@@ -3,48 +3,20 @@
 from __future__ import annotations
 
 import asyncio
-import threading
-from collections.abc import AsyncGenerator, Callable
-from contextlib import asynccontextmanager, suppress
-from contextvars import ContextVar
-from datetime import UTC, datetime, timedelta
+from dataclasses import dataclass
+from datetime import timedelta
 from pathlib import Path
-from typing import Self
 from uuid import UUID, uuid4
 
 import pytest
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel
 
 from cadrumo.adapters.persistence.operations.journal import OperationJournalRepository
-from cadrumo.adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
 from cadrumo.adapters.persistence.operations.secure_references import operation_secure_reference_repository
 from cadrumo.adapters.persistence.storage.secure_object_namespaces import OPERATION_SECURE_REFERENCE_NAMESPACE
-from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from cadrumo.application.operations.capabilities import (
-    OperationBaselinePolicy,
-    OperationCapabilities,
-    OperationConflictScope,
-    OperationOwnedResource,
-    OperationReplayPolicy,
-    OperationRequestStoragePolicy,
-    OperationSensitiveInputPolicy,
-)
+from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from cadrumo.application.operations.frontend_projection import OperationReviewProjectionReferenceV1
 from cadrumo.application.operations.frontend_requests import (
-    OperationCancellationRefusalCode,
-    OperationCancellationRefusalV1,
-    OperationCancellationRequestV1,
-    OperationCancellationSuccessV1,
-    OperationDetachRequestV1,
-    OperationDetachSuccessV1,
-    OperationObservationRequestV1,
-    OperationObservationSuccessV1,
-    OperationResponseApplyRequestV1,
-    OperationResponseControlRefusalCode,
-    OperationResponseControlRequestV1,
-    OperationResponseControlSuccessV1,
-    OperationResponseMutationSuccessV1,
-    OperationResponseRejectRequestV1,
     OperationResultProjectionRefusalCode,
     OperationResultProjectionRefusalV1,
     OperationResultProjectionRequestV1,
@@ -60,466 +32,56 @@ from cadrumo.application.operations.frontend_requests import (
     OperationWorkspaceRefreshTargetSuccessV1,
     OperationWorkspaceRefreshTargetVersionHeader,
 )
-from cadrumo.application.operations.interactions import (
-    OperationInteractionRequest,
-    OperationPendingInteraction,
-    OperationResponseIntent,
-)
 from cadrumo.application.operations.models import (
-    OperationFailureErrorCode,
-    OperationIdentity,
-    OperationRequest,
     OperationTerminalReceipt,
 )
-from cadrumo.application.operations.observation import OperationObservationService
-from cadrumo.application.operations.operation_definition import OperationDefinition, OperationExecutorFactory
-from cadrumo.application.operations.owner import OperationExecutorContext
-from cadrumo.application.operations.persistence.events import (
-    OperationInteractionEvent,
-    OperationPhaseEvent,
-    OperationTerminalEvent,
-)
 from cadrumo.application.operations.persistence.journal import OperationPersistedSnapshot
-from cadrumo.application.operations.persistence.leases import (
-    OperationOwnerLease,
-    operation_conflict_scope_reference,
-)
 from cadrumo.application.operations.projection_services import (
-    BoundOperationSecureResponseAuthority,
-    OperationCancellationService,
-    OperationDetachService,
-    OperationResponseAuthorityBroker,
-    OperationResponseControlService,
     OperationResultProjectionService,
     OperationReviewProjectionService,
     OperationWorkspaceRefreshTargetService,
-    UnavailableOperationSecureResponseAuthority,
 )
 from cadrumo.application.operations.registry import (
     OperationFrontendProjection,
-    OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationPolicy,
-    OperationRegistry,
-    OperationSchemaBindingV1,
-    operation_public_schema_reference,
+    OperationPublicDefinitionContractV1,
 )
-from cadrumo.application.operations.subject_reference import OperationSubjectReferenceV1
-from cadrumo.application.operations.supervisor import OperationSupervisor
-from cadrumo.application.operations.tests.authority_test_support import unread_authority_operation
-from cadrumo.core.models import STRICT_FROZEN_CONFIG
 from cadrumo.core.operations import (
-    OperationCancellation,
-    OperationClosePolicy,
-    OperationDeadline,
-    OperationDurability,
     OperationEffect,
-    OperationInteractionKind,
-    OperationLifecycle,
     OperationTerminalCondition,
 )
 
+from .projection_services_support import (
+    _DEFINITION_ID,
+    _INTERACTION_ID,
+    _NOW,
+    _OPERATION_ID,
+    _REFUSAL_CODE,
+    _REFUSAL_SENTINEL,
+    _TOKEN,
+    PrivateRefusalDetail,
+    ProjectionResult,
+    PublicProjectionResult,
+    PublicRefusalDetail,
+    ReviewedOperand,
+    SafeReviewProjection,
+    WorkspaceRefreshTarget,
+    _lease,
+    _observe_refused_operation,
+    _pending,
+    _project_refusal_detail,
+    _project_result,
+    _refused_snapshot,
+    _registry,
+    _running_snapshot,
+    _terminal_snapshot,
+    _unsafe_refresh_target,
+    _unsafe_result_projection,
+    _unsafe_review_projection,
+    _waiting_snapshot,
+    _write,
+)
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-
-_NOW = datetime(2026, 8, 24, 12, tzinfo=UTC)
-_OPERATION_ID = "1" * 64
-_INTERACTION_ID = "2" * 64
-_TOKEN = "3" * 64
-_PROPOSAL = "4" * 64
-_DEFINITION_ID = "operations.projection.test"
-_REFUSAL_CODE = "REFUSED_OPERATION_SUBJECT_BUSY"
-_REFUSAL_SENTINEL = "PRIVATE-REFUSAL-DETAIL-SENTINEL"
-
-
-class ProjectionRequest(BaseModel):
-    model_config = STRICT_FROZEN_CONFIG
-    subject_code: str
-
-
-class ProjectionResult(BaseModel):
-    model_config = STRICT_FROZEN_CONFIG
-    result_code: str
-
-
-class PublicProjectionResult(BaseModel):
-    model_config = STRICT_FROZEN_CONFIG
-    result_code: str
-
-
-class PrivateRefusalDetail(BaseModel):
-    model_config = STRICT_FROZEN_CONFIG
-    detail_code: str
-    private_sentinel: str
-
-
-class PublicRefusalDetail(BaseModel):
-    model_config = STRICT_FROZEN_CONFIG
-    detail_code: str
-
-
-class ReviewedOperand(BaseModel):
-    model_config = STRICT_FROZEN_CONFIG
-    summary_code: str
-
-
-class SafeReviewProjection(BaseModel):
-    model_config = STRICT_FROZEN_CONFIG
-    summary_code: str
-
-
-class ReviewResponseSchema(BaseModel):
-    model_config = STRICT_FROZEN_CONFIG
-    intent: OperationResponseIntent
-
-
-class WorkspaceRefreshTarget(BaseModel):
-    model_config = STRICT_FROZEN_CONFIG
-    workspace_coordinate: str
-
-
-class ProjectionExecutor:
-    async def execute(
-        self,
-        request: OperationRequest[ProjectionRequest],
-        context: OperationExecutorContext,
-    ) -> str | None:
-        del context
-        return request.subject_ref
-
-
-def _build_executor() -> ProjectionExecutor:
-    return ProjectionExecutor()
-
-
-def _project_review(operand: BaseModel, interaction: OperationInteractionRequest) -> BaseModel:
-    del interaction
-    return SafeReviewProjection(summary_code=ReviewedOperand.model_validate(operand).summary_code)
-
-
-def _project_result(result: BaseModel, receipt: OperationTerminalReceipt) -> BaseModel:
-    del receipt
-    return PublicProjectionResult(result_code=ProjectionResult.model_validate(result).result_code)
-
-
-def _project_refusal_detail(result: BaseModel, receipt: OperationTerminalReceipt) -> BaseModel:
-    """Release only the declared detail code for its exact refused terminal."""
-    if (
-        type(result) is not PrivateRefusalDetail
-        or receipt.condition is not OperationTerminalCondition.REFUSED
-        or receipt.refusal_ref != _REFUSAL_CODE
-    ):
-        raise TypeError("refusal detail does not match its registered refused terminal")
-    return PublicRefusalDetail(detail_code=result.detail_code)
-
-
-def _unsafe_result_projection(result: BaseModel, receipt: OperationTerminalReceipt) -> BaseModel:
-    del result, receipt
-    return SafeReviewProjection(summary_code="wrong-model")
-
-
-def _refresh_target(receipt: OperationTerminalReceipt) -> BaseModel:
-    del receipt
-    return WorkspaceRefreshTarget(workspace_coordinate="profile:active")
-
-
-def _unsafe_review_projection(operand: BaseModel, interaction: OperationInteractionRequest) -> BaseModel:
-    del operand, interaction
-    return WorkspaceRefreshTarget(workspace_coordinate="wrong-model")
-
-
-def _unsafe_refresh_target(receipt: OperationTerminalReceipt) -> BaseModel:
-    del receipt
-    return SafeReviewProjection(summary_code="wrong-model")
-
-
-def _registry(
-    *,
-    close_policy: OperationClosePolicy = OperationClosePolicy.DETACH_ALLOWED,
-    review_projector: Callable[[BaseModel, OperationInteractionRequest], BaseModel] = _project_review,
-    result_projector: Callable[[BaseModel, OperationTerminalReceipt], BaseModel] | None = None,
-    result_schema_type: type[BaseModel] = ProjectionResult,
-    result_type: type[BaseModel] = ProjectionResult,
-    refusal_detail_codes: frozenset[OperationFailureErrorCode] = frozenset(),
-    refresh_adapter: Callable[[OperationTerminalReceipt], BaseModel] = _refresh_target,
-    include_refresh: bool = True,
-) -> OperationRegistry:
-    capabilities = OperationCapabilities(
-        durability=OperationDurability.RECORDED,
-        cancellation=OperationCancellation.COOPERATIVE,
-        deadline=OperationDeadline.COOPERATIVE,
-        replay=OperationReplayPolicy.IDEMPOTENT_SUBMIT,
-        baseline=OperationBaselinePolicy.REQUEST_BOUND,
-        request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
-        sensitive_input=OperationSensitiveInputPolicy.SECURE_REFERENCE,
-        conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
-        owned_resources=frozenset({OperationOwnedResource.ASYNC_TASK}),
-        permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.UPDATED, OperationEffect.UNKNOWN}),
-        close_policy=close_policy,
-    )
-    definition = OperationDefinition(
-        definition_id=_DEFINITION_ID,
-        request_type=ProjectionRequest,
-        subject_reference=OperationSubjectReferenceV1.profile(),
-        result_type=result_type,
-        executor_factory=OperationExecutorFactory(
-            request_type=ProjectionRequest,
-            executor_type=ProjectionExecutor,
-            build=_build_executor,
-        ),
-        phase_codes=("projection.running",),
-        interaction_kinds=frozenset({OperationInteractionKind.REVIEW}),
-        capabilities=capabilities,
-        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        refusal_detail_codes=refusal_detail_codes,
-    )
-    registration = OperationPublicDefinitionRegistrationV1.compose(
-        definition=definition,
-        request_schema=OperationSchemaBindingV1.bind(
-            schema_id="operations.projection.request",
-            schema_version=1,
-            model_type=ProjectionRequest,
-        ),
-        result_schema=OperationSchemaBindingV1.bind(
-            schema_id="operations.projection.result",
-            schema_version=1,
-            model_type=result_schema_type,
-        ),
-        review_projection_schema=OperationSchemaBindingV1.bind(
-            schema_id="operations.projection.review",
-            schema_version=1,
-            model_type=SafeReviewProjection,
-        ),
-        interaction_response_schema=OperationSchemaBindingV1.bind(
-            schema_id="operations.projection.response",
-            schema_version=1,
-            model_type=ReviewResponseSchema,
-        ),
-        workspace_refresh_target_schema=(
-            OperationSchemaBindingV1.bind(
-                schema_id="operations.projection.refresh",
-                schema_version=1,
-                model_type=WorkspaceRefreshTarget,
-            )
-            if include_refresh
-            else None
-        ),
-        reviewed_operand_type=ReviewedOperand,
-        review_projector=review_projector,
-        result_projector=result_projector,
-        workspace_refresh_adapter=refresh_adapter if include_refresh else None,
-    )
-    return OperationRegistry(definitions=(definition,), public_registrations=(registration,))
-
-
-def _lease() -> OperationOwnerLease:
-    return OperationOwnerLease(
-        operation_id=_OPERATION_ID,
-        scope_ref=operation_conflict_scope_reference(definition_id=_DEFINITION_ID, subject_ref="profile:active"),
-        owner_id="5" * 64,
-        token="6" * 64,
-        acquired_at=_NOW,
-        expires_at=_NOW + timedelta(hours=1),
-    )
-
-
-def _pending(registry: OperationRegistry, *, proposal: str = _PROPOSAL) -> OperationPendingInteraction:
-    contract = registry.lookup_public_contract(_DEFINITION_ID)
-    assert contract.interaction_response_schema is not None
-    request = OperationInteractionRequest(
-        interaction_id=_INTERACTION_ID,
-        identity=OperationIdentity(
-            operation_id=_OPERATION_ID,
-            definition_id=_DEFINITION_ID,
-            subject_ref="profile:active",
-        ),
-        revision=0,
-        kind=OperationInteractionKind.REVIEW,
-        presentation_code="projection.review.ready",
-        response_schema_ref=operation_public_schema_reference(contract.interaction_response_schema),
-        continuation_digest="7" * 64,
-        expires_at=_NOW + timedelta(minutes=30),
-    )
-    return OperationPendingInteraction.bind(
-        request=request,
-        response_token=_TOKEN,
-        reviewed_proposal_digest=proposal,
-        baseline_digest="9" * 64,
-        proposed_effect_digest="a" * 64,
-    )
-
-
-def _waiting_snapshot(registry: OperationRegistry, pending: OperationPendingInteraction) -> OperationPersistedSnapshot:
-    identity = pending.request.identity
-    event = OperationInteractionEvent(
-        identity=identity,
-        revision=0,
-        sequence=1,
-        timestamp=_NOW,
-        code="operation.interaction.pending",
-        interaction_id=pending.request.interaction_id,
-    )
-    return OperationPersistedSnapshot(
-        identity=identity,
-        definition_contract_digest=registry.lookup_public_contract(_DEFINITION_ID).definition_contract_digest,
-        request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
-        request_reference="8" * 64,
-        revision=0,
-        lifecycle=OperationLifecycle.WAITING_FOR_INTERACTION,
-        started_at=_NOW,
-        updated_at=_NOW,
-        execution_deadline=_NOW + timedelta(hours=1),
-        cleanup_deadline=None,
-        cancellation_requested_at=None,
-        cancellation_acknowledged_at=None,
-        cancellation_deferred=False,
-        event_cursor=1,
-        events=(event,),
-        pending_interaction=pending,
-    )
-
-
-def _running_snapshot(registry: OperationRegistry) -> OperationPersistedSnapshot:
-    identity = OperationIdentity(
-        operation_id=_OPERATION_ID,
-        definition_id=_DEFINITION_ID,
-        subject_ref="profile:active",
-    )
-    event = OperationPhaseEvent(
-        identity=identity,
-        revision=0,
-        sequence=1,
-        timestamp=_NOW,
-        code="projection.running",
-        phase_code="projection.running",
-    )
-    return OperationPersistedSnapshot(
-        identity=identity,
-        definition_contract_digest=registry.lookup_public_contract(_DEFINITION_ID).definition_contract_digest,
-        request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
-        request_reference="8" * 64,
-        revision=0,
-        lifecycle=OperationLifecycle.RUNNING,
-        phase_code="projection.running",
-        started_at=_NOW,
-        updated_at=_NOW,
-        execution_deadline=_NOW + timedelta(hours=1),
-        cleanup_deadline=None,
-        cancellation_requested_at=None,
-        cancellation_acknowledged_at=None,
-        cancellation_deferred=False,
-        event_cursor=1,
-        events=(event,),
-    )
-
-
-def _terminal_snapshot(
-    registry: OperationRegistry,
-    *,
-    result_ref: str = "result:projection-complete",
-    condition: OperationTerminalCondition = OperationTerminalCondition.SUCCEEDED,
-    effect: OperationEffect = OperationEffect.UPDATED,
-    failure_error_code: str | None = None,
-) -> OperationPersistedSnapshot:
-    running = _running_snapshot(registry)
-    receipt = OperationTerminalReceipt(
-        identity=running.identity,
-        revision=1,
-        condition=condition,
-        effect=effect,
-        settled_at=_NOW + timedelta(minutes=1),
-        result_ref=result_ref,
-        failure_error_code=failure_error_code,
-    )
-    event = OperationTerminalEvent(
-        identity=running.identity,
-        revision=1,
-        sequence=2,
-        timestamp=receipt.settled_at,
-        code="operation.terminal",
-        receipt=receipt,
-    )
-    return OperationPersistedSnapshot.model_validate(
-        running.model_copy(
-            update={
-                "revision": 1,
-                "lifecycle": OperationLifecycle.TERMINAL,
-                "terminal_condition": condition,
-                "effect": effect,
-                "updated_at": receipt.settled_at,
-                "event_cursor": 2,
-                "events": (event,),
-                "terminal_receipt": receipt,
-            }
-        ).model_dump()
-    )
-
-
-def _refused_snapshot(
-    registry: OperationRegistry,
-    *,
-    detail_ref: str,
-    effect: OperationEffect = OperationEffect.UNKNOWN,
-) -> OperationPersistedSnapshot:
-    """Build one durable refused receipt with a separate encrypted-detail reference."""
-    running = _running_snapshot(registry)
-    receipt = OperationTerminalReceipt(
-        identity=running.identity,
-        revision=1,
-        condition=OperationTerminalCondition.REFUSED,
-        effect=effect,
-        settled_at=_NOW + timedelta(minutes=1),
-        refusal_ref=_REFUSAL_CODE,
-        refusal_detail_ref=detail_ref,
-    )
-    event = OperationTerminalEvent(
-        identity=running.identity,
-        revision=1,
-        sequence=2,
-        timestamp=receipt.settled_at,
-        code="operation.terminal",
-        receipt=receipt,
-    )
-    return OperationPersistedSnapshot.model_validate(
-        running.model_copy(
-            update={
-                "revision": 1,
-                "lifecycle": OperationLifecycle.TERMINAL,
-                "terminal_condition": OperationTerminalCondition.REFUSED,
-                "effect": effect,
-                "updated_at": receipt.settled_at,
-                "event_cursor": 2,
-                "events": (event,),
-                "terminal_receipt": receipt,
-            }
-        ).model_dump()
-    )
-
-
-def _observe_refused_operation(
-    repository: OperationJournalRepository,
-    registry: OperationRegistry,
-    *,
-    expected_effect: OperationEffect,
-) -> OperationObservationSuccessV1:
-    """Re-read the durable public lifecycle independently of result projection."""
-    observed = asyncio.run(
-        OperationObservationService(reader=repository, registry=registry).observe(
-            OperationObservationRequestV1(operation_id=_OPERATION_ID, after_cursor=0, page_limit=32)
-        )
-    )
-    assert isinstance(observed, OperationObservationSuccessV1)
-    assert observed.projection.lifecycle is OperationLifecycle.TERMINAL
-    assert observed.projection.terminal_condition is OperationTerminalCondition.REFUSED
-    assert observed.projection.refusal_ref == _REFUSAL_CODE
-    assert observed.projection.effect is expected_effect
-    assert observed.projection.result_ref is None
-    return observed
-
-
-def _write(root: Path, repository: OperationJournalRepository, snapshot: OperationPersistedSnapshot) -> None:
-    lease = _lease()
-    observed = asyncio.run(OperationLeaseFilesystemRepository(storage_root=root).acquire(lease, observed_at=_NOW))
-    assert observed.current == lease
-    asyncio.run(repository.create(snapshot, lease=lease))
 
 
 def test_review_resolution_uses_encrypted_operand_and_is_read_only(tmp_path: Path) -> None:
@@ -677,92 +239,127 @@ def test_result_resolution_uses_encrypted_operand_and_public_contract(tmp_path: 
         assert "result_ref" not in type(request).model_fields
 
 
+@dataclass
+class _PagedResultRig:
+    """A persisted terminal result read through the projection service with a counted projector."""
+
+    service: OperationResultProjectionService
+    request: OperationResultProjectionRequestV1
+    contract: OperationPublicDefinitionContractV1
+    terminal: OperationPersistedSnapshot
+    projections: list[str]
+    scope: tuple[UUID, OperationFrontendProjection]
+
+    def read(
+        self,
+        selected: OperationResultProjectionRequestV1 | None = None,
+        *,
+        continuation: bool = True,
+        reader_scope: tuple[UUID, OperationFrontendProjection] | None = None,
+    ) -> OperationResultProjectionSuccessV1[PublicProjectionResult] | OperationResultProjectionRefusalV1:
+        return asyncio.run(
+            self.service.resolve(
+                self.request if selected is None else selected,
+                PublicProjectionResult,
+                snapshot_scope=self.scope if reader_scope is None else reader_scope,
+                continue_snapshot=continuation,
+            )
+        )
+
+
+def _paged_result_rig(tmp_path: Path, profile: TestRuntimeProfile) -> _PagedResultRig:
+    projections: list[str] = []
+
+    def project(result: BaseModel, receipt: OperationTerminalReceipt) -> BaseModel:
+        projections.append("projected")
+        return _project_result(result, receipt)
+
+    root = tmp_path / "paged-result-durable"
+    registry = _registry(result_projector=project, result_schema_type=PublicProjectionResult)
+    repository = OperationJournalRepository(storage_root=root)
+    operands = operation_secure_reference_repository(objects=profile.repository)
+    result_ref = asyncio.run(operands.put(ProjectionResult(result_code="safe.result"), written_at=_NOW))
+    terminal = _terminal_snapshot(registry, result_ref=result_ref)
+    _write(root, repository, _running_snapshot(registry))
+    asyncio.run(repository.commit_settlement(terminal, expected_revision=0, lease=_lease()))
+    contract = registry.lookup_public_contract(_DEFINITION_ID)
+    assert contract.result_schema is not None
+    request = OperationResultProjectionRequestV1(
+        operation_id=_OPERATION_ID,
+        terminal_revision=terminal.revision,
+        definition_contract_digest=contract.definition_contract_digest,
+        result_schema=contract.result_schema,
+    )
+    service = OperationResultProjectionService(reader=repository, registry=registry, operands=operands)
+    return _PagedResultRig(
+        service=service,
+        request=request,
+        contract=contract,
+        terminal=terminal,
+        projections=projections,
+        scope=(uuid4(), OperationFrontendProjection.TUI),
+    )
+
+
+def _assert_paged_read_refusals(rig: _PagedResultRig) -> None:
+    request = rig.request
+    stale = rig.read(request.model_copy(update={"terminal_revision": rig.terminal.revision + 1}))
+    assert isinstance(stale, OperationResultProjectionRefusalV1)
+    assert stale.code is OperationResultProjectionRefusalCode.STALE_OPERATION_REVISION
+    changed_contract = rig.read(request.model_copy(update={"definition_contract_digest": "a" * 64}))
+    assert isinstance(changed_contract, OperationResultProjectionRefusalV1)
+    assert changed_contract.code is OperationResultProjectionRefusalCode.DEFINITION_CONTRACT_MISMATCH
+    changed_schema = rig.read(request.model_copy(update={"result_schema": rig.contract.request_schema}))
+    assert isinstance(changed_schema, OperationResultProjectionRefusalV1)
+    assert changed_schema.code is OperationResultProjectionRefusalCode.RESULT_SCHEMA_MISMATCH
+    assert len(rig.projections) == 1
+    wrong_model = asyncio.run(
+        rig.service.resolve(request, ProjectionResult, snapshot_scope=rig.scope, continue_snapshot=True)
+    )
+    assert isinstance(wrong_model, OperationResultProjectionRefusalV1)
+    assert wrong_model.code is OperationResultProjectionRefusalCode.RESULT_PROJECTION_UNAVAILABLE
+    assert len(rig.projections) == 2
+
+
+def _assert_paged_reads_reuse_only_their_own_snapshot(
+    rig: _PagedResultRig,
+    first: OperationResultProjectionSuccessV1[PublicProjectionResult] | OperationResultProjectionRefusalV1,
+) -> None:
+    projections = rig.projections
+    # A page-zero read and another session each resolve the real encrypted
+    # operand again; neither is an earlier reader's continuation.
+    assert rig.read(continuation=False) == first
+    assert len(projections) == 3
+    assert rig.read(reader_scope=(uuid4(), OperationFrontendProjection.TUI)) == first
+    assert len(projections) == 4
+    assert rig.read() == first
+    assert len(projections) == 5
+    assert rig.read(reader_scope=(rig.scope[0], OperationFrontendProjection.CLI)) == first
+    assert len(projections) == 6
+    assert rig.read() == first
+    assert len(projections) == 7
+    rig.service.forget_snapshot(_OPERATION_ID)
+    assert rig.read() == first
+    assert len(projections) == 8
+    rig.service.forget_snapshot()
+    assert rig.read() == first
+    assert len(projections) == 9
+
+    # The ordinary service remains a fresh read even while another paged
+    # transfer has a snapshot; the optimization is explicitly requested.
+    assert asyncio.run(rig.service.resolve(rig.request, PublicProjectionResult)) == first
+    assert len(projections) == 10
+
+
 def test_paged_snapshot_rechecks_terminal_contract_and_keeps_readers_separate(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        projections: list[str] = []
-
-        def project(result: BaseModel, receipt: OperationTerminalReceipt) -> BaseModel:
-            projections.append("projected")
-            return _project_result(result, receipt)
-
-        root = tmp_path / "paged-result-durable"
-        registry = _registry(result_projector=project, result_schema_type=PublicProjectionResult)
-        repository = OperationJournalRepository(storage_root=root)
-        operands = operation_secure_reference_repository(objects=profile.repository)
-        result_ref = asyncio.run(operands.put(ProjectionResult(result_code="safe.result"), written_at=_NOW))
-        terminal = _terminal_snapshot(registry, result_ref=result_ref)
-        _write(root, repository, _running_snapshot(registry))
-        asyncio.run(repository.commit_settlement(terminal, expected_revision=0, lease=_lease()))
-        contract = registry.lookup_public_contract(_DEFINITION_ID)
-        assert contract.result_schema is not None
-        request = OperationResultProjectionRequestV1(
-            operation_id=_OPERATION_ID,
-            terminal_revision=terminal.revision,
-            definition_contract_digest=contract.definition_contract_digest,
-            result_schema=contract.result_schema,
-        )
-        service = OperationResultProjectionService(reader=repository, registry=registry, operands=operands)
-        scope = (uuid4(), OperationFrontendProjection.TUI)
-
-        def read(
-            selected: OperationResultProjectionRequestV1 = request,
-            *,
-            continuation: bool = True,
-            reader_scope: tuple[UUID, OperationFrontendProjection] = scope,
-        ) -> OperationResultProjectionSuccessV1[PublicProjectionResult] | OperationResultProjectionRefusalV1:
-            return asyncio.run(
-                service.resolve(
-                    selected,
-                    PublicProjectionResult,
-                    snapshot_scope=reader_scope,
-                    continue_snapshot=continuation,
-                )
-            )
-
-        first = read(continuation=False)
+        rig = _paged_result_rig(tmp_path, profile)
+        first = rig.read(continuation=False)
         assert isinstance(first, OperationResultProjectionSuccessV1)
-        assert read() == first
-        assert len(projections) == 1
-        stale = read(request.model_copy(update={"terminal_revision": terminal.revision + 1}))
-        assert isinstance(stale, OperationResultProjectionRefusalV1)
-        assert stale.code is OperationResultProjectionRefusalCode.STALE_OPERATION_REVISION
-        changed_contract = read(request.model_copy(update={"definition_contract_digest": "a" * 64}))
-        assert isinstance(changed_contract, OperationResultProjectionRefusalV1)
-        assert changed_contract.code is OperationResultProjectionRefusalCode.DEFINITION_CONTRACT_MISMATCH
-        changed_schema = read(request.model_copy(update={"result_schema": contract.request_schema}))
-        assert isinstance(changed_schema, OperationResultProjectionRefusalV1)
-        assert changed_schema.code is OperationResultProjectionRefusalCode.RESULT_SCHEMA_MISMATCH
-        assert len(projections) == 1
-        wrong_model = asyncio.run(
-            service.resolve(request, ProjectionResult, snapshot_scope=scope, continue_snapshot=True)
-        )
-        assert isinstance(wrong_model, OperationResultProjectionRefusalV1)
-        assert wrong_model.code is OperationResultProjectionRefusalCode.RESULT_PROJECTION_UNAVAILABLE
-        assert len(projections) == 2
-
-        # A page-zero read and another session each resolve the real encrypted
-        # operand again; neither is an earlier reader's continuation.
-        assert read(continuation=False) == first
-        assert len(projections) == 3
-        assert read(reader_scope=(uuid4(), OperationFrontendProjection.TUI)) == first
-        assert len(projections) == 4
-        assert read() == first
-        assert len(projections) == 5
-        assert read(reader_scope=(scope[0], OperationFrontendProjection.CLI)) == first
-        assert len(projections) == 6
-        assert read() == first
-        assert len(projections) == 7
-        service.forget_snapshot(_OPERATION_ID)
-        assert read() == first
-        assert len(projections) == 8
-        service.forget_snapshot()
-        assert read() == first
-        assert len(projections) == 9
-
-        # The ordinary service remains a fresh read even while another paged
-        # transfer has a snapshot; the optimization is explicitly requested.
-        assert asyncio.run(service.resolve(request, PublicProjectionResult)) == first
-        assert len(projections) == 10
+        assert rig.read() == first
+        assert len(rig.projections) == 1
+        _assert_paged_read_refusals(rig)
+        _assert_paged_reads_reuse_only_their_own_snapshot(rig, first)
 
 
 def test_refused_detail_uses_encrypted_operand_and_preserves_the_refused_receipt(tmp_path: Path) -> None:
@@ -1114,356 +711,3 @@ def test_projection_services_close_version_unknown_pending_terminal_and_adapter_
         assert not_terminal.code is OperationWorkspaceRefreshTargetRefusalCode.OPERATION_NOT_TERMINAL
         assert refresh_unsupported.code is OperationWorkspaceRefreshTargetRefusalCode.UNSUPPORTED_VERSION
         assert unavailable.code is OperationWorkspaceRefreshTargetRefusalCode.REFRESH_ADAPTER_UNAVAILABLE
-
-
-def test_response_control_requires_separately_bound_runtime_bearer(tmp_path: Path) -> None:
-    root = tmp_path / "durable"
-    registry = _registry()
-    pending = _pending(registry)
-    repository = OperationJournalRepository(storage_root=root)
-    _write(root, repository, _waiting_snapshot(registry, pending))
-    authority = BoundOperationSecureResponseAuthority.bind(
-        operation_id=_OPERATION_ID,
-        interaction_id=_INTERACTION_ID,
-        revision=0,
-        reviewed_proposal_digest=_PROPOSAL,
-        actor_ref="operator:reviewer",
-        expires_at=pending.request.expires_at,
-        intents=frozenset({OperationResponseIntent.APPLY, OperationResponseIntent.REJECT}),
-        response_token=_TOKEN,
-        clock=lambda: _NOW,
-    )
-    request = OperationResponseControlRequestV1(
-        operation_id=_OPERATION_ID,
-        interaction_id=_INTERACTION_ID,
-        revision=0,
-        actor_ref="operator:reviewer",
-    )
-    supervisor = OperationSupervisor(
-        authority_operation=unread_authority_operation(),
-        registry=registry,
-        journal=repository,
-        event_stream=repository,
-        leases=OperationLeaseFilesystemRepository(storage_root=root),
-        operands=None,
-        owner_id="5" * 64,
-        lease_token_factory=lambda: "6" * 64,
-        clock=lambda: _NOW,
-        lease_duration=timedelta(minutes=1),
-    )
-    service = OperationResponseControlService(
-        reader=repository,
-        registry=registry,
-        authority=authority,
-        supervisor=supervisor,
-    )
-
-    result = asyncio.run(service.inspect(request))
-    authority.close()
-    closed = asyncio.run(service.inspect(request))
-
-    assert isinstance(result, OperationResponseControlSuccessV1)
-    assert result.available and result.permitted_intents == frozenset({"apply", "reject"})
-    assert closed.outcome == "refused"
-    assert all(value == 0 for value in authority._token)
-    assert _TOKEN not in result.model_dump_json()
-
-
-def test_response_authority_is_unavailable_after_process_restart(tmp_path: Path) -> None:
-    root = tmp_path / "durable"
-    registry = _registry()
-    pending = _pending(registry)
-    repository = OperationJournalRepository(storage_root=root)
-    _write(root, repository, _waiting_snapshot(registry, pending))
-    original_process = OperationResponseAuthorityBroker()
-    capability = original_process.reserve(_OPERATION_ID, "operator:reviewer")
-    original_process.issue(pending, _TOKEN)
-    original_process.close()
-    restarted_process = OperationResponseAuthorityBroker()
-    request = OperationResponseControlRequestV1(
-        operation_id=_OPERATION_ID,
-        interaction_id=_INTERACTION_ID,
-        revision=0,
-        actor_ref="operator:reviewer",
-    )
-    authority = restarted_process.bind(request, pending, capability, clock=lambda: _NOW)
-    supervisor = OperationSupervisor(
-        authority_operation=unread_authority_operation(),
-        registry=registry,
-        journal=repository,
-        event_stream=repository,
-        leases=OperationLeaseFilesystemRepository(storage_root=root),
-        operands=None,
-        owner_id="7" * 64,
-        lease_token_factory=lambda: "8" * 64,
-        clock=lambda: _NOW,
-        lease_duration=timedelta(minutes=1),
-    )
-    service = OperationResponseControlService(
-        reader=repository,
-        registry=registry,
-        authority=authority,
-        supervisor=supervisor,
-    )
-
-    result = asyncio.run(service.inspect(request))
-
-    assert result.outcome == "refused"
-    assert result.code is OperationResponseControlRefusalCode.RESPONSE_AUTHORITY_UNAVAILABLE
-
-
-@pytest.mark.parametrize("response_action", ["apply", "reject"])
-def test_public_response_service_consumes_runtime_authority(tmp_path: Path, response_action: str) -> None:
-    root = tmp_path / response_action
-    registry = _registry()
-    pending = _pending(registry)
-    repository = OperationJournalRepository(storage_root=root)
-    _write(root, repository, _waiting_snapshot(registry, pending))
-    broker = OperationResponseAuthorityBroker()
-    capability = broker.reserve(_OPERATION_ID, "operator:reviewer")
-    broker.issue(pending, _TOKEN)
-    control = OperationResponseControlRequestV1(
-        operation_id=_OPERATION_ID,
-        interaction_id=_INTERACTION_ID,
-        revision=0,
-        actor_ref="operator:reviewer",
-    )
-    actor_mismatch = control.model_copy(update={"actor_ref": "operator:intruder"})
-    stale = control.model_copy(update={"revision": 1})
-    forged = OperationResponseAuthorityBroker().reserve(_OPERATION_ID, "operator:reviewer")
-    assert isinstance(
-        broker.bind(actor_mismatch, pending, capability, clock=lambda: _NOW),
-        UnavailableOperationSecureResponseAuthority,
-    )
-    assert isinstance(
-        broker.bind(stale, pending, capability, clock=lambda: _NOW), UnavailableOperationSecureResponseAuthority
-    )
-    assert isinstance(
-        broker.bind(control, pending, forged, clock=lambda: _NOW), UnavailableOperationSecureResponseAuthority
-    )
-    authority = broker.bind(control, pending, capability, clock=lambda: _NOW)
-    assert isinstance(
-        broker.bind(control, pending, capability, clock=lambda: _NOW), UnavailableOperationSecureResponseAuthority
-    )
-    supervisor = OperationSupervisor(
-        authority_operation=unread_authority_operation(),
-        registry=registry,
-        journal=repository,
-        event_stream=repository,
-        leases=OperationLeaseFilesystemRepository(storage_root=root),
-        operands=None,
-        owner_id="5" * 64,
-        lease_token_factory=lambda: "6" * 64,
-        clock=lambda: _NOW,
-        lease_duration=timedelta(minutes=1),
-    )
-    service = OperationResponseControlService(
-        reader=repository,
-        registry=registry,
-        authority=authority,
-        supervisor=supervisor,
-    )
-
-    if response_action == "apply":
-        mutation = OperationResponseApplyRequestV1(**control.model_dump(), responded_at=_NOW)
-        result = asyncio.run(service.apply(mutation))
-    else:
-        mutation = OperationResponseRejectRequestV1(
-            **control.model_dump(),
-            responded_at=_NOW,
-            reason_code="operator.rejected",
-        )
-        result = asyncio.run(service.reject(mutation))
-
-    assert isinstance(result, OperationResponseMutationSuccessV1)
-    assert result.response_action == response_action
-    consumed = asyncio.run(supervisor.inspect(_OPERATION_ID)).consumed_interactions
-    assert len(consumed) == 1 and consumed[0].intent.value == response_action
-
-
-def test_cancellation_and_detach_delegate_to_real_supervisor_ports(tmp_path: Path) -> None:
-    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        root = tmp_path / "durable"
-        registry = _registry()
-        repository = OperationJournalRepository(storage_root=root)
-        leases = OperationLeaseFilesystemRepository(storage_root=root)
-        _write(root, repository, _running_snapshot(registry))
-        supervisor = OperationSupervisor(
-            authority_operation=unread_authority_operation(),
-            registry=registry,
-            journal=repository,
-            event_stream=repository,
-            leases=leases,
-            operands=operation_secure_reference_repository(objects=profile.repository),
-            owner_id="5" * 64,
-            lease_token_factory=lambda: "6" * 64,
-            clock=lambda: _NOW,
-            lease_duration=timedelta(hours=1),
-            cleanup_timeout=timedelta(minutes=5),
-        )
-        detach = asyncio.run(
-            OperationDetachService(reader=repository, registry=registry, supervisor=supervisor).detach(
-                OperationDetachRequestV1(operation_id=_OPERATION_ID, expected_revision=0)
-            )
-        )
-        cancelled = asyncio.run(
-            OperationCancellationService(reader=repository, registry=registry, supervisor=supervisor).request(
-                OperationCancellationRequestV1(operation_id=_OPERATION_ID, expected_revision=0)
-            )
-        )
-        stale = asyncio.run(
-            OperationCancellationService(reader=repository, registry=registry, supervisor=supervisor).request(
-                OperationCancellationRequestV1(operation_id=_OPERATION_ID, expected_revision=0)
-            )
-        )
-        journal_path = root / "operation-journals" / f"{_OPERATION_ID}.json"
-        settled_bytes = journal_path.read_bytes()
-        with pytest.raises(ValueError, match="expected revision is stale"):
-            asyncio.run(supervisor.request_cancel(_OPERATION_ID, expected_revision=0))
-
-        assert isinstance(detach, OperationDetachSuccessV1)
-        assert isinstance(cancelled, OperationCancellationSuccessV1)
-        assert isinstance(stale, OperationCancellationRefusalV1)
-        assert stale.code is OperationCancellationRefusalCode.STALE_OPERATION_REVISION
-        assert journal_path.read_bytes() == settled_bytes
-
-
-_RESULT_PROJECTION_IDENTITY: ContextVar[str] = ContextVar("result_projection_identity", default="")
-_RESULT_MODEL_HOOK: ContextVar[Callable[[], None] | None] = ContextVar("result_model_validation", default=None)
-
-
-class HeldPublicProjectionResult(PublicProjectionResult):
-    """Exercise both projector construction and registered public-model revalidation."""
-
-    @model_validator(mode="after")
-    def _hold_public_validation(self) -> Self:
-        hook = _RESULT_MODEL_HOOK.get()
-        if hook is not None:
-            hook()
-        return self
-
-
-async def _await_result_stage[T](pending: asyncio.Task[T], entered: asyncio.Event) -> None:
-    """Surface an on-loop regression without a blocking test fallback or wall-clock cutoff."""
-    waiting = asyncio.create_task(entered.wait())
-    try:
-        await asyncio.wait((pending, waiting), return_when=asyncio.FIRST_COMPLETED)
-        if not entered.is_set():
-            pending.result()
-            pytest.fail("the registered result stage did not enter its held body")
-    finally:
-        waiting.cancel()
-        with suppress(asyncio.CancelledError):
-            await waiting
-
-
-@pytest.mark.parametrize("stage", ["projector", "validation"])
-@pytest.mark.parametrize("cancel", [False, True])
-def test_result_projection_yields_and_settles_inside_the_callers_guard(
-    tmp_path: Path, stage: str, cancel: bool
-) -> None:
-    """Pure public transformation preserves context and cannot outlive the caller's authority guard."""
-    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-
-        async def resolve() -> None:
-            loop = asyncio.get_running_loop()
-            loop_thread = threading.get_ident()
-            entered, progressed = asyncio.Event(), asyncio.Event()
-            resume = threading.Event()
-            events: list[str] = []
-            validations = 0
-
-            def hold() -> None:
-                assert threading.get_ident() != loop_thread
-                assert _RESULT_PROJECTION_IDENTITY.get() == "original-result-context"
-                loop.call_soon_threadsafe(entered.set)
-                resume.wait()
-                events.append("result-body-settled")
-
-            def validate() -> None:
-                nonlocal validations
-                validations += 1
-                assert threading.get_ident() != loop_thread
-                assert _RESULT_PROJECTION_IDENTITY.get() == "original-result-context"
-                if stage == "validation" and validations == 2:
-                    hold()
-
-            def project(result: BaseModel, receipt: OperationTerminalReceipt) -> BaseModel:
-                assert receipt.condition is OperationTerminalCondition.SUCCEEDED
-                if stage == "projector":
-                    hold()
-                return HeldPublicProjectionResult(result_code=ProjectionResult.model_validate(result).result_code)
-
-            root = tmp_path / "held-result-durable"
-            registry = _registry(result_projector=project, result_schema_type=HeldPublicProjectionResult)
-            repository = OperationJournalRepository(storage_root=root)
-            operands = operation_secure_reference_repository(objects=profile.repository)
-            result_ref = await operands.put(ProjectionResult(result_code="held.safe.result"), written_at=_NOW)
-            terminal = _terminal_snapshot(registry, result_ref=result_ref)
-            lease = _lease()
-            observed = await OperationLeaseFilesystemRepository(storage_root=root).acquire(lease, observed_at=_NOW)
-            assert observed.current == lease
-            await repository.create(_running_snapshot(registry), lease=lease)
-            await repository.commit_settlement(terminal, expected_revision=0, lease=lease)
-            contract = registry.lookup_public_contract(_DEFINITION_ID)
-            assert contract.result_schema is not None
-            request = OperationResultProjectionRequestV1(
-                operation_id=_OPERATION_ID,
-                terminal_revision=terminal.revision,
-                definition_contract_digest=contract.definition_contract_digest,
-                result_schema=contract.result_schema,
-            )
-            service = OperationResultProjectionService(reader=repository, registry=registry, operands=operands)
-
-            @asynccontextmanager
-            async def caller_guard() -> AsyncGenerator[None]:
-                events.append("authority-held")
-                try:
-                    yield
-                finally:
-                    events.append("authority-released")
-
-            async def guarded_result() -> OperationResultProjectionSuccessV1[HeldPublicProjectionResult]:
-                async with caller_guard():
-                    result = await service.resolve(request, HeldPublicProjectionResult)
-                    assert not isinstance(result, OperationResultProjectionRefusalV1)
-                    assert isinstance(result, OperationResultProjectionSuccessV1)
-                    return result
-
-            async def control() -> None:
-                assert entered.is_set() and not resume.is_set()
-                progressed.set()
-
-            identity = _RESULT_PROJECTION_IDENTITY.set("original-result-context")
-            hook = _RESULT_MODEL_HOOK.set(validate)
-            pending = asyncio.create_task(guarded_result())
-            try:
-                await _await_result_stage(pending, entered)
-                await asyncio.create_task(control())
-                assert progressed.is_set() and not pending.done()
-                if cancel:
-                    pending.cancel()
-                    await asyncio.sleep(0)
-                    pending.cancel()
-                    await asyncio.sleep(0)
-                    assert not pending.done() and events == ["authority-held"]
-                resume.set()
-                if cancel:
-                    with pytest.raises(asyncio.CancelledError):
-                        await pending
-                else:
-                    result = await pending
-                    assert result.projection.result_code == "held.safe.result"
-                    assert result.result_schema == contract.result_schema
-                    assert result.definition_contract_digest == contract.definition_contract_digest
-                assert validations >= 2
-                assert events == ["authority-held", "result-body-settled", "authority-released"]
-            finally:
-                resume.set()
-                _RESULT_MODEL_HOOK.reset(hook)
-                _RESULT_PROJECTION_IDENTITY.reset(identity)
-                if not pending.done():
-                    with suppress(asyncio.CancelledError):
-                        await pending
-
-        asyncio.run(resolve())
