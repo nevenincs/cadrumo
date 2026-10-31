@@ -31,6 +31,7 @@ def words_by_language(value: str, locale: str = "en") -> dict[str, set[str]]:
         ("Google Sheet", "Sheet"),
         ("Google Sheets", "Sheets"),
         ("Apple silicon", "silicon"),
+        ("Apache License", "License"),
     ],
 )
 @pytest.mark.parametrize("locale", ["ca", "es", "hu"])
@@ -47,8 +48,36 @@ def test_complete_standard_names_keep_dictionary_ownership_and_adjacent_typos(
 
 @pytest.mark.parametrize("locale", ["ca", "es", "hu"])
 def test_standard_name_mutations_and_unpaired_product_words_stay_local(locale: str) -> None:
-    for value in ("hash-based message authentlcation code", "Google Cloudd", "Apple siliccon", "Cloud"):
+    for value in (
+        "hash-based message authentlcation code",
+        "Google Cloudd",
+        "Apple siliccon",
+        "Apache Licensse",
+        "Cloud",
+    ):
         assert "en" not in words_by_language(value, locale)
+
+
+@pytest.mark.parametrize("locale", ["ca", "en", "hu"])
+@pytest.mark.parametrize(
+    "name,part",
+    [
+        ("Dirección Electrónica Habilitada Única", "Dirección"),
+        ("Impuesto sobre la Renta de las Personas Físicas", "Físicas"),
+        ("Impuesto sobre el Valor Añadido", "Añadido"),
+        ("**Mis notificaciones**", "notificaciones"),
+    ],
+)
+def test_official_spanish_names_are_checked_as_complete_phrases(locale: str, name: str, part: str) -> None:
+    result = words_by_language(name + " misspellledd", locale)
+    assert part in result["es"]
+    assert "misspellledd" in result[locale]
+    assert part + "x" in words_by_language(name.replace(part, part + "x"), locale)[locale]
+    assert "es" not in words_by_language('<span lang="ca">' + name + "</span>", "hu")
+
+
+def test_plain_notifications_are_not_assumed_to_be_the_official_label() -> None:
+    assert "es" not in words_by_language("Mis notificaciones errror", "ca")
 
 
 @pytest.mark.parametrize(

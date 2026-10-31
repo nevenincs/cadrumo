@@ -150,6 +150,9 @@ TRANSLATION_LEGAL_TITLE_RE: Final[re.Pattern[str]] = re.compile(
 
 TRANSLATION_SPANISH_AUTHORITY_RE: Final[re.Pattern[str]] = re.compile(
     r"\b(?:Agencia (?:Estatal de Administración )?Tributaria|Boletín Oficial del Estado|"
+    # Complete official DEHú service name; its individual words stay local.
+    # https://administracion.gob.es/lectura-facil/notificaciones
+    r"Dirección Electrónica Habilitada Única|"
     # Retained proper names in profile adoption guidance and the ROI, REDEME
     # and REBECA guides. Only the complete names change dictionary ownership.
     r"Registro (?:Civil|de Operadores Intracomunitarios|de Devolución Mensual|"
@@ -164,6 +167,12 @@ TRANSLATION_SPANISH_AUTHORITY_RE: Final[re.Pattern[str]] = re.compile(
 # Owners: _data/terminology/concepts and the bienes de inversión register.
 TRANSLATION_SPANISH_TAX_TERM_RE: Final[re.Pattern[str]] = re.compile(
     r"(?<![\w'’-])['‘’]?(?:bien(?:es)? de inversión|recargo de equivalencia|grupo de entidades de IVA|"
+    # Full official tax names retained in the bilingual lifecycle guides.
+    # https://sede.agenciatributaria.gob.es/Sede/iva/novedades-iva/novedades-normativa-2025/orden-hac-1425-2025-9-diciembre.html
+    r"Impuesto sobre la Renta de las Personas Físicas|Impuesto sobre el Valor Añadido|"
+    # This is the exact bold navigation label in the notifications guide.
+    # https://sede.agenciatributaria.gob.es/Sede/mi-area-personal.html
+    r"(?<=\*\*)Mis notificaciones(?=\*\*)|"
     # Retained in the capital-goods labels and bilingual home-office notes.
     # Route the whole phrase; its words still go through the Spanish dictionary.
     r"cuota soportada|regla de prorrata|prorrata especial|datos censales|"
