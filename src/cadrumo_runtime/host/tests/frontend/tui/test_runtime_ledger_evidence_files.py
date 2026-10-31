@@ -97,7 +97,6 @@ from cadrumo.application.ledger.evidence_read_operation import (
 from cadrumo.application.ledger.evidence_review_summaries import LedgerEvidenceReviewSummaryProjection
 from cadrumo.application.ledger.extraction_draft_repository import ExtractionDraftRepositoryFactory
 from cadrumo.application.ledger.invoice_evidence_operation_dtos import InvoiceDraftProjectionV1
-from cadrumo.application.ledger.transaction_projection import LedgerTransactionProjection
 from cadrumo.application.operations.error_detail import OperationErrorDetailKind, OperationErrorDetailV1
 from cadrumo.application.operations.registry import (
     OperationRegistry,
@@ -113,6 +112,7 @@ from cadrumo.domain.attachments.enums import AttachmentSource
 from cadrumo.domain.iva.schema import InvoiceKind
 from cadrumo.entrypoints.tui.account import AccountSessionExpiredError
 from cadrumo.entrypoints.tui.ledger.evidence_files_doors import LedgerEvidenceFilesDoorsV1
+from cadrumo.entrypoints.tui.ledger.tests.evidence_files_fixtures import evidence_transaction
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.transport.frontend_client import FrontendClient
 
@@ -243,47 +243,6 @@ def _batch(profile_id: UUID = PROFILE_ID) -> LedgerEvidenceBatchProjection:
     )
 
 
-def _transaction(attachment_ids: tuple[str, ...]) -> LedgerTransactionProjection:
-    return LedgerTransactionProjection(
-        transaction_id=_TRANSACTION_ID,
-        date="2026-03-14",
-        booked_date="2026-03-14",
-        value_date=None,
-        amount="1250.00",
-        currency="EUR",
-        direction="outgoing",
-        counterparty="Suministros Delta SL",
-        description="Material de oficina",
-        business_classification="business",
-        business_pct=None,
-        category_id=None,
-        taxable_base=None,
-        iva_rate=None,
-        iva_amount=None,
-        iva_category=None,
-        counterparty_country=None,
-        counterparty_identification_state=None,
-        irpf_category=None,
-        m210_income_classification=None,
-        usage_ratio_id=None,
-        prorrata_reference=None,
-        purchase_invoice_evidence_id=None,
-        invoice_id=None,
-        attachment_ids=attachment_ids,
-        notes="",
-        lifecycle_state="active",
-        classified_by="manual",
-        classified_at=None,
-        classification_reason="",
-        classification_confidence=None,
-        source_jurisdiction=None,
-        value_in_eur=None,
-        fx_rate=None,
-        created_at=NOW.isoformat(),
-        modified_at=NOW.isoformat(),
-    )
-
-
 def _attachment_result(
     operation_id: LedgerAttachmentOperationId, profile_id: UUID = PROFILE_ID
 ) -> LedgerAttachmentOperationResult:
@@ -294,7 +253,9 @@ def _attachment_result(
         result=LedgerAttachmentProjection(
             profile_id=profile_id,
             operation_id=operation_id,
-            transaction=_transaction((_DIGEST,) if operation_id == LEDGER_ATTACH_OPERATION_DEFINITION_ID else ()),
+            transaction=evidence_transaction(
+                _TRANSACTION_ID, (_DIGEST,) if operation_id == LEDGER_ATTACH_OPERATION_DEFINITION_ID else (), NOW
+            ),
             review_status=LedgerReviewStatus.PENDING,
             bucket_event_ids=(_EVENT_ID,),
         ),

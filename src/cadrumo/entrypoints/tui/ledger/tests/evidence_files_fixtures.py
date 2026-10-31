@@ -81,6 +81,7 @@ from .....application.ledger.invoice_evidence_operation_dtos import (
     InvoiceDraftProjectionV1,
 )
 from .....application.ledger.preconditions import LedgerPreconditionCondition, ledger_no_recovery_verdict
+from .....application.ledger.tests.transaction_projection_support import ledger_transaction_projection
 from .....application.ledger.transaction_projection import LedgerTransactionProjection
 from .....application.operations.public_scalar import PublicDecimal
 from .....application.review.filter import LedgerReviewStatus
@@ -191,44 +192,24 @@ def synthetic_review(
     )
 
 
-def _transaction(transaction_id: str, attachment_ids: tuple[str, ...]) -> LedgerTransactionProjection:
-    return LedgerTransactionProjection(
+def evidence_transaction(
+    transaction_id: str, attachment_ids: tuple[str, ...], at: datetime
+) -> LedgerTransactionProjection:
+    """Return the outgoing office-supplies row the evidence-files screens attach files to."""
+    return ledger_transaction_projection(
         transaction_id=transaction_id,
         date="2026-03-14",
         booked_date="2026-03-14",
-        value_date=None,
         amount="1250.00",
-        currency="EUR",
         direction="outgoing",
         counterparty="Suministros Delta SL",
         description="Material de oficina",
         business_classification="business",
         business_pct=None,
-        category_id=None,
-        taxable_base=None,
-        iva_rate=None,
-        iva_amount=None,
-        iva_category=None,
-        counterparty_country=None,
-        counterparty_identification_state=None,
-        irpf_category=None,
-        m210_income_classification=None,
-        usage_ratio_id=None,
-        prorrata_reference=None,
-        purchase_invoice_evidence_id=None,
-        invoice_id=None,
         attachment_ids=attachment_ids,
-        notes="",
         lifecycle_state="active",
-        classified_by="manual",
-        classified_at=None,
-        classification_reason="",
-        classification_confidence=None,
-        source_jurisdiction=None,
-        value_in_eur=None,
-        fx_rate=None,
-        created_at=_AT.isoformat(),
-        modified_at=_AT.isoformat(),
+        created_at=at.isoformat(),
+        modified_at=at.isoformat(),
     )
 
 
@@ -405,7 +386,7 @@ class MemoryEvidenceFilesStore:
             result=LedgerAttachmentProjection(
                 profile_id=self.profile_id,
                 operation_id=operation_id,
-                transaction=_transaction(transaction_id, attached),
+                transaction=evidence_transaction(transaction_id, attached, _AT),
                 review_status=LedgerReviewStatus.PENDING,
                 bucket_event_ids=(_EVENT_ID,) if changed else (),
             ),
