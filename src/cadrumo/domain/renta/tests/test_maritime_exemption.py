@@ -13,14 +13,20 @@ Expected values are grounded in:
 from __future__ import annotations
 
 from collections.abc import Iterator
+from concurrent.futures import ThreadPoolExecutor
+from dataclasses import dataclass, field
 from datetime import date
 from decimal import Decimal
 
 import pytest
 
-from ...calculations.registry.authority import bundled_indexed_authority
+from ....core.errors.hierarchy import InternalInvariantError
+from ...calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...calculations.registry.bindings import CasillaObservation
 from ...calculations.registry.errors import RegistryValidationError
+from ...calculations.registry.facts.payloads import MappingFactEntry, MappingFactPayload
+from ...calculations.registry.facts.resolution import GovernedFactQuery, ResolvedGovernedFact, ResolvedMappingFact
+from ...calculations.registry.snapshot_globals import SupportedFilingYearsCatalogue
 from ...calculations.registry.tests.legal_inventory import legal_reference_ids
 from ...calculations.registry.tests.published_authority import PublishedGovernedFactSource
 from ..errors import RentaValidationError
@@ -56,6 +62,28 @@ _REBECA_SOURCE_REFS = ("boe-ley-19-1994-art-75-statutory-facts",)
 _AUTHORITY = PublishedGovernedFactSource()
 _FILING_PERIOD = date(2025, 12, 31)
 _DEVENGO_DATE = date(2025, 12, 31)
+
+
+@dataclass(slots=True)
+class _RebecaMappingSource:
+    """Change one registry mapping while retaining the pinned source for other facts."""
+
+    operation: PinnedAuthorityOperation
+    registry: str
+    queries: list[str] = field(default_factory=list)
+
+    def resolve_governed_fact(self, query: GovernedFactQuery) -> ResolvedGovernedFact:
+        self.queries.append(query.fact_id)
+        resolved = self.operation.resolve_governed_fact(query)
+        if query.fact_id != "rebeca-eligible-vessel-registries":
+            return resolved
+        assert isinstance(resolved, ResolvedMappingFact)
+        return resolved.model_copy(
+            update={"payload": MappingFactPayload(entries=(MappingFactEntry(key="registries", value=self.registry),))}
+        )
+
+    def supported_filing_years(self) -> SupportedFilingYearsCatalogue:
+        return self.operation.supported_filing_years()
 
 
 _ART_7P_SELECTOR_CASES = (
@@ -220,6 +248,28 @@ class TestRebecaEligible:
     def test_selector_cases(self) -> None:
         for label, facts, expected in _REBECA_SELECTOR_CASES:
             assert rebeca_eligible(facts) is expected, label
+
+    def test_an_explicit_source_controls_both_selector_and_calculation(self) -> None:
+        with bundled_indexed_authority().operation() as operation:
+            source = _RebecaMappingSource(operation=operation, registry="custom-register")
+            ordinary = MaritimeWorkerFacts(worker_class="trabajador_del_mar", vessel_registry="REBECA")
+            custom = MaritimeWorkerFacts(worker_class="trabajador_del_mar", vessel_registry="custom-register")
+            assert not rebeca_eligible(ordinary, authority=source)
+            assert rebeca_eligible(custom, authority=source)
+            result = calculate_rebeca_exemption(
+                gross_navigation_income=Decimal("1000"), facts=custom, authority=source, devengo_date=_DEVENGO_DATE
+            )
+            assert result.value == Decimal("500")
+            assert source.queries[-2:] == ["rebeca-eligible-vessel-registries", "rebeca-maritime-exemption-fraction"]
+
+    def test_selector_without_an_authority_scope_refuses(self) -> None:
+        facts = MaritimeWorkerFacts(worker_class="trabajador_del_mar", vessel_registry="REBECA")
+        # A fresh thread does not inherit this module's operation fixture.
+        with (
+            ThreadPoolExecutor(max_workers=1) as pool,
+            pytest.raises(InternalInvariantError, match="generation-pinned"),
+        ):
+            pool.submit(rebeca_eligible, facts).result()
 
 
 class TestDa41Eligible:

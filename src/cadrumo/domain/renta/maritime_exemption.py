@@ -124,7 +124,7 @@ def art_7p_eligible(facts: MaritimeWorkerFacts) -> bool:
     return facts.vessel_flag == "foreign" or facts.waters_type == "international"
 
 
-def rebeca_eligible(facts: MaritimeWorkerFacts) -> bool:
+def rebeca_eligible(facts: MaritimeWorkerFacts, *, authority: GovernedFactSource | None = None) -> bool:
     """Return whether the REBECA exemption applies to the worker profile.
 
     A trabajador del mar on a REBECA vessel, a REBECA company vessel in another
@@ -133,7 +133,7 @@ def rebeca_eligible(facts: MaritimeWorkerFacts) -> bool:
     """
     if facts.worker_class != _MARITIME_WORKER_CLASS:
         return False
-    registries = resolve_form_codes(_ELIGIBLE_VESSEL_REGISTRIES_FACT).codes("registries")
+    registries = resolve_form_codes(_ELIGIBLE_VESSEL_REGISTRIES_FACT, authority=authority).codes("registries")
     return facts.vessel_registry in registries
 
 
@@ -202,7 +202,8 @@ def calculate_art_7p_exemption(
     """Calculate the Art. 7.p) exempt amount.
 
     Formula (Ley 35/2006 Art. 7.p) BOE-A-2006-20764; RIRPF art. 6.2 reparto over
-    "el numero total de dias del ano"):
+    "el numero total de dias del ano")::
+
         exempt_amount = min(annual_salary / days_of_year * qualifying_days, cap)
 
     Args:
@@ -249,7 +250,8 @@ def calculate_rebeca_exemption(
 ) -> CasillaObservation:
     """Calculate the REBECA exempt amount.
 
-    Formula (Ley 19/1994 Arts. 73-75 BOE-A-1994-15794):
+    Formula (Ley 19/1994 Arts. 73-75 BOE-A-1994-15794)::
+
         exempt_amount = gross_navigation_income * fraction
 
     Args:
@@ -267,17 +269,21 @@ def calculate_rebeca_exemption(
         RentaValidationError: When eligibility predicate is not satisfied
             or when input values are out of range.
     """
-    if not rebeca_eligible(facts):
-        raise RentaValidationError("rebeca_eligible predicate is False; cannot calculate REBECA exemption")
-    if not gross_navigation_income.is_finite() or gross_navigation_income <= Decimal("0"):
-        raise RentaValidationError("gross_navigation_income must be a positive finite Decimal")
-    fraction, resolved_fraction = _resolve_decimal_fact(
-        authority,
-        fact_id=_REBECA_EXEMPTION_FRACTION_FACT_ID,
-        date_axis=DateAxis.DEVENGO_DATE,
-        effective_date=devengo_date or today_madrid(),
-    )
-    return _exempt_observation(gross_navigation_income * fraction, resolved_fraction)
+
+    def resolve(source: GovernedFactSource) -> CasillaObservation:
+        if not rebeca_eligible(facts, authority=source):
+            raise RentaValidationError("rebeca_eligible predicate is False; cannot calculate REBECA exemption")
+        if not gross_navigation_income.is_finite() or gross_navigation_income <= Decimal("0"):
+            raise RentaValidationError("gross_navigation_income must be a positive finite Decimal")
+        fraction, resolved_fraction = _resolve_decimal_fact(
+            source,
+            fact_id=_REBECA_EXEMPTION_FRACTION_FACT_ID,
+            date_axis=DateAxis.DEVENGO_DATE,
+            effective_date=devengo_date or today_madrid(),
+        )
+        return _exempt_observation(gross_navigation_income * fraction, resolved_fraction)
+
+    return _with_authority(authority, resolve)
 
 
 def guard_da41_inactive(facts: MaritimeWorkerFacts) -> None:

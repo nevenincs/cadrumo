@@ -176,7 +176,7 @@ def resolve_maritime_exemption(
         )
         observations.append(obs)
 
-    if rebeca_eligible(facts):
+    if rebeca_eligible(facts, authority=authority):
         if gross_navigation_income is None:
             raise RentaValidationError(
                 translated_message="application.calculations.maritime_exemption.errors.rebeca_input_required",

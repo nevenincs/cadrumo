@@ -18,7 +18,10 @@ from decimal import Decimal
 import pytest
 
 from ....domain.calculations.registry.authority import bundled_indexed_authority
+from ....domain.calculations.registry.errors import RegistryValidationError
+from ....domain.calculations.registry.facts.resolution import GovernedFactQuery, ResolvedGovernedFact
 from ....domain.calculations.registry.queries import PinnedRegistryQueryService
+from ....domain.calculations.registry.snapshot_globals import SupportedFilingYearsCatalogue
 from ....domain.renta.errors import RentaValidationError
 from ....domain.renta.maritime_exemption import (
     MaritimeExemptionInactiveError,
@@ -65,6 +68,20 @@ def _files_in_no_box(casilla_id: str) -> bool:
         casillas = operation.snapshot("100", filing_year=2025, period="0A").revision.casillas
     (casilla,) = (casilla for casilla in casillas if casilla.id == casilla_id)
     return casilla.internal_only
+
+
+def test_rebeca_selector_uses_the_supplied_authority_and_propagates_its_refusal() -> None:
+    class ExpiredAuthority:
+        def resolve_governed_fact(self, query: GovernedFactQuery) -> ResolvedGovernedFact:
+            assert query.fact_id == "rebeca-eligible-vessel-registries"
+            raise RegistryValidationError("the supplied generation has no current registry mapping")
+
+        def supported_filing_years(self) -> SupportedFilingYearsCatalogue:
+            raise AssertionError("the selector must resolve through the supplied source")
+
+    facts = MaritimeWorkerFacts(worker_class="trabajador_del_mar", vessel_registry="REBECA")
+    with pytest.raises(RegistryValidationError, match="supplied generation"):
+        resolve_maritime_exemption(facts=facts, authority=ExpiredAuthority())
 
 
 class TestResolveMaritimeExemptionArt7p:
