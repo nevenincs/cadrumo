@@ -250,6 +250,34 @@ def _invoice(
     )
 
 
+def _resolve_2025_renta_expenses(secure_objects: SecureObjectRepository):
+    """Resolve the 2025 Renta ledger expense sources over the profile's saved catalogues."""
+    resolver = LedgerRentaGastosEstimacionDirectaAggregationSourceResolver(
+        ports=_renta_ports(
+            transaction_repository=TransactionCatalogueRepository(
+                bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
+            ),
+            invoice_repository=InvoiceCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects),
+        ),
+        prorrata_register_repository=ProrrataRegisterRepository(
+            bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
+        ),
+        usage_ratio_profile_loader=load_usage_ratios,
+        activity_asset_history_repository=ActividadAssetHistoryRepository(
+            bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
+        ),
+    )
+    return resolver.resolve(
+        CalculationSourceContext(
+            bucket_id=SECURE_OBJECTS_BUCKET_ID,
+            modelo="100",
+            filing_year=2025,
+            period=Period.from_year_and_code(2025, "0A"),
+            revision=_m100_2025_renta_expense_revision(),
+        ),
+    )
+
+
 def test_repository_backed_aggregation_loads_persisted_catalogues_and_emits_casilla_values(
     secure_objects: SecureObjectRepository,
 ) -> None:
@@ -337,30 +365,7 @@ def test_renta_filing_aggregation_resolves_registry_bound_inputs(secure_objects:
     tx_repo.save(TransactionCatalogue.from_transactions((transaction,)))
     invoice_repo.save(InvoiceCatalogue())
 
-    revision = _m100_2025_renta_expense_revision()
-    resolution = LedgerRentaGastosEstimacionDirectaAggregationSourceResolver(
-        ports=_renta_ports(
-            transaction_repository=TransactionCatalogueRepository(
-                bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
-            ),
-            invoice_repository=InvoiceCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects),
-        ),
-        prorrata_register_repository=ProrrataRegisterRepository(
-            bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
-        ),
-        usage_ratio_profile_loader=load_usage_ratios,
-        activity_asset_history_repository=ActividadAssetHistoryRepository(
-            bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
-        ),
-    ).resolve(
-        CalculationSourceContext(
-            bucket_id=SECURE_OBJECTS_BUCKET_ID,
-            modelo="100",
-            filing_year=2025,
-            period=Period.from_year_and_code(2025, "0A"),
-            revision=revision,
-        ),
-    )
+    resolution = _resolve_2025_renta_expenses(secure_objects)
     binding_values = resolution.binding_values
 
     assert binding_values["renta-ledger-expense-0199-deductible"] == Decimal("121.00")
@@ -395,30 +400,7 @@ def test_renta_filing_aggregation_routes_office_software_and_marketing_to_m100_e
     tx_repo.save(TransactionCatalogue.from_transactions(transactions))
     invoice_repo.save(InvoiceCatalogue())
 
-    revision = _m100_2025_renta_expense_revision()
-    resolution = LedgerRentaGastosEstimacionDirectaAggregationSourceResolver(
-        ports=_renta_ports(
-            transaction_repository=TransactionCatalogueRepository(
-                bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
-            ),
-            invoice_repository=InvoiceCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects),
-        ),
-        prorrata_register_repository=ProrrataRegisterRepository(
-            bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
-        ),
-        usage_ratio_profile_loader=load_usage_ratios,
-        activity_asset_history_repository=ActividadAssetHistoryRepository(
-            bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
-        ),
-    ).resolve(
-        CalculationSourceContext(
-            bucket_id=SECURE_OBJECTS_BUCKET_ID,
-            modelo="100",
-            filing_year=2025,
-            period=Period.from_year_and_code(2025, "0A"),
-            revision=revision,
-        ),
-    )
+    resolution = _resolve_2025_renta_expenses(secure_objects)
 
     assert resolution.diagnostics == ()
     assert resolution.binding_values["renta-ledger-expense-0199-deductible"] == Decimal("780.00")
@@ -443,30 +425,7 @@ def test_renta_filing_aggregation_loads_usage_ratios_for_dwelling_lease_expenses
         objects=secure_objects,
     )
 
-    revision = _m100_2025_renta_expense_revision()
-    resolution = LedgerRentaGastosEstimacionDirectaAggregationSourceResolver(
-        ports=_renta_ports(
-            transaction_repository=TransactionCatalogueRepository(
-                bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
-            ),
-            invoice_repository=InvoiceCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects),
-        ),
-        prorrata_register_repository=ProrrataRegisterRepository(
-            bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
-        ),
-        usage_ratio_profile_loader=load_usage_ratios,
-        activity_asset_history_repository=ActividadAssetHistoryRepository(
-            bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
-        ),
-    ).resolve(
-        CalculationSourceContext(
-            bucket_id=SECURE_OBJECTS_BUCKET_ID,
-            modelo="100",
-            filing_year=2025,
-            period=Period.from_year_and_code(2025, "0A"),
-            revision=revision,
-        ),
-    )
+    resolution = _resolve_2025_renta_expenses(secure_objects)
 
     assert resolution.diagnostics == ()
     assert resolution.binding_values["renta-ledger-expense-0192-deductible"] == Decimal("60.50")
