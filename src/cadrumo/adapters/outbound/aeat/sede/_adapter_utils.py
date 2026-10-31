@@ -19,6 +19,7 @@ never sees and that the forbidden-verb source scan deliberately permits.
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
+from http import HTTPStatus
 from typing import TYPE_CHECKING, Any, Protocol
 from urllib.parse import urlsplit
 
@@ -415,7 +416,7 @@ def assert_pdf_response(
         JustificanteFetchError: On a non-2xx status, an empty body, or a
             content type whose media type is not ``application/pdf``.
     """
-    if not (200 <= status < 300):
+    if not (HTTPStatus.OK <= status < HTTPStatus.MULTIPLE_CHOICES):
         raise JustificanteFetchError(f"pdf fetch for {subject} returned HTTP {status}")
     if not body:
         raise JustificanteFetchError(f"empty PDF body for {subject}")

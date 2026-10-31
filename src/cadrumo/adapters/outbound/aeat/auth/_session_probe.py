@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import time
 from collections.abc import Awaitable, Callable
+from http import HTTPStatus
 from typing import TYPE_CHECKING
 
 from pydantic import BaseModel
@@ -58,7 +59,7 @@ def _landing_is_authenticated_session(
     is_authenticated_landing: AuthenticatedLandingPredicate,
 ) -> bool:
     """Return ``True`` when the landing is a successful authenticated AEAT page."""
-    if not (landing_url is not None and landing_url) or not (200 <= status_code < 400):
+    if not (landing_url is not None and landing_url) or not (HTTPStatus.OK <= status_code < HTTPStatus.BAD_REQUEST):
         return False
     return is_authenticated_landing(landing_url, target_path)
 

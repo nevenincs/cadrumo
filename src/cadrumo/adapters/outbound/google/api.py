@@ -11,6 +11,7 @@ instead of endpoint-specific ``HttpError`` strings.
 from __future__ import annotations
 
 from enum import StrEnum
+from http import HTTPStatus
 from typing import TYPE_CHECKING, NoReturn, Protocol, cast
 
 from ....application.operator_actions.models import PreconditionVerdict
@@ -265,7 +266,7 @@ def _raise_mapped_google_http_error(exc: Exception, *, action: str) -> None:
         return
     status = google_http_status(exc)
     quota_marker = google_quota_marker(exc)
-    if status == 429 or (status == 403 and quota_marker is not None):
+    if status == HTTPStatus.TOO_MANY_REQUESTS or (status == HTTPStatus.FORBIDDEN and quota_marker is not None):
         raise OutboundStorageQuotaError(
             f"Google {action} exhausted quota (HTTP {status}): {exc}",
             context={"action": action, "status": status, "quota_marker": quota_marker or "HTTP_429"},
@@ -284,7 +285,7 @@ def _raise_mapped_google_http_error(exc: Exception, *, action: str) -> None:
             translated_message="adapters.google.calc_sheets.errors.api_call_refused",
             precondition_verdict=_external_verdict("google.api.permission_denied", action=action, status=status),
         ) from exc
-    if status == 404:
+    if status == HTTPStatus.NOT_FOUND:
         raise OutboundStorageNotFoundError(
             f"Google {action} target not found (HTTP 404): {exc}",
             context={"action": action},

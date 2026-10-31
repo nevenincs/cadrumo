@@ -22,6 +22,7 @@ import contextlib
 import json
 import time
 from collections.abc import Awaitable, Callable
+from http import HTTPStatus
 from typing import TYPE_CHECKING, NoReturn, Protocol, cast
 from urllib.parse import urlsplit
 
@@ -449,13 +450,13 @@ class _ClaveMovilPageFlowMixin(abc.ABC):
                     wait_for_response(
                         lambda candidate: bool(
                             surface.cancelar_clave_movil_path_marker in str(getattr(candidate, "url", ""))
-                            and int(getattr(candidate, "status", 599)) < 400
+                            and int(getattr(candidate, "status", 599)) < HTTPStatus.BAD_REQUEST
                         ),
                         timeout=_DIAGNOSTIC_CAPTURE_TIMEOUT_SECONDS * 1000,
                     ),
                     timeout=_DIAGNOSTIC_CAPTURE_TIMEOUT_SECONDS,
                 )
-                return int(getattr(response, "status", 599)) < 400
+                return int(getattr(response, "status", 599)) < HTTPStatus.BAD_REQUEST
             except (TimeoutError, PlaywrightTimeoutError, PlaywrightError):
                 return False
 

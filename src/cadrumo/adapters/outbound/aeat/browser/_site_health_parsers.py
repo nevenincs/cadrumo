@@ -26,6 +26,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from datetime import UTC, datetime
 from email.utils import parsedate_to_datetime
+from http import HTTPStatus
 
 from .....core.errors.hierarchy import SiteHealthState
 from .....core.time.clock import now
@@ -271,7 +272,7 @@ def parse_waf_challenge(
     if not body_hits:
         return None
     has_correlation = any(marker in lowered for marker in _WAF_CORRELATION_MARKERS)
-    is_403 = http_status == 403
+    is_403 = http_status == HTTPStatus.FORBIDDEN
     blocked_phrase_present = "request blocked" in lowered
     if not (is_403 or (blocked_phrase_present and has_correlation)):
         return None
@@ -350,7 +351,7 @@ def parse_rate_limit_response(
 
 def _is_mantenimiento_rate_limit(http_status: int, html: str, lowered: str) -> bool:
     """Return whether a 503 should yield to the mantenimiento parser."""
-    if http_status != 503:
+    if http_status != HTTPStatus.SERVICE_UNAVAILABLE:
         return False
     title = _extract_title(html, lowered)
     return bool(_matches_mantenimiento(lowered, title))

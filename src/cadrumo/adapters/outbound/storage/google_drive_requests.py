@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from http import HTTPStatus
 from typing import Any
 
 from ....core.google_http_error import google_http_status, google_quota_marker
@@ -19,6 +20,9 @@ from .errors import (
     OutboundStorageUnavailableError,
 )
 
+_STATUS_CODE_END = 600
+"""One past the last status code HTTP defines."""
+
 _FILE_EXTENSION = ".bin"
 
 
@@ -31,7 +35,9 @@ def translate_http_error(error: Exception, *, action: str) -> OutboundStorageErr
     status = google_http_status(error)
     detail = "drive request failed"
     context = {"action": action, "status": str(status) if status is not None else "unknown"}
-    if status == 429 or (status == 403 and google_quota_marker(error) is not None):
+    if status == HTTPStatus.TOO_MANY_REQUESTS or (
+        status == HTTPStatus.FORBIDDEN and google_quota_marker(error) is not None
+    ):
         return OutboundStorageQuotaError(
             detail,
             context=context,
@@ -53,7 +59,7 @@ def translate_http_error(error: Exception, *, action: str) -> OutboundStorageErr
                 outcome=NoRecoveryOutcome.SAFETY,
             ),
         )
-    if status == 404:
+    if status == HTTPStatus.NOT_FOUND:
         return OutboundStorageNotFoundError(
             detail,
             context=context,
@@ -64,7 +70,7 @@ def translate_http_error(error: Exception, *, action: str) -> OutboundStorageErr
                 outcome=NoRecoveryOutcome.OPERATOR_DECISION,
             ),
         )
-    if status == 409:
+    if status == HTTPStatus.CONFLICT:
         return OutboundStorageConflictError(
             detail,
             context=context,
@@ -75,7 +81,7 @@ def translate_http_error(error: Exception, *, action: str) -> OutboundStorageErr
                 outcome=NoRecoveryOutcome.OPERATOR_DECISION,
             ),
         )
-    if status is not None and 500 <= status < 600:
+    if status is not None and HTTPStatus.INTERNAL_SERVER_ERROR <= status < _STATUS_CODE_END:
         return OutboundStorageUnavailableError(
             detail,
             context=context,
