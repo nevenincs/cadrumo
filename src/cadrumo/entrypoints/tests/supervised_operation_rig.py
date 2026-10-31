@@ -14,7 +14,10 @@ from pydantic import BaseModel
 
 from cadrumo.adapters.persistence.operations.journal import OperationJournalRepository
 from cadrumo.adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
-from cadrumo.adapters.persistence.operations.secure_references import operation_secure_reference_repository
+from cadrumo.adapters.persistence.operations.secure_references import (
+    OperationSecureReferenceRepository,
+    operation_secure_reference_repository,
+)
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.application.operations.access_resolution import OperationAccessContext, resolve_operation_access
 from cadrumo.application.operations.frontend_contracts import OperationResultProjectionResultV1
@@ -40,7 +43,7 @@ class SupervisedOperation(NamedTuple):
 
     journal: OperationJournalRepository
     leases: OperationLeaseFilesystemRepository
-    operands: object
+    operands: OperationSecureReferenceRepository
     supervisor: OperationSupervisor
     result_service: OperationResultProjectionService
 

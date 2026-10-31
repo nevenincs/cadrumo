@@ -94,7 +94,7 @@ def _create_profile(*, activity_start_date: str | None = None) -> None:
     close_active_bucket_session()
 
 
-def _invoke(arguments: list[str]):
+def _invoke(arguments: list[str]) -> Result:
     fixture = _NATIVE_FIXTURE.get()
     assert fixture.label == _LABEL
     close_active_bucket_session()
@@ -123,6 +123,7 @@ def _create_calculated_130_unit() -> tuple[str, Result]:
     )  # fmt: skip
     assert created.exit_code == 0
     work_unit_id = _payload(created.output)["work_unit_id"]
+    assert isinstance(work_unit_id, str)
 
     calculated = _invoke(
         [
@@ -201,7 +202,7 @@ def test_pipeline_shows_filed_modelo_readiness_row_and_reports_ready() -> None:
     is honestly ``ready``."""
 
     _create_profile(activity_start_date="2025-10-01")
-    work_unit_id, calculated = _create_calculated_130_unit()
+    work_unit_id, _calculated = _create_calculated_130_unit()
 
     verified = _invoke(
         [
@@ -249,7 +250,7 @@ def test_pipeline_calculated_but_unverified_unit_is_not_ready() -> None:
     reports the ``calculated`` state and keeps the pipeline unready."""
 
     _create_profile(activity_start_date="2025-10-01")
-    work_unit_id, calculated = _create_calculated_130_unit()
+    work_unit_id, _calculated = _create_calculated_130_unit()
 
     result = _invoke(
         ["--format", "json", "app", "overview", "pipeline", "--year", "2025", "--period", "4T"],

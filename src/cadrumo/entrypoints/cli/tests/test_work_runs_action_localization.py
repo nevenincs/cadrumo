@@ -345,6 +345,7 @@ def _bool_or_violations(name: str, node: ast.BoolOp) -> list[str]:
 
 
 def _constant_violations(name: str, node: ast.Constant) -> list[str]:
+    assert isinstance(node.value, str)
     violations: list[str] = []
     if node.value == "next_action":
         violations.append(f"{name}:{node.lineno}:next_action field")

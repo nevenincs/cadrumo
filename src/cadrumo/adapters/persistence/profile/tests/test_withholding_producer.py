@@ -13,6 +13,7 @@ from pydantic import ValidationError
 from cadrumo.adapters.persistence.profile.percepciones_observations import PercepcionObservationRepositoryAdapter
 from cadrumo.adapters.persistence.profile.retencion_observations import RetencionObservationRepositoryAdapter
 from cadrumo.adapters.persistence.profile.withholding_observation_workflow import WithholdingObservationWorkflowAdapter
+from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.aggregation.m193_phase_materialization import (
     Modelo193DisclosurePhase,
@@ -66,9 +67,7 @@ _PROFESSIONAL_SCHEME = RetencionScheme("actividades_profesionales")
 _CAPITAL_SCHEME = RetencionScheme("intereses")
 
 
-def _producer_for(objects: object) -> tuple[WithholdingProducer, WithholdingObservationService]:
-    from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-
+def _producer_for(objects: SecureObjectRepository) -> tuple[WithholdingProducer, WithholdingObservationService]:
     assert isinstance(objects, SecureObjectRepository)
     service = WithholdingObservationService(
         WithholdingObservationWorkflowAdapter(
@@ -344,7 +343,7 @@ def test_professional_payment_producer_reopens_and_feeds_pinned_m111_resolver(tm
 
 
 def _capture_unpaid_capital_and_reopen(
-    repository: object,
+    repository: SecureObjectRepository,
 ) -> tuple[WithholdingEvidenceCaptureResult, WithholdingProducer, WithholdingObservationService]:
     """Capture the unpaid exigible capital accrual, then reopen the producer and read it back as pending."""
     producer, _service = _producer_for(repository)
@@ -428,7 +427,7 @@ def _settle_capital_later(
 
 
 def _assert_settlement_adds_no_second_123_liability(
-    repository: object, unpaid: WithholdingEvidenceCaptureResult
+    repository: SecureObjectRepository, unpaid: WithholdingEvidenceCaptureResult
 ) -> None:
     _after_reopen_producer, after_reopen_service = _producer_for(repository)
     persisted_after_settlement = RetencionObservationRepositoryAdapter(objects=repository).load_observations(

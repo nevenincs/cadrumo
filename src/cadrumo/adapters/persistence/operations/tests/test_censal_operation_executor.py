@@ -242,6 +242,8 @@ async def apply_pending(
     responded_at: datetime = NOW,
 ) -> None:
     """Answer the pending review with an apply response that echoes its digests."""
+    assert pending.baseline_digest is not None
+    assert pending.proposed_effect_digest is not None
     await supervisor.respond(
         OperationApplyResponse(
             interaction_id=pending.request.interaction_id,

@@ -374,6 +374,7 @@ def _assert_dispose(
 ) -> None:
     """Check the recorded disposal."""
     assert isinstance(payload, ActivityAssetDisposeRequest)
+    assert isinstance(projection, ActivityAssetDisposeProjection)
     assert projection.history is not None
     assert projection.history.to_domain() == after
     recorded = after.revisions[-1].disposal
@@ -390,6 +391,7 @@ def _assert_disposal_calculate(
     operation: PinnedAuthorityOperation,
 ) -> None:
     """Check the disposal calculation figures."""
+    assert isinstance(projection, ActivityAssetDisposalCalculateProjection)
     assert after == before
     assert projection.calculation is not None
     # 250.00 received, 10.00 of costs: the seeded element's cost of 300.00 has no claim

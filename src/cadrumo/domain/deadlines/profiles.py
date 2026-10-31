@@ -650,6 +650,8 @@ def _parse_group_member_roster_key(key: str) -> tuple[str | None, int | None, st
                 return modelo, int(year), token
             case [year, token] if year.isdigit():
                 return Modelo("322").value, int(year), token
+            case _:
+                continue
     return None, None, None
 
 

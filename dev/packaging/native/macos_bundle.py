@@ -198,7 +198,14 @@ def _ready_report(line: bytes) -> dict[str, object] | None:
         ready = json.loads(line)
     except ValueError:
         return None
-    return ready if isinstance(ready, dict) and ready.get("kind") == "runtime_ready" else None
+    if not isinstance(ready, dict) or ready.get("kind") != "runtime_ready":
+        return None
+    report: dict[str, object] = {}
+    for key, value in ready.items():
+        if not isinstance(key, str):
+            return None
+        report[key] = value
+    return report
 
 
 async def _serve_until_ready(main_executable: Path, root: Path) -> str:

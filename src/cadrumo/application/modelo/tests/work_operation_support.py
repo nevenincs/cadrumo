@@ -53,8 +53,8 @@ class GuardEvents:
         raise GuardPhaseReachedError(phase)
 
 
-def guarded_executor_context(
-    request: OperationRequest[BaseModel],
+def guarded_executor_context[Payload: BaseModel](
+    request: OperationRequest[Payload],
     *,
     definition_id: str | None = None,
     subject_ref: str | None = None,

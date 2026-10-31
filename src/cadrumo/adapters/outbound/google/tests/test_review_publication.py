@@ -1,7 +1,7 @@
 """New publications, literal text, retained failures and preservation of external notes."""
 
 from asyncio import CancelledError
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -50,7 +50,7 @@ class _PublicationWorld:
 
 
 @contextmanager
-def _publication_world(tmp_path: Path, failure_case: str) -> Iterator[_PublicationWorld]:
+def _publication_world(tmp_path: Path, failure_case: str) -> Generator[_PublicationWorld]:
     """Open a real profile with Drive and Sheets endpoints and one injected failure (or none) armed."""
     snapshot = review_snapshot(amount="99.75")
     profile_id = uuid4()

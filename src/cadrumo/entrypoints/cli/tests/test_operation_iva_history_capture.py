@@ -100,7 +100,9 @@ def test_history_capture_without_a_named_root_leaves_the_default_to_the_worker(
         cast(typer.Context, cast(object, None)), year_from=2023, year_to=2025, output_root=None
     )
 
-    assert submitted[0][0].output_root is None
+    request = submitted[0][0]
+    assert isinstance(request, IvaWalletHistoryCaptureRequest)
+    assert request.output_root is None
     assert read.projection.output_root == str(_OUTPUT_ROOT)
 
 

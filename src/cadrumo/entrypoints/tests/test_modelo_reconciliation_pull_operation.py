@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Sequence
+from collections.abc import Mapping
 from datetime import UTC, datetime
 from decimal import Decimal
 from functools import partial
@@ -174,8 +174,8 @@ def _assert_history_and_atomic_write(
     history: tuple[ModeloReconciliationHistoryEntry, ...],
     before_records: tuple[ModeloReconciliationRecord, ...],
     after_records: tuple[ModeloReconciliationRecord, ...],
-    before_events: Sequence[BucketEvent],
-    after_events: Sequence[BucketEvent],
+    before_events: Mapping[str, BucketEvent],
+    after_events: Mapping[str, BucketEvent],
 ) -> None:
     assert history[-1].calculation_revision_id == projection.calculation_revision_id
     assert after_records[-1].calculation_revision_id == projection.calculation_revision_id

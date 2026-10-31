@@ -51,8 +51,16 @@ def _modelos_with_projection_fields() -> dict[str, int]:
 def _dispatched_modelos(source: str) -> set[str]:
     """Return the modelos the ``_projection_plan_for_layout`` body in ``source`` dispatches on."""
     body = source.partition("def _projection_plan_for_layout(")[2].partition("\ndef ")[0]
-    named = {enum_member or constructed for enum_member, constructed in _DISPATCHED_MODELO.findall(body)}
-    return named | {form_for_role(role) for role in _DISPATCHED_ROLE.findall(body)}
+    named: set[str] = set()
+    for match in _DISPATCHED_MODELO.finditer(body):
+        token = match.group(1) or match.group(2)
+        assert isinstance(token, str)
+        named.add(token)
+    for match in _DISPATCHED_ROLE.finditer(body):
+        role = match.group(1)
+        assert isinstance(role, str)
+        named.add(form_for_role(role))
+    return named
 
 
 def _modelos_with_a_plan_builder() -> set[str]:

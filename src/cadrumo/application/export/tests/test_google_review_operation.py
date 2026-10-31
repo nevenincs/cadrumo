@@ -46,6 +46,7 @@ from ..google_review_operation_contracts import (
 from ..google_review_operation_executor import GoogleReviewExecutor
 from ..managed_artifact_ports import ArtifactCreationReceipt, ManagedArtifactKind
 from ..publication_receipt import PublicationState
+from ..review_snapshot import ReviewSnapshot
 from .review_publication_fixture import PROFILE_ID, acceptance_publication, acceptance_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -154,7 +155,7 @@ class _ReviewPublisher:
         self.publication = publication
         self.root = publication.root
         self.monkeypatch = monkeypatch
-        self.calls: list = []
+        self.calls: list[ReviewSnapshot] = []
         self.retained = None
 
     def __call__(self, selected, receipt, authorization, *, commit, before_handoff, acknowledged):

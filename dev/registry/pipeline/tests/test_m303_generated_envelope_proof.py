@@ -22,10 +22,7 @@ from cadrumo.application.filing.export import render_filing_envelope
 from cadrumo.application.filing.export_envelope import FilingEnvelopeRenderRequest, FilingEnvelopeRenderResult
 from cadrumo.application.filing.projection import project_filing_record
 from cadrumo.application.filing.tests import test_m303_did_account_wire_isolated_authority as m303_did
-from cadrumo.application.filing.tests.producer_snapshot_support import (
-    m303_bienes_inversion_parameters,
-    m303_exonerado_390_evidence,
-)
+from cadrumo.application.filing.tests.producer_snapshot_support import m303_exonerado_390_evidence
 from cadrumo.core.filing_projection_ref import (
     M303DifferentiatedDeductionProjectionRef,
     M303Exonerado390ActivityProjectionRef,
@@ -42,6 +39,7 @@ from cadrumo.core.prorrata_register import (
 )
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.core.result_disposition import ResultDisposition
+from cadrumo.domain.bienes_inversion.tests.explicit_parameters import params_for
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
@@ -221,7 +219,7 @@ def _m303_prorrata_and_differentiated_producer(*, snapshot, catalogues, operatio
     # From the module that owns the bundle rather than rebuilt here; the
     # projection refuses one resolved for another filing year, so it is asked
     # for THIS year, and the regularisation result below reuses its provenance.
-    bienes_parameters = m303_bienes_inversion_parameters(filing_year)
+    bienes_parameters = params_for(filing_year)
     facts = m303_did.M303FilingFacts(
         bienes_parameters=bienes_parameters,
         joint_return_elected=False,

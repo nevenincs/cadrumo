@@ -14,4 +14,6 @@ def parse_receipt_path() -> Path:
     parser.add_argument("--profile-label")
     parser.add_argument("--journey")
     parser.add_argument("--profile-bootstrap")
-    return parser.parse_args().receipt
+    receipt = parser.parse_args().receipt
+    assert isinstance(receipt, Path)
+    return receipt

@@ -43,7 +43,11 @@ def _wheel_declaration(root: Path) -> dict[str, object]:
     document = parse_toml((root / "pyproject.toml").read_text(encoding="utf-8"))
     declaration = document["tool"]["hatch"]["build"]["targets"]["wheel"]
     assert isinstance(declaration, dict)
-    return declaration
+    fields: dict[str, object] = {}
+    for key, value in declaration.items():
+        assert isinstance(key, str)
+        fields[key] = value
+    return fields
 
 
 def _selected(builder: WheelBuilder | SdistBuilder) -> frozenset[str]:

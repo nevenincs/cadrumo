@@ -6,7 +6,7 @@ import json
 import socket
 import struct
 import sys
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
 from typing import Literal
@@ -30,7 +30,7 @@ from cadrumo_agent_service.providers.persistence.store import (
 )
 from cadrumo_agent_service.service import AgentService
 from cadrumo_client.contracts.service_access import ServiceConnected
-from cadrumo_client.transport.frontend_client import FrontendClient
+from cadrumo_client.transport.service_client import InstalledServiceClient
 from cadrumo_runtime.host.tests.test_service_records import service_record_runtime
 
 from .provider_catalog_support import (
@@ -236,7 +236,7 @@ def _model_list(answer: dict[str, JsonValue]) -> dict[str, JsonValue]:
 @contextmanager
 def _admitted_admin_server(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> Iterator[tuple[FrontendClient, AdminServer, bytearray]]:
+) -> Generator[tuple[InstalledServiceClient, AdminServer, bytearray]]:
     """An admitted, claimed agent service behind its parent-authority admin server, torn down on exit."""
     image, _record = stand_in_agent_image(tmp_path, catalog_document=synthetic_document())
     monkeypatch.setenv(PACKAGE_AGENT_VARIABLE, str(image))
