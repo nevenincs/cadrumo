@@ -42,6 +42,10 @@ REVIEWED_LOCALE_SPELLINGS: dict[str, frozenset[str]] = {
             "Akrotiri",
             "Dhekelia",
             "Balears",
+            # AEAT's exact names for a declaration box and a Renta draft:
+            # https://sede.agenciatributaria.gob.es/Sede/casilla.shtml
+            "casilla",
+            "borrador",
             # A redaction can also be an edited version of a text:
             # https://interparestrust.org/terminology/term/redaction
             "redaction",
@@ -55,6 +59,13 @@ REVIEWED_LOCALE_SPELLINGS: dict[str, frozenset[str]] = {
             "recoverability",
             "reachability",
             "decrypts",
+            # Exact forms used in the referenced technical documentation:
+            # https://learn.microsoft.com/en-us/windows/win32/lwef/-search-2x-wds-fromcommandline
+            # https://learn.microsoft.com/en-us/biztalk/core/orchestration-dehydration-and-rehydration
+            # https://learn.microsoft.com/en-us/visualstudio/data-tools/typed-vs-untyped-datasets
+            "rescans",
+            "rehydration",
+            "untyped",
             # Exact forms attested in Microsoft documentation, the IRS and
             # European Commission tax guidance, and the cited dictionaries:
             # https://learn.microsoft.com/en-us/dynamics365/customer-insights/journeys/real-time-marketing-form-prefill

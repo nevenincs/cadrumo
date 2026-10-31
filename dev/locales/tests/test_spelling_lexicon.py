@@ -39,6 +39,12 @@ def test_english_redaction_version_terms_are_exact() -> None:
     assert not is_project_spelling("en", "redactionss")
 
 
+def test_english_citation_retains_exact_aeat_terms_and_possessives() -> None:
+    for word in ("casilla", "casilla's", "borrador", "borrador's"):
+        assert is_project_spelling("en", word)
+        assert not is_project_spelling("en", word + "x")
+
+
 def test_identifier_labels_are_exact_shared_technical_terms() -> None:
     for locale in ("ca", "en", "es", "hu"):
         for form in ("id", "Id", "ids", "Ids", "IDs"):
@@ -1792,7 +1798,7 @@ def test_reviewed_technical_nouns_keep_bounded_plural_and_case() -> None:
     assert is_project_spelling("en", "ZIPs")
     assert is_project_spelling("en", "UUIDs")
     assert is_project_spelling("en", "uploadable")
-    for word in ("untagged", "recoverability", "reachability", "decrypts"):
+    for word in ("untagged", "recoverability", "reachability", "decrypts", "rescans", "rehydration", "untyped"):
         assert is_project_spelling("en", word)
         assert not is_project_spelling("en", word + "x")
     for typo in ("ZIPss", "zipS", "UUIDss", "UuidS", "uploadible"):
