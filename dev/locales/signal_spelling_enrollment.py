@@ -173,6 +173,19 @@ _LOCALE_SPELLINGS: dict[str, frozenset[str]] = {
             "loopback",
             # Authored documentation uses the valid US English spelling too.
             "behavior",
+            # Existing English prose also uses these valid spelling variants:
+            # advisor in disclaimer/filing guidance; adapter(s) in architecture
+            # and service help; artifact in authority/API docs; amortization
+            # and formalization/formalized in legal notes; and proration in
+            # Modelo diagnostics. Keep only the observed lowercase forms.
+            "advisor",
+            "adapter",
+            "adapters",
+            "artifact",
+            "amortization",
+            "proration",
+            "formalization",
+            "formalized",
             # The English catalogue and authored docs also use these exact US
             # forms, absent from the pinned British dictionary: common.yml's
             # window actions, application.yml's synchronization/finalization
