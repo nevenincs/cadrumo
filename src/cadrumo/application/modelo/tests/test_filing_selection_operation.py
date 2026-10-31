@@ -18,14 +18,10 @@ from ....core.operations import OperationEffect, profile_operation_subject
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.modelos.filing_record import (
-    AeatConfirmationState,
-    FilingDeclarationKind,
-    FilingOrigin,
     ModeloRecord,
     ModeloRecordCatalogue,
-    derive_filing_record_id,
 )
-from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, WorkUnitState, derive_work_unit_id
+from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...operations.models import OperationRequest
 from ...operations.registry import OperationFrontendProjection, OperationRegistry
@@ -46,6 +42,7 @@ from ..filing_selection_operation import (
 )
 from ..metadata_projection import ModeloWorkMetadataSnapshot
 from ..verification_repository_ports import VerificationRepositoryBundle
+from .filing_source_support import filing_source
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -58,46 +55,9 @@ _ACTOR = "gestoria source"
 
 
 def _source() -> tuple[WorkUnit, ModeloRecord]:
-    """Build a valid filing receipt whose profile and period match its unit."""
-    period = Period.from_year_and_code(2026, "1T")
-    unit_id = derive_work_unit_id(
-        bucket_id=str(_PROFILE), modelo="303", filing_year=2026, period=period, revision_id="test-revision"
+    return filing_source(
+        profile_id=_PROFILE, calculation_revision_id=_CALCULATION_REVISION_ID, filed_by=_ACTOR, now=_NOW
     )
-    filing_id = derive_filing_record_id(
-        work_unit_id=unit_id,
-        calculation_revision_id=_CALCULATION_REVISION_ID,
-        filed_by=_ACTOR,
-    )
-    unit = WorkUnit(
-        work_unit_id=unit_id,
-        bucket_id=str(_PROFILE),
-        modelo="303",
-        filing_year=2026,
-        period=period,
-        revision_id="test-revision",
-        name="First-quarter return",
-        created_at=_NOW,
-        updated_at=_NOW,
-        state=WorkUnitState.BORRADOR,
-        current_calculation_revision_id=_CALCULATION_REVISION_ID,
-        filed_calculation_revision_id=_CALCULATION_REVISION_ID,
-        current_filing_record_id=filing_id,
-    )
-    record = ModeloRecord(
-        filing_record_id=filing_id,
-        work_unit_id=unit_id,
-        calculation_revision_id=_CALCULATION_REVISION_ID,
-        bucket_id=str(_PROFILE),
-        modelo="303",
-        filing_year=2026,
-        period=period,
-        filed_at=_NOW,
-        filed_by=_ACTOR,
-        origin=FilingOrigin.LOCAL,
-        confirmation=AeatConfirmationState.PENDIENTE,
-        declaration_kind=FilingDeclarationKind.ORIGINAL,
-    )
-    return unit, record
 
 
 class _Repository:
