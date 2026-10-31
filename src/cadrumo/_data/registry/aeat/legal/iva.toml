@@ -2187,7 +2187,7 @@ Nacional de Actividades Económicas (CNAE) cuyos regímenes de deducción difier
 consideran distintos cuando los porcentajes de deducción del art 104 difieran en mas de 50 PUNTOS \
 PORCENTUALES respecto de la actividad principal. Letra b': actividades acogidas a los regímenes \
 especiales simplificado, agricultura/ganaderia/pesca, oro de inversion o recargo de equivalencia. \
-Letras c'/d': arrendamiento financiero y cesion de creditos/prestamos (salvo factoring). La \
+Letras c'/d': arrendamiento financiero y cesión de creditos/prestamos (salvo factoring). La \
 particion del contribuyente en sectores diferenciados es un juicio legal (que grupos CNAE, si \
 divergen >50pp, si hay régimen especial) - operator-declared, nunca inferido del ledger."""
 required_text = [
@@ -2429,7 +2429,7 @@ effective_from = 1993-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-15
 reviewed_by = "operator"
-notes = "Articulo 163 vicies LIVA: obligaciones formales del régimen especial MOSS exterior - declaración de inicio/cese, presentación de declaraciones trimestrales, ingreso por el total, llevanza del registro, conservacion durante diez anos, e idioma de las declaraciones."
+notes = "Articulo 163 vicies LIVA: obligaciones formales del régimen especial MOSS exterior - declaración de inicio/cese, presentación de declaraciones trimestrales, ingreso por el total, llevanza del registro, conservación durante diez anos, e idioma de las declaraciones."
 required_text = [
     "Uno. Los empresarios o profesionales no establecidos en la Comunidad que se acojan a este régimen especial no podrán deducir en la",
     "No obstante lo anterior, dichos empresarios o profesionales acogidos a este régimen especial tendrán derecho a la devolución de la",
@@ -2690,7 +2690,7 @@ effective_from = 2017-07-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-06-28
 reviewed_by = "agent-review"
-notes = "Real Decreto 596/2016: moderniza la gestion del IVA e introduce la llevanza de libros registro a través de la Sede electrónica de la AEAT mediante el suministro electrónico de registros de facturación."
+notes = "Real Decreto 596/2016: moderniza la gestión del IVA e introduce la llevanza de libros registro a través de la Sede electrónica de la AEAT mediante el suministro electrónico de registros de facturación."
 required_text = [
     "Sede electrónica de la Agencia Estatal de la Administración Tributaria",
     "suministro electrónico de los registros de facturación",
@@ -2865,7 +2865,7 @@ effective_from = 2014-01-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-06
 reviewed_by = "agent-review"
-notes = "Articulo 163 undecies LIVA: opcion y condiciones para aplicar el régimen especial del criterio de caja."
+notes = "Articulo 163 undecies LIVA: opción y condiciones para aplicar el régimen especial del criterio de caja."
 required_text = [
     "Artículo 163 undecies. Condiciones para la aplicación del régimen especial del criterio de caja.",
     "opten por su aplicación",
@@ -2923,7 +2923,7 @@ effective_from = 2014-01-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-06
 reviewed_by = "agent-review"
-notes = "Articulo 163 quaterdecies LIVA: efectos de renuncia o exclusion del régimen especial del criterio de caja sobre operaciones efectuadas durante su vigencia."
+notes = "Articulo 163 quaterdecies LIVA: efectos de renuncia o exclusión del régimen especial del criterio de caja sobre operaciones efectuadas durante su vigencia."
 required_text = [
     "Artículo 163 quaterdecies. Efectos de la renuncia o exclusión del régimen especial del criterio de caja.",
     "operaciones efectuadas durante su vigencia",
@@ -3101,7 +3101,7 @@ aceite de oliva; recargo 0,62 % y 0 % respectivamente. Del 1 de octubre al 31 de
 7,5 % y 2 %; recargo 1 % y 0,26 %. ALCANCE. Esta entrada cubre solo lo que fija el articulo 1. El \
 articulo 2 del mismo real decreto-ley modifica el art. 91 Dos.1.1 LIVA con efectos desde el 1 de \
 enero de 2025 y es una provision distinta que necesita su propia entrada; el texto consolidado de la \
-LIVA solo anota ese articulo 2, que es la razon por la que este instrumento parecia fijar únicamente \
+LIVA solo anota ese articulo 2, que es la razón por la que este instrumento parecia fijar únicamente \
 una fecha de 2025. Las ventanas anteriores al 1 de julio de 2024 las fijan RDL 20/2022, RDL 18/2022, \
 RDL 5/2023 y RDL 8/2023, ninguno de los cuales esta en el corpus. CONTRASTE INDEPENDIENTE. Las \
 cuatro cifras del recargo (0,62 / 0 / 1 / 0,26) coinciden con los tipos que declara el diseño de \
@@ -3306,7 +3306,7 @@ hasta la redacción previa a esta norma y Dos = 4 por 100 desde ella, ininterrum
 es un diff antes/despues, no una lectura de prosa. PROVENANCIA. Documento adquirido mediante la \
 herramienta de adquisición del corpus consolidado oficial (modo articulo), sha256 \
 1c484707bac3ccf0ef6a252fe1272fb8dedde5150a9bf35f81048450b8308b61, 15448 bytes, leido de nuevo desde \
-disco antes de redactar esta entrada. La captura se hizo SIN required_text a proposito: fijar la \
+disco antes de redactar esta entrada. La captura se hizo SIN required_text a propósito: fijar la \
 frase del 4 por ciento antes de leer el fichero habria hecho tautologica la comprobación. Entrada \
 preparada por agente y fundamentada en el texto empaquetado leido directamente; no la ha revisado un \
 operador humano, y reviewed_by lo declara así."""

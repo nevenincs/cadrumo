@@ -18,7 +18,7 @@ la declaración anual (base reglamentaria del Modelo 347); apartado 2 extiende l
 las adquisiciones al margen de la actividad de las entidades del art 94.1 y 2 LGT; apartado 3 \
 alcanza a las entidades que cobran honorarios o derechos por cuenta de sus socios, asociados o \
 colegiados. El articulo no fija ningun importe: el umbral por contraparte lo establece el art 33 \
-y la exclusion de quienes no lo superan el art 32.c. Texto verificado contra el consolidado \
+y la exclusión de quienes no lo superan el art 32.c. Texto verificado contra el consolidado \
 bundled corpus/normatives/html/rd-1065-2007.html (redacción del apartado 1 por RD 828/2013, \
 BOE-A-2013-11216).\
 """
@@ -245,7 +245,7 @@ notes = """RD 1065/2007 art 35: criterios de imputacion temporal del Modelo 347.
 regla que decide a que periodo se imputa una operacion, distinta del art 31 (quien \
 declara) y de los arts 33/34 (que importe se declara). La operacion se entiende \
 producida en el periodo en que, conforme al art 69 del Reglamento del IVA, debe \
-realizarse la anotacion registral de la factura -- NO en la fecha de devengo del art 75 \
+realizarse la anotación registral de la factura -- NO en la fecha de devengo del art 75 \
 LIVA. Las operaciones en regimen especial del criterio de caja son la excepcion y se \
 imputan al devengo del art 163 terdecies LIVA. Texto extraido de la API de datos \
 abiertos del BOE el 2026-08-06 tomando la ultima version consolidada, redacción \
@@ -337,7 +337,7 @@ effective_from = 2014-01-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-10-03
 reviewed_by = "agent-authored from the bundled corpus capture; operator to re-stamp"
-notes = """RGAT art 33.2.g: excluye del deber de declarar las importaciones y exportaciones de mercancias y las operaciones realizadas desde o para un establecimiento permanente del obligado situado fuera de Espana. Se declara con el id compuesto porque la exclusion de categorias de IVA del Modelo 347 (y su aviso cuando la categoria no dice si la operacion es de bienes) es una afirmacion sobre esta letra, no sobre el articulo entero. Texto verificado contra el consolidado bundled corpus/normatives/html/rd-1065-2007.html (redacción en vigor desde 2014-01-01)."""
+notes = """RGAT art 33.2.g: excluye del deber de declarar las importaciones y exportaciones de mercancias y las operaciones realizadas desde o para un establecimiento permanente del obligado situado fuera de Espana. Se declara con el id compuesto porque la exclusión de categorías de IVA del Modelo 347 (y su aviso cuando la categoria no dice si la operacion es de bienes) es una afirmacion sobre esta letra, no sobre el articulo entero. Texto verificado contra el consolidado bundled corpus/normatives/html/rd-1065-2007.html (redacción en vigor desde 2014-01-01)."""
 required_text = [
     "quedan excluidas del deber de declaración las siguientes operaciones",
     "Las importaciones y exportaciones de mercancías",
@@ -356,7 +356,7 @@ effective_from = 2014-01-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-10-03
 reviewed_by = "agent-authored from the bundled corpus capture; operator to re-stamp"
-notes = """RGAT art 33.2.i: excluye las operaciones sujetas a una obligacion periodica de suministro de información que, por ello, ya figuren en otra declaración de contenido coincidente (el Modelo 349, o el resumen anual de retenciones del art 108.2 RIRPF para quien practica la retencion). Se declara con el id compuesto porque la exclusion de las facturas recibidas con retencion y el aviso sobre las emitidas con retencion afirman esta letra. Texto verificado contra el consolidado bundled corpus/normatives/html/rd-1065-2007.html (redacción en vigor desde 2014-01-01)."""
+notes = """RGAT art 33.2.i: excluye las operaciones sujetas a una obligacion periodica de suministro de información que, por ello, ya figuren en otra declaración de contenido coincidente (el Modelo 349, o el resumen anual de retenciones del art 108.2 RIRPF para quien practica la retencion). Se declara con el id compuesto porque la exclusión de las facturas recibidas con retencion y el aviso sobre las emitidas con retencion afirman esta letra. Texto verificado contra el consolidado bundled corpus/normatives/html/rd-1065-2007.html (redacción en vigor desde 2014-01-01)."""
 required_text = [
     "quedan excluidas del deber de declaración las siguientes operaciones",
     "En general, todas aquellas operaciones respecto de las que exista una obligación periódica de suministro de información",

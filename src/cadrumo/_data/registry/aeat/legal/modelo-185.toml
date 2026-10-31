@@ -115,7 +115,7 @@ effective_from = 2003-01-31
 review_status = "agent_reviewed"
 reviewed_at = 2026-08-21
 reviewed_by = "agent-review (verbatim against the bundled disposicion Tercero excerpt)"
-notes = "Disposición Tercero is the provision that ESTABLISHES the modelo 185 monthly plazo for filings governed by this orden: la información mensual se presentara en el plazo de los diez días naturales siguientes a la finalizacion del mes a que se refiera la información. Disposición Primero, cited as orden-hac-96-2003:art-1, approves the diseños físicos y lógicos and states no timing, so it cannot ground a deadline window."
+notes = "Disposición Tercero is the provision that ESTABLISHES the modelo 185 monthly plazo for filings governed by this orden: la información mensual se presentara en el plazo de los diez días naturales siguientes a la finalización del mes a que se refiera la información. Disposición Primero, cited as orden-hac-96-2003:art-1, approves the diseños físicos y lógicos and states no timing, so it cannot ground a deadline window."
 required_text = [
     "en el plazo de los diez días naturales siguientes a la finalización del mes",
 ]

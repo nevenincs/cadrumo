@@ -31,7 +31,7 @@ effective_from = 1993-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-07
 reviewed_by = "operator"
-notes = "LIVA art 91: tipos impositivos reducidos. Apartado Uno establece el tipo reducido del 10 por ciento aplicable a determinadas operaciones (productos para la nutricion humana, agua, medicamentos, viviendas, transporte de viajeros, hosteleria, etc.). Apartado Dos establece el tipo super-reducido del 4 por ciento para productos basicos (pan, leche, frutas, libros, medicamentos especificos, etc.) y operaciones para colectivos en riesgo de exclusion."
+notes = "LIVA art 91: tipos impositivos reducidos. Apartado Uno establece el tipo reducido del 10 por ciento aplicable a determinadas operaciones (productos para la nutricion humana, agua, medicamentos, viviendas, transporte de viajeros, hosteleria, etc.). Apartado Dos establece el tipo super-reducido del 4 por ciento para productos basicos (pan, leche, frutas, libros, medicamentos especificos, etc.) y operaciones para colectivos en riesgo de exclusión."
 required_text = [
     "Tipos impositivos reducidos",
     "10 por ciento",
