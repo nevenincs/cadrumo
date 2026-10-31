@@ -34,6 +34,7 @@ from cadrumo.application.operations.frontend_requests import (
 )
 from cadrumo.application.operations.interactions import (
     OperationApplyResponse,
+    OperationPendingInteraction,
     OperationRejectResponse,
 )
 from cadrumo.application.operations.models import OperationRequest
@@ -233,6 +234,30 @@ async def start(supervisor: OperationSupervisor, operation_id: str):
     return await run_to_settlement(supervisor, operation_id)
 
 
+async def apply_pending(
+    supervisor: OperationSupervisor,
+    operation_id: str,
+    pending: OperationPendingInteraction,
+    *,
+    responded_at: datetime = NOW,
+) -> None:
+    """Answer the pending review with an apply response that echoes its digests."""
+    await supervisor.respond(
+        OperationApplyResponse(
+            interaction_id=pending.request.interaction_id,
+            operation_id=operation_id,
+            revision=pending.request.revision,
+            response_token=RESPONSE_TOKEN,
+            continuation_digest=pending.request.continuation_digest,
+            reviewed_proposal_digest=pending.reviewed_proposal_digest,
+            actor_ref="operator:integration",
+            responded_at=responded_at,
+            baseline_digest=pending.baseline_digest,
+            proposed_effect_digest=pending.proposed_effect_digest,
+        )
+    )
+
+
 async def resolved_result(
     supervisor: OperationSupervisor,
     *,
@@ -347,20 +372,7 @@ def test_censal_executor_acquires_once_recovers_review_and_applies_exact_operand
             assert isinstance(review, OperationReviewProjectionSuccessV1)
             assert review.projection.reviewed_proposal_digest == recovered_pending.reviewed_proposal_digest
 
-            await recovery.respond(
-                OperationApplyResponse(
-                    interaction_id=recovered_pending.request.interaction_id,
-                    operation_id=operation_id,
-                    revision=recovered_pending.request.revision,
-                    response_token=RESPONSE_TOKEN,
-                    continuation_digest=recovered_pending.request.continuation_digest,
-                    reviewed_proposal_digest=recovered_pending.reviewed_proposal_digest,
-                    actor_ref="operator:integration",
-                    responded_at=NOW + timedelta(minutes=2),
-                    baseline_digest=recovered_pending.baseline_digest,
-                    proposed_effect_digest=recovered_pending.proposed_effect_digest,
-                )
-            )
+            await apply_pending(recovery, operation_id, recovered_pending, responded_at=NOW + timedelta(minutes=2))
             applied = await wait_for_phase(recovery, operation_id, CENSAL_PHASE_SETTLEMENT)
             assert applied.effect is OperationEffect.UPDATED
             assert acquisitions == 1
@@ -491,20 +503,7 @@ def test_censal_executor_rejects_none_and_post_commit_failure_stays_unknown(tmp_
             waiting = await start(supervisor, operation_id)
             pending = waiting.pending_interaction
             assert pending is not None
-            await supervisor.respond(
-                OperationApplyResponse(
-                    interaction_id=pending.request.interaction_id,
-                    operation_id=operation_id,
-                    revision=pending.request.revision,
-                    response_token=RESPONSE_TOKEN,
-                    continuation_digest=pending.request.continuation_digest,
-                    reviewed_proposal_digest=pending.reviewed_proposal_digest,
-                    actor_ref="operator:integration",
-                    responded_at=NOW,
-                    baseline_digest=pending.baseline_digest,
-                    proposed_effect_digest=pending.proposed_effect_digest,
-                )
-            )
+            await apply_pending(supervisor, operation_id, pending)
             terminal = await supervisor.await_terminal(operation_id)
             assert terminal.terminal_condition is OperationTerminalCondition.FAILED
             assert terminal.effect is OperationEffect.NONE
@@ -550,20 +549,7 @@ def test_censal_executor_rejects_none_and_post_commit_failure_stays_unknown(tmp_
             waiting = await start(supervisor, operation_id)
             pending = waiting.pending_interaction
             assert pending is not None
-            await supervisor.respond(
-                OperationApplyResponse(
-                    interaction_id=pending.request.interaction_id,
-                    operation_id=operation_id,
-                    revision=pending.request.revision,
-                    response_token=RESPONSE_TOKEN,
-                    continuation_digest=pending.request.continuation_digest,
-                    reviewed_proposal_digest=pending.reviewed_proposal_digest,
-                    actor_ref="operator:integration",
-                    responded_at=NOW,
-                    baseline_digest=pending.baseline_digest,
-                    proposed_effect_digest=pending.proposed_effect_digest,
-                )
-            )
+            await apply_pending(supervisor, operation_id, pending)
             terminal = await supervisor.await_terminal(operation_id)
             assert terminal.terminal_condition is OperationTerminalCondition.FAILED
             assert terminal.effect is OperationEffect.UNKNOWN
@@ -620,20 +606,7 @@ def test_censal_executor_cancellation_before_irreversible_entry_keeps_none_and_w
             waiting = await start(supervisor, operation_id)
             pending = waiting.pending_interaction
             assert pending is not None
-            await supervisor.respond(
-                OperationApplyResponse(
-                    interaction_id=pending.request.interaction_id,
-                    operation_id=operation_id,
-                    revision=pending.request.revision,
-                    response_token=RESPONSE_TOKEN,
-                    continuation_digest=pending.request.continuation_digest,
-                    reviewed_proposal_digest=pending.reviewed_proposal_digest,
-                    actor_ref="operator:integration",
-                    responded_at=NOW,
-                    baseline_digest=pending.baseline_digest,
-                    proposed_effect_digest=pending.proposed_effect_digest,
-                )
-            )
+            await apply_pending(supervisor, operation_id, pending)
             await reached_boundary.wait()
             requested = await supervisor.request_cancel(operation_id)
             assert requested.effect is OperationEffect.NONE

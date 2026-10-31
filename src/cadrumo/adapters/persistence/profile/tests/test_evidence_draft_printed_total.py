@@ -173,35 +173,6 @@ def _operator_attestations(
     )
 
 
-def _confirm(
-    lines: tuple[str, ...],
-    *,
-    isolated_settings: Settings,
-    secure_objects: SecureObjectRepository,
-    tmp_path: Path,
-    filename: str,
-    authority: InvoiceAuthorityFixture,
-):
-    pdf_path = tmp_path / filename
-    pdf_path.write_bytes(text_pdf_bytes(lines))
-    svc = _make_svc(isolated_settings, secure_objects)
-    record = svc.add(bucket_id=_BUCKET_ID, source_path=pdf_path).record
-    return confirm_invoice_draft_from_evidence(
-        counterparty_country="ES",
-        bucket_id=_BUCKET_ID,
-        kind=InvoiceKind.RECEIVED,
-        evidence_id=record.evidence_id,
-        counterparty_name="Acme Suministros SL",
-        settings=isolated_settings,
-        resolutions=_operator_attestations(
-            evidence_id=record.evidence_id,
-            isolated_settings=isolated_settings,
-            authority=authority,
-        ),
-        **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID, authority=authority),
-    )
-
-
 def test_an_unexplained_printed_total_is_reported_against_the_record(
     isolated_settings: Settings,
     secure_objects: SecureObjectRepository,
@@ -215,7 +186,7 @@ def test_an_unexplained_printed_total_is_reported_against_the_record(
     without this check the difference would vanish behind a valid-looking
     invoice.
     """
-    result = _confirm(
+    result = _confirm_with(
         _UNEXPLAINED_TOTAL_INVOICE_LINES,
         isolated_settings=isolated_settings,
         secure_objects=secure_objects,
@@ -246,7 +217,7 @@ def test_a_coherent_invoice_reports_no_discrepancy(
     The negative control: base + cuota equals the printed total, so there is
     nothing to report and nothing is reported.
     """
-    result = _confirm(
+    result = _confirm_with(
         _COHERENT_INVOICE_LINES,
         isolated_settings=isolated_settings,
         secure_objects=secure_objects,
