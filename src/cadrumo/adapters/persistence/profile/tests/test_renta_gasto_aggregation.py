@@ -128,6 +128,34 @@ def _gasto_transaction(
     )
 
 
+def _save_priced_gasto_row(secure_objects: SecureObjectRepository, provider_id: str) -> None:
+    """Save one 2025-02-01 gasto of 1000.00 base plus 210.00 IVA under ``provider_id``."""
+    row = _gasto_transaction(
+        provider_id,
+        value_date=date(2025, 2, 1),
+        amount=Decimal("1210.00"),
+        taxable_base=Decimal("1000.00"),
+        iva_amount=Decimal("210.00"),
+    )
+    TransactionCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects).save(
+        TransactionCatalogue.from_transactions((row,)),
+    )
+
+
+def _save_general_prorrata_entry(secure_objects: SecureObjectRepository) -> None:
+    """Register the 2025 GENERAL prorrata at a 70 percent provisional share."""
+    ProrrataRegisterRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects).upsert_entry(
+        ProrrataRegisterEntry(
+            ejercicio=2025,
+            regime=ProrrataRegisterRegime.from_registry("general"),
+            especial_transition=None,
+            provisional_percentage=Decimal("70"),
+            provisional_provenance=ProrrataProvisionalProvenance.from_registry("carried_prior_definitiva"),
+            source_registry_snapshot_refs=(_prior_m303_snapshot_ref(),),
+        ),
+    )
+
+
 def test_repository_backed_aggregation_emits_casilla_02_sum(
     secure_objects: SecureObjectRepository,
 ) -> None:
@@ -333,26 +361,8 @@ def test_repository_wrapper_general_prorrata_register_joins_the_non_deductible_s
     secure_objects: SecureObjectRepository,
 ) -> None:
     """A GENERAL-prorrata register entry joins the non-recoverable IVA share into M130."""
-    row = _gasto_transaction(
-        "row-prorrata",
-        value_date=date(2025, 2, 1),
-        amount=Decimal("1210.00"),
-        taxable_base=Decimal("1000.00"),
-        iva_amount=Decimal("210.00"),
-    )
-    TransactionCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects).save(
-        TransactionCatalogue.from_transactions((row,)),
-    )
-    ProrrataRegisterRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects).upsert_entry(
-        ProrrataRegisterEntry(
-            ejercicio=2025,
-            regime=ProrrataRegisterRegime.from_registry("general"),
-            especial_transition=None,
-            provisional_percentage=Decimal("70"),
-            provisional_provenance=ProrrataProvisionalProvenance.from_registry("carried_prior_definitiva"),
-            source_registry_snapshot_refs=(_prior_m303_snapshot_ref(),),
-        ),
-    )
+    _save_priced_gasto_row(secure_objects, "row-prorrata")
+    _save_general_prorrata_entry(secure_objects)
 
     result = aggregate_renta_gasto_ledger_from_repositories(
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
@@ -376,16 +386,7 @@ def test_repository_wrapper_ninguna_prorrata_regime_is_byte_identical_to_absent_
     secure_objects: SecureObjectRepository,
 ) -> None:
     """A NINGUNA regime entry changes nothing for M130 either."""
-    row = _gasto_transaction(
-        "row-ninguna",
-        value_date=date(2025, 2, 1),
-        amount=Decimal("1210.00"),
-        taxable_base=Decimal("1000.00"),
-        iva_amount=Decimal("210.00"),
-    )
-    TransactionCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects).save(
-        TransactionCatalogue.from_transactions((row,)),
-    )
+    _save_priced_gasto_row(secure_objects, "row-ninguna")
     ProrrataRegisterRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects).upsert_entry(
         ProrrataRegisterEntry(
             ejercicio=2025,
@@ -417,26 +418,8 @@ def test_m130_and_m100_resolve_the_same_iva_deduction_ratio_for_the_same_ejercic
     secure_objects: SecureObjectRepository,
 ) -> None:
     """M130 and M100 resolve one shared IVA deduction ratio through real repositories."""
-    row = _gasto_transaction(
-        "row-shared",
-        value_date=date(2025, 2, 1),
-        amount=Decimal("1210.00"),
-        taxable_base=Decimal("1000.00"),
-        iva_amount=Decimal("210.00"),
-    )
-    TransactionCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects).save(
-        TransactionCatalogue.from_transactions((row,)),
-    )
-    ProrrataRegisterRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects).upsert_entry(
-        ProrrataRegisterEntry(
-            ejercicio=2025,
-            regime=ProrrataRegisterRegime.from_registry("general"),
-            especial_transition=None,
-            provisional_percentage=Decimal("70"),
-            provisional_provenance=ProrrataProvisionalProvenance.from_registry("carried_prior_definitiva"),
-            source_registry_snapshot_refs=(_prior_m303_snapshot_ref(),),
-        ),
-    )
+    _save_priced_gasto_row(secure_objects, "row-shared")
+    _save_general_prorrata_entry(secure_objects)
 
     m130_result = aggregate_renta_gasto_ledger_from_repositories(
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
