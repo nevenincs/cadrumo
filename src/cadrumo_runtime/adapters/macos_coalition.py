@@ -56,6 +56,8 @@ def read_macos_resource_coalition(pid: int) -> int | None:
     Args:
         pid: Kernel PID, bounded before native integer conversion.
     """
+    if sys.platform != "darwin":
+        raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE)
     payload = read_macos_pidinfo(pid, flavor=_PROC_PIDCOALITIONINFO, record_size=ctypes.sizeof(_CoalitionInfo))
     return None if payload is None else decode_macos_resource_coalition(payload)
 
