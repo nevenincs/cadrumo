@@ -42,6 +42,7 @@ See Also:
 from __future__ import annotations
 
 import functools
+from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
@@ -57,11 +58,13 @@ from cadrumo.adapters.persistence.profile.tests._review_package_bytes_support im
     review_package_revision,
     review_package_work_unit,
 )
-from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_two_bucket_runtime
+from cadrumo.adapters.persistence.storage.tests.secure_sql import MultiBucketTestRuntime, isolated_two_bucket_runtime
+from cadrumo.application.modelo.recipient_encryption import RecipientEncryptedPackage
 from cadrumo.application.modelo.review_package_collab_audit import emit_collab_feedback_countersign_attached_event
 from cadrumo.application.modelo.review_package_counter_sign import counter_sign_review_package
 from cadrumo.application.modelo.review_package_feedback import (
     FeedbackCounterSignatureInvalidError,
+    ImportedFeedback,
     ReviewPackageFeedbackError,
     build_feedback_package,
     decrypt_feedback_package_from_originator_envelope,
@@ -384,128 +387,104 @@ def test_expired_feedback_envelope_refuses() -> None:
         )
 
 
+@dataclass(frozen=True)
+class _CounterSignedFeedback:
+    package_path: Path
+    envelope: RecipientEncryptedPackage
+    originator_private_key_hex: str
+    operator_public_key_hex: str
+    counter_signer_public_key_hex: str
+
+
+def _counter_signed_feedback(runtime: MultiBucketTestRuntime, tmp_path: Path) -> _CounterSignedFeedback:
+    """Sign a package, counter-sign it from the second bucket and encrypt the accountant's feedback."""
+    bucket_id = runtime.primary.bucket_id
+    package_path = _build_package(tmp_path, bucket_id=bucket_id)
+    operator_signing_keypair = ensure_review_package_signing_keypair(
+        bucket_id=bucket_id,
+        signing_keypair=_signing_capability(runtime, bucket_id=bucket_id),
+    )
+    signed = sign_review_package(package_path, keypair=operator_signing_keypair)
+    originator_encryption_keypair = ensure_recipient_encryption_keypair(
+        bucket_id=bucket_id,
+        recipient_encryption=RecipientEncryptionAdapter(repository=runtime.primary.repository),
+    )
+    with runtime.switch_to_secondary():
+        accountant_signing_keypair = ensure_review_package_signing_keypair(
+            bucket_id=runtime.secondary.bucket_id,
+            signing_keypair=_signing_capability(runtime, bucket_id=runtime.secondary.bucket_id),
+        )
+    receipt = counter_sign_review_package(
+        signed,
+        counter_signer_keypair=accountant_signing_keypair,
+        note="reviewed, no changes",
+        counter_signed_at=_NOW,
+    )
+    feedback = build_feedback_package(
+        bucket_id=bucket_id,
+        work_unit_id=review_package_work_unit(bucket_id=bucket_id).work_unit_id,
+        calculation_revision_id=signed.calculation_revision_id,
+        note="all clear",
+        counter_signed_receipt=receipt,
+        submitted_by="my-accountant",
+        submitted_at=_NOW,
+    )
+    envelope = encrypt_feedback_package_for_originator(
+        feedback,
+        originator_public_key_hex=originator_encryption_keypair.public_key_hex,
+        issued_at=_NOW,
+        recipient_encryption=_CRYPTO_CAPABILITY,
+    )
+    return _CounterSignedFeedback(
+        package_path=package_path,
+        envelope=envelope,
+        originator_private_key_hex=originator_encryption_keypair.private_key_hex,
+        operator_public_key_hex=operator_signing_keypair.public_key_hex,
+        counter_signer_public_key_hex=accountant_signing_keypair.public_key_hex,
+    )
+
+
+def _import_counter_signed(
+    world: _CounterSignedFeedback, *, counter_signer_public_key_hex: str | None
+) -> ImportedFeedback:
+    return import_feedback_package(
+        world.envelope,
+        originator_private_key_hex=world.originator_private_key_hex,
+        reviewed_package_path=world.package_path,
+        operator_public_key_hex=world.operator_public_key_hex,
+        counter_signer_public_key_hex=counter_signer_public_key_hex,
+        now=_NOW,
+        recipient_encryption=_CRYPTO_CAPABILITY,
+    )
+
+
 def test_import_feedback_package_refuses_when_archive_tampered_after_countersign(tmp_path: Path) -> None:
     """A tampered local archive invalidates import, even though decryption itself succeeds."""
     import zipfile
 
     with isolated_two_bucket_runtime(tmp_path=tmp_path) as runtime:
-        package_path = _build_package(tmp_path, bucket_id=runtime.primary.bucket_id)
-        operator_signing_keypair = ensure_review_package_signing_keypair(
-            bucket_id=runtime.primary.bucket_id,
-            signing_keypair=_signing_capability(runtime, bucket_id=runtime.primary.bucket_id),
-        )
-        signed = sign_review_package(package_path, keypair=operator_signing_keypair)
-
-        originator_encryption_keypair = ensure_recipient_encryption_keypair(
-            bucket_id=runtime.primary.bucket_id,
-            recipient_encryption=RecipientEncryptionAdapter(repository=runtime.primary.repository),
-        )
-        originator_encryption_public_key = originator_encryption_keypair
-
-        with runtime.switch_to_secondary():
-            accountant_signing_keypair = ensure_review_package_signing_keypair(
-                bucket_id=runtime.secondary.bucket_id,
-                signing_keypair=_signing_capability(runtime, bucket_id=runtime.secondary.bucket_id),
-            )
-        receipt = counter_sign_review_package(
-            signed,
-            counter_signer_keypair=accountant_signing_keypair,
-            note="reviewed, no changes",
-            counter_signed_at=_NOW,
-        )
-
-        feedback = build_feedback_package(
-            bucket_id=runtime.primary.bucket_id,
-            work_unit_id=review_package_work_unit(bucket_id=runtime.primary.bucket_id).work_unit_id,
-            calculation_revision_id=signed.calculation_revision_id,
-            note="all clear",
-            counter_signed_receipt=receipt,
-            submitted_by="my-accountant",
-            submitted_at=_NOW,
-        )
-        envelope = encrypt_feedback_package_for_originator(
-            feedback,
-            originator_public_key_hex=originator_encryption_public_key.public_key_hex,
-            issued_at=_NOW,
-            recipient_encryption=_CRYPTO_CAPABILITY,
-        )
+        world = _counter_signed_feedback(runtime, tmp_path)
 
         # Tamper the LOCAL archive the originator still holds, after signing.
-        rewritten = package_path.with_name(package_path.name + ".rewritten")
-        with zipfile.ZipFile(package_path, "r") as src, zipfile.ZipFile(rewritten, "w") as dst:
+        rewritten = world.package_path.with_name(world.package_path.name + ".rewritten")
+        with zipfile.ZipFile(world.package_path, "r") as src, zipfile.ZipFile(rewritten, "w") as dst:
             for item in src.infolist():
                 data = b"TAMPERED FICHERO BYTES" if item.filename == "draft.fichero-boe" else src.read(item.filename)
                 dst.writestr(item, data)
-        rewritten.replace(package_path)
+        rewritten.replace(world.package_path)
 
         with pytest.raises(FeedbackCounterSignatureInvalidError):
-            import_feedback_package(
-                envelope,
-                originator_private_key_hex=originator_encryption_keypair.private_key_hex,
-                reviewed_package_path=package_path,
-                operator_public_key_hex=operator_signing_keypair.public_key_hex,
-                counter_signer_public_key_hex=accountant_signing_keypair.public_key_hex,
-                now=_NOW,
-                recipient_encryption=_CRYPTO_CAPABILITY,
-            )
+            _import_counter_signed(world, counter_signer_public_key_hex=world.counter_signer_public_key_hex)
 
 
 def test_import_feedback_package_refuses_with_forged_counter_signer_key(tmp_path: Path) -> None:
     """A wrong counter-signer public key (impersonation attempt) fails verification."""
     with isolated_two_bucket_runtime(tmp_path=tmp_path) as runtime:
-        package_path = _build_package(tmp_path, bucket_id=runtime.primary.bucket_id)
-        operator_signing_keypair = ensure_review_package_signing_keypair(
-            bucket_id=runtime.primary.bucket_id,
-            signing_keypair=_signing_capability(runtime, bucket_id=runtime.primary.bucket_id),
-        )
-        signed = sign_review_package(package_path, keypair=operator_signing_keypair)
-
-        originator_encryption_keypair = ensure_recipient_encryption_keypair(
-            bucket_id=runtime.primary.bucket_id,
-            recipient_encryption=RecipientEncryptionAdapter(repository=runtime.primary.repository),
-        )
-        originator_encryption_public_key = originator_encryption_keypair
-
-        with runtime.switch_to_secondary():
-            accountant_signing_keypair = ensure_review_package_signing_keypair(
-                bucket_id=runtime.secondary.bucket_id,
-                signing_keypair=_signing_capability(runtime, bucket_id=runtime.secondary.bucket_id),
-            )
-        receipt = counter_sign_review_package(
-            signed,
-            counter_signer_keypair=accountant_signing_keypair,
-            note="reviewed, no changes",
-            counter_signed_at=_NOW,
-        )
-
-        feedback = build_feedback_package(
-            bucket_id=runtime.primary.bucket_id,
-            work_unit_id=review_package_work_unit(bucket_id=runtime.primary.bucket_id).work_unit_id,
-            calculation_revision_id=signed.calculation_revision_id,
-            note="all clear",
-            counter_signed_receipt=receipt,
-            submitted_by="my-accountant",
-            submitted_at=_NOW,
-        )
-        envelope = encrypt_feedback_package_for_originator(
-            feedback,
-            originator_public_key_hex=originator_encryption_public_key.public_key_hex,
-            issued_at=_NOW,
-            recipient_encryption=_CRYPTO_CAPABILITY,
-        )
-
+        world = _counter_signed_feedback(runtime, tmp_path)
         forged_counter_signer_public_key_hex = X25519PrivateKey.generate().public_key().public_bytes_raw().hex()
 
         with pytest.raises(FeedbackCounterSignatureInvalidError):
-            import_feedback_package(
-                envelope,
-                originator_private_key_hex=originator_encryption_keypair.private_key_hex,
-                reviewed_package_path=package_path,
-                operator_public_key_hex=operator_signing_keypair.public_key_hex,
-                counter_signer_public_key_hex=forged_counter_signer_public_key_hex,
-                now=_NOW,
-                recipient_encryption=_CRYPTO_CAPABILITY,
-            )
+            _import_counter_signed(world, counter_signer_public_key_hex=forged_counter_signer_public_key_hex)
 
 
 def test_import_feedback_package_raises_when_receipt_present_but_no_counter_signer_key_supplied(
@@ -513,57 +492,10 @@ def test_import_feedback_package_raises_when_receipt_present_but_no_counter_sign
 ) -> None:
     """A caller cannot silently skip verification by omitting the counter-signer key."""
     with isolated_two_bucket_runtime(tmp_path=tmp_path) as runtime:
-        package_path = _build_package(tmp_path, bucket_id=runtime.primary.bucket_id)
-        operator_signing_keypair = ensure_review_package_signing_keypair(
-            bucket_id=runtime.primary.bucket_id,
-            signing_keypair=_signing_capability(runtime, bucket_id=runtime.primary.bucket_id),
-        )
-        signed = sign_review_package(package_path, keypair=operator_signing_keypair)
-
-        originator_encryption_keypair = ensure_recipient_encryption_keypair(
-            bucket_id=runtime.primary.bucket_id,
-            recipient_encryption=RecipientEncryptionAdapter(repository=runtime.primary.repository),
-        )
-        originator_encryption_public_key = originator_encryption_keypair
-
-        with runtime.switch_to_secondary():
-            accountant_signing_keypair = ensure_review_package_signing_keypair(
-                bucket_id=runtime.secondary.bucket_id,
-                signing_keypair=_signing_capability(runtime, bucket_id=runtime.secondary.bucket_id),
-            )
-        receipt = counter_sign_review_package(
-            signed,
-            counter_signer_keypair=accountant_signing_keypair,
-            note="reviewed, no changes",
-            counter_signed_at=_NOW,
-        )
-
-        feedback = build_feedback_package(
-            bucket_id=runtime.primary.bucket_id,
-            work_unit_id=review_package_work_unit(bucket_id=runtime.primary.bucket_id).work_unit_id,
-            calculation_revision_id=signed.calculation_revision_id,
-            note="all clear",
-            counter_signed_receipt=receipt,
-            submitted_by="my-accountant",
-            submitted_at=_NOW,
-        )
-        envelope = encrypt_feedback_package_for_originator(
-            feedback,
-            originator_public_key_hex=originator_encryption_public_key.public_key_hex,
-            issued_at=_NOW,
-            recipient_encryption=_CRYPTO_CAPABILITY,
-        )
+        world = _counter_signed_feedback(runtime, tmp_path)
 
         with pytest.raises(ReviewPackageFeedbackError):
-            import_feedback_package(
-                envelope,
-                originator_private_key_hex=originator_encryption_keypair.private_key_hex,
-                reviewed_package_path=package_path,
-                operator_public_key_hex=operator_signing_keypair.public_key_hex,
-                counter_signer_public_key_hex=None,
-                now=_NOW,
-                recipient_encryption=_CRYPTO_CAPABILITY,
-            )
+            _import_counter_signed(world, counter_signer_public_key_hex=None)
 
 
 def test_emit_collab_feedback_countersign_attached_event_refuses_unverified_feedback(
@@ -571,7 +503,6 @@ def test_emit_collab_feedback_countersign_attached_event_refuses_unverified_feed
 ) -> None:
     """Attaching to the journal is refused when the countersignature was not verified true."""
     from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-    from cadrumo.application.modelo.review_package_feedback import ImportedFeedback
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="9a1ab02a-114c-439a-ae84-4b55d9bd64d1") as profile:
         event_repository = BucketEventHistoryRepository(objects=profile.repository)
