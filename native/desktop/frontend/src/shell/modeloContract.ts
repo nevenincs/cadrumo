@@ -373,6 +373,7 @@ export type CalculationNoteSentence =
   | "disposal_m131_excess"
   | "disposal_m131_excess_unresolved"
   | "disposal_later_affectation"
+  | "disposal_zero_result"
   | "disposal_figure_no_box"
   | "disposal_figure_in_box"
   | "disposal_figure_element_row"
@@ -1396,7 +1397,7 @@ export type M145CommunicationExportProjection = {
   communication_record_id: string;
   bucket_id: string;
   service_owner: "cadrumo.application.modelo";
-  modelo: "145";
+  modelo: string;
   communication_year: number;
   period_token: M145CommunicationPeriod;
   revision_id: RevisionId;
@@ -1491,7 +1492,7 @@ export type M145CommunicationRecordProjection = {
   communication_record_id: string;
   bucket_id: string;
   service_owner: "cadrumo.application.modelo";
-  modelo: "145";
+  modelo: string;
   communication_year: number;
   period_token: M145CommunicationPeriod;
   revision_id: RevisionId;
@@ -1568,7 +1569,7 @@ export type M145CommunicationValidationProjection = {
   communication_record_id: string;
   bucket_id: string;
   service_owner: "cadrumo.application.modelo";
-  modelo: "145";
+  modelo: string;
   communication_year: number;
   period_token: M145CommunicationPeriod;
   revision_id: RevisionId;
@@ -2847,7 +2848,7 @@ export type ModeloEditAddressV1 =
  * Every field of ModeloEditBaselineV1 except `modelo` already crosses an
  * operation payload safely: Hex64Str, bounded Annotated str, Period and the
  * permitted-surface union are all plain Pydantic shapes with no custom core
- * schema. Only `modelo: ModeloCode` does - it is a str subclass that
+ * schema. Only the domain `ModeloCode` does - it is a str subclass that
  * customises its Pydantic core schema, which the operations payload-graph gate
  * refuses inside a registered request payload - so only that one field is
  * mirrored here. `to_baseline` re-validates it through the real type.
@@ -5218,7 +5219,7 @@ export type ModeloLocalObservationMutationRequest = {
  */
 export type ModeloM210PlazoAdvisoryV1 = {
   version: 1;
-  modelo: "210";
+  modelo: string;
   filing_year: number;
   period: string;
   resultado: string;
@@ -6005,7 +6006,7 @@ export type ModeloTaxationComparisonProjection = {
   profile_id: string;
   work_unit_id: string;
   filing_year: number;
-  modelo: "100";
+  modelo: string;
   revision: string;
   conjunta_cuota_resultante: string;
   individual_cuota_resultante: string;
@@ -7777,6 +7778,7 @@ export type PublicSpanishTaxIdFormat = {
   nie_leaders: string;
   cif_leaders: string;
   nif_letters: string;
+  nif_check_modulus: number;
   nie_prefix_substitutions: [string, string][];
   cif_digit_only_kinds: string;
   cif_letter_only_kinds: string;
