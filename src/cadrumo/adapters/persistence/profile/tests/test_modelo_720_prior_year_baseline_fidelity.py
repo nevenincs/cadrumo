@@ -78,7 +78,7 @@ from .....domain.modelos.verification_report import ModeloVerificationFindingKin
 from ...storage.tests.secure_sql import isolated_runtime_profile, isolated_two_bucket_runtime
 from ..calculation_observations import CalculationObservationRepository
 from ..iva_compensation_history import IvaCompensationHistoryRepository
-from ._multi_year_roundtrip_support import assert_two_ejercicio_round_trip
+from ._multi_year_roundtrip_support import assert_omitted_casilla_is_detected, assert_two_ejercicio_round_trip
 from ._observation_lookup_support import find_observation, save_app_filing_observation
 from .cross_period_clean_state_support import (
     BUCKET_ID as CLEAN_STATE_BUCKET_ID,
@@ -801,31 +801,12 @@ def test_redeclaration_advisory_is_silent_when_required_group_is_declared_or_del
 
 def test_anti_tautology_proof_missing_casilla_surfaces_as_inequality(tmp_path: Path) -> None:
     """Anti-tautology: omitting the valoracion casilla produces strict inequality."""
-    obs_n = _year_n_observation()
-    obs_n_no_val = RegistryModeloObservation(
-        modelo=_MODELO,
-        filing_year=_YEAR_N,
-        period="0A",
-        observations=tuple(
-            o
-            for o in obs_n.observations
-            if o.casilla_id not in (_CUENTAS_VALORACION_CASILLA, _VALORES_VALORACION_CASILLA)
-        ),
+    assert_omitted_casilla_is_detected(
+        tmp_path,
+        _year_n_observation(),
+        omitted=(_CUENTAS_VALORACION_CASILLA, _VALORES_VALORACION_CASILLA),
+        captured_at=_CLOCK_N,
     )
-
-    assert obs_n != obs_n_no_val, "the full observation and the valoracion-omitted observation must be strictly unequal"
-
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        repo = CalculationObservationRepository()
-        save_app_filing_observation(repo, obs_n, captured_at=_CLOCK_N)
-        loaded = find_observation(repo, _MODELO, filing_year=_YEAR_N, period="0A")
-
-        assert loaded is not None
-        assert loaded.observation != obs_n_no_val, (
-            "loaded observation equals the valoracion-omitted stub — "
-            "the roundtrip silently dropped cuentas.valoracion / valores.valoracion"
-        )
-        assert loaded.observation == obs_n
 
 
 def test_enrollment_recorder_evidences_two_distinct_annual_cycles_and_matches_manifest(

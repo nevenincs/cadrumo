@@ -44,6 +44,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
+from cadrumo.adapters.persistence.profile.tests._multi_year_roundtrip_support import assert_omitted_casilla_is_detected
 from cadrumo.adapters.persistence.profile.tests._observation_lookup_support import (
     find_observation,
     save_app_filing_observation,
@@ -180,22 +181,9 @@ def test_both_observations_are_independently_retrievable_no_bleed(tmp_path: Path
 
 def test_anti_tautology_proof_missing_casilla_surfaces_as_inequality(tmp_path: Path) -> None:
     """Anti-tautology: a missing casilla in the reloaded observation is detectable."""
-    obs_n = _year_n_observation()
-    obs_n_missing = RegistryModeloObservation(
-        modelo=_MODELO,
-        filing_year=_YEAR_N,
-        period=_PERIOD,
-        observations=tuple(o for o in obs_n.observations if o.casilla_id != _OP_BASE_IMPONIBLE_CASILLA),
+    assert_omitted_casilla_is_detected(
+        tmp_path, _year_n_observation(), omitted=(_OP_BASE_IMPONIBLE_CASILLA,), captured_at=_CLOCK_N
     )
-    assert obs_n != obs_n_missing
-
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        repo = CalculationObservationRepository()
-        save_app_filing_observation(repo, obs_n, captured_at=_CLOCK_N)
-        loaded = find_observation(repo, _MODELO, filing_year=_YEAR_N, period=_PERIOD)
-        assert loaded is not None
-        assert loaded.observation != obs_n_missing
-        assert loaded.observation == obs_n
 
 
 def test_modelo_349_intracomunitario_fidelity_enrolls_two_renta_years(tmp_path: Path) -> None:

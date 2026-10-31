@@ -2,18 +2,21 @@
 
 from __future__ import annotations
 
+from collections.abc import Collection
 from typing import TYPE_CHECKING, Literal
 
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from cadrumo.domain.calculations.registry.tests.registry_observations import revision_id_for_observation
+
+from ._observation_lookup_support import find_observation
 
 if TYPE_CHECKING:
     from datetime import datetime
     from pathlib import Path
 
     from cadrumo.application.calculations.observations_repository import ObservationEnvelopePayload
-    from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 
 
 def _find_modelo_observation(
@@ -111,4 +114,38 @@ def assert_two_ejercicio_round_trip(
         return loaded_n, loaded_n_plus_1
 
 
-__all__ = ["assert_two_ejercicio_round_trip"]
+def assert_omitted_casilla_is_detected(
+    tmp_path: Path,
+    observation: RegistryModeloObservation,
+    *,
+    omitted: Collection[object],
+    captured_at: datetime,
+) -> None:
+    """Anti-tautology: a copy missing ``omitted`` casillas differs from the saved and reloaded observation."""
+    stub = RegistryModeloObservation(
+        modelo=observation.modelo,
+        filing_year=observation.filing_year,
+        period=observation.period,
+        observations=tuple(o for o in observation.observations if o.casilla_id not in omitted),
+    )
+    assert observation != stub, "the full observation and the omitted-casilla stub must be strictly unequal"
+
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        repo = CalculationObservationRepository()
+        repo.save(
+            repo.prepare_observation_envelope(
+                observation,
+                source_kind="app_filing",
+                captured_at=captured_at,
+                stamped_revision_id=revision_id_for_observation(observation),
+            )
+        )
+        loaded = find_observation(
+            repo, observation.modelo, filing_year=observation.filing_year, period=observation.period
+        )
+        assert loaded is not None
+        assert loaded.observation != stub, "the roundtrip silently dropped the omitted casillas"
+        assert loaded.observation == observation
+
+
+__all__ = ["assert_omitted_casilla_is_detected", "assert_two_ejercicio_round_trip"]

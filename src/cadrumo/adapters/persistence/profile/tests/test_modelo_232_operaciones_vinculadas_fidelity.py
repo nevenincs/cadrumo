@@ -36,7 +36,10 @@ from pathlib import Path
 import pytest
 
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
-from cadrumo.adapters.persistence.profile.tests._multi_year_roundtrip_support import assert_two_ejercicio_round_trip
+from cadrumo.adapters.persistence.profile.tests._multi_year_roundtrip_support import (
+    assert_omitted_casilla_is_detected,
+    assert_two_ejercicio_round_trip,
+)
 from cadrumo.adapters.persistence.profile.tests._observation_lookup_support import (
     find_observation,
     save_app_filing_observation,
@@ -253,28 +256,9 @@ def test_anti_tautology_proof_missing_casilla_surfaces_as_inequality(tmp_path: P
     unequal to the full observation, proving the roundtrip assertions would
     catch a save-drops-field regression on the amount field.
     """
-    obs_n = _year_n_observation()
-    obs_n_no_importe = RegistryModeloObservation(
-        modelo=_MODELO,
-        filing_year=_YEAR_N,
-        period="0A",
-        observations=tuple(o for o in obs_n.observations if o.casilla_id != _VINCULADA_IMPORTE_CASILLA),
+    assert_omitted_casilla_is_detected(
+        tmp_path, _year_n_observation(), omitted=(_VINCULADA_IMPORTE_CASILLA,), captured_at=_CLOCK_N
     )
-
-    assert obs_n != obs_n_no_importe, (
-        "the full observation and the importe-omitted observation must be strictly unequal"
-    )
-
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        repo = CalculationObservationRepository()
-        save_app_filing_observation(repo, obs_n, captured_at=_CLOCK_N)
-        loaded = find_observation(repo, _MODELO, filing_year=_YEAR_N, period="0A")
-
-        assert loaded is not None
-        assert loaded.observation != obs_n_no_importe, (
-            "loaded observation equals the importe-omitted stub — the roundtrip silently dropped vinculada-1-importe"
-        )
-        assert loaded.observation == obs_n
 
 
 def test_enrollment_recorder_evidences_two_distinct_renta_years_and_matches_manifest(
