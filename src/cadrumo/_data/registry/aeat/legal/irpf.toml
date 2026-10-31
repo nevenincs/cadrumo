@@ -389,7 +389,7 @@ effective_from = 2007-04-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-15
 reviewed_by = "operator"
-notes = "RIRPF art 108: obligaciones formales del retenedor y del obligado a ingresar a cuenta. Establece la obligacion de presentar declaracion-liquidacion trimestral de las cantidades retenidas e ingresadas (M111, M115, M123, art-71 RIVA enlaza mensual cuando aplica), la declaracion negativa, y la declaracion anual resumen (M180, M190, M193). Base reglamentaria comun de los modelos de retencion IRPF."
+notes = "RIRPF art 108: obligaciones formales del retenedor y del obligado a ingresar a cuenta. Establece la obligacion de presentar declaracion-liquidacion trimestral de las cantidades retenidas e ingresadas (M111, M115, M123, art-71 RIVA enlaza mensual cuando aplica), la declaración negativa, y la declaración anual resumen (M180, M190, M193). Base reglamentaria comun de los modelos de retencion IRPF."
 required_text = [
     "Obligaciones formales del retenedor y del obligado a ingresar a cuenta",
     "declaración de las cantidades retenidas y de los ingresos a cuenta",
@@ -463,7 +463,7 @@ effective_from = 2011-04-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-14
 reviewed_by = "operator"
-notes = "Aprobacion del modelo 111 — autoliquidacion de retenciones e ingresos a cuenta del IRPF sobre rendimientos del trabajo, actividades economicas, premios, determinadas ganancias patrimoniales e imputaciones de renta. Foundational orden for the Modelo 111 quarterly retenciones return."
+notes = "Aprobación del modelo 111 — autoliquidacion de retenciones e ingresos a cuenta del IRPF sobre rendimientos del trabajo, actividades economicas, premios, determinadas ganancias patrimoniales e imputaciones de renta. Foundational orden for the Modelo 111 quarterly retenciones return."
 required_text = [
     "Aprobación del modelo 111",
     "Retenciones e ingresos a cuenta del Impuesto sobre la Renta de las Personas Físicas",
@@ -483,7 +483,7 @@ effective_from = 2001-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-15
 reviewed_by = "operator"
-notes = "Aprobacion del modelo 115 — declaracion-documento de ingreso de retenciones e ingresos a cuenta sobre rentas o rendimientos procedentes del arrendamiento o subarrendamiento de inmuebles urbanos. Foundational orden for the Modelo 115 quarterly return."
+notes = "Aprobación del modelo 115 — declaracion-documento de ingreso de retenciones e ingresos a cuenta sobre rentas o rendimientos procedentes del arrendamiento o subarrendamiento de inmuebles urbanos. Foundational orden for the Modelo 115 quarterly return."
 required_text = [
     "Se aprueban los modelos 115",
     "Retenciones e ingresos a cuenta sobre determinadas rentas o rendimientos procedentes del arrendamiento o subarrendamiento de inmuebles urbanos",
@@ -503,7 +503,7 @@ effective_from = 2007-04-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-06-28
 reviewed_by = "verified against bundled orden-eha-672-2007.html#a1 and official BOE-A-2007-6032#a1; operator to re-stamp"
-notes = "Orden EHA/672/2007 art 1: aprobacion del Modelo 130 para pagos fraccionados IRPF de actividades economicas en estimacion directa. Article 3 is the separate Modelo 131 approval authority."
+notes = "Orden EHA/672/2007 art 1: aprobación del Modelo 130 para pagos fraccionados IRPF de actividades economicas en estimacion directa. Article 3 is the separate Modelo 131 approval authority."
 required_text = [
     "Aprobación del modelo 130",
     "Actividades económicas en estimación directa",
@@ -523,7 +523,7 @@ effective_from = 2007-04-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-06-28
 reviewed_by = "verified against bundled orden-eha-672-2007.html#a3 and official BOE-A-2007-6032#a3; operator to re-stamp"
-notes = "Orden EHA/672/2007 art 3: aprobacion del Modelo 131 para pagos fraccionados IRPF de actividades economicas en estimacion objetiva."
+notes = "Orden EHA/672/2007 art 3: aprobación del Modelo 131 para pagos fraccionados IRPF de actividades economicas en estimacion objetiva."
 required_text = [
     "Aprobación del modelo 131",
     "Actividades económicas en estimación objetiva",
@@ -667,7 +667,7 @@ effective_to = 2019-12-31
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-05
 reviewed_by = "operator"
-notes = "Aprobacion de signos, indices o modulos de estimacion objetiva aplicables durante 2019."
+notes = "Aprobación de signos, indices o módulos de estimacion objetiva aplicables durante 2019."
 required_text = [
     "Aprobación de los signos, índices o módulos",
     "método de estimación objetiva",
@@ -688,7 +688,7 @@ effective_to = 2020-12-31
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-05
 reviewed_by = "operator"
-notes = "Aprobacion de signos, indices o modulos de estimacion objetiva aplicables durante 2020."
+notes = "Aprobación de signos, indices o módulos de estimacion objetiva aplicables durante 2020."
 required_text = [
     "Aprobación de los signos, índices o módulos",
     "método de estimación objetiva",
@@ -709,7 +709,7 @@ effective_to = 2021-12-31
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-05
 reviewed_by = "operator"
-notes = "Aprobacion de signos, indices o modulos de estimacion objetiva aplicables durante 2021."
+notes = "Aprobación de signos, indices o módulos de estimacion objetiva aplicables durante 2021."
 required_text = [
     "Aprobación de los signos, índices o módulos",
     "método de estimación objetiva",
@@ -730,7 +730,7 @@ effective_to = 2022-12-31
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-05
 reviewed_by = "operator"
-notes = "Aprobacion de signos, indices o modulos de estimacion objetiva aplicables durante 2022."
+notes = "Aprobación de signos, indices o módulos de estimacion objetiva aplicables durante 2022."
 required_text = [
     "Aprobación de los signos, índices o módulos",
     "método de estimación objetiva",
@@ -751,7 +751,7 @@ effective_to = 2022-12-31
 review_status = "agent_reviewed"
 reviewed_at = 2026-09-30
 reviewed_by = "agent-authored from the BOE consolidated-text excerpt orden-hfp-1335-2021-da-1.html (block da), sliced with the canonical excerpt tool from act.php as served in force; operator to re-stamp"
-notes = "Reduccion general del 5 por ciento del rendimiento neto de modulos para 2022, aplicable tambien para cuantificar el rendimiento neto a efectos de los pagos fraccionados (M131) de 2022 (apartado 3). El texto consolidado anota dos alteraciones posteriores de la cuantia que esta entrada no cita: el 15 por 100 de la disposicion adicional octava de la Orden HFP/1172/2022 (orden-hfp-1172-2022:da-8), tambien para el pago fraccionado del cuarto trimestre de 2022, y el 25 por ciento para las actividades agricolas, ganaderas y forestales del anexo I que fija el art. 2 de la Orden HFP/405/2023 (BOE-A-2023-9955), no catalogado."
+notes = "Reduccion general del 5 por ciento del rendimiento neto de módulos para 2022, aplicable tambien para cuantificar el rendimiento neto a efectos de los pagos fraccionados (M131) de 2022 (apartado 3). El texto consolidado anota dos alteraciones posteriores de la cuantia que esta entrada no cita: el 15 por 100 de la disposición adicional octava de la Orden HFP/1172/2022 (orden-hfp-1172-2022:da-8), tambien para el pago fraccionado del cuarto trimestre de 2022, y el 25 por ciento para las actividades agricolas, ganaderas y forestales del anexo I que fija el art. 2 de la Orden HFP/405/2023 (BOE-A-2023-9955), no catalogado."
 required_text = [
     "Reducción en 2022 del rendimiento neto calculado por el método de estimación objetiva",
     "podrán reducir el rendimiento neto de módulos obtenido en 2022 en un 5 por 100",
@@ -959,7 +959,7 @@ effective_to = 2022-12-31
 review_status = "agent_reviewed"
 reviewed_at = 2026-10-01
 reviewed_by = "agent-authored from bundled orden-hfp-1335-2021.html; operator to re-stamp"
-notes = "Fase 3a agraria: rendimiento neto de modulos. Sobre el rendimiento neto minorado se aplican en secuencia, cuando correspondan, los indices correctores de las letras a) a h), cada uno sobre el rendimiento ya rectificado por los anteriores, con sus incompatibilidades: el indice por personal asalariado no se aplica cuando procede el de medios de produccion ajenos, y a las actividades forestales solo les es aplicable el indice de la letra h). Base de la casilla 1548 del Modelo 100 del ejercicio 2022 (indices declarados en las casillas 1540 a 1547)."
+notes = "Fase 3a agraria: rendimiento neto de módulos. Sobre el rendimiento neto minorado se aplican en secuencia, cuando correspondan, los indices correctores de las letras a) a h), cada uno sobre el rendimiento ya rectificado por los anteriores, con sus incompatibilidades: el indice por personal asalariado no se aplica cuando procede el de medios de produccion ajenos, y a las actividades forestales solo les es aplicable el indice de la letra h). Base de la casilla 1548 del Modelo 100 del ejercicio 2022 (indices declarados en las casillas 1540 a 1547)."
 required_text = [
     "Rendimiento neto de módulos.",
     "Sobre el rendimiento neto minorado se aplicarán, cuando correspondan, los índices correctores que se establecen a continuación",
@@ -982,7 +982,7 @@ effective_to = 2022-12-31
 review_status = "agent_reviewed"
 reviewed_at = 2026-10-01
 reviewed_by = "agent-authored from bundled orden-hfp-1335-2021.html; operator to re-stamp"
-notes = "Fase 4a agraria: reduccion agricultores jovenes. Los agricultores jovenes o asalariados agrarios pueden reducir en un 25 por ciento el rendimiento neto de modulos de su actividad agraria durante los periodos impositivos cerrados en los cinco anos siguientes a su primera instalacion como titulares de una explotacion prioritaria, acreditando un plan de mejora. Desarrolla para el ejercicio 2022 la disposicion adicional sexta de la Ley del IRPF; base de la casilla 1551 del Modelo 100 del ejercicio 2022."
+notes = "Fase 4a agraria: reduccion agricultores jovenes. Los agricultores jovenes o asalariados agrarios pueden reducir en un 25 por ciento el rendimiento neto de módulos de su actividad agraria durante los periodos impositivos cerrados en los cinco anos siguientes a su primera instalacion como titulares de una explotacion prioritaria, acreditando un plan de mejora. Desarrolla para el ejercicio 2022 la disposición adicional sexta de la Ley del IRPF; base de la casilla 1551 del Modelo 100 del ejercicio 2022."
 required_text = [
     "Los agricultores jóvenes o asalariados agrarios podrán reducir el rendimiento neto de módulos correspondiente a su actividad agraria en un 25 por ciento",
     "primera instalación como titulares de una explotación prioritaria",
@@ -1001,7 +1001,7 @@ effective_from = 2023-04-25
 review_status = "agent_reviewed"
 reviewed_at = 2026-10-01
 reviewed_by = "agent-authored from the BOE consolidated-text article orden-hfp-405-2023-art-2.xml (block a2), fetched with the canonical article fetcher as served in force; operator to re-stamp"
-notes = "Orden HFP/405/2023 art. 2: eleva al 25 por ciento, para las actividades del anexo I de la Orden HFP/1335/2021 (agricolas, ganaderas y forestales), la reduccion general del rendimiento neto de modulos del periodo impositivo 2022 prevista en la disposicion adicional primera de esa orden (5 por ciento, elevado al 15 por ciento para todas las actividades por la disposicion adicional octava de la Orden HFP/1172/2022). En vigor el dia de su publicacion (disposicion final unica), dentro del plazo de declaracion del ejercicio 2022, cuyo periodo impositivo rige."
+notes = "Orden HFP/405/2023 art. 2: eleva al 25 por ciento, para las actividades del anexo I de la Orden HFP/1335/2021 (agricolas, ganaderas y forestales), la reduccion general del rendimiento neto de módulos del periodo impositivo 2022 prevista en la disposición adicional primera de esa orden (5 por ciento, elevado al 15 por ciento para todas las actividades por la disposición adicional octava de la Orden HFP/1172/2022). En vigor el dia de su publicacion (disposición final unica), dentro del plazo de declaración del ejercicio 2022, cuyo periodo impositivo rige."
 required_text = [
     "Reducción en 2022 del rendimiento neto calculado por el método de estimación objetiva para las actividades agrícolas, ganaderas y forestales",
     "será del 25 por ciento para las actividades incluidas en el anexo I de la citada orden",
@@ -1357,7 +1357,7 @@ effective_from = 2024-04-19
 review_status = "agent_reviewed"
 reviewed_at = 2026-10-01
 reviewed_by = "agent-authored from the BOE as-published orden-hac-348-2024.html, fetched with the canonical published-document fetcher after BOE redirected its consolidated view away; operator to re-stamp"
-notes = "Orden HAC/348/2024 art. 2: eleva al 15 por ciento, para las actividades del anexo I de la Orden HFP/1172/2022 (agricolas, ganaderas y forestales), la reduccion general del rendimiento neto de modulos del periodo impositivo 2023 prevista en la disposicion adicional primera de esa orden (10 por ciento). En vigor el dia de su publicacion (disposicion final unica), dentro del plazo de declaracion del ejercicio 2023, cuyo periodo impositivo rige."
+notes = "Orden HAC/348/2024 art. 2: eleva al 15 por ciento, para las actividades del anexo I de la Orden HFP/1172/2022 (agricolas, ganaderas y forestales), la reduccion general del rendimiento neto de módulos del periodo impositivo 2023 prevista en la disposición adicional primera de esa orden (10 por ciento). En vigor el dia de su publicacion (disposición final unica), dentro del plazo de declaración del ejercicio 2023, cuyo periodo impositivo rige."
 required_text = [
     "Reducción en 2023 del rendimiento neto calculado por el método de estimación objetiva para las actividades agrícolas, ganaderas y forestales",
     "será del 15 por ciento para las actividades incluidas en el anexo I de la citada orden",
@@ -1538,7 +1538,7 @@ correctores especiales (a.2 transporte por autotaxis, a.3 transporte urbano cole
 transporte de mercancias por carretera y servicios de mudanzas, a.5), y cuando resulte aplicable el \
 índice b.1 tampoco se aplica el índice corrector de exceso (b.3); el índice corrector de temporada \
 (b.2) y el de inicio de nuevas actividades (b.4) son a su vez incompatibles entre sí. El motor de \
-modulos M131 2024 (0003-cmodulos-epigrafe__cmodulos-rendimiento-neto-actividad.toml, \
+módulos M131 2024 (0003-cmodulos-epigrafe__cmodulos-rendimiento-neto-actividad.toml, \
 m131_resolve_modulos_indices_generales) aplica los cuatro índices generales (b.1, b.2, b.4, b.3) en \
 el orden de la propia Orden y hace cumplir estructuralmente las tres incompatibilidades, en paralelo \
 al motor 2025 grounded en orden-hac-1347-2024:anexo-ii-instrucción-2-3-incompatibilidades."""
@@ -1747,7 +1747,7 @@ reviewed_at = 2026-08-13
 reviewed_by = "agent-prepared-pending-operator"
 notes = """\
 Reduccion DANA 2024 para actividades economicas en estimacion objetiva en municipios afectados; \
-fundamenta el APARTADO 1 del articulo, que opera sobre el rendimiento neto de modulos del IRPF. El \
+fundamenta el APARTADO 1 del articulo, que opera sobre el rendimiento neto de módulos del IRPF. El \
 apartado 2 del mismo articulo reduce la cuota devengada por operaciones corrientes del regimen \
 simplificado del IVA y tiene su propia entrada, real-decreto-ley-7-2024:art-11.2. CAMBIO DE CORPUS. \
 corpus_ref apuntaba a un extracto recortado a mano del articulo que perdia su ultima frase (la que \
@@ -1804,7 +1804,7 @@ effective_to = 2025-12-31
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-05
 reviewed_by = "operator"
-notes = "Aprobacion de signos, indices o modulos de estimacion objetiva aplicables durante 2025."
+notes = "Aprobación de signos, indices o módulos de estimacion objetiva aplicables durante 2025."
 required_text = [
     "Artículo\u00a04.\u2003Aprobación de los signos, índices o módulos.",
     "método de estimación objetiva",
@@ -1825,7 +1825,7 @@ effective_to = 2025-12-31
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-02
 reviewed_by = "agent-authored from bundled orden-hac-1347-2024.html; operator to re-stamp"
-notes = "Reduccion general del 5 por ciento del rendimiento neto de modulos para 2025, aplicable tambien para cuantificar el rendimiento neto a efectos de los pagos fraccionados (M131) de 2025 (apartado 3)."
+notes = "Reduccion general del 5 por ciento del rendimiento neto de módulos para 2025, aplicable tambien para cuantificar el rendimiento neto a efectos de los pagos fraccionados (M131) de 2025 (apartado 3)."
 required_text = [
     "Reducción en 2025 del rendimiento neto calculado por el método de estimación objetiva",
     "podrán reducir el rendimiento neto de módulos obtenido en 2025 en un 5 por ciento",
@@ -1925,7 +1925,7 @@ correctores especiales (a.2 transporte por autotaxis, a.3 transporte urbano cole
 transporte de mercancias por carretera y servicios de mudanzas, a.5), y cuando resulte aplicable el \
 indice b.1 tampoco se aplica el indice corrector de exceso (b.3); el indice corrector de temporada \
 (b.2) y el de inicio de nuevas actividades (b.4) son a su vez incompatibles entre si. El motor de \
-modulos M131 (0003-cmodulos-epigrafe__cmodulos-rendimiento-neto-actividad.toml, \
+módulos M131 (0003-cmodulos-epigrafe__cmodulos-rendimiento-neto-actividad.toml, \
 m131_resolve_modulos_indices_generales) aplica ahora los cuatro indices generales (b.1, b.2, b.4, \
 b.3) en el orden de la propia Orden y hace cumplir estructuralmente las tres incompatibilidades: el \
 indice b.1 declarado se ignora para las dos actividades tabuladas con indice especial (721.2 \
@@ -2071,7 +2071,7 @@ Anexo II). El primer slice del motor no modela un registro de bienes de inversio
 (valor de adquisicion, coeficiente, periodo transcurrido por bien); la amortizacion se recoge como \
 un importe declarado por el operador, grounded en esta instruccion, y se resta del rendimiento neto \
 previo (casilla 1538 del Modelo 100, minorando la casilla 1537 para obtener la casilla 1539). Mismo \
-patron honesto-escalar que la minoracion por incentivos a la inversion del motor de modulos del \
+patron honesto-escalar que la minoracion por incentivos a la inversion del motor de módulos del \
 Anexo II (instruccion 2.2.b), ver orden-hac-1347-2024:instruccion-2-2-b."""
 required_text = [
     "2.2 Fase 2: Rendimiento neto minorado.",
@@ -2094,21 +2094,21 @@ review_status = "agent_reviewed"
 reviewed_at = 2026-07-03
 reviewed_by = "agent-authored from bundled orden-hac-1347-2024.html; operator to re-stamp"
 notes = """\
-Fase 3a agraria: rendimiento neto de modulos. Sobre el rendimiento neto minorado (fase 2a) se \
+Fase 3a agraria: rendimiento neto de módulos. Sobre el rendimiento neto minorado (fase 2a) se \
 aplican, cuando corresponda, los indices correctores letras a) a i) de esta instruccion, cada uno \
 sobre el rendimiento minorado o, en su caso, sobre el ya rectificado por los indices anteriores \
-(aplicacion secuencial, no simultanea, siguiendo el orden de letras del Anexo). El motor implementa \
+(aplicación secuencial, no simultanea, siguiendo el orden de letras del Anexo). El motor implementa \
 las letras a) a h) (indices 1 a 8, casillas 1540-1547 del Modelo 100: medios de produccion ajenos \
 0,75; personal asalariado 0,90/0,85/0,80/0,75 por tramos; tierras arrendadas 0,90; piensos de \
 terceros 0,50; agricultura ecologica 0,95; regadio electrico 0,75; pequena empresa (rendimiento \
 minorado <= 9.447,91 euros) 0,90; forestales 0,80) sobre la casilla 1539 para obtener la casilla \
-1548 (rendimiento neto de modulos); el indice 9 (mejillon en batea, letra i) se aplica en un \
+1548 (rendimiento neto de módulos); el indice 9 (mejillon en batea, letra i) se aplica en un \
 producto separado (casilla 0160) fuera de esta cascada. Cada indice es un valor P012 declarado por \
 el operador/preparador segun el Diseno de Registros AEAT (aeat-dr-100-2025-dictionary, campos \
 E5AI1-E5AI8); una casilla en blanco no aplica ningun indice (factor neutro), nunca fabrica una \
 reduccion no declarada. Si el rendimiento neto minorado no es positivo, no se aplica ningun indice \
 corrector (principio general de estimacion objetiva, ver el paralelo Anexo II instruccion 2.3 \
-aplicado por el motor de modulos M131)."""
+aplicado por el motor de módulos M131)."""
 required_text = [
     "Rendimiento neto de módulos.",
     "Sobre el rendimiento neto minorado se aplicarán, cuando correspondan, los índices correctores que se establecen a continuación",
@@ -2131,11 +2131,11 @@ reviewed_at = 2026-07-03
 reviewed_by = "agent-authored from bundled orden-hac-1347-2024.html; operator to re-stamp"
 notes = """\
 Fase 4a agraria: reduccion agricultores jovenes. Los agricultores jovenes o asalariados agrarios \
-podran reducir el rendimiento neto de modulos correspondiente a su actividad agraria en un 25 por \
+podran reducir el rendimiento neto de módulos correspondiente a su actividad agraria en un 25 por \
 ciento durante los periodos impositivos cerrados durante los cinco anos siguientes a su primera \
 instalacion como titulares de una explotacion prioritaria (capitulo IV, titulo I, Ley 19/1995), \
 siempre que acrediten un plan de mejora de la explotacion. Desarrolla, para el ejercicio 2025, la \
-disposicion adicional sexta de la Ley del IRPF (ley-35-2006:da-6). Base legal de la casilla 1551 del \
+disposición adicional sexta de la Ley del IRPF (ley-35-2006:da-6). Base legal de la casilla 1551 del \
 Modelo 100 2025 (motor: percent(1550, 25) cuando la casilla informativa AJ del Diseno de Registros \
 AEAT declara la elegibilidad; en blanco/No no se fabrica ninguna reduccion)."""
 required_text = [
@@ -2184,7 +2184,7 @@ effective_to = 2026-12-31
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-05
 reviewed_by = "operator"
-notes = "Aprobacion de signos, indices o modulos de estimacion objetiva aplicables durante 2026."
+notes = "Aprobación de signos, indices o módulos de estimacion objetiva aplicables durante 2026."
 required_text = [
     "Artículo\u00a04.\u2003Aprobación de los signos, índices o módulos.",
     "método de estimación objetiva",
@@ -2205,7 +2205,7 @@ effective_to = 2026-12-31
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-04
 reviewed_by = "agent-authored from bundled orden-hac-1425-2025.html; operator to re-stamp"
-notes = "Reduccion general del 5 por ciento del rendimiento neto de modulos para 2026, aplicable tambien para cuantificar el rendimiento neto a efectos de los pagos fraccionados (M131) de 2026 (apartado 3). Cross-checked byte-identical against the 2025 disposicion (orden-hac-1347-2024:da-1): same 5 por ciento figure."
+notes = "Reduccion general del 5 por ciento del rendimiento neto de módulos para 2026, aplicable tambien para cuantificar el rendimiento neto a efectos de los pagos fraccionados (M131) de 2026 (apartado 3). Cross-checked byte-identical against the 2025 disposición (orden-hac-1347-2024:da-1): same 5 por ciento figure."
 required_text = [
     "Reducción en 2026 del rendimiento neto calculado por el método de estimación objetiva",
     "podrán reducir el rendimiento neto de módulos obtenido en 2026 en un 5 por ciento",
@@ -2364,12 +2364,12 @@ correctores especiales (a.2 transporte por autotaxis, a.3 transporte urbano cole
 transporte de mercancias por carretera y servicios de mudanzas, a.5), y cuando resulte aplicable el \
 indice b.1 tampoco se aplica el indice corrector de exceso (b.3), y cuando resulte aplicable el \
 indice corrector de temporada (b.2) no se aplica el de inicio de nuevas actividades (b.4). El motor \
-de modulos M131 (0003-modulos-engine.toml) aplica para 2026 la cascada completa b.1 -> b.2 -> b.3 \
+de módulos M131 (0003-modulos-engine.toml) aplica para 2026 la cascada completa b.1 -> b.2 -> b.3 \
 -> b.4 mediante el op m131_resolve_modulos_indices_generales, que modela estructuralmente ambas \
 incompatibilidades: el indice b.1 se ignora para los epigrafes tabulados que llevan indice especial \
 (721.2 transporte por autotaxis, letra a.2; 722 transporte de mercancias por carretera, letra a.4), \
 y el indice de temporada desplaza al de inicio de nuevas actividades. Esta entrada fundamenta los \
-advisories no bloqueantes que senalan al operador la declaracion ignorada, per \
+advisories no bloqueantes que senalan al operador la declaración ignorada, per \
 orden-hac-1425-2025-Anexo-II-instruccion-2-3 y no-silent-under-declaration. Cross-checked \
 byte-identical against the 2025 instruccion \
 (orden-hac-1347-2024:anexo-ii-instruccion-2-3-incompatibilidades)."""
@@ -2437,7 +2437,7 @@ effective_from = 2007-04-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-06-27
 reviewed_by = "agent-review"
-notes = "RIRPF art 31: entidades en regimen de atribucion. Establece la aplicacion de la modalidad simplificada de estimacion directa a actividades economicas desarrolladas por entidades de atribucion de rentas cuando todos sus miembros sean contribuyentes IRPF y la entidad cumpla los requisitos reglamentarios."
+notes = "RIRPF art 31: entidades en regimen de atribucion. Establece la aplicación de la modalidad simplificada de estimacion directa a actividades economicas desarrolladas por entidades de atribucion de rentas cuando todos sus miembros sean contribuyentes IRPF y la entidad cumpla los requisitos reglamentarios."
 required_text = [
     "Entidades en régimen de atribución",
     "La modalidad simplificada del método de estimación directa",
@@ -2458,7 +2458,7 @@ effective_from = 2007-04-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-06-27
 reviewed_by = "agent-review"
-notes = "RIRPF art 39: entidades en regimen de atribucion. Establece la aplicacion del metodo de estimacion objetiva a actividades economicas desarrolladas por entidades de atribucion de rentas, con independencia de las circunstancias individuales de sus miembros y con reglas de computo del ambito de aplicacion."
+notes = "RIRPF art 39: entidades en regimen de atribucion. Establece la aplicación del metodo de estimacion objetiva a actividades economicas desarrolladas por entidades de atribucion de rentas, con independencia de las circunstancias individuales de sus miembros y con reglas de computo del ambito de aplicación."
 required_text = [
     "El método de estimación objetiva",
     "todos sus socios, herederos, comuneros o partícipes sean personas físicas",
@@ -2521,7 +2521,7 @@ effective_from = 2019-01-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "agent-review"
-notes = "Aprobacion del Modelo 117 como autoliquidacion periodica de retenciones, ingresos a cuenta y pagos a cuenta sobre rentas o ganancias por transmisiones o reembolsos de participaciones de IIC y transmisiones de derechos de suscripcion."
+notes = "Aprobación del Modelo 117 como autoliquidacion periodica de retenciones, ingresos a cuenta y pagos a cuenta sobre rentas o ganancias por transmisiones o reembolsos de participaciones de IIC y transmisiones de derechos de suscripcion."
 required_text = [
     "ANEXO I",
     "Se sustituye por el que figura como anexo de la Orden HAC/1417/2018",
@@ -2541,7 +2541,7 @@ effective_from = 2008-04-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-05
 reviewed_by = "operator"
-notes = "Aprobacion de Modelo 123 como autoliquidacion periodica de retenciones e ingresos a cuenta sobre determinados rendimientos del capital mobiliario y determinadas rentas."
+notes = "Aprobación de Modelo 123 como autoliquidacion periodica de retenciones e ingresos a cuenta sobre determinados rendimientos del capital mobiliario y determinadas rentas."
 required_text = [
     "Modelo 123",
     "Autoliquidación periódica-Modelo 123",
@@ -2561,7 +2561,7 @@ effective_from = 2008-04-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "agent-review"
-notes = "Aprobacion del Modelo 126 como autoliquidacion periodica de retenciones e ingresos a cuenta sobre rendimientos del capital mobiliario y rentas por la contraprestacion de cuentas en instituciones financieras."
+notes = "Aprobación del Modelo 126 como autoliquidacion periodica de retenciones e ingresos a cuenta sobre rendimientos del capital mobiliario y rentas por la contraprestacion de cuentas en instituciones financieras."
 required_text = ["ANEXO IV"]
 
 [legal."orden-eha-3435-2007:anexo-v"]
@@ -2577,7 +2577,7 @@ effective_from = 2008-04-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "agent-review"
-notes = "Aprobacion del Modelo 128 como autoliquidacion periodica de retenciones e ingresos a cuenta sobre rentas o rendimientos del capital mobiliario procedentes de operaciones de capitalizacion y contratos de seguro."
+notes = "Aprobación del Modelo 128 como autoliquidacion periodica de retenciones e ingresos a cuenta sobre rentas o rendimientos del capital mobiliario procedentes de operaciones de capitalizacion y contratos de seguro."
 required_text = ["ANEXO V"]
 
 [legal."orden-hac-56-2024:art-1"]
@@ -2658,7 +2658,7 @@ effective_from = 2019-12-31
 review_status = "agent_reviewed"
 reviewed_at = 2026-08-25
 reviewed_by = "agent: inspected the bundled full BOE-A-2019-18752 text and the official AEAT 2019 record design"
-notes = "Orden HAC/1276/2019 articulo primero modifies the Modelo 194 record design and its disposicion final unica applies it first to ejercicio 2019 declarations presented in 2020."
+notes = "Orden HAC/1276/2019 articulo primero modifies the Modelo 194 record design and its disposición final unica applies it first to ejercicio 2019 declarations presented in 2020."
 required_text = [
     "Artículo primero. Modificación de la Orden de 18 de noviembre de 1999",
     "modelos 194",
@@ -2678,7 +2678,7 @@ effective_from = 2019-12-31
 review_status = "agent_reviewed"
 reviewed_at = 2026-08-25
 reviewed_by = "agent: inspected the bundled full BOE-A-2019-18752 text and the official AEAT 2019 record design"
-notes = "Orden HAC/1276/2019 disposicion final unica: first application to declarations for ejercicio 2019 presented in 2020."
+notes = "Orden HAC/1276/2019 disposición final unica: first application to declarations for ejercicio 2019 presented in 2020."
 required_text = [
     "Disposición final única. Entrada en vigor.",
     "declaraciones correspondientes a 2019 que se presenten en 2020",
@@ -2718,7 +2718,7 @@ effective_from = 2023-12-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-08-25
 reviewed_by = "agent: inspected the bundled full BOE-A-2023-24412 text and the official AEAT 2023 record design"
-notes = "Orden HFP/1284/2023 disposicion final unica: first application to declarations for ejercicio 2023 presented in 2024."
+notes = "Orden HFP/1284/2023 disposición final unica: first application to declarations for ejercicio 2023 presented in 2024."
 required_text = [
     "Disposición final única",
     "declaraciones informativas correspondientes al ejercicio 2023",
@@ -2894,7 +2894,7 @@ effective_from = 2011-12-13
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-05
 reviewed_by = "operator"
-notes = "Aprobacion del Modelo 193 y de sus disenos fisicos y logicos para resumen anual de retenciones e ingresos a cuenta sobre rendimientos del capital mobiliario y determinadas rentas."
+notes = "Aprobación del Modelo 193 y de sus disenos fisicos y logicos para resumen anual de retenciones e ingresos a cuenta sobre rendimientos del capital mobiliario y determinadas rentas."
 required_text = [
     "Se aprueba el modelo 193",
     "Declaración resumen anual de retenciones e ingresos a cuenta",
@@ -2933,7 +2933,7 @@ effective_from = 2009-11-24
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-05
 reviewed_by = "operator"
-notes = "Aprobacion del Modelo 190 como resumen anual de retenciones e ingresos a cuenta de IRPF sobre rendimientos del trabajo, actividades economicas, premios, ganancias patrimoniales e imputaciones de renta."
+notes = "Aprobación del Modelo 190 como resumen anual de retenciones e ingresos a cuenta de IRPF sobre rendimientos del trabajo, actividades economicas, premios, ganancias patrimoniales e imputaciones de renta."
 required_text = [
     "Se aprueba el modelo 190",
     "Retenciones e ingresos a cuenta",
@@ -2974,7 +2974,7 @@ effective_from = 2024-12-20
 review_status = "agent_reviewed"
 reviewed_by = "agent: enrolled from the bundled BOE text alongside art-unico. This disposicion is enrolled SEPARATELY because it is the thing that splits the orden: without it a reader would take the whole article to apply to ejercicio 2024, which is false for apartado uno. Both required_text phrases confirmed present. NOT CLAIMED -- no operator countersignature."
 reviewed_at = 2026-09-12
-notes = """Disposicion final unica: THE ORDEN HAS TWO EFFECTIVE DATES. Its principal limb applies "por primera vez para la presentacion del modelo 190 correspondiente al ejercicio 2024 y cuyo plazo de presentacion se inicie a partir del 1 de enero de 2025". Its carve-out defers apartado uno -- the SUBCLAVE field at positions 79-80, where clave C subclaves 07, 08 and 09 are rewritten and created -- to ejercicio 2025. The bundled 2024 diseno de registro corroborates this from the other side: it PRINTS subclaves 07/08/09 in their post-amendment wording and stamps them "Esta modificacion no sera aplicable" three times, where the 2025 design stamps them zero times. A modelo 190 2024 row asserting clave C subclave 07, 08 or 09 content is therefore NOT grounded by this orden."""
+notes = """Disposición final unica: THE ORDEN HAS TWO EFFECTIVE DATES. Its principal limb applies "por primera vez para la presentación del modelo 190 correspondiente al ejercicio 2024 y cuyo plazo de presentación se inicie a partir del 1 de enero de 2025". Its carve-out defers apartado uno -- the SUBCLAVE field at positions 79-80, where clave C subclaves 07, 08 and 09 are rewritten and created -- to ejercicio 2025. The bundled 2024 diseno de registro corroborates this from the other side: it PRINTS subclaves 07/08/09 in their post-amendment wording and stamps them "Esta modificacion no sera aplicable" three times, where the 2025 design stamps them zero times. A modelo 190 2024 row asserting clave C subclave 07, 08 or 09 content is therefore NOT grounded by this orden."""
 required_text = [
     "No obstante, el apartado uno del articulo unico de esta orden sera aplicable por primera vez para la presentacion del modelo 190 correspondiente al ejercicio 2025",
     "Disposicion final unica",
@@ -3838,7 +3838,7 @@ effective_from = 2015-01-01
 review_status = "agent_reviewed"
 reviewed_by = "agent: enrolled from the bundled consolidated IRPF law (ley-35-2006.html). The modelo 280 diseno de registro invokes this disposicion four times as the substantive authority for the PALP regime, for the retention base and for the imputable negative return, and no table existed for it, so the 2022-2024 authoring could not cite what its own design rests on. Both required_text phrases confirmed present in the bundled payload. NOT CLAIMED -- no operator countersignature; the effective_from records when the PALP regime began under Ley 26/2014, not this law's own 2006 entry into force."
 reviewed_at = 2026-09-12
-notes = """IRPF DA 26: configures the Plan de Ahorro a Largo Plazo as a contract between the contribuyente and an aseguradora or entidad de credito, instrumented either as a Seguro Individual de Vida a Largo Plazo or as a Cuenta Individual de Ahorro a Largo Plazo. It is the substantive regime modelo 280 reports on; the approving orden HAP/2118/2015 creates the declaration, this disposicion creates the thing declared."""
+notes = """IRPF DA 26: configures the Plan de Ahorro a Largo Plazo as a contract between the contribuyente and an aseguradora or entidad de credito, instrumented either as a Seguro Individual de Vida a Largo Plazo or as a Cuenta Individual de Ahorro a Largo Plazo. It is the substantive regime modelo 280 reports on; the approving orden HAP/2118/2015 creates the declaration, this disposición creates the thing declared."""
 required_text = [
     "Planes de Ahorro a Largo Plazo",
     "contratos celebrados entre el contribuyente y una entidad aseguradora o de credito",
@@ -4497,7 +4497,7 @@ review_status = "agent_reviewed"
 reviewed_at = 2026-07-02
 reviewed_by = "agent-authored from bundled ley-35-2006.html#a61; operator to re-stamp"
 notes = """\
-LIRPF art 61: normas comunes para la aplicacion del minimo del contribuyente y por descendientes, \
+LIRPF art 61: normas comunes para la aplicación del minimo del contribuyente y por descendientes, \
 ascendientes y discapacidad. Norma 1a: cuando dos o mas contribuyentes tengan derecho al minimo por \
 descendientes, ascendientes o discapacidad respecto de los mismos ascendientes o descendientes, su \
 importe se prorrateara entre ellos por partes iguales -- the custodia-compartida 50% prorrata \
@@ -4532,7 +4532,7 @@ introduces the tranche list, which is what separates this clause from art 61 nor
 grado-de-parentesco tie-break -- that clause carries the SAME 8.000-euro figure but applies it to \
 the CLAIMANT rather than the descendant, and reads 'no tengan ... en cuyo caso'. Confirmed present \
 in the art-58 unit and absent from the art-61 unit. AGENT-AUTHORED, grounded in the bundled \
-authoritative consolidated ley-35-2006.html#a58 (redaccion Ley 26/2014, en vigor 01/01/2015, \
+authoritative consolidated ley-35-2006.html#a58 (redacción Ley 26/2014, en vigor 01/01/2015, \
 unamended since); operator to confirm and re-stamp."""
 required_text = [
     "no tenga rentas anuales, excluidas las exentas, superiores a 8.000 euros, de:",
@@ -4553,13 +4553,13 @@ reviewed_at = 2026-08-04
 reviewed_by = "agent-authored from bundled ley-35-2006.html#a61; operator to re-stamp"
 notes = """\
 LIRPF art 61 norma 2a: the own-return exclusion. The minimo does not apply at all when the \
-ascendiente or descendiente who generates the entitlement files their own declaracion for this \
+ascendiente or descendiente who generates the entitlement files their own declaración for this \
 Impuesto with rentas superiores a 1.800 euros. This is an exclusion threshold on the DEPENDANT's own \
 filing, distinct from art 58.1's 8.000-euro rentas ceiling, and distinct from norma 1a's prorrateo \
 which the parent ley-35-2006:art-61 entry already pins. The 1.800-euro figure is pinned verbatim \
 here because the parent entry's required_text covers only the norma 1a prorrateo clause. SCOPE, and \
 read this before authoring anything adjacent: the clause governs THREE minimos in one sentence -- \
-'No procedera la aplicacion del minimo por descendientes, ascendientes o discapacidad' -- so this \
+'No procedera la aplicación del minimo por descendientes, ascendientes o discapacidad' -- so this \
 entry is the single authority for all three, not a descendientes-only entry. Only the descendientes \
 predicate consumes it today, and the per-year parameters are named \
 'minimo-descendientes-declaracion-propia-rentas-limite' after that first consumer rather than after \
@@ -4568,7 +4568,7 @@ and no binding, so nothing is incomplete. Whoever builds an ascendientes or disc
 MUST cite this entry and reuse the existing 1.800 parameter rather than minting a second legal entry \
 and a second parameter for the same clause and the same figure -- one clause, one authority, one \
 figure. AGENT-AUTHORED, grounded in the bundled authoritative consolidated ley-35-2006.html#a61 \
-(redaccion Ley 26/2014, en vigor 01/01/2015, unamended since); operator to confirm and re-stamp."""
+(redacción Ley 26/2014, en vigor 01/01/2015, unamended since); operator to confirm and re-stamp."""
 required_text = [
     "presenten declaración por este Impuesto con rentas superiores a 1.800 euros",
 ]
@@ -4606,7 +4606,7 @@ age 'sin computar a estos efectos aquellos descendientes que, en su caso, hubier
 ejercicio con anterioridad a la fecha de devengo del impuesto' -- which has no counterpart in the \
 statutory text of norma 4a and is grounded on the manual source instead. Omitting that second limb \
 over-grants every younger sibling by leaving them at a rank the deceased should have vacated. \
-AGENT-AUTHORED, grounded in the bundled authoritative consolidated ley-35-2006.html#a61 (redaccion \
+AGENT-AUTHORED, grounded in the bundled authoritative consolidated ley-35-2006.html#a61 (redacción \
 Ley 26/2014, en vigor 01/01/2015, unamended since; norma 4a last modified by Ley 39/2010 art 61.5 \
 with effect 01/01/2011 and then by Ley 26/2014); operator to confirm and re-stamp."""
 required_text = [
@@ -5487,7 +5487,7 @@ effective_from = 2026-03-28
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-05
 reviewed_by = "operator"
-notes = "Aprobacion del Modelo D-100 y documentos de ingreso o devolucion del IRPF ejercicio 2025."
+notes = "Aprobación del Modelo D-100 y documentos de ingreso o devolucion del IRPF ejercicio 2025."
 required_text = [
     "Artículo 3",
     "Modelo D-100",
@@ -5507,7 +5507,7 @@ effective_from = 2026-03-28
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-21
 reviewed_by = "operator"
-notes = "Articulo 7 de la Orden HAC/277/2026: plazo de presentacion de la declaracion del IRPF ejercicio 2025. El plazo general comprende del 8 de abril al 30 de junio de 2026. La domiciliacion bancaria del pago puede realizarse desde el 8 de abril hasta el 25 de junio de 2026."
+notes = "Articulo 7 de la Orden HAC/277/2026: plazo de presentación de la declaración del IRPF ejercicio 2025. El plazo general comprende del 8 de abril al 30 de junio de 2026. La domiciliacion bancaria del pago puede realizarse desde el 8 de abril hasta el 25 de junio de 2026."
 required_text = [
     "Plazo de presentación del borrador de declaración",
     "8 de abril y 30 de junio de 2026",
@@ -5550,7 +5550,7 @@ effective_from = 2024-03-23
 review_status = "agent_reviewed"
 reviewed_at = 2026-06-29
 reviewed_by = "verified against bundled orden-hac-265-2024.html; operator to re-stamp"
-notes = "Orden HAC/265/2024 art 3: aprobacion del Modelo D-100 y documentos de ingreso o devolucion del IRPF ejercicio 2023."
+notes = "Orden HAC/265/2024 art 3: aprobación del Modelo D-100 y documentos de ingreso o devolucion del IRPF ejercicio 2023."
 required_text = [
     "Artículo 3",
     "modelo D-100",
@@ -5570,7 +5570,7 @@ effective_from = 2024-03-23
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-21
 reviewed_by = "operator"
-notes = "Articulo 8 de la Orden HAC/265/2024: plazo de presentacion de la declaracion del IRPF ejercicio 2023. El plazo general comprende del 3 de abril al 1 de julio de 2024. La domiciliacion bancaria del pago puede realizarse desde el 3 de abril hasta el 26 de junio de 2024."
+notes = "Articulo 8 de la Orden HAC/265/2024: plazo de presentación de la declaración del IRPF ejercicio 2023. El plazo general comprende del 3 de abril al 1 de julio de 2024. La domiciliacion bancaria del pago puede realizarse desde el 3 de abril hasta el 26 de junio de 2024."
 required_text = [
     "Plazo de presentación del borrador de declaración",
     "3 de abril y 1 de julio de 2024",
@@ -5613,7 +5613,7 @@ effective_from = 2021-03-18
 review_status = "agent_reviewed"
 reviewed_at = 2026-06-29
 reviewed_by = "verified against bundled orden-hac-248-2021.html; operator to re-stamp"
-notes = "Orden HAC/248/2021 art 3: aprobacion del Modelo D-100 y documentos de ingreso o devolucion del IRPF ejercicio 2020."
+notes = "Orden HAC/248/2021 art 3: aprobación del Modelo D-100 y documentos de ingreso o devolucion del IRPF ejercicio 2020."
 required_text = [
     "Artículo 3",
     "modelo D-100",
@@ -5633,7 +5633,7 @@ effective_from = 2021-03-18
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-27
 reviewed_by = "operator"
-notes = "Articulo 8 de la Orden HAC/248/2021: plazo de presentacion de la declaracion del IRPF ejercicio 2020. El plazo general comprende del 7 de abril al 30 de junio de 2021. La domiciliacion bancaria del pago puede realizarse desde el 7 de abril hasta el 25 de junio de 2021."
+notes = "Articulo 8 de la Orden HAC/248/2021: plazo de presentación de la declaración del IRPF ejercicio 2020. El plazo general comprende del 7 de abril al 30 de junio de 2021. La domiciliacion bancaria del pago puede realizarse desde el 7 de abril hasta el 25 de junio de 2021."
 required_text = [
     "Plazo de presentación del borrador de declaración",
     "7 de abril y 30 de junio de 2021",
@@ -5676,7 +5676,7 @@ effective_from = 2022-03-18
 review_status = "agent_reviewed"
 reviewed_at = 2026-06-29
 reviewed_by = "verified against bundled orden-hfp-207-2022.html; operator to re-stamp"
-notes = "Orden HFP/207/2022 art 3: aprobacion del Modelo D-100 y documentos de ingreso o devolucion del IRPF ejercicio 2021."
+notes = "Orden HFP/207/2022 art 3: aprobación del Modelo D-100 y documentos de ingreso o devolucion del IRPF ejercicio 2021."
 required_text = [
     "Artículo 3",
     "modelo D-100",
@@ -5696,7 +5696,7 @@ effective_from = 2022-03-18
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-27
 reviewed_by = "operator"
-notes = "Articulo 8 de la Orden HFP/207/2022: plazo de presentacion de la declaracion del IRPF ejercicio 2021. El plazo general comprende del 6 de abril al 30 de junio de 2022. La domiciliacion bancaria del pago puede realizarse desde el 6 de abril hasta el 27 de junio de 2022."
+notes = "Articulo 8 de la Orden HFP/207/2022: plazo de presentación de la declaración del IRPF ejercicio 2021. El plazo general comprende del 6 de abril al 30 de junio de 2022. La domiciliacion bancaria del pago puede realizarse desde el 6 de abril hasta el 27 de junio de 2022."
 required_text = [
     "Plazo de presentación del borrador de declaración",
     "6 de abril y 30 de junio de 2022",
@@ -5739,7 +5739,7 @@ effective_from = 2023-04-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-06-29
 reviewed_by = "verified against bundled orden-hfp-310-2023.html; operator to re-stamp"
-notes = "Orden HFP/310/2023 art 3: aprobacion del Modelo D-100 y documentos de ingreso o devolucion del IRPF ejercicio 2022."
+notes = "Orden HFP/310/2023 art 3: aprobación del Modelo D-100 y documentos de ingreso o devolucion del IRPF ejercicio 2022."
 required_text = [
     "Artículo 3",
     "modelo D-100",
@@ -5759,7 +5759,7 @@ effective_from = 2023-04-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-27
 reviewed_by = "operator"
-notes = "Articulo 8 de la Orden HFP/310/2023: plazo de presentacion de la declaracion del IRPF ejercicio 2022. El plazo general comprende del 11 de abril al 30 de junio de 2023. La domiciliacion bancaria del pago puede realizarse desde el 11 de abril hasta el 27 de junio de 2023."
+notes = "Articulo 8 de la Orden HFP/310/2023: plazo de presentación de la declaración del IRPF ejercicio 2022. El plazo general comprende del 11 de abril al 30 de junio de 2023. La domiciliacion bancaria del pago puede realizarse desde el 11 de abril hasta el 27 de junio de 2023."
 required_text = [
     "Plazo de presentación del borrador de declaración",
     "11 de abril y 30 de junio de 2023",
@@ -5802,7 +5802,7 @@ effective_from = 2025-03-15
 review_status = "agent_reviewed"
 reviewed_at = 2026-06-29
 reviewed_by = "verified against bundled orden-hac-242-2025.html; operator to re-stamp"
-notes = "Orden HAC/242/2025 art 3: aprobacion del Modelo D-100 y documentos de ingreso o devolucion del IRPF ejercicio 2024."
+notes = "Orden HAC/242/2025 art 3: aprobación del Modelo D-100 y documentos de ingreso o devolucion del IRPF ejercicio 2024."
 required_text = [
     "Artículo 3",
     "modelo D-100",
@@ -5822,7 +5822,7 @@ effective_from = 2025-03-15
 review_status = "agent_reviewed"
 reviewed_at = 2026-06-28
 reviewed_by = "verified against official BOE-A-2025-5049#a8 and bundled orden-hac-242-2025.html; operator to re-stamp"
-notes = "Articulo 8 de la Orden HAC/242/2025: plazo de presentacion de la declaracion del IRPF ejercicio 2024. El plazo general comprende del 2 de abril al 30 de junio de 2025. La domiciliacion bancaria del pago puede realizarse desde el 2 de abril hasta el 25 de junio de 2025, por remision al articulo 13.3."
+notes = "Articulo 8 de la Orden HAC/242/2025: plazo de presentación de la declaración del IRPF ejercicio 2024. El plazo general comprende del 2 de abril al 30 de junio de 2025. La domiciliacion bancaria del pago puede realizarse desde el 2 de abril hasta el 25 de junio de 2025, por remision al articulo 13.3."
 required_text = [
     "Plazo de presentación del borrador de declaración",
     "2 de abril y 30 de junio de 2025",
@@ -7725,7 +7725,7 @@ effective_from = 2008-01-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-08-27
 reviewed_by = "agent-authored from bundled rd-439-2007.html#a9; operator to re-stamp"
-notes = "RIRPF art 9: dietas y asignaciones para gastos normales de manutencion. Carries the four daily manutencion limits (53,34 y 91,35 con pernocta; 26,67 y 48,08 sin pernocta) that LIRPF art. 30.2.5.c adopts by reference as the cap on a self-employed taxpayer's own manutencion expense. effective_from is 2008-01-01 rather than the 2007-03-31 publication because apartado A.3, which carries these amounts, was given that effect by the disposicion final 3.1 of Real Decreto 1804/2008 (Ref. BOE-A-2008-18548); the later date is the conservative claim and both span every supported filing year."
+notes = "RIRPF art 9: dietas y asignaciones para gastos normales de manutencion. Carries the four daily manutencion limits (53,34 y 91,35 con pernocta; 26,67 y 48,08 sin pernocta) that LIRPF art. 30.2.5.c adopts by reference as the cap on a self-employed taxpayer's own manutencion expense. effective_from is 2008-01-01 rather than the 2007-03-31 publication because apartado A.3, which carries these amounts, was given that effect by the disposición final 3.1 of Real Decreto 1804/2008 (Ref. BOE-A-2008-18548); the later date is the conservative claim and both span every supported filing year."
 required_text = [
     "Dietas y asignaciones para gastos de locomoción y gastos normales de manutención y estancia",
     "Por gastos de manutención, 53,34 euros diarios",
