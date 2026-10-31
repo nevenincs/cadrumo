@@ -153,6 +153,8 @@ TRANSLATION_SPANISH_AUTHORITY_RE: Final[re.Pattern[str]] = re.compile(
     # Complete official DEHú service name; its individual words stay local.
     # https://administracion.gob.es/lectura-facil/notificaciones
     r"Dirección Electrónica Habilitada (?:Única|única)|"
+    # https://www.fnmt.es/es/contacto
+    r"Fábrica Nacional de Moneda y Timbre|"
     # Retained proper names in profile adoption guidance and the ROI, REDEME
     # and REBECA guides. Only the complete names change dictionary ownership.
     r"Registro (?:Civil|de Operadores Intracomunitarios|de Devolución Mensual|"
@@ -171,6 +173,14 @@ TRANSLATION_SPANISH_TAX_TERM_RE: Final[re.Pattern[str]] = re.compile(
     # Full official tax names retained in the bilingual lifecycle guides.
     # https://sede.agenciatributaria.gob.es/Sede/iva/novedades-iva/novedades-normativa-2025/orden-hac-1425-2025-9-diciembre.html
     r"Impuesto sobre la Renta de las Personas Físicas|Impuesto sobre el Valor Añadido|"
+    # Complete official identification and maritime-regime names, plus the
+    # installment-payment term retained in modelo guidance.
+    # https://sede.agenciatributaria.gob.es/Sede/ayuda/consultas-informaticas/otros-servicios-ayuda-tecnica/apoderamientos-otorgados.html
+    # https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/guia-practica-cumplimentacion-modelo-censal-036/capitulo-02-identificacion/modelo-036/pagina-2a-identificacion-personas-fisicas/identificacion.html
+    # https://www.seg-social.es/wps/portal/wss/internet/Trabajadores/Afiliacion/10548/32840/610
+    # https://www3.agenciatributaria.gob.es/Sede/irpf/retenciones-ingresos-cuenta-pagos-fraccionados/pagos-fraccionados/gestiones-pagos-fraccionados.html
+    r"Número de Identificación Fiscal|Número de Identidad de Extranjero|"
+    r"Régimen Especial de Trabajadores del Mar|pago fraccionado|pagos fraccionados(?: anteriores)?|"
     # This is the exact bold navigation label in the notifications guide.
     # https://sede.agenciatributaria.gob.es/Sede/mi-area-personal.html
     r"(?<=\*\*)Mis notificaciones(?=\*\*)|"
@@ -183,7 +193,9 @@ TRANSLATION_SPANISH_TAX_TERM_RE: Final[re.Pattern[str]] = re.compile(
     r"operaciones (?:vinculadas|intracomunitarias|con terceros)|"
     r"sede electrónica|cuenta corriente tributaria|domiciliación bancaria|"
     r"autoliquidación conjunta|referencia catastral|situación catastral|"
-    r"diseño de registros|consulta de declaraciones presentadas|fichero BOE|"
+    # AEAT uses both number forms and sentence-initial capitalization.
+    # https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_100_199/archivos/DR-128e16_v1.05.pdf
+    r"(?:diseño|Diseño) de registros?|consulta de declaraciones presentadas|fichero BOE|"
     r"cotejo por CSV|CSV cotejo|"
     # English UI and guidance deliberately retain these complete Spanish
     # statutory phrases. Keep the route phrase-specific: their component words

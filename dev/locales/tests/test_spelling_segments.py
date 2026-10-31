@@ -65,8 +65,16 @@ def test_standard_name_mutations_and_unpaired_product_words_stay_local(locale: s
     [
         ("Dirección Electrónica Habilitada Única", "Dirección"),
         ("Dirección Electrónica Habilitada única", "Dirección"),
+        ("Fábrica Nacional de Moneda y Timbre", "Fábrica"),
         ("Impuesto sobre la Renta de las Personas Físicas", "Físicas"),
         ("Impuesto sobre el Valor Añadido", "Añadido"),
+        ("Número de Identificación Fiscal", "Identificación"),
+        ("Número de Identidad de Extranjero", "Extranjero"),
+        ("Régimen Especial de Trabajadores del Mar", "Trabajadores"),
+        ("pagos fraccionados anteriores", "fraccionados"),
+        ("pago fraccionado", "fraccionado"),
+        ("Diseño de registro", "Diseño"),
+        ("diseño de registros", "diseño"),
         ("**Mis notificaciones**", "notificaciones"),
     ],
 )
