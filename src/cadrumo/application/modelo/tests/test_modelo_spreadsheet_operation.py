@@ -6,7 +6,6 @@ import asyncio
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from dataclasses import replace
-from datetime import datetime
 from pathlib import Path
 from types import SimpleNamespace
 from typing import NoReturn, cast
@@ -33,6 +32,7 @@ from ...operations.public_period import PublicPeriod
 from ...operations.refusal_evidence import OperationRefusalEvidence
 from ...operations.registry import OperationFrontendProjection, OperationRegistry
 from ...storage.calc_sheets.engine import build_export_plan
+from ...tests.operation_host_fakes import RecordingEvents, RecordingOperands
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..export_sink import LocalFileExportReceipt, LocalFileExportSink, ModeloExportOutputPathError
 from ..modelo_spreadsheet_executor import ModeloSpreadsheetExecutor
@@ -66,12 +66,12 @@ def test_retired_request_is_refused_before_ports_or_provider(
         profile_id=_PROFILE, modelo="130", period=_PERIOD, output_path=str(Path.cwd() / "unused.xlsx")
     )
     request = _request(f"modelo.spreadsheet.{verb}", payload)
-    scope, events, operands = _Scope(), _Events(), _Operands()
+    scope, events, operands = _Scope(), RecordingEvents(), RecordingOperands("f" * 64)
     executor = ModeloSpreadsheetExecutor(_unavailable)
     with pytest.raises(ProfileAccessRefusedError) as error:
         asyncio.run(executor.execute(request, _context(request, authority_operation, scope, events, operands)))
     assert error.value.reason is AccessDenialCode.OPERATION_UNAVAILABLE
-    assert not operands.rows and not events.effects and scope.admissions == 0
+    assert not operands.stored and not events.effects and scope.admissions == 0
 
 
 class _Scope:
@@ -93,27 +93,6 @@ class _Scope:
             self.held = False
 
 
-class _Events:
-    def __init__(self) -> None:
-        self.effects: list[OperationEffect] = []
-
-    async def phase(self, _phase: str) -> None:
-        pass
-
-    async def effect(self, effect: OperationEffect) -> None:
-        self.effects.append(effect)
-
-
-class _Operands:
-    def __init__(self) -> None:
-        self.rows: list[BaseModel] = []
-
-    async def put(self, operand: BaseModel, *, written_at: datetime) -> str:
-        assert written_at.tzinfo is not None
-        self.rows.append(operand)
-        return "f" * 64
-
-
 def _request(definition_id: str, payload: BaseModel) -> OperationRequest[BaseModel]:
     return OperationRequest[BaseModel](
         definition_id=definition_id, subject_ref=profile_operation_subject(str(_PROFILE)), payload=payload
@@ -124,8 +103,8 @@ def _context(
     request: OperationRequest[BaseModel],
     operation: PinnedAuthorityOperation,
     scope: _Scope,
-    events: _Events,
-    operands: _Operands,
+    events: RecordingEvents,
+    operands: RecordingOperands,
 ) -> OperationExecutorContext:
     return cast(
         OperationExecutorContext,
@@ -195,7 +174,7 @@ def test_foreign_worker_profile_is_refused_before_port_construction(
             profile_id=_PROFILE, modelo="130", period=_PERIOD, output_path=str(Path.cwd() / "review.xlsx")
         ),
     )
-    scope, events, operands = _Scope(), _Events(), _Operands()
+    scope, events, operands = _Scope(), RecordingEvents(), RecordingOperands("f" * 64)
     definition = _definition(_unavailable, request.definition_id)
     with override_settings(cadrumo_active_profile=str(uuid4())), pytest.raises(ProfileAccessRefusedError) as error:
         asyncio.run(
@@ -204,14 +183,14 @@ def test_foreign_worker_profile_is_refused_before_port_construction(
             )
         )
     assert error.value.reason is AccessDenialCode.PROFILE_MISMATCH
-    assert not operands.rows and not events.effects and scope.admissions == 0
+    assert not operands.stored and not events.effects and scope.admissions == 0
 
 
 @pytest.mark.parametrize("refuse", [False, True])
 def test_export_publication_uses_real_local_commit_and_receipt(
     tmp_path: Path, authority_operation: PinnedAuthorityOperation, monkeypatch: pytest.MonkeyPatch, refuse: bool
 ) -> None:
-    scope, events, operands = _Scope(refuse=refuse), _Events(), _Operands()
+    scope, events, operands = _Scope(refuse=refuse), RecordingEvents(), RecordingOperands("f" * 64)
     target = tmp_path / "modelo.xlsx"
     original_write = LocalFileExportSink.write
 
@@ -233,7 +212,7 @@ def test_export_publication_uses_real_local_commit_and_receipt(
                         request, _context(request, authority_operation, scope, events, operands)
                     )
                 )
-            assert not target.exists() and not operands.rows and events.effects == [OperationEffect.NONE]
+            assert not target.exists() and not operands.stored and events.effects == [OperationEffect.NONE]
             return
         asyncio.run(
             definition.executor_factory.create().execute(
@@ -241,7 +220,7 @@ def test_export_publication_uses_real_local_commit_and_receipt(
             )
         )
     assert not scope.held and events.effects == [OperationEffect.UNKNOWN, OperationEffect.UPDATED]
-    execution_result = operands.rows[0]
+    execution_result = operands.stored[0]
     assert isinstance(execution_result, ModeloSpreadsheetExecutionResult)
     projection = execution_result.projection
     assert isinstance(projection, ModeloSpreadsheetExportOutcome)
@@ -350,7 +329,7 @@ def test_output_refusal_retains_closed_facts_and_actual_effect(
         monkeypatch.setattr(LocalFileExportSink, "write", failed_write)
     else:
         target.write_bytes(b"original")
-    scope, events, operands = _Scope(), _Events(), _Operands()
+    scope, events, operands = _Scope(), RecordingEvents(), RecordingOperands("f" * 64)
     definition = _definition(_factory(_ports(authority_operation)), MODELO_SPREADSHEET_EXPORT_OPERATION_DEFINITION_ID)
     request = _request(
         definition.definition_id,
@@ -365,7 +344,7 @@ def test_output_refusal_retains_closed_facts_and_actual_effect(
     assert isinstance(evidence, OperationRefusalEvidence)
     effect = OperationEffect.UNKNOWN if during_publication else OperationEffect.NONE
     assert events.effects[-1] is effect
-    retained = operands.rows[0]
+    retained = operands.stored[0]
     assert isinstance(retained, ModeloSpreadsheetExecutionResult)
     assert retained.effect == effect.value
     detail = retained.projection.refusal
