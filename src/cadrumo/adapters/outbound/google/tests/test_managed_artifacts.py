@@ -2,12 +2,18 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterator
+from contextlib import contextmanager
 from pathlib import Path
 from uuid import UUID, uuid4
 
 import pytest
 
-from .....application.export.managed_artifact_ports import ManagedArtifactKind, ManagedArtifactPurpose
+from .....application.export.managed_artifact_ports import (
+    ArtifactCreationReceipt,
+    ManagedArtifactKind,
+    ManagedArtifactPurpose,
+)
 from .....core.hashing import sha256_hex
 from ....persistence.storage.errors import SecureObjectRevisionConflictError
 from ....persistence.storage.tests.secure_sql import isolated_runtime_profile
@@ -16,14 +22,19 @@ from ..artifact_admission import GoogleArtifactAdmission
 from ..artifact_receipt_store import GoogleArtifactReceiptStore
 from ..managed_artifacts import ManagedGoogleArtifacts
 from ..root_folder import ensure_root_folder
-from .drive_files_server import drive_files_endpoint
+from .drive_files_server import DriveFilesEndpoint, drive_files_endpoint
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_outbound_adapter]
 _PROFILE = UUID("3d2a9c41-7f5e-4b0a-9c1d-5e8f7a6b4c32")
 
 
-@pytest.mark.parametrize("duplicate", [False, True])
-def test_lost_create_response_reconciles_only_one_intent_match_without_replay(tmp_path: Path, duplicate: bool) -> None:
+@contextmanager
+def _managed_artifacts(
+    tmp_path: Path,
+) -> Iterator[
+    tuple[DriveFilesEndpoint, GoogleArtifactReceiptStore, str, ArtifactCreationReceipt, ManagedGoogleArtifacts]
+]:
+    """Open a profile, a Drive endpoint, the root folder receipt and a transport bound to them."""
     with (
         isolated_runtime_profile(tmp_path=tmp_path, bucket_id=str(_PROFILE)) as profile,
         drive_files_endpoint() as drive,
@@ -35,6 +46,12 @@ def test_lost_create_response_reconciles_only_one_intent_match_without_replay(tm
         transport = ManagedGoogleArtifacts(
             GoogleArtifactAdmission(drive.service, profile_id=_PROFILE, root=root, receipts=receipts), receipts=receipts
         )
+        yield drive, receipts, root_id, root, transport
+
+
+@pytest.mark.parametrize("duplicate", [False, True])
+def test_lost_create_response_reconciles_only_one_intent_match_without_replay(tmp_path: Path, duplicate: bool) -> None:
+    with _managed_artifacts(tmp_path) as (drive, receipts, _root_id, root, transport):
         publication_id = uuid4()
         parent = transport.admit(root, purpose=ManagedArtifactPurpose.PUBLICATION)
         drive.create_statuses.append(503)
@@ -72,17 +89,7 @@ def test_lost_create_response_reconciles_only_one_intent_match_without_replay(tm
 
 
 def test_native_creation_and_binary_population_preserve_prior_artifacts(tmp_path: Path) -> None:
-    with (
-        isolated_runtime_profile(tmp_path=tmp_path, bucket_id=str(_PROFILE)) as profile,
-        drive_files_endpoint() as drive,
-    ):
-        receipts = GoogleArtifactReceiptStore(profile.repository, profile_id=_PROFILE)
-        root_id = ensure_root_folder(drive.service, profile=str(_PROFILE), receipts=receipts)
-        root = receipts.load(root_id)
-        assert root is not None
-        transport = ManagedGoogleArtifacts(
-            GoogleArtifactAdmission(drive.service, profile_id=_PROFILE, root=root, receipts=receipts), receipts=receipts
-        )
+    with _managed_artifacts(tmp_path) as (drive, receipts, root_id, root, transport):
         parent = transport.admit(root, purpose=ManagedArtifactPurpose.PUBLICATION)
         publication_id = uuid4()
         sheet = transport.create(
@@ -114,17 +121,7 @@ def test_native_creation_and_binary_population_preserve_prior_artifacts(tmp_path
 
 
 def test_binary_digest_mismatch_and_movement_refuse_before_content(tmp_path: Path) -> None:
-    with (
-        isolated_runtime_profile(tmp_path=tmp_path, bucket_id=str(_PROFILE)) as profile,
-        drive_files_endpoint() as drive,
-    ):
-        receipts = GoogleArtifactReceiptStore(profile.repository, profile_id=_PROFILE)
-        root_id = ensure_root_folder(drive.service, profile=str(_PROFILE), receipts=receipts)
-        root = receipts.load(root_id)
-        assert root is not None
-        transport = ManagedGoogleArtifacts(
-            GoogleArtifactAdmission(drive.service, profile_id=_PROFILE, root=root, receipts=receipts), receipts=receipts
-        )
+    with _managed_artifacts(tmp_path) as (drive, _receipts, _root_id, root, transport):
         parent = transport.admit(root, purpose=ManagedArtifactPurpose.PUBLICATION)
         binary = transport.create(
             parent, name="ciphertext", kind=ManagedArtifactKind.CIPHERTEXT, publication_id=uuid4()
