@@ -6,5 +6,5 @@ else()
   set(bundle_check verify-staging --root "${CPACK_TEMPORARY_INSTALL_DIRECTORY}")
 endif()
 execute_process(COMMAND "@CADRUMO_DEV_PYTHON@" -B -m dev.packaging.native.macos_bundle
-  --identity "@CADRUMO_PATH_GENERATED@/identity.json" --codesign "@CADRUMO_CODESIGN@" ${bundle_check}
+  --build "@CMAKE_BINARY_DIR@" --identity "@CADRUMO_PATH_GENERATED@/identity.json" --codesign "@CADRUMO_CODESIGN@" ${bundle_check}
   WORKING_DIRECTORY "@CADRUMO_SOURCE_ROOT@" COMMAND_ERROR_IS_FATAL ANY)

@@ -25,6 +25,8 @@ from tempfile import TemporaryDirectory
 from typing import Protocol
 
 from ..command_execution import run_command
+from .build_directory import require_enrolled_build
+from .build_paths import build_paths
 from .hashing import digest
 from .layout import ApplicationBundle
 from .platforms.posix_images import macho_image
@@ -199,17 +201,17 @@ async def _serve_until_ready(main_executable: Path, root: Path) -> str:
             await process.wait()
 
 
-def verify_runtime_role(codesign: Path, bundle: Path, application_id: str) -> str:
+def verify_runtime_role(codesign: Path, bundle: Path, application_id: str, *, scratch_root: Path) -> str:
     """Start the sealed bundle's runtime role and require ready and a stop on closed input.
 
     The seal is verified first, so a bundle that fails its seal is never executed, and
     verified again afterwards, so a run that wrote beneath the bundle fails. The role
-    serves a private temporary storage root and stops when its standard input closes.
+    serves a private storage root beneath the build testing directory and stops when its standard input closes.
     """
     verify_seal(codesign, bundle, application_id)
     info = plistlib.loads((bundle / "Contents/Info.plist").read_bytes())
     main_executable = bundle / "Contents/MacOS" / str(info["CFBundleExecutable"])
-    with TemporaryDirectory(prefix="cadrumo-health-") as directory:
+    with TemporaryDirectory(prefix="cadrumo-health-", dir=scratch_root) as directory:
         version = asyncio.run(_serve_until_ready(main_executable, Path(directory)))
     verify_seal(codesign, bundle, application_id)
     return version
@@ -244,8 +246,10 @@ def _verify_copy(tools: PackageTools, bundle: Path, application_id: str, label: 
     print(f"[cadrumo:bundle] {label}: gatekeeper {assess(tools.spctl, bundle)}")
 
 
-def _verify_disk_image(tools: PackageTools, image: Path, application: str, application_id: str) -> None:
-    with TemporaryDirectory(prefix="cadrumo-dmg-") as directory:
+def _verify_disk_image(
+    tools: PackageTools, image: Path, application: str, application_id: str, *, scratch_root: Path
+) -> None:
+    with TemporaryDirectory(prefix="cadrumo-dmg-", dir=scratch_root) as directory:
         mountpoint = Path(directory) / "volume"
         mountpoint.mkdir()
         _run(
@@ -259,8 +263,10 @@ def _verify_disk_image(tools: PackageTools, image: Path, application: str, appli
                 _run(tools.hdiutil, "detach", "-force", str(mountpoint))
 
 
-def _verify_archive(tools: PackageTools, archive: Path, application: str, application_id: str) -> None:
-    with TemporaryDirectory(prefix="cadrumo-zip-") as directory:
+def _verify_archive(
+    tools: PackageTools, archive: Path, application: str, application_id: str, *, scratch_root: Path
+) -> None:
+    with TemporaryDirectory(prefix="cadrumo-zip-", dir=scratch_root) as directory:
         extracted = Path(directory) / "archive"
         _run(tools.ditto, "-x", "-k", str(archive), str(extracted))
         _verify_copy(tools, locate_bundle(extracted, application), application_id, archive.name)
@@ -274,13 +280,15 @@ def locate_bundle(root: Path, application: str) -> Path:
     return bundles[0]
 
 
-def verify_packages(tools: PackageTools, packages: Sequence[Path], application: str, application_id: str) -> None:
+def verify_packages(
+    tools: PackageTools, packages: Sequence[Path], application: str, application_id: str, *, scratch_root: Path
+) -> None:
     """Verify the bundle seal inside every built disk image and archive, read-only."""
     for package in packages:
         if package.suffix == ".dmg":
-            _verify_disk_image(tools, package, application, application_id)
+            _verify_disk_image(tools, package, application, application_id, scratch_root=scratch_root)
         elif package.suffix == ".zip":
-            _verify_archive(tools, package, application, application_id)
+            _verify_archive(tools, package, application, application_id, scratch_root=scratch_root)
         else:
             raise ValueError(f"No bundle verification is declared for {package.name}")
 
@@ -288,6 +296,7 @@ def verify_packages(tools: PackageTools, packages: Sequence[Path], application: 
 def main() -> None:
     """Command-line entry for the CPack pre- and post-build verification scripts."""
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--build", type=require_enrolled_build, required=True)
     parser.add_argument("--identity", type=Path, required=True)
     parser.add_argument("--codesign", type=Path, required=True)
     commands = parser.add_subparsers(dest="command", required=True)
@@ -299,17 +308,19 @@ def main() -> None:
     built.add_argument("--ditto", type=Path, required=True)
     built.add_argument("packages", type=Path, nargs="+")
     arguments = parser.parse_args()
+    scratch_root = build_paths(arguments.build)["testing"]
+    scratch_root.mkdir(parents=True, exist_ok=True)
     identity = json.loads(arguments.identity.read_text(encoding="utf-8"))
     application = f"{identity['name']}.app"
     if arguments.command == "verify-staging":
         bundle = locate_bundle(arguments.root, application)
         verify_seal(arguments.codesign, bundle, identity["application_id"])
         print(f"[cadrumo:bundle] staged {application}: seal valid")
-        version = verify_runtime_role(arguments.codesign, bundle, identity["application_id"])
+        version = verify_runtime_role(arguments.codesign, bundle, identity["application_id"], scratch_root=scratch_root)
         print(f"[cadrumo:bundle] staged {application}: runtime role ready ({version}), seal intact")
     else:
         tools = PackageTools(arguments.codesign, arguments.spctl, arguments.hdiutil, arguments.ditto)
-        verify_packages(tools, arguments.packages, application, identity["application_id"])
+        verify_packages(tools, arguments.packages, application, identity["application_id"], scratch_root=scratch_root)
 
 
 if __name__ == "__main__":
