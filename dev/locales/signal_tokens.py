@@ -42,6 +42,9 @@ _AREA_UNIT_RE = re.compile(r"(?<!\w)m²(?!\w)")
 # The IRNR guidance cites legislative decrees with this exact abbreviation.
 # Require the complete number/year reference; the bare word is not vocabulary.
 _LEGISLATIVE_DECREE_REFERENCE_RE = re.compile(r"(?<!\w)RDLeg[ \t]+\d{1,4}/\d{4}(?!\w)")
+# Dotted suffixes in workbook/statement prompts are file-format notation.
+# Keep the list closed to these attested formats; bare words remain prose.
+_SPREADSHEET_SUFFIX_RE = re.compile(r"(?<![\w.])\.(?:xlsx|csv)(?!\w)")
 _CENSO_GLOSSED_CHOICES_RE = re.compile(
     rf"(?<!\w)(?P<alta>{re.escape(CensoModeloEventKind.ALTA.value)})(?P<alta_gloss>\s*\([^()\r\n]+\))"
     rf",\s*(?P<modificacion>{re.escape(CensoModeloEventKind.MODIFICACION.value)})"
@@ -109,6 +112,7 @@ def filtered_translation_text(value: str) -> tuple[str, int]:
         (_OUTPUT_LANGUAGE_CHOICES_RE, " "),
         (_CENSO_GLOSSED_CHOICES_RE, _visible_choice_glosses),
         (_LEGISLATIVE_DECREE_REFERENCE_RE, " "),
+        (_SPREADSHEET_SUFFIX_RE, " "),
         (TRANSLATION_URL_RE, " "),
         (TRANSLATION_PATH_RE, " "),
         (command_path_pattern(), " "),
