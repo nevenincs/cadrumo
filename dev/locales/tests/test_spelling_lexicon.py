@@ -1757,6 +1757,11 @@ def test_reviewed_technical_nouns_keep_bounded_plural_and_case() -> None:
         "Docstrings",
         "subpackage",
         "subcommands",
+        "checksums",
+        "Checksums",
+        "lookups",
+        "Wireframe",
+        "rulebook",
         "enums",
         "parsers",
         "Filesystem",
@@ -1777,6 +1782,8 @@ def test_reviewed_technical_nouns_keep_bounded_plural_and_case() -> None:
         "docstrngs",
         "subpackege",
         "subcommandss",
+        "checksumss",
+        "wireframme",
         "enumss",
         "ciphertex",
         "walkthruogh",
@@ -1785,6 +1792,9 @@ def test_reviewed_technical_nouns_keep_bounded_plural_and_case() -> None:
     assert is_project_spelling("en", "ZIPs")
     assert is_project_spelling("en", "UUIDs")
     assert is_project_spelling("en", "uploadable")
+    for word in ("untagged", "recoverability", "reachability", "decrypts"):
+        assert is_project_spelling("en", word)
+        assert not is_project_spelling("en", word + "x")
     for typo in ("ZIPss", "zipS", "UUIDss", "UuidS", "uploadible"):
         assert not is_project_spelling("en", typo)
 

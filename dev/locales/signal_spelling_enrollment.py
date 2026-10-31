@@ -108,6 +108,9 @@ _SHARED_SPELLINGS = (
 # https://docs.github.com/en/copilot/how-tos/troubleshoot-copilot/troubleshoot-firewall-settings
 # https://docs.python.org/3/library/os.path.html#os.path.basename
 # https://dictionary.cambridge.org/dictionary/english/walkthrough
+# https://docs.python.org/3.15/whatsnew/changelog.html
+# https://learn.microsoft.com/en-us/archive/msdn-magazine/2016/january/cutting-edge-don%E2%80%99t-gamble-with-ux-use-wireframes
+# https://learn.microsoft.com/en-us/microsoft-365/copilot/copilot-tuning-document-validation-template
 _ENGLISH_TECHNICAL_NOUNS = frozenset(
     {
         "codebase",
@@ -115,6 +118,10 @@ _ENGLISH_TECHNICAL_NOUNS = frozenset(
         "docstring",
         "subpackage",
         "subcommand",
+        "checksum",
+        "lookup",
+        "wireframe",
+        "rulebook",
         "enum",
         "parser",
         "filesystem",
@@ -186,6 +193,15 @@ _LOCALE_SPELLINGS: dict[str, frozenset[str]] = {
             # https://interparestrust.org/terminology/term/redaction
             "redaction",
             "redactions",
+            # Exact technical forms used in storage and networking guidance:
+            # https://docs.aws.amazon.com/sagemaker/latest/dg/sm-console-domain-resources-view.html
+            # https://learn.microsoft.com/en-us/entra/architecture/recoverability-overview
+            # https://docs.aws.amazon.com/vpc/latest/reachability/what-is-reachability-analyzer.html
+            # https://docs.aws.amazon.com/kms/latest/APIReference/API_Decrypt.html
+            "untagged",
+            "recoverability",
+            "reachability",
+            "decrypts",
             # Exact forms attested in Microsoft documentation, the IRS and
             # European Commission tax guidance, and the cited dictionaries:
             # https://learn.microsoft.com/en-us/dynamics365/customer-insights/journeys/real-time-marketing-form-prefill
