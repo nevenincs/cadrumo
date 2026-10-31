@@ -1381,8 +1381,9 @@ it runs the installed CLI as a passthrough in the caller's directory. `--gui`
 forces the window: it exits with 69 and `desktop_unavailable` when no interactive
 desktop exists, and with 64 when other arguments follow it. On Windows an
 interactive desktop means a visible window station with an input desktop the
-process can open; on Linux a non-empty `WAYLAND_DISPLAY` or `DISPLAY`. macOS
-refuses the window with `unsupported_platform`. One window runs per user and
+process can open; on Linux a non-empty `WAYLAND_DISPLAY` or `DISPLAY`; on macOS a
+graphical login session the process belongs to. The macOS window uses the system's
+own title bar controls over the page's header. One window runs per user and
 channel; the [Desktop single instance](#desktop-single-instance) section records
 that contract.
 
@@ -2004,7 +2005,13 @@ access, so no other account can create or reach them.
   Timing, the other-session report and the exit status match Windows; a socket that
   is missing or refuses the connection counts as absent.
 
-macOS runs no desktop GUI and takes no lock.
+On macOS the lock and the activation sockets live in the private transient transport
+directory the runtime's sockets use, rechecked against replacement. The names are
+`desktop-<digest>.lock` and `desktop-<digest>-<session>.sock`, where `<digest>` is a
+short digest of the family, since `sun_path` bounds the socket path, and `<session>`
+is the kernel audit session of the graphical login. Claiming, activation and the
+other-session report match Linux. The window that holds the lock establishes
+supervision of the runtime.
 
 ## Manager startup and supervision
 
