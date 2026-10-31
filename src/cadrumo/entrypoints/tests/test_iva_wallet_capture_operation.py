@@ -233,9 +233,7 @@ def test_supervisor_admits_exact_profile_and_projects_guarded_wallet_capture(tmp
         )
 
         terminal, projected = asyncio.run(
-            settle_and_project(
-                supervisor, result_service, registry, definition.definition_id, request, IvaWalletCapturePublicResultV1
-            )
+            settle_and_project(supervisor, result_service, registry, request, IvaWalletCapturePublicResultV1)
         )
 
     assert terminal.lifecycle is OperationLifecycle.TERMINAL

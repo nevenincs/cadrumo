@@ -98,18 +98,19 @@ async def settle_and_project[Result: BaseModel](
     supervisor: OperationSupervisor,
     result_service: OperationResultProjectionService,
     registry: OperationRegistry,
-    definition_id: str,
     request: OperationRequest[Any],
     result_type: type[Result],
+    *,
+    operation_id: str = "3" * 64,
 ) -> tuple[OperationPersistedSnapshot, OperationResultProjectionResultV1[Result]]:
     """Submit ``request``, settle it, and read the public result the contract projects for its terminal revision."""
-    operation_id = await supervisor.submit(request, operation_id="3" * 64)
-    terminal = await run_to_terminal(supervisor, operation_id)
-    contract = registry.lookup_public_contract(definition_id)
+    submitted_id = await supervisor.submit(request, operation_id=operation_id)
+    terminal = await run_to_terminal(supervisor, submitted_id)
+    contract = registry.lookup_public_contract(request.definition_id)
     assert contract.result_schema is not None
     projected = await result_service.resolve(
         OperationResultProjectionRequestV1(
-            operation_id=operation_id,
+            operation_id=submitted_id,
             terminal_revision=terminal.revision,
             definition_contract_digest=contract.definition_contract_digest,
             result_schema=contract.result_schema,
@@ -119,7 +120,12 @@ async def settle_and_project[Result: BaseModel](
     return terminal, projected
 
 
-def cli_submit_context(*, profile_id: UUID, contract: OperationPublicDefinitionContractV1) -> OperationAccessContext:
+def cli_submit_context(
+    *,
+    profile_id: UUID,
+    contract: OperationPublicDefinitionContractV1,
+    authority_operation: PinnedAuthorityOperation | None = None,
+) -> OperationAccessContext:
     """Return the access context of a CLI submission against published authority for a random destination."""
     return OperationAccessContext(
         profile_id=profile_id,
@@ -128,4 +134,5 @@ def cli_submit_context(*, profile_id: UUID, contract: OperationPublicDefinitionC
         frontend=OperationFrontendProjection.CLI,
         contract=contract,
         published_authority=Availability.AVAILABLE,
+        authority_operation=authority_operation,
     )

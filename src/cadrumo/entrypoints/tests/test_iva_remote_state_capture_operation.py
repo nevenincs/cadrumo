@@ -402,7 +402,6 @@ def test_supervisor_captures_iva_remote_state_for_exact_external_client_profile(
                 supervisor,
                 result_service,
                 registry,
-                definition.definition_id,
                 request,
                 IvaRemoteStateCapturePublicResultV1,
             )

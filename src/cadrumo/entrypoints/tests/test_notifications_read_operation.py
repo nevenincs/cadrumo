@@ -44,15 +44,13 @@ from cadrumo.application.live.notifications_read_operation import (
     build_notifications_show_registration,
 )
 from cadrumo.application.live.snapshot_base import SnapshotRepository
-from cadrumo.application.operations.access_resolution import OperationAccessContext, resolve_operation_access
+from cadrumo.application.operations.access_resolution import resolve_operation_access
 from cadrumo.application.operations.frontend_requests import (
-    OperationResultProjectionRequestV1,
     OperationResultProjectionSuccessV1,
 )
 from cadrumo.application.operations.models import OperationRequest
 from cadrumo.application.operations.persistence.journal import OperationPersistedSnapshot
 from cadrumo.application.operations.registry import (
-    OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationRegistry,
 )
@@ -64,9 +62,15 @@ from cadrumo.core.operations import (
     profile_operation_subject,
 )
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
-from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
+from cadrumo_client.contracts.access_vocabulary import AccessAction
 
-from .supervised_operation_rig import assert_foreign_profile_refused, build_supervised_operation, run_to_terminal
+from .supervised_operation_rig import (
+    assert_foreign_profile_refused,
+    build_supervised_operation,
+    cli_submit_context,
+    run_to_terminal,
+    settle_and_project,
+)
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -231,14 +235,8 @@ def test_registered_notification_reads_are_exact_profile_and_project_closed_resu
         )
 
         for request, _result_type, registration in requests:
-            access_context = OperationAccessContext(
-                profile_id=profile_id,
-                destination_id=uuid4(),
-                action=AccessAction.SUBMIT,
-                frontend=OperationFrontendProjection.CLI,
-                contract=registration.contract,
-                published_authority=Availability.AVAILABLE,
-                authority_operation=authority,
+            access_context = cli_submit_context(
+                profile_id=profile_id, contract=registration.contract, authority_operation=authority
             )
             admitted = resolve_operation_access(registry=registry, request=request, context=access_context)
             assert admitted.request.profile_id == profile_id
@@ -262,18 +260,8 @@ def test_registered_notification_reads_are_exact_profile_and_project_closed_resu
         async def run(
             request: OperationRequest[BaseModel], operation_id: str, result_type: type[BaseModel]
         ) -> tuple[OperationPersistedSnapshot, OperationResultProjectionSuccessV1[BaseModel]]:
-            submitted_id = await supervisor.submit(request, operation_id=operation_id)
-            terminal = await run_to_terminal(supervisor, submitted_id)
-            contract = registry.lookup_public_contract(request.definition_id)
-            assert contract.result_schema is not None
-            projected = await result_service.resolve(
-                OperationResultProjectionRequestV1(
-                    operation_id=submitted_id,
-                    terminal_revision=terminal.revision,
-                    definition_contract_digest=contract.definition_contract_digest,
-                    result_schema=contract.result_schema,
-                ),
-                result_type,
+            terminal, projected = await settle_and_project(
+                supervisor, result_service, registry, request, result_type, operation_id=operation_id
             )
             assert isinstance(projected, OperationResultProjectionSuccessV1)
             return terminal, cast(OperationResultProjectionSuccessV1[BaseModel], projected)

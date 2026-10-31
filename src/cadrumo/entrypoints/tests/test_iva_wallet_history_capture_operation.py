@@ -348,7 +348,6 @@ def test_supervisor_admits_exact_external_client_profile_and_projects_guarded_iv
                 supervisor,
                 result_service,
                 registry,
-                definition.definition_id,
                 request,
                 IvaWalletHistoryCapturePublicResultV1,
             )

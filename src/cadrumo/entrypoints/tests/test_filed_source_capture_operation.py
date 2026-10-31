@@ -428,7 +428,6 @@ def test_supervisor_binds_source_capture_to_exact_profile_and_projects_reconcili
                 supervisor,
                 result_service,
                 registry,
-                definition.definition_id,
                 request,
                 FiledSourceCapturePublicResultV1,
             )

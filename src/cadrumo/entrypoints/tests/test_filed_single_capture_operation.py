@@ -389,7 +389,6 @@ def test_supervisor_binds_single_capture_to_exact_profile_and_projects_guarded_a
                 supervisor,
                 result_service,
                 registry,
-                definition.definition_id,
                 request,
                 FiledSingleCapturePublicResultV1,
             )
