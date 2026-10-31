@@ -35,8 +35,6 @@ class ActivityAssetTableGroup:
     maximum_period_years: Decimal
     class_label: str
     requires_vehicle_declaration: bool
-    """Whether an asset of this class is charged only on a vehicle affectation declaration."""
-    can_hold_vehicle: bool
     """Whether the registry classes a material asset of this class as one that can be a restricted vehicle.
 
     Such an asset is charged only on a vehicle affectation declaration; an asset of another class is
@@ -151,7 +149,6 @@ def _form_table_groups(
                 minimum_coefficient=Decimal("1") / period_years,
                 maximum_period_years=period_years,
                 class_label=class_label,
-                can_hold_vehicle=requires_vehicle_declaration,
                 requires_vehicle_declaration=requires_vehicle_declaration,
             ),
         )
