@@ -6,23 +6,18 @@
 use crate::environment::Parent;
 use cadrumo_application::diagnostics::Diagnostics;
 
-#[cfg(windows)]
 use cadrumo_application::{
     error::application::{ApplicationError, ErrorCode, Operation, Result},
     value::RelativePath,
 };
-#[cfg(windows)]
 use serde::Deserialize;
-#[cfg(windows)]
 use std::path::{Path, PathBuf};
 
-#[cfg(windows)]
 #[derive(Deserialize)]
 struct Contract {
     desktop_defaults: Defaults,
 }
 
-#[cfg(windows)]
 #[derive(Deserialize)]
 struct Defaults {
     logs: RelativePath,
@@ -33,18 +28,14 @@ struct Defaults {
 /// Called after instance admission and before package/interpreter validation.
 /// A refused location records only the safe typed failure and remains buffered.
 pub fn configure(parent: &Parent, diagnostics: &Diagnostics) {
-    #[cfg(windows)]
     match std::env::current_exe() {
         Ok(executable) => configure_for(&executable, parent, diagnostics),
         Err(error) => diagnostics.failure(unavailable().caused_by(error)),
     }
-    #[cfg(not(windows))]
-    let _ = (parent, diagnostics);
 }
 
 /// Configure startup logging for the host at `executable`, whose location decides
 /// whether it is installed or a development build.
-#[cfg(windows)]
 fn configure_for(executable: &Path, parent: &Parent, diagnostics: &Diagnostics) {
     let outcome: Result<()> = (|| {
         let contract: Contract =
@@ -63,22 +54,27 @@ fn configure_for(executable: &Path, parent: &Parent, diagnostics: &Diagnostics) 
     }
 }
 
-#[cfg(windows)]
 fn unavailable() -> ApplicationError {
     ApplicationError::new(ErrorCode::LogUnavailable, Operation::Logging)
 }
 
-#[cfg(windows)]
 fn location(executable: &Path, parent: &Parent, contract: &Contract) -> Result<PathBuf> {
     use cadrumo_platform::storage::{
         detect_mode, resolve_storage_root_with, validated_absolute_path,
     };
+    // Variable names are case-insensitive on Windows only.
     let lookup = |name: &str| {
         parent
             .environment
             .iter()
             .rev()
-            .find(|(key, _)| key.to_string_lossy().eq_ignore_ascii_case(name))
+            .find(|(key, _)| {
+                if cfg!(windows) {
+                    key.to_string_lossy().eq_ignore_ascii_case(name)
+                } else {
+                    key.as_os_str() == name
+                }
+            })
             .map(|(_, value)| value.clone())
     };
     let evidence = detect_mode(executable)
@@ -90,7 +86,7 @@ fn location(executable: &Path, parent: &Parent, contract: &Contract) -> Result<P
         .map_err(|error| unavailable().caused_by(std::io::Error::from(error)))
 }
 
-#[cfg(all(test, windows))]
+#[cfg(test)]
 mod tests {
     use super::*;
     use cadrumo_application::diagnostics::{EventKind, delivery_wait::delivered};
@@ -107,10 +103,13 @@ mod tests {
                 .duration_since(UNIX_EPOCH)
                 .unwrap()
                 .as_nanos();
-            let path = std::env::temp_dir().join(format!(
-                "cadrumo-startup-logging-{}-{nanos}",
-                std::process::id()
-            ));
+            // Resolved, since a root reached through a link is refused.
+            let path = fs::canonicalize(std::env::temp_dir())
+                .unwrap()
+                .join(format!(
+                    "cadrumo-startup-logging-{}-{nanos}",
+                    std::process::id()
+                ));
             fs::create_dir_all(&path).unwrap();
             Self(path)
         }
@@ -146,7 +145,7 @@ mod tests {
             .fold(package.clone(), |path, part| path.join(part));
         fs::create_dir_all(manifest.parent().unwrap()).unwrap();
         fs::write(manifest, "{}").unwrap();
-        package.join("cadrumo.exe")
+        package.join(format!("cadrumo{}", std::env::consts::EXE_SUFFIX))
     }
 
     #[test]
