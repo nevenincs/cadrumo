@@ -112,6 +112,7 @@ def invoice_snapshot(
         base_total_eur=None,
         iva_total_eur=None,
         grand_total_eur=None,
+        referencia_catastral=None,
     )
 
 

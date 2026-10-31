@@ -116,6 +116,7 @@ class CatalogueInvoiceSnapshot(BaseModel):
     base_total_eur: PublicDecimal | None
     iva_total_eur: PublicDecimal | None
     grand_total_eur: PublicDecimal | None
+    referencia_catastral: str | None
 
     @model_validator(mode="after")
     def _bounds(self) -> Self:
@@ -163,6 +164,11 @@ class CatalogueInvoiceSnapshot(BaseModel):
             base_total_eur=_optional_decimal(invoice.base_total_eur),
             iva_total_eur=_optional_decimal(invoice.iva_total_eur),
             grand_total_eur=_optional_decimal(invoice.grand_total_eur),
+            referencia_catastral=(
+                invoice.business_premises_lease.referencia_catastral
+                if invoice.business_premises_lease is not None
+                else None
+            ),
         )
 
 

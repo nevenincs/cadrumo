@@ -8,6 +8,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
+from ....domain.invoices.business_premises import BusinessPremisesLease, SituacionInmueble
 from ....domain.iva.schema import InvoiceKind
 from ...exchange_rate_provider import exchange_rate_provider
 from ...operations.registry_schema_validation import strict_model_json_schema
@@ -17,10 +18,12 @@ from ..catalogue_read_projection import CatalogueInvoiceSnapshot, InvoiceLineSna
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 
-def _snapshot() -> CatalogueInvoiceSnapshot:
+def _snapshot(
+    *, kind: InvoiceKind = InvoiceKind.RECEIVED, lease: BusinessPremisesLease | None = None
+) -> CatalogueInvoiceSnapshot:
     invoice = build_catalogue_invoice(
         bucket_id="20202020-2020-4202-8202-202020202020",
-        kind=InvoiceKind.RECEIVED,
+        kind=kind,
         counterparty_name="Papeleria Sol SL",
         counterparty_tax_id="A58818501",
         counterparty_country="ES",
@@ -29,6 +32,7 @@ def _snapshot() -> CatalogueInvoiceSnapshot:
         taxable_base=Decimal("137.25"),
         iva_rate=Decimal("21"),
         currency="EUR",
+        business_premises_lease=lease,
         rate_provider=exchange_rate_provider(),
     )
     return CatalogueInvoiceSnapshot.from_invoice(invoice)
@@ -48,6 +52,23 @@ def test_snapshot_roundtrip_preserves_amounts_lines_and_absence() -> None:
     assert "source_path" not in decoded.model_fields_set
     assert "provenance" not in decoded.model_fields_set
     assert strict_model_json_schema(CatalogueInvoiceSnapshot)
+
+
+def test_snapshot_discloses_the_lease_referencia_catastral_normalised_by_the_domain() -> None:
+    lease = BusinessPremisesLease(
+        situacion_inmueble=SituacionInmueble.SPAIN_OTHER_THAN_BASQUE_NAVARRE,
+        referencia_catastral=" 9872023vh5797s0001wx ",
+    )
+    snapshot = _snapshot(kind=InvoiceKind.ISSUED, lease=lease)
+    assert snapshot.referencia_catastral == "9872023VH5797S0001WX"
+    decoded = CatalogueInvoiceSnapshot.model_validate_json(snapshot.model_dump_json())
+    assert decoded.referencia_catastral == "9872023VH5797S0001WX"
+
+
+def test_snapshot_referencia_catastral_is_absent_without_a_lease_or_a_reference() -> None:
+    assert _snapshot().referencia_catastral is None
+    unreferenced = BusinessPremisesLease(situacion_inmueble=SituacionInmueble.ABROAD)
+    assert _snapshot(kind=InvoiceKind.ISSUED, lease=unreferenced).referencia_catastral is None
 
 
 @pytest.mark.parametrize(
