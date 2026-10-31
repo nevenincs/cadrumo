@@ -1258,7 +1258,12 @@ export function setupOperations(ledger: FixtureLedger, tools: Tools) {
             ? "errors.refused.refused_profile_inventory_validation"
             : `application.inventory.service.errors.${REASON_KEY_NAMES[reason] ?? reason}`,
         reason_facts: Object.entries(extra)
-          .filter(([, fact]) => fact !== null && typeof fact !== "object")
+          .filter(
+            ([key, fact]) =>
+              key !== "actividad_id" &&
+              fact !== null &&
+              typeof fact !== "object",
+          )
           .map(([key, fact]) => ({ key, value: String(fact) })),
         ...extra,
       },
@@ -1872,7 +1877,6 @@ export function setupOperations(ledger: FixtureLedger, tools: Tools) {
       const facts = object(request.facts);
       fromKeys(facts, [
         "decision_id",
-        "decided_at",
         "authority",
         "reason",
         "decision_evidence",
@@ -1881,8 +1885,6 @@ export function setupOperations(ledger: FixtureLedger, tools: Tools) {
       ]);
       const decision = required(facts.decision_id);
       required(facts.reason);
-      if (!/^\d{4}-\d{2}-\d{2}T.*Z$/.test(required(facts.decided_at)))
-        invalid();
       const authority = required(facts.authority);
       if (!CLOSING_AUTHORITIES.includes(authority)) invalid();
       const documentsOf = (
@@ -1944,8 +1946,8 @@ export function setupOperations(ledger: FixtureLedger, tools: Tools) {
         );
         if ((earlier?.closing ?? null) === null && prior.length === 0)
           return inventoryRefusal(
-            "REFUSED_PROFILE_INVENTORY_VALIDATION",
-            "inventory_validation",
+            "REFUSED_INVENTORY_SERVICE_INPUT",
+            "prior_closing_document_needed",
             { actividad_id: actividad, year },
             shape,
           );

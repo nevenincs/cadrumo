@@ -55,11 +55,7 @@ export function YearStepper({
   const before = neighbour(options, value, -1);
   const after = neighbour(options, value, 1);
   return (
-    <div
-      role="group"
-      aria-label={t(ASSET_KEYS.year)}
-      className={cn("flex shrink-0 items-center gap-0.5", className)}
-    >
+    <div className={cn("flex shrink-0 items-center gap-0.5", className)}>
       <IconButton
         label={t("desktop.ledger.period.year_previous")}
         disabled={before === null}

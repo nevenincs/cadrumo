@@ -609,6 +609,14 @@ export const ClosingRefusedNeedsPriorDocument: Story = {
       ),
     );
     await press(context, t("desktop.ledger.stock.submit.closing"));
+    // The sentence the backend's catalogue has for this refusal, not the plain one.
+    await waitFor(() => {
+      const said = t(
+        "application.inventory.service.errors.prior_closing_document_needed",
+      );
+      if (!within(context.canvasElement).queryByText(said))
+        throw new Error("the refusal's own sentence is not drawn");
+    });
   },
 };
 

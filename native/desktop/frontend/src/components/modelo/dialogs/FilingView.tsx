@@ -33,11 +33,13 @@ import type {
   ModeloFormElection,
   ModeloWorkbenchFormProjectionV1,
   OutputLanguage,
+  RecordedCalculationNote,
 } from "../../../shell/modeloContract";
 import { AEAT_SEDE } from "../../../shell/links";
 import { useStrings } from "../../../shell/strings";
 import { stampText } from "../../ledger/movements/movementWords";
 import type { FormSession } from "../form/session";
+import { CalculationNotes } from "../workspace/CalculationNotes";
 import { runOperation, type OperationRun } from "./operationRun";
 
 // Export and record: the official file written to a place the filer picks,
@@ -216,6 +218,9 @@ export function FilingView({
   );
 
   const [notice, setNotice] = useState<Notice | null>(null);
+  // What the last filing file's calculation noted, kept beside the file
+  // while this view shows it, whatever is done after.
+  const [notes, setNotes] = useState<readonly RecordedCalculationNote[]>([]);
   const [held, setHeld] = useState<ModeloWorkbenchFormProjectionV1 | null>(
     null,
   );
@@ -314,12 +319,16 @@ export function FilingView({
           },
           envelope.work_unit_id,
         ),
-      (result: ModeloResult<"modelo.export">) => ({
-        kind: "saved",
-        write,
-        name: picked.name,
-        unverified: result.completeness === "unverified",
-      }),
+      (result: ModeloResult<"modelo.export">) => {
+        if (write === "export")
+          setNotes(result.fichero_boe?.calculation_notes ?? []);
+        return {
+          kind: "saved",
+          write,
+          name: picked.name,
+          unverified: result.completeness === "unverified",
+        };
+      },
       [picked.token],
       picked.token,
     );
@@ -517,6 +526,7 @@ export function FilingView({
           {t("workspace.modelo.next.apply", { count: session.stagedCount })}
         </Alert>
       )}
+      <CalculationNotes notes={notes} />
 
       <Card
         icon="page"

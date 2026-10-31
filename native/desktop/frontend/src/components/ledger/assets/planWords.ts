@@ -35,6 +35,20 @@ export const stateTone = (token: string) =>
     ? STATE_TONE[token]!
     : "text-muted-foreground";
 
+/** The typed absences that are a known state with nothing to work out: a
+ * year after the basis is spent, under a free election, covered by the
+ * opening amount, or past the maximum period. Every other absence is a figure
+ * the register cannot state. */
+const NOT_APPLICABLE: ReadonlySet<string> = new Set([
+  "basis_exhausted",
+  "covered_by_opening",
+  "free_election",
+  "period_elapsed",
+]);
+
+export const absenceNotApplicable = (absence: string | null) =>
+  absence !== null && NOT_APPLICABLE.has(absence);
+
 /** Whether the backend states this amount as a recorded zero. */
 export const isStatedZero = (amount: Amount) =>
   amount !== null && Number(amount.decimal) === 0;

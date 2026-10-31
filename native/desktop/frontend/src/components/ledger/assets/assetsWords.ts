@@ -55,7 +55,8 @@ export const ASSET_KEYS = {
       planned: "desktop.ledger.assets.plan.column.planned",
       claimed: "desktop.ledger.assets.plan.column.claimed",
       days: "desktop.ledger.assets.plan.column.days",
-      minimum: "tui.ledger.activity_asset.plan_minimum",
+      minimum: "desktop.ledger.assets.plan.column.minimum",
+      minimum_note: "desktop.ledger.assets.plan.column.minimum_note",
       replaced_by: "desktop.ledger.assets.plan.column.replaced_by",
       period: "desktop.ledger.assets.plan.column.period",
     },
@@ -73,9 +74,10 @@ export const ASSET_KEYS = {
     rate_missing: "desktop.ledger.assets.plan.rate_missing",
     planned_missing: "desktop.ledger.assets.plan.planned_missing",
     days_missing: "desktop.ledger.assets.plan.days_missing",
-    claimed_missing: "desktop.ledger.assets.plan.claimed_missing",
     minimum_missing: "desktop.ledger.assets.plan.minimum_missing",
-    claim_correct: "desktop.ledger.assets.plan.claim_correct",
+    correct_this: "desktop.ledger.assets.plan.correct_this",
+    stale_fix: "desktop.ledger.assets.plan.stale_fix",
+    baja: "desktop.ledger.assets.plan.baja",
     edition: "desktop.ledger.assets.plan.edition",
     claimable: "desktop.ledger.assets.plan.claimable",
     claimable_none: "desktop.ledger.assets.plan.claimable_none",
@@ -133,6 +135,10 @@ export const ASSET_KEYS = {
   },
   unrecognised: "desktop.ledger.assets.unrecognised",
   not_known: "desktop.ledger.assets.not_known",
+  mark: {
+    nothing_recorded: "desktop.ledger.assets.mark.nothing_recorded",
+    not_applicable: "desktop.ledger.assets.mark.not_applicable",
+  },
   opening_unknown: "desktop.ledger.assets.opening_unknown",
   field_other: "desktop.ledger.assets.field.other",
   handoff: {
@@ -268,7 +274,7 @@ export function refusalText(
 /** The glyph a year's claim state is drawn with; the word sits in its tooltip
  * and accessible name, and colour never carries it alone. */
 const STATE_ICON: Record<string, IconName> = {
-  edition_unavailable: "noRate",
+  edition_unavailable: "unknown",
   claimed: "check",
   superseded: "check",
   missing: "alert",
@@ -345,7 +351,7 @@ export const COUNT_ICON: Record<keyof AssetCounts, IconName> = {
   missing: "alert",
   incomplete: "unknown",
   conflict: "refused",
-  stale: "pending",
+  stale: "reset",
 };
 
 /** The kinds of count a list row can carry, in the order they are shown. */

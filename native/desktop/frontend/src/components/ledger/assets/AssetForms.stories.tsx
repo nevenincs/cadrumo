@@ -181,7 +181,11 @@ const fillElement = async (root: Root) => {
   await chosen(root, "method", 0);
   await chosen(root, "amortization.authority_class_key", 0);
   await chosen(root, "acquisition", 0);
+  await chosenValue(root, "acquired_condition", "new");
+  await chosenValue(root, "basis_stage", "taxpayer_owned");
+  await chosenValue(root, "opening_status", "missing");
   await typed(root, "basis_amount", "900.00");
+  await typed(root, "business_use_share", "100");
 };
 const sendElement = steps(fillElement, submit);
 
@@ -256,10 +260,23 @@ export const AddElementDone: Story = adding({
   play: sendElement,
 });
 export const AddElementAlreadyThere: Story = adding({
-  name: "Add element, sent again: already recorded",
+  name: "Add element, sent again: the same element, recorded once",
   play: steps(fillElement, submit, async (root) => {
     await drawn(root, ".ledger-asset-saved");
     await submit(root);
+    // The register answers an identical send with the element it holds, so the
+    // line stays the one for a landed write and nothing is refused.
+    await waitFor(
+      () => {
+        if (
+          root.querySelector(".ledger-asset-refused, .ledger-asset-incomplete")
+        )
+          throw new Error("the second send was refused");
+        if (!root.querySelector(".ledger-asset-saved"))
+          throw new Error("the line for the landed write is gone");
+      },
+      { timeout: 5000 },
+    );
   }),
 });
 export const AddElementInFlight: Story = adding({
@@ -367,8 +384,15 @@ export const CorrectNotSeen: Story = correcting("servidor", {
 
 // ---- Giving an element a baja -------------------------------------------------------
 
+/** The year the page stands on when a baja is given: one the registry serves
+ * options for, whenever the element came into service. */
+const BAJA_YEAR = 2026;
+
 const disposing = (assetId: string, extra: Partial<Story> = {}) =>
-  form((props) => <BajaForm {...props} assetId={assetId} />, extra);
+  form(
+    (props) => <BajaForm {...props} assetId={assetId} taxYear={BAJA_YEAR} />,
+    extra,
+  );
 
 const fillBaja = (date: string) => async (root: Root) => {
   await typed(root, "date", date);
@@ -383,7 +407,7 @@ const dispose = (date: string) => steps(fillBaja(date), confirm);
 
 /** The baja an element is given before its form opens, to change or remove. */
 const recorded = {
-  disposal_date: "2009-03-31",
+  disposal_date: "2026-03-31",
   reason: "sale",
   proceeds: { decimal: "9000.00" },
   transmission_costs: { decimal: "150.00" },
@@ -404,14 +428,28 @@ function AfterBaja({
   children: ReactNode;
 }) {
   const [given, setGiven] = useState(false);
+  const [refused, setRefused] = useState<Error | null>(null);
   useEffect(() => {
     void port
       .submit("ledger.actividad-asset.dispose", {
         asset_id: assetId,
         disposal: recorded,
       })
-      .then(() => setGiven(true));
+      .then((outcome) => {
+        if (outcome.kind === "settled") setGiven(true);
+        else
+          setRefused(
+            new Error(
+              `the baja given before the form opened was ${outcome.kind}`,
+            ),
+          );
+      })
+      .catch((error: unknown) =>
+        setRefused(error instanceof Error ? error : new Error(String(error))),
+      );
   }, [port, assetId]);
+  // A story that depends on a baja already being there fails if it is not.
+  if (refused !== null) throw refused;
   return given ? children : null;
 }
 
@@ -419,7 +457,7 @@ const changing = (assetId: string, extra: Partial<Story> = {}) =>
   form(
     (props) => (
       <AfterBaja port={props.port} assetId={assetId}>
-        <BajaForm {...props} assetId={assetId} />
+        <BajaForm {...props} assetId={assetId} taxYear={BAJA_YEAR} />
       </AfterBaja>
     ),
     extra,
@@ -445,19 +483,19 @@ export const BajaBeforeService: Story = disposing("plotter", {
 export const BajaInFlight: Story = disposing("plotter", {
   name: "Baja, in flight",
   args: { hold: "in_flight" },
-  play: dispose("2009-03-31"),
+  play: dispose("2026-03-31"),
 });
 export const BajaNotSeen: Story = disposing("plotter", {
   name: "Baja, settlement not seen: held",
   args: { shape: "unknown" },
-  play: dispose("2009-03-31"),
+  play: dispose("2026-03-31"),
 });
 export const BajaChange: Story = changing("plotter", {
   name: "Baja recorded: change or remove it",
 });
 export const BajaChangeDone: Story = changing("plotter", {
   name: "Baja recorded, changed: done",
-  play: steps((root) => typed(root, "date", "2009-06-30"), submit, confirm),
+  play: steps((root) => typed(root, "date", "2026-06-30"), submit, confirm),
 });
 export const BajaRemoveConfirmation: Story = changing("plotter", {
   name: "Baja recorded, removal waiting for the person to confirm",
@@ -481,6 +519,8 @@ export const CorrectKeepsBaja: Story = form(
 
 // ---- Recording depreciation ---------------------------------------------------------
 
+/** Each story opens on the year it names: the latest year the plan leaves
+ * open is a later one, which the registry has no edition for yet. */
 const claiming = (
   assetId: string,
   taxYear: number,
@@ -493,7 +533,7 @@ const claiming = (
         {...props}
         assetId={assetId}
         taxYear={taxYear}
-        initialYear={more.initialYear}
+        initialYear={more.initialYear ?? taxYear}
         supersedes={more.supersedes}
       />
     ),
@@ -575,7 +615,11 @@ export const ClaimProjectedYear: Story = claiming("furgoneta", 2027, {
 });
 export const ClaimPeriodElapsed: Story = claiming("cristaleria", 2026, {
   name: "Record dotación, maximum period elapsed: refused with its date",
-  play: steps((root) => typed(root, "covered_from", "2026-01-01"), forecast),
+  play: steps(
+    (root) => typed(root, "covered_from", "2026-01-01"),
+    (root) => typed(root, "covered_through", "2026-12-31"),
+    forecast,
+  ),
 });
 export const ClaimInFlight: Story = claiming("furgoneta", 2026, {
   name: "Record dotación, in flight",

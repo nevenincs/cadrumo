@@ -1351,7 +1351,7 @@ desktop:
           cancelled.
         confirm_back: Go back
         confirm_yes: Record the baja
-        deducted: Depreciation deducted
+        deducted: Amortisation deducted
         effect_missing: No effect on the cost is worked out for this point.
         excess: Excess
         figures: Figures of the baja (nothing is saved)
@@ -1415,7 +1415,7 @@ desktop:
         acquisition_reference: Invoice or document reference
         acquisition_shape: Kind of acquisition
         allocation_provenance: Where the earlier split comes from
-        basis: Depreciable basis
+        basis: Amortisable basis
         basis_stage: How you came to own it
         building_construction_date: Date the building was built
         business_use_share: Business use share
@@ -1489,14 +1489,31 @@ desktop:
         vehicle_private_use: Private use
         vehicle_propulsion: Electric drive (if any)
       filing:
-        choose_year: Choose a year to see where the depreciation allowances go.
+        choose_year: Choose a year to see where the dotaciones go.
         unavailable: The filing handoff isn't available.
-      forecast: Depreciation {amount} · {days} days · {from} – {until}
+      forecast: Dotación {amount} · {days} days · {from} – {until}
       forecast_note: The forecast saves nothing until you record the dotación.
-      free: Free depreciation requested
-      free_hint: Only for a free-depreciation method
+      free: Free amortisation requested
+      free_hint: Only for a free-amortisation method
       from: From
       handoff: Dotaciones in your tax returns
+      handoff_agrarian_count: 'Left out of Modelo 130, because they belong to an agricultural
+        activity, which pays a share of income: {count} elements.'
+      handoff_agrarian_named: 'Left out of Modelo 130, because they belong to an agricultural
+        activity, which pays a share of income: {names}.'
+      handoff_free_count: 'Not counted in Modelo 130, because their method leaves
+        the dotación to you: {count} elements.'
+      handoff_free_named: 'Not counted in Modelo 130, because their method leaves
+        the dotación to you: {names}.'
+      handoff_gap_accrued: 'Modelo 100: {name} has no dotación recorded from {start}
+        to {end}. The {amount} EUR it accrued in that time is not in the amounts above.'
+      handoff_gap_free: 'Modelo 100: {name} has no dotación recorded from {start}
+        to {end}. Its method leaves the amount to you, so none can be worked out.'
+      handoff_gap_unavailable: 'Modelo 100: {name} has no dotación recorded from {start}
+        to {end}, and it could not be worked out.'
+      handoff_gap_unnamed: 'Also left out: {count} periods of elements that this list
+        does not name.'
+      handoff_left_out: Left out of these amounts
       handoff_partial: 'Partial: {count} elements can''t be worked out and are left
         out of this amount.'
       handoff_year: Year for the filing figures
@@ -1517,23 +1534,29 @@ desktop:
         serial_missing: No serial number is recorded.
         summary: Needing attention, all years
         unavailable: The register isn't available right now.
+      mark:
+        not_applicable: Doesn't apply
+        nothing_recorded: Nothing recorded
       not_known: Not known
       opening_unknown: Fill in “{field}” to work this out.
       plan:
-        claim_correct: Correct the dotación from {from} to {until}
+        baja: 'Baja on {date}: {reason}'
         claimable: Dotación can still be recorded {from} – {until}
         claimable_none: Nothing left to record
-        claimed_missing: Nothing is recorded for this year.
         claims: Dotaciones for {year}
         column:
           claimed: Recorded
           days: Days
+          minimum: Minimum accumulated to year end
+          minimum_note: Counts towards the cost if you dispose of this element. It
+            isn't this year's deduction.
           period: Period
           planned: Planned
           rate: Rate
           replaced_by: Replaced by
           status: Status
           year: Year
+        correct_this: Correct this dotación
         days_missing: No days in service are counted for this year.
         edition: Tables from {edition}
         election_changed: Amortisation method changes here
@@ -1562,6 +1585,7 @@ desktop:
         rate_missing: No rate applies because no figure is worked out for this year.
         recorded_zero: Recorded as zero
         replaced: Replaced
+        stale_fix: This dotación no longer matches the plan. Correct it.
       quarter: Modelo 130 quarter
       quarter_none: No Modelo 130 quarter
       refused: The register did not accept that.
@@ -1603,7 +1627,7 @@ desktop:
         described: Details saved.
         element_added: Element added.
         fill_in: Fill this in
-        fix_marked: Fix the fields marked above.
+        fix_marked: Fix the entries marked above.
         incomplete: 'Not saved. Still to fill in: {fields}'
         kept: Nothing was saved. What you entered is still here.
         missing: 'Still to fill in: {fields}'
@@ -3780,6 +3804,8 @@ desktop:
       movement_correct_note: The corrected movement takes the place of the old one.
         The old one stays in the history.
       movements_none: No movements in this book yet. Add the first one.
+      movements_none_retired: No movements in this book. It's retired, so nothing
+        can be added.
       movements_of: Movements of {name}
       options_failed: The choices for this form couldn't be loaded. Close the form
         and open it again.
@@ -5284,8 +5310,8 @@ ledger:
       electricity_self_consumption: Electricity for self-consumption
       thermal_own_use: Thermal energy for own use
     stale_reason:
-      authority_changed: The tax tables changed after this claim
-      revision_changed: The element was corrected after this claim
+      authority_changed: The tax tables changed after this dotación
+      revision_changed: The element was corrected after this dotación
       schedule_unavailable: The schedule cannot be worked out now
     vehicle_category:
       aircraft: Aircraft
@@ -9349,6 +9375,12 @@ workspace:
         into.
       source_locked: It follows your records; correct it there and recalculate.
       value_channel_unavailable: Values of this kind cannot be entered here yet.
+    notes:
+      lead: These do not stop the file. They say what the dotaciones of your assets
+        leave out, so you can decide what to add.
+      title: Worth knowing before you file
+      unworded: The calculation noted something about your assets that cannot be shown
+        here.
     operation:
       calculated: Calculated. {direction} {value}.
       checked:

@@ -127,6 +127,15 @@ export function FixedAssetsPane({
   const offered = [...official, ...estimated];
   const year = chosenYear ?? openingYear(offered, new Date().getFullYear());
   const row = rows.find((found) => found.asset_id === selected) ?? null;
+  // The names the list holds; an element not yet described has none, and is
+  // never said by its id.
+  const names = new Map(
+    rows.flatMap((found) =>
+      found.name !== null && found.name.trim() !== ""
+        ? [[found.asset_id, found.name] as const]
+        : [],
+    ),
+  );
 
   const form = () => {
     if (!request) return null;
@@ -276,6 +285,7 @@ export function FixedAssetsPane({
               reader={reader}
               locale={locale}
               year={year}
+              names={names}
             />
           </section>
         )}

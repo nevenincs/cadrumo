@@ -52,6 +52,10 @@ import {
   correctRequest,
   createRequest,
 } from "../src/components/ledger/assets/assetRevision";
+import {
+  leftOutNotes,
+  type Handoff,
+} from "../src/components/ledger/assets/handoffWords";
 import { changeValueText } from "../src/components/ledger/assets/planWords";
 import type { SetupCall } from "../src/components/ledger/setup/setupModel";
 import {
@@ -2801,4 +2805,115 @@ test("a changed fact on the timeline is worded by the key the backend served for
   expect(fields).not.toContain("acquisition.evidence_fingerprint");
   expect(fields).not.toContain("asset_id");
   expect(fields).not.toContain("revision_number");
+});
+
+const HANDOFF_WORDS = words({
+  "desktop.ledger.assets.handoff_gap_accrued":
+    "{name}: nothing from {start} to {end}, {amount} EUR accrued.",
+  "desktop.ledger.assets.handoff_gap_free":
+    "{name}: nothing from {start} to {end}, left to you.",
+  "desktop.ledger.assets.handoff_gap_unavailable":
+    "{name}: nothing from {start} to {end}, not worked out.",
+  "desktop.ledger.assets.handoff_gap_unnamed": "{count} more periods.",
+  "desktop.ledger.assets.handoff_free_named": "Free: {names}.",
+  "desktop.ledger.assets.handoff_free_count": "Free: {count} elements.",
+  "desktop.ledger.assets.handoff_agrarian_named": "Agricultural: {names}.",
+  "desktop.ledger.assets.handoff_agrarian_count":
+    "Agricultural: {count} elements.",
+});
+
+const projection = (
+  casilla: string,
+  facts: {
+    free?: string[];
+    agrarian?: string[];
+  } = {},
+) => ({
+  target_casilla_id: casilla,
+  tax_year: 2025,
+  amount: { decimal: "0.00" },
+  contributions: [],
+  unavailable_asset_ids: [],
+  free_gap_asset_ids: facts.free ?? [],
+  agrarian_excluded_asset_ids: facts.agrarian ?? [],
+});
+
+const claims = (casilla: string) => ({
+  target_casilla_id: casilla,
+  tax_year: 2025,
+  claim_ids: [],
+  amount: { decimal: "0.00" },
+});
+
+test("a handoff says what it leaves out by the elements' names, and by their number where a name is missing, never by an id", () => {
+  const names = new Map([
+    ["asset-aaa", "Laptop"],
+    ["asset-bbb", "Printer"],
+  ]);
+  const handoff: Handoff = {
+    material_m100: claims("0208"),
+    intangible_m100: claims("0227"),
+    m100_gaps: [
+      {
+        asset_id: "asset-aaa",
+        kind: "accrued",
+        covered_from: "2025-01-01",
+        covered_until: "2025-03-31",
+        accrued: { decimal: "412.50" },
+      },
+      {
+        asset_id: "asset-bbb",
+        kind: "free_method",
+        covered_from: "2025-02-01",
+        covered_until: "2025-03-31",
+        accrued: null,
+      },
+      {
+        // An accrual that is not stated is never drawn as an amount.
+        asset_id: "asset-aaa",
+        kind: "accrued",
+        covered_from: "2025-04-01",
+        covered_until: "2025-04-30",
+        accrued: null,
+      },
+      {
+        asset_id: "asset-zzz",
+        kind: "unavailable",
+        covered_from: "2025-01-01",
+        covered_until: "2025-12-31",
+        accrued: null,
+      },
+    ],
+    material_m130: projection("02", {
+      free: ["asset-aaa", "asset-bbb"],
+      agrarian: ["asset-zzz"],
+    }),
+    intangible_m130: projection("02", { free: ["asset-bbb"] }),
+  };
+  const said = leftOutNotes(HANDOFF_WORDS, "en", handoff, names);
+  expect(said).toEqual([
+    "Laptop: nothing from Jan 1, 2025 to Mar 31, 2025, 412.50 EUR accrued.",
+    "Printer: nothing from Feb 1, 2025 to Mar 31, 2025, left to you.",
+    "Laptop: nothing from Apr 1, 2025 to Apr 30, 2025, not worked out.",
+    "1 more periods.",
+    // Both kinds name the element once; one element has no name here.
+    "Free: Laptop and Printer.",
+    "Agricultural: 1 elements.",
+  ]);
+  expect(said.join(" ")).not.toMatch(/asset-/);
+  // A handoff that leaves nothing out says nothing.
+  expect(
+    leftOutNotes(
+      HANDOFF_WORDS,
+      "en",
+      {
+        material_m100: claims("0208"),
+        intangible_m100: claims("0227"),
+        m100_gaps: [],
+        material_m130: null,
+        intangible_m130: null,
+      },
+      names,
+    ),
+  ).toEqual([]);
 });
