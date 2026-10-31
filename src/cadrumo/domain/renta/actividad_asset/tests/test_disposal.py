@@ -297,6 +297,39 @@ def test_market_value_below_proceeds_leaves_the_proceeds() -> None:
     assert calculation.transmission_value == Decimal("500.00")
 
 
+def test_the_value_of_transmission_on_the_form_is_net_of_costs() -> None:
+    # Manual Renta 2025, chapter 11: the real amount, less the costs of the sale, is the value of
+    # transmission, and the gain is that value less the value of acquisition: 5,000 - 100 = 4,900,
+    # and 4,900 - 3,000 = 1,900.
+    calculation = calculate_disposal(
+        _facts(
+            _disposal(proceeds="5000.00", costs="100.00"),
+            (_year(2025, minimum=None),),
+            acquisition="3000.00",
+            amortizable="3000.00",
+        ),
+    )
+    assert calculation.net_value == Decimal("3000.00")
+    assert calculation.net_transmission_value == Decimal("4900.00")
+    assert calculation.result == Decimal("1900.00")
+
+
+def test_a_higher_market_value_prevails_over_the_price_before_costs_come_off() -> None:
+    # Manual Renta 2025, chapter 11: the normal market value prevails where the price is below it,
+    # and the costs are deducted from that amount: 800 - 20 = 780.
+    calculation = calculate_disposal(
+        _facts(_disposal(proceeds="500.00", costs="20.00", market_value="800.00"), (_year(2025, "100.00"),)),
+    )
+    assert calculation.net_transmission_value == Decimal("780.00")
+
+
+def test_a_withdrawal_has_no_value_of_transmission() -> None:
+    calculation = calculate_disposal(
+        _facts(_disposal(ActivityAssetDisposalReason.WITHDRAWAL), (_year(2025, "100.00"),)),
+    )
+    assert calculation.net_transmission_value is None
+
+
 def test_whole_element_amounts_take_the_allocation_share() -> None:
     # Half the element is the activity's: 1,000 proceeds and 100 costs become 500 and 50; cost 500, reduction 50.
     calculation = calculate_disposal(

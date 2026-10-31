@@ -7,6 +7,7 @@ and Modelo 130 are read through their real resolvers and the published 2025 revi
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
 
@@ -17,10 +18,12 @@ from cadrumo.domain.calculations.registry.actividad_asset_disposal_bindings impo
     ActivityAssetDisposalRoute,
     activity_asset_disposal_route_casillas,
 )
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.invoices.catalogue import InvoiceCatalogue
 from cadrumo.domain.modelos.calculation_revision_sources import ActivityAssetConsumption, CalculationNoteSentence
 from cadrumo.domain.renta.actividad_asset.disposal import (
     ActivityAssetDisposal,
+    ActivityAssetDisposalCalculation,
     ActivityAssetDisposalReason,
     PriorFreeDepreciationRegime,
 )
@@ -31,6 +34,11 @@ from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from ...actividad_asset.history import ActivityAssetHistory
 from ...modelo.calculation_notes import GATE_REFUSED_REASONS
 from ...modelo.tests.source_diagnostics_support import apply_expected_missing_binding_diagnostics
+from ..activity_asset_disposal_projection import (
+    ActivityAssetDisposalRow,
+    calculate_asset_disposal,
+    disposal_row_source_identities,
+)
 from ..modelo_bindings import LedgerRentaIncomeAggregationSourceResolver
 from ..modelo_bindings_actividad_assets import (
     ActivityAssetDisposalExcess,
@@ -405,3 +413,51 @@ def test_one_sale_has_its_row() -> None:
     resolution = resolve_m100(disposed_asset_history())
     assert _row_values(resolution, "1633")
     assert _shared_row_notes(resolution) == []
+
+
+def test_the_row_states_the_value_of_transmission_net_of_costs() -> None:
+    # 12,000 less 100 of costs is 11,900; the net value is 11,702.47, so the gain is 197.53.
+    resolution = resolve_m100(disposed_asset_history(costs="100.00"))
+
+    assert _row_values(resolution, "1633") == {1: Decimal("11900.00")}
+    assert _row_values(resolution, "1637") == {1: Decimal("11702.47")}
+    assert _row_values(resolution, "1654") == {1: Decimal("197.53")}
+    assert _boxes(resolution)["1654"] == Decimal("197.53")
+
+
+@dataclass(frozen=True, slots=True)
+class _SameSale(ActivityAssetDisposalRow):
+    """A row whose identity holds still, so its fingerprint can move only with what it states."""
+
+    @property
+    def source_identity(self) -> str:
+        return "same-sale"
+
+
+def _fingerprint(revision: ActivityAssetRevision, calculation: ActivityAssetDisposalCalculation) -> str:
+    row = _SameSale(
+        revision=revision,
+        route=ActivityAssetDisposalRoute.TRANSMISSION_GAIN_ELEMENT,
+        amount=Decimal("1.00"),
+        calculation=calculation,
+    )
+    key = ("any-binding", 1)
+    return disposal_row_source_identities({key: row.source_identity}, (row,))[key].fingerprint
+
+
+def test_the_row_fingerprint_moves_with_the_costs_and_the_date_of_the_sale(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    history = disposed_asset_history()
+    revision = history.revisions[-1]
+    calculation = calculate_asset_disposal(revision, history, operation=operation)
+    baseline = _fingerprint(revision, calculation)
+    disposal = revision.disposal
+    assert disposal is not None
+
+    assert baseline != _fingerprint(revision, calculation.model_copy(update={"transmission_costs": Decimal("1.00")}))
+    assert baseline != _fingerprint(
+        revision.model_copy(update={"disposal": disposal.model_copy(update={"disposal_date": date(2025, 7, 1)})}),
+        calculation,
+    )
+    assert baseline == _fingerprint(revision, calculation)

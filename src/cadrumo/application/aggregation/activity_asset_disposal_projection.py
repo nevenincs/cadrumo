@@ -161,7 +161,7 @@ class ActivityAssetDisposalRow:
             case ActivityAssetDisposalRowField.TRANSMISSION_DATE:
                 return None if disposal is None else disposal.disposal_date.isoformat()
             case ActivityAssetDisposalRowField.TRANSMISSION_VALUE:
-                return self.calculation.transmission_value
+                return self.calculation.net_transmission_value
             case ActivityAssetDisposalRowField.ACQUISITION_VALUE:
                 return self.calculation.net_value
             case ActivityAssetDisposalRowField.GAIN:
@@ -183,7 +183,9 @@ def disposal_row_source_identities(
                 "identity": row.source_identity,
                 "route": row.route.value,
                 "amount": str(row.amount),
+                "transmission_date": str(row.column(ActivityAssetDisposalRowField.TRANSMISSION_DATE)),
                 "transmission_value": str(row.calculation.transmission_value),
+                "transmission_costs": str(row.calculation.transmission_costs),
                 "net_value": str(row.calculation.net_value),
             }
         )
@@ -332,7 +334,7 @@ class ActivityAssetBajaReader:
             count=count,
             amount=figure.amount,
             box=self._routes[figure.route],
-            transmission_value=calculation.transmission_value,
+            transmission_value=calculation.net_transmission_value,
             net_value=calculation.net_value,
         )
 
@@ -385,7 +387,7 @@ class ActivityAssetBajaReader:
                 ),
                 amount=amount,
                 box=box,
-                transmission_value=calculation.transmission_value,
+                transmission_value=calculation.net_transmission_value,
                 net_value=calculation.net_value,
             )
         return self._finding(revision, message, CalculationNoteSentence.DISPOSAL_FIGURE_IN_BOX, amount=amount, box=box)

@@ -255,6 +255,13 @@ class ActivityAssetDisposalCalculation(BaseModel):
     years: tuple[ActivityAssetDisposalYear, ...]
     findings: tuple[ActivityAssetDisposalFinding, ...]
 
+    @property
+    def net_transmission_value(self) -> Decimal | None:
+        """Return what the form calls the value of transmission: the amount less its costs (LIRPF art. 35.2)."""
+        if self.transmission_value is None or self.transmission_costs is None:
+            return None
+        return self.transmission_value - self.transmission_costs
+
 
 def calculate_disposal(facts: ActivityAssetDisposalFacts) -> ActivityAssetDisposalCalculation:
     """Work out the reduction of cost, any excess and the gain or loss of one baja.
