@@ -1,7 +1,5 @@
 """Shared resolvers, repositories and invoice builders for the ledger source-mesh tests."""
 
-from datetime import date as _date
-from datetime import date as _prov_date
 from decimal import Decimal
 
 from cadrumo.core.prorrata_register import ProrrataRegisterRegime
@@ -18,16 +16,12 @@ from ....domain.bienes_inversion.register import (
     RegistroRegularizacionResult,
     compute_registro_regularizacion,
 )
-from ....domain.bienes_inversion.regularizacion_parameters import (
-    BienesInversionParameterProvenance,
-    BienesInversionRegularizacionParameters,
-)
+from ....domain.bienes_inversion.tests.explicit_parameters import params_for
 from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from ....domain.calculations.registry.m303_schema_vocabulary import (
     m303_regime_composition_simplified_scope,
 )
-from ....domain.calculations.registry.schema_base import ThresholdComparison
 from ....domain.deadlines.models import (
     ModeloIVAProfile,
 )
@@ -57,59 +51,6 @@ from ..producer_snapshot import (
     PresenterIdentity,
     TaxpayerIdentityFacts,
 )
-
-#: Provenance stamped onto directly-constructed projections in this module. A
-#: result must name the registry declaration its figures came from; these tests
-#: build results by hand rather than by projection, so they state it explicitly.
-_PROVENANCE = BienesInversionParameterProvenance(
-    modelo_id="303",
-    revision_id="2025",
-    parameter_ids=(
-        "m303-bien-inversion-ventana-anos-mueble",
-        "m303-bien-inversion-ventana-anos-inmueble",
-        "m303-bien-inversion-divisor-mueble",
-        "m303-bien-inversion-divisor-inmueble",
-        "m303-bien-inversion-regularizacion-umbral-puntos",
-    ),
-    resolved_on=_prov_date(2025, 6, 1),
-)
-
-
-#: An explicit bundle. These tests exercise the surrounding wiring, not the law;
-#: whether these are the figures the law states is answered against the registry
-#: by the modelo 303 parameter gates.
-_PARAMS = BienesInversionRegularizacionParameters(
-    ventana_anos_mueble=4,
-    ventana_anos_inmueble=9,
-    divisor_mueble=Decimal("5"),
-    divisor_inmueble=Decimal("10"),
-    umbral_puntos=Decimal("10"),
-    umbral_comparison=ThresholdComparison.EXCLUSIVE,
-    provenance=BienesInversionParameterProvenance(
-        modelo_id="303",
-        revision_id="2025",
-        parameter_ids=(
-            "m303-bien-inversion-ventana-anos-mueble",
-            "m303-bien-inversion-ventana-anos-inmueble",
-            "m303-bien-inversion-divisor-mueble",
-            "m303-bien-inversion-divisor-inmueble",
-            "m303-bien-inversion-regularizacion-umbral-puntos",
-        ),
-        resolved_on=_date(2025, 6, 1),
-    ),
-)
-
-
-def m303_bienes_inversion_parameters(year: int) -> BienesInversionRegularizacionParameters:
-    """The bundle, resolved for ``year``.
-
-    The projection refuses a bundle resolved for a different filing year, so a
-    fixture cannot pin one year and be applied to another.
-    """
-    return _PARAMS.model_copy(
-        update={"provenance": _PARAMS.provenance.model_copy(update={"resolved_on": _prov_date(year, 12, 31)})}
-    )
-
 
 _TAXPAYER_TAX_ID = "12345678Z"
 
@@ -181,7 +122,7 @@ def _empty_m303_export_arrivals(
         bienes_register,
         regularizacion_year=filing_year,
         prorrata_definitiva_by_identifier={},
-        parameters=m303_bienes_inversion_parameters(filing_year),
+        parameters=params_for(filing_year),
     )
     return register, bienes_register, regularisation
 
@@ -213,7 +154,7 @@ def _m303_filing_facts(
         differentiated_contributions=(),
         bienes_register=bienes_register,
         regularisation_result=regularisation,
-        bienes_parameters=m303_bienes_inversion_parameters(filing_year),
+        bienes_parameters=params_for(filing_year),
     )
 
 

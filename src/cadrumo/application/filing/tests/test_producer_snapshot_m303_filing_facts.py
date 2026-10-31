@@ -26,6 +26,7 @@ from ....domain.bienes_inversion.register import (
     RegistroRegularizacionResult,
     compute_registro_regularizacion,
 )
+from ....domain.bienes_inversion.tests.explicit_parameters import params_for
 from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.deadlines.models import (
     ModeloIVAProfile,
@@ -66,7 +67,6 @@ from .producer_snapshot_support import (
     _m303_profile,
     _presenter,
     _taxpayer_identity,
-    m303_bienes_inversion_parameters,
     m303_exonerado_390_evidence,
 )
 
@@ -170,7 +170,7 @@ def _m303_foral_snapshot(
         differentiated_contributions=(),
         bienes_register=bienes_register,
         regularisation_result=regularisation,
-        bienes_parameters=m303_bienes_inversion_parameters(period.filing_year),
+        bienes_parameters=params_for(period.filing_year),
     )
     profile = _m303_profile().model_copy(
         update={
@@ -502,7 +502,7 @@ def test_m303_filing_facts_refuse_annual_and_non_official_filing_periods(period_
             differentiated_contributions=(),
             bienes_register=bienes_register,
             regularisation_result=regularisation,
-            bienes_parameters=m303_bienes_inversion_parameters(period.filing_year),
+            bienes_parameters=params_for(period.filing_year),
         )
 
 
@@ -527,7 +527,7 @@ def test_m303_filing_facts_resolver_refuses_non_official_period_before_producer_
             differentiated_contributions=(),
             bienes_register=bienes_register,
             regularisation_result=regularisation,
-            bienes_parameters=m303_bienes_inversion_parameters(period.filing_year),
+            bienes_parameters=params_for(period.filing_year),
         )
 
 
@@ -642,7 +642,7 @@ def test_m303_filing_facts_accept_the_canonical_bienes_regularisation_result() -
         register,
         regularizacion_year=2026,
         prorrata_definitiva_by_identifier={"canonical-bien": Decimal("80")},
-        parameters=m303_bienes_inversion_parameters(2026),
+        parameters=params_for(2026),
     )
 
     facts = M303FilingFacts.model_validate(
@@ -665,7 +665,7 @@ def test_m303_filing_facts_refuse_an_empty_regularisation_for_a_register_bien() 
         computed_count=0,
         pending_percentage_count=0,
         sector_contributions=(),
-        parameters_provenance=m303_bienes_inversion_parameters(2026).provenance,
+        parameters_provenance=params_for(2026).provenance,
     )
 
     with pytest.raises(ValidationError, match="canonical projection of the supplied Bienes register"):
@@ -684,7 +684,7 @@ def test_m303_filing_facts_refuse_a_regularisation_from_another_bienes_register(
         foreign_register,
         regularizacion_year=2026,
         prorrata_definitiva_by_identifier={"foreign-bien": Decimal("80")},
-        parameters=m303_bienes_inversion_parameters(2026),
+        parameters=params_for(2026),
     )
 
     with pytest.raises(ValidationError, match="canonical projection of the supplied Bienes register"):
@@ -702,7 +702,7 @@ def test_m303_filing_facts_refuse_a_regularisation_that_omits_an_in_window_bien(
         register,
         regularizacion_year=2026,
         prorrata_definitiva_by_identifier={},
-        parameters=m303_bienes_inversion_parameters(2026),
+        parameters=params_for(2026),
     )
     omitted = RegistroRegularizacionResult(
         regularizacion_year=2026,
@@ -711,7 +711,7 @@ def test_m303_filing_facts_refuse_a_regularisation_that_omits_an_in_window_bien(
         computed_count=0,
         pending_percentage_count=1,
         sector_contributions=(),
-        parameters_provenance=m303_bienes_inversion_parameters(2026).provenance,
+        parameters_provenance=params_for(2026).provenance,
     )
 
     with pytest.raises(ValidationError, match="canonical projection of the supplied Bienes register"):
