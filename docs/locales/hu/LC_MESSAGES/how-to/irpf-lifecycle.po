@@ -210,7 +210,7 @@ msgstr ""
 "nettó összeg 20 százalékának megfelelő előleg. A nettó jövedelem a "
 "{term}`rovat <casilla>` `03` mezőben 500.00, az előleg pedig a "
 "{term}`rovat <casilla>` `04` mezőben 100.00. Az alacsony jövedelem miatti"
-" minoración a {term}`rovat <casilla>` `13` mezőben 100.00, ami a teljes "
+" csökkentés a {term}`rovat <casilla>` `13` mezőben 100.00, ami a teljes "
 "előleget elnyeli, így a végeredmény a {term}`rovat <casilla>` `19` "
 "mezőben 0.00."
 
