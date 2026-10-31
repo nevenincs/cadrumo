@@ -100,78 +100,102 @@ class _RepliesRpc:
         self.token_serial = b"1:SECRET:MAIN"
         self.closed = False
         self.failure: Exception | None = None
+        self._handlers = {
+            "C_Initialize": self._initialize,
+            "C_GetSlotList": self._get_slot_list,
+            "C_GetTokenInfo": self._get_token_info,
+            "C_OpenSession": self._open_session,
+            "C_FindObjectsInit": self._find_objects_init,
+            "C_FindObjects": self._find_objects,
+            "C_FindObjectsFinal": self._find_objects_final,
+            "C_GetAttributeValue": self._get_attribute_value,
+            "C_CloseSession": self._close_session,
+            "C_Finalize": self._finalize,
+        }
 
     def call(self, name: str, payload: bytes = b"") -> protection._Reader:
         self.calls.append(name)
         assert name in protection._CALLS
-        if name == "C_Initialize":
-            assert payload == b"\x01" + protection._blob(protection._HANDSHAKE)
-        elif name == "C_GetSlotList":
-            assert payload == b"\x01" + protection._u32(protection._MAX_SLOTS)
-            return protection._Reader(b"\x01" + protection._u32(1) + protection._ulong(9))
-        elif name == "C_GetTokenInfo":
-            assert payload == protection._ulong(9)
-            data = b"".join(
-                protection._blob(value.ljust(length, b" "))
-                for value, length in (
-                    (b"Secret Store", 32),
-                    (b"Gnome Keyring", 32),
-                    (b"", 16),
-                    (self.token_serial, 16),
-                )
-            )
-            return protection._Reader(data + b"\0" * (11 * 8 + 4) + protection._blob(b" " * 16))
-        elif name == "C_OpenSession":
-            assert payload == protection._ulong(9) + protection._ulong(4)
-            return protection._Reader(protection._ulong(_SESSION))
-        elif name == "C_FindObjectsInit":
-            reader = protection._Reader(payload)
-            assert reader.number(8) == _SESSION and reader.number() == 2
-            for kind, value in (
-                (protection._CLASS, struct.pack("@L", protection._COLLECTION_CLASS)),
-                (protection._ID, self.identifier),
-            ):
-                assert reader.number() == kind and reader.take(1) == b"\x01"
-                assert reader.number() == len(value) and reader.blob() == value
-            reader.finish()
-        elif name == "C_FindObjects":
-            assert payload == protection._ulong(_SESSION) + protection._u32(2)
-            data = b"\x01" + protection._u32(len(self.matches))
-            return protection._Reader(data + b"".join(protection._ulong(value) for value in self.matches))
-        elif name == "C_FindObjectsFinal":
-            assert payload == protection._ulong(_SESSION)
-        elif name == "C_GetAttributeValue":
-            if self.failure is not None:
-                raise self.failure
-            reader = protection._Reader(payload)
-            assert reader.number(8) == _SESSION and reader.number(8) == self.matches[0]
-            assert reader.number() == 6
-            requested = [(reader.number(), reader.number()) for _ in range(6)]
-            reader.finish()
-            assert [kind for kind, _ in requested] == [
-                protection._CLASS,
-                protection._ID,
-                protection._TOKEN,
-                protection._TRANSIENT,
-                protection._TRUSTED,
-                protection._LOCKED,
-            ]
-            data = protection._u32(6)
-            for kind, _length in requested:
-                data += protection._u32(kind)
-                if kind not in self.values:
-                    data += b"\0"
-                else:
-                    value = self.values[kind]
-                    data += b"\x01" + protection._u32(len(value)) + protection._blob(value)
-            return protection._Reader(data + protection._ulong(0))
-        elif name == "C_CloseSession":
-            assert payload == protection._ulong(_SESSION)
-        elif name == "C_Finalize":
-            assert payload == b""
-        else:
+        handler = self._handlers.get(name)
+        if handler is None:
             pytest.fail(f"unexpected metadata call {name}")
-        return protection._Reader(b"")
+        reply = handler(payload)
+        return protection._Reader(b"") if reply is None else reply
+
+    def _initialize(self, payload: bytes) -> None:
+        assert payload == b"" + protection._blob(protection._HANDSHAKE)
+
+    def _get_slot_list(self, payload: bytes) -> protection._Reader:
+        assert payload == b"" + protection._u32(protection._MAX_SLOTS)
+        return protection._Reader(b"" + protection._u32(1) + protection._ulong(9))
+
+    def _get_token_info(self, payload: bytes) -> protection._Reader:
+        assert payload == protection._ulong(9)
+        data = b"".join(
+            protection._blob(value.ljust(length, b" "))
+            for value, length in (
+                (b"Secret Store", 32),
+                (b"Gnome Keyring", 32),
+                (b"", 16),
+                (self.token_serial, 16),
+            )
+        )
+        return protection._Reader(data + b"\0" * (11 * 8 + 4) + protection._blob(b" " * 16))
+
+    def _open_session(self, payload: bytes) -> protection._Reader:
+        assert payload == protection._ulong(9) + protection._ulong(4)
+        return protection._Reader(protection._ulong(_SESSION))
+
+    def _find_objects_init(self, payload: bytes) -> None:
+        reader = protection._Reader(payload)
+        assert reader.number(8) == _SESSION and reader.number() == 2
+        for kind, value in (
+            (protection._CLASS, struct.pack("@L", protection._COLLECTION_CLASS)),
+            (protection._ID, self.identifier),
+        ):
+            assert reader.number() == kind and reader.take(1) == b""
+            assert reader.number() == len(value) and reader.blob() == value
+        reader.finish()
+
+    def _find_objects(self, payload: bytes) -> protection._Reader:
+        assert payload == protection._ulong(_SESSION) + protection._u32(2)
+        data = b"" + protection._u32(len(self.matches))
+        return protection._Reader(data + b"".join(protection._ulong(value) for value in self.matches))
+
+    def _find_objects_final(self, payload: bytes) -> None:
+        assert payload == protection._ulong(_SESSION)
+
+    def _get_attribute_value(self, payload: bytes) -> protection._Reader:
+        if self.failure is not None:
+            raise self.failure
+        reader = protection._Reader(payload)
+        assert reader.number(8) == _SESSION and reader.number(8) == self.matches[0]
+        assert reader.number() == 6
+        requested = [(reader.number(), reader.number()) for _ in range(6)]
+        reader.finish()
+        assert [kind for kind, _ in requested] == [
+            protection._CLASS,
+            protection._ID,
+            protection._TOKEN,
+            protection._TRANSIENT,
+            protection._TRUSTED,
+            protection._LOCKED,
+        ]
+        data = protection._u32(6)
+        for kind, _length in requested:
+            data += protection._u32(kind)
+            if kind not in self.values:
+                data += b"\0"
+            else:
+                value = self.values[kind]
+                data += b"" + protection._u32(len(value)) + protection._blob(value)
+        return protection._Reader(data + protection._ulong(0))
+
+    def _close_session(self, payload: bytes) -> None:
+        assert payload == protection._ulong(_SESSION)
+
+    def _finalize(self, payload: bytes) -> None:
+        assert payload == b""
 
     def empty(self, name: str, payload: bytes = b"") -> None:
         self.call(name, payload).finish()
