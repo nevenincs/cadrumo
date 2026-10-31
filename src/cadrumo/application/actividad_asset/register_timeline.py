@@ -153,21 +153,8 @@ def element_timeline(
             replaced = claims.get(claim.supersedes_claim_id or "")
             changes = _timeline_claim_changes(claim, replaced)
             effect_date = claim.covered_from
-            event_kind = (
-                ActivityAssetTimelineEventKind.CLAIM_REPLACED
-                if replaced is not None
-                else ActivityAssetTimelineEventKind.CLAIM_RECORDED
-            )
-            stale = matches_current_schedule(claim, current, context)
-            claim_use = ActivityAssetTimelineClaimUse(
-                used_by=used_by.get(claim.claim_id, ()),
-                matches_current_schedule=stale is None,
-                stale_reason=stale,
-                in_effect=claim in effective,
-                tax_year=claim.tax_year,
-                covered_from=claim.covered_from,
-                covered_through=last_day_covered(claim.covered_until),
-            )
+            event_kind = _claim_event_kind(replaced)
+            claim_use = _claim_use(claim, current, context, effective=effective, used_by=used_by)
         else:
             event_kind = ActivityAssetTimelineEventKind.DESCRIBED
             descriptor = descriptors[event.record_id]
@@ -188,6 +175,34 @@ def element_timeline(
             ),
         )
     return tuple(timeline)
+
+
+def _claim_event_kind(replaced: AmortizationClaim | None) -> ActivityAssetTimelineEventKind:
+    return (
+        ActivityAssetTimelineEventKind.CLAIM_REPLACED
+        if replaced is not None
+        else ActivityAssetTimelineEventKind.CLAIM_RECORDED
+    )
+
+
+def _claim_use(
+    claim: AmortizationClaim,
+    current: ActivityAssetRevision,
+    context: RegisterReadContext,
+    *,
+    effective: tuple[AmortizationClaim, ...],
+    used_by: Mapping[str, tuple[str, ...]],
+) -> ActivityAssetTimelineClaimUse:
+    stale = matches_current_schedule(claim, current, context)
+    return ActivityAssetTimelineClaimUse(
+        used_by=used_by.get(claim.claim_id, ()),
+        matches_current_schedule=stale is None,
+        stale_reason=stale,
+        in_effect=claim in effective,
+        tax_year=claim.tax_year,
+        covered_from=claim.covered_from,
+        covered_through=last_day_covered(claim.covered_until),
+    )
 
 
 def _revision_event(

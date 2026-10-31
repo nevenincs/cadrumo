@@ -239,7 +239,7 @@ def element_plan(revision: ActivityAssetRevision, context: RegisterReadContext) 
     minimum = Decimal("0")
     minimum_complete = True
     for row in _walk_to_settlement(revision, context):
-        intervals, refusal_key, refusal_facts = _claimable(revision, row, context.history)
+        claimable = _claimable(revision, row, context.history)
         year = year_minimum(
             revision,
             tax_year=row.tax_year,
@@ -248,30 +248,41 @@ def element_plan(revision: ActivityAssetRevision, context: RegisterReadContext) 
         )
         minimum_complete = minimum_complete and year is not None
         minimum += year or Decimal("0")
-        rows.append(
-            ActivityAssetPlanRow(
-                tax_year=row.tax_year,
-                method=revision.amortization.method,
-                coefficient=_optional_amount(None if row.charge is None else row.charge.annual_rate),
-                planned=_amount(row.charge.amount) if row.charge is not None and row.absence is None else None,
-                absence=row.absence,
-                absence_reason_key=row.reason_key,
-                absence_reason_facts=project_reason_facts(row.reason_facts),
-                claimed=_amount(row.claimed),
-                claim_state=_claim_state(row, intervals, today=context.today),
-                claimable_intervals=intervals,
-                claimable_refusal_key=refusal_key,
-                claimable_refusal_facts=refusal_facts,
-                edition=_edition_or_none(context, row.tax_year),
-                service_days=None if row.charge is None else row.charge.service_days,
-                calendar_days=None if row.charge is None else row.charge.calendar_days,
-                claims=_plan_claims(revision, row.tax_year, context),
-                minimum_through=_amount(min(basis, round_to_cents(minimum))) if minimum_complete else None,
-                minimum_reason_key=None if minimum_complete else _MINIMUM_UNRESOLVED_KEY,
-                minimum_complete=minimum_complete,
-            ),
-        )
+        rows.append(_plan_row(revision, context, row, claimable, basis, minimum, minimum_complete))
     return tuple(rows)
+
+
+def _plan_row(
+    revision: ActivityAssetRevision,
+    context: RegisterReadContext,
+    row: WalkedYear,
+    claimable: tuple[tuple[ActivityAssetClaimableInterval, ...], str | None, tuple[ActivityAssetReasonFact, ...]],
+    basis: Decimal,
+    minimum: Decimal,
+    minimum_complete: bool,
+) -> ActivityAssetPlanRow:
+    intervals, refusal_key, refusal_facts = claimable
+    return ActivityAssetPlanRow(
+        tax_year=row.tax_year,
+        method=revision.amortization.method,
+        coefficient=_optional_amount(None if row.charge is None else row.charge.annual_rate),
+        planned=_amount(row.charge.amount) if row.charge is not None and row.absence is None else None,
+        absence=row.absence,
+        absence_reason_key=row.reason_key,
+        absence_reason_facts=project_reason_facts(row.reason_facts),
+        claimed=_amount(row.claimed),
+        claim_state=_claim_state(row, intervals, today=context.today),
+        claimable_intervals=intervals,
+        claimable_refusal_key=refusal_key,
+        claimable_refusal_facts=refusal_facts,
+        edition=_edition_or_none(context, row.tax_year),
+        service_days=None if row.charge is None else row.charge.service_days,
+        calendar_days=None if row.charge is None else row.charge.calendar_days,
+        claims=_plan_claims(revision, row.tax_year, context),
+        minimum_through=_amount(min(basis, round_to_cents(minimum))) if minimum_complete else None,
+        minimum_reason_key=None if minimum_complete else _MINIMUM_UNRESOLVED_KEY,
+        minimum_complete=minimum_complete,
+    )
 
 
 _MINIMUM_UNRESOLVED_KEY = "ledger.actividad_asset.disposal_finding.minimum_unresolved"
