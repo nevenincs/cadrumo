@@ -10,6 +10,12 @@ optional branches have been pruned by then, so a retained calculation placeholde
 file will carry is not refused, and whatever reached the document by any route is
 held to the same limits. Export and verification share this one walk.
 
+The XSD is also what decides letter case. Every free-text type in the official
+schemas spells its alphabet in capitals, while an operator types ordinary text, so
+:func:`canonical_xml_text` capitalizes a value only when its declared type refuses it
+as written and admits it capitalized. Nothing else is rewritten: a character the type
+does not admit in either case is refused, never dropped or replaced.
+
 Refusals name the box and the limit and never carry the value, which may be private.
 """
 
@@ -87,15 +93,18 @@ class _Violation:
 
 
 @dataclass(slots=True)
-class _Schema:
+class XmlValueSchema:
     """Named types of one XSD, with each simple type parsed the first time it is met."""
 
     source_id: str
+    root_tag: str
+    declaration: Element[str]
     complex_types: Mapping[str, Element[str]]
     simple_type_nodes: Mapping[str, Element[str]]
     simple_types: dict[str, _SimpleType] = field(default_factory=dict)
 
     def simple_type(self, name: str) -> _SimpleType:
+        """Return the facets of the type called ``name``, a named type or an XSD primitive."""
         known = self.simple_types.get(name)
         if known is not None:
             return known
@@ -142,6 +151,86 @@ def xsd_declared_children(node: Element[str]) -> list[Element[str]]:
     return found
 
 
+def xml_value_schema(schema: Element[str], *, source_id: str, root_tag: str) -> XmlValueSchema:
+    """Read one official XSD for checking and normalizing the values of ``root_tag``.
+
+    Args:
+        schema: The parsed XSD of the edition being exported.
+        source_id: Registry id of that XSD, named when it cannot be applied.
+        root_tag: The document element the XSD must declare.
+
+    Returns:
+        The parsed :class:`XmlValueSchema`.
+
+    Raises:
+        ModeloApplicationError: The XSD declares no such document element.
+    """
+    declaration = next(
+        (node for node in schema if node.tag == f"{XSD_NS}element" and node.get("name") == root_tag),
+        None,
+    )
+    if declaration is None:
+        raise _schema_unreadable(source_id, root_tag)
+    return XmlValueSchema(
+        source_id=source_id,
+        root_tag=root_tag,
+        declaration=declaration,
+        complex_types={
+            name: node for node in schema.iter(f"{XSD_NS}complexType") if (name := node.get("name")) is not None
+        },
+        simple_type_nodes={
+            name: node for node in schema.iter(f"{XSD_NS}simpleType") if (name := node.get("name")) is not None
+        },
+    )
+
+
+def canonical_xml_text(schema: XmlValueSchema, path: str, text: str) -> str:
+    """Return ``text`` in the case the type declared at ``path`` admits.
+
+    Export and verification both call this, so a capitalized file still matches the
+    draft holding the text as the operator typed it.
+
+    Args:
+        schema: The edition's :class:`XmlValueSchema`.
+        path: The dictionary path of the value.
+        text: The rendered value.
+
+    Returns:
+        The capitalized text when only that form is admitted; otherwise ``text``
+        unchanged, for the check over the finished document to judge.
+    """
+    capitalized = text.upper()
+    if capitalized == text:
+        return text
+    declared = _simple_type_at(schema, path)
+    if declared is None or _alphabet_admits(declared, text) or not _alphabet_admits(declared, capitalized):
+        return text
+    return capitalized
+
+
+def _simple_type_at(schema: XmlValueSchema, path: str) -> _SimpleType | None:
+    current = schema.declaration
+    for part in _document_path(path, root_tag=schema.root_tag).strip("/").split("/"):
+        complex_type = _declared_complex_type(current, schema)
+        if complex_type is None:
+            return None
+        declared = (
+            {item.get("name"): item for item in complex_type.findall(f"{XSD_NS}attribute")}.get(part[1:])
+            if part.startswith("@")
+            else {item.get("name"): item for item in xsd_declared_children(complex_type)}.get(part)
+        )
+        if declared is None:
+            return None
+        current = declared
+    return None if _declared_complex_type(current, schema) is not None else _declared_simple_type(current, schema)
+
+
+def _alphabet_admits(declared: _SimpleType, text: str) -> bool:
+    if declared.enumeration:
+        return text in declared.enumeration
+    return not declared.patterns or any(pattern.fullmatch(text) for pattern in declared.patterns)
+
+
 def refuse_xml_values_outside_schema(
     document: Element[str],
     *,
@@ -163,28 +252,14 @@ def refuse_xml_values_outside_schema(
             is listed, so one export names all there is to correct. Also raised
             when the XSD uses a construct this check cannot apply.
     """
-    parsed = _Schema(
-        source_id=source_id,
-        complex_types={
-            name: node for node in schema.iter(f"{XSD_NS}complexType") if (name := node.get("name")) is not None
-        },
-        simple_type_nodes={
-            name: node for node in schema.iter(f"{XSD_NS}simpleType") if (name := node.get("name")) is not None
-        },
-    )
-    declaration = next(
-        (node for node in schema if node.tag == f"{XSD_NS}element" and node.get("name") == document.tag),
-        None,
-    )
-    if declaration is None:
-        raise _schema_unreadable(source_id, document.tag)
-    violations = tuple(_element_violations(document, declaration, path="", schema=parsed))
+    parsed = xml_value_schema(schema, source_id=source_id, root_tag=document.tag)
+    violations = tuple(_element_violations(document, parsed.declaration, path="", schema=parsed))
     if violations:
         raise _refusal(violations, entries=entries, root_tag=document.tag)
 
 
 def _element_violations(
-    node: Element[str], declaration: Element[str], *, path: str, schema: _Schema
+    node: Element[str], declaration: Element[str], *, path: str, schema: XmlValueSchema
 ) -> Iterator[_Violation]:
     complex_type = _declared_complex_type(declaration, schema)
     if complex_type is None:
@@ -233,14 +308,14 @@ def _undeclared_children(node: Element[str], path: str) -> Iterator[_Violation]:
             )
 
 
-def _declared_complex_type(declaration: Element[str], schema: _Schema) -> Element[str] | None:
+def _declared_complex_type(declaration: Element[str], schema: XmlValueSchema) -> Element[str] | None:
     declared = declaration.get("type")
     if declared is not None:
         return schema.complex_types.get(declared)
     return declaration.find(f"{XSD_NS}complexType")
 
 
-def _declared_simple_type(declaration: Element[str], schema: _Schema) -> _SimpleType | None:
+def _declared_simple_type(declaration: Element[str], schema: XmlValueSchema) -> _SimpleType | None:
     """Return the facets on a declaration, or ``None`` for one that declares no type at all."""
     declared = declaration.get("type")
     if declared is not None:
@@ -269,7 +344,8 @@ def _parse_simple_type(node: Element[str], *, source_id: str, name: str) -> _Sim
             max_inclusive=_optional(_single_facet(facets, "maxInclusive"), Decimal),
             fraction_digits=_optional(_single_facet(facets, "fractionDigits"), int),
             enumeration=frozenset(_facet_values(facets, "enumeration")),
-            patterns=tuple(re.compile(value) for value in _facet_values(facets, "pattern")),
+            # ASCII because XML Schema's whitespace class is four characters, not Unicode's.
+            patterns=tuple(re.compile(value, re.ASCII) for value in _facet_values(facets, "pattern")),
         )
     except (ArithmeticError, ValueError, re.error) as exc:
         raise _schema_unreadable(source_id, name) from exc
@@ -297,11 +373,13 @@ def _value_violations(raw: str, declared: _SimpleType, *, path: str) -> Iterator
         yield from _numeric_violations(text, declared, path=path)
     else:
         yield from _length_violations(text, declared, path=path)
-    if declared.enumeration:
-        if text not in declared.enumeration:
+    if not _alphabet_admits(declared, text):
+        if declared.enumeration:
             yield _Violation(path=path, translated_message="application.filing.export.errors.xml_value_not_listed")
-    elif declared.patterns and not any(pattern.fullmatch(text) for pattern in declared.patterns):
-        yield _Violation(path=path, translated_message="application.filing.export.errors.xml_value_illegal_characters")
+        else:
+            yield _Violation(
+                path=path, translated_message="application.filing.export.errors.xml_value_illegal_characters"
+            )
 
 
 def _length_violations(text: str, declared: _SimpleType, *, path: str) -> Iterator[_Violation]:
@@ -397,7 +475,10 @@ def _schema_unreadable(source_id: str, type_name: str) -> ModeloApplicationError
 
 __all__ = [
     "XSD_NS",
+    "XmlValueSchema",
+    "canonical_xml_text",
     "is_xml_value_refusal",
     "refuse_xml_values_outside_schema",
+    "xml_value_schema",
     "xsd_declared_children",
 ]

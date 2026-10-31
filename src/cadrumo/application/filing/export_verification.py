@@ -35,9 +35,11 @@ from ._export_xml_dictionary import (
     read_xml_dictionary_root_identity,
     refuse_xml_dictionary_payload_outside_xsd,
     xml_dictionary_repeated_rows,
+    xml_dictionary_value_schema,
 )
 from ._export_xml_dictionary_modelo100 import modelo_100_sign_branch_value, registry_modelo_100_xml_declarations
 from ._export_xml_dictionary_values import format_xml_dictionary_value
+from .export_xml_value_limits import XmlValueSchema, canonical_xml_text
 from .runtime import RegistryModeloSubview, RegistrySchemaAccessor, build_runtime_schema_provider
 
 _logger = get_logger(__name__)
@@ -469,6 +471,7 @@ def _mismatched_xml_dictionary_casilla_ids(
     modelo_100_declarations = (
         registry_modelo_100_xml_declarations() if draft.modelo == form_for_role("renta.annual") else None
     )
+    value_schema = xml_dictionary_value_schema(layout, schema_provider=schema_provider)
     mismatched: list[CasillaId] = list(mismatched_xml_dictionary_repeated_casillas(payload, repeated_rows))
     checked: list[CasillaId] = []
     parsed_payload = parse_export_payload(
@@ -495,6 +498,7 @@ def _mismatched_xml_dictionary_casilla_ids(
             expected,
             modelo=draft.modelo,
             modelo_100_declarations=modelo_100_declarations,
+            value_schema=value_schema,
         )
         if expected_wire != parsed.raw:
             mismatched.append(casilla_id)
@@ -507,12 +511,14 @@ def _xml_dictionary_checked_wire_value(
     *,
     modelo: str,
     modelo_100_declarations: Mapping[str, str] | None,
+    value_schema: XmlValueSchema,
 ) -> str:
     """Attach the signed field identity to an expected-value rendering refusal."""
     try:
-        return _xml_dictionary_expected_wire_value(
+        expected = _xml_dictionary_expected_wire_value(
             entry, value, modelo=modelo, modelo_100_declarations=modelo_100_declarations
         )
+        return canonical_xml_text(value_schema, entry.path, expected)
     except FilingExportValidationError as exc:
         raise FilingExportValidationError(
             f"XML dictionary field {entry.field_id!r} could not render its expected verification value"

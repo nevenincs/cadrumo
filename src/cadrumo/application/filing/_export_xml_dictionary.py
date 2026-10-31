@@ -57,7 +57,14 @@ from ._export_xml_dictionary_modelo100 import (
     registry_modelo_100_xml_declarations,
 )
 from ._export_xml_dictionary_values import format_xml_dictionary_value, is_xml_dictionary_numeric_type
-from .export_xml_value_limits import XSD_NS, refuse_xml_values_outside_schema, xsd_declared_children
+from .export_xml_value_limits import (
+    XSD_NS,
+    XmlValueSchema,
+    canonical_xml_text,
+    refuse_xml_values_outside_schema,
+    xml_value_schema,
+    xsd_declared_children,
+)
 from .runtime import RegistrySchemaAccessor
 
 _XML_SCHEMA_INSTANCE_NS = "http://www.w3.org/2001/XMLSchema-instance"
@@ -105,6 +112,7 @@ def _write_xml_dictionary_entries(
     headers: Mapping[FilingProducerKey, object],
     dictionary_values: Mapping[str, object],
     declarations: Mapping[str, str] | None,
+    value_schema: XmlValueSchema,
     element_order: dict[str, tuple[str, ...]],
     repeated_rows: tuple[XmlDictionaryRepeatedRows, ...] = (),
 ) -> None:
@@ -118,6 +126,7 @@ def _write_xml_dictionary_entries(
             headers=headers,
             dictionary_values=dictionary_values,
             declarations=declarations,
+            value_schema=value_schema,
         )
         if rendered is None or rendered == "":
             continue
@@ -205,12 +214,35 @@ def render_xml_dictionary_layout(
         headers=headers,
         dictionary_values=dictionary_values or {},
         declarations=declarations,
+        value_schema=xml_dictionary_value_schema(layout, schema_provider=schema_provider),
         element_order=element_order,
         repeated_rows=repeated_rows,
     )
     _finish_xml_dictionary_root(root, draft, optional_element_paths=optional_element_paths)
     _refuse_values_outside_xsd(root, layout, entries=entries, schema_provider=schema_provider)
     return _serialize_xml_dictionary(root)
+
+
+def xml_dictionary_value_schema(
+    layout: ExportLayoutDefinition,
+    *,
+    schema_provider: RegistrySchemaAccessor,
+) -> XmlValueSchema:
+    """Read the layout's official XSD for normalizing the values of its rows.
+
+    Args:
+        layout: The ``xml_dictionary`` layout being rendered or verified.
+        schema_provider: Resolves the layout's XSD source.
+
+    Returns:
+        The :class:`XmlValueSchema` of that edition.
+    """
+    source = _xml_dictionary_xsd_source(layout, schema_provider.sources)
+    return xml_value_schema(
+        _xml_dictionary_xsd_root(source, source_payloads=schema_provider.source_payloads),
+        source_id=source.id,
+        root_tag=_XML_DICTIONARY_ROOT_TAG,
+    )
 
 
 def refuse_xml_dictionary_payload_outside_xsd(
@@ -670,6 +702,7 @@ def _xml_dictionary_rendered_value(
     headers: Mapping[FilingProducerKey, object],
     dictionary_values: Mapping[str, object],
     declarations: Mapping[str, str] | None,
+    value_schema: XmlValueSchema,
 ) -> str | None:
     raw = _xml_dictionary_raw_value(
         entry, casilla_values=casilla_values, headers=headers, dictionary_values=dictionary_values
@@ -680,9 +713,8 @@ def _xml_dictionary_rendered_value(
     if routed is None:
         return None
     rendered = format_xml_dictionary_value(entry.data_type, routed)
-    if draft.modelo == form_for_role("renta.annual") and entry.field_id in {"DP_APENOM_D", "DP_APENOM_C"}:
-        rendered = rendered.upper()
-    return _apply_xml_dictionary_value_converter(entry, rendered, declarations)
+    converted = _apply_xml_dictionary_value_converter(entry, rendered, declarations)
+    return canonical_xml_text(value_schema, entry.path, converted)
 
 
 def _is_zero_token(value: str | None) -> bool:
@@ -815,13 +847,16 @@ def xml_dictionary_repeated_rows(
         source_payloads=schema_provider.source_payloads,
     )
     bindings = {binding.id: binding for binding in schema_provider.get_snapshot(draft.modelo).revision.bindings}
+    value_schema = xml_dictionary_value_schema(layout, schema_provider=schema_provider)
     occurrences: dict[str, dict[int, dict[str, str]]] = {}
     casillas: dict[str, dict[str, CasillaId]] = {}
     for value in values:
         binding = bindings[value.binding_id]
         element, entry = _row_column_entry(binding, entries, repeating)
         row = occurrences.setdefault(element, {}).setdefault(value.row_index or 0, {})
-        row[entry.path] = _render_bound_row_value(binding, entry, value.value)
+        row[entry.path] = canonical_xml_text(
+            value_schema, entry.path, _render_bound_row_value(binding, entry, value.value)
+        )
         if entry.casilla_id is not None:
             casillas.setdefault(element, {})[entry.path] = entry.casilla_id
     return tuple(
@@ -1114,4 +1149,5 @@ __all__ = [
     "refuse_xml_dictionary_payload_outside_xsd",
     "render_xml_dictionary_layout",
     "xml_dictionary_repeated_rows",
+    "xml_dictionary_value_schema",
 ]
