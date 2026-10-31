@@ -6,7 +6,7 @@ date: '2026-10-30'
 tier: L1
 modified: '2026-10-31'
 body_schema: body-v2
-body_hash: 'sha256:6b58caffc5289749d6219bbb14e1fc92e5618e6361f2e4e456fc3037897055e2'
+body_hash: 'sha256:49cc331614187eb4e0d88392a0179ff90ce77ca0ca9d69fd9a888b105e670d39'
 ---
 
 # `registry-owned-facts` plan
@@ -25,6 +25,7 @@ Move every remaining tax number, limit, period rule and form code from productio
 - [ ] `S04` - Move modelo routing rules and sets into registry declarations; `src/cadrumo/application/aggregation/, src/cadrumo/domain/calculations/registry/applicability.py, src/cadrumo/domain/deadlines/`.
 - [ ] `S05` - Move period rules with legal force into the registry; `src/cadrumo/domain/period.py, src/cadrumo/domain/renta/maritime_exemption.py`.
 - [ ] `S06` - Extend the literal gate across domain and application, covering field bounds, box ids and letter claves, and republish the authority; `dev/quality/tests/`.
+- [ ] `S07` - Bind the Modelo 100 elemento patrimonial rows as repeated rows per sale; `src/cadrumo/domain/calculations/registry/actividad_asset_disposal_bindings.py, src/cadrumo/_data/registry/aeat/modelos/100/`.
 
 ## Parallelization
 
