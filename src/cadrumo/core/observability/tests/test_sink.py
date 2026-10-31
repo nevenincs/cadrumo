@@ -510,7 +510,9 @@ class TestSinkEmitFailureWarningIsScrubbed:
         # The record must have been processed by SecretScrubbingFilter:
         # Snapshot exception text is scrubbed without retaining live frames.
         assert warn.exc_info is None, "live traceback frames must not cross the diagnostic boundary"
-        assert warn.exc_text is not None and "PermissionError" in warn.exc_text
+        assert warn.exc_text is not None
+        # Opening a directory as a file is refused with a different error class per platform.
+        assert any(name in warn.exc_text for name in ("PermissionError", "IsADirectoryError"))
         # If SecretScrubbingFilter ran, it converts exc_info → exc_text.
         # A raw bearer token injected into the traceback would appear as
         # "Bearer <redacted>" not "Bearer <raw-value>".
