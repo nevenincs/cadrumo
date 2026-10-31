@@ -10,12 +10,7 @@ import { useStrings } from "../../../shell/strings";
 import { BoxNumber } from "./BoxNumber";
 import { useForm } from "./formContext";
 import { ORIGIN_LOOK, TONE_TEXT } from "./originLook";
-import {
-  confirmIntent,
-  editKey,
-  fieldKey,
-  type StagedEdit,
-} from "./session";
+import { confirmIntent, editKey, fieldKey, type StagedEdit } from "./session";
 import { ValueCell } from "./ValueCell";
 
 /** An official label written all in capitals, put in sentence case. */

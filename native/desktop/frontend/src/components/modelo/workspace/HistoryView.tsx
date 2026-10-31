@@ -85,9 +85,7 @@ function RenameDialog({
             <DialogTitle>{t("workspace.modelo.history.rename")}</DialogTitle>
           </DialogHeader>
           <Labelled label={t("desktop.modelo.rename.name")}>
-            {(id) => (
-              <TextEditor id={id} value={name} onChange={setName} />
-            )}
+            {(id) => <TextEditor id={id} value={name} onChange={setName} />}
           </Labelled>
           <DialogFooter>
             <Button
@@ -142,9 +140,7 @@ function DiscardDialog({
           </DialogDescription>
         </DialogHeader>
         <Labelled label={t("desktop.modelo.discard.reason")}>
-          {(id) => (
-            <TextEditor id={id} value={reason} onChange={setReason} />
-          )}
+          {(id) => <TextEditor id={id} value={reason} onChange={setReason} />}
         </Labelled>
         <DialogFooter>
           <Button variant="ghost" onClick={() => onOpenChange(false)}>
