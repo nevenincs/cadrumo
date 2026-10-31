@@ -749,7 +749,11 @@ itself out of the group is not reached. The engine never runs the local AI serve
 runtime manager runs it on the fixed local AI address while the program is set up, and
 contains it the same way, in a kill-on-close job on Windows and in a guarded process
 group of its own on Linux and macOS, so the server and what it starts end when the
-manager ends. A local AI setup installs the program, records it with that address, and
+manager ends. The supervised runtime is contained the same way on Linux and macOS: it
+starts in a guarded process group of its own, apart from the terminal's job control,
+which its guardian kills when the supervising process ends however it ends, and which
+the supervisor releases once it has observed the runtime's exit, so a clean drain is
+unchanged. A local AI setup installs the program, records it with that address, and
 waits up to 35 s for the manager's server before it pulls the models through it;
 without a manager the setup fails with `program_not_running`.
 

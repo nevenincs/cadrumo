@@ -16,6 +16,14 @@ use std::path::{Path, PathBuf};
 use std::process::{Child, Command, Stdio};
 use std::sync::OnceLock;
 
+/// A started runtime and what keeps it contained for as long as the supervisor holds it.
+pub(crate) struct Launched {
+    pub(crate) child: Child,
+    /// Dropped once the supervisor has observed the runtime's exit: on Linux and macOS
+    /// this ends whatever the runtime left in its process group.
+    pub(crate) containment: Box<dyn Send>,
+}
+
 /// File stem of the Cadrumo binary at the package root, which runs the runtime role.
 pub const RUNTIME_IMAGE_STEM: &str = "cadrumo";
 
@@ -188,7 +196,7 @@ impl LaunchTarget {
     }
 
     /// Start the runtime with the allow-list environment and the protocol on its stdio.
-    pub(crate) fn spawn(&self) -> io::Result<Child> {
+    pub(crate) fn spawn(&self) -> io::Result<Launched> {
         let mut command = Command::new(&self.image);
         command
             .args(self.role_arguments())
@@ -213,18 +221,31 @@ impl LaunchTarget {
             command.creation_flags(CREATE_NO_WINDOW);
             // No process may start while this process is attached to a runtime console.
             let _quiescent = super::windows::console_quiescent();
-            cadrumo_application::process::creation::run(|| command.spawn())
+            let child = cadrumo_application::process::creation::run(|| command.spawn())?;
+            Ok(Launched {
+                child,
+                containment: Box::new(()),
+            })
         }
         #[cfg(unix)]
         {
-            use std::os::unix::process::CommandExt;
-            // Terminal job-control signals for the manager never reach the runtime.
-            command.process_group(0);
-            command.spawn()
+            // The runtime is created into a process scope of its own: a group apart from
+            // the terminal's job control whose guardian ends it, and what the runtime
+            // started in it, when this process drops the scope or ends however it ends.
+            let scope = cadrumo_platform::process_scope::ProcessScope::new()?;
+            scope.join(&mut command)?;
+            let child = command.spawn()?;
+            Ok(Launched {
+                child,
+                containment: Box::new(scope),
+            })
         }
         #[cfg(not(any(windows, unix)))]
         {
-            command.spawn()
+            Ok(Launched {
+                child: command.spawn()?,
+                containment: Box::new(()),
+            })
         }
     }
 
@@ -429,5 +450,164 @@ mod tests {
             .unwrap();
         assert_eq!(&first, second);
         std::fs::remove_dir_all(root).unwrap();
+    }
+
+    #[cfg(unix)]
+    mod containment {
+        use super::*;
+        use std::io::{BufRead, BufReader, Read};
+        use std::os::unix::fs::PermissionsExt;
+        use std::time::{Duration, Instant};
+
+        const HOST_HELPER: &str = "CADRUMO_MANAGER_RUNTIME_HOST";
+        const BOUND: Duration = Duration::from_secs(10);
+
+        /// A stand-in runtime that records its pid beneath the root it is given, then only
+        /// waits; it ignores the hangup an orphaned group is sent, so only a kill ends it.
+        const RUNTIME: &str = "#!/bin/sh\n\
+                               trap '' HUP\n\
+                               echo $$ > \"$2/runtime-pid\"\n\
+                               exec /bin/sleep 600\n";
+
+        fn scratch(label: &str) -> PathBuf {
+            let nanos = std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos();
+            let path = env::temp_dir().canonicalize().unwrap().join(format!(
+                "cadrumo-manager-{label}-{}-{nanos}",
+                std::process::id()
+            ));
+            std::fs::create_dir_all(&path).unwrap();
+            path
+        }
+
+        fn target(root: &Path) -> LaunchTarget {
+            let image = root.join("runtime.sh");
+            std::fs::write(&image, RUNTIME).unwrap();
+            std::fs::set_permissions(&image, std::fs::Permissions::from_mode(0o755)).unwrap();
+            LaunchTarget::fixture(image, root.join("storage"), "a".repeat(64), "1.0".into())
+                .unwrap()
+        }
+
+        fn runtime_pid(root: &Path) -> i32 {
+            let record = root.join("storage").join("runtime-pid");
+            let deadline = Instant::now() + BOUND;
+            loop {
+                if let Some(pid) = std::fs::read_to_string(&record)
+                    .ok()
+                    .and_then(|text| text.trim().parse().ok())
+                {
+                    return pid;
+                }
+                assert!(Instant::now() < deadline, "the runtime never started");
+                std::thread::sleep(Duration::from_millis(10));
+            }
+        }
+
+        fn signal(name: &str, pid: i32) -> bool {
+            Command::new("/bin/kill")
+                .args([format!("-{name}"), pid.to_string()])
+                .stderr(Stdio::null())
+                .status()
+                .unwrap()
+                .success()
+        }
+
+        fn running(pid: i32) -> bool {
+            // Signal 0 only probes for the process and delivers nothing.
+            signal("0", pid)
+        }
+
+        fn group_of(pid: u32) -> u32 {
+            let output = Command::new("/bin/ps")
+                .args(["-o", "pgid=", "-p", &pid.to_string()])
+                .output()
+                .unwrap();
+            String::from_utf8(output.stdout)
+                .unwrap()
+                .trim()
+                .parse()
+                .unwrap()
+        }
+
+        fn ends_within_bound(pid: i32) {
+            let deadline = Instant::now() + BOUND;
+            while running(pid) {
+                assert!(Instant::now() < deadline, "runtime {pid} outlived its host");
+                std::thread::sleep(Duration::from_millis(10));
+            }
+        }
+
+        /// The child-process mode: a supervisor host that starts the runtime, says so,
+        /// and holds it until it is killed.
+        #[test]
+        fn runtime_host_helper() {
+            let Some(root) = env::var_os(HOST_HELPER) else {
+                return;
+            };
+            let launched = target(Path::new(&root)).spawn().unwrap();
+            runtime_pid(Path::new(&root));
+            println!("launched");
+            let _held = launched;
+            let mut sink = Vec::new();
+            let _ = io::stdin().read_to_end(&mut sink);
+            std::process::exit(0);
+        }
+
+        #[test]
+        fn a_runtime_ends_when_its_supervisor_host_is_killed() {
+            let root = scratch("runtime-host");
+            let mut host = Command::new(env::current_exe().unwrap())
+                .args([
+                    "--exact",
+                    "supervision::launch::tests::containment::runtime_host_helper",
+                    "--nocapture",
+                    "--test-threads=1",
+                ])
+                .env(HOST_HELPER, &root)
+                .stdin(Stdio::piped())
+                .stdout(Stdio::piped())
+                .stderr(Stdio::null())
+                .spawn()
+                .unwrap();
+            let mut stdout = BufReader::new(host.stdout.take().unwrap());
+            let mut line = String::new();
+            while !line.contains("launched") {
+                line.clear();
+                assert_ne!(
+                    stdout.read_line(&mut line).unwrap(),
+                    0,
+                    "the host ended early"
+                );
+            }
+            let pid = runtime_pid(&root);
+            assert!(running(pid));
+            // The runtime is in its guardian's group, apart from the host's.
+            let runtime_group = group_of(u32::try_from(pid).unwrap());
+            assert!(runtime_group > 0);
+            assert_ne!(runtime_group, group_of(host.id()));
+            assert_ne!(i32::try_from(runtime_group).unwrap(), pid);
+            host.kill().unwrap();
+            host.wait().unwrap();
+            ends_within_bound(pid);
+            std::fs::remove_dir_all(root).unwrap();
+        }
+
+        #[test]
+        fn a_runtime_that_exited_on_its_own_releases_its_containment() {
+            let root = scratch("runtime-clean");
+            let Launched {
+                mut child,
+                containment,
+            } = target(&root).spawn().unwrap();
+            let pid = runtime_pid(&root);
+            // A drained runtime exits on its own before the supervisor lets go of it.
+            assert!(signal("TERM", pid));
+            child.wait().unwrap();
+            drop(containment);
+            assert!(!running(pid));
+            std::fs::remove_dir_all(root).unwrap();
+        }
     }
 }
