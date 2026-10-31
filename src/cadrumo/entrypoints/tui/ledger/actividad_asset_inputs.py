@@ -5,15 +5,13 @@ from __future__ import annotations
 from collections.abc import Callable
 from decimal import Decimal
 
-from pydantic import ValidationError
-
 from ....application.actividad_asset.operation_dtos import ActivityAssetDisposalSnapshot
+from ....application.actividad_asset.request_restoration import restoring
 from ....application.operations.public_scalar import PublicDecimal
 from ....core.decimal.coercion import coerce_finite_european_decimal
 from ....core.parsing.dates import require_iso8601_date
 from ....domain.renta.actividad_asset.disposal import ActivityAssetDisposalReason, PriorFreeDepreciationRegime
 from ....domain.renta.actividad_asset.election import ActivityAssetAmortizationElection, AmortizationMethod
-from ....domain.renta.actividad_asset.errors import ActividadAssetValidationError
 from ....domain.renta.actividad_asset.lifecycle import ActivityAssetBasis, ActivityAssetRevision
 
 
@@ -53,25 +51,10 @@ def stated_revision(read_value: Callable[[str], str], revision_json: str) -> Act
     if method:
         election = dict(revision.amortization)
         election["method"] = AmortizationMethod(method)
-        updates["amortization"] = _stated_election(election)
+        updates["amortization"] = restoring(lambda: ActivityAssetAmortizationElection.model_validate(election))
     if not updates:
         return revision
     return ActivityAssetRevision.model_validate({**dict(revision), **updates})
-
-
-def _stated_election(election: dict[str, object]) -> ActivityAssetAmortizationElection:
-    """Keep a single registered election refusal available to the TUI renderer."""
-    try:
-        return ActivityAssetAmortizationElection.model_validate(election)
-    except ValidationError as exc:
-        details = exc.errors(include_url=False)
-        if len(details) == 1:
-            context = details[0].get("ctx", {})
-            wrapped = context.get("error")
-            cause = wrapped.__cause__ if isinstance(wrapped, ValueError) else None
-            if isinstance(cause, ActividadAssetValidationError):
-                raise cause from exc
-        raise
 
 
 def _fact_amount(read_value: Callable[[str], str], input_id: str) -> Decimal | None:

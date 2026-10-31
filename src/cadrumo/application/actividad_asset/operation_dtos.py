@@ -63,6 +63,7 @@ from .election_fact_dtos import (
 )
 from .history import ActivityAssetHistory, ActivityAssetHistoryClaimResult
 from .operations import ActivityAssetFilingHandoff, M100ClaimGapProjection, M130AccrualProjection, M130Contribution
+from .request_restoration import restoring
 from .schedule_walk import M100GapKind
 
 
@@ -172,7 +173,14 @@ class ActivityAssetAmortizationElectionSnapshot(BaseModel):
         )
 
     def to_domain(self) -> ActivityAssetAmortizationElection:
-        """Restore the canonical election and its nested evidence."""
+        """Restore the canonical election and its nested evidence.
+
+        Raises:
+            ActividadAssetError: With the reason key of the rule a fact breaks.
+        """
+        return restoring(self._restore)
+
+    def _restore(self) -> ActivityAssetAmortizationElection:
         return ActivityAssetAmortizationElection(
             regime=self.regime,
             method=self.method,
@@ -190,12 +198,6 @@ class ActivityAssetAmortizationElectionSnapshot(BaseModel):
             renewable_self_consumption=self.renewable_self_consumption,
             used_original_price=self.used_original_price.to_domain() if self.used_original_price is not None else None,
         )
-
-    @model_validator(mode="after")
-    @pydantic_validation_boundary
-    def _canonical(self) -> Self:
-        self.to_domain()
-        return self
 
 
 class ActivityAssetDisposalSnapshot(BaseModel):
@@ -317,7 +319,17 @@ class _ActivityAssetRevisionFields(BaseModel):
         )
 
     def _to_domain(self, number: int) -> ActivityAssetRevision:
-        """Restore and revalidate the canonical immutable revision under its assigned number."""
+        """Restore and revalidate the canonical immutable revision under its assigned number.
+
+        A request carries the revision unjudged, so a fact that breaks a rule reaches the operator as
+        the registered refusal of that rule and not as a request that cannot be read.
+
+        Raises:
+            ActividadAssetError: With the reason key of the rule a fact breaks.
+        """
+        return restoring(lambda: self._restore(number))
+
+    def _restore(self, number: int) -> ActivityAssetRevision:
         disposal = None if self.disposal is None else self.disposal.to_domain()
         return ActivityAssetRevision(
             asset_id=self.asset_id,
@@ -351,16 +363,6 @@ class ActivityAssetRevisionSnapshot(_ActivityAssetRevisionFields):
         """Restore the revision, optionally under a supplied number."""
         return self._to_domain(self.revision_number if revision_number is None else revision_number)
 
-    @model_validator(mode="after")
-    @pydantic_validation_boundary
-    def _canonical(self) -> Self:
-        self.to_domain()
-        return self
-
-
-_ORIGINAL_REVISION_NUMBER: Final = 1
-"""A correction follows at least the original, the number the shape check stands in for when none is stated."""
-
 
 class ActivityAssetCorrectionRevisionSnapshot(_ActivityAssetRevisionFields):
     """The revision a correct request states: its baja is always stated and its number is the backend's to assign.
@@ -380,12 +382,6 @@ class ActivityAssetCorrectionRevisionSnapshot(_ActivityAssetRevisionFields):
         if number is None:
             raise ValueError("a correction's number is assigned from the revision it supersedes")
         return self._to_domain(number)
-
-    @model_validator(mode="after")
-    @pydantic_validation_boundary
-    def _canonical(self) -> Self:
-        self._to_domain(self.revision_number or _ORIGINAL_REVISION_NUMBER + 1)
-        return self
 
 
 class AmortizationClaimSnapshot(BaseModel):
