@@ -112,6 +112,20 @@ def resolve_form_codes_leased(fact_id: str, *, authority: GovernedFactSource | N
         return resolve_form_codes(fact_id, authority=operation)
 
 
+def require_form_width(value: str | None, key: str) -> str | None:
+    """Return ``value`` when its length is one the ``form-row-codes`` fact declares for ``key``."""
+    if value is not None and str(len(value)) not in resolve_form_codes_leased("form-row-codes").codes(key):
+        raise CoreValidationError(f"a value does not have the width the form declares for {key}")
+    return value
+
+
+def require_form_fit(value: str | None, key: str) -> str | None:
+    """Return ``value`` when it fits the length the ``form-row-codes`` fact declares for ``key``."""
+    if value is not None and len(value) > int(resolve_form_codes_leased("form-row-codes").code(key)):
+        raise CoreValidationError(f"a value is longer than the form declares for {key}")
+    return value
+
+
 def form_for_role(role: str, *, authority: GovernedFactSource | None = None) -> str:
     """Return the form that holds ``role``, from the registry's role routing."""
     return resolve_form_codes_leased(_ROLE_ROUTING_FACT, authority=authority).code(role)
@@ -202,4 +216,11 @@ class RegistryCodedEnum(StrEnum):
         )
 
 
-__all__ = ["FormCodes", "RegistryCodedEnum", "resolve_form_codes", "resolve_form_codes_leased"]
+__all__ = [
+    "FormCodes",
+    "RegistryCodedEnum",
+    "require_form_fit",
+    "require_form_width",
+    "resolve_form_codes",
+    "resolve_form_codes_leased",
+]

@@ -25,7 +25,7 @@ required_text = ["Transporte por autotaxis", "Transporte de mercancías por carr
 # the three repeating 303 blocks are also pinned to each edition's own declarations by a test.
 [[fact.variants.source_citations]]
 source_ref = "aeat-dr-303-2026"
-required_text = ["El número máximo de ocurrencias de la página 2 del modelo es 6", "el número máximo de páginas 2 será 3", "Módulo Mesas", "Prorratas - 5 - Código CNAE"]
+required_text = ["El número máximo de ocurrencias de la página 2 del modelo es 6", "el número máximo de páginas 2 será 3", "Módulo Mesas", "Prorratas - 5 - Código CNAE", "Versión del Programa (Nota 1)", "NIF Empresa Desarrollo (Nota 1)"]
 
 [fact.variants.payload]
 kind = "mapping"
@@ -51,4 +51,36 @@ entries = [
   { key = "m303.orden.modules_per_activity", value = "7" },
   { key = "m303.orden.seasonal_bands", value = "3" },
   { key = "m303.orden.seasonal_max_days", value = "180" },
+  { key = "m210.tipo_renta_digits", value = "2" },
+  { key = "m184.row.subclave_digits", value = "2" },
+  { key = "m184.row.provincia_digits", value = "2" },
+  { key = "perceptor.subclave_digits", value = "2" },
+  { key = "withholding.subclave_max", value = "4" },
+  { key = "withholding.codigo_emisor_max", value = "12" },
+  { key = "m180.address.municipality", value = "30" },
+  { key = "m180.address.locality", value = "30" },
+  { key = "m180.address.street_type", value = "5" },
+  { key = "m180.address.street_name", value = "50" },
+  { key = "m180.address.number_type", value = "3" },
+  { key = "m180.address.house_number", value = "5" },
+  { key = "m180.address.number_qualifier", value = "3" },
+  { key = "m180.address.block", value = "3" },
+  { key = "m180.address.portal", value = "3" },
+  { key = "m180.address.staircase", value = "3" },
+  { key = "m180.address.floor", value = "3" },
+  { key = "m180.address.door", value = "3" },
+  { key = "m180.address.complement", value = "40" },
+  { key = "m303.prorrata.cnae_digits", value = "3,4" },
+  { key = "m100.ascendant_cohabiting_descendants_max", value = "10" },
+  { key = "aeat.aux.version_width", value = "4" },
+  { key = "aeat.aux.program_identifier_width", value = "4" },
+  { key = "aeat.aux.developer_tax_id_width", value = "9" },
+  { key = "aeat.aux.prefix_fields", value = "13" },
+  { key = "m303.dp30302.single_page_epochs", value = "2022" },
+  { key = "m303.orden.difficult_justification_legal_refs", value = "2" },
+  { key = "prorrata.catalogue.regimes_min", value = "3" },
+  { key = "prorrata.catalogue.apportioning_regimes", value = "2" },
+  { key = "prorrata.catalogue.transition_kinds", value = "2" },
+  { key = "prorrata.catalogue.provenances", value = "4" },
+  { key = "prorrata.catalogue.sector_letters", value = "4" },
 ]
