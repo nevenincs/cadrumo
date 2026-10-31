@@ -102,6 +102,30 @@ def new_test_profile_custody_envelope(profile_id: UUID) -> ProfileCustodyEnvelop
     )
 
 
+def identity_seeded_custody_envelope(identity: UUID) -> ProfileCustodyEnvelope:
+    """Build custody material fixed by the profile identity alone, so another process can rebuild it."""
+    seed = identity.bytes + identity.bytes
+    return ProfileCustodyEnvelope.create(
+        profile_id=identity,
+        password_generation=1,
+        dek_epoch=b64encode(seed[:16]).decode("ascii"),
+        kdf=ProfileCustodyKdfParameters(
+            algorithm="argon2id",
+            version=19,
+            memory_mib=19,
+            iterations=2,
+            parallelism=1,
+            salt_b64=b64encode(seed[16:]).decode("ascii"),
+            output_bytes=32,
+        ),
+        wrapped_dek=ProfileCustodyWrappedDek(
+            nonce_b64=b64encode(seed[:12]).decode("ascii"),
+            ciphertext_b64=b64encode(seed).decode("ascii"),
+            tag_b64=b64encode(seed[:16]).decode("ascii"),
+        ),
+    )
+
+
 def publish_test_profile_capsule(
     profile_id: str | UUID,
     *,
@@ -156,26 +180,7 @@ def create_current_profile_session(
     """
     create_context, decode_context = profile_authority_contexts()
     identity = UUID(profile_id)
-    seed = identity.bytes + identity.bytes
-    envelope = ProfileCustodyEnvelope.create(
-        profile_id=identity,
-        password_generation=1,
-        dek_epoch=b64encode(seed[:16]).decode("ascii"),
-        kdf=ProfileCustodyKdfParameters(
-            algorithm="argon2id",
-            version=19,
-            memory_mib=19,
-            iterations=2,
-            parallelism=1,
-            salt_b64=b64encode(seed[16:]).decode("ascii"),
-            output_bytes=32,
-        ),
-        wrapped_dek=ProfileCustodyWrappedDek(
-            nonce_b64=b64encode(seed[:12]).decode("ascii"),
-            ciphertext_b64=b64encode(seed).decode("ascii"),
-            tag_b64=b64encode(seed[:16]).decode("ascii"),
-        ),
-    )
+    envelope = identity_seeded_custody_envelope(identity)
     session = ProfileRecordSession.from_envelope(
         envelope=envelope, dek=_CURRENT_PROFILE_DEK, profile_decode_context=decode_context
     )

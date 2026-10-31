@@ -13,10 +13,12 @@ depend on a pytest fixture or on an already-running test session.
 
 from __future__ import annotations
 
-from base64 import b64encode
 from pathlib import Path
 from uuid import UUID
 
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+    identity_seeded_custody_envelope,
+)
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     profile_authority_contexts as _profile_contexts_for_test,
 )
@@ -26,8 +28,6 @@ from .....core.bucket_pointer import BucketPointer, write_pointer
 from .....domain.user_profile.values import ProfileSetupState, UserProfileFact
 from ..custody.records import (
     ProfileCustodyEnvelope,
-    ProfileCustodyKdfParameters,
-    ProfileCustodyWrappedDek,
 )
 from ..custody.sentinel import create_profile_custody_sentinel
 
@@ -56,27 +56,7 @@ READY_FACTS: tuple[UserProfileFact, ...] = (
 
 def build_envelope() -> ProfileCustodyEnvelope:
     """Return the deterministic password envelope both processes agree on."""
-    identity = UUID(PROFILE_ID)
-    seed = identity.bytes + identity.bytes
-    return ProfileCustodyEnvelope.create(
-        profile_id=identity,
-        password_generation=1,
-        dek_epoch=b64encode(seed[:16]).decode("ascii"),
-        kdf=ProfileCustodyKdfParameters(
-            algorithm="argon2id",
-            version=19,
-            memory_mib=19,
-            iterations=2,
-            parallelism=1,
-            salt_b64=b64encode(seed[16:]).decode("ascii"),
-            output_bytes=32,
-        ),
-        wrapped_dek=ProfileCustodyWrappedDek(
-            nonce_b64=b64encode(seed[:12]).decode("ascii"),
-            ciphertext_b64=b64encode(seed).decode("ascii"),
-            tag_b64=b64encode(seed[:16]).decode("ascii"),
-        ),
-    )
+    return identity_seeded_custody_envelope(UUID(PROFILE_ID))
 
 
 def publish_capsule_and_pointer(root: Path) -> None:
