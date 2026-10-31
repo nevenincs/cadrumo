@@ -759,6 +759,37 @@ def operation_supervisor(
     )
 
 
+def resumable_review_supervisor(
+    *,
+    executor_type: type[object],
+    build: Callable[[], object],
+    journal: OperationJournalRepository,
+    leases: OperationLeaseFilesystemRepository,
+    operands: OperationSecureReferenceStore,
+) -> tuple[OperationRegistry, OperationSupervisor]:
+    """Return a resumable review-capable registry and its first lease owner."""
+    registry = supervisor_registry(
+        executor_type=executor_type,
+        build=build,
+        capabilities=_capabilities(
+            durability=OperationDurability.RESUMABLE,
+            replay=OperationReplayPolicy.RESUMABLE,
+        ),
+        interaction_kinds=frozenset({OperationInteractionKind.REVIEW}),
+        reconciliation_policy=OperationReconciliationPolicy.RESUME_FROM_CHECKPOINT,
+    )
+    owner = operation_supervisor(
+        registry=registry,
+        journal=journal,
+        leases=leases,
+        operands=operands,
+        owner_id="1" * 64,
+        token="2" * 64,
+        lease_duration=timedelta(minutes=1),
+    )
+    return registry, owner
+
+
 def supervisor_request(
     *, subject_ref: str = "subject:one", idempotency_key: str | None = None
 ) -> OperationRequest[BaseModel]:

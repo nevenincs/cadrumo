@@ -55,6 +55,7 @@ from .supervisor_test_support import (
     _response,
     operation_repositories,
     operation_supervisor,
+    resumable_review_supervisor,
     supervisor_registry,
     supervisor_request,
 )
@@ -205,24 +206,12 @@ def test_resumed_executor_returning_no_result_settles_failed_with_its_registered
         journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "durable-state", profile_objects=profile.repository
         )
-        registry = supervisor_registry(
+        registry, owner = resumable_review_supervisor(
             executor_type=ResumableReviewExecutor,
             build=ResumableReviewExecutor,
-            capabilities=_capabilities(
-                durability=OperationDurability.RESUMABLE,
-                replay=OperationReplayPolicy.RESUMABLE,
-            ),
-            interaction_kinds=frozenset({OperationInteractionKind.REVIEW}),
-            reconciliation_policy=OperationReconciliationPolicy.RESUME_FROM_CHECKPOINT,
-        )
-        owner = operation_supervisor(
-            registry=registry,
             journal=journal,
             leases=leases,
             operands=operands,
-            owner_id="1" * 64,
-            token="2" * 64,
-            lease_duration=timedelta(minutes=1),
         )
         operation_id = asyncio.run(owner.submit(supervisor_request(), operation_id="3" * 64))
         waiting = asyncio.run(run_to_settlement(owner, operation_id))

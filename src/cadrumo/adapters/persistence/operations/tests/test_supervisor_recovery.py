@@ -11,7 +11,6 @@ import pytest
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.operations.capabilities import (
     OperationOwnedResource,
-    OperationReplayPolicy,
 )
 from cadrumo.application.operations.interactions import OperationRejectResponse
 from cadrumo.application.operations.models import (
@@ -24,11 +23,9 @@ from cadrumo.application.operations.persistence.leases import (
     OperationLeaseObservationDisposition,
     operation_conflict_scope_reference,
 )
-from cadrumo.application.operations.registry import OperationReconciliationPolicy
 from cadrumo.core.operations import (
     OperationCancellation,
     OperationDeadline,
-    OperationDurability,
     OperationEffect,
     OperationInteractionKind,
     OperationLifecycle,
@@ -47,6 +44,7 @@ from .supervisor_test_support import (
     _response,
     operation_repositories,
     operation_supervisor,
+    resumable_review_supervisor,
     supervisor_registry,
     supervisor_request,
 )
@@ -160,24 +158,8 @@ def test_expired_resumable_checkpoint_restarts_through_real_storage_and_replays_
         journal, leases, operands = operation_repositories(
             storage_root=storage_root, profile_objects=profile.repository
         )
-        registry = supervisor_registry(
-            executor_type=ResumableReviewExecutor,
-            build=build,
-            capabilities=_capabilities(
-                durability=OperationDurability.RESUMABLE,
-                replay=OperationReplayPolicy.RESUMABLE,
-            ),
-            interaction_kinds=frozenset({OperationInteractionKind.REVIEW}),
-            reconciliation_policy=OperationReconciliationPolicy.RESUME_FROM_CHECKPOINT,
-        )
-        owner = operation_supervisor(
-            registry=registry,
-            journal=journal,
-            leases=leases,
-            operands=operands,
-            owner_id="1" * 64,
-            token="2" * 64,
-            lease_duration=timedelta(minutes=1),
+        registry, owner = resumable_review_supervisor(
+            executor_type=ResumableReviewExecutor, build=build, journal=journal, leases=leases, operands=operands
         )
         operation_id = asyncio.run(owner.submit(supervisor_request(), operation_id="3" * 64))
         checkpoint = asyncio.run(run_to_settlement(owner, operation_id))

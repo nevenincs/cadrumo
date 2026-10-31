@@ -65,6 +65,7 @@ from .supervisor_test_support import (
     _response,
     operation_repositories,
     operation_supervisor,
+    resumable_review_supervisor,
     supervisor_registry,
     supervisor_request,
 )
@@ -252,24 +253,8 @@ def test_reconcile_reenters_only_a_declared_valid_checkpoint(tmp_path: Path) -> 
         journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "durable-state", profile_objects=profile.repository
         )
-        registry = supervisor_registry(
-            executor_type=ResumableReviewExecutor,
-            build=build,
-            capabilities=_capabilities(
-                durability=OperationDurability.RESUMABLE,
-                replay=OperationReplayPolicy.RESUMABLE,
-            ),
-            interaction_kinds=frozenset({OperationInteractionKind.REVIEW}),
-            reconciliation_policy=OperationReconciliationPolicy.RESUME_FROM_CHECKPOINT,
-        )
-        owner = operation_supervisor(
-            registry=registry,
-            journal=journal,
-            leases=leases,
-            operands=operands,
-            owner_id="1" * 64,
-            token="2" * 64,
-            lease_duration=timedelta(minutes=1),
+        registry, owner = resumable_review_supervisor(
+            executor_type=ResumableReviewExecutor, build=build, journal=journal, leases=leases, operands=operands
         )
         operation_id = asyncio.run(owner.submit(supervisor_request(), operation_id="3" * 64))
         waiting = asyncio.run(run_to_settlement(owner, operation_id))
@@ -313,24 +298,8 @@ def test_resumed_executor_result_reference_settles_the_recovered_operation(tmp_p
             storage_root=tmp_path / "resumed-result-state",
             profile_objects=profile.repository,
         )
-        registry = supervisor_registry(
-            executor_type=ResumableReviewExecutor,
-            build=build,
-            capabilities=_capabilities(
-                durability=OperationDurability.RESUMABLE,
-                replay=OperationReplayPolicy.RESUMABLE,
-            ),
-            interaction_kinds=frozenset({OperationInteractionKind.REVIEW}),
-            reconciliation_policy=OperationReconciliationPolicy.RESUME_FROM_CHECKPOINT,
-        )
-        owner = operation_supervisor(
-            registry=registry,
-            journal=journal,
-            leases=leases,
-            operands=operands,
-            owner_id="1" * 64,
-            token="2" * 64,
-            lease_duration=timedelta(minutes=1),
+        registry, owner = resumable_review_supervisor(
+            executor_type=ResumableReviewExecutor, build=build, journal=journal, leases=leases, operands=operands
         )
         operation_id = asyncio.run(owner.submit(supervisor_request(), operation_id="3" * 64))
         waiting = asyncio.run(run_to_settlement(owner, operation_id))
@@ -421,24 +390,12 @@ def test_reconcile_refuses_resume_without_a_declared_valid_checkpoint(tmp_path: 
         journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "durable-state", profile_objects=profile.repository
         )
-        registry = supervisor_registry(
+        registry, owner = resumable_review_supervisor(
             executor_type=ResumableIdleExecutor,
             build=ResumableIdleExecutor,
-            capabilities=_capabilities(
-                durability=OperationDurability.RESUMABLE,
-                replay=OperationReplayPolicy.RESUMABLE,
-            ),
-            interaction_kinds=frozenset({OperationInteractionKind.REVIEW}),
-            reconciliation_policy=OperationReconciliationPolicy.RESUME_FROM_CHECKPOINT,
-        )
-        owner = operation_supervisor(
-            registry=registry,
             journal=journal,
             leases=leases,
             operands=operands,
-            owner_id="1" * 64,
-            token="2" * 64,
-            lease_duration=timedelta(minutes=1),
         )
         operation_id = asyncio.run(owner.submit(supervisor_request(), operation_id="3" * 64))
         abandoned = asyncio.run(_close_host_over_live_executor(owner, operation_id, ResumableIdleExecutor.started))
@@ -508,24 +465,12 @@ def test_secure_review_publication_and_consumed_continuation_recover_without_rea
         journal, leases, operands = operation_repositories(
             storage_root=storage_root, profile_objects=profile.repository
         )
-        registry = supervisor_registry(
+        registry, owner = resumable_review_supervisor(
             executor_type=DurableContinuationExecutor,
             build=DurableContinuationExecutor,
-            capabilities=_capabilities(
-                durability=OperationDurability.RESUMABLE,
-                replay=OperationReplayPolicy.RESUMABLE,
-            ),
-            interaction_kinds=frozenset({OperationInteractionKind.REVIEW}),
-            reconciliation_policy=OperationReconciliationPolicy.RESUME_FROM_CHECKPOINT,
-        )
-        owner = operation_supervisor(
-            registry=registry,
             journal=journal,
             leases=leases,
             operands=operands,
-            owner_id="1" * 64,
-            token="2" * 64,
-            lease_duration=timedelta(minutes=1),
         )
 
         async def publish_consume_and_schedule() -> tuple[str, OperationConsumedInteraction]:
