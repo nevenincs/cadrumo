@@ -26,6 +26,19 @@ def test_project_spelling_is_exact_and_language_scoped() -> None:
     assert not is_project_spelling("ca", "modelo")
 
 
+def test_attested_iva_territory_names_do_not_admit_typos() -> None:
+    for name in ("Akrotiri", "Dhekelia", "Balears"):
+        assert is_project_spelling("en", name)
+        assert not is_project_spelling("en", name + "x")
+    assert not is_project_spelling("en", "Illes")
+
+
+def test_english_redaction_version_terms_are_exact() -> None:
+    for word in ("redaction", "redactions"):
+        assert is_project_spelling("en", word)
+    assert not is_project_spelling("en", "redactionss")
+
+
 def test_identifier_labels_are_exact_shared_technical_terms() -> None:
     for locale in ("ca", "en", "es", "hu"):
         for form in ("id", "Id", "ids", "Ids", "IDs"):
@@ -1743,6 +1756,7 @@ def test_reviewed_technical_nouns_keep_bounded_plural_and_case() -> None:
         "docstring",
         "Docstrings",
         "subpackage",
+        "subcommands",
         "enums",
         "parsers",
         "Filesystem",
@@ -1762,6 +1776,7 @@ def test_reviewed_technical_nouns_keep_bounded_plural_and_case() -> None:
         "ENTrypoints",
         "docstrngs",
         "subpackege",
+        "subcommandss",
         "enumss",
         "ciphertex",
         "walkthruogh",

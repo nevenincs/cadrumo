@@ -114,6 +114,7 @@ _ENGLISH_TECHNICAL_NOUNS = frozenset(
         "entrypoint",
         "docstring",
         "subpackage",
+        "subcommand",
         "enum",
         "parser",
         "filesystem",
@@ -175,6 +176,16 @@ _LOCALE_SPELLINGS: dict[str, frozenset[str]] = {
     # adapters.yml. Keep only the observed spellings and capitalisation.
     "en": frozenset(
         {
+            # Exact territory names used in the IVA geographic source notes:
+            # https://www.gov.uk/government/publications/geographical-names-and-information
+            # https://www.boe.es/biblioteca_juridica/abrir_pdf.php?id=PUB-PB-2025-386
+            "Akrotiri",
+            "Dhekelia",
+            "Balears",
+            # A redaction can also be an edited version of a text:
+            # https://interparestrust.org/terminology/term/redaction
+            "redaction",
+            "redactions",
             # Exact forms attested in Microsoft documentation, the IRS and
             # European Commission tax guidance, and the cited dictionaries:
             # https://learn.microsoft.com/en-us/dynamics365/customer-insights/journeys/real-time-marketing-form-prefill

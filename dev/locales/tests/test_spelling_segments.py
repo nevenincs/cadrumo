@@ -81,6 +81,16 @@ def test_actual_import_extensions_are_structural_only_when_complete_and_dotted()
         assert value.lstrip(".") in prose
 
 
+def test_minute_symbol_requires_a_quantity_and_leaves_unrelated_words() -> None:
+    prose, excluded = filtered_translation_text("unos {minutes} min o 20 min; misspeling")
+    assert "min" not in prose
+    assert "misspeling" in prose
+    assert excluded == 4  # two quantities plus placeholder and number
+    for value in ("min", "{count} min", "20 minn", "20 minute"):
+        prose, _excluded = filtered_translation_text(value)
+        assert "min" in prose
+
+
 @pytest.mark.parametrize(
     "name,component",
     [

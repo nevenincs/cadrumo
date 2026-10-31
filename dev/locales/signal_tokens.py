@@ -66,6 +66,11 @@ _SPREADSHEET_SUFFIX_RE = re.compile(r"(?<![\w.])\.(?:xlsx|xlsm|xls|csv|tsv)(?!\w
 # outside this observed syntax remain prose for the spelling audit.
 # See domain/calculations/registry/_formula_operator_contracts.py (percent).
 _PERCENT_FORMULA_CALL_RE = re.compile(r"(?<![\w.])percent\([ \t]*\d+[ \t]*,[ \t]*\d+[ \t]*\)(?![\w])")
+# The minute symbol is structural only after a number or its documented
+# minutes placeholder; retain the value for the ordinary placeholder/number
+# handling and leave bare or misspelled words visible.
+# https://www.nist.gov/pml/special-publication-330/sp-330-section-4
+_MINUTE_QUANTITY_RE = re.compile(r"(?<![\w.])(?P<value>\{minutes\}|\d+(?:[.,]\d+)?)[ \t]+min(?![\w])")
 # These exact Latin suffixes identify statutory articles, rather than prose in
 # the surrounding locale. They are attested by Ley 37/1992's article headings:
 # https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740
@@ -148,6 +153,7 @@ def filtered_translation_text(value: str) -> tuple[str, int]:
         (TRANSLATION_LITERAL_RE, " "),
         (TRANSLATION_BRACKET_REFERENCE_RE, " "),
         (_PARAMETER_ASSIGNMENT_RE, _visible_assignment_label),
+        (_MINUTE_QUANTITY_RE, r"\g<value>"),
         (TRANSLATION_PLACEHOLDER_RE, " "),
         (_OUTPUT_LANGUAGE_CHOICES_RE, " "),
         (_CENSO_GLOSSED_CHOICES_RE, _visible_choice_glosses),
