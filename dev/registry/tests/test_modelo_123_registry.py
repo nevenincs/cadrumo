@@ -17,6 +17,7 @@ from cadrumo.domain.calculations.registry.tests.snapshot_support import build_sn
 from dev.registry.compiler.authority import compiled_bundled_authority
 
 from .profile_schema_support import committed_supported_filing_years
+from .quarterly_deadline_support import QUARTERLY_RETENCION_DEADLINES
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -25,39 +26,6 @@ _SUPPORT = committed_supported_filing_years()
 # Orden HAC/56/2024 revision that replaces it with split base sub-totals.
 _RETENCIONES_SUM_REVISION = "2019-2023"
 _SPLIT_BASE_REVISION = "2024-y-siguientes"
-
-_SUPPORTED_DEADLINES = {
-    2022: (
-        ("2022-04-20", "2022-04-15"),
-        ("2022-07-20", "2022-07-15"),
-        ("2022-10-20", "2022-10-15"),
-        ("2023-01-20", "2023-01-15"),
-    ),
-    2023: (
-        ("2023-04-20", "2023-04-15"),
-        ("2023-07-20", "2023-07-15"),
-        ("2023-10-20", "2023-10-15"),
-        ("2024-01-22", "2024-01-17"),
-    ),
-    2024: (
-        ("2024-04-22", "2024-04-17"),
-        ("2024-07-22", "2024-07-17"),
-        ("2024-10-21", "2024-10-16"),
-        ("2025-01-20", "2025-01-15"),
-    ),
-    2025: (
-        ("2025-04-21", "2025-04-15"),
-        ("2025-07-21", "2025-07-16"),
-        ("2025-10-20", "2025-10-15"),
-        ("2026-01-20", "2026-01-15"),
-    ),
-    2026: (
-        ("2026-04-20", "2026-04-15"),
-        ("2026-07-20", "2026-07-15"),
-        ("2026-10-20", "2026-10-15"),
-        ("2027-01-20", None),
-    ),
-}
 
 
 _M123_RENTAS_DIVIDENDOS_CASILLA: CasillaId = validated_casilla_id("01")
@@ -190,7 +158,7 @@ def test_modelo_123_supported_year_deadline_census_dates_sources_and_ownership()
         window.id for window in current_revision.deadline_windows
     }
 
-    for filing_year, expected_year in _SUPPORTED_DEADLINES.items():
+    for filing_year, expected_year in QUARTERLY_RETENCION_DEADLINES.items():
         expected_periods = {"1T", "2T", "3T", "4T"}
         assert {period for year, period in windows if year == filing_year} == expected_periods
         projected = compiled_bundled_authority().deadline_windows(filing_year, modelos=("123",))
