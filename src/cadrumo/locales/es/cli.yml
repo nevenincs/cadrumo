@@ -3074,7 +3074,7 @@ cli:
       help: Añade un movimiento manual a tus registros del perfil activo
       idempotency_key_help: 'Clave estable para esta anotación lógica: repetir la
         misma clave es una operación sin efecto, por lo que los reintentos no duplican
-        la fila. Omítala para añadir un duplicado deliberado.'
+        la fila. Omítela para añadir un duplicado deliberado.'
       idempotent_noop: 'Operación idempotente sin efecto: ya existe una transacción
         con esta clave de idempotencia (%{transaction_id}); no se añadió nada.'
       input_classification_help: 'Clasificación de uso que declaras para el IVA soportado

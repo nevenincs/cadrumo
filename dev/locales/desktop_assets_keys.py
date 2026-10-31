@@ -133,6 +133,7 @@ ASSET_PERCENT_PLACEHOLDER_PREFIXES: Final[tuple[str, ...]] = (ASSET_REASON_FAMIL
 #: The enum behind each token family, for the test that compares them.
 ASSET_ENUM_FAMILIES: Final[Mapping[str, type[Enum]]] = MappingProxyType(_enum_families())
 
+
 def _backend_reason_keys() -> frozenset[str]:
     """Return the reason keys the plan serves outside the reason family, which the tab words as they stand."""
     from cadrumo.application.actividad_asset.activity_asset_read_models import NO_TABLE_MINIMUM_REASON_KEY

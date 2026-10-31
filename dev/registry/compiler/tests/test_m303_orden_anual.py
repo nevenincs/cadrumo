@@ -136,11 +136,13 @@ def _extracted_census() -> M303AnnualOrdenSourceCensus:
     return extract_m303_annual_orden_source(ejercicio=2022, source=source, source_root=bundled_path())
 
 
+@pytest.mark.usefixtures("governed_fact_scope")
 def test_the_extracted_orden_has_the_shape_the_registry_declares() -> None:
     """CONTROL: the refusals below are the mutated value, not the census."""
     require_declared_orden_shape(_extracted_census())
 
 
+@pytest.mark.usefixtures("governed_fact_scope")
 def test_a_module_order_past_the_declared_rows_is_refused() -> None:
     census = _extracted_census()
     activity = census.activities[0]
@@ -151,6 +153,7 @@ def test_a_module_order_past_the_declared_rows_is_refused() -> None:
         require_declared_orden_shape(mutated)
 
 
+@pytest.mark.usefixtures("governed_fact_scope")
 def test_a_seasonal_band_past_the_declared_days_is_refused() -> None:
     census = _extracted_census()
     last = census.seasonal_indexes[-1].model_copy(update={"maximum_days": 181})
@@ -160,6 +163,7 @@ def test_a_seasonal_band_past_the_declared_days_is_refused() -> None:
         require_declared_orden_shape(mutated)
 
 
+@pytest.mark.usefixtures("governed_fact_scope")
 def test_a_missing_seasonal_band_is_refused() -> None:
     census = _extracted_census()
     mutated = census.model_copy(update={"seasonal_indexes": census.seasonal_indexes[:-1]})

@@ -881,7 +881,7 @@ application:
         document_conflict: 'Ya hay guardado un documento distinto para esa notificación;
           no se ha sobrescrito nada. Discrepan: {diverging_fields}.'
         document_not_found: Ningún documento guardado corresponde a esa notificación.
-          Descárguelo primero.
+          Descárgalo primero.
         document_prefix_ambiguous: Ese prefijo de certificado corresponde a varios
           documentos guardados. Indica el identificador completo.
         document_row_mismatch: Ese documento pertenece a otra notificación y no se
@@ -2165,7 +2165,7 @@ application:
         enter_withholding_certificate: Introduce la retención que figura en el certificado
           de retenciones e ingresos a cuenta de tu pagador y vuelve a calcular.
         file_another_way: Cadrumo todavía no puede preparar esta declaración para
-          presentarla. Preséntela por otra vía, por ejemplo en la web de la AEAT.
+          presentarla. Preséntala por otra vía, por ejemplo en la web de la AEAT.
         nothing_to_do: No tienes que hacer nada. Explica lo que hizo el cálculo.
         read_and_decide: Léelo y decide si te afecta. No te impide presentar.
         regroup_income_lines: Corrige cómo están agrupadas las líneas de renta y vuelve
