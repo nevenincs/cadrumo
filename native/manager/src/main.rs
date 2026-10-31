@@ -156,7 +156,8 @@ fn run_macos(intent: Intent, diagnostics: Arc<Diagnostics>) -> io::Result<()> {
     else {
         diagnostics.host_outcome(HostStage::Instance, HostOutcome::AlreadyRunning);
         if let Some(request) = intent.existing_request() {
-            let response = ipc::request(&executable, &request)?;
+            // The session's core may be hosted by this package's desktop instead.
+            let response = ipc::request_host(locations.package_root(), &request)?;
             if intent == Intent::Retry
                 && response.outcome != cadrumo_manager::ipc::Outcome::ReEvaluated
             {

@@ -118,12 +118,6 @@ pub fn run(
     diagnostics: Arc<Diagnostics>,
 ) -> Result<i32> {
     logs::native::install(diagnostics.clone());
-    if cfg!(target_os = "macos") {
-        return Err(ApplicationError::new(
-            ErrorCode::UnsupportedPlatform,
-            Operation::Webview,
-        ));
-    }
     // Before the console detaches, so the refusal still reaches it.
     #[cfg(windows)]
     shell::webview_environment::refuse_overrides()?;
@@ -420,12 +414,12 @@ pub(crate) async fn assemble<R: Runtime>(
     )));
     app.manage(Arc::new(shell::modelo::ModeloHost::new(profile)));
     startup.stage(crate::startup::Phase::Runtime);
-    #[cfg(windows)]
+    #[cfg(any(windows, target_os = "macos"))]
     tokio::select! {
         result = manager.ensure_ready(&sign_in) => result?,
         _ = startup.wait_cancelled() => { startup.check_cancelled()?; }
     }
-    #[cfg(not(windows))]
+    #[cfg(not(any(windows, target_os = "macos")))]
     manager.start(false).await?;
     startup.check_cancelled()?;
     startup.stage(crate::startup::Phase::Workspace);
@@ -485,7 +479,7 @@ pub(crate) async fn assemble<R: Runtime>(
     workspace.map_err(|e| {
         ApplicationError::new(ErrorCode::WebviewFailed, Operation::Webview).caused_by(e)
     })?;
-    #[cfg(windows)]
+    #[cfg(any(windows, target_os = "macos"))]
     {
         let host = app.clone();
         spawn_detached(

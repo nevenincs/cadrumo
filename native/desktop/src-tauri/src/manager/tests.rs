@@ -177,8 +177,8 @@ fn fixture(target: Result<std::result::Result<PathBuf, &'static str>>) -> Arc<Ma
         spawn_fence: Arc::new(Mutex::new(())),
         closing: tokio::sync::Notify::new(),
         supervision: Arc::new(tokio::sync::watch::Sender::new(0)),
-        observation: observation::Observer::new(cfg!(windows)),
-        #[cfg(windows)]
+        observation: observation::Observer::new(cfg!(any(windows, target_os = "macos"))),
+        #[cfg(any(windows, target_os = "macos"))]
         host: Mutex::new(None),
     })
 }
