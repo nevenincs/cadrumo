@@ -443,23 +443,30 @@ def _seed_usage(recorder: LLMRunRecorder) -> None:
         )
 
 
-def test_build_llm_usage_report_aggregates_by_provider_and_model(profile: TestRuntimeProfile) -> None:
-    """Real recorded runs fold per-provider, and per-model within each provider."""
+def _seeded_usage_providers(
+    profile: TestRuntimeProfile,
+) -> tuple[LlmUsageReport, dict[str, LlmRunHealthProviderMetrics]]:
     recorder = _recorder(profile)
     _seed_usage(recorder)
-
     report = build_llm_usage_report(run_record_port=LLMRunRecordDiagnosticsAdapter(recorder))
+    return report, {row.provider: row for row in report.by_provider}
+
+
+def test_build_llm_usage_report_totals_across_providers(profile: TestRuntimeProfile) -> None:
+    """Real recorded runs fold into overall totals and one row per provider."""
+    report, providers = _seeded_usage_providers(profile)
 
     assert report.has_run_data is True
     assert report.total_runs == 6
     assert report.total_succeeded == 5
     assert report.total_failed == 1
     assert report.overall_success_rate == Decimal("0.8333")
-
-    providers = {row.provider: row for row in report.by_provider}
     assert set(providers) == {"llm:claude:test-model", "llm:codex:test-model"}
 
-    claude = providers["llm:claude:test-model"]
+
+def test_build_llm_usage_report_folds_a_provider_with_its_duration_bounds(profile: TestRuntimeProfile) -> None:
+    claude = _seeded_usage_providers(profile)[1]["llm:claude:test-model"]
+
     assert claude.runs == 4
     assert claude.succeeded == 3
     assert claude.failed == 1
@@ -467,6 +474,10 @@ def test_build_llm_usage_report_aggregates_by_provider_and_model(profile: TestRu
     assert claude.max_duration_ms == 400
     assert claude.total_duration_ms == 1000
     assert claude.success_rate == Decimal("0.7500")
+
+
+def test_build_llm_usage_report_folds_models_within_a_provider(profile: TestRuntimeProfile) -> None:
+    claude = _seeded_usage_providers(profile)[1]["llm:claude:test-model"]
 
     claude_models = {row.model: row for row in claude.models}
     assert set(claude_models) == {"model-a", "model-b"}
@@ -479,7 +490,10 @@ def test_build_llm_usage_report_aggregates_by_provider_and_model(profile: TestRu
     assert claude_models["model-b"].failed == 1
     assert claude_models["model-b"].success_rate == Decimal("0.5000")
 
-    codex = providers["llm:codex:test-model"]
+
+def test_build_llm_usage_report_folds_a_provider_with_a_single_model(profile: TestRuntimeProfile) -> None:
+    codex = _seeded_usage_providers(profile)[1]["llm:codex:test-model"]
+
     assert codex.runs == 2
     assert codex.succeeded == 2
     assert codex.failed == 0
