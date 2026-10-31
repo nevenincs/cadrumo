@@ -179,7 +179,8 @@ export function RatiosPane({
       sort: (row) => rankDecimal(overrides.get(row.category)),
       cell: (row) => {
         const name = row.label;
-        if (row.category in editing)
+        const draft = editing[row.category];
+        if (draft !== undefined)
           return (
             <span className="flex flex-col items-end gap-1">
               <span className="flex items-center gap-1">
@@ -187,7 +188,7 @@ export function RatiosPane({
                   unit="fraction"
                   controlSize="sm"
                   className="w-24"
-                  value={editing[row.category]}
+                  value={draft}
                   autoFocus
                   aria-label={t("desktop.ledger.ratios.input", {
                     category: name,

@@ -838,8 +838,15 @@ test("a split's last part takes the remainder, and its parts may be classified",
   const dialog = target.locator(".ledger-split");
   await expect(dialog).toBeVisible();
   await dialog.locator(".ledger-split-amount").first().fill("20");
-  const rest = dialog.locator(".ledger-split-part input[readonly]");
-  await expect(rest).toHaveValue(String(Math.round((amount - 20) * 100) / 100));
+  // The remainder is a figure drawn in the window's language: English groups
+  // thousands with a comma and always shows two decimals.
+  const rest = dialog.locator(".ledger-split-remainder");
+  await expect(rest).toHaveText(
+    new Intl.NumberFormat("en", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(Math.round((amount - 20) * 100) / 100),
+  );
   const descriptions = dialog.locator(".ledger-split-description");
   await descriptions.nth(0).fill("Licencia");
   await descriptions.nth(1).fill("Soporte");

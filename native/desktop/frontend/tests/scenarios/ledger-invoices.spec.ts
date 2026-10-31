@@ -201,7 +201,7 @@ test("an issued invoice with two lines at 21% and a 15% retención is added", as
   await editor(target)
     .getByRole("button", { name: "15%", exact: true })
     .click();
-  await expect(field(target, "retention_amount")).toHaveValue("165");
+  await expect(field(target, "retention_amount")).toHaveValue("165.00");
   await expect(editor(target).locator(".ledger-invoice-to-pay")).toHaveText(
     label("desktop.ledger.invoices.to_pay_withheld", {
       amount: "1,166.00",
@@ -220,7 +220,7 @@ test("an issued invoice with two lines at 21% and a 15% retención is added", as
   await expect(
     editor(target).locator(".ledger-invoice-lines tbody tr"),
   ).toHaveCount(2);
-  await expect(field(target, "retention_amount")).toHaveValue("165");
+  await expect(field(target, "retention_amount")).toHaveValue("165.00");
 });
 
 test("each requirement and rule is refused on its own field", async ({

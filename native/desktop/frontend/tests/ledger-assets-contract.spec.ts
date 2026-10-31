@@ -130,12 +130,13 @@ const portOf = (shape: "fixture" | "unknown" = "fixture"): LedgerPort =>
     shape,
   });
 
-/** A changed field of the timeline, as the backend states it. */
+/** A field of the timeline given its first value, as the backend states it. */
 const change = (
   field: string,
   after: string | null,
   afterKey: string | null = null,
 ) => ({
+  kind: "added" as const,
   field,
   field_key: `ledger.actividad_asset.field.${field}`,
   before: null,
@@ -1386,6 +1387,7 @@ test("a baja ends the plan at the year of its last day, lists the element out of
       ["disposal.proceeds", "9000.00"],
       ["disposal.transmission_costs", "150.00"],
     ].map(([field, after]) => ({
+      kind: "added",
       field,
       field_key: `ledger.actividad_asset.field.${field}`,
       before: null,

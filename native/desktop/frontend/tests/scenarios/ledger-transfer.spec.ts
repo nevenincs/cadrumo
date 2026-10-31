@@ -304,7 +304,10 @@ test("an invoice book has no preview and lists the rows it refused", async ({
   await country.fill("e");
   await expect(preview).toBeDisabled();
   await country.fill("es");
-  await expect(country).toHaveValue("ES");
+  // Left, the field shows the code it holds with its name in the window's
+  // language, which in English is Spain.
+  await country.blur();
+  await expect(country).toHaveValue("ES · Spain");
   await preview.click();
   await expect(dialog).toContainText(
     label("desktop.ledger.import.book_no_preview"),
