@@ -48,7 +48,10 @@ from ...core.logging import get_logger
 from ...domain.modelos.calculation_revision_sources import (
     CalculationNoteFact,
     CalculationNoteSentence,
+    CalculationSourceIssue,
+    RecordedCalculationNote,
     element_names_of,
+    recorded_calculation_notes,
 )
 from ..actividad_asset.ports import ActivityAssetHistoryRepository
 from ..aggregation.source_diagnostic_reason import CalculationSourceDiagnosticReason
@@ -202,6 +205,7 @@ _KEY_ROOT: Final[str] = "application.modelo.calc_diagnostic"
 _FACT_KEY_ROOT: Final[str] = "application.modelo.calc_diagnostic_fact"
 _ELEMENT_NAME_LOCALE_KEY: Final[str] = "application.modelo.calc_diagnostic_words.named_element"
 _UNNAMED_ELEMENT_LOCALE_KEY: Final[str] = "application.modelo.calc_diagnostic_words.unnamed_element"
+_UNNUMBERED_BOX_LOCALE_KEY: Final[str] = "application.modelo.finding_fact.box_unnumbered"
 _DATE_VALUES: Final[frozenset[str]] = frozenset({"date", "start", "end", "row_date", "period_end"})
 _AMOUNT_VALUES: Final[frozenset[str]] = frozenset(
     {"amount", "cost", "paid", "price", "base", "remainder", "effect", "transmission_value", "net_value", "row_amount"}
@@ -287,6 +291,21 @@ def read_element_names(repository: ActivityAssetHistoryRepository | None) -> dic
         _logger.warning("activity_asset_names_unavailable")
         return {}
     return {descriptor.asset_id: descriptor.facts.name for descriptor in history.descriptors}
+
+
+def read_recorded_notes(
+    issues: Iterable[CalculationSourceIssue], repository: ActivityAssetHistoryRepository | None
+) -> tuple[RecordedCalculationNote, ...]:
+    """The notes a calculation kept, in words and under the names their elements go by now."""
+    return tuple(
+        note.model_copy(
+            update={
+                "message": note_fact_text(note.fact, element_names=note.element_names),
+                "detail": tr(what_locale_key(note.reason), box=tr(_UNNUMBERED_BOX_LOCALE_KEY)),
+            }
+        )
+        for note in recorded_calculation_notes(issues, names=read_element_names(repository))
+    )
 
 
 def with_element_names(
@@ -385,6 +404,7 @@ __all__ = [
     "note_attention",
     "note_fact_text",
     "read_element_names",
+    "read_recorded_notes",
     "what_locale_key",
     "what_to_do_locale_key",
     "with_element_names",

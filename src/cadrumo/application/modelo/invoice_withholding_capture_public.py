@@ -7,16 +7,18 @@ Canonical aggregation and withholding models are restored before service use.
 from __future__ import annotations
 
 from datetime import date
-from typing import Literal, Self
+from typing import Self
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.hex import Hex64Str
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.spanish_postcode import SpanishProvinceCode
 from ..aggregation.invoice_retencion import InvoiceWithholdingEvidenceRequest
 from ..aggregation.retenciones import Modelo180StructuredAddress, Modelo193NonpaymentCause
 from ..aggregation.service import PerModeloAggregationCommand
+from ..aggregation.withholding_modelo_routing import require_invoice_evidence_modelo
 from ..aggregation.withholding_observation_service import WithholdingMutationMode
 from ..aggregation.withholding_recognition import (
     WithholdingIncomeKind,
@@ -226,8 +228,14 @@ class PublicInvoiceWithholdingCommand(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
-    modelo: Literal["111", "115"]
+    modelo: str
     period: PublicPeriod
+
+    @field_validator("modelo")
+    @classmethod
+    @pydantic_validation_boundary
+    def _require_invoice_evidence_modelo(cls, value: str) -> str:
+        return require_invoice_evidence_modelo(value)
 
     @classmethod
     def from_domain(cls, value: PerModeloAggregationCommand) -> Self:

@@ -11,6 +11,7 @@ from __future__ import annotations
 import re
 from datetime import UTC, datetime
 from string import Formatter
+from typing import cast
 
 import pytest
 
@@ -26,8 +27,9 @@ from ....domain.calculations.registry.tests.published_authority import published
 from ....domain.modelos.calculation_revision_sources import CalculationNoteFact, CalculationNoteSentence
 from ....domain.renta.actividad_asset.register_records import ActivityAssetDescriptorFacts
 from ...actividad_asset.history import ActivityAssetHistory
+from ...actividad_asset.ports import ActivityAssetHistoryRepository
 from ...aggregation.tests.test_modelo_source_mesh_ledger import register_asset, resolve_m100
-from ..calculation_notes import fact_locale_key, note_fact_text, read_element_names
+from ..calculation_notes import fact_locale_key, note_fact_text, read_element_names, read_recorded_notes
 from ..printed_boxes import snapshot_printed_boxes
 from ..work_form_issue_lines import form_issue_lines
 from .test_work_form_gate_agreement import _checked_form, _revision, _work_unit
@@ -174,6 +176,27 @@ def test_the_form_shows_the_current_name_from_the_read_it_was_given(operation: P
 
     assert any("Standing desk" in line.message for line in form_issue_lines(named, OutputLanguage.EN))
     assert any("An asset with no name" in line.message for line in form_issue_lines(form, OutputLanguage.EN))
+
+
+def test_a_recorded_note_arrives_in_words_for_a_reader_that_only_draws_it(operation: PinnedAuthorityOperation) -> None:
+    from ..calculation_bucket_actions import _unrouted_source_issues
+
+    class _Register:
+        def load(self) -> ActivityAssetHistory:
+            return _described("Standing desk")
+
+    boxes = snapshot_printed_boxes(operation, operation.snapshot("100", filing_year=2025, period="0A"))
+    issues = _unrouted_source_issues(resolve_m100(_described("Standing desk")).diagnostics, boxes)
+
+    named = read_recorded_notes(issues, cast(ActivityAssetHistoryRepository, _Register()))
+    unnamed = read_recorded_notes(issues, None)
+
+    gap = next(note for note in named if note.reason == "activity_asset_claim_gap")
+    assert "Standing desk" in gap.message
+    assert gap.message == note_fact_text(gap.fact, element_names=gap.element_names)
+    assert all(note.message and note.detail and "{" not in note.message + note.detail for note in named)
+    assert all("Standing desk" not in note.message for note in unnamed)
+    assert {note.reason for note in unnamed} == {note.reason for note in named}
 
 
 def test_a_register_that_is_not_there_leaves_the_plain_phrase() -> None:

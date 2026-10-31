@@ -78,6 +78,13 @@ def invoice_evidence_modelos() -> frozenset[str]:
     return _modelos_for(INVOICE_EVIDENCED_INCOME_KINDS)
 
 
+def require_invoice_evidence_modelo(value: str) -> str:
+    """Return ``value`` when a received invoice can evidence withholding on it, else refuse."""
+    if value not in invoice_evidence_modelos():
+        raise ValueError(f"a received invoice evidences no withholding on modelo {value!r}")
+    return value
+
+
 def formalization_refused_modelos() -> frozenset[str]:
     """Return the modelos a formalization projection never files into."""
     return _routing().codes("formalization.refused.modelos")
@@ -110,4 +117,5 @@ __all__ = [
     "ledger_payment_modelos",
     "modelo_for_income_kind",
     "periodic_withholding_modelos",
+    "require_invoice_evidence_modelo",
 ]

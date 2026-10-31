@@ -328,6 +328,7 @@ def native_cli_profile_server(
     """
     if sys.platform != "win32":
         pytest.skip("requires native Windows profile workers")
+    storage_root.mkdir(parents=True, exist_ok=True)
     endpoint = WindowsEndpoint(storage_root=storage_root)
     stop, boot, native, verifier = Event(), uuid4(), MemoryNativePort(), ControlledServiceVerifier()
     owner = NativeRuntimeFixtureOwner(endpoint, stop, timeout=15)
@@ -417,6 +418,13 @@ class NativeCliProfileFixture:
         self.scope.enter_context(
             native_cli_profile_server(self.storage_root, failure_observer=self.failure_observer, model_runs=service)
         )
+        self.label = label
+
+    def serve_copied(self, *, label: str) -> None:
+        """Serve the one profile a copied world already holds."""
+        if self.label is not None:
+            raise AssertionError("the native CLI fixture registers exactly one profile")
+        self.scope.enter_context(native_cli_profile_server(self.storage_root, failure_observer=self.failure_observer))
         self.label = label
 
 

@@ -12,14 +12,14 @@ review_status = "agent_reviewed"
 reviewed_at = 2026-10-03
 reviewed_by = "agent-review"
 notes = """\
-RGAT art 31: obligados a suministrar informacion sobre operaciones con terceras personas. \
+RGAT art 31: obligados a suministrar información sobre operaciones con terceras personas. \
 Apartado 1 obliga a quienes desarrollen actividades empresariales o profesionales a presentar \
-la declaracion anual (base reglamentaria del Modelo 347); apartado 2 extiende la obligacion a \
+la declaración anual (base reglamentaria del Modelo 347); apartado 2 extiende la obligacion a \
 las adquisiciones al margen de la actividad de las entidades del art 94.1 y 2 LGT; apartado 3 \
 alcanza a las entidades que cobran honorarios o derechos por cuenta de sus socios, asociados o \
 colegiados. El articulo no fija ningun importe: el umbral por contraparte lo establece el art 33 \
 y la exclusion de quienes no lo superan el art 32.c. Texto verificado contra el consolidado \
-bundled corpus/normatives/html/rd-1065-2007.html (redaccion del apartado 1 por RD 828/2013, \
+bundled corpus/normatives/html/rd-1065-2007.html (redacción del apartado 1 por RD 828/2013, \
 BOE-A-2013-11216).\
 """
 required_text = [
@@ -43,16 +43,16 @@ review_status = "agent_reviewed"
 reviewed_at = 2026-10-03
 reviewed_by = "agent-review"
 notes = """\
-RGAT art 32: personas o entidades excluidas de la obligacion de presentar la declaracion \
+RGAT art 32: personas o entidades excluidas de la obligacion de presentar la declaración \
 anual de operaciones con terceras personas (Modelo 347). Letra b) excluye las actividades en \
 estimacion objetiva del IRPF que tributan simultaneamente en los regimenes especiales \
 simplificado, agricultura o recargo de equivalencia del IVA, salvo por las operaciones por las \
 que emitan factura, y su segundo parrafo hace que los acogidos al regimen simplificado incluyan \
 ademas las adquisiciones anotadas en el libro registro de facturas recibidas del art 40.1 RIVA \
-(redaccion del RD 828/2013); letra c) a quienes no superen 3.005,06 EUR por contraparte y ano natural, \
+(redacción del RD 828/2013); letra c) a quienes no superen 3.005,06 EUR por contraparte y ano natural, \
 o 300,51 EUR en el cobro por cuenta de terceros; letra e) a los obligados del art 62.6 RIVA \
 (llevanza de libros registro por el SII). Texto verificado contra el consolidado bundled \
-corpus/normatives/html/rd-1065-2007.html (letra e en la redaccion del RD 1512/2018, \
+corpus/normatives/html/rd-1065-2007.html (letra e en la redacción del RD 1512/2018, \
 BOE-A-2018-17995).\
 """
 required_text = [
@@ -77,7 +77,7 @@ effective_from = 2008-10-23
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-06
 reviewed_by = "operator"
-notes = "Aprueba el modelo 347 'Declaracion anual de operaciones con terceras personas', formato electronico, ajustado a los disenos logicos del anexo."
+notes = "Aprueba el modelo 347 'Declaración anual de operaciones con terceras personas', formato electronico, ajustado a los disenos logicos del anexo."
 required_text = [
     "Aprobación del modelo 347",
     "Declaración anual de operaciones con terceras personas",
@@ -97,7 +97,7 @@ effective_from = 2008-10-23
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-06
 reviewed_by = "operator"
-notes = "Plazo de presentacion del Modelo 347: durante el mes de febrero de cada ano en relacion con las operaciones realizadas durante el ano natural anterior."
+notes = "Plazo de presentación del Modelo 347: durante el mes de febrero de cada ano en relacion con las operaciones realizadas durante el ano natural anterior."
 required_text = [
     "Plazo de presentación del modelo 347",
     "mes de febrero",
@@ -248,7 +248,7 @@ producida en el periodo en que, conforme al art 69 del Reglamento del IVA, debe 
 realizarse la anotacion registral de la factura -- NO en la fecha de devengo del art 75 \
 LIVA. Las operaciones en regimen especial del criterio de caja son la excepcion y se \
 imputan al devengo del art 163 terdecies LIVA. Texto extraido de la API de datos \
-abiertos del BOE el 2026-08-06 tomando la ultima version consolidada, redaccion \
+abiertos del BOE el 2026-08-06 tomando la ultima version consolidada, redacción \
 BOE-A-2013-11216 en vigor desde 2014-01-01."""
 required_text = [
     "Criterios de imputación temporal",
@@ -269,7 +269,7 @@ review_status = "agent_reviewed"
 reviewed_at = 2026-08-27
 reviewed_by = "agent-review"
 notes = """\
-RGAT art 33: contenido de la declaracion anual de operaciones con terceras personas. \
+RGAT art 33: contenido de la declaración anual de operaciones con terceras personas. \
 Fija el umbral general de 3.005,06 EUR por contraparte y ano natural (parrafo 1), \
 excluye determinadas operaciones del deber de declarar (apartado 2), y establece un \
 umbral separado de 300,51 EUR para los cobros por cuenta de terceros de honorarios \
@@ -281,7 +281,7 @@ umbral se juzga por contraparte y sentido de la operacion; el apartado 3 relacio
 subvenciones satisfechas por las Administraciones Publicas cualquiera que sea su importe. Del \
 apartado 2 se aplican la letra g), que excluye las importaciones y exportaciones de mercancias \
 cualquiera que sea la residencia de la contraparte, y la letra i), que excluye las operaciones ya \
-incluidas en otra declaracion periodica de contenido coincidente (Modelo 349, y el resumen anual de \
+incluidas en otra declaración periodica de contenido coincidente (Modelo 349, y el resumen anual de \
 retenciones del art 108.2 RIRPF para quien practica la retencion). Texto verificado contra el \
 consolidado bundled corpus/normatives/html/rd-1065-2007.html.\
 """
@@ -308,7 +308,7 @@ review_status = "agent_reviewed"
 reviewed_at = 2026-08-27
 reviewed_by = "agent-review"
 notes = """\
-RGAT art 34: cumplimentacion de la declaracion anual de operaciones con terceras \
+RGAT art 34: cumplimentacion de la declaración anual de operaciones con terceras \
 personas. Apartado 1 enumera los datos a consignar, incluido el NIF de cada \
 contraparte (letra b) y el importe total anual de las operaciones (letra c). Letra i) \
 exige declarar SEPARADAMENTE de otras operaciones las cantidades percibidas en \
@@ -337,7 +337,7 @@ effective_from = 2014-01-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-10-03
 reviewed_by = "agent-authored from the bundled corpus capture; operator to re-stamp"
-notes = """RGAT art 33.2.g: excluye del deber de declarar las importaciones y exportaciones de mercancias y las operaciones realizadas desde o para un establecimiento permanente del obligado situado fuera de Espana. Se declara con el id compuesto porque la exclusion de categorias de IVA del Modelo 347 (y su aviso cuando la categoria no dice si la operacion es de bienes) es una afirmacion sobre esta letra, no sobre el articulo entero. Texto verificado contra el consolidado bundled corpus/normatives/html/rd-1065-2007.html (redaccion en vigor desde 2014-01-01)."""
+notes = """RGAT art 33.2.g: excluye del deber de declarar las importaciones y exportaciones de mercancias y las operaciones realizadas desde o para un establecimiento permanente del obligado situado fuera de Espana. Se declara con el id compuesto porque la exclusion de categorias de IVA del Modelo 347 (y su aviso cuando la categoria no dice si la operacion es de bienes) es una afirmacion sobre esta letra, no sobre el articulo entero. Texto verificado contra el consolidado bundled corpus/normatives/html/rd-1065-2007.html (redacción en vigor desde 2014-01-01)."""
 required_text = [
     "quedan excluidas del deber de declaración las siguientes operaciones",
     "Las importaciones y exportaciones de mercancías",
@@ -356,7 +356,7 @@ effective_from = 2014-01-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-10-03
 reviewed_by = "agent-authored from the bundled corpus capture; operator to re-stamp"
-notes = """RGAT art 33.2.i: excluye las operaciones sujetas a una obligacion periodica de suministro de informacion que, por ello, ya figuren en otra declaracion de contenido coincidente (el Modelo 349, o el resumen anual de retenciones del art 108.2 RIRPF para quien practica la retencion). Se declara con el id compuesto porque la exclusion de las facturas recibidas con retencion y el aviso sobre las emitidas con retencion afirman esta letra. Texto verificado contra el consolidado bundled corpus/normatives/html/rd-1065-2007.html (redaccion en vigor desde 2014-01-01)."""
+notes = """RGAT art 33.2.i: excluye las operaciones sujetas a una obligacion periodica de suministro de información que, por ello, ya figuren en otra declaración de contenido coincidente (el Modelo 349, o el resumen anual de retenciones del art 108.2 RIRPF para quien practica la retencion). Se declara con el id compuesto porque la exclusion de las facturas recibidas con retencion y el aviso sobre las emitidas con retencion afirman esta letra. Texto verificado contra el consolidado bundled corpus/normatives/html/rd-1065-2007.html (redacción en vigor desde 2014-01-01)."""
 required_text = [
     "quedan excluidas del deber de declaración las siguientes operaciones",
     "En general, todas aquellas operaciones respecto de las que exista una obligación periódica de suministro de información",
@@ -375,7 +375,7 @@ effective_from = 2014-01-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-10-03
 reviewed_by = "agent-authored from the bundled corpus capture; operator to re-stamp"
-notes = """RGAT art 34.1.d: los arrendamientos de locales de negocios se hacen constar separadamente de las demas operaciones entre las mismas partes, y el arrendador consigna arrendatarios, referencias catastrales y localizacion de los inmuebles. Fundamenta que el arrendador relacione el arrendamiento aunque el arrendatario le haya practicado retencion. Texto verificado contra el consolidado bundled corpus/normatives/html/rd-1065-2007.html (apartado 1 en la redaccion del RD 828/2013, en vigor desde 2014-01-01)."""
+notes = """RGAT art 34.1.d: los arrendamientos de locales de negocios se hacen constar separadamente de las demas operaciones entre las mismas partes, y el arrendador consigna arrendatarios, referencias catastrales y localizacion de los inmuebles. Fundamenta que el arrendador relacione el arrendamiento aunque el arrendatario le haya practicado retencion. Texto verificado contra el consolidado bundled corpus/normatives/html/rd-1065-2007.html (apartado 1 en la redacción del RD 828/2013, en vigor desde 2014-01-01)."""
 required_text = [
     "los arrendamientos de locales de negocios",
     "el arrendador consignará el nombre y apellidos o razón social o denominación completa",
@@ -413,7 +413,7 @@ effective_from = 2014-01-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-10-03
 reviewed_by = "agent-authored from the bundled corpus capture; operator to re-stamp"
-notes = """RGAT art 34.1.h: se hacen constar los importes superiores a 6.000 euros percibidos en metalico de cada persona o entidad relacionada. Fundamenta el campo IMPORTE PERCIBIDO EN METALICO del diseno del Modelo 347 y el aviso de que las facturas no registran el cobro en efectivo. Texto verificado contra el consolidado bundled corpus/normatives/html/rd-1065-2007.html (apartado 1 en la redaccion del RD 828/2013, en vigor desde 2014-01-01)."""
+notes = """RGAT art 34.1.h: se hacen constar los importes superiores a 6.000 euros percibidos en metalico de cada persona o entidad relacionada. Fundamenta el campo IMPORTE PERCIBIDO EN METALICO del diseno del Modelo 347 y el aviso de que las facturas no registran el cobro en efectivo. Texto verificado contra el consolidado bundled corpus/normatives/html/rd-1065-2007.html (apartado 1 en la redacción del RD 828/2013, en vigor desde 2014-01-01)."""
 required_text = [
     "Se harán constar los importes superiores a 6.000 euros que se hubieran percibido en metálico",
 ]
@@ -431,7 +431,7 @@ effective_from = 2014-01-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-10-03
 reviewed_by = "agent-authored from the bundled corpus capture; operator to re-stamp"
-notes = """RGAT art 34.1.j: las operaciones del regimen especial del criterio de caja se hacen constar separadamente, por su devengo segun la regla general del art 75 LIVA y por el devengo del art 163 terdecies LIVA. Fundamenta la marca de criterio de caja del registro de declarado del Modelo 347 y su importe anual devengado. Texto verificado contra el consolidado bundled corpus/normatives/html/rd-1065-2007.html (redaccion del RD 828/2013, en vigor desde 2014-01-01)."""
+notes = """RGAT art 34.1.j: las operaciones del regimen especial del criterio de caja se hacen constar separadamente, por su devengo segun la regla general del art 75 LIVA y por el devengo del art 163 terdecies LIVA. Fundamenta la marca de criterio de caja del registro de declarado del Modelo 347 y su importe anual devengado. Texto verificado contra el consolidado bundled corpus/normatives/html/rd-1065-2007.html (redacción del RD 828/2013, en vigor desde 2014-01-01)."""
 required_text = [
     "las operaciones a las que sea de aplicación el régimen especial del criterio de caja del Impuesto sobre el Valor Añadido",
 ]
@@ -449,7 +449,7 @@ effective_from = 2014-01-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-10-03
 reviewed_by = "agent-authored from the bundled corpus capture; operator to re-stamp"
-notes = """RGAT art 34.1.k: se hacen constar separadamente las operaciones en las que el sujeto pasivo sea el destinatario conforme al art 84.Uno.2 LIVA. Fundamenta la marca de inversion del sujeto pasivo del registro de declarado del Modelo 347. Texto verificado contra el consolidado bundled corpus/normatives/html/rd-1065-2007.html (redaccion del RD 828/2013, en vigor desde 2014-01-01)."""
+notes = """RGAT art 34.1.k: se hacen constar separadamente las operaciones en las que el sujeto pasivo sea el destinatario conforme al art 84.Uno.2 LIVA. Fundamenta la marca de inversion del sujeto pasivo del registro de declarado del Modelo 347. Texto verificado contra el consolidado bundled corpus/normatives/html/rd-1065-2007.html (redacción del RD 828/2013, en vigor desde 2014-01-01)."""
 required_text = [
     "las operaciones en las que el sujeto pasivo sea el destinatario de acuerdo con lo establecido en el",
 ]

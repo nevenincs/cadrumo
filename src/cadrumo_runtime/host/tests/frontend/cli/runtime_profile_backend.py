@@ -13,7 +13,6 @@ never contend for one runtime door in a test.
 
 from __future__ import annotations
 
-import shutil
 from collections.abc import Callable, Generator, Iterator, Mapping, Sequence
 from contextlib import ExitStack, contextmanager, nullcontext
 from pathlib import Path
@@ -24,18 +23,23 @@ import pytest
 from click.testing import Result
 
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
+from cadrumo.adapters.persistence.profile.tests.sealed_profile_world import (
+    SealedProfileWorld,
+    copy_sealed_tree,
+    publish_world_session,
+)
 from cadrumo.adapters.persistence.storage.bucket.directory_layout import bucket_paths
-from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
+from cadrumo.adapters.persistence.storage.master_key.active_session import (
+    close_active_bucket_session,
+    current_active_bucket_session,
+)
 from cadrumo.adapters.persistence.storage.runtime import inspect_storage_runtime
 from cadrumo.adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from cadrumo.adapters.persistence.storage.sql.engine import dispose_engine
 from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_profile_storage_root
-from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation
 from cadrumo.application.workflow.profile_bucket_scan import read_profile_bucket_by_id
 from cadrumo.core.config import load_settings, override_settings
 from cadrumo.core.paths import effective_storage_root
-from cadrumo.core.storage_taxonomy import StorageCategory
-from cadrumo.core.storage_taxonomy_locations import storage_location
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.tests.cli_fixture_ports import ClickInvokeKwargs
 
@@ -53,8 +57,6 @@ __all__ = [
 
 #: The label of a world's operator profile when the suite names none.
 _OPERATOR_LABEL = "operator"
-#: The storage root an isolated world opens beneath its directory.
-_STORAGE_ROOT_NAME = "cadrumo-storage"
 
 
 class _RuntimeJoinedOnFirstCommand:
@@ -201,28 +203,17 @@ def _isolated_world(root: Path, settings_overrides: Mapping[str, object] | None)
 
 
 @contextmanager
-def _signed_in_copy_bound_to_cli(storage_root: Path, label: str) -> Generator[None]:
-    """Unlock a copied world's profile with its password, as its operator would, and bind it."""
-    passphrase = load_settings().cadrumo_dev_test_database_password.get_secret_value()
+def _resumed_copy_bound_to_cli(storage_root: Path, world: SealedProfileWorld, label: str) -> Generator[None]:
+    """Resume a copied world's profile from the key its registration proved, and bind it."""
     with bundled_indexed_authority().operation() as operation:
-        login = authenticate_profile_for_invocation(
-            name=label,
-            passphrase_callback=lambda: passphrase,
-            profile_decode_context=operation.profile_decode_context(),
-        )
+        publish_world_session(world, profile_decode_context=operation.profile_decode_context())
     try:
         with ExitStack() as stack:
-            joiner = _RuntimeJoinedOnFirstCommand(stack, storage_root, UUID(login.bucket_id), label)
+            joiner = _RuntimeJoinedOnFirstCommand(stack, storage_root, UUID(world.profile_id), label)
             stack.enter_context(bind_profile_cli(joiner))
             yield
     finally:
         close_active_bucket_session()
-
-
-def _runtime_installation_state(directory: str, names: list[str]) -> set[str]:
-    """Leave out the runtime coordination directory of a copied storage root."""
-    coordination = storage_location(StorageCategory.RUNTIME_COORDINATION).relative_path().name
-    return {coordination} if coordination in names and Path(directory).name == _STORAGE_ROOT_NAME else set()
 
 
 class ProfileWorldSeed(Protocol):
@@ -273,31 +264,31 @@ def seeded_runtime_profile_origin(
     label: str = _OPERATOR_LABEL,
     settings_overrides: Mapping[str, object] | None = None,
     profile_overrides: Mapping[str, str] | None = None,
-) -> Generator[Path]:
+) -> Generator[SealedProfileWorld]:
     root = tmp_path_factory.mktemp("seeded-origin")
     with (
         _isolated_world(root, settings_overrides) as storage_root,
-        operator_profile_bound_to_cli(storage_root=storage_root, label=label, facts=profile_overrides),
+        operator_profile_bound_to_cli(storage_root=storage_root, label=label, facts=profile_overrides) as profile_id,
     ):
         seed(invoke_cli=invoke_cli)
-    yield root
+        session = current_active_bucket_session()
+        assert session is not None
+        dek = bytes(session.dek)
+    yield SealedProfileWorld(origin=root, profile_id=str(profile_id), dek=dek)
 
 
 @contextmanager
 def copied_runtime_profile_backend(
-    origin: Path,
+    world: SealedProfileWorld,
     tmp_path: Path,
     *,
     label: str = _OPERATOR_LABEL,
     settings_overrides: Mapping[str, object] | None = None,
 ) -> Generator[None]:
-    clone = tmp_path / "seeded-world"
-    # The runtime installation record names the origin root's physical
-    # identity; a copy is another root, which installs its own on first use.
-    shutil.copytree(origin, clone, ignore=_runtime_installation_state)
+    clone = copy_sealed_tree(world.origin, tmp_path / "seeded-world")
     with (
         _isolated_world(clone, settings_overrides) as storage_root,
-        _signed_in_copy_bound_to_cli(storage_root, label),
+        _resumed_copy_bound_to_cli(storage_root, world, label),
     ):
         yield
 
@@ -311,20 +302,22 @@ def runtime_seeded_profile_backend_fixture(
     autouse: bool = True,
     name: str = "_isolated_backend",
     origin_name: str = "_isolated_backend_origin",
-) -> tuple[Callable[..., Iterator[Path]], Callable[..., Iterator[None]]]:
+) -> tuple[Callable[..., Iterator[SealedProfileWorld]], Callable[..., Iterator[None]]]:
     """Build the (origin, per-test) pair of a seed-once world whose commands reach a runtime.
 
     ``seed`` runs once per module as the operator of a password-custodied
     profile, so the commands it runs are admitted like any other. Each test
     receives a filesystem copy of the settled world, including its custody
-    material, unlocks the copy's profile with its password and runs its
-    commands as that profile's operator. As in the storage package's seed-once
+    material, resumes the copy's profile from the key the seed proved and runs
+    its commands as that profile's operator. As in the storage package's seed-once
     factory, a module binding two worlds states a distinct ``name`` and
     ``origin_name`` for each.
     """
 
     @pytest.fixture(name=origin_name, scope="module")
-    def _seeded_origin(tmp_path_factory: pytest.TempPathFactory, invoke_cli: Callable[..., Result]) -> Iterator[Path]:
+    def _seeded_origin(
+        tmp_path_factory: pytest.TempPathFactory, invoke_cli: Callable[..., Result]
+    ) -> Iterator[SealedProfileWorld]:
         with seeded_runtime_profile_origin(
             seed=seed,
             tmp_path_factory=tmp_path_factory,
@@ -338,7 +331,7 @@ def runtime_seeded_profile_backend_fixture(
     @pytest.fixture(name=name, autouse=autouse)
     def _copied_backend(request: pytest.FixtureRequest, tmp_path: Path) -> Iterator[None]:
         origin = request.getfixturevalue(origin_name)
-        assert isinstance(origin, Path)
+        assert isinstance(origin, SealedProfileWorld)
         with copied_runtime_profile_backend(origin, tmp_path, label=label, settings_overrides=settings_overrides):
             yield
 

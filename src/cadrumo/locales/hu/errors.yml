@@ -206,8 +206,8 @@ errors:
     error_deadlines_schedule_computation: A motor nem tudott érvényes határidő-ütemtervet
       létrehozni. Ellenőrizd a kért évet és a profil adatait.
     error_deadlines_validation: Egy határidő-rekord nem ment át az érvényesítésen.
-    error_decimal_format: 'Decimális formázási hiba: az érték None, de nem lett tartalék
-      értékkonfiguráció megadva.'
+    error_decimal_format: 'Tizedes szám formázási hiba: hiányzik az érték, és nincs
+      megadva helyettesítő érték.'
     error_declaracion_template_not_detected: A bevallás PDF sablon-revíziója nem ismerhető
       fel automatikusan.
     error_domain_submission: Benyújtási domain hiba történt.

@@ -2235,9 +2235,9 @@ cli:
         la sessió.
     google:
       detail:
-        sync_push_limit_requires_dry_run: La sincronització push de Google no pot
-          usar --límit llevat que --dry-run estigui activat, perquè una execució real
-          acotada crearia un manifest remot parcial.
+        sync_push_limit_requires_dry_run: La sincronització de dades cap a Google
+          només admet --limit amb --dry-run, perquè una execució real limitada crearia
+          un manifest remot parcial.
       errors:
         auth_failed: 'L''autenticació amb Google ha fallat: {detail}'
         browser_open: 'No s''ha pogut obrir un navegador per autoritzar l''accés a

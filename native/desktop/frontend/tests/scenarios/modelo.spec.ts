@@ -335,24 +335,6 @@ test("the check lists every finding under its level, in plain words only", async
   }
 });
 
-/** What the catalogue says of one calculation note: its own sentence with its
- * values, and the kind of thing it is. */
-const noteWords = (
-  note: (typeof ASSET_NOTES)[number],
-  language: Language = "en",
-) => ({
-  fact: label(
-    `application.modelo.calc_diagnostic_fact.${note.fact.sentence}`,
-    Object.fromEntries(note.fact.values),
-    language,
-  ),
-  kind: label(
-    `application.modelo.calc_diagnostic.${note.reason}.what`,
-    {},
-    language,
-  ),
-});
-
 test("the check draws each asset note as its own line to read, asking for nothing and counting nothing", async ({
   page: target,
 }) => {
@@ -365,10 +347,9 @@ test("the check draws each asset note as its own line to read, asking for nothin
   // Two elements with a gap of one kind are two lines, each stating its own
   // element and dates, and the kind of thing it is as the second line.
   for (const note of ASSET_NOTES) {
-    const words = noteWords(note);
-    const item = level.getByRole("listitem").filter({ hasText: words.fact });
+    const item = level.getByRole("listitem").filter({ hasText: note.message });
     await expect(item).toHaveCount(1);
-    await expect(item).toContainText(words.kind);
+    await expect(item).toContainText(note.detail);
     // It leads nowhere to fill, and it is not a button to press.
     await expect(item.getByRole("button")).toHaveCount(0);
   }
@@ -870,10 +851,9 @@ for (const language of LANGUAGES) {
     await expect(items).toHaveCount(ASSET_NOTES.length);
     // Each note is its own item: its sentence with its values, then its kind.
     for (const note of ASSET_NOTES) {
-      const words = noteWords(note, language);
-      const item = items.filter({ hasText: words.fact });
+      const item = items.filter({ hasText: note.message });
       await expect(item).toHaveCount(1);
-      await expect(item).toContainText(words.kind);
+      await expect(item).toContainText(note.detail);
     }
     await expect(notes.getByRole("button")).toHaveCount(0);
     // No catalogue key and no unfilled value reaches the filer.

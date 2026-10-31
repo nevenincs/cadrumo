@@ -5,6 +5,9 @@ from __future__ import annotations
 from collections import Counter
 from collections.abc import Mapping, Sequence
 
+from cadrumo.core.aggregation import BindingAggregationOp
+from cadrumo.domain.calculations.registry.binding_aggregation import binding_aggregation_op
+from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
 from cadrumo.domain.calculations.registry.schema_exports import (
     ExportRecordDefinition,
 )
@@ -16,6 +19,7 @@ from cadrumo.domain.calculations.registry.schema_form_layouts import (
     FormGridBlock,
     FormGridColumn,
     FormGridRow,
+    FormPageDefinition,
     FormRepeatingColumn,
     FormRepeatingGroupBlock,
     FormRepeatingRowSource,
@@ -320,3 +324,58 @@ def _repeating_record_block(build: _Build, record: ExportRecordDefinition, block
         export_record_id=record.id,
         columns=tuple(columns),
     )
+
+
+def _row_column_groups(build: _Build) -> dict[str, list[tuple[str, str]]]:
+    """Group the row columns of each per-item record, as binding and box pairs in declared order."""
+    groups: dict[str, list[tuple[str, str]]] = {}
+    for binding in build.revision.bindings:
+        selector = selector_as_dict(binding)
+        record, grouping, casilla_id = (selector.get(key) for key in ("record", "grouping", "target_casilla_id"))
+        if binding_aggregation_op(binding) is BindingAggregationOp.ROWS and record and grouping and casilla_id:
+            groups.setdefault(str(record), []).append((binding.id, str(casilla_id)))
+    return groups
+
+
+def _row_column_block(build: _Build, record: str, columns: list[tuple[str, str]]) -> FormRepeatingGroupBlock:
+    return FormRepeatingGroupBlock(
+        id=node_slug(f"{record}-rows"),
+        row_source=FormRepeatingRowSource.ROW_SET_BINDING,
+        binding_id=columns[0][0],
+        columns=tuple(
+            FormRepeatingColumn(
+                key=f"box-{casilla_id}",
+                heading_key=_column_heading_key(build.modelo_id, f"box-{casilla_id}"),
+                casilla_id=casilla_id,
+                binding_id=binding_id,
+            )
+            for binding_id, casilla_id in columns
+        ),
+    )
+
+
+def _with_row_column_groups(build: _Build, pages: list[FormPageDefinition]) -> list[FormPageDefinition]:
+    """Open each per-item record's rows beside the box that holds their total; the box itself stays."""
+    result = list(pages)
+    for record, columns in _row_column_groups(build).items():
+        boxes = {casilla_id for _binding_id, casilla_id in columns}
+        for page_index, page in enumerate(result):
+            target = next(
+                (
+                    index
+                    for index, section in enumerate(page.sections)
+                    if any(isinstance(block, FormFieldBlock) and block.casilla_id in boxes for block in section.blocks)
+                ),
+                None,
+            )
+            if target is None:
+                continue
+            section = page.sections[target]
+            opened = section.model_copy(
+                update={"blocks": (*section.blocks, _row_column_block(build, record, columns))},
+            )
+            result[page_index] = page.model_copy(
+                update={"sections": (*page.sections[:target], opened, *page.sections[target + 1 :])},
+            )
+            break
+    return result

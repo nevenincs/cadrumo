@@ -32874,8 +32874,8 @@
         "closes_on": "2027-01-30",
         "nominal_closes_on": "2027-01-30",
         "holiday_coverage": "calendar_unavailable",
-        "reference_on": "2026-10-27",
-        "days_remaining": 95,
+        "reference_on": "2026-10-31",
+        "days_remaining": 91,
         "days_overdue": null
       },
       "aeat_data": null,
@@ -32912,8 +32912,8 @@
     "attention": [],
     "result": null,
     "deadline": {
-      "text": "Plazo hasta el 30/01/2027 · días restantes: 95",
-      "short_text": "Plazo hasta el 30/01/2027 · días restantes: 95",
+      "text": "Plazo hasta el 30/01/2027 · días restantes: 91",
+      "short_text": "Plazo hasta el 30/01/2027 · días restantes: 91",
       "tone": "normal",
       "help": null
     },

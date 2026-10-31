@@ -53,10 +53,10 @@ def test_two_sales_fill_two_rows_each_with_its_own_gain(revision_id: str) -> Non
 
     gain = next(binding_id for binding_id in activity_asset_disposal_row_binding_ids(revision) if "gain" in binding_id)
     clave = next(binding_id for binding_id in activity_asset_disposal_row_binding_ids(revision) if "type" in binding_id)
-    assert values[(gain, 0)] == Decimal("100.00")
-    assert values[(gain, 1)] == Decimal("250.00")
-    assert identities[(gain, 1)] == "sale-b"
-    assert values[(clave, 0)] == values[(clave, 1)] == "5"
+    assert values[(gain, 1)] == Decimal("100.00")
+    assert values[(gain, 2)] == Decimal("250.00")
+    assert identities[(gain, 2)] == "sale-b"
+    assert values[(clave, 1)] == values[(clave, 2)] == "5"
 
 
 def test_a_column_a_sale_has_no_value_for_stays_off_its_row() -> None:
@@ -66,7 +66,7 @@ def test_a_column_a_sale_has_no_value_for_stays_off_its_row() -> None:
         (_Sale("sale-a", {ActivityAssetDisposalRowField.GAIN: Decimal("1.00")}),),
     )
     loss = next(binding_id for binding_id in activity_asset_disposal_row_binding_ids(revision) if "loss" in binding_id)
-    assert (loss, 0) not in values
+    assert (loss, 1) not in values
 
 
 def test_the_columns_move_no_scalar_total() -> None:

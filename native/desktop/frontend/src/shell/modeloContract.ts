@@ -328,12 +328,20 @@ export type BundleVerificationState =
  * A note's reason says what kind of thing was noticed, and several notes can
  * share a reason. This says which row, element, interval and amount this one
  * is about, so what was known at calculation stays readable in every language
- * after the process that calculated it has gone. Values are text the sentence
- * prints as they stand.
+ * after the process that calculated it has gone. Values are the sentence's
+ * dates, amounts and box.
+ *
+ * A fact is part of its revision's identity, and an element's name is not a
+ * tax fact, so `element_refs` holds which elements it speaks of and the name
+ * is read when the note is shown: renaming an element moves no revision.
+ * `row_refs` keeps two rows of one date and amount apart; neither is ever
+ * shown.
  */
 export type CalculationNoteFact = {
   sentence: CalculationNoteSentence;
   values: [string, string][];
+  element_refs: string[];
+  row_refs: string[];
 };
 
 /**
@@ -349,7 +357,9 @@ export type CalculationNoteSentence =
   | "agrarian_excluded"
   | "residence_period_unknown"
   | "row_unregistered"
+  | "row_unregistered_undated"
   | "register_owned_acquisition"
+  | "register_owned_acquisition_undated"
   | "possibly_durable_expense"
   | "register_row_missing"
   | "register_cost_exceeds_paid"
@@ -517,6 +527,7 @@ export type CalculationSourceDiagnosticSnapshot = {
   resolver_id: string | null;
   source_ref: string | null;
   fact: CalculationNoteFact | null;
+  element_names: [string, string][];
   binding_id: BindingId | null;
   relation_id: RelationId | null;
   relation_ids: RelationId[];
@@ -4278,6 +4289,7 @@ export type ModeloFormCalculationNote = {
   box: string | null;
   withholds_filing: boolean;
   fact: CalculationNoteFact | null;
+  element_names: [string, string][];
 };
 
 /**
@@ -7957,6 +7969,9 @@ export type ReconciliationExportXlsxRequest = {
 export type RecordedCalculationNote = {
   reason: string;
   fact: CalculationNoteFact;
+  element_names: [string, string][];
+  message: string;
+  detail: string;
 };
 
 /**

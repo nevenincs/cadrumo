@@ -221,6 +221,30 @@ def _has_projection_fields(block: FormRepeatingGroupBlock) -> bool:
     return any(column.export_field_id is not None for column in block.columns)
 
 
+def _saved_row_column_records(
+    snapshot: RegistrySnapshot,
+    revision: CalculationRevision,
+    block: FormRepeatingGroupBlock,
+) -> tuple[bool, tuple[ModeloFormRepeatingRow, ...]]:
+    """Read a group whose columns each name the row binding they show.
+
+    A box total with no rows behind it comes from a calculation saved before the rows were
+    recorded, so those rows stay unknown rather than read as none.
+    """
+    columns = tuple(column for column in block.columns if column.binding_id is not None and column.casilla_id)
+    if not columns:
+        return False, ()
+    data_types = {casilla.id: str(casilla.data_type) for casilla in snapshot.revision.casillas}
+    by_row: dict[int, dict[str, ModeloFormScalar]] = {}
+    for column in columns:
+        for index, raw in revision.row_binding_values.get(str(column.binding_id), {}).items():
+            target = str(column.casilla_id)
+            _put_row_value(by_row, int(index), target, _saved_value(raw, data_types.get(target, "text")))
+    if not by_row and any(revision.casilla_values.get(str(column.casilla_id)) for column in columns):
+        return False, ()
+    return True, _rows_from_values(by_row, tuple(column.casilla_id for column in block.columns))
+
+
 def saved_form_records(
     *,
     snapshot: RegistrySnapshot,
@@ -236,8 +260,10 @@ def saved_form_records(
     never renumbered. Detail-row bindings take the same precedence over saved
     row bindings as filing replay; a binding field reads its binding channel.
     """
-    if revision is None or block.row_source is not FormRepeatingRowSource.EXPORT_RECORD:
+    if revision is None:
         return False, ()
+    if block.row_source is FormRepeatingRowSource.ROW_SET_BINDING:
+        return _saved_row_column_records(snapshot, revision, block)
     if _has_projection_fields(block):
         return saved_projection_form_records(snapshot=snapshot, revision=revision, block=block)
     matched = _matching_record(snapshot, block)

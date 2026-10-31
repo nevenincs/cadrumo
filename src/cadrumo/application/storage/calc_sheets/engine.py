@@ -154,7 +154,13 @@ def _guide_paragraphs(snapshot: RegistrySnapshot) -> tuple[str, ...]:
             period=snapshot.period,
             filing_year=snapshot.filing_year,
         ),
-        tr("application.storage.calc_sheets.engine.guide.editable_cells"),
+        tr(
+            "application.storage.calc_sheets.engine.guide.editable_cells",
+            inputs_tab=TabName.ENTRADAS.value,
+            calculations_tab=TabName.CALCULOS.value,
+            provenance_tab=TabName.PROVENANCE.value,
+            tariffs_tab=TabName.TARIFFS.value,
+        ),
     )
     if snapshot.filing_period is not None:
         return (*paragraphs, tr("application.storage.calc_sheets.engine.guide.pull_command"))
@@ -838,7 +844,7 @@ def _anchors(layout: SheetLayout) -> tuple[SheetAnchor, ...]:
             SheetAnchor(
                 address=SheetCellAddress.at(first.tab, first.row, 6),
                 kind="start",
-                label=tr("application.storage.calc_sheets.engine.anchors.start"),
+                label=tr("application.storage.calc_sheets.engine.anchors.start", inputs_tab=first.tab.value),
             ),
         )
     if layout.calculos_rows:

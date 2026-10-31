@@ -18,11 +18,6 @@ review_status = "agent_reviewed"
 reviewed_by = "codex-agent-source-review-pending-operator"
 reviewed_at = 2026-10-08
 
-[revisions."2026-hasta-01-y-1t".family_dispositions.applicability]
-reason = "The prior printed annex applies to January/Q1 2026; the 2026 record design independently governs all 2026 presentations. Filing cadence remains declared by filing_schedules and orden_aplicabilidad."
-legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["boe-modelo-303-2024-form-pdf", "boe-modelo-303-2026-form-pdf", "aeat-dr-303-2026"]
-
 # DP30303 box112 Nota2: "Sólo para periodo 02 y siguientes".
 # BOE-A-2026-1761 final provision: first February or Q2 2026.
 # Its 2026 transport slot remains present; early-period nonzero deduction is refused.

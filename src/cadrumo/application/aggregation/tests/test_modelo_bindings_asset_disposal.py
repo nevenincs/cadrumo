@@ -365,38 +365,43 @@ def _two_sales(*, second_proceeds: str) -> ActivityAssetHistory:
     )
 
 
-def _shared_row_facts(resolution: CalculationSourceResolution) -> dict[str, dict[str, str]]:
-    return {
-        item.fact.element_refs[0]: dict(item.fact.values)
+def _row_values(resolution: CalculationSourceResolution, box: str) -> dict[int, object]:
+    return {index: value for (binding, index), value in resolution.row_binding_values.items() if binding.endswith(box)}
+
+
+def _shared_row_notes(resolution: CalculationSourceResolution) -> list[str]:
+    return [
+        item.fact.element_refs[0]
         for item in resolution.diagnostics
         if item.fact is not None and item.fact.sentence is CalculationNoteSentence.DISPOSAL_SHARED_ROW
-    }
+    ]
 
 
-def test_a_gain_and_a_loss_that_share_the_row_are_each_stated_for_a_row_of_their_own() -> None:
+def test_a_gain_and_a_loss_each_take_a_row_of_their_own() -> None:
     # Net value 12,000 - 297.53 = 11,702.47: 12,000 gains 297.53 and 10,000 loses 1,702.47.
     resolution = resolve_m100(_two_sales(second_proceeds="10000.00"))
 
-    facts = _shared_row_facts(resolution)
-
     assert _boxes(resolution) == {"1654": Decimal("297.53"), "1639": Decimal("1702.47")}
-    assert facts["first"]["amount"] == "297.53"
-    assert facts["first"]["box"] == "1654"
-    assert facts["first"]["transmission_value"] == "12000.00"
-    assert facts["first"]["net_value"] == "11702.47"
-    assert facts["first"]["date"] == "2025-06-30"
-    assert facts["first"]["count"] == "2"
-    assert facts["second"]["amount"] == "1702.47"
-    assert facts["second"]["transmission_value"] == "10000.00"
+    assert _row_values(resolution, "1654") == {1: Decimal("297.53")}
+    assert _row_values(resolution, "1639") == {2: Decimal("1702.47")}
+    assert _row_values(resolution, "1633") == {1: Decimal("12000.00"), 2: Decimal("10000.00")}
+    assert _row_values(resolution, "1637") == {1: Decimal("11702.47"), 2: Decimal("11702.47")}
+    assert _row_values(resolution, "1631")[1] == "2025-06-30"
+    assert set(_row_values(resolution, "1626")) == {1, 2}
+    assert set(resolution.row_source_identities) == set(resolution.row_binding_values)
+    assert _shared_row_notes(resolution) == []
     assert _blocks(resolution) == set()
 
 
-def test_two_gains_keep_their_sum_for_the_forms_total_and_each_is_still_stated() -> None:
+def test_two_gains_keep_their_sum_for_the_forms_total_and_each_has_its_row() -> None:
     resolution = resolve_m100(_two_sales(second_proceeds="12000.00"))
 
     assert _boxes(resolution) == {"1654": Decimal("595.06")}
-    assert set(_shared_row_facts(resolution)) == {"first", "second"}
+    assert _row_values(resolution, "1654") == {1: Decimal("297.53"), 2: Decimal("297.53")}
+    assert _shared_row_notes(resolution) == []
 
 
-def test_one_sale_has_its_row_and_needs_no_such_statement() -> None:
-    assert _shared_row_facts(resolve_m100(disposed_asset_history())) == {}
+def test_one_sale_has_its_row() -> None:
+    resolution = resolve_m100(disposed_asset_history())
+    assert _row_values(resolution, "1633")
+    assert _shared_row_notes(resolution) == []

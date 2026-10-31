@@ -20,7 +20,7 @@ msgstr ""
 
 #: ../../how-to/irpf-lifecycle.md:1
 msgid "The income-tax year: four instalments and the annual Renta"
-msgstr "A jövedelemadó-év: négy előleg és az éves Renta"
+msgstr "A jövedelemadó-év: négy előleg és az éves jövedelemadó-bevallás"
 
 #: ../../how-to/irpf-lifecycle.md:3
 msgid ""
@@ -32,9 +32,10 @@ msgid ""
 msgstr ""
 "Ez az oldal egy teljes IRPF-évet mutat be egy példaadózó számára: négy "
 "negyedéves Modelo 130 előleget, amelyek egymásra épülnek, és az éves "
-"Modelo 100 Renta-bevallással zárulnak, amely az egész évet összefogja. "
-"Üres tárolóból indul; a végére előkészíti és benyújtja az összes IRPF-"
-"benyújtást, amelyet az év egy önálló vállalkozó tanácsadótól megkövetel."
+"Modelo 100 jövedelemadó-bevallással zárulnak, amely az egész évet "
+"összefogja. Üres tárolóból indul; a végére előkészíti és benyújtja az "
+"összes IRPF-benyújtást, amelyet az év egy önálló vállalkozó tanácsadótól "
+"megkövetel."
 
 #: ../../how-to/irpf-lifecycle.md:9
 msgid ""
@@ -45,8 +46,8 @@ msgid ""
 msgstr ""
 "A Cadrumo (az `aeat` parancs) helyi fájlokat készít a spanyol "
 "adónyomtatványokhoz. Nem nyújtja be őket az Agencia Estatal de "
-"Administración Tributaria (AEAT) részére. A Modelo 130-hoz helyi fichero-"
-"BOE fájlt ír, amelyet az AEAT-portálon nyújtasz be."
+"Administración Tributaria (AEAT) részére. A Modelo 130-hoz helyi BOE-"
+"formátumú fájlt ír, amelyet az AEAT-portálon nyújtasz be."
 
 #: ../../how-to/irpf-lifecycle.md:14
 msgid ""
@@ -57,12 +58,12 @@ msgid ""
 "lifecycle.md) - the two run-throughs describe the same business from two "
 "tax angles."
 msgstr ""
-"Ismerd meg a személyt, akit ez a végigfutás követ: Ana García López, egy "
-"tanácsadó (*consultoría*), aki 2026. január 1-jén kezdte meg a "
-"tevékenységét, 21 százalékos IVA-val számláz az ügyfeleinek, és menet "
-"közben irodaszert vásárol. Ugyanez a személy és ugyanazok a "
-"nyilvántartások folytatódnak [Az IVA-év](iva-lifecycle.md) oldalon - a "
-"két végigfutás ugyanazt az üzletet írja le két adóügyi szemszögből."
+"Ismerd meg a végigvezetett példában szereplő személyt: Ana García López, "
+"aki tanácsadóként dolgozik, 2026. január 1-jén kezdte meg tevékenységét, "
+"21 százalékos IVA-val számláz az ügyfeleinek, és menet közben irodaszert "
+"vásárol. Ugyanez a személy és a nyilvántartásai folytatódnak [Az IVA-év"
+"](iva-lifecycle.md) útmutatóban is; a két példa ugyanazt a vállalkozást "
+"mutatja be két adózási szempontból."
 
 #: ../../how-to/irpf-lifecycle.md:20
 msgid ""
@@ -102,8 +103,8 @@ msgid ""
 msgstr ""
 "Hozd létre a profilt az `aeat config profile` paranccsal, az [Állítsd be "
 "az adózói profilodat](profile-setup.md) útmutatójában leírtak szerint. A "
-"dokumentációs sandbox saját profilt hoz létre, ezért ez a létrehozás nem "
-"futtatott példaként szerepel:"
+"dokumentációs tesztkörnyezet saját profilt hoz létre, ezért ez a "
+"létrehozás nem futtatott példaként szerepel:"
 
 #: ../../how-to/irpf-lifecycle.md:40
 msgid ""
@@ -138,10 +139,10 @@ msgid ""
 msgstr ""
 "A naptár 2026-ot fedi le, ezért a Modelo 303 időablakai mellett a Modelo "
 "130 első három negyedévének időablakait (április, július és október) "
-"sorolja fel. A negyedik negyedév januári ablaka és az éves Renta ablaka a"
-" következő évben nyílik, a tartományon kívül. Az `explain` megmutatja, "
-"miért vonatkozik Anára a Modelo 130: estimación directa alá tartozó "
-"tevékenység."
+"sorolja fel. A negyedik negyedév januári ablaka és az éves "
+"jövedelemadó-bevallás ablaka a következő évben nyílik, a tartományon "
+"kívül. Az `explain` megmutatja, miért vonatkozik Anára a Modelo 130: "
+"közvetlen becslési rendszer szerinti tevékenység."
 
 #: ../../how-to/irpf-lifecycle.md:60
 msgid "Stage 2: the first quarter"
@@ -223,9 +224,9 @@ msgid ""
 msgstr ""
 "Az ellenőrzés `completeness_status complete` és "
 "`granted_verificado_completo true` értéket jelez (a fenti sorozat ezt "
-"ellenőrzi). Az `export` kiírja a feltöltésre szánt fichero-BOE fájlt, és "
-"közli az ellenőrzőösszegét. Nem írja felül a meglévő fájlt, hacsak nem "
-"adod meg a `--replace` kapcsolót; lásd: [A benyújtási munkafolyamat"
+"ellenőrzi). Az `export` kiírja a feltöltésre szánt BOE-formátumú fájlt, "
+"és közli az ellenőrzőösszegét. Nem írja felül a meglévő fájlt, hacsak nem"
+" adod meg a `--replace` kapcsolót; lásd: [A benyújtási munkafolyamat"
 "](filing-spine.md)."
 
 #: ../../how-to/irpf-lifecycle.md:97
@@ -282,16 +283,18 @@ msgid ""
 "Box `01` (ingresos) now covers January through June - the records used "
 "for `2T` are the year to date, not the quarter alone."
 msgstr ""
-"A `01` rovat (ingresos) most januártól júniusig terjed - a `2T` esetén "
-"használt nyilvántartások az év eleji halmozottak, nem csak a negyedévé."
+"A `01` rovat (bevételek) a januártól júniusig terjedő időszakot fedi le: "
+"a `2T` esetén figyelembe vett adatok az év elejétől halmozódnak, tehát "
+"nem csak a negyedévre vonatkoznak."
 
 #: ../../how-to/irpf-lifecycle.md:124
 msgid ""
 "Box `05` (pagos fraccionados anteriores) carries the instalment you paid "
 "in the first quarter, read from your own recorded filing."
 msgstr ""
-"A `05` rovat (pagos fraccionados anteriores) hordozza az első negyedévben"
-" befizetett előleget, a saját, rögzített benyújtásodból kiolvasva."
+"A `05` rovat (korábbi negyedéves adóelőlegek) tartalmazza az első "
+"negyedévben befizetett előleget; az adat a saját, rögzített bevallásodból"
+" származik."
 
 #: ../../how-to/irpf-lifecycle.md:126
 msgid "If an earlier quarter had ended negative, box `15` would offset it here."
@@ -357,7 +360,7 @@ msgstr "Bármikor ellenőrizd az év IRPF-helyzetét:"
 
 #: ../../how-to/irpf-lifecycle.md:153
 msgid "Stage 5: the annual Renta declaration"
-msgstr "5. szakasz: az éves Renta-bevallás"
+msgstr "5. szakasz: az éves jövedelemadó-bevallás"
 
 #: ../../how-to/irpf-lifecycle.md:155
 msgid ""
@@ -401,10 +404,10 @@ msgstr ""
 " vagy AEAT-igazolás. A bevallás négyféle forrásból áll össze: Ana "
 "profiladatai, az év osztályozott nyilvántartásai, a négy benyújtottként "
 "rögzített előleg (előlegfizetésként bevonva) és bármely átvitt érték egy "
-"korábbi Rentából. A munkaviszonyból vagy tőkéből származó, a "
-"nyilvántartásaidból nem megismerhető jövedelem kézi rovatokban adható "
-"meg; a szükséges rovatokat a `bindings list --missing` paranccsal "
-"találhatod meg:"
+"korábbi jövedelemadó-bevallásból. A munkaviszonyból vagy tőkéből "
+"származó, a nyilvántartásaidból nem megismerhető jövedelem kézi "
+"rovatokban adható meg; a szükséges rovatokat a `bindings list --missing` "
+"paranccsal találhatod meg:"
 
 #: ../../how-to/irpf-lifecycle.md:180
 msgid ""
@@ -414,7 +417,7 @@ msgid ""
 msgstr ""
 "Azt, hogy minden érték hogyan érkezik, és hogyan vezethető vissza bármely"
 " szám a szabályára és a törvénycikkére, az [Elmélyülés: hogyan áll össze "
-"a Renta-bevallás](../explanation/how-renta-is-assembled.md) oldal "
+"a jövedelemadó-bevallás](../explanation/how-renta-is-assembled.md) oldal "
 "tárgyalja."
 
 #: ../../how-to/irpf-lifecycle.md:184
@@ -457,15 +460,15 @@ msgstr ""
 
 #: ../../how-to/irpf-lifecycle.md:197
 msgid "[Prepare the annual Modelo 100 Renta declaration](modelo-100.md)"
-msgstr "[Az éves Modelo 100 Renta-bevallás előkészítése](modelo-100.md)"
+msgstr "[Az éves Modelo 100 jövedelemadó-bevallás előkészítése](modelo-100.md)"
 
 #: ../../how-to/irpf-lifecycle.md:198
 msgid ""
 "[Deep dive: how the Renta declaration is assembled](../explanation/how-"
 "renta-is-assembled.md)"
 msgstr ""
-"[Elmélyülés: hogyan áll össze a Renta-bevallás](../explanation/how-renta-"
-"is-assembled.md)"
+"[Elmélyülés: hogyan áll össze a jövedelemadó-bevallás](../explanation"
+"/how-renta-is-assembled.md)"
 
 #: ../../how-to/irpf-lifecycle.md:199
 msgid "[Diagnose and repair your local setup](troubleshooting.md)"

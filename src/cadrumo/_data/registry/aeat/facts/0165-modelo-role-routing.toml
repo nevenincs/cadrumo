@@ -1,0 +1,33 @@
+[fact]
+fact_id = "modelo-role-routing"
+family = "mapping"
+
+# Which form holds each role the code asks about, and which forms a rule covers. Each key
+# is a question the application asks; the forms answering it are the registry's.
+[[fact.variants]]
+variant_id = "modelo-role-routing:design"
+date_axis = "filing_period"
+legal_refs = ["ley-37-1992:art-164", "ley-35-2006:art-99", "rd-439-2007:art-109"]
+source_refs = ["aeat-modelo-303-procedure"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["303"]
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "iva.periodic", value = "303" },
+  { key = "iva.annual_summary", value = "390" },
+  { key = "renta.annual", value = "100" },
+  { key = "renta.direct_instalment", value = "130" },
+  { key = "renta.objective_instalment", value = "131" },
+  { key = "withholding.lease_annual", value = "180" },
+  { key = "renta_income_ledger.modelos", value = "100,130,131" },
+  { key = "filed_declaration_reconciliation.modelos", value = "100,111,130,190,303,390" },
+  { key = "pre_activity_lifecycle.modelos", value = "130,303" },
+  { key = "invoice_ledger_screen.modelos", value = "303,390" },
+  { key = "capital_goods_regularization.modelos", value = "303,390" },
+]

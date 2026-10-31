@@ -40,7 +40,6 @@ import {
   type ModeloWorkbenchFormProjectionV1,
   type PublicModeloFormField,
   type OutputLanguage,
-  type RecordedCalculationNote,
 } from "../shell/modeloContract";
 import { translator } from "../shell/strings";
 import { ASSET_NOTES } from "./modeloAssetNotes";
@@ -133,15 +132,8 @@ const reject = (
   throw new Refusal({ code, operation_id: null, ...extra });
 };
 
-/** The sentence a note has in the catalogue, with its values. */
-const noteWords = (language: OutputLanguage, note: RecordedCalculationNote) =>
-  translator(language)(
-    `application.modelo.calc_diagnostic_fact.${note.fact.sentence}`,
-    Object.fromEntries(note.fact.values),
-  );
-
 /** A form read after its calculation kept asset notes: each is a line to
- * check, worded as the catalogue words it, and a note of the form. */
+ * check, as the backend words it, and a note of the form. */
 function withAssetNotes(
   form: ModeloWorkbenchFormProjectionV1,
   language: OutputLanguage,
@@ -155,9 +147,9 @@ function withAssetNotes(
         level: "check",
         box: null,
         where: null,
-        message: noteWords(language, note),
+        message: note.message,
         action: t("workspace.modelo.notes.lead"),
-        detail: t(`application.modelo.calc_diagnostic.${note.reason}.what`),
+        detail: note.detail,
         technical: note.reason,
         address: null,
         in_records: false,

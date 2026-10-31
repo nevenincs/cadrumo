@@ -2108,17 +2108,17 @@ application:
       engine:
         anchors:
           final: RESULT
-          start: 'START: Entradas'
+          start: 'START: %{inputs_tab}'
         errors:
           parameter_no_dated_value: The spreadsheet export engine could not find a
             parameter value valid for the filing date.
           unsupported_rounding: The spreadsheet export engine found a rounding rule
             in the modelo definitions that it does not support.
         guide:
-          editable_cells: 'Edit only the cells in the ''Entradas'' tab. The other
-            tabs are protected: ''Cálculos'' contains derived formula cells, ''Procedencia''
-            audits each calculated casilla, and ''Tarifas'' mirrors the active parameters
-            used by formulas.'
+          editable_cells: 'Edit only the cells in the ''%{inputs_tab}'' tab. The other
+            tabs are protected: ''%{calculations_tab}'' contains derived formula cells,
+            ''%{provenance_tab}'' audits each calculated casilla, and ''%{tariffs_tab}''
+            mirrors the active parameters used by formulas.'
           period: '%{modelo_title} - period %{period} / %{filing_year}.'
           pull_command: Spreadsheet edits are not imported into the Cadrumo profile;
             review the changes and enter them in Cadrumo.
@@ -2147,8 +2147,8 @@ application:
           tariffs: Tariffs / active parameters - protected
       form:
         communication_caption: Information form · change inputs in their source sheets
-        communication_guide: Change the data in Entradas. Modelo displays the communication;
-          it does not calculate withholding.
+        communication_guide: Change the data in %{inputs_tab}. Modelo displays the
+          communication; it does not calculate withholding.
         reported_data_caption: Reported data · edit the inputs in the source sheets
       layout:
         errors:

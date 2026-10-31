@@ -19,6 +19,7 @@ from ...iva.schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind
 from .binding_selector_utils import provider_member
 from .binding_targets import casillas_by_binding
 from .errors import RegistryValidationError
+from .form_codes import form_for_role, forms_for_role
 from .ids import BindingId
 from .iva_category_catalogue import resolve_iva_category_catalogue
 from .iva_rate_kind_catalogue import resolve_iva_rate_kind_catalogue
@@ -58,7 +59,7 @@ _INVOICE_LEDGER_SCREEN_FACTS = frozenset(
         LedgerIvaFact.RECARGO_AMOUNT_SUM,
     },
 )
-_INVOICE_LEDGER_SCREEN_MODELOS = frozenset({"303", "390"})
+_INVOICE_LEDGER_SCREEN_ROLE = "invoice_ledger_screen.modelos"
 
 
 def _invoice_ledger_screen_rate_slots(effective_date: date) -> tuple[_InvoiceLedgerScreenShape, ...]:
@@ -157,7 +158,7 @@ def _is_conceptual_invoice_screen_rung(
     modelo: str,
 ) -> bool:
     if selector.applied_rates is not None:
-        if modelo != "303":
+        if modelo != form_for_role("iva.periodic"):
             return False
         target_ids = casillas_by_binding(revision).get(binding.id, ())
         if not target_ids:
@@ -242,7 +243,7 @@ def invoice_ledger_screen_bindings(
     Core types:
     :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
     """
-    if modelo not in _INVOICE_LEDGER_SCREEN_MODELOS:
+    if modelo not in forms_for_role(_INVOICE_LEDGER_SCREEN_ROLE):
         return ()
 
     rate_slots = _invoice_ledger_screen_rate_slots(revision.valid_from)

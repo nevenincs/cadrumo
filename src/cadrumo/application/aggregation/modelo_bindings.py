@@ -35,7 +35,6 @@ from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.i18n.translatable import Translatable as tr
 from ...core.irnr import M210GrossIncomeSourceMode
-from ...core.modelo import Modelo
 from ...core.period import Period, PeriodError, StandardPeriodCode
 from ...core.tipos_actividad import TipoActividad
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -44,6 +43,7 @@ from ...domain.calculations.registry.binding_temporal import NonCalculation
 from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from ...domain.calculations.registry.errors import RegistryError
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
+from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.irnr_ledger_bindings import (
     LedgerIrnrIncomeProvider,
@@ -249,7 +249,7 @@ class LedgerRentaIncomeAggregationSourceResolver:
             activity_category_matcher = _activity_category_matcher(operation)
             employment_category_matcher = _employment_category_matcher(operation)
             try:
-                if context.modelo == Modelo("100").value:
+                if context.modelo == form_for_role("renta.annual"):
                     aggregation = aggregate_renta_m100_income_ledger_from_repositories(
                         bucket_id=context.bucket_id,
                         period=aggregation_period,
@@ -259,7 +259,7 @@ class LedgerRentaIncomeAggregationSourceResolver:
                         employment_category_matcher=employment_category_matcher,
                         ports=self._ports,
                     )
-                elif context.modelo == Modelo("131").value:
+                elif context.modelo == form_for_role("renta.objective_instalment"):
                     agrarian_activity_codes = frozenset(
                         TipoActividad(code)
                         for code in tipo_actividad_code_set(
@@ -291,7 +291,7 @@ class LedgerRentaIncomeAggregationSourceResolver:
                     )
                 disposal_excess = (
                     ()
-                    if context.modelo == Modelo("100").value
+                    if context.modelo == form_for_role("renta.annual")
                     else activity_asset_disposal_excess(
                         self._activity_asset_history_repository.load(),
                         context=context,
@@ -318,7 +318,7 @@ class LedgerRentaIncomeAggregationSourceResolver:
     ) -> CalculationSourceResolution:
         declared_excess = (
             tuple(row for row in disposal_excess if not row.agrarian and row.error is None)
-            if context.modelo == Modelo("130").value
+            if context.modelo == form_for_role("renta.direct_instalment")
             else ()
         )
         binding_values = resolve_ledger_renta_income_aggregation_binding_values(
@@ -416,7 +416,7 @@ class LedgerRentaIncomeAggregationSourceResolver:
             )
             + (
                 activity_asset_disposal_excess_m131_findings(disposal_excess, resolver_id=self.resolver_id)
-                if context.modelo == Modelo("131").value
+                if context.modelo == form_for_role("renta.objective_instalment")
                 else ()
             ),
             provenance=tuple(

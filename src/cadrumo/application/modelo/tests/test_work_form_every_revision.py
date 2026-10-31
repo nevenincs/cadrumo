@@ -103,11 +103,13 @@ def _form(operation: PinnedAuthorityOperation, modelo: str, year: int, code: str
 def _shown_casillas(form: ModeloWorkForm) -> list[str]:
     """Every casilla a form accounts for: fields, repeating-group columns, working figures and unplaced boxes."""
     shown = [key[1] for key in (address_key(field.address) for field in form.fields()) if key[0] == "casilla"]
+    # A repeating group may open the rows behind a box the form already shows as their total.
+    fields = set(shown)
     for page in form.pages:
         for section in page.sections:
             for block in section.blocks:
                 if isinstance(block, ModeloFormRepeatingBlock):
-                    shown.extend(casilla for casilla in block.column_casilla_ids if casilla is not None)
+                    shown.extend(casilla for casilla in block.column_casilla_ids if casilla not in {None, *fields})
     return shown
 
 

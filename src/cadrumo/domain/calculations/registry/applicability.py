@@ -49,13 +49,10 @@ withholding-payer facts, trade thresholds). The engine routing contract
 does not treat pass-through income taxation as an exemption from
 non-income-tax obligations.
 
-**Canonical applicability authority — modelo level.**
-:data:`MODELO_APPLICABILITY_RULES` is the single canonical source for
-modelo-level applicability. Any question of the form "does this
-taxpayer ever owe this modelo?" is answered here. Code that derives
-applicability verdicts MUST read from this table; it MUST NOT
-re-implement the logic in another module or maintain a parallel copy
-of the rules dict.
+**Canonical applicability authority: modelo level.**
+The rule a revision declares in the registry is the single source for modelo-level
+applicability. Any question of the form "does this taxpayer ever owe this modelo?" is
+answered through :func:`derive_modelo_applicability`; code does not hold a second copy.
 
 **Relation to ``applicability_conditions`` on ``ModeloDeadlineWindow``.**
 ``ModeloDeadlineWindow`` carries a
@@ -70,27 +67,16 @@ confirms the modelo applies at all; it never overrides the modelo-level
 verdict. Adding a condition to a deadline window does not affect the
 ``ApplicabilityVerdict`` returned by :func:`derive_modelo_applicability`.
 
-Every rule carries ``legal_refs`` — scoped registry citation keys in
-the ``law-slug:art-N`` form (e.g. ``ley-35-2006:art-99``) that resolve
-against ``src/cadrumo/_data/registry/aeat/legal/*.toml`` — per
-``.claude/rules/aeat-calculation-grounding.md``: applicability is
-regulatory data and must be registry-grounded, and every typed-ID
-reference must point at an existing registry entity. The seed table
-below covers the core modelo set an ordinary taxpayer encounters —
-the IRPF Renta and pago-fraccionado modelos (100 / 130 / 131), the
-corporate IS modelos (200 / 202), the IVA modelos (303 / 390), the
-retención modelos and their annual companions (111 / 190, 115 / 180),
-the operaciones modelos (349 / 347), and the attribution-entity
-informational Modelo 184. Per-entity / per-regime expansion to the
-remaining registered modelos is intentionally deferred; a modelo with no
-seed rule is reported INCOMPLETE with a rationale that says so.
+Every rule carries ``legal_refs``: scoped registry citation keys in the ``law-slug:art-N``
+form that resolve against the legal tables of the registry. A modelo whose revisions declare
+no rule is reported INCOMPLETE with a rationale that says so.
 """
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Iterator, Mapping
+from collections.abc import Iterable, Mapping
 from datetime import date
-from typing import TYPE_CHECKING, Final, override
+from typing import TYPE_CHECKING, Final
 
 if TYPE_CHECKING:
     from .authority import PinnedAuthorityOperation, ValidatedRegistryAuthority
@@ -101,7 +87,6 @@ from ....core.modelo import Modelo
 from ....core.time.clock import today_madrid
 from ...contribuyente.entity_type import (
     entity_type_natural_person_token,
-    entity_type_tokens,
     require_entity_type,
 )
 from ...contribuyente.renta_codes import FiscalResidency
@@ -133,10 +118,7 @@ from .irpf_income_categories import (
     require_irpf_income_category,
 )
 from .irpf_regimes import require_irpf_estimation_regime
-from .iva_regime_vocabulary import (
-    iva_regime_self_assessment_tokens,
-    require_iva_regime,
-)
+from .iva_regime_vocabulary import require_iva_regime
 from .schema_revision_members import ApplicabilityExclusionDefinition, ApplicabilityRuleDefinition
 from .third_party_declaration_roles import resolve_third_party_declaration_role_catalogue
 
@@ -265,95 +247,6 @@ _IMPATRIADO_M151_NOT_APPLICABLE_REASON_LOCALE_KEY = "filing.applicability.impatr
 """``NOT_APPLICABLE`` rationale for M151 outside the active Art. 93 window."""
 
 
-# ---------------------------------------------------------------------
-# Seed rule table — core persona coverage, deliberately narrow
-# ---------------------------------------------------------------------
-#
-# Every rule below is grounded against the registry legal tables for the
-# taxpayer-type applicability model. Citation keys are scoped registry
-# keys (``law-slug:art-N``) that resolve against
-# ``src/cadrumo/_data/registry/aeat/legal/*.toml`` — never URLs, never
-# invented slugs. Full per-entity / per-regime coverage of every
-# registered modelo is a deferred expansion.
-
-
-def _iva_seed_applicability_rule(modelo: str) -> ModeloApplicabilityRule:
-    """Build an IVA seed rule from the governed facts in the active scope.
-
-    These rules remain Python-authored until their export fragments migrate to
-    the registry, but none of their governed vocabulary may be captured at
-    module import. Development validation can compile several candidates in
-    one process; resolving here makes each lookup observe that candidate's
-    fact scope instead of the first candidate that happened to import this
-    module.
-    """
-    if modelo == "390":
-        return ModeloApplicabilityRule(
-            modelo=modelo,
-            applicable_entity_types=frozenset(entity_type_tokens()),
-            required_income_categories=frozenset({irpf_income_category_actividad_economica_token()}),
-            applicable_iva_regimes=iva_regime_self_assessment_tokens(),
-            applicable_reason=(
-                "Modelo 390 (resumen anual del IVA): el contribuyente realiza "
-                "una actividad económica sujeta al IVA y presenta la "
-                "declaración-resumen anual del impuesto."
-            ),
-            not_applicable_reason=(
-                "Modelo 390 no aplica: sin una actividad económica sujeta al "
-                "IVA no hay declaración-resumen anual del impuesto."
-            ),
-            legal_refs=("rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"),
-        )
-    if modelo == "303":
-        return ModeloApplicabilityRule(
-            modelo=modelo,
-            applicable_entity_types=frozenset(entity_type_tokens()),
-            required_income_categories=frozenset({irpf_income_category_actividad_economica_token()}),
-            applicable_iva_regimes=iva_regime_self_assessment_tokens(),
-            applicable_reason=(
-                "Modelo 303 (autoliquidación del IVA): el contribuyente "
-                "realiza una actividad económica sujeta al IVA y presenta la "
-                "autoliquidación periódica."
-            ),
-            not_applicable_reason=(
-                "Modelo 303 no aplica: sin una actividad económica sujeta al "
-                "IVA no hay autoliquidación periódica del impuesto."
-            ),
-            legal_refs=("ley-37-1992:art-99",),
-        )
-    raise KeyError(modelo)
-
-
-class _SeedApplicabilityRules(Mapping[str, ModeloApplicabilityRule]):
-    """Read-only seed-rule mapping whose values follow the active fact scope."""
-
-    _MODELOS = ("303", "390")
-
-    @override
-    def __getitem__(self, modelo: str) -> ModeloApplicabilityRule:
-        if modelo not in self._MODELOS:
-            raise KeyError(modelo)
-        return _iva_seed_applicability_rule(modelo)
-
-    @override
-    def __iter__(self) -> Iterator[str]:
-        return iter(self._MODELOS)
-
-    @override
-    def __len__(self) -> int:
-        return len(self._MODELOS)
-
-
-MODELO_APPLICABILITY_RULES: Mapping[str, ModeloApplicabilityRule] = _SeedApplicabilityRules()
-
-"""Seed modelo-applicability rules — core persona coverage.
-
-A modelo absent from this table has no derived rule yet: its
-applicability is reported :attr:`ApplicabilityVerdict.INCOMPLETE` with
-a rationale naming the deferred expansion, never a confident guess.
-"""
-
-
 _ROUTES_FACT: Final = "modelo-applicability-routes"
 """The fact naming the forms the art. 93 regime reroutes while its window is open."""
 
@@ -480,18 +373,7 @@ def _modelo_applicability_rule(
     authority: ValidatedRegistryAuthority | None = None,
     operation: PinnedAuthorityOperation | None = None,
 ) -> ModeloApplicabilityRule | None:
-    """Return ``modelo``'s applicability rule, resolved from the registry or the literal table.
-
-    The single seam every consumer (:func:`derive_modelo_applicability` and
-    :func:`iter_modelo_applicability_rules`) reads through, so the mixed-surface split (registry-resolved vs.
-    still-literal) is decided in exactly one place. An unrecognised
-    ``modelo`` string -- not a member of either surface -- returns ``None``,
-    matching the pre-cutover dict-lookup behaviour exactly; it is never an
-    error to ask about an unruled modelo.
-    """
-    seed = MODELO_APPLICABILITY_RULES.get(modelo)
-    if seed is not None:
-        return seed
+    """Return ``modelo``'s applicability rule from the registry; asking about an unruled modelo is no error."""
     return _resolve_registry_applicability_rule(Modelo(modelo), authority=authority, operation=operation)
 
 
@@ -499,7 +381,7 @@ def iter_modelo_applicability_rules(
     *,
     operation: PinnedAuthorityOperation | None = None,
 ) -> tuple[ModeloApplicabilityRule, ...]:
-    """Return every registry-resolved or seed-literal :class:`ModeloApplicabilityRule`.
+    """Return every registry-declared :class:`ModeloApplicabilityRule`.
 
     The returned tuple is ordered by modelo id for deterministic audits and
     tests. Callers receive rule objects, not the mutable module-level
@@ -520,7 +402,7 @@ def iter_modelo_applicability_rules(
 
 
 def _known_modelos(operation: PinnedAuthorityOperation) -> list[str]:
-    return sorted({*MODELO_APPLICABILITY_RULES, *operation.modelo_ids()})
+    return sorted(operation.modelo_ids())
 
 
 def _applicability_rules(
@@ -538,8 +420,8 @@ def modelo_requires_iva_regime(modelo: str, *, operation: PinnedAuthorityOperati
 
     Calendar completeness is a consumer of the same applicability predicate
     that determines whether a taxpayer can have the modelo obligation.  Keep
-    that classification here, where registry-resolved and seed rules already
-    meet, rather than maintaining a second calendar or core-constants set.
+    that classification here rather than maintaining a second calendar or
+    core-constants set.
     """
     rule = _modelo_applicability_rule(modelo, operation=operation)
     return rule is not None and bool(rule.applicable_iva_regimes)
@@ -608,10 +490,8 @@ def derive_modelo_applicability(
     :attr:`ApplicabilityVerdict.INCOMPLETE` answer; the engine never
     reports a confident wrong obligation.
 
-    A modelo without a seed rule (the seed covers the core persona set
-    only) is also reported ``INCOMPLETE`` so the operator is never told
-    a confident yes/no the registry rules cannot yet justify; the
-    rationale points at the deferred expansion.
+    A modelo whose revisions declare no rule is also reported ``INCOMPLETE``
+    so the operator is never told a confident yes/no the registry cannot justify.
 
     Args:
         profile: The operator's three-axis taxpayer model.
@@ -643,7 +523,7 @@ def derive_modelo_applicability(
     # six-year Beckham window is active: the annual declaration is Modelo
     # 151, and the ordinary Renta self-assessment (Modelo 100) is not the
     # filing route. Once the window expires, both modelos fall back to their
-    # ordinary applicability rules: M100 through the seed table below, M151
+    # ordinary applicability rules: M100 through its declared rule, M151
     # to a positive NOT_APPLICABLE.
     routes = resolve_form_codes_leased(_ROUTES_FACT, authority=operation)
     if beckham_window_active and modelo == routes.code("impatriado.suppressed"):
@@ -704,7 +584,6 @@ def derive_taxpayer_files_economic_activity(profile: TaxpayerProfile) -> bool | 
 
 
 __all__ = [
-    "MODELO_APPLICABILITY_RULES",
     "ApplicabilityEvidenceDisagreement",
     "ApplicabilityProvenance",
     "ApplicabilityVerdict",

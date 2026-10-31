@@ -24,7 +24,7 @@ effective_from = 2004-07-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-09-10
 reviewed_by = "agent"
-notes = """LGT art 94: autoridades sometidas al deber de informar y colaborar. Extiende la obligacion informativa del art 93 a las autoridades y entidades del sector publico - organos del Estado, comunidades autonomas y entidades locales, organismos autonomos y entidades publicas empresariales, camaras y colegios profesionales, mutualidades de prevision social, entidades gestoras de la Seguridad Social y en general quienes ejerzan funciones publicas - y a los partidos politicos, sindicatos y asociaciones empresariales. Es la base sustantiva del papel declarante 'entidad integrada en una Administracion publica' del Modelo 347 (clave E), que el esquema de perfil declara en declaration_roles junto al art 93 y al rd-1065-2007 art 31."""
+notes = """LGT art 94: autoridades sometidas al deber de informar y colaborar. Extiende la obligación informativa del art 93 a las autoridades y entidades del sector publico - organos del Estado, comunidades autonomas y entidades locales, organismos autonomos y entidades publicas empresariales, camaras y colegios profesionales, mutualidades de prevision social, entidades gestoras de la Seguridad Social y en general quienes ejerzan funciones publicas - y a los partidos politicos, sindicatos y asociaciones empresariales. Es la base sustantiva del papel declarante 'entidad integrada en una Administracion publica' del Modelo 347 (clave E), que el esquema de perfil declara en declaration_roles junto al art 93 y al rd-1065-2007 art 31."""
 required_text = [
     "Autoridades sometidas al deber de informar y colaborar",
     "trascendencia tributaria",
@@ -45,12 +45,12 @@ review_status = "operator_reviewed"
 reviewed_at = 2026-05-15
 reviewed_by = "operator"
 notes = """\
-LGT art 93: obligaciones de informacion. Base sustantiva de toda obligacion informativa frente a \
+LGT art 93: obligaciones de información. Base sustantiva de toda obligación informativa frente a \
 AEAT - personas fisicas y juridicas obligadas a proporcionar datos, informes, antecedentes y \
 justificantes con trascendencia tributaria. Enumera obligados especificos (retenedores, sociedades \
-de cobro de honorarios profesionales, entidades bancarias y de mediacion). Base sustantiva de las \
+de cobro de honorarios profesionales, entidades bancarias y de mediación). Base sustantiva de las \
 declaraciones informativas: M347 (operaciones con terceros), M180/M190/M193 (resumenes anuales de \
-retenciones), M184 (atribucion de rentas), M232 (vinculadas y paraisos), M349 (intracomunitarias), \
+retenciones), M184 (atribución de rentas), M232 (vinculadas y paraisos), M349 (intracomunitarias), \
 M720 (bienes en el extranjero), M193 (capital mobiliario)."""
 required_text = [
     "Obligaciones de información",
@@ -91,7 +91,7 @@ effective_from = 2004-07-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-14
 reviewed_by = "operator"
-notes = "Declaracion tributaria: any document presented before AEAT acknowledging a tax-relevant fact. Filing does not imply acceptance of the tax obligation. Options exercised via a declaration cannot be rectified after the filing period closes. Pending compensation / deduction balances cannot be modified through complementarias after AEAT initiates an application procedure."
+notes = "Declaración tributaria: any document presented before AEAT acknowledging a tax-relevant fact. Filing does not imply acceptance of the tax obligation. Options exercised via a declaration cannot be rectified after the filing period closes. Pending compensation / deduction balances cannot be modified through complementarias after AEAT initiates an application procedure."
 required_text = [
     "todo documento presentado ante la Administración tributaria",
     "La presentación de una declaración no implica aceptación o reconocimiento",
@@ -113,10 +113,10 @@ reviewed_at = 2026-05-14
 reviewed_by = "operator"
 notes = """\
 Autoliquidaciones: declarations in which the obligado tributario performs the calificacion \
-+ cuantificacion necessary to determine the deuda tributaria and either pays, claims a \
++ cuantificación necessary to determine the deuda tributaria and either pays, claims a \
 refund, or claims compensation. AEAT may verify and comprobar. Where the obligado \
-considers the autoliquidacion has harmed their legitimate interests they may instar la \
-rectificacion per the apartado 3 procedure; otherwise the autoliquidacion rectificativa \
+considers the autoliquidación has harmed their legitimate interests they may instar la \
+rectificación per the apartado 3 procedure; otherwise the autoliquidación rectificativa \
 procedure of apartado 4 applies where the tax-specific regulation so establishes."""
 required_text = [
     "Las autoliquidaciones son declaraciones en las que los obligados tributarios",

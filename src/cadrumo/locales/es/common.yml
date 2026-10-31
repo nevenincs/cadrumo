@@ -5664,6 +5664,7 @@ sheets:
     headers:
       accrual_year: Ejercicio de devengo
       acquisition_date: Fecha de adquisición
+      acquisition_value: Valor de adquisición
       amount: Importe
       amount_donated: Importe donado
       anualidades_alimentos: Anualidades por alimentos
@@ -5754,6 +5755,7 @@ sheets:
       donor_legal_name: Nombre o razón social del donante
       donor_tax_id: NIF del donante
       door: Puerta
+      element_type: Tipo de elemento patrimonial
       emerging_stock_excess_clave: Excesos de entrega de acciones de empresas emergentes
       fecha_devengo: Fecha de devengo
       fecha_inicio_prestamo: Fecha de inicio del préstamo
@@ -5769,6 +5771,7 @@ sheets:
       foral_retention_estatal: Retenciones e ingresos a cuenta ingresados al Estado
       foral_retention_gipuzkoa: Retenciones e ingresos a cuenta ingresados a Gipuzkoa
       foral_retention_navarra: Retenciones e ingresos a cuenta ingresados a Navarra
+      gain: Ganancia patrimonial
       garantias: Garantías
       gastos_deducibles: Gastos deducibles
       geographic_mobility_clave: Movilidad geográfica
@@ -5792,6 +5795,7 @@ sheets:
       is_recurrent: Donativo recurrente
       isin_code: Código ISIN
       locality: Localidad
+      loss: Pérdida patrimonial
       member_legal_name: Razón social del miembro
       member_state_code: Estado miembro
       member_tax_id: NIF del miembro
@@ -5876,6 +5880,8 @@ sheets:
       tipo_codigo: Tipo código
       tipo_percepcion: Tipo de percepción
       transfer_pricing_method_code: Método de valoración
+      transmission_date: Fecha de transmisión
+      transmission_value: Valor de transmisión
       unit_convivencia_titular_clave: Titular de la unidad de convivencia
       valuation_amount: Valoración
       valuation_event: Evento de valoración

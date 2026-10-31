@@ -11,7 +11,7 @@ effective_from = 2010-04-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-06
 reviewed_by = "operator"
-notes = "Articulo 1 de la Orden EHA/789/2010: aprobacion del formulario 360 de solicitud de devolucion del IVA soportado por empresarios o profesionales establecidos en el TAI por operaciones efectuadas en otros Estados miembros (procedimiento Octava Directiva 2008/9/CE)."
+notes = "Articulo 1 de la Orden EHA/789/2010: aprobación del formulario 360 de solicitud de devolución del IVA soportado por empresarios o profesionales establecidos en el TAI por operaciones efectuadas en otros Estados miembros (procedimiento Octava Directiva 2008/9/CE)."
 required_text = [
     "Aprobación del formulario 360",
     "solicitud de devolución",
@@ -31,7 +31,7 @@ effective_from = 2010-04-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-06
 reviewed_by = "operator"
-notes = "Articulo 4 de la Orden EHA/789/2010: plazo de presentacion del formulario 360. El plazo se inicia el dia siguiente al final del periodo de devolucion y concluye el 30 de septiembre siguiente al ano natural en el que se hayan soportado las cuotas a que se refiera."
+notes = "Articulo 4 de la Orden EHA/789/2010: plazo de presentación del formulario 360. El plazo se inicia el dia siguiente al final del periodo de devolución y concluye el 30 de septiembre siguiente al ano natural en el que se hayan soportado las cuotas a que se refiera."
 required_text = [
     "Plazo de presentación del formulario 360",
     "30 de septiembre",
@@ -180,7 +180,7 @@ effective_from = 2003-12-31
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-06
 reviewed_by = "operator"
-notes = "Apartado primero de la Orden HAC/3625/2003: aprobacion del modelo 309 'Declaracion-liquidacion no periodica del Impuesto sobre el Valor Anadido'. Filed by sujetos pasivos sin obligacion ordinaria de declaracion-liquidacion (adquisiciones de medios de transporte nuevos, ejecuciones forzosas, regimen agricola/ganadero/pesquero, recargo de equivalencia)."
+notes = "Apartado primero de la Orden HAC/3625/2003: aprobación del modelo 309 'Declaracion-liquidacion no periodica del Impuesto sobre el Valor Anadido'. Filed by sujetos pasivos sin obligación ordinaria de declaracion-liquidacion (adquisiciones de medios de transporte nuevos, ejecuciones forzosas, régimen agricola/ganadero/pesquero, recargo de equivalencia)."
 required_text = [
     "Aprobación del modelo 309",
     "Declaración-liquidación no periódica",
@@ -206,7 +206,7 @@ effective_from = 2003-12-31
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-06
 reviewed_by = "operator"
-notes = "Apartado tercero de la Orden HAC/3625/2003: plazo de presentacion del Modelo 309. Veinte primeros dias naturales de abril, julio y octubre; ultimo periodo en los treinta primeros dias naturales del mes de enero del ano siguiente. Casos especiales: medios de transporte nuevos 30 dias desde la transmision; ejecuciones forzosas 1 mes desde el pago de la adjudicacion."
+notes = "Apartado tercero de la Orden HAC/3625/2003: plazo de presentación del Modelo 309. Veinte primeros días naturales de abril, julio y octubre; ultimo periodo en los treinta primeros días naturales del mes de enero del ano siguiente. Casos especiales: medios de transporte nuevos 30 días desde la transmisión; ejecuciones forzosas 1 mes desde el pago de la adjudicacion."
 required_text = [
     "Plazo de presentación del modelo 309",
     "veinte primeros días naturales",
@@ -226,7 +226,7 @@ effective_from = 2023-01-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-08-26
 reviewed_by = "agent-reviewed-against-bundled-boe-source"
-notes = "Orden HFP/1245/2022 articulo unico: sustituye el anexo I de la Orden HAC/3625/2003. Su disposicion final unica fija la entrada en vigor el 1 de enero de 2023 y su aplicacion a los ejercicios 2023 y siguientes."
+notes = "Orden HFP/1245/2022 articulo único: sustituye el anexo I de la Orden HAC/3625/2003. Su disposición final única fija la entrada en vigor el 1 de enero de 2023 y su aplicación a los ejercicios 2023 y siguientes."
 required_text = [
     "El anexo I de la Orden HAC/3625/2003",
     "se sustituye por el anexo de esta orden",
@@ -416,7 +416,7 @@ effective_from = 2007-11-30
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-06
 reviewed_by = "operator"
-notes = "Articulo 1 de la Orden EHA/3434/2007: aprobacion del modelo 322 'Impuesto sobre el Valor Anadido. Grupo de entidades. Modelo individual. Autoliquidacion mensual'. Aplicable a sujetos pasivos del IVA que formen parte de un grupo de entidades conforme al articulo 163 quinquies.Uno de la LIVA."
+notes = "Articulo 1 de la Orden EHA/3434/2007: aprobación del modelo 322 'Impuesto sobre el Valor Anadido. Grupo de entidades. Modelo individual. Autoliquidación mensual'. Aplicable a sujetos pasivos del IVA que formen parte de un grupo de entidades conforme al articulo 163 quinquies.Uno de la LIVA."
 required_text = [
     "Aprobación del modelo 322",
     "Grupo de entidades",
@@ -436,7 +436,7 @@ effective_from = 2007-11-30
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-06
 reviewed_by = "operator"
-notes = "Articulo 2 de la Orden EHA/3434/2007: aprobacion del modelo 353 'Grupo de entidades. Modelo agregado. Autoliquidacion mensual' del IVA. Lo presenta la entidad dominante del grupo."
+notes = "Articulo 2 de la Orden EHA/3434/2007: aprobación del modelo 353 'Grupo de entidades. Modelo agregado. Autoliquidación mensual' del IVA. Lo presenta la entidad dominante del grupo."
 required_text = [
     "Aprobación del modelo 353",
     "Modelo agregado",
@@ -623,7 +623,7 @@ effective_from = 2007-11-30
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-06
 reviewed_by = "operator"
-notes = "Articulo 8 de la Orden EHA/3434/2007: plazo de presentacion de los modelos 322 y 353. Treinta dias naturales del mes siguiente al periodo de liquidacion mensual; el periodo de enero se presenta hasta el ultimo dia del mes de febrero."
+notes = "Articulo 8 de la Orden EHA/3434/2007: plazo de presentación de los modelos 322 y 353. Treinta días naturales del mes siguiente al periodo de liquidación mensual; el periodo de enero se presenta hasta el ultimo dia del mes de febrero."
 required_text = [
     "Plazo de presentación de los modelos 322 y 353",
     "treinta días naturales del mes siguiente",
@@ -723,7 +723,7 @@ effective_from = 2009-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-06
 reviewed_by = "operator"
-notes = "Articulo 1 de la Orden EHA/3786/2008: aprobacion del modelo 303 'Impuesto sobre el Valor Anadido. Autoliquidacion. Ingreso del Impuesto sobre el Valor Anadido a la importacion liquidado por la Aduana'."
+notes = "Articulo 1 de la Orden EHA/3786/2008: aprobación del modelo 303 'Impuesto sobre el Valor Anadido. Autoliquidación. Ingreso del Impuesto sobre el Valor Anadido a la importación liquidado por la Aduana'."
 required_text = [
     "Aprobación del modelo 303",
     "Impuesto sobre el Valor Añadido",
@@ -743,7 +743,7 @@ effective_from = 2009-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-06
 reviewed_by = "operator"
-notes = "Articulo 7 de la Orden EHA/3786/2008: plazo de presentacion del Modelo 303. Periodos mensuales y trimestrales: primeros 20 dias naturales del mes siguiente al final del periodo. El ultimo periodo del ano se presenta durante los primeros 30 dias naturales del mes de enero siguiente."
+notes = "Articulo 7 de la Orden EHA/3786/2008: plazo de presentación del Modelo 303. Periodos mensuales y trimestrales: primeros 20 días naturales del mes siguiente al final del periodo. El ultimo periodo del ano se presenta durante los primeros 30 días naturales del mes de enero siguiente."
 required_text = [
     "Plazo de presentación del modelo 303",
     "veinte primeros días naturales",
@@ -763,7 +763,7 @@ effective_from = 2009-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-06
 reviewed_by = "operator"
-notes = "Articulo 2 de la Orden EHA/3786/2008: aprobacion del modelo 308 'Impuesto sobre el Valor Anadido, solicitud de devolucion: recargo de equivalencia, articulo 30 bis del Reglamento del IVA, articulo 21.4 de la Ley del IVA y sujetos pasivos ocasionales'."
+notes = "Articulo 2 de la Orden EHA/3786/2008: aprobación del modelo 308 'Impuesto sobre el Valor Anadido, solicitud de devolución: recargo de equivalencia, articulo 30 bis del Reglamento del IVA, articulo 21.4 de la Ley del IVA y sujetos pasivos ocasionales'."
 required_text = [
     "Aprobación del modelo 308",
     "solicitud de devolución",
@@ -783,7 +783,7 @@ effective_from = 2009-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-06
 reviewed_by = "operator"
-notes = "Articulo 11 de la Orden EHA/3786/2008: plazos de presentacion del Modelo 308. Sujetos pasivos ocasionales (medios de transporte nuevos): 30 dias naturales desde la entrega. Regimen simplificado actividad de transporte: primeros 20 dias naturales del mes siguiente a la adquisicion."
+notes = "Articulo 11 de la Orden EHA/3786/2008: plazos de presentación del Modelo 308. Sujetos pasivos ocasionales (medios de transporte nuevos): 30 días naturales desde la entrega. Régimen simplificado actividad de transporte: primeros 20 días naturales del mes siguiente a la adquisición."
 required_text = [
     "Plazos de presentación del modelo 308",
     "treinta días naturales",
@@ -920,7 +920,7 @@ effective_from = 2010-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-06
 reviewed_by = "operator"
-notes = "Articulo 1 de la Orden EHA/3111/2009: aprobacion del modelo 390 'Declaracion-resumen anual del Impuesto sobre el Valor Anadido'."
+notes = "Articulo 1 de la Orden EHA/3111/2009: aprobación del modelo 390 'Declaracion-resumen anual del Impuesto sobre el Valor Anadido'."
 required_text = [
     "Aprobación del modelo 390",
     "Declaración-resumen anual",
@@ -940,7 +940,7 @@ effective_from = 2010-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-06
 reviewed_by = "operator"
-notes = "Articulo 8 de la Orden EHA/3111/2009: plazo de presentacion del Modelo 390. La declaracion-resumen anual del IVA se presenta en los treinta primeros dias naturales del mes de enero siguiente al ejercicio."
+notes = "Articulo 8 de la Orden EHA/3111/2009: plazo de presentación del Modelo 390. La declaracion-resumen anual del IVA se presenta en los treinta primeros días naturales del mes de enero siguiente al ejercicio."
 required_text = [
     "Plazo de presentación del modelo 390",
     "treinta primeros días naturales",
@@ -1353,7 +1353,7 @@ effective_from = 2010-04-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-05
 reviewed_by = "operator"
-notes = "Aprobacion del modelo 349 de declaracion recapitulativa de operaciones intracomunitarias y de sus disenos fisicos y logicos. Base reglamentaria desarrollada por el RD 1624/1992 articulos 78 a 81 y por la Ley 37/1992 articulo 164.5."
+notes = "Aprobación del modelo 349 de declaración recapitulativa de operaciones intracomunitarias y de sus diseños fisicos y logicos. Base reglamentaria desarrollada por el RD 1624/1992 articulos 78 a 81 y por la Ley 37/1992 articulo 164.5."
 required_text = [
     "se aprueba el modelo 349",
     "declaración recapitulativa de operaciones intracomunitarias",
@@ -1374,7 +1374,7 @@ effective_from = 2010-04-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-05
 reviewed_by = "operator"
-notes = "Obligados a presentar la declaracion recapitulativa de operaciones intracomunitarias y reglas de periodicidad mensual/trimestral en funcion del umbral de 50.000 euros del Reglamento del IVA."
+notes = "Obligados a presentar la declaración recapitulativa de operaciones intracomunitarias y reglas de periodicidad mensual/trimestral en funcion del umbral de 50.000 euros del Reglamento del IVA."
 required_text = [
     "Obligados a presentar la declaración recapitulativa",
     "acuerdos de ventas de bienes en consigna",
@@ -1393,7 +1393,7 @@ effective_from = 2010-04-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-05
 reviewed_by = "operator"
-notes = "Plazo de presentacion del modelo 349: veinte primeros dias naturales del mes inmediato siguiente al periodo, salvo julio (hasta el 20 de septiembre) y diciembre/cuarto trimestre (treinta primeros dias naturales de enero)."
+notes = "Plazo de presentación del modelo 349: veinte primeros días naturales del mes inmediato siguiente al periodo, salvo julio (hasta el 20 de septiembre) y diciembre/cuarto trimestre (treinta primeros días naturales de enero)."
 required_text = [
     "Plazo de presentación del modelo 349",
     "veinte primeros días naturales",
@@ -1413,7 +1413,7 @@ effective_from = 2020-03-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-05
 reviewed_by = "operator"
-notes = "Modificacion de la Orden EHA/769/2010 que aprueba el modelo 349. Anade las claves R, D y C para acuerdos de ventas de bienes en consigna y suprime la presentacion anual del modelo 349. Aplicable a declaraciones del ejercicio 2020 y siguientes."
+notes = "Modificación de la Orden EHA/769/2010 que aprueba el modelo 349. Anade las claves R, D y C para acuerdos de ventas de bienes en consigna y suprime la presentación anual del modelo 349. Aplicable a declaraciones del ejercicio 2020 y siguientes."
 required_text = [
     "Artículo único. Modificación de la Orden EHA/769/2010",
     "modelo 349",
@@ -1520,7 +1520,7 @@ effective_from = 2021-07-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-06
 reviewed_by = "operator"
-notes = "Articulo 1 de la Orden HAC/610/2021: aprobacion del modelo 369, autoliquidacion de los regimenes especiales OSS/IOSS del IVA."
+notes = "Articulo 1 de la Orden HAC/610/2021: aprobación del modelo 369, autoliquidación de los regimenes especiales OSS/IOSS del IVA."
 required_text = [
     "Aprobación del modelo 369",
     "Impuesto sobre el Valor Añadido",
@@ -1540,7 +1540,7 @@ effective_from = 2021-07-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-06
 reviewed_by = "operator"
-notes = "Articulo 2 de la Orden HAC/610/2021: obligados a presentar Modelo 369. Esquemas Exterior y Union presentan por trimestre natural; el regimen de importacion presenta por mes natural."
+notes = "Articulo 2 de la Orden HAC/610/2021: obligados a presentar Modelo 369. Esquemas Exterior y Union presentan por trimestre natural; el régimen de importación presenta por mes natural."
 required_text = [
     "por cada trimestre natural",
     "por cada mes natural",
@@ -1560,7 +1560,7 @@ effective_from = 2021-07-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-06
 reviewed_by = "operator"
-notes = "Articulo 3 de la Orden HAC/610/2021: el Modelo 369 se presenta dentro del mes natural siguiente al final del periodo de autoliquidacion."
+notes = "Articulo 3 de la Orden HAC/610/2021: el Modelo 369 se presenta dentro del mes natural siguiente al final del periodo de autoliquidación."
 required_text = [
     "Plazo de presentación del modelo 369",
     "dentro del mes natural siguiente",
@@ -1580,7 +1580,7 @@ effective_from = 2021-07-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-06
 reviewed_by = "operator"
-notes = "Ley 37/1992, articulo 163 octiesdecies: ambito del regimen exterior para empresarios o profesionales no establecidos en la Comunidad."
+notes = "Ley 37/1992, articulo 163 octiesdecies: ámbito del régimen exterior para empresarios o profesionales no establecidos en la Comunidad."
 required_text = [
     "Artículo 163 octiesdecies",
     "empresarios o profesionales no establecidos en la Comunidad",
@@ -1642,7 +1642,7 @@ effective_from = 2021-07-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-06
 reviewed_by = "operator"
-notes = "Ley 37/1992, articulo 163 quinvicies: ambito del regimen de importacion para ventas a distancia de bienes importados de paises o territorios terceros."
+notes = "Ley 37/1992, articulo 163 quinvicies: ámbito del régimen de importación para ventas a distancia de bienes importados de paises o territorios terceros."
 required_text = [
     "Artículo 163 quinvicies",
     "ventas a distancia de bienes importados",
@@ -1742,9 +1742,9 @@ review_status = "agent_reviewed"
 reviewed_at = 2026-08-07
 reviewed_by = "agent-review"
 notes = """\
-RD 1619/2012 Reglamento de facturacion art 6.1.d: contenido de la factura, NIF. Ademas del NIF del \
+RD 1619/2012 Reglamento de facturación art 6.1.d: contenido de la factura, NIF. Ademas del NIF del \
 expedidor, la consignacion del NIF del DESTINATARIO es obligatoria en tres casos, y el tercero -- \
-operaciones realizadas en el territorio de aplicacion del Impuesto por un empresario o profesional \
+operaciones realizadas en el territorio de aplicación del Impuesto por un empresario o profesional \
 establecido en dicho territorio -- es el que fundamenta el aviso de la CLI cuando una factura \
 simplificada domestica no nombra NIF de contraparte. Se declara con el id compuesto art-6.1.d porque \
 el aviso cita la letra, no el articulo entero: citar solo art-6 apuntaria al contenido general de la \
@@ -1787,7 +1787,7 @@ effective_from = 2013-01-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-09-13
 reviewed_by = "agent-authored from the bundled corpus capture; operator to re-stamp"
-notes = "RD 1619/2012 Reglamento de facturacion art 7: contenido de la factura simplificada. Fundamenta la clase SIMPLIFICADA. corpus_ref nombra el acto consolidado completo porque no hay captura por articulo para el 7; la del articulo 6 no lo contiene."
+notes = "RD 1619/2012 Reglamento de facturación art 7: contenido de la factura simplificada. Fundamenta la clase SIMPLIFICADA. corpus_ref nombra el acto consolidado completo porque no hay captura por articulo para el 7; la del articulo 6 no lo contiene."
 required_text = [
     "Contenido de las facturas simplificadas",
     "las facturas simplificadas y sus copias contendrán los siguientes datos o requisitos",
@@ -1867,14 +1867,14 @@ review_status = "agent_reviewed"
 reviewed_at = 2026-10-03
 reviewed_by = "agent-review"
 notes = """\
-RD 1619/2012 disposicion adicional cuarta, apartado 7: las agencias de viajes que expidan las \
-facturas de esta disposicion consignan en la declaracion anual de operaciones con terceras \
+RD 1619/2012 disposición adicional cuarta, apartado 7: las agencias de viajes que expidan las \
+facturas de esta disposición consignan en la declaración anual de operaciones con terceras \
 personas (Modelo 347), letra a) en concepto de ventas los servicios documentados mediante esas \
 facturas, y letra b) en concepto de compras las prestaciones en que intervienen como mediadoras. \
 Es la base de que las claves F (ventas agencia viaje) y G (compras agencia viaje) se sumen con las \
 entregas y con las adquisiciones, respectivamente, al juzgar el umbral del art 33.1 RGAT. El \
-apartado 7 esta en la redaccion del RD 1075/2017 (BOE-A-2017-15843), en vigor desde el 1 de enero \
-de 2018 segun las notas de vigencia del mismo real decreto en el consolidado; por eso se fecha en \
+apartado 7 esta en la redacción del RD 1075/2017 (BOE-A-2017-15843), en vigor desde el 1 de enero \
+de 2018 según las notas de vigencia del mismo real decreto en el consolidado; por eso se fecha en \
 2018. Texto verificado contra el consolidado bundled corpus/normatives/html/rd-1619-2012.html.\
 """
 required_text = [
@@ -2080,21 +2080,21 @@ review_status = "agent_reviewed"
 reviewed_at = 2026-07-28
 reviewed_by = "agent-authored from the bundled corpus text, amendment history cross-checked against the live BOE consolidated text; operator to re-stamp"
 notes = """\
-Articulo 103 LIVA: clases de prorrata y criterios de aplicacion. Apartado Uno: la regla de prorrata \
+Articulo 103 LIVA: clases de prorrata y criterios de aplicación. Apartado Uno: la regla de prorrata \
 tiene dos modalidades, general y especial; la general se aplica cuando no concurren las \
 circunstancias del apartado siguiente. Apartado Dos: la prorrata especial es aplicable (1) cuando el \
 sujeto pasivo opta por ella en plazo y forma reglamentarios, o (2) cuando el montante total de las \
 cuotas deducibles del ano natural por la regla general excede del que resultaria por la regla \
-especial en el margen legal del ejercicio (obligacion de especial). ATENCION - el apartado Dos \
-numero 2 NO es invariante en la ventana de ejercicios que la aplicacion sirve: la redaccion original \
+especial en el margen legal del ejercicio (obligación de especial). ATENCION - el apartado Dos \
+numero 2 NO es invariante en la ventana de ejercicios que la aplicación sirve: la redacción original \
 de la Ley 37/1992 (en vigor 01-01-1993 a 31-12-2014) exigia que excediera 'en un 20 por 100', sin 'o \
 mas', mientras que el art. 1.26 de la Ley 28/2014 (BOE-A-2014-12329, en vigor desde 01-01-2015) lo \
-sustituyo por 'en un 10 por ciento o mas'. La modificacion rebajo el margen Y lo hizo inclusivo: el \
+sustituyo por 'en un 10 por ciento o mas'. La modificación rebajo el margen Y lo hizo inclusivo: el \
 preambulo de la Ley 28/2014 lo describe como 'disminuir del 20 al 10 por ciento la diferencia \
 admisible'. Base legal del aviso de prorrata especial obligatoria. El margen y su \
 direccion de comparacion se declaran como dato de registro en el parametro \
 m303-prorrata-especial-obligatoria-margen-porcentaje de cada revision del modelo 303; \
-solo se declara la redaccion vigente, y un ejercicio anterior a 2015 se rechaza por \
+solo se declara la redacción vigente, y un ejercicio anterior a 2015 se rechaza por \
 carecer de autoridad citable en este corpus."""
 required_text = [
     "La regla de prorrata tendrá dos modalidades de aplicación: general y especial.",
@@ -2117,11 +2117,11 @@ review_status = "agent_reviewed"
 reviewed_at = 2026-07-07
 reviewed_by = "agent-authored from bundled ley-37-1992.html#a106 la prorrata especial; operator to re-stamp"
 notes = """\
-Articulo 106 LIVA: la prorrata especial. Apartado Uno, tres reglas de deduccion por uso del input: \
+Articulo 106 LIVA: la prorrata especial. Apartado Uno, tres reglas de deducción por uso del input: \
 1a las cuotas soportadas en bienes/servicios utilizados EXCLUSIVAMENTE en operaciones con derecho a \
-deduccion se deducen INTEGRAMENTE (100%); 2a las utilizadas EXCLUSIVAMENTE en operaciones sin \
+deducción se deducen INTEGRAMENTE (100%); 2a las utilizadas EXCLUSIVAMENTE en operaciones sin \
 derecho NO son deducibles (0%); 3a las utilizadas SOLO EN PARTE en operaciones con derecho se \
-deducen en la proporcion del porcentaje general del art 104.Dos y siguientes, con el procedimiento \
+deducen en la proporción del porcentaje general del art 104.Dos y siguientes, con el procedimiento \
 del art 105. Base legal del enrutado por InputClassification \
 (exclusively_deductible/exclusively_non_deductible/common)."""
 required_text = [
@@ -2145,17 +2145,17 @@ review_status = "agent_reviewed"
 reviewed_at = 2026-07-08
 reviewed_by = "agent-authored from bundled ley-37-1992.html#a101 regimen de deducciones en sectores diferenciados; art 101.Dos comun deferred; operator to re-stamp"
 notes = """\
-Articulo 101 LIVA: regimen de deducciones en sectores diferenciados de la actividad. Apartado Uno: \
-el sujeto pasivo que realiza actividades economicas en sectores diferenciados (art 9.1.c) debe \
-aplicar SEPARADAMENTE el regimen de deducciones respecto de cada uno; la prorrata especial puede \
+Articulo 101 LIVA: régimen de deducciones en sectores diferenciados de la actividad. Apartado Uno: \
+el sujeto pasivo que realiza actividades económicas en sectores diferenciados (art 9.1.c) debe \
+aplicar SEPARADAMENTE el régimen de deducciones respecto de cada uno; la prorrata especial puede \
 aplicarse independientemente por sector (letras a', c', d'); los sectores de la letra b' se rigen \
 por sus regimenes especiales. Las adquisiciones para uso EN COMUN en varios sectores se deducen por \
 el porcentaje del art 104.Dos y siguientes (porcentaje comun). Base legal del enrutado por sector: \
-cada input a la deduccion de SU sector; el input de uso comun al porcentaje comun del art 104.Dos. \
-Apartado Dos (DIFERIDO en esta fase): la Administracion puede autorizar un regimen de deduccion \
+cada input a la deducción de SU sector; el input de uso comun al porcentaje comun del art 104.Dos. \
+Apartado Dos (DIFERIDO en esta fase): la Administracion puede autorizar un régimen de deducción \
 COMUN a los sectores de la letra a', autorizacion que NO surte efectos en el ano en que el total de \
-cuotas deducibles por el regimen comun exceda en un 20 por 100 al que resultaria aplicando con \
-independencia el regimen de cada sector - se registra como caso de autorizacion (register \
+cuotas deducibles por el régimen comun exceda en un 20 por 100 al que resultaria aplicando con \
+independencia el régimen de cada sector - se registra como caso de autorizacion (register \
 authorisation_reference) y su +20% void test se difiere, con el esquema del register ya preparado \
 para admitirlo."""
 required_text = [
@@ -2181,15 +2181,15 @@ review_status = "agent_reviewed"
 reviewed_at = 2026-07-08
 reviewed_by = "agent-authored from bundled ley-37-1992.html#a9 definicion de sectores diferenciados letra c; operator to re-stamp"
 notes = """\
-Articulo 9, numero 1.o, letra c) LIVA: la definicion de los SECTORES DIFERENCIADOS de la actividad \
-(base del art 101). Letra a': actividades economicas con grupos DISTINTOS en la Clasificacion \
-Nacional de Actividades Economicas (CNAE) cuyos regimenes de deduccion difieran; los regimenes se \
-consideran distintos cuando los porcentajes de deduccion del art 104 difieran en mas de 50 PUNTOS \
+Articulo 9, numero 1.o, letra c) LIVA: la definición de los SECTORES DIFERENCIADOS de la actividad \
+(base del art 101). Letra a': actividades económicas con grupos DISTINTOS en la Clasificación \
+Nacional de Actividades Económicas (CNAE) cuyos regimenes de deducción difieran; los regimenes se \
+consideran distintos cuando los porcentajes de deducción del art 104 difieran en mas de 50 PUNTOS \
 PORCENTUALES respecto de la actividad principal. Letra b': actividades acogidas a los regimenes \
 especiales simplificado, agricultura/ganaderia/pesca, oro de inversion o recargo de equivalencia. \
 Letras c'/d': arrendamiento financiero y cesion de creditos/prestamos (salvo factoring). La \
 particion del contribuyente en sectores diferenciados es un juicio legal (que grupos CNAE, si \
-divergen >50pp, si hay regimen especial) - operator-declared, nunca inferido del ledger."""
+divergen >50pp, si hay régimen especial) - operator-declared, nunca inferido del ledger."""
 required_text = [
     "se considerarán sectores diferenciados de la actividad empresarial o profesional los siguientes",
     "Se considerarán actividades económicas distintas aquellas que tengan asignados grupos diferentes en la Clasificación Nacional de Actividades Económicas.",
@@ -2292,7 +2292,7 @@ effective_from = 1993-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-15
 reviewed_by = "operator"
-notes = "Articulo 163 duovicies LIVA: regimen especial aplicable a empresarios o profesionales no establecidos que presten servicios de telecomunicaciones, radiodifusion, television o servicios prestados por via electronica a destinatarios que no sean empresarios o profesionales (one stop shop). Forma parte del bloque de regimenes especiales del titulo IX, capitulo XI."
+notes = "Articulo 163 duovicies LIVA: régimen especial aplicable a empresarios o profesionales no establecidos que presten servicios de telecomunicaciones, radiodifusion, television o servicios prestados por via electronica a destinatarios que no sean empresarios o profesionales (one stop shop). Forma parte del bloque de regimenes especiales del titulo IX, capitulo XI."
 required_text = [
     "a) Disponer del número de identificación fiscal al que se refiere el artículo 164.Uno.2.º de esta Ley.",
     "f) Expedir y entregar factura, ajustada a lo que se determine reglamentariamente.",
@@ -2311,7 +2311,7 @@ effective_from = 1993-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-15
 reviewed_by = "operator"
-notes = "Articulo 163 sexvicies LIVA: regimen especial aplicable a las ventas a distancia de bienes importados procedentes de paises terceros (Import One Stop Shop / IOSS). Establecido como ventanilla unica para envios de valor intrinseco no superior a 150 euros."
+notes = "Articulo 163 sexvicies LIVA: régimen especial aplicable a las ventas a distancia de bienes importados procedentes de paises terceros (Import One Stop Shop / IOSS). Establecido como ventanilla única para envios de valor intrinseco no superior a 150 euros."
 required_text = [
     "En las entregas de bienes acogidas a este régimen especial el devengo del impuesto se producirá en el momento de la entrega, que s",
 ]
@@ -2368,7 +2368,7 @@ effective_from = 1993-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-15
 reviewed_by = "operator"
-notes = "Articulo 163 tervicies LIVA: regimen especial aplicable a empresarios o profesionales establecidos en la Comunidad, pero no en el Estado miembro de consumo (Union One Stop Shop). Habilita la declaracion unica de servicios y ventas a distancia intracomunitarias a traves del Estado miembro de identificacion."
+notes = "Articulo 163 tervicies LIVA: régimen especial aplicable a empresarios o profesionales establecidos en la Comunidad, pero no en el Estado miembro de consumo (Union One Stop Shop). Habilita la declaración única de servicios y ventas a distancia intracomunitarias a traves del Estado miembro de identificación."
 required_text = [
     "Uno. Los empresarios o profesionales que se acojan a este régimen especial no podrán deducir en la declaración-liquidación a que s",
     "No obstante lo anterior, los empresarios o profesionales que se acojan a este régimen especial tendrán derecho a la devolución de ",
@@ -2429,7 +2429,7 @@ effective_from = 1993-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-15
 reviewed_by = "operator"
-notes = "Articulo 163 vicies LIVA: obligaciones formales del regimen especial MOSS exterior - declaracion de inicio/cese, presentacion de declaraciones trimestrales, ingreso por el total, llevanza del registro, conservacion durante diez anos, e idioma de las declaraciones."
+notes = "Articulo 163 vicies LIVA: obligaciones formales del régimen especial MOSS exterior - declaración de inicio/cese, presentación de declaraciones trimestrales, ingreso por el total, llevanza del registro, conservacion durante diez anos, e idioma de las declaraciones."
 required_text = [
     "Uno. Los empresarios o profesionales no establecidos en la Comunidad que se acojan a este régimen especial no podrán deducir en la",
     "No obstante lo anterior, dichos empresarios o profesionales acogidos a este régimen especial tendrán derecho a la devolución de la",
@@ -2557,7 +2557,7 @@ effective_from = 1993-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-21
 reviewed_by = "operator"
-notes = "Articulo 122 LIVA: regimen simplificado del IVA. Seran de aplicacion a los sujetos pasivos que reglamentariamente se determinen en atencion al volumen de operaciones u otras circunstancias."
+notes = "Articulo 122 LIVA: régimen simplificado del IVA. Seran de aplicación a los sujetos pasivos que reglamentariamente se determinen en atencion al volumen de operaciones u otras circunstancias."
 required_text = [
     "régimen simplificado",
     "volumen de operaciones",
@@ -2576,7 +2576,7 @@ effective_from = 1993-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-21
 reviewed_by = "operator"
-notes = "Articulo 123 LIVA: contenido del regimen simplificado. Determinacion de las cuotas tributarias para las actividades acogidas al regimen simplificado mediante el metodo de indices, modulos o signos."
+notes = "Articulo 123 LIVA: contenido del régimen simplificado. Determinación de las cuotas tributarias para las actividades acogidas al régimen simplificado mediante el método de indices, módulos o signos."
 required_text = [
     "cuotas tributarias",
     "módulos",
@@ -2690,7 +2690,7 @@ effective_from = 2017-07-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-06-28
 reviewed_by = "agent-review"
-notes = "Real Decreto 596/2016: moderniza la gestion del IVA e introduce la llevanza de libros registro a traves de la Sede electronica de la AEAT mediante el suministro electronico de registros de facturacion."
+notes = "Real Decreto 596/2016: moderniza la gestion del IVA e introduce la llevanza de libros registro a traves de la Sede electronica de la AEAT mediante el suministro electronico de registros de facturación."
 required_text = [
     "Sede electrónica de la Agencia Estatal de la Administración Tributaria",
     "suministro electrónico de los registros de facturación",
@@ -2711,7 +2711,7 @@ consolidated_as_of = 2025-12-03
 review_status = "agent_reviewed"
 reviewed_at = 2026-06-29
 reviewed_by = "agent-review"
-notes = "RD 1007/2023 Art. 3 delimita los obligados tributarios que usan sistemas informaticos de facturacion: IS, IRPF con actividades economicas, IRNR con establecimiento permanente y entidades en atribucion de rentas con actividades economicas; excluye a quienes llevan libros registro por RIVA Art. 62.6 y aplica tambien a productores/comercializadores en su actividad."
+notes = "RD 1007/2023 Art. 3 delimita los obligados tributarios que usan sistemas informaticos de facturación: IS, IRPF con actividades económicas, IRNR con establecimiento permanente y entidades en atribución de rentas con actividades económicas; excluye a quienes llevan libros registro por RIVA Art. 62.6 y aplica también a productores/comercializadores en su actividad."
 required_text = [
     "El presente Reglamento se aplicará a los obligados tributarios que se indican a continuación, que utilicen sistemas informáticos de facturación",
     "Los contribuyentes del Impuesto sobre Sociedades",
@@ -2737,7 +2737,7 @@ consolidated_as_of = 2025-12-03
 review_status = "agent_reviewed"
 reviewed_at = 2026-06-29
 reviewed_by = "agent-review"
-notes = "La disposicion final cuarta, modificada por el Real Decreto-ley 15/2025, fija los hitos actuales de adaptacion: antes del 1 de enero de 2027 para los obligados del art. 3.1.a y antes del 1 de julio de 2027 para el resto de obligados del art. 3.1."
+notes = "La disposición final cuarta, modificada por el Real Decreto-ley 15/2025, fija los hitos actuales de adaptacion: antes del 1 de enero de 2027 para los obligados del art. 3.1.a y antes del 1 de julio de 2027 para el resto de obligados del art. 3.1."
 required_text = [
     "antes del 1 de enero de 2027",
     "antes del 1 de julio de 2027",
@@ -2865,7 +2865,7 @@ effective_from = 2014-01-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-06
 reviewed_by = "agent-review"
-notes = "Articulo 163 undecies LIVA: opcion y condiciones para aplicar el regimen especial del criterio de caja."
+notes = "Articulo 163 undecies LIVA: opcion y condiciones para aplicar el régimen especial del criterio de caja."
 required_text = [
     "Artículo 163 undecies. Condiciones para la aplicación del régimen especial del criterio de caja.",
     "opten por su aplicación",
@@ -2923,7 +2923,7 @@ effective_from = 2014-01-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-06
 reviewed_by = "agent-review"
-notes = "Articulo 163 quaterdecies LIVA: efectos de renuncia o exclusion del regimen especial del criterio de caja sobre operaciones efectuadas durante su vigencia."
+notes = "Articulo 163 quaterdecies LIVA: efectos de renuncia o exclusion del régimen especial del criterio de caja sobre operaciones efectuadas durante su vigencia."
 required_text = [
     "Artículo 163 quaterdecies. Efectos de la renuncia o exclusión del régimen especial del criterio de caja.",
     "operaciones efectuadas durante su vigencia",
@@ -3015,13 +3015,13 @@ effective_from = 1993-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-08-01
 reviewed_by = "operator"
-notes = """LIVA art 68: lugar de realizacion de las entregas de bienes. Together with \
+notes = """LIVA art 68: lugar de realización de las entregas de bienes. Together with \
 arts. 69 and 70 (prestaciones de servicios, reglas generales y especiales) this is the \
 place-of-supply rule set that decides WHICH IVA category a cross-border operation \
 belongs to. That selection is a declared judgement made by the operator, never derived \
 by the system from the counterparty's country: two invoices with identical counterparty \
 countries can fall in different categories depending on where the entrega or the \
-prestacion is localised under these articles. \
+prestación is localised under these articles. \
 Bundled text checked against the live BOE consolidated text on 2026-08-05: the anchored \
 #a68 unit of the bundled ley-37-1992.html is character-identical to the current \
 redaction BOE-A-2022-22128 (in force 2023-01-01), apart from the BOE amendment-history \
@@ -3223,11 +3223,11 @@ review_status = "agent_reviewed"
 reviewed_at = 2026-08-08
 reviewed_by = "agent-prepared-pending-operator"
 notes = """\
-RDL 20/2012 art. 23, apartado Dos: da nueva redaccion al art. 90 Uno LIVA y fija el tipo general en \
+RDL 20/2012 art. 23, apartado Dos: da nueva redacción al art. 90 Uno LIVA y fija el tipo general en \
 el 21 por ciento, con efectos desde el 1 de septiembre de 2012. Esta es la provision que ESTABLECE \
 el valor; el art. 90 LIVA es el articulo marco que lo aloja, y citarlo solo no basta cuando una \
 norma modificativa fija la cifra. El texto consolidado del art. 90 lo confirma en su nota de \
-modificacion: 'Se modifica el apartado 1, con efectos desde el 1 de septiembre de 2012, por el art. \
+modificación: 'Se modifica el apartado 1, con efectos desde el 1 de septiembre de 2012, por el art. \
 23.2 del Real Decreto-ley 20/2012, de 13 de julio. Ref. BOE-A-2012-9364'. DOS TRAMPAS DE CITA, ambas \
 verificadas sobre el fichero empaquetado. Primera: el documento contiene TRES cadenas 'Articulo 23' \
 y la primera pertenece a otra ley -- el articulo 23 sobre el Servicio de Ayuda a Domicilio -- de \
@@ -3236,7 +3236,7 @@ aparicion. Segunda: los apartados difieren por tipo. El 21 por ciento lo fija el
 10 por ciento el apartado Tres, por lo que citar 23.2 para el tipo reducido seria erroneo en un \
 apartado. El tipo super-reducido del 4 por ciento es ANTERIOR a esta norma y NO puede heredarla por \
 proximidad: necesita su propia provision. PROVENANCIA. Documento adquirido mediante la herramienta \
-de adquisicion del corpus consolidado oficial (API de legislacion consolidada del portal oficial), \
+de adquisición del corpus consolidado oficial (API de legislacion consolidada del portal oficial), \
 26 bloques servidos cada uno en su ultima version, sha256 \
 d0ef2bae3d07e5a2fed52315c29808306f0a3ec197b1bc0501186ce16181c9df, 733051 bytes. Entrada preparada \
 por agente y fundamentada en el texto empaquetado leido directamente; no la ha revisado un operador \
@@ -3259,15 +3259,15 @@ review_status = "agent_reviewed"
 reviewed_at = 2026-08-08
 reviewed_by = "agent-prepared-pending-operator"
 notes = """\
-RDL 20/2012 art. 23, apartado Tres: da nueva redaccion al art. 91 LIVA y fija el tipo reducido en el \
+RDL 20/2012 art. 23, apartado Tres: da nueva redacción al art. 91 LIVA y fija el tipo reducido en el \
 10 por ciento, con efectos desde el 1 de septiembre de 2012. Entrada SEPARADA de la del apartado Dos \
 deliberadamente: el mismo articulo fija dos tipos en dos apartados distintos, y una sola entrada \
-obligaria a cada tipo a citar una provision que no es exactamente la suya. La nota de modificacion \
+obligaria a cada tipo a citar una provision que no es exactamente la suya. La nota de modificación \
 del art. 90 consolidado cita 23.2, que es correcta para el 21 por ciento y NO para este tipo. El \
 tipo super-reducido del 4 por ciento es anterior a esta norma y necesita su propia provision. \
 PROVENANCIA. Mismo documento y mismo sha256 que la entrada del apartado Dos, \
 d0ef2bae3d07e5a2fed52315c29808306f0a3ec197b1bc0501186ce16181c9df; adquirido mediante la herramienta \
-de adquisicion del corpus consolidado oficial. Entrada preparada por agente, no revisada por un \
+de adquisición del corpus consolidado oficial. Entrada preparada por agente, no revisada por un \
 operador humano."""
 required_text = [
     "Se aplicará el tipo del 10 por ciento",
@@ -3288,26 +3288,26 @@ reviewed_at = 2026-08-08
 reviewed_by = "agent-prepared-pending-operator"
 notes = """\
 Ley 41/1994, de 30 de diciembre, de Presupuestos Generales del Estado para 1995, art. 78 (Tipos \
-impositivos), apartado Segundo: da nueva redaccion al art. 91 LIVA y fija el tipo super-reducido en \
+impositivos), apartado Segundo: da nueva redacción al art. 91 LIVA y fija el tipo super-reducido en \
 el 4 por 100, elevando ademas el reducido del 6 al 7 por 100 en el mismo apartado. Esta es la \
 provision que ESTABLECE el 4 por ciento; el art. 91 LIVA es el articulo marco que lo aloja. Las dos \
 entradas hermanas de RDL 20/2012 lo dicen explicitamente en sus propias notas: el tipo \
 super-reducido es ANTERIOR a aquella norma y no puede heredarla por proximidad. EFECTOS: el propio \
-encabezado del articulo dice 'Con efectos a partir del dia 1 de enero de 1995 se da nueva redaccion \
+encabezado del articulo dice 'Con efectos a partir del dia 1 de enero de 1995 se da nueva redacción \
 a los siguientes preceptos de la Ley 37/1992', de modo que la fecha citable esta en el texto y no en \
-una nota. El atributo fecha_vigencia del endpoint marca 19950120, diecinueve dias mas tarde; tomarlo \
+una nota. El atributo fecha_vigencia del endpoint marca 19950120, diecinueve días mas tarde; tomarlo \
 como effective_from seria erroneo. IDENTIFICACION DEL APARTADO: el apartado Primero modifica el art. \
 90 (tipo general, 16 por 100) y el Segundo el art. 91, por lo que citar el Primero para el 4 por \
 ciento seria erroneo en un apartado, el mismo error que las notas de 2012 documentan. No hay trampa \
 de ancla en este documento: contiene una sola cadena 'Articulo 78', a diferencia del de 2012, que \
 contiene tres 'Articulo 23' de los cuales el primero pertenece a otra ley. CORROBORACION \
 INDEPENDIENTE: recorrer las 41 redacciones consolidadas del art. 91 LIVA muestra Dos = 3 por 100 \
-hasta la redaccion previa a esta norma y Dos = 4 por 100 desde ella, ininterrumpidamente hasta hoy; \
+hasta la redacción previa a esta norma y Dos = 4 por 100 desde ella, ininterrumpidamente hasta hoy; \
 es un diff antes/despues, no una lectura de prosa. PROVENANCIA. Documento adquirido mediante la \
-herramienta de adquisicion del corpus consolidado oficial (modo articulo), sha256 \
+herramienta de adquisición del corpus consolidado oficial (modo articulo), sha256 \
 1c484707bac3ccf0ef6a252fe1272fb8dedde5150a9bf35f81048450b8308b61, 15448 bytes, leido de nuevo desde \
 disco antes de redactar esta entrada. La captura se hizo SIN required_text a proposito: fijar la \
-frase del 4 por ciento antes de leer el fichero habria hecho tautologica la comprobacion. Entrada \
+frase del 4 por ciento antes de leer el fichero habria hecho tautologica la comprobación. Entrada \
 preparada por agente y fundamentada en el texto empaquetado leido directamente; no la ha revisado un \
 operador humano, y reviewed_by lo declara asi."""
 required_text = [

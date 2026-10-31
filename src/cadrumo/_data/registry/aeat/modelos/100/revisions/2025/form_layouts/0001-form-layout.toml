@@ -4272,6 +4272,7 @@ blocks = [
     { kind = "field", id = "field-53", casilla_id = "0225" },
     { kind = "field", id = "field-54", casilla_id = "0236" },
     { kind = "field", id = "field-55", casilla_id = "0226" },
+    { kind = "repeating", id = "inventory-activity-rows", row_source = "row_set_binding", binding_id = "renta-inventory-activity-closing-increase-0177", columns = [{ key = "box-0177", heading_key = "modelo.schema.100.form.column.box-0177.heading", casilla_id = "0177", binding_id = "renta-inventory-activity-closing-increase-0177" }, { key = "box-0181", heading_key = "modelo.schema.100.form.column.box-0181.heading", casilla_id = "0181", binding_id = "renta-inventory-activity-acquisition-cost-0181" }, { key = "box-0182", heading_key = "modelo.schema.100.form.column.box-0182.heading", casilla_id = "0182", binding_id = "renta-inventory-activity-closing-decrease-0182" }] },
 ]
 
 [[revisions.2025.form_layouts.pages.sections]]
@@ -4675,6 +4676,7 @@ blocks = [
     { kind = "field", id = "field-23", casilla_id = "1652" },
     { kind = "field", id = "field-24", casilla_id = "1653" },
     { kind = "field", id = "field-25", casilla_id = "1654" },
+    { kind = "repeating", id = "elemento-patrimonial-rows", row_source = "row_set_binding", binding_id = "renta-activity-asset-disposal-row-element-type-1626", columns = [{ key = "box-1626", heading_key = "modelo.schema.100.form.column.box-1626.heading", casilla_id = "1626", binding_id = "renta-activity-asset-disposal-row-element-type-1626" }, { key = "box-1631", heading_key = "modelo.schema.100.form.column.box-1631.heading", casilla_id = "1631", binding_id = "renta-activity-asset-disposal-row-transmission-date-1631" }, { key = "box-1633", heading_key = "modelo.schema.100.form.column.box-1633.heading", casilla_id = "1633", binding_id = "renta-activity-asset-disposal-row-transmission-value-1633" }, { key = "box-1637", heading_key = "modelo.schema.100.form.column.box-1637.heading", casilla_id = "1637", binding_id = "renta-activity-asset-disposal-row-acquisition-value-1637" }, { key = "box-1639", heading_key = "modelo.schema.100.form.column.box-1639.heading", casilla_id = "1639", binding_id = "renta-activity-asset-disposal-row-loss-1639" }, { key = "box-1654", heading_key = "modelo.schema.100.form.column.box-1654.heading", casilla_id = "1654", binding_id = "renta-activity-asset-disposal-row-gain-1654" }] },
 ]
 
 [[revisions.2025.form_layouts.pages.sections]]

@@ -519,11 +519,12 @@ msgid ""
 "(módulos) regime, `objetiva`, files Modelo 131 instead. Cadrumo does not "
 "assume a regime when you leave it unset."
 msgstr ""
-"Tevékenységnél az `--irpf-estimation-regime` kapcsolóval rögzítsd, hogyan"
-" becsüli az IRPF a hozamot. Az estimación directa (`directa_normal` vagy "
-"`directa_simplificada`) Modelo 130-at nyújt be. Az estimación objetiva "
-"(módulos) rendszer, az `objetiva`, ehelyett Modelo 131-et nyújt be. A "
-"Cadrumo nem feltételez rendszert, ha üresen hagyod."
+"Tevékenység esetén az `--irpf-estimation-regime` kapcsolóval rögzítsd, "
+"hogyan állapítja meg az IRPF a tevékenység jövedelmét. A normál vagy "
+"egyszerűsített közvetlen becslési rendszer (`directa_normal` vagy "
+"`directa_simplificada`) Modelo 130-at igényel. Az objektív becslési "
+"rendszer (átalányadózás, `objetiva`) ehelyett Modelo 131-et igényel. Ha "
+"üresen hagyod, a Cadrumo nem feltételez adózási rendszert."
 
 #: ../../how-to/profile-setup.md:225
 msgid "Identity"
@@ -795,7 +796,7 @@ msgstr "Modelo nyomtatvány"
 
 #: ../../how-to/profile-setup.md:294
 msgid "Art. 109 activity-income coverage exception applies"
-msgstr "A 109. cikk szerinti tevékenységijövedelem-fedezeti kivétel érvényes"
+msgstr "A 109. cikk szerinti kivétel alkalmazható a tevékenységi bevételekre"
 
 #: ../../how-to/profile-setup.md:294
 msgid "Removes the Modelo 130 obligation"

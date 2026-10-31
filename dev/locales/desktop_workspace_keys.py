@@ -4,38 +4,6 @@ from collections.abc import Callable, Iterable, Mapping
 from types import MappingProxyType
 from typing import Final
 
-#: The catalogue family that words what a calculation note says about its own subject, one sentence for
-#: each :class:`~cadrumo.domain.modelos.calculation_revision_sources.CalculationNoteSentence`, with the
-#: values that fill it in.
-CALCULATION_NOTE_FACT_FAMILY: Final[str] = "application.modelo.calc_diagnostic_fact."
-
-#: The family of the sentences that say what kind of thing a calculation noticed, one for each reason.
-CALCULATION_NOTE_KIND_FAMILY: Final[str] = "application.modelo.calc_diagnostic."
-
-
-def _calculation_note_kind_members() -> tuple[str, ...]:
-    """Return ``<reason>.what`` for each reason whose sentence needs no value of its own.
-
-    A note kept with a revision names no box, so a sentence that prints one cannot be drawn there.
-    """
-    from cadrumo.application.modelo.calculation_notes import CALCULATION_NOTE_ATTENTION
-
-    from ._paths import LOCALES_DIR, SRC_DIR
-    from .locale_tree import _flatten_raw_locale_leaves
-    from .locale_yaml import locale_catalogue_source
-    from .manager import LocaleManager
-
-    source = locale_catalogue_source(LOCALES_DIR, "en")
-    if source is None:
-        raise ValueError(f"No source catalogue under {LOCALES_DIR}, so no calculation note could be listed")
-    leaves = _flatten_raw_locale_leaves(LocaleManager(SRC_DIR, LOCALES_DIR).load_locale(source))
-    members = []
-    for reason in CALCULATION_NOTE_ATTENTION:
-        text = leaves.get(f"{CALCULATION_NOTE_KIND_FAMILY}{reason}.what")
-        if isinstance(text, str) and "{" not in text:
-            members.append(f"{reason}.what")
-    return tuple(sorted(members))
-
 
 def _composed_families(
     enumerated: Callable[[str], tuple[str, ...]],
@@ -50,13 +18,10 @@ def _composed_families(
     from cadrumo.application.modelo.work_form_next_step import ModeloFormNextAction
     from cadrumo.application.modelo.work_form_wording import SOURCE_WORDED_ORIGINS
     from cadrumo.domain.deadlines.festivos import DeadlineHolidayCoverage
-    from cadrumo.domain.modelos.calculation_revision_sources import CalculationNoteSentence
     from cadrumo.domain.modelos.verification_report import VerificationCompletenessStatus
 
     complete = {DeadlineHolidayCoverage.NATIONAL_AND_TERRITORY, DeadlineHolidayCoverage.NOT_SHIFTED}
     return {
-        CALCULATION_NOTE_FACT_FAMILY: values(CalculationNoteSentence),
-        CALCULATION_NOTE_KIND_FAMILY: _calculation_note_kind_members(),
         "workspace.declarations.holiday_coverage.": values(c for c in DeadlineHolidayCoverage if c not in complete),
         "workspace.declarations.list.group.": values(
             group for group in DeclarationListGroup if group is not DeclarationListGroup.AEAT_UNLINKED
@@ -371,7 +336,6 @@ WORKSPACE_KEYS: Final[frozenset[str]] = frozenset(
         "workspace.modelo.next_button.apply",
         "workspace.modelo.notes.lead",
         "workspace.modelo.notes.title",
-        "workspace.modelo.notes.unworded",
         "workspace.modelo.operation.checked.complete",
         "workspace.modelo.operation.done",
         "workspace.modelo.operation.not_done",

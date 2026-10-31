@@ -11,7 +11,7 @@ effective_from = 2009-01-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "downloaded official BOE-A-2008-19523 consolidated HTML from BOE on 2026-07-01"
-notes = "Orden EHA/3481/2008 articulo 1: aprueba el Modelo 189, declaracion informativa anual acerca de valores, seguros y rentas, y sus disenos fisicos y logicos."
+notes = "Orden EHA/3481/2008 articulo 1: aprueba el Modelo 189, declaración informativa anual acerca de valores, seguros y rentas, y sus diseños fisicos y logicos."
 required_text = [
     "Artículo 1. Aprobación del modelo 189",
     "Se aprueba el modelo 189",
@@ -50,7 +50,7 @@ effective_from = 2023-11-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "downloaded official BOE-A-2023-22221 HTML from BOE on 2026-07-01"
-notes = "Orden HFP/1180/2023 articulo primero: modifica los disenos de registro del Modelo 189 para campos de declarado como clave de valor y valoracion."
+notes = "Orden HFP/1180/2023 articulo primero: modifica los diseños de registro del Modelo 189 para campos de declarado como clave de valor y valoración."
 required_text = [
     "Artículo primero. Modificación de la Orden EHA/3481/2008",
     "modelo 189",
@@ -92,7 +92,7 @@ effective_from = 2026-02-28
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "downloaded official BOE-A-2026-4521 HTML from BOE on 2026-07-01"
-notes = "Orden HAC/132/2026 articulo unico: aprueba las relaciones de valores negociados del cuarto trimestre de 2025 usadas para el Impuesto sobre Patrimonio 2025 y el Modelo 189."
+notes = "Orden HAC/132/2026 articulo único: aprueba las relaciones de valores negociados del cuarto trimestre de 2025 usadas para el Impuesto sobre Patrimonio 2025 y el Modelo 189."
 required_text = [
     "Artículo único. Aprobación de las relaciones de valores negociados",
     "cuarto trimestre de 2025",
@@ -130,7 +130,7 @@ effective_from = 2022-02-26
 review_status = "agent_reviewed"
 reviewed_at = 2026-10-01
 reviewed_by = "agent-prepared from the BOE consolidated-text article endpoint (block df, single redaction fecha_vigencia 20220226, incorporating the corrections BOE-A-2022-3810 and BOE-A-2022-4629); pending operator re-stamp"
-notes = "Orden HFP/115/2022 disposicion final primera: modifica el anexo II de la Orden EHA/3481/2008 (modelo 189). NOMINAL UNITARIO DE LOS VALORES pasa a las posiciones 146-163 del registro de tipo 2 (146-159 parte entera, 160-163 parte decimal) y BLANCOS a 164-500. Es la ultima modificacion del anexo II antes de las Ordenes HFP/1180/2023 y HFP/1284/2023, que se aplican por primera vez al ejercicio 2023, segun el analisis del BOE de BOE-A-2008-19523; rige por tanto la declaracion del ejercicio 2022."
+notes = "Orden HFP/115/2022 disposición final primera: modifica el anexo II de la Orden EHA/3481/2008 (modelo 189). NOMINAL UNITARIO DE LOS VALORES pasa a las posiciones 146-163 del registro de tipo 2 (146-159 parte entera, 160-163 parte decimal) y BLANCOS a 164-500. Es la ultima modificación del anexo II antes de las Ordenes HFP/1180/2023 y HFP/1284/2023, que se aplican por primera vez al ejercicio 2023, según el analisis del BOE de BOE-A-2008-19523; rige por tanto la declaración del ejercicio 2022."
 required_text = [
     "Nominal unitario de los valores.",
     "146-159 Parte entera del importe del nominal unitario de la operación.",

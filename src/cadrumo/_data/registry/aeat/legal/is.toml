@@ -32,7 +32,7 @@ effective_from = 2015-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-06-02
 reviewed_by = "operator"
-notes = "LIS art 10: concepto y determinacion de la base imponible. La base imponible es la renta del periodo minorada por la compensacion de bases imponibles negativas; en estimacion directa se calcula corrigiendo el resultado contable mediante los preceptos de la Ley. Es la definicion-marco del encadenamiento de determinacion de la base del Modelo 200 (00501 resultado contable -> correcciones -> 00550 base previa -> 00552 base imponible)."
+notes = "LIS art 10: concepto y determinación de la base imponible. La base imponible es la renta del periodo minorada por la compensación de bases imponibles negativas; en estimación directa se calcula corrigiendo el resultado contable mediante los preceptos de la Ley. Es la definicion-marco del encadenamiento de determinación de la base del Modelo 200 (00501 resultado contable -> correcciones -> 00550 base previa -> 00552 base imponible)."
 required_text = [
     "La base imponible estará constituida por el importe de la renta obtenida en el período impositivo",
     "compensación de bases imponibles negativas",
@@ -52,7 +52,7 @@ effective_from = 2015-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-06-02
 reviewed_by = "operator"
-notes = "LIS art 11: imputacion temporal e inscripcion contable de ingresos y gastos. Los ingresos y gastos se imputan al periodo de su devengo con arreglo a la normativa contable, con independencia de su pago o cobro. Gobierna el criterio de devengo de las partidas que forman el resultado contable que alimenta la determinacion de la base del Modelo 200."
+notes = "LIS art 11: imputación temporal e inscripcion contable de ingresos y gastos. Los ingresos y gastos se imputan al periodo de su devengo con arreglo a la normativa contable, con independencia de su pago o cobro. Gobierna el criterio de devengo de las partidas que forman el resultado contable que alimenta la determinación de la base del Modelo 200."
 required_text = [
     "se imputarán al período impositivo en que se produzca su devengo",
     "con independencia de la fecha de su pago o de su cobro",
@@ -71,7 +71,7 @@ effective_from = 2015-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-06-02
 reviewed_by = "operator"
-notes = "LIS art 14: provisiones y otros gastos. Regula la no deducibilidad de determinados gastos por provisiones (fondos internos de pensiones, retribuciones a largo plazo, obligaciones implicitas o tacitas) que constituyen correcciones al resultado contable en la determinacion de la base imponible del Modelo 200."
+notes = "LIS art 14: provisiones y otros gastos. Regula la no deducibilidad de determinados gastos por provisiones (fondos internos de pensiones, retribuciones a largo plazo, obligaciones implicitas o tacitas) que constituyen correcciones al resultado contable en la determinación de la base imponible del Modelo 200."
 required_text = [
     "No serán deducibles los gastos por provisiones y fondos internos",
     "No serán deducibles los siguientes gastos asociados a provisiones",
@@ -94,7 +94,7 @@ notes = """\
 LIS art 13: correcciones de valor - perdida por deterioro del valor de los elementos patrimoniales. \
 Establece la deducibilidad del deterioro de creditos cuando concurra una de cuatro circunstancias (6 \
 meses de vencimiento, concurso, alzamiento de bienes, reclamacion judicial / arbitral), las \
-exclusiones (creditos publicos, vinculadas excepto liquidacion concursal, estimaciones globales), y \
+exclusiones (creditos publicos, vinculadas excepto liquidación concursal, estimaciones globales), y \
 la no-deducibilidad general del deterioro de inmovilizado material/intangible/inversiones \
 inmobiliarias y participaciones. Base sustantiva de la dotaciones_deterioro_creditos_u_otros_activos \
 section de M200."""
@@ -121,7 +121,7 @@ notes = """\
 LIS art 15: gastos no deducibles. Enumera los gastos que la LIS expresamente excluye de la \
 deducibilidad fiscal: retribucion de fondos propios (incluidos prestamos participativos \
 intra-grupo), IS contabilizado, multas y sanciones, recargos del periodo ejecutivo y \
-extemporaneos, perdidas del juego, donativos y liberalidades (con excepcion de atenciones \
+extemporaneos, perdidas del juego, donativos y liberalidades (con excepción de atenciones \
 a clientes limitadas al 1 por ciento del INCN), actuaciones contrarias al ordenamiento \
 juridico, gastos con paraisos fiscales. Base sustantiva de las correcciones positivas al \
 resultado contable en M200."""
@@ -145,11 +145,11 @@ review_status = "operator_reviewed"
 reviewed_at = 2026-05-15
 reviewed_by = "operator"
 notes = """\
-LIS art 21: exencion sobre dividendos y rentas derivadas de la transmision de valores \
+LIS art 21: exención sobre dividendos y rentas derivadas de la transmisión de valores \
 representativos de los fondos propios de entidades residentes y no residentes en \
-territorio espanol. Establece el regimen de participation exemption: dividendos y \
-ganancias por transmision de acciones quedan exentos cuando se cumple el umbral del 5 por \
-ciento de participacion sostenida durante un anio, con requisito adicional para no \
+territorio espanol. Establece el régimen de participation exemption: dividendos y \
+ganancias por transmisión de acciones quedan exentos cuando se cumple el umbral del 5 por \
+ciento de participación sostenida durante un anio, con requisito adicional para no \
 residentes de tributacion minima al 10 por ciento nominal. Base sustantiva de las \
 correcciones negativas por dividendos exentos en M200."""
 required_text = [
@@ -172,10 +172,10 @@ review_status = "operator_reviewed"
 reviewed_at = 2026-05-15
 reviewed_by = "operator"
 notes = """\
-LIS art 22: exencion de las rentas obtenidas en el extranjero a traves de un \
-establecimiento permanente. Establece la exencion para rentas positivas obtenidas por EPs \
+LIS art 22: exención de las rentas obtenidas en el extranjero a traves de un \
+establecimiento permanente. Establece la exención para rentas positivas obtenidas por EPs \
 no residentes cuando el EP haya estado sujeto al impuesto extranjero a un tipo nominal de \
-al menos el 10 por ciento, junto con la exencion en transmision o cese del EP. Las rentas \
+al menos el 10 por ciento, junto con la exención en transmisión o cese del EP. Las rentas \
 negativas no se integran salvo en caso de cese (con minorizacion por rentas positivas \
 previamente exentas o deducidas). Base sustantiva de las correcciones por \
 rentas-EP-no-residente en M200."""
@@ -199,12 +199,12 @@ review_status = "operator_reviewed"
 reviewed_at = 2026-05-15
 reviewed_by = "operator"
 notes = """\
-LIS art 31: deduccion para evitar la doble imposicion juridica - impuesto soportado por el \
+LIS art 31: deducción para evitar la doble imposición juridica - impuesto soportado por el \
 contribuyente. Permite deducir de la cuota integra la menor de dos cantidades: el impuesto \
 efectivamente satisfecho en el extranjero (con tope del convenio CDI si aplica), o la \
 cuota integra que en Espana correspondería pagar por las mismas rentas. Las cantidades no \
-deducidas se trasladan a periodos siguientes; comprobacion prescribe a los 10 anios. Base \
-sustantiva de la deduccion por doble imposicion juridica internacional en M200."""
+deducidas se trasladan a periodos siguientes; comprobación prescribe a los 10 anios. Base \
+sustantiva de la deducción por doble imposición juridica internacional en M200."""
 required_text = [
     "Deducción para evitar la doble imposición jurídica",
     "menor de las dos cantidades",
@@ -224,7 +224,7 @@ effective_from = 2015-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-15
 reviewed_by = "operator"
-notes = "LIS art 32: deduccion para evitar la doble imposicion economica internacional - dividendos y participaciones en beneficios. Permite deducir el impuesto efectivamente pagado por la entidad no residente sobre los beneficios distribuidos como dividendos, condicionado a participacion minima del 5 por ciento mantenida ininterrumpidamente durante un anio y a la inclusion de la cuantia en la base imponible. Base sustantiva del underlying-tax-credit (deduccion DIE) en M200."
+notes = "LIS art 32: deducción para evitar la doble imposición económica internacional - dividendos y participaciones en beneficios. Permite deducir el impuesto efectivamente pagado por la entidad no residente sobre los beneficios distribuidos como dividendos, condicionado a participación minima del 5 por ciento mantenida ininterrumpidamente durante un anio y a la inclusion de la cuantía en la base imponible. Base sustantiva del underlying-tax-credit (deducción DIE) en M200."
 required_text = [
     "Deducción para evitar la doble imposición económica internacional",
     "dividendos",
@@ -246,12 +246,12 @@ reviewed_at = 2026-05-15
 reviewed_by = "operator"
 notes = """\
 LIS art 12: correcciones de valor - amortizaciones. Define la deducibilidad de la \
-amortizacion segun depreciacion efectiva, los cinco metodos validos (tabla lineal \
+amortización según depreciación efectiva, los cinco métodos validos (tabla lineal \
 art-12.1.a, porcentaje constante degresivo, numeros digitos, plan aceptado por la \
-Administracion, justificacion del importe) y la tabla de coeficientes maximos por tipo de \
+Administracion, justificación del importe) y la tabla de coeficientes maximos por tipo de \
 elemento (obra civil 2-7 por ciento, edificios 2-4 por ciento, maquinaria 12 por ciento, \
 equipos electronicos 20-33 por ciento, etc.). Base sustantiva de las casillas de \
-amortizacion de M200, desarrollada en RIS art-3."""
+amortización de M200, desarrollada en RIS art-3."""
 required_text = [
     "Correcciones de valor: amortizaciones",
     "depreciación efectiva",
@@ -293,8 +293,8 @@ reviewed_at = 2026-05-15
 reviewed_by = "operator"
 notes = """\
 LIS art 19: cambios de residencia, operaciones realizadas con o por personas o entidades \
-residentes en paraisos fiscales y cantidades sujetas a retencion. Establece la regla de \
-salida fiscal (integracion en base imponible de la diferencia entre valor de mercado y \
+residentes en paraisos fiscales y cantidades sujetas a retención. Establece la regla de \
+salida fiscal (integración en base imponible de la diferencia entre valor de mercado y \
 valor fiscal de los elementos patrimoniales al trasladar la residencia) y la opcion de \
 fraccionamiento del pago en cinco anualidades cuando el destino es la UE/EEE con \
 asistencia mutua equivalente. Base sustantiva de la \
@@ -318,7 +318,7 @@ effective_from = 2015-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-15
 reviewed_by = "operator"
-notes = "LIS art 36: deduccion por inversiones en producciones cinematograficas, series audiovisuales y espectaculos en vivo de artes escenicas y musicales. Establece las tasas de deduccion (30 por ciento primer millon de base, 25 por ciento exceso), los limites por produccion y episodio (20M / 10M EUR), el requisito de gasto territorial espanol (50 por ciento de la base) y el sub-regimen de productor/financiacion (la letra que M200 cita como art-36.1 y 36.3 para entidades cofinanciadoras)."
+notes = "LIS art 36: deducción por inversiones en producciones cinematograficas, series audiovisuales y espectaculos en vivo de artes escenicas y musicales. Establece las tasas de deducción (30 por ciento primer millon de base, 25 por ciento exceso), los limites por producción y episodio (20M / 10M EUR), el requisito de gasto territorial espanol (50 por ciento de la base) y el sub-regimen de productor/financiacion (la letra que M200 cita como art-36.1 y 36.3 para entidades cofinanciadoras)."
 required_text = [
     "Deducción por inversiones en producciones cinematográficas",
     "30 por ciento",
@@ -338,7 +338,7 @@ effective_from = 2015-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-15
 reviewed_by = "operator"
-notes = "LIS art 100: Transparencia Fiscal Internacional. Imputacion de rentas positivas obtenidas por entidades no residentes y establecimientos permanentes cuando el contribuyente tenga (solo o con vinculadas art-18) participacion igual o superior al 50 por ciento Y el gravamen extranjero sea inferior al 75 por ciento del que hubiera correspondido en Espana. Base sustantiva de la imputacion-rentas-positivas-art-100-LIS section de M200."
+notes = "LIS art 100: Transparencia Fiscal Internacional. Imputación de rentas positivas obtenidas por entidades no residentes y establecimientos permanentes cuando el contribuyente tenga (solo o con vinculadas art-18) participación igual o superior al 50 por ciento Y el gravamen extranjero sea inferior al 75 por ciento del que hubiera correspondido en Espana. Base sustantiva de la imputacion-rentas-positivas-art-100-LIS section de M200."
 required_text = [
     "Imputación de rentas positivas obtenidas por entidades no residentes",
     "participación igual o superior al 50 por ciento",
@@ -359,12 +359,12 @@ review_status = "operator_reviewed"
 reviewed_at = 2026-05-15
 reviewed_by = "operator"
 notes = """\
-RIS art 3: amortizacion de elementos patrimoniales del inmovilizado material, intangible e \
-inversiones inmobiliarias - normas comunes. Define los metodos de depreciacion efectiva \
-(LIS art-12), la base amortizable (precio de adquisicion o coste de produccion, exclusion \
-del valor del suelo en edificaciones, prorrateo catastral), el inicio de la amortizacion \
+RIS art 3: amortización de elementos patrimoniales del inmovilizado material, intangible e \
+inversiones inmobiliarias - normas comunes. Define los métodos de depreciación efectiva \
+(LIS art-12), la base amortizable (precio de adquisición o coste de producción, exclusion \
+del valor del suelo en edificaciones, prorrateo catastral), el inicio de la amortización \
 (puesta en funcionamiento / capacidad de producir ingresos) y el tratamiento de \
-renovaciones, ampliaciones y mejoras. Base reglamentaria de las casillas de amortizacion \
+renovaciones, ampliaciones y mejoras. Base reglamentaria de las casillas de amortización \
 de M200."""
 required_text = [
     "Amortización de elementos patrimoniales",
@@ -385,7 +385,7 @@ effective_from = 2015-07-12
 review_status = "agent_reviewed"
 reviewed_at = 2026-09-23
 reviewed_by = "agent-prepared; anchor resolved in the bundled consolidated text; required_text copied from that unit; pending operator re-stamp"
-notes = "RIS art 4: amortizacion segun la tabla de la LIS. Admite cualquier coeficiente entre el maximo y el derivado del periodo maximo, el coeficiente por mas de un turno de trabajo y el doble del maximo sobre el precio de elementos usados; los edificios de menos de diez anos no son usados."
+notes = "RIS art 4: amortización según la tabla de la LIS. Admite cualquier coeficiente entre el maximo y el derivado del periodo maximo, el coeficiente por mas de un turno de trabajo y el doble del maximo sobre el precio de elementos usados; los edificios de menos de diez anos no son usados."
 required_text = [
     "Amortización según la tabla de amortización establecida en la Ley del Impuesto",
     "Cualquier otro coeficiente de amortización lineal comprendido entre los dos anteriormente mencionados",
@@ -407,7 +407,7 @@ effective_from = 2015-07-12
 review_status = "agent_reviewed"
 reviewed_at = 2026-09-23
 reviewed_by = "agent-prepared; anchor resolved in the bundled consolidated text; required_text copied from that unit; pending operator re-stamp"
-notes = "RIS art 5: amortizacion segun porcentaje constante sobre el valor pendiente, ponderado 1,5, 2 o 2,5 segun el periodo, nunca inferior al 11 por ciento; excluye edificios, mobiliario y enseres."
+notes = "RIS art 5: amortización según porcentaje constante sobre el valor pendiente, ponderado 1,5, 2 o 2,5 según el periodo, nunca inferior al 11 por ciento; excluye edificios, mobiliario y enseres."
 required_text = [
     "Amortización según porcentaje constante",
     "En ningún caso el porcentaje constante podrá ser inferior al 11 por ciento",
@@ -427,7 +427,7 @@ effective_from = 2015-07-12
 review_status = "agent_reviewed"
 reviewed_at = 2026-09-23
 reviewed_by = "agent-prepared; anchor resolved in the bundled consolidated text; required_text copied from that unit; pending operator re-stamp"
-notes = "RIS art 6: amortizacion segun numeros digitos, en orden decreciente o inverso, con periodo entre el maximo y el derivado del coeficiente maximo; excluye edificios, mobiliario y enseres."
+notes = "RIS art 6: amortización según numeros digitos, en orden decreciente o inverso, con periodo entre el maximo y el derivado del coeficiente maximo; excluye edificios, mobiliario y enseres."
 required_text = [
     "Amortización según números dígitos",
     "La asignación de valores numéricos también podrá efectuarse de manera inversa a la prevista en el párrafo anterior",
@@ -447,7 +447,7 @@ effective_from = 2015-07-12
 review_status = "agent_reviewed"
 reviewed_at = 2026-09-23
 reviewed_by = "agent-prepared; anchor resolved in the bundled consolidated text; required_text copied from that unit; pending operator re-stamp"
-notes = "RIS art 7: planes de amortizacion propuestos por el contribuyente y aprobados, expresamente o por silencio, por la Administracion; surten efecto en los periodos que finalicen tras su presentacion."
+notes = "RIS art 7: planes de amortización propuestos por el contribuyente y aprobados, expresamente o por silencio, por la Administracion; surten efecto en los periodos que finalicen tras su presentación."
 required_text = [
     "Planes de amortización",
     "Aprobar el plan de amortización formulado por el contribuyente",
@@ -467,7 +467,7 @@ effective_from = 2015-01-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-09-23
 reviewed_by = "agent-prepared; anchor resolved in the bundled consolidated text; required_text copied from that unit; pending operator re-stamp"
-notes = "LIS art 103: los elementos nuevos del inmovilizado material, inversiones inmobiliarias e intangible puestos a disposicion en un periodo de reducida dimension pueden amortizarse con el doble del coeficiente lineal maximo de las tablas."
+notes = "LIS art 103: los elementos nuevos del inmovilizado material, inversiones inmobiliarias e intangible puestos a disposición en un periodo de reducida dimension pueden amortizarse con el doble del coeficiente lineal maximo de las tablas."
 required_text = [
     "Amortización de los elementos nuevos del inmovilizado material y de las inversiones inmobiliarias y del inmovilizado intangible",
     "multiplicar por 2 el coeficiente de amortización lineal máximo previsto en las tablas de amortización oficialmente aprobadas",
@@ -499,7 +499,7 @@ effective_from = 2015-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-15
 reviewed_by = "operator"
-notes = "LIS art 25: reserva de capitalizacion. Establece la reduccion en la base imponible del 15 por ciento del incremento de los fondos propios (23 por ciento si la plantilla media aumenta), condicionada al mantenimiento durante 3 anios y a la dotacion de una reserva indisponible."
+notes = "LIS art 25: reserva de capitalización. Establece la reducción en la base imponible del 15 por ciento del incremento de los fondos propios (23 por ciento si la plantilla media aumenta), condicionada al mantenimiento durante 3 anios y a la dotacion de una reserva indisponible."
 required_text = [
     "Reserva de capitalización",
     "reducción en la base imponible",
@@ -519,7 +519,7 @@ effective_from = 2015-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-15
 reviewed_by = "operator"
-notes = "LIS art 26: compensacion de bases imponibles negativas. Establece el limite del 70 por ciento de la base imponible previa para la compensacion de BINs con rentas positivas de ejercicios siguientes, con suelo absoluto de 1 millon de euros y plazo de prescripcion de 10 anios para la facultad de comprobacion."
+notes = "LIS art 26: compensación de bases imponibles negativas. Establece el limite del 70 por ciento de la base imponible previa para la compensación de BINs con rentas positivas de ejercicios siguientes, con suelo absoluto de 1 millon de euros y plazo de prescripción de 10 anios para la facultad de comprobación."
 required_text = [
     "Compensación de bases imponibles negativas",
     "70 por ciento de la base imponible previa",
@@ -539,7 +539,7 @@ effective_from = 2015-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-15
 reviewed_by = "operator"
-notes = "LIS art 29: el tipo de gravamen. Establece los tipos del Impuesto sobre Sociedades: 25 por ciento general; escala micro-empresa 17 por ciento (0-50.000) / 20 por ciento (resto); cooperativas fiscalmente protegidas -3 pp; entidades sin fines lucrativos 10 por ciento; nuevas creacion 15 por ciento (primeros dos ejercicios); entidades de credito y exploracion de hidrocarburos 30 por ciento."
+notes = "LIS art 29: el tipo de gravamen. Establece los tipos del Impuesto sobre Sociedades: 25 por ciento general; escala micro-empresa 17 por ciento (0-50.000) / 20 por ciento (resto); cooperativas fiscalmente protegidas -3 pp; entidades sin fines lucrativos 10 por ciento; nuevas creación 15 por ciento (primeros dos ejercicios); entidades de crédito y exploracion de hidrocarburos 30 por ciento."
 required_text = [
     "El tipo de gravamen",
     "25 por ciento",
@@ -754,7 +754,7 @@ effective_from = 2015-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-15
 reviewed_by = "operator"
-notes = "LIS art 30: cuota integra. Define la cuota integra como la cantidad resultante de aplicar a la base imponible el tipo de gravamen del articulo 29, con regla de proporcionalidad para periodos impositivos de duracion inferior al anio. La definicion sustantiva del Impuesto sobre Sociedades reside en este articulo."
+notes = "LIS art 30: cuota integra. Define la cuota integra como la cantidad resultante de aplicar a la base imponible el tipo de gravamen del articulo 29, con regla de proporcionalidad para periodos impositivos de duración inferior al anio. La definición sustantiva del Impuesto sobre Sociedades reside en este articulo."
 required_text = [
     "Cuota íntegra",
     "aplicar a la base imponible el tipo de gravamen",
@@ -773,7 +773,7 @@ effective_from = 2015-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-15
 reviewed_by = "operator"
-notes = "LIS art 39: normas comunes a las deducciones para incentivar la realizacion de determinadas actividades. Establece el plazo de 15 anios para aplicar deducciones no utilizadas por insuficiencia de cuota, el regimen de abono por insuficiencia de cuota para deducciones de I+D+i y animacion, y los limites anuales de 1 millon de euros (innovacion tecnologica) y 3 millones (conjunto)."
+notes = "LIS art 39: normas comunes a las deducciones para incentivar la realización de determinadas actividades. Establece el plazo de 15 anios para aplicar deducciones no utilizadas por insuficiencia de cuota, el régimen de abono por insuficiencia de cuota para deducciones de I+D+i y animacion, y los limites anuales de 1 millon de euros (innovacion tecnologica) y 3 millones (conjunto)."
 required_text = [
     "Normas comunes a las deducciones",
     "15 años inmediatos y sucesivos",
@@ -793,7 +793,7 @@ effective_from = 2015-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-15
 reviewed_by = "operator"
-notes = "LIS art 105: reserva de nivelacion de bases imponibles. Permite a las entidades que cumplen las condiciones del articulo 101 (cifra de negocios inferior a 10 millones de euros) y aplican el tipo general minorar su base imponible positiva hasta el 10 por ciento de su importe, con tope de 1 millon de euros, computada tambien a efectos de pagos fraccionados (art 40.3) e incompatible con la reserva de capitalizacion del articulo 25."
+notes = "LIS art 105: reserva de nivelacion de bases imponibles. Permite a las entidades que cumplen las condiciones del articulo 101 (cifra de negocios inferior a 10 millones de euros) y aplican el tipo general minorar su base imponible positiva hasta el 10 por ciento de su importe, con tope de 1 millon de euros, computada también a efectos de pagos fraccionados (art 40.3) e incompatible con la reserva de capitalización del articulo 25."
 required_text = [
     "Reserva de nivelación de bases imponibles",
     "minorar su base imponible positiva hasta el 10 por ciento",
@@ -841,7 +841,7 @@ LIS art 40.3: modalidad opcional / obligatoria del pago fraccionado del Impuesto
 calculada sobre la parte de la base imponible de los 3, 9 u 11 primeros meses del año natural. La \
 modalidad es obligatoria para los contribuyentes cuyo importe neto de la cifra de negocios haya \
 superado los 6 millones de euros durante los 12 meses anteriores al inicio del periodo impositivo. \
-La cuantia se obtiene aplicando a la base el porcentaje resultante de multiplicar por cinco septimos \
+La cuantía se obtiene aplicando a la base el porcentaje resultante de multiplicar por cinco septimos \
 el tipo de gravamen redondeado por defecto. Funda el gate de aplicabilidad de la modalidad Modelo \
 202 Art. 40.3 frente a la modalidad Art. 40.2."""
 required_text = [
@@ -1358,7 +1358,7 @@ effective_from = 2015-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-05
 reviewed_by = "operator"
-notes = "Operaciones vinculadas: definicion, valor de mercado, metodos de valoracion y deber de informacion (Modelo 232)."
+notes = "Operaciones vinculadas: definición, valor de mercado, métodos de valoración y deber de información (Modelo 232)."
 required_text = [
     "personas o entidades vinculadas",
     # Apartado 6 (acuerdos previos de valoracion) and apartado 14, at 50% and
@@ -1384,7 +1384,7 @@ effective_from = 2015-07-12
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-05
 reviewed_by = "operator"
-notes = "Reglamento del Impuesto sobre Sociedades: informacion y documentacion sobre entidades y operaciones vinculadas."
+notes = "Reglamento del Impuesto sobre Sociedades: información y documentación sobre entidades y operaciones vinculadas."
 required_text = [
     "operaciones vinculadas",
     "18.3 de la Ley",
@@ -1403,7 +1403,7 @@ effective_from = 2017-08-31
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-05
 reviewed_by = "operator"
-notes = "Aprueba el modelo 232 de declaracion informativa de operaciones vinculadas y de operaciones y situaciones relacionadas con paises o territorios calificados como paraisos fiscales."
+notes = "Aprueba el modelo 232 de declaración informativa de operaciones vinculadas y de operaciones y situaciones relacionadas con paises o territorios calificados como paraisos fiscales."
 required_text = [
     "modelo 232",
     "operaciones vinculadas",
@@ -1423,7 +1423,7 @@ effective_from = 2017-08-31
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-05
 reviewed_by = "operator"
-notes = "Obligados a presentar el Modelo 232: contribuyentes del IS y del IRNR con establecimiento permanente, asi como entidades en regimen de atribucion de rentas. Define los umbrales de operaciones vinculadas y las reglas de paraisos fiscales."
+notes = "Obligados a presentar el Modelo 232: contribuyentes del IS y del IRNR con establecimiento permanente, asi como entidades en régimen de atribución de rentas. Define los umbrales de operaciones vinculadas y las reglas de paraisos fiscales."
 required_text = [
     "Obligados a presentar",
     "Impuesto sobre Sociedades",
@@ -1443,7 +1443,7 @@ effective_from = 2017-08-31
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-05
 reviewed_by = "operator"
-notes = "Contenido del Modelo 232: secciones I (Informacion de operaciones con personas o entidades vinculadas), II (Operaciones con personas o entidades vinculadas en paraisos fiscales) y III (Operaciones y situaciones relacionadas con paraisos fiscales)."
+notes = "Contenido del Modelo 232: secciones I (Información de operaciones con personas o entidades vinculadas), II (Operaciones con personas o entidades vinculadas en paraisos fiscales) y III (Operaciones y situaciones relacionadas con paraisos fiscales)."
 required_text = [
     "Contenido del modelo 232",
     "operaciones del mismo tipo",
@@ -1463,7 +1463,7 @@ effective_from = 2017-08-31
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-05
 reviewed_by = "operator"
-notes = "Plazo de presentacion del Modelo 232: el mes siguiente a los diez meses posteriores a la conclusion del periodo impositivo (noviembre para ejercicios cerrados a 31 de diciembre)."
+notes = "Plazo de presentación del Modelo 232: el mes siguiente a los diez meses posteriores a la conclusion del periodo impositivo (noviembre para ejercicios cerrados a 31 de diciembre)."
 required_text = [
     "Plazo de presentación del Modelo 232",
     "mes siguiente a los diez meses posteriores",
@@ -1535,7 +1535,7 @@ effective_from = 2015-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-06
 reviewed_by = "operator"
-notes = "Deduccion de retenciones, ingresos a cuenta y pagos fraccionados de la cuota liquida del Impuesto sobre Sociedades. Establece el deber de devolucion del exceso por la Administracion."
+notes = "Deducción de retenciones, ingresos a cuenta y pagos fraccionados de la cuota liquida del Impuesto sobre Sociedades. Establece el deber de devolución del exceso por la Administracion."
 required_text = [
     "Deducción de las retenciones, ingresos a cuenta y pagos fraccionados",
     "Serán deducibles de la cuota líquida",
@@ -1600,7 +1600,7 @@ effective_from = 2015-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-06
 reviewed_by = "operator"
-notes = "Declaracion del Impuesto sobre Sociedades: lugar, forma, obligados y plazo general de 25 dias naturales tras los seis meses posteriores a la conclusion del periodo impositivo."
+notes = "Declaración del Impuesto sobre Sociedades: lugar, forma, obligados y plazo general de 25 días naturales tras los seis meses posteriores a la conclusion del periodo impositivo."
 required_text = [
     "Los contribuyentes estarán obligados a presentar una declaración",
     "25 días naturales siguientes a los 6 meses posteriores",
@@ -1622,7 +1622,7 @@ governs_periods_to = 2024-12-31
 review_status = "agent_reviewed"
 reviewed_at = 2026-06-29
 reviewed_by = "agent-review"
-notes = "Orden HAC/657/2025: aprueba el Modelo 200 de declaracion del Impuesto sobre Sociedades para periodos impositivos iniciados en 2024; the bundled BOE excerpt carries the Art. 6 reference to Art. 1 approval, deadline, entry into force, and Modelo 200 heading."
+notes = "Orden HAC/657/2025: aprueba el Modelo 200 de declaración del Impuesto sobre Sociedades para periodos impositivos iniciados en 2024; the bundled BOE excerpt carries the Art. 6 reference to Art. 1 approval, deadline, entry into force, and Modelo 200 heading."
 required_text = [
     "períodos impositivos iniciados entre el 1 de enero y el 31 de diciembre de 2024",
     "modelo 200 de declaración del Impuesto sobre Sociedades",
@@ -1956,7 +1956,7 @@ governs_periods_to = 2022-12-31
 review_status = "agent_reviewed"
 reviewed_at = 2026-10-01
 reviewed_by = "agent-prepared (corpus-grounded against the bundled as-published BOE-A-2023-12416 art 1; pending operator re-stamp)"
-notes = "Orden HFP/523/2023 art 1.1.a).2.o approves Modelo 220, the IS declaration of grupos fiscales in the regimen de consolidacion fiscal, set out in anexo II, for periodos impositivos iniciados entre el 1 de enero y el 31 de diciembre de 2022; art 1.3 applies it to the grupos fiscales, cooperatives included, of capitulo VI del titulo VII LIS and RD 1345/1992. The orden enters into force on 2023-07-01 (disposicion final unica). It is the approval clause of Modelo 220's ejercicio 2022 edition."
+notes = "Orden HFP/523/2023 art 1.1.a).2.o approves Modelo 220, the IS declaration of grupos fiscales in the régimen de consolidacion fiscal, set out in anexo II, for periodos impositivos iniciados entre el 1 de enero y el 31 de diciembre de 2022; art 1.3 applies it to the grupos fiscales, cooperatives included, of capitulo VI del titulo VII LIS and RD 1345/1992. The orden enters into force on 2023-07-01 (disposición final única). It is the approval clause of Modelo 220's ejercicio 2022 edition."
 required_text = [
     "Se aprueban los modelos de declaración del Impuesto sobre Sociedades",
     "para los períodos impositivos iniciados entre el 1 de enero y el 31 de diciembre de 2022",
@@ -1977,7 +1977,7 @@ effective_from = 2023-07-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-10-01
 reviewed_by = "agent-prepared (corpus-grounded against the bundled as-published BOE-A-2023-12416 art 3.2; pending operator re-stamp)"
-notes = "Orden HFP/523/2023 art 3.2: the domiciliacion bancaria of the Modelos 200 and 220 for periodos ended on 31 December 2022 may be ordered from 1 to 20 July 2023, both inclusive. It grounds the Modelo 220 ejercicio 2022 window's payment_cutoff_on."
+notes = "Orden HFP/523/2023 art 3.2: the domiciliación bancaria of the Modelos 200 and 220 for periodos ended on 31 December 2022 may be ordered from 1 to 20 July 2023, both inclusive. It grounds the Modelo 220 ejercicio 2022 window's payment_cutoff_on."
 required_text = [
     "La domiciliación bancaria a que se refiere el párrafo anterior podrá realizarse desde el día 1 de julio hasta el 20 de julio de 2023, ambos inclusive.",
 ]
@@ -2031,7 +2031,7 @@ governs_periods_to = 2023-12-31
 review_status = "agent_reviewed"
 reviewed_at = 2026-10-01
 reviewed_by = "agent-prepared (corpus-grounded against the bundled as-published BOE-A-2024-10574 art 1; pending operator re-stamp)"
-notes = "Orden HAC/495/2024 art 1.1.a).2.o approves Modelo 220, the IS declaration of grupos fiscales in the regimen de consolidacion fiscal, set out in anexo II, for periodos impositivos iniciados entre el 1 de enero y el 31 de diciembre de 2023; art 1.3 applies it to the grupos fiscales, cooperatives included, of capitulo VI del titulo VII LIS and RD 1345/1992. The orden enters into force on 2024-07-01 (disposicion final tercera). It is the approval clause of Modelo 220's ejercicio 2023 edition."
+notes = "Orden HAC/495/2024 art 1.1.a).2.o approves Modelo 220, the IS declaration of grupos fiscales in the régimen de consolidacion fiscal, set out in anexo II, for periodos impositivos iniciados entre el 1 de enero y el 31 de diciembre de 2023; art 1.3 applies it to the grupos fiscales, cooperatives included, of capitulo VI del titulo VII LIS and RD 1345/1992. The orden enters into force on 2024-07-01 (disposición final tercera). It is the approval clause of Modelo 220's ejercicio 2023 edition."
 required_text = [
     "Se aprueban los modelos de declaración del Impuesto sobre Sociedades",
     "para los períodos impositivos iniciados entre el 1 de enero y el 31 de diciembre de 2023",
@@ -2052,7 +2052,7 @@ effective_from = 2024-07-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-10-01
 reviewed_by = "agent-prepared (corpus-grounded against the bundled as-published BOE-A-2024-10574 art 3.2; pending operator re-stamp)"
-notes = "Orden HAC/495/2024 art 3.2: the domiciliacion bancaria of the Modelos 200 and 220 for periodos ended on 31 December 2023 may be ordered from 1 to 22 July 2024, both inclusive. It grounds the Modelo 220 ejercicio 2023 window's payment_cutoff_on."
+notes = "Orden HAC/495/2024 art 3.2: the domiciliación bancaria of the Modelos 200 and 220 for periodos ended on 31 December 2023 may be ordered from 1 to 22 July 2024, both inclusive. It grounds the Modelo 220 ejercicio 2023 window's payment_cutoff_on."
 required_text = [
     "La domiciliación bancaria a que se refiere el párrafo anterior podrá realizarse desde el día 1 de julio hasta el 22 de julio de 2024, ambos inclusive.",
 ]
@@ -2111,7 +2111,7 @@ governs_periods_to = 2022-12-31
 review_status = "agent_reviewed"
 reviewed_at = 2026-10-01
 reviewed_by = "agent-prepared (corpus-grounded against the bundled as-published BOE-A-2023-12416 art 1; pending operator re-stamp)"
-notes = "Orden HFP/523/2023 art 1.1.a).1.o approves Modelo 200, the declaracion del Impuesto sobre Sociedades and of the IRNR (establecimientos permanentes and entidades en regimen de atribucion de rentas constituidas en el extranjero con presencia en territorio espanol), set out in anexo I, for periodos impositivos iniciados entre el 1 de enero y el 31 de diciembre de 2022; art 1.2 applies it with caracter general to every IS contribuyente. The orden enters into force on 2023-07-01 (disposicion final unica). It is the approval clause of Modelo 200's ejercicio 2022 edition."
+notes = "Orden HFP/523/2023 art 1.1.a).1.o approves Modelo 200, the declaración del Impuesto sobre Sociedades and of the IRNR (establecimientos permanentes and entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio espanol), set out in anexo I, for periodos impositivos iniciados entre el 1 de enero y el 31 de diciembre de 2022; art 1.2 applies it with caracter general to every IS contribuyente. The orden enters into force on 2023-07-01 (disposición final única). It is the approval clause of Modelo 200's ejercicio 2022 edition."
 required_text = [
     "Se aprueban los modelos de declaración del Impuesto sobre Sociedades",
     "para los períodos impositivos iniciados entre el 1 de enero y el 31 de diciembre de 2022",
@@ -2132,7 +2132,7 @@ effective_from = 2023-07-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-10-01
 reviewed_by = "agent-prepared (corpus-grounded against the bundled as-published BOE-A-2023-12416 art 6.1; pending operator re-stamp)"
-notes = "Orden HFP/523/2023 art 6.1: under LIS art 124.1 the Modelo 200 approved in art 1 is filed within the 25 dias naturales following the six months after the periodo impositivo ends. It is the Modelo 200 plazo clause for periodos impositivos iniciados en 2022."
+notes = "Orden HFP/523/2023 art 6.1: under LIS art 124.1 the Modelo 200 approved in art 1 is filed within the 25 días naturales following the six months after the periodo impositivo ends. It is the Modelo 200 plazo clause for periodos impositivos iniciados en 2022."
 required_text = [
     "el modelo 200 de declaración del Impuesto sobre Sociedades, aprobado en el artículo 1 de la presente orden, se presentará en el plazo de los 25 días naturales siguientes a los seis meses posteriores a la conclusión del período impositivo",
 ]
@@ -2166,7 +2166,7 @@ governs_periods_to = 2023-12-31
 review_status = "agent_reviewed"
 reviewed_at = 2026-10-01
 reviewed_by = "agent-prepared (corpus-grounded against the bundled as-published BOE-A-2024-10574 art 1; pending operator re-stamp)"
-notes = "Orden HAC/495/2024 art 1.1.a).1.o approves Modelo 200, the declaracion del Impuesto sobre Sociedades and of the IRNR (establecimientos permanentes and entidades en regimen de atribucion de rentas constituidas en el extranjero con presencia en territorio espanol), set out in anexo I, for periodos impositivos iniciados entre el 1 de enero y el 31 de diciembre de 2023; art 1.2 applies it with caracter general to every IS contribuyente. The orden enters into force on 2024-07-01 (disposicion final tercera). It is the approval clause of Modelo 200's ejercicio 2023 edition."
+notes = "Orden HAC/495/2024 art 1.1.a).1.o approves Modelo 200, the declaración del Impuesto sobre Sociedades and of the IRNR (establecimientos permanentes and entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio espanol), set out in anexo I, for periodos impositivos iniciados entre el 1 de enero y el 31 de diciembre de 2023; art 1.2 applies it with caracter general to every IS contribuyente. The orden enters into force on 2024-07-01 (disposición final tercera). It is the approval clause of Modelo 200's ejercicio 2023 edition."
 required_text = [
     "Se aprueban los modelos de declaración del Impuesto sobre Sociedades",
     "para los períodos impositivos iniciados entre el 1 de enero y el 31 de diciembre de 2023",
@@ -2187,7 +2187,7 @@ effective_from = 2024-07-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-10-01
 reviewed_by = "agent-prepared (corpus-grounded against the bundled as-published BOE-A-2024-10574 art 6.1; pending operator re-stamp)"
-notes = "Orden HAC/495/2024 art 6.1: under LIS art 124.1 the Modelo 200 approved in art 1 is filed within the veinticinco dias naturales following the six months after the periodo impositivo ends. It is the Modelo 200 plazo clause for periodos impositivos iniciados en 2023."
+notes = "Orden HAC/495/2024 art 6.1: under LIS art 124.1 the Modelo 200 approved in art 1 is filed within the veinticinco días naturales following the six months after the periodo impositivo ends. It is the Modelo 200 plazo clause for periodos impositivos iniciados en 2023."
 required_text = [
     "el modelo 200 de declaración del Impuesto sobre Sociedades, aprobado en el artículo 1 de la presente orden, se presentará en el plazo de los veinticinco días naturales siguientes a los seis meses posteriores a la conclusión del período impositivo",
 ]
@@ -2219,7 +2219,7 @@ effective_from = 2015-10-24
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-27
 reviewed_by = "operator"
-notes = "Ley 44/2015 Art. 1: definicion de sociedad laboral. Sociedad Anonima Laboral (SAL) y Sociedad Limitada Laboral (SLL). Requisito: la mayoria del capital social ha de ser propiedad de trabajadores que presten en ella servicios retribuidos en forma personal y directa, cuya relacion laboral sea de duracion indefinida. Ningun socio puede poseer acciones o participaciones que representen mas de un tercio del capital social salvo entidades publicas, asociaciones u otras personas juridicas sin animo de lucro."
+notes = "Ley 44/2015 Art. 1: definición de sociedad laboral. Sociedad Anonima Laboral (SAL) y Sociedad Limitada Laboral (SLL). Requisito: la mayoria del capital social ha de ser propiedad de trabajadores que presten en ella servicios retribuidos en forma personal y directa, cuya relación laboral sea de duración indefinida. Ningun socio puede poseer acciones o participaciones que representen mas de un tercio del capital social salvo entidades publicas, asociaciones u otras personas juridicas sin animo de lucro."
 required_text = [
     "sociedad laboral",
     "capital social",
@@ -2259,7 +2259,7 @@ effective_from = 2015-10-24
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-27
 reviewed_by = "operator"
-notes = "Ley 44/2015 Art. 13: regimen tributario de las sociedades laborales. Las sociedades laborales tributan por el Impuesto sobre Sociedades en el regimen general. No tienen un tipo reducido propio; el tipo aplicable es el general del 25 por ciento o el que corresponda segun su cifra de negocios, forma juridica, etc."
+notes = "Ley 44/2015 Art. 13: régimen tributario de las sociedades laborales. Las sociedades laborales tributan por el Impuesto sobre Sociedades en el régimen general. No tienen un tipo reducido propio; el tipo aplicable es el general del 25 por ciento o el que corresponda según su cifra de negocios, forma juridica, etc."
 required_text = [
     "régimen tributario",
     "Impuesto sobre Sociedades",
@@ -2281,10 +2281,10 @@ reviewed_by = "verified against official BOE-A-2015-11071 consolidated art. 14; 
 notes = """\
 Ley 44/2015 Art. 14: reserva especial. Las sociedades laborales deben constituir una reserva \
 especial dotada con el diez por ciento del beneficio liquido de cada ejercicio hasta que alcance al \
-menos una cifra superior al doble del capital social. El articulo tambien limita el destino de la \
+menos una cifra superior al doble del capital social. El articulo también limita el destino de la \
 reserva a compensar perdidas cuando no haya otras reservas disponibles suficientes y/o a adquirir \
 acciones o participaciones propias para enajenarlas a trabajadores indefinidos conforme al art 12. \
-La reduccion de base imponible IS por dotaciones a la reserva especial se fundamenta separadamente \
+La reducción de base imponible IS por dotaciones a la reserva especial se fundamenta separadamente \
 en Ley 44/2015 art 13."""
 required_text = [
     "reserva especial",
@@ -2334,7 +2334,7 @@ effective_from = 2015-01-01
 review_status = "agent_reviewed"
 reviewed_by = "agent: enrolled from the bundled consolidated LIS (ley-27-2014.html). Modelo 220's revision prose has discussed LIS art. 75.2 at length for several editions while citing it only indirectly through the approving orden's reference to it, because no table existed; a ref discussed in prose and absent from the catalogue is not citable, and this closes that gap. Both required_text phrases were confirmed present in the bundled payload. NOT CLAIMED -- no operator countersignature, and apartado 1 is not enrolled here."
 reviewed_at = 2026-09-12
-notes = """LIS art. 75.2: plazo de la declaracion del grupo fiscal. The group declaration is filed within the plazo of the REPRESENTANTE's own individual declaration rather than on a plazo of its own, which is why modelo 220's deadline routes through art. 124.1 by way of the representante rather than directly. Orden HAC/529/2026 art. 6.3 grounds the Modelo 220 plazo on this provision; until now the registry could only cite that orden, not the provision it rests on."""
+notes = """LIS art. 75.2: plazo de la declaración del grupo fiscal. The group declaration is filed within the plazo of the REPRESENTANTE's own individual declaration rather than on a plazo of its own, which is why modelo 220's deadline routes through art. 124.1 by way of the representante rather than directly. Orden HAC/529/2026 art. 6.3 grounds the Modelo 220 plazo on this provision; until now the registry could only cite that orden, not the provision it rests on."""
 required_text = [
     "La declaracion del grupo fiscal debera presentarse dentro del plazo correspondiente a la declaracion en regimen de tributacion individual de la entidad representante",
     "Declaracion y autoliquidacion del grupo fiscal",
@@ -2353,7 +2353,7 @@ effective_from = 2016-01-01
 review_status = "agent_reviewed"
 reviewed_by = "agent-prepared; anchor #a130 resolved through the production resolver against the bundled consolidated LIS (ley-27-2014.html, 212 units, exactly one unit for this anchor) and each required_text phrase confirmed present in that resolved unit; corroborated by the AEAT Manual practico de Sociedades 2024 anchors 59 and 61 (pp. 529, 534); pending operator re-stamp"
 reviewed_at = 2026-08-26
-notes = """LIS art. 130: derecho a la conversion de activos por impuesto diferido (AID) en credito exigible frente a la Administracion Tributaria. Los AID correspondientes a dotaciones por deterioro de creditos por insolvencias de deudores no vinculados y no adeudados con entidades de derecho publico cuya deducibilidad no se produce por el art. 13.1.a), y los derivados de los apartados 1 y 2 del art. 14 (sistemas de prevision social y prejubilacion), pueden convertirse en credito exigible por un importe igual a la cuota liquida positiva del periodo impositivo de generacion, cuando concurra alguna de las circunstancias del apartado 2 (perdidas contables en los terminos que fija, o liquidacion o insolvencia judicialmente declarada). Funda la seccion activos_impuesto_diferido_aid_art_130_lis del Modelo 200, que hasta ahora citaba unicamente la lista generica de 18 articulos comun a toda la revision y no el articulo que establece el derecho."""
+notes = """LIS art. 130: derecho a la conversion de activos por impuesto diferido (AID) en crédito exigible frente a la Administracion Tributaria. Los AID correspondientes a dotaciones por deterioro de creditos por insolvencias de deudores no vinculados y no adeudados con entidades de derecho publico cuya deducibilidad no se produce por el art. 13.1.a), y los derivados de los apartados 1 y 2 del art. 14 (sistemas de prevision social y prejubilacion), pueden convertirse en crédito exigible por un importe igual a la cuota liquida positiva del periodo impositivo de generacion, cuando concurra alguna de las circunstancias del apartado 2 (perdidas contables en los terminos que fija, o liquidación o insolvencia judicialmente declarada). Funda la seccion activos_impuesto_diferido_aid_art_130_lis del Modelo 200, que hasta ahora citaba unicamente la lista generica de 18 articulos comun a toda la revision y no el articulo que establece el derecho."""
 required_text = [
     "podrán convertirse en un crédito exigible frente a la Administración Tributaria",
     "Que la entidad sea objeto de liquidación o insolvencia judicialmente declarada",
@@ -2372,7 +2372,7 @@ effective_from = 2016-01-01
 review_status = "agent_reviewed"
 reviewed_by = "agent-prepared; anchor #dadecimotercera-2 resolved through the production resolver to exactly one unit of the bundled consolidated LIS (the -2 suffix is the BOE source anchor id, verified NOT a redaction split: only one unit matches the #dadecimotercera prefix); required_text phrases confirmed present in that unit; the 1,5 per cent prestacion rate is described in these notes but deliberately NOT asserted in required_text, because a numeric rate needs the live-BOE cross-check this entry has not had; pending operator re-stamp"
 reviewed_at = 2026-08-26
-notes = """LIS disposicion adicional decimotercera: prestacion patrimonial por conversion de activos por impuesto diferido en credito exigible frente a la Administracion Tributaria. Obliga al pago de la prestacion a los contribuyentes que tengan registrados AID a que se refiere el apartado 2 de la DT 33a y pretendan tener el derecho del art. 130. El importe declarado por el texto bundled es el resultado de aplicar el 1,5 por ciento al importe total de dichos activos existente el ultimo dia del periodo impositivo; esa cifra NO ha sido contrastada contra el texto vivo del BOE y no se afirma en required_text. Se devenga el dia de inicio del plazo voluntario de declaracion."""
+notes = """LIS disposición adicional decimotercera: prestación patrimonial por conversion de activos por impuesto diferido en crédito exigible frente a la Administracion Tributaria. Obliga al pago de la prestación a los contribuyentes que tengan registrados AID a que se refiere el apartado 2 de la DT 33a y pretendan tener el derecho del art. 130. El importe declarado por el texto bundled es el resultado de aplicar el 1,5 por ciento al importe total de dichos activos existente el ultimo dia del periodo impositivo; esa cifra NO ha sido contrastada contra el texto vivo del BOE y no se afirma en required_text. Se devenga el dia de inicio del plazo voluntario de declaración."""
 required_text = [
     "Prestación patrimonial por conversión de activos por impuesto diferido",
     "El ingreso de la prestación patrimonial se realizará mediante autoliquidación",
@@ -2391,7 +2391,7 @@ effective_from = 2016-01-01
 review_status = "agent_reviewed"
 reviewed_by = "agent-prepared; anchor #dttrigesimatercera resolved through the production resolver to exactly one unit of the bundled consolidated LIS; required_text phrases confirmed present in that unit; corroborated by the AEAT Manual practico de Sociedades 2024 anchor 61 (p. 534), which cites art. 130, DA 13a and DT 33a together; pending operator re-stamp"
 reviewed_at = 2026-08-26
-notes = """LIS disposicion transitoria trigesima tercera: extiende lo dispuesto en los arts. 11.12 y 130 a los activos por impuesto diferido generados en periodos impositivos iniciados con anterioridad a 1 de enero de 2016, incluidos los derivados de los arts. 13.1.b) y 14.1.f) del texto refundido anterior segun su redaccion vigente en periodos iniciados antes de 1 de enero de 2015. Es la pata transitoria de la seccion activos_impuesto_diferido_aid_dt_33a_y_da_13a_lis del Modelo 200, cuyo propio nombre de seccion nombra esta disposicion y la DA 13a."""
+notes = """LIS disposición transitoria trigesima tercera: extiende lo dispuesto en los arts. 11.12 y 130 a los activos por impuesto diferido generados en periodos impositivos iniciados con anterioridad a 1 de enero de 2016, incluidos los derivados de los arts. 13.1.b) y 14.1.f) del texto refundido anterior según su redacción vigente en periodos iniciados antes de 1 de enero de 2015. Es la pata transitoria de la seccion activos_impuesto_diferido_aid_dt_33a_y_da_13a_lis del Modelo 200, cuyo propio nombre de seccion nombra esta disposición y la DA 13a."""
 required_text = [
     "Conversión de activos por impuesto diferido generados en períodos impositivos iniciados con anterioridad",
     "se registren activos por impuesto diferido",
@@ -2410,7 +2410,7 @@ effective_from = 2015-01-01
 review_status = "agent_reviewed"
 reviewed_by = "agent-prepared; anchor #a17 resolved to exactly one unit through the production resolver against the bundled consolidated LIS; required_text confirmed present in that unit; the section tag naming art. 17 was checked against the provision own rubric rather than trusted, because M200 section tags truncate at roughly 50 characters; pending operator re-stamp"
 reviewed_at = 2026-08-26
-notes = "LIS art. 17: regla general y reglas especiales de valoracion en los supuestos de transmisiones lucrativas y societarias. Los elementos patrimoniales se valoran conforme al Codigo de Comercio corregido por los preceptos de la Ley, y las variaciones por valor razonable no tienen efectos fiscales mientras no se imputen a la cuenta de perdidas y ganancias. Funda las secciones del Modelo 200 cuyo tag nombra el art. 17."
+notes = "LIS art. 17: regla general y reglas especiales de valoración en los supuestos de transmisiones lucrativas y societarias. Los elementos patrimoniales se valoran conforme al Codigo de Comercio corregido por los preceptos de la Ley, y las variaciones por valor razonable no tienen efectos fiscales mientras no se imputen a la cuenta de perdidas y ganancias. Funda las secciones del Modelo 200 cuyo tag nombra el art. 17."
 required_text = [
     "Los elementos patrimoniales se valorarán de acuerdo con los criterios previstos en el Código de Comercio",
     "las variaciones de valor originadas por aplicación del criterio del valor razonable no tendrán efectos fiscales",
@@ -2429,7 +2429,7 @@ effective_from = 2015-01-01
 review_status = "agent_reviewed"
 reviewed_by = "agent-prepared; anchor #dasexta resolved to exactly one unit through the production resolver; required_text confirmed present; the 50 per cent exemption share is described in notes but deliberately NOT asserted in required_text, pending a live-BOE numeric cross-check; pending operator re-stamp"
 reviewed_at = 2026-08-26
-notes = "LIS disposicion adicional sexta: exencion de rentas derivadas de la transmision de determinados inmuebles. Segun el texto bundled, exime parcialmente las rentas positivas derivadas de la transmision de bienes inmuebles urbanos que sean activo no corriente o activo no corriente mantenido para la venta, adquiridos a titulo oneroso entre la entrada en vigor del RDL 18/2012 y el 31 de diciembre de 2012. La proporcion exenta que declara el texto bundled es del 50 por ciento; esa cifra no ha sido contrastada contra el texto vivo del BOE y no se afirma en required_text."
+notes = "LIS disposición adicional sexta: exención de rentas derivadas de la transmisión de determinados inmuebles. Según el texto bundled, exime parcialmente las rentas positivas derivadas de la transmisión de bienes inmuebles urbanos que sean activo no corriente o activo no corriente mantenido para la venta, adquiridos a titulo oneroso entre la entrada en vigor del RDL 18/2012 y el 31 de diciembre de 2012. La proporción exenta que declara el texto bundled es del 50 por ciento; esa cifra no ha sido contrastada contra el texto vivo del BOE y no se afirma en required_text."
 required_text = [
     "rentas positivas derivadas de la transmisión de bienes inmuebles de naturaleza urbana",
     "activos no corrientes mantenidos para la venta",
@@ -2448,7 +2448,7 @@ effective_from = 2015-01-01
 review_status = "agent_reviewed"
 reviewed_by = "agent-prepared; anchor #dtprimera resolved to exactly one unit through the production resolver; required_text confirmed present; pending operator re-stamp"
 reviewed_at = 2026-08-26
-notes = "LIS disposicion transitoria primera: regularizacion de ajustes extracontables. Los ajustes extracontables positivos y negativos practicados para determinar bases imponibles de periodos iniciados antes de la entrada en vigor de la Ley se toman en consideracion para determinar las bases de los periodos en que la Ley aplica, con la regla de cierre de que una misma renta no puede dejar de computarse ni computarse dos veces."
+notes = "LIS disposición transitoria primera: regularización de ajustes extracontables. Los ajustes extracontables positivos y negativos practicados para determinar bases imponibles de periodos iniciados antes de la entrada en vigor de la Ley se toman en consideración para determinar las bases de los periodos en que la Ley aplica, con la regla de cierre de que una misma renta no puede dejar de computarse ni computarse dos veces."
 required_text = [
     "Los ajustes extracontables, positivos y negativos",
     "En ningún caso será admisible que una misma renta no se tome",
@@ -2467,7 +2467,7 @@ effective_from = 2015-01-01
 review_status = "agent_reviewed"
 reviewed_by = "agent-prepared; anchor #dtvigesimatercera resolved to exactly one unit through the production resolver; required_text confirmed present; the doble-imposicion-interna subject matter was matched against the di_interna_* section tags it grounds rather than assumed from the tag text; pending operator re-stamp"
 reviewed_at = 2026-08-26
-notes = "LIS disposicion transitoria vigesima tercera: regimen transitorio de las deducciones para evitar la doble imposicion. Gobierna las participaciones adquiridas en periodos iniciados en el transmitente antes de 1 de enero de 2015, remitiendo a la exencion del art. 21 cuando se cumplen sus requisitos. Funda las secciones di_interna_<ejercicio> del Modelo 200, que declaran por ejercicio de generacion los saldos pendientes de deduccion por doble imposicion interna."
+notes = "LIS disposición transitoria vigesima tercera: régimen transitorio de las deducciones para evitar la doble imposición. Gobierna las participaciones adquiridas en periodos iniciados en el transmitente antes de 1 de enero de 2015, remitiendo a la exención del art. 21 cuando se cumplen sus requisitos. Funda las secciones di_interna_<ejercicio> del Modelo 200, que declaran por ejercicio de generacion los saldos pendientes de deducción por doble imposición interna."
 required_text = [
     "Régimen transitorio en el Impuesto sobre Sociedades de las deducciones para evitar la doble imposición",
     "con anterioridad a 1 de enero de 2015",
@@ -2486,7 +2486,7 @@ effective_from = 2015-01-01
 review_status = "agent_reviewed"
 reviewed_by = "agent-prepared; anchor #dtvigesimacuaa resolved to exactly one unit through the production resolver -- note the BOE ordinal spelling cuaa rather than cuarta, which was read off the corpus and never guessed; required_text confirmed present; pending operator re-stamp"
 reviewed_at = 2026-08-26
-notes = "LIS disposicion transitoria vigesima cuarta: deducciones para incentivar la realizacion de determinadas actividades pendientes de aplicar. Conserva la aplicabilidad de deducciones generadas bajo la Ley 61/1978 y el Reglamento aprobado por el RD 2631/1982, y de los saldos pendientes procedentes de regimenes anteriores. Funda las secciones del Modelo 200 cuyo tag nombra la DT 24a."
+notes = "LIS disposición transitoria vigesima cuarta: deducciones para incentivar la realización de determinadas actividades pendientes de aplicar. Conserva la aplicabilidad de deducciones generadas bajo la Ley 61/1978 y el Reglamento aprobado por el RD 2631/1982, y de los saldos pendientes procedentes de regimenes anteriores. Funda las secciones del Modelo 200 cuyo tag nombra la DT 24a."
 required_text = [
     "Deducciones para incentivar la realización de determinadas actividades pendientes de aplicar",
     "de la Ley 61/1978",
@@ -2505,7 +2505,7 @@ effective_from = 2015-07-12
 review_status = "agent_reviewed"
 reviewed_by = "agent-prepared; anchor #dtquinta resolved to exactly one unit through the production resolver against the bundled consolidated RIS (rd-634-2015.html, 87 units); required_text confirmed present; pending operator re-stamp"
 reviewed_at = 2026-08-26
-notes = "RIS disposicion transitoria quinta: obligaciones de informacion de la disposicion transitoria decimocuarta de la Ley del Impuesto. Obliga a presentar, junto con la declaracion del Impuesto sobre Sociedades de los ejercicios en que se practique la deduccion de la DT 14a LIS, la identificacion y porcentaje de participacion en las entidades participadas, la descripcion de sus actividades y el valor de sus fondos propios. Funda la seccion del Modelo 200 cuyo tag nombra la DT 5a RIS."
+notes = "RIS disposición transitoria quinta: obligaciones de información de la disposición transitoria decimocuarta de la Ley del Impuesto. Obliga a presentar, junto con la declaración del Impuesto sobre Sociedades de los ejercicios en que se practique la deducción de la DT 14a LIS, la identificación y porcentaje de participación en las entidades participadas, la descripcion de sus actividades y el valor de sus fondos propios. Funda la seccion del Modelo 200 cuyo tag nombra la DT 5a RIS."
 required_text = [
     "Obligaciones de información de la disposición transitoria decimocuarta de la Ley del Impuesto",
     "Identificación y porcentaje de participación en aquellas entidades participadas",
@@ -2524,7 +2524,7 @@ effective_from = 2015-01-01
 review_status = "agent_reviewed"
 reviewed_by = "agent-prepared; anchor #a45 resolved to exactly one unit through the production resolver against the bundled consolidated LIS, and its rubric reads Uniones temporales de empresas, matching the section it grounds; required_text confirmed present in the resolved unit; the anchor was checked against the measured collision set for this corpus and is not shadowed; pending operator re-stamp"
 reviewed_at = 2026-08-26
-notes = "LIS art. 45: uniones temporales de empresas. Las UTE reguladas en la Ley 18/1982 e inscritas en el registro especial tributan con arreglo al art. 43 (agrupaciones de interes economico espanolas), salvo la regla de valoracion del segundo parrafo del apartado 4 de ese articulo. Funda la seccion del Modelo 200 cuyo tag nombra el art. 45.1."
+notes = "LIS art. 45: uniones temporales de empresas. Las UTE reguladas en la Ley 18/1982 e inscritas en el registro especial tributan con arreglo al art. 43 (agrupaciones de interes economico espanolas), salvo la regla de valoración del segundo parrafo del apartado 4 de ese articulo. Funda la seccion del Modelo 200 cuyo tag nombra el art. 45.1."
 required_text = [
     "Las uniones temporales de empresas reguladas en la Ley 18/1982",
     "inscritas en el registro especial",
@@ -2543,7 +2543,7 @@ effective_from = 2015-01-01
 review_status = "agent_reviewed"
 reviewed_by = "agent-prepared; anchor #a106 resolved to exactly one unit through the production resolver, rubric Contratos de arrendamiento financiero, matching the section it grounds; required_text confirmed present; the minimum contract durations the provision states are described in notes but deliberately NOT asserted in required_text, pending a live-BOE numeric cross-check; pending operator re-stamp"
 reviewed_at = 2026-08-26
-notes = "LIS art. 106: contratos de arrendamiento financiero. Se aplica a los contratos en que el arrendador es una entidad de credito o un establecimiento financiero de credito. El texto bundled fija duraciones minimas segun el objeto sea bien mueble o inmueble, con habilitacion reglamentaria para otros plazos; esas cifras no han sido contrastadas contra el texto vivo del BOE y no se afirman en required_text. Funda la seccion de arrendamiento financiero del Modelo 200."
+notes = "LIS art. 106: contratos de arrendamiento financiero. Se aplica a los contratos en que el arrendador es una entidad de crédito o un establecimiento financiero de crédito. El texto bundled fija duraciones minimas según el objeto sea bien mueble o inmueble, con habilitacion reglamentaria para otros plazos; esas cifras no han sido contrastadas contra el texto vivo del BOE y no se afirman en required_text. Funda la seccion de arrendamiento financiero del Modelo 200."
 required_text = [
     "Contratos de arrendamiento financiero",
     "el arrendador sea una entidad de crédito o un establecimiento financiero de crédito",
@@ -2562,7 +2562,7 @@ effective_from = 2015-01-01
 review_status = "agent_reviewed"
 reviewed_by = "agent-prepared; anchor #a83 resolved to exactly one unit through the production resolver against the bundled consolidated LIS, and checked against this corpus's measured anchor-collision set so it is not one of the shadowed bis/ter provisions; required_text confirmed present in the resolved unit; pending operator re-stamp"
 reviewed_at = 2026-08-26
-notes = "LIS art. 83: limitacion en la deduccion de gastos financieros destinados a la adquisicion de participaciones en el capital o en los fondos propios de entidades. Opera a los efectos del art. 16, anadiendo un limite propio para la deuda destinada a adquirir participaciones cuando la entidad adquirida se incorpora al grupo fiscal o es objeto de una reestructuracion. Es la SEGUNDA MITAD del compuesto que nombra la seccion limite_art_16_5_y_o_83_lis del Modelo 200: esa seccion descansa sobre el art. 16.5 y sobre este articulo, de modo que fundarla solo en el art. 16 declararia una autoridad mas estrecha que la que la propia seccion invoca."
+notes = "LIS art. 83: limitacion en la deducción de gastos financieros destinados a la adquisición de participaciones en el capital o en los fondos propios de entidades. Opera a los efectos del art. 16, anadiendo un limite propio para la deuda destinada a adquirir participaciones cuando la entidad adquirida se incorpora al grupo fiscal o es objeto de una reestructuracion. Es la SEGUNDA MITAD del compuesto que nombra la seccion limite_art_16_5_y_o_83_lis del Modelo 200: esa seccion descansa sobre el art. 16.5 y sobre este articulo, de modo que fundarla solo en el art. 16 declararia una autoridad mas estrecha que la que la propia seccion invoca."
 required_text = [
     "Limitación en la deducción de gastos financieros destinados a la adquisición de participaciones",
     "A los efectos de lo previsto en el artículo 16 de esta Ley",
@@ -2582,7 +2582,7 @@ effective_from = 2021-01-01
 review_status = "agent_reviewed"
 reviewed_by = "agent-prepared; ANCHOR NOTE -- BOE's own anchor for this provision is #a1-2, which _canonical_anchor normalises to 'a12' and so collides with articulo 12; the resolver correctly REFUSES it. The compact form #a15bis reaches the provision through the resolver's structural-title fallback and resolves to exactly one unit, verified through the production resolver before this entry was written. required_text confirmed present in that resolved unit; pending operator re-stamp"
 reviewed_at = 2026-08-26
-notes = "LIS art. 15 bis: asimetrias hibridas. Niega la deducibilidad de gastos correspondientes a operaciones con personas o entidades vinculadas que, por una calificacion fiscal diferente en aquellas, no generen ingreso, generen un ingreso exento o sujeto a una reduccion del tipo, o den lugar a una deduccion sin inclusion. Transpone la ATAD II. Funda la seccion asimetrias_hibridas_art_15_bis_lis del Modelo 200, cuyo tag nombra este articulo con la salvedad que el propio tag recoge."
+notes = "LIS art. 15 bis: asimetrias hibridas. Niega la deducibilidad de gastos correspondientes a operaciones con personas o entidades vinculadas que, por una calificacion fiscal diferente en aquellas, no generen ingreso, generen un ingreso exento o sujeto a una reducción del tipo, o den lugar a una deducción sin inclusion. Transpone la ATAD II. Funda la seccion asimetrias_hibridas_art_15_bis_lis del Modelo 200, cuyo tag nombra este articulo con la salvedad que el propio tag recoge."
 required_text = [
     "Asimetrías híbridas",
     "No serán fiscalmente deducibles los gastos correspondientes a operaciones realizadas con personas o entidades vinculadas",
@@ -2602,7 +2602,7 @@ effective_from = 2023-01-01
 review_status = "agent_reviewed"
 reviewed_by = "agent-prepared; ANCHOR NOTE -- BOE anchors this disposicion as #da-3, which _canonical_anchor folds onto 'da3' and so collides with DA tercera; the compact ordinal form #dadecimoctava reaches it through the resolver's structural-title fallback and resolves to exactly one unit, verified through the production resolver before this entry was written. required_text confirmed present in that unit. The percentage and investment ceilings the disposicion states are described in notes but deliberately NOT asserted in required_text, pending a live-BOE numeric cross-check; pending operator re-stamp"
 reviewed_at = 2026-08-26
-notes = "LIS disposicion adicional decimoctava: libertad de amortizacion en determinados vehiculos y en nuevas infraestructuras de recarga. Permite amortizar libremente las inversiones en vehiculos electricos y en puntos de recarga afectos a actividades economicas y puestos a disposicion en los ejercicios que la propia disposicion acota. Funda la seccion libertad_de_amortizacion_de_determinados_vehiculos del Modelo 200, cuyo nombre reproduce el rubrico de la disposicion."
+notes = "LIS disposición adicional decimoctava: libertad de amortización en determinados vehiculos y en nuevas infraestructuras de recarga. Permite amortizar libremente las inversiones en vehiculos electricos y en puntos de recarga afectos a actividades económicas y puestos a disposición en los ejercicios que la propia disposición acota. Funda la seccion libertad_de_amortizacion_de_determinados_vehiculos del Modelo 200, cuyo nombre reproduce el rubrico de la disposición."
 required_text = [
     "Libertad de amortización en determinados vehículos y en nuevas infraestructuras de recarga",
     "Las inversiones en vehículos",
@@ -2622,7 +2622,7 @@ effective_from = 2024-06-28
 review_status = "agent_reviewed"
 reviewed_at = 2026-09-30
 reviewed_by = "agent-authored from the bundled consolidated RDL 4/2024 (block a4); operator to re-stamp"
-notes = "RDL 4/2024 art. 4.Uno: con efectos para los periodos impositivos que se inicien a partir de 1 de enero de 2024 y que no hayan concluido a la entrada en vigor del real decreto-ley (28 de junio de 2024), redacta de nuevo la disposicion adicional decimoctava LIS: libertad de amortizacion de vehiculos nuevos FCV, FCHV, BEV, REEV o PHEV y de nuevas infraestructuras de recarga que entren en funcionamiento en los periodos impositivos que se inicien en 2024 y 2025, sustituyendo la amortizacion acelerada al doble del coeficiente lineal maximo que regia desde 2023. Un periodo impositivo concluido antes del 28 de junio de 2024 (en el IRPF, el del contribuyente fallecido antes de esa fecha) queda fuera de esta redaccion y conserva la amortizacion acelerada, como recoge el Manual practico de Renta 2024. Los apartados Dos y Tres del articulo (reserva de capitalizacion) no se citan desde esta entrada."
+notes = "RDL 4/2024 art. 4.Uno: con efectos para los periodos impositivos que se inicien a partir de 1 de enero de 2024 y que no hayan concluido a la entrada en vigor del real decreto-ley (28 de junio de 2024), redacta de nuevo la disposición adicional decimoctava LIS: libertad de amortización de vehiculos nuevos FCV, FCHV, BEV, REEV o PHEV y de nuevas infraestructuras de recarga que entren en funcionamiento en los periodos impositivos que se inicien en 2024 y 2025, sustituyendo la amortización acelerada al doble del coeficiente lineal maximo que regia desde 2023. Un periodo impositivo concluido antes del 28 de junio de 2024 (en el IRPF, el del contribuyente fallecido antes de esa fecha) queda fuera de esta redacción y conserva la amortización acelerada, como recoge el Manual practico de Renta 2024. Los apartados Dos y Tres del articulo (reserva de capitalización) no se citan desde esta entrada."
 required_text = [
     "Modificación de la Ley 27/2014, de 27 de noviembre, del Impuesto sobre Sociedades",
     "Con efectos para los períodos impositivos que se inicien a partir de 1 de enero de 2024 y que no hayan concluido a la entrada en vigor de este real decreto-ley, se modifica la disposición adicional decimoctava",
@@ -2641,7 +2641,7 @@ effective_from = 2022-10-20
 review_status = "agent_reviewed"
 reviewed_at = 2026-09-23
 reviewed_by = "agent-prepared; BOE anchors this disposicion as #da-2, which collides with another unit, so the compact ordinal form #dadecimoseptima reaches it through the resolver's structural-title fallback; verified to resolve to exactly one unit through resolve_anchored_extracted_unit with every required_text phrase present; pending operator re-stamp"
-notes = "LIS disposicion adicional decimoseptima (added by RDL 18/2022): libertad de amortizacion en instalaciones de autoconsumo electrico y de uso termico de consumo propio con energia renovable que sustituyan instalaciones fosiles, condicionada a mantener la plantilla media total de los 24 meses siguientes al inicio del periodo impositivo respecto de la de los doce meses anteriores. Excluye edificios; inversion maxima 500.000 euros. The consolidated text carries a chain of RDL amendments and derogations (RDL 9/2024, 16/2025, 2/2026 derogated; RDL 7/2026 for periods not concluded at 22 March 2026) that governs which entry-into-service years apply to a given period."
+notes = "LIS disposición adicional decimoseptima (added by RDL 18/2022): libertad de amortización en instalaciones de autoconsumo electrico y de uso termico de consumo propio con energia renovable que sustituyan instalaciones fosiles, condicionada a mantener la plantilla media total de los 24 meses siguientes al inicio del periodo impositivo respecto de la de los doce meses anteriores. Excluye edificios; inversion maxima 500.000 euros. The consolidated text carries a chain of RDL amendments and derogations (RDL 9/2024, 16/2025, 2/2026 derogated; RDL 7/2026 for periods not concluded at 22 March 2026) that governs which entry-into-service years apply to a given period."
 required_text = [
     "Libertad de amortización en inversiones que utilicen energía procedente de fuentes renovables",
     "la plantilla media total de la entidad se mantenga respecto de la plantilla media de los doce meses anteriores",
@@ -2661,7 +2661,7 @@ effective_from = 2022-10-20
 review_status = "agent_reviewed"
 reviewed_at = 2026-09-30
 reviewed_by = "agent-prepared from the BOE consolidated-text article endpoint (block a2-4, single redaction fecha_vigencia 20221020); pending operator re-stamp"
-notes = "RDL 18/2022 art. 22: introduce la disposicion adicional decimoseptima LIS, libertad de amortizacion de instalaciones de autoconsumo electrico y de uso termico de consumo propio con energia renovable que sustituyan instalaciones fosiles, puestas a disposicion del contribuyente a partir de la entrada en vigor del real decreto-ley (20 de octubre de 2022) y que entren en funcionamiento en 2023, en los periodos impositivos que se inicien o concluyan en dicho ano; condicionada al mantenimiento de la plantilla media, excluye edificios e inversion maxima de 500.000 euros. Funda los parametros de Renta 2023 de esta libertad de amortizacion; la ampliacion a 2024 es del art. 18 del RDL 8/2023 (real-decreto-ley-8-2023:art-18)."
+notes = "RDL 18/2022 art. 22: introduce la disposición adicional decimoseptima LIS, libertad de amortización de instalaciones de autoconsumo electrico y de uso termico de consumo propio con energia renovable que sustituyan instalaciones fosiles, puestas a disposición del contribuyente a partir de la entrada en vigor del real decreto-ley (20 de octubre de 2022) y que entren en funcionamiento en 2023, en los periodos impositivos que se inicien o concluyan en dicho ano; condicionada al mantenimiento de la plantilla media, excluye edificios e inversion maxima de 500.000 euros. Funda los parametros de Renta 2023 de esta libertad de amortización; la ampliacion a 2024 es del art. 18 del RDL 8/2023 (real-decreto-ley-8-2023:art-18)."
 required_text = [
     "Se introduce una nueva disposición adicional decimoséptima en la Ley 27/2014, de 27 de noviembre, del Impuesto sobre Sociedades",
     "entren funcionamiento en 2023, podrán ser amortizadas libremente en los períodos impositivos que se inicien o concluyan en dicho año",
@@ -2681,7 +2681,7 @@ effective_from = 2023-12-29
 review_status = "agent_reviewed"
 reviewed_at = 2026-09-30
 reviewed_by = "agent-prepared from the BOE consolidated-text article endpoint (block a1-10, single redaction fecha_vigencia 20231229); pending operator re-stamp"
-notes = "RDL 8/2023 art. 18: modifica el apartado 1 de la disposicion adicional decimoseptima LIS para admitir tambien las instalaciones que entren en funcionamiento en 2024, amortizables libremente en los periodos impositivos que se inicien o concluyan en 2024 (letra ii), manteniendo la puesta a disposicion desde la entrada en vigor del RDL 18/2022, la plantilla media, la exclusion de edificios y la inversion maxima de 500.000 euros. Funda los parametros de Renta 2024 de esta libertad de amortizacion."
+notes = "RDL 8/2023 art. 18: modifica el apartado 1 de la disposición adicional decimoseptima LIS para admitir también las instalaciones que entren en funcionamiento en 2024, amortizables libremente en los periodos impositivos que se inicien o concluyan en 2024 (letra ii), manteniendo la puesta a disposición desde la entrada en vigor del RDL 18/2022, la plantilla media, la exclusion de edificios y la inversion maxima de 500.000 euros. Funda los parametros de Renta 2024 de esta libertad de amortización."
 required_text = [
     "Se modifica el apartado 1 de la disposición adicional decimoséptima de la Ley 27/2014, de 27 de noviembre, del Impuesto sobre Sociedades",
     "ii) Que se inicien o concluyan en 2024, cuando la entrada en funcionamiento de los elementos a que se refiere este apartado se produzca en 2024.",
@@ -2702,7 +2702,7 @@ effective_to = 2026-01-27
 review_status = "agent_reviewed"
 reviewed_at = 2026-09-24
 reviewed_by = "agent-prepared from the BOE consolidated-text article endpoint (block a1-9); pending operator re-stamp"
-notes = "RDL 16/2025 art. 17.Uno: con efectos para los periodos impositivos que se inicien a partir de 1 de enero de 2025, redacta de nuevo la disposicion adicional decimoseptima LIS y anade la letra c) (periodos que se inicien o concluyan en 2025, entrada en funcionamiento en 2025), manteniendo la plantilla media, la exclusion de edificios y la inversion maxima de 500.000 euros. En vigor desde el 25 de diciembre de 2025 (entrada en vigor que publica el BOE). Derogado: la Resolucion de 27 de enero de 2026 (BOE-A-2026-2024, catalogada como resolucion-congreso-2026-01-27-derogacion-rdl-16-2025:acuerdo) publica que el Congreso, en su sesion de 27 de enero de 2026, acordo derogarlo; fecha de publicacion 28 de enero de 2026. La resolucion no fija otra fecha de efectos, y la derogacion de un real decreto-ley no convalidado surte efecto con la publicacion del acuerdo, de modo que su ultimo dia de vigencia es el 27 de enero de 2026. Que la letra c) siga rigiendo el periodo impositivo 2025 no descansa en esta entrada sino en la posicion de la AEAT (Manual de Renta 2025), citada por separado en los parametros que la aplican."
+notes = "RDL 16/2025 art. 17.Uno: con efectos para los periodos impositivos que se inicien a partir de 1 de enero de 2025, redacta de nuevo la disposición adicional decimoseptima LIS y anade la letra c) (periodos que se inicien o concluyan en 2025, entrada en funcionamiento en 2025), manteniendo la plantilla media, la exclusion de edificios y la inversion maxima de 500.000 euros. En vigor desde el 25 de diciembre de 2025 (entrada en vigor que publica el BOE). Derogado: la Resolución de 27 de enero de 2026 (BOE-A-2026-2024, catalogada como resolucion-congreso-2026-01-27-derogacion-rdl-16-2025:acuerdo) publica que el Congreso, en su sesion de 27 de enero de 2026, acordo derogarlo; fecha de publicación 28 de enero de 2026. La resolución no fija otra fecha de efectos, y la derogación de un real decreto-ley no convalidado surte efecto con la publicación del acuerdo, de modo que su ultimo dia de vigencia es el 27 de enero de 2026. Que la letra c) siga rigiendo el periodo impositivo 2025 no descansa en esta entrada sino en la posicion de la AEAT (Manual de Renta 2025), citada por separado en los parametros que la aplican."
 required_text = [
     "Con efectos para los períodos impositivos que se inicien a partir de 1 de enero de 2025, la disposición adicional decimoséptima queda redactada de la siguiente forma:",
     "c) Que se inicien o concluyan en 2025, cuando la entrada en funcionamiento de los elementos a que se refiere este apartado se produzca en 2025.",
@@ -2721,7 +2721,7 @@ effective_from = 2026-01-28
 review_status = "agent_reviewed"
 reviewed_at = 2026-09-24
 reviewed_by = "agent-prepared from BOE-A-2026-2024 downloaded from boe.es; pending operator re-stamp"
-notes = "Resolucion de 27 de enero de 2026 del Congreso de los Diputados que ordena publicar el acuerdo de derogacion del Real Decreto-ley 16/2025 (art. 86.2 CE). Fecha de disposicion 27/01/2026, fecha de publicacion 28/01/2026. Su analisis deja sin efecto, entre otras, la modificacion de las disposiciones adicionales 17 y 18 de la LIS. Fija el fin de vigencia de rdl-16-2025:art-17."
+notes = "Resolución de 27 de enero de 2026 del Congreso de los Diputados que ordena publicar el acuerdo de derogación del Real Decreto-ley 16/2025 (art. 86.2 CE). Fecha de disposición 27/01/2026, fecha de publicación 28/01/2026. Su analisis deja sin efecto, entre otras, la modificación de las disposiciones adicionales 17 y 18 de la LIS. Fija el fin de vigencia de rdl-16-2025:art-17."
 required_text = [
     "el Congreso de los Diputados, en su sesión del día de hoy, acordó derogar el Real Decreto-ley",
     "Palacio del Congreso de los Diputados, 27 de enero de 2026.",
@@ -2740,7 +2740,7 @@ effective_from = 2015-01-01
 review_status = "agent_reviewed"
 reviewed_by = "agent-prepared; anchor #a102 resolved to exactly one unit through the production resolver and checked against this corpus's measured collision set; required_text confirmed present. Adjudicated as the ENTIDADES DE REDUCIDA DIMENSION regime rather than a general one: art. 102 sits in the incentives chapter whose ambito is fixed by art. 101, which the catalogue already carries, so it grounds the ERD libertad-de-amortizacion section and not the other varieties; pending operator re-stamp"
 reviewed_at = 2026-08-26
-notes = "LIS art. 102: libertad de amortizacion de las entidades de reducida dimension. Los elementos nuevos del inmovilizado material y de las inversiones inmobiliarias afectos a actividades economicas pueden amortizarse libremente siempre que, durante los periodos que la norma fija, la plantilla media total se incremente respecto de la de los doce meses anteriores y ese incremento se mantenga. Funda la seccion empresas_de_reducida_dimension_libertad_de_amortizacion del Modelo 200."
+notes = "LIS art. 102: libertad de amortización de las entidades de reducida dimension. Los elementos nuevos del inmovilizado material y de las inversiones inmobiliarias afectos a actividades económicas pueden amortizarse libremente siempre que, durante los periodos que la norma fija, la plantilla media total se incremente respecto de la de los doce meses anteriores y ese incremento se mantenga. Funda la seccion empresas_de_reducida_dimension_libertad_de_amortizacion del Modelo 200."
 required_text = [
     "Libertad de amortización",
     "Los elementos nuevos del inmovilizado material y de las inversiones inmobiliarias",

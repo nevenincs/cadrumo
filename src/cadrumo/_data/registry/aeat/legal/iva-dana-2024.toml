@@ -88,8 +88,8 @@ review_status = "agent_reviewed"
 reviewed_at = 2026-08-13
 reviewed_by = "agent-prepared-pending-operator"
 notes = """\
-RDL 6/2024 art. 1: objeto y ambito de aplicacion de las medidas DANA. Apartado 1 fija el ambito por \
-remision al anexo de la propia norma y a la ventana del 28 de octubre al 4 de noviembre de 2024. \
+RDL 6/2024 art. 1: objeto y ámbito de aplicación de las medidas DANA. Apartado 1 fija el ámbito por \
+remisión al anexo de la propia norma y a la ventana del 28 de octubre al 4 de noviembre de 2024. \
 Apartado 4 declara el anexo MUTABLE: puede modificarse mediante Acuerdo de Consejo de Ministros. Esa \
 mutabilidad es la razon de que la geografia se cite siempre con consolidated_as_of y nunca se \
 transcriba como lista fija. PROVENANCIA DE LA CORRECCION. El propio apartado 4 lleva la nota de \
@@ -126,7 +126,7 @@ entradas. consolidated_as_of fecha esas bytes: el anexo es modificable por Acuer
 Ministros conforme al art. 1 apartado 4, asi que una lista sin fecha seria una instantanea \
 disfrazada de norma. required_text ancla tres puntos que discriminan esta version concreta: el \
 titulo del listado, la entrada 43 con su salvedad territorial literal (Loriguilla, solo nucleo \
-urbano junto A3, que ninguna otra redaccion comparte) y la entrada 78, que cierra la lista. Una \
+urbano junto A3, que ninguna otra redacción comparte) y la entrada 78, que cierra la lista. Una \
 lista recortada o ampliada por la cola deja de satisfacer la tercera frase. NOTA SOBRE LA ENTRADA \
 78. Benicull de Xuquer rompe el orden alfabetico del resto del anexo; se conserva tal cual porque \
 asi lo publica el BOE, y no se reordena. article se deja sin declarar a proposito: un anexo no es un \
@@ -153,7 +153,7 @@ notes = """\
 Correccion de errores del RDL 6/2024 (BOE num. 280, de 20 de noviembre de 2024). Rectifica la parte \
 expositiva y los articulos 1.4, 8.1, 24.1, 25.1, 46.1 y 47; NO toca el anexo, de modo que la \
 geografia publicada el 6 de noviembre sigue siendo la corregida. effective_from se fija en la \
-entrada en vigor del RDL 6/2024 y no en la fecha de publicacion de la correccion, porque una \
+entrada en vigor del RDL 6/2024 y no en la fecha de publicación de la correccion, porque una \
 correccion de errores no crea una regla nueva: restituye lo que la norma decia desde su origen. kind \
 se declara real_decreto_ley porque el instrumento corregido lo es y la correccion forma parte de su \
 texto oficial; el vocabulario cerrado del catalogo no tiene un termino propio para una correccion de \
@@ -184,20 +184,20 @@ review_status = "agent_reviewed"
 reviewed_at = 2026-08-13
 reviewed_by = "agent-prepared-pending-operator"
 notes = """\
-RDL 7/2024 art. 11 apartado 2: reduccion del 25 por ciento de la cuota devengada por operaciones \
-corrientes del regimen especial simplificado del IVA correspondiente al ano 2024. POR QUE UNA \
+RDL 7/2024 art. 11 apartado 2: reducción del 25 por ciento de la cuota devengada por operaciones \
+corrientes del régimen especial simplificado del IVA correspondiente al ano 2024. POR QUE UNA \
 ENTRADA PROPIA. El articulo 11 ya esta citado en el catalogo del IRPF como \
 real-decreto-ley-7-2024:art-11, y esa entrada fundamenta el APARTADO 1, que reduce el rendimiento \
-neto de modulos del IRPF. Comparten el porcentaje pero no la magnitud ni el impuesto, asi que una \
+neto de módulos del IRPF. Comparten el porcentaje pero no la magnitud ni el impuesto, asi que una \
 sola entrada para ambos haria que una cita del IVA descansara sobre frases del IRPF. Esta entrada se \
 identifica por el apartado, siguiendo la granularidad ya usada en el catalogo \
-(trlirnr-rdleg-5-2004:art-13.1, ley-58-2003:art-27.2). ALCANCE. El apartado declara que la reduccion \
-se tiene en cuenta para el calculo de la CUOTA ANUAL de 2024: no es una reduccion trimestral \
+(trlirnr-rdleg-5-2004:art-13.1, ley-58-2003:art-27.2). ALCANCE. El apartado declara que la reducción \
+se tiene en cuenta para el calculo de la CUOTA ANUAL de 2024: no es una reducción trimestral \
 repetida cuatro veces, y required_text exige esa frase precisamente porque es la que distingue las \
 dos lecturas. GEOGRAFIA. El apartado no enumera municipios: se remite al anexo del RDL 6/2024, que \
-required_text exige literalmente, de modo que esta entrada no puede satisfacerse si la remision \
-desapareciera del texto. APLICABILIDAD. Cuando la reduccion rige no lo dice este articulo sino la \
-disposicion final decimocuarta de la misma norma; la entrada real-decreto-ley-7-2024:df-14 la cita, \
+required_text exige literalmente, de modo que esta entrada no puede satisfacerse si la remisión \
+desapareciera del texto. APLICABILIDAD. Cuando la reducción rige no lo dice este articulo sino la \
+disposición final decimocuarta de la misma norma; la entrada real-decreto-ley-7-2024:df-14 la cita, \
 y effective_from se toma de alli en lugar de deducirse. PROVENANCIA DE LA REVISION. Entrada \
 preparada por agente sobre el texto consolidado empaquetado (documento BOE integro, sha256 \
 13615f1354c9644aeccd62170c60a147e2b18a3d8211bea33c7d387bd63e6eb6), cotejada contra el texto en vigor \
@@ -224,12 +224,12 @@ review_status = "agent_reviewed"
 reviewed_at = 2026-08-13
 reviewed_by = "agent-prepared-pending-operator"
 notes = """\
-RDL 7/2024 disposicion final decimocuarta: entrada en vigor. La norma entra en vigor el dia \
-siguiente al de su publicacion en el BOE; publicada el 12 de noviembre de 2024, rige desde el 13 de \
+RDL 7/2024 disposición final decimocuarta: entrada en vigor. La norma entra en vigor el dia \
+siguiente al de su publicación en el BOE; publicada el 12 de noviembre de 2024, rige desde el 13 de \
 noviembre de 2024, que es el effective_from de esta entrada y el que toma prestado la entrada del \
-articulo 11 apartado 2. La misma disposicion acota hasta el 31 de diciembre de 2024 unicamente las \
+articulo 11 apartado 2. La misma disposición acota hasta el 31 de diciembre de 2024 unicamente las \
 medidas del articulo 42.1.e) y 4, materia laboral ajena al IVA, de modo que no cierra la vigencia de \
-la reduccion del articulo 11.2. Esta entrada existe para que la aplicabilidad de la reduccion se lea \
+la reducción del articulo 11.2. Esta entrada existe para que la aplicabilidad de la reducción se lea \
 de la norma y no se infiera del articulo que la establece. PROVENANCIA DE LA REVISION. Entrada \
 preparada por agente sobre el texto consolidado empaquetado (sha256 \
 13615f1354c9644aeccd62170c60a147e2b18a3d8211bea33c7d387bd63e6eb6). No la ha revisado un operador \

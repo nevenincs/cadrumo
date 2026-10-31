@@ -47,6 +47,7 @@ from ..calculations.registry.authority import bundled_indexed_authority
 from ..calculations.registry.bindings import CasillaObservation
 from ..calculations.registry.errors import RegistryValidationError
 from ..calculations.registry.facts.resolution import ResolvedScalarFact, ScalarFactQuery
+from ..calculations.registry.form_codes import resolve_form_codes_leased
 from ..calculations.registry.governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from ..calculations.registry.ids import LegalRefId
 from ..calculations.registry.schema_base import DateAxis
@@ -59,7 +60,7 @@ from .errors import RentaError, RentaValidationError
 RENTA_EXENTA_CASILLA: CasillaId = validated_casilla_id("trabajo-mar-renta-exenta", surface="RENTA_EXENTA_CASILLA")
 
 _MARITIME_WORKER_CLASS: Final = "trabajador_del_mar"
-_ELIGIBLE_VESSEL_REGISTRIES: Final = frozenset({"REBECA", "rebeca_eu_eea", "scheduled_canary_route"})
+_ELIGIBLE_VESSEL_REGISTRIES_FACT: Final = "rebeca-eligible-vessel-registries"
 _DA41_BINDING_ID: Final = "da41-tuna-fleet-inactive"
 _DA41_LEGAL_REF: Final[LegalRefId] = "ley-35-2006:da-41"
 _RETMAR_LEGAL_REF: Final[LegalRefId] = "ley-35-2006:art-96"
@@ -132,7 +133,8 @@ def rebeca_eligible(facts: MaritimeWorkerFacts) -> bool:
     """
     if facts.worker_class != _MARITIME_WORKER_CLASS:
         return False
-    return facts.vessel_registry in _ELIGIBLE_VESSEL_REGISTRIES
+    registries = resolve_form_codes_leased(_ELIGIBLE_VESSEL_REGISTRIES_FACT).codes("registries")
+    return facts.vessel_registry in registries
 
 
 def da41_eligible(facts: MaritimeWorkerFacts) -> bool:

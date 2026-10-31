@@ -31,7 +31,6 @@ from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.casilla_id import CasillaId
 from ...core.decimal.constants import MONEY_ZERO
 from ...core.i18n.render import tr
-from ...core.modelo import Modelo
 from ...core.period import Period
 from ...domain.bienes_inversion.register import (
     BienesInversionIvaRegister,
@@ -49,6 +48,7 @@ from ...domain.bienes_inversion.regularizacion_parameters import (
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.binding_targets import sole_bound_casilla
 from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
+from ...domain.calculations.registry.form_codes import form_for_role, forms_for_role
 from ...domain.calculations.registry.ids import BindingId, LegalRefId, SourceRefId
 from ...domain.calculations.registry.prorrata_regularizacion_bindings import (
     prorrata_definitive_percentage_source_casilla_id,
@@ -221,7 +221,7 @@ def _current_year_prorrata_from_m303_observation(
         return None
     for token in reversed(_settlement_period_tokens(revision)):
         payload = repository.load_observation(
-            Modelo("303").value,
+            form_for_role("iva.periodic"),
             Period.from_year_and_code(filing_year, token),
         )
         if payload is None:
@@ -303,7 +303,7 @@ def _current_year_values_for_context(
     """Combine injected current-year values with the M390 stamped M303 fallback."""
     values = dict(current_year_values)
     prorrata_id = prorrata_definitive_percentage_source_casilla_id(revision.bindings)
-    if prorrata_id is not None and prorrata_id not in values and modelo == Modelo("390").value:
+    if prorrata_id is not None and prorrata_id not in values and modelo == form_for_role("iva.annual_summary"):
         observed_pct = _current_year_prorrata_from_m303_observation(
             observation_repository,
             filing_year=filing_year,
@@ -505,7 +505,7 @@ def build_bienes_inversion_regularizacion_advisory(
     if in_window == 0:
         return projection, None
 
-    target = _target_binding_and_casilla(revision, modelo=Modelo("303").value)
+    target = _target_binding_and_casilla(revision, modelo=form_for_role("iva.periodic"))
     target_casilla_id = target[1] if target is not None else None
 
     message = tr(
@@ -579,7 +579,7 @@ def build_bienes_inversion_transmision_advisory(
     if projection.computed_count == 0:
         return projection, None
 
-    target = _target_binding_and_casilla(revision, modelo=Modelo("303").value)
+    target = _target_binding_and_casilla(revision, modelo=form_for_role("iva.periodic"))
     target_casilla_id = target[1] if target is not None else None
 
     message = tr(
@@ -636,7 +636,7 @@ class BienesInversionRegularizacionSourceResolver:
         if not declared_binding_ids:
             return CalculationSourceResolution(resolver_id=self.resolver_id, owned_sources=self.owned_sources)
 
-        if context.modelo not in {Modelo("303").value, Modelo("390").value}:
+        if context.modelo not in forms_for_role("capital_goods_regularization.modelos"):
             return CalculationSourceResolution(
                 resolver_id=self.resolver_id,
                 owned_sources=self.owned_sources,

@@ -11,7 +11,7 @@ effective_from = 2024-01-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "downloaded official BOE-A-2023-26739 HTML from BOE on 2026-07-01"
-notes = "Orden HFP/1415/2023 articulo 1: aprueba el Modelo 379, Declaracion informativa sobre pagos transfronterizos, de formato electronico y contenido anexo."
+notes = "Orden HFP/1415/2023 articulo 1: aprueba el Modelo 379, Declaración informativa sobre pagos transfronterizos, de formato electronico y contenido anexo."
 required_text = [
     "Artículo 1. Aprobación del modelo 379",
     "Se aprueba el modelo 379",
@@ -91,7 +91,7 @@ effective_from = 2024-01-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "downloaded official BOE-A-2023-26739 HTML from BOE on 2026-07-01"
-notes = "Orden HFP/1415/2023 articulo 5: establece la presentacion electronica del Modelo 379 por Internet y el ajuste del fichero al anexo/formato de la Sede electronica."
+notes = "Orden HFP/1415/2023 articulo 5: establece la presentación electronica del Modelo 379 por Internet y el ajuste del fichero al anexo/formato de la Sede electronica."
 required_text = [
     "Artículo 5. Forma de presentación",
     "se efectuará por vía telemática",

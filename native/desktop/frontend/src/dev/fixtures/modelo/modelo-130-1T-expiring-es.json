@@ -9,7 +9,7 @@
       "period": { "filing_year": 2026, "code": "1T" },
       "registry_revision_id": "2019-y-siguientes",
       "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
-      "calculation_revision_id": "c97f842f24bbb703a0f5d7223b5da565080749c9177a51fac458c1e89381a3bc",
+      "calculation_revision_id": "db8443730f7d33d16af7a65efb718dfeb1d749271576fe9a4468e18d443d6213",
       "language": "es",
       "layout_provenance": "generated",
       "inspection_reason": null,
@@ -1478,7 +1478,9 @@
           "attention": "check",
           "casilla_id": null,
           "box": null,
-          "withholds_filing": true
+          "withholds_filing": true,
+          "fact": null,
+          "element_names": []
         }
       ],
       "calculation_notes_held": true,
@@ -1561,9 +1563,9 @@
         "closes_on": "2026-04-20",
         "nominal_closes_on": "2026-04-20",
         "holiday_coverage": "national_only",
-        "reference_on": "2026-10-27",
+        "reference_on": "2026-10-31",
         "days_remaining": null,
-        "days_overdue": 190
+        "days_overdue": 194
       },
       "aeat_data": null,
       "filing": null,
@@ -1582,9 +1584,9 @@
       "workspace_contract_version": 1,
       "edit_contract_version": 1,
       "operation_manifest_version": 4,
-      "contract_set_digest": "63eefbfa612f9215a940ebbec16d4aa1b9fd502a84be98eee12245ef14879246",
+      "contract_set_digest": "e3ab9b8b7b8c2063e94194e3c0e6e0d7a61e874b8cd563b5dc5a4341e748b3f6",
       "operation_definition_id": "modelo.edit.apply",
-      "definition_contract_digest": "007cac2c7aaf032edde6b8d860a1ad2ba98b80c18c2967c4ebf8f08044834d57",
+      "definition_contract_digest": "6b37be16acf22e172dcafd43befa599a92a16043f3f81ca6836a5ca1a2857646",
       "request_schema": {
         "schema_id": "modelo.edit.apply.request",
         "schema_version": 2,
@@ -1608,7 +1610,7 @@
       "financial_operand_schema": {
         "schema_id": "modelo.edit.submission",
         "schema_version": 1,
-        "schema_fingerprint": "207803c795cd324d67b0c181c1e575755354ef23733b5450214c0c861992b4aa"
+        "schema_fingerprint": "071dc760f85f95503b711314955cdc61b45de1765f60fb15b7b746a638b38314"
       }
     },
     "bucket_id": "13000000-0000-4000-8000-000000000730",
@@ -1617,9 +1619,9 @@
     "period_filing_year": 2026,
     "period_code": "1T",
     "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
-    "work_unit_record_digest": "5fea965af7e8b0b925367da08d34dd042cdd72c28f70a8f15df38ff9809b8d94",
-    "calculation_head_digest": "84a3ad74404ec9952ecfcff77b9c81bbbefbc40921279f6c75dc8f4c658e473b",
-    "current_calculation_revision_id": "c97f842f24bbb703a0f5d7223b5da565080749c9177a51fac458c1e89381a3bc",
+    "work_unit_record_digest": "e8990083ed261628644140754609ac525fb3491690785e5d6647fc3c42adb16d",
+    "calculation_head_digest": "0ed3c93c26c285399721170f46d7e3eda6147ad00c2709ec4029e1b4445502c5",
+    "current_calculation_revision_id": "db8443730f7d33d16af7a65efb718dfeb1d749271576fe9a4468e18d443d6213",
     "law_selected_revision_id": "2019-y-siguientes",
     "schema_identity": {
       "schema_id": "modelo-130-2019-y-siguientes",
@@ -1922,9 +1924,9 @@
     ],
     "permitted_surface_digest": "2705e6476442c123bb8c6979cb9d82e81dc02301b0f923b4b78f24941d4686dd",
     "mutation_family": "calculate",
-    "issued_at": "2026-10-27T08:03:53.820867Z",
-    "expires_at": "2026-10-27T08:08:53.820867Z",
-    "baseline_id": "d6fb94b71566859f9a463da876b3bce4df46e0a0d70c0e9afd2885fce6fbf356"
+    "issued_at": "2026-10-31T02:44:35.482180Z",
+    "expires_at": "2026-10-31T02:49:35.482180Z",
+    "baseline_id": "c327e2efa2c0fa6db3fa3539983cac0254fb2d6ed4c7a8d590529d182688bce6"
   },
   "admission_refusal": null,
   "admission_refusal_words": null,
@@ -2003,7 +2005,7 @@
     "words": "La declaración aún no se ha comprobado.",
     "unapplied_words": null
   },
-  "calculation_revision_id": "c97f842f24bbb703a0f5d7223b5da565080749c9177a51fac458c1e89381a3bc",
+  "calculation_revision_id": "db8443730f7d33d16af7a65efb718dfeb1d749271576fe9a4468e18d443d6213",
   "verification_report_id": null,
   "asks_m303_evidence": false,
   "asks_modelo_390": false,

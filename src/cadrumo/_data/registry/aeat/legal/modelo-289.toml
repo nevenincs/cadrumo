@@ -11,7 +11,7 @@ effective_from = 2016-01-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "downloaded official BOE-A-2015-12399 consolidated HTML from BOE on 2026-07-01"
-notes = "Real Decreto 1021/2015 articulo 3: regula la identificacion de la residencia fiscal de las personas que ostenten la titularidad o el control de cuentas financieras."
+notes = "Real Decreto 1021/2015 articulo 3: regula la identificación de la residencia fiscal de las personas que ostenten la titularidad o el control de cuentas financieras."
 required_text = [
     "titularidad o el control de cuentas financieras",
     "conforme a lo previsto en el anexo",
@@ -30,7 +30,7 @@ effective_from = 2016-01-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "downloaded official BOE-A-2015-12399 consolidated HTML from BOE on 2026-07-01"
-notes = "Real Decreto 1021/2015 articulo 4: establece la obligacion anual de informacion respecto de las cuentas financieras comunicables."
+notes = "Real Decreto 1021/2015 articulo 4: establece la obligación anual de información respecto de las cuentas financieras comunicables."
 required_text = [
     "cuentas financieras sean residentes fiscales",
     "forma, lugar y plazo que se determine",
@@ -49,7 +49,7 @@ effective_from = 2016-01-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "downloaded official BOE-A-2015-12399 consolidated HTML from BOE on 2026-07-01"
-notes = "Real Decreto 1021/2015 articulo 5: enumera la informacion financiera que debe suministrarse sobre cada cuenta comunicable."
+notes = "Real Decreto 1021/2015 articulo 5: enumera la información financiera que debe suministrarse sobre cada cuenta comunicable."
 required_text = [
     "a suministrar correspondiente",
     "El saldo o valor de la cuenta",
@@ -68,7 +68,7 @@ effective_from = 2016-10-28
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "downloaded official BOE-A-2016-9834 consolidated HTML from BOE on 2026-07-01"
-notes = "Orden HAP/1695/2016 articulo 1: aprueba el Modelo 289 y su anexo de contenido para la declaracion informativa anual de cuentas financieras."
+notes = "Orden HAP/1695/2016 articulo 1: aprueba el Modelo 289 y su anexo de contenido para la declaración informativa anual de cuentas financieras."
 required_text = [
     "Se aprueba el modelo 289",
     "Declaración informativa anual de cuentas financieras",
@@ -88,7 +88,7 @@ effective_from = 2016-10-28
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "downloaded official BOE-A-2016-9834 consolidated HTML from BOE on 2026-07-01"
-notes = "Orden HAP/1695/2016 articulo 2: identifica como obligadas a las instituciones financieras obligadas a comunicar informacion conforme al Real Decreto 1021/2015."
+notes = "Orden HAP/1695/2016 articulo 2: identifica como obligadas a las instituciones financieras obligadas a comunicar información conforme al Real Decreto 1021/2015."
 required_text = [
     "modelo 289, las instituciones financieras",
     "Real Decreto 1021/2015",
@@ -107,7 +107,7 @@ effective_from = 2016-10-28
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "downloaded official BOE-A-2016-9834 consolidated HTML from BOE on 2026-07-01"
-notes = "Orden HAP/1695/2016 articulo 3: delimita el objeto de informacion del Modelo 289 y regula la comunicacion negativa cuando no existan cuentas que comunicar."
+notes = "Orden HAP/1695/2016 articulo 3: delimita el objeto de información del Modelo 289 y regula la comunicación negativa cuando no existan cuentas que comunicar."
 required_text = [
     "modelo 289, de conformidad",
     "anexo III de la presente orden",
@@ -126,7 +126,7 @@ effective_from = 2016-10-28
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "downloaded official BOE-A-2016-9834 consolidated HTML from BOE on 2026-07-01"
-notes = "Orden HAP/1695/2016 articulo 4: fija el plazo anual del Modelo 289 entre el 1 de enero y el 31 de mayo del ano siguiente al de la informacion."
+notes = "Orden HAP/1695/2016 articulo 4: fija el plazo anual del Modelo 289 entre el 1 de enero y el 31 de mayo del ano siguiente al de la información."
 required_text = [
     "entre el 1 de enero y el 31 de mayo",
     "31 de mayo de cada",
@@ -145,7 +145,7 @@ effective_from = 2016-10-28
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "downloaded official BOE-A-2016-9834 consolidated HTML from BOE on 2026-07-01"
-notes = "Orden HAP/1695/2016 articulo 5: regula las condiciones y procedimiento de presentacion electronica del Modelo 289 mediante servicios web."
+notes = "Orden HAP/1695/2016 articulo 5: regula las condiciones y procedimiento de presentación electronica del Modelo 289 mediante servicios web."
 required_text = [
     "Condiciones y procedimiento",
     "modelo 289 con arreglo a las condiciones",
@@ -265,7 +265,7 @@ effective_from = 2021-12-04
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "downloaded official BOE-A-2021-20004 HTML from BOE on 2026-07-01"
-notes = "Orden HFP/1351/2021 articulo octavo: modifica la comunicacion de inexistencia de cuentas que comunicar y los anexos I, II y III del Modelo 289."
+notes = "Orden HFP/1351/2021 articulo octavo: modifica la comunicación de inexistencia de cuentas que comunicar y los anexos I, II y III del Modelo 289."
 required_text = [
     "Orden HAP/1695/2016, de",
     "Se modifica el artículo",
@@ -386,7 +386,7 @@ effective_from = 2025-12-17
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "downloaded official BOE-A-2025-25389 HTML from BOE on 2026-07-01"
-notes = "Orden HAC/1430/2025 disposicion final unica: aplica por primera vez las modificaciones del Modelo 289 a las declaraciones del ejercicio 2025 presentadas desde 2026."
+notes = "Orden HAC/1430/2025 disposición final única: aplica por primera vez las modificaciones del Modelo 289 a las declaraciones del ejercicio 2025 presentadas desde 2026."
 required_text = [
     "disposición final única",
     "declaraciones informativas correspondientes al ejercicio 2025",

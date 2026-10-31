@@ -25,7 +25,6 @@ from ...domain.modelos.calculation_revision import (
     CalculationRevisionCatalogue,
     CalculationRevisionState,
 )
-from ...domain.modelos.calculation_revision_sources import recorded_calculation_notes
 from ...domain.modelos.participation_index import TransactionRevisionParticipation, upsert_transaction_participation
 from ...domain.modelos.protocols import (
     CalculationRevisionCatalogueRepositoryProtocol,
@@ -63,7 +62,7 @@ from .action_errors import (
     WorkUnitNotFoundError,
 )
 from .calculation_note_gate import require_work_unit_calculation_unblocked
-from .calculation_notes import read_element_names
+from .calculation_notes import read_recorded_notes
 from .calculation_revision_gate import require_calculation_revision_coordinates_current
 from .filing_revision_persistence import require_filing_instance_evidence_for_work_unit
 from .lifecycle_clock_gate import (
@@ -170,9 +169,8 @@ def _existing_verification(
                     existing.findings,
                     failures_by_finding_id={},
                 ),
-                calculation_notes=recorded_calculation_notes(
-                    target.source_issues,
-                    names=read_element_names(repos.ledger_membership_ports.activity_asset_history_repository),
+                calculation_notes=read_recorded_notes(
+                    target.source_issues, repos.ledger_membership_ports.activity_asset_history_repository
                 ),
             )
         raise CalculationRevisionStateError(
@@ -438,9 +436,8 @@ def _finish_verification(
             findings,
             failures_by_finding_id=failures_by_finding_id,
         ),
-        calculation_notes=recorded_calculation_notes(
-            target.source_issues,
-            names=read_element_names(repos.ledger_membership_ports.activity_asset_history_repository),
+        calculation_notes=read_recorded_notes(
+            target.source_issues, repos.ledger_membership_ports.activity_asset_history_repository
         ),
     )
 

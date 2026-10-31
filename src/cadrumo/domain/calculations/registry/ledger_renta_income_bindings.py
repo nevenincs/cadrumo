@@ -6,7 +6,7 @@ from collections.abc import Callable, Iterable, Mapping, Sequence
 from decimal import Decimal
 from typing import TYPE_CHECKING, Literal, NamedTuple, Protocol
 
-from pydantic import BaseModel, field_validator, model_validator
+from pydantic import BaseModel, model_validator
 
 from ....core.aggregation import (
     BindingSourceKind,
@@ -27,7 +27,8 @@ from ._ledger_binding_resolution import (
     unsupported_ledger_family_observations,
 )
 from .binding_selector_utils import provider_member
-from .errors import RegistryError
+from .errors import RegistryError, RegistryValidationError
+from .form_codes import forms_for_role
 from .ids import BindingId
 from .ledger_binding_selector_support import (
     LEDGER_INCOME_FACTS,
@@ -110,14 +111,6 @@ class LedgerRentaIncomeProvider(BaseModel):
     target_casilla_id: CasillaId
     fact: LedgerIncomeFactValue
 
-    @field_validator("modelo")
-    @classmethod
-    @pydantic_validation_boundary
-    def _require_supported_modelo(cls, value: Modelo) -> Modelo:
-        if value not in _RENTA_INCOME_MODELOS:
-            raise ValueError(f"ledger_renta_income_aggregation modelo must be one of {sorted(_RENTA_INCOME_MODELOS)!r}")
-        return value
-
     @model_validator(mode="before")
     @classmethod
     @pydantic_validation_boundary
@@ -139,7 +132,7 @@ class LedgerRentaIncomeProvider(BaseModel):
 
 # The declaration series this aggregation feeds. The boxes it may target come from
 # each edition's own bindings: see ``ledger_renta_income_target_failures``.
-_RENTA_INCOME_MODELOS: frozenset[Modelo] = frozenset((Modelo("100"), Modelo("130"), Modelo("131")))
+_RENTA_INCOME_ROLE = "renta_income_ledger.modelos"
 
 
 def validate_ledger_renta_income_aggregation_binding_definition(binding: BindingDefinition) -> None:
@@ -149,6 +142,11 @@ def validate_ledger_renta_income_aggregation_binding_definition(binding: Binding
         BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION,
         LedgerRentaIncomeProvider,
     )
+    allowed = forms_for_role(_RENTA_INCOME_ROLE)
+    if selector.modelo not in allowed:
+        raise RegistryValidationError(
+            f"binding {binding.id!r}: ledger_renta_income_aggregation modelo must be one of {sorted(allowed)!r}",
+        )
     require_ledger_aggregation_op(binding)
     require_ledger_fact(binding, selector.fact, LEDGER_INCOME_FACTS)
 

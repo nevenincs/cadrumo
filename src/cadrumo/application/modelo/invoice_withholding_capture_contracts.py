@@ -9,15 +9,17 @@ from dataclasses import dataclass
 from typing import Annotated, Literal, Protocol, Self
 from uuid import UUID
 
-from pydantic import BaseModel, Field, NonNegativeInt, model_validator
+from pydantic import BaseModel, Field, NonNegativeInt, field_validator, model_validator
 
 from ...core.aggregation import BindingSourceKind
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.hex import Hex64Str
 from ...core.models import STRICT_FROZEN_CONFIG, STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...domain.invoices.catalogue import InvoiceCatalogue
 from ..aggregation.invoice_retencion import InvoiceRetencionProjectionDefect, InvoiceWithholdingEvidenceRequest
 from ..aggregation.retencion_observations_repository import RetencionObservationRepository
 from ..aggregation.service import PerModeloAggregationCommand, PerModeloAggregationContributor
+from ..aggregation.withholding_modelo_routing import require_invoice_evidence_modelo
 from ..aggregation.withholding_observation_service import WithholdingMutationMode, WithholdingObservationService
 from ..operations.public_period import PublicPeriod
 from .invoice_withholding_capture_public import PublicInvoiceWithholdingCommand, PublicInvoiceWithholdingEvidence
@@ -154,8 +156,15 @@ class ModeloInvoiceWithholdingCaptureProjection(BaseModel):
 
     outcome: Literal["captured", "refused"]
     profile_id: UUID
-    modelo: Literal["111", "115"]
+    modelo: str
     period: PublicPeriod
+
+    @field_validator("modelo")
+    @classmethod
+    @pydantic_validation_boundary
+    def _require_invoice_evidence_modelo(cls, value: str) -> str:
+        return require_invoice_evidence_modelo(value)
+
     provider: Literal[PerModeloAggregationContributor.RETENCIONES] | None = None
     observation_count: NonNegativeInt | None = None
     source_kinds: tuple[BindingSourceKind, ...] | None = None

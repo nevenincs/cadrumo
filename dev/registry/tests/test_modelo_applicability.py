@@ -9,7 +9,6 @@ import pytest
 from pydantic import ValidationError
 
 from cadrumo.domain.calculations.registry.applicability import (
-    MODELO_APPLICABILITY_RULES,
     derive_modelo_applicability,
     iter_modelo_applicability_rules,
 )
@@ -105,12 +104,11 @@ def test_seed_modelo_applicability_rules_are_registry_owned() -> None:
     }
     assert authored, "no modelo authors an applicability rule, so this assertion would be vacuous"
 
-    still_literal = {str(modelo) for modelo in MODELO_APPLICABILITY_RULES}
     exposed = {rule.modelo for rule in iter_modelo_applicability_rules()}
 
-    assert exposed == authored | still_literal, {
+    assert exposed == authored, {
         "authored_but_not_exposed": sorted(authored - exposed),
-        "exposed_but_not_authored_or_literal": sorted(exposed - (authored | still_literal)),
+        "exposed_but_not_authored": sorted(exposed - authored),
     }
 
 

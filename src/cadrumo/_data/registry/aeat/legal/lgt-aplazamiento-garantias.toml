@@ -73,7 +73,7 @@ lists the debts that may NOT be deferred (retenciones and ingresos a cuenta amon
 that a request over such a debt is inadmitted. A deferral request filed in periodo voluntario \
 prevents the periodo ejecutivo from starting but does not stop intereses de demora accruing. \
 Deferred debts must be secured under art-82. Where the debt is fully secured by aval solidario de \
-entidad de credito or certificado de seguro de caucion the interest demanded is the interes legal \
+entidad de crédito or certificado de seguro de caucion the interest demanded is the interes legal \
 rather than the interes de demora; this article fixes neither rate, both being set annually by the \
 LPGE."""
 required_text = [
@@ -99,7 +99,7 @@ reviewed_at = 2026-08-12
 reviewed_by = "operator"
 notes = """\
 Garantias para el aplazamiento y fraccionamiento de la deuda. The preferred security is an aval \
-solidario de entidad de credito or sociedad de garantia reciproca, or a certificado de seguro de \
+solidario de entidad de crédito or sociedad de garantia reciproca, or a certificado de seguro de \
 caucion. Where the obligado shows it cannot obtain one, hipoteca, prenda, fianza personal y \
 solidaria or another sufficient security is accepted, and the Administracion may instead adopt \
 medidas cautelares in substitution. Apartado 2 allows total or partial dispensation of the garantia, \

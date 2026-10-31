@@ -84,6 +84,11 @@ _PAYABLE_M349_OPERATION_TYPES: frozenset[IntracomOperationType] = frozenset(
 )
 
 
+_THIRD_PARTY_COLLECTION = "third_party_collection"
+_OUTSIDE_ECONOMIC_ACTIVITY = "outside_economic_activity"
+_SUBSIDY_OR_AID = "subsidy_or_aid"
+
+
 def _clave_by_kind_and_category() -> dict[tuple[InvoiceKind, IvaCategory], IntracomOperationType]:
     """Project the dated Modelo 349 category-to-clave bindings."""
     catalogue = resolve_iva_category_catalogue()
@@ -412,7 +417,9 @@ def _m347_invoice_observation(
         return None
     source_kind = BindingSourceKind(invoice_source_kind(invoice))
     clave = _m347_operation_clave(invoice, source_kind=source_kind, declaration_roles=m347_filer.declaration_roles)
-    is_third_party_collection = clave == "C"
+    is_third_party_collection = clave == resolve_third_party_declaration_role_catalogue().clave_for(
+        _THIRD_PARTY_COLLECTION
+    )
     party_tax_id = invoice.collected_on_behalf_of_tax_id if is_third_party_collection else invoice.counterparty_tax_id
     party_legal_name = invoice.collected_on_behalf_of_name if is_third_party_collection else invoice.counterparty_name
     if party_tax_id is None:
@@ -519,12 +526,14 @@ def _m347_role_operation_clave(
     declaration_roles: frozenset[ThirdPartyDeclarationRole],
 ) -> str | None:
     role_catalogue = resolve_third_party_declaration_role_catalogue()
-    if invoice.collected_on_behalf_of_tax_id is not None and declaration_roles & role_catalogue.roles_for_clave("C"):
-        return "C"
-    if invoice.outside_economic_activity is True and declaration_roles & role_catalogue.roles_for_clave("D"):
-        return "D"
-    if invoice.is_subvencion_ayuda is True and declaration_roles & role_catalogue.roles_for_clave("E"):
-        return "E"
+    for circumstance, holds in (
+        (_THIRD_PARTY_COLLECTION, invoice.collected_on_behalf_of_tax_id is not None),
+        (_OUTSIDE_ECONOMIC_ACTIVITY, invoice.outside_economic_activity is True),
+        (_SUBSIDY_OR_AID, invoice.is_subvencion_ayuda is True),
+    ):
+        clave = role_catalogue.clave_for(circumstance)
+        if holds and declaration_roles & role_catalogue.roles_for_clave(clave):
+            return clave
     return None
 
 

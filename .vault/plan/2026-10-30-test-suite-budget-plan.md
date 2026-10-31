@@ -8,7 +8,7 @@ related:
   - '[[2026-08-14-test-harness-sanity-successor-adr]]'
 modified: '2026-10-31'
 body_schema: body-v2
-body_hash: 'sha256:613f6b4e8db74887845488b3e3ac0ea1e1b1b253b4a5e6c563552724707825b1'
+body_hash: 'sha256:0af69ce09a2761f762e84b922f019eb76da1d23ee631a6f83a1e247f4111e7df'
 ---
 
 # `test-suite-budget` plan
@@ -32,7 +32,7 @@ Constraint on reuse: secure stores stay per test. `2026-07-04-codebase-solidific
 - [ ] `S03` - Reuse one compiled tree across generated-export trees and inheritance cases (2,500s); `dev/registry/pipeline/tests`.
 - [ ] `S04` - Replace per-defect real-gate launches in the import quality gate with one shared baseline (2,255s); `dev/tests/test_import_quality_gate.py`.
 - [ ] `S05` - Bound TUI sequence walks and workbench acceptance to one composed app per module (2,800s); `dev/tui/harness/tests, src/cadrumo/entrypoints/tui/tests`.
-- [ ] `S06` - Reduce the per-command CPU floor and repeated calculation cost on the product CLI path; `src/cadrumo_client, src/cadrumo_runtime, src/cadrumo/application/modelo`.
+- [x] `S06` - Reduce the per-command CPU floor and repeated calculation cost on the product CLI path; `src/cadrumo_client, src/cadrumo_runtime, src/cadrumo/application/modelo`.
 - [ ] `S07` - Stop seeding test state through whole CLI commands where the command is not the subject; `src/cadrumo_runtime/host/tests/frontend/cli, src/cadrumo/entrypoints/tests/profile_persistence`.
 - [ ] `S08` - Raise the default worker width to the measured best and amend the worker decision; `src/cadrumo/tests/worker_count_hook.py`.
 - [ ] `S09` - Remove whole-function and token-level clones across test trees; `src, dev test trees`.

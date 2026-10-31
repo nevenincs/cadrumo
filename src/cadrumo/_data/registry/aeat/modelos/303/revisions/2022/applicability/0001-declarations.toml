@@ -1,0 +1,8 @@
+[[revisions."2022".applicability]]
+id = "m303-seed"
+applicable_entity_types = ["legal_entity", "natural_person", "attribution_entity"]
+required_income_categories = ["actividad_economica"]
+applicable_iva_regimes = ["GENERAL", "SIMPLIFICADO"]
+applicable_reason = "Modelo 303 (autoliquidación del IVA): el contribuyente realiza una actividad económica sujeta al IVA y presenta la autoliquidación periódica."
+not_applicable_reason = "Modelo 303 no aplica: sin una actividad económica sujeta al IVA no hay autoliquidación periódica del impuesto."
+legal_refs = ["ley-37-1992:art-99"]

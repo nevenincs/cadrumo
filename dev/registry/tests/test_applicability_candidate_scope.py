@@ -4,10 +4,13 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.domain.calculations.registry.applicability import MODELO_APPLICABILITY_RULES
+from cadrumo.core.modelo import Modelo
+from cadrumo.domain.calculations.registry.applicability import hydrate_applicability_rule
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.facts.payloads import MappingFactPayload
 from cadrumo.domain.calculations.registry.facts.schema import GovernedFactCatalogue
 from cadrumo.domain.calculations.registry.governed_fact_scope import CandidateFactAuthority, validating_governed_facts
+from cadrumo.domain.calculations.registry.schema_revision_members import ApplicabilityRuleDefinition
 
 from ..compiler.authority import compiled_bundled_authority
 
@@ -33,29 +36,26 @@ def _candidate_with_mapping_value(fact_id: str, key: str, value: str) -> Candida
     return CandidateFactAuthority(GovernedFactCatalogue(facts=facts), catalogues.require_supported_filing_years())
 
 
-def test_iva_seed_rules_do_not_capture_the_first_candidate_vocabulary() -> None:
+def _declared_rule(modelo: str) -> ApplicabilityRuleDefinition:
+    definition = next(item for item in compiled_bundled_authority().modelos if item.id == modelo)
+    return next(rule for revision in definition.revisions.values() for rule in revision.applicability)
+
+
+@pytest.mark.parametrize("modelo", ["303", "390"])
+def test_a_declared_iva_rule_is_read_under_the_vocabulary_of_each_candidate(modelo: str) -> None:
     """Two validations in one process must each see their own governed facts."""
-    first_candidate = _candidate_with_mapping_value(
-        "taxpayer-entity-vocabulary",
-        "entity_type.order",
-        "natural_person,legal_entity",
+    declared = _declared_rule(modelo)
+    accepting = _candidate_with_mapping_value(
+        "iva-statutory-schema-vocabulary", "iva_regime.self_assessment_order", "SIMPLIFICADO"
     )
-    second_candidate = _candidate_with_mapping_value(
-        "iva-statutory-schema-vocabulary",
-        "iva_regime.self_assessment_order",
-        "SIMPLIFICADO",
+    narrowed = _candidate_with_mapping_value(
+        "taxpayer-entity-vocabulary", "entity_type.order", "natural_person,legal_entity"
     )
 
-    with validating_governed_facts(first_candidate):
-        first = MODELO_APPLICABILITY_RULES["303"]
-    with validating_governed_facts(second_candidate):
-        second = MODELO_APPLICABILITY_RULES["303"]
+    with validating_governed_facts(accepting):
+        rule = hydrate_applicability_rule(Modelo(modelo), declared)
+    assert {str(token) for token in rule.applicable_iva_regimes} == {"GENERAL", "SIMPLIFICADO"}
+    assert {str(token) for token in rule.required_income_categories} == {"actividad_economica"}
 
-    assert {str(token) for token in first.applicable_entity_types} == {"natural_person", "legal_entity"}
-    assert {str(token) for token in first.applicable_iva_regimes} == {"GENERAL", "SIMPLIFICADO"}
-    assert {str(token) for token in second.applicable_entity_types} == {
-        "natural_person",
-        "legal_entity",
-        "attribution_entity",
-    }
-    assert {str(token) for token in second.applicable_iva_regimes} == {"SIMPLIFICADO"}
+    with validating_governed_facts(narrowed), pytest.raises(RegistryValidationError):
+        hydrate_applicability_rule(Modelo(modelo), declared)

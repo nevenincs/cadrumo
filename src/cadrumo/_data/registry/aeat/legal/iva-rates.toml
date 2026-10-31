@@ -11,7 +11,7 @@ effective_from = 1993-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-07
 reviewed_by = "operator"
-notes = "LIVA art 90: tipo impositivo general del IVA. Establece que el Impuesto se exigira al tipo del 21 por ciento, salvo lo dispuesto en el articulo 91 (tipos reducidos). El tipo aplicable a cada operacion sera el vigente en el momento del devengo (art 90 Dos)."
+notes = "LIVA art 90: tipo impositivo general del IVA. Establece que el Impuesto se exigira al tipo del 21 por ciento, salvo lo dispuesto en el articulo 91 (tipos reducidos). El tipo aplicable a cada operación sera el vigente en el momento del devengo (art 90 Dos)."
 required_text = [
     "Tipo impositivo general",
     "21 por ciento",

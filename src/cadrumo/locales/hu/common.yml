@@ -5638,6 +5638,7 @@ sheets:
     headers:
       accrual_year: Keletkezés éve
       acquisition_date: Szerzés dátuma
+      acquisition_value: Beszerzési érték
       amount: Összeg
       amount_donated: Adományozott összeg
       anualidades_alimentos: Tartásdíj-járadék
@@ -5728,6 +5729,7 @@ sheets:
       donor_legal_name: Adományozó neve
       donor_tax_id: Adományozó adóazonosítója
       door: Ajtó
+      element_type: Eszköz típusa
       emerging_stock_excess_clave: Startup részvényjuttatási többlet
       fecha_devengo: Keletkezés dátuma
       fecha_inicio_prestamo: Kölcsön kezdő dátuma
@@ -5743,6 +5745,7 @@ sheets:
       foral_retention_estatal: Az államnak befizetett visszatartások és előlegek
       foral_retention_gipuzkoa: Gipuzkoának befizetett visszatartások és előlegek
       foral_retention_navarra: Navarrának befizetett visszatartások és előlegek
+      gain: Nyereség
       garantias: Garancia
       gastos_deducibles: Levonható költségek
       geographic_mobility_clave: Földrajzi mobilitás
@@ -5764,6 +5767,7 @@ sheets:
       is_recurrent: Ismétlődő adomány
       isin_code: ISIN kód
       locality: Település
+      loss: Veszteség
       member_legal_name: Tag neve
       member_state_code: Tagállam
       member_tax_id: Tag adóazonosítója
@@ -5847,6 +5851,8 @@ sheets:
       tipo_codigo: Kódtípus
       tipo_percepcion: Juttatás típusa
       transfer_pricing_method_code: Transzferár-módszer
+      transmission_date: Átruházás dátuma
+      transmission_value: Átruházási érték
       unit_convivencia_titular_clave: Együttélési egység vezetője
       valuation_amount: Értékelés
       valuation_event: Értékelési esemény

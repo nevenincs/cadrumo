@@ -207,8 +207,8 @@ errors:
     error_deadlines_schedule_computation: El motor no pudo generar un calendario de
       plazos válido. Comprueba el año solicitado y los datos del perfil.
     error_deadlines_validation: Un registro de plazo no superó la validación.
-    error_decimal_format: 'Se produjo un error de formato decimal: el valor es None
-      pero no se configuró un sustituto.'
+    error_decimal_format: 'Se produjo un error de formato decimal: falta el valor
+      y no se configuró un sustituto.'
     error_declaracion_template_not_detected: No se pudo detectar automáticamente la
       versión de plantilla del PDF de la declaración.
     error_domain_submission: Se produjo un error en el dominio de envío.

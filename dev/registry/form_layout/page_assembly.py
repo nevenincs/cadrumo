@@ -28,6 +28,7 @@ from .page_sections import (
     _section_slug,
     _signature,
     _unique,
+    _with_row_column_groups,
 )
 from .predecessor_layout import ContinuedLayout
 
@@ -237,6 +238,7 @@ def _build_pages(
         primary={casilla_id: anchors[0] for casilla_id, anchors in build.anchors.items()},
     )
     _append_source_pages(state, pages, refs)
+    state.pages[:] = _with_row_column_groups(build, state.pages)
     _mark_repeating_bindings(state)
     _append_numbered_page(state)
     _append_inputs_page(state)

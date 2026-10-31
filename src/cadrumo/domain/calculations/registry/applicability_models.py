@@ -696,7 +696,7 @@ this text is the engine's own, and the engine speaks the user's language.
 _INCOMPLETE_UNRULED_REASON_LOCALE_KEY = "filing.applicability.incomplete_no_rule"
 """``INCOMPLETE`` rationale for a *modelo with no seed rule*.
 
-Used when :data:`MODELO_APPLICABILITY_RULES` carries no rule for the
+Used when no revision declares a rule for the
 requested modelo. The profile may be fully declared; this verdict is a
 statement about the seed coverage, not about the operator. It must never tell a declared operator to declare
 their taxpayer type.

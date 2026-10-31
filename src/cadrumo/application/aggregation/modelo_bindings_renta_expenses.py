@@ -12,6 +12,7 @@ from ...core.modelo import Modelo
 from ...domain.calculations.registry.actividad_asset_disposal_bindings import (
     resolve_activity_asset_disposal_binding_values,
     resolve_activity_asset_disposal_element_type_values,
+    resolve_activity_asset_disposal_row_values,
 )
 from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from ...domain.calculations.registry.errors import RegistryError
@@ -45,6 +46,7 @@ from ._modelo_bindings_support import (
     empty_source_resolution,
     revision_has_binding_source,
 )
+from .activity_asset_disposal_projection import disposal_row_source_identities
 from .activity_asset_expense_reconciliation import (
     LedgerExpenseRegisterClassification,
     LedgerRentaExpenseTreatment,
@@ -282,9 +284,17 @@ class LedgerRentaGastosEstimacionDirectaAggregationSourceResolver:
             context.revision,
             asset_projection.disposal_observations,
         )
+        disposal_row_values, disposal_row_identities = resolve_activity_asset_disposal_row_values(
+            context.revision,
+            asset_projection.disposal_rows,
+        )
         return CalculationSourceResolution(
             resolver_id=self.resolver_id,
             owned_sources=self.owned_sources,
+            row_binding_values=disposal_row_values,
+            row_source_identities=disposal_row_source_identities(
+                disposal_row_identities, asset_projection.disposal_rows
+            ),
             binding_values={
                 **resolve_ledger_renta_gastos_estimacion_directa_aggregation_binding_values(
                     context.revision,

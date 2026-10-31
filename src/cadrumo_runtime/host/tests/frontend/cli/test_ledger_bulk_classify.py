@@ -12,6 +12,7 @@ import pytest
 from click.testing import Result
 from pydantic import ValidationError
 
+from cadrumo.adapters.persistence.profile.tests.sealed_profile_world import copy_sealed_tree, sealed_tree
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.core.config import override_settings
 from cadrumo.entrypoints.cli.ledger_rule_results import (
@@ -26,6 +27,8 @@ from .cli_runner import invoke_cached_cli
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _PROFILE_FREE_TESTS: set[Callable[..., None]] = set()
+_ON_IMPORTED_LEDGER: set[Callable[..., None]] = set()
+_IMPORTED: ContextVar[tuple[str, str]] = ContextVar("bulk_classify_imported")
 _ACTIVE_PROFILE: ContextVar[NativeCliProfileFixture | None] = ContextVar("bulk_classify_active_profile", default=None)
 _PROFILE_LABEL = "bulk-classify-cli-test"
 _PROFILE_FACTS = {
@@ -65,14 +68,39 @@ def _invoke_cli(args: Sequence[str]) -> Result:
     return result
 
 
+def _on_two_imported_transactions[TestT: Callable[..., None]](test: TestT) -> TestT:
+    """Start a test on its own copy of a ledger the CLI already imported two rows into."""
+    _ON_IMPORTED_LEDGER.add(test)
+    return test
+
+
+def _imported_ledger(origin: Path) -> tuple[str, str]:
+    """Register the profile and import through the real commands, once per worker."""
+    with native_cli_profile_scope(origin) as profile:
+        profile.register(label=_PROFILE_LABEL, facts=_PROFILE_FACTS)
+        token = _ACTIVE_PROFILE.set(profile)
+        try:
+            return _import_two_transactions(origin)
+        finally:
+            _ACTIVE_PROFILE.reset(token)
+
+
 @pytest.fixture(autouse=True)
 def _profile_unless_contract_only(request: pytest.FixtureRequest, tmp_path: Path) -> Iterator[None]:
     """Use a real password-protected CLI profile except for pure DTO checks."""
     if request.function in _PROFILE_FREE_TESTS:
         yield
         return
+    imported = None
+    if request.function in _ON_IMPORTED_LEDGER:
+        origin, imported = sealed_tree("bulk classify imported ledger", _imported_ledger)
+        copy_sealed_tree(origin, tmp_path)
     with native_cli_profile_scope(tmp_path) as profile:
-        profile.register(label=_PROFILE_LABEL, facts=_PROFILE_FACTS)
+        if imported is None:
+            profile.register(label=_PROFILE_LABEL, facts=_PROFILE_FACTS)
+        else:
+            profile.serve_copied(label=_PROFILE_LABEL)
+            _IMPORTED.set(imported)
         token = _ACTIVE_PROFILE.set(profile)
         try:
             yield
@@ -196,8 +224,9 @@ def _import_many_transactions(tmp_path: Path, *, count: int) -> list[str]:
 # ---------------------------------------------------------------------------
 
 
+@_on_two_imported_transactions
 def test_classify_from_csv_applies_all_valid_rows(tmp_path: Path) -> None:
-    tx1, tx2 = _import_two_transactions(tmp_path)
+    tx1, tx2 = _IMPORTED.get()
 
     csv_content = f"transaction_id,classification\n{tx1},BUSINESS\n{tx2},PERSONAL\n"
     csv_file = tmp_path / "classify.csv"
@@ -211,8 +240,9 @@ def test_classify_from_csv_applies_all_valid_rows(tmp_path: Path) -> None:
     assert by_id[tx2]["business_classification"] == "PERSONAL"
 
 
+@_on_two_imported_transactions
 def test_classify_from_csv_partial_failure_applies_valid_rows(tmp_path: Path) -> None:
-    tx1, _tx2 = _import_two_transactions(tmp_path)
+    tx1, _tx2 = _IMPORTED.get()
 
     csv_content = f"transaction_id,classification\n{tx1},BUSINESS\ndeadbeef,PERSONAL\n"
     csv_file = tmp_path / "partial.csv"
@@ -227,8 +257,8 @@ def test_classify_from_csv_partial_failure_applies_valid_rows(tmp_path: Path) ->
     assert payload["failures"]  # at least one failure for unknown id
 
 
+@_on_two_imported_transactions
 def test_classify_from_csv_all_failed_exits_nonzero(tmp_path: Path) -> None:
-    _import_two_transactions(tmp_path)
 
     csv_content = "transaction_id,classification\nmissing-short,BUSINESS\nmissing-long,PERSONAL\n"
     csv_file = tmp_path / "all_failed.csv"
@@ -247,6 +277,7 @@ def test_classify_from_csv_all_failed_exits_nonzero(tmp_path: Path) -> None:
     assert len(payload["failures"]) == 2, payload
 
 
+@_on_two_imported_transactions
 def test_classify_from_csv_rejects_pipeline_managed_state(tmp_path: Path) -> None:
     """A bulk row naming a pipeline-managed state reds (mirrors the single-classify guard).
 
@@ -254,7 +285,7 @@ def test_classify_from_csv_rejects_pipeline_managed_state(tmp_path: Path) -> Non
     produced by the pipeline, never assigned by hand. The valid BUSINESS row
     still applies (partial-success); the system-state row lands in ``failures``.
     """
-    tx1, tx2 = _import_two_transactions(tmp_path)
+    tx1, tx2 = _IMPORTED.get()
 
     csv_content = f"transaction_id,classification\n{tx1},BUSINESS\n{tx2},SKIPPED_BY_RULE\n"
     csv_file = tmp_path / "system_state.csv"
@@ -271,8 +302,9 @@ def test_classify_from_csv_rejects_pipeline_managed_state(tmp_path: Path) -> Non
     assert any("set automatically by aeat" in f["reason"] for f in payload["failures"]), payload
 
 
+@_on_two_imported_transactions
 def test_classify_from_csv_rejects_unknown_column(tmp_path: Path) -> None:
-    tx1, _ = _import_two_transactions(tmp_path)
+    tx1, _ = _IMPORTED.get()
 
     csv_content = f"transaction_id,classification,unknown_field\n{tx1},BUSINESS,foo\n"
     csv_file = tmp_path / "badcol.csv"
@@ -282,11 +314,12 @@ def test_classify_from_csv_rejects_unknown_column(tmp_path: Path) -> None:
     assert result.exit_code != 0
 
 
+@_on_two_imported_transactions
 def test_classify_from_csv_accepts_iva_category_column(tmp_path: Path) -> None:
     """Bulk CSV accepts the same IVA category field as single-row classify."""
     from cadrumo.domain.iva.schema import IvaCategory
 
-    tx1, _tx2 = _import_two_transactions(tmp_path)
+    tx1, _tx2 = _IMPORTED.get()
     csv_file = tmp_path / "iva_category.csv"
     csv_file.write_text(
         f"transaction_id,classification,iva_category\n{tx1},BUSINESS,domestic_general\n",
@@ -304,9 +337,10 @@ def test_classify_from_csv_accepts_iva_category_column(tmp_path: Path) -> None:
     assert _stored_transaction(tx1).iva_category == IvaCategory("domestic_general")
 
 
+@_on_two_imported_transactions
 def test_classify_from_csv_accepts_irpf_category_column(tmp_path: Path) -> None:
     """Bulk CSV accepts the same IRPF category field as single-row classify."""
-    tx1, _tx2 = _import_two_transactions(tmp_path)
+    tx1, _tx2 = _IMPORTED.get()
     csv_file = tmp_path / "irpf_category.csv"
     csv_file.write_text(
         f"transaction_id,classification,irpf_category\n{tx1},BUSINESS,actividad_economica\n",
@@ -324,9 +358,10 @@ def test_classify_from_csv_accepts_irpf_category_column(tmp_path: Path) -> None:
     assert _stored_transaction(tx1).irpf_category == "actividad_economica"
 
 
+@_on_two_imported_transactions
 def test_classify_from_csv_accepts_display_id_prefix(tmp_path: Path) -> None:
     """Bulk CSV resolves transaction ids like single-row classify does."""
-    tx1, _tx2 = _import_two_transactions(tmp_path)
+    tx1, _tx2 = _IMPORTED.get()
     by_id = {row["transaction_id"]: row for row in _list_transactions()}
     display_id = by_id[tx1]["display_id"]
     csv_file = tmp_path / "short_id.csv"
@@ -374,8 +409,9 @@ def test_classify_from_csv_ambiguous_prefix_is_row_failure(tmp_path: Path) -> No
     assert by_id[valid_id]["business_classification"] == "BUSINESS"
 
 
+@_on_two_imported_transactions
 def test_classify_from_csv_exclusive_with_id(tmp_path: Path) -> None:
-    tx1, _ = _import_two_transactions(tmp_path)
+    tx1, _ = _IMPORTED.get()
     csv_file = tmp_path / "x.csv"
     csv_file.write_text(f"transaction_id,classification\n{tx1},BUSINESS\n", encoding="utf-8")
 
@@ -540,8 +576,9 @@ def test_rule_list_empty() -> None:
 # ---------------------------------------------------------------------------
 
 
+@_on_two_imported_transactions
 def test_rule_apply_classifies_not_yet_processed_transactions(tmp_path: Path) -> None:
-    tx1, tx2 = _import_two_transactions(tmp_path)
+    tx1, tx2 = _IMPORTED.get()
 
     # The imported CSV uses "Payment reference" as description: INV-001, INV-002
     _invoke_cli(
@@ -564,8 +601,9 @@ def test_rule_apply_classifies_not_yet_processed_transactions(tmp_path: Path) ->
     assert by_id[tx2].get("classified_by", "").startswith("rule:")
 
 
+@_on_two_imported_transactions
 def test_rule_apply_skips_already_classified_without_reaffirm(tmp_path: Path) -> None:
-    tx1, _tx2 = _import_two_transactions(tmp_path)
+    tx1, _tx2 = _IMPORTED.get()
 
     # Manually classify tx1
     _invoke_cli(["app", "ledger", "classify", tx1, "--classification", "PERSONAL"])
@@ -590,8 +628,8 @@ def test_rule_apply_skips_already_classified_without_reaffirm(tmp_path: Path) ->
     assert by_id[tx1]["business_classification"] == "PERSONAL"
 
 
+@_on_two_imported_transactions
 def test_rule_apply_dry_run_does_not_mutate(tmp_path: Path) -> None:
-    _import_two_transactions(tmp_path)
     _invoke_cli(
         ["app", "ledger", "rule", "add", "--description-pattern", "INV-001", "--classification", "BUSINESS"],
     )
@@ -607,8 +645,9 @@ def test_rule_apply_dry_run_does_not_mutate(tmp_path: Path) -> None:
         assert row["business_classification"] == "NOT_YET_PROCESSED"
 
 
+@_on_two_imported_transactions
 def test_rule_priority_order_first_match_wins(tmp_path: Path) -> None:
-    tx1, _ = _import_two_transactions(tmp_path)
+    tx1, _ = _IMPORTED.get()
 
     # Two rules both match "INV-001"; priority 1 (BUSINESS) should win over priority 100 (PERSONAL)
     _invoke_cli(
@@ -648,6 +687,7 @@ def test_rule_priority_order_first_match_wins(tmp_path: Path) -> None:
     assert by_id[tx1]["business_classification"] == "BUSINESS"
 
 
+@_on_two_imported_transactions
 def test_classify_from_csv_persists_iva_facts(tmp_path: Path) -> None:
     """Bulk --file supplies the same IVA facts single-classify supplies.
 
@@ -657,7 +697,7 @@ def test_classify_from_csv_persists_iva_facts(tmp_path: Path) -> None:
     classification-only row (no IVA columns) on the same batch must still
     classify with the IVA facts absent (zero regression).
     """
-    tx1, tx2 = _import_two_transactions(tmp_path)
+    tx1, tx2 = _IMPORTED.get()
 
     csv_file = tmp_path / "iva.csv"
     # tx1 (gross 100.00 EUR) carries the IVA facts; the base + iva_amount must
@@ -694,9 +734,10 @@ def test_classify_from_csv_persists_iva_facts(tmp_path: Path) -> None:
     assert by_id[tx2]["iva_amount"] is None
 
 
+@_on_two_imported_transactions
 def test_classify_from_csv_preserves_existing_tax_facts_when_columns_omitted(tmp_path: Path) -> None:
     """Partial classification CSV rows must not clear facts they do not mention."""
-    tx1, _tx2 = _import_two_transactions(tmp_path)
+    tx1, _tx2 = _IMPORTED.get()
     _classify_with_tax_facts(tx1)
 
     csv_file = tmp_path / "classification_only.csv"
@@ -720,9 +761,10 @@ def test_classify_from_csv_preserves_existing_tax_facts_when_columns_omitted(tmp
     assert row["irpf_category"] == "actividad_economica"
 
 
+@_on_two_imported_transactions
 def test_classify_from_csv_blank_optional_tax_cells_preserve_existing_values(tmp_path: Path) -> None:
     """Blank optional CSV cells behave as omitted cells, not destructive clears."""
-    tx1, _tx2 = _import_two_transactions(tmp_path)
+    tx1, _tx2 = _IMPORTED.get()
     _classify_with_tax_facts(tx1)
 
     csv_file = tmp_path / "blank_tax_cells.csv"
@@ -747,6 +789,7 @@ def test_classify_from_csv_blank_optional_tax_cells_preserve_existing_values(tmp
     assert row["irpf_category"] == "actividad_economica"
 
 
+@_on_two_imported_transactions
 def test_classify_from_csv_iva_facts_match_single_classify(tmp_path: Path) -> None:
     """Bulk and single-id mode persist the supplied IVA facts via the same write path.
 
@@ -757,7 +800,7 @@ def test_classify_from_csv_iva_facts_match_single_classify(tmp_path: Path) -> No
     proving the bulk path reuses the single-classify primitive rather than a
     parallel write path.
     """
-    tx1, tx2 = _import_two_transactions(tmp_path)
+    tx1, tx2 = _IMPORTED.get()
 
     # Single-classify tx1 (gross 100.00) with IVA facts via positional-id mode.
     single = _invoke_cli(
@@ -800,9 +843,10 @@ def test_classify_from_csv_iva_facts_match_single_classify(tmp_path: Path) -> No
     assert by_id[tx1]["iva_rate"] == by_id[tx2]["iva_rate"]
 
 
+@_on_two_imported_transactions
 def test_classify_from_csv_rejects_malformed_iva_fact(tmp_path: Path) -> None:
     """A malformed IVA-fact Decimal reds the row, not a silent coercion."""
-    tx1, tx2 = _import_two_transactions(tmp_path)
+    tx1, tx2 = _IMPORTED.get()
     csv_file = tmp_path / "bad_iva.csv"
     # tx1 carries a malformed taxable_base (reds the row); tx2 (gross 200.00)
     # carries a valid IVA set that satisfies the gross-equality invariant.
@@ -824,9 +868,10 @@ def test_classify_from_csv_rejects_malformed_iva_fact(tmp_path: Path) -> None:
     assert by_id[tx2]["taxable_base"] == "165.29"
 
 
+@_on_two_imported_transactions
 def test_classify_from_csv_surplus_cells_are_row_failure(tmp_path: Path) -> None:
     """A row with more cells than headers fails that row without aborting the batch."""
-    tx1, tx2 = _import_two_transactions(tmp_path)
+    tx1, tx2 = _IMPORTED.get()
     csv_file = tmp_path / "surplus_cells.csv"
     csv_file.write_text(
         f"transaction_id,classification\n{tx1},BUSINESS,unexpected-extra-cell\n{tx2},BUSINESS\n",
@@ -850,9 +895,10 @@ def test_classify_from_csv_surplus_cells_are_row_failure(tmp_path: Path) -> None
     assert by_id[tx2]["business_classification"] == "BUSINESS"
 
 
+@_on_two_imported_transactions
 def test_classify_from_csv_accepts_business_pct_for_mixed(tmp_path: Path) -> None:
     """MIXED rows classify in bulk via --file with a business_pct column."""
-    tx1, _tx2 = _import_two_transactions(tmp_path)
+    tx1, _tx2 = _IMPORTED.get()
     csv_file = tmp_path / "mixed.csv"
     csv_file.write_text(
         f"transaction_id,classification,category_id,business_pct\n{tx1},MIXED,telefonia_movil,0.50\n",
@@ -866,9 +912,10 @@ def test_classify_from_csv_accepts_business_pct_for_mixed(tmp_path: Path) -> Non
     assert row["business_pct"] is not None and row["business_pct"].startswith("0.5")
 
 
+@_on_two_imported_transactions
 def test_classify_from_csv_accepts_usage_ratio_id_for_mixed(tmp_path: Path) -> None:
     """Bulk CSV can carry the proportionality reference needed by mixed rows."""
-    tx1, _tx2 = _import_two_transactions(tmp_path)
+    tx1, _tx2 = _IMPORTED.get()
 
     ratio = _invoke_cli(["app", "ledger", "ratios", "set", "arrendamiento_vivienda_afecto", "0.50"])
     assert ratio.exit_code == 0, ratio.output
@@ -897,9 +944,10 @@ def test_classify_from_csv_accepts_usage_ratio_id_for_mixed(tmp_path: Path) -> N
     assert stored.edit_lineage[-1].source_command == "aeat app ledger classify --file"
 
 
+@_on_two_imported_transactions
 def test_classify_from_csv_rejects_unknown_usage_ratio_id(tmp_path: Path) -> None:
     """Bulk CSV uses the shared usage-ratio validator before persisting a mixed row."""
-    tx1, _tx2 = _import_two_transactions(tmp_path)
+    tx1, _tx2 = _IMPORTED.get()
     csv_file = tmp_path / "mixed_unknown_ratio.csv"
     csv_file.write_text(
         "transaction_id,classification,category_id,business_pct,usage_ratio_id\n"

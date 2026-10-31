@@ -20,7 +20,7 @@ msgstr ""
 
 #: ../../how-to/prorrata.md:2
 msgid "Apply VAT prorrata deductions"
-msgstr "IVA prorrata-levonások alkalmazása"
+msgstr "IVA-levonások arányosítása"
 
 #: ../../how-to/prorrata.md:4
 msgid ""
@@ -31,12 +31,13 @@ msgid ""
 "prorrata choice once and the tool applies it to Modelo 303 and Modelo 390"
 " automatically."
 msgstr ""
-"Akkor használd ezt az útmutatót, ha nem vonhatod le a teljes beszerzési "
-"IVA-t. Ez akkor fordul elő, ha a tevékenységed olyan ügyleteket vegyít, "
-"amelyek levonási jogot adnak, és olyanokat, amelyek nem (levonási jog "
-"nélküli mentesített ügyletek). A spanyol IVA ezt *prorratának* nevezi. "
-"Rögzítsd egyszer a prorrata-választásodat, az eszköz pedig automatikusan "
-"alkalmazza a Modelo 303-ra és a Modelo 390-re."
+"Akkor használd ezt az útmutatót, ha az adózó nem vonhatja le az összes "
+"előzetesen felszámított IVA-t. Ez akkor fordul elő, ha a tevékenység "
+"levonási jogot adó és levonási jogot nem adó ügyleteket vegyít (beleértve"
+" a levonási jog nélküli mentes ügyleteket). A spanyol IVA-jog ezt az "
+"arányos levonási módszert *prorratának* nevezi. Rögzítsd egyszer az adózó"
+" arányosítási módszerét; az eszköz automatikusan alkalmazza a Modelo 303 "
+"és a Modelo 390 esetén."
 
 #: ../../how-to/prorrata.md:10
 msgid ""
@@ -44,9 +45,9 @@ msgid ""
 " locally with the taxpayer's profile; it is not something you file at "
 "AEAT."
 msgstr ""
-"A Cadrumo nem nyújt be semmit az AEAT-hoz. A prorrata-nyilvántartás "
-"helyben, a profilodhoz kapcsolva tárolódik; nem olyasmi, amit be kell "
-"nyújtanod az AEAT-nál."
+"A Cadrumo nem nyújt be semmit az AEAT-hoz. Az arányosítási nyilvántartás "
+"helyben, az adózó profiljához kapcsolva tárolódik; ezt nem kell "
+"benyújtani az AEAT-nál."
 
 #: ../../how-to/prorrata.md:13
 msgid "The tool needs your passphrase and prompts for it."
@@ -64,7 +65,7 @@ msgstr ""
 
 #: ../../how-to/prorrata.md:19
 msgid "Which prorrata applies"
-msgstr "Melyik prorrata alkalmazható"
+msgstr "Melyik levonási módszer alkalmazandó?"
 
 #: ../../how-to/prorrata.md:21
 msgid ""
@@ -72,10 +73,11 @@ msgid ""
 " every deductible input for the year. It applies unless the taxpayer opts"
 " for especial or the law requires especial (LIVA art. 103.Dos)."
 msgstr ""
-"**Általános prorrata** (LIVA art. 104): egyetlen levonási százalék "
-"vonatkozik az év minden levonható beszerzési IVA-jára. Akkor "
-"alkalmazandó, ha az adózó nem az especialt választja, vagy a jog nem írja"
-" elő az especialt (LIVA art. 103.Dos)."
+"**Általános arányosítás (prorrata general)** (LIVA art. 104): az év "
+"minden levonható beszerzésére ugyanaz a levonási százalék érvényes. Az "
+"általános módszer alkalmazandó, kivéve ha az adózó a különleges "
+"arányosítást választja, vagy a törvény kötelezővé teszi azt (LIVA art. "
+"103.Dos)."
 
 #: ../../how-to/prorrata.md:24
 msgid ""
@@ -84,11 +86,12 @@ msgid ""
 "non-deducting operations deduct nothing, and shared (\"common\") inputs "
 "deduct at the general percentage. Tag each input with its use."
 msgstr ""
-"**Especial prorrata** (LIVA art. 103 és 106): minden beszerzési IVA a "
-"saját használata szerint vonódik le. A teljesen levonható tételek teljes "
-"egészében levonódnak, a kizárólag nem levonó ügyletekhez használtak "
-"semmit sem vonnak le, a megosztott („közös”) tételek pedig az általános "
-"százalékon vonódnak le. Címkézzen meg minden tételt a használatával."
+"**Különleges arányosítás (prorrata especial)** (LIVA art. 103 és 106): "
+"minden beszerzés levonhatóságát a saját felhasználása határozza meg. A "
+"teljesen levonható tételek teljes egészében levonhatók; a kizárólag "
+"levonásra nem jogosító ügyletekhez használt tételekből semmi sem vonható "
+"le; a megosztott (\"közös\") beszerzésekre az általános százalék "
+"vonatkozik. Minden beszerzést a felhasználása szerint címkézz."
 
 #: ../../how-to/prorrata.md:29
 msgid ""
@@ -103,11 +106,11 @@ msgstr ""
 
 #: ../../how-to/prorrata.md:33
 msgid "Elect general prorrata"
-msgstr "Az általános prorrata választása"
+msgstr "Az általános arányosítás választása"
 
 #: ../../how-to/prorrata.md:35
 msgid "Elect the year's general percentage:"
-msgstr "Válaszd ki az év általános százalékát:"
+msgstr "Válaszd ki az évre érvényes általános levonási százalékot:"
 
 #: ../../how-to/prorrata.md:41
 msgid "`--ejercicio` is the filing year the election covers."
@@ -149,11 +152,11 @@ msgstr ""
 
 #: ../../how-to/prorrata.md:53
 msgid "Elect especial prorrata and classify inputs"
-msgstr "Az especial prorrata választása és a beszerzések besorolása"
+msgstr "A különleges arányosítás választása és a beszerzések besorolása"
 
 #: ../../how-to/prorrata.md:55
 msgid "Elect especial for the year:"
-msgstr "Válaszd az especialt az évre:"
+msgstr "Válaszd a különleges arányosítást az adott évre:"
 
 #: ../../how-to/prorrata.md:61
 msgid ""
@@ -209,11 +212,11 @@ msgid ""
 "recorded example starts without an election, so it prints that warning. "
 "Elect especial to make the tag take effect."
 msgstr ""
-"Ha megjelölsz egy bemenetet, de nem választod az especialt arra az évre, "
-"az eszköz figyelmeztet, hogy a címke hatástalan: a bemenet az általános "
-"százalék szerint vonódik le. A rögzített példa választás nélkül indul, "
-"ezért kiírja ezt a figyelmeztetést. Válaszd az especialt, hogy a címke "
-"érvénybe lépjen."
+"Ha besorolsz egy bemenetet, de az adott évre nem választod a különleges "
+"arányosítást, az eszköz figyelmeztet, hogy a címke hatástalan: a bemenet "
+"levonása az általános százalék szerint történik. A rögzített példa "
+"választás nélkül indul, ezért a figyelmeztetés megjelenik. A címke "
+"érvényesítéséhez válaszd a különleges arányosítást."
 
 #: ../../how-to/prorrata.md:86
 msgid ""
@@ -303,10 +306,11 @@ msgstr ""
 "sector` a szektor ideiglenes százalékát a saját előző évi végleges "
 "százalékából tölti fel. A `prorrata settle-sector` az év végi végleges "
 "százalékot a szektor levonásra jogosító és nem jogosító ügyleteinek éves "
-"forgalmából számítja ki. A `prorrata revoke-especial` egy előző évi "
-"especial állapot után visszavonja az especialt egy évre, és megköveteli "
-"az `--evidence-reference` kapcsolót. Futtasd mindegyiket a `--help` "
-"kapcsolóval a lehetőségeikért."
+"forgalmából számítja ki. A `prorrata revoke-especial` parancs a "
+"különleges arányosítás előző évi állapotának fennállása után visszavonja "
+"a választást egy adott évre, és megköveteli az `--evidence-reference` "
+"kapcsolót. Futtasd mindegyiket a `--help` kapcsolóval, hogy lásd a "
+"lehetőségeiket."
 
 #: ../../how-to/prorrata.md:126
 msgid "Read the settlement advisories"
@@ -330,13 +334,14 @@ msgid ""
 "this check; until then it prompts you to classify. The check does not run"
 " for a register with declared sectors."
 msgstr ""
-"**Az especial kötelező lehet** - amikor általános prorratával számolsz, "
-"és az általános szerint levonható összeg legalább 10 százalékkal "
-"meghaladja az especial szerint levonhatót, a törvény (LIVA art. "
-"103.Dos.2) kötelezővé teszi az especialt. Sorold be az év minden "
-"bemenetét, hogy az eszköz lefuttathassa ezt az ellenőrzést; addig az "
-"eszköz arra kér, hogy sorold be őket. Az ellenőrzés nem fut le olyan "
-"nyilvántartásnál, amelyben szektorok vannak deklarálva."
+"**A különleges arányosítás kötelező lehet** - ha az adózó általános "
+"arányosítással számol, és az általános módszer szerint levonható összeg "
+"legalább 10 százalékkal meghaladja a különleges módszer szerint "
+"levonhatót, a törvény (LIVA art. 103.Dos.2) kötelezővé teszi a különleges"
+" arányosítást. Sorold be az év minden bemenetét, hogy az eszköz "
+"lefuttathassa ezt az ellenőrzést; addig az eszköz arra kér, hogy sorold "
+"be őket. Az ellenőrzés nem fut le olyan nyilvántartásnál, amelyben "
+"szektorok vannak deklarálva."
 
 #: ../../how-to/prorrata.md:138
 msgid "Two more warnings appear when you add a row, not at settlement:"
@@ -349,8 +354,8 @@ msgid ""
 "**Inert classification** - an `--input-classification` tag set with no "
 "especial election for that year."
 msgstr ""
-"**Hatástalan besorolás** - egy `--input-classification` címke, amely arra"
-" az évre nincs especial-választással beállítva."
+"**Hatástalan besorolás** - az `--input-classification` címke hatástalan, "
+"ha az adott évre nem választottál különleges arányosítást."
 
 #: ../../how-to/prorrata.md:142
 msgid "**Unmatched sector** - a `--sector` tag naming a sector not yet declared."
@@ -385,8 +390,8 @@ msgid ""
 "[Classify transactions](classify-transactions.md) so each input carries "
 "the data prorrata needs."
 msgstr ""
-"[Tranzakciók besorolása](classify-transactions.md), hogy minden beszerzés"
-" hordozza a prorratához szükséges adatokat."
+"[Tranzakciók besorolása](classify-transactions.md), hogy minden "
+"beszerzési tétel tartalmazza az arányosításhoz szükséges adatokat."
 
 #: ../../how-to/prorrata.md:160
 msgid ""

@@ -45,7 +45,11 @@ def render_guide[M: (SheetExportMetadata, SheetReviewMetadata, SheetTemplatePrev
         (
             "Edite los datos en Entradas. Modelo muestra el resultado; Cálculos y Tarifas permiten revisarlo."
             if isinstance(frame, Period)
-            else tr("application.storage.calc_sheets.form.communication_guide", locale="es"),
+            else tr(
+                "application.storage.calc_sheets.form.communication_guide",
+                locale="es",
+                inputs_tab=TabName.ENTRADAS.value,
+            ),
         ),
     )
     emit(

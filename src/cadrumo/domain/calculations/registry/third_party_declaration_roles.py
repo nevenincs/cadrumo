@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
@@ -25,7 +26,8 @@ _FACT_ID = "third-party-declaration-role-catalogue"
 _ORDER_KEY = "role.order"
 _ROLE_PREFIX = "role."
 _SELECTION_PREFIX = "selection."
-_SELECTION_CLAVES = ("C", "D", "E")
+_SELECTION_KEY = re.compile(r"selection\.(\w+)\.roles")
+_CLAVE_FOR_PREFIX = "clave_for."
 
 
 @dataclass(frozen=True, slots=True)
@@ -85,9 +87,13 @@ class ThirdPartyDeclarationRoleCatalogue:
     def roles_for_clave(self, clave: str) -> frozenset[ThirdPartyDeclarationRole]:
         """Return the registry-owned role population for one C/D/E selector."""
         normalized = clave.strip().upper()
-        if normalized not in _SELECTION_CLAVES:
+        if normalized not in self.selections:
             raise RegistryValidationError(f"unsupported third-party declaration selection {clave!r}")
         return frozenset(self.selections[normalized])
+
+    def clave_for(self, circumstance: str) -> str:
+        """Return the clave the registry gives one circumstance of a declared operation."""
+        return required_mapping_entry(self.declarations, f"{_CLAVE_FOR_PREFIX}{circumstance}", subject=_ENTRY_SUBJECT)
 
 
 _ENTRIES_POLICY = StringMappingPolicy(subject=_ENTRY_SUBJECT, value_whitespace=MappingValueWhitespace.PRESERVE)
@@ -117,7 +123,7 @@ def _catalogue(entries: Mapping[str, str]) -> ThirdPartyDeclarationRoleCatalogue
 
     role_choices = {item.token for item in definitions}
     selections: dict[str, tuple[ThirdPartyDeclarationRole, ...]] = {}
-    for clave in _SELECTION_CLAVES:
+    for clave in (match[1] for key in entries if (match := _SELECTION_KEY.fullmatch(key))):
         raw_roles = unique_mapping_tokens(entries, f"{_SELECTION_PREFIX}{clave}.roles", subject=_ENTRY_SUBJECT)
         selected = tuple(ThirdPartyDeclarationRole.from_registry(raw) for raw in raw_roles)
         if not set(selected).issubset(role_choices):

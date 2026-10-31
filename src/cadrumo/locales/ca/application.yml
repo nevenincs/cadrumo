@@ -2238,17 +2238,18 @@ application:
       engine:
         anchors:
           final: RESULTAT
-          start: 'INICI: Entradas'
+          start: 'INICI: %{inputs_tab}'
         errors:
           parameter_no_dated_value: El motor d'exportació de fulls de càlcul no ha
             trobat cap valor de paràmetre vigent per a la data de meritació.
           unsupported_rounding: El motor d'exportació de fulls de càlcul ha trobat
             una regla d'arrodoniment de les definicions del model que no admet.
         guide:
-          editable_cells: 'Edita només les cel·les de la pestanya ''Entradas''. La
-            resta de pestanyes estan protegides: ''Cálculos'' conté les caselles derivades
-            amb fórmules, ''Procedència'' audita cada casella calculada i ''Tarifas''
-            reflecteix els paràmetres vigents consultats per les fórmules.'
+          editable_cells: 'Edita només les cel·les de la pestanya ''%{inputs_tab}''.
+            La resta de pestanyes estan protegides: ''%{calculations_tab}'' conté
+            les caselles derivades amb fórmules, ''%{provenance_tab}'' audita cada
+            casella calculada i ''%{tariffs_tab}'' reflecteix els paràmetres vigents
+            consultats per les fórmules.'
           period: '%{modelo_title} - període %{period} / %{filing_year}.'
           pull_command: Les modificacions del full de càlcul no s'importen al perfil
             de Cadrumo; revisa els canvis i introdueix-los a Cadrumo.
@@ -2278,7 +2279,7 @@ application:
       form:
         communication_caption: Formulari de dades · canvia les entrades als fulls
           d’origen
-        communication_guide: Canvia les dades a Entradas. Modelo mostra la comunicació;
+        communication_guide: Canvia les dades a %{inputs_tab}. Modelo mostra la comunicació;
           no calcula retencions.
         reported_data_caption: Dades declarades · edita les entrades als fulls d’origen
       layout:
