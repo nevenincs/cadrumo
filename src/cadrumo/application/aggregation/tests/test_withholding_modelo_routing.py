@@ -17,7 +17,7 @@ from cadrumo.application.aggregation.withholding_modelo_routing import (
     modelo_for_income_kind,
     periodic_withholding_modelos,
 )
-from cadrumo.application.aggregation.withholding_producer import _modelo_for
+from cadrumo.application.aggregation.withholding_producer import WithholdingProducerError, _modelo_for
 from cadrumo.application.aggregation.withholding_recognition import WithholdingIncomeKind
 from cadrumo.core.aggregation import RetencionScheme
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
@@ -74,8 +74,10 @@ def test_each_annual_route_draws_on_a_periodic_modelo() -> None:
 
 
 def test_the_producer_refuses_a_scheme_of_another_income_kind() -> None:
-    with pytest.raises(Exception, match="scheme_income_kind_mismatch"):
-        _modelo_for(WithholdingIncomeKind.URBAN_RENT, RetencionScheme("rendimientos_trabajo"))
+    scheme = RetencionScheme("rendimientos_trabajo")
+    with pytest.raises(WithholdingProducerError, match="scheme_income_kind_mismatch") as raised:
+        _modelo_for(WithholdingIncomeKind.URBAN_RENT, scheme)
+    assert raised.value.refusal_code == "scheme_income_kind_mismatch"
 
 
 def test_a_ledger_payment_request_refuses_a_kind_its_payment_cannot_prove() -> None:
