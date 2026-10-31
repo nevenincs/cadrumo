@@ -14,8 +14,8 @@ aggregation:
         teljesített kifizetések levonását a nem belföldi illetőségűek jövedelemadójában
         kell bevallani.
       not_a_retenedor_liability: Ennél az áfakezelésnél és számlatípusnál a levonás
-        nem olyan tartozás, amellyel te mint a levonást végző kifizető (retenedor)
-        tartozol; az általad kiállított számlán szereplő levonás a javadra szóló jóváírás.
+        nem olyan tartozás, amellyel neked, a levonást végző kifizetőnek kellene tartoznod;
+        az általad kiállított számlán szereplő levonás a javadra szóló jóváírás.
   irnr_income_ledger:
     diagnostics:
       foreign_source_out_of_scope: A(z) %{source_jurisdiction} source_jurisdiction
@@ -183,7 +183,7 @@ aggregation:
       m193_phase_allocation_collision: 'Modelo %{modelo}, %{filing_year}: a(z) %{source_allocations}
         felosztás(ok) kézzel is rögzítve vannak, és a rögzített tőkejövedelem-visszatartásból
         is származnak. Töröld a kézi sort.'
-      perceptor_nif_blank: A perceptor NIF nem lehet üres.
+      perceptor_nif_blank: A kedvezményezett NIF-je nem lehet üres.
       perceptor_observations_missing: Nincsenek kedvezményezettenkénti forrásadó-megfigyelések
         a Modelo %{modelo} (%{filing_year}, %{period}) bevalláshoz; a(z) %{source_kind}
         forrás nem oldható fel.
@@ -433,8 +433,9 @@ categories:
     mutualidad_alternativa:
       label: Alternatív kölcsönös biztosítói járulék
       notes: Levonható az adott év RETA szerinti, közös kockázatokra vonatkozó legmagasabb
-        járulékáig, és csak a RETA-kockázatokat fedező részben, ha a mutualidad helyettesíti
-        a RETA-tagságodat (Ley 35/2006 art. 30.2, 1. szabály, második bekezdés).
+        járulékáig, és csak a RETA-kockázatokat fedező részben, ha a szakmai kölcsönös
+        biztosító egyesület helyettesíti a RETA-tagságodat (Ley 35/2006 art. 30.2,
+        1. szabály, második bekezdés).
     publicidad_marketing:
       label: Reklám- és marketingköltség
       notes: Teljes mértékben levonható költség (Ley 35/2006 art. 28.1, egyéb külső
@@ -496,8 +497,8 @@ categories:
     suministros_local_afecto:
       label: Üzleti helyiség közüzemi költségei
       notes: 'Teljes egészében levonható költség: a tevékenység végzésének helyet
-        ado ingatlan üzleti eszköznek minősül (Ley 35/2006 art. 29.1.a), ezert közüzemi
-        költségei levonhatok (art. 28.1). A 30 százalékos szabály (art. 30.2.5.b)
+        adó ingatlan üzleti eszköznek minősül (Ley 35/2006 art. 29.1.a), ezért közüzemi
+        költségei levonhatók (art. 28.1). A 30 százalékos szabály (art. 30.2.5.b)
         nem alkalmazandó, mert az csak a részben üzleti célra használt lakóhelyre
         vonatkozik.'
     telefonia_fija:
@@ -545,7 +546,7 @@ categories:
       label: Járműbiztosítás
       notes: Csak akkor levonható, ha a járművet kizárólag a tevékenységhez használod;
         bármilyen magáncélú használat kizárja, kivéve a Reglamento IRPF art. 22.4
-        eseteit (a jármű kizárólagos affektációja).
+        eseteit (a jármű kizárólagos üzleti használata).
     viajes_alojamiento:
       label: Utazási szállásköltség
       notes: Teljes mértékben levonható költség (Ley 35/2006 art. 28.1, egyéb külső
@@ -1799,8 +1800,8 @@ desktop:
         iroda bérleti díj bérlemény
       arrendamiento_vivienda_afecto: alquiler vivienda casa piso arrendamiento lakás
         otthon albérlet bérleti díj
-      asesoria_contable: asesoria gestoria contable contabilidad
-      asesoria_fiscal: asesoria gestoria fiscal impuestos
+      asesoria_contable: számviteli tanácsadás könyvelő könyvelés
+      asesoria_fiscal: adóügyi tanácsadás könyvelő adó adók
       asesoria_juridica: abogado asesoria juridica legal notario
       comunidad_vivienda_afecto: comunidad propietarios cuota
       cuotas_autonomos_ss: autonomos seguridad social reta tgss cuota egyéni vállalkozó
@@ -1826,10 +1827,10 @@ desktop:
       seguros_salud_autonomo: seguro salud medico poliza
       software_suscripcion: software suscripcion licencia aplicacion szoftver előfizetés
         licenc alkalmazás
-      subcontratacion: subcontratacion colaborador freelance
+      subcontratacion: alvállalkozás közreműködő szabadúszó
       suministros_cliente_directos: suministros cliente
       suministros_home_office_agua: agua
-      suministros_home_office_gas: gas butano
+      suministros_home_office_gas: butángáz
       suministros_home_office_internet: internet fibra adsl wifi
       suministros_home_office_luz: luz electricidad energia
       suministros_local_afecto: suministros luz agua gas local
@@ -2052,8 +2053,8 @@ desktop:
       confirm: Megerősítés számlaként
       confirm_anyway: Megerősítés mégis
       confirm_heading: Megerősítés számlaként
-      confirm_note: Pontosan ezt az olvasatot erősíti meg. Előbb újra beolvassuk a
-        dokumentumot ezen a gépen; ha az olvasat változott, újra ellenőrzöd.
+      confirm_note: Pontosan ezt az olvasatot erősíted meg. Előbb újra beolvassuk
+        a dokumentumot ezen a gépen; ha az olvasat megváltozott, ismét ellenőrizheted.
       confirmed: Megerősítve {number} számlaként
       confirmed_short: Megerősítve
       confirmed_toast: '{number} számla megerősítve'
@@ -2347,7 +2348,7 @@ desktop:
       copy_selection: Másolás TSV-ként
       count_unknown: A tételek számát nem sikerült beolvasni.
       counting: Számolás…
-      description: Helyi fájl neked vagy a gestorodnak. Semmi sem megy az AEAT-nek.
+      description: Helyi fájl neked vagy a könyvelődnek. Semmi sem megy az AEAT-nek.
       done: A fájl elkészült
       done_note: 'Kiírt tételek ({name}): {count}.'
       file: Mentés másként
@@ -3066,9 +3067,9 @@ desktop:
       cancel: Mégse
       check: Ellenőrzés
       class:
-        ordinaria: Ordinaria (teljes)
+        ordinaria: Teljes számla
         rectificativa: Rectificativa (helyesbítő)
-        simplificada: Simplificada (egyszerűsített)
+        simplificada: Egyszerűsített számla
       class_filter: Számla típusa
       close: Bezárás
       column:
@@ -3219,7 +3220,7 @@ desktop:
         retention_above_base: Nem haladhatja meg az adóalapot.
         retention_differs: A mérték alapján {amount}.
         retention_needs_amount: A mértékhez összeg is kell.
-        series_required: A rectificativához sorozat kell.
+        series_required: Helyesbítő számlához sorozat szükséges.
         tax_id_required: Kötelező, kivéve kiállított egyszerűsített számla esetén.
       rate:
         exempt: Mentes
@@ -3295,7 +3296,7 @@ desktop:
       domestic_not_subject: Nem adóköteles
       domestic_reduced: Kedvezményes kulcs
       domestic_reverse_charge: Belföldi fordított adózás
-      domestic_super_reduced: Szuperkedvezményes kulcs
+      domestic_super_reduced: Különösen kedvezményes kulcs
       domestic_zero: Nulla kulcs
       erroneous_invoice: Hibás számla
       export_assimilated_zero_rated: Exporttal egyenértékű
@@ -3570,7 +3571,7 @@ desktop:
       missing_counterparty_establishment_on_export: Telephely
       missing_counterparty_identification_state: IVA-azonosítás
       missing_eur_tax_substrate: EUR-adatok
-      missing_home_office_afectacion: Afectación
+      missing_home_office_afectacion: Üzleti célú használat
       missing_iva_amount: IVA összeg
       missing_iva_rate: IVA-kulcs
       missing_proportionality_reference: Használati arány
@@ -3591,7 +3592,8 @@ desktop:
         exportügyleten
       missing_counterparty_identification_state: Hiányzik a partner IVA-azonosítása
       missing_eur_tax_substrate: Hiányoznak az euróadatok
-      missing_home_office_afectacion: Hiányzik az otthoni iroda afectación értéke
+      missing_home_office_afectacion: Hiányzik az otthoni iroda üzleti célú használatának
+        értéke
       missing_iva_amount: Hiányzik az IVA összege
       missing_iva_rate: Hiányzik az IVA-kulcs
       missing_proportionality_reference: Vegyes, használati arány nélkül
@@ -4204,11 +4206,11 @@ desktop:
       review_count: 'Ellenőrzendő AEAT-értékek: {count}'
       review_hint: A változások lent, a helyükön látszanak. Semmi sem mentődik, amíg
         meg nem erősíted.
-      scope: Adócím, irányítószám és kataszteri azonosító átvétele a Censóból. A profil
-        többi adatát neked kell megadnod.
+      scope: Adócím, irányítószám és kataszteri azonosító átvétele az adózói nyilvántartásból.
+        A profil többi adatát neked kell megadnod.
       session: A munkameneted véget ért. A folytatáshoz jelentkezz be újra.
       setup: AEAT-bejelentkezés beállítása
-      source: Az AEAT censóból mentve
+      source: Az AEAT adózói nyilvántartásából mentve
       stopped: A szinkronizálás leállt. A profil nem módosult.
       subject_busy: Ehhez a profilhoz még egy másik szinkronizálás folyamatban van.
         Várd meg, amíg befejeződik; ha továbbra is elakad, jelezd a megjelenő kódot.
@@ -4494,7 +4496,7 @@ desktop:
     step_connecting: Kapcsolódás
     step_downloading: Letöltés
     step_installing: Telepítés
-    step_tidying: Rendrakás
+    step_tidying: Tisztítás
     step_waiting: Indulásra vár
     title: A Cadrumo beállítása
     toast_cancelled: Beállítás megszakítva
@@ -5089,7 +5091,7 @@ ledger:
         vonatkozik.
       foral_territory: Forális területen élsz, ahol az AEAT 100-as és 130-as modellje
         nem alkalmazandó.
-      forecast_interval_end_required: Az előrejelzett időszakhoz meg kell adni az
+      forecast_interval_end_required: Az előre jelzett időszakhoz meg kell adni az
         utolsó lefedett napot vagy azt a napot, amely előtt véget ér.
       forecast_no_longer_matches: Ez megváltozott, mióta megnyitottad. Frissíts, és
         próbáld újra.
@@ -5156,8 +5158,8 @@ ledger:
         a módszer engedélyezett-e ilyen típusú eszközre, ezért még nem fogadható el.
       method_excluded_by_law: Ez a módszer jogszabály szerint ki van zárva ilyen típusú
         eszközre ebben a becslési módozatban (%{legal}).
-      method_excludes_buildings_and_furniture: Épületek, mobiliario és enseres nem
-        alkalmazhatják ezt a módszert (%{provision}).
+      method_excludes_buildings_and_furniture: Épületekre, bútorokra és berendezési
+        tárgyakra nem alkalmazható ez a módszer (%{provision}).
       method_not_enrolled_for_kind: 'A Cadrumo ezt még nem támogatja: ezt a módszert
         ilyen típusú eszközre ebben a becslési módozatban.'
       method_without_resolver: 'A Cadrumo ezt még nem támogatja: ez az értékcsökkenési
@@ -5253,8 +5255,8 @@ ledger:
         terjed ki épületekre (LIS 12.3.b cikk).
       research_development_free_table_class_required: Az anyagi K+F szabad értékcsökkenéshez
         táblázati osztály szükséges.
-      residual_value_not_below_basis: A maradványértéknek az értékcsökkenthető költségnél
-        kisebbnek kell lennie.
+      residual_value_not_below_basis: A maradványértéknek kisebbnek kell lennie az
+        értékcsökkenési alapnál.
       revision_begins_after_tax_year: A rendelkezésre álló Modelo 100 kiadás a(z)
         %{tax_year}. adóév után kezdődik.
       revision_first_cannot_supersede: Egy eszköz első változata nem válthat le másik
@@ -5555,8 +5557,8 @@ ledger:
       operation_failed: A bizonylatolvasó művelete sikertelen volt
 live:
   errors:
-    expediente_not_found: Az AEAT nyilatkozat-nyilvántartás nem adta vissza a kért
-      expedientét.
+    expediente_not_found: Az AEAT bevallási nyilvántartása nem adta vissza a kért
+      ügyiratot.
     iva_history_modelo_303_only: Az IVA-kompenzáció előzmények letöltése csak a Modelo
       303 megfigyeléseket fogadja el.
     target_period_year_mismatch: A célidőszak éve nem egyezik.
@@ -6012,14 +6014,14 @@ topic:
       alapján. Automatizáláshoz a JSON ajánlott, emberi olvasáshoz a `text` formátum.
     title: Kimeneti formátumok
   irpf-regime:
-    body: Önálló vállalkozó IRPF-rezsimje. Közvetlen becslés (normál vagy egyszerűsített)
-      vagy objektív becslés (módszer). Meghatározza, hogy melyik előlegfizetési nyomtatvány
-      alkalmazandó (130 vs. 131).
+    body: 'Az önálló vállalkozó IRPF-rendszere: közvetlen becslés (normál vagy egyszerűsített)
+      vagy objektív becslés. Meghatározza, hogy melyik előlegfizetési nyomtatvány
+      alkalmazandó (130 vagy 131).'
     title: IRPF-rezsim
   iva-regime:
-    body: 'Az adózónál alkalmazandó IVA-rezsim: általános, egyszerűsített, equivalencia-feláras,
-      mentes, REAGP vagy REBU. Meghatározza a negyedéves Modelo 303 bevallást és az
-      éves Modelo 390 összesítőt.'
+    body: 'Az adózónál alkalmazandó IVA-rendszer: általános, egyszerűsített, egyenértékűségi
+      feláras, mentes, REAGP vagy REBU. Meghatározza a negyedéves Modelo 303 bevallást
+      és az éves Modelo 390 összesítőt.'
     title: IVA-rezsim (ÁFA)
   modelos:
     body: Az AEAT adónyomtatványainak katalógusa (303, 130, 100, 347, 349, 111, 115,
@@ -6047,8 +6049,8 @@ topic:
       15%-ot plusz kamatot. Jogalap: Ley 58/2003 27. cikk.'
     title: Késedelmi pótdíj
   regimens:
-    body: 'Az önálló vállalkozóra vonatkozó adórezsimek összessége. A két fő tengely:
-      ÁFA (általános, egyszerűsített, equivalencia-felár, mentes) és IRPF (közvetlen,
+    body: 'Az önálló vállalkozóra vonatkozó adózási rendszerek. A két fő tengely:
+      ÁFA (általános, egyszerűsített, egyenértékűségi feláras, mentes) és IRPF (közvetlen,
       objektív).'
     title: Adórezsimek
   sii:
@@ -6661,7 +6663,7 @@ tui:
       supersedes: Felülírandó elszámolt értékcsökkenés (nem kötelező)
       superseding_claims: A javítással lecserélt elszámolások (JSON)
       timeline: Előzmények
-      title: Értékcsökkenthető eszközök
+      title: Értékcsökkenő eszközök
     area:
       classification: Besorolás
       entries: Tételek
@@ -7725,9 +7727,9 @@ tui:
       cancel: Mégse
       cancelled: Megszakítva. Semmi sem került rögzítésre.
       class:
-        ordinaria: Teljes számla (ordinaria)
+        ordinaria: Teljes számla
         rectificativa: Helyesbítő számla (rectificativa)
-        simplificada: Egyszerűsített számla (simplificada)
+        simplificada: Egyszerűsített számla
       confirm: Számla rögzítése
       confirming: Ellenőrizd a számlát, majd rögzítsd.
       euro_rate_unavailable: Nem található euró árfolyam {currency} pénznemre erre

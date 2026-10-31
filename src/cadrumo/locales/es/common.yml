@@ -2712,7 +2712,7 @@ desktop:
         reader_unavailable_here: 'No se ha leído: el modelo que elegiste no está disponible
           ahora mismo. Revísalo en el selector de modelos del agente.'
         result_limit: 'Más de 4.096 filas: impórtalo por partes.'
-        source_changed: 'Ha cambiado tras la vista previa: vuelve a previsualizarlo.'
+        source_changed: El fichero ha cambiado desde la vista previa; vuelve a generarla.
         transaction_validation: No se ha podido leer como extracto bancario.
       refused_rows: Filas no aceptadas
       remove: Quitar {name}
@@ -3184,7 +3184,7 @@ desktop:
         field: Línea {line}, {field}
         iva: IVA
         problem: 'Línea {line} · {field}: {problem}'
-        quantity: Cant.
+        quantity: Cantidad
         rate: Tipo de IVA
         remove: Quitar la línea {line}
         subtotal: Subtotal
@@ -5676,7 +5676,7 @@ navigation:
         label: Registros
       python:
         keywords: python consola repl intérprete
-        label: Shell de Python
+        label: Intérprete de Python
     profile:
       aeat_access:
         keywords: aeat acceso identificarse clave certificado electrónico
@@ -6026,8 +6026,8 @@ topic:
     title: Calendario de obligaciones
   casilla:
     body: Una casilla es un campo numerado de un modelo. Las casillas pueden ser manuales,
-      calculadas (computed) o derivadas de vinculaciones. 'aeat app modelo casillas
-      <modelo>' las lista.
+      calculadas o derivadas de relaciones. aeat app modelo casillas <modelo> las
+      muestra.
     title: Casillas
   formats:
     body: La CLI emite salida en `text` o `json` según `--format`. JSON es el formato
@@ -6059,8 +6059,9 @@ topic:
       Edítalo con 'aeat config profile edit NAME'.
     title: Perfil del contribuyente
   providers:
-    body: Proveedores de autenticación soportados; cada uno requiere requisitos distintos.
-      'cadrumo-runtime config auth --help' lista los proveedores con sus prerrequisitos.
+    body: Proveedores de autenticación admitidos; cada uno tiene requisitos previos
+      distintos. cadrumo-runtime config auth --help muestra los proveedores y sus
+      requisitos.
     title: Proveedores de autenticación
   recargo-extemporaneo:
     body: La presentación fuera de plazo sin requerimiento previo de la AEAT acumula
@@ -7752,8 +7753,8 @@ tui:
         reader_unavailable: el modelo que elegiste no está disponible ahora mismo,
           así que no se leyó el fichero; vuelve a intentarlo cuando esté disponible
         result_limit: la importación alcanzó su límite de filas antes de este fichero
-        source_changed: el fichero cambió después de la previsualización y no se importó
-          nada de él; vuelve a previsualizarlo
+        source_changed: El fichero cambió después de la vista previa y no se importó
+          nada; vuelve a generarla.
         transaction_validation: el fichero no se pudo leer como extracto
       success: 'Importados: {imported}; omitidos: {skipped}.'
       title: Importar apuntes
@@ -8626,8 +8627,8 @@ tui:
         si lo eliges.
       portal: 'Una página web de la AEAT: su dirección, su finalidad y sus métodos
         de identificación.'
-      portals: Las páginas web de la AEAT que conoce Cadrumo, por categoría o modelo.
-        Listarlas no abre ninguna.
+      portals: Páginas web de la AEAT que conoce Cadrumo, agrupadas por categoría
+        o modelo. Consultar la lista no abre ninguna.
       support_matrix: 'Lo que Cadrumo puede hacer con cada modelo: calcular, exportar,
         leer copias presentadas.'
     title: Referencia

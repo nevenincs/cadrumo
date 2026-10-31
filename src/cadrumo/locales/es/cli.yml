@@ -600,8 +600,8 @@ cli:
           omitidas: %{skipped}, sin_coincidencia: %{no_match}'
         category_id_help: Categoría de gasto opcional a aplicar.
         classification_help: Clasificación objetivo para las transacciones coincidentes.
-        description_pattern_help: Patrón regex comparado (sin distinción de mayúsculas)
-          con la descripción de la transacción.
+        description_pattern_help: Expresión regular que se compara, sin distinguir
+          mayúsculas de minúsculas, con la descripción de la transacción.
         empty_pattern: Una regla necesita un --description-pattern no vacío (una palabra
           o frase, p. ej. "software") para coincidir con las descripciones de las
           transacciones.
@@ -1044,10 +1044,10 @@ cli:
           de la AEAT
         observe_local_reason_help: Motivo por el que sustituyes la observación de
           este periodo; se guarda en la auditoría de la sustitución
-        observe_local_recorded_notice: Tu sustitución se ha registrado como observación
-          local pendiente solo para el prellenado del cálculo; no es evidencia de
-          la AEAT, se conserva cualquier observación oficial y no se ha creado ningún
-          registro de presentación.
+        observe_local_recorded_notice: Tu sustitución se ha guardado como observación
+          local pendiente, solo para rellenar previamente el cálculo; no constituye
+          evidencia de la AEAT, se conserva cualquier observación oficial y no se
+          ha creado ningún registro de presentación.
         observe_local_set_help: Id de casilla canónico y valor Decimal a registrar,
           p. ej. --set 1391=0
         reconciliation_contradicted: 'Modelo {modelo} {period} {filing_year}: la AEAT
@@ -1081,8 +1081,9 @@ cli:
       formulas:
         as_of_help: Resolver la revisión del modelo vigente en la fecha ISO indicada
           (AAAA-MM-DD)
-        explain_help: Incluir legal_refs y source_refs que sustentan cada fórmula
-          en la salida de texto. El payload JSON los lleva siempre.
+        explain_help: Incluye legal_refs y source_refs, referencias legales y documentales
+          que respaldan cada fórmula, en la salida de texto. El objeto JSON siempre
+          las incluye.
         help: Listar todas las casillas calculadas y sus fórmulas para la revisión
           de un modelo específico.
         modelo_help: Código del modelo tributario (p. ej. 303, 130, 100)
@@ -1324,9 +1325,9 @@ cli:
           sumas de comprobación (borrador fichero-BOE, origen del cálculo guardado
           y justificantes de tus registros incluidos) para entregar al asesor. Solo
           local; nunca contacta con la AEAT.
-        counter_sign_help: Contrafirma un paquete de revisión ya firmado por el declarante
-          en nombre del asesor fiscal que lo recibe y escribe el sobre del recibo
-          en --output. Solo local; nunca contacta con la AEAT.
+        counter_sign_help: Firma, como asesor fiscal receptor, un paquete de revisión
+          que ya firmó el declarante y escribe el sobre del recibo en --output. Solo
+          funciona en local; nunca contacta con la AEAT.
         counter_sign_note_help: Nota o veredicto libre del contrafirmante (por ejemplo,
           'revisado, sin cambios').
         counter_sign_output_help: Ruta donde escribir el recibo contrafirmado en formato
@@ -1452,9 +1453,9 @@ cli:
             on`.
           dry_run_help: Previsualiza lo que esta exportación borraría y reescribiría
             en el libro, sin escribir nada
-          prefill_relations_help: Prerrellenar valores de relaciones entre revisiones
-            desde el almacén local de observaciones antes de exportar (resúmenes anuales,
-            arrastre de trimestres anteriores, etc.)
+          prefill_relations_help: Carga previamente los valores de las relaciones
+            entre revisiones desde el almacén local de observaciones antes de exportar
+            (resúmenes anuales, arrastre de trimestres anteriores, etc.).
           root_folder_required: No se ha creado ninguna carpeta de Drive para este
             perfil; ejecuta `cadrumo-runtime config google login` primero
           snapshot_failure: No se puede construir la instantánea de las definiciones
@@ -1673,7 +1674,7 @@ cli:
         invalid_casilla_key: 'La clave --casilla no es un CasillaId válido (alfanumérico
           más separadores . _ : -, máx. 64 caracteres)'
         invalid_relation_key: La clave --relation no es un RelationId válido. Usa
-          un id de relation en minúsculas con guiones o puntos.
+          un identificador de relación en minúsculas con guiones o puntos.
         invalid_revision_selector: 'El selector de revisión {value} no es válido.
           Valores permitidos: {choices}.'
         invalid_work_unit_id: work_unit_id debe ser un resumen SHA-256 hexadecimal
@@ -1749,12 +1750,12 @@ cli:
           del trimestre ni en el futuro.
         output_help: Ruta donde escribir el informe de cálculo; su directorio padre
           debe existir.
-        output_language_help: Idioma de salida para los mensajes renderizados.
+        output_language_help: Idioma de salida para los mensajes generados.
         override_help: Valor de entrada de una casilla con sintaxis KEY=VALUE (repetible);
           ejecuta `aeat app modelo bindings list --missing` para ver los valores que
           requiere el cálculo.
-        payment_election_help: 'Elige como se paga un resultado positivo del Modelo
-          303: ingreso ordinario o domiciliacion.'
+        payment_election_help: 'Elige cómo se paga un resultado positivo del Modelo
+          303: mediante ingreso ordinario o domiciliación.'
         period_help: 'Código de periodo de la declaración: 0A anual, 1T-4T trimestres,
           01-12 meses; para modelos censales (036) usa alta, modificacion o baja.'
         period_token_invalid: '--period ''%{token}'' no es un token de periodo válido
@@ -1839,9 +1840,9 @@ cli:
             ninguna clave: indica --trusted-key con la clave recibida por otro canal,
             o compruébalo contra el almacén del perfil que lo firmó.'
         report_verify_help: 'Comprueba un resumen del cálculo en PDF: su firma de
-          integridad, los datos adjuntos y las páginas, y, salvo con --document-only,
-          que el almacén cifrado del perfil activo sigue reproduciéndolo; no es un
-          documento oficial de la AEAT.'
+          integridad, los datos adjuntos y las páginas; salvo con --document-only,
+          verifica también que el almacén cifrado del perfil activo todavía puede
+          reproducirlo. No es un documento oficial de la AEAT.'
         report_verify_path_help: Ruta del resumen del cálculo en PDF que se comprueba.
         rescate_contingencia_year_help: 'Año en que acaeció la contingencia (jubilación,
           incapacidad, fallecimiento) del plan de pensiones. Determina la ventana
@@ -2375,7 +2376,8 @@ cli:
         section_help: Clave de la sección repetible del perfil.
         unknown_section: '''{section}'' no es una sección repetible del perfil. Secciones
           disponibles: {sections}.'
-        value_help: Campo de la fila como CAMPO=VALOR; repítalo por cada campo informado.
+        value_help: Campo de la fila con formato CAMPO=VALOR; repítelo por cada campo
+          que informes.
       archive:
         export_help: Escribe la cápsula del perfil indicado en un archivo sellado
           en --output; el archivo se cifra con la contraseña del perfil y no incluye
@@ -2599,8 +2601,8 @@ cli:
           que sus entradas nombran esa sesión como destino.
       edit_help: Vuelve a ejecutar el asistente sobre un perfil existente
       edit_row:
-        clear_help: Campo declarado que se vacía de forma explícita; repítalo si es
-          necesario.
+        clear_help: Campo declarado que se vacía de forma explícita; repítelo si hace
+          falta.
         help: Modifica una fila identificada de una sección repetible del perfil.
         value_help: Campo de fila como CAMPO=VALOR; repítelo para cada campo que cambies.
       help: Gestionar valores de configuración del perfil activo
@@ -2665,7 +2667,7 @@ cli:
         year_help: Año natural al que corresponde la media.
       recovery:
         channel_absent: Un código de recuperación solo puede mostrarse en un terminal.
-          En un host sin terminal, indica --recovery-handoff-fd y --recovery-verification-fd;
+          En un sistema sin terminal interactiva, indica --recovery-handoff-fd y --recovery-verification-fd;
           no se registró nada.
         code_heading: 'Tu código de recuperación. Anótalo y guárdalo lejos de este
           equipo:'
@@ -2793,12 +2795,12 @@ cli:
         concertado para la cabecera del Modelo 111.
       help: Configuración inicial guiada del perfil tributario
       profile_name_help: Nombre del perfil donde guardar las respuestas
-      quiet_help: Ejecuta sin interacción usando solo los valores de los flags indicados,
-        sin preguntar nada. Un flag sin valor no se escribe en lugar de provocar un
-        error, por lo que un perfil nuevo queda con la configuración incompleta; `aeat
-        config profile complete-setup` indica los datos que aún le faltan. Suficiente
-        por sí solo; combínalo con --accept-defaults para rellenar el resto con los
-        valores por defecto.
+      quiet_help: Ejecuta sin interacción usando solo los valores indicados mediante
+        opciones, sin hacer preguntas. Si una opción no tiene valor, se omite en vez
+        de provocar un error; así, un perfil nuevo queda con la configuración incompleta.
+        `aeat config profile complete-setup` indica qué datos faltan. Esta opción
+        basta por sí sola; combínala con --accept-defaults para completar el resto
+        con los valores predeterminados.
     sign_in_status:
       help: Comprueba si has iniciado sesión sin reanudarla ni prolongarla.
     status:
@@ -2823,7 +2825,7 @@ cli:
         reason:
           durable_lifecycle: un destino seleccionado tiene un ciclo de vida duradero
           durable_state: el área contiene estado duradero
-          no_reclaimable_targets: la taxonomía no declara destinos liberables
+          no_reclaimable_targets: La taxonomía no declara destinos que se puedan liberar.
           not_root_scoped: un destino seleccionado no pertenece a la raíz
           protected_descendant: un destino seleccionado contiene datos declarados
             protegidos
@@ -3008,8 +3010,8 @@ cli:
         de los modelos: omitida.'
       registry_unavailable: Las definiciones de los modelos no están disponibles.
       secure_objects_empty: El almacén de objetos seguros esta vacío.
-      secure_objects_readable: '%{readable} namespaces de objetos seguros legibles:
-        %{namespaces}.'
+      secure_objects_readable: '%{readable} espacios de nombres de objetos seguros
+        legibles: %{namespaces}.'
       secure_objects_unreadable: '%{unreadable} fila(s) ilegible(s), %{readable} fila(s)
         legible(s)'
       state_backend_readable: El almacén de estado del flujo de trabajo es accesible.
@@ -3226,11 +3228,11 @@ cli:
         con un tipo de deducción de inversión y rechazada en cualquier otro.
       irpf_category_help: Identificador de categoría de IRPF. Las facturas profesionales
         cobradas en neto usan actividad_economica; los alquileres pagados en neto
-        usan arrendamiento_local o arrendamiento_vivienda_afecto. Royalties y los
-        ingresos de SGAE son capital mobiliario según el art. 25.4 LIRPF cuando el
-        contribuyente no es el autor, y actividad económica según el art. 27 LIRPF
-        cuando sí lo es y ejerce la actividad. Consulta el catálogo de categorías
-        de tus registros para ver todos los identificadores.
+        usan arrendamiento_local o arrendamiento_vivienda_afecto. Los cánones y los
+        ingresos de SGAE son rendimientos del capital mobiliario según el art. 25.4
+        LIRPF cuando el contribuyente no es el autor, y rendimientos de actividades
+        económicas según el art. 27 LIRPF cuando sí lo es y ejerce la actividad. Consulta
+        el catálogo de categorías de tus registros para ver todos los identificadores.
       iva_amount_help: Importe de IVA
       iva_category_help: Categoría de IVA explícita para esta transacción (p. ej.
         intra_community_supply, export_third_country_zero_rated, export_assimilated_zero_rated,
@@ -3476,7 +3478,7 @@ cli:
         conciliación en una sola operación atómica. Rechaza vínculos entre buckets.
         Solo local; nunca contacta con la AEAT.
       id_help: Id del movimiento (SHA-256 o prefijo inequívoco).
-      invoice_id_help: Id de factura que se vinculará bidireccionalmente con la transacción.
+      invoice_id_help: Id. de factura que se vinculará en ambos sentidos con la transacción.
     list:
       account_help: Muestra solo las entradas vinculadas a esta cuenta bancaria propia,
         por su id (p. ej. acc-01).
@@ -3745,8 +3747,8 @@ cli:
         diagnostics_version: Muestra la identidad del paquete instalado.
         family_app: Abre los comandos fiscales vinculados al perfil.
         family_config: Abre perfiles, sesión, custodia, almacenamiento y reparación.
-        footer: Añade --help para más detalle. Elimina datos sensibles del log y después
-          informa en github.com/nevenincs/cadrumo/issues.
+        footer: Añade --help para ver más detalles. Elimina los datos sensibles del
+          registro y después informa del problema en github.com/nevenincs/cadrumo/issues.
         heading: CADRUMO - flujo local con la Agencia Estatal de Administración Tributaria
           (AEAT)
         paragraph_app_root: La raíz app gestiona resumen, tus registros, modelos,
@@ -4021,9 +4023,8 @@ cli:
       help: Mostrar detalles de revisión de un elemento
       id_help: Identificador del elemento en la cola
   root:
-    app_app_help: 'Trabajo fiscal: tus registros (ledger), modelo, lecturas en vivo
-      de la AEAT, resumen (overview), definiciones de los modelos (registry), revisión
-      (review) y diagnósticos de ejecución.'
+    app_app_help: 'Trabajo fiscal: tus registros, modelos, consultas en vivo a la
+      AEAT, resumen, definiciones de modelos, revisión y diagnósticos de ejecución.'
     app_help: Acceder a los comandos de nivel de aplicación.
     app_help_help: Mostrar la ayuda de los comandos de la aplicación.
     app_tui_help: Abre la aplicación a pantalla completa sobre tus registros locales.

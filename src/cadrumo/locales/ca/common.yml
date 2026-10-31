@@ -7498,9 +7498,9 @@ tui:
         outcome:
           counts: 'Desats: {ingested}. Ja desats: {no_op}. Pendents de revisió: {pending}.
             En pausa: {paused}. Rebutjats: {refused}. Il·legibles: {unreadable}.'
-          partial: 'Aquest lot ha estat parcial: alguns documents s''han desat i d''altres
-            no. Torna a llançar-lo després de corregir els rebutjats; els documents
-            desats no es desen dues vegades.'
+          partial: 'Aquest lot s’ha processat parcialment: alguns documents s’han
+            desat i d’altres no. Torna a executar-lo després de corregir els rebutjats;
+            els documents ja desats no es tornaran a desar.'
           paused: El model que has triat no ha pogut llegir els documents en pausa.
             Revisa el model que has triat i torna a llançar el lot per acabar-los.
           writes: 'Registres escrits: {count}.'

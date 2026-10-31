@@ -198,12 +198,12 @@ wizard:
           instead. The under-three increase is counted from that date.
         prompt: Registro Civil inscription date
       meses-madre-trabajo:
-        help: 'For the maternity deduction (Art. 81 LIRPF): WHICH months the mother
-          paid Social Security while this child qualified -- under 3, or (age-independent)
-          inside the adopcion/acogimiento entry-date window recorded via INSCRIPCION/ACOGIMIENTO.
-          Write MM or MM-MM, separated by '';'' (for example 5-8 or 1;2;11;12). The
-          months rather than their number, because the guarderia increase is prorated
-          by the months these and the nursery months share.'
+        help: 'For the maternity deduction (Art. 81 LIRPF): which months the mother
+          paid Social Security while this child qualified — under age 3, or regardless
+          of age within the adoption/fostering entry-date window recorded via INSCRIPCION/ACOGIMIENTO.
+          Write MM or MM-MM, separated by '';'' (for example 5-8 or 1;2;11;12). Enter
+          the months themselves, not their number, because the childcare increase
+          is prorated by the months these and the nursery months overlap.'
         invalid_range: Enter months as MM or MM-MM, separated by ';' (for example
           5-8 or 1;2;11;12), each between %{minimum} and %{maximum}.
         prompt: Which months the mother worked while entitled -- child under 3, or
@@ -850,7 +850,7 @@ wizard:
             label: Movable capital income
           ganancias-patrimoniales:
             description: Capital gains or losses from selling assets (shares, property,
-              crypto).
+              cryptocurrency).
             label: Capital gains
           pension:
             description: Pension income - treated as employment income under IRPF.

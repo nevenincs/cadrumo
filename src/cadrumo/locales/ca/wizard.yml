@@ -323,13 +323,14 @@ wizard:
         help: Categoria de renda IRPF; indica --irpf-income-categories una vegada
           per categoria
       irpf-special-regime:
-        help: Règim especial IRPF. "general" per a la majoria de contribuents. "impatriado"
-          per a treballadors desplaçats a Espanya acollits a la Llei Beckham (Art.
-          93 LIRPF), aplicable els primers 6 anys des del trasllat.
+        help: Règim especial de l’IRPF. `general` per a la majoria de contribuents.
+          `impatriado` per als treballadors desplaçats a Espanya que s’acullen a la
+          Llei Beckham (art. 93 LIRPF), aplicable durant els primers 6 anys des del
+          trasllat.
       irpf-special-regime-start-date:
-        help: Data en què el treballador va optar pel règim d'impatriats (AAAA-MM-DD).
-          Només quan irpf-special-regime és "impatriado". RIRPF Art. 116. El règim
-          expira en acabar el 6è any natural.
+        help: Data en què t’aculls al règim d’impatriats (AAAA-MM-DD). Només quan
+          irpf-special-regime té el valor `impatriado`. RIRPF art. 116. El règim venç
+          al final del 6è any natural.
       iva-cash-accounting-regime-enrolled:
         help: Declara la inscripció en el règim especial del criteri de caixa de l'IVA.
       iva-group-dominant-entity-enrolled:

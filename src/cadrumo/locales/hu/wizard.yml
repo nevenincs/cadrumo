@@ -127,7 +127,7 @@ wizard:
     descendientes:
       acogimiento-resolucion:
         help: 'Az első örökbefogadás előtti vagy tartós nevelésbe vételi határozat
-          dátuma. Akkor is add meg, ha a gyermeket később örökbefogadták: a hároméves
+          dátuma. Akkor is add meg, ha a gyermeket később örökbe fogadták: a hároméves
           kor alatti növekmény az első nevelésbe vételtől számít, összesen három időszakon
           át tart, és az örökbefogadás nem indítja újra.'
         prompt: Az első nevelésbe vételi határozat dátuma
@@ -573,7 +573,8 @@ wizard:
           impatriado:
             description: A LIRPF 93. cikke szerinti különleges rendszert választottad
               (Modelo 151).
-            label: Bejövő expatriált – Beckham-törvény (LIRPF 93. cikkely)
+            label: Beérkező, Spanyolországba áthelyezett munkavállaló – Beckham-törvény
+              (LIRPF 93. cikk)
         help: A kiküldött (Beckham-törvény) adózási rend az áthelyezés utáni első
           6 adóévre alkalmazható. A legtöbb adózó az általános rend szerint adózik.
         prompt: IRPF különleges adózási rend (Beckham-törvény / LIRPF 93. cikkely)
@@ -582,8 +583,8 @@ wizard:
           cikkely). Az adózási rend a 6. naptári év végén jár le.
         prompt: A különleges adózási rend kezdőnapja (ÉÉÉÉ-HH-NN)
       modelo-111-no-retenciones-periods:
-        help: ÉÉÉÉ:IDŐSZAK időszakok, amikor nem történt retención vagy ingreso a
-          cuenta alá eső kifizetés, ezért nem nyújtandó be üres Modelo 111.
+        help: ÉÉÉÉ:IDŐSZAK azon időszakokhoz, amikor nem történt adólevonás vagy adóelőleg-jóváírás
+          alá eső kifizetés, ezért nem kell üres Modelo 111-et benyújtani.
         prompt: Modelo 111 forrásadó nélküli időszakok
       modelo-115-no-relevant-payment-periods:
         help: ÉÉÉÉ:IDŐSZAK időszakok, amikor nem történt releváns, forrásadó-köteles
@@ -856,7 +857,7 @@ wizard:
           attribution-entity:
             description: 'Jövedelem-hozzárendelési entitás (comunidad de bienes, sociedad
               civil): a jövedelem a tagoknak tulajdonítható.'
-            label: Jövedelemattribúciós szervezet
+            label: Jövedelem-hozzárendelő szervezet
           legal-entity:
             description: Társaság vagy szervezet (SL, SA, egyesület…), amely társasági
               adó (IS) szerint adózik.
@@ -887,7 +888,7 @@ wizard:
             label: Ingóvagyon-jövedelem
           ganancias-patrimoniales:
             description: Eszközértékesítésből származó nyereség vagy veszteség (részvény,
-              ingatlan, kripto).
+              ingatlan, kriptoeszköz).
             label: Tőkenyereség
           pension:
             description: Nyugdíj - az IRPF-ben munkajövedelemként adózik.
@@ -914,8 +915,8 @@ wizard:
               kérdezett különös adószabályozást.'
             label: Nonprofit szervezet
           sl:
-            description: 'Sociedad Limitada: a szokásos kisvállalati forma, minimum
-              tőke 3000 EUR.'
+            description: 'Korlátolt felelősségű társaság: a szokásos kisvállalati
+              forma, minimum 3000 EUR törzstőkével.'
             label: Korlátolt felelősségű társaság (S.L.)
           sll:
             label: Munkavállalói tulajdonú korlátolt felelősségű társaság (S.L.L.)

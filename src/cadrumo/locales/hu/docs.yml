@@ -21,8 +21,8 @@ docs:
       ledger_oss_aggregation: az OSS-értékesítési nyilvántartásaiból
       ledger_renta_gastos_estimacion_directa_aggregation: a közvetlen megállapítás
         szerinti kiadási nyilvántartásaiból
-      ledger_renta_gastos_pago_fraccionado_aggregation: a pago fraccionado kiadási
-        nyilvántartásaiból
+      ledger_renta_gastos_pago_fraccionado_aggregation: a részletfizetésekhez tartozó
+        kiadási nyilvántartásokból
       ledger_renta_income_aggregation: a bevételi nyilvántartásaiból
       ledger_transaction: a nyilvántartásaiból
       m303_regimen_simplificado_annual_summary: a Modelo 303 egyszerűsített rendszerének
@@ -131,9 +131,9 @@ docs:
       exit_unavailable: A külső szolgáltatás nem érhető el.
       exit_usage: Érvénytelen CLI-használat (hibás kapcsoló, hiányzó argumentum).
       exit_validation: Érvényesítési hiba a felhasználó által megadott adatokban.
-      intro: 'Ezt az oldalt akkor használd, ha ``aeat`` hívásokat szkriptelsz: a folyamat
-        kilépési kódjait és a minden parancsra érvényes TTY/JSON kimeneti viselkedést
-        írja le.'
+      intro: 'Ezt az oldalt akkor használd, ha az ``aeat`` hívásokat szkriptből futtatod:
+        a folyamat kilépési kódjait és a minden parancsra érvényes TTY/JSON-kimeneti
+        viselkedést írja le.'
       output_contract_body: Ha a kimenet TTY-ra megy, a CLI ember által olvasható,
         formázott szöveget ad. Ha a ``--format json`` kapcsolót megadják (vagy a kimenetet
         átirányítják), a CLI hívásonként egyetlen JSON-dokumentumot ad. A ``SchemaEnvelope``
@@ -193,8 +193,8 @@ docs:
         a TTY/JSON kimeneti szerződéshez.
       next_config: Nyisd meg a :doc:`config` oldalt a helyi beállítási és karbantartási
         parancsokhoz.
-      next_howto: Nyisd meg a :doc:`/how-to/index` oldalt a bevezető végigjátszásokhoz
-        és a feladatútmutatókhoz.
+      next_howto: Nyisd meg a :doc:`/how-to/index` oldalt a bevezető útmutatókhoz
+        és a feladatleírásokhoz.
       next_schemas: Nyisd meg a :doc:`schemas` oldalt a JSON kimeneti sémák nyilvántartásához.
       open_family_link: Az ``aeat {family}`` referenciájának megnyitása
       start_here: Kezdd az alábbi család-hivatkozásokkal. A pontos kapcsolók, argumentumok,

@@ -108,7 +108,7 @@ profile:
       marriage_date: Data d'inici del matrimoni (AAAA-MM-DD)
       sex: Sexe del primer declarant
     tax:
-      id: Tax identifier (NIF/NIE/CIF)
+      id: Identificador fiscal (NIF/NIE/CIF)
     tax_residence:
       ccaa: Comunitat autònoma de residència fiscal
       jurisdiction_scope: Quin territori tributari s'aplica a aquest Model 303?

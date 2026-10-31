@@ -373,7 +373,7 @@ profile:
         monedas_virtuales_extranjero_above_threshold:
           label: Modelo 721 threshold exceeded
         premio_loteria_gravamen_especial_sin_retencion:
-          label: Lottery prize without retención (Modelo 136)
+          label: Lottery prize without withholding (Modelo 136)
         premio_loteria_gravamen_especial_trimestres:
           label: Prize quarters (Modelo 136)
         third_party_transactions_above_347_threshold:

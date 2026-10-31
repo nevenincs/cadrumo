@@ -213,9 +213,8 @@ docs:
       option_required: Opción, obligatoria.
     schemas:
       group_entries: '{count} entradas: {keys}'
-      summary: Las siguientes {count} rutas de comando tienen un ``OutputSchema``
-        registrado. Las superficies de retrollamada de grupo ({groups}) se listan
-        aparte.
+      summary: Las siguientes {count} rutas de comando tienen registrado un ``OutputSchema``.
+        Las interfaces de devolución de llamada de grupo ({groups}) se muestran aparte.
       title: Registro de esquemas de salida
       tooling_note: Esta página está pensada sobre todo para quienes crean herramientas.
         Si ejecuta los comandos a mano, las :doc:`páginas de familia <index>` suelen

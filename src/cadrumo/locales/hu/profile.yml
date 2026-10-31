@@ -366,7 +366,7 @@ profile:
         worker_class:
           choices:
             trabajador_del_mar: Tengerész
-          label: Trabajador del mar (besorolás)
+          label: Tengerészeti dolgozó besorolása
       obligations:
         bienes_extranjero_above_threshold:
           label: Modelo 720 küszöbérték túllépve
@@ -605,7 +605,7 @@ profile:
         title: IVA-profil
       maritime_worker:
         summary: 'Csak tengerészeknek: a különleges kedvezményeket meghatározó besorolás.'
-        title: Trabajador del mar (besorolás)
+        title: Tengerészeti dolgozó
       obligations:
         summary: Azok az értékhatárok, amelyek eldöntik, kell-e bizonyos bevallásokat
           benyújtania.

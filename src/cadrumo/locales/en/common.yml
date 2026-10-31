@@ -215,7 +215,7 @@ aggregation:
         of value sources.
       closed_record_rows_conflict: Row membership and its values have incompatible
         sources.
-      closed_record_rows_unadmitted: An incomplete or unadmitted source cannot establish
+      closed_record_rows_unadmitted: An incomplete or inadmissible source cannot establish
         a complete table.
       duplicate_binding_owner: 'Internal error: the same value source has two owners
         in the source mesh.'
@@ -1938,7 +1938,7 @@ desktop:
       scope:
         es_canarias: Canary Islands
         es_ceuta_melilla: Ceuta and Melilla
-        es_mainland: Spain, mainland and Balearics
+        es_mainland: Spain, mainland and the Balearic Islands
         eu_member: Another EU State
         third_country: Outside the EU
       scope_label: Established in
@@ -5087,8 +5087,8 @@ ledger:
         is allowed for this kind of asset, so it can't be accepted yet.
       method_excluded_by_law: This method is excluded by law for this kind of asset
         in this estimation modality (%{legal}).
-      method_excludes_buildings_and_furniture: Buildings, mobiliario and enseres cannot
-        use this method (%{provision}).
+      method_excludes_buildings_and_furniture: Buildings, furniture and furnishings
+        cannot use this method (%{provision}).
       method_not_enrolled_for_kind: 'Cadrumo doesn''t support this yet: this method
         for this kind of asset in this estimation modality.'
       method_without_resolver: 'Cadrumo doesn''t support this yet: this amortisation
@@ -5920,8 +5920,8 @@ topic:
       for automation; `text` for human inspection.
     title: Output formats
   irpf-regime:
-    body: An autonomo's IRPF regime. Estimación directa (normal or simplified) or
-      estimación objetiva (módulos). Determines which pago-fraccionado modelos apply
+    body: A self-employed person's IRPF regime. Direct assessment (normal or simplified)
+      or objective assessment (modules). Determines which advance-payment models apply
       (130 vs 131).
     title: IRPF regime
   iva-regime:
@@ -5935,9 +5935,9 @@ topic:
       list' enumerates the available ones.
     title: Tax forms (modelos)
   pago-fraccionado:
-    body: Quarterly IRPF advance payment for an autonomo. Modelo 130 applies to estimación
-      directa; 131 to estimación objetiva. Calculation uses the quarter's data and,
-      in some cases, the prior year.
+    body: Quarterly IRPF advance payment for a self-employed person. Modelo 130 applies
+      to direct assessment; 131 to objective assessment. Calculation uses the quarter's
+      data and, in some cases, the prior year.
     title: IRPF advance payment
   profile:
     body: The local profile carries your tax identifier (NIF/CIF/DNI/NIE), main activity,
@@ -7687,8 +7687,8 @@ tui:
         amounts: Taxable base {base} {currency} · VAT rate {rate}
         counterparty: 'Counterparty: {name} · NIF {nif} · {country}'
         identity: '{kind} invoice {number} dated {date}'
-        lease: Business premises lease · situación {situacion} · referencia catastral
-          {referencia}
+        lease: Business premises lease · property location {situacion} · cadastral
+          reference {referencia}
         operation: Modelo 349 key {code} · operation date {date}
         recargo: Equivalence surcharge {amount} {currency}
         rectifies: Corrects invoice {number}

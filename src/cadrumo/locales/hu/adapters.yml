@@ -277,10 +277,9 @@ adapters:
       modelo_unavailable: Az AEAT bevallásnyilvántartója nem kínálja a kért nyomtatványt.
       no_auth_session: Az AEAT hitelesítési munkamenet hiányzik vagy nincs tartósan
         tárolva; futtasd először a `cadrumo-runtime config auth status` parancsot.
-      notification_content_requires_operator: 'Nem nyitható meg olvasatlan értesítés
-        tartalma: ez a lépés maga a kézbesítés (comparecencia), amely jogilag kézbesíti
-        az értesítést és elindítja a határidőket; ehhez az aláírásodra van szükség.
-        Nyisd meg személyesen a Sede felületén.'
+      notification_content_requires_operator: 'Nem nyitható meg egy olvasatlan értesítés
+        tartalma: a megnyitás maga a joghatással járó kézbesítés, amely elindítja
+        a határidőket; ehhez alá kell írnod. Nyisd meg személyesen a Sede felületén.'
       notifications_bad_landing: Az AEAT értesítési oldala nem töltődött be megfelelően;
         a munkamenet lejárhatott, vagy az AEAT karbantartás alatt áll. Futtasd a 'cadrumo-runtime
         config auth status' parancsot, és próbáld újra. Ne tekintsd ezt üres postafióknak.

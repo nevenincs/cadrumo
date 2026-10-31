@@ -402,7 +402,7 @@ application:
       errors:
         aux_block_undeclared: Az exportelrendezés nem tudja kiírni a bevallás kötelező
           Aux blokkját.
-        casilla_metadata_drift: A rovat számozása vagy segmentója eltér a nyomtatványdefiníciókban
+        casilla_metadata_drift: A rovat számozása vagy szegmense eltér a nyomtatványdefiníciókban
           szereplő hivatalos rekordtervtől.
         rate_boxes_understate_total: A kulcsonkénti mezők nem tartalmazzák az összes
           rögzített összeget.
@@ -899,7 +899,7 @@ application:
       errors:
         caller_binding_keys_blank: A megadott értékek kulcsai nem lehetnek üresek.
         decimal_value_invalid: A(z) %{binding_id} numerikus forrás borrador-értékének
-          decimáliskompatibilisnek kell lennie.
+          decimális számként értelmezhetőnek kell lennie.
         forbidden_bindings: 'A borrador olyan értékeket tartalmaz, amelyeket a nyomtatványdefiníciók
           nem jelöltek az AEAT által előre kitöltöttként: %{bindings}.'
         registry_snapshot_axis_mismatch: 'A nyomtatványdefiníciók éve és időszaka
@@ -1725,8 +1725,8 @@ application:
         listáját.
       recipient_registry_not_found: Nincs %{recipient_id} azonosítójú regisztrált
         címzett.
-      reconcile_declaration_unsupported: A bevallás-PDF rovatszintű egyeztetése még
-        nem támogatott ennél a nyomtatványnál; egyeztess egy letöltött justificantét
+      reconcile_declaration_unsupported: A bevallás PDF-jének rovatszintű egyeztetése
+        még nem támogatott ennél a nyomtatványnál; egyeztess egy letöltött igazolást
         az aeat app modelo reconcile import paranccsal, vagy várj, amíg ez a nyomtatvány
         támogatottá válik.
       reconcile_no_active_bucket: Nincs aktív profilmappa; futtasd a(z) `aeat config
@@ -1865,8 +1865,8 @@ application:
       cuota_less_ledger_row_base_missing: A nyilvántartásaidban egy tétel nem tartalmaz
         bevallható adóalapot (base imponible).
       dt12a_reduccion_antiquity_possible: A(z) [%{reduccion_id}] rovat %{reduccion_value}
-        EUR DT 12.ª szerinti csökkentést tartalmaz. Ellenőrizd, hogy teljesül-e az
-        ehhez szükséges régiségi (antigüedad) feltétel.
+        EUR összegű, a DT 12.ª szerinti csökkentést tartalmaz. Ellenőrizd, hogy teljesül-e
+        az ehhez szükséges időtartamra vonatkozó feltétel.
       dt12a_reduccion_possible: A(z) [%{ingreso_id}] rovat %{ingreso_value} EUR munkajövedelmet
         (rendimientos del trabajo) tartalmaz a DT 12.ª szerinti küszöb felett, ezért
         a(z) [%{reduccion_id}] rovatban olyan csökkentést kaphatsz, amelyet még nem
@@ -1986,13 +1986,13 @@ application:
         számlához nincs alátámasztó bizonylat. Csatold a nyilvántartásaid megfelelő
         tételéhez.
       withholding_detail_absent_against_ledger_evidence: 'A Modelo %{modelo} (%{filing_year})
-        egyetlen kedvezményezettre sem jelent be kifizetést (percepción), de a nyilvántartásaid
-        szerint abban az évben adólevonás (retención) alá eső kifizetések történtek:
-        %{contradicting_invoice_count} beérkezett számla olyan levonással, amelyet
-        kifizetőként (retenedor) be kell fizetned, és %{contradicting_ledger_row_count}
-        kimenő kifizetés SZJA-levonási (IRPF) kategóriában. A Modelo %{source_modelo}
-        levonási részletezése üres, így semmi sem vallja be ezeket. Ellenőrzés előtt
-        rögzítsd őket a nyomtatvány kedvezményezettenkénti részletezésében.'
+        egyetlen kedvezményezettnek sem jelent be kifizetést, de a nyilvántartásaid
+        szerint abban az évben adólevonás alá eső kifizetések történtek: %{contradicting_invoice_count}
+        beérkezett számlán szerepel olyan levonás, amelyet kifizetőként be kell fizetned,
+        és %{contradicting_ledger_row_count} kimenő kifizetés tartozik SZJA-levonási
+        (IRPF) kategóriába. A Modelo %{source_modelo} levonási részletezése üres,
+        ezért ezek egyike sincs bevallva. Ellenőrzés előtt rögzítsd őket a nyomtatvány
+        kedvezményezettenkénti részletezésében.'
       withholding_detail_absent_attested: 'A Modelo %{modelo} (%{filing_year}) egyetlen
         kedvezményezettre sem jelent be kifizetést (percepción), és a profilod szerint
         a megerősített időszakokban nem fizettél ki adólevonás (retención) alá eső

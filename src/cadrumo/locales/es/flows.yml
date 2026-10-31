@@ -254,8 +254,8 @@ flows:
     change_button: Cambiar contraseña
     confirm_label: Confirma la contraseña nueva
     current_label: Contraseña actual
-    intro: Esto sustituye la contraseña que protege tu perfil. Los datos que protege
-      no se vuelven a cifrar, solo se reenvuelven.
+    intro: Esto sustituye la contraseña que protege tu perfil. Los datos protegidos
+      no se vuelven a cifrar; solo se vuelve a envolver su clave de cifrado.
     new_hint: Al menos 12 caracteres, combinando letras, números o símbolos.
     new_label: Contraseña nueva
     refusal:

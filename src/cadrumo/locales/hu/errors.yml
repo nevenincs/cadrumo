@@ -165,11 +165,11 @@ errors:
     error_actividad_asset: Egy IRPF gazdasági tevékenységi eszközművelet sikertelen
       volt.
     error_aggregation_config: Az összesítési szolgáltatás összetételi invariáns megsértése.
-    error_application_live: Az élő AEAT-olvasási vezénylés meghiúsult.
-    error_application_live_iva_surface_timeout: Az élő IVA-olvasási felület időtúllépett,
-      mielőtt AEAT-bizonyítékot adott volna vissza.
-    error_application_registry: A modellnyilvántartás vezénylése meghiúsult vagy el
-      lett utasítva.
+    error_application_live: Az AEAT élő adatainak lekérdezése meghiúsult.
+    error_application_live_iva_surface_timeout: Az élő IVA-adatlekérő felület időtúllépés
+      miatt leállt, mielőtt AEAT-bizonyítékot adott volna vissza.
+    error_application_registry: A modellnyilvántartás lekérdezése meghiúsult vagy
+      el lett utasítva.
     error_automation_decision_run: Az automatizálási döntést nem sikerült megerősíteni.
       Újrapróbálkozás előtt ellenőrizd a műveletet.
     error_automation_inventory_read: Az automatizálási jogosultságok listáját nem
@@ -289,8 +289,7 @@ errors:
     error_modelo_work_unit_not_found: A kért munkajegység nem található.
     error_modelos: Adóbevallási hiba történt.
     error_modelos_validation: Egy nyomtatványkód sérti az alaki invariánsait.
-    error_observation_key: Egy megfigyelési kulcs komponense nem felel meg a tárrepozitórium
-      szerződésének.
+    error_observation_key: Egy megfigyelési kulcs eleme nem felel meg az adattár szerződésének.
     error_optional_extra_missing: Ennek a funkciónak a választható összetevője nincs
       telepítve.
     error_outbound_storage_not_found: A kért tárolási objektum vagy névtér nem létezik.
@@ -425,7 +424,7 @@ errors:
     fail_acceleration_receipt_revocation: A profil tárolt bejelentkezési gyorsítója
       nem távolítható el; továbbra is a lemezen van.
     fail_borrador_parse: A Modelo 100 tervezet PDF-et nem sikerült bevallássá elemezni.
-    fail_browser_evasion: A böngésző-kijátszás beállítása nem alkalmazható.
+    fail_browser_evasion: A böngésző-kikerülés beállítása nem alkalmazható.
     fail_browser_session_browser: A böngésző-munkamenet böngészőjét nem sikerült elindítani.
     fail_browser_validation: A böngésző-munkamenet paraméterei nem mentek át az érvényesítésen.
     fail_certificado_censal_parse: Nem sikerült beolvasni a Certificado de Situación
@@ -451,7 +450,8 @@ errors:
     fail_justificante_parse: A PDF-et nem sikerült bizonylatként elemezni.
     fail_llm_cache: Egy nyelvi modell gyorsítótár-bejegyzése nem olvasható, írható
       vagy elemezhető.
-    fail_llm_pdf_rasterisation: A PDF-et nem sikerült oldalképekké renderelni az olvasáshoz.
+    fail_llm_pdf_rasterisation: A PDF-et nem sikerült oldalankénti képekké alakítani
+      az olvasáshoz.
     fail_llm_provider: A nyelvi modell szolgáltatója nem visszaállítható hibát adott
       vissza.
     fail_llm_rate_limit: A nyelvi modell szolgáltatója sebességkorlátozás miatt elutasította
@@ -498,7 +498,7 @@ errors:
     fail_storage_secret_store: Bemeneti/kimeneti hiba történt a titkos adatok tárolójában.
     fail_storage_secure_object_revision_conflict: A biztonságos objektumot egy másik
       írás módosította; töltsd be újra, majd próbáld újra az aktuális revízióval.
-    fail_storage_secure_object_upsert: A biztonságos objektumot nem sikerült perzisztálni.
+    fail_storage_secure_object_upsert: A biztonságos objektumot nem sikerült elmenteni.
       Ellenőrizd a tárolási útvonalat, majd próbáld újra.
     fail_user_profile_not_found: A kért felhasználói profil szekció vagy mező nem
       található.
@@ -691,8 +691,8 @@ errors:
     canonical_invoice_wizard_field: A számlavarázsló egyik mezője nem ment át az érvényesítésen.
     canonical_operation_definition_contract_mismatch: A műveletdefiníció nem egyezik
       a szerződésével.
-    canonical_operation_financial_operand_custody: Megsértették a pénzügyi operandus
-      őrzésének rögzített átmeneti sorrendjét.
+    canonical_operation_financial_operand_custody: Megsértették a pénzügyi operandusok
+      megőrzésének rögzített átmeneti sorrendjét.
     canonical_schema_resolution: A parancsséma vetítése hiányos.
     canonical_structured_invoice_read: A kiválasztott olvasó nem tudta beolvasni a
       strukturált számlát.
@@ -943,9 +943,8 @@ errors:
       semmi sem változott.
     modelo_edit_refused: A szerkesztést elutasította a rendszer, és semmi sem változott.
       Ellenőrizd az értékeket, majd próbáld újra.
-    modelo_export_cross_bucket: A megcímzett revízió egy másik bucket-hez tartozik,
-      nem az aktív profil bucket-jéhez. Az export csak az aktív profil bucket-en belül
-      működik.
+    modelo_export_cross_bucket: A célrevízió egy másik tárolóhoz tartozik, nem az
+      aktív profil tárolójához. Az export csak az aktív profil tárolóján belül működik.
     modelo_export_no_active_bucket: Az exportáláshoz aktív profil szükséges. Hozz
       létre vagy válassz ki egy profilt, és próbáld újra.
     modelo_project_invalid_decimal_override: Egy előrejelzési felülírás nem érvényes
@@ -1085,8 +1084,9 @@ errors:
       értelmezni ezt a forrásdokumentumot.
     refused_financial_provider_validation: Egy mező a pénzügyi dokumentumban (dátum
       vagy összeg) nem ment át az érvényesítésen.
-    refused_financial_usage_ratios_censo_mismatch: Egy mentett otthoni irodahasználati
-      arány eltér a censotól, amely a kötelező jogi forrás. Igazítsd a censo értékéhez.
+    refused_financial_usage_ratios_censo_mismatch: Egy mentett otthoni irodai használati
+      arány eltér az adózói nyilvántartásban szereplő, kötelező jogi forrásértéktől.
+      Igazítsd ehhez az értékhez.
     refused_flow_answer: A vezetett folyamat elutasította a választ.
     refused_flow_checkpoint: A vezetett folyamat elutasította a mentés és folytatás
       műveletet.
@@ -1236,8 +1236,7 @@ errors:
     refused_modelo_m303_rectificativa_motive: A 303-as rectificativa egyetlen kanonikus
       indokot követel meg egy alkalmazható és felülvizsgált rekordtervnél; az indok
       minden más esetben tiltott.
-    refused_modelo_payment_election_capability: A választott fizetési mod meg nem
-      támogatott.
+    refused_modelo_payment_election_capability: A választott fizetési mód nem támogatott.
     refused_modelo_payment_election_incompatible: A választott fizetési módhoz pozitív
       eredmény szükséges.
     refused_modelo_refund_account_missing: Visszatérítést kértek, de nincs visszatérítési
@@ -1289,7 +1288,7 @@ errors:
       is fennáll, ez a gép nem tudja elindítani a kulcslevezetéshez szükséges felügyelt
       munkafolyamatot.
     refused_profile_custody_legacy: A tároló visszavont letétkezelést tartalmaz; csak
-      a destruktív visszaállítás és az újrabeligazgatás az út.
+      a destruktív visszaállítás és az újbóli letétkezelés lehetséges.
     refused_profile_displaced_session_retirement: A korábban kiválasztott profil tárolt
       munkamenetét nem sikerült visszavonni, ezért az új profil nem jött létre.
     refused_profile_foral_regime: A kiválasztott forális adózási rend nem modellezett

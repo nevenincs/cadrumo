@@ -444,10 +444,10 @@ cli:
           egy objektumot adj meg. Strukturált bemenetnél a skaláris --taxable-base
           és --iva-rate opció helyett használd.
         list_help: Az egyeztetési katalógus számláinak listázása.
-        operation_date_help: A teljesítés (termekertekesites vagy szolgaltatasnyujtas)
-          időpontja (EEEE-HH-NN). Ez a LIVA 75. cikke szerinti adófizetési kötelezettség
+        operation_date_help: A teljesítés (termékértékesítés vagy szolgáltatásnyújtás)
+          időpontja (YYYY-MM-DD). Ez a LIVA 75. cikke szerinti adófizetési kötelezettség
           keletkezésének napja, amely meghatározza, melyik időszakban kell az adót
-          bevallani; ennek hiányában a számla kelte lep a helyebe.
+          bevallani; ennek hiányában a számla kelte lép a helyébe.
         operation_type_help: 'M349 műveleti kód: E termékértékesítés, M adómentes
           importot követő értékesítés, H ugyanez adóügyi képviselő útján, A termékbeszerzés,
           T háromszögügylet, S nyújtott szolgáltatás, I igénybe vett szolgáltatás,
@@ -491,8 +491,8 @@ cli:
         elect_especial_help: 'Válaszd a prorrata especial rezsimet egy adóévre (LIVA
           art. 103.Dos.1): a bemeneti levonás tételenként az --input-classification
           alapján történik a nyilvántartásaidban.'
-        elect_general_help: 'Válaszd a prorrata general rezsimet egy adóévre (LIVA
-          art. 104): egyetlen levonási százalék vonatkozik minden levonható cuota-ra.'
+        elect_general_help: 'Válaszd az általános levonási hányadot egy adóévre (LIVA
+          art. 104): egyetlen levonási százalék vonatkozik minden levonható adóösszegre.'
         evidence_reference_help: A tárgyidőszaki különleges arányosítási választás
           vagy visszavonás bizonyítékának hivatkozása.
         general_percentage_help: Ideiglenes levonási százalék 0-100 (LIVA art. 104.Uno
@@ -638,8 +638,8 @@ cli:
         casillas_not_enrolled: 'A rögzített bevallásokban {count} rovat értéke nem
           összeg, ezért nem került be számítási bizonyítékként: {affected}. Az érintett
           bevallások minden számszerű adata a szokásos módon bekerült.'
-        discover_help: Megjeleníti, mely nyomtatvány- és ejercicio-párokat járná be
-          egy előzményletöltés.
+        discover_help: Megjeleníti, mely nyomtatvány- és adóév-párokat járná be egy
+          előzményletöltés.
         discover_no_profile_denominator: 'Ez a jelentés nem tartalmaz adózóspecifikus
           nevezőt: hiányzik a profil vagy annak tevékenységkezdő dátuma, ezért a párok
           száma nem méri a lefedettséget. Egészítsd ki a profilt, és futtasd újra,
@@ -721,12 +721,12 @@ cli:
             tárolt rekord.
           app_help: Az AEAT által egy értesítés mögött kiszolgált dokumentum letöltése
             és visszaolvasása.
-          certificado_id_help: Az értesítés AEAT-tanúsítványszáma (número de certificado).
-          comparecencia_notice: 'Ez a dokumentum kizárólag azért került letöltésre,
-            mert az AEAT szerint az adózó az értesítést már elolvasta. Egy olvasatlan
-            értesítés megnyitása maga a comparecencia: ezzel válik jogilag kézbesítetté,
-            és ekkor indulnak a jogorvoslati és fizetési határidők, ezért az olvasatlan
-            értesítést a program elutasítja, és azt az adózónak személyesen kell megnyitnia.'
+          certificado_id_help: Az értesítés AEAT-tanúsítványszáma.
+          comparecencia_notice: 'Ez a dokumentum kizárólag azért tölthető le, mert
+            az AEAT szerint az adózó már elolvasta az értesítést. Egy olvasatlan értesítés
+            megnyitása maga a joghatással járó kézbesítés: ettől válik jogilag kézbesítetté,
+            és ekkor indulnak a jogorvoslati és fizetési határidők. Ezért a program
+            elutasítja az olvasatlan értesítést; azt neked kell személyesen megnyitnod.'
           history_help: Sorold fel az egyes tárolt értesítési dokumentumokban közölt
             összegeket összesítés nélkül.
           history_notice: 'Ez az előzmény az AEAT által az egyes értesítési dokumentumokban
@@ -819,10 +819,10 @@ cli:
           megszerzőjének tevékenységére vonatkozó jogi tény, amelyet a rendszer sosem
           következtet ki a számlából.'
       aggregate_help: Egy modelo adatainak összesítése egy időszakra. A partner- és
-        külföldivagyon-megfigyeléseket JSON-opciókként kell átadni. A levonással kapcsolatos
-        modelók az időszakra már tárolt sorokat olvassák, miután rögzítették azt az
-        egy levonást, amelyet egy parancs egy beérkezett számlából vagy a nyilvántartásodban
-        szereplő kifizetésből hordozhat.
+        külföldi vagyonra vonatkozó megfigyeléseket JSON-opcióként kell megadnod.
+        A levonással kapcsolatos nyomtatványok az időszakra már tárolt sorokat olvassák,
+        miután rögzítetted azt az egy levonást, amelyet egy parancs egy beérkezett
+        számlából vagy a nyilvántartásodban szereplő kifizetésből tartalmazhat.
       app_help: 'A nyomtatványdefiníciók vizsgálata: az AEAT adónyomtatványainak katalógusa.'
       audit:
         bundle_id_help: Bizonyítékcsomag azonosítója (teljes SHA-256 vagy egyértelmű
@@ -1195,7 +1195,7 @@ cli:
           az adatait és vagy own_account_id-t (a kérelmező saját, SWIFT-BIC-kel rendelkező
           számlája), vagy representante_account-ot.'
         filing_year_help: A kérelem adóéve (pl. 2025).
-        group_help: Egy adóév Modelo 360 visszatérítési kérelmének (solicitud) megadása.
+        group_help: Egy adóév Modelo 360 visszatérítési kérelmének megadása.
         list_help: A megadott kérelmek listája maszkolt számlákkal.
         remove_help: Egy adóévre megadott kérelem törlése.
       project:
@@ -1287,10 +1287,10 @@ cli:
           esemény rögzít.
         bucket_id_help: A tároló azonosítója, amelyen a felülvizsgálati csomag működik
           (alapértelmezés szerint az aktív profil).
-        build_help: Megosztható, checksummal ellenőrizhető áttekintő csomag (fichero-BOE
-          tervezet, a mentett számítás forrása és a nyilvántartásodból csatolt bizonylatok)
-          összeállítása a könyvelőnek való átadáshoz. Csak helyi; soha nem kapcsolódik
-          az AEAT-hoz.
+        build_help: Megosztható, ellenőrző összeggel ellenőrizhető áttekintő csomag
+          (fichero-BOE tervezet, a mentett számítás forrása és a nyilvántartásodból
+          csatolt bizonylatok) összeállítása a könyvelőnek való átadáshoz. Csak helyi;
+          soha nem kapcsolódik az AEAT-hoz.
         counter_sign_help: Ellenjegyezd az adózó által már aláírt felülvizsgálati
           csomagot a fogadó könyvelő nevében, és a nyugta-borítékot a --output útvonalra
           írd. Csak helyi; soha nem lép kapcsolatba az AEAT-tal.
@@ -1706,10 +1706,10 @@ cli:
           formában ezen a parancson; a KEY a nyomtatványdefiníciók egy kapcsolatazonosítója
           (relation id), nem --binding kulcs. Futtasd: %{discover}, hogy lásd a kapcsolatokra
           vonatkozó útmutatót és a számításhoz még hiányzó többi értéket.'
-        missing_relation_guidance_m200_m202: '%{base} A Modelo 202 nyomtatvány pagos
-          fraccionados értékeit a Modelo 200 nyomtatványhoz --relation RELATION_ID=VALUE
-          formában add meg, ne a --binding kapcsolóval. A DP200014B:00611 két, egymást
-          kizáró M202 fizetési kapcsolati (relation) csatornát von le: modelo-200-2024-rel-202-pagos-fraccionados
+        missing_relation_guidance_m200_m202: '%{base} A Modelo 202 részletfizetési
+          értékeit a Modelo 200 nyomtatványhoz --relation RELATION_ID=VALUE formában
+          add meg, ne a --binding kapcsolóval. A DP200014B:00611 két, egymást kizáró
+          M202 fizetési kapcsolati csatornát von le: modelo-200-2024-rel-202-pagos-fraccionados
           a 40.3 [34] rovathoz és modelo-200-2024-rel-202-pagos-fraccionados-40-2
           a 40.2 [03] rovathoz. Kézi érték megadásakor a nem használt modalitást állítsd
           0-ra. Futtasd: %{discover}, hogy lásd a kapcsolatokra vonatkozó útmutatót
@@ -1788,9 +1788,9 @@ cli:
           értéke KEY=VALUE formában (ismételhető). A KEY kapcsolatazonosító, nem --binding
           kulcs; ezt használd a más időszakból vagy más nyomtatványból származó bemenetekhez.
           Futtasd: aeat app modelo bindings list --missing, hogy lásd a bevallásra
-          vonatkozó kapcsolati útmutatót. A Modelo 200 nyomtatvány M202 pagos fraccionados
-          értékeinél az egymást kizáró 40.3 [34] rovat és 40.2 [03] rovat kapcsolati
-          csatornákat használd, és kézi érték megadásakor a nem használt modalitást
+          vonatkozó kapcsolati útmutatót. A Modelo 200 nyomtatvány M202 részletfizetési
+          értékeihez használd az egymást kizáró 40.3 [34] rovat és 40.2 [03] rovat
+          kapcsolati csatornákat, és kézi érték megadásakor a nem használt modalitást
           állítsd 0-ra.'
         rename_help: Egy bevallás megjelenítési nevének frissítése.
         report:
@@ -2537,13 +2537,13 @@ cli:
           Ismételhető. Futtasd az `aeat config profile descendiente` parancsot alparancs
           nélkül a vezetett bevitelhez.
         add_help: Egy vagy több leszármazott hozzáadása az aktív profilhoz.
-        ambiguous_relacion_advisory: descendiente %{indices} meses_madre_trabajo értéket
-          deklarál a meg nem adott reláció alatt. A kézikönyv megadja a minimumot,
-          de kizárja a 81.1. cikk szerinti anyasági levonást egy unoka vagy más, gyermektől
-          eltérő egyenesági leszármazott, vagy bírósági határozattal gondozásba vett
-          kiskorú esetén -- a tárolt tény nem különbözteti meg őket egy valódi gyermektől.
-          Erősítsd meg, hogy ez a leszármazott gyermek, vagy add meg a tényleges relációt
-          a RELACION= mezővel.
+        ambiguous_relacion_advisory: A(z) %{indices} leszármazott esetében meses_madre_trabajo
+          érték van megadva, de a rokonsági kapcsolat nincs rögzítve. A kézikönyv
+          meghatározza a minimumot, de kizárja a 81.1. cikk szerinti anyasági levonást
+          unoka vagy más, gyermektől eltérő egyenesági leszármazott, illetve bírósági
+          határozattal gondozásba vett kiskorú esetén; a tárolt adat nem különbözteti
+          meg ezeket a saját gyermektől. Erősítsd meg, hogy saját gyermekről van szó,
+          vagy add meg a tényleges rokonsági kapcsolatot a RELACION= mezővel.
         guarderia_spend_shapes_conflict: Egy leszármazottnál a GASTOS_GUARDERIA vagy
           a GASTOS_GUARDERIA_MENSUAL értéket add meg, ne mindkettőt.
         help: Leszármazottak megadása a LIRPF 58/61. cikk szerinti leszármazotti minimumhoz.
@@ -3317,7 +3317,7 @@ cli:
       dry_run_preview: 'Próba futtatás: nem mentett sorok. A fenti számok azt mutatják,
         mi történne valódi importálásnál.'
       empty_directory: 'Nem találhatók importálható kivonatfájlok a könyvtárban: {path}'
-      file_help: A bankikivonati fájl vagy könyvtár elérési útja.
+      file_help: A banki kivonatfájl vagy -könyvtár elérési útja.
       file_reader_unavailable: 'A kivonat nem lett beolvasva: a kiválasztott modell
         jelenleg nem érhető el a(z) {file} fájl olvasásához. Próbáld újra, amint elérhető.'
       file_refused: 'Elutasított és kihagyott kivonat: {file}. A mappa többi része
@@ -3761,8 +3761,8 @@ cli:
       allow_incomplete_help: A naptár megjelenítése akkor is, ha a profiladatok hiányosak.
       from_help: A naptárablak kezdő dátuma (ISO ÉÉÉÉ-HH-NN, beleszámítva).
       help: A határidő-naptár megjelenítése az aktív profilhoz a megadott dátumablakon
-        belül. Festivos és munkanapszámítás alkalmazásával. Csak helyi; soha nem lép
-        kapcsolatba az AEAT-tal.
+        belül, az ünnepnapok és a munkanapok figyelembevételével. Csak helyi; soha
+        nem lép kapcsolatba az AEAT-tal.
       show_suppressed_help: Elnyomott bejegyzések megjelenítése is a naptárban.
       to_help: A naptárablak záró dátuma (ISO ÉÉÉÉ-HH-NN, beleszámítva).
     calendar_local_filing_evidence_unavailable: A naptár helyi benyújtási bizonyítéka
@@ -3898,7 +3898,7 @@ cli:
         vonnak-e le adóelőleget.
       censo_enrolment_unverified: A nyilvántartásba vételt még nem ellenőrizték
       estimacion_objetiva_unset: A profilodban még nem szerepel, hogy tevékenységedre
-        melyik személyijövedelemadó-megállapítási rendszer vonatkozik.
+        melyik személyi jövedelemadózási rendszer vonatkozik.
       has_employees_unset: A profilodban még nem szerepel, hogy foglalkoztatsz-e alkalmazottakat.
       intracomunitario_unset: A profilodban még nem szerepel, hogy vásárolsz vagy
         értékesítesz-e árut vagy szolgáltatást uniós országok között.
@@ -3951,9 +3951,8 @@ cli:
       help: Egyetlen elem felülvizsgálati adatainak megjelenítése.
       id_help: Az elem azonosítója a felülvizsgálati sorból.
   root:
-    app_app_help: 'Adómunka: nyilvántartás (ledger), modelo, élő AEAT-lekérdezések,
-      áttekintés (overview), nyomtatványdefiníciók (registry), felülvizsgálat (review)
-      és futási diagnosztika.'
+    app_app_help: 'Adóügyek: nyilvántartás, modelo, élő AEAT-lekérdezések, áttekintés,
+      nyomtatványdefiníciók, felülvizsgálat és futási diagnosztika.'
     app_help: Alkalmazásszintű parancsok elérése.
     app_help_help: Súgó megjelenítése az alkalmazásparancsokhoz.
     app_tui_help: Megnyitja a teljes képernyős alkalmazást a helyi nyilvántartásán.

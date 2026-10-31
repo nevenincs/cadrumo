@@ -1203,7 +1203,7 @@ application:
         what: Falta información de la que depende esta cifra, o no se ha podido usar.
         what_to_do: Revisa tus registros y tu perfil por si falta algo y vuelve a
           calcular.
-      stale: De la última calculación. Vuelve a calcular para actualizar.
+      stale: Resultado del último cálculo. Vuelve a calcular para actualizarlo.
       storage_degraded:
         what: Cadrumo no ha podido leer una parte de tus registros guardados, así
           que algunas cifras pueden estar incompletas.
@@ -1612,9 +1612,9 @@ application:
         no coincide con el modelo %{modelo}, ejercicio %{filing_year}, periodo %{period}.
       external_import_justificante_missing: La evidencia de importación externa %{evidence_reference_id}
         (%{evidence_kind}) no está guardada como registro de justificante.
-      external_import_m303_filing_evidence_required: La importación externa del modelo
-        303 requiere evidencia tipada completa de la instancia de declaración y no
-        puede inferirla de los valores de casillas.
+      external_import_m303_filing_evidence_required: La importación externa del Modelo
+        303 requiere pruebas tipadas completas de la instancia de declaración; no
+        puede deducirlas de los valores de las casillas.
       external_import_registry_root_missing: Falta la generación publicada de la autoridad
         %{missing_path}; no se pueden validar los ids de casilla importados.
       external_import_registry_snapshot_unresolved: No se pudieron resolver las definiciones

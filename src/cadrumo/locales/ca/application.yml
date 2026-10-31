@@ -2638,12 +2638,13 @@ application:
         de 16 caràcters; s'ha rebut {run_id}.
       resume_target_contradiction: 'Indica només un destí per reprendre: id d''execució
         de flux, id de declaració, id de càlcul desat, o model/any/període.'
-      resume_target_invalid: Destí de resume {target} invàlid. Usa --modelo --year
-        --period o executa `aeat app modelo work runs`.
+      resume_target_invalid: Objectiu de represa {target} no vàlid. Indica --modelo,
+        --year i --period, o executa `aeat app modelo work runs`.
       resume_target_required: Indica --modelo --year --period, un id d'execució de
         flux, un id de declaració o un id de càlcul desat per reprendre.
-      resume_visible_target_incomplete: Resume per clau natural requereix --modelo,
-        --year i --period junts; rebut model={modelo}, year={year}, period={period}.
+      resume_visible_target_incomplete: Per reprendre per clau natural, cal indicar
+        junts --modelo, --year i --period; s’han rebut model={modelo}, year={year},
+        period={period}.
       run_id_invalid_blank: L'identificador d'execució no pot estar en blanc.
       run_id_invalid_separators: L'identificador d'execució no ha de contenir separadors
         de ruta.

@@ -493,9 +493,9 @@ cli:
         declare_sector_help: 'Declara un sector diferenciat (LIVA arts. 9.1.c / 101):
           la teva partició de l''art. 9.1.c, mai inferida dels teus registres.'
         ejercicio_help: Exercici (any) que cobreix l'elecció.
-        elect_especial_help: 'Tria prorrata especial per a un exercici (LIVA art.
-          103.Dos.1): la deducció per input s''enruta amb --input-classification a
-          cada apunt dels teus registres.'
+        elect_especial_help: 'Tria la prorrata especial per a un exercici (LIVA art.
+          103.Dos.1): assigna la deducció de cada apunt dels teus registres mitjançant
+          --input-classification.'
         elect_general_help: 'Tria prorrata general per a un exercici (LIVA art. 104):
           un únic percentatge de deducció s''aplica a cada quota deduïble.'
         evidence_reference_help: Referència de l'evidència de l'opció o revocació
@@ -2500,8 +2500,8 @@ cli:
           valors diferents dels que has declarat: {axes}. La teva resposta es manté;
           resol cada discrepància tu mateix.'
         pull_help: Previsualitza la identitat i el domicili de les dades censals de
-          l'AEAT, o revisa i aplica una proposta exacta mitjançant l'operació canònica
-          reanudable.
+          l’AEAT, o revisa i aplica una proposta exacta mitjançant l’operació canònica
+          reprenable.
         pull_preview_notice: 'Només previsualització: no s''ha escrit res al perfil.'
         pull_verified_tier_notice: Aquests fets s'han llegit directament de l'autoritat
           censal, de manera que la incorporació al cens compta com a verificada.

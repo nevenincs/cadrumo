@@ -1454,8 +1454,8 @@ application:
         role %{semantic_role}.
       calculate_text_casilla_numeric_value: The --casilla value for %{key} (%{label})
         targets a non-numeric data_type=%{data_type} declarante selector that names
-        the contribuyente who obtains the income, not an amount. Enter the income
-        figure in its own numeric casilla and keep this casilla for the member selector.
+        the taxpayer who obtains the income, not an amount. Enter the income figure
+        in its own numeric casilla and keep this casilla for the member selector.
       calculate_text_input_empty: The --casilla value targets a text casilla and must
         be a non-empty string.
       calculate_typed_text_input_invalid: The --casilla value is not valid for that
@@ -2454,9 +2454,10 @@ application:
     next_hint:
       modelo_work_create: aeat app modelo work create
     notices:
-      ccaa_defaulted: No comunidad autónoma was chosen, so %{ccaa} was assumed for
-        this profile. Autonomic deductions and the autonomic part of the tax scale
-        are calculated for %{ccaa}. Set --tax-residence-ccaa to use a different comunidad.
+      ccaa_defaulted: No autonomous community was chosen, so %{ccaa} was assumed for
+        this profile. Autonomous-community deductions and the autonomous-community
+        part of the tax scale are calculated for %{ccaa}. Set --tax-residence-ccaa
+        to use a different autonomous community.
       modify_descendants_via_door: Descendants are not part of profile edit. Manage
         them through the descendants command.
       modify_no_resume: 'Changes in modify mode are not applied yet: leaving without

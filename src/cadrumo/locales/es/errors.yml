@@ -331,7 +331,8 @@ errors:
       no es estructuralmente válido.
     error_profile_tax_residence: Se produjo un error en el perfil de residencia fiscal.
     error_profile_validation: Un registro de perfil no superó la validación.
-    error_redaction: Un helper de redacción recibió un argumento del tipo incorrecto.
+    error_redaction: Una función auxiliar de redacción recibió un argumento de tipo
+      incorrecto.
     error_renta: Se produjo un error en el cálculo de la declaración de la Renta.
     error_renta_profile_completeness_warning: 'Aviso de declaración obligatoria RETMAR:
       este trabajador figura inscrito en RETMAR. Desde enero de 2023, todos los trabajadores
@@ -486,7 +487,7 @@ errors:
     fail_justificante_parse: No se pudo interpretar el PDF como un justificante.
     fail_llm_cache: No se pudo leer, escribir o interpretar una entrada de la caché
       del modelo de lenguaje.
-    fail_llm_pdf_rasterisation: No se pudo renderizar el PDF en imágenes de página
+    fail_llm_pdf_rasterisation: No se pudo convertir el PDF en imágenes de página
       para leerlo.
     fail_llm_provider: El proveedor del modelo de lenguaje devolvió un error irrecuperable.
     fail_llm_rate_limit: El proveedor del modelo de lenguaje rechazó la solicitud
@@ -711,8 +712,8 @@ errors:
       infringen la política de su clasificación.
     integrity_storage_secure_object_batch_size: El tamaño de lote de iteración de
       objetos seguros debe ser al menos 1; se recibió %{batch_size}.
-    integrity_storage_secure_object_hashed_key_length: El digest de búsqueda sin procesar
-      del objeto seguro debe tener 32 bytes; se recibieron %{length}.
+    integrity_storage_secure_object_hashed_key_length: El resumen hash de búsqueda
+      sin procesar del objeto seguro debe tener 32 bytes; se recibieron %{length}.
     integrity_storage_secure_object_revision_ancestry_json: El campo de ascendencia
       de revisión de un objeto seguro almacenado no contiene JSON válido.
     integrity_storage_secure_object_revision_ancestry_shape: El campo de ascendencia
@@ -732,7 +733,7 @@ errors:
       un ciclo de carga recursivo.
     canonical_calibration_deadline_elapsed: La calibración de derivación de claves
       del perfil superó su límite total de tiempo.
-    canonical_internal_invariant: Se infringió una invariancia interna de la aplicación.
+    canonical_internal_invariant: Se infringió una invariante interna de la aplicación.
     canonical_invoice_row_parse: No se pudo interpretar una fila de importación de
       facturas.
     canonical_invoice_wizard_field: Un campo del asistente de facturas no superó la
