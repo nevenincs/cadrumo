@@ -47,7 +47,7 @@ def _design_fields(node: object) -> Iterator[dict[str, Any]]:
 def _valid_address() -> dict[str, str]:
     return {
         "province_code": "28",
-        "municipality_code": "079",
+        "municipality_code": "28079",
         "municipality": "M",
         "locality": "M",
         "postal_code": "28001",
@@ -60,6 +60,26 @@ def _valid_address() -> dict[str, str]:
 
 def _declared(field: str) -> int:
     return int(resolve_form_codes_leased("form-row-codes").code(f"m180.address.{field}"))
+
+
+@pytest.mark.parametrize("code", ["079", "28", "2807", "280790", "99079"])
+def test_a_municipality_code_that_is_not_an_ine_code_is_refused(code: str) -> None:
+    with pytest.raises(ValidationError):
+        Modelo180StructuredAddress(**{**_valid_address(), "municipality_code": code})
+
+
+def test_a_municipality_outside_the_province_is_refused() -> None:
+    with pytest.raises(ValidationError, match="start with the province"):
+        Modelo180StructuredAddress(**{**_valid_address(), "municipality_code": "08019"})
+
+
+def test_the_municipality_code_fills_the_positions_the_design_declares() -> None:
+    code = Modelo180StructuredAddress(**_valid_address()).municipality_code
+    for design in _MODELO_180.glob("*/export/0002-record-modelo-180-perceptor.toml"):
+        fields = _design_fields(tomllib.loads(design.read_text(encoding="utf-8")))
+        assert [item["length"] for item in fields if item.get("id") == "modelo-180-perc-inmueble-codigo-municipio"] == [
+            len(code)
+        ]
 
 
 @pytest.mark.parametrize("field", sorted(_DESIGN_FIELD))

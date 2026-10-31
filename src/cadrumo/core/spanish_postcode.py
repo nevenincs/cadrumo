@@ -48,6 +48,9 @@ OptionalSpanishPostcode = Annotated[str, StringConstraints(pattern=rf"^$|^{SPANI
 SpanishPostcode = Annotated[str, StringConstraints(pattern=rf"^{SPANISH_POSTCODE_PATTERN}$")]
 """A postcode a record requires to be declared."""
 
+SPANISH_MUNICIPALITY_CODE_PATTERN: Final = rf"^{SPANISH_PROVINCE_CODE_PATTERN}[0-9]{{3}}$"
+"""An INE municipality code: the province code, then the municipality number."""
+
 SpanishProvinceCode = Annotated[str, StringConstraints(pattern=rf"^{SPANISH_PROVINCE_CODE_PATTERN}$")]
 """A standalone province code in 01..52, as an AEAT record design's provincia field carries it."""
 
@@ -65,6 +68,7 @@ def is_spanish_postcode(value: str) -> bool:
 
 
 __all__ = [
+    "SPANISH_MUNICIPALITY_CODE_PATTERN",
     "SPANISH_POSTCODE_PATTERN",
     "SPANISH_PROVINCE_CODE_PATTERN",
     "OptionalSpanishPostcode",

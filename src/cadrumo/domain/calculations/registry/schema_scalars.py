@@ -19,7 +19,11 @@ from ....core.identity.documents import TAX_ID_FORMAT_CONTEXT, IdentityError, Sp
 from ....core.identity.nif_iva import normalise_nif_iva
 from ....core.identity.tax_id import validate_spanish_tax_id
 from ....core.period import StandardPeriodCode
-from ....core.spanish_postcode import SPANISH_POSTCODE_PATTERN, SPANISH_PROVINCE_CODE_PATTERN
+from ....core.spanish_postcode import (
+    SPANISH_MUNICIPALITY_CODE_PATTERN,
+    SPANISH_POSTCODE_PATTERN,
+    SPANISH_PROVINCE_CODE_PATTERN,
+)
 from ....core.type_guards import is_object_mapping
 from .errors import RegistryValidationError
 
@@ -348,7 +352,7 @@ PostalCode = Annotated[str, BeforeValidator(_validate_postal_code)]
 """Five-digit Spanish postal code for the registry boundary."""
 
 
-_MUNICIPALITY_CODE_RE = re.compile(rf"^{SPANISH_PROVINCE_CODE_PATTERN}[0-9]{{3}}$")
+_MUNICIPALITY_CODE_RE = re.compile(SPANISH_MUNICIPALITY_CODE_PATTERN)
 
 
 @pydantic_validation_boundary

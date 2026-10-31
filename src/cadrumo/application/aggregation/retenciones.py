@@ -32,13 +32,13 @@ from ...core.aggregation import (
     RetencionScheme,
     WorkIncomeRetencionTreatment,
 )
-from ...core.errors.hierarchy import pydantic_validation_boundary
+from ...core.errors.hierarchy import CoreValidationError, pydantic_validation_boundary
 from ...core.identity.tax_id import TaxIdIdentityToken
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.parsing.dates import IsoDateString
 from ...core.period import Period
-from ...core.spanish_postcode import SpanishPostcode, SpanishProvinceCode
+from ...core.spanish_postcode import SPANISH_MUNICIPALITY_CODE_PATTERN, SpanishPostcode, SpanishProvinceCode
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ...domain.calculations.registry.form_codes import form_for_role, require_form_fit, resolve_form_codes
@@ -71,7 +71,7 @@ class Modelo180StructuredAddress(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     province_code: SpanishProvinceCode
-    municipality_code: str = Field(pattern=r"^\d{3}$")
+    municipality_code: str = Field(pattern=SPANISH_MUNICIPALITY_CODE_PATTERN)
     municipality: str = Field(min_length=1, max_length=64)
     locality: str = Field(min_length=1, max_length=64)
     postal_code: SpanishPostcode
@@ -86,6 +86,13 @@ class Modelo180StructuredAddress(BaseModel):
     floor: str = Field(default="", max_length=64)
     door: str = Field(default="", max_length=64)
     complement: str = Field(default="", max_length=64)
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _municipality_lies_in_the_province(self) -> Modelo180StructuredAddress:
+        if not self.municipality_code.startswith(self.province_code):
+            raise CoreValidationError("the municipality code must start with the province code")
+        return self
 
     @field_validator(
         "municipality",

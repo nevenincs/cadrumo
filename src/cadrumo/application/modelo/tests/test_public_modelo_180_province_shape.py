@@ -13,7 +13,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 def _address(**overrides: str) -> dict[str, str]:
     return {
         "province_code": "28",
-        "municipality_code": "079",
+        "municipality_code": "28079",
         "municipality": "Madrid",
         "locality": "Madrid",
         "postal_code": "28001",
@@ -27,7 +27,9 @@ def _address(**overrides: str) -> dict[str, str]:
 
 @pytest.mark.parametrize("province", ["01", "52"])
 def test_the_province_table_boundaries_are_admitted(province: str) -> None:
-    address = PublicModelo180Address.model_validate(_address(province_code=province, postal_code=f"{province}100"))
+    address = PublicModelo180Address.model_validate(
+        _address(province_code=province, municipality_code=f"{province}079", postal_code=f"{province}100")
+    )
     assert address.province_code == province
 
 

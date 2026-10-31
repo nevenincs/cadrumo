@@ -294,7 +294,7 @@ def _capture_m115_invoice_withholding() -> None:
             cadastral_reference="1234567VK4713C0001XY",
             address=Modelo180StructuredAddress(
                 province_code="28",
-                municipality_code="079",
+                municipality_code="28079",
                 municipality="Madrid",
                 locality="Madrid",
                 postal_code="28001",

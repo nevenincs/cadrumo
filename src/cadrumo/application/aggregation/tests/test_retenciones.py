@@ -63,7 +63,7 @@ def _property(key: str, cadastral_reference: str) -> Modelo180PropertyEvidence:
         withholding_percentage=Decimal("19.00"),
         address=Modelo180StructuredAddress(
             province_code="28",
-            municipality_code="079",
+            municipality_code="28079",
             municipality="Madrid",
             locality="Madrid",
             postal_code="28001",
@@ -518,7 +518,7 @@ class TestModelo180ProvinceAndPostcodeShape:
     def _address(**overrides: str) -> Modelo180StructuredAddress:
         fields = {
             "province_code": "28",
-            "municipality_code": "079",
+            "municipality_code": "28079",
             "municipality": "Madrid",
             "locality": "Madrid",
             "postal_code": "28001",
@@ -531,7 +531,12 @@ class TestModelo180ProvinceAndPostcodeShape:
 
     @pytest.mark.parametrize("province", ["01", "09", "10", "49", "50", "52"])
     def test_every_boundary_province_is_admitted(self, province: str) -> None:
-        assert self._address(province_code=province, postal_code=f"{province}001").province_code == province
+        assert (
+            self._address(
+                province_code=province, municipality_code=f"{province}079", postal_code=f"{province}001"
+            ).province_code
+            == province
+        )
 
     @pytest.mark.parametrize("province", ["00", "53", "99", "٢٨", "2", "028"])
     def test_a_province_outside_the_table_is_refused(self, province: str) -> None:
