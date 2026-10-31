@@ -127,7 +127,7 @@ async def test_an_out_of_range_year_is_refused_by_the_request_model_before_anyth
         async with WorkspaceHostApp(screen).run_test(size=(120, 60)) as pilot:
             await settle(pilot)
             assert _text(screen, "#ledger-flow-status") == tr("tui.ledger.registers.capital_goods.empty")
-            _fill(screen, year="2100")
+            _fill(screen, year="10000")
             await _press(pilot, screen, "register-review")
             assert screen.staged is None
             assert _text(screen, "#ledger-refusal")

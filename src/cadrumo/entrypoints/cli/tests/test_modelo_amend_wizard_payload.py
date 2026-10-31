@@ -81,7 +81,7 @@ def test_work_amend_wizard_result_round_trips_valid_row() -> None:
         ("filed_by", ""),
         ("filing_year", 0),
         ("filed_at", "not-a-timestamp"),
-        ("notes", "x" * 501),
+        ("notes", "x" * 513),
         ("status", "bogus"),
         ("kind", "bogus"),
         ("live_submission", "yes"),
