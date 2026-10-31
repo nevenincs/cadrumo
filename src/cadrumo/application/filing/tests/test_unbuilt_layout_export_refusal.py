@@ -12,48 +12,15 @@ from pathlib import Path
 
 import pytest
 
-from ....core.modelo import Modelo
-from ....core.payment_election import PaymentElection
-from ....core.prior_domiciliation_election import PriorDomiciliationElection
-from ....core.refund_election import RefundElection
-from ....core.result_disposition import ResultDisposition
 from ....domain.filing.errors import FilingExportError
 from ..export import export_draft
-from ..producer_snapshot import (
-    FilingElectionFacts,
-    Modelo111ProfileFacts,
-    PresenterIdentity,
-    TaxpayerIdentityFacts,
-    build_filing_producer_snapshot,
-)
-from .export_support import _approved_modelo_111_registry_draft, _schema_provider
+from .export_support import _approved_modelo_111_registry_draft, _schema_provider, _typed_producer_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 
 def test_a_modelo_with_no_export_layout_refuses_before_writing_output(tmp_path: Path) -> None:
-    snapshot = build_filing_producer_snapshot(
-        modelo=Modelo("111"),
-        taxpayer_tax_id="12345678Z",
-        taxpayer_identity=TaxpayerIdentityFacts(
-            legal_name=None,
-            given_name="Ana",
-            surnames="Prueba",
-            full_name="Ana Prueba",
-        ),
-        presenter=PresenterIdentity(tax_id="00000000T", full_name="Gestoría Prueba"),
-        model_profile=Modelo111ProfileFacts(colegio_concertado=False),
-        elections=FilingElectionFacts(
-            result_disposition=ResultDisposition.NEGATIVA,
-            payment=PaymentElection.INGRESO,
-            refund=RefundElection.COMPENSAR,
-            prior_domiciliation=PriorDomiciliationElection.KEEP,
-        ),
-        amendment_evidence=None,
-        refund_account=None,
-        charge_account=None,
-        m303_filing_facts=None,
-    )
+    snapshot = _typed_producer_snapshot()
     output = tmp_path / "unbuilt-layout-modelo-111.txt"
 
     # Assert the CONDITION -- a revision carrying no export layout -- rather than
