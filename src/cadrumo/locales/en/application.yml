@@ -1261,15 +1261,19 @@ application:
         not be worked out, so activity income may be understated.'
       disposal_unresolved_no_box: '{element}: the result of its baja on {date} could
         not be worked out, so no box carries it.'
+      disposal_zero_result: '{element}: its sale on {date}, at {transmission_value}
+        of transmission value against {net_value} of net value, neither gains nor
+        loses, so no box carries it.'
       instalment_free_gap: '{element}: no dotación is recorded from {start} to {end}.
         Its method leaves the amount to you, so it adds nothing to box {box}.'
       possibly_durable_expense: The ledger entry of {row_date} for {row_amount} deducts
         as a current expense, and its description reads like a long-term asset.
       register_cost_exceeds_paid: '{elements}: these assets state a cost of {cost},
         and the ledger entries they name paid {paid}.'
-      register_owned_acquisition_undated: '{element}: a ledger entry is its purchase, so it deducts through dotaciones rather than as an expense.'
       register_owned_acquisition: '{element}: the ledger entry of {row_date} for {row_amount}
         is its purchase, so it deducts through dotaciones rather than as an expense.'
+      register_owned_acquisition_undated: '{element}: a ledger entry is its purchase,
+        so it deducts through dotaciones rather than as an expense.'
       register_partly_accounted: '{elements}: the ledger entries of these assets declare
         a base of {base} and the assets account for {price}, so the remaining {remainder}
         deducts nothing.'
@@ -1279,9 +1283,10 @@ application:
         that no longer exist.'
       residence_period_unknown: No tax residence is recorded for {date}, so your assets
         count as if Modelos 100 and 130 apply.
-      row_unregistered_undated: 'A ledger entry records an asset your register does not hold.'
       row_unregistered: The ledger entry of {row_date} for {row_amount} records an
         asset your register does not hold.
+      row_unregistered_undated: A ledger entry records an asset your register does
+        not hold.
     calc_diagnostic_words:
       named_element: '"{name}"'
       unnamed_element: An asset with no name

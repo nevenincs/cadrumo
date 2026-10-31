@@ -1449,7 +1449,7 @@ desktop:
         acquisition_shape: A beszerzés módja
         allocation_provenance: Honnan származik a korábbi megosztás
         basis: Értékcsökkenési alap
-        basis_stage: Hogyan lett a tiéd
+        basis_stage: Mit fed le a költség
         building_construction_date: Az épület építésének napja
         business_use_share: Üzleti használat aránya
         charging_certificate: A telepítés igazolása
@@ -1488,6 +1488,8 @@ desktop:
         opening_amount: Már elszámolt értékcsökkenés
         opening_method: Korábban alkalmazott módszer
         opening_status: Értékcsökkenés a használatbavétel előtt
+        opening_status_hint: Válaszd az ismertet, ha be akarod írni, amit már levontál.
+          Új elemnél írj 0-t, a módszert és az évet pedig hagyd üresen.
         opening_through: Fedezett adóév vége
         other: Egyéb adat
         ownership_mode: A tulajdon módja
@@ -1638,6 +1640,9 @@ desktop:
         replaced: Helyettesítve
         stale_fix: Ez az értékcsökkenési leírás már nem egyezik a tervvel. Javítsd
           ki.
+        unrecorded_note: Egy év, amelyre nincs rögzített leírás, nem számít bele a
+          következő évekbe, így ezek a tervezett összegek az alapnál többet is kitehetnek,
+          amíg nem rögzíted őket.
       quarter: 130-as negyedév
       quarter_none: 130-as modell negyedéve nélkül
       refused: A nyilvántartás nem fogadta el.
@@ -2450,6 +2455,8 @@ desktop:
       close: Bezárás
       date_hint: Év-hónap-nap, pl. 2026-10-31
       failed: Ez nem sikerült
+      fill_to_continue: A folytatáshoz töltsd ki, ami fent még üres, a kért fájlokkal
+        együtt.
       'no': Nem
       none: Nincs
       percent_hint: '70%-hoz írd: 70'
@@ -4858,9 +4865,9 @@ ledger:
       intangible: Immateriális eszköz
       material: Tárgyi eszköz
     basis_stage:
-      business_allocated: A tevékenységhez rendelve
-      taxpayer_owned: Az adózó tulajdona, az üzleti használat előtt
-      whole_property: Teljes ingatlan
+      business_allocated: Csak a tevékenységedben használt rész
+      taxpayer_owned: A teljes kifizetett összeg, a magáncélú használat levonása előtt
+      whole_property: Egy teljes ingatlan, még nem bontva épületre, telekre és használatra
     claim_state:
       claimed: Elszámolva
       edition_unavailable: Nincsenek hivatalos táblázatok
@@ -5100,7 +5107,8 @@ ledger:
         módszer.'
       method_without_schedule_arithmetic: 'A Cadrumo ezt még nem támogatja: ez az
         értékcsökkenési módszer.'
-      modality_not_declared: Az adózói profil nem jelöl meg IRPF-becslési rendszert.
+      modality_not_declared: Először add meg az IRPF becslési rendet a profilodban.
+        Az értékcsökkenés ettől függ.
       modality_not_direct_estimation: 'A Cadrumo ezt még nem támogatja: a tevékenységi
         eszközök értékcsökkenése a közvetlen becslésen kívül.'
       multi_shift_not_enrolled: 'A Cadrumo ezt még nem támogatja: a RIS 4.2 cikk szerinti
@@ -5273,7 +5281,7 @@ ledger:
           election_reference: A választásod hivatkozása
           new_material_evidence_reference: A választás igazolása
         method: Módszer
-        regime: A közvetlen becslés módja
+        regime: IRPF becslési rend
         renewable_self_consumption:
           documentation_kind: A dokumentáció fajtája
           documentation_reference: A dokumentáció hivatkozása
@@ -5308,7 +5316,7 @@ ledger:
         ownership_mode: A tulajdon módja
         ownership_share: A te tulajdoni hányadod
         prior_allocation_provenance: Honnan származik a korábbi megosztás
-        stage: Hogyan lett a tiéd
+        stage: Mit fed le a költség
         total_area: Teljes terület (m²)
       building_construction_date: Az épület építésének napja
       declared_acquisition_date: A vásárlás napja

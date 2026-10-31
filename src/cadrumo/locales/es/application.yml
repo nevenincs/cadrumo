@@ -1338,6 +1338,9 @@ application:
         por debajo del real.'
       disposal_unresolved_no_box: '{element}: no se ha podido calcular el resultado
         de su baja el {date}, así que ninguna casilla lo recoge.'
+      disposal_zero_result: '{element}: su venta el {date}, con {transmission_value}
+        de valor de transmisión y {net_value} de valor neto, no da ganancia ni pérdida,
+        así que ninguna casilla la recoge.'
       instalment_free_gap: '{element}: no hay dotación registrada de {start} a {end}.
         Su método deja el importe a tu elección, así que no suma nada a la casilla
         {box}.'

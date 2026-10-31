@@ -1468,7 +1468,7 @@ desktop:
         acquisition_shape: Tipus d'adquisició
         allocation_provenance: D'on surt el repartiment anterior
         basis: Base amortitzable
-        basis_stage: Com va arribar a ser teu
+        basis_stage: Què cobreix el cost
         building_construction_date: Data de construcció de l'edifici
         business_use_share: Percentatge d'ús empresarial
         charging_certificate: Certificat de la instal·lació
@@ -1507,6 +1507,8 @@ desktop:
         opening_amount: Amortització ja deduïda
         opening_method: Mètode aplicat abans
         opening_status: Amortització anterior a l'entrada
+        opening_status_hint: Tria coneguda per escriure el que ja s'ha deduït. Per
+          a un element nou escriu 0 i deixa buits el mètode i l'any.
         opening_through: Coberta fins a l'exercici
         other: Una altra dada
         ownership_mode: Com és la titularitat
@@ -1658,6 +1660,9 @@ desktop:
         recorded_zero: Registrada com a zero
         replaced: Substituïda
         stale_fix: Aquesta dotació ja no coincideix amb el pla. Corregeix-la.
+        unrecorded_note: Un any sense dotació registrada no compta per als anys següents,
+          de manera que aquestes xifres previstes poden sumar més que la base fins
+          que les registris.
       quarter: Trimestre del model 130
       quarter_none: Sense trimestre del model 130
       refused: El registre no ho ha admès.
@@ -2469,6 +2474,8 @@ desktop:
       close: Tanca
       date_hint: Any-mes-dia, p. ex. 2026-10-31
       failed: No ha funcionat
+      fill_to_continue: Omple el que encara és buit a dalt per continuar, inclosos
+        els fitxers que demani.
       'no': 'No'
       none: Cap
       percent_hint: Escriu 70 per al 70 %
@@ -4876,9 +4883,9 @@ ledger:
       intangible: Immobilitzat intangible
       material: Immobilitzat material
     basis_stage:
-      business_allocated: Imputat a l'activitat
-      taxpayer_owned: Propietat del contribuent, abans de l'ús en l'activitat
-      whole_property: Immoble complet
+      business_allocated: Només la part usada a la teva activitat
+      taxpayer_owned: Tot el que vas pagar, abans d'apartar l'ús privat
+      whole_property: Un immoble sencer, sense separar encara construcció, sòl i ús
     claim_state:
       claimed: Registrada
       edition_unavailable: Sense taules oficials
@@ -5117,8 +5124,8 @@ ledger:
       method_without_resolver: 'Cadrumo encara no admet això: aquest mètode d''amortització.'
       method_without_schedule_arithmetic: 'Cadrumo encara no admet això: aquest mètode
         d''amortització.'
-      modality_not_declared: El perfil del contribuent no declara cap règim d'estimació
-        de l'IRPF.
+      modality_not_declared: Indica primer el teu règim d'estimació al perfil. L'amortització
+        en depèn.
       modality_not_direct_estimation: 'Cadrumo encara no admet això: l''amortització
         de l''immobilitzat de l''activitat fora de l''estimació directa.'
       multi_shift_not_enrolled: 'Cadrumo encara no admet això: el coeficient de diversos
@@ -5292,7 +5299,7 @@ ledger:
           election_reference: Referència de la teva elecció
           new_material_evidence_reference: Justificant de l'elecció
         method: Mètode
-        regime: Modalitat d'estimació directa
+        regime: Règim d'estimació
         renewable_self_consumption:
           documentation_kind: Tipus de documentació
           documentation_reference: Referència de la documentació
@@ -5329,7 +5336,7 @@ ledger:
         ownership_mode: Com és la titularitat
         ownership_share: La teva quota de l'immoble
         prior_allocation_provenance: D'on surt el repartiment anterior
-        stage: Com va arribar a ser teu
+        stage: Què cobreix el cost
         total_area: Superfície total (m²)
       building_construction_date: Data de construcció de l'edifici
       declared_acquisition_date: Data de compra

@@ -1428,7 +1428,7 @@ desktop:
         acquisition_shape: Kind of acquisition
         allocation_provenance: Where the earlier split comes from
         basis: Amortisable basis
-        basis_stage: How you came to own it
+        basis_stage: What the cost covers
         building_construction_date: Date the building was built
         business_use_share: Business use share
         charging_certificate: Installation certificate
@@ -1467,6 +1467,8 @@ desktop:
         opening_amount: Amortisation already deducted
         opening_method: Method used before
         opening_status: Amortisation before entry
+        opening_status_hint: Choose known to write what was already deducted. For
+          a new element write 0 and leave the method and year empty.
         opening_through: Covered through tax year
         other: Other detail
         ownership_mode: How you own it
@@ -1614,6 +1616,9 @@ desktop:
         recorded_zero: Recorded as zero
         replaced: Replaced
         stale_fix: This dotación no longer matches the plan. Correct it.
+        unrecorded_note: A year with no dotación recorded does not count towards the
+          years after it, so these planned figures can add up to more than the basis
+          until you record them.
       quarter: Modelo 130 quarter
       quarter_none: No Modelo 130 quarter
       refused: The register did not accept that.
@@ -2423,6 +2428,8 @@ desktop:
       close: Close
       date_hint: Year-month-day, e.g. 2026-10-31
       failed: That didn't work
+      fill_to_continue: Fill in what is still empty above to continue, including any
+        files it asks for.
       'no': 'No'
       none: None
       percent_hint: Write 70 for 70%
@@ -4795,9 +4802,9 @@ ledger:
       intangible: Intangible asset
       material: Tangible asset
     basis_stage:
-      business_allocated: Allocated to the activity
-      taxpayer_owned: Owned by the taxpayer, before business use
-      whole_property: Whole property
+      business_allocated: Only the part used in your activity
+      taxpayer_owned: Everything you paid, before setting aside private use
+      whole_property: A whole property, not yet split into building, land and use
     claim_state:
       claimed: Dotación recorded
       edition_unavailable: No official tables
@@ -5025,7 +5032,8 @@ ledger:
         method.'
       method_without_schedule_arithmetic: 'Cadrumo doesn''t support this yet: this
         amortisation method.'
-      modality_not_declared: The taxpayer profile declares no IRPF estimation regime.
+      modality_not_declared: Set your estimation regime in your profile first. Amortisation
+        depends on it.
       modality_not_direct_estimation: 'Cadrumo doesn''t support this yet: activity-asset
         amortisation outside direct estimation.'
       multi_shift_not_enrolled: 'Cadrumo doesn''t support this yet: the multi-shift
@@ -5188,7 +5196,7 @@ ledger:
           election_reference: Reference of your choice
           new_material_evidence_reference: Evidence of the election
         method: Method
-        regime: Direct estimation modality
+        regime: Estimation regime
         renewable_self_consumption:
           documentation_kind: Kind of documentation
           documentation_reference: Documentation reference
@@ -5213,7 +5221,7 @@ ledger:
       amount: Amount
       asset_kind: Kind
       basis:
-        basis_amount: Depreciable basis
+        basis_amount: Amortisable basis
         business_use_share: Business use share
         construction_cost: Cost of the building
         is_property: Is a property
@@ -5223,7 +5231,7 @@ ledger:
         ownership_mode: How you own it
         ownership_share: Your share of the property
         prior_allocation_provenance: Where the earlier split comes from
-        stage: How you came to own it
+        stage: What the cost covers
         total_area: Total area (m²)
       building_construction_date: Date the building was built
       declared_acquisition_date: Purchase date

@@ -522,7 +522,7 @@ _READS: dict[
         ActivityAssetListResult,
         ActivityAssetListProjection,
         ActivityAssetListExecutor,
-        ("rows",),
+        ("rows", "years", "default_year"),
         False,
     ),
     ACTIVITY_ASSET_PLAN_OPERATION_DEFINITION_ID: (

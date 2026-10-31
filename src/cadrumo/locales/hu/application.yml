@@ -1304,15 +1304,19 @@ application:
         nem számítható ki, ezért a tevékenység jövedelme a valósnál kisebb lehet.'
       disposal_unresolved_no_box: '{element}: a(z) {date} napi kivezetés eredménye
         nem számítható ki, ezért egyik mező sem tartalmazza.'
+      disposal_zero_result: '{element}: a(z) {date} napi eladás {transmission_value}
+        átruházási értékkel és {net_value} nettó értékkel sem nyereséget, sem veszteséget
+        nem eredményez, ezért egyik mezőbe sem kerül.'
       instalment_free_gap: '{element}: {start} és {end} között nincs rögzített értékcsökkenési
         leírás. A módszere rád bízza az összeget, ezért semmit sem ad a(z) {box} mezőhöz.'
       possibly_durable_expense: A(z) {row_date} napi, {row_amount} összegű tétel folyó
         költségként kerül levonásra, a leírása pedig tartós eszközre utal.
       register_cost_exceeds_paid: '{elements}: ezek az eszközök {cost} költséget adnak
         meg, a megnevezett tételek pedig {paid} összeget fizettek.'
-      register_owned_acquisition_undated: '{element}: egy könyvelt tétel a beszerzése, ezért ráfordítás helyett értékcsökkenéssel vonható le.'
       register_owned_acquisition: '{element}: a(z) {row_date} napi, {row_amount} összegű
         tétel a vásárlása, ezért értékcsökkenési leírással vonható le, nem költségként.'
+      register_owned_acquisition_undated: '{element}: egy könyvelt tétel a beszerzése,
+        ezért ráfordítás helyett értékcsökkenéssel vonható le.'
       register_partly_accounted: '{elements}: ezen eszközök tételei {base} alapot
         tartalmaznak, az eszközök pedig {price} összeget fednek le, ezért a fennmaradó
         {remainder} nem kerül levonásra.'
@@ -1322,9 +1326,10 @@ application:
         meg, amely már nem létezik.'
       residence_period_unknown: '{date} napra nincs rögzített adóügyi illetőség, ezért
         az eszközeid úgy számítanak, mintha a 100-as és 130-as modell lenne érvényes.'
-      row_unregistered_undated: 'Egy könyvelt tétel a nyilvántartásban nem szereplő eszközt rögzít.'
       row_unregistered: A(z) {row_date} napi, {row_amount} összegű tétel olyan eszközt
         rögzít, amely nincs a nyilvántartásodban.
+      row_unregistered_undated: Egy könyvelt tétel a nyilvántartásban nem szereplő
+        eszközt rögzít.
     calc_diagnostic_words:
       named_element: „{name}”
       unnamed_element: Névtelen eszköz

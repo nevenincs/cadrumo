@@ -1338,6 +1338,9 @@ application:
         quedar per sota del real.'
       disposal_unresolved_no_box: '{element}: no s''ha pogut calcular el resultat
         de la seva baixa el {date}, de manera que cap casella no el recull.'
+      disposal_zero_result: '{element}: la seva venda el {date}, amb {transmission_value}
+        de valor de transmissió i {net_value} de valor net, no dona ni guany ni pèrdua,
+        així que cap casella no la recull.'
       instalment_free_gap: '{element}: no hi ha dotació registrada de {start} a {end}.
         El seu mètode deixa l''import a la teva elecció, de manera que no suma res
         a la casella {box}.'
