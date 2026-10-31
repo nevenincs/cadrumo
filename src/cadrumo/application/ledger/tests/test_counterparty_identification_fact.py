@@ -21,7 +21,6 @@ it as an answer would let a note correction silently withdraw the registration.
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from typing import override
 
 import pytest
 
@@ -29,13 +28,13 @@ from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.iva.classification import resolve_iva_classification_catalogue
 from ....domain.iva.schema import EUMemberState, IvaTerritorialScope
 from ..counterparty_establishment import (
-    ConfirmedCounterpartyFacts,
     CounterpartyEstablishmentConflictError,
     forget_confirmed_counterparty_facts,
     record_confirmed_counterparty_facts,
     resolve_confirmed_counterparty_facts,
 )
 from ..counterparty_establishment_ports import CounterpartyEstablishmentRepositoryProtocol
+from .counterparty_establishment_support import InMemoryCounterpartyEstablishmentRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -45,29 +44,10 @@ _CIF = "B12345674"
 _DEFAULT_SCOPE = IvaTerritorialScope.from_registry("es_mainland")
 
 
-class _InMemoryCounterpartyEstablishmentRepository(CounterpartyEstablishmentRepositoryProtocol):
-    """Inward fake for the counterparty fact policy tests."""
-
-    def __init__(self) -> None:
-        self._records: dict[str, ConfirmedCounterpartyFacts] = {}
-
-    @override
-    def load(self, identifier: str) -> ConfirmedCounterpartyFacts | None:
-        return self._records.get(identifier)
-
-    @override
-    def save(self, payload: ConfirmedCounterpartyFacts) -> None:
-        self._records[payload.counterparty_key] = payload
-
-    @override
-    def delete(self, identifier: str) -> bool:
-        return self._records.pop(identifier, None) is not None
-
-
 @pytest.fixture
 def repository() -> CounterpartyEstablishmentRepositoryProtocol:
     """Return a fresh inward capability for each policy test."""
-    return _InMemoryCounterpartyEstablishmentRepository()
+    return InMemoryCounterpartyEstablishmentRepository()
 
 
 def _confirm(
@@ -142,7 +122,7 @@ def test_no_territory_ever_produces_an_identification(*, operation: PinnedAuthor
     for scope in resolve_iva_classification_catalogue(None, operation=operation).territorial_scopes:
         # A confirmed territory cannot be replaced in place, so each territory
         # is confirmed against its own store.
-        repository = _InMemoryCounterpartyEstablishmentRepository()
+        repository = InMemoryCounterpartyEstablishmentRepository()
         _confirm(repository, scope=scope)
         assert _resolve(repository).identification is None
 

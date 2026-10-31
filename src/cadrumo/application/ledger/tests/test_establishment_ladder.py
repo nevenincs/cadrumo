@@ -32,7 +32,6 @@ from __future__ import annotations
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from importlib import import_module
-from typing import override
 
 import pytest
 
@@ -56,7 +55,6 @@ from ....domain.iva.regime_legend import resolve_regime_legends
 from ....domain.iva.schema import EUMemberState, InvoiceKind, IvaTerritorialScope
 from ....tests.attribute_scope import scoped_attribute
 from ..counterparty_establishment import (
-    ConfirmedCounterpartyFacts,
     ConfirmedCounterpartyResolution,
     record_confirmed_counterparty_facts,
 )
@@ -76,6 +74,7 @@ from ..evidence_draft import counterparty_draft_side
 from ..invoice_draft_records import InvoiceDraft, InvoiceDraftLine, InvoiceDraftRateBreakdown
 from ..invoice_extraction_authority import default_invoice_extraction_period
 from ..regime_contradiction import draft_prints_a_repercutido_line
+from .counterparty_establishment_support import InMemoryCounterpartyEstablishmentRepository
 
 #: The defining module itself, for the attribute scoping below. Named through
 #: `import_module` rather than `from .. import`: the ledger package facade is
@@ -105,29 +104,10 @@ def _registry_legends(operation):
     return resolve_regime_legends(operation=operation, effective_date=period.end_date)
 
 
-class _InMemoryCounterpartyEstablishmentRepository(CounterpartyEstablishmentRepositoryProtocol):
-    """Inward fake for the establishment policy and routing tests."""
-
-    def __init__(self) -> None:
-        self._records: dict[str, ConfirmedCounterpartyFacts] = {}
-
-    @override
-    def load(self, identifier: str) -> ConfirmedCounterpartyFacts | None:
-        return self._records.get(identifier)
-
-    @override
-    def save(self, payload: ConfirmedCounterpartyFacts) -> None:
-        self._records[payload.counterparty_key] = payload
-
-    @override
-    def delete(self, identifier: str) -> bool:
-        return self._records.pop(identifier, None) is not None
-
-
 @pytest.fixture
 def repository() -> CounterpartyEstablishmentRepositoryProtocol:
     """Return a fresh inward capability for each ladder test."""
-    return _InMemoryCounterpartyEstablishmentRepository()
+    return InMemoryCounterpartyEstablishmentRepository()
 
 
 def _resolve(
