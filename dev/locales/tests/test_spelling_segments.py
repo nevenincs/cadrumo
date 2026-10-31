@@ -191,6 +191,7 @@ def test_complete_row_kind_list_requires_every_wire_discriminator_and_a_real_exa
         ("Model Context Protocol", "Protocol"),
         ("Portable Document Format", "Portable"),
         ("Open Financial Exchange", "Financial"),
+        ("Microsoft Excel Open XML", "Microsoft"),
         ("Advanced Encryption Standard", "Encryption"),
         ("Tom's Obvious Minimal Language", "Minimal"),
         ("hash-based message authentication code", "authentication"),
@@ -219,6 +220,7 @@ def test_standard_name_mutations_and_unpaired_product_words_stay_local(locale: s
     for value in (
         "hash-based message authentlcation code",
         "Google Cloudd",
+        "Microsoft Excel Openn XML",
         "Apple siliccon",
         "Apache Licensse",
         "Cloud",
@@ -525,6 +527,63 @@ def test_exact_spanish_tax_terms_own_their_words_only(locale: str) -> None:
     assert words_by_language("Read bienes de inversión and casillas misspeling", locale) == {
         locale: {"Read", "and", "misspeling"},
         "es": {"bienes", "de", "inversión", "casillas"},
+    }
+
+
+@pytest.mark.parametrize("locale", ["en", "ca", "hu"])
+@pytest.mark.parametrize(
+    "label",
+    [
+        "Retribuciones dinerarias",
+        "Resultado final",
+        "cuota íntegra",
+        "cuota líquida",
+        "cuota resultante",
+        "territorio común",
+        "operador intracomunitario",
+        "vivienda habitual",
+    ],
+)
+def test_parenthetical_official_labels_use_spanish_without_taking_surrounding_prose(locale: str, label: str) -> None:
+    assert words_by_language(f"prefix ({label}) misspeling", locale) == {
+        locale: {"prefix", "misspeling"},
+        "es": set(label.split()),
+    }
+
+
+def test_official_label_requires_parentheses_and_exact_spelling() -> None:
+    assert words_by_language("Resultado final misspeling") == {"en": {"Resultado", "final", "misspeling"}}
+    assert words_by_language("(Resultado finall) misspeling") == {
+        "en": {"Resultado", "finall", "misspeling"},
+    }
+    assert words_by_language("(label; Resultado final) misspeling") == {
+        "en": {"label", "misspeling"},
+        "es": {"Resultado", "final"},
+    }
+
+
+@pytest.mark.parametrize("locale", ["en", "ca", "hu"])
+@pytest.mark.parametrize("label", ["Ingreso", "A deducir", "Negativa"])
+def test_quoted_modelo_130_section_uses_spanish_without_taking_surrounding_prose(locale: str, label: str) -> None:
+    assert words_by_language(f'prefix "{label}" misspeling', locale) == {
+        locale: {"prefix", "misspeling"},
+        "es": set(label.split()),
+    }
+
+
+def test_modelo_130_section_requires_the_complete_quoted_label() -> None:
+    assert words_by_language('Ingreso "A deducirr" misspeling') == {
+        "en": {"Ingreso", "A", "deducirr", "misspeling"},
+    }
+
+
+def test_official_box_65_label_requires_its_percent_and_exact_spanish() -> None:
+    assert words_by_language('label "% atribuible a la Administración del Estado" misspeling') == {
+        "en": {"label", "misspeling"},
+        "es": {"atribuible", "a", "la", "Administración", "del", "Estado"},
+    }
+    assert words_by_language('label "% atribuible a la Administracióm del Estado" misspeling') == {
+        "en": {"label", "atribuible", "a", "la", "Administracióm", "del", "Estado", "misspeling"},
     }
 
 

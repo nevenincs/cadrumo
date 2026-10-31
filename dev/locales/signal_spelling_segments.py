@@ -41,11 +41,13 @@ _CATALAN_HYPHENATED_CLITIC_RE = re.compile(r"(?<![\w-])(?P<form>[Mm]antén-(?:lo
 # https://developer.apple.com/documentation/apple-silicon
 # https://developer.apple.com/help/account/certificates/create-developer-id-certificates
 # https://www.apache.org/licenses/LICENSE-2.0.html
+# https://learn.microsoft.com/en-us/connectors/excelonlinebusiness/
 _ENGLISH_REFERENCE_NAME_RE = re.compile(
     r"(?<!\w)(?:JSON Lines|VAT Information Exchange System|Model Context Protocol|"
     r"Portable Document Format|Open Financial Exchange|Advanced Encryption Standard|"
     r"Tom['’]s Obvious Minimal Language|hash-based message authentication code|"
-    r"Google Cloud|Google Sheets?|Apple silicon|Apple Developer ID|Apache License)(?!\w)"
+    r"Google Cloud|Google Sheets?|Apple silicon|Apple Developer ID|Apache License|"
+    r"Microsoft Excel Open XML)(?!\w)"
 )
 # Fact 0129-renta-ccaa-tax-residence-catalogue owns these region identities;
 # profile/schema and

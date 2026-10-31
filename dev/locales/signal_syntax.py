@@ -228,6 +228,20 @@ TRANSLATION_SPANISH_TAX_TERM_RE: Final[re.Pattern[str]] = re.compile(
     # labels, including the two attested English hyphenated label forms.
     # Component words stay in their surrounding language elsewhere; matched
     # labels still require Spanish dictionary recognition word by word.
+    # The official box labels and legal terms below are retained as complete
+    # parenthetical labels in the translated filing guides. Match the label,
+    # not the surrounding explanation or its individual common words.
+    # Modelo 100/303 dictionaries and the 349 operator declaration own them:
+    # https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2024.html
+    r"(?:(?<=\()|(?<=; ))(?:Retribuciones dinerarias|Resultado final|"
+    r"cuota (?:íntegra|líquida|resultante)|territorio común|operador intracomunitario|"
+    r"vivienda habitual)(?=\))|"
+    # The Modelo 130 instructions name these exact quoted filing sections.
+    # https://sede.agenciatributaria.gob.es/Sede/procedimientoini/GI34.shtml
+    r"(?<=[\"“«])(?:Ingreso|A deducir|Negativa)(?=[\"”»])|"
+    # Numbered box 65, retained after the percent sign in the 303 guide.
+    # https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IVA/IVA_2025/Imagenes/Cap_9_303_eu_es.pdf
+    r"(?<=% )atribuible a la Administración del Estado(?=[\"”»])|"
     r"(?:base (?:imponible|liquidable)|cuota devengada|régimen(?: |-)general|"
     r"régimen simplificado|régimen de atribución|régimen-de-atribución)(?![\w-])|"
     r"carácter social|entrega intracomunitaria|"
