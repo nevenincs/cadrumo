@@ -117,7 +117,7 @@ _NEW = {
 #: Each scenario is the draft a person types, over the common one.
 _CREATE: dict[str, dict[str, str]] = {
     "linear": {},
-    "linear_elected_coefficient": {"amortization.linear_coefficient": "10"},
+    "linear_elected_coefficient": {"amortization.linear_coefficient": "0.1"},
     "linear_used_known_price": {
         "acquired_condition": "used",
         "amortization.used_original_price.determination": "known",
@@ -132,8 +132,8 @@ _CREATE: dict[str, dict[str, str]] = {
     },
     "opening_amount_known": {"opening_amount": "500.00", "opening_through": "2026", "opening_method": "linear"},
     "opening_missing": {"opening_status": "missing", "opening_amount": ""},
-    "taxpayer_owned_basis": {"basis_stage": "taxpayer_owned", "business_use_share": "60"},
-    "constant_percentage": {"method": "constant_percentage", "amortization.linear_coefficient": "10"},
+    "taxpayer_owned_basis": {"basis_stage": "taxpayer_owned", "business_use_share": "0.6"},
+    "constant_percentage": {"method": "constant_percentage", "amortization.linear_coefficient": "0.1"},
     "sum_of_digits": {
         "method": "sum_of_digits",
         "amortization.sum_of_digits_period_years": "8",
@@ -187,7 +187,7 @@ _PROPERTY = {
     "construction_cost": "800.00",
     "land_cost": "200.00",
     "ownership_mode": "sole",
-    "ownership_share": "100",
+    "ownership_share": "1",
     "office_area": "30",
     "total_area": "100",
 }
@@ -241,7 +241,7 @@ _STATED: dict[str, dict[str, str]] = {
     "whole_property_fractional": {
         **_PROPERTY,
         "ownership_mode": "fractional_direct",
-        "ownership_share": "50",
+        "ownership_share": "0.5",
     },
     "vehicle": _VEHICLE,
     "multi_shift_hours": {"amortization.shift_hours_per_day": "16"},
@@ -251,10 +251,10 @@ _STATED: dict[str, dict[str, str]] = {
 _CORRECT: dict[str, dict[str, str]] = {
     "basis": {"basis_amount": "1000.00"},
     "in_service_date": {"in_service_date": "2026-07-01"},
-    "stage": {"basis_stage": "taxpayer_owned", "business_use_share": "75"},
-    "method_with_class_kept": {"method": "constant_percentage", "amortization.linear_coefficient": "10"},
+    "stage": {"basis_stage": "taxpayer_owned", "business_use_share": "0.75"},
+    "method_with_class_kept": {"method": "constant_percentage", "amortization.linear_coefficient": "0.1"},
     "opening": {"opening_amount": "300.00", "opening_through": "2026", "opening_method": "linear"},
-    "elected_coefficient": {"amortization.linear_coefficient": "9"},
+    "elected_coefficient": {"amortization.linear_coefficient": "0.09"},
     "vehicle_declaration": _VEHICLE,
     "shift_hours": {"amortization.shift_hours_per_day": "16"},
     "residual_value": {"residual_value": "10.00"},
