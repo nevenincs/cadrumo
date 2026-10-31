@@ -305,7 +305,12 @@ def shared_cohort(repo_root: Path = REPO_ROOT) -> SharedCohort:
             return cohort
         # A dead parent may leave a build subprocess using its work tree. The
         # key lock does not prove that child has stopped, so do not reap peers.
-        work = cache / var_scratch_name(SHARED_COHORT_WORK_FAMILY, f"{requested}-{uuid.uuid4().hex}")
+        # Keep the private work name independent of the 64-character cache key.
+        # Repeating it here pushes companion-project working directories past
+        # Windows' process-creation limit in nested checkouts. The PID and UUID
+        # still identify the owner and prevent concurrent work from colliding;
+        # the published entry keeps its complete content key.
+        work = cache / var_scratch_name(SHARED_COHORT_WORK_FAMILY, uuid.uuid4().hex)
         try:
             build_root = build_root_snapshot(repo_root, work)
             built = cohort_key(build_root, client_root=repo_root)
