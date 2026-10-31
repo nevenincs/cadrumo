@@ -120,7 +120,7 @@ review_status = "agent_reviewed"
 reviewed_at = 2026-08-13
 reviewed_by = "agent-prepared-pending-operator"
 notes = """\
-RDL 6/2024 anexo: listado de terminos municipales afectados por la DANA. Es la UNICA autoridad de la \
+RDL 6/2024 anexo: listado de terminos municipales afectados por la DANA. Es la ÚNICA autoridad de la \
 geografía; RDL 7/2024 art. 11 se remite a el en lugar de enumerar. El listado consolidado carga 78 \
 entradas. consolidated_as_of fecha esas bytes: el anexo es modificable por Acuerdo de Consejo de \
 Ministros conforme al art. 1 apartado 4, así que una lista sin fecha seria una instantanea \

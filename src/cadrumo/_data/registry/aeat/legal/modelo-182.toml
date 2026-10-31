@@ -66,7 +66,7 @@ effective_from = 2021-12-04
 review_status = "agent_reviewed"
 reviewed_at = 2026-10-01
 reviewed_by = "agent-prepared (corpus-grounded against the bundled BOE-A-2021-20004 articulo cuarto; pending operator re-stamp)"
-notes = "Articulo cuarto de la Orden HFP/1351/2021: modifica el anexo II de la Orden EHA/3021/2007 (modelo 182), campo NUMERO IDENTIFICATIVO DE LA DECLARACION ANTERIOR, posiciones 123-135 del registro de tipo 1. Es la ultima modificación del anexo II antes de la Orden HAC/1504/2024, según el análisis del BOE de BOE-A-2007-18192, y fija el diseño que AEAT publica como 182.pdf para los ejercicios 2021 a 2023."
+notes = "Articulo cuarto de la Orden HFP/1351/2021: modifica el anexo II de la Orden EHA/3021/2007 (modelo 182), campo NUMERO IDENTIFICATIVO DE LA DECLARACIÓN ANTERIOR, posiciones 123-135 del registro de tipo 1. Es la ultima modificación del anexo II antes de la Orden HAC/1504/2024, según el análisis del BOE de BOE-A-2007-18192, y fija el diseño que AEAT publica como 182.pdf para los ejercicios 2021 a 2023."
 required_text = [
     "Se modifica el campo «NÚMERO IDENTIFICATIVO DE LA DECLARACIÓN ANTERIOR», que ocupa las posiciones 123 a 135 del registro de tipo 1",
 ]
