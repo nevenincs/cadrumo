@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from collections.abc import Callable, Iterator
+from collections.abc import Callable, Generator, Iterator
 from contextlib import contextmanager
 from pathlib import Path
 
@@ -162,7 +162,7 @@ def invoke_native_profile_revealing(profile: NativeCliProfileFixture, *command: 
 
 
 @contextmanager
-def partial_taxpayer_invoker(tmp_path: Path, *, label: str) -> Iterator[Callable[[list[str]], Result]]:
+def partial_taxpayer_invoker(tmp_path: Path, *, label: str) -> Generator[Callable[[list[str]], Result]]:
     """Serve one native profile holding a partial Catalan taxpayer and yield a command runner bound to it."""
     with native_cli_profile_scope(tmp_path) as profile:
         profile.register(

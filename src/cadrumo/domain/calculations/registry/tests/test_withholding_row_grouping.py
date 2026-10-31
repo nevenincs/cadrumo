@@ -22,7 +22,7 @@ from ..withholding_bindings import (
     resolve_withholding_binding_row_values,
     resolve_withholding_binding_values,
 )
-from .withholding_observation_defaults import ZERO_INCAPACITY_AND_FORAL_FIELDS
+from .withholding_observation_defaults import zero_incapacity_and_foral_fields
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
@@ -322,7 +322,7 @@ def _observation(
         retencion_practicada=Decimal(withholding),
         province_code=province_code,
         territorial_deduction_clave=0,
-        **ZERO_INCAPACITY_AND_FORAL_FIELDS,
+        **zero_incapacity_and_foral_fields(),
     )
 
 

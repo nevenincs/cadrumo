@@ -5,6 +5,8 @@ from __future__ import annotations
 import asyncio
 from uuid import uuid4
 
+from pydantic import BaseModel
+
 from ...core.config import override_settings
 from ...core.operations import OperationEffect, OperationTerminalCondition
 from . import registered_executor_case_support as conformance
@@ -15,7 +17,7 @@ def assert_refused_for_foreign_active_profile(
     *,
     definition_id: str,
     subject_ref: str,
-    payload: object,
+    payload: BaseModel,
 ) -> None:
     """Submit with a different profile active and require a terminal refusal that recorded no effect."""
     with override_settings(cadrumo_active_profile=str(uuid4())):

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
 from uuid import UUID, uuid4
@@ -31,7 +31,7 @@ _PROFILE = UUID("3d2a9c41-7f5e-4b0a-9c1d-5e8f7a6b4c32")
 @contextmanager
 def _managed_artifacts(
     tmp_path: Path,
-) -> Iterator[
+) -> Generator[
     tuple[DriveFilesEndpoint, GoogleArtifactReceiptStore, str, ArtifactCreationReceipt, ManagedGoogleArtifacts]
 ]:
     """Open a profile, a Drive endpoint, the root folder receipt and a transport bound to them."""

@@ -274,7 +274,7 @@ async def _scroll_back_and_activate_without_editing(
 
 async def _return_from_column_finding(
     screen: ModeloWorkbenchScreen,
-    app: ScreenHostApp,
+    app: ScreenHostApp[None],
     listing: CasillaList,
     pilot: Pilot[None],
     key: tuple[str, str],

@@ -20,7 +20,7 @@ import pytest
 from .....core.aggregation import RetencionClave
 from ..withholding_bindings import WithholdingObservation
 from ..withholding_clave_breakdown import WithholdingClaveBreakdown, aggregate_withholding_by_clave
-from .withholding_observation_defaults import ZERO_INCAPACITY_AND_FORAL_FIELDS
+from .withholding_observation_defaults import zero_incapacity_and_foral_fields
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -46,7 +46,7 @@ def _obs(
         percibido_especie=Decimal(percibido_especie),
         retencion_practicada=Decimal(retencion_practicada),
         ingreso_a_cuenta=Decimal(ingreso_a_cuenta),
-        **ZERO_INCAPACITY_AND_FORAL_FIELDS,
+        **zero_incapacity_and_foral_fields(),
     )
 
 
