@@ -9,6 +9,7 @@ from datetime import UTC, datetime
 import pytest
 
 from ....core.config import Settings
+from ...tests._operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
 from ...workflow.state_models import WorkflowState
 from .. import operator_revocation as revocation
 from ..models import (
@@ -24,7 +25,6 @@ from ..operator_results import (
     AuthOperationScopeConflictError,
     CertificateSecretMutationInProgressError,
 )
-from ._operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
 from .certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

@@ -38,7 +38,6 @@ from ...application.modelo.operation_definitions import (
 )
 from ...application.modelo.operation_shared import MODELO_WORK_RENAME_OPERATION_DEFINITION_ID
 from ...application.modelo.operator_inputs import ModeloExportOperatorInput
-from ...application.modelo.tests.operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
 from ...application.modelo.verification_preconditions import ModeloVerificationResult
 from ...application.modelo.verification_projection import ModeloVerificationSnapshot
 from ...application.modelo.work_amend_contracts import (
@@ -65,6 +64,7 @@ from ...application.operations.capabilities import (
     OperationRequestStoragePolicy,
 )
 from ...application.operations.models import CredentialFreeOperationRequest
+from ...application.tests._operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
 from ...core.operations import OperationCancellation, OperationDurability, OperationEffect
 from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation

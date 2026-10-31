@@ -30,6 +30,7 @@ from ...live.tests.unopened_live_ports import unopened_browser_session_factory, 
 from ...operations.registry import OperationPublicContractSetV1
 from ...operator_actions.catalogue import OPERATOR_ACTION_CATALOGUE, ActionCatalogue, ActionCatalogueEntry
 from ...operator_actions.models import ActionReference
+from ...tests._operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
 from ...user_profile.censal_operation import (
     build_censal_operation_definition,
     build_censal_operation_registration,
@@ -65,7 +66,6 @@ from ..workspace import (
     aeat_sync_workspace_sources,
     project_aeat_sync_workspace,
 )
-from ._operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
 
 _OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
 

@@ -11,11 +11,11 @@ from pydantic import SecretStr, ValidationError
 from ....core.auth_provider import AuthProviderKind
 from ....core.config import override_settings
 from ...auth_credentials import ActiveCertificateCredentials
+from ...tests._operator_probe_fakes import fake_operator_probe_ports
 from ..auth_read_contracts import AuthReadProjection, AuthReadResult
 from ..credentials import ActiveAuthProjectionSnapshot
 from ..operator_probe_ports import CertificateHealthBand, CertificateHealthObservation, ClaveIdentityObservation
 from ..sync_readiness import AuthSyncReadiness, project_auth_sync_readiness
-from ._operator_probe_fakes import fake_operator_probe_ports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

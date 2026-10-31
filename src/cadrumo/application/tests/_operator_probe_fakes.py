@@ -1,4 +1,4 @@
-"""Inward operator-probe fakes for application tests."""
+"""Inward fakes for application operator-probe tests."""
 
 from __future__ import annotations
 
@@ -22,7 +22,9 @@ from ..auth.operator_probe_ports import (
 
 
 @dataclass
-class _ActiveProfileSession(ActiveProfileSessionPresencePort):
+class FakeActiveProfileSessionPresence(ActiveProfileSessionPresencePort):
+    """Report the explicitly selected session state to an application probe."""
+
     bound: bool = True
 
     @override
@@ -31,7 +33,9 @@ class _ActiveProfileSession(ActiveProfileSessionPresencePort):
 
 
 @dataclass
-class _CertificateHealth(CertificateHealthProbePort):
+class FakeCertificateHealthProbe(CertificateHealthProbePort):
+    """Return a caller-supplied application health result."""
+
     result: CertificateHealthProbeResult = field(
         default_factory=lambda: CertificateHealthObservation(
             severity=CertificateHealthBand.OK,
@@ -48,7 +52,9 @@ class _CertificateHealth(CertificateHealthProbePort):
 
 
 @dataclass
-class _ClaveIdentity(ClaveIdentityProbePort):
+class FakeClaveIdentityProbe(ClaveIdentityProbePort):
+    """Return translated identity facts without importing the Cl@ve adapter."""
+
     result_by_raw: dict[str, ClaveIdentityProbeResult] = field(default_factory=dict)
     default_kind: str = "DNI"
 
@@ -70,7 +76,7 @@ def fake_operator_probe_ports(
     clave_identity_results: Mapping[str, ClaveIdentityProbeResult] | None = None,
 ) -> OperatorProbePorts:
     """Build a complete inward fake bundle for an application test."""
-    clave_probe = _ClaveIdentity()
+    clave_probe = FakeClaveIdentityProbe()
     if clave_identity is not None:
         clave_probe.default_kind = (
             clave_identity.kind if isinstance(clave_identity, ClaveIdentityObservation) else "DNI"
@@ -78,8 +84,8 @@ def fake_operator_probe_ports(
     if clave_identity_results is not None:
         clave_probe.result_by_raw.update(clave_identity_results)
     return OperatorProbePorts(
-        active_profile_session=_ActiveProfileSession(active_profile_session_bound),
-        certificate_health=_CertificateHealth(
+        active_profile_session=FakeActiveProfileSessionPresence(active_profile_session_bound),
+        certificate_health=FakeCertificateHealthProbe(
             result=certificate_health
             if certificate_health is not None
             else CertificateHealthObservation(
@@ -92,4 +98,9 @@ def fake_operator_probe_ports(
     )
 
 
-__all__ = ["fake_operator_probe_ports"]
+__all__ = [
+    "FakeActiveProfileSessionPresence",
+    "FakeCertificateHealthProbe",
+    "FakeClaveIdentityProbe",
+    "fake_operator_probe_ports",
+]

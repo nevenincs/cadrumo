@@ -20,12 +20,12 @@ from ....core.auth_provider import AuthProviderKind
 from ....core.bucket_pointer import BucketPointer, write_pointer
 from ....core.config import load_settings, override_settings
 from ....core.errors.error_codes import get_registered_error_code, resolve_error_message
+from ...tests._operator_probe_fakes import fake_operator_probe_ports
+from ...tests._operator_scope_fakes import build_inward_operator_scope_ports
 from ..operator_probes import probe_local_session
 from ..operator_results import AuthOperationRequiresCustodySessionError
 from ..operator_scope import active_profile_storage_span
 from ..operator_scope_ports import OperatorScopeSession
-from ._operator_probe_fakes import fake_operator_probe_ports
-from ._operator_scope_fakes import build_inward_operator_scope_ports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 

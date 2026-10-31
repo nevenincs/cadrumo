@@ -27,8 +27,6 @@ from cadrumo.application.auth.provider_configure_operation_access import (
     AuthConfigurePublicResultV2,
     project_auth_configure_result,
 )
-from cadrumo.application.auth.tests._operator_probe_fakes import fake_operator_probe_ports
-from cadrumo.application.auth.tests._operator_scope_fakes import build_inward_operator_scope_ports
 from cadrumo.application.auth.tests.certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
 from cadrumo.application.operations.access_resolution import OperationAccessContext, resolve_operation_access
 from cadrumo.application.operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
@@ -38,6 +36,8 @@ from cadrumo.application.operations.registry import (
     OperationPublicDefinitionRegistrationV1,
     OperationRegistry,
 )
+from cadrumo.application.tests._operator_probe_fakes import fake_operator_probe_ports
+from cadrumo.application.tests._operator_scope_fakes import build_inward_operator_scope_ports
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.core.auth_provider import AuthProviderKind
 from cadrumo.core.config import Settings

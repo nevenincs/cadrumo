@@ -61,11 +61,11 @@ from ...operations.models import OperationIdentity, OperationRequest, OperationT
 from ...operations.owner import OperationExecutorContext
 from ...operations.person_acts import operation_is_persons_act
 from ...operations.registry import OperationFrontendProjection, OperationRegistry
+from ...tests._operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from .. import sede_view_operation as module
 from ..sede_view_ports import SedeViewBrowser, SedeViewEnd, SedeViewOpening, SedeViewSignIn
 from .borrador_100_operation_support import PROFILE_ID, policy_decision
-from .operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
 from .unopened_live_ports import unopened_browser_session_factory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
