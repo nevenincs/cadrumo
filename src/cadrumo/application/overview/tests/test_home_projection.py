@@ -129,17 +129,8 @@ def test_selected_profile_posture_requires_a_label() -> None:
         HomeAccountSession(posture=HomeSessionPosture.ACTIVE)
 
 
-def test_local_agenda_survives_when_aeat_evidence_was_never_captured() -> None:
-    agenda = HomeAgendaEntry(
-        modelo="303",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "3T"),
-        due_on=date(2026, 10, 20),
-        period_state=OverviewPeriodState.DUE,
-        local_filing_state=OverviewLocalFilingState.READY_TO_FILE,
-        aeat_submission_state=OverviewAeatSubmissionState.NOT_OBSERVED,
-    )
-    projection = HomeProjectionV1(
+def _never_captured_projection(agenda: HomeAgendaEntry) -> HomeProjectionV1:
+    return HomeProjectionV1(
         generated_at=_NOW,
         account=HomeAccountSession(posture=HomeSessionPosture.ACTIVE, profile_label="Example profile"),
         actions_state=_AVAILABLE,
@@ -155,6 +146,19 @@ def test_local_agenda_survives_when_aeat_evidence_was_never_captured() -> None:
         messages_state=_AVAILABLE,
         messages_requiring_attention=0,
     )
+
+
+def test_local_agenda_survives_when_aeat_evidence_was_never_captured() -> None:
+    agenda = HomeAgendaEntry(
+        modelo="303",
+        filing_year=2026,
+        period=Period.from_year_and_code(2026, "3T"),
+        due_on=date(2026, 10, 20),
+        period_state=OverviewPeriodState.DUE,
+        local_filing_state=OverviewLocalFilingState.READY_TO_FILE,
+        aeat_submission_state=OverviewAeatSubmissionState.NOT_OBSERVED,
+    )
+    projection = _never_captured_projection(agenda)
 
     assert projection.agenda == (agenda,)
     assert projection.agenda_evidence_state.availability is HomeAvailability.NEVER_CAPTURED
@@ -247,22 +251,7 @@ def test_never_captured_aeat_evidence_refuses_an_observed_submission() -> None:
         aeat_submission_state=OverviewAeatSubmissionState.ACCEPTED,
     )
     with pytest.raises(ValidationError, match="cannot claim AEAT submission"):
-        HomeProjectionV1(
-            generated_at=_NOW,
-            account=HomeAccountSession(posture=HomeSessionPosture.ACTIVE, profile_label="Example profile"),
-            actions_state=_AVAILABLE,
-            declarations_state=_AVAILABLE,
-            ledger_state=_AVAILABLE,
-            ledger=HomeLedgerReadiness(entries=0, requiring_review=0, unclassified=0, missing_evidence=0),
-            agenda_state=_AVAILABLE,
-            agenda_evidence_state=HomeZoneState(
-                availability=HomeAvailability.NEVER_CAPTURED,
-                reason_code="aeat.never_captured",
-            ),
-            agenda=(agenda,),
-            messages_state=_AVAILABLE,
-            messages_requiring_attention=0,
-        )
+        _never_captured_projection(agenda)
 
 
 def test_non_available_messages_cannot_claim_a_zero_count() -> None:
