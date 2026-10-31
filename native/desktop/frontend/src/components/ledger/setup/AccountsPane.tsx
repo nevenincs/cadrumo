@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { BicEditor } from "@/components/editors/BicEditor";
 import { CountryEditor } from "@/components/editors/CountryEditor";
 import { CurrencyEditor } from "@/components/editors/CurrencyEditor";
@@ -16,6 +16,8 @@ import {
 import { Icon } from "@/components/ui/icon";
 import { IconButton } from "@/components/ui/icon-button";
 import { facts } from "@/shell/compose";
+import { useFieldSuggestions } from "../suggestions/SuggestionsProvider";
+import { usedCodeOptions } from "../suggestions/ledgerSuggestions";
 import { ownAccountChange, type OwnAccountChange } from "../../../shell/ledger";
 import { parseIsoDate } from "../../../shell/ledgerGrammar";
 import type {
@@ -130,6 +132,11 @@ export function AccountsPane({ port, reader, locale }: SetupProps) {
   const [modelo, setModelo] = useState("");
 
   const listed = read?.kind === "done" ? read.result : null;
+  const currencies = useFieldSuggestions("currency");
+  const designated = useMemo(
+    () => usedCodeOptions((listed?.designations ?? []).map((d) => d.modelo)),
+    [listed],
+  );
   const open = (next: Form | null) => {
     write.clear();
     setForm(next);
@@ -532,6 +539,7 @@ export function AccountsPane({ port, reader, locale }: SetupProps) {
             describedBy={control.describedBy}
             required={form?.kind === "add"}
             maxLength={64}
+            autoComplete="new-password"
             secret
           />
         )}
@@ -545,6 +553,7 @@ export function AccountsPane({ port, reader, locale }: SetupProps) {
             invalid={control.invalid}
             describedBy={control.describedBy}
             maxLength={16}
+            autoComplete="new-password"
             secret
           />
         )}
@@ -554,6 +563,7 @@ export function AccountsPane({ port, reader, locale }: SetupProps) {
         value={secrets.bank_name}
         onValue={secret("bank_name")}
         type="password"
+        autoComplete="new-password"
         hint={t("desktop.ledger.accounts.bank_hint")}
         maxLength={70}
       />
@@ -562,6 +572,7 @@ export function AccountsPane({ port, reader, locale }: SetupProps) {
         value={secrets.bank_address}
         onValue={secret("bank_address")}
         type="password"
+        autoComplete="new-password"
         maxLength={35}
       />
       <TextField
@@ -569,6 +580,7 @@ export function AccountsPane({ port, reader, locale }: SetupProps) {
         value={secrets.bank_city}
         onValue={secret("bank_city")}
         type="password"
+        autoComplete="new-password"
         maxLength={30}
       />
       <EditorField label={t("desktop.ledger.accounts.bank_country")}>
@@ -580,6 +592,7 @@ export function AccountsPane({ port, reader, locale }: SetupProps) {
             invalid={control.invalid}
             describedBy={control.describedBy}
             maxLength={2}
+            autoComplete="new-password"
             secret
           />
         )}
@@ -691,6 +704,7 @@ export function AccountsPane({ port, reader, locale }: SetupProps) {
                     describedBy={control.describedBy}
                     maxLength={3}
                     required
+                    {...currencies}
                   />
                 )}
               </EditorField>
@@ -779,6 +793,7 @@ export function AccountsPane({ port, reader, locale }: SetupProps) {
                     describedBy={control.describedBy}
                     maxLength={3}
                     inputMode="numeric"
+                    suggestions={designated}
                   />
                 )}
               </EditorField>

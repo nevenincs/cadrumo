@@ -207,6 +207,9 @@ function SecretForm({
   const needsAddress = gateway && !provider.defaultBaseUrl;
   const [address, setAddress] = useState(provider.baseUrl ?? "");
   const held = !filled || (needsAddress && address.trim() === "") || saving;
+  const defaults = provider.defaultBaseUrl
+    ? [{ value: provider.defaultBaseUrl, label: provider.defaultBaseUrl }]
+    : null;
 
   const save = (event: FormEvent) => {
     event.preventDefault();
@@ -232,7 +235,7 @@ function SecretForm({
           ref={secret}
           id={secretId}
           type="password"
-          autoComplete="off"
+          autoComplete="new-password"
           spellCheck={false}
           autoCapitalize="off"
           autoCorrect="off"
@@ -254,6 +257,8 @@ function SecretForm({
             value={address}
             onChange={setAddress}
             required={needsAddress}
+            suggestions={defaults}
+            opensEmpty
           />
           <FieldDescription>
             {provider.defaultBaseUrl

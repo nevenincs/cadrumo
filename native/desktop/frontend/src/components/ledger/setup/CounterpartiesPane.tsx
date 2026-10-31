@@ -6,6 +6,7 @@ import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { facts } from "@/shell/compose";
+import { useFieldSuggestions } from "../suggestions/SuggestionsProvider";
 import type { LedgerCounterpartyResult } from "../../../shell/ledgerSetup";
 import { useStrings } from "../../../shell/strings";
 import { WriteHold, type Landing } from "../WritePause";
@@ -54,6 +55,9 @@ export function CounterpartiesPane({ port, locale }: SetupProps) {
   // A form with anything typed into it that is not yet written.
   useSetupDraft([country, scope, state, note].some(Boolean));
   const write = useSetupWrite(t("desktop.ledger.counterparty.title"));
+  const taxIds = useFieldSuggestions("party_tax_id");
+  const countries = useFieldSuggestions("country");
+  const states = useFieldSuggestions("state");
 
   const view = async (id = taxId) => {
     setViewed(
@@ -165,6 +169,8 @@ export function CounterpartiesPane({ port, locale }: SetupProps) {
               invalid={control.invalid}
               describedBy={control.describedBy}
               maxLength={256}
+              {...taxIds}
+              onPick={(picked) => void view(picked.value)}
             />
           )}
         </EditorField>
@@ -234,6 +240,7 @@ export function CounterpartiesPane({ port, locale }: SetupProps) {
                   describedBy={control.describedBy}
                   maxLength={2}
                   required
+                  {...countries}
                 />
               )}
             </EditorField>
@@ -259,6 +266,7 @@ export function CounterpartiesPane({ port, locale }: SetupProps) {
                   invalid={control.invalid}
                   describedBy={control.describedBy}
                   maxLength={2}
+                  {...states}
                 />
               )}
             </EditorField>

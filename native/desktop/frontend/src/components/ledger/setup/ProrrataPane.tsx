@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { MoneyEditor } from "@/components/editors/MoneyEditor";
 import { PercentEditor } from "@/components/editors/PercentEditor";
 import { TextEditor } from "@/components/editors/TextEditor";
@@ -19,6 +19,7 @@ import { useStrings } from "../../../shell/strings";
 import { WriteHold, type Landing, type LandingCheck } from "../WritePause";
 import { formatAmount, formatPercent } from "../../../shared/numbers";
 import { PeriodSelector } from "../PeriodSelector";
+import { listOptions, textOptions } from "../suggestions/setupSuggestions";
 import {
   CallLine,
   ChoiceField,
@@ -109,6 +110,25 @@ export function ProrrataPane({
   );
 
   const register = read?.kind === "done" ? read.result : null;
+  const references = useMemo(
+    () =>
+      textOptions(
+        (register?.entries ?? []).map((entry) => entry.authorisation_reference),
+      ),
+    [register],
+  );
+  const evidences = useMemo(
+    () =>
+      textOptions(
+        (register?.entries ?? []).map(
+          (entry) => entry.especial_transition?.evidence_reference ?? null,
+        ),
+      ),
+    [register],
+  );
+  const usedCodes = (register?.sectors ?? []).flatMap(
+    (found) => found.member_activity_codes,
+  );
   const choose = (next: Action) => {
     write.clear();
     setAction(action === next ? null : next);
@@ -435,6 +455,7 @@ export function ProrrataPane({
             onChange={setReference}
             invalid={control.invalid}
             describedBy={control.describedBy}
+            suggestions={references}
           />
         )}
       </EditorField>
@@ -563,6 +584,7 @@ export function ProrrataPane({
                       onChange={setCodes}
                       invalid={control.invalid}
                       describedBy={control.describedBy}
+                      suggestions={listOptions(usedCodes, codes, ",")}
                     />
                   )}
                 </EditorField>
@@ -584,6 +606,7 @@ export function ProrrataPane({
                     onChange={setEvidence}
                     invalid={control.invalid}
                     describedBy={control.describedBy}
+                    suggestions={evidences}
                     required={action === "revoke_especial"}
                   />
                 )}

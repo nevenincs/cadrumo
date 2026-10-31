@@ -28,6 +28,7 @@ import {
   categoryOption,
   classificationLabel,
 } from "../movements/movementWords";
+import { descriptionWords, listOptions } from "../suggestions/setupSuggestions";
 import { EditorField } from "./EditorField";
 import { CallLine, ChoiceField, useSetupRead } from "./SetupParts";
 import {
@@ -129,6 +130,7 @@ export function RuleDialog({
 }) {
   const t = useStrings();
   const ids = useId();
+  const heldWords = useMemo(() => rows && descriptionWords(rows), [rows]);
   const byId = useMemo(
     () =>
       new Map((rows ?? []).map((row) => [row.transaction.transaction_id, row])),
@@ -348,6 +350,7 @@ export function RuleDialog({
                   onChange={setWords}
                   invalid={control.invalid}
                   describedBy={control.describedBy}
+                  suggestions={heldWords && listOptions(heldWords, words, " ")}
                   required
                   autoFocus
                 />
