@@ -37,16 +37,13 @@ import pytest
 
 from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 from cadrumo.application.calculations.binding_prefill import resolve_bindings_from_local_store
-from cadrumo.application.calculations.observations_repository import ResultDispositionProjection
-from cadrumo.core.result_disposition import ResultDisposition
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation
-from .....domain.calculations.registry.tests.registry_observations import revision_id_for_observation
 from ...storage.tests.secure_sql import isolated_runtime_profile
 from ..calculation_observations import CalculationObservationRepository
-from .modelo_303_carry_support import calculate_303, registry_observation
+from .modelo_303_carry_support import calculate_303, save_compensacion_filing
 from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -111,21 +108,7 @@ def _run_carry_chain(
             relation_values={},
         )
         carried_saldo = result_n.values[_SALDO_CASILLA]
-        obs_repo.save(
-            obs_repo.prepare_observation_envelope(
-                registry_observation(filing_year=_YEAR_N, period="4T", result=result_n),
-                source_kind="app_filing",
-                result_disposition=ResultDispositionProjection(
-                    disposition=ResultDisposition.COMPENSACION,
-                    provenance_kind="app_filing",
-                    provenance_locator="test-local-filing:compensacion-carry",
-                ),
-                captured_at=_CLOCK,
-                stamped_revision_id=revision_id_for_observation(
-                    registry_observation(filing_year=_YEAR_N, period="4T", result=result_n)
-                ),
-            )
-        )
+        save_compensacion_filing(obs_repo, filing_year=_YEAR_N, period="4T", result=result_n, captured_at=_CLOCK)
 
         snapshot_n1 = published_authority_operation().snapshot(_MODELO, filing_year=_YEAR_N_PLUS_1, period="1T")
         resolved = _resolve_carry_from_local_store(snapshot_n1, repository=obs_repo, operation=operation)

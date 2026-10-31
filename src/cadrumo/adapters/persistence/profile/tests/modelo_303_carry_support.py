@@ -3,16 +3,20 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from datetime import date
+from datetime import date, datetime
 from decimal import Decimal
 
+from .....application.calculations.observations_repository import ResultDispositionProjection
+from .....core.result_disposition import ResultDisposition
 from .....domain.calculations.registry.bindings import (
     RegistryModeloObservation,
     resolve_available_bound_inputs_by_casilla_id,
 )
 from .....domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from .....domain.calculations.registry.ids import RelationId
+from .....domain.calculations.registry.tests.registry_observations import revision_id_for_observation
 from .....domain.calculations.registry.tests.relation_fixture import relation_prefill_values_as_binding_values
+from ..calculation_observations import CalculationObservationRepository
 from .published_authority_support import published_authority_operation
 
 __all__ = [
@@ -23,6 +27,7 @@ __all__ = [
     "STATE_ATTRIBUTION_RATIO_BINDING",
     "calculate_303",
     "registry_observation",
+    "save_compensacion_filing",
 ]
 
 MODELO = "303"
@@ -117,4 +122,29 @@ def registry_observation(
         filing_year=filing_year,
         period=period,
         observations=result.observations,
+    )
+
+
+def save_compensacion_filing(
+    repository: CalculationObservationRepository,
+    *,
+    filing_year: int,
+    period: str,
+    result: RegistryCalculationResult,
+    captured_at: datetime,
+) -> None:
+    """Persist a local app filing whose disposition is a compensation carry."""
+    observation = registry_observation(filing_year=filing_year, period=period, result=result)
+    repository.save(
+        repository.prepare_observation_envelope(
+            observation,
+            source_kind="app_filing",
+            result_disposition=ResultDispositionProjection(
+                disposition=ResultDisposition.COMPENSACION,
+                provenance_kind="app_filing",
+                provenance_locator="test-local-filing:compensacion-carry",
+            ),
+            captured_at=captured_at,
+            stamped_revision_id=revision_id_for_observation(observation),
+        )
     )

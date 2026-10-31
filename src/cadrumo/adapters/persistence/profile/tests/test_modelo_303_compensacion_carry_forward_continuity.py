@@ -70,7 +70,6 @@ from .....domain.calculations.registry.bindings import (
 )
 from .....domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from .....domain.calculations.registry.ids import RelationId
-from .....domain.calculations.registry.tests.registry_observations import revision_id_for_observation
 from .....domain.calculations.registry.tests.relation_fixture import relation_prefill_values_as_binding_values
 from ...storage.sql.engine import get_engine
 from ...storage.sql.orm import SecureObjectRow
@@ -85,6 +84,7 @@ from .modelo_303_carry_support import (
     LEDGER_CUOTA_BINDINGS,
     STATE_ATTRIBUTION_RATIO_BINDING,
     registry_observation,
+    save_compensacion_filing,
 )
 from .published_authority_support import published_authority_operation
 
@@ -411,21 +411,7 @@ def test_year_n_plus_1_1t_casilla_110_auto_resolves_from_prior_year_4t(tmp_path:
             relation_values={},
         )
         carried_saldo = result_n.values[_M303_SALDO_COMPENSACION_CASILLA]
-        obs_repo.save(
-            obs_repo.prepare_observation_envelope(
-                registry_observation(filing_year=_YEAR_N, period="4T", result=result_n),
-                source_kind="app_filing",
-                result_disposition=ResultDispositionProjection(
-                    disposition=ResultDisposition.COMPENSACION,
-                    provenance_kind="app_filing",
-                    provenance_locator="test-local-filing:compensacion-carry",
-                ),
-                captured_at=_CLOCK,
-                stamped_revision_id=revision_id_for_observation(
-                    registry_observation(filing_year=_YEAR_N, period="4T", result=result_n)
-                ),
-            )
-        )
+        save_compensacion_filing(obs_repo, filing_year=_YEAR_N, period="4T", result=result_n, captured_at=_CLOCK)
 
         snapshot_n1 = published_authority_operation().snapshot(_MODELO, filing_year=_YEAR_N_PLUS_1, period="1T")
         resolved = _resolve_carry_from_local_store(
@@ -462,21 +448,7 @@ def test_modelo_303_compensacion_carry_enrolls_two_renta_years(tmp_path: Path) -
             relation_values={},
         )
         carried_saldo = result_n.values[_M303_SALDO_COMPENSACION_CASILLA]
-        obs_repo.save(
-            obs_repo.prepare_observation_envelope(
-                registry_observation(filing_year=_YEAR_N, period="4T", result=result_n),
-                source_kind="app_filing",
-                result_disposition=ResultDispositionProjection(
-                    disposition=ResultDisposition.COMPENSACION,
-                    provenance_kind="app_filing",
-                    provenance_locator="test-local-filing:compensacion-carry",
-                ),
-                captured_at=_CLOCK,
-                stamped_revision_id=revision_id_for_observation(
-                    registry_observation(filing_year=_YEAR_N, period="4T", result=result_n)
-                ),
-            )
-        )
+        save_compensacion_filing(obs_repo, filing_year=_YEAR_N, period="4T", result=result_n, captured_at=_CLOCK)
 
         # Year N+1 — 1T: the carry resolves from the local store (cross-renta
         # wrap), lands in casilla 110, and a real calculation runs with it.
