@@ -14,18 +14,13 @@ from cadrumo_client.commands.errors import CliRefusedBoundaryError
 from cadrumo_client.commands.registered_operation_contracts import RegisteredOperationCompletion
 from cadrumo_client.contracts.contracts import RefusalCode
 
-from ....application.live.filed_single_capture_operation import (
-    FiledCaptureNoticeV1,
-    FiledReconciliationNoticeV1,
-    FiledReconciliationV1,
-)
 from ....application.live.filed_source_capture_operation import (
     FILED_SOURCE_CAPTURE_DEFINITION_ID,
     FiledSourceCapturePublicResultV1,
     FiledSourceCaptureRequest,
 )
 from ....application.modelo.filing_chain_reconciliation import FilingReconciliationOutcome
-from ....core.json_contract import Notice, NoticeSeverity
+from ....core.json_contract import Notice
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....core.period import Period
 from .. import app_live_commands as handler
@@ -34,6 +29,7 @@ from .. import operation_profile_operation as profile_operation
 from .._profile_authentication_gate import _uses_profile_connection
 from ..app_live_filed_results import FiledCaptureSourcesResult
 from ..command_specs import COMMAND_GRAPH
+from .filed_capture_projection_support import confirmed_reconciliation, incomplete_receipt_notice
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -61,34 +57,8 @@ def _projection() -> FiledSourceCapturePublicResultV1:
         casilla_count=2,
         calculation_observation_count=2,
         calculation_observation_keys=("observation-1", "observation-2"),
-        evidence_notices=(
-            FiledCaptureNoticeV1(
-                severity=NoticeSeverity.WARNING,
-                code="live.filed.capture_test",
-                message="Receipt metadata was incomplete",
-                context=(("reason", "unavailable"),),
-            ),
-        ),
-        reconciliations=(
-            FiledReconciliationV1(
-                outcome=FilingReconciliationOutcome.CONFIRMED.value,
-                bucket_id=str(_PROFILE),
-                modelo="303",
-                filing_year=2024,
-                period="4T",
-                member_nif="X1234567A",
-                filing_record_id="record-1",
-                affected_filing_record_ids=("record-2", "record-3"),
-                differing_casilla_ids=("casilla.a", "casilla.b"),
-                evidence_basis="casillas",
-                notices=(
-                    FiledReconciliationNoticeV1(
-                        code="receipt_totals_only",
-                        context=(("reason", "receipt"),),
-                    ),
-                ),
-            ),
-        ),
+        evidence_notices=(incomplete_receipt_notice(),),
+        reconciliations=(confirmed_reconciliation(bucket_id=str(_PROFILE), filing_year=2024, period="4T"),),
     )
 
 

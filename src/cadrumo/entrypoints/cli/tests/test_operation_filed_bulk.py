@@ -23,8 +23,6 @@ from ....application.live.filed_bulk_capture_operation import (
 )
 from ....application.live.filed_single_capture_operation import (
     FiledCaptureNoticeV1,
-    FiledReconciliationNoticeV1,
-    FiledReconciliationV1,
 )
 from ....application.live.remote_state_models import FiledCapturePairOutcome
 from ....application.modelo.filing_chain_reconciliation import FilingReconciliationOutcome
@@ -35,6 +33,7 @@ from .. import app_live_commands as handler
 from .. import operation_filed_bulk as bridge
 from .. import operation_profile_operation as profile_operation
 from ..app_live_filed_results import FiledCaptureResult
+from .filed_capture_projection_support import confirmed_reconciliation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -77,28 +76,7 @@ def _pair(
 def _projection(*, dry_run: bool = False) -> FiledBulkCapturePublicResultV1:
     persisted = not dry_run
     reconciliation_rows = (
-        ()
-        if dry_run
-        else (
-            FiledReconciliationV1(
-                outcome=FilingReconciliationOutcome.CONFIRMED.value,
-                bucket_id=str(_PROFILE),
-                modelo="303",
-                filing_year=2025,
-                period="1T",
-                member_nif="X1234567A",
-                filing_record_id="record-1",
-                affected_filing_record_ids=("record-2", "record-3"),
-                differing_casilla_ids=("casilla.a", "casilla.b"),
-                evidence_basis="casillas",
-                notices=(
-                    FiledReconciliationNoticeV1(
-                        code="receipt_totals_only",
-                        context=(("reason", "receipt"),),
-                    ),
-                ),
-            ),
-        )
+        () if dry_run else (confirmed_reconciliation(bucket_id=str(_PROFILE), filing_year=2025, period="1T"),)
     )
     return FiledBulkCapturePublicResultV1(
         output_root=str(_OUTPUT_ROOT),
