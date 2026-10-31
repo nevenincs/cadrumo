@@ -185,7 +185,7 @@ effective_from = 2004-03-13
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-27
 reviewed_by = "operator"
-notes = "TRLIRNR art 25.1.f: tipo de gravamen del 19 por ciento aplicable por clase de renta a dividendos, intereses y otros rendimientos de capitales propios, y ganancias patrimoniales por transmisión de elementos patrimoniales. No contiene condicion de residencia UE/EEE; esa condicion pertenece al tipo general reducido de art 25.1.a. Soporte legal de las filas tipo_renta=dividend, tipo_renta=interest y tipo_renta=ganancia_patrimonial del parámetro registry m210-tipo-gravamen-2025."
+notes = "TRLIRNR art 25.1.f: tipo de gravamen del 19 por ciento aplicable por clase de renta a dividendos, intereses y otros rendimientos de capitales propios, y ganancias patrimoniales por transmisión de elementos patrimoniales. No contiene condición de residencia UE/EEE; esa condición pertenece al tipo general reducido de art 25.1.a. Soporte legal de las filas tipo_renta=dividend, tipo_renta=interest y tipo_renta=ganancia_patrimonial del parámetro registry m210-tipo-gravamen-2025."
 required_text = ["El 19 por ciento cuando se trate de", "Dividendos y otros rendimientos derivados de la participacion en los fondos propios de una entidad", "Intereses y otros rendimientos obtenidos por la cesion a terceros de capitales propios", "Ganancias patrimoniales que se pongan de manifiesto con ocasion de transmisiones de elementos patrimoniales"]
 
 [legal."convenio-es-gb-2013:art-6"]
@@ -659,7 +659,7 @@ effective_from = 2009-01-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-04
 reviewed_by = "agent-replaced the bundled excerpt with the BOE published text of art. 4 of BOE-A-2008-18497; the prior excerpt was hand-shaped despite claiming a verbatim fetch; operator to re-stamp"
-notes = "Orden EHA/3290/2008 art 4: plazo de presentación del modelo 216. Con carácter general (trimestral), la presentación e ingreso se efectua en los veinte primeros días naturales de los meses de abril, julio, octubre y enero por el trimestre natural inmediato anterior. Para grandes empresas, mensual, en los veinte primeros días naturales de cada mes. Binding deadline provision grounding the M216 trimestral deadline windows."
+notes = "Orden EHA/3290/2008 art 4: plazo de presentación del modelo 216. Con carácter general (trimestral), la presentación e ingreso se efectúa en los veinte primeros días naturales de los meses de abril, julio, octubre y enero por el trimestre natural inmediato anterior. Para grandes empresas, mensual, en los veinte primeros días naturales de cada mes. Binding deadline provision grounding the M216 trimestral deadline windows."
 required_text = [
     "Plazo de presentación del modelo 216",
     "veinte primeros días naturales de los meses de abril, julio, octubre y enero",

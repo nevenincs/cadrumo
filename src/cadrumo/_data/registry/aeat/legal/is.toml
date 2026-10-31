@@ -247,7 +247,7 @@ reviewed_by = "operator"
 notes = """\
 LIS art 12: correcciones de valor - amortizaciones. Define la deducibilidad de la \
 amortización según depreciación efectiva, los cinco métodos validos (tabla lineal \
-art-12.1.a, porcentaje constante degresivo, numeros dígitos, plan aceptado por la \
+art-12.1.a, porcentaje constante degresivo, números dígitos, plan aceptado por la \
 Administración, justificación del importe) y la tabla de coeficientes máximos por tipo de \
 elemento (obra civil 2-7 por ciento, edificios 2-4 por ciento, maquinaria 12 por ciento, \
 equipos electrónicos 20-33 por ciento, etc.). Base sustantiva de las casillas de \
@@ -427,7 +427,7 @@ effective_from = 2015-07-12
 review_status = "agent_reviewed"
 reviewed_at = 2026-09-23
 reviewed_by = "agent-prepared; anchor resolved in the bundled consolidated text; required_text copied from that unit; pending operator re-stamp"
-notes = "RIS art 6: amortización según numeros dígitos, en orden decreciente o inverso, con periodo entre el máximo y el derivado del coeficiente máximo; excluye edificios, mobiliario y enseres."
+notes = "RIS art 6: amortización según números dígitos, en orden decreciente o inverso, con periodo entre el máximo y el derivado del coeficiente máximo; excluye edificios, mobiliario y enseres."
 required_text = [
     "Amortización según números dígitos",
     "La asignación de valores numéricos también podrá efectuarse de manera inversa a la prevista en el párrafo anterior",
@@ -2219,7 +2219,7 @@ effective_from = 2015-10-24
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-27
 reviewed_by = "operator"
-notes = "Ley 44/2015 Art. 1: definición de sociedad laboral. Sociedad Anonima Laboral (SAL) y Sociedad Limitada Laboral (SLL). Requisito: la mayoria del capital social ha de ser propiedad de trabajadores que presten en ella servicios retribuidos en forma personal y directa, cuya relación laboral sea de duración indefinida. Ningun socio puede poseer acciones o participaciones que representen mas de un tercio del capital social salvo entidades publicas, asociaciones u otras personas jurídicas sin animo de lucro."
+notes = "Ley 44/2015 Art. 1: definición de sociedad laboral. Sociedad Anónima Laboral (SAL) y Sociedad Limitada Laboral (SLL). Requisito: la mayoria del capital social ha de ser propiedad de trabajadores que presten en ella servicios retribuidos en forma personal y directa, cuya relación laboral sea de duración indefinida. Ningun socio puede poseer acciones o participaciones que representen mas de un tercio del capital social salvo entidades publicas, asociaciones u otras personas jurídicas sin animo de lucro."
 required_text = [
     "sociedad laboral",
     "capital social",
@@ -2239,7 +2239,7 @@ effective_from = 2015-10-24
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-27
 reviewed_by = "operator"
-notes = "Ley 44/2015 Art. 2: denominacion social. Las sociedades laborales deben incluir en su denominacion las palabras 'Sociedad Anonima Laboral' o 'Sociedad Limitada Laboral', o sus abreviaturas SAL o SLL respectivamente. Prohibicion de uso de estas denominaciones por entidades no calificadas."
+notes = "Ley 44/2015 Art. 2: denominacion social. Las sociedades laborales deben incluir en su denominacion las palabras 'Sociedad Anónima Laboral' o 'Sociedad Limitada Laboral', o sus abreviaturas SAL o SLL respectivamente. Prohibicion de uso de estas denominaciones por entidades no calificadas."
 required_text = [
     "Sociedad Anónima Laboral",
     "Sociedad Limitada Laboral",
@@ -2524,7 +2524,7 @@ effective_from = 2015-01-01
 review_status = "agent_reviewed"
 reviewed_by = "agent-prepared; anchor #a45 resolved to exactly one unit through the production resolver against the bundled consolidated LIS, and its rubric reads Uniones temporales de empresas, matching the section it grounds; required_text confirmed present in the resolved unit; the anchor was checked against the measured collision set for this corpus and is not shadowed; pending operator re-stamp"
 reviewed_at = 2026-08-26
-notes = "LIS art. 45: uniones temporales de empresas. Las UTE reguladas en la Ley 18/1982 e inscritas en el registro especial tributan con arreglo al art. 43 (agrupaciones de interés economico españolas), salvo la regla de valoración del segundo párrafo del apartado 4 de ese articulo. Funda la sección del Modelo 200 cuyo tag nombra el art. 45.1."
+notes = "LIS art. 45: uniones temporales de empresas. Las UTE reguladas en la Ley 18/1982 e inscritas en el registro especial tributan con arreglo al art. 43 (agrupaciones de interés económico españolas), salvo la regla de valoración del segundo párrafo del apartado 4 de ese articulo. Funda la sección del Modelo 200 cuyo tag nombra el art. 45.1."
 required_text = [
     "Las uniones temporales de empresas reguladas en la Ley 18/1982",
     "inscritas en el registro especial",
@@ -2641,7 +2641,7 @@ effective_from = 2022-10-20
 review_status = "agent_reviewed"
 reviewed_at = 2026-09-23
 reviewed_by = "agent-prepared; BOE anchors this disposicion as #da-2, which collides with another unit, so the compact ordinal form #dadecimoseptima reaches it through the resolver's structural-title fallback; verified to resolve to exactly one unit through resolve_anchored_extracted_unit with every required_text phrase present; pending operator re-stamp"
-notes = "LIS disposición adicional decimoséptima (added by RDL 18/2022): libertad de amortización en instalaciones de autoconsumo eléctrico y de uso termico de consumo propio con energía renovable que sustituyan instalaciones fosiles, condicionada a mantener la plantilla media total de los 24 meses siguientes al inicio del periodo impositivo respecto de la de los doce meses anteriores. Excluye edificios; inversion máxima 500.000 euros. The consolidated text carries a chain of RDL amendments and derogations (RDL 9/2024, 16/2025, 2/2026 derogated; RDL 7/2026 for periods not concluded at 22 March 2026) that governs which entry-into-service years apply to a given period."
+notes = "LIS disposición adicional decimoséptima (added by RDL 18/2022): libertad de amortización en instalaciones de autoconsumo eléctrico y de uso térmico de consumo propio con energía renovable que sustituyan instalaciones fósiles, condicionada a mantener la plantilla media total de los 24 meses siguientes al inicio del periodo impositivo respecto de la de los doce meses anteriores. Excluye edificios; inversion máxima 500.000 euros. The consolidated text carries a chain of RDL amendments and derogations (RDL 9/2024, 16/2025, 2/2026 derogated; RDL 7/2026 for periods not concluded at 22 March 2026) that governs which entry-into-service years apply to a given period."
 required_text = [
     "Libertad de amortización en inversiones que utilicen energía procedente de fuentes renovables",
     "la plantilla media total de la entidad se mantenga respecto de la plantilla media de los doce meses anteriores",
@@ -2661,7 +2661,7 @@ effective_from = 2022-10-20
 review_status = "agent_reviewed"
 reviewed_at = 2026-09-30
 reviewed_by = "agent-prepared from the BOE consolidated-text article endpoint (block a2-4, single redaction fecha_vigencia 20221020); pending operator re-stamp"
-notes = "RDL 18/2022 art. 22: introduce la disposición adicional decimoséptima LIS, libertad de amortización de instalaciones de autoconsumo eléctrico y de uso termico de consumo propio con energía renovable que sustituyan instalaciones fosiles, puestas a disposición del contribuyente a partir de la entrada en vigor del real decreto-ley (20 de octubre de 2022) y que entren en funcionamiento en 2023, en los periodos impositivos que se inicien o concluyan en dicho ano; condicionada al mantenimiento de la plantilla media, excluye edificios e inversion máxima de 500.000 euros. Funda los parámetros de Renta 2023 de esta libertad de amortización; la ampliacion a 2024 es del art. 18 del RDL 8/2023 (real-decreto-ley-8-2023:art-18)."
+notes = "RDL 18/2022 art. 22: introduce la disposición adicional decimoséptima LIS, libertad de amortización de instalaciones de autoconsumo eléctrico y de uso térmico de consumo propio con energía renovable que sustituyan instalaciones fósiles, puestas a disposición del contribuyente a partir de la entrada en vigor del real decreto-ley (20 de octubre de 2022) y que entren en funcionamiento en 2023, en los periodos impositivos que se inicien o concluyan en dicho ano; condicionada al mantenimiento de la plantilla media, excluye edificios e inversion máxima de 500.000 euros. Funda los parámetros de Renta 2023 de esta libertad de amortización; la ampliacion a 2024 es del art. 18 del RDL 8/2023 (real-decreto-ley-8-2023:art-18)."
 required_text = [
     "Se introduce una nueva disposición adicional decimoséptima en la Ley 27/2014, de 27 de noviembre, del Impuesto sobre Sociedades",
     "entren funcionamiento en 2023, podrán ser amortizadas libremente en los períodos impositivos que se inicien o concluyan en dicho año",

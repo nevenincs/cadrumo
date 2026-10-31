@@ -188,7 +188,7 @@ effective_from = 1993-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-06-09
 reviewed_by = "operator"
-notes = "LIVA art 7: operaciones no sujetas al impuesto. Enumera los supuestos de no sujecion (transmisión de unidad económica autónoma, muestras gratuitas, entregas publicitarias, servicios en régimen de dependencia, operaciones de Administraciones Publicas sin contraprestación, concesiones administrativas, entregas de dinero). Base sustantiva para la clasificación no-sujeta en el enrutamiento M303 (Tier-2 routing)."
+notes = "LIVA art 7: operaciones no sujetas al impuesto. Enumera los supuestos de no sujeción (transmisión de unidad económica autónoma, muestras gratuitas, entregas publicitarias, servicios en régimen de dependencia, operaciones de Administraciones Publicas sin contraprestación, concesiones administrativas, entregas de dinero). Base sustantiva para la clasificación no-sujeta en el enrutamiento M303 (Tier-2 routing)."
 required_text = [
     "Operaciones no sujetas al impuesto",
     "No estarán sujetas al impuesto",
@@ -247,7 +247,7 @@ effective_from = 1993-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-06-09
 reviewed_by = "operator"
-notes = "LIVA art 17: hecho imponible de las importaciones de bienes. Sujeta al impuesto las importaciones de bienes cualquiera que sea el fin a que se destinen y la condicion del importador. Base sustantiva del hecho imponible de importación en el enrutamiento M303 (Tier-2 routing)."
+notes = "LIVA art 17: hecho imponible de las importaciones de bienes. Sujeta al impuesto las importaciones de bienes cualquiera que sea el fin a que se destinen y la condición del importador. Base sustantiva del hecho imponible de importación en el enrutamiento M303 (Tier-2 routing)."
 required_text = [
     "Estarán sujetas al impuesto las importaciones de bienes",
     "cualquiera que sea el fin a que se destinen y la condición del importador",
@@ -295,9 +295,9 @@ reviewed_at = 2026-06-09
 reviewed_by = "operator"
 notes = """\
 LIVA art 22: exenciones en las operaciones asimiladas a las exportaciones. Exime entregas y \
-servicios relativos a buques afectos a navegación maritima internacional, aeronaves de companias que \
+servicios relativos a buques afectos a navegación marítima internacional, aeronaves de compañías que \
 se dediquen al trafico internacional, operaciones con organismos internacionales y misiones \
-diplomaticas. Base sustantiva de la clasificación exenta asimilada a exportación en el enrutamiento \
+diplomáticas. Base sustantiva de la clasificación exenta asimilada a exportación en el enrutamiento \
 M303 (Tier-2 routing). REDACTION HISTORY, read from the BOE open-data article endpoint (12 \
 redacciones): first vigencia 19930101 by BOE-A-1992-28740 (the law itself), last 20230101 by \
 BOE-A-2022-22128. The article has therefore been in force continuously since 1993 and DID govern \
@@ -354,7 +354,7 @@ effective_from = 2010-03-03
 review_status = "operator_reviewed"
 reviewed_at = 2026-06-09
 reviewed_by = "operator"
-notes = "LIVA art 26: exenciones en las adquisiciones intracomunitarias de bienes, incluida la operación triangular. Exime las adquisiciones intracomunitarias cuya entrega interior estaria no sujeta o exenta, las que corresponden a importaciones exentas, las realizadas en el marco de una operación triangular y aquellas con derecho a devolución total. Base sustantiva de la exención intracomunitaria y la triangulacion en el enrutamiento M303 (Tier-2 routing)."
+notes = "LIVA art 26: exenciones en las adquisiciones intracomunitarias de bienes, incluida la operación triangular. Exime las adquisiciones intracomunitarias cuya entrega interior estaría no sujeta o exenta, las que corresponden a importaciones exentas, las realizadas en el marco de una operación triangular y aquellas con derecho a devolución total. Base sustantiva de la exención intracomunitaria y la triangulación en el enrutamiento M303 (Tier-2 routing)."
 required_text = [
     "Exenciones en las adquisiciones intracomunitarias de bienes",
     "Las adquisiciones intracomunitarias de bienes cuya entrega en el territorio de aplicación del impuesto hubiera estado",

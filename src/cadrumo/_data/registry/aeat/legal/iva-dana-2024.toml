@@ -91,7 +91,7 @@ notes = """\
 RDL 6/2024 art. 1: objeto y ámbito de aplicación de las medidas DANA. Apartado 1 fija el ámbito por \
 remisión al anexo de la propia norma y a la ventana del 28 de octubre al 4 de noviembre de 2024. \
 Apartado 4 declara el anexo MUTABLE: puede modificarse mediante Acuerdo de Consejo de Ministros. Esa \
-mutabilidad es la razón de que la geografia se cite siempre con consolidated_as_of y nunca se \
+mutabilidad es la razón de que la geografía se cite siempre con consolidated_as_of y nunca se \
 transcriba como lista fija. PROVENANCIA DE LA CORRECCION. El propio apartado 4 lleva la nota de \
 consolidación que lo vincula a la corrección de errores BOE-A-2024-24097; required_text la exige \
 literalmente, de modo que un corpus que perdiera esa nota no podria satisfacer esta entrada. \
@@ -121,7 +121,7 @@ reviewed_at = 2026-08-13
 reviewed_by = "agent-prepared-pending-operator"
 notes = """\
 RDL 6/2024 anexo: listado de terminos municipales afectados por la DANA. Es la UNICA autoridad de la \
-geografia; RDL 7/2024 art. 11 se remite a el en lugar de enumerar. El listado consolidado carga 78 \
+geografía; RDL 7/2024 art. 11 se remite a el en lugar de enumerar. El listado consolidado carga 78 \
 entradas. consolidated_as_of fecha esas bytes: el anexo es modificable por Acuerdo de Consejo de \
 Ministros conforme al art. 1 apartado 4, así que una lista sin fecha seria una instantanea \
 disfrazada de norma. required_text ancla tres puntos que discriminan esta version concreta: el \
@@ -152,7 +152,7 @@ reviewed_by = "agent-prepared-pending-operator"
 notes = """\
 Corrección de errores del RDL 6/2024 (BOE num. 280, de 20 de noviembre de 2024). Rectifica la parte \
 expositiva y los artículos 1.4, 8.1, 24.1, 25.1, 46.1 y 47; NO toca el anexo, de modo que la \
-geografia publicada el 6 de noviembre sigue siendo la corregida. effective_from se fija en la \
+geografía publicada el 6 de noviembre sigue siendo la corregida. effective_from se fija en la \
 entrada en vigor del RDL 6/2024 y no en la fecha de publicación de la corrección, porque una \
 corrección de errores no crea una regla nueva: restituye lo que la norma decia desde su origen. kind \
 se declara real_decreto_ley porque el instrumento corregido lo es y la corrección forma parte de su \

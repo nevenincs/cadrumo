@@ -2084,15 +2084,15 @@ Articulo 103 LIVA: clases de prorrata y criterios de aplicación. Apartado Uno: 
 tiene dos modalidades, general y especial; la general se aplica cuando no concurren las \
 circunstancias del apartado siguiente. Apartado Dos: la prorrata especial es aplicable (1) cuando el \
 sujeto pasivo opta por ella en plazo y forma reglamentarios, o (2) cuando el montante total de las \
-cuotas deducibles del ano natural por la regla general excede del que resultaria por la regla \
+cuotas deducibles del ano natural por la regla general excede del que resultaría por la regla \
 especial en el margen legal del ejercicio (obligación de especial). ATENCION - el apartado Dos \
 numero 2 NO es invariante en la ventana de ejercicios que la aplicación sirve: la redacción original \
-de la Ley 37/1992 (en vigor 01-01-1993 a 31-12-2014) exigia que excediera 'en un 20 por 100', sin 'o \
+de la Ley 37/1992 (en vigor 01-01-1993 a 31-12-2014) exigía que excediera 'en un 20 por 100', sin 'o \
 mas', mientras que el art. 1.26 de la Ley 28/2014 (BOE-A-2014-12329, en vigor desde 01-01-2015) lo \
 sustituyo por 'en un 10 por ciento o mas'. La modificación rebajo el margen Y lo hizo inclusivo: el \
 preámbulo de la Ley 28/2014 lo describe como 'disminuir del 20 al 10 por ciento la diferencia \
 admisible'. Base legal del aviso de prorrata especial obligatoria. El margen y su \
-direccion de comparacion se declaran como dato de registro en el parámetro \
+dirección de comparación se declaran como dato de registro en el parámetro \
 m303-prorrata-especial-obligatoria-margen-porcentaje de cada revision del modelo 303; \
 solo se declara la redacción vigente, y un ejercicio anterior a 2015 se rechaza por \
 carecer de autoridad citable en este corpus."""
@@ -2154,7 +2154,7 @@ el porcentaje del art 104.Dos y siguientes (porcentaje común). Base legal del e
 cada input a la deducción de SU sector; el input de uso común al porcentaje común del art 104.Dos. \
 Apartado Dos (DIFERIDO en esta fase): la Administración puede autorizar un régimen de deducción \
 COMUN a los sectores de la letra a', autorizacion que NO surte efectos en el ano en que el total de \
-cuotas deducibles por el régimen común exceda en un 20 por 100 al que resultaria aplicando con \
+cuotas deducibles por el régimen común exceda en un 20 por 100 al que resultaría aplicando con \
 independencia el régimen de cada sector - se registra como caso de autorizacion (register \
 authorisation_reference) y su +20% void test se difiere, con el esquema del register ya preparado \
 para admitirlo."""
@@ -2188,7 +2188,7 @@ consideran distintos cuando los porcentajes de deducción del art 104 difieran e
 PORCENTUALES respecto de la actividad principal. Letra b': actividades acogidas a los regímenes \
 especiales simplificado, agricultura/ganaderia/pesca, oro de inversion o recargo de equivalencia. \
 Letras c'/d': arrendamiento financiero y cesión de creditos/prestamos (salvo factoring). La \
-particion del contribuyente en sectores diferenciados es un juicio legal (que grupos CNAE, si \
+partición del contribuyente en sectores diferenciados es un juicio legal (que grupos CNAE, si \
 divergen >50pp, si hay régimen especial) - operator-declared, nunca inferido del ledger."""
 required_text = [
     "se considerarán sectores diferenciados de la actividad empresarial o profesional los siguientes",
@@ -2292,7 +2292,7 @@ effective_from = 1993-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-15
 reviewed_by = "operator"
-notes = "Articulo 163 duovicies LIVA: régimen especial aplicable a empresarios o profesionales no establecidos que presten servicios de telecomunicaciones, radiodifusion, television o servicios prestados por via electrónica a destinatarios que no sean empresarios o profesionales (one stop shop). Forma parte del bloque de regímenes especiales del titulo IX, capitulo XI."
+notes = "Articulo 163 duovicies LIVA: régimen especial aplicable a empresarios o profesionales no establecidos que presten servicios de telecomunicaciones, radiodifusión, television o servicios prestados por via electrónica a destinatarios que no sean empresarios o profesionales (one stop shop). Forma parte del bloque de regímenes especiales del titulo IX, capitulo XI."
 required_text = [
     "a) Disponer del número de identificación fiscal al que se refiere el artículo 164.Uno.2.º de esta Ley.",
     "f) Expedir y entregar factura, ajustada a lo que se determine reglamentariamente.",
@@ -2311,7 +2311,7 @@ effective_from = 1993-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-15
 reviewed_by = "operator"
-notes = "Articulo 163 sexvicies LIVA: régimen especial aplicable a las ventas a distancia de bienes importados procedentes de países terceros (Import One Stop Shop / IOSS). Establecido como ventanilla única para envios de valor intrinseco no superior a 150 euros."
+notes = "Articulo 163 sexvicies LIVA: régimen especial aplicable a las ventas a distancia de bienes importados procedentes de países terceros (Import One Stop Shop / IOSS). Establecido como ventanilla única para envíos de valor intrínseco no superior a 150 euros."
 required_text = [
     "En las entregas de bienes acogidas a este régimen especial el devengo del impuesto se producirá en el momento de la entrega, que s",
 ]
@@ -2711,7 +2711,7 @@ consolidated_as_of = 2025-12-03
 review_status = "agent_reviewed"
 reviewed_at = 2026-06-29
 reviewed_by = "agent-review"
-notes = "RD 1007/2023 Art. 3 delimita los obligados tributarios que usan sistemas informaticos de facturación: IS, IRPF con actividades económicas, IRNR con establecimiento permanente y entidades en atribución de rentas con actividades económicas; excluye a quienes llevan libros registro por RIVA Art. 62.6 y aplica también a productores/comercializadores en su actividad."
+notes = "RD 1007/2023 Art. 3 delimita los obligados tributarios que usan sistemas informáticos de facturación: IS, IRPF con actividades económicas, IRNR con establecimiento permanente y entidades en atribución de rentas con actividades económicas; excluye a quienes llevan libros registro por RIVA Art. 62.6 y aplica también a productores/comercializadores en su actividad."
 required_text = [
     "El presente Reglamento se aplicará a los obligados tributarios que se indican a continuación, que utilicen sistemas informáticos de facturación",
     "Los contribuyentes del Impuesto sobre Sociedades",
@@ -2903,7 +2903,7 @@ effective_from = 2014-01-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-06
 reviewed_by = "agent-review"
-notes = "Articulo 163 terdecies LIVA: devengo por cobro total o parcial, fallback de 31 de diciembre del ano siguiente, acreditacion del cobro, y nacimiento del derecho a deducir por pago para sujetos acogidos."
+notes = "Articulo 163 terdecies LIVA: devengo por cobro total o parcial, fallback de 31 de diciembre del ano siguiente, acreditación del cobro, y nacimiento del derecho a deducir por pago para sujetos acogidos."
 required_text = [
     "Artículo 163 terdecies. Contenido del régimen especial del criterio de caja.",
     "momento del cobro total o parcial",
@@ -3233,13 +3233,13 @@ verificadas sobre el fichero empaquetado. Primera: el documento contiene TRES ca
 y la primera pertenece a otra ley -- el articulo 23 sobre el Servicio de Ayuda a Domicilio -- de \
 modo que anclar por la cadena sola selecciona el articulo equivocado; el de IVA es la segunda \
 aparicion. Segunda: los apartados difieren por tipo. El 21 por ciento lo fija el apartado Dos y el \
-10 por ciento el apartado Tres, por lo que citar 23.2 para el tipo reducido seria erroneo en un \
+10 por ciento el apartado Tres, por lo que citar 23.2 para el tipo reducido seria erróneo en un \
 apartado. El tipo super-reducido del 4 por ciento es ANTERIOR a esta norma y NO puede heredarla por \
 proximidad: necesita su propia provision. PROVENANCIA. Documento adquirido mediante la herramienta \
 de adquisición del corpus consolidado oficial (API de legislacion consolidada del portal oficial), \
 26 bloques servidos cada uno en su ultima version, sha256 \
 d0ef2bae3d07e5a2fed52315c29808306f0a3ec197b1bc0501186ce16181c9df, 733051 bytes. Entrada preparada \
-por agente y fundamentada en el texto empaquetado leido directamente; no la ha revisado un operador \
+por agente y fundamentada en el texto empaquetado leído directamente; no la ha revisado un operador \
 humano, y reviewed_by lo declara así."""
 required_text = [
     "se exigirá al tipo del 21 por ciento",
@@ -3296,19 +3296,19 @@ super-reducido es ANTERIOR a aquella norma y no puede heredarla por proximidad. 
 encabezado del articulo dice 'Con efectos a partir del día 1 de enero de 1995 se da nueva redacción \
 a los siguientes preceptos de la Ley 37/1992', de modo que la fecha citable esta en el texto y no en \
 una nota. El atributo fecha_vigencia del endpoint marca 19950120, diecinueve días mas tarde; tomarlo \
-como effective_from seria erroneo. IDENTIFICACION DEL APARTADO: el apartado Primero modifica el art. \
+como effective_from seria erróneo. IDENTIFICACION DEL APARTADO: el apartado Primero modifica el art. \
 90 (tipo general, 16 por 100) y el Segundo el art. 91, por lo que citar el Primero para el 4 por \
-ciento seria erroneo en un apartado, el mismo error que las notas de 2012 documentan. No hay trampa \
+ciento seria erróneo en un apartado, el mismo error que las notas de 2012 documentan. No hay trampa \
 de ancla en este documento: contiene una sola cadena 'Articulo 78', a diferencia del de 2012, que \
 contiene tres 'Articulo 23' de los cuales el primero pertenece a otra ley. CORROBORACION \
 INDEPENDIENTE: recorrer las 41 redacciones consolidadas del art. 91 LIVA muestra Dos = 3 por 100 \
 hasta la redacción previa a esta norma y Dos = 4 por 100 desde ella, ininterrumpidamente hasta hoy; \
 es un diff antes/despues, no una lectura de prosa. PROVENANCIA. Documento adquirido mediante la \
 herramienta de adquisición del corpus consolidado oficial (modo articulo), sha256 \
-1c484707bac3ccf0ef6a252fe1272fb8dedde5150a9bf35f81048450b8308b61, 15448 bytes, leido de nuevo desde \
+1c484707bac3ccf0ef6a252fe1272fb8dedde5150a9bf35f81048450b8308b61, 15448 bytes, leído de nuevo desde \
 disco antes de redactar esta entrada. La captura se hizo SIN required_text a propósito: fijar la \
 frase del 4 por ciento antes de leer el fichero habria hecho tautologica la comprobación. Entrada \
-preparada por agente y fundamentada en el texto empaquetado leido directamente; no la ha revisado un \
+preparada por agente y fundamentada en el texto empaquetado leído directamente; no la ha revisado un \
 operador humano, y reviewed_by lo declara así."""
 required_text = [
     "Se modifica el artículo 91",

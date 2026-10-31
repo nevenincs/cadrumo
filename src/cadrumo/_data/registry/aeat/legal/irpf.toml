@@ -356,11 +356,11 @@ reviewed_by = "operator"
 notes = """\
 RIRPF art 95: importe de las retenciones sobre rendimientos de actividades económicas. El apartado 1 \
 establece el tipo del 15 por ciento general para actividades profesionales, el tipo reducido del 7 \
-por ciento para nuevos profesionales (inicio + dos siguientes) y para colectivos especificos \
+por ciento para nuevos profesionales (inicio + dos siguientes) y para colectivos específicos \
 (recaudadores municipales, mediadores de seguros con auxiliares, delegados comerciales SELAE, \
 actividades artisticas de los grupos IAE 851, 852, 853, 861, 862, 864 y 869 de la sección segunda y \
 agrupaciones 01, 02, 03 y 05 de la sección tercera, sujetas a una prueba de ingresos de dos partes: \
-menos de 15.000 euros el ejercicio anterior Y mas del 75 por ciento de los rendimientos integros de \
+menos de 15.000 euros el ejercicio anterior Y mas del 75 por ciento de los rendimientos íntegros de \
 actividades económicas y trabajo). Los apartados 4, 5 y 6.1 fijan los tipos sectoriales: 2 por \
 ciento agricola/ganadero general con carve-out del 1 por ciento para engorde de porcino y avicultura \
 (apartado 4), 2 por ciento forestal (apartado 5) y 1 por ciento en estimación objetiva (apartado \
@@ -625,7 +625,7 @@ effective_from = 2007-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-14
 reviewed_by = "operator"
-notes = "Deducción por actuaciones para la proteccion y difusion del Patrimonio Historico Español y de las ciudades, conjuntos y bienes declarados Patrimonio Mundial. 15 per cent of investments or expenses for: (a) acquisition of Patrimonio Historico Español assets from abroad with permanence + cultural-interest declaration requirements; (b) conservation/restoration/exhibition of bienes de interés cultural; (c) rehabilitation of buildings in protected city perimeters or Patrimonio Mundial sites."
+notes = "Deducción por actuaciones para la proteccion y difusion del Patrimonio Histórico Español y de las ciudades, conjuntos y bienes declarados Patrimonio Mundial. 15 per cent of investments or expenses for: (a) acquisition of Patrimonio Histórico Español assets from abroad with permanence + cultural-interest declaration requirements; (b) conservation/restoration/exhibition of bienes de interés cultural; (c) rehabilitation of buildings in protected city perimeters or Patrimonio Mundial sites."
 required_text = [
     "Deducción por actuaciones para la protección y difusión del Patrimonio Histórico Español",
     "deducción en la cuota del 15 por ciento",
@@ -646,7 +646,7 @@ effective_from = 2007-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-14
 reviewed_by = "operator"
-notes = "Limites de determinadas deducciones. Caps the base of the art. 68.3 (donativos) and art. 68.5 (Patrimonio Historico) deductions at 10 per cent of the contribuyente's base liquidable. The limits on art. 68.2 (actividades económicas) follow the Impuesto sobre Sociedades incentivos regime and are computed after subtracting art. 68.1 (empresas nueva creación) and art. 68.5 (Patrimonio Historico) from the combined estatal + autonómica cuota integra."
+notes = "Limites de determinadas deducciones. Caps the base of the art. 68.3 (donativos) and art. 68.5 (Patrimonio Histórico) deductions at 10 per cent of the contribuyente's base liquidable. The limits on art. 68.2 (actividades económicas) follow the Impuesto sobre Sociedades incentivos regime and are computed after subtracting art. 68.1 (empresas nueva creación) and art. 68.5 (Patrimonio Histórico) from the combined estatal + autonómica cuota integra."
 required_text = [
     "Límites de determinadas deducciones",
     "no podrá exceder para cada una de ellas del 10 por ciento de la base liquidable del contribuyente",
@@ -982,7 +982,7 @@ effective_to = 2022-12-31
 review_status = "agent_reviewed"
 reviewed_at = 2026-10-01
 reviewed_by = "agent-authored from bundled orden-hfp-1335-2021.html; operator to re-stamp"
-notes = "Fase 4a agraria: reducción agricultores jovenes. Los agricultores jovenes o asalariados agrarios pueden reducir en un 25 por ciento el rendimiento neto de módulos de su actividad agraria durante los periodos impositivos cerrados en los cinco anos siguientes a su primera instalación como titulares de una explotación prioritaria, acreditando un plan de mejora. Desarrolla para el ejercicio 2022 la disposición adicional sexta de la Ley del IRPF; base de la casilla 1551 del Modelo 100 del ejercicio 2022."
+notes = "Fase 4a agraria: reducción agricultores jóvenes. Los agricultores jóvenes o asalariados agrarios pueden reducir en un 25 por ciento el rendimiento neto de módulos de su actividad agraria durante los periodos impositivos cerrados en los cinco anos siguientes a su primera instalación como titulares de una explotación prioritaria, acreditando un plan de mejora. Desarrolla para el ejercicio 2022 la disposición adicional sexta de la Ley del IRPF; base de la casilla 1551 del Modelo 100 del ejercicio 2022."
 required_text = [
     "Los agricultores jóvenes o asalariados agrarios podrán reducir el rendimiento neto de módulos correspondiente a su actividad agraria en un 25 por ciento",
     "primera instalación como titulares de una explotación prioritaria",
@@ -1933,7 +1933,7 @@ transporte por autotaxis, 722 transporte de mercancías); cuando b.1 se aplica, 
 ambos b.2 y b.4 se declaran, prevalece la temporada (orden de enumeracion de la Orden) y se ignora \
 el inicio de nuevas actividades. Dos indicadores internos (modulos-pequena-dimension-ignorado-flag, \
 modulos-temporada-inicio-actividad-conflicto-flag) fundamentan los advisories no bloqueantes que \
-senalan al operador cuando una de sus declaraciones fue ignorada, per no-silent-under-declaration. \
+señalan al operador cuando una de sus declaraciones fue ignorada, per no-silent-under-declaration. \
 El motor M100 (0293-...-rendimiento-base.toml) sigue modelando únicamente su propio cascade agrario \
 (indices 1-8, Anexo I instrucción 2.3), sin relación con este Anexo II."""
 required_text = [
@@ -2130,7 +2130,7 @@ review_status = "agent_reviewed"
 reviewed_at = 2026-07-03
 reviewed_by = "agent-authored from bundled orden-hac-1347-2024.html; operator to re-stamp"
 notes = """\
-Fase 4a agraria: reducción agricultores jovenes. Los agricultores jovenes o asalariados agrarios \
+Fase 4a agraria: reducción agricultores jóvenes. Los agricultores jóvenes o asalariados agrarios \
 podran reducir el rendimiento neto de módulos correspondiente a su actividad agraria en un 25 por \
 ciento durante los periodos impositivos cerrados durante los cinco anos siguientes a su primera \
 instalación como titulares de una explotación prioritaria (capitulo IV, titulo I, Ley 19/1995), \
@@ -2369,7 +2369,7 @@ de módulos M131 (0003-modulos-engine.toml) aplica para 2026 la cascada completa
 incompatibilidades: el indice b.1 se ignora para los epígrafes tabulados que llevan indice especial \
 (721.2 transporte por autotaxis, letra a.2; 722 transporte de mercancías por carretera, letra a.4), \
 y el indice de temporada desplaza al de inicio de nuevas actividades. Esta entrada fundamenta los \
-advisories no bloqueantes que senalan al operador la declaración ignorada, per \
+advisories no bloqueantes que señalan al operador la declaración ignorada, per \
 orden-hac-1425-2025-Anexo-II-instruccion-2-3 y no-silent-under-declaration. Cross-checked \
 byte-identical against the 2025 instrucción \
 (orden-hac-1347-2024:anexo-ii-instruccion-2-3-incompatibilidades)."""
@@ -5229,7 +5229,7 @@ effective_from = 2012-03-31
 review_status = "agent_reviewed"
 reviewed_at = 2026-10-30
 reviewed_by = "agent-reviewed against bundled datrigesima and live BOE consolidated provision; no operator attestation"
-notes = "LIRPF DA 30.2, redactada por el art. 2 del Real Decreto-ley 12/2012 (BOE-A-2012-4441), publicado y en vigor el 31/03/2012: en la transmisión de elementos acogidos a la libertad de amortización de la DA 11 o DT 37 TRLIS, el exceso sobre la amortización ordinaria no reduce el valor de adquisición y constituye rendimiento integro de la actividad en el periodo de transmisión. Este régimen anterior sustenta el exceso historico; no anticipa la DA 59, vigente desde 28/06/2024."
+notes = "LIRPF DA 30.2, redactada por el art. 2 del Real Decreto-ley 12/2012 (BOE-A-2012-4441), publicado y en vigor el 31/03/2012: en la transmisión de elementos acogidos a la libertad de amortización de la DA 11 o DT 37 TRLIS, el exceso sobre la amortización ordinaria no reduce el valor de adquisición y constituye rendimiento integro de la actividad en el periodo de transmisión. Este régimen anterior sustenta el exceso histórico; no anticipa la DA 59, vigente desde 28/06/2024."
 required_text = [
     "Libertad de amortización en elementos nuevos del activo material fijo",
     "El citado exceso tendrá, para el transmitente, la consideración de rendimiento íntegro de la actividad económica en el período impositivo en que se efectúe la transmisión",
@@ -5951,7 +5951,7 @@ effective_from = 2020-02-06
 review_status = "agent_reviewed"
 reviewed_at = 2026-06-28
 reviewed_by = "agent-review"
-notes = "LIRPF art 17: defines rendimientos integros del trabajo from employment, statutory, pension and similar sources, while excluding items that qualify as economic-activity income. Current consolidated redaction was published 2020-02-05 and is in force from 2020-02-06."
+notes = "LIRPF art 17: defines rendimientos íntegros del trabajo from employment, statutory, pension and similar sources, while excluding items that qualify as economic-activity income. Current consolidated redaction was published 2020-02-05 and is in force from 2020-02-06."
 required_text = [
     "Rendimientos íntegros del trabajo.",
     "contraprestaciones o utilidades",
