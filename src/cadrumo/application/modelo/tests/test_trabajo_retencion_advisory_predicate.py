@@ -27,10 +27,10 @@ from decimal import Decimal
 import pytest
 
 from ....core.casilla_id import validated_casilla_id
-from ....domain.calculations.registry.tests.published_authority import published_authored_revision
 from ....domain.contribuyente.entity_type import EntityType
 from ....domain.deadlines.models import IrpfIncomeCategory, IVARegime, TaxpayerProfile
 from ..verification_predicates import evaluate_predicate_expression
+from .retencion_predicate_support import declared_m100_predicate
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -58,12 +58,7 @@ def _profile() -> TaxpayerProfile:
 
 
 def _predicate(year: int):
-    """Return the registry's own declared predicate, not a hand-written expression."""
-    revision = published_authored_revision("100", year=year)
-    for predicate in revision.verification_predicates or ():
-        if predicate.predicate_id == _predicate_id(year):
-            return predicate
-    pytest.fail(f"{_predicate_id(year)} is not declared on the M100/{year} revision")
+    return declared_m100_predicate(_predicate_id(year), year)
 
 
 def _holds(year: int, gross: str, retencion: str) -> bool:
