@@ -2537,13 +2537,12 @@ cli:
           Ismételhető. Futtasd az `aeat config profile descendiente` parancsot alparancs
           nélkül a vezetett bevitelhez.
         add_help: Egy vagy több leszármazott hozzáadása az aktív profilhoz.
-        ambiguous_relacion_advisory: A(z) %{indices} leszármazott esetében meses_madre_trabajo
-          érték van megadva, de a rokonsági kapcsolat nincs rögzítve. A kézikönyv
-          meghatározza a minimumot, de kizárja a 81.1. cikk szerinti anyasági levonást
-          unoka vagy más, gyermektől eltérő egyenesági leszármazott, illetve bírósági
-          határozattal gondozásba vett kiskorú esetén; a tárolt adat nem különbözteti
-          meg ezeket a saját gyermektől. Erősítsd meg, hogy saját gyermekről van szó,
-          vagy add meg a tényleges rokonsági kapcsolatot a RELACION= mezővel.
+        ambiguous_relacion_advisory: A(z) %{indices} leszármazottnál az anyai munkavégzés
+          hónapjai az alapértelmezett kapcsolattal szerepelnek. A nyilvántartás nem
+          különbözteti meg a gyermeket az unokától vagy más, nem gyermek vér szerinti
+          leszármazottól. Az utóbbiak után nem jár a 81.1. cikk szerinti anyasági
+          kedvezmény, de a leszármazottak utáni minimum alkalmazható lehet. A kedvezmény
+          alkalmazása előtt erősítsd meg a rokonsági kapcsolatot.
         guarderia_spend_shapes_conflict: Egy leszármazottnál a GASTOS_GUARDERIA vagy
           a GASTOS_GUARDERIA_MENSUAL értéket add meg, ne mindkettőt.
         help: Leszármazottak megadása a LIRPF 58/61. cikk szerinti leszármazotti minimumhoz.

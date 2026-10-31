@@ -2571,13 +2571,12 @@ cli:
           Repetible. Ejecuta `aeat config profile descendiente` sin subcomando para
           introducirlos de forma guiada.
         add_help: Añadir uno o varios descendientes al perfil activo.
-        ambiguous_relacion_advisory: descendiente %{indices} declara meses_madre_trabajo
-          bajo la relación no indicada. El manual concede el mínimo pero excluye la
-          deducción por maternidad del art. 81.1 para un nieto u otro descendiente
-          por consanguinidad distinto de un hijo, o un menor bajo guarda y custodia
-          judicial -- el dato almacenado no permite distinguirlo de un hijo real.
-          Confirma que este descendiente es un hijo, o indica la relación real con
-          RELACION=.
+        ambiguous_relacion_advisory: El descendiente %{indices} declara meses de trabajo
+          materno con la relación predeterminada. El registro no distingue a un hijo
+          de un nieto u otro descendiente por consanguinidad que no sea hijo. Estos
+          últimos no dan derecho a la deducción por maternidad del artículo 81.1,
+          aunque puede corresponder el mínimo por descendientes. Confirma el parentesco
+          antes de aplicar la deducción.
         guarderia_spend_shapes_conflict: Para un descendiente, declare GASTOS_GUARDERIA
           o GASTOS_GUARDERIA_MENSUAL, pero no ambos.
         help: Declarar descendientes para el mínimo por descendientes del art. 58/61

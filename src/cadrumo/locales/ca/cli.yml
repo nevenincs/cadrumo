@@ -2553,12 +2553,12 @@ cli:
           Repetible. Executa `aeat config profile descendiente` sense subcomandament
           per introduir-los de manera guiada.
         add_help: Afegeix un o més descendents al perfil actiu.
-        ambiguous_relacion_advisory: descendent %{indices} declara meses_madre_trabajo
-          sota la relació no indicada. El manual concedeix el mínim però exclou la
-          deducció per maternitat de l'art. 81.1 per a un net o altre descendent per
-          consanguinitat diferent d'un fill, o un menor sota guarda i custòdia judicial
-          -- la dada emmagatzemada no permet distingir-lo d'un fill real. Confirma
-          que aquest descendent és un fill, o indica la relació real amb RELACION=.
+        ambiguous_relacion_advisory: El descendent %{indices} declara mesos de treball
+          matern amb la relació predeterminada. El registre no distingeix un fill
+          d'un net o un altre descendent per consanguinitat que no sigui fill. Aquests
+          darrers no donen dret a la deducció per maternitat de l'article 81.1, tot
+          i que pot correspondre el mínim per descendents. Confirma el parentiu abans
+          d'aplicar la deducció.
         guarderia_spend_shapes_conflict: Per a un descendent, declara GASTOS_GUARDERIA
           o GASTOS_GUARDERIA_MENSUAL, però no tots dos.
         help: Declara descendents per al mínim per descendents de l'art. 58/61 LIRPF.

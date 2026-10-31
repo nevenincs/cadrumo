@@ -2387,12 +2387,12 @@ cli:
           Repeatable. Run `aeat config profile descendiente` with no subcommand to
           enter these guided.
         add_help: Add one or more descendants to the active profile.
-        ambiguous_relacion_advisory: descendiente %{indices} declares meses_madre_trabajo
-          under the unstated relación. The manual grants the mínimo but excludes the
-          Art. 81.1 deducción por maternidad for a grandchild/other consanguinidad
-          descendant, or a minor under judicial guarda y custodia -- the stored fact
-          cannot distinguish either from a true hijo. Confirm this descendant is a
-          hijo, or state the actual relación with RELACION=.
+        ambiguous_relacion_advisory: Descendant %{indices} declares months of maternal
+          work under the default relationship. The record cannot distinguish a child
+          from a grandchild or another descendant by blood who is not a child. The
+          latter do not qualify for the Article 81.1 maternity deduction, although
+          the allowance for descendants may still apply. Confirm the relationship
+          before relying on the deduction.
         guarderia_spend_shapes_conflict: For one descendant, declare GASTOS_GUARDERIA
           or GASTOS_GUARDERIA_MENSUAL, but not both.
         help: Declare descendants for the Art. 58/61 LIRPF minimum allowance for descendants.
