@@ -12,7 +12,7 @@ related:
   - '[[2026-10-03-application-packaging-interpreter-foundation-adr]]'
 modified: '2026-10-31'
 body_schema: body-v2
-body_hash: 'sha256:8bc067ecdfda344945b5072d0a78d67248019d3c0fe3daab45c1cb31b17a3ee5'
+body_hash: 'sha256:4cf1ac297755d62000d722bb6490426f071addb1657bba4efb5087c7da36a472'
 ---
 
 # `macos-platform` plan
@@ -52,4 +52,3 @@ Steps ran mostly in sequence because this 8 GB host admits one native build at a
 ## Verification
 
 The plan is complete when every Step is closed and the integrated review passes. The evidence is: the backend and desktop graphs build for aarch64-apple-darwin; CTest platform, manager and application cases pass; desktop host unit and frontend suites pass; the Python runtime, client, agent-service and MCP suites pass; the staged bundle, DMG and ZIP pass codesign --verify --deep --strict; the packaged app reaches runtime ready, drains cleanly on quit and SIGTERM, contains its runtime on a killed host and records a handoff; and launches use only background, process-targeted control without synthetic input.
-
