@@ -1505,6 +1505,7 @@ desktop:
         vehicle_listed_use: Listed business use (if any)
         vehicle_private_use: Private use
         vehicle_propulsion: Electric drive (if any)
+        wholly_business_hint: Used only for your activity? Write {share}.
       filing:
         choose_year: Choose a year to see where the dotaciones go.
         unavailable: The filing handoff isn't available.
@@ -1646,6 +1647,7 @@ desktop:
         used_by: Used in {count} calculations
         used_by_one: Used in 1 calculation
         value_changed: Changed
+        value_recorded: Recorded
       unrecognised: Not recognised
       until: Until
       write:
@@ -4802,8 +4804,9 @@ ledger:
       intangible: Intangible asset
       material: Tangible asset
     basis_stage:
-      business_allocated: Only the part used in your activity
-      taxpayer_owned: Everything you paid, before setting aside private use
+      business_allocated: Only the business part, already split from a larger cost
+      taxpayer_owned: Everything you paid, including something used only for your
+        activity
       whole_property: A whole property, not yet split into building, land and use
     claim_state:
       claimed: Dotación recorded
@@ -5772,6 +5775,7 @@ sheets:
       foral_retention_gipuzkoa: Withholdings and payments on account paid to Gipuzkoa
       foral_retention_navarra: Withholdings and payments on account paid to Navarre
       gain: Capital gain
+      gain_difference: Gain on the transfer
       garantias: Guarantees
       gastos_deducibles: Deductible expenses
       geographic_mobility_clave: Geographic mobility
@@ -5794,6 +5798,7 @@ sheets:
       isin_code: ISIN code
       locality: Locality
       loss: Capital loss
+      loss_difference: Loss on the transfer
       member_legal_name: Member legal name
       member_state_code: Member state
       member_tax_id: Member tax id
@@ -5811,6 +5816,7 @@ sheets:
       number_type: Number type
       numero_afiliacion: Membership number
       numero_orden: Order number
+      onerous_transfer: Transfer for consideration
       opening_minus_closing_positive: Positive opening-minus-closing difference
       operation_date: Operation date
       operation_kind_code: Operation kind

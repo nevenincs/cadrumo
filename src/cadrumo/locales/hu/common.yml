@@ -1526,6 +1526,7 @@ desktop:
         vehicle_listed_use: Listázott üzleti használat (ha van)
         vehicle_private_use: Magáncélú használat
         vehicle_propulsion: Elektromos hajtás (ha van)
+        wholly_business_hint: Csak a tevékenységedhez használod? Írj {share} értéket.
       filing:
         choose_year: Válassz évet az értékcsökkenési leírás átadásának megtekintéséhez.
         unavailable: A bevallási átadás nem érhető el.
@@ -1670,6 +1671,7 @@ desktop:
         used_by: '{count} számításban szerepel'
         used_by_one: 1 számításban szerepel
         value_changed: Módosítva
+        value_recorded: Rögzítve
       unrecognised: Ismeretlen
       until: Eddig
       write:
@@ -4865,8 +4867,10 @@ ledger:
       intangible: Immateriális eszköz
       material: Tárgyi eszköz
     basis_stage:
-      business_allocated: Csak a tevékenységedben használt rész
-      taxpayer_owned: A teljes kifizetett összeg, a magáncélú használat levonása előtt
+      business_allocated: Csak a tevékenységre jutó rész, már elkülönítve egy nagyobb
+        költségből
+      taxpayer_owned: A teljes kifizetett összeg, akkor is, ha csak a tevékenységedhez
+        használod
       whole_property: Egy teljes ingatlan, még nem bontva épületre, telekre és használatra
     claim_state:
       claimed: Elszámolva
@@ -5870,6 +5874,7 @@ sheets:
       foral_retention_gipuzkoa: Gipuzkoának befizetett visszatartások és előlegek
       foral_retention_navarra: Navarrának befizetett visszatartások és előlegek
       gain: Nyereség
+      gain_difference: Az átruházás nyeresége
       garantias: Garancia
       gastos_deducibles: Levonható költségek
       geographic_mobility_clave: Földrajzi mobilitás
@@ -5892,6 +5897,7 @@ sheets:
       isin_code: ISIN kód
       locality: Település
       loss: Veszteség
+      loss_difference: Az átruházás vesztesége
       member_legal_name: Tag neve
       member_state_code: Tagállam
       member_tax_id: Tag adóazonosítója
@@ -5909,6 +5915,7 @@ sheets:
       number_type: Számozás típusa
       numero_afiliacion: Tagsági szám
       numero_orden: Sorszám
+      onerous_transfer: Visszterhes átruházás
       opening_minus_closing_positive: Pozitív nyitó mínusz záró különbözet
       operation_date: Művelet dátuma
       operation_kind_code: Művelettípus

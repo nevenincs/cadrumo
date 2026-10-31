@@ -1545,6 +1545,7 @@ desktop:
         vehicle_listed_use: Ús professional de la llista (si n'hi ha)
         vehicle_private_use: Ús privat
         vehicle_propulsion: Propulsió elèctrica (si en té)
+        wholly_business_hint: S'usa només a la teva activitat? Escriu {share}.
       filing:
         choose_year: Tria un any per veure on van les dotacions.
         unavailable: El traspàs a la declaració no està disponible.
@@ -1690,6 +1691,7 @@ desktop:
         used_by: S'usa en {count} càlculs
         used_by_one: S'usa en 1 càlcul
         value_changed: Canviat
+        value_recorded: Registrat
       unrecognised: No reconegut
       until: Fins a
       write:
@@ -4883,8 +4885,9 @@ ledger:
       intangible: Immobilitzat intangible
       material: Immobilitzat material
     basis_stage:
-      business_allocated: Només la part usada a la teva activitat
-      taxpayer_owned: Tot el que vas pagar, abans d'apartar l'ús privat
+      business_allocated: Només la part de l'activitat, ja separada d'un cost més
+        gran
+      taxpayer_owned: Tot el que vas pagar, també si s'usa només a la teva activitat
       whole_property: Un immoble sencer, sense separar encara construcció, sòl i ús
     claim_state:
       claimed: Registrada
@@ -5889,6 +5892,7 @@ sheets:
       foral_retention_gipuzkoa: Retencions i ingressos a compte ingressats a Gipuzkoa
       foral_retention_navarra: Retencions i ingressos a compte ingressats a Navarra
       gain: Guany patrimonial
+      gain_difference: Guany per la transmissió
       garantias: Garanties
       gastos_deducibles: Despeses deduïbles
       geographic_mobility_clave: Mobilitat geogràfica
@@ -5913,6 +5917,7 @@ sheets:
       isin_code: Codi ISIN
       locality: Localitat
       loss: Pèrdua patrimonial
+      loss_difference: Pèrdua per la transmissió
       member_legal_name: Raó social del membre
       member_state_code: Estat membre
       member_tax_id: NIF del membre
@@ -5930,6 +5935,7 @@ sheets:
       number_type: Tipus de numeració
       numero_afiliacion: Número d’afiliació
       numero_orden: Número d'ordre
+      onerous_transfer: Transmissió onerosa
       opening_minus_closing_positive: Diferència positiva entre obertura i tancament
       operation_date: Data de l'operació
       operation_kind_code: Clau d'operació

@@ -1549,6 +1549,7 @@ desktop:
         vehicle_listed_use: Uso profesional de la lista (si lo hay)
         vehicle_private_use: Uso privado
         vehicle_propulsion: Propulsión eléctrica (si la tiene)
+        wholly_business_hint: ¿Se usa solo en tu actividad? Escribe {share}.
       filing:
         choose_year: Elige un año para ver a dónde van las dotaciones.
         unavailable: El traspaso a la declaración no está disponible.
@@ -1694,6 +1695,7 @@ desktop:
         used_by: Se usa en {count} cálculos
         used_by_one: Se usa en 1 cálculo
         value_changed: Cambiado
+        value_recorded: Registrado
       unrecognised: No reconocido
       until: Hasta
       write:
@@ -4888,8 +4890,8 @@ ledger:
       intangible: Inmovilizado intangible
       material: Inmovilizado material
     basis_stage:
-      business_allocated: Solo la parte usada en tu actividad
-      taxpayer_owned: Todo lo que pagaste, antes de apartar el uso privado
+      business_allocated: Solo la parte de la actividad, ya separada de un coste mayor
+      taxpayer_owned: Todo lo que pagaste, también si se usa solo en tu actividad
       whole_property: Un inmueble entero, sin separar aún construcción, suelo y uso
     claim_state:
       claimed: Registrada
@@ -5891,6 +5893,7 @@ sheets:
       foral_retention_gipuzkoa: Retenciones e ingresos a cuenta ingresados a Gipuzkoa
       foral_retention_navarra: Retenciones e ingresos a cuenta ingresados a Navarra
       gain: Ganancia patrimonial
+      gain_difference: Ganancia por la transmisión
       garantias: Garantías
       gastos_deducibles: Gastos deducibles
       geographic_mobility_clave: Movilidad geográfica
@@ -5915,6 +5918,7 @@ sheets:
       isin_code: Código ISIN
       locality: Localidad
       loss: Pérdida patrimonial
+      loss_difference: Pérdida por la transmisión
       member_legal_name: Razón social del miembro
       member_state_code: Estado miembro
       member_tax_id: NIF del miembro
@@ -5932,6 +5936,7 @@ sheets:
       number_type: Tipo de numeración
       numero_afiliacion: Número de afiliación
       numero_orden: Número de orden
+      onerous_transfer: Transmisión onerosa
       opening_minus_closing_positive: Diferencia positiva entre apertura y cierre
       operation_date: Fecha de la operación
       operation_kind_code: Clave de operación
