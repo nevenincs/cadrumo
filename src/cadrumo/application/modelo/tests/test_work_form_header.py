@@ -18,13 +18,10 @@ import pytest
 from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import tr
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from ....domain.calculations.registry.tax_id_format import runtime_tax_id_format
 from ....domain.deadlines.festivos import DeadlineHolidayCoverage
 from ....domain.modelos.calculation_revision import CalculationRevisionState
 from ....domain.modelos.verification_report import VerificationCompletenessStatus
 from ..calculation_notes import CALCULATION_NOTE_ATTENTION, GATE_REFUSED_REASONS
-from ..edit_admission import RESPONSIBLE_OWNER
-from ..edit_models import ModeloEditDomainRefusalV1, ModeloEditRefusalCode, ModeloEditRefusedV1
 from ..work_form_findings import ModeloFormAttention
 from ..work_form_header import (
     ModeloFormDeadlineTone,
@@ -56,10 +53,8 @@ from ..work_form_next_step import (
     is_result_field,
     missing_count,
 )
-from ..work_form_service import ModeloWorkFormLoadV1
 from ..workbench_projection import project_modelo_workbench_form, restore_modelo_workbench_form
-from ..workbench_read import ModeloWorkbenchFormReadV1
-from .work_form_fixture import built_form
+from .work_form_fixture import built_form, read_before_calculation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -279,23 +274,7 @@ def test_a_recorded_declaration_states_its_result_and_nothing_left_to_do(operati
 
 def test_the_public_read_carries_the_header_in_the_forms_language(operation: PinnedAuthorityOperation) -> None:
     form = built_form(operation, "210", 2025, "0A", entered=frozenset(), language=_ES)
-    read = ModeloWorkbenchFormReadV1(
-        load=ModeloWorkFormLoadV1(form=form, verified=False, filed=False),
-        admission=ModeloEditRefusedV1(
-            refusal=ModeloEditDomainRefusalV1(
-                code=ModeloEditRefusalCode.ADMISSION_DENIED,
-                facts=("current_calculation_revision_id",),
-                responsible_owner=RESPONSIBLE_OWNER,
-                reconsideration_condition="calculate the declaration before editing it",
-            )
-        ),
-        calculation_revision_id=None,
-        verification_report_id=None,
-        asks_m303_evidence=False,
-        asks_modelo_390=False,
-        registry_revision_id=form.registry_revision_id,
-        tax_id_format=runtime_tax_id_format(authority=operation),
-    )
+    read = read_before_calculation(form, operation)
 
     projection = project_modelo_workbench_form(UUID("13000000-0000-4000-8000-000000000455"), form.work_unit_id, read)
 

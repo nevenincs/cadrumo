@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from decimal import Decimal
+from typing import Any
 
 from ....core.casilla_id import validated_casilla_id
 from ....core.external_constants import OutputLanguage
@@ -15,14 +16,18 @@ from ....core.modelo_work_progress_state import ModeloWorkProgressState
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.schema import RegistrySnapshot
+from ....domain.calculations.registry.tax_id_format import runtime_tax_id_format
 from ....domain.filing.schema import ModeloValueKind
 from ....domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.verification_report import ModeloVerificationFinding
+from ..edit_admission import RESPONSIBLE_OWNER
+from ..edit_models import ModeloEditDomainRefusalV1, ModeloEditRefusalCode, ModeloEditRefusedV1
 from ..work_form import build_modelo_work_form
 from ..work_form_models import ModeloFormCasillaAddressV1, ModeloFormField, ModeloWorkForm
-from ..work_form_service import modelo_form_snapshot
+from ..work_form_service import ModeloWorkFormLoadV1, modelo_form_snapshot
 from ..work_review import ModeloWorkProgress, ModeloWorkReview, build_modelo_work_review_casillas
+from ..workbench_read import ModeloWorkbenchFormReadV1
 
 
 def form_snapshot(operation: PinnedAuthorityOperation, modelo: str, year: int, code: str) -> RegistrySnapshot:
@@ -92,3 +97,32 @@ def form_casilla(form: ModeloWorkForm, casilla_id: str) -> ModeloFormField:
 
 
 __all__ = ["built_form", "form_casilla", "form_snapshot"]
+
+
+def read_before_calculation(
+    form: ModeloWorkForm,
+    operation: PinnedAuthorityOperation,
+    *,
+    verified: bool = False,
+    filed: bool = False,
+    **offer_fields: Any,
+) -> ModeloWorkbenchFormReadV1:
+    """The public form read of a declaration whose edit door is refused until it is calculated."""
+    return ModeloWorkbenchFormReadV1(
+        load=ModeloWorkFormLoadV1(form=form, verified=verified, filed=filed),
+        admission=ModeloEditRefusedV1(
+            refusal=ModeloEditDomainRefusalV1(
+                code=ModeloEditRefusalCode.ADMISSION_DENIED,
+                facts=("current_calculation_revision_id",),
+                responsible_owner=RESPONSIBLE_OWNER,
+                reconsideration_condition="calculate the declaration before editing it",
+            )
+        ),
+        calculation_revision_id=None,
+        verification_report_id=None,
+        asks_m303_evidence=False,
+        asks_modelo_390=False,
+        registry_revision_id=form.registry_revision_id,
+        tax_id_format=runtime_tax_id_format(authority=operation),
+        **offer_fields,
+    )

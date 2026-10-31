@@ -23,7 +23,6 @@ from ....core.period import Period
 from ....core.prior_domiciliation_election import PriorDomiciliationElection
 from ....core.refund_election import RefundElection
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from ....domain.calculations.registry.tax_id_format import runtime_tax_id_format
 from ....domain.modelos.calculation_revision import CalculationRevisionState
 from ....domain.modelos.filing_record import (
     AeatConfirmationState,
@@ -38,8 +37,6 @@ from ....domain.modelos.filing_record import (
 from ....domain.modelos.verification_report import VerificationCompletenessStatus
 from ..calculation_note_gate import gate_refuses
 from ..calculation_notes import CALCULATION_NOTE_ATTENTION, CHECK_REFUSED_REASONS, GATE_REFUSED_REASONS
-from ..edit_admission import RESPONSIBLE_OWNER
-from ..edit_models import ModeloEditDomainRefusalV1, ModeloEditRefusalCode, ModeloEditRefusedV1
 from ..work_form_export_offer import (
     EXPORT_ARTEFACT_LOCALE_KEYS,
     ModeloFormElection,
@@ -60,15 +57,13 @@ from ..work_form_models import (
     map_form_fields,
     revised_field,
 )
-from ..work_form_service import ModeloWorkFormLoadV1
 from ..work_form_typing_effect import (
     ModeloFormDisplacement,
     form_typing_effects,
     typing_effect_words,
 )
 from ..workbench_projection import project_modelo_workbench_form, restore_modelo_workbench_form
-from ..workbench_read import ModeloWorkbenchFormReadV1
-from .work_form_fixture import built_form, form_snapshot
+from .work_form_fixture import built_form, form_snapshot, read_before_calculation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -211,22 +206,11 @@ def test_typing_over_a_box_is_worded_as_the_review_words_its_change(operation: P
 
 def test_the_public_read_carries_the_offer_receipt_and_typing_words(operation: PinnedAuthorityOperation) -> None:
     form = built_form(operation, "303", 2026, "1T", entered=frozenset(), lifecycle=CalculationRevisionState.PRESENTADO)
-    read = ModeloWorkbenchFormReadV1(
-        load=ModeloWorkFormLoadV1(form=form, verified=True, filed=True),
-        admission=ModeloEditRefusedV1(
-            refusal=ModeloEditDomainRefusalV1(
-                code=ModeloEditRefusalCode.ADMISSION_DENIED,
-                facts=("current_calculation_revision_id",),
-                responsible_owner=RESPONSIBLE_OWNER,
-                reconsideration_condition="calculate the declaration before editing it",
-            )
-        ),
-        calculation_revision_id=None,
-        verification_report_id=None,
-        asks_m303_evidence=False,
-        asks_modelo_390=False,
-        registry_revision_id=form.registry_revision_id,
-        tax_id_format=runtime_tax_id_format(authority=operation),
+    read = read_before_calculation(
+        form,
+        operation,
+        verified=True,
+        filed=True,
         export_offer=form_export_offer(
             "303", form_snapshot(operation, "303", 2026, "1T"), _EN, form=form, verified=True, filed=True
         ),
