@@ -51,6 +51,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 _SEDE: Final[str] = Settings.external_constants().aeat.domains.sede
 _SHIFT: Final[int] = 8
 _CONTROL: Final[int] = 2
+_META: Final[int] = 4
 
 # Button, text field and form field at fixed positions of a 400 x 300 page.
 _BUTTON: Final[tuple[int, int]] = (70, 40)
@@ -275,6 +276,18 @@ async def test_input_backspace_and_select_all_edit_the_focused_field() -> None:
 
     assert after_backspace == "ab"
     assert after_select_all == ""
+
+
+@pytest.mark.asyncio
+async def test_input_meta_select_all_selects_the_focused_field() -> None:
+    async with _adapter(_FORM_PAGE) as (adapter, _context, page, _notices):
+        await _click(adapter, _FIELD)
+        await adapter.input(ViewInput(event=TextInput(text="abc")))
+        await _press(adapter, "a", "KeyA", _META)
+        await _press(adapter, "Backspace", "Backspace")
+        value = await page.input_value("#i")
+
+    assert value == ""
 
 
 @pytest.mark.asyncio

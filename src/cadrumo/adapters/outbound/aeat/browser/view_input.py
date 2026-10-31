@@ -80,6 +80,9 @@ _NAVIGATION_COMMIT_TIMEOUT_MS: Final[int] = 15_000
 
 #: CDP modifier bits: Alt 1, Control 2, Meta 4, Shift 8.
 _NON_SHIFT_MODIFIERS: Final[int] = 0b0111
+_CONTROL_MODIFIER: Final[int] = 0b0010
+_META_MODIFIER: Final[int] = 0b0100
+_SELECT_ALL_CHORDS: Final[frozenset[int]] = frozenset({_CONTROL_MODIFIER, _META_MODIFIER})
 
 _POINTER_TYPES: Final[Mapping[PointerAction, str]] = MappingProxyType(
     {
@@ -566,6 +569,10 @@ def _key_parameters(event: KeyInput) -> dict[str, object] | None:
     if text and event.action is KeyAction.DOWN:
         parameters["text"] = text
         parameters["unmodifiedText"] = text
+    if event.action is KeyAction.DOWN and event.key.lower() == "a" and event.modifiers in _SELECT_ALL_CHORDS:
+        # Synthetic key events bypass the platform keymap, so a platform whose
+        # select-all chord is not Control+A needs the editing command named.
+        parameters["commands"] = ["selectAll"]
     return parameters
 
 
