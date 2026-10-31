@@ -33,6 +33,33 @@ def test_identifier_labels_are_exact_shared_technical_terms() -> None:
         assert not is_project_spelling(locale, "idss")
 
 
+def test_hungarian_documentation_format_and_builder_names_keep_exact_case_and_typo_checks() -> None:
+    names = ("Markdown", "reStructuredText", "Sphinx")
+    for name in names:
+        assert is_project_spelling("hu", name)
+        assert not is_project_spelling("hu", name.lower())
+        assert not is_project_spelling("hu", name.upper())
+        assert not is_project_spelling("hu", name + "x")
+    unknown: set[tuple[str, str]] = set()
+    by_cell: dict[tuple[str, str], set[str]] = defaultdict(set)
+
+    class EmptyDictionary:
+        def lookup(self, word: str) -> bool:
+            return False
+
+    key = "parallel:docs/locales/hu/LC_MESSAGES/authoring-guide.po:test"
+    words = (*names, "Markdwon", "reStructuredTex", "Sphinxx", "ordinaryenglish", "misspellledd")
+    check_dictionary_spelling_words(
+        "hu",
+        {word: {("hu", key)} for word in words},
+        {"hu": EmptyDictionary()},
+        {("hu", key): " ".join(words)},
+        unknown,
+        by_cell,
+    )
+    assert by_cell[("hu", key)] == {"Markdwon", "reStructuredTex", "Sphinxx", "ordinaryenglish", "misspellledd"}
+
+
 def test_evidence_format_and_source_names_preserve_nearby_typo_checks(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
