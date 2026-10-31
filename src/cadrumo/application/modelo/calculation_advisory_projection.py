@@ -16,6 +16,7 @@ from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.ids import BindingId, LegalRefId, RelationId, SourceRefId
 from ...domain.calculations.registry.modelo_rendering import modelo_rendering_value
 from ...domain.deadlines.festivos import DeadlineHolidayCoverage
+from ...domain.modelos.calculation_revision_sources import CalculationNoteFact
 from ..aggregation.source_diagnostic_reason import CalculationSourceDiagnosticReason
 from ..aggregation.source_mesh import (
     DIAGNOSTIC_MESSAGE_MAX_LENGTH,
@@ -45,6 +46,7 @@ class CalculationSourceDiagnosticSnapshot(BaseModel):
     remedy: str | None = Field(default=None, min_length=1, max_length=DIAGNOSTIC_REMEDY_MAX_LENGTH)
     resolver_id: str | None = Field(default=None, min_length=1, max_length=128)
     source_ref: str | None = Field(default=None, min_length=1, max_length=256)
+    fact: CalculationNoteFact | None = None
     binding_id: BindingId | None = None
     relation_id: RelationId | None = None
     relation_ids: tuple[RelationId, ...] = ()

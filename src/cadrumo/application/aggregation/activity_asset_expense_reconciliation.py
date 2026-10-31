@@ -13,6 +13,7 @@ from pydantic import BaseModel, Field
 from ...core.identity.transaction_ids import TransactionId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.categories.spending_category_catalogue import amortizable_spending_categories
+from ...domain.modelos.calculation_revision_sources import CalculationNoteFact, CalculationNoteSentence
 from ...domain.renta.actividad_asset.claims import current_revisions
 from ...domain.renta.actividad_asset.lifecycle import ActivityAssetRevision, AssetBasisStage
 from . import _shared_issue_reasons
@@ -292,6 +293,12 @@ def unregistered_amortization_row_diagnostics(
             "register the element in the activity-asset register, naming this transaction as its acquisition, "
             "or reclassify the row if it is not an amortizable element"
         ),
+        fact=lambda row: CalculationNoteFact.of(
+            CalculationNoteSentence.ROW_UNREGISTERED,
+            row=row.transaction_id[-12:],
+            category=row.category or "",
+            year=row.tax_year,
+        ),
     )
 
 
@@ -328,6 +335,11 @@ def register_owned_acquisition_diagnostics(
         remedy=lambda _acquisition: (
             "the register owns this asset's Renta deduction: record the year's amortization charge so the "
             "schedule's claim is declared instead of the purchase"
+        ),
+        fact=lambda acquisition: CalculationNoteFact.of(
+            CalculationNoteSentence.REGISTER_OWNED_ACQUISITION,
+            row=acquisition.transaction_id[-12:],
+            element=acquisition.asset_id,
         ),
     )
 

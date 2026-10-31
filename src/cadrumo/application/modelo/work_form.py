@@ -158,7 +158,9 @@ def build_modelo_work_form(
         overridden_binding_ids=overridden_binding_ids,
         language=language,
         unworked_casilla_ids=frozenset(
-            casilla_id for reason, casilla_id, _ in sources if reason in UNWORKED_BOX_REASONS and casilla_id is not None
+            casilla_id
+            for reason, casilla_id, _, _ in sources
+            if reason in UNWORKED_BOX_REASONS and casilla_id is not None
         ),
     )
     held = calculation_diagnostics is not None

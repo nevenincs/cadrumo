@@ -46,7 +46,7 @@ from ...domain.modelos.verification_report import (
     ModeloVerificationFindingKind,
     VerificationCompletenessStatus,
 )
-from .calculation_notes import RECORDS_REASONS, what_locale_key, what_to_do_locale_key
+from .calculation_notes import RECORDS_REASONS, note_fact_text, what_locale_key, what_to_do_locale_key
 from .finding_message_text import finding_message_text
 from .source_policy import SourceSurface
 from .work_form_findings import ModeloFormAttention, ModeloFormIssue
@@ -131,7 +131,7 @@ class ModeloFormIssueLine(BaseModel):
     message: str = Field(min_length=1)
     #: What to do, as one sentence that says so.
     action: str = Field(min_length=1)
-    #: What this kind of finding means; ``None`` for a calculation note.
+    #: What this kind of finding means; ``None`` for a calculation note that states no facts of its own.
     detail: str | None
     #: The codes, facts and references, for the filer who asks for technical details.
     technical: str = Field(min_length=1)
@@ -386,16 +386,19 @@ def _note_identifiers(
 def _note_line(note: ModeloFormCalculationNote, context: _Context) -> ModeloFormIssueLine:
     """One thing the latest calculation noticed, in the same parts as a finding."""
     field, box_text, codes = _note_identifiers(note, context)
+    what = context.say(what_locale_key(note.reason), box=box_text)
+    # What this note is about comes first, so it is read without opening anything; the kind explains it.
+    message, detail = (what, None) if note.fact is None else (note_fact_text(note.fact, locale=context.language), what)
     return ModeloFormIssueLine(
         # A note the filing gate refuses on is listed with what blocks filing, as the counts count it.
         level=ModeloFormAttention.BLOCKS if note.withholds_filing else note.attention,
         box=note.box or None,
         where=_note_where(note, field, context),
-        message=context.say(what_locale_key(note.reason), box=box_text),
+        message=message,
         action=context.say(
             _WHAT_TO_DO_LOCALE_KEY, action=context.say(what_to_do_locale_key(note.reason), box=box_text)
         ),
-        detail=None,
+        detail=detail,
         technical=f"{context.say(_TECHNICAL_LOCALE_KEY)}: {' · '.join(codes)}",
         address=None if field is None else field.address,
         surface=SourceSurface.LEDGER if note.reason in RECORDS_REASONS else None,

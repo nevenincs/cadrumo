@@ -18,13 +18,14 @@ from cadrumo.domain.calculations.registry.actividad_asset_disposal_bindings impo
     activity_asset_disposal_route_casillas,
 )
 from cadrumo.domain.invoices.catalogue import InvoiceCatalogue
-from cadrumo.domain.modelos.calculation_revision_sources import ActivityAssetConsumption
+from cadrumo.domain.modelos.calculation_revision_sources import ActivityAssetConsumption, CalculationNoteSentence
 from cadrumo.domain.renta.actividad_asset.disposal import (
     ActivityAssetDisposal,
     ActivityAssetDisposalReason,
     PriorFreeDepreciationRegime,
 )
 from cadrumo.domain.renta.actividad_asset.errors import ActividadAssetIncompleteError
+from cadrumo.domain.renta.actividad_asset.lifecycle import ActivityAssetRevision
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 
 from ...actividad_asset.history import ActivityAssetHistory
@@ -341,3 +342,64 @@ def test_a_modelo_130_excess_records_the_figures_it_rests_on() -> None:
     assert current.disposals_changed_from(recorded) == 1
     assert _income_box(_income(history("4000.00"), "4T")) == Decimal("2204.93")
     assert _income_box(_income(history("5000.00"), "4T")) == Decimal("3204.93")
+
+
+def _two_sales(*, second_proceeds: str) -> ActivityAssetHistory:
+    first = register_asset("first", transaction_id="c" * 64)
+    second = register_asset("second", transaction_id="d" * 64)
+
+    def sold(asset: ActivityAssetRevision, proceeds: str) -> ActivityAssetRevision:
+        return asset.with_disposal(
+            ActivityAssetDisposal(
+                disposal_date=date(2025, 6, 30),
+                reason=ActivityAssetDisposalReason.SALE,
+                proceeds=Decimal(proceeds),
+                transmission_costs=Decimal("0.00"),
+            ),
+        )
+
+    return (
+        ActivityAssetHistory(revisions=(first, second))
+        .apply_correction(sold(first, "12000.00"), ())
+        .apply_correction(sold(second, second_proceeds), ())
+    )
+
+
+def _shared_row_facts(resolution: CalculationSourceResolution) -> dict[str, dict[str, str]]:
+    return {
+        values["element"]: values
+        for values in (
+            dict(item.fact.values)
+            for item in resolution.diagnostics
+            if item.fact is not None and item.fact.sentence is CalculationNoteSentence.DISPOSAL_SHARED_ROW
+        )
+    }
+
+
+def test_a_gain_and_a_loss_that_share_the_row_are_each_stated_for_a_row_of_their_own() -> None:
+    # Net value 12,000 - 297.53 = 11,702.47: 12,000 gains 297.53 and 10,000 loses 1,702.47.
+    resolution = resolve_m100(_two_sales(second_proceeds="10000.00"))
+
+    facts = _shared_row_facts(resolution)
+
+    assert _boxes(resolution) == {"1654": Decimal("297.53"), "1639": Decimal("1702.47")}
+    assert facts["first"]["amount"] == "297.53"
+    assert facts["first"]["box"] == "1654"
+    assert facts["first"]["transmission_value"] == "12000.00"
+    assert facts["first"]["net_value"] == "11702.47"
+    assert facts["first"]["date"] == "2025-06-30"
+    assert facts["first"]["count"] == "2"
+    assert facts["second"]["amount"] == "1702.47"
+    assert facts["second"]["transmission_value"] == "10000.00"
+    assert _blocks(resolution) == set()
+
+
+def test_two_gains_keep_their_sum_for_the_forms_total_and_each_is_still_stated() -> None:
+    resolution = resolve_m100(_two_sales(second_proceeds="12000.00"))
+
+    assert _boxes(resolution) == {"1654": Decimal("595.06")}
+    assert set(_shared_row_facts(resolution)) == {"first", "second"}
+
+
+def test_one_sale_has_its_row_and_needs_no_such_statement() -> None:
+    assert _shared_row_facts(resolve_m100(_disposed())) == {}

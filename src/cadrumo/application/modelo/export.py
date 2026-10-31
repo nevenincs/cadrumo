@@ -66,6 +66,7 @@ from ...domain.iva_compensation.reconciliation import IvaCompensationReconciliat
 from ...domain.modelos.calculation_revision import (
     CalculationRevision,
 )
+from ...domain.modelos.calculation_revision_sources import recorded_calculation_notes
 from ...domain.modelos.errors import (
     ModeloError,
     ModeloExportError,
@@ -285,6 +286,7 @@ def _persist_exported_draft(
     return _export_result(
         command=command,
         work_unit=work_unit,
+        revision=revision,
         period=period,
         receipt=receipt,
         event=event,
@@ -324,6 +326,7 @@ def _export_result(
     *,
     command: ModeloExportCommand,
     work_unit: WorkUnit,
+    revision: CalculationRevision,
     period: Period,
     receipt: DeclaracionExportResult | FilingExportConsumedResult,
     event: BucketEvent,
@@ -343,6 +346,7 @@ def _export_result(
     completeness_unverified = export_completeness_unverified(work_unit, schema_provider)
 
     return ModeloExportResult(
+        calculation_notes=recorded_calculation_notes(revision.source_issues),
         calculation_revision_id=command.calculation_revision_id,
         work_unit_id=work_unit.work_unit_id,
         bucket_id=work_unit.bucket_id,

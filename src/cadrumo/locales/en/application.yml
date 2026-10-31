@@ -891,8 +891,8 @@ application:
       activity_asset_disposal_finding:
         what: The disposal of an asset has a point you should check, though it does
           not stop this form.
-        what_to_do: Read the note on the asset's disposal, and record or correct what
-          it names if it applies to you.
+        what_to_do: Check what this note says about the disposal, and record or correct
+          it if it applies to you.
       activity_asset_foral_territory:
         what: You live in the Basque Country or Navarre in this period, where other
           rules govern amortisation. It is outside this calculation and no figure is
@@ -1179,6 +1179,85 @@ application:
           is shown without support.
         what_to_do: Add the detail records for the year in your records, then calculate
           again.
+    calc_diagnostic_fact:
+      accrual_unavailable: The depreciation of asset {element} could not be worked
+        out, so it is not included.
+      activity_undeclared: The purchase of asset {element} has no type of activity
+        and another of your assets is agricultural, so it counts as non-agricultural.
+      agrarian_excluded: Asset {element} belongs to an agricultural activity, so it
+        is left out of the {period} instalment.
+      amortization_box_unbound: This edition has no box for the depreciation of asset
+        {element}, so it adds nothing to this calculation.
+      claim_gap_accrued: 'Asset {element} has no recorded depreciation from {start}
+        to {end}: {amount} EUR accrued, and box {box} declares only what is recorded.'
+      claim_gap_free_method: Asset {element} has no recorded depreciation from {start}
+        to {end}. Its method leaves the amount to you, so none can be worked out,
+        and box {box} declares only what is recorded.
+      disposal_claim_gap: Asset {element}, disposed of on {date}, has no recorded
+        depreciation for part of {year}. Its minimum still reduces the cost.
+      disposal_exemption_not_computed: Any exemption or deferral on disposing of asset
+        {element} on {date} is not worked out here, so the full result stands.
+      disposal_figure_element_row: '{amount} EUR from selling asset {element} on {date}
+        enters box {box}. On its row, enter the dates and values: {transmission_value}
+        EUR at sale and a net value of {net_value} EUR.'
+      disposal_figure_in_box: '{amount} EUR from disposing of asset {element} on {date}
+        enters box {box}.'
+      disposal_figure_no_box: '{amount} EUR from disposing of asset {element} on {date}
+        reaches no box of this edition.'
+      disposal_figure_property_row: '{amount} EUR from selling asset {element} on
+        {date} enters box {box}. On its row, mark the property as used in an activity
+        and enter the dates and values: {transmission_value} EUR at sale and a net
+        value of {net_value} EUR.'
+      disposal_instalment_agrarian_excess: The {amount} EUR excess on disposing of
+        asset {element} on {date}, in an agricultural activity, has no established
+        instalment line. It is left to you.
+      disposal_instalment_excess_unresolved: The excess on disposing of asset {element}
+        on {date} could not be worked out, so this instalment carries none.
+      disposal_later_affectation: The sale of asset {element} on {date} falls within
+        the period after a later change of use that alters its route, so its result
+        of {amount} EUR enters no box and is left to you.
+      disposal_m131_excess: The {amount} EUR excess on disposing of asset {element}
+        on {date} does not reach Modelo 131, whose instructions do not address it.
+      disposal_m131_excess_unresolved: The excess on disposing of asset {element}
+        on {date} could not be worked out, and Modelo 131, whose instructions do not
+        address it, carries none.
+      disposal_minimum_exceeded_deduction: On asset {element}, disposed of on {date},
+        the minimum for {year} exceeded what was deducted, raising the reduction of
+        cost by {effect} EUR.
+      disposal_minimum_unresolved: On asset {element}, disposed of on {date}, no edition
+        gives the minimum for {year}, so only what was deducted reduces the cost.
+      disposal_modules_agrarian_excess: The {amount} EUR excess on disposing of asset
+        {element} on {date}, in an agricultural activity under modules, has no established
+        line. It is left to you.
+      disposal_no_minimum_authority: On asset {element}, disposed of on {date}, no
+        minimum applies to {year}, so only what was deducted reduces the cost.
+      disposal_shared_row: 'The form gives each sale its own row, and this calculation
+        carries {count} sales together. Enter asset {element} on a row of its own:
+        sold on {date} for {transmission_value} EUR, net value {net_value} EUR, {amount}
+        EUR in box {box}.'
+      disposal_unresolved_income: The result of disposing of asset {element} on {date}
+        could not be worked out, so activity income may be understated.
+      disposal_unresolved_no_box: The result of disposing of asset {element} on {date}
+        could not be worked out, so no box carries it.
+      instalment_free_gap: Asset {element} has no recorded depreciation from {start}
+        to {end}. Its method leaves the amount to you, so it adds nothing to box {box}.
+      possibly_durable_expense: Ledger entry {row} (category {category}) deducts as
+        a current expense, and its description reads like a long-term asset.
+      register_cost_exceeds_paid: Assets {elements} state a cost of {cost} EUR, and
+        the ledger entries they name paid {paid} EUR.
+      register_owned_acquisition: Ledger entry {row} is the purchase of asset {element},
+        so it is depreciated rather than deducted.
+      register_partly_accounted: The ledger entries of assets {elements} declare a
+        base of {base} EUR and the assets account for {price} EUR, so the remaining
+        {remainder} EUR deducts nothing.
+      register_price_exceeds_base: Assets {elements} state a price of {price} EUR,
+        and the ledger entries they name declare a base of {base} EUR.
+      register_row_missing: 'Assets {elements} name ledger entries that no longer
+        exist: {rows}.'
+      residence_period_unknown: No tax residence is recorded for {date}, so your assets
+        count as if Modelos 100 and 130 apply.
+      row_unregistered: Ledger entry {row} (category {category}, {year}) records an
+        asset your register does not hold.
     calculation_report:
       local_calculation_notice: 'Cadrumo local calculation report. Not official AEAT
         filing evidence. Official evidence comes from AEAT after filing: justificante;

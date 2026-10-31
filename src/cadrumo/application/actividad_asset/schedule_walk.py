@@ -11,7 +11,7 @@ RIRPF art. 40 and is a separate figure, never subtracted here.  Nothing here rec
 from __future__ import annotations
 
 from collections.abc import Mapping
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import date, timedelta
 from decimal import Decimal
 from enum import StrEnum
@@ -293,6 +293,80 @@ class M130ElementAccrual:
     activity_undeclared: bool = False
 
 
+class M100GapKind(StrEnum):
+    """What can be said about an interval of the year no effective claim covers."""
+
+    ACCRUED = "accrued"
+    FREE_METHOD = "free_method"
+    UNAVAILABLE = "unavailable"
+
+
+@dataclass(frozen=True, slots=True)
+class M100ClaimGap:
+    """One interval of an element's year that Modelo 100 does not declare, because no claim records it."""
+
+    revision: ActivityAssetRevision
+    kind: M100GapKind
+    covered_from: date
+    covered_until: date
+    accrued: Decimal | None = None
+    error: ActividadAssetError | RegistryError | None = None
+
+
+def m100_claim_gaps(
+    revision: ActivityAssetRevision,
+    history: ActivityAssetHistory,
+    *,
+    forecast: ActivityAssetForecastOperation,
+    tax_year: int,
+) -> tuple[M100ClaimGap, ...]:
+    """Find the intervals of ``tax_year`` an element has no claim for and what each would have accrued.
+
+    An interval whose schedule has nothing left to give is no gap. Neither is a free
+    method's once its base is used up.
+
+    Returns:
+        One entry per interval that matters, in date order.
+    """
+    gaps: list[M100ClaimGap] = []
+    for gap in uncovered_claim_intervals(
+        revision,
+        history.claims,
+        start=date(tax_year, 1, 1),
+        end=date(tax_year + 1, 1, 1),
+    ):
+        interval = M100ClaimGap(
+            revision=revision,
+            kind=M100GapKind.FREE_METHOD,
+            covered_from=gap.covered_from,
+            covered_until=gap.covered_until,
+        )
+        if revision.amortization.method in FREE_AMOUNT_METHODS:
+            if free_base_remains(revision, history, tax_year=tax_year):
+                gaps.append(interval)
+            continue
+        try:
+            charge = forecast(
+                revision,
+                covered_from=gap.covered_from,
+                covered_until=gap.covered_until,
+                history=asset_schedule_history(
+                    claims_through_year(history.claims, tax_year),
+                    history.revisions,
+                    asset_id=revision.asset_id,
+                    tax_year=tax_year,
+                ),
+            )
+        except ActividadAssetPeriodElapsedError:
+            continue
+        except (ActividadAssetError, RegistryError) as error:
+            gaps.append(replace(interval, kind=M100GapKind.UNAVAILABLE, error=error))
+            continue
+        if charge.amount > Decimal("0"):
+            gaps.append(replace(interval, kind=M100GapKind.ACCRUED, accrued=charge.amount))
+    return tuple(gaps)
+
+
 def m130_register_accruals(
     history: ActivityAssetHistory,
     *,
@@ -420,12 +494,15 @@ def free_base_remains(revision: ActivityAssetRevision, history: ActivityAssetHis
 
 
 __all__ = [
+    "M100ClaimGap",
+    "M100GapKind",
     "M130Contribution",
     "M130ElementAccrual",
     "M130ElementOutcome",
     "PlanFigureAbsence",
     "WalkedYear",
     "free_base_remains",
+    "m100_claim_gaps",
     "m130_register_accruals",
     "walk_element",
 ]

@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 from collections.abc import Iterable, Sequence
-from typing import Final, Literal
+from enum import StrEnum
+from typing import Final, Literal, Self
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -118,6 +119,81 @@ class CalculationSourceRef(BaseModel):
         return self
 
 
+CALCULATION_SOURCE_ISSUE_MESSAGE_LIMIT: Final[int] = 512
+"""A durable issue's technical account stops here, so a long one cannot fail the calculation it describes."""
+
+
+class CalculationNoteSentence(StrEnum):
+    """The catalogue sentence that states one note's facts."""
+
+    CLAIM_GAP_ACCRUED = "claim_gap_accrued"
+    CLAIM_GAP_FREE_METHOD = "claim_gap_free_method"
+    INSTALMENT_FREE_GAP = "instalment_free_gap"
+    ACCRUAL_UNAVAILABLE = "accrual_unavailable"
+    AMORTIZATION_BOX_UNBOUND = "amortization_box_unbound"
+    ACTIVITY_UNDECLARED = "activity_undeclared"
+    AGRARIAN_EXCLUDED = "agrarian_excluded"
+    RESIDENCE_PERIOD_UNKNOWN = "residence_period_unknown"
+    ROW_UNREGISTERED = "row_unregistered"
+    REGISTER_OWNED_ACQUISITION = "register_owned_acquisition"
+    POSSIBLY_DURABLE_EXPENSE = "possibly_durable_expense"
+    REGISTER_ROW_MISSING = "register_row_missing"
+    REGISTER_COST_EXCEEDS_PAID = "register_cost_exceeds_paid"
+    REGISTER_PRICE_EXCEEDS_BASE = "register_price_exceeds_base"
+    REGISTER_PARTLY_ACCOUNTED = "register_partly_accounted"
+    DISPOSAL_UNRESOLVED_INCOME = "disposal_unresolved_income"
+    DISPOSAL_UNRESOLVED_NO_BOX = "disposal_unresolved_no_box"
+    DISPOSAL_INSTALMENT_EXCESS_UNRESOLVED = "disposal_instalment_excess_unresolved"
+    DISPOSAL_INSTALMENT_AGRARIAN_EXCESS = "disposal_instalment_agrarian_excess"
+    DISPOSAL_MODULES_AGRARIAN_EXCESS = "disposal_modules_agrarian_excess"
+    DISPOSAL_M131_EXCESS = "disposal_m131_excess"
+    DISPOSAL_M131_EXCESS_UNRESOLVED = "disposal_m131_excess_unresolved"
+    DISPOSAL_LATER_AFFECTATION = "disposal_later_affectation"
+    DISPOSAL_FIGURE_NO_BOX = "disposal_figure_no_box"
+    DISPOSAL_FIGURE_IN_BOX = "disposal_figure_in_box"
+    DISPOSAL_FIGURE_ELEMENT_ROW = "disposal_figure_element_row"
+    DISPOSAL_FIGURE_PROPERTY_ROW = "disposal_figure_property_row"
+    DISPOSAL_SHARED_ROW = "disposal_shared_row"
+    DISPOSAL_CLAIM_GAP = "disposal_claim_gap"
+    DISPOSAL_MINIMUM_EXCEEDED_DEDUCTION = "disposal_minimum_exceeded_deduction"
+    DISPOSAL_NO_MINIMUM_AUTHORITY = "disposal_no_minimum_authority"
+    DISPOSAL_MINIMUM_UNRESOLVED = "disposal_minimum_unresolved"
+    DISPOSAL_EXEMPTION_NOT_COMPUTED = "disposal_exemption_not_computed"
+
+
+class CalculationNoteFact(BaseModel):
+    """What one note says about its own subject: a catalogue sentence and the values it names.
+
+    A note's reason says what kind of thing was noticed, and several notes can share
+    a reason. This says which row, element, interval and amount this one is about, so
+    what was known at calculation stays readable in every language after the process
+    that calculated it has gone. Values are text the sentence prints as they stand.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    sentence: CalculationNoteSentence
+    values: tuple[tuple[str, str], ...] = ()
+
+    @classmethod
+    def of(cls, sentence: CalculationNoteSentence, /, **values: object) -> Self:
+        """Build the fact from named values, in a stable order."""
+        return cls(sentence=sentence, values=tuple(sorted((name, str(value)) for name, value in values.items())))
+
+    def identity(self) -> tuple[str, ...]:
+        """Flatten the fact for a revision's content identity and for telling two notes apart."""
+        return (self.sentence.value, *(part for pair in self.values for part in pair))
+
+
+class RecordedCalculationNote(BaseModel):
+    """A note kept with a calculation, as verification and export restate it."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    reason: str = Field(min_length=1, max_length=64)
+    fact: CalculationNoteFact
+
+
 class CalculationSourceIssue(BaseModel):
     """One durable unresolved source condition found while calculating a revision.
 
@@ -161,8 +237,11 @@ class CalculationSourceIssue(BaseModel):
     ``activity_asset_residence_unresolved`` is a tax residence that could not be
     read while the register holds elements. These three persist in the same way:
     the amortization is left out and the rest of the declaration stands.
-    ``binding_source`` is ``None`` only where the condition names no binding
-    source kind.
+    The other activity-asset reasons persist as durable notes for the same cause:
+    what was known about the register at calculation stays with the filed record.
+    None of them withholds anything. ``fact`` states such a note's own row, element,
+    interval and amount. ``binding_source`` is ``None`` only where the condition
+    names no binding source kind.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -181,12 +260,24 @@ class CalculationSourceIssue(BaseModel):
         "ledger_amortization_row_unregistered",
         "activity_asset_foral_territory",
         "activity_asset_residence_unresolved",
+        "activity_asset_claim_gap",
+        "activity_asset_accrual_unavailable",
+        "activity_asset_activity_undeclared",
+        "activity_asset_agrarian_excluded",
+        "activity_asset_residence_period_unknown",
+        "activity_asset_disposal_finding",
+        "register_acquisition_exceeds_ledger",
+        "register_acquisition_partly_accounted",
+        "register_acquisition_row_missing",
+        "register_owned_capital_acquisition",
+        "ledger_expense_may_be_durable",
     ]
     binding_source: BindingSourceKind | None
-    message: str = Field(min_length=1, max_length=512)
+    message: str = Field(min_length=1, max_length=CALCULATION_SOURCE_ISSUE_MESSAGE_LIMIT)
     resolver_id: str | None = Field(default=None, min_length=1, max_length=128)
     source_ref: str | None = Field(default=None, min_length=1, max_length=256)
     casilla_id: CasillaId | None = None
+    fact: CalculationNoteFact | None = None
 
 
 ACTIVITY_ASSET_CLAIM_REF_PREFIX: Final = "activity-asset-claim:"
@@ -285,3 +376,12 @@ def validate_revision_source_provenance(rows: Sequence[CalculationSourceRef]) ->
         if row.lineage_role is CalculationSourceLineageRole.CONTRIBUTOR
     ):
         raise ModeloValidationError("source provenance contributor parent does not resolve to a primary")
+
+
+def recorded_calculation_notes(issues: Iterable[CalculationSourceIssue]) -> tuple[RecordedCalculationNote, ...]:
+    """The notes a calculation kept that state their own facts, once each and in the order they were raised."""
+    return tuple(
+        dict.fromkeys(
+            RecordedCalculationNote(reason=issue.reason, fact=issue.fact) for issue in issues if issue.fact is not None
+        )
+    )

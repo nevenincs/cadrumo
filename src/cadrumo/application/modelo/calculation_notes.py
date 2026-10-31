@@ -23,7 +23,10 @@ form prints it (:data:`PRINTED_BOX_REASONS`, as :mod:`.printed_boxes` reads the
 form); a working figure is worth checking. A value arriving by an undeclared
 route is worth checking and persists with the calculation: it still fires for a
 route kept without a terminal origin by design, so refusing on it would refuse
-declarations calculated through that route. Every diagnostic that does not persist is held in this process only until
+declarations calculated through that route. An activity-asset note persists too,
+with the row, element, interval and amount it names (:func:`fact_locale_key`), so
+what was known at calculation stays with the filed record; it withholds nothing.
+Every diagnostic that does not persist is held in this process only until
 the next calculation of the declaration (:class:`CalculationNoteStore`), and a
 declaration opened afresh says to calculate again to see them.
 """
@@ -36,6 +39,8 @@ from types import MappingProxyType
 from typing import Final, get_args
 
 from ...core.aggregation import BindingSourceKind
+from ...core.i18n.render import tr
+from ...domain.modelos.calculation_revision_sources import CalculationNoteFact, CalculationNoteSentence
 from ..aggregation.source_diagnostic_reason import CalculationSourceDiagnosticReason
 from ..aggregation.source_mesh import CalculationSourceDiagnostic
 from .work_form_findings import ModeloFormAttention
@@ -183,6 +188,7 @@ RECORDS_REASONS: Final[frozenset[str]] = frozenset(
 """Reasons whose cause is an entry in the filer's records, where the note sits and is put right."""
 
 _KEY_ROOT: Final[str] = "application.modelo.calc_diagnostic"
+_FACT_KEY_ROOT: Final[str] = "application.modelo.calc_diagnostic_fact"
 STALE_LOCALE_KEY: Final[str] = "application.modelo.calc_diagnostic.stale"
 REOPEN_HINT_LOCALE_KEY: Final[str] = "application.modelo.calc_diagnostic.reopen_hint"
 
@@ -206,6 +212,16 @@ def what_locale_key(reason: str) -> str:
 def what_to_do_locale_key(reason: str) -> str:
     """The catalogue key of the sentence saying what to do about it."""
     return f"{_KEY_ROOT}.{reason}.what_to_do"
+
+
+def fact_locale_key(sentence: CalculationNoteSentence) -> str:
+    """The catalogue key of the sentence that states a note's own row, element, interval and amount."""
+    return f"{_FACT_KEY_ROOT}.{sentence.value}"
+
+
+def note_fact_text(fact: CalculationNoteFact, *, locale: str | None = None) -> str:
+    """State a note's facts in words, in ``locale`` or the active language."""
+    return tr(fact_locale_key(fact.sentence), locale=locale, **dict(fact.values))
 
 
 def durable_binding_source(diagnostic: CalculationSourceDiagnostic) -> BindingSourceKind | None:
@@ -287,7 +303,9 @@ __all__ = [
     "UNWORKED_BOX_REASONS",
     "CalculationNoteStore",
     "durable_binding_source",
+    "fact_locale_key",
     "note_attention",
+    "note_fact_text",
     "what_locale_key",
     "what_to_do_locale_key",
 ]

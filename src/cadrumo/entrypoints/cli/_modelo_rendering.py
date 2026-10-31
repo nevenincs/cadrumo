@@ -17,7 +17,7 @@ and uniform :class:`~cadrumo.core.json_contract.Notice` rows into
 
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from decimal import Decimal
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Final
@@ -57,6 +57,7 @@ if TYPE_CHECKING:
     # calculate module's own deferral of the same type.
     from ...application.aggregation.source_mesh import CalculationSourceDiagnostic
     from ...application.modelo.printed_boxes import PrintedBoxes
+    from ...domain.modelos.calculation_revision_sources import RecordedCalculationNote
 
 
 def _modelo_rendering_value(key: str) -> str:
@@ -240,7 +241,7 @@ def source_diagnostic_notice(
         # remains reserved for Notice.action by the Notice validator.
         "remedy": diagnostic.remedy,
     }
-    from ...application.modelo.calculation_notes import note_attention, what_locale_key
+    from ...application.modelo.calculation_notes import note_attention, note_fact_text, what_locale_key
     from ...application.modelo.work_form_findings import ModeloFormAttention
 
     box = None if boxes is None or diagnostic.casilla_id is None else boxes.number(str(diagnostic.casilla_id))
@@ -250,9 +251,35 @@ def source_diagnostic_notice(
     return Notice(
         severity=NoticeSeverity.INFO if attention is ModeloFormAttention.INFO else NoticeSeverity.WARNING,
         code=code,
-        message=tr(what_locale_key(diagnostic.reason), box=_box_words(box)),
+        message=(
+            tr(what_locale_key(diagnostic.reason), box=_box_words(box))
+            if diagnostic.fact is None
+            else note_fact_text(diagnostic.fact)
+        ),
         context=context,
     )
+
+
+def recorded_note_notice(note: RecordedCalculationNote, *, code: str) -> Notice:
+    """Restate a note the calculation kept, where a command reports on that calculation afterwards."""
+    from ...application.modelo.calculation_notes import note_attention, note_fact_text
+    from ...application.modelo.work_form_findings import ModeloFormAttention
+
+    attention = note_attention(note.reason, box=None)
+    return Notice(
+        severity=NoticeSeverity.INFO if attention is ModeloFormAttention.INFO else NoticeSeverity.WARNING,
+        code=code,
+        message=note_fact_text(note.fact),
+        context={"reason": note.reason, "level": attention.value},
+    )
+
+
+def recorded_note_notices(
+    notes: Iterable[RecordedCalculationNote], *, code: str
+) -> tuple[tuple[Notice, ...], tuple[str, ...]]:
+    """Restate kept notes as notices and as the text lines that say the same."""
+    notices = tuple(recorded_note_notice(note, code=code) for note in notes)
+    return notices, tuple(source_diagnostic_notice_text(notice) for notice in notices)
 
 
 def _box_words(box: str | None) -> str:
