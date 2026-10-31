@@ -50,6 +50,37 @@ Confirm the command is on your path:
 aeat --version
 ```
 
+## Open the macOS app
+
+The macOS app, `Cadrumo.app`, is not notarized by Apple. Cadrumo is an
+open-source project with no Apple Developer ID, and it will not get one, so every
+copy carries only an ad-hoc signature. That signature lets macOS check that the
+app has not changed since it was built. It does not tell macOS who built it.
+
+If you build the app yourself from a source checkout, macOS opens it without a
+warning. The native build and its prerequisites are described in
+`native/CONTRACT.md` in the source repository.
+
+macOS quarantines a copy that you download as a disk image (DMG) or ZIP, and
+refuses to open it the first time. Drag `Cadrumo.app` to your Applications
+folder, then do one of the following:
+
+- Open the app once and choose **Done** in the warning. Go to
+  **System Settings** > **Privacy & Security**, choose **Open Anyway** next to
+  the message about Cadrumo, and confirm with your password.
+- Remove the quarantine in Terminal:
+
+  ```bash
+  xattr -dr com.apple.quarantine /Applications/Cadrumo.app
+  ```
+
+Do this only for a copy that comes from Cadrumo's own release channel. After
+the first run, the app opens normally.
+
+When the app runs from an Applications folder, its background manager starts
+when you sign in to your Mac, and macOS lists it under Login Items. To stop
+that, turn off **Start at sign-in** in the manager's menu bar item.
+
 ## Install optional extras
 
 The core install is lean. Each optional extra adds one capability:
