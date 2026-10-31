@@ -1318,10 +1318,10 @@ cli:
           y en el evento de exportación subyacente.
         bucket_id_help: Id del bucket sobre el que opera el paquete de revisión (por
           defecto el perfil activo).
-        build_help: Ensambla un paquete de revisión compartible y verificable por
-          checksum (borrador fichero-BOE, origen del cálculo guardado y justificantes
-          de tus registros incluidos) para entregar al asesor. Solo local; nunca contacta
-          con la AEAT.
+        build_help: Ensambla un paquete de revisión compartible y verificable mediante
+          sumas de comprobación (borrador fichero-BOE, origen del cálculo guardado
+          y justificantes de tus registros incluidos) para entregar al asesor. Solo
+          local; nunca contacta con la AEAT.
         counter_sign_help: Contrafirma un paquete de revisión ya firmado por el declarante
           en nombre del asesor fiscal que lo recibe y escribe el sobre del recibo
           en --output. Solo local; nunca contacta con la AEAT.
@@ -1409,9 +1409,9 @@ cli:
         signature_path_help: Ruta del sobre de firma JSON generado por `sign`.
         valid_for_days_help: Ventana de validez opcional en días; omítela para un
           paquete que nunca caduque.
-        verify_help: Verifica el manifiesto de checksum de un paquete de revisión
-          (solo integridad; no certifica quién lo construyó). Solo local; nunca contacta
-          con la AEAT.
+        verify_help: Verifica el manifiesto de sumas de comprobación de un paquete
+          de revisión (solo integridad; no certifica quién lo construyó). Solo local;
+          nunca contacta con la AEAT.
         verify_receipt_help: 'Verifica ambas capas de firma de un recibo contrafirmado
           de un paquete de revisión: la firma original del declarante y la contrafirma
           del asesor fiscal. Solo local; nunca contacta con la AEAT.'

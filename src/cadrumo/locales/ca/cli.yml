@@ -1307,10 +1307,10 @@ cli:
           l'esdeveniment d'exportació subjacent.
         bucket_id_help: Id del bucket sobre el qual opera el paquet de revisió (per
           defecte el perfil actiu).
-        build_help: Assembla un paquet de revisió compartible i verificable per checksum
-          (esborrany fichero-BOE, origen del càlcul desat i justificants dels teus
-          registres inclosos) per lliurar a l'assessor. Només local; mai contacta
-          amb l'AEAT.
+        build_help: Assembla un paquet de revisió compartible i verificable mitjançant
+          sumes de verificació (esborrany fichero-BOE, origen del càlcul desat i justificants
+          dels teus registres inclosos) per lliurar a l'assessor. Només local; mai
+          contacta amb l'AEAT.
         counter_sign_help: Contrasigna un paquet de revisió ja signat pel declarant
           en nom de l'assessor fiscal que el rep i escriu el sobre del rebut a --output.
           Només local; mai contacta amb l'AEAT.
@@ -1398,8 +1398,8 @@ cli:
         signature_path_help: Camí del sobre de signatura JSON generat per `sign`.
         valid_for_days_help: Finestra de validesa opcional en dies; omet-la per a
           un paquet que mai caduqui.
-        verify_help: Verifica el manifest de checksum d'un paquet de revisió (només
-          integritat; no certifica qui l'ha construït). Només local; mai contacta
+        verify_help: Verifica el manifest de sumes de verificació d'un paquet de revisió
+          (només integritat; no certifica qui l'ha construït). Només local; mai contacta
           amb l'AEAT.
         verify_receipt_help: 'Verifica les dues capes de signatura d''un rebut contrasignat
           d''un paquet de revisió: la signatura original del declarant i la contrasignatura

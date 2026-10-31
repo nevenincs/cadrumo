@@ -1381,9 +1381,9 @@ cli:
           útja.
         valid_for_days_help: Opcionális érvényességi ablak napokban; hagyd ki egy
           soha le nem járó csomaghoz.
-        verify_help: Egy áttekintő csomag checksum-manifestjének ellenőrzése (csak
-          integritás; nem igazolja, ki állította össze). Csak helyi; soha nem kapcsolódik
-          az AEAT-hoz.
+        verify_help: Egy áttekintő csomag ellenőrzőösszeg-manifesztjének ellenőrzése
+          (csak integritás; nem igazolja, ki állította össze). Csak helyi; soha nem
+          kapcsolódik az AEAT-hoz.
         verify_receipt_help: 'Ellenőrzi egy felülvizsgálati csomag ellenjegyzett nyugtájának
           mindkét aláírási rétegét: az adózó eredeti aláírását és a könyvelő ellenjegyzését.
           Csak helyi; soha nem lép kapcsolatba az AEAT-tal.'
@@ -2125,7 +2125,7 @@ cli:
         echo_suppression_unavailable: Ez a terminál nem tudja elrejteni a beírt szöveget,
           így a titok láthatóvá válna a képernyőn; használd a --secrets-stdin vagy
           --secrets-fd kapcsolót.
-        new_passphrase_mismatch: Az új passphrase és a megerősítés nem egyezik.
+        new_passphrase_mismatch: Az új jelszó és a megerősítés nem egyezik.
         no_controlling_terminal_for_secret: Ez a titok csak terminálon jeleníthető
           meg, de nincs csatlakoztatva terminál. Futtasd újra a parancsot interaktív
           munkamenetből.
