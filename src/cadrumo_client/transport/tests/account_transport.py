@@ -17,9 +17,9 @@ _SEARCH_DEPTH = 3
 def account_transport_entries() -> frozenset[str]:
     """Name every entry now in the account's transport directory; empty where it is absent."""
     if sys.platform != "darwin":
-        return frozenset()
+        return frozenset[str]()
     directory = darwin_socket_directory()
-    return frozenset(entry.name for entry in directory.iterdir()) if directory.is_dir() else frozenset()
+    return frozenset(entry.name for entry in directory.iterdir()) if directory.is_dir() else frozenset[str]()
 
 
 def _directories(root: Path, depth: int) -> Iterator[Path]:

@@ -10,6 +10,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
+from typing import override
 
 import pytest
 
@@ -430,6 +431,7 @@ class _SameSale(ActivityAssetDisposalRow):
     """A row whose identity holds still, so its fingerprint can move only with what it states."""
 
     @property
+    @override
     def source_identity(self) -> str:
         return "same-sale"
 
