@@ -59,9 +59,7 @@ fn unavailable() -> ApplicationError {
 }
 
 fn location(executable: &Path, parent: &Parent, contract: &Contract) -> Result<PathBuf> {
-    use cadrumo_platform::storage::{
-        detect_mode, resolve_storage_root_with, validated_absolute_path,
-    };
+    use cadrumo_platform::storage::{Package, resolve_storage_root_with, validated_absolute_path};
     // Variable names are case-insensitive on Windows only.
     let lookup = |name: &str| {
         parent
@@ -77,9 +75,9 @@ fn location(executable: &Path, parent: &Parent, contract: &Contract) -> Result<P
             })
             .map(|(_, value)| value.clone())
     };
-    let evidence = detect_mode(executable)
+    Package::installed(executable)
         .map_err(|error| unavailable().caused_by(std::io::Error::other(error)))?;
-    let root = resolve_storage_root_with(&evidence, &lookup)
+    let root = resolve_storage_root_with(&lookup)
         .map_err(|error| unavailable().caused_by(std::io::Error::from(error)))?
         .root;
     validated_absolute_path(&contract.desktop_defaults.logs.under(&root))
@@ -135,12 +133,11 @@ mod tests {
         }
     }
 
-    /// A host inside a scratch package, so mode detection never depends on where the test
-    /// binary itself was built: a Debug test build bakes its development root and a release
-    /// one reads the package manifest; the parent's root override selects the root in both.
+    /// A host inside a scratch package, so package evidence never depends on where the test
+    /// binary itself was built; the parent's root override selects the root.
     fn packaged_host(scratch: &Scratch) -> PathBuf {
         let package = scratch.0.join("package");
-        let manifest = cadrumo_platform::MODE_PACKAGE_MANIFEST
+        let manifest = cadrumo_platform::PACKAGE_MANIFEST
             .split('/')
             .fold(package.clone(), |path, part| path.join(part));
         fs::create_dir_all(manifest.parent().unwrap()).unwrap();

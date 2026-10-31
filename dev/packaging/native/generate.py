@@ -77,7 +77,8 @@ def _environment_section(declaration: ApplicationEnvironment) -> dict[str, Any]:
     }
 
 
-def _mode_section(layout: dict[str, Any]) -> dict[str, Any]:
+def _package_section(layout: dict[str, Any]) -> dict[str, Any]:
+    """Project where an image finds its package root and the manifest that proves it is installed."""
     return {
         "package_manifest": layout["files"]["package_manifest"],
         "package_root_from_executable": layout["package_root_from_executable"],
@@ -109,7 +110,7 @@ def _rust_path_vectors(lines: list[str], vectors: list[_PathVector]) -> None:
 
 
 def _rust_root_and_environment(contract: dict[str, Any]) -> list[str]:
-    root, environment, mode = contract["root"], contract["environment"], contract["mode"]
+    root, environment, package = contract["root"], contract["environment"], contract["package"]
     lines = [
         "pub struct InstalledBaseCandidate { pub variable: &'static str, pub subpath: &'static [&'static str] }",
         "pub struct InstalledDefault {",
@@ -163,8 +164,8 @@ def _rust_root_and_environment(contract: dict[str, Any]) -> list[str]:
             for field in environment["host_inherited"]["fields"]
         )
         + "];",
-        f"pub const MODE_PACKAGE_MANIFEST: &str = {_rust_string(mode['package_manifest'])};",
-        f"pub const MODE_PACKAGE_ROOT_FROM_EXECUTABLE: &str = {_rust_string(mode['package_root_from_executable'])};",
+        f"pub const PACKAGE_MANIFEST: &str = {_rust_string(package['package_manifest'])};",
+        f"pub const PACKAGE_ROOT_FROM_EXECUTABLE: &str = {_rust_string(package['package_root_from_executable'])};",
     ]
     lines += [
         f"pub const INVALID_NATIVE_PATH_BYTES: &[u8] = &{list(INVALID_NATIVE_PATH_BYTES)};",
@@ -253,7 +254,7 @@ def _build_contract(root: Path, layout: dict[str, Any], channel: str) -> tuple[d
         "root": dict(declaration.root),
         "runtime_transport": transport_section(),
         "environment": environment,
-        "mode": _mode_section(layout),
+        "package": _package_section(layout),
         "path_vectors": [vector.as_contract() for vector in storage_path_vectors()],
         "invalid_native_path": {
             "posix_bytes": list(INVALID_NATIVE_PATH_BYTES),

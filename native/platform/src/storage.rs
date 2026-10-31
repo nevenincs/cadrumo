@@ -1,16 +1,16 @@
 //! Storage-root resolution and child environments from the generated native contract.
 //!
-//! A release image resolves the declared platform user-data base joined with the build
-//! channel's directory. A Debug build's images carry the storage root its build environment
-//! baked in at compile time, so a release image holds no development location or rule. The
-//! one root variable, when set, must be absolute and wins in both. Every other location is a
-//! declared path beneath the root. Mode never comes from the working directory.
+//! The root is the one root variable when it is set, which must be absolute, and otherwise
+//! the declared per-user platform data base joined with the build channel's directory. Every
+//! image resolves it the same way, whatever configuration built it: nothing is baked in at
+//! compile time and nothing is read from the working directory. Every other location is a
+//! declared path beneath the root.
 
 use crate::{
     BUILD_CHANNEL, CHANNEL_SEPARATOR, CLEARED_NAMES, CLEARED_PREFIXES, ENTRYPOINT_FILES,
     HOST_INHERITED_ENV, HOST_INHERITED_FIELDS, INHERITED_KIND_DIRECTORY_PATH, INSTALLED_DEFAULTS,
-    InstalledDefault, MODE_PACKAGE_MANIFEST, MODE_PACKAGE_ROOT_FROM_EXECUTABLE, NAMESPACE_PREFIX,
-    NATIVE, PINNED_ENV, PRODUCT_DIRECTORY, ROOT_REFUSAL_FILESYSTEM_PATH_REFUSED,
+    InstalledDefault, NAMESPACE_PREFIX, NATIVE, PACKAGE_MANIFEST, PACKAGE_ROOT_FROM_EXECUTABLE,
+    PINNED_ENV, PRODUCT_DIRECTORY, ROOT_REFUSAL_FILESYSTEM_PATH_REFUSED,
     ROOT_REFUSAL_HOME_UNAVAILABLE, ROOT_REFUSAL_INSTALLED_BASE_UNAVAILABLE,
     ROOT_REFUSAL_INVALID_PATH_INPUT, ROOT_REFUSAL_NON_ABSOLUTE_PIN,
     ROOT_REFUSAL_RELATIVE_OVERRIDE_INSTALLED, ROOT_REFUSALS, ROOT_VARIABLE, STABLE_CHANNEL,
@@ -26,26 +26,40 @@ use std::{
 #[cfg(windows)]
 use std::{ffi::c_void, ptr};
 
-/// Whether an image is a development build or a release image.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum Mode {
-    /// A Debug build: its default root is the one its build environment baked in.
-    Development,
-    /// A release image: its default root is the per-user, per-channel installed default.
-    Installed,
-}
-
-/// Package evidence for one executable; the working directory is never read.
+/// The package one executable belongs to; the working directory is never read.
+///
+/// Package evidence locates package files only. It never selects a storage root.
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct Evidence {
-    /// Which default root applies.
-    pub mode: Mode,
+pub struct Package {
     /// The package root the executable belongs to.
-    pub package: PathBuf,
+    pub root: PathBuf,
     /// Whether the package root holds the package manifest.
     pub packaged: bool,
-    /// The storage root a development build baked in; a release image has none.
-    pub build_root: Option<PathBuf>,
+}
+
+impl Package {
+    /// Locate the package `exe` belongs to without requiring its manifest.
+    pub fn locate(exe: &Path) -> Result<Self, String> {
+        if !exe.is_absolute() {
+            return Err("Package location requires an absolute executable path".into());
+        }
+        let root = package_root(exe)?.join(relative_components(PACKAGE_ROOT_FROM_EXECUTABLE));
+        let packaged = root.join(relative_components(PACKAGE_MANIFEST)).is_file();
+        Ok(Self { root, packaged })
+    }
+
+    /// Locate the package `exe` belongs to and require its manifest.
+    pub fn installed(exe: &Path) -> Result<Self, String> {
+        let package = Self::locate(exe)?;
+        if !package.packaged {
+            return Err(format!(
+                "{} is not part of an installed CADRUMO package: {PACKAGE_MANIFEST} is \
+                 missing. Reinstall CADRUMO.",
+                exe.display()
+            ));
+        }
+        Ok(package)
+    }
 }
 
 /// A declared refusal: `code` is one of the contract's root refusals.
@@ -79,8 +93,6 @@ impl From<Refusal> for std::io::Error {
 pub enum RootSource {
     /// The operator's absolute root variable.
     Override,
-    /// The storage root a development build baked in.
-    BuildDefault,
     /// The per-user, per-channel installed default.
     InstalledDefault,
 }
@@ -142,49 +154,6 @@ pub(crate) fn package_root(exe: &Path) -> Result<PathBuf, String> {
         package = package.parent().ok_or("Entrypoint has no package root")?;
     }
     Ok(package.to_path_buf())
-}
-
-/// The storage root a Debug build's environment bakes into its images at compile time.
-/// A release build compiles without it, so its images hold no development location.
-const BUILD_STORAGE_ROOT: Option<&str> = match option_env!("CADRUMO_BUILD_STORAGE_ROOT") {
-    Some(root) if !root.is_empty() => Some(root),
-    _ => None,
-};
-
-/// A development build when this image carries a baked storage root; otherwise an
-/// installed image, which its package manifest must prove.
-pub fn detect_mode(exe: &Path) -> Result<Evidence, String> {
-    evidence_for(exe, BUILD_STORAGE_ROOT.map(Path::new))
-}
-
-/// Classify `exe` for an image whose build baked `build_root`, or none.
-pub(crate) fn evidence_for(exe: &Path, build_root: Option<&Path>) -> Result<Evidence, String> {
-    if !exe.is_absolute() {
-        return Err("Mode detection requires an absolute executable path".into());
-    }
-    let package = package_root(exe)?.join(relative_components(MODE_PACKAGE_ROOT_FROM_EXECUTABLE));
-    let packaged = package
-        .join(relative_components(MODE_PACKAGE_MANIFEST))
-        .is_file();
-    match build_root {
-        Some(root) => Ok(Evidence {
-            mode: Mode::Development,
-            package,
-            packaged,
-            build_root: Some(root.to_path_buf()),
-        }),
-        None if packaged => Ok(Evidence {
-            mode: Mode::Installed,
-            package,
-            packaged,
-            build_root: None,
-        }),
-        None => Err(format!(
-            "{} is not part of an installed CADRUMO package: {MODE_PACKAGE_MANIFEST} is \
-             missing. Reinstall CADRUMO.",
-            exe.display()
-        )),
-    }
 }
 
 pub(crate) fn channel_directory(channel: &str) -> String {
@@ -318,12 +287,10 @@ fn expand_home(value: &str, lookup: &dyn Fn(&str) -> Option<OsString>) -> Result
 
 /// The contract's root algorithm on explicit inputs.
 ///
-/// `build_root` is the root a development build baked in. `known_folder` replaces the
-/// environment base the command line reads, because the native host asks the shell for
-/// `FOLDERID_LocalAppData` directly.
+/// `known_folder` replaces the environment base the command line reads, because the
+/// native host asks the shell for `FOLDERID_LocalAppData` directly.
 fn anchored_root(
     lookup: &dyn Fn(&str) -> Option<OsString>,
-    build_root: Option<&Path>,
     known_folder: Option<&Path>,
     channel: &str,
 ) -> Result<ResolvedRoot, Refusal> {
@@ -339,13 +306,6 @@ fn anchored_root(
             ROOT_REFUSAL_RELATIVE_OVERRIDE_INSTALLED,
             format!("{ROOT_VARIABLE} must be an absolute directory."),
         ));
-    }
-    if let Some(root) = build_root {
-        checked_path_value("Build storage root", root.as_os_str())?;
-        return Ok(ResolvedRoot {
-            root: root.to_path_buf(),
-            source: RootSource::BuildDefault,
-        });
     }
     #[cfg(unix)]
     let selected = {
@@ -391,11 +351,10 @@ fn anchored_root(
 
 pub(crate) fn resolve_root(
     lookup: &dyn Fn(&str) -> Option<OsString>,
-    build_root: Option<&Path>,
     known_folder: Option<&Path>,
     channel: &str,
 ) -> Result<ResolvedRoot, Refusal> {
-    let resolved = anchored_root(lookup, build_root, known_folder, channel)?;
+    let resolved = anchored_root(lookup, known_folder, channel)?;
     Ok(ResolvedRoot {
         root: validated_absolute_path(&resolved.root)?,
         source: resolved.source,
@@ -410,7 +369,7 @@ pub(crate) fn resolve_root_vector(
     known_folder: Option<&Path>,
     channel: &str,
 ) -> Result<ResolvedRoot, Refusal> {
-    let resolved = anchored_root(lookup, None, known_folder, channel)?;
+    let resolved = anchored_root(lookup, known_folder, channel)?;
     absolute_path_input(&resolved.root)?;
     Ok(ResolvedRoot {
         root: normalized_absolute_components(&resolved.root),
@@ -470,31 +429,24 @@ pub(crate) fn local_app_data() -> Option<PathBuf> {
     folder
 }
 
-/// Resolve this process's storage root for `evidence` from its environment and the shell.
-///
-/// The runtime manager manages a root only when `source` is [`RootSource::InstalledDefault`].
-pub fn resolve_storage_root(evidence: &Evidence) -> Result<ResolvedRoot, Refusal> {
-    resolve_storage_root_with(evidence, &|name| env::var_os(name))
+/// Resolve this process's storage root from its environment and the shell.
+pub fn resolve_storage_root() -> Result<ResolvedRoot, Refusal> {
+    resolve_storage_root_with(&|name| env::var_os(name))
 }
 
 /// Resolve against a captured environment without mutating the current process.
 pub fn resolve_storage_root_with(
-    evidence: &Evidence,
     lookup: &dyn Fn(&str) -> Option<OsString>,
 ) -> Result<ResolvedRoot, Refusal> {
     #[cfg(windows)]
-    let known_folder = match evidence.mode {
-        Mode::Installed => local_app_data(),
-        Mode::Development => None,
+    let known_folder = if nonblank(lookup, ROOT_VARIABLE)?.is_some() {
+        None
+    } else {
+        local_app_data()
     };
     #[cfg(unix)]
     let known_folder: Option<PathBuf> = None;
-    resolve_root(
-        lookup,
-        evidence.build_root.as_deref(),
-        known_folder.as_deref(),
-        BUILD_CHANNEL,
-    )
+    resolve_root(lookup, known_folder.as_deref(), BUILD_CHANNEL)
 }
 
 /// A location beneath `root`: the slash-separated declared `relative` path, without creating it.
@@ -723,14 +675,10 @@ mod tests {
     fn resolved_root_reports_whether_an_override_or_a_default_selected_it() {
         let base = Path::new(r"C:\Users\ada\AppData\Local");
         let none = |_: &str| None;
-        let installed = resolve_root(&none, None, Some(base), STABLE_CHANNEL).unwrap();
+        let installed = resolve_root(&none, Some(base), STABLE_CHANNEL).unwrap();
         assert_eq!(installed.source, RootSource::InstalledDefault);
-        let baked = Path::new(r"C:\src\project\var\storage");
-        let development = resolve_root(&none, Some(baked), None, STABLE_CHANNEL).unwrap();
-        assert_eq!(development.source, RootSource::BuildDefault);
-        assert_eq!(development.root, baked);
         let overridden = |name: &str| (name == ROOT_VARIABLE).then(|| OsString::from(r"D:\data"));
-        let explicit = resolve_root(&overridden, Some(baked), Some(base), STABLE_CHANNEL).unwrap();
+        let explicit = resolve_root(&overridden, Some(base), STABLE_CHANNEL).unwrap();
         assert_eq!(explicit.source, RootSource::Override);
         assert_eq!(explicit.root, PathBuf::from(r"D:\data"));
     }
@@ -743,44 +691,38 @@ mod tests {
             assert_eq!(folder, PathBuf::from(local));
         }
         let none = |_: &str| None;
-        let resolved = resolve_root(&none, None, Some(&folder), BUILD_CHANNEL).unwrap();
+        let resolved = resolve_root(&none, Some(&folder), BUILD_CHANNEL).unwrap();
         assert_eq!(resolved.root, folder.join(channel_directory(BUILD_CHANNEL)));
     }
 
     #[test]
-    fn mode_comes_from_the_baked_root_and_package_evidence_never_the_working_directory() {
+    fn package_evidence_comes_from_the_image_never_the_working_directory() {
         let installed = Scratch::new("installed");
-        let manifest = installed.0.join(relative_components(MODE_PACKAGE_MANIFEST));
+        let manifest = installed.0.join(relative_components(PACKAGE_MANIFEST));
         fs::create_dir_all(manifest.parent().unwrap()).unwrap();
         fs::write(&manifest, b"{}").unwrap();
         let unrelated = Scratch::new("unrelated");
         let previous = env::current_dir().unwrap();
         env::set_current_dir(&installed.0).unwrap();
 
-        let packaged = evidence_for(&installed.0.join(EXECUTABLE), None);
+        let packaged = Package::installed(&installed.0.join(EXECUTABLE));
         let entrypoint = ENTRYPOINT_FILES[0];
-        let packaged_entrypoint = evidence_for(&installed.0.join(NATIVE).join(entrypoint), None);
+        let packaged_entrypoint = Package::installed(&installed.0.join(NATIVE).join(entrypoint));
         // The working directory holds a package manifest, but the image beside it does not.
-        let refused = evidence_for(&unrelated.0.join(EXECUTABLE), None);
-        let baked = unrelated.0.join("storage");
-        let built = evidence_for(&unrelated.0.join(EXECUTABLE), Some(&baked));
+        let refused = Package::installed(&unrelated.0.join(EXECUTABLE));
+        let located = Package::locate(&unrelated.0.join(EXECUTABLE));
         env::set_current_dir(previous).unwrap();
 
         assert_eq!(
             packaged.unwrap(),
-            Evidence {
-                mode: Mode::Installed,
-                package: installed.0.clone(),
+            Package {
+                root: installed.0.clone(),
                 packaged: true,
-                build_root: None,
             }
         );
-        assert_eq!(packaged_entrypoint.unwrap().package, installed.0);
-        assert!(refused.unwrap_err().contains(MODE_PACKAGE_MANIFEST));
-        let development = built.unwrap();
-        assert_eq!(development.mode, Mode::Development);
-        assert_eq!(development.build_root.as_deref(), Some(baked.as_path()));
-        assert!(!development.packaged);
+        assert_eq!(packaged_entrypoint.unwrap().root, installed.0);
+        assert!(refused.unwrap_err().contains(PACKAGE_MANIFEST));
+        assert!(!located.unwrap().packaged);
     }
 
     fn ambient() -> Vec<(OsString, OsString)> {

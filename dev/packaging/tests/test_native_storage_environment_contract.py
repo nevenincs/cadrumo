@@ -167,7 +167,8 @@ def test_schema_one_contract_projects_the_storage_declaration(tmp_path: Path) ->
     assert environment["pinned"] == [root["variable"], *declaration.temporary]
     assert environment["host_inherited"]["fields"] == [{"name": declaration.authority.name, "kind": "directory_path"}]
     layout = load_layout()
-    assert contract["mode"] == {
+    assert "mode" not in contract
+    assert contract["package"] == {
         "package_manifest": layout["files"]["package_manifest"],
         "package_root_from_executable": layout["package_root_from_executable"],
     }
@@ -180,7 +181,8 @@ def test_schema_one_contract_projects_the_storage_declaration(tmp_path: Path) ->
     assert _rust_strings(generated, "ROOT_VARIABLE") == [root["variable"]]
     assert "INSTALLED_ROOT_PRECEDENCE" not in generated and "INSTALLED_RELATIVE_OVERRIDE" not in generated
     assert _rust_strings(generated, "PINNED_ENV") == environment["pinned"]
-    assert _rust_strings(generated, "MODE_PACKAGE_MANIFEST") == [contract["mode"]["package_manifest"]]
+    assert _rust_strings(generated, "PACKAGE_MANIFEST") == [contract["package"]["package_manifest"]]
+    assert "MODE_PACKAGE" not in generated and "BUILD_STORAGE_ROOT" not in generated
     # The resolver's test vectors live apart from the contract every image includes.
     vectors = (tmp_path / "contract_vectors.rs").read_text(encoding="utf-8")
     rust_vectors = re.findall(r'StorageRootVector \{ name: "([^"]+)"', vectors)

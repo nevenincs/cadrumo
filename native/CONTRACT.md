@@ -192,14 +192,13 @@ selected artifact and does not establish a successful fresh `bundle` build.
 that selects it is declared in `native/application-environment.toml` and applied
 by the platform crate to every packaged image. `CADRUMO_STORAGE_ROOT` is the only
 variable that places storage; it names an absolute directory and wins in every
-image, and a relative value is refused. Without it, an installed package uses the
-per-user, per-channel default in the mutable-root row, and a Debug image uses the
-`var/storage` directory of the checkout its build ran in, which CMake bakes into
-the Debug image at compile time (a Release image bakes nothing and holds no trace of
-the checkout). Every other location is a declared path beneath the root. The
-platform crate decides between the two by whether the image was built with a baked
-root and, for an installed image, by the package manifest beside it, never by the
-working directory or a search for a checkout. The command line keeps its own
+image, and a relative value is refused. Without it, every image, whatever
+configuration built it, uses the per-user, per-channel default in the mutable-root
+row; no build bakes a storage root into an image. Every other location is a
+declared path beneath the root. The package manifest beside an image proves that
+it belongs to an installed package and locates package files; it never selects a
+root, and neither does the working directory or a search for a checkout. The
+command line keeps its own
 resolver and built-in default for runs outside a package. The package takes nothing
 from it; the package-side conformance check only compares the two defaults.
 `<name>` is `cadrumo` for the stable channel and `cadrumo-<channel>` for any
@@ -758,14 +757,14 @@ without a manager the setup fails with `program_not_running`.
 
 The native bootstrap applies the storage-root rule that
 `native/application-environment.toml` declares. Python continues to own bucket
-routing, encryption, authorization and member defaults. An installed package uses
-the per-user, per-channel default of the platform mappings, and a Debug image the
-root its build baked in. A relative `CADRUMO_STORAGE_ROOT` is refused. The command
+routing, encryption, authorization and member defaults. Without
+`CADRUMO_STORAGE_ROOT`, every image uses the per-user, per-channel default of the
+platform mappings. A relative `CADRUMO_STORAGE_ROOT` is refused. The command
 line's own built-in default is the stable channel's; a native package pins the root
 for its own channel before Python starts, and a pinned root is never re-resolved.
-The native host is installed when its package root holds the package manifest and
-in development when its build baked a root; otherwise it refuses. It never reads
-the working directory and never looks for a checkout. Installed Windows resolves the
+The native host is installed when its package root holds the package manifest;
+otherwise a host that needs package files refuses. It never reads the working
+directory and never looks for a checkout. Windows resolves the
 default through `FOLDERID_LocalAppData`, not the environment, and replays the
 generated storage-root vectors in the `platform.resolver` test. No
 storage is migrated: a tree that an earlier installed build created beneath a
