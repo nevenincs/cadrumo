@@ -275,14 +275,7 @@ def test_clave_mode_without_any_dni_nie_refuses_naming_the_absent_credential() -
     assert raised.value.context == {"provider": "clave_movil", "identity_field": expected_label}
 
 
-def test_non_qr_route_without_a_contraste_refuses_before_the_browser_opens() -> None:
-    """The non-QR form needs a contraste and cannot proceed without one.
-
-    Refusing here is the point of the change: the operator learns what is
-    missing at the entry to the session rather than part-way through an
-    AEAT form.
-    """
-
+def _assert_non_qr_route_refused_for_missing_contraste() -> None:
     _register_profile(
         **{"auth.dni_nie": _TAX_ID, "auth.clave_movil_route": ClaveMovilRoute.APP_REQUEST.value},
     )
@@ -303,6 +296,17 @@ def test_non_qr_route_without_a_contraste_refuses_before_the_browser_opens() -> 
         )
 
     assert raised.value.translated_message == "application.auth.sessions.errors.clave_contraste_missing"
+
+
+def test_non_qr_route_without_a_contraste_refuses_before_the_browser_opens() -> None:
+    """The non-QR form needs a contraste and cannot proceed without one.
+
+    Refusing here is the point of the change: the operator learns what is
+    missing at the entry to the session rather than part-way through an
+    AEAT form.
+    """
+
+    _assert_non_qr_route_refused_for_missing_contraste()
 
 
 def test_qr_route_is_not_refused_for_a_missing_contraste() -> None:
@@ -446,26 +450,7 @@ def test_a_profile_carrying_neither_contraste_still_refuses_the_non_qr_route() -
     now that there are two fields that could satisfy it.
     """
 
-    _register_profile(
-        **{"auth.dni_nie": _TAX_ID, "auth.clave_movil_route": ClaveMovilRoute.APP_REQUEST.value},
-    )
-    with (
-        override_settings(
-            cadrumo_clave_movil_dni_nie=SecretStr(_TAX_ID),
-            cadrumo_clave_movil_nie_soporte=None,
-            cadrumo_clave_movil_dni_fecha=None,
-            cadrumo_clave_prefer_non_qr=True,
-        ) as settings,
-        pytest.raises(ClaveCredentialsIncompleteError) as raised,
-    ):
-        prepare_clave_auth(
-            settings,
-            AuthProviderKind.CLAVE_MOVIL,
-            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-            profile_decode_context=leased_profile_decode_context(),
-        )
-
-    assert raised.value.translated_message == "application.auth.sessions.errors.clave_contraste_missing"
+    _assert_non_qr_route_refused_for_missing_contraste()
 
 
 def test_clave_permanente_resolves_its_identity_from_the_profile() -> None:
