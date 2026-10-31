@@ -467,6 +467,13 @@ pub(crate) async fn assemble<R: Runtime>(
                 None => builder,
             }
         };
+        // The system draws the controls over the page's header.
+        #[cfg(target_os = "macos")]
+        let builder = builder
+            .decorations(true)
+            .title_bar_style(tauri::TitleBarStyle::Overlay)
+            .hidden_title(true)
+            .traffic_light_position(tauri::LogicalPosition::new(16.0, 15.0));
         let builder = builder.visible(false);
         builder
             .initialization_script(startup.script.clone())

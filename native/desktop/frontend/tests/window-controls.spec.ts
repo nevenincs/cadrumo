@@ -13,10 +13,15 @@ test("window controls use authenticated commands and native presentation", async
       tokens: [] as unknown[],
       maximized: false,
       fullscreen: false,
+      chrome: "custom" as "custom" | "native",
       fail: false,
       diagnostics: [] as Record<string, unknown>[],
       crash: () => undefined as void,
-      publish: (next: { maximized: boolean; fullscreen: boolean }) => {
+      publish: (next: {
+        maximized: boolean;
+        fullscreen: boolean;
+        chrome: "custom" | "native";
+      }) => {
         void next;
       },
     };
@@ -56,7 +61,7 @@ test("window controls use authenticated commands and native presentation", async
               state.crash = () =>
                 channel.onmessage(
                   new Proxy(
-                    { maximized: false, fullscreen: false },
+                    { maximized: false, fullscreen: false, chrome: "custom" },
                     {
                       get(target, name) {
                         if (name === "fullscreen")
@@ -163,12 +168,54 @@ test("window controls use authenticated commands and native presentation", async
       window as unknown as {
         __windowTest: {
           fullscreen: boolean;
-          publish: (next: { maximized: boolean; fullscreen: boolean }) => void;
+          publish: (next: {
+            maximized: boolean;
+            fullscreen: boolean;
+            chrome: "custom" | "native";
+          }) => void;
         };
       }
     ).__windowTest;
     state.fullscreen = true;
-    state.publish({ maximized: false, fullscreen: true });
+    state.publish({ maximized: false, fullscreen: true, chrome: "custom" });
+  });
+  await expect(maximize).toBeDisabled();
+  await page.evaluate(() => {
+    const state = (
+      window as unknown as {
+        __windowTest: {
+          publish: (next: {
+            maximized: boolean;
+            fullscreen: boolean;
+            chrome: "custom" | "native";
+          }) => void;
+        };
+      }
+    ).__windowTest;
+    state.publish({ maximized: false, fullscreen: false, chrome: "native" });
+  });
+  // A native window shows the system's controls, not the page's.
+  await expect(maximize).toHaveCount(0);
+  await expect(page.locator("header.titlebar")).toHaveAttribute(
+    "data-chrome",
+    "native",
+  );
+  await page.evaluate(() => {
+    (
+      window as unknown as {
+        __windowTest: {
+          publish: (next: {
+            maximized: boolean;
+            fullscreen: boolean;
+            chrome: "custom" | "native";
+          }) => void;
+        };
+      }
+    ).__windowTest.publish({
+      maximized: false,
+      fullscreen: true,
+      chrome: "custom",
+    });
   });
   await expect(maximize).toBeDisabled();
   await page.evaluate(() => {
