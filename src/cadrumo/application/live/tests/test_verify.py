@@ -32,6 +32,16 @@ def _service() -> VerifyService:
     return VerifyService(persistence=InMemoryVerifyObservationPersistence())
 
 
+def _record_de1(svc: VerifyService, verdict: IdentityCheckVerdict, checked_at: datetime) -> VerifyObservation:
+    return svc.record(
+        bucket_id=_BUCKET_ID,
+        surface=VerifySurface.NIF_IVA,
+        nif="DE1",
+        verdict=verdict,
+        checked_at=checked_at,
+    )
+
+
 class TestRecord:
     def test_record_persists_observation(self) -> None:
         svc = _service()
@@ -75,20 +85,8 @@ class TestRecord:
     ) -> None:
         svc = _service()
         ts = datetime(2025, 3, 15, 10, 0, tzinfo=UTC)
-        a = svc.record(
-            bucket_id=_BUCKET_ID,
-            surface=VerifySurface.NIF_IVA,
-            nif="DE1",
-            verdict=IdentityCheckVerdict.VALID,
-            checked_at=ts,
-        )
-        b = svc.record(
-            bucket_id=_BUCKET_ID,
-            surface=VerifySurface.NIF_IVA,
-            nif="DE1",
-            verdict=IdentityCheckVerdict.VALID,
-            checked_at=ts,
-        )
+        a = _record_de1(svc, IdentityCheckVerdict.VALID, ts)
+        b = _record_de1(svc, IdentityCheckVerdict.VALID, ts)
         assert a.observation_id == b.observation_id
         assert len(svc.list_observations(bucket_id=_BUCKET_ID)) == 1
 
@@ -97,20 +95,8 @@ class TestRecord:
     ) -> None:
         svc = _service()
         ts = datetime(2025, 3, 15, 10, 0, tzinfo=UTC)
-        a = svc.record(
-            bucket_id=_BUCKET_ID,
-            surface=VerifySurface.NIF_IVA,
-            nif="DE1",
-            verdict=IdentityCheckVerdict.VALID,
-            checked_at=ts,
-        )
-        b = svc.record(
-            bucket_id=_BUCKET_ID,
-            surface=VerifySurface.NIF_IVA,
-            nif="DE1",
-            verdict=IdentityCheckVerdict.INVALID,
-            checked_at=ts,
-        )
+        a = _record_de1(svc, IdentityCheckVerdict.VALID, ts)
+        b = _record_de1(svc, IdentityCheckVerdict.INVALID, ts)
         assert a.observation_id != b.observation_id
 
 
