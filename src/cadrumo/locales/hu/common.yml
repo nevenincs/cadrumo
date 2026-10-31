@@ -3938,6 +3938,8 @@ desktop:
       title: Készlet
       unavailable: A készleted most nem érhető el.
       unnamed: Ismeretlen
+    suggestions:
+      filled: Kitöltve.
     sum:
       in: Bejövő {amount}
       out: Kimenő {amount}

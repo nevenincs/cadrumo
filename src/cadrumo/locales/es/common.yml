@@ -3963,6 +3963,8 @@ desktop:
       title: Existencias
       unavailable: Tus existencias no están disponibles ahora mismo.
       unnamed: Desconocido
+    suggestions:
+      filled: Rellenado.
     sum:
       in: Entradas {amount}
       out: Salidas {amount}

@@ -698,6 +698,7 @@ DESKTOP_INTERFACE_KEYS: Final[frozenset[str]] = DESKTOP_PROFILE_INTERFACE_KEYS |
         "desktop.ledger.edit.refusal.not_a_currency",
         "desktop.ledger.edit.refusal.not_an_iban",
         "desktop.ledger.import.country_purpose",
+        "desktop.ledger.suggestions.filled",
         "desktop.logs.all_loggers",
         "desktop.logs.level_critical",
         "desktop.logs.visible_count",

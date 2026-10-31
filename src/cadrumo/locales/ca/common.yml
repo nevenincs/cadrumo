@@ -3962,6 +3962,8 @@ desktop:
       title: Existències
       unavailable: Les teves existències no estan disponibles ara mateix.
       unnamed: Desconegut
+    suggestions:
+      filled: Emplenat.
     sum:
       in: Entrades {amount}
       out: Sortides {amount}

@@ -62,6 +62,7 @@ import {
 } from "./ledgerWords";
 import { DocumentsSection } from "./documents/DocumentsSection";
 import { InvoicesSection } from "./invoices/InvoicesSection";
+import { LedgerSuggestions } from "./suggestions/SuggestionsProvider";
 import type { EditorTarget } from "./invoices/InvoiceEditor";
 import { MovementsSection } from "./movements/MovementsSection";
 import {
@@ -861,219 +862,226 @@ export function LedgerPage({
 
   return (
     <WritePauseContext.Provider value={pause}>
-      {/* The page's own keys reach every part of it, the header included;
+      <LedgerSuggestions
+        port={port}
+        reader={reader}
+        rows={drawnRows?.rows ?? null}
+        drafts={stage.content.drafts}
+      >
+        {/* The page's own keys reach every part of it, the header included;
           the wrapper draws nothing of its own. */}
-      <div data-ledger-root="" className="contents">
-        <LedgerHeader
-          title={pane.title}
-          controls={pane.controls}
-          onToggleMaximize={pane.onToggleMaximize}
-          section={readable ? section : undefined}
-          onSection={setSection}
-          counts={counts}
-          panel={panel}
-          period={
-            periodShown && (
-              <PeriodSelector
-                value={period}
-                onChange={setPeriod}
-                label={t("desktop.ledger.period.label")}
-                years={years}
-                locale={locale}
-                fallbackYear={fallbackYear}
-                open={periodOpen}
-                onOpenChange={setPeriodOpen}
-              />
-            )
-          }
-          importAction={importAction}
-          exportAction={exportAction}
-          addAction={
-            section === "movements"
-              ? addAction
-              : section === "invoices"
-                ? addInvoiceAction
+        <div data-ledger-root="" className="contents">
+          <LedgerHeader
+            title={pane.title}
+            controls={pane.controls}
+            onToggleMaximize={pane.onToggleMaximize}
+            section={readable ? section : undefined}
+            onSection={setSection}
+            counts={counts}
+            panel={panel}
+            period={
+              periodShown && (
+                <PeriodSelector
+                  value={period}
+                  onChange={setPeriod}
+                  label={t("desktop.ledger.period.label")}
+                  years={years}
+                  locale={locale}
+                  fallbackYear={fallbackYear}
+                  open={periodOpen}
+                  onOpenChange={setPeriodOpen}
+                />
+              )
+            }
+            importAction={importAction}
+            exportAction={exportAction}
+            addAction={
+              section === "movements"
+                ? addAction
+                : section === "invoices"
+                  ? addInvoiceAction
+                  : undefined
+            }
+            addName={
+              section === "invoices"
+                ? t("desktop.ledger.invoices.action.add")
                 : undefined
-          }
-          addName={
-            section === "invoices"
-              ? t("desktop.ledger.invoices.action.add")
-              : undefined
-          }
-        />
-        <section
-          ref={page}
-          tabIndex={-1}
-          aria-label={t("desktop.ledger.title")}
-          aria-busy={periodWindow?.phase === "reading" || undefined}
-          className="ledger-page flex min-h-0 flex-1 flex-col overflow-y-auto bg-background focus-visible:-outline-offset-2"
-        >
-          <div
-            id={panel}
-            // Withheld, no section is shown: the page says why instead.
-            role={readable ? (isTab ? "tabpanel" : "region") : undefined}
-            aria-labelledby={
-              readable && isTab ? sectionTabId(panel, section) : undefined
             }
-            aria-label={
-              readable && !isTab ? sectionName(t, section) : undefined
-            }
-            className="flex min-h-0 flex-1 flex-col"
+          />
+          <section
+            ref={page}
+            tabIndex={-1}
+            aria-label={t("desktop.ledger.title")}
+            aria-busy={periodWindow?.phase === "reading" || undefined}
+            className="ledger-page flex min-h-0 flex-1 flex-col overflow-y-auto bg-background focus-visible:-outline-offset-2"
           >
-            {readable && (
-              <PausedBanner
-                pause={pause}
-                onShow={(ids) => {
-                  setSection("movements");
-                  movements.setSelection(new Set(ids));
-                }}
-              />
-            )}
-            <GridRoomContext.Provider value={gridRoom}>
-              <div
-                ref={row}
-                className="flex min-h-0 flex-1"
-                onKeyDown={onInspectorKey}
-              >
-                {/* The grid scrolls within what the panel leaves it; resizing
+            <div
+              id={panel}
+              // Withheld, no section is shown: the page says why instead.
+              role={readable ? (isTab ? "tabpanel" : "region") : undefined}
+              aria-labelledby={
+                readable && isTab ? sectionTabId(panel, section) : undefined
+              }
+              aria-label={
+                readable && !isTab ? sectionName(t, section) : undefined
+              }
+              className="flex min-h-0 flex-1 flex-col"
+            >
+              {readable && (
+                <PausedBanner
+                  pause={pause}
+                  onShow={(ids) => {
+                    setSection("movements");
+                    movements.setSelection(new Set(ids));
+                  }}
+                />
+              )}
+              <GridRoomContext.Provider value={gridRoom}>
+                <div
+                  ref={row}
+                  className="flex min-h-0 flex-1"
+                  onKeyDown={onInspectorKey}
+                >
+                  {/* The grid scrolls within what the panel leaves it; resizing
                 the panel keeps it its own width. */}
-                <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-                  {movementMissing && (
-                    <div className="px-3 pt-3">
-                      <RowRevealNotice
-                        notice={{ kind: "missing" }}
-                        dismiss={() => setMovementMissing(false)}
-                        hidden={t("desktop.ledger.reveal.movement_hidden")}
-                        missing={t("desktop.ledger.reveal.movement_missing")}
-                      />
-                    </div>
+                  <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+                    {movementMissing && (
+                      <div className="px-3 pt-3">
+                        <RowRevealNotice
+                          notice={{ kind: "missing" }}
+                          dismiss={() => setMovementMissing(false)}
+                          hidden={t("desktop.ledger.reveal.movement_hidden")}
+                          missing={t("desktop.ledger.reveal.movement_missing")}
+                        />
+                      </div>
+                    )}
+                    {body}
+                  </div>
+                  {inspectorShown && periodWindow && (
+                    <LedgerInspector
+                      port={port}
+                      reader={reader}
+                      rows={shownRows(periodWindow)?.rows ?? []}
+                      generation={periodWindow.generation}
+                      stage={stage}
+                      onStage={editing.onStage}
+                      sealed={sealed}
+                      unread={unread}
+                      selection={movements.selection}
+                      onSelection={movements.setSelection}
+                      context={inspectorContext}
+                      mode={panelMode}
+                      onMode={setPanelMode}
+                      matchPanel={
+                        <MatchQueue
+                          port={port}
+                          reader={reader}
+                          shown={panelMode === "match"}
+                          rows={shownRows(periodWindow)?.rows ?? null}
+                          generation={
+                            periodWindow.phase === "ready"
+                              ? periodWindow.generation
+                              : null
+                          }
+                          stage={stage}
+                          onStage={editing.onStage}
+                          onChoose={(id) => {
+                            movements.setSelection(new Set([id]));
+                            openInspector("invoice");
+                          }}
+                          locale={locale}
+                        />
+                      }
+                      width={view.inspectorWidth}
+                      onWidth={(inspectorWidth) =>
+                        onViewChange((current) => ({
+                          ...current,
+                          inspectorWidth,
+                        }))
+                      }
+                      focus={inspectorFocus}
+                      locale={locale}
+                      panelRef={inspectorPanel}
+                      onClose={closeInspector}
+                      onOpenInvoice={(invoiceId) => {
+                        setSection("invoices");
+                        setInvoiceEditor({ kind: "open", invoiceId });
+                      }}
+                      onExport={() => setTransfer("export")}
+                      onMakeRule={openRuleFromSelection}
+                      copy={copy}
+                    />
                   )}
-                  {body}
                 </div>
-                {inspectorShown && periodWindow && (
-                  <LedgerInspector
-                    port={port}
-                    reader={reader}
-                    rows={shownRows(periodWindow)?.rows ?? []}
-                    generation={periodWindow.generation}
-                    stage={stage}
-                    onStage={editing.onStage}
-                    sealed={sealed}
-                    unread={unread}
-                    selection={movements.selection}
-                    onSelection={movements.setSelection}
-                    context={inspectorContext}
-                    mode={panelMode}
-                    onMode={setPanelMode}
-                    matchPanel={
-                      <MatchQueue
-                        port={port}
-                        reader={reader}
-                        shown={panelMode === "match"}
-                        rows={shownRows(periodWindow)?.rows ?? null}
-                        generation={
-                          periodWindow.phase === "ready"
-                            ? periodWindow.generation
-                            : null
-                        }
-                        stage={stage}
-                        onStage={editing.onStage}
-                        onChoose={(id) => {
-                          movements.setSelection(new Set([id]));
-                          openInspector("invoice");
-                        }}
-                        locale={locale}
-                      />
-                    }
-                    width={view.inspectorWidth}
-                    onWidth={(inspectorWidth) =>
-                      onViewChange((current) => ({
-                        ...current,
-                        inspectorWidth,
-                      }))
-                    }
-                    focus={inspectorFocus}
-                    locale={locale}
-                    panelRef={inspectorPanel}
-                    onClose={closeInspector}
-                    onOpenInvoice={(invoiceId) => {
-                      setSection("invoices");
-                      setInvoiceEditor({ kind: "open", invoiceId });
-                    }}
-                    onExport={() => setTransfer("export")}
-                    onMakeRule={openRuleFromSelection}
-                    copy={copy}
-                  />
-                )}
-              </div>
-            </GridRoomContext.Provider>
-          </div>
-        </section>
-        {readable && editing.dock}
-        {readable && ruleTarget && (
-          <RuleDialog
-            port={port}
-            reader={reader}
-            target={ruleTarget}
-            rows={setupProps.rows}
-            onStage={editing.onStage}
-            onSaved={(_rule, place) => {
-              setRulesVersion((value) => value + 1);
-              setRuleTarget(null);
-              setToast(t("desktop.ledger.rules.saved_toast", { place }));
-            }}
-            onClose={() => setRuleTarget(null)}
-            // Opened from the grid, it hands the keyboard back to the grid's
-            // active cell; the Rules section's own opener takes it otherwise.
-            onClosed={
-              ruleTarget.kind === "seed"
-                ? () => inspectorContext?.focusActive()
-                : undefined
-            }
-          />
-        )}
-        {readable && transfer === "import" && (
-          <ImportDialog
-            port={port}
-            locale={locale}
-            period={period}
-            years={years}
-            fallbackYear={fallbackYear}
-            onClose={() => setTransfer(null)}
-            onWritten={() => {
-              reread();
-              refreshYears();
-            }}
-            onShowImported={(shown) => {
-              setShownImport(shown);
-              setPeriod(periodCovering(shown.span));
-              setSection("movements");
-            }}
-            onShowDocuments={() => setSection("documents")}
-            onCloseAutoFocus={returnTransferFocus}
-          />
-        )}
-        {readable && transfer === "export" && (
-          <ExportDialog
-            port={port}
-            locale={locale}
-            period={period}
-            years={years}
-            fallbackYear={fallbackYear}
-            format={view.exportFormat}
-            onFormat={(exportFormat) =>
-              onViewChange((current) => ({ ...current, exportFormat }))
-            }
-            staged={editing.tally.units}
-            onReviewStaged={editing.openReview}
-            readiness={exportReadiness}
-            copy={copy}
-            onClose={() => setTransfer(null)}
-            onCloseAutoFocus={returnTransferFocus}
-          />
-        )}
-        <Toast className="ledger-page-toast">{toast}</Toast>
-      </div>
+              </GridRoomContext.Provider>
+            </div>
+          </section>
+          {readable && editing.dock}
+          {readable && ruleTarget && (
+            <RuleDialog
+              port={port}
+              reader={reader}
+              target={ruleTarget}
+              rows={setupProps.rows}
+              onStage={editing.onStage}
+              onSaved={(_rule, place) => {
+                setRulesVersion((value) => value + 1);
+                setRuleTarget(null);
+                setToast(t("desktop.ledger.rules.saved_toast", { place }));
+              }}
+              onClose={() => setRuleTarget(null)}
+              // Opened from the grid, it hands the keyboard back to the grid's
+              // active cell; the Rules section's own opener takes it otherwise.
+              onClosed={
+                ruleTarget.kind === "seed"
+                  ? () => inspectorContext?.focusActive()
+                  : undefined
+              }
+            />
+          )}
+          {readable && transfer === "import" && (
+            <ImportDialog
+              port={port}
+              locale={locale}
+              period={period}
+              years={years}
+              fallbackYear={fallbackYear}
+              onClose={() => setTransfer(null)}
+              onWritten={() => {
+                reread();
+                refreshYears();
+              }}
+              onShowImported={(shown) => {
+                setShownImport(shown);
+                setPeriod(periodCovering(shown.span));
+                setSection("movements");
+              }}
+              onShowDocuments={() => setSection("documents")}
+              onCloseAutoFocus={returnTransferFocus}
+            />
+          )}
+          {readable && transfer === "export" && (
+            <ExportDialog
+              port={port}
+              locale={locale}
+              period={period}
+              years={years}
+              fallbackYear={fallbackYear}
+              format={view.exportFormat}
+              onFormat={(exportFormat) =>
+                onViewChange((current) => ({ ...current, exportFormat }))
+              }
+              staged={editing.tally.units}
+              onReviewStaged={editing.openReview}
+              readiness={exportReadiness}
+              copy={copy}
+              onClose={() => setTransfer(null)}
+              onCloseAutoFocus={returnTransferFocus}
+            />
+          )}
+          <Toast className="ledger-page-toast">{toast}</Toast>
+        </div>
+      </LedgerSuggestions>
     </WritePauseContext.Provider>
   );
 }

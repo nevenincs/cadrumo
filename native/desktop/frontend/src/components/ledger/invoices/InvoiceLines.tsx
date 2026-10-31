@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { IconButton } from "@/components/ui/icon-button";
 import { NativeSelect } from "@/components/ui/native-select";
+import type { Suggestion } from "@/components/ui/suggestions";
 import { useTableView, type ViewColumn } from "@/components/ui/table-view";
 import type { CatalogueInvoiceLine, InvoiceKind } from "../../../shell/ledger";
 import {
@@ -49,6 +50,7 @@ const CELL = "px-1.5 py-1 align-middle";
  * invoices also take a spending category per line; issued ones do not.
  */
 export function DraftLines({
+  descriptions,
   lines,
   figures,
   kind,
@@ -59,6 +61,8 @@ export function DraftLines({
   onAdd,
   onRemove,
 }: {
+  /** What a line's description may be picked from. */
+  descriptions: readonly Suggestion[];
   lines: readonly LineDraft[];
   figures: readonly LineFigures[];
   kind: InvoiceKind | null;
@@ -153,6 +157,7 @@ export function DraftLines({
                     <TextEditor
                       controlSize="sm"
                       value={line.description}
+                      suggestions={descriptions}
                       aria-label={name("description")}
                       invalid={Boolean(problemOf(line, "description"))}
                       describedBy={described(line, "description")}

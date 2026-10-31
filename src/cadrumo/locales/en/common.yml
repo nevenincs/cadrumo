@@ -3900,6 +3900,8 @@ desktop:
       title: Stock
       unavailable: Your stock isn't available right now.
       unnamed: Unknown
+    suggestions:
+      filled: Filled in.
     sum:
       in: In {amount}
       out: Out {amount}

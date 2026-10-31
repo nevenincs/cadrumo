@@ -25,6 +25,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import type { Suggestion } from "@/components/ui/suggestions";
 import { facts, labelGap } from "../../../shell/compose";
 import type {
   CatalogueInvoice,
@@ -43,6 +44,14 @@ import { useStrings, type Translate } from "../../../shell/strings";
 import { localDay } from "../../../shared/dates";
 import { formatDay } from "../../../shared/dateFormats";
 import { formatAmount, formatPercent } from "../../../shared/numbers";
+import {
+  emptyFills,
+  invoiceNumberOptions,
+  lineDescriptionOptions,
+  partyNameOptions,
+  partyTaxIdOptions,
+  seriesOptions,
+} from "../suggestions/ledgerSuggestions";
 import { useWritePause, WriteHold } from "../WritePause";
 import {
   EditorSection,
@@ -425,6 +434,7 @@ export function InvoiceEditor({
         edit={edit}
         duplicate={duplicate}
         onOpenInvoice={onOpenInvoice}
+        say={say}
       />
     );
   else
@@ -714,6 +724,7 @@ function NewInvoice({
   edit,
   duplicate,
   onOpenInvoice,
+  say,
 }: {
   draft: InvoiceDraft;
   check: ReturnType<typeof checkDraft>;
@@ -726,6 +737,7 @@ function NewInvoice({
   edit<K extends keyof InvoiceDraft>(key: K, value: InvoiceDraft[K]): void;
   duplicate: string | null;
   onOpenInvoice(invoiceId: string): void;
+  say(text: string): void;
 }) {
   const t = useStrings();
   const bind = (key: keyof InvoiceDraft, field: string) => ({
@@ -733,11 +745,23 @@ function NewInvoice({
     onChange: (value: string) => edit(key, value as never),
     onBlur: () => touch(field),
   });
-  const text =
-    (key: keyof InvoiceDraft, field: string) => (control: ControlProps) => (
-      <TextEditor {...wired(control)} {...bind(key, field)} />
-    );
   const issued = draft.kind === "issued";
+  const partyScope = { kind: draft.kind };
+  // A pick fills only what is still empty, and the person sees it before
+  // anything is saved.
+  const fillParty = (picked: Suggestion) => {
+    const filled = emptyFills<"counterpartyName" | "taxId" | "country">(
+      picked.fills,
+      {
+        counterpartyName: draft.counterpartyName,
+        taxId: draft.taxId,
+        country: draft.country,
+      },
+      { name: "counterpartyName", tax_id: "taxId", country: "country" },
+    );
+    for (const [key, value] of filled) edit(key, value);
+    if (filled.length > 0) say(t("desktop.ledger.suggestions.filled"));
+  };
   const year = /^\d{4}-\d{2}-\d{2}$/.test(draft.issuedAt.trim())
     ? Number(draft.issuedAt.trim().slice(0, 4))
     : Number(localDay().slice(0, 4));
@@ -835,7 +859,14 @@ function NewInvoice({
             error={shown("counterparty_name")}
             className="col-span-2"
           >
-            {text("counterpartyName", "counterparty_name")}
+            {(control) => (
+              <TextEditor
+                {...wired(control)}
+                {...bind("counterpartyName", "counterparty_name")}
+                suggestions={partyNameOptions(invoices, partyScope)}
+                onPick={fillParty}
+              />
+            )}
           </FormField>
           <FormField
             label={t("desktop.ledger.invoices.field.counterparty_tax_id")}
@@ -850,6 +881,8 @@ function NewInvoice({
               <TaxIdEditor
                 {...wired(control)}
                 {...bind("taxId", "counterparty_tax_id")}
+                suggestions={partyTaxIdOptions(invoices, partyScope)}
+                onPick={fillParty}
               />
             )}
           </FormField>
@@ -895,7 +928,17 @@ function NewInvoice({
             required={rectificativa}
             error={shown("series")}
           >
-            {text("series", "series")}
+            {(control) => (
+              <TextEditor
+                {...wired(control)}
+                {...bind("series", "series")}
+                suggestions={seriesOptions(invoices, {
+                  kind: draft.kind,
+                  invoiceClass: draft.invoiceClass,
+                })}
+                opensEmpty
+              />
+            )}
           </FormField>
           <FormField
             label={t("desktop.ledger.invoices.field.invoice_number")}
@@ -903,7 +946,38 @@ function NewInvoice({
             hint={numberHint}
             error={numberError}
           >
-            {text("number", "invoice_number")}
+            {(control) => (
+              <TextEditor
+                {...wired(control)}
+                {...bind("number", "invoice_number")}
+                suggestions={[
+                  ...(suggestion
+                    ? [
+                        {
+                          value: suggestion.number,
+                          label: suggestion.number,
+                          note: suggestion.series,
+                          fills: { series: suggestion.series },
+                        },
+                      ]
+                    : []),
+                  ...(issued
+                    ? []
+                    : invoiceNumberOptions(invoices, {
+                        kind: draft.kind,
+                        party: draft.counterpartyName,
+                      }).map(({ value, label, note }) => ({
+                        value,
+                        label,
+                        note,
+                      }))),
+                ]}
+                onPick={(picked) => {
+                  const series = picked.fills?.series;
+                  if (series && !draft.series.trim()) edit("series", series);
+                }}
+              />
+            )}
           </FormField>
           <FormField
             label={t("desktop.ledger.invoices.field.issued_at")}
@@ -949,7 +1023,17 @@ function NewInvoice({
               required
               error={shown("rectifies_invoice_number")}
             >
-              {text("rectifies", "rectifies_invoice_number")}
+              {(control) => (
+                <TextEditor
+                  {...wired(control)}
+                  {...bind("rectifies", "rectifies_invoice_number")}
+                  suggestions={invoiceNumberOptions(invoices, {
+                    kind: draft.kind,
+                    party: draft.counterpartyName,
+                  })}
+                  onPick={fillParty}
+                />
+              )}
             </FormField>
           )}
           <IvaCategoryField
@@ -986,6 +1070,10 @@ function NewInvoice({
           </p>
         )}
         <DraftLines
+          descriptions={lineDescriptionOptions(
+            invoices,
+            draft.counterpartyName,
+          )}
           lines={draft.lines}
           figures={check.lines}
           kind={draft.kind}
