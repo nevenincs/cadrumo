@@ -13,26 +13,46 @@ from ..errors import RegistryValidationError
 from ..formula_initial_values import materialise_observations
 from ..formula_runtime import RegistryCalculationEntry, calculate_registry_snapshot
 from ..schema import RegistrySnapshot
-from ._formula_runtime_support import (
+from .formula_runtime_support import (
     _IVA_PRORRATA_PORCENTAJE_CASILLA,
-    _M130_AGRARIAN_VOLUME_CASILLA,
-    _M130_AGRARIAN_WITHHELD_CASILLA,
     _M130_DIFERENCIA_ACTIVIDADES_CASILLA,
     _M130_DIFERENCIA_AGRARIA_CASILLA,
     _M130_DIFERENCIA_CASILLA,
     _M130_DIFERENCIA_TOTAL_CASILLA,
-    _M130_GASTOS_CASILLA,
-    _M130_HOME_DEDUCTION_CASILLA,
-    _M130_INGRESOS_CASILLA,
     _M130_MINORACION_CASILLA,
-    _M130_PAGO_FRACCIONADO_CASILLA,
-    _M130_PRIOR_RETURN_RESULT_CASILLA,
     _M130_RESULTADO_FINAL_CASILLA,
     _M130_RESULTADO_POSITIVO_CASILLA,
     _M130_RESULTADO_PREVIO_CASILLA,
-    _M130_RETENCIONES_CASILLA,
-    _PREVIOUS_PERIOD_NEGATIVE_RESULT_BINDING,
-    _PREVIOUS_YEAR_NET_INCOME_BINDING,
+)
+from .formula_runtime_support import (
+    M130_AGRARIAN_VOLUME_CASILLA as _M130_AGRARIAN_VOLUME_CASILLA,
+)
+from .formula_runtime_support import (
+    M130_AGRARIAN_WITHHELD_CASILLA as _M130_AGRARIAN_WITHHELD_CASILLA,
+)
+from .formula_runtime_support import (
+    M130_GASTOS_CASILLA as _M130_GASTOS_CASILLA,
+)
+from .formula_runtime_support import (
+    M130_HOME_DEDUCTION_CASILLA as _M130_HOME_DEDUCTION_CASILLA,
+)
+from .formula_runtime_support import (
+    M130_INGRESOS_CASILLA as _M130_INGRESOS_CASILLA,
+)
+from .formula_runtime_support import (
+    M130_PAGO_FRACCIONADO_CASILLA as _M130_PAGO_FRACCIONADO_CASILLA,
+)
+from .formula_runtime_support import (
+    M130_PRIOR_RETURN_RESULT_CASILLA as _M130_PRIOR_RETURN_RESULT_CASILLA,
+)
+from .formula_runtime_support import (
+    M130_RETENCIONES_CASILLA as _M130_RETENCIONES_CASILLA,
+)
+from .formula_runtime_support import (
+    PREVIOUS_PERIOD_NEGATIVE_RESULT_BINDING as _PREVIOUS_PERIOD_NEGATIVE_RESULT_BINDING,
+)
+from .formula_runtime_support import (
+    PREVIOUS_YEAR_NET_INCOME_BINDING as _PREVIOUS_YEAR_NET_INCOME_BINDING,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

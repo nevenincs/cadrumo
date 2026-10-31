@@ -11,7 +11,7 @@ from pydantic import SecretStr, ValidationError
 from ....core.auth_provider import AuthProviderKind
 from ....core.config import override_settings
 from ...auth_credentials import ActiveCertificateCredentials
-from ...tests._operator_probe_fakes import fake_operator_probe_ports
+from ...tests.operator_probe_fakes import fake_operator_probe_ports
 from ..auth_read_contracts import AuthReadProjection, AuthReadResult
 from ..credentials import ActiveAuthProjectionSnapshot
 from ..operator_probe_ports import CertificateHealthBand, CertificateHealthObservation, ClaveIdentityObservation

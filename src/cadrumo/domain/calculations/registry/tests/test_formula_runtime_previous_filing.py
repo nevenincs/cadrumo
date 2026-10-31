@@ -18,7 +18,7 @@ from ..bindings_previous_filing import (
 )
 from ..relations import RegistryFoldRequirement, relation_source_requirements
 from ..schema import RegistrySnapshot
-from ._formula_runtime_support import (
+from .formula_runtime_support import (
     _M100_PAGOS_FRACCIONADOS_CASILLA,
     _M100_RENDIMIENTO_NETO_ACTIVIDADES_CASILLA,
     _M100_RESULTADO_AUTOLIQUIDACION_CASILLA,
@@ -27,8 +27,10 @@ from ._formula_runtime_support import (
     _M115_PERCEPTORES_CASILLA,
     _M115_RETENCIONES_CASILLA,
     _M130_SALDO_NEGATIVO_CASILLA,
-    _PREVIOUS_YEAR_NET_INCOME_BINDING,
     _previous_year_net_income_binding,
+)
+from .formula_runtime_support import (
+    PREVIOUS_YEAR_NET_INCOME_BINDING as _PREVIOUS_YEAR_NET_INCOME_BINDING,
 )
 from .registry_observations import registry_grounded_modelo_observation
 from .relation_fixture import resolve_relation_values_from_observations

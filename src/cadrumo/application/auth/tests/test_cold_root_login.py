@@ -7,13 +7,13 @@ from pathlib import Path
 import pytest
 from pydantic import SecretStr
 
-from cadrumo.application.tests._operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
+from cadrumo.application.tests.operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
 
 from ....core.auth_provider import AuthProviderKind
 from ....core.config import override_settings
 from ....tests.certificates import CERTIFICATE_BUNDLE_INPUT, build_pkcs12_bundle
 from ...live.tests.unopened_live_ports import unopened_browser_session_factory
-from ...tests._operator_probe_fakes import fake_operator_probe_ports
+from ...tests.operator_probe_fakes import fake_operator_probe_ports
 from ..credentials import active_auth_projection_span
 from ..operator import login_operator_auth
 from ..operator_results import AuthConfigureNoActiveBucketError

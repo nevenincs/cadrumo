@@ -44,7 +44,7 @@ from ...overview.evidence import (
     build_calendar_evidence_projection,
 )
 from ...overview.home import HomeAvailability, HomeZoneState
-from ...tests._operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
+from ...tests.operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
 from ...user_profile.censal_operation import (
     build_censal_operation_definition,
     build_censal_operation_registration,

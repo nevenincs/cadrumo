@@ -91,7 +91,7 @@ from ..workbench_generation_contracts import (
     WorkbenchGenerationSourceResultV1,
 )
 from ..workbench_generation_reader import SecureProfileWorkbenchGenerationReadDoorV1
-from ._operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
+from .operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
 
 _OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
 

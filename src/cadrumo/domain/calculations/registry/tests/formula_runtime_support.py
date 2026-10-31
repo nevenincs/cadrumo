@@ -14,7 +14,7 @@ from ..schema_formula import FormulaExpression, ParameterDefinition
 from .snapshot_support import build_snapshot
 
 
-def _evaluate(
+def evaluate(
     expression: FormulaExpression,
     values: Mapping[CasillaId, Decimal] | None = None,
     *,
@@ -47,25 +47,25 @@ def _evaluate(
     )
 
 
-_PREVIOUS_YEAR_NET_INCOME_BINDING = "irpf.previous_year_economic_activity_net_income"
-_PREVIOUS_PERIOD_NEGATIVE_RESULT_BINDING = "modelo-130-resultados-negativos-anteriores"
+PREVIOUS_YEAR_NET_INCOME_BINDING = "irpf.previous_year_economic_activity_net_income"
+PREVIOUS_PERIOD_NEGATIVE_RESULT_BINDING = "modelo-130-resultados-negativos-anteriores"
 
 
-_M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01")
-_M130_GASTOS_CASILLA: CasillaId = validated_casilla_id("02")
-_M130_PAGO_FRACCIONADO_CASILLA: CasillaId = validated_casilla_id("04")
-_M130_RETENCIONES_CASILLA: CasillaId = validated_casilla_id("06")
+M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01")
+M130_GASTOS_CASILLA: CasillaId = validated_casilla_id("02")
+M130_PAGO_FRACCIONADO_CASILLA: CasillaId = validated_casilla_id("04")
+M130_RETENCIONES_CASILLA: CasillaId = validated_casilla_id("06")
 _M130_DIFERENCIA_ACTIVIDADES_CASILLA: CasillaId = validated_casilla_id("07")
-_M130_AGRARIAN_VOLUME_CASILLA: CasillaId = validated_casilla_id("08")
+M130_AGRARIAN_VOLUME_CASILLA: CasillaId = validated_casilla_id("08")
 _M130_DIFERENCIA_AGRARIA_CASILLA: CasillaId = validated_casilla_id("09")
-_M130_AGRARIAN_WITHHELD_CASILLA: CasillaId = validated_casilla_id("10")
+M130_AGRARIAN_WITHHELD_CASILLA: CasillaId = validated_casilla_id("10")
 _M130_DIFERENCIA_TOTAL_CASILLA: CasillaId = validated_casilla_id("11")
 _M130_RESULTADO_POSITIVO_CASILLA: CasillaId = validated_casilla_id("12")
 _M130_MINORACION_CASILLA: CasillaId = validated_casilla_id("13")
 _M130_RESULTADO_PREVIO_CASILLA: CasillaId = validated_casilla_id("14")
-_M130_HOME_DEDUCTION_CASILLA: CasillaId = validated_casilla_id("16")
+M130_HOME_DEDUCTION_CASILLA: CasillaId = validated_casilla_id("16")
 _M130_DIFERENCIA_CASILLA: CasillaId = validated_casilla_id("17")
-_M130_PRIOR_RETURN_RESULT_CASILLA: CasillaId = validated_casilla_id("18")
+M130_PRIOR_RETURN_RESULT_CASILLA: CasillaId = validated_casilla_id("18")
 _M130_RESULTADO_FINAL_CASILLA: CasillaId = validated_casilla_id("19")
 _M130_SALDO_NEGATIVO_CASILLA: CasillaId = validated_casilla_id("saldo-negativo-fin-periodo")
 _M115_PERCEPTORES_CASILLA: CasillaId = validated_casilla_id("01")
@@ -78,7 +78,7 @@ _M100_PAGOS_FRACCIONADOS_CASILLA: CasillaId = validated_casilla_id("1553")
 _M100_RESULTADO_AUTOLIQUIDACION_CASILLA: CasillaId = validated_casilla_id("1577")
 
 
-def _committed_modelo_130_snapshot(
+def committed_modelo_130_snapshot(
     registry_snapshot: Callable[..., RegistrySnapshot],
 ) -> RegistrySnapshot:
     """The formula-runtime engine's own calculation claim, never a filing one.
@@ -91,13 +91,13 @@ def _committed_modelo_130_snapshot(
     return registry_snapshot("130", 2026, "1T", grade=RegistryAuthorityGrade.CALCULATION)
 
 
-def _committed_modelo_180_snapshot(
+def committed_modelo_180_snapshot(
     registry_snapshot: Callable[..., RegistrySnapshot],
 ) -> RegistrySnapshot:
     return registry_snapshot("180", 2026, "0A", grade=RegistryAuthorityGrade.CALCULATION)
 
 
-def _modelo_180_snapshot_with_inactive_relation_period(
+def modelo_180_snapshot_with_inactive_relation_period(
     registry_tree: tuple[tuple[ModeloDefinition, ...], RegistryCatalogues],
 ) -> RegistrySnapshot:
     """A calculation-grade check of the runtime's relation-activity guard.
@@ -124,4 +124,4 @@ def _modelo_180_snapshot_with_inactive_relation_period(
 
 
 def _previous_year_net_income_binding(snapshot: RegistrySnapshot) -> BindingDefinition:
-    return next(binding for binding in snapshot.revision.bindings if binding.id == _PREVIOUS_YEAR_NET_INCOME_BINDING)
+    return next(binding for binding in snapshot.revision.bindings if binding.id == PREVIOUS_YEAR_NET_INCOME_BINDING)

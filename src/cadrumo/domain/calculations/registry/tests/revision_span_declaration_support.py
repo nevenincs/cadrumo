@@ -11,7 +11,7 @@ from __future__ import annotations
 #:
 #: Each reason quotes AEAT's OWN published title, read from the per-modelo corpus
 #: manifest rather than inferred from the stored filename.
-_OPEN_BOUNDED_ERA_DESIGNS: dict[tuple[str, str], str] = {
+OPEN_BOUNDED_ERA_DESIGNS: dict[tuple[str, str], str] = {
     (
         "111",
         "04-111-ejercicios-anteriores-al-2001-65-kb-pdf.pdf",
@@ -32,7 +32,7 @@ _OPEN_BOUNDED_ERA_DESIGNS: dict[tuple[str, str], str] = {
 #: design states no coverage at all, and absorbing it here would relabel "nobody
 #: knows" as "known on another axis", which is the exact confusion the assertion
 #: below exists to prevent.
-_NON_EJERCICIO_COVERAGE_AXIS: dict[tuple[str, str], str] = {
+NON_EJERCICIO_COVERAGE_AXIS: dict[tuple[str, str], str] = {
     (
         "036",
         "01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx",

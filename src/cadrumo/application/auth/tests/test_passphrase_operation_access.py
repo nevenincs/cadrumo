@@ -54,8 +54,8 @@ from cadrumo_client.contracts.access_vocabulary import (
     DisclosurePermission,
 )
 
-from ...tests._operator_probe_fakes import fake_operator_probe_ports
-from ...tests._operator_scope_fakes import build_inward_operator_scope_ports
+from ...tests.operator_probe_fakes import fake_operator_probe_ports
+from ...tests.operator_scope_fakes import build_inward_operator_scope_ports
 from .certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

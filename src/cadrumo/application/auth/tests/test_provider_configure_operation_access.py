@@ -36,8 +36,8 @@ from cadrumo.application.operations.registry import (
     OperationPublicDefinitionRegistrationV1,
     OperationRegistry,
 )
-from cadrumo.application.tests._operator_probe_fakes import fake_operator_probe_ports
-from cadrumo.application.tests._operator_scope_fakes import build_inward_operator_scope_ports
+from cadrumo.application.tests.operator_probe_fakes import fake_operator_probe_ports
+from cadrumo.application.tests.operator_scope_fakes import build_inward_operator_scope_ports
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.core.auth_provider import AuthProviderKind
 from cadrumo.core.config import Settings
