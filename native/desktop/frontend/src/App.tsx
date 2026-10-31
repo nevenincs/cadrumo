@@ -845,6 +845,26 @@ export function App({ host }: { host: Host }) {
     toastTimer.current = window.setTimeout(() => setToast(null), TOAST_MS);
   }, []);
 
+  // The previous close ended changes before they reported: say once that
+  // their outcome is unknown, so none is repeated blindly. The host gives the
+  // answer only once, so it is asked only once.
+  const previousClose = host.previousClose;
+  const previousCloseAsked = useRef(false);
+  const [previousCloseUnknown, setPreviousCloseUnknown] = useState(false);
+  useEffect(() => {
+    if (!previousClose || previousCloseAsked.current) return;
+    previousCloseAsked.current = true;
+    previousClose().then(
+      (interrupted) => setPreviousCloseUnknown(interrupted > 0),
+      () => undefined,
+    );
+  }, [previousClose]);
+  useEffect(() => {
+    if (!previousCloseUnknown) return;
+    setPreviousCloseUnknown(false);
+    say(t("desktop.toast.previous_close_interrupted"));
+  }, [previousCloseUnknown, say, t]);
+
   useEffect(
     () => observeInternalFailures(() => say(t("desktop.error.internal"))),
     [say, t],

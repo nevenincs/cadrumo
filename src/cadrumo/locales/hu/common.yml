@@ -4557,6 +4557,8 @@ desktop:
     open_failed: Nem sikerült megnyitni.
     paste_failed: Nem sikerült a beillesztés.
     paste_too_large: Ez túl sok szöveg egyszerre a beillesztéshez.
+    previous_close_interrupted: A Cadrumo egy módosítás közben zárult be; az eredménye
+      ismeretlen. Ellenőrizd, mielőtt megismétled.
   tui:
     hide: Munkaterület elrejtése
     label: Cadrumo-munkaterület

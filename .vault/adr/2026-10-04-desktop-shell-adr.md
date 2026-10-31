@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:061a37593bfcdb72572572a3bdb14e894bef60c7e5f039412d96de0e73f47625'
+body_hash: 'sha256:72fa2259f4a862af5f636671a9e590786ecea421e577b85c5fde941266de4def'
 related:
   - "[[2026-10-04-desktop-shell-reference]]"
   - "[[2026-10-03-application-packaging-adr]]"
@@ -430,3 +430,18 @@ Superseded sentences:
 - Constraints: "A second GUI launch hands its activation to the open window and exits 0." and "A newer version launched while an older window is open hands activation to that window" now apply to a window open on the same storage root.
 
 Unchanged: the headless CLI passthrough never takes the lock; the other-session report, activation protocol, patience and foreign-object refusal are as before. Outside this amendment: durable recording of pre-log admission outcomes and the close-time relaunch wait (plan Step `S13`), and isolating tests from the real per-user transport directory (plan Step `S16`).
+
+## Amendment 2026-10-31 - a quit settles the changes it submitted
+
+Basis: the user pre-approved ADR changes for the macOS platform bring-up, recorded in the Description of `2026-10-30-macos-platform-plan`; this is its Step `S14`. The root-cause analysis of the macOS start failures (failure mode F5) found that a quit during a profile creation killed the helper running it with no record of what happened. It also found that every orderly quit logged `session_unavailable` as a failure.
+
+What changed:
+
+- **One close for every ending.** A quit, a window close and a termination signal (a logout, a system shutdown or a stop sent to the process) all end the window through the same close. On POSIX hosts the window takes `SIGTERM` from its default disposition before its run loop starts, and answers it by asking the application to exit.
+- **Settle window.** The close first stops admitting changes: the profile host refuses further relayed operations, and the helper lane refuses further mutations. Reads go on. The changes already submitted then share one settle window to report before any client ends. It is `OPERATION_SETTLE_BOUND` in `native/application/src/shutdown.rs`, equal to the runtime's drain bound, so a quit never gives submitted work less time than a runtime stop does. A change that reports in time ends with its own outcome. One still running is ended with its client, and the runtime's journal records what happened to it (`2026-10-04-runtime-manager-architecture-supervisor-contract-adr`, amendment of the same date).
+- **Relaunch patience.** The relaunch patience is now the settle window plus the supervisor close bound plus the runtime drain bound.
+- **Expected outcomes are not failures.** A closing window's own refusals carry the reason `host_closing` (`cadrumo_application::shutdown::is_host_closing`). They are not recorded as failures and are logged at information level. A helper that the close refused or ended has the timing outcome `interrupted`. A change that the close ended is logged at warning level, because its effect is unknown to the window.
+- **Next launch.** When the close ended changes before they reported, the window appends a payload-free record naming each change by its closed command identity to `cadrumo-close-outcomes.jsonl` in the root's log directory. The next window on that root asks once (`previous_close`) and says that the outcome of the change is unknown and should be checked before it is repeated. It then marks the record reported. A settled close writes nothing. The runtime journal stays the authority on each change's outcome; the record only remembers that the person was not told.
+
+Unchanged: admitted work is owned by the runtime and survives the client disconnecting. The window holds no journal of its own and never infers an outcome from a timeout.
+

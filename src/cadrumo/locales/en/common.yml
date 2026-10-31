@@ -4505,6 +4505,8 @@ desktop:
     open_failed: Couldn't open that.
     paste_failed: Could not paste that.
     paste_too_large: That is too much text to paste at once.
+    previous_close_interrupted: Cadrumo closed during a change; its outcome is unknown.
+      Check it before you repeat it.
   tui:
     hide: Hide workspace
     label: Cadrumo workspace

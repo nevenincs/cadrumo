@@ -10,6 +10,7 @@ use super::wire::Stop;
 use cadrumo_application::{
     diagnostics::Diagnostics,
     error::application::{ApplicationError, Cause},
+    shutdown::is_host_closing,
 };
 use std::sync::{Arc, Mutex};
 
@@ -59,6 +60,10 @@ impl Reports {
 
     /// As [`Reports::read`], for a failure that is not a stop.
     pub fn read_error(&self, error: &ApplicationError) {
+        // A read the closing window refused itself is an expected shutdown outcome.
+        if is_host_closing(error) {
+            return;
+        }
         let reported = Reported::of(error);
         let mut last = self.last.lock().unwrap_or_else(|e| e.into_inner());
         if last.as_ref() == Some(&reported) {
@@ -71,6 +76,9 @@ impl Reports {
 
     /// Records a failure of the host itself, which no command or read answers.
     pub fn error(&self, error: &ApplicationError) {
+        if is_host_closing(error) {
+            return;
+        }
         *self.last.lock().unwrap_or_else(|e| e.into_inner()) = Some(Reported::of(error));
         self.diagnostics.failure(error.clone());
     }

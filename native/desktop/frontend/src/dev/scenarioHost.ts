@@ -801,6 +801,15 @@ export function scenarioHost(
         }
       : {}),
 
+    // `?previous_close=interrupted`: the previous close ended a change unreported.
+    previousClose() {
+      say("previousClose");
+      const interrupted =
+        new URLSearchParams(window.location.search).get("previous_close") ===
+        "interrupted";
+      return Promise.resolve(interrupted ? 1 : 0);
+    },
+
     about() {
       say("about");
       return scenario.services === "refused"

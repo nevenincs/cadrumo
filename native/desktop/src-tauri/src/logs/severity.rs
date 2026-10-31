@@ -1,11 +1,12 @@
 use super::format::Level;
 use cadrumo_application::diagnostics::{
     Event, EventKind, HostOutcome,
-    helper::{HelperDecode, HelperOutcome},
+    helper::{HelperDecode, HelperKind, HelperOutcome},
     lifecycle::{LifecycleFact, RuntimeExit, RuntimeReason, SupervisorOutcome},
     service::{AgentRefusal, ServiceFact},
 };
 use cadrumo_application::process::status::ProcessRole;
+use cadrumo_application::shutdown::is_host_closing;
 
 const PROJECT_LOGGER_ROOTS: [&str; 5] = [
     "cadrumo",
@@ -30,6 +31,10 @@ pub fn level(event: &Event) -> Level {
     }
     if matches!(event.kind, EventKind::Panic) {
         return Level::Critical;
+    }
+    // A closing host's own refusal is an expected shutdown outcome, not a failure.
+    if event.failure.as_ref().is_some_and(is_host_closing) {
+        return Level::Info;
     }
     if event.failure.is_some() || event.webview_failure.is_some() {
         return Level::Error;
@@ -108,8 +113,17 @@ pub fn level(event: &Event) -> Level {
         {
             Level::Error
         }
-        EventKind::HelperTiming => match event.helper_timing.map(|fact| fact.outcome) {
-            Some(HelperOutcome::Completed) => Level::Debug,
+        EventKind::HelperTiming => match event.helper_timing {
+            Some(fact) if fact.outcome == HelperOutcome::Completed => Level::Debug,
+            // A change the close ended has an unknown effect; anything else it refused or
+            // ended changed nothing.
+            Some(fact) if fact.outcome == HelperOutcome::Interrupted => {
+                if fact.helper_kind == HelperKind::Mutation && event.status.is_some() {
+                    Level::Warning
+                } else {
+                    Level::Debug
+                }
+            }
             _ => Level::Error,
         },
         EventKind::StageCompleted if event.outcome == Some(HostOutcome::Unavailable) => {
@@ -300,6 +314,67 @@ mod tests {
         assert_eq!(
             level(diagnostics.snapshot(0).events.last().unwrap()),
             Level::Error
+        );
+    }
+
+    #[test]
+    fn a_close_records_its_own_refusals_as_outcomes_and_an_ended_change_as_a_warning() {
+        use cadrumo_application::diagnostics::helper::{
+            HelperExecutable, HelperIdentity, HelperResult, HelperTiming,
+        };
+        use cadrumo_application::error::application::{ApplicationError, ErrorCode, Operation};
+        use cadrumo_application::process::status::ProcessPhase;
+        use cadrumo_application::shutdown::HOST_CLOSING;
+        let identity = HelperIdentity {
+            command: "config.profile.create",
+            executable: HelperExecutable::Cli,
+        };
+        let closing = ApplicationError::new(ErrorCode::SessionUnavailable, Operation::Cli)
+            .with_reason(HOST_CLOSING);
+        let timing = |helper_kind, spawn_ms| HelperTiming {
+            helper_kind,
+            outcome: HelperOutcome::Interrupted,
+            admission_wait_ms: 0,
+            spawn_ms,
+            execution_ms: spawn_ms,
+            cleanup_ms: None,
+            output_join_ms: None,
+            total_ms: 1,
+        };
+        let diagnostics = Diagnostics::default();
+        // A change the close ended after its settle window.
+        let id = diagnostics.start(4300, ProcessRole::SignIn);
+        diagnostics.finish_helper(id, None, ProcessPhase::Terminated);
+        diagnostics.helper_result(
+            Some(id),
+            HelperResult::unavailable(identity, 0, 0),
+            Some(closing.clone()),
+        );
+        diagnostics.helper_timing(Some(id), timing(HelperKind::Mutation, Some(1)));
+        // A read the closing host refused before it started.
+        diagnostics.helper_result(
+            None,
+            HelperResult::unavailable(identity, 0, 0),
+            Some(closing),
+        );
+        diagnostics.helper_timing(None, timing(HelperKind::Read, None));
+        // The same code without the closing reason is still a failure.
+        diagnostics.failure(ApplicationError::new(
+            ErrorCode::SessionUnavailable,
+            Operation::Cli,
+        ));
+        let events = diagnostics.snapshot(0).events;
+        assert_eq!(
+            events.iter().map(level).collect::<Vec<_>>(),
+            [
+                Level::Debug,
+                Level::Debug,
+                Level::Info,
+                Level::Warning,
+                Level::Info,
+                Level::Debug,
+                Level::Error
+            ]
         );
     }
 

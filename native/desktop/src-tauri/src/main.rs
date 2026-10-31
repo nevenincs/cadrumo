@@ -3,6 +3,7 @@
 mod agent;
 mod app;
 mod auth_browser;
+mod close_outcome;
 mod docs;
 mod environment;
 mod launch;

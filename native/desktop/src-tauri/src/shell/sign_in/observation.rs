@@ -45,7 +45,7 @@ impl Observer {
             .lock()
             .map_err(|_| super::failure(ErrorCode::LockPoisoned))?;
         if self.closed.load(Ordering::Acquire) {
-            return Err(super::failure(ErrorCode::SessionUnavailable));
+            return Err(super::closing());
         }
         let id = channel.id();
         *self

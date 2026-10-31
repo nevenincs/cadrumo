@@ -164,6 +164,11 @@ fn failure(code: ErrorCode) -> ApplicationError {
     ApplicationError::new(code, Operation::Cli)
 }
 
+/// The refusal of a window that is closing: an expected shutdown outcome, not a failure.
+fn closing() -> ApplicationError {
+    failure(ErrorCode::SessionUnavailable).with_reason(cadrumo_application::shutdown::HOST_CLOSING)
+}
+
 #[derive(Deserialize)]
 struct Contract {
     layout: Layout,
@@ -289,7 +294,7 @@ impl SignIn {
     /// connection of the window's own.
     pub(crate) fn person(&self, profile_id: &str) -> Result<crate::agent::person::HeldPerson> {
         if self.closed.load(std::sync::atomic::Ordering::Acquire) {
-            return Err(failure(ErrorCode::SessionUnavailable));
+            return Err(closing());
         }
         let mut cached = self.person.lock().unwrap_or_else(|e| e.into_inner());
         if let Some(held) = cached.upgrade() {
@@ -298,7 +303,7 @@ impl SignIn {
                 drop(person);
                 let _lifecycle = self.lifecycle.lock().unwrap_or_else(|e| e.into_inner());
                 if self.closed.load(std::sync::atomic::Ordering::Acquire) {
-                    return Err(failure(ErrorCode::SessionUnavailable));
+                    return Err(closing());
                 }
                 return Ok(held);
             }
@@ -306,7 +311,7 @@ impl SignIn {
         let mut person = self.resume(profile_id)?;
         let _lifecycle = self.lifecycle.lock().unwrap_or_else(|e| e.into_inner());
         if self.closed.load(std::sync::atomic::Ordering::Acquire) {
-            return Err(failure(ErrorCode::SessionUnavailable));
+            return Err(closing());
         }
         person.observe_events(self.person_events.clone())?;
         let held = Arc::new(std::sync::Mutex::new(person));
@@ -324,7 +329,7 @@ impl SignIn {
 
         let waiting = TimeoutWait::new();
         if self.closed.load(std::sync::atomic::Ordering::Acquire) {
-            return Err(failure(ErrorCode::SessionUnavailable));
+            return Err(closing());
         }
         macro_rules! native {
             ($exchange:expr) => {
@@ -372,12 +377,12 @@ impl SignIn {
             .lock()
             .unwrap_or_else(|error| error.into_inner());
         if self.closed.load(std::sync::atomic::Ordering::Acquire) {
-            return Err(failure(ErrorCode::SessionUnavailable));
+            return Err(closing());
         }
         if let Some(rebound) = self.rebind_held(&profile_id, &password) {
             let _lifecycle = self.lifecycle.lock().unwrap_or_else(|e| e.into_inner());
             if self.closed.load(std::sync::atomic::Ordering::Acquire) {
-                return Err(failure(ErrorCode::SessionUnavailable));
+                return Err(closing());
             }
             return match rebound {
                 Ok(()) => Ok(signed_in(active)),
@@ -408,7 +413,7 @@ impl SignIn {
         let mut cached = self.person.lock().unwrap_or_else(|e| e.into_inner());
         let _lifecycle = self.lifecycle.lock().unwrap_or_else(|e| e.into_inner());
         if self.closed.load(std::sync::atomic::Ordering::Acquire) {
-            return Err(failure(ErrorCode::SessionUnavailable));
+            return Err(closing());
         }
         *cached = Arc::downgrade(&held);
         *self.signed_in.lock().unwrap_or_else(|e| e.into_inner()) = Some(held);
@@ -499,6 +504,21 @@ impl SignIn {
     fn shown(&self, mut status: SignInStatus) -> SignInStatus {
         status.reconnecting = self.custody.reconnecting();
         status
+    }
+
+    /// Refuses every further change through a helper, then waits for the one already
+    /// running, if any, until `deadline`. Returns what is still running then: the stop
+    /// that follows ends it, and its effect is unknown to the window.
+    pub(crate) async fn settle_changes(
+        &self,
+        deadline: std::time::Instant,
+    ) -> Option<&'static str> {
+        let children = self.children.clone();
+        super::blocking(move || Ok(children.settle(deadline)))
+            .await
+            .ok()
+            .flatten()
+            .map(|identity| identity.command)
     }
 
     /// Signal every opening before shutdown joins any dependent owner.

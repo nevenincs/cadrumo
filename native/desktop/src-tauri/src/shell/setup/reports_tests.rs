@@ -129,3 +129,23 @@ fn a_failure_of_the_host_itself_is_recorded_as_it_is() {
         (ErrorCode::SessionUnavailable, Some("setup_host_closed"))
     );
 }
+
+#[test]
+fn a_read_or_command_the_closing_window_refused_itself_records_nothing() {
+    let (reports, diagnostics) = reports();
+    let closing = || {
+        Stop::Host(
+            ApplicationError::new(ErrorCode::SessionUnavailable, Operation::Cli)
+                .with_reason(cadrumo_application::shutdown::HOST_CLOSING),
+        )
+    };
+    reports.read(&closing());
+    reports.command(&closing());
+    assert!(recorded(&diagnostics).is_empty());
+    // A failure that is not the close's own still records.
+    reports.read(&host("setup_session_changed"));
+    assert_eq!(
+        reasons(&diagnostics),
+        [Some("setup_session_changed".into())]
+    );
+}

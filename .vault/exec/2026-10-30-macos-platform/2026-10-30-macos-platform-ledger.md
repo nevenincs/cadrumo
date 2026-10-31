@@ -5,7 +5,7 @@ tags:
 date: '2026-10-30'
 modified: '2026-10-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:b07e7cfd104b98f9a58e47476afee8586e2fd79f857a084bd8f4a6d95a3d7f3b'
+body_hash: 'sha256:ee639d50cb241dc5781d4d8333a5f0fd99d51e2392e1782b654e2d87ef6fbe53'
 related:
   - "[[2026-10-30-macos-platform-plan]]"
 ---
@@ -213,6 +213,45 @@ native/manager/src/supervision/supervisor.rs`
 - `S13` `M` `native/manager/tests/supervision.rs`
 - `S13` `verify:` `build.sh Debug desktop-host-unit-test` -> `pass`
 - `S13` `verify:` `ctest -C Debug -R manager.supervision` -> `pass`
+- `S14` `M` `src/cadrumo_runtime/host/profile_connection_drain.py`
+- `S14` `M` `src/cadrumo_runtime/host/terminated_operations.py`
+- `S14` `M` `src/cadrumo_runtime/host/tests/test_runtime_drain.py`
+- `S14` `M` `native/application/src/shutdown.rs`
+- `S14` `M` `native/application/src/diagnostics/helper.rs`
+- `S14` `M` `native/desktop/src-tauri/Cargo.toml`
+- `S14` `M` `native/desktop/src-tauri/src/app.rs`
+- `S14` `M` `native/desktop/src-tauri/src/main.rs`
+- `S14` `M` `native/desktop/src-tauri/src/logs/severity.rs`
+- `S14` `M` `native/desktop/src-tauri/src/shell/setup/reports.rs`
+- `S14` `M` `native/desktop/src-tauri/src/shell/setup/reports_tests.rs`
+- `S14` `M` `native/desktop/src-tauri/src/shell/sign_in/mod.rs`
+- `S14` `M` `native/desktop/src-tauri/src/shell/sign_in/observation.rs`
+- `S14` `M` `native/desktop/src-tauri/src/shell/sign_in/process.rs`
+- `S14` `M` `native/desktop/src-tauri/src/shell/sign_in/watch.rs`
+- `S14` `M` `native/desktop/src-tauri/src/shell/user_profile.rs`
+- `S14` `M` `native/desktop/frontend/src/App.tsx`
+- `S14` `M` `native/desktop/frontend/src/dev/scenarioHost.ts`
+- `S14` `M` `native/desktop/frontend/src/ipc/contract.ts`
+- `S14` `M` `native/desktop/frontend/src/shell/host.ts`
+- `S14` `M` `native/desktop/frontend/src/shell/tauriHost.ts`
+- `S14` `M` `dev/locales/desktop_interface_keys.py`
+- `S14` `M` `src/cadrumo/locales/en/common.yml`
+- `S14` `M` `src/cadrumo/locales/es/common.yml`
+- `S14` `M` `src/cadrumo/locales/ca/common.yml`
+- `S14` `M` `src/cadrumo/locales/hu/common.yml`
+- `S14` `M` `.vault/adr/2026-10-04-desktop-shell-adr.md`
+- `S14` `M` `.vault/adr/2026-10-04-runtime-manager-architecture-supervisor-contract-adr.md`
+- `S14` `A` `src/cadrumo_runtime/host/tests/test_drained_worker_settlement.py`
+- `S14` `A` `native/desktop/src-tauri/src/close_outcome.rs`
+- `S14` `A` `native/desktop/frontend/tests/scenarios/previous-close.spec.ts`
+- `S14` `verify:` `pytest runtime drain, session-end, terminated-owner tests` -> `pass`
+- `S14` `verify:` `desktop-host-unit-test` -> `pass`
+- `S14` `verify:` `desktop-host-unit-clippy` -> `pass`
+- `S14` `verify:` `ctest application.rust application.clippy application.fmt desktop.fmt` -> `pass`
+- `S14` `verify:` `desktop-frontend-check` -> `pass`
+- `S14` `verify:` `desktop-frontend-test scenarios/previous-close` -> `pass`
+- `S14` `verify:` `lint-imports` -> `pass`
+- `S14` `by:` `vaultspec-high-executor`
 
 ## Notes
 
@@ -221,3 +260,4 @@ native/manager/src/supervision/supervisor.rs`
 - `S09` manager rust/supervision/clippy blocked by foreign uncommitted unsafe blocks in launch.rs; application diagnostics retry test fails, unrelated; bundle.environment-launch not rerun for disk
 - `S12` Windows dispatch, cutover, session mutex, pipe and desktop host changes were not compiled or run: no Windows target on this Mac.
 - `S12` macOS process tests still claim in the real per-user Darwin transport directory, as the existing ones do; Step S16 isolates it.
+- `S14` The Windows-only real-worker drain test `(test_runtime_drain.py)` was updated for the new terminal outcome but not run here; no packaged GUI launch verified SIGTERM end to end
