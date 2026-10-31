@@ -15,6 +15,10 @@ from cadrumo.domain.user_profile.values import create_user_profile_record as _cr
 from ....core.aggregation import BindingSourceKind
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.schema_input_kind import InputKind
+from ....domain.calculations.registry.tests.modelo_100_profile_binding_tables import (
+    FAMILY_ROW_BINDINGS,
+    PERSONAL_FAMILY_CASILLA_TO_BINDING,
+)
 from ....domain.calculations.registry.tests.published_authority import (
     PublishedGovernedFactSource,
     published_profile_schema,
@@ -36,45 +40,13 @@ _PROFILE_ID = "10000000-0000-4000-8000-000000000366"
 _BUCKET_ID = _PROFILE_ID
 _CLOCK = datetime(_SUPPORT.horizon, 7, 1, 12, 0, 0, tzinfo=UTC)
 
-_CASILLA_TO_BINDING: Mapping[str, str] = {
-    "DPNIF_D": "renta-profile-tax-id",
-    "DP_APENOM_D": "renta-profile-display-name",
-    "ZCCAD": "renta-profile-tax-residence-ccaa",
-    "TIPOTRIBUTACION": "renta-profile-declaration-type",
-    "SEXO_D": "renta-profile-taxpayer-sex",
-    "ECIVIL": "renta-profile-marital-status",
-    "DPFNAC_D": "renta-profile-taxpayer-birth-date",
-    "DPNIF_C": "renta-profile-spouse-tax-id",
-    "DP_APENOM_C": "renta-profile-spouse-display-name",
-    "DPFNAC_C": "renta-profile-spouse-birth-date",
-    "SEXO_C": "renta-profile-spouse-sex",
-    "DPGMIN_D": "renta-profile-taxpayer-disability-grade",
-    "DECFAL": "renta-profile-taxpayer-death-date",
-    "DPGMIN_C": "renta-profile-spouse-disability-grade",
-    "NORESIDENTE": "renta-profile-spouse-non-resident-irpf",
-    "RESIDENTEUE": "renta-profile-spouse-eu-eea-resident",
-    "ZRUE2": "renta-profile-spouse-eu-eea-country",
-    "HIJOSUE": "renta-profile-family-descendants-eu-eea-deduction",
-    "PH18": "renta-profile-family-minor-children-in-unit",
-    "NIFDLG": "renta-family-descendant-tax-id",
-    "APENOMDLG": "renta-family-descendant-display-name",
-    "FNACDLG": "renta-family-descendant-birth-date",
-    "MINUSDLG": "renta-family-descendant-disability-grade",
-    "FALLDLG": "renta-family-descendant-death-date",
-    "DNIASDLG": "renta-family-ascendant-tax-id",
-    "APENOMDLG_ASC": "renta-family-ascendant-display-name",
-    "ANOASDLG": "renta-family-ascendant-birth-date",
-    "PCTMINASDLG": "renta-family-ascendant-disability-grade",
-    "CONVASDLG": "renta-family-ascendant-cohabiting-descendant-count",
-    "FALLASDLG": "renta-family-ascendant-death-date",
-}
 
 # The first authored Modelo 100 edition that binds every personal and family field
 # above to the profile; every later supported year keeps the construct.
 _PROFILE_BACKED_FIRST_EDITION = next(
     revision.valid_from.year
     for revision in authored_revisions_where(
-        "100", lambda revision: set(_CASILLA_TO_BINDING.values()) <= {b.id for b in revision.bindings}
+        "100", lambda revision: set(PERSONAL_FAMILY_CASILLA_TO_BINDING.values()) <= {b.id for b in revision.bindings}
     )
 )
 _PROFILE_BACKED_YEARS = tuple(year for year in _SUPPORT.years if year >= _PROFILE_BACKED_FIRST_EDITION)
@@ -100,20 +72,6 @@ _SCALAR_PROFILE_BINDING_VALUES: Mapping[str, object] = {
     "renta-profile-spouse-eu-eea-country": "DE",
     "renta-profile-family-descendants-eu-eea-deduction": True,
     "renta-profile-family-minor-children-in-unit": False,
-}
-
-_ROW_BINDINGS: Mapping[str, tuple[str, str]] = {
-    "renta-family-descendant-tax-id": ("descendants", "tax_id"),
-    "renta-family-descendant-display-name": ("descendants", "display_name"),
-    "renta-family-descendant-birth-date": ("descendants", "birth_date"),
-    "renta-family-descendant-disability-grade": ("descendants", "disability_grade"),
-    "renta-family-descendant-death-date": ("descendants", "death_date"),
-    "renta-family-ascendant-tax-id": ("ascendants", "tax_id"),
-    "renta-family-ascendant-display-name": ("ascendants", "display_name"),
-    "renta-family-ascendant-birth-date": ("ascendants", "birth_date"),
-    "renta-family-ascendant-disability-grade": ("ascendants", "disability_grade"),
-    "renta-family-ascendant-cohabiting-descendant-count": ("ascendants", "cohabiting_descendant_count"),
-    "renta-family-ascendant-death-date": ("ascendants", "death_date"),
 }
 
 
@@ -161,9 +119,9 @@ def test_modelo_100_personal_family_construct_is_profile_backed(filing_year: int
     casillas = {casilla.id: casilla for casilla in snapshot.revision.casillas}
     bindings = {binding.id: binding for binding in snapshot.revision.bindings}
 
-    assert set(construct.casilla_ids) == set(_CASILLA_TO_BINDING)
-    assert set(construct.bindings) == set(_CASILLA_TO_BINDING.values())
-    for casilla_id, binding_id in _CASILLA_TO_BINDING.items():
+    assert set(construct.casilla_ids) == set(PERSONAL_FAMILY_CASILLA_TO_BINDING)
+    assert set(construct.bindings) == set(PERSONAL_FAMILY_CASILLA_TO_BINDING.values())
+    for casilla_id, binding_id in PERSONAL_FAMILY_CASILLA_TO_BINDING.items():
         casilla = casillas[casilla_id]
         assert casilla.input_kind is InputKind.BOUND
         assert casilla.binding == binding_id
@@ -182,7 +140,7 @@ def test_modelo_100_profile_binding_selectors_target_real_profile_schema(filing_
     }
     bindings = {binding.id: binding for binding in snapshot.revision.bindings}
 
-    for binding_id in _CASILLA_TO_BINDING.values():
+    for binding_id in PERSONAL_FAMILY_CASILLA_TO_BINDING.values():
         selectors = profile_binding_selectors(bindings[binding_id].provider)
         assert selectors, binding_id
         missing = set(selectors) - schema_selectors
@@ -206,7 +164,7 @@ def test_modelo_100_family_row_bindings_address_repeating_profile_collections(fi
     snapshot = _snapshot(filing_year)
     bindings = {binding.id: binding for binding in snapshot.revision.bindings}
 
-    for binding_id, (collection, field) in _ROW_BINDINGS.items():
+    for binding_id, (collection, field) in FAMILY_ROW_BINDINGS.items():
         selector: Any = bindings[binding_id].provider
         assert selector.profile_model == "RentaFamilyProfile"
         assert selector.collection == collection

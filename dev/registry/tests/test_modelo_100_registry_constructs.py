@@ -26,6 +26,7 @@ from cadrumo.domain.calculations.registry.schema import BindingDefinition, Regis
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.calculations.registry.schema_revision_members import ApplicationLinkSurface
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
+from cadrumo.domain.calculations.registry.tests.modelo_100_profile_binding_tables import FAMILY_ROW_BINDINGS
 from cadrumo.domain.calculations.registry.tests.published_authority import published_supported_filing_years
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 from cadrumo.domain.contribuyente.family_profile import RentaFamilyProfile
@@ -343,21 +344,6 @@ _SPOUSE_REQUIRED_BINDINGS: tuple[str, ...] = (
 )
 """Bindings whose ``required_when_*`` selector is keyed on declaration type == joint."""
 
-_FAMILY_ROW_BINDINGS: Mapping[str, tuple[str, str]] = {
-    "renta-family-descendant-tax-id": ("descendants", "tax_id"),
-    "renta-family-descendant-display-name": ("descendants", "display_name"),
-    "renta-family-descendant-birth-date": ("descendants", "birth_date"),
-    "renta-family-descendant-disability-grade": ("descendants", "disability_grade"),
-    "renta-family-descendant-death-date": ("descendants", "death_date"),
-    "renta-family-ascendant-tax-id": ("ascendants", "tax_id"),
-    "renta-family-ascendant-display-name": ("ascendants", "display_name"),
-    "renta-family-ascendant-birth-date": ("ascendants", "birth_date"),
-    "renta-family-ascendant-disability-grade": ("ascendants", "disability_grade"),
-    "renta-family-ascendant-cohabiting-descendant-count": ("ascendants", "cohabiting_descendant_count"),
-    "renta-family-ascendant-death-date": ("ascendants", "death_date"),
-}
-"""Family row bindings → (collection name on RentaFamilyProfile, field name on the row model)."""
-
 
 def test_modelo_100_personal_family_profile_bindings_target_profile_schema() -> None:
     snapshot = _modelo_100_snapshot()
@@ -451,7 +437,7 @@ def _assert_family_row_selectors(
     casillas_by_id: Mapping[CasillaId, CasillaDefinition],
 ) -> None:
     """Family-row bindings address a repeating collection + field pair on RentaFamilyProfile."""
-    for binding_id, (collection, field) in _FAMILY_ROW_BINDINGS.items():
+    for binding_id, (collection, field) in FAMILY_ROW_BINDINGS.items():
         selector = selector_as_dict(bindings_by_id[binding_id])
         assert selector["profile_model"] == "RentaFamilyProfile", binding_id
         assert selector["collection"] == collection, binding_id
