@@ -34,7 +34,7 @@ class CadrumoRuntimeSettings(CadrumoTimeoutSettings):
     )
     cadrumo_browser_locale: str = Field(
         default="es-ES",
-        min_length=2,
+        min_length=1,
         description="Default browser locale passed to Playwright context (BCP-47 tag)",
     )
     cadrumo_browser_timezone: str = Field(

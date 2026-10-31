@@ -99,10 +99,14 @@ def _run_context_variables() -> tuple[ContextVar[RunContextInfo | None], Context
     return RUN_CONTEXT_VAR, STEP_CONTEXT_VAR
 
 
+#: Position of the message arguments in ``logging.LogRecord``'s positional constructor.
+_LOG_RECORD_ARGS_INDEX = 5
+
+
 def _safe_factory_args(args: tuple[Any, ...]) -> tuple[Any, ...]:
-    if len(args) <= 5 or type(args[5]) is not tuple:
+    if len(args) <= _LOG_RECORD_ARGS_INDEX or type(args[_LOG_RECORD_ARGS_INDEX]) is not tuple:
         return args
-    arguments = cast(tuple[object, ...], args[5])
+    arguments = cast(tuple[object, ...], args[_LOG_RECORD_ARGS_INDEX])
     if len(arguments) != 1:
         return args
     candidate = arguments[0]

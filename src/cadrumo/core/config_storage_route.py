@@ -177,7 +177,8 @@ def _bucket_id_for_route(*, database_path: Path | None, storage_root: Path) -> s
     buckets_dirname = storage_location(StorageCategory.BUCKETS).subpath
     bucket_db_dirname = storage_location(StorageCategory.BUCKET_DATABASE).subpath
     parts = relative.parts
-    if len(parts) == 4 and parts[0] == buckets_dirname and parts[2:] == (bucket_db_dirname, PRODUCT_DATABASE_FILENAME):
+    database_route = (bucket_db_dirname, PRODUCT_DATABASE_FILENAME)
+    if len(parts) == 2 + len(database_route) and parts[0] == buckets_dirname and parts[2:] == database_route:
         return parts[1]
     return ""
 

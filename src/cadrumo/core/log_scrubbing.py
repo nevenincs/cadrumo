@@ -77,6 +77,12 @@ FORMAT_SIZE_RE = re.compile(
     r"%(?:\([^)]+\))?[-#+ ]*(?P<width>\d+|\*)?(?:\.(?P<precision>\d+|\*))?[hlL]?[diouxXeEfFgGcrsa]"
 )
 
+#: Technical run lengths: base64 that follows a file magic, and the unbroken run that is a payload alone.
+_MAGIC_PAYLOAD_MIN_RUN = 16
+_OPAQUE_PAYLOAD_MIN_RUN = 256
+#: Trailing characters of a serial a redaction marker keeps visible.
+_SERIAL_SUFFIX_LENGTH = 4
+
 #: Base64 payload embedded in a ``data:`` URI, the shape a vision request uses
 #: when the image travels inline rather than as a bare field.
 _DATA_URI_PAYLOAD_RE = re.compile(r"data:[A-Za-z0-9.+-]+/[A-Za-z0-9.+-]+;base64,[A-Za-z0-9+/=]+")
@@ -85,14 +91,16 @@ _DATA_URI_PAYLOAD_RE = re.compile(r"data:[A-Za-z0-9.+-]+/[A-Za-z0-9.+-]+;base64,
 #: arrives as. Matched without a word boundary because several magics begin
 #: with ``/``, which is not a word character.
 _BINARY_MAGIC_PAYLOAD_RE = re.compile(
-    r"(?:iVBORw0KGg|/9j/4AAQ|R0lGODdh|R0lGODlh|UklGR|JVBERi0|SUkqA|TU0AK)[A-Za-z0-9+/]{16,}={0,2}",
+    r"(?:iVBORw0KGg|/9j/4AAQ|R0lGODdh|R0lGODlh|UklGR|JVBERi0|SUkqA|TU0AK)[A-Za-z0-9+/]{"
+    + str(_MAGIC_PAYLOAD_MIN_RUN)
+    + ",}={0,2}",
 )
 
 #: Any sufficiently long unbroken base64 run, whatever produced it. Diagnostic
 #: prose never contains one; an encoded document always does. This is the rule
 #: that does not need to recognise the payload's shape, so a format the magic
 #: alternation above has never heard of is still contained.
-_OPAQUE_PAYLOAD_RE = re.compile(r"[A-Za-z0-9+/]{256,}={0,2}")
+_OPAQUE_PAYLOAD_RE = re.compile(r"[A-Za-z0-9+/]{" + str(_OPAQUE_PAYLOAD_MIN_RUN) + r",}={0,2}")
 
 #: Ceiling on a ``bytes`` log argument before it is treated as a payload rather
 #: than a diagnostic value. Decrypted document bytes must never be formatted
@@ -160,7 +168,7 @@ def _looks_sensitive_key(key: str | None) -> bool:
 def _redacted_value(key: str | None, value: str) -> str:
     """Return the stable redaction marker for a sensitive value."""
     if key is not None and "serial" in key.lower():
-        suffix = value[-4:] if len(value) >= 4 else "????"
+        suffix = value[-_SERIAL_SUFFIX_LENGTH:] if len(value) >= _SERIAL_SUFFIX_LENGTH else "????"
         return f"<cert:....{suffix}>"
     return "<redacted>"
 

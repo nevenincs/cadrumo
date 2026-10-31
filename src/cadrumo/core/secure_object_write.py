@@ -69,7 +69,7 @@ class SecureObjectWrite(BaseModel):
     schema_version: int = Field(ge=1)
     written_at: datetime
     payload: bytes = Field(min_length=1)
-    write_provenance: str = Field(default=DEFAULT_WRITE_PROVENANCE, min_length=1, max_length=255)
+    write_provenance: str = Field(default=DEFAULT_WRITE_PROVENANCE, min_length=1, max_length=256)
     source_event_id: str | None = Field(default=None, min_length=1, max_length=128)
     expected_revision_id: Hex64Str | None = None
 

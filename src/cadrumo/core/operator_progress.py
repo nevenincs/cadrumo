@@ -35,7 +35,7 @@ class OperatorProgress(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    notice_code: str = Field(min_length=3, max_length=128, pattern=r"^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$")
+    notice_code: str = Field(min_length=1, max_length=128, pattern=r"^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$")
     display_code: OperatorDisplayCode | None = None
     message: str = Field(min_length=1)
     timeout_seconds: int | None = Field(default=None, gt=0)

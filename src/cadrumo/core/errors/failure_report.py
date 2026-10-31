@@ -35,8 +35,9 @@ FIRST_PARTY_MODULE_ROOTS: Final[tuple[str, ...]] = (
 )
 _MAX_LINKS: Final = 16
 _MAX_INVARIANT_TEXT: Final = 240
+_MAX_REASON: Final = 256
 _TRACE_ATTRIBUTE: Final = "_cadrumo_failure_trace_id"
-_REASON_PATTERN: Final = re.compile(r"[A-Za-z0-9_.:-]{1,160}")
+_REASON_PATTERN: Final = re.compile(r"[A-Za-z0-9_.:-]+")
 _CHAIN_SEPARATOR: Final = " <- "
 
 
@@ -87,7 +88,7 @@ def _qualified_type(error: BaseException) -> str:
 def _identifier(value: object) -> str | None:
     if isinstance(value, Enum):
         value = value.value
-    if isinstance(value, str) and _REASON_PATTERN.fullmatch(value):
+    if isinstance(value, str) and len(value) <= _MAX_REASON and _REASON_PATTERN.fullmatch(value):
         return value
     return None
 

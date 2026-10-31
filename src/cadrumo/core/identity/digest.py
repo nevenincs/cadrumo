@@ -49,7 +49,7 @@ _PREFIXED_HEX_64 = f"^sha256:{HEX_PATTERN_64.removeprefix('^').removesuffix('$')
 
 PrefixedContentDigest = Annotated[
     str,
-    StringConstraints(strip_whitespace=True, min_length=71, max_length=71, pattern=_PREFIXED_HEX_64),
+    StringConstraints(strip_whitespace=True, pattern=_PREFIXED_HEX_64),
 ]
 """A :data:`ContentDigest` written as ``sha256:<hex64>``.
 

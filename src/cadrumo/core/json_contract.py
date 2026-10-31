@@ -161,7 +161,7 @@ class ResolvedActionReference(PreconditionActionIdentity):
     the action ID nor discovers the live command surface.
     """
 
-    target_command_key: str = Field(pattern=FIELD_KEY_PATTERN, min_length=1, max_length=160)
+    target_command_key: str = Field(pattern=FIELD_KEY_PATTERN, min_length=1, max_length=256)
     cli_path: tuple[str, ...] | None = Field(default=None, exclude_if=lambda value: value is None)
     arguments: Mapping[str, str] | None = Field(default=None, exclude_if=lambda value: value is None)
 

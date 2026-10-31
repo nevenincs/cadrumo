@@ -37,7 +37,7 @@ _DATE_DDMMYYYY_RE: Final = re.compile(r"^\s*(\d{2}[-/]\d{2}[-/]\d{4})\s*$")
 # ISO week date (``2026-W03-4``, also ten characters) are deliberately refused:
 # ``date.fromisoformat`` admits both, and neither is a shape an operator or an AEAT
 # wire format means by a calendar date.
-_ISO_8601_EXTENDED_RE: Final = re.compile(r"[0-9]{4}-[0-9]{2}-[0-9]{2}")
+_ISO_8601_EXTENDED_RE: Final = re.compile(r"\d{4}-\d{2}-\d{2}", re.ASCII)
 
 #: The separators a date format is defined by. Each is recognised by comparison
 #: and then re-emitted as its own literal below, so nothing from the input is

@@ -937,7 +937,7 @@ def _sub_cli_uuids(text: str, replace: Callable[[re.Match[str]], str]) -> str:
 #: here is a pure function of the text and the reveal flag. Longer strings are
 #: redacted afresh so a rendered report never sits in the cache.
 _CLI_STRING_CACHE_MAX_LENGTH = 512
-_CLI_GOOGLE_SHEET_URL = re.compile(r"https://docs\.google\.com/spreadsheets/d/([A-Za-z0-9_-]{10,200})/edit")
+_CLI_GOOGLE_SHEET_URL = re.compile(r"https://docs\.google\.com/spreadsheets/d/([A-Za-z0-9_-]+)/edit")
 
 
 def _canonical_google_sheet_id(value: object) -> str | None:

@@ -43,16 +43,16 @@ class ActionArgumentResolution(BaseModel):
 
     model_config = _STRICT_FROZEN_CONFIG
 
-    argument_name: str = Field(pattern=FIELD_KEY_PATTERN, min_length=1, max_length=120)
+    argument_name: str = Field(pattern=FIELD_KEY_PATTERN, min_length=1, max_length=128)
     status: ActionArgumentStatus
     value: str | int | bool | Decimal | None = None
     source: ActionArgumentSource | None = None
-    source_key: str | None = Field(default=None, pattern=FIELD_KEY_PATTERN, min_length=1, max_length=160)
+    source_key: str | None = Field(default=None, pattern=FIELD_KEY_PATTERN, min_length=1, max_length=256)
     source_evidence_id: str | None = Field(
         default=None,
         pattern=NAMESPACED_ID_PATTERN,
-        min_length=3,
-        max_length=160,
+        min_length=1,
+        max_length=256,
     )
 
     @model_validator(mode="after")

@@ -44,6 +44,8 @@ _RECORD_EOF: Final[int] = 0x000A
 _RECORD_BOUNDSHEET: Final[int] = 0x0085
 _RECORD_FORMULA: Final[int] = 0x0006
 _BOUNDSHEET_WORKSHEET: Final[int] = 0x00
+_BOUNDSHEET_HEADER: Final = struct.Struct("<IBB")
+_FORMULA_CELL: Final = struct.Struct("<HH")
 _RECORD_HEADER = struct.Struct("<HH")
 
 
@@ -149,12 +151,18 @@ def _formula_cells_by_worksheet(stream: bytes) -> list[frozenset[tuple[int, int]
     return [_formula_cells_in_worksheet(stream, offset) for offset in _worksheet_offsets(stream)]
 
 
+def _is_worksheet_record(payload: bytes) -> bool:
+    """Return whether a BOUNDSHEET record is long enough to say so and names a worksheet."""
+    sheet_type_index = _BOUNDSHEET_HEADER.size - 1
+    return len(payload) >= _BOUNDSHEET_HEADER.size and payload[sheet_type_index] == _BOUNDSHEET_WORKSHEET
+
+
 def _worksheet_offsets(stream: bytes) -> list[int]:
     """Return worksheet substream offsets in the order xlrd assigns sheets."""
     return [
         struct.unpack_from("<I", payload, 0)[0]
         for code, _position, payload in _records(stream, 0)
-        if code == _RECORD_BOUNDSHEET and len(payload) >= 6 and payload[5] == _BOUNDSHEET_WORKSHEET
+        if code == _RECORD_BOUNDSHEET and _is_worksheet_record(payload)
     ]
 
 
@@ -168,9 +176,9 @@ def _formula_cells_in_worksheet(stream: bytes, offset: int) -> frozenset[tuple[i
         elif code == _RECORD_EOF:
             depth -= 1
         elif code == _RECORD_FORMULA and depth == 1:
-            if len(payload) < 4:
+            if len(payload) < _FORMULA_CELL.size:
                 raise TabularSourceError("legacy workbook FORMULA record is truncated")
-            row, column = struct.unpack_from("<HH", payload, 0)
+            row, column = _FORMULA_CELL.unpack_from(payload, 0)
             cells.add((row, column))
     return frozenset(cells)
 

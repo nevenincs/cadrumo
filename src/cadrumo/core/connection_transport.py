@@ -14,6 +14,7 @@ MANAGER_SOCKET_DOMAIN: Final = "cadrumo-manager-session-v1"
 MANAGER_SOCKET_PREFIX: Final = "manager-"
 MANAGER_SOCKET_SUFFIX: Final = ".sock"
 MANAGER_SOCKET_DIGEST_BYTES: Final = 16
+_NATIVE_U32_MAX: Final = 2**32 - 1
 MANAGER_SOCKET_MAX_IDENTIFIER_BYTES: Final = 128
 INSTANCE_ROOT_SCOPE: Final = ".root."
 STORAGE_IDENTITY_HEX_DIGITS: Final = 64
@@ -80,9 +81,9 @@ def manager_socket_name(manager_id: str, user: str, session: str) -> str:
 def _native_decimal(value: str) -> bool:
     return (
         bool(value)
-        and len(value) <= 10
+        and len(value) <= len(str(_NATIVE_U32_MAX))
         and value.isascii()
         and value.isdecimal()
         and str(int(value)) == value
-        and int(value) <= 2**32 - 1
+        and int(value) <= _NATIVE_U32_MAX
     )

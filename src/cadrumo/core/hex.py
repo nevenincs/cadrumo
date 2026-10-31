@@ -55,7 +55,7 @@ length check is needed at the pydantic boundary.
 
 Hex16Str = Annotated[
     str,
-    StringConstraints(strip_whitespace=True, min_length=16, max_length=16, pattern=HEX_PATTERN_16),
+    StringConstraints(strip_whitespace=True, pattern=HEX_PATTERN_16),
 ]
 """The canonical hex-16 constrained shape (lowercase, exactly 16 hex chars).
 
