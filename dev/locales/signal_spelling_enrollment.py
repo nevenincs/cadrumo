@@ -48,7 +48,10 @@ from .signal_spelling_segments import spanish_word_context, translation_spelling
 # arbitrary inflections or name typos.
 # Identifier labels occur as standalone technical terms in diagnostics and
 # error prose across all locale catalogues. Preserve only observed casing.
-_SHARED_SPELLINGS = frozenset({"Cadrumo", "AEAT", "id", "Id", "ids", "Ids", "IDs"})
+# WebP names an admitted evidence image format in every application.yml.
+# Gmail names the evidence source in desktop/TUI common.yml; Catalan's
+# dictionary already recognises it, so only the other locales enroll it below.
+_SHARED_SPELLINGS = frozenset({"Cadrumo", "AEAT", "id", "Id", "ids", "Ids", "IDs", "WebP"})
 _LOCALE_SPELLINGS: dict[str, frozenset[str]] = {
     # These ordinary English technical/domain terms are absent from the pinned
     # dictionary-en-gb data, but are attested in the canonical English catalogue:
@@ -60,6 +63,7 @@ _LOCALE_SPELLINGS: dict[str, frozenset[str]] = {
         {
             "modelo",
             "Modelo",
+            "Gmail",
             "counterparty",
             "Counterparty",
             "withholdings",
@@ -201,6 +205,7 @@ _LOCALE_SPELLINGS: dict[str, frozenset[str]] = {
             # Singular taxpayer term in the same regime-help diagnostics.
             "impatriado",
             "Google",
+            "Gmail",
             "Drive",
             "Python",
             "Enter",
@@ -466,6 +471,7 @@ _LOCALE_SPELLINGS: dict[str, frozenset[str]] = {
         {
             "modelo",
             "Modelo",
+            "Gmail",
             "Drive",
             "Sheets",
             "Windows",

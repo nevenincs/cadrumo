@@ -33,6 +33,28 @@ def test_identifier_labels_are_exact_shared_technical_terms() -> None:
         assert not is_project_spelling(locale, "idss")
 
 
+def test_evidence_format_and_source_names_preserve_nearby_typo_checks(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    dictionaries = load_dictionaries(REPO_ROOT)
+    monkeypatch.setattr("dev.locales.signal_spelling.load_dictionaries", lambda repository: dictionaries)
+    for locale in dictionaries:
+        assert not dictionaries[locale].lookup("WebP")
+        assert is_project_spelling(locale, "WebP")
+        assert is_project_spelling(locale, "Gmail") == (locale != "ca")
+        assert dictionaries[locale].lookup("Gmail") == (locale == "ca")
+        for near_miss in ("WebbP", "Webp", "webP", "Gmaill", "GMail"):
+            assert not is_project_spelling(locale, near_miss)
+    spelling, _inventory, _findings = spellcheck_catalogues(
+        {"evidence"},
+        {locale: {"evidence": "Gmail WebP WebbP Gmaill misspeling"} for locale in dictionaries},
+        REPO_ROOT,
+    )
+    assert {cell: set(words) for cell, words in spelling.items()} == {
+        (locale, "evidence"): {"WebbP", "Gmaill", "misspeling"} for locale in dictionaries
+    }
+
+
 def test_only_english_possessives_of_exact_project_stems_are_accepted() -> None:
     assert is_project_spelling("en", "Cadrumo's")
     assert is_project_spelling("en", "modelo's")
