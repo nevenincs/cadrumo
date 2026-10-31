@@ -17,7 +17,7 @@ from ..template_source import WorkbookTemplateSource
 from .test_form_context_fields import _producer, _with_context
 from .test_form_workbook import form_source as form_source
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
 
 def _preview(snapshot):
