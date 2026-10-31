@@ -13,7 +13,7 @@ import {
   rmSync,
   writeFileSync,
 } from "node:fs";
-import { dirname, isAbsolute, relative, resolve } from "node:path";
+import { basename, dirname, isAbsolute, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { syncBackendSource } from "./backend-snapshot.mjs";
 import { requireBuildOutput } from "./build-paths.mjs";
@@ -51,8 +51,44 @@ function inventory(paths) {
   return entries;
 }
 
+// A file another build's running tests may be reading stays in place until its
+// replacement is whole, and is left untouched when the bytes are the same.
+function publishStaged({ outputs, record, fingerprint }, build) {
+  mkdirSync(dirname(record), { recursive: true });
+  const workspace = mkdtempSync(resolve(dirname(record), "content-build-"));
+  try {
+    const staged = new Map(
+      outputs.map((output, index) => {
+        const directory = resolve(workspace, String(index));
+        mkdirSync(directory);
+        return [output, resolve(directory, basename(output))];
+      }),
+    );
+    build(staged);
+    for (const file of staged.values())
+      if (!existsSync(file))
+        throw new Error("Build did not produce all declared outputs");
+    for (const [output, file] of staged) {
+      if (existsSync(output) && readFileSync(output).equals(readFileSync(file)))
+        continue;
+      mkdirSync(dirname(output), { recursive: true });
+      renameSync(file, output);
+    }
+    writeStable(
+      record,
+      JSON.stringify({ fingerprint, outputs: inventory(outputs) }),
+    );
+  } catch (error) {
+    rmSync(record, { force: true });
+    throw error;
+  } finally {
+    rmSync(workspace, { recursive: true, force: true });
+  }
+  return true;
+}
+
 export function contentBuild(
-  { inputs, outputs, record, identity = {} },
+  { inputs, outputs, record, identity = {}, staged = false },
   build,
 ) {
   const fingerprint = JSON.stringify({
@@ -76,6 +112,7 @@ export function contentBuild(
     before.every(([, hash]) => hash !== null)
   )
     return false;
+  if (staged) return publishStaged({ outputs, record, fingerprint }, build);
   // Preserve original filesystem objects, including sub-microsecond times.
   // Tools may empty/truncate their output trees, so build separately and merge
   // changed bytes into the retained originals before moving them back.
@@ -152,11 +189,23 @@ if (
   if (!options.record || !options.outputs.length)
     throw new Error("Declare the action record and outputs");
   options.record = requireBuildOutput(options.record);
-  options.outputs = options.outputs.map((output) => requireBuildOutput(output));
+  const named = options.outputs;
+  options.outputs = named.map((output) => requireBuildOutput(output));
   const command = args.slice(boundary + 1);
   options.identity = { command, node: process.version };
-  contentBuild(options, () => {
-    const result = spawnSync(command[0], command.slice(1), {
+  // A command told where to write can write beside the output instead.
+  options.staged = named.every((output) => command.includes(output));
+  contentBuild(options, (staged) => {
+    const destination = new Map(
+      named.map((output, index) => [
+        output,
+        staged?.get(options.outputs[index]),
+      ]),
+    );
+    const [program, ...rest] = command.map(
+      (part) => destination.get(part) ?? part,
+    );
+    const result = spawnSync(program, rest, {
       stdio: "inherit",
       windowsHide: true,
     });

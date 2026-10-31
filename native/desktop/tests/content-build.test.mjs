@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import {
   copyFileSync,
+  existsSync,
   mkdtempSync,
   mkdirSync,
   readFileSync,
@@ -207,6 +208,74 @@ add_custom_target(unrelated COMMAND ${quote(process.execPath)} -e "throw new Err
   rmSync(output);
   build();
   assert.equal(readFileSync(log, "utf8"), "build\nbuild\nbuild\n");
+});
+
+test("a staged output stays readable until its replacement is whole", (t) => {
+  const { source, output, record } = fixture(t);
+  const options = { inputs: [source], outputs: [output], record, staged: true };
+  writeFileSync(output, "old");
+  utimesSync(output, 1000000000, 1000000000);
+  const produce = (bytes) => (staged) => {
+    assert.equal(readFileSync(output, "utf8"), "old");
+    writeFileSync(staged.get(output), bytes);
+  };
+  // The same bytes leave the file as it was.
+  assert.equal(contentBuild(options, produce("old")), true);
+  assert.equal(statSync(output).mtimeMs, 1000000000000);
+  assert.equal(contentBuild(options, produce("old")), false);
+  // A failed or empty producer leaves it too, and records nothing.
+  writeFileSync(join(source, "input"), "second");
+  assert.throws(
+    () =>
+      contentBuild(options, () => {
+        throw new Error("failed");
+      }),
+    /failed/,
+  );
+  assert.throws(
+    () => contentBuild(options, () => {}),
+    /did not produce all declared outputs/,
+  );
+  assert.equal(readFileSync(output, "utf8"), "old");
+  assert.equal(existsSync(record), false);
+  // New bytes replace it.
+  assert.equal(contentBuild(options, produce("new")), true);
+  assert.equal(readFileSync(output, "utf8"), "new");
+});
+
+test("the CLI points a producer named its output at the staged file", (t) => {
+  const { root } = fixture(t);
+  const { helper, binary, output, record } = cliFixture(root);
+  writeFileSync(output, "old");
+  const producer = join(root, "producer.mjs");
+  writeFileSync(
+    producer,
+    `import { readFileSync, writeFileSync } from "node:fs";
+if (process.argv[2] === ${JSON.stringify(output)}) throw new Error("not staged");
+if (readFileSync(${JSON.stringify(output)}, "utf8") !== "old") throw new Error("moved");
+writeFileSync(process.argv[2], "new");
+`,
+  );
+  const result = spawnSync(
+    process.execPath,
+    [
+      helper,
+      "--record",
+      record,
+      "--output",
+      output,
+      "--",
+      process.execPath,
+      producer,
+      output,
+    ],
+    {
+      encoding: "utf8",
+      env: { ...process.env, CADRUMO_CMAKE_BINARY_DIR: binary },
+    },
+  );
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(readFileSync(output, "utf8"), "new");
 });
 
 test("CLI refuses undeclared outputs before running the producer", (t) => {
