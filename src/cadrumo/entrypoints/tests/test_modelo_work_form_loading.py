@@ -17,8 +17,6 @@ imported AEAT draft supplied reads as AEAT data.
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncGenerator
-from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
 from datetime import UTC, date, datetime
 from decimal import Decimal
@@ -26,7 +24,6 @@ from pathlib import Path
 from typing import cast
 
 import pytest
-from pydantic import BaseModel
 
 from cadrumo.entrypoints.tests.modelo_operator_work_storage import SeededOperatorWork, seeded_operator_work
 
@@ -69,12 +66,12 @@ from ...application.operations.owner import OperationExecutorContext
 from ...core.casilla_id import validated_casilla_id
 from ...core.external_constants import OutputLanguage
 from ...core.hashing import content_hash_hex
-from ...core.operations import OperationEffect
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.deadlines.festivos import DeadlineHolidayCoverage
 from ...domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState
 from ...domain.modelos.verification_report import ModeloVerificationFindingKind
 from ..adapter_composition_work_ports import build_verification_repository_bundle
+from .executor_context_stand_ins import RecordedEvents, RecordedOperands, UninterruptedCancellation
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -115,43 +112,15 @@ def _field(form: ModeloWorkForm, casilla_id: str) -> ModeloFormField:
     return next(field for field in form.fields() if address_key(field.address) == ("casilla", casilla_id))
 
 
-@dataclass(slots=True)
-class _Events:
-    phases: list[str] = field(default_factory=list)
-    effects: list[OperationEffect] = field(default_factory=list)
-
-    async def phase(self, phase_code: str) -> None:
-        self.phases.append(phase_code)
-
-    async def effect(self, effect: OperationEffect) -> None:
-        self.effects.append(effect)
-
-
-class _Cancellation:
-    @asynccontextmanager
-    async def irreversible_section(self) -> AsyncGenerator[None]:
-        yield
-
-
-@dataclass(slots=True)
-class _Operands:
-    results: list[BaseModel] = field(default_factory=list)
-
-    async def put(self, operand: BaseModel, *, written_at: datetime) -> str:
-        del written_at
-        self.results.append(operand)
-        return content_hash_hex({"operand": len(self.results)})
-
-
 @dataclass(frozen=True, slots=True)
 class _Context:
     """The slice of the supervisor context the verify executor reads."""
 
     identity: OperationIdentity
     authority_operation: PinnedAuthorityOperation
-    events: _Events
-    cancellation: _Cancellation = field(default_factory=_Cancellation)
-    operands: _Operands = field(default_factory=_Operands)
+    events: RecordedEvents
+    cancellation: UninterruptedCancellation = field(default_factory=UninterruptedCancellation)
+    operands: RecordedOperands = field(default_factory=RecordedOperands)
 
 
 def _verify(work: SeededOperatorWork) -> ModeloWorkVerifyPublicResultV2:
@@ -169,7 +138,7 @@ def _verify(work: SeededOperatorWork) -> ModeloWorkVerifyPublicResultV2:
             subject_ref=work.work_unit_id,
         ),
         authority_operation=work.operation,
-        events=_Events(),
+        events=RecordedEvents(),
     )
     executor = ModeloWorkVerifyExecutor(
         certificate_secret_backend_factory=build_certificate_secret_backend,

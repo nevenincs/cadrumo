@@ -12,8 +12,6 @@ from __future__ import annotations
 
 import asyncio
 import json
-from collections.abc import AsyncGenerator
-from contextlib import asynccontextmanager
 from dataclasses import dataclass, field, replace
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
@@ -107,6 +105,7 @@ from ...domain.modelos.calculation_repository import CalculationRevisionPersiste
 from ...domain.modelos.calculation_revision import CalculationRevisionCatalogue
 from ...domain.modelos.work_unit import WorkUnitCatalogue
 from ..adapter_composition_work_ports import build_calculation_action_ports
+from .executor_context_stand_ins import RecordedEvents, RecordedOperands, UninterruptedCancellation
 from .production_operation_registry import production_operation_registry
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -126,41 +125,13 @@ class _OperationLoadRepository(Protocol):
     def load(self, *, operation: PinnedAuthorityOperation | None = None) -> Any: ...
 
 
-@dataclass(slots=True)
-class _Events:
-    phases: list[str] = field(default_factory=list)
-    effects: list[OperationEffect] = field(default_factory=list)
-
-    async def phase(self, phase_code: str) -> None:
-        self.phases.append(phase_code)
-
-    async def effect(self, effect: OperationEffect) -> None:
-        self.effects.append(effect)
-
-
-class _Cancellation:
-    @asynccontextmanager
-    async def irreversible_section(self) -> AsyncGenerator[None]:
-        yield
-
-
-@dataclass(slots=True)
-class _Operands:
-    results: list[BaseModel] = field(default_factory=list)
-
-    async def put(self, operand: BaseModel, *, written_at: datetime) -> str:
-        del written_at
-        self.results.append(operand)
-        return content_hash_hex({"operand": len(self.results)})
-
-
 @dataclass(frozen=True, slots=True)
 class _Context:
     identity: OperationIdentity
     authority_operation: PinnedAuthorityOperation
-    events: _Events = field(default_factory=_Events)
-    cancellation: _Cancellation = field(default_factory=_Cancellation)
-    operands: _Operands = field(default_factory=_Operands)
+    events: RecordedEvents = field(default_factory=RecordedEvents)
+    cancellation: UninterruptedCancellation = field(default_factory=UninterruptedCancellation)
+    operands: RecordedOperands = field(default_factory=RecordedOperands)
     typed_financial_operand: BoundTypedFinancialOperandAccess = field(
         default_factory=lambda: BoundTypedFinancialOperandAccess(broker=None, declaration=None, requirement=None)
     )
