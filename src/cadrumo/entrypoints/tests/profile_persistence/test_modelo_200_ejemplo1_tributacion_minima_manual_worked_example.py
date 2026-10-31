@@ -159,7 +159,6 @@ from cadrumo.domain.calculations.registry.tests.authored_editions import (
 )
 from cadrumo.domain.calculations.registry.tests.registry_observations import (
     registry_grounded_observations,
-    revision_id_for_observation,
 )
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
@@ -169,6 +168,7 @@ from cadrumo.domain.user_profile.values import create_user_profile_record as _cr
 from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import calculation_ports_for_test
 
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
+from .observation_seeding_support import save_stamped_observation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -360,41 +360,24 @@ def _seed_zero_m202_pagos(filing_year: int) -> None:
     """
     obs_repo = CalculationObservationRepository()
     for period in _M202_PAGO_PERIODS:
-        obs_repo.save(
-            obs_repo.prepare_observation_envelope(
-                RegistryModeloObservation(
+        save_stamped_observation(
+            obs_repo,
+            RegistryModeloObservation(
+                modelo=_M202,
+                filing_year=filing_year,
+                period=period,
+                observations=registry_grounded_observations(
                     modelo=_M202,
                     filing_year=filing_year,
                     period=period,
-                    observations=registry_grounded_observations(
-                        modelo=_M202,
-                        filing_year=filing_year,
-                        period=period,
-                        casilla_values={
-                            _M202_PAGO_OUTPUT: Decimal("0"),
-                            _M202_PAGO_OUTPUT_40_2: Decimal("0"),
-                        },
-                    ),
+                    casilla_values={
+                        _M202_PAGO_OUTPUT: Decimal("0"),
+                        _M202_PAGO_OUTPUT_40_2: Decimal("0"),
+                    },
                 ),
-                source_kind=APP_FILING_SOURCE_KIND,
-                captured_at=_profile_instant(filing_year),
-                stamped_revision_id=revision_id_for_observation(
-                    RegistryModeloObservation(
-                        modelo=_M202,
-                        filing_year=filing_year,
-                        period=period,
-                        observations=registry_grounded_observations(
-                            modelo=_M202,
-                            filing_year=filing_year,
-                            period=period,
-                            casilla_values={
-                                _M202_PAGO_OUTPUT: Decimal("0"),
-                                _M202_PAGO_OUTPUT_40_2: Decimal("0"),
-                            },
-                        ),
-                    )
-                ),
-            )
+            ),
+            source_kind=APP_FILING_SOURCE_KIND,
+            captured_at=_profile_instant(filing_year),
         )
 
 

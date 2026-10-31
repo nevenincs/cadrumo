@@ -40,7 +40,6 @@ from ....domain.calculations.registry.ids import BindingId
 from ....domain.calculations.registry.tests.authored_editions import authored_revisions
 from ....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_observations,
-    revision_id_for_observation,
 )
 from ....domain.categories.spending_category import SpendingCategory
 from ....domain.invoices.catalogue import InvoiceCatalogue
@@ -50,6 +49,7 @@ from ....domain.transactions.raw_transaction import RawProvenance, RawTransactio
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
 from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 from ...adapter_composition_work_ports import build_calculation_action_ports, build_work_lifecycle_ports
+from .observation_seeding_support import save_stamped_observation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -218,35 +218,21 @@ def _seed_sofia_ledger(objects: SecureObjectRepository) -> tuple[Transaction, ..
 
 
 def _seed_prior_year_m100_zero_carry(objects: SecureObjectRepository) -> None:
-    CalculationObservationRepository(objects=objects).save(
-        CalculationObservationRepository(objects=objects).prepare_observation_envelope(
-            RegistryModeloObservation(
+    save_stamped_observation(
+        CalculationObservationRepository(objects=objects),
+        RegistryModeloObservation(
+            modelo="100",
+            filing_year=_YEAR - 1,
+            period=_ANNUAL_PERIOD,
+            observations=registry_grounded_observations(
                 modelo="100",
                 filing_year=_YEAR - 1,
                 period=_ANNUAL_PERIOD,
-                observations=registry_grounded_observations(
-                    modelo="100",
-                    filing_year=_YEAR - 1,
-                    period=_ANNUAL_PERIOD,
-                    casilla_values={_M100_PRIOR_YEAR_NEGATIVE_GENERAL_BASE_CARRY_CASILLA: Decimal("0")},
-                ),
+                casilla_values={_M100_PRIOR_YEAR_NEGATIVE_GENERAL_BASE_CARRY_CASILLA: Decimal("0")},
             ),
-            source_kind=APP_FILING_SOURCE_KIND,
-            captured_at=_T0,
-            stamped_revision_id=revision_id_for_observation(
-                RegistryModeloObservation(
-                    modelo="100",
-                    filing_year=_YEAR - 1,
-                    period=_ANNUAL_PERIOD,
-                    observations=registry_grounded_observations(
-                        modelo="100",
-                        filing_year=_YEAR - 1,
-                        period=_ANNUAL_PERIOD,
-                        casilla_values={_M100_PRIOR_YEAR_NEGATIVE_GENERAL_BASE_CARRY_CASILLA: Decimal("0")},
-                    ),
-                )
-            ),
-        )
+        ),
+        source_kind=APP_FILING_SOURCE_KIND,
+        captured_at=_T0,
     )
 
 

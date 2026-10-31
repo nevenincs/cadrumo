@@ -63,8 +63,8 @@ from cadrumo.entrypoints.tests.profile_persistence.verification_repository_suppo
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from ....adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from ....application.tests.wizard_catalogue_fixtures import register_wizard_catalogue
-from ....domain.calculations.registry.tests.registry_observations import revision_id_for_observation
 from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from .observation_seeding_support import save_stamped_observation
 
 __all__ = ["register_wizard_catalogue"]
 
@@ -105,6 +105,7 @@ from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
 from ...adapter_composition_work_ports import build_calculation_action_ports, build_work_lifecycle_ports
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
+
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -297,33 +298,20 @@ def _calculate_through_the_mesh(
     # held in the year would rightly refuse the calculation without its valuation.
     with _secure_backend(tmp_path, register_assets=bool(observations)):
         observation_repository = CalculationObservationRepository()
-        observation_repository.save(
-            observation_repository.prepare_observation_envelope(
-                registry_grounded_modelo_observation(
-                    modelo=Modelo("720").value,
-                    filing_year=_YEAR_N,
-                    period=_PERIOD,
-                    casilla_values={
-                        _CUENTAS_VALORACION: _CUENTAS_N,
-                        _VALORES_VALORACION: _VALORES_N,
-                        _INMUEBLES_VALORACION: _INMUEBLES_N,
-                    },
-                ),
-                source_kind="app_filing",
-                captured_at=_CLOCK_N,
-                stamped_revision_id=revision_id_for_observation(
-                    registry_grounded_modelo_observation(
-                        modelo=Modelo("720").value,
-                        filing_year=_YEAR_N,
-                        period=_PERIOD,
-                        casilla_values={
-                            _CUENTAS_VALORACION: _CUENTAS_N,
-                            _VALORES_VALORACION: _VALORES_N,
-                            _INMUEBLES_VALORACION: _INMUEBLES_N,
-                        },
-                    )
-                ),
-            )
+        save_stamped_observation(
+            observation_repository,
+            registry_grounded_modelo_observation(
+                modelo=Modelo("720").value,
+                filing_year=_YEAR_N,
+                period=_PERIOD,
+                casilla_values={
+                    _CUENTAS_VALORACION: _CUENTAS_N,
+                    _VALORES_VALORACION: _VALORES_N,
+                    _INMUEBLES_VALORACION: _INMUEBLES_N,
+                },
+            ),
+            source_kind="app_filing",
+            captured_at=_CLOCK_N,
         )
 
         snapshot = published_authority_operation().snapshot(

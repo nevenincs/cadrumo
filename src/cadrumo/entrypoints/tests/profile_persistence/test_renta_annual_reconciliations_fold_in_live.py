@@ -121,7 +121,6 @@ from ....domain.calculations.registry.authority import PinnedAuthorityOperation,
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_observations,
-    revision_id_for_observation,
 )
 from ....domain.calculations.registry.withholding_bindings import WithholdingObservation
 from ....domain.deadlines.models import IVARegime, TaxpayerProfile
@@ -130,8 +129,10 @@ from ....domain.user_profile.values import create_user_profile_record as _create
 from ....tests.env_scope import ready_clave_settings
 from ._fold_in_assertions_support import _assert_distinct_positive
 from .file_flow_test_support import calculation_ports_for_test
+from .observation_seeding_support import save_stamped_observation
 
 _OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
+
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -230,35 +231,21 @@ def _seed_quarterly_filing(
     :meth:`CalculationObservationRepository.save_observation` write path with the
     non-official ``app_filing`` source_kind.
     """
-    obs_repo.save(
-        obs_repo.prepare_observation_envelope(
-            RegistryModeloObservation(
+    save_stamped_observation(
+        obs_repo,
+        RegistryModeloObservation(
+            modelo=source_modelo,
+            filing_year=year,
+            period=period,
+            observations=registry_grounded_observations(
                 modelo=source_modelo,
                 filing_year=year,
                 period=period,
-                observations=registry_grounded_observations(
-                    modelo=source_modelo,
-                    filing_year=year,
-                    period=period,
-                    casilla_values=casilla_values,
-                ),
+                casilla_values=casilla_values,
             ),
-            source_kind=APP_FILING_SOURCE_KIND,
-            captured_at=_T0,
-            stamped_revision_id=revision_id_for_observation(
-                RegistryModeloObservation(
-                    modelo=source_modelo,
-                    filing_year=year,
-                    period=period,
-                    observations=registry_grounded_observations(
-                        modelo=source_modelo,
-                        filing_year=year,
-                        period=period,
-                        casilla_values=casilla_values,
-                    ),
-                )
-            ),
-        )
+        ),
+        source_kind=APP_FILING_SOURCE_KIND,
+        captured_at=_T0,
     )
 
 

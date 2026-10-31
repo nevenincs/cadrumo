@@ -30,7 +30,6 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from cadrumo.domain.calculations.registry.tests.registry_observations import (
     registry_grounded_observations,
-    revision_id_for_observation,
 )
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
@@ -42,6 +41,8 @@ from cadrumo.entrypoints.tests.profile_persistence._dormant_resolver_live_suppor
     _seed_ready_profile,
 )
 from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import calculation_ports_for_test
+
+from .observation_seeding_support import save_stamped_observation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -176,14 +177,7 @@ def _seed_prior_year_m100_net_income(objects: SecureObjectRepository) -> None:
         ),
     )
     obs_repo = CalculationObservationRepository(objects=objects)
-    obs_repo.save(
-        obs_repo.prepare_observation_envelope(
-            observation,
-            source_kind=APP_FILING_SOURCE_KIND,
-            captured_at=_T0,
-            stamped_revision_id=revision_id_for_observation(observation),
-        )
-    )
+    save_stamped_observation(obs_repo, observation, source_kind=APP_FILING_SOURCE_KIND, captured_at=_T0)
 
 
 def test_m130_casilla_01_folds_seeded_ledger_income_on_live_calculate(

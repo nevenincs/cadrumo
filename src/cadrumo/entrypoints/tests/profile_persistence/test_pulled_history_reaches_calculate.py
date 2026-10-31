@@ -82,12 +82,12 @@ from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.ids import BindingId
 from ....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_observations,
-    revision_id_for_observation,
 )
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
 from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 from ...live_state_composition import compose_filed_observation_persistence_ports
 from .file_flow_test_support import calculation_ports_for_test
+from .observation_seeding_support import save_stamped_observation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -239,35 +239,21 @@ def _seed_prior_year_m100_zero_carry(secure_objects: SecureObjectRepository) -> 
 
     Seeded identically on both poles, so it cannot be the thing they differ on.
     """
-    CalculationObservationRepository(objects=secure_objects).save(
-        CalculationObservationRepository(objects=secure_objects).prepare_observation_envelope(
-            RegistryModeloObservation(
+    save_stamped_observation(
+        CalculationObservationRepository(objects=secure_objects),
+        RegistryModeloObservation(
+            modelo=Modelo("100").value,
+            filing_year=_YEAR - 1,
+            period=_M100_ANNUAL_PERIOD,
+            observations=registry_grounded_observations(
                 modelo=Modelo("100").value,
                 filing_year=_YEAR - 1,
                 period=_M100_ANNUAL_PERIOD,
-                observations=registry_grounded_observations(
-                    modelo=Modelo("100").value,
-                    filing_year=_YEAR - 1,
-                    period=_M100_ANNUAL_PERIOD,
-                    casilla_values={_M100_BASE_LIQUIDABLE_NEGATIVA_GENERAL_CASILLA: Decimal("0")},
-                ),
+                casilla_values={_M100_BASE_LIQUIDABLE_NEGATIVA_GENERAL_CASILLA: Decimal("0")},
             ),
-            source_kind=ObservationSourceKind.APP_FILING,
-            captured_at=_T0,
-            stamped_revision_id=revision_id_for_observation(
-                RegistryModeloObservation(
-                    modelo=Modelo("100").value,
-                    filing_year=_YEAR - 1,
-                    period=_M100_ANNUAL_PERIOD,
-                    observations=registry_grounded_observations(
-                        modelo=Modelo("100").value,
-                        filing_year=_YEAR - 1,
-                        period=_M100_ANNUAL_PERIOD,
-                        casilla_values={_M100_BASE_LIQUIDABLE_NEGATIVA_GENERAL_CASILLA: Decimal("0")},
-                    ),
-                )
-            ),
-        )
+        ),
+        source_kind=ObservationSourceKind.APP_FILING,
+        captured_at=_T0,
     )
 
 

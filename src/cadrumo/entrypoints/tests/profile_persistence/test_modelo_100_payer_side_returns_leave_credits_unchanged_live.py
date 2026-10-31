@@ -71,12 +71,12 @@ from ....domain.calculations.registry.runtime_graph import expression_casilla_re
 from ....domain.calculations.registry.tests.authored_editions import newest_authored_edition
 from ....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_observations,
-    revision_id_for_observation,
 )
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
 from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 from ._fold_in_assertions_support import _assert_distinct_positive
 from .file_flow_test_support import calculation_ports_for_test
+from .observation_seeding_support import save_stamped_observation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -213,14 +213,7 @@ def _seed_filing(
             ),
         )
 
-    obs_repo.save(
-        obs_repo.prepare_observation_envelope(
-            observation(),
-            source_kind=APP_FILING_SOURCE_KIND,
-            captured_at=_T0,
-            stamped_revision_id=revision_id_for_observation(observation()),
-        )
-    )
+    save_stamped_observation(obs_repo, observation(), source_kind=APP_FILING_SOURCE_KIND, captured_at=_T0)
 
 
 def _seed_pagos_quarters(*, obs_repo: CalculationObservationRepository) -> None:
@@ -301,14 +294,7 @@ def _seed_prior_year_m100_zero_carry(secure_objects: SecureObjectRepository) -> 
             ),
         )
 
-    repository.save(
-        repository.prepare_observation_envelope(
-            observation(),
-            source_kind=APP_FILING_SOURCE_KIND,
-            captured_at=_T0,
-            stamped_revision_id=revision_id_for_observation(observation()),
-        )
-    )
+    save_stamped_observation(repository, observation(), source_kind=APP_FILING_SOURCE_KIND, captured_at=_T0)
 
 
 def _seed_taxpayer_unit_profile(secure_objects: SecureObjectRepository) -> None:

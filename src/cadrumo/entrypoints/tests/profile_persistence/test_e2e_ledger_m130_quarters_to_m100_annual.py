@@ -87,7 +87,6 @@ from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservat
 from cadrumo.domain.calculations.registry.ids import BindingId
 from cadrumo.domain.calculations.registry.tests.registry_observations import (
     registry_grounded_observations,
-    revision_id_for_observation,
 )
 from cadrumo.domain.categories.spending_category import SpendingCategory
 from cadrumo.domain.contribuyente.entity_type import EntityType
@@ -109,8 +108,10 @@ from cadrumo.tests.env_scope import ready_clave_settings
 
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from ....application.modelo.tests.filed_observation_fixture import persist_filed_revision_observation
+from .observation_seeding_support import save_stamped_observation
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
+
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -519,47 +520,27 @@ def _seed_prior_year_m100(secure_objects: SecureObjectRepository) -> None:
     zero). Net income is set above the minoración ceiling so the minoración
     resolves to zero.
     """
-    CalculationObservationRepository(objects=secure_objects).save(
-        CalculationObservationRepository(objects=secure_objects).prepare_observation_envelope(
-            RegistryModeloObservation(
+    save_stamped_observation(
+        CalculationObservationRepository(objects=secure_objects),
+        RegistryModeloObservation(
+            modelo="100",
+            filing_year=_PRIOR_YEAR,
+            period=_M100_ANNUAL_PERIOD,
+            observations=registry_grounded_observations(
                 modelo="100",
                 filing_year=_PRIOR_YEAR,
                 period=_M100_ANNUAL_PERIOD,
-                observations=registry_grounded_observations(
-                    modelo="100",
-                    filing_year=_PRIOR_YEAR,
-                    period=_M100_ANNUAL_PERIOD,
-                    casilla_values={
-                        _M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: _PRIOR_YEAR_NET_INCOME,
-                        _M100_RENDIMIENTO_SOURCE_1479_CASILLA: Decimal("0"),
-                        _M100_RENDIMIENTO_SOURCE_1553_CASILLA: Decimal("0"),
-                        _M100_RENDIMIENTO_SOURCE_1577_CASILLA: Decimal("0"),
-                        _M100_BASE_LIQUIDABLE_NEGATIVA_GENERAL_CASILLA: Decimal("0"),
-                    },
-                ),
+                casilla_values={
+                    _M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: _PRIOR_YEAR_NET_INCOME,
+                    _M100_RENDIMIENTO_SOURCE_1479_CASILLA: Decimal("0"),
+                    _M100_RENDIMIENTO_SOURCE_1553_CASILLA: Decimal("0"),
+                    _M100_RENDIMIENTO_SOURCE_1577_CASILLA: Decimal("0"),
+                    _M100_BASE_LIQUIDABLE_NEGATIVA_GENERAL_CASILLA: Decimal("0"),
+                },
             ),
-            source_kind="app_filing",
-            captured_at=_FILE_AT,
-            stamped_revision_id=revision_id_for_observation(
-                RegistryModeloObservation(
-                    modelo="100",
-                    filing_year=_PRIOR_YEAR,
-                    period=_M100_ANNUAL_PERIOD,
-                    observations=registry_grounded_observations(
-                        modelo="100",
-                        filing_year=_PRIOR_YEAR,
-                        period=_M100_ANNUAL_PERIOD,
-                        casilla_values={
-                            _M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: _PRIOR_YEAR_NET_INCOME,
-                            _M100_RENDIMIENTO_SOURCE_1479_CASILLA: Decimal("0"),
-                            _M100_RENDIMIENTO_SOURCE_1553_CASILLA: Decimal("0"),
-                            _M100_RENDIMIENTO_SOURCE_1577_CASILLA: Decimal("0"),
-                            _M100_BASE_LIQUIDABLE_NEGATIVA_GENERAL_CASILLA: Decimal("0"),
-                        },
-                    ),
-                )
-            ),
-        )
+        ),
+        source_kind="app_filing",
+        captured_at=_FILE_AT,
     )
 
 

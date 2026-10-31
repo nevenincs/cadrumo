@@ -67,11 +67,11 @@ from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.ids import BindingId
 from ....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_observations,
-    revision_id_for_observation,
 )
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
 from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 from .file_flow_test_support import calculation_ports_for_test
+from .observation_seeding_support import save_stamped_observation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -130,70 +130,42 @@ def _seed_m130_quarters(
     total = Decimal("0")
     for period in periods:
         value = _M130_C19_BY_PERIOD[period]
-        obs_repo.save(
-            obs_repo.prepare_observation_envelope(
-                RegistryModeloObservation(
+        save_stamped_observation(
+            obs_repo,
+            RegistryModeloObservation(
+                modelo="130",
+                filing_year=_YEAR,
+                period=period,
+                observations=registry_grounded_observations(
                     modelo="130",
                     filing_year=_YEAR,
                     period=period,
-                    observations=registry_grounded_observations(
-                        modelo="130",
-                        filing_year=_YEAR,
-                        period=period,
-                        casilla_values={_M130_SOURCE_CASILLA_ID: value},
-                    ),
+                    casilla_values={_M130_SOURCE_CASILLA_ID: value},
                 ),
-                source_kind=APP_FILING_SOURCE_KIND,
-                captured_at=_T0,
-                stamped_revision_id=revision_id_for_observation(
-                    RegistryModeloObservation(
-                        modelo="130",
-                        filing_year=_YEAR,
-                        period=period,
-                        observations=registry_grounded_observations(
-                            modelo="130",
-                            filing_year=_YEAR,
-                            period=period,
-                            casilla_values={_M130_SOURCE_CASILLA_ID: value},
-                        ),
-                    )
-                ),
-            )
+            ),
+            source_kind=APP_FILING_SOURCE_KIND,
+            captured_at=_T0,
         )
         total += value
     return total
 
 
 def _seed_prior_year_m100_zero_carry(secure_objects: SecureObjectRepository) -> None:
-    CalculationObservationRepository(objects=secure_objects).save(
-        CalculationObservationRepository(objects=secure_objects).prepare_observation_envelope(
-            RegistryModeloObservation(
+    save_stamped_observation(
+        CalculationObservationRepository(objects=secure_objects),
+        RegistryModeloObservation(
+            modelo="100",
+            filing_year=_YEAR - 1,
+            period=_M100_ANNUAL_PERIOD,
+            observations=registry_grounded_observations(
                 modelo="100",
                 filing_year=_YEAR - 1,
                 period=_M100_ANNUAL_PERIOD,
-                observations=registry_grounded_observations(
-                    modelo="100",
-                    filing_year=_YEAR - 1,
-                    period=_M100_ANNUAL_PERIOD,
-                    casilla_values={_M100_BASE_LIQUIDABLE_NEGATIVA_GENERAL_CASILLA: Decimal("0")},
-                ),
+                casilla_values={_M100_BASE_LIQUIDABLE_NEGATIVA_GENERAL_CASILLA: Decimal("0")},
             ),
-            source_kind=APP_FILING_SOURCE_KIND,
-            captured_at=_T0,
-            stamped_revision_id=revision_id_for_observation(
-                RegistryModeloObservation(
-                    modelo="100",
-                    filing_year=_YEAR - 1,
-                    period=_M100_ANNUAL_PERIOD,
-                    observations=registry_grounded_observations(
-                        modelo="100",
-                        filing_year=_YEAR - 1,
-                        period=_M100_ANNUAL_PERIOD,
-                        casilla_values={_M100_BASE_LIQUIDABLE_NEGATIVA_GENERAL_CASILLA: Decimal("0")},
-                    ),
-                )
-            ),
-        )
+        ),
+        source_kind=APP_FILING_SOURCE_KIND,
+        captured_at=_T0,
     )
 
 

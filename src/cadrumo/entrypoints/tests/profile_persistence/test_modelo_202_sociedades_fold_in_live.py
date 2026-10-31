@@ -95,7 +95,6 @@ from ....adapters.persistence.profile.buckets import BucketEventHistoryRepositor
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from ....application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from ....application.tests.wizard_catalogue_fixtures import register_wizard_catalogue
-from ....domain.calculations.registry.tests.registry_observations import revision_id_for_observation
 from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 from ...adapter_composition_work_ports import build_calculation_action_ports
 
@@ -122,6 +121,7 @@ from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
+from .observation_seeding_support import save_stamped_observation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -267,41 +267,24 @@ def _seed_m200_sociedad_profile() -> None:
 
 def _seed_m202_pago_for_m200(*, period: str, value: Decimal, obs_repo: CalculationObservationRepository) -> None:
     """Persist one filed M202/2025 instalment (c34) for the M200 pagos fold proof."""
-    obs_repo.save(
-        obs_repo.prepare_observation_envelope(
-            RegistryModeloObservation(
+    save_stamped_observation(
+        obs_repo,
+        RegistryModeloObservation(
+            modelo=_M202,
+            filing_year=_FILING_YEAR,
+            period=period,
+            observations=registry_grounded_observations(
                 modelo=_M202,
                 filing_year=_FILING_YEAR,
                 period=period,
-                observations=registry_grounded_observations(
-                    modelo=_M202,
-                    filing_year=_FILING_YEAR,
-                    period=period,
-                    casilla_values={
-                        _M202_PAGO_OUTPUT: value,
-                        _M202_PAGO_OUTPUT_40_2: Decimal("0"),
-                    },
-                ),
+                casilla_values={
+                    _M202_PAGO_OUTPUT: value,
+                    _M202_PAGO_OUTPUT_40_2: Decimal("0"),
+                },
             ),
-            source_kind=APP_FILING_SOURCE_KIND,
-            captured_at=_T0,
-            stamped_revision_id=revision_id_for_observation(
-                RegistryModeloObservation(
-                    modelo=_M202,
-                    filing_year=_FILING_YEAR,
-                    period=period,
-                    observations=registry_grounded_observations(
-                        modelo=_M202,
-                        filing_year=_FILING_YEAR,
-                        period=period,
-                        casilla_values={
-                            _M202_PAGO_OUTPUT: value,
-                            _M202_PAGO_OUTPUT_40_2: Decimal("0"),
-                        },
-                    ),
-                )
-            ),
-        )
+        ),
+        source_kind=APP_FILING_SOURCE_KIND,
+        captured_at=_T0,
     )
 
 
@@ -386,77 +369,45 @@ def _seed_sociedad_profile() -> None:
 
 def _seed_m202_pago(*, period: str, value: Decimal, obs_repo: CalculationObservationRepository) -> None:
     """Persist one filed M202/2025 instalment carrying the c34 pago for ``period``."""
-    obs_repo.save(
-        obs_repo.prepare_observation_envelope(
-            RegistryModeloObservation(
+    save_stamped_observation(
+        obs_repo,
+        RegistryModeloObservation(
+            modelo=_M202,
+            filing_year=_FILING_YEAR,
+            period=period,
+            observations=registry_grounded_observations(
                 modelo=_M202,
                 filing_year=_FILING_YEAR,
                 period=period,
-                observations=registry_grounded_observations(
-                    modelo=_M202,
-                    filing_year=_FILING_YEAR,
-                    period=period,
-                    casilla_values={
-                        _M202_PAGO_OUTPUT: value,
-                        _M202_PAGO_OUTPUT_40_2: Decimal("0"),
-                    },
-                ),
+                casilla_values={
+                    _M202_PAGO_OUTPUT: value,
+                    _M202_PAGO_OUTPUT_40_2: Decimal("0"),
+                },
             ),
-            source_kind=APP_FILING_SOURCE_KIND,
-            captured_at=_T0,
-            stamped_revision_id=revision_id_for_observation(
-                RegistryModeloObservation(
-                    modelo=_M202,
-                    filing_year=_FILING_YEAR,
-                    period=period,
-                    observations=registry_grounded_observations(
-                        modelo=_M202,
-                        filing_year=_FILING_YEAR,
-                        period=period,
-                        casilla_values={
-                            _M202_PAGO_OUTPUT: value,
-                            _M202_PAGO_OUTPUT_40_2: Decimal("0"),
-                        },
-                    ),
-                )
-            ),
-        )
+        ),
+        source_kind=APP_FILING_SOURCE_KIND,
+        captured_at=_T0,
     )
 
 
 def _seed_m200_prior_cuota(*, cuota: Decimal, obs_repo: CalculationObservationRepository) -> None:
     """Persist the prior-year M200 cuota del ejercicio (DP200014B:00599) the 2P base folds."""
-    obs_repo.save(
-        obs_repo.prepare_observation_envelope(
-            RegistryModeloObservation(
+    save_stamped_observation(
+        obs_repo,
+        RegistryModeloObservation(
+            modelo=_M200,
+            filing_year=_PRIOR_M200_YEAR,
+            period="0A",
+            observations=registry_grounded_observations(
                 modelo=_M200,
                 filing_year=_PRIOR_M200_YEAR,
                 period="0A",
-                observations=registry_grounded_observations(
-                    modelo=_M200,
-                    filing_year=_PRIOR_M200_YEAR,
-                    period="0A",
-                    casilla_values={_M200_CUOTA_EJERCICIO: cuota},
-                    grade=RegistryAuthorityGrade.CALCULATION,
-                ),
+                casilla_values={_M200_CUOTA_EJERCICIO: cuota},
+                grade=RegistryAuthorityGrade.CALCULATION,
             ),
-            source_kind=APP_FILING_SOURCE_KIND,
-            captured_at=_T0,
-            stamped_revision_id=revision_id_for_observation(
-                RegistryModeloObservation(
-                    modelo=_M200,
-                    filing_year=_PRIOR_M200_YEAR,
-                    period="0A",
-                    observations=registry_grounded_observations(
-                        modelo=_M200,
-                        filing_year=_PRIOR_M200_YEAR,
-                        period="0A",
-                        casilla_values={_M200_CUOTA_EJERCICIO: cuota},
-                        grade=RegistryAuthorityGrade.CALCULATION,
-                    ),
-                )
-            ),
-        )
+        ),
+        source_kind=APP_FILING_SOURCE_KIND,
+        captured_at=_T0,
     )
 
 

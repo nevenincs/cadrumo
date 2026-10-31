@@ -75,11 +75,11 @@ from ....domain.calculations.registry.relations import relation_prefill_bindings
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_modelo_observation,
-    revision_id_for_observation,
 )
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
 from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 from ...adapter_composition_work_ports import build_calculation_action_ports, build_work_lifecycle_ports
+from .observation_seeding_support import save_stamped_observation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -119,25 +119,16 @@ def _snapshot(filing_year: int) -> RegistrySnapshot:
 
 def _seed_prior_year_saldo(*, source_year: int, saldo: Decimal, obs_repo: CalculationObservationRepository) -> None:
     """Record a prior-year M100 end-of-year generated saldo (casilla 1391)."""
-    obs_repo.save(
-        obs_repo.prepare_observation_envelope(
-            registry_grounded_modelo_observation(
-                modelo=_MODELO,
-                filing_year=source_year,
-                period=_PERIOD,
-                casilla_values={_GENERATED_SALDO: saldo},
-            ),
-            source_kind="app_filing",
-            captured_at=_CLOCK,
-            stamped_revision_id=revision_id_for_observation(
-                registry_grounded_modelo_observation(
-                    modelo=_MODELO,
-                    filing_year=source_year,
-                    period=_PERIOD,
-                    casilla_values={_GENERATED_SALDO: saldo},
-                )
-            ),
-        )
+    save_stamped_observation(
+        obs_repo,
+        registry_grounded_modelo_observation(
+            modelo=_MODELO,
+            filing_year=source_year,
+            period=_PERIOD,
+            casilla_values={_GENERATED_SALDO: saldo},
+        ),
+        source_kind="app_filing",
+        captured_at=_CLOCK,
     )
 
 

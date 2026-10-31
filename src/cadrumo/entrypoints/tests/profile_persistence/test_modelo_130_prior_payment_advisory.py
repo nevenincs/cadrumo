@@ -73,7 +73,6 @@ from ....domain.calculations.registry.errors import RegistrySnapshotError
 from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_observations,
-    revision_id_for_observation,
 )
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction, TransactionCatalogue
@@ -81,6 +80,7 @@ from ....domain.transactions.raw_transaction import RawProvenance, RawTransactio
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
 from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 from .file_flow_test_support import calculation_ports_for_test
+from .observation_seeding_support import save_stamped_observation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -191,45 +191,26 @@ def _seed_prior_year_m100(obs_repo: CalculationObservationRepository) -> None:
     a fresh bucket the engine raises if that prior-year value is absent. This is
     upstream substrate, not the casilla under test.
     """
-    obs_repo.save(
-        obs_repo.prepare_observation_envelope(
-            RegistryModeloObservation(
+    save_stamped_observation(
+        obs_repo,
+        RegistryModeloObservation(
+            modelo="100",
+            filing_year=_PRIOR_YEAR,
+            period="0A",
+            observations=registry_grounded_observations(
                 modelo="100",
                 filing_year=_PRIOR_YEAR,
                 period="0A",
-                observations=registry_grounded_observations(
-                    modelo="100",
-                    filing_year=_PRIOR_YEAR,
-                    period="0A",
-                    casilla_values={
-                        _M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: _PRIOR_YEAR_NET_INCOME,
-                        _M100_RENDIMIENTO_SOURCE_1479_CASILLA: Decimal("0"),
-                        _M100_RENDIMIENTO_SOURCE_1553_CASILLA: Decimal("0"),
-                        _M100_RENDIMIENTO_SOURCE_1577_CASILLA: Decimal("0"),
-                    },
-                ),
+                casilla_values={
+                    _M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: _PRIOR_YEAR_NET_INCOME,
+                    _M100_RENDIMIENTO_SOURCE_1479_CASILLA: Decimal("0"),
+                    _M100_RENDIMIENTO_SOURCE_1553_CASILLA: Decimal("0"),
+                    _M100_RENDIMIENTO_SOURCE_1577_CASILLA: Decimal("0"),
+                },
             ),
-            source_kind=APP_FILING_SOURCE_KIND,
-            captured_at=_T0,
-            stamped_revision_id=revision_id_for_observation(
-                RegistryModeloObservation(
-                    modelo="100",
-                    filing_year=_PRIOR_YEAR,
-                    period="0A",
-                    observations=registry_grounded_observations(
-                        modelo="100",
-                        filing_year=_PRIOR_YEAR,
-                        period="0A",
-                        casilla_values={
-                            _M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: _PRIOR_YEAR_NET_INCOME,
-                            _M100_RENDIMIENTO_SOURCE_1479_CASILLA: Decimal("0"),
-                            _M100_RENDIMIENTO_SOURCE_1553_CASILLA: Decimal("0"),
-                            _M100_RENDIMIENTO_SOURCE_1577_CASILLA: Decimal("0"),
-                        },
-                    ),
-                )
-            ),
-        )
+        ),
+        source_kind=APP_FILING_SOURCE_KIND,
+        captured_at=_T0,
     )
 
 
@@ -274,14 +255,7 @@ def _seed_prior_1t_m130_filing(
             casilla_values=casillas,
         ),
     )
-    obs_repo.save(
-        obs_repo.prepare_observation_envelope(
-            observation,
-            source_kind=APP_FILING_SOURCE_KIND,
-            captured_at=_T0,
-            stamped_revision_id=revision_id_for_observation(observation),
-        )
-    )
+    save_stamped_observation(obs_repo, observation, source_kind=APP_FILING_SOURCE_KIND, captured_at=_T0)
     return observation
 
 

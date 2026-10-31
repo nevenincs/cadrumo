@@ -46,13 +46,13 @@ from ....domain.calculations.registry.relations import relation_prefill_bindings
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_modelo_observation,
-    revision_id_for_observation,
 )
 from ....domain.modelos.calculation_revision import CalculationRevision
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
 from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 from ...adapter_composition_work_ports import build_work_lifecycle_ports
 from .file_flow_test_support import calculation_ports_for_test
+from .observation_seeding_support import save_stamped_observation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -132,25 +132,16 @@ def _seed_prior_negative_base(*, saldo: Decimal, obs_repo: CalculationObservatio
     The ``previous_filing`` carry binding resolves this into the current year's
     opening pending (casilla 1388).
     """
-    obs_repo.save(
-        obs_repo.prepare_observation_envelope(
-            registry_grounded_modelo_observation(
-                modelo=_MODELO,
-                filing_year=_FILING_YEAR - 1,
-                period=_PERIOD,
-                casilla_values={_PRIOR_NEGATIVE_BASE_CASILLA: saldo},
-            ),
-            source_kind="app_filing",
-            captured_at=_CLOCK,
-            stamped_revision_id=revision_id_for_observation(
-                registry_grounded_modelo_observation(
-                    modelo=_MODELO,
-                    filing_year=_FILING_YEAR - 1,
-                    period=_PERIOD,
-                    casilla_values={_PRIOR_NEGATIVE_BASE_CASILLA: saldo},
-                )
-            ),
-        )
+    save_stamped_observation(
+        obs_repo,
+        registry_grounded_modelo_observation(
+            modelo=_MODELO,
+            filing_year=_FILING_YEAR - 1,
+            period=_PERIOD,
+            casilla_values={_PRIOR_NEGATIVE_BASE_CASILLA: saldo},
+        ),
+        source_kind="app_filing",
+        captured_at=_CLOCK,
     )
 
 

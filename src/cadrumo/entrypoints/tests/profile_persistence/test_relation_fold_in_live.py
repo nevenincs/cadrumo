@@ -76,7 +76,6 @@ from cadrumo.domain.calculations.registry.bindings import (
 )
 from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from cadrumo.domain.calculations.registry.temporal import select_revision
-from cadrumo.domain.calculations.registry.tests.registry_observations import revision_id_for_observation
 from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
@@ -92,6 +91,7 @@ from cadrumo.entrypoints.adapter_composition_work_ports import (
 
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from ....adapters.persistence.profile.tests.retencion_observation_authoring import replace_retencion_observations
+from .observation_seeding_support import save_stamped_observation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -201,25 +201,16 @@ def _seed_115_quarters(*, obs_repo: CalculationObservationRepository) -> dict[Ca
             binding_values=binding_values,
             date_context={"filing_period": date(_YEAR, 12, 31)},
         )
-        obs_repo.save(
-            obs_repo.prepare_observation_envelope(
-                RegistryModeloObservation(
-                    modelo="115",
-                    filing_year=_YEAR,
-                    period=period,
-                    observations=result.observations,
-                ),
-                source_kind="app_filing",
-                captured_at=_T0,
-                stamped_revision_id=revision_id_for_observation(
-                    RegistryModeloObservation(
-                        modelo="115",
-                        filing_year=_YEAR,
-                        period=period,
-                        observations=result.observations,
-                    )
-                ),
-            )
+        save_stamped_observation(
+            obs_repo,
+            RegistryModeloObservation(
+                modelo="115",
+                filing_year=_YEAR,
+                period=period,
+                observations=result.observations,
+            ),
+            source_kind="app_filing",
+            captured_at=_T0,
         )
         for cid in totals:
             totals[cid] += result.values[cid]

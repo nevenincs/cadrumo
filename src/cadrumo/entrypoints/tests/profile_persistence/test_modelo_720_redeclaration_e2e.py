@@ -59,11 +59,11 @@ from ....adapters.persistence.profile.tests.operator_scope_fakes import (
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from ....application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from ....application.tests.wizard_catalogue_fixtures import register_wizard_catalogue
-from ....domain.calculations.registry.tests.registry_observations import revision_id_for_observation
 from ....domain.contribuyente.renta_codes import FiscalResidency
 from ....domain.deadlines.models import IVARegime
 from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 from .file_flow_test_support import calculation_ports_for_test
+from .observation_seeding_support import save_stamped_observation
 
 __all__ = ["register_wizard_catalogue"]
 
@@ -99,6 +99,7 @@ from ....domain.modelos.verification_report import (
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
 
 _OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
+
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -183,33 +184,20 @@ def _calculate_and_verify(
     """Run the real year-N+1 M720 pipeline over a real persisted year-N baseline."""
     with _secure_backend(tmp_path):
         observation_repository = CalculationObservationRepository()
-        observation_repository.save(
-            observation_repository.prepare_observation_envelope(
-                registry_grounded_modelo_observation(
-                    modelo=Modelo("720").value,
-                    filing_year=_YEAR_N,
-                    period=_PERIOD,
-                    casilla_values={
-                        _CUENTAS_VALORACION: _CUENTAS_N,
-                        _VALORES_VALORACION: _VALORES_N,
-                        _INMUEBLES_VALORACION: _INMUEBLES_N,
-                    },
-                ),
-                source_kind="app_filing",
-                captured_at=_CLOCK_N,
-                stamped_revision_id=revision_id_for_observation(
-                    registry_grounded_modelo_observation(
-                        modelo=Modelo("720").value,
-                        filing_year=_YEAR_N,
-                        period=_PERIOD,
-                        casilla_values={
-                            _CUENTAS_VALORACION: _CUENTAS_N,
-                            _VALORES_VALORACION: _VALORES_N,
-                            _INMUEBLES_VALORACION: _INMUEBLES_N,
-                        },
-                    )
-                ),
-            )
+        save_stamped_observation(
+            observation_repository,
+            registry_grounded_modelo_observation(
+                modelo=Modelo("720").value,
+                filing_year=_YEAR_N,
+                period=_PERIOD,
+                casilla_values={
+                    _CUENTAS_VALORACION: _CUENTAS_N,
+                    _VALORES_VALORACION: _VALORES_N,
+                    _INMUEBLES_VALORACION: _INMUEBLES_N,
+                },
+            ),
+            source_kind="app_filing",
+            captured_at=_CLOCK_N,
         )
 
         snapshot = published_authority_operation().snapshot(
@@ -321,13 +309,8 @@ def test_source_mesh_scopes_m720_prior_baselines_to_the_intended_work_unit_coord
 
     with _secure_backend(tmp_path):
         observation_repository = CalculationObservationRepository()
-        observation_repository.save(
-            observation_repository.prepare_observation_envelope(
-                prior_observation,
-                source_kind="app_filing",
-                captured_at=_CLOCK_N,
-                stamped_revision_id=revision_id_for_observation(prior_observation),
-            )
+        save_stamped_observation(
+            observation_repository, prior_observation, source_kind="app_filing", captured_at=_CLOCK_N
         )
         work_unit_repository = WorkUnitCatalogueRepository()
         work_unit_n1 = create_work_unit(

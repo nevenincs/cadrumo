@@ -70,7 +70,6 @@ from ....domain.calculations.registry.tests.published_authority import leased_pr
 from ....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_modelo_observation,
     revision_id_for_coordinates,
-    revision_id_for_observation,
 )
 from ....domain.deadlines.models import (
     IVARegime,
@@ -85,8 +84,10 @@ from ....domain.modelos.verification_report import ModeloVerificationFindingKind
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from ....tests.env_scope import ready_clave_settings
 from ...adapter_composition_work_ports import build_calculation_action_ports
+from .observation_seeding_support import save_stamped_observation
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
+
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
 
@@ -418,13 +419,8 @@ def test_q2_casilla_15_auto_resolves_from_prior_quarter_filing(
     q1 = _calculate_quarter(
         repos, period="1T", casilla_inputs=_Q1_INPUTS, binding_values=_Q1_BINDINGS, operation=operation
     )
-    obs_repo.save(
-        obs_repo.prepare_observation_envelope(
-            _observation_from_revision(q1, period="1T"),
-            source_kind="app_filing",
-            captured_at=_CLOCK,
-            stamped_revision_id=revision_id_for_observation(_observation_from_revision(q1, period="1T")),
-        )
+    save_stamped_observation(
+        obs_repo, _observation_from_revision(q1, period="1T"), source_kind="app_filing", captured_at=_CLOCK
     )
     _seed_prior_year_m100(
         obs_repo,
@@ -455,13 +451,8 @@ def test_q2_carry_forward_flows_into_casilla_15_value(repos: _Repos, *, operatio
     q1 = _calculate_quarter(
         repos, period="1T", casilla_inputs=_Q1_INPUTS, binding_values=_Q1_BINDINGS, operation=operation
     )
-    obs_repo.save(
-        obs_repo.prepare_observation_envelope(
-            _observation_from_revision(q1, period="1T"),
-            source_kind="app_filing",
-            captured_at=_CLOCK,
-            stamped_revision_id=revision_id_for_observation(_observation_from_revision(q1, period="1T")),
-        )
+    save_stamped_observation(
+        obs_repo, _observation_from_revision(q1, period="1T"), source_kind="app_filing", captured_at=_CLOCK
     )
     _seed_prior_year_m100(
         obs_repo,
@@ -636,61 +627,35 @@ def test_casilla_15_copy_and_casilla_05_sum_carries_resolve_on_shared_fixture(re
         stamped_revision_id=revision_id_for_coordinates(modelo="100", filing_year=2025, period="0A"),
     )
 
-    obs_repo.save(
-        obs_repo.prepare_observation_envelope(
-            registry_grounded_modelo_observation(
-                modelo="130",
-                filing_year=2026,
-                period="1T",
-                casilla_values={
-                    _M130_PAGO_FRACCIONADO_CASILLA: _PRIOR_07_1T,
-                    _M130_HOME_DEDUCTION_CASILLA: _PRIOR_16_1T,
-                    _M130_SALDO_NEGATIVO_CASILLA: Decimal("0"),
-                },
-            ),
-            source_kind="app_filing",
-            captured_at=_CLOCK,
-            stamped_revision_id=revision_id_for_observation(
-                registry_grounded_modelo_observation(
-                    modelo="130",
-                    filing_year=2026,
-                    period="1T",
-                    casilla_values={
-                        _M130_PAGO_FRACCIONADO_CASILLA: _PRIOR_07_1T,
-                        _M130_HOME_DEDUCTION_CASILLA: _PRIOR_16_1T,
-                        _M130_SALDO_NEGATIVO_CASILLA: Decimal("0"),
-                    },
-                )
-            ),
-        )
+    save_stamped_observation(
+        obs_repo,
+        registry_grounded_modelo_observation(
+            modelo="130",
+            filing_year=2026,
+            period="1T",
+            casilla_values={
+                _M130_PAGO_FRACCIONADO_CASILLA: _PRIOR_07_1T,
+                _M130_HOME_DEDUCTION_CASILLA: _PRIOR_16_1T,
+                _M130_SALDO_NEGATIVO_CASILLA: Decimal("0"),
+            },
+        ),
+        source_kind="app_filing",
+        captured_at=_CLOCK,
     )
-    obs_repo.save(
-        obs_repo.prepare_observation_envelope(
-            registry_grounded_modelo_observation(
-                modelo="130",
-                filing_year=2026,
-                period="2T",
-                casilla_values={
-                    _M130_PAGO_FRACCIONADO_CASILLA: _PRIOR_07_2T,
-                    _M130_HOME_DEDUCTION_CASILLA: _PRIOR_16_2T,
-                    _M130_SALDO_NEGATIVO_CASILLA: _PRIOR_2T_SALDO,
-                },
-            ),
-            source_kind="app_filing",
-            captured_at=_CLOCK,
-            stamped_revision_id=revision_id_for_observation(
-                registry_grounded_modelo_observation(
-                    modelo="130",
-                    filing_year=2026,
-                    period="2T",
-                    casilla_values={
-                        _M130_PAGO_FRACCIONADO_CASILLA: _PRIOR_07_2T,
-                        _M130_HOME_DEDUCTION_CASILLA: _PRIOR_16_2T,
-                        _M130_SALDO_NEGATIVO_CASILLA: _PRIOR_2T_SALDO,
-                    },
-                )
-            ),
-        )
+    save_stamped_observation(
+        obs_repo,
+        registry_grounded_modelo_observation(
+            modelo="130",
+            filing_year=2026,
+            period="2T",
+            casilla_values={
+                _M130_PAGO_FRACCIONADO_CASILLA: _PRIOR_07_2T,
+                _M130_HOME_DEDUCTION_CASILLA: _PRIOR_16_2T,
+                _M130_SALDO_NEGATIVO_CASILLA: _PRIOR_2T_SALDO,
+            },
+        ),
+        source_kind="app_filing",
+        captured_at=_CLOCK,
     )
 
     snapshot_3t = published_authority_operation().snapshot("130", filing_year=2026, period="3T")

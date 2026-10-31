@@ -63,12 +63,12 @@ from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.ids import BindingId
 from ....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_modelo_observation,
-    revision_id_for_observation,
 )
 from ....domain.modelos.calculation_revision import CalculationRevision
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
 from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 from ...adapter_composition_work_ports import build_calculation_action_ports, build_work_lifecycle_ports
+from .observation_seeding_support import save_stamped_observation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -224,35 +224,21 @@ def _seed_prior_year_m100(obs_repo: CalculationObservationRepository, *, filing_
     records net income in 0224 and explicit zeros for its non-applicable
     rendimiento sources; resolver completeness is tested separately.
     """
-    obs_repo.save(
-        obs_repo.prepare_observation_envelope(
-            registry_grounded_modelo_observation(
-                modelo="100",
-                filing_year=filing_year,
-                period="0A",
-                casilla_values={
-                    _M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: _PRIOR_YEAR_NET_INCOME,
-                    _M100_RENDIMIENTO_SOURCE_1479_CASILLA: Decimal("0"),
-                    _M100_RENDIMIENTO_SOURCE_1553_CASILLA: Decimal("0"),
-                    _M100_RENDIMIENTO_SOURCE_1577_CASILLA: Decimal("0"),
-                },
-            ),
-            source_kind="app_filing",
-            captured_at=_CLOCK,
-            stamped_revision_id=revision_id_for_observation(
-                registry_grounded_modelo_observation(
-                    modelo="100",
-                    filing_year=filing_year,
-                    period="0A",
-                    casilla_values={
-                        _M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: _PRIOR_YEAR_NET_INCOME,
-                        _M100_RENDIMIENTO_SOURCE_1479_CASILLA: Decimal("0"),
-                        _M100_RENDIMIENTO_SOURCE_1553_CASILLA: Decimal("0"),
-                        _M100_RENDIMIENTO_SOURCE_1577_CASILLA: Decimal("0"),
-                    },
-                )
-            ),
-        )
+    save_stamped_observation(
+        obs_repo,
+        registry_grounded_modelo_observation(
+            modelo="100",
+            filing_year=filing_year,
+            period="0A",
+            casilla_values={
+                _M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: _PRIOR_YEAR_NET_INCOME,
+                _M100_RENDIMIENTO_SOURCE_1479_CASILLA: Decimal("0"),
+                _M100_RENDIMIENTO_SOURCE_1553_CASILLA: Decimal("0"),
+                _M100_RENDIMIENTO_SOURCE_1577_CASILLA: Decimal("0"),
+            },
+        ),
+        source_kind="app_filing",
+        captured_at=_CLOCK,
     )
 
 

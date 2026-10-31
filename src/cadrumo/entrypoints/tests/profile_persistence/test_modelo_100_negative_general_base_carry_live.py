@@ -47,11 +47,11 @@ from ....domain.calculations.registry.ids import BindingId
 from ....domain.calculations.registry.tests.authored_editions import newest_authored_editions
 from ....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_observations,
-    revision_id_for_observation,
 )
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
 from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 from ...adapter_composition_work_ports import build_calculation_action_ports
+from .observation_seeding_support import save_stamped_observation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -134,35 +134,21 @@ def _save_observation(
     period: str,
     casilla_values: dict[CasillaId, Decimal],
 ) -> None:
-    obs_repo.save(
-        obs_repo.prepare_observation_envelope(
-            RegistryModeloObservation(
+    save_stamped_observation(
+        obs_repo,
+        RegistryModeloObservation(
+            modelo=modelo,
+            filing_year=filing_year,
+            period=period,
+            observations=registry_grounded_observations(
                 modelo=modelo,
                 filing_year=filing_year,
                 period=period,
-                observations=registry_grounded_observations(
-                    modelo=modelo,
-                    filing_year=filing_year,
-                    period=period,
-                    casilla_values=casilla_values,
-                ),
+                casilla_values=casilla_values,
             ),
-            source_kind=APP_FILING_SOURCE_KIND,
-            captured_at=_CLOCK,
-            stamped_revision_id=revision_id_for_observation(
-                RegistryModeloObservation(
-                    modelo=modelo,
-                    filing_year=filing_year,
-                    period=period,
-                    observations=registry_grounded_observations(
-                        modelo=modelo,
-                        filing_year=filing_year,
-                        period=period,
-                        casilla_values=casilla_values,
-                    ),
-                )
-            ),
-        )
+        ),
+        source_kind=APP_FILING_SOURCE_KIND,
+        captured_at=_CLOCK,
     )
 
 
