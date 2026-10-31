@@ -46,10 +46,12 @@ from .desktop_assets_keys import (
     INVENTORY_KEYS,
     INVENTORY_PERCENT_PLACEHOLDER_PREFIXES,
 )
+from .desktop_entry_option_keys import ENTRY_OPTION_FAMILIES, ENTRY_OPTION_KEYS
 from .desktop_interface_keys import DESKTOP_INTERFACE_KEYS
 from .desktop_ledger_catalogue_keys import DESKTOP_LEDGER_CATALOGUE_KEYS
 from .desktop_ledger_document_keys import DESKTOP_LEDGER_DOCUMENT_KEYS
 from .desktop_ledger_workflow_keys import DESKTOP_LEDGER_WORKFLOW_KEYS
+from .desktop_modelo_choice_keys import MODELO_CHOICE_FAMILIES, MODELO_CHOICE_KEYS
 from .desktop_workspace_keys import WORKSPACE_FAMILIES, WORKSPACE_KEYS
 from .errors import LocaleError
 
@@ -857,6 +859,7 @@ DESKTOP_CHROME_FAMILIES: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType
             "sector_prior_definitive_absent",
             "sector_settlement_entry_absent",
         ),
+        "desktop.ledger.prorrata.kind.": ("provisional", "definitiva"),
         "desktop.ledger.prorrata.regime.": ("general", "especial"),
         "desktop.ledger.ratios.kind.": (
             "full_deductible",
@@ -870,6 +873,8 @@ DESKTOP_CHROME_FAMILIES: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType
         **WORKSPACE_FAMILIES,
         **ASSET_FAMILIES,
         **INVENTORY_FAMILIES,
+        **ENTRY_OPTION_FAMILIES,
+        **MODELO_CHOICE_FAMILIES,
     }
 )
 
@@ -881,6 +886,8 @@ DESKTOP_CHROME_KEYS: Final[frozenset[str]] = (
     | WORKSPACE_KEYS
     | ASSET_KEYS
     | INVENTORY_KEYS
+    | ENTRY_OPTION_KEYS
+    | MODELO_CHOICE_KEYS
 )
 
 #: Declared keys no shell source names yet, because their view is still being
@@ -892,7 +899,7 @@ DESKTOP_CHROME_AWAITING_CONSUMER: Final[frozenset[str]] = frozenset({"desktop.si
 
 #: A whole key in quotes, or the fixed head of a template literal up to ``${``.
 _SHELL_LITERAL_KEY: Final[re.Pattern[str]] = re.compile(
-    r"""["'`]((?:desktop|workspace|ledger\.actividad_asset|tui\.ledger\.activity_asset|application\.inventory\.labels|application\.inventory\.service|auth\.sync\.requirement)\.[A-Za-z0-9_.]+|application\.inventory\.advisories\.)["'`]"""
+    r"""["'`]((?:desktop|workspace|ledger\.actividad_asset|tui\.ledger\.activity_asset|application\.inventory\.labels|application\.inventory\.service|application\.ledger\.entry_options|application\.modelo\.edit_choice|auth\.sync\.requirement)\.[A-Za-z0-9_.]+|application\.inventory\.advisories\.)["'`]"""
 )
 _SHELL_TEMPLATE_HEAD: Final[re.Pattern[str]] = re.compile(
     r"`((?:desktop|workspace|ledger\.actividad_asset)\.[A-Za-z0-9_.]*)\$\{"

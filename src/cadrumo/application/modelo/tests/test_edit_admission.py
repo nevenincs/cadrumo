@@ -2,10 +2,14 @@
 
 from __future__ import annotations
 
+import itertools
 from datetime import UTC, date, datetime, timedelta
+from decimal import Decimal
+from importlib.resources import files
 from typing import override
 
 import pytest
+import yaml
 
 from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.external_constants import OutputLanguage
@@ -63,6 +67,14 @@ from ..edit_models import (
 from ..edit_parsing import parse_modelo_edit_lexeme
 from ..edit_transient_operand import modelo_edit_financial_operand
 from ..edit_value_grammar import ModeloEditValueGrammarV1
+from ..work_form_models import (
+    ModeloFormCasillaAddressV1,
+    ModeloFormEditability,
+    ModeloFormOrigin,
+    comparable_entry,
+    revised_field,
+)
+from .work_form_fixture import built_form
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -245,9 +257,7 @@ def test_published_modelo_100_surface_size_is_admitted_without_dropping_entries(
 
 
 def _published_modelo_100_baseline() -> ModeloEditBaselineV1:
-    outcome, _ = _admit(snapshot=published_snapshot("100", filing_year=2025, period="0A"))
-    assert isinstance(outcome, ModeloEditAdmittedV1)
-    return outcome.baseline
+    return _published_baseline("100", filing_year=2025, code="0A")
 
 
 def _read_entry(
@@ -300,6 +310,125 @@ def test_every_yes_or_no_on_a_published_declaration_reads_the_1_or_0_its_editor_
             refused = _read_entry(baseline, address, lexeme, language)
             assert isinstance(refused, ModeloEditRefusedV1), address
             assert refused.refusal.reason is reason
+
+
+def _published_baseline(modelo: str, *, filing_year: int, code: str) -> ModeloEditBaselineV1:
+    snapshot = published_snapshot(modelo, filing_year=filing_year, period=code)
+    period = Period.from_year_and_code(filing_year, code)
+    revision_id = str(snapshot.revision.id)
+    work_unit = WorkUnit(
+        work_unit_id=derive_work_unit_id(
+            bucket_id="edit-bucket", modelo=modelo, filing_year=filing_year, period=period, revision_id=revision_id
+        ),
+        bucket_id="edit-bucket",
+        modelo=modelo,
+        filing_year=filing_year,
+        period=period,
+        revision_id=revision_id,
+        name=f"{modelo} {filing_year}",
+        created_at=_NOW,
+        updated_at=_NOW,
+    )
+    operation, _ = _recording_operation(snapshot)
+    outcome = admit_modelo_edit_baseline(
+        work_unit_id=work_unit.work_unit_id,
+        work_catalogue=WorkUnitCatalogue(work_units={work_unit.work_unit_id: work_unit}),
+        calculation_catalogue=CalculationRevisionCatalogue(),
+        operation=operation,
+        operation_contracts=_contracts(),
+        issued_at=_NOW,
+    )
+    assert isinstance(outcome, ModeloEditAdmittedV1)
+    return outcome.baseline
+
+
+@pytest.mark.parametrize("filing_year", [2025, 2026])
+def test_a_box_that_declares_a_blank_token_keeps_missing_blank_and_refused_apart(filing_year: int) -> None:
+    baseline = _published_baseline("322", filing_year=filing_year, code="01")
+    (grammar,) = (
+        entry.grammar
+        for entry in baseline.permitted_surface
+        if isinstance(entry, ModeloEditWritableScalarSurfaceEntryV1) and entry.casilla_id == "decl.sin-actividad"
+    )
+    address = ModeloEditScalarAddressV1(casilla_id="decl.sin-actividad")
+
+    assert grammar.choices is not None
+    assert [choice.code for choice in grammar.choices] == ["X", ""]
+    # Nothing typed is a stated blank, which the design allows; no entry at all stays no entry.
+    blank = _read_entry(baseline, address, "", OutputLanguage.ES)
+    assert isinstance(blank, ModeloEditParsedValueV1)
+    assert blank.value == ""
+    marked = _read_entry(baseline, address, "x", OutputLanguage.ES)
+    assert isinstance(marked, ModeloEditParsedValueV1)
+    assert marked.value == "X"
+    refused = _read_entry(baseline, address, "Y", OutputLanguage.ES)
+    assert isinstance(refused, ModeloEditRefusedV1)
+    assert refused.refusal.reason is ModeloEditParseReason.NOT_IN_CHOICES
+
+
+def test_a_province_box_serves_every_province_with_the_key_of_its_word() -> None:
+    baseline = _published_baseline("714", filing_year=2025, code="0A")
+    grammars = [
+        entry.grammar
+        for entry in baseline.permitted_surface
+        if isinstance(entry, ModeloEditWritableScalarSurfaceEntryV1) and entry.grammar.data_type == "province_code"
+    ]
+
+    assert grammars
+    for grammar in grammars:
+        assert grammar.choices is not None
+        assert [choice.code for choice in grammar.choices] == [f"{number:02d}" for number in range(1, 53)]
+        assert grammar.choices[27].word == "application.modelo.edit_choice.province_code.28"
+
+
+@pytest.mark.parametrize("locale", ["en", "es", "ca", "hu"])
+def test_each_province_word_is_the_name_the_official_table_gives_its_code(locale: str) -> None:
+    table = (
+        files("cadrumo")
+        .joinpath("_data", "corpus", "normatives", "html", "orden-eha-3481-2008.html.extracted.md")
+        .read_text(encoding="utf-8")
+    )
+    lines = [line.strip() for line in table.splitlines()]
+    official: dict[str, str] = {}
+    for previous, line in itertools.pairwise(lines):
+        if len(line) == 2 and line.isdecimal() and "01" <= line <= "52" and previous.istitle() and line not in official:
+            official[line] = previous
+    catalogue = yaml.safe_load(
+        files("cadrumo").joinpath("locales", locale, "application.yml").read_text(encoding="utf-8")
+    )
+    words = catalogue["application"]["modelo"]["edit_choice"]["province_code"]
+
+    assert {code: words[code] for code in official} == official
+    assert official["28"] == "Madrid"
+    assert len(words) == 52
+
+
+def test_choosing_the_same_yes_or_no_again_changes_nothing(authority_operation: PinnedAuthorityOperation) -> None:
+    baseline = _published_modelo_100_baseline()
+    on_form = {
+        str(field.address.casilla_id): field
+        for field in built_form(authority_operation, "100", 2025, "0A").fields()
+        if isinstance(field.address, ModeloFormCasillaAddressV1)
+    }
+    address = next(
+        address
+        for address, _ in _writable_yes_no_addresses(baseline)
+        if isinstance(address, ModeloEditScalarAddressV1) and str(address.casilla_id) in on_form
+    )
+    # A calculation holds a yes or no box as the figure its decimal channel carried.
+    field = revised_field(
+        on_form[str(address.casilla_id)],
+        editability=ModeloFormEditability.EDITABLE_VALUE,
+        origin=ModeloFormOrigin.ENTERED,
+        value=Decimal("1"),
+    )
+
+    read = _read_entry(baseline, address, "1", OutputLanguage.EN)
+    assert isinstance(read, ModeloEditParsedValueV1)
+    assert comparable_entry(read.value) == field.own_value
+    other = _read_entry(baseline, address, "0", OutputLanguage.EN)
+    assert isinstance(other, ModeloEditParsedValueV1)
+    assert comparable_entry(other.value) != field.own_value
 
 
 def test_a_date_or_year_box_the_filer_fills_is_refused_for_want_of_an_engine_channel() -> None:
