@@ -37,6 +37,7 @@ impl SessionClaim {
     }
 
     /// Acquires in a namespace the caller owns beneath `base`.
+    #[cfg(feature = "fixture-test-mode")]
     pub(crate) fn acquire_beneath(
         base: &Path,
         manager_id: &str,

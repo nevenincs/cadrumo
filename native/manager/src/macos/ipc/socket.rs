@@ -80,6 +80,7 @@ impl Directory {
     }
 
     /// The namespace a caller owns beneath `base`, with the installed checks.
+    #[cfg(feature = "fixture-test-mode")]
     pub(super) fn beneath(base: &Path) -> io::Result<Self> {
         Self::in_transport(DarwinTransport::beneath(base, true)?)
     }

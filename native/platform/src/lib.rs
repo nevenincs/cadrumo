@@ -1,5 +1,7 @@
 #[cfg(not(any(target_os = "windows", target_os = "linux", target_os = "macos")))]
 compile_error!("Unsupported native platform");
+#[cfg(all(feature = "test-support", not(debug_assertions)))]
+compile_error!("release builds refuse the test-support feature");
 
 #[cfg(windows)]
 use std::os::windows::fs::MetadataExt;
