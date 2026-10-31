@@ -48,6 +48,7 @@ from typing import TYPE_CHECKING, Annotated, Final, Self
 from pydantic import BaseModel, Field, GetCoreSchemaHandler, NonNegativeInt, StringConstraints
 from pydantic_core import CoreSchema, core_schema
 
+from ...core.filing_year import FILING_YEAR_MIN
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.registry_token import RegistryToken
 from ..calculations.registry.errors import RegistryValidationError
@@ -162,7 +163,7 @@ class DeadlineHolidayCoverage(StrEnum):
 
 
 _SHORT_TEXT_MAX_LENGTH: Final = 200
-_FIRST_CALENDAR_YEAR: Final = 2000
+_FIRST_CALENDAR_YEAR: Final = FILING_YEAR_MIN
 _LAST_CALENDAR_YEAR: Final = 2100
 
 _NonEmptyShortString = Annotated[

@@ -35,6 +35,8 @@ from cadrumo_client.contracts.command_ports import CommandNodeKind
 # the import-boundary checker, or a dead-code sweep -- could see the edge, so all of
 # these modules read as orphaned while backing live verbs. A wrong key now raises
 # at spec-build time instead of failing lazily on first invocation.
+_DEFAULT_LOG_LINES: Final = 20
+
 _HANDLER_MODULES: Final[dict[str, str]] = {
     "_repair_cli": ".repair_commands",
     "_repair_profile": ".profile_repair_commands",
@@ -108,7 +110,7 @@ CONFIG_REPAIR_COMMAND_SPECS = (
                 name="lines",
                 declarations=("--lines",),
                 value=ValueContract(DeferredTarget("builtins", "int")),
-                default=ParameterDefault.value(20),
+                default=ParameterDefault.value(_DEFAULT_LOG_LINES),
                 help_key=TranslationKey("cli.config.repair.logs_lines_help"),
                 constraint=ParameterConstraint(minimum=0),
             ),

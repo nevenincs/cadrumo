@@ -23,6 +23,8 @@ from .remote_state_models import (
     LiveIvaReadSurface,
 )
 
+_MESSAGE_TEXT_LENGTH = 160
+
 
 def _string_object_mapping(value: object) -> dict[str, object] | None:
     if not isinstance(value, Mapping):
@@ -130,7 +132,7 @@ def auth_outcome(
     )
 
 
-def bounded_context_text(value: object, *, max_length: int = 160) -> str:
+def bounded_context_text(value: object, *, max_length: int = _MESSAGE_TEXT_LENGTH) -> str:
     """Return normalized diagnostic text bounded for persisted context payloads."""
     text = " ".join(str(value).replace("\xa0", " ").split())
     if len(text) <= max_length:

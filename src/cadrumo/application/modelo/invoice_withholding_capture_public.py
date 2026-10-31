@@ -133,7 +133,7 @@ class PublicAnnualRecipientDetail(BaseModel):
     nif_pagador_anterior: str | None = Field(default=None, min_length=1, max_length=32)
     fecha_devengo: str | None = Field(default=None, max_length=16, pattern="^\\d*$")
     clave_mercado: str | None = None
-    numero_orden: int | None = Field(default=None, ge=1, le=1_000_000_000)
+    numero_orden: int | None = Field(default=None, ge=1, le=1 << 30)
 
     @classmethod
     def from_domain(cls, value: BaseModel) -> Self:

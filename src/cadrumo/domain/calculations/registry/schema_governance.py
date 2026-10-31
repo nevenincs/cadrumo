@@ -81,12 +81,13 @@ from __future__ import annotations
 
 from datetime import date
 
+from ....core.filing_year import FILING_YEAR_MIN
 from ....core.revision_review import REVIEWED_REVISION_REVIEW_STATUSES, RevisionReviewStatus
 from .errors import RegistryValidationError
 from .ids import RevisionId
 
 _REVIEW_YEAR_CEILING = 2100
-_REVIEW_YEAR_FLOOR = 2000
+_REVIEW_YEAR_FLOOR = FILING_YEAR_MIN
 
 REVISION_REVIEW_DATE_CEILING: date = date(_REVIEW_YEAR_CEILING, 1, 1)
 """Exclusive upper bound on a governance stamp's ``reviewed_at`` signoff date.

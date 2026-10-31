@@ -7,9 +7,9 @@ calculate-input diagnostic renderer also applies.
 
 from __future__ import annotations
 
-__all__ = ["MAX_NAMED_DESCENDANTS"]
+__all__ = ["MAX_DESCENDANTS_IN_MESSAGE"]
 
 # The interpolated descendant list is the only unbounded term in these
 # operator-facing messages. Keep the shared cap in this public owner so the
 # calculate-input diagnostic renderer uses the same bound.
-MAX_NAMED_DESCENDANTS = 3
+MAX_DESCENDANTS_IN_MESSAGE = 3

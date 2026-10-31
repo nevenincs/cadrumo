@@ -23,8 +23,6 @@ from ._invoice_row_materialization import (
 )
 from .binding_aggregation import binding_aggregation_op
 from .binding_selector_utils import (
-    M347_OPERATION_CLAVES,
-    M349_OPERATION_CLAVES,
     intracommunity_clave_validator,
     invariant_diagnostics,
     operation_clave_validator,
@@ -181,7 +179,7 @@ class InvoiceObservation(BaseModel):
     _country_code_uppercase = field_validator("country_code")(uppercase_alpha_code("country_code"))
     _clave_uppercase = field_validator("intracommunity_clave")(intracommunity_clave_validator())
     _operation_clave_valid = field_validator("operation_clave")(
-        operation_clave_validator(field_label="operation_clave", claves=M347_OPERATION_CLAVES),
+        operation_clave_validator(field_label="operation_clave"),
     )
 
     @field_validator("source_kind", mode="before")
@@ -251,25 +249,6 @@ class InvoiceProviderBase(BaseModel):
             if clave != clave.upper():
                 raise RegistryValidationError("invoice selector clave must be uppercase")
         return value
-
-    @model_validator(mode="after")
-    @pydantic_validation_boundary
-    def _claves_within_grouping_vocabulary(self) -> InvoiceProviderBase:
-        """Check ``claves`` against the vocabulary its OWN grouping declares.
-
-        A field validator cannot see ``grouping`` (declared after ``claves``
-        in this model), so the closed-set membership check -- as opposed to
-        the shape checks above -- runs here, once both fields are available.
-        M347's ``contraparte_clave`` grouping and M349's two groupings share
-        the ``claves`` field but never its vocabulary; validating every
-        selector against M349's set alone would refuse every legitimate M347
-        binding.
-        """
-        claves_vocabulary = M347_OPERATION_CLAVES if self.grouping == "contraparte_clave" else M349_OPERATION_CLAVES
-        for clave in self.claves:
-            if clave not in claves_vocabulary:
-                raise RegistryValidationError(f"invoice selector clave {clave!r} is not an AEAT clave de operacion")
-        return self
 
 
 # The five invoice-family providers share one selector grammar and differ only

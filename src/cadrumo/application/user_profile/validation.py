@@ -567,7 +567,7 @@ class ProfileValidationService:
 
 _PROFILE_SCHEMA_VALIDATION_MESSAGE: Final[str] = "profile facts failed schema validation"
 
-_REPORTED_ISSUE_LIMIT: Final[int] = 3
+_ISSUE_MESSAGE_LIMIT: Final[int] = 3
 """How many refused facts the message names before it summarises the rest.
 
 The operator needs the first few named to act; an unbounded list on a badly
@@ -643,8 +643,8 @@ def _blocking_profile_issues(
 
 def _blocking_profile_detail(blocking: tuple[ProfileValidationIssue, ...]) -> str:
     """Render the bounded operator detail carried by a schema refusal."""
-    named = "; ".join(issue.message for issue in blocking[:_REPORTED_ISSUE_LIMIT])
-    remaining = len(blocking) - _REPORTED_ISSUE_LIMIT
+    named = "; ".join(issue.message for issue in blocking[:_ISSUE_MESSAGE_LIMIT])
+    remaining = len(blocking) - _ISSUE_MESSAGE_LIMIT
     return f"{named}; and {remaining} more" if remaining > 0 else named
 
 

@@ -29,7 +29,6 @@ from datetime import date
 from decimal import Decimal
 from typing import Final
 
-from .binding_selector_utils import M347_OPERATION_CLAVES
 from .errors import RegistryValidationError
 from .facts.resolution import ResolvedScalarFact, ScalarFactQuery, required_mapping_entry, unique_mapping_tokens
 from .facts.string_mapping import (
@@ -61,6 +60,16 @@ _M347_THRESHOLD_BUCKETS_FACT: Final = StringMappingFact(
         value_whitespace=MappingValueWhitespace.STRIP,
     ),
 )
+_M347_OPERATION_CLAVES_SUBJECT: Final = "M347 and M349 counterpart operation catalogue"
+_COUNTERPART_OPERATION_FACT: Final = StringMappingFact(
+    fact_id="m347-m349-counterpart-operation-catalogue",
+    date_axis=DateAxis.FILING_PERIOD,
+    policy=StringMappingPolicy(
+        subject=_M347_OPERATION_CLAVES_SUBJECT,
+        value_whitespace=MappingValueWhitespace.STRIP,
+    ),
+)
+_M347_OPERATION_CLAVES_KEY: Final = "modelo.347.operation_claves"
 _BUCKET_ORDER_KEY: Final = "bucket.order"
 _BUCKET_PREFIX: Final = "bucket."
 _BUCKET_FIELDS: Final = frozenset({"claves", "floor_fact", "declared_regardless_of_amount", "reading_unsettled"})
@@ -185,12 +194,22 @@ def resolve_m347_threshold_buckets(
     entries = _M347_THRESHOLD_BUCKETS_FACT.resolve_entries(selected, effective_date=effective_date)
     tokens = unique_mapping_tokens(entries, _BUCKET_ORDER_KEY, subject=_M347_THRESHOLD_BUCKETS_SUBJECT)
     _refuse_undeclared_bucket_entries(entries, frozenset(tokens))
-    buckets = tuple(_bucket(entries, token, effective_date=effective_date, authority=selected) for token in tokens)
+    vocabulary = frozenset(
+        unique_mapping_tokens(
+            _COUNTERPART_OPERATION_FACT.resolve_entries(selected, effective_date=effective_date),
+            _M347_OPERATION_CLAVES_KEY,
+            subject=_M347_OPERATION_CLAVES_SUBJECT,
+        )
+    )
+    buckets = tuple(
+        _bucket(entries, token, vocabulary=vocabulary, effective_date=effective_date, authority=selected)
+        for token in tokens
+    )
     assigned = [clave for bucket in buckets for clave in bucket.claves]
-    if len(assigned) != len(set(assigned)) or frozenset(assigned) != M347_OPERATION_CLAVES:
+    if len(assigned) != len(set(assigned)) or frozenset(assigned) != vocabulary:
         raise RegistryValidationError(
             f"{_M347_THRESHOLD_BUCKETS_SUBJECT} must assign every clave in "
-            f"{sorted(M347_OPERATION_CLAVES)} to exactly one bucket, got {sorted(assigned)}",
+            f"{sorted(vocabulary)} to exactly one bucket, got {sorted(assigned)}",
         )
     return M347ThresholdBuckets(buckets=buckets, effective_date=effective_date)
 
@@ -208,12 +227,13 @@ def _bucket(
     entries: Mapping[str, str],
     token: str,
     *,
+    vocabulary: frozenset[str],
     effective_date: date,
     authority: GovernedFactSource,
 ) -> M347ThresholdBucket:
     prefix = f"{_BUCKET_PREFIX}{token}."
     claves = frozenset(unique_mapping_tokens(entries, f"{prefix}claves", subject=_M347_THRESHOLD_BUCKETS_SUBJECT))
-    unknown = claves - M347_OPERATION_CLAVES
+    unknown = claves - vocabulary
     if unknown:
         raise RegistryValidationError(
             f"{_M347_THRESHOLD_BUCKETS_SUBJECT} bucket {token!r} names unknown claves {sorted(unknown)}",

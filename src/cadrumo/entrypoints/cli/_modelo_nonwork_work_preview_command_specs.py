@@ -46,7 +46,7 @@ MODELO_NONWORK_WORK_PREVIEW_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 multiple=False,
                 is_flag=False,
                 flag_value=None,
-                constraint=ParameterConstraint(minimum=1, maximum=365),
+                constraint=ParameterConstraint(minimum=1, maximum=366),
             ),
             OptionSpec(
                 name="gross_navigation_income",

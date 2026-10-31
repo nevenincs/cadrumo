@@ -326,7 +326,7 @@ class _NormalisedListRawRow:
 _UNREADABLE_ROW_ID = 0
 _UNREADABLE_CLASSIFICATION = "<unreadable>"
 _UNREADABLE_SCHEMA_VERSION = 1
-_UNREADABLE_INSTANT = datetime(1, 1, 1, tzinfo=UTC)
+_UNREADABLE_INSTANT = datetime.min.replace(tzinfo=UTC)
 
 
 def _normalised_list_raw_row(row: _SecureObjectListRawRow) -> tuple[_NormalisedListRawRow, tuple[str, ...]]:

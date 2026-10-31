@@ -24,6 +24,8 @@ from .reconciliation_list_operation import ModeloReconciliationListEntryProjecti
 from .verification_report_public_facts import ModeloVerificationRegistrySnapshotProjection
 
 _WORKBOOK_CELL_LIMIT = 250_000
+_WORKBOOK_ROW_LIMIT = 10_000
+_WORKBOOK_CELL_TEXT_LIMIT = 40_000
 
 
 class _ReconciliationWorkbook:
@@ -38,11 +40,11 @@ class _ReconciliationWorkbook:
     def table(
         self, tab: TabName, headers: Sequence[str], rows: Sequence[Sequence[str]], column_widths: Sequence[int]
     ) -> None:
-        if len(rows) > 10_000 or len(self.cells) + (len(rows) + 1) * len(headers) > _WORKBOOK_CELL_LIMIT:
+        if len(rows) > _WORKBOOK_ROW_LIMIT or len(self.cells) + (len(rows) + 1) * len(headers) > _WORKBOOK_CELL_LIMIT:
             raise ValueError("reconciliation exceeds workbook limits; select one work unit")
         for row_index, values in enumerate((tuple(self.label(header) for header in headers), *rows), 1):
             for column, value in enumerate(values, 1):
-                if len(value) > 40_000:
+                if len(value) > _WORKBOOK_CELL_TEXT_LIMIT:
                     raise ValueError("reconciliation text exceeds workbook cell limit")
                 self.cells.append(
                     SheetValueCell(

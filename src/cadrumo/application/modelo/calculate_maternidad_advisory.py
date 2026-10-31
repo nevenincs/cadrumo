@@ -12,7 +12,7 @@ from ..aggregation.source_mesh import CalculationSourceDiagnostic
 
 # Intra-package reuse of a sibling module's cap, permitted by the architecture
 # rule; only cross-package private reaches are barred, and that gate is separate.
-from .minimo_descendientes_advisory import MAX_NAMED_DESCENDANTS
+from .minimo_descendientes_advisory import MAX_DESCENDANTS_IN_MESSAGE
 from .work_profile import ModeloWorkProfile
 
 if TYPE_CHECKING:
@@ -145,13 +145,13 @@ def bounded_descendant_ids(ids: Sequence[str]) -> str:
     and a NON-blocking advisory becomes a hard validation error that stops the
     filing -- at exactly the moment it had something to say.
 
-    Shares :data:`MAX_NAMED_DESCENDANTS` with the sibling advisory module that
+    Shares :data:`MAX_DESCENDANTS_IN_MESSAGE` with the sibling advisory module that
     first hit this rather than restating the number, so the two bounds cannot
     drift apart. The rendering differs (bare ids here, fact paths there) but the
     judgement being made is one judgement.
     """
-    shown = ", ".join(ids[:MAX_NAMED_DESCENDANTS])
-    remainder = len(ids) - MAX_NAMED_DESCENDANTS
+    shown = ", ".join(ids[:MAX_DESCENDANTS_IN_MESSAGE])
+    remainder = len(ids) - MAX_DESCENDANTS_IN_MESSAGE
     return f"{shown} and {remainder} more" if remainder > 0 else shown
 
 

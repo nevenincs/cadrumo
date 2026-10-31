@@ -19,13 +19,14 @@ from decimal import Decimal
 from enum import StrEnum
 from typing import Final
 
+from ...core.filing_year import FILING_YEAR_MIN
 from .errors import UserProfileValidationError
 from .values import restore_profile_fact_value
 
 PLANTILLA_MEDIA_PATH: Final[str] = "irpf.plantilla_media"
 """The declared object field whose instances this module reads."""
 
-YEAR_MINIMUM: Final[int] = 2000
+YEAR_MINIMUM: Final[int] = FILING_YEAR_MIN
 YEAR_MAXIMUM: Final[int] = 2100
 _MAXIMUM_DECIMAL_PLACES: Final[int] = 2
 _SUBFIELDS: Final[tuple[str, ...]] = ("year", "average_workforce", "state")

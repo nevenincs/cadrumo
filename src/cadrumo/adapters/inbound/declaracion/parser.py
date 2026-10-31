@@ -763,7 +763,7 @@ def _target_hits(
     return _find_casilla_hits(pages, target, numeric_anchors=numeric_anchors)
 
 
-_LINE_Y_TOLERANCE: float = 3.0
+_LINE_Y_TOLERANCE_POINTS: float = 3.0
 """Maximum vertical distance (points) between words treated as one printed line."""
 
 
@@ -773,7 +773,7 @@ def _words_by_line(words: list[_PdfWord]) -> list[list[_PdfWord]]:
     for word in sorted(words, key=lambda w: (float(w["top"]), float(w["x0"]))):
         top = float(word["top"])
         for line_top, line in lines:
-            if abs(line_top - top) <= _LINE_Y_TOLERANCE:
+            if abs(line_top - top) <= _LINE_Y_TOLERANCE_POINTS:
                 line.append(word)
                 break
         else:

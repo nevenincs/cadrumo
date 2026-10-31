@@ -723,7 +723,7 @@ def filed_pull_cmd(
 
 
 #: Casillas named individually in the not-enrolled notice; the count carries the rest.
-_MAX_NOTICED_CASILLAS = 8
+_MAX_CASILLAS_IN_MESSAGE = 8
 
 
 def _skipped_casilla_notice(skipped: Sequence[FiledCasillaSkipRow]) -> Notice | None:
@@ -743,9 +743,9 @@ def _skipped_casilla_notice(skipped: Sequence[FiledCasillaSkipRow]) -> Notice | 
     """
     if not skipped:
         return None
-    affected = ", ".join(f"{row.casilla_id} ({row.label})" for row in skipped[:_MAX_NOTICED_CASILLAS])
-    if len(skipped) > _MAX_NOTICED_CASILLAS:
-        affected += f", and {len(skipped) - _MAX_NOTICED_CASILLAS} more"
+    affected = ", ".join(f"{row.casilla_id} ({row.label})" for row in skipped[:_MAX_CASILLAS_IN_MESSAGE])
+    if len(skipped) > _MAX_CASILLAS_IN_MESSAGE:
+        affected += f", and {len(skipped) - _MAX_CASILLAS_IN_MESSAGE} more"
     return Notice(
         severity=NoticeSeverity.INFO,
         code="live.filed.pull.casillas_not_enrolled",

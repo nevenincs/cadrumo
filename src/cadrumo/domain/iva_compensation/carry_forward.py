@@ -37,6 +37,10 @@ from .errors import (
     IvaCompensationYearRangeError,
 )
 
+_ANNUAL_SORT_RANK = 99
+_OTHER_PERIOD_SORT_RANK = 100
+"""Both sort after every month and quarter."""
+
 #: The provenances whose rows declare an opening carry-forward balance rather
 #: than generating credit in a filed period. Both members belong here: the
 #: retired ``status`` literal wrote one token for a seed AND a correction, so
@@ -558,8 +562,8 @@ def iva_compensation_period_sort_key(period: Period) -> tuple[int, str]:
     if period.kind is PeriodKind.MONTHLY:
         return (int(period.registry_token), period.registry_token)
     if period.standard_code is StandardPeriodCode.ANNUAL:
-        return (99, period.registry_token)
-    return (100, period.registry_token)
+        return (_ANNUAL_SORT_RANK, period.registry_token)
+    return (_OTHER_PERIOD_SORT_RANK, period.registry_token)
 
 
 def _expiry_review_state(

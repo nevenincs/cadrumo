@@ -506,7 +506,7 @@ def test_lease_and_replay_results_are_fail_closed() -> None:
     with pytest.raises(ValidationError):
         TypeAdapter(OperationReplayLimit).validate_python(0)
     with pytest.raises(ValidationError):
-        TypeAdapter(OperationReplayLimit).validate_python(1_001)
+        TypeAdapter(OperationReplayLimit).validate_python(1_025)
 
 
 def test_lease_observation_binds_target_state_and_deterministic_evidence() -> None:

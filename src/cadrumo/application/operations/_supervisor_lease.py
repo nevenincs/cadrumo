@@ -29,6 +29,9 @@ from .persistence.leases import (
 )
 from .persistence.replay import OperationReplayStatus
 
+_SHORTEST_WAKEUP_SECONDS = 0.001
+_LONGEST_WAKEUP_SECONDS = 30.0
+
 _log = get_logger(__name__)
 
 
@@ -74,7 +77,7 @@ class OperationSupervisorLeaseMixin:
 
     def _renewal_interval_seconds(self) -> float:
         """Bound scheduler wakeups without making scheduler time lease authority."""
-        return min(max(self._lease_duration.total_seconds() / 3, 0.001), 30.0)
+        return min(max(self._lease_duration.total_seconds() / 3, _SHORTEST_WAKEUP_SECONDS), _LONGEST_WAKEUP_SECONDS)
 
     async def _require_owned_lease(self, identity: OperationIdentity, now: datetime) -> OperationOwnerLease:
         """Return this supervisor's exact live lease under its local CAS guard."""

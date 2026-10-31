@@ -45,7 +45,7 @@ VERIFY_LATEST_DEFINITION_ID = "live.verify.latest"
 _LIST_PHASES = ("verify-list.read", "verify-list.result")
 _VIEW_PHASES = ("verify-view.read", "verify-view.result")
 _LATEST_PHASES = ("verify-latest.read", "verify-latest.result")
-_MAX_VERIFY_LIST_ROWS = 10_000
+_MAX_VERIFY_LIST_ROWS = 16_384
 _RESULT_DOCUMENT_MAX_BYTES = PROJECTION_DOCUMENT_MAX_BYTES - 4_096
 VerifyObservationPersistenceFactory = Callable[[str], VerifyObservationPersistencePort]
 

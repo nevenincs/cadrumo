@@ -53,10 +53,10 @@ class ProfileRecordEncryptedBlob(BaseModel):
     @classmethod
     def from_wire(cls, payload: bytes) -> ProfileRecordEncryptedBlob:
         """Parse the canonical wire representation without adapter imports."""
-        minimum = 12 + 16
-        if len(payload) < minimum:
+        minimum_bytes = 12 + 16
+        if len(payload) < minimum_bytes:
             raise ProfileRecordCryptoError(
-                f"AEAD payload too short: got {len(payload)} bytes, need at least {minimum}",
+                f"AEAD payload too short: got {len(payload)} bytes, need at least {minimum_bytes}",
             )
         return cls(nonce=payload[:12], ciphertext=payload[12:])
 

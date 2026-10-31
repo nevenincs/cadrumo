@@ -31,6 +31,8 @@ from ._app_ledger_command_spec_support import (
     _optional_text_option,
 )
 
+_LOW_CONFIDENCE_DEFAULT = 0.5
+
 LEDGER_MANAGEMENT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     CommandSpec(
         "app_ledger_inventory",
@@ -312,7 +314,7 @@ LEDGER_MANAGEMENT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 name="low_confidence_below",
                 declarations=("--low-confidence-below",),
                 value=ValueContract(DeferredTarget("builtins", "float")),
-                default=ParameterDefault.value(0.5),
+                default=ParameterDefault.value(_LOW_CONFIDENCE_DEFAULT),
                 help_key=TranslationKey("cli.ledger.llm_diagnostics.threshold_help"),
                 metavar=None,
                 is_flag=False,

@@ -22,8 +22,6 @@ if TYPE_CHECKING:
     from .schema import BindingDefinition, ModeloRevision
 
 __all__ = [
-    "M347_OPERATION_CLAVES",
-    "M349_OPERATION_CLAVES",
     "BindingExportDataType",
     "BindingExportSelector",
     "BindingFixedExportSelector",
@@ -754,35 +752,24 @@ def optional_uppercase_alpha_code(field_label: str) -> Callable[[type, str | Non
     return _validate
 
 
-M349_OPERATION_CLAVES: frozenset[str] = frozenset({"E", "M", "H", "A", "T", "S", "I", "R", "D", "C"})
-#: Modelo 347's OWN clave de operacion vocabulary (RD 1065/2007 arts. 31/33,
-#: RD 1619/2012 disposicion adicional cuarta), disjoint from M349's
-#: intracommunity clave set above -- the letter A means a different thing in
-#: each. Confirmed against every bundled M347 diseno de registro (2008-2009,
-#: 2010, 2011, 2025-y-siguientes): none declares an "H" or "I" clave.
-M347_OPERATION_CLAVES: frozenset[str] = frozenset({"A", "B", "C", "D", "E", "F", "G"})
-
-
 def intracommunity_clave_validator() -> Callable[[type, str | None], str | None]:
     """Build the shared ``intracommunity_clave`` field validator.
 
-    An invoice observation's clave is optional, must be uppercase, and must be
-    one of the closed AEAT clave de operación set.
+    An invoice observation's clave is optional and must be one uppercase letter.
     """
-    return operation_clave_validator(field_label="intracommunity_clave", claves=M349_OPERATION_CLAVES)
+    return operation_clave_validator(field_label="intracommunity_clave")
 
 
 def operation_clave_validator(
     *,
     field_label: str,
-    claves: frozenset[str],
 ) -> Callable[[type, str | None], str | None]:
-    """Build an optional, uppercase, closed-set clave-de-operacion field validator.
+    """Build an optional clave-de-operacion field validator for the letter's shape.
 
-    Generalises :func:`intracommunity_clave_validator` to any closed clave
-    vocabulary -- a modelo's clave letters mean nothing outside their own
-    modelo's set, so the closed set is a parameter, never a hand-listed
-    literal at the call site.
+    Which letters a modelo declares is registry data, which a record's own validator has
+    no pinned authority to read. The registry declares them in the counterpart operation
+    catalogue; the producers of a clave derive it from registry data or a closed enum, and
+    the registry test suite proves both agree.
     """
 
     def _validate(cls: type, value: str | None) -> str | None:
@@ -790,7 +777,7 @@ def operation_clave_validator(
             return None
         if value != value.upper():
             raise RegistryValidationError(f"{field_label} must be uppercase")
-        if value not in claves:
+        if len(value) != 1 or not value.isalpha():
             raise RegistryValidationError(f"{field_label} {value!r} is not an AEAT clave de operacion")
         return value
 
