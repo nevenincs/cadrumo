@@ -236,10 +236,15 @@ def _retargeted_page_corpus(apex: Path, language: str, *, subdirectory: str = ""
     ``subdirectory`` places the pages deeper inside the root, which is how the
     English full-scope root carries its API reference tree.
     """
+    if not _BUILT_HTML.is_dir():
+        pytest.fail(f"no built documentation HTML at {_BUILT_HTML}; run the docs build first.")
+    pages = scan_directory(_BUILT_HTML, pattern="*.html")[:_PAGES]
+    if len(pages) < _PAGES:
+        pytest.fail(f"need {_PAGES} built pages under {_BUILT_HTML} to assemble a site corpus.")
     root = apex / language
     destination = root / subdirectory if subdirectory else root
     destination.mkdir(parents=True, exist_ok=True)
-    for source in scan_directory(_BUILT_HTML, pattern="*.html")[:_PAGES]:
+    for source in pages:
         text = source.read_text(encoding=_UTF_8, errors="replace")
         retargeted, replaced = re.subn(r'(<html[^>]*?)\blang="[^"]*"', rf'\1lang="{language}"', text, count=1)
         assert replaced == 1, f"built page {source.name} carries no <html lang> attribute to retarget"
@@ -261,6 +266,22 @@ def _indexed_pages(apex: Path) -> dict[str, set[str]]:
         for value in payload.get("filters", {}).get("language", []):
             pages.setdefault(value, set()).add(payload["url"])
     return pages
+
+
+@pytest.mark.parametrize("built_pages", [None, 0, _PAGES - 1])
+def test_a_missing_or_incomplete_build_cannot_supply_the_language_index_corpus(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, built_pages: int | None
+) -> None:
+    """Report a missing build before an empty index can masquerade as a filter defect."""
+    built = tmp_path / "built"
+    monkeypatch.setattr(__name__ + "._BUILT_HTML", built)
+    if built_pages is not None:
+        built.mkdir()
+        for number in range(built_pages):
+            (built / f"{number}.html").write_text("not a complete corpus", encoding=_UTF_8)
+    with pytest.raises(pytest.fail.Exception, match=r"built documentation HTML|built pages"):
+        _retargeted_page_corpus(tmp_path / "site", "en")
+    assert not (tmp_path / "site").exists()
 
 
 def test_the_site_index_addresses_every_root_by_the_directory_it_is_served_from(tmp_path: Path) -> None:
