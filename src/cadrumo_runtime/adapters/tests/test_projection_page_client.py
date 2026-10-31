@@ -8,7 +8,6 @@ from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, datetime
 from functools import lru_cache
-from threading import Condition
 from types import SimpleNamespace
 from typing import NoReturn, cast, override
 from uuid import UUID, uuid4
@@ -56,7 +55,7 @@ from cadrumo_client.contracts.access_vocabulary import (
     OperationAccessPolicy,
     OperationAccessRequest,
 )
-from cadrumo_client.contracts.contracts import ChannelWake, ClientHello, Peer, RefusalCode, RefusalError, ServerHello
+from cadrumo_client.contracts.contracts import ClientHello, RefusalCode, RefusalError, ServerHello
 from cadrumo_client.contracts.operation_access import (
     OperationPage,
     OperationProjected,
@@ -77,6 +76,7 @@ from cadrumo_client.transport.framing import VerifiedConnection
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 from cadrumo_client.transport.frontend_profile_view_client import ProfileViewFrontend
+from cadrumo_client.transport.tests.memory_channel import MemoryChannel
 from cadrumo_runtime.adapters.connection_handshake import accept_connection_handshake
 from cadrumo_runtime.contracts.profile_worker import ProfileWorkerProjectionPage
 from cadrumo_runtime.contracts.worker_authorization import WorkerAuthorizationRequest, WorkerResponseScopeRequest
@@ -88,63 +88,6 @@ _SESSION_ID = UUID("b1270000-0000-4000-8000-000000000002")
 _OPERATION_ID = "a" * 64
 _DOCUMENT: dict[str, JsonValue] = {"message": "ñ" * (PROJECTION_PAGE_BYTES * 3 // 4), "changed": False}
 _NOW = datetime(2026, 9, 28, tzinfo=UTC)
-
-
-class MemoryChannel:
-    """Peer-identified byte channel with synchronized in-memory frames."""
-
-    def __init__(self) -> None:
-        self._condition = Condition()
-        self._data = bytearray()
-        self._closed = False
-        self._other: MemoryChannel | None = None
-        self.peer = Peer(os_owner_id="synthetic-owner", process_id=1)
-
-    def pair(self, other: MemoryChannel) -> None:
-        self._other = other
-        other._other = self
-
-    def read_exact(self, count: int, *, deadline: float) -> bytes:
-        with self._condition:
-            while len(self._data) < count:
-                if self._closed or (self._other is not None and self._other._closed):
-                    raise RefusalError(RefusalCode.CONNECTION_CLOSED)
-                remaining = deadline - time.monotonic()
-                if remaining <= 0:
-                    raise RefusalError(RefusalCode.TIMEOUT)
-                self._condition.wait(remaining)
-            result = bytes(self._data[:count])
-            del self._data[:count]
-            return result
-
-    def read_ready(self) -> bool:
-        with self._condition:
-            return bool(self._data) or self._closed or (self._other is not None and self._other._closed)
-
-    def wait_readable(self, *wakes: ChannelWake) -> bool:
-        while not self.read_ready():
-            if any(wake.is_set() for wake in wakes):
-                return False
-            time.sleep(0.01)
-        return True
-
-    def write_all(self, payload: bytes | bytearray, *, deadline: float) -> None:
-        other = self._other
-        if other is None or time.monotonic() >= deadline:
-            raise RefusalError(RefusalCode.TIMEOUT)
-        with other._condition:
-            if self._closed or other._closed:
-                raise RefusalError(RefusalCode.CONNECTION_CLOSED)
-            other._data.extend(payload)
-            other._condition.notify_all()
-
-    def close(self) -> None:
-        with self._condition:
-            self._closed = True
-            self._condition.notify_all()
-        if self._other is not None:
-            with self._other._condition:
-                self._other._condition.notify_all()
 
 
 def _result() -> OperationResultProjectionRequestV1:

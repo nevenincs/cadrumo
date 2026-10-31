@@ -29,9 +29,8 @@ from cadrumo_client.contracts.submission_payload import (
 )
 from cadrumo_client.transport.frame_io import read_document, read_secret, write_document
 from cadrumo_client.transport.framing import VerifiedConnection
+from cadrumo_client.transport.tests.memory_channel import MemoryChannel
 from cadrumo_runtime.adapters.connection_handshake import accept_connection_handshake
-
-from .test_projection_page_client import MemoryChannel
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 
