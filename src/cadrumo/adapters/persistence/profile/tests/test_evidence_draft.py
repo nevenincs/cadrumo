@@ -209,6 +209,17 @@ class _InvoiceExtraction:
             **invoice_draft_extraction_kwargs(bucket_id=_BUCKET_ID, authority=self._invoice_authority),
         )
 
+    def _confirm_received_from_acme(self, evidence_id: str, settings: Settings):
+        return confirm_invoice_draft_from_evidence(
+            counterparty_country="ES",
+            bucket_id=_BUCKET_ID,
+            kind=InvoiceKind.RECEIVED,
+            evidence_id=evidence_id,
+            counterparty_name="Acme Suministros SL",
+            settings=settings,
+            **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID, authority=self._invoice_authority),
+        )
+
 
 class TestExtractInvoiceDraftFromEvidence(_InvoiceExtraction):
     """Real-behaviour tests for the CLI-facing wiring layer.
@@ -462,15 +473,7 @@ class TestConfirmInvoiceDraftFromEvidence(_InvoiceExtraction):
         record = svc.add(bucket_id=_BUCKET_ID, source_path=pdf_path).record
         self._repo(secure_objects)
 
-        confirmation = confirm_invoice_draft_from_evidence(
-            counterparty_country="ES",
-            bucket_id=_BUCKET_ID,
-            kind=InvoiceKind.RECEIVED,
-            evidence_id=record.evidence_id,
-            counterparty_name="Acme Suministros SL",
-            settings=isolated_settings,
-            **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID, authority=self._invoice_authority),
-        )
+        confirmation = self._confirm_received_from_acme(record.evidence_id, isolated_settings)
 
         assert confirmation.created is True
         assert confirmation.invoice.counterparty_tax_id == _SUPPLIER_CIF
@@ -502,15 +505,7 @@ class TestConfirmInvoiceDraftFromEvidence(_InvoiceExtraction):
         pdf_path.write_bytes(text_pdf_bytes(_FULL_INVOICE_LINES))
         svc = _make_svc(isolated_settings, secure_objects)
         record = svc.add(bucket_id=_BUCKET_ID, source_path=pdf_path).record
-        confirmation = confirm_invoice_draft_from_evidence(
-            counterparty_country="ES",
-            bucket_id=_BUCKET_ID,
-            kind=InvoiceKind.RECEIVED,
-            evidence_id=record.evidence_id,
-            counterparty_name="Acme Suministros SL",
-            settings=isolated_settings,
-            **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID, authority=self._invoice_authority),
-        )
+        confirmation = self._confirm_received_from_acme(record.evidence_id, isolated_settings)
 
         with pytest.raises(PurchaseInvoiceEvidenceInputError) as excinfo:
             self._extract(evidence_id=confirmation.invoice.invoice_id, settings=isolated_settings)
@@ -531,26 +526,10 @@ class TestConfirmInvoiceDraftFromEvidence(_InvoiceExtraction):
         record = svc.add(bucket_id=_BUCKET_ID, source_path=pdf_path).record
         self._repo(secure_objects)
 
-        first = confirm_invoice_draft_from_evidence(
-            counterparty_country="ES",
-            bucket_id=_BUCKET_ID,
-            kind=InvoiceKind.RECEIVED,
-            evidence_id=record.evidence_id,
-            counterparty_name="Acme Suministros SL",
-            settings=isolated_settings,
-            **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID, authority=self._invoice_authority),
-        )
+        first = self._confirm_received_from_acme(record.evidence_id, isolated_settings)
         assert first.created is True
 
-        second = confirm_invoice_draft_from_evidence(
-            counterparty_country="ES",
-            bucket_id=_BUCKET_ID,
-            kind=InvoiceKind.RECEIVED,
-            evidence_id=record.evidence_id,
-            counterparty_name="Acme Suministros SL",
-            settings=isolated_settings,
-            **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID, authority=self._invoice_authority),
-        )
+        second = self._confirm_received_from_acme(record.evidence_id, isolated_settings)
 
         assert second.created is False
         assert second.invoice.invoice_id == first.invoice.invoice_id
@@ -738,15 +717,7 @@ class TestConfirmInvoiceDraftFromEvidence(_InvoiceExtraction):
         assert record.attachment_id is not None
         self._repo(secure_objects)
 
-        confirmation = confirm_invoice_draft_from_evidence(
-            counterparty_country="ES",
-            bucket_id=_BUCKET_ID,
-            kind=InvoiceKind.RECEIVED,
-            evidence_id=record.evidence_id,
-            counterparty_name="Acme Suministros SL",
-            settings=isolated_settings,
-            **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID, authority=self._invoice_authority),
-        )
+        confirmation = self._confirm_received_from_acme(record.evidence_id, isolated_settings)
 
         store = AttachmentStore(objects=secure_objects)
         reloaded_attachment = store.load_manifest(record.attachment_id)
@@ -797,26 +768,10 @@ class TestConfirmInvoiceDraftFromEvidence(_InvoiceExtraction):
         assert record.attachment_id is not None
         self._repo(secure_objects)
 
-        first = confirm_invoice_draft_from_evidence(
-            counterparty_country="ES",
-            bucket_id=_BUCKET_ID,
-            kind=InvoiceKind.RECEIVED,
-            evidence_id=record.evidence_id,
-            counterparty_name="Acme Suministros SL",
-            settings=isolated_settings,
-            **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID, authority=self._invoice_authority),
-        )
+        first = self._confirm_received_from_acme(record.evidence_id, isolated_settings)
         assert first.created is True
 
-        second = confirm_invoice_draft_from_evidence(
-            counterparty_country="ES",
-            bucket_id=_BUCKET_ID,
-            kind=InvoiceKind.RECEIVED,
-            evidence_id=record.evidence_id,
-            counterparty_name="Acme Suministros SL",
-            settings=isolated_settings,
-            **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID, authority=self._invoice_authority),
-        )
+        second = self._confirm_received_from_acme(record.evidence_id, isolated_settings)
         assert second.created is False
         assert second.invoice.invoice_id == first.invoice.invoice_id
 
