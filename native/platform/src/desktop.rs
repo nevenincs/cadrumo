@@ -162,16 +162,18 @@ pub fn missing_webview_interface(
 }
 
 /// Turns off the browser accelerator keys (reload, print, find, zoom,
-/// developer tools) and the default context menus of the webview behind
-/// `controller`, then reads both settings back.
+/// developer tools), the default context menus, and the form history and
+/// password saving of the webview behind `controller`, then reads each setting
+/// back. Form history would keep what a person types in plain text in the
+/// webview's data directory, outside the profile's encrypted custody.
 ///
-/// A runtime without `ICoreWebView2Settings3` is refused with
+/// A runtime without `ICoreWebView2Settings4` is refused with
 /// [`std::io::ErrorKind::Unsupported`] before any setting changes.
 #[cfg(feature = "webview2")]
 pub fn disable_browser_features(
     controller: &webview2_com::Microsoft::Web::WebView2::Win32::ICoreWebView2Controller,
 ) -> std::io::Result<()> {
-    use webview2_com::Microsoft::Web::WebView2::Win32::ICoreWebView2Settings3;
+    use webview2_com::Microsoft::Web::WebView2::Win32::ICoreWebView2Settings4;
     use windows_core::{BOOL, Interface};
     let failed = std::io::Error::other;
     // SAFETY: `controller` is a live COM reference the caller holds for the
@@ -183,21 +185,33 @@ pub fn disable_browser_features(
             .and_then(|webview| webview.Settings())
             .map_err(failed)?;
         let keys = settings
-            .cast::<ICoreWebView2Settings3>()
+            .cast::<ICoreWebView2Settings4>()
             .map_err(|e| std::io::Error::new(std::io::ErrorKind::Unsupported, e))?;
         settings
             .SetAreDefaultContextMenusEnabled(false)
             .map_err(failed)?;
         keys.SetAreBrowserAcceleratorKeysEnabled(false)
             .map_err(failed)?;
+        keys.SetIsGeneralAutofillEnabled(false).map_err(failed)?;
+        keys.SetIsPasswordAutosaveEnabled(false).map_err(failed)?;
         let mut menus_enabled = BOOL(1);
         let mut keys_enabled = BOOL(1);
+        let mut autofill_enabled = BOOL(1);
+        let mut autosave_enabled = BOOL(1);
         settings
             .AreDefaultContextMenusEnabled(&mut menus_enabled)
             .map_err(failed)?;
         keys.AreBrowserAcceleratorKeysEnabled(&mut keys_enabled)
             .map_err(failed)?;
-        if menus_enabled.as_bool() || keys_enabled.as_bool() {
+        keys.IsGeneralAutofillEnabled(&mut autofill_enabled)
+            .map_err(failed)?;
+        keys.IsPasswordAutosaveEnabled(&mut autosave_enabled)
+            .map_err(failed)?;
+        if menus_enabled.as_bool()
+            || keys_enabled.as_bool()
+            || autofill_enabled.as_bool()
+            || autosave_enabled.as_bool()
+        {
             return Err(std::io::Error::other(
                 "WebView2 kept a browser feature enabled",
             ));

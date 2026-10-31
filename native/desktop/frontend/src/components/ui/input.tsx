@@ -28,12 +28,14 @@ function Input({
   className,
   controlSize,
   type = "text",
+  autoComplete = "off",
   ...props
 }: React.ComponentProps<"input"> & VariantProps<typeof inputVariants>) {
   return (
     <input
       data-slot="input"
       type={type}
+      autoComplete={autoComplete}
       className={cn(inputVariants({ controlSize }), className)}
       {...props}
     />
