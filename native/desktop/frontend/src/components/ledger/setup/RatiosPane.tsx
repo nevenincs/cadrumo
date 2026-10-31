@@ -1,8 +1,8 @@
 import { useState } from "react";
+import { PercentEditor } from "@/components/editors/PercentEditor";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
-import { Input } from "@/components/ui/input";
 import {
   Tooltip,
   TooltipContent,
@@ -11,8 +11,7 @@ import {
 import { listed } from "@/shell/compose";
 import {
   compareDecimal,
-  parsePercent,
-  percentOf,
+  parseFractionPercent,
 } from "../../../shell/ledgerGrammar";
 import type { OutputLanguage } from "../../../shell/ledger";
 import type {
@@ -22,7 +21,7 @@ import type {
 } from "../../../shell/ledgerSetup";
 import { useStrings } from "../../../shell/strings";
 import { WriteHold, type Landing } from "../WritePause";
-import { formatPercent } from "../../../shared/numbers";
+import { formatPercent, heldDecimal } from "../../../shared/numbers";
 import { PeriodSelector } from "../PeriodSelector";
 import {
   CallLine,
@@ -98,12 +97,12 @@ export function RatiosPane({
   useSetupDraft(
     Object.entries(editing).some(([category, text]) => {
       const set = overrides.get(category);
-      return text !== (set ? (percentOf(set) ?? "") : "");
+      return text !== (set ? heldDecimal(set) : "");
     }),
   );
 
   const save = async (category: string) => {
-    const parsed = parsePercent(editing[category] ?? "");
+    const parsed = parseFractionPercent(editing[category] ?? "");
     if (parsed.kind !== "value") {
       setRefused({
         ...refused,
@@ -184,21 +183,18 @@ export function RatiosPane({
           return (
             <span className="flex flex-col items-end gap-1">
               <span className="flex items-center gap-1">
-                <Input
+                <PercentEditor
+                  unit="fraction"
                   controlSize="sm"
-                  className="w-20 text-right tabular-nums"
+                  className="w-24"
                   value={editing[row.category]}
                   autoFocus
-                  inputMode="decimal"
                   aria-label={t("desktop.ledger.ratios.input", {
                     category: name,
                   })}
-                  aria-invalid={refused[row.category] ? true : undefined}
-                  onChange={(event) =>
-                    setEditing({
-                      ...editing,
-                      [row.category]: event.target.value,
-                    })
+                  invalid={Boolean(refused[row.category])}
+                  onChange={(next) =>
+                    setEditing({ ...editing, [row.category]: next })
                   }
                   onKeyDown={(event) => {
                     if (event.key === "Enter") void save(row.category);
@@ -209,7 +205,6 @@ export function RatiosPane({
                     }
                   }}
                 />
-                <span className="text-muted-foreground">%</span>
               </span>
               {refused[row.category] && (
                 <span role="alert" className="text-xs text-destructive">
@@ -266,7 +261,7 @@ export function RatiosPane({
                   onClick={() =>
                     setEditing({
                       ...editing,
-                      [row.category]: set ? (percentOf(set) ?? "") : "",
+                      [row.category]: set ? heldDecimal(set) : "",
                     })
                   }
                 >

@@ -1,4 +1,8 @@
 import { useState } from "react";
+import { MoneyEditor } from "@/components/editors/MoneyEditor";
+import { PercentEditor } from "@/components/editors/PercentEditor";
+import { TextEditor } from "@/components/editors/TextEditor";
+import { YearEditor } from "@/components/editors/YearEditor";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { facts } from "@/shell/compose";
@@ -6,6 +10,7 @@ import {
   parseAmount,
   TAX_AMOUNT_RULE,
   parseDecimal,
+  parseYear,
 } from "../../../shell/ledgerGrammar";
 import type {
   CapitalGood,
@@ -23,12 +28,12 @@ import {
   readLanding,
   rankDecimal,
   SetupTable,
-  TextField,
   useSetupDraft,
   useSetupRead,
   useSetupWrite,
   type Column,
 } from "./SetupParts";
+import { EditorField } from "./EditorField";
 import type { SetupProps } from "./setupProps";
 import { parsePoints, setupCall, wholeYear } from "./setupModel";
 import { grammarText, tokenText } from "./setupWords";
@@ -200,6 +205,11 @@ export function CapitalGoodsPane({ port, reader, locale }: SetupProps) {
 
   const amountError = (parsed: ReturnType<typeof parseAmount>) =>
     parsed.kind === "refused" ? grammarText(t, parsed.refusal) : null;
+  const yearError = (typed: string, read: number | null) => {
+    if (!typed.trim() || read !== null) return null;
+    const refused = parseYear(typed);
+    return refused.kind === "refused" ? grammarText(t, refused.refusal) : null;
+  };
   return (
     <Panel
       title={t("desktop.ledger.capital.title")}
@@ -244,19 +254,31 @@ export function CapitalGoodsPane({ port, reader, locale }: SetupProps) {
           }}
         >
           <FormGrid>
-            <TextField
-              label={t("desktop.ledger.capital.identifier")}
-              value={identifier}
-              onValue={setIdentifier}
-              required
-              autoFocus
-            />
-            <TextField
-              label={t("desktop.ledger.capital.description")}
-              value={description}
-              onValue={setDescription}
-              required
-            />
+            <EditorField label={t("desktop.ledger.capital.identifier")}>
+              {(control) => (
+                <TextEditor
+                  id={control.id}
+                  value={identifier}
+                  onChange={setIdentifier}
+                  invalid={control.invalid}
+                  describedBy={control.describedBy}
+                  required
+                  autoFocus
+                />
+              )}
+            </EditorField>
+            <EditorField label={t("desktop.ledger.capital.description")}>
+              {(control) => (
+                <TextEditor
+                  id={control.id}
+                  value={description}
+                  onChange={setDescription}
+                  invalid={control.invalid}
+                  describedBy={control.describedBy}
+                  required
+                />
+              )}
+            </EditorField>
             <ChoiceField
               label={t("desktop.ledger.capital.kind_label")}
               value={kind}
@@ -267,45 +289,68 @@ export function CapitalGoodsPane({ port, reader, locale }: SetupProps) {
                 label: tokenText(t, "capital.kind", value),
               }))}
             />
-            <TextField
+            <EditorField
               label={t("desktop.ledger.capital.year")}
-              value={year}
-              onValue={setYear}
-              inputMode="numeric"
-              hint={t("desktop.ledger.form.year_hint")}
-              error={
-                year.trim() && acquired === null
-                  ? t("desktop.ledger.form.year_hint")
-                  : null
-              }
-              required
-            />
-            <TextField
+              error={yearError(year, acquired)}
+            >
+              {(control) => (
+                <YearEditor
+                  id={control.id}
+                  value={year}
+                  onChange={setYear}
+                  invalid={control.invalid}
+                  describedBy={control.describedBy}
+                  required
+                />
+              )}
+            </EditorField>
+            <EditorField
               label={t("desktop.ledger.capital.movement")}
-              value={movement}
-              onValue={setMovement}
-              mono
               hint={t("desktop.ledger.capital.movement_hint")}
-              required
-            />
-            <TextField
+            >
+              {(control) => (
+                <TextEditor
+                  id={control.id}
+                  value={movement}
+                  onChange={setMovement}
+                  invalid={control.invalid}
+                  describedBy={control.describedBy}
+                  mono
+                  required
+                />
+              )}
+            </EditorField>
+            <EditorField
               label={t("desktop.ledger.capital.cuota")}
-              value={cuota}
-              onValue={setCuota}
-              inputMode="decimal"
-              hint={t("desktop.ledger.form.amount_hint")}
               error={amountError(cuotaParsed)}
-              required
-            />
-            <TextField
+            >
+              {(control) => (
+                <MoneyEditor
+                  id={control.id}
+                  value={cuota}
+                  onChange={setCuota}
+                  invalid={control.invalid}
+                  describedBy={control.describedBy}
+                  required
+                />
+              )}
+            </EditorField>
+            <EditorField
               label={t("desktop.ledger.capital.prorrata")}
-              value={pct}
-              onValue={setPct}
-              inputMode="decimal"
-              hint={t("desktop.ledger.form.points_hint")}
               error={amountError(pctParsed)}
-              required
-            />
+            >
+              {(control) => (
+                <PercentEditor
+                  id={control.id}
+                  unit="points"
+                  value={pct}
+                  onChange={setPct}
+                  invalid={control.invalid}
+                  describedBy={control.describedBy}
+                  required
+                />
+              )}
+            </EditorField>
             <ChoiceField
               label={t("desktop.ledger.capital.art108")}
               value={art108}
@@ -316,13 +361,21 @@ export function CapitalGoodsPane({ port, reader, locale }: SetupProps) {
                 { value: "no", label: t("desktop.ledger.form.no") },
               ]}
             />
-            <TextField
+            <EditorField
               label={t("desktop.ledger.capital.disposal_year")}
-              value={disposalYear}
-              onValue={setDisposalYear}
-              inputMode="numeric"
               hint={t("desktop.ledger.capital.disposal_hint")}
-            />
+              error={yearError(disposalYear, disposed)}
+            >
+              {(control) => (
+                <YearEditor
+                  id={control.id}
+                  value={disposalYear}
+                  onChange={setDisposalYear}
+                  invalid={control.invalid}
+                  describedBy={control.describedBy}
+                />
+              )}
+            </EditorField>
             <ChoiceField
               label={t("desktop.ledger.capital.disposal_regime")}
               value={disposalRegime}

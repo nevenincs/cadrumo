@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { MoneyEditor } from "@/components/editors/MoneyEditor";
+import { PercentEditor } from "@/components/editors/PercentEditor";
 import { TextEditor } from "@/components/editors/TextEditor";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -26,7 +28,6 @@ import {
   readLanding,
   rankDecimal,
   SetupTable,
-  TextField,
   useSetupDraft,
   useSetupRead,
   useSetupWrite,
@@ -396,16 +397,23 @@ export function ProrrataPane({
 
   const electionFields = (
     <>
-      <TextField
+      <EditorField
         label={t("desktop.ledger.prorrata.percentage")}
-        value={percentage}
-        onValue={setPercentage}
-        inputMode="decimal"
-        hint={t("desktop.ledger.form.points_hint")}
         error={refusedText(points)}
-        required
-        autoFocus
-      />
+      >
+        {(control) => (
+          <PercentEditor
+            id={control.id}
+            unit="points"
+            value={percentage}
+            onChange={setPercentage}
+            invalid={control.invalid}
+            describedBy={control.describedBy}
+            required
+            autoFocus
+          />
+        )}
+      </EditorField>
       <ChoiceField
         label={t("desktop.ledger.prorrata.provenance_label")}
         value={provenance}
@@ -596,24 +604,36 @@ export function ProrrataPane({
             )}
             {action === "settle_sector" && (
               <>
-                <TextField
+                <EditorField
                   label={t("desktop.ledger.prorrata.con_derecho")}
-                  value={con}
-                  onValue={setCon}
-                  inputMode="decimal"
-                  hint={t("desktop.ledger.form.amount_hint")}
                   error={refusedText(conVolume)}
-                  required
-                />
-                <TextField
+                >
+                  {(control) => (
+                    <MoneyEditor
+                      id={control.id}
+                      value={con}
+                      onChange={setCon}
+                      invalid={control.invalid}
+                      describedBy={control.describedBy}
+                      required
+                    />
+                  )}
+                </EditorField>
+                <EditorField
                   label={t("desktop.ledger.prorrata.sin_derecho")}
-                  value={sin}
-                  onValue={setSin}
-                  inputMode="decimal"
-                  hint={t("desktop.ledger.form.amount_hint")}
                   error={refusedText(sinVolume)}
-                  required
-                />
+                >
+                  {(control) => (
+                    <MoneyEditor
+                      id={control.id}
+                      value={sin}
+                      onChange={setSin}
+                      invalid={control.invalid}
+                      describedBy={control.describedBy}
+                      required
+                    />
+                  )}
+                </EditorField>
               </>
             )}
           </FormGrid>

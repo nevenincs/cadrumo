@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { DateEditor } from "@/components/editors/DateEditor";
+import { PercentEditor } from "@/components/editors/PercentEditor";
 import { Button } from "@/components/ui/button";
-import { parseIsoDate, parsePercent } from "../../../shell/ledgerGrammar";
+import { parseFractionPercent, parseIsoDate } from "../../../shell/ledgerGrammar";
 import type { LedgerLlmDiagnosticsResult } from "../../../shell/ledgerSetup";
 import { useStrings } from "../../../shell/strings";
 import {
@@ -15,7 +16,6 @@ import {
   Panel,
   rankDecimal,
   SetupTable,
-  TextField,
 } from "./SetupParts";
 import { EditorField } from "./EditorField";
 import type { SetupProps } from "./setupProps";
@@ -41,7 +41,7 @@ export function DiagnosticsPane({ port, locale }: SetupProps) {
   const [reading, setReading] = useState(false);
   const from = parseIsoDate(since);
   const to = parseIsoDate(until);
-  const low = parsePercent(threshold);
+  const low = parseFractionPercent(threshold);
   const fieldError = (parsed: ReturnType<typeof parseIsoDate>) =>
     parsed.kind === "refused" ? grammarText(t, parsed.refusal) : null;
   const ready =
@@ -98,15 +98,22 @@ export function DiagnosticsPane({ port, locale }: SetupProps) {
             />
           )}
         </EditorField>
-        <TextField
+        <EditorField
           label={t("desktop.ledger.diagnostics.threshold")}
-          value={threshold}
-          onValue={setThreshold}
-          inputMode="decimal"
-          hint={t("desktop.ledger.form.percent_hint")}
           error={low.kind === "refused" ? grammarText(t, low.refusal) : null}
-          required
-        />
+        >
+          {(control) => (
+            <PercentEditor
+              id={control.id}
+              unit="fraction"
+              value={threshold}
+              onChange={setThreshold}
+              invalid={control.invalid}
+              describedBy={control.describedBy}
+              required
+            />
+          )}
+        </EditorField>
       </FormGrid>
       <div>
         <Button

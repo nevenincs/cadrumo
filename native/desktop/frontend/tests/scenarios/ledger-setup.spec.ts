@@ -225,8 +225,8 @@ test("ratios are set and unset for the year chosen", async ({
   const input = target.getByLabel(
     label("desktop.ledger.ratios.input", { category }),
   );
-  // A fraction is refused: 0.4 could be 40% or 0.4%.
-  await input.fill("0.4");
+  // Typing is in points, so more than a hundred is refused.
+  await input.fill("101");
   await input.press("Enter");
   await expect(target.getByRole("alert").first()).toBeVisible();
   await input.fill("40");

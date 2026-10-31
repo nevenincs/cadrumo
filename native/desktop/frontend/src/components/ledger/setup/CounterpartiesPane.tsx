@@ -1,5 +1,7 @@
 import { useState } from "react";
+import { CountryEditor } from "@/components/editors/CountryEditor";
 import { NotesEditor } from "@/components/editors/NotesEditor";
+import { TaxIdEditor } from "@/components/editors/TaxIdEditor";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
@@ -14,7 +16,6 @@ import {
   FormGrid,
   Panel,
   readLanding,
-  TextField,
   useSetupDraft,
   useSetupWrite,
 } from "./SetupParts";
@@ -152,14 +153,21 @@ export function CounterpartiesPane({ port, locale }: SetupProps) {
           if (taxId.trim()) void view();
         }}
       >
-        <TextField
+        <EditorField
           label={t("desktop.ledger.counterparty.tax_id")}
-          value={taxId}
-          onValue={setTaxId}
-          mono
           className="w-64"
-          maxLength={256}
-        />
+        >
+          {(control) => (
+            <TaxIdEditor
+              id={control.id}
+              value={taxId}
+              onChange={setTaxId}
+              invalid={control.invalid}
+              describedBy={control.describedBy}
+              maxLength={256}
+            />
+          )}
+        </EditorField>
         <Button
           type="submit"
           size="sm"
@@ -213,15 +221,22 @@ export function CounterpartiesPane({ port, locale }: SetupProps) {
             )}
           </Alert>
           <FormGrid>
-            <TextField
+            <EditorField
               label={t("desktop.ledger.counterparty.country")}
-              value={country}
-              onValue={setCountry}
-              hint={t("desktop.ledger.form.two_letters")}
               error={countryWrong ? t("desktop.ledger.form.two_letters") : null}
-              maxLength={2}
-              required
-            />
+            >
+              {(control) => (
+                <CountryEditor
+                  id={control.id}
+                  value={country}
+                  onChange={setCountry}
+                  invalid={control.invalid}
+                  describedBy={control.describedBy}
+                  maxLength={2}
+                  required
+                />
+              )}
+            </EditorField>
             <ChoiceField
               label={t("desktop.ledger.counterparty.scope_label")}
               value={scope}
@@ -232,14 +247,21 @@ export function CounterpartiesPane({ port, locale }: SetupProps) {
                 label: tokenText(t, "counterparty.scope", value),
               }))}
             />
-            <TextField
+            <EditorField
               label={t("desktop.ledger.counterparty.state")}
-              value={state}
-              onValue={setState}
-              hint={t("desktop.ledger.form.two_letters")}
               error={stateWrong ? t("desktop.ledger.form.two_letters") : null}
-              maxLength={2}
-            />
+            >
+              {(control) => (
+                <CountryEditor
+                  id={control.id}
+                  value={state}
+                  onChange={setState}
+                  invalid={control.invalid}
+                  describedBy={control.describedBy}
+                  maxLength={2}
+                />
+              )}
+            </EditorField>
             <EditorField label={t("desktop.ledger.counterparty.note")}>
               {(control) => (
                 <NotesEditor

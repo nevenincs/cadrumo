@@ -1,5 +1,9 @@
 import { useState } from "react";
+import { BicEditor } from "@/components/editors/BicEditor";
+import { CountryEditor } from "@/components/editors/CountryEditor";
+import { CurrencyEditor } from "@/components/editors/CurrencyEditor";
 import { DateEditor } from "@/components/editors/DateEditor";
+import { IbanEditor } from "@/components/editors/IbanEditor";
 import { TextEditor } from "@/components/editors/TextEditor";
 import { Button } from "@/components/ui/button";
 import {
@@ -23,6 +27,7 @@ import type {
 import { useStrings } from "../../../shell/strings";
 import { useWritePause, WriteHold, type Landing } from "../WritePause";
 import { formatDay } from "../../../shared/dateFormats";
+import { ibanProblem, ibanText } from "../../../shared/iban";
 import {
   CallLine,
   ChoiceField,
@@ -42,8 +47,6 @@ import type { SetupProps } from "./setupProps";
 import {
   callFailure,
   callOutcome,
-  ibanProblem,
-  ibanText,
   setupCall,
   type SetupCall,
 } from "./setupModel";
@@ -510,30 +513,42 @@ export function AccountsPane({ port, reader, locale }: SetupProps) {
 
   const secretFields = (
     <>
-      <TextField
+      <EditorField
         label={t("desktop.ledger.accounts.iban")}
-        value={secrets.iban}
-        onValue={secret("iban")}
-        type="password"
-        mono
-        name="own-account-number"
         hint={t("desktop.ledger.accounts.iban_hint")}
         error={
           ibanWrong
             ? t(`desktop.ledger.accounts.iban_problem.${ibanWrong}`)
             : null
         }
-        required={form?.kind === "add"}
-        maxLength={64}
-      />
-      <TextField
-        label={t("desktop.ledger.accounts.swift_bic")}
-        value={secrets.swift_bic}
-        onValue={secret("swift_bic")}
-        type="password"
-        mono
-        maxLength={16}
-      />
+      >
+        {(control) => (
+          <IbanEditor
+            id={control.id}
+            name="own-account-number"
+            value={secrets.iban}
+            onChange={secret("iban")}
+            invalid={control.invalid}
+            describedBy={control.describedBy}
+            required={form?.kind === "add"}
+            maxLength={64}
+            secret
+          />
+        )}
+      </EditorField>
+      <EditorField label={t("desktop.ledger.accounts.swift_bic")}>
+        {(control) => (
+          <BicEditor
+            id={control.id}
+            value={secrets.swift_bic}
+            onChange={secret("swift_bic")}
+            invalid={control.invalid}
+            describedBy={control.describedBy}
+            maxLength={16}
+            secret
+          />
+        )}
+      </EditorField>
       <TextField
         label={t("desktop.ledger.accounts.bank_name")}
         value={secrets.bank_name}
@@ -556,14 +571,19 @@ export function AccountsPane({ port, reader, locale }: SetupProps) {
         type="password"
         maxLength={30}
       />
-      <TextField
-        label={t("desktop.ledger.accounts.bank_country")}
-        value={secrets.bank_country_code}
-        onValue={secret("bank_country_code")}
-        type="password"
-        hint={t("desktop.ledger.form.two_letters")}
-        maxLength={2}
-      />
+      <EditorField label={t("desktop.ledger.accounts.bank_country")}>
+        {(control) => (
+          <CountryEditor
+            id={control.id}
+            value={secrets.bank_country_code}
+            onChange={secret("bank_country_code")}
+            invalid={control.invalid}
+            describedBy={control.describedBy}
+            maxLength={2}
+            secret
+          />
+        )}
+      </EditorField>
     </>
   );
 
@@ -661,14 +681,19 @@ export function AccountsPane({ port, reader, locale }: SetupProps) {
                   label: t(`desktop.ledger.accounts.holding.${value}`),
                 }))}
               />
-              <TextField
-                label={t("desktop.ledger.accounts.currency")}
-                value={currency}
-                onValue={setCurrency}
-                hint={t("desktop.ledger.accounts.currency_hint")}
-                maxLength={3}
-                required
-              />
+              <EditorField label={t("desktop.ledger.accounts.currency")}>
+                {(control) => (
+                  <CurrencyEditor
+                    id={control.id}
+                    value={currency}
+                    onChange={setCurrency}
+                    invalid={control.invalid}
+                    describedBy={control.describedBy}
+                    maxLength={3}
+                    required
+                  />
+                )}
+              </EditorField>
               <EditorField
                 label={t("desktop.ledger.accounts.opened")}
                 error={dateError(openedOn)}
