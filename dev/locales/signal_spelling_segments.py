@@ -177,34 +177,38 @@ def legal_title_spelling_segments(
     value: str, default_locale: str, foreign: list[tuple[int, int, str, str, int]]
 ) -> None:
     """Legal title spelling segments."""
-    if default_locale != "es":
-        # A complete command is transport syntax. Extracting a Spanish word
-        # such as "modelo" first would split its path before command masking.
-        literal_ranges = tuple(
-            (match.start(), match.end())
-            for pattern in (TRANSLATION_LITERAL_RE, command_path_pattern())
-            for match in pattern.finditer(value)
-        )
-        for pattern in (
-            MODELO_FORM_RE,
-            TRANSLATION_LEGAL_TITLE_RE,
-            TRANSLATION_SPANISH_AUTHORITY_RE,
-            TRANSLATION_SPANISH_TAX_TERM_RE,
-            TRANSLATION_CLAVE_NAME_RE,
-        ):
-            for match in pattern.finditer(value):
-                if any(start <= match.start() and match.end() <= end for start, end in literal_ranges):
-                    continue
-                text = match.group(0)
-                foreign.append(
-                    (
-                        match.start(),
-                        match.end(),
-                        "es",
-                        text,
-                        filtered_translation_text(text)[1],
-                    )
+    # A complete command is transport syntax. Extracting a Spanish word
+    # such as "modelo" first would split its path before command masking.
+    literal_ranges = tuple(
+        (match.start(), match.end())
+        for pattern in (TRANSLATION_LITERAL_RE, command_path_pattern())
+        for match in pattern.finditer(value)
+    )
+    for pattern in (
+        MODELO_FORM_RE,
+        TRANSLATION_LEGAL_TITLE_RE,
+        TRANSLATION_SPANISH_AUTHORITY_RE,
+        TRANSLATION_SPANISH_TAX_TERM_RE,
+        TRANSLATION_CLAVE_NAME_RE,
+    ):
+        for match in pattern.finditer(value):
+            if any(start <= match.start() and match.end() <= end for start, end in literal_ranges):
+                continue
+            text = match.group(0)
+            # Both names identify a numbered return, but the English
+            # word "Form" is not the Spanish word "modelo".
+            language = "en" if pattern is MODELO_FORM_RE and text.split(maxsplit=1)[0].casefold() == "form" else "es"
+            if language == default_locale:
+                continue
+            foreign.append(
+                (
+                    match.start(),
+                    match.end(),
+                    language,
+                    text,
+                    filtered_translation_text(text)[1],
                 )
+            )
 
 
 def english_reference_spelling_segments(

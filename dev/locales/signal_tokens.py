@@ -4,8 +4,10 @@ from __future__ import annotations
 
 import re
 
+from cadrumo.application.review.filter import LedgerReviewFilterKey
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.i18n.render import extract_placeholders
+from cadrumo.core.period import accepted_filing_period_codes
 from cadrumo.domain.calculations.registry.censo_modelos import CensoModeloEventKind
 
 from .signal_command_paths import command_path_pattern
@@ -34,6 +36,20 @@ from .signal_syntax import (
 # The spelling of the surrounding explanation and each gloss stays visible.
 _OUTPUT_LANGUAGE_CHOICES_RE = re.compile(
     r"\(" + r"\s*,\s*".join(re.escape(language.value) for language in OutputLanguage) + r"\)"
+)
+# A context field labelled with its own interpolation name is runtime syntax,
+# not a translated word. Mismatched labels remain visible to spelling checks.
+_PARAMETER_ASSIGNMENT_RE = re.compile(
+    r"(?<!\w)(?P<name>[A-Za-z_][A-Za-z0-9_]*)\s*=\s*\{(?P<parameter>[A-Za-z_][A-Za-z0-9_]*)\}(?!\w)"
+)
+# A period filter is a typed CLI clause. Admit only the real filter key and
+# filing codes, so a misspelled key or invalid code is not hidden as syntax.
+_LEDGER_PERIOD_FILTER_RE = re.compile(
+    r"(?<![\w-])"
+    + re.escape(LedgerReviewFilterKey.PERIOD.value)
+    + r"=(?:"
+    + "|".join(re.escape(code) for code in sorted(accepted_filing_period_codes(), key=len, reverse=True))
+    + r")(?![\w-])"
 )
 # Area labels in the asset basis forms carry the SI unit, not a prose word.
 # Match only the complete, case-sensitive symbol; adjacent letters or another
@@ -72,6 +88,12 @@ def _visible_choice_glosses(match: re.Match[str]) -> str:
         start, end = match.span(name)
         text[start - match.start() : end - match.start()] = [" "] * (end - start)
     return "".join(text)
+
+
+def _visible_assignment_label(match: re.Match[str]) -> str:
+    """Keep a mismatched label visible after its placeholder is removed."""
+    name = match.group("name")
+    return " " if name == match.group("parameter") else f" {name} "
 
 
 def translation_tokens(value: str) -> tuple[frozenset[str], frozenset[str]]:
@@ -120,6 +142,7 @@ def filtered_translation_text(value: str) -> tuple[str, int]:
         (TRANSLATION_MYST_ROLE_RE, visible_role_label),
         (TRANSLATION_LITERAL_RE, " "),
         (TRANSLATION_BRACKET_REFERENCE_RE, " "),
+        (_PARAMETER_ASSIGNMENT_RE, _visible_assignment_label),
         (TRANSLATION_PLACEHOLDER_RE, " "),
         (_OUTPUT_LANGUAGE_CHOICES_RE, " "),
         (_CENSO_GLOSSED_CHOICES_RE, _visible_choice_glosses),
@@ -129,6 +152,7 @@ def filtered_translation_text(value: str) -> tuple[str, int]:
         (TRANSLATION_PATH_RE, " "),
         (command_path_pattern(), " "),
         (TRANSLATION_OPTION_RE, " "),
+        (_LEDGER_PERIOD_FILTER_RE, " "),
         (TRANSLATION_FORMULA_RE, " "),
         (_AREA_UNIT_RE, " "),
         (_NUMBERED_ARTICLE_REFERENCE_RE, " "),

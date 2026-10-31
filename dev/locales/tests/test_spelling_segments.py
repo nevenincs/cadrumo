@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 
 from ..signal_spelling_segments import locale_spelling_words, spanish_word_context, translation_spelling_segments
-from ..signal_tokens import filtered_translation_text
+from ..signal_tokens import filtered_translation_text, translation_words
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -79,6 +79,37 @@ def test_explicit_language_inside_link_controls_only_annotated_words() -> None:
 
 def test_english_legal_title_stays_english() -> None:
     assert words_by_language("Royal Decree 1/2026 guidance") == {"en": {"Royal", "Decree", "guidance"}}
+
+
+@pytest.mark.parametrize("locale", ["en", "es", "ca", "hu"])
+def test_numbered_form_label_follows_its_actual_language(locale: str) -> None:
+    result = words_by_language("Form 036 Modelo 100 misspellledd", locale)
+    assert "Form" in result["en"]
+    assert "Modelo" in result["es"]
+    assert "misspellledd" in result[locale]
+
+
+def test_numbered_form_label_respects_explicit_language_and_does_not_hide_typos() -> None:
+    explicit = words_by_language('<span lang="es">Form 036 errro</span> misspellledd', "en")
+    assert explicit == {"en": {"misspellledd"}, "es": {"Form", "errro"}}
+    typo = words_by_language("Fomr 036 misspellledd", "en")
+    assert typo == {"en": {"Fomr", "misspellledd"}}
+
+
+def test_context_assignment_requires_the_same_interpolation_name() -> None:
+    words, _ = filtered_translation_text("year={year}, period={period}; peroid={period} misspellledd")
+    assert "year" not in words
+    assert "period" not in words
+    assert "peroid" in words
+    assert "misspellledd" in words
+
+
+def test_ledger_period_filter_requires_the_real_key_and_valid_period() -> None:
+    words, _ = filtered_translation_text("period=1T; peroid=1T; period=9T; misspellledd")
+    tokens = translation_words(words)
+    assert tokens.count("period") == 1
+    assert "peroid" in tokens
+    assert "misspellledd" in tokens
 
 
 def test_html_source_filename_with_anchor_is_structural_but_standalone_html_is_checked() -> None:
