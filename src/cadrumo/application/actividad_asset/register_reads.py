@@ -360,7 +360,7 @@ def matches_current_schedule(
     if claim.disposal_revision_id is not None and claim.amount == Decimal("0"):
         return None
     recorded_under = next(item for item in context.history.revisions if item.revision_id == claim.asset_revision_id)
-    if not recorded_under.same_tax_facts(current):
+    if not recorded_under.same_charge_facts(current):
         return ActivityAssetClaimStaleReason.REVISION_CHANGED
     try:
         charge = context.forecast(
