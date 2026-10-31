@@ -1540,6 +1540,8 @@ desktop:
       handoff_gap_accrued: 'Modelo 100: {name} has no depreciation charge recorded
         from {start} to {end}. The {amount} EUR it accrued in that time is not in
         the amounts above.'
+      handoff_gap_box_unbound: 'Modelo 100: this edition has no box for the depreciation
+        of {name}, so nothing is declared for it from {start} to {end}.'
       handoff_gap_free: 'Modelo 100: {name} has no depreciation charge recorded from
         {start} to {end}. Its method leaves the amount to you, so none can be worked
         out.'
@@ -6542,6 +6544,21 @@ tui:
       form_options: Form options
       free_amount: Optional accelerated depreciation amount
       in_service_date: In-service date (YYYY-MM-DD), replaces the revision's date
+      errors:
+        amount_invalid: Write the amount in digits only, with a point for the decimals,
+          for example 1500.00.
+        asset_id_required: Write the asset identifier first.
+        choice_invalid: 'Choose one of these: {options}.'
+        date_invalid: Write the date as YYYY-MM-DD, for example 2025-06-30.
+        entry_unreadable: One of the values you wrote can't be read. Check the dates,
+          amounts and codes and try again.
+        forecast_first: Calculate a forecast before recording the depreciation charge.
+        json_invalid: '{field} can''t be read. Check the JSON and try again.'
+        quarter_invalid: Write the quarter as 1T, 2T, 3T or 4T, or leave it empty
+          to ask for the annual figures alone.
+        unexpected: The action could not be completed and nothing was changed. Try
+          again.
+        year_invalid: Write the year with four digits, for example 2025.
       inspect: Inspect
       list: List elements
       method: 'Amortisation method: linear, constant_percentage, sum_of_digits, approved_plan

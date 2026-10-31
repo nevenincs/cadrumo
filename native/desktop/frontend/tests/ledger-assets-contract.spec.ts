@@ -1160,14 +1160,14 @@ test("the filing handoff reads the seeded claims, and names the element it canno
       (sum, claim) => sum + cents(claim.amount.decimal),
       0n,
     );
-    expect(projection[key].claim_ids.sort()).toEqual(
+    expect(projection[key]!.claim_ids.sort()).toEqual(
       claims.map((claim) => claim.claim_id).sort(),
     );
-    expect(cents(projection[key].amount.decimal)).toBe(total);
-    expect(projection[key].amount.decimal).not.toBe("0.00");
+    expect(cents(projection[key]!.amount.decimal)).toBe(total);
+    expect(projection[key]!.amount.decimal).not.toBe("0.00");
   }
-  expect(projection.material_m100.target_casilla_id).toBe("0208");
-  expect(projection.intangible_m100.target_casilla_id).toBe("0227");
+  expect(projection.material_m100!.target_casilla_id).toBe("0208");
+  expect(projection.intangible_m100!.target_casilla_id).toBe("0227");
   // Every element of the year is behind casilla 02, and the one it cannot work out is named.
   const material130 = projection.material_m130!;
   expect(material130.target_casilla_id).toBe("02");
@@ -2795,8 +2795,8 @@ test("a handoff for a year alone states the Modelo 100 boxes and no Modelo 130 s
     material_m130: null,
     intangible_m130: null,
   });
-  expect(year.filing_handoff!.material_m100.target_casilla_id).toBe("0208");
-  expect(year.filing_handoff!.intangible_m100.target_casilla_id).toBe("0227");
+  expect(year.filing_handoff!.material_m100!.target_casilla_id).toBe("0208");
+  expect(year.filing_handoff!.intangible_m100!.target_casilla_id).toBe("0227");
   const quarter = handoffRequest(2025, "2T", "es");
   expect(quarter).toEqual({
     tax_year: 2025,
@@ -3706,9 +3706,9 @@ test("the handoff names each box in the language asked, tells the two Modelo 130
     ).filing_handoff!;
   const english = await read("en");
   const spanish = await read("es");
-  expect(english.material_m100.box_name).not.toBeNull();
-  expect(english.material_m100.box_name).not.toBe(
-    spanish.material_m100.box_name,
+  expect(english.material_m100!.box_name).not.toBeNull();
+  expect(english.material_m100!.box_name).not.toBe(
+    spanish.material_m100!.box_name,
   );
   const [material, intangible] = [
     english.material_m130!,

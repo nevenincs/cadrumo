@@ -1577,6 +1577,9 @@ desktop:
       handoff_gap_accrued: 'Model 100: {name} no té dotació registrada del {start}
         al {end}. Els {amount} EUR que es van meritar en aquest temps no són als imports
         de dalt.'
+      handoff_gap_box_unbound: 'Model 100: aquesta edició no té casella per a la dotació
+        de {name}, així que no es declara res per a aquest element del {start} al
+        {end}.'
       handoff_gap_free: 'Model 100: {name} no té dotació registrada del {start} al
         {end}. El seu mètode deixa l''import a les teves mans, així que no se''n pot
         calcular cap.'
@@ -6668,6 +6671,22 @@ tui:
       form_options: Opcions del formulari
       free_amount: Import de llibertat d’amortització (opcional)
       in_service_date: Data de posada en funcionament (AAAA-MM-DD), substitueix la
+      errors:
+        amount_invalid: Escriu l'import només amb xifres i amb punt per als decimals,
+          per exemple 1500.00.
+        asset_id_required: Escriu primer l'identificador de l'element.
+        choice_invalid: 'Tria una d''aquestes opcions: {options}.'
+        date_invalid: Escriu la data com AAAA-MM-DD, per exemple 2025-06-30.
+        entry_unreadable: No es pot llegir un dels valors que has escrit. Revisa les
+          dates, els imports i els codis i torna-ho a provar.
+        forecast_first: Calcula una previsió abans de registrar la dotació.
+        json_invalid: No es pot llegir el camp {field}. Revisa el JSON i torna-ho
+          a provar.
+        quarter_invalid: Escriu el trimestre com 1T, 2T, 3T o 4T, o deixa'l buit per
+          demanar només les xifres anuals.
+        unexpected: No s'ha pogut completar l'acció i no s'ha canviat res. Torna-ho
+          a provar.
+        year_invalid: Escriu l'any amb quatre xifres, per exemple 2025.
         de la revisió
       inspect: Inspeccionar
       list: Llista els elements

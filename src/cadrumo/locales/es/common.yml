@@ -1581,6 +1581,9 @@ desktop:
       handoff_gap_accrued: 'Modelo 100: {name} no tiene dotación registrada del {start}
         al {end}. Los {amount} EUR que se devengaron en ese tiempo no están en los
         importes de arriba.'
+      handoff_gap_box_unbound: 'Modelo 100: esta edición no tiene casilla para la
+        dotación de {name}, así que no se declara nada por ese elemento del {start}
+        al {end}.'
       handoff_gap_free: 'Modelo 100: {name} no tiene dotación registrada del {start}
         al {end}. Su método deja el importe en tus manos, así que no se puede calcular
         ninguno.'
@@ -6671,6 +6674,22 @@ tui:
       form_options: Opciones del formulario
       free_amount: Importe de libertad de amortización (opcional)
       in_service_date: Fecha de puesta en funcionamiento (AAAA-MM-DD), sustituye a
+      errors:
+        amount_invalid: Escribe el importe solo con cifras y con punto para los decimales,
+          por ejemplo 1500.00.
+        asset_id_required: Escribe primero el identificador del elemento.
+        choice_invalid: 'Elige una de estas opciones: {options}.'
+        date_invalid: Escribe la fecha como AAAA-MM-DD, por ejemplo 2025-06-30.
+        entry_unreadable: No se puede leer uno de los valores que has escrito. Revisa
+          las fechas, los importes y los códigos e inténtalo de nuevo.
+        forecast_first: Calcula una previsión antes de registrar la dotación.
+        json_invalid: No se puede leer el campo {field}. Revisa el JSON e inténtalo
+          de nuevo.
+        quarter_invalid: Escribe el trimestre como 1T, 2T, 3T o 4T, o déjalo vacío
+          para pedir solo las cifras anuales.
+        unexpected: No se pudo completar la acción y no se ha cambiado nada. Inténtalo
+          de nuevo.
+        year_invalid: Escribe el año con cuatro cifras, por ejemplo 2025.
         la de la revisión
       inspect: Inspeccionar
       list: Listar elementos

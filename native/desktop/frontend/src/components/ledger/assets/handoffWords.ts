@@ -19,6 +19,7 @@ const GAP_KEYS = {
   accrued: "desktop.ledger.assets.handoff_gap_accrued",
   free_method: "desktop.ledger.assets.handoff_gap_free",
   unavailable: "desktop.ledger.assets.handoff_gap_unavailable",
+  box_unbound: "desktop.ledger.assets.handoff_gap_box_unbound",
 } as const;
 
 /** The elements a Modelo 130 amount leaves out, by the reason, each worded by

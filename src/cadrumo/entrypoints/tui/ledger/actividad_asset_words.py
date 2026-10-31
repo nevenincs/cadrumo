@@ -26,10 +26,13 @@ from ....application.actividad_asset.activity_asset_read_models import (
     ActivityAssetTimelineEvent,
     activity_asset_label_key,
 )
+from ....application.actividad_asset.operations import M100ClaimGapProjection
+from ....application.actividad_asset.schedule_walk import M100GapKind
 from ....application.modelo.edit_value_grammar import ModeloEditRatioUnit
 from ....application.modelo.value_presentation import format_casilla_value
 from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import lookup_translation, output_language, tr
+from ....domain.renta.actividad_asset.schedule import last_day_covered
 
 #: The glyph a year's claim state is drawn with; the state's word stands beside it.
 _CLAIM_STATE_GLYPH: Final = {
@@ -76,6 +79,15 @@ _ASSET_LOCALE_KEYS: Final = {
 }
 
 
+#: What Modelo 100 leaves out of an element, by what can be said of the interval.
+_HANDOFF_GAP_LOCALE_KEYS: Final = {
+    M100GapKind.ACCRUED: "desktop.ledger.assets.handoff_gap_accrued",
+    M100GapKind.FREE_METHOD: "desktop.ledger.assets.handoff_gap_free",
+    M100GapKind.UNAVAILABLE: "desktop.ledger.assets.handoff_gap_unavailable",
+    M100GapKind.BOX_UNBOUND: "desktop.ledger.assets.handoff_gap_box_unbound",
+}
+
+
 def _text(name: str, **fields: object) -> str:
     return tr(_ASSET_LOCALE_KEYS[name], **fields)
 
@@ -94,6 +106,21 @@ def date_text(value: date | str) -> str:
 def amount_text(value: str) -> str:
     """Write an amount served as a plain decimal to the cent, as the interface language does."""
     return format_casilla_value(Decimal(value), data_type="money", language=_language())
+
+
+def m100_gap_line(gap: M100ClaimGapProjection) -> str:
+    """Say an interval of an element that Modelo 100 leaves out, by the element's identifier and its last day."""
+    unworked = gap.kind is M100GapKind.ACCRUED and gap.accrued is None
+    return tr(
+        _HANDOFF_GAP_LOCALE_KEYS[M100GapKind.UNAVAILABLE if unworked else gap.kind],
+        name=gap.asset_id,
+        start=date_text(gap.covered_from),
+        end=date_text(last_day_covered(gap.covered_until)),
+        # The sentence names the currency itself, so the figure is bare.
+        amount=""
+        if gap.accrued is None
+        else format_casilla_value(gap.accrued, data_type="decimal", language=_language()),
+    )
 
 
 def _fact_text(fact: ActivityAssetReasonFact) -> str:
@@ -354,6 +381,7 @@ __all__ = [
     "form_options_text",
     "limits_line",
     "list_row_line",
+    "m100_gap_line",
     "minimum_text",
     "opening_remedy",
     "plan_row_line",

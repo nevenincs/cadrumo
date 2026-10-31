@@ -617,6 +617,7 @@ DESKTOP_LEDGER_WORKFLOW_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.ledger.assets.handoff_free_count",
         "desktop.ledger.assets.handoff_free_named",
         "desktop.ledger.assets.handoff_gap_accrued",
+        "desktop.ledger.assets.handoff_gap_box_unbound",
         "desktop.ledger.assets.handoff_gap_free",
         "desktop.ledger.assets.handoff_gap_unavailable",
         "desktop.ledger.assets.handoff_gap_unnamed",

@@ -371,13 +371,14 @@ class RuntimeActivityAssetTuiActionsV1:
         )
 
     def filing_handoff(self, request: ActivityAssetFilingRequestV1) -> ActivityAssetFilingHandoff:
-        """Return all four exact M100/M130 projections from the worker result."""
+        """Return the exact M100 projections, and the M130 ones for a requested quarter, from the worker result."""
+        period = None if request.m130_period is None else str(request.m130_period.code)
 
         def correlate(projection: ActivityAssetFilingHandoffProjection) -> ActivityAssetFilingHandoff:
             if (
                 projection.filing_handoff is None
                 or projection.tax_year != request.tax_year
-                or projection.m130_period != str(request.m130_period.code)
+                or projection.m130_period != period
             ):
                 raise RefusalError(RefusalCode.INVALID_FRAME)
             return projection.filing_handoff.to_domain()
@@ -386,7 +387,7 @@ class RuntimeActivityAssetTuiActionsV1:
             ActivityAssetFilingHandoffRequest(
                 profile_id=self._profile_id,
                 tax_year=int(request.tax_year),
-                m130_period=str(request.m130_period.code),
+                m130_period=period,
             ),
             definition_id=ACTIVITY_ASSET_FILING_HANDOFF_OPERATION_DEFINITION_ID,
             result_type=ActivityAssetFilingHandoffProjection,

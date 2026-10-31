@@ -122,14 +122,19 @@ export function FilingHandoffPanel({
     // A box the backend does not state, because no quarter was asked, is not
     // drawn: it is not unknown, and it is not zero.
     const stated: Stated[] = [
-      ...[handoff.material_m100, handoff.intangible_m100].map(
-        (found, index) => ({
-          id: `m100:${index}`,
-          name: found.box_name,
-          casilla: found.target_casilla_id,
-          amount: found.amount,
-          left: 0,
-        }),
+      ...[handoff.material_m100, handoff.intangible_m100].flatMap(
+        (found, index) =>
+          found === null
+            ? []
+            : [
+                {
+                  id: `m100:${index}`,
+                  name: found.box_name,
+                  casilla: found.target_casilla_id,
+                  amount: found.amount,
+                  left: 0,
+                },
+              ],
       ),
       ...[handoff.material_m130, handoff.intangible_m130].flatMap((found) =>
         found === null

@@ -71,7 +71,8 @@ class ActivityAssetFilingRequestV1(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
     tax_year: FilingYear
-    m130_period: Period
+    m130_period: Period | None = None
+    """The quarter whose cumulative Modelo 130 amounts are asked for; none asks for the annual Modelo 100 alone."""
 
 
 class ActivityAssetInspectionV1(BaseModel):

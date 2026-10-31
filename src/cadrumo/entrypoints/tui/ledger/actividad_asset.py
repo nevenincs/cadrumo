@@ -6,7 +6,7 @@ import asyncio
 from dataclasses import dataclass, replace
 from typing import override
 
-from pydantic import TypeAdapter
+from pydantic import TypeAdapter, ValidationError
 from textual.app import ComposeResult
 from textual.widget import Widget
 from textual.widgets import Button, Input, Static
@@ -19,9 +19,10 @@ from ....application.actividad_asset.operation_dtos import ActivityAssetDisposal
 from ....application.operator_actions.models import PreconditionVerdict
 from ....core.errors.error_codes import resolve_error_message
 from ....core.errors.hierarchy import CadrumoError, InternalInvariantError
+from ....core.filing_year import FilingYear
 from ....core.i18n.render import tr
-from ....core.parsing.dates import require_iso8601_date
-from ....core.period import Period
+from ....core.period import Period, PeriodError
+from ....domain.renta.actividad_asset.claims import ClaimProjection
 from ....domain.renta.actividad_asset.errors import ActividadAssetIncompleteError
 from ....domain.renta.actividad_asset.lifecycle import ActivityAssetRevision, AssetKind
 from ....domain.renta.actividad_asset.register_records import ActivityAssetDescriptorFacts
@@ -29,11 +30,18 @@ from ....domain.renta.actividad_asset.schedule import ScheduledAmortizationCharg
 from ..account import AccountSessionExpiredError
 from ..components.language import localized
 from ..operations.outcome import OperationOutcomeUnknownError, unknown_outcome_of
-from .actividad_asset_inputs import stated_disposal, stated_revision
+from .actividad_asset_inputs import (
+    InputRefusedError,
+    stated_choice,
+    stated_date,
+    stated_disposal,
+    stated_revision,
+)
 from .actividad_asset_words import (
     form_options_text,
     limits_line,
     list_row_line,
+    m100_gap_line,
     plan_row_line,
     reason_text,
     timeline_line,
@@ -53,6 +61,8 @@ from .workspace_screen import LedgerWorkspaceScreen
 _WRITE_BUTTONS = ("#asset-create", "#asset-correct", "#asset-claim", "#asset-describe", "#asset-dispose")
 
 _SUPERSEDING_CLAIMS = TypeAdapter(tuple[ActivityAssetSupersedingClaim, ...])
+
+_FILING_YEAR = TypeAdapter(FilingYear)
 
 #: The facts a new element states with typed fields; a field left empty states nothing, never zero.
 _FACT_INPUT_LOCALE_KEYS = {
@@ -265,10 +275,29 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
             self._hold_writes(self._named_asset_id)
             self.query_one("#asset-result", Static).update(f"unknown\t{resolve_error_message(exc)}")
             return
-        except (CadrumoError, ValueError) as exc:
-            shown = resolve_error_message(exc) if isinstance(exc, CadrumoError) else str(exc)
-            self.query_one("#asset-result", Static).update(f"refused\t{shown}")
+        except InputRefusedError as exc:
+            self.query_one("#asset-result", Static).update(f"refused\t{exc}")
+            return
+        except CadrumoError as exc:
+            self.query_one("#asset-result", Static).update(f"refused\t{resolve_error_message(exc)}")
             self._show_recovery(exc)
+            return
+        except ValueError:
+            # A value no check above judged: its own text names internals, so only that it is unreadable is said.
+            self.query_one("#asset-result", Static).update(
+                f"refused\t{tr('tui.ledger.activity_asset.errors.entry_unreadable')}"
+            )
+            return
+        except Exception:
+            # Anything else would end the whole window. A write may have been saved, so its writes are held.
+            if f"#{button_id}" in _WRITE_BUTTONS:
+                self._hold_writes(self._named_asset_id)
+                unknown = OperationOutcomeUnknownError(operation_id=button_id or "", effect=None)
+                self.query_one("#asset-result", Static).update(f"unknown\t{resolve_error_message(unknown)}")
+            else:
+                self.query_one("#asset-result", Static).update(
+                    f"refused\t{tr('tui.ledger.activity_asset.errors.unexpected')}"
+                )
             return
         finally:
             # Cleared with no await before the outcome is on screen, so leaving never hides it.
@@ -374,7 +403,7 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
             self._named_asset_id = creation.revision.asset_id
             return self._inspection_result(prefix="created", result=self._actions.create(creation))
         if button_id == "asset-inspect":
-            self._named_asset_id = asset_id
+            self._named_asset_id = self._required_asset_id(asset_id)
             result = self._actions.inspect(asset_id)
             inspected = self._inspection_result(prefix="asset", result=result)
             return replace(inspected, inspected_asset_id=result.asset_id)
@@ -382,18 +411,18 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
             superseding = self.query_one("#asset-superseding-claims", Input).value.strip()
             correction = ActivityAssetCorrectionRequestV1(
                 revision=self._stated_revision(revision_json),
-                superseding_claims=_SUPERSEDING_CLAIMS.validate_json(superseding) if superseding else (),
+                superseding_claims=self._stated_superseding_claims(superseding),
             )
             self._named_asset_id = correction.revision.asset_id
             return self._inspection_result(prefix="corrected", result=self._actions.correct(correction))
         if button_id == "asset-forecast":
-            self._named_asset_id = asset_id
+            self._named_asset_id = self._required_asset_id(asset_id)
             supersedes_claim_id = self.query_one("#asset-supersedes-claim-id", Input).value.strip() or None
             self._last_forecast = self._actions.forecast(
                 ActivityAssetForecastRequestV1(
                     asset_id=asset_id,
-                    covered_from=require_iso8601_date(self.query_one("#asset-covered-from", Input).value),
-                    covered_until=require_iso8601_date(self.query_one("#asset-covered-until", Input).value),
+                    covered_from=stated_date(self.query_one("#asset-covered-from", Input).value),
+                    covered_until=stated_date(self.query_one("#asset-covered-until", Input).value),
                     # An empty field elects no amount.
                     requested_free_amount=parse_requested_free_amount(
                         self.query_one("#asset-free-amount", Input).value.strip() or None
@@ -408,7 +437,7 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
             )
         if button_id == "asset-claim":
             if self._last_forecast is None:
-                raise ValueError("calculate a forecast before recording a claim")
+                raise InputRefusedError(tr("tui.ledger.activity_asset.errors.forecast_first"))
             self._named_asset_id = self._last_forecast.asset_id
             result = self._actions.record_claim(
                 ActivityAssetClaimRequestV1(
@@ -426,36 +455,37 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
     ) -> _ActivityAssetScreenResult:
         if button_id == "asset-filing-handoff":
             tax_year = self._stated_filing_year()
-            m130_period = Period.from_year_and_code(
-                tax_year,
-                self.query_one("#asset-filing-m130-period", Input).value,
-            )
+            m130_period = self._stated_quarter(tax_year)
             result = self._actions.filing_handoff(
                 ActivityAssetFilingRequestV1(tax_year=tax_year, m130_period=m130_period),
             )
-            if result.material_m130 is None or result.intangible_m130 is None:
+            if m130_period is not None and (result.material_m130 is None or result.intangible_m130 is None):
                 raise InternalInvariantError("activity-asset handoff for a Modelo 130 period omitted its accruals")
+            amounts = [
+                f"m100_material={_box_amount(result.material_m100)}",
+                f"m100_intangible={_box_amount(result.intangible_m100)}",
+            ]
+            if result.material_m130 is not None and result.intangible_m130 is not None:
+                amounts += [
+                    f"m130_material={result.material_m130.amount}",
+                    f"m130_intangible={result.intangible_m130.amount}",
+                ]
+            # An amount of zero is said beside the intervals the box leaves out, so it is never left unexplained.
             return _ActivityAssetScreenResult(
-                message=(
-                    "filing_handoff"
-                    f"\tm100_material={result.material_m100.amount}"
-                    f"\tm100_intangible={result.intangible_m100.amount}"
-                    f"\tm130_material={result.material_m130.amount}"
-                    f"\tm130_intangible={result.intangible_m130.amount}"
-                )
+                message="\n".join(["filing_handoff\t" + "\t".join(amounts), *map(m100_gap_line, result.m100_gaps)])
             )
         if button_id == "asset-describe":
-            self._named_asset_id = asset_id
+            self._named_asset_id = self._required_asset_id(asset_id)
             history = self._actions.describe(asset_id, self._descriptor())
             return _ActivityAssetScreenResult(message=f"described\t{asset_id}\tdescriptors={len(history.descriptors)}")
         if button_id == "asset-dispose":
-            self._named_asset_id = asset_id
+            self._named_asset_id = self._required_asset_id(asset_id)
             history = self._actions.dispose(asset_id, self._stated_disposal())
             return _ActivityAssetScreenResult(
                 message=f"disposed\t{asset_id}\trevisions={len(history.revisions)}\tclaims={len(history.claims)}"
             )
         if button_id == "asset-disposal-calculate":
-            self._named_asset_id = asset_id
+            self._named_asset_id = self._required_asset_id(asset_id)
             stated = self._stated_disposal() if self._disposal_text("asset-disposal-date") else None
             calculation = self._actions.disposal_calculate(asset_id, stated)
             return _ActivityAssetScreenResult(
@@ -474,7 +504,7 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
         if button_id == "asset-plan":
             return self._plan_result(asset_id)
         if button_id == "asset-timeline":
-            self._named_asset_id = asset_id
+            self._named_asset_id = self._required_asset_id(asset_id)
             return _ActivityAssetScreenResult(
                 message="\n".join(timeline_line(event) for event in self._actions.timeline(asset_id))
                 or tr("desktop.ledger.assets.timeline.empty"),
@@ -493,7 +523,7 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
         )
 
     def _plan_result(self, asset_id: str) -> _ActivityAssetScreenResult:
-        self._named_asset_id = asset_id
+        self._named_asset_id = self._required_asset_id(asset_id)
         plan = self._actions.plan(asset_id)
         minimum_label = tr("tui.ledger.activity_asset.plan_minimum")
         minimum_incomplete = tr("tui.ledger.activity_asset.plan_minimum_incomplete")
@@ -527,7 +557,7 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
     ) -> _ActivityAssetScreenResult:
         if button_id == "asset-form-options":
             options = self._actions.form_options(
-                AssetKind(self.query_one("#asset-options-kind", Input).value),
+                stated_choice(AssetKind, self.query_one("#asset-options-kind", Input).value.strip()),
                 self._stated_filing_year(),
             )
             # The quarter stays the operator's choice: the served ones are listed, none is preselected.
@@ -545,8 +575,38 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
         """Read the year the operator chose, or say that one is to be chosen."""
         text = self.query_one("#asset-filing-tax-year", Input).value.strip()
         if not text:
-            raise ValueError(tr("desktop.ledger.assets.filing.choose_year"))
-        return int(text)
+            raise InputRefusedError(tr("desktop.ledger.assets.filing.choose_year"))
+        try:
+            return _FILING_YEAR.validate_python(int(text))
+        except (ValueError, ValidationError):
+            raise InputRefusedError(tr("tui.ledger.activity_asset.errors.year_invalid")) from None
+
+    def _stated_quarter(self, tax_year: int) -> Period | None:
+        """Read the quarter the operator chose, or none when the annual figures alone are asked for."""
+        text = self.query_one("#asset-filing-m130-period", Input).value.strip()
+        if not text:
+            return None
+        try:
+            return Period.from_year_and_code(tax_year, text)
+        except PeriodError:
+            raise InputRefusedError(tr("tui.ledger.activity_asset.errors.quarter_invalid")) from None
+
+    @staticmethod
+    def _required_asset_id(asset_id: str) -> str:
+        """Return the asset the operator named, or say that one is to be named."""
+        if not asset_id.strip():
+            raise InputRefusedError(tr("tui.ledger.activity_asset.errors.asset_id_required"))
+        return asset_id
+
+    @staticmethod
+    def _stated_superseding_claims(text: str) -> tuple[ActivityAssetSupersedingClaim, ...]:
+        if not text:
+            return ()
+        try:
+            return _SUPERSEDING_CLAIMS.validate_json(text)
+        except ValidationError:
+            field = tr("tui.ledger.activity_asset.superseding_claims")
+            raise InputRefusedError(tr("tui.ledger.activity_asset.errors.json_invalid", field=field)) from None
 
     def _disposal_text(self, input_id: str) -> str:
         return self.query_one(f"#{input_id}", Input).value.strip()
@@ -572,6 +632,11 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
             message=f"{prefix}\t{result.asset_id}\trevisions={len(result.revisions)}",
             current_revision_id=result.revisions[-1].revision_id,
         )
+
+
+def _box_amount(projection: ClaimProjection | None) -> str:
+    """The amount a Modelo 100 box takes, or the token saying the edition has no box for the kind."""
+    return "box_unbound" if projection is None else str(projection.amount)
 
 
 __all__ = ["ActivityAssetScreen"]

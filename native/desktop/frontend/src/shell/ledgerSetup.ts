@@ -973,9 +973,11 @@ export type M130Projection = {
   agrarian_excluded_asset_ids: string[];
 };
 /** What can be said about an interval of the year no claim covers. */
-export type M100GapKind = "accrued" | "free_method" | "unavailable";
+export type M100GapKind =
+  "accrued" | "free_method" | "unavailable" | "box_unbound";
 /** An interval of the year Modelo 100 leaves out of an element because no
- * claim records it. `accrued` is stated only where it can be worked out. */
+ * claim records it, or because the edition has no box for its kind.
+ * `accrued` is stated only where it can be worked out. */
 export type M100ClaimGap = {
   asset_id: string;
   kind: M100GapKind;
@@ -990,8 +992,10 @@ export type ActivityAssetFilingResult = ActivityAssetResultBase & {
   tax_year: number | null;
   m130_period: string | null;
   filing_handoff: {
-    material_m100: ClaimProjection;
-    intangible_m100: ClaimProjection;
+    /** Null for a kind the edition has no Modelo 100 box for; the gaps name
+     * its elements. */
+    material_m100: ClaimProjection | null;
+    intangible_m100: ClaimProjection | null;
     m100_gaps: M100ClaimGap[];
     /** Both null when no quarter was asked. */
     material_m130: M130Projection | null;

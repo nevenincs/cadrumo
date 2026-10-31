@@ -1560,6 +1560,8 @@ desktop:
       handoff_gap_accrued: '100-as: {name} esetében nincs rögzített értékcsökkenési
         leírás {start} és {end} között. Az ez alatt felmerült {amount} EUR nincs benne
         a fenti összegekben.'
+      handoff_gap_box_unbound: '100-as: ebben a kiadásban nincs rovat {name} értékcsökkenési
+        leírásához, ezért {start} és {end} között nem szerepel róla semmi.'
       handoff_gap_free: '100-as: {name} esetében nincs rögzített értékcsökkenési leírás
         {start} és {end} között. A módszere az összeget rád hagyja, ezért egyik sem
         számítható ki.'
@@ -6648,6 +6650,22 @@ tui:
       form_options: Űrlapbeállítások
       free_amount: Szabad értékcsökkenés összege (nem kötelező)
       in_service_date: Üzembe helyezés napja (ÉÉÉÉ-HH-NN), felülírja a revízióét
+      errors:
+        amount_invalid: Az összeget csak számjegyekkel, tizedesponttal add meg, például
+          1500.00.
+        asset_id_required: Először add meg az elem azonosítóját.
+        choice_invalid: 'Válassz az alábbiak közül: {options}.'
+        date_invalid: Add meg a dátumot ÉÉÉÉ-HH-NN alakban, például 2025-06-30.
+        entry_unreadable: Az egyik megadott érték nem olvasható. Ellenőrizd a dátumokat,
+          az összegeket és a kódokat, és próbáld újra.
+        forecast_first: Az értékcsökkenési leírás rögzítése előtt számíts előrejelzést.
+        json_invalid: A(z) {field} nem olvasható. Ellenőrizd a JSON-t, és próbáld
+          újra.
+        quarter_invalid: A negyedévet 1T, 2T, 3T vagy 4T alakban add meg, vagy hagyd
+          üresen, ha csak az éves összegek kellenek.
+        unexpected: A műveletet nem sikerült végrehajtani, és semmi sem változott.
+          Próbáld újra.
+        year_invalid: Az évet négy számjeggyel add meg, például 2025.
       inspect: Megtekintés
       list: Elemek listája
       method: 'Értékcsökkenési leírás módja: linear, constant_percentage, sum_of_digits,

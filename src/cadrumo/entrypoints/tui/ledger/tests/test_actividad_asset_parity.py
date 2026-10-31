@@ -5,12 +5,15 @@ from __future__ import annotations
 import re
 from datetime import date
 from decimal import Decimal
+from enum import StrEnum
 from threading import Event
 
 import pytest
 from textual.widgets import Button, Input, Static
 
 from .....application.actividad_asset.operation_dtos import ActivityAssetDisposalSnapshot
+from .....application.actividad_asset.operations import M100ClaimGapProjection
+from .....application.actividad_asset.schedule_walk import M100GapKind
 from .....application.calculations.actividad_asset_schedule import vehicle_affectation_verdict
 from .....application.operations.public_scalar import PublicDecimal
 from .....core.config import override_settings
@@ -33,7 +36,11 @@ from ...tests.settling import SettleTimeoutError, settle, settle_until
 from ..actividad_asset import ActivityAssetScreen
 from ..actividad_asset_inputs import stated_revision
 from ..controller import LedgerWorkspaceController
-from ..models_actividad_asset import ActivityAssetCreationRequestV1, ActivityAssetForecastRequestV1
+from ..models_actividad_asset import (
+    ActivityAssetCreationRequestV1,
+    ActivityAssetFilingRequestV1,
+    ActivityAssetForecastRequestV1,
+)
 from ..workspace_injection import LedgerWorkspaceInjection
 from .actividad_asset_fixtures import (
     ActivityAssetActionStub,
@@ -747,3 +754,230 @@ def test_stated_method_keeps_the_registered_missing_fact_for_presentation() -> N
 
     assert refused.value.translated_message == "ledger.actividad_asset.errors.election_requires_fact"
     assert refused.value.context == {"method": "sum_of_digits", "field": "sum_of_digits_period_years"}
+
+
+async def _refusal_for(actions: ActivityAssetActionStub, selector: str, **inputs: str) -> str:
+    """Press one button over the stated inputs and return the refusal the screen shows."""
+    screen = _screen(actions)
+    app = ScreenHostApp[None](screen)
+    async with app.run_test(size=(100, 70)) as pilot:
+        for input_id, text in inputs.items():
+            screen.query_one(f"#{input_id}", Input).value = text
+        await _activate(pilot=pilot, screen=screen, selector=selector)
+        return await _wait_for_screen_result(pilot=pilot, screen=screen, expected_prefix="refused\t")
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("selector", "inputs", "key"),
+    (
+        ("#asset-filing-handoff", {"asset-filing-tax-year": "abc"}, "year_invalid"),
+        ("#asset-filing-handoff", {"asset-filing-tax-year": "20255"}, "year_invalid"),
+        (
+            "#asset-filing-handoff",
+            {"asset-filing-tax-year": "2025", "asset-filing-m130-period": "9T"},
+            "quarter_invalid",
+        ),
+        (
+            "#asset-forecast",
+            {"asset-covered-from": "2025-01-01", "asset-covered-until": "2026-01-01"},
+            "asset_id_required",
+        ),
+        ("#asset-inspect", {}, "asset_id_required"),
+        (
+            "#asset-forecast",
+            {"asset-id": "a", "asset-covered-from": "soon", "asset-covered-until": "2026-01-01"},
+            "date_invalid",
+        ),
+        ("#asset-claim", {}, "forecast_first"),
+        (
+            "#asset-dispose",
+            {
+                "asset-id": "a",
+                "asset-disposal-date": "2026-06-30",
+                "asset-disposal-reason": "sale",
+                "asset-disposal-proceeds": "1e3",
+            },
+            "amount_invalid",
+        ),
+    ),
+)
+async def test_activity_asset_screen_words_an_unreadable_entry_before_the_door_is_reached(
+    selector: str, inputs: dict[str, str], key: str
+) -> None:
+    actions = ActivityAssetActionStub(activity_asset_revision("tui-refusals"))
+
+    with override_settings(cadrumo_output_language="en"):
+        shown = await _refusal_for(actions, selector, **inputs)
+        wanted = tr(f"tui.ledger.activity_asset.errors.{key}")
+
+    assert shown == f"refused\t{wanted}"
+    assert actions.requests == []
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("selector", "inputs", "choices"),
+    (
+        ("#asset-form-options", {"asset-filing-tax-year": "2025", "asset-options-kind": "x"}, AssetKind),
+        (
+            "#asset-dispose",
+            {"asset-id": "a", "asset-disposal-date": "2026-06-30", "asset-disposal-reason": "gift"},
+            ActivityAssetDisposalReason,
+        ),
+    ),
+)
+async def test_activity_asset_screen_lists_the_choices_it_asks_for(
+    selector: str, inputs: dict[str, str], choices: type[StrEnum]
+) -> None:
+    actions = ActivityAssetActionStub(activity_asset_revision("tui-choices"))
+
+    with override_settings(cadrumo_output_language="en"):
+        shown = await _refusal_for(actions, selector, **inputs)
+        wanted = tr(
+            "tui.ledger.activity_asset.errors.choice_invalid",
+            options=", ".join(member.value for member in choices),
+        )
+
+    assert shown == f"refused\t{wanted}"
+    assert actions.requests == []
+
+
+@pytest.mark.asyncio
+async def test_activity_asset_screen_names_the_field_whose_json_cannot_be_read() -> None:
+    actions = ActivityAssetActionStub(activity_asset_revision("tui-json"))
+
+    with override_settings(cadrumo_output_language="en"):
+        shown = await _refusal_for(actions, "#asset-create", **{"asset-revision-json": "{"})
+        wanted = tr(
+            "tui.ledger.activity_asset.errors.json_invalid",
+            field=tr("tui.ledger.activity_asset.revision"),
+        )
+
+    assert shown == f"refused\t{wanted}"
+    assert actions.requests == []
+
+
+@pytest.mark.asyncio
+async def test_activity_asset_screen_never_shows_the_text_of_an_exception_it_did_not_judge() -> None:
+    revision = activity_asset_revision("tui-unjudged")
+    actions = ActivityAssetActionStub(revision, plan_error=ValueError("secret internal detail"))
+
+    with override_settings(cadrumo_output_language="en"):
+        shown = await _refusal_for(actions, "#asset-plan", **{"asset-id": revision.asset_id})
+        wanted = tr("tui.ledger.activity_asset.errors.entry_unreadable")
+
+    assert shown == f"refused\t{wanted}"
+
+
+@pytest.mark.asyncio
+async def test_activity_asset_screen_survives_an_unexpected_failure_of_a_read() -> None:
+    revision = activity_asset_revision("tui-read-failure")
+    actions = ActivityAssetActionStub(revision, plan_error=KeyError("internal"))
+
+    with override_settings(cadrumo_output_language="en"):
+        shown = await _refusal_for(actions, "#asset-plan", **{"asset-id": revision.asset_id})
+        wanted = tr("tui.ledger.activity_asset.errors.unexpected")
+
+    assert shown == f"refused\t{wanted}"
+
+
+@pytest.mark.asyncio
+async def test_activity_asset_screen_holds_its_writes_after_an_unexpected_failure_of_a_write() -> None:
+    revision = activity_asset_revision("tui-write-failure")
+    actions = ActivityAssetActionStub(revision, create_error=OSError("disk"))
+    screen = _screen(actions)
+    app = ScreenHostApp[None](screen)
+
+    async with app.run_test(size=(100, 35)) as pilot:
+        screen.query_one("#asset-revision-json", Input).value = revision.model_dump_json()
+        await _activate(pilot=pilot, screen=screen, selector="#asset-create")
+        shown = await _wait_for_screen_result(pilot=pilot, screen=screen, expected_prefix="unknown\t")
+        assert "refused" not in shown
+        assert _writes_disabled(screen) == [True, True, True, True, True]
+
+
+def _gap(kind: M100GapKind, **served: object) -> M100ClaimGapProjection:
+    return M100ClaimGapProjection.model_validate(
+        {
+            "asset_id": "laptop-1",
+            "kind": kind,
+            "covered_from": date(2025, 1, 1),
+            "covered_until": date(2026, 1, 1),
+            **served,
+        }
+    )
+
+
+@pytest.mark.asyncio
+async def test_activity_asset_filing_without_a_quarter_asks_for_the_annual_figures_alone() -> None:
+    revision = activity_asset_revision("tui-annual")
+    actions = ActivityAssetActionStub(revision)
+    screen = _screen(actions)
+    app = ScreenHostApp[None](screen)
+
+    async with app.run_test(size=(100, 60)) as pilot:
+        screen.query_one("#asset-filing-tax-year", Input).value = "2025"
+        await _activate(pilot=pilot, screen=screen, selector="#asset-filing-handoff")
+        shown = await _wait_for_screen_result(pilot=pilot, screen=screen, expected_prefix="filing_handoff")
+
+    ((_, request),) = actions.requests
+    assert isinstance(request, ActivityAssetFilingRequestV1)
+    assert request.m130_period is None
+    assert shown == "filing_handoff\tm100_material=0.00\tm100_intangible=0.00"
+
+
+@pytest.mark.asyncio
+async def test_activity_asset_filing_with_a_quarter_states_both_modelos() -> None:
+    revision = activity_asset_revision("tui-quarter")
+    actions = ActivityAssetActionStub(revision)
+    screen = _screen(actions)
+    app = ScreenHostApp[None](screen)
+
+    async with app.run_test(size=(100, 60)) as pilot:
+        screen.query_one("#asset-filing-tax-year", Input).value = "2025"
+        screen.query_one("#asset-filing-m130-period", Input).value = "2T"
+        await _activate(pilot=pilot, screen=screen, selector="#asset-filing-handoff")
+        shown = await _wait_for_screen_result(pilot=pilot, screen=screen, expected_prefix="filing_handoff")
+
+    assert shown == (
+        "filing_handoff\tm100_material=0.00\tm100_intangible=0.00\tm130_material=0.00\tm130_intangible=0.00"
+    )
+
+
+@pytest.mark.asyncio
+async def test_activity_asset_filing_says_why_a_box_is_left_out_with_the_last_day_it_covers() -> None:
+    revision = activity_asset_revision("tui-gaps")
+    actions = ActivityAssetActionStub(
+        revision,
+        handoff_gaps=(
+            _gap(M100GapKind.ACCRUED, accrued=Decimal("520.00")),
+            _gap(M100GapKind.ACCRUED),
+            _gap(M100GapKind.FREE_METHOD),
+            _gap(M100GapKind.UNAVAILABLE),
+            _gap(M100GapKind.BOX_UNBOUND),
+        ),
+        unbound_material_box=True,
+    )
+    screen = _screen(actions)
+    app = ScreenHostApp[None](screen)
+
+    with override_settings(cadrumo_output_language="en"):
+        async with app.run_test(size=(100, 60)) as pilot:
+            screen.query_one("#asset-filing-tax-year", Input).value = "2025"
+            await _activate(pilot=pilot, screen=screen, selector="#asset-filing-handoff")
+            shown = await _wait_for_screen_result(pilot=pilot, screen=screen, expected_prefix="filing_handoff")
+        first, *lines = shown.splitlines()
+        wanted = [
+            tr(key, name="laptop-1", start="01/01/2025", end="31/12/2025", amount=amount)
+            for key, amount in (
+                ("desktop.ledger.assets.handoff_gap_accrued", "520.00"),
+                ("desktop.ledger.assets.handoff_gap_unavailable", ""),
+                ("desktop.ledger.assets.handoff_gap_free", ""),
+                ("desktop.ledger.assets.handoff_gap_unavailable", ""),
+                ("desktop.ledger.assets.handoff_gap_box_unbound", ""),
+            )
+        ]
+
+    assert first == "filing_handoff\tm100_material=box_unbound\tm100_intangible=0.00"
+    assert lines == wanted

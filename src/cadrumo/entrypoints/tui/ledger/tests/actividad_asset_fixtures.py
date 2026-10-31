@@ -42,7 +42,11 @@ from .....application.actividad_asset.activity_asset_read_models import (
 )
 from .....application.actividad_asset.history import ActivityAssetHistory, ActivityAssetHistoryClaimResult
 from .....application.actividad_asset.operation_dtos import ActivityAssetDisposalSnapshot
-from .....application.actividad_asset.operations import ActivityAssetFilingHandoff, M130AccrualProjection
+from .....application.actividad_asset.operations import (
+    ActivityAssetFilingHandoff,
+    M100ClaimGapProjection,
+    M130AccrualProjection,
+)
 from .....application.actividad_asset.schedule_walk import PlanFigureAbsence
 from .....application.operations.public_scalar import PublicDecimal
 from .....domain.renta.actividad_asset.claims import ClaimProjection
@@ -153,6 +157,9 @@ class ActivityAssetActionStub:
         register_default_year: int | None = None,
         timeline_events: tuple[ActivityAssetTimelineEvent, ...] = (),
         form_options_view: ActivityAssetFormOptionsView | None = None,
+        plan_error: Exception | None = None,
+        handoff_gaps: tuple[M100ClaimGapProjection, ...] = (),
+        unbound_material_box: bool = False,
     ) -> None:
         self.revision = revision
         self.list_rows = list_rows
@@ -160,6 +167,9 @@ class ActivityAssetActionStub:
         self.timeline_events = timeline_events
         self.form_options_view = form_options_view
         self.forecast_error = forecast_error
+        self.plan_error = plan_error
+        self.handoff_gaps = handoff_gaps
+        self.unbound_material_box = unbound_material_box
         self.inspect_error = inspect_error
         self.create_started = create_started
         self.create_release = create_release
@@ -209,6 +219,8 @@ class ActivityAssetActionStub:
 
     def plan(self, asset_id: str) -> ActivityAssetPlanProjection:
         self.requests.append(("plan", asset_id))
+        if self.plan_error is not None:
+            raise self.plan_error
         return ActivityAssetPlanProjection(
             profile_id=UUID(int=1),
             authority=ActivityAssetAuthorityProvenance(
@@ -319,19 +331,27 @@ class ActivityAssetActionStub:
 
     def filing_handoff(self, request: ActivityAssetFilingRequestV1) -> ActivityAssetFilingHandoff:
         self.requests.append(("filing_handoff", request))
+        framed = request.m130_period is not None
         return ActivityAssetFilingHandoff(
-            material_m100=ClaimProjection(
+            material_m100=None
+            if self.unbound_material_box
+            else ClaimProjection(
                 target_casilla_id="0113", tax_year=request.tax_year, claim_ids=(), amount=Decimal("0.00")
             ),
             intangible_m100=ClaimProjection(
                 target_casilla_id="0114", tax_year=request.tax_year, claim_ids=(), amount=Decimal("0.00")
             ),
+            m100_gaps=self.handoff_gaps,
             material_m130=M130AccrualProjection(
                 target_casilla_id="02", tax_year=request.tax_year, amount=Decimal("0.00")
-            ),
+            )
+            if framed
+            else None,
             intangible_m130=M130AccrualProjection(
                 target_casilla_id="02", tax_year=request.tax_year, amount=Decimal("0.00")
-            ),
+            )
+            if framed
+            else None,
         )
 
 
