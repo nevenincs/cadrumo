@@ -14,19 +14,14 @@ import pytest
 from pydantic import BaseModel
 
 from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
+from cadrumo.application.tests._access_authority_support import build_access_authority, new_access_binding
 from cadrumo.application.user_profile.access_contracts import (
     ACCESS_LEASE_MAXIMUM,
     AccessEvaluationContext,
     AccessSession,
     ApiKeyRecord,
     AutomationGrant,
-    LoginEligibility,
-    OsLockState,
-    OsLoginContext,
-    ProfileAccessBinding,
     ProfileAccessState,
-    SessionKind,
-    SessionState,
 )
 from cadrumo.application.user_profile.access_policy import intersect_scopes, intersect_scopes_within, scope_is_subset
 from cadrumo.application.user_profile.operation_access_policy import evaluate_operation_access, operation_scope_refusal
@@ -41,7 +36,6 @@ from cadrumo_client.contracts.access_refusals import AccessAllowed, AccessDenial
 from cadrumo_client.contracts.access_vocabulary import (
     AccessAction,
     AccessScope,
-    AuthorityState,
     Availability,
     DisclosureCategory,
     DisclosureCategoryGrant,
@@ -401,83 +395,18 @@ def access_scenario(size: int) -> Authority:
     registry = OperationRegistry(
         definitions=definitions, public_registrations=build_user_profile_operation_registrations(definitions)
     )
-    binding = ProfileAccessBinding(
-        profile_id=uuid4(),
-        installation_id=uuid4(),
-        os_owner_id="synthetic-owner",
-        custody_generation=1,
-        dek_epoch=uuid4(),
-    )
     scope = listed_scope(size, categories=frozenset(GRANTS))
-    profile = ProfileAccessState(
-        binding=binding,
-        lock_generation=0,
-        globally_locked=False,
-        automation_enabled=True,
-        scope=scope,
-        storage=Availability.AVAILABLE,
-        automation_custody=Availability.AVAILABLE,
-    )
-    grant = AutomationGrant(
-        grant_id=uuid4(),
-        binding=binding,
-        client_id=uuid4(),
-        generation=1,
-        profile_lock_generation=0,
-        state=AuthorityState.ACTIVE,
-        scope=scope,
-        valid_from=NOW - timedelta(days=1),
-        expires_at=NOW + timedelta(days=364),
-        unattended=True,
-        allow_os_lock=True,
-    )
-    key = ApiKeyRecord(
-        key_id=uuid4(),
-        grant_id=grant.grant_id,
-        binding=binding,
-        generation=1,
-        state=AuthorityState.ACTIVE,
-        valid_from=grant.valid_from,
-        expires_at=grant.expires_at,
-    )
-    session = AccessSession(
-        session_id=uuid4(),
-        binding=binding,
-        profile_lock_generation=0,
-        runtime_boot_id=uuid4(),
-        connection_id=uuid4(),
-        client_id=grant.client_id,
-        kind=SessionKind.API_KEY,
-        state=SessionState.ACTIVE,
-        scope=changed(scope, disclosure_categories=frozenset()),
-        grant_id=grant.grant_id,
-        grant_generation=1,
-        key_id=key.key_id,
-        key_generation=1,
-        issued_at=NOW,
-        expires_at=NOW + ACCESS_LEASE_MAXIMUM,
-        issued_monotonic=100.0,
-    )
-    context = AccessEvaluationContext(
+    built = build_access_authority(
+        binding=new_access_binding(uuid4()),
         now=NOW,
-        monotonic_now=100.0,
-        clock_rollback_detected=False,
-        runtime_boot_id=session.runtime_boot_id,
-        connection_id=session.connection_id,
-        authenticated_client_id=grant.client_id,
-        login_contexts=(
-            OsLoginContext(
-                login_id="login-a",
-                os_owner_id=binding.os_owner_id,
-                active=True,
-                lock_state=OsLockState.UNLOCKED,
-                unattended=LoginEligibility.ELIGIBLE,
-                credential_facilities=Availability.AVAILABLE,
-            ),
-        ),
-        private_work_available=True,
+        grant_scope=scope,
+        session_scope=changed(scope, disclosure_categories=frozenset()),
+        grant_validity=timedelta(days=364),
+        session_lease=ACCESS_LEASE_MAXIMUM,
+        allow_os_lock=True,
+        login_id="login-a",
     )
-    return Authority(registry, profile, grant, key, session, context)
+    return Authority(registry, built.profile, built.grant, built.key, built.session, built.context)
 
 
 def access_policy(registry: OperationRegistry, disclosure: DisclosurePermission) -> OperationAccessPolicy:

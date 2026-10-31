@@ -30,21 +30,10 @@ from cadrumo.application.ledger.reset_operation import (
 from cadrumo.application.operations.access_resolution import OperationAccessContext, resolve_operation_access
 from cadrumo.application.operations.models import OperationRequest
 from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
+from cadrumo.application.tests._access_authority_support import build_access_authority, new_access_binding
 from cadrumo.application.user_profile.access_contracts import (
     ACCESS_LEASE_MAXIMUM,
-    AccessEvaluationContext,
-    AccessSession,
-    ApiKeyRecord,
-    AutomationGrant,
-    LoginEligibility,
-    OsLockState,
-    OsLoginContext,
-    ProfileAccessBinding,
-    ProfileAccessState,
-    SessionKind,
-    SessionState,
 )
-from cadrumo.application.user_profile.operation_access_policy import evaluate_operation_access
 from cadrumo.application.user_profile.operations import (
     USER_PROFILE_OPERATION_DEFINITIONS,
     build_user_profile_operation_registrations,
@@ -61,7 +50,7 @@ from cadrumo.application.user_profile.view_operation import (
 from cadrumo.core.operations import profile_operation_subject
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo_client.contracts.access_refusals import AccessAllowed, AccessDecision, AccessDenialCode, AccessDenied
-from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope, AuthorityState, Availability
+from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope, Availability
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -168,90 +157,19 @@ def _decision(
             allow_delegation=False,
         )
 
-    binding = ProfileAccessBinding(
-        profile_id=_PROFILE,
-        installation_id=uuid4(),
-        os_owner_id="synthetic-owner",
-        custody_generation=1,
-        dek_epoch=uuid4(),
-    )
-    grant = AutomationGrant(
-        grant_id=uuid4(),
-        binding=binding,
-        client_id=client_id,
-        generation=1,
-        profile_lock_generation=0,
-        state=AuthorityState.ACTIVE,
-        scope=scope(_ALL_ACTIONS),
-        valid_from=_NOW - timedelta(days=1),
-        expires_at=_NOW + timedelta(days=364),
-        unattended=True,
+    authority = build_access_authority(
+        binding=new_access_binding(_PROFILE),
+        now=_NOW,
+        grant_scope=scope(_ALL_ACTIONS),
+        session_scope=scope(session_actions),
+        profile_scope=scope(profile_actions),
+        grant_validity=timedelta(days=364),
+        session_lease=ACCESS_LEASE_MAXIMUM,
         allow_os_lock=True,
-    )
-    key = ApiKeyRecord(
-        key_id=uuid4(),
-        grant_id=grant.grant_id,
-        binding=binding,
-        generation=1,
-        state=AuthorityState.ACTIVE,
-        valid_from=grant.valid_from,
-        expires_at=grant.expires_at,
-    )
-    session = AccessSession(
-        session_id=uuid4(),
-        binding=binding,
-        profile_lock_generation=0,
-        runtime_boot_id=uuid4(),
-        connection_id=uuid4(),
+        login_id="login-a",
         client_id=client_id,
-        kind=SessionKind.API_KEY,
-        state=SessionState.ACTIVE,
-        scope=scope(session_actions),
-        grant_id=grant.grant_id,
-        grant_generation=grant.generation,
-        key_id=key.key_id,
-        key_generation=key.generation,
-        issued_at=_NOW,
-        expires_at=_NOW + ACCESS_LEASE_MAXIMUM,
-        issued_monotonic=100.0,
     )
-    return evaluate_operation_access(
-        request=resolved.request,
-        policy=resolved.policy,
-        registry=registry,
-        session=session,
-        ancestors=(),
-        grant=grant,
-        key=key,
-        profile=ProfileAccessState(
-            binding=binding,
-            lock_generation=0,
-            globally_locked=False,
-            automation_enabled=True,
-            scope=scope(profile_actions),
-            storage=Availability.AVAILABLE,
-            automation_custody=Availability.AVAILABLE,
-        ),
-        context=AccessEvaluationContext(
-            now=_NOW,
-            monotonic_now=100.0,
-            clock_rollback_detected=False,
-            runtime_boot_id=session.runtime_boot_id,
-            connection_id=session.connection_id,
-            authenticated_client_id=client_id,
-            login_contexts=(
-                OsLoginContext(
-                    login_id="login-a",
-                    os_owner_id=binding.os_owner_id,
-                    active=True,
-                    lock_state=OsLockState.UNLOCKED,
-                    unattended=LoginEligibility.ELIGIBLE,
-                    credential_facilities=Availability.AVAILABLE,
-                ),
-            ),
-            private_work_available=True,
-        ),
-    )
+    return authority.evaluate(registry=registry, request=resolved.request, policy=resolved.policy)
 
 
 @pytest.mark.parametrize("narrowed", ["session", "profile"])

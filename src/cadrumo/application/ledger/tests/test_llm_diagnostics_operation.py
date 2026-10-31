@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import replace
-from datetime import UTC, date, datetime, timedelta
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from threading import get_ident
 from types import SimpleNamespace
@@ -17,7 +17,6 @@ from cadrumo_client.contracts.access_refusals import AccessAllowed, AccessDenial
 from cadrumo_client.contracts.access_vocabulary import (
     AccessAction,
     AccessScope,
-    AuthorityState,
     Availability,
     DisclosureCategory,
     DisclosurePermission,
@@ -32,21 +31,8 @@ from ...operations.models import OperationIdentity, OperationRequest, OperationT
 from ...operations.owner import OperationExecutorContext
 from ...operations.public_scalar import PublicDecimal
 from ...operations.registry import OperationFrontendProjection, OperationRegistry
-from ...user_profile.access_contracts import (
-    AccessEvaluationContext,
-    AccessSession,
-    ApiKeyRecord,
-    AutomationGrant,
-    LoginEligibility,
-    OsLockState,
-    OsLoginContext,
-    ProfileAccessBinding,
-    ProfileAccessState,
-    SessionKind,
-    SessionState,
-)
+from ...tests._access_authority_support import build_access_authority, new_access_binding
 from ...user_profile.access_errors import ProfileAccessRefusedError
-from ...user_profile.operation_access_policy import evaluate_operation_access
 from ..llm_diagnostics import LlmConfidenceProviderMetrics, LlmDiagnosticsReport, LlmUsageCostProviderMetrics
 from ..llm_diagnostics_operation import (
     LEDGER_LLM_DIAGNOSTICS_OPERATION_DEFINITION_ID,
@@ -514,90 +500,13 @@ def test_external_client_result_requires_both_categories_destination_and_all_per
         allow_delegation=False,
     )
     instant = datetime(2026, 10, 1, 12, tzinfo=UTC)
-    binding = ProfileAccessBinding(
-        profile_id=_PROFILE,
-        installation_id=uuid4(),
-        os_owner_id="synthetic-owner",
-        custody_generation=1,
-        dek_epoch=uuid4(),
+    authority = build_access_authority(
+        binding=new_access_binding(_PROFILE),
+        now=instant,
+        grant_scope=granted,
+        profile_scope=complete,
     )
-    grant = AutomationGrant(
-        grant_id=uuid4(),
-        binding=binding,
-        client_id=uuid4(),
-        generation=1,
-        profile_lock_generation=0,
-        state=AuthorityState.ACTIVE,
-        scope=granted,
-        valid_from=instant - timedelta(days=1),
-        expires_at=instant + timedelta(days=1),
-        unattended=True,
-        allow_os_lock=False,
-    )
-    key = ApiKeyRecord(
-        key_id=uuid4(),
-        grant_id=grant.grant_id,
-        binding=binding,
-        generation=1,
-        state=AuthorityState.ACTIVE,
-        valid_from=grant.valid_from,
-        expires_at=grant.expires_at,
-    )
-    session = AccessSession(
-        session_id=uuid4(),
-        binding=binding,
-        profile_lock_generation=0,
-        runtime_boot_id=uuid4(),
-        connection_id=uuid4(),
-        client_id=grant.client_id,
-        kind=SessionKind.API_KEY,
-        state=SessionState.ACTIVE,
-        scope=granted,
-        grant_id=grant.grant_id,
-        grant_generation=grant.generation,
-        key_id=key.key_id,
-        key_generation=key.generation,
-        issued_at=instant,
-        expires_at=instant + timedelta(minutes=2),
-        issued_monotonic=100.0,
-    )
-    decision = evaluate_operation_access(
-        request=resolved.request,
-        policy=resolved.policy,
-        registry=registry,
-        session=session,
-        ancestors=(),
-        grant=grant,
-        key=key,
-        profile=ProfileAccessState(
-            binding=binding,
-            lock_generation=0,
-            globally_locked=False,
-            automation_enabled=True,
-            scope=complete,
-            storage=Availability.AVAILABLE,
-            automation_custody=Availability.AVAILABLE,
-        ),
-        context=AccessEvaluationContext(
-            now=instant,
-            monotonic_now=100.0,
-            clock_rollback_detected=False,
-            runtime_boot_id=session.runtime_boot_id,
-            connection_id=session.connection_id,
-            authenticated_client_id=grant.client_id,
-            login_contexts=(
-                OsLoginContext(
-                    login_id="synthetic-login",
-                    os_owner_id=binding.os_owner_id,
-                    active=True,
-                    lock_state=OsLockState.UNLOCKED,
-                    unattended=LoginEligibility.ELIGIBLE,
-                    credential_facilities=Availability.AVAILABLE,
-                ),
-            ),
-            private_work_available=True,
-        ),
-    )
+    decision = authority.evaluate(registry=registry, request=resolved.request, policy=resolved.policy)
     if missing is None:
         assert isinstance(decision, AccessAllowed)
     else:

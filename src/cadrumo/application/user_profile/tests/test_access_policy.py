@@ -16,6 +16,7 @@ from cadrumo.application.operations.registry import (
     OperationRegistry,
     OperationSchemaBindingV1,
 )
+from cadrumo.application.tests._access_authority_support import build_access_authority, new_access_binding
 from cadrumo.application.user_profile.access_administration import (
     AccessAdministrationAction,
     AccessAdministrationRequest,
@@ -33,8 +34,6 @@ from cadrumo.application.user_profile.access_contracts import (
     AutomationGrant,
     LoginEligibility,
     OsLockState,
-    OsLoginContext,
-    ProfileAccessBinding,
     ProfileAccessState,
     SessionKind,
     SessionState,
@@ -110,13 +109,6 @@ def scenario() -> Scenario:
         definitions=definitions,
         public_registrations=build_user_profile_operation_registrations(definitions),
     )
-    binding = ProfileAccessBinding(
-        profile_id=uuid4(),
-        installation_id=uuid4(),
-        os_owner_id="synthetic-owner",
-        custody_generation=1,
-        dek_epoch=uuid4(),
-    )
     scope = AccessScope(
         operations=frozenset(item.definition_id for item in definitions),
         actions=frozenset(AccessAction),
@@ -125,76 +117,17 @@ def scenario() -> Scenario:
         allow_period_independent=True,
         allow_delegation=True,
     )
-    profile = ProfileAccessState(
-        binding=binding,
-        lock_generation=0,
-        globally_locked=False,
-        automation_enabled=True,
-        scope=scope,
-        storage=Availability.AVAILABLE,
-        automation_custody=Availability.AVAILABLE,
-    )
-    grant = AutomationGrant(
-        grant_id=uuid4(),
-        binding=binding,
-        client_id=uuid4(),
-        generation=1,
-        profile_lock_generation=0,
-        state=AuthorityState.ACTIVE,
-        scope=scope,
-        valid_from=NOW - timedelta(days=1),
-        expires_at=NOW + timedelta(days=364),
-        unattended=True,
-        allow_os_lock=True,
-    )
-    key = ApiKeyRecord(
-        key_id=uuid4(),
-        grant_id=grant.grant_id,
-        binding=binding,
-        generation=1,
-        state=AuthorityState.ACTIVE,
-        valid_from=grant.valid_from,
-        expires_at=grant.expires_at,
-    )
-    session = AccessSession(
-        session_id=uuid4(),
-        binding=binding,
-        profile_lock_generation=0,
-        runtime_boot_id=uuid4(),
-        connection_id=uuid4(),
-        client_id=grant.client_id,
-        kind=SessionKind.API_KEY,
-        state=SessionState.ACTIVE,
-        scope=scope,
-        grant_id=grant.grant_id,
-        grant_generation=1,
-        key_id=key.key_id,
-        key_generation=1,
-        issued_at=NOW,
-        expires_at=NOW + ACCESS_LEASE_MAXIMUM,
-        issued_monotonic=100.0,
-    )
-    context = AccessEvaluationContext(
+    authority = build_access_authority(
+        binding=new_access_binding(uuid4()),
         now=NOW,
-        monotonic_now=100.0,
-        clock_rollback_detected=False,
-        runtime_boot_id=session.runtime_boot_id,
-        connection_id=session.connection_id,
-        authenticated_client_id=grant.client_id,
-        login_contexts=(
-            OsLoginContext(
-                login_id="login-a",
-                os_owner_id=binding.os_owner_id,
-                active=True,
-                lock_state=OsLockState.UNLOCKED,
-                unattended=LoginEligibility.ELIGIBLE,
-                credential_facilities=Availability.AVAILABLE,
-            ),
-        ),
-        private_work_available=True,
+        grant_scope=scope,
+        grant_validity=timedelta(days=364),
+        session_lease=ACCESS_LEASE_MAXIMUM,
+        allow_os_lock=True,
+        login_id="login-a",
     )
     request = OperationAccessRequest(
-        profile_id=binding.profile_id,
+        profile_id=authority.binding.profile_id,
         definition_id=PROFILE_FIELD_MUTATION_OPERATION_DEFINITION_ID,
         action=AccessAction.SUBMIT,
         frontend=OperationFrontendProjection.EXTERNAL_CLIENT,
@@ -214,7 +147,16 @@ def scenario() -> Scenario:
         provider=Availability.NOT_REQUIRED,
         transaction_authority_required=False,
     )
-    return Scenario(registry, profile, grant, key, session, context, request, policy)
+    return Scenario(
+        registry,
+        authority.profile,
+        authority.grant,
+        authority.key,
+        authority.session,
+        authority.context,
+        request,
+        policy,
+    )
 
 
 def assert_denied(scenario: Scenario, code: AccessDenialCode) -> None:
