@@ -220,7 +220,9 @@ def source_diagnostic_notice(
     }
     optional: dict[str, str | None] = {
         "resolver_id": diagnostic.resolver_id,
-        "binding_source": diagnostic.binding_source.value if diagnostic.binding_source else None,
+        "binding_source": diagnostic.binding_source.value
+        if (diagnostic.binding_source is not None and diagnostic.binding_source)
+        else None,
         "binding_id": diagnostic.binding_id,
         "relation_id": diagnostic.relation_id,
         "casilla_id": diagnostic.casilla_id,
