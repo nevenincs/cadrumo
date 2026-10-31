@@ -705,7 +705,7 @@ cli:
             contacting AEAT.
         latest_help: Show the most recent DEHU notification snapshot.
         list_help: List saved DEHú notification snapshots
-        pull_help: Pull DEHu notifications and persist a bucket-scoped snapshot.
+        pull_help: Pull DEHú notifications and persist a bucket-scoped snapshot.
         snapshot_id_help: Snapshot id (or unambiguous prefix)
         view_help: Show a DEHú notification snapshot
       output_root_help: Directory for captured observations of submitted declarations

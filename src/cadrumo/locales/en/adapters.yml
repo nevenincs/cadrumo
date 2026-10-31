@@ -34,14 +34,14 @@ adapters:
           was refused. Open this link in your browser: %{authentication_url}'
         dni_nie_not_set: CADRUMO_CLAVE_MOVIL_DNI_NIE is not set; configure your DNI
           or NIE before authenticating.
-        initial_navigation_timeout: Initial navigation to Cl@ve Movil did not complete
+        initial_navigation_timeout: Initial navigation to Cl@ve Móvil did not complete
           within the configured timeout.
         metadata_invalid: Cl@ve Móvil session metadata is invalid or could not be
           parsed.
-        no_persisted_session: No persisted Cl@ve Movil session found; run `cadrumo-runtime
+        no_persisted_session: No persisted Cl@ve Móvil session found; run `cadrumo-runtime
           config auth status` first.
-        session_expired: Cl@ve Movil session has passed its idle deadline.
-        storage_state_hash_mismatch: Cl@ve Movil storage-state hash mismatch; session
+        session_expired: Cl@ve Móvil session has passed its idle deadline.
+        storage_state_hash_mismatch: Cl@ve Móvil storage-state hash mismatch; session
           data may be corrupt.
         verify_requires_active_context: Cl@ve Móvil ClaveMovilAuthProvider.verify()
           requires an active browser context; call ClaveMovilAuthProvider.authenticate()
