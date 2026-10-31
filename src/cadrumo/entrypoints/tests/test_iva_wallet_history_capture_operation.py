@@ -64,7 +64,7 @@ from cadrumo_client.contracts.access_vocabulary import AccessAction, Availabilit
 
 from .supervised_operation_rig import assert_foreign_profile_refused, build_supervised_operation, run_to_terminal
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
+pytestmark = [pytest.mark.usefixtures("authority_operation"), pytest.mark.integration, pytest.mark.hex_application]
 
 _NOW = datetime(2026, 8, 24, 20, tzinfo=UTC)
 _PERIOD = Period.from_year_and_code(2025, "1T")

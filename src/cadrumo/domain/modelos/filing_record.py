@@ -46,7 +46,6 @@ from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...core.time.utc import UtcInstant, parse_iso_datetime
 from ...core.type_guards import is_object_list_or_tuple
-from ..calculations.registry.form_codes import form_for_role
 from ..filing_evidence import FilingEvidenceReference
 from .codes import ModeloCode
 from .errors import ModeloValidationError
@@ -633,6 +632,8 @@ def _require_settlement_modelo(record: ModeloRecord) -> None:
     settlement = record.settlement
     if settlement is None:
         return
+    from ..calculations.registry.form_codes import form_for_role
+
     if str(record.modelo) != form_for_role("iva.periodic"):
         raise ModeloValidationError("an IVA settlement snapshot requires Modelo 303")
     if settlement.calculation_revision_id != record.calculation_revision_id:

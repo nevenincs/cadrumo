@@ -32,7 +32,7 @@ from ....domain.calculations.registry.tests.published_authority import published
 from ....domain.iva_compensation.reconciliation import IvaCompensationDecisionReason, reconcile_iva_compensation_wallet
 from ..app_live_iva_commands import _iva_wallet_decision_reason_text
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+pytestmark = [pytest.mark.usefixtures("authority_operation"), pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _TAXPAYER_REF = "12345678Z"
 _DECIDED_AT = datetime(2026, 5, 19, 10, 0, 0, tzinfo=UTC)
