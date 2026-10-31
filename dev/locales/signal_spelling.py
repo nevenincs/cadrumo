@@ -20,6 +20,16 @@ from .signal_spelling_enrollment import (
 # and IRPF in _data/terminology/concepts/irpf.toml. These are accepted only on
 # bilingual search-keyword surfaces, never as general prose vocabulary.
 _SPANISH_SEARCH_ABBREVIATIONS: Final[frozenset[str]] = frozenset({"ibi", "irpf"})
+# Exact lowercase aliases in the three keyword families below. They name
+# TGSS, PC, ADSL, ITV, Cadrumo, URL, DEHú, REPL, BOE and TUI. The category
+# aliases reflect bank-statement terminology; palette/navigation aliases name
+# their actual services, link format and views. Search consumes lowercase
+# words, and dehu deliberately supports queries without DEHú's accent.
+# This is a closed alias inventory, not a rule accepting arbitrary acronyms,
+# name variants, accent loss, or these tokens in translated prose.
+_SEARCH_NAME_AND_INITIALISM_ALIASES: Final[frozenset[str]] = frozenset(
+    {"tgss", "pc", "adsl", "itv", "cadrumo", "url", "dehu", "repl", "boe", "tui"}
+)
 
 
 def spellcheck_catalogues(
@@ -199,7 +209,8 @@ def _discard_known_search_keywords(
         accepted = {
             word
             for word in words
-            if (callable(english_lookup) and english_lookup(word))
+            if word in _SEARCH_NAME_AND_INITIALISM_ALIASES
+            or (callable(english_lookup) and english_lookup(word))
             or (spanish_dictionary is not None and _is_spanish_search_keyword(word, spanish_dictionary))
         }
         words.difference_update(accepted)
