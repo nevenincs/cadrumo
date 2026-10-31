@@ -12,6 +12,7 @@ mod role;
 mod shell;
 mod startup;
 mod startup_logging;
+mod startup_outcome;
 mod terminal;
 
 use cadrumo_application::{
@@ -36,16 +37,25 @@ fn run(diagnostics: Arc<Diagnostics>) -> Result<i32> {
     let mode = launch::select(arguments, launch::desktop_available());
     diagnostics.event(EventKind::HostStarted, None, None);
     diagnostics.host_event(EventKind::StageStarted, HostStage::Admission);
-    // The GUI claims the per-user instance before any per-user state opens.
+    let parent = environment::Parent::current()?;
+    // The GUI claims the per-user instance before any per-user state opens. A launch
+    // that ends here has no log of its own, so its outcome is recorded durably first.
     let _instance = match &mode {
-        Ok(mode) => match shell::single_instance::admit(mode)? {
-            shell::single_instance::Admission::Activated => {
-                diagnostics.host_outcome(HostStage::Admission, HostOutcome::AlreadyRunning);
-                return Ok(0);
+        Ok(mode) => {
+            let admission = shell::single_instance::admit(mode);
+            if let Some((outcome, reason)) = startup_outcome::of_admission(&admission) {
+                startup_outcome::conclude(&parent, outcome, HostStage::Admission, reason);
             }
-            shell::single_instance::Admission::Primary(primary) => Some(primary),
-            shell::single_instance::Admission::Headless => None,
-        },
+            match admission? {
+                shell::single_instance::Admission::Activated
+                | shell::single_instance::Admission::OpenInOtherSession => {
+                    diagnostics.host_outcome(HostStage::Admission, HostOutcome::AlreadyRunning);
+                    return Ok(0);
+                }
+                shell::single_instance::Admission::Primary(primary) => Some(primary),
+                shell::single_instance::Admission::Headless => None,
+            }
+        }
         Err(_) => None,
     };
     diagnostics.host_outcome(HostStage::Admission, HostOutcome::Ready);
@@ -57,9 +67,18 @@ fn run(diagnostics: Arc<Diagnostics>) -> Result<i32> {
             .ok_or_else(launch_error)?
             .to_owned(),
     };
-    let parent = environment::Parent::current()?;
     // Before the window exists, so a panic in any webview callback has a durable sink.
-    startup_logging::configure(&parent, &diagnostics);
+    if let Err(error) = startup_logging::configure(&parent, &diagnostics)
+        && matches!(mode, Ok(launch::Mode::Gui))
+    {
+        // The startup page names the failure, but with no log it would leave no trace.
+        let _ = startup_outcome::record(
+            &parent,
+            startup_outcome::Outcome::Refused,
+            HostStage::Package,
+            Some(error.code),
+        );
+    }
     if matches!(mode, Ok(launch::Mode::Gui)) {
         contain_application()?;
         return app::run(root, parent, diagnostics);
