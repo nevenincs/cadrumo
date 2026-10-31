@@ -5,7 +5,7 @@ tags:
 date: '2026-10-30'
 modified: '2026-10-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:ee639d50cb241dc5781d4d8333a5f0fd99d51e2392e1782b654e2d87ef6fbe53'
+body_hash: 'sha256:e48a391b44f64cfde1786d70d9aabb22db96f66b27379377d30c77a2eca26fa6'
 related:
   - "[[2026-10-30-macos-platform-plan]]"
 ---
@@ -252,6 +252,50 @@ native/manager/src/supervision/supervisor.rs`
 - `S14` `verify:` `desktop-frontend-test scenarios/previous-close` -> `pass`
 - `S14` `verify:` `lint-imports` -> `pass`
 - `S14` `by:` `vaultspec-high-executor`
+- `S11` `M` `native/CONTRACT.md`
+- `S11` `M` `native/desktop/frontend/src/components/Titlebar.tsx`
+- `S11` `M` `native/desktop/frontend/src/dev/scenarioHost.ts`
+- `S11` `M` `native/desktop/frontend/src/ipc/contract.ts`
+- `S11` `M` `native/desktop/frontend/src/styles/titlebar.css`
+- `S11` `M` `native/desktop/frontend/src/styles/tokens.css`
+- `S11` `M` `native/desktop/frontend/tests/window-controls.spec.ts`
+- `S11` `M` `native/desktop/src-tauri/src/app.rs`
+- `S11` `M` `native/desktop/src-tauri/src/shell/window_controls.rs`
+- `S11` `M` `native/interpreter/posix/host.c`
+- `S11` `verify:` `desktop-frontend window-controls spec and packaged window screenshot` -> `pass`
+- `S16` `M` `native/desktop/src-tauri/src/shell/single_instance/mod.rs`
+- `S16` `M` `native/desktop/src-tauri/src/shell/single_instance/posix.rs`
+- `S16` `M` `native/manager/src/macos/ipc.rs`
+- `S16` `M` `native/manager/src/macos/ipc/socket.rs`
+- `S16` `M` `native/manager/src/session/instance.rs`
+- `S16` `M` `native/manager/tests/session_ownership.rs`
+- `S16` `M` `native/platform/src/transport.rs`
+- `S16` `M` `src/cadrumo_client/transport/tests/account_transport.py`
+- `S16` `M` `src/cadrumo_client/transport/tests/test_isolated_transport_namespace.py`
+- `S16` `M` `src/cadrumo_runtime/adapters/tests/test_darwin_transport.py`
+- `S16` `M` `src/cadrumo_runtime/adapters/tests/test_posix.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/conftest.py`
+- `S16` `M` `src/cadrumo/core/tests/test_storage_fingerprint_participation_gate.py`
+- `S16` `M` `src/cadrumo/tests/process_support.py`
+- `S16` `verify:` `build.sh Debug desktop-host-unit-test (702) with real transport dir unchanged` -> `pass`
+- `S15` `M` `dev/packaging/native/agent.py`
+- `S15` `M` `dev/packaging/native/distribution_prepare.py`
+- `S15` `M` `dev/packaging/native/installation_currency.py`
+- `S15` `M` `dev/packaging/native/installation_plan.py`
+- `S15` `M` `dev/packaging/native/installation.py`
+- `S15` `M` `dev/packaging/native/macos_bundle.py`
+- `S15` `M` `dev/packaging/native/platforms/posix_images.py`
+- `S15` `M` `dev/packaging/native/tests/test_macos_bundle.py`
+- `S15` `M` `dev/packaging/tests/test_native_installation.py`
+- `S15` `M` `native/cmake/distribution/CMakeLists.txt`
+- `S15` `M` `native/cmake/distribution/MacosBundleSeal.cmake.in`
+- `S15` `M` `native/cmake/distribution/MacosBundleVerify.cmake.in`
+- `S15` `M` `native/CONTRACT.md`
+- `S15` `verify:` `CPack pre-build runtime-role gate and codesign --verify --deep --strict on stage, DMG, ZIP` -> `pass`
+- `S07` `M` `dev/packaging/native/macos_bundle.py`
+- `S07` `M` `dev/packaging/native/tests/test_macos_bundle.py`
+- `S07` `M` `native/CONTRACT.md`
+- `S07` `verify:` `packaged Cadrumo.app: runtime ready, Apple Event and SIGTERM clean drain, SIGKILL containment, handoff record` -> `pass`
 
 ## Notes
 
