@@ -258,7 +258,8 @@ def _annotate_demonstration(plan: SheetExportPlan, case: DemoCase) -> SheetExpor
 def build_demonstration_plan(case: DemoCase) -> tuple[RegistrySnapshot, SheetExportPlan]:
     """Use the same typed form compiler for each modelo and preserve its formulas."""
     snapshot = demonstration_snapshot(case)
-    inputs, bindings = demonstration_inputs(snapshot, case)
+    with validating_governed_facts(compiled_bundled_authority()):
+        inputs, bindings = demonstration_inputs(snapshot, case)
     plan = _build_form_plan(snapshot, case, inputs, bindings)
     return snapshot, _annotate_demonstration(plan, case)
 
