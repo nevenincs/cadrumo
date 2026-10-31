@@ -372,13 +372,13 @@ test("a typed field refuses what the grammar refuses and stages a correction", a
   await expect(typed).toHaveAttribute("aria-invalid", "true");
   await target.keyboard.press("Escape");
   expect(await trayCount(target)).toBe(1);
-  // A decimal comma is refused with its meaning offered in one press,
-  // never taken silently.
+  // A sign is refused with its meaning offered in one press, never taken
+  // silently: the direction, not the amount, says which way money went.
   await amount.click();
-  const comma = body(target).locator("input:focus");
-  await comma.fill("77,45");
+  const signed = body(target).locator("input:focus");
+  await signed.fill("-77.45");
   await target.keyboard.press("Enter");
-  await expect(comma).toHaveAttribute("aria-invalid", "true");
+  await expect(signed).toHaveAttribute("aria-invalid", "true");
   expect(await trayCount(target)).toBe(1);
   await body(target)
     .getByRole("button", {
@@ -943,7 +943,7 @@ test("set for all applies as chosen and says how many hidden movements it reache
   const group = selection.locator("form").filter({
     has: target.getByLabel(label("desktop.ledger.column.group_label")),
   });
-  await group.getByRole("textbox").fill("Suscripciones");
+  await group.getByRole("combobox").fill("Suscripciones");
   const set = group.getByRole("button");
   await expect(set).toHaveText(
     label("desktop.ledger.inspector.selection.set_hidden", {

@@ -98,6 +98,11 @@ const TEXT_LIMITS: Partial<Record<StageField, number>> = {
 export const pointsText = (held: string): string =>
   held.trim() === "" ? held : `${held.trim()}%`;
 
+/** The points a person typed, without the sign `pointsText` said them with:
+ * what a refusal echoes and a field shows again. */
+export const typedPoints = (said: string): string =>
+  said.replace(/\s*%\s*$/, "");
+
 /** The most a text field takes. */
 export const textLimitOf = (field: StageField | DraftField): number =>
   TEXT_LIMITS[field as StageField] ?? 4096;

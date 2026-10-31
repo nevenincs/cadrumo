@@ -76,7 +76,7 @@ import {
 import { useStrings, type Translate } from "../../../shell/strings";
 import { dateFormats } from "../../../shared/dateFormats";
 import { formatAmount, formatCount } from "../../../shared/numbers";
-import { draftRow, stageTally } from "../editing/editingModel";
+import { draftRow, stageTally, typedPoints } from "../editing/editingModel";
 import {
   REVERT_CELL_CHORD,
   useMovementEditing,
@@ -949,7 +949,7 @@ export function MovementsSection({
     );
     if (outcome.kind === "refused")
       return t("desktop.ledger.classify.share_refused", {
-        raw: outcome.refusal.raw,
+        raw: typedPoints(outcome.refusal.raw),
       });
     if (outcome.kind === "needs") return null;
     const classification = classificationLabel(
@@ -1046,7 +1046,7 @@ export function MovementsSection({
       error:
         outcome.kind === "refused"
           ? t("desktop.ledger.classify.share_refused", {
-              raw: outcome.refusal.raw,
+              raw: typedPoints(outcome.refusal.raw),
             })
           : null,
       ...(answer.share ? { share: answer.share } : {}),
@@ -1845,7 +1845,7 @@ export function MovementsSection({
                 setAsking({
                   ...asking,
                   error: t("desktop.ledger.classify.share_refused", {
-                    raw: answer.share ?? "",
+                    raw: typedPoints(answer.share ?? ""),
                   }),
                 });
                 return;

@@ -296,7 +296,8 @@ test("each requirement and rule is refused on its own field", async ({
   await field(target, "retention_rate").fill("");
   await field(target, "retention_amount").fill("");
 
-  await lineCell(target, 1, 1).fill("1.500");
+  // In English this is fifteen hundred, or one and a half.
+  await lineCell(target, 1, 1).fill("1,500");
   await expect(lineCell(target, 1, 1)).toHaveAttribute("aria-invalid", "true");
   await lineCell(target, 1, 1).fill("2");
 

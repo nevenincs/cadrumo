@@ -22,7 +22,7 @@ import {
   SPENDING_CATEGORY_FAMILIES,
 } from "../../../shell/ledgerVocabulary";
 import { useStrings } from "../../../shell/strings";
-import { pointsText } from "../editing/editingModel";
+import { pointsText, typedPoints } from "../editing/editingModel";
 import { categoryLabel, categoryOption } from "./movementWords";
 
 /**
@@ -85,7 +85,7 @@ export function ClassifyDialog({
   const shareId = useId();
   const form = useRef<HTMLFormElement>(null);
   const [category, setCategory] = useState<string | null>(null);
-  const [share, setShare] = useState(initialShare.replace(/\s*%\s*$/, ""));
+  const [share, setShare] = useState(typedPoints(initialShare));
   const mixed = kind === "mixed";
   const options = useMemo<ComboboxOption[]>(
     () =>

@@ -1192,7 +1192,7 @@ test("a late active start is cancelled after the signed-in profile changes", asy
   );
   await expect(dialog).toHaveCount(0);
   await expect(
-    target.getByRole("button", { name: /Other profile Signed in/ }),
+    target.getByRole("button", { name: /Other profile\W+Signed in/ }),
   ).toBeVisible();
   await target.evaluate(() => window.__scenarioProviderSignIn!.completeStart());
   await expect

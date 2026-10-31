@@ -908,7 +908,7 @@ test("adding an element sends the revision and descriptor the backend decodes, w
     ],
   });
   const outside = await refused(
-    send({ "amortization.linear_coefficient": "99" }),
+    send({ "amortization.linear_coefficient": "0.99" }),
   );
   expect(outside.detail.refusal.reason_key).toBe(
     "ledger.actividad_asset.errors.elected_coefficient_out_of_range",
@@ -1808,7 +1808,7 @@ test("a correction states only what changed from the record, and an emptied fiel
   const fields = fieldsFor(context, initial);
   expect(initial).toMatchObject({
     method: row.method,
-    basis_amount: row.basis.decimal,
+    basis_amount: "3800",
     in_service_date: row.in_service_date,
   });
   expect(answer(fields, initial, initial).values).toEqual({});
@@ -2538,7 +2538,7 @@ test("a whole property states its parts, a vehicle its declaration, and a linear
     construction_cost: "800.00",
     land_cost: "200.00",
     ownership_mode: "sole",
-    ownership_share: "100",
+    ownership_share: "1",
     office_area: "30",
     total_area: "100",
   };
@@ -3299,7 +3299,7 @@ test("the facts of a basis stage and of an opening status are the ones the optio
   const draft = {
     ...initial,
     basis_stage: "taxpayer_owned",
-    business_use_share: "60",
+    business_use_share: "0.6",
   };
   const request = correctRequest(
     answer(fieldsFor(correction, draft), draft, initial).values,

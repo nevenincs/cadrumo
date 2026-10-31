@@ -187,14 +187,15 @@ test("the amount editor refuses what could be read two ways, echoing it, and sav
   const row = rowOf(target, "SOFTNUBE IRELAND SUSCRIPCION");
   await cellOf(row, "amount").click();
   await target.keyboard.press("Enter");
-  await editor(target).fill("1.234,50");
+  // In English this is a thousand and more, or one and a bit.
+  await editor(target).fill("1,234");
   await target.keyboard.press("Enter");
   // Refused in words that echo the raw value; the editor stays open.
   await expect(editor(target)).toHaveAttribute("aria-invalid", "true");
   await expect(target.locator(".ledger-cell-note")).toContainText(
-    label("desktop.ledger.edit.refusal.grouping", {
-      raw: "1.234,50",
-      suggestion: "1234.50",
+    label("desktop.ledger.edit.refusal.ambiguous_grouping", {
+      raw: "1,234",
+      suggestion: "",
       limit: "",
     }),
   );
@@ -223,7 +224,7 @@ test("the amount editor refuses what could be read two ways, echoing it, and sav
   await expect(tray(target)).toHaveCount(0);
 });
 
-test("a share is a percentage in one grammar: 21 is 21%, 0.21 is refused", async ({
+test("a share is a percentage in one grammar: 21 is 21%, 0.21 is 0.21%", async ({
   page: target,
 }) => {
   await openLedger(target);
@@ -244,13 +245,11 @@ test("a share is a percentage in one grammar: 21 is 21%, 0.21 is refused", async
   await target.keyboard.press("Enter");
   await editor(target).fill("0.21");
   await target.keyboard.press("Enter");
-  await expect(target.locator(".ledger-cell-note")).toContainText(
-    label("desktop.ledger.edit.refusal.percent_as_fraction", {
-      raw: "0.21",
-      suggestion: "21",
-      limit: "",
-    }),
+  await expect(cellOf(row, "iva_rate").locator("[data-staged]")).toContainText(
+    "0.21%",
   );
+  await cellOf(row, "iva_rate").click();
+  await target.keyboard.press("Enter");
   await editor(target).fill("21");
   await target.keyboard.press("Enter");
   await expect(cellOf(row, "iva_rate").locator("[data-staged]")).toContainText(
@@ -374,10 +373,10 @@ test("classifying is one command: hidden selections are held, Business asks a ca
       name: label("desktop.ledger.category.telefonia_fija"),
     })
     .click();
-  await dialog.getByLabel(label("desktop.ledger.classify.share")).fill("0.5");
+  await dialog.getByLabel(label("desktop.ledger.classify.share")).fill("101");
   await dialog.locator(".ledger-classify-stage").click();
   await expect(dialog).toContainText(
-    label("desktop.ledger.classify.share_refused", { raw: "0.5" }),
+    label("desktop.ledger.classify.share_refused", { raw: "101" }),
   );
   await dialog.getByLabel(label("desktop.ledger.classify.share")).fill("40");
   await dialog.locator(".ledger-classify-stage").click();
