@@ -24,7 +24,7 @@ class PartyAttributionAdvisoryProjection(BaseModel):
     """Closed public projection of all party attribution warnings."""
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-    parties: Annotated[tuple[PartyAttributionWarningProjection, ...], Field(min_length=1, max_length=2)]
+    parties: Annotated[tuple[PartyAttributionWarningProjection, ...], Field(min_length=1, max_length=16)]
 
     @property
     def fields(self) -> tuple[str, ...]:
@@ -47,7 +47,7 @@ class CountryVocabularyAdvisoryProjection(BaseModel):
     """Closed public projection of every country-vocabulary warning."""
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-    parties: Annotated[tuple[CountryVocabularyWarningProjection, ...], Field(min_length=1, max_length=2)]
+    parties: Annotated[tuple[CountryVocabularyWarningProjection, ...], Field(min_length=1, max_length=16)]
 
     def by_status(self, status: StatedCountryCodeStatus) -> tuple[CountryVocabularyWarningProjection, ...]:
         """Return the warnings for one exact canonical country-code status."""

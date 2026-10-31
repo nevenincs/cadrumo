@@ -18,10 +18,11 @@ from pydantic import BaseModel, Field, model_validator
 
 from ...core.classifier_input_source import ClassifierInputSource
 from ...core.confirmation_gate import ConfirmationBlockReason
+from ...core.country_code import CountryCodeAlpha2
 from ...core.draft_discrepancy import DraftDiscrepancyKind
 from ...core.field_grounding import FieldGroundingOutcome
 from ...core.field_origin import FieldOrigin
-from ...core.hex import Hex64Str
+from ...core.hex import Hex16Str, Hex64Str
 from ...core.iva_category_resolution import IvaCategoryOutcome
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...domain.iva.classification import IvaInvoiceClassificationCriteria
@@ -59,7 +60,7 @@ _BoundedText = Annotated[str, Field(max_length=16_384)]
 _ShortText = Annotated[str, Field(max_length=2_048)]
 _FieldName = Annotated[str, Field(min_length=1, max_length=128)]
 _RegistryToken = Annotated[str, Field(min_length=1, max_length=128)]
-_MemberStateToken = Annotated[str, Field(min_length=2, max_length=2)]
+_MemberStateToken = CountryCodeAlpha2
 _DeclaredValue = TypeVar("_DeclaredValue")
 
 
@@ -540,7 +541,7 @@ class ConfirmationBlockerProjectionV1(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
-    blocker_id: Annotated[str, Field(min_length=16, max_length=16)]
+    blocker_id: Hex16Str
     reason: ConfirmationBlockReason
     field: _FieldName | None = None
     detail: _ShortText = ""
@@ -640,7 +641,7 @@ class InvoiceConfirmationProjectionV1(BaseModel):
     draft: InvoiceDraftProjectionV1
     created: bool
     total_discrepancy: PrintedTotalDiscrepancyProjectionV1 | None = None
-    confirmation_id: Annotated[str, Field(min_length=16, max_length=16)] | None = None
+    confirmation_id: Hex16Str | None = None
     confirmed_provenance: _ProvenanceRows = ()
     establishment: ConfirmedEstablishmentProjectionV1 | None = None
     label_reading_fallback: LabelReadingFallbackProjectionV1 | None = None

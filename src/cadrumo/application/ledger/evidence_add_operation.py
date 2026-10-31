@@ -60,7 +60,7 @@ _PERSON_FRONTEND_ACTOR = "cli"
 _EvidenceText = Annotated[str, Field(max_length=16_384)]
 _EvidencePath = Annotated[str, Field(min_length=1, max_length=4_096)]
 _EvidenceLabel = Annotated[str, Field(max_length=1_024)]
-_InvoiceDate = Annotated[str, Field(min_length=10, max_length=10)]
+_InvoiceDate = Annotated[str, Field(min_length=1, max_length=16)]
 _DecimalText = Annotated[str, Field(min_length=1, max_length=128)]
 _IdempotencyKey = Annotated[str, Field(max_length=256)]
 _EvidenceEventId = Annotated[str, Field(min_length=1, max_length=64)]

@@ -42,13 +42,14 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from typing import ClassVar, Self
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, model_validator
 
 from ...core.confirmation_gate import ConfirmationBlockReason, FindingResolutionAction
 from ...core.draft_discrepancy import DraftDiscrepancyKind
 from ...core.errors.hierarchy import CadrumoError, InternalInvariantError, pydantic_validation_boundary
 from ...core.field_grounding import FieldGroundingOutcome
 from ...core.hashing import content_hash_hex
+from ...core.hex import Hex16Str
 from ...core.models import STRICT_FROZEN_CONFIG
 from .invoice_draft_records import FieldAmbiguityCandidate, InvoiceDraft
 from .preconditions import LedgerPreconditionCondition, LedgerPreconditionErrorMixin, ledger_no_recovery_verdict
@@ -142,7 +143,7 @@ class ConfirmationBlocker(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    blocker_id: str = Field(min_length=16, max_length=16)
+    blocker_id: Hex16Str
     reason: ConfirmationBlockReason
     field: str | None = None
     detail: str = ""
@@ -210,7 +211,7 @@ class FindingResolution(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    blocker_id: str = Field(min_length=16, max_length=16)
+    blocker_id: Hex16Str
     action: FindingResolutionAction
     value: str | None = None
     note: str = ""

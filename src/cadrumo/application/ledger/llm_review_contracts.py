@@ -111,7 +111,7 @@ class LedgerLlmSuggestionProjection(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     kind: Literal["classification", "saturated", "split"]
-    transaction_id: Annotated[str, Field(min_length=1, max_length=96)]
+    transaction_id: Annotated[str, Field(min_length=1, max_length=128)]
     provenance: Annotated[str, Field(min_length=1, max_length=256)]
     reason: LedgerLlmLongText
     evidence_id: LedgerLlmShortText | None

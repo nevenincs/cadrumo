@@ -70,7 +70,7 @@ class LedgerRemoveRequest(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     profile_id: UUID
-    transaction_id: str = Field(min_length=1, max_length=96)
+    transaction_id: str = Field(min_length=1, max_length=128)
     reason: str = Field(default="", max_length=MAX_LEDGER_REMOVAL_RECEIPT_REASON_LENGTH)
     dry_run: bool = False
     actor: str | None = Field(default=None, min_length=1, max_length=64)

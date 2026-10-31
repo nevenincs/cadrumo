@@ -74,7 +74,7 @@ LedgerEvidenceUpdateField = Literal[
     "notes",
 ]
 _UpdateField = LedgerEvidenceUpdateField
-_UpdateFields = Annotated[tuple[_UpdateField, ...], Field(max_length=7)]
+_UpdateFields = Annotated[tuple[_UpdateField, ...], Field(max_length=16)]
 _UPDATE_FIELDS = frozenset(
     {"supplier", "invoice_number", "invoice_date", "taxable_base", "iva_rate", "iva_amount", "notes"}
 )

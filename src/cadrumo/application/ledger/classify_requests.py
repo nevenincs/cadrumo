@@ -56,7 +56,7 @@ _CLASSIFY_FIELDS = frozenset(
     },
 )
 
-_ClassifyFields = Annotated[tuple[LedgerClassifyPatchField, ...], Field(min_length=1, max_length=14)]
+_ClassifyFields = Annotated[tuple[LedgerClassifyPatchField, ...], Field(min_length=1, max_length=16)]
 
 LedgerClassifyDecimalText = Annotated[str, Field(min_length=1, max_length=128)]
 
@@ -64,7 +64,7 @@ LedgerClassifyShortText = Annotated[str, Field(max_length=128)]
 
 LedgerClassifyLongText = Annotated[str, Field(max_length=4096)]
 
-LedgerClassifyTransactionPrefix = Annotated[str, Field(min_length=1, max_length=96)]
+LedgerClassifyTransactionPrefix = Annotated[str, Field(min_length=1, max_length=128)]
 
 # Hand-typed euro amounts carry at most cent precision, so a thousands-grouped amount is
 # refused instead of being read as a fraction. A share or a rate is a fraction of one whose
@@ -88,7 +88,7 @@ class LedgerClassifyPatch(BaseModel):
     deduction_fact_kind: LedgerClassifyShortText | None = None
     investment_asset_id: LedgerClassifyShortText | None = None
     counterparty_country: CountryCodeAlpha2 | None = None
-    counterparty_identification_state: Annotated[str, Field(max_length=2)] | None = None
+    counterparty_identification_state: CountryCodeAlpha2 | None = None
     notes: LedgerClassifyLongText | None = None
 
     @field_validator("business_classification")

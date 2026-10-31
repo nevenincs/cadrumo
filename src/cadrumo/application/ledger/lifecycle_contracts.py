@@ -37,11 +37,11 @@ LEDGER_LIFECYCLE_MAX_VALIDATION_MESSAGE_LENGTH = 2048
 
 LEDGER_LIFECYCLE_MAX_RECOVERY_TRANSACTION_IDS = 256
 
-_TransactionPrefix = Annotated[str, Field(min_length=1, max_length=96)]
+_TransactionPrefix = Annotated[str, Field(min_length=1, max_length=128)]
 
 _Actor = Annotated[str, Field(min_length=1, max_length=64)]
 
-_Reason = Annotated[str, Field(max_length=500)]
+_Reason = Annotated[str, Field(max_length=512)]
 
 _EventIds = Annotated[tuple[Hex64Str, ...], Field(min_length=1, max_length=1)]
 
@@ -132,7 +132,7 @@ class LedgerLifecycleReplacedStateProjection(BaseModel):
     business_classification: BusinessClassification
     business_pct: str | None
     classified_by: str
-    reversed_by: Annotated[tuple[LedgerLifecycleReversalOperationId, ...], Field(min_length=1, max_length=2)]
+    reversed_by: Annotated[tuple[LedgerLifecycleReversalOperationId, ...], Field(min_length=1, max_length=16)]
 
 
 class LedgerLifecycleMutationProjection(BaseModel):

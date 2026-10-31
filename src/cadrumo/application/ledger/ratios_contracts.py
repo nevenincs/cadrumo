@@ -23,7 +23,7 @@ LEDGER_RATIOS_CENSO_MISMATCH_REFUSAL_CODE = "REFUSED_FINANCIAL_USAGE_RATIOS_CENS
 LEDGER_RATIOS_NO_OVERRIDE_REFUSAL_CODE = "REFUSED_CLI_VALIDATION_BOUNDARY"
 
 _Year = Annotated[int, Field(ge=1900, le=9999)]
-_CategoryToken = Annotated[str, Field(min_length=1, max_length=96)]
+_CategoryToken = Annotated[str, Field(min_length=1, max_length=128)]
 _RatioText = Annotated[str, Field(min_length=1, max_length=128)]
 #: The registry's wording for one category: its label and its notes.
 _CategoryWording = Annotated[str, Field(min_length=1, max_length=1024)]
@@ -189,8 +189,8 @@ class LedgerRatiosValidationFinding(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     category: _CategoryToken
-    kind: Annotated[str, Field(min_length=1, max_length=96)]
-    detail: Annotated[str, Field(max_length=300)] = ""
+    kind: Annotated[str, Field(min_length=1, max_length=128)]
+    detail: Annotated[str, Field(max_length=512)] = ""
 
 
 class _LedgerRatiosValidateFacts(BaseModel):

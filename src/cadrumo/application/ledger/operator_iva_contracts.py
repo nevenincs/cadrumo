@@ -78,7 +78,7 @@ class LedgerOperatorIvaResult(BaseModel):
 
     profile_id: UUID
     outcome: Literal["derived", "validation_error"] = "derived"
-    transaction_id: Annotated[str, Field(min_length=1, max_length=96)]
+    transaction_id: Annotated[str, Field(min_length=1, max_length=128)]
     iva_category: Annotated[str, Field(min_length=1, max_length=128)]
     derivable: bool
     iva_rate: LedgerClassifyDecimalText | None = None

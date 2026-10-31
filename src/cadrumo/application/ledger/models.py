@@ -384,7 +384,7 @@ class ManualLedgerTransactionResult(BaseModel):
     stale_finalized_revisions: tuple[LedgerRemovalBlocker, ...] = ()
 
 
-IsoDateText = Annotated[str, StringConstraints(min_length=10, max_length=10)]
+IsoDateText = Annotated[str, StringConstraints(pattern=r"^\d{4}-\d{2}-\d{2}$")]
 """A calendar date as the wire carries it, ``YYYY-MM-DD``, fixed at ten characters."""
 
 DiagnosticKind = Annotated[str, StringConstraints(min_length=1, max_length=32)]

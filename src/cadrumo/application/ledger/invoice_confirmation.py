@@ -56,13 +56,14 @@ from datetime import date
 from decimal import Decimal
 from typing import TYPE_CHECKING, Final, Literal, NamedTuple, NoReturn
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 from ...core.aggregation import IntracomOperationType
 from ...core.config import Settings
 from ...core.config import load_settings as _load_settings
 from ...core.draft_discrepancy import DraftDiscrepancyKind
 from ...core.hashing import canonical_json_bytes, sha256_hex
+from ...core.hex import Hex16Str
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.parsing.dates import parse_iso8601_date
 from ...domain.attachments.errors import AttachmentNotFoundError
@@ -188,7 +189,7 @@ class InvoiceConfirmationResult(BaseModel):
     draft: InvoiceDraft
     created: bool
     total_discrepancy: PrintedTotalDiscrepancy | None = None
-    confirmation_id: str | None = Field(default=None, min_length=16, max_length=16)
+    confirmation_id: Hex16Str | None = None
     confirmed_provenance: tuple[FieldProvenance, ...] = ()
     establishment: ConfirmedEstablishment | None = None
 

@@ -33,7 +33,7 @@ class LedgerLlmOperationResult(BaseModel):
     profile_id: UUID
     reviewed_proposal_digest: ContentDigest
     outcome: Literal["preview", "classified", "split", "rejected"]
-    transaction_id: Annotated[str, Field(min_length=1, max_length=96)]
+    transaction_id: Annotated[str, Field(min_length=1, max_length=128)]
     preview: LedgerLlmReviewProjection | None = None
     classification: LedgerClassifyOperationResult | None = None
     split_group_id: LedgerLlmShortText | None = None

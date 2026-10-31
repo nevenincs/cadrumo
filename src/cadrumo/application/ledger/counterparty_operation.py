@@ -94,7 +94,7 @@ class LedgerCounterpartyRequest(BaseModel):
     tax_identifier: str = Field(min_length=1, max_length=256)
     country_code: CountryCodeAlpha2 | None = None
     territorial_scope: str | None = Field(default=None, min_length=1, max_length=64)
-    identification_state: str | None = Field(default=None, min_length=2, max_length=2)
+    identification_state: CountryCodeAlpha2 | None = None
     evidenced_scope: str | None = Field(default=None, min_length=1, max_length=64)
     note: str = Field(default="", max_length=4096)
     asserted_by: str | None = Field(default=None, max_length=256)
@@ -127,7 +127,7 @@ class CounterpartyFactProjection(BaseModel):
     counterparty_key: Hex64Str
     canonical_tax_identifier: str = Field(min_length=1, max_length=256)
     territorial_scope: str | None = Field(default=None, min_length=1, max_length=64)
-    identification_state: str | None = Field(default=None, min_length=2, max_length=2)
+    identification_state: CountryCodeAlpha2 | None = None
     asserted_by: str = Field(min_length=1, max_length=256)
     asserted_at: datetime
     note: str = Field(default="", max_length=4096)
@@ -152,7 +152,7 @@ class CounterpartyResolutionProjection(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     territorial_scope: str | None = Field(default=None, min_length=1, max_length=64)
     territorial_source: str | None = Field(default=None, min_length=1, max_length=64)
-    identification_state: str | None = Field(default=None, min_length=2, max_length=2)
+    identification_state: CountryCodeAlpha2 | None = None
     identification_source: str | None = Field(default=None, min_length=1, max_length=64)
     confirmed_scope: str | None = Field(default=None, min_length=1, max_length=64)
     evidenced_scope: str | None = Field(default=None, min_length=1, max_length=64)

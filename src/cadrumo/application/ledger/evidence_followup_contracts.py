@@ -286,7 +286,7 @@ class LedgerEvidenceReviewListProjection(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     profile_id: UUID
-    filters: Annotated[tuple[str, ...], Field(max_length=4)] = ()
+    filters: Annotated[tuple[str, ...], Field(max_length=16)] = ()
     rows: _ReviewRows = ()
 
     @model_validator(mode="after")

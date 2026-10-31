@@ -54,7 +54,7 @@ class LedgerAllocateRequest(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     profile_id: UUID
-    transaction_id: Annotated[str, Field(min_length=1, max_length=96)]
+    transaction_id: Annotated[str, Field(min_length=1, max_length=128)]
     business_pct: _BusinessShareText
     category_id: Annotated[str, Field(max_length=128)] | None = None
     usage_ratio_id: Annotated[str, Field(max_length=128)] | None = None

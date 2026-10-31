@@ -25,14 +25,14 @@ _AddText = Annotated[str, Field(max_length=4096)]
 _AddOptionalText = Annotated[str, Field(max_length=4096)] | None
 _AddDecimalText = Annotated[str, Field(min_length=1, max_length=128)]
 _AddOptionalDecimalText = _AddDecimalText | None
-_AddDateText = Annotated[str, Field(min_length=10, max_length=10)]
+_AddDateText = Annotated[str, Field(min_length=1, max_length=16)]
 _AddOptionalDateText = _AddDateText | None
 _AddId = Annotated[str, Field(min_length=1, max_length=256)]
 _AddOptionalId = _AddId | None
 _AddDirection = Annotated[str, Field(min_length=1, max_length=32)]
 _AddClassification = Annotated[str, Field(min_length=1, max_length=64)]
 _AddIvaCategory = Annotated[str, Field(min_length=1, max_length=128)] | None
-_AddEUMemberState = Annotated[str, Field(min_length=2, max_length=2)] | None
+_AddEUMemberState = CountryCodeAlpha2 | None
 _AddAttachmentIds = Annotated[
     tuple[Annotated[str, Field(min_length=1, max_length=256)], ...], Field(max_length=MAX_LEDGER_ADD_ATTACHMENTS)
 ]

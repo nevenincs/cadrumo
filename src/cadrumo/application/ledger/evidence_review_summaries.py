@@ -13,7 +13,7 @@ from ...core.draft_discrepancy import DraftDiscrepancyKind
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.field_grounding import FieldGroundingOutcome
 from ...core.field_origin import FieldOrigin
-from ...core.hex import Hex64Str
+from ...core.hex import Hex16Str, Hex64Str
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.time.utc import validate_utc_aware
 from ...domain.iva.establishment import StatedCountryCodeStatus
@@ -128,7 +128,7 @@ class EvidenceReviewBlockerSummary(BaseModel):
     """One question that blocks confirmation, addressed by the identity confirmation answers."""
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-    blocker_id: Annotated[str, Field(min_length=16, max_length=16)]
+    blocker_id: Hex16Str
     reason: ConfirmationBlockReason
     field: EvidenceReviewFieldName | None = None
     candidate_count: NonNegativeInt
@@ -217,7 +217,7 @@ class LedgerEvidenceReviewSummaryProjection(BaseModel):
     blockers: Annotated[tuple[EvidenceReviewBlockerSummary, ...], Field(max_length=128)] = ()
     label_reading_fallback: LabelReadingFallbackProjectionV1 | None = None
     party_attribution_advisory: PartyAttributionAdvisoryProjection | None = None
-    country_vocabulary_warnings: Annotated[tuple[EvidenceReviewCountryWarningSummary, ...], Field(max_length=2)] = ()
+    country_vocabulary_warnings: Annotated[tuple[EvidenceReviewCountryWarningSummary, ...], Field(max_length=16)] = ()
     withheld_text_fields: Annotated[tuple[EvidenceReviewFieldName, ...], Field(max_length=64)] = ()
     text_withheld: bool
 
