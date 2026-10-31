@@ -20,7 +20,7 @@ from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG, STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.period import Period
 from ...core.prior_domiciliation_election import PriorDomiciliationElection
-from ...domain.calculations.registry.form_codes import form_codes_in_scope, form_for_role
+from ...domain.calculations.registry.form_codes import form_for_role, resolve_form_codes
 from ...domain.calculations.registry.ids import RecordId
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.calculations.registry.schema_exports import (
@@ -35,6 +35,9 @@ from ...domain.filing.software_identity import AeatProductSoftwareIdentity
 from ...domain.submission.models import ModeloDraftStatus
 from ._envelope_modelo_policy import filing_envelope_modelo_policy
 from .producer_snapshot import FilingProducerSnapshot
+
+#: The governed fact holding the envelope's declared extents.
+_FORM_ROW_CODES_FACT = "form-row-codes"
 
 _ENVELOPE_GRAMMAR_LITERALS: Mapping[FilingEnvelopePrefixRole, str] = {
     FilingEnvelopePrefixRole.OPENING_TAG: "<T",
@@ -182,10 +185,7 @@ def envelope_period_token(period: Period) -> str:
     token = period.registry_token
     #: The envelope grammar prints the filing period as the fixed ``PP`` span of its
     #: record identifier ``<T{modelo}0{AAAA}{PP}0000>``, in the prefix and the relative closer.
-    codes = form_codes_in_scope()
-    if codes is None:
-        return token
-    extent = codes.integer("aeat.envelope.period_extent")
+    extent = resolve_form_codes(_FORM_ROW_CODES_FACT).integer("aeat.envelope.period_extent")
     if len(token) != extent:
         raise FilingExportValidationError(f"filing period {period!s} has no {extent}-character envelope representation")
     return token
@@ -227,8 +227,7 @@ def envelope_closer_bytes(*, modelo: Modelo, period: Period, envelope: FilingEnv
     record_type = _ENVELOPE_GRAMMAR_LITERALS[FilingEnvelopePrefixRole.RECORD_TYPE]
     period_token = _declared_envelope_period_token(period, modelo=modelo, envelope=envelope)
     closer = f"</T{modelo.value}{discriminant}{period.filing_year:04d}{period_token}{record_type}".encode("ascii")
-    codes = form_codes_in_scope()
-    if codes is not None and len(closer) != (extent := codes.integer("aeat.envelope.closer_extent")):
+    if len(closer) != (extent := resolve_form_codes(_FORM_ROW_CODES_FACT).integer("aeat.envelope.closer_extent")):
         raise FilingExportValidationError(f"filing-envelope closer must render to the declared {extent}-byte extent")
     return closer
 

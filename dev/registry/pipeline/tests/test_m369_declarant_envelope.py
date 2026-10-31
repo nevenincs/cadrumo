@@ -54,6 +54,7 @@ def _declaration(*, roles: tuple[tuple[R, int], ...] = _ROLES) -> FilingEnvelope
     )
 
 
+@pytest.mark.usefixtures("operation")
 def test_declarant_prefix_and_closer_use_only_source_stated_slots() -> None:
     declaration = _declaration()
     period = Period.from_year_and_code(2025, "1T")

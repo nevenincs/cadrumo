@@ -122,6 +122,7 @@ def test_filing_envelope_defining_module_exposes_one_closed_request() -> None:
     }
 
 
+@pytest.mark.usefixtures("operation")
 def test_m303_envelope_occurrence_and_result_validate_emitted_byte_evidence() -> None:
     period = Period.from_year_and_code(2023, "4T")
     envelope = _m303_envelope_definition()
