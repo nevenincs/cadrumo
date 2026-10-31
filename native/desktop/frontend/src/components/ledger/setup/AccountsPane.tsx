@@ -38,7 +38,6 @@ import {
   Reading,
   readLanding,
   SetupTable,
-  TextField,
   useSetupDraft,
   useSetupRead,
   useSetupWrite,
@@ -558,31 +557,49 @@ export function AccountsPane({ port, reader, locale }: SetupProps) {
           />
         )}
       </EditorField>
-      <TextField
+      <EditorField
         label={t("desktop.ledger.accounts.bank_name")}
-        value={secrets.bank_name}
-        onValue={secret("bank_name")}
-        type="password"
-        autoComplete="new-password"
         hint={t("desktop.ledger.accounts.bank_hint")}
-        maxLength={70}
-      />
-      <TextField
+      >
+        {(control) => (
+          <TextEditor
+            id={control.id}
+            value={secrets.bank_name}
+            onChange={secret("bank_name")}
+            invalid={control.invalid}
+            describedBy={control.describedBy}
+            maxLength={70}
+          />
+        )}
+      </EditorField>
+      <EditorField
         label={t("desktop.ledger.accounts.bank_address")}
-        value={secrets.bank_address}
-        onValue={secret("bank_address")}
-        type="password"
-        autoComplete="new-password"
-        maxLength={35}
-      />
-      <TextField
+      >
+        {(control) => (
+          <TextEditor
+            id={control.id}
+            value={secrets.bank_address}
+            onChange={secret("bank_address")}
+            invalid={control.invalid}
+            describedBy={control.describedBy}
+            maxLength={35}
+          />
+        )}
+      </EditorField>
+      <EditorField
         label={t("desktop.ledger.accounts.bank_city")}
-        value={secrets.bank_city}
-        onValue={secret("bank_city")}
-        type="password"
-        autoComplete="new-password"
-        maxLength={30}
-      />
+      >
+        {(control) => (
+          <TextEditor
+            id={control.id}
+            value={secrets.bank_city}
+            onChange={secret("bank_city")}
+            invalid={control.invalid}
+            describedBy={control.describedBy}
+            maxLength={30}
+          />
+        )}
+      </EditorField>
       <EditorField label={t("desktop.ledger.accounts.bank_country")}>
         {(control) => (
           <CountryEditor
