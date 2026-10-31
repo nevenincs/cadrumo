@@ -1,4 +1,4 @@
-import { openPanelTab } from "../support/panel";
+import { openLogFilters, openPanelTab } from "../support/panel";
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { seedLayout } from "../support/layout";
 import { label } from "../support/strings";
@@ -936,4 +936,37 @@ test("a press in the documentation while a menu is open keeps focus there", asyn
   await expect(menu).toBeHidden();
   await target.waitForTimeout(200);
   await expect(target.locator(".docs-frame")).toBeFocused();
+});
+
+test("a menu opened just as a popover goes keeps focus and stays open", async ({
+  page: target,
+}) => {
+  await target.goto(
+    "/scenarios.html?scenario=user-profile&latency=0&bar=off&logLevel=INFO",
+  );
+  await openPanelTab(target, "logs");
+  await openLogFilters(target);
+  const popover = target.locator('[data-slot="popover-content"]');
+  await expect(popover).toBeVisible();
+  // The popover gives focus back a task after it unmounts. A busy window can
+  // handle a right-click first, so the press comes in exactly that gap: after
+  // the popover has gone, before its focus return has run.
+  await target.evaluate(() => {
+    document.addEventListener("animationend", (event) => {
+      if ((event.target as HTMLElement).dataset.slot !== "popover-content")
+        return;
+      document
+        .querySelector('.record[data-seq="4"]')
+        ?.dispatchEvent(
+          new MouseEvent("contextmenu", { bubbles: true, cancelable: true }),
+        );
+    });
+  });
+  await target.keyboard.press("Escape");
+  await expect(popover).toHaveCount(0);
+  // Queued behind the popover's own zero-delay focus return.
+  await target.evaluate(() => new Promise((done) => setTimeout(done)));
+  const menu = target.getByRole("menu");
+  await expect(menu).toBeVisible();
+  await expect(menu).toBeFocused();
 });

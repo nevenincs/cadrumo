@@ -28,6 +28,10 @@ function PopoverAnchor(
  * Escape pressed inside it closes it at the first press. The foundation gives
  * the key to the topmost layer only, so a tooltip showing anywhere in the
  * window would otherwise take the first press and leave the popover up.
+ *
+ * Focus goes back to the trigger a task after the popover has gone, so whatever
+ * took focus in between keeps it: a menu opened in that moment would otherwise
+ * lose focus to the trigger and close.
  */
 function PopoverContent({
   className,
@@ -36,6 +40,7 @@ function PopoverContent({
   collisionPadding = 8,
   children,
   onFocusCapture,
+  onCloseAutoFocus,
   ...props
 }: React.ComponentProps<typeof PopoverPrimitive.Content>) {
   const dismiss = React.useRef<HTMLButtonElement>(null);
@@ -43,6 +48,11 @@ function PopoverContent({
     <PopoverPrimitive.Portal>
       <PopoverPrimitive.Content
         data-slot="popover-content"
+        onCloseAutoFocus={(event) => {
+          onCloseAutoFocus?.(event);
+          const held = document.activeElement;
+          if (held && held !== document.body) event.preventDefault();
+        }}
         // Tall content scrolls inside: what takes focus is brought into view.
         onFocusCapture={(event) => {
           onFocusCapture?.(event);
