@@ -16,6 +16,7 @@ from cadrumo.domain.user_profile.values import create_user_profile_record as _cr
 from ....core.aggregation import BindingSourceKind
 from ....core.period import Period
 from ....domain.categories.spending_category import SpendingCategory
+from ....domain.modelos.calculation_revision_sources import CalculationNoteFact, CalculationNoteSentence
 from ....domain.renta.actividad_asset.claims import AmortizationClaim
 from ....domain.renta.actividad_asset.election import (
     AcquiredCondition,
@@ -844,3 +845,59 @@ def test_a_register_owned_row_without_a_claim_yields_a_non_blocking_gap_and_no_d
     gaps = [item for item in resolution.diagnostics if item.reason == "activity_asset_claim_gap"]
     assert len(gaps) == 1
     assert gaps[0].reason not in GATE_REFUSED_REASONS
+
+
+def test_an_edition_without_a_box_for_a_kind_names_the_element_and_keeps_the_kind_it_does_bind() -> None:
+    bound = _m100_revision(2025)
+    unbound_kind = _renta_expense_binding_id(bound, "0208")
+    revision = bound.model_copy(
+        update={"bindings": tuple(binding for binding in bound.bindings if binding.id != unbound_kind)}
+    )
+    material = register_asset("furniture", transaction_id="c" * 64, in_service=date(2025, 1, 1))
+    intangible = register_asset(
+        "licence",
+        transaction_id="d" * 64,
+        in_service=date(2025, 1, 1),
+        kind=AssetKind.INTANGIBLE,
+    )
+    history = ActivityAssetHistory(
+        revisions=(material, intangible),
+        claims=(
+            _register_claim(material, amount=Decimal("1200.00"), tax_year=2025),
+            _register_claim(intangible, amount=Decimal("700.00"), tax_year=2025),
+        ),
+    )
+
+    resolution = LedgerRentaGastosEstimacionDirectaAggregationSourceResolver(
+        ports=catalogue_read_ports(
+            invoice_repository=_InMemoryInvoiceCatalogueRepository(),
+            transaction_repository=InMemoryTransactionCatalogueRepository(bucket_id=BUCKET_ID),
+        ),
+        prorrata_register_repository=empty_prorrata_repository(),
+        usage_ratio_profile_loader=lambda *, bucket_id, operation: UsageRatioProfile(),
+        activity_asset_history_repository=StaticActivityAssetHistoryRepository(history),
+    ).resolve(
+        CalculationSourceContext(
+            bucket_id=BUCKET_ID,
+            modelo="100",
+            filing_year=2025,
+            period=Period.from_year_and_code(2025, "0A"),
+            revision=revision,
+        ),
+    )
+
+    assert unbound_kind not in resolution.binding_values
+    assert resolution.binding_values[_renta_expense_binding_id(bound, "0227")] == Decimal("700.00")
+    assert [
+        (item.source_ref, item.reason, item.casilla_id, item.fact)
+        for item in resolution.diagnostics
+        if item.reason == "activity_asset_accrual_unavailable"
+    ] == [
+        (
+            f"activity-asset:{material.asset_id}",
+            "activity_asset_accrual_unavailable",
+            None,
+            CalculationNoteFact.of(CalculationNoteSentence.AMORTIZATION_BOX_UNBOUND, elements=(material.asset_id,)),
+        ),
+    ]
+    assert not [item for item in resolution.diagnostics if item.reason == "activity_asset_claim_gap"]
