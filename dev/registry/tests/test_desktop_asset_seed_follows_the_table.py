@@ -20,6 +20,7 @@ import pytest
 from cadrumo.domain.renta.actividad_asset.lifecycle import (
     BASIS_STAGE_FACTS,
     OPENING_STATUS_FACTS,
+    WHOLLY_BUSINESS_STAGE_FACTS,
     AssetBasisStage,
 )
 from dev._paths import REPO_ROOT
@@ -207,6 +208,29 @@ def test_the_seeded_basis_stages_serve_the_facts_the_domain_table_states() -> No
     assert seeded
     assert seeded == {
         stage.value: (facts, stage is AssetBasisStage.WHOLE_PROPERTY) for stage, facts in BASIS_STAGE_FACTS.items()
+    }
+
+
+def test_the_seeded_wholly_business_facts_have_the_served_values_and_shape() -> None:
+    section = _section(_SEED.read_text(encoding="utf-8"), "BASIS_STAGES")
+    seeded = {
+        match["stage"]: {
+            fact["fact"]: Decimal(fact["value"])
+            for fact in re.finditer(
+                r'fact:\s*"(?P<fact>\w+)",\s*value:\s*\{\s*decimal:\s*"(?P<value>[^"]+)"',
+                match["facts"],
+            )
+        }
+        for match in re.finditer(
+            r'stage:\s*"(?P<stage>\w+)".*?wholly_business_facts:\s*\[(?P<facts>.*?)\],\s*\}',
+            section,
+            re.DOTALL,
+        )
+    }
+
+    assert seeded
+    assert seeded == {
+        stage.value: dict(WHOLLY_BUSINESS_STAGE_FACTS.get(stage, {})) for stage in BASIS_STAGE_FACTS
     }
 
 

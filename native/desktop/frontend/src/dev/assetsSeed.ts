@@ -9207,7 +9207,9 @@ export const BASIS_STAGES: readonly BasisStageOption[] = [
     stage: "taxpayer_owned",
     facts: ["business_use_share"],
     is_property: false,
-    wholly_business_facts: [{ fact: "business_use_share", value: "1" }],
+    wholly_business_facts: [
+      { fact: "business_use_share", value: { decimal: "1" } },
+    ],
   },
   {
     stage: "business_allocated",

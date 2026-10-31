@@ -897,7 +897,9 @@ export function AssetForm({
     .find((found) => found.fact === "business_use_share");
   const whollyBusiness = whollyShare
     ? t("desktop.ledger.assets.field.wholly_business_hint", {
-        share: formatPercent(locale, whollyShare.value, { unit: "fraction" }),
+        share: formatPercent(locale, whollyShare.value.decimal, {
+          unit: "fraction",
+        }),
       })
     : null;
   const name = asset.row?.name ?? t(ASSET_KEYS.list.no_name);

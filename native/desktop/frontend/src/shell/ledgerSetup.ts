@@ -1277,7 +1277,7 @@ export type BasisStageOption = {
   is_property: boolean;
   /** The facts that state a purchase used wholly for the activity under this
    * stage; empty where the stage has no such path. */
-  wholly_business_facts: { fact: string; value: string }[];
+  wholly_business_facts: { fact: string; value: PublicDecimal }[];
 };
 
 /** One status an opening history can have, with the facts it can state. */
