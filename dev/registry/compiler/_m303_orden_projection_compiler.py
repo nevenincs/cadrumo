@@ -48,7 +48,10 @@ def require_declared_orden_shape(census: M303AnnualOrdenSourceCensus) -> None:
     """Refuse an annual Orden whose module rows or seasonal bands the registry does not declare."""
     row_codes = resolve_form_codes("form-row-codes", effective_date=date(census.ejercicio, 1, 1))
     modules = int(row_codes.code("m303.orden.modules_per_activity"))
-    if any(module.order > modules for activity in census.activities for module in activity.modules):
+    if any(
+        len(activity.modules) > modules or any(module.order > modules for module in activity.modules)
+        for activity in census.activities
+    ):
         raise RegistryValidationError(f"annual Orden module order is past the {modules} the record declares")
     bands = int(row_codes.code("m303.orden.seasonal_bands"))
     if len(census.seasonal_indexes) != bands:

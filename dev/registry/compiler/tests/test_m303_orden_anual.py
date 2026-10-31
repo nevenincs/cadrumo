@@ -10,6 +10,8 @@ indistinguishable from one whose output is current.
 from __future__ import annotations
 
 from datetime import date
+from decimal import Decimal
+from types import SimpleNamespace
 
 import pytest
 
@@ -17,16 +19,27 @@ from cadrumo.core.errors.hierarchy import InternalInvariantError
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.facts.payloads import MappingFactPayload
 from cadrumo.domain.calculations.registry.facts.schema import GovernedFactCatalogue
+from cadrumo.domain.calculations.registry.form_codes import resolve_form_codes
 from cadrumo.domain.calculations.registry.governed_fact_scope import CandidateFactAuthority, validating_governed_facts
+from cadrumo.domain.calculations.registry.schema_references import TemporalSupportEnvelope
 from cadrumo.domain.calculations.registry.tests.fact_scope import outside_governed_fact_validation
+from cadrumo.domain.iva.errors import IvaValidationError
+from cadrumo.domain.iva.schema import validate_orden_module_identities
 
 from ...analysis.m303_orden_anual import main
 from .._m303_orden_projection_compiler import require_declared_orden_shape
 from .._m303_orden_source import extract_m303_annual_orden_source
 from ..annual_orden_auxiliary_indicator import resolve_annual_orden_auxiliary_activity_indicators
+from ..fact_loader import load_governed_fact_file
 from ..loader import load_registry_tree
-from ..m303_orden_raw_models import M303AnnualOrdenSourceCensus
+from ..m303_orden_raw_models import (
+    M303AnnualOrdenRawActivity,
+    M303AnnualOrdenRawModule,
+    M303AnnualOrdenRawSeasonalIndex,
+    M303AnnualOrdenSourceCensus,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -151,6 +164,90 @@ def test_a_module_order_past_the_declared_rows_is_refused() -> None:
 
     with pytest.raises(RegistryValidationError, match="module order is past"):
         require_declared_orden_shape(mutated)
+
+
+def test_module_capacity_follows_the_candidate_fact_not_a_domain_literal() -> None:
+    fact = load_governed_fact_file(bundled_path("registry", "aeat", "facts", "0167-form-row-codes.toml"))
+    catalogue = GovernedFactCatalogue(facts={fact.fact_id: fact})
+    support = TemporalSupportEnvelope(floor=2022, horizon=2026)
+    variant = fact.variants[0]
+    assert isinstance(variant.payload, MappingFactPayload)
+    base = CandidateFactAuthority(catalogue, support)
+    with validating_governed_facts(base):
+        codes = resolve_form_codes("form-row-codes", effective_date=date(2025, 1, 1))
+        limit = int(codes.code("m303.orden.modules_per_activity"))
+        bands = int(codes.code("m303.orden.seasonal_bands"))
+    expanded_limit = limit + 1
+    entries = tuple(
+        entry.model_copy(update={"value": str(expanded_limit)})
+        if entry.key == "m303.orden.modules_per_activity"
+        else entry
+        for entry in variant.payload.entries
+    )
+    assert entries != variant.payload.entries
+    expanded = fact.model_copy(
+        update={
+            "variants": (
+                variant.model_copy(update={"payload": variant.payload.model_copy(update={"entries": entries})}),
+            )
+        }
+    )
+    facts = GovernedFactCatalogue(facts={fact.fact_id: expanded})
+    wider = CandidateFactAuthority(facts, support)
+    modules = tuple(
+        M303AnnualOrdenRawModule(
+            order=order,
+            definition=f"module {order}",
+            unit="person",
+            coefficient=Decimal("1"),
+            required_text="source wording",
+        )
+        for order in range(1, expanded_limit + 1)
+    )
+    activity = M303AnnualOrdenRawActivity(
+        annex_heading="ANEXO II",
+        activity_name="Example activity",
+        iae_epigrafe="123.4",
+        modules=modules,
+        cuota_minima_pct=Decimal("1"),
+        required_text=("source wording",),
+    )
+    altered = M303AnnualOrdenSourceCensus.model_construct(
+        ejercicio=2025,
+        activities=(activity,),
+        seasonal_indexes=tuple(
+            M303AnnualOrdenRawSeasonalIndex(
+                minimum_days=1,
+                maximum_days=1,
+                coefficient=Decimal("1"),
+                required_text="source wording",
+            )
+            for _ in range(bands)
+        ),
+    )
+
+    validate_orden_module_identities(
+        tuple(
+            SimpleNamespace(order=order, coefficient=Decimal("1"), identity=str(order))
+            for order in range(1, expanded_limit + 1)
+        )
+    )
+    with validating_governed_facts(base), pytest.raises(RegistryValidationError, match="module order is past"):
+        require_declared_orden_shape(altered)
+    with validating_governed_facts(wider):
+        require_declared_orden_shape(altered)
+
+
+def test_module_identity_structure_remains_closed() -> None:
+    good = SimpleNamespace(order=1, coefficient=Decimal("1"), identity="a")
+    with pytest.raises(IvaValidationError, match="at least one"):
+        validate_orden_module_identities(())
+    with pytest.raises(IvaValidationError, match="complete and ordered"):
+        validate_orden_module_identities((SimpleNamespace(order=2, coefficient=Decimal("1"), identity="a"),))
+    with pytest.raises(IvaValidationError, match="positive"):
+        validate_orden_module_identities((SimpleNamespace(order=1, coefficient=Decimal("0"), identity="a"),))
+    with pytest.raises(IvaValidationError, match="duplicate"):
+        validate_orden_module_identities((good, SimpleNamespace(order=2, coefficient=Decimal("1"), identity="a")))
 
 
 @pytest.mark.usefixtures("governed_fact_scope")

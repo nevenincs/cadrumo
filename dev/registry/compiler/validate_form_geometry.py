@@ -8,14 +8,15 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.export import derive_export_layouts_from_bindings
 from cadrumo.domain.calculations.registry.form_codes import FormCodes, resolve_form_codes
-from cadrumo.domain.calculations.registry.governed_fact_scope import governed_facts_in_scope
+from cadrumo.domain.calculations.registry.governed_fact_scope import CandidateFactAuthority, governed_facts_in_scope
 from cadrumo.domain.calculations.registry.irnr_tipo_renta import resolve_tipo_renta_irnr_catalogue
 from cadrumo.domain.calculations.registry.prorrata_register_catalogue import resolve_prorrata_register_catalogue
 from cadrumo.domain.calculations.registry.prorrata_register_models import ProrrataRegisterCatalogue
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
+
+from . import fact_providers
 
 
 def prorrata_catalogue_failures(catalogue: ProrrataRegisterCatalogue, codes: FormCodes) -> list[str]:
@@ -59,13 +60,17 @@ def modelo_geometry_failures(modelos: Iterable[ModeloDefinition], codes: FormCod
 
 def validate_form_geometry(modelos: Iterable[ModeloDefinition]) -> tuple[str, ...]:
     """Return failures for authored data whose shape differs from the declared form geometry."""
-    if governed_facts_in_scope() is None:
+    authority = governed_facts_in_scope()
+    if authority is None:
         return ()
-    try:
-        codes = resolve_form_codes("form-row-codes")
-    except RegistryValidationError:
-        # A partial candidate tree authors no form geometry to compare against.
+    if (
+        isinstance(authority, CandidateFactAuthority)
+        and not fact_providers.FACT_PROVIDER_REGISTRATIONS
+        and "form-row-codes" not in authority.catalogue.facts
+    ):
+        # A provider-free partial candidate may omit the entire geometry family.
         return ()
+    codes = resolve_form_codes("form-row-codes")
     tipo_renta_widths = codes.codes("m210.tipo_renta_digits")
     failures = prorrata_catalogue_failures(resolve_prorrata_register_catalogue(), codes)
     failures.extend(

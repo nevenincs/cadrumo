@@ -41,7 +41,7 @@ class M303AnnualOrdenRawActivity(RegistryModel):
     annex_heading: Literal["ANEXO II"]
     activity_name: str = Field(min_length=1)
     iae_epigrafe: IaeEpigrafe
-    modules: tuple[M303AnnualOrdenRawModule, ...] = Field(min_length=1, max_length=7)
+    modules: tuple[M303AnnualOrdenRawModule, ...] = Field(min_length=1)
     cuota_minima_pct: Percentage
     required_text: tuple[str, ...] = Field(min_length=1)
 

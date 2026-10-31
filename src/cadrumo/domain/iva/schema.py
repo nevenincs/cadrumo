@@ -77,8 +77,8 @@ class _ModuloOrdenAnualLike(Protocol):
 
 def validate_orden_module_identities(modulos: tuple[_ModuloOrdenAnualLike, ...]) -> None:
     """Refuse an Orden activity whose modules are missing, misordered or non-positive."""
-    if not 1 <= len(modulos) <= 7:
-        raise IvaValidationError("an Orden activity must declare one through seven modules")
+    if not modulos:
+        raise IvaValidationError("an Orden activity must declare at least one module")
     if tuple(module.order for module in modulos) != tuple(range(1, len(modulos) + 1)):
         raise IvaValidationError("an Orden activity module identities must be complete and ordered")
     if any(module.coefficient <= 0 for module in modulos):
