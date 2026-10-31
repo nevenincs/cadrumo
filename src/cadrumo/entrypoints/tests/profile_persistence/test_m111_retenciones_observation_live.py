@@ -25,6 +25,7 @@ from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....application.aggregation.retenciones import RetencionObservation
 from ....application.modelo.calculation_bucket_actions import (
+    BucketAggregationCalculationResult,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
 from ....application.modelo.work_lifecycle import create_work_unit
@@ -36,6 +37,7 @@ from ....core.aggregation import (
 )
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.user_profile.tests.general_regime_facts import GENERAL_REGIME_NATURAL_PERSON_FACTS
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
 from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 from .file_flow_test_support import calculation_ports_for_test
@@ -98,17 +100,7 @@ def _seed_ready_profile(objects: SecureObjectRepository) -> None:
                 UserProfileFact(path="identity.name", value="Test"),
                 UserProfileFact(path="identity.surnames", value="Operator"),
                 UserProfileFact(path="activities.description", value="withholding operator activity"),
-                UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-                UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-                UserProfileFact(path="iva.regime", value="GENERAL"),
-                UserProfileFact(path="iva.m303_regime_composition", value="general"),
-                UserProfileFact(path="iva.redeme_enrolled", value=False),
-                UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-                UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-                UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-                UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-                UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-                UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
+                *GENERAL_REGIME_NATURAL_PERSON_FACTS,
                 UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
                 # Modelo 111 refuses a defaulted colegio-concertado declaration: the fichero
                 # carries the row as filer data, so it must be stated rather than assumed.
@@ -122,6 +114,47 @@ def _seed_ready_profile(objects: SecureObjectRepository) -> None:
     )
 
 
+def _calculate_with_observation(
+    objects: SecureObjectRepository, operation: PinnedAuthorityOperation, observation: RetencionObservation
+) -> BucketAggregationCalculationResult:
+    """Persist one retención observation for 1T 2026, create the Modelo 111 work unit and calculate it."""
+    period = Period.from_year_and_code(2026, "1T")
+    replace_retencion_observations(
+        RetencionObservationRepositoryAdapter(objects=objects),
+        modelo="111",
+        filing_year=2026,
+        period=period,
+        observations=[observation],
+        source_kind=AggregationCaptureKind.AGGREGATE_PULL,
+    )
+    snapshot = published_authority_operation().snapshot("111", filing_year=2026, period="1T")
+    wu_repo = WorkUnitCatalogueRepository(objects=objects)
+    work_unit = create_work_unit(
+        bucket_id=_BUCKET_ID,
+        modelo="111",
+        filing_year=2026,
+        period=period,
+        revision_id=snapshot.revision.id,
+        ports=WorkLifecyclePorts(
+            work_unit_repository=wu_repo, bucket_event_repository=BucketEventHistoryRepository(objects=objects)
+        ),
+        clock=_T0,
+        operation=operation,
+    )
+    with calculation_ports_for_test(
+        bucket_id=_BUCKET_ID,
+        calculation_repository=CalculationRevisionCatalogueRepository(objects=objects),
+        invoice_repository=InvoiceCatalogueRepository(objects=objects),
+        transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects),
+        work_unit_repository=wu_repo,
+    ) as calculation_ports:
+        return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+            work_unit.work_unit_id,
+            ports=calculation_ports,
+            clock=_T1,
+        )
+
+
 def test_m111_professional_retencion_observation_calculates_activity_boxes(
     tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
@@ -129,41 +162,7 @@ def test_m111_professional_retencion_observation_calculates_activity_boxes(
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID, label="M111 retenciones") as profile:
         objects: SecureObjectRepository = profile.repository
         _seed_ready_profile(objects)
-        period = Period.from_year_and_code(2026, "1T")
-        replace_retencion_observations(
-            RetencionObservationRepositoryAdapter(objects=objects),
-            modelo="111",
-            filing_year=2026,
-            period=period,
-            observations=[_professional_observation()],
-            source_kind=AggregationCaptureKind.AGGREGATE_PULL,
-        )
-        snapshot = published_authority_operation().snapshot("111", filing_year=2026, period="1T")
-        wu_repo = WorkUnitCatalogueRepository(objects=objects)
-        work_unit = create_work_unit(
-            bucket_id=_BUCKET_ID,
-            modelo="111",
-            filing_year=2026,
-            period=period,
-            revision_id=snapshot.revision.id,
-            ports=WorkLifecyclePorts(
-                work_unit_repository=wu_repo, bucket_event_repository=BucketEventHistoryRepository(objects=objects)
-            ),
-            clock=_T0,
-            operation=operation,
-        )
-        with calculation_ports_for_test(
-            bucket_id=_BUCKET_ID,
-            calculation_repository=CalculationRevisionCatalogueRepository(objects=objects),
-            invoice_repository=InvoiceCatalogueRepository(objects=objects),
-            transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects),
-            work_unit_repository=wu_repo,
-        ) as _calculation_ports_151:
-            result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
-                work_unit.work_unit_id,
-                ports=_calculation_ports_151,
-                clock=_T1,
-            )
+        result = _calculate_with_observation(objects, operation, _professional_observation())
 
     values = result.revision.casilla_values
     assert values["07"] == Decimal("1")
@@ -186,41 +185,7 @@ def test_m111_administrador_retencion_observation_folds_into_trabajo_boxes(
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID, label="M111 retenciones") as profile:
         objects: SecureObjectRepository = profile.repository
         _seed_ready_profile(objects)
-        period = Period.from_year_and_code(2026, "1T")
-        replace_retencion_observations(
-            RetencionObservationRepositoryAdapter(objects=objects),
-            modelo="111",
-            filing_year=2026,
-            period=period,
-            observations=[_administrador_observation()],
-            source_kind=AggregationCaptureKind.AGGREGATE_PULL,
-        )
-        snapshot = published_authority_operation().snapshot("111", filing_year=2026, period="1T")
-        wu_repo = WorkUnitCatalogueRepository(objects=objects)
-        work_unit = create_work_unit(
-            bucket_id=_BUCKET_ID,
-            modelo="111",
-            filing_year=2026,
-            period=period,
-            revision_id=snapshot.revision.id,
-            ports=WorkLifecyclePorts(
-                work_unit_repository=wu_repo, bucket_event_repository=BucketEventHistoryRepository(objects=objects)
-            ),
-            clock=_T0,
-            operation=operation,
-        )
-        with calculation_ports_for_test(
-            bucket_id=_BUCKET_ID,
-            calculation_repository=CalculationRevisionCatalogueRepository(objects=objects),
-            invoice_repository=InvoiceCatalogueRepository(objects=objects),
-            transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects),
-            work_unit_repository=wu_repo,
-        ) as _calculation_ports_203:
-            result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
-                work_unit.work_unit_id,
-                ports=_calculation_ports_203,
-                clock=_T1,
-            )
+        result = _calculate_with_observation(objects, operation, _administrador_observation())
 
     values = result.revision.casilla_values
     assert values["01"] == Decimal("1")
@@ -245,41 +210,7 @@ def test_m111_administrador_wrong_rate_surfaces_calculate_advisory(
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID, label="M111 retenciones") as profile:
         objects: SecureObjectRepository = profile.repository
         _seed_ready_profile(objects)
-        period = Period.from_year_and_code(2026, "1T")
-        replace_retencion_observations(
-            RetencionObservationRepositoryAdapter(objects=objects),
-            modelo="111",
-            filing_year=2026,
-            period=period,
-            observations=[_administrador_wrong_rate_observation()],
-            source_kind=AggregationCaptureKind.AGGREGATE_PULL,
-        )
-        snapshot = published_authority_operation().snapshot("111", filing_year=2026, period="1T")
-        wu_repo = WorkUnitCatalogueRepository(objects=objects)
-        work_unit = create_work_unit(
-            bucket_id=_BUCKET_ID,
-            modelo="111",
-            filing_year=2026,
-            period=period,
-            revision_id=snapshot.revision.id,
-            ports=WorkLifecyclePorts(
-                work_unit_repository=wu_repo, bucket_event_repository=BucketEventHistoryRepository(objects=objects)
-            ),
-            clock=_T0,
-            operation=operation,
-        )
-        with calculation_ports_for_test(
-            bucket_id=_BUCKET_ID,
-            calculation_repository=CalculationRevisionCatalogueRepository(objects=objects),
-            invoice_repository=InvoiceCatalogueRepository(objects=objects),
-            transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects),
-            work_unit_repository=wu_repo,
-        ) as _calculation_ports_257:
-            result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
-                work_unit.work_unit_id,
-                ports=_calculation_ports_257,
-                clock=_T1,
-            )
+        result = _calculate_with_observation(objects, operation, _administrador_wrong_rate_observation())
 
     values = result.revision.casilla_values
     assert values["02"] == Decimal("2000.00")
