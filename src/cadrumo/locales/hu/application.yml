@@ -401,7 +401,7 @@ application:
     export_parity:
       errors:
         aux_block_undeclared: Az exportelrendezés nem tudja kiírni a bevallás kötelező
-          Aux blokkját.
+          `Aux` blokkját.
         casilla_metadata_drift: A rovat számozása vagy szegmense eltér a nyomtatványdefiníciókban
           szereplő hivatalos rekordtervtől.
         rate_boxes_understate_total: A kulcsonkénti mezők nem tartalmazzák az összes
@@ -466,7 +466,7 @@ application:
           nem egyezik a megadott {period} időszakkal.'
         modelo_not_in_registry: A Modelo %{modelo} nyomtatvány nem szerepel a számításhoz
           használt nyomtatványdefiníciókban.
-        period_type: 'Belső hiba: a futásidejű sémaszolgáltatóhoz Period objektum
+        period_type: 'Belső hiba: a futásidejű sémaszolgáltatóhoz `Period` objektum
           szükséges; {period_type} érkezett.'
         registry_empty: A(z) %{registry_root_name} mappában nincsenek nyomtatványdefiníciók.
         registry_empty_for_period: A nyomtatványdefiníciók nem tartalmaznak semmit

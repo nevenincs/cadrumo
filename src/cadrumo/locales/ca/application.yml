@@ -410,7 +410,7 @@ application:
           amb les definicions del model en ús.
     export_parity:
       errors:
-        aux_block_undeclared: El disseny d'exportació no pot escriure el bloc Aux
+        aux_block_undeclared: El disseny d'exportació no pot escriure el bloc `Aux`
           obligatori de la declaració.
         casilla_metadata_drift: La numeració o el segment de casella es desvia del
           disseny de registre oficial de les definicions del model.
@@ -478,7 +478,7 @@ application:
           no coincideix amb el període indicat {period}.'
         modelo_not_in_registry: El model %{modelo} no està present a les definicions
           de model usades per al càlcul.
-        period_type: 'Error intern: es requereix un objecte Period per al proveïdor
+        period_type: 'Error intern: es requereix un objecte `Period` per al proveïdor
           d''esquema en temps d''execució; s''ha rebut {period_type}.'
         registry_empty: La carpeta %{registry_root_name} no té definicions de model.
         registry_empty_for_period: Les definicions de model no tenen res per a l'exercici

@@ -412,7 +412,7 @@ application:
     export_parity:
       errors:
         aux_block_undeclared: El diseño de exportación no puede escribir el bloque
-          Aux obligatorio de la declaración.
+          `Aux` obligatorio de la declaración.
         casilla_metadata_drift: La numeración o el segmento de casilla se desvía del
           diseño de registro oficial de las definiciones del modelo.
         rate_boxes_understate_total: Las casillas por tipo no incluyen todos los importes
@@ -480,7 +480,7 @@ application:
           no coincide con el periodo indicado {period}.'
         modelo_not_in_registry: El modelo %{modelo} no está presente en las definiciones
           de modelo usadas para el cálculo.
-        period_type: 'Error interno: se requiere un objeto Period para el proveedor
+        period_type: 'Error interno: se requiere un objeto `Period` para el proveedor
           de esquema en tiempo de ejecución; se recibió {period_type}.'
         registry_empty: La carpeta %{registry_root_name} no tiene definiciones de
           modelo.
