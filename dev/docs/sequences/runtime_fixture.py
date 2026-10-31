@@ -34,7 +34,9 @@ from cadrumo.application.user_profile.automation_custody_port import NativeSecre
 from cadrumo.core.config import load_settings, override_settings
 from cadrumo.core.models import STRICT_FROZEN_CONFIG
 from cadrumo.core.time.clock import frozen_clock
+from cadrumo.domain.calculations.registry.authority import IndexedRegistryAuthority
 from cadrumo.domain.calculations.registry.authority_location import bundled_authority_descriptor_path
+from cadrumo.domain.calculations.registry.authority_store import AUTHORITY_DESCRIPTOR_FILENAME
 from cadrumo.domain.filing import software_identity
 from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
 from cadrumo.tests.authority_run_snapshot import freeze_authority_root
@@ -102,8 +104,20 @@ class _RecordedExportVersion(BaseModel):
         return value
 
 
+@contextmanager
+def _export_version_authority(sandbox_root: Path) -> Generator[None]:
+    """Validate against the exact public generation copied for this sandbox."""
+    authority = IndexedRegistryAuthority(sandbox_root / "docs-authority" / AUTHORITY_DESCRIPTOR_FILENAME)
+    try:
+        with authority.operation():
+            yield
+    finally:
+        authority.close()
+
+
 def _publish_export_version(sandbox_root: Path) -> None:
-    recorded = _RecordedExportVersion(package_version=software_identity.PACKAGE_VERSION)
+    with _export_version_authority(sandbox_root):
+        recorded = _RecordedExportVersion(package_version=software_identity.PACKAGE_VERSION)
     with (sandbox_root / _EXPORT_VERSION_FILE).open("x", encoding="utf-8") as destination:
         destination.write(recorded.model_dump_json())
 
@@ -114,7 +128,8 @@ def _recorded_export_version(sandbox_root: Path) -> Generator[None]:
         raw = source.read(_EXPORT_VERSION_BYTES + 1)
     if len(raw) > _EXPORT_VERSION_BYTES:
         raise ValueError("recorded documentation export version exceeds its finite limit")
-    recorded = _RecordedExportVersion.model_validate_json(raw)
+    with _export_version_authority(sandbox_root):
+        recorded = _RecordedExportVersion.model_validate_json(raw)
     with pytest.MonkeyPatch.context() as selected:
         selected.setattr(software_identity, "PACKAGE_VERSION", recorded.package_version)
         yield
@@ -165,13 +180,13 @@ def _worker_composition() -> Generator[None]:
     )
     try:
         with (
-            _recorded_export_version(root.parent),
             override_settings(
                 cadrumo_authority_root=root.parent / "docs-authority",
                 cadrumo_output_language="en",
                 cadrumo_live_tests_enabled="",
                 cadrumo_live_tests_google="",
             ),
+            _recorded_export_version(root.parent),
             frozen_clock(SANDBOX_INSTANT),
             bind_exchange_rate_provider_factory(recorded_ecb_rate_provider),
             profile_adapter_composition(automation_secrets_store=_UnavailableSecretStore()),
