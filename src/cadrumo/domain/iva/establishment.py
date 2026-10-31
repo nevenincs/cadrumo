@@ -96,6 +96,7 @@ if TYPE_CHECKING:
 __all__ = [
     "SPAIN_COUNTRY_CODE",
     "StatedCountryCodeStatus",
+    "catalogued_country_codes",
     "country_code_for_printed_country_name",
     "country_code_for_printed_tax_identifier",
     "country_code_for_stated_country_code",
@@ -285,7 +286,7 @@ def _territory_carve_outs(
     }
 
 
-def _catalogued_country_codes(
+def catalogued_country_codes(
     *,
     operation: PinnedAuthorityOperation,
 ) -> frozenset[str]:
@@ -353,7 +354,7 @@ def stated_country_code_status(
     candidate = stated_code.strip().upper()
     if len(candidate) != _ALPHA2_LENGTH or not candidate.isalpha():
         return None
-    if candidate in _catalogued_country_codes(operation=operation):
+    if candidate in catalogued_country_codes(operation=operation):
         return StatedCountryCodeStatus.CATALOGUED
     if candidate in _USER_ASSIGNED_ALPHA2:
         return StatedCountryCodeStatus.UNASSIGNED
@@ -476,7 +477,7 @@ def territorial_scope_for_country(
             a corrupt bundled table is a defect, not an unestablished party.
     """
     normalised = _normalise_country_code_for_scope(country_code)
-    if normalised is None or normalised not in _catalogued_country_codes(operation=operation):
+    if normalised is None or normalised not in catalogued_country_codes(operation=operation):
         return None
     return _scope_for_catalogued_country(normalised, operation=operation)
 
@@ -705,7 +706,7 @@ def country_code_for_stated_country_code(
         # is asked separately so the two questions stay separable and neither
         # authority is asked for the other's answer.
         normalised = normalise_iso_3166_alpha2_jurisdiction(candidate)
-        if normalised is None or normalised not in _catalogued_country_codes(operation=operation):
+        if normalised is None or normalised not in catalogued_country_codes(operation=operation):
             return None
         return normalised
     if len(candidate) == _ALPHA3_LENGTH:
