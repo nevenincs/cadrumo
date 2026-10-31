@@ -172,7 +172,7 @@ review_status = "operator_reviewed"
 reviewed_at = 2026-05-15
 reviewed_by = "operator"
 notes = """\
-LIS art 22: exención de las rentas obtenidas en el extranjero a traves de un \
+LIS art 22: exención de las rentas obtenidas en el extranjero a través de un \
 establecimiento permanente. Establece la exención para rentas positivas obtenidas por EPs \
 no residentes cuando el EP haya estado sujeto al impuesto extranjero a un tipo nominal de \
 al menos el 10 por ciento, junto con la exención en transmisión o cese del EP. Las rentas \
@@ -247,7 +247,7 @@ reviewed_by = "operator"
 notes = """\
 LIS art 12: correcciones de valor - amortizaciones. Define la deducibilidad de la \
 amortización según depreciación efectiva, los cinco métodos validos (tabla lineal \
-art-12.1.a, porcentaje constante degresivo, numeros digitos, plan aceptado por la \
+art-12.1.a, porcentaje constante degresivo, numeros dígitos, plan aceptado por la \
 Administración, justificación del importe) y la tabla de coeficientes maximos por tipo de \
 elemento (obra civil 2-7 por ciento, edificios 2-4 por ciento, maquinaria 12 por ciento, \
 equipos electrónicos 20-33 por ciento, etc.). Base sustantiva de las casillas de \
@@ -427,7 +427,7 @@ effective_from = 2015-07-12
 review_status = "agent_reviewed"
 reviewed_at = 2026-09-23
 reviewed_by = "agent-prepared; anchor resolved in the bundled consolidated text; required_text copied from that unit; pending operator re-stamp"
-notes = "RIS art 6: amortización según numeros digitos, en orden decreciente o inverso, con periodo entre el maximo y el derivado del coeficiente maximo; excluye edificios, mobiliario y enseres."
+notes = "RIS art 6: amortización según numeros dígitos, en orden decreciente o inverso, con periodo entre el maximo y el derivado del coeficiente maximo; excluye edificios, mobiliario y enseres."
 required_text = [
     "Amortización según números dígitos",
     "La asignación de valores numéricos también podrá efectuarse de manera inversa a la prevista en el párrafo anterior",
@@ -1403,7 +1403,7 @@ effective_from = 2017-08-31
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-05
 reviewed_by = "operator"
-notes = "Aprueba el modelo 232 de declaración informativa de operaciones vinculadas y de operaciones y situaciones relacionadas con paises o territorios calificados como paraísos fiscales."
+notes = "Aprueba el modelo 232 de declaración informativa de operaciones vinculadas y de operaciones y situaciones relacionadas con países o territorios calificados como paraísos fiscales."
 required_text = [
     "modelo 232",
     "operaciones vinculadas",
@@ -1423,7 +1423,7 @@ effective_from = 2017-08-31
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-05
 reviewed_by = "operator"
-notes = "Obligados a presentar el Modelo 232: contribuyentes del IS y del IRNR con establecimiento permanente, asi como entidades en régimen de atribución de rentas. Define los umbrales de operaciones vinculadas y las reglas de paraísos fiscales."
+notes = "Obligados a presentar el Modelo 232: contribuyentes del IS y del IRNR con establecimiento permanente, así como entidades en régimen de atribución de rentas. Define los umbrales de operaciones vinculadas y las reglas de paraísos fiscales."
 required_text = [
     "Obligados a presentar",
     "Impuesto sobre Sociedades",
@@ -2353,7 +2353,7 @@ effective_from = 2016-01-01
 review_status = "agent_reviewed"
 reviewed_by = "agent-prepared; anchor #a130 resolved through the production resolver against the bundled consolidated LIS (ley-27-2014.html, 212 units, exactly one unit for this anchor) and each required_text phrase confirmed present in that resolved unit; corroborated by the AEAT Manual practico de Sociedades 2024 anchors 59 and 61 (pp. 529, 534); pending operator re-stamp"
 reviewed_at = 2026-08-26
-notes = """LIS art. 130: derecho a la conversion de activos por impuesto diferido (AID) en crédito exigible frente a la Administración Tributaria. Los AID correspondientes a dotaciones por deterioro de creditos por insolvencias de deudores no vinculados y no adeudados con entidades de derecho publico cuya deducibilidad no se produce por el art. 13.1.a), y los derivados de los apartados 1 y 2 del art. 14 (sistemas de prevision social y prejubilacion), pueden convertirse en crédito exigible por un importe igual a la cuota liquida positiva del periodo impositivo de generacion, cuando concurra alguna de las circunstancias del apartado 2 (perdidas contables en los terminos que fija, o liquidación o insolvencia judicialmente declarada). Funda la sección activos_impuesto_diferido_aid_art_130_lis del Modelo 200, que hasta ahora citaba unicamente la lista generica de 18 articulos común a toda la revision y no el articulo que establece el derecho."""
+notes = """LIS art. 130: derecho a la conversion de activos por impuesto diferido (AID) en crédito exigible frente a la Administración Tributaria. Los AID correspondientes a dotaciones por deterioro de creditos por insolvencias de deudores no vinculados y no adeudados con entidades de derecho publico cuya deducibilidad no se produce por el art. 13.1.a), y los derivados de los apartados 1 y 2 del art. 14 (sistemas de prevision social y prejubilacion), pueden convertirse en crédito exigible por un importe igual a la cuota liquida positiva del periodo impositivo de generacion, cuando concurra alguna de las circunstancias del apartado 2 (perdidas contables en los terminos que fija, o liquidación o insolvencia judicialmente declarada). Funda la sección activos_impuesto_diferido_aid_art_130_lis del Modelo 200, que hasta ahora citaba únicamente la lista generica de 18 artículos común a toda la revision y no el articulo que establece el derecho."""
 required_text = [
     "podrán convertirse en un crédito exigible frente a la Administración Tributaria",
     "Que la entidad sea objeto de liquidación o insolvencia judicialmente declarada",
@@ -2372,7 +2372,7 @@ effective_from = 2016-01-01
 review_status = "agent_reviewed"
 reviewed_by = "agent-prepared; anchor #dadecimotercera-2 resolved through the production resolver to exactly one unit of the bundled consolidated LIS (the -2 suffix is the BOE source anchor id, verified NOT a redaction split: only one unit matches the #dadecimotercera prefix); required_text phrases confirmed present in that unit; the 1,5 per cent prestacion rate is described in these notes but deliberately NOT asserted in required_text, because a numeric rate needs the live-BOE cross-check this entry has not had; pending operator re-stamp"
 reviewed_at = 2026-08-26
-notes = """LIS disposición adicional decimotercera: prestación patrimonial por conversion de activos por impuesto diferido en crédito exigible frente a la Administración Tributaria. Obliga al pago de la prestación a los contribuyentes que tengan registrados AID a que se refiere el apartado 2 de la DT 33a y pretendan tener el derecho del art. 130. El importe declarado por el texto bundled es el resultado de aplicar el 1,5 por ciento al importe total de dichos activos existente el ultimo dia del periodo impositivo; esa cifra NO ha sido contrastada contra el texto vivo del BOE y no se afirma en required_text. Se devenga el dia de inicio del plazo voluntario de declaración."""
+notes = """LIS disposición adicional decimotercera: prestación patrimonial por conversion de activos por impuesto diferido en crédito exigible frente a la Administración Tributaria. Obliga al pago de la prestación a los contribuyentes que tengan registrados AID a que se refiere el apartado 2 de la DT 33a y pretendan tener el derecho del art. 130. El importe declarado por el texto bundled es el resultado de aplicar el 1,5 por ciento al importe total de dichos activos existente el ultimo día del periodo impositivo; esa cifra NO ha sido contrastada contra el texto vivo del BOE y no se afirma en required_text. Se devenga el día de inicio del plazo voluntario de declaración."""
 required_text = [
     "Prestación patrimonial por conversión de activos por impuesto diferido",
     "El ingreso de la prestación patrimonial se realizará mediante autoliquidación",
@@ -2391,7 +2391,7 @@ effective_from = 2016-01-01
 review_status = "agent_reviewed"
 reviewed_by = "agent-prepared; anchor #dttrigesimatercera resolved through the production resolver to exactly one unit of the bundled consolidated LIS; required_text phrases confirmed present in that unit; corroborated by the AEAT Manual practico de Sociedades 2024 anchor 61 (p. 534), which cites art. 130, DA 13a and DT 33a together; pending operator re-stamp"
 reviewed_at = 2026-08-26
-notes = """LIS disposición transitoria trigesima tercera: extiende lo dispuesto en los arts. 11.12 y 130 a los activos por impuesto diferido generados en periodos impositivos iniciados con anterioridad a 1 de enero de 2016, incluidos los derivados de los arts. 13.1.b) y 14.1.f) del texto refundido anterior según su redacción vigente en periodos iniciados antes de 1 de enero de 2015. Es la pata transitoria de la sección activos_impuesto_diferido_aid_dt_33a_y_da_13a_lis del Modelo 200, cuyo propio nombre de sección nombra esta disposición y la DA 13a."""
+notes = """LIS disposición transitoria trigésima tercera: extiende lo dispuesto en los arts. 11.12 y 130 a los activos por impuesto diferido generados en periodos impositivos iniciados con anterioridad a 1 de enero de 2016, incluidos los derivados de los arts. 13.1.b) y 14.1.f) del texto refundido anterior según su redacción vigente en periodos iniciados antes de 1 de enero de 2015. Es la pata transitoria de la sección activos_impuesto_diferido_aid_dt_33a_y_da_13a_lis del Modelo 200, cuyo propio nombre de sección nombra esta disposición y la DA 13a."""
 required_text = [
     "Conversión de activos por impuesto diferido generados en períodos impositivos iniciados con anterioridad",
     "se registren activos por impuesto diferido",
@@ -2410,7 +2410,7 @@ effective_from = 2015-01-01
 review_status = "agent_reviewed"
 reviewed_by = "agent-prepared; anchor #a17 resolved to exactly one unit through the production resolver against the bundled consolidated LIS; required_text confirmed present in that unit; the section tag naming art. 17 was checked against the provision own rubric rather than trusted, because M200 section tags truncate at roughly 50 characters; pending operator re-stamp"
 reviewed_at = 2026-08-26
-notes = "LIS art. 17: regla general y reglas especiales de valoración en los supuestos de transmisiones lucrativas y societarias. Los elementos patrimoniales se valoran conforme al Codigo de Comercio corregido por los preceptos de la Ley, y las variaciones por valor razonable no tienen efectos fiscales mientras no se imputen a la cuenta de perdidas y ganancias. Funda las secciones del Modelo 200 cuyo tag nombra el art. 17."
+notes = "LIS art. 17: regla general y reglas especiales de valoración en los supuestos de transmisiones lucrativas y societarias. Los elementos patrimoniales se valoran conforme al Código de Comercio corregido por los preceptos de la Ley, y las variaciones por valor razonable no tienen efectos fiscales mientras no se imputen a la cuenta de perdidas y ganancias. Funda las secciones del Modelo 200 cuyo tag nombra el art. 17."
 required_text = [
     "Los elementos patrimoniales se valorarán de acuerdo con los criterios previstos en el Código de Comercio",
     "las variaciones de valor originadas por aplicación del criterio del valor razonable no tendrán efectos fiscales",
@@ -2467,7 +2467,7 @@ effective_from = 2015-01-01
 review_status = "agent_reviewed"
 reviewed_by = "agent-prepared; anchor #dtvigesimatercera resolved to exactly one unit through the production resolver; required_text confirmed present; the doble-imposicion-interna subject matter was matched against the di_interna_* section tags it grounds rather than assumed from the tag text; pending operator re-stamp"
 reviewed_at = 2026-08-26
-notes = "LIS disposición transitoria vigesima tercera: régimen transitorio de las deducciones para evitar la doble imposición. Gobierna las participaciones adquiridas en periodos iniciados en el transmitente antes de 1 de enero de 2015, remitiendo a la exención del art. 21 cuando se cumplen sus requisitos. Funda las secciones di_interna_<ejercicio> del Modelo 200, que declaran por ejercicio de generacion los saldos pendientes de deducción por doble imposición interna."
+notes = "LIS disposición transitoria vigésima tercera: régimen transitorio de las deducciones para evitar la doble imposición. Gobierna las participaciones adquiridas en periodos iniciados en el transmitente antes de 1 de enero de 2015, remitiendo a la exención del art. 21 cuando se cumplen sus requisitos. Funda las secciones di_interna_<ejercicio> del Modelo 200, que declaran por ejercicio de generacion los saldos pendientes de deducción por doble imposición interna."
 required_text = [
     "Régimen transitorio en el Impuesto sobre Sociedades de las deducciones para evitar la doble imposición",
     "con anterioridad a 1 de enero de 2015",
@@ -2486,7 +2486,7 @@ effective_from = 2015-01-01
 review_status = "agent_reviewed"
 reviewed_by = "agent-prepared; anchor #dtvigesimacuaa resolved to exactly one unit through the production resolver -- note the BOE ordinal spelling cuaa rather than cuarta, which was read off the corpus and never guessed; required_text confirmed present; pending operator re-stamp"
 reviewed_at = 2026-08-26
-notes = "LIS disposición transitoria vigesima cuarta: deducciones para incentivar la realización de determinadas actividades pendientes de aplicar. Conserva la aplicabilidad de deducciones generadas bajo la Ley 61/1978 y el Reglamento aprobado por el RD 2631/1982, y de los saldos pendientes procedentes de regímenes anteriores. Funda las secciones del Modelo 200 cuyo tag nombra la DT 24a."
+notes = "LIS disposición transitoria vigésima cuarta: deducciones para incentivar la realización de determinadas actividades pendientes de aplicar. Conserva la aplicabilidad de deducciones generadas bajo la Ley 61/1978 y el Reglamento aprobado por el RD 2631/1982, y de los saldos pendientes procedentes de regímenes anteriores. Funda las secciones del Modelo 200 cuyo tag nombra la DT 24a."
 required_text = [
     "Deducciones para incentivar la realización de determinadas actividades pendientes de aplicar",
     "de la Ley 61/1978",
@@ -2524,7 +2524,7 @@ effective_from = 2015-01-01
 review_status = "agent_reviewed"
 reviewed_by = "agent-prepared; anchor #a45 resolved to exactly one unit through the production resolver against the bundled consolidated LIS, and its rubric reads Uniones temporales de empresas, matching the section it grounds; required_text confirmed present in the resolved unit; the anchor was checked against the measured collision set for this corpus and is not shadowed; pending operator re-stamp"
 reviewed_at = 2026-08-26
-notes = "LIS art. 45: uniones temporales de empresas. Las UTE reguladas en la Ley 18/1982 e inscritas en el registro especial tributan con arreglo al art. 43 (agrupaciones de interes economico españolas), salvo la regla de valoración del segundo parrafo del apartado 4 de ese articulo. Funda la sección del Modelo 200 cuyo tag nombra el art. 45.1."
+notes = "LIS art. 45: uniones temporales de empresas. Las UTE reguladas en la Ley 18/1982 e inscritas en el registro especial tributan con arreglo al art. 43 (agrupaciones de interés economico españolas), salvo la regla de valoración del segundo párrafo del apartado 4 de ese articulo. Funda la sección del Modelo 200 cuyo tag nombra el art. 45.1."
 required_text = [
     "Las uniones temporales de empresas reguladas en la Ley 18/1982",
     "inscritas en el registro especial",
@@ -2641,7 +2641,7 @@ effective_from = 2022-10-20
 review_status = "agent_reviewed"
 reviewed_at = 2026-09-23
 reviewed_by = "agent-prepared; BOE anchors this disposicion as #da-2, which collides with another unit, so the compact ordinal form #dadecimoseptima reaches it through the resolver's structural-title fallback; verified to resolve to exactly one unit through resolve_anchored_extracted_unit with every required_text phrase present; pending operator re-stamp"
-notes = "LIS disposición adicional decimoseptima (added by RDL 18/2022): libertad de amortización en instalaciones de autoconsumo electrico y de uso termico de consumo propio con energia renovable que sustituyan instalaciones fosiles, condicionada a mantener la plantilla media total de los 24 meses siguientes al inicio del periodo impositivo respecto de la de los doce meses anteriores. Excluye edificios; inversion maxima 500.000 euros. The consolidated text carries a chain of RDL amendments and derogations (RDL 9/2024, 16/2025, 2/2026 derogated; RDL 7/2026 for periods not concluded at 22 March 2026) that governs which entry-into-service years apply to a given period."
+notes = "LIS disposición adicional decimoséptima (added by RDL 18/2022): libertad de amortización en instalaciones de autoconsumo electrico y de uso termico de consumo propio con energia renovable que sustituyan instalaciones fosiles, condicionada a mantener la plantilla media total de los 24 meses siguientes al inicio del periodo impositivo respecto de la de los doce meses anteriores. Excluye edificios; inversion maxima 500.000 euros. The consolidated text carries a chain of RDL amendments and derogations (RDL 9/2024, 16/2025, 2/2026 derogated; RDL 7/2026 for periods not concluded at 22 March 2026) that governs which entry-into-service years apply to a given period."
 required_text = [
     "Libertad de amortización en inversiones que utilicen energía procedente de fuentes renovables",
     "la plantilla media total de la entidad se mantenga respecto de la plantilla media de los doce meses anteriores",
@@ -2661,7 +2661,7 @@ effective_from = 2022-10-20
 review_status = "agent_reviewed"
 reviewed_at = 2026-09-30
 reviewed_by = "agent-prepared from the BOE consolidated-text article endpoint (block a2-4, single redaction fecha_vigencia 20221020); pending operator re-stamp"
-notes = "RDL 18/2022 art. 22: introduce la disposición adicional decimoseptima LIS, libertad de amortización de instalaciones de autoconsumo electrico y de uso termico de consumo propio con energia renovable que sustituyan instalaciones fosiles, puestas a disposición del contribuyente a partir de la entrada en vigor del real decreto-ley (20 de octubre de 2022) y que entren en funcionamiento en 2023, en los periodos impositivos que se inicien o concluyan en dicho ano; condicionada al mantenimiento de la plantilla media, excluye edificios e inversion maxima de 500.000 euros. Funda los parametros de Renta 2023 de esta libertad de amortización; la ampliacion a 2024 es del art. 18 del RDL 8/2023 (real-decreto-ley-8-2023:art-18)."
+notes = "RDL 18/2022 art. 22: introduce la disposición adicional decimoséptima LIS, libertad de amortización de instalaciones de autoconsumo electrico y de uso termico de consumo propio con energia renovable que sustituyan instalaciones fosiles, puestas a disposición del contribuyente a partir de la entrada en vigor del real decreto-ley (20 de octubre de 2022) y que entren en funcionamiento en 2023, en los periodos impositivos que se inicien o concluyan en dicho ano; condicionada al mantenimiento de la plantilla media, excluye edificios e inversion maxima de 500.000 euros. Funda los parámetros de Renta 2023 de esta libertad de amortización; la ampliacion a 2024 es del art. 18 del RDL 8/2023 (real-decreto-ley-8-2023:art-18)."
 required_text = [
     "Se introduce una nueva disposición adicional decimoséptima en la Ley 27/2014, de 27 de noviembre, del Impuesto sobre Sociedades",
     "entren funcionamiento en 2023, podrán ser amortizadas libremente en los períodos impositivos que se inicien o concluyan en dicho año",
@@ -2681,7 +2681,7 @@ effective_from = 2023-12-29
 review_status = "agent_reviewed"
 reviewed_at = 2026-09-30
 reviewed_by = "agent-prepared from the BOE consolidated-text article endpoint (block a1-10, single redaction fecha_vigencia 20231229); pending operator re-stamp"
-notes = "RDL 8/2023 art. 18: modifica el apartado 1 de la disposición adicional decimoseptima LIS para admitir también las instalaciones que entren en funcionamiento en 2024, amortizables libremente en los periodos impositivos que se inicien o concluyan en 2024 (letra ii), manteniendo la puesta a disposición desde la entrada en vigor del RDL 18/2022, la plantilla media, la exclusion de edificios y la inversion maxima de 500.000 euros. Funda los parametros de Renta 2024 de esta libertad de amortización."
+notes = "RDL 8/2023 art. 18: modifica el apartado 1 de la disposición adicional decimoséptima LIS para admitir también las instalaciones que entren en funcionamiento en 2024, amortizables libremente en los periodos impositivos que se inicien o concluyan en 2024 (letra ii), manteniendo la puesta a disposición desde la entrada en vigor del RDL 18/2022, la plantilla media, la exclusion de edificios y la inversion maxima de 500.000 euros. Funda los parámetros de Renta 2024 de esta libertad de amortización."
 required_text = [
     "Se modifica el apartado 1 de la disposición adicional decimoséptima de la Ley 27/2014, de 27 de noviembre, del Impuesto sobre Sociedades",
     "ii) Que se inicien o concluyan en 2024, cuando la entrada en funcionamiento de los elementos a que se refiere este apartado se produzca en 2024.",
@@ -2702,7 +2702,7 @@ effective_to = 2026-01-27
 review_status = "agent_reviewed"
 reviewed_at = 2026-09-24
 reviewed_by = "agent-prepared from the BOE consolidated-text article endpoint (block a1-9); pending operator re-stamp"
-notes = "RDL 16/2025 art. 17.Uno: con efectos para los periodos impositivos que se inicien a partir de 1 de enero de 2025, redacta de nuevo la disposición adicional decimoseptima LIS y anade la letra c) (periodos que se inicien o concluyan en 2025, entrada en funcionamiento en 2025), manteniendo la plantilla media, la exclusion de edificios y la inversion maxima de 500.000 euros. En vigor desde el 25 de diciembre de 2025 (entrada en vigor que publica el BOE). Derogado: la Resolución de 27 de enero de 2026 (BOE-A-2026-2024, catalogada como resolucion-congreso-2026-01-27-derogacion-rdl-16-2025:acuerdo) publica que el Congreso, en su sesion de 27 de enero de 2026, acordo derogarlo; fecha de publicación 28 de enero de 2026. La resolución no fija otra fecha de efectos, y la derogación de un real decreto-ley no convalidado surte efecto con la publicación del acuerdo, de modo que su ultimo dia de vigencia es el 27 de enero de 2026. Que la letra c) siga rigiendo el periodo impositivo 2025 no descansa en esta entrada sino en la posicion de la AEAT (Manual de Renta 2025), citada por separado en los parametros que la aplican."
+notes = "RDL 16/2025 art. 17.Uno: con efectos para los periodos impositivos que se inicien a partir de 1 de enero de 2025, redacta de nuevo la disposición adicional decimoséptima LIS y añade la letra c) (periodos que se inicien o concluyan en 2025, entrada en funcionamiento en 2025), manteniendo la plantilla media, la exclusion de edificios y la inversion maxima de 500.000 euros. En vigor desde el 25 de diciembre de 2025 (entrada en vigor que publica el BOE). Derogado: la Resolución de 27 de enero de 2026 (BOE-A-2026-2024, catalogada como resolucion-congreso-2026-01-27-derogacion-rdl-16-2025:acuerdo) publica que el Congreso, en su sesion de 27 de enero de 2026, acordo derogarlo; fecha de publicación 28 de enero de 2026. La resolución no fija otra fecha de efectos, y la derogación de un real decreto-ley no convalidado surte efecto con la publicación del acuerdo, de modo que su ultimo día de vigencia es el 27 de enero de 2026. Que la letra c) siga rigiendo el periodo impositivo 2025 no descansa en esta entrada sino en la posicion de la AEAT (Manual de Renta 2025), citada por separado en los parámetros que la aplican."
 required_text = [
     "Con efectos para los períodos impositivos que se inicien a partir de 1 de enero de 2025, la disposición adicional decimoséptima queda redactada de la siguiente forma:",
     "c) Que se inicien o concluyan en 2025, cuando la entrada en funcionamiento de los elementos a que se refiere este apartado se produzca en 2025.",
@@ -2721,7 +2721,7 @@ effective_from = 2026-01-28
 review_status = "agent_reviewed"
 reviewed_at = 2026-09-24
 reviewed_by = "agent-prepared from BOE-A-2026-2024 downloaded from boe.es; pending operator re-stamp"
-notes = "Resolución de 27 de enero de 2026 del Congreso de los Diputados que ordena publicar el acuerdo de derogación del Real Decreto-ley 16/2025 (art. 86.2 CE). Fecha de disposición 27/01/2026, fecha de publicación 28/01/2026. Su analisis deja sin efecto, entre otras, la modificación de las disposiciones adicionales 17 y 18 de la LIS. Fija el fin de vigencia de rdl-16-2025:art-17."
+notes = "Resolución de 27 de enero de 2026 del Congreso de los Diputados que ordena publicar el acuerdo de derogación del Real Decreto-ley 16/2025 (art. 86.2 CE). Fecha de disposición 27/01/2026, fecha de publicación 28/01/2026. Su análisis deja sin efecto, entre otras, la modificación de las disposiciones adicionales 17 y 18 de la LIS. Fija el fin de vigencia de rdl-16-2025:art-17."
 required_text = [
     "el Congreso de los Diputados, en su sesión del día de hoy, acordó derogar el Real Decreto-ley",
     "Palacio del Congreso de los Diputados, 27 de enero de 2026.",

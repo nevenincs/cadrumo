@@ -11,7 +11,7 @@ effective_from = 2016-12-31
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "downloaded official BOE-A-2016-12484 HTML from BOE on 2026-07-01"
-notes = "Orden HFP/1978/2016 articulo 1: aprueba el Modelo 231 de Declaración de información pais por pais, cuyo contenido figura en el anexo de la orden."
+notes = "Orden HFP/1978/2016 articulo 1: aprueba el Modelo 231 de Declaración de información país por país, cuyo contenido figura en el anexo de la orden."
 required_text = [
     "Artículo 1. Aprobación del modelo 231",
     "Se aprueba el modelo 231",
@@ -31,7 +31,7 @@ effective_from = 2016-12-31
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "downloaded official BOE-A-2016-12484 HTML from BOE on 2026-07-01"
-notes = "Orden HFP/1978/2016 articulo 3: plazo de presentación del Modelo 231 desde el dia siguiente a la finalizacion del periodo impositivo hasta que transcurran doce meses desde su finalizacion."
+notes = "Orden HFP/1978/2016 articulo 3: plazo de presentación del Modelo 231 desde el día siguiente a la finalizacion del periodo impositivo hasta que transcurran doce meses desde su finalizacion."
 required_text = [
     "Artículo 3. Plazo de presentación del Modelo 231",
     "desde el día siguiente a la finalización del período impositivo",

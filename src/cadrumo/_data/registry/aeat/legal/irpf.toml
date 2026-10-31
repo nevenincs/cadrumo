@@ -306,12 +306,12 @@ reviewed_by = "agent-authored from live BOE consolidated text BOE-A-2007-6820 re
 notes = """RIRPF art 76: obligados a retener o ingresar a cuenta. Fixes WHO bears the \
 withholding obligation, which is the provision the IVA component-expectation table \
 relies on when it declares a cross-border counterparty's retención NOT_EXPECTED. \
-Apartado 1 lists the obligados: a) personas jurídicas y demas entidades, incluidas \
+Apartado 1 lists the obligados: a) personas jurídicas y demás entidades, incluidas \
 las comunidades de propietarios y las entidades en régimen de atribución de rentas; \
 b) contribuyentes que ejerzan actividades económicas, cuando satisfagan rentas en el \
 ejercicio de sus actividades; c) no residentes que operen en territorio español \
 MEDIANTE establecimiento permanente; d) no residentes que operen SIN mediación de \
-establecimiento permanente, unicamente en cuanto a los rendimientos del trabajo y a \
+establecimiento permanente, únicamente en cuanto a los rendimientos del trabajo y a \
 otros rendimientos sometidos a retención que constituyan gasto deducible para las \
 rentas del art. 24.2 del TRLIRNR. \
 SCOPE NOTE - the not-expected expectation this entry grounds is a DEFAULT, never a \
@@ -326,7 +326,7 @@ rentas, and then lists four supuestos that are NOT simple mediación de pago. \
 Bundled excerpt is the current redaction BOE-A-2017-15842, retrieved from the live BOE \
 consolidated text on 2026-08-05. The excerpt reproduces the consolidated page's own \
 amendment history verbatim so the redaction can be dated from the bundled bytes alone; \
-its most recent line reads "Se modifican los apartados 2.e), f) y se anade el apartado \
+its most recent line reads "Se modifican los apartados 2.e), f) y se añade el apartado \
 2.i) por el art. 1.9 del Real Decreto 1074/2017, de 29 de diciembre. Ref. \
 BOE-A-2017-15842". \
 UNRESOLVED, for the operator re-stamp: effective_from is recorded as 2017-12-30, the \
@@ -625,7 +625,7 @@ effective_from = 2007-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-14
 reviewed_by = "operator"
-notes = "Deducción por actuaciones para la proteccion y difusion del Patrimonio Historico Español y de las ciudades, conjuntos y bienes declarados Patrimonio Mundial. 15 per cent of investments or expenses for: (a) acquisition of Patrimonio Historico Español assets from abroad with permanence + cultural-interest declaration requirements; (b) conservation/restoration/exhibition of bienes de interes cultural; (c) rehabilitation of buildings in protected city perimeters or Patrimonio Mundial sites."
+notes = "Deducción por actuaciones para la proteccion y difusion del Patrimonio Historico Español y de las ciudades, conjuntos y bienes declarados Patrimonio Mundial. 15 per cent of investments or expenses for: (a) acquisition of Patrimonio Historico Español assets from abroad with permanence + cultural-interest declaration requirements; (b) conservation/restoration/exhibition of bienes de interés cultural; (c) rehabilitation of buildings in protected city perimeters or Patrimonio Mundial sites."
 required_text = [
     "Deducción por actuaciones para la protección y difusión del Patrimonio Histórico Español",
     "deducción en la cuota del 15 por ciento",
@@ -856,7 +856,7 @@ effective_to = 2022-12-31
 review_status = "agent_reviewed"
 reviewed_at = 2026-09-30
 reviewed_by = "agent-authored from bundled orden-hfp-1335-2021.html; operator to re-stamp"
-notes = "Fase 3a: indice corrector para empresas de pequeña dimension. Se aplica el indice que corresponda (0,70/0,75/0,80 según la población del municipio, o 0,90 si ademas hay personal asalariado hasta 2 trabajadores) cuando concurren todas las circunstancias: titular persona física, un solo local, no mas de un vehiculo afecto de hasta 1.000 kg, y sin personal asalariado (salvo el supuesto de hasta 2 trabajadores del indice 0,90)."
+notes = "Fase 3a: indice corrector para empresas de pequeña dimension. Se aplica el indice que corresponda (0,70/0,75/0,80 según la población del municipio, o 0,90 si además hay personal asalariado hasta 2 trabajadores) cuando concurren todas las circunstancias: titular persona física, un solo local, no mas de un vehiculo afecto de hasta 1.000 kg, y sin personal asalariado (salvo el supuesto de hasta 2 trabajadores del indice 0,90)."
 required_text = [
     "b.1) Índice corrector para empresas de pequeña dimensión:",
     "Titular persona física.",
@@ -1001,7 +1001,7 @@ effective_from = 2023-04-25
 review_status = "agent_reviewed"
 reviewed_at = 2026-10-01
 reviewed_by = "agent-authored from the BOE consolidated-text article orden-hfp-405-2023-art-2.xml (block a2), fetched with the canonical article fetcher as served in force; operator to re-stamp"
-notes = "Orden HFP/405/2023 art. 2: eleva al 25 por ciento, para las actividades del anexo I de la Orden HFP/1335/2021 (agricolas, ganaderas y forestales), la reducción general del rendimiento neto de módulos del periodo impositivo 2022 prevista en la disposición adicional primera de esa orden (5 por ciento, elevado al 15 por ciento para todas las actividades por la disposición adicional octava de la Orden HFP/1172/2022). En vigor el dia de su publicación (disposición final única), dentro del plazo de declaración del ejercicio 2022, cuyo periodo impositivo rige."
+notes = "Orden HFP/405/2023 art. 2: eleva al 25 por ciento, para las actividades del anexo I de la Orden HFP/1335/2021 (agricolas, ganaderas y forestales), la reducción general del rendimiento neto de módulos del periodo impositivo 2022 prevista en la disposición adicional primera de esa orden (5 por ciento, elevado al 15 por ciento para todas las actividades por la disposición adicional octava de la Orden HFP/1172/2022). En vigor el día de su publicación (disposición final única), dentro del plazo de declaración del ejercicio 2022, cuyo periodo impositivo rige."
 required_text = [
     "Reducción en 2022 del rendimiento neto calculado por el método de estimación objetiva para las actividades agrícolas, ganaderas y forestales",
     "será del 25 por ciento para las actividades incluidas en el anexo I de la citada orden",
@@ -1357,7 +1357,7 @@ effective_from = 2024-04-19
 review_status = "agent_reviewed"
 reviewed_at = 2026-10-01
 reviewed_by = "agent-authored from the BOE as-published orden-hac-348-2024.html, fetched with the canonical published-document fetcher after BOE redirected its consolidated view away; operator to re-stamp"
-notes = "Orden HAC/348/2024 art. 2: eleva al 15 por ciento, para las actividades del anexo I de la Orden HFP/1172/2022 (agricolas, ganaderas y forestales), la reducción general del rendimiento neto de módulos del periodo impositivo 2023 prevista en la disposición adicional primera de esa orden (10 por ciento). En vigor el dia de su publicación (disposición final única), dentro del plazo de declaración del ejercicio 2023, cuyo periodo impositivo rige."
+notes = "Orden HAC/348/2024 art. 2: eleva al 15 por ciento, para las actividades del anexo I de la Orden HFP/1172/2022 (agricolas, ganaderas y forestales), la reducción general del rendimiento neto de módulos del periodo impositivo 2023 prevista en la disposición adicional primera de esa orden (10 por ciento). En vigor el día de su publicación (disposición final única), dentro del plazo de declaración del ejercicio 2023, cuyo periodo impositivo rige."
 required_text = [
     "Reducción en 2023 del rendimiento neto calculado por el método de estimación objetiva para las actividades agrícolas, ganaderas y forestales",
     "será del 15 por ciento para las actividades incluidas en el anexo I de la citada orden",
@@ -1762,7 +1762,7 @@ vigor servido por boe.es el 2026-08-13. La entrada real-decreto-ley-7-2024:art-1
 IVA cita esas mismas bytes: una sola fecha para unas mismas bytes. PROVENANCIA DE LA REVISION. El \
 operador reviso esta entrada el 2026-05-05, pero reviso el extracto recortado y una nota de una \
 linea; ni el puntero de evidencia actual ni esta prosa pasaron por sus manos. reviewed_by lo declara \
-asi y queda pendiente de re-sello por operador."""
+así y queda pendiente de re-sello por operador."""
 required_text = [
     "Artículo 11",
     "rendimiento neto de módulos de\u00a02024",
@@ -1934,7 +1934,7 @@ ambos b.2 y b.4 se declaran, prevalece la temporada (orden de enumeracion de la 
 el inicio de nuevas actividades. Dos indicadores internos (modulos-pequena-dimension-ignorado-flag, \
 modulos-temporada-inicio-actividad-conflicto-flag) fundamentan los advisories no bloqueantes que \
 senalan al operador cuando una de sus declaraciones fue ignorada, per no-silent-under-declaration. \
-El motor M100 (0293-...-rendimiento-base.toml) sigue modelando unicamente su propio cascade agrario \
+El motor M100 (0293-...-rendimiento-base.toml) sigue modelando únicamente su propio cascade agrario \
 (indices 1-8, Anexo I instrucción 2.3), sin relación con este Anexo II."""
 required_text = [
     "Incompatibilidades entre los índices correctores:",
@@ -1958,7 +1958,7 @@ reviewed_at = 2026-07-04
 reviewed_by = "agent-authored from bundled orden-hac-1347-2024.html; operator to re-stamp"
 notes = """\
 Fase 3a: indice corrector para empresas de pequeña dimension. Se aplica el indice que \
-corresponda (0,70/0,75/0,80 según la población del municipio, o 0,90 si ademas hay \
+corresponda (0,70/0,75/0,80 según la población del municipio, o 0,90 si además hay \
 personal asalariado hasta 2 trabajadores) cuando concurren todas las circunstancias: \
 titular persona física, un solo local, no mas de un vehiculo afecto de hasta 1.000 kg, y \
 sin personal asalariado (salvo el supuesto de hasta 2 trabajadores del indice 0,90). \
@@ -2038,7 +2038,7 @@ independiente, el rendimiento neto previo se obtiene multiplicando el volumen to
 neto que corresponda a ese producto o servicio, por el cuadro codigo-producto de indices aprobado en \
 este mismo Anexo I. Cross-checked byte-identical against the AEAT Manual practico de Renta 2025, \
 Parte 1, Capitulo 9, worked example "Determinación del rendimiento neto previo de la actividad" \
-(Dona M.J.I., manzanas / frutos no citricos, codigo 12: ingresos 18.030,00 euros x indice 0,37 = \
+(Dona M.J.I., manzanas / frutos no citricos, código 12: ingresos 18.030,00 euros x indice 0,37 = \
 rendimiento neto previo 6.671,10 euros)."""
 required_text = [
     "2.1 Fase 1: Rendimiento neto previo.",
@@ -2296,7 +2296,7 @@ effective_to = 2026-12-31
 review_status = "agent_reviewed"
 reviewed_at = 2026-09-12
 reviewed_by = "agent-authored from bundled orden-hac-1425-2025.html; operator to re-stamp"
-notes = """Fase 3a: indice corrector para empresas de pequeña dimension. Se aplica el indice que corresponda (0,70/0,75/0,80 según la población del municipio, o 0,90 si ademas hay personal asalariado hasta 2 trabajadores) cuando concurren todas las circunstancias: titular persona física, un solo local, no mas de un vehiculo afecto de hasta 1.000 kg, y sin personal asalariado (salvo el supuesto de hasta 2 trabajadores del indice 0,90). Cross-checked byte-identical against the 2025 instrucción (orden-hac-1347-2024:anexo-ii-instruccion-2-3-b-1): same 27-line b.1 block, same 0,70/0,75/0,80/0,90 indices and the same four concurrent circumstances."""
+notes = """Fase 3a: indice corrector para empresas de pequeña dimension. Se aplica el indice que corresponda (0,70/0,75/0,80 según la población del municipio, o 0,90 si además hay personal asalariado hasta 2 trabajadores) cuando concurren todas las circunstancias: titular persona física, un solo local, no mas de un vehiculo afecto de hasta 1.000 kg, y sin personal asalariado (salvo el supuesto de hasta 2 trabajadores del indice 0,90). Cross-checked byte-identical against the 2025 instrucción (orden-hac-1347-2024:anexo-ii-instruccion-2-3-b-1): same 27-line b.1 block, same 0,70/0,75/0,80/0,90 indices and the same four concurrent circumstances."""
 required_text = [
     "b.1) Índice corrector para empresas de pequeña dimensión:",
     "Titular persona física.",
@@ -5248,7 +5248,7 @@ effective_from = 2024-06-28
 review_status = "agent_reviewed"
 reviewed_at = 2026-09-30
 reviewed_by = "agent-authored from bundled ley-35-2006.html#da-13 (DA quincuagesima novena), anchor verified to resolve to exactly that unit through the production resolver; operator to re-stamp"
-notes = "LIRPF disposición adicional 59a: extiende a los contribuyentes del IRPF que desarrollen la actividad económica a la que se afecten los vehículos e instalaciones de recarga, cualquiera que sea el método de determinación de su rendimiento neto, la libertad de amortización de la disposición adicional decimoctava LIS; el exceso amortizado se íntegra como rendimiento de la actividad al transmitir el elemento. Anadida por el art. 3.4 del Real Decreto-ley 4/2024 (BOE-A-2024-12944), texto publicado el 27/06/2024 y en vigor desde el 28/06/2024, con efectos desde 1 de enero de 2024; la DA 18 LIS a la que remite, redactada por el art. 4.Uno del mismo real decreto-ley (real-decreto-ley-4-2024:art-4), solo alcanza a los períodos impositivos no concluidos a su entrada en vigor, por lo que no se declara alcance retroactivo de devengo."
+notes = "LIRPF disposición adicional 59a: extiende a los contribuyentes del IRPF que desarrollen la actividad económica a la que se afecten los vehículos e instalaciones de recarga, cualquiera que sea el método de determinación de su rendimiento neto, la libertad de amortización de la disposición adicional decimoctava LIS; el exceso amortizado se íntegra como rendimiento de la actividad al transmitir el elemento. Añadida por el art. 3.4 del Real Decreto-ley 4/2024 (BOE-A-2024-12944), texto publicado el 27/06/2024 y en vigor desde el 28/06/2024, con efectos desde 1 de enero de 2024; la DA 18 LIS a la que remite, redactada por el art. 4.Uno del mismo real decreto-ley (real-decreto-ley-4-2024:art-4), solo alcanza a los períodos impositivos no concluidos a su entrada en vigor, por lo que no se declara alcance retroactivo de devengo."
 required_text = [
     "Libertad de amortización en determinados vehículos y en nuevas infraestructuras de recarga",
     "resultará de aplicación a los contribuyentes de este impuesto que desarrollen la actividad económica a la que se afecten los vehículos e instalaciones de recarga, cualquiera que sea el método de determinación de su rendimiento neto",
@@ -5402,7 +5402,7 @@ calculation depends on. It is proportional to 'el numero de meses en que se cump
 simultanea los requisitos de los apartados 1 y 2', so the month basis is an INTERSECTION of the two \
 apartados rather than either alone. It carves out the under-three condition for the turning-three \
 extension months ('salvo el relativo a que sea menor de tres anios en los meses a los que se refiere \
-el segundo parrafo del apartado 2'). And it caps the result at 'el importe total del gasto efectivo \
+el segundo párrafo del apartado 2'). And it caps the result at 'el importe total del gasto efectivo \
 no subvencionado satisfecho en dicho periodo a la guarderia o centro educativo EN RELACION CON ESE \
 HIJO' -- per child by its own words, which is the authority for bounding the increment per \
 descendant rather than over the household. The apartado's FIRST paragraph prorates the apartado 1 \

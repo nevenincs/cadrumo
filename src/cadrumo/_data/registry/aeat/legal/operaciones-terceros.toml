@@ -47,8 +47,8 @@ RGAT art 32: personas o entidades excluidas de la obligacion de presentar la dec
 anual de operaciones con terceras personas (Modelo 347). Letra b) excluye las actividades en \
 estimacion objetiva del IRPF que tributan simultaneamente en los regimenes especiales \
 simplificado, agricultura o recargo de equivalencia del IVA, salvo por las operaciones por las \
-que emitan factura, y su segundo parrafo hace que los acogidos al regimen simplificado incluyan \
-ademas las adquisiciones anotadas en el libro registro de facturas recibidas del art 40.1 RIVA \
+que emitan factura, y su segundo párrafo hace que los acogidos al regimen simplificado incluyan \
+además las adquisiciones anotadas en el libro registro de facturas recibidas del art 40.1 RIVA \
 (redacción del RD 828/2013); letra c) a quienes no superen 3.005,06 EUR por contraparte y ano natural, \
 o 300,51 EUR en el cobro por cuenta de terceros; letra e) a los obligados del art 62.6 RIVA \
 (llevanza de libros registro por el SII). Texto verificado contra el consolidado bundled \
@@ -270,12 +270,12 @@ reviewed_at = 2026-08-27
 reviewed_by = "agent-review"
 notes = """\
 RGAT art 33: contenido de la declaración anual de operaciones con terceras personas. \
-Fija el umbral general de 3.005,06 EUR por contraparte y ano natural (parrafo 1), \
+Fija el umbral general de 3.005,06 EUR por contraparte y ano natural (párrafo 1), \
 excluye determinadas operaciones del deber de declarar (apartado 2), y establece un \
 umbral separado de 300,51 EUR para los cobros por cuenta de terceros de honorarios \
 profesionales o derechos de propiedad intelectual/industrial (apartado 4, remitiendo a \
 los obligados del art 31.3). Es la base reglamentaria de las claves A/B (umbral general) \
-y C (cobros por cuenta de terceros) del diseno de registro del Modelo 347. El parrafo \
+y C (cobros por cuenta de terceros) del diseno de registro del Modelo 347. El párrafo \
 segundo del apartado 1 computa por separado las entregas y las adquisiciones, de modo que el \
 umbral se juzga por contraparte y sentido de la operacion; el apartado 3 relaciona las \
 subvenciones satisfechas por las Administraciones Publicas cualquiera que sea su importe. Del \
@@ -375,7 +375,7 @@ effective_from = 2014-01-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-10-03
 reviewed_by = "agent-authored from the bundled corpus capture; operator to re-stamp"
-notes = """RGAT art 34.1.d: los arrendamientos de locales de negocios se hacen constar separadamente de las demas operaciones entre las mismas partes, y el arrendador consigna arrendatarios, referencias catastrales y localizacion de los inmuebles. Fundamenta que el arrendador relacione el arrendamiento aunque el arrendatario le haya practicado retencion. Texto verificado contra el consolidado bundled corpus/normatives/html/rd-1065-2007.html (apartado 1 en la redacción del RD 828/2013, en vigor desde 2014-01-01)."""
+notes = """RGAT art 34.1.d: los arrendamientos de locales de negocios se hacen constar separadamente de las demás operaciones entre las mismas partes, y el arrendador consigna arrendatarios, referencias catastrales y localizacion de los inmuebles. Fundamenta que el arrendador relacione el arrendamiento aunque el arrendatario le haya practicado retencion. Texto verificado contra el consolidado bundled corpus/normatives/html/rd-1065-2007.html (apartado 1 en la redacción del RD 828/2013, en vigor desde 2014-01-01)."""
 required_text = [
     "los arrendamientos de locales de negocios",
     "el arrendador consignará el nombre y apellidos o razón social o denominación completa",

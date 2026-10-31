@@ -76,7 +76,7 @@ reviewed_at = 2026-08-08
 reviewed_by = "agent-review"
 notes = """\
 LIVA art. 3 apartado Tres: the ASSIMILATION limb, and a separate entry from apartado Dos because it \
-rules the opposite way. Apartado Dos carves territories OUT of the interior del pais; apartado Tres \
+rules the opposite way. Apartado Dos carves territories OUT of the interior del país; apartado Tres \
 brings three territories that lie outside every Member State IN, by declaring that operations with \
 Monaco, the Isle of Man and the United Kingdom sovereign base areas of Akrotiri and Dhekelia have \
 the same consideration as operations with France, the United Kingdom and Cyprus respectively. Citing \
@@ -141,7 +141,7 @@ effective_from = 2004-07-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-06-28
 reviewed_by = "agent-authored from official BOE-A-2003-23186#a26 and bundled ley-58-2003-art-26.html; operator to re-stamp"
-notes = "LGT art 26: interes de demora. Define the accessory tax interest charge, the cases in which it is due, calculation over unpaid or improperly refunded amounts, and the art 26.6 legal-interest-plus-25-percent rule cited by RIRPF art 59 for lost deduction regularization."
+notes = "LGT art 26: interés de demora. Define the accessory tax interest charge, the cases in which it is due, calculation over unpaid or improperly refunded amounts, and the art 26.6 legal-interest-plus-25-percent rule cited by RIRPF art 59 for lost deduction regularization."
 required_text = [
     "Interés de demora",
     "prestación accesoria",

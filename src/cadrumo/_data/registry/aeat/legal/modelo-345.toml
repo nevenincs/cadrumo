@@ -215,7 +215,7 @@ effective_from = 2025-12-17
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "downloaded official BOE-A-2025-25389 HTML from BOE on 2026-07-01"
-notes = "Orden HAC/1430/2025 articulo septimo: modifica el campo de rendimientos integros del trabajo superiores a 60.000 euros del Modelo 345."
+notes = "Orden HAC/1430/2025 articulo séptimo: modifica el campo de rendimientos integros del trabajo superiores a 60.000 euros del Modelo 345."
 required_text = [
     "Orden HFP/823/2022",
     "Se modifica el campo",

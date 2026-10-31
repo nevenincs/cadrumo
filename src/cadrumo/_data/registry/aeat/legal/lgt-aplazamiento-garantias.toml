@@ -73,8 +73,8 @@ lists the debts that may NOT be deferred (retenciones and ingresos a cuenta amon
 that a request over such a debt is inadmitted. A deferral request filed in periodo voluntario \
 prevents the periodo ejecutivo from starting but does not stop intereses de demora accruing. \
 Deferred debts must be secured under art-82. Where the debt is fully secured by aval solidario de \
-entidad de crédito or certificado de seguro de caucion the interest demanded is the interes legal \
-rather than the interes de demora; this article fixes neither rate, both being set annually by the \
+entidad de crédito or certificado de seguro de caucion the interest demanded is the interés legal \
+rather than the interés de demora; this article fixes neither rate, both being set annually by the \
 LPGE."""
 required_text = [
     "cuando su situación económico-financiera le impida, de forma transitoria, efectuar el pago",

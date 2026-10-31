@@ -208,7 +208,7 @@ effective_from = 2021-07-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-06-09
 reviewed_by = "operator"
-notes = "LIVA art 13: hecho imponible de las adquisiciones intracomunitarias de bienes. Sujeta las adquisiciones intracomunitarias efectuadas a titulo oneroso por empresarios, profesionales o personas jurídicas, asi como las adquisiciones de medios de transporte nuevos. Base sustantiva del hecho imponible intracomunitario en el enrutamiento M303 (Tier-2 routing)."
+notes = "LIVA art 13: hecho imponible de las adquisiciones intracomunitarias de bienes. Sujeta las adquisiciones intracomunitarias efectuadas a titulo oneroso por empresarios, profesionales o personas jurídicas, así como las adquisiciones de medios de transporte nuevos. Base sustantiva del hecho imponible intracomunitario en el enrutamiento M303 (Tier-2 routing)."
 required_text = [
     "Las adquisiciones intracomunitarias de bienes efectuadas a título oneroso",
     "Estarán sujetas las siguientes operaciones realizadas en el ámbito espacial de aplicación del Impuesto",
@@ -683,12 +683,12 @@ review_status = "agent_reviewed"
 reviewed_at = 2026-10-03
 reviewed_by = "agent-review"
 notes = """RIVA art 62: libros registros del IVA. El apartado 6 obliga a llevar los libros \
-registro a traves de la Sede electrónica de la AEAT, mediante el suministro electrónico de \
+registro a través de la Sede electrónica de la AEAT, mediante el suministro electrónico de \
 los registros de facturación (SII), a quienes tengan un periodo de liquidación mensual \
 conforme al art 71.3, y permite optar por el mismo sistema al resto de sujetos pasivos en los \
 terminos del art 68 bis. Es el supuesto al que remite el art 32.e del RD 1065/2007 para \
 excluir de la declaración anual de operaciones con terceras personas (Modelo 347) tanto a los \
-obligados como a los acogidos voluntariamente. Apartado 6 anadido con efectos desde el \
+obligados como a los acogidos voluntariamente. Apartado 6 añadido con efectos desde el \
 1 de enero de 2017 por el RD 596/2016 (BOE-A-2016-11575); texto verificado contra el \
 consolidado bundled corpus/normatives/html/rd-1624-1992.html."""
 required_text = [

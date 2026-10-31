@@ -59,7 +59,7 @@ effective_from = 2004-03-13
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-27
 reviewed_by = "operator"
-notes = "TRLIRNR art 2: ámbito de aplicación territorial del impuesto. Incluye salvedad de los regímenes forales (Pais Vasco, Navarra) y especialidades de Canarias, Ceuta y Melilla. Fundamento territorial para la atribución de obligación IRNR a contribuyentes no residentes que obtienen rentas con fuente en territorio español."
+notes = "TRLIRNR art 2: ámbito de aplicación territorial del impuesto. Incluye salvedad de los regímenes forales (País Vasco, Navarra) y especialidades de Canarias, Ceuta y Melilla. Fundamento territorial para la atribución de obligación IRNR a contribuyentes no residentes que obtienen rentas con fuente en territorio español."
 required_text = ["Este impuesto se aplicara en todo el territorio espanol", "regimenes tributarios forales"]
 
 [legal."trlirnr-rdleg-5-2004:art-10"]
@@ -151,7 +151,7 @@ TRLIRNR art 25.1.a: tipo de gravamen general 24 por ciento para rentas obtenidas
 mediación de establecimiento permanente. El mismo apartado fija un tipo reducido del 19 \
 por ciento cuando el contribuyente es residente en otro Estado miembro de la UE o del EEE \
 con efectivo intercambio de información tributaria, lo que motiva la fila \
-tipo_renta=ue_residente del parametro registry m210-tipo-gravamen-2025. Los valores \
+tipo_renta=ue_residente del parámetro registry m210-tipo-gravamen-2025. Los valores \
 numericos vigentes son consolidados a partir de varias reformas posteriores al RDLeg \
 5/2004 original."""
 required_text = ["Con caracter general, el 24 por ciento", "el tipo de gravamen sera el 19 por ciento", "residentes en otro Estado miembro de la Union Europea o del Espacio Economico Europeo"]
@@ -185,7 +185,7 @@ effective_from = 2004-03-13
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-27
 reviewed_by = "operator"
-notes = "TRLIRNR art 25.1.f: tipo de gravamen del 19 por ciento aplicable por clase de renta a dividendos, intereses y otros rendimientos de capitales propios, y ganancias patrimoniales por transmisión de elementos patrimoniales. No contiene condicion de residencia UE/EEE; esa condicion pertenece al tipo general reducido de art 25.1.a. Soporte legal de las filas tipo_renta=dividend, tipo_renta=interest y tipo_renta=ganancia_patrimonial del parametro registry m210-tipo-gravamen-2025."
+notes = "TRLIRNR art 25.1.f: tipo de gravamen del 19 por ciento aplicable por clase de renta a dividendos, intereses y otros rendimientos de capitales propios, y ganancias patrimoniales por transmisión de elementos patrimoniales. No contiene condicion de residencia UE/EEE; esa condicion pertenece al tipo general reducido de art 25.1.a. Soporte legal de las filas tipo_renta=dividend, tipo_renta=interest y tipo_renta=ganancia_patrimonial del parámetro registry m210-tipo-gravamen-2025."
 required_text = ["El 19 por ciento cuando se trate de", "Dividendos y otros rendimientos derivados de la participacion en los fondos propios de una entidad", "Intereses y otros rendimientos obtenidos por la cesion a terceros de capitales propios", "Ganancias patrimoniales que se pongan de manifiesto con ocasion de transmisiones de elementos patrimoniales"]
 
 [legal."convenio-es-gb-2013:art-6"]

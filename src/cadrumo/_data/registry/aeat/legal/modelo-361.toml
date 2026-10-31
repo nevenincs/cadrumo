@@ -71,7 +71,7 @@ effective_from = 2010-04-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "verified against bundled official BOE-A-2010-5210 HTML"
-notes = "Orden EHA/789/2010 articulo 10: plazo de presentación del Modelo 361; comienza el dia siguiente al final de cada trimestre natural o ano natural y concluye el 30 de septiembre siguiente al ano natural de las cuotas soportadas."
+notes = "Orden EHA/789/2010 articulo 10: plazo de presentación del Modelo 361; comienza el día siguiente al final de cada trimestre natural o ano natural y concluye el 30 de septiembre siguiente al ano natural de las cuotas soportadas."
 required_text = [
     "Artículo 10. Plazo de presentación del modelo 361",
     "30 de septiembre",

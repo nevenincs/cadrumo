@@ -31,7 +31,7 @@ effective_from = 2010-04-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-06
 reviewed_by = "operator"
-notes = "Articulo 4 de la Orden EHA/789/2010: plazo de presentación del formulario 360. El plazo se inicia el dia siguiente al final del periodo de devolución y concluye el 30 de septiembre siguiente al ano natural en el que se hayan soportado las cuotas a que se refiera."
+notes = "Articulo 4 de la Orden EHA/789/2010: plazo de presentación del formulario 360. El plazo se inicia el día siguiente al final del periodo de devolución y concluye el 30 de septiembre siguiente al ano natural en el que se hayan soportado las cuotas a que se refiera."
 required_text = [
     "Plazo de presentación del formulario 360",
     "30 de septiembre",
@@ -180,7 +180,7 @@ effective_from = 2003-12-31
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-06
 reviewed_by = "operator"
-notes = "Apartado primero de la Orden HAC/3625/2003: aprobación del modelo 309 'Declaracion-liquidacion no periódica del Impuesto sobre el Valor Anadido'. Filed by sujetos pasivos sin obligación ordinaria de declaracion-liquidacion (adquisiciones de medios de transporte nuevos, ejecuciones forzosas, régimen agricola/ganadero/pesquero, recargo de equivalencia)."
+notes = "Apartado primero de la Orden HAC/3625/2003: aprobación del modelo 309 'Declaracion-liquidacion no periódica del Impuesto sobre el Valor Añadido'. Filed by sujetos pasivos sin obligación ordinaria de declaracion-liquidacion (adquisiciones de medios de transporte nuevos, ejecuciones forzosas, régimen agricola/ganadero/pesquero, recargo de equivalencia)."
 required_text = [
     "Aprobación del modelo 309",
     "Declaración-liquidación no periódica",
@@ -416,7 +416,7 @@ effective_from = 2007-11-30
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-06
 reviewed_by = "operator"
-notes = "Articulo 1 de la Orden EHA/3434/2007: aprobación del modelo 322 'Impuesto sobre el Valor Anadido. Grupo de entidades. Modelo individual. Autoliquidación mensual'. Aplicable a sujetos pasivos del IVA que formen parte de un grupo de entidades conforme al articulo 163 quinquies.Uno de la LIVA."
+notes = "Articulo 1 de la Orden EHA/3434/2007: aprobación del modelo 322 'Impuesto sobre el Valor Añadido. Grupo de entidades. Modelo individual. Autoliquidación mensual'. Aplicable a sujetos pasivos del IVA que formen parte de un grupo de entidades conforme al articulo 163 quinquies.Uno de la LIVA."
 required_text = [
     "Aprobación del modelo 322",
     "Grupo de entidades",
@@ -623,7 +623,7 @@ effective_from = 2007-11-30
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-06
 reviewed_by = "operator"
-notes = "Articulo 8 de la Orden EHA/3434/2007: plazo de presentación de los modelos 322 y 353. Treinta días naturales del mes siguiente al periodo de liquidación mensual; el periodo de enero se presenta hasta el ultimo dia del mes de febrero."
+notes = "Articulo 8 de la Orden EHA/3434/2007: plazo de presentación de los modelos 322 y 353. Treinta días naturales del mes siguiente al periodo de liquidación mensual; el periodo de enero se presenta hasta el ultimo día del mes de febrero."
 required_text = [
     "Plazo de presentación de los modelos 322 y 353",
     "treinta días naturales del mes siguiente",
@@ -723,7 +723,7 @@ effective_from = 2009-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-06
 reviewed_by = "operator"
-notes = "Articulo 1 de la Orden EHA/3786/2008: aprobación del modelo 303 'Impuesto sobre el Valor Anadido. Autoliquidación. Ingreso del Impuesto sobre el Valor Anadido a la importación liquidado por la Aduana'."
+notes = "Articulo 1 de la Orden EHA/3786/2008: aprobación del modelo 303 'Impuesto sobre el Valor Añadido. Autoliquidación. Ingreso del Impuesto sobre el Valor Añadido a la importación liquidado por la Aduana'."
 required_text = [
     "Aprobación del modelo 303",
     "Impuesto sobre el Valor Añadido",
@@ -763,7 +763,7 @@ effective_from = 2009-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-06
 reviewed_by = "operator"
-notes = "Articulo 2 de la Orden EHA/3786/2008: aprobación del modelo 308 'Impuesto sobre el Valor Anadido, solicitud de devolución: recargo de equivalencia, articulo 30 bis del Reglamento del IVA, articulo 21.4 de la Ley del IVA y sujetos pasivos ocasionales'."
+notes = "Articulo 2 de la Orden EHA/3786/2008: aprobación del modelo 308 'Impuesto sobre el Valor Añadido, solicitud de devolución: recargo de equivalencia, articulo 30 bis del Reglamento del IVA, articulo 21.4 de la Ley del IVA y sujetos pasivos ocasionales'."
 required_text = [
     "Aprobación del modelo 308",
     "solicitud de devolución",
@@ -920,7 +920,7 @@ effective_from = 2010-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-06
 reviewed_by = "operator"
-notes = "Articulo 1 de la Orden EHA/3111/2009: aprobación del modelo 390 'Declaracion-resumen anual del Impuesto sobre el Valor Anadido'."
+notes = "Articulo 1 de la Orden EHA/3111/2009: aprobación del modelo 390 'Declaracion-resumen anual del Impuesto sobre el Valor Añadido'."
 required_text = [
     "Aprobación del modelo 390",
     "Declaración-resumen anual",
@@ -1353,7 +1353,7 @@ effective_from = 2010-04-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-05
 reviewed_by = "operator"
-notes = "Aprobación del modelo 349 de declaración recapitulativa de operaciones intracomunitarias y de sus diseños físicos y lógicos. Base reglamentaria desarrollada por el RD 1624/1992 articulos 78 a 81 y por la Ley 37/1992 articulo 164.5."
+notes = "Aprobación del modelo 349 de declaración recapitulativa de operaciones intracomunitarias y de sus diseños físicos y lógicos. Base reglamentaria desarrollada por el RD 1624/1992 artículos 78 a 81 y por la Ley 37/1992 articulo 164.5."
 required_text = [
     "se aprueba el modelo 349",
     "declaración recapitulativa de operaciones intracomunitarias",
@@ -1413,7 +1413,7 @@ effective_from = 2020-03-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-05
 reviewed_by = "operator"
-notes = "Modificación de la Orden EHA/769/2010 que aprueba el modelo 349. Anade las claves R, D y C para acuerdos de ventas de bienes en consigna y suprime la presentación anual del modelo 349. Aplicable a declaraciones del ejercicio 2020 y siguientes."
+notes = "Modificación de la Orden EHA/769/2010 que aprueba el modelo 349. Añade las claves R, D y C para acuerdos de ventas de bienes en consigna y suprime la presentación anual del modelo 349. Aplicable a declaraciones del ejercicio 2020 y siguientes."
 required_text = [
     "Artículo único. Modificación de la Orden EHA/769/2010",
     "modelo 349",
@@ -1642,7 +1642,7 @@ effective_from = 2021-07-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-06
 reviewed_by = "operator"
-notes = "Ley 37/1992, articulo 163 quinvicies: ámbito del régimen de importación para ventas a distancia de bienes importados de paises o territorios terceros."
+notes = "Ley 37/1992, articulo 163 quinvicies: ámbito del régimen de importación para ventas a distancia de bienes importados de países o territorios terceros."
 required_text = [
     "Artículo 163 quinvicies",
     "ventas a distancia de bienes importados",
@@ -1742,7 +1742,7 @@ review_status = "agent_reviewed"
 reviewed_at = 2026-08-07
 reviewed_by = "agent-review"
 notes = """\
-RD 1619/2012 Reglamento de facturación art 6.1.d: contenido de la factura, NIF. Ademas del NIF del \
+RD 1619/2012 Reglamento de facturación art 6.1.d: contenido de la factura, NIF. Además del NIF del \
 expedidor, la consignacion del NIF del DESTINATARIO es obligatoria en tres casos, y el tercero -- \
 operaciones realizadas en el territorio de aplicación del Impuesto por un empresario o profesional \
 establecido en dicho territorio -- es el que fundamenta el aviso de la CLI cuando una factura \
@@ -2090,9 +2090,9 @@ numero 2 NO es invariante en la ventana de ejercicios que la aplicación sirve: 
 de la Ley 37/1992 (en vigor 01-01-1993 a 31-12-2014) exigia que excediera 'en un 20 por 100', sin 'o \
 mas', mientras que el art. 1.26 de la Ley 28/2014 (BOE-A-2014-12329, en vigor desde 01-01-2015) lo \
 sustituyo por 'en un 10 por ciento o mas'. La modificación rebajo el margen Y lo hizo inclusivo: el \
-preambulo de la Ley 28/2014 lo describe como 'disminuir del 20 al 10 por ciento la diferencia \
+preámbulo de la Ley 28/2014 lo describe como 'disminuir del 20 al 10 por ciento la diferencia \
 admisible'. Base legal del aviso de prorrata especial obligatoria. El margen y su \
-direccion de comparacion se declaran como dato de registro en el parametro \
+direccion de comparacion se declaran como dato de registro en el parámetro \
 m303-prorrata-especial-obligatoria-margen-porcentaje de cada revision del modelo 303; \
 solo se declara la redacción vigente, y un ejercicio anterior a 2015 se rechaza por \
 carecer de autoridad citable en este corpus."""
@@ -2311,7 +2311,7 @@ effective_from = 1993-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-15
 reviewed_by = "operator"
-notes = "Articulo 163 sexvicies LIVA: régimen especial aplicable a las ventas a distancia de bienes importados procedentes de paises terceros (Import One Stop Shop / IOSS). Establecido como ventanilla única para envios de valor intrinseco no superior a 150 euros."
+notes = "Articulo 163 sexvicies LIVA: régimen especial aplicable a las ventas a distancia de bienes importados procedentes de países terceros (Import One Stop Shop / IOSS). Establecido como ventanilla única para envios de valor intrinseco no superior a 150 euros."
 required_text = [
     "En las entregas de bienes acogidas a este régimen especial el devengo del impuesto se producirá en el momento de la entrega, que s",
 ]
@@ -2368,7 +2368,7 @@ effective_from = 1993-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-15
 reviewed_by = "operator"
-notes = "Articulo 163 tervicies LIVA: régimen especial aplicable a empresarios o profesionales establecidos en la Comunidad, pero no en el Estado miembro de consumo (Union One Stop Shop). Habilita la declaración única de servicios y ventas a distancia intracomunitarias a traves del Estado miembro de identificación."
+notes = "Articulo 163 tervicies LIVA: régimen especial aplicable a empresarios o profesionales establecidos en la Comunidad, pero no en el Estado miembro de consumo (Union One Stop Shop). Habilita la declaración única de servicios y ventas a distancia intracomunitarias a través del Estado miembro de identificación."
 required_text = [
     "Uno. Los empresarios o profesionales que se acojan a este régimen especial no podrán deducir en la declaración-liquidación a que s",
     "No obstante lo anterior, los empresarios o profesionales que se acojan a este régimen especial tendrán derecho a la devolución de ",
@@ -2690,7 +2690,7 @@ effective_from = 2017-07-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-06-28
 reviewed_by = "agent-review"
-notes = "Real Decreto 596/2016: moderniza la gestion del IVA e introduce la llevanza de libros registro a traves de la Sede electrónica de la AEAT mediante el suministro electrónico de registros de facturación."
+notes = "Real Decreto 596/2016: moderniza la gestion del IVA e introduce la llevanza de libros registro a través de la Sede electrónica de la AEAT mediante el suministro electrónico de registros de facturación."
 required_text = [
     "Sede electrónica de la Agencia Estatal de la Administración Tributaria",
     "suministro electrónico de los registros de facturación",
@@ -3101,22 +3101,22 @@ aceite de oliva; recargo 0,62 % y 0 % respectivamente. Del 1 de octubre al 31 de
 7,5 % y 2 %; recargo 1 % y 0,26 %. ALCANCE. Esta entrada cubre solo lo que fija el articulo 1. El \
 articulo 2 del mismo real decreto-ley modifica el art. 91 Dos.1.1 LIVA con efectos desde el 1 de \
 enero de 2025 y es una provision distinta que necesita su propia entrada; el texto consolidado de la \
-LIVA solo anota ese articulo 2, que es la razon por la que este instrumento parecia fijar unicamente \
+LIVA solo anota ese articulo 2, que es la razon por la que este instrumento parecia fijar únicamente \
 una fecha de 2025. Las ventanas anteriores al 1 de julio de 2024 las fijan RDL 20/2022, RDL 18/2022, \
 RDL 5/2023 y RDL 8/2023, ninguno de los cuales esta en el corpus. CONTRASTE INDEPENDIENTE. Las \
 cuatro cifras del recargo (0,62 / 0 / 1 / 0,26) coinciden con los tipos que declara el diseño de \
 registro del Modelo 390 en las casillas 665/666, 663/664, 693/694 y 691/692, y 0,62 es estable en \
-las revisiones 2023, 2024 y 2025 del diseño. El preambulo del propio real decreto-ley redondea 0,62 \
+las revisiones 2023, 2024 y 2025 del diseño. El preámbulo del propio real decreto-ley redondea 0,62 \
 a "0,6"; prevalece el texto operativo, y el diseño lo corrobora de forma independiente. PROVENANCIA \
 DE LA REVISION. Entrada preparada por agente y fundamentada en el texto autoritativo empaquetado \
 (documento BOE integro, sha256 3738875c89c223a8e561eb994d0349affd3006d7b4104e4e9e99b337f64dcc58). No \
-la ha revisado un operador humano; reviewed_by lo declara asi. El modelo tipa review_status como \
+la ha revisado un operador humano; reviewed_by lo declara así. El modelo tipa review_status como \
 Literal["reviewed"], de modo que la honestidad de la provenance vive en reviewed_by hasta que un \
 operador re-selle la entrada. NOTA PARA QUIEN EDITE required_text. Las cuatro frases operativas son \
 identicas salvo la cifra, de modo que un required_text tomado del prefijo común coincide con las \
-cuatro y no discrimina nada. Cada entrada lleva su cifra. Ademas el documento separa "del" de la \
+cuatro y no discrimina nada. Cada entrada lleva su cifra. Además el documento separa "del" de la \
 cifra con un espacio duro (U+00A0), pero la puerta lo normaliza a espacio normal antes de comparar, \
-asi que required_text usa espacio normal: incrustar el espacio duro hace fallar todas las \
+así que required_text usa espacio normal: incrustar el espacio duro hace fallar todas las \
 coincidencias."""
 required_text = [
     "será del 0,62 por ciento",
@@ -3240,7 +3240,7 @@ de adquisición del corpus consolidado oficial (API de legislacion consolidada d
 26 bloques servidos cada uno en su ultima version, sha256 \
 d0ef2bae3d07e5a2fed52315c29808306f0a3ec197b1bc0501186ce16181c9df, 733051 bytes. Entrada preparada \
 por agente y fundamentada en el texto empaquetado leido directamente; no la ha revisado un operador \
-humano, y reviewed_by lo declara asi."""
+humano, y reviewed_by lo declara así."""
 required_text = [
     "se exigirá al tipo del 21 por ciento",
 ]
@@ -3289,11 +3289,11 @@ reviewed_by = "agent-prepared-pending-operator"
 notes = """\
 Ley 41/1994, de 30 de diciembre, de Presupuestos Generales del Estado para 1995, art. 78 (Tipos \
 impositivos), apartado Segundo: da nueva redacción al art. 91 LIVA y fija el tipo super-reducido en \
-el 4 por 100, elevando ademas el reducido del 6 al 7 por 100 en el mismo apartado. Esta es la \
+el 4 por 100, elevando además el reducido del 6 al 7 por 100 en el mismo apartado. Esta es la \
 provision que ESTABLECE el 4 por ciento; el art. 91 LIVA es el articulo marco que lo aloja. Las dos \
 entradas hermanas de RDL 20/2012 lo dicen explicitamente en sus propias notas: el tipo \
 super-reducido es ANTERIOR a aquella norma y no puede heredarla por proximidad. EFECTOS: el propio \
-encabezado del articulo dice 'Con efectos a partir del dia 1 de enero de 1995 se da nueva redacción \
+encabezado del articulo dice 'Con efectos a partir del día 1 de enero de 1995 se da nueva redacción \
 a los siguientes preceptos de la Ley 37/1992', de modo que la fecha citable esta en el texto y no en \
 una nota. El atributo fecha_vigencia del endpoint marca 19950120, diecinueve días mas tarde; tomarlo \
 como effective_from seria erroneo. IDENTIFICACION DEL APARTADO: el apartado Primero modifica el art. \
@@ -3309,7 +3309,7 @@ herramienta de adquisición del corpus consolidado oficial (modo articulo), sha2
 disco antes de redactar esta entrada. La captura se hizo SIN required_text a proposito: fijar la \
 frase del 4 por ciento antes de leer el fichero habria hecho tautologica la comprobación. Entrada \
 preparada por agente y fundamentada en el texto empaquetado leido directamente; no la ha revisado un \
-operador humano, y reviewed_by lo declara asi."""
+operador humano, y reviewed_by lo declara así."""
 required_text = [
     "Se modifica el artículo 91",
     "Se aplicará el tipo del 4 por 100",
