@@ -961,8 +961,8 @@ application:
       activity_asset_disposal_finding:
         what: La baja de un elemento tiene un punto que debes revisar, aunque no detiene
           este modelo.
-        what_to_do: Lee la nota sobre la baja del elemento y registra o corrige lo
-          que indica si te afecta.
+        what_to_do: Revisa lo que esta nota dice sobre la baja y regístralo o corrígelo
+          si te afecta.
       activity_asset_foral_territory:
         what: En este periodo resides en un territorio foral, donde la amortización
           se rige por otras normas. Queda fuera de este cálculo y no se deduce
@@ -1252,6 +1252,93 @@ application:
         what: No hay detalle de retenciones por perceptor en el año, así que se muestra
           un cero sin respaldo.
         what_to_do: Añade en tus registros el detalle del año y vuelve a calcular.
+    calc_diagnostic_fact:
+      accrual_unavailable: No se ha podido calcular la amortización del elemento {element},
+        así que no se incluye.
+      activity_undeclared: La compra del elemento {element} no indica tipo de actividad
+        y otro de tus elementos es agrario, así que se cuenta como no agraria.
+      agrarian_excluded: El elemento {element} pertenece a una actividad agraria,
+        así que queda fuera del pago fraccionado {period}.
+      amortization_box_unbound: Esta edición no tiene casilla para la amortización
+        del elemento {element}, así que no suma nada a este cálculo.
+      claim_gap_accrued: 'El elemento {element} no tiene amortización registrada de
+        {start} a {end}: se han devengado {amount} EUR, y la casilla {box} solo declara
+        lo registrado.'
+      claim_gap_free_method: El elemento {element} no tiene amortización registrada
+        de {start} a {end}. Su método deja el importe a tu elección, así que no se
+        puede calcular, y la casilla {box} solo declara lo registrado.
+      disposal_claim_gap: El elemento {element}, dado de baja el {date}, no tiene
+        amortización registrada para parte de {year}. Su mínimo reduce igualmente
+        el coste.
+      disposal_exemption_not_computed: Cualquier exención o diferimiento de la baja
+        del elemento {element} el {date} no se calcula aquí, así que se mantiene el
+        resultado completo.
+      disposal_figure_element_row: '{amount} EUR de la venta del elemento {element}
+        el {date} entran en la casilla {box}. En su fila, indica las fechas y los
+        valores: {transmission_value} EUR de transmisión y {net_value} EUR de valor
+        neto.'
+      disposal_figure_in_box: '{amount} EUR de la baja del elemento {element} el {date}
+        entran en la casilla {box}.'
+      disposal_figure_no_box: '{amount} EUR de la baja del elemento {element} el {date}
+        no llegan a ninguna casilla de esta edición.'
+      disposal_figure_property_row: '{amount} EUR de la venta del elemento {element}
+        el {date} entran en la casilla {box}. En su fila, marca el inmueble como afecto
+        a una actividad e indica las fechas y los valores: {transmission_value} EUR
+        de transmisión y {net_value} EUR de valor neto.'
+      disposal_instalment_agrarian_excess: El exceso de {amount} EUR de la baja del
+        elemento {element} el {date}, en una actividad agraria, no tiene una línea
+        establecida en el pago fraccionado. Queda a tu cargo.
+      disposal_instalment_excess_unresolved: No se ha podido calcular el exceso de
+        la baja del elemento {element} el {date}, así que este pago fraccionado no
+        incluye ninguno.
+      disposal_later_affectation: La venta del elemento {element} el {date} cae dentro
+        del plazo posterior a una afectación que cambia su destino, así que su resultado
+        de {amount} EUR no entra en ninguna casilla y queda a tu cargo.
+      disposal_m131_excess: El exceso de {amount} EUR de la baja del elemento {element}
+        el {date} no llega al Modelo 131, cuyas instrucciones no lo tratan.
+      disposal_m131_excess_unresolved: No se ha podido calcular el exceso de la baja
+        del elemento {element} el {date}, y el Modelo 131, cuyas instrucciones no
+        lo tratan, no incluye ninguno.
+      disposal_minimum_exceeded_deduction: En el elemento {element}, dado de baja
+        el {date}, el mínimo de {year} superó lo deducido y aumenta en {effect} EUR
+        la reducción del coste.
+      disposal_minimum_unresolved: En el elemento {element}, dado de baja el {date},
+        ninguna edición da el mínimo de {year}, así que solo lo deducido reduce el
+        coste.
+      disposal_modules_agrarian_excess: El exceso de {amount} EUR de la baja del elemento
+        {element} el {date}, en una actividad agraria en módulos, no tiene una línea
+        establecida. Queda a tu cargo.
+      disposal_no_minimum_authority: En el elemento {element}, dado de baja el {date},
+        no se aplica ningún mínimo a {year}, así que solo lo deducido reduce el coste.
+      disposal_shared_row: 'El modelo da a cada venta su propia fila y este cálculo
+        reúne {count} ventas. Indica el elemento {element} en una fila propia: vendido
+        el {date} por {transmission_value} EUR, valor neto {net_value} EUR, {amount}
+        EUR en la casilla {box}.'
+      disposal_unresolved_income: No se ha podido calcular el resultado de la baja
+        del elemento {element} el {date}, así que el rendimiento de la actividad puede
+        quedar por debajo del real.
+      disposal_unresolved_no_box: No se ha podido calcular el resultado de la baja
+        del elemento {element} el {date}, así que ninguna casilla lo recoge.
+      instalment_free_gap: El elemento {element} no tiene amortización registrada
+        de {start} a {end}. Su método deja el importe a tu elección, así que no suma
+        nada a la casilla {box}.
+      possibly_durable_expense: El movimiento {row} (categoría {category}) se deduce
+        como gasto corriente y su descripción parece la de un elemento duradero.
+      register_cost_exceeds_paid: Los elementos {elements} indican un coste de {cost}
+        EUR, y los movimientos que nombran pagaron {paid} EUR.
+      register_owned_acquisition: El movimiento {row} es la compra del elemento {element},
+        así que se amortiza en lugar de deducirse.
+      register_partly_accounted: Los movimientos de los elementos {elements} declaran
+        una base de {base} EUR y los elementos justifican {price} EUR, así que los
+        {remainder} EUR restantes no deducen nada.
+      register_price_exceeds_base: Los elementos {elements} indican un precio de {price}
+        EUR, y los movimientos que nombran declaran una base de {base} EUR.
+      register_row_missing: 'Los elementos {elements} indican movimientos que ya no
+        existen: {rows}.'
+      residence_period_unknown: No hay residencia fiscal registrada para {date}, así
+        que tus elementos se cuentan como si se aplicaran los Modelos 100 y 130.
+      row_unregistered: El movimiento {row} (categoría {category}, {year}) registra
+        un elemento que no está en tu registro.
     calculation_report:
       local_calculation_notice: 'Informe de cálculo local de Cadrumo. No es evidencia
         oficial de presentación ante la AEAT. La evidencia oficial la emite la AEAT

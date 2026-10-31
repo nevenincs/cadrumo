@@ -7,6 +7,7 @@ from datetime import date
 from ...core.casilla_id import CasillaId
 from ...core.period import Period
 from ...domain.calculations.registry.errors import RegistryError
+from ...domain.modelos.calculation_revision_sources import CalculationNoteFact, CalculationNoteSentence
 from ...domain.renta.actividad_asset.errors import ActividadAssetError
 from ...domain.renta.actividad_asset.lifecycle import ActivityAssetRevision
 from ..actividad_asset.schedule_walk import M130ElementAccrual, M130ElementOutcome
@@ -41,6 +42,13 @@ def m130_accrual_diagnostics(
                 f"is the taxpayer's election; it contributes nothing to box {target_casilla_id}"
             ),
             remedy="record the elected amortization charge to deduct it",
+            fact=CalculationNoteFact.of(
+                CalculationNoteSentence.INSTALMENT_FREE_GAP,
+                element=revision.asset_id,
+                start=start.isoformat(),
+                end=period.end_date.isoformat(),
+                box=target_casilla_id,
+            ),
         ),
     )
 
@@ -61,6 +69,7 @@ def accrual_unavailable_diagnostic(
         casilla_id=casilla_id,
         message=f"the schedule of element {revision.asset_id!r} could not be worked out: {error}",
         remedy="complete or correct the element in the register, then calculate again",
+        fact=CalculationNoteFact.of(CalculationNoteSentence.ACCRUAL_UNAVAILABLE, element=revision.asset_id),
     )
 
 
@@ -79,6 +88,11 @@ def agrarian_excluded_diagnostic(
         message=(
             f"element {revision.asset_id!r} belongs to an agrarian activity, whose {period.registry_token} instalment "
             "is a share of income (RIRPF art. 110.1.c); its amortization is deducted in Modelo 100 only"
+        ),
+        fact=CalculationNoteFact.of(
+            CalculationNoteSentence.AGRARIAN_EXCLUDED,
+            element=revision.asset_id,
+            period=period.registry_token,
         ),
     )
 
@@ -99,4 +113,5 @@ def activity_undeclared_diagnostic(
             "taxpayer is agrarian; it is counted as non-agrarian"
         ),
         remedy="set the type of activity on the acquisition entry, then calculate again",
+        fact=CalculationNoteFact.of(CalculationNoteSentence.ACTIVITY_UNDECLARED, element=revision.asset_id),
     )

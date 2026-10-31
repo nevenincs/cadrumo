@@ -23,6 +23,7 @@ from textual.screen import ModalScreen
 from textual.widgets import Button, Static
 
 from ....application.export.calculation_review_xlsx_operation import CalculationReviewXlsxResult
+from ....application.modelo.calculation_notes import note_fact_text
 from ....application.modelo.export_projection import (
     ModeloExportCompleteness,
     ModeloExportEvidenceStatus,
@@ -167,6 +168,11 @@ def export_result_warnings(
             NoticePresentation(
                 severity="warning", message=tr("tui.modelo.export.result.warning.completeness_unverified")
             )
+        )
+    if receipt is not None:
+        warnings.extend(
+            NoticePresentation(severity="warning", message=note_fact_text(note.fact))
+            for note in receipt.calculation_notes
         )
     return tuple(warnings)
 

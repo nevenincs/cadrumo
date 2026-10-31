@@ -40,6 +40,7 @@ from ._modelo_rendering import (
     filing_record_payload,
     m184_socio_handoff_advisory_notices,
     m210_plazo_notice,
+    recorded_note_notices,
     verification_report_lines,
     verification_report_notices,
     verification_report_payload,
@@ -250,6 +251,9 @@ def work_verify(
         )
         lines.append(noop_message)
     notices.extend(m184_socio_handoff_advisory_notices(projection.advisories.m184_socio_handoffs))
+    note_notices, note_lines = recorded_note_notices(verification.calculation_notes, code="modelo.calculation_note")
+    notices.extend(note_notices)
+    lines.extend(note_lines)
     emit_envelope(ctx, command="modelo.work.verify", result=result, lines=lines, notices=notices)
     if not report.granted_verificado_completo:
         raise typer.Exit(code=1)

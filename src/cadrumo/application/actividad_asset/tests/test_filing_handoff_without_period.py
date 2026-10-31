@@ -32,6 +32,7 @@ from cadrumo.domain.renta.actividad_asset.schedule import (
     ScheduledAmortizationCharge,
 )
 
+from ..schedule_walk import M100GapKind
 from .ledger_support import MemoryLedger
 from .operations_support import ACQUISITION, build_forecast, build_operations, build_revision
 from .register_support import MemoryRepository, memory_register_authority
@@ -55,7 +56,7 @@ def _operations_that_cannot_work_out_modelo_130() -> ActivityAssetOperations:
         history: AssetScheduleHistory,
         requested_free_amount: Decimal | None = None,
     ) -> ScheduledAmortizationCharge:
-        raise AssertionError(f"the Modelo 100 boxes alone must not work out {covered_from} to {covered_until}")
+        raise ActividadAssetValidationError(translated_message="ledger.actividad_asset.errors.foral_territory")
 
     repository = MemoryRepository()
     ActivityAssetOperations(
@@ -92,11 +93,27 @@ def test_a_year_alone_projects_the_modelo_100_boxes_and_no_modelo_130_figure() -
     assert framed.material_m130 is not None
 
 
-def test_a_year_alone_reads_no_modelo_130_authority_and_works_out_no_schedule() -> None:
+def test_a_year_alone_reads_no_modelo_130_authority_and_a_schedule_it_cannot_read_is_a_stated_gap() -> None:
     handoff = _operations_that_cannot_work_out_modelo_130().filing_handoff(tax_year=2025)
 
     assert handoff.material_m130 is None
     assert handoff.intangible_m130 is None
+    assert [(gap.asset_id, gap.kind, gap.accrued) for gap in handoff.m100_gaps] == [
+        ("laptop-1", M100GapKind.UNAVAILABLE, None),
+    ]
+
+
+def test_the_handoff_says_what_it_leaves_out_and_keeps_saying_so_across_the_wire() -> None:
+    operations = build_operations()
+
+    handoff = operations.filing_handoff(tax_year=2025, m130_period=Period.from_year_and_code(2025, "4T"))
+
+    (gap,) = handoff.m100_gaps
+    assert gap.kind is M100GapKind.ACCRUED
+    assert gap.accrued is not None
+    assert gap.accrued > Decimal("0")
+    assert gap.covered_until == date(2026, 1, 1)
+    assert ActivityAssetFilingHandoffSnapshot.from_domain(handoff).to_domain() == handoff
 
 
 def test_a_year_alone_still_refuses_a_foral_residence() -> None:

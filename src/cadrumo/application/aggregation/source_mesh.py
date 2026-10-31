@@ -61,6 +61,7 @@ from ...domain.modelos.calculation_revision import (
     empty_row_source_identities,
 )
 from ...domain.modelos.calculation_revision_m303_handoff import M303RegimenSimplificadoAnnualSummaryHandoff
+from ...domain.modelos.calculation_revision_sources import CalculationNoteFact
 from ...domain.modelos.row_models import ModeloDetailRow
 from ..modelo.work_profile import ModeloWorkProfile
 from .source_diagnostic_reason import CalculationSourceDiagnosticReason
@@ -271,6 +272,8 @@ class CalculationSourceDiagnostic(BaseModel):
     where the advisory discloses a state with no action attached to it."""
     resolver_id: str | None = Field(default=None, min_length=1, max_length=128)
     source_ref: str | None = Field(default=None, min_length=1, max_length=256)
+    fact: CalculationNoteFact | None = None
+    """What this diagnostic says about its own subject, in catalogue words; ``None`` when its reason says it all."""
     binding_id: BindingId | None = None
     relation_id: RelationId | None = None
     relation_ids: tuple[RelationId, ...] = ()

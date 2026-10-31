@@ -389,7 +389,8 @@ def test_static_projection_preserves_every_strict_disposition_and_fails_closed_o
 
     strict_residues = set(_residue_signature(strict_report))
     degraded_residues = set(_residue_signature(diagnostic_report))
-    assert not strict_residues - degraded_residues, "the degraded read must not lose a strict disposition"
+    missing_residues = strict_residues - degraded_residues
+    assert not missing_residues, f"the degraded read lost strict dispositions: {sorted(missing_residues)!r}"
 
     only_degraded = degraded_residues - strict_residues
     assert {(row[0], row[1]) for row in only_degraded} == materialized

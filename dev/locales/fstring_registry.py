@@ -487,6 +487,7 @@ def _modelo_workbench_registrations() -> tuple[FStringKeyRegistration, ...]:
     """
     from cadrumo.application.modelo.calculation_notes import (
         CALCULATION_NOTE_ATTENTION,
+        fact_locale_key,
         what_locale_key,
         what_to_do_locale_key,
     )
@@ -511,6 +512,7 @@ def _modelo_workbench_registrations() -> tuple[FStringKeyRegistration, ...]:
         CalculationRevisionAmendmentKind,
         M303RectificativaMotive,
     )
+    from cadrumo.domain.modelos.calculation_revision_sources import CalculationNoteSentence
     from cadrumo.entrypoints.tui.modelo.workbench.editor import EDITOR_HINT_KINDS
     from cadrumo.entrypoints.tui.modelo.workbench.page_items import WorkbenchFilter
     from cadrumo.entrypoints.tui.modelo.workbench.progress import WorkbenchStep
@@ -572,6 +574,11 @@ def _modelo_workbench_registrations() -> tuple[FStringKeyRegistration, ...]:
             description="application.modelo.calc_diagnostic.*.what_to_do (calculation note reasons)",
             key_factory=what_to_do_locale_key,
             values=tuple(CALCULATION_NOTE_ATTENTION),
+        ),
+        FStringKeyRegistration(
+            description="application.modelo.calc_diagnostic_fact.* (CalculationNoteSentence)",
+            key_factory=lambda value: fact_locale_key(CalculationNoteSentence(value)),
+            values=_enum_values(CalculationNoteSentence),
         ),
     )
 

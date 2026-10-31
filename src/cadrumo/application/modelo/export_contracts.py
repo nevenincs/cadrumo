@@ -64,6 +64,7 @@ from ...domain.filing.software_identity import (
 from ...domain.modelos.calculation_revision import (
     CalculationRevision,
 )
+from ...domain.modelos.calculation_revision_sources import RecordedCalculationNote
 from ...domain.modelos.errors import (
     ModeloError,
     ModeloExportError,
@@ -332,6 +333,8 @@ class ModeloExportResult(BaseModel):
         software_identity_grade: Grade of the program identifier and
             developer NIF stamped into an envelope-prefixed header, or
             ``None`` when the selected layout renders no such header.
+        calculation_notes: What the exported revision's calculation noted about
+            the taxpayer's assets, in the words the form uses.
     """
 
     model_config = _STRICT_FROZEN
@@ -361,6 +364,7 @@ class ModeloExportResult(BaseModel):
     casilla_provenance: tuple[ModeloCasillaProvenance, ...] = Field(default_factory=tuple)
     iva_wallet_decision_provenance: ModeloIvaWalletDecisionProvenance | None = None
     software_identity_grade: AeatSoftwareIdentityGrade | None = None
+    calculation_notes: tuple[RecordedCalculationNote, ...] = ()
     local_evidence_status: str = Field(default=_LOCAL_EXPORT_EVIDENCE_STATUS, min_length=1)
     official_evidence_message: str = Field(default=_LOCAL_EXPORT_OFFICIAL_EVIDENCE_MESSAGE, min_length=1)
     domiciliation_cutoff_unverified: bool = Field(

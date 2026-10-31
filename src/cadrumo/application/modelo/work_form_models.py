@@ -61,6 +61,7 @@ from ...domain.calculations.registry.schema_form_layouts import (
 )
 from ...domain.calculations.registry.schema_surfaces import CasillaConstraints
 from ...domain.deadlines.festivos import DeadlineHolidayCoverage
+from ...domain.modelos.calculation_revision_sources import CalculationNoteFact
 from ...domain.modelos.codes import ModeloCode
 from ...domain.modelos.verification_report import (
     ModeloVerificationFindingKind,
@@ -922,7 +923,8 @@ class ModeloFormCalculationNote(_FormModel):
     calculation-note gate's own answer: the gate refuses the file and the
     recording while such a note stands, whatever its attention says, so the
     editor withholds them too (:attr:`ModeloWorkForm.blocking_calculation_notes`),
-    as it does for a note at the blocking level.
+    as it does for a note at the blocking level. ``fact`` is what this note says
+    about its own subject, when its reason alone does not.
     """
 
     reason: str = Field(min_length=1, max_length=64)
@@ -930,6 +932,7 @@ class ModeloFormCalculationNote(_FormModel):
     casilla_id: CasillaId | None = None
     box: str | None = None
     withholds_filing: bool = False
+    fact: CalculationNoteFact | None = None
 
 
 class ModeloFormAeatData(_FormModel):

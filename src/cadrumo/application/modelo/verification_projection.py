@@ -19,6 +19,7 @@ from ...core.operator_action_enums import (
     NoRecoveryOutcome,
 )
 from ...domain.calculations.registry.ids import LegalRefId, ModeloId, RevisionId, SourceRefId, VerificationExpectationId
+from ...domain.modelos.calculation_revision_sources import RecordedCalculationNote
 from ...domain.modelos.filing_text import ModeloActorLabel
 from ...domain.modelos.verification_report import (
     ModeloVerificationFinding,
@@ -211,6 +212,7 @@ class ModeloVerificationSnapshot(BaseModel):
     report: ModeloVerificationReportSnapshot
     published: bool
     finding_preconditions: tuple[ModeloFindingPreconditionSnapshot, ...]
+    calculation_notes: tuple[RecordedCalculationNote, ...] = ()
 
     @classmethod
     def from_verification(cls, outcome: ModeloVerificationResult) -> Self:
@@ -229,6 +231,7 @@ class ModeloVerificationSnapshot(BaseModel):
                 )
                 for item in outcome.finding_preconditions
             ),
+            calculation_notes=outcome.calculation_notes,
         )
 
     def to_verification(self) -> ModeloVerificationResult:
@@ -245,6 +248,7 @@ class ModeloVerificationSnapshot(BaseModel):
                 )
                 for item in self.finding_preconditions
             ),
+            calculation_notes=self.calculation_notes,
         )
 
     @model_validator(mode="after")

@@ -25,6 +25,7 @@ from ...domain.modelos.calculation_revision import (
     CalculationRevisionCatalogue,
     CalculationRevisionState,
 )
+from ...domain.modelos.calculation_revision_sources import recorded_calculation_notes
 from ...domain.modelos.participation_index import TransactionRevisionParticipation, upsert_transaction_participation
 from ...domain.modelos.protocols import (
     CalculationRevisionCatalogueRepositoryProtocol,
@@ -168,6 +169,7 @@ def _existing_verification(
                     existing.findings,
                     failures_by_finding_id={},
                 ),
+                calculation_notes=recorded_calculation_notes(target.source_issues),
             )
         raise CalculationRevisionStateError(
             translated_message="errors.error.error_modelo_calculation_revision_state",
@@ -432,6 +434,7 @@ def _finish_verification(
             findings,
             failures_by_finding_id=failures_by_finding_id,
         ),
+        calculation_notes=recorded_calculation_notes(target.source_issues),
     )
 
 

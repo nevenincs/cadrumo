@@ -32,7 +32,11 @@ from ...domain.modelos.calculation_revision_m303_handoff import (
     FilingInstanceEvidence,
 )
 from ...domain.modelos.calculation_revision_operator_layer import CalculationOperatorLayer
-from ...domain.modelos.calculation_revision_sources import CalculationSourceIssue, CalculationSourceRef
+from ...domain.modelos.calculation_revision_sources import (
+    CALCULATION_SOURCE_ISSUE_MESSAGE_LIMIT,
+    CalculationSourceIssue,
+    CalculationSourceRef,
+)
 from ...domain.modelos.row_models import Modelo210AgrupacionRentaRow, ModeloDetailRow
 from ...domain.modelos.work_unit import WorkUnit
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
@@ -739,7 +743,8 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         + advisory_diagnostics
         + profile_text_diagnostics
     )
-    # Held for the editor form until the next calculation of this declaration; only the blocking ones persist.
+    # Held for the editor form until the next calculation of this declaration; those that withhold filing and
+    # the activity-asset notes also persist on the revision, so a reopened declaration still shows them.
     CALCULATION_NOTES.record(revision.work_unit_id, revision.calculation_revision_id, source_diagnostics)
     return BucketAggregationCalculationResult(
         revision=revision,
@@ -761,6 +766,33 @@ def _durable_invoice_source_reason(diagnostic: CalculationSourceDiagnostic) -> _
         return "activity_asset_foral_territory"
     if diagnostic.reason == "activity_asset_residence_unresolved":
         return "activity_asset_residence_unresolved"
+    return _durable_asset_note_reason(diagnostic)
+
+
+def _durable_asset_note_reason(diagnostic: CalculationSourceDiagnostic) -> _DurableSourceIssueReason | None:
+    """Keep what the calculation knew about the register with the filed record; none of these withholds anything."""
+    if diagnostic.reason == "activity_asset_claim_gap":
+        return "activity_asset_claim_gap"
+    if diagnostic.reason == "activity_asset_accrual_unavailable":
+        return "activity_asset_accrual_unavailable"
+    if diagnostic.reason == "activity_asset_activity_undeclared":
+        return "activity_asset_activity_undeclared"
+    if diagnostic.reason == "activity_asset_agrarian_excluded":
+        return "activity_asset_agrarian_excluded"
+    if diagnostic.reason == "activity_asset_residence_period_unknown":
+        return "activity_asset_residence_period_unknown"
+    if diagnostic.reason == "activity_asset_disposal_finding":
+        return "activity_asset_disposal_finding"
+    if diagnostic.reason == "register_acquisition_exceeds_ledger":
+        return "register_acquisition_exceeds_ledger"
+    if diagnostic.reason == "register_acquisition_partly_accounted":
+        return "register_acquisition_partly_accounted"
+    if diagnostic.reason == "register_acquisition_row_missing":
+        return "register_acquisition_row_missing"
+    if diagnostic.reason == "register_owned_capital_acquisition":
+        return "register_owned_capital_acquisition"
+    if diagnostic.reason == "ledger_expense_may_be_durable":
+        return "ledger_expense_may_be_durable"
     return None
 
 
@@ -836,10 +868,11 @@ def _unrouted_source_issues(
                 message=(
                     "selected-scope IVA evidence failure"
                     if reason == "iva_selected_scope_evidence_failure"
-                    else diagnostic.message
+                    else diagnostic.message[:CALCULATION_SOURCE_ISSUE_MESSAGE_LIMIT]
                 ),
                 resolver_id=diagnostic.resolver_id,
                 source_ref=diagnostic.source_ref,
+                fact=diagnostic.fact,
             ),
         )
     return tuple(issues)
@@ -944,6 +977,17 @@ _DurableSourceIssueReason = Literal[
     "ledger_amortization_row_unregistered",
     "activity_asset_foral_territory",
     "activity_asset_residence_unresolved",
+    "activity_asset_claim_gap",
+    "activity_asset_accrual_unavailable",
+    "activity_asset_activity_undeclared",
+    "activity_asset_agrarian_excluded",
+    "activity_asset_residence_period_unknown",
+    "activity_asset_disposal_finding",
+    "register_acquisition_exceeds_ledger",
+    "register_acquisition_partly_accounted",
+    "register_acquisition_row_missing",
+    "register_owned_capital_acquisition",
+    "ledger_expense_may_be_durable",
 ]
 
 

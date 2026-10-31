@@ -15,6 +15,7 @@ from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
+from types import MappingProxyType
 from typing import Final
 
 from pydantic import BaseModel, Field
@@ -49,25 +50,24 @@ from ...domain.modelos.calculation_revision_sources import (
     ACTIVITY_ASSET_DISPOSAL_FIGURES_REF_PREFIX,
     ACTIVITY_ASSET_DISPOSAL_REF_PREFIX,
     ACTIVITY_ASSET_SCHEDULE_REF_PREFIX,
+    CalculationNoteFact,
+    CalculationNoteSentence,
 )
 from ...domain.renta.actividad_asset.claims import (
     AmortizationClaim,
-    asset_schedule_history,
-    claims_through_year,
     current_revisions,
     select_effective_claims,
-    uncovered_claim_intervals,
 )
 from ...domain.renta.actividad_asset.disposal import (
     BAJA_WITHOUT_TRANSMISSION_REASONS,
     TRANSMISSION_REASONS,
     ActivityAssetDisposalCalculation,
+    ActivityAssetDisposalFinding,
+    ActivityAssetDisposalFindingKind,
     ActivityAssetDisposalReason,
 )
-from ...domain.renta.actividad_asset.election import FREE_AMOUNT_METHODS
 from ...domain.renta.actividad_asset.errors import (
     ActividadAssetError,
-    ActividadAssetPeriodElapsedError,
     ActividadAssetValidationError,
 )
 from ...domain.renta.actividad_asset.lifecycle import ActivityAssetRevision, AssetKind
@@ -83,8 +83,9 @@ from ..actividad_asset.disposal_calculation import (
 )
 from ..actividad_asset.history import ActivityAssetHistory
 from ..actividad_asset.schedule_walk import (
+    M100GapKind,
     M130ElementAccrual,
-    free_base_remains,
+    m100_claim_gaps,
     m130_register_accruals,
 )
 from ..calculations.actividad_asset_schedule import forecast_activity_asset_charge
@@ -258,6 +259,7 @@ def m100_activity_asset_projection(
             *_residence_period_findings(territory, period=period, resolver_id=resolver_id),
             *diagnostics,
             *(note for baja in bajas for note in baja.notes),
+            *reader.shared_row_findings(bajas),
         ),
         disposal_revision_ids=tuple(revision.revision_id for revision in disposed),
         disposal_digests=_disposal_digests(disposed, history, operation=operation),
@@ -566,14 +568,27 @@ def _calculate(
 
 
 def _disposal_finding(
-    revision: ActivityAssetRevision, message: str, *, resolver_id: str
+    revision: ActivityAssetRevision,
+    message: str,
+    sentence: CalculationNoteSentence,
+    /,
+    *,
+    resolver_id: str,
+    **values: object,
 ) -> CalculationSourceDiagnostic:
+    disposal = revision.disposal
     return CalculationSourceDiagnostic(
         reason="activity_asset_disposal_finding",
         source_kind=resolver_id,
         resolver_id=resolver_id,
         source_ref=f"activity-asset:{revision.asset_id}",
         message=f"baja of element {revision.asset_id!r}: {message}",
+        fact=CalculationNoteFact.of(
+            sentence,
+            element=revision.asset_id,
+            date="" if disposal is None else disposal.disposal_date.isoformat(),
+            **values,
+        ),
     )
 
 
@@ -594,9 +609,21 @@ def _m100_unresolved_disposal(
     message = f"its result could not be worked out ({error})"
     if disposal_excess_applies(revision, disposal):
         return (
-            _disposal_finding(revision, f"{message}, so activity income may be understated", resolver_id=resolver_id),
+            _disposal_finding(
+                revision,
+                f"{message}, so activity income may be understated",
+                CalculationNoteSentence.DISPOSAL_UNRESOLVED_INCOME,
+                resolver_id=resolver_id,
+            ),
         )
-    return (_disposal_finding(revision, f"{message}; no box carries it", resolver_id=resolver_id),)
+    return (
+        _disposal_finding(
+            revision,
+            f"{message}; no box carries it",
+            CalculationNoteSentence.DISPOSAL_UNRESOLVED_NO_BOX,
+            resolver_id=resolver_id,
+        ),
+    )
 
 
 def _m130_excess_notes(
@@ -609,6 +636,7 @@ def _m130_excess_notes(
             _disposal_finding(
                 row.revision,
                 f"its excess could not be worked out ({row.error}), so this instalment carries none",
+                CalculationNoteSentence.DISPOSAL_INSTALMENT_EXCESS_UNRESOLVED,
                 resolver_id=resolver_id,
             ),
         )
@@ -618,7 +646,9 @@ def _m130_excess_notes(
                 row.revision,
                 f"{row.amount} EUR of excess in an agrarian activity has no established instalment line; "
                 "it is left to you",
+                CalculationNoteSentence.DISPOSAL_INSTALMENT_AGRARIAN_EXCESS,
                 resolver_id=resolver_id,
+                amount=row.amount,
             ),
         )
     return ()
@@ -646,19 +676,33 @@ def _m131_excess_finding(row: ActivityAssetDisposalExcess, *, resolver_id: str) 
             row.revision,
             f"its excess could not be worked out ({row.error}), and Modelo 131, whose instructions do not address "
             "it, carries none",
+            CalculationNoteSentence.DISPOSAL_M131_EXCESS_UNRESOLVED,
             resolver_id=resolver_id,
         )
     return _disposal_finding(
         row.revision,
         f"{row.amount} EUR of excess is not routed to Modelo 131, whose instructions do not address it",
+        CalculationNoteSentence.DISPOSAL_M131_EXCESS,
         resolver_id=resolver_id,
+        amount=row.amount,
     )
+
+
+@dataclass(frozen=True, slots=True)
+class _RowFigure:
+    """A gain or loss that fills a row of the form, with what a row of its own would state."""
+
+    revision: ActivityAssetRevision
+    route: ActivityAssetDisposalRoute
+    amount: Decimal
+    calculation: ActivityAssetDisposalCalculation
 
 
 @dataclass(frozen=True, slots=True)
 class _BajaReading:
     observations: tuple[ActivityAssetDisposalObservation, ...] = ()
     notes: tuple[CalculationSourceDiagnostic, ...] = ()
+    row_figures: tuple[_RowFigure, ...] = ()
 
 
 class _BajaReader:
@@ -693,7 +737,14 @@ class _BajaReader:
         figures: list[tuple[ActivityAssetDisposalRoute, Decimal]] = []
         notes: list[CalculationSourceDiagnostic] = []
         if calculation.route_changed_by_later_affectation:
-            notes.append(self._finding(revision, _later_affectation_message(calculation)))
+            notes.append(
+                self._finding(
+                    revision,
+                    _later_affectation_message(calculation),
+                    CalculationNoteSentence.DISPOSAL_LATER_AFFECTATION,
+                    amount=calculation.result,
+                )
+            )
         elif (route := _result_route(revision, calculation)) is not None and calculation.result is not None:
             figures.append((route, abs(calculation.result)))
         if calculation.excess > Decimal("0"):
@@ -704,11 +755,13 @@ class _BajaReader:
                         revision,
                         f"{calculation.excess} EUR of excess in an agrarian activity under modulos has no established "
                         "line; it is left to you",
+                        CalculationNoteSentence.DISPOSAL_MODULES_AGRARIAN_EXCESS,
+                        amount=calculation.excess,
                     ),
                 )
             else:
                 figures.append((excess_route, calculation.excess))
-        notes.extend(self._figure_finding(revision, route, amount) for route, amount in figures)
+        notes.extend(self._figure_finding(revision, route, amount, calculation) for route, amount in figures)
         notes.extend(self._calculation_findings(revision, calculation))
         return _BajaReading(
             observations=tuple(
@@ -717,6 +770,45 @@ class _BajaReader:
                 if route in self._routes
             ),
             notes=tuple(notes),
+            row_figures=tuple(
+                _RowFigure(revision=revision, route=route, amount=amount, calculation=calculation)
+                for route, amount in figures
+                if route in ELEMENT_ROW_ROUTES or route in _PROPERTY_ROW_ROUTES
+            ),
+        )
+
+    def shared_row_findings(self, readings: Iterable[_BajaReading]) -> tuple[CalculationSourceDiagnostic, ...]:
+        """Say what each sale would state on a row of its own when several share one.
+
+        The official form repeats these rows, one per element, and this edition's bindings
+        hold one value per box. Each route's total stays right, as the form's own sums
+        need, but the row can no longer be read as one sale, so each sale's date and
+        values are put in front of the filer.
+
+        Returns:
+            One finding per sale of a row family two or more sales fill.
+        """
+        figures = tuple(figure for reading in readings for figure in reading.row_figures)
+        return tuple(
+            self._shared_row_finding(figure, count=len(family))
+            for routes in (ELEMENT_ROW_ROUTES, _PROPERTY_ROW_ROUTES)
+            if len(family := tuple(item for item in figures if item.route in routes)) > 1
+            for figure in family
+            if figure.route in self._routes
+        )
+
+    def _shared_row_finding(self, figure: _RowFigure, *, count: int) -> CalculationSourceDiagnostic:
+        calculation = figure.calculation
+        return self._finding(
+            figure.revision,
+            f"{count} sales share one row of box {self._routes[figure.route]}, where the form gives each its own; "
+            f"this one comes to {figure.amount} EUR",
+            CalculationNoteSentence.DISPOSAL_SHARED_ROW,
+            count=count,
+            amount=figure.amount,
+            box=self._routes[figure.route],
+            transmission_value=calculation.transmission_value,
+            net_value=calculation.net_value,
         )
 
     def _calculation_findings(
@@ -730,23 +822,48 @@ class _BajaReader:
                 + (
                     "" if finding.effect_on_cost is None else f", raising the reduction by {finding.effect_on_cost} EUR"
                 ),
+                _FINDING_SENTENCES[finding.kind],
+                **_finding_values(finding),
             )
             for finding in calculation.findings
         )
 
-    def _finding(self, revision: ActivityAssetRevision, message: str) -> CalculationSourceDiagnostic:
-        return _disposal_finding(revision, message, resolver_id=self._resolver_id)
+    def _finding(
+        self, revision: ActivityAssetRevision, message: str, sentence: CalculationNoteSentence, /, **values: object
+    ) -> CalculationSourceDiagnostic:
+        return _disposal_finding(revision, message, sentence, resolver_id=self._resolver_id, **values)
 
     def _figure_finding(
         self,
         revision: ActivityAssetRevision,
         route: ActivityAssetDisposalRoute,
         amount: Decimal,
+        calculation: ActivityAssetDisposalCalculation,
     ) -> CalculationSourceDiagnostic:
         box = self._routes.get(route)
         if box is None:
-            return self._finding(revision, f"{amount} EUR ({route.value}) reaches no box of this edition")
-        return self._finding(revision, f"{amount} EUR ({route.value}) enters box {box}{self._row_entry(route)}")
+            return self._finding(
+                revision,
+                f"{amount} EUR ({route.value}) reaches no box of this edition",
+                CalculationNoteSentence.DISPOSAL_FIGURE_NO_BOX,
+                amount=amount,
+            )
+        message = f"{amount} EUR ({route.value}) enters box {box}{self._row_entry(route)}"
+        if route in ELEMENT_ROW_ROUTES or route in _PROPERTY_ROW_ROUTES:
+            return self._finding(
+                revision,
+                message,
+                (
+                    CalculationNoteSentence.DISPOSAL_FIGURE_ELEMENT_ROW
+                    if route in ELEMENT_ROW_ROUTES
+                    else CalculationNoteSentence.DISPOSAL_FIGURE_PROPERTY_ROW
+                ),
+                amount=amount,
+                box=box,
+                transmission_value=calculation.transmission_value,
+                net_value=calculation.net_value,
+            )
+        return self._finding(revision, message, CalculationNoteSentence.DISPOSAL_FIGURE_IN_BOX, amount=amount, box=box)
 
     def _row_entry(self, route: ActivityAssetDisposalRoute) -> str:
         if route in ELEMENT_ROW_ROUTES:
@@ -777,6 +894,29 @@ class _BajaReader:
         if activity in agrarian:
             return None
         return ActivityAssetDisposalRoute.EXCESS_OBJECTIVE_ESTIMATION
+
+
+_FINDING_SENTENCES: Final[Mapping[ActivityAssetDisposalFindingKind, CalculationNoteSentence]] = MappingProxyType(
+    {
+        ActivityAssetDisposalFindingKind.CLAIM_GAP: CalculationNoteSentence.DISPOSAL_CLAIM_GAP,
+        ActivityAssetDisposalFindingKind.MINIMUM_EXCEEDED_DEDUCTION: (
+            CalculationNoteSentence.DISPOSAL_MINIMUM_EXCEEDED_DEDUCTION
+        ),
+        ActivityAssetDisposalFindingKind.NO_MINIMUM_AUTHORITY: CalculationNoteSentence.DISPOSAL_NO_MINIMUM_AUTHORITY,
+        ActivityAssetDisposalFindingKind.MINIMUM_UNRESOLVED: CalculationNoteSentence.DISPOSAL_MINIMUM_UNRESOLVED,
+        ActivityAssetDisposalFindingKind.EXEMPTION_NOT_COMPUTED: (
+            CalculationNoteSentence.DISPOSAL_EXEMPTION_NOT_COMPUTED
+        ),
+    },
+)
+"""The sentence that states each thing a baja's calculation tells the filer."""
+
+
+def _finding_values(finding: ActivityAssetDisposalFinding) -> dict[str, object]:
+    return {
+        **({} if finding.tax_year is None else {"year": finding.tax_year}),
+        **({} if finding.effect_on_cost is None else {"effect": finding.effect_on_cost}),
+    }
 
 
 _ESTIMATION_REGIME_PATH: Final[str] = "irpf.estimation_regime"
@@ -911,6 +1051,9 @@ def _residence_period_findings(
                 "is counted as if Modelos 100 and 130 of the AEAT apply to this period"
             ),
             remedy="state the tax residence that applied in this period in the profile",
+            fact=CalculationNoteFact.of(
+                CalculationNoteSentence.RESIDENCE_PERIOD_UNKNOWN, date=period.end_date.isoformat()
+            ),
         ),
     )
 
@@ -971,6 +1114,7 @@ def _amortization_box_unbound_diagnostic(
             f"so element {revision.asset_id!r} contributes nothing to this calculation"
         ),
         remedy="enter the amortization by hand on the return if it applies",
+        fact=CalculationNoteFact.of(CalculationNoteSentence.AMORTIZATION_BOX_UNBOUND, element=revision.asset_id),
     )
 
 
@@ -993,21 +1137,6 @@ def _m100_claim_observations(
     )
 
 
-def _year_history(
-    history: ActivityAssetHistory,
-    revision: ActivityAssetRevision,
-    *,
-    tax_year: int,
-) -> AssetScheduleHistory:
-    """Summarise history up to ``tax_year``: a later year's claim does not change this year's figure."""
-    return asset_schedule_history(
-        claims_through_year(history.claims, tax_year),
-        history.revisions,
-        asset_id=revision.asset_id,
-        tax_year=tax_year,
-    )
-
-
 def _m100_gap_diagnostics(
     revision: ActivityAssetRevision,
     history: ActivityAssetHistory,
@@ -1022,34 +1151,31 @@ def _m100_gap_diagnostics(
         return (_amortization_box_unbound_diagnostic(revision, resolver_id=resolver_id),)
     named_box = None if casilla in reached else casilla
     diagnostics: list[CalculationSourceDiagnostic] = []
-    for gap in uncovered_claim_intervals(
-        revision,
-        history.claims,
-        start=date(tax_year, 1, 1),
-        end=date(tax_year + 1, 1, 1),
-    ):
-        if revision.amortization.method in FREE_AMOUNT_METHODS:
-            if not free_base_remains(revision, history, tax_year=tax_year):
-                continue
+    for gap in m100_claim_gaps(revision, history, forecast=forecast, tax_year=tax_year):
+        if gap.error is not None:
+            diagnostics.append(
+                accrual_unavailable_diagnostic(revision, gap.error, casilla_id=named_box, resolver_id=resolver_id),
+            )
+            continue
+        if gap.kind is M100GapKind.FREE_METHOD:
             accrued = "no computable accrual, because the amount of a free method is the taxpayer's election"
+            fact = CalculationNoteFact.of(
+                CalculationNoteSentence.CLAIM_GAP_FREE_METHOD,
+                element=revision.asset_id,
+                start=gap.covered_from.isoformat(),
+                end=gap.covered_until.isoformat(),
+                box=casilla,
+            )
         else:
-            try:
-                charge = forecast(
-                    revision,
-                    covered_from=gap.covered_from,
-                    covered_until=gap.covered_until,
-                    history=_year_history(history, revision, tax_year=tax_year),
-                )
-            except ActividadAssetPeriodElapsedError:
-                continue
-            except ActividadAssetError as exc:
-                diagnostics.append(
-                    accrual_unavailable_diagnostic(revision, exc, casilla_id=named_box, resolver_id=resolver_id),
-                )
-                continue
-            if charge.amount <= Decimal("0"):
-                continue
-            accrued = f"{charge.amount} EUR accrued"
+            accrued = f"{gap.accrued} EUR accrued"
+            fact = CalculationNoteFact.of(
+                CalculationNoteSentence.CLAIM_GAP_ACCRUED,
+                element=revision.asset_id,
+                start=gap.covered_from.isoformat(),
+                end=gap.covered_until.isoformat(),
+                amount=gap.accrued,
+                box=casilla,
+            )
         diagnostics.append(
             CalculationSourceDiagnostic(
                 reason="activity_asset_claim_gap",
@@ -1063,6 +1189,7 @@ def _m100_gap_diagnostics(
                     f"box {casilla} declares only recorded claims"
                 ),
                 remedy="record the amortization charge for that interval to deduct it",
+                fact=fact,
             ),
         )
     return tuple(diagnostics)

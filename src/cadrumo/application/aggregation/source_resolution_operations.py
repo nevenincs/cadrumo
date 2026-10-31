@@ -29,6 +29,7 @@ from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.calculations.row_casilla import DirectRowMaterializationProvenance, RowCasillaKey
 from ...domain.calculations.row_source_identity import RowBindingKey, RowSourceIdentity
 from ...domain.modelos.calculation_revision_m303_handoff import M303RegimenSimplificadoAnnualSummaryHandoff
+from ...domain.modelos.calculation_revision_sources import CalculationNoteFact
 from ...domain.modelos.row_models import ModeloDetailRow
 from .errors import AggregationValidationError
 from .source_diagnostic_reason import CalculationSourceDiagnosticReason
@@ -56,6 +57,10 @@ def _no_source_text(_: object) -> None:
     return None
 
 
+def _no_note_fact(_: object) -> None:
+    return None
+
+
 def source_diagnostics_for[T](
     items: Iterable[T],
     *,
@@ -65,6 +70,7 @@ def source_diagnostics_for[T](
     message: Callable[[T], str],
     source_ref: Callable[[T], str | None] = _no_source_text,
     remedy: Callable[[T], str | None] = _no_source_text,
+    fact: Callable[[T], CalculationNoteFact | None] = _no_note_fact,
 ) -> tuple[CalculationSourceDiagnostic, ...]:
     """Project repeated source facts through the diagnostic contract."""
     return tuple(
@@ -75,6 +81,7 @@ def source_diagnostics_for[T](
             source_ref=source_ref(item),
             message=message(item),
             remedy=remedy(item),
+            fact=fact(item),
         )
         for item in items
     )

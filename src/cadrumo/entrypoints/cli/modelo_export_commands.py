@@ -17,6 +17,7 @@ from ._modelo_cli_support import (
     parse_revision_selector,
     resolve_default_actor,
 )
+from ._modelo_rendering import recorded_note_notices
 from .common import emit_envelope
 from .modelo_query_results import ModeloExportPayload
 from .operation_modelo_export import run_modelo_export
@@ -71,6 +72,7 @@ def _export_notices(result: ModeloExportResult) -> list[Notice]:
         notices.append(_development_software_identity_notice(result))
     if result.completeness_unverified:
         notices.append(_completeness_advisory_notice(result))
+    notices.extend(recorded_note_notices(result.calculation_notes, code="modelo.calculation_note")[0])
     return notices
 
 
@@ -91,6 +93,7 @@ def _export_text_lines(result: ModeloExportResult) -> list[str]:
         f"evidence_status\t{result.local_evidence_status}",
         f"software_identity_grade\t{result.software_identity_grade or 'none'}",
         f"evidence_notice\t{result.official_evidence_message}",
+        *recorded_note_notices(result.calculation_notes, code="modelo.calculation_note")[1],
     ]
 
 

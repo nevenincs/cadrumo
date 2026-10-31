@@ -29,6 +29,7 @@ from ...domain.categories.spending_category_catalogue import (
 from ...domain.invoices.catalogue import InvoiceCatalogue
 from ...domain.invoices.models import Invoice
 from ...domain.iva.schema import InvoiceKind
+from ...domain.modelos.calculation_revision_sources import CalculationNoteFact, CalculationNoteSentence
 from ...domain.renta.actividad_asset.claims import current_revisions
 from ...domain.renta.actividad_asset.lifecycle import ActivityAssetRevision
 from ...domain.transactions.enums import TransactionDirection
@@ -45,6 +46,9 @@ from .source_mesh import CalculationSourceDiagnostic
 _INVESTMENT_ACQUISITION_KINDS = "kind.investment_acquisition"
 _CATEGORY_KEYWORDS_ROOT = "desktop.ledger.category_keywords"
 _WORD = re.compile(r"[^\W_]+")
+
+
+type _GroupFinding = tuple[CalculationSourceDiagnosticReason, str, str, CalculationNoteFact]
 
 
 @dataclass(frozen=True, slots=True)
@@ -124,7 +128,7 @@ def activity_asset_ledger_findings(
         )
         if finding is None:
             continue
-        reason, message, remedy = finding
+        reason, message, remedy, fact = finding
         findings.append(
             CalculationSourceDiagnostic(
                 reason=reason,
@@ -133,20 +137,30 @@ def activity_asset_ledger_findings(
                 source_ref=f"activity-asset:{group.revisions[0].asset_id}",
                 message=message,
                 remedy=remedy,
+                fact=fact,
             ),
         )
     return tuple(findings)
 
 
+def _element_words(group: _AcquisitionGroup) -> str:
+    return ", ".join(revision.asset_id for revision in group.revisions)
+
+
 def _missing_row_finding(
     group: _AcquisitionGroup,
     missing: tuple[str, ...],
-) -> tuple[CalculationSourceDiagnosticReason, str, str]:
+) -> _GroupFinding:
     names = ", ".join(repr(revision.asset_id) for revision in group.revisions)
     return (
         "register_acquisition_row_missing",
         f"elements {names} name ledger entries the ledger no longer holds: {', '.join(missing)}",
         "enter the missing ledger entry again, or correct the element's acquisition in the register",
+        CalculationNoteFact.of(
+            CalculationNoteSentence.REGISTER_ROW_MISSING,
+            elements=_element_words(group),
+            rows=", ".join(row[-12:] for row in missing),
+        ),
     )
 
 
@@ -155,19 +169,19 @@ def _group_finding(
     rows: tuple[Transaction, ...],
     *,
     tax_year: int,
-) -> tuple[CalculationSourceDiagnosticReason, str, str] | None:
+) -> _GroupFinding | None:
     names = ", ".join(repr(revision.asset_id) for revision in group.revisions)
     cost = sum((revision.basis.acquisition_cost() for revision in group.revisions), Decimal("0"))
     price = sum((revision.basis.basis_amount for revision in group.revisions), Decimal("0"))
-    payment_finding = _payment_finding(rows, names=names, cost=cost)
+    payment_finding = _payment_finding(group, rows, names=names, cost=cost)
     if payment_finding is not None:
         return payment_finding
     return _base_finding(group, rows, names=names, price=price, tax_year=tax_year)
 
 
 def _payment_finding(
-    rows: tuple[Transaction, ...], *, names: str, cost: Decimal
-) -> tuple[CalculationSourceDiagnosticReason, str, str] | None:
+    group: _AcquisitionGroup, rows: tuple[Transaction, ...], *, names: str, cost: Decimal
+) -> _GroupFinding | None:
     payments = tuple(_paid_in_euro(row) for row in rows if row.direction is TransactionDirection.OUTGOING)
     if all(amount is not None for amount in payments):
         paid = sum((amount for amount in payments if amount is not None), Decimal("0"))
@@ -176,6 +190,12 @@ def _payment_finding(
                 "register_acquisition_exceeds_ledger",
                 f"elements {names} state a cost of {cost} EUR and the ledger entries they name paid {paid} EUR",
                 "correct the element's price in the register, or the ledger entry it names",
+                CalculationNoteFact.of(
+                    CalculationNoteSentence.REGISTER_COST_EXCEEDS_PAID,
+                    elements=_element_words(group),
+                    cost=cost,
+                    paid=paid,
+                ),
             )
     return None
 
@@ -187,7 +207,7 @@ def _base_finding(
     names: str,
     price: Decimal,
     tax_year: int,
-) -> tuple[CalculationSourceDiagnosticReason, str, str] | None:
+) -> _GroupFinding | None:
     base = _total_taxable_base(group, rows)
     if base is None:
         return None
@@ -197,6 +217,12 @@ def _base_finding(
             f"elements {names} state a price of {price} EUR and the ledger entries they name declare a base of "
             f"{base} EUR",
             "correct the element's price in the register, or the ledger entry it names",
+            CalculationNoteFact.of(
+                CalculationNoteSentence.REGISTER_PRICE_EXCEEDS_BASE,
+                elements=_element_words(group),
+                price=price,
+                base=base,
+            ),
         )
     if price < base and any(row.raw.booked_date.year == tax_year for row in rows):
         return (
@@ -204,6 +230,13 @@ def _base_finding(
             f"the ledger entries of elements {names} declare a base of {base} EUR and the elements account for "
             f"{price} EUR; the remaining {base - price} EUR deducts nothing",
             "register what else those entries paid for, or correct the element's price if it is understated",
+            CalculationNoteFact.of(
+                CalculationNoteSentence.REGISTER_PARTLY_ACCOUNTED,
+                elements=_element_words(group),
+                price=price,
+                base=base,
+                remainder=base - price,
+            ),
         )
     return None
 
@@ -373,6 +406,11 @@ def _durable_findings(
                         f"current expense and its description reads as a durable element: {', '.join(sorted(matched))}"
                     ),
                     remedy="register the element if it is durable, or leave the entry if it is a consumable",
+                    fact=CalculationNoteFact.of(
+                        CalculationNoteSentence.POSSIBLY_DURABLE_EXPENSE,
+                        row=row.transaction_id[-12:],
+                        category=row.category_id or "",
+                    ),
                 ),
             )
     return tuple(findings)

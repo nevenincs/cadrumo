@@ -492,6 +492,8 @@ class ActivityAssetM130ProjectionSnapshot(_ReadModel):
     amount: PublicDecimal
     contributions: tuple[ActivityAssetM130Contribution, ...] = ()
     unavailable_asset_ids: tuple[str, ...] = ()
+    free_gap_asset_ids: tuple[str, ...] = ()
+    agrarian_excluded_asset_ids: tuple[str, ...] = ()
 
 
 __all__ = [

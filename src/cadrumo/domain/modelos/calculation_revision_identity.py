@@ -316,6 +316,7 @@ def _source_issues_revision_id_payload(
                 issue.resolver_id or "",
                 issue.message,
                 *(() if issue.casilla_id is None else (issue.casilla_id,)),
+                *(() if issue.fact is None else issue.fact.identity()),
             )
             for issue in source_issues
         )

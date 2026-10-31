@@ -12,6 +12,7 @@ from typing import Final
 
 from ...core.aggregation import BindingSourceKind
 from ...domain.modelos.calculation_revision import CalculationRevision
+from ...domain.modelos.calculation_revision_sources import CalculationNoteFact
 from ...domain.modelos.verification_report import ModeloVerificationFinding, ModeloVerificationFindingSeverity
 from ..aggregation.source_mesh import CalculationSourceDiagnostic
 from .calculation_note_gate import gate_refuses
@@ -62,8 +63,8 @@ _FINDINGS_OF_THE_SAME_CAUSE: Final[Mapping[str, frozenset[str]]] = {
 _ATTENTION_ORDER: Final[tuple[ModeloFormAttention, ...]] = tuple(ModeloFormAttention)
 
 
-type NoteSource = tuple[str, str | None, BindingSourceKind | None]
-"""One latest-calculation reason, the box it names, and the binding source that raised it."""
+type NoteSource = tuple[str, str | None, BindingSourceKind | None, CalculationNoteFact | None]
+"""One latest-calculation reason, the box it names, the binding source that raised it, and its own facts."""
 
 
 def collect_note_sources(
@@ -75,11 +76,12 @@ def collect_note_sources(
     """
     if diagnostics is not None:
         return tuple(
-            (diagnostic.reason, diagnostic.casilla_id, durable_binding_source(diagnostic)) for diagnostic in diagnostics
+            (diagnostic.reason, diagnostic.casilla_id, durable_binding_source(diagnostic), diagnostic.fact)
+            for diagnostic in diagnostics
         )
     if revision is None:
         return ()
-    return tuple((issue.reason, issue.casilla_id, issue.binding_source) for issue in revision.source_issues)
+    return tuple((issue.reason, issue.casilla_id, issue.binding_source, issue.fact) for issue in revision.source_issues)
 
 
 def _said_by_a_finding(reason: str, casilla_id: str | None, findings: Iterable[ModeloVerificationFinding]) -> bool:
@@ -93,6 +95,9 @@ def project_calculation_notes(
 ) -> tuple[ModeloFormCalculationNote, ...]:
     """The latest calculation's notes on the filer's scale, once each, leaving out what a finding already says.
 
+    Notes of one reason about one box are one note unless their facts differ: two
+    elements with a gap in the same box are two things to read.
+
     A reason the check decides on its own evidence waits for the check: once
     the current calculation has been checked, the check's finding of the same
     cause is what stands, blocking where the check refused and worth checking
@@ -102,20 +107,22 @@ def project_calculation_notes(
     boxes = {
         field.address.casilla_id: field.box for field in fields if isinstance(field.address, ModeloFormCasillaAddressV1)
     }
-    notes: dict[tuple[str, str | None], ModeloFormCalculationNote] = {}
-    for reason, casilla_id, binding_source in sources:
-        if (reason, casilla_id) in notes or _said_by_a_finding(reason, casilla_id, context.review.findings):
+    notes: dict[tuple[str, str | None, tuple[str, ...]], ModeloFormCalculationNote] = {}
+    for reason, casilla_id, binding_source, fact in sources:
+        key = (reason, casilla_id, () if fact is None else fact.identity())
+        if key in notes or _said_by_a_finding(reason, casilla_id, context.review.findings):
             continue
         if checked and reason in CHECK_REFUSED_REASONS:
             continue
         box = None if casilla_id is None else boxes.get(casilla_id)
         attention = note_attention(reason, box=box)
-        notes[(reason, casilla_id)] = ModeloFormCalculationNote(
+        notes[key] = ModeloFormCalculationNote(
             reason=reason,
             attention=attention,
             casilla_id=casilla_id,
             box=box,
             withholds_filing=gate_refuses(reason, binding_source),
+            fact=fact,
         )
     return tuple(sorted(notes.values(), key=lambda note: _ATTENTION_ORDER.index(note.attention)))
 

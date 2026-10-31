@@ -63,7 +63,8 @@ from .acquisition_dtos import (
 )
 from .activity_asset_read_models import ActivityAssetM130Contribution, ActivityAssetM130ProjectionSnapshot
 from .history import ActivityAssetHistory, ActivityAssetHistoryClaimResult
-from .operations import ActivityAssetFilingHandoff, M130AccrualProjection, M130Contribution
+from .operations import ActivityAssetFilingHandoff, M100ClaimGapProjection, M130AccrualProjection, M130Contribution
+from .schedule_walk import M100GapKind
 
 
 def _decimal(value: PublicDecimal | None) -> Decimal | None:
@@ -631,6 +632,8 @@ def _m130_snapshot(value: M130AccrualProjection) -> ActivityAssetM130ProjectionS
             for item in value.contributions
         ),
         unavailable_asset_ids=value.unavailable_asset_ids,
+        free_gap_asset_ids=value.free_gap_asset_ids,
+        agrarian_excluded_asset_ids=value.agrarian_excluded_asset_ids,
     )
 
 
@@ -649,7 +652,42 @@ def _m130_domain(value: ActivityAssetM130ProjectionSnapshot) -> M130AccrualProje
             for item in value.contributions
         ),
         unavailable_asset_ids=value.unavailable_asset_ids,
+        free_gap_asset_ids=value.free_gap_asset_ids,
+        agrarian_excluded_asset_ids=value.agrarian_excluded_asset_ids,
     )
+
+
+class ActivityAssetM100GapSnapshot(BaseModel):
+    """An interval of the year Modelo 100 leaves out of an element, with explicit decimal amounts."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    asset_id: str = Field(min_length=1)
+    kind: M100GapKind
+    covered_from: date
+    covered_until: date
+    accrued: PublicDecimal | None = None
+
+    @classmethod
+    def from_domain(cls, value: M100ClaimGapProjection) -> Self:
+        """Project one left-out interval."""
+        return cls(
+            asset_id=value.asset_id,
+            kind=value.kind,
+            covered_from=value.covered_from,
+            covered_until=value.covered_until,
+            accrued=None if value.accrued is None else project_scalar(value.accrued),
+        )
+
+    def to_domain(self) -> M100ClaimGapProjection:
+        """Restore one left-out interval."""
+        return M100ClaimGapProjection(
+            asset_id=self.asset_id,
+            kind=self.kind,
+            covered_from=self.covered_from,
+            covered_until=self.covered_until,
+            accrued=None if self.accrued is None else Decimal(self.accrued.decimal),
+        )
 
 
 class ActivityAssetFilingHandoffSnapshot(BaseModel):
@@ -659,6 +697,7 @@ class ActivityAssetFilingHandoffSnapshot(BaseModel):
 
     material_m100: ClaimProjectionSnapshot
     intangible_m100: ClaimProjectionSnapshot
+    m100_gaps: tuple[ActivityAssetM100GapSnapshot, ...] = ()
     material_m130: ActivityAssetM130ProjectionSnapshot | None = None
     intangible_m130: ActivityAssetM130ProjectionSnapshot | None = None
     """Both set for a Modelo 130 period, and both null when the handoff states Modelo 100 alone."""
@@ -676,6 +715,7 @@ class ActivityAssetFilingHandoffSnapshot(BaseModel):
         return cls(
             material_m100=ClaimProjectionSnapshot.from_domain(value.material_m100),
             intangible_m100=ClaimProjectionSnapshot.from_domain(value.intangible_m100),
+            m100_gaps=tuple(ActivityAssetM100GapSnapshot.from_domain(gap) for gap in value.m100_gaps),
             material_m130=None if value.material_m130 is None else _m130_snapshot(value.material_m130),
             intangible_m130=None if value.intangible_m130 is None else _m130_snapshot(value.intangible_m130),
         )
@@ -685,6 +725,7 @@ class ActivityAssetFilingHandoffSnapshot(BaseModel):
         return ActivityAssetFilingHandoff(
             material_m100=self.material_m100.to_domain(),
             intangible_m100=self.intangible_m100.to_domain(),
+            m100_gaps=tuple(gap.to_domain() for gap in self.m100_gaps),
             material_m130=None if self.material_m130 is None else _m130_domain(self.material_m130),
             intangible_m130=None if self.intangible_m130 is None else _m130_domain(self.intangible_m130),
         )

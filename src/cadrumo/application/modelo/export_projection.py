@@ -23,6 +23,7 @@ from ...core.refund_election import RefundElection
 from ...core.result_disposition import ResultDisposition
 from ...domain.filing.schema import ModeloCasillaProvenance
 from ...domain.filing.software_identity import AeatSoftwareIdentityGrade
+from ...domain.modelos.calculation_revision_sources import RecordedCalculationNote
 from ..calculations.observations_repository import PriorDomiciliationElectionProjection
 from ..operations.public_period import PublicPeriod
 from .calculation_report_export import ModeloCalculationReportResult
@@ -136,6 +137,7 @@ class ModeloFicheroBoePublicReceipt(BaseModel):
     domiciliation_cutoff_unverified: bool = False
     completeness_unverified: bool
     software_identity_grade: AeatSoftwareIdentityGrade | None
+    calculation_notes: tuple[RecordedCalculationNote, ...] = ()
 
     @classmethod
     def from_result(cls, result: ModeloExportResult) -> Self:
@@ -172,6 +174,7 @@ class ModeloFicheroBoePublicReceipt(BaseModel):
             domiciliation_cutoff_unverified=result.domiciliation_cutoff_unverified,
             completeness_unverified=result.completeness_unverified,
             software_identity_grade=result.software_identity_grade,
+            calculation_notes=result.calculation_notes,
         )
 
     def to_result(self) -> ModeloExportResult:
@@ -206,6 +209,7 @@ class ModeloFicheroBoePublicReceipt(BaseModel):
             domiciliation_cutoff_unverified=self.domiciliation_cutoff_unverified,
             completeness_unverified=self.completeness_unverified,
             software_identity_grade=self.software_identity_grade,
+            calculation_notes=self.calculation_notes,
         )
 
 

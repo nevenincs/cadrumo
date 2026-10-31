@@ -22,8 +22,8 @@ from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_wor
 from ....domain.transactions.models import TransactionCatalogue
 from ...actividad_asset.history import ActivityAssetHistory
 from ...aggregation.ledger_filing_snapshot import stale_filed_revisions
-from ...aggregation.tests.test_modelo_bindings_asset_disposal import _disposed
 from ...aggregation.ledger_membership import LedgerMembershipPorts
+from ...aggregation.tests.test_modelo_bindings_asset_disposal import _disposed
 from ...aggregation.tests.test_modelo_source_mesh_ledger import (
     InMemoryTransactionCatalogueRepository,
     activity_asset_ledger_membership,

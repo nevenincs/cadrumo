@@ -36,6 +36,7 @@ from ...domain.renta.actividad_asset.claims import (
     amount_before_baja_zeroed,
     asset_schedule_history,
     claims_through_year,
+    current_revisions,
     effective_claims,
     project_m100,
     record_claim,
@@ -100,7 +101,13 @@ from .register_reads import (
     method_facts_view,
 )
 from .register_timeline import element_timeline
-from .schedule_walk import M130ElementOutcome, error_reason_facts, m130_register_accruals
+from .schedule_walk import (
+    M100GapKind,
+    M130ElementOutcome,
+    error_reason_facts,
+    m100_claim_gaps,
+    m130_register_accruals,
+)
 from .service import ActivityAssetHistoryService
 
 
@@ -126,7 +133,9 @@ class M130AccrualProjection(BaseModel):
     """What one asset kind accrued in the year through the period's end.
 
     ``unavailable_asset_ids`` names elements whose schedule could not be worked
-    out, so an amount that leaves them out says so.
+    out, ``free_gap_asset_ids`` those whose method leaves an unrecorded amount to
+    the taxpayer, and ``agrarian_excluded_asset_ids`` those of an agrarian activity,
+    which pays a share of income, so an amount that leaves them out says so.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -136,15 +145,33 @@ class M130AccrualProjection(BaseModel):
     amount: Decimal
     contributions: tuple[M130Contribution, ...] = ()
     unavailable_asset_ids: tuple[str, ...] = ()
+    free_gap_asset_ids: tuple[str, ...] = ()
+    agrarian_excluded_asset_ids: tuple[str, ...] = ()
+
+
+class M100ClaimGapProjection(BaseModel):
+    """An interval of the year Modelo 100 leaves out of an element, and what it would have accrued."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    asset_id: str = Field(min_length=1)
+    kind: M100GapKind
+    covered_from: date
+    covered_until: date
+    accrued: Decimal | None = None
 
 
 class ActivityAssetFilingHandoff(BaseModel):
-    """Non-consuming projections for both supported IRPF filing destinations."""
+    """Non-consuming projections for both supported IRPF filing destinations.
+
+    ``m100_gaps`` says what the Modelo 100 boxes leave out because no claim records it.
+    """
 
     model_config = STRICT_FROZEN_CONFIG
 
     material_m100: ClaimProjection
     intangible_m100: ClaimProjection
+    m100_gaps: tuple[M100ClaimGapProjection, ...] = ()
     material_m130: M130AccrualProjection | None = None
     intangible_m130: M130AccrualProjection | None = None
     """Both set for a Modelo 130 period, and both absent when the handoff states Modelo 100 alone."""
@@ -722,8 +749,21 @@ class ActivityAssetOperations:
 
         material_m100 = m100(AssetKind.MATERIAL)
         intangible_m100 = m100(AssetKind.INTANGIBLE)
+        m100_gaps = tuple(
+            M100ClaimGapProjection(
+                asset_id=gap.revision.asset_id,
+                kind=gap.kind,
+                covered_from=gap.covered_from,
+                covered_until=gap.covered_until,
+                accrued=gap.accrued,
+            )
+            for revision in current_revisions(history.revisions).values()
+            for gap in m100_claim_gaps(revision, history, forecast=self._forecast_operation, tax_year=tax_year)
+        )
         if m130_period is None:
-            return ActivityAssetFilingHandoff(material_m100=material_m100, intangible_m100=intangible_m100)
+            return ActivityAssetFilingHandoff(
+                material_m100=material_m100, intangible_m100=intangible_m100, m100_gaps=m100_gaps
+            )
         period_end = m130_period.end_date
         current = {revision.asset_id: revision for revision in history.revisions}
         rows = self._ledger.load_by_ids(
@@ -761,11 +801,20 @@ class ActivityAssetOperations:
                     for accrual in selected
                     if accrual.outcome is M130ElementOutcome.UNAVAILABLE
                 ),
+                free_gap_asset_ids=tuple(
+                    accrual.revision.asset_id for accrual in selected if accrual.outcome is M130ElementOutcome.FREE_GAP
+                ),
+                agrarian_excluded_asset_ids=tuple(
+                    accrual.revision.asset_id
+                    for accrual in selected
+                    if accrual.outcome is M130ElementOutcome.AGRARIAN_EXCLUDED
+                ),
             )
 
         return ActivityAssetFilingHandoff(
             material_m100=material_m100,
             intangible_m100=intangible_m100,
+            m100_gaps=m100_gaps,
             material_m130=m130(AssetKind.MATERIAL),
             intangible_m130=m130(AssetKind.INTANGIBLE),
         )
@@ -951,6 +1000,7 @@ __all__ = [
     "ActivityAssetFilingHandoff",
     "ActivityAssetOperations",
     "ActivityAssetRegisterAuthority",
+    "M100ClaimGapProjection",
     "M130AccrualProjection",
     "M130Contribution",
     "SupersedingClaimRequest",
