@@ -11,7 +11,6 @@ from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.governed_fact_scope import CandidateFactAuthority, validating_governed_facts
 from cadrumo.domain.calculations.registry.record_design_coverage import calculation_closure_casilla_ids
 from cadrumo.domain.calculations.registry.reference_checks import check_all_id_references
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.calculations.registry.schema_surfaces import (
@@ -23,11 +22,13 @@ from cadrumo.domain.calculations.registry.schema_surfaces import (
 from ..compiler.validator import RegistryValidator
 from ..conformance.registry_schema_support import committed_registry_tree as _committed_registry_tree
 from ._referential_integrity_support import (
+    PARITY_SOURCE_ID,
     PRIOR_REVISION_ID,
     REFERENCE_LEGAL_ID,
     REFERENCE_SOURCE_ID,
     build_snapshot_with_missing_legal,
     build_snapshot_with_missing_source,
+    catalogues_with_executable_parity_source,
     completeness_manifest,
     minimal_casilla,
     minimal_catalogues,
@@ -35,6 +36,7 @@ from ._referential_integrity_support import (
     minimal_modelo,
     minimal_revision,
     minimal_source_ref,
+    modelo_validation_failures,
     segmented_casilla,
     single_segment_casilla,
     snapshot_for_revision,
@@ -65,29 +67,6 @@ _MISSING_LEGAL_ID = "ley-35-2006:art-9999"
 _MISSING_SOURCE_ID = "aeat-missing-source"
 _EXTRA_LEGAL_ID = "ley-35-2006:art-9998"
 _EXTRA_SOURCE_ID = "aeat-extra-source"
-_PARITY_SOURCE_ID = "aeat-open-parity-source"
-
-
-def _modelo_validation_failures(modelo: ModeloDefinition) -> list[str]:
-    try:
-        RegistryValidator(minimal_catalogues(), user_profile_schema=load_user_profile_schema()).validate_modelo(modelo)
-    except RegistryValidationError as exc:
-        return str(exc).splitlines()
-    return []
-
-
-def _catalogues_with_executable_parity_source() -> RegistryCatalogues:
-    parity_source = minimal_source_ref().model_copy(
-        update={
-            "id": _PARITY_SOURCE_ID,
-            "evidence_tier": "executable_parity_evidence",
-        },
-    )
-    catalogues = minimal_catalogues()
-    return RegistryCatalogues(
-        legal=catalogues.legal,
-        sources={**catalogues.sources, _PARITY_SOURCE_ID: parity_source},
-    )
 
 
 def test_segment_qualified_reference_resolves_across_segments() -> None:
@@ -133,7 +112,7 @@ def test_segment_qualified_reference_resolves_across_segments() -> None:
     ).model_copy(
         update={"completeness_manifest": manifest},
     )
-    failures = _modelo_validation_failures(minimal_modelo(revision))
+    failures = modelo_validation_failures(minimal_modelo(revision))
     unknown_casilla_failures = [f for f in failures if "unknown casilla" in f]
     assert unknown_casilla_failures == [], (
         f"a segment-qualified casilla reference must resolve; got: {unknown_casilla_failures}"
@@ -475,7 +454,7 @@ def test_completeness_gate_fails_on_manifest_metadata_mismatch() -> None:
     )
     revision = minimal_revision(casillas=(declared,)).model_copy(update={"completeness_manifest": manifest})
     modelo = minimal_modelo(revision)
-    failures = _modelo_validation_failures(modelo)
+    failures = modelo_validation_failures(modelo)
     mismatch = [
         f
         for f in failures
@@ -519,7 +498,7 @@ def test_completeness_gate_fails_on_ungrounded_required_casilla() -> None:
         update={"completeness_manifest": manifest, "casillas": (ungrounded,)},
     )
     modelo = minimal_modelo(revision)
-    failures = _modelo_validation_failures(modelo)
+    failures = modelo_validation_failures(modelo)
     legal = [f for f in failures if "casilla.id '01'" in f and "without legal_refs" in f]
     source = [f for f in failures if "casilla.id '01'" in f and "without source_refs" in f]
     assert legal, f"ungrounded required casilla must be reported without legal_refs; got: {failures}"
@@ -541,7 +520,7 @@ def test_completeness_manifest_refs_must_resolve_in_registry_validation() -> Non
         update={"completeness_manifest": manifest},
     )
 
-    failures = _modelo_validation_failures(minimal_modelo(revision))
+    failures = modelo_validation_failures(minimal_modelo(revision))
 
     assert any(
         "calculation-completeness manifest references unknown legal id 'ley-35-2006:art-9999'" in failure
@@ -557,7 +536,7 @@ def test_modelo_validation_rejects_manifest_sourced_only_by_executable_parity() 
     manifest = completeness_manifest(
         (CalculationCompletenessCasilla(casilla_id=_NUMERIC_CASILLA_01, number="01"),),
     ).model_copy(
-        update={"source_ref": _PARITY_SOURCE_ID, "source_refs": (_PARITY_SOURCE_ID,)},
+        update={"source_ref": PARITY_SOURCE_ID, "source_refs": (PARITY_SOURCE_ID,)},
     )
     revision = minimal_revision(casillas=(minimal_casilla(_NUMERIC_CASILLA_01),)).model_copy(
         update={"completeness_manifest": manifest},
@@ -571,7 +550,7 @@ def test_modelo_validation_rejects_manifest_sourced_only_by_executable_parity() 
         ),
     ):
         RegistryValidator(
-            _catalogues_with_executable_parity_source(), user_profile_schema=load_user_profile_schema()
+            catalogues_with_executable_parity_source(), user_profile_schema=load_user_profile_schema()
         ).validate_modelo(minimal_modelo(revision))
 
 
@@ -590,7 +569,7 @@ def test_casilla_continuidad_evolution_refs_must_resolve_in_registry_validation(
         update={"casilla_continuidad_evolutions": (evolution,)},
     )
 
-    failures = _modelo_validation_failures(minimal_modelo(revision))
+    failures = modelo_validation_failures(minimal_modelo(revision))
 
     assert any(
         "casilla continuidad evolution 'test-continuidad-2024-2025' "
@@ -612,7 +591,7 @@ def test_modelo_validation_rejects_continuity_evolution_sourced_only_by_executab
         to_revision="test-revision",
         evolution_kind="label_evolved",
         legal_refs=(REFERENCE_LEGAL_ID,),
-        source_refs=(_PARITY_SOURCE_ID,),
+        source_refs=(PARITY_SOURCE_ID,),
     )
     revision = minimal_revision(casillas=(minimal_casilla(_NUMERIC_CASILLA_01),)).model_copy(
         update={"casilla_continuidad_evolutions": (evolution,)},
@@ -626,7 +605,7 @@ def test_modelo_validation_rejects_continuity_evolution_sourced_only_by_executab
         ),
     ):
         RegistryValidator(
-            _catalogues_with_executable_parity_source(), user_profile_schema=load_user_profile_schema()
+            catalogues_with_executable_parity_source(), user_profile_schema=load_user_profile_schema()
         ).validate_modelo(minimal_modelo(revision))
 
 

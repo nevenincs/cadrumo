@@ -11,7 +11,7 @@ from cadrumo.core.period import Period
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.reference_checks import check_all_id_references
-from cadrumo.domain.calculations.registry.schema import FormulaDefinition, ModeloDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.schema import FormulaDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_base import CasillaDataType
 from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 from cadrumo.domain.calculations.registry.schema_deadlines import DeadlineWindowDefinition, ModeloScheduleDefinition
@@ -30,16 +30,19 @@ from cadrumo.domain.calculations.registry.schema_revision_members import (
 
 from ..compiler.validator import RegistryValidator
 from ._referential_integrity_support import (
+    PARITY_SOURCE_ID,
     REFERENCE_LEGAL_ID,
     REFERENCE_SOURCE_ID,
     build_minimal_snapshot,
     build_snapshot_with_missing_legal,
+    catalogues_with_executable_parity_source,
     minimal_application_link,
     minimal_casilla,
     minimal_catalogues,
     minimal_modelo,
     minimal_revision,
     minimal_source_ref,
+    modelo_validation_failures,
     snapshot_for_revision,
 )
 from .profile_schema_support import load_user_profile_schema
@@ -55,15 +58,6 @@ _NONEXISTENT_CASILLA: CasillaId = validated_casilla_id("nonexistent-casilla", su
 _NUMERIC_CASILLA_01: CasillaId = validated_casilla_id("01", surface="_NUMERIC_CASILLA_01")
 _MISSING_LEGAL_ID = "ley-35-2006:art-9999"
 _LAYOUT_SOURCE_ID = "aeat-layout-source-test"
-_PARITY_SOURCE_ID = "aeat-open-parity-source"
-
-
-def _modelo_validation_failures(modelo: ModeloDefinition) -> list[str]:
-    try:
-        RegistryValidator(minimal_catalogues(), user_profile_schema=load_user_profile_schema()).validate_modelo(modelo)
-    except RegistryValidationError as exc:
-        return str(exc).splitlines()
-    return []
 
 
 def _catalogues_with_layout_source() -> RegistryCatalogues:
@@ -82,20 +76,6 @@ def _catalogues_with_layout_source() -> RegistryCatalogues:
     )
 
 
-def _catalogues_with_executable_parity_source() -> RegistryCatalogues:
-    parity_source = minimal_source_ref().model_copy(
-        update={
-            "id": _PARITY_SOURCE_ID,
-            "evidence_tier": "executable_parity_evidence",
-        },
-    )
-    catalogues = minimal_catalogues()
-    return RegistryCatalogues(
-        legal=catalogues.legal,
-        sources={**catalogues.sources, _PARITY_SOURCE_ID: parity_source},
-    )
-
-
 def _assert_missing_legal_ref_rejected(revision: ModeloRevision, expected_match: str) -> None:
     snapshot = build_snapshot_with_missing_legal(revision, _MISSING_LEGAL_ID)
     with pytest.raises(RegistryValidationError, match=expected_match):
@@ -103,19 +83,19 @@ def _assert_missing_legal_ref_rejected(revision: ModeloRevision, expected_match:
 
 
 def test_modelo_validation_rejects_modelo_sourced_only_by_executable_parity() -> None:
-    modelo = minimal_modelo(minimal_revision()).model_copy(update={"source_refs": (_PARITY_SOURCE_ID,)})
+    modelo = minimal_modelo(minimal_revision()).model_copy(update={"source_refs": (PARITY_SOURCE_ID,)})
 
     with pytest.raises(
         RegistryValidationError,
         match=r"modelo: 130 requires one of official_source_guidance, layout_authority source evidence",
     ):
         RegistryValidator(
-            _catalogues_with_executable_parity_source(), user_profile_schema=load_user_profile_schema()
+            catalogues_with_executable_parity_source(), user_profile_schema=load_user_profile_schema()
         ).validate_modelo(modelo)
 
 
 def test_modelo_validation_rejects_revision_sourced_only_by_executable_parity() -> None:
-    revision = minimal_revision().model_copy(update={"source_refs": (_PARITY_SOURCE_ID,)})
+    revision = minimal_revision().model_copy(update={"source_refs": (PARITY_SOURCE_ID,)})
 
     with pytest.raises(
         RegistryValidationError,
@@ -125,7 +105,7 @@ def test_modelo_validation_rejects_revision_sourced_only_by_executable_parity() 
         ),
     ):
         RegistryValidator(
-            _catalogues_with_executable_parity_source(), user_profile_schema=load_user_profile_schema()
+            catalogues_with_executable_parity_source(), user_profile_schema=load_user_profile_schema()
         ).validate_modelo(minimal_modelo(revision))
 
 
@@ -304,7 +284,7 @@ def test_export_record_row_field_casilla_refs_must_resolve_in_registry_validatio
     )
     revision = minimal_revision(export_layouts=(layout,))
 
-    failures = _modelo_validation_failures(minimal_modelo(revision))
+    failures = modelo_validation_failures(minimal_modelo(revision))
 
     assert any(
         "export record 'rec.test' row_field_casilla_ids.importe references unknown casilla 'nonexistent-casilla'"

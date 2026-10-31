@@ -17,7 +17,6 @@ from cadrumo.domain.calculations.registry.reference_checks import check_all_id_r
 from cadrumo.domain.calculations.registry.schema import (
     BindingDefinition,
     FormulaDefinition,
-    ModeloDefinition,
     ModeloRevision,
 )
 from cadrumo.domain.calculations.registry.schema_base import CasillaDataType
@@ -40,11 +39,13 @@ from cadrumo.domain.calculations.registry.schema_verification import (
 
 from ..compiler.validator import RegistryValidator
 from ._referential_integrity_support import (
+    PARITY_SOURCE_ID,
     REFERENCE_LEGAL_ID,
     REFERENCE_SOURCE_ID,
     build_minimal_snapshot,
     build_snapshot_with_missing_legal,
     build_snapshot_with_missing_source,
+    catalogues_with_executable_parity_source,
     minimal_casilla,
     minimal_catalogues,
     minimal_legal_ref,
@@ -52,6 +53,7 @@ from ._referential_integrity_support import (
     minimal_revision,
     minimal_source_ref,
     minimal_workbook_ref,
+    modelo_validation_failures,
     snapshot_for_revision,
     supported_filing_year,
 )
@@ -74,29 +76,6 @@ _MISSING_LEGAL_ID = "ley-35-2006:art-9999"
 _MISSING_SOURCE_ID = "aeat-missing-source"
 _EXTRA_LEGAL_ID = "ley-35-2006:art-9998"
 _EXTRA_SOURCE_ID = "aeat-extra-source"
-_PARITY_SOURCE_ID = "aeat-open-parity-source"
-
-
-def _modelo_validation_failures(modelo: ModeloDefinition) -> list[str]:
-    try:
-        RegistryValidator(minimal_catalogues(), user_profile_schema=load_user_profile_schema()).validate_modelo(modelo)
-    except RegistryValidationError as exc:
-        return str(exc).splitlines()
-    return []
-
-
-def _catalogues_with_executable_parity_source() -> RegistryCatalogues:
-    parity_source = minimal_source_ref().model_copy(
-        update={
-            "id": _PARITY_SOURCE_ID,
-            "evidence_tier": "executable_parity_evidence",
-        },
-    )
-    catalogues = minimal_catalogues()
-    return RegistryCatalogues(
-        legal=catalogues.legal,
-        sources={**catalogues.sources, _PARITY_SOURCE_ID: parity_source},
-    )
 
 
 def _assert_missing_legal_ref_rejected(revision: ModeloRevision, expected_match: str) -> None:
@@ -227,7 +206,7 @@ def test_casilla_alias_and_constraints_refs_must_resolve_in_registry_validation(
     )
     revision = minimal_revision(casillas=(casilla,))
 
-    failures = _modelo_validation_failures(minimal_modelo(revision))
+    failures = modelo_validation_failures(minimal_modelo(revision))
 
     assert any(
         f"casilla 01 alias '{_ALTERNATE_ALIAS_KEY}' references unknown legal id '{_MISSING_LEGAL_ID}'" in failure
@@ -239,7 +218,7 @@ def test_casilla_alias_and_constraints_refs_must_resolve_in_registry_validation(
 
 
 def test_modelo_validation_rejects_casilla_sourced_only_by_executable_parity() -> None:
-    casilla = minimal_casilla(_NUMERIC_CASILLA_01).model_copy(update={"source_refs": (_PARITY_SOURCE_ID,)})
+    casilla = minimal_casilla(_NUMERIC_CASILLA_01).model_copy(update={"source_refs": (PARITY_SOURCE_ID,)})
     revision = minimal_revision(casillas=(casilla,))
 
     with pytest.raises(
@@ -247,7 +226,7 @@ def test_modelo_validation_rejects_casilla_sourced_only_by_executable_parity() -
         match=r"casilla 01 requires one of official_source_guidance, layout_authority source evidence",
     ):
         RegistryValidator(
-            _catalogues_with_executable_parity_source(), user_profile_schema=load_user_profile_schema()
+            catalogues_with_executable_parity_source(), user_profile_schema=load_user_profile_schema()
         ).validate_modelo(minimal_modelo(revision))
 
 
@@ -255,7 +234,7 @@ def test_modelo_validation_rejects_casilla_constraints_sourced_only_by_executabl
     constraints = CasillaConstraints(
         sign="non_negative",
         legal_refs=(REFERENCE_LEGAL_ID,),
-        source_refs=(_PARITY_SOURCE_ID,),
+        source_refs=(PARITY_SOURCE_ID,),
     )
     casilla = minimal_casilla(_NUMERIC_CASILLA_01).model_copy(update={"constraints": constraints})
     revision = minimal_revision(casillas=(casilla,))
@@ -265,7 +244,7 @@ def test_modelo_validation_rejects_casilla_constraints_sourced_only_by_executabl
         match=r"casilla 01 constraints requires one of official_source_guidance, layout_authority source evidence",
     ):
         RegistryValidator(
-            _catalogues_with_executable_parity_source(), user_profile_schema=load_user_profile_schema()
+            catalogues_with_executable_parity_source(), user_profile_schema=load_user_profile_schema()
         ).validate_modelo(minimal_modelo(revision))
 
 
@@ -273,7 +252,7 @@ def test_modelo_validation_rejects_casilla_alias_sourced_only_by_executable_pari
     alias = CasillaAlias(
         localization_key=_ALTERNATE_ALIAS_KEY,
         legal_refs=(REFERENCE_LEGAL_ID,),
-        source_refs=(_PARITY_SOURCE_ID,),
+        source_refs=(PARITY_SOURCE_ID,),
     )
     casilla = minimal_casilla(_NUMERIC_CASILLA_01).model_copy(update={"aliases": (alias,)})
     revision = minimal_revision(casillas=(casilla,))
@@ -286,7 +265,7 @@ def test_modelo_validation_rejects_casilla_alias_sourced_only_by_executable_pari
         ),
     ):
         RegistryValidator(
-            _catalogues_with_executable_parity_source(), user_profile_schema=load_user_profile_schema()
+            catalogues_with_executable_parity_source(), user_profile_schema=load_user_profile_schema()
         ).validate_modelo(minimal_modelo(revision))
 
 
@@ -557,7 +536,7 @@ def test_cross_reference_applicability_predicate_refs_must_resolve_in_registry_v
     )
     revision = minimal_revision(live_cross_references=(cross_ref,))
 
-    failures = _modelo_validation_failures(minimal_modelo(revision))
+    failures = modelo_validation_failures(minimal_modelo(revision))
 
     assert any(
         "cross-reference test.cross-ref applicability predicate 'iva.roi_enrolled' "
@@ -695,7 +674,7 @@ def test_verification_predicate_refs_must_resolve_in_registry_validation() -> No
     )
     revision = minimal_revision().model_copy(update={"verification_predicates": (predicate,)})
 
-    failures = _modelo_validation_failures(minimal_modelo(revision))
+    failures = modelo_validation_failures(minimal_modelo(revision))
 
     assert any(
         "verification predicate test.predicate references unknown legal id 'ley-35-2006:art-9999'" in failure

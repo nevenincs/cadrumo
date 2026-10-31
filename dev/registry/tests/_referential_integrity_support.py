@@ -59,9 +59,13 @@ from cadrumo.domain.calculations.registry.schema_verification import (
 from cadrumo.domain.calculations.registry.tests.published_authority import published_supported_filing_years
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot_for_validated_modelo
 
+from ..compiler.validator import RegistryValidator
+from .profile_schema_support import load_user_profile_schema
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 __all__ = [
+    "PARITY_SOURCE_ID",
     "PRIOR_REVISION_ID",
     "REFERENCE_LEGAL_ID",
     "REFERENCE_SOURCE_ID",
@@ -75,6 +79,7 @@ __all__ = [
     "build_minimal_snapshot",
     "build_snapshot_with_missing_legal",
     "build_snapshot_with_missing_source",
+    "catalogues_with_executable_parity_source",
     "check_all_id_references",
     "completeness_manifest",
     "freeze_toml",
@@ -87,6 +92,7 @@ __all__ = [
     "minimal_revision",
     "minimal_source_ref",
     "minimal_workbook_ref",
+    "modelo_validation_failures",
     "segmented_casilla",
     "single_segment_casilla",
     "snapshot_for_revision",
@@ -94,6 +100,7 @@ __all__ = [
 ]
 
 PRIOR_REVISION_ID = "test-prior-revision"
+PARITY_SOURCE_ID = "aeat-open-parity-source"
 
 
 def _snapshot_for_revision(
@@ -455,3 +462,25 @@ minimal_workbook_ref = _minimal_workbook_ref
 segmented_casilla = _segmented_casilla
 single_segment_casilla = _single_segment_casilla
 snapshot_for_revision = _snapshot_for_revision
+
+
+def modelo_validation_failures(modelo: ModeloDefinition) -> list[str]:
+    try:
+        RegistryValidator(minimal_catalogues(), user_profile_schema=load_user_profile_schema()).validate_modelo(modelo)
+    except RegistryValidationError as exc:
+        return str(exc).splitlines()
+    return []
+
+
+def catalogues_with_executable_parity_source() -> RegistryCatalogues:
+    parity_source = minimal_source_ref().model_copy(
+        update={
+            "id": PARITY_SOURCE_ID,
+            "evidence_tier": "executable_parity_evidence",
+        },
+    )
+    catalogues = minimal_catalogues()
+    return RegistryCatalogues(
+        legal=catalogues.legal,
+        sources={**catalogues.sources, PARITY_SOURCE_ID: parity_source},
+    )
