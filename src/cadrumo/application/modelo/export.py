@@ -66,7 +66,6 @@ from ...domain.iva_compensation.reconciliation import IvaCompensationReconciliat
 from ...domain.modelos.calculation_revision import (
     CalculationRevision,
 )
-from ...domain.modelos.calculation_revision_sources import recorded_calculation_notes
 from ...domain.modelos.errors import (
     ModeloError,
     ModeloExportError,
@@ -102,7 +101,7 @@ from .action_errors import (
     WorkUnitNotFoundError,
 )
 from .calculation_note_gate import require_work_unit_calculation_unblocked
-from .calculation_notes import read_element_names
+from .calculation_notes import read_recorded_notes
 from .calculation_revision_gate import require_calculation_revision_coordinates_current
 from .export_accounts import (
     build_export_producer_snapshot,
@@ -350,7 +349,7 @@ def _export_result(
     completeness_unverified = export_completeness_unverified(work_unit, schema_provider)
 
     return ModeloExportResult(
-        calculation_notes=recorded_calculation_notes(revision.source_issues, names=read_element_names(activity_assets)),
+        calculation_notes=read_recorded_notes(revision.source_issues, activity_assets),
         calculation_revision_id=command.calculation_revision_id,
         work_unit_id=work_unit.work_unit_id,
         bucket_id=work_unit.bucket_id,

@@ -221,6 +221,10 @@ class RecordedCalculationNote(BaseModel):
     fact: CalculationNoteFact
     element_names: tuple[tuple[str, str], ...] = ()
     """The current name of each element the fact speaks of that still has one, read for this showing."""
+    message: str = ""
+    """The fact in words, in the language of this showing, for a reader that draws it as it stands."""
+    detail: str = ""
+    """What kind of note this is, in the same language."""
 
 
 class CalculationSourceIssue(BaseModel):

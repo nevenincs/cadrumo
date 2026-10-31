@@ -403,11 +403,7 @@ def test_attested_english_aeat_legal_terms_are_exact_and_language_scoped() -> No
     # its localized AEAT catalogues, so only Catalan and Spanish are unscoped.
     # The impatriate regime names are attested in those locales too.
     for locale in ("ca", "es"):
-        assert all(
-            not is_project_spelling(locale, term)
-            for term in terms
-            if term not in {"Beckham", "impatriado"}
-        )
+        assert all(not is_project_spelling(locale, term) for term in terms if term not in {"Beckham", "impatriado"})
 
 
 def test_oauth_and_dehu_names_are_exact_and_scoped_to_attested_locales() -> None:
