@@ -1996,8 +1996,8 @@ application:
         enum_boolean_invalid: The profile fact for enum-channel value source %{binding_id}
           resolved to a boolean; boolean facts are not valid enum dispatch keys.
     quickfile:
-      stage_incomplete: The quickfile %{stage} stage finished with status %{status}.
-      stage_refused: 'Quickfile stopped at the %{stage} stage: the stage was refused
+      stage_incomplete: The `quickfile` %{stage} stage finished with status %{status}.
+      stage_refused: '`quickfile` stopped at the %{stage} stage: the stage was refused
         with %{error_code}.'
     work_form:
       additional_data_for_box: Additional data for box {box}

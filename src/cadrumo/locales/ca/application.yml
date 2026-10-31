@@ -2125,9 +2125,9 @@ application:
         enum_boolean_invalid: La dada de perfil per a l'origen de valor enum %{binding_id}
           ha resolt a booleà; els booleans no són claus vàlides de dispatch enum.
     quickfile:
-      stage_incomplete: L'etapa %{stage} de quickfile ha acabat amb l'estat %{status}.
-      stage_refused: 'Quickfile s''ha aturat a l''etapa %{stage}: l''etapa s''ha rebutjat
-        amb %{error_code}.'
+      stage_incomplete: L'etapa %{stage} de `quickfile` ha acabat amb l'estat %{status}.
+      stage_refused: '`quickfile` s''ha aturat a l''etapa %{stage}: l''etapa s''ha
+        rebutjat amb %{error_code}.'
     work_form:
       additional_data_for_box: Dada addicional de la casella {box}
       box_locator_help:

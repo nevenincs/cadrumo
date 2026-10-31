@@ -56,8 +56,8 @@ adapters:
         api_call_failed: La crida a Google {action} ha fallat.
         api_call_refused: La crida a Google {action} ha estat rebutjada (HTTP {status}).
         api_target_not_found: El destí de Google {action} no s'ha trobat.
-        googleapiclient_not_importable: googleapiclient no es pot importar; l'adaptador
-          de Google no pot accedir a l'API.
+        googleapiclient_not_importable: '`googleapiclient` no es pot importar; l''adaptador
+          de Google no pot accedir a l''API.'
     installation_client:
       errors:
         client_metadata_invalid: El client de Google inclòs en aquesta instal·lació

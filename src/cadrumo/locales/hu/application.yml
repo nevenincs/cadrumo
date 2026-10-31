@@ -2084,9 +2084,9 @@ application:
           logikai értékre oldódott fel; a logikai adatok nem érvényes enum dispatch
           kulcsok.
     quickfile:
-      stage_incomplete: A quickfile %{stage} szakasza %{status} állapottal fejeződött
+      stage_incomplete: A `quickfile` %{stage} szakasza %{status} állapottal fejeződött
         be.
-      stage_refused: 'A quickfile a(z) %{stage} szakasznál leállt: a szakaszt %{error_code}
+      stage_refused: 'A `quickfile` a(z) %{stage} szakasznál leállt: a szakaszt %{error_code}
         kóddal elutasították.'
     work_form:
       additional_data_for_box: Kiegészítő adat a(z) {box}. rovathoz

@@ -2683,7 +2683,8 @@ cli:
           demostrar su contraseña; el código se muestra una sola vez y debe escribirse
           de vuelta.
         enabled_notice: La recuperación está configurada. Si olvidas la contraseña,
-          ejecuta el comando 'config passphrase reset NOMBRE' con este código.
+          ejecuta el comando `cadrumo-runtime config passphrase reset NOMBRE` con
+          este código.
         handoff_fd_help: Escribe el código de recuperación de un solo uso como un
           objeto JSON secreto acotado en este descriptor heredado de escritura.
         handoff_too_large: La entrega de recuperación superó su límite de 8192 bytes;

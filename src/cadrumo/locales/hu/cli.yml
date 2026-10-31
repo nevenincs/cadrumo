@@ -2649,7 +2649,7 @@ cli:
         enable_help: Helyreállítási kódot rögzít az aktív profilhoz a jelszó igazolása
           után; a kód egyszer jelenik meg, és vissza kell gépelni.
         enabled_notice: A helyreállítás be van állítva. Ha elfelejted a jelszót, futtasd
-          a 'config passphrase reset NÉV' parancsot ezzel a kóddal.
+          a `cadrumo-runtime config passphrase reset NÉV` parancsot ezzel a kóddal.
         handoff_fd_help: Az egyszeri helyreállítási kódot egyetlen korlátozott méretű
           titkos JSON-objektumként írd erre az örökölt, írható leíróra.
         handoff_too_large: A helyreállítási átadás túllépte a 8192 bájtos korlátot;

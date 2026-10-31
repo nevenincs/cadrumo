@@ -76,7 +76,7 @@ wizard:
       title: Service capabilities
     certificate:
       path:
-        prompt: Enter the path to your digital certificate (.p12, .pfx)
+        prompt: Enter the path to your digital certificate (`.p12`, `.pfx`)
     codes:
       disability-grade:
         choices:

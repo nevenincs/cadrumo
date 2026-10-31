@@ -2662,7 +2662,8 @@ cli:
           demostrar-ne la contrasenya; el codi es mostra una sola vegada i s'ha d'escriure
           de tornada.
         enabled_notice: La recuperació està configurada. Si oblides la contrasenya,
-          executa l'ordre 'config passphrase reset NOM' amb aquest codi.
+          executa l'ordre `cadrumo-runtime config passphrase reset NOM` amb aquest
+          codi.
         handoff_fd_help: Escriu el codi de recuperació d'un sol ús com un objecte
           JSON secret acotat en aquest descriptor heretat d'escriptura.
         handoff_too_large: El lliurament de recuperació ha superat el límit de 8192

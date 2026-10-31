@@ -2492,7 +2492,7 @@ cli:
         enable_help: Enrol a recovery code for the active profile after proving its
           passphrase; the code is shown once and must be typed back.
         enabled_notice: Recovery is set up. If you forget the passphrase, run the
-          'config passphrase reset NAME' command with this code.
+          `cadrumo-runtime config passphrase reset NAME` command with this code.
         handoff_fd_help: Write the one-time recovery code as one bounded secret JSON
           object to this inherited writable descriptor.
         handoff_too_large: The recovery handoff exceeded its 8192-byte bound; nothing

@@ -2124,8 +2124,8 @@ application:
         enum_boolean_invalid: El dato de perfil para el origen de valor enum %{binding_id}
           resolvió a booleano; los booleanos no son claves válidas de despacho enum.
     quickfile:
-      stage_incomplete: La etapa %{stage} de quickfile terminó con el estado %{status}.
-      stage_refused: 'Quickfile se detuvo en la etapa %{stage}: la etapa se rechazó
+      stage_incomplete: La etapa %{stage} de `quickfile` terminó con el estado %{status}.
+      stage_refused: '`quickfile` se detuvo en la etapa %{stage}: la etapa se rechazó
         con %{error_code}.'
     work_form:
       additional_data_for_box: Dato adicional de la casilla {box}
