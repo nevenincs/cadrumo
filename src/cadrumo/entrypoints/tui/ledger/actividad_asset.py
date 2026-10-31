@@ -4,8 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from dataclasses import dataclass, replace
-from decimal import Decimal
-from typing import Protocol, override
+from typing import override
 
 from pydantic import TypeAdapter
 from textual.app import ComposeResult
@@ -14,35 +13,23 @@ from textual.widgets import Button, Input, Static
 
 from ....application.actividad_asset.activity_asset_contracts import ActivityAssetSupersedingClaim
 from ....application.actividad_asset.activity_asset_projections import (
-    ActivityAssetListProjection,
     ActivityAssetPlanProjection,
 )
-from ....application.actividad_asset.activity_asset_read_models import (
-    ActivityAssetAcquisitionCandidate,
-    ActivityAssetDisposalCalculationView,
-    ActivityAssetFormOptionsView,
-    ActivityAssetTimelineEvent,
-)
-from ....application.actividad_asset.history import ActivityAssetHistory, ActivityAssetHistoryClaimResult
 from ....application.actividad_asset.operation_dtos import ActivityAssetDisposalSnapshot
-from ....application.actividad_asset.operations import ActivityAssetFilingHandoff
-from ....application.operations.public_scalar import PublicDecimal
 from ....application.operator_actions.models import PreconditionVerdict
-from ....core.decimal.coercion import coerce_finite_european_decimal
 from ....core.errors.error_codes import resolve_error_message
 from ....core.errors.hierarchy import CadrumoError, InternalInvariantError
 from ....core.i18n.render import tr
 from ....core.parsing.dates import require_iso8601_date
 from ....core.period import Period
-from ....domain.renta.actividad_asset.disposal import ActivityAssetDisposalReason, PriorFreeDepreciationRegime
-from ....domain.renta.actividad_asset.election import ActivityAssetAmortizationElection, AmortizationMethod
 from ....domain.renta.actividad_asset.errors import ActividadAssetIncompleteError
-from ....domain.renta.actividad_asset.lifecycle import ActivityAssetBasis, ActivityAssetRevision, AssetKind
+from ....domain.renta.actividad_asset.lifecycle import ActivityAssetRevision, AssetKind
 from ....domain.renta.actividad_asset.register_records import ActivityAssetDescriptorFacts
 from ....domain.renta.actividad_asset.schedule import ScheduledAmortizationCharge, parse_requested_free_amount
 from ..account import AccountSessionExpiredError
 from ..components.language import localized
 from ..operations.outcome import OperationOutcomeUnknownError, unknown_outcome_of
+from .actividad_asset_inputs import stated_disposal, stated_revision
 from .actividad_asset_words import (
     form_options_text,
     limits_line,
@@ -115,70 +102,6 @@ class _ActivityAssetScreenResult:
     """The asset an inspection read, when the action was one."""
     fills: tuple[tuple[str, str], ...] = ()
     """The inputs a read's served defaults fill, as input id and text."""
-
-
-class ActivityAssetTuiActionsV1(Protocol):
-    """Typed action door backed by the installed session's runtime operations."""
-
-    def create(self, request: ActivityAssetCreationRequestV1) -> ActivityAssetInspectionV1:
-        """Create an asset and return its persisted revision chain."""
-        ...
-
-    def inspect(self, asset_id: str) -> ActivityAssetInspectionV1:
-        """Inspect one asset's immutable revision chain."""
-        ...
-
-    def correct(self, request: ActivityAssetCorrectionRequestV1) -> ActivityAssetInspectionV1:
-        """Append a correction and return the resulting chain."""
-        ...
-
-    def forecast(self, request: ActivityAssetForecastRequestV1) -> ScheduledAmortizationCharge:
-        """Preview a schedule through the application boundary."""
-        ...
-
-    def record_claim(self, request: ActivityAssetClaimRequestV1) -> ActivityAssetHistoryClaimResult:
-        """Record an explicit claim through the application boundary."""
-        ...
-
-    def describe(self, asset_id: str, descriptor: ActivityAssetDescriptorFacts) -> ActivityAssetHistory:
-        """Append an element's descriptive facts."""
-        ...
-
-    def dispose(self, asset_id: str, disposal: ActivityAssetDisposalSnapshot) -> ActivityAssetHistory:
-        """Record an element's baja and the claims it supersedes."""
-        ...
-
-    def disposal_calculate(
-        self,
-        asset_id: str,
-        disposal: ActivityAssetDisposalSnapshot | None,
-    ) -> ActivityAssetDisposalCalculationView:
-        """Work out a baja's figures: the stated one as a preview, or else the recorded one."""
-        ...
-
-    def list_elements(self) -> ActivityAssetListProjection:
-        """Summarise the register, with the year it opens on."""
-        ...
-
-    def plan(self, asset_id: str) -> ActivityAssetPlanProjection:
-        """Read one element's amortization plan."""
-        ...
-
-    def timeline(self, asset_id: str) -> tuple[ActivityAssetTimelineEvent, ...]:
-        """Read one element's ordered history."""
-        ...
-
-    def form_options(self, asset_kind: AssetKind, tax_year: int) -> ActivityAssetFormOptionsView:
-        """Read what the registry admits for an asset kind and tax year."""
-        ...
-
-    def acquisition_candidates(self) -> tuple[ActivityAssetAcquisitionCandidate, ...]:
-        """List the ledger payments an element could name as its acquisition."""
-        ...
-
-    def filing_handoff(self, request: ActivityAssetFilingRequestV1) -> ActivityAssetFilingHandoff:
-        """Build non-consuming filing projections."""
-        ...
 
 
 class ActivityAssetScreen(LedgerWorkspaceScreen):
@@ -547,17 +470,7 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
         self, button_id: str | None, asset_id: str, _revision_json: str
     ) -> _ActivityAssetScreenResult:
         if button_id == "asset-list":
-            register = self._actions.list_elements()
-            rows = register.rows or ()
-            self._default_claim_years = {
-                row.asset_id: row.default_claim_year for row in rows if row.default_claim_year is not None
-            }
-            return _ActivityAssetScreenResult(
-                message="\n".join(list_row_line(row) for row in rows) or tr("desktop.ledger.assets.list.empty"),
-                fills=(
-                    () if register.default_year is None else (("asset-filing-tax-year", str(register.default_year)),)
-                ),
-            )
+            return self._list_result()
         if button_id == "asset-plan":
             return self._plan_result(asset_id)
         if button_id == "asset-timeline":
@@ -567,6 +480,17 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
                 or tr("desktop.ledger.assets.timeline.empty"),
             )
         raise ValueError("unknown activity-asset action")
+
+    def _list_result(self) -> _ActivityAssetScreenResult:
+        register = self._actions.list_elements()
+        rows = register.rows or ()
+        self._default_claim_years = {
+            row.asset_id: row.default_claim_year for row in rows if row.default_claim_year is not None
+        }
+        return _ActivityAssetScreenResult(
+            message="\n".join(list_row_line(row) for row in rows) or tr("desktop.ledger.assets.list.empty"),
+            fills=(() if register.default_year is None else (("asset-filing-tax-year", str(register.default_year)),)),
+        )
 
     def _plan_result(self, asset_id: str) -> _ActivityAssetScreenResult:
         self._named_asset_id = asset_id
@@ -628,54 +552,10 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
         return self.query_one(f"#{input_id}", Input).value.strip()
 
     def _stated_disposal(self) -> ActivityAssetDisposalSnapshot:
-        """Read the baja's inputs; the operation judges the reason and the amounts."""
-        market_value = self._disposal_text("asset-disposal-market-value")
-        prior_regime = self._disposal_text("asset-disposal-prior-regime")
-        later_affectation = self._disposal_text("asset-disposal-later-affectation")
-        return ActivityAssetDisposalSnapshot(
-            disposal_date=require_iso8601_date(self._disposal_text("asset-disposal-date")),
-            reason=ActivityAssetDisposalReason(self._disposal_text("asset-disposal-reason")),
-            proceeds=PublicDecimal(decimal=self._disposal_text("asset-disposal-proceeds") or "0.00"),
-            transmission_costs=PublicDecimal(decimal=self._disposal_text("asset-disposal-costs") or "0.00"),
-            market_value=PublicDecimal(decimal=market_value) if market_value else None,
-            prior_free_depreciation_regime=PriorFreeDepreciationRegime(prior_regime) if prior_regime else None,
-            later_affectation_on=require_iso8601_date(later_affectation) if later_affectation else None,
-        )
+        return stated_disposal(self._disposal_text)
 
     def _stated_revision(self, revision_json: str) -> ActivityAssetRevision:
-        """Read the revision, with each typed fact the operator stated in place of the one it carries."""
-        revision = ActivityAssetRevision.model_validate_json(revision_json)
-        price = self._fact_amount("asset-price")
-        non_deductible_iva = self._fact_amount("asset-non-deductible-iva")
-        in_service = self._disposal_text("asset-in-service-date")
-        method = self._disposal_text("asset-method")
-        updates: dict[str, object] = {}
-        if price is not None or non_deductible_iva is not None:
-            basis = dict(revision.basis)
-            if price is not None:
-                basis["basis_amount"] = price
-            if non_deductible_iva is not None:
-                basis["non_deductible_iva"] = non_deductible_iva
-            updates["basis"] = ActivityAssetBasis.model_validate(basis)
-        if in_service:
-            updates["in_service_date"] = require_iso8601_date(in_service)
-        if method:
-            election = dict(revision.amortization)
-            election["method"] = AmortizationMethod(method)
-            updates["amortization"] = ActivityAssetAmortizationElection.model_validate(election)
-        if not updates:
-            return revision
-        return ActivityAssetRevision.model_validate({**dict(revision), **updates})
-
-    def _fact_amount(self, input_id: str) -> Decimal | None:
-        """Read a stated amount; an empty field is no statement, and an ambiguous number is refused."""
-        text = self._disposal_text(input_id)
-        if not text:
-            return None
-        amount = coerce_finite_european_decimal(text)
-        if amount is None:
-            raise ValueError(f"{input_id} is not an unambiguous amount")
-        return amount
+        return stated_revision(self._disposal_text, revision_json)
 
     def _descriptor(self) -> ActivityAssetDescriptorFacts:
         return ActivityAssetDescriptorFacts(
@@ -694,4 +574,4 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
         )
 
 
-__all__ = ["ActivityAssetScreen", "ActivityAssetTuiActionsV1"]
+__all__ = ["ActivityAssetScreen"]

@@ -31,6 +31,7 @@ from ...components.host import ScreenHostApp
 from ...operations.outcome import OperationOutcomeUnknownError, SessionExpiredOutcomeUnknownError
 from ...tests.settling import SettleTimeoutError, settle, settle_until
 from ..actividad_asset import ActivityAssetScreen
+from ..actividad_asset_inputs import stated_revision
 from ..controller import LedgerWorkspaceController
 from ..models_actividad_asset import ActivityAssetCreationRequestV1, ActivityAssetForecastRequestV1
 from ..workspace_injection import LedgerWorkspaceInjection
@@ -734,5 +735,15 @@ async def test_activity_asset_creation_shows_the_refusal_of_a_method_the_revisio
         await _activate(pilot=pilot, screen=screen, selector="#asset-create")
         shown = await _wait_for_screen_result(pilot=pilot, screen=screen, expected_prefix="refused	")
 
-    assert "sum_of_digits_period_years" in shown
+    assert shown == f"refused\t{tr('ledger.actividad_asset.errors.election_requires_fact')}"
     assert actions.requests == []
+
+
+def test_stated_method_keeps_the_registered_missing_fact_for_presentation() -> None:
+    revision = activity_asset_revision("tui-method-fact")
+
+    with pytest.raises(ActividadAssetValidationError) as refused:
+        stated_revision(lambda name: "sum_of_digits" if name == "asset-method" else "", revision.model_dump_json())
+
+    assert refused.value.translated_message == "ledger.actividad_asset.errors.election_requires_fact"
+    assert refused.value.context == {"method": "sum_of_digits", "field": "sum_of_digits_period_years"}

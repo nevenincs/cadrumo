@@ -16,7 +16,6 @@ from ....core.i18n.render import tr
 from ..components.language import localized
 from ..destination_alias import closed_destination_ids
 from ..navigation import TuiScreenContextV1, TuiScreenFactoryV1
-from .actividad_asset import ActivityAssetTuiActionsV1
 from .classification import LedgerClassificationScreen
 from .controller import LEDGER_TRANSACTION_FOCUS, LedgerWorkspaceController
 from .entries import LedgerEntriesScreen
@@ -36,6 +35,7 @@ from .models import (
     LedgerRouteRefusalV1,
     LedgerRouteTargetV1,
 )
+from .models_actividad_asset import ActivityAssetTuiActionsV1
 from .overview import LedgerOverviewScreen
 from .own_accounts import LedgerOwnAccountDoorV1
 from .reconciliation import LedgerReconciliationScreen
