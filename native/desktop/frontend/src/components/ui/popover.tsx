@@ -20,6 +20,12 @@ function PopoverAnchor(
   return <PopoverPrimitive.Anchor data-slot="popover-anchor" {...props} />;
 }
 
+/** The popover a popover was opened inside, for what only the inner one sees. */
+const EnclosingPopover = React.createContext<{
+  close: () => void;
+  holds: (node: Node) => boolean;
+} | null>(null);
+
 /**
  * A non-modal surface anchored to its trigger. It closes on Escape or a
  * press outside and hands focus back to the trigger. It never grows past the
@@ -31,7 +37,13 @@ function PopoverAnchor(
  *
  * Focus goes back to the trigger a task after the popover has gone, so whatever
  * took focus in between keeps it: a menu opened in that moment would otherwise
- * lose focus to the trigger and close.
+ * lose focus to the trigger and close. If what took it is outside the popover
+ * around this one, that one closes too: its own watch never saw focus leave,
+ * for the element holding it was removed without losing it.
+ *
+ * A popover already going has no more use for Escape, though the foundation
+ * still gives it the key until it is gone, so it passes the press to the one
+ * around it.
  */
 function PopoverContent({
   className,
@@ -44,6 +56,15 @@ function PopoverContent({
   ...props
 }: React.ComponentProps<typeof PopoverPrimitive.Content>) {
   const dismiss = React.useRef<HTMLButtonElement>(null);
+  const enclosing = React.useContext(EnclosingPopover);
+  const self = React.useMemo(
+    () => ({
+      close: () => dismiss.current?.click(),
+      holds: (node: Node) =>
+        dismiss.current?.parentElement?.contains(node) ?? false,
+    }),
+    [],
+  );
   return (
     <PopoverPrimitive.Portal>
       <PopoverPrimitive.Content
@@ -51,7 +72,10 @@ function PopoverContent({
         onCloseAutoFocus={(event) => {
           onCloseAutoFocus?.(event);
           const held = document.activeElement;
-          if (held && held !== document.body) event.preventDefault();
+          if (held && held !== document.body) {
+            event.preventDefault();
+            if (enclosing && !enclosing.holds(held)) enclosing.close();
+          }
         }}
         // Tall content scrolls inside: what takes focus is brought into view.
         onFocusCapture={(event) => {
@@ -65,8 +89,11 @@ function PopoverContent({
             !event.nativeEvent.isComposing &&
             event.currentTarget.contains(event.target as Node) &&
             !suggestionsOpenOn(event.target)
-          )
-            dismiss.current?.click();
+          ) {
+            if (event.currentTarget.dataset.state === "closed")
+              enclosing?.close();
+            else self.close();
+          }
         }}
         align={align}
         sideOffset={sideOffset}
@@ -80,7 +107,9 @@ function PopoverContent({
         )}
         {...props}
       >
-        {children}
+        <EnclosingPopover.Provider value={self}>
+          {children}
+        </EnclosingPopover.Provider>
         <PopoverPrimitive.Close ref={dismiss} hidden tabIndex={-1} />
       </PopoverPrimitive.Content>
     </PopoverPrimitive.Portal>

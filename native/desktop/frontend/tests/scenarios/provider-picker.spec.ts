@@ -1,7 +1,12 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { FIXTURE_CATALOG } from "../../src/dev/fixtures/agentCatalog";
 import { FIXTURE_SETTINGS_LANES } from "../../src/dev/providerSettingsFixture";
-import { agentColumn as column, ask, settled } from "../support/agent";
+import {
+  agentColumn as column,
+  ask,
+  messageField,
+  settled,
+} from "../support/agent";
 import { label } from "../support/strings";
 
 // The agent's provider list: a list of lanes, each with its provider's own
@@ -349,6 +354,70 @@ test("choosing an entry chooses its lane, and a message goes with that lane's tr
     startsWith("alpha/api"),
   );
   expect(startsWith("alpha/api").transport).toBe("api");
+});
+
+/** Holds a closing popover's fade open, so that what lands in that moment on a
+ * busy window lands in it every time. */
+const holdClosing = (target: Page) =>
+  target.addStyleTag({
+    content: `[data-slot="popover-content"][data-state="closed"] { animation-duration: 2s !important; }`,
+  });
+
+test("Escape as the list goes closes the settings", async ({
+  page: target,
+}) => {
+  await open(target);
+  const settings = await openSettings(target);
+  await holdClosing(target);
+  await chooseLane(target, settings, "beta/api");
+  await expect(providerBox(settings)).toHaveAccessibleName(
+    `${label("desktop.agent.provider")}: Example Beta, ${label("desktop.providers.connection_api")}`,
+  );
+  // The list has been answered, and is still going.
+  await expect(pickerList(target)).toHaveCount(1);
+  await target.keyboard.press("Escape");
+  await expect(settings).toHaveCount(0);
+  await expect(composerButton(target)).toBeFocused();
+});
+
+test("the message box taking focus just as the list goes closes the settings", async ({
+  page: target,
+}) => {
+  await open(target);
+  const settings = await openSettings(target);
+  // The list gives focus back a task after it unmounts, and a busy window can
+  // run something else first: this focuses the message box exactly in that gap,
+  // with the focus the list held already lost to the removal.
+  await target.evaluate(() => {
+    const listGoing = (event: AnimationEvent) => {
+      const list = event.target as HTMLElement;
+      if (
+        list.dataset.slot !== "popover-content" ||
+        list.dataset.state !== "closed"
+      )
+        return;
+      document.removeEventListener("animationend", listGoing);
+      new MutationObserver((_, watcher) => {
+        if (list.isConnected) return;
+        watcher.disconnect();
+        Object.assign(window, {
+          __focusLost: document.activeElement === document.body,
+        });
+        document.querySelector<HTMLElement>(".pane-agent textarea")?.focus();
+      }).observe(document.body, { childList: true, subtree: true });
+    };
+    document.addEventListener("animationend", listGoing);
+  });
+  await chooseLane(target, settings, "beta/api");
+  await expect
+    .poll(() =>
+      target.evaluate(
+        () => (window as unknown as { __focusLost?: boolean }).__focusLost,
+      ),
+    )
+    .toBe(true);
+  await expect(settings).toHaveCount(0);
+  await expect(messageField(target)).toBeFocused();
 });
 
 test("a held entry cannot be chosen, and says why", async ({
