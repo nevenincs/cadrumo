@@ -621,6 +621,63 @@ def test_verification_wait_expiry_preserves_identity_without_reading_or_replayin
     assert wire.exchanges[-1][0] == "operation_observe"
 
 
+def _assert_filing_exchanges(wire: _VerificationWire, request: ModeloWorkFileRequest, observations: int) -> None:
+    submitted = wire.requests[0]
+    assert isinstance(submitted, OperationSubmit)
+    assert submitted.definition_id == MODELO_WORK_FILE_OPERATION_DEFINITION_ID
+    assert submitted.subject_ref == _WORK_UNIT
+    assert ModeloWorkFileRequest.model_validate_json(submitted.payload_json) == request
+    started = wire.requests[1]
+    assert isinstance(started, OperationControl)
+    assert started.action == "operation_start"
+    assert started.operation_id == _OPERATION
+    observed = [request for request in wire.requests if isinstance(request, OperationObserve)]
+    assert [request.observation.operation_id for request in observed] == [_OPERATION] * observations
+    # The one event is read first; every later observation resumes after it.
+    assert [request.observation.after_cursor for request in observed] == [0] + [1] * (observations - 1)
+    bounded = [exchange for exchange in wire.exchanges if exchange[0] != "operation_result_page"]
+    assert [stage for stage, _, _ in bounded] == [
+        "contract",
+        "operation_submit",
+        "operation_start",
+        *(["operation_observe"] * observations),
+    ]
+    assert all(0 < deadline - entered <= 60 for _, entered, deadline in bounded)
+    assert len({request.request_id for request in wire.requests}) == len(wire.requests)
+    assert wire.cues == 1
+
+
+def _assert_filing_refusal_recorded(
+    raised: CliRecordedOperationError, wire: _VerificationWire, elapsed: float, result_deadline: float | None
+) -> None:
+    assert get_registered_error_code(raised).code == _REFUSAL_CODE
+    assert raised.translated_message == "aggregation.grouping.errors.unsupported_modelo"
+    assert raised.context is not None
+    assert raised.context["operation_id"] == _OPERATION
+    assert raised.context["reason"] == "typed_reason"
+    assert raised.context == {
+        "modelo": "111",
+        "reason": "typed_reason",
+        "operation_id": _OPERATION,
+        "effect": OperationEffect.NONE.value,
+        "terminal_condition": OperationTerminalCondition.REFUSED.value,
+    }
+    assert raised.terminal_precondition_verdict == cli_exception_no_recovery_verdict(
+        CliExceptionPrecondition.REFUSAL_RETRIED, facts={"boundary_error_type": "probe"}
+    )
+    assert len(wire.wire.detail_reads) == 1
+    assert wire.exchanges[-1] == ("operation_result_page", elapsed, result_deadline)
+    assert result_deadline is not None
+    assert result_deadline > 60
+    assert result_deadline - elapsed >= 60
+
+
+def _assert_filing_still_running(raised: CliOperationStillRunningError, wire: _VerificationWire) -> None:
+    assert get_registered_error_code(raised).code == "LOCKED_CLI_OPERATION_STILL_RUNNING"
+    assert raised.context == {"operation_id": _OPERATION, "effect": OperationEffect.UNKNOWN.value}
+    assert wire.wire.detail_reads == []
+
+
 @pytest.mark.parametrize(
     ("elapsed", "settlement_timeout", "outcome", "result_deadline"),
     [
@@ -670,56 +727,14 @@ def test_filing_settlement_preserves_approval_and_bounded_exchanges(
                 wire, work_unit_id=_WORK_UNIT, request=request, timeout=60, settlement_timeout=settlement_timeout
             )
 
-    submitted = wire.requests[0]
-    assert isinstance(submitted, OperationSubmit)
-    assert submitted.definition_id == MODELO_WORK_FILE_OPERATION_DEFINITION_ID
-    assert submitted.subject_ref == _WORK_UNIT
-    assert ModeloWorkFileRequest.model_validate_json(submitted.payload_json) == request
-    started = wire.requests[1]
-    assert isinstance(started, OperationControl)
-    assert started.action == "operation_start"
-    assert started.operation_id == _OPERATION
     observations = 3 if outcome == "refused" else 2
-    observed = [request for request in wire.requests if isinstance(request, OperationObserve)]
-    assert [request.observation.operation_id for request in observed] == [_OPERATION] * observations
-    # The one event is read first; every later observation resumes after it.
-    assert [request.observation.after_cursor for request in observed] == [0] + [1] * (observations - 1)
-    bounded = [exchange for exchange in wire.exchanges if exchange[0] != "operation_result_page"]
-    assert [stage for stage, _, _ in bounded] == [
-        "contract",
-        "operation_submit",
-        "operation_start",
-        *(["operation_observe"] * observations),
-    ]
-    assert all(0 < deadline - entered <= 60 for _, entered, deadline in bounded)
-    assert len({request.request_id for request in wire.requests}) == len(wire.requests)
-    assert wire.cues == 1
+    _assert_filing_exchanges(wire, request, observations)
     if outcome == "refused":
         assert isinstance(raised.value, CliRecordedOperationError)
-        assert get_registered_error_code(raised.value).code == _REFUSAL_CODE
-        assert raised.value.translated_message == "aggregation.grouping.errors.unsupported_modelo"
-        assert raised.value.context is not None
-        assert raised.value.context["operation_id"] == _OPERATION
-        assert raised.value.context["reason"] == "typed_reason"
-        assert raised.value.context == {
-            "modelo": "111",
-            "reason": "typed_reason",
-            "operation_id": _OPERATION,
-            "effect": OperationEffect.NONE.value,
-            "terminal_condition": OperationTerminalCondition.REFUSED.value,
-        }
-        assert raised.value.terminal_precondition_verdict == cli_exception_no_recovery_verdict(
-            CliExceptionPrecondition.REFUSAL_RETRIED, facts={"boundary_error_type": "probe"}
-        )
-        assert len(wire.wire.detail_reads) == 1
-        assert wire.exchanges[-1] == ("operation_result_page", elapsed, result_deadline)
-        assert result_deadline is not None
-        assert result_deadline > 60
-        assert result_deadline - elapsed >= 60
+        _assert_filing_refusal_recorded(raised.value, wire, elapsed, result_deadline)
     else:
-        assert get_registered_error_code(raised.value).code == "LOCKED_CLI_OPERATION_STILL_RUNNING"
-        assert raised.value.context == {"operation_id": _OPERATION, "effect": OperationEffect.UNKNOWN.value}
-        assert wire.wire.detail_reads == []
+        assert isinstance(raised.value, CliOperationStillRunningError)
+        _assert_filing_still_running(raised.value, wire)
 
 
 def _notice(sequence: int, notice_code: str, display_code: str | None = None) -> OperationPublicNoticeEventV1:
