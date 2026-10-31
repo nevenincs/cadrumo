@@ -844,6 +844,11 @@ settings_override: contextvars.ContextVar[Settings | None] = contextvars.Context
     "settings_override",
     default=None,
 )
+settings_override_fields: contextvars.ContextVar[frozenset[str]] = contextvars.ContextVar(
+    "settings_override_fields",
+    default=frozenset(),
+)
+"""Fields explicitly changed by active override scopes, excluding inherited environment values."""
 _settings_pointer_observation: contextvars.ContextVar[tuple[Path, BucketPointer] | None] = contextvars.ContextVar(
     "_settings_pointer_observation",
     default=None,
@@ -1016,9 +1021,11 @@ def override_settings(**overrides: object) -> Generator[Settings]:
     from .i18n.render import clear_output_language_cache_for_settings_override
 
     token = settings_override.set(new_settings)
+    fields_token = settings_override_fields.set(settings_override_fields.get() | overrides.keys())
     clear_output_language_cache_for_settings_override()
     try:
         yield new_settings
     finally:
+        settings_override_fields.reset(fields_token)
         settings_override.reset(token)
         clear_output_language_cache_for_settings_override()

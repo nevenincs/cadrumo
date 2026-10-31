@@ -33,6 +33,7 @@ from ..config import (
     override_settings,
     reset_settings_cache,
     settings_override,
+    settings_override_fields,
 )
 from ..config_support import coerce_output_language_setting
 from ..external_constants import OutputLanguage
@@ -159,6 +160,19 @@ def test_override_settings_preserves_explicit_fields_set_signal() -> None:
         untouched = set(type(baseline).model_fields) - baseline_explicit - {"cadrumo_wallet_diagnostic_dump_dir"}
         assert untouched, "the baseline marks every field explicit, so nothing here is checked"
         assert overridden.model_fields_set == baseline_explicit | {"cadrumo_wallet_diagnostic_dump_dir"}
+
+
+def test_override_field_provenance_tracks_nested_scopes_and_restores_on_error() -> None:
+    """Inherited settings are not mistaken for fields an override actually changed."""
+    baseline = settings_override_fields.get()
+    with override_settings(cadrumo_profile_kdf_measure_calibration=False):
+        outer = settings_override_fields.get()
+        assert outer == baseline | {"cadrumo_profile_kdf_measure_calibration"}
+        with pytest.raises(RuntimeError, match="probe"), override_settings(cadrumo_output_language="en"):
+            assert settings_override_fields.get() == outer | {"cadrumo_output_language"}
+            raise RuntimeError("probe")
+        assert settings_override_fields.get() == outer
+    assert settings_override_fields.get() == baseline
 
 
 @contextmanager
