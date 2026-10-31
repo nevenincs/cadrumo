@@ -12,7 +12,7 @@ related:
   - '[[2026-10-30-desktop-ledger-assets-reference]]'
 modified: '2026-10-31'
 body_schema: body-v2
-body_hash: 'sha256:8ba4da8b6f2abd4de8292de3204b3aea1eba9e375ab214f4e17eb2cd0b0f5dc4'
+body_hash: 'sha256:67a4add161ea1b0bbf822cf691550f9da37906db1cb7fc420aaad82896ab543a'
 ---
 
 # `desktop-ledger-assets` plan
@@ -33,7 +33,7 @@ Inventory edit and remove have no backend operation and no owner; this was raise
 - [x] `S04` - Build the options-driven forms for element, descriptor, correction, claim and baja, covering every write state; `native/desktop/frontend/src/components/ledger/assets/AssetForm.tsx, DescribeForm.tsx, CorrectForm.tsx, ClaimFlow.tsx, BajaForm.tsx`.
 - [x] `S05` - Conform to the landed S06, S11 and S12 contracts, amend the ledger editor ADR, admit the new ids and delete the provisional module; `native/desktop/frontend/src/components/ledger/assets/, native/desktop/src-tauri/src/shell/ledger/admitted.rs, .vault/adr/`.
 - [x] `S06` - Build the Existencias panel, run valuation preview as a held write, add the assets tab before Setup and retire the Setup panes; `native/desktop/frontend/src/components/ledger/assets/InventoryPanel.tsx, native/desktop/frontend/src/components/ledger/setup/RegistersSection.tsx, ledgerWords.ts, layout.ts`.
-- [ ] `S07` - Review the integrated tab in the running app and append findings to the audit; `.vault/audit/`.
+- [x] `S07` - Review the integrated tab in the running app and append findings to the audit; `.vault/audit/`.
 
 ## Parallelization
 

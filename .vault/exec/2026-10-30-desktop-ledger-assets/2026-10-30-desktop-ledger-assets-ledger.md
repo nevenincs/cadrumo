@@ -5,7 +5,7 @@ tags:
 date: '2026-10-30'
 modified: '2026-10-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:f8ac8aa554e9925552d6d42d2ef04fb9982b026cfbd169021d53908ca1b6901e'
+body_hash: 'sha256:fb7312b9263ef50bacceaafaa8697207c26a4e576e66cd1994b5324520162312'
 related:
   - "[[2026-10-30-desktop-ledger-assets-plan]]"
 ---
@@ -304,6 +304,8 @@ related:
 - `S07` `verify:` `playwright contract 70 stock 38 scenarios 90` -> `pass`
 - `S07` `verify:` `pytest decode seed locales` -> `pass`
 - `S07` `by:` `implementation-engineer`
+- `S07` `M` `.vault/audit/2026-10-31-desktop-ledger-assets-audit.md`
+- `S07` `verify:` `playwright test tests/ledger-assets-contract.spec.ts` -> `pass`
 
 ## Notes
 
@@ -323,3 +325,4 @@ related:
 - `S06` open: reason-sentence test fails for 4 reasons; shell-key drift test fails on another agent's keys; chrome build blocked by a `ledger.actividad_asset.` family in assetsFixture.ts; Rust tests not run
 - `S07` assetRequests.ts edited outside the write list: the decode test bundles it and it must carry the backend's served options
 - `S07` dev/locales `test_parity` fails on keys of the stock agent only `(tui.ledger.registers.inventory.*)`
+- `S07` last two fixes in b8be028a5e not re-driven in the running app: the shared build would not settle

@@ -5,29 +5,10 @@ tags:
 date: '2026-10-31'
 modified: '2026-10-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:7a92fef192bb8ac244c889fcf4da02ae9e8db0160eb97dbcce463880b103cd84'
+body_hash: 'sha256:32580b56e9fd122cec585d32e4f34faf6def72e1b764b7505cb96379d6cdd89d'
 related:
   - "[[2026-10-30-desktop-ledger-assets-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace desktop-ledger-assets with a kebab-case feature tag, e.g. #foo-bar.
-     Exactly these two tags are allowed; do not append additional tags.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - Cite code as inline backtick locators: `src/module.py:42`; never as a
-       markdown link. -->
 
 # `desktop-ledger-assets` audit: `desktop ledger assets review`
 
@@ -186,3 +167,47 @@ Plan table 697 px in a 512 px frame.
 Backend-owned items go to the amortization and inventory backend owners; frontend items are fixed under S07. The form-options contract serving per-stage facts and the default year, and the timeline's added event kinds, are additive and need no follow-on ADR. The vehicle-class seed matches the registry: `0001-declarations.toml:1483` flags `transporte` only in the simplified table.
 
 Re-review at `251c76b2d1`: of the first pass, 18 findings are fixed; `not-known`, `logic-in-react`, `estimated-mark`, `terminology` and the form half of `vehicle-reason` remain, and the entries above carry them forward.
+
+### live-list-years | high | The list read dropped years and default_year
+
+The window's year selector stayed blank, Record a depreciation charge did nothing and the filing handoff had no year, because the registered list read projected `rows` only. The scenario fixtures hid it. Fixed in `e0efc09342`; confirmed in the running app on a synthetic profile: the selector offers years and the handoff shows 248.92 in casilla 0208.
+
+### live-form-crash | high | The add form crashed the window once options loaded
+
+`AssetForm.tsx` passed the served `wholly_business_facts[].value`, a public decimal, to a formatter that takes text, so a profile with a regime lost the whole window. The hand-written seed repeated the wrong shape. Fixed in `f7ce953940`, with a seed test that fails on the old shape; confirmed in the running app.
+
+### live-opening-refusal | high | A zero opening amount with a covered year gave no reason
+
+Fixed by the backend owner in `5263975b48`. The window now says the covered year applies only above zero and that nothing was saved.
+
+### live-after-save | medium | Record stayed active after a save
+
+A second press on a saved claim was refused without recording twice, but the button invited it. `b8be028a5e` clears the forecast and retires the disposal submit. The contract spec passes; the running app was not re-driven after this commit.
+
+### live-disposal-words | low | English mixed baja and disposal
+
+`b8be028a5e` says disposal on the English screens. Backend refusal messages under `ledger.actividad_asset.errors` still say baja. Not confirmed in the running app.
+
+### live-stale-row | low | One stale row after a disposal was not reproduced
+
+Once, the row still read In service well after the disposal saved, while the CLI read `out_of_service`. Two sampled repeats updated within 2 and 5 seconds. No cause was established.
+
+### live-log-levels | medium | Expected sign-in states and a read are logged as errors
+
+Each sign-in logs `session_unavailable [sign_in_mutation_in_progress]` as ERROR, although `native/desktop/src-tauri/src/agent/supervisor.rs:114` treats it as pending. `form-options` logs a WARNING for the ordinary missing-regime refusal. Left to the owners of sign-in and settlement logging.
+
+### live-uncoded-rejection | medium | Rejections without a code are unexplained
+
+`user_profile_read` and `ledger_submit` were each rejected once with no code, and `native/desktop/frontend/src/shell/hostCall.ts:108` raises the internal-error notice for that. Repeated navigation with capture did not reproduce it, and the diagnostic does not carry the raw error. Cause unknown.
+
+### live-slow-read | low | One candidates read took 18 seconds
+
+`ledger.actividad-asset.acquisition-candidates` took 18.3 s once during concurrent builds, against a 2 s budget. Not separated from machine load.
+
+### live-disposal-layout | low | Disposal confirm sits below the fold and figures split across lines
+
+In the narrow pane the final confirm button needs scrolling, and each figure's value sits on the line below its label. The change confirmation also reuses the record wording.
+
+### live-verified | info | Flows confirmed in the running app
+
+Sign-in, create, inline missing-field marks, wholly business hint, plan arithmetic (248.92 = 312 x 292/366), forecast, claim, duplicate claim refusal, replacement refusal for a different period, handoff, timeline kinds and order, disposal figures (170.49; loss 229.51), record, change (92.07; loss 307.93), remove, the shortened charge staying short, CLI parity of state, and es, ca and hu with no raw keys or the English words scanned. Not driven in this pass: Correct, a stock purchase with files, and replacing a charge after a basis correction.
