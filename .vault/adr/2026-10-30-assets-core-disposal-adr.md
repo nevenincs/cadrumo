@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#assets-core'
 date: '2026-10-30'
-modified: '2026-10-30'
+modified: '2026-10-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:2f98b6d8360e84b70ae3172ee45aadf85e2c83a729ebd6321759d08869813d2d'
+body_hash: 'sha256:17ce8f50aeb85ee7974d71b45b1a23165d7c942b4062698205d511953c438027'
 related:
   - "[[2026-10-30-assets-core-amortization-law-and-form-placement-research]]"
   - "[[2026-10-30-assets-core-implementation-state-against-law-reference]]"

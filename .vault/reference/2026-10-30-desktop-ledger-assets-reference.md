@@ -3,30 +3,11 @@ tags:
   - '#reference'
   - '#desktop-ledger-assets'
 date: '2026-10-30'
-modified: '2026-10-30'
+modified: '2026-10-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:a62e3cc1ace57a8abadaa96a606f6dadb2674981af4319e42d0984c337fa4f8e'
+body_hash: 'sha256:6cf8b2acc1aa86a8e5d3462da314c0addbcea4fc0bfa1d059df33ba5b640db7d'
 related: []
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #reference) and one feature tag.
-     Replace desktop-ledger-assets with a kebab-case feature tag, e.g. #foo-bar.
-     Exactly these two tags are allowed; do not append additional tags.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - Cite code as inline backtick locators: `src/module.py:42`; never as a
-       markdown link. -->
 
 # `desktop-ledger-assets` reference: `assets tab design and schedule display audit`
 

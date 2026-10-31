@@ -3,32 +3,13 @@ tags:
   - '#audit'
   - '#desktop-aeat-sync'
 date: '2026-10-29'
-modified: '2026-10-29'
+modified: '2026-10-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:f8111c10f2072bbd958ba2de4c4baac97a1d7863b17cced37f7309bbef6bed80'
+body_hash: 'sha256:d2c695cd9089ca6d6c2ea62fc5a9346339636ee5e62b66e483acac247706d985'
 related:
   - "[[2026-10-29-desktop-aeat-sync-plan]]"
   - "[[2026-10-29-desktop-aeat-sync-adr]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace desktop-aeat-sync with a kebab-case feature tag, e.g. #foo-bar.
-     Exactly these two tags are allowed; do not append additional tags.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - Cite code as inline backtick locators: `src/module.py:42`; never as a
-       markdown link. -->
 
 # `desktop-aeat-sync` audit: `desktop AEAT sync integrated review`
 
