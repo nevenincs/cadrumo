@@ -398,6 +398,26 @@ application:
           elő.
         verify_draft_snapshot_stale: Az ellenőrzéshez a jelenleg használt nyomtatványdefiníciókból
           készült piszkozat szükséges.
+        xml_schema_unreadable: Az adott év hivatalos sémáját nem sikerült alkalmazni
+          a bevallás értékeinek ellenőrzéséhez.
+        xml_value_above_maximum: A(z) %{box} rovat összege meghaladja a(z) %{limit}
+          értéket, a hivatalos séma által megengedett legnagyobb értéket.
+        xml_value_below_minimum: A(z) %{box} rovat összege kisebb a(z) %{limit} értéknél,
+          a hivatalos séma által megengedett legkisebb értéknél.
+        xml_value_illegal_characters: A(z) %{box} rovat olyan formájú szöveget tartalmaz,
+          amelyet a hivatalos séma nem enged meg.
+        xml_value_not_a_number: A(z) %{box} rovatnak a hivatalos séma szerint számot
+          kell tartalmaznia.
+        xml_value_not_listed: A(z) %{box} rovat értéke nem szerepel a hivatalos sémában
+          felsorolt lehetőségek között.
+        xml_value_too_long: A(z) %{box} rovat %{observed} karaktert tartalmaz; a hivatalos
+          séma legfeljebb %{limit} karaktert enged meg.
+        xml_value_too_many_decimals: A(z) %{box} rovat %{observed} tizedesjegyet tartalmaz;
+          a hivatalos séma legfeljebb %{limit} tizedesjegyet enged meg.
+        xml_value_undeclared: A(z) %{box} rovatnak nincs helye az adott év hivatalos
+          sémájában.
+        xml_value_wrong_length: A(z) %{box} rovat %{observed} karaktert tartalmaz;
+          a hivatalos séma pontosan %{limit} karaktert ír elő.
     export_parity:
       errors:
         aux_block_undeclared: Az exportelrendezés nem tudja kiírni a bevallás kötelező

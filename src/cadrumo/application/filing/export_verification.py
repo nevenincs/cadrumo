@@ -33,6 +33,7 @@ from ._export_xml_dictionary import (
     expected_xml_dictionary_root_identity,
     mismatched_xml_dictionary_repeated_casillas,
     read_xml_dictionary_root_identity,
+    refuse_xml_dictionary_payload_outside_xsd,
     xml_dictionary_repeated_rows,
 )
 from ._export_xml_dictionary_modelo100 import modelo_100_sign_branch_value, registry_modelo_100_xml_declarations
@@ -300,6 +301,10 @@ def _verify_export_file(
         return _missing_verification_result(
             draft, file_path=file_path, narrative="filing.export.malformed_file", digest=digest
         )
+    if subview.export_layouts[0].format is ExportLayoutFormat.XML_DICTIONARY:
+        # A file can state exactly what the draft holds and still be one AEAT rejects,
+        # so agreement with the draft alone is no match.
+        refuse_xml_dictionary_payload_outside_xsd(subview.export_layouts[0], payload=payload, schema_provider=provider)
     return DeclaracionVerifyResult(
         draft_id=draft.draft_id,
         file_path=file_path,

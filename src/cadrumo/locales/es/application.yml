@@ -409,6 +409,26 @@ application:
           vacío.
         verify_draft_snapshot_stale: La comprobación requiere un borrador construido
           con las definiciones del modelo en uso.
+        xml_schema_unreadable: No se ha podido aplicar el esquema oficial de este
+          ejercicio para comprobar los valores de la declaración.
+        xml_value_above_maximum: La casilla %{box} tiene un importe superior a %{limit},
+          el máximo que admite el esquema oficial.
+        xml_value_below_minimum: La casilla %{box} tiene un importe inferior a %{limit},
+          el mínimo que admite el esquema oficial.
+        xml_value_illegal_characters: La casilla %{box} contiene un texto con una
+          forma que el esquema oficial no admite.
+        xml_value_not_a_number: La casilla %{box} debe contener un número según el
+          esquema oficial.
+        xml_value_not_listed: La casilla %{box} contiene un valor fuera de las opciones
+          que enumera el esquema oficial.
+        xml_value_too_long: La casilla %{box} tiene %{observed} caracteres; el esquema
+          oficial admite como máximo %{limit}.
+        xml_value_too_many_decimals: La casilla %{box} tiene %{observed} decimales;
+          el esquema oficial admite como máximo %{limit}.
+        xml_value_undeclared: La casilla %{box} no tiene lugar en el esquema oficial
+          de este ejercicio.
+        xml_value_wrong_length: La casilla %{box} tiene %{observed} caracteres; el
+          esquema oficial exige exactamente %{limit}.
     export_parity:
       errors:
         aux_block_undeclared: El diseño de exportación no puede escribir el bloque

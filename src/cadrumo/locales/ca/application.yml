@@ -408,6 +408,26 @@ application:
           declaració buit.
         verify_draft_snapshot_stale: La comprovació requereix un esborrany construït
           amb les definicions del model en ús.
+        xml_schema_unreadable: No s'ha pogut aplicar l'esquema oficial d'aquest exercici
+          per comprovar els valors de la declaració.
+        xml_value_above_maximum: La casella %{box} té un import superior a %{limit},
+          el màxim que admet l'esquema oficial.
+        xml_value_below_minimum: La casella %{box} té un import inferior a %{limit},
+          el mínim que admet l'esquema oficial.
+        xml_value_illegal_characters: La casella %{box} conté un text amb una forma
+          que l'esquema oficial no admet.
+        xml_value_not_a_number: La casella %{box} ha de contenir un nombre segons
+          l'esquema oficial.
+        xml_value_not_listed: La casella %{box} conté un valor fora de les opcions
+          que enumera l'esquema oficial.
+        xml_value_too_long: La casella %{box} té %{observed} caràcters; l'esquema
+          oficial n'admet com a màxim %{limit}.
+        xml_value_too_many_decimals: La casella %{box} té %{observed} decimals; l'esquema
+          oficial n'admet com a màxim %{limit}.
+        xml_value_undeclared: La casella %{box} no té lloc a l'esquema oficial d'aquest
+          exercici.
+        xml_value_wrong_length: La casella %{box} té %{observed} caràcters; l'esquema
+          oficial n'exigeix exactament %{limit}.
     export_parity:
       errors:
         aux_block_undeclared: El disseny d'exportació no pot escriure el bloc `Aux`

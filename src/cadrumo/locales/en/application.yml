@@ -376,6 +376,25 @@ application:
         rendered_payload_empty: The export layout produced an empty declaration payload.
         verify_draft_snapshot_stale: The check requires a draft built from the modelo
           definitions currently in use.
+        xml_schema_unreadable: The official schema for this year could not be applied
+          to check the declaration's values.
+        xml_value_above_maximum: Box %{box} holds an amount above %{limit}, the most
+          the official schema admits.
+        xml_value_below_minimum: Box %{box} holds an amount below %{limit}, the least
+          the official schema admits.
+        xml_value_illegal_characters: Box %{box} holds text in a form the official
+          schema does not admit.
+        xml_value_not_a_number: Box %{box} must hold a number under the official schema.
+        xml_value_not_listed: Box %{box} holds a value outside the options the official
+          schema lists.
+        xml_value_too_long: Box %{box} holds %{observed} characters; the official
+          schema admits at most %{limit}.
+        xml_value_too_many_decimals: Box %{box} holds %{observed} decimal places;
+          the official schema admits at most %{limit}.
+        xml_value_undeclared: Box %{box} has no place in the official schema for this
+          year.
+        xml_value_wrong_length: Box %{box} holds %{observed} characters; the official
+          schema requires exactly %{limit}.
     export_parity:
       errors:
         aux_block_undeclared: The export layout cannot write the declaration's mandatory

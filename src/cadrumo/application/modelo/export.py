@@ -87,6 +87,7 @@ from ..filing.export_verification import (
     FilingExportPayloadConsumer,
     assert_export_artifact_matches_receipt,
 )
+from ..filing.export_xml_value_limits import is_xml_value_refusal
 from ..filing.producer_snapshot import (
     AmendmentEvidence,
     FilingProducerSnapshot,
@@ -426,10 +427,7 @@ def _write_export_staging(
         # whose registry snapshot declares no export layout (e.g. Modelo 202 has
         # no Diseño de Registros authored, so a verified-complete revision cannot
         # be written to fichero-BOE), which reads as a misleading disk/IO failure.
-        raise ModeloExportError(
-            translated_message="application.modelo.errors.export_draft_write_failed",
-            context=_export_write_failure_context(command, exc),
-        ) from exc
+        raise _export_write_failure(command, exc) from exc
 
 
 def _consume_export_payload(
@@ -454,10 +452,20 @@ def _consume_export_payload(
             schema_provider=schema_provider,
         )
     except FilingExportError as exc:
-        raise ModeloExportError(
-            translated_message="application.modelo.errors.export_draft_write_failed",
-            context=_export_write_failure_context(command, exc),
-        ) from exc
+        raise _export_write_failure(command, exc) from exc
+
+
+def _export_write_failure(command: ModeloExportCommand, exc: FilingExportError) -> ModeloExportError:
+    """Keep a refused box's own message; the generic one would read as a disk problem."""
+    if is_xml_value_refusal(exc):
+        return ModeloExportError(
+            translated_message=exc.translated_message,
+            context={"calculation_revision_id": command.calculation_revision_id, **(exc.context or {})},
+        )
+    return ModeloExportError(
+        translated_message="application.modelo.errors.export_draft_write_failed",
+        context=_export_write_failure_context(command, exc),
+    )
 
 
 def _export_write_failure_context(command: ModeloExportCommand, exc: FilingExportError) -> dict[str, object]:

@@ -72,6 +72,7 @@ _SWEPT_MODULES: tuple[str, ...] = (
     "__init__.py",
     "draft_construction.py",
     "export_parity.py",
+    "export_xml_value_limits.py",
     "_m303_exonerado_390.py",
     "_m303_export_applicability.py",
     "draft_review.py",
@@ -142,6 +143,7 @@ _UNSWEPT_MODULES: tuple[str, ...] = tuple(_UNSWEPT_MODULE_RATIONALES)
 _OPERATOR_REACHABLE_REFUSAL_ALIASES: dict[str, str] = {
     "draft_construction.py": "_ModeloBuilderError",
     "export_parity.py": "FilingExportError",
+    "export_xml_value_limits.py": "ModeloApplicationError",
     "_m303_exonerado_390.py": "FilingExportError",
     "_m303_export_applicability.py": "FilingExportError",
     "runtime.py": "ModeloBuilderError",
@@ -372,6 +374,22 @@ def test_boolean_input_refusal_renders_as_its_key() -> None:
         _boolean_input("iva.flag", Decimal("1"))
 
     assert str(excinfo.value) == "application.filing.build_draft.errors.binding_value_not_boolean"
+    _assert_terminal_application_refusal(excinfo.value)
+
+
+def test_xml_value_refusal_renders_as_its_key_and_terminal_condition() -> None:
+    from defusedxml import ElementTree
+
+    from ..export_xml_value_limits import refuse_xml_values_outside_schema
+
+    schema = ElementTree.fromstring('<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"/>')
+
+    with pytest.raises(ModeloApplicationError) as excinfo:
+        refuse_xml_values_outside_schema(
+            ElementTree.fromstring("<Declaracion/>"), schema=schema, source_id="literal", entries=()
+        )
+
+    assert str(excinfo.value) == "application.filing.export.errors.xml_schema_unreadable"
     _assert_terminal_application_refusal(excinfo.value)
 
 

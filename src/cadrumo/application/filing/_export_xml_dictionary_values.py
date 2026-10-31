@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import re
 from datetime import date
-from decimal import ROUND_HALF_UP, Decimal
+from decimal import ROUND_HALF_UP, Decimal, localcontext
 
 from ...core.decimal.coercion import coerce_decimal
 from ...core.decimal.grammar import try_parse_canonical_decimal
@@ -94,7 +94,7 @@ def _format_xml_dictionary_boolean_value(data_type: str, normalized_type: str, v
     #
     # The damage that makes this worth refusing rather than rendering is clearest
     # on an amount row: ``True`` on a euro-cent row reads as one euro, the XSD
-    # accepts it, nothing on the export path validates anyway, and a taxpayer
+    # accepts it, so no check on the export path can catch it, and a taxpayer
     # files a figure they never stated. Same decision the unreadable-amount
     # branch below makes, for the same reason -- a wrong number that satisfies
     # every downstream check is worse than a refusal, because the refusal is the
@@ -144,7 +144,7 @@ def _format_xml_dictionary_numeric_value(data_type: str, value: object, numeric:
         if isinstance(value, str)
         else coerce_decimal(value)
     )
-    if amount is None:
+    if amount is None or not amount.is_finite():
         raise FilingExportValidationError(
             f"amount for a {data_type} row could not be read: {value!r}. "
             f"The accepted form is a dot decimal separator with at most {scale} "
@@ -157,7 +157,11 @@ def _format_xml_dictionary_numeric_value(data_type: str, value: object, numeric:
             "hold, not which reading was meant. Write the amount unambiguously "
             "(1000 or 1.0) at the source.",
         )
-    return f"{amount.quantize(Decimal(1).scaleb(-scale), rounding=ROUND_HALF_UP)}"
+    # Enough working precision that a figure far above any row's limit still renders,
+    # because the check against the official schema is what refuses it, by its box.
+    with localcontext() as context:
+        context.prec = max(context.prec, amount.adjusted() + scale + 2)
+        return f"{amount.quantize(Decimal(1).scaleb(-scale), rounding=ROUND_HALF_UP)}"
 
 
 def _format_xml_dictionary_text_value(data_type: str, normalized_type: str, value: object) -> str:
