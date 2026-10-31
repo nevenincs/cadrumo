@@ -72,6 +72,7 @@ from .authored_editions import authored_revisions_where
 from .modelo_100_registry_support import M100_NO_DESCENDANT_MATERNIDAD_BINDINGS
 from .published_authority import PublishedGovernedFactSource, published_supported_filing_years
 from .relation_fixture import resolve_relation_values_from_observations
+from .withholding_observation_defaults import ZERO_INCAPACITY_AND_FORAL_FIELDS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
@@ -347,17 +348,7 @@ def _withholding_observation(
         clave=RetencionClave.from_registry(clave),
         percibido_dinerario=percibido_dinerario,
         retencion_practicada=retencion_practicada,
-        incapacity_cash_perception=Decimal("0"),
-        incapacity_cash_withholding=Decimal("0"),
-        incapacity_kind_value=Decimal("0"),
-        incapacity_kind_ingreso_a_cuenta=Decimal("0"),
-        incapacity_kind_repercutido=Decimal("0"),
-        foral_retention_estatal=Decimal("0"),
-        foral_retention_navarra=Decimal("0"),
-        foral_retention_araba=Decimal("0"),
-        foral_retention_gipuzkoa=Decimal("0"),
-        foral_retention_bizkaia=Decimal("0"),
-        base_retenciones=Decimal("0"),
+        **ZERO_INCAPACITY_AND_FORAL_FIELDS,
     )
 
 

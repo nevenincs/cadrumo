@@ -34,6 +34,7 @@ from ..withholding_bindings import (
     WithholdingProvider,
     resolve_withholding_binding_values,
 )
+from .withholding_observation_defaults import ZERO_INCAPACITY_AND_FORAL_FIELDS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -87,17 +88,7 @@ def _obs(nif: str, clave: str, subclave: str = "") -> WithholdingObservation:
         subclave=subclave,
         percibido_dinerario=Decimal("1000"),
         retencion_practicada=Decimal("190"),
-        incapacity_cash_perception=Decimal("0"),
-        incapacity_cash_withholding=Decimal("0"),
-        incapacity_kind_value=Decimal("0"),
-        incapacity_kind_ingreso_a_cuenta=Decimal("0"),
-        incapacity_kind_repercutido=Decimal("0"),
-        foral_retention_estatal=Decimal("0"),
-        foral_retention_navarra=Decimal("0"),
-        foral_retention_araba=Decimal("0"),
-        foral_retention_gipuzkoa=Decimal("0"),
-        foral_retention_bizkaia=Decimal("0"),
-        base_retenciones=Decimal("0"),
+        **ZERO_INCAPACITY_AND_FORAL_FIELDS,
     )
 
 
