@@ -36,11 +36,28 @@ def test_identifier_labels_are_exact_shared_technical_terms() -> None:
 
 @pytest.mark.parametrize("locale", ["ca", "en", "es", "hu"])
 def test_software_proper_names_preserve_exact_case_and_stem_boundaries(locale: str) -> None:
-    for name in ("GitHub", "Linux", "Markdown", "OpenSSL", "PowerShell", "Sphinx", "reStructuredText"):
+    for name in ("GitHub", "Linux", "Markdown", "OpenSSL", "PowerShell", "Pydantic", "Sphinx", "reStructuredText"):
         assert is_project_spelling(locale, name)
         assert not is_project_spelling(locale, name + "x")
-    for bad in ("GitHup", "Linuz", "Markdwon", "OpenSSl", "Powershell", "Sphinxx", "reStructuredTex"):
+    for bad in ("GitHup", "Linuz", "Markdwon", "OpenSSl", "Powershell", "Pydantci", "Sphinxx", "reStructuredTex"):
         assert not is_project_spelling(locale, bad)
+
+
+@pytest.mark.parametrize("locale,word", [("ca", "declarables"), ("es", "heredables")])
+def test_attested_native_plurals_are_exact_and_locale_scoped(locale: str, word: str) -> None:
+    assert is_project_spelling(locale, word)
+    assert not is_project_spelling(locale, word + "s")
+    assert not is_project_spelling(locale, word.capitalize())
+    for other in {"ca", "en", "es", "hu"} - {locale}:
+        assert not is_project_spelling(other, word)
+
+
+def test_pydantic_brand_keeps_code_literal_and_adjacent_typo_distinct() -> None:
+    values = {"ca": {"example": "Pydantic `pydantic` Pydantci"}}
+    unknown, inventory, _ = spellcheck_catalogues(set(), {}, REPO_ROOT, additional_values=values)
+    assert not inventory["spelling_tool_failures"]
+    assert unknown[("ca", "example")] == ("Pydantci",)
+    assert not is_project_spelling("ca", "pydantic")
 
 
 @pytest.mark.parametrize(

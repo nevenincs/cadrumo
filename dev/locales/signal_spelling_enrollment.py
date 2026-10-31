@@ -66,8 +66,11 @@ from .signal_tokens import filtered_translation_text
 # Exact software/format names in architecture/index.md, authoring-guide.md,
 # download.md and the signed-report verification recipe. pyproject.toml and
 # docs/conf.py identify the same tools; casing and adjacent typos stay checked.
+# Pydantic is the product name used by its own documentation; the lowercase
+# Python distribution/module remains code syntax, not an alternate brand.
+# https://docs.pydantic.dev/latest/
 _SOFTWARE_PROPER_NAMES = frozenset(
-    {"GitHub", "Linux", "Markdown", "OpenSSL", "PowerShell", "Sphinx", "reStructuredText"}
+    {"GitHub", "Linux", "Markdown", "OpenSSL", "PowerShell", "Pydantic", "Sphinx", "reStructuredText"}
 )
 _SHARED_SPELLINGS = (
     frozenset(
@@ -334,6 +337,9 @@ _LOCALE_SPELLINGS: dict[str, frozenset[str]] = {
     ),
     "es": frozenset(
         {
+            # NCI's Spanish dictionary uses this exact plural of heredable:
+            # https://www.cancer.gov/espanol/publicaciones/diccionarios/diccionario-cancer/def/heredable
+            "heredables",
             # Exact native, technical and retained tax forms attested in
             # _data/terminology/concepts; no new casing or inflections implied.
             "autorrepercute",
@@ -517,6 +523,9 @@ _LOCALE_SPELLINGS: dict[str, frozenset[str]] = {
     ),
     "ca": frozenset(
         {
+            # BOE's Catalan edition uses this exact plural for reportable items:
+            # https://www.boe.es/boe_catalan/dias/2020/02/05/pdfs/BOE-A-2020-1653-C.pdf
+            "declarables",
             # Exact native, technical and retained tax forms attested in
             # _data/terminology/concepts; no new casing or inflections implied.
             "autorepercuteix",
