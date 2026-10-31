@@ -9,7 +9,7 @@
       "period": { "filing_year": 2026, "code": "1T" },
       "registry_revision_id": "2019-y-siguientes",
       "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
-      "calculation_revision_id": "bd01ee184cc8f8cbf6fbe927c7d0f1dd6f5f769a8510f888ec5d8870fc513851",
+      "calculation_revision_id": "6d4086b54b763d375c3c451a93ab32b2327b3719d27577ec6b24d19c4b3be43e",
       "language": "es",
       "layout_provenance": "generated",
       "inspection_reason": null,
@@ -1478,14 +1478,18 @@
           "attention": "check",
           "casilla_id": null,
           "box": null,
-          "withholds_filing": false
+          "withholds_filing": false,
+          "fact": null,
+          "element_names": []
         },
         {
           "reason": "operator_override_diverges_from_computed",
           "attention": "check",
           "casilla_id": "06",
           "box": "06",
-          "withholds_filing": false
+          "withholds_filing": false,
+          "fact": null,
+          "element_names": []
         }
       ],
       "calculation_notes_held": true,
@@ -1584,15 +1588,15 @@
         "closes_on": "2026-04-20",
         "nominal_closes_on": "2026-04-20",
         "holiday_coverage": "national_only",
-        "reference_on": "2026-10-27",
+        "reference_on": "2026-10-31",
         "days_remaining": null,
-        "days_overdue": 190
+        "days_overdue": 194
       },
       "aeat_data": null,
       "filing": null,
       "last_export": {
-        "exported_at": "2026-10-27T08:34:10.587393Z",
-        "calculation_revision_id": "4e6bfe8d425e4aed9205ee6b51980e6f0d0985f24e199e48f9c3a0ac85d661cb",
+        "exported_at": "2026-10-31T03:14:49.118016Z",
+        "calculation_revision_id": "4d870880fa8ccce6cf2806f279414f7a8f2e82a574a1b0da1cfd482f951aeb61",
         "current": false
       },
       "edit_closure": null,
@@ -1609,9 +1613,9 @@
       "workspace_contract_version": 1,
       "edit_contract_version": 1,
       "operation_manifest_version": 4,
-      "contract_set_digest": "63eefbfa612f9215a940ebbec16d4aa1b9fd502a84be98eee12245ef14879246",
+      "contract_set_digest": "e3ab9b8b7b8c2063e94194e3c0e6e0d7a61e874b8cd563b5dc5a4341e748b3f6",
       "operation_definition_id": "modelo.edit.apply",
-      "definition_contract_digest": "007cac2c7aaf032edde6b8d860a1ad2ba98b80c18c2967c4ebf8f08044834d57",
+      "definition_contract_digest": "6b37be16acf22e172dcafd43befa599a92a16043f3f81ca6836a5ca1a2857646",
       "request_schema": {
         "schema_id": "modelo.edit.apply.request",
         "schema_version": 2,
@@ -1635,7 +1639,7 @@
       "financial_operand_schema": {
         "schema_id": "modelo.edit.submission",
         "schema_version": 1,
-        "schema_fingerprint": "207803c795cd324d67b0c181c1e575755354ef23733b5450214c0c861992b4aa"
+        "schema_fingerprint": "071dc760f85f95503b711314955cdc61b45de1765f60fb15b7b746a638b38314"
       }
     },
     "bucket_id": "13000000-0000-4000-8000-000000000730",
@@ -1644,9 +1648,9 @@
     "period_filing_year": 2026,
     "period_code": "1T",
     "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
-    "work_unit_record_digest": "a180e18dbcccb3733310f544e2c1d89b5036fcb061d68171b272e6559536045c",
-    "calculation_head_digest": "cfa193ee86f383092bc854b8869185fd6cfdff99d73cf99d2f3fd7aa43f35f8c",
-    "current_calculation_revision_id": "bd01ee184cc8f8cbf6fbe927c7d0f1dd6f5f769a8510f888ec5d8870fc513851",
+    "work_unit_record_digest": "96e2f5ec85d00ce932dd16078970ae46729e5f73724bb3212a20e32886753b24",
+    "calculation_head_digest": "6ba73195b1d8aef63cfc2677978127584e10102d5a4ac6ad4bbda021ceb4b38f",
+    "current_calculation_revision_id": "6d4086b54b763d375c3c451a93ab32b2327b3719d27577ec6b24d19c4b3be43e",
     "law_selected_revision_id": "2019-y-siguientes",
     "schema_identity": {
       "schema_id": "modelo-130-2019-y-siguientes",
@@ -1949,9 +1953,9 @@
     ],
     "permitted_surface_digest": "2705e6476442c123bb8c6979cb9d82e81dc02301b0f923b4b78f24941d4686dd",
     "mutation_family": "calculate",
-    "issued_at": "2026-10-27T08:34:29.079412Z",
-    "expires_at": "2026-10-27T08:39:29.079412Z",
-    "baseline_id": "81cbe547290386d468f22607da16b65c33f90092ae64063281338c026c69c153"
+    "issued_at": "2026-10-31T03:15:02.471943Z",
+    "expires_at": "2026-10-31T03:20:02.471943Z",
+    "baseline_id": "8dda36918dcae3198120c81c897a4ed526ec28cb6179867ceedd4ac87986b48f"
   },
   "admission_refusal": null,
   "admission_refusal_words": null,
@@ -1961,7 +1965,7 @@
     "count": 0,
     "findings_lead": false,
     "recorded_at": null,
-    "file_created_at": "2026-10-27T08:34:10.587393Z",
+    "file_created_at": "2026-10-31T03:14:49.118016Z",
     "receipt_to_add": false
   },
   "header": {
@@ -1987,10 +1991,10 @@
       "help": null
     },
     "file": {
-      "exported_at": "2026-10-27T08:34:10.587393Z",
-      "created_on": "27/10/2026",
+      "exported_at": "2026-10-31T03:14:49.118016Z",
+      "created_on": "31/10/2026",
       "current": false,
-      "words": "El fichero del 27/10/2026 está desactualizado. Vuelve a generarlo."
+      "words": "El fichero del 31/10/2026 está desactualizado. Vuelve a generarlo."
     },
     "export_hold": null
   },
@@ -2029,8 +2033,8 @@
     "words": "La comprobación es correcta.",
     "unapplied_words": "El cálculo guardado superó la comprobación; tus cambios no se han aplicado."
   },
-  "calculation_revision_id": "bd01ee184cc8f8cbf6fbe927c7d0f1dd6f5f769a8510f888ec5d8870fc513851",
-  "verification_report_id": "ace880582ce38237ead83b0700bb636a8b73194bd33930d3bcb263639e542479",
+  "calculation_revision_id": "6d4086b54b763d375c3c451a93ab32b2327b3719d27577ec6b24d19c4b3be43e",
+  "verification_report_id": "52473c1c3b519f8b505b56d6c86c9c71532dc1971c1c7a5d021708ade322164f",
   "asks_m303_evidence": false,
   "asks_modelo_390": false,
   "registry_revision_id": "2019-y-siguientes",
@@ -2110,7 +2114,7 @@
     "record": {
       "available": false,
       "reason": "file_out_of_date",
-      "words": "El fichero del 27/10/2026 está desactualizado. Vuelve a generarlo. Si ya presentaste ese fichero anterior en la AEAT, inicia una corrección."
+      "words": "El fichero del 31/10/2026 está desactualizado. Vuelve a generarlo. Si ya presentaste ese fichero anterior en la AEAT, inicia una corrección."
     },
     "review_package": {
       "words": "Paquete para tu gestor",

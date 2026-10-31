@@ -17986,9 +17986,9 @@
         "closes_on": "2026-04-20",
         "nominal_closes_on": "2026-04-20",
         "holiday_coverage": "national_only",
-        "reference_on": "2026-10-27",
+        "reference_on": "2026-10-31",
         "days_remaining": null,
-        "days_overdue": 190
+        "days_overdue": 194
       },
       "aeat_data": null,
       "filing": null,
@@ -18007,9 +18007,9 @@
       "workspace_contract_version": 1,
       "edit_contract_version": 1,
       "operation_manifest_version": 4,
-      "contract_set_digest": "63eefbfa612f9215a940ebbec16d4aa1b9fd502a84be98eee12245ef14879246",
+      "contract_set_digest": "e3ab9b8b7b8c2063e94194e3c0e6e0d7a61e874b8cd563b5dc5a4341e748b3f6",
       "operation_definition_id": "modelo.edit.apply",
-      "definition_contract_digest": "007cac2c7aaf032edde6b8d860a1ad2ba98b80c18c2967c4ebf8f08044834d57",
+      "definition_contract_digest": "6b37be16acf22e172dcafd43befa599a92a16043f3f81ca6836a5ca1a2857646",
       "request_schema": {
         "schema_id": "modelo.edit.apply.request",
         "schema_version": 2,
@@ -18033,7 +18033,7 @@
       "financial_operand_schema": {
         "schema_id": "modelo.edit.submission",
         "schema_version": 1,
-        "schema_fingerprint": "207803c795cd324d67b0c181c1e575755354ef23733b5450214c0c861992b4aa"
+        "schema_fingerprint": "071dc760f85f95503b711314955cdc61b45de1765f60fb15b7b746a638b38314"
       }
     },
     "bucket_id": "13000000-0000-4000-8000-000000000730",
@@ -21123,9 +21123,9 @@
     ],
     "permitted_surface_digest": "55e1f327f6ef11017b79b42e78ea5e991f50ab537a901307c3c3b3b06b6f049a",
     "mutation_family": "calculate",
-    "issued_at": "2026-10-27T08:32:25.397614Z",
-    "expires_at": "2026-10-27T08:37:25.397614Z",
-    "baseline_id": "959074cab3c529568b8e9647cdb51f2e1251e96e07897ede1a4d43347e1d62cf"
+    "issued_at": "2026-10-31T03:13:28.381179Z",
+    "expires_at": "2026-10-31T03:18:28.381179Z",
+    "baseline_id": "1a6ae2a559ed7407c1aca7af5e465d746b3a77b39fc900f0b49c02803c60c131"
   },
   "admission_refusal": null,
   "admission_refusal_words": null,

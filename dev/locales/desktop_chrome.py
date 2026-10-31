@@ -809,7 +809,6 @@ DESKTOP_CHROME_FAMILIES: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType
             "used_price",
         ),
         "desktop.ledger.assets.submit.": ("create", "correct", "forecast"),
-        "desktop.ledger.assets.target.": ("material_m100", "intangible_m100", "material_m130", "intangible_m130"),
         "desktop.ledger.capital.disposal.": ("sujeta_no_exenta", "exenta_o_no_sujeta"),
         "desktop.ledger.capital.kind.": ("mueble", "inmueble"),
         "desktop.ledger.capital.refusal.": ("validation", "disposal_incomplete", "duplicate_identifier"),
@@ -895,7 +894,7 @@ DESKTOP_CHROME_AWAITING_CONSUMER: Final[frozenset[str]] = frozenset({"desktop.si
 
 #: A whole key in quotes, or the fixed head of a template literal up to ``${``.
 _SHELL_LITERAL_KEY: Final[re.Pattern[str]] = re.compile(
-    r"""["'`]((?:desktop|workspace|ledger\.actividad_asset|tui\.ledger\.activity_asset|application\.inventory\.labels|application\.inventory\.service|auth\.sync\.requirement)\.[A-Za-z0-9_.]+|application\.inventory\.advisories\.|application\.modelo\.calc_diagnostic_fact\.|application\.modelo\.calc_diagnostic\.)["'`]"""
+    r"""["'`]((?:desktop|workspace|ledger\.actividad_asset|tui\.ledger\.activity_asset|application\.inventory\.labels|application\.inventory\.service|auth\.sync\.requirement)\.[A-Za-z0-9_.]+|application\.inventory\.advisories\.)["'`]"""
 )
 _SHELL_TEMPLATE_HEAD: Final[re.Pattern[str]] = re.compile(
     r"`((?:desktop|workspace|ledger\.actividad_asset)\.[A-Za-z0-9_.]*)\$\{"

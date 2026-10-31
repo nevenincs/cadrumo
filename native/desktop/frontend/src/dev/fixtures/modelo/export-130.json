@@ -1,6 +1,6 @@
 {
   "result_version": 3,
-  "calculation_revision_id": "4e6bfe8d425e4aed9205ee6b51980e6f0d0985f24e199e48f9c3a0ac85d661cb",
+  "calculation_revision_id": "4d870880fa8ccce6cf2806f279414f7a8f2e82a574a1b0da1cfd482f951aeb61",
   "artefact": "fichero_boe",
   "export_format": "fichero-boe",
   "output_path": "modelo-130.txt",
@@ -10,7 +10,7 @@
   "evidence_status": "local_export_not_official_aeat_filing_evidence",
   "completeness": "not_flagged",
   "fichero_boe": {
-    "calculation_revision_id": "4e6bfe8d425e4aed9205ee6b51980e6f0d0985f24e199e48f9c3a0ac85d661cb",
+    "calculation_revision_id": "4d870880fa8ccce6cf2806f279414f7a8f2e82a574a1b0da1cfd482f951aeb61",
     "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
     "bucket_id": "13000000-0000-4000-8000-000000000730",
     "modelo": "130",
@@ -20,9 +20,9 @@
     "byte_size": 946,
     "file_sha256": "3d8bfdd902bf67f4d98277f90b0f035c0ccadf4405a9b5a062b6d0aff8808d31",
     "format": "fichero-boe",
-    "exported_at": "2026-10-27T08:34:10.587393Z",
+    "exported_at": "2026-10-31T03:14:49.118016Z",
     "actor": "operator:desktop-modelo",
-    "bucket_event_id": "0b20fa6ad4ede0fff5bdf610d88b799c66d7f45adcc68b3414878aeecf8af1ae",
+    "bucket_event_id": "c604e4141b3deacce082483cefcc2c84c8e4f643b93e254b0ab685f1dcb161ae",
     "resolved_result_disposition": "I",
     "payment_election": "ingreso",
     "refund_election": null,
@@ -256,7 +256,8 @@
     "official_evidence_message": "Local export wrote an AEAT-compatible fichero-BOE file only; it is not official AEAT filing evidence. Official evidence comes from AEAT after filing: justificante, consulta de declaraciones presentadas, or CSV cotejo.",
     "domiciliation_cutoff_unverified": false,
     "completeness_unverified": false,
-    "software_identity_grade": "development_mock"
+    "software_identity_grade": "development_mock",
+    "calculation_notes": []
   },
   "calculation_report": null,
   "handoff_required": true

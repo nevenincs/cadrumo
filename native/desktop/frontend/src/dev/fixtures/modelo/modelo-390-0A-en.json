@@ -32931,8 +32931,8 @@
         "closes_on": "2027-01-30",
         "nominal_closes_on": "2027-01-30",
         "holiday_coverage": "calendar_unavailable",
-        "reference_on": "2026-10-27",
-        "days_remaining": 95,
+        "reference_on": "2026-10-31",
+        "days_remaining": 91,
         "days_overdue": null
       },
       "aeat_data": null,
@@ -32969,8 +32969,8 @@
     "attention": [],
     "result": null,
     "deadline": {
-      "text": "Deadline 30/01/2027 · days left: 95",
-      "short_text": "Deadline 30/01/2027 · days left: 95",
+      "text": "Deadline 30/01/2027 · days left: 91",
+      "short_text": "Deadline 30/01/2027 · days left: 91",
       "tone": "normal",
       "help": null
     },
