@@ -530,6 +530,7 @@ def conformance_operation_runtime(
     tmp_path: Path,
     *,
     cleanup: OperationRuntimeCloseWitness,
+    registry: OperationRegistry | None = None,
     before_irreversible_section: Callable[[], Awaitable[None]] | None = None,
     execution_timeout: timedelta = timedelta(hours=1),
     amendment_action_ports_factory: AmendmentActionPortsFactory | None = None,
@@ -562,7 +563,7 @@ def conformance_operation_runtime(
             passphrase_callback=lambda: _CREDENTIAL_INPUT,
             profile_decode_context=_profile_decode_context_for_test,
         )
-        registry = _conformance_registry(
+        registry = registry or _conformance_registry(
             before_irreversible_section=before_irreversible_section,
             amendment_action_ports_factory=amendment_action_ports_factory,
             execution_caller_reader=execution_caller_reader,
