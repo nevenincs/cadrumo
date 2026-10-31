@@ -265,7 +265,7 @@ class AeatNotificationsQuery(_Frozen):
         detail_view_action: Action token returning the notification PDF.
     """
 
-    lookback_years: int = Field(ge=1, le=50)
+    lookback_years: int = Field(ge=1, le=64)
     date_format: str
     tipo_consulta_all: str
     leida_all: str
