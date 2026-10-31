@@ -32,42 +32,22 @@ from cadrumo.domain.calculations.registry.schema import ModeloRevision
 
 from ..compiler.loader import load_modelo_directory
 from ..conformance.loader_directory_mode_support import write_standard_manifest
+from .synthetic_delta_edition_support import (
+    LEGAL_REF,
+    MODELO_ID,
+    PREDECESSOR_EDITION,
+    SOURCE_REF,
+    SUCCESSOR_EDITION,
+    delta_casilla,
+    delta_formula,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_MODELO_ID: Final = "999"
-_LEGAL_REF: Final = "ley-58-2003:art-29"
-_SOURCE_REF: Final = "aeat-manual"
-_PREDECESSOR: Final = "2024"
-_SUCCESSOR: Final = "2025"
 _REASON: Final = "the 2025 diseno de registros lays the formula set out end to end"
 _RESTATED_FORMULAS: Final = (
     f'restated_families = [{{ family = "formulas", cause = "official_structure_differs", reason = "{_REASON}" }}]\n'
 )
-
-
-def _casilla(revision_id: str, casilla_id: str, *, number: str, lineage: str) -> str:
-    return (
-        f'[[revisions."{revision_id}".casillas]]\n'
-        f'id = "{casilla_id}"\n'
-        f'number = "{number}"\n'
-        'section = ["liquidacion"]\n'
-        'data_type = "money"\n'
-        f'continuidad_id = "{lineage}"\n'
-        f'legal_refs = ["{_LEGAL_REF}"]\n'
-        f'source_refs = ["{_SOURCE_REF}"]\n\n'
-    )
-
-
-def _formula(revision_id: str, formula_id: str, *, target: str) -> str:
-    return (
-        f'[[revisions."{revision_id}".formulas]]\n'
-        f'id = "{formula_id}"\n'
-        f'target_casilla_id = "{target}"\n'
-        'expression = { literal = "0" }\n'
-        f'legal_refs = ["{_LEGAL_REF}"]\n'
-        f'source_refs = ["{_SOURCE_REF}"]\n\n'
-    )
 
 
 def _write_revision(
@@ -88,8 +68,8 @@ def _write_revision(
         f"valid_from = {year}-01-01\n"
         f"valid_to = {year}-12-31\n"
         f'period_selector = {{ years = [{year}], periods = ["0A"] }}\n'
-        f'legal_refs = ["{_LEGAL_REF}"]\n'
-        f'source_refs = ["{_SOURCE_REF}"]\n'
+        f'legal_refs = ["{LEGAL_REF}"]\n'
+        f'source_refs = ["{SOURCE_REF}"]\n'
         f"{predecessor_line}{extra_manifest}",
         encoding="utf-8",
         newline="\n",
@@ -107,32 +87,32 @@ def _build_modelo(root: Path, *, successor_extra: str = "", predecessor_extra: s
     ``formulas`` has members behind it and a claim about ``constructs`` -- a
     family neither edition declares -- has none.
     """
-    modelo_dir = root / _MODELO_ID
+    modelo_dir = root / MODELO_ID
     modelo_dir.mkdir(parents=True)
     write_standard_manifest(modelo_dir, "Test")
     _write_revision(
         modelo_dir,
-        _PREDECESSOR,
+        PREDECESSOR_EDITION,
         year=2024,
-        casillas=_casilla(_PREDECESSOR, "0001", number="1", lineage="base")
-        + _casilla(_PREDECESSOR, "0002", number="2", lineage="cuota"),
-        formulas=_formula(_PREDECESSOR, "modelo-999-2024-cuota", target="0002"),
+        casillas=delta_casilla(PREDECESSOR_EDITION, "0001", number="1", lineage="base")
+        + delta_casilla(PREDECESSOR_EDITION, "0002", number="2", lineage="cuota"),
+        formulas=delta_formula(PREDECESSOR_EDITION, "modelo-999-2024-cuota", target="0002"),
         extra_manifest=predecessor_extra,
     )
     _write_revision(
         modelo_dir,
-        _SUCCESSOR,
+        SUCCESSOR_EDITION,
         year=2025,
-        predecessor=_PREDECESSOR,
-        casillas=_casilla(_SUCCESSOR, "0002", number="22", lineage="cuota"),
-        formulas=_formula(_SUCCESSOR, "modelo-999-2025-cuota", target="0002"),
+        predecessor=PREDECESSOR_EDITION,
+        casillas=delta_casilla(SUCCESSOR_EDITION, "0002", number="22", lineage="cuota"),
+        formulas=delta_formula(SUCCESSOR_EDITION, "modelo-999-2025-cuota", target="0002"),
         extra_manifest=successor_extra,
     )
     return modelo_dir
 
 
 def _successor(modelo_dir: Path) -> ModeloRevision:
-    return load_modelo_directory(modelo_dir).revisions[_SUCCESSOR]
+    return load_modelo_directory(modelo_dir).revisions[SUCCESSOR_EDITION]
 
 
 def test_an_authored_restatement_reaches_the_successor_revision(tmp_path: Path) -> None:

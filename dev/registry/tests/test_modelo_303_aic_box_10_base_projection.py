@@ -68,6 +68,27 @@ def _bundled_registry_root() -> Path:
     return bundled_path("registry", "aeat")
 
 
+def _aic_goods_zero_row(ledger_id: str) -> IvaLedgerObservation:
+    """An intra-community acquisition at the zero rate whose base is non-zero and whose cuota is zero."""
+    return IvaLedgerObservation(
+        ledger_id=ledger_id,
+        transaction_date=date(2025, 5, 10),
+        category=IvaCategory("intra_community_acquisition_reverse_charge"),
+        rate_kind=IvaRateKind("zero"),
+        applied_rate=Decimal("0.00"),
+        flow_direction=IvaFlowDirection.from_registry("inversion_sujeto_pasivo"),
+        base_amount=Decimal("1739.25"),
+        iva_amount=Decimal("0.00"),
+        deduction_fact_kind=IvaDeductionFactKind.from_registry("intra_eu_current"),
+        deduction_provenance=IvaDeductionClassificationProvenance(
+            authority=IvaDeductionEvidenceAuthority.from_registry("intra_eu_self_assessment"),
+            source_locator=f"test-ledger:{ledger_id}",
+            evidence_digest="a" * 64,
+        ),
+        observation_role=IvaLedgerObservationRole.SETTLEMENT,
+    )
+
+
 def test_box_10_is_computed_from_the_base_parity_casilla() -> None:
     revision = _m303_revision(_bundled_registry_root())
     casillas = {c.id: c for c in revision.casillas}
@@ -127,23 +148,7 @@ def test_zero_rate_aic_row_reaches_box_10_base_and_every_aic_binding_admits_it()
     live resolver selected the AIC row rather than merely observing the cuota.
     """
     revision = _m303_revision(_bundled_registry_root())
-    aic_row = IvaLedgerObservation(
-        ledger_id="aic-goods-zero",
-        transaction_date=date(2025, 5, 10),
-        category=IvaCategory("intra_community_acquisition_reverse_charge"),
-        rate_kind=IvaRateKind("zero"),
-        applied_rate=Decimal("0.00"),
-        flow_direction=IvaFlowDirection.from_registry("inversion_sujeto_pasivo"),
-        base_amount=Decimal("1739.25"),
-        iva_amount=Decimal("0.00"),
-        deduction_fact_kind=IvaDeductionFactKind.from_registry("intra_eu_current"),
-        deduction_provenance=IvaDeductionClassificationProvenance(
-            authority=IvaDeductionEvidenceAuthority.from_registry("intra_eu_self_assessment"),
-            source_locator="test-ledger:aic-goods-zero",
-            evidence_digest="a" * 64,
-        ),
-        observation_role=IvaLedgerObservationRole.SETTLEMENT,
-    )
+    aic_row = _aic_goods_zero_row("aic-goods-zero")
 
     resolved = dict(resolve_ledger_iva_aggregation_binding_values(revision, (aic_row,)))
 
@@ -176,23 +181,7 @@ def test_mutation_removing_zero_from_aic_base_selector_reds_the_zero_rate_gate(t
         ),
     )
 
-    aic_row = IvaLedgerObservation(
-        ledger_id="aic-goods-zero-mutant",
-        transaction_date=date(2025, 5, 10),
-        category=IvaCategory("intra_community_acquisition_reverse_charge"),
-        rate_kind=IvaRateKind("zero"),
-        applied_rate=Decimal("0.00"),
-        flow_direction=IvaFlowDirection.from_registry("inversion_sujeto_pasivo"),
-        base_amount=Decimal("1739.25"),
-        iva_amount=Decimal("0.00"),
-        deduction_fact_kind=IvaDeductionFactKind.from_registry("intra_eu_current"),
-        deduction_provenance=IvaDeductionClassificationProvenance(
-            authority=IvaDeductionEvidenceAuthority.from_registry("intra_eu_self_assessment"),
-            source_locator="test-ledger:aic-goods-zero-mutant",
-            evidence_digest="a" * 64,
-        ),
-        observation_role=IvaLedgerObservationRole.SETTLEMENT,
-    )
+    aic_row = _aic_goods_zero_row("aic-goods-zero-mutant")
     mutated_resolved = dict(resolve_ledger_iva_aggregation_binding_values(_m303_revision(scratch_root), (aic_row,)))
 
     assert mutated_resolved[_BINDING_BASE] != Decimal("1739.25")
