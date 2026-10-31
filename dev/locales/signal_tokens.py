@@ -51,6 +51,23 @@ _LEDGER_PERIOD_FILTER_RE = re.compile(
     + "|".join(re.escape(code) for code in sorted(accepted_filing_period_codes(), key=len, reverse=True))
     + r")(?![\w-])"
 )
+# These names are the actual review-filter keys, shown together in CLI help.
+# Match the complete ordered list and leave both explanatory glosses visible;
+# an incomplete or misspelled list is not treated as an established contract.
+_REVIEW_FILTER_LIST_RE = re.compile(
+    r"(?<![\w-])"
+    + rf"(?P<status>{re.escape(LedgerReviewFilterKey.STATUS.value)}),[ \t]*"
+    + rf"(?P<period>{re.escape(LedgerReviewFilterKey.PERIOD.value)})[ \t]*\([^()\r\n]*\)[ \t]*"
+    + r"(?:junto con|és|plus)[ \t]+"
+    + rf"(?P<year>{re.escape(LedgerReviewFilterKey.YEAR.value)})[ \t]*\([^()\r\n]*\),[ \t]*"
+    + rf"(?P<issue>{re.escape(LedgerReviewFilterKey.ISSUE.value)}),[ \t]*"
+    + rf"(?P<import>{re.escape(LedgerReviewFilterKey.IMPORT.value)}),[ \t]*"
+    + rf"(?P<classification>{re.escape(LedgerReviewFilterKey.CLASSIFICATION.value)}),[ \t]*"
+    + rf"(?P<text>{re.escape(LedgerReviewFilterKey.TEXT.value)}),[ \t]*"
+    + rf"(?P<direction>{re.escape(LedgerReviewFilterKey.DIRECTION.value)})"
+    + r"(?:,[ \t]*or|[ \t]+o|[ \t]+vagy)[ \t]+"
+    + rf"(?P<account>{re.escape(LedgerReviewFilterKey.ACCOUNT.value)})(?![\w-])"
+)
 # Area labels in the asset basis forms carry the SI unit, not a prose word.
 # Match only the complete, case-sensitive symbol; adjacent letters or another
 # exponent remain visible to spelling checks.
@@ -125,6 +142,15 @@ def _visible_assignment_label(match: re.Match[str]) -> str:
     return " " if name == match.group("parameter") else f" {name} "
 
 
+def _visible_review_filter_glosses(match: re.Match[str]) -> str:
+    """Retain punctuation and both user-facing glosses around actual keys."""
+    text = list(match.group())
+    for name in match.re.groupindex:
+        start, end = match.span(name)
+        text[start - match.start() : end - match.start()] = [" "] * (end - start)
+    return "".join(text)
+
+
 def translation_tokens(value: str) -> tuple[frozenset[str], frozenset[str]]:
     """Return expansion placeholders and bracketed casilla references."""
     bracketed = tuple(match.group(1) for match in re.finditer(r"\[([^\[\]\r\n]+)\]", value))
@@ -178,6 +204,7 @@ def filtered_translation_text(value: str) -> tuple[str, int]:
         (_CENSO_GLOSSED_CHOICES_RE, _visible_choice_glosses),
         (_DESCENDANT_BOOL_CHOICES_RE, " "),
         (DESCENDANT_RELATION_CHOICES_RE, " "),
+        (_REVIEW_FILTER_LIST_RE, _visible_review_filter_glosses),
         (_LEGISLATIVE_DECREE_REFERENCE_RE, " "),
         (_SPREADSHEET_SUFFIX_RE, " "),
         (TRANSLATION_URL_RE, " "),

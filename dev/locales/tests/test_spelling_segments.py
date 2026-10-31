@@ -14,6 +14,7 @@ from ..signal_spelling_segments import (
 )
 from ..signal_tokens import (
     _DESCENDANT_BOOL_CHOICES_RE,
+    _REVIEW_FILTER_LIST_RE,
     DESCENDANT_RELATION_CHOICES,
     DESCENDANT_RELATION_CHOICES_RE,
     filtered_translation_text,
@@ -128,6 +129,19 @@ def test_descendant_relationship_choices_match_authority_and_require_the_complet
     words = words_by_language(complete + " hibásszó", "hu")
     assert "hibásszó" in words["hu"]
     assert not {"adoptado", "tutela"}.intersection(words["hu"])
+
+
+@pytest.mark.parametrize("joiner,last", [("junto con", "o"), ("és", "vagy"), ("plus", ", or")])
+def test_complete_review_filter_keys_preserve_glosses_and_reject_malformed_lists(joiner: str, last: str) -> None:
+    value = (
+        f"status, period (gloss typo) {joiner} year (more prose), issue, import, classification, "
+        f"text, direction {last} account"
+    ).replace("direction , or", "direction, or")
+    assert _REVIEW_FILTER_LIST_RE.search(value)
+    prose, _excluded = filtered_translation_text(value)
+    assert "gloss typo" in prose and "more prose" in prose
+    for bad in (value.replace("classification", "classificaton"), value.replace("issue, ", "issue, extra, ")):
+        assert _REVIEW_FILTER_LIST_RE.search(bad) is None
 
 
 @pytest.mark.parametrize(
