@@ -27,6 +27,7 @@ from ...domain.calculations.registry.actividad_asset_bindings import (
 from ...domain.calculations.registry.actividad_asset_form_options import activity_asset_form_options
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.errors import RegistryError
+from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.calculations.registry.schema_references import LegalReference, TemporalProjectionDirection
 from ...domain.calculations.registry.temporal import revision_temporal_resolution
@@ -770,7 +771,9 @@ class ActivityAssetOperations:
         m100_gaps = _m100_gaps(history, self._forecast_operation, tax_year)
 
         def m100_name(projection: ClaimProjection) -> str:
-            return self._authority.box_name("100", tax_year, "0A", projection.target_casilla_id, language)
+            return self._authority.box_name(
+                form_for_role("renta.annual"), tax_year, "0A", projection.target_casilla_id, language
+            )
 
         if m130_period is None:
             return ActivityAssetFilingHandoff(
@@ -795,7 +798,11 @@ class ActivityAssetOperations:
 
         m130_box = self._authority.m130_amortization_casilla(m130_period)
         m130_name = self._authority.box_name(
-            "130", m130_period.filing_year, m130_period.registry_token, m130_box, language
+            form_for_role("renta.direct_instalment"),
+            m130_period.filing_year,
+            m130_period.registry_token,
+            m130_box,
+            language,
         )
 
         return ActivityAssetFilingHandoff(

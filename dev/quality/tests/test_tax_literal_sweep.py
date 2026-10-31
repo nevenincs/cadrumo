@@ -69,13 +69,13 @@ _STANDARD_SHAPE_NAME: Final = re.compile(
     re.IGNORECASE,
 )
 _STRUCTURE_LEN_NAME: Final = re.compile(
-    r"args$|parts|segments|split|groups?$|tokens?$|head$|pieces|pair|anchors|spans|children|candidates|"
+    r"args$|parts?$|parts\[|segments|split|groups?$|groups\[|fraction$|tokens?$|head$|pieces|pair|anchors|spans|children|candidates|"
     r"keys$|ids$|boundaries|endpoints|arguments|suffix|outcomes|years$|actions|agenda|digits|"
     r"grant|dek|operator_id|work_unit|_id$|stripped|\\bcase_id",
     re.IGNORECASE,
 )
 _STANDARD_SHAPE_FUNCTION: Final = re.compile(
-    r"(?:^|_)(?:date|year|month|day|country|currency|iso|member|alpha|amount|number|decimal|modelo_id)(?:_|s?$)",
+    r"(?:^|_)(?:date|year|month|day|calendar|country|currency|iso|member|ccaa|alpha|amount|number|decimal|modelo_id)(?:_|s?$)",
     re.IGNORECASE,
 )
 _ORDERING_OPERATORS: Final = (ast.Lt, ast.LtE, ast.Gt, ast.GtE)
@@ -200,6 +200,17 @@ class _Sweep(ast.NodeVisitor):
                 return ""
         return ""
 
+    def _annotation_of(self, node: ast.AST) -> str:
+        """Return the annotated type around a ``Field``: a row per month states the calendar."""
+        current = node
+        while current in self._parents:
+            current = self._parents[current]
+            if isinstance(current, ast.AnnAssign):
+                return ast.unparse(current.annotation)
+            if isinstance(current, ast.stmt):
+                return ""
+        return ""
+
     def _enclosing_function(self, node: ast.AST) -> str:
         current = node
         while current in self._parents:
@@ -277,6 +288,8 @@ class _Sweep(ast.NodeVisitor):
             }
             for bound, value in lengths.items():
                 other = lengths.get("max_length" if bound == "min_length" else "min_length")
+                if value == _MONTHS_OF_A_YEAR and "Monthly" in self._annotation_of(node):
+                    continue
                 if not _lawful_length(self._owner(node), value, other):
                     self._report(f"field_{bound}", value, node)
         self.generic_visit(node)

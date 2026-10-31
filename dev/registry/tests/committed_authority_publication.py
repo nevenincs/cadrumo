@@ -3,33 +3,30 @@
 A full publication compiles and validates the registry in the canonical child
 interpreter and then writes a ~120 MB indexed database, minutes of work that is
 a pure function of its inputs. Every test that needs the committed authority as
-a published generation therefore reads one publication per distinct input
+a published generation therefore reads the one run artifact for its inputs
 instead of producing its own.
 
-The publication is keyed on the two digests the development tooling already
-derives: the legal source identity the publisher records as the generation's
+The entry is keyed on the two digests the development tooling already derives:
+the legal source identity the publisher records as the generation's
 ``logical_generation``, and the compiler source-tree digest the development
 compile caches key on, because the database bytes also depend on the code that
-built them. It lives under the development cache root, so it is shared by every
-xdist worker and survives across runs until either input changes. The first
-process to need it publishes under an exclusive lock; the others wait for that
-lock and then admit the result. Admission re-reads the descriptor and checks the
-database's size, its SHA-256 and the recorded generation, which costs a hash of
-one file rather than a validation.
+built them. It is kept in the development cache, so it survives across runs
+until either input changes. Admission re-reads the descriptor and checks the
+database's size, its SHA-256 and the recorded generation: a hash of one file,
+never a validation.
 """
 
 from __future__ import annotations
 
-import shutil
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Final
 
 from cadrumo.core.hashing import hash_file
-from cadrumo.core.locks import exclusive_file_lock
 from cadrumo.domain.calculations.registry.authority_store import AuthorityDescriptor, AuthorityStoreError
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.tests.run_artifact import run_artifact
 from dev.cache_root import dev_cache_dir
 
 from ..compiler.authority import AuthoritySourceSet
@@ -43,16 +40,11 @@ __all__ = [
     "published_authority",
 ]
 
-_CACHE_NAME: Final = "published-authority"
+_KIND: Final = "authority"
 _DESCRIPTOR_NAME: Final = "authority.current.json"
-_PUBLICATION_WAIT_SECONDS: Final = 1800.0
-"""How long a worker waits for the one publishing worker; a full publication takes minutes."""
-_PUBLICATION_POLL_SECONDS: Final = 0.5
-_RETAINED_PUBLICATIONS: Final = 3
-"""Entries kept beside a fresh publication, so a concurrent run on older inputs keeps its own."""
 
 AuthorityPublisher = Callable[[AuthoritySourceSet, Path], object]
-"""Publishes one source set into a destination directory."""
+"""Publishes one source set into an empty destination directory."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -72,7 +64,7 @@ class RunPublishedAuthority:
 
 def committed_authority_publication() -> RunPublishedAuthority:
     """Return the publication of the committed bundled sources, publishing it only if no current one exists."""
-    return published_authority(AuthoritySourceSet.bundled(), cache_root=dev_cache_dir(_CACHE_NAME))
+    return published_authority(AuthoritySourceSet.bundled(), cache_root=dev_cache_dir("run-artifacts"))
 
 
 def published_authority(
@@ -81,45 +73,41 @@ def published_authority(
     cache_root: Path,
     publish: AuthorityPublisher | None = None,
 ) -> RunPublishedAuthority:
-    """Admit the cached publication of ``sources``, or publish it once under the cache lock.
+    """Admit the run artifact publishing ``sources``, publishing it once if none is current.
 
     A changed source set derives another identity and so another entry; an
-    entry is never admitted for any identity but the one it records.
+    entry is admitted only for the identity it records.
     """
     identity = authority_source_identity(
         registry_root=sources.registry_root,
         source_root=sources.source_evidence_root,
         profile_schema_path=sources.profile_schema_path,
     )
-    root = cache_root / f"{identity[:16]}-{compiler_source_tree_digest()[:12]}"
-    descriptor_path = root / _DESCRIPTOR_NAME
-    admitted = _admit(descriptor_path, identity)
-    if admitted is not None:
-        return admitted
-    cache_root.mkdir(parents=True, exist_ok=True)
-    with exclusive_file_lock(
-        cache_root / root.name,
-        timeout=_PUBLICATION_WAIT_SECONDS,
-        retry_backoff=_PUBLICATION_POLL_SECONDS,
-    ):
-        admitted = _admit(descriptor_path, identity)
-        if admitted is not None:
-            return admitted
-        # A partial entry left by an interrupted publication is never admitted;
-        # the publisher's content-addressed install replaces or reuses its bytes.
-        (publish or _canonical_publish)(sources, root)
-        published = _admit(descriptor_path, identity)
-        if published is None:
+    publisher = publish or _canonical_publish
+
+    def publish_into(destination: Path) -> None:
+        publisher(sources, destination)
+        if _descriptor(destination, identity) is None:
             raise RegistryValidationError(
                 "the run publication does not record the sources it was keyed on; "
-                "the bundled registry changed while it was being published"
+                "the registry changed while it was being published"
             )
-        _retire_older_publications(cache_root, current=root)
+
+    artifact = run_artifact(
+        _KIND,
+        f"{identity[:16]}{compiler_source_tree_digest()[:8]}",
+        publish=publish_into,
+        verify=lambda root: _descriptor(root, identity) is not None,
+        cache_root=cache_root,
+    )
+    descriptor = _descriptor(artifact.root, identity)
+    if descriptor is None:
+        raise RegistryValidationError(f"the run publication at {artifact.root} changed after admission")
     return RunPublishedAuthority(
-        descriptor_path=published.descriptor_path,
-        descriptor=published.descriptor,
+        descriptor_path=artifact.root / _DESCRIPTOR_NAME,
+        descriptor=descriptor,
         source_identity_digest=identity,
-        published_by_this_call=True,
+        published_by_this_call=artifact.published_by_this_call,
     )
 
 
@@ -132,31 +120,15 @@ def _canonical_publish(sources: AuthoritySourceSet, destination: Path) -> None:
     )
 
 
-def _admit(descriptor_path: Path, identity: str) -> RunPublishedAuthority | None:
-    """Return the entry when its descriptor, database bytes and recorded generation all agree."""
+def _descriptor(root: Path, identity: str) -> AuthorityDescriptor | None:
+    """Return the descriptor when it, its database bytes and its recorded generation all agree."""
     try:
-        descriptor = AuthorityDescriptor.read(descriptor_path)
-        digest, size = hash_file(descriptor_path.parent / descriptor.database)
+        descriptor = AuthorityDescriptor.read(root / _DESCRIPTOR_NAME)
+        digest, size = hash_file(root / descriptor.database)
     except (AuthorityStoreError, OSError, ValueError):
         return None
     if (digest, size) != (descriptor.database_sha256, descriptor.database_size):
         return None
     if descriptor.logical_generation != identity:
         return None
-    return RunPublishedAuthority(
-        descriptor_path=descriptor_path,
-        descriptor=descriptor,
-        source_identity_digest=identity,
-        published_by_this_call=False,
-    )
-
-
-def _retire_older_publications(cache_root: Path, *, current: Path) -> None:
-    """Remove all but the most recent entries; one another process still reads is left for later."""
-    entries = sorted(
-        (entry for entry in cache_root.iterdir() if entry.is_dir() and entry != current),
-        key=lambda entry: entry.stat().st_mtime,
-        reverse=True,
-    )
-    for entry in entries[_RETAINED_PUBLICATIONS - 1 :]:
-        shutil.rmtree(entry, ignore_errors=True)
+    return descriptor
