@@ -1691,3 +1691,35 @@ def test_us_english_behavior_is_recognized_without_accepting_a_typo() -> None:
     assert is_project_spelling("en", "behavior")
     assert not is_project_spelling("en", "behavor")
     assert not is_project_spelling("es", "behavior")
+
+
+def test_reference_us_english_forms_are_exact_and_do_not_accept_nearby_typos() -> None:
+    forms = (
+        "Adapters",
+        "afterward",
+        "amortized",
+        "authorizes",
+        "capitalized",
+        "categorized",
+        "center",
+        "color",
+        "enrollments",
+        "finalizes",
+        "judgment",
+        "memorize",
+        "modeled",
+        "notarized",
+        "personalized",
+        "recognizable",
+        "serializes",
+        "specialized",
+        "specialty",
+        "summarizes",
+    )
+    for form in forms:
+        assert is_project_spelling("en", form)
+        assert not is_project_spelling("en", form + "x")
+        for locale in ("ca", "es", "hu"):
+            assert not is_project_spelling(locale, form)
+    for typo in ("authorizess", "categorizd", "enrollmentss", "personallized", "sumarizes"):
+        assert not is_project_spelling("en", typo)

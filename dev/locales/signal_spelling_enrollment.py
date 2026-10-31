@@ -254,6 +254,30 @@ _LOCALE_SPELLINGS: dict[str, frozenset[str]] = {
             "loopback",
             # Authored documentation uses the valid US English spelling too.
             "behavior",
+            # These exact source forms are accepted by the English (US) SCOWL
+            # reference dictionary but absent from our pinned en-GB data.
+            # Keep them finite: do not infer arbitrary -ize forms or casing.
+            # https://wordlist.aspell.net/
+            "Adapters",
+            "afterward",
+            "amortized",
+            "authorizes",
+            "capitalized",
+            "categorized",
+            "center",
+            "color",
+            "enrollments",
+            "finalizes",
+            "judgment",
+            "memorize",
+            "modeled",
+            "notarized",
+            "personalized",
+            "recognizable",
+            "serializes",
+            "specialized",
+            "specialty",
+            "summarizes",
             # Existing English prose also uses these valid spelling variants:
             # advisor in disclaimer/filing guidance; adapter(s) in architecture
             # and service help; artifact in authority/API docs; amortization
