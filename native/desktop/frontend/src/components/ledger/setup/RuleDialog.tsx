@@ -1,4 +1,5 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react";
+import { TextEditor } from "@/components/editors/TextEditor";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -27,7 +28,8 @@ import {
   categoryOption,
   classificationLabel,
 } from "../movements/movementWords";
-import { CallLine, ChoiceField, TextField, useSetupRead } from "./SetupParts";
+import { EditorField } from "./EditorField";
+import { CallLine, ChoiceField, useSetupRead } from "./SetupParts";
 import {
   patternHits,
   patternMatcher,
@@ -313,28 +315,44 @@ export function RuleDialog({
             </Label>
           </div>
           {advanced ? (
-            <TextField
+            <EditorField
               label={t("desktop.ledger.rules.expression")}
-              value={expression}
-              onValue={setExpression}
-              mono
               hint={t("desktop.ledger.rules.expression_hint")}
               error={
                 patternBroken
                   ? t("desktop.ledger.rules.expression_unread")
                   : null
               }
-              required
-            />
+            >
+              {(control) => (
+                <TextEditor
+                  id={control.id}
+                  value={expression}
+                  onChange={setExpression}
+                  invalid={control.invalid}
+                  describedBy={control.describedBy}
+                  mono
+                  required
+                />
+              )}
+            </EditorField>
           ) : (
-            <TextField
+            <EditorField
               label={t("desktop.ledger.rules.words")}
-              value={words}
-              onValue={setWords}
               hint={t("desktop.ledger.rules.words_hint")}
-              required
-              autoFocus
-            />
+            >
+              {(control) => (
+                <TextEditor
+                  id={control.id}
+                  value={words}
+                  onChange={setWords}
+                  invalid={control.invalid}
+                  describedBy={control.describedBy}
+                  required
+                  autoFocus
+                />
+              )}
+            </EditorField>
           )}
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <ChoiceField

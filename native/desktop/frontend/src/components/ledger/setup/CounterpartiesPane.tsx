@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { NotesEditor } from "@/components/editors/NotesEditor";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
@@ -17,6 +18,7 @@ import {
   useSetupDraft,
   useSetupWrite,
 } from "./SetupParts";
+import { EditorField } from "./EditorField";
 import type { SetupProps } from "./setupProps";
 import { setupCall, type SetupCall } from "./setupModel";
 import { tokenText } from "./setupWords";
@@ -238,12 +240,18 @@ export function CounterpartiesPane({ port, locale }: SetupProps) {
               error={stateWrong ? t("desktop.ledger.form.two_letters") : null}
               maxLength={2}
             />
-            <TextField
-              label={t("desktop.ledger.counterparty.note")}
-              value={note}
-              onValue={setNote}
-              maxLength={4096}
-            />
+            <EditorField label={t("desktop.ledger.counterparty.note")}>
+              {(control) => (
+                <NotesEditor
+                  id={control.id}
+                  value={note}
+                  onChange={setNote}
+                  invalid={control.invalid}
+                  describedBy={control.describedBy}
+                  maxLength={4096}
+                />
+              )}
+            </EditorField>
           </FormGrid>
           <div className="flex flex-wrap gap-2">
             <WriteHold>

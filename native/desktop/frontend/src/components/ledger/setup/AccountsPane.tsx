@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { DateEditor } from "@/components/editors/DateEditor";
+import { TextEditor } from "@/components/editors/TextEditor";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -35,6 +37,7 @@ import {
   useSetupWrite,
   type Column,
 } from "./SetupParts";
+import { EditorField } from "./EditorField";
 import type { SetupProps } from "./setupProps";
 import {
   callFailure,
@@ -634,14 +637,20 @@ export function AccountsPane({ port, reader, locale }: SetupProps) {
           </h4>
           {form.kind === "add" && (
             <FormGrid>
-              <TextField
-                label={t("desktop.ledger.accounts.label")}
-                value={label}
-                onValue={setLabel}
-                required
-                maxLength={80}
-                autoFocus
-              />
+              <EditorField label={t("desktop.ledger.accounts.label")}>
+                {(control) => (
+                  <TextEditor
+                    id={control.id}
+                    value={label}
+                    onChange={setLabel}
+                    invalid={control.invalid}
+                    describedBy={control.describedBy}
+                    maxLength={80}
+                    required
+                    autoFocus
+                  />
+                )}
+              </EditorField>
               <ChoiceField
                 label={t("desktop.ledger.accounts.holding_label")}
                 value={holding}
@@ -660,40 +669,61 @@ export function AccountsPane({ port, reader, locale }: SetupProps) {
                 maxLength={3}
                 required
               />
-              <TextField
+              <EditorField
                 label={t("desktop.ledger.accounts.opened")}
-                value={opened}
-                onValue={setOpened}
-                hint={t("desktop.ledger.form.date_hint")}
                 error={dateError(openedOn)}
-                required
-              />
+              >
+                {(control) => (
+                  <DateEditor
+                    id={control.id}
+                    value={opened}
+                    onChange={setOpened}
+                    invalid={control.invalid}
+                    describedBy={control.describedBy}
+                    required
+                  />
+                )}
+              </EditorField>
               {secretFields}
             </FormGrid>
           )}
           {form.kind === "update" && (
             <FormGrid>
-              <TextField
-                label={t("desktop.ledger.accounts.label")}
-                value={label}
-                onValue={setLabel}
-                maxLength={80}
-                autoFocus
-              />
+              <EditorField label={t("desktop.ledger.accounts.label")}>
+                {(control) => (
+                  <TextEditor
+                    id={control.id}
+                    value={label}
+                    onChange={setLabel}
+                    invalid={control.invalid}
+                    describedBy={control.describedBy}
+                    maxLength={80}
+                    autoFocus
+                  />
+                )}
+              </EditorField>
               {secretFields}
             </FormGrid>
           )}
           {form.kind === "close" && (
-            <TextField
+            <EditorField
               label={t("desktop.ledger.accounts.closed_on")}
-              value={closedOn}
-              onValue={setClosedOn}
               hint={t("desktop.ledger.accounts.closed_hint")}
               error={dateError(closing)}
-              required
-              autoFocus
               className="max-w-xs"
-            />
+            >
+              {(control) => (
+                <DateEditor
+                  id={control.id}
+                  value={closedOn}
+                  onChange={setClosedOn}
+                  invalid={control.invalid}
+                  describedBy={control.describedBy}
+                  required
+                  autoFocus
+                />
+              )}
+            </EditorField>
           )}
           {form.kind === "designate" && (
             <FormGrid>
@@ -707,19 +737,26 @@ export function AccountsPane({ port, reader, locale }: SetupProps) {
                   label: t(`desktop.ledger.accounts.role.${value}`),
                 }))}
               />
-              <TextField
+              <EditorField
                 label={t("desktop.ledger.accounts.modelo_label")}
-                value={modelo}
-                onValue={setModelo}
-                hint={t("desktop.ledger.accounts.modelo_hint")}
                 error={
                   modelo && !MODELO.test(modelo)
                     ? t("desktop.ledger.accounts.modelo_hint")
                     : null
                 }
-                maxLength={3}
-                inputMode="numeric"
-              />
+              >
+                {(control) => (
+                  <TextEditor
+                    id={control.id}
+                    value={modelo}
+                    onChange={setModelo}
+                    invalid={control.invalid}
+                    describedBy={control.describedBy}
+                    maxLength={3}
+                    inputMode="numeric"
+                  />
+                )}
+              </EditorField>
             </FormGrid>
           )}
           <div className="flex gap-2">

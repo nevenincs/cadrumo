@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { TextEditor } from "@/components/editors/TextEditor";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
@@ -37,10 +38,10 @@ import {
   Panel,
   Reading,
   readLanding,
-  TextField,
   useSetupRead,
   useSetupWrite,
 } from "./SetupParts";
+import { EditorField } from "./EditorField";
 import type { SetupProps } from "./setupProps";
 import { setupCall, type SetupCall } from "./setupModel";
 
@@ -481,17 +482,25 @@ export function HealthSection({
         onOpen={setResetOpen}
       >
         <p className="text-sm">{t("desktop.ledger.health.reset_what")}</p>
-        <TextField
+        <EditorField
           label={t("desktop.ledger.health.reset_reason")}
-          value={reason}
-          onValue={setReason}
           hint={t("desktop.ledger.health.reset_reason_hint", {
             limit: RESET_REASON_LIMIT,
           })}
-          maxLength={RESET_REASON_LIMIT}
-          required
           className="max-w-xl"
-        />
+        >
+          {(control) => (
+            <TextEditor
+              id={control.id}
+              value={reason}
+              onChange={setReason}
+              invalid={control.invalid}
+              describedBy={control.describedBy}
+              maxLength={RESET_REASON_LIMIT}
+              required
+            />
+          )}
+        </EditorField>
         <div>
           <Button
             size="sm"

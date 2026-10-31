@@ -168,10 +168,44 @@ export const AccountForm: Story = pane((props) => <AccountsPane {...props} />, {
     await userEvent.click(add);
   },
 });
+
+const press = (selector: string) => async (canvasElement: HTMLElement) => {
+  const found = await waitFor(() => {
+    const button = canvasElement.querySelector<HTMLElement>(selector);
+    if (!button) throw new Error(`${selector} is not drawn yet`);
+    return button;
+  });
+  await userEvent.click(found);
+};
+
 export const Prorrata: Story = pane((props) => <ProrrataPane {...props} />);
+export const ProrrataElection: Story = pane(
+  (props) => <ProrrataPane {...props} />,
+  {
+    name: "Prorrata, a general election",
+    play: ({ canvasElement }) =>
+      press("button.ledger-prorrata-elect_general")(canvasElement),
+  },
+);
+export const ProrrataSettlement: Story = pane(
+  (props) => <ProrrataPane {...props} />,
+  {
+    name: "Prorrata, settling a sector",
+    play: ({ canvasElement }) =>
+      press("button.ledger-prorrata-settle_sector")(canvasElement),
+  },
+);
 export const CapitalGoods: Story = pane((props) => (
   <CapitalGoodsPane {...props} />
 ));
+export const CapitalGoodsForm: Story = pane(
+  (props) => <CapitalGoodsPane {...props} />,
+  {
+    name: "Capital goods, declaring one",
+    play: ({ canvasElement }) =>
+      press("button.ledger-capital-add")(canvasElement),
+  },
+);
 export const Ratios: Story = pane((props) => <RatiosPane {...props} />);
 export const Counterparties: Story = pane((props) => (
   <CounterpartiesPane {...props} />

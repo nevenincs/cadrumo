@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { DateEditor } from "@/components/editors/DateEditor";
 import { Button } from "@/components/ui/button";
 import { parseIsoDate, parsePercent } from "../../../shell/ledgerGrammar";
 import type { LedgerLlmDiagnosticsResult } from "../../../shell/ledgerSetup";
@@ -16,6 +17,7 @@ import {
   SetupTable,
   TextField,
 } from "./SetupParts";
+import { EditorField } from "./EditorField";
 import type { SetupProps } from "./setupProps";
 import { setupCall, type SetupCall } from "./setupModel";
 import { grammarText } from "./setupWords";
@@ -68,20 +70,34 @@ export function DiagnosticsPane({ port, locale }: SetupProps) {
   return (
     <Panel title={t("desktop.ledger.diagnostics.title")}>
       <FormGrid>
-        <TextField
+        <EditorField
           label={t("desktop.ledger.diagnostics.since")}
-          value={since}
-          onValue={setSince}
-          hint={t("desktop.ledger.form.date_hint")}
           error={fieldError(from)}
-        />
-        <TextField
+        >
+          {(control) => (
+            <DateEditor
+              id={control.id}
+              value={since}
+              onChange={setSince}
+              invalid={control.invalid}
+              describedBy={control.describedBy}
+            />
+          )}
+        </EditorField>
+        <EditorField
           label={t("desktop.ledger.diagnostics.until")}
-          value={until}
-          onValue={setUntil}
-          hint={t("desktop.ledger.form.date_hint")}
           error={fieldError(to)}
-        />
+        >
+          {(control) => (
+            <DateEditor
+              id={control.id}
+              value={until}
+              onChange={setUntil}
+              invalid={control.invalid}
+              describedBy={control.describedBy}
+            />
+          )}
+        </EditorField>
         <TextField
           label={t("desktop.ledger.diagnostics.threshold")}
           value={threshold}

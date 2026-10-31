@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { TextEditor } from "@/components/editors/TextEditor";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
@@ -31,6 +32,7 @@ import {
   useSetupWrite,
   type Column,
 } from "./SetupParts";
+import { EditorField } from "./EditorField";
 import type { SetupProps } from "./setupProps";
 import { parsePoints, setupCall, type SetupCall } from "./setupModel";
 import { grammarText, tokenText } from "./setupWords";
@@ -414,12 +416,20 @@ export function ProrrataPane({
           label: tokenText(t, "prorrata.provenance", value),
         }))}
       />
-      <TextField
+      <EditorField
         label={t("desktop.ledger.prorrata.reference")}
-        value={reference}
-        onValue={setReference}
         hint={t("desktop.ledger.prorrata.reference_hint")}
-      />
+      >
+        {(control) => (
+          <TextEditor
+            id={control.id}
+            value={reference}
+            onChange={setReference}
+            invalid={control.invalid}
+            describedBy={control.describedBy}
+          />
+        )}
+      </EditorField>
       {sectorChoices.length > 0 && (
         <ChoiceField
           label={t("desktop.ledger.prorrata.sector")}
@@ -511,13 +521,19 @@ export function ProrrataPane({
           <FormGrid>
             {action === "declare_sector" && (
               <>
-                <TextField
-                  label={t("desktop.ledger.prorrata.sector_id")}
-                  value={sector}
-                  onValue={setSector}
-                  required
-                  autoFocus
-                />
+                <EditorField label={t("desktop.ledger.prorrata.sector_id")}>
+                  {(control) => (
+                    <TextEditor
+                      id={control.id}
+                      value={sector}
+                      onChange={setSector}
+                      invalid={control.invalid}
+                      describedBy={control.describedBy}
+                      required
+                      autoFocus
+                    />
+                  )}
+                </EditorField>
                 <ChoiceField
                   label={t("desktop.ledger.prorrata.letra_label")}
                   value={letra}
@@ -528,12 +544,20 @@ export function ProrrataPane({
                     label: tokenText(t, "prorrata.letra", value),
                   }))}
                 />
-                <TextField
+                <EditorField
                   label={t("desktop.ledger.prorrata.codes")}
-                  value={codes}
-                  onValue={setCodes}
                   hint={t("desktop.ledger.prorrata.codes_hint")}
-                />
+                >
+                  {(control) => (
+                    <TextEditor
+                      id={control.id}
+                      value={codes}
+                      onChange={setCodes}
+                      invalid={control.invalid}
+                      describedBy={control.describedBy}
+                    />
+                  )}
+                </EditorField>
               </>
             )}
             {(action === "elect_general" ||
@@ -541,13 +565,21 @@ export function ProrrataPane({
               action === "revoke_especial") &&
               electionFields}
             {(action === "elect_especial" || action === "revoke_especial") && (
-              <TextField
+              <EditorField
                 label={t("desktop.ledger.prorrata.evidence")}
-                value={evidence}
-                onValue={setEvidence}
-                required={action === "revoke_especial"}
                 hint={t("desktop.ledger.prorrata.evidence_hint")}
-              />
+              >
+                {(control) => (
+                  <TextEditor
+                    id={control.id}
+                    value={evidence}
+                    onChange={setEvidence}
+                    invalid={control.invalid}
+                    describedBy={control.describedBy}
+                    required={action === "revoke_especial"}
+                  />
+                )}
+              </EditorField>
             )}
             {(action === "seed_sector" || action === "settle_sector") && (
               <ChoiceField
