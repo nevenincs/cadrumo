@@ -119,6 +119,27 @@ def _schema_facet(
     )
 
 
+def _available_paged_facet(
+    target: ModeloWorkspaceResolvedTargetV1,
+    schema_identity: ModeloWorkspaceSchemaIdentityV1,
+    baseline: ModeloWorkspaceBaselineV1,
+    contributors: tuple[ModeloWorkspaceContributorIdentityV1, ...],
+    cursor: ModeloWorkspaceCursorV1,
+) -> ModeloWorkspaceBoundedFacetV1[ModeloWorkspaceSchemaRecordV1]:
+    return ModeloWorkspaceBoundedFacetV1[ModeloWorkspaceSchemaRecordV1](
+        selected_revision_id=target.law_selected_revision_id,
+        schema_identity=schema_identity,
+        baseline=baseline,
+        contributor_epoch_digest=baseline.contributor_epoch_digest,
+        contributors=contributors,
+        facet=ModeloWorkspaceFacetName.SCHEMA,
+        disposition=ModeloWorkspaceCapabilityDisposition.AVAILABLE,
+        page_size=1,
+        has_more=True,
+        next_cursor=cursor,
+    )
+
+
 def _cursor(
     target: ModeloWorkspaceResolvedTargetV1,
     schema_identity: ModeloWorkspaceSchemaIdentityV1,
@@ -547,18 +568,7 @@ def test_workspace_cursor_coordinate_mutations_are_refused_by_the_bounded_facet(
     baseline = _baseline(target, schema_identity)
     contributors = _contributors()
     cursor = _cursor(target, schema_identity, baseline)
-    available = ModeloWorkspaceBoundedFacetV1[ModeloWorkspaceSchemaRecordV1](
-        selected_revision_id=target.law_selected_revision_id,
-        schema_identity=schema_identity,
-        baseline=baseline,
-        contributor_epoch_digest=baseline.contributor_epoch_digest,
-        contributors=contributors,
-        facet=ModeloWorkspaceFacetName.SCHEMA,
-        disposition=ModeloWorkspaceCapabilityDisposition.AVAILABLE,
-        page_size=1,
-        has_more=True,
-        next_cursor=cursor,
-    )
+    available = _available_paged_facet(target, schema_identity, baseline, contributors, cursor)
 
     assert (
         ModeloWorkspaceBoundedFacetV1[ModeloWorkspaceSchemaRecordV1].model_validate_json(available.model_dump_json())
@@ -602,18 +612,7 @@ def test_workspace_cursor_page_state_and_unavailable_cursor_mutations_are_refuse
     baseline = _baseline(target, schema_identity)
     contributors = _contributors()
     cursor = _cursor(target, schema_identity, baseline)
-    available = ModeloWorkspaceBoundedFacetV1[ModeloWorkspaceSchemaRecordV1](
-        selected_revision_id=target.law_selected_revision_id,
-        schema_identity=schema_identity,
-        baseline=baseline,
-        contributor_epoch_digest=baseline.contributor_epoch_digest,
-        contributors=contributors,
-        facet=ModeloWorkspaceFacetName.SCHEMA,
-        disposition=ModeloWorkspaceCapabilityDisposition.AVAILABLE,
-        page_size=1,
-        has_more=True,
-        next_cursor=cursor,
-    )
+    available = _available_paged_facet(target, schema_identity, baseline, contributors, cursor)
 
     with pytest.raises(ValidationError, match="has_more must agree with next_cursor"):
         ModeloWorkspaceBoundedFacetV1[ModeloWorkspaceSchemaRecordV1].model_validate(
