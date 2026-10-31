@@ -239,7 +239,7 @@ def resolve_activity_asset_disposal_row_values(
     values: dict[tuple[BindingId, int], Decimal | str] = {}
     identities: dict[tuple[BindingId, int], str] = {}
     columns = tuple(item for item in _all_bindings(revision) if item[1].fact == "row_field")
-    for index, row in enumerate(rows):
+    for index, row in enumerate(rows, start=1):
         for binding, provider in columns:
             field = provider.row_field
             if field is None:  # defensive: a row column names its field at build time

@@ -354,6 +354,8 @@ class FormRepeatingColumn(RegistryModel):
     official_heading: OfficialHeading | None = None
     casilla_id: CasillaId | None = None
     export_field_id: ExportFieldId | None = None
+    binding_id: BindingId | None = None
+    """The row-set binding this column reads when a group's columns come from several bindings."""
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -387,6 +389,8 @@ class FormRepeatingGroupBlock(RegistryModel):
         if self.max_rows is not None and self.max_rows < self.min_rows:
             raise RegistryValidationError(f"{owner} declares max_rows below min_rows")
         _require_unique(owner, "column keys", tuple(column.key for column in self.columns))
+        if not by_binding and any(column.binding_id is not None for column in self.columns):
+            raise RegistryValidationError(f"{owner} reads column bindings without a row-set binding source")
         self._validate_projected_columns(owner)
         self._validate_grids(owner)
         return self

@@ -368,3 +368,52 @@ def test_one_column_cannot_have_two_value_owners():
 @pytest.fixture
 def projection_block() -> FormRepeatingGroupBlock:
     return _block(24, 25, 52, 53)
+
+
+def _disposal_rows_block(operation: PinnedAuthorityOperation) -> FormRepeatingGroupBlock:
+    return next(
+        block
+        for layout in (operation.form_layout("100", "2025"),)
+        for page in layout.pages
+        for section in page.sections
+        for block in section.blocks
+        if isinstance(block, FormRepeatingGroupBlock) and block.id == "elemento-patrimonial-rows"
+    )
+
+
+def test_each_sale_shows_as_its_own_row_beside_the_boxes_that_hold_the_totals(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    snapshot = operation.snapshot("100", filing_year=2025, period="0A")
+    block = _disposal_rows_block(operation)
+    by_box = {column.casilla_id: column.binding_id for column in block.columns}
+    columns = tuple(column.casilla_id for column in block.columns)
+    revision = _revision(snapshot, None).model_copy(
+        update={
+            "row_binding_values": {
+                by_box["1633"]: {"1": "12000.00", "2": "10000.00"},
+                by_box["1654"]: {"1": "297.53"},
+                by_box["1639"]: {"2": "1702.47"},
+            }
+        }
+    )
+
+    known, rows = saved_form_records(snapshot=snapshot, revision=revision, block=block, column_casillas=columns)
+
+    assert known is True
+    assert [row.index for row in rows] == [1, 2]
+    first = dict(zip(columns, rows[0].values, strict=True))
+    second = dict(zip(columns, rows[1].values, strict=True))
+    assert (first["1633"], first["1654"], first["1639"]) == (Decimal("12000.00"), Decimal("297.53"), None)
+    assert (second["1633"], second["1654"], second["1639"]) == (Decimal("10000.00"), None, Decimal("1702.47"))
+
+
+def test_a_box_total_saved_without_rows_leaves_the_sales_unknown(operation: PinnedAuthorityOperation) -> None:
+    snapshot = operation.snapshot("100", filing_year=2025, period="0A")
+    block = _disposal_rows_block(operation)
+    columns = tuple(column.casilla_id for column in block.columns)
+    empty = _revision(snapshot, None)
+    older = empty.model_copy(update={"casilla_values": {"1654": Decimal("297.53")}})
+
+    assert saved_form_records(snapshot=snapshot, revision=older, block=block, column_casillas=columns) == (False, ())
+    assert saved_form_records(snapshot=snapshot, revision=empty, block=block, column_casillas=columns) == (True, ())

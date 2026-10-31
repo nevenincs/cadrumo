@@ -2,22 +2,28 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from decimal import Decimal
 from types import MappingProxyType
 from typing import Final
 
+from ...core.aggregation import BindingSourceKind
+from ...core.hashing import content_hash_hex
 from ...core.period import Period
 from ...core.tipos_actividad import TipoActividad
 from ...domain.calculations.registry.actividad_asset_disposal_bindings import (
     ELEMENT_ROW_ROUTES,
     ActivityAssetDisposalRoute,
+    ActivityAssetDisposalRowField,
     activity_asset_disposal_route_casillas,
+    activity_asset_disposal_row_binding_ids,
 )
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.errors import RegistryError
+from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.irpf_regimes import irpf_estimation_regime_objetiva_token
+from ...domain.calculations.row_source_identity import RowSourceIdentity
 from ...domain.modelos.calculation_revision_sources import CalculationNoteFact, CalculationNoteSentence
 from ...domain.renta.actividad_asset.disposal import (
     BAJA_WITHOUT_TRANSMISSION_REASONS,
@@ -135,20 +141,69 @@ def _m100_unresolved_disposal(
 
 
 @dataclass(frozen=True, slots=True)
-class _RowFigure:
-    """A gain or loss that fills a row of the form, with what a row of its own would state."""
+class ActivityAssetDisposalRow:
+    """A gain or loss that fills a row of the form, with what a row of its own states."""
 
     revision: ActivityAssetRevision
     route: ActivityAssetDisposalRoute
     amount: Decimal
     calculation: ActivityAssetDisposalCalculation
 
+    @property
+    def source_identity(self) -> str:
+        """Identify the sale the row comes from."""
+        return f"activity-asset:{self.revision.asset_id}:{self.revision.revision_id}"
+
+    def column(self, row_field: ActivityAssetDisposalRowField) -> Decimal | str | None:
+        """Return this sale's value for a column; the clave column is the revision's own."""
+        disposal = self.revision.disposal
+        match row_field:
+            case ActivityAssetDisposalRowField.TRANSMISSION_DATE:
+                return None if disposal is None else disposal.disposal_date.isoformat()
+            case ActivityAssetDisposalRowField.TRANSMISSION_VALUE:
+                return self.calculation.transmission_value
+            case ActivityAssetDisposalRowField.ACQUISITION_VALUE:
+                return self.calculation.net_value
+            case ActivityAssetDisposalRowField.GAIN:
+                return self.amount if self.route is ActivityAssetDisposalRoute.TRANSMISSION_GAIN_ELEMENT else None
+            case ActivityAssetDisposalRowField.LOSS:
+                return self.amount if self.route is ActivityAssetDisposalRoute.TRANSMISSION_LOSS_ELEMENT else None
+            case _:
+                return None
+
+
+def disposal_row_source_identities(
+    identities: Mapping[tuple[BindingId, int], str],
+    rows: Sequence[ActivityAssetDisposalRow],
+) -> dict[tuple[BindingId, int], RowSourceIdentity]:
+    """Fingerprint each row coordinate by what its sale states."""
+    fingerprints = {
+        row.source_identity: content_hash_hex(
+            {
+                "identity": row.source_identity,
+                "route": row.route.value,
+                "amount": str(row.amount),
+                "transmission_value": str(row.calculation.transmission_value),
+                "net_value": str(row.calculation.net_value),
+            }
+        )
+        for row in rows
+    }
+    return {
+        key: RowSourceIdentity(
+            source_kind=BindingSourceKind.ACTIVITY_ASSET_DISPOSAL,
+            source_row_identity=identity,
+            fingerprint=fingerprints[identity],
+        )
+        for key, identity in identities.items()
+    }
+
 
 @dataclass(frozen=True, slots=True)
 class _BajaReading:
     observations: tuple[ActivityAssetDisposalObservation, ...] = ()
     notes: tuple[CalculationSourceDiagnostic, ...] = ()
-    row_figures: tuple[_RowFigure, ...] = ()
+    row_figures: tuple[ActivityAssetDisposalRow, ...] = ()
 
 
 class ActivityAssetBajaReader:
@@ -193,7 +248,7 @@ class ActivityAssetBajaReader:
             ),
             notes=tuple(notes),
             row_figures=tuple(
-                _RowFigure(revision=revision, route=route, amount=amount, calculation=calculation)
+                ActivityAssetDisposalRow(revision=revision, route=route, amount=amount, calculation=calculation)
                 for route, amount in figures
                 if route in ELEMENT_ROW_ROUTES or route in _PROPERTY_ROW_ROUTES
             ),
@@ -234,24 +289,26 @@ class ActivityAssetBajaReader:
     def shared_row_findings(self, readings: Iterable[_BajaReading]) -> tuple[CalculationSourceDiagnostic, ...]:
         """Say what each sale would state on a row of its own when several share one.
 
-        The official form repeats these rows, one per element, and this edition's bindings
-        hold one value per box. Each route's total stays right, as the form's own sums
-        need, but the row can no longer be read as one sale, so each sale's date and
-        values are put in front of the filer.
+        The official form repeats these rows, one per element. An edition that declares row
+        columns gives each sale of an element its own; every other family holds one value
+        per box. The total stays right, as the form's own sums need, but such a row can no
+        longer be read as one sale, so each sale's date and values are put in front of the
+        filer.
 
         Returns:
-            One finding per sale of a row family two or more sales fill.
+            One finding per sale of a row family two or more sales fill with no row of their own.
         """
         figures = tuple(figure for reading in readings for figure in reading.row_figures)
+        has_element_rows = bool(activity_asset_disposal_row_binding_ids(self._context.revision))
         return tuple(
             self._shared_row_finding(figure, count=len(family))
-            for routes in (ELEMENT_ROW_ROUTES, _PROPERTY_ROW_ROUTES)
+            for routes in (() if has_element_rows else (ELEMENT_ROW_ROUTES,)) + (_PROPERTY_ROW_ROUTES,)
             if len(family := tuple(item for item in figures if item.route in routes)) > 1
             for figure in family
             if figure.route in self._routes
         )
 
-    def _shared_row_finding(self, figure: _RowFigure, *, count: int) -> CalculationSourceDiagnostic:
+    def _shared_row_finding(self, figure: ActivityAssetDisposalRow, *, count: int) -> CalculationSourceDiagnostic:
         calculation = figure.calculation
         return self._finding(
             figure.revision,

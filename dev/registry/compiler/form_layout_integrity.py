@@ -222,7 +222,9 @@ def _block_casilla_references(block: FormBlockDefinition) -> Iterator[str]:
     elif isinstance(block, FormGridBlock):
         yield from (cell.casilla_id for row in block.rows for cell in row.cells if cell.casilla_id is not None)
     elif isinstance(block, FormRepeatingGroupBlock):
-        yield from (column.casilla_id for column in block.columns if column.casilla_id is not None)
+        yield from (
+            column.casilla_id for column in block.columns if column.casilla_id is not None and column.binding_id is None
+        )
 
 
 def _referenced_bindings(layout: FormLayoutDefinition) -> Iterator[str]:
@@ -275,6 +277,9 @@ def _repeating_block_failure(
             return f"repeating group {block.id!r} ranges over unknown binding {block.binding_id!r}"
         if binding.value.channel is not BindingValueChannel.ROW_SET:
             return f"repeating group {block.id!r} ranges over non-row-set binding {block.binding_id!r}"
+        for column in block.columns:
+            if column.binding_id is not None and column.binding_id not in bindings:
+                return f"repeating group {block.id!r} column {column.key!r} reads unknown binding {column.binding_id!r}"
         return None
     if block.export_record_id not in repeating_records:
         return (
