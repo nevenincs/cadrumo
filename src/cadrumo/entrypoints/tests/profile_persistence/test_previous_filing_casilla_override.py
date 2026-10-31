@@ -30,6 +30,8 @@ from cadrumo.domain.user_profile.values import (
 )
 from cadrumo.entrypoints.adapter_composition_work_ports import build_calculation_action_ports
 
+from .general_iva_profile_facts_support import general_iva_profile_facts
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _Repos = tuple[
@@ -57,23 +59,10 @@ _CLOCK = datetime(2026, 10, 15, 9, 0, 0, tzinfo=UTC)
 #: future instant, which the record validator refuses outright.
 _PROFILE_SEEDED_AT = datetime(2026, 1, 5, 9, 0, 0, tzinfo=UTC)
 _PROFILE_ID = "00000000-0000-4000-8000-000000000000"
-_READY_PROFILE_FACTS: tuple[UserProfileFact, ...] = (
-    UserProfileFact(path="identity.tax_id", value="00000000T"),
-    UserProfileFact(path="identity.name", value="Diego"),
-    UserProfileFact(path="identity.surnames", value="Operator"),
-    UserProfileFact(path="activities.description", value="economic activity"),
-    UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-    UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-    UserProfileFact(path="iva.regime", value="GENERAL"),
-    UserProfileFact(path="iva.m303_regime_composition", value="general"),
-    UserProfileFact(path="iva.redeme_enrolled", value=False),
-    UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-    UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-    UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-    UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-    UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-    UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
-    UserProfileFact(path="censo.activity_start_date", value="2020-01-01"),
+_READY_PROFILE_FACTS: tuple[UserProfileFact, ...] = general_iva_profile_facts(
+    tax_id="00000000T",
+    activity_start_date="2020-01-01",
+    name="Diego",
 )
 
 

@@ -80,9 +80,10 @@ from ....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_observations,
     revision_id_for_observation,
 )
-from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
+from ....domain.user_profile.values import ProfileSetupState
 from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 from ...adapter_composition_work_ports import build_calculation_action_ports, build_work_lifecycle_ports
+from .general_iva_profile_facts_support import general_iva_profile_facts
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -259,23 +260,10 @@ def _store_ready_profile(secure_objects: SecureObjectRepository) -> None:
         _create_profile_record_for_test(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=_BUCKET_ID,
-            facts=(
-                UserProfileFact(path="identity.tax_id", value=_TAX_ID),
-                UserProfileFact(path="identity.name", value="Test"),
-                UserProfileFact(path="identity.surnames", value="Operator"),
-                UserProfileFact(path="activities.description", value="activity"),
-                UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-                UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-                UserProfileFact(path="iva.regime", value="GENERAL"),
-                UserProfileFact(path="iva.m303_regime_composition", value="general"),
-                UserProfileFact(path="iva.redeme_enrolled", value=False),
-                UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-                UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-                UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-                UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-                UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-                UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
-                UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
+            facts=general_iva_profile_facts(
+                tax_id=_TAX_ID,
+                activity_start_date=date(2020, 1, 1),
+                activity="activity",
             ),
             created_at=_T0,
             updated_at=_T0,

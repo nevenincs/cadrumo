@@ -86,7 +86,7 @@ from ....domain.modelos.verification_report import (
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
-from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
+from ....domain.user_profile.values import ProfileSetupState
 from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 from ....tests.env_scope import ready_clave_settings
 from ...adapter_composition_work_ports import (
@@ -95,6 +95,7 @@ from ...adapter_composition_work_ports import (
     build_ledger_evidence_ports,
     build_verification_repository_bundle,
 )
+from .general_iva_profile_facts_support import general_iva_profile_facts
 from .ledger_drift_support import raw_transaction
 
 _OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
@@ -218,23 +219,12 @@ def _store_profile(objects: SecureObjectRepository) -> None:
         _create_profile_record_for_test(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=_BUCKET_ID,
-            facts=(
-                UserProfileFact(path="identity.tax_id", value=_TAX_ID),
-                UserProfileFact(path="identity.name", value="Irene"),
-                UserProfileFact(path="identity.surnames", value="Evidence"),
-                UserProfileFact(path="activities.description", value="consulting"),
-                UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-                UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-                UserProfileFact(path="iva.regime", value="GENERAL"),
-                UserProfileFact(path="iva.m303_regime_composition", value="general"),
-                UserProfileFact(path="iva.redeme_enrolled", value=False),
-                UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-                UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-                UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-                UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-                UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-                UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
-                UserProfileFact(path="censo.activity_start_date", value=date(_YEAR, 1, 1)),
+            facts=general_iva_profile_facts(
+                tax_id=_TAX_ID,
+                activity_start_date=date(_YEAR, 1, 1),
+                name="Irene",
+                surnames="Evidence",
+                activity="consulting",
             ),
             created_at=_T0,
             updated_at=_T0,

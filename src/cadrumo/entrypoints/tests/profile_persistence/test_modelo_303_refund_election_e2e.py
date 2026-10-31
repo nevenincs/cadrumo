@@ -90,12 +90,13 @@ from ....domain.deadlines.models import (
     ModeloIVAProfile,
     TaxpayerProfile,
 )
-from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
+from ....domain.user_profile.values import ProfileSetupState
 from ...adapter_composition_work_ports import (
     build_calculation_action_ports,
     build_filing_action_ports,
     build_work_lifecycle_ports,
 )
+from .general_iva_profile_facts_support import general_iva_profile_facts
 
 _OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
 
@@ -204,23 +205,9 @@ def _store_operator_profile(*, created_at: datetime, period_token: str) -> None:
         create_user_profile_record(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=_BUCKET_ID,
-            facts=(
-                UserProfileFact(path="identity.tax_id", value=_TAX_ID),
-                UserProfileFact(path="identity.name", value="Test"),
-                UserProfileFact(path="identity.surnames", value="Operator"),
-                UserProfileFact(path="activities.description", value="economic activity"),
-                UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-                UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-                UserProfileFact(path="iva.regime", value="GENERAL"),
-                UserProfileFact(path="iva.m303_regime_composition", value="general"),
-                UserProfileFact(path="iva.redeme_enrolled", value=False),
-                UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-                UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-                UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-                UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-                UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-                UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
-                UserProfileFact(path="censo.activity_start_date", value=activity_start_date),
+            facts=general_iva_profile_facts(
+                tax_id=_TAX_ID,
+                activity_start_date=activity_start_date,
             ),
             created_at=created_at,
             updated_at=created_at,
