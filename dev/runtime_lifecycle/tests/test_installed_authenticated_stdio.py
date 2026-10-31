@@ -42,6 +42,8 @@ from cadrumo_client.contracts.access_vocabulary import (
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_runtime.host.tests.frontend.cli.native_api_cli_support import native_api_cli_session
 
+from .installed_mcp_stdio_support import structured_object
+
 pytestmark = [
     pytest.mark.integration,
     pytest.mark.hex_core,
@@ -92,11 +94,6 @@ def _unused_reference(store: NativeClientCredentialStore) -> UUID:
         # A pre-existing or malformed exact account is left untouched. No
         # global native-store enumeration is performed.
     raise AssertionError("could not reserve an unused synthetic credential reference")
-
-
-def _object(value: object) -> dict[str, Any]:
-    assert isinstance(value, dict)
-    return cast("dict[str, Any]", value)
 
 
 def _prepare_empty_profile(_profile_id: UUID, _root: Path) -> None:
@@ -188,9 +185,9 @@ async def test_installed_stdio_authenticates_and_reads_pinned_auth_result(
 
                     status_call = await client.call_tool("status", {})
                     assert status_call.is_error is False
-                    status_document = _object(status_call.structured_content)
+                    status_document = structured_object(status_call.structured_content)
                     assert status_document["outcome"] == "status"
-                    status = _object(status_document["status"])
+                    status = structured_object(status_document["status"])
                     assert status["connected"] is True
                     assert status["credential_authenticated"] is True
                     assert status["profile_bound"] is True
@@ -228,19 +225,19 @@ async def test_installed_stdio_authenticates_and_reads_pinned_auth_result(
 
                     search_call = await client.call_tool("search", {"query": _AUTH_READ})
                     assert search_call.is_error is False
-                    search_document = _object(search_call.structured_content)
+                    search_document = structured_object(search_call.structured_content)
                     assert search_document["outcome"] == "found"
                     operations = cast("list[dict[str, Any]]", search_document["operations"])
                     assert any(item["definition_id"] == _AUTH_READ for item in operations)
 
                     describe_call = await client.call_tool("describe", {"definition_id": _AUTH_READ})
                     assert describe_call.is_error is False
-                    describe_document = _object(describe_call.structured_content)
+                    describe_document = structured_object(describe_call.structured_content)
                     assert describe_document["outcome"] == "described"
-                    description = _object(describe_document["description"])
-                    contract = _object(description["contract"])
+                    description = structured_object(describe_document["description"])
+                    contract = structured_object(description["contract"])
                     assert contract["definition_id"] == _AUTH_READ
-                    result_schema = _object(contract["result_schema"])
+                    result_schema = structured_object(contract["result_schema"])
                     assert result_schema["schema_id"] == AUTH_READ_RESULT_SCHEMA_ID
 
                     execute_call = await client.call_tool(
@@ -252,11 +249,11 @@ async def test_installed_stdio_authenticates_and_reads_pinned_auth_result(
                         },
                     )
                     assert execute_call.is_error is False
-                    execution = _object(execute_call.structured_content)
+                    execution = structured_object(execute_call.structured_content)
                     assert execution["outcome"] == "submitted"
-                    receipt = _object(execution["receipt"])
+                    receipt = structured_object(execution["receipt"])
                     operation_id = cast(str, receipt["operation_id"])
-                    start = _object(execution["start"])
+                    start = structured_object(execution["start"])
                     assert start["operation_id"] == operation_id
 
                     observed_projection: dict[str, Any] | None = None
@@ -273,11 +270,11 @@ async def test_installed_stdio_authenticates_and_reads_pinned_auth_result(
                             },
                         )
                         assert observe_call.is_error is False
-                        observed_reply = _object(_object(observe_call.structured_content)["reply"])
+                        observed_reply = structured_object(structured_object(observe_call.structured_content)["reply"])
                         assert observed_reply["kind"] == "operation_observed"
-                        observation = _object(observed_reply["observation"])
+                        observation = structured_object(observed_reply["observation"])
                         assert observation["outcome"] == "success"
-                        projection = _object(observation["projection"])
+                        projection = structured_object(observation["projection"])
                         if projection["lifecycle"] == "terminal":
                             observed_projection = projection
                             break
@@ -303,11 +300,11 @@ async def test_installed_stdio_authenticates_and_reads_pinned_auth_result(
                         },
                     )
                     assert result_call.is_error is False
-                    result_document = _object(_object(result_call.structured_content)["document"])
+                    result_document = structured_object(structured_object(result_call.structured_content)["document"])
                     assert result_document["outcome"] == "success"
                     assert result_document["definition_contract_digest"] == contract["definition_contract_digest"]
                     assert result_document["result_schema"] == result_schema
-                    auth_projection = _object(result_document["projection"])
+                    auth_projection = structured_object(result_document["projection"])
                     assert auth_projection["profile_id"] == str(profile.profile_id)
                     assert auth_projection["kind"] == "status"
                     assert auth_projection["status"] is not None
@@ -319,7 +316,7 @@ async def test_installed_stdio_authenticates_and_reads_pinned_auth_result(
                     assert denied.structured_content == {"outcome": "refused", "code": "unknown_tool"}
                     after_denial_call = await client.call_tool("status", {})
                     assert after_denial_call.is_error is False
-                    after_denial = _object(_object(after_denial_call.structured_content)["status"])
+                    after_denial = structured_object(structured_object(after_denial_call.structured_content)["status"])
                     assert after_denial["session_id"] == status["session_id"]
                     assert after_denial["profile_id"] == str(profile.profile_id)
         except BaseException as error:

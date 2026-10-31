@@ -8,7 +8,6 @@ custody, real stdio, and the registered profile-worker operation.
 
 from __future__ import annotations
 
-import asyncio
 import sys
 from collections.abc import Callable
 from dataclasses import dataclass, field
@@ -21,7 +20,6 @@ import pytest
 from click.testing import Result
 from mcp import ClientSession
 from mcp.client.stdio import StdioServerParameters, stdio_client
-from pydantic import BaseModel
 
 from cadrumo.adapters.persistence.profile.m036_lifecycle import build_m036_lifecycle_ports
 from cadrumo.adapters.persistence.storage.custody.automation_client_credentials import NativeClientCredentialStore
@@ -42,19 +40,12 @@ from cadrumo.application.modelo.m036_operation import (
 )
 from cadrumo.application.operations.frontend_requests import (
     OPERATION_OBSERVATION_PROJECTION_ID,
-    OperationObservationRequestV1,
-    OperationObservationSuccessV1,
-    OperationResultProjectionRequestV1,
     OperationResultProjectionSuccessV1,
-    OperationSubmissionReceiptV1,
 )
 from cadrumo.application.operations.registry import OperationPublicDefinitionContractV1
 from cadrumo.core.hashing import canonical_json_bytes
 from cadrumo.core.operations import (
     OperationEffect,
-    OperationLifecycle,
-    OperationTerminalCondition,
-    profile_operation_subject,
 )
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.authority_location import bundled_authority_descriptor_path
@@ -72,6 +63,7 @@ from cadrumo_client.contracts.access_vocabulary import (
 )
 from cadrumo_runtime.host.tests.frontend.cli.native_api_cli_support import native_api_cli_session
 
+from .installed_mcp_stdio_support import assert_human_operation_refused, release_query_result, structured_object
 from .test_installed_authenticated_stdio import (
     _installed_mcp_executable,
     _native_backend_for_current_platform,
@@ -188,11 +180,6 @@ def _prepare_profile(
     )
 
 
-def _object(value: object) -> dict[str, Any]:
-    assert isinstance(value, dict)
-    return cast("dict[str, Any]", value)
-
-
 def _unique_digest_prefix(declaration_id: str, declaration_ids: tuple[str, ...]) -> str:
     """Choose a useful prefix that is unique among these exact seeded ids."""
     for length in range(12, len(declaration_id)):
@@ -210,61 +197,15 @@ async def _query(
     seed: _M036Seed,
     credential_reference: UUID,
 ) -> M036QueryProjection:
-    submitted = await client.call_tool(
-        "execute",
-        {
-            "definition_id": _QUERY,
-            "subject_ref": profile_operation_subject(str(request.profile_id)),
-            "payload": request.model_dump(mode="json"),
-        },
+    result, document = await release_query_result(
+        client,
+        definition_id=_QUERY,
+        profile_id=request.profile_id,
+        request=request,
+        contract=contract,
+        result_model=OperationResultProjectionSuccessV1[M036QueryProjection],
+        label=f"M036 {request.kind} query",
     )
-    assert submitted.is_error is False
-    receipt = OperationSubmissionReceiptV1.model_validate_json(
-        canonical_json_bytes(_object(submitted.structured_content)["receipt"]),
-    )
-    observation_request = OperationObservationRequestV1(
-        operation_id=receipt.operation_id,
-        after_cursor=0,
-        page_limit=32,
-    )
-    terminal: OperationObservationSuccessV1 | None = None
-    for _attempt in range(100):
-        observed = await client.call_tool(
-            "observe",
-            {"observation": observation_request.model_dump(mode="json")},
-        )
-        assert observed.is_error is False
-        candidate = OperationObservationSuccessV1.model_validate_json(
-            canonical_json_bytes(_object(_object(observed.structured_content)["reply"])["observation"]),
-        )
-        state = candidate.projection
-        assert state.operation_id == receipt.operation_id
-        assert state.definition_id == _QUERY
-        assert state.subject_ref == profile_operation_subject(str(request.profile_id))
-        if state.lifecycle is OperationLifecycle.TERMINAL:
-            terminal = candidate
-            break
-        await asyncio.sleep(0.05)
-    assert terminal is not None, f"M036 {request.kind} query did not settle"
-    state = terminal.projection
-    assert state.terminal_condition is OperationTerminalCondition.SUCCEEDED
-    assert state.effect is OperationEffect.NONE
-
-    result_schema = contract.result_schema
-    assert result_schema is not None
-    result_request = OperationResultProjectionRequestV1(
-        operation_id=receipt.operation_id,
-        terminal_revision=state.revision,
-        definition_contract_digest=contract.definition_contract_digest,
-        result_schema=result_schema,
-    )
-    released = await client.call_tool("result", {"result": result_request.model_dump(mode="json")})
-    assert released.is_error is False
-    result = OperationResultProjectionSuccessV1[M036QueryProjection].model_validate_json(
-        canonical_json_bytes(_object(released.structured_content)["document"]),
-    )
-    assert result.result_schema == result_schema
-    assert result.definition_contract_digest == contract.definition_contract_digest
     projection = result.projection
     assert projection.profile_id == request.profile_id
     assert projection.kind == request.kind
@@ -284,7 +225,7 @@ async def _query(
         assert row.justificante_present is True
         assert row.note_present is True
     serialized_projection = canonical_json_bytes(projection.model_dump(mode="json")).decode("utf-8")
-    serialized_response = canonical_json_bytes(_object(released.structured_content)).decode("utf-8")
+    serialized_response = canonical_json_bytes(document).decode("utf-8")
     assert all(sentinel not in serialized_projection for sentinel in seed.note_sentinels)
     assert all(sentinel not in serialized_projection for sentinel in seed.receipt_sentinels)
     assert all(sentinel not in serialized_response for sentinel in seed.note_sentinels)
@@ -297,26 +238,6 @@ async def _query(
     assert "note" not in M036QueryDeclaration.model_fields
     assert "sede_justificante" not in M036QueryDeclaration.model_fields
     return projection
-
-
-async def _assert_human_operation_refused(
-    client: ClientSession,
-    *,
-    definition_id: str,
-    profile_id: UUID,
-    request: BaseModel,
-) -> None:
-    """Require query-only MCP admission to refuse a human-only purpose."""
-    refusal = await client.call_tool(
-        "execute",
-        {
-            "definition_id": definition_id,
-            "subject_ref": profile_operation_subject(str(profile_id)),
-            "payload": request.model_dump(mode="json"),
-        },
-    )
-    assert refusal.is_error is True
-    assert refusal.structured_content == {"outcome": "refused", "code": "operation_denied"}
 
 
 @pytest.mark.anyio
@@ -388,13 +309,17 @@ async def test_installed_mcp_releases_only_safe_m036_query_rows(
                     await client.initialize()
                     found = await client.call_tool("search", {"query": _QUERY})
                     assert found.is_error is False
-                    visible = cast("list[dict[str, Any]]", _object(found.structured_content)["operations"])
+                    visible = cast("list[dict[str, Any]]", structured_object(found.structured_content)["operations"])
                     assert any(item["definition_id"] == _QUERY for item in visible)
 
                     described = await client.call_tool("describe", {"definition_id": _QUERY})
                     assert described.is_error is False
                     contract = OperationPublicDefinitionContractV1.model_validate_json(
-                        canonical_json_bytes(_object(_object(described.structured_content)["description"])["contract"]),
+                        canonical_json_bytes(
+                            structured_object(structured_object(described.structured_content)["description"])[
+                                "contract"
+                            ]
+                        ),
                     )
                     assert contract.definition_id == _QUERY
                     assert contract.request_schema.schema_id == _QUERY + ".request"
@@ -407,13 +332,13 @@ async def test_installed_mcp_releases_only_safe_m036_query_rows(
                     assert '"note":' not in result_schema_json
                     assert '"sede_justificante":' not in result_schema_json
 
-                    await _assert_human_operation_refused(
+                    await assert_human_operation_refused(
                         client,
                         definition_id=_READ,
                         profile_id=profile.profile_id,
                         request=M036ReadRequest(profile_id=profile.profile_id, kind="list"),
                     )
-                    await _assert_human_operation_refused(
+                    await assert_human_operation_refused(
                         client,
                         definition_id=_RECORD,
                         profile_id=profile.profile_id,

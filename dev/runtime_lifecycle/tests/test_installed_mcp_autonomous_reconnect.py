@@ -15,7 +15,7 @@ from collections.abc import Callable
 from datetime import timedelta
 from functools import partial
 from pathlib import Path
-from typing import Any, cast
+from typing import cast
 from uuid import UUID
 
 import pytest
@@ -68,6 +68,7 @@ from cadrumo_runtime.host.profile_connections import RuntimeProfileConnections
 from cadrumo_runtime.host.tests.frontend.cli import native_api_cli_support
 from cadrumo_runtime.host.tests.frontend.cli.native_api_cli_support import native_api_cli_session
 
+from .installed_mcp_stdio_support import structured_object
 from .test_installed_authenticated_stdio import (
     _installed_mcp_executable,
     _native_backend_for_current_platform,
@@ -88,13 +89,8 @@ _LIVE_RETIREMENT_CODES = frozenset({"session_inactive", "connection_mismatch", "
 _REVOKED_KEY_CODES = frozenset({"key_inactive", "grant_inactive"})
 
 
-def _object(value: object) -> dict[str, Any]:
-    assert isinstance(value, dict)
-    return cast("dict[str, Any]", value)
-
-
 def _status(value: object, *, profile_id: UUID) -> ProfileAccessStatus:
-    document = _object(value)
+    document = structured_object(value)
     assert document["outcome"] == "status"
     status = ProfileAccessStatus.model_validate_json(canonical_json_bytes(document["status"]))
     assert status.profile_id == profile_id
@@ -225,16 +221,16 @@ async def test_installed_mcp_reconnects_same_native_grant_with_distinct_session_
 
                     private = await client.call_tool("search", {"query": AUTH_READ_OPERATION_DEFINITION_ID})
                     assert private.is_error is False
-                    found = _object(private.structured_content)
+                    found = structured_object(private.structured_content)
                     assert found["outcome"] == "found"
                     assert any(
-                        _object(item)["definition_id"] == AUTH_READ_OPERATION_DEFINITION_ID
+                        structured_object(item)["definition_id"] == AUTH_READ_OPERATION_DEFINITION_ID
                         for item in cast("list[object]", found["operations"])
                     )
 
                     described = await client.call_tool("describe", {"definition_id": AUTH_READ_OPERATION_DEFINITION_ID})
                     assert described.is_error is False
-                    description = _object(_object(described.structured_content)["description"])
+                    description = structured_object(structured_object(described.structured_content)["description"])
                     contract = OperationPublicDefinitionContractV1.model_validate_json(
                         canonical_json_bytes(description["contract"])
                     )
@@ -250,7 +246,7 @@ async def test_installed_mcp_reconnects_same_native_grant_with_distinct_session_
                         },
                     )
                     assert submitted.is_error is False
-                    submission = _object(submitted.structured_content)
+                    submission = structured_object(submitted.structured_content)
                     assert submission["outcome"] == "submitted"
                     receipt = OperationSubmissionReceiptV1.model_validate_json(
                         canonical_json_bytes(submission["receipt"])
@@ -264,7 +260,7 @@ async def test_installed_mcp_reconnects_same_native_grant_with_distinct_session_
                             "observe", {"observation": observation.model_dump(mode="json")}
                         )
                         assert observed.is_error is False
-                        reply = _object(_object(observed.structured_content)["reply"])
+                        reply = structured_object(structured_object(observed.structured_content)["reply"])
                         candidate = OperationObservationSuccessV1.model_validate_json(
                             canonical_json_bytes(reply["observation"])
                         )
@@ -286,7 +282,7 @@ async def test_installed_mcp_reconnects_same_native_grant_with_distinct_session_
                     result_args = {"result": result_request.model_dump(mode="json")}
                     released = await client.call_tool("result", result_args)
                     assert released.is_error is False
-                    document = _object(_object(released.structured_content)["document"])
+                    document = structured_object(structured_object(released.structured_content)["document"])
                     result = OperationResultProjectionSuccessV1[AuthReadProjection].model_validate_json(
                         canonical_json_bytes(document)
                     )
@@ -319,13 +315,13 @@ async def test_installed_mcp_reconnects_same_native_grant_with_distinct_session_
                         )
                     assert denied_output.exit_code == 0, denied_output.output
                     assert PROFILE_INPUT not in denied_output.output
-                    denied_document = _object(json.loads(denied_output.stdout))
+                    denied_document = structured_object(json.loads(denied_output.stdout))
                     assert denied_document["command"] == "config.profile.automation.deny"
                     assert denied_document["status"] in {"success", "warning"}
-                    denied_result = _object(denied_document["result"])
+                    denied_result = structured_object(denied_document["result"])
                     assert denied_result["kind"] == "key"
                     assert denied_result["target_id"] == str(source_metadata.key_id)
-                    assert _object(denied_result["receipt"])["access_denied"] is True
+                    assert structured_object(denied_result["receipt"])["access_denied"] is True
 
                     with override_settings(cadrumo_cli_reveal_identifiers=True):
                         inventory_output = await asyncio.to_thread(
@@ -346,17 +342,22 @@ async def test_installed_mcp_reconnects_same_native_grant_with_distinct_session_
                         )
                     assert inventory_output.exit_code == 0, inventory_output.output
                     assert PROFILE_INPUT not in inventory_output.output
-                    inventory_document = _object(json.loads(inventory_output.stdout))
+                    inventory_document = structured_object(json.loads(inventory_output.stdout))
                     assert inventory_document["command"] == "config.profile.automation.list"
-                    keys = cast("list[object]", _object(_object(inventory_document["result"])["inventory"])["keys"])
+                    keys = cast(
+                        "list[object]",
+                        structured_object(structured_object(inventory_document["result"])["inventory"])["keys"],
+                    )
                     selected = [
-                        _object(item) for item in keys if _object(item)["key_id"] == str(source_metadata.key_id)
+                        structured_object(item)
+                        for item in keys
+                        if structured_object(item)["key_id"] == str(source_metadata.key_id)
                     ]
                     assert len(selected) == 1 and selected[0]["state"] == "revoked"
 
                     search = await client.call_tool("search", {"query": AUTH_READ_OPERATION_DEFINITION_ID})
                     assert search.is_error is True
-                    search_refusal = _object(search.structured_content)
+                    search_refusal = structured_object(search.structured_content)
                     assert set(search_refusal) <= {"outcome", "code", "remedy", "notice"}
                     assert search_refusal["outcome"] == "refused"
                     assert search_refusal["code"] in _LIVE_RETIREMENT_CODES
@@ -364,7 +365,7 @@ async def test_installed_mcp_reconnects_same_native_grant_with_distinct_session_
                     assert str(reference) not in repr(search_refusal)
                     cached_result = await client.call_tool("result", result_args)
                     assert cached_result.is_error is True
-                    cached_refusal = _object(cached_result.structured_content)
+                    cached_refusal = structured_object(cached_result.structured_content)
                     assert set(cached_refusal) <= {"outcome", "code", "remedy", "notice"}
                     assert cached_refusal["outcome"] == "refused"
                     assert cached_refusal["code"] in _LIVE_RETIREMENT_CODES
@@ -379,14 +380,14 @@ async def test_installed_mcp_reconnects_same_native_grant_with_distinct_session_
                     await client.initialize()
                     revoked_call = await client.call_tool("status", {})
                     assert revoked_call.is_error is False
-                    revoked = _object(revoked_call.structured_content)
+                    revoked = structured_object(revoked_call.structured_content)
                     assert revoked["outcome"] == "status"
                     assert revoked["profile_id"] == str(profile.profile_id)
                     assert revoked["authenticated"] is False
                     assert revoked["denial"] in _REVOKED_KEY_CODES
                     search = await client.call_tool("search", {"query": AUTH_READ_OPERATION_DEFINITION_ID})
                     assert search.is_error is True
-                    search_refusal = _object(search.structured_content)
+                    search_refusal = structured_object(search.structured_content)
                     assert search_refusal == {
                         "outcome": "refused",
                         "code": revoked["denial"],
@@ -395,7 +396,7 @@ async def test_installed_mcp_reconnects_same_native_grant_with_distinct_session_
                     assert str(reference) not in repr(search.structured_content)
                     denied = await client.call_tool("observe", {"observation": {}})
                     assert denied.is_error is True
-                    assert _object(denied.structured_content) == {
+                    assert structured_object(denied.structured_content) == {
                         "outcome": "refused",
                         "code": revoked["denial"],
                         "remedy": SIGN_IN_REMEDY,
@@ -596,7 +597,11 @@ async def test_installed_mcp_independent_grant_executes_after_genuine_human_idle
                     described = await sdk.call_tool("describe", {"definition_id": AUTH_READ_OPERATION_DEFINITION_ID})
                     assert not described.is_error
                     contract = OperationPublicDefinitionContractV1.model_validate_json(
-                        canonical_json_bytes(_object(_object(described.structured_content)["description"])["contract"])
+                        canonical_json_bytes(
+                            structured_object(structured_object(described.structured_content)["description"])[
+                                "contract"
+                            ]
+                        )
                     )
                     assert contract.definition_id == AUTH_READ_OPERATION_DEFINITION_ID and contract.result_schema
                     submitted = await sdk.call_tool(
@@ -610,7 +615,7 @@ async def test_installed_mcp_independent_grant_executes_after_genuine_human_idle
                         },
                     )
                     assert not submitted.is_error
-                    submission = _object(submitted.structured_content)
+                    submission = structured_object(submitted.structured_content)
                     assert submission["outcome"] == "submitted"
                     receipt = OperationSubmissionReceiptV1.model_validate_json(
                         canonical_json_bytes(submission["receipt"])
@@ -626,7 +631,9 @@ async def test_installed_mcp_independent_grant_executes_after_genuine_human_idle
                             assert not observed.is_error
                             terminal = OperationObservationSuccessV1.model_validate_json(
                                 canonical_json_bytes(
-                                    _object(_object(observed.structured_content)["reply"])["observation"]
+                                    structured_object(structured_object(observed.structured_content)["reply"])[
+                                        "observation"
+                                    ]
                                 )
                             )
                             if terminal.projection.lifecycle is OperationLifecycle.TERMINAL:
@@ -645,7 +652,7 @@ async def test_installed_mcp_independent_grant_executes_after_genuine_human_idle
                     released = await sdk.call_tool("result", {"result": requested.model_dump(mode="json")})
                     assert not released.is_error
                     result = OperationResultProjectionSuccessV1[AuthReadProjection].model_validate_json(
-                        canonical_json_bytes(_object(released.structured_content)["document"])
+                        canonical_json_bytes(structured_object(released.structured_content)["document"])
                     )
                     assert result.definition_contract_digest == contract.definition_contract_digest
                     assert result.result_schema == contract.result_schema

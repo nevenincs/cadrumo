@@ -8,7 +8,6 @@ the registered worker operation; it cannot invoke human import/read purposes.
 
 from __future__ import annotations
 
-import asyncio
 import sys
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -21,7 +20,6 @@ import pytest
 from click.testing import Result
 from mcp import ClientSession
 from mcp.client.stdio import StdioServerParameters, stdio_client
-from pydantic import BaseModel
 
 from cadrumo.adapters.persistence.storage.custody.automation_client_credentials import NativeClientCredentialStore
 from cadrumo.adapters.persistence.storage.custody.automation_secret_store import native_automation_secret_store
@@ -39,22 +37,12 @@ from cadrumo.application.live.borrador_100_operation import (
 from cadrumo.application.live.snapshot_base import SnapshotStateFilter
 from cadrumo.application.operations.frontend_requests import (
     OPERATION_OBSERVATION_PROJECTION_ID,
-    OperationObservationRequestV1,
-    OperationObservationSuccessV1,
-    OperationResultProjectionRequestV1,
     OperationResultProjectionSuccessV1,
-    OperationSubmissionReceiptV1,
 )
 from cadrumo.application.operations.public_period import PublicPeriod
 from cadrumo.application.operations.registry import OperationPublicDefinitionContractV1
 from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.core.hashing import canonical_json_bytes
-from cadrumo.core.operations import (
-    OperationEffect,
-    OperationLifecycle,
-    OperationTerminalCondition,
-    profile_operation_subject,
-)
 from cadrumo.core.period import Period
 from cadrumo.core.time.clock import now
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
@@ -71,6 +59,7 @@ from cadrumo_client.contracts.access_vocabulary import (
 )
 from cadrumo_runtime.host.tests.frontend.cli.native_api_cli_support import native_api_cli_session
 
+from .installed_mcp_stdio_support import assert_human_operation_refused, release_query_result, structured_object
 from .test_installed_authenticated_stdio import (
     _installed_mcp_executable,
     _native_backend_for_current_platform,
@@ -176,11 +165,6 @@ def _prepare_profile(
     return _BorradorSeed(snapshot_id=str(snapshot.snapshot_id), source_url=source_url)
 
 
-def _object(value: object) -> dict[str, Any]:
-    assert isinstance(value, dict)
-    return cast("dict[str, Any]", value)
-
-
 async def _query(
     client: ClientSession,
     *,
@@ -189,53 +173,14 @@ async def _query(
     source_url_sentinel: str,
     credential_reference: UUID,
 ) -> Borrador100QueryProjection:
-    submitted = await client.call_tool(
-        "execute",
-        {
-            "definition_id": _QUERY,
-            "subject_ref": profile_operation_subject(str(request.profile_id)),
-            "payload": request.model_dump(mode="json"),
-        },
-    )
-    assert submitted.is_error is False
-    receipt = OperationSubmissionReceiptV1.model_validate_json(
-        canonical_json_bytes(_object(submitted.structured_content)["receipt"]),
-    )
-    observation_request = OperationObservationRequestV1(
-        operation_id=receipt.operation_id,
-        after_cursor=0,
-        page_limit=32,
-    )
-    terminal: OperationObservationSuccessV1 | None = None
-    for _attempt in range(100):
-        observed = await client.call_tool(
-            "observe",
-            {"observation": observation_request.model_dump(mode="json")},
-        )
-        assert observed.is_error is False
-        candidate = OperationObservationSuccessV1.model_validate_json(
-            canonical_json_bytes(_object(_object(observed.structured_content)["reply"])["observation"]),
-        )
-        if candidate.projection.lifecycle is OperationLifecycle.TERMINAL:
-            terminal = candidate
-            break
-        await asyncio.sleep(0.05)
-    assert terminal is not None, f"Borrador {request.kind} query did not settle"
-    assert terminal.projection.terminal_condition is OperationTerminalCondition.SUCCEEDED
-    assert terminal.projection.effect is OperationEffect.NONE
-
-    result_schema = contract.result_schema
-    assert result_schema is not None
-    result_request = OperationResultProjectionRequestV1(
-        operation_id=receipt.operation_id,
-        terminal_revision=terminal.projection.revision,
-        definition_contract_digest=contract.definition_contract_digest,
-        result_schema=result_schema,
-    )
-    released = await client.call_tool("result", {"result": result_request.model_dump(mode="json")})
-    assert released.is_error is False
-    result = OperationResultProjectionSuccessV1[Borrador100QueryProjection].model_validate_json(
-        canonical_json_bytes(_object(released.structured_content)["document"]),
+    result, _document = await release_query_result(
+        client,
+        definition_id=_QUERY,
+        profile_id=request.profile_id,
+        request=request,
+        contract=contract,
+        result_model=OperationResultProjectionSuccessV1[Borrador100QueryProjection],
+        label=f"Borrador {request.kind} query",
     )
     projection = result.projection
     assert projection.profile_id == request.profile_id
@@ -261,26 +206,6 @@ async def _query(
     assert "source_url" not in released_json
     assert "warnings" not in released_json
     return projection
-
-
-async def _assert_human_operation_refused(
-    client: ClientSession,
-    *,
-    definition_id: str,
-    profile_id: UUID,
-    request: BaseModel,
-) -> None:
-    """Require the current typed MCP refusal before a human-only request is admitted."""
-    refusal = await client.call_tool(
-        "execute",
-        {
-            "definition_id": definition_id,
-            "subject_ref": profile_operation_subject(str(profile_id)),
-            "payload": request.model_dump(mode="json"),
-        },
-    )
-    assert refusal.is_error is True
-    assert refusal.structured_content == {"outcome": "refused", "code": "operation_denied"}
 
 
 @pytest.mark.anyio
@@ -348,14 +273,18 @@ async def test_installed_mcp_queries_borrador_without_releasing_source_provenanc
 
                     found = await client.call_tool("search", {"query": "live.borrador.100"})
                     assert found.is_error is False
-                    operations = cast("list[dict[str, Any]]", _object(found.structured_content)["operations"])
+                    operations = cast("list[dict[str, Any]]", structured_object(found.structured_content)["operations"])
                     visible_ids = {str(item["definition_id"]) for item in operations}
                     assert _QUERY in visible_ids
 
                     described = await client.call_tool("describe", {"definition_id": _QUERY})
                     assert described.is_error is False
                     contract = OperationPublicDefinitionContractV1.model_validate_json(
-                        canonical_json_bytes(_object(_object(described.structured_content)["description"])["contract"]),
+                        canonical_json_bytes(
+                            structured_object(structured_object(described.structured_content)["description"])[
+                                "contract"
+                            ]
+                        ),
                     )
                     assert contract.definition_id == _QUERY
                     assert contract.result_schema is not None
@@ -364,7 +293,7 @@ async def test_installed_mcp_queries_borrador_without_releasing_source_provenanc
                     assert '"source_url"' not in query_schema
                     assert '"warnings"' not in query_schema
 
-                    await _assert_human_operation_refused(
+                    await assert_human_operation_refused(
                         client,
                         definition_id=_READ,
                         profile_id=profile.profile_id,
@@ -374,7 +303,7 @@ async def test_installed_mcp_queries_borrador_without_releasing_source_provenanc
                             snapshot_id=snapshot_id,
                         ),
                     )
-                    await _assert_human_operation_refused(
+                    await assert_human_operation_refused(
                         client,
                         definition_id=_IMPORT,
                         profile_id=profile.profile_id,

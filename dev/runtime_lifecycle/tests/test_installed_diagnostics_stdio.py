@@ -12,7 +12,6 @@ import sys
 from collections.abc import Callable
 from datetime import UTC, date, datetime
 from pathlib import Path
-from typing import Any, cast
 from uuid import UUID
 
 import pytest
@@ -67,6 +66,7 @@ from cadrumo_client.contracts.access_vocabulary import (
 )
 from cadrumo_runtime.host.tests.frontend.cli.native_api_cli_support import native_api_cli_session
 
+from .installed_mcp_stdio_support import structured_object
 from .test_installed_authenticated_stdio import (
     _installed_mcp_executable,
     _native_backend_for_current_platform,
@@ -157,11 +157,6 @@ def _prepare(profile_id: UUID, _root: Path, *, operation: PinnedAuthorityOperati
     }
 
 
-def _object(value: object) -> dict[str, Any]:
-    assert isinstance(value, dict)
-    return cast("dict[str, Any]", value)
-
-
 def _canonical_report(projection: DiagnosticsReadProjection) -> object:
     """Compare full canonical meaning after the reviewed decimal wire conversion."""
     if projection.run_health is not None:
@@ -236,7 +231,7 @@ async def test_installed_mcp_reads_all_diagnostics_reports_with_exact_filters(
                     await client.initialize()
                     status_call = await client.call_tool("status", {})
                     assert status_call.is_error is False
-                    status_document = _object(status_call.structured_content)
+                    status_document = structured_object(status_call.structured_content)
                     assert status_document["outcome"] == "status"
                     status = ProfileAccessStatus.model_validate_json(canonical_json_bytes(status_document["status"]))
                     assert status.profile_id == profile.profile_id
@@ -262,12 +257,17 @@ async def test_installed_mcp_reads_all_diagnostics_reports_with_exact_filters(
                     found = await client.call_tool("search", {"query": _DEFINITION})
                     assert found.is_error is False
                     assert any(
-                        item["definition_id"] == _DEFINITION for item in _object(found.structured_content)["operations"]
+                        item["definition_id"] == _DEFINITION
+                        for item in structured_object(found.structured_content)["operations"]
                     )
                     described = await client.call_tool("describe", {"definition_id": _DEFINITION})
                     assert described.is_error is False
                     contract = OperationPublicDefinitionContractV1.model_validate_json(
-                        canonical_json_bytes(_object(_object(described.structured_content)["description"])["contract"])
+                        canonical_json_bytes(
+                            structured_object(structured_object(described.structured_content)["description"])[
+                                "contract"
+                            ]
+                        )
                     )
                     assert contract.result_schema is not None
                     for kind in _KINDS:
@@ -289,7 +289,7 @@ async def test_installed_mcp_reads_all_diagnostics_reports_with_exact_filters(
                         )
                         assert submitted.is_error is False
                         receipt = OperationSubmissionReceiptV1.model_validate_json(
-                            canonical_json_bytes(_object(submitted.structured_content)["receipt"])
+                            canonical_json_bytes(structured_object(submitted.structured_content)["receipt"])
                         )
                         observation_request = OperationObservationRequestV1(
                             operation_id=receipt.operation_id, after_cursor=0, page_limit=32
@@ -302,7 +302,9 @@ async def test_installed_mcp_reads_all_diagnostics_reports_with_exact_filters(
                             assert observed.is_error is False
                             candidate = OperationObservationSuccessV1.model_validate_json(
                                 canonical_json_bytes(
-                                    _object(_object(observed.structured_content)["reply"])["observation"]
+                                    structured_object(structured_object(observed.structured_content)["reply"])[
+                                        "observation"
+                                    ]
                                 )
                             )
                             if candidate.projection.lifecycle is OperationLifecycle.TERMINAL:
@@ -321,7 +323,7 @@ async def test_installed_mcp_reads_all_diagnostics_reports_with_exact_filters(
                         released = await client.call_tool("result", {"result": result_request.model_dump(mode="json")})
                         assert released.is_error is False
                         result = OperationResultProjectionSuccessV1[DiagnosticsReadProjection].model_validate_json(
-                            canonical_json_bytes(_object(released.structured_content)["document"])
+                            canonical_json_bytes(structured_object(released.structured_content)["document"])
                         )
                         assert result.projection.profile_id == profile.profile_id
                         assert result.projection.model_dump(
