@@ -3,12 +3,10 @@
 from __future__ import annotations
 
 from collections.abc import Iterator
-from contextlib import asynccontextmanager
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
-from types import SimpleNamespace
-from typing import Any, cast
+from typing import cast
 from uuid import UUID, uuid4
 
 import pytest
@@ -17,7 +15,6 @@ from pydantic import BaseModel, ValidationError
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
-from ....core.secure_object_write import SecureObjectWrite
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.transactions.enums import (
     BusinessClassification,
@@ -31,7 +28,6 @@ from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
-from ...operations.owner import OperationExecutorContext
 from ...operations.registry import (
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
@@ -41,8 +37,7 @@ from ...user_profile.access_errors import ProfileAccessRefusedError
 from .. import split_operation as operation
 from ..action_ports import LedgerActionPorts
 from ..models import SplitChildCommand, SplitTransactionResult
-from ..persistence_ports import LedgerPersistenceConflictError
-from ..protocols import RevisionGuardedTransactionCatalogueCoCommitWriterProtocol
+from .full_catalogue_commit_harness import FullCatalogueCommitHarness
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -252,125 +247,16 @@ def test_result_over_its_byte_bound_fails_as_validation_not_profile_mismatch(
 async def test_executor_resolves_and_writes_against_the_same_fresh_revision(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    in_commit = False
     parent = _parent_transaction()
     catalogue = TransactionCatalogue.model_validate({parent.transaction_id: parent})
-    revision_calls: list[object] = []
-    guarded_writes: list[str] = []
     split_calls: list[dict[str, object]] = []
-    authority = cast(PinnedAuthorityOperation, object())
-
-    class TransactionRepository:
-        bucket_id = str(_PROFILE)
-
-        def exists(self) -> bool:
-            return True
-
-        def load(self) -> TransactionCatalogue:
-            return catalogue
-
-        def load_for_date_range(self, _start: date, _end: date) -> TransactionCatalogue:
-            return catalogue
-
-        def load_by_ids(self, _transaction_ids: object) -> TransactionCatalogue:
-            return catalogue
-
-        def partition_by_date_range(self, _start: date, _end: date) -> object:
-            raise AssertionError("split should use the full revisioned catalogue")
-
-        def save(self, _catalogue: TransactionCatalogue) -> None:
-            raise AssertionError("split must use its full-catalogue revision guard")
-
-        def save_with_secure_object_writes(
-            self,
-            _catalogue: TransactionCatalogue,
-            _extra_writes: tuple[SecureObjectWrite, ...],
-        ) -> None:
-            raise AssertionError("split must use its full-catalogue revision guard")
-
-        def replace_if_current_with_secure_object_writes(
-            self,
-            _current: Transaction,
-            _replacement: Transaction,
-            _extra_writes: tuple[SecureObjectWrite, ...],
-        ) -> None:
-            raise AssertionError("split must use its full-catalogue revision guard")
-
-        def load_revisioned(self) -> tuple[TransactionCatalogue, str]:
-            assert in_commit
-            revision_calls.append(catalogue)
-            return catalogue, "revision-one"
-
-        def save_if_revision_with_secure_object_writes(
-            self,
-            _new_catalogue: TransactionCatalogue,
-            *,
-            expected_revision_id: str,
-            extra_writes: tuple[SecureObjectWrite, ...],
-        ) -> None:
-            assert in_commit
-            assert extra_writes == ()
-            guarded_writes.append(expected_revision_id)
-
-    repository = TransactionRepository()
-    ports = LedgerActionPorts(
-        operation=authority,
-        transaction_repository=cast(Any, repository),
-        bucket_event_repository=cast(Any, object()),
-        invoice_repository=cast(Any, SimpleNamespace(bucket_id=str(_PROFILE))),
-        attachment_store=cast(Any, object()),
-        usage_ratio_profile=cast(Any, object()),
-        usage_ratio_profile_loader=cast(Any, object()),
-        work_unit_repository=cast(Any, SimpleNamespace(bucket_id=str(_PROFILE))),
-        calculation_repository=cast(Any, SimpleNamespace(bucket_id=str(_PROFILE))),
-        purchase_invoice_evidence_records=(),
-    )
-
-    class Cancellation:
-        @asynccontextmanager
-        async def irreversible_section(self):
-            nonlocal in_commit
-            in_commit = True
-            try:
-                yield
-            finally:
-                in_commit = False
-
-    class Events:
-        def __init__(self) -> None:
-            self.effects: list[OperationEffect] = []
-
-        async def phase(self, _phase: str) -> None:
-            return None
-
-        async def effect(self, effect: OperationEffect) -> None:
-            self.effects.append(effect)
-
-    class Operands:
-        value: BaseModel | None = None
-
-        async def put(self, operand: BaseModel, *, written_at: object) -> str:
-            self.value = operand
-            return "d" * 64
+    harness = FullCatalogueCommitHarness(profile_id=_PROFILE, catalogue=catalogue, verb="split", result_ref="d" * 64)
 
     action_results: list[SplitTransactionResult] = []
     monkeypatch.setattr("cadrumo.application.operations.profile_guard.require_active_bucket_id", lambda: str(_PROFILE))
 
     def canonical_split(**kwargs: object) -> SplitTransactionResult:
-        assert in_commit
-        split_ports = cast(LedgerActionPorts, kwargs["ports"])
-        pinned = cast(RevisionGuardedTransactionCatalogueCoCommitWriterProtocol, split_ports.transaction_repository)
-        assert pinned is not repository
-        pinned_catalogue, pinned_revision = pinned.load_revisioned()
-        assert pinned_catalogue is catalogue
-        assert pinned_revision == "revision-one"
-        with pytest.raises(LedgerPersistenceConflictError):
-            pinned.save(catalogue)
-        pinned.save_if_revision_with_secure_object_writes(
-            catalogue,
-            expected_revision_id=pinned_revision,
-            extra_writes=(),
-        )
+        harness.exercise_pinned_commit(cast(LedgerActionPorts, kwargs["ports"]))
         split_calls.append(kwargs)
         commands = cast(tuple[SplitChildCommand, ...], kwargs["children"])
         child_transactions = tuple(
@@ -421,19 +307,10 @@ async def test_executor_resolves_and_writes_against_the_same_fresh_revision(
 
     monkeypatch.setattr(operation, "split_transaction", canonical_split)
 
-    events = Events()
-    operands = Operands()
-    context = SimpleNamespace(
-        identity=SimpleNamespace(
-            definition_id=operation.LEDGER_SPLIT_OPERATION_DEFINITION_ID,
-            subject_ref=profile_operation_subject(str(_PROFILE)),
-        ),
-        authority_operation=authority,
-        cancellation=Cancellation(),
-        events=events,
-        operands=operands,
-    )
-    executor = operation.LedgerSplitExecutor(lambda *, bucket_id, operation: ports)
+    events = harness.events
+    operands = harness.operands
+    context = harness.context(operation.LEDGER_SPLIT_OPERATION_DEFINITION_ID)
+    executor = operation.LedgerSplitExecutor(lambda *, bucket_id, operation: harness.ports)
     payload = operation.LedgerSplitRequest(
         profile_id=_PROFILE,
         transaction_id=parent.transaction_id[:12],
@@ -448,11 +325,11 @@ async def test_executor_resolves_and_writes_against_the_same_fresh_revision(
         payload=payload,
     )
 
-    result_ref = await executor.execute(request, cast(OperationExecutorContext, context))
+    result_ref = await executor.execute(request, context)
 
     assert result_ref == "d" * 64
-    assert revision_calls == [catalogue]
-    assert guarded_writes == ["revision-one"]
+    assert harness.revision_calls == [catalogue]
+    assert harness.guarded_writes == ["revision-one"]
     assert len(split_calls) == 1
     assert split_calls[0]["transaction_id"] == parent.transaction_id
     assert split_calls[0]["actor"] == str(_PROFILE)
