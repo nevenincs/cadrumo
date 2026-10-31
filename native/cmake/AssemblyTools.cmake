@@ -21,7 +21,9 @@ endforeach()
 string(JSON build_toolchain SET "${build_toolchain}" native_tools "${native_tools}")
 string(JSON build_toolchain SET "${build_toolchain}" native_tool_sha256 "${native_tool_hashes}")
 if(target_system STREQUAL "Darwin")
-  set(CADRUMO_NATIVE_SIGNING_IDENTITY "" CACHE STRING "Explicit identity for signing assembled native images")
+  # The ad-hoc identity is the distribution signature; another local identity only
+  # changes the seal on this builder's own images.
+  set(CADRUMO_NATIVE_SIGNING_IDENTITY "-" CACHE STRING "Identity for signing assembled native images; - is the ad-hoc seal")
   if(CADRUMO_NATIVE_SIGNING_IDENTITY STREQUAL "")
     message(FATAL_ERROR "Supply CADRUMO_NATIVE_SIGNING_IDENTITY for macOS package assembly")
   endif()
