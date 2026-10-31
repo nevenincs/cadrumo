@@ -71,7 +71,7 @@ effective_from = 1993-01-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-06-27
 reviewed_by = "agent-review"
-notes = "LIVA art 80: modificacion de la base imponible. Grounds rectified M349 bases where the declared intracommunity operation base changes because the taxable base is reduced or otherwise modified."
+notes = "LIVA art 80: modificación de la base imponible. Grounds rectified M349 bases where the declared intracommunity operation base changes because the taxable base is reduced or otherwise modified."
 required_text = [
     "Modificación de la base imponible",
     "la base imponible se modificará en la cuantía correspondiente",
@@ -109,7 +109,7 @@ effective_from = 1993-01-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-08-06
 reviewed_by = "agent-review"
-notes = "LIVA art 85: sujetos pasivos de las adquisiciones intracomunitarias de bienes. Distinto de art. 84, que gobierna la inversion del sujeto pasivo para servicios/entregas de no establecidos; el sujeto pasivo de una AIB de bienes es quien realiza la adquisicion, por remision al art. 71."
+notes = "LIVA art 85: sujetos pasivos de las adquisiciones intracomunitarias de bienes. Distinto de art. 84, que gobierna la inversion del sujeto pasivo para servicios/entregas de no establecidos; el sujeto pasivo de una AIB de bienes es quien realiza la adquisición, por remision al art. 71."
 required_text = [
     "Sujetos pasivos",
     "En las adquisiciones intracomunitarias de bienes los sujetos pasivos del impuesto serán quienes las realicen",
@@ -128,7 +128,7 @@ effective_from = 1993-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-06
 reviewed_by = "operator"
-notes = "LIVA art 88: repercusion del impuesto. Establece la obligacion del sujeto pasivo de repercutir integramente el importe del IVA sobre el destinatario de la operacion gravada, quedando este obligado a soportarlo. Es la base legal del flujo IVA repercutido."
+notes = "LIVA art 88: repercusion del impuesto. Establece la obligación del sujeto pasivo de repercutir integramente el importe del IVA sobre el destinatario de la operacion gravada, quedando este obligado a soportarlo. Es la base legal del flujo IVA repercutido."
 required_text = [
     "Repercusión del impuesto",
     "deberán repercutir íntegramente el importe del impuesto",
@@ -188,7 +188,7 @@ effective_from = 1993-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-06-09
 reviewed_by = "operator"
-notes = "LIVA art 7: operaciones no sujetas al impuesto. Enumera los supuestos de no sujecion (transmision de unidad economica autonoma, muestras gratuitas, entregas publicitarias, servicios en regimen de dependencia, operaciones de Administraciones Publicas sin contraprestacion, concesiones administrativas, entregas de dinero). Base sustantiva para la clasificacion no-sujeta en el enrutamiento M303 (Tier-2 routing)."
+notes = "LIVA art 7: operaciones no sujetas al impuesto. Enumera los supuestos de no sujecion (transmisión de unidad economica autonoma, muestras gratuitas, entregas publicitarias, servicios en regimen de dependencia, operaciones de Administraciones Publicas sin contraprestacion, concesiones administrativas, entregas de dinero). Base sustantiva para la clasificacion no-sujeta en el enrutamiento M303 (Tier-2 routing)."
 required_text = [
     "Operaciones no sujetas al impuesto",
     "No estarán sujetas al impuesto",
@@ -227,7 +227,7 @@ effective_from = 2020-03-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-06-09
 reviewed_by = "operator"
-notes = "LIVA art 15: concepto de adquisicion intracomunitaria de bienes. Define la adquisicion intracomunitaria como la obtencion del poder de disposición sobre bienes muebles corporales expedidos o transportados al territorio de aplicación del Impuesto desde otro Estado miembro. Base definitoria del enrutamiento intracomunitario M303 (Tier-2 routing)."
+notes = "LIVA art 15: concepto de adquisición intracomunitaria de bienes. Define la adquisición intracomunitaria como la obtención del poder de disposición sobre bienes muebles corporales expedidos o transportados al territorio de aplicación del Impuesto desde otro Estado miembro. Base definitoria del enrutamiento intracomunitario M303 (Tier-2 routing)."
 required_text = [
     "Concepto de adquisición intracomunitaria de bienes",
     "Se entenderá por adquisición intracomunitaria de bienes",
@@ -266,7 +266,7 @@ effective_from = 2019-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-06-09
 reviewed_by = "operator"
-notes = "LIVA art 20: exenciones en operaciones interiores. Enumera las exenciones limitadas (sin derecho a deduccion) aplicables a las operaciones interiores: servicio postal, sanidad, educacion, asistencia social, operaciones financieras y de seguros, arrendamientos y entregas de inmuebles, entre otras. Base sustantiva de la clasificacion exenta interior en el enrutamiento M303 (Tier-2 routing)."
+notes = "LIVA art 20: exenciones en operaciones interiores. Enumera las exenciones limitadas (sin derecho a deducción) aplicables a las operaciones interiores: servicio postal, sanidad, educacion, asistencia social, operaciones financieras y de seguros, arrendamientos y entregas de inmuebles, entre otras. Base sustantiva de la clasificacion exenta interior en el enrutamiento M303 (Tier-2 routing)."
 required_text = [
     "Estarán exentas de este impuesto las siguientes operaciones",
     # Apartado Dos (renuncia a la exención) and the closing clause of apartado

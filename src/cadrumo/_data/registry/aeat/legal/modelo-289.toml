@@ -30,7 +30,7 @@ effective_from = 2016-01-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "downloaded official BOE-A-2015-12399 consolidated HTML from BOE on 2026-07-01"
-notes = "Real Decreto 1021/2015 articulo 4: establece la obligacion anual de información respecto de las cuentas financieras comunicables."
+notes = "Real Decreto 1021/2015 articulo 4: establece la obligación anual de información respecto de las cuentas financieras comunicables."
 required_text = [
     "cuentas financieras sean residentes fiscales",
     "forma, lugar y plazo que se determine",

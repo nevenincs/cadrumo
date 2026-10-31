@@ -32,7 +32,7 @@ effective_from = 2016-01-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "downloaded official BOE-A-2015-11074 consolidated HTML from BOE on 2026-07-01"
-notes = "Orden HAP/2118/2015 articulo 2: identifica como obligadas a las entidades aseguradoras o de credito que comercialicen Planes de Ahorro a Largo Plazo."
+notes = "Orden HAP/2118/2015 articulo 2: identifica como obligadas a las entidades aseguradoras o de crédito que comercialicen Planes de Ahorro a Largo Plazo."
 required_text = [
     "Artículo 2. Obligados a presentar el modelo 280",
     "entidades aseguradoras o de crédito",

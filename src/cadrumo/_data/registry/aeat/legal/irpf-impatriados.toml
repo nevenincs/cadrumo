@@ -420,7 +420,7 @@ review_status = "agent_reviewed"
 reviewed_at = 2026-08-16
 reviewed_by = "agent-review"
 corpus_tier = "full_consolidated"
-notes = "Orden HFP/1338/2023 art 2: obligados a presentar el modelo 151. Misma remision al articulo 114 del Reglamento del IRPF que su predecesora, con el ambito subjetivo ampliado por la Ley 28/2022 a trabajadores, profesionales, emprendedores e inversores desplazados. Verified against the bundled consolidated corpus file before authoring."
+notes = "Orden HFP/1338/2023 art 2: obligados a presentar el modelo 151. Misma remision al articulo 114 del Reglamento del IRPF que su predecesora, con el ámbito subjetivo ampliado por la Ley 28/2022 a trabajadores, profesionales, emprendedores e inversores desplazados. Verified against the bundled consolidated corpus file before authoring."
 required_text = [
     "Obligados a presentar el modelo 151",
     "estarán obligados a presentar y suscribir el modelo de declaración",

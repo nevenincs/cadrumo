@@ -179,7 +179,7 @@ review_status = "operator_reviewed"
 reviewed_at = 2026-08-12
 reviewed_by = "operator"
 notes = """\
-Embargo de bienes o derechos en entidades de credito o de deposito. The seizure may extend beyond \
+Embargo de bienes o derechos en entidades de crédito o de deposito. The seizure may extend beyond \
 the office where it was notified, within the amount due. Where the seized balance derives from a \
 transfer of salary, pension or wage, the limits protecting those sums apply as though the balance \
 were the payment itself. On a jointly held account only the obligado's share is seized, and where \

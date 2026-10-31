@@ -658,7 +658,7 @@ text = "Articulo segundo de la Orden HAC/623/2026: modifica en el registro de ti
 
 [[legal."orden-hac-623-2026:disposicion-final-unica"]]
 language = "es"
-text = "Disposición final unica de la Orden HAC/623/2026, punto 1: la modificacion del modelo 296 se aplica por primera vez a la declaración informativa del ejercicio 2026, que se presentara en 2027."
+text = "Disposición final unica de la Orden HAC/623/2026, punto 1: la modificación del modelo 296 se aplica por primera vez a la declaración informativa del ejercicio 2026, que se presentara en 2027."
 
 [[legal."orden-hfp-1351-2021:art-quinto"]]
 language = "es"
@@ -666,7 +666,7 @@ text = "Articulo quinto de la Orden HFP/1351/2021: modifica el anexo III de la O
 
 [[legal."trlirnr-rdleg-5-2004:art-2"]]
 language = "es"
-text = "TRLIRNR art 2: ambito de aplicación territorial del impuesto. Incluye salvedad de los regimenes forales (Pais Vasco, Navarra) y especialidades de Canarias, Ceuta y Melilla. Fundamento territorial para la atribucion de obligacion IRNR a contribuyentes no residentes que obtienen rentas con fuente en territorio espanol."
+text = "TRLIRNR art 2: ámbito de aplicación territorial del impuesto. Incluye salvedad de los regimenes forales (Pais Vasco, Navarra) y especialidades de Canarias, Ceuta y Melilla. Fundamento territorial para la atribucion de obligación IRNR a contribuyentes no residentes que obtienen rentas con fuente en territorio espanol."
 
 [[legal."trlirnr-rdleg-5-2004:art-24"]]
 language = "es"
@@ -690,7 +690,7 @@ text = "TRLIRNR art 25.1.b: escala especial para pensiones y prestaciones simila
 
 [[legal."trlirnr-rdleg-5-2004:art-25.1.f"]]
 language = "es"
-text = "TRLIRNR art 25.1.f: tipo de gravamen del 19 por ciento aplicable por clase de renta a dividendos, intereses y otros rendimientos de capitales propios, y ganancias patrimoniales por transmision de elementos patrimoniales."
+text = "TRLIRNR art 25.1.f: tipo de gravamen del 19 por ciento aplicable por clase de renta a dividendos, intereses y otros rendimientos de capitales propios, y ganancias patrimoniales por transmisión de elementos patrimoniales."
 
 [[legal."trlirnr-rdleg-5-2004:art-25.1.f"]]
 language = "es"
@@ -702,23 +702,23 @@ text = "Soporte legal de las filas tipo_renta=dividend, tipo_renta=interest y ti
 
 [[legal."orden-hfp-207-2022:art-2"]]
 language = "es"
-text = "orden-hfp-207-2022 art 2: obligacion de declarar por el Impuesto sobre el Patrimonio, ejercicio 2021."
+text = "orden-hfp-207-2022 art 2: obligación de declarar por el Impuesto sobre el Patrimonio, ejercicio 2021."
 
 [[legal."orden-hfp-310-2023:art-2"]]
 language = "es"
-text = "orden-hfp-310-2023 art 2: obligacion de declarar por el Impuesto sobre el Patrimonio, ejercicio 2022."
+text = "orden-hfp-310-2023 art 2: obligación de declarar por el Impuesto sobre el Patrimonio, ejercicio 2022."
 
 [[legal."orden-hac-265-2024:art-2"]]
 language = "es"
-text = "orden-hac-265-2024 art 2: obligacion de declarar por el Impuesto sobre el Patrimonio, ejercicio 2023."
+text = "orden-hac-265-2024 art 2: obligación de declarar por el Impuesto sobre el Patrimonio, ejercicio 2023."
 
 [[legal."orden-hac-242-2025:art-2"]]
 language = "es"
-text = "orden-hac-242-2025 art 2: obligacion de declarar por el Impuesto sobre el Patrimonio, ejercicio 2024."
+text = "orden-hac-242-2025 art 2: obligación de declarar por el Impuesto sobre el Patrimonio, ejercicio 2024."
 
 [[legal."orden-hac-277-2026:art-2"]]
 language = "es"
-text = "orden-hac-277-2026 art 2: obligacion de declarar por el Impuesto sobre el Patrimonio, ejercicio 2025."
+text = "orden-hac-277-2026 art 2: obligación de declarar por el Impuesto sobre el Patrimonio, ejercicio 2025."
 
 [[legal."ley-37-1992:art-163-octiesdecies"]]
 language = "es"
@@ -738,7 +738,7 @@ text = "reglas especiales de base imponible para las operaciones asimiladas a en
 
 [[legal."ley-37-1992:art-88"]]
 language = "es"
-text = "repercusion del impuesto. Establece la obligacion del sujeto pasivo de repercutir integramente el importe del IVA sobre el destinatario de la operacion gravada, quedando este obligado a soportarlo."
+text = "repercusion del impuesto. Establece la obligación del sujeto pasivo de repercutir integramente el importe del IVA sobre el destinatario de la operacion gravada, quedando este obligado a soportarlo."
 
 [[legal."ley-37-1992:art-9"]]
 language = "es"
@@ -966,7 +966,7 @@ text = "Esta entrada se identifica por el apartado, siguiendo la granularidad ya
 
 [[legal."real-decreto-ley-7-2024:art-11.2"]]
 language = "es"
-text = "El apartado declara que la reduccion se tiene en cuenta para el calculo de la CUOTA ANUAL de 2024: no es una reduccion trimestral repetida cuatro veces, y required_text exige esa frase precisamente porque es la que distingue las dos lecturas."
+text = "El apartado declara que la reducción se tiene en cuenta para el calculo de la CUOTA ANUAL de 2024: no es una reducción trimestral repetida cuatro veces, y required_text exige esa frase precisamente porque es la que distingue las dos lecturas."
 
 [[legal."real-decreto-ley-7-2024:art-11.2"]]
 language = "es"
@@ -974,7 +974,7 @@ text = "El apartado no enumera municipios: se remite al anexo del RDL 6/2024, qu
 
 [[legal."real-decreto-ley-7-2024:art-11.2"]]
 language = "es"
-text = "Cuando la reduccion rige no lo dice este articulo sino la disposición final decimocuarta de la misma norma; la entrada real-decreto-ley-7-2024:df-14 la cita, y effective_from se toma de alli en lugar de deducirse."
+text = "Cuando la reducción rige no lo dice este articulo sino la disposición final decimocuarta de la misma norma; la entrada real-decreto-ley-7-2024:df-14 la cita, y effective_from se toma de alli en lugar de deducirse."
 
 [[legal."real-decreto-ley-7-2024:art-11"]]
 language = "es"
@@ -1090,7 +1090,7 @@ text = "RDL 6/2024 art."
 
 [[legal."real-decreto-ley-6-2024:art-1"]]
 language = "es"
-text = "Apartado 1 fija el ambito por remision al anexo de la propia norma y a la ventana del 28 de octubre al 4 de noviembre de 2024."
+text = "Apartado 1 fija el ámbito por remision al anexo de la propia norma y a la ventana del 28 de octubre al 4 de noviembre de 2024."
 
 [[legal."real-decreto-ley-6-2024:art-1"]]
 language = "es"
@@ -1190,15 +1190,15 @@ text = "El apartado 7 esta en la redacción del RD 1075/2017 (BOE-A-2017-15843),
 
 [[legal."real-decreto-ley-7-2024:df-14"]]
 language = "es"
-text = "La norma entra en vigor el dia siguiente al de su publicacion en el BOE; publicada el 12 de noviembre de 2024, rige desde el 13 de noviembre de 2024, que es el effective_from de esta entrada y el que toma prestado la entrada del articulo 11 apartado 2."
+text = "La norma entra en vigor el dia siguiente al de su publicación en el BOE; publicada el 12 de noviembre de 2024, rige desde el 13 de noviembre de 2024, que es el effective_from de esta entrada y el que toma prestado la entrada del articulo 11 apartado 2."
 
 [[legal."real-decreto-ley-7-2024:df-14"]]
 language = "es"
-text = "La misma disposición acota hasta el 31 de diciembre de 2024 unicamente las medidas del articulo 42.1.e) y 4, materia laboral ajena al IVA, de modo que no cierra la vigencia de la reduccion del articulo 11.2."
+text = "La misma disposición acota hasta el 31 de diciembre de 2024 unicamente las medidas del articulo 42.1.e) y 4, materia laboral ajena al IVA, de modo que no cierra la vigencia de la reducción del articulo 11.2."
 
 [[legal."real-decreto-ley-7-2024:df-14"]]
 language = "es"
-text = "Esta entrada existe para que la aplicabilidad de la reduccion se lea de la norma y no se infiera del articulo que la establece."
+text = "Esta entrada existe para que la aplicabilidad de la reducción se lea de la norma y no se infiera del articulo que la establece."
 
 [[legal."rd-1624-1992:art-62"]]
 language = "es"

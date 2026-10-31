@@ -113,7 +113,7 @@ effective_from = 2004-07-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-08-12
 reviewed_by = "operator"
-notes = "Infraccion por incumplir la obligacion de presentar de forma completa y correcta las declaraciones o documentos necesarios para practicar liquidaciones. Same severity axis and same nominal bands as art-191, applied to the declaration-based rather than the self-assessment-based case: leve 50 por ciento, grave 50 al 100 por ciento, muy grave 100 al 150 por ciento, with the same 10 per cent and 50 per cent books-and-registers thresholds."
+notes = "Infraccion por incumplir la obligación de presentar de forma completa y correcta las declaraciones o documentos necesarios para practicar liquidaciones. Same severity axis and same nominal bands as art-191, applied to the declaration-based rather than the self-assessment-based case: leve 50 por ciento, grave 50 al 100 por ciento, muy grave 100 al 150 por ciento, with the same 10 per cent and 50 per cent books-and-registers thresholds."
 required_text = [
     "La sanción por infracción leve consistirá en multa pecuniaria proporcional del 50 por ciento",
     "represente un porcentaje superior al 10 por ciento de la base de la sanción",

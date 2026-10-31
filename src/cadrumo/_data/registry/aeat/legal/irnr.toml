@@ -59,7 +59,7 @@ effective_from = 2004-03-13
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-27
 reviewed_by = "operator"
-notes = "TRLIRNR art 2: ambito de aplicación territorial del impuesto. Incluye salvedad de los regimenes forales (Pais Vasco, Navarra) y especialidades de Canarias, Ceuta y Melilla. Fundamento territorial para la atribucion de obligacion IRNR a contribuyentes no residentes que obtienen rentas con fuente en territorio espanol."
+notes = "TRLIRNR art 2: ámbito de aplicación territorial del impuesto. Incluye salvedad de los regimenes forales (Pais Vasco, Navarra) y especialidades de Canarias, Ceuta y Melilla. Fundamento territorial para la atribucion de obligación IRNR a contribuyentes no residentes que obtienen rentas con fuente en territorio espanol."
 required_text = ["Este impuesto se aplicara en todo el territorio espanol", "regimenes tributarios forales"]
 
 [legal."trlirnr-rdleg-5-2004:art-10"]
@@ -75,7 +75,7 @@ effective_from = 2004-03-13
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-27
 reviewed_by = "operator"
-notes = "TRLIRNR art 10: obligacion de designar representante fiscal con residencia en Espana para los contribuyentes que no sean residentes en otro Estado miembro de la Union Europea, cuando operen mediante establecimiento permanente o cuando la Administracion Tributaria lo requiera por la cuantia o caracteristicas de la renta. Fundamento legal del gate de verification predicate implies_nonzero(['fiscal_residency','representante_fiscal_nif']) en la superficie M210 vigente."
+notes = "TRLIRNR art 10: obligación de designar representante fiscal con residencia en Espana para los contribuyentes que no sean residentes en otro Estado miembro de la Union Europea, cuando operen mediante establecimiento permanente o cuando la Administracion Tributaria lo requiera por la cuantia o caracteristicas de la renta. Fundamento legal del gate de verification predicate implies_nonzero(['fiscal_residency','representante_fiscal_nif']) en la superficie M210 vigente."
 required_text = ["no sean residentes en otro Estado miembro de la Union Europea", "persona fisica o juridica con residencia en Espana", "les represente ante la Administracion Tributaria"]
 
 [legal."trlirnr-rdleg-5-2004:art-13.1"]
@@ -185,7 +185,7 @@ effective_from = 2004-03-13
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-27
 reviewed_by = "operator"
-notes = "TRLIRNR art 25.1.f: tipo de gravamen del 19 por ciento aplicable por clase de renta a dividendos, intereses y otros rendimientos de capitales propios, y ganancias patrimoniales por transmision de elementos patrimoniales. No contiene condicion de residencia UE/EEE; esa condicion pertenece al tipo general reducido de art 25.1.a. Soporte legal de las filas tipo_renta=dividend, tipo_renta=interest y tipo_renta=ganancia_patrimonial del parametro registry m210-tipo-gravamen-2025."
+notes = "TRLIRNR art 25.1.f: tipo de gravamen del 19 por ciento aplicable por clase de renta a dividendos, intereses y otros rendimientos de capitales propios, y ganancias patrimoniales por transmisión de elementos patrimoniales. No contiene condicion de residencia UE/EEE; esa condicion pertenece al tipo general reducido de art 25.1.a. Soporte legal de las filas tipo_renta=dividend, tipo_renta=interest y tipo_renta=ganancia_patrimonial del parametro registry m210-tipo-gravamen-2025."
 required_text = ["El 19 por ciento cuando se trate de", "Dividendos y otros rendimientos derivados de la participacion en los fondos propios de una entidad", "Intereses y otros rendimientos obtenidos por la cesion a terceros de capitales propios", "Ganancias patrimoniales que se pongan de manifiesto con ocasion de transmisiones de elementos patrimoniales"]
 
 [legal."convenio-es-gb-2013:art-6"]
@@ -639,7 +639,7 @@ effective_from = 2009-01-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-04
 reviewed_by = "agent-replaced the bundled excerpt with the BOE published text of arts. 1 and 4 of BOE-A-2008-18497; the prior excerpt was hand-shaped despite claiming a verbatim fetch; operator to re-stamp"
-notes = "Orden EHA/3290/2008 art 1: aprobación del modelo 216, Impuesto sobre la Renta de no Residentes, rentas obtenidas sin mediacion de establecimiento permanente, retenciones e ingresos a cuenta, declaracion-documento de ingreso. Approval-order anchor for the Modelo 216 quarterly IRNR retencion return."
+notes = "Orden EHA/3290/2008 art 1: aprobación del modelo 216, Impuesto sobre la Renta de no Residentes, rentas obtenidas sin mediacion de establecimiento permanente, retenciones e ingresos a cuenta, declaracion-documento de ingreso. Approval-order anchor for the Modelo 216 quarterly IRNR retención return."
 required_text = [
     "Se aprueba el modelo 216",
     "Retenciones e ingresos a cuenta",
@@ -1080,7 +1080,7 @@ effective_from = 2026-06-24
 review_status = "agent_reviewed"
 reviewed_at = 2026-09-30
 reviewed_by = "agent-prepared-pending-operator"
-notes = "Disposición final unica de la Orden HAC/623/2026, punto 1: la modificacion del modelo 296 se aplica por primera vez a la declaración informativa del ejercicio 2026, que se presentara en 2027."
+notes = "Disposición final unica de la Orden HAC/623/2026, punto 1: la modificación del modelo 296 se aplica por primera vez a la declaración informativa del ejercicio 2026, que se presentara en 2027."
 required_text = [
     "declaración informativa modelo 296",
     "correspondiente al ejercicio 2026",
