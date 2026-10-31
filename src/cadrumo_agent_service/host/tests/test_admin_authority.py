@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import json
 import socket
-import struct
 from threading import Event
 from uuid import uuid4
 
@@ -18,6 +17,7 @@ from ...contracts import ServiceStartupFrame
 from ...gateway_credentials import GatewayCredentials
 from ..controller import AgentGenerations, ResolvedAgentCredentials
 from ..credential_frame import build_credential_frame, wipe
+from .admin_wire_support import read_frame, send_frame
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -41,26 +41,6 @@ class _AdminRecorder:
         if action == "set":
             assert secret == bytearray(b"synthetic-provider-secret")
         return {"kind": "served", "action": action}
-
-
-def _send(stream: socket.socket, payload: bytes | bytearray) -> None:
-    stream.sendall(struct.pack("!I", len(payload)) + payload)
-
-
-def _read(stream: socket.socket) -> dict[str, object]:
-    def exact(size: int) -> bytes:
-        result = bytearray()
-        while len(result) < size:
-            value = stream.recv(size - len(result))
-            if not value:
-                raise EOFError("admin_response_incomplete")
-            result.extend(value)
-        return bytes(result)
-
-    (size,) = struct.unpack("!I", exact(4))
-    document = json.loads(exact(size))
-    assert isinstance(document, dict)
-    return {str(key): value for key, value in document.items()}
 
 
 @pytest.mark.parametrize(
@@ -119,16 +99,16 @@ def test_gateway_frame_secret_is_refused_and_parent_admin_secret_dispatches(acti
         request["secret_bytes"] = len(secret)
     try:
         with socket.create_connection(("127.0.0.1", server.port), timeout=5) as stream:
-            _send(stream, agent_token)
-            assert _read(stream) == {"kind": "refused", "code": "unauthenticated"}
+            send_frame(stream, agent_token)
+            assert read_frame(stream) == {"kind": "refused", "code": "unauthenticated"}
         assert target.actions == []
         with socket.create_connection(("127.0.0.1", server.port), timeout=5) as stream:
-            _send(stream, parent)
-            _send(stream, json.dumps(request).encode())
+            send_frame(stream, parent)
+            send_frame(stream, json.dumps(request).encode())
             if action in {"set", "connect_submit_code"}:
-                assert _read(stream) == {"event": "secret_ready", "request_id": request["request_id"]}
-                _send(stream, secret)
-            assert _read(stream) == {
+                assert read_frame(stream) == {"event": "secret_ready", "request_id": request["request_id"]}
+                send_frame(stream, secret)
+            assert read_frame(stream) == {
                 "version": 1,
                 "request_id": request["request_id"],
                 "result": {"kind": "served", "action": action},

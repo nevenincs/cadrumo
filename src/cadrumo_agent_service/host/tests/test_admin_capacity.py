@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import json
 import socket
-import struct
 import time
 from concurrent.futures import ThreadPoolExecutor
 from threading import Event, Lock
@@ -15,6 +14,7 @@ from pydantic import JsonValue
 
 from ...admin import ADMIN_EXCHANGES, AdminServer
 from ..credential_frame import wipe
+from .admin_wire_support import read_frame, send_frame
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -36,31 +36,11 @@ class _HeldTarget:
         return {"kind": "served", "action": action}
 
 
-def _send(stream: socket.socket, payload: bytes) -> None:
-    stream.sendall(struct.pack("!I", len(payload)) + payload)
-
-
-def _read(stream: socket.socket) -> dict[str, object]:
-    def exact(size: int) -> bytes:
-        result = bytearray()
-        while len(result) < size:
-            value = stream.recv(size - len(result))
-            if not value:
-                raise EOFError("admin_response_incomplete")
-            result.extend(value)
-        return bytes(result)
-
-    (size,) = struct.unpack("!I", exact(4))
-    document = json.loads(exact(size))
-    assert isinstance(document, dict)
-    return {str(key): value for key, value in document.items()}
-
-
 def _exchange(port: int, request_id: str) -> dict[str, object]:
     with socket.create_connection(("127.0.0.1", port), timeout=15) as stream:
-        _send(stream, _BEARER)
-        _send(stream, json.dumps({"version": 1, "request_id": request_id, "action": "catalog"}).encode())
-        return _read(stream)
+        send_frame(stream, _BEARER)
+        send_frame(stream, json.dumps({"version": 1, "request_id": request_id, "action": "catalog"}).encode())
+        return read_frame(stream)
 
 
 def test_exchanges_past_the_served_ones_are_answered_busy_and_the_served_ones_complete() -> None:

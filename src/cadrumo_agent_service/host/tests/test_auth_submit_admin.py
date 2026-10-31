@@ -2,35 +2,15 @@
 
 import json
 import socket
-import struct
 from uuid import uuid4
 
 import pytest
 from pydantic import JsonValue, ValidationError
 
 from ...admin import AdminRequest, AdminServer
+from .admin_wire_support import read_frame, send_frame
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-
-
-def _send(stream: socket.socket, payload: bytes) -> None:
-    stream.sendall(struct.pack("!I", len(payload)) + payload)
-
-
-def _read(stream: socket.socket) -> dict[str, object]:
-    def exact(size: int) -> bytes:
-        result = bytearray()
-        while len(result) < size:
-            data = stream.recv(size - len(result))
-            if not data:
-                raise EOFError
-            result.extend(data)
-        return bytes(result)
-
-    (size,) = struct.unpack("!I", exact(4))
-    value: object = json.loads(exact(size))
-    assert isinstance(value, dict)
-    return {str(key): item for key, item in value.items()}
 
 
 def test_secret_frame_is_separate_and_wiped_after_dispatch() -> None:
@@ -55,11 +35,11 @@ def test_secret_frame_is_separate_and_wiped_after_dispatch() -> None:
     }
     try:
         with socket.create_connection(("127.0.0.1", server.port), timeout=5) as stream:
-            _send(stream, bytes(bearer))
-            _send(stream, json.dumps(request).encode())
-            assert _read(stream) == {"event": "secret_ready", "request_id": request["request_id"]}
-            _send(stream, b"synthetic-code")
-            reply = _read(stream)
+            send_frame(stream, bytes(bearer))
+            send_frame(stream, json.dumps(request).encode())
+            assert read_frame(stream) == {"event": "secret_ready", "request_id": request["request_id"]}
+            send_frame(stream, b"synthetic-code")
+            reply = read_frame(stream)
             assert reply["result"] == {"event": "started"}
             assert "synthetic-code" not in str(reply)
         assert target.secret == bytearray()
