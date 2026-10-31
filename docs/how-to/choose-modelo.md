@@ -21,7 +21,7 @@ Run `overview explain` with the modelo code. By default the tool answers for the
 :verify: Confirm the tool reports whether Modelo 303 applies and whether the profile is ready to file it.
 ```
 
-The explain answer has four parts:
+The `explain` answer has four parts:
 
 - **The verdict** - whether the modelo applies to you for that year.
 - **The rationale** - a plain-language explanation derived from the official rules.

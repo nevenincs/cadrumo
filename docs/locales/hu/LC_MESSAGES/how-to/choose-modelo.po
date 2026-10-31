@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-30 16:56+0100\n"
+"POT-Creation-Date: 2026-10-31 11:24+0100\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo localization <docs@cadrumo>\n"
 "Language: hu\n"
@@ -108,8 +108,8 @@ msgstr ""
 "diagnosztikai folyamatot."
 
 #: ../../how-to/choose-modelo.md:24
-msgid "The explain answer has four parts:"
-msgstr "Az explain válasza négy részből áll:"
+msgid "The `explain` answer has four parts:"
+msgstr "Az `explain` válasza négy részből áll:"
 
 #: ../../how-to/choose-modelo.md:26
 msgid "**The verdict** - whether the modelo applies to you for that year."

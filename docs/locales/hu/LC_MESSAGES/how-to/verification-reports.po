@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-02 00:43+0200\n"
+"POT-Creation-Date: 2026-10-31 11:24+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: hu\n"
@@ -262,8 +262,10 @@ msgid "Each issue carries:"
 msgstr "Minden probléma hordozza:"
 
 #: ../../how-to/verification-reports.md:100
-msgid "A severity: **blocking** or **warning**."
-msgstr "Egy súlyosságot: **blokkoló** vagy **figyelmeztetés**."
+msgid "A severity: **`blocking`** or **`warning`**."
+msgstr ""
+"Egy súlyosságot: **`blocking` (blokkoló)** vagy **`warning` "
+"(figyelmeztetés)**."
 
 #: ../../how-to/verification-reports.md:101
 msgid ""

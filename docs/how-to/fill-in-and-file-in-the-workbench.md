@@ -75,7 +75,7 @@ The figures are Cadrumo's calculation. The AEAT has not seen them.
 - **The navigator** on the left lists the official pages and their sections.
   Each shows the most serious thing inside it (▲, then !, then ◐) with a
   count. A finished section shows ✓. A section that does not apply this period
-  is dimmed and says so. Press Space, or ← and →, to close or open a page.
+  is dimmed and says so. Press `Space`, or ← and →, to close or open a page.
   On a narrow terminal the navigator becomes one line above the list; use `[`
   and `]` to change page.
 - **The list** shows each box: its number in brackets, its label, its value
@@ -89,7 +89,7 @@ The figures are Cadrumo's calculation. The AEAT has not seen them.
   ↑ and ↓ to move between rows. On a narrow terminal the table is stacked
   instead.
 - **Records that repeat**, such as the intra-community traders in Modelo 349,
-  appear as a numbered table. Use ↑ and ↓ or Page Up and Page Down to scroll
+  appear as a numbered table. Use ↑ and ↓ or `Page Up` and `Page Down` to scroll
   through the rows. These values are read-only here; change them where they
   come from, for example in your records.
 
@@ -131,7 +131,7 @@ applied yet". When a box cannot be typed into, the panel says why and what to
 do: a value that follows your records, for example, is corrected in Records and
 then recalculated.
 
-Press `x` or Delete to clear a value you entered, and `u` to go back to the
+Press `x` or `Delete` to clear a value you entered, and `u` to go back to the
 value before your change.
 
 ### Confirm an assumed value
@@ -316,7 +316,7 @@ is refused. To change it, {ref}`start a correction <correct-an-already-filed-loc
 | ← and → or `h` and `l` | Move between cells in a table |
 | Space | Open or close a page |
 | `b` | Confirm assumed values of a section or page |
-| `x` or Delete | Clear a value you entered |
+| `x` or `Delete` | Clear a value you entered |
 | `u` | Undo a change you have not applied |
 | `s` | The sources map |
 | `i` | Issues |

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-15 06:16+0200\n"
+"POT-Creation-Date: 2026-10-31 11:24+0100\n"
 "PO-Revision-Date: 2026-07-18 13:10+0000\n"
 "Last-Translator: Cadrumo translation team <docs@cadrumo.example>\n"
 "Language: ca\n"
@@ -63,10 +63,10 @@ msgstr "Registrar el servidor"
 
 #: ../../how-to/connect-an-agent.md:22
 msgid ""
-"Register `cadrumo-mcp` as a stdio server in your MCP client. For a client"
-" that accepts a JSON server definition:"
+"Register `cadrumo-mcp` as a `stdio` server in your MCP client. For a "
+"client that accepts a JSON server definition:"
 msgstr ""
-"Registra `cadrumo-mcp` com a servidor stdio al teu client MCP. En un "
+"Registra `cadrumo-mcp` com a servidor `stdio` al teu client MCP. En un "
 "client que accepti una definició de servidor JSON:"
 
 #: ../../how-to/connect-an-agent.md:36

@@ -40,7 +40,7 @@ Change one or more fields directly. The sequence records a chair at the wrong pr
 :verify: Confirm the update replaced the amount and description.
 ```
 
-Each flag fully replaces that field - write the complete new value, not an addition to the old one. Write the amount as a positive figure - the direction field carries whether money came in or went out, and a negative amount is refused. The updatable fields are: date, value-date, amount, direction, currency, counterparty, description, taxable-base, iva-rate, iva-amount, irpf-category, notes, and group.
+Each flag fully replaces that field - write the complete new value, not an addition to the old one. Write the amount as a positive figure - the direction field carries whether money came in or went out, and a negative amount is refused. The updatable fields are: `date`, `value-date`, `amount`, `direction`, `currency`, `counterparty`, `description`, `taxable-base`, `iva-rate`, `iva-amount`, `irpf-category`, `notes`, and `group`.
 
 An update gives the transaction a new ID - the update output prints it. You don't have to track the change for read commands: an ID you wrote down before the update still answers in `history`, `view`, and `track`, resolving to the corrected transaction, exactly as the `view` in the update sequence does. For a further mutation - another `update`, `classify`, or `archive` - use the current ID from the update output or from `list`, because those commands act on the live transaction.
 
@@ -123,7 +123,7 @@ If you stashed or archived a transaction by mistake, restore it to active. Resto
 :verify: Confirm the restored transaction is active again.
 ```
 
-Restore accepts the same id prefix the other commands accept. To recover several rows stashed by mistake, restore each one by id - you do not need to clear all your records. List does not have a stashed-only filter, so identify the stashed rows from the ids you stashed, or from each row's lifecycle state shown by `view`.
+Restore accepts the same id prefix the other commands accept. To recover several rows stashed by mistake, restore each one by id - you do not need to clear all your records. `list` does not have a stashed-only filter, so identify the stashed rows from the ids you stashed, or from each row's lifecycle state shown by `view`.
 
 Restore refuses a row that is already active, and it refuses a row whose period you have already filed - restoring it would change the inputs behind a return you have presented. Restore one of these only after you have corrected the filing through a correction.
 

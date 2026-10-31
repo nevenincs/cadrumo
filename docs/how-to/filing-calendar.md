@@ -65,13 +65,13 @@ AEAT authentication and is read-only.
 
 ## What missed modelos did I forget to file?
 
-Use backlog for past-due obligations that you have not recorded as filed. The default window starts 365 days before today and ends today; narrow it with `--from` and `--to` when you are checking a specific period. The example profile declares an economic activity that started in 2025:
+Use `backlog` for past-due obligations that you have not recorded as filed. The default window starts 365 days before today and ends today; narrow it with `--from` and `--to` when you are checking a specific period. The example profile declares an economic activity that started in 2025:
 
 ```{cli-sequence} filing-calendar-backlog
 :verify: Confirm the backlog resolves for the default and narrowed windows.
 ```
 
-Backlog is a local planning tool. It does not prove what AEAT has or has not
+`backlog` is a local planning tool. It does not prove what AEAT has or has not
 received. It depends on the [active
 profile](profile-setup.md#what-the-active-profile-means), the filings you
 recorded as filed, and local tax rules. For the local filing lifecycle, see [The

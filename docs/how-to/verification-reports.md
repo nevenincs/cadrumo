@@ -97,7 +97,7 @@ The report shows:
 
 Each issue carries:
 
-- A severity: **blocking** or **warning**.
+- A severity: **`blocking`** or **`warning`**.
 - A kind: `missing_required_casilla`, `reconciliation_mismatch`,
   `cross_period_dependency_unclean`, `blocking_rule`, or `advisory`.
 - The affected box, where one applies.

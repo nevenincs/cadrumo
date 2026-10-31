@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-02 00:43+0200\n"
+"POT-Creation-Date: 2026-10-31 11:24+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: es\n"
@@ -261,8 +261,8 @@ msgid "Each issue carries:"
 msgstr "Cada incidencia lleva:"
 
 #: ../../how-to/verification-reports.md:100
-msgid "A severity: **blocking** or **warning**."
-msgstr "Una severidad: **bloqueante** o **advertencia**."
+msgid "A severity: **`blocking`** or **`warning`**."
+msgstr "Una severidad: **`blocking` (bloqueante)** o **`warning` (advertencia)**."
 
 #: ../../how-to/verification-reports.md:101
 msgid ""

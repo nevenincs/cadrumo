@@ -81,8 +81,8 @@ flowchart TD
 ```
 
 **Text alternative.** Entrypoints depend on every inner layer. Adapters depend
-on the application ports, the domain, and core. The application depends on the
-domain and core, and the domain depends only on core. Nothing in an inner layer
+on the application ports, the domain, and `core`. The application depends on the
+domain and `core`, and the domain depends only on `core`. Nothing in an inner layer
 imports an outer one.
 
 - **`core`** is the innermost layer. It owns the cross-cutting primitives every

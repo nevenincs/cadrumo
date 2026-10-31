@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-30 16:56+0100\n"
+"POT-Creation-Date: 2026-10-31 11:24+0100\n"
 "PO-Revision-Date: 2026-07-18 13:10+0000\n"
 "Last-Translator: Cadrumo translation team <docs@cadrumo.example>\n"
 "Language: ca\n"
@@ -107,8 +107,8 @@ msgstr ""
 " trimestre: tot el flux de diagnòstic en ordre."
 
 #: ../../how-to/choose-modelo.md:24
-msgid "The explain answer has four parts:"
-msgstr "La resposta d'explain té quatre parts:"
+msgid "The `explain` answer has four parts:"
+msgstr "La resposta d'`explain` té quatre parts:"
 
 #: ../../how-to/choose-modelo.md:26
 msgid "**The verdict** - whether the modelo applies to you for that year."

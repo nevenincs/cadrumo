@@ -282,14 +282,14 @@ clear when you link or update the invoice - see
 
 ## Confirm readiness
 
-Run preflight after classification. The example starts from the classified
-quarter, then runs preflight and reads the status of your records:
+Run `preflight` after classification. The example starts from the classified
+quarter, then runs `preflight` and reads the status of your records:
 
 ```{cli-sequence} classify-confirm-readiness
 :verify: Confirm preflight reports the classified quarter's readiness.
 ```
 
-Preflight names rows that still need category, taxable base, VAT amount, VAT
+`preflight` names rows that still need category, taxable base, VAT amount, VAT
 rate, currency, or proportionality reference.
 
 ## Correct a classification

@@ -100,7 +100,7 @@ classification and category you choose:
 If the row is mixed-use, the LLM suggestion alone is not enough. Supply the
 business share through the normal
 [mixed-use workflow](classify-transactions.md#classify-mixed-use-transactions).
-After important corrections, re-run preflight for the period:
+After important corrections, re-run `preflight` for the period:
 
 ```{cli-sequence} llm-preflight
 :verify: Confirm the period preflight reads ready after corrections.

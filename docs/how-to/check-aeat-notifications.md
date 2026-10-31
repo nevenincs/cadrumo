@@ -10,7 +10,7 @@ language](profile-setup.md#choose-the-output-language).
 
 Every live read works the same way. It uses your configured authentication,
 reads from the AEAT sede read-only, and saves an encrypted local copy in
-your profile. It applies nothing automatically: a pull saves a local copy,
+your profile. It applies nothing automatically: a `pull` saves a local copy,
 and applying a downloaded fact updates only your local profile or records,
 and only after you review it. Nothing is ever sent back to AEAT. You remain
 the only one who files. To understand that boundary, see
@@ -45,10 +45,10 @@ DEHú (Dirección Electrónica Habilitada única) is the official electronic
 address for notifications. Cadrumo reads the notificaciones and comunicaciones
 that AEAT has served you, from AEAT's electronic notification service in its
 sede. It does not read notifications from other public bodies.
-The example shows the notification reads: pull downloads your notifications and
-saves them as a snapshot, list shows your saved snapshots,
-view opens a saved snapshot by its ID (or an unambiguous prefix of it), and
-latest shows the most recent snapshot in the active profile.
+The example shows the notification reads: `pull` downloads your notifications and
+saves them as a snapshot, `list` shows your saved snapshots,
+`view` opens a saved snapshot by its ID (or an unambiguous prefix of it), and
+`latest` shows the most recent snapshot in the active profile.
 
 ```{cli-sequence} check-notifications-dehu
 ```
@@ -85,7 +85,7 @@ whether its amount was paid, appealed, reduced, or superseded.
 Expedientes are the official AEAT record of your past declarations: each
 filed return for each modelo and year, with its status and filing date.
 
-The example shows the expedientes reads: pull downloads the history for one form and year, pull with a year range covers several years at once (leave out `--modelo` to download history for all your registered forms), list shows saved downloads, view opens one download's details (individual declarations, status, dates, and links to AEAT receipts), and latest shows the most recent snapshot.
+The example shows the expedientes reads: `pull` downloads the history for one form and year, `pull` with a year range covers several years at once (leave out `--modelo` to download history for all your registered forms), `list` shows saved downloads, `view` opens one download's details (individual declarations, status, dates, and links to AEAT receipts), and `latest` shows the most recent snapshot.
 
 ```{cli-sequence} check-notifications-expedientes
 ```
@@ -140,7 +140,7 @@ they are mutually exclusive. `portals view` opens one portal's details.
 
 ## 7. Borrador (draft Modelo 100)
 
-The borrador is the pre-calculated Modelo 100 IRPF draft that AEAT makes available to taxpayers who meet its conditions. Cadrumo does not download it. Download the borrador PDF from the AEAT sede yourself, then import it with `aeat app live borrador 100 import`, passing the file with `--file` and its year with `--filing-year`, as the first command in the example shows. Import refuses a PDF that yields too few of the expected boxes, and stores nothing. The example shows the stored-snapshot reads, which never contact AEAT: list shows the snapshots (`--state` filters them), view opens one borrador's box values, and latest shows the latest active draft for a filing year.
+The borrador is the pre-calculated Modelo 100 IRPF draft that AEAT makes available to taxpayers who meet its conditions. Cadrumo does not download it. Download the borrador PDF from the AEAT sede yourself, then import it with `aeat app live borrador 100 import`, passing the file with `--file` and its year with `--filing-year`, as the first command in the example shows. Import refuses a PDF that yields too few of the expected boxes, and stores nothing. The example shows the stored-snapshot reads, which never contact AEAT: `list` shows the snapshots (`--state` filters them), `view` opens one borrador's box values, and `latest` shows the latest active draft for a filing year.
 
 ```{cli-sequence} check-notifications-borrador
 ```

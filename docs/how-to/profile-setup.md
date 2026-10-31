@@ -296,8 +296,8 @@ profile is ready to file one modelo for one year and period:
 ```
 
 `aeat app modelo readiness` checks one modelo, filing year, and period. Here the
-profile is ready (`profile_ready` is true), but the Modelo 303 source inputs are
-not (`binding_ready` is false), so the command exits with status 2. Use
+profile is ready (`profile_ready` is `true`), but the Modelo 303 source inputs are
+not (`binding_ready` is `false`), so the command exits with status 2. Use
 [Find out which modelos apply to you](choose-modelo.md) to find the period codes a
 modelo accepts. Fix any wrong facts with `edit` before you continue.
 
