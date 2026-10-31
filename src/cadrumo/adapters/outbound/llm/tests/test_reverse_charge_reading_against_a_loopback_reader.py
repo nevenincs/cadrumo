@@ -40,36 +40,22 @@ from typing import ClassVar
 
 import pytest
 
-from cadrumo.adapters.outbound.llm.evidence_draft_text import TextInvoiceFieldExtractor
 from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from cadrumo.application.ledger import invoice_draft_extraction as invoice_draft_extraction_module
-from cadrumo.application.ledger.document_transcription import DocumentTranscription
 from cadrumo.application.ledger.evidence_input import EvidenceInput
-from cadrumo.application.ledger.evidence_input_ports import EvidenceInputPorts
 from cadrumo.application.ledger.evidence_textlayer import transcribe_text_layer
 from cadrumo.application.ledger.evidence_textlayer_ports import EvidenceTextLayerPorts
-from cadrumo.application.ledger.invoice_draft_extraction_ports import (
-    EvidenceConsentProof,
-    InvoiceDraftExtractionPorts,
-    StructuredInvoiceReadError,
-)
-from cadrumo.application.ledger.invoice_draft_records import InvoiceDraft
 from cadrumo.application.ledger.invoice_extraction_authority import (
-    InvoiceExtractionAuthorityValues,
     default_invoice_extraction_period,
 )
 from cadrumo.application.ledger.regime_contradiction import (
     draft_prints_a_repercutido_line,
     regime_contradiction_finding,
 )
-from cadrumo.application.ledger.structured_invoice_ports import StructuredInvoiceRecord
-from cadrumo.core.config import Settings, load_settings
+from cadrumo.core.config import load_settings
 from cadrumo.core.document_shape import DocumentShape
 from cadrumo.core.draft_discrepancy import DraftDiscrepancyKind
 from cadrumo.core.field_origin import FieldOrigin
-from cadrumo.domain.calculations.registry.authority import (
-    PinnedAuthorityOperation,
-)
 from cadrumo.domain.calculations.registry.authority import (
     bundled_indexed_authority as _indexed_authority_for_test,
 )
@@ -81,6 +67,7 @@ from cadrumo.domain.iva.legend_derivation import LegendDerivationOutcome, derive
 from cadrumo.domain.iva.regime_legend import RegimeLegend, resolve_regime_legends
 
 from .model_run_support import ON_HOST_LANE, serving_agent
+from .text_layer_reader_support import text_layer_reader_ports
 
 
 def _text_layer_ports_for_pages(pages: tuple[str, ...]) -> EvidenceTextLayerPorts:
@@ -115,46 +102,6 @@ _CONTRADICTORY = _CORPUS / "es_reverse_charge_legend_beside_repercutido.pdf"
 #: composed here, so the legend table is matched against real printed text.
 _PRINTED_MENTION = "Inversión del sujeto pasivo (art. 84.Uno.2º LIVA)"
 _TEXT_LAYER_PORTS = _text_layer_ports_for_pages((_PRINTED_MENTION,))
-
-
-def _reader_ports(evidence: EvidenceInput, *, operation: PinnedAuthorityOperation) -> InvoiceDraftExtractionPorts:
-    """Bind the application reader contract to the real outbound text adapter."""
-
-    def parse_structured_invoice(data: bytes) -> StructuredInvoiceRecord:
-        del data
-        raise StructuredInvoiceReadError()
-
-    def read_text(
-        transcription: DocumentTranscription,
-        settings: Settings,
-        _consent_token: EvidenceConsentProof | None,
-        authority_values: object,
-        /,
-    ) -> InvoiceDraft:
-        if not isinstance(authority_values, InvoiceExtractionAuthorityValues):
-            raise TypeError("text reader requires resolved invoice extraction authority values")
-        return TextInvoiceFieldExtractor(
-            settings=settings, authority_values=authority_values, operation=operation
-        ).extract(transcription=transcription)
-
-    def vision_not_expected(*_args: object, **_kwargs: object) -> DocumentTranscription:
-        raise AssertionError("the text-layer reader must not invoke the vision path")
-
-    def document_shape_probe(data: bytes) -> DocumentShape:
-        del data
-        return DocumentShape.PDF_TEXT_LAYER
-
-    return InvoiceDraftExtractionPorts(
-        resolve_evidence_input=lambda *_args: evidence,
-        evidence_input_ports=EvidenceInputPorts(document_shape_probe=document_shape_probe),
-        text_layer_ports=_TEXT_LAYER_PORTS,
-        parse_structured_invoice=parse_structured_invoice,
-        read_text=read_text,
-        propose_supply_nature=lambda *_args: None,
-        rasterise_pdf=lambda _data: (),
-        transcribe_vision=vision_not_expected,
-        consent_binding_error=lambda _facts: RuntimeError("consent binding was not expected"),
-    )
 
 
 _BASE_REPLY: dict[str, str | None] = {
@@ -220,7 +167,7 @@ def serve(secure_object_test_profile: TestRuntimeProfile) -> Iterator[object]:
                 authority_period=default_invoice_extraction_period(),
                 operation=operation,
                 legends=legends,
-                ports=_reader_ports(evidence, operation=operation),
+                ports=text_layer_reader_ports(evidence, text_layer_ports=_TEXT_LAYER_PORTS, operation=operation),
             )
 
         with _indexed_authority_for_test().operation() as operation:

@@ -28,33 +28,23 @@ from typing import ClassVar
 import pytest
 
 from cadrumo.adapters.inbound.pdf.page_text_extraction import extract_pages_text_from_bytes
-from cadrumo.adapters.outbound.llm.evidence_draft_text import TextInvoiceFieldExtractor
 from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from cadrumo.application.ledger import invoice_draft_extraction as invoice_draft_extraction_module
-from cadrumo.application.ledger.document_transcription import DocumentTranscription
 from cadrumo.application.ledger.evidence_input import EvidenceInput
-from cadrumo.application.ledger.evidence_input_ports import EvidenceInputPorts
 from cadrumo.application.ledger.evidence_textlayer import transcribe_text_layer
 from cadrumo.application.ledger.evidence_textlayer_ports import EvidenceTextLayerPorts
-from cadrumo.application.ledger.invoice_draft_extraction_ports import (
-    EvidenceConsentProof,
-    InvoiceDraftExtractionPorts,
-    StructuredInvoiceReadError,
-)
-from cadrumo.application.ledger.invoice_draft_records import InvoiceDraft
 from cadrumo.application.ledger.invoice_extraction_authority import (
-    InvoiceExtractionAuthorityValues,
     default_invoice_extraction_period,
 )
-from cadrumo.application.ledger.structured_invoice_ports import StructuredInvoiceRecord
-from cadrumo.core.config import Settings, load_settings
+from cadrumo.core.config import load_settings
 from cadrumo.core.document_shape import DocumentShape
 from cadrumo.core.draft_discrepancy import DraftDiscrepancyKind
 from cadrumo.core.field_grounding import FieldGroundingOutcome
-from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.iva.regime_legend import resolve_regime_legends
 
 from .model_run_support import ON_HOST_LANE, RecordingModelRuns, serving_agent
+from .text_layer_reader_support import text_layer_reader_ports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -68,46 +58,6 @@ def _extract_control_pages_text(data: bytes) -> tuple[str, ...]:
 
 
 _CONTROL_TEXT_LAYER_PORTS = EvidenceTextLayerPorts(extract_pages_text=_extract_control_pages_text)
-
-
-def _reader_ports(*, operation: PinnedAuthorityOperation) -> InvoiceDraftExtractionPorts:
-    """Bind the application reader contract to the real outbound text adapter."""
-
-    def parse_structured_invoice(data: bytes) -> StructuredInvoiceRecord:
-        del data
-        raise StructuredInvoiceReadError()
-
-    def read_text(
-        transcription: DocumentTranscription,
-        settings: Settings,
-        _consent_token: EvidenceConsentProof | None,
-        authority_values: object,
-        /,
-    ) -> InvoiceDraft:
-        if not isinstance(authority_values, InvoiceExtractionAuthorityValues):
-            raise TypeError("text reader requires resolved invoice extraction authority values")
-        return TextInvoiceFieldExtractor(
-            settings=settings, authority_values=authority_values, operation=operation
-        ).extract(transcription=transcription)
-
-    def vision_not_expected(*_args: object, **_kwargs: object) -> DocumentTranscription:
-        raise AssertionError("the text-layer reader must not invoke the vision path")
-
-    def document_shape_probe(data: bytes) -> DocumentShape:
-        del data
-        return DocumentShape.PDF_TEXT_LAYER
-
-    return InvoiceDraftExtractionPorts(
-        resolve_evidence_input=lambda *_args: _control_evidence(),
-        evidence_input_ports=EvidenceInputPorts(document_shape_probe=document_shape_probe),
-        text_layer_ports=_CONTROL_TEXT_LAYER_PORTS,
-        parse_structured_invoice=parse_structured_invoice,
-        read_text=read_text,
-        propose_supply_nature=lambda *_args: None,
-        rasterise_pdf=lambda _data: (),
-        transcribe_vision=vision_not_expected,
-        consent_binding_error=lambda _facts: RuntimeError("consent binding was not expected"),
-    )
 
 
 #: The reply the stub returns. Authored from the control document's OWN printed
@@ -178,7 +128,7 @@ def _read_through_the_wired_path():
             authority_period=period,
             operation=operation,
             legends=legends,
-            ports=_reader_ports(operation=operation),
+            ports=text_layer_reader_ports(evidence, text_layer_ports=_CONTROL_TEXT_LAYER_PORTS, operation=operation),
         )
 
 
