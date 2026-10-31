@@ -12,6 +12,7 @@ import type {
 import { factsGap } from "../../../shell/compose";
 import { useStrings } from "../../../shell/strings";
 import { BoxNumber } from "./BoxNumber";
+import { readOnlyReason } from "./entryField";
 import { calm, Label, useChosenFocus } from "./FieldRow";
 import { useForm } from "./formContext";
 import { editKey, fieldKey } from "./session";
@@ -53,6 +54,23 @@ function GridBox({ field }: { field: PublicModeloFormField }) {
   const selected = session.selectedKey === key;
   const open = editing?.key === key ? editing.request : null;
   const ref = useChosenFocus<HTMLTableCellElement>(selected, open !== null);
+  const reason = readOnlyReason(field);
+  const value = (
+    <ValueCell
+      field={field}
+      staged={session.staged.get(editKey(field))}
+      grammar={session.grammarOf(field)}
+      editable={session.editable(field)}
+      editing={open}
+      onEditingChange={(request) =>
+        setEditing(request ? key : null, request ?? undefined)
+      }
+      enter={session.enter}
+      onDone={(how) => onDone(field, how)}
+      onOpenSurface={onOpenSurface}
+      align="grid"
+    />
+  );
   return (
     <td
       ref={ref}
@@ -70,20 +88,18 @@ function GridBox({ field }: { field: PublicModeloFormField }) {
     >
       <div className="flex items-center justify-end gap-2">
         <BoxNumber box={field.box} size="sm" />
-        <ValueCell
-          field={field}
-          staged={session.staged.get(editKey(field))}
-          grammar={session.grammarOf(field)}
-          editable={session.editable(field)}
-          editing={open}
-          onEditingChange={(request) =>
-            setEditing(request ? key : null, request ?? undefined)
-          }
-          enter={session.enter}
-          onDone={(how) => onDone(field, how)}
-          onOpenSurface={onOpenSurface}
-          align="grid"
-        />
+        {reason ? (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span tabIndex={0} className="block">
+                {value}
+              </span>
+            </TooltipTrigger>
+            <TooltipContent>{reason}</TooltipContent>
+          </Tooltip>
+        ) : (
+          value
+        )}
       </div>
     </td>
   );

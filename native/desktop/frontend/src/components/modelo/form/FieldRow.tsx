@@ -8,6 +8,7 @@ import type {
 } from "../../../shell/modeloContract";
 import { useStrings } from "../../../shell/strings";
 import { BoxNumber } from "./BoxNumber";
+import { readOnlyReason } from "./entryField";
 import { useForm } from "./formContext";
 import { ORIGIN_LOOK, TONE_TEXT } from "./originLook";
 import { confirmIntent, editKey, fieldKey, type StagedEdit } from "./session";
@@ -98,6 +99,7 @@ export function FieldRow({ field }: { field: PublicModeloFormField }) {
   const open = editing?.key === key ? editing.request : null;
   const editable = session.editable(field);
   const confirm = !staged && editable ? confirmIntent(field) : null;
+  const reason = readOnlyReason(field);
   const ref = useChosenFocus<HTMLDivElement>(selected, open !== null);
   return (
     <div
@@ -142,6 +144,12 @@ export function FieldRow({ field }: { field: PublicModeloFormField }) {
         className="flex min-w-0 flex-col items-start gap-0.5"
       >
         <OriginMark field={field} staged={staged} />
+        {reason && (
+          <span className="flex items-start gap-1 text-sm text-muted-foreground">
+            <Icon name="lock" size="xs" className="mt-0.5 shrink-0" />
+            {reason}
+          </span>
+        )}
         {staged && (
           <span className="text-xs text-faint tabular-nums">
             {t("workspace.modelo.was", {

@@ -292,6 +292,49 @@ test("a filled Modelo 130 shows its figures, and its held zeros as zero", async 
     ).toBeVisible();
 });
 
+test("a box whose kind of value cannot be typed says why on the form", async ({
+  page: target,
+}) => {
+  const page = form("303-1T").form.form.pages[0]!;
+  const blocks = page.sections.flatMap((section) => section.blocks);
+  const ownLine = blocks.flatMap((block) =>
+    block.kind === "field" && block.field.takes_typed_value
+      ? [block.field]
+      : [],
+  )[0];
+  const inGrid = blocks
+    .flatMap((block) => (block.kind === "grid" ? block.rows : []))
+    .flatMap((row) => row.cells)
+    .find((cell) => cell.field?.takes_typed_value)?.field;
+  if (!ownLine?.box || !inGrid?.box)
+    throw new Error("the first page holds no typed box of each layout");
+  const reason = label(
+    "workspace.modelo.not_writable.value_channel_unavailable",
+  );
+  await openDeclaration(target, "303", { shape: "read-only-boxes" });
+  // The form draws its sections as they scroll in: find each box by number.
+  const search = target.getByRole("searchbox", {
+    name: label("desktop.modelo.search.label"),
+  });
+
+  // On its own line the reason sits beside the box, and the box takes nothing.
+  await search.fill(ownLine.box);
+  const row = boxRow(target, ownLine.box);
+  await expect(row).toContainText(reason);
+  const face = row.getByRole("gridcell").nth(2).getByRole("button");
+  await expect(face).toBeDisabled();
+  await expect(formPanel(target).getByRole("textbox")).toHaveCount(0);
+
+  // In a grid, where a line has no room for it, the box shows it on hover.
+  await search.fill(inGrid.box);
+  const cell = formPanel(target).getByRole("cell", {
+    name: label("workspace.modelo.section.box", { box: inGrid.box }),
+  });
+  await expect(cell).not.toContainText(reason);
+  await cell.locator("button").hover();
+  await expect(target.getByRole("tooltip")).toContainText(reason);
+});
+
 test("a box with no value is drawn as missing, never as a zero", async ({
   page: target,
 }) => {

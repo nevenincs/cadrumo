@@ -2,6 +2,7 @@ import type { FieldSpec } from "../../../shared/fieldKind";
 import type {
   ModeloEditValueGrammarV1,
   ModeloEditWritableScalarSurfaceEntryV1,
+  PublicModeloFormField,
 } from "../../../shell/modeloContract";
 import type { Translate } from "../../../shell/strings";
 
@@ -14,14 +15,15 @@ type CasillaDataType = ModeloEditWritableScalarSurfaceEntryV1["data_type"];
 const MONO: FieldSpec = { kind: "text", mono: true };
 
 /** Keyed by the generated type, so a type the registry gains does not compile
- * until it is placed here. */
-const CASILLA_FIELDS: Record<CasillaDataType, FieldSpec> = {
+ * until it is placed here. A yes or no has no box of its own: `readsYesNo`
+ * places it from the grammar. */
+const CASILLA_FIELDS: Record<CasillaDataType, FieldSpec | null> = {
   decimal: { kind: "decimal" },
   money: { kind: "money" },
   integer: { kind: "integer" },
   ratio: { kind: "decimal" },
   year: { kind: "year" },
-  boolean: { kind: "choice", choices: [] },
+  boolean: null,
   date: { kind: "date" },
   text: { kind: "text" },
   nif: { kind: "taxId" },
@@ -45,19 +47,46 @@ const fieldOfType = (dataType: string): FieldSpec | null =>
       ? CASILLA_FIELDS[dataType as CasillaDataType]
       : null;
 
+/** Whether the application reads the entry as a number. A corrected box always
+ * is, whatever the box prints, because a filed declaration holds figures. */
+const readsFigure = (grammar: ModeloEditValueGrammarV1): boolean =>
+  grammar.family === "decimal" || grammar.family === "integer";
+
+/** Whether the entry is a yes or a no: read as one, or as the figure 1 or 0 a
+ * corrected box holds. */
+const readsYesNo = (grammar: ModeloEditValueGrammarV1): boolean =>
+  grammar.family === "boolean" ||
+  (grammar.data_type === "boolean" && readsFigure(grammar));
+
+/** The editors whose text the application reads as a number. */
+const FIGURE_KINDS: ReadonlySet<FieldSpec["kind"]> = new Set([
+  "decimal",
+  "integer",
+  "money",
+  "year",
+]);
+
 /** Whether a value can be typed against `grammar`: a channel carries it and
  * its data type is one an editor is known for. */
 export const takesEntry = (grammar: ModeloEditValueGrammarV1): boolean =>
-  grammar.channel !== "unavailable" && fieldOfType(grammar.data_type) !== null;
+  grammar.channel !== "unavailable" &&
+  (readsYesNo(grammar) || fieldOfType(grammar.data_type) !== null);
+
+/** Why a box takes no value here, in the application's words; null for a box
+ * that says so otherwise, as a calculated box or a value from a source does. */
+export const readOnlyReason = (field: PublicModeloFormField): string | null =>
+  field.editability === "not_writable" ? field.editability_words : null;
 
 /** The editor for an address. A figure the registry declares no percentage
  * for keeps a plain figure: what is typed is read as written, never moved a
- * hundredfold. A yes or no goes as the `1` or `0` every language reads. */
+ * hundredfold. A yes or no goes as the `1` or `0` every language reads. A box
+ * read as a number never takes an editor whose text is not one, such as a
+ * date's. */
 export function entryField(
   t: Translate,
   grammar: ModeloEditValueGrammarV1,
 ): FieldSpec {
-  if (grammar.family === "boolean")
+  if (readsYesNo(grammar))
     return {
       kind: "choice",
       choices: [
@@ -76,5 +105,8 @@ export function entryField(
     };
   if (grammar.ratio_unit === "percent")
     return { kind: "percent", unit: "points" };
-  return fieldOfType(grammar.data_type) ?? { kind: "text" };
+  const field = fieldOfType(grammar.data_type) ?? { kind: "text" };
+  return readsFigure(grammar) && !FIGURE_KINDS.has(field.kind)
+    ? { kind: "decimal" }
+    : field;
 }

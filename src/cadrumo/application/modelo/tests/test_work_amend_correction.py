@@ -46,6 +46,7 @@ from ..work_amend_contracts import ModeloWorkAmendOverride
 from ..work_amend_correction import (
     ModeloAmendmentCorrectionContextV1,
     amendable_casilla_rows,
+    correction_value_grammar,
     correction_value_grammars,
     worded_amendment_context,
 )
@@ -213,6 +214,63 @@ def test_a_corrected_value_the_amendment_would_refuse_is_refused(
 
     assert isinstance(outcome, ModeloEditRefusedV1)
     assert outcome.refusal.reason is reason
+
+
+def _first_casilla_of_type(operation: PinnedAuthorityOperation, modelo: str, revision_id: str, data_type: str):
+    revision = operation.revision(modelo, revision_id)
+    casilla = next(casilla for casilla in revision.casillas if casilla.data_type == data_type)
+    return casilla.id, {casilla.id: correction_value_grammar(casilla)}
+
+
+def _read_corrected(casilla_id, grammars, text: str, language: OutputLanguage):
+    return parse_modelo_edit_lexeme(
+        ModeloEditParseRequestV1(
+            address=ModeloEditCorrectionAddressV1(casilla_id=casilla_id), entry_locale=language, lexeme=text
+        ),
+        baseline=_baseline(),
+        tax_id_format=None,
+        correction_grammars=grammars,
+    )
+
+
+@pytest.mark.parametrize("language", list(OutputLanguage))
+@pytest.mark.parametrize(("text", "expected"), [("1", Decimal(1)), ("0", Decimal(0))])
+def test_a_corrected_yes_or_no_reads_the_figure_its_editor_sends(
+    operation: PinnedAuthorityOperation, language: OutputLanguage, text: str, expected: Decimal
+) -> None:
+    casilla_id, grammars = _first_casilla_of_type(operation, "036", "2025-02-03-y-siguientes", "boolean")
+
+    outcome = _read_corrected(casilla_id, grammars, text, language)
+
+    assert isinstance(outcome, ModeloEditParsedValueV1)
+    assert outcome.value == expected
+
+
+@pytest.mark.parametrize("language", list(OutputLanguage))
+def test_a_corrected_date_box_reads_a_figure_and_refuses_a_day(
+    operation: PinnedAuthorityOperation, language: OutputLanguage
+) -> None:
+    casilla_id, grammars = _first_casilla_of_type(operation, "036", "2025-02-03-y-siguientes", "date")
+
+    figure = _read_corrected(casilla_id, grammars, "5", language)
+    day = _read_corrected(casilla_id, grammars, "2025-03-31", language)
+
+    assert isinstance(figure, ModeloEditParsedValueV1)
+    assert figure.value == Decimal(5)
+    assert isinstance(day, ModeloEditRefusedV1)
+    assert day.refusal.reason is ModeloEditParseReason.NOT_A_NUMBER
+
+
+@pytest.mark.parametrize("language", list(OutputLanguage))
+def test_a_corrected_year_box_reads_the_four_digits_its_editor_sends(
+    operation: PinnedAuthorityOperation, language: OutputLanguage
+) -> None:
+    casilla_id, grammars = _first_casilla_of_type(operation, "100", "2020", "year")
+
+    outcome = _read_corrected(casilla_id, grammars, "2025", language)
+
+    assert isinstance(outcome, ModeloEditParsedValueV1)
+    assert outcome.value == Decimal(2025)
 
 
 def test_a_correction_entry_without_its_revisions_grammars_is_not_writable() -> None:

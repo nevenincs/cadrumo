@@ -8,6 +8,7 @@ from typing import override
 import pytest
 
 from ....core.authority_grade import RegistryAuthorityGrade
+from ....core.external_constants import OutputLanguage
 from ....core.modelo import Modelo
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -16,6 +17,7 @@ from ....domain.calculations.registry.binding_value_contract import (
     BindingValueChannel,
     BindingValueContract,
 )
+from ....domain.calculations.registry.casilla_membership import row_field_template_records_by_casilla
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.ids import RevisionId
 from ....domain.calculations.registry.ledger_renta_income_bindings import LedgerRentaIncomeProvider
@@ -29,25 +31,38 @@ from ....domain.calculations.registry.schema import (
 from ....domain.calculations.registry.schema_base import CasillaDataType
 from ....domain.calculations.registry.schema_input_kind import InputKind
 from ....domain.calculations.registry.schema_surfaces import CasillaDefinition
+from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....domain.modelos.calculation_revision import CalculationRevisionCatalogue
 from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
 from ...operations.financial_operand_contract import OperationTransientFinancialOperandPublicDeclarationV1
 from ...operations.registry import OperationPublicContractSetV1, OperationPublicDefinitionContractV1
 from ...operations.schema_identity import OperationSchemaIdentityV1
 from ...operations.subject_reference import OperationSubjectReferenceV1
+from .._edit_execution import _channel_value
 from ..edit_admission import admit_modelo_edit_baseline
+from ..edit_apply_scalar_contracts import wire_scalar_value
 from ..edit_models import (
     ModeloEditAdmittedV1,
+    ModeloEditBaselineV1,
+    ModeloEditBindingAddressV1,
     ModeloEditDomainRefusalV1,
     ModeloEditNonWritableBindingOverrideSurfaceEntryV1,
     ModeloEditNonWritableReason,
     ModeloEditNonWritableScalarSurfaceEntryV1,
+    ModeloEditParsedValueV1,
+    ModeloEditParseReason,
+    ModeloEditParseRequestV1,
+    ModeloEditParseResultV1,
     ModeloEditRefusalCode,
     ModeloEditRefusedV1,
+    ModeloEditScalarAddressV1,
+    ModeloEditValueAddressV1,
     ModeloEditWritableBindingOverrideSurfaceEntryV1,
     ModeloEditWritableScalarSurfaceEntryV1,
 )
+from ..edit_parsing import parse_modelo_edit_lexeme
 from ..edit_transient_operand import modelo_edit_financial_operand
+from ..edit_value_grammar import ModeloEditValueGrammarV1
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -227,6 +242,89 @@ def test_published_modelo_100_surface_size_is_admitted_without_dropping_entries(
         )
         == 71
     )
+
+
+def _published_modelo_100_baseline() -> ModeloEditBaselineV1:
+    outcome, _ = _admit(snapshot=published_snapshot("100", filing_year=2025, period="0A"))
+    assert isinstance(outcome, ModeloEditAdmittedV1)
+    return outcome.baseline
+
+
+def _read_entry(
+    baseline: ModeloEditBaselineV1, address: ModeloEditValueAddressV1, lexeme: str, language: OutputLanguage
+) -> ModeloEditParseResultV1:
+    return parse_modelo_edit_lexeme(
+        ModeloEditParseRequestV1(address=address, entry_locale=language, lexeme=lexeme),
+        baseline=baseline,
+        tax_id_format=None,
+    )
+
+
+def _writable_yes_no_addresses(
+    baseline: ModeloEditBaselineV1,
+) -> list[tuple[ModeloEditValueAddressV1, ModeloEditValueGrammarV1]]:
+    found: list[tuple[ModeloEditValueAddressV1, ModeloEditValueGrammarV1]] = []
+    for entry in baseline.permitted_surface:
+        if isinstance(entry, ModeloEditWritableScalarSurfaceEntryV1) and entry.grammar.data_type == "boolean":
+            found.append((ModeloEditScalarAddressV1(casilla_id=entry.casilla_id), entry.grammar))
+        elif (
+            isinstance(entry, ModeloEditWritableBindingOverrideSurfaceEntryV1) and entry.grammar.data_type == "boolean"
+        ):
+            found.append((ModeloEditBindingAddressV1(binding_id=entry.binding_id), entry.grammar))
+    return found
+
+
+@pytest.mark.parametrize("language", list(OutputLanguage))
+def test_every_yes_or_no_on_a_published_declaration_reads_the_1_or_0_its_editor_sends(
+    language: OutputLanguage,
+) -> None:
+    baseline = _published_modelo_100_baseline()
+    addresses = _writable_yes_no_addresses(baseline)
+
+    assert {type(address) for address, _ in addresses} == {ModeloEditScalarAddressV1, ModeloEditBindingAddressV1}
+    for address, grammar in addresses:
+        for lexeme, expected, channel in (("1", True, "1"), ("0", False, "0")):
+            read = _read_entry(baseline, address, lexeme, language)
+            assert isinstance(read, ModeloEditParsedValueV1), address
+            assert read.value is expected
+            # What the window sends back on apply is that value, and it reaches the engine as the figure.
+            assert (
+                _channel_value(wire_scalar_value(read.value), address=address, grammar=grammar, tax_id_format=None)
+                == channel
+            )
+        for lexeme, reason in (
+            ("2", ModeloEditParseReason.NOT_A_BOOLEAN),
+            ("true", ModeloEditParseReason.NOT_A_BOOLEAN),
+            ("  ", ModeloEditParseReason.EMPTY),
+        ):
+            refused = _read_entry(baseline, address, lexeme, language)
+            assert isinstance(refused, ModeloEditRefusedV1), address
+            assert refused.refusal.reason is reason
+
+
+def test_a_date_or_year_box_the_filer_fills_is_refused_for_want_of_an_engine_channel() -> None:
+    revision = published_snapshot("100", filing_year=2025, period="0A").revision
+    baseline = _published_modelo_100_baseline()
+    templates = set(row_field_template_records_by_casilla(revision))
+    filled_by_hand = {
+        casilla.id: casilla.data_type
+        for casilla in revision.casillas
+        if casilla.input_kind is InputKind.MANUAL
+        and casilla.data_type in {CasillaDataType.DATE, CasillaDataType.YEAR}
+        and casilla.id not in templates
+    }
+    reasons = {
+        entry.casilla_id: entry.reason
+        for entry in baseline.permitted_surface
+        if isinstance(entry, ModeloEditNonWritableScalarSurfaceEntryV1)
+    }
+
+    assert CasillaDataType.YEAR in filled_by_hand.values()
+    for casilla_id in filled_by_hand:
+        assert reasons[casilla_id] is ModeloEditNonWritableReason.VALUE_CHANNEL_UNAVAILABLE
+        read = _read_entry(baseline, ModeloEditScalarAddressV1(casilla_id=casilla_id), "2025", OutputLanguage.ES)
+        assert isinstance(read, ModeloEditRefusedV1)
+        assert read.refusal.reason is ModeloEditParseReason.ADDRESS_NOT_WRITABLE
 
 
 def test_oversized_edit_surface_refuses_at_admission_before_model_validation() -> None:

@@ -69,7 +69,10 @@ import { hex64 } from "./fixtures/ledger";
  * `moving` moves it once more after that read, and again after the next,
  * so each check on a form read again is stale;
  * the `receipt` declaration is corrected, and `correction-refused` and
- * `correction-unknown` refuse the correction or lose its settlement. */
+ * `correction-unknown` refuse the correction or lose its settlement.
+ * `read-only-boxes` reads every box that takes a typed value as one whose kind
+ * of value has no way in yet, as a date or a year box is: the application's
+ * reads of these synthetic declarations hold no such box. */
 export const MODELO_SHAPES = [
   "fixture",
   "checked",
@@ -89,6 +92,7 @@ export const MODELO_SHAPES = [
   "correction-unknown",
   "rebase",
   "moving",
+  "read-only-boxes",
   "refused",
   "unknown",
   "unavailable",
@@ -158,6 +162,25 @@ function withAssetNotes(
       })),
     ],
   };
+}
+
+/** A form read with its typed boxes as boxes that cannot be typed into, each
+ * saying why as the backend words it. */
+function withReadOnlyBoxes(
+  form: ModeloWorkbenchFormProjectionV1,
+  t: Translate,
+): ModeloWorkbenchFormProjectionV1 {
+  for (const field of fields(form.form.form.pages))
+    if (field.takes_typed_value) {
+      field.editability = "not_writable";
+      field.not_writable_reason = "value_channel_unavailable";
+      field.editability_words = t(
+        "workspace.modelo.not_writable.value_channel_unavailable",
+      );
+      field.takes_typed_value = false;
+      field.clearable = false;
+    }
+  return form;
 }
 
 /** Every envelope by name, each read on first use: the largest forms are
@@ -318,6 +341,8 @@ export function modeloFixture(options: Options): ModeloPort {
     const admitted = form ? form.admitted_baseline?.baseline_id : undefined;
     if (read && admitted) admittedBy.set(admitted, read);
     if (!form) return reject("refused", { reason: "profile_mismatch" });
+    if (shape === "read-only-boxes")
+      return withReadOnlyBoxes(form, options.translate(language));
     return shape === "check-notes" && name === LATER_STATES
       ? withAssetNotes(form, options.translate(language))
       : form;
