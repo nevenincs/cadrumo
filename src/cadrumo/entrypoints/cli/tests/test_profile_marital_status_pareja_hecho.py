@@ -51,4 +51,4 @@ def test_profile_create_help_advertises_pareja_de_hecho_marital_status() -> None
 
     assert result.exit_code == 0, result.output
     compact_help = re.sub(r"\s+", "", result.output)
-    assert "1|2|3|4|5" in compact_help
+    assert "5=registeredcivilpartnership" in compact_help

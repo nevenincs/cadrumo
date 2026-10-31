@@ -132,7 +132,7 @@ def test_native_modelo_history_project_compare_reuse_real_stored_revisions(
         assert projected["quarters_filed"] == 1 and projected["quarters_available"] == ["1T"]
         assert projected["is_extrapolated"] is True
         assert projected["casilla_observations"]
-        assert projected["m100_projection"]["base_liquidable_general_0505"] is not None
+        assert projected["m100_projection"]["base_liquidable_general"] is not None
 
         compared = _invoke(profile, "app", "modelo", "compare", "--modelo", "130", "--year", "2025", "--year", "2026")
         assert compared.exit_code == 0, compared.output

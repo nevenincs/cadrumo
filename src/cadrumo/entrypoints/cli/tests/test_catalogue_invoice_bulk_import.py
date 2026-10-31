@@ -170,8 +170,9 @@ def test_missing_import_file_keeps_the_typed_clean_refusal(tmp_path: Path) -> No
     error = require_error_document(result.output)["error"]
     # Click echoes the operator's own argument back; the refusal is clean when
     # it names the offending option and that path, not when the directory is hidden.
+    # Click prints the path's repr, which doubles every backslash on Windows.
     assert "--file" in error["message"]
-    assert str(missing) in error["message"]
+    assert repr(str(missing))[1:-1] in error["message"]
     assert error["code"] == "REFUSED_CLI_BOUNDARY"
 
 

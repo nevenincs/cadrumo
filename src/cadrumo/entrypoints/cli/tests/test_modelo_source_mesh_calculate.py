@@ -16,7 +16,6 @@ from click.testing import Result
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from cadrumo.adapters.persistence.profile.usage_ratios import save_usage_ratios
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.adapters.persistence.storage.tests.secure_sql import (
     isolated_cli_backend as _isolated_cli_backend,
@@ -44,7 +43,6 @@ from cadrumo.domain.iva.schema import EUMemberState, IvaCategory
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from cadrumo.domain.usage_ratios.model import UsageRatioProfile
 from cadrumo.tests.cli_envelope import unwrap_envelope_notices
 from cadrumo.tests.cli_envelope import unwrap_schema_envelope as _payload
 
@@ -574,10 +572,6 @@ def test_work_calculate_modelo_100_routes_autonoma_auto_ledger_expenses(
                 TransactionCatalogue.from_transactions((_m100_activity_income_transaction(), *expense_rows)),
             )
             InvoiceCatalogueRepository(bucket_id=bucket_id).save(InvoiceCatalogue())
-            save_usage_ratios(
-                UsageRatioProfile(ratios={SpendingCategory.from_registry("telefonia_movil"): Decimal("1")}),
-                bucket_id=bucket_id,
-            )
 
         calculated = _cli(
             profile,

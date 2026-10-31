@@ -239,8 +239,8 @@ def test_native_structured_extract_confirm_readback_and_stale_digest_refusal(tmp
         assert error["code"] == "REFUSED_INVOICE_EVIDENCE_REVIEW_CHANGED", error
         assert error["category"] == "REFUSED"
         context = error["context"]
-        assert set(context) == {"reason", "refusal_code", "effect", "operation_id", "terminal_condition"}, error
-        assert context["reason"] == context["refusal_code"] == "REFUSED_INVOICE_EVIDENCE_REVIEW_CHANGED"
+        assert set(context) == {"part", "effect", "operation_id", "terminal_condition"}, error
+        assert context["part"] == "draft"
         assert context["effect"] == "none"
         assert context["terminal_condition"] == "refused"
         assert isinstance(context["operation_id"], str) and len(context["operation_id"]) == 64
