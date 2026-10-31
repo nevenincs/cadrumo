@@ -32,7 +32,7 @@ from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, Aut
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.contracts.deadline_budget import DEFAULT_TIMEOUT_POLICY
 from cadrumo_client.contracts.operation_access import operation_management_action
-from cadrumo_client.contracts.projection_pages import PROJECTION_PAGE_BYTES, project_document_page
+from cadrumo_client.contracts.projection_pages import PROJECTION_PAGE_BYTES
 from cadrumo_client.contracts.submission_payload import FinancialOperandInputDescriptor
 from cadrumo_client.transport.frame_io import read_document, read_secret, write_document
 from cadrumo_client.transport.native_wake import NativeWake
@@ -565,29 +565,27 @@ async def _read_reply(operations: ProfileWorkerOperationHost, request: _ReadRequ
                 release=release,
             )
         return
-    async with operations.project(
-        request.session_id,
-        request.projection,
-        frontend=request.frontend,
-        page=request.page if isinstance(request, ProfileWorkerProjectPageRequest) else None,
-    ) as (
-        document,
-        release,
-    ):
-        if isinstance(request, ProfileWorkerProjectPageRequest):
+    if isinstance(request, ProfileWorkerProjectPageRequest):
+        async with operations.project_page(
+            request.session_id, request.projection, frontend=request.frontend, page=request.page
+        ) as (page, release):
             yield ProfileWorkerProjectionPage(
                 identity=operations.custody.identity,
                 request_id=request.request_id,
-                page=project_document_page(document, request.page),
+                page=page,
                 release=release,
             )
-        else:
-            yield ProfileWorkerProjection(
-                identity=operations.custody.identity,
-                request_id=request.request_id,
-                document=document,
-                release=release,
-            )
+        return
+    async with operations.project(request.session_id, request.projection, frontend=request.frontend) as (
+        document,
+        release,
+    ):
+        yield ProfileWorkerProjection(
+            identity=operations.custody.identity,
+            request_id=request.request_id,
+            document=document,
+            release=release,
+        )
 
 
 @asynccontextmanager

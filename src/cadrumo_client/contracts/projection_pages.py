@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import base64
+from dataclasses import dataclass
 from typing import Annotated, Self
 
 from pydantic import BaseModel, Field, JsonValue, model_validator
@@ -60,15 +61,28 @@ class ProjectionPage(BaseModel):
         return self
 
 
-def project_document_page(document: dict[str, JsonValue], request: ProjectionPageRequest) -> ProjectionPage:
-    """Slice only while the operation owner retains its normal output guard."""
+@dataclass(frozen=True, slots=True)
+class EncodedProjectionDocument:
+    """The canonical bytes and digest every page of one document is sliced from."""
+
+    encoded: bytes
+    digest: str
+
+
+def encode_projection_document(document: dict[str, JsonValue]) -> EncodedProjectionDocument:
+    """Encode one whole document once, so its pages need not encode it again."""
     try:
         encoded = canonical_json_bytes(document)
     except (TypeError, ValueError, RecursionError):
         # A custom Pydantic serializer can return a non-JSON value even in
         # JSON mode. Never let it publish a partial page or kill the worker.
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE) from None
-    digest = sha256_hex(encoded)
+    return EncodedProjectionDocument(encoded=encoded, digest=sha256_hex(encoded))
+
+
+def project_encoded_page(document: EncodedProjectionDocument, request: ProjectionPageRequest) -> ProjectionPage:
+    """Slice only while the operation owner retains its normal output guard."""
+    encoded, digest = document.encoded, document.digest
     if (
         len(encoded) > PROJECTION_DOCUMENT_MAX_BYTES
         or request.offset >= len(encoded)
@@ -81,3 +95,8 @@ def project_document_page(document: dict[str, JsonValue], request: ProjectionPag
         document_digest=digest,
         encoded=base64.b64encode(encoded[request.offset : request.offset + PROJECTION_PAGE_BYTES]).decode("ascii"),
     )
+
+
+def project_document_page(document: dict[str, JsonValue], request: ProjectionPageRequest) -> ProjectionPage:
+    """Encode one document and slice the requested page from it."""
+    return project_encoded_page(encode_projection_document(document), request)

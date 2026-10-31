@@ -161,6 +161,7 @@ class JournalRepositoryBase[T: JournalOperation]:
         self._subject = subject
         self._id_subject = id_subject
         self._prepared_root: _DirectoryIdentity | None = None
+        self._validated_root: _DirectoryIdentity | None = None
 
     @property
     def root(self) -> Path:
@@ -274,8 +275,13 @@ class JournalRepositoryBase[T: JournalOperation]:
 
         Link-like roots and redirected resolved locations are refused. This is a
         location check, not protection against malicious concurrent path
-        replacement.
+        replacement. Resolving runs once per directory entry this instance
+        validated: an entry with the same identity is the same directory, and a
+        removed, replaced or relinked one is validated in full.
         """
+        identity = _directory_identity(self._root)
+        if identity is not None and identity == self._validated_root:
+            return True
         if not os.path.lexists(self._root):
             return False
         if is_link_like(self._root):
@@ -290,6 +296,7 @@ class JournalRepositoryBase[T: JournalOperation]:
         )
         if resolved_root == buckets_root or buckets_root in resolved_root.parents:
             raise self._error_type(f"{self._subject} repository must remain outside bucket directories")
+        self._validated_root = identity
         return True
 
     def _write(self, path: Path, operation: T) -> None:

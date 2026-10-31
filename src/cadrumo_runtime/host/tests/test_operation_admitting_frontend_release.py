@@ -18,7 +18,7 @@ from contextlib import asynccontextmanager, contextmanager
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import override
+from typing import Any, override
 from uuid import UUID, uuid4
 
 import pytest
@@ -54,7 +54,13 @@ from cadrumo.application.operations.frontend_requests import (
     OperationResultProjectionRequestV1,
     OperationReviewProjectionRequestV1,
 )
-from cadrumo.application.operations.models import OperationId, OperationRequest, new_operation_id
+from cadrumo.application.operations.models import (
+    OperationId,
+    OperationIdentity,
+    OperationRequest,
+    OperationStoredInvocation,
+    new_operation_id,
+)
 from cadrumo.application.operations.operation_definition import build_single_phase_definition
 from cadrumo.application.operations.owner import OperationExecutorContext
 from cadrumo.application.operations.persistence.journal import OperationSecureReferenceStore
@@ -91,7 +97,7 @@ from cadrumo_client.contracts.access_vocabulary import (
     DisclosurePermission,
 )
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
-from cadrumo_client.contracts.projection_pages import ProjectionPageRequest, project_document_page
+from cadrumo_client.contracts.projection_pages import ProjectionPage, ProjectionPageRequest, project_document_page
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
 from cadrumo_runtime.contracts.worker_authorization import WorkerAuthorityRequest
 
@@ -391,6 +397,9 @@ class _Worker:
             assert release.request.destination_id == session.client_id
             return document
 
+    async def result_request(self, operation_id: OperationId) -> OperationResultProjectionRequestV1:
+        return await self._result_request(operation_id, None)
+
     async def result_page(
         self, session: AccessSession, frontend: OperationFrontendProjection, operation_id: OperationId
     ) -> bytes:
@@ -491,6 +500,55 @@ def test_every_frontend_reads_the_same_result_and_page_whichever_frontend_admitt
                 pages.add(await worker.result_page(session, frontend, operation_id))
         assert len(pages) == 1
         assert _FILE.encode() in next(iter(pages))
+
+    _exercise(tmp_path, scenario)
+
+
+def test_later_pages_reuse_one_invocation_only_for_the_same_reader_and_recheck_authority(tmp_path: Path) -> None:
+    """Paging spares the invocation read, never the disclosure guard or a reader's own read."""
+
+    async def scenario(worker: _Worker) -> None:
+        operation_id = await worker.run(worker.person, _CLI)
+        request = await worker.result_request(operation_id)
+        host = worker.host
+        reads: list[OperationId] = []
+        guards: list[AccessAction] = []
+        original_read = host.stored_invocation
+        execution = host.execution
+        assert execution is not None
+        original_guard = execution.guard_binding
+
+        async def counted_read(read_id: OperationId, *, require_idle: bool = False) -> OperationStoredInvocation:
+            reads.append(read_id)
+            return await original_read(read_id, require_idle=require_idle)
+
+        def counted_guard(identity: OperationIdentity, action: AccessAction, binding: Any) -> Any:
+            guards.append(action)
+            return original_guard(identity, action, binding)
+
+        patch = pytest.MonkeyPatch()
+        patch.setattr(host, "stored_invocation", counted_read)
+        patch.setattr(execution, "guard_binding", counted_guard)
+
+        async def page(session: AccessSession, offset: int, digest: str | None) -> ProjectionPage:
+            wanted = ProjectionPageRequest(offset=offset, expected_digest=digest)
+            async with host.project_page(session.session_id, request, frontend=_CLI, page=wanted) as (released, _):
+                return released
+
+        first = await page(worker.person, 0, None)
+        whole = first.decode()
+        assert (await page(worker.person, 1, first.document_digest)).decode() == whole[1:]
+        assert (await page(worker.person, 2, first.document_digest)).decode() == whole[2:]
+        assert reads == [operation_id]
+        assert guards == [AccessAction.RESULT] * 3
+
+        assert (await page(worker.key, 1, first.document_digest)).decode() == whole[1:]
+        assert reads == [operation_id, operation_id]
+
+        host.release_delivered_result(operation_id)
+        assert (await page(worker.key, 1, first.document_digest)).decode() == whole[1:]
+        assert reads == [operation_id, operation_id, operation_id]
+        patch.undo()
 
     _exercise(tmp_path, scenario)
 

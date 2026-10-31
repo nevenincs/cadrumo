@@ -69,6 +69,41 @@ from .supervisor_test_support import (
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 
+def test_a_lease_renewed_within_the_last_interval_is_confirmed_and_not_rewritten(tmp_path: Path) -> None:
+    """A journal advance soon after a renewal leaves the durable lease exactly as it was."""
+    observed_at = [_NOW]
+    with isolated_ephemeral_secure_sql(tmp_path=tmp_path):
+        journal, leases, operands = operation_repositories(
+            storage_root=tmp_path / "durable-state",
+            profile_objects=SecureObjectRepository(namespace_registry=STORAGE_NAMESPACE_REGISTRY),
+        )
+        started = asyncio.Event()
+        executor = WaitingExecutor(started=started, release=asyncio.Event())
+        supervisor = _supervisor(
+            registry=_registry(executor_type=WaitingExecutor, build=lambda: executor),
+            journal=journal,
+            leases=leases,
+            operands=operands,
+            owner_id="1" * 64,
+            token="2" * 64,
+            clock=lambda: observed_at[0],
+            lease_duration=timedelta(minutes=1),
+        )
+        operation_id = asyncio.run(supervisor.submit(_request(), operation_id="3" * 64))
+
+        observed_at[0] = _NOW + timedelta(seconds=5)
+        running = asyncio.run(_close_host_over_live_executor(supervisor, operation_id, started))
+        scope_ref = operation_conflict_scope_reference(
+            definition_id=running.identity.definition_id,
+            subject_ref=running.identity.subject_ref,
+        )
+        current = asyncio.run(leases.inspect(scope_ref, operation_id, observed_at=observed_at[0]))
+
+        assert running.lifecycle is OperationLifecycle.RUNNING
+        assert current.current is not None
+        assert current.current.expires_at == _NOW + timedelta(minutes=1)
+
+
 def test_supervisor_renews_exact_lease_before_expiry_and_settles_beyond_original_duration(tmp_path: Path) -> None:
     """A renewal made while live retains exclusive settlement beyond the original window."""
     observed_at = [_NOW]

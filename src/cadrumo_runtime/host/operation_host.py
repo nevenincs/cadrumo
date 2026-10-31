@@ -14,6 +14,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import AsyncGenerator
 from contextlib import AbstractContextManager, ExitStack, asynccontextmanager
+from dataclasses import dataclass
 from datetime import timedelta
 from importlib import import_module
 from threading import RLock
@@ -54,7 +55,13 @@ from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, Aut
 from cadrumo_client.contracts.operation_access import (
     OperationManagementRequest,
 )
-from cadrumo_client.contracts.projection_pages import ProjectionPageRequest
+from cadrumo_client.contracts.projection_pages import (
+    EncodedProjectionDocument,
+    ProjectionPage,
+    ProjectionPageRequest,
+    encode_projection_document,
+    project_encoded_page,
+)
 
 from .operation_input_admission import submit_financial_input, submit_payload
 from .operation_progress_reporter import OperationProgressReporter
@@ -113,6 +120,32 @@ def _projection_document(result: BaseModel, *, paged: bool) -> dict[str, JsonVal
     return _PROJECTION_DOCUMENT.validate_python(serialized)
 
 
+def _projection_target(
+    request: OperationResultProjectionRequestV1 | OperationReviewProjectionRequestV1,
+) -> tuple[OperationId, AccessAction]:
+    """Name the operation a projection reads and the disclosure it asks for."""
+    if isinstance(request, OperationResultProjectionRequestV1):
+        return request.operation_id, AccessAction.RESULT
+    return request.reference.operation_id, AccessAction.REVIEW
+
+
+@dataclass(frozen=True, slots=True)
+class _PagedDelivery:
+    """The one result being delivered in pages, with what its later pages reuse.
+
+    Its invocation and document are immutable once resolved. Reusing them spares
+    no authority check: every page still takes the disclosure guard, and the
+    settled result is still rechecked. Held for as long as the result snapshot.
+    """
+
+    operation_id: OperationId
+    session_id: UUID
+    frontend: OperationFrontendProjection
+    invocation: OperationStoredInvocation
+    result: BaseModel
+    document: EncodedProjectionDocument
+
+
 class ProfileWorkerOperationHost:
     """Own the existing services and publication lease, never a second dispatcher."""
 
@@ -142,6 +175,7 @@ class ProfileWorkerOperationHost:
         self.closed = False
         self._drain_result: OperationDrainResult | None = None
         self._output_tasks: dict[asyncio.Task[object], OperationId] = {}
+        self._paged_delivery: _PagedDelivery | None = None
         self.submissions: dict[OperationId, tuple[UUID, OperationSubmission]] = {}
         self.inventory_lock = asyncio.Lock()
         self.inventory_verified = False
@@ -402,12 +436,16 @@ class ProfileWorkerOperationHost:
         Its result is decrypted profile data in plain memory; a reader that
         needs it again reads the profile again, which has no effect.
         """
+        delivery = self._paged_delivery
+        if delivery is not None and delivery.operation_id == operation_id:
+            self._paged_delivery = None
         services = self.services
         if services is not None:
             services.release_ephemeral_result(operation_id)
 
     def forget_settled_ephemeral(self) -> None:
         """Forget pending private projections: the worker outlives its last session, its reads do not."""
+        self._paged_delivery = None
         services = self.services
         if services is not None:
             services.forget_settled_ephemeral()
@@ -581,6 +619,20 @@ class ProfileWorkerOperationHost:
         self, session_id: UUID, operation_id: OperationId, frontend: OperationFrontendProjection, action: AccessAction
     ) -> AsyncGenerator[WorkerAuthorityRequest]:
         """Bind each internal projection to policy the runtime must recheck on final output."""
+        async with self._release_invocation(session_id, operation_id, frontend, action) as (authorization, _invocation):
+            yield authorization
+
+    @asynccontextmanager
+    async def _release_invocation(
+        self,
+        session_id: UUID,
+        operation_id: OperationId,
+        frontend: OperationFrontendProjection,
+        action: AccessAction,
+        *,
+        retained: OperationStoredInvocation | None = None,
+    ) -> AsyncGenerator[tuple[WorkerAuthorityRequest, OperationStoredInvocation]]:
+        """Hold the release guard over ``retained``, or over the invocation read afresh."""
         await self.custody.require_off_loop(session_id)
         await self.require_current_inventory()
         self.composed()
@@ -596,7 +648,7 @@ class ProfileWorkerOperationHost:
         from .worker_operation_binding import WorkerOperationBinding
 
         try:
-            invocation = await self.stored_invocation(operation_id)
+            invocation = retained if retained is not None else await self.stored_invocation(operation_id)
             binding = WorkerOperationBinding(session_id, frontend, invocation.request, invocation.provenance)
             async with execution.guard_binding(invocation.identity, action, binding) as authorization:
                 # The full-owner workbench projection is released only to the
@@ -607,7 +659,7 @@ class ProfileWorkerOperationHost:
                     and invocation.identity.definition_id == WORKBENCH_GENERATION_OPERATION_DEFINITION_ID
                 ):
                     await execution.require_owner(operation_id, session_id)
-                yield authorization
+                yield authorization, invocation
         finally:
             self._output_tasks.pop(task, None)
 
@@ -672,32 +724,76 @@ class ProfileWorkerOperationHost:
         request: OperationResultProjectionRequestV1 | OperationReviewProjectionRequestV1,
         *,
         frontend: OperationFrontendProjection,
-        page: ProjectionPageRequest | None = None,
     ) -> AsyncGenerator[tuple[dict[str, JsonValue], WorkerAuthorityRequest]]:
         """Serialize only the canonical registered public projection under consent."""
-        is_result = isinstance(request, OperationResultProjectionRequestV1)
-        operation_id = request.operation_id if is_result else request.reference.operation_id
-        action = AccessAction.RESULT if is_result else AccessAction.REVIEW
+        operation_id, action = _projection_target(request)
         async with self.release(session_id, operation_id, frontend, action) as authorization:
-            services = self.composed()
-            if isinstance(request, OperationResultProjectionRequestV1):
-                result = await await_cancellation_complete(
-                    services.result.resolve(
-                        request,
-                        BaseModel,
-                        snapshot_scope=(session_id, frontend) if page is not None else None,
-                        continue_snapshot=page is not None and page.offset > 0,
-                    ),
-                    task_name="profile-operation-result",
-                )
+            result = await self._resolve_projection(request, session_id, frontend, page=None)
+            yield _projection_document(result, paged=False), authorization
+
+    @asynccontextmanager
+    async def project_page(
+        self,
+        session_id: UUID,
+        request: OperationResultProjectionRequestV1 | OperationReviewProjectionRequestV1,
+        *,
+        frontend: OperationFrontendProjection,
+        page: ProjectionPageRequest,
+    ) -> AsyncGenerator[tuple[ProjectionPage, WorkerAuthorityRequest]]:
+        """Release one page, reusing only what the same delivery already resolved.
+
+        Every page takes the disclosure guard and rechecks the settled result; a
+        later page spares the invocation read and the whole-document encoding.
+        """
+        operation_id, action = _projection_target(request)
+        held = self._paged_delivery
+        continued = (
+            held
+            if page.offset > 0
+            and held is not None
+            and held.operation_id == operation_id
+            and held.session_id == session_id
+            and held.frontend is frontend
+            else None
+        )
+        async with self._release_invocation(
+            session_id,
+            operation_id,
+            frontend,
+            action,
+            retained=None if continued is None else continued.invocation,
+        ) as (authorization, invocation):
+            result = await self._resolve_projection(request, session_id, frontend, page=page)
+            if continued is not None and continued.result is result:
+                document = continued.document
             else:
-                result = await await_cancellation_complete(
-                    services.review.resolve(request, BaseModel), task_name="profile-operation-review"
-                )
-            # Polymorphic canonical projections retain their validated fields;
-            # serializing as the BaseModel parameter would discard them.
-            document = _projection_document(result, paged=page is not None)
-            yield document, authorization
+                document = encode_projection_document(_projection_document(result, paged=True))
+                self._paged_delivery = _PagedDelivery(operation_id, session_id, frontend, invocation, result, document)
+            yield project_encoded_page(document, page), authorization
+
+    async def _resolve_projection(
+        self,
+        request: OperationResultProjectionRequestV1 | OperationReviewProjectionRequestV1,
+        session_id: UUID,
+        frontend: OperationFrontendProjection,
+        *,
+        page: ProjectionPageRequest | None,
+    ) -> BaseModel:
+        """Resolve the registered public model; a polymorphic one keeps its validated fields when dumped."""
+        services = self.composed()
+        if isinstance(request, OperationResultProjectionRequestV1):
+            return await await_cancellation_complete(
+                services.result.resolve(
+                    request,
+                    BaseModel,
+                    snapshot_scope=(session_id, frontend) if page is not None else None,
+                    continue_snapshot=page is not None and page.offset > 0,
+                ),
+                task_name="profile-operation-result",
+            )
+        return await await_cancellation_complete(
+            services.review.resolve(request, BaseModel), task_name="profile-operation-review"
+        )
 
     async def _require_owner(self, operation_id: OperationId, session_id: UUID) -> None:
         if self.execution is None:

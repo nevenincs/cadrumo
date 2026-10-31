@@ -109,6 +109,41 @@ def test_many_writes_create_and_restrict_the_root_once(tmp_path: Path) -> None:
     assert len(repository.list()) == 12
 
 
+def _counting_resolves(monkeypatch: pytest.MonkeyPatch) -> list[Path]:
+    resolved: list[Path] = []
+    original = Path.resolve
+
+    def counted(self: Path, strict: bool = False) -> Path:
+        resolved.append(self)
+        return original(self, strict=strict)
+
+    monkeypatch.setattr(Path, "resolve", counted)
+    return resolved
+
+
+def test_repeated_reads_resolve_the_validated_root_no_further(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    repository = _repository(tmp_path)
+    repository.save(_operation(1))
+    resolved = _counting_resolves(monkeypatch)
+
+    for _ in range(5):
+        repository.load(_operation(1).operation_id)
+
+    assert repository.root not in resolved
+
+
+def test_a_root_replaced_after_validation_is_resolved_again(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    repository = _repository(tmp_path)
+    repository.save(_operation(1))
+    shutil.rmtree(repository.root)
+    repository.root.mkdir()
+    resolved = _counting_resolves(monkeypatch)
+
+    assert repository.list() == ()
+
+    assert repository.root in resolved
+
+
 def test_a_root_removed_between_writes_is_created_and_restricted_again(tmp_path: Path) -> None:
     repository = _repository(tmp_path)
     repository.save(_operation(1))

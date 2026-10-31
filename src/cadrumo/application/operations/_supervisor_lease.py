@@ -86,7 +86,12 @@ class OperationSupervisorLeaseMixin:
         identity: OperationIdentity,
         now: datetime,
     ) -> OperationOwnerLease:
-        """Return this supervisor's exact live lease, renewing it only by CAS."""
+        """Return this supervisor's exact live lease, renewing it only by CAS.
+
+        Every journal advance passes through here. A lease renewed within the
+        last renewal interval is confirmed against durable state and not
+        rewritten; the supervisor's own schedule still renews it.
+        """
         scope_ref = operation_conflict_scope_reference(
             definition_id=identity.definition_id,
             subject_ref=identity.subject_ref,
@@ -94,6 +99,9 @@ class OperationSupervisorLeaseMixin:
         held = await self._load_owned_lease(identity, scope_ref=scope_ref, now=now)
         if now >= held.expires_at:
             raise ValueError("operation exact lease expired before renewal")
+        freshly_renewed_until = now + self._lease_duration - timedelta(seconds=self._renewal_interval_seconds())
+        if held.expires_at > freshly_renewed_until:
+            return await self._retain_owned_lease(identity, scope_ref=scope_ref, held=held, now=now)
         successor = OperationOwnerLease(
             operation_id=held.operation_id,
             scope_ref=held.scope_ref,
