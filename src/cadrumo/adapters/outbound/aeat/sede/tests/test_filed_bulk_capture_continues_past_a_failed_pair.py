@@ -61,9 +61,8 @@ from .....persistence.storage.tests.secure_sql import isolated_runtime_profile
 from .declarations_register_test_support import (
     RoutedFiledDataCapturePort,
     aeat_sede_fixture,
-    declared_register_total,
     open_routed_declarations_register,
-    rendered_register_rows,
+    truncation_failures_naming_their_cause,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -123,21 +122,7 @@ def test_a_truncated_pair_is_reported_while_the_other_pair_is_still_captured(tmp
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         report = _capture(tmp_path / "captures")
 
-    truncation_failures = [failure for failure in report.failures if failure.error_type == "SedeParseError"]
-    assert truncation_failures, f"no truncation refusal was absorbed into a failure row: {report.failures}"
-
-    # Both numbers are read straight out of the fixture's own markup rather than
-    # from anything the parser computed, so the row is cross-checked against the
-    # page it came from and neither number is hardcoded here.
-    truncated_page = aeat_sede_fixture("declaraciones-register-form-paginated-synthetic")
-    declared_total = declared_register_total(truncated_page)
-    assert declared_total is not None
-    rendered_rows = rendered_register_rows(truncated_page)
-    assert rendered_rows < declared_total, "fixture no longer renders fewer rows than its pager declares"
-    for failure in truncation_failures:
-        assert str(rendered_rows) in failure.message and str(declared_total) in failure.message, (
-            f"the failure row lost the rendered-versus-declared cause: {failure.message!r}"
-        )
+    truncation_failures_naming_their_cause(report.failures)
 
     walk_refusals = [failure for failure in report.failures if failure.expediente_id is None]
     per_row_outcomes = [failure for failure in report.failures if failure.expediente_id is not None]

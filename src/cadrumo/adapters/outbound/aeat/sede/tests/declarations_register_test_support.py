@@ -7,6 +7,7 @@ from collections.abc import AsyncGenerator, Sequence
 from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
+from typing import Protocol, TypeVar
 
 from playwright.async_api import Route, async_playwright
 
@@ -35,6 +36,38 @@ def declared_register_total(html: str) -> int | None:
 def rendered_register_rows(html: str) -> int:
     """Count rows directly from synthetic register markup."""
     return len(_LISTITEM_RE.findall(html))
+
+
+class _BulkFailure(Protocol):
+    @property
+    def error_type(self) -> str: ...
+
+    @property
+    def message(self) -> str: ...
+
+
+_FailureT = TypeVar("_FailureT", bound=_BulkFailure)
+
+
+def truncation_failures_naming_their_cause(failures: Sequence[_FailureT]) -> list[_FailureT]:
+    """Return the absorbed truncation refusals after checking each names rendered versus declared rows.
+
+    Both numbers are read straight out of the fixture's own markup rather than
+    from anything the parser computed, so the row is cross-checked against the
+    page it came from and neither number is hardcoded by callers.
+    """
+    truncation_failures = [failure for failure in failures if failure.error_type == "SedeParseError"]
+    assert truncation_failures, f"no truncation refusal was absorbed into a failure row: {failures}"
+    truncated_page = aeat_sede_fixture("declaraciones-register-form-paginated-synthetic")
+    declared_total = declared_register_total(truncated_page)
+    assert declared_total is not None
+    rendered_rows = rendered_register_rows(truncated_page)
+    assert rendered_rows < declared_total, "fixture no longer renders fewer rows than its pager declares"
+    for failure in truncation_failures:
+        assert str(rendered_rows) in failure.message and str(declared_total) in failure.message, (
+            f"the failure row lost the rendered-versus-declared cause: {failure.message!r}"
+        )
+    return truncation_failures
 
 
 def offline_aeat_session() -> AeatSession:
