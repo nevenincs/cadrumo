@@ -7,22 +7,16 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefinition, ExportRecordDefinition
-
 from ...compiler.authority import compiled_bundled_authority
-from ...compiler.loader import load_registry_tree
 from ...tests.authored_edition_support import source_first_exercise, source_with_sha256
-from .._export_tree import render_complete_export_tree
-from ..record_design_intermediate import (
-    RecordDesignIntermediate,
-    RecordDesignIntermediateField,
-    load_record_design_intermediate,
-)
-from ..render_check import GeneratedExportBootstrapTransport, revision_render_inputs
-from ..semantic_map import (
-    SemanticMapEntry,
-    load_semantic_map,
+from ..semantic_map import SemanticMapEntry, load_semantic_map
+from ._m390_semantic_map_support import (
+    assert_anchors_biject_to_layout,
+    assert_page_07_close,
+    entry_index,
+    field_index,
+    load_design,
+    render_edition,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -69,27 +63,6 @@ _REMOVED_PAGE_5_ANCHORS = {("Pág. 5", f"A{row}") for row in range(103, 112)}
 _RETIRED_PAGE_5_SLOTS = {("Pág. 5", cell) for cell in ("A27", "A51", "A101")}
 
 
-def _design(source_ref: str, *, filing_year: int, epoch: str) -> RecordDesignIntermediate:
-    _modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
-    return load_record_design_intermediate(
-        bundled_path(),
-        catalogues.sources,
-        source_ref=source_ref,
-        filing_year=filing_year,
-        design_epoch=epoch,
-    )
-
-
-def _field_index(design: RecordDesignIntermediate) -> dict[tuple[str, str], RecordDesignIntermediateField]:
-    return {
-        (sheet.record_identity, field.source_cell or ""): field for sheet in design.sheets for field in sheet.fields
-    }
-
-
-def _entry_index(entries: tuple[SemanticMapEntry, ...]) -> dict[tuple[str, str], SemanticMapEntry]:
-    return {(entry.anchor.record_identity, entry.anchor.source_cell or ""): entry for entry in entries}
-
-
 _StablePayload = tuple[str, str | None, str | None, str | None, str | None, str | None, str | None, str | None]
 
 
@@ -107,29 +80,15 @@ def _stable_payload(entry: SemanticMapEntry, revision: str) -> _StablePayload:
     )
 
 
-def _assert_layout_owner(entry: SemanticMapEntry, field: ExportFieldDefinition) -> None:
-    assert entry.export_field_id == field.id
-    assert entry.kind == field.kind
-    assert entry.casilla_id == field.casilla_id
-    assert entry.binding == field.binding
-    assert entry.literal == field.literal
-    assert entry.producer_key == field.producer_key
-    assert entry.projection_ref == field.projection_ref
-    assert entry.draft_attribute == field.draft_attribute
-    assert entry.computed_key == field.computed_key
-    assert entry.legal_refs == field.legal_refs
-    assert entry.source_refs == field.source_refs
-
-
 def test_m390_dana_reduction_retirement_bijects_every_parser_anchor_to_the_reviewed_revision_owner() -> None:
     authority = compiled_bundled_authority()
     revision = authority.modelo("390").revisions[str(_DESIGN_EXERCISE)]
-    predecessor_design = _design(
+    predecessor_design = load_design(
         _PREDECESSOR_SOURCE_REF, filing_year=_PREDECESSOR_EXERCISE, epoch=str(_PREDECESSOR_EXERCISE)
     )
-    design = _design(_SOURCE_REF, filing_year=_DESIGN_EXERCISE, epoch=str(_DESIGN_EXERCISE))
-    predecessor_fields = _field_index(predecessor_design)
-    fields = _field_index(design)
+    design = load_design(_SOURCE_REF, filing_year=_DESIGN_EXERCISE, epoch=str(_DESIGN_EXERCISE))
+    predecessor_fields = field_index(predecessor_design)
+    fields = field_index(design)
     delta = {key for key in predecessor_fields.keys() | fields.keys() if predecessor_fields.get(key) != fields.get(key)}
 
     assert len(predecessor_fields) == 621
@@ -142,58 +101,20 @@ def test_m390_dana_reduction_retirement_bijects_every_parser_anchor_to_the_revie
 
     predecessor_map = load_semantic_map(Path(f"dev/registry/mappings/modelo_390/{_PREDECESSOR_EXERCISE}"))
     semantic_map = load_semantic_map(Path(f"dev/registry/mappings/modelo_390/{_DESIGN_EXERCISE}"))
-    predecessor_entries = _entry_index(predecessor_map.entries)
-    entries = _entry_index(semantic_map.entries)
+    predecessor_entries = entry_index(predecessor_map.entries)
+    entries = entry_index(semantic_map.entries)
     stable = set(predecessor_fields) & set(fields) - delta
     assert {key: _stable_payload(predecessor_entries[key], str(_PREDECESSOR_EXERCISE)) for key in stable} == {
         key: _stable_payload(entries[key], str(_DESIGN_EXERCISE)) for key in stable
     }
 
-    layout_records: dict[str, ExportRecordDefinition] = {
-        str(record.record_type): record for record in revision.export_layouts[0].records
-    }
-
-    bindings_by_id = {str(binding.id): binding for binding in revision.bindings}
-
-    owned_field_ids: set[str] = set()
-    owned_kinds: Counter[str] = Counter()
-    covered_record_types: set[str] = set()
-    filler_anchors: set[tuple[str, str]] = set()
-    for sheet in design.sheets:
-        suffix = "02b" if sheet.record_identity == "Pág. 2 bis" else sheet.record_identity.split()[-1].zfill(2)
-        record_type = f"page_{suffix}"
-        covered_record_types.add(record_type)
-        layout = layout_records[record_type]
-        layout_fields = {
-            (field.offset, field.length): field
-            for field in layout.fields
-            if field.offset is not None and field.length is not None
-        }
-        for field in sheet.fields:
-            anchor = (sheet.record_identity, field.source_cell or "")
-            entry = entries[anchor]
-            layout_field = layout_fields[(field.offset, field.length)]
-            _assert_layout_owner(entry, layout_field)
-            assert str(layout_field.id) not in owned_field_ids
-            owned_field_ids.add(str(layout_field.id))
-            owned_kinds[layout_field.kind.value] += 1
-            if layout_field.kind.value == "filler":
-                filler_anchors.add(anchor)
-                if anchor in _COMPLEMENTARIA_INDICATOR_ANCHORS:
-                    assert str(layout_field.id).endswith("-complementaria-indicator")
-            if layout_field.kind.value == "binding":
-                binding = bindings_by_id[str(layout_field.binding)]
-                assert tuple(binding.legal_refs) == tuple(layout_field.legal_refs)
-                # An inherited binding keeps the source that grounded it at its origin;
-                # the generated field cites this edition's design.
-                assert binding.source_refs
-                assert tuple(layout_field.source_refs) == (_SOURCE_REF,)
-
-    assert covered_record_types == set(layout_records)
-    published_fields = [field for record in revision.export_layouts[0].records for field in record.fields]
-    assert owned_field_ids == {str(field.id) for field in published_fields}
-    assert owned_kinds == Counter(field.kind.value for field in published_fields)
-    assert sum(owned_kinds.values()) == len(fields)
+    filler_anchors = assert_anchors_biject_to_layout(
+        design=design,
+        revision=revision,
+        entries=entries,
+        source_ref=_SOURCE_REF,
+        complementaria_anchors=_COMPLEMENTARIA_INDICATOR_ANCHORS,
+    )
     assert filler_anchors == _RESERVED_ANCHORS | _COMPLEMENTARIA_INDICATOR_ANCHORS
     assert {anchor for anchor in filler_anchors if anchor[0] == "Pág. 5"} == _RETIRED_PAGE_5_SLOTS
 
@@ -201,27 +122,11 @@ def test_m390_dana_reduction_retirement_bijects_every_parser_anchor_to_the_revie
 def test_m390_dana_reduction_retirement_profile_and_map_render_all_numbered_anchors_from_the_exact_source(
     tmp_path: Path,
 ) -> None:
-    inputs = revision_render_inputs(
-        compiled_bundled_authority(),
-        modelo="390",
-        revision=str(_DESIGN_EXERCISE),
+    rendered = render_edition(
+        tmp_path,
+        exercise=_DESIGN_EXERCISE,
         source_ref=_SOURCE_REF,
-        bootstrap_transport=GeneratedExportBootstrapTransport(
-            layout_id=f"generated-modelo-390-{_DESIGN_EXERCISE}-fichero",
-            line_ending="crlf",
-            source_ref=_SOURCE_REF,
-            source_sha256=_SOURCE_SHA256,
-        ),
-    )
-
-    rendered = render_complete_export_tree(
-        tmp_path / "export",
-        revision_id=str(_DESIGN_EXERCISE),
-        joined=inputs.joined,
-        semantic_map=inputs.semantic_map,
-        transport_profile=inputs.transport_profile,
-        render_profile=inputs.render_profile,
-        render_profile_source_evidence=inputs.render_profile_source_evidence,
+        source_sha256=_SOURCE_SHA256,
     )
 
     assert len(rendered.layout.records) == 9
@@ -237,10 +142,4 @@ def test_m390_dana_reduction_retirement_profile_and_map_render_all_numbered_anch
         "page_07",
         "page_08",
     ]
-    close = next(
-        field
-        for record in rendered.layout.records
-        for field in record.fields
-        if str(field.id) == "modelo-390-page-07-close"
-    )
-    assert close.literal == "</T39007000>"
+    assert_page_07_close(rendered)
