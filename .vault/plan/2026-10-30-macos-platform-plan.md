@@ -12,7 +12,7 @@ related:
   - '[[2026-10-03-application-packaging-interpreter-foundation-adr]]'
 modified: '2026-10-31'
 body_schema: body-v2
-body_hash: 'sha256:bb80b651af18e7ff464d18d1347a3beb5a9fb7f7bca52dd6f158c265b1fa68b5'
+body_hash: 'sha256:978c485bc16f29886858bd6a0bbd04564b5618555f4f8d6d9e51829d67c31550'
 ---
 
 # `macos-platform` plan
@@ -27,7 +27,7 @@ Bring Cadrumo to a working build, package and run on macOS arm64: configure and 
 
 - [ ] `S01` - Admit the macOS configure path: case-insensitive build-path guards and a developer recipe that resolves the reviewed Apple clang, SDK, Rust root and Darwin assembly tools as explicit cache inputs; `native/cmake/BuildPaths.cmake, native/cmake/BinaryDirectory.cmake, native/cmake/BuildLog.cmake, justfile, native/CONTRACT.md`.
 - [x] `S02` - Compile the native backend (platform, launch guard, manager, application crates and the C interpreter host/bridge) for aarch64-apple-darwin and pass its CTest cases; `native/platform, native/launch_guard, native/manager, native/application, native/interpreter, native/interpreter_host, native/cmake/platforms`.
-- [ ] `S03` - Repair macOS-specific Python suite failures (paths, sockets, locking, process and platform branches) found by the baseline run; `src/, dev/, tests under owning packages`.
+- [x] `S03` - Repair macOS-specific Python suite failures (paths, sockets, locking, process and platform branches) found by the baseline run; `src/, dev/, tests under owning packages`.
 - [ ] `S04` - Enable the desktop shell on macOS: GUI availability, a per-user single-instance lock in the Darwin transport namespace, and a Tauri build of the desktop host; `native/desktop/src-tauri/src/launch.rs, native/desktop/src-tauri/src/shell/single_instance, native/desktop/src-tauri/Cargo.toml`.
 - [ ] `S05` - Assemble the full macOS payload: PBS CPython SDK, wheelhouse, agent runtime, Mach-O relocation and ad-hoc signing into the flat bundle; `native/cmake/Packaging.cmake, native/cmake/PythonDistribution.cmake, dev/packaging/native/platforms/macos.py, native/platforms/macos-arm64.json`.
 - [ ] `S06` - Author the macOS application wrapper: .app bundle with Info.plist, icon and nested signed payload, packaged into the CPack DragNDrop DMG; `native/cmake/distribution/CMakeLists.txt, native/desktop/src-tauri, native/package-layout.json`.

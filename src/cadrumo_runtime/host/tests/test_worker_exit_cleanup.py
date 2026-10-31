@@ -988,7 +988,7 @@ async def test_serve_preserves_control_failure_retires_all_local_owners_and_leav
 ) -> None:
     primary = ValueError("synthetic control validation failure")
     control, operation, proof = _Channel(read_failure=primary), _Channel(), _Channel()
-    custody, human, uploads = _Release(), _Human(failures), _Release(failures)
+    custody, human, uploads = _ServeCustody(), _Human(failures), _Release(failures)
     operations = _Operations(failures)
     monkeypatch.setattr(worker_service, "WorkerSubmissionStaging", lambda: uploads)
     with pytest.raises(ValueError) as caught:
@@ -1022,7 +1022,7 @@ async def test_serve_repeated_cancellation_waits_for_cleanup_and_preserves_origi
 ) -> None:
     primary = asyncio.CancelledError("original control cancellation")
     control, operation, proof = _Channel(read_failure=primary), _Channel(), _Channel()
-    custody, human, uploads = _Release(), _Human(1), _Release()
+    custody, human, uploads = _ServeCustody(), _Human(1), _Release()
     entered, finish = asyncio.Event(), asyncio.Event()
 
     class PendingOperations(_Operations):
