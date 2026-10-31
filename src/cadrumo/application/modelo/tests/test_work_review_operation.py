@@ -22,7 +22,11 @@ from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_wor
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...operations.models import OperationIdentity, OperationRequest
 from ...operations.owner import OperationExecutorContext
-from ...operations.registry import OperationFrontendProjection, OperationRegistry
+from ...operations.registry import (
+    OperationFrontendProjection,
+    OperationPublicDefinitionRegistrationV1,
+    OperationRegistry,
+)
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..history_ports import ModeloHistoryPorts, ModeloHistoryPortsFactory
 from ..work_review_contracts import (
@@ -190,15 +194,20 @@ def test_review_fact_rejects_ambiguous_encoded_values(kind: str, value: str) -> 
         ModeloWorkReviewFact.model_validate({"key": "sample", "kind": kind, "value": value})
 
 
-def test_review_period_is_admitted_once_and_sealed_for_result(authority_operation: PinnedAuthorityOperation) -> None:
-    unit = _unit()
-    loads: list[str] = []
+def _review_registry(
+    unit: WorkUnit,
+    authority_operation: PinnedAuthorityOperation,
+    *,
+    loads: list[str] | None = None,
+) -> tuple[OperationRegistry, OperationPublicDefinitionRegistrationV1, OperationRequest[BaseModel]]:
+    """Register the work-review operation over a repository holding only ``unit``."""
 
     class Repository:
         bucket_id = str(_PROFILE)
 
         def load(self) -> WorkUnitCatalogue:
-            loads.append("load")
+            if loads is not None:
+                loads.append("load")
             return WorkUnitCatalogue(work_units={unit.work_unit_id: unit})
 
     def factory(*, bucket_id: str, operation: PinnedAuthorityOperation) -> ModeloHistoryPorts:
@@ -225,6 +234,14 @@ def test_review_period_is_admitted_once_and_sealed_for_result(authority_operatio
         subject_ref=unit.work_unit_id,
         payload=ModeloWorkReviewRequest(profile_id=_PROFILE, work_unit_id=unit.work_unit_id),
     )
+    return registry, registration, request
+
+
+def test_review_period_is_admitted_once_and_sealed_for_result(authority_operation: PinnedAuthorityOperation) -> None:
+    unit = _unit()
+    loads: list[str] = []
+
+    registry, registration, request = _review_registry(unit, authority_operation, loads=loads)
 
     def context(
         *,
@@ -264,36 +281,7 @@ def test_work_review_is_admitted_on_the_external_client_frontend_without_a_commi
 ) -> None:
     unit = _unit()
 
-    class Repository:
-        bucket_id = str(_PROFILE)
-
-        def load(self) -> WorkUnitCatalogue:
-            return WorkUnitCatalogue(work_units={unit.work_unit_id: unit})
-
-    def factory(*, bucket_id: str, operation: PinnedAuthorityOperation) -> ModeloHistoryPorts:
-        assert bucket_id == str(_PROFILE) and operation is authority_operation
-        return cast(
-            ModeloHistoryPorts,
-            cast(
-                object,
-                SimpleNamespace(
-                    work_unit_repository=Repository(),
-                    calculation_repository=SimpleNamespace(bucket_id=str(_PROFILE)),
-                    verification_repository=SimpleNamespace(bucket_id=str(_PROFILE)),
-                    filing_repository=SimpleNamespace(bucket_id=str(_PROFILE)),
-                ),
-            ),
-        )
-
-    typed_factory = cast(ModeloHistoryPortsFactory, factory)
-    definition = build_modelo_work_review_definition(typed_factory)
-    registration = build_modelo_work_review_registration(definition, typed_factory)
-    registry = OperationRegistry(definitions=(definition,), public_registrations=(registration,))
-    request = OperationRequest[BaseModel](
-        definition_id=MODELO_WORK_REVIEW_OPERATION_DEFINITION_ID,
-        subject_ref=unit.work_unit_id,
-        payload=ModeloWorkReviewRequest(profile_id=_PROFILE, work_unit_id=unit.work_unit_id),
-    )
+    registry, registration, request = _review_registry(unit, authority_operation)
 
     resolved = resolve_operation_access(
         registry=registry,
