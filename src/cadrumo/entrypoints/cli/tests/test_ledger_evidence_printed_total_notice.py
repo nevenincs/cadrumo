@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-
 import pytest
 
 from ....application.invoices.catalogue_read_projection import CatalogueInvoiceSnapshot
