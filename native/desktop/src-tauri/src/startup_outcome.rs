@@ -5,8 +5,8 @@
 //! The record names a closed outcome, the typed reason code, the stage, the process id, the
 //! time and the digest identity of the storage root. It never carries paths, arguments,
 //! environment values or error messages. It lands in the declared log directory of the root the
-//! launch selects, or of the per-user installed default when the selected root cannot be
-//! resolved; a launch with neither stays on its standard error.
+//! launch's environment selects. A launch whose selected root cannot be resolved writes no
+//! record and creates no root: it stays on its standard error.
 
 use crate::{
     environment::Parent,
@@ -50,16 +50,6 @@ impl Outcome {
     }
 }
 
-/// Which root the record was written under.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
-#[serde(rename_all = "snake_case")]
-pub enum RootSelection {
-    /// The root the launch's environment selects.
-    Selected,
-    /// The per-user installed default, because the selected root could not be resolved.
-    InstalledDefault,
-}
-
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 struct Record {
@@ -71,7 +61,6 @@ struct Record {
     pid: u32,
     timestamp_ms: u64,
     root_identity: Option<String>,
-    root: RootSelection,
 }
 
 /// The outcome an admission ends the launch with, or `None` when the launch goes on.
@@ -92,7 +81,7 @@ pub fn record(
     reason: Option<ErrorCode>,
 ) -> Result<PathBuf> {
     let contract = Contract::current()?;
-    let (root, selection) = resolve(parent)?;
+    let root = resolve(parent)?;
     let directory = contract.log_directory(&root)?;
     let record = Record {
         schema: 1,
@@ -103,7 +92,6 @@ pub fn record(
         pid: std::process::id(),
         timestamp_ms: timestamp_ms(),
         root_identity: cadrumo_application::instance_scope::storage_scope(&root).ok(),
-        root: selection,
     };
     let (max_bytes, backups) = contract.log_bounds();
     let file = LogFile::for_file(&directory.join(FILE_NAME), max_bytes, backups)?;
@@ -111,8 +99,9 @@ pub fn record(
     Ok(file.paths.current)
 }
 
-/// The root to record under, created owner-only when absent.
-fn resolve(parent: &Parent) -> Result<(PathBuf, RootSelection)> {
+/// The root the launch's environment selects, created owner-only when absent. A selection
+/// that cannot be resolved is refused: no other root is written in its place.
+fn resolve(parent: &Parent) -> Result<PathBuf> {
     let unavailable = |error: std::io::Error| {
         ApplicationError::new(
             ErrorCode::LogUnavailable,
@@ -120,22 +109,10 @@ fn resolve(parent: &Parent) -> Result<(PathBuf, RootSelection)> {
         )
         .caused_by(error)
     };
-    let (resolved, selection) =
-        match resolve_storage_root_with(&|name| environment_value(parent, name)) {
-            Ok(resolved) => (resolved, RootSelection::Selected),
-            Err(_) => {
-                let without_override = |name: &str| {
-                    (name != cadrumo_platform::ROOT_VARIABLE)
-                        .then(|| environment_value(parent, name))
-                        .flatten()
-                };
-                let resolved = resolve_storage_root_with(&without_override)
-                    .map_err(|error| unavailable(std::io::Error::from(error)))?;
-                (resolved, RootSelection::InstalledDefault)
-            }
-        };
+    let resolved = resolve_storage_root_with(&|name| environment_value(parent, name))
+        .map_err(|error| unavailable(std::io::Error::from(error)))?;
     create_storage_root(&resolved.root).map_err(unavailable)?;
-    Ok((resolved.root, selection))
+    Ok(resolved.root)
 }
 
 /// Concurrent launches contend for the file's lock; a short bounded wait settles them.
@@ -275,17 +252,17 @@ mod tests {
 
     #[cfg(unix)]
     #[test]
-    fn an_unresolvable_selected_root_falls_back_to_the_installed_default() {
+    fn an_unresolvable_selected_root_neither_falls_back_nor_creates_a_root() {
         let scratch = Scratch::new();
         let home = scratch.0.join("home");
         fs::create_dir_all(&home).unwrap();
         let relative = Path::new("relative-private-root-canary");
         let parent = parent(&[(cadrumo_platform::ROOT_VARIABLE, relative), ("HOME", &home)]);
-        let file = record(&parent, Outcome::Refused, HostStage::Package, None).unwrap();
-        assert!(file.starts_with(&home), "{}", file.display());
-        let records = lines(&file);
-        assert_eq!(records[0]["root"], "installed_default");
-        assert!(!fs::read_to_string(&file).unwrap().contains("canary"));
+        let error = record(&parent, Outcome::Refused, HostStage::Package, None).unwrap_err();
+        assert_eq!(error.code, ErrorCode::LogUnavailable);
+        assert_eq!(fs::read_dir(&home).unwrap().count(), 0);
+        assert_eq!(fs::read_dir(&scratch.0).unwrap().count(), 1);
+        assert!(!format!("{error:?}").contains("canary"));
     }
 
     #[test]
@@ -293,11 +270,8 @@ mod tests {
         let scratch = Scratch::new();
         let relative = Path::new("relative-private-root-canary");
         let parent = parent(&[(cadrumo_platform::ROOT_VARIABLE, relative)]);
-        // No home or application-data base either, so no default exists to fall back to.
         let error = record(&parent, Outcome::Refused, HostStage::Package, None);
-        if cfg!(unix) {
-            assert_eq!(error.unwrap_err().code, ErrorCode::LogUnavailable);
-        }
+        assert_eq!(error.unwrap_err().code, ErrorCode::LogUnavailable);
         assert_eq!(fs::read_dir(&scratch.0).unwrap().count(), 0);
     }
 }

@@ -1435,6 +1435,13 @@ record to a temporary file, flushes it and renames it over the previous record.
 A missing or unreadable record means the configured defaults. No webview command
 reads or writes it.
 
+A launch that ends before the regular startup log exists records one payload-free
+outcome line in the `cadrumo-startup-outcomes.jsonl` file of the declared log
+directory beneath the root its environment selects. When that selection cannot be
+resolved, the launch records nothing and creates no root: it reports on its standard
+error and, where the platform shows one, in its native alert. It never writes into
+a root the operator did not select, including the channel's default root.
+
 ### Origins and the documentation scheme
 
 Origins are computed at startup from the window's `useHttpsScheme` setting, never
