@@ -29,9 +29,7 @@ from cadrumo.adapters.persistence.operations.journal import OperationJournalRepo
 from cadrumo.adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
 from cadrumo.adapters.persistence.operations.secure_references import (
     OperationSecureReferenceRepository,
-    operation_secure_reference_repository,
 )
-from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.operations.capabilities import (
     OperationBaselinePolicy,
@@ -72,6 +70,7 @@ from cadrumo.domain.calculations.registry.governed_fact_scope import (
 )
 
 from .supervision_support import run_to_settlement
+from .supervisor_test_support import operation_repositories
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -232,18 +231,6 @@ def _definition(executor: HeldExecutor) -> OperationDefinition:
     )
 
 
-def _repositories(
-    *,
-    storage_root: Path,
-    profile_objects: SecureObjectRepository,
-) -> tuple[OperationJournalRepository, OperationLeaseFilesystemRepository, OperationSecureReferenceRepository]:
-    return (
-        OperationJournalRepository(storage_root=storage_root),
-        OperationLeaseFilesystemRepository(storage_root=storage_root),
-        operation_secure_reference_repository(objects=profile_objects),
-    )
-
-
 def _supervisor(
     *,
     journal: OperationJournalRepository,
@@ -309,7 +296,7 @@ async def _assert_no_terminal_published(
 def test_elapsed_aggregate_deadline_publishes_nothing_while_the_executor_continues(tmp_path: Path) -> None:
     """An outrun executor keeps the record open until it actually stops."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        journal, leases, operands = _repositories(
+        journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "durable-state",
             profile_objects=profile.repository,
         )
@@ -366,7 +353,7 @@ def test_elapsed_aggregate_deadline_publishes_nothing_while_the_executor_continu
 def test_elapsed_cleanup_deadline_retains_uncertainty_while_an_owned_resource_closes(tmp_path: Path) -> None:
     """A resource still closing leaves the record unsettled, never falsely timed out."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        journal, leases, operands = _repositories(
+        journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "durable-state",
             profile_objects=profile.repository,
         )
@@ -443,7 +430,7 @@ class ScopeObservingExecutor(HeldExecutor):
 def test_an_operation_reads_governed_facts_from_its_pinned_generation(tmp_path: Path) -> None:
     """A stored form code decoded in the worker thread finds the operation's own generation."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        journal, leases, operands = _repositories(
+        journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "durable-state",
             profile_objects=profile.repository,
         )

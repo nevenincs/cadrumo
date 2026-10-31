@@ -29,9 +29,7 @@ from cadrumo.adapters.persistence.operations.journal import OperationJournalRepo
 from cadrumo.adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
 from cadrumo.adapters.persistence.operations.secure_references import (
     OperationSecureReferenceRepository,
-    operation_secure_reference_repository,
 )
-from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.operations.capabilities import (
     OperationBaselinePolicy,
@@ -67,6 +65,7 @@ from cadrumo.core.operations import (
 )
 
 from .supervision_support import run_to_settlement
+from .supervisor_test_support import operation_repositories
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -239,18 +238,6 @@ def _definition(executor: PhaseGatedProcessExecutor) -> OperationDefinition:
     )
 
 
-def _repositories(
-    *,
-    storage_root: Path,
-    profile_objects: SecureObjectRepository,
-) -> tuple[OperationJournalRepository, OperationLeaseFilesystemRepository, OperationSecureReferenceRepository]:
-    return (
-        OperationJournalRepository(storage_root=storage_root),
-        OperationLeaseFilesystemRepository(storage_root=storage_root),
-        operation_secure_reference_repository(objects=profile_objects),
-    )
-
-
 def _supervisor(
     *,
     journal: OperationJournalRepository,
@@ -303,7 +290,7 @@ def test_cancellation_at_each_declared_phase_reaps_the_child_and_frees_the_scope
 ) -> None:
     """A stop at any declared phase settles only after real cleanup and reaping."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        journal, leases, operands = _repositories(
+        journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "durable-state",
             profile_objects=profile.repository,
         )

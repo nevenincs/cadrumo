@@ -14,9 +14,7 @@ from cadrumo.adapters.persistence.operations.journal import OperationJournalRepo
 from cadrumo.adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
 from cadrumo.adapters.persistence.operations.secure_references import (
     OperationSecureReferenceRepository,
-    operation_secure_reference_repository,
 )
-from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.operations.capabilities import (
     OperationBaselinePolicy,
@@ -65,6 +63,7 @@ from cadrumo.core.operations import (
 from cadrumo.core.operator_progress import OperatorProgress, emit_operator_progress
 
 from .supervision_support import run_to_settlement
+from .supervisor_test_support import operation_repositories
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -260,19 +259,6 @@ def _request() -> OperationRequest[BaseModel]:
     )
 
 
-def _repositories(
-    *,
-    storage_root: Path,
-    profile_objects: SecureObjectRepository,
-) -> tuple[OperationJournalRepository, OperationLeaseFilesystemRepository, OperationSecureReferenceRepository]:
-    """Build real filesystem and encrypted persistence adapters."""
-    return (
-        OperationJournalRepository(storage_root=storage_root),
-        OperationLeaseFilesystemRepository(storage_root=storage_root),
-        operation_secure_reference_repository(objects=profile_objects),
-    )
-
-
 @pytest.mark.parametrize(
     "executor",
     (UndeclaredPhaseExecutor(), UndeclaredEffectExecutor()),
@@ -284,7 +270,7 @@ def test_supervisor_context_refuses_undeclared_event_claims_without_journal_muta
 ) -> None:
     """Phase and effect refusals retain the exact pre-attempt persisted history."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        journal, leases, operands = _repositories(
+        journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "durable-state", profile_objects=profile.repository
         )
         supervisor = _supervisor(
@@ -312,7 +298,7 @@ def test_supervisor_context_refuses_undeclared_resource_ownership_without_journa
     """A refused resource-family handoff neither persists nor reaches settlement cleanup."""
     executor = UndeclaredResourceExecutor()
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        journal, leases, operands = _repositories(
+        journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "durable-state", profile_objects=profile.repository
         )
         supervisor = _supervisor(
@@ -352,7 +338,9 @@ def test_supervisor_journals_executor_operator_progress_as_public_notice_events(
     executor = OperatorProgressExecutor()
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         storage_root = tmp_path / "durable-state"
-        journal, leases, operands = _repositories(storage_root=storage_root, profile_objects=profile.repository)
+        journal, leases, operands = operation_repositories(
+            storage_root=storage_root, profile_objects=profile.repository
+        )
         registry = _registry(executor_type=type(executor), build=lambda: executor)
         supervisor = _supervisor(registry=registry, journal=journal, leases=leases, operands=operands)
         operation_id = asyncio.run(supervisor.submit(_request(), operation_id="3" * 64))

@@ -16,9 +16,7 @@ from cadrumo.adapters.persistence.operations.journal import OperationJournalRepo
 from cadrumo.adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
 from cadrumo.adapters.persistence.operations.secure_references import (
     OperationSecureReferenceRepository,
-    operation_secure_reference_repository,
 )
-from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.operations.capabilities import (
     OperationBaselinePolicy,
@@ -59,7 +57,7 @@ from cadrumo.core.operations import (
 )
 
 from .supervision_support import run_to_settlement
-from .supervisor_test_support import _close_host_over_live_executor
+from .supervisor_test_support import _close_host_over_live_executor, operation_repositories
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -232,18 +230,6 @@ _TERMINAL_CASES = (
         effect=OperationEffect.UNKNOWN,
     ),
 )
-
-
-def operation_repositories(
-    *,
-    storage_root: Path,
-    profile_objects: SecureObjectRepository,
-) -> tuple[OperationJournalRepository, OperationLeaseFilesystemRepository, OperationSecureReferenceRepository]:
-    return (
-        OperationJournalRepository(storage_root=storage_root),
-        OperationLeaseFilesystemRepository(storage_root=storage_root),
-        operation_secure_reference_repository(objects=profile_objects),
-    )
 
 
 def _supervisor(
