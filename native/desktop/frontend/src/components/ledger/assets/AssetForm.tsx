@@ -3,11 +3,20 @@ import {
   useEffect,
   useRef,
   useState,
+  useId,
   type ReactNode,
   type RefObject,
 } from "react";
+import { DateEditor } from "@/components/editors/DateEditor";
+import { TextEditor } from "@/components/editors/TextEditor";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldLabel,
+} from "@/components/ui/field";
 import { Icon } from "@/components/ui/icon";
 import { facts, labelled, listed } from "../../../shell/compose";
 import type {
@@ -253,12 +262,42 @@ const corridorText = (t: Translate, locale: string, group: TableGroup) => {
   ]);
 };
 
-/** The hint that says how a control's value is written. */
-const WRITING_HINT: Partial<Record<FormField["control"], string>> = {
-  date: "desktop.ledger.form.date_hint",
-  amount: "desktop.ledger.form.amount_hint",
-  share: "desktop.ledger.form.percent_hint",
-};
+/** A labelled field around an editor, with the hint under it and the error
+ * that marks it invalid. */
+function EditorField({
+  label,
+  hint,
+  error,
+  children,
+}: {
+  label: string;
+  hint?: string;
+  error?: string | null;
+  children(control: {
+    id: string;
+    invalid: boolean;
+    describedBy: string | undefined;
+  }): ReactNode;
+}) {
+  const id = useId();
+  const hintId = `${id}-hint`;
+  const errorId = `${id}-error`;
+  return (
+    <Field data-invalid={error ? true : undefined}>
+      <FieldLabel htmlFor={id}>{label}</FieldLabel>
+      {children({
+        id,
+        invalid: Boolean(error),
+        describedBy:
+          [hint ? hintId : null, error ? errorId : null]
+            .filter(Boolean)
+            .join(" ") || undefined,
+      })}
+      {hint && <FieldDescription id={hintId}>{hint}</FieldDescription>}
+      <FieldError id={errorId}>{error}</FieldError>
+    </Field>
+  );
+}
 
 /** A choice's word: the generated word of its family, the catalogue key it
  * names, the text served with it, else the generic word. */
@@ -318,11 +357,9 @@ export function FieldsGrid({
         const problem = problems[field.key];
         const fillIn = missing.has(field.key) && unstated(field);
         const emptied = cleared.has(field.key);
-        const writing = WRITING_HINT[field.control];
         const hint =
           [
             field.hint_key ? t(field.hint_key) : null,
-            writing ? t(writing) : null,
             field.key === "amortization.authority_class_key"
               ? (() => {
                   const group = options?.table_groups.find(
@@ -355,9 +392,32 @@ export function FieldsGrid({
         const choose = (value: string) => onField(field, value);
         return (
           <div key={field.key} data-field={field.key} className="contents">
-            {field.control === "text" ||
-            field.control === "date" ||
-            field.control === "amount" ||
+            {field.control === "text" ? (
+              <EditorField label={label} hint={hint} error={error}>
+                {(control) => (
+                  <TextEditor
+                    {...control}
+                    name={field.key}
+                    required={field.required}
+                    value={raw}
+                    onChange={choose}
+                    maxLength={200}
+                  />
+                )}
+              </EditorField>
+            ) : field.control === "date" ? (
+              <EditorField label={label} hint={hint} error={error}>
+                {(control) => (
+                  <DateEditor
+                    {...control}
+                    name={field.key}
+                    required={field.required}
+                    value={raw}
+                    onChange={choose}
+                  />
+                )}
+              </EditorField>
+            ) : field.control === "amount" ||
             field.control === "share" ||
             field.control === "quantity" ||
             field.control === "whole" ? (
@@ -378,7 +438,7 @@ export function FieldsGrid({
                       ? "numeric"
                       : "text"
                 }
-                maxLength={field.control === "text" ? 200 : 32}
+                maxLength={32}
               />
             ) : (
               <ChoiceField
@@ -891,6 +951,14 @@ export function AssetForm({
     (typed.asset_kind === "" || typed.in_service_date === "")
       ? t("desktop.ledger.assets.write.options_wait")
       : null;
+  const whollyShare = loaded?.basis_stages
+    .flatMap((stage) => stage.wholly_business_facts)
+    .find((found) => found.fact === "business_use_share");
+  const whollyBusiness = whollyShare
+    ? t("desktop.ledger.assets.field.wholly_business_hint", {
+        share: formatPercent(locale, whollyShare.value, { unit: "fraction" }),
+      })
+    : null;
   const name = asset.row?.name ?? t(ASSET_KEYS.list.no_name);
   const bajaDate = disposalOf(answered.values)?.disposal_date ?? "";
   const stillToFill = listed(
@@ -941,6 +1009,7 @@ export function AssetForm({
             opening_status: t(
               "desktop.ledger.assets.field.opening_status_hint",
             ),
+            business_use_share: whollyBusiness,
             method: waiting,
             acquisition_shape: waiting,
             non_deductible_iva:

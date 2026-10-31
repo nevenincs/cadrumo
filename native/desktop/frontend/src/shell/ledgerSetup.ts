@@ -1177,6 +1177,8 @@ export type PlanResult = {
 // ---- The append-only timeline --------------------------------------------
 
 export type TimelineChange = {
+  /** Whether the event gave the field its first value, changed it or took it away. */
+  kind: "added" | "changed" | "removed";
   /** The record's field as the backend names it, a dotted path. */
   field: string;
   /** The catalogue key that words `field`; null for a path no fact of the
@@ -1273,6 +1275,9 @@ export type BasisStageOption = {
   /** Whether the basis is the whole property's, which makes the element a
    * property. */
   is_property: boolean;
+  /** The facts that state a purchase used wholly for the activity under this
+   * stage; empty where the stage has no such path. */
+  wholly_business_facts: { fact: string; value: string }[];
 };
 
 /** One status an opening history can have, with the facts it can state. */

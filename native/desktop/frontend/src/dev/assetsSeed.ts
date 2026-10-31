@@ -639,6 +639,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         origin: "ledger.actividad-asset.create",
         changes: [
           {
+            kind: "added",
             field: "asset_kind",
             field_key: "ledger.actividad_asset.field.asset_kind",
             before: null,
@@ -649,6 +650,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "in_service_date",
             field_key: "ledger.actividad_asset.field.in_service_date",
             before: null,
@@ -659,6 +661,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "basis.basis_amount",
             field_key: "ledger.actividad_asset.field.basis.basis_amount",
             before: null,
@@ -669,6 +672,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "basis.non_deductible_iva",
             field_key: "ledger.actividad_asset.field.basis.non_deductible_iva",
             before: null,
@@ -679,6 +683,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "residual_value",
             field_key: "ledger.actividad_asset.field.residual_value",
             before: null,
@@ -689,6 +694,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "amortization.method",
             field_key: "ledger.actividad_asset.field.amortization.method",
             before: null,
@@ -699,6 +705,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "amortization.authority_class_key",
             field_key:
               "ledger.actividad_asset.field.amortization.authority_class_key",
@@ -710,6 +717,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: "Elementos de transporte externo",
           },
           {
+            kind: "added",
             field: "amortization.linear_coefficient",
             field_key:
               "ledger.actividad_asset.field.amortization.linear_coefficient",
@@ -721,6 +729,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: "12%",
           },
           {
+            kind: "added",
             field: "acquired_condition",
             field_key: "ledger.actividad_asset.field.acquired_condition",
             before: null,
@@ -731,6 +740,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "acquisition_shape",
             field_key: "ledger.actividad_asset.field.acquisition_shape",
             before: null,
@@ -742,6 +752,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "basis.stage",
             field_key: "ledger.actividad_asset.field.basis.stage",
             before: null,
@@ -752,6 +763,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "opening_history.status",
             field_key: "ledger.actividad_asset.field.opening_history.status",
             before: null,
@@ -776,6 +788,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         origin: "ledger.actividad-asset.describe",
         changes: [
           {
+            kind: "added",
             field: "name",
             field_key: "ledger.actividad_asset.field.name",
             before: null,
@@ -786,6 +799,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "serial_number",
             field_key: "ledger.actividad_asset.field.serial_number",
             before: null,
@@ -810,6 +824,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         origin: "ledger.actividad-asset.claim",
         changes: [
           {
+            kind: "added",
             field: "amount",
             field_key: "ledger.actividad_asset.field.amount",
             before: null,
@@ -842,6 +857,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         origin: "ledger.actividad-asset.claim",
         changes: [
           {
+            kind: "added",
             field: "amount",
             field_key: "ledger.actividad_asset.field.amount",
             before: null,
@@ -874,6 +890,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         origin: "ledger.actividad-asset.claim",
         changes: [
           {
+            kind: "added",
             field: "amount",
             field_key: "ledger.actividad_asset.field.amount",
             before: null,
@@ -906,6 +923,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         origin: "ledger.actividad-asset.claim",
         changes: [
           {
+            kind: "added",
             field: "amount",
             field_key: "ledger.actividad_asset.field.amount",
             before: null,
@@ -1506,6 +1524,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         origin: "ledger.actividad-asset.create",
         changes: [
           {
+            kind: "added",
             field: "asset_kind",
             field_key: "ledger.actividad_asset.field.asset_kind",
             before: null,
@@ -1516,6 +1535,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "in_service_date",
             field_key: "ledger.actividad_asset.field.in_service_date",
             before: null,
@@ -1526,6 +1546,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "basis.basis_amount",
             field_key: "ledger.actividad_asset.field.basis.basis_amount",
             before: null,
@@ -1536,6 +1557,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "basis.non_deductible_iva",
             field_key: "ledger.actividad_asset.field.basis.non_deductible_iva",
             before: null,
@@ -1546,6 +1568,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "residual_value",
             field_key: "ledger.actividad_asset.field.residual_value",
             before: null,
@@ -1556,6 +1579,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "amortization.method",
             field_key: "ledger.actividad_asset.field.amortization.method",
             before: null,
@@ -1566,6 +1590,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "amortization.authority_class_key",
             field_key:
               "ledger.actividad_asset.field.amortization.authority_class_key",
@@ -1577,6 +1602,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: "Equipos para procesos de información",
           },
           {
+            kind: "added",
             field: "amortization.linear_coefficient",
             field_key:
               "ledger.actividad_asset.field.amortization.linear_coefficient",
@@ -1588,6 +1614,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: "25%",
           },
           {
+            kind: "added",
             field: "acquired_condition",
             field_key: "ledger.actividad_asset.field.acquired_condition",
             before: null,
@@ -1598,6 +1625,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "acquisition_shape",
             field_key: "ledger.actividad_asset.field.acquisition_shape",
             before: null,
@@ -1609,6 +1637,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "basis.stage",
             field_key: "ledger.actividad_asset.field.basis.stage",
             before: null,
@@ -1619,6 +1648,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "opening_history.status",
             field_key: "ledger.actividad_asset.field.opening_history.status",
             before: null,
@@ -1643,6 +1673,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         origin: "ledger.actividad-asset.describe",
         changes: [
           {
+            kind: "added",
             field: "name",
             field_key: "ledger.actividad_asset.field.name",
             before: null,
@@ -1653,6 +1684,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "serial_number",
             field_key: "ledger.actividad_asset.field.serial_number",
             before: null,
@@ -1677,6 +1709,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         origin: "ledger.actividad-asset.claim",
         changes: [
           {
+            kind: "added",
             field: "amount",
             field_key: "ledger.actividad_asset.field.amount",
             before: null,
@@ -1709,6 +1742,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         origin: "ledger.actividad-asset.claim",
         changes: [
           {
+            kind: "added",
             field: "amount",
             field_key: "ledger.actividad_asset.field.amount",
             before: null,
@@ -2610,6 +2644,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         origin: "ledger.actividad-asset.create",
         changes: [
           {
+            kind: "added",
             field: "asset_kind",
             field_key: "ledger.actividad_asset.field.asset_kind",
             before: null,
@@ -2620,6 +2655,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "in_service_date",
             field_key: "ledger.actividad_asset.field.in_service_date",
             before: null,
@@ -2630,6 +2666,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "basis.basis_amount",
             field_key: "ledger.actividad_asset.field.basis.basis_amount",
             before: null,
@@ -2640,6 +2677,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "basis.non_deductible_iva",
             field_key: "ledger.actividad_asset.field.basis.non_deductible_iva",
             before: null,
@@ -2650,6 +2688,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "residual_value",
             field_key: "ledger.actividad_asset.field.residual_value",
             before: null,
@@ -2660,6 +2699,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "amortization.method",
             field_key: "ledger.actividad_asset.field.amortization.method",
             before: null,
@@ -2670,6 +2710,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "amortization.authority_class_key",
             field_key:
               "ledger.actividad_asset.field.amortization.authority_class_key",
@@ -2681,6 +2722,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: "Maquinaria",
           },
           {
+            kind: "added",
             field: "amortization.linear_coefficient",
             field_key:
               "ledger.actividad_asset.field.amortization.linear_coefficient",
@@ -2692,6 +2734,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: "12%",
           },
           {
+            kind: "added",
             field: "acquired_condition",
             field_key: "ledger.actividad_asset.field.acquired_condition",
             before: null,
@@ -2702,6 +2745,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "acquisition_shape",
             field_key: "ledger.actividad_asset.field.acquisition_shape",
             before: null,
@@ -2713,6 +2757,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "basis.stage",
             field_key: "ledger.actividad_asset.field.basis.stage",
             before: null,
@@ -2723,6 +2768,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "opening_history.status",
             field_key: "ledger.actividad_asset.field.opening_history.status",
             before: null,
@@ -2747,6 +2793,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         origin: "ledger.actividad-asset.describe",
         changes: [
           {
+            kind: "added",
             field: "name",
             field_key: "ledger.actividad_asset.field.name",
             before: null,
@@ -2757,6 +2804,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "serial_number",
             field_key: "ledger.actividad_asset.field.serial_number",
             before: null,
@@ -2781,6 +2829,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         origin: "ledger.actividad-asset.claim",
         changes: [
           {
+            kind: "added",
             field: "amount",
             field_key: "ledger.actividad_asset.field.amount",
             before: null,
@@ -2813,6 +2862,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         origin: "ledger.actividad-asset.claim",
         changes: [
           {
+            kind: "added",
             field: "amount",
             field_key: "ledger.actividad_asset.field.amount",
             before: null,
@@ -2845,6 +2895,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         origin: "ledger.actividad-asset.claim",
         changes: [
           {
+            kind: "added",
             field: "amount",
             field_key: "ledger.actividad_asset.field.amount",
             before: null,
@@ -2877,6 +2928,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         origin: "ledger.actividad-asset.claim",
         changes: [
           {
+            kind: "added",
             field: "amount",
             field_key: "ledger.actividad_asset.field.amount",
             before: null,
@@ -2909,6 +2961,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         origin: "ledger.actividad-asset.claim",
         changes: [
           {
+            kind: "added",
             field: "amount",
             field_key: "ledger.actividad_asset.field.amount",
             before: null,
@@ -3517,6 +3570,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         origin: "ledger.actividad-asset.create",
         changes: [
           {
+            kind: "added",
             field: "asset_kind",
             field_key: "ledger.actividad_asset.field.asset_kind",
             before: null,
@@ -3527,6 +3581,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "in_service_date",
             field_key: "ledger.actividad_asset.field.in_service_date",
             before: null,
@@ -3537,6 +3592,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "basis.basis_amount",
             field_key: "ledger.actividad_asset.field.basis.basis_amount",
             before: null,
@@ -3547,6 +3603,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "basis.non_deductible_iva",
             field_key: "ledger.actividad_asset.field.basis.non_deductible_iva",
             before: null,
@@ -3557,6 +3614,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "residual_value",
             field_key: "ledger.actividad_asset.field.residual_value",
             before: null,
@@ -3567,6 +3625,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "amortization.method",
             field_key: "ledger.actividad_asset.field.amortization.method",
             before: null,
@@ -3577,6 +3636,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "amortization.authority_class_key",
             field_key:
               "ledger.actividad_asset.field.amortization.authority_class_key",
@@ -3588,6 +3648,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: "Cristalería",
           },
           {
+            kind: "added",
             field: "amortization.linear_coefficient",
             field_key:
               "ledger.actividad_asset.field.amortization.linear_coefficient",
@@ -3599,6 +3660,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: "25%",
           },
           {
+            kind: "added",
             field: "acquired_condition",
             field_key: "ledger.actividad_asset.field.acquired_condition",
             before: null,
@@ -3609,6 +3671,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "acquisition_shape",
             field_key: "ledger.actividad_asset.field.acquisition_shape",
             before: null,
@@ -3620,6 +3683,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "basis.stage",
             field_key: "ledger.actividad_asset.field.basis.stage",
             before: null,
@@ -3630,6 +3694,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "opening_history.status",
             field_key: "ledger.actividad_asset.field.opening_history.status",
             before: null,
@@ -3654,6 +3719,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         origin: "ledger.actividad-asset.describe",
         changes: [
           {
+            kind: "added",
             field: "name",
             field_key: "ledger.actividad_asset.field.name",
             before: null,
@@ -3678,6 +3744,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         origin: "ledger.actividad-asset.claim",
         changes: [
           {
+            kind: "added",
             field: "amount",
             field_key: "ledger.actividad_asset.field.amount",
             before: null,
@@ -3710,6 +3777,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         origin: "ledger.actividad-asset.claim",
         changes: [
           {
+            kind: "added",
             field: "amount",
             field_key: "ledger.actividad_asset.field.amount",
             before: null,
@@ -4295,6 +4363,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         origin: "ledger.actividad-asset.create",
         changes: [
           {
+            kind: "added",
             field: "asset_kind",
             field_key: "ledger.actividad_asset.field.asset_kind",
             before: null,
@@ -4305,6 +4374,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "in_service_date",
             field_key: "ledger.actividad_asset.field.in_service_date",
             before: null,
@@ -4315,6 +4385,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "basis.basis_amount",
             field_key: "ledger.actividad_asset.field.basis.basis_amount",
             before: null,
@@ -4325,6 +4396,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "basis.non_deductible_iva",
             field_key: "ledger.actividad_asset.field.basis.non_deductible_iva",
             before: null,
@@ -4335,6 +4407,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "residual_value",
             field_key: "ledger.actividad_asset.field.residual_value",
             before: null,
@@ -4345,6 +4418,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "amortization.method",
             field_key: "ledger.actividad_asset.field.amortization.method",
             before: null,
@@ -4355,6 +4429,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "amortization.authority_class_key",
             field_key:
               "ledger.actividad_asset.field.amortization.authority_class_key",
@@ -4366,6 +4441,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: "Maquinaria",
           },
           {
+            kind: "added",
             field: "amortization.linear_coefficient",
             field_key:
               "ledger.actividad_asset.field.amortization.linear_coefficient",
@@ -4377,6 +4453,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: "12%",
           },
           {
+            kind: "added",
             field: "out_of_service_date",
             field_key: "ledger.actividad_asset.field.out_of_service_date",
             before: null,
@@ -4387,6 +4464,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "acquired_condition",
             field_key: "ledger.actividad_asset.field.acquired_condition",
             before: null,
@@ -4397,6 +4475,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "acquisition_shape",
             field_key: "ledger.actividad_asset.field.acquisition_shape",
             before: null,
@@ -4408,6 +4487,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "basis.stage",
             field_key: "ledger.actividad_asset.field.basis.stage",
             before: null,
@@ -4418,6 +4498,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "opening_history.status",
             field_key: "ledger.actividad_asset.field.opening_history.status",
             before: null,
@@ -4442,6 +4523,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         origin: "ledger.actividad-asset.describe",
         changes: [
           {
+            kind: "added",
             field: "name",
             field_key: "ledger.actividad_asset.field.name",
             before: null,
@@ -4452,6 +4534,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "serial_number",
             field_key: "ledger.actividad_asset.field.serial_number",
             before: null,
@@ -4476,6 +4559,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         origin: "ledger.actividad-asset.claim",
         changes: [
           {
+            kind: "added",
             field: "amount",
             field_key: "ledger.actividad_asset.field.amount",
             before: null,
@@ -4508,6 +4592,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         origin: "ledger.actividad-asset.claim",
         changes: [
           {
+            kind: "added",
             field: "amount",
             field_key: "ledger.actividad_asset.field.amount",
             before: null,
@@ -4540,6 +4625,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         origin: "ledger.actividad-asset.claim",
         changes: [
           {
+            kind: "added",
             field: "amount",
             field_key: "ledger.actividad_asset.field.amount",
             before: null,
@@ -4572,6 +4658,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         origin: "ledger.actividad-asset.claim",
         changes: [
           {
+            kind: "added",
             field: "amount",
             field_key: "ledger.actividad_asset.field.amount",
             before: null,
@@ -5205,6 +5292,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         origin: "ledger.actividad-asset.create",
         changes: [
           {
+            kind: "added",
             field: "asset_kind",
             field_key: "ledger.actividad_asset.field.asset_kind",
             before: null,
@@ -5215,6 +5303,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "in_service_date",
             field_key: "ledger.actividad_asset.field.in_service_date",
             before: null,
@@ -5225,6 +5314,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "basis.basis_amount",
             field_key: "ledger.actividad_asset.field.basis.basis_amount",
             before: null,
@@ -5235,6 +5325,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "basis.non_deductible_iva",
             field_key: "ledger.actividad_asset.field.basis.non_deductible_iva",
             before: null,
@@ -5245,6 +5336,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "residual_value",
             field_key: "ledger.actividad_asset.field.residual_value",
             before: null,
@@ -5255,6 +5347,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "amortization.method",
             field_key: "ledger.actividad_asset.field.amortization.method",
             before: null,
@@ -5265,6 +5358,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "amortization.authority_class_key",
             field_key:
               "ledger.actividad_asset.field.amortization.authority_class_key",
@@ -5276,6 +5370,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: "Sistemas y programas informáticos",
           },
           {
+            kind: "added",
             field: "amortization.linear_coefficient",
             field_key:
               "ledger.actividad_asset.field.amortization.linear_coefficient",
@@ -5287,6 +5382,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: "20%",
           },
           {
+            kind: "added",
             field: "acquired_condition",
             field_key: "ledger.actividad_asset.field.acquired_condition",
             before: null,
@@ -5297,6 +5393,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "acquisition_shape",
             field_key: "ledger.actividad_asset.field.acquisition_shape",
             before: null,
@@ -5308,6 +5405,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "basis.stage",
             field_key: "ledger.actividad_asset.field.basis.stage",
             before: null,
@@ -5318,6 +5416,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "opening_history.status",
             field_key: "ledger.actividad_asset.field.opening_history.status",
             before: null,
@@ -5342,6 +5441,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         origin: "ledger.actividad-asset.describe",
         changes: [
           {
+            kind: "added",
             field: "name",
             field_key: "ledger.actividad_asset.field.name",
             before: null,
@@ -5366,6 +5466,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         origin: "ledger.actividad-asset.claim",
         changes: [
           {
+            kind: "added",
             field: "amount",
             field_key: "ledger.actividad_asset.field.amount",
             before: null,
@@ -5398,6 +5499,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         origin: "ledger.actividad-asset.claim",
         changes: [
           {
+            kind: "added",
             field: "amount",
             field_key: "ledger.actividad_asset.field.amount",
             before: null,
@@ -5973,6 +6075,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         origin: "ledger.actividad-asset.create",
         changes: [
           {
+            kind: "added",
             field: "asset_kind",
             field_key: "ledger.actividad_asset.field.asset_kind",
             before: null,
@@ -5983,6 +6086,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "in_service_date",
             field_key: "ledger.actividad_asset.field.in_service_date",
             before: null,
@@ -5993,6 +6097,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "basis.basis_amount",
             field_key: "ledger.actividad_asset.field.basis.basis_amount",
             before: null,
@@ -6003,6 +6108,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "basis.non_deductible_iva",
             field_key: "ledger.actividad_asset.field.basis.non_deductible_iva",
             before: null,
@@ -6013,6 +6119,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "residual_value",
             field_key: "ledger.actividad_asset.field.residual_value",
             before: null,
@@ -6023,6 +6130,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "amortization.method",
             field_key: "ledger.actividad_asset.field.amortization.method",
             before: null,
@@ -6033,6 +6141,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "amortization.authority_class_key",
             field_key:
               "ledger.actividad_asset.field.amortization.authority_class_key",
@@ -6044,6 +6153,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: "Útiles y herramientas",
           },
           {
+            kind: "added",
             field: "amortization.linear_coefficient",
             field_key:
               "ledger.actividad_asset.field.amortization.linear_coefficient",
@@ -6055,6 +6165,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: "25%",
           },
           {
+            kind: "added",
             field: "acquired_condition",
             field_key: "ledger.actividad_asset.field.acquired_condition",
             before: null,
@@ -6065,6 +6176,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "acquisition_shape",
             field_key: "ledger.actividad_asset.field.acquisition_shape",
             before: null,
@@ -6076,6 +6188,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "basis.stage",
             field_key: "ledger.actividad_asset.field.basis.stage",
             before: null,
@@ -6086,6 +6199,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "opening_history.status",
             field_key: "ledger.actividad_asset.field.opening_history.status",
             before: null,
@@ -6110,6 +6224,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         origin: "ledger.actividad-asset.claim",
         changes: [
           {
+            kind: "added",
             field: "amount",
             field_key: "ledger.actividad_asset.field.amount",
             before: null,
@@ -6142,6 +6257,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         origin: "ledger.actividad-asset.claim",
         changes: [
           {
+            kind: "added",
             field: "amount",
             field_key: "ledger.actividad_asset.field.amount",
             before: null,
@@ -6174,6 +6290,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         origin: "ledger.actividad-asset.claim",
         changes: [
           {
+            kind: "added",
             field: "amount",
             field_key: "ledger.actividad_asset.field.amount",
             before: null,
@@ -6680,6 +6797,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         origin: "ledger.actividad-asset.create",
         changes: [
           {
+            kind: "added",
             field: "asset_kind",
             field_key: "ledger.actividad_asset.field.asset_kind",
             before: null,
@@ -6690,6 +6808,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "in_service_date",
             field_key: "ledger.actividad_asset.field.in_service_date",
             before: null,
@@ -6700,6 +6819,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "basis.basis_amount",
             field_key: "ledger.actividad_asset.field.basis.basis_amount",
             before: null,
@@ -6710,6 +6830,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "basis.non_deductible_iva",
             field_key: "ledger.actividad_asset.field.basis.non_deductible_iva",
             before: null,
@@ -6720,6 +6841,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "residual_value",
             field_key: "ledger.actividad_asset.field.residual_value",
             before: null,
@@ -6730,6 +6852,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "amortization.method",
             field_key: "ledger.actividad_asset.field.amortization.method",
             before: null,
@@ -6740,6 +6863,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "amortization.authority_class_key",
             field_key:
               "ledger.actividad_asset.field.amortization.authority_class_key",
@@ -6751,6 +6875,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: "Equipos para procesos de información",
           },
           {
+            kind: "added",
             field: "amortization.linear_coefficient",
             field_key:
               "ledger.actividad_asset.field.amortization.linear_coefficient",
@@ -6762,6 +6887,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: "25%",
           },
           {
+            kind: "added",
             field: "acquired_condition",
             field_key: "ledger.actividad_asset.field.acquired_condition",
             before: null,
@@ -6772,6 +6898,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "acquisition_shape",
             field_key: "ledger.actividad_asset.field.acquisition_shape",
             before: null,
@@ -6783,6 +6910,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "basis.stage",
             field_key: "ledger.actividad_asset.field.basis.stage",
             before: null,
@@ -6793,6 +6921,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "opening_history.status",
             field_key: "ledger.actividad_asset.field.opening_history.status",
             before: null,
@@ -6817,6 +6946,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         origin: "ledger.actividad-asset.describe",
         changes: [
           {
+            kind: "added",
             field: "name",
             field_key: "ledger.actividad_asset.field.name",
             before: null,
@@ -6827,6 +6957,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "serial_number",
             field_key: "ledger.actividad_asset.field.serial_number",
             before: null,
@@ -6851,6 +6982,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         origin: "ledger.actividad-asset.claim",
         changes: [
           {
+            kind: "added",
             field: "amount",
             field_key: "ledger.actividad_asset.field.amount",
             before: null,
@@ -6884,6 +7016,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         origin: "ledger.actividad-asset.correct",
         changes: [
           {
+            kind: "changed",
             field: "basis.basis_amount",
             field_key: "ledger.actividad_asset.field.basis.basis_amount",
             before: "4000.00",
@@ -7317,6 +7450,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         origin: "ledger.actividad-asset.create",
         changes: [
           {
+            kind: "added",
             field: "asset_kind",
             field_key: "ledger.actividad_asset.field.asset_kind",
             before: null,
@@ -7327,6 +7461,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "in_service_date",
             field_key: "ledger.actividad_asset.field.in_service_date",
             before: null,
@@ -7337,6 +7472,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "basis.basis_amount",
             field_key: "ledger.actividad_asset.field.basis.basis_amount",
             before: null,
@@ -7347,6 +7483,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "basis.non_deductible_iva",
             field_key: "ledger.actividad_asset.field.basis.non_deductible_iva",
             before: null,
@@ -7357,6 +7494,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "residual_value",
             field_key: "ledger.actividad_asset.field.residual_value",
             before: null,
@@ -7367,6 +7505,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "amortization.method",
             field_key: "ledger.actividad_asset.field.amortization.method",
             before: null,
@@ -7377,6 +7516,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "amortization.authority_class_key",
             field_key:
               "ledger.actividad_asset.field.amortization.authority_class_key",
@@ -7388,6 +7528,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: "Resto instalaciones",
           },
           {
+            kind: "added",
             field: "amortization.linear_coefficient",
             field_key:
               "ledger.actividad_asset.field.amortization.linear_coefficient",
@@ -7399,6 +7540,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: "10%",
           },
           {
+            kind: "added",
             field: "acquired_condition",
             field_key: "ledger.actividad_asset.field.acquired_condition",
             before: null,
@@ -7409,6 +7551,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "acquisition_shape",
             field_key: "ledger.actividad_asset.field.acquisition_shape",
             before: null,
@@ -7420,6 +7563,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "basis.stage",
             field_key: "ledger.actividad_asset.field.basis.stage",
             before: null,
@@ -7430,6 +7574,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "opening_history.status",
             field_key: "ledger.actividad_asset.field.opening_history.status",
             before: null,
@@ -7454,6 +7599,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         origin: "ledger.actividad-asset.describe",
         changes: [
           {
+            kind: "added",
             field: "name",
             field_key: "ledger.actividad_asset.field.name",
             before: null,
@@ -7698,6 +7844,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         origin: "ledger.actividad-asset.create",
         changes: [
           {
+            kind: "added",
             field: "asset_kind",
             field_key: "ledger.actividad_asset.field.asset_kind",
             before: null,
@@ -7708,6 +7855,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "in_service_date",
             field_key: "ledger.actividad_asset.field.in_service_date",
             before: null,
@@ -7718,6 +7866,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "basis.basis_amount",
             field_key: "ledger.actividad_asset.field.basis.basis_amount",
             before: null,
@@ -7728,6 +7877,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "basis.non_deductible_iva",
             field_key: "ledger.actividad_asset.field.basis.non_deductible_iva",
             before: null,
@@ -7738,6 +7888,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "residual_value",
             field_key: "ledger.actividad_asset.field.residual_value",
             before: null,
@@ -7748,6 +7899,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "amortization.method",
             field_key: "ledger.actividad_asset.field.amortization.method",
             before: null,
@@ -7758,6 +7910,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "acquired_condition",
             field_key: "ledger.actividad_asset.field.acquired_condition",
             before: null,
@@ -7768,6 +7921,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "acquisition_shape",
             field_key: "ledger.actividad_asset.field.acquisition_shape",
             before: null,
@@ -7779,6 +7933,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "basis.stage",
             field_key: "ledger.actividad_asset.field.basis.stage",
             before: null,
@@ -7789,6 +7944,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "opening_history.status",
             field_key: "ledger.actividad_asset.field.opening_history.status",
             before: null,
@@ -7813,6 +7969,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         origin: "ledger.actividad-asset.describe",
         changes: [
           {
+            kind: "added",
             field: "name",
             field_key: "ledger.actividad_asset.field.name",
             before: null,
@@ -7823,6 +7980,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "serial_number",
             field_key: "ledger.actividad_asset.field.serial_number",
             before: null,
@@ -7847,6 +8005,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         origin: "ledger.actividad-asset.claim",
         changes: [
           {
+            kind: "added",
             field: "amount",
             field_key: "ledger.actividad_asset.field.amount",
             before: null,
@@ -8137,6 +8296,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         origin: "ledger.actividad-asset.create",
         changes: [
           {
+            kind: "added",
             field: "asset_kind",
             field_key: "ledger.actividad_asset.field.asset_kind",
             before: null,
@@ -8147,6 +8307,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "in_service_date",
             field_key: "ledger.actividad_asset.field.in_service_date",
             before: null,
@@ -8157,6 +8318,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "basis.basis_amount",
             field_key: "ledger.actividad_asset.field.basis.basis_amount",
             before: null,
@@ -8167,6 +8329,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "basis.non_deductible_iva",
             field_key: "ledger.actividad_asset.field.basis.non_deductible_iva",
             before: null,
@@ -8177,6 +8340,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "residual_value",
             field_key: "ledger.actividad_asset.field.residual_value",
             before: null,
@@ -8187,6 +8351,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "amortization.method",
             field_key: "ledger.actividad_asset.field.amortization.method",
             before: null,
@@ -8197,6 +8362,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "acquired_condition",
             field_key: "ledger.actividad_asset.field.acquired_condition",
             before: null,
@@ -8207,6 +8373,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "acquisition_shape",
             field_key: "ledger.actividad_asset.field.acquisition_shape",
             before: null,
@@ -8218,6 +8385,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "basis.stage",
             field_key: "ledger.actividad_asset.field.basis.stage",
             before: null,
@@ -8228,6 +8396,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "opening_history.status",
             field_key: "ledger.actividad_asset.field.opening_history.status",
             before: null,
@@ -8252,6 +8421,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         origin: "ledger.actividad-asset.describe",
         changes: [
           {
+            kind: "added",
             field: "name",
             field_key: "ledger.actividad_asset.field.name",
             before: null,
@@ -8262,6 +8432,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after_label: null,
           },
           {
+            kind: "added",
             field: "serial_number",
             field_key: "ledger.actividad_asset.field.serial_number",
             before: null,
@@ -9030,16 +9201,19 @@ export const BASIS_STAGES: readonly BasisStageOption[] = [
       "total_area",
     ],
     is_property: true,
+    wholly_business_facts: [],
   },
   {
     stage: "taxpayer_owned",
     facts: ["business_use_share"],
     is_property: false,
+    wholly_business_facts: [{ fact: "business_use_share", value: "1" }],
   },
   {
     stage: "business_allocated",
     facts: ["prior_allocation_provenance"],
     is_property: false,
+    wholly_business_facts: [],
   },
 ];
 

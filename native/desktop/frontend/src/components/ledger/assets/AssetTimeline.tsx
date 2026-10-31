@@ -33,7 +33,6 @@ function Change({
   change: TimelineChange;
 }) {
   const t = useStrings();
-  const { before, after } = change;
   // The backend's label, else the word of its key, else what the field is.
   const value = (side: "before" | "after") =>
     changeValueText(t, locale, change, side);
@@ -41,7 +40,7 @@ function Change({
   const name = changeFieldWord(t, change.field_key);
   // A value that is added or cleared is one sentence of the catalogue's; one
   // that changes reads before, arrow, after.
-  if (before === null && after !== null)
+  if (change.kind === "added")
     return (
       <li className="flex items-start gap-1">
         <Icon name="plus" size="xs" className="mt-0.5 text-muted-foreground" />
@@ -51,7 +50,7 @@ function Change({
         })}
       </li>
     );
-  if (before !== null && after === null)
+  if (change.kind === "removed")
     return (
       <li className="flex items-start gap-1">
         <Icon name="erase" size="xs" className="mt-0.5 text-muted-foreground" />

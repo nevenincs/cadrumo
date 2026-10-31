@@ -729,6 +729,8 @@ DESKTOP_LEDGER_WORKFLOW_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.ledger.assets.write.nothing_changed",
         "desktop.ledger.assets.write.options_wait",
         "desktop.ledger.assets.field.opening_status_hint",
+        "desktop.ledger.assets.field.wholly_business_hint",
+        "desktop.ledger.assets.timeline.value_recorded",
         "desktop.ledger.assets.plan.unrecorded_note",
         "desktop.ledger.form.fill_to_continue",
         "desktop.ledger.assets.write.reused",

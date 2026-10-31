@@ -173,14 +173,19 @@ export function changeValueText(
   side: "before" | "after",
 ): string {
   const value = change[side];
-  if (value === null) return t(ASSET_KEYS.timeline.value_changed);
+  const unworded = t(
+    change.kind === "added"
+      ? "desktop.ledger.assets.timeline.value_recorded"
+      : ASSET_KEYS.timeline.value_changed,
+  );
+  if (value === null) return unworded;
   const label = change[`${side}_label`];
   if (label !== null && label.trim() !== "") return label;
   const key = change[`${side}_key`];
   const keyed = wordOfKey(t, key);
   if (keyed !== null) return keyed;
   // The backend named a word for this value and the catalogue has none.
-  if (key !== null) return t(ASSET_KEYS.timeline.value_changed);
+  if (key !== null) return unworded;
   const path = unindexed(change.field);
   const kind = Object.hasOwn(VALUE_KIND, path) ? VALUE_KIND[path] : undefined;
   switch (kind) {
@@ -201,5 +206,5 @@ export function changeValueText(
   }
   if (DATE.test(value)) return formatDay(locale, value);
   if (TEXT_FIELDS.has(path) && change.field_key !== null) return value;
-  return looksInternal(value) ? t(ASSET_KEYS.timeline.value_changed) : value;
+  return looksInternal(value) ? unworded : value;
 }

@@ -423,7 +423,7 @@ export function ChoiceField({
         onChange={(event) => onValue(event.target.value)}
       >
         {placeholder !== undefined && (
-          <option value="" disabled>
+          <option value="" disabled={required}>
             {placeholder}
           </option>
         )}

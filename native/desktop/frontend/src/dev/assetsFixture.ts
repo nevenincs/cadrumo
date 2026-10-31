@@ -881,6 +881,12 @@ export function assetOperations(tools: Tools) {
       origin,
       changes: changes.map((change) => ({
         ...change,
+        kind:
+          change.before === null
+            ? ("added" as const)
+            : change.after === null
+              ? ("removed" as const)
+              : ("changed" as const),
         field_key: fieldKeyOf(change.field),
         before_key: keyOf(change.field, change.before),
         after_key: keyOf(change.field, change.after),
