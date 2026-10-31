@@ -34,6 +34,11 @@ def load_legal_provisions(repo_root: Path) -> tuple[LegalProvisionRecord, ...]:
     the same rows, and each was re-parsing the whole catalogue for itself. A
     caller reading a DIFFERENT root (a temporary catalogue) keys its own entry.
     """
+    return read_legal_provisions(repo_root)
+
+
+def read_legal_provisions(repo_root: Path) -> tuple[LegalProvisionRecord, ...]:
+    """Read a fresh catalogue generation for proof-sensitive consumers."""
     catalogue = repo_root / LEGAL_CATALOGUE_RELPATH
     if not catalogue.is_dir():
         raise LegalReferenceError(f"legal catalogue directory does not exist: {catalogue}")

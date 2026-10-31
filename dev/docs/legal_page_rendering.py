@@ -7,7 +7,9 @@ from html import escape
 from pathlib import Path
 from typing import Final
 
+from cadrumo.core.errors.hierarchy import CorpusAnchorResolutionError
 from cadrumo.core.external_constants import OutputLanguage
+from dev.corpus.text import corpus_redaction_marks, resolve_anchored_extracted_unit
 
 from ._locale_chrome import chrome_anchor, docs_chrome, same_wording
 from .compile_slots import Rendering, language_text
@@ -92,7 +94,7 @@ def _in_force_sentence(record: LegalProvisionRecord, language: OutputLanguage) -
     return None
 
 
-def _official_wording_block(required_text: tuple[str, ...], language: OutputLanguage) -> list[str]:
+def _official_wording_block(record: LegalProvisionRecord, language: OutputLanguage, repo_root: Path) -> list[str]:
     """Render the authored extracts of the official text, marked as Spanish.
 
     Emitted as raw HTML rather than RST for two reasons that both protect the
@@ -107,13 +109,24 @@ def _official_wording_block(required_text: tuple[str, ...], language: OutputLang
     Each phrase is its own paragraph.  Run together they would read as one
     continuous piece of statutory wording that the provision does not contain.
     """
-    quoted = "".join(f"<p>{escape(item.rstrip())}</p>" for item in required_text)
+    quoted = "".join(f"<p>{escape(item.rstrip())}</p>" for item in record.required_text)
     label = escape(docs_chrome("docs.legal.provision.official_wording", language))
     # The label's own language is the page's, which the one compile does not
     # have: the tag is as much a per-language string as the label is, and this
     # block's own raw HTML is where it is written.
     label_language = language_text(lambda carried: carried, language.value, rendering=Rendering.VERBATIM)
+    verified = verified_legal_wording_indices(record, repo_root)
+    marker = (
+        [
+            ".. cadrumo-legal-verbatim: "
+            + json.dumps({"legal_id": record.legal_id, "verified": verified}, ensure_ascii=False),
+            "",
+        ]
+        if verified
+        else []
+    )
     return [
+        *marker,
         ".. raw:: html",
         "",
         '   <div class="cadrumo-legal-wording">',
@@ -247,6 +260,75 @@ def _supports_inline_note_markup(note: str | None) -> bool:
 
 _DATA_ROOT = Path("src") / "cadrumo" / "_data"
 _CORPUS_PREFIX = "src/cadrumo/_data/"
+
+
+def verified_legal_wording_indices(record: LegalProvisionRecord, repo_root: Path) -> tuple[int, ...]:
+    """Identify wording exactly present in its declared anchored corpus unit.
+
+    Other required-text fragments retain their ordinary spelling treatment.
+    Case, accents and punctuation are never folded; only whitespace differs.
+    """
+    unit = _anchored_wording_source(record.corpus_ref, repo_root)
+    if unit is None:
+        return ()
+    normalized = " ".join(unit.split())
+    return tuple(
+        index
+        for index, phrase in enumerate(record.required_text)
+        if (needle := " ".join(phrase.split())) and needle in normalized
+    )
+
+
+def _anchored_wording_source(corpus_ref: str, repo_root: Path) -> str | None:
+    """Resolve a contained corpus sidecar to its one declared source unit."""
+    reference, separator, anchor = corpus_ref.partition("#")
+    if not separator or not anchor or "#" in anchor:
+        return None
+    target = _contained_wording_source(reference, repo_root)
+    if target is None:
+        return None
+    try:
+        if target.suffix.casefold() == ".xml":
+            return _anchored_xml_wording_source(target, anchor, repo_root)
+        sidecar = target.with_name(target.name + ".extracted.json").resolve()
+        if not sidecar.is_relative_to((repo_root / _DATA_ROOT / "corpus").resolve()):
+            return None
+        return resolve_anchored_extracted_unit(sidecar, anchor=anchor, include_title=True)
+    except (CorpusAnchorResolutionError, OSError, UnicodeError, ValueError, RuntimeError):
+        return None
+
+
+def _contained_wording_source(reference: str, repo_root: Path) -> Path | None:
+    """Keep both authored corpus spelling and resolved paths inside the corpus."""
+    if reference.startswith(_CORPUS_PREFIX):
+        reference = reference[len(_CORPUS_PREFIX) :]
+    relative = Path(reference)
+    if relative.is_absolute() or any(part in {"", ".", ".."} for part in relative.parts):
+        return None
+    corpus_root = (repo_root / _DATA_ROOT / "corpus").resolve()
+    target = (repo_root / _DATA_ROOT / relative).resolve()
+    if not target.is_relative_to(corpus_root) or not target.is_file():
+        return None
+    return target
+
+
+def _anchored_xml_wording_source(target: Path, anchor: str, repo_root: Path) -> str | None:
+    """Resolve one XML unit, refusing fused versions and ambiguous anchors."""
+    from .preprocess.normatives_html import build_xml_outputs
+
+    if len(corpus_redaction_marks(target.read_text(encoding="utf-8"))) >= 2:
+        return None
+    outputs = build_xml_outputs(target, repo_root=repo_root)
+    units = [
+        unit
+        for output in outputs
+        for unit in output.units
+        if unit.anchor is not None and unit.anchor.lstrip("#") == anchor.lstrip("#")
+    ]
+    if len(units) != 1:
+        return None
+    unit = units[0]
+    return f"{unit.title}\n\n{unit.text}" if unit.title is not None and unit.title != "" else unit.text
 
 
 def _verified_note_spans(
@@ -402,7 +484,7 @@ def _render_entry(
         lines.extend([".. container:: cadrumo-legal-force", "", f"   {in_force}", ""])
 
     if record.required_text:
-        lines.extend(_official_wording_block(record.required_text, language))
+        lines.extend(_official_wording_block(record, language, repo_root))
 
     lines.extend(
         [

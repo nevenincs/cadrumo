@@ -546,6 +546,7 @@
         "dev.locales.signal_domain_summary",
         "dev.locales.signal_echo_classification",
         "dev.locales.signal_gettext",
+        "dev.locales.signal_legal_verbatim",
         "dev.locales.signal_parallel_findings",
         "dev.locales.signal_parallel_gettext",
         "dev.locales.signal_parallel_inventory",
