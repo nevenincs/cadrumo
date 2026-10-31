@@ -2007,13 +2007,20 @@ access, so no other account can create or reach them.
 
 | Object | Name |
 | --- | --- |
-| Lock | `<key>.desktop.lock`, held with an exclusive `flock` |
-| Activation | `<key>.desktop.session.<session>.activate`, a Unix stream socket the holder binds |
+| Lock | `desktop-<digest>.lock`, held with an exclusive `flock` |
+| Activation | `desktop-<digest>-<session>.sock`, a Unix stream socket the holder binds |
 
+- `<digest>` is the first 12 hexadecimal digits of the SHA-256 of
+  `cadrumo-desktop-instance-v1`, a NUL byte and the key. The key, a channel family
+  scoped to one storage root, is too long to appear in a name within the `sun_path`
+  bound, and stable and preview keys differ, so their digests differ. The same
+  names apply on every Unix.
 - `<session>` is `XDG_SESSION_ID`, or `unnamed` when it is unset. It is letters,
   digits, `-` and `_`.
-- On taking the lock, the holder removes every
-  `<key>.desktop.session.*.activate` socket, then binds its own.
+- A claim refuses with an invalid-input error, before it opens the lock file, a
+  socket path that reaches the `sun_path` size (108 bytes on Linux, 104 on macOS).
+- On taking the lock, the holder removes every `desktop-<digest>-*.sock` socket,
+  then binds its own.
 - A claimant connects to its own session's socket and writes nothing. The holder
   reads nothing and writes the byte `0x01` for a request it accepted, on the
   connection that carried it, so a late acknowledgement reaches no later claim.
@@ -2022,9 +2029,8 @@ access, so no other account can create or reach them.
 
 On macOS the lock and the activation sockets live in the private transient transport
 directory the runtime's sockets use, rechecked against replacement. The names are
-`desktop-<digest>.lock` and `desktop-<digest>-<session>.sock`, where `<digest>` is a
-short digest of the key, since `sun_path` bounds the socket path, and `<session>`
-is the kernel audit session of the graphical login. Claiming, activation and the
+those above, and `<session>` is the kernel audit session of the graphical login.
+Claiming, activation and the
 other-session report match Linux. The window that holds the lock establishes
 supervision of the runtime.
 
