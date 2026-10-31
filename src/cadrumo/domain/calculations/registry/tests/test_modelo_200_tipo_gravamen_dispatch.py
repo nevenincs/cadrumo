@@ -105,6 +105,32 @@ def _base_inputs(base: Decimal) -> dict[CasillaId, Decimal]:
     }
 
 
+def _calculate_tipo_gravamen(
+    inputs: dict[CasillaId, Decimal],
+    dispatch: str,
+    *,
+    incn: str,
+    new_entity: Decimal = Decimal("0"),
+    exercise: int = 2024,
+):
+    """Run the M200 chain for one entity form, prior-12-month INCN and exercise, with no other adjustments."""
+    return calculate_registry_snapshot(
+        _snapshot(),
+        inputs=inputs,
+        enum_binding_values={_DISPATCH_BINDING: dispatch},
+        binding_values={
+            "modelo-200-profile-new-entity-flag": new_entity,
+            "modelo-200-profile-incn-prior-12-months": Decimal(incn),
+            "modelo-200-profile-tributacion-estado-porcentaje": Decimal("100"),
+            "modelo-200-bin-pendiente-ejercicios-anteriores": Decimal("0"),
+            "modelo-200-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores": Decimal("0"),
+            "modelo-200-dotaciones-deterioro-creditos-saldo-cumplido-anteriores": Decimal("0"),
+        },
+        relation_values=dict(_M200_PAGOS_RELATIONS_ZERO),
+        date_context={"filing_period": date(exercise, 12, 31)},
+    )
+
+
 def _snapshot():
     return published_snapshot("200", filing_year=2025, period="0A", grade=RegistryAuthorityGrade.CALCULATION)
 
@@ -335,21 +361,7 @@ def test_tipo_gravamen_dispatch_routes_00558_by_legal_entity_form() -> None:
 
 def test_nonprofit_special_regime_stays_at_10_percent_inside_erd_threshold() -> None:
     """Ley 49/2002 entities keep the 10% special-regime rate below 1M INCN."""
-    result = calculate_registry_snapshot(
-        _snapshot(),
-        inputs=_base_inputs(Decimal("1000000")),
-        enum_binding_values={_DISPATCH_BINDING: "sin_fines_lucrativos"},
-        binding_values={
-            "modelo-200-profile-new-entity-flag": Decimal("0"),
-            "modelo-200-profile-incn-prior-12-months": Decimal("500000"),
-            "modelo-200-profile-tributacion-estado-porcentaje": Decimal("100"),
-            "modelo-200-bin-pendiente-ejercicios-anteriores": Decimal("0"),
-            "modelo-200-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores": Decimal("0"),
-            "modelo-200-dotaciones-deterioro-creditos-saldo-cumplido-anteriores": Decimal("0"),
-        },
-        relation_values=dict(_M200_PAGOS_RELATIONS_ZERO),
-        date_context={"filing_period": date(2024, 12, 31)},
-    )
+    result = _calculate_tipo_gravamen(_base_inputs(Decimal("1000000")), "sin_fines_lucrativos", incn="500000")
 
     assert result.values[_M200_TIPO_GRAVAMEN_CASILLA] == Decimal("10")
     assert result.values[_M200_CUOTA_INTEGRA_CASILLA] == Decimal("100000.00")
@@ -527,20 +539,8 @@ def test_tipo_gravamen_dispatch_routes_dt44_first_year_micro_display_rate_to_fir
     the legacy 23 %. The display scalar must follow the same filing-year
     threshold as the bracket calculation.
     """
-    result = calculate_registry_snapshot(
-        _snapshot(),
-        inputs=_base_inputs(Decimal("50000")),
-        enum_binding_values={_DISPATCH_BINDING: "sl"},
-        binding_values={
-            "modelo-200-profile-new-entity-flag": Decimal("0"),
-            "modelo-200-profile-incn-prior-12-months": Decimal("450000"),
-            "modelo-200-profile-tributacion-estado-porcentaje": Decimal("100"),
-            "modelo-200-bin-pendiente-ejercicios-anteriores": Decimal("0"),
-            "modelo-200-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores": Decimal("0"),
-            "modelo-200-dotaciones-deterioro-creditos-saldo-cumplido-anteriores": Decimal("0"),
-        },
-        relation_values=dict(_M200_PAGOS_RELATIONS_ZERO),
-        date_context={"filing_period": date(_DT44_FIRST_TRANSITIONAL_EXERCISE, 12, 31)},
+    result = _calculate_tipo_gravamen(
+        _base_inputs(Decimal("50000")), "sl", incn="450000", exercise=_DT44_FIRST_TRANSITIONAL_EXERCISE
     )
 
     assert result.values[_M200_TIPO_GRAVAMEN_CASILLA] == Decimal("21")
@@ -549,20 +549,8 @@ def test_tipo_gravamen_dispatch_routes_dt44_first_year_micro_display_rate_to_fir
 
 def test_tipo_gravamen_dispatch_routes_dt44_first_year_micro_cuota_to_rest_tranche() -> None:
     """A DT 44ª first-year micro-company above 50.000 EUR uses the second tranche."""
-    result = calculate_registry_snapshot(
-        _snapshot(),
-        inputs=_base_inputs(Decimal("100000")),
-        enum_binding_values={_DISPATCH_BINDING: "sl"},
-        binding_values={
-            "modelo-200-profile-new-entity-flag": Decimal("0"),
-            "modelo-200-profile-incn-prior-12-months": Decimal("450000"),
-            "modelo-200-profile-tributacion-estado-porcentaje": Decimal("100"),
-            "modelo-200-bin-pendiente-ejercicios-anteriores": Decimal("0"),
-            "modelo-200-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores": Decimal("0"),
-            "modelo-200-dotaciones-deterioro-creditos-saldo-cumplido-anteriores": Decimal("0"),
-        },
-        relation_values=dict(_M200_PAGOS_RELATIONS_ZERO),
-        date_context={"filing_period": date(_DT44_FIRST_TRANSITIONAL_EXERCISE, 12, 31)},
+    result = _calculate_tipo_gravamen(
+        _base_inputs(Decimal("100000")), "sl", incn="450000", exercise=_DT44_FIRST_TRANSITIONAL_EXERCISE
     )
 
     assert result.values[_M200_TIPO_GRAVAMEN_CASILLA] == Decimal("21")
@@ -580,21 +568,7 @@ def test_tipo_gravamen_dispatch_routes_general_25_when_incn_at_or_above_1m() -> 
     """
     base_inputs = _base_inputs(Decimal("1000000"))
 
-    result = calculate_registry_snapshot(
-        _snapshot(),
-        inputs=base_inputs,
-        enum_binding_values={_DISPATCH_BINDING: "sa"},
-        binding_values={
-            "modelo-200-profile-new-entity-flag": Decimal("0"),
-            "modelo-200-profile-incn-prior-12-months": Decimal("1500000"),
-            "modelo-200-profile-tributacion-estado-porcentaje": Decimal("100"),
-            "modelo-200-bin-pendiente-ejercicios-anteriores": Decimal("0"),
-            "modelo-200-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores": Decimal("0"),
-            "modelo-200-dotaciones-deterioro-creditos-saldo-cumplido-anteriores": Decimal("0"),
-        },
-        relation_values=dict(_M200_PAGOS_RELATIONS_ZERO),
-        date_context={"filing_period": date(2024, 12, 31)},
-    )
+    result = _calculate_tipo_gravamen(base_inputs, "sa", incn="1500000")
     assert result.values[_M200_TIPO_GRAVAMEN_CASILLA] == Decimal("25"), (
         "SA with INCN 1.5M must display tipo 25 % (above ERD threshold)"
     )
@@ -609,20 +583,8 @@ def test_tipo_gravamen_dispatch_routes_art101_erd_below_10m_under_dt44() -> None
     a micro-empresa, but is below the art.101 10M threshold, so both the
     displayed rate and cuota path must use the ERD schedule.
     """
-    result = calculate_registry_snapshot(
-        _snapshot(),
-        inputs=_base_inputs(Decimal("1000000")),
-        enum_binding_values={_DISPATCH_BINDING: "sa"},
-        binding_values={
-            "modelo-200-profile-new-entity-flag": Decimal("0"),
-            "modelo-200-profile-incn-prior-12-months": Decimal("7000000"),
-            "modelo-200-profile-tributacion-estado-porcentaje": Decimal("100"),
-            "modelo-200-bin-pendiente-ejercicios-anteriores": Decimal("0"),
-            "modelo-200-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores": Decimal("0"),
-            "modelo-200-dotaciones-deterioro-creditos-saldo-cumplido-anteriores": Decimal("0"),
-        },
-        relation_values=dict(_M200_PAGOS_RELATIONS_ZERO),
-        date_context={"filing_period": date(_DT44_FIRST_TRANSITIONAL_EXERCISE, 12, 31)},
+    result = _calculate_tipo_gravamen(
+        _base_inputs(Decimal("1000000")), "sa", incn="7000000", exercise=_DT44_FIRST_TRANSITIONAL_EXERCISE
     )
 
     assert result.values[_M200_TIPO_GRAVAMEN_CASILLA] == Decimal("24")
@@ -631,20 +593,8 @@ def test_tipo_gravamen_dispatch_routes_art101_erd_below_10m_under_dt44() -> None
 
 def test_tipo_gravamen_dispatch_keeps_general_rate_at_art101_boundary_under_dt44() -> None:
     """INCN at 10M is outside art.101 ERD and stays on the general rate."""
-    result = calculate_registry_snapshot(
-        _snapshot(),
-        inputs=_base_inputs(Decimal("1000000")),
-        enum_binding_values={_DISPATCH_BINDING: "sa"},
-        binding_values={
-            "modelo-200-profile-new-entity-flag": Decimal("0"),
-            "modelo-200-profile-incn-prior-12-months": Decimal("10000000"),
-            "modelo-200-profile-tributacion-estado-porcentaje": Decimal("100"),
-            "modelo-200-bin-pendiente-ejercicios-anteriores": Decimal("0"),
-            "modelo-200-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores": Decimal("0"),
-            "modelo-200-dotaciones-deterioro-creditos-saldo-cumplido-anteriores": Decimal("0"),
-        },
-        relation_values=dict(_M200_PAGOS_RELATIONS_ZERO),
-        date_context={"filing_period": date(_DT44_FIRST_TRANSITIONAL_EXERCISE, 12, 31)},
+    result = _calculate_tipo_gravamen(
+        _base_inputs(Decimal("1000000")), "sa", incn="10000000", exercise=_DT44_FIRST_TRANSITIONAL_EXERCISE
     )
 
     assert result.values[_M200_TIPO_GRAVAMEN_CASILLA] == Decimal("25")
@@ -660,21 +610,7 @@ def test_new_entity_flag_overrides_erd_threshold() -> None:
     """
     base_inputs = _base_inputs(Decimal("500000"))
 
-    result = calculate_registry_snapshot(
-        _snapshot(),
-        inputs=base_inputs,
-        enum_binding_values={_DISPATCH_BINDING: "sl"},
-        binding_values={
-            "modelo-200-profile-new-entity-flag": Decimal("1"),
-            "modelo-200-profile-incn-prior-12-months": Decimal("200000"),
-            "modelo-200-profile-tributacion-estado-porcentaje": Decimal("100"),
-            "modelo-200-bin-pendiente-ejercicios-anteriores": Decimal("0"),
-            "modelo-200-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores": Decimal("0"),
-            "modelo-200-dotaciones-deterioro-creditos-saldo-cumplido-anteriores": Decimal("0"),
-        },
-        relation_values=dict(_M200_PAGOS_RELATIONS_ZERO),
-        date_context={"filing_period": date(2024, 12, 31)},
-    )
+    result = _calculate_tipo_gravamen(base_inputs, "sl", incn="200000", new_entity=Decimal("1"))
     assert result.values[_M200_TIPO_GRAVAMEN_CASILLA] == Decimal("15"), (
         "new-entity flag must override ERD lane: tipo = 15 %, not 23 %"
     )
@@ -692,21 +628,7 @@ def test_cooperativa_retains_20_percent_even_when_incn_below_1m() -> None:
     """
     base_inputs = _base_inputs(Decimal("1000000"))
 
-    result = calculate_registry_snapshot(
-        _snapshot(),
-        inputs=base_inputs,
-        enum_binding_values={_DISPATCH_BINDING: "cooperativa"},
-        binding_values={
-            "modelo-200-profile-new-entity-flag": Decimal("0"),
-            "modelo-200-profile-incn-prior-12-months": Decimal("500000"),
-            "modelo-200-profile-tributacion-estado-porcentaje": Decimal("100"),
-            "modelo-200-bin-pendiente-ejercicios-anteriores": Decimal("0"),
-            "modelo-200-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores": Decimal("0"),
-            "modelo-200-dotaciones-deterioro-creditos-saldo-cumplido-anteriores": Decimal("0"),
-        },
-        relation_values=dict(_M200_PAGOS_RELATIONS_ZERO),
-        date_context={"filing_period": date(2024, 12, 31)},
-    )
+    result = _calculate_tipo_gravamen(base_inputs, "cooperativa", incn="500000")
     assert result.values[_M200_TIPO_GRAVAMEN_CASILLA] == Decimal("20"), (
         "cooperativa with INCN 500k must retain 20 %, not ERD 23 %"
     )
