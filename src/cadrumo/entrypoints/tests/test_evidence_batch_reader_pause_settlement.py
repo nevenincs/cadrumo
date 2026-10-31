@@ -17,7 +17,6 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Iterator
-from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from uuid import UUID
 
@@ -28,7 +27,6 @@ from cadrumo_client.contracts.model_runs import ModelRunRefusalCode
 
 from ...adapters.outbound.llm.preconditions import LLMPreconditionCondition
 from ...adapters.persistence.operations.tests.supervision_support import run_to_settlement
-from ...adapters.persistence.operations.tests.supervisor_test_support import operation_repositories
 from ...adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ...application.ledger.evidence_ingestion_contracts import (
     LEDGER_EVIDENCE_BATCH_OPERATION_DEFINITION_ID,
@@ -53,7 +51,7 @@ from ...domain.calculations.registry.authority import PinnedAuthorityOperation, 
 from ...domain.iva.schema import InvoiceKind
 from ...tests.pdf_fixtures import text_pdf_bytes
 from ..ledger_evidence_ingestion_operation_composition import build_ledger_evidence_ingestion_operation_ports
-from .dependency_operation_gating_support import RecordingRunsAuthority, agent_refusing
+from .dependency_operation_gating_support import RecordingRunsAuthority, agent_refusing, supervisor_with_projections
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -126,26 +124,13 @@ def test_a_batch_paused_for_its_missing_text_model_settles_with_the_missing_mode
         return receipt.condition, receipt.effect, projection
 
     with agent_refusing(ModelRunRefusalCode.MODEL_NOT_INSTALLED) as agent:
-        journal, leases, operands = operation_repositories(
-            storage_root=tmp_path / "durable-state", profile_objects=profile.repository
-        )
-        supervisor = OperationSupervisor(
+        supervisor, service = supervisor_with_projections(
+            tmp_path=tmp_path,
+            profile_objects=profile.repository,
             authority_operation=operation,
             registry=registry,
-            journal=journal,
-            event_stream=journal,
-            leases=leases,
-            operands=operands,
-            owner_id="1" * 64,
-            lease_token_factory=lambda: "2" * 64,
-            clock=lambda: datetime.now(UTC),
-            lease_duration=timedelta(minutes=5),
-            execution_timeout=timedelta(minutes=2),
-            cleanup_timeout=timedelta(minutes=1),
-            response_token_factory=lambda: "3" * 64,
             execution_authority=RecordingRunsAuthority(agent),
         )
-        service = OperationResultProjectionService(reader=journal, registry=registry, operands=operands)
         condition, effect, projection = asyncio.run(settle(supervisor, service))
 
     assert condition is OperationTerminalCondition.SUCCEEDED

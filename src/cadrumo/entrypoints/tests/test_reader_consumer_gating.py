@@ -70,7 +70,7 @@ import traceback
 from collections.abc import Callable, Generator, Iterable, Mapping, Sequence
 from contextlib import contextmanager
 from dataclasses import dataclass
-from datetime import UTC, date, datetime, timedelta
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from io import BytesIO
 from pathlib import Path
@@ -92,7 +92,6 @@ from ...adapters.outbound.llm.statement_reading import StatementReader
 from ...adapters.outbound.llm.supply_nature_proposal import SupplyNatureProposal
 from ...adapters.outbound.llm.tests.model_run_support import RecordingModelRuns
 from ...adapters.persistence.operations.tests.supervision_support import run_to_settlement
-from ...adapters.persistence.operations.tests.supervisor_test_support import operation_repositories
 from ...adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ...application.ledger.column_roles import ColumnRoleReaderUnavailable, column_role_mapping_resolver
 from ...application.ledger.document_transcription import DocumentTranscription
@@ -108,10 +107,8 @@ from ...application.operations.contract_manifest import OperationContractManifes
 from ...application.operations.models import CredentialFreeOperationRequest, OperationRequest
 from ...application.operations.operation_definition import build_single_phase_definition
 from ...application.operations.owner import OperationExecutorContext
-from ...application.operations.projection_services import OperationResultProjectionService
 from ...application.operations.registry import OperationPublicDefinitionRegistrationV1, OperationRegistry
 from ...application.operations.subject_reference import OperationSubjectReferenceV1
-from ...application.operations.supervisor import OperationSupervisor
 from ...application.operator_actions.models import PreconditionVerdict
 from ...core.config import Settings, load_settings, override_settings
 from ...core.config_support import LLMProvider
@@ -149,6 +146,7 @@ from .dependency_operation_gating_support import (
     settle_ledger_import,
     settle_ledger_import_pdf,
     settle_split_review,
+    supervisor_with_projections,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -1075,26 +1073,13 @@ def _settle_fixture_read(tmp_path: Path, *, swallow: bool, publish: bool) -> tup
         agent_refusing(ModelRunRefusalCode.MODEL_NOT_INSTALLED) as agent,
         bundled_indexed_authority().operation() as operation,
     ):
-        journal, leases, operands = operation_repositories(
-            storage_root=tmp_path / "durable-state", profile_objects=profile.repository
-        )
-        supervisor = OperationSupervisor(
+        supervisor, service = supervisor_with_projections(
+            tmp_path=tmp_path,
+            profile_objects=profile.repository,
             authority_operation=operation,
             registry=registry,
-            journal=journal,
-            event_stream=journal,
-            leases=leases,
-            operands=operands,
-            owner_id="1" * 64,
-            lease_token_factory=lambda: "2" * 64,
-            clock=lambda: datetime.now(UTC),
-            lease_duration=timedelta(minutes=5),
-            execution_timeout=timedelta(minutes=2),
-            cleanup_timeout=timedelta(minutes=1),
-            response_token_factory=lambda: "3" * 64,
             execution_authority=RecordingRunsAuthority(agent),
         )
-        service = OperationResultProjectionService(reader=journal, registry=registry, operands=operands)
 
         async def settle() -> SettledOperation:
             operation_id = await supervisor.submit(

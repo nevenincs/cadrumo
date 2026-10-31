@@ -14,7 +14,7 @@ import base64
 import hashlib
 from collections.abc import Iterator
 from dataclasses import dataclass
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 from io import BytesIO
 from pathlib import Path
 from uuid import UUID
@@ -25,7 +25,6 @@ from pydantic import BaseModel
 
 from ...adapters.inbound.pdf.page_image import PageImageRenderer
 from ...adapters.persistence.operations.tests.supervision_support import run_to_settlement
-from ...adapters.persistence.operations.tests.supervisor_test_support import operation_repositories
 from ...adapters.persistence.storage.attachment import AttachmentStore
 from ...adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ...application.ledger.evidence import PurchaseInvoiceEvidence, PurchaseInvoiceEvidenceService
@@ -53,9 +52,7 @@ from ...application.operations.frontend_requests import (
     OperationResultProjectionSuccessV1,
 )
 from ...application.operations.models import OperationRequest, OperationTerminalReceipt
-from ...application.operations.projection_services import OperationResultProjectionService
 from ...application.operations.registry import OperationRegistry
-from ...application.operations.supervisor import OperationSupervisor
 from ...core.errors.error_codes import get_registered_error_code
 from ...core.errors.hierarchy import CadrumoError
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
@@ -65,6 +62,7 @@ from ...domain.calculations.registry.authority import PinnedAuthorityOperation, 
 from ...tests.pdf_fixtures import multi_page_text_pdf_bytes
 from ..adapter_composition_work_ports import build_ledger_evidence_ports
 from ..evidence_page_operation_composition import build_ledger_evidence_page_operation_ports
+from .dependency_operation_gating_support import supervisor_with_projections
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -142,23 +140,11 @@ def _settle(
     definition = build_ledger_evidence_page_definition(build_ledger_evidence_page_operation_ports(renderer=renderer))
     registration = build_ledger_evidence_page_registration(definition)
     registry = OperationRegistry(definitions=(definition,), public_registrations=(registration,))
-    journal, leases, operands = operation_repositories(
-        storage_root=tmp_path / "durable-state", profile_objects=profile.repository
-    )
-    supervisor = OperationSupervisor(
+    supervisor, projections = supervisor_with_projections(
+        tmp_path=tmp_path,
+        profile_objects=profile.repository,
         authority_operation=operation,
         registry=registry,
-        journal=journal,
-        event_stream=journal,
-        leases=leases,
-        operands=operands,
-        owner_id="1" * 64,
-        lease_token_factory=lambda: "2" * 64,
-        clock=lambda: datetime.now(UTC),
-        lease_duration=timedelta(minutes=5),
-        execution_timeout=timedelta(minutes=2),
-        cleanup_timeout=timedelta(minutes=1),
-        response_token_factory=lambda: "3" * 64,
     )
 
     async def settle() -> _Settled:
@@ -177,7 +163,7 @@ def _settle(
             return _Settled(receipt=receipt, page=None)
         schema = registration.contract.result_schema
         assert schema is not None
-        resolved = await OperationResultProjectionService(reader=journal, registry=registry, operands=operands).resolve(
+        resolved = await projections.resolve(
             OperationResultProjectionRequestV1(
                 operation_id=operation_id,
                 terminal_revision=terminal.revision,

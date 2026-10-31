@@ -16,7 +16,7 @@ from __future__ import annotations
 import asyncio
 import hashlib
 from collections.abc import Iterator
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 from pathlib import Path
 from uuid import UUID
 
@@ -27,7 +27,6 @@ from cadrumo_client.contracts.model_runs import ModelRunRefusalCode
 
 from ...adapters.outbound.llm.preconditions import LLMPreconditionCondition
 from ...adapters.persistence.operations.tests.supervision_support import run_to_settlement
-from ...adapters.persistence.operations.tests.supervisor_test_support import operation_repositories
 from ...adapters.persistence.storage.attachment import AttachmentStore
 from ...adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ...application.ledger.evidence_errors import PurchaseInvoiceEvidenceReaderError
@@ -59,7 +58,7 @@ from ...domain.calculations.registry.authority import PinnedAuthorityOperation, 
 from ...domain.iva.schema import InvoiceKind
 from ...tests.llm_vision_evidence_support import png_image
 from ..invoice_evidence_operation_composition import build_invoice_evidence_operation_ports
-from .dependency_operation_gating_support import RecordingRunsAuthority, agent_refusing
+from .dependency_operation_gating_support import RecordingRunsAuthority, agent_refusing, supervisor_with_projections
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -145,26 +144,13 @@ def test_a_confirm_whose_re_read_needs_the_vision_model_settles(
         return receipt.condition, receipt.refusal_ref, detail
 
     with agent_refusing(ModelRunRefusalCode.MODEL_NOT_INSTALLED) as agent:
-        journal, leases, operands = operation_repositories(
-            storage_root=tmp_path / "durable-state", profile_objects=profile.repository
-        )
-        supervisor = OperationSupervisor(
+        supervisor, service = supervisor_with_projections(
+            tmp_path=tmp_path,
+            profile_objects=profile.repository,
             authority_operation=operation,
             registry=registry,
-            journal=journal,
-            event_stream=journal,
-            leases=leases,
-            operands=operands,
-            owner_id="1" * 64,
-            lease_token_factory=lambda: "2" * 64,
-            clock=lambda: datetime.now(UTC),
-            lease_duration=timedelta(minutes=5),
-            execution_timeout=timedelta(minutes=2),
-            cleanup_timeout=timedelta(minutes=1),
-            response_token_factory=lambda: "3" * 64,
             execution_authority=RecordingRunsAuthority(agent),
         )
-        service = OperationResultProjectionService(reader=journal, registry=registry, operands=operands)
         condition, refusal_ref, detail = asyncio.run(settle(supervisor, service))
 
     assert condition is OperationTerminalCondition.REFUSED

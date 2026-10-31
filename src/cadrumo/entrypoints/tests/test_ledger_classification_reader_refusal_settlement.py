@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Iterator, Mapping
-from datetime import UTC, date, datetime, timedelta
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 from uuid import UUID
@@ -28,7 +28,6 @@ from cadrumo_client.contracts.model_runs import ModelRunRefusalCode
 from ...adapters.outbound.llm.preconditions import LLMPreconditionCondition
 from ...adapters.outbound.llm.tests.model_run_support import RecordingModelRuns
 from ...adapters.persistence.operations.tests.supervision_support import run_to_settlement
-from ...adapters.persistence.operations.tests.supervisor_test_support import operation_repositories
 from ...adapters.persistence.profile.tests.ledger_action_create_support import ledger_ports_for_test
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
@@ -57,9 +56,7 @@ from ...application.operations.frontend_requests import (
     OperationResultProjectionSuccessV1,
 )
 from ...application.operations.models import OperationRequest
-from ...application.operations.projection_services import OperationResultProjectionService
 from ...application.operations.registry import OperationRegistry
-from ...application.operations.supervisor import OperationSupervisor
 from ...core.config import load_settings
 from ...core.errors.error_codes import get_registered_error_code
 from ...core.model_roles import ModelRole
@@ -69,7 +66,7 @@ from ...domain.transactions.enums import TransactionDirection
 from ...domain.transactions.models import Transaction, TransactionCatalogue
 from ...domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ..ledger_llm_composition import compose_ledger_llm
-from .dependency_operation_gating_support import RecordingRunsAuthority, agent_refusing
+from .dependency_operation_gating_support import RecordingRunsAuthority, agent_refusing, supervisor_with_projections
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -136,23 +133,11 @@ def _settle_and_read_detail(
         )
         registration = build_ledger_llm_review_registration(definition)
         registry = OperationRegistry(definitions=(definition,), public_registrations=(registration,))
-        journal, leases, operands = operation_repositories(
-            storage_root=tmp_path / "durable-state", profile_objects=profile.repository
-        )
-        supervisor = OperationSupervisor(
+        supervisor, projections = supervisor_with_projections(
+            tmp_path=tmp_path,
+            profile_objects=profile.repository,
             authority_operation=ledger.operation,
             registry=registry,
-            journal=journal,
-            event_stream=journal,
-            leases=leases,
-            operands=operands,
-            owner_id="1" * 64,
-            lease_token_factory=lambda: "2" * 64,
-            clock=lambda: datetime.now(UTC),
-            lease_duration=timedelta(minutes=5),
-            execution_timeout=timedelta(minutes=2),
-            cleanup_timeout=timedelta(minutes=1),
-            response_token_factory=lambda: "3" * 64,
             execution_authority=RecordingRunsAuthority(service),
         )
 
@@ -175,9 +160,7 @@ def _settle_and_read_detail(
             receipt = terminal.terminal_receipt
             assert receipt is not None
             assert receipt.effect is OperationEffect.NONE
-            resolved = await OperationResultProjectionService(
-                reader=journal, registry=registry, operands=operands
-            ).resolve(
+            resolved = await projections.resolve(
                 OperationResultProjectionRequestV1(
                     operation_id=operation_id,
                     terminal_revision=terminal.revision,

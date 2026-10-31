@@ -19,7 +19,7 @@ import hashlib
 from collections.abc import AsyncGenerator, Awaitable, Callable, Generator
 from contextlib import asynccontextmanager, contextmanager
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from functools import partial
 from pathlib import Path
 from typing import Protocol
@@ -41,7 +41,9 @@ from cadrumo_client.contracts.model_runs import (
 from ...adapters.outbound.llm.column_role_mapping import resolve_column_roles
 from ...adapters.outbound.llm.statement_reading import StatementReader
 from ...adapters.outbound.llm.tests.model_run_support import ON_HOST_LANE, RecordingModelRuns, serving_agent
+from ...adapters.persistence.operations.tests.supervisor_test_support import operation_repositories
 from ...adapters.persistence.storage.attachment import AttachmentStore
+from ...adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ...application.invoices.catalogue_intake_contracts import (
     INVOICE_IMPORT_OPERATION_DEFINITION_ID,
     InvoiceImportRequest,
@@ -78,20 +80,24 @@ from ...application.ledger.llm_review_contracts import (
 )
 from ...application.ledger.llm_review_workflow import LlmReviewInvocationOrigin
 from ...application.ledger.statement_reading import bind_statement_reader_factory
+from ...application.operations.authorization import OperationExecutionAuthority
 from ...application.operations.error_detail import OperationErrorDetailV1, operation_error_detail_schema
 from ...application.operations.frontend_requests import (
     OperationResultProjectionRequestV1,
     OperationResultProjectionSuccessV1,
 )
 from ...application.operations.models import OperationIdentity, OperationRequest
+from ...application.operations.projection_services import OperationResultProjectionService
 from ...application.operations.registry import OperationRegistry
 from ...application.operations.subject_reference import expected_operation_subject
+from ...application.operations.supervisor import OperationSupervisor
 from ...application.operator_actions.models import PreconditionVerdict
 from ...application.operator_actions.projection import PreconditionVerdictSnapshot
 from ...core.model_roles import ModelRole
 from ...core.operations import OperationTerminalCondition
 from ...domain.attachments.enums import AttachmentKind, AttachmentSource
 from ...domain.attachments.models import Attachment
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.iva.schema import InvoiceKind
 from ...tests.inventory import FIXTURES_DIR
 from ...tests.llm_vision_evidence_support import png_image
@@ -219,6 +225,37 @@ class OperationRuntime:
             )
 
         return asyncio.run(run())
+
+
+def supervisor_with_projections(
+    *,
+    tmp_path: Path,
+    profile_objects: SecureObjectRepository,
+    authority_operation: PinnedAuthorityOperation,
+    registry: OperationRegistry,
+    execution_authority: OperationExecutionAuthority | None = None,
+) -> tuple[OperationSupervisor, OperationResultProjectionService]:
+    """Return a real supervisor and its result reader over a durable journal under ``tmp_path``."""
+    journal, leases, operands = operation_repositories(
+        storage_root=tmp_path / "durable-state", profile_objects=profile_objects
+    )
+    supervisor = OperationSupervisor(
+        authority_operation=authority_operation,
+        registry=registry,
+        journal=journal,
+        event_stream=journal,
+        leases=leases,
+        operands=operands,
+        owner_id="1" * 64,
+        lease_token_factory=lambda: "2" * 64,
+        clock=lambda: datetime.now(UTC),
+        lease_duration=timedelta(minutes=5),
+        execution_timeout=timedelta(minutes=2),
+        cleanup_timeout=timedelta(minutes=1),
+        response_token_factory=lambda: "3" * 64,
+        execution_authority=execution_authority,
+    )
+    return supervisor, OperationResultProjectionService(reader=journal, registry=registry, operands=operands)
 
 
 class RecordingRunsAuthority:
