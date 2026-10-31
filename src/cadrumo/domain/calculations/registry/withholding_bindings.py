@@ -655,6 +655,12 @@ class WithholdingObservation(BaseModel):
                     raise RegistryValidationError(f"{name} exceeds the width the record design declares")
             elif str(value) not in declared.codes(f"observation_code.{name}"):
                 raise RegistryValidationError(f"{name} is not a code the record design declares")
+        if (
+            self.financial_asset_origin is not None
+            and self.clave_codigo is not None
+            and str(self.clave_codigo) not in declared.codes("modelo.194.clave_codigo")
+        ):
+            raise RegistryValidationError("clave_codigo is not a code the Modelo 194 record design declares")
         return self
 
     @model_validator(mode="after")

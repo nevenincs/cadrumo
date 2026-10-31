@@ -742,7 +742,7 @@ def resolve_profile_binding_value(
     # gate fact states WHETHER the binding applies, never WHAT it holds, so it
     # must not stand in as a value. Without this, a gated binding whose real
     # fact is absent silently resolves to its precondition: a conjunta filing
-    # missing the spouse's birth date wrote the declaration type ("2") into
+    # missing the spouse's birth date wrote the joint declaration-type code into
     # DPFNAC_C, and a missing EU country wrote a boolean into ZRUE2 -- wrong
     # values on a filed artefact, indistinguishable from real ones. Measured
     # across the whole registry: 12 gated bindings, all Modelo 100, every one

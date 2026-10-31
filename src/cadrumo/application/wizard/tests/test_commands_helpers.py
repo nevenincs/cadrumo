@@ -32,6 +32,12 @@ from cadrumo.domain.calculations.registry.authority import bundled_indexed_autho
 
 from ....core.i18n.translatable import Translatable as tr
 from ....domain.calculations.registry.ccaa_catalogue import ccaa_choices, resolve_ccaa_catalogue
+from ....domain.contribuyente.renta_codes import (
+    RentaDeclaracionType,
+    RentaDisabilityGrade,
+    RentaMaritalStatus,
+    RentaSexCode,
+)
 from ..catalogue import build_setup_flow
 from ..command_parameters import (
     SETUP_OPTION_INFOS,
@@ -159,6 +165,32 @@ def test_tax_residence_ccaa_choices_match_the_ccaa_enum(authority_operation: Pin
         resolve_ccaa_catalogue(authority=authority_operation).foral_cli_aliases
     )
     assert list(choice_type.choices) == expected
+
+
+@pytest.mark.usefixtures("_isolated_setup_option_infos")
+@pytest.mark.parametrize(
+    ("flag", "vocabulary"),
+    [
+        ("taxation-type", RentaDeclaracionType),
+        ("taxpayer-sex", RentaSexCode),
+        ("spouse-sex", RentaSexCode),
+        ("taxpayer-marital-status", RentaMaritalStatus),
+        ("taxpayer-disability-grade", RentaDisabilityGrade),
+        ("spouse-disability-grade", RentaDisabilityGrade),
+    ],
+)
+def test_a_renta_code_flag_takes_its_choices_from_the_leased_flow(
+    flag: str,
+    vocabulary: type[RentaDeclaracionType | RentaSexCode | RentaMaritalStatus | RentaDisabilityGrade],
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    """The import-time option holds no code; the builder fills it from the pinned generation."""
+    build_wizard_command(build_setup_flow(authority_operation), mode="create", operation=authority_operation)
+    option = SETUP_OPTION_INFOS[flag]
+    assert option is not None
+    choice_type = option.click_type
+    assert isinstance(choice_type, click.Choice)
+    assert set(choice_type.choices) == set(vocabulary.form_codes(authority=authority_operation).values())
 
 
 # ---------------------------------------------------------------------------

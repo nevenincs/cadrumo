@@ -26,6 +26,17 @@ from ..withholding_bindings import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 
+def test_a_financial_asset_row_holds_its_clave_codigo_to_the_modelo_194_design() -> None:
+    # Modelo 194 position 79 lists three claves; only Modelo 193 position 79 adds the fourth.
+    row = _observation(source_id="asset-row", subclave="01", amount="0", withholding="0").model_dump()
+
+    assert WithholdingObservation.model_validate({**row, "clave_codigo": 4}).clave_codigo == 4
+    asset = {**row, "financial_asset_origin": "A"}
+    assert WithholdingObservation.model_validate({**asset, "clave_codigo": 3}).clave_codigo == 3
+    with pytest.raises(ValidationError, match="Modelo 194 record design"):
+        WithholdingObservation.model_validate({**asset, "clave_codigo": 4})
+
+
 def test_financial_asset_loss_preserves_signed_base_without_negative_withholding() -> None:
     observation = _observation(source_id="asset-loss", subclave="01", amount="0", withholding="0")
     loss = WithholdingObservation.model_validate(
