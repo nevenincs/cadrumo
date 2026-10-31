@@ -524,7 +524,7 @@ msgstr "Proyección en tiempo de ejecución"
 
 #: ../../reference/registry-legal-api.md
 msgid "Scalar binding"
-msgstr "Binding escalar"
+msgstr "Vinculación escalar"
 
 #: ../../reference/registry-legal-api.md
 msgid "Typed source kind, selector, and aggregation"
@@ -538,7 +538,7 @@ msgstr ""
 
 #: ../../reference/registry-legal-api.md
 msgid "Repeating row binding"
-msgstr "Binding de fila repetida"
+msgstr "Vinculación de fila repetida"
 
 #: ../../reference/registry-legal-api.md
 msgid "Typed source kind plus grouping, row field, and aggregation"

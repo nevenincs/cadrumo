@@ -185,9 +185,9 @@ msgid ""
 "profile name, the edit applies to the active profile:"
 msgstr ""
 "El asistente recorre los campos del perfil, incluidos los que proceden "
-"del censo. Para una actualización mediante script, pasa las opciones de "
-"campo con `--quiet`. Si no indicas el nombre de un perfil, la "
-"modificación se aplica al perfil activo:"
+"del censo. Para una actualización mediante una secuencia de comandos, "
+"pasa las opciones de campo con `--quiet`. Si no indicas el nombre de un "
+"perfil, la modificación se aplica al perfil activo:"
 
 #: ../../how-to/censo-update.md:77
 msgid ""

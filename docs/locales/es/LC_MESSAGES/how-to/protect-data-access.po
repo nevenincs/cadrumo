@@ -106,7 +106,8 @@ msgstr ""
 msgid "Never store it in a shared shell profile, a committed script, or a log."
 msgstr ""
 "No la almacenes en un archivo de configuración compartido del intérprete "
-"de comandos, en un script versionado en el repositorio ni en un registro."
+"de comandos, en una secuencia de comandos guardada en el repositorio ni "
+"en un registro."
 
 #: ../../how-to/protect-data-access.md:32
 msgid ""
@@ -632,9 +633,9 @@ msgid ""
 "credential to the wrong target after a command-line mistake."
 msgstr ""
 "Una fuente seleccionada que no se aplica al comando resuelto o al perfil "
-"exacto se rechaza por no utilizada. Esto protege a los scripts de enviar "
-"una credencial al destino equivocado tras un error en la línea de "
-"comandos."
+"exacto se rechaza por no utilizada. Esto evita que las secuencias de "
+"comandos envíen una credencial al destino equivocado tras un error en la "
+"línea de comandos."
 
 #: ../../how-to/protect-data-access.md:245
 msgid "Pass an inherited descriptor safely"

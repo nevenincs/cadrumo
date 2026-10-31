@@ -258,7 +258,9 @@ msgstr "Gyorsindító"
 
 #: ../../download.md:136
 msgid "Take the shortest path from an empty profile to an exported modelo file."
-msgstr "Tedd meg a legrövidebb utat az üres profiltól az exportált modelofájlig."
+msgstr ""
+"Tedd meg a legrövidebb utat az üres profiltól az exportált "
+"nyomtatványfájlig."
 
 #: ../../download.md:139
 msgid "Connect an agent (MCP)"

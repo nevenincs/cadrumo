@@ -57,8 +57,8 @@ msgid ""
 "same commands against your own profile to see your own figures."
 msgstr ""
 "Az ezen az oldalon szereplő parancsok a dokumentáció összeállításakor "
-"élőben futnak egy friss, szintetikus sandboxban. A tranzakciók, az "
-"összegek és az adózó kitaláltak. Futtasd ugyanezeket a parancsokat a "
+"élőben futnak egy friss, szintetikus tesztkörnyezetben. A tranzakciók, az"
+" összegek és az adózó kitaláltak. Futtasd ugyanezeket a parancsokat a "
 "profilodon, hogy lásd a saját számaidat."
 
 #: ../../how-to/first-quarterly-filing.md:17

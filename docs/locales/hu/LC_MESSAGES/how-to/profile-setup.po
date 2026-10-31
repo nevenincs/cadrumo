@@ -1172,9 +1172,9 @@ msgid ""
 msgstr ""
 "Nyisd meg a **Profilok kezelése** felületet a profilmenüből vagy a "
 "bejelentkezési képernyőről. Létrehozhatsz profilt, vagy törölhetsz egyet,"
-" amely a jelenlegi operációsrendszer-fiókod alatt van tárolva. A "
-"törléshez nincs szükséged a profil jelszavára. A többi operációsrendszer-"
-"fiók profiljai nem szerepelnek a listán."
+" amely az operációs rendszerben használt jelenlegi fiókod alatt van "
+"tárolva. A törléshez nincs szükséged a profil jelszavára. Az operációs "
+"rendszer más fiókjaihoz tartozó profilok nem szerepelnek a listán."
 
 #: ../../how-to/profile-setup.md:476
 msgid ""

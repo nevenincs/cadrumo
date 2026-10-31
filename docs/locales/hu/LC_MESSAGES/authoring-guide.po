@@ -117,9 +117,9 @@ msgid ""
 "**sequence golden**: The committed, recorded output of a documented CLI "
 "sequence. Only `just docs-generate-sequences` writes goldens."
 msgstr ""
-"**szekvencia-golden (sequence golden)**: egy dokumentált CLI-szekvencia "
-"rögzített, a tárolóba bevezetett kimenete. Goldeneket csak a `just docs-"
-"generate-sequences` ír."
+"**Parancssorozat rögzített kimenete**: egy dokumentált CLI-parancssorozat"
+" kódtárban tárolt, rögzített kimenete. Ilyen kimeneteket csak a `just "
+"docs-generate-sequences` ír."
 
 #: ../../authoring-guide.md:21
 msgid "Preview and verify a change"
@@ -319,4 +319,3 @@ msgstr ""
 "lépésazonosítókat, a terv- és döntésrekord-azonosítókat, valamint az "
 "ügynök- vagy kampánycímkéket. Az olvasónak a terméket kell látnia, nem a "
 "folyamatot, amely felépítette."
-
