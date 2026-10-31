@@ -34,8 +34,6 @@ from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.work_unit import WorkUnit, WorkUnitState, derive_work_unit_id
 from cadrumo.domain.transactions.date_partition import (
     LedgerDatePartition,
-    OutOfWindowTransactionIndexEntry,
-    OutOfWindowTransactionSummary,
 )
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
@@ -44,6 +42,7 @@ from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransa
 from cadrumo.domain.usage_ratios.model import UsageRatioProfile
 
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
+from ...tests._ledger_partition_support import partition_by_filing_date
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -140,25 +139,7 @@ class _InMemoryTransactionRepository:
         )
 
     def partition_by_date_range(self, start: date, end: date) -> LedgerDatePartition:
-        in_window: list[Transaction] = []
-        out_of_window: list[OutOfWindowTransactionIndexEntry] = []
-        for transaction in self._catalogue:
-            filing_date = transaction.raw.value_date or transaction.raw.booked_date
-            if start <= filing_date <= end:
-                in_window.append(transaction)
-            else:
-                out_of_window.append(
-                    OutOfWindowTransactionIndexEntry(
-                        transaction_id=transaction.transaction_id,
-                        filing_date=filing_date,
-                    ),
-                )
-        return LedgerDatePartition(
-            in_window=TransactionCatalogue.from_transactions(in_window),
-            out_of_window=tuple(out_of_window),
-            out_of_window_summary=OutOfWindowTransactionSummary.from_index_entries(out_of_window),
-            index_complete=True,
-        )
+        return partition_by_filing_date(self._catalogue, start, end)
 
     def save(self, catalogue: TransactionCatalogue) -> None:
         self._catalogue = catalogue

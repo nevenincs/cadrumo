@@ -26,8 +26,6 @@ import pytest
 from ....core.irnr import M210PayerMode
 from ....domain.transactions.date_partition import (
     LedgerDatePartition,
-    OutOfWindowTransactionIndexEntry,
-    OutOfWindowTransactionSummary,
 )
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.errors import TransactionValidationError
@@ -35,6 +33,7 @@ from ....domain.transactions.m210_income_classification import resolve_m210_paye
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
+from ...tests._ledger_partition_support import partition_by_filing_date
 from ..m210_classification import resolve_m210_income_classification
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
@@ -123,25 +122,7 @@ class _InMemoryTransactionRepository(TransactionCatalogueRepositoryProtocol):
 
     @override
     def partition_by_date_range(self, start: date, end: date) -> LedgerDatePartition:
-        in_window: list[Transaction] = []
-        out_of_window: list[OutOfWindowTransactionIndexEntry] = []
-        for transaction in self._catalogue:
-            filing_date = transaction.raw.value_date or transaction.raw.booked_date
-            if start <= filing_date <= end:
-                in_window.append(transaction)
-            else:
-                out_of_window.append(
-                    OutOfWindowTransactionIndexEntry(
-                        transaction_id=transaction.transaction_id,
-                        filing_date=filing_date,
-                    )
-                )
-        return LedgerDatePartition(
-            in_window=TransactionCatalogue.from_transactions(in_window),
-            out_of_window=tuple(out_of_window),
-            out_of_window_summary=OutOfWindowTransactionSummary.from_index_entries(out_of_window),
-            index_complete=True,
-        )
+        return partition_by_filing_date(self._catalogue, start, end)
 
     @override
     def save(self, catalogue: TransactionCatalogue) -> None:

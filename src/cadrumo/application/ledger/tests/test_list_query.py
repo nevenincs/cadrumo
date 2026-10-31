@@ -25,8 +25,6 @@ from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.iva.schema import IvaCashAccountingPaymentEvidence, IvaCashAccountingTreatment, IvaCategory
 from ....domain.transactions.date_partition import (
     LedgerDatePartition,
-    OutOfWindowTransactionIndexEntry,
-    OutOfWindowTransactionSummary,
 )
 from ....domain.transactions.dates import transaction_eligible_date_span
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
@@ -35,6 +33,7 @@ from ....domain.transactions.protocols import TransactionCatalogueRepositoryProt
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....domain.usage_ratios.model import UsageRatioProfile
 from ...review.filter import LedgerReviewFilterSpec
+from ...tests._ledger_partition_support import partition_by_filing_date
 from ..action_ports import LedgerActionPorts
 from ..list_operation import ledger_list_row
 from ..list_query import LedgerTransactionListQuery, query_ledger_transaction_list, sort_ledger_results
@@ -152,25 +151,7 @@ class _InMemoryTransactionRepository(TransactionCatalogueRepositoryProtocol):
 
     @override
     def partition_by_date_range(self, start: date, end: date) -> LedgerDatePartition:
-        in_window: list[Transaction] = []
-        out_of_window: list[OutOfWindowTransactionIndexEntry] = []
-        for transaction in self._catalogue:
-            filing_date = transaction.raw.value_date or transaction.raw.booked_date
-            if start <= filing_date <= end:
-                in_window.append(transaction)
-            else:
-                out_of_window.append(
-                    OutOfWindowTransactionIndexEntry(
-                        transaction_id=transaction.transaction_id,
-                        filing_date=filing_date,
-                    ),
-                )
-        return LedgerDatePartition(
-            in_window=TransactionCatalogue.from_transactions(in_window),
-            out_of_window=tuple(out_of_window),
-            out_of_window_summary=OutOfWindowTransactionSummary.from_index_entries(out_of_window),
-            index_complete=True,
-        )
+        return partition_by_filing_date(self._catalogue, start, end)
 
     @override
     def save(self, catalogue: TransactionCatalogue) -> None:
