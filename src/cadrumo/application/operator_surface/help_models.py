@@ -22,7 +22,7 @@ class HelpSurface(StrEnum):
 HelpLabel = Annotated[str, StringConstraints(min_length=1, max_length=128)]
 """One line of the help surface: a command, its description, a section title."""
 
-HelpProse = Annotated[str, StringConstraints(min_length=1, max_length=128)]
+HelpProse = Annotated[str, StringConstraints(min_length=1, max_length=1024)]
 """A heading or footer, which gets more room than a single help line."""
 
 
