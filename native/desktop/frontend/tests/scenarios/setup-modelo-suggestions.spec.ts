@@ -112,18 +112,18 @@ test("an account's bank block and number are offered nothing and keep out of bro
     .first()
     .click();
   const form = target.locator(".ledger-account-form");
-  for (const key of [
-    "iban",
-    "swift_bic",
-    "bank_name",
-    "bank_address",
-    "bank_city",
-    "bank_country",
-  ]) {
+  for (const key of ["iban", "swift_bic", "bank_country"]) {
     const secret = field(form, `desktop.ledger.accounts.${key}`);
     await expect(secret).toHaveAttribute("type", "password");
     await expect(secret).toHaveAttribute("autocomplete", "new-password");
     await expect(secret).not.toHaveAttribute("role", "combobox");
+  }
+  // The bank's name and place read as plain text, still offered nothing.
+  for (const key of ["bank_name", "bank_address", "bank_city"]) {
+    const plain = field(form, `desktop.ledger.accounts.${key}`);
+    await expect(plain).toHaveAttribute("type", "text");
+    await expect(plain).toHaveAttribute("autocomplete", "off");
+    await expect(plain).not.toHaveAttribute("role", "combobox");
   }
   // The currency is a plain code field that offers the codes in use.
   const currency = field(form, "desktop.ledger.accounts.currency");
