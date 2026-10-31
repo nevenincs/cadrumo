@@ -1,6 +1,7 @@
-import { useId, useState } from "react";
+import { useState, type FocusEvent } from "react";
 import type { EditorProps } from "@/components/editors/editorProps";
 import { Input } from "@/components/ui/input";
+import { useSuggestions } from "@/components/ui/suggestions";
 
 export type EntryReading = {
   /** What a typed text holds, or null when it cannot be read: that text then
@@ -37,14 +38,19 @@ export function EntryInput({
   controlSize,
   mode = "normalise",
   suggestions,
+  onPick,
+  onSuggestionsWanted,
+  opensEmpty,
   reading,
   type,
+  ref,
+  onKeyDown,
+  onInput,
   ...native
 }: EditorProps & {
   reading: EntryReading;
   type?: "text" | "email" | "tel" | "url" | "password";
 }) {
-  const list = useId();
   const [entry, setEntry] = useState<{ text: string; sent: string } | null>(
     null,
   );
@@ -53,6 +59,34 @@ export function EntryInput({
   // A value that changes from outside while typing replaces what was typed.
   if (entry && entry.sent !== value) setEntry({ text: typedForm, sent: value });
   const text = entry?.text ?? (lexeme ? value : reading.shown(value));
+  const take = (typed: string) => {
+    const sent = lexeme ? typed : (reading.read(typed) ?? typed);
+    setEntry({ text: typed, sent });
+    onChange(sent);
+  };
+  const offered = useSuggestions({
+    value: text,
+    options: suggestions ?? null,
+    onPick: (picked, via) => {
+      take(picked.value);
+      onPick?.(picked, via);
+    },
+    onWanted: onSuggestionsWanted,
+    opensEmpty,
+  });
+  const own = {
+    ref,
+    onKeyDown,
+    onInput,
+    onFocus: (event: FocusEvent<HTMLInputElement>) => {
+      setEntry({ text: typedForm, sent: value });
+      onFocus?.(event);
+    },
+    onBlur: (event: FocusEvent<HTMLInputElement>) => {
+      setEntry(null);
+      onBlur?.(event);
+    },
+  };
   return (
     <>
       <Input
@@ -61,33 +95,14 @@ export function EntryInput({
         {...native}
         type={type}
         value={text}
-        onFocus={(event) => {
-          setEntry({ text: typedForm, sent: value });
-          onFocus?.(event);
-        }}
-        onBlur={(event) => {
-          setEntry(null);
-          onBlur?.(event);
-        }}
-        onChange={(event) => {
-          const typed = event.target.value;
-          const sent = lexeme ? typed : (reading.read(typed) ?? typed);
-          setEntry({ text: typed, sent });
-          onChange(sent);
-        }}
+        {...(suggestions === undefined ? own : offered.field(own))}
+        onChange={(event) => take(event.target.value)}
         controlSize={controlSize}
         aria-invalid={invalid || undefined}
         aria-required={required || undefined}
         aria-describedby={describedBy}
-        list={suggestions ? list : undefined}
       />
-      {suggestions && (
-        <datalist id={list}>
-          {suggestions.map((suggestion) => (
-            <option key={suggestion} value={suggestion} />
-          ))}
-        </datalist>
-      )}
+      {offered.list}
     </>
   );
 }

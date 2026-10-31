@@ -19,6 +19,10 @@ export function CodeEditor({
   shown,
   secret,
   className,
+  suggestions,
+  onPick,
+  onSuggestionsWanted,
+  opensEmpty,
   ...editor
 }: EditorProps & SecretProps & { shown?: (code: string) => string }) {
   const reading = useMemo(
@@ -33,6 +37,10 @@ export function CodeEditor({
     <EntryInput
       autoCapitalize="characters"
       {...editor}
+      // A secret is never offered, whichever kind of code it is.
+      {...(secret
+        ? {}
+        : { suggestions, onPick, onSuggestionsWanted, opensEmpty })}
       type={secret ? "password" : "text"}
       reading={reading}
       className={cn("font-mono", className)}

@@ -3,7 +3,10 @@ import { CountryEditor } from "@/components/editors/CountryEditor";
 import { CurrencyEditor } from "@/components/editors/CurrencyEditor";
 import { DateEditor } from "@/components/editors/DateEditor";
 import { DecimalEditor } from "@/components/editors/DecimalEditor";
-import type { EditorProps } from "@/components/editors/editorProps";
+import type {
+  EditorProps,
+  SuggestionProps,
+} from "@/components/editors/editorProps";
 import { IbanEditor } from "@/components/editors/IbanEditor";
 import { IntegerEditor } from "@/components/editors/IntegerEditor";
 import { MoneyEditor } from "@/components/editors/MoneyEditor";
@@ -36,8 +39,7 @@ export type TypedFieldProps = Pick<
   onBlur?(): void;
   /** Called when a kind that can be picked from has a value picked. */
   onPicked?(value: string): void;
-  suggestions?: readonly string[];
-};
+} & SuggestionProps;
 
 /** The one dispatch from a field's kind to its editor. */
 export function TypedField({
@@ -45,11 +47,21 @@ export function TypedField({
   onBlur,
   onPicked,
   suggestions,
+  onPick,
+  onSuggestionsWanted,
+  opensEmpty,
   mode,
   ...common
 }: TypedFieldProps) {
   const blur = onBlur && (() => onBlur());
-  const editor = { ...common, mode, suggestions, onBlur: blur };
+  const unoffered = { ...common, mode, onBlur: blur };
+  const editor = {
+    ...unoffered,
+    suggestions,
+    onPick,
+    onSuggestionsWanted,
+    opensEmpty,
+  };
   switch (field.kind) {
     case "text":
       return (
@@ -81,9 +93,9 @@ export function TypedField({
     case "taxId":
       return <TaxIdEditor {...editor} />;
     case "iban":
-      return <IbanEditor {...editor} secret={field.secret} />;
+      return <IbanEditor {...unoffered} secret={field.secret} />;
     case "bic":
-      return <BicEditor {...editor} secret={field.secret} />;
+      return <BicEditor {...unoffered} secret={field.secret} />;
     case "country":
       return <CountryEditor {...editor} secret={field.secret} />;
     case "currency":
