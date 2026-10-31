@@ -3,21 +3,23 @@
 A year the registry authors no edition for is served by the nearest edition
 through temporal projection. That only works when a parameter row the law
 leaves unchanged stays open: a row that closes at its edition's own year end
-drops the value from every projected year and fails the filing. A row may
-still close on a genuine legal end, but then a later row carries on or the
-parameter has no value to project, and the rows in force at the newest
-edition's last day are exactly the rows the projected years must see.
+without a successor drops the value from projected years and fails the filing.
+An authored scalar successor may replace the value, but must continue coverage
+without a gap. Table rows in force at the newest edition's last day retain
+their existing projection checks.
 """
 
 from __future__ import annotations
 
 from collections.abc import Iterable
-from datetime import date
+from datetime import date, timedelta
+from decimal import Decimal
 from functools import cache
 
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.formula_runtime_ops import resolve_dated_value
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_base import DateAxis
 from cadrumo.domain.calculations.registry.schema_formula import (
@@ -63,8 +65,19 @@ def _in_force(parameter: ParameterDefinition, on: date) -> tuple[_Row, ...]:
 
 
 def _years_losing_rows(parameter: ParameterDefinition, *, edition_end: date, years: Iterable[int]) -> tuple[int, ...]:
-    """Projected years whose year end sees fewer of the rows in force when the edition ends."""
+    """Find missing coverage, admitting authored scalar successors on the same axis."""
     last = set(_in_force(parameter, edition_end))
+    if parameter.values and last:
+        # A later dated value replaces the earlier scalar; the retired row's
+        # identity and amount must not be projected over an authored successor.
+        covered_until = edition_end
+        for row in sorted(_filing_period_rows(parameter), key=lambda row: row.valid_from):
+            if row.valid_from > covered_until + timedelta(days=1):
+                break
+            if row.valid_to is None:
+                return ()
+            covered_until = max(covered_until, row.valid_to)
+        return tuple(year for year in years if date(year, 12, 31) > covered_until)
     return tuple(year for year in years if not last <= set(_in_force(parameter, date(year, 12, 31))))
 
 
@@ -112,7 +125,7 @@ def test_no_edition_states_a_row_that_closed_before_it_begins() -> None:
     assert stale == {}, stale
 
 
-def test_a_row_closed_at_its_edition_end_is_detected() -> None:
+def test_a_closed_scalar_requires_continuation_on_the_same_axis() -> None:
     edition_year = _newest_edition().valid_from.year
     closed = ParameterDefinition.model_validate(
         {
@@ -140,3 +153,19 @@ def test_a_row_closed_at_its_edition_end_is_detected() -> None:
     later_edition_start = date(edition_year + 1, 1, 1)
     assert _rows_closed_before(closed, later_edition_start) == closed.values
     assert _rows_closed_before(opened, later_edition_start) == ()
+
+    successor = closed.values[0].model_copy(
+        update={"value": Decimal("200"), "valid_from": later_edition_start, "valid_to": None}
+    )
+    continued = closed.model_copy(update={"values": (*closed.values, successor)})
+    assert _years_losing_rows(continued, edition_end=edition_end, years=years) == ()
+    assert resolve_dated_value(continued, {"filing_period": edition_end}).value == Decimal("100")
+    assert resolve_dated_value(continued, {"filing_period": later_edition_start}).value == Decimal("200")
+
+    delayed = successor.model_copy(update={"valid_from": later_edition_start + timedelta(days=1)})
+    gap = continued.model_copy(update={"values": (*closed.values, delayed)})
+    assert _years_losing_rows(gap, edition_end=edition_end, years=years) == years
+
+    other_axis = successor.model_copy(update={"date_axis": DateAxis.TRANSACTION_DATE})
+    wrong_axis = continued.model_copy(update={"values": (*closed.values, other_axis)})
+    assert _years_losing_rows(wrong_axis, edition_end=edition_end, years=years) == years
