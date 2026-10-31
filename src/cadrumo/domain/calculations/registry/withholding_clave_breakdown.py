@@ -22,7 +22,8 @@ class WithholdingClaveBreakdown(BaseModel):
     Modelos 190 and 193) by their ``clave`` and carries that clave's
     distinct percepción count and percibido / retención magnitudes. The figures
     reuse the scalar withholding-fact arithmetic
-    (:func:`~cadrumo.domain.calculations.registry.withholding_bindings.resolve_withholding_binding_values`): ``percepcion_count`` is the
+    (:func:`~cadrumo.domain.calculations.registry.withholding_bindings.resolve_withholding_binding_values`):
+    ``percepcion_count`` is the
     distinct ``(perceptor, clave, subclave)`` count, ``percibido_total`` is
     ``percibido_dinerario + percibido_especie``, and ``retencion_total`` is
     ``retencion_practicada + ingreso_a_cuenta``. It is a projection of the same

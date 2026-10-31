@@ -1,12 +1,12 @@
 """The register's descriptor, event order, reads, atomic correction and one accrual route.
 
 Figures are hand-worked from a fixed 26% linear charge on a 2,000.00 basis in service
-from collections.abc import Iterator
 from 1 January 2025: 520.00 a full year, so 2,000 / 520 = 3.85 years of charge.
 """
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from enum import StrEnum
