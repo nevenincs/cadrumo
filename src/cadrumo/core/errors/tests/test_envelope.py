@@ -7,6 +7,7 @@ import inspect
 import json
 import re
 import textwrap
+from collections.abc import Mapping
 from urllib.parse import urlsplit
 
 import pytest
@@ -189,6 +190,31 @@ def test_error_envelope_rejects_retired_suggestion_field() -> None:
         ErrorEnvelope.model_validate(legacy_payload)
 
 
+_REDACTED_CONTEXT_KEYS = (
+    "AUTHORIZATION",
+    "certificateData",
+    "nie",
+    "NIF",
+    "taxId",
+    "NIFValue",
+    "NIEValue",
+    "profileNIFValue",
+    "profile_tax_id",
+)
+
+
+def _assert_absent_from_both(rendered_json: str, rendered_text: str, needles: tuple[str, ...]) -> None:
+    for needle in needles:
+        assert needle not in rendered_json, needle
+        assert needle not in rendered_text, needle
+
+
+def _assert_sensitive_context_redacted(context: Mapping[str, object]) -> None:
+    for key in _REDACTED_CONTEXT_KEYS:
+        assert context[key] == "<redacted>", key
+    assert context["diagnostic"] == "lock ownership remains visible"
+
+
 def test_secret_scrubbing_redacts_sensitive_fields_in_json_and_text() -> None:
     jwt = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.aaaaaaaaaaaa.bbbbbbbbbbbb"
     callback = "https://example.test/private/path?token=secret"
@@ -219,48 +245,27 @@ def test_secret_scrubbing_redacts_sensitive_fields_in_json_and_text() -> None:
 
     assert "<redacted>" in rendered_json
     assert "<redacted>" in rendered_text
-    assert "top-secret" not in rendered_json
-    assert "session-cookie" not in rendered_json
-    assert "hunter2" not in rendered_json
-    assert "top-secret" not in rendered_text
-    assert "session-cookie" not in rendered_text
-    assert "hunter2" not in rendered_text
-    assert "X1234567L" not in rendered_json
-    assert "X1234567L" not in rendered_text
-    for canary in (
-        "OPAQUE-AUTHORIZATION-CANARY",
-        "OPAQUE-CERTIFICATE-CANARY",
-        "OPAQUE-NIE-CANARY",
-        "OPAQUE-NIF-CANARY",
-        "OPAQUE-TAX-ID-CANARY",
-        "OPAQUE-NIF-VALUE-CANARY",
-        "OPAQUE-NIE-VALUE-CANARY",
-        "OPAQUE-PROFILE-NIF-CANARY",
-    ):
-        assert canary not in rendered_json
-        assert canary not in rendered_text
+    _assert_absent_from_both(
+        rendered_json,
+        rendered_text,
+        (
+            "top-secret",
+            "session-cookie",
+            "hunter2",
+            "X1234567L",
+            "OPAQUE-AUTHORIZATION-CANARY",
+            "OPAQUE-CERTIFICATE-CANARY",
+            "OPAQUE-NIE-CANARY",
+            "OPAQUE-NIF-CANARY",
+            "OPAQUE-TAX-ID-CANARY",
+            "OPAQUE-NIF-VALUE-CANARY",
+            "OPAQUE-NIE-VALUE-CANARY",
+            "OPAQUE-PROFILE-NIF-CANARY",
+        ),
+    )
     assert public_context is not None
-    assert public_context["AUTHORIZATION"] == "<redacted>"
-    assert public_context["certificateData"] == "<redacted>"
-    assert public_context["nie"] == "<redacted>"
-    assert public_context["NIF"] == "<redacted>"
-    assert public_context["taxId"] == "<redacted>"
-    assert public_context["NIFValue"] == "<redacted>"
-    assert public_context["NIEValue"] == "<redacted>"
-    assert public_context["profileNIFValue"] == "<redacted>"
-    assert public_context["profile_tax_id"] == "<redacted>"
-    assert public_context["diagnostic"] == "lock ownership remains visible"
-    envelope_context = payload["error"]["context"]
-    assert envelope_context["AUTHORIZATION"] == "<redacted>"
-    assert envelope_context["certificateData"] == "<redacted>"
-    assert envelope_context["nie"] == "<redacted>"
-    assert envelope_context["NIF"] == "<redacted>"
-    assert envelope_context["taxId"] == "<redacted>"
-    assert envelope_context["NIFValue"] == "<redacted>"
-    assert envelope_context["NIEValue"] == "<redacted>"
-    assert envelope_context["profileNIFValue"] == "<redacted>"
-    assert envelope_context["profile_tax_id"] == "<redacted>"
-    assert envelope_context["diagnostic"] == "lock ownership remains visible"
+    _assert_sensitive_context_redacted(public_context)
+    _assert_sensitive_context_redacted(payload["error"]["context"])
     assert callback not in rendered_json
     # Exact comparison, not a substring: the host must survive whole and alone,
     # so a look-alike such as ``https://example.test.attacker.invalid`` fails.

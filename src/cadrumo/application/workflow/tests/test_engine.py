@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import ast
 import inspect
+from dataclasses import dataclass, field
 from datetime import date
 
 import pytest
@@ -48,80 +49,101 @@ def _call_leaf_name(call: ast.Call) -> str | None:
     return None
 
 
+@dataclass
+class _ProducerScan:
+    violations: list[str] = field(default_factory=list)
+    failure_producers: list[tuple[str, str, str]] = field(default_factory=list)
+    conditional_actions: list[tuple[str, str, tuple[str, ...]]] = field(default_factory=list)
+
+
+def _keyword_values(node: ast.Call) -> dict[str, ast.expr]:
+    return {keyword.arg: keyword.value for keyword in node.keywords if keyword.arg is not None}
+
+
+def _string_constant(node: ast.expr | None) -> bool:
+    return isinstance(node, ast.Constant) and isinstance(node.value, str)
+
+
+def _scan_conditional_action(where: str, locale_key: str, verdict: ast.Call, scan: _ProducerScan) -> None:
+    verdict_keywords = _keyword_values(verdict)
+    action_id = verdict_keywords.get("action_id")
+    missing_names = verdict_keywords.get("missing_argument_names")
+    if not (
+        isinstance(action_id, ast.Constant)
+        and isinstance(action_id.value, str)
+        and isinstance(missing_names, ast.Tuple)
+        and all(_string_constant(item) for item in missing_names.elts)
+    ):
+        scan.violations.append(f"{where}: non-literal conditional action identity")
+        return
+    scan.conditional_actions.append(
+        (
+            locale_key,
+            action_id.value,
+            tuple(
+                item.value
+                for item in missing_names.elts
+                if isinstance(item, ast.Constant) and isinstance(item.value, str)
+            ),
+        )
+    )
+
+
+def _scan_failed_step(module_name: str, where: str, keywords: dict[str, ast.expr], scan: _ProducerScan) -> None:
+    verdict = keywords.get("precondition_verdict")
+    locale_value = keywords.get("summary_locale_key")
+    if not isinstance(verdict, ast.Call):
+        scan.violations.append(f"{where}: failed step without verdict")
+    if not isinstance(locale_value, ast.Constant) or not isinstance(locale_value.value, str):
+        scan.violations.append(f"{where}: non-literal locale identity")
+        return
+    if not isinstance(verdict, ast.Call):
+        return
+    verdict_leaf = _call_leaf_name(verdict)
+    if verdict_leaf is None:
+        scan.violations.append(f"{where}: indirect verdict producer")
+        return
+    scan.failure_producers.append((module_name.rsplit(".", maxsplit=1)[-1], locale_value.value, verdict_leaf))
+    if verdict_leaf == "_conditional_action_verdict":
+        _scan_conditional_action(where, locale_value.value, verdict, scan)
+
+
+def _scan_producer_call(module_name: str, node: ast.Call, scan: _ProducerScan) -> None:
+    where = f"{module_name}:{node.lineno}"
+    leaf_name = _call_leaf_name(node)
+    if leaf_name == "tr":
+        scan.violations.append(f"{where}: write-time translation marker")
+    if leaf_name not in {"WorkflowStep", "WorkflowResult", "SiteHealthAlert"}:
+        return
+    keywords = _keyword_values(node)
+    if "summary" in keywords:
+        scan.violations.append(f"{where}: persisted summary prose")
+    if isinstance(keywords.get("summary_locale_key"), ast.Call):
+        scan.violations.append(f"{where}: computed locale key")
+    success = keywords.get("success")
+    if leaf_name == "WorkflowStep" and isinstance(success, ast.Constant) and success.value is False:
+        _scan_failed_step(module_name, where, keywords, scan)
+    if leaf_name == "SiteHealthAlert":
+        status = keywords.get("status")
+        if not (
+            isinstance(status, ast.Call)
+            and isinstance(status.func, ast.Attribute)
+            and status.func.attr == "from_status"
+        ):
+            scan.violations.append(f"{where}: raw site-health status")
+
+
 def test_workflow_failure_producers_are_locale_keyed_and_verdict_complete() -> None:
     """Static producer guard closes refusal records against presentation drift."""
-    violations: list[str] = []
-    failure_producers: list[tuple[str, str, str]] = []
-    conditional_actions: list[tuple[str, str, tuple[str, ...]]] = []
+    scan = _ProducerScan()
     for module in _WORKFLOW_PRODUCER_MODULES:
         tree = ast.parse(inspect.getsource(module), filename=module.__name__)
         for node in ast.walk(tree):
-            if not isinstance(node, ast.Call):
-                continue
-            leaf_name = _call_leaf_name(node)
-            if leaf_name == "tr":
-                violations.append(f"{module.__name__}:{node.lineno}: write-time translation marker")
-            if leaf_name not in {"WorkflowStep", "WorkflowResult", "SiteHealthAlert"}:
-                continue
-            keywords = {keyword.arg: keyword.value for keyword in node.keywords if keyword.arg is not None}
-            if "summary" in keywords:
-                violations.append(f"{module.__name__}:{node.lineno}: persisted summary prose")
-            locale_value = keywords.get("summary_locale_key")
-            if isinstance(locale_value, ast.Call):
-                violations.append(f"{module.__name__}:{node.lineno}: computed locale key")
-            success = keywords.get("success")
-            if leaf_name == "WorkflowStep" and isinstance(success, ast.Constant) and success.value is False:
-                verdict = keywords.get("precondition_verdict")
-                if not isinstance(verdict, ast.Call):
-                    violations.append(f"{module.__name__}:{node.lineno}: failed step without verdict")
-                if not isinstance(locale_value, ast.Constant) or not isinstance(locale_value.value, str):
-                    violations.append(f"{module.__name__}:{node.lineno}: non-literal locale identity")
-                elif isinstance(verdict, ast.Call):
-                    verdict_leaf = _call_leaf_name(verdict)
-                    if verdict_leaf is None:
-                        violations.append(f"{module.__name__}:{node.lineno}: indirect verdict producer")
-                    else:
-                        failure_producers.append(
-                            (module.__name__.rsplit(".", maxsplit=1)[-1], locale_value.value, verdict_leaf)
-                        )
-                        if verdict_leaf == "_conditional_action_verdict":
-                            verdict_keywords = {
-                                keyword.arg: keyword.value for keyword in verdict.keywords if keyword.arg is not None
-                            }
-                            action_id = verdict_keywords.get("action_id")
-                            missing_names = verdict_keywords.get("missing_argument_names")
-                            if not (
-                                isinstance(action_id, ast.Constant)
-                                and isinstance(action_id.value, str)
-                                and isinstance(missing_names, ast.Tuple)
-                                and all(
-                                    isinstance(item, ast.Constant) and isinstance(item.value, str)
-                                    for item in missing_names.elts
-                                )
-                            ):
-                                violations.append(
-                                    f"{module.__name__}:{node.lineno}: non-literal conditional action identity"
-                                )
-                            else:
-                                conditional_actions.append(
-                                    (
-                                        locale_value.value,
-                                        action_id.value,
-                                        tuple(
-                                            item.value
-                                            for item in missing_names.elts
-                                            if isinstance(item, ast.Constant) and isinstance(item.value, str)
-                                        ),
-                                    )
-                                )
-            if leaf_name == "SiteHealthAlert":
-                status = keywords.get("status")
-                if not (
-                    isinstance(status, ast.Call)
-                    and isinstance(status.func, ast.Attribute)
-                    and status.func.attr == "from_status"
-                ):
-                    violations.append(f"{module.__name__}:{node.lineno}: raw site-health status")
+            if isinstance(node, ast.Call):
+                _scan_producer_call(module.__name__, node, scan)
+    violations = scan.violations
+    failure_producers = scan.failure_producers
+    conditional_actions = scan.conditional_actions
 
     assert violations == []
     assert sorted(failure_producers) == sorted(
