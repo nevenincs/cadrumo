@@ -61,6 +61,39 @@ _REVIEWED_FORMS = [
     "repítelo",
     "sepáralo",
     "termínala",
+    "Enuméralas",
+    "rastréala",
+    "Revócalo",
+    "acótalo",
+    "Trátala",
+    "trátalo",
+    "establécelo",
+    "examínala",
+    "vincúlala",
+    "vincúlalos",
+    "vincúlalo",
+    "expórtalo",
+    "concílialo",
+    "resuélvelo",
+    "Adminístralos",
+    "respóndelo",
+    "anótalo",
+    "proporciónalo",
+    "sáltalo",
+    "apórtalo",
+    "inicialízalo",
+    "recompílalo",
+    "actívalo",
+    "rastrearlo",
+    "configurarlo",
+    "juntarlo",
+    "ofrecerlo",
+    "descartarlos",
+    "reejecutarlo",
+    "sobrescribirlo",
+    "indícale",
+    "quítale",
+    "replicándolos",
 ]
 _REVIEWED_STEMS = [
     "alinéa",
@@ -98,6 +131,34 @@ _REVIEWED_STEMS = [
     "repíte",
     "sepára",
     "termína",
+    "enuméra",
+    "rastréa",
+    "revóca",
+    "acóta",
+    "tráta",
+    "establéce",
+    "examína",
+    "vincúla",
+    "expórta",
+    "concília",
+    "resuélve",
+    "adminístra",
+    "respónde",
+    "anóta",
+    "proporcióna",
+    "sálta",
+    "apórta",
+    "inicialíza",
+    "recompíla",
+    "actíva",
+    "rastrear",
+    "configurar",
+    "juntar",
+    "ofrecer",
+    "descartar",
+    "reejecutar",
+    "sobrescribir",
+    "replicándo",
 ]
 
 
@@ -135,13 +196,25 @@ def test_observed_forms_keep_language_case_and_adjacent_typo_checks(word: str) -
 @pytest.mark.parametrize("suffix", ["lo", "la", "los", "las"])
 def test_only_finite_direct_object_pronouns_attach_to_reviewed_stems(stem: str, suffix: str) -> None:
     assert _spanish_reviewed_imperative(stem + suffix)
-    for bad_suffix in ("loo", "lass", "le", "les", "mente", "lós"):
+    for bad_suffix in ("loo", "lass", "mente", "lós"):
         assert not _spanish_reviewed_imperative(stem + bad_suffix)
+    if stem != "quíta":
+        assert not _spanish_reviewed_imperative(stem + "le")
+        assert not _spanish_reviewed_imperative(stem + "les")
     assert not _spanish_reviewed_imperative("x" + stem + suffix)
     assert not _spanish_reviewed_imperative(stem.upper() + suffix)
     unaccented = "".join(c for c in unicodedata.normalize("NFD", stem) if unicodedata.category(c) != "Mn")
     if unaccented != stem:
         assert not _spanish_reviewed_imperative(unaccented + suffix)
+
+
+@pytest.mark.parametrize("stem", ["indíca", "quíta"])
+@pytest.mark.parametrize("suffix", ["le", "les"])
+def test_reviewed_indirect_object_forms_keep_stem_and_suffix_boundaries(stem: str, suffix: str) -> None:
+    assert _spanish_reviewed_imperative(stem + suffix)
+    assert not _spanish_reviewed_imperative(stem + suffix + "x")
+    assert not _spanish_reviewed_imperative(stem.replace("í", "i") + suffix)
+    assert not _spanish_reviewed_imperative("x" + stem + suffix)
 
 
 @pytest.mark.parametrize(
