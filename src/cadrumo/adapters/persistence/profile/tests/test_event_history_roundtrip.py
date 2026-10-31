@@ -179,9 +179,10 @@ def test_bucket_event_payload_tampering_surfaces_at_load(tmp_path: Path) -> None
         }
 
 
-def test_bucket_event_inner_classification_drift_is_structured(tmp_path: Path) -> None:
-    """Inner envelope classification drift is rejected after secure-object decrypts."""
-
+def _load_after_envelope_drift(
+    tmp_path: Path, envelope_update: dict[str, object]
+) -> pytest.ExceptionInfo[BucketEventHistoryPersistenceError]:
+    """Rewrite the stored inner envelope with ``envelope_update`` and return the load refusal."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         catalogue = BucketEventHistoryCatalogue()
         repo = BucketEventHistoryRepository()
@@ -200,56 +201,37 @@ def test_bucket_event_inner_classification_drift_is_structured(tmp_path: Path) -
             classification=record.classification,
             schema_version=record.schema_version,
             written_at=record.written_at,
-            payload=envelope.model_copy(update={"classification": SensitivityClass.AUDIT})
-            .model_dump_json()
-            .encode("utf-8"),
+            payload=envelope.model_copy(update=envelope_update).model_dump_json().encode("utf-8"),
         )
 
         with pytest.raises(BucketEventHistoryPersistenceError) as exc_info:
             repo.load()
+        return exc_info
 
-        assert exc_info.value.translated_message == "errors.integrity.integrity_storage_classification"
-        assert exc_info.value.context == {
-            "namespace": _NAMESPACE,
-            "object_key": _OBJECT_KEY,
-            "classification": SensitivityClass.AUDIT.value,
-            "expected": SensitivityClass.FINANCIAL.value,
-        }
+
+def test_bucket_event_inner_classification_drift_is_structured(tmp_path: Path) -> None:
+    """Inner envelope classification drift is rejected after secure-object decrypts."""
+
+    exc_info = _load_after_envelope_drift(tmp_path, {"classification": SensitivityClass.AUDIT})
+
+    assert exc_info.value.translated_message == "errors.integrity.integrity_storage_classification"
+    assert exc_info.value.context == {
+        "namespace": _NAMESPACE,
+        "object_key": _OBJECT_KEY,
+        "classification": SensitivityClass.AUDIT.value,
+        "expected": SensitivityClass.FINANCIAL.value,
+    }
 
 
 def test_bucket_event_inner_schema_version_drift_is_structured(tmp_path: Path) -> None:
     """Inner envelope schema-version drift is rejected after secure-object decrypts."""
 
-    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        catalogue = BucketEventHistoryCatalogue()
-        repo = BucketEventHistoryRepository()
-        repo.save(catalogue)
-        record = profile.repository.load(
-            _NAMESPACE,
-            _OBJECT_KEY,
-            expected_class=SensitivityClass.FINANCIAL,
-            max_supported_version=_CATALOGUE_VERSION,
-        )
-        assert record is not None
-        envelope = Envelope[BucketEventHistoryCatalogue].model_validate_json(record.payload)
-        profile.repository.save(
-            namespace=record.namespace,
-            object_key=_OBJECT_KEY,
-            classification=record.classification,
-            schema_version=record.schema_version,
-            written_at=record.written_at,
-            payload=envelope.model_copy(update={"schema_version": _CATALOGUE_VERSION + 1})
-            .model_dump_json()
-            .encode("utf-8"),
-        )
+    exc_info = _load_after_envelope_drift(tmp_path, {"schema_version": _CATALOGUE_VERSION + 1})
 
-        with pytest.raises(BucketEventHistoryPersistenceError) as exc_info:
-            repo.load()
-
-        assert exc_info.value.translated_message == "errors.integrity.integrity_storage_envelope_version"
-        assert exc_info.value.context == {
-            "namespace": _NAMESPACE,
-            "object_key": _OBJECT_KEY,
-            "schema_version": _CATALOGUE_VERSION + 1,
-            "expected": _CATALOGUE_VERSION,
-        }
+    assert exc_info.value.translated_message == "errors.integrity.integrity_storage_envelope_version"
+    assert exc_info.value.context == {
+        "namespace": _NAMESPACE,
+        "object_key": _OBJECT_KEY,
+        "schema_version": _CATALOGUE_VERSION + 1,
+        "expected": _CATALOGUE_VERSION,
+    }
