@@ -8,7 +8,7 @@ import json
 import os
 import shutil
 from contextlib import suppress
-from pathlib import Path, PureWindowsPath
+from pathlib import Path, PurePath, PureWindowsPath
 from typing import cast
 from uuid import uuid4
 
@@ -234,14 +234,14 @@ def maintenance_plan(
     build: Path,
     identity: Path,
     scope: InstallationScope,
-    prefix: Path,
+    prefix: PurePath,
     desktop: str | None = None,
     adapter: Path | None = None,
     runner: Path | None = None,
 ) -> Path:
     """Bind an explicit installation intent to the verified pair of native artifacts."""
-    if scope not in {"user", "machine"} or not prefix.is_absolute():
-        raise ValueError("Native MSI maintenance requires an explicit scope and absolute prefix")
+    if scope not in {"user", "machine"}:
+        raise ValueError("Native MSI maintenance requires an explicit scope")
     paths = build_paths(build)
     inventory_path = member(paths["installation_metadata"], "installation.json")
     verify_inventory(paths["installation_stage"], inventory_path)

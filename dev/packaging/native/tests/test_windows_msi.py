@@ -264,11 +264,10 @@ def test_msi_maintenance_plan_refuses_selected_destination_before_writing(
         raise AssertionError("Artifact verification may author files and must follow destination admission")
 
     monkeypatch.setattr(windows_msi_build, "verify_products", not_entered)
-    prefix = tmp_path / ("a" * 245)
+    prefix = PureWindowsPath("C:/" + "a" * 245)
     with pytest.raises(ValueError, match="259 UTF-16"):
         maintenance_plan(build, identity, "user", prefix, "cadrumo")
     assert not (build / "installation/metadata/maintenance-user.json").exists()
-    assert not prefix.exists()
     assert before == {path.name: path.read_bytes() for path in owned.iterdir() if path.is_file()}
 
 
