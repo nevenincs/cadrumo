@@ -53,14 +53,14 @@ def _run_registered_python_executables(monkeypatch: pytest.MonkeyPatch) -> Itera
     real_create_subprocess_exec = asyncio.create_subprocess_exec
 
     def command_with_python(argv: list[str] | tuple[str, ...]) -> list[str] | tuple[str, ...]:
-        if sys.platform == "win32" and argv and Path(argv[0]) in _SYNTHETIC_EXECUTABLES:
+        if argv and Path(argv[0]) in _SYNTHETIC_EXECUTABLES:
             return [sys.executable, *argv]
         return argv
 
     def adapted_run_command(argv, **kwargs):
         environment = kwargs.get("environment")
         adjusted = dict(kwargs)
-        if sys.platform == "win32" and argv and Path(argv[0]) in _SYNTHETIC_EXECUTABLES and environment is not None:
+        if argv and Path(argv[0]) in _SYNTHETIC_EXECUTABLES and environment is not None:
             environment = dict(environment)
             if "SYSTEMROOT" in os.environ:
                 environment.setdefault("SystemRoot", os.environ["SYSTEMROOT"])
@@ -68,8 +68,9 @@ def _run_registered_python_executables(monkeypatch: pytest.MonkeyPatch) -> Itera
         return real_run_command(command_with_python(argv), **adjusted)
 
     async def adapted_create_subprocess_exec(program, *args, **kwargs):
+        synthetic = Path(str(program)) in _SYNTHETIC_EXECUTABLES
         argv = command_with_python((str(program), *args))
-        if sys.platform == "win32" and argv[0] == sys.executable and kwargs.get("env") is not None:
+        if sys.platform == "win32" and synthetic and kwargs.get("env") is not None:
             environment = dict(kwargs["env"])
             if "SYSTEMROOT" in os.environ:
                 environment.setdefault("SystemRoot", os.environ["SYSTEMROOT"])
