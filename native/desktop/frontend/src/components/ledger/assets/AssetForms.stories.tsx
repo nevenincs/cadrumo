@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { userEvent, waitFor } from "storybook/test";
+import { expect, userEvent, waitFor } from "storybook/test";
 import { STORY_READER, useLedgerPort } from "@/dev/LedgerStage";
 import { SEED_ELEMENTS } from "@/dev/assetsSeed";
 import { ledgerClassOf } from "@/dev/ledgerClassesFixture";
@@ -261,6 +261,61 @@ export const AddElementOpeningKnown: Story = adding({
     (root) => typed(root, "in_service_date", "2026-06-15"),
     (root) => chosenValue(root, "opening_status", "known"),
   ),
+});
+/** The control a field is drawn on: a calendar for a day, a percent box for a
+ * share, numeric entry for an amount and a year, plain text for a name. */
+const drawnOn = async (root: Root, key: string) => {
+  const field = await drawn<HTMLElement>(root, `[data-field="${key}"]`);
+  const input = field.querySelector<HTMLInputElement>("input")!;
+  return {
+    date: field.querySelector('[data-slot="date-editor"]') !== null,
+    percent: field.querySelector('[data-slot="percent-editor"]') !== null,
+    inputMode: input.inputMode,
+  };
+};
+
+export const AddElementEditors: Story = adding({
+  name: "Add element, opening known: each field on its own editor, with no writing hint",
+  play: async (context) => {
+    const root = context.canvasElement;
+    await steps(
+      (found) => chosen(found, "asset_kind", 0),
+      (found) => chosenValue(found, "basis_stage", "taxpayer_owned"),
+      (found) => chosenValue(found, "opening_status", "known"),
+    )(context);
+    await expect(await drawnOn(root, "in_service_date")).toMatchObject({
+      date: true,
+      percent: false,
+    });
+    await expect(await drawnOn(root, "business_use_share")).toMatchObject({
+      date: false,
+      percent: true,
+      inputMode: "decimal",
+    });
+    await expect(await drawnOn(root, "basis_amount")).toMatchObject({
+      date: false,
+      percent: false,
+      inputMode: "decimal",
+    });
+    await expect(await drawnOn(root, "opening_through")).toMatchObject({
+      date: false,
+      percent: false,
+      inputMode: "numeric",
+    });
+    await expect(await drawnOn(root, "name")).toMatchObject({
+      date: false,
+      percent: false,
+      inputMode: "",
+    });
+    const writing = [
+      "Year-month-day",
+      "Write 70 for 70%",
+      "Dot decimal",
+      "Four digits",
+    ];
+    for (const hint of writing)
+      await expect(root.textContent).not.toContain(hint);
+  },
 });
 export const AddElementUsedOriginalPrice: Story = adding({
   name: "Add element, bought used on the linear method: the originating price beside the building date",

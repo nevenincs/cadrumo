@@ -3,20 +3,12 @@ import {
   useEffect,
   useRef,
   useState,
-  useId,
   type ReactNode,
   type RefObject,
 } from "react";
-import { DateEditor } from "@/components/editors/DateEditor";
-import { TextEditor } from "@/components/editors/TextEditor";
+import { TypedField } from "@/components/editors/TypedField";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import {
-  Field,
-  FieldDescription,
-  FieldError,
-  FieldLabel,
-} from "@/components/ui/field";
 import { Icon } from "@/components/ui/icon";
 import { facts, labelled, listed } from "../../../shell/compose";
 import type {
@@ -48,10 +40,10 @@ import {
   FormGrid,
   Panel,
   Reading,
-  TextField,
   useSetupDraft,
   useSetupWrite,
 } from "../setup/SetupParts";
+import { EditorField } from "../setup/EditorField";
 import { setupCall, type SetupCall } from "../setup/setupModel";
 import { grammarText } from "../setup/setupWords";
 import {
@@ -60,6 +52,7 @@ import {
   formKeyOf,
   FURTHER_PURCHASE,
   initialOf,
+  specOf,
   type FormDraft,
   type FormField,
   type FormValues,
@@ -262,43 +255,6 @@ const corridorText = (t: Translate, locale: string, group: TableGroup) => {
   ]);
 };
 
-/** A labelled field around an editor, with the hint under it and the error
- * that marks it invalid. */
-function EditorField({
-  label,
-  hint,
-  error,
-  children,
-}: {
-  label: string;
-  hint?: string;
-  error?: string | null;
-  children(control: {
-    id: string;
-    invalid: boolean;
-    describedBy: string | undefined;
-  }): ReactNode;
-}) {
-  const id = useId();
-  const hintId = `${id}-hint`;
-  const errorId = `${id}-error`;
-  return (
-    <Field data-invalid={error ? true : undefined}>
-      <FieldLabel htmlFor={id}>{label}</FieldLabel>
-      {children({
-        id,
-        invalid: Boolean(error),
-        describedBy:
-          [hint ? hintId : null, error ? errorId : null]
-            .filter(Boolean)
-            .join(" ") || undefined,
-      })}
-      {hint && <FieldDescription id={hintId}>{hint}</FieldDescription>}
-      <FieldError id={errorId}>{error}</FieldError>
-    </Field>
-  );
-}
-
 /** A choice's word: the generated word of its family, the catalogue key it
  * names, the text served with it, else the generic word. */
 function choiceWord(
@@ -390,57 +346,10 @@ export function FieldsGrid({
               : null;
         const label = t(field.label_key);
         const choose = (value: string) => onField(field, value);
+        const spec = specOf(field);
         return (
           <div key={field.key} data-field={field.key} className="contents">
-            {field.control === "text" ? (
-              <EditorField label={label} hint={hint} error={error}>
-                {(control) => (
-                  <TextEditor
-                    {...control}
-                    name={field.key}
-                    required={field.required}
-                    value={raw}
-                    onChange={choose}
-                    maxLength={200}
-                  />
-                )}
-              </EditorField>
-            ) : field.control === "date" ? (
-              <EditorField label={label} hint={hint} error={error}>
-                {(control) => (
-                  <DateEditor
-                    {...control}
-                    name={field.key}
-                    required={field.required}
-                    value={raw}
-                    onChange={choose}
-                  />
-                )}
-              </EditorField>
-            ) : field.control === "amount" ||
-            field.control === "share" ||
-            field.control === "quantity" ||
-            field.control === "whole" ? (
-              <TextField
-                label={label}
-                name={field.key}
-                value={raw}
-                onValue={choose}
-                required={field.required}
-                hint={hint}
-                error={error}
-                inputMode={
-                  field.control === "amount" ||
-                  field.control === "share" ||
-                  field.control === "quantity"
-                    ? "decimal"
-                    : field.control === "whole"
-                      ? "numeric"
-                      : "text"
-                }
-                maxLength={32}
-              />
-            ) : (
+            {spec === null ? (
               <ChoiceField
                 label={label}
                 value={raw}
@@ -476,6 +385,19 @@ export function FieldsGrid({
                         }))
                 }
               />
+            ) : (
+              <EditorField label={label} hint={hint} error={error}>
+                {(control) => (
+                  <TypedField
+                    {...control}
+                    field={spec}
+                    name={field.key}
+                    required={field.required}
+                    value={raw}
+                    onChange={choose}
+                  />
+                )}
+              </EditorField>
             )}
           </div>
         );

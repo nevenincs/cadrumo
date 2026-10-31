@@ -6,13 +6,14 @@
 // register already states. The form decides nothing about them, and the
 // backend judges what is sent.
 
+import type { FieldSpec } from "../../../shared/fieldKind";
+import { heldDecimal } from "../../../shared/numbers";
 import {
-  copyDecimal,
-  copyPercent,
+  canonicalDecimal,
   parseDecimal,
+  parseFractionPercent,
   parseIsoDate,
   parseLine,
-  parsePercent,
   QUANTITY_RULE,
   TAX_AMOUNT_RULE,
   type GrammarRefusal,
@@ -44,6 +45,7 @@ export type FieldKind = FormKind | "baja_change";
  * `quantity` is a plain number such as hours or square metres. */
 export type FormControl =
   | "text"
+  | "taxid"
   | "date"
   | "amount"
   | "share"
@@ -93,6 +95,8 @@ const field = (
 ): FormField => ({ key, label_key: label, control, required, choices });
 const text = (key: string, label: string, required = false) =>
   field("text", key, label, required);
+const taxid = (key: string, label: string, required = false) =>
+  field("taxid", key, label, required);
 const date = (key: string, label: string, required = false) =>
   field("date", key, label, required);
 const amount = (key: string, label: string, required = false) =>
@@ -220,9 +224,61 @@ const SHAPE_WORD: Record<string, string> = {
 
 // ---- Typed text into values ---------------------------------------------------
 
+/** The kind of editor a control is drawn on; none for a choice, which the
+ * form draws as a list. */
+export function specOf(found: FormField): FieldSpec | null {
+  switch (found.control) {
+    case "text":
+      return { kind: "text", maxLength: 200 };
+    case "taxid":
+      return { kind: "taxId" };
+    case "date":
+      return { kind: "date" };
+    case "amount":
+      return { kind: "money" };
+    case "share":
+      return { kind: "percent", unit: "fraction" };
+    case "quantity":
+      return { kind: "decimal" };
+    case "whole":
+      return { kind: "integer" };
+    case "year":
+      return { kind: "year" };
+    case "choice":
+    case "flag":
+    case "candidate":
+      return null;
+  }
+}
+
+const NUMBER_CONTROLS: ReadonlySet<FormControl> = new Set([
+  "amount",
+  "quantity",
+  "share",
+]);
+
+/** A draft with each stated number held as an editor holds it: the canonical
+ * decimal text, a share as the fraction the backend states. */
+const seeded = (fields: readonly FormField[], draft: FormDraft): FormDraft =>
+  Object.fromEntries(
+    Object.entries(draft).map(([key, text]) => {
+      const control = fields.find((found) => found.key === key)?.control;
+      const number = control !== undefined && NUMBER_CONTROLS.has(control);
+      return [
+        key,
+        number && text !== ""
+          ? heldDecimal(canonicalDecimal(text) ?? text)
+          : text,
+      ];
+    }),
+  );
+
 /** Each field starting from what the record states now. */
 export const draftOf = (fields: readonly FormField[]): FormDraft =>
-  Object.fromEntries(fields.map((found) => [found.key, found.current ?? ""]));
+  seeded(
+    fields,
+    Object.fromEntries(fields.map((found) => [found.key, found.current ?? ""])),
+  );
 
 const empty: Parsed<FormValue> = { kind: "empty" };
 const value = (found: FormValue): Parsed<FormValue> => ({
@@ -235,6 +291,7 @@ const value = (found: FormValue): Parsed<FormValue> => ({
 export function parseField(found: FormField, raw: string): Parsed<FormValue> {
   switch (found.control) {
     case "text":
+    case "taxid":
       return parseLine(raw, 200);
     case "date":
       return parseIsoDate(raw);
@@ -251,7 +308,7 @@ export function parseField(found: FormField, raw: string): Parsed<FormValue> {
         : parsed;
     }
     case "share": {
-      const parsed = parsePercent(raw);
+      const parsed = parseFractionPercent(raw);
       return parsed.kind === "value"
         ? value({ decimal: parsed.value })
         : parsed;
@@ -412,8 +469,6 @@ export function formKeyOf(path: string): string {
   return found ? found[0] : path;
 }
 
-/** The facts stated as a share: the person writes a percentage. */
-const SHARES = new Set(["business_use_share", "ownership_share"]);
 const FLAGS = new Set(["vehicle_in_books"]);
 
 /** What the options say of whether a class is charged only on a vehicle
@@ -479,13 +534,7 @@ export function revisionDraft(
   for (const [key, path] of Object.entries(REVISION_PATHS)) {
     const said = stated(revision, path);
     if (said === null) continue;
-    draft[key] = SHARES.has(key)
-      ? copyPercent(said)
-      : FLAGS.has(key)
-        ? said === "true"
-          ? "yes"
-          : "no"
-        : said;
+    draft[key] = FLAGS.has(key) ? (said === "true" ? "yes" : "no") : said;
   }
   for (const leaf of electionLeaves(revision.amortization)) {
     const path = ["amortization", ...leaf];
@@ -495,16 +544,7 @@ export function revisionDraft(
     const said = stated(revision, path);
     if (said === null) continue;
     const kind = kindOf(revision, options, path);
-    draft[key] =
-      kind === "share"
-        ? copyPercent(said)
-        : kind === "flag"
-          ? said === "true"
-            ? "yes"
-            : "no"
-          : kind === "decimal"
-            ? copyDecimal(said)
-            : said;
+    draft[key] = kind === "flag" ? (said === "true" ? "yes" : "no") : said;
   }
   return draft;
 }
@@ -1069,7 +1109,7 @@ export function fieldsFor(
           current: descriptor?.supplier_name ?? null,
         },
         {
-          ...text(
+          ...taxid(
             "supplier_tax_id",
             "desktop.ledger.assets.field.supplier_tax_id",
           ),
@@ -1094,8 +1134,11 @@ export function initialOf(
 ): FormDraft {
   const base = draftOf(fields);
   if (context.kind === "correction" && context.revision !== null)
-    return { ...base, ...revisionDraft(context.revision, context.options) };
+    return seeded(fields, {
+      ...base,
+      ...revisionDraft(context.revision, context.options),
+    });
   if (context.kind === "baja_change" && context.revision !== null)
-    return { ...base, ...disposalDraft(context.revision) };
+    return seeded(fields, { ...base, ...disposalDraft(context.revision) });
   return base;
 }
