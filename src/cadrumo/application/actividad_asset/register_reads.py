@@ -266,12 +266,16 @@ def element_plan(revision: ActivityAssetRevision, context: RegisterReadContext) 
                 service_days=None if row.charge is None else row.charge.service_days,
                 calendar_days=None if row.charge is None else row.charge.calendar_days,
                 claims=_plan_claims(revision, row.tax_year, context),
-                minimum_through=_amount(min(basis, round_to_cents(minimum))),
+                minimum_through=_amount(min(basis, round_to_cents(minimum))) if minimum_complete else None,
+                minimum_reason_key=None if minimum_complete else _MINIMUM_UNRESOLVED_KEY,
                 minimum_complete=minimum_complete,
             ),
         )
     return tuple(rows)
 
+
+_MINIMUM_UNRESOLVED_KEY = "ledger.actividad_asset.disposal_finding.minimum_unresolved"
+"""Words a minimum that cannot be summed because a year up to it has no minimum authority."""
 
 _NOT_TABLE_BOUND = {
     AmortizationMethod.GOODWILL: ActivityAssetNotTableBoundReason.TWENTIETH_LIMIT,
@@ -359,6 +363,8 @@ def matches_current_schedule(
     """Compare a claim's fingerprint with what the current revision and authority would stamp."""
     if claim.disposal_revision_id is not None and claim.amount == Decimal("0"):
         return None
+    if claim not in effective_claims(context.history.claims):
+        return None
     recorded_under = next(item for item in context.history.revisions if item.revision_id == claim.asset_revision_id)
     if not recorded_under.same_charge_facts(current):
         return ActivityAssetClaimStaleReason.REVISION_CHANGED
@@ -415,7 +421,9 @@ def _list_row(revision: ActivityAssetRevision, context: RegisterReadContext) -> 
         basis=_amount(basis),
         accumulated=_optional_amount(accumulated),
         pending=_optional_amount(pending),
+        pending_applies=revision.disposal is None,
         findings=_finding_counts(plan, claims, revision, context),
+        default_claim_year=default_claim_year(plan, today=context.today),
         years=tuple(year for year in readable if year <= context.last_admitted_year),
         projected_years=tuple(year for year in readable if year > context.last_admitted_year),
         disposal=_list_disposal(revision),
@@ -447,14 +455,43 @@ def _finding_counts(
     revision: ActivityAssetRevision,
     context: RegisterReadContext,
 ) -> ActivityAssetFindingCounts:
+    """Count each year once, under the first thing that stops it: no table, an unresolved fact, then a claim missing."""
     return ActivityAssetFindingCounts(
         missing=sum(
-            row.claim_state in {ActivityAssetClaimState.MISSING, ActivityAssetClaimState.PARTIAL} for row in plan
+            row.absence in _CLAIMABLE_ABSENCES
+            and row.claim_state in {ActivityAssetClaimState.MISSING, ActivityAssetClaimState.PARTIAL}
+            for row in plan
         ),
         incomplete=sum(row.absence is PlanFigureAbsence.INCOMPLETE for row in plan),
-        conflict=sum(row.absence in {PlanFigureAbsence.CONFLICT, PlanFigureAbsence.UNSUPPORTED} for row in plan),
+        conflict=sum(row.absence is PlanFigureAbsence.CONFLICT for row in plan),
+        unsupported=sum(row.absence is PlanFigureAbsence.UNSUPPORTED for row in plan),
+        without_tables=sum(row.absence is PlanFigureAbsence.EDITION_UNAVAILABLE for row in plan),
         stale=sum(matches_current_schedule(claim, revision, context) is not None for claim in claims),
     )
+
+
+_CLAIMABLE_ABSENCES = frozenset({None, PlanFigureAbsence.FREE_ELECTION})
+"""The absences of a year whose claim can still be missing: the rest say why no figure can be worked out."""
+
+
+def default_claim_year(plan: tuple[ActivityAssetPlanRow, ...], *, today: date) -> int | None:
+    """Pick the year a claim form opens on, from the backend's clock.
+
+    The latest year up to the current one that has a claimable remainder; when none has,
+    the earliest later year that has; null when no year has a remainder.
+    """
+    open_years = [row.tax_year for row in plan if row.claimable_intervals]
+    elapsed = [year for year in open_years if year <= today.year]
+    if elapsed:
+        return max(elapsed)
+    return min(open_years, default=None)
+
+
+def default_register_year(years: Iterable[int], *, today: date) -> int | None:
+    """Pick the year the register opens on: the latest readable year up to the current one, else the earliest."""
+    ordered = sorted(set(years))
+    elapsed = [year for year in ordered if year <= today.year]
+    return max(elapsed) if elapsed else min(ordered, default=None)
 
 
 def _register_state(
@@ -486,6 +523,8 @@ def _left_service(revision: ActivityAssetRevision, today: date) -> bool:
 
 __all__ = [
     "RegisterReadContext",
+    "default_claim_year",
+    "default_register_year",
     "election_limits",
     "element_list",
     "element_plan",

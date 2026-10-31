@@ -181,15 +181,16 @@ def test_the_minimum_to_date_is_shown_apart_and_never_lowers_the_value_pending()
     assert _year(operations, 2025).amount == Decimal("1000.00")
 
 
-def test_a_year_without_minimum_authority_says_the_figure_leaves_it_out() -> None:
+def test_a_year_without_minimum_authority_serves_no_figure_and_says_why() -> None:
     def from_2022(revision: ActivityAssetRevision, tax_year: int) -> ActivityAssetDisposalBounds:
         return _one_eighteenth(revision, tax_year) if tax_year >= 2022 else ActivityAssetDisposalBounds()
 
     rows = {row.tax_year: row for row in _operations(revision=_revision(), bounds=from_2022).plan(_ASSET)}
 
-    assert rows[2024].minimum_through is not None
-    assert rows[2024].minimum_through.decimal == "1666.67"
     assert rows[2024].minimum_complete is False
+    assert rows[2024].minimum_through is None
+    assert rows[2024].minimum_reason_key == "ledger.actividad_asset.disposal_finding.minimum_unresolved"
+    assert rows[2030].minimum_through is None
 
 
 def test_the_minimum_to_date_stops_at_the_basis() -> None:

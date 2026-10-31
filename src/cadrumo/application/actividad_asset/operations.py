@@ -96,6 +96,7 @@ from .ports import (
 )
 from .register_reads import (
     RegisterReadContext,
+    default_register_year,
     election_limits,
     element_list,
     element_plan,
@@ -854,6 +855,10 @@ class ActivityAssetOperations:
     def list_elements(self) -> tuple[ActivityAssetListRow, ...]:
         """Summarise every element of the register."""
         return element_list(self._read_context(self._service.reopen()))
+
+    def default_register_year(self, years: Iterable[int]) -> int | None:
+        """Name the year the register opens on, by this register's clock."""
+        return default_register_year(years, today=self._authority.today())
 
     def plan(self, asset_id: str) -> tuple[ActivityAssetPlanRow, ...]:
         """Work out one element's plan, year by year."""

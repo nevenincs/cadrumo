@@ -188,6 +188,7 @@ class ActivityAssetListProjection(_ActivityAssetOperationProjection):
 
     rows: tuple[ActivityAssetListRow, ...] | None = None
     years: tuple[int, ...] = ()
+    default_year: int | None = None
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
