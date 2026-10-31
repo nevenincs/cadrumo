@@ -164,6 +164,8 @@ pub struct Diagnostics {
     writer: OnceLock<dispatch::LogWriter>,
     recorded: RecordedObserver,
     notifications: OnceLock<mpsc::SyncSender<()>>,
+    exit_requested: std::sync::atomic::AtomicBool,
+    stopped: std::sync::atomic::AtomicBool,
 }
 impl Diagnostics {
     /// Schedules a coalesced `notify` outside event recording and its locks,
@@ -440,7 +442,27 @@ impl Diagnostics {
             },
         );
     }
+    /// Records that the host was asked to exit, once, whichever quit path asked first.
+    /// Returns whether this call recorded it.
+    pub fn host_exit_requested(&self) -> bool {
+        if self
+            .exit_requested
+            .swap(true, std::sync::atomic::Ordering::SeqCst)
+        {
+            return false;
+        }
+        self.host_event(EventKind::HostExitRequested, HostStage::Shutdown);
+        true
+    }
+    /// Records the host's final outcome, once: the first path to reach it (a platform
+    /// exit hook or the return path) owns the recorded code.
     pub fn host_stopped(&self, code: i32) {
+        if self
+            .stopped
+            .swap(true, std::sync::atomic::Ordering::SeqCst)
+        {
+            return;
+        }
         self.record(
             EventKind::HostStopped,
             None,
