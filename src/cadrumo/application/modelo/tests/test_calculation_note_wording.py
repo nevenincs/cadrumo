@@ -107,6 +107,20 @@ def test_a_name_with_a_stored_look_still_reads_only_as_itself() -> None:
     assert "An asset with no name" in note_fact_text(fact, locale="en")
 
 
+@pytest.mark.parametrize("stored", ["element", "elements"])
+def test_a_stored_value_named_like_the_elements_placeholder_does_not_replace_the_elements(stored: str) -> None:
+    fact = CalculationNoteFact(
+        sentence=CalculationNoteSentence.ACCRUAL_UNAVAILABLE,
+        values=((stored, _ASSET),),
+        element_refs=(_ASSET,),
+    )
+
+    text = note_fact_text(fact, element_names=((_ASSET, "Office laptop"),), locale="en")
+
+    assert "Office laptop" in text
+    assert _ASSET not in text
+
+
 def test_the_sentence_writes_dates_and_amounts_as_the_language_does() -> None:
     fact = CalculationNoteFact.of(
         CalculationNoteSentence.DISPOSAL_FIGURE_IN_BOX,

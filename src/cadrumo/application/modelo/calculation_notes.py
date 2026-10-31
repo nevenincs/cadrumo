@@ -206,6 +206,7 @@ _FACT_KEY_ROOT: Final[str] = "application.modelo.calc_diagnostic_fact"
 _ELEMENT_NAME_LOCALE_KEY: Final[str] = "application.modelo.calc_diagnostic_words.named_element"
 _UNNAMED_ELEMENT_LOCALE_KEY: Final[str] = "application.modelo.calc_diagnostic_words.unnamed_element"
 _UNNUMBERED_BOX_LOCALE_KEY: Final[str] = "application.modelo.finding_fact.box_unnumbered"
+_ELEMENT_PLACEHOLDERS: Final[frozenset[str]] = frozenset({"element", "elements"})
 _DATE_VALUES: Final[frozenset[str]] = frozenset({"date", "start", "end", "row_date", "period_end"})
 _AMOUNT_VALUES: Final[frozenset[str]] = frozenset(
     {"amount", "cost", "paid", "price", "base", "remainder", "effect", "transmission_value", "net_value", "row_amount"}
@@ -265,7 +266,12 @@ def note_fact_text(
         locale=language.value,
         element=elements,
         elements=elements,
-        **{name: _fact_value_text(name, value, language) for name, value in fact.values},
+        # Older stored facts carry these two names as values; the sentence's own elements take their place.
+        **{
+            name: _fact_value_text(name, value, language)
+            for name, value in fact.values
+            if name not in _ELEMENT_PLACEHOLDERS
+        },
     )
 
 
