@@ -22,6 +22,7 @@ import pytest
 from .....application.modelo.m145_communication_records import (
     M145CommunicationCreateCommand,
     M145CommunicationValidationIssueKind,
+    M145CommunicationValidationResult,
     create_m145_communication_record,
     export_m145_communication_record,
     validate_m145_communication_record,
@@ -61,6 +62,27 @@ def _family_situation_casilla() -> CasillaDefinition:
         if casilla.semantic_role == "modelo_145_perceptor_situacion_familiar":
             return casilla
     raise AssertionError("Modelo 145 registry declares no family-situation casilla")
+
+
+def _create_and_validate(
+    tmp_path: Path,
+    field_values: dict[str, str],
+    operation: PinnedAuthorityOperation,
+) -> M145CommunicationValidationResult:
+    """Create a communication record from ``field_values`` and validate it in a fresh profile."""
+    with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
+        record = create_m145_communication_record(
+            M145CommunicationCreateCommand(communication_year=2026, field_values=field_values),
+            bucket_id=runtime.bucket_id,
+            ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
+            operation=operation,
+        )
+        return validate_m145_communication_record(
+            record.communication_record_id,
+            bucket_id=runtime.bucket_id,
+            ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
+            operation=operation,
+        )
 
 
 def test_validate_m145_communication_record_accepts_registry_backed_required_fields(
@@ -204,19 +226,7 @@ def test_validate_m145_communication_record_accepts_registry_declared_family_sit
     values = valid_field_values()
     values[casilla.id] = value
 
-    with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
-        record = create_m145_communication_record(
-            M145CommunicationCreateCommand(communication_year=2026, field_values=values),
-            bucket_id=runtime.bucket_id,
-            ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
-            operation=operation,
-        )
-        result = validate_m145_communication_record(
-            record.communication_record_id,
-            bucket_id=runtime.bucket_id,
-            ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
-            operation=operation,
-        )
+    result = _create_and_validate(tmp_path, values, operation)
 
     assert result.valid is True
     assert result.issues == ()
@@ -230,19 +240,7 @@ def test_validate_m145_communication_record_rejects_unknown_family_situation(
     values = valid_field_values()
     values[casilla.id] = "familia_unknown"
 
-    with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
-        record = create_m145_communication_record(
-            M145CommunicationCreateCommand(communication_year=2026, field_values=values),
-            bucket_id=runtime.bucket_id,
-            ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
-            operation=operation,
-        )
-        result = validate_m145_communication_record(
-            record.communication_record_id,
-            bucket_id=runtime.bucket_id,
-            ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
-            operation=operation,
-        )
+    result = _create_and_validate(tmp_path, values, operation)
 
     issue = next(
         issue
@@ -262,19 +260,7 @@ def test_validate_m145_communication_record_reports_missing_required_casilla_wit
     values = valid_field_values()
     values.pop(missing.id)
 
-    with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
-        record = create_m145_communication_record(
-            M145CommunicationCreateCommand(communication_year=2026, field_values=values),
-            bucket_id=runtime.bucket_id,
-            ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
-            operation=operation,
-        )
-        result = validate_m145_communication_record(
-            record.communication_record_id,
-            bucket_id=runtime.bucket_id,
-            ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
-            operation=operation,
-        )
+    result = _create_and_validate(tmp_path, values, operation)
 
     issue = next(
         issue for issue in result.issues if issue.kind is M145CommunicationValidationIssueKind.MISSING_REQUIRED
@@ -309,19 +295,7 @@ def test_validate_m145_communication_record_reports_registry_data_type_failures(
     values = valid_field_values()
     values[casilla.id] = invalid_value
 
-    with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
-        record = create_m145_communication_record(
-            M145CommunicationCreateCommand(communication_year=2026, field_values=values),
-            bucket_id=runtime.bucket_id,
-            ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
-            operation=operation,
-        )
-        result = validate_m145_communication_record(
-            record.communication_record_id,
-            bucket_id=runtime.bucket_id,
-            ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
-            operation=operation,
-        )
+    result = _create_and_validate(tmp_path, values, operation)
 
     issue = next(
         issue
