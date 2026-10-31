@@ -1237,7 +1237,7 @@ function WhatStep({
             />
             {countryValid ? (
               <FieldDescription id={`${ids}-country-hint`}>
-                {t("desktop.ledger.import.country_hint")}
+                {t("desktop.ledger.import.country_purpose")}
               </FieldDescription>
             ) : (
               <FieldError id={`${ids}-country-hint`}>
