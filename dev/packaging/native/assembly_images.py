@@ -104,6 +104,15 @@ def native_assembly_layout(contract: dict[str, Any], provenance: Mapping[str, An
     if not required:
         return contract
     toolchain = provenance.get("build_toolchain", {})
+    selected = _verified_native_tools(required, toolchain)
+    projected: dict[str, Any] = dict(contract, native_tools=selected)
+    if contract["backend"] == "macos":
+        projected.update(_macos_signing_inputs(toolchain))
+    return projected
+
+
+def _verified_native_tools(required: tuple[str, ...], toolchain: Mapping[str, Any]) -> dict[str, str]:
+    """Require each assembly tool to match the path and digest recorded by CMake."""
     tools = toolchain.get("native_tools", {})
     hashes = toolchain.get("native_tool_sha256", {})
     selected: dict[str, str] = {}
@@ -114,17 +123,18 @@ def native_assembly_layout(contract: dict[str, Any], provenance: Mapping[str, An
         if digest(Path(value)) != hashes.get(name):
             raise ValueError(f"Native assembly tool differs from CMake provenance: {name}")
         selected[name] = value
-    projected: dict[str, Any] = dict(contract, native_tools=selected)
-    if contract["backend"] == "macos":
-        identity = toolchain.get("native_signing_identity")
-        if not isinstance(identity, str) or not identity:
-            raise ValueError("Native macOS assembly requires an explicit signing identity")
-        projected["native_signing_identity"] = identity
-        info_plist = toolchain.get("desktop_info_plist")
-        if not isinstance(info_plist, str) or not Path(info_plist).is_absolute():
-            raise ValueError("Native macOS assembly requires the generated desktop identity property list")
-        projected["desktop_info_plist"] = info_plist
-    return projected
+    return selected
+
+
+def _macos_signing_inputs(toolchain: Mapping[str, Any]) -> dict[str, str]:
+    """Carry only the declared signing identity and generated desktop identity."""
+    identity = toolchain.get("native_signing_identity")
+    if not isinstance(identity, str) or not identity:
+        raise ValueError("Native macOS assembly requires an explicit signing identity")
+    info_plist = toolchain.get("desktop_info_plist")
+    if not isinstance(info_plist, str) or not Path(info_plist).is_absolute():
+        raise ValueError("Native macOS assembly requires the generated desktop identity property list")
+    return {"native_signing_identity": identity, "desktop_info_plist": info_plist}
 
 
 def _validate_license_members(source: Path) -> None:

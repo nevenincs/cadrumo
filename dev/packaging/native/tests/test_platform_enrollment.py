@@ -7,6 +7,7 @@ import struct
 import sys
 import zipfile
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -14,7 +15,7 @@ from dev._paths import REPO_ROOT
 
 from ...runtime_wheelhouse_contract import SUPPORTED_TARGETS
 from ..layout import application_images, backend, distribution_target, load_layout
-from ..platforms import macos
+from ..platforms import macos, macos_macho
 from ..stdlib import bundle
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -89,7 +90,7 @@ def test_macos_system_admission_requires_the_measured_install_name(
     if admitted:
         macos.relocate([image], tmp_path, layout)
         assert len(tool_calls) == 2
-        assert macos.inspect(image).dependencies == (dependency,)
+        assert macos_macho.inspect_macho(image).dependencies == (dependency,)
     else:
         with pytest.raises(ValueError, match="Unresolved Mach-O dependency"):
             macos.relocate([image], tmp_path, layout)
@@ -124,7 +125,7 @@ def _desktop_image(path: Path, plist: bytes | None) -> None:
     path.write_bytes(header + commands + (plist or b""))
 
 
-def _desktop_layout(tmp_path: Path, expected: bytes, is_desktop: bool) -> dict:
+def _desktop_layout(tmp_path: Path, expected: bytes, is_desktop: bool) -> dict[str, Any]:
     layout = load_layout("macos-arm64")
     layout["native_tools"] = {"codesign": "fixture-codesign"}
     layout["native_signing_identity"] = "-"

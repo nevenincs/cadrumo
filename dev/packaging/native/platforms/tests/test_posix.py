@@ -15,7 +15,7 @@ import pytest
 
 from dev.packaging.native import layout as native_layout
 from dev.packaging.native.hashing import digest
-from dev.packaging.native.platforms import linux, macos, posix, posix_assembly, posix_sdk_download
+from dev.packaging.native.platforms import linux, macos, macos_macho, posix, posix_assembly, posix_sdk_download
 from dev.packaging.native.platforms.posix import acquire_sdk, dependencies_by_name, relative_loader_path
 from dev.packaging.native.tests.binary_fixtures import elf_image
 
@@ -92,13 +92,13 @@ def _macho(path: Path, *, cpu: int = 0x0100000C, subtype: int = 0, minimum: int 
 
 def test_macho_requires_arm64_and_explicit_deployment_floor(tmp_path: Path) -> None:
     image = _macho(tmp_path / "image")
-    assert macos.inspect(image).minimum == (14, 0, 0)
+    assert macos_macho.inspect_macho(image).minimum == (14, 0, 0)
     _macho(image, cpu=0x01000007)
     with pytest.raises(ValueError, match="ARM64"):
-        macos.inspect(image)
+        macos_macho.inspect_macho(image)
     image.write_bytes(struct.pack("<8I", 0xFEEDFACF, 0x0100000C, 0, 6, 0, 0, 0, 0))
     with pytest.raises(ValueError, match="deployment floor"):
-        macos.inspect(image)
+        macos_macho.inspect_macho(image)
 
 
 @pytest.mark.parametrize("subtype", [1, 2, 0x80000002, 0x81000002, 0xFFFFFFFF])
@@ -124,7 +124,7 @@ def test_universal_arm64e_refuses_before_thinning(tmp_path: Path, wide: bool, su
     image = tmp_path / "universal-arm64e.so"
     image.write_bytes(data)
     with pytest.raises(ValueError, match="ARM64 CPU subtype"):
-        macos._select_arm64(image)
+        macos_macho.select_arm64(image)
     assert image.read_bytes() == data
 
 
@@ -142,9 +142,9 @@ def test_universal_macho_selects_only_the_declared_arm64_slice(tmp_path: Path, e
     data[128:184], data[256:312] = x86, arm64
     universal = tmp_path / "universal.so"
     universal.write_bytes(data)
-    macos._select_arm64(universal)
+    macos_macho.select_arm64(universal)
     assert universal.read_bytes() == arm64
-    assert macos.inspect(universal).minimum == (14, 0, 0)
+    assert macos_macho.inspect_macho(universal).minimum == (14, 0, 0)
 
 
 @pytest.mark.parametrize(
@@ -160,7 +160,7 @@ def test_universal_macho_invalid_target_or_bounds_refuse_without_mutation(
     image = tmp_path / "invalid-universal.so"
     image.write_bytes(data)
     with pytest.raises(ValueError, match=r"universal|Universal"):
-        macos._select_arm64(image)
+        macos_macho.select_arm64(image)
     assert image.read_bytes() == data
 
 
@@ -169,7 +169,7 @@ def test_macho_truncation_is_refused(tmp_path: Path, length: int) -> None:
     image = _macho(tmp_path / "truncated")
     image.write_bytes(image.read_bytes()[:length])
     with pytest.raises(ValueError):
-        macos.inspect(image)
+        macos_macho.inspect_macho(image)
 
 
 def test_macho_newer_deployment_refused_before_native_tools(tmp_path: Path) -> None:
