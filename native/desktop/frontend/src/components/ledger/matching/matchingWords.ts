@@ -4,9 +4,10 @@
 
 import type { CatalogueInvoice } from "../../../shell/ledger";
 import type { Translate } from "../../../shell/strings";
-import { figureText, paymentLabel } from "../invoices/invoiceWords";
+import { formatDay } from "../../../shared/dateFormats";
+import { formatAmount } from "../../../shared/numbers";
+import { paymentLabel } from "../invoices/invoiceWords";
 import { seriesAndNumber } from "../invoices/invoiceModel";
-import { dayText } from "../transfer/transferWords";
 import type { LinkInconsistency, MatchChip } from "./matchingModel";
 
 export function chipText(t: Translate, chip: MatchChip): string {
@@ -58,7 +59,7 @@ export function invoiceLine(
   return t("desktop.ledger.matching.invoice_line", {
     number: seriesAndNumber(invoice),
     counterparty: invoice.counterparty_name,
-    date: dayText(locale, invoice.issued_at),
+    date: formatDay(locale, invoice.issued_at),
     payment: paymentLabel(t, invoice.payment_status),
   });
 }
@@ -72,11 +73,11 @@ export function settlesText(
 ): string {
   return invoice.retention_amount
     ? t("desktop.ledger.matching.settles_withheld", {
-        amount: figureText(locale, settles),
-        total: figureText(locale, invoice.grand_total.decimal),
-        withheld: figureText(locale, invoice.retention_amount.decimal),
+        amount: formatAmount(locale, settles),
+        total: formatAmount(locale, invoice.grand_total.decimal),
+        withheld: formatAmount(locale, invoice.retention_amount.decimal),
       })
     : t("desktop.ledger.matching.settles", {
-        amount: figureText(locale, settles),
+        amount: formatAmount(locale, settles),
       });
 }

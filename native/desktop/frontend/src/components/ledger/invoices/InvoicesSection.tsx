@@ -21,9 +21,10 @@ import type { CatalogueInvoice, LedgerPort } from "../../../shell/ledger";
 import type { LedgerPeriod } from "../../../shell/ledgerGrammar";
 import { useFocusTarget } from "../../../shell/navigation/hooks";
 import { useStrings, type Translate } from "../../../shell/strings";
+import { formatDay } from "../../../shared/dateFormats";
+import { formatAmount } from "../../../shared/numbers";
 import { RowRevealNotice, useRowReveal, type LinkedRow } from "../RowReveal";
 import { INVOICE_TSV_COLUMNS, invoicesTsv } from "../transfer/tsv";
-import { dayText } from "../transfer/transferWords";
 import { InvoiceEditor, type EditorTarget } from "./InvoiceEditor";
 import {
   INVOICE_CLASSES,
@@ -35,12 +36,7 @@ import {
   type CatalogueSort,
   type CatalogueSortKey,
 } from "./invoiceModel";
-import {
-  classLabel,
-  figureText,
-  kindLabel,
-  paymentLabel,
-} from "./invoiceWords";
+import { classLabel, kindLabel, paymentLabel } from "./invoiceWords";
 import { invoiceHiding, withoutHiding } from "./invoiceReveal";
 import { useInvoiceCatalogue } from "./useInvoiceCatalogue";
 
@@ -62,7 +58,7 @@ const quiet = (text: string) => (
 );
 const amount = (locale: string, value: { decimal: string } | null) =>
   value === null ? null : (
-    <span className="tabular-nums">{figureText(locale, value.decimal)}</span>
+    <span className="tabular-nums">{formatAmount(locale, value.decimal)}</span>
   );
 
 function catalogueColumns(t: Translate, locale: string): Column[] {
@@ -89,7 +85,7 @@ function catalogueColumns(t: Translate, locale: string): Column[] {
       width: 7,
       cell: (invoice) => (
         <span className="tabular-nums">
-          {dayText(locale, invoice.issued_at)}
+          {formatDay(locale, invoice.issued_at)}
         </span>
       ),
     },
@@ -100,7 +96,7 @@ function catalogueColumns(t: Translate, locale: string): Column[] {
         invoice.operation_date &&
         invoice.operation_date !== invoice.issued_at ? (
           <span className="tabular-nums">
-            {dayText(locale, invoice.operation_date)}
+            {formatDay(locale, invoice.operation_date)}
           </span>
         ) : null,
     },
@@ -169,7 +165,7 @@ function catalogueColumns(t: Translate, locale: string): Column[] {
       align: "end",
       cell: (invoice) => (
         <span className="font-medium tabular-nums">
-          {figureText(locale, invoice.grand_total.decimal)}
+          {formatAmount(locale, invoice.grand_total.decimal)}
         </span>
       ),
     },

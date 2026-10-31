@@ -11,13 +11,14 @@ import {
   isSpendingCategory,
 } from "../../../shell/ledgerVocabulary";
 import { useStrings, type Translate } from "../../../shell/strings";
+import { formatAmount, formatDecimal } from "../../../shared/numbers";
 import {
   RATE_SLOTS,
   type LineDraft,
   type LineFigures,
   type Problem,
 } from "./invoiceModel";
-import { figureText, problemText, rateLabel } from "./invoiceWords";
+import { problemText, rateLabel } from "./invoiceWords";
 
 const LINE_FIELDS = ["description", "quantity", "unitPrice", "rate"] as const;
 type LineField = (typeof LINE_FIELDS)[number];
@@ -302,7 +303,7 @@ function Figure({ locale, value }: { locale: string; value: string | null }) {
       —
     </span>
   ) : (
-    <span>{figureText(locale, value)}</span>
+    <span>{formatAmount(locale, value)}</span>
   );
 }
 
@@ -356,17 +357,17 @@ export function StoredLines({
                 {line.description}
               </td>
               <td className={`${CELL} text-end tabular-nums`}>
-                {line.quantity.decimal}
+                {formatDecimal(locale, line.quantity.decimal)}
               </td>
               <td className={`${CELL} text-end tabular-nums`}>
-                {line.unit_price.decimal}
+                {formatDecimal(locale, line.unit_price.decimal)}
               </td>
               <td className={`${CELL} text-end tabular-nums`}>
-                {figureText(locale, line.subtotal.decimal)}
+                {formatAmount(locale, line.subtotal.decimal)}
               </td>
               <td className={CELL}>{rateLabel(t, locale, line.iva_rate)}</td>
               <td className={`${CELL} text-end tabular-nums`}>
-                {figureText(locale, line.iva_amount.decimal)}
+                {formatAmount(locale, line.iva_amount.decimal)}
               </td>
               {received && (
                 <td className={CELL}>

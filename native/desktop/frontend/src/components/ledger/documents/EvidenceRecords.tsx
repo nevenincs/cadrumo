@@ -18,9 +18,10 @@ import {
 } from "../../../shell/ledger";
 import { readAnswer } from "../../../shell/ledgerWindow";
 import { useStrings } from "../../../shell/strings";
-import { figureText } from "../invoices/invoiceWords";
+import { localDay } from "../../../shared/dates";
+import { formatDay } from "../../../shared/dateFormats";
+import { formatAmount } from "../../../shared/numbers";
 import { write } from "../invoices/invoiceWrites";
-import { dayText } from "../transfer/transferWords";
 import {
   landingSettle,
   useWritePause,
@@ -191,7 +192,7 @@ function RecordDetail({
           <span className="text-sm text-muted-foreground">
             {t("desktop.ledger.documents.added_on", {
               kind: t(`desktop.ledger.documents.media.${record.media_kind}`),
-              date: dayText(locale, record.created_at.slice(0, 10)),
+              date: formatDay(locale, localDay(new Date(record.created_at))),
             })}
           </span>
         </div>
@@ -223,7 +224,7 @@ function RecordDetail({
         {attachedTo
           ? t("desktop.ledger.documents.attached_to", {
               description: attachedTo.transaction.description,
-              amount: figureText(locale, attachedTo.transaction.amount),
+              amount: formatAmount(locale, attachedTo.transaction.amount),
             })
           : t("desktop.ledger.documents.not_attached")}
       </p>

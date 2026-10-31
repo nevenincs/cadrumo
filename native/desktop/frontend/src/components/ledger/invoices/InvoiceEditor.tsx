@@ -29,11 +29,13 @@ import type {
   LedgerPort,
   PaymentStatus,
 } from "../../../shell/ledger";
+import { parsePercent } from "../../../shell/ledgerGrammar";
 import { IVA_CATEGORIES, isIvaCategory } from "../../../shell/ledgerVocabulary";
 import { useNavigationGuard } from "../../../shell/navigation/hooks";
 import { useStrings, type Translate } from "../../../shell/strings";
 import { localDay } from "../../../shared/dates";
-import { amountText, dayText } from "../transfer/transferWords";
+import { formatDay } from "../../../shared/dateFormats";
+import { formatAmount, formatPercent } from "../../../shared/numbers";
 import { useWritePause, WriteHold } from "../WritePause";
 import {
   EditorSection,
@@ -64,7 +66,6 @@ import {
 } from "./invoiceModel";
 import {
   classLabel,
-  figureText,
   kindChoice,
   kindLabel,
   paymentLabel,
@@ -1193,13 +1194,13 @@ function TotalsList({
           <dt className="text-muted-foreground">
             {t("desktop.ledger.invoices.base")}
           </dt>
-          <dd className="tabular-nums">{figureText(locale, base)}</dd>
+          <dd className="tabular-nums">{formatAmount(locale, base)}</dd>
         </div>
         <div className={row}>
           <dt className="text-muted-foreground">
             {t("desktop.ledger.invoices.iva")}
           </dt>
-          <dd className="tabular-nums">{figureText(locale, iva)}</dd>
+          <dd className="tabular-nums">{formatAmount(locale, iva)}</dd>
         </div>
       </dl>
       {recargo}
@@ -1207,7 +1208,7 @@ function TotalsList({
         <div className={cn(row, "border-t border-border pt-2 font-medium")}>
           <dt>{t("desktop.ledger.invoices.total")}</dt>
           <dd className="ledger-invoice-total tabular-nums">
-            {figureText(locale, total)} {currency}
+            {formatAmount(locale, total)} {currency}
           </dd>
         </div>
       </dl>
@@ -1300,11 +1301,11 @@ function Retention({
       <p className="ledger-invoice-to-pay text-sm tabular-nums">
         {withheld !== null && left !== null
           ? t("desktop.ledger.invoices.to_pay_withheld", {
-              amount: figureText(locale, left),
-              retention: figureText(locale, withheld),
+              amount: formatAmount(locale, left),
+              retention: formatAmount(locale, withheld),
             })
           : t("desktop.ledger.invoices.to_pay", {
-              amount: figureText(locale, total),
+              amount: formatAmount(locale, total),
             })}
       </p>
     </div>
@@ -1511,7 +1512,7 @@ function StoredInvoice({
           />
           <FixedField
             label={t("desktop.ledger.invoices.field.issued_at")}
-            value={dayText(locale, invoice.issued_at)}
+            value={formatDay(locale, invoice.issued_at)}
             reason={fixed}
           />
           {invoice.operation_date === null ? (
@@ -1589,7 +1590,7 @@ function StoredInvoice({
                       {t("desktop.ledger.invoices.field.recargo")}
                     </span>
                     <span className="tabular-nums">
-                      {figureText(locale, invoice.recargo_amount.decimal)}
+                      {formatAmount(locale, invoice.recargo_amount.decimal)}
                     </span>
                   </div>
                 ) : null
@@ -1716,9 +1717,11 @@ function Confirmation({
           {facts(t, [
             kindLabel(t, draftRequest.kind),
             draftRequest.invoice_number,
-            dayText(locale, draftRequest.issued_at),
+            formatDay(locale, draftRequest.issued_at),
             draftRequest.counterparty_name,
-            amountText(locale, totals.total, draftRequest.currency),
+            formatAmount(locale, totals.total, {
+              currency: draftRequest.currency,
+            }),
           ])}
         </AlertTitle>
         <AlertDescription>
@@ -1743,9 +1746,15 @@ function Confirmation({
       case "operation_type":
         return draft.operationType;
       case "operation_date":
-        return draft.operationDate ? dayText(locale, draft.operationDate) : "";
-      case "retention_rate":
-        return draft.retentionRate ? `${draft.retentionRate}%` : "";
+        return draft.operationDate
+          ? formatDay(locale, draft.operationDate)
+          : "";
+      case "retention_rate": {
+        const rate = parsePercent(draft.retentionRate);
+        return rate.kind === "value"
+          ? formatPercent(locale, rate.value, { unit: "fraction" })
+          : draft.retentionRate;
+      }
       case "retention_amount":
         return shownRetentionAmount(draft, stored.base_total.decimal);
       case "series":

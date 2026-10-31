@@ -1,11 +1,4 @@
-import {
-  useEffect,
-  useId,
-  useMemo,
-  useRef,
-  useState,
-  type ReactNode,
-} from "react";
+import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/components/ui/cn";
@@ -54,6 +47,8 @@ import {
 import type { ShowImportBatch } from "../../../shell/ledgerImports";
 import { useStrings, type Translate } from "../../../shell/strings";
 import { localDay } from "../../../shared/dates";
+import { formatDay } from "../../../shared/dateFormats";
+import { formatAmount, formatCount } from "../../../shared/numbers";
 import { listOf } from "../../../shared/lists";
 import { SetupOffer } from "../../setup/SetupOffer";
 import { PeriodSelector } from "../PeriodSelector";
@@ -85,8 +80,6 @@ import {
   type OwnAccount,
 } from "./importModel";
 import {
-  amountText,
-  dayText,
   diagnosticText,
   importRefusal,
   providerName,
@@ -208,11 +201,13 @@ function DuplicateCompare({
       )}
       <span className="tabular-nums">
         {facts(t, [
-          amountText(locale, movement.amount, movement.currency),
+          formatAmount(locale, movement.amount, {
+            currency: movement.currency,
+          }),
           t(
             `desktop.ledger.import.direction.${movement.direction.toLowerCase()}`,
           ),
-          dayText(locale, movement.date),
+          formatDay(locale, movement.date),
         ])}
       </span>
     </div>
@@ -376,8 +371,7 @@ export function ImportDialog({
   onCloseAutoFocus?: (event: Event) => void;
 }) {
   const t = useStrings();
-  const numbers = useMemo(() => new Intl.NumberFormat(locale), [locale]);
-  const count = (value: number) => numbers.format(value);
+  const count = (value: number) => formatCount(locale, value);
   const heading = useRef<HTMLHeadingElement>(null);
   const issued = useRef(new Set<string>());
   const [step, setStep] = useState<Step>("what");
@@ -1684,8 +1678,10 @@ function ResultStep({
                   <Icon name="alert" size="xs" className="text-warning" />
                   <span className="tabular-nums">
                     {facts(t, [
-                      dayText(locale, movement.date),
-                      amountText(locale, movement.amount, movement.currency),
+                      formatDay(locale, movement.date),
+                      formatAmount(locale, movement.amount, {
+                        currency: movement.currency,
+                      }),
                     ])}
                   </span>
                   <span className="min-w-0 [overflow-wrap:anywhere]">

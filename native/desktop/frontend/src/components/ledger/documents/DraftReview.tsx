@@ -49,9 +49,12 @@ import { readAnswer } from "../../../shell/ledgerWindow";
 import { useNavigationGuard } from "../../../shell/navigation/hooks";
 import { provisionActionOf } from "../../../shell/provisioningRecovery";
 import { useStrings, type Translate } from "../../../shell/strings";
+import { localDay } from "../../../shared/dates";
+import { formatDay } from "../../../shared/dateFormats";
+import { formatAmount, formatPercent } from "../../../shared/numbers";
 import { SetupOffer } from "../../setup/SetupOffer";
 import { seriesAndNumber } from "../invoices/invoiceModel";
-import { figureText, kindChoice, problemText } from "../invoices/invoiceWords";
+import { kindChoice, problemText } from "../invoices/invoiceWords";
 import { write } from "../invoices/invoiceWrites";
 import { landingSettle, useWritePause, WriteHold } from "../WritePause";
 import {
@@ -62,7 +65,6 @@ import {
   stagedLinks,
 } from "../matching/matchingModel";
 import { invoiceLine } from "../matching/matchingWords";
-import { dayText } from "../transfer/transferWords";
 import {
   CORRECTION_SHAPES,
   DERIVED_FIELDS,
@@ -200,7 +202,8 @@ function ReadingTable({
 /** A value as the reading table shows it: rates as percentages. */
 function shownValue(locale: string, field: ReadingField, value: string | null) {
   if (value === null) return null;
-  if (field === "iva_rate" || field === "retencion_rate") return `${value}%`;
+  if (field === "iva_rate" || field === "retencion_rate")
+    return formatPercent(locale, value, { unit: "points" });
   if (
     field === "taxable_base" ||
     field === "iva_amount" ||
@@ -208,7 +211,7 @@ function shownValue(locale: string, field: ReadingField, value: string | null) {
     field === "retencion_amount" ||
     field === "grand_total"
   )
-    return figureText(locale, value);
+    return formatAmount(locale, value);
   return value;
 }
 
@@ -811,11 +814,11 @@ export function DraftReview({
         {confirmed.confirmation.total_discrepancy && (
           <Alert tone="warning" icon={<Icon name="alert" />}>
             {t("desktop.ledger.documents.printed_differs", {
-              printed: figureText(
+              printed: formatAmount(
                 locale,
                 confirmed.confirmation.total_discrepancy.printed_total.decimal,
               ),
-              recorded: figureText(
+              recorded: formatAmount(
                 locale,
                 confirmed.confirmation.total_discrepancy.recorded_total.decimal,
               ),
@@ -842,8 +845,8 @@ export function DraftReview({
                   value: option.row.transaction.transaction_id,
                   label: facts(t, [
                     option.row.transaction.description,
-                    dayText(locale, option.row.transaction.date),
-                    figureText(locale, option.row.transaction.amount),
+                    formatDay(locale, option.row.transaction.date),
+                    formatAmount(locale, option.row.transaction.amount),
                   ]),
                   group: option.settles
                     ? t("desktop.ledger.inspector.invoice.group_settles")
@@ -882,8 +885,8 @@ export function DraftReview({
                 <span>
                   {t("desktop.ledger.documents.link_offer_note", {
                     description: offer.row.transaction.description,
-                    date: dayText(locale, offer.row.transaction.date),
-                    amount: figureText(locale, offer.row.transaction.amount),
+                    date: formatDay(locale, offer.row.transaction.date),
+                    amount: formatAmount(locale, offer.row.transaction.amount),
                   })}
                 </span>
                 <span>
@@ -998,13 +1001,13 @@ export function DraftReview({
           <Tooltip>
             <TooltipTrigger asChild>
               <span className="justify-self-start text-sm text-muted-foreground">
-                {dayText(locale, view.drafted_at.slice(0, 10))}
+                {formatDay(locale, localDay(new Date(view.drafted_at)))}
               </span>
             </TooltipTrigger>
             <TooltipContent>
               {t("desktop.ledger.documents.read_by", {
                 extractor: view.extractor,
-                date: dayText(locale, view.drafted_at.slice(0, 10)),
+                date: formatDay(locale, localDay(new Date(view.drafted_at))),
               })}
             </TooltipContent>
           </Tooltip>

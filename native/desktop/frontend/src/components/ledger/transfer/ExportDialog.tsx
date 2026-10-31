@@ -46,6 +46,7 @@ import {
   type Readiness,
 } from "../../../shell/ledgerWindow";
 import { useStrings } from "../../../shell/strings";
+import { formatCount } from "../../../shared/numbers";
 import { periodText } from "../ledgerWords";
 import { NO_FILTERS, readinessSets } from "../movements/movementsModel";
 import { ReadinessStrip } from "../movements/ReadinessStrip";
@@ -156,8 +157,7 @@ export function ExportDialog({
   const t = useStrings();
   const ids = useId();
   const heading = useRef<HTMLHeadingElement>(null);
-  const numbers = useMemo(() => new Intl.NumberFormat(locale), [locale]);
-  const count = (value: number) => numbers.format(value);
+  const count = (value: number) => formatCount(locale, value);
   const [format, setFormatNow] = useState<LedgerExportFormat>(lastFormat);
   const [period, setPeriodNow] = useState<LedgerPeriod | null>(pagePeriod);
   const [inactive, setInactive] = useState(false);

@@ -5,6 +5,7 @@
 
 import type { InvoiceKind, PaymentStatus } from "../../../shell/ledger";
 import type { Translate } from "../../../shell/strings";
+import { formatPercent } from "../../../shared/numbers";
 import {
   INVOICE_CLASSES,
   PAYMENT_STATUSES,
@@ -31,22 +32,13 @@ export const paymentLabel = (t: Translate, status: string) =>
     ? t(`desktop.ledger.invoices.payment.${lower(status)}`)
     : status;
 
-const percents = new Map<string, Intl.NumberFormat>();
 /** A rate slot as the invoice prints it: `21%`, or Exempt or Not subject. */
 export function rateLabel(t: Translate, locale: string, slot: string): string {
   if (!isRateSlot(slot)) return slot;
   const fraction = RATE_SLOTS.find((found) => found.slot === slot)!.fraction;
   if (fraction === null)
     return t(`desktop.ledger.invoices.rate.${lower(slot)}`);
-  let format = percents.get(locale);
-  if (!format) {
-    format = new Intl.NumberFormat(locale, {
-      style: "percent",
-      maximumFractionDigits: 1,
-    });
-    percents.set(locale, format);
-  }
-  return format.format(Number(fraction));
+  return formatPercent(locale, fraction, { unit: "fraction", maxFraction: 1 });
 }
 
 const figures = new Map<string, Intl.NumberFormat>();

@@ -26,10 +26,10 @@ import type {
   PickedFile,
 } from "../../../shell/ledger";
 import { useStrings, type Translate } from "../../../shell/strings";
+import { formatTime } from "../../../shared/dateFormats";
 import { SetupOffer } from "../../setup/SetupOffer";
 import { rowTone } from "../../setup/setupWords";
 import { kindChoice } from "../invoices/invoiceWords";
-import { stampText } from "../movements/movementWords";
 import { applyDocuments, type DocumentsApplied } from "../transfer/importModel";
 import { sizeText } from "../transfer/transferWords";
 import { write } from "../invoices/invoiceWrites";
@@ -252,7 +252,7 @@ export function AttachmentQueue({
               {sizeText(locale, item.bytes_size)}
             </td>
             <td className={`${cell} tabular-nums`}>
-              {stampText(locale, item.captured_at)}
+              {formatTime(locale, item.captured_at)}
             </td>
             <td className={cell}>
               {state(item)}
@@ -693,7 +693,7 @@ export function ConsentHistory({
           renderRow={(dispatch) => (
             <tr className="ledger-consent-dispatch">
               <td className={`${cell} tabular-nums`}>
-                {stampText(locale, dispatch.recorded_at)}
+                {formatTime(locale, dispatch.recorded_at)}
               </td>
               <td className={cell}>
                 {named(dispatch.evidence_content_address)}
@@ -719,7 +719,7 @@ export function ConsentHistory({
             renderRow={(artefact) => (
               <tr>
                 <td className={`${cell} tabular-nums`}>
-                  {stampText(locale, artefact.drafted_at)}
+                  {formatTime(locale, artefact.drafted_at)}
                 </td>
                 <td className={cell}>{named(artefact.evidence_reference)}</td>
                 <td className={`${cell} font-mono text-xs`}>

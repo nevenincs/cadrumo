@@ -12,9 +12,9 @@ import type {
 } from "../../../shell/ledger";
 import type { StageEvent, StageState } from "../../../shell/ledgerStage";
 import { useStrings, type Translate } from "../../../shell/strings";
-import { figureText } from "../invoices/invoiceWords";
+import { formatDay } from "../../../shared/dateFormats";
+import { formatAmount } from "../../../shared/numbers";
 import { seriesAndNumber } from "../invoices/invoiceModel";
-import { dayText } from "../transfer/transferWords";
 import {
   inconsistencies,
   reconcile,
@@ -43,7 +43,9 @@ const SHOWN_CHIPS = 2;
 export type AffectedDeclaration = LedgerStatusResult["stale_filings"][number];
 
 const movementAmount = (locale: string, row: LedgerRow) =>
-  `${figureText(locale, row.transaction.amount)} ${row.transaction.currency}`;
+  formatAmount(locale, row.transaction.amount, {
+    currency: row.transaction.currency,
+  });
 
 function Chips({ t, pair }: { t: Translate; pair: MatchPair }) {
   return (
@@ -157,7 +159,7 @@ function MatchItem({
           <span className="tabular-nums">{movementAmount(locale, row)}</span>
         </span>
         <span className="text-sm text-muted-foreground tabular-nums">
-          {dayText(locale, row.transaction.date)}
+          {formatDay(locale, row.transaction.date)}
         </span>
         <span className="text-sm">
           {invoiceLine(t, locale, suggestion.invoice)}

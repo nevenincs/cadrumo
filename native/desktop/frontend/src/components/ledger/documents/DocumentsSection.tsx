@@ -15,7 +15,7 @@ import { facts } from "../../../shell/compose";
 import type { LedgerPort, LedgerRow } from "../../../shell/ledger";
 import type { StageEvent, StageState } from "../../../shell/ledgerStage";
 import { useStrings } from "../../../shell/strings";
-import { dayText } from "../transfer/transferWords";
+import { formatDay } from "../../../shared/dateFormats";
 import {
   AttachmentQueue,
   ConsentHistory,
@@ -319,7 +319,7 @@ export function DocumentsSection({
                       <span className="flex flex-wrap items-center gap-1 text-sm text-muted-foreground">
                         {state}
                         <span className="ml-auto tabular-nums">
-                          {dayText(locale, row.drafted_at.slice(0, 10))}
+                          {formatDay(locale, row.drafted_at.slice(0, 10))}
                         </span>
                       </span>
                     </>
