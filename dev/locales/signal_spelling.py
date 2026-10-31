@@ -183,7 +183,7 @@ def _is_spanish_search_keyword(word: str, dictionary: object) -> bool:
     return False
 
 
-def _is_search_keyword_surface(key: str) -> bool:
+def is_search_keyword_surface(key: str) -> bool:
     """Identify the three presentation families that declare search aliases."""
     return (
         key.startswith("desktop.ledger.category_keywords.")
@@ -219,7 +219,7 @@ def _discard_known_search_keywords(
         return
     for cell, words in tuple(unknown_by_cell.items()):
         _locale, key = cell
-        if not _is_search_keyword_surface(key):
+        if not is_search_keyword_surface(key):
             continue
         accepted = {word for word in words if _is_known_search_keyword(word, spanish_dictionary, english_dictionary)}
         words.difference_update(accepted)

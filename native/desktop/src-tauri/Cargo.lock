@@ -279,6 +279,8 @@ dependencies = [
  "ctrlc",
  "getrandom 0.4.3",
  "log",
+ "objc2-app-kit",
+ "objc2-foundation",
  "opener",
  "portable-pty",
  "serde",

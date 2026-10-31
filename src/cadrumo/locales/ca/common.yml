@@ -587,6 +587,17 @@ common:
     running: Motor preparat
     start_at_sign_in: Iniciar en iniciar la sessió
     starting: Iniciant el motor
+    startup_closing_message: La finestra anterior de Cadrumo no ha acabat de tancar-se
+      a temps. Espera un moment i torna a obrir Cadrumo.
+    startup_closing_title: Cadrumo encara s'està tancant
+    startup_dismiss: D'acord
+    startup_failed_details: El registre d'inici de la carpeta de registres de Cadrumo
+      en té els detalls.
+    startup_failed_reason: Motiu
+    startup_failed_title: Cadrumo no s'ha pogut iniciar
+    startup_other_session_message: Cadrumo ja és obert en una altra sessió d'inici
+      d'aquest compte. Canvia a aquesta sessió.
+    startup_other_session_title: Cadrumo és obert en una altra sessió
     stopping: Aturant el motor
     unavailable: Motor no disponible
     update_deferred: L’actualització espera que acabi la feina en curs. No s’ha aturat
@@ -1831,8 +1842,7 @@ desktop:
       telefonia_fija: telefono fijo linea telefonia
       telefonia_movil: telefono movil celular telefonia
       tributos_fiscalmente_deducibles: tasa tributo impuesto ayuntamiento
-      vehiculo_combustible: gasolina gasoil diesel combustible carburante gasolinera
-        coche benzina dièsel cotxe
+      vehiculo_combustible: gasolina gasoleo diesel combustible carburante gasolinera
       vehiculo_mantenimiento: taller revision itv neumaticos coche
       vehiculo_parking: parking aparcamiento estacionamiento
       vehiculo_peaje: peaje autopista

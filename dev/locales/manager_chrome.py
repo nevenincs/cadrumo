@@ -27,6 +27,14 @@ MANAGER_CHROME_KEYS = frozenset(
         "common.manager.restart_warning",
         "common.manager.quit_warning",
         "common.manager.action_failed",
+        "common.manager.startup_other_session_title",
+        "common.manager.startup_other_session_message",
+        "common.manager.startup_closing_title",
+        "common.manager.startup_closing_message",
+        "common.manager.startup_failed_title",
+        "common.manager.startup_failed_reason",
+        "common.manager.startup_failed_details",
+        "common.manager.startup_dismiss",
     }
 )
 

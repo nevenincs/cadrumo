@@ -569,6 +569,17 @@ common:
     running: A háttérfolyamat készen áll
     start_at_sign_in: Indítás bejelentkezéskor
     starting: A háttérfolyamat indul
+    startup_closing_message: A Cadrumo előző ablaka nem zárult be időben. Várj egy
+      kicsit, majd nyisd meg újra a Cadrumót.
+    startup_closing_title: A Cadrumo még bezárul
+    startup_dismiss: Rendben
+    startup_failed_details: Az indítási napló a Cadrumo naplómappájában tartalmazza
+      a részleteket.
+    startup_failed_reason: Ok
+    startup_failed_title: A Cadrumo nem indult el
+    startup_other_session_message: A Cadrumo már meg van nyitva ennek a fiókodnak
+      egy másik bejelentkezési munkamenetében. Válts át arra a munkamenetre.
+    startup_other_session_title: A Cadrumo egy másik munkamenetben meg van nyitva
     stopping: A háttérfolyamat leáll
     unavailable: A háttérfolyamat nem érhető el
     update_deferred: A frissítés megvárja a folyamatban lévő munka befejezését. Egyetlen
@@ -1811,8 +1822,8 @@ desktop:
       telefonia_fija: telefono fijo linea telefonia
       telefonia_movil: telefono movil celular telefonia
       tributos_fiscalmente_deducibles: tasa tributo impuesto ayuntamiento
-      vehiculo_combustible: gasolina gasoil diesel combustible carburante gasolinera
-        coche
+      vehiculo_combustible: benzin gázolaj dízel üzemanyag töltőállomás kút gasolina
+        gasoleo diesel combustible gasolinera
       vehiculo_mantenimiento: taller revision itv neumaticos coche
       vehiculo_parking: parking aparcamiento estacionamiento
       vehiculo_peaje: peaje autopista
@@ -2329,7 +2340,7 @@ desktop:
       file: Mentés másként
       file_hint: Utoljára választod ki, a rendszer mentési ablakában, amely rákérdez,
         mielőtt felülír egy fájlt. A formátum vagy az időszak módosítása törli.
-      file_stem: naplo
+      file_stem: napló
       filter:
         csv: CSV-fájl
         jsonl: JSON Lines-fájl
@@ -2615,7 +2626,7 @@ desktop:
       drop:
         bank: Húzd ide a kivonatfájlokat vagy egy mappát
         book: Húzz ide egy számlakönyvet
-        documents: Húzz ide PDF-eket, képeket, e-számlákat vagy egy mappát
+        documents: Húzz ide PDF-fájlokat, képeket, e-számlákat vagy egy mappát
       duplicates: Lehetséges ismétlések
       duplicates_chip: 'Lehetséges ismétlések: {count}'
       duplicates_more: És még {count}.
