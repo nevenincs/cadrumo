@@ -86,6 +86,43 @@ def _deduction_provenance(
     )
 
 
+def general_settlement_observations(
+    *,
+    exercise: int,
+    devengado: Decimal,
+    deducible: Decimal,
+    ledger_id_prefix: str = "",
+) -> tuple[IvaLedgerObservation, IvaLedgerObservation]:
+    """One general-rate devengado and one general-rate deducible settlement row for the 15th of March."""
+    return (
+        IvaLedgerObservation(
+            ledger_id=f"{ledger_id_prefix}devengado-general",
+            transaction_date=date(exercise, 3, 15),
+            category=IvaCategory("domestic_general"),
+            rate_kind=IvaRateKind("general"),
+            flow_direction=IvaFlowDirection.from_registry("repercutido"),
+            base_amount=Decimal("0"),
+            iva_amount=devengado,
+            observation_role=IvaLedgerObservationRole.SETTLEMENT,
+        ),
+        IvaLedgerObservation(
+            ledger_id=f"{ledger_id_prefix}deducible-general",
+            transaction_date=date(exercise, 3, 15),
+            category=IvaCategory("domestic_general"),
+            rate_kind=IvaRateKind("general"),
+            flow_direction=IvaFlowDirection.from_registry("soportado"),
+            base_amount=Decimal("0"),
+            iva_amount=deducible,
+            deduction_fact_kind=IvaDeductionFactKind.from_registry("domestic_current"),
+            deduction_provenance=_deduction_provenance(
+                IvaDeductionFactKind.from_registry("domestic_current"),
+                source_locator=f"invoice:{ledger_id_prefix}deducible-general",
+            ),
+            observation_role=IvaLedgerObservationRole.SETTLEMENT,
+        ),
+    )
+
+
 _M303_AUTOREPERCUTIDO_INTERIOR_DEVENGADO_CASILLA: CasillaId = validated_casilla_id(
     "iva.autorepercutido.interior.devengado"
 )
