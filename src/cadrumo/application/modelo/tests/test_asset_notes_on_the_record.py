@@ -196,7 +196,7 @@ def test_every_language_names_the_same_facts(sentence: CalculationNoteSentence) 
     def named(language: str) -> set[str]:
         text = lookup_translation(fact_locale_key(sentence), locale=language)
         assert text is not None
-        return {field for _, field, _, _ in Formatter().parse(text) if field}
+        return {field for _, field, _, _ in Formatter().parse(text) if field is not None}
 
     assert {language: named(language) for language in SUPPORTED_OUTPUT_LANGUAGES} == dict.fromkeys(
         SUPPORTED_OUTPUT_LANGUAGES, named("en")

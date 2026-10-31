@@ -921,8 +921,8 @@ application:
       activity_asset_disposal_finding:
         what: Egy eszköz kivezetésénél van egy pont, amelyet ellenőrizned kell, bár
           ez nem állítja meg ezt a nyomtatványt.
-        what_to_do: Olvasd el az eszköz kivezetéséhez tartozó megjegyzést, és rögzítsd
-          vagy javítsd, amit megnevez, ha rád vonatkozik.
+        what_to_do: Ellenőrizd, mit mond ez a megjegyzés a kivezetésről, és rögzítsd
+          vagy javítsd, ha rád vonatkozik.
       activity_asset_foral_territory:
         what: Ebben az időszakban önálló adóhatóságú területen élsz, ahol az
           értékcsökkenésre más szabályok vonatkoznak. Ez kívül esik ezen a
@@ -1211,6 +1211,93 @@ application:
           nulla érték alátámasztás nélkül jelenik meg.
         what_to_do: Pótold a részletező tételeket az évre a nyilvántartásodban, majd
           számolj újra.
+    calc_diagnostic_fact:
+      accrual_unavailable: A(z) {element} eszköz amortizációja nem számítható ki,
+        ezért nem szerepel benne.
+      activity_undeclared: A(z) {element} eszköz vásárlásához nincs tevékenységtípus,
+        és egy másik eszközöd mezőgazdasági, ezért nem mezőgazdaságiként számít.
+      agrarian_excluded: A(z) {element} eszköz mezőgazdasági tevékenységhez tartozik,
+        ezért kimarad a(z) {period} előlegből.
+      amortization_box_unbound: Ebben a kiadásban nincs mező a(z) {element} eszköz
+        amortizációjához, ezért semmit sem ad ehhez a számításhoz.
+      claim_gap_accrued: 'A(z) {element} eszközhöz {start} és {end} között nincs rögzített
+        amortizáció: {amount} EUR halmozódott fel, a(z) {box} mező pedig csak a rögzítettet
+        tartalmazza.'
+      claim_gap_free_method: A(z) {element} eszközhöz {start} és {end} között nincs
+        rögzített amortizáció. A módszere rád bízza az összeget, ezért nem számítható
+        ki, a(z) {box} mező pedig csak a rögzítettet tartalmazza.
+      disposal_claim_gap: A(z) {date} napon kivezetett {element} eszközhöz {year}
+        egy részére nincs rögzített amortizáció. A minimuma ettől még csökkenti a
+        költséget.
+      disposal_exemption_not_computed: A(z) {element} eszköz {date} napi kivezetésének
+        esetleges mentessége vagy halasztása itt nem számítódik ki, ezért a teljes
+        eredmény marad.
+      disposal_figure_element_row: 'A(z) {element} eszköz {date} napi eladásából származó
+        {amount} EUR a(z) {box} mezőbe kerül. A sorában add meg a dátumokat és az
+        értékeket: {transmission_value} EUR eladási érték és {net_value} EUR nettó
+        érték.'
+      disposal_figure_in_box: A(z) {element} eszköz {date} napi kivezetéséből származó
+        {amount} EUR a(z) {box} mezőbe kerül.
+      disposal_figure_no_box: A(z) {element} eszköz {date} napi kivezetéséből származó
+        {amount} EUR ennek a kiadásnak egyik mezőjébe sem kerül.
+      disposal_figure_property_row: 'A(z) {element} eszköz {date} napi eladásából
+        származó {amount} EUR a(z) {box} mezőbe kerül. A sorában jelöld az ingatlant
+        tevékenységhez rendeltként, és add meg a dátumokat és az értékeket: {transmission_value}
+        EUR eladási érték és {net_value} EUR nettó érték.'
+      disposal_instalment_agrarian_excess: A(z) {element} eszköz {date} napi kivezetésének
+        {amount} EUR többlete mezőgazdasági tevékenységben nem rendelkezik megállapított
+        előlegsorral. Ez rád marad.
+      disposal_instalment_excess_unresolved: A(z) {element} eszköz {date} napi kivezetésének
+        többlete nem számítható ki, ezért ez az előleg nem tartalmaz ilyet.
+      disposal_later_affectation: A(z) {element} eszköz {date} napi eladása egy későbbi,
+        az útvonalát megváltoztató rendeltetés utáni időszakba esik, ezért a(z) {amount}
+        EUR eredménye egyik mezőbe sem kerül, és rád marad.
+      disposal_m131_excess: A(z) {element} eszköz {date} napi kivezetésének {amount}
+        EUR többlete nem jut el a 131-es modellhez, amelynek útmutatója nem tér ki
+        rá.
+      disposal_m131_excess_unresolved: A(z) {element} eszköz {date} napi kivezetésének
+        többlete nem számítható ki, és a 131-es modell, amelynek útmutatója nem tér
+        ki rá, nem tartalmaz ilyet.
+      disposal_minimum_exceeded_deduction: A(z) {date} napon kivezetett {element}
+        eszköznél a(z) {year} minimuma meghaladta a levontat, és {effect} EUR-val
+        növeli a költség csökkentését.
+      disposal_minimum_unresolved: A(z) {date} napon kivezetett {element} eszköznél
+        egyik kiadás sem adja meg a(z) {year} minimumát, ezért csak a levont összeg
+        csökkenti a költséget.
+      disposal_modules_agrarian_excess: A(z) {element} eszköz {date} napi kivezetésének
+        {amount} EUR többlete modulos mezőgazdasági tevékenységben nem rendelkezik
+        megállapított sorral. Ez rád marad.
+      disposal_no_minimum_authority: A(z) {date} napon kivezetett {element} eszköznél
+        {year} évre nincs minimum, ezért csak a levont összeg csökkenti a költséget.
+      disposal_shared_row: 'A nyomtatvány minden eladásnak külön sort ad, ez a számítás
+        pedig {count} eladást von össze. Add meg a(z) {element} eszközt külön sorban:
+        eladva {date} napon {transmission_value} EUR-ért, nettó érték {net_value}
+        EUR, {amount} EUR a(z) {box} mezőben.'
+      disposal_unresolved_income: A(z) {element} eszköz {date} napi kivezetésének
+        eredménye nem számítható ki, ezért a tevékenység jövedelme a valósnál kisebb
+        lehet.
+      disposal_unresolved_no_box: A(z) {element} eszköz {date} napi kivezetésének
+        eredménye nem számítható ki, ezért egyik mező sem tartalmazza.
+      instalment_free_gap: A(z) {element} eszközhöz {start} és {end} között nincs
+        rögzített amortizáció. A módszere rád bízza az összeget, ezért semmit sem
+        ad a(z) {box} mezőhöz.
+      possibly_durable_expense: A(z) {row} tétel ({category} kategória) folyó költségként
+        kerül levonásra, a leírása pedig tartós eszközre utal.
+      register_cost_exceeds_paid: A(z) {elements} eszközök {cost} EUR költséget adnak
+        meg, a megnevezett tételek pedig {paid} EUR-t fizettek.
+      register_owned_acquisition: A(z) {row} tétel a(z) {element} eszköz vásárlása,
+        ezért amortizálódik, és nem kerül levonásra.
+      register_partly_accounted: A(z) {elements} eszközök tételei {base} EUR alapot
+        tartalmaznak, az eszközök pedig {price} EUR-t fednek le, ezért a fennmaradó
+        {remainder} EUR nem kerül levonásra.
+      register_price_exceeds_base: A(z) {elements} eszközök {price} EUR árat adnak
+        meg, a megnevezett tételek pedig {base} EUR alapot tartalmaznak.
+      register_row_missing: 'A(z) {elements} eszközök olyan tételeket neveznek meg,
+        amelyek már nem léteznek: {rows}.'
+      residence_period_unknown: '{date} napra nincs rögzített adóügyi illetőség, ezért
+        az eszközeid úgy számítanak, mintha a 100-as és 130-as modell lenne érvényes.'
+      row_unregistered: A(z) {row} tétel ({category} kategória, {year}) olyan eszközt
+        rögzít, amely nincs a nyilvántartásodban.
     calculation_report:
       local_calculation_notice: 'Cadrumo helyi számítási jelentés. Nem hivatalos AEAT-bizonyíték
         a benyújtásról. A hivatalos bizonyítékot az AEAT adja ki a benyújtás után:
