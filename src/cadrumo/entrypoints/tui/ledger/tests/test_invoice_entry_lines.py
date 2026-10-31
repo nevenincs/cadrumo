@@ -278,9 +278,10 @@ async def test_an_issued_business_premises_lease_reaches_the_add_door_with_its_p
             screen.query_one("#ledger-invoice-review", Button).press()
             await settle(pilot)
             assert screen.flow_state is LedgerFlowState.CONFIRMING, _text(screen, "#ledger-refusal")
-            assert "Business premises lease · situación 1 · referencia catastral 9872023VH5797S0001WX" in _text(
-                screen, "#ledger-invoice-summary"
-            )
+            assert (
+                "Business premises lease · situación Spain, outside the Basque Country and Navarre"
+                " · referencia catastral 9872023VH5797S0001WX"
+            ) in _text(screen, "#ledger-invoice-summary")
             screen.query_one("#ledger-invoice-confirm", Button).press()
             await settle(pilot)
 
