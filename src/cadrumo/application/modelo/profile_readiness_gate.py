@@ -34,6 +34,7 @@ from ...domain.calculations.registry.applicability import derive_modelo_applicab
 from ...domain.calculations.registry.applicability_models import ApplicabilityVerdict
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.errors import RegistrySnapshotError
+from ...domain.calculations.registry.form_codes import forms_for_role
 from ...domain.calculations.registry.ids import RevisionId
 from ...domain.calculations.registry.irpf_income_categories import irpf_income_category_actividad_economica_token
 from ...domain.calculations.registry.profile_grounding import (
@@ -63,7 +64,7 @@ if TYPE_CHECKING:
     from ...domain.calculations.registry.authority_artifact import ProfileDecodeContext
 
 _PROFILE_ACTIVITY_START_PATH = "censo.activity_start_date"
-_PRE_ACTIVITY_LIFECYCLE_MODELOS = frozenset({Modelo("130").value, Modelo("303").value})
+_PRE_ACTIVITY_LIFECYCLE_ROLE = "pre_activity_lifecycle.modelos"
 _FILING_BASELINE_PROFILE_PATHS = ("identity.tax_id",)
 _PROFILE_ACTIVITY_DESCRIPTION_PATH = "activities.description"
 #: Shared with :mod:`.work_create_policy`, which runs the same applicability
@@ -447,7 +448,7 @@ def pre_activity_period_refusal(
             against the profile activity-start date.
     """
     modelo_code = modelo.strip()
-    if modelo_code not in _PRE_ACTIVITY_LIFECYCLE_MODELOS or not period.has_date_span():
+    if modelo_code not in forms_for_role(_PRE_ACTIVITY_LIFECYCLE_ROLE) or not period.has_date_span():
         return None
     activity_start_date = profile_activity_start_date(record)
     if activity_start_date is None:
@@ -676,7 +677,7 @@ def require_profile_ready_for_modelo_work(
         profile_decode_context=resolved_profile_decode_context,
         grounding_index=grounding_index,
     )
-    applicability_first = enforce_applicability and modelo.strip() in _PRE_ACTIVITY_LIFECYCLE_MODELOS
+    applicability_first = enforce_applicability and modelo.strip() in forms_for_role(_PRE_ACTIVITY_LIFECYCLE_ROLE)
     if applicability_first:
         _require_modelo_applicable_for_local_work(
             record=record,
@@ -745,7 +746,7 @@ def require_existing_profile_baseline_ready_for_modelo_work(
     if loaded is None:
         return
     record = loaded.record
-    applicability_first = enforce_applicability and modelo.strip() in _PRE_ACTIVITY_LIFECYCLE_MODELOS
+    applicability_first = enforce_applicability and modelo.strip() in forms_for_role(_PRE_ACTIVITY_LIFECYCLE_ROLE)
     if applicability_first:
         _require_modelo_applicable_for_local_work(
             record=record,

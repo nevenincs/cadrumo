@@ -40,6 +40,7 @@ from ...core.identity.documents import IdentityError
 from ...core.parsing.dates import parse_iso8601_date
 from ...core.text_bounds import CALENDAR_MONTH_MAX, CALENDAR_MONTH_MIN, is_calendar_month
 from ...core.time.clock import today_madrid
+from ...domain.calculations.registry.descendant_disability_catalogue import accepted_descendant_disability_grades
 from ...domain.calculations.registry.descendant_relacion_catalogue import (
     descendant_relacion_adoption_token,
     descendant_relacion_entitling_tokens,
@@ -184,9 +185,6 @@ _INSCRIPCION_HELP_LOCALE_KEY = "wizard.setup.descendientes.inscripcion-registro-
 _ACOGIMIENTO_PROMPT_LOCALE_KEY = "wizard.setup.descendientes.acogimiento-resolucion.prompt"
 _ACOGIMIENTO_HELP_LOCALE_KEY = "wizard.setup.descendientes.acogimiento-resolucion.help"
 _DISCAPACIDAD_PROMPT_LOCALE_KEY = "wizard.setup.descendientes.discapacidad.prompt"
-_DISCAPACIDAD_CHOICE_0_LOCALE_KEY = "wizard.setup.descendientes.discapacidad.choices.0.label"
-_DISCAPACIDAD_CHOICE_33_LOCALE_KEY = "wizard.setup.descendientes.discapacidad.choices.33.label"
-_DISCAPACIDAD_CHOICE_65_LOCALE_KEY = "wizard.setup.descendientes.discapacidad.choices.65.label"
 _CONVIVENCIA_PROMPT_LOCALE_KEY = "wizard.setup.descendientes.convivencia.prompt"
 _DEPENDENCIA_PROMPT_LOCALE_KEY = "wizard.setup.descendientes.dependencia-economica.prompt"
 _DEPENDENCIA_HELP_LOCALE_KEY = "wizard.setup.descendientes.dependencia-economica.help"
@@ -556,11 +554,15 @@ _DEPENDENCIA_CHOICES: tuple[FlowChoice, ...] = (
 )
 
 
-_DISCAPACIDAD_CHOICES: tuple[FlowChoice, ...] = (
-    FlowChoice(value="0", label=_locale_ref(_DISCAPACIDAD_CHOICE_0_LOCALE_KEY)),
-    FlowChoice(value="33", label=_locale_ref(_DISCAPACIDAD_CHOICE_33_LOCALE_KEY)),
-    FlowChoice(value="65", label=_locale_ref(_DISCAPACIDAD_CHOICE_65_LOCALE_KEY)),
-)
+def _discapacidad_choices(operation: PinnedAuthorityOperation) -> tuple[FlowChoice, ...]:
+    """Offer each grade the pinned catalogue accepts, in ascending order."""
+    return tuple(
+        FlowChoice(
+            value=str(grade),
+            label=_locale_ref(f"wizard.setup.descendientes.discapacidad.choices.{grade}.label"),
+        )
+        for grade in sorted(accepted_descendant_disability_grades(authority=operation))
+    )
 
 
 #: Art. 61 norma 1a answers. Left unanswered the engine derives the answer
@@ -592,7 +594,7 @@ def _build_descendant_pages(operation: PinnedAuthorityOperation) -> tuple[FlowPa
     )
     return (
         *_descendant_identity_pages(relation_choices, adoption_token.value, acogimiento_visibility),
-        *_descendant_circumstance_pages(),
+        *_descendant_circumstance_pages(operation),
         *_descendant_maternity_pages(),
     )
 
@@ -749,13 +751,13 @@ def _descendant_identity_pages(
     )
 
 
-def _descendant_circumstance_pages() -> tuple[FlowPage, ...]:
+def _descendant_circumstance_pages(operation: PinnedAuthorityOperation) -> tuple[FlowPage, ...]:
     return (
         FlowPage(
             id=_DISCAPACIDAD_PAGE_ID,
             widget=FlowWidgetKind.SELECT,
             prompt=_locale_ref(_DISCAPACIDAD_PROMPT_LOCALE_KEY),
-            choices=_DISCAPACIDAD_CHOICES,
+            choices=_discapacidad_choices(operation),
             required=False,
             answer_type=str,
         ),

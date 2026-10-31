@@ -33,6 +33,8 @@ from .facts.string_mapping import MappingValueWhitespace, StringMappingFact, Str
 from .governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from .schema_base import DateAxis
 
+_ROLE_ROUTING_FACT = "modelo-role-routing"
+
 
 @dataclass(frozen=True, slots=True)
 class FormCodes:
@@ -108,6 +110,16 @@ def resolve_form_codes_leased(fact_id: str, *, authority: GovernedFactSource | N
 
     with bundled_indexed_authority().operation() as operation:
         return resolve_form_codes(fact_id, authority=operation)
+
+
+def form_for_role(role: str, *, authority: GovernedFactSource | None = None) -> str:
+    """Return the form that holds ``role``, from the registry's role routing."""
+    return resolve_form_codes_leased(_ROLE_ROUTING_FACT, authority=authority).code(role)
+
+
+def forms_for_role(role: str, *, authority: GovernedFactSource | None = None) -> frozenset[str]:
+    """Return the forms a rule named ``role`` covers, from the registry's role routing."""
+    return resolve_form_codes_leased(_ROLE_ROUTING_FACT, authority=authority).codes(role)
 
 
 class RegistryCodedEnum(StrEnum):

@@ -183,6 +183,9 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
     from cadrumo.core.storage_taxonomy import StorageArea
     from cadrumo.domain.auth.apoderamientos.catalogue import load_default_catalogue
     from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+    from cadrumo.domain.calculations.registry.descendant_disability_catalogue import (
+        accepted_descendant_disability_grades,
+    )
     from cadrumo.domain.calculations.registry.descendant_relacion_catalogue import descendant_relacion_tokens
     from cadrumo.domain.user_profile.values import ProfileSetupState
     from cadrumo.entrypoints.tui.ledger.classification import CLASSIFICATION_FIELD_NAMES
@@ -195,6 +198,9 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
             scope.code.lower() for scope in load_default_catalogue(operation=operation).scopes
         )
         descendant_relations = tuple(token.value for token in descendant_relacion_tokens(authority=operation))
+        descendant_disability_grades = tuple(
+            str(grade) for grade in sorted(accepted_descendant_disability_grades(authority=operation))
+        )
     topic_slugs = tuple(topic.slug for topic in load_topic_catalogue().topics)
     row_fields = scan_detail_row_fields()
     profile_field_label_keys = tuple(
@@ -251,7 +257,7 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
         *_own_account_registrations(),
         *_modelo_review_filter_registrations(),
         *_generated_docs_registrations(),
-        *_runtime_registrations(descendant_relations),
+        *_runtime_registrations(descendant_relations, descendant_disability_grades),
     )
 
 
@@ -272,7 +278,10 @@ def _operation_refusal_values() -> tuple[str, ...]:
     )
 
 
-def _runtime_registrations(descendant_relations: tuple[str, ...]) -> tuple[FStringKeyRegistration, ...]:
+def _runtime_registrations(
+    descendant_relations: tuple[str, ...],
+    descendant_disability_grades: tuple[str, ...],
+) -> tuple[FStringKeyRegistration, ...]:
     """Enumerate runtime refusal, action and terminal-condition copy."""
     from cadrumo.application.calculations.m303_carry_ingress import M303_CARRY_ERROR_NAMESPACE
     from cadrumo.application.live.errors import LiveIvaAcquisitionFailureMode
@@ -357,6 +366,11 @@ def _runtime_registrations(descendant_relations: tuple[str, ...]) -> tuple[FStri
             description="application.workflow.errors.resume_refused_* (WorkflowResumeRefusalReason)",
             key_factory=lambda v: f"application.workflow.errors.resume_refused_{v}",
             values=_enum_values(WorkflowResumeRefusalReason),
+        ),
+        FStringKeyRegistration(
+            description="wizard.setup.descendientes.discapacidad.choices.*.label (descendant disability catalogue)",
+            key_factory=lambda v: f"wizard.setup.descendientes.discapacidad.choices.{v}.label",
+            values=descendant_disability_grades,
         ),
         FStringKeyRegistration(
             description="wizard.setup.descendientes.relacion.choices.*.label (descendant relationship authority)",

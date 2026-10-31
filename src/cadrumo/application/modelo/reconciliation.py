@@ -15,7 +15,7 @@ printed total) a ``totals_not_reconciled`` advisory discloses it so an
 identity-only ``matches`` is never a silent false green.
 
 For a filed declaración, the same header comparison runs, and — for the
-modelos enrolled in :data:`_DECLARATION_CASILLA_RECONCILE_MODELOS` — every
+modelos enrolled in :data:`forms_for_role(_DECLARATION_RECONCILE_ROLE)` — every
 casilla the registry's verification policy reconciles is compared, one by one,
 against the persisted revision's ``casilla_values`` via
 :func:`application.modelo.reconcile_casilla.detect_casilla_divergences`.
@@ -62,9 +62,9 @@ from ...core.identity.bucket import BucketId
 from ...core.identity.digest import ContentDigest
 from ...core.identity.hex_ids import CalculationRevisionId, WorkUnitId
 from ...core.identity.tax_id import same_tax_identifier, tax_id_identity_token
-from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.time.clock import now
+from ...domain.calculations.registry.form_codes import forms_for_role
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...domain.filing.reconciliation.errors import ReconciliationDeclaracionParseError
 from ...domain.justificante.errors import JustificanteParseError
@@ -118,9 +118,7 @@ if TYPE_CHECKING:
     from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
     from ..live.filed_observation_ports import FiledObservationProtocol
 
-_DECLARATION_CASILLA_RECONCILE_MODELOS: frozenset[Modelo] = frozenset(
-    {Modelo("100"), Modelo("111"), Modelo("130"), Modelo("190"), Modelo("303"), Modelo("390")}
-)
+_DECLARATION_RECONCILE_ROLE = "filed_declaration_reconciliation.modelos"
 """Modelos enrolled in casilla-level filed-declaration reconciliation.
 
 A modelo not in this set still accepts
@@ -203,7 +201,7 @@ class ModeloReconciliationCommand(BaseModel):
     ``source_path`` points to the operator-supplied evidence file and
     ``source_kind`` records how that file must be parsed. Justificante PDFs are
     supported for every modelo; declaration PDFs are supported (casilla-level)
-    only for modelos in :data:`_DECLARATION_CASILLA_RECONCILE_MODELOS` — an
+    only for modelos under :data:`_DECLARATION_RECONCILE_ROLE` — an
     unenrolled modelo is refused before parsing.
     """
 
@@ -326,7 +324,7 @@ def _require_declaration_enrolled_modelo(
     """Refuse an unenrolled modelo before spending effort parsing its PDF.
 
     Declaración parsing (template detection, registry-profile extraction) is
-    real work; a modelo outside :data:`_DECLARATION_CASILLA_RECONCILE_MODELOS`
+    real work; a modelo outside :data:`_DECLARATION_RECONCILE_ROLE`
     is refused immediately from the work unit's own declared modelo, before any
     file is opened, rather than only after a parse attempt happens to fail for
     an unrelated reason.
@@ -340,12 +338,12 @@ def _require_declaration_enrolled_modelo(
         catalogue=catalogue,
         bucket_id=bucket_id,
     )
-    if str(work_unit.modelo) not in _DECLARATION_CASILLA_RECONCILE_MODELOS:
+    if str(work_unit.modelo) not in forms_for_role(_DECLARATION_RECONCILE_ROLE):
         raise ReconciliationDeclaracionSourceUnsupportedError(
             translated_message="application.modelo.errors.reconcile_declaration_unsupported",
             context={
                 "modelo": str(work_unit.modelo),
-                "enrolled_modelos": ",".join(sorted(_DECLARATION_CASILLA_RECONCILE_MODELOS)),
+                "enrolled_modelos": ",".join(sorted(forms_for_role(_DECLARATION_RECONCILE_ROLE))),
             },
         )
     return work_unit
@@ -366,7 +364,7 @@ def prepare_modelo_reconcile(
     ``reconciliation_total_casilla_ids``.
 
     For a declaración, consumes the parser port's structural observation and,
-    for modelos enrolled in :data:`_DECLARATION_CASILLA_RECONCILE_MODELOS`,
+    for modelos enrolled in :data:`forms_for_role(_DECLARATION_RECONCILE_ROLE)`,
     compares every registry-reconciled casilla against the persisted revision's
     ``casilla_values``, surfacing each divergence as a typed ``casilla`` diff. A
     modelo outside that set raises
@@ -527,12 +525,12 @@ def prepare_parsed_declaracion(
 ) -> PreparedModeloReconciliation:
     """Compare parsed declaration evidence without writing it."""
     active_bucket_id = work_unit.bucket_id
-    if str(work_unit.modelo) not in _DECLARATION_CASILLA_RECONCILE_MODELOS:
+    if str(work_unit.modelo) not in forms_for_role(_DECLARATION_RECONCILE_ROLE):
         raise ReconciliationDeclaracionSourceUnsupportedError(
             translated_message="application.modelo.errors.reconcile_declaration_unsupported",
             context={
                 "modelo": str(work_unit.modelo),
-                "enrolled_modelos": ",".join(sorted(_DECLARATION_CASILLA_RECONCILE_MODELOS)),
+                "enrolled_modelos": ",".join(sorted(forms_for_role(_DECLARATION_RECONCILE_ROLE))),
             },
         )
 

@@ -62,11 +62,6 @@ year_to = 2024
 # monthly IVA-liquidation taxpayers (REDEME or large-company status).
 periods = ["1T", "2T", "01", "02", "03", "04", "05", "06", "07", "08"]
 
-[revisions."2024-hasta-08-y-2t".family_dispositions.applicability]
-reason = "Modelo 303 applicability is defined by filing_schedules and orden_aplicabilidad."
-legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2024-early"]
-
 [[revisions.2024-hasta-08-y-2t.lineage_attestations]]
 family = "casillas"
 continuidad_id = "dr303-64"

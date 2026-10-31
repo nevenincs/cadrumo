@@ -16,7 +16,6 @@ from types import CodeType, FrameType
 import pytest
 
 from ....domain.calculations.registry.applicability import (
-    MODELO_APPLICABILITY_RULES,
     derive_modelo_applicability,
     iter_modelo_applicability_rules,
 )
@@ -102,12 +101,7 @@ def test_a_calendar_does_not_lease_the_authority_per_obligation(operation: Pinne
 def test_the_counter_detects_a_lease_per_applicability_decision(operation: PinnedAuthorityOperation) -> None:
     del operation  # scopes the profile's tax-id vocabulary; the decisions below deliberately take none
     profile = _autonomo()
-    # Only registry-resolved rules reach the authority; a seed-table rule needs no lease.
-    modelos = tuple(
-        sorted(
-            rule.modelo for rule in iter_modelo_applicability_rules() if rule.modelo not in MODELO_APPLICABILITY_RULES
-        )
-    )[:5]
+    modelos = tuple(sorted(rule.modelo for rule in iter_modelo_applicability_rules()))[:5]
 
     leases = _leases_during(lambda: [derive_modelo_applicability(profile, modelo, today=_TODAY) for modelo in modelos])
 
@@ -137,7 +131,7 @@ def test_the_rule_table_is_read_under_one_lease() -> None:
     rules: list[object] = []
     leases = _leases_during(lambda: rules.extend(iter_modelo_applicability_rules()))
 
-    assert len([rule for rule in rules if getattr(rule, "modelo", None) not in set(MODELO_APPLICABILITY_RULES)]) > 1
+    assert len(rules) > 1
     assert leases == 1
 
 

@@ -63,8 +63,12 @@ def m347_role_fact_advisories(
     if not declaration_roles:
         return ()
     role_catalogue = resolve_third_party_declaration_role_catalogue()
-    clave_d_eligible = bool(declaration_roles & role_catalogue.roles_for_clave("D"))
-    clave_e_eligible = bool(declaration_roles & role_catalogue.roles_for_clave("E"))
+    clave_d_eligible = bool(
+        declaration_roles & role_catalogue.roles_for_clave(role_catalogue.clave_for("outside_economic_activity"))
+    )
+    clave_e_eligible = bool(
+        declaration_roles & role_catalogue.roles_for_clave(role_catalogue.clave_for("subsidy_or_aid"))
+    )
     diagnostics: list[CalculationSourceDiagnostic] = []
     for invoice in invoices:
         if clave_d_eligible and invoice.kind is InvoiceKind.RECEIVED and invoice.outside_economic_activity is None:

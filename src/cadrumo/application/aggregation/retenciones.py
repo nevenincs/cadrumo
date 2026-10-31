@@ -41,7 +41,7 @@ from ...core.period import Period
 from ...core.spanish_postcode import SpanishPostcode, SpanishProvinceCode
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
-from ...domain.calculations.registry.form_codes import resolve_form_codes
+from ...domain.calculations.registry.form_codes import form_for_role, resolve_form_codes
 from ...domain.calculations.registry.governed_fact_scope import GovernedFactSource, require_governed_fact_authority
 from ...domain.calculations.registry.schema_base import DateAxis
 from ...domain.calculations.registry.withholding_bindings import WithholdingObservation
@@ -352,9 +352,10 @@ def _validate_type2_record_count(aggregation: RetencionesAggregation) -> None:
 
 
 def _validate_type2_rows_match_modelo(aggregation: RetencionesAggregation) -> None:
-    if aggregation.modelo != "180" and aggregation.type2_rows:
+    lease_annual = form_for_role("withholding.lease_annual")
+    if aggregation.modelo != lease_annual and aggregation.type2_rows:
         raise ValueError("Modelo 180 type-2 rows cannot belong to another modelo")
-    if aggregation.modelo != "180" or not aggregation.type2_rows:
+    if aggregation.modelo != lease_annual or not aggregation.type2_rows:
         return
     if sum((row.taxable_base for row in aggregation.type2_rows), Decimal("0")) != aggregation.total_taxable_base:
         raise ValueError("Modelo 180 type-2 bases must reconcile with the declaration total")

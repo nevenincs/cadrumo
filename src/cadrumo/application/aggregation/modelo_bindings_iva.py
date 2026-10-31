@@ -11,11 +11,11 @@ from decimal import Decimal
 from typing import ClassVar
 
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
-from ...core.modelo import Modelo
 from ...core.period import Period
 from ...domain.bienes_inversion.register import BienesInversionIvaRegister
 from ...domain.calculations.registry.binding_targets import bound_casilla_binding_ids
 from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
+from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.ledger_binding_selector_support import LedgerIvaFact
 from ...domain.calculations.registry.ledger_iva_bindings import (
@@ -393,7 +393,7 @@ class LedgerIvaAggregationSourceResolver:
 def _present_unroutable_iva_categories(
     context: CalculationSourceContext, observations: Iterable[IvaLedgerObservation]
 ) -> tuple[IvaCategory, ...]:
-    if context.modelo != Modelo("303").value:
+    if context.modelo != form_for_role("iva.periodic"):
         return ()
     present_categories = {observation.category for observation in observations}
     return tuple(

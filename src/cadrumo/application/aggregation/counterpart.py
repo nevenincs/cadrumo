@@ -14,10 +14,12 @@ taxonomy.
 
 from __future__ import annotations
 
+import re
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
+from typing import Final
 
 from pydantic import BaseModel, Field, InstanceOf, NonNegativeInt, field_validator, model_validator
 
@@ -41,11 +43,16 @@ def _validate_source_kind(value: str) -> CounterpartSourceKind:
     return counterpart_source_kind(value)
 
 
+_OPERATION_KINDS_KEY: Final = re.compile(r"modelo\.(\w+)\.operation_kinds")
+_READINESS_KEY: Final = re.compile(r"modelo\.(\w+)\.readiness\.groi_country")
+
+
 @dataclass(frozen=True, slots=True)
 class _CounterpartRegistryCatalogue:
     """Generic counterpart projection of the selected registry mapping."""
 
     model_kinds: Mapping[str, frozenset[str]]
+    readiness_modelo: str
     groi_countries: frozenset[str]
     nif_iva_for_non_groi_country: bool
 
@@ -91,11 +98,16 @@ def _registry_counterpart_catalogue(
     operation: PinnedAuthorityOperation,
 ) -> _CounterpartRegistryCatalogue:
     """Resolve counterpart kinds and readiness gates from registry authority."""
-    for modelo in (Modelo("347").value, Modelo("349").value):
+    entries = counterpart_operation_catalogue_entries(effective_date, operation=operation)
+    modelos = tuple(match[1] for key in entries if (match := _OPERATION_KINDS_KEY.fullmatch(key)))
+    for modelo in modelos:
         directory = operation.modelo_directory(modelo)
         if not any(metadata.contains_date(effective_date) for metadata in directory.revisions):
             raise ValueError(f"{modelo} has no registry revision in force on {effective_date.isoformat()}")
-    entries = counterpart_operation_catalogue_entries(effective_date, operation=operation)
+    readiness_modelos = tuple(match[1] for key in entries if (match := _READINESS_KEY.fullmatch(key)))
+    if len(readiness_modelos) != 1:
+        raise ValueError("counterpart registry mapping must name one form with readiness gates")
+    readiness_modelo = readiness_modelos[0]
 
     def required(key: str) -> str:
         value = entries.get(key)
@@ -109,15 +121,13 @@ def _registry_counterpart_catalogue(
             raise ValueError(f"counterpart registry mapping {key!r} has no tokens")
         return result
 
-    readiness = required("modelo.349.readiness.nif_iva_for_non_groi_country").casefold()
+    readiness = required(f"modelo.{readiness_modelo}.readiness.nif_iva_for_non_groi_country").casefold()
     if readiness not in {"true", "false"}:
         raise ValueError("counterpart registry readiness flag must be true or false")
     return _CounterpartRegistryCatalogue(
-        model_kinds={
-            Modelo("347").value: tokens("modelo.347.operation_kinds"),
-            Modelo("349").value: tokens("modelo.349.operation_kinds"),
-        },
-        groi_countries=frozenset({required("modelo.349.readiness.groi_country").strip()}),
+        model_kinds={modelo: tokens(f"modelo.{modelo}.operation_kinds") for modelo in modelos},
+        readiness_modelo=readiness_modelo,
+        groi_countries=frozenset({required(f"modelo.{readiness_modelo}.readiness.groi_country").strip()}),
         nif_iva_for_non_groi_country=readiness == "true",
     )
 
@@ -404,7 +414,7 @@ def _counterpart_readiness_for_modelo(
     observations: tuple[CounterpartObservation, ...],
     registry_catalogue: _CounterpartRegistryCatalogue,
 ) -> dict[str, bool]:
-    if modelo != Modelo("349").value:
+    if modelo != registry_catalogue.readiness_modelo:
         return {
             "requires_groi_check": False,
             "requires_nif_iva_check": False,
