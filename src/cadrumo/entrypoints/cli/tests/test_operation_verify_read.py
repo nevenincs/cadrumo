@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from datetime import UTC, datetime
-from types import SimpleNamespace
+from functools import partial
 from typing import cast
 from uuid import UUID
 
@@ -13,7 +12,6 @@ import typer
 from pydantic import BaseModel
 
 from cadrumo_client.commands.errors import CliRefusedBoundaryError
-from cadrumo_client.commands.registered_operation_contracts import RegisteredOperationCompletion
 from cadrumo_client.contracts.contracts import RefusalCode
 
 from ....application.live.verify import VerifySurface
@@ -32,9 +30,9 @@ from ....application.live.verify_read_operation import (
     VERIFY_VIEW_DEFINITION_ID,
 )
 from ....core.identity_check_verdict import IdentityCheckVerdict
-from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
-from .. import operation_profile_operation as profile_operation
+from ....core.operations import OperationEffect, profile_operation_subject
 from .. import operation_verify_read as bridge
+from .operation_bridge_support import bind_profile_reads
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -81,40 +79,7 @@ def _latest_projection(
     )
 
 
-def _bind(
-    monkeypatch: pytest.MonkeyPatch,
-    projections: Mapping[str, BaseModel],
-    *,
-    effect: OperationEffect = OperationEffect.NONE,
-    terminal_condition: OperationTerminalCondition = OperationTerminalCondition.SUCCEEDED,
-    refusal_code: str | None = None,
-) -> tuple[list[tuple[BaseModel, dict[str, object]]], list[UUID]]:
-    bound_profiles: list[UUID] = []
-    client = SimpleNamespace(profile_id=_PROFILE)
-
-    def require_client(_ctx: object) -> object:
-        bound_profiles.append(client.profile_id)
-        return client
-
-    monkeypatch.setattr(bridge, "bound_profile_client", require_client)
-    submitted: list[tuple[BaseModel, dict[str, object]]] = []
-
-    def submit(
-        submitted_client: object, request: BaseModel, **kwargs: object
-    ) -> RegisteredOperationCompletion[BaseModel]:
-        assert submitted_client is client
-        submitted.append((request, kwargs))
-        definition_id = cast(str, kwargs["definition_id"])
-        return RegisteredOperationCompletion(
-            operation_id=_OPERATION_ID,
-            projection=projections[definition_id],
-            effect=effect,
-            terminal_condition=terminal_condition,
-            refusal_code=refusal_code,
-        )
-
-    monkeypatch.setattr(profile_operation, "run_registered_operation", submit)
-    return submitted, bound_profiles
+_bind = partial(bind_profile_reads, bridge=bridge, profile_id=_PROFILE, operation_id=_OPERATION_ID)
 
 
 def _context() -> typer.Context:

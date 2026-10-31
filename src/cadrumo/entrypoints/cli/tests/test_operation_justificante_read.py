@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from datetime import UTC, datetime
-from types import SimpleNamespace
+from functools import partial
 from typing import cast
 from uuid import UUID
 
@@ -26,11 +25,11 @@ from ....application.live.justificante_read_operation import (
     JustificanteSnapshotSummaryPublicV1,
 )
 from ....application.live.snapshot_base import SnapshotLifecycleState
-from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ....core.operations import OperationEffect, profile_operation_subject
 from .. import app_live_justificante_commands as handler
 from .. import operation_justificante_read as bridge
-from .. import operation_profile_operation as profile_operation
 from ..app_live_justificante_results import JustificanteListResult, JustificanteViewResult
+from .operation_bridge_support import bind_profile_reads
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -74,40 +73,7 @@ def _show_projection(*, bucket_id: UUID = _PROFILE, snapshot_id: str = _SNAPSHOT
     )
 
 
-def _bind(
-    monkeypatch: pytest.MonkeyPatch,
-    projections: Mapping[str, BaseModel],
-    *,
-    effect: OperationEffect = OperationEffect.NONE,
-    terminal_condition: OperationTerminalCondition = OperationTerminalCondition.SUCCEEDED,
-    refusal_code: str | None = None,
-) -> tuple[list[tuple[BaseModel, dict[str, object]]], list[UUID]]:
-    bound_profiles: list[UUID] = []
-    client = SimpleNamespace(profile_id=_PROFILE)
-
-    def require_client(_ctx: object) -> object:
-        bound_profiles.append(client.profile_id)
-        return client
-
-    monkeypatch.setattr(bridge, "bound_profile_client", require_client)
-    submitted: list[tuple[BaseModel, dict[str, object]]] = []
-
-    def submit(
-        submitted_client: object, request: BaseModel, **kwargs: object
-    ) -> RegisteredOperationCompletion[BaseModel]:
-        assert submitted_client is client
-        submitted.append((request, kwargs))
-        definition_id = cast(str, kwargs["definition_id"])
-        return RegisteredOperationCompletion(
-            operation_id=_OPERATION_ID,
-            projection=projections[definition_id],
-            effect=effect,
-            terminal_condition=terminal_condition,
-            refusal_code=refusal_code,
-        )
-
-    monkeypatch.setattr(profile_operation, "run_registered_operation", submit)
-    return submitted, bound_profiles
+_bind = partial(bind_profile_reads, bridge=bridge, profile_id=_PROFILE, operation_id=_OPERATION_ID)
 
 
 def _context() -> typer.Context:
