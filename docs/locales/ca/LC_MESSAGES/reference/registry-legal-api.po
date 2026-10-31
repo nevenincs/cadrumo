@@ -45,9 +45,9 @@ msgid ""
 msgstr ""
 "El registre de càlcul de Cadrumo preserva l'estructura de l'AEAT que "
 "representa: identificadors de modelo, períodes, seccions, casillas, "
-"fórmules, bindings, classificacions i referències de font conserven el "
-"nom que els dóna l'autoritat. Una revisió de càlcul resolta registra la "
-"revisió del registre que va utilitzar, de manera que una revisió "
+"fórmules, vinculacions, classificacions i referències de font conserven "
+"el nom que els dóna l'autoritat. Una revisió de càlcul resolta registra "
+"la revisió del registre que va utilitzar, de manera que una revisió "
 "posterior pugui identificar el conjunt exacte de regles."
 
 #: ../../reference/registry-legal-api.md
@@ -68,7 +68,7 @@ msgstr "Revisió exacta de regles inclosa que s'ha utilitzat per al càlcul"
 
 #: ../../reference/registry-legal-api.md
 msgid "Formula or binding"
-msgstr "Fórmula o binding"
+msgstr "Fórmula o vinculació"
 
 #: ../../reference/registry-legal-api.md
 msgid "Deterministic route from source values to a casilla"
@@ -500,10 +500,10 @@ msgid ""
 msgstr ""
 "El snapshot validat del registre és l'autoritat del model de lectura per "
 "a un modelo, un any de presentació i un període. Defineix les casillas, "
-"fórmules, bindings, camps repetits, fonamentació i disseny d'exportació "
-"que requereix aquesta revisió de la presentació. Els registres "
-"empresarials d'origen continuen sent propietat dels seus repositoris de "
-"domini xifrats."
+"fórmules, vinculacions, camps repetits, fonamentació i disseny "
+"d'exportació que requereix aquesta revisió de la presentació. Els "
+"registres empresarials d'origen continuen sent propietat dels seus "
+"repositoris de domini xifrats."
 
 #: ../../reference/registry-legal-api.md
 msgid "Shape"
@@ -519,7 +519,7 @@ msgstr "Projecció en temps d'execució"
 
 #: ../../reference/registry-legal-api.md
 msgid "Scalar binding"
-msgstr "Binding escalar"
+msgstr "Vinculació escalar"
 
 #: ../../reference/registry-legal-api.md
 msgid "Typed source kind, selector, and aggregation"
@@ -529,11 +529,11 @@ msgstr "Tipus d'origen tipat, selector i agregació"
 msgid "One numeric, enumerated, text, or date value for a binding id"
 msgstr ""
 "Un valor numèric, enumerat, de text o de data per a un identificador de "
-"binding"
+"vinculació"
 
 #: ../../reference/registry-legal-api.md
 msgid "Repeating row binding"
-msgstr "Binding de fila repetida"
+msgstr "Vinculació de fila repetida"
 
 #: ../../reference/registry-legal-api.md
 msgid "Typed source kind plus grouping, row field, and aggregation"
@@ -544,8 +544,8 @@ msgid ""
 "Values keyed by binding id and one-based row index, with validated detail"
 " rows"
 msgstr ""
-"Valors indexats per identificador de binding i índex de fila que comença "
-"en u, amb files de detall validades"
+"Valors indexats per identificador de vinculació i índex de fila que "
+"comença en u, amb files de detall validades"
 
 #: ../../reference/registry-legal-api.md
 msgid "Formula"
@@ -568,12 +568,12 @@ msgid ""
 "through the `inventory` binding source, which projects Modelo 100 2025 "
 "casillas 0177, 0181, and 0182 per activity."
 msgstr ""
-"Un binding no és un bloc de dades adjuntable. És el contracte pel qual un"
-" resolutor d'orígens inscrit projecta un registre d'origen propi en una "
-"d'aquestes formes d'entrada de presentació. Els actius estrangers del "
-"Modelo 720 utilitzen una projecció de files repetides inscrita. "
-"L'`InventoryLedger` xifrat està inscrit mitjançant l'origen de binding "
-"`inventory`, que projecta les casillas 0177, 0181 i 0182 del Modelo 100 "
+"Una vinculació no és un bloc de dades adjuntable. És el contracte pel "
+"qual un resolutor d'orígens inscrit projecta un registre d'origen propi "
+"en una d'aquestes formes d'entrada de presentació. Els actius estrangers "
+"del Modelo 720 utilitzen una projecció de files repetides inscrita. "
+"L'`InventoryLedger` xifrat està inscrit mitjançant l'origen de vinculació"
+" `inventory`, que projecta les casillas 0177, 0181 i 0182 del Modelo 100 "
 "del 2025 per activitat."
 
 #: ../../reference/registry-legal-api.md:166
