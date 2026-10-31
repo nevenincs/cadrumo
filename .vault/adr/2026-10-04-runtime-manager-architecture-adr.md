@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#runtime-manager-architecture'
 date: '2026-10-04'
-modified: '2026-10-29'
+modified: '2026-10-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:dfb0e99fb62b067797595ee34e2efbf4e72afbc210769e631f7bf2f2fca15d28'
+body_hash: 'sha256:a0b5e845ab28b60063622417a4a3c7dde6ebff06bd3b90d2808a60fe0684c6ad'
 related:
   - "[[2026-10-04-runtime-manager-architecture-requirements-research]]"
   - "[[2026-10-03-runtime-manager-architecture-research]]"
@@ -352,3 +352,25 @@ Accepted 2026-10-17 under `2026-10-17-single-binary-process-tree-adr`, which the
 ## The manager supervises the local AI server
 
 Under `2026-10-24-rust-component-provisioning-adr` (constraint 12), the manager also supervises the local AI server that the Rust component engine installs: it starts it while the local AI is set up, restarts it after a crash, stops it on exit, at session end and before the engine replaces or removes the program, and contains it so nothing outlives the manager. The server binds one fixed Cadrumo loopback address from the canonical environment definition. The manager still holds no profile or credential authority; the local AI server is installation-wide, public software outside custody.
+
+## Amendment 2026-10-31 - the manager manages the environment-selected root
+
+Basis: the user's ruling of 2026-10-30 that Cadrumo has no development-versus-installed (dev/prod) mode and that the storage location is selected only by the environment: an absolute `CADRUMO_STORAGE_ROOT`, otherwise the per-user default for the channel. The user pre-approved ADR changes for the macOS platform bring-up, recorded in the Description of `2026-10-30-macos-platform-plan`. Implemented in commits 212247032d (Python `StorageMode` removal), 0a27935448 (native storage resolves from the environment alone) and 947fa42364 (runtime containment on macOS and Linux).
+
+What changed:
+
+- The manager manages the storage root its environment selects: an absolute `CADRUMO_STORAGE_ROOT` when set, otherwise the per-user default for its channel. `ManagedLocations` (`native/manager/src/supervision/environment.rs`) accepts that root and records whether it is the installed default. It still requires an installed package, proven by its package manifest, and still refuses an authority override. The runtime still starts under the `strict` profile, which pins the resolved root and passes no other override.
+- No image is classified as Development or Installed. A Debug manager starts against an environment-selected root in the same way as a release manager. The native `Package` type only locates package files and proves an installed package; it never picks a root.
+- On macOS and Linux the supervised runtime starts in a process group of its own, apart from terminal job control, held by a guardian that kills the group when the supervising process ends however it ends. The supervisor releases the group once it has observed the runtime's exit, so a clean drain is unchanged. Windows keeps its job-based containment.
+
+Superseded sentences:
+
+- Identity and privilege: "It manages only the canonical default root. A root or authority selected by an environment override stays developer-owned and unmanaged." now reads: "It manages the root its environment selects, through an installed package. An authority override is refused."
+- Sessions: "Only the managed default root is supervised. Developer and test roots stay developer-owned." now reads: "The supervised root is the environment-selected root. One runtime per OS user and storage root still holds."
+- Placement and adoption, on macOS and Linux only: "A manager crash does not kill it." now reads: "A supervisor that ends without a drain takes the runtime's process group with it; the next supervisor starts a new runtime." The runtime is still never a descendant of a frontend's job and never in a job the manager does not own.
+- 2026-10-08 Darwin section: "For default socket endpoints in installed Darwin mode" now reads "For socket endpoints on Darwin". "Development roots remain root-relative and explicit synthetic/operator socket namespaces retain isolation. Custom installed data roots keep root-derived endpoint identities." now reads: "Every root uses the shared transient directory and keeps its root-derived endpoint identity. A caller that injects an explicit namespace, such as a fixture, keeps that isolation. No environment variable selects a socket directory."
+
+Still open, plan Step `S12` of `2026-10-30-macos-platform-plan`:
+
+- The session lock and the manager IPC identifier are not yet scoped by storage root. A standalone manager and a desktop host on the same override root do not yet recognise each other, and two managers on different roots in one session contend for one lock.
+- Windows entry dispatch still refuses an override root (`native/manager/src/installation.rs`), because the strict successor environment clears the root variable. Until `S12` lands, an installed Windows manager reached through entry dispatch manages only the installed default root.

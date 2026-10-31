@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#canonical-environment'
 date: '2026-10-08'
-modified: '2026-10-08'
+modified: '2026-10-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:2337591d34ae8410fd35747804624a520e203b6a4684c9c7b17af109c31ae091'
+body_hash: 'sha256:b5d006fbf75afdd232d497b3efc8264c4472dcffc20bb1d0a1dbfc9e46be9f8c'
 related:
   - "[[2026-10-08-runtime-manager-architecture-darwin-socket-paths-research]]"
   - "[[2026-10-04-canonical-environment-adr]]"
@@ -70,3 +70,25 @@ Default installed Darwin endpoint discovery changes in the pre-release regime. O
 ## Acceptance
 
 Accepted 2026-10-08 under the user's advance authorization to fix the identified high, medium and low defects, install required dependencies, and code/build all installer and manager work except signing certificates. This narrow transient-default correction is necessary to remove the measured installed Darwin launch blocker within the approved runtime-manager work. The four governing ADRs are reconciled in the same change. Persistent data locations, host non-disposability, signing requirements and native lifecycle acceptance gates remain unchanged. Acceptance authorizes the implementation contract; it is not implementation or release evidence.
+
+## Amendment 2026-10-31 - selection independent of any mode
+
+Basis: the user's ruling of 2026-10-30 that Cadrumo has no development-versus-installed (dev/prod) mode and that the storage location is selected only by the environment: an absolute `CADRUMO_STORAGE_ROOT`, otherwise the per-user default for the channel. The user pre-approved ADR changes for the macOS platform bring-up, recorded in the Description of `2026-10-30-macos-platform-plan`. Implemented in commits 212247032d (Python `StorageMode` removal), 0a27935448 (native storage resolves from the environment alone) and 947fa42364 (runtime containment on macOS and Linux).
+
+What changed:
+
+- The Darwin transient directory is derived by the OS from the per-user cache base (`_CS_DARWIN_USER_CACHE_DIR`) for the product family, on every Darwin process, independent of any mode and of the storage root (`src/cadrumo/core/connection_transport.py`, `native/platform/src/transport.rs`). Every storage root, default or `CADRUMO_STORAGE_ROOT`, places its runtime and worker endpoints in that directory under its root-derived endpoint names.
+- The operator socket-directory variable and every per-member location variable are removed (212247032d). No environment variable selects a socket directory.
+- A caller that passes an explicit namespace, such as a test fixture, keeps that isolation. This is a constructor argument, not an environment control.
+- The desktop single-instance lock and its per-session activation sockets on macOS live in the same directory (`native/desktop/src-tauri/src/shell/single_instance/posix.rs`). Their names carry a compact digest of the family: `desktop-<12 hex>.lock` and `desktop-<12 hex>-<session>.sock`, from SHA-256 over `cadrumo-desktop-instance-v1`, a NUL byte and the family identifier. They use the same retained, rechecked namespace custody and the same socket-path bound refusal. This record did not list them before.
+
+Superseded sentences:
+
+- Constraints: "Only the default socket location in installed Darwin mode gains an external transient anchor for RUNTIME_SOCKETS." now reads: "On Darwin, the socket location gains an external transient anchor for RUNTIME_SOCKETS." The list of contents gains the desktop single-instance lock and activation sockets.
+- Constraints: "Development roots remain root-relative, and explicit synthetic or operator-selected socket namespaces keep their isolation; the existing operator socket-directory override remains an operator feature and is removed by the manager's strict environment." now reads: "Every root uses the transient anchor; an explicit namespace passed by a caller keeps its isolation; no operator socket-directory override exists."
+- Constraints: "Selection uses installed mode plus absence of an explicit runtime-socket member or namespace override." and "Development mode remains root-relative. Neither mode nor channel is inferred from the root pathname or from the presence of a pin." now read: "Selection uses the platform alone, unless a caller passes an explicit namespace. Channel is not inferred from the root pathname or from the presence of a pin."
+- Constraints: "Custom installed storage roots retain distinct root-derived runtime/worker endpoint leaves" now reads "Every non-default storage root retains distinct root-derived runtime/worker endpoint leaves".
+- Constraints: "The manager's existing admission to only the installed default storage root remains unchanged" is superseded by the 2026-10-31 amendment of `2026-10-04-runtime-manager-architecture-adr`. This transport rule still grants no management authority.
+- Implementation: "consume it in installed runtime/worker and manager endpoints" now reads "consume it in runtime, worker, manager and desktop instance endpoints".
+
+Still open: the manager filename digest input carries the manager identifier, UID and session, but no storage root. Two managers on different roots in one session therefore map to one manager socket name. Root scoping of the session lock and identifier is plan Step `S12`.
