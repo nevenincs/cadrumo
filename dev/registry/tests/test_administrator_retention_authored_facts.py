@@ -17,10 +17,9 @@ from cadrumo.domain.calculations.registry.facts.resolution import (
 from cadrumo.domain.calculations.registry.facts.schema import GovernedFactCatalogue
 from cadrumo.domain.calculations.registry.schema_base import DateAxis
 
-from ..compiler.fact_loader import load_governed_facts
 from ..compiler.fact_validation import governed_fact_catalogue_failures
 from ..compiler.loader import load_shared_catalogues
-from .profile_schema_support import authored_history_supported_filing_years
+from .profile_schema_support import authored_fact_catalogue, authored_history_supported_filing_years
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -35,9 +34,7 @@ _REDUCTION_START = date(2015, 1, 1)
 
 
 def _catalogue() -> GovernedFactCatalogue:
-    facts = load_governed_facts(bundled_path("registry", "aeat", "facts"))
-    selected = {fact.fact_id: fact for fact in facts if fact.fact_id in _FACT_IDS}
-    return GovernedFactCatalogue(facts=selected)
+    return authored_fact_catalogue(_FACT_IDS)
 
 
 def _resolve(fact_id: str, effective_date: date) -> ResolvedScalarFact:

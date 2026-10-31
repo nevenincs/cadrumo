@@ -8,11 +8,13 @@ from pathlib import Path
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
+from cadrumo.domain.calculations.registry.facts.schema import GovernedFactCatalogue
 from cadrumo.domain.calculations.registry.governed_fact_scope import CandidateFactAuthority, validating_governed_facts
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 from cadrumo.domain.calculations.registry.snapshot_globals import SupportedFilingYearsCatalogue
 from cadrumo.domain.user_profile.schema import ProfileSchemaDefinition
+from dev.registry.compiler.fact_loader import load_governed_facts
 from dev.registry.compiler.loader import load_shared_catalogues
 from dev.registry.compiler.profile_schema import capture_profile_schema
 from dev.registry.compiler.validator import RegistryValidator
@@ -22,6 +24,13 @@ from dev.registry.compiler.validator import RegistryValidator
 def committed_supported_filing_years() -> SupportedFilingYearsCatalogue:
     """Return the committed registry's single filing-year support envelope."""
     return load_shared_catalogues(bundled_path("registry", "aeat")).require_supported_filing_years()
+
+
+def authored_fact_catalogue(fact_ids: Iterable[str]) -> GovernedFactCatalogue:
+    """Return the authored governed facts named by ``fact_ids``, read from the committed registry source."""
+    wanted = frozenset(fact_ids)
+    facts = load_governed_facts(bundled_path("registry", "aeat", "facts"))
+    return GovernedFactCatalogue(facts={fact.fact_id: fact for fact in facts if fact.fact_id in wanted})
 
 
 @cache
