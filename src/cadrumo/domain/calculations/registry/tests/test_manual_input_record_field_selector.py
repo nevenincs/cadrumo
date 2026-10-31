@@ -31,6 +31,7 @@ from ..binding_value_contract import BindingDataType, BindingValueChannel, Bindi
 from ..bindings_previous_filing import PreviousFilingProvider
 from ..errors import RegistryValidationError
 from ..schema import BindingDefinition
+from .profile_binding_fixture import tax_residence_profile_binding
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -105,28 +106,7 @@ def test_a_casilla_shape_manual_input_binding_is_not_applicable() -> None:
 
 def test_a_non_manual_input_binding_is_not_applicable() -> None:
     """A profile-sourced binding is never a record-field manual_input selector."""
-    profile = BindingDefinition.model_validate(
-        {
-            "id": "renta-profile-tax-residence-ccaa",
-            "provider": {
-                "kind": "profile",
-                "profile_model": "TaxResidenceProfile",
-                "field": "ccaa",
-                "xsd_attribute": "codigoCADeclaracion",
-                "dictionary_field": "ZCCAD",
-            },
-            "value": {
-                "data_type": "enum",
-                "channel": "enum",
-                "typed_enum": "CCAA",
-            },
-            "aggregation": {
-                "op": "copy",
-            },
-            "legal_refs": ("orden-hac-277-2026:art-3",),
-            "source_refs": ("aeat-dr-100-2025-dictionary",),
-        },
-    )
+    profile = tax_residence_profile_binding()
 
     assert manual_input_record_field_selector(profile) is None
 
