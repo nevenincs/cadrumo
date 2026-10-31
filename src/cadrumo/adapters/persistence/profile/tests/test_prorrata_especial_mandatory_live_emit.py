@@ -195,6 +195,24 @@ def _parenthesised_amounts(message: str) -> list[Decimal]:
 # ---------------------------------------------------------------------------
 
 
+def _seed_general_that_over_deducts(profile: TestRuntimeProfile, operation: PinnedAuthorityOperation) -> None:
+    """Save a COMMON and an EXCLUSIVELY_NON_DEDUCTIBLE purchase and declare the general regime."""
+    _save_txns(
+        profile,
+        (
+            _purchase(
+                "buy-common", cuota=Decimal("210.00"), classification=InputClassification.from_registry("common")
+            ),
+            _purchase(
+                "buy-non-ded",
+                cuota=Decimal("210.00"),
+                classification=InputClassification.from_registry("exclusively_non_deductible"),
+            ),
+        ),
+    )
+    _declare(ProrrataRegisterRegime.from_registry("general"), operation=operation, percentage=_GENERAL_PCT)
+
+
 def test_fires_for_fully_classified_general_bucket_with_breach(
     tmp_path: Path,
     *,
@@ -207,20 +225,7 @@ def test_fires_for_fully_classified_general_bucket_with_breach(
     general -> the general regime over-deducts by more than 10% (art. 103.Dos.2).
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET) as profile:
-        _save_txns(
-            profile,
-            (
-                _purchase(
-                    "buy-common", cuota=Decimal("210.00"), classification=InputClassification.from_registry("common")
-                ),
-                _purchase(
-                    "buy-non-ded",
-                    cuota=Decimal("210.00"),
-                    classification=InputClassification.from_registry("exclusively_non_deductible"),
-                ),
-            ),
-        )
-        _declare(ProrrataRegisterRegime.from_registry("general"), operation=operation, percentage=_GENERAL_PCT)
+        _seed_general_that_over_deducts(profile, operation)
         especial = _especial_diagnostics(_collect())
 
     assert len(especial) == 1
@@ -313,20 +318,7 @@ def test_prompt_for_general_bucket_with_unclassified_row(
 def test_silent_mid_year_period(tmp_path: Path, *, operation: PinnedAuthorityOperation) -> None:
     """A mid-year quarter is never a settlement event: the check never runs."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET) as profile:
-        _save_txns(
-            profile,
-            (
-                _purchase(
-                    "buy-common", cuota=Decimal("210.00"), classification=InputClassification.from_registry("common")
-                ),
-                _purchase(
-                    "buy-non-ded",
-                    cuota=Decimal("210.00"),
-                    classification=InputClassification.from_registry("exclusively_non_deductible"),
-                ),
-            ),
-        )
-        _declare(ProrrataRegisterRegime.from_registry("general"), operation=operation, percentage=_GENERAL_PCT)
+        _seed_general_that_over_deducts(profile, operation)
         especial = _especial_diagnostics(_collect(period_token=_MID_YEAR_PERIOD))
 
     assert especial == []
@@ -420,20 +412,7 @@ def test_silent_for_sectorized_register(tmp_path: Path, *, operation: PinnedAuth
 def test_fires_through_live_calculate_fan_out(tmp_path: Path, *, operation: PinnedAuthorityOperation) -> None:
     """The obligation fires through the ACTUAL calculate advisory fan-out, not the collector alone."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET) as profile:
-        _save_txns(
-            profile,
-            (
-                _purchase(
-                    "buy-common", cuota=Decimal("210.00"), classification=InputClassification.from_registry("common")
-                ),
-                _purchase(
-                    "buy-non-ded",
-                    cuota=Decimal("210.00"),
-                    classification=InputClassification.from_registry("exclusively_non_deductible"),
-                ),
-            ),
-        )
-        _declare(ProrrataRegisterRegime.from_registry("general"), operation=operation, percentage=_GENERAL_PCT)
+        _seed_general_that_over_deducts(profile, operation)
         diagnostics = collect_bucket_aggregation_advisory_diagnostics(
             _revision(),
             {},
