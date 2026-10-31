@@ -285,7 +285,7 @@ def _rent(*, landlord: str, source_id: str, accrued_on: date, base: str, retenci
             cadastral_reference="1234567VK4713C0001XY",
             address=Modelo180StructuredAddress(
                 province_code="28",
-                municipality_code="079",
+                municipality_code="28079",
                 municipality="Madrid",
                 locality="Madrid",
                 postal_code="28001",

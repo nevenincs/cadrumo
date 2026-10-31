@@ -209,7 +209,7 @@ def _one_recipient_two_properties(year: int) -> RetencionesAggregation:
                 cadastral_reference=f"{key.upper()}REF",
                 address=Modelo180StructuredAddress(
                     province_code="28",
-                    municipality_code="079",
+                    municipality_code="28079",
                     municipality="Madrid",
                     locality="Madrid",
                     postal_code="28001",
