@@ -58,7 +58,7 @@ effective_from = 2004-07-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-08-12
 reviewed_by = "operator"
-notes = "Carácter del procedimiento de apremio. Exclusively administrative, driven ex officio through all its steps, and not cumulative with judicial or other execution procedures. Conflicts of jurisdiction with judges and courts are resolved under Ley Organica 2/1987 de Conflictos Jurisdiccionales. The framing article for the whole enforcement chapter."
+notes = "Carácter del procedimiento de apremio. Exclusively administrative, driven ex officio through all its steps, and not cumulative with judicial or other execution procedures. Conflicts of jurisdiction with judges and courts are resolved under Ley Orgánica 2/1987 de Conflictos Jurisdiccionales. The framing article for the whole enforcement chapter."
 required_text = [
     "no será acumulable a los judiciales ni a otros procedimientos de ejecución",
     "se iniciará e impulsará de oficio en todos sus trámites",
@@ -104,7 +104,7 @@ effective_from = 2004-07-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-08-12
 reviewed_by = "operator"
-notes = "Ejecucion de garantías. Where the debt is secured, the garantía is executed first through the apremio procedure. The Administración may instead seize and sell other assets beforehand where the garantía is disproportionate to the secured debt or where the obligado so requests and points to sufficient assets; in that case the garantía lapses to the extent covered by the seizures."
+notes = "Ejecución de garantías. Where the debt is secured, the garantía is executed first through the apremio procedure. The Administración may instead seize and sell other assets beforehand where the garantía is disproportionate to the secured debt or where the obligado so requests and points to sufficient assets; in that case the garantía lapses to the extent covered by the seizures."
 required_text = [
     "la garantía prestada quedará sin efecto en la parte asegurada por los embargos",
 ]
@@ -150,14 +150,7 @@ effective_from = 2012-10-31
 review_status = "operator_reviewed"
 reviewed_at = 2026-08-12
 reviewed_by = "operator"
-notes = """\
-Diligencia de embargo y anotación preventiva. Each seizure is documented in its own diligencia, \
-notified to the obligado, and where the asset is registrable the Administración is entitled to a \
-preventive annotation of the seizure in the corresponding register. Apartado 3 closes the grounds of \
-opposition to the diligencia (extinción or prescripción, lack of notification of the providencia, \
-breach of the seizure rules, and suspension of the procedure). Apartado 6 allows a prohibicion de \
-disponer over the real property of a company whose shares have been seized from a controlling \
-shareholder."""
+notes = "Diligencia de embargo y anotación preventiva. Each seizure is documented in its own diligencia, notified to the obligado, and where the asset is registrable the Administración is entitled to a preventive annotation of the seizure in the corresponding register. Apartado 3 closes the grounds of opposition to the diligencia (extinción or prescripción, lack of notification of the providencia, breach of the seizure rules, and suspension of the procedure). Apartado 6 allows a prohibición de disponer over the real property of a company whose shares have been seized from a controlling shareholder."
 required_text = [
     "Contra la diligencia de embargo sólo serán admisibles los siguientes motivos de oposición",
     "prohibición de disponer sobre los bienes inmuebles de una sociedad",
@@ -204,14 +197,7 @@ effective_from = 2004-07-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-08-12
 reviewed_by = "operator"
-notes = """\
-Enajenacion de los bienes embargados. Sale proceeds by public auction, competition or direct award. \
-Where the assets are not sold the procedure may end with their adjudication to the Hacienda Publica: \
-that adjudication is agreed for the amount of the debt pursued and may never exceed 75 por ciento of \
-the initial price set in the sale procedure -- the one percentage this article establishes. Assets \
-may not be sold until the liquidación being enforced is firm, save for force majeure, perishable \
-goods, or the obligado's express request. The obligado may release the seized assets at any point \
-before adjudication by extinguishing the debt and the costs."""
+notes = "Enajenación de los bienes embargados. Sale proceeds by public auction, competition or direct award. Where the assets are not sold the procedure may end with their adjudication to the Hacienda Publica: that adjudication is agreed for the amount of the debt pursued and may never exceed 75 por ciento of the initial price set in the sale procedure -- the one percentage this article establishes. Assets may not be sold until the liquidación being enforced is firm, save for force majeure, perishable goods, or the obligado's express request. The obligado may release the seized assets at any point before adjudication by extinguishing the debt and the costs."
 required_text = [
     "podrá concluir con la adjudicación de bienes a la Hacienda Pública",
     "sin que, en ningún caso, pueda rebasar el 75 por ciento del tipo inicial fijado en el procedimiento de enajenación",
@@ -230,7 +216,7 @@ effective_from = 2004-07-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-08-12
 reviewed_by = "operator"
-notes = "Terminacion del procedimiento de apremio. The procedure ends on payment of the debt, on a ruling that the debt is uncollectible once every obligado has been declared fallido, or on agreement that the debt has been extinguished on any other ground. A credit declared uncollectible is not necessarily final: the procedure is resumed within the prescription period if the solvency of an obligado becomes known."
+notes = "Terminación del procedimiento de apremio. The procedure ends on payment of the debt, on a ruling that the debt is uncollectible once every obligado has been declared fallido, or on agreement that the debt has been extinguished on any other ground. A credit declared uncollectible is not necessarily final: the procedure is resumed within the prescription period if the solvency of an obligado becomes known."
 required_text = [
     "una vez declarados fallidos todos los obligados al pago",
     "el procedimiento de apremio se reanudará, dentro del plazo de prescripción",

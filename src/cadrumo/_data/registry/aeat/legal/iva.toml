@@ -206,7 +206,7 @@ effective_from = 2003-12-31
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-06
 reviewed_by = "operator"
-notes = "Apartado tercero de la Orden HAC/3625/2003: plazo de presentación del Modelo 309. Veinte primeros días naturales de abril, julio y octubre; ultimo periodo en los treinta primeros días naturales del mes de enero del ano siguiente. Casos especiales: medios de transporte nuevos 30 días desde la transmisión; ejecuciones forzosas 1 mes desde el pago de la adjudicacion."
+notes = "Apartado tercero de la Orden HAC/3625/2003: plazo de presentación del Modelo 309. Veinte primeros días naturales de abril, julio y octubre; ultimo periodo en los treinta primeros días naturales del mes de enero del ano siguiente. Casos especiales: medios de transporte nuevos 30 días desde la transmisión; ejecuciones forzosas 1 mes desde el pago de la adjudicación."
 required_text = [
     "Plazo de presentación del modelo 309",
     "veinte primeros días naturales",
@@ -1374,7 +1374,7 @@ effective_from = 2010-04-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-05
 reviewed_by = "operator"
-notes = "Obligados a presentar la declaración recapitulativa de operaciones intracomunitarias y reglas de periodicidad mensual/trimestral en funcion del umbral de 50.000 euros del Reglamento del IVA."
+notes = "Obligados a presentar la declaración recapitulativa de operaciones intracomunitarias y reglas de periodicidad mensual/trimestral en función del umbral de 50.000 euros del Reglamento del IVA."
 required_text = [
     "Obligados a presentar la declaración recapitulativa",
     "acuerdos de ventas de bienes en consigna",
@@ -1741,14 +1741,7 @@ effective_from = 2013-01-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-08-07
 reviewed_by = "agent-review"
-notes = """\
-RD 1619/2012 Reglamento de facturación art 6.1.d: contenido de la factura, NIF. Además del NIF del \
-expedidor, la consignacion del NIF del DESTINATARIO es obligatoria en tres casos, y el tercero -- \
-operaciones realizadas en el territorio de aplicación del Impuesto por un empresario o profesional \
-establecido en dicho territorio -- es el que fundamenta el aviso de la CLI cuando una factura \
-simplificada domestica no nombra NIF de contraparte. Se declara con el id compuesto art-6.1.d porque \
-el aviso cita la letra, no el articulo entero: citar solo art-6 apuntaria al contenido general de la \
-factura y no a la provision que exige ese dato."""
+notes = "RD 1619/2012 Reglamento de facturación art 6.1.d: contenido de la factura, NIF. Además del NIF del expedidor, la consignación del NIF del DESTINATARIO es obligatoria en tres casos, y el tercero -- operaciones realizadas en el territorio de aplicación del Impuesto por un empresario o profesional establecido en dicho territorio -- es el que fundamenta el aviso de la CLI cuando una factura simplificada domestica no nombra NIF de contraparte. Se declara con el id compuesto art-6.1.d porque el aviso cita la letra, no el articulo entero: citar solo art-6 apuntaría al contenido general de la factura y no a la provision que exige ese dato."
 required_text = [
     "Contenido de la factura",
     "será obligatoria la consignación del Número de Identificación Fiscal del destinatario",
@@ -1806,7 +1799,7 @@ effective_from = 2013-01-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-09-13
 reviewed_by = "agent-authored from the bundled corpus capture; operator to re-stamp"
-notes = "RD 1619/2012 art 6.1.a: numero y serie de la factura. Se declara con el id compuesto porque la clase RECTIFICATIVA cita la letra, no el articulo entero. El texto citado es el del articulo 6; el articulo 7.1.a usa la misma formula para las facturas SIMPLIFICADAS, de ahi que la cita incluya 'las facturas dentro de cada serie' sin el adjetivo."
+notes = "RD 1619/2012 art 6.1.a: numero y serie de la factura. Se declara con el id compuesto porque la clase RECTIFICATIVA cita la letra, no el articulo entero. El texto citado es el del articulo 6; el articulo 7.1.a usa la misma formula para las facturas SIMPLIFICADAS, de ahí que la cita incluya 'las facturas dentro de cada serie' sin el adjetivo."
 required_text = [
     "Contenido de la factura",
     "Número y, en su caso, serie",
@@ -2143,21 +2136,8 @@ published_at = 1992-12-29
 effective_from = 1993-01-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-08
-reviewed_by = "agent-authored from bundled ley-37-1992.html#a101 regimen de deducciones en sectores diferenciados; art 101.Dos comun deferred; operator to re-stamp"
-notes = """\
-Articulo 101 LIVA: régimen de deducciones en sectores diferenciados de la actividad. Apartado Uno: \
-el sujeto pasivo que realiza actividades económicas en sectores diferenciados (art 9.1.c) debe \
-aplicar SEPARADAMENTE el régimen de deducciones respecto de cada uno; la prorrata especial puede \
-aplicarse independientemente por sector (letras a', c', d'); los sectores de la letra b' se rigen \
-por sus regímenes especiales. Las adquisiciones para uso EN COMUN en varios sectores se deducen por \
-el porcentaje del art 104.Dos y siguientes (porcentaje común). Base legal del enrutado por sector: \
-cada input a la deducción de SU sector; el input de uso común al porcentaje común del art 104.Dos. \
-Apartado Dos (DIFERIDO en esta fase): la Administración puede autorizar un régimen de deducción \
-COMUN a los sectores de la letra a', autorizacion que NO surte efectos en el ano en que el total de \
-cuotas deducibles por el régimen común exceda en un 20 por 100 al que resultaría aplicando con \
-independencia el régimen de cada sector - se registra como caso de autorizacion (register \
-authorisation_reference) y su +20% void test se difiere, con el esquema del register ya preparado \
-para admitirlo."""
+reviewed_by = "agent-authored from bundled ley-37-1992.html#a101 regimen de deducciones en sectores diferenciados; art 101.Dos común deferred; operator to re-stamp"
+notes = "Articulo 101 LIVA: régimen de deducciones en sectores diferenciados de la actividad. Apartado Uno: el sujeto pasivo que realiza actividades económicas en sectores diferenciados (art 9.1.c) debe aplicar SEPARADAMENTE el régimen de deducciones respecto de cada uno; la prorrata especial puede aplicarse independientemente por sector (letras a', c', d'); los sectores de la letra b' se rigen por sus regímenes especiales. Las adquisiciones para uso EN COMUN en varios sectores se deducen por el porcentaje del art 104.Dos y siguientes (porcentaje común). Base legal del enrutado por sector: cada input a la deducción de SU sector; el input de uso común al porcentaje común del art 104.Dos. Apartado Dos (DIFERIDO en esta fase): la Administración puede autorizar un régimen de deducción COMUN a los sectores de la letra a', autorización que NO surte efectos en el ano en que el total de cuotas deducibles por el régimen común exceda en un 20 por 100 al que resultaría aplicando con independencia el régimen de cada sector - se registra como caso de autorización (register authorisation_reference) y su +20% void test se difiere, con el esquema del register ya preparado para admitirlo."
 required_text = [
     "Los sujetos pasivos que realicen actividades económicas en sectores diferenciados de la actividad empresarial o profesional deberán aplicar separadamente el régimen de deducciones respecto de cada uno de ellos.",
     "La aplicación de la regla de prorrata especial podrá efectuarse independientemente respecto de cada uno de los sectores diferenciados",
@@ -2179,7 +2159,7 @@ published_at = 1992-12-29
 effective_from = 1993-01-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-08
-reviewed_by = "agent-authored from bundled ley-37-1992.html#a9 definicion de sectores diferenciados letra c; operator to re-stamp"
+reviewed_by = "agent-authored from bundled ley-37-1992.html#a9 definición de sectores diferenciados letra c; operator to re-stamp"
 notes = """\
 Articulo 9, numero 1.o, letra c) LIVA: la definición de los SECTORES DIFERENCIADOS de la actividad \
 (base del art 101). Letra a': actividades económicas con grupos DISTINTOS en la Clasificación \
@@ -2469,7 +2449,7 @@ effective_from = 1993-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-21
 reviewed_by = "operator"
-notes = "Articulo 94 LIVA: operaciones que originan el derecho a deducir. Los sujetos pasivos podran deducir las cuotas del IVA soportadas en los supuestos en que las referidas operaciones hayan sido realizadas en el ejercicio de su actividad empresarial o profesional."
+notes = "Articulo 94 LIVA: operaciones que originan el derecho a deducir. Los sujetos pasivos podrán deducir las cuotas del IVA soportadas en los supuestos en que las referidas operaciones hayan sido realizadas en el ejercicio de su actividad empresarial o profesional."
 required_text = [
     # Operative phrases from apartado Uno.1.c) and apartado Tres, chosen so a
     # truncated excerpt cannot satisfy this check. The article title alone
@@ -2557,7 +2537,7 @@ effective_from = 1993-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-21
 reviewed_by = "operator"
-notes = "Articulo 122 LIVA: régimen simplificado del IVA. Seran de aplicación a los sujetos pasivos que reglamentariamente se determinen en atencion al volumen de operaciones u otras circunstancias."
+notes = "Articulo 122 LIVA: régimen simplificado del IVA. Serán de aplicación a los sujetos pasivos que reglamentariamente se determinen en atención al volumen de operaciones u otras circunstancias."
 required_text = [
     "régimen simplificado",
     "volumen de operaciones",
@@ -2737,7 +2717,7 @@ consolidated_as_of = 2025-12-03
 review_status = "agent_reviewed"
 reviewed_at = 2026-06-29
 reviewed_by = "agent-review"
-notes = "La disposición final cuarta, modificada por el Real Decreto-ley 15/2025, fija los hitos actuales de adaptacion: antes del 1 de enero de 2027 para los obligados del art. 3.1.a y antes del 1 de julio de 2027 para el resto de obligados del art. 3.1."
+notes = "La disposición final cuarta, modificada por el Real Decreto-ley 15/2025, fija los hitos actuales de adaptación: antes del 1 de enero de 2027 para los obligados del art. 3.1.a y antes del 1 de julio de 2027 para el resto de obligados del art. 3.1."
 required_text = [
     "antes del 1 de enero de 2027",
     "antes del 1 de julio de 2027",
@@ -3093,31 +3073,7 @@ effective_to = 2024-12-31
 review_status = "agent_reviewed"
 reviewed_at = 2026-08-07
 reviewed_by = "agent-prepared-pending-operator"
-notes = """\
-RDL 4/2024 art. 1: tipos impositivos temporales del IVA sobre determinados alimentos y los tipos del \
-recargo de equivalencia correlativos. Dos ventanas. Del 1 de julio al 30 de septiembre de 2024: 5 % \
-para aceites de semilla y pastas alimenticias, 0 % para alimentos de primera necesidad incluido el \
-aceite de oliva; recargo 0,62 % y 0 % respectivamente. Del 1 de octubre al 31 de diciembre de 2024: \
-7,5 % y 2 %; recargo 1 % y 0,26 %. ALCANCE. Esta entrada cubre solo lo que fija el articulo 1. El \
-articulo 2 del mismo real decreto-ley modifica el art. 91 Dos.1.1 LIVA con efectos desde el 1 de \
-enero de 2025 y es una provision distinta que necesita su propia entrada; el texto consolidado de la \
-LIVA solo anota ese articulo 2, que es la razón por la que este instrumento parecia fijar únicamente \
-una fecha de 2025. Las ventanas anteriores al 1 de julio de 2024 las fijan RDL 20/2022, RDL 18/2022, \
-RDL 5/2023 y RDL 8/2023, ninguno de los cuales esta en el corpus. CONTRASTE INDEPENDIENTE. Las \
-cuatro cifras del recargo (0,62 / 0 / 1 / 0,26) coinciden con los tipos que declara el diseño de \
-registro del Modelo 390 en las casillas 665/666, 663/664, 693/694 y 691/692, y 0,62 es estable en \
-las revisiones 2023, 2024 y 2025 del diseño. El preámbulo del propio real decreto-ley redondea 0,62 \
-a "0,6"; prevalece el texto operativo, y el diseño lo corrobora de forma independiente. PROVENANCIA \
-DE LA REVISION. Entrada preparada por agente y fundamentada en el texto autoritativo empaquetado \
-(documento BOE integro, sha256 3738875c89c223a8e561eb994d0349affd3006d7b4104e4e9e99b337f64dcc58). No \
-la ha revisado un operador humano; reviewed_by lo declara así. El modelo tipa review_status como \
-Literal["reviewed"], de modo que la honestidad de la provenance vive en reviewed_by hasta que un \
-operador re-selle la entrada. NOTA PARA QUIEN EDITE required_text. Las cuatro frases operativas son \
-identicas salvo la cifra, de modo que un required_text tomado del prefijo común coincide con las \
-cuatro y no discrimina nada. Cada entrada lleva su cifra. Además el documento separa "del" de la \
-cifra con un espacio duro (U+00A0), pero la puerta lo normaliza a espacio normal antes de comparar, \
-así que required_text usa espacio normal: incrustar el espacio duro hace fallar todas las \
-coincidencias."""
+notes = "RDL 4/2024 art. 1: tipos impositivos temporales del IVA sobre determinados alimentos y los tipos del recargo de equivalencia correlativos. Dos ventanas. Del 1 de julio al 30 de septiembre de 2024: 5 % para aceites de semilla y pastas alimenticias, 0 % para alimentos de primera necesidad incluido el aceite de oliva; recargo 0,62 % y 0 % respectivamente. Del 1 de octubre al 31 de diciembre de 2024: 7,5 % y 2 %; recargo 1 % y 0,26 %. ALCANCE. Esta entrada cubre solo lo que fija el articulo 1. El articulo 2 del mismo real decreto-ley modifica el art. 91 Dos.1.1 LIVA con efectos desde el 1 de enero de 2025 y es una provision distinta que necesita su propia entrada; el texto consolidado de la LIVA solo anota ese articulo 2, que es la razón por la que este instrumento parecía fijar únicamente una fecha de 2025. Las ventanas anteriores al 1 de julio de 2024 las fijan RDL 20/2022, RDL 18/2022, RDL 5/2023 y RDL 8/2023, ninguno de los cuales esta en el corpus. CONTRASTE INDEPENDIENTE. Las cuatro cifras del recargo (0,62 / 0 / 1 / 0,26) coinciden con los tipos que declara el diseño de registro del Modelo 390 en las casillas 665/666, 663/664, 693/694 y 691/692, y 0,62 es estable en las revisiones 2023, 2024 y 2025 del diseño. El preámbulo del propio real decreto-ley redondea 0,62 a \"0,6\"; prevalece el texto operativo, y el diseño lo corrobora de forma independiente. PROVENANCIA DE LA REVISION. Entrada preparada por agente y fundamentada en el texto autoritativo empaquetado (documento BOE integro, sha256 3738875c89c223a8e561eb994d0349affd3006d7b4104e4e9e99b337f64dcc58). No la ha revisado un operador humano; reviewed_by lo declara así. El modelo tipa review_status como Literal[\"reviewed\"], de modo que la honestidad de la provenance vive en reviewed_by hasta que un operador re-selle la entrada. NOTA PARA QUIEN EDITE required_text. Las cuatro frases operativas son idénticas salvo la cifra, de modo que un required_text tomado del prefijo común coincide con las cuatro y no discrimina nada. Cada entrada lleva su cifra. Además el documento separa \"del\" de la cifra con un espacio duro (U+00A0), pero la puerta lo normaliza a espacio normal antes de comparar, así que required_text usa espacio normal: incrustar el espacio duro hace fallar todas las coincidencias."
 required_text = [
     "será del 0,62 por ciento",
     "será del 0 por ciento",
@@ -3222,25 +3178,7 @@ effective_from = 2012-09-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-08-08
 reviewed_by = "agent-prepared-pending-operator"
-notes = """\
-RDL 20/2012 art. 23, apartado Dos: da nueva redacción al art. 90 Uno LIVA y fija el tipo general en \
-el 21 por ciento, con efectos desde el 1 de septiembre de 2012. Esta es la provision que ESTABLECE \
-el valor; el art. 90 LIVA es el articulo marco que lo aloja, y citarlo solo no basta cuando una \
-norma modificativa fija la cifra. El texto consolidado del art. 90 lo confirma en su nota de \
-modificación: 'Se modifica el apartado 1, con efectos desde el 1 de septiembre de 2012, por el art. \
-23.2 del Real Decreto-ley 20/2012, de 13 de julio. Ref. BOE-A-2012-9364'. DOS TRAMPAS DE CITA, ambas \
-verificadas sobre el fichero empaquetado. Primera: el documento contiene TRES cadenas 'Articulo 23' \
-y la primera pertenece a otra ley -- el articulo 23 sobre el Servicio de Ayuda a Domicilio -- de \
-modo que anclar por la cadena sola selecciona el articulo equivocado; el de IVA es la segunda \
-aparicion. Segunda: los apartados difieren por tipo. El 21 por ciento lo fija el apartado Dos y el \
-10 por ciento el apartado Tres, por lo que citar 23.2 para el tipo reducido seria erróneo en un \
-apartado. El tipo super-reducido del 4 por ciento es ANTERIOR a esta norma y NO puede heredarla por \
-proximidad: necesita su propia provision. PROVENANCIA. Documento adquirido mediante la herramienta \
-de adquisición del corpus consolidado oficial (API de legislacion consolidada del portal oficial), \
-26 bloques servidos cada uno en su ultima version, sha256 \
-d0ef2bae3d07e5a2fed52315c29808306f0a3ec197b1bc0501186ce16181c9df, 733051 bytes. Entrada preparada \
-por agente y fundamentada en el texto empaquetado leído directamente; no la ha revisado un operador \
-humano, y reviewed_by lo declara así."""
+notes = "RDL 20/2012 art. 23, apartado Dos: da nueva redacción al art. 90 Uno LIVA y fija el tipo general en el 21 por ciento, con efectos desde el 1 de septiembre de 2012. Esta es la provision que ESTABLECE el valor; el art. 90 LIVA es el articulo marco que lo aloja, y citarlo solo no basta cuando una norma modificativa fija la cifra. El texto consolidado del art. 90 lo confirma en su nota de modificación: 'Se modifica el apartado 1, con efectos desde el 1 de septiembre de 2012, por el art. 23.2 del Real Decreto-ley 20/2012, de 13 de julio. Ref. BOE-A-2012-9364'. DOS TRAMPAS DE CITA, ambas verificadas sobre el fichero empaquetado. Primera: el documento contiene TRES cadenas 'Articulo 23' y la primera pertenece a otra ley -- el articulo 23 sobre el Servicio de Ayuda a Domicilio -- de modo que anclar por la cadena sola selecciona el articulo equivocado; el de IVA es la segunda aparición. Segunda: los apartados difieren por tipo. El 21 por ciento lo fija el apartado Dos y el 10 por ciento el apartado Tres, por lo que citar 23.2 para el tipo reducido seria erróneo en un apartado. El tipo super-reducido del 4 por ciento es ANTERIOR a esta norma y NO puede heredarla por proximidad: necesita su propia provision. PROVENANCIA. Documento adquirido mediante la herramienta de adquisición del corpus consolidado oficial (API de legislación consolidada del portal oficial), 26 bloques servidos cada uno en su ultima version, sha256 d0ef2bae3d07e5a2fed52315c29808306f0a3ec197b1bc0501186ce16181c9df, 733051 bytes. Entrada preparada por agente y fundamentada en el texto empaquetado leído directamente; no la ha revisado un operador humano, y reviewed_by lo declara así."
 required_text = [
     "se exigirá al tipo del 21 por ciento",
 ]
@@ -3286,30 +3224,7 @@ effective_from = 1995-01-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-08-08
 reviewed_by = "agent-prepared-pending-operator"
-notes = """\
-Ley 41/1994, de 30 de diciembre, de Presupuestos Generales del Estado para 1995, art. 78 (Tipos \
-impositivos), apartado Segundo: da nueva redacción al art. 91 LIVA y fija el tipo super-reducido en \
-el 4 por 100, elevando además el reducido del 6 al 7 por 100 en el mismo apartado. Esta es la \
-provision que ESTABLECE el 4 por ciento; el art. 91 LIVA es el articulo marco que lo aloja. Las dos \
-entradas hermanas de RDL 20/2012 lo dicen explicitamente en sus propias notas: el tipo \
-super-reducido es ANTERIOR a aquella norma y no puede heredarla por proximidad. EFECTOS: el propio \
-encabezado del articulo dice 'Con efectos a partir del día 1 de enero de 1995 se da nueva redacción \
-a los siguientes preceptos de la Ley 37/1992', de modo que la fecha citable esta en el texto y no en \
-una nota. El atributo fecha_vigencia del endpoint marca 19950120, diecinueve días mas tarde; tomarlo \
-como effective_from seria erróneo. IDENTIFICACION DEL APARTADO: el apartado Primero modifica el art. \
-90 (tipo general, 16 por 100) y el Segundo el art. 91, por lo que citar el Primero para el 4 por \
-ciento seria erróneo en un apartado, el mismo error que las notas de 2012 documentan. No hay trampa \
-de ancla en este documento: contiene una sola cadena 'Articulo 78', a diferencia del de 2012, que \
-contiene tres 'Articulo 23' de los cuales el primero pertenece a otra ley. CORROBORACION \
-INDEPENDIENTE: recorrer las 41 redacciones consolidadas del art. 91 LIVA muestra Dos = 3 por 100 \
-hasta la redacción previa a esta norma y Dos = 4 por 100 desde ella, ininterrumpidamente hasta hoy; \
-es un diff antes/despues, no una lectura de prosa. PROVENANCIA. Documento adquirido mediante la \
-herramienta de adquisición del corpus consolidado oficial (modo articulo), sha256 \
-1c484707bac3ccf0ef6a252fe1272fb8dedde5150a9bf35f81048450b8308b61, 15448 bytes, leído de nuevo desde \
-disco antes de redactar esta entrada. La captura se hizo SIN required_text a propósito: fijar la \
-frase del 4 por ciento antes de leer el fichero habria hecho tautologica la comprobación. Entrada \
-preparada por agente y fundamentada en el texto empaquetado leído directamente; no la ha revisado un \
-operador humano, y reviewed_by lo declara así."""
+notes = "Ley 41/1994, de 30 de diciembre, de Presupuestos Generales del Estado para 1995, art. 78 (Tipos impositivos), apartado Segundo: da nueva redacción al art. 91 LIVA y fija el tipo super-reducido en el 4 por 100, elevando además el reducido del 6 al 7 por 100 en el mismo apartado. Esta es la provision que ESTABLECE el 4 por ciento; el art. 91 LIVA es el articulo marco que lo aloja. Las dos entradas hermanas de RDL 20/2012 lo dicen explícitamente en sus propias notas: el tipo super-reducido es ANTERIOR a aquella norma y no puede heredarla por proximidad. EFECTOS: el propio encabezado del articulo dice 'Con efectos a partir del día 1 de enero de 1995 se da nueva redacción a los siguientes preceptos de la Ley 37/1992', de modo que la fecha citable esta en el texto y no en una nota. El atributo fecha_vigencia del endpoint marca 19950120, diecinueve días mas tarde; tomarlo como effective_from seria erróneo. IDENTIFICACION DEL APARTADO: el apartado Primero modifica el art. 90 (tipo general, 16 por 100) y el Segundo el art. 91, por lo que citar el Primero para el 4 por ciento seria erróneo en un apartado, el mismo error que las notas de 2012 documentan. No hay trampa de ancla en este documento: contiene una sola cadena 'Articulo 78', a diferencia del de 2012, que contiene tres 'Articulo 23' de los cuales el primero pertenece a otra ley. CORROBORACION INDEPENDIENTE: recorrer las 41 redacciones consolidadas del art. 91 LIVA muestra Dos = 3 por 100 hasta la redacción previa a esta norma y Dos = 4 por 100 desde ella, ininterrumpidamente hasta hoy; es un diff antes/despues, no una lectura de prosa. PROVENANCIA. Documento adquirido mediante la herramienta de adquisición del corpus consolidado oficial (modo articulo), sha256 1c484707bac3ccf0ef6a252fe1272fb8dedde5150a9bf35f81048450b8308b61, 15448 bytes, leído de nuevo desde disco antes de redactar esta entrada. La captura se hizo SIN required_text a propósito: fijar la frase del 4 por ciento antes de leer el fichero habría hecho tautologica la comprobación. Entrada preparada por agente y fundamentada en el texto empaquetado leído directamente; no la ha revisado un operador humano, y reviewed_by lo declara así."
 required_text = [
     "Se modifica el artículo 91",
     "Se aplicará el tipo del 4 por 100",

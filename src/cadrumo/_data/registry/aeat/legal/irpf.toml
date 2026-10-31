@@ -32,13 +32,7 @@ effective_from = 2007-04-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-15
 reviewed_by = "operator"
-notes = """\
-RIRPF art 13: gastos deducibles de los rendimientos del capital inmobiliario. Detalla las \
-categorías de gasto que reducen el rendimiento integro del capital inmobiliario: intereses \
-y gastos de financiacion, reparacion y conservación, tributos no estatales, \
-contraprestaciones por servicios, gastos de formalizacion, saldos de dudoso cobro, primas \
-de seguro, suministros y amortización. Base reglamentaria del articulo 23 LIRPF y de la \
-sección rendimientos_capital_inmobiliario > gastos_deducibles del Modelo 100."""
+notes = "RIRPF art 13: gastos deducibles de los rendimientos del capital inmobiliario. Detalla las categorías de gasto que reducen el rendimiento integro del capital inmobiliario: intereses y gastos de financiación, reparación y conservación, tributos no estatales, contraprestaciones por servicios, gastos de formalización, saldos de dudoso cobro, primas de seguro, suministros y amortización. Base reglamentaria del articulo 23 LIRPF y de la sección rendimientos_capital_inmobiliario > gastos_deducibles del Modelo 100."
 required_text = [
     "Gastos deducibles de los rendimientos del capital inmobiliario",
     "intereses de los capitales ajenos",
@@ -166,14 +160,7 @@ effective_from = 2007-04-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-15
 reviewed_by = "operator"
-notes = """\
-RIRPF art 80: importe de las retenciones sobre rendimientos del trabajo. Establece el \
-régimen de tipos de retención: regla general personalizada via tablas del art 86; 35 por \
-ciento para retribuciones de administradores y consejeros (reducido al 19 por ciento si la \
-cifra de negocios de la entidad es inferior a 100.000 euros); 15 por ciento para \
-rendimientos por cursos, conferencias, seminarios y obras literarias, artisticas o \
-cientificas. Base reglamentaria de la retención sobre rendimientos del trabajo en Modelo \
-111 (trimestral) y Modelo 190 (resumen anual)."""
+notes = "RIRPF art 80: importe de las retenciones sobre rendimientos del trabajo. Establece el régimen de tipos de retención: regla general personalizada via tablas del art 86; 35 por ciento para retribuciones de administradores y consejeros (reducido al 19 por ciento si la cifra de negocios de la entidad es inferior a 100.000 euros); 15 por ciento para rendimientos por cursos, conferencias, seminarios y obras literarias, artísticas o científicas. Base reglamentaria de la retención sobre rendimientos del trabajo en Modelo 111 (trimestral) y Modelo 190 (resumen anual)."
 required_text = [
     "Importe de las retenciones sobre rendimientos del trabajo",
     "35 por ciento",
@@ -625,7 +612,7 @@ effective_from = 2007-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-14
 reviewed_by = "operator"
-notes = "Deducción por actuaciones para la proteccion y difusion del Patrimonio Histórico Español y de las ciudades, conjuntos y bienes declarados Patrimonio Mundial. 15 per cent of investments or expenses for: (a) acquisition of Patrimonio Histórico Español assets from abroad with permanence + cultural-interest declaration requirements; (b) conservation/restoration/exhibition of bienes de interés cultural; (c) rehabilitation of buildings in protected city perimeters or Patrimonio Mundial sites."
+notes = "Deducción por actuaciones para la protección y difusión del Patrimonio Histórico Español y de las ciudades, conjuntos y bienes declarados Patrimonio Mundial. 15 per cent of investments or expenses for: (a) acquisition of Patrimonio Histórico Español assets from abroad with permanence + cultural-interest declaration requirements; (b) conservation/restoration/exhibition of bienes de interés cultural; (c) rehabilitation of buildings in protected city perimeters or Patrimonio Mundial sites."
 required_text = [
     "Deducción por actuaciones para la protección y difusión del Patrimonio Histórico Español",
     "deducción en la cuota del 15 por ciento",
@@ -1745,24 +1732,7 @@ consolidated_as_of = 2026-08-13
 review_status = "agent_reviewed"
 reviewed_at = 2026-08-13
 reviewed_by = "agent-prepared-pending-operator"
-notes = """\
-Reducción DANA 2024 para actividades económicas en estimación objetiva en municipios afectados; \
-fundamenta el APARTADO 1 del articulo, que opera sobre el rendimiento neto de módulos del IRPF. El \
-apartado 2 del mismo articulo reduce la cuota devengada por operaciones corrientes del régimen \
-simplificado del IVA y tiene su propia entrada, real-decreto-ley-7-2024:art-11.2. CAMBIO DE CORPUS. \
-corpus_ref apuntaba a un extracto recortado a mano del articulo que perdia su ultima frase (la que \
-declara que la reducción se computa sobre la cuota ANUAL del régimen simplificado); apunta ahora al \
-documento consolidado integro ya empaquetado, cuyo bloque a1-3 es el mismo articulo completo. \
-Ninguna de las tres frases de required_text cambia de resultado: se verificaron contra el bloque \
-nuevo antes del cambio. FECHA DE CONSOLIDACION. consolidated_as_of pasa de 2025-10-29 a 2026-08-13. \
-El 2025-10-29 fechaba el extracto recortado que se retiro y no viajo con el cambio de puntero; las \
-bytes que ahora se citan son las del documento consolidado empaquetado (sha256 \
-13615f1354c9644aeccd62170c60a147e2b18a3d8211bea33c7d387bd63e6eb6), cotejadas contra el texto en \
-vigor servido por boe.es el 2026-08-13. La entrada real-decreto-ley-7-2024:art-11.2 del catalogo del \
-IVA cita esas mismas bytes: una sola fecha para unas mismas bytes. PROVENANCIA DE LA REVISION. El \
-operador reviso esta entrada el 2026-05-05, pero reviso el extracto recortado y una nota de una \
-linea; ni el puntero de evidencia actual ni esta prosa pasaron por sus manos. reviewed_by lo declara \
-así y queda pendiente de re-sello por operador."""
+notes = "Reducción DANA 2024 para actividades económicas en estimación objetiva en municipios afectados; fundamenta el APARTADO 1 del articulo, que opera sobre el rendimiento neto de módulos del IRPF. El apartado 2 del mismo articulo reduce la cuota devengada por operaciones corrientes del régimen simplificado del IVA y tiene su propia entrada, real-decreto-ley-7-2024:art-11.2. CAMBIO DE CORPUS. corpus_ref apuntaba a un extracto recortado a mano del articulo que perdía su ultima frase (la que declara que la reducción se computa sobre la cuota ANUAL del régimen simplificado); apunta ahora al documento consolidado integro ya empaquetado, cuyo bloque a1-3 es el mismo articulo completo. Ninguna de las tres frases de required_text cambia de resultado: se verificaron contra el bloque nuevo antes del cambio. FECHA DE CONSOLIDACION. consolidated_as_of pasa de 2025-10-29 a 2026-08-13. El 2025-10-29 fechaba el extracto recortado que se retiro y no viajo con el cambio de puntero; las bytes que ahora se citan son las del documento consolidado empaquetado (sha256 13615f1354c9644aeccd62170c60a147e2b18a3d8211bea33c7d387bd63e6eb6), cotejadas contra el texto en vigor servido por boe.es el 2026-08-13. La entrada real-decreto-ley-7-2024:art-11.2 del catalogo del IVA cita esas mismas bytes: una sola fecha para unas mismas bytes. PROVENANCIA DE LA REVISION. El operador reviso esta entrada el 2026-05-05, pero reviso el extracto recortado y una nota de una linea; ni el puntero de evidencia actual ni esta prosa pasaron por sus manos. reviewed_by lo declara así y queda pendiente de re-sello por operador."
 required_text = [
     "Artículo 11",
     "rendimiento neto de módulos de\u00a02024",
@@ -1918,24 +1888,7 @@ effective_to = 2025-12-31
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-03
 reviewed_by = "agent-authored from bundled orden-hac-1347-2024.html; operator to re-stamp"
-notes = """\
-Fase 3a: incompatibilidades entre los indices correctores. El indice corrector para empresas de \
-pequeña dimension (b.1) nunca se aplica a las actividades que tienen asignados los indices \
-correctores especiales (a.2 transporte por autotaxis, a.3 transporte urbano colectivo, a.4 \
-transporte de mercancías por carretera y servicios de mudanzas, a.5), y cuando resulte aplicable el \
-indice b.1 tampoco se aplica el indice corrector de exceso (b.3); el indice corrector de temporada \
-(b.2) y el de inicio de nuevas actividades (b.4) son a su vez incompatibles entre si. El motor de \
-módulos M131 (0003-cmodulos-epigrafe__cmodulos-rendimiento-neto-actividad.toml, \
-m131_resolve_modulos_indices_generales) aplica ahora los cuatro indices generales (b.1, b.2, b.4, \
-b.3) en el orden de la propia Orden y hace cumplir estructuralmente las tres incompatibilidades: el \
-indice b.1 declarado se ignora para las dos actividades tabuladas con indice especial (721.2 \
-transporte por autotaxis, 722 transporte de mercancías); cuando b.1 se aplica, b.3 se omite; cuando \
-ambos b.2 y b.4 se declaran, prevalece la temporada (orden de enumeracion de la Orden) y se ignora \
-el inicio de nuevas actividades. Dos indicadores internos (modulos-pequena-dimension-ignorado-flag, \
-modulos-temporada-inicio-actividad-conflicto-flag) fundamentan los advisories no bloqueantes que \
-señalan al operador cuando una de sus declaraciones fue ignorada, per no-silent-under-declaration. \
-El motor M100 (0293-...-rendimiento-base.toml) sigue modelando únicamente su propio cascade agrario \
-(indices 1-8, Anexo I instrucción 2.3), sin relación con este Anexo II."""
+notes = "Fase 3a: incompatibilidades entre los indices correctores. El indice corrector para empresas de pequeña dimension (b.1) nunca se aplica a las actividades que tienen asignados los indices correctores especiales (a.2 transporte por autotaxis, a.3 transporte urbano colectivo, a.4 transporte de mercancías por carretera y servicios de mudanzas, a.5), y cuando resulte aplicable el indice b.1 tampoco se aplica el indice corrector de exceso (b.3); el indice corrector de temporada (b.2) y el de inicio de nuevas actividades (b.4) son a su vez incompatibles entre si. El motor de módulos M131 (0003-cmodulos-epigrafe__cmodulos-rendimiento-neto-actividad.toml, m131_resolve_modulos_indices_generales) aplica ahora los cuatro indices generales (b.1, b.2, b.4, b.3) en el orden de la propia Orden y hace cumplir estructuralmente las tres incompatibilidades: el indice b.1 declarado se ignora para las dos actividades tabuladas con indice especial (721.2 transporte por autotaxis, 722 transporte de mercancías); cuando b.1 se aplica, b.3 se omite; cuando ambos b.2 y b.4 se declaran, prevalece la temporada (orden de enumeración de la Orden) y se ignora el inicio de nuevas actividades. Dos indicadores internos (modulos-pequena-dimension-ignorado-flag, modulos-temporada-inicio-actividad-conflicto-flag) fundamentan los advisories no bloqueantes que señalan al operador cuando una de sus declaraciones fue ignorada, per no-silent-under-declaration. El motor M100 (0293-...-rendimiento-base.toml) sigue modelando únicamente su propio cascade agrario (indices 1-8, Anexo I instrucción 2.3), sin relación con este Anexo II."
 required_text = [
     "Incompatibilidades entre los índices correctores:",
     "En ningún caso será aplicable el índice corrector para empresas de pequeña dimensión (b.1) a las actividades para las que están previstos los índices correctores especiales enumerados en las letras a.2), a.3), a.4) y a.5).",
@@ -2031,15 +1984,7 @@ effective_to = 2025-12-31
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-03
 reviewed_by = "agent-authored from bundled orden-hac-1347-2024.html; operator to re-stamp"
-notes = """\
-Fase 1a agraria: rendimiento neto previo. Para cada actividad agricola, ganadera o forestal \
-independiente, el rendimiento neto previo se obtiene multiplicando el volumen total de ingresos \
-(incluidas subvenciones e indemnizaciones) del cultivo o explotación por el indice de rendimiento \
-neto que corresponda a ese producto o servicio, por el cuadro codigo-producto de indices aprobado en \
-este mismo Anexo I. Cross-checked byte-identical against the AEAT Manual practico de Renta 2025, \
-Parte 1, Capitulo 9, worked example "Determinación del rendimiento neto previo de la actividad" \
-(Dona M.J.I., manzanas / frutos no citricos, código 12: ingresos 18.030,00 euros x indice 0,37 = \
-rendimiento neto previo 6.671,10 euros)."""
+notes = "Fase 1a agraria: rendimiento neto previo. Para cada actividad agrícola, ganadera o forestal independiente, el rendimiento neto previo se obtiene multiplicando el volumen total de ingresos (incluidas subvenciones e indemnizaciones) del cultivo o explotación por el indice de rendimiento neto que corresponda a ese producto o servicio, por el cuadro codigo-producto de indices aprobado en este mismo Anexo I. Cross-checked byte-identical against the AEAT Manual practico de Renta 2025, Parte 1, Capitulo 9, worked example \"Determinación del rendimiento neto previo de la actividad\" (Dona M.J.I., manzanas / frutos no cítricos, código 12: ingresos 18.030,00 euros x indice 0,37 = rendimiento neto previo 6.671,10 euros)."
 required_text = [
     "2.1 Fase 1: Rendimiento neto previo.",
     "se obtendrá multiplicando el volumen total de ingresos",
@@ -2093,22 +2038,7 @@ effective_to = 2025-12-31
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-03
 reviewed_by = "agent-authored from bundled orden-hac-1347-2024.html; operator to re-stamp"
-notes = """\
-Fase 3a agraria: rendimiento neto de módulos. Sobre el rendimiento neto minorado (fase 2a) se \
-aplican, cuando corresponda, los indices correctores letras a) a i) de esta instrucción, cada uno \
-sobre el rendimiento minorado o, en su caso, sobre el ya rectificado por los indices anteriores \
-(aplicación secuencial, no simultanea, siguiendo el orden de letras del Anexo). El motor implementa \
-las letras a) a h) (indices 1 a 8, casillas 1540-1547 del Modelo 100: medios de producción ajenos \
-0,75; personal asalariado 0,90/0,85/0,80/0,75 por tramos; tierras arrendadas 0,90; piensos de \
-terceros 0,50; agricultura ecologica 0,95; regadio eléctrico 0,75; pequeña empresa (rendimiento \
-minorado <= 9.447,91 euros) 0,90; forestales 0,80) sobre la casilla 1539 para obtener la casilla \
-1548 (rendimiento neto de módulos); el indice 9 (mejillon en batea, letra i) se aplica en un \
-producto separado (casilla 0160) fuera de esta cascada. Cada indice es un valor P012 declarado por \
-el operador/preparador según el Diseño de Registros AEAT (aeat-dr-100-2025-dictionary, campos \
-E5AI1-E5AI8); una casilla en blanco no aplica ningun indice (factor neutro), nunca fabrica una \
-reducción no declarada. Si el rendimiento neto minorado no es positivo, no se aplica ningun indice \
-corrector (principio general de estimación objetiva, ver el paralelo Anexo II instrucción 2.3 \
-aplicado por el motor de módulos M131)."""
+notes = "Fase 3a agraria: rendimiento neto de módulos. Sobre el rendimiento neto minorado (fase 2a) se aplican, cuando corresponda, los indices correctores letras a) a i) de esta instrucción, cada uno sobre el rendimiento minorado o, en su caso, sobre el ya rectificado por los indices anteriores (aplicación secuencial, no simultanea, siguiendo el orden de letras del Anexo). El motor implementa las letras a) a h) (indices 1 a 8, casillas 1540-1547 del Modelo 100: medios de producción ajenos 0,75; personal asalariado 0,90/0,85/0,80/0,75 por tramos; tierras arrendadas 0,90; piensos de terceros 0,50; agricultura ecológica 0,95; regadío eléctrico 0,75; pequeña empresa (rendimiento minorado <= 9.447,91 euros) 0,90; forestales 0,80) sobre la casilla 1539 para obtener la casilla 1548 (rendimiento neto de módulos); el indice 9 (mejillón en batea, letra i) se aplica en un producto separado (casilla 0160) fuera de esta cascada. Cada indice es un valor P012 declarado por el operador/preparador según el Diseño de Registros AEAT (aeat-dr-100-2025-dictionary, campos E5AI1-E5AI8); una casilla en blanco no aplica ningún indice (factor neutro), nunca fabrica una reducción no declarada. Si el rendimiento neto minorado no es positivo, no se aplica ningún indice corrector (principio general de estimación objetiva, ver el paralelo Anexo II instrucción 2.3 aplicado por el motor de módulos M131)."
 required_text = [
     "Rendimiento neto de módulos.",
     "Sobre el rendimiento neto minorado se aplicarán, cuando correspondan, los índices correctores que se establecen a continuación",
@@ -2521,7 +2451,7 @@ effective_from = 2019-01-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "agent-review"
-notes = "Aprobación del Modelo 117 como autoliquidación periódica de retenciones, ingresos a cuenta y pagos a cuenta sobre rentas o ganancias por transmisiones o reembolsos de participaciones de IIC y transmisiones de derechos de suscripcion."
+notes = "Aprobación del Modelo 117 como autoliquidación periódica de retenciones, ingresos a cuenta y pagos a cuenta sobre rentas o ganancias por transmisiones o reembolsos de participaciones de IIC y transmisiones de derechos de suscripción."
 required_text = [
     "ANEXO I",
     "Se sustituye por el que figura como anexo de la Orden HAC/1417/2018",
@@ -3839,10 +3769,7 @@ review_status = "agent_reviewed"
 reviewed_by = "agent: enrolled from the bundled consolidated IRPF law (ley-35-2006.html). The modelo 280 diseño de registro invokes this disposición four times as the substantive authority for the PALP regime, for the retention base and for the imputable negative return, and no table existed for it, so the 2022-2024 authoring could not cite what its own design rests on. Both required_text phrases confirmed present in the bundled payload. NOT CLAIMED -- no operator countersignature; the effective_from records when the PALP regime began under Ley 26/2014, not this law's own 2006 entry into force."
 reviewed_at = 2026-09-12
 notes = """IRPF DA 26: configures the Plan de Ahorro a Largo Plazo as a contract between the contribuyente and an aseguradora or entidad de crédito, instrumented either as a Seguro Individual de Vida a Largo Plazo or as a Cuenta Individual de Ahorro a Largo Plazo. It is the substantive regime modelo 280 reports on; the approving orden HAP/2118/2015 creates the declaration, this disposición creates the thing declared."""
-required_text = [
-    "Planes de Ahorro a Largo Plazo",
-    "contratos celebrados entre el contribuyente y una entidad aseguradora o de credito",
-]
+required_text = ["Planes de Ahorro a Largo Plazo", "contratos celebrados entre el contribuyente y una entidad aseguradora o de crédito"]
 
 [legal."ley-35-2006:da-56"]
 evidence_tier = "legal_authority"
@@ -4551,24 +4478,7 @@ effective_from = 2015-01-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-08-04
 reviewed_by = "agent-authored from bundled ley-35-2006.html#a61; operator to re-stamp"
-notes = """\
-LIRPF art 61 norma 2a: the own-return exclusión. The mínimo does not apply at all when the \
-ascendiente or descendiente who generates the entitlement files their own declaración for this \
-Impuesto with rentas superiores a 1.800 euros. This is an exclusión threshold on the DEPENDANT's own \
-filing, distinct from art 58.1's 8.000-euro rentas ceiling, and distinct from norma 1a's prorrateo \
-which the parent ley-35-2006:art-61 entry already pins. The 1.800-euro figure is pinned verbatim \
-here because the parent entry's required_text covers only the norma 1a prorrateo clause. SCOPE, and \
-read this before authoring anything adjacent: the clause governs THREE mínimos in one sentence -- \
-'No procedera la aplicación del mínimo por descendientes, ascendientes o discapacidad' -- so this \
-entry is the single authority for all three, not a descendientes-only entry. Only the descendientes \
-predicate consumes it today, and the per-year parameters are named \
-'minimo-descendientes-declaracion-propia-rentas-limite' after that first consumer rather than after \
-the clause's reach; ascendientes and discapacidad are currently bare manual inputs with no formula \
-and no binding, so nothing is incomplete. Whoever builds an ascendientes or discapacidad predicate \
-MUST cite this entry and reuse the existing 1.800 parameter rather than minting a second legal entry \
-and a second parameter for the same clause and the same figure -- one clause, one authority, one \
-figure. AGENT-AUTHORED, grounded in the bundled authoritative consolidated ley-35-2006.html#a61 \
-(redacción Ley 26/2014, en vigor 01/01/2015, unamended since); operator to confirm and re-stamp."""
+notes = "LIRPF art 61 norma 2a: the own-return exclusión. The mínimo does not apply at all when the ascendiente or descendiente who generates the entitlement files their own declaración for this Impuesto with rentas superiores a 1.800 euros. This is an exclusión threshold on the DEPENDANT's own filing, distinct from art 58.1's 8.000-euro rentas ceiling, and distinct from norma 1a's prorrateo which the parent ley-35-2006:art-61 entry already pins. The 1.800-euro figure is pinned verbatim here because the parent entry's required_text covers only the norma 1a prorrateo clause. SCOPE, and read this before authoring anything adjacent: the clause governs THREE mínimos in one sentence -- 'No procederá la aplicación del mínimo por descendientes, ascendientes o discapacidad' -- so this entry is the single authority for all three, not a descendientes-only entry. Only the descendientes predicate consumes it today, and the per-year parameters are named 'minimo-descendientes-declaracion-propia-rentas-limite' after that first consumer rather than after the clause's reach; ascendientes and discapacidad are currently bare manual inputs with no formula and no binding, so nothing is incomplete. Whoever builds an ascendientes or discapacidad predicate MUST cite this entry and reuse the existing 1.800 parameter rather than minting a second legal entry and a second parameter for the same clause and the same figure -- one clause, one authority, one figure. AGENT-AUTHORED, grounded in the bundled authoritative consolidated ley-35-2006.html#a61 (redacción Ley 26/2014, en vigor 01/01/2015, unamended since); operator to confirm and re-stamp."
 required_text = [
     "presenten declaración por este Impuesto con rentas superiores a 1.800 euros",
 ]
@@ -5247,7 +5157,7 @@ published_at = 2006-11-29
 effective_from = 2024-06-28
 review_status = "agent_reviewed"
 reviewed_at = 2026-09-30
-reviewed_by = "agent-authored from bundled ley-35-2006.html#da-13 (DA quincuagesima novena), anchor verified to resolve to exactly that unit through the production resolver; operator to re-stamp"
+reviewed_by = "agent-authored from bundled ley-35-2006.html#da-13 (DA quincuagésima novena), anchor verified to resolve to exactly that unit through the production resolver; operator to re-stamp"
 notes = "LIRPF disposición adicional 59a: extiende a los contribuyentes del IRPF que desarrollen la actividad económica a la que se afecten los vehículos e instalaciones de recarga, cualquiera que sea el método de determinación de su rendimiento neto, la libertad de amortización de la disposición adicional decimoctava LIS; el exceso amortizado se íntegra como rendimiento de la actividad al transmitir el elemento. Añadida por el art. 3.4 del Real Decreto-ley 4/2024 (BOE-A-2024-12944), texto publicado el 27/06/2024 y en vigor desde el 28/06/2024, con efectos desde 1 de enero de 2024; la DA 18 LIS a la que remite, redactada por el art. 4.Uno del mismo real decreto-ley (real-decreto-ley-4-2024:art-4), solo alcanza a los períodos impositivos no concluidos a su entrada en vigor, por lo que no se declara alcance retroactivo de devengo."
 required_text = [
     "Libertad de amortización en determinados vehículos y en nuevas infraestructuras de recarga",
@@ -5342,7 +5252,7 @@ effective_from = 2007-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-15
 reviewed_by = "operator"
-notes = "LIRPF art 81: deducción por maternidad. Establece la deducción de hasta 1.200 euros anuales por cada hijo menor de tres años para madres trabajadoras, con incremento de hasta 1.000 euros por gastos en guarderias. Base sustantiva del Modelo 100 casillas 0611 (deducción), 0612 (abono anticipado), 0613 (incremento guarderias)."
+notes = "LIRPF art 81: deducción por maternidad. Establece la deducción de hasta 1.200 euros anuales por cada hijo menor de tres años para madres trabajadoras, con incremento de hasta 1.000 euros por gastos en guarderías. Base sustantiva del Modelo 100 casillas 0611 (deducción), 0612 (abono anticipado), 0613 (incremento guarderías)."
 required_text = [
     "Deducción por maternidad",
     "hijos menores de tres años",
@@ -5427,7 +5337,7 @@ effective_from = 2015-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-15
 reviewed_by = "operator"
-notes = "LIRPF art 81 bis: deducciones por familia numerosa o personas con discapacidad a cargo. Establece deducciones de hasta 1.200 euros anuales por: descendiente con discapacidad (a), ascendiente con discapacidad (b), familia numerosa o ascendiente separado legalmente con dos hijos (c), conyuge con discapacidad (d). Base sustantiva del Modelo 100 casillas 0623/0624 (descendiente), 0636/0637 (ascendiente), 0248/0249 (conyuge), 0660/0661 (familia numerosa), 0662/0663 (ascendiente separado), 0664/0666 (regularización)."
+notes = "LIRPF art 81 bis: deducciones por familia numerosa o personas con discapacidad a cargo. Establece deducciones de hasta 1.200 euros anuales por: descendiente con discapacidad (a), ascendiente con discapacidad (b), familia numerosa o ascendiente separado legalmente con dos hijos (c), cónyuge con discapacidad (d). Base sustantiva del Modelo 100 casillas 0623/0624 (descendiente), 0636/0637 (ascendiente), 0248/0249 (cónyuge), 0660/0661 (familia numerosa), 0662/0663 (ascendiente separado), 0664/0666 (regularización)."
 required_text = [
     "Deducciones por familia numerosa o personas con discapacidad a cargo",
     "descendiente con discapacidad",
@@ -7725,7 +7635,7 @@ effective_from = 2008-01-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-08-27
 reviewed_by = "agent-authored from bundled rd-439-2007.html#a9; operator to re-stamp"
-notes = "RIRPF art 9: dietas y asignaciones para gastos normales de manutencion. Carries the four daily manutencion limits (53,34 y 91,35 con pernocta; 26,67 y 48,08 sin pernocta) that LIRPF art. 30.2.5.c adopts by reference as the cap on a self-employed taxpayer's own manutencion expense. effective_from is 2008-01-01 rather than the 2007-03-31 publication because apartado A.3, which carries these amounts, was given that effect by the disposición final 3.1 of Real Decreto 1804/2008 (Ref. BOE-A-2008-18548); the later date is the conservative claim and both span every supported filing year."
+notes = "RIRPF art 9: dietas y asignaciones para gastos normales de manutención. Carries the four daily manutención limits (53,34 y 91,35 con pernocta; 26,67 y 48,08 sin pernocta) that LIRPF art. 30.2.5.c adopts by reference as the cap on a self-employed taxpayer's own manutención expense. effective_from is 2008-01-01 rather than the 2007-03-31 publication because apartado A.3, which carries these amounts, was given that effect by the disposición final 3.1 of Real Decreto 1804/2008 (Ref. BOE-A-2008-18548); the later date is the conservative claim and both span every supported filing year."
 required_text = [
     "Dietas y asignaciones para gastos de locomoción y gastos normales de manutención y estancia",
     "Por gastos de manutención, 53,34 euros diarios",
@@ -7746,7 +7656,7 @@ effective_from = 2007-03-31
 review_status = "agent_reviewed"
 reviewed_at = 2026-08-27
 reviewed_by = "agent-authored from bundled rd-439-2007.html#a22; operator to re-stamp"
-notes = "RIRPF art 22: elementos patrimoniales afectos a una actividad económica. This is the affectation rule the vehículo and telefonia spending categories rest on: it admits only elements the contribuyente uses for the purposes of the activity and excludes those destined to the titular's private use, which is why those categories are usage-ratio rather than fully deductible. A sweep of the bundled consolidated text between this article and art. 23 found no amending note, so the text is the original 2007 wording."
+notes = "RIRPF art 22: elementos patrimoniales afectos a una actividad económica. This is the affectation rule the vehículo and telefonía spending categories rest on: it admits only elements the contribuyente uses for the purposes of the activity and excludes those destined to the titular's private use, which is why those categories are usage-ratio rather than fully deductible. A sweep of the bundled consolidated text between this article and art. 23 found no amending note, so the text is the original 2007 wording."
 required_text = [
     "Elementos patrimoniales afectos a una actividad",
     "Los bienes inmuebles en los que se desarrolle la actividad",

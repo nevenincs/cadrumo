@@ -11,7 +11,7 @@ effective_from = 2015-10-30
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-06
 reviewed_by = "operator"
-notes = "Articulo 1 de la Orden HAP/2250/2015: aprobación del modelo 184 'Declaración informativa anual de Entidades en régimen de atribución de rentas' y de los diseños de registro a los que deberan ajustarse los ficheros que contengan la información a suministrar."
+notes = "Articulo 1 de la Orden HAP/2250/2015: aprobación del modelo 184 'Declaración informativa anual de Entidades en régimen de atribución de rentas' y de los diseños de registro a los que deberán ajustarse los ficheros que contengan la información a suministrar."
 required_text = [
     "Aprobación del modelo 184",
     "Declaración informativa anual de Entidades en régimen de atribución de rentas",

@@ -83,11 +83,11 @@ text = "LIRPF art 79: cuota diferencial. Define el resultado de minorar la suma 
 
 [[legal."ley-35-2006:art-81"]]
 language = "es"
-text = "LIRPF art 81: deducción por maternidad. Establece la deducción de hasta 1.200 euros anuales por cada hijo menor de tres años para madres trabajadoras, con incremento de hasta 1.000 euros por gastos en guarderias. Base sustantiva del Modelo 100 casillas 0611 (deducción), 0612 (abono anticipado), 0613 (incremento guarderias)."
+text = "LIRPF art 81: deducción por maternidad. Establece la deducción de hasta 1.200 euros anuales por cada hijo menor de tres años para madres trabajadoras, con incremento de hasta 1.000 euros por gastos en guarderías. Base sustantiva del Modelo 100 casillas 0611 (deducción), 0612 (abono anticipado), 0613 (incremento guarderías)."
 
 [[legal."ley-35-2006:art-81-bis"]]
 language = "es"
-text = "LIRPF art 81 bis: deducciones por familia numerosa o personas con discapacidad a cargo. Establece deducciones de hasta 1.200 euros anuales por: descendiente con discapacidad (a), ascendiente con discapacidad (b), familia numerosa o ascendiente separado legalmente con dos hijos (c), conyuge con discapacidad (d). Base sustantiva del Modelo 100 casillas 0623/0624 (descendiente), 0636/0637 (ascendiente), 0248/0249 (conyuge), 0660/0661 (familia numerosa), 0662/0663 (ascendiente separado), 0664/0666 (regularización)."
+text = "LIRPF art 81 bis: deducciones por familia numerosa o personas con discapacidad a cargo. Establece deducciones de hasta 1.200 euros anuales por: descendiente con discapacidad (a), ascendiente con discapacidad (b), familia numerosa o ascendiente separado legalmente con dos hijos (c), cónyuge con discapacidad (d). Base sustantiva del Modelo 100 casillas 0623/0624 (descendiente), 0636/0637 (ascendiente), 0248/0249 (cónyuge), 0660/0661 (familia numerosa), 0662/0663 (ascendiente separado), 0664/0666 (regularización)."
 
 [[legal."ley-35-2006:art-85"]]
 language = "es"
@@ -419,7 +419,7 @@ text = "Orden HFP/1284/2023 artículo 15: modifica los anexos I y II de la Orden
 
 [[legal."orden-hfp-1284-2023:art-9"]]
 language = "es"
-text = "Artículo 9 de la Orden HFP/1284/2023: crea en el registro de tipo 2 del modelo 296 el campo IDENTIFICADOR DE REGISTRO O NUMERO DE ORDEN (posiciones 77-84) y el Anexo de desglose (tipo de hoja F). Aplicable por primera vez al ejercicio 2023 según su disposición final única; antes, las posiciones 77-90 eran blancos y no existia el anexo."
+text = "Artículo 9 de la Orden HFP/1284/2023: crea en el registro de tipo 2 del modelo 296 el campo IDENTIFICADOR DE REGISTRO O NUMERO DE ORDEN (posiciones 77-84) y el Anexo de desglose (tipo de hoja F). Aplicable por primera vez al ejercicio 2023 según su disposición final única; antes, las posiciones 77-90 eran blancos y no existía el anexo."
 
 [[legal."orden-hfp-1359-2023:anexo-i-instruccion-2-1"]]
 language = "es"
@@ -682,7 +682,7 @@ text = "El mismo apartado fija un tipo reducido del 19 por ciento cuando el cont
 
 [[legal."trlirnr-rdleg-5-2004:art-25.1.a"]]
 language = "es"
-text = "Los valores numericos vigentes son consolidados a partir de varias reformas posteriores al RDLeg 5/2004 original."
+text = "Los valores numéricos vigentes son consolidados a partir de varias reformas posteriores al RDLeg 5/2004 original."
 
 [[legal."trlirnr-rdleg-5-2004:art-25.1.b"]]
 language = "es"
@@ -742,19 +742,19 @@ text = "repercusión del impuesto. Establece la obligación del sujeto pasivo de
 
 [[legal."ley-37-1992:art-9"]]
 language = "es"
-text = "operaciones asimiladas a las entregas de bienes (autoconsumo). El apartado 1.c establece el autoconsumo del promotor cuando afecta a su patrimonio empresarial o profesional bienes inmuebles de su propia construcción o rehabilitacion. La base imponible se determina conforme al art 79 apartado 4."
+text = "operaciones asimiladas a las entregas de bienes (autoconsumo). El apartado 1.c establece el autoconsumo del promotor cuando afecta a su patrimonio empresarial o profesional bienes inmuebles de su propia construcción o rehabilitación. La base imponible se determina conforme al art 79 apartado 4."
 
 [[legal."ley-37-1992:art-90"]]
 language = "es"
-text = "tipo impositivo general del IVA. Establece que el Impuesto se exigira al tipo del 21 por ciento, salvo lo dispuesto en el articulo 91 (tipos reducidos). El tipo aplicable a cada operación sera el vigente en el momento del devengo (art 90 Dos)."
+text = "tipo impositivo general del IVA. Establece que el Impuesto se exigirá al tipo del 21 por ciento, salvo lo dispuesto en el articulo 91 (tipos reducidos). El tipo aplicable a cada operación sera el vigente en el momento del devengo (art 90 Dos)."
 
 [[legal."ley-37-1992:art-91"]]
 language = "es"
-text = "tipos impositivos reducidos. Apartado Uno establece el tipo reducido del 10 por ciento aplicable a determinadas operaciones (productos para la nutricion humana, agua, medicamentos, viviendas, transporte de viajeros, hosteleria, etc.). Apartado Dos establece el tipo super-reducido del 4 por ciento para productos basicos (pan, leche, frutas, libros, medicamentos específicos, etc.) y operaciones para colectivos en riesgo de exclusión."
+text = "tipos impositivos reducidos. Apartado Uno establece el tipo reducido del 10 por ciento aplicable a determinadas operaciones (productos para la nutrición humana, agua, medicamentos, viviendas, transporte de viajeros, hostelería, etc.). Apartado Dos establece el tipo super-reducido del 4 por ciento para productos básicos (pan, leche, frutas, libros, medicamentos específicos, etc.) y operaciones para colectivos en riesgo de exclusión."
 
 [[legal."ley-37-1992:art-122"]]
 language = "es"
-text = "régimen simplificado del IVA. Seran de aplicación a los sujetos pasivos que reglamentariamente se determinen en atencion al volumen de operaciones u otras circunstancias."
+text = "régimen simplificado del IVA. Serán de aplicación a los sujetos pasivos que reglamentariamente se determinen en atención al volumen de operaciones u otras circunstancias."
 
 [[legal."ley-37-1992:art-123"]]
 language = "es"
@@ -774,7 +774,7 @@ text = "compensación de bases imponibles negativas. Establece el limite del 70 
 
 [[legal."ley-27-2014:art-29"]]
 language = "es"
-text = "el tipo de gravamen. Establece los tipos del Impuesto sobre Sociedades: 25 por ciento general; escala micro-empresa 17 por ciento (0-50.000) / 20 por ciento (resto); cooperativas fiscalmente protegidas -3 pp; entidades sin fines lucrativos 10 por ciento; nuevas creación 15 por ciento (primeros dos ejercicios); entidades de crédito y exploracion de hidrocarburos 30 por ciento."
+text = "el tipo de gravamen. Establece los tipos del Impuesto sobre Sociedades: 25 por ciento general; escala micro-empresa 17 por ciento (0-50.000) / 20 por ciento (resto); cooperativas fiscalmente protegidas -3 pp; entidades sin fines lucrativos 10 por ciento; nuevas creación 15 por ciento (primeros dos ejercicios); entidades de crédito y exploración de hidrocarburos 30 por ciento."
 
 [[legal."ley-27-2014:art-30"]]
 language = "es"
@@ -786,7 +786,7 @@ text = "deducción para evitar la doble imposición económica internacional - d
 
 [[legal."ley-27-2014:art-36"]]
 language = "es"
-text = "deducción por inversiones en producciones cinematograficas, series audiovisuales y espectaculos en vivo de artes escenicas y musicales. Establece las tasas de deducción (30 por ciento primer millón de base, 25 por ciento exceso), los limites por producción y episodio (20M / 10M EUR), el requisito de gasto territorial español (50 por ciento de la base) y el sub-regimen de productor/financiacion (la letra que M200 cita como art-36.1 y 36.3 para entidades cofinanciadoras)."
+text = "deducción por inversiones en producciones cinematográficas, series audiovisuales y espectáculos en vivo de artes escénicas y musicales. Establece las tasas de deducción (30 por ciento primer millón de base, 25 por ciento exceso), los limites por producción y episodio (20M / 10M EUR), el requisito de gasto territorial español (50 por ciento de la base) y el sub-regimen de productor/financiacion (la letra que M200 cita como art-36.1 y 36.3 para entidades cofinanciadoras)."
 
 [[legal."ley-27-2014:art-45"]]
 language = "es"
@@ -802,11 +802,11 @@ text = "régimen transitorio del tipo de gravamen de las microempresas cuyo INCN
 
 [[legal."ley-27-2014:art-105"]]
 language = "es"
-text = "reserva de nivelacion de bases imponibles. Permite a las entidades que cumplen las condiciones del articulo 101 (cifra de negocios inferior a 10 millones de euros) y aplican el tipo general minorar su base imponible positiva hasta el 10 por ciento de su importe, con tope de 1 millón de euros, computada también a efectos de pagos fraccionados (art 40.3) e incompatible con la reserva de capitalización del articulo 25."
+text = "reserva de nivelación de bases imponibles. Permite a las entidades que cumplen las condiciones del articulo 101 (cifra de negocios inferior a 10 millones de euros) y aplican el tipo general minorar su base imponible positiva hasta el 10 por ciento de su importe, con tope de 1 millón de euros, computada también a efectos de pagos fraccionados (art 40.3) e incompatible con la reserva de capitalización del articulo 25."
 
 [[legal."ley-27-2014:art-15"]]
 language = "es"
-text = "gastos no deducibles. Enumera los gastos que la LIS expresamente excluye de la deducibilidad fiscal: retribucion de fondos propios (incluidos prestamos participativos intra-grupo), IS contabilizado, multas y sanciones, recargos del periodo ejecutivo y extemporaneos, perdidas del juego, donativos y liberalidades (con excepción de atenciones a clientes limitadas al 1 por ciento del INCN), actuaciones contrarias al ordenamiento jurídico, gastos con paraísos fiscales. Base sustantiva de las correcciones positivas al resultado contable en M200."
+text = "gastos no deducibles. Enumera los gastos que la LIS expresamente excluye de la deducibilidad fiscal: retribución de fondos propios (incluidos prestamos participativos intra-grupo), IS contabilizado, multas y sanciones, recargos del periodo ejecutivo y extemporáneos, perdidas del juego, donativos y liberalidades (con excepción de atenciones a clientes limitadas al 1 por ciento del INCN), actuaciones contrarias al ordenamiento jurídico, gastos con paraísos fiscales. Base sustantiva de las correcciones positivas al resultado contable en M200."
 
 [[legal."ley-27-2014:art-16"]]
 language = "es"
@@ -859,6 +859,10 @@ text = "disposición final décima, apartado veinticuatro"
 [[legal."ley-28-1990:art-19"]]
 language = "es"
 text = "Impuesto sobre Sociedades"
+
+[[legal."ley-28-1990:art-19"]]
+language = "es"
+text = "Convenio Económico Navarra"
 
 [[legal."valenciana-ley-13-1997:art-2-bis"]]
 language = "es"
@@ -924,6 +928,18 @@ text = "Impuesto sobre Sociedades, tipo de gravamen especial"
 [[legal."ley-12-2002:art-15"]]
 language = "es"
 text = "Impuesto sobre Sociedades"
+
+[[legal."ley-12-2002:art-15"]]
+language = "es"
+text = "Concierto Económico País Vasco"
+
+[[legal."ley-12-2002:art-15"]]
+language = "es"
+text = "Diputaciones Forales"
+
+[[legal."ley-12-2002:art-15"]]
+language = "es"
+text = "Administración del Estado"
 
 [[legal."ley-27-2014:art-7"]]
 language = "es"
@@ -1006,7 +1022,7 @@ text = "El párrafo segundo del apartado 1 computa por separado las entregas y l
 
 [[legal."rd-1065-2007:art-33"]]
 language = "es"
-text = "Del apartado 2 se aplican la letra g), que excluye las importaciones y exportaciones de mercancias cualquiera que sea la residencia de la contraparte, y la letra i), que excluye las operaciones ya incluidas en otra declaración periodica de contenido coincidente (Modelo 349, y el resumen anual de retenciones del art 108.2 RIRPF para quien practica la retención)."
+text = "Del apartado 2 se aplican la letra g), que excluye las importaciones y exportaciones de mercancías cualquiera que sea la residencia de la contraparte, y la letra i), que excluye las operaciones ya incluidas en otra declaración periódica de contenido coincidente (Modelo 349, y el resumen anual de retenciones del art 108.2 RIRPF para quien practica la retención)."
 
 [[legal."correccion-errores-rdl-6-2024"]]
 language = "es"
@@ -1062,7 +1078,7 @@ text = "La resolución no fija otra fecha de efectos, y la derogación de un rea
 
 [[legal."rdl-16-2025:art-17"]]
 language = "es"
-text = "Que la letra c) siga rigiendo el periodo impositivo 2025 no descansa en esta entrada sino en la posicion de la AEAT (Manual de Renta 2025), citada por separado en los parámetros que la aplican."
+text = "Que la letra c) siga rigiendo el periodo impositivo 2025 no descansa en esta entrada sino en la posición de la AEAT (Manual de Renta 2025), citada por separado en los parámetros que la aplican."
 
 [[legal."real-decreto-ley-6-2024:anexo"]]
 language = "es"
@@ -1082,7 +1098,7 @@ text = "Una lista recortada o ampliada por la cola deja de satisfacer la tercera
 
 [[legal."real-decreto-ley-6-2024:anexo"]]
 language = "es"
-text = "Benicull de Xuquer rompe el orden alfabetico del resto del anexo; se conserva tal cual porque así lo publica el BOE, y no se reordena."
+text = "Benicull de Xuquer rompe el orden alfabético del resto del anexo; se conserva tal cual porque así lo publica el BOE, y no se reordena."
 
 [[legal."real-decreto-ley-6-2024:art-1"]]
 language = "es"
@@ -1114,7 +1130,7 @@ text = "RGAT art 32: personas o entidades excluidas de la obligación de present
 
 [[legal."rd-1065-2007:art-32"]]
 language = "es"
-text = "Letra b) excluye las actividades en estimación objetiva del IRPF que tributan simultaneamente en los regimenes especiales simplificado, agricultura o recargo de equivalencia del IVA, salvo por las operaciones por las que emitan factura, y su segundo párrafo hace que los acogidos al regimen simplificado incluyan además las adquisiciones anotadas en el libro registro de facturas recibidas del art 40.1 RIVA (redacción del RD 828/2013); letra c) a quienes no superen 3.005,06 EUR por contraparte y ano natural, o 300,51 EUR en el cobro por cuenta de terceros; letra e) a los obligados del art 62.6 RIVA (llevanza de libros registro por el SII)."
+text = "Letra b) excluye las actividades en estimación objetiva del IRPF que tributan simultáneamente en los regímenes especiales simplificado, agricultura o recargo de equivalencia del IVA, salvo por las operaciones por las que emitan factura, y su segundo párrafo hace que los acogidos al regimen simplificado incluyan además las adquisiciones anotadas en el libro registro de facturas recibidas del art 40.1 RIVA (redacción del RD 828/2013); letra c) a quienes no superen 3.005,06 EUR por contraparte y ano natural, o 300,51 EUR en el cobro por cuenta de terceros; letra e) a los obligados del art 62.6 RIVA (llevanza de libros registro por el SII)."
 
 [[legal."ley-27-2014:art-130"]]
 language = "es"
@@ -1126,7 +1142,7 @@ text = "Los AID correspondientes a dotaciones por deterioro de créditos por ins
 
 [[legal."ley-27-2014:art-130"]]
 language = "es"
-text = "Funda la sección activos_impuesto_diferido_aid_art_130_lis del Modelo 200, que hasta ahora citaba únicamente la lista generica de 18 artículos común a toda la revision y no el articulo que establece el derecho."
+text = "Funda la sección activos_impuesto_diferido_aid_art_130_lis del Modelo 200, que hasta ahora citaba únicamente la lista genérica de 18 artículos común a toda la revision y no el articulo que establece el derecho."
 
 [[legal."real-decreto-ley-4-2024:art-4"]]
 language = "es"
@@ -1246,7 +1262,7 @@ text = "Texto original, publicado el 26/06/2022"
 
 [[legal."ley-37-1992:art-70"]]
 language = "es"
-text = "inmuebles, transporte, acceso a manifestaciones, servicios electrónicos, restauracion, mediación, trabajos sobre bienes muebles, arrendamiento de medios de transporte"
+text = "inmuebles, transporte, acceso a manifestaciones, servicios electrónicos, restauración, mediación, trabajos sobre bienes muebles, arrendamiento de medios de transporte"
 
 [[legal."orden-hac-510-2021:dt-unica"]]
 language = "es"
@@ -1351,22 +1367,6 @@ text = "LIRPF disposición transitoria 18ª: régimen transitorio de la deducci�
 [[legal."ley-35-2006:dt-9"]]
 language = "es"
 text = "LIRPF disposición transitoria 9ª: régimen transitorio (coeficientes de abatimiento) de las ganancias patrimoniales derivadas de elementos patrimoniales adquiridos antes del 31-12-1994, con el límite acumulado de 400.000 € de valor de transmisión. Base legal de la reducción DT-9ª en las casillas de ganancia patrimonial por transmisión de inmuebles en Modelo 100."
-
-[[legal."ley-12-2002:art-15"]]
-language = "es"
-text = "Concierto Económico País Vasco"
-
-[[legal."ley-12-2002:art-15"]]
-language = "es"
-text = "Diputaciones Forales"
-
-[[legal."ley-12-2002:art-15"]]
-language = "es"
-text = "Administración del Estado"
-
-[[legal."ley-28-1990:art-19"]]
-language = "es"
-text = "Convenio Económico Navarra"
 
 [[legal."rdl-2-2004:art-78"]]
 language = "es"
