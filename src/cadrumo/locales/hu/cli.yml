@@ -188,7 +188,7 @@ cli:
         confirm_rectifies_help: Annak a számlának a száma, amelyet ez a helyesbítő
           számla javít. Az RD 1619/2012 6.1.a.2 cikke a saját sorozattal együtt megköveteli,
           és a dokumentumból olvassuk ki, ha megadja.
-        confirm_resolve_help: 'Válaszolj egy blokkoló problémára: <finding-id>=<choose|supply|attest>:<érték-vagy-indok>.
+        confirm_resolve_help: 'Válaszolj egy blokkoló problémára: <finding-id>=`<choose|supply|attest>`:<érték-vagy-indok>.
           A `choose` esetén az olvasatot az értékével vagy a `review` által mutatott
           kivonattal nevezd meg. Problémánként egyszer ismételd; nincs tömeges kapcsoló.'
         confirm_retention_amount_help: A számlán szereplő jövedelemadó-levonás összege.
@@ -328,7 +328,7 @@ cli:
           reference_help: A függő piszkozat forrásaként szolgáló bizonyíték- vagy
             mellékletazonosító.
           resolve_action: Ismeretlen feloldási művelet.
-          resolve_shape: Minden --resolve alakja <finding-id>=<choose|supply|attest>:<érték-vagy-indok>.
+          resolve_shape: Minden --resolve alakja <finding-id>=`<choose|supply|attest>`:<érték-vagy-indok>.
             A `choose` az olvasatot az értékével vagy a `review` által mutatott kivonattal
             nevezi meg.
           view_help: Megjeleníti egy függőben lévő piszkozat minden ellenőrizhető

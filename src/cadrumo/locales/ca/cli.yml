@@ -190,7 +190,7 @@ cli:
         confirm_rectifies_help: Número de la factura que rectifica aquesta rectificativa.
           El RD 1619/2012 art. 6.1.a.2 l'exigeix juntament amb la seva pròpia sèrie,
           i es llegeix del document quan aquest l'indica.
-        confirm_resolve_help: 'Respon a una incidència bloquejant: <finding-id>=<choose|supply|attest>:<valor-o-motiu>.
+        confirm_resolve_help: 'Respon a una incidència bloquejant: <finding-id>=`<choose|supply|attest>`:<valor-o-motiu>.
           Per a `choose`, indica la lectura pel seu valor o pel resum que va mostrar
           `review`. Repeteix un cop per incidència; no hi ha opció massiva.'
         confirm_retention_amount_help: Import de retenció d'IRPF de la factura.
@@ -329,7 +329,7 @@ cli:
           reference_help: Referencia d'evidencia o adjunt de la qual s'ha llegit l'esborrany
             pendent.
           resolve_action: Acció de resolució desconeguda.
-          resolve_shape: Cada --resolve és <finding-id>=<choose|supply|attest>:<valor-o-motiu>.
+          resolve_shape: Cada --resolve és <finding-id>=`<choose|supply|attest>`:<valor-o-motiu>.
             Un `choose` indica la lectura pel seu valor o pel resum que va mostrar
             `review`.
           view_help: Mostra tots els camps revisables d'un esborrany pendent, juntament

@@ -179,7 +179,7 @@ cli:
         confirm_rectifies_help: Number of the invoice this rectificativa corrects.
           Required by RD 1619/2012 art. 6.1.a.2 alongside its own series, and read
           from the document where one is named.
-        confirm_resolve_help: 'Answer one blocking issue: <finding-id>=<choose|supply|attest>:<value-or-reason>.
+        confirm_resolve_help: 'Answer one blocking issue: <finding-id>=`<choose|supply|attest>`:<value-or-reason>.
           For choose, name the reading by its value or by the digest review showed.
           Repeat once per issue; there is no bulk flag.'
         confirm_retention_amount_help: Income-tax withholding amount from the invoice.
@@ -309,7 +309,7 @@ cli:
           reference_help: Evidence or attachment reference the pending draft was read
             from.
           resolve_action: Unknown resolution action.
-          resolve_shape: Each --resolve is <finding-id>=<choose|supply|attest>:<value-or-reason>.
+          resolve_shape: Each --resolve is <finding-id>=`<choose|supply|attest>`:<value-or-reason>.
             A choose names the reading by its value or by the digest review showed.
           view_help: Show every reviewable field of a pending draft, along with its
             blocking issues.

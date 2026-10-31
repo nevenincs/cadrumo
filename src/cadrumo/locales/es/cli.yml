@@ -192,7 +192,7 @@ cli:
         confirm_rectifies_help: Número de la factura que rectifica esta rectificativa.
           El RD 1619/2012 art. 6.1.a.2 lo exige junto con su propia serie, y se lee
           del documento cuando este lo indica.
-        confirm_resolve_help: 'Responde a una incidencia bloqueante: <finding-id>=<choose|supply|attest>:<valor-o-motivo>.
+        confirm_resolve_help: 'Responde a una incidencia bloqueante: <finding-id>=`<choose|supply|attest>`:<valor-o-motivo>.
           Para `choose`, indica la lectura por su valor o por el resumen que mostró
           `review`. Repite una vez por incidencia; no hay opción masiva.'
         confirm_retention_amount_help: Importe de retención de IRPF de la factura.
@@ -331,7 +331,7 @@ cli:
           reference_help: Referencia de evidencia o adjunto de la que se leyó el borrador
             pendiente.
           resolve_action: Acción de resolución desconocida.
-          resolve_shape: Cada --resolve es <finding-id>=<choose|supply|attest>:<valor-o-motivo>.
+          resolve_shape: Cada --resolve es <finding-id>=`<choose|supply|attest>`:<valor-o-motivo>.
             Un `choose` indica la lectura por su valor o por el resumen que mostró
             `review`.
           view_help: Muestra todos los campos revisables de un borrador pendiente,
