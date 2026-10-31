@@ -31,6 +31,7 @@ from cadrumo.application.invoices.catalogue_add_contracts import (
 from cadrumo.application.invoices.catalogue_read_operation import INVOICE_VIEW_OPERATION_DEFINITION_ID
 from cadrumo.application.invoices.catalogue_remove_operation import INVOICE_REMOVE_OPERATION_DEFINITION_ID
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.invoices.business_premises import SituacionInmueble
 from cadrumo.tests.cli_envelope import require_error_document
 from cadrumo.tests.cli_text_output_support import line_value
 
@@ -435,7 +436,7 @@ def test_catalogue_create_records_a_business_premises_lease(
         assert stored is not None
         lease = stored.business_premises_lease
         assert lease is not None
-        assert lease.situacion_inmueble == "1"
+        assert lease.situacion_inmueble is SituacionInmueble.SPAIN_OTHER_THAN_BASQUE_NAVARRE
         assert lease.referencia_catastral == "9872023VH5797S0001WX"
 
 

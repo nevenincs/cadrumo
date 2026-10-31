@@ -215,6 +215,9 @@ def test_installed_cli_resumes_other_profile_without_retiring_independent_api_se
                         ("absolute_deadline", "absolute_deadline"),
                     ):
                         assert datetime.fromisoformat(payload[key]) == datetime.fromisoformat(second_metadata[source])
+                    # Resume borrows the existing proof; the later profile view
+                    # is admitted activity that may reseal that same receipt.
+                    assert second_receipt.read_bytes() == before_second
                     assert first_client.status().status.session_id == first_session
                     shown = run_cadrumo_cli(
                         ("--format", "json", "--profile", "Receipt profile B", "config", "profile", "view")
@@ -225,7 +228,6 @@ def test_installed_cli_resumes_other_profile_without_retiring_independent_api_se
                     assert not first_receipt.exists()
                     with pytest.raises(ProfileReceiptRefusedError), borrow_receipt_proof(profile_id=first_id):
                         pytest.fail("another profile's revoked saved sign-in remained usable")
-                    assert second_receipt.read_bytes() == before_second
                     proofs_unchanged = keyring.entries == second_keyring
                     assert proofs_unchanged
                     assert passphrase not in result.output + shown.output
