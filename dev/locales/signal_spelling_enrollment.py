@@ -79,6 +79,38 @@ _SHARED_SPELLINGS = (
     )
     | _SOFTWARE_PROPER_NAMES
 )
+# English technical nouns attested in primary tool and standards references.
+# Only these stems receive regular plural and sentence-initial capitalization;
+# arbitrary unknown words never become valid merely by removing a final s.
+# https://docs.github.com/en/copilot/tutorials/explore-a-codebase
+# https://docs.docker.com/reference/compose-file/services/
+# https://docs.python.org/3/glossary.html
+# https://docs.python.org/3/reference/import.html
+# https://docs.python.org/3/howto/enum.html
+# https://docs.kernel.org/filesystems/path-lookup.html
+# https://csrc.nist.gov/glossary/term/ciphertext
+# https://rust-lang.github.io/rustup/concepts/toolchains.html
+# https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/about-rulesets
+# https://docs.github.com/en/copilot/how-tos/troubleshoot-copilot/troubleshoot-firewall-settings
+# https://docs.python.org/3/library/os.path.html#os.path.basename
+# https://dictionary.cambridge.org/dictionary/english/walkthrough
+_ENGLISH_TECHNICAL_NOUNS = frozenset(
+    {
+        "codebase",
+        "entrypoint",
+        "docstring",
+        "subpackage",
+        "enum",
+        "parser",
+        "filesystem",
+        "ciphertext",
+        "toolchain",
+        "ruleset",
+        "basename",
+        "allowlist",
+        "walkthrough",
+    }
+)
 # Exact Spanish dictionary gaps in the canonical legal references: IVA flow
 # notes use enrutamiento, transmitente and registrales; IS uses deducibilidad
 # and extracontables; IRPF uses autotaxis, subclaves, reinversión and aportante.
@@ -254,6 +286,12 @@ _LOCALE_SPELLINGS: dict[str, frozenset[str]] = {
             "loopback",
             # Authored documentation uses the valid US English spelling too.
             "behavior",
+            # File format acronym and the documented adjective for a file
+            # that can be uploaded; retain only these exact observed forms.
+            # https://docs.python.org/3/library/zipfile.html
+            # https://www.mediawiki.org/wiki/Extension:Page_Forms/Input_types
+            "ZIPs",
+            "uploadable",
             # These exact source forms are accepted by the English (US) SCOWL
             # reference dictionary but absent from our pinned en-GB data.
             # Keep them finite: do not infer arbitrary -ize forms or casing.
@@ -1032,9 +1070,14 @@ def is_project_spelling(locale: str, word: str) -> bool:
         # A grammatical possessive does not change an exact enrolled name.
         # Other apostrophe forms and misspelled stems still need a dictionary.
         word = word[:-2]
+    technical = word[:1].lower() + word[1:]
     return (
         word in _SHARED_SPELLINGS
         or word in _LOCALE_SPELLINGS.get(locale, frozenset())
+        or (
+            locale == "en"
+            and (technical in _ENGLISH_TECHNICAL_NOUNS or technical.removesuffix("s") in _ENGLISH_TECHNICAL_NOUNS)
+        )
         or (locale == "es" and is_reviewed_spanish_form(word))
     )
 

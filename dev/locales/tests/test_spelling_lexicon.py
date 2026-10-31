@@ -1703,6 +1703,46 @@ def test_english_possessives_require_a_real_dictionary_base() -> None:
     assert set(unknown[("en", "example")]) == {"descriptorr's", "resolvver's"}
 
 
+def test_reviewed_technical_nouns_keep_bounded_plural_and_case() -> None:
+    for word in (
+        "codebase",
+        "codebases",
+        "entrypoint",
+        "entrypoints",
+        "Entrypoints",
+        "docstring",
+        "Docstrings",
+        "subpackage",
+        "enums",
+        "parsers",
+        "Filesystem",
+        "ciphertext",
+        "toolchains",
+        "ruleset",
+        "basename",
+        "allowlist",
+        "walkthrough",
+    ):
+        assert is_project_spelling("en", word)
+        for locale in ("ca", "es", "hu"):
+            assert not is_project_spelling(locale, word)
+    for typo in (
+        "codebasse",
+        "entrypointss",
+        "ENTrypoints",
+        "docstrngs",
+        "subpackege",
+        "enumss",
+        "ciphertex",
+        "walkthruogh",
+    ):
+        assert not is_project_spelling("en", typo)
+    assert is_project_spelling("en", "ZIPs")
+    assert is_project_spelling("en", "uploadable")
+    for typo in ("ZIPss", "zipS", "uploadible"):
+        assert not is_project_spelling("en", typo)
+
+
 def test_reference_us_english_forms_are_exact_and_do_not_accept_nearby_typos() -> None:
     forms = (
         "Adapters",
