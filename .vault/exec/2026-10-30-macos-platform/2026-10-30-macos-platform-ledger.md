@@ -5,7 +5,7 @@ tags:
 date: '2026-10-30'
 modified: '2026-10-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:f93f13bd61e700bce044e016df3be1654d4134a6057e0e7b8b0b32dbd0429bfe'
+body_hash: 'sha256:f80ab2da1240f033bef401cdf706938f2b5114774860e1c52100a50fb5a5e3af'
 related:
   - "[[2026-10-30-macos-platform-plan]]"
 ---
@@ -48,7 +48,23 @@ src/cadrumo/core/tests/test_output_dir_state_root.py`
 - `S03` `verify:` `uv run --no-sync pytest --co -q` -> `pass`
 - `S03` `verify:` `rerun of 107 baseline failing files: 15 failures, all fixed` -> `pass`
 - `S03` `by:` `vaultspec-standard-executor`
+- `S05` `M` `dev/packaging/native/product.py`
+- `S05` `M` `native/desktop/scripts/frontend-install.mjs`
+- `S05` `M` `dev/packaging/native/platforms/posix.py`
+- `S05` `verify:` `build/macos-arm64/stage/Debug/app/bin/aeat --version` -> `pass`
+- `S05` `verify:` `stage/Debug/app/cadrumo-manager --version` -> `pass`
+- `S05` `by:` `vaultspec-high-executor`
+- `S06` `A` `native/desktop/macos/bundle_launcher.c`
+- `S06` `M` `native/platforms/macos-arm64.json`
+- `S06` `M` `dev/packaging/native/layout.py`
+- `S06` `A` `dev/packaging/native/macos_bundle.py`
+- `S06` `M` `native/cmake/distribution/CMakeLists.txt`
+- `S06` `M` `native/cmake/InstallerFlow.cmake`
+- `S06` `verify:` `codesign --verify --strict --deep Cadrumo.app` -> `pass`
+- `S06` `verify:` `open -n Cadrumo.app (window opens, LaunchServices md.neve.cadrumo)` -> `pass`
+- `S06` `by:` `vaultspec-high-executor`
 
 ## Notes
 
 - `S03` Baseline 396 failures reduced to 15 on rerun; remaining platform and in-progress failures fixed or already fixed by concurrent sessions; Chromium provisioned (581 MB)
+- `S05` payload stage built by a parallel session's app-payload run in the shared build dir; relocation edits owned by that session
