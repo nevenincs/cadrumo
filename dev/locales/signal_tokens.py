@@ -76,6 +76,20 @@ _MINUTE_QUANTITY_RE = re.compile(r"(?<![\w.])(?P<value>\{minutes\}|\d+(?:[.,]\d+
 _DESCENDANT_BOOL_CHOICES_RE = re.compile(
     r"(?<![\w])(?:CONVIVENCIA|DEPENDENCIA|CUSTODIA|DECLARACION_PROPIA|PRORRATA)=true\|false(?![\w|])"
 )
+# A complete, copyable list of the governed RELACION wire values. A missing,
+# extra, reordered or misspelled choice stays visible for review. The
+# authority-backed test verifies this exact list against the live catalogue.
+DESCENDANT_RELATION_CHOICES = (
+    "descendiente",
+    "adoptado",
+    "acogimiento_preadoptivo_o_permanente",
+    "acogimiento_temporal",
+    "tutela",
+    "guarda_y_custodia_judicial",
+)
+DESCENDANT_RELATION_CHOICES_RE = re.compile(
+    r"(?<![\w])RELACION=" + r"\|".join(map(re.escape, DESCENDANT_RELATION_CHOICES)) + r"(?![\w|])"
+)
 # These exact Latin suffixes identify statutory articles, rather than prose in
 # the surrounding locale. They are attested by Ley 37/1992's article headings:
 # https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740
@@ -163,6 +177,7 @@ def filtered_translation_text(value: str) -> tuple[str, int]:
         (_OUTPUT_LANGUAGE_CHOICES_RE, " "),
         (_CENSO_GLOSSED_CHOICES_RE, _visible_choice_glosses),
         (_DESCENDANT_BOOL_CHOICES_RE, " "),
+        (DESCENDANT_RELATION_CHOICES_RE, " "),
         (_LEGISLATIVE_DECREE_REFERENCE_RE, " "),
         (_SPREADSHEET_SUFFIX_RE, " "),
         (TRANSLATION_URL_RE, " "),

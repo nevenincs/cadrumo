@@ -7,11 +7,18 @@ import pytest
 from ..signal_document_prose import visible_document_prose
 from ..signal_spelling_segments import (
     _CATALAN_HYPHENATED_CLITIC_RE,
+    hungarian_suffix_spelling_text,
     locale_spelling_words,
     spanish_word_context,
     translation_spelling_segments,
 )
-from ..signal_tokens import _DESCENDANT_BOOL_CHOICES_RE, filtered_translation_text, translation_words
+from ..signal_tokens import (
+    _DESCENDANT_BOOL_CHOICES_RE,
+    DESCENDANT_RELATION_CHOICES,
+    DESCENDANT_RELATION_CHOICES_RE,
+    filtered_translation_text,
+    translation_words,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -102,6 +109,25 @@ def test_descendant_boolean_choices_match_only_actual_field_and_complete_values(
     assert "hibásszó" in words["hu"]
     assert not {"true", "false"}.intersection(words["hu"])
     assert "prorrata" in words_by_language("prorrata hibásszó", "hu")["es"]
+
+
+@pytest.mark.usefixtures("authority_operation")
+def test_descendant_relationship_choices_match_authority_and_require_the_complete_list() -> None:
+    from cadrumo.domain.calculations.registry.descendant_relacion_catalogue import resolve_descendant_relacion_catalogue
+
+    actual = tuple(str(value) for value in resolve_descendant_relacion_catalogue().relations)
+    assert actual == DESCENDANT_RELATION_CHOICES
+    complete = "RELACION=" + "|".join(actual)
+    assert DESCENDANT_RELATION_CHOICES_RE.fullmatch(complete)
+    for malformed in (
+        "|".join(complete.split("|")[:-1]),
+        complete + "|otro",
+        complete.replace("adoptado", "adoptaddo"),
+    ):
+        assert DESCENDANT_RELATION_CHOICES_RE.fullmatch(malformed) is None
+    words = words_by_language(complete + " hibásszó", "hu")
+    assert "hibásszó" in words["hu"]
+    assert not {"adoptado", "tutela"}.intersection(words["hu"])
 
 
 @pytest.mark.parametrize(
@@ -346,12 +372,45 @@ def test_hungarian_hyphenated_suffix_does_not_hide_a_misspelled_alphabetic_stem(
     assert {"Censel", "hibásszó"} <= words
 
 
-@pytest.mark.parametrize("token", ["40 %-os", "100%-ot", "50%-ban", "33%-ig", "33%-tól"])
+@pytest.mark.parametrize("token", ["40 %-os", "100%-ot", "50%-ban", "33%-ig", "33%-tól", "70%-ából", "26 %-on"])
 def test_hungarian_percentage_suffix_is_structural_but_surrounding_prose_is_checked(token: str) -> None:
     words, excluded = locale_spelling_words(f"{token} hibásszó", "hu")
     assert "hibásszó" in words
-    assert not {"os", "ot", "ban", "ig", "tól"}.intersection(words)
+    assert not {"os", "ot", "ban", "ig", "tól", "ából", "on"}.intersection(words)
     assert excluded >= 1
+
+
+@pytest.mark.parametrize(
+    "token,ending",
+    [
+        ("PDF-jével", "jével"),
+        ("PDF-ekről", "ekről"),
+        ("DEK-jével", "jével"),
+        ("CSV-jével", "jével"),
+        ("JSON-ját", "ját"),
+        ("NIF-jüket", "jüket"),
+        ("NIE-jüket", "jüket"),
+        ("HANDLE-öket", "öket"),
+        ("`AttachmentStore`-on", "on"),
+        ("`--iva-category`-ra", "ra"),
+        ("`aeat`-tel", "tel"),
+        ("`4T`-re", "re"),
+        ("`aeat`-nak", "nak"),
+    ],
+)
+def test_hungarian_attested_structural_case_endings_keep_the_stem(token: str, ending: str) -> None:
+    masked, matches = hungarian_suffix_spelling_text(token)
+    assert matches == 1
+    assert masked.startswith(token[: token.rfind("-")])
+    words, excluded = locale_spelling_words(token + " hibásszó", "hu")
+    assert ending not in words
+    assert "hibásszó" in words
+    assert excluded >= 1
+
+
+@pytest.mark.parametrize("value", ["FDS-jével", "PDF-jévell", "DEK-jévelx", "NIE-jüketx", "HANDLE-ökett"])
+def test_hungarian_structural_suffixes_reject_unreviewed_stems_and_misspellings(value: str) -> None:
+    assert hungarian_suffix_spelling_text(value) == (value, 0)
 
 
 @pytest.mark.parametrize("token", ["40%-oss", "100%-ott", "50%-bann", "33%-igg", "33%-tóll"])

@@ -21,7 +21,12 @@ from .signal_syntax import (
     TRANSLATION_SPANISH_AUTHORITY_RE,
     TRANSLATION_SPANISH_TAX_TERM_RE,
 )
-from .signal_tokens import _DESCENDANT_BOOL_CHOICES_RE, filtered_translation_text, translation_words
+from .signal_tokens import (
+    _DESCENDANT_BOOL_CHOICES_RE,
+    DESCENDANT_RELATION_CHOICES_RE,
+    filtered_translation_text,
+    translation_words,
+)
 
 # These exact Catalan pronoun forms are attested in the operator guides. Keep
 # the verb visible and the set closed; arbitrary stems still need checking.
@@ -85,12 +90,17 @@ def is_known_residence_region_label(locale: str, key: str, value: str) -> bool:
 _HUNGARIAN_STRUCTURAL_SUFFIX_PATTERNS = tuple(
     re.compile(r"(?<![\w-])" + pattern + r"(?![\w-])")
     for pattern in (
-        r"(?<!`)(?P<stem>``[^`\r\n]+``|`[^`\r\n]+`)-(?:ból|ből|tól|től|ig|vel|nek|et)",
+        r"(?<!`)(?P<stem>``[^`\r\n]+``|`[^`\r\n]+`)-(?:ból|ből|tól|től|ig|vel|nek|et|on|ra|tel|re|nak)",
         r"(?P<stem>IVA)-(?:jának|jával)",
-        r"(?P<stem>PDF)-(?:jét|jének)",
+        r"(?P<stem>PDF)-(?:jét|jének|jével|ekről)",
+        r"(?P<stem>CSV)-(?:je|jével)",
+        r"(?P<stem>JSON)-ját",
+        r"(?P<stem>DEK)-jével",
+        r"(?P<stem>HANDLE)-öket",
         r"(?P<stem>IGIC|IPSI)-jére",
         r"(?P<stem>UUID)-jával",
-        r"(?P<stem>NIF)-(?:jét|jének)",
+        r"(?P<stem>NIF)-(?:jét|jének|jüket)",
+        r"(?P<stem>NIE)-jüket",
         r"(?P<stem>URL)-jét",
         r"(?P<stem>Cl@ve)-vel",
         # AEAT's exact service name with the attested Hungarian allative;
@@ -193,7 +203,12 @@ def legal_title_spelling_segments(
     # such as "modelo" first would split its path before command masking.
     literal_ranges = tuple(
         (match.start(), match.end())
-        for pattern in (TRANSLATION_LITERAL_RE, command_path_pattern(), _DESCENDANT_BOOL_CHOICES_RE)
+        for pattern in (
+            TRANSLATION_LITERAL_RE,
+            command_path_pattern(),
+            _DESCENDANT_BOOL_CHOICES_RE,
+            DESCENDANT_RELATION_CHOICES_RE,
+        )
         for match in pattern.finditer(value)
     )
     for pattern in (

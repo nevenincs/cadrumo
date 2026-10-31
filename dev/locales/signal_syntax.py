@@ -289,7 +289,7 @@ TRANSLATION_HUNGARIAN_HYPHENATED_SUFFIX_RE: Final[re.Pattern[str]] = re.compile(
 # only these endings structural, since the numeric filter removes the number
 # and percent sign later; unrelated endings remain spelling input.
 TRANSLATION_HUNGARIAN_PERCENT_SUFFIX_RE: Final[re.Pattern[str]] = re.compile(
-    r"(?<![\w-])(?P<stem>\d+\s*%)-(?P<suffix>os|ot|ban|ig|tól)(?![\w-])"
+    r"(?<![\w-])(?P<stem>\d+\s*%)-(?P<suffix>os|ot|ban|ig|tól|ából|on)(?![\w-])"
 )
 
 
