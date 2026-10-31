@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 import sys
 from collections.abc import Mapping
-from dataclasses import replace
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import override
 
@@ -232,6 +232,314 @@ class _NoWriteEventHistory(BucketEventHistoryRepositoryProtocol):
         return self._repository.to_secure_object_write(catalogue, expected_revision_id=expected_revision_id)
 
 
+@dataclass(frozen=True)
+class _Session:
+    """The registered profile and the bucket and authority the M145 steps run against."""
+
+    profile: NativeCliProfileFixture
+    bucket_id: str
+    authority_operation: PinnedAuthorityOperation
+
+
+def _missing_record_is_refused(session: _Session) -> None:
+    """Validating an unknown record is refused with its typed reason and writes no event."""
+    ports = build_m145_communication_records_ports(bucket_id=session.bucket_id)
+    history_before_missing = ports.bucket_event_repository.load()
+    missing = _invoke(
+        session.profile,
+        "app",
+        "modelo",
+        "m145",
+        "validate",
+        "0" * 12,
+    )
+    assert missing.exit_code == 2, missing.output
+    assert "Traceback" not in missing.output
+    missing_error = require_error_document(missing.output)["error"]
+    assert missing_error["code"] == "REFUSED_M145_COMMUNICATION_RECORD_NOT_FOUND"
+    assert missing_error["category"] == "REFUSED"
+    assert missing_error["context"] == {"communication_record_id": "0" * 12}
+    assert _reauthenticate(session.profile, authority_operation=session.authority_operation) == session.bucket_id
+    ports = build_m145_communication_records_ports(bucket_id=session.bucket_id)
+    _event_delta(
+        history_before_missing,
+        ports.bucket_event_repository.load(),
+        bucket_id=session.bucket_id,
+        expected_mutation=None,
+    )
+
+
+def _create_record(session: _Session) -> tuple[str, M145CommunicationRecord]:
+    """Create a local communication and check the projection, the redaction and the creation event."""
+    ports = build_m145_communication_records_ports(bucket_id=session.bucket_id)
+    history_before_create = ports.bucket_event_repository.load()
+    created = _invoke(
+        session.profile,
+        "app",
+        "modelo",
+        "m145",
+        "create",
+        "--year",
+        "2026",
+        "--casilla",
+        "perceptor.nif=12345678Z",
+        "--casilla",
+        "perceptor.primer-apellido=Garcia",
+        "--casilla",
+        "perceptor.segundo-apellido=Lopez",
+        "--casilla",
+        "perceptor.nombre=Ana",
+        "--casilla",
+        "perceptor.anio-nacimiento=1981",
+        "--note",
+        "Native local communication",
+    )
+    assert created.exit_code == 0, created.output
+    create_payload = unwrap_cli_result(created)
+    record_id = create_payload["record"]["communication_record_id"]
+    assert isinstance(record_id, str)
+    assert _reauthenticate(session.profile, authority_operation=session.authority_operation) == session.bucket_id
+    ports = build_m145_communication_records_ports(bucket_id=session.bucket_id)
+    record = read_m145_communication_record(
+        record_id,
+        bucket_id=session.bucket_id,
+        ports=ports,
+        operation=session.authority_operation,
+    )
+    expected_create_payload = _record_result_payload("modelo.m145.create", record)
+    assert create_payload == expected_create_payload, (
+        "create payload differs from the canonical M145 projection at: "
+        + ", ".join(_payload_mismatch_paths(expected_create_payload, create_payload))
+    )
+    assert _FIELD_VALUES["perceptor.nif"] not in created.output
+    assert create_payload["record"]["field_values"]["perceptor.nif"] != _FIELD_VALUES["perceptor.nif"]
+    assert record.field_values == _FIELD_VALUES
+    assert record.note == "Native local communication"
+    created_event = _event_delta(
+        history_before_create,
+        ports.bucket_event_repository.load(),
+        bucket_id=session.bucket_id,
+        expected_mutation=BucketEventType.MODELO_145_COMMUNICATION_CREATED,
+    )
+    assert created_event is not None
+    _assert_communication_event(
+        created_event,
+        bucket_id=session.bucket_id,
+        record=record,
+        event_type=BucketEventType.MODELO_145_COMMUNICATION_CREATED,
+        actor=session.bucket_id,
+    )
+    return record_id, record
+
+
+def _premature_completion_is_refused(session: _Session, record_id: str, record: M145CommunicationRecord) -> None:
+    """Completing a record that was never delivered is refused and leaves it and the history unchanged."""
+    ports = build_m145_communication_records_ports(bucket_id=session.bucket_id)
+    history_before_transition_refusal = ports.bucket_event_repository.load()
+    premature_completion = _invoke(
+        session.profile,
+        "app",
+        "modelo",
+        "m145",
+        "mark-locally-completed",
+        record_id[:12],
+        "--by",
+        _ACTOR,
+    )
+    assert premature_completion.exit_code == 2, premature_completion.output
+    assert "Traceback" not in premature_completion.output
+    transition_error = require_error_document(premature_completion.output)["error"]
+    assert transition_error["code"] == "REFUSED_M145_COMMUNICATION_RECORD_TRANSITION"
+    assert transition_error["category"] == "REFUSED"
+    assert transition_error["context"] == {"communication_record_id": record_id, "state": "created"}
+    assert _reauthenticate(session.profile, authority_operation=session.authority_operation) == session.bucket_id
+    ports = build_m145_communication_records_ports(bucket_id=session.bucket_id)
+    unchanged = read_m145_communication_record(
+        record_id,
+        bucket_id=session.bucket_id,
+        ports=ports,
+        operation=session.authority_operation,
+    )
+    assert unchanged == record
+    _event_delta(
+        history_before_transition_refusal,
+        ports.bucket_event_repository.load(),
+        bucket_id=session.bucket_id,
+        expected_mutation=None,
+    )
+
+
+def _validate_record(session: _Session, record_id: str) -> None:
+    """Validation reports the canonical result and writes no event."""
+    ports = build_m145_communication_records_ports(bucket_id=session.bucket_id)
+    history_before_validate = ports.bucket_event_repository.load()
+    validation = _invoke(session.profile, "app", "modelo", "m145", "validate", record_id[:12])
+    assert validation.exit_code == 0, validation.output
+    assert _reauthenticate(session.profile, authority_operation=session.authority_operation) == session.bucket_id
+    ports = build_m145_communication_records_ports(bucket_id=session.bucket_id)
+    expected_validation = validate_m145_communication_record(
+        record_id,
+        bucket_id=session.bucket_id,
+        ports=ports,
+        operation=session.authority_operation,
+    )
+    expected_validation_payload = M145CommunicationValidationResultPayload.from_result(expected_validation).model_dump(
+        mode="json"
+    )
+    assert unwrap_cli_result(validation) == _redacted_cli_payload(expected_validation_payload)
+    assert expected_validation.valid is True
+    _event_delta(
+        history_before_validate,
+        ports.bucket_event_repository.load(),
+        bucket_id=session.bucket_id,
+        expected_mutation=None,
+    )
+
+
+def _export_record(session: _Session, record_id: str, record: M145CommunicationRecord) -> None:
+    """Export previews without writing, then records one export event whose payload matches the canonical bytes."""
+    ports = build_m145_communication_records_ports(bucket_id=session.bucket_id)
+    history_before_export = ports.bucket_event_repository.load()
+    preview_repository = _NoWriteEventHistory(ports.bucket_event_repository)
+    preview_ports = replace(ports, bucket_event_repository=preview_repository)
+    expected_export = export_m145_communication_record(
+        record_id,
+        bucket_id=session.bucket_id,
+        renderer=RegistryFixedWidthRecordRenderer(),
+        ports=preview_ports,
+        operation=session.authority_operation,
+        actor=_ACTOR,
+    )
+    assert preview_repository.proposed is not None
+    assert ports.bucket_event_repository.load() == history_before_export
+    exported = _invoke(session.profile, "app", "modelo", "m145", "export", record_id[:12], "--by", _ACTOR)
+    assert exported.exit_code == 0, exported.output
+    assert _reauthenticate(session.profile, authority_operation=session.authority_operation) == session.bucket_id
+    ports = build_m145_communication_records_ports(bucket_id=session.bucket_id)
+    export_payload = unwrap_cli_result(exported)
+    expected_export_payload = M145CommunicationExportResultPayload.from_result(expected_export).model_dump(
+        mode="json",
+    )
+    assert export_payload == _redacted_cli_payload(expected_export_payload)
+    export_event = _event_delta(
+        history_before_export,
+        ports.bucket_event_repository.load(),
+        bucket_id=session.bucket_id,
+        expected_mutation=BucketEventType.MODELO_145_COMMUNICATION_EXPORTED,
+    )
+    assert export_event is not None
+    _assert_communication_event(
+        export_event,
+        bucket_id=session.bucket_id,
+        record=record,
+        event_type=BucketEventType.MODELO_145_COMMUNICATION_EXPORTED,
+        extra={
+            "export_layout_id": expected_export.export_layout_id,
+            "payload_sha256": expected_export.payload_sha256,
+            "byte_length": str(expected_export.byte_length),
+            "record_count": str(expected_export.record_count),
+        },
+    )
+    assert export_payload["payload_sha256"] == expected_export.payload_sha256
+    canonical_payload_text = expected_export_payload["payload_text"]
+    assert isinstance(canonical_payload_text, str)
+    assert canonical_payload_text.startswith("<T145010>")
+    assert canonical_payload_text.encode(expected_export.encoding) == expected_export.payload
+    assert _FIELD_VALUES["perceptor.nif"] in canonical_payload_text
+    assert _FIELD_VALUES["perceptor.nif"].encode(expected_export.encoding) in expected_export.payload
+    actual_payload_text = export_payload["payload_text"]
+    assert isinstance(actual_payload_text, str)
+    assert actual_payload_text.encode(expected_export.encoding) == expected_export.payload
+
+
+def _mark_delivered(session: _Session, record_id: str) -> M145CommunicationRecord:
+    """Marking delivery to the payer returns the canonical record and records one delivery event."""
+    ports = build_m145_communication_records_ports(bucket_id=session.bucket_id)
+    history_before_delivery = ports.bucket_event_repository.load()
+    delivered = _invoke(
+        session.profile,
+        "app",
+        "modelo",
+        "m145",
+        "mark-delivered-to-payer",
+        record_id[:12],
+        "--by",
+        _ACTOR,
+    )
+    assert delivered.exit_code == 0, delivered.output
+    assert _reauthenticate(session.profile, authority_operation=session.authority_operation) == session.bucket_id
+    ports = build_m145_communication_records_ports(bucket_id=session.bucket_id)
+    delivered_record = read_m145_communication_record(
+        record_id,
+        bucket_id=session.bucket_id,
+        ports=ports,
+        operation=session.authority_operation,
+    )
+    assert unwrap_cli_result(delivered) == _record_result_payload(
+        "modelo.m145.mark_delivered_to_payer",
+        delivered_record,
+    )
+    assert delivered_record.delivered_to_payer_at is not None
+    delivered_event = _event_delta(
+        history_before_delivery,
+        ports.bucket_event_repository.load(),
+        bucket_id=session.bucket_id,
+        expected_mutation=BucketEventType.MODELO_145_COMMUNICATION_DELIVERED_TO_PAYER,
+    )
+    assert delivered_event is not None
+    _assert_communication_event(
+        delivered_event,
+        bucket_id=session.bucket_id,
+        record=delivered_record,
+        event_type=BucketEventType.MODELO_145_COMMUNICATION_DELIVERED_TO_PAYER,
+    )
+    return delivered_record
+
+
+def _mark_locally_completed(session: _Session, record_id: str, delivered_record: M145CommunicationRecord) -> None:
+    """Local completion keeps the delivery time and records one completion event."""
+    ports = build_m145_communication_records_ports(bucket_id=session.bucket_id)
+    history_before_completion = ports.bucket_event_repository.load()
+    completed = _invoke(
+        session.profile,
+        "app",
+        "modelo",
+        "m145",
+        "mark-locally-completed",
+        record_id[:12],
+        "--by",
+        _ACTOR,
+    )
+    assert completed.exit_code == 0, completed.output
+    assert _reauthenticate(session.profile, authority_operation=session.authority_operation) == session.bucket_id
+    ports = build_m145_communication_records_ports(bucket_id=session.bucket_id)
+    completed_record = read_m145_communication_record(
+        record_id,
+        bucket_id=session.bucket_id,
+        ports=ports,
+        operation=session.authority_operation,
+    )
+    assert unwrap_cli_result(completed) == _record_result_payload(
+        "modelo.m145.mark_locally_completed",
+        completed_record,
+    )
+    assert completed_record.delivered_to_payer_at == delivered_record.delivered_to_payer_at
+    assert completed_record.locally_completed_at is not None
+    completed_event = _event_delta(
+        history_before_completion,
+        ports.bucket_event_repository.load(),
+        bucket_id=session.bucket_id,
+        expected_mutation=BucketEventType.MODELO_145_COMMUNICATION_LOCALLY_COMPLETED,
+    )
+    assert completed_event is not None
+    _assert_communication_event(
+        completed_event,
+        bucket_id=session.bucket_id,
+        record=completed_record,
+        event_type=BucketEventType.MODELO_145_COMMUNICATION_LOCALLY_COMPLETED,
+    )
+
+
 def test_native_m145_five_operations_preserve_full_values_history_and_refusals(
     tmp_path: Path,
     authority_operation: PinnedAuthorityOperation,
@@ -241,273 +549,12 @@ def test_native_m145_five_operations_preserve_full_values_history_and_refusals(
         assert profile.label is not None
         bucket_id = str(resolve_login_target(profile.label).bucket_id)
         assert _reauthenticate(profile, authority_operation=authority_operation) == bucket_id
-        ports = build_m145_communication_records_ports(bucket_id=bucket_id)
 
-        history_before_missing = ports.bucket_event_repository.load()
-        missing = _invoke(
-            profile,
-            "app",
-            "modelo",
-            "m145",
-            "validate",
-            "0" * 12,
-        )
-        assert missing.exit_code == 2, missing.output
-        assert "Traceback" not in missing.output
-        missing_error = require_error_document(missing.output)["error"]
-        assert missing_error["code"] == "REFUSED_M145_COMMUNICATION_RECORD_NOT_FOUND"
-        assert missing_error["category"] == "REFUSED"
-        assert missing_error["context"] == {"communication_record_id": "0" * 12}
-        assert _reauthenticate(profile, authority_operation=authority_operation) == bucket_id
-        ports = build_m145_communication_records_ports(bucket_id=bucket_id)
-        _event_delta(
-            history_before_missing,
-            ports.bucket_event_repository.load(),
-            bucket_id=bucket_id,
-            expected_mutation=None,
-        )
-
-        history_before_create = ports.bucket_event_repository.load()
-        created = _invoke(
-            profile,
-            "app",
-            "modelo",
-            "m145",
-            "create",
-            "--year",
-            "2026",
-            "--casilla",
-            "perceptor.nif=12345678Z",
-            "--casilla",
-            "perceptor.primer-apellido=Garcia",
-            "--casilla",
-            "perceptor.segundo-apellido=Lopez",
-            "--casilla",
-            "perceptor.nombre=Ana",
-            "--casilla",
-            "perceptor.anio-nacimiento=1981",
-            "--note",
-            "Native local communication",
-        )
-        assert created.exit_code == 0, created.output
-        create_payload = unwrap_cli_result(created)
-        record_id = create_payload["record"]["communication_record_id"]
-        assert isinstance(record_id, str)
-        assert _reauthenticate(profile, authority_operation=authority_operation) == bucket_id
-        ports = build_m145_communication_records_ports(bucket_id=bucket_id)
-        record = read_m145_communication_record(
-            record_id,
-            bucket_id=bucket_id,
-            ports=ports,
-            operation=authority_operation,
-        )
-        expected_create_payload = _record_result_payload("modelo.m145.create", record)
-        assert create_payload == expected_create_payload, (
-            "create payload differs from the canonical M145 projection at: "
-            + ", ".join(_payload_mismatch_paths(expected_create_payload, create_payload))
-        )
-        assert _FIELD_VALUES["perceptor.nif"] not in created.output
-        assert create_payload["record"]["field_values"]["perceptor.nif"] != _FIELD_VALUES["perceptor.nif"]
-        assert record.field_values == _FIELD_VALUES
-        assert record.note == "Native local communication"
-        created_event = _event_delta(
-            history_before_create,
-            ports.bucket_event_repository.load(),
-            bucket_id=bucket_id,
-            expected_mutation=BucketEventType.MODELO_145_COMMUNICATION_CREATED,
-        )
-        assert created_event is not None
-        _assert_communication_event(
-            created_event,
-            bucket_id=bucket_id,
-            record=record,
-            event_type=BucketEventType.MODELO_145_COMMUNICATION_CREATED,
-            actor=bucket_id,
-        )
-
-        history_before_transition_refusal = ports.bucket_event_repository.load()
-        premature_completion = _invoke(
-            profile,
-            "app",
-            "modelo",
-            "m145",
-            "mark-locally-completed",
-            record_id[:12],
-            "--by",
-            _ACTOR,
-        )
-        assert premature_completion.exit_code == 2, premature_completion.output
-        assert "Traceback" not in premature_completion.output
-        transition_error = require_error_document(premature_completion.output)["error"]
-        assert transition_error["code"] == "REFUSED_M145_COMMUNICATION_RECORD_TRANSITION"
-        assert transition_error["category"] == "REFUSED"
-        assert transition_error["context"] == {"communication_record_id": record_id, "state": "created"}
-        assert _reauthenticate(profile, authority_operation=authority_operation) == bucket_id
-        ports = build_m145_communication_records_ports(bucket_id=bucket_id)
-        unchanged = read_m145_communication_record(
-            record_id,
-            bucket_id=bucket_id,
-            ports=ports,
-            operation=authority_operation,
-        )
-        assert unchanged == record
-        _event_delta(
-            history_before_transition_refusal,
-            ports.bucket_event_repository.load(),
-            bucket_id=bucket_id,
-            expected_mutation=None,
-        )
-
-        history_before_validate = ports.bucket_event_repository.load()
-        validation = _invoke(profile, "app", "modelo", "m145", "validate", record_id[:12])
-        assert validation.exit_code == 0, validation.output
-        assert _reauthenticate(profile, authority_operation=authority_operation) == bucket_id
-        ports = build_m145_communication_records_ports(bucket_id=bucket_id)
-        expected_validation = validate_m145_communication_record(
-            record_id,
-            bucket_id=bucket_id,
-            ports=ports,
-            operation=authority_operation,
-        )
-        expected_validation_payload = M145CommunicationValidationResultPayload.from_result(
-            expected_validation
-        ).model_dump(mode="json")
-        assert unwrap_cli_result(validation) == _redacted_cli_payload(expected_validation_payload)
-        assert expected_validation.valid is True
-        _event_delta(
-            history_before_validate,
-            ports.bucket_event_repository.load(),
-            bucket_id=bucket_id,
-            expected_mutation=None,
-        )
-
-        history_before_export = ports.bucket_event_repository.load()
-        preview_repository = _NoWriteEventHistory(ports.bucket_event_repository)
-        preview_ports = replace(ports, bucket_event_repository=preview_repository)
-        expected_export = export_m145_communication_record(
-            record_id,
-            bucket_id=bucket_id,
-            renderer=RegistryFixedWidthRecordRenderer(),
-            ports=preview_ports,
-            operation=authority_operation,
-            actor=_ACTOR,
-        )
-        assert preview_repository.proposed is not None
-        assert ports.bucket_event_repository.load() == history_before_export
-        exported = _invoke(profile, "app", "modelo", "m145", "export", record_id[:12], "--by", _ACTOR)
-        assert exported.exit_code == 0, exported.output
-        assert _reauthenticate(profile, authority_operation=authority_operation) == bucket_id
-        ports = build_m145_communication_records_ports(bucket_id=bucket_id)
-        export_payload = unwrap_cli_result(exported)
-        expected_export_payload = M145CommunicationExportResultPayload.from_result(expected_export).model_dump(
-            mode="json",
-        )
-        assert export_payload == _redacted_cli_payload(expected_export_payload)
-        export_event = _event_delta(
-            history_before_export,
-            ports.bucket_event_repository.load(),
-            bucket_id=bucket_id,
-            expected_mutation=BucketEventType.MODELO_145_COMMUNICATION_EXPORTED,
-        )
-        assert export_event is not None
-        _assert_communication_event(
-            export_event,
-            bucket_id=bucket_id,
-            record=record,
-            event_type=BucketEventType.MODELO_145_COMMUNICATION_EXPORTED,
-            extra={
-                "export_layout_id": expected_export.export_layout_id,
-                "payload_sha256": expected_export.payload_sha256,
-                "byte_length": str(expected_export.byte_length),
-                "record_count": str(expected_export.record_count),
-            },
-        )
-        assert export_payload["payload_sha256"] == expected_export.payload_sha256
-        canonical_payload_text = expected_export_payload["payload_text"]
-        assert isinstance(canonical_payload_text, str)
-        assert canonical_payload_text.startswith("<T145010>")
-        assert canonical_payload_text.encode(expected_export.encoding) == expected_export.payload
-        assert _FIELD_VALUES["perceptor.nif"] in canonical_payload_text
-        assert _FIELD_VALUES["perceptor.nif"].encode(expected_export.encoding) in expected_export.payload
-        actual_payload_text = export_payload["payload_text"]
-        assert isinstance(actual_payload_text, str)
-        assert actual_payload_text.encode(expected_export.encoding) == expected_export.payload
-
-        history_before_delivery = ports.bucket_event_repository.load()
-        delivered = _invoke(
-            profile,
-            "app",
-            "modelo",
-            "m145",
-            "mark-delivered-to-payer",
-            record_id[:12],
-            "--by",
-            _ACTOR,
-        )
-        assert delivered.exit_code == 0, delivered.output
-        assert _reauthenticate(profile, authority_operation=authority_operation) == bucket_id
-        ports = build_m145_communication_records_ports(bucket_id=bucket_id)
-        delivered_record = read_m145_communication_record(
-            record_id,
-            bucket_id=bucket_id,
-            ports=ports,
-            operation=authority_operation,
-        )
-        assert unwrap_cli_result(delivered) == _record_result_payload(
-            "modelo.m145.mark_delivered_to_payer",
-            delivered_record,
-        )
-        assert delivered_record.delivered_to_payer_at is not None
-        delivered_event = _event_delta(
-            history_before_delivery,
-            ports.bucket_event_repository.load(),
-            bucket_id=bucket_id,
-            expected_mutation=BucketEventType.MODELO_145_COMMUNICATION_DELIVERED_TO_PAYER,
-        )
-        assert delivered_event is not None
-        _assert_communication_event(
-            delivered_event,
-            bucket_id=bucket_id,
-            record=delivered_record,
-            event_type=BucketEventType.MODELO_145_COMMUNICATION_DELIVERED_TO_PAYER,
-        )
-
-        history_before_completion = ports.bucket_event_repository.load()
-        completed = _invoke(
-            profile,
-            "app",
-            "modelo",
-            "m145",
-            "mark-locally-completed",
-            record_id[:12],
-            "--by",
-            _ACTOR,
-        )
-        assert completed.exit_code == 0, completed.output
-        assert _reauthenticate(profile, authority_operation=authority_operation) == bucket_id
-        ports = build_m145_communication_records_ports(bucket_id=bucket_id)
-        completed_record = read_m145_communication_record(
-            record_id,
-            bucket_id=bucket_id,
-            ports=ports,
-            operation=authority_operation,
-        )
-        assert unwrap_cli_result(completed) == _record_result_payload(
-            "modelo.m145.mark_locally_completed",
-            completed_record,
-        )
-        assert completed_record.delivered_to_payer_at == delivered_record.delivered_to_payer_at
-        assert completed_record.locally_completed_at is not None
-        completed_event = _event_delta(
-            history_before_completion,
-            ports.bucket_event_repository.load(),
-            bucket_id=bucket_id,
-            expected_mutation=BucketEventType.MODELO_145_COMMUNICATION_LOCALLY_COMPLETED,
-        )
-        assert completed_event is not None
-        _assert_communication_event(
-            completed_event,
-            bucket_id=bucket_id,
-            record=completed_record,
-            event_type=BucketEventType.MODELO_145_COMMUNICATION_LOCALLY_COMPLETED,
-        )
+        session = _Session(profile=profile, bucket_id=bucket_id, authority_operation=authority_operation)
+        _missing_record_is_refused(session)
+        record_id, record = _create_record(session)
+        _premature_completion_is_refused(session, record_id, record)
+        _validate_record(session, record_id)
+        _export_record(session, record_id, record)
+        delivered_record = _mark_delivered(session, record_id)
+        _mark_locally_completed(session, record_id, delivered_record)
