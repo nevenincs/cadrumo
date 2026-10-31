@@ -5,6 +5,7 @@
 // classification, category, IVA category, operation type, rate or retention.
 
 import type { Suggestion } from "@/components/ui/suggestions";
+import { countryName, currencyName } from "../../../shared/codeNames";
 import type { CatalogueInvoice, LedgerRow } from "../../../shell/ledger";
 
 /** The sibling fields a counterparty pick can fill. */
@@ -303,3 +304,44 @@ export function emptyFills<Field extends string>(
     return (current[to] ?? "").trim() === "" ? [[to, offered]] : [];
   }) as [Field, string][];
 }
+
+/** Series in use, this party's first and then those of the same kind. */
+export function partySeriesOptions(
+  invoices: readonly CatalogueInvoice[],
+  scope: { kind?: CatalogueInvoice["kind"] | null; party?: string },
+): Suggestion[] {
+  const wanted = fold(scope.party ?? "");
+  const pool = firstThose(
+    firstThose(newestFirst(invoices), (invoice) => invoice.kind === scope.kind),
+    (invoice) => wanted !== "" && fold(invoice.counterparty_name) === wanted,
+  );
+  return plainOptions(distinctText(pool.map((invoice) => invoice.series)));
+}
+
+/** Countries named by the catalogue, the most used first. */
+export const invoiceCountryOptions = (
+  invoices: readonly CatalogueInvoice[],
+  locale: string,
+): Suggestion[] =>
+  usedCodeOptions(
+    invoices.map((invoice) => invoice.counterparty_country),
+    (code) => countryName(locale, code) ?? undefined,
+  );
+
+/** Currencies named by the catalogue, the most used first. */
+export const invoiceCurrencyOptions = (
+  invoices: readonly CatalogueInvoice[],
+  locale: string,
+): Suggestion[] =>
+  usedCodeOptions(
+    invoices.map((invoice) => invoice.currency),
+    (code) => currencyName(locale, code) ?? undefined,
+  );
+
+/** Cadastral references the catalogue's leases already record, newest first. */
+export const referenciaCatastralOptions = (
+  invoices: readonly CatalogueInvoice[],
+): Suggestion[] =>
+  plainOptions(
+    distinctText(newestFirst(invoices).map((i) => i.referencia_catastral)),
+  );

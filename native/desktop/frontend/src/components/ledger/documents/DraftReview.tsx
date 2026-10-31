@@ -32,6 +32,7 @@ import {
   SegmentedControlItem,
 } from "@/components/ui/segmented-control";
 import { Spinner } from "@/components/ui/spinner";
+import type { Suggestion } from "@/components/ui/suggestions";
 import { useTableView } from "@/components/ui/table-view";
 import {
   Tooltip,
@@ -62,6 +63,14 @@ import { seriesAndNumber } from "../invoices/invoiceModel";
 import { kindChoice, problemText } from "../invoices/invoiceWords";
 import { write } from "../invoices/invoiceWrites";
 import { landingSettle, useWritePause, WriteHold } from "../WritePause";
+import { useFieldSuggestions } from "../suggestions/SuggestionsProvider";
+import {
+  emptyFills,
+  invoiceNumberOptions,
+  partySeriesOptions,
+  partyNameOptions,
+  partyTaxIdOptions,
+} from "../suggestions/ledgerSuggestions";
 import {
   movementPicker,
   PICK_WINDOW_DAYS,
@@ -566,6 +575,8 @@ export function DraftReview({
   );
   const countryId = useId();
   const currencyId = useId();
+  const countries = useFieldSuggestions("country");
+  const currencies = useFieldSuggestions("currency");
   const root = useRef<HTMLDivElement>(null);
   // After a confirmation the next step is its link, when one is offered;
   // otherwise the confirmation itself, so the focus is never left behind
@@ -961,6 +972,64 @@ export function DraftReview({
       !(parsed.kind === "empty" && read === null);
     return { readField, typed, read, parsed, edited };
   };
+  /** What a correctable row offers: the catalogue's parties, series and
+   * numbers, this party's first. A party picked fills the other of name and
+   * tax id only while the person has not touched it and the reading left it
+   * empty; the person sees it and confirms as before. */
+  const offers = (field: CorrectionField) => {
+    const party = correctable("counterparty_name");
+    const partyName = party.typed ?? party.read ?? "";
+    const fillSibling =
+      (sibling: CorrectionField, key: "name" | "tax_id") =>
+      (picked: Suggestion) => {
+        const { typed, read } = correctable(sibling);
+        const filled =
+          typed === undefined
+            ? emptyFills<CorrectionField>(
+                picked.fills,
+                { [sibling]: read },
+                { [key]: sibling },
+              )
+            : [];
+        if (filled.length === 0) return;
+        setCorrections((held) => ({
+          ...held,
+          ...Object.fromEntries(
+            filled.filter(([to]) => held[to] === undefined),
+          ),
+        }));
+        say(t("desktop.ledger.suggestions.filled"));
+      };
+    switch (field) {
+      case "counterparty_name":
+        return {
+          suggestions: invoices && partyNameOptions(invoices, { kind }),
+          onPick: fillSibling("counterparty_tax_id", "tax_id"),
+        };
+      case "counterparty_tax_id":
+        return {
+          suggestions: invoices && partyTaxIdOptions(invoices, { kind }),
+          onPick: fillSibling("counterparty_name", "name"),
+        };
+      case "series":
+        return {
+          suggestions:
+            invoices &&
+            partySeriesOptions(invoices, { kind, party: partyName }),
+          opensEmpty: true,
+        };
+      case "invoice_number":
+        return {
+          suggestions:
+            invoices &&
+            invoiceNumberOptions(invoices, { kind, party: partyName }),
+        };
+      case "currency":
+        return currencies;
+      default:
+        return {};
+    }
+  };
   const suggested = draft.suggested_kind ?? null;
   const readCountry =
     kind === "issued"
@@ -1182,6 +1251,7 @@ export function DraftReview({
                         facts.typed ??
                         seeded(CORRECTION_SHAPES[row.field], facts.read ?? "")
                       }
+                      {...offers(row.field)}
                       onChange={(value) =>
                         setCorrections((held) => ({
                           ...held,
@@ -1298,6 +1368,7 @@ export function DraftReview({
               }
               value={country}
               onChange={setCountry}
+              {...countries}
             />
             {readCountry && country !== readCountry && (
               <Button
@@ -1328,6 +1399,7 @@ export function DraftReview({
                 onChange={(currency) =>
                   setCorrections((held) => ({ ...held, currency }))
                 }
+                {...currencies}
               />
               <FieldDescription>
                 {t("desktop.ledger.documents.currency_not_read")}

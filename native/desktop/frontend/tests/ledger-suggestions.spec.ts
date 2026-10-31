@@ -8,6 +8,7 @@ import {
   lineDescriptionOptions,
   partyNameOptions,
   partyTaxIdOptions,
+  referenciaCatastralOptions,
   seriesOptions,
   usedCodeOptions,
 } from "../src/components/ledger/suggestions/ledgerSuggestions";
@@ -178,6 +179,31 @@ test("codes in use are offered most used first, in capitals", () => {
   expect(
     usedCodeOptions(["es", "FR", "ES", null]).map((option) => option.value),
   ).toEqual(["ES", "FR"]);
+});
+
+test("a cadastral reference the leases record is offered once, newest first", () => {
+  const options = referenciaCatastralOptions([
+    invoice({
+      referencia_catastral: "9999999VH9999S0001AB",
+      issued_at: "2026-01-05",
+    }),
+    invoice({ referencia_catastral: null, issued_at: "2026-09-01" }),
+    invoice({
+      referencia_catastral: "8888888VH8888S0001CD",
+      issued_at: "2026-05-01",
+    }),
+    invoice({
+      referencia_catastral: "9999999vh9999s0001ab",
+      issued_at: "2026-02-01",
+    }),
+  ]);
+  expect(options.map((option) => option.value)).toEqual([
+    "8888888VH8888S0001CD",
+    "9999999vh9999s0001ab",
+  ]);
+  expect(
+    referenciaCatastralOptions([invoice({ referencia_catastral: null })]),
+  ).toEqual([]);
 });
 
 test("a list hides when its one answer is what the field holds", () => {

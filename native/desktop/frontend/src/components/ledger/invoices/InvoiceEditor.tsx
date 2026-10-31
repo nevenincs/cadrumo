@@ -46,10 +46,13 @@ import { formatDay } from "../../../shared/dateFormats";
 import { formatAmount, formatPercent } from "../../../shared/numbers";
 import {
   emptyFills,
+  invoiceCountryOptions,
+  invoiceCurrencyOptions,
   invoiceNumberOptions,
   lineDescriptionOptions,
   partyNameOptions,
   partyTaxIdOptions,
+  referenciaCatastralOptions,
   seriesOptions,
 } from "../suggestions/ledgerSuggestions";
 import { useWritePause, WriteHold } from "../WritePause";
@@ -73,6 +76,7 @@ import {
   correctionOf,
   emptyDraft,
   emptyLine,
+  isPaymentId,
   lessDecimal,
   seriesAndNumber,
   shownRetentionAmount,
@@ -441,6 +445,7 @@ export function InvoiceEditor({
     body = (
       <StoredInvoice
         invoice={stored!}
+        invoices={invoices}
         correction={correction!}
         locale={locale}
         shown={shown}
@@ -895,6 +900,7 @@ function NewInvoice({
               <CountryEditor
                 {...wired(control)}
                 {...bind("country", "counterparty_country")}
+                suggestions={invoiceCountryOptions(invoices, locale)}
               />
             )}
           </FormField>
@@ -1012,6 +1018,7 @@ function NewInvoice({
               <CurrencyEditor
                 {...wired(control)}
                 {...bind("currency", "currency")}
+                suggestions={invoiceCurrencyOptions(invoices, locale)}
               />
             )}
           </FormField>
@@ -1198,6 +1205,7 @@ function NewInvoice({
                   <TextEditor
                     {...wired(control)}
                     {...bind("referencia", "referencia")}
+                    suggestions={referenciaCatastralOptions(invoices)}
                     mono
                     maxLength={25}
                   />
@@ -1479,6 +1487,7 @@ function NotesField({
 
 function StoredInvoice({
   invoice,
+  invoices,
   correction,
   locale,
   shown,
@@ -1486,6 +1495,8 @@ function StoredInvoice({
   correct,
 }: {
   invoice: CatalogueInvoice;
+  /** The catalogue, for what a field can offer. */
+  invoices: readonly CatalogueInvoice[];
   correction: CorrectionDraft;
   locale: string;
   shown(field: string): string | null;
@@ -1503,8 +1514,13 @@ function StoredInvoice({
     onBlur: () => touch(field),
   });
   const text =
-    (key: keyof CorrectionDraft, field: string) => (control: ControlProps) => (
-      <TextEditor {...wired(control)} {...bind(key, field)} />
+    (
+      key: keyof CorrectionDraft,
+      field: string,
+      offered?: { suggestions: readonly Suggestion[]; opensEmpty?: boolean },
+    ) =>
+    (control: ControlProps) => (
+      <TextEditor {...wired(control)} {...bind(key, field)} {...offered} />
     );
   const rectificativa = correction.invoiceClass === "RECTIFICATIVA";
   const amount = shownRetentionAmount(correction, invoice.base_total.decimal);
@@ -1526,7 +1542,9 @@ function StoredInvoice({
             required
             error={shown("counterparty_name")}
           >
-            {text("counterpartyName", "counterparty_name")}
+            {text("counterpartyName", "counterparty_name", {
+              suggestions: partyNameOptions(invoices, { kind: invoice.kind }),
+            })}
           </FormField>
           <FixedField
             label={t("desktop.ledger.invoices.field.counterparty_tax_id")}
@@ -1545,6 +1563,7 @@ function StoredInvoice({
               <CountryEditor
                 {...wired(control)}
                 {...bind("country", "counterparty_country")}
+                suggestions={invoiceCountryOptions(invoices, locale)}
               />
             )}
           </FormField>
@@ -1575,7 +1594,13 @@ function StoredInvoice({
             required={rectificativa}
             error={shown("series")}
           >
-            {text("series", "series")}
+            {text("series", "series", {
+              suggestions: seriesOptions(invoices, {
+                kind: invoice.kind,
+                invoiceClass: correction.invoiceClass,
+              }),
+              opensEmpty: true,
+            })}
           </FormField>
           <FixedField
             label={t("desktop.ledger.invoices.field.invoice_number")}
@@ -1619,7 +1644,14 @@ function StoredInvoice({
               required
               error={shown("rectifies_invoice_number")}
             >
-              {text("rectifies", "rectifies_invoice_number")}
+              {text("rectifies", "rectifies_invoice_number", {
+                suggestions: invoiceNumberOptions(
+                  invoices.filter(
+                    (other) => other.invoice_id !== invoice.invoice_id,
+                  ),
+                  { kind: invoice.kind, party: correction.counterpartyName },
+                ),
+              })}
             </FormField>
           )}
           <IvaCategoryField
@@ -1721,6 +1753,9 @@ function StoredInvoice({
               <TextEditor
                 {...wired(control)}
                 {...bind("paymentId", "payment_id")}
+                suggestions={invoice.linked_transaction_ids
+                  .filter(isPaymentId)
+                  .map((id) => ({ value: id, label: id }))}
                 mono
                 maxLength={64}
               />
