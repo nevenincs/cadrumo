@@ -74,6 +74,21 @@ def test_attested_tax_abbreviations_do_not_exempt_mixed_case_typos(monkeypatch: 
     }
 
 
+def test_input_tax_phrase_uses_spanish_without_hiding_adjacent_or_phrase_typos(monkeypatch: pytest.MonkeyPatch) -> None:
+    dictionaries = load_dictionaries(REPO_ROOT)
+    monkeypatch.setattr("dev.locales.signal_spelling.load_dictionaries", lambda repository: dictionaries)
+    spelling, _inventory, _findings = spellcheck_catalogues(
+        {"tax", "typo"},
+        {locale: {"tax": "Cuota soportada misspeling", "typo": "cuota soportadaa"} for locale in ("en", "hu")},
+        REPO_ROOT,
+    )
+    for locale in ("en", "hu"):
+        assert spelling[(locale, "tax")] == ("misspeling",)
+        assert "soportadaa" in spelling[(locale, "typo")]
+    assert not is_project_spelling("en", "soportada")
+    assert not is_project_spelling("hu", "soportada")
+
+
 def test_only_english_possessives_of_exact_project_stems_are_accepted() -> None:
     assert is_project_spelling("en", "Cadrumo's")
     assert is_project_spelling("en", "modelo's")

@@ -160,7 +160,9 @@ TRANSLATION_SPANISH_AUTHORITY_RE: Final[re.Pattern[str]] = re.compile(
 # Owners: _data/terminology/concepts and the bienes de inversión register.
 TRANSLATION_SPANISH_TAX_TERM_RE: Final[re.Pattern[str]] = re.compile(
     r"(?<![\w'’-])['‘’]?(?:bien(?:es)? de inversión|recargo de equivalencia|"
-    r"regla de prorrata|prorrata especial|datos censales|"
+    # Retained in the capital-goods labels and bilingual home-office notes.
+    # Route the whole phrase; its words still go through the Spanish dictionary.
+    r"cuota soportada|regla de prorrata|prorrata especial|datos censales|"
     r"declaración (?:tributaria|censal|de la renta)|"
     r"justificante de presentación|retenciones (?:del trabajo|de alquiler)|"
     r"atribución de rentas|impuesto sobre sociedades|"
