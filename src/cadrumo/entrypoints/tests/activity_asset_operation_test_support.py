@@ -205,6 +205,313 @@ def seed_activity_asset(
     )
 
 
+def _assert_create(
+    payload: BaseModel,
+    projection: BaseModel,
+    before: ActivityAssetHistory,
+    after: ActivityAssetHistory,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """Check the created first revision and its descriptor."""
+    assert isinstance(payload, ActivityAssetCreateRequest)
+    assert isinstance(projection, ActivityAssetCreateProjection)
+    revision = payload.revision.to_domain()
+    assert before == ActivityAssetHistory()
+    assert after.revisions == (revision,)
+    assert after.claims == ()
+    descriptor = after.current_descriptor(revision.asset_id)
+    assert descriptor is not None
+    assert descriptor.facts == payload.descriptor
+    assert projection.history is not None
+    assert projection.history.to_domain() == after
+
+
+def _assert_inspect(
+    payload: BaseModel,
+    projection: BaseModel,
+    before: ActivityAssetHistory,
+    after: ActivityAssetHistory,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """Check the revisions served for one asset."""
+    assert isinstance(payload, ActivityAssetInspectRequest)
+    assert isinstance(projection, ActivityAssetInspectProjection)
+    expected_revisions = tuple(item for item in before.revisions if item.asset_id == payload.asset_id)
+    assert after == before
+    assert projection.asset_id == payload.asset_id
+    assert projection.revisions is not None
+    assert tuple(item.revision.to_domain() for item in projection.revisions) == expected_revisions
+    assert tuple(item.revision_id for item in projection.revisions) == tuple(
+        item.revision_id for item in expected_revisions
+    )
+
+
+def _assert_correct(
+    payload: BaseModel,
+    projection: BaseModel,
+    before: ActivityAssetHistory,
+    after: ActivityAssetHistory,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """Check a correcting revision appended to the history."""
+    assert isinstance(payload, ActivityAssetCorrectRequest)
+    assert isinstance(projection, ActivityAssetCorrectProjection)
+    assert after.revisions == (*before.revisions, payload.revision.to_domain())
+    assert after.claims == before.claims
+    assert projection.history is not None
+    assert projection.history.to_domain() == after
+
+
+def _assert_forecast(
+    payload: BaseModel,
+    projection: BaseModel,
+    before: ActivityAssetHistory,
+    after: ActivityAssetHistory,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """Check the served forecast against the pinned schedule."""
+    pin = operation.pin()
+    assert isinstance(payload, ActivityAssetForecastRequest)
+    assert isinstance(projection, ActivityAssetForecastProjection)
+    revision = max(
+        (item for item in before.revisions if item.asset_id == payload.asset_id),
+        key=lambda item: item.revision_number,
+    )
+    expected = forecast_activity_asset_charge(
+        revision,
+        modelo_100_revision=operation.revision_for_context(
+            "100",
+            filing_year=payload.covered_from.year,
+            period="0A",
+        ),
+        authority_generation=pin.logical_generation,
+        covered_from=payload.covered_from,
+        covered_until=payload.exclusive_end(),
+        history=asset_schedule_history(
+            before.claims,
+            before.revisions,
+            asset_id=payload.asset_id,
+            tax_year=payload.covered_from.year,
+            excluding_claim_id=payload.supersedes_claim_id,
+        ),
+        taxpayer_workforce=lambda: (),
+        legal_reference=operation.legal_reference,
+        requested_free_amount=(
+            Decimal(payload.requested_free_amount.decimal) if payload.requested_free_amount is not None else None
+        ),
+    )
+    assert after == before
+    assert projection.forecast is not None
+    assert projection.forecast.to_domain() == expected
+    assert projection.forecast.authority_generation == pin.logical_generation
+
+
+def _assert_claim(
+    payload: BaseModel,
+    projection: BaseModel,
+    before: ActivityAssetHistory,
+    after: ActivityAssetHistory,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """Check the recorded amortization claim."""
+    assert isinstance(payload, ActivityAssetClaimRequest)
+    assert isinstance(projection, ActivityAssetClaimProjection)
+    revision = max(
+        (item for item in before.revisions if item.asset_id == payload.forecast.asset_id),
+        key=lambda item: item.revision_number,
+    )
+    expected_claim = AmortizationClaim.from_schedule(
+        payload.forecast.to_domain(),
+        asset_kind=revision.asset_kind,
+        creating_operation=ACTIVITY_ASSET_CLAIM_OPERATION_DEFINITION_ID,
+        supersedes_claim_id=payload.supersedes_claim_id,
+    )
+    assert len(after.claims) == len(before.claims) + 1
+    assert after.claims[:-1] == before.claims
+    assert after.claims[-1] == expected_claim
+    assert projection.claim_id == expected_claim.claim_id
+    assert projection.claim_result is not None
+    result = projection.claim_result.to_domain()
+    assert result.claim == expected_claim
+    assert result.history == after
+    assert result.reused_existing_claim is False
+
+
+def _assert_filing_handoff(
+    payload: BaseModel,
+    projection: BaseModel,
+    before: ActivityAssetHistory,
+    after: ActivityAssetHistory,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """Check the Modelo 100 and 130 handoff amounts."""
+    assert isinstance(payload, ActivityAssetFilingHandoffRequest)
+    assert isinstance(projection, ActivityAssetFilingHandoffProjection)
+    assert after == before
+    assert (projection.tax_year, projection.m130_period) == (payload.tax_year, payload.m130_period)
+    assert projection.filing_handoff is not None
+    handoff = projection.filing_handoff.to_domain()
+    assert handoff.material_m100 == project_m100(
+        after.claims,
+        asset_kind=AssetKind.MATERIAL,
+        tax_year=payload.tax_year,
+        target_casilla_id="0208",
+    )
+    # EUR 300.00 at the published 25% for the full year 2025.
+    assert handoff.material_m130 is not None
+    assert handoff.intangible_m130 is not None
+    assert handoff.material_m130.amount == Decimal("75.00")
+    assert [item.amount for item in handoff.material_m130.contributions] == [Decimal("75.00")]
+    assert handoff.intangible_m130.contributions == ()
+
+
+def _assert_dispose(
+    payload: BaseModel,
+    projection: BaseModel,
+    before: ActivityAssetHistory,
+    after: ActivityAssetHistory,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """Check the recorded disposal."""
+    assert isinstance(payload, ActivityAssetDisposeRequest)
+    assert projection.history is not None
+    assert projection.history.to_domain() == after
+    recorded = after.revisions[-1].disposal
+    assert recorded is not None
+    assert recorded.disposal_date == payload.disposal.disposal_date
+    assert after.revisions[-1].out_of_service_date == date(2025, 7, 1)
+
+
+def _assert_disposal_calculate(
+    payload: BaseModel,
+    projection: BaseModel,
+    before: ActivityAssetHistory,
+    after: ActivityAssetHistory,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """Check the disposal calculation figures."""
+    assert after == before
+    assert projection.calculation is not None
+    # 250.00 received, 10.00 of costs: the seeded element's cost of 300.00 has no claim
+    # behind it, so the reduction is the 2025 minimum and it is the same under any table.
+    assert projection.calculation.transmission_value is not None
+    assert projection.calculation.transmission_value.decimal == "250.00"
+    assert projection.calculation.transmission_costs is not None
+    assert projection.calculation.transmission_costs.decimal == "10.00"
+
+
+def _assert_describe(
+    payload: BaseModel,
+    projection: BaseModel,
+    before: ActivityAssetHistory,
+    after: ActivityAssetHistory,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """Check the descriptor change keeps the tax facts."""
+    assert isinstance(payload, ActivityAssetDescribeRequest)
+    assert isinstance(projection, ActivityAssetDescribeProjection)
+    assert after.same_tax_facts(before)
+    descriptor = after.current_descriptor(payload.asset_id)
+    assert descriptor is not None
+    assert descriptor.facts == payload.descriptor
+    assert projection.history is not None
+    assert projection.history.to_domain() == after
+
+
+def _assert_list(
+    payload: BaseModel,
+    projection: BaseModel,
+    before: ActivityAssetHistory,
+    after: ActivityAssetHistory,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """Check the listed asset basis."""
+    assert isinstance(projection, ActivityAssetListProjection)
+    assert projection.rows is not None
+    assert [row.basis.decimal for row in projection.rows] == ["300.00"]
+
+
+def _assert_plan(
+    payload: BaseModel,
+    projection: BaseModel,
+    before: ActivityAssetHistory,
+    after: ActivityAssetHistory,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """Check the planned amortization rows and limits."""
+    assert isinstance(projection, ActivityAssetPlanProjection)
+    assert projection.rows is not None
+    assert projection.rows[0].tax_year == 2025
+    assert projection.rows[0].planned is not None
+    assert projection.rows[0].planned.decimal == "75.00"
+    assert projection.limits is not None
+    assert projection.limits.class_key == "equipo-proceso-informacion"
+
+
+def _assert_timeline(
+    payload: BaseModel,
+    projection: BaseModel,
+    before: ActivityAssetHistory,
+    after: ActivityAssetHistory,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """Check the revision and claim timeline."""
+    assert isinstance(projection, ActivityAssetTimelineProjection)
+    assert projection.events is not None
+    assert [event.kind.value for event in projection.events] == ["revision", "claim"]
+    assert projection.events[1].claim is not None
+    assert projection.events[1].claim.matches_current_schedule is True
+
+
+def _assert_form_options(
+    payload: BaseModel,
+    projection: BaseModel,
+    before: ActivityAssetHistory,
+    after: ActivityAssetHistory,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """Check the offered table groups."""
+    assert isinstance(projection, ActivityAssetFormOptionsProjection)
+    assert projection.options is not None
+    assert "equipo-proceso-informacion" in {group.class_key for group in projection.options.table_groups}
+
+
+def _assert_acquisition_candidates(
+    payload: BaseModel,
+    projection: BaseModel,
+    before: ActivityAssetHistory,
+    after: ActivityAssetHistory,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """Check no acquisition candidates remain."""
+    assert isinstance(projection, ActivityAssetAcquisitionCandidatesProjection)
+    assert projection.candidates == ()
+
+
+_HISTORY_ASSERTIONS = {
+    ACTIVITY_ASSET_CREATE_OPERATION_DEFINITION_ID: _assert_create,
+    ACTIVITY_ASSET_INSPECT_OPERATION_DEFINITION_ID: _assert_inspect,
+    ACTIVITY_ASSET_CORRECT_OPERATION_DEFINITION_ID: _assert_correct,
+    ACTIVITY_ASSET_FORECAST_OPERATION_DEFINITION_ID: _assert_forecast,
+    ACTIVITY_ASSET_CLAIM_OPERATION_DEFINITION_ID: _assert_claim,
+    ACTIVITY_ASSET_FILING_HANDOFF_OPERATION_DEFINITION_ID: _assert_filing_handoff,
+}
+
+_PROJECTION_ASSERTIONS = (
+    (ActivityAssetDisposeProjection, _assert_dispose),
+    (ActivityAssetDisposalCalculateProjection, _assert_disposal_calculate),
+)
+
+_READ_ASSERTIONS = {
+    ACTIVITY_ASSET_DESCRIBE_OPERATION_DEFINITION_ID: _assert_describe,
+    ACTIVITY_ASSET_LIST_OPERATION_DEFINITION_ID: _assert_list,
+    ACTIVITY_ASSET_PLAN_OPERATION_DEFINITION_ID: _assert_plan,
+    ACTIVITY_ASSET_TIMELINE_OPERATION_DEFINITION_ID: _assert_timeline,
+    ACTIVITY_ASSET_FORM_OPTIONS_OPERATION_DEFINITION_ID: _assert_form_options,
+    ACTIVITY_ASSET_ACQUISITION_CANDIDATES_OPERATION_DEFINITION_ID: _assert_acquisition_candidates,
+}
+
+
 def assert_activity_asset_conformance_result(
     *,
     definition_id: str,
@@ -240,193 +547,19 @@ def assert_activity_asset_conformance_result(
     assert projection.authority.reader_incarnation == pin.reader_incarnation
     assert projection.outcome == "succeeded"
 
-    if definition_id == ACTIVITY_ASSET_CREATE_OPERATION_DEFINITION_ID:
-        assert isinstance(payload, ActivityAssetCreateRequest)
-        assert isinstance(projection, ActivityAssetCreateProjection)
-        revision = payload.revision.to_domain()
-        assert before == ActivityAssetHistory()
-        assert after.revisions == (revision,)
-        assert after.claims == ()
-        descriptor = after.current_descriptor(revision.asset_id)
-        assert descriptor is not None
-        assert descriptor.facts == payload.descriptor
-        assert projection.history is not None
-        assert projection.history.to_domain() == after
-        return
-
-    if definition_id == ACTIVITY_ASSET_INSPECT_OPERATION_DEFINITION_ID:
-        assert isinstance(payload, ActivityAssetInspectRequest)
-        assert isinstance(projection, ActivityAssetInspectProjection)
-        expected_revisions = tuple(item for item in before.revisions if item.asset_id == payload.asset_id)
-        assert after == before
-        assert projection.asset_id == payload.asset_id
-        assert projection.revisions is not None
-        assert tuple(item.revision.to_domain() for item in projection.revisions) == expected_revisions
-        assert tuple(item.revision_id for item in projection.revisions) == tuple(
-            item.revision_id for item in expected_revisions
-        )
-        return
-
-    if definition_id == ACTIVITY_ASSET_CORRECT_OPERATION_DEFINITION_ID:
-        assert isinstance(payload, ActivityAssetCorrectRequest)
-        assert isinstance(projection, ActivityAssetCorrectProjection)
-        assert after.revisions == (*before.revisions, payload.revision.to_domain())
-        assert after.claims == before.claims
-        assert projection.history is not None
-        assert projection.history.to_domain() == after
-        return
-
-    if definition_id == ACTIVITY_ASSET_FORECAST_OPERATION_DEFINITION_ID:
-        assert isinstance(payload, ActivityAssetForecastRequest)
-        assert isinstance(projection, ActivityAssetForecastProjection)
-        revision = max(
-            (item for item in before.revisions if item.asset_id == payload.asset_id),
-            key=lambda item: item.revision_number,
-        )
-        expected = forecast_activity_asset_charge(
-            revision,
-            modelo_100_revision=operation.revision_for_context(
-                "100",
-                filing_year=payload.covered_from.year,
-                period="0A",
-            ),
-            authority_generation=pin.logical_generation,
-            covered_from=payload.covered_from,
-            covered_until=payload.exclusive_end(),
-            history=asset_schedule_history(
-                before.claims,
-                before.revisions,
-                asset_id=payload.asset_id,
-                tax_year=payload.covered_from.year,
-                excluding_claim_id=payload.supersedes_claim_id,
-            ),
-            taxpayer_workforce=lambda: (),
-            legal_reference=operation.legal_reference,
-            requested_free_amount=(
-                Decimal(payload.requested_free_amount.decimal) if payload.requested_free_amount is not None else None
-            ),
-        )
-        assert after == before
-        assert projection.forecast is not None
-        assert projection.forecast.to_domain() == expected
-        assert projection.forecast.authority_generation == pin.logical_generation
-        return
-
-    if definition_id == ACTIVITY_ASSET_CLAIM_OPERATION_DEFINITION_ID:
-        assert isinstance(payload, ActivityAssetClaimRequest)
-        assert isinstance(projection, ActivityAssetClaimProjection)
-        revision = max(
-            (item for item in before.revisions if item.asset_id == payload.forecast.asset_id),
-            key=lambda item: item.revision_number,
-        )
-        expected_claim = AmortizationClaim.from_schedule(
-            payload.forecast.to_domain(),
-            asset_kind=revision.asset_kind,
-            creating_operation=ACTIVITY_ASSET_CLAIM_OPERATION_DEFINITION_ID,
-            supersedes_claim_id=payload.supersedes_claim_id,
-        )
-        assert len(after.claims) == len(before.claims) + 1
-        assert after.claims[:-1] == before.claims
-        assert after.claims[-1] == expected_claim
-        assert projection.claim_id == expected_claim.claim_id
-        assert projection.claim_result is not None
-        result = projection.claim_result.to_domain()
-        assert result.claim == expected_claim
-        assert result.history == after
-        assert result.reused_existing_claim is False
-        return
-
-    if definition_id == ACTIVITY_ASSET_FILING_HANDOFF_OPERATION_DEFINITION_ID:
-        assert isinstance(payload, ActivityAssetFilingHandoffRequest)
-        assert isinstance(projection, ActivityAssetFilingHandoffProjection)
-        assert after == before
-        assert (projection.tax_year, projection.m130_period) == (payload.tax_year, payload.m130_period)
-        assert projection.filing_handoff is not None
-        handoff = projection.filing_handoff.to_domain()
-        assert handoff.material_m100 == project_m100(
-            after.claims,
-            asset_kind=AssetKind.MATERIAL,
-            tax_year=payload.tax_year,
-            target_casilla_id="0208",
-        )
-        # EUR 300.00 at the published 25% for the full year 2025.
-        assert handoff.material_m130 is not None
-        assert handoff.intangible_m130 is not None
-        assert handoff.material_m130.amount == Decimal("75.00")
-        assert [item.amount for item in handoff.material_m130.contributions] == [Decimal("75.00")]
-        assert handoff.intangible_m130.contributions == ()
-        return
-
-    if isinstance(projection, ActivityAssetDisposeProjection):
-        assert isinstance(payload, ActivityAssetDisposeRequest)
-        assert projection.history is not None
-        assert projection.history.to_domain() == after
-        recorded = after.revisions[-1].disposal
-        assert recorded is not None
-        assert recorded.disposal_date == payload.disposal.disposal_date
-        assert after.revisions[-1].out_of_service_date == date(2025, 7, 1)
-        return
-
-    if isinstance(projection, ActivityAssetDisposalCalculateProjection):
-        assert after == before
-        assert projection.calculation is not None
-        # 250.00 received, 10.00 of costs: the seeded element's cost of 300.00 has no claim
-        # behind it, so the reduction is the 2025 minimum and it is the same under any table.
-        assert projection.calculation.transmission_value is not None
-        assert projection.calculation.transmission_value.decimal == "250.00"
-        assert projection.calculation.transmission_costs is not None
-        assert projection.calculation.transmission_costs.decimal == "10.00"
+    assertion = _HISTORY_ASSERTIONS.get(definition_id) or next(
+        (item for kind, item in _PROJECTION_ASSERTIONS if isinstance(projection, kind)), None
+    )
+    if assertion is not None:
+        assertion(payload, projection, before, after, operation)
         return
 
     assert after == before or definition_id == ACTIVITY_ASSET_DESCRIBE_OPERATION_DEFINITION_ID
 
-    if definition_id == ACTIVITY_ASSET_DESCRIBE_OPERATION_DEFINITION_ID:
-        assert isinstance(payload, ActivityAssetDescribeRequest)
-        assert isinstance(projection, ActivityAssetDescribeProjection)
-        assert after.same_tax_facts(before)
-        descriptor = after.current_descriptor(payload.asset_id)
-        assert descriptor is not None
-        assert descriptor.facts == payload.descriptor
-        assert projection.history is not None
-        assert projection.history.to_domain() == after
-        return
-
-    if definition_id == ACTIVITY_ASSET_LIST_OPERATION_DEFINITION_ID:
-        assert isinstance(projection, ActivityAssetListProjection)
-        assert projection.rows is not None
-        assert [row.basis.decimal for row in projection.rows] == ["300.00"]
-        return
-
-    if definition_id == ACTIVITY_ASSET_PLAN_OPERATION_DEFINITION_ID:
-        assert isinstance(projection, ActivityAssetPlanProjection)
-        assert projection.rows is not None
-        assert projection.rows[0].tax_year == 2025
-        assert projection.rows[0].planned is not None
-        assert projection.rows[0].planned.decimal == "75.00"
-        assert projection.limits is not None
-        assert projection.limits.class_key == "equipo-proceso-informacion"
-        return
-
-    if definition_id == ACTIVITY_ASSET_TIMELINE_OPERATION_DEFINITION_ID:
-        assert isinstance(projection, ActivityAssetTimelineProjection)
-        assert projection.events is not None
-        assert [event.kind.value for event in projection.events] == ["revision", "claim"]
-        assert projection.events[1].claim is not None
-        assert projection.events[1].claim.matches_current_schedule is True
-        return
-
-    if definition_id == ACTIVITY_ASSET_FORM_OPTIONS_OPERATION_DEFINITION_ID:
-        assert isinstance(projection, ActivityAssetFormOptionsProjection)
-        assert projection.options is not None
-        assert "equipo-proceso-informacion" in {group.class_key for group in projection.options.table_groups}
-        return
-
-    if definition_id == ACTIVITY_ASSET_ACQUISITION_CANDIDATES_OPERATION_DEFINITION_ID:
-        assert isinstance(projection, ActivityAssetAcquisitionCandidatesProjection)
-        assert projection.candidates == ()
-        return
-
-    raise AssertionError(f"unknown activity-asset conformance operation: {definition_id}")
+    read_assertion = _READ_ASSERTIONS.get(definition_id)
+    if read_assertion is None:
+        raise AssertionError(f"unknown activity-asset conformance operation: {definition_id}")
+    read_assertion(payload, projection, before, after, operation)
 
 
 __all__ = [
