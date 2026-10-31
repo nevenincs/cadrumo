@@ -81,9 +81,6 @@ from ....adapters.persistence.profile.participation_index import TransactionPart
 from ....adapters.persistence.profile.percepciones_observations import PercepcionObservationRepositoryAdapter
 from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from ....adapters.persistence.profile.retencion_observations import RetencionObservationRepositoryAdapter
-from ....adapters.persistence.profile.tests.operator_scope_fakes import (
-    build_inward_operator_scope_ports_for_active_route,
-)
 from ....adapters.persistence.profile.tests.percepcion_observation_authoring import replace_percepcion_observations
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from ....adapters.persistence.profile.tests.retencion_observation_authoring import replace_retencion_observations
@@ -109,6 +106,9 @@ from ....application.modelo.filing_revision_persistence import persist_filed_rev
 from ....application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from ....application.modelo.work_lifecycle import create_work_unit
 from ....application.modelo.work_lifecycle_ports import WorkLifecyclePorts
+from ....application.tests.operator_scope_fakes import (
+    build_inward_operator_scope_ports_for_active_route,
+)
 from ....core.aggregation import (
     AggregationCaptureKind,
     BindingSourceKind,

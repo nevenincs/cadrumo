@@ -13,7 +13,6 @@ from cadrumo.adapters.outbound.aeat.auth import session_store
 from cadrumo.adapters.outbound.aeat.browser.factory import default_browser_session_factory
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.filing_drafts import ModeloDraftRepository
-from cadrumo.adapters.persistence.profile.tests.operator_probe_fakes import fake_operator_probe_ports
 from cadrumo.adapters.persistence.profile.tests.operator_projection_test_support import (
     build_live_auth_preflight_report,
     build_operator_state_projection,
@@ -22,9 +21,6 @@ from cadrumo.adapters.persistence.profile.tests.operator_projection_test_support
 )
 from cadrumo.adapters.persistence.profile.tests.operator_projection_test_support import (
     test_operator_auth as run_operator_auth_test,
-)
-from cadrumo.adapters.persistence.profile.tests.operator_scope_fakes import (
-    build_inward_operator_scope_ports_for_active_route,
 )
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
 from cadrumo.adapters.persistence.storage.certificate_secret_backend import build_certificate_secret_backend
@@ -47,6 +43,10 @@ from cadrumo.application.auth.operator_revocation import reset_operator_auth
 from cadrumo.application.auth.probes import ProviderProbeResult
 from cadrumo.application.auth.sessions import storage_state_paths
 from cadrumo.application.state_projection_auth import ProjectionAuthReadiness
+from cadrumo.application.tests.operator_probe_fakes import fake_operator_probe_ports
+from cadrumo.application.tests.operator_scope_fakes import (
+    build_inward_operator_scope_ports_for_active_route,
+)
 from cadrumo.application.workflow.persistence import workflow_state_repository
 from cadrumo.core.auth_provider import AuthProviderKind, ClaveMovilRoute
 from cadrumo.core.config import Settings, load_settings, override_settings

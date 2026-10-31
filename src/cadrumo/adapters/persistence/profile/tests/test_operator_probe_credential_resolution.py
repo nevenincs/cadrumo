@@ -18,13 +18,9 @@ from __future__ import annotations
 import pytest
 from pydantic import SecretStr
 
-from cadrumo.adapters.persistence.profile.tests.operator_probe_fakes import fake_operator_probe_ports
 from cadrumo.adapters.persistence.profile.tests.operator_projection_test_support import (
     build_live_auth_preflight_report,
     configure_operator_auth,
-)
-from cadrumo.adapters.persistence.profile.tests.operator_scope_fakes import (
-    build_inward_operator_scope_ports_for_active_route,
 )
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
 from cadrumo.adapters.persistence.storage.certificate_secret_backend import build_certificate_secret_backend
@@ -35,6 +31,10 @@ from cadrumo.application.auth.operator_probes import (
     probe_clave_credentials,
 )
 from cadrumo.application.state_projection_auth import build_auth_readiness
+from cadrumo.application.tests.operator_probe_fakes import fake_operator_probe_ports
+from cadrumo.application.tests.operator_scope_fakes import (
+    build_inward_operator_scope_ports_for_active_route,
+)
 from cadrumo.application.workflow.persistence import workflow_state_repository
 from cadrumo.core.auth_provider import AuthProviderKind
 from cadrumo.core.config import load_settings, override_settings

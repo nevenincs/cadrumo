@@ -71,11 +71,11 @@ from cadrumo.domain.transactions.enums import BusinessClassification, Transactio
 from cadrumo.entrypoints.adapter_composition_work_ports import build_work_lifecycle_ports
 from cadrumo.tests.log_records import delivered_records
 
-from ....adapters.persistence.profile.tests.operator_probe_fakes import fake_operator_probe_ports
-from ....adapters.persistence.profile.tests.operator_scope_fakes import (
+from ....application.ledger.tests.manual_transaction_support import create_manual_transaction
+from ....application.tests.operator_probe_fakes import fake_operator_probe_ports
+from ....application.tests.operator_scope_fakes import (
     build_inward_operator_scope_ports_for_active_route,
 )
-from ....application.ledger.tests.manual_transaction_support import create_manual_transaction
 
 _OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
 

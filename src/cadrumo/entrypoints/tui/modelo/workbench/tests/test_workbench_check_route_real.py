@@ -24,15 +24,15 @@ from pathlib import Path
 import pytest
 from textual.pilot import Pilot
 
-from ......adapters.persistence.profile.tests.operator_scope_fakes import (
-    build_inward_operator_scope_ports_for_active_route,
-)
 from ......application.calculations.m111_no_retenciones import M111_NO_RETENCIONES_PROFILE_PATH
 from ......application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from ......application.modelo.work_form_findings import ModeloFormAttention
 from ......application.modelo.work_form_models import ModeloWorkForm
 from ......application.modelo.work_form_next_step import ModeloFormNextAction
 from ......application.modelo.work_form_service import ModeloWorkFormLoadV1
+from ......application.tests.operator_scope_fakes import (
+    build_inward_operator_scope_ports_for_active_route,
+)
 from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage
 from ......domain.deadlines.models import IVARegime, TaxpayerProfile

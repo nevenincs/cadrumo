@@ -53,11 +53,11 @@ from cadrumo.entrypoints.tests.profile_persistence.verification_repository_suppo
     build_test_verification_repository_bundle,
 )
 
-from ....adapters.persistence.profile.tests.operator_scope_fakes import (
-    build_inward_operator_scope_ports_for_active_route,
-)
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from ....application.modelo.work_lifecycle_ports import WorkLifecyclePorts
+from ....application.tests.operator_scope_fakes import (
+    build_inward_operator_scope_ports_for_active_route,
+)
 from ....application.tests.wizard_catalogue_fixtures import register_wizard_catalogue
 from ....domain.contribuyente.renta_codes import FiscalResidency
 from ....domain.deadlines.models import IVARegime

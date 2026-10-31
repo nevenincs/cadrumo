@@ -29,10 +29,6 @@ import keyring
 import pytest
 from pydantic import SecretStr
 
-from cadrumo.adapters.persistence.profile.tests.certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
-from cadrumo.adapters.persistence.profile.tests.operator_scope_fakes import (
-    build_inward_operator_scope_ports_for_active_route,
-)
 from cadrumo.adapters.persistence.profile.tests.profile_registration import (
     live_clave_movil_profile_scope,
     register_minimal_profile,
@@ -44,6 +40,10 @@ from cadrumo.application.auth.credentials import resolve_active_provider_kind
 from cadrumo.application.auth.operator_scope import active_profile_storage_span
 from cadrumo.application.auth.protocols import BrowserSessionPort
 from cadrumo.application.auth.sessions import ensure_authenticated_aeat_session
+from cadrumo.application.auth.tests.certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
+from cadrumo.application.tests.operator_scope_fakes import (
+    build_inward_operator_scope_ports_for_active_route,
+)
 from cadrumo.application.workflow.persistence import workflow_state_repository
 from cadrumo.core.auth_provider import AuthProviderKind
 from cadrumo.core.config import Settings, load_settings, override_settings

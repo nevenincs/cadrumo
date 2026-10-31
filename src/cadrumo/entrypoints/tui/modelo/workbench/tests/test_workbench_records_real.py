@@ -17,9 +17,6 @@ import pytest
 from textual.widgets import OptionList, Static
 
 from ......adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
-from ......adapters.persistence.profile.tests.operator_scope_fakes import (
-    build_inward_operator_scope_ports_for_active_route,
-)
 from ......adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from ......application.modelo.calculation_bucket_actions import (
     BucketAggregationCalculationResult,
@@ -29,6 +26,9 @@ from ......application.modelo.value_presentation import format_casilla_value
 from ......application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from ......application.modelo.work_form_models import ModeloFormRepeatingBlock
 from ......application.modelo.work_form_wording import does_not_apply_words
+from ......application.tests.operator_scope_fakes import (
+    build_inward_operator_scope_ports_for_active_route,
+)
 from ......core.casilla_id import validated_casilla_id
 from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage

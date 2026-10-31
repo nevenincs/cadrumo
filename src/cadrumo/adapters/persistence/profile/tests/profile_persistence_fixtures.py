@@ -9,6 +9,7 @@ from collections.abc import Generator, Iterator
 
 import pytest
 
+from .....application.auth.tests.certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
 from .....application.ledger.invoice_extraction_authority import default_invoice_extraction_period
 from .....domain.calculations.registry.authority import bundled_indexed_authority
 from .....domain.iva.regime_legend import resolve_regime_legends
@@ -20,7 +21,6 @@ from ...storage.tests.secure_sql import (
 )
 from ...tests.runtime_profile_fixture import default_bucket_runtime_profile_fixture
 from ._invoice_confirmation_test_support import InvoiceAuthorityFixture
-from .certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
 from .ledger_action_persistence_support import BUCKET_ID
 from .published_authority_support import release_published_authority_operation
 
