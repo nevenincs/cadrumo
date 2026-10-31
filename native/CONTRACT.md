@@ -2460,7 +2460,10 @@ two members the seal produces by presence and re-verifies the seal whenever an
 existing stage is reused. The stage, a `cmake --install` prefix, the ZIP and the
 DMG therefore carry the same seal, and nothing writes beneath the bundle after it.
 CPack only copies the stage: its pre-build script verifies the seal of its staging
-copy and its post-build script verifies the bundle inside each built package, the
+copy, then starts that copy's runtime role against a private temporary storage root,
+requiring the ready line and a stop when its input closes, and verifies the seal
+again, so no package is built from a bundle that cannot start. Its post-build script
+verifies the bundle inside each built package, the
 DMG attached read-only and the ZIP extracted with `ditto`. Either refusal fails the
 package build. Each check also records `spctl --assess`, which rejects an ad-hoc
 seal; that assessment is informational.
