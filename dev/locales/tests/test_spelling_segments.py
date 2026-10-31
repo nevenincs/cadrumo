@@ -64,6 +64,7 @@ def test_standard_name_mutations_and_unpaired_product_words_stay_local(locale: s
     "name,part",
     [
         ("Dirección Electrónica Habilitada Única", "Dirección"),
+        ("Dirección Electrónica Habilitada única", "Dirección"),
         ("Impuesto sobre la Renta de las Personas Físicas", "Físicas"),
         ("Impuesto sobre el Valor Añadido", "Añadido"),
         ("**Mis notificaciones**", "notificaciones"),
@@ -79,6 +80,16 @@ def test_official_spanish_names_are_checked_as_complete_phrases(locale: str, nam
 
 def test_plain_notifications_are_not_assumed_to_be_the_official_label() -> None:
     assert "es" not in words_by_language("Mis notificaciones errror", "ca")
+
+
+def test_catalan_elision_keeps_complete_spanish_tax_name_checked_in_spanish() -> None:
+    result = words_by_language("de l'Impuesto sobre la Renta de las Personas Físicas errror", "ca")
+    assert {"Impuesto", "Personas", "Físicas"} <= result["es"]
+    assert "errror" in result["ca"]
+    mutated = words_by_language("de l'Impuesto sobre la Renta de las Personas Físicasx errror", "ca")
+    assert "Físicasx" in mutated["ca"]
+    embedded = words_by_language("devil'Impuesto sobre la Renta de las Personas Físicas", "ca")
+    assert "Personas" in embedded["ca"]
 
 
 @pytest.mark.parametrize(
