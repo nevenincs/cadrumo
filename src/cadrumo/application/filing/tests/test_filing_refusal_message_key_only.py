@@ -105,6 +105,14 @@ _UNSWEPT_MODULE_RATIONALES: dict[str, str] = {
         "XML-dictionary layout invariants are consumed by export.py, whose "
         "export/verification boundary owns their projection."
     ),
+    "_export_xml_dictionary_modelo100.py": (
+        "Modelo 100 XML routing and declaration invariants feed _export_xml_dictionary.py, "
+        "then export.py's public export/verification boundary."
+    ),
+    "_export_xml_dictionary_values.py": (
+        "XML scalar wire-type and formatting invariants feed _export_xml_dictionary.py, "
+        "then export.py's public export/verification boundary."
+    ),
     "projection.py": (
         "Projection-plan and value-address invariants are consumed by export.py's render-request boundary."
     ),

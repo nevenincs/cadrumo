@@ -12,6 +12,8 @@ from types import ModuleType
 
 import pytest
 
+from cadrumo_client.commands.shared_contracts import BindingState
+
 from ....core.directory_scan import scan_directory
 from .. import (
     _ledger_classify_cli,
@@ -33,6 +35,7 @@ from .. import (
     ledger_rules_commands,
 )
 from .. import ledger_lifecycle_cli as _ledger_lifecycle_cli
+from ..command_specs import COMMAND_GRAPH
 from .locale_catalogue import LocaleNode, load_locale
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -58,6 +61,47 @@ _LEDGER_NOTICE_MODULES: tuple[ModuleType, ...] = (
 )
 
 _COMMAND_PROSE = re.compile(r"(?i)\b(?:aeat\s+)?app\s+ledger\b")
+
+
+@cache
+def _ledger_command_help_keys() -> frozenset[str]:
+    """Find help text by its command-graph owner, not by key spelling."""
+    keys: set[str] = set()
+    for node in COMMAND_GRAPH.nodes():
+        if node.path[:3] != ("aeat", "app", "ledger"):
+            continue
+        for key in (node.spec.help_key, node.spec.short_help_key, *(p.help_key for p in node.spec.parameters)):
+            if key is not None:
+                keys.add(key.value)
+    return frozenset(keys)
+
+
+@cache
+def _executable_ledger_paths() -> re.Pattern[str]:
+    """Recognize complete, implemented ledger commands at a reference site."""
+    paths = (
+        node.path
+        for node in COMMAND_GRAPH.nodes()
+        if node.path[:3] == ("aeat", "app", "ledger")
+        and node.spec.kind == "leaf"
+        and node.spec.handler is not None
+        and node.spec.handler.state is BindingState.TARGET
+    )
+    alternatives = [r"[ \t]+".join(map(re.escape, path)) for path in sorted(paths, key=len, reverse=True)]
+    assert alternatives, "the ledger graph must retain executable commands"
+    return re.compile(r"(?:" + "|".join(alternatives) + r")(?![\w-])")
+
+
+def _redeclares_ledger_command(key: str, value: str) -> bool:
+    """Reject actions in notices and incomplete command references in help."""
+    references = tuple(_COMMAND_PROSE.finditer(value))
+    if not references:
+        return False
+    return key not in _ledger_command_help_keys() or any(
+        _executable_ledger_paths().match(value, reference.start()) is None for reference in references
+    )
+
+
 _PACKAGE_ROOT = Path(inspect.getfile(ledger_commands)).parents[2]
 # ``_PACKAGE_ROOT`` already addresses ``src/cadrumo``; re-appending it doubled
 # the path, so every catalogue read here resolved to a file that cannot exist.
@@ -185,6 +229,13 @@ def test_ledger_notices_do_not_redeclare_actions_or_english_fallbacks() -> None:
                 for resolved_message in _message_expressions(tree, message):
                     if isinstance(resolved_message, ast.Constant) and isinstance(resolved_message.value, str):
                         failures.append(f"{location}: raw notice message")
+                    if any(
+                        isinstance(part, ast.Constant)
+                        and isinstance(part.value, str)
+                        and part.value in _ledger_command_help_keys()
+                        for part in ast.walk(resolved_message)
+                    ):
+                        failures.append(f"{location}: notice reuses command help")
                     if isinstance(resolved_message, ast.Call) and any(
                         keyword.arg == "default" for keyword in resolved_message.keywords
                     ):
@@ -309,7 +360,7 @@ _MINIMUM_LEDGER_LOCALE_KEYS = 200
 
 
 def test_ledger_locale_values_do_not_redeclare_command_guidance() -> None:
-    """Localized ledger facts cannot carry executable command identity."""
+    """Notices cannot carry actions; graph-owned help may name complete commands."""
     failures: list[str] = []
     for locale in ("ca", "en", "es", "hu"):
         ledger_leaves = [(key, value) for key, value in _ledger_locale_leaves(locale) if isinstance(value, str)]
@@ -317,8 +368,17 @@ def test_ledger_locale_values_do_not_redeclare_command_guidance() -> None:
             f"locale {locale} carries only {len(ledger_leaves)} cli.ledger key(s); below this "
             "the claim below holds because that catalogue emptied, not because it is clean"
         )
-        failures.extend(f"{locale}:{key}" for key, value in ledger_leaves if _COMMAND_PROSE.search(value))
+        failures.extend(f"{locale}:{key}" for key, value in ledger_leaves if _redeclares_ledger_command(key, value))
     assert failures == [], failures
+
+
+def test_command_help_exception_requires_graph_ownership_and_an_executable_path() -> None:
+    help_key = "cli.ledger.check.period_help"
+    assert help_key in _ledger_command_help_keys()
+    assert not _redeclares_ledger_command(help_key, "See aeat app ledger status.")
+    assert _redeclares_ledger_command(help_key, "See app ledger status.")
+    assert _redeclares_ledger_command(help_key, "See aeat app ledger statuss.")
+    assert _redeclares_ledger_command("cli.ledger.some_notice", "Run aeat app ledger status.")
 
 
 def test_ledger_runtime_command_literals_are_provenance_only() -> None:

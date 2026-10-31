@@ -48,7 +48,7 @@ _LOOKS_INTERNAL: Final = re.compile(r"(?i)[a-z0-9]+(?:[_.:-][a-z0-9]+)+|[0-9a-f]
 #: Fact names a sentence is never filled with; they identify records for a screen to act on.
 _NOT_SAID_FACTS: Final = frozenset({"conflicting_claim_ids"})
 
-_ASSET_KEYS: Final = {
+_ASSET_LOCALE_KEYS: Final = {
     "no_name": "desktop.ledger.assets.list.no_name",
     "not_known": "desktop.ledger.assets.not_known",
     "not_applicable": "desktop.ledger.assets.mark.not_applicable",
@@ -77,7 +77,7 @@ _ASSET_KEYS: Final = {
 
 
 def _text(name: str, **fields: object) -> str:
-    return tr(_ASSET_KEYS[name], **fields)
+    return tr(_ASSET_LOCALE_KEYS[name], **fields)
 
 
 def _language() -> OutputLanguage:

@@ -9,7 +9,7 @@
   contacts AEAT. ``--kind`` selects the evidence document's KIND, orthogonal to
   the pull/file transport axis: ``justificante`` (the default, every modelo) or
   ``declaration`` (a filed declaración PDF, casilla-level reconcile, enrolled
-  modelos only -- see :data:`application.modelo.reconciliation._DECLARATION_CASILLA_RECONCILE_MODELOS`).
+  modelos only -- see :data:`application.modelo.reconciliation._DECLARATION_RECONCILE_ROLE`).
 * ``reconcile list`` lists past reconciliations.
 """
 
