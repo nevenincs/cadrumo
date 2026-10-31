@@ -72,7 +72,7 @@ from cadrumo_client.contracts.operation_access import (
     OperationSubmit,
     OperationSubmitted,
 )
-from cadrumo_client.contracts.projection_pages import project_document_page
+from cadrumo_client.contracts.projection_pages import encode_projection_document, project_encoded_page
 from cadrumo_client.transport.frontend_client import FrontendClient
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -181,7 +181,7 @@ class _FilingWire(FrontendClient):
                 runtime_boot_id=_PROFILE,
                 connection_id=_SESSION,
                 operation_id=_OPERATION,
-                page=project_document_page(encoded, request.page),
+                page=project_encoded_page(encode_projection_document(encoded), request.page),
             )
         if isinstance(request, OperationSubmit):
             return OperationSubmitted(

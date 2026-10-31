@@ -95,8 +95,3 @@ def project_encoded_page(document: EncodedProjectionDocument, request: Projectio
         document_digest=digest,
         encoded=base64.b64encode(encoded[request.offset : request.offset + PROJECTION_PAGE_BYTES]).decode("ascii"),
     )
-
-
-def project_document_page(document: dict[str, JsonValue], request: ProjectionPageRequest) -> ProjectionPage:
-    """Encode one document and slice the requested page from it."""
-    return project_encoded_page(encode_projection_document(document), request)

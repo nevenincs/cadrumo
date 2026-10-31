@@ -68,7 +68,8 @@ from cadrumo_client.contracts.projection_pages import (
     PROJECTION_PAGE_BYTES,
     ProjectionPage,
     ProjectionPageRequest,
-    project_document_page,
+    encode_projection_document,
+    project_encoded_page,
 )
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
 from cadrumo_client.transport.frame_io import MAXIMUM_FRAME_BYTES, document_frame, read_document, write_document
@@ -213,7 +214,7 @@ def _page(request: OperationResultPage, *, boot_id: UUID, connection_id: UUID) -
         runtime_boot_id=boot_id,
         connection_id=connection_id,
         operation_id=request.result.operation_id,
-        page=project_document_page(_DOCUMENT, request.page),
+        page=project_encoded_page(encode_projection_document(_DOCUMENT), request.page),
     )
 
 
@@ -279,7 +280,10 @@ def test_frontend_reassembles_verified_multi_page_result() -> None:
     assert result == _DOCUMENT
     assert requests[0].page == ProjectionPageRequest()
     assert requests[1].page.offset == PROJECTION_PAGE_BYTES
-    assert requests[1].page.expected_digest == project_document_page(_DOCUMENT, ProjectionPageRequest()).document_digest
+    assert (
+        requests[1].page.expected_digest
+        == project_encoded_page(encode_projection_document(_DOCUMENT), ProjectionPageRequest()).document_digest
+    )
     assert len(canonical_json_bytes(result)) > PROJECTION_PAGE_BYTES
 
 
@@ -423,7 +427,7 @@ def test_document_budget_is_distinct_from_each_page_budget(
         now[0] += durations[len(deadlines) - 1]
         if now[0] >= deadline:
             raise RefusalError(RefusalCode.TIMEOUT)
-        return project_document_page(document, request)
+        return project_encoded_page(encode_projection_document(document), request)
 
     client = cast(FrontendClient, SimpleNamespace(read_result_page=read_page))
     if succeeds:
@@ -634,7 +638,7 @@ def test_profile_view_terminal_refusal_exposes_registered_refusal_code_without_r
 @pytest.mark.parametrize("release_kind", ["authorize", "response_scope"])
 def test_full_page_worker_and_runtime_envelopes_fit_real_frames(release_kind: str) -> None:
     """A full byte page leaves room for bounded authority metadata, not just bare base64."""
-    page = project_document_page(_DOCUMENT, ProjectionPageRequest())
+    page = project_encoded_page(encode_projection_document(_DOCUMENT), ProjectionPageRequest())
     assert len(page.decode()) == PROJECTION_PAGE_BYTES
     destination = uuid4()
     periods = frozenset(

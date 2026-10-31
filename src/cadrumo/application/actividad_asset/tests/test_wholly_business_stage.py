@@ -7,7 +7,7 @@ from typing import Any
 
 import pytest
 
-from cadrumo.application.actividad_asset.operation_dtos import ActivityAssetBasisSnapshot
+from cadrumo.application.actividad_asset.acquisition_dtos import ActivityAssetBasisSnapshot
 from cadrumo.domain.renta.actividad_asset.lifecycle import (
     WHOLLY_BUSINESS_STAGE_FACTS,
     ActivityAssetRevision,

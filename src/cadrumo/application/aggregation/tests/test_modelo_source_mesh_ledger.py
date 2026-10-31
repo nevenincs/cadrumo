@@ -27,7 +27,6 @@ from ....core.operator_action_enums import NoRecoveryOutcome
 from ....core.period import Period
 from ....core.prorrata_register import ProrrataProvisionalProvenance, ProrrataRegisterRegime
 from ....core.secure_object_write import SecureObjectWrite
-from ....core.tipos_actividad import TipoActividad
 from ....domain.bienes_inversion.register import BienesInversionIvaRegister, BienInversionIvaRecord
 from ....domain.calculations.registry.ids import BindingId
 from ....domain.calculations.registry.schema import ModeloRevision
@@ -95,7 +94,12 @@ from ..source_mesh import (
     CalculationSourceResolution,
 )
 from .iva_authority_support import aggregate_iva_ledger_observations
-from .ledger_transaction_support import iva_transaction, ledger_raw_transaction
+from .ledger_transaction_support import (
+    iva_transaction,
+    ledger_raw_transaction,
+    renta_acquisition_row,
+    renta_transaction,
+)
 from .usage_ratio_support import no_stored_usage_ratios
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
@@ -309,32 +313,6 @@ def _m100_revision(year: int) -> ModeloRevision:
 @cache
 def _m303_revision() -> ModeloRevision:
     return published_snapshot("303", filing_year=2025, period="1T").revision
-
-
-def _renta_transaction(
-    provider_id: str,
-    *,
-    purchase_invoice_evidence_id: str | None,
-    amount: Decimal = Decimal("121.00"),
-    category: SpendingCategory | None = None,
-) -> Transaction:
-    return Transaction.model_validate(
-        {
-            "raw": ledger_raw_transaction(
-                provider_id,
-                booked_date=date(2025, 4, 5),
-                amount=amount,
-            ),
-            "direction": TransactionDirection.OUTGOING,
-            "group_label": None,
-            "business_classification": BusinessClassification.BUSINESS,
-            "source_jurisdiction": "ES",
-            "purchase_invoice_evidence_id": purchase_invoice_evidence_id,
-            "category_id": (SpendingCategory.from_registry("asesoria_fiscal") if category is None else category).value,
-            "classified_at": datetime(2025, 4, 6, 13, 0, tzinfo=UTC),
-            "classified_by": "manual",
-        },
-    )
 
 
 def _invoice(tx_id: str, *, bucket_id: str = BUCKET_ID) -> Invoice:
@@ -1045,9 +1023,9 @@ def test_renta_source_mesh_resolver_preserves_purchase_invoice_evidence_provenan
         bucket_id=BUCKET_ID,
     )
     invoice_repo = _InMemoryInvoiceCatalogueRepository()
-    initial = _renta_transaction("renta-linked", purchase_invoice_evidence_id=None)
+    initial = renta_transaction("renta-linked", purchase_invoice_evidence_id=None)
     invoice = _invoice(initial.transaction_id)
-    linked = _renta_transaction("renta-linked", purchase_invoice_evidence_id=invoice.invoice_id)
+    linked = renta_transaction("renta-linked", purchase_invoice_evidence_id=invoice.invoice_id)
     tx_repo.save(TransactionCatalogue.from_transactions((linked,)))
     invoice_repo.save(build_invoice_catalogue((invoice,)))
 
@@ -1079,13 +1057,13 @@ def test_renta_source_mesh_blocks_a_separate_depreciation_row_and_never_deducts_
     """A depreciation row the register does not own carries a blocking note and reaches no box."""
     revision = _revision("100", "2025")
     tx_repo = InMemoryTransactionCatalogueRepository(bucket_id=BUCKET_ID)
-    acquisition = _renta_transaction(
+    acquisition = renta_transaction(
         "asset-acquisition",
         purchase_invoice_evidence_id=None,
         amount=Decimal("2000.00"),
         category=SpendingCategory.from_registry("hardware_amortizable"),
     )
-    separate_depreciation = _renta_transaction(
+    separate_depreciation = renta_transaction(
         "separate-depreciation-row",
         purchase_invoice_evidence_id=None,
         amount=Decimal("250.00"),
@@ -1371,7 +1349,7 @@ def test_renta_source_mesh_declares_only_the_claim_for_a_register_owned_acquisit
 
 @pytest.mark.parametrize("period", ["1T", "2T"])
 def test_renta_gasto_keeps_only_in_window_held_back_identity_as_durable_evidence(period: str) -> None:
-    transaction = _renta_transaction("missing-base-gasto", purchase_invoice_evidence_id=None)
+    transaction = renta_transaction("missing-base-gasto", purchase_invoice_evidence_id=None)
     tx_repo = InMemoryTransactionCatalogueRepository(bucket_id=BUCKET_ID)
     tx_repo.save(TransactionCatalogue.from_transactions((transaction,)))
     resolution = LedgerRentaGastosPagoFraccionadoAggregationSourceResolver(
@@ -1644,12 +1622,6 @@ def _prior_year_purchase() -> Transaction:
     )
 
 
-def _acquisition_row(provider_id: str, *, activity: str | None) -> Transaction:
-    return _renta_transaction(provider_id, purchase_invoice_evidence_id=None).model_copy(
-        update={"tipo_actividad": None if activity is None else TipoActividad(activity)},
-    )
-
-
 @pytest.mark.parametrize(
     ("period", "expected"),
     [
@@ -1690,8 +1662,8 @@ def test_m130_accrual_ignores_a_later_years_claim_and_a_claim_inside_the_year() 
 
 def test_m130_excludes_an_agrarian_element_but_keeps_the_same_taxpayers_other_activity() -> None:
     """RIRPF art. 110.1.c filters by activity: 0 from the farm machine, the full accrual from the other."""
-    farm_row = _acquisition_row("farm-machine", activity="B01")
-    office_row = _acquisition_row("office-desk", activity="A05")
+    farm_row = renta_acquisition_row("farm-machine", activity="B01")
+    office_row = renta_acquisition_row("office-desk", activity="A05")
     farm = register_asset("farm-machine", transaction_id=farm_row.transaction_id)
     office = register_asset("office-desk", transaction_id=office_row.transaction_id)
 
@@ -1705,7 +1677,7 @@ def test_m130_excludes_an_agrarian_element_but_keeps_the_same_taxpayers_other_ac
 def test_m130_counts_an_element_with_no_declared_activity_and_says_so_only_beside_an_agrarian_one() -> None:
     silent_row = _prior_year_purchase()
     silent = register_asset("unmarked", transaction_id=silent_row.transaction_id)
-    farm_row = _acquisition_row("farm-machine", activity="B05")
+    farm_row = renta_acquisition_row("farm-machine", activity="B05")
     farm = register_asset("farm-machine", transaction_id=farm_row.transaction_id)
 
     alone = resolve_m130(ActivityAssetHistory(revisions=(silent,)), "1T", rows=(silent_row,))

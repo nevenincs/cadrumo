@@ -7,6 +7,8 @@ from decimal import Decimal
 from pathlib import Path
 
 from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
+from ....core.tipos_actividad import TipoActividad
+from ....domain.categories.spending_category import SpendingCategory
 from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from ....domain.iva.schema import IvaCategory
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
@@ -75,4 +77,38 @@ def iva_transaction(
     return Transaction.model_validate(fields)
 
 
-__all__ = ["iva_transaction", "ledger_raw_transaction"]
+def renta_transaction(
+    provider_id: str,
+    *,
+    purchase_invoice_evidence_id: str | None,
+    amount: Decimal = Decimal("121.00"),
+    category: SpendingCategory | None = None,
+    activity: str | None = None,
+) -> Transaction:
+    """Return one classified Renta expense row with optional activity and invoice evidence."""
+    fields: dict[str, object] = {
+        "raw": ledger_raw_transaction(
+            provider_id,
+            booked_date=date(2025, 4, 5),
+            amount=amount,
+        ),
+        "direction": TransactionDirection.OUTGOING,
+        "group_label": None,
+        "business_classification": BusinessClassification.BUSINESS,
+        "source_jurisdiction": "ES",
+        "purchase_invoice_evidence_id": purchase_invoice_evidence_id,
+        "category_id": (SpendingCategory.from_registry("asesoria_fiscal") if category is None else category).value,
+        "classified_at": datetime(2025, 4, 6, 13, 0, tzinfo=UTC),
+        "classified_by": "manual",
+    }
+    if activity is not None:
+        fields["tipo_actividad"] = TipoActividad(activity)
+    return Transaction.model_validate(fields)
+
+
+def renta_acquisition_row(provider_id: str, *, activity: str | None) -> Transaction:
+    """Return one Renta expense row linked to a register-owned acquisition."""
+    return renta_transaction(provider_id, purchase_invoice_evidence_id=None, activity=activity)
+
+
+__all__ = ["iva_transaction", "ledger_raw_transaction", "renta_acquisition_row", "renta_transaction"]

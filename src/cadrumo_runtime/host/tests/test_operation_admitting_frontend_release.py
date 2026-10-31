@@ -97,7 +97,12 @@ from cadrumo_client.contracts.access_vocabulary import (
     DisclosurePermission,
 )
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
-from cadrumo_client.contracts.projection_pages import ProjectionPage, ProjectionPageRequest, project_document_page
+from cadrumo_client.contracts.projection_pages import (
+    ProjectionPage,
+    ProjectionPageRequest,
+    encode_projection_document,
+    project_encoded_page,
+)
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
 from cadrumo_runtime.contracts.worker_authorization import WorkerAuthorityRequest
 
@@ -406,7 +411,7 @@ class _Worker:
         """Cut the first page as the worker does, inside the same released projection."""
         request = await self._result_request(operation_id, None)
         async with self.host.project(session.session_id, request, frontend=frontend) as (document, _release):
-            return project_document_page(document, ProjectionPageRequest()).decode()
+            return project_encoded_page(encode_projection_document(document), ProjectionPageRequest()).decode()
 
     async def review(
         self, session: AccessSession, frontend: OperationFrontendProjection, operation_id: OperationId

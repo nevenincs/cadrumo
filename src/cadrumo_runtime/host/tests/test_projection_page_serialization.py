@@ -11,7 +11,11 @@ from pydantic_core import PydanticSerializationError
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.core.hashing import canonical_json_bytes
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
-from cadrumo_client.contracts.projection_pages import ProjectionPageRequest, project_document_page
+from cadrumo_client.contracts.projection_pages import (
+    ProjectionPageRequest,
+    encode_projection_document,
+    project_encoded_page,
+)
 
 from ..operation_host import _projection_document
 
@@ -37,7 +41,7 @@ def test_paged_projection_has_the_same_canonical_bytes_as_full_validation() -> N
     full = _projection_document(result, paged=False)
     paged = _projection_document(result, paged=True)
     assert canonical_json_bytes(paged) == canonical_json_bytes(full)
-    first = project_document_page(paged, ProjectionPageRequest())
+    first = project_encoded_page(encode_projection_document(paged), ProjectionPageRequest())
     assert first.decode() == canonical_json_bytes(full)[: len(first.decode())]
 
 
@@ -55,7 +59,7 @@ def test_paged_projection_refuses_malformed_serializer_output() -> None:
 @pytest.mark.parametrize("bad", [float("nan"), float("inf"), float("-inf")])
 def test_paged_projection_refuses_nonfinite_values_at_canonical_encoder(bad: float) -> None:
     with pytest.raises(ProfileAccessRefusedError) as refused:
-        project_document_page({"bad": bad}, ProjectionPageRequest())
+        project_encoded_page(encode_projection_document({"bad": bad}), ProjectionPageRequest())
     assert refused.value.reason is AccessDenialCode.OPERATION_UNAVAILABLE
 
 
@@ -64,7 +68,7 @@ def test_paged_projection_refuses_excessive_nesting_at_canonical_encoder() -> No
     for _ in range(10_000):
         nested = {"next": nested}
     with pytest.raises(ProfileAccessRefusedError) as refused:
-        project_document_page(nested, ProjectionPageRequest())
+        project_encoded_page(encode_projection_document(nested), ProjectionPageRequest())
     assert refused.value.reason is AccessDenialCode.OPERATION_UNAVAILABLE
 
 

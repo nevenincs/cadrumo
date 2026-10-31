@@ -46,12 +46,12 @@ from ..modelo_bindings_actividad_assets import (
     activity_asset_disposal_excess_m131_findings,
 )
 from ..source_mesh import CalculationSourceContext, CalculationSourceResolution
+from .ledger_transaction_support import renta_acquisition_row
 from .renta_income_aggregation_support import _catalogue_read_ports
 from .test_modelo_source_mesh_ledger import (
     BUCKET_ID,
     InMemoryTransactionCatalogueRepository,
     StaticActivityAssetHistoryRepository,
-    _acquisition_row,
     _register_claim,
     _revision,
     reasons,
@@ -263,7 +263,7 @@ def test_no_attestation_means_no_excess() -> None:
 
 
 def test_an_agrarian_excess_is_a_finding_and_reaches_no_box() -> None:
-    row = _acquisition_row("farm-machine", activity="B01")
+    row = renta_acquisition_row("farm-machine", activity="B01")
     history = _excess_history(transaction_id=row.transaction_id)
     instalment = resolve_m130(history, "2T", rows=(row,))
 
@@ -466,7 +466,7 @@ def test_the_row_fingerprint_moves_with_the_costs_and_the_date_of_the_sale(
 
 
 def test_the_row_states_the_day_of_the_acquisition_row_and_an_onerous_transfer() -> None:
-    row = _acquisition_row("acquired", activity=None)
+    row = renta_acquisition_row("acquired", activity=None)
     resolution = resolve_m100(disposed_asset_history(transaction_id=row.transaction_id), rows=(row,))
 
     assert _row_values(resolution, "1632") == {1: "2025-04-05"}

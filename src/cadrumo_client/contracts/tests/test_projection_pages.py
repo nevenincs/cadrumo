@@ -11,7 +11,13 @@ from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedE
 from cadrumo.core.hashing import canonical_json_bytes, sha256_hex
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
-from ..projection_pages import PROJECTION_PAGE_BYTES, ProjectionPage, ProjectionPageRequest, project_document_page
+from ..projection_pages import (
+    PROJECTION_PAGE_BYTES,
+    ProjectionPage,
+    ProjectionPageRequest,
+    encode_projection_document,
+    project_encoded_page,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -26,7 +32,10 @@ def test_utf8_spanning_page_boundary_reassembles_exact_canonical_document() -> N
     offset = 0
     digest: str | None = None
     while offset < len(expected):
-        page = project_document_page(document, ProjectionPageRequest(offset=offset, expected_digest=digest))
+        page = project_encoded_page(
+            encode_projection_document(document),
+            ProjectionPageRequest(offset=offset, expected_digest=digest),
+        )
         chunks.append(page.decode())
         assert page.offset == offset
         assert page.total_bytes == len(expected)
@@ -41,12 +50,12 @@ def test_utf8_spanning_page_boundary_reassembles_exact_canonical_document() -> N
 def test_continuation_requires_and_checks_original_document_digest() -> None:
     text = "x" * (PROJECTION_PAGE_BYTES + 1)
     document: dict[str, JsonValue] = {"text": text}
-    first = project_document_page(document, ProjectionPageRequest())
+    first = project_encoded_page(encode_projection_document(document), ProjectionPageRequest())
     with pytest.raises(ValidationError):
         ProjectionPageRequest(offset=PROJECTION_PAGE_BYTES)
     with pytest.raises(ProfileAccessRefusedError) as stale:
-        project_document_page(
-            {"text": text + "changed"},
+        project_encoded_page(
+            encode_projection_document({"text": text + "changed"}),
             ProjectionPageRequest(
                 offset=PROJECTION_PAGE_BYTES,
                 expected_digest=first.document_digest,
@@ -54,19 +63,20 @@ def test_continuation_requires_and_checks_original_document_digest() -> None:
         )
     assert stale.value.reason is AccessDenialCode.OPERATION_UNAVAILABLE
     with pytest.raises(ProfileAccessRefusedError):
-        project_document_page(
-            document, ProjectionPageRequest(offset=first.total_bytes, expected_digest=first.document_digest)
+        project_encoded_page(
+            encode_projection_document(document),
+            ProjectionPageRequest(offset=first.total_bytes, expected_digest=first.document_digest),
         )
 
 
 @pytest.mark.parametrize("encoded", ["!!!!", "e31=", "e30=="])
 def test_projection_page_refuses_malformed_or_noncanonical_base64(encoded: str) -> None:
-    original = project_document_page({}, ProjectionPageRequest())
+    original = project_encoded_page(encode_projection_document({}), ProjectionPageRequest())
     with pytest.raises(ValidationError):
         ProjectionPage.model_validate({**original.model_dump(), "encoded": encoded})
 
 
 def test_projection_page_refuses_inconsistent_range() -> None:
-    original = project_document_page({}, ProjectionPageRequest())
+    original = project_encoded_page(encode_projection_document({}), ProjectionPageRequest())
     with pytest.raises(ValidationError):
         ProjectionPage.model_validate({**original.model_dump(), "offset": 1})

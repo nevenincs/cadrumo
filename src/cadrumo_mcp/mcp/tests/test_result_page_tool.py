@@ -52,7 +52,8 @@ from cadrumo_client.contracts.projection_pages import (
     PROJECTION_PAGE_BYTES,
     ProjectionPage,
     ProjectionPageRequest,
-    project_document_page,
+    encode_projection_document,
+    project_encoded_page,
 )
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
@@ -95,7 +96,7 @@ class _PageClient:
         self.calls.append((result, page))
         if page.offset and self.deny_continuation:
             raise FrontendRefusedError("grant_inactive")
-        return project_document_page(self.document, page)
+        return project_encoded_page(encode_projection_document(self.document), page)
 
     def read_result_document(
         self, result: OperationResultProjectionRequestV1, *, deadline: float
