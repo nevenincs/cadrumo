@@ -16,6 +16,7 @@ from cadrumo.adapters.persistence.storage.certificate_secret_backend import buil
 from cadrumo.adapters.persistence.storage.custody.acceleration_receipt import profile_session_path
 from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
+from cadrumo.application.config_reset_models import ConfigResetOperation
 from cadrumo.application.user_profile.custody_ports import profile_custody_port
 from cadrumo.core.bucket_pointer import read_pointer
 from cadrumo.core.directory_scan import iter_directory, scan_directory
@@ -250,6 +251,78 @@ def test_start_and_resume_require_explicit_confirmation(tmp_path: Path) -> None:
             )
 
 
+def _assert_reset_completed_for_both_targets(operation: ConfigResetOperation) -> None:
+    from cadrumo.application.config_reset_models import ConfigResetOperationStatus, ConfigResetTargetPhase
+
+    assert operation.status is ConfigResetOperationStatus.COMPLETE
+    assert tuple(target.bucket_id for target in operation.targets) == (
+        _PROFILE_A_ID,
+        _DANGLING_ID,
+    )
+    assert all(target.bucket_id != "cadrumo.db" for target in operation.targets)
+    assert operation.pointer_snapshot.record.bucket_id == _DANGLING_ID
+    assert operation.pointer_snapshot.record.transition_revision == 0
+    assert operation.summary is not None
+    assert operation.summary.target_count == 2
+    assert operation.summary.deleted_count == 1
+    assert operation.summary.already_absent_count == 1
+    for target in operation.targets:
+        assert target.phase is ConfigResetTargetPhase.DELETED
+        assert target.completed_at is not None
+        if target.exists_at_snapshot:
+            assert target.deletion_marker is not None
+            assert target.fingerprint is not None
+            assert target.deletion_marker.operation_id == operation.operation_id
+            assert target.deletion_marker.fingerprint == target.fingerprint.digest
+        else:
+            assert target.deletion_marker is None
+
+
+def _assert_reset_erased_buckets_pointer_and_spared_the_cold_default(
+    root: Path, cold_default_database: Path, cold_default_bytes: bytes
+) -> None:
+    from cadrumo.adapters.persistence.storage.bucket.directory_layout import bucket_paths
+    from cadrumo.core.bucket_pointer import pointer_path
+
+    assert pointer_path(root).is_file()
+    assert read_pointer(root).bucket_id is None
+    assert bucket_paths(root, _PROFILE_A_ID).bucket_dir.exists() is False
+    assert bucket_paths(root, _PROFILE_B_ID).bucket_dir.exists() is False
+    assert bucket_paths(root, _DANGLING_ID).bucket_dir.exists() is False
+    assert cold_default_database.read_bytes() == cold_default_bytes
+
+
+def _assert_locked_targets_cleared_by_capsule_destruction(
+    operation: ConfigResetOperation, root: Path, secret_blob_root: Path
+) -> None:
+    from cadrumo.application.config_reset_models import ConfigResetAuthClearanceMode
+    from cadrumo.core.auth_provider import AuthProviderKind
+
+    # Every target here was LOCKED, so the certificate secret held outside
+    # the capsule could be neither addressed nor removed, and it outlives
+    # the erase. The reset records that it did rather than reporting a
+    # clean sweep; the ciphertext is unreadable, every wrapping of its key
+    # having gone with the capsule.
+    assert any(path.is_file() for path in scan_directory(secret_blob_root, recursive=True))
+    # The claim that the residue is unreadable rests on this: the capsule
+    # carried the password and recovery envelopes and the key sentinel, and
+    # the session receipt outside it is the only other wrapping of the same
+    # key. Both are gone, so nothing that could unwrap the leftover remains.
+    assert profile_session_path(storage_root=root, profile_id=UUID(_PROFILE_A_ID)).exists() is False
+    for target in operation.targets:
+        clearance = target.auth_clearance
+        assert clearance is not None
+        assert clearance.mode is ConfigResetAuthClearanceMode.CAPSULE_DESTRUCTION
+        assert clearance.removed_out_of_bucket_secret_records is None
+    cleared_locks = {
+        target.bucket_id: target.auth_clearance.cleared_lock_provider_ids
+        for target in operation.targets
+        if target.auth_clearance is not None
+    }
+    assert cleared_locks[_PROFILE_A_ID] == (AuthProviderKind.CLAVE_PERMANENTE.value,)
+    assert cleared_locks[_DANGLING_ID] == ()
+
+
 def test_start_discovers_live_and_dangling_targets_then_completes(
     tmp_path: Path,
 ) -> None:
@@ -267,21 +340,14 @@ def test_start_discovers_live_and_dangling_targets_then_completes(
     clearing it is a contract the reset actually holds.
     """
     with _certificate_indexed_authority_for_test().operation() as _certificate_authority_operation_for_test:
-        from cadrumo.adapters.persistence.storage.bucket.directory_layout import bucket_paths
         from cadrumo.application.auth.acquisition_lock import acquire_auth_acquisition_lock, auth_acquisition_lock_path
         from cadrumo.application.auth.certificate_source_operations import (
             register_operator_certificate_source,
             set_operator_certificate_source_secret,
         )
         from cadrumo.application.config_reset import start_config_reset
-        from cadrumo.application.config_reset_models import (
-            ConfigResetAuthClearanceMode,
-            ConfigResetOperationStatus,
-            ConfigResetTargetPhase,
-        )
         from cadrumo.application.config_reset_repository import ConfigResetJournalRepository
         from cadrumo.core.auth_provider import AuthProviderKind
-        from cadrumo.core.bucket_pointer import pointer_path
         from cadrumo.core.config import load_settings
         from cadrumo.core.storage_taxonomy import StorageCategory
         from cadrumo.core.storage_taxonomy_locations import storage_location
@@ -345,58 +411,11 @@ def test_start_discovers_live_and_dangling_targets_then_completes(
                 )
                 assert lock_path.exists() is False
 
-            assert operation.status is ConfigResetOperationStatus.COMPLETE
-            assert tuple(target.bucket_id for target in operation.targets) == (
-                _PROFILE_A_ID,
-                _DANGLING_ID,
+            _assert_reset_completed_for_both_targets(operation)
+            _assert_reset_erased_buckets_pointer_and_spared_the_cold_default(
+                root, cold_default_database, cold_default_bytes
             )
-            assert all(target.bucket_id != "cadrumo.db" for target in operation.targets)
-            assert operation.pointer_snapshot.record.bucket_id == _DANGLING_ID
-            assert operation.pointer_snapshot.record.transition_revision == 0
-            assert operation.summary is not None
-            assert operation.summary.target_count == 2
-            assert operation.summary.deleted_count == 1
-            assert operation.summary.already_absent_count == 1
-            for target in operation.targets:
-                assert target.phase is ConfigResetTargetPhase.DELETED
-                assert target.completed_at is not None
-                if target.exists_at_snapshot:
-                    assert target.deletion_marker is not None
-                    assert target.fingerprint is not None
-                    assert target.deletion_marker.operation_id == operation.operation_id
-                    assert target.deletion_marker.fingerprint == target.fingerprint.digest
-                else:
-                    assert target.deletion_marker is None
-
-            assert pointer_path(root).is_file()
-            assert read_pointer(root).bucket_id is None
-            assert bucket_paths(root, _PROFILE_A_ID).bucket_dir.exists() is False
-            assert bucket_paths(root, _PROFILE_B_ID).bucket_dir.exists() is False
-            assert bucket_paths(root, _DANGLING_ID).bucket_dir.exists() is False
-            assert cold_default_database.read_bytes() == cold_default_bytes
-            # Every target here was LOCKED, so the certificate secret held outside
-            # the capsule could be neither addressed nor removed, and it outlives
-            # the erase. The reset records that it did rather than reporting a
-            # clean sweep; the ciphertext is unreadable, every wrapping of its key
-            # having gone with the capsule.
-            assert any(path.is_file() for path in scan_directory(secret_blob_root, recursive=True))
-            # The claim that the residue is unreadable rests on this: the capsule
-            # carried the password and recovery envelopes and the key sentinel, and
-            # the session receipt outside it is the only other wrapping of the same
-            # key. Both are gone, so nothing that could unwrap the leftover remains.
-            assert profile_session_path(storage_root=root, profile_id=UUID(_PROFILE_A_ID)).exists() is False
-            for target in operation.targets:
-                clearance = target.auth_clearance
-                assert clearance is not None
-                assert clearance.mode is ConfigResetAuthClearanceMode.CAPSULE_DESTRUCTION
-                assert clearance.removed_out_of_bucket_secret_records is None
-            cleared_locks = {
-                target.bucket_id: target.auth_clearance.cleared_lock_provider_ids
-                for target in operation.targets
-                if target.auth_clearance is not None
-            }
-            assert cleared_locks[_PROFILE_A_ID] == (AuthProviderKind.CLAVE_PERMANENTE.value,)
-            assert cleared_locks[_DANGLING_ID] == ()
+            _assert_locked_targets_cleared_by_capsule_destruction(operation, root, secret_blob_root)
             assert ConfigResetJournalRepository().load(operation.operation_id) == operation
 
 
