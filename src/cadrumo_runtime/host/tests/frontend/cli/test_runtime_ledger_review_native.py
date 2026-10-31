@@ -297,12 +297,41 @@ def _new_events(before: _Snapshot, after: _Snapshot) -> tuple[BucketEvent, ...]:
     return tuple(event for event in after.events if event.event_id not in prior)
 
 
-def test_native_classification_review_evidence_rejection_and_saturation(
-    native_review: _NativeReview,
-    tmp_path: Path,
+def _assert_edit_and_classification_events(
+    events: tuple[BucketEvent, ...],
+    *,
+    bucket_id: str,
+    transaction_id: str,
+    applied: dict[str, object],
+    source_command: str,
 ) -> None:
-    """Real registered reviews preserve no-write previews and canonical durable outcomes."""
-    review = native_review
+    """An applied classification writes exactly one edit and one classification event, as the command reported."""
+    assert len(events) == 2
+    assert Counter(event.event_type for event in events) == Counter(
+        {
+            BucketEventType.LEDGER_TRANSACTION_UPDATED: 1,
+            BucketEventType.LEDGER_TRANSACTION_CLASSIFIED: 1,
+        },
+    )
+    assert len({event.event_id for event in events}) == 2
+    assert Counter(event.event_id for event in events) == Counter(
+        _text(value) for value in json_array(applied["bucket_event_ids"])
+    )
+    for event in events:
+        assert event.bucket_id == bucket_id
+        assert event.object_type.value == "ledger_transaction" and event.object_id == transaction_id
+        assert event.payload["previous_transaction_id"] == transaction_id
+        assert event.payload["source_command"] == source_command
+        assert event.payload["mutation_kind"] == (
+            "edit" if event.event_type is BucketEventType.LEDGER_TRANSACTION_UPDATED else "classification"
+        )
+        if event.event_type is BucketEventType.LEDGER_TRANSACTION_CLASSIFIED:
+            assert event.payload["classification"] == "BUSINESS"
+            assert event.payload["category_id"] == "material_oficina"
+
+
+def _preview_apply_and_incompatible_options(review: _NativeReview) -> None:
+    """A preview and an incompatible request write nothing; applying persists the classification once."""
     marker = "native-basic-classification"
     review.agent.answers[marker] = _classification_answer()
     transaction_id = _add(review, marker)
@@ -327,6 +356,9 @@ def test_native_classification_review_evidence_rejection_and_saturation(
         BucketEventType.LEDGER_TRANSACTION_CLASSIFIED
     ]
 
+
+def _rejection_records_only_the_rejection_event(review: _NativeReview) -> None:
+    """Rejecting a suggestion leaves the catalogue unchanged and records one rejection event."""
     rejected_marker = "native-rejected-classification"
     review.agent.answers[rejected_marker] = _classification_answer()
     rejected_id = _add(review, rejected_marker)
@@ -341,6 +373,9 @@ def test_native_classification_review_evidence_rejection_and_saturation(
     assert events[0].event_id == rejection["bucket_event_id"]
     assert events[0].object_id == rejected_id
 
+
+def _evidence_saturation_previews_then_applies(review: _NativeReview, tmp_path: Path) -> None:
+    """Reading attached text evidence saturates the amounts; only the applied run writes them."""
     evidence_marker = "native-text-evidence-classification"
     review.agent.answers[evidence_marker] = _classification_answer()
     evidence_id = _add(review, evidence_marker)
@@ -388,30 +423,17 @@ def test_native_classification_review_evidence_rejection_and_saturation(
     assert row.iva_category is not None and row.iva_category.value == "domestic_general"
     assert row.purchase_invoice_evidence_id == linked
     assert row.classified_by == saturated["provenance"]
-    events = _new_events(before_saturate, after_saturate)
-    assert len(events) == 2
-    assert Counter(event.event_type for event in events) == Counter(
-        {
-            BucketEventType.LEDGER_TRANSACTION_UPDATED: 1,
-            BucketEventType.LEDGER_TRANSACTION_CLASSIFIED: 1,
-        },
+    _assert_edit_and_classification_events(
+        _new_events(before_saturate, after_saturate),
+        bucket_id=before_saturate.events[0].bucket_id,
+        transaction_id=evidence_id,
+        applied=saturated_apply,
+        source_command="aeat app ledger classify --llm --saturate --apply",
     )
-    assert len({event.event_id for event in events}) == 2
-    assert Counter(event.event_id for event in events) == Counter(
-        _text(value) for value in json_array(saturated_apply["bucket_event_ids"])
-    )
-    for event in events:
-        assert event.bucket_id == before_saturate.events[0].bucket_id
-        assert event.object_type.value == "ledger_transaction" and event.object_id == evidence_id
-        assert event.payload["previous_transaction_id"] == evidence_id
-        assert event.payload["source_command"] == "aeat app ledger classify --llm --saturate --apply"
-        assert event.payload["mutation_kind"] == (
-            "edit" if event.event_type is BucketEventType.LEDGER_TRANSACTION_UPDATED else "classification"
-        )
-        if event.event_type is BucketEventType.LEDGER_TRANSACTION_CLASSIFIED:
-            assert event.payload["classification"] == "BUSINESS"
-            assert event.payload["category_id"] == "material_oficina"
 
+
+def _malformed_provider_selection_writes_nothing(review: _NativeReview) -> None:
+    """A selection outside the published categories is refused after one provider call and writes nothing."""
     invalid_marker = "native-invalid-provider-selection"
     invalid_id = _add(review, invalid_marker)
     review.agent.answers[invalid_marker] = _Answer(
@@ -430,6 +452,84 @@ def test_native_classification_review_evidence_rejection_and_saturation(
     assert invalid.exit_code != 0, invalid.output
     assert len(review.agent.runs()) == calls + 1
     assert review.snapshot() == before_invalid
+
+
+def test_native_classification_review_evidence_rejection_and_saturation(
+    native_review: _NativeReview,
+    tmp_path: Path,
+) -> None:
+    """Real registered reviews preserve no-write previews and canonical durable outcomes."""
+    review = native_review
+    _preview_apply_and_incompatible_options(review)
+    _rejection_records_only_the_rejection_event(review)
+    _evidence_saturation_previews_then_applies(review, tmp_path)
+    _malformed_provider_selection_writes_nothing(review)
+
+
+def _single_line_auto_split_classifies_in_place(review: _NativeReview, image: Path) -> None:
+    """An image read that yields one line is classified in place: no children, one edit and one classification event."""
+    single_marker = "native-image-single-line-parent"
+    review.agent.answers[single_marker] = _split_answer(single=True)
+    single_id = _add(review, single_marker)
+    _attach(review, single_id, image)
+    before_single = review.snapshot()
+    command = ("app", "ledger", "classify", single_id, "--read-evidence", "--auto-split")
+    single_preview = _provider_once(review, single_marker, *command)
+    assert single_preview["persisted"] is False
+    assert single_preview["classification"] == "BUSINESS"
+    assert review.snapshot() == before_single
+    single_apply = _provider_once(review, single_marker, *command, "--apply", expected_posts=0)
+    after_single = review.snapshot()
+    assert len(after_single.catalogue.transactions) == len(before_single.catalogue.transactions)
+    single = after_single.catalogue.transactions[single_id]
+    assert single.lifecycle_state is TransactionLifecycleState.ACTIVE
+    assert single.business_classification is BusinessClassification.BUSINESS
+    assert single.taxable_base == Decimal("100") and single.iva_amount == Decimal("21")
+    assert single.classified_by == single_preview["provenance"]
+    _assert_edit_and_classification_events(
+        _new_events(before_single, after_single),
+        bucket_id=before_single.events[0].bucket_id,
+        transaction_id=single_id,
+        applied=single_apply,
+        source_command="aeat app ledger classify --read-evidence --auto-split --apply",
+    )
+
+
+def _assert_split_cohort(
+    after: _Snapshot,
+    before: _Snapshot,
+    *,
+    parent_id: str,
+    linked: str,
+    applied: dict[str, object],
+    preview: dict[str, object],
+) -> None:
+    """The parent is split into evidence-linked, classified children that sum to it, with one split event."""
+    child_ids = tuple(_text(value) for value in json_array(applied["child_transaction_ids"]))
+    assert len(child_ids) == 2
+    assert len(set(child_ids)) == 2
+    parent = after.catalogue.transactions[parent_id]
+    assert parent.lifecycle_state is TransactionLifecycleState.SPLIT
+    assert parent.split_lineage is not None
+    assert parent.split_lineage.split_group_id == applied["split_group_id"]
+    assert set(parent.split_lineage.sibling_transaction_ids) == set(child_ids)
+    children = [after.catalogue.transactions[child_id] for child_id in child_ids]
+    assert sum((child.raw.amount for child in children), Decimal("0")) == parent.raw.amount
+    assert len(after.catalogue.transactions) == len(before.catalogue.transactions) + 2
+    for child in children:
+        assert child.lifecycle_state is TransactionLifecycleState.ACTIVE
+        assert child.business_classification is BusinessClassification.BUSINESS
+        assert child.purchase_invoice_evidence_id == linked
+        assert child.classified_by == preview["provenance"]
+        assert child.taxable_base is not None and child.iva_amount is not None
+        assert child.taxable_base + child.iva_amount == abs(child.raw.amount)
+        assert child.iva_rate == Decimal("0.21")
+    events = _new_events(before, after)
+    assert sum(event.event_type is BucketEventType.LEDGER_TRANSACTION_SPLIT for event in events) == 1
+    classified_ids = {
+        event.object_id for event in events if event.event_type is BucketEventType.LEDGER_TRANSACTION_CLASSIFIED
+    }
+    assert classified_ids == set(child_ids)
 
 
 @pytest.mark.parametrize("route", ["auto_split", "split"])
@@ -476,72 +576,9 @@ def test_native_image_split_review_and_atomic_children(
         expected_posts=0,
     )
     assert applied["persisted"] is True
-    after = review.snapshot()
-    child_ids = tuple(_text(value) for value in json_array(applied["child_transaction_ids"]))
-    assert len(child_ids) == 2
-    assert len(set(child_ids)) == 2
-    parent = after.catalogue.transactions[parent_id]
-    assert parent.lifecycle_state is TransactionLifecycleState.SPLIT
-    assert parent.split_lineage is not None
-    assert parent.split_lineage.split_group_id == applied["split_group_id"]
-    assert set(parent.split_lineage.sibling_transaction_ids) == set(child_ids)
-    children = [after.catalogue.transactions[child_id] for child_id in child_ids]
-    assert sum((child.raw.amount for child in children), Decimal("0")) == parent.raw.amount
-    assert len(after.catalogue.transactions) == len(before.catalogue.transactions) + 2
-    for child in children:
-        assert child.lifecycle_state is TransactionLifecycleState.ACTIVE
-        assert child.business_classification is BusinessClassification.BUSINESS
-        assert child.purchase_invoice_evidence_id == linked
-        assert child.classified_by == preview["provenance"]
-        assert child.taxable_base is not None and child.iva_amount is not None
-        assert child.taxable_base + child.iva_amount == abs(child.raw.amount)
-        assert child.iva_rate == Decimal("0.21")
-    events = _new_events(before, after)
-    assert sum(event.event_type is BucketEventType.LEDGER_TRANSACTION_SPLIT for event in events) == 1
-    classified_ids = {
-        event.object_id for event in events if event.event_type is BucketEventType.LEDGER_TRANSACTION_CLASSIFIED
-    }
-    assert classified_ids == set(child_ids)
+    _assert_split_cohort(
+        review.snapshot(), before, parent_id=parent_id, linked=linked, applied=applied, preview=preview
+    )
 
     if route == "auto_split":
-        single_marker = "native-image-single-line-parent"
-        review.agent.answers[single_marker] = _split_answer(single=True)
-        single_id = _add(review, single_marker)
-        _attach(review, single_id, image)
-        before_single = review.snapshot()
-        command = ("app", "ledger", "classify", single_id, "--read-evidence", "--auto-split")
-        single_preview = _provider_once(review, single_marker, *command)
-        assert single_preview["persisted"] is False
-        assert single_preview["classification"] == "BUSINESS"
-        assert review.snapshot() == before_single
-        single_apply = _provider_once(review, single_marker, *command, "--apply", expected_posts=0)
-        after_single = review.snapshot()
-        assert len(after_single.catalogue.transactions) == len(before_single.catalogue.transactions)
-        single = after_single.catalogue.transactions[single_id]
-        assert single.lifecycle_state is TransactionLifecycleState.ACTIVE
-        assert single.business_classification is BusinessClassification.BUSINESS
-        assert single.taxable_base == Decimal("100") and single.iva_amount == Decimal("21")
-        assert single.classified_by == single_preview["provenance"]
-        events = _new_events(before_single, after_single)
-        assert len(events) == 2
-        assert Counter(event.event_type for event in events) == Counter(
-            {
-                BucketEventType.LEDGER_TRANSACTION_UPDATED: 1,
-                BucketEventType.LEDGER_TRANSACTION_CLASSIFIED: 1,
-            },
-        )
-        assert len({event.event_id for event in events}) == 2
-        assert Counter(event.event_id for event in events) == Counter(
-            _text(value) for value in json_array(single_apply["bucket_event_ids"])
-        )
-        for event in events:
-            assert event.bucket_id == before_single.events[0].bucket_id
-            assert event.object_type.value == "ledger_transaction" and event.object_id == single_id
-            assert event.payload["previous_transaction_id"] == single_id
-            assert event.payload["source_command"] == "aeat app ledger classify --read-evidence --auto-split --apply"
-            assert event.payload["mutation_kind"] == (
-                "edit" if event.event_type is BucketEventType.LEDGER_TRANSACTION_UPDATED else "classification"
-            )
-            if event.event_type is BucketEventType.LEDGER_TRANSACTION_CLASSIFIED:
-                assert event.payload["classification"] == "BUSINESS"
-                assert event.payload["category_id"] == "material_oficina"
+        _single_line_auto_split_classifies_in_place(review, image)
