@@ -31,7 +31,9 @@ from typing import TYPE_CHECKING
 
 from pydantic import ValidationError
 
+from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.calculations.registry.form_codes import resolve_form_codes
+from ...domain.calculations.registry.governed_fact_scope import governed_facts_in_scope
 from ...domain.modelos.errors import ModeloError
 
 if TYPE_CHECKING:
@@ -49,6 +51,14 @@ if TYPE_CHECKING:
 _CEDED_AUTONOMIC_LOCALE_KEY = "cli.app.modelo.work.create_stub_modelo_{modelo}_refused"
 
 
+def _ceded_autonomic_modelos() -> frozenset[str]:
+    """Read the scope's list, or the published authority for a refusal raised before any scope opens."""
+    if governed_facts_in_scope() is not None:
+        return resolve_form_codes("form-row-codes").codes("ceded_autonomic.modelos")
+    with bundled_indexed_authority().operation() as operation:
+        return resolve_form_codes("form-row-codes", authority=operation).codes("ceded_autonomic.modelos")
+
+
 def ceded_autonomic_modelo_locale_key(modelo: str) -> str | None:
     """Return the instructive autonomic-redirect locale key for a ceded modelo.
 
@@ -64,7 +74,7 @@ def ceded_autonomic_modelo_locale_key(modelo: str) -> str | None:
             The sibling work-create refusal this discovery redirect mirrors.
     """
     code = modelo.strip()
-    if code not in resolve_form_codes("form-row-codes").codes("ceded_autonomic.modelos"):
+    if code not in _ceded_autonomic_modelos():
         return None
     return _CEDED_AUTONOMIC_LOCALE_KEY.format(modelo=code)
 

@@ -5,7 +5,6 @@ from __future__ import annotations
 import pytest
 
 from cadrumo.domain.calculations.registry.authority_artifact import (
-    AuthorityComponentCodecError,
     GovernedFactComponentQuery,
     SnapshotGlobalsComponentQuery,
 )
@@ -33,10 +32,8 @@ def test_snapshot_globals_enrolls_the_fact_required_by_annual_orden_validation()
 
     dependencies = _decoded_fact_dependencies(query, payload, fact_queries, fact_values)
 
-    assert GovernedFactComponentQuery("form-row-codes") in dependencies
+    # The form geometry is checked when the registry compiles, so loading needs no fact for it.
+    assert GovernedFactComponentQuery("form-row-codes") not in dependencies
     admitted = tuple(facts[item.fact_id] for item in dependencies)
     decoded = decode_authority_component(query, payload, dependencies=admitted)
     assert decoded == globals_value
-    without_row_codes = tuple(facts[item.fact_id] for item in dependencies if item.fact_id != "form-row-codes")
-    with pytest.raises(AuthorityComponentCodecError, match="failed typed decoding"):
-        decode_authority_component(query, payload, dependencies=without_row_codes)

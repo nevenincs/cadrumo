@@ -18,6 +18,7 @@ coincidentally satisfy them.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from datetime import date
 from decimal import Decimal
 
@@ -33,6 +34,7 @@ from cadrumo.core.aggregation import (
 )
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
 from cadrumo.domain.calculations.registry.ledger_binding_selector_support import LedgerIncomeFact
 from cadrumo.domain.calculations.registry.ledger_renta_income_bindings import (
@@ -47,6 +49,14 @@ from cadrumo.domain.calculations.registry.tests.snapshot_support import build_sn
 from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+@pytest.fixture(autouse=True)
+def _pinned_authority() -> Iterator[None]:
+    """Hold the authority the runtime holds, so code that reads a form fact has it."""
+    with bundled_indexed_authority().operation():
+        yield
+
 
 _INGRESOS_BINDING = "modelo-130-actividad-economica-ingresos-cumulative"
 _RETENCIONES_BINDING = "modelo-130-actividad-economica-retenciones-cumulative"

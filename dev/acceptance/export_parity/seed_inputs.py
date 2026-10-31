@@ -100,7 +100,7 @@ def _modelo_180_property(year: int) -> dict[str, object]:
         "withholding_percentage": "19.00",
         "address": {
             "province_code": "28",
-            "municipality_code": "079",
+            "municipality_code": "28079",
             "municipality": "Madrid",
             "locality": "Madrid",
             "postal_code": "28001",

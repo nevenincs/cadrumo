@@ -10,7 +10,7 @@ those differences against it.
 from __future__ import annotations
 
 import re
-from collections.abc import Mapping
+from collections.abc import Iterator, Mapping
 from datetime import date
 from decimal import Decimal
 from functools import cache
@@ -19,6 +19,7 @@ import pytest
 
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.casilla_id import validated_casilla_id_map
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from cadrumo.domain.calculations.registry.schema import FormulaDefinition, ModeloDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_base import NUMERIC_CASILLA_DATA_TYPES
@@ -33,6 +34,14 @@ from ..conformance.registry_schema_support import committed_modelo
 from .authored_edition_support import legal_text_match
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+@pytest.fixture(autouse=True)
+def _pinned_authority() -> Iterator[None]:
+    """Hold the authority the runtime holds, so code that reads a form fact has it."""
+    with bundled_indexed_authority().operation():
+        yield
+
 
 _DESIGN = "aeat-dr-222-2019-2022"
 _INSTRUCTIONS = "aeat-modelo-222-instructions-2019-2022"

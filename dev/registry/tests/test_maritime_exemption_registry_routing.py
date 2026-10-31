@@ -6,10 +6,12 @@ eager validated authority the development compiler builds from authored source.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from decimal import Decimal
 
 import pytest
 
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.bindings import CasillaObservation
 from cadrumo.domain.calculations.registry.queries import RegistryQueryService
 from cadrumo.domain.renta.maritime_exemption import (
@@ -21,6 +23,13 @@ from cadrumo.domain.renta.maritime_exemption import (
 from ..compiler.authority import compiled_bundled_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+@pytest.fixture(autouse=True)
+def _pinned_authority() -> Iterator[None]:
+    """Hold the authority the runtime holds, so code that reads a form fact has it."""
+    with bundled_indexed_authority().operation():
+        yield
 
 
 def _registry_target_for(observation: CasillaObservation) -> str:

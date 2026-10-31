@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterator
+
 import pytest
 
 from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.governed_fact_scope import CandidateFactAuthority
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.modelos.perceptor_clave_scope import (
@@ -18,6 +21,14 @@ from cadrumo.domain.modelos.perceptor_clave_scope import (
 from ..compiler.authority import AuthoringCandidateInspection, inspect_authoring_candidate
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_domain]
+
+
+@pytest.fixture(autouse=True)
+def _pinned_authority() -> Iterator[None]:
+    """Hold the authority the runtime holds, so code that reads a form fact has it."""
+    with bundled_indexed_authority().operation():
+        yield
+
 
 _JUBILACION = validated_casilla_id("perc.prestacion-jubilacion")
 

@@ -12,6 +12,7 @@ than restated here.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from decimal import Decimal
 from functools import cache
 
@@ -27,6 +28,7 @@ from cadrumo.application.aggregation.retenciones import (
 from cadrumo.core.aggregation import BindingSourceKind, RetencionScheme
 from cadrumo.core.period import Period
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.export import (
     derive_export_layouts_from_bindings,
     row_binding_casilla_ids_by_field,
@@ -41,6 +43,14 @@ from ..compiler.authority import compiled_bundled_authority
 from ..compiler.loader import load_shared_catalogues
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
+
+
+@pytest.fixture(autouse=True)
+def _pinned_authority() -> Iterator[None]:
+    """Hold the authority the runtime holds, so code that reads a form fact has it."""
+    with bundled_indexed_authority().operation():
+        yield
+
 
 _MODELO = "180"
 _PERIOD = "0A"
@@ -209,7 +219,7 @@ def _one_recipient_two_properties(year: int) -> RetencionesAggregation:
                 cadastral_reference=f"{key.upper()}REF",
                 address=Modelo180StructuredAddress(
                     province_code="28",
-                    municipality_code="079",
+                    municipality_code="28079",
                     municipality="Madrid",
                     locality="Madrid",
                     postal_code="28001",

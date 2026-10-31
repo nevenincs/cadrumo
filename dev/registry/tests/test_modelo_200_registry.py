@@ -3,13 +3,13 @@
 from __future__ import annotations
 
 import re
+from collections.abc import Iterator
 from datetime import date
 from decimal import Decimal
 from html import unescape
 from typing import get_args
 
 import pytest
-from pydantic import ValidationError
 
 from cadrumo.application.filing.draft_construction import build_draft
 from cadrumo.application.filing.export import export_draft
@@ -24,6 +24,7 @@ from cadrumo.core.filing_projection_ref import (
     filing_projection_ref_casilla_id,
 )
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
@@ -41,6 +42,13 @@ from dev.registry.edition_round_trip import SYNTHETIC_TAX_ID
 from .authored_edition_support import source_first_exercise, source_with_sha256, sources_where
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+@pytest.fixture(autouse=True)
+def _pinned_authority() -> Iterator[None]:
+    """Hold the authority the runtime holds, so code that reads a form fact has it."""
+    with bundled_indexed_authority().operation():
+        yield
 
 
 def _m200_casilla(value: object, *, surface: str = "test_modelo_200_registry.casilla") -> CasillaId:
@@ -288,15 +296,14 @@ def test_modelo_200_projection_endpoints_keep_design_derived_slot_caps_and_no_ca
         references = tuple(reference for reference in m200_references if type(reference) is model_type)
         declared_slots = {_projection_slot(reference) for reference in references}
         slot_cap = max(declared_slots)
-        upper_bound = {metadata.le for metadata in model_type.model_fields["slot"].metadata if hasattr(metadata, "le")}
+        code_bound = {metadata.le for metadata in model_type.model_fields["slot"].metadata if hasattr(metadata, "le")}
 
         assert declared_slots == set(range(1, slot_cap + 1))
-        assert upper_bound == {slot_cap}
+        assert code_bound == set(), "the revision's endpoints own the slot cap"
         assert all(filing_projection_ref_casilla_id(reference) is None for reference in references)
 
         cap_plus_one = references[0].model_dump(mode="json") | {"slot": slot_cap + 1}
-        with pytest.raises(ValidationError, match="less than or equal"):
-            compile_filing_projection_ref(cap_plus_one)
+        assert compile_filing_projection_ref(cap_plus_one) not in m200_references
 
 
 def test_modelo_200_liquidacion_cuota_chain_casillas_resolve_under_their_segmento() -> None:

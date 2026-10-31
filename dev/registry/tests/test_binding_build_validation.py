@@ -27,11 +27,14 @@ Anti-tautology proofs (the gate is not trivially rejecting everything):
 
 from __future__ import annotations
 
+from collections.abc import Iterator
+
 import pytest
 from pydantic import ValidationError
 
 from cadrumo.core.aggregation import BindingAggregation, BindingAggregationOp
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.bindings import validate_binding_selector_shape
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema import BindingDefinition, ModeloDefinition, ModeloRevision
@@ -41,6 +44,14 @@ from ..conformance.registry_schema_support import committed_modelo as _committed
 from .profile_schema_support import committed_registry_validator
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
+
+
+@pytest.fixture(autouse=True)
+def _pinned_authority() -> Iterator[None]:
+    """Hold the authority the runtime holds, so code that reads a form fact has it."""
+    with bundled_indexed_authority().operation():
+        yield
+
 
 _M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01", surface="_M130_INGRESOS_CASILLA")
 _M130_GASTOS_CASILLA: CasillaId = validated_casilla_id("02", surface="_M130_GASTOS_CASILLA")
@@ -226,32 +237,6 @@ _CONSTRUCTION_REFUSED_CASES: tuple[
         },
         BindingAggregationOp.COPY,
     ),
-    (
-        "inventory",
-        "inventory",
-        {
-            "modelo": "100",
-            "projection_grain": "taxpayer_year_activity",
-            "fact": "row_field",
-            "record": "inventory_activity",
-            "grouping": "per_inventory_activity",
-            "row_field": "closing_minus_opening_positive",
-            "target_casilla_id": "0177",
-        },
-        BindingAggregationOp.ROWS,
-        # The operation-to-destination identity is closed: an inventory
-        # increase cannot be projected into the decrease casilla.
-        {
-            "modelo": "100",
-            "projection_grain": "taxpayer_year_activity",
-            "fact": "row_field",
-            "record": "inventory_activity",
-            "grouping": "per_inventory_activity",
-            "row_field": "closing_minus_opening_positive",
-            "target_casilla_id": "0182",
-        },
-        BindingAggregationOp.ROWS,
-    ),
 )
 
 _FAMILY_IDS = tuple(case[0] for case in _FAMILY_CASES)
@@ -324,6 +309,26 @@ def test_provider_member_refuses_a_malformed_declaration_at_construction(
     assert validate_binding_selector_shape(well_formed) == []
     with pytest.raises(ValidationError, match=f"provider.{source}"):
         _build_binding(source=source, selector=malformed_selector, op=malformed_op)
+
+
+def test_the_build_gate_refuses_an_inventory_operation_on_another_casilla() -> None:
+    """An increase cannot be projected into the decrease casilla; the registry's row codes decide."""
+    selector = {
+        "modelo": "100",
+        "projection_grain": "taxpayer_year_activity",
+        "fact": "row_field",
+        "record": "inventory_activity",
+        "grouping": "per_inventory_activity",
+        "row_field": "closing_minus_opening_positive",
+    }
+    well_formed = _build_binding(
+        source="inventory", selector=selector | {"target_casilla_id": "0177"}, op=BindingAggregationOp.ROWS
+    )
+    assert validate_binding_selector_shape(well_formed) == []
+    malformed = _build_binding(
+        source="inventory", selector=selector | {"target_casilla_id": "0182"}, op=BindingAggregationOp.ROWS
+    )
+    assert any("must target casilla" in failure for failure in validate_binding_selector_shape(malformed))
 
 
 def test_isolated_revision_build_gate_runs_every_family() -> None:
