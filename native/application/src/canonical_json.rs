@@ -14,14 +14,14 @@ pub(crate) fn canonical_json(value: &Value) -> String {
 
 /// Compact JSON in the document's own member order, as Python's
 /// `json.dumps(..., ensure_ascii=False, separators=(",", ":"))` writes it.
-#[cfg(all(windows, feature = "platform"))]
+#[cfg(feature = "platform")]
 pub(crate) fn compact_json(value: &Value) -> String {
     let mut out = String::new();
     write_json(value, false, &mut out);
     out
 }
 
-#[cfg(all(windows, feature = "platform"))]
+#[cfg(feature = "platform")]
 pub(crate) fn json_string(value: &str) -> String {
     let mut out = String::new();
     write_string(value, &mut out);

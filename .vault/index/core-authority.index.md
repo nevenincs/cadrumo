@@ -15,5 +15,3 @@ related: []
 Auto-generated index of all documents tagged with `#core-authority`.
 
 ## Documents
-
-

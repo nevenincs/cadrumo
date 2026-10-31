@@ -14,7 +14,6 @@ use std::{
     time::Instant,
 };
 
-#[cfg(windows)]
 mod native;
 #[cfg(test)]
 mod scripted;
@@ -140,7 +139,6 @@ trait Bridge: Send {
     /// Brings the session back by the profile's `password` on its own
     /// connection, while the runtime keeps it suspended. A scripted holder
     /// has no connection of its own to rebind on.
-    #[cfg(windows)]
     fn rebind_password(&mut self, _password: &[u8]) -> std::result::Result<(), Refusal> {
         Err(Refusal::Unavailable)
     }
@@ -169,7 +167,6 @@ impl Person {
         self.bridge.admission_changed()
     }
     /// Holds the session the window's own connection admitted for its profile.
-    #[cfg(windows)]
     pub(crate) fn native(
         connection: Arc<dyn cadrumo_application::runtime_client::SessionExchange>,
         pushed: std::sync::mpsc::Receiver<cadrumo_application::runtime_client::Pushed>,
@@ -228,7 +225,6 @@ impl Person {
             .expect("a scripted holder's person")
     }
 
-    #[cfg(any(windows, test))]
     fn held(
         bridge: Box<dyn Bridge>,
         events: EventSlot,
@@ -258,7 +254,6 @@ impl Person {
         self.identity["session_persisted"] == true
     }
 
-    #[cfg(any(windows, test))]
     fn require_held(&self, profile: &str, members: usize) -> Result<()> {
         if !self
             .identity
@@ -327,7 +322,6 @@ impl Person {
     /// Brings the session back by the profile's `password`, on the connection
     /// that holds it, while the runtime keeps it suspended. A refusal leaves
     /// the session held and waiting, so the password can be typed again.
-    #[cfg(windows)]
     pub fn rebind_password(&mut self, password: &[u8]) -> std::result::Result<(), Refusal> {
         if self.failure.borrow().is_some() {
             return Err(Refusal::ConnectionClosed);

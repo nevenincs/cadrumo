@@ -200,6 +200,8 @@ pub fn run(
                 .build()?;
             #[cfg(windows)]
             sharpen_icon(loading.as_ref().window(), None)?;
+            #[cfg(not(windows))]
+            drop(loading);
             Ok(())
         })
         .on_window_event(|window, event| {
@@ -381,6 +383,7 @@ pub(crate) async fn assemble<R: Runtime>(
     startup: &crate::startup::Startup,
 ) -> Result<()> {
     let diagnostics = launch.diagnostics.clone();
+    #[cfg(windows)]
     let data_directory = launch.webview.clone();
     if let Some(lease) = launch._publication.as_ref() {
         std::mem::forget(lease.clone());
@@ -428,61 +431,60 @@ pub(crate) async fn assemble<R: Runtime>(
     startup.stage(crate::startup::Phase::Workspace);
     let config = &app.config().app.windows[0];
     let origins = startup.origins.clone();
-    tauri::WebviewWindowBuilder::from_config(&app, config)
-        .and_then(|builder| {
+    let workspace = tauri::WebviewWindowBuilder::from_config(&app, config).and_then(|builder| {
+        #[cfg(windows)]
+        let builder = {
             let arguments = shell::webview_environment::workspace_browser_arguments();
             let builder = match &arguments {
                 Some(arguments) => builder.additional_browser_args(arguments),
                 None => builder,
             };
-            let builder = builder.visible(false);
-            let builder = match shell::webview_environment::workspace_data_directory(
+            match shell::webview_environment::workspace_data_directory(
                 data_directory,
                 arguments.as_deref(),
             ) {
                 Some(directory) => builder.data_directory(directory),
                 None => builder,
-            };
-            builder
-                .initialization_script(startup.script.clone())
-                .on_navigation(move |url| shell::navigation::allowed(&origins, url))
-                .on_page_load(|window, payload| {
-                    if matches!(payload.event(), tauri::webview::PageLoadEvent::Finished) {
-                        if let Err(error) = window.show() {
-                            window
-                                .state::<Arc<TerminalState>>()
-                                .launch
-                                .diagnostics
-                                .failure(
-                                    ApplicationError::new(
-                                        ErrorCode::WebviewFailed,
-                                        Operation::Webview,
-                                    )
+            }
+        };
+        let builder = builder.visible(false);
+        builder
+            .initialization_script(startup.script.clone())
+            .on_navigation(move |url| shell::navigation::allowed(&origins, url))
+            .on_page_load(|window, payload| {
+                if matches!(payload.event(), tauri::webview::PageLoadEvent::Finished) {
+                    if let Err(error) = window.show() {
+                        window
+                            .state::<Arc<TerminalState>>()
+                            .launch
+                            .diagnostics
+                            .failure(
+                                ApplicationError::new(ErrorCode::WebviewFailed, Operation::Webview)
                                     .caused_by(error),
-                                );
-                            return;
-                        }
-                        if let Some(loading) = window.app_handle().get_webview_window("startup")
-                            && let Err(error) = loading.destroy()
-                        {
-                            window
-                                .state::<Arc<TerminalState>>()
-                                .launch
-                                .diagnostics
-                                .failure(webview_failure(error));
-                        }
+                            );
+                        return;
                     }
-                })
-                .build()
-        })
-        .and_then(|window| {
-            #[cfg(windows)]
-            sharpen_icon(window.as_ref().window(), None)?;
-            Ok(window)
-        })
-        .map_err(|e| {
-            ApplicationError::new(ErrorCode::WebviewFailed, Operation::Webview).caused_by(e)
-        })?;
+                    if let Some(loading) = window.app_handle().get_webview_window("startup")
+                        && let Err(error) = loading.destroy()
+                    {
+                        window
+                            .state::<Arc<TerminalState>>()
+                            .launch
+                            .diagnostics
+                            .failure(webview_failure(error));
+                    }
+                }
+            })
+            .build()
+    });
+    #[cfg(windows)]
+    let workspace = workspace.and_then(|window| {
+        sharpen_icon(window.as_ref().window(), None)?;
+        Ok(window)
+    });
+    workspace.map_err(|e| {
+        ApplicationError::new(ErrorCode::WebviewFailed, Operation::Webview).caused_by(e)
+    })?;
     #[cfg(windows)]
     {
         let host = app.clone();

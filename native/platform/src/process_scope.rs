@@ -24,6 +24,8 @@ use std::{
     os::unix::{fs::MetadataExt, process::CommandExt},
     process::{Child, ChildStdin, Command, Stdio},
     sync::{Mutex, OnceLock},
+    thread,
+    time::{Duration, Instant},
 };
 
 const SHELL: &str = "/bin/sh";
@@ -38,7 +40,7 @@ const GUARDIAN: &str = "trap '' HUP INT QUIT TSTP TTIN TTOU\n\
 #[derive(Debug)]
 pub struct ProcessScope {
     group: i32,
-    lifeline: Option<ChildStdin>,
+    lifeline: Mutex<Option<ChildStdin>>,
     guardian: Mutex<Child>,
 }
 
@@ -64,7 +66,7 @@ impl ProcessScope {
         };
         Ok(Self {
             group,
-            lifeline: Some(lifeline),
+            lifeline: Mutex::new(Some(lifeline)),
             guardian: Mutex::new(guardian),
         })
     }
@@ -84,6 +86,43 @@ impl ProcessScope {
         Ok(())
     }
 
+    /// Ends every process in the scope now and returns once none is left, within
+    /// `bound`. The scope admits no member afterwards.
+    ///
+    /// The guardian kills the group and itself; this waits for it, then until no
+    /// process of the group still runs. A member that left the group is not waited for,
+    /// and one the kernel has not finished ending past `bound` is reported as a timeout.
+    /// Where the kernel still counts an exited member until its parent reaps it, the
+    /// caller's own unreaped child keeps the group from settling.
+    pub fn terminate(&self, bound: Duration) -> io::Result<()> {
+        let deadline = Instant::now() + bound;
+        drop(
+            self.lifeline
+                .lock()
+                .unwrap_or_else(|poisoned| poisoned.into_inner())
+                .take(),
+        );
+        self.guardian().wait()?;
+        loop {
+            // SAFETY: signal 0 only probes for a process of the group and delivers nothing.
+            if unsafe { libc::killpg(self.group, 0) } != 0 {
+                let error = io::Error::last_os_error();
+                return match error.raw_os_error() {
+                    Some(libc::ESRCH) => Ok(()),
+                    // Darwin refuses the probe once every member left has exited and
+                    // only awaits reaping by its parent.
+                    #[cfg(target_os = "macos")]
+                    Some(libc::EPERM) => Ok(()),
+                    _ => Err(error),
+                };
+            }
+            if Instant::now() >= deadline {
+                return Err(io::ErrorKind::TimedOut.into());
+            }
+            thread::sleep(Duration::from_millis(10));
+        }
+    }
+
     fn guardian(&self) -> std::sync::MutexGuard<'_, Child> {
         self.guardian
             .lock()
@@ -94,9 +133,33 @@ impl ProcessScope {
 impl Drop for ProcessScope {
     /// Ends every process left in the group and waits for the guardian to have done so.
     fn drop(&mut self) {
-        drop(self.lifeline.take());
+        drop(
+            self.lifeline
+                .lock()
+                .unwrap_or_else(|poisoned| poisoned.into_inner())
+                .take(),
+        );
         let _ = self.guardian().wait();
     }
+}
+
+/// Kills every process of the process group `group` at once. A group that no longer
+/// exists is already ended.
+///
+/// The caller names a group whose leader it started and has not yet reaped, so the id
+/// still names that group and cannot have been reused by another.
+pub fn kill_group(group: i32) -> io::Result<()> {
+    if group <= 0 {
+        return Err(io::ErrorKind::InvalidInput.into());
+    }
+    // SAFETY: a signal to a process group of this account's own, by its positive id.
+    if unsafe { libc::killpg(group, libc::SIGKILL) } != 0 {
+        let error = io::Error::last_os_error();
+        if error.raw_os_error() != Some(libc::ESRCH) {
+            return Err(error);
+        }
+    }
+    Ok(())
 }
 
 static CURRENT: OnceLock<ProcessScope> = OnceLock::new();
@@ -187,6 +250,59 @@ mod tests {
         drop(scope);
         every_holder_ended(&mut stdout);
         assert_eq!(started.wait().unwrap().signal(), Some(9));
+    }
+
+    #[test]
+    fn a_terminated_scope_is_empty_when_terminate_returns_and_admits_no_member() {
+        let scope = ProcessScope::new().unwrap();
+        let (reader, writer) = io::pipe().unwrap();
+        let mut command = member(writer.into());
+        scope.join(&mut command).unwrap();
+        let mut started = command.spawn().unwrap();
+        drop(command);
+        let mut stdout = BufReader::new(reader);
+        both_running(&mut stdout);
+        scope.terminate(Duration::from_secs(10)).unwrap();
+        // Nothing of the group runs any more: its output has no writer left.
+        every_holder_ended(&mut stdout);
+        assert_eq!(started.wait().unwrap().signal(), Some(9));
+        // Once reaped, by this test and by whoever adopted the descendant, the group
+        // is gone altogether.
+        let deadline = Instant::now() + Duration::from_secs(10);
+        loop {
+            // SAFETY: a probe of the scope's group, which delivers nothing.
+            assert_eq!(unsafe { libc::killpg(scope.group(), 0) }, -1);
+            let probe = io::Error::last_os_error().raw_os_error();
+            if probe == Some(libc::ESRCH) {
+                break;
+            }
+            assert!(Instant::now() < deadline, "{probe:?}");
+            thread::sleep(Duration::from_millis(10));
+        }
+        assert_eq!(
+            scope.join(&mut member(Stdio::null())).unwrap_err().kind(),
+            io::ErrorKind::BrokenPipe
+        );
+    }
+
+    #[test]
+    fn a_killed_group_ends_every_member_and_an_ended_group_is_not_an_error() {
+        let (reader, writer) = io::pipe().unwrap();
+        let mut command = member(writer.into());
+        // The member leads a group of its own, as a terminal's shell does.
+        command.process_group(0);
+        let mut started = command.spawn().unwrap();
+        drop(command);
+        let mut stdout = BufReader::new(reader);
+        both_running(&mut stdout);
+        let group = i32::try_from(started.id()).unwrap();
+        kill_group(group).unwrap();
+        every_holder_ended(&mut stdout);
+        assert_eq!(started.wait().unwrap().signal(), Some(9));
+        assert_eq!(
+            kill_group(0).unwrap_err().kind(),
+            io::ErrorKind::InvalidInput
+        );
     }
 
     #[test]

@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#robust-logging'
 date: '2026-10-27'
-modified: '2026-10-27'
+modified: '2026-10-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:afb1e0c3d3187a83fc1f79eb4649d9c0997cf763a35cda1044faeed09036bb31'
+body_hash: 'sha256:36e93fcec515e224f6dd29d718b490c55742766461eb11830a3a1810e73496d5'
 related: []
 ---
 # Logging stalls and shared producer paths

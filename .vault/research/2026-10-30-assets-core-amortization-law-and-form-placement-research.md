@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#assets-core'
 date: '2026-10-30'
-modified: '2026-10-30'
+modified: '2026-10-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:9305732b40c2e721996d545d991431459887e28d3100583ea5adfe50a37412dc'
+body_hash: 'sha256:f4389f613d1e2ab36d3c4e6bff65d9be89cb12c18c3cb485fa28a79633424cf9'
 related:
   - "[[2026-09-23-assets-core-amortization-method-set-research]]"
   - "[[2026-09-21-assets-core-lifecycle-and-integration-research]]"
@@ -97,7 +97,6 @@ Each rule below is what the product implements. Precedence is statute and regula
 - BOE resolution convalidating RDL 7/2026, reported by INAP as dated 26 March 2026.
 - Foral tables, because foral residents are refused.
 - No official worked example of a used asset was found. Twelve official worked examples for other cases exist and serve as independent oracles, including an accelerated part-year charge of 720, a leasing limit of 3,840, a módulos bar of 6,050 and an agrarian case of 11,185.
-
 
 ## RIS art. 4.3 group paragraph and an individual buyer
 

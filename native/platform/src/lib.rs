@@ -12,6 +12,8 @@ include!(env!("CADRUMO_CONTRACT_RS"));
 // The generated resolver vectors exist only in test builds.
 #[cfg(test)]
 include!(env!("CADRUMO_CONTRACT_VECTORS_RS"));
+#[cfg(unix)]
+pub mod account;
 #[cfg(test)]
 mod conformance_tests;
 #[cfg(windows)]
@@ -19,6 +21,8 @@ pub mod desktop;
 pub mod file_changes;
 #[cfg(windows)]
 pub mod installation;
+#[cfg(target_os = "macos")]
+pub mod keychain;
 pub mod launch;
 #[cfg(all(test, unix))]
 mod posix_tests;

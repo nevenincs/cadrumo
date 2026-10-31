@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#assets-core'
 date: '2026-09-21'
-modified: '2026-10-30'
+modified: '2026-10-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:383361cd514e78e86a56c9b5ec94f0264eb2e3e4d6294b425611d24072692754'
+body_hash: 'sha256:1226b6e77f992fe6a710b4c0caedd50e6c5475712246f1b8fe5c6376a379ceb7'
 related:
   - "[[2026-09-21-assets-core-ownership-contracts-reference]]"
   - "[[2026-09-21-assets-core-lifecycle-and-integration-research]]"

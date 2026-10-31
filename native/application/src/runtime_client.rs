@@ -1,7 +1,7 @@
 //! The application's own connection to the installed runtime.
 //!
-//! A runtime owns a storage root and serves it over one native pipe. This
-//! module derives that pipe's name from the root, connects as the runtime's
+//! A runtime owns a storage root and serves it over one native endpoint. This
+//! module derives that endpoint's name from the root, connects as the runtime's
 //! verified same-account peer, completes the cohort handshake, and then runs
 //! correlated exchanges on the connection while the runtime pushes events
 //! between replies. It also reads the proof of a stored sign-in and makes the
@@ -21,8 +21,21 @@
 
 use crate::value::Sha256Digest;
 use cadrumo_platform::runtime_connect::ConnectRefusal;
+#[cfg(windows)]
+use cadrumo_platform::runtime_pipe;
+#[cfg(windows)]
 pub use cadrumo_platform::runtime_pipe::ConnectCancellation as OpenCancellation;
-use cadrumo_platform::runtime_pipe::{self, Pipe};
+#[cfg(unix)]
+use cadrumo_platform::runtime_socket;
+#[cfg(unix)]
+pub use cadrumo_platform::runtime_socket::ConnectCancellation as OpenCancellation;
+
+/// The native channel a runtime connection runs over on this platform.
+#[cfg(windows)]
+pub type RuntimeChannel = cadrumo_platform::runtime_pipe::Pipe;
+/// The native channel a runtime connection runs over on this platform.
+#[cfg(unix)]
+pub type RuntimeChannel = cadrumo_platform::runtime_socket::Socket;
 use serde_json::{Map, Value, json};
 use sha2::{Digest, Sha256};
 use std::{
@@ -259,19 +272,28 @@ impl From<ConnectRefusal> for Refusal {
     }
 }
 
-/// The pipe a storage root's runtime serves, derived from the root alone.
+/// The endpoint a storage root's runtime serves, derived from the root alone.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Endpoint {
+    #[cfg(windows)]
     pub pipe_name: String,
+    /// The runtime's entry in this account's private socket namespace.
+    #[cfg(unix)]
+    pub socket_leaf: String,
     /// The hex digest both peers compare in the handshake.
     pub storage_identity: String,
     /// The account that owns the root; the runtime's process must be its own.
+    #[cfg(windows)]
     pub owner_sid: String,
+    /// The account that owns the root; the runtime's process must be its own.
+    #[cfg(unix)]
+    pub owner_uid: u32,
 }
 
 impl Endpoint {
     /// The endpoint of `storage_root`, followed through links as the runtime
     /// follows it. A root that cannot be identified names no endpoint.
+    #[cfg(windows)]
     pub fn of(storage_root: &Path) -> Result<Self, Refusal> {
         let identity =
             runtime_pipe::storage_identity(storage_root).map_err(|_| Refusal::EndpointUntrusted)?;
@@ -282,6 +304,33 @@ impl Endpoint {
             owner_sid: identity.owner_sid,
         })
     }
+
+    /// The endpoint of `storage_root`, followed through links as the runtime
+    /// follows it. A root that cannot be identified names no endpoint.
+    #[cfg(unix)]
+    pub fn of(storage_root: &Path) -> Result<Self, Refusal> {
+        let identity = runtime_socket::storage_identity(storage_root)
+            .map_err(|_| Refusal::EndpointUntrusted)?;
+        let storage_identity = sha256_hex(identity.text().as_bytes());
+        Ok(Self {
+            socket_leaf: format!("{}.sock", &storage_identity[..32]),
+            storage_identity,
+            owner_uid: identity.uid,
+        })
+    }
+}
+
+/// Connects to the endpoint's runtime as its verified same-account peer.
+fn connect(
+    endpoint: &Endpoint,
+    deadline: Instant,
+    cancellation: Arc<OpenCancellation>,
+) -> Result<RuntimeChannel, ConnectRefusal> {
+    #[cfg(windows)]
+    let (name, owner) = (&endpoint.pipe_name, &endpoint.owner_sid);
+    #[cfg(unix)]
+    let (name, owner) = (&endpoint.socket_leaf, endpoint.owner_uid);
+    RuntimeChannel::connect_cancellable(name, owner, deadline, cancellation)
 }
 
 /// What this process expects the runtime to be: the same installed version
@@ -407,7 +456,10 @@ fn frame_header(header: &[u8; 5]) -> Result<(u8, usize), Refusal> {
 
 /// Reads one frame before the caller's deadline, allowing at most
 /// [`FRAME_BUDGET`] for the payload after its header.
-pub(crate) fn read_frame(pipe: &Pipe, header_deadline: Instant) -> Result<(u8, Vec<u8>), Refusal> {
+pub(crate) fn read_frame(
+    pipe: &RuntimeChannel,
+    header_deadline: Instant,
+) -> Result<(u8, Vec<u8>), Refusal> {
     let mut header = [0u8; 5];
     pipe.read_exact(&mut header, header_deadline)?;
     let (kind, size) = frame_header(&header)?;
@@ -419,7 +471,7 @@ pub(crate) fn read_frame(pipe: &Pipe, header_deadline: Instant) -> Result<(u8, V
     Ok((kind, payload))
 }
 
-fn read_idle_frame(pipe: &Pipe) -> Result<(u8, Vec<u8>), Refusal> {
+fn read_idle_frame(pipe: &RuntimeChannel) -> Result<(u8, Vec<u8>), Refusal> {
     let mut header = [0u8; 5];
     pipe.read_idle_byte(&mut header[0])?;
     let deadline = Instant::now() + FRAME_BUDGET;
@@ -581,7 +633,7 @@ fn event(document: &Map<String, Value>) -> Event {
 /// One verified connection: exchanges from any thread, one at a time, and the
 /// events the runtime pushes between them.
 pub struct Connection {
-    pipe: Arc<Pipe>,
+    pipe: Arc<RuntimeChannel>,
     hello: Hello,
     shared: Arc<Shared>,
     exchange: Arc<ExchangeQueue>,
@@ -686,7 +738,7 @@ pub(crate) fn handshake(
     cohort: &Cohort,
     lifecycle_notices: bool,
     deadline: Instant,
-) -> Result<(Pipe, Hello), Refusal> {
+) -> Result<(RuntimeChannel, Hello), Refusal> {
     handshake_cancellable(
         endpoint,
         cohort,
@@ -702,13 +754,8 @@ fn handshake_cancellable(
     lifecycle_notices: bool,
     deadline: Instant,
     cancellation: Arc<OpenCancellation>,
-) -> Result<(Pipe, Hello), Refusal> {
-    let pipe = Pipe::connect_cancellable(
-        &endpoint.pipe_name,
-        &endpoint.owner_sid,
-        deadline,
-        cancellation,
-    )?;
+) -> Result<(RuntimeChannel, Hello), Refusal> {
+    let pipe = connect(endpoint, deadline, cancellation)?;
     let payload = serde_json::to_vec(&hello_document(endpoint, cohort, lifecycle_notices))
         .map_err(|_| Refusal::InvalidFrame)?;
     pipe.write_all(&frame(DOCUMENT_FRAME, &payload)?, deadline)?;
@@ -756,7 +803,7 @@ fn server_hello(
 }
 
 fn read_loop(
-    pipe: Arc<Pipe>,
+    pipe: Arc<RuntimeChannel>,
     shared: Arc<Shared>,
     replies: mpsc::Sender<Map<String, Value>>,
     boot_id: String,
@@ -1997,7 +2044,13 @@ pub fn stored_sign_in_proof(
         }
     })?;
     let locator = receipt_locator(&payload, profile_id)?;
-    let account = receipt_account(&locator);
+    let blob = stored_key(&receipt_account(&locator))?;
+    decode_stored_key(&blob)
+}
+
+/// The stored key's bytes, as the keyring wrote them for `account`.
+#[cfg(windows)]
+fn stored_key(account: &str) -> Result<Zeroizing<Vec<u8>>, ProofRefusal> {
     let read = |target: &str| {
         runtime_pipe::read_generic_credential(target).map_err(|_| ProofRefusal::KeyringUnavailable)
     };
@@ -2008,8 +2061,24 @@ pub fn stored_sign_in_proof(
         _ => read(&format!("{account}@{RECEIPT_KEYCHAIN_SERVICE}"))?,
     };
     let credential = stored.ok_or(ProofRefusal::KeychainEntryMissing)?;
-    let blob = Zeroizing::new(credential.blob);
-    decode_stored_key(&blob)
+    Ok(Zeroizing::new(credential.blob))
+}
+
+/// The stored key's bytes, as the keyring wrote them for `account`. An item this
+/// program may not read without asking is unavailable, never a prompt.
+#[cfg(target_os = "macos")]
+fn stored_key(account: &str) -> Result<Zeroizing<Vec<u8>>, ProofRefusal> {
+    cadrumo_platform::keychain::read_generic_password(RECEIPT_KEYCHAIN_SERVICE, account)
+        .map_err(|_| ProofRefusal::KeyringUnavailable)?
+        .map(Zeroizing::new)
+        .ok_or(ProofRefusal::KeychainEntryMissing)
+}
+
+/// This platform's credential store is not read natively yet; a stored sign-in falls
+/// back to the password.
+#[cfg(all(unix, not(target_os = "macos")))]
+fn stored_key(_account: &str) -> Result<Zeroizing<Vec<u8>>, ProofRefusal> {
+    Err(ProofRefusal::KeyringUnavailable)
 }
 
 #[cfg(test)]
@@ -2613,11 +2682,21 @@ mod tests {
         assert!(!is_uuid("0A1B2C3D-4E5F-4A6B-9C7D-8E9F0A1B2C3D"));
     }
 
+    #[cfg(windows)]
     fn endpoint() -> Endpoint {
         Endpoint {
             pipe_name: r"\\.\pipe\cadrumo-runtime-test".into(),
             storage_identity: "f".repeat(64),
             owner_sid: "S-1-5-21-1-2-3-1001".into(),
+        }
+    }
+
+    #[cfg(unix)]
+    fn endpoint() -> Endpoint {
+        Endpoint {
+            socket_leaf: format!("{}.sock", "f".repeat(32)),
+            storage_identity: "f".repeat(64),
+            owner_uid: 501,
         }
     }
 
@@ -2875,6 +2954,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(windows)]
     fn an_absent_endpoint_is_not_ready_and_an_unknown_root_names_none() {
         let endpoint = Endpoint {
             pipe_name: format!(r"\\.\pipe\cadrumo-runtime-absent-{}", std::process::id()),
@@ -2900,6 +2980,44 @@ mod tests {
             format!(r"\\.\pipe\cadrumo-runtime-{}", here.storage_identity)
         );
         assert_eq!(here.storage_identity.len(), 64);
+    }
+
+    #[test]
+    #[cfg(target_os = "macos")]
+    fn an_absent_endpoint_is_not_ready_and_an_unknown_or_foreign_root_names_none() {
+        let endpoint = Endpoint {
+            socket_leaf: format!("{:032x}.sock", u128::from(std::process::id())),
+            storage_identity: "f".repeat(64),
+            owner_uid: cadrumo_platform::runtime_socket::current_uid(),
+        };
+        let refused = match Connection::open(
+            &endpoint,
+            &cohort(None),
+            Instant::now() + Duration::from_secs(2),
+        ) {
+            Ok(_) => panic!("an absent socket must not connect"),
+            Err(refused) => refused,
+        };
+        assert!(matches!(refused, Refusal::EndpointNotReady), "{refused}");
+        assert!(matches!(
+            Endpoint::of(Path::new("/cadrumo-no-such-root")),
+            Err(Refusal::EndpointUntrusted)
+        ));
+        // The root directory belongs to the system account, never to this one.
+        assert!(matches!(
+            Endpoint::of(Path::new("/")),
+            Err(Refusal::EndpointUntrusted)
+        ));
+        let here = Endpoint::of(&std::env::temp_dir()).unwrap();
+        assert_eq!(here.storage_identity.len(), 64);
+        assert_eq!(
+            here.socket_leaf,
+            format!("{}.sock", &here.storage_identity[..32])
+        );
+        assert_eq!(
+            here.owner_uid,
+            cadrumo_platform::runtime_socket::current_uid()
+        );
     }
 }
 
@@ -3030,21 +3148,29 @@ mod live_tests {
 
         // The stored sign-in is resumed with the proof its receipt names, as a
         // window resumes it when it finds the profile signed in; timed from connecting.
-        assert!(stored_sign_in_proof(&live.root, &live.profile_id).is_ok());
-        let started = Instant::now();
-        let resumed = Connection::open(&endpoint, &live.cohort, soon()).unwrap();
-        let session = resumed
-            .resume_receipt(&live.root, &live.profile_id, Frontend::Cli, soon())
-            .unwrap();
-        let resumed_in = started.elapsed();
-        assert_eq!(session.profile_id, live.profile_id);
-        assert_eq!(
-            resumed.connection_id().as_deref(),
-            Some(session.connection_id.as_str())
-        );
-        let status = resumed.status(&session, soon()).unwrap();
-        assert_eq!(status["session_id"], json!(session.session_id));
-        resumed.note_activity(&session, soon()).unwrap();
+        // A keychain that guards the command line's item from other programs refuses
+        // the window at once, without asking, and the window signs in with the password.
+        let resumed = match stored_sign_in_proof(&live.root, &live.profile_id) {
+            Ok(_) => {
+                let started = Instant::now();
+                let resumed = Connection::open(&endpoint, &live.cohort, soon()).unwrap();
+                let session = resumed
+                    .resume_receipt(&live.root, &live.profile_id, Frontend::Cli, soon())
+                    .unwrap();
+                let resumed_in = started.elapsed();
+                assert_eq!(session.profile_id, live.profile_id);
+                assert_eq!(
+                    resumed.connection_id().as_deref(),
+                    Some(session.connection_id.as_str())
+                );
+                let status = resumed.status(&session, soon()).unwrap();
+                assert_eq!(status["session_id"], json!(session.session_id));
+                resumed.note_activity(&session, soon()).unwrap();
+                Some((resumed, session, resumed_in))
+            }
+            Err(ProofRefusal::KeyringUnavailable) if cfg!(target_os = "macos") => None,
+            Err(refusal) => panic!("stored sign-in proof: {refusal:?}"),
+        };
 
         // The window's own password sign-in, on a development root, timed from
         // connecting. Storing it for the other frontends is admitted only from
@@ -3052,7 +3178,9 @@ mod live_tests {
         let started = Instant::now();
         let window = Connection::open(&endpoint, &live.cohort, soon()).unwrap();
         let connected = started.elapsed();
-        let retirements = resumed.subscribe();
+        let retirements = resumed
+            .as_ref()
+            .map(|(connection, _, _)| connection.subscribe());
         let held = window
             .login_password(
                 &live.profile_id,
@@ -3064,10 +3192,10 @@ mod live_tests {
             .unwrap();
         let signed_in = started.elapsed();
         println!(
-            "native sign-in: connect {} ms, password sign-in {} ms; receipt resume {} ms",
+            "native sign-in: connect {} ms, password sign-in {} ms; receipt resume {:?}",
             connected.as_millis(),
             signed_in.as_millis(),
-            resumed_in.as_millis()
+            resumed.as_ref().map(|(_, _, resumed_in)| resumed_in)
         );
         assert_eq!(held.profile_id, live.profile_id);
         assert!(
@@ -3167,13 +3295,15 @@ mod live_tests {
         let out = window.sign_out(&held, soon()).unwrap();
         assert!(out.automation_enabled.is_some() || out.automation_access_remains.is_none());
         assert!(out.session_ids.contains(&held.session_id));
-        assert!(out.session_ids.contains(&session.session_id));
         assert!(out.receipt_removed);
-        let retired = retirements.recv_timeout(Duration::from_secs(10)).unwrap();
-        assert!(
-            matches!(retired, Event::SessionRetired { .. }),
-            "{retired:?}"
-        );
+        if let (Some((_, session, _)), Some(retirements)) = (&resumed, &retirements) {
+            assert!(out.session_ids.contains(&session.session_id));
+            let retired = retirements.recv_timeout(Duration::from_secs(10)).unwrap();
+            assert!(
+                matches!(retired, Event::SessionRetired { .. }),
+                "{retired:?}"
+            );
+        }
         let cue = cues.recv_timeout(Duration::from_secs(10)).unwrap();
         assert_eq!(cue, Event::SignInChanged);
         let after = watcher
@@ -3184,11 +3314,13 @@ mod live_tests {
             stored_sign_in_proof(&live.root, &live.profile_id).unwrap_err(),
             ProofRefusal::Absent
         );
-        let refused = resumed.status(&session, soon()).unwrap_err();
-        assert!(
-            matches!(refused, Refusal::Denied { .. } | Refusal::ConnectionClosed),
-            "{refused}"
-        );
+        if let Some((resumed, session, _)) = &resumed {
+            let refused = resumed.status(session, soon()).unwrap_err();
+            assert!(
+                matches!(refused, Refusal::Denied { .. } | Refusal::ConnectionClosed),
+                "{refused}"
+            );
+        }
         window.close();
         watcher.close();
     }

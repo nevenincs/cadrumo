@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#desktop-ledger-editor'
 date: '2026-10-24'
-modified: '2026-10-25'
+modified: '2026-10-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:5a7428f451e61d5426a1e64c3db3574f45dae3629f37db845c854cc067a2590d'
+body_hash: 'sha256:e22f44a10e7af4f3a277176b5747d2f728f8c21151b93501391cc3bca915cca4'
 related:
   - "[[2026-10-23-desktop-ledger-editor-plan]]"
   - "[[2026-10-23-desktop-ledger-editor-adr]]"

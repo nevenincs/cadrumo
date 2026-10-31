@@ -33,14 +33,14 @@ pub mod diagnostics;
 pub mod error;
 pub mod installation;
 pub mod package;
-#[cfg(all(windows, feature = "platform"))]
+#[cfg(feature = "platform")]
 pub mod person_operations;
 pub mod process;
 pub mod provisioning;
 pub mod python;
 pub mod role;
 pub mod runtime;
-#[cfg(all(windows, feature = "platform"))]
+#[cfg(feature = "platform")]
 pub mod runtime_client;
 pub mod value;
 pub mod view_stream;

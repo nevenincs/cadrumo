@@ -80,9 +80,7 @@ struct Inner {
     snapshot: watch::Sender<Snapshot>,
     fence: Mutex<Fence>,
     wakes: Mutex<Option<mpsc::Sender<Wake>>>,
-    #[cfg(windows)]
     connection: Mutex<Option<Arc<cadrumo_application::runtime_client::Connection>>>,
-    #[cfg(windows)]
     opening: Mutex<Option<Arc<cadrumo_application::runtime_client::OpenCancellation>>>,
     started: AtomicBool,
     closed: AtomicBool,
@@ -114,9 +112,7 @@ impl Watch {
                 snapshot,
                 fence: Mutex::new(Fence::default()),
                 wakes: Mutex::new(None),
-                #[cfg(windows)]
                 connection: Mutex::new(None),
-                #[cfg(windows)]
                 opening: Mutex::new(None),
                 started: AtomicBool::new(false),
                 closed: AtomicBool::new(false),
@@ -222,11 +218,9 @@ impl Watch {
         if let Some(wakes) = lock(&self.inner.wakes).take() {
             let _ = wakes.send(Wake::Stop);
         }
-        #[cfg(windows)]
         if let Some(opening) = lock(&self.inner.opening).as_ref() {
             opening.cancel();
         }
-        #[cfg(windows)]
         if let Some(connection) = lock(&self.inner.connection).as_ref() {
             connection.request_close();
         }
@@ -314,7 +308,6 @@ fn supervise(inner: &Arc<Inner>, stopping: &mpsc::Receiver<()>) {
 
 /// One connection's life: whether it was connected at all, so a retry after a
 /// served stretch starts its pauses over.
-#[cfg(windows)]
 fn run(inner: &Inner) -> Result<bool> {
     use cadrumo_application::runtime_client::{
         Cohort, Connection, Endpoint, Event, OpenCancellation, TimeoutWait,
@@ -389,12 +382,6 @@ fn run(inner: &Inner) -> Result<bool> {
     result.map(|()| true)
 }
 
-#[cfg(not(windows))]
-fn run(_: &Inner) -> Result<bool> {
-    Err(failure(ErrorCode::UnsupportedPlatform))
-}
-
-#[cfg(windows)]
 fn unavailable_code(refusal: &cadrumo_application::runtime_client::Refusal) -> String {
     use cadrumo_application::runtime_client::Refusal;
     match refusal {
@@ -409,7 +396,6 @@ fn unavailable_code(refusal: &cadrumo_application::runtime_client::Refusal) -> S
 
 /// Reads the observation and publishes it on every cue, until the connection
 /// ends or the window closes.
-#[cfg(windows)]
 fn follow(
     inner: &Inner,
     connection: &cadrumo_application::runtime_client::Connection,
@@ -439,7 +425,6 @@ fn follow(
 
 /// The selected profile, its label and its stored sign-in, each asked of the
 /// runtime, which also cues this connection on every later change.
-#[cfg(windows)]
 fn observe(
     connection: &cadrumo_application::runtime_client::Connection,
 ) -> std::result::Result<Observed, cadrumo_application::runtime_client::Refusal> {
@@ -502,7 +487,6 @@ mod tests {
         assert_eq!(presence("whatever"), Presence::Unknown);
     }
 
-    #[cfg(windows)]
     #[test]
     fn transport_refusals_read_as_an_unavailable_runtime_and_others_keep_their_code() {
         use cadrumo_application::runtime_client::Refusal;

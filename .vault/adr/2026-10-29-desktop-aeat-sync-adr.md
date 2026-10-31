@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#desktop-aeat-sync'
 date: '2026-10-29'
-modified: '2026-10-29'
+modified: '2026-10-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:770d3fabbfe76e875dbe603307fca0921c355b9455e3f7a6e7059d56cbbce6e9'
+body_hash: 'sha256:50a86d592099b2cabc417d606bfb401954f8040b13f55325e34b28235b762622'
 related:
   - "[[2026-10-06-desktop-shell-capabilities-shell-profile-reads-adr]]"
   - "[[2026-10-04-desktop-shell-adr]]"

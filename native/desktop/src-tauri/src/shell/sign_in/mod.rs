@@ -58,7 +58,6 @@ enum NativeSignIn {
     Unavailable(ApplicationError),
 }
 
-#[cfg(windows)]
 impl NativeSignIn {
     /// Reads the runtime's answer to a sign-in it did not admit. Among the
     /// refusals that are not its own: the runtime does not admit this process
@@ -207,22 +206,18 @@ pub struct SignIn {
     custody: Custody,
     closed: std::sync::atomic::AtomicBool,
     lifecycle: std::sync::Mutex<()>,
-    #[cfg(windows)]
     signing_in: std::sync::Mutex<Option<Arc<PendingSignIn>>>,
-    #[cfg(windows)]
     openings: std::sync::Mutex<
         Vec<std::sync::Weak<cadrumo_application::runtime_client::OpenCancellation>>,
     >,
 }
 
-#[cfg(windows)]
 struct PendingSignIn {
     password: std::sync::Mutex<Zeroizing<Vec<u8>>>,
     complete: std::sync::Mutex<bool>,
     settled: std::sync::Condvar,
 }
 
-#[cfg(windows)]
 impl PendingSignIn {
     fn wait(&self) {
         let mut complete = self.complete.lock().unwrap_or_else(|e| e.into_inner());
@@ -235,13 +230,11 @@ impl PendingSignIn {
     }
 }
 
-#[cfg(windows)]
 struct SigningIn<'a>(
     &'a std::sync::Mutex<Option<Arc<PendingSignIn>>>,
     Arc<PendingSignIn>,
 );
 
-#[cfg(windows)]
 impl Drop for SigningIn<'_> {
     fn drop(&mut self) {
         *self.1.complete.lock().unwrap_or_else(|e| e.into_inner()) = true;
@@ -271,16 +264,13 @@ impl SignIn {
             custody: Custody::default(),
             closed: std::sync::atomic::AtomicBool::new(false),
             lifecycle: std::sync::Mutex::new(()),
-            #[cfg(windows)]
             signing_in: std::sync::Mutex::new(None),
-            #[cfg(windows)]
             openings: std::sync::Mutex::new(Vec::new()),
         }
     }
 
     /// What keeps a session this window holds through a loss of the profile's
     /// worker: the stored sign-in it presents once, and the standing it reports.
-    #[cfg(windows)]
     fn recovery(&self) -> Result<crate::agent::recovery::rebind::Recovery> {
         use crate::agent::recovery::rebind::{Recovery, StoredReceipt};
 
@@ -329,7 +319,6 @@ impl SignIn {
     /// the sign-in for the TUI and the command line, and keeps that session as
     /// the window's person session. Named profiles are resolved by the runtime,
     /// even before this window has received its first status observation.
-    #[cfg(windows)]
     fn sign_in(&self, label: Option<&str>, password: Zeroizing<Vec<u8>>) -> Result<SignInResult> {
         use cadrumo_application::runtime_client::TimeoutWait;
 
@@ -426,17 +415,11 @@ impl SignIn {
         Ok(signed_in(active))
     }
 
-    #[cfg(not(windows))]
-    fn sign_in(&self, _: Option<&str>, _: Zeroizing<Vec<u8>>) -> Result<SignInResult> {
-        Err(failure(ErrorCode::UnsupportedPlatform))
-    }
-
     /// Brings the session this window holds for `profile_id` back by its
     /// password, on the connection that holds it, while the runtime keeps it
     /// suspended: a password typed on any other connection would sign in
     /// under a new session instead. `None` when no held session waits for
     /// one, and the password signs in afresh.
-    #[cfg(windows)]
     fn rebind_held(
         &self,
         profile_id: &str,
@@ -457,11 +440,6 @@ impl SignIn {
                 .rebind_password(password)
                 .map_err(NativeSignIn::from_refusal),
         )
-    }
-
-    #[cfg(not(windows))]
-    fn rebind_held(&self, _: &str, _: &[u8]) -> Option<std::result::Result<(), NativeSignIn>> {
-        None
     }
 
     /// Every later push to whichever person session this window holds.
@@ -531,7 +509,6 @@ impl SignIn {
                 .store(true, std::sync::atomic::Ordering::Release);
         }
         self.watch.request_close();
-        #[cfg(windows)]
         for opening in self
             .openings
             .lock()
@@ -541,7 +518,6 @@ impl SignIn {
         {
             opening.cancel();
         }
-        #[cfg(windows)]
         if let Some(pending) = self
             .signing_in
             .lock()
@@ -558,7 +534,6 @@ impl SignIn {
     pub async fn stop(&self) -> Result<()> {
         self.request_stop();
         self.observation.close();
-        #[cfg(windows)]
         let pending = self
             .signing_in
             .lock()
@@ -567,7 +542,6 @@ impl SignIn {
             .cloned();
         let children = self.children.clone();
         let result = super::blocking(move || {
-            #[cfg(windows)]
             if let Some(pending) = pending {
                 pending.wait();
             }
@@ -593,7 +567,6 @@ impl SignIn {
     }
 
     /// The runtime this window's connections reach, and the release it expects there.
-    #[cfg(windows)]
     pub(crate) fn runtime_target(
         &self,
     ) -> std::result::Result<
@@ -615,7 +588,6 @@ impl SignIn {
     }
 
     /// A connection of the window's own to its runtime.
-    #[cfg(windows)]
     fn connect(
         &self,
         deadline: std::time::Instant,
@@ -646,7 +618,6 @@ impl SignIn {
 
     /// Signs `profile_id` in on a connection of the window's own, storing the
     /// sign-in for the other frontends, and holds the session it admits.
-    #[cfg(windows)]
     fn native_sign_in(
         &self,
         profile_id: &str,
@@ -675,7 +646,6 @@ impl SignIn {
 
     /// Resumes the stored sign-in of `profile_id` on a fresh connection of the
     /// window's own, as the desktop frontend, and holds the session it admits.
-    #[cfg(windows)]
     fn resume(&self, profile_id: &str) -> Result<crate::agent::person::Person> {
         use cadrumo_application::runtime_client::Frontend;
         let waiting = cadrumo_application::runtime_client::TimeoutWait::new();
@@ -701,11 +671,6 @@ impl SignIn {
                     .caused_by(refusal)
             })?;
         crate::agent::person::Person::native(connection, pushed, admitted, None, recovery)
-    }
-
-    #[cfg(not(windows))]
-    fn resume(&self, _: &str) -> Result<crate::agent::person::Person> {
-        Err(failure(ErrorCode::UnsupportedPlatform))
     }
 
     /// Notes the person's input through the session this window holds, so a
@@ -883,10 +848,10 @@ fn resolve_image(launch: &Launch, entrypoint: &str) -> Result<ChildConfiguration
     })
 }
 
-// The CLI currently exposes no GNOME binding capability. Until that projection
-// exists, non-Windows hosts must not claim a positively observed login binding.
+// A host whose runtime the native client cannot reach yet must not claim a
+// positively observed sign-in.
 fn supported() -> bool {
-    cfg!(windows)
+    cfg!(any(windows, target_os = "macos"))
 }
 
 pub fn commands<R: tauri::Runtime>() -> crate::app::Commands<R> {

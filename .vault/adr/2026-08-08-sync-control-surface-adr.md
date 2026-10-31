@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#sync-control-surface'
 date: '2026-08-08'
-modified: '2026-10-29'
+modified: '2026-10-31'
 body_schema: 'body-v1'
-body_hash: 'sha256:98fa82a3474c359ed73b3ff5a648093e64fbcf4c3f05a2b19e885666b6abdfd4'
+body_hash: 'sha256:fe313641a233048fb2ee91ca64a01542248c4777a776777a05dbcc39b635b46c'
 related:
   - '[[2026-08-08-sync-control-surface-reference]]'
   - '[[2026-07-25-censal-profile-autofill-adr]]'

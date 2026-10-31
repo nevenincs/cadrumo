@@ -55,8 +55,7 @@ use super::{
     },
     transfer::{SenderControl, TransferChunk, TransferReceiver, TransferSender},
 };
-use crate::runtime_client::{Cohort, Endpoint, Refusal};
-use cadrumo_platform::runtime_pipe::Pipe;
+use crate::runtime_client::{Cohort, Endpoint, Refusal, RuntimeChannel};
 use std::{
     collections::VecDeque,
     fmt, io,
@@ -90,24 +89,24 @@ pub trait ViewTransport: Send + Sync + 'static {
     fn close(&self);
 }
 
-impl ViewTransport for Pipe {
+impl ViewTransport for RuntimeChannel {
     fn read_idle_byte(&self, byte: &mut u8) -> io::Result<()> {
-        Pipe::read_idle_byte(self, byte)
+        RuntimeChannel::read_idle_byte(self, byte)
     }
 
     fn read_exact(&self, buffer: &mut [u8], deadline: Instant) -> io::Result<()> {
-        Pipe::read_exact(self, buffer, deadline)
+        RuntimeChannel::read_exact(self, buffer, deadline)
     }
 
     fn write_all(&self, bytes: &[u8], deadline: Option<Instant>) -> io::Result<()> {
         match deadline {
-            Some(deadline) => Pipe::write_all(self, bytes, deadline),
-            None => Pipe::write_all_while_open(self, bytes),
+            Some(deadline) => RuntimeChannel::write_all(self, bytes, deadline),
+            None => RuntimeChannel::write_all_while_open(self, bytes),
         }
     }
 
     fn close(&self) {
-        Pipe::close(self);
+        RuntimeChannel::close(self);
     }
 }
 
