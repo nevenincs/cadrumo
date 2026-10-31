@@ -55,6 +55,31 @@ from .signal_spelling_segments import spanish_word_context, translation_spelling
 # BOE-A-2024-3329 (ITPyAJD) and Hacienda's TEAC 24/01192/2021 (LISyD).
 # Preserve exactly those abbreviations, not arbitrary mixed-case tokens.
 _SHARED_SPELLINGS = frozenset({"Cadrumo", "AEAT", "id", "Id", "ids", "Ids", "IDs", "WebP", "ITPyAJD", "LISyD"})
+# Exact Spanish dictionary gaps in the canonical legal references: IVA flow
+# notes use enrutamiento, transmitente and registrales; IS uses deducibilidad
+# and extracontables; IRPF uses autotaxis, subclaves, reinversión and aportante.
+# Modelo 234/379 uses transfronterizos, Modelo 763 uses plurianuales, and Modelo
+# 592 uses reutilizables. IRPF/Modelo 136 quoted wording uses autoliquidar.
+# Enrutamiento is also attested in IGN's normalized ISO/TC211 glossary:
+# https://www.ign.es/web/ide-glosario-panhispanico
+# Keep this lexical subset separate from literal option IDs and casing aliases.
+_SPANISH_LEGAL_SPELLINGS = frozenset(
+    {
+        "enrutamiento",
+        "deducibilidad",
+        "transmitente",
+        "transfronterizos",
+        "plurianuales",
+        "autotaxis",
+        "subclaves",
+        "extracontables",
+        "registrales",
+        "reinversión",
+        "aportante",
+        "autoliquidar",
+        "reutilizables",
+    }
+)
 _LOCALE_SPELLINGS: dict[str, frozenset[str]] = {
     # These ordinary English technical/domain terms are absent from the pinned
     # dictionary-en-gb data, but are attested in the canonical English catalogue:
@@ -204,6 +229,7 @@ _LOCALE_SPELLINGS: dict[str, frozenset[str]] = {
     ),
     "es": frozenset(
         {
+            *_SPANISH_LEGAL_SPELLINGS,
             # The unchanged surname names the impatriate regime in CLI help,
             # wizard choices and the Modelo 151 title; retain its exact case.
             "Beckham",
@@ -868,6 +894,7 @@ def enroll_spelling_cell(
 # includes literal option IDs such as modificacion, which is a typo in prose.
 _SPANISH_LEGAL_REFERENCE_SPELLINGS = frozenset(
     {
+        *_SPANISH_LEGAL_SPELLINGS,
         "Minoración",
         "intracomunitaria",
         "intracomunitarias",
