@@ -38,7 +38,7 @@ from ..projection import (
     project_filing_record,
 )
 from ..record_renderer import preflight_projection_plan
-from .test_producer_snapshot import _elections, _m303_filing_facts, _m303_profile, _presenter, _taxpayer_identity
+from .producer_snapshot_support import _elections, _m303_filing_facts, _m303_profile, _presenter, _taxpayer_identity
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

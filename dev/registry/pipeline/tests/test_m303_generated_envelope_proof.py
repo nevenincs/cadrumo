@@ -22,7 +22,7 @@ from cadrumo.application.filing.export import render_filing_envelope
 from cadrumo.application.filing.export_envelope import FilingEnvelopeRenderRequest, FilingEnvelopeRenderResult
 from cadrumo.application.filing.projection import project_filing_record
 from cadrumo.application.filing.tests import test_m303_did_account_wire_isolated_authority as m303_did
-from cadrumo.application.filing.tests.test_producer_snapshot import (
+from cadrumo.application.filing.tests.producer_snapshot_support import (
     m303_bienes_inversion_parameters,
     m303_exonerado_390_evidence,
 )

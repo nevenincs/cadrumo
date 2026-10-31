@@ -55,7 +55,7 @@ from ....domain.modelos.calculation_revision_m303_handoff import M303RegimenSimp
 from ...calculations.m303_regimen_simplificado import calculate_m303_regimen_simplificado_result
 from ..producer_snapshot import build_filing_producer_snapshot
 from ..projection import build_m303_filing_projection_plan
-from .test_producer_snapshot import _elections, _m303_filing_facts, _m303_profile, _presenter, _taxpayer_identity
+from .producer_snapshot_support import _elections, _m303_filing_facts, _m303_profile, _presenter, _taxpayer_identity
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
