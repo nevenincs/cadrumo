@@ -71,7 +71,7 @@ except LaunchRefusedError as error:
     refuse(error.code, error.subject)
 root = lookup(declaration.root["variable"])
 if not root:
-    platform = {{"nt": "windows"}}.get(os.name, "linux")
+    platform = {{"win32": "windows", "darwin": "macos"}}.get(sys.platform, "linux")
     rule = next(item for item in declaration.root["installed_defaults"] if item["platform"] == platform)
     for candidate in rule["candidates"]:
         value = lookup(candidate["variable"])
