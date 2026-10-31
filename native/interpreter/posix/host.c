@@ -41,9 +41,12 @@ static char *path(cadrumo_context *ctx, uint32_t key) {
 
 static char *join(const char *directory, const char *name) {
     size_t a = strlen(directory), b = strlen(name);
-    if (a > SIZE_MAX - b - 2) return NULL;
-    char *value = malloc(a + b + 2);
-    if (value) snprintf(value, a + b + 2, "%s/%s", directory, name);
+    /* A directory that already ends in a separator takes no second one. */
+    const char *separator = a > 0 && directory[a - 1] == '/' ? "" : "/";
+    size_t s = strlen(separator);
+    if (a > SIZE_MAX - b - s - 1) return NULL;
+    char *value = malloc(a + s + b + 1);
+    if (value) snprintf(value, a + s + b + 1, "%s%s%s", directory, separator, name);
     return value;
 }
 
