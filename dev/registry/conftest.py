@@ -7,9 +7,15 @@ compiler merely to clear its caches. Application-backed fixtures are discovered
 from the repository-root test host and are not forwarded through this conftest.
 """
 
+from __future__ import annotations
+
 from collections.abc import Iterator
+from typing import TYPE_CHECKING
 
 import pytest
+
+if TYPE_CHECKING:
+    from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -38,8 +44,22 @@ def authored_history_fact_scope() -> Iterator[None]:
         yield
 
 
+@pytest.fixture(scope="session")
+def _worker_compiled_authority() -> ValidatedRegistryAuthority:
+    """Compile the bundled authority once per worker.
+
+    A test may not edit the bundled tree, so this snapshot stays correct for the
+    whole session; asking the compiler per test re-hashes the source tree each
+    time its fingerprint lapses. A test whose subject is recompilation asks the
+    compiler itself.
+    """
+    from .compiler.authority import compiled_bundled_authority
+
+    return compiled_bundled_authority()
+
+
 @pytest.fixture
-def governed_fact_scope() -> Iterator[None]:
+def governed_fact_scope(_worker_compiled_authority: ValidatedRegistryAuthority) -> Iterator[None]:
     """Resolve registry tokens in one requesting test against the compiled authored facts.
 
     Governed-fact resolvers refuse to run without an explicit authority scope.
@@ -48,7 +68,5 @@ def governed_fact_scope() -> Iterator[None]:
     """
     from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
 
-    from .compiler.authority import compiled_bundled_authority
-
-    with validating_governed_facts(compiled_bundled_authority()):
+    with validating_governed_facts(_worker_compiled_authority):
         yield
