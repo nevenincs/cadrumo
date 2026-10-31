@@ -13,7 +13,7 @@ from ..errors import RegistryValidationError
 from ..formula_initial_values import materialise_observations
 from ..formula_runtime import RegistryCalculationEntry, calculate_registry_snapshot
 from ..schema import RegistrySnapshot
-from ._formula_runtime_support import (
+from .formula_runtime_support import (
     _IVA_PRORRATA_PORCENTAJE_CASILLA,
     _M130_AGRARIAN_VOLUME_CASILLA,
     _M130_AGRARIAN_WITHHELD_CASILLA,

@@ -42,7 +42,7 @@ from ....domain.transactions.enums import BusinessClassification, TransactionDir
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....domain.usage_ratios.model import UsageRatioProfile
-from ...tests._ledger_partition_support import partition_by_filing_date
+from ...tests.ledger_partition_support import partition_by_filing_date
 from ..action_ports import LedgerActionPorts
 from ..actions_classification import (
     ClassificationRulePlan,

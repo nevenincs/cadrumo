@@ -35,7 +35,7 @@ from ....application.live.justificante import (
     capture_justificante_snapshot_outcome,
 )
 from ....application.live.snapshot_base import SnapshotLifecycleState
-from ....application.tests._operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
+from ....application.tests.operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
 from ....core.bucket_pointer import require_active_bucket_id
 from ....core.period import Period
 from ....tests.live_gate import requires_live_enabled

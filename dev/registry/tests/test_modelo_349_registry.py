@@ -19,34 +19,86 @@ from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefinition
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.calculations.registry.temporal import select_revision
-from cadrumo.domain.calculations.registry.tests._modelo_349_registry_support import (
-    _DECL_IMPORTE_OPERACIONES_CASILLA,
-    _DECL_IMPORTE_RECTIFICACIONES_CASILLA,
-    _DECL_NUMERO_OPERADORES_CASILLA,
-    _DECL_NUMERO_RECTIFICACIONES_CASILLA,
-    _DECLARANT_SUMMARY_CASILLAS,
-    _M349_CADENCE_LEGAL_REF,
-    _M349_CADENCE_REQUIRED_TEXT,
-    _M349_GB_XI_ORDINARY_BINDINGS,
-    _M349_GB_XI_ORDINARY_REQUIRED_TEXT,
-    _M349_GB_XI_RECTIFICATION_BINDINGS,
-    _M349_GB_XI_RECTIFICATION_REQUIRED_TEXT,
-    _M349_GB_XI_SOURCE_REF,
-    _OFFICIAL_FIELD_POSITIONS,
-    _OFFICIAL_FIELD_WIDTHS,
-    _OP_APELLIDOS_RAZON_SOCIAL_CASILLA,
-    _OP_BASE_IMPONIBLE_CASILLA,
-    _OP_CLAVE_OPERACION_CASILLA,
-    _OP_CODIGO_PAIS_CASILLA,
-    _OP_NIF_COMUNITARIO_CASILLA,
-    _RECT_BASE_ANTERIOR_CASILLA,
-    _RECT_BASE_RECTIFICADA_CASILLA,
-    _RECT_EJERCICIO_RECTIFICADO_CASILLA,
-    _RECT_PERIODO_RECTIFICADO_CASILLA,
-    _WWW6_HOST,
-    _fixed_width_record,
-    _load_modelo_349,
-    _modelo_349_revision,
+from cadrumo.domain.calculations.registry.tests.modelo_349_registry_support import (
+    DECL_IMPORTE_OPERACIONES_CASILLA as _DECL_IMPORTE_OPERACIONES_CASILLA,
+)
+from cadrumo.domain.calculations.registry.tests.modelo_349_registry_support import (
+    DECL_IMPORTE_RECTIFICACIONES_CASILLA as _DECL_IMPORTE_RECTIFICACIONES_CASILLA,
+)
+from cadrumo.domain.calculations.registry.tests.modelo_349_registry_support import (
+    DECL_NUMERO_OPERADORES_CASILLA as _DECL_NUMERO_OPERADORES_CASILLA,
+)
+from cadrumo.domain.calculations.registry.tests.modelo_349_registry_support import (
+    DECL_NUMERO_RECTIFICACIONES_CASILLA as _DECL_NUMERO_RECTIFICACIONES_CASILLA,
+)
+from cadrumo.domain.calculations.registry.tests.modelo_349_registry_support import (
+    DECLARANT_SUMMARY_CASILLAS as _DECLARANT_SUMMARY_CASILLAS,
+)
+from cadrumo.domain.calculations.registry.tests.modelo_349_registry_support import (
+    M349_CADENCE_LEGAL_REF as _M349_CADENCE_LEGAL_REF,
+)
+from cadrumo.domain.calculations.registry.tests.modelo_349_registry_support import (
+    M349_CADENCE_REQUIRED_TEXT as _M349_CADENCE_REQUIRED_TEXT,
+)
+from cadrumo.domain.calculations.registry.tests.modelo_349_registry_support import (
+    M349_GB_XI_ORDINARY_BINDINGS as _M349_GB_XI_ORDINARY_BINDINGS,
+)
+from cadrumo.domain.calculations.registry.tests.modelo_349_registry_support import (
+    M349_GB_XI_ORDINARY_REQUIRED_TEXT as _M349_GB_XI_ORDINARY_REQUIRED_TEXT,
+)
+from cadrumo.domain.calculations.registry.tests.modelo_349_registry_support import (
+    M349_GB_XI_RECTIFICATION_BINDINGS as _M349_GB_XI_RECTIFICATION_BINDINGS,
+)
+from cadrumo.domain.calculations.registry.tests.modelo_349_registry_support import (
+    M349_GB_XI_RECTIFICATION_REQUIRED_TEXT as _M349_GB_XI_RECTIFICATION_REQUIRED_TEXT,
+)
+from cadrumo.domain.calculations.registry.tests.modelo_349_registry_support import (
+    M349_GB_XI_SOURCE_REF as _M349_GB_XI_SOURCE_REF,
+)
+from cadrumo.domain.calculations.registry.tests.modelo_349_registry_support import (
+    OFFICIAL_FIELD_POSITIONS as _OFFICIAL_FIELD_POSITIONS,
+)
+from cadrumo.domain.calculations.registry.tests.modelo_349_registry_support import (
+    OFFICIAL_FIELD_WIDTHS as _OFFICIAL_FIELD_WIDTHS,
+)
+from cadrumo.domain.calculations.registry.tests.modelo_349_registry_support import (
+    OP_APELLIDOS_RAZON_SOCIAL_CASILLA as _OP_APELLIDOS_RAZON_SOCIAL_CASILLA,
+)
+from cadrumo.domain.calculations.registry.tests.modelo_349_registry_support import (
+    OP_BASE_IMPONIBLE_CASILLA as _OP_BASE_IMPONIBLE_CASILLA,
+)
+from cadrumo.domain.calculations.registry.tests.modelo_349_registry_support import (
+    OP_CLAVE_OPERACION_CASILLA as _OP_CLAVE_OPERACION_CASILLA,
+)
+from cadrumo.domain.calculations.registry.tests.modelo_349_registry_support import (
+    OP_CODIGO_PAIS_CASILLA as _OP_CODIGO_PAIS_CASILLA,
+)
+from cadrumo.domain.calculations.registry.tests.modelo_349_registry_support import (
+    OP_NIF_COMUNITARIO_CASILLA as _OP_NIF_COMUNITARIO_CASILLA,
+)
+from cadrumo.domain.calculations.registry.tests.modelo_349_registry_support import (
+    RECT_BASE_ANTERIOR_CASILLA as _RECT_BASE_ANTERIOR_CASILLA,
+)
+from cadrumo.domain.calculations.registry.tests.modelo_349_registry_support import (
+    RECT_BASE_RECTIFICADA_CASILLA as _RECT_BASE_RECTIFICADA_CASILLA,
+)
+from cadrumo.domain.calculations.registry.tests.modelo_349_registry_support import (
+    RECT_EJERCICIO_RECTIFICADO_CASILLA as _RECT_EJERCICIO_RECTIFICADO_CASILLA,
+)
+from cadrumo.domain.calculations.registry.tests.modelo_349_registry_support import (
+    RECT_PERIODO_RECTIFICADO_CASILLA as _RECT_PERIODO_RECTIFICADO_CASILLA,
+)
+from cadrumo.domain.calculations.registry.tests.modelo_349_registry_support import (
+    WWW6_HOST as _WWW6_HOST,
+)
+from cadrumo.domain.calculations.registry.tests.modelo_349_registry_support import (
+    fixed_width_record as _fixed_width_record,
+)
+from cadrumo.domain.calculations.registry.tests.modelo_349_registry_support import (
+    load_modelo_349 as _load_modelo_349,
+)
+from cadrumo.domain.calculations.registry.tests.modelo_349_registry_support import (
+    modelo_349_revision as _modelo_349_revision,
 )
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 from cadrumo.tests.aeat_literal_fixtures import AEAT_HOST_SUFFIX_EXPECTED

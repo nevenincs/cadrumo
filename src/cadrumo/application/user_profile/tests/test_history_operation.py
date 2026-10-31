@@ -38,7 +38,7 @@ from ...operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
 from ...operations.models import OperationIdentity, OperationRequest
 from ...operations.owner import OperationExecutorContext
 from ...operations.registry import OperationFrontendProjection, OperationRegistry
-from ...tests._access_authority_support import build_access_authority, new_access_binding
+from ...tests.access_authority_support import build_access_authority, new_access_binding
 from ..access_errors import ProfileAccessRefusedError
 from ..history_contracts import ProfileHistoryExecutionResult, ProfileHistoryProjection, ProfileHistoryRequest
 from ..history_operation import (

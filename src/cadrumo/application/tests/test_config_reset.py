@@ -20,7 +20,7 @@ from cadrumo.application.user_profile.custody_ports import (
     ProfileBucketStoragePort,
 )
 
-from ._operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
+from .operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

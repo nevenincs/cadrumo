@@ -18,7 +18,7 @@ from ..bindings_previous_filing import (
 )
 from ..relations import RegistryFoldRequirement, relation_source_requirements
 from ..schema import RegistrySnapshot
-from ._formula_runtime_support import (
+from .formula_runtime_support import (
     _M100_PAGOS_FRACCIONADOS_CASILLA,
     _M100_RENDIMIENTO_NETO_ACTIVIDADES_CASILLA,
     _M100_RESULTADO_AUTOLIQUIDACION_CASILLA,

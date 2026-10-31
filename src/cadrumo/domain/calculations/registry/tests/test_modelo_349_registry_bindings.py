@@ -19,15 +19,29 @@ from ..invoice_bindings import (
 )
 from ..schema import BindingDefinition
 from ..schema_input_kind import InputKind
-from ._modelo_349_registry_support import (
-    _DECL_IMPORTE_OPERACIONES_CASILLA,
-    _DECL_IMPORTE_RECTIFICACIONES_CASILLA,
-    _DECL_NUMERO_OPERADORES_CASILLA,
-    _DECL_NUMERO_RECTIFICACIONES_CASILLA,
-    _DECLARANT_SUMMARY_CASILLAS,
+from .modelo_349_registry_support import (
     _M349_SUBSTANTIVE_BINDING_LEGAL_REFS,
-    _load_modelo_349,
-    _modelo_349_revision,
+)
+from .modelo_349_registry_support import (
+    DECL_IMPORTE_OPERACIONES_CASILLA as _DECL_IMPORTE_OPERACIONES_CASILLA,
+)
+from .modelo_349_registry_support import (
+    DECL_IMPORTE_RECTIFICACIONES_CASILLA as _DECL_IMPORTE_RECTIFICACIONES_CASILLA,
+)
+from .modelo_349_registry_support import (
+    DECL_NUMERO_OPERADORES_CASILLA as _DECL_NUMERO_OPERADORES_CASILLA,
+)
+from .modelo_349_registry_support import (
+    DECL_NUMERO_RECTIFICACIONES_CASILLA as _DECL_NUMERO_RECTIFICACIONES_CASILLA,
+)
+from .modelo_349_registry_support import (
+    DECLARANT_SUMMARY_CASILLAS as _DECLARANT_SUMMARY_CASILLAS,
+)
+from .modelo_349_registry_support import (
+    load_modelo_349 as _load_modelo_349,
+)
+from .modelo_349_registry_support import (
+    modelo_349_revision as _modelo_349_revision,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]

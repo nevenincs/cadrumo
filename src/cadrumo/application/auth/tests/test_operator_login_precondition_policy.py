@@ -11,7 +11,7 @@ import pytest
 
 from cadrumo.application.auth import operator
 from cadrumo.application.auth.sessions import ClaveCredentials
-from cadrumo.application.tests._operator_probe_fakes import fake_operator_probe_ports
+from cadrumo.application.tests.operator_probe_fakes import fake_operator_probe_ports
 from cadrumo.core.auth_provider import AuthProviderKind
 from cadrumo.core.config import override_settings
 

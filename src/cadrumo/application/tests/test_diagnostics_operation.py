@@ -55,7 +55,7 @@ from ..operations.models import OperationIdentity, OperationRequest, OperationTe
 from ..operations.owner import OperationExecutorContext
 from ..operations.registry import OperationFrontendProjection, OperationRegistry
 from ..user_profile.access_errors import ProfileAccessRefusedError
-from ._access_authority_support import scoped_policy_decision
+from .access_authority_support import scoped_policy_decision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

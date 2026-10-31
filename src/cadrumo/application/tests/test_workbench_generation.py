@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from collections.abc import Iterator
 from dataclasses import dataclass
 from datetime import UTC, date, datetime
 from pathlib import Path
@@ -21,7 +20,7 @@ from ...core.errors.hierarchy import InternalInvariantError
 from ...core.external_constants import OutputLanguage
 from ...core.operations import profile_operation_subject
 from ...core.period import Period
-from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.modelos.calculation_revision import CalculationRevisionCatalogue, CalculationRevisionState
 from ...domain.modelos.filing_record import ModeloRecordCatalogue
 from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
@@ -91,7 +90,7 @@ from ..workbench_generation_contracts import (
     WorkbenchGenerationSourceResultV1,
 )
 from ..workbench_generation_reader import SecureProfileWorkbenchGenerationReadDoorV1
-from ._operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
+from .operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
 
 _OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
 
@@ -107,13 +106,6 @@ def test_installed_calendar_reaches_latest_completed_filing_year() -> None:
         from_date=date(2025, 1, 1),
         to_date=date(2026, 12, 31),
     )
-
-
-@pytest.fixture
-def authority_operation() -> Iterator[PinnedAuthorityOperation]:
-    """Pin one published generation for the production workbench door."""
-    with bundled_indexed_authority().operation() as operation:
-        yield operation
 
 
 def _test_censal_operation_definition():

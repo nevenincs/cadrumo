@@ -21,7 +21,7 @@ from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...operations.access_resolution import ResolvedOperationAccess
 from ...operations.owner import OperationExecutorContext
 from ...operations.registry import OperationRegistry
-from ...tests._access_authority_support import scoped_policy_decision
+from ...tests.access_authority_support import scoped_policy_decision
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..m036_lifecycle import M036DeclarationAmbiguousError, M036DeclarationNotFoundError, M036DeclarationResult
 from ..m036_lifecycle_ports import M036LifecyclePorts

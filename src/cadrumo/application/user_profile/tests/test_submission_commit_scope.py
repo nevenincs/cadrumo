@@ -30,7 +30,7 @@ from cadrumo.application.ledger.reset_operation import (
 from cadrumo.application.operations.access_resolution import OperationAccessContext, resolve_operation_access
 from cadrumo.application.operations.models import OperationRequest
 from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
-from cadrumo.application.tests._access_authority_support import build_access_authority, new_access_binding
+from cadrumo.application.tests.access_authority_support import build_access_authority, new_access_binding
 from cadrumo.application.user_profile.access_contracts import (
     ACCESS_LEASE_MAXIMUM,
 )

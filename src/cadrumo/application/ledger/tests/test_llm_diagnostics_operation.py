@@ -31,7 +31,7 @@ from ...operations.models import OperationIdentity, OperationRequest, OperationT
 from ...operations.owner import OperationExecutorContext
 from ...operations.public_scalar import PublicDecimal
 from ...operations.registry import OperationFrontendProjection, OperationRegistry
-from ...tests._access_authority_support import build_access_authority, new_access_binding
+from ...tests.access_authority_support import build_access_authority, new_access_binding
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..llm_diagnostics import LlmConfidenceProviderMetrics, LlmDiagnosticsReport, LlmUsageCostProviderMetrics
 from ..llm_diagnostics_operation import (

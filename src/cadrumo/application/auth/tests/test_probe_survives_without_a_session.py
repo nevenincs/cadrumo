@@ -16,7 +16,7 @@ from cadrumo.application.auth.operator_probes import (
 from cadrumo.core.auth_provider import AuthProviderKind
 from cadrumo.core.config import override_settings
 
-from ...tests._operator_probe_fakes import fake_operator_probe_ports
+from ...tests.operator_probe_fakes import fake_operator_probe_ports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

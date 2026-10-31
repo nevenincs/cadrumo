@@ -16,7 +16,7 @@ from cadrumo.application.operations.registry import (
     OperationRegistry,
     OperationSchemaBindingV1,
 )
-from cadrumo.application.tests._access_authority_support import build_access_authority, new_access_binding
+from cadrumo.application.tests.access_authority_support import build_access_authority, new_access_binding
 from cadrumo.application.user_profile.access_administration import (
     AccessAdministrationAction,
     AccessAdministrationRequest,

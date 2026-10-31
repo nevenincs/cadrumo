@@ -22,8 +22,8 @@ from cadrumo.domain.calculations.registry.authority import bundled_indexed_autho
 
 from ...auth.tests.certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
 from ...state_projection_auth import build_auth_readiness
-from ...tests._operator_probe_fakes import fake_operator_probe_ports
-from ...tests._operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
+from ...tests.operator_probe_fakes import fake_operator_probe_ports
+from ...tests.operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
 from ...workflow.state_models import WorkflowState
 from ..status import build_wizard_status
 

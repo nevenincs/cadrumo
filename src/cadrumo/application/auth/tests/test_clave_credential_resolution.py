@@ -22,7 +22,7 @@ from collections.abc import Iterator
 import pytest
 from pydantic import SecretStr
 
-from cadrumo.application.tests._operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
+from cadrumo.application.tests.operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from cadrumo.domain.calculations.registry.tests.published_authority import published_profile_schema

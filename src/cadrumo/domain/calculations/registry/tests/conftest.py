@@ -10,11 +10,13 @@ from ..governed_fact_scope import validating_governed_facts
 from ..ids import RevisionId
 from ..schema import ModeloDefinition, RegistrySnapshot
 from ..schema_catalogues import RegistryCatalogues
-from ._formula_runtime_support import (
-    _committed_modelo_130_snapshot,
-    _committed_modelo_180_snapshot,
-)
 from .authority_lease_support import private_authority_lease, scoped_when_requested
+from .formula_runtime_support import (
+    committed_modelo_130_snapshot as _committed_modelo_130_snapshot,
+)
+from .formula_runtime_support import (
+    committed_modelo_180_snapshot as _committed_modelo_180_snapshot,
+)
 from .registry_tree import bundled_registry_tree
 
 

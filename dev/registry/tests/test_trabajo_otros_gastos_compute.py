@@ -34,7 +34,7 @@ import pytest
 
 from cadrumo.core.casilla_id import CasillaId
 from cadrumo.domain.calculations.registry.schema import FormulaDefinition, ModeloRevision
-from cadrumo.domain.calculations.registry.tests._formula_runtime_support import _evaluate
+from cadrumo.domain.calculations.registry.tests.formula_runtime_support import evaluate as _evaluate
 
 from ._registry_schema_support import _committed_modelo
 

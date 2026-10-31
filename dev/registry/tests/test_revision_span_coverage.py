@@ -10,11 +10,13 @@ import pytest
 from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.revision_order import revisions_coexist
-from cadrumo.domain.calculations.registry.tests._revision_span_declaration_support import (
-    _NON_EJERCICIO_COVERAGE_AXIS,
-    _OPEN_BOUNDED_ERA_DESIGNS,
-)
 from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
+from cadrumo.domain.calculations.registry.tests.revision_span_declaration_support import (
+    NON_EJERCICIO_COVERAGE_AXIS as _NON_EJERCICIO_COVERAGE_AXIS,
+)
+from cadrumo.domain.calculations.registry.tests.revision_span_declaration_support import (
+    OPEN_BOUNDED_ERA_DESIGNS as _OPEN_BOUNDED_ERA_DESIGNS,
+)
 
 from ._revision_span_coverage_support import (
     _covers_year,

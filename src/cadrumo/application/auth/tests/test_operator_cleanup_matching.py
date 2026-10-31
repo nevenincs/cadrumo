@@ -9,7 +9,7 @@ from datetime import UTC, datetime
 import pytest
 
 from ....core.config import Settings
-from ...tests._operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
+from ...tests.operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
 from ...workflow.state_models import WorkflowState
 from .. import operator_revocation as revocation
 from ..models import (

@@ -33,7 +33,7 @@ from ....domain.transactions.m210_income_classification import resolve_m210_paye
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from ...tests._ledger_partition_support import partition_by_filing_date
+from ...tests.ledger_partition_support import partition_by_filing_date
 from ..m210_classification import resolve_m210_income_classification
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]

@@ -33,7 +33,7 @@ from ....domain.transactions.protocols import TransactionCatalogueRepositoryProt
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....domain.usage_ratios.model import UsageRatioProfile
 from ...review.filter import LedgerReviewFilterSpec
-from ...tests._ledger_partition_support import partition_by_filing_date
+from ...tests.ledger_partition_support import partition_by_filing_date
 from ..action_ports import LedgerActionPorts
 from ..list_operation import ledger_list_row
 from ..list_query import LedgerTransactionListQuery, query_ledger_transaction_list, sort_ledger_results

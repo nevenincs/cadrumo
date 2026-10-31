@@ -42,7 +42,7 @@ from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransa
 from cadrumo.domain.usage_ratios.model import UsageRatioProfile
 
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
-from ...tests._ledger_partition_support import partition_by_filing_date
+from ...tests.ledger_partition_support import partition_by_filing_date
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

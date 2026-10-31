@@ -50,7 +50,7 @@ from ....domain.transactions.enums import BusinessClassification, TransactionDir
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ...aggregation.ledger_filing_snapshot import row_fingerprint
-from ...tests._ledger_partition_support import partition_by_filing_date
+from ...tests.ledger_partition_support import partition_by_filing_date
 from .._calculation_helpers import build_typed_observations
 from .._calculation_modelo_adjustments import drop_row_field_template_outputs
 from ..amendment_actions import _amendment_ledger_anchor

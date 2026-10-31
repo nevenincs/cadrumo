@@ -19,7 +19,7 @@ from pydantic import SecretStr
 
 from ...core.aggregation import BindingSourceKind
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-from ._operator_probe_fakes import fake_operator_probe_ports
+from .operator_probe_fakes import fake_operator_probe_ports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

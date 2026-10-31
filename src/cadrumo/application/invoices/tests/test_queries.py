@@ -24,7 +24,7 @@ from ....domain.transactions.enums import TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....domain.transactions.service import link_invoice
-from ...tests._ledger_partition_support import partition_by_filing_date
+from ...tests.ledger_partition_support import partition_by_filing_date
 from ..catalogue_reads import verify_invoice_repository_links
 from ..catalogue_reads_ports import InvoiceCatalogueReadPorts
 from ..transaction_linking import link_invoice_transaction_catalogues

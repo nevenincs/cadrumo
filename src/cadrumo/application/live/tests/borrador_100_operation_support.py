@@ -23,7 +23,7 @@ from ....domain.calculations.registry.schema_extraction import ExtractionProfile
 from ...operations.access_resolution import ResolvedOperationAccess
 from ...operations.owner import OperationExecutorContext
 from ...operations.registry import OperationRegistry
-from ...tests._access_authority_support import scoped_policy_decision
+from ...tests.access_authority_support import scoped_policy_decision
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..borrador_100 import Borrador100Snapshot
 from ..borrador_100_operation_ports import (

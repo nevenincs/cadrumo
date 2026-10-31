@@ -35,7 +35,7 @@ from ....domain.transactions.enums import BusinessClassification, TransactionDir
 from ....domain.transactions.lineage_models import TransactionEditLineageEntry
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from ...tests._ledger_partition_support import partition_by_filing_date
+from ...tests.ledger_partition_support import partition_by_filing_date
 from ..history_query import (
     LEDGER_EVIDENCE_HISTORY_EVENT_TYPES,
     LEDGER_HISTORY_EVENT_TYPES,

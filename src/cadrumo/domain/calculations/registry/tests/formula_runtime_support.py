@@ -14,7 +14,7 @@ from ..schema_formula import FormulaExpression, ParameterDefinition
 from .snapshot_support import build_snapshot
 
 
-def _evaluate(
+def evaluate(
     expression: FormulaExpression,
     values: Mapping[CasillaId, Decimal] | None = None,
     *,
@@ -78,7 +78,7 @@ _M100_PAGOS_FRACCIONADOS_CASILLA: CasillaId = validated_casilla_id("1553")
 _M100_RESULTADO_AUTOLIQUIDACION_CASILLA: CasillaId = validated_casilla_id("1577")
 
 
-def _committed_modelo_130_snapshot(
+def committed_modelo_130_snapshot(
     registry_snapshot: Callable[..., RegistrySnapshot],
 ) -> RegistrySnapshot:
     """The formula-runtime engine's own calculation claim, never a filing one.
@@ -91,7 +91,7 @@ def _committed_modelo_130_snapshot(
     return registry_snapshot("130", 2026, "1T", grade=RegistryAuthorityGrade.CALCULATION)
 
 
-def _committed_modelo_180_snapshot(
+def committed_modelo_180_snapshot(
     registry_snapshot: Callable[..., RegistrySnapshot],
 ) -> RegistrySnapshot:
     return registry_snapshot("180", 2026, "0A", grade=RegistryAuthorityGrade.CALCULATION)

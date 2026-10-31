@@ -408,13 +408,16 @@ def _field_equals_declared_default(model: BaseModel, field_name: str) -> bool:
         # the tag when it rehydrates canonical JSON.
         return False
     field = type(model).model_fields[field_name]
-    if field.is_required():
+    if field.is_required() or field.default_factory is not None:
+        # A factory may depend on the active authority, time or other state.
+        # The model already carries its resolved value; serializing it avoids
+        # recomputing a potentially different value during publication.
         return False
     try:
-        comparison = getattr(model, field_name) == field.get_default(call_default_factory=True)
+        comparison = getattr(model, field_name) == field.get_default()
     except (TypeError, ValueError):
-        # A context-sensitive default factory, or a value whose equality is not
-        # scalar, is not sufficient authority to remove published information.
+        # A value that cannot be compared is not sufficient authority to
+        # remove published information.
         return False
     return comparison if isinstance(comparison, bool) else False
 
