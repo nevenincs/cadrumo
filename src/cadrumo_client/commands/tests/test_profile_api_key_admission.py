@@ -5,14 +5,12 @@ from __future__ import annotations
 from typing import cast
 
 import pytest
-import typer
 
 from cadrumo_client.commands import profile_admission as admission
 from cadrumo_client.commands.errors import CliRefusedBoundaryError
 from cadrumo_client.commands.profile_authentication import (
     ProfileAuthenticationMethod,
     ProfileAuthenticationSecrets,
-    ProfileSecretSourceOptions,
 )
 from cadrumo_client.commands.secure_input import ProfileSecretChannel, ProfileSecretSelection
 from cadrumo_client.transport.frontend_client import FrontendClient
@@ -26,18 +24,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 def _runtime_answers_login_targets(monkeypatch: pytest.MonkeyPatch) -> None:
     """The runtime client here is a double, so the runtime's login-target answer is given as it would give it."""
     answer_login_targets_locally(monkeypatch)
-
-
-def _context(source: ProfileSecretSourceOptions) -> typer.Context:
-    app = typer.Typer()
-
-    @app.command()
-    def noop() -> None:
-        return
-
-    context = typer.Context(typer.main.get_command(app))
-    cast("dict[str, object]", context.ensure_object(dict))["profile_secret_source"] = source
-    return context
 
 
 class _LoginWitness:

@@ -9,7 +9,6 @@ from typing import cast, override
 from uuid import UUID, uuid4
 
 import pytest
-import typer
 
 from cadrumo.application.cli_exception_preconditions import nested_terminal_precondition_verdict
 from cadrumo.application.operations.registry import OperationFrontendProjection
@@ -24,7 +23,7 @@ from cadrumo_client.contracts.sign_in_outcomes import ProfileReceiptRefusedError
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 
-from .runtime_target_double import answer_login_targets_locally
+from .runtime_target_double import answer_login_targets_locally, profile_secret_context
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -33,18 +32,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 def _runtime_answers_login_targets(monkeypatch: pytest.MonkeyPatch) -> None:
     """The runtime client here is a double, so the runtime's login-target answer is given as it would give it."""
     answer_login_targets_locally(monkeypatch)
-
-
-def _context(source: ProfileSecretSourceOptions) -> typer.Context:
-    app = typer.Typer()
-
-    @app.command()
-    def noop() -> None:
-        return
-
-    context = typer.Context(typer.main.get_command(app))
-    cast("dict[str, object]", context.ensure_object(dict))["profile_secret_source"] = source
-    return context
 
 
 class _AdmittedClient:
@@ -100,7 +87,7 @@ def test_password_proof_refusals_are_translated_without_changing_api_key_refusal
         monkeypatch.setattr("sys.stdin", stdin)
         with pytest.raises(CliRefusedBoundaryError) as caught:
             admission.activate_profile(
-                _context(ProfileSecretSourceOptions(method=method, stdin=True)),
+                profile_secret_context(ProfileSecretSourceOptions(method=method, stdin=True)),
                 target_bucket_id=str(profile_id),
                 target_profile_label="operator",
                 root_selection=ProfileSecretSelection(ProfileSecretChannel.STDIN),
@@ -153,7 +140,7 @@ def test_missing_receipt_login_remedy_preserves_the_public_profile_label(
     monkeypatch.setattr(profile_selection, "runtime_login_target", public_target)
     with pytest.raises(CliRefusedBoundaryError) as caught:
         admission.activate_profile(
-            _context(ProfileSecretSourceOptions()),
+            profile_secret_context(ProfileSecretSourceOptions()),
             target_bucket_id=None if explicit_label is None else str(profile_id),
             target_profile_label=explicit_label,
             root_selection=None,
@@ -203,7 +190,7 @@ def test_reference_uses_installed_credential_door_and_binds_exact_profile(
         lambda _ctx, bound_client, *, profile_id: bound.append(("client", (bound_client, profile_id))),
     )
     admission.activate_profile(
-        _context(
+        profile_secret_context(
             ProfileSecretSourceOptions(method=ProfileAuthenticationMethod.API_KEY, credential_reference=reference)
         ),
         target_bucket_id=str(profile_id),
@@ -233,7 +220,7 @@ def test_bad_reference_is_a_refusal_without_password_or_receipt_fallback(monkeyp
     )
     with pytest.raises(CliRefusedBoundaryError):
         admission.activate_profile(
-            _context(
+            profile_secret_context(
                 ProfileSecretSourceOptions(method=ProfileAuthenticationMethod.API_KEY, credential_reference=reference)
             ),
             target_bucket_id=str(profile_id),

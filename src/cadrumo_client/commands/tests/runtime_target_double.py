@@ -7,13 +7,17 @@ replaced.
 
 from __future__ import annotations
 
+from typing import cast
+
 import pytest
+import typer
 
 from cadrumo.application.workflow.errors import ProfileLabelAmbiguousError
 from cadrumo.application.workflow.profile_bucket_scan import resolve_profile_bucket
 from cadrumo.core.bucket_pointer import read_pointer_selection
 from cadrumo.core.config import load_settings
 from cadrumo_client.commands import profile_selection
+from cadrumo_client.commands.profile_authentication import ProfileSecretSourceOptions
 from cadrumo_client.commands.profile_selection import LoginTarget
 
 
@@ -33,3 +37,16 @@ def answer_login_targets_locally(monkeypatch: pytest.MonkeyPatch) -> None:
     """Resolve login targets and the selection as the runtime does, without a runtime to ask."""
     monkeypatch.setattr(profile_selection, "runtime_login_target", _resolved)
     monkeypatch.setattr(profile_selection, "runtime_selected_profile_id", _selected)
+
+
+def profile_secret_context(source: ProfileSecretSourceOptions) -> typer.Context:
+    """Build a command context that carries the given secret source, as the root callback leaves it."""
+    app = typer.Typer()
+
+    @app.command()
+    def noop() -> None:
+        return
+
+    context = typer.Context(typer.main.get_command(app))
+    cast("dict[str, object]", context.ensure_object(dict))["profile_secret_source"] = source
+    return context
