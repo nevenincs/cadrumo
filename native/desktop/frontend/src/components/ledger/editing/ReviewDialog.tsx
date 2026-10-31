@@ -61,6 +61,7 @@ import {
   heldUnits,
   linkMismatches,
   linksReady,
+  pointsText,
   outcomeTally,
   type AskedConflict,
   type ChangeGroup,
@@ -370,7 +371,7 @@ function BlockerFixes({
           className="flex flex-wrap items-center gap-2"
           onSubmit={(event) => {
             event.preventDefault();
-            const parsed = parsePercent(share);
+            const parsed = parsePercent(pointsText(share));
             if (parsed.kind !== "value") {
               setShareError(
                 t("desktop.ledger.classify.share_refused", {

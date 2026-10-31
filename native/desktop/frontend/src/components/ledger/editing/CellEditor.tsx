@@ -41,6 +41,7 @@ import {
   NO_ACCOUNT,
   clearRefusal,
   parseCell,
+  pointsText,
   textLimitOf,
   type CellValue,
   type EditKind,
@@ -147,8 +148,7 @@ export function TypedEditor({
   /** What the held text stages, or why it cannot. A percentage is typed in
    * points and the grammar reads it as such. */
   const decide = (held: string): EditCommit | "nothing" => {
-    const typed =
-      kind === "percent" && held.trim() !== "" ? `${held.trim()}%` : held;
+    const typed = kind === "percent" ? pointsText(held) : held;
     const parsed = parseCell(kind, field, typed, labels);
     if (parsed.kind === "refused")
       return { kind: "refused", refusal: { ...parsed.refusal, raw: held } };

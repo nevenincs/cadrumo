@@ -93,6 +93,11 @@ const TEXT_LIMITS: Partial<Record<StageField, number>> = {
   group_label: 64,
 };
 
+/** Points typed in a percentage field, said as the grammar reads a percent
+ * that names itself: `0.5` is half a per cent, not a fraction. */
+export const pointsText = (held: string): string =>
+  held.trim() === "" ? held : `${held.trim()}%`;
+
 /** The most a text field takes. */
 export const textLimitOf = (field: StageField | DraftField): number =>
   TEXT_LIMITS[field as StageField] ?? 4096;

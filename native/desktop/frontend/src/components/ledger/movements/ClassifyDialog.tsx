@@ -22,6 +22,7 @@ import {
   SPENDING_CATEGORY_FAMILIES,
 } from "../../../shell/ledgerVocabulary";
 import { useStrings } from "../../../shell/strings";
+import { pointsText } from "../editing/editingModel";
 import { categoryLabel, categoryOption } from "./movementWords";
 
 /**
@@ -140,7 +141,7 @@ export function ClassifyDialog({
             if (!ready) return;
             onStage({
               ...(asksCategory && category ? { category } : {}),
-              ...(asksShare ? { share } : {}),
+              ...(asksShare ? { share: pointsText(share) } : {}),
             });
           }}
         >

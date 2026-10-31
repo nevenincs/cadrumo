@@ -5,6 +5,7 @@ import { STORY_PERIOD, useLedgerPort, useLedgerRead } from "@/dev/LedgerStage";
 import type { Readiness } from "../../../shell/ledgerWindow";
 import { parsePercent } from "../../../shell/ledgerGrammar";
 import { useStrings } from "../../../shell/strings";
+import { pointsText } from "../editing/editingModel";
 import { periodText } from "../ledgerWords";
 import { ClassifyDialog } from "./ClassifyDialog";
 import { ColumnChooser } from "./ColumnChooser";
@@ -250,7 +251,9 @@ export const ClassifyMixedShareRefused = classify({
   error: "A share is between 0 and 100.",
 });
 const staged = fn();
-export const ClassifyMixedShareTyped: StoryObj = {
+// What the share staged as the page reads it: typed points reach the wire as
+// the same fraction a grid cell gives them.
+const shareTyped = (typed: string, fraction: string): StoryObj => ({
   render: () => (
     <Classify
       kind="mixed"
@@ -268,15 +271,22 @@ export const ClassifyMixedShareTyped: StoryObj = {
       if (!found) throw new Error("the share is not drawn yet");
       return found;
     });
-    await userEvent.type(share, "50");
+    await userEvent.type(share, typed);
     await userEvent.click(
       document.body.querySelector<HTMLElement>(".ledger-classify-stage")!,
     );
-    await waitFor(() => expect(staged).toHaveBeenCalledWith({ share: "50" }));
-    // The page reads that answer with the grammar, as it did before.
-    expect(parsePercent("50")).toEqual({ kind: "value", value: "0.5" });
+    await waitFor(() => expect(staged).toHaveBeenCalledTimes(1));
+    const answer = staged.mock.calls[0]![0] as { share: string };
+    expect(answer.share).toBe(`${typed}%`);
+    expect(parsePercent(answer.share)).toEqual({
+      kind: "value",
+      value: fraction,
+    });
+    expect(parsePercent(answer.share)).toEqual(parsePercent(pointsText(typed)));
   },
-};
+});
+export const ClassifyMixedShareTyped = shareTyped("50", "0.5");
+export const ClassifyMixedShareUnderOne = shareTyped("0.5", "0.005");
 export const ClassifyPersonal = classify({
   kind: "personal",
   overwritten: 3,
