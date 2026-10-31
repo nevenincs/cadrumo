@@ -199,6 +199,14 @@ pub struct Delivery {
     batch: LogBatch,
 }
 
+/// The subscriptions a set of deliveries is for.
+pub fn recipients(deliveries: &[Delivery]) -> Vec<u64> {
+    deliveries
+        .iter()
+        .map(|delivery| delivery.subscription)
+        .collect()
+}
+
 /// Sends each batch in order and returns the subscriptions whose sink refused.
 pub fn send(deliveries: Vec<Delivery>) -> Vec<u64> {
     deliveries
@@ -359,6 +367,18 @@ impl Aggregate {
             });
         }
         deliveries
+    }
+
+    /// Counts the pacing interval of each delivered subscription from `now`,
+    /// when its batch finished going rather than when it was picked: encoding
+    /// and the channel take a varying time, and the interval is the least
+    /// spacing the receiver sees between batches.
+    pub fn delivered(&mut self, subscriptions: &[u64], now: Instant) {
+        for subscriber in &mut self.subscribers {
+            if subscriptions.contains(&subscriber.id) {
+                subscriber.last_sent = Some(now);
+            }
+        }
     }
 
     /// How long until a batch [`Aggregate::deliver`] held back may go: a
@@ -542,6 +562,31 @@ mod tests {
         drop(batches);
         assert!(aggregate.unsubscribe(id));
         assert!(!aggregate.unsubscribe(id));
+    }
+
+    #[test]
+    fn the_interval_counts_from_the_end_of_a_slow_delivery() {
+        let mut aggregate = Aggregate::new(available());
+        let (sink, received) = collector();
+        aggregate.subscribe(sink);
+        let start = Instant::now();
+        let picked = aggregate.deliver(start);
+        let recipients = recipients(&picked);
+        assert_eq!(recipients.len(), 1);
+        assert!(send(picked).is_empty());
+        // Encoding and the channel took most of an interval.
+        let finished = start + BATCH_INTERVAL * 9 / 10;
+        aggregate.delivered(&recipients, finished);
+        aggregate.push(entry("a"));
+        assert_eq!(
+            aggregate.due(finished),
+            Some(BATCH_INTERVAL),
+            "the wait is a whole interval after the delivery ended"
+        );
+        deliver(&mut aggregate, start + BATCH_INTERVAL);
+        assert_eq!(received.lock().unwrap().len(), 1);
+        deliver(&mut aggregate, finished + BATCH_INTERVAL);
+        assert_eq!(received.lock().unwrap().len(), 2);
     }
 
     #[test]
