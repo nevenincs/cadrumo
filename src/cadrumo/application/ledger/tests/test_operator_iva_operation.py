@@ -35,7 +35,7 @@ from ..classify_result_contracts import (
 from ..llm_classification_ports import OperatorIvaDerivationResult
 from ..models import ManualLedgerTransactionResult
 from ..persistence_ports import LedgerPersistenceConflictError
-from .test_classify_operation import _current_transaction
+from .ledger_input_rule_support import current_transaction
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -61,7 +61,7 @@ class _ExecutorPort:
 
     def __init__(self, monkeypatch: pytest.MonkeyPatch, authority: PinnedAuthorityOperation) -> None:
         self.in_commit = False
-        self.current = _current_transaction()
+        self.current = current_transaction()
         self.catalogue = SimpleNamespace(transactions={self.current.transaction_id: self.current})
         self.loads = 0
         self.writes: list[dict[str, object]] = []

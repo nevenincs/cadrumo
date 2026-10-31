@@ -29,7 +29,7 @@ from cadrumo_client.transport.service_client import InstalledServiceClient
 from ...admin import AdminServer
 from ...main import _wait_out_recovery
 from ...service import AgentService
-from .test_admin_authority import _read, _send
+from .admin_wire_support import read_frame, send_frame
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -221,9 +221,9 @@ def test_the_main_loop_waits_out_a_suspension_and_reads_its_lease_again_at_the_n
 def _ask(server: AdminServer, bearer: bytearray) -> dict[str, JsonValue]:
     request = {"version": 1, "request_id": str(uuid4()), "action": "status"}
     with socket.create_connection(("127.0.0.1", server.port), timeout=5) as stream:
-        _send(stream, bearer)
-        _send(stream, json.dumps(request).encode())
-        reply = _read(stream)
+        send_frame(stream, bearer)
+        send_frame(stream, json.dumps(request).encode())
+        reply = read_frame(stream)
     assert reply["request_id"] == request["request_id"]
     result = reply["result"]
     assert isinstance(result, dict)
