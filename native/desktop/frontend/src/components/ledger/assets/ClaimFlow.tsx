@@ -49,6 +49,7 @@ import {
   viewOf,
 } from "./assetWrites";
 import { ASSET_KEYS } from "./assetsWords";
+import { nothingOpenWhy as nothingOpenWords } from "./planWords";
 
 const NO_FIELDS = new Set<string>();
 const NO_CLAIMS: readonly PlanClaim[] = [];
@@ -109,6 +110,10 @@ export function ClaimFlow({
   const spans = claimSpans(row, replaced);
   const span = spans[spanIndex] ?? spans[0] ?? null;
   const fields = claimFields(row, replaced, span);
+  // A year with no span open, and no dotación being replaced, has nothing to
+  // record: the plan's own reason is said instead of blank dates.
+  const nothingOpenWhy =
+    row !== null && spans.length === 0 ? nothingOpenWords(t, row) : null;
   const form = useFieldsDraft(draftOf(fields));
   const [forecast, setForecast] = useState<ActivityAssetForecast | null>(null);
   const [forecastCall, setForecastCall] =
@@ -239,9 +244,12 @@ export function ClaimFlow({
       label={t(ASSET_KEYS.year)}
       value={String(year)}
       onValue={(value) => chooseYear(Number(value))}
-      options={years.map((found) => ({
-        value: String(found),
-        label: String(found),
+      options={(rows ?? []).map((found) => ({
+        value: String(found.tax_year),
+        label:
+          found.edition?.projected === true
+            ? t(ASSET_KEYS.year_estimated, { year: found.tax_year })
+            : String(found.tax_year),
       }))}
     />
   );
@@ -302,6 +310,15 @@ export function ClaimFlow({
             void preview();
           }}
         >
+          {nothingOpenWhy !== null && (
+            <Alert
+              role="status"
+              icon={<Icon name="info" />}
+              className="ledger-asset-nothing-open"
+            >
+              {nothingOpenWhy}
+            </Alert>
+          )}
           {yearChoice}
           {effective.length > 0 && (
             <ChoiceField
@@ -384,6 +401,13 @@ export function ClaimFlow({
                 <span className="text-sm">
                   {t("desktop.ledger.assets.forecast_note")}
                 </span>
+                {rows?.find((found) => found.tax_year === forecast.tax_year)
+                  ?.edition?.projected === true && (
+                  <span className="inline-flex items-center gap-1.5 text-sm">
+                    <Icon name="calendar" size="xs" />
+                    {t(ASSET_KEYS.year_estimated_note)}
+                  </span>
+                )}
               </Alert>
               <div className="flex gap-2">
                 <WriteHold>

@@ -12,6 +12,8 @@ import { BajaForm } from "./BajaForm";
 import { ClaimFlow } from "./ClaimFlow";
 import { CorrectForm } from "./CorrectForm";
 import { DescribeForm } from "./DescribeForm";
+import { ASSET_KEYS } from "./assetsWords";
+import { translator } from "../../../shell/strings";
 
 // The forms of the Assets tab over the scenario ledger: adding an element,
 // describing it, correcting it, recording its dotación and giving it a baja,
@@ -656,8 +658,23 @@ export const ClaimFreeMethodWithoutAmount: Story = claiming("impresora", 2026, {
   play: steps(forecast),
 });
 export const ClaimProjectedYear: Story = claiming("furgoneta", 2027, {
-  name: "Record dotación, a year on projected tables: forecast offered",
-  play: steps(forecast),
+  name: "Record dotación, a year on projected tables: marked estimated, forecast offered with the note",
+  play: async (context) => {
+    await steps(forecast)(context);
+    const root = context.canvasElement;
+    await drawn(root, ".ledger-asset-forecast-result");
+    const t = translator(String(context.globals.locale ?? "en"));
+    await waitFor(() => {
+      if (!root.textContent?.includes(t(ASSET_KEYS.year_estimated_note)))
+        throw new Error("the estimated note is not drawn");
+    });
+  },
+});
+export const ClaimNothingOpen: Story = claiming("cristaleria", 2026, {
+  name: "Record dotación, nothing open in the year: the reason is said above the dates",
+  play: steps(async (root) => {
+    await drawn(root, ".ledger-asset-nothing-open");
+  }),
 });
 export const ClaimPeriodElapsed: Story = claiming("cristaleria", 2026, {
   name: "Record dotación, maximum period elapsed: refused with its date",

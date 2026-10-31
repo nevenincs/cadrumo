@@ -1413,7 +1413,7 @@ desktop:
       count:
         conflict: 'Átfedő értékcsökkenési leírások, minden évben: {count}'
         incomplete: 'Nem kiszámítható évek, minden évben: {count}'
-        missing: 'Értékcsökkenési leírás nélküli évek, minden évben: {count}'
+        missing: 'Évek, amelyekben még van mit rögzíteni, minden évben: {count}'
         stale: 'Az ütemezéssel már nem egyező értékcsökkenési leírások, minden évben:
           {count}'
         unsupported: 'Évek olyan módszerrel, amelyet a Cadrumo még nem támogat, minden
@@ -1527,10 +1527,14 @@ desktop:
       handoff: Értékcsökkenési leírások a bevallásaidban
       handoff_agrarian_count: 'Kimarad a 130-asból, mert mezőgazdasági tevékenységhez
         tartoznak, amely a bevétel egy részét fizeti: {count} elem.'
+      handoff_agrarian_count_one: 'Kimarad a 130-asból, mert mezőgazdasági tevékenységhez
+        tartozik, amely a bevétel egy részét fizeti: 1 elem.'
       handoff_agrarian_named: 'Kimarad a 130-asból, mert mezőgazdasági tevékenységhez
         tartoznak, amely a bevétel egy részét fizeti: {names}.'
       handoff_free_count: 'Nem számít bele a 130-asba, mert a módszerük az értékcsökkenési
         leírás összegét rád hagyja: {count} elem.'
+      handoff_free_count_one: 'Nem számít bele a 130-asba, mert a módszere az értékcsökkenési
+        leírás összegét rád hagyja: 1 elem.'
       handoff_free_named: 'Nem számít bele a 130-asba, mert a módszerük az értékcsökkenési
         leírás összegét rád hagyja: {names}.'
       handoff_gap_accrued: '100-as: {name} esetében nincs rögzített értékcsökkenési
@@ -1543,9 +1547,16 @@ desktop:
         leírás {start} és {end} között, és nem számítható ki.'
       handoff_gap_unnamed: Emellett kimarad {count} időszak olyan elemekből, amelyeket
         ez a lista nem nevez meg.
+      handoff_gap_unnamed_one: Emellett kimarad 1 időszak olyan elemekből, amelyeket
+        ez a lista nem nevez meg.
       handoff_left_out: Kimarad ezekből az összegekből
       handoff_partial: 'Részleges: {count} elem nem számítható ki, ezért kimarad ebből
         az összegből.'
+      handoff_partial_one: 'Részleges: 1 elem nem számítható ki, ezért kimarad ebből
+        az összegből.'
+      handoff_unavailable_count: '{count} elemet nem sikerült kiszámolni, ezért kimaradnak.'
+      handoff_unavailable_count_one: 1 elemet nem sikerült kiszámolni, ezért kimarad.
+      handoff_unavailable_named: 'Nem sikerült kiszámolni, ezért kimarad: {names}.'
       handoff_year: A bevalláshoz tartozó számok éve
       list:
         column:

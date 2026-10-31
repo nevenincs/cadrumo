@@ -6,8 +6,18 @@
 
 import type { Translate } from "../../../shell/strings";
 import { amountText, dateText, percentText } from "../movements/movementWords";
-import type { Amount, TimelineChange } from "../../../shell/ledgerSetup";
-import { ASSET_KEYS, tokenWord, unindexed, wordOfKey } from "./assetsWords";
+import type {
+  Amount,
+  PlanRow,
+  TimelineChange,
+} from "../../../shell/ledgerSetup";
+import {
+  ASSET_KEYS,
+  reasonText,
+  tokenWord,
+  unindexed,
+  wordOfKey,
+} from "./assetsWords";
 
 /** The labels only the plan and the timeline name directly. */
 export const PLAN_KEYS = {
@@ -48,6 +58,38 @@ const NOT_APPLICABLE: ReadonlySet<string> = new Set([
 
 export const absenceNotApplicable = (absence: string | null) =>
   absence !== null && NOT_APPLICABLE.has(absence);
+
+/** The mark of a year's missing recorded figure: a year with a span still open
+ * is one with nothing recorded, whatever its absence is; any other year
+ * draws by whether its absence is a known state of nothing to work out. */
+export const recordedMark = (
+  row: Pick<PlanRow, "absence" | "claimable_intervals">,
+): "nothing_recorded" | "not_applicable" =>
+  !absenceNotApplicable(row.absence) || row.claimable_intervals.length > 0
+    ? "nothing_recorded"
+    : "not_applicable";
+
+/** Why a year has no span open to record, in the plan's own words: the reason
+ * of its refusal, else the reason of its absence, else the generic word.
+ * Null where a span is open. */
+export function nothingOpenWhy(
+  t: Translate,
+  row: Pick<
+    PlanRow,
+    | "claimable_intervals"
+    | "claimable_refusal_key"
+    | "claimable_refusal_facts"
+    | "absence_reason_key"
+    | "absence_reason_facts"
+  >,
+): string | null {
+  if (row.claimable_intervals.length > 0) return null;
+  return (
+    reasonText(t, row.claimable_refusal_key, row.claimable_refusal_facts) ??
+    reasonText(t, row.absence_reason_key, row.absence_reason_facts) ??
+    t(ASSET_KEYS.plan.claimable_none)
+  );
+}
 
 /** Whether the backend states this amount as a recorded zero. */
 export const isStatedZero = (amount: Amount) =>

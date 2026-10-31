@@ -212,7 +212,11 @@ function TimelineTable({
               </td>
               <td className="px-2 py-1.5 tabular-nums">
                 {event.effect_date === null ? (
-                  <NotKnown why={t(ASSET_KEYS.timeline.effect_missing)} />
+                  // A described event has no effective date by nature: the
+                  // cell stays empty rather than saying it is not known.
+                  event.event_kind === "described" ? null : (
+                    <NotKnown why={t(ASSET_KEYS.timeline.effect_missing)} />
+                  )
                 ) : (
                   <span className="whitespace-nowrap">
                     {dateText(locale, event.effect_date, true)}

@@ -481,6 +481,12 @@ export const PlanDoesNotApplyMark: Story = plan({
   play: hint(ASSET_KEYS.mark.not_applicable),
 });
 
+export const PlanDaysDoNotApply: Story = plan({
+  name: "Plan, days in a year the maximum period has elapsed: Doesn't apply, not Not known",
+  args: { assetId: "cristaleria", narrow: true },
+  play: hint(ASSET_KEYS.plan.days_missing),
+});
+
 export const PlanMinimumUnknown: Story = plan({
   name: "Plan, a minimum with an earlier year unresolved is Not known with its reason, never a figure",
   args: { assetId: "plotter" },
@@ -526,6 +532,12 @@ export const PlanFreeMethodClaimed: Story = plan({
 export const PlanFreeMethodOpen: Story = plan({
   name: "Plan, free depreciation, still to claim",
   args: { assetId: "impresora" },
+});
+
+export const PlanFreeMethodOpenYearNothingRecorded: Story = plan({
+  name: "Plan, a free-method year still open: Nothing recorded, never Doesn't apply",
+  args: { assetId: "impresora" },
+  play: hint(ASSET_KEYS.mark.nothing_recorded),
 });
 
 export const PlanOpeningHistoryMissing: Story = plan({
@@ -596,6 +608,25 @@ export const TimelineReplacedClaim: Story = timeline({
 export const TimelineDescription: Story = timeline({
   name: "Timeline, a description outside the calculation",
   args: { assetId: "furgoneta" },
+});
+
+export const TimelineDescriptionHasNoEffectDate: Story = timeline({
+  name: "Timeline, a description has no effective date: the cell stays empty",
+  args: { assetId: "furgoneta" },
+  play: async ({ canvasElement, globals }: PlayContext) => {
+    const t = translator(String(globals.locale ?? "en"));
+    await waitFor(() => {
+      if (!canvasElement.querySelector("tbody tr"))
+        throw new Error("the timeline is not drawn yet");
+    });
+    const rows = [...canvasElement.querySelectorAll("tbody tr")].filter((row) =>
+      row.textContent?.includes(t(ASSET_KEYS.timeline.not_in_calculation)),
+    );
+    if (rows.length === 0) throw new Error("no description is drawn");
+    for (const row of rows)
+      if (row.querySelector(`[aria-label*="${t(ASSET_KEYS.not_known)}"]`))
+        throw new Error("a description draws Not known for its date");
+  },
 });
 
 export const TimelineWithoutName: Story = timeline({

@@ -15,7 +15,7 @@ import {
 import { callRefusal, Hint } from "./AssetList";
 import { handoffRequest } from "./assetWrites";
 import { leftOutNotes } from "./handoffWords";
-import { ASSET_KEYS, refusalText } from "./assetsWords";
+import { ASSET_KEYS, countSentence, refusalText } from "./assetsWords";
 
 /** One box the handoff states: its casilla, its amount, and how many
  * elements its amount leaves out. */
@@ -153,7 +153,11 @@ export function FilingHandoffPanel({
                   <span className="inline-flex items-center justify-end gap-1.5 whitespace-nowrap">
                     {left > 0 && (
                       <Hint
-                        words={t(ASSET_KEYS.handoff.partial, { count: left })}
+                        words={countSentence(
+                          t,
+                          ASSET_KEYS.handoff.partial,
+                          left,
+                        )}
                         className="bg-secondary px-2 py-0.5 text-xs font-medium"
                       >
                         <Icon name="alert" size="xs" className="text-warning" />

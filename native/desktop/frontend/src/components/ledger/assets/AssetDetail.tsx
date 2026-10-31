@@ -8,7 +8,7 @@ import { WriteHold } from "../WritePause";
 import { dateText } from "../movements/movementWords";
 import { AmortizationPlan } from "./AmortizationPlan";
 import { AssetTimeline } from "./AssetTimeline";
-import { NotApplicable, NotKnown } from "./AssetList";
+import { NotApplicable, NotKnown, NothingRecorded } from "./AssetList";
 import { figureText } from "./planWords";
 import type { AssetListRow } from "../../../shell/ledgerSetup";
 import type { FormKind } from "./assetFields";
@@ -162,7 +162,7 @@ export function AssetDetail({
             </Fact>
             <Fact label={fieldWord(t, "serial_number")}>
               {row.serial_number ?? (
-                <NotKnown why={t(ASSET_KEYS.list.serial_missing)} />
+                <NothingRecorded why={t(ASSET_KEYS.list.serial_missing)} />
               )}
             </Fact>
             <Fact label={fieldWord(t, "asset_kind")}>
