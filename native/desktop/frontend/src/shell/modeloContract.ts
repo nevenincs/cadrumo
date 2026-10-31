@@ -5503,16 +5503,16 @@ export type ModeloReconciliationDiff = {
  * tax id). `total` — a filed-amount disagreement between the receipt total and
  * the canonical computed result casilla. `casilla` — a per-casilla value
  * disagreement between the persisted computed revision and a filed
- * declaración, emitted for modelos enrolled in
- * `_DECLARATION_CASILLA_RECONCILE_MODELOS` (`detect_casilla_divergences`).
+ * declaración, emitted for modelos enrolled under
+ * `_DECLARATION_RECONCILE_ROLE` (`detect_casilla_divergences`).
  */
 export type ModeloReconciliationDiffKind = "header_field" | "total" | "casilla";
 
 /**
  * Closed external-evidence labels accepted by reconciliation commands.
  *
- * `DECLARATION` performs casilla-level reconciliation for modelos in
- * `_DECLARATION_CASILLA_RECONCILE_MODELOS`; other modelos raise
+ * `DECLARATION` performs casilla-level reconciliation for modelos enrolled
+ * under `_DECLARATION_RECONCILE_ROLE`; other modelos raise
  * `ReconciliationDeclaracionSourceUnsupportedError`.
  */
 export type ModeloReconciliationEvidenceKind = "justificante" | "declaration";

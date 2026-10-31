@@ -91,7 +91,7 @@ export function Hint({
 
 /** A figure the register does not know, drawn as a dashed circle. It is
  * named "Not known" and the tooltip says why. */
-export function NotKnown({ why }: { why: string }) {
+export function NotKnown({ why }: { why?: string | null }) {
   const t = useStrings();
   return (
     <Hint words={facts(t, [t(ASSET_KEYS.not_known), why])}>
@@ -295,7 +295,7 @@ export function AssetList({
             );
           const pending = figureText(locale, row.pending);
           return pending === null ? (
-            <NotKnown why={openingRemedy(t)} />
+            <NotKnown why={openingRemedy(t, row.opening_remedy_field_key)} />
           ) : (
             <span className="whitespace-nowrap">{pending}</span>
           );

@@ -194,7 +194,9 @@ export function AssetDetail({
             </Fact>
             <Fact label={t(ASSET_KEYS.list.column.accumulated)}>
               {figureText(locale, row.accumulated) ?? (
-                <NotKnown why={openingRemedy(t)} />
+                <NotKnown
+                  why={openingRemedy(t, row.opening_remedy_field_key)}
+                />
               )}
             </Fact>
             <Fact label={t(ASSET_KEYS.list.column.pending)}>
@@ -208,7 +210,9 @@ export function AssetDetail({
                 />
               ) : (
                 (figureText(locale, row.pending) ?? (
-                  <NotKnown why={openingRemedy(t)} />
+                  <NotKnown
+                    why={openingRemedy(t, row.opening_remedy_field_key)}
+                  />
                 ))
               )}
             </Fact>
