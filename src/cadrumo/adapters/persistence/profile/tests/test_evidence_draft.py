@@ -185,15 +185,8 @@ def test_image_evidence_has_no_text_layer_and_refuses() -> None:
         transcribe_text_layer(ev, text_layer_ports=evidence_text_layer_ports_for_test())
 
 
-class TestExtractInvoiceDraftFromEvidence:
-    """Real-behaviour tests for the CLI-facing wiring layer.
-
-    Drives the real encrypted-bucket ``PurchaseInvoiceEvidenceService.add``
-    write path so the evidence's bytes genuinely live in the
-    ``AttachmentStore``, then resolves them back through
-    :func:`extract_invoice_draft_from_evidence` by both reference kinds
-    (``evidence_id`` and ``attachment_id``). No mocks.
-    """
+class _InvoiceExtraction:
+    """Binds the invoice authority fixture and extracts a draft from stored evidence."""
 
     _invoice_authority: InvoiceAuthorityFixture
 
@@ -215,6 +208,17 @@ class TestExtractInvoiceDraftFromEvidence:
             settings=settings,
             **invoice_draft_extraction_kwargs(bucket_id=_BUCKET_ID, authority=self._invoice_authority),
         )
+
+
+class TestExtractInvoiceDraftFromEvidence(_InvoiceExtraction):
+    """Real-behaviour tests for the CLI-facing wiring layer.
+
+    Drives the real encrypted-bucket ``PurchaseInvoiceEvidenceService.add``
+    write path so the evidence's bytes genuinely live in the
+    ``AttachmentStore``, then resolves them back through
+    :func:`extract_invoice_draft_from_evidence` by both reference kinds
+    (``evidence_id`` and ``attachment_id``). No mocks.
+    """
 
     def test_extracts_by_evidence_id_from_a_real_stored_pdf(
         self,
@@ -302,7 +306,7 @@ def _png_bytes() -> bytes:
     return buffer.getvalue()
 
 
-class TestExtractInvoiceDraftFromEvidenceVisionFallback:
+class TestExtractInvoiceDraftFromEvidenceVisionFallback(_InvoiceExtraction):
     """Real-behaviour tests: a scan-only PDF / image falls back to the vision role.
 
     ``transcribe_text_layer`` (the acquisition-stage primitive) still refuses on a
@@ -313,27 +317,6 @@ class TestExtractInvoiceDraftFromEvidenceVisionFallback:
     path, answered by a recording stand-in for the agent service. The lane is
     declared on-host, so no consent is asked, and no file is written.
     """
-
-    _invoice_authority: InvoiceAuthorityFixture
-
-    @pytest.fixture(autouse=True)
-    def _authority(self, invoice_authority: InvoiceAuthorityFixture) -> None:
-        self._invoice_authority = invoice_authority
-
-    def _extract(
-        self,
-        *,
-        evidence_id: str | None = None,
-        attachment_id: str | None = None,
-        settings: Settings,
-    ) -> InvoiceDraft:
-        return extract_invoice_draft_from_evidence(
-            bucket_id=_BUCKET_ID,
-            evidence_id=evidence_id,
-            attachment_id=attachment_id,
-            settings=settings,
-            **invoice_draft_extraction_kwargs(bucket_id=_BUCKET_ID, authority=self._invoice_authority),
-        )
 
     def _extraction_json(self) -> str:
         return json.dumps(
@@ -452,7 +435,7 @@ class TestExtractInvoiceDraftFromEvidenceVisionFallback:
         )
 
 
-class TestConfirmInvoiceDraftFromEvidence:
+class TestConfirmInvoiceDraftFromEvidence(_InvoiceExtraction):
     """Real-behaviour tests for the non-interactive confirm-into-Invoice step.
 
     Confirms delegate the write to
@@ -463,27 +446,6 @@ class TestConfirmInvoiceDraftFromEvidence:
     re-confirm is a guarded no-op, and that an override wins over the
     extracted value. No mocks.
     """
-
-    _invoice_authority: InvoiceAuthorityFixture
-
-    @pytest.fixture(autouse=True)
-    def _authority(self, invoice_authority: InvoiceAuthorityFixture) -> None:
-        self._invoice_authority = invoice_authority
-
-    def _extract(
-        self,
-        *,
-        evidence_id: str | None = None,
-        attachment_id: str | None = None,
-        settings: Settings,
-    ) -> InvoiceDraft:
-        return extract_invoice_draft_from_evidence(
-            bucket_id=_BUCKET_ID,
-            evidence_id=evidence_id,
-            attachment_id=attachment_id,
-            settings=settings,
-            **invoice_draft_extraction_kwargs(bucket_id=_BUCKET_ID, authority=self._invoice_authority),
-        )
 
     def _repo(self, secure_objects: SecureObjectRepository) -> InvoiceCatalogueRepository:
         return InvoiceCatalogueRepository(objects=secure_objects)
