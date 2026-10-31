@@ -30,6 +30,7 @@ from .activity_asset_read_models import (
     ActivityAssetListRow,
     ActivityAssetPlanAdvisory,
     ActivityAssetPlanRow,
+    ActivityAssetReasonFactKind,
     ActivityAssetTimelineEvent,
 )
 from .history import ActivityAssetHistory, ActivityAssetHistoryClaimResult
@@ -50,6 +51,7 @@ class ActivityAssetRefusalResult(BaseModel):
     accelerated_da18: ActivityAssetAcceleratedDa18Facts | None = None
     reason_key: ActivityAssetRefusalReasonKey | None = None
     reason_facts: dict[str, str] = Field(default_factory=dict)
+    reason_fact_kinds: dict[str, ActivityAssetReasonFactKind] = Field(default_factory=dict)
 
     @model_validator(mode="after")
     @pydantic_validation_boundary

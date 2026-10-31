@@ -304,7 +304,7 @@ def _project_refusal(refusal: ActivityAssetRefusalResult | None) -> ActivityAsse
         ),
         accelerated_da18=refusal.accelerated_da18,
         reason_key=refusal.reason_key,
-        reason_facts=project_reason_facts(refusal.reason_facts),
+        reason_facts=project_reason_facts(refusal.reason_facts, refusal.reason_fact_kinds),
     )
 
 

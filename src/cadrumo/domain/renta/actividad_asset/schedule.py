@@ -458,8 +458,8 @@ def _charge_interval(
         if interval_start >= amortization_end:
             raise ActividadAssetPeriodElapsedError(
                 context={
-                    "ended_on": last_day_covered(amortization_end).isoformat(),
-                    "ended_before": amortization_end.isoformat(),
+                    "ended_on": last_day_covered(amortization_end),
+                    "ended_before": amortization_end,
                 },
                 translated_message="ledger.actividad_asset.errors.amortization_period_elapsed",
             )
@@ -766,8 +766,8 @@ def _require_investment_within_cap(context: _ChargeContext, *, history: AssetSch
             context={
                 "entry_year": context.revision.in_service_date.year,
                 "method": context.authority.method.value,
-                "investment": str(investment),
-                "investment_cap": str(investment_cap),
+                "investment": investment,
+                "investment_cap": investment_cap,
             },
             translated_message="ledger.actividad_asset.errors.investment_cap_exceeded",
         )

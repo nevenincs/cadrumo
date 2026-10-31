@@ -73,8 +73,8 @@ def _validate_acquired_outside_ledger(revision: ActivityAssetRevision) -> None:
         raise ActividadAssetValidationError(
             translated_message="ledger.actividad_asset.errors.declared_acquisition_after_service",
             context={
-                "declared_acquisition_date": declared.isoformat(),
-                "in_service_date": revision.in_service_date.isoformat(),
+                "declared_acquisition_date": declared,
+                "in_service_date": revision.in_service_date,
             },
         )
 
@@ -115,8 +115,8 @@ def require_later_affectation_in_order(revision: ActivityAssetRevision, disposal
     if affected is not None and affected > revision.in_service_date:
         raise ActividadAssetValidationError(
             context={
-                "later_affectation_on": affected.isoformat(),
-                "in_service_date": revision.in_service_date.isoformat(),
+                "later_affectation_on": affected,
+                "in_service_date": revision.in_service_date,
             },
             translated_message="ledger.actividad_asset.errors.later_affectation_out_of_order",
         )

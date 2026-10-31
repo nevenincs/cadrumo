@@ -14,12 +14,13 @@ import pytest
 from cadrumo.application.actividad_asset.activity_asset_read_models import (
     ActivityAssetClaimState,
     ActivityAssetReasonFact,
+    project_reason_facts,
 )
 from cadrumo.application.actividad_asset.operations import ActivityAssetOperations
 from cadrumo.application.actividad_asset.ports import ActivityAssetForecastOperation
 from cadrumo.core.i18n.render import tr
 from cadrumo.domain.renta.actividad_asset.election import AmortizationMethod, DirectEstimationRegime
-from cadrumo.domain.renta.actividad_asset.errors import ActividadAssetUnsupportedError
+from cadrumo.domain.renta.actividad_asset.errors import ActividadAssetUnsupportedError, PercentFact
 from cadrumo.domain.renta.actividad_asset.lifecycle import ActivityAssetRevision
 from cadrumo.domain.renta.actividad_asset.schedule import AssetScheduleHistory, ScheduledAmortizationCharge
 
@@ -120,3 +121,31 @@ def test_a_method_refusal_for_a_missing_year_serves_the_method_that_words_it() -
     key = row.claimable_refusal_key
     assert _stated(row.claimable_refusal_facts) == {"method": "constant_percentage"}
     assert "{" not in tr(key, **_stated(row.claimable_refusal_facts))
+
+
+def test_each_fact_states_the_kind_it_was_raised_with() -> None:
+    facts = project_reason_facts(
+        {
+            "on": date(2026, 6, 30),
+            "paid": Decimal("1234.50"),
+            "elected": PercentFact("0.16"),
+            "months": 7,
+            "method": "linear",
+        },
+    )
+
+    assert [(fact.key, fact.value, fact.kind.value) for fact in facts] == [
+        ("elected", "0.16", "percent"),
+        ("method", "linear", "text"),
+        ("months", "7", "count"),
+        ("on", "2026-06-30", "date"),
+        ("paid", "1234.50", "amount"),
+    ]
+
+
+def test_a_refusal_projects_the_kinds_its_context_was_raised_with() -> None:
+    operations = _register(_without_edition_after_2026, _revision())
+
+    row = {item.tax_year: item for item in operations.plan(_ASSET)}[2027]
+
+    assert [(fact.key, fact.kind.value) for fact in row.claimable_refusal_facts] == [("tax_year", "count")]

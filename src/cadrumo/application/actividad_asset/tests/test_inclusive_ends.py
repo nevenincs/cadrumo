@@ -71,3 +71,13 @@ def test_a_claim_past_the_baja_states_the_last_days_beside_the_boundaries() -> N
     rendered = tr(refused.value.translated_message, **facts)
     assert "2028-12-31" in rendered
     assert "2026-06-30" in rendered
+
+
+def test_the_election_limits_state_the_last_day_of_the_period_beside_the_boundary() -> None:
+    operations, _ = _operations()
+    operations.create(_revision(), _NAME)
+
+    limits = operations.plan_limits("laptop-1")
+
+    assert limits.maximum_period_ends_on == date(2035, 1, 1)
+    assert limits.maximum_period_last_day == date(2034, 12, 31)

@@ -96,7 +96,7 @@ def require_admissible_disposal(
         raise ActividadAssetUnsupportedError(context={"reason": reason.value}, translated_message=refusal_key)
     if reason is ActivityAssetDisposalReason.SCRAPPING and proceeds != Decimal("0"):
         raise ActividadAssetValidationError(
-            context={"proceeds": str(proceeds)},
+            context={"proceeds": proceeds},
             translated_message="ledger.actividad_asset.errors.disposal_scrapping_with_proceeds",
         )
     if reason is ActivityAssetDisposalReason.WITHDRAWAL and (

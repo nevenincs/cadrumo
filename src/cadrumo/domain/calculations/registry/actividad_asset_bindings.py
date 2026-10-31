@@ -33,6 +33,7 @@ from ...renta.actividad_asset.errors import (
     ActividadAssetIncompleteError,
     ActividadAssetUnsupportedError,
     ActividadAssetValidationError,
+    PercentFact,
     VehicleAffectationRecovery,
 )
 from ...renta.actividad_asset.lifecycle import ActivityAssetRevision, AssetKind
@@ -569,7 +570,11 @@ def _elected_coefficient(
         return maximum
     if not minimum <= elected <= maximum:
         raise ActividadAssetValidationError(
-            context={"elected": elected, "minimum": minimum, "maximum": maximum},
+            context={
+                "elected": PercentFact(elected),
+                "minimum": PercentFact(minimum),
+                "maximum": PercentFact(maximum),
+            },
             translated_message="ledger.actividad_asset.errors.elected_coefficient_out_of_range",
         )
     return elected

@@ -96,6 +96,7 @@ from .activity_asset_contracts import (
     ActivityAssetPlanRequest,
     ActivityAssetTimelineRequest,
 )
+from .activity_asset_read_models import reason_fact_kind, reason_fact_text
 from .activity_asset_results import (
     ActivityAssetAcquisitionCandidatesResult,
     ActivityAssetClaimResult,
@@ -125,6 +126,7 @@ from .operations import (
     pinned_edition,
 )
 from .register_reads import register_years
+from .schedule_walk import error_reason_facts
 
 _AGRARIAN_INSTALMENT_SELECTOR = "rd-439-2007-art-110:selector-m036-actividades-pago-fraccionado-agrarias-pesqueras"
 """The activities whose instalment is a share of income under RIRPF art. 110.1.c."""
@@ -259,7 +261,9 @@ def _refusal(error: Exception) -> ActivityAssetRefusalResult | None:
     if not isinstance(error, ActividadAssetError):
         return None
     reason_key = error.translated_message
-    reason_facts = {name: str(value) for name, value in (error.context or {}).items()}
+    stated = error_reason_facts(error)
+    reason_facts = {name: reason_fact_text(value) for name, value in stated.items()}
+    reason_fact_kinds = {name: reason_fact_kind(value) for name, value in stated.items()}
     if isinstance(error, ActividadAssetIncompleteError):
         verdict = error.terminal_precondition_verdict
         return ActivityAssetRefusalResult(
@@ -267,6 +271,7 @@ def _refusal(error: Exception) -> ActivityAssetRefusalResult | None:
             precondition_verdict=verdict if isinstance(verdict, PreconditionVerdict) else None,
             reason_key=reason_key,
             reason_facts=reason_facts,
+            reason_fact_kinds=reason_fact_kinds,
         )
     if isinstance(error, ActividadAssetAcceleratedDa18DepreciationError):
         return ActivityAssetRefusalResult(
@@ -274,24 +279,28 @@ def _refusal(error: Exception) -> ActivityAssetRefusalResult | None:
             accelerated_da18=ActivityAssetAcceleratedDa18Facts.from_error(error),
             reason_key=reason_key,
             reason_facts=reason_facts,
+            reason_fact_kinds=reason_fact_kinds,
         )
     if isinstance(error, ActividadAssetUnsupportedError):
         return ActivityAssetRefusalResult(
             code=ACTIVITY_ASSET_REFUSED_UNSUPPORTED,
             reason_key=reason_key,
             reason_facts=reason_facts,
+            reason_fact_kinds=reason_fact_kinds,
         )
     if isinstance(error, ActividadAssetClaimConflictError):
         return ActivityAssetRefusalResult(
             code=ACTIVITY_ASSET_REFUSED_CLAIM_CONFLICT,
             reason_key=reason_key,
             reason_facts=reason_facts,
+            reason_fact_kinds=reason_fact_kinds,
         )
     if isinstance(error, ActividadAssetValidationError):
         return ActivityAssetRefusalResult(
             code=ACTIVITY_ASSET_REFUSED_VALIDATION,
             reason_key=reason_key,
             reason_facts=reason_facts,
+            reason_fact_kinds=reason_fact_kinds,
         )
     return None
 

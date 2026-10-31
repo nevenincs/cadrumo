@@ -443,10 +443,10 @@ def _require_claim_within_boundary(claim: AmortizationClaim, revision: ActivityA
     if boundary is not None and claim.amount > Decimal("0") and claim.covered_until > boundary:
         raise ActividadAssetClaimConflictError(
             context={
-                "covered_until": claim.covered_until.isoformat(),
-                "covered_through": last_day_covered(claim.covered_until).isoformat(),
-                "boundary": boundary.isoformat(),
-                "boundary_through": last_day_covered(boundary).isoformat(),
+                "covered_until": claim.covered_until,
+                "covered_through": last_day_covered(claim.covered_until),
+                "boundary": boundary,
+                "boundary_through": last_day_covered(boundary),
             },
             translated_message="ledger.actividad_asset.errors.disposal_claim_past_boundary",
         )

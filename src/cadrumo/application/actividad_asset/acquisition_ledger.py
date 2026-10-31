@@ -106,8 +106,8 @@ def _declared_total(amounts: Iterable[Decimal | None]) -> Decimal | None:
     return sum((amount for amount in declared if amount is not None), Decimal("0"))
 
 
-def _context(**values: object) -> dict[str, str]:
-    return {name: str(value) for name, value in values.items()}
+def _context(**values: object) -> dict[str, object]:
+    return values
 
 
 def _paid_in_euro(transaction: Transaction) -> Decimal:

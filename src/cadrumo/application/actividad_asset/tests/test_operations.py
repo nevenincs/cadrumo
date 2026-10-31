@@ -462,8 +462,8 @@ def test_a_refused_cost_names_the_exact_figures_in_its_context() -> None:
         _operations(_acquisition()).create(_revision(non_deductible_iva=Decimal("500.00")), describing())
 
     assert refused.value.context == {
-        "cost": "2500.00",
-        "price": "2000",
-        "non_deductible_iva": "500.00",
-        "paid": "2420.00",
+        "cost": Decimal("2500.00"),
+        "price": Decimal("2000"),
+        "non_deductible_iva": Decimal("500.00"),
+        "paid": Decimal("2420.00"),
     }

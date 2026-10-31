@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from datetime import date, datetime
+from decimal import Decimal
 from enum import StrEnum
 from typing import Final, Self
 
@@ -20,6 +21,7 @@ from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.tipos_actividad import TipoActividad
 from ...domain.renta.actividad_asset.disposal import ActivityAssetDisposalFindingKind, ActivityAssetDisposalReason
 from ...domain.renta.actividad_asset.election import AmortizationMethod, DirectEstimationRegime
+from ...domain.renta.actividad_asset.errors import PercentFact
 from ...domain.renta.actividad_asset.fact_leaves import SEQUENCE_STEP, FactKind, indexed_to_step_path
 from ...domain.renta.actividad_asset.lifecycle import AcquisitionShape, AssetKind
 from ...domain.renta.actividad_asset.register_records import ActivityAssetEventKind
@@ -85,6 +87,16 @@ def timeline_token_key(field: str, value: str | None) -> str | None:
     return activity_asset_label_key(name, enum(value))
 
 
+class ActivityAssetReasonFactKind(StrEnum):
+    """What a reason fact's value is, so a screen formats it by type and never by looking at the text."""
+
+    TEXT = "text"
+    DATE = "date"
+    AMOUNT = "amount"
+    PERCENT = "percent"
+    COUNT = "count"
+
+
 class ActivityAssetReasonFact(BaseModel):
     """One immutable fact used to render an activity-asset reason."""
 
@@ -92,12 +104,45 @@ class ActivityAssetReasonFact(BaseModel):
 
     key: str = Field(min_length=1, max_length=_REASON_FACT_KEY_LIMIT)
     value: str = Field(max_length=_REASON_FACT_VALUE_LIMIT)
+    kind: ActivityAssetReasonFactKind = ActivityAssetReasonFactKind.TEXT
+    """Date values are ISO dates, amounts and percents plain decimals (a percent as a fraction), counts integers."""
 
 
-def project_reason_facts(facts: Mapping[str, str]) -> tuple[ActivityAssetReasonFact, ...]:
-    """Preserve every reason fact in deterministic key order."""
+def reason_fact_kind(value: object) -> ActivityAssetReasonFactKind:
+    """Name the kind of a fact from the type it was raised with."""
+    if isinstance(value, bool):
+        return ActivityAssetReasonFactKind.TEXT
+    if isinstance(value, PercentFact):
+        return ActivityAssetReasonFactKind.PERCENT
+    if isinstance(value, Decimal):
+        return ActivityAssetReasonFactKind.AMOUNT
+    if isinstance(value, int):
+        return ActivityAssetReasonFactKind.COUNT
+    if isinstance(value, date):
+        return ActivityAssetReasonFactKind.DATE
+    return ActivityAssetReasonFactKind.TEXT
+
+
+def reason_fact_text(value: object) -> str:
+    """Write a fact's value the way a reader receives it."""
+    if isinstance(value, Decimal):
+        return format(value, "f")
+    if isinstance(value, date):
+        return value.isoformat()
+    return str(value)
+
+
+def project_reason_facts(
+    facts: Mapping[str, object],
+    kinds: Mapping[str, ActivityAssetReasonFactKind] | None = None,
+) -> tuple[ActivityAssetReasonFact, ...]:
+    """Preserve every reason fact in deterministic key order, each with the kind it was raised with."""
     return tuple(
-        ActivityAssetReasonFact(key=key[:_REASON_FACT_KEY_LIMIT], value=value[:_REASON_FACT_VALUE_LIMIT])
+        ActivityAssetReasonFact(
+            key=key[:_REASON_FACT_KEY_LIMIT],
+            value=reason_fact_text(value)[:_REASON_FACT_VALUE_LIMIT],
+            kind=reason_fact_kind(value) if kinds is None else kinds.get(key, reason_fact_kind(value)),
+        )
         for key, value in sorted(facts.items())
     )
 
@@ -319,6 +364,9 @@ class ActivityAssetElectionLimits(_ReadModel):
     minimum_coefficient: PublicDecimal | None = None
     maximum_period_years: PublicDecimal | None = None
     maximum_period_ends_on: date | None = None
+    """The first day after the maximum period, the boundary the schedule computes with."""
+    maximum_period_last_day: date | None = None
+    """The last day of the maximum period, the day a reader sees it end on."""
     legal_citations: tuple[ActivityAssetLegalCitation, ...] = ()
     legal_citations_complete: bool = True
     """False when a cited parameter or provision did not resolve, so ``legal_citations`` leaves it out."""
@@ -568,6 +616,7 @@ __all__ = [
     "ActivityAssetPlanClaim",
     "ActivityAssetPlanRow",
     "ActivityAssetReasonFact",
+    "ActivityAssetReasonFactKind",
     "ActivityAssetRegisterState",
     "ActivityAssetTableGroup",
     "ActivityAssetTimelineChange",
@@ -576,6 +625,8 @@ __all__ = [
     "ActivityAssetTimelineEventKind",
     "activity_asset_label_key",
     "project_reason_facts",
+    "reason_fact_kind",
+    "reason_fact_text",
     "timeline_field_key",
     "timeline_field_word_key",
     "timeline_token_key",

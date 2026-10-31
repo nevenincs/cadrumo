@@ -2,8 +2,13 @@
 
 from collections.abc import Mapping
 from dataclasses import dataclass
+from decimal import Decimal
 
 from ....core.errors.hierarchy import CadrumoError, TerminalPreconditionErrorMixin
+
+
+class PercentFact(Decimal):
+    """A rate stated as a fraction, carried in an error's context so a reader knows to show it as a percent."""
 
 
 class ActividadAssetError(CadrumoError):
@@ -85,5 +90,6 @@ __all__ = [
     "ActividadAssetPeriodElapsedError",
     "ActividadAssetUnsupportedError",
     "ActividadAssetValidationError",
+    "PercentFact",
     "VehicleAffectationRecovery",
 ]

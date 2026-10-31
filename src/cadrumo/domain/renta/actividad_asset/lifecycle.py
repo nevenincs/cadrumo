@@ -490,8 +490,8 @@ class ActivityAssetRevision(CachedIdentityModel):
         if disposal.disposal_date < self.in_service_date:
             raise ActividadAssetValidationError(
                 context={
-                    "disposal_date": disposal.disposal_date.isoformat(),
-                    "in_service_date": self.in_service_date.isoformat(),
+                    "disposal_date": disposal.disposal_date,
+                    "in_service_date": self.in_service_date,
                 },
                 translated_message="ledger.actividad_asset.errors.disposal_before_service",
             )

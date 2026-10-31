@@ -529,7 +529,7 @@ class ActivityAssetOperations:
             return history
         if current.disposal is not None:
             raise ActividadAssetClaimConflictError(
-                context={"disposal_date": current.disposal.disposal_date.isoformat()},
+                context={"disposal_date": current.disposal.disposal_date},
                 translated_message="ledger.actividad_asset.errors.disposal_already_recorded",
             )
         revision = current.with_disposal(disposal)
@@ -890,7 +890,7 @@ class ActivityAssetOperations:
             )
         except RegistryError:
             reason_key = "ledger.actividad_asset.errors.tax_year_without_edition"
-            reason_facts = {"tax_year": str(tax_year)}
+            reason_facts = {"tax_year": tax_year}
         except ActividadAssetError as error:
             reason_key = error.translated_message
             reason_facts = error_reason_facts(error)

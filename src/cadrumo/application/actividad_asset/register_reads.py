@@ -316,6 +316,7 @@ def election_limits(
             ),
             maximum_coefficient=_optional_amount(authority.annual_rate if twentieth else None),
             maximum_period_ends_on=ends_on,
+            maximum_period_last_day=None if ends_on is None else last_day_covered(ends_on),
             legal_citations=citations.citations,
             legal_citations_complete=citations.complete,
             not_table_bound=_NOT_TABLE_BOUND.get(election.method, ActivityAssetNotTableBoundReason.FREE_ELECTION),
@@ -328,6 +329,7 @@ def election_limits(
         minimum_coefficient=_amount(group.minimum_coefficient),
         maximum_period_years=_amount(group.maximum_period_years),
         maximum_period_ends_on=ends_on,
+        maximum_period_last_day=None if ends_on is None else last_day_covered(ends_on),
         legal_citations=citations.citations,
         legal_citations_complete=citations.complete,
     )

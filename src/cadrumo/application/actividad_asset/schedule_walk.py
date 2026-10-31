@@ -63,7 +63,7 @@ class WalkedYear:
     charge: ScheduledAmortizationCharge | None
     absence: PlanFigureAbsence | None
     reason_key: str | None
-    reason_facts: Mapping[str, str] = field(default_factory=dict[str, str])
+    reason_facts: Mapping[str, object] = field(default_factory=dict[str, object])
     consumed_before: Decimal = Decimal("0")
     consumed_through: Decimal = Decimal("0")
 
@@ -255,11 +255,11 @@ def _reason_key(error: Exception) -> str | None:
     return error.translated_message if isinstance(error, ActividadAssetError) else None
 
 
-def error_reason_facts(error: Exception) -> dict[str, str]:
+def error_reason_facts(error: Exception) -> dict[str, object]:
     """Return the facts a refusal's reason is worded with, or none for an error that carries no reason."""
     if not isinstance(error, ActividadAssetError):
         return {}
-    return {name: str(value) for name, value in (error.context or {}).items()}
+    return dict(error.context or {})
 
 
 class M130ElementOutcome(StrEnum):
