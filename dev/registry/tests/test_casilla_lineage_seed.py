@@ -21,15 +21,13 @@ from cadrumo.domain.calculations.registry.casilla_lineage_totality import (
 )
 from cadrumo.domain.calculations.registry.errors import RegistryError
 from cadrumo.domain.calculations.registry.revision_order import ordered_revisions, revisions_overlap
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
-from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
-from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 from cadrumo.domain.calculations.registry.tests.lineage_totality import is_total
 
 from ..analysis import casilla_lineage_seed
 from ..analysis.casilla_lineage_ledger import load_ledger_refusals
 from ..analysis.casilla_lineage_seed_corpus import load_corpus
-from ..analysis.casilla_lineage_seed_design import DesignOracle, parse_design_inventory
+from ..analysis.casilla_lineage_seed_design import parse_design_inventory
 from ..analysis.casilla_lineage_seed_ledger import (
     carried_refusals,
     load_previous_ledger,
@@ -49,24 +47,24 @@ from ..analysis.casilla_lineage_seed_types import (
 )
 from ..analysis.casilla_lineage_seed_validation import contradictions, gate_regressions
 from ..analysis.casilla_lineage_seed_writer import insert_lineage_keys
-from ..compiler.loader import load_modelo_directory, load_shared_catalogues
+from ..compiler.loader import load_modelo_directory
 from ..compiler.loader_cache import ModeloSource, discover_modelo_sources
+from .casilla_lineage_planted_support import (
+    ABSENT_ROW,
+    HELD_REASON,
+    HELD_ROW,
+    HELD_STEM,
+    PLANTED_MODELO,
+    absence_modelo,
+    design_oracle,
+    held_modelo,
+    held_pair_ruling,
+    planted_casilla,
+    planted_modelo,
+    planted_revision,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
-
-
-def _casilla(**updates: object) -> CasillaDefinition:
-    payload: dict[str, object] = {
-        "id": "01",
-        "number": "01",
-        "localization_keys": ("modelo.schema.test.casilla.01.label",),
-        "section": ("liquidacion",),
-        "semantic_role": "base_imponible",
-        "legal_refs": ("ley-35-2006:art-25",),
-        "source_refs": ("aeat-dr-123-2024-v20",),
-    }
-    payload.update(updates)
-    return CasillaDefinition.model_validate(payload)
 
 
 # --------------------------------------------------------------------------- design oracle
@@ -115,7 +113,7 @@ def test_a_box_printed_on_two_lines_has_no_single_locus() -> None:
 
 
 def test_agreeing_rows_are_admitted() -> None:
-    category, _ = admit_bare_chain(_casilla(), _casilla())
+    category, _ = admit_bare_chain(planted_casilla(), planted_casilla())
     assert category is None
 
 
@@ -130,15 +128,17 @@ def test_agreeing_rows_are_admitted() -> None:
     ],
 )
 def test_a_disagreeing_row_is_refused(previous: dict[str, object], successor: dict[str, object], category: str) -> None:
-    refused, reason = admit_bare_chain(_casilla(**previous), _casilla(**successor))
+    refused, reason = admit_bare_chain(planted_casilla(**previous), planted_casilla(**successor))
     assert refused == category, reason
 
 
 def test_the_general_number_field_is_never_read_for_identity() -> None:
     """A one-byte wire campo declares a plain integer in ``number``; it must not refuse a sound chain."""
-    category, _ = admit_bare_chain(_casilla(number="977"), _casilla(number="1016"))
+    category, _ = admit_bare_chain(planted_casilla(number="977"), planted_casilla(number="1016"))
     assert category is None
-    refused, _ = admit_bare_chain(_casilla(number="977", form_number="12"), _casilla(number="977", form_number="13"))
+    refused, _ = admit_bare_chain(
+        planted_casilla(number="977", form_number="12"), planted_casilla(number="977", form_number="13")
+    )
     assert refused == "contradicted"
 
 
@@ -349,7 +349,6 @@ def test_an_excluded_modelo_that_cannot_have_a_residual_row_refuses_to_record_on
 _LOADABLE = "303"
 #: A modelo whose successor editions still carry unresolved rows.
 _UNRESOLVED = "100"
-_PLANTED = "999"
 
 
 def _bundled_source(modelo_id: str) -> ModeloSource:
@@ -359,10 +358,10 @@ def _bundled_source(modelo_id: str) -> ModeloSource:
 
 def _planted_failure(root: Path) -> ModeloSource:
     """A modelo directory the registry loader refuses: a manifest with no revisions beside it."""
-    directory = root / _PLANTED
+    directory = root / PLANTED_MODELO
     (directory / "revisions").mkdir(parents=True)
-    (directory / "manifest.toml").write_text(f'[modelo]\nid = "{_PLANTED}"\n', encoding="utf-8")
-    return ModeloSource(modelo_id=_PLANTED, path=directory, manifest_path=directory / "manifest.toml")
+    (directory / "manifest.toml").write_text(f'[modelo]\nid = "{PLANTED_MODELO}"\n', encoding="utf-8")
+    return ModeloSource(modelo_id=PLANTED_MODELO, path=directory, manifest_path=directory / "manifest.toml")
 
 
 def test_a_modelo_that_cannot_be_compiled_is_recorded_and_stops_only_itself(tmp_path: Path) -> None:
@@ -375,7 +374,7 @@ def test_a_modelo_that_cannot_be_compiled_is_recorded_and_stops_only_itself(tmp_
     loaded, failures = load_corpus((real, _planted_failure(tmp_path)))
     assert sorted(loaded) == [_LOADABLE], "a modelo that fails to load must not take another one down"
     assert len(loaded[_LOADABLE].revisions) > 1
-    assert [failure.modelo for failure in failures] == [_PLANTED]
+    assert [failure.modelo for failure in failures] == [PLANTED_MODELO]
     assert "no revisions found" in failures[0].reason
 
 
@@ -396,13 +395,15 @@ def test_a_load_failure_with_nothing_to_carry_names_no_row(tmp_path: Path) -> No
     plan = LineagePlan(_UNRESOLVED)
     for key in unresolved:
         plan.refuse(key.revision, key.casilla, LineageRefusalCategory.NOT_EXAMINED, "planted for this gate")
-    failure = ModeloLoadFailure(_PLANTED, f"registry/aeat/modelos/{_PLANTED}: no revisions found in revisions/")
+    failure = ModeloLoadFailure(
+        PLANTED_MODELO, f"registry/aeat/modelos/{PLANTED_MODELO}: no revisions found in revisions/"
+    )
     path = tmp_path / "ledger.toml"
     path.write_text(render_ledger([plan], {_UNRESOLVED: []}, (failure,), ()) + "\n", encoding="utf-8")
 
     document = parse_toml(path.read_text(encoding="utf-8"))
     assert document["load_failed"] == [{"modelo": failure.modelo, "reason": failure.reason}]
-    assert all(entry["modelo"] != _PLANTED for entry in document["refusal"])
+    assert all(entry["modelo"] != PLANTED_MODELO for entry in document["refusal"])
 
     keys = set(load_ledger_refusals(path))
     assert {key.modelo for key in keys} == {_UNRESOLVED}
@@ -416,10 +417,6 @@ def test_a_load_failure_with_nothing_to_carry_names_no_row(tmp_path: Path) -> No
 
 _PLANTED_ROW = "23"
 _PLANTED_ROLE = "planted_role_no_successor_shares"
-
-
-def _oracle() -> DesignOracle:
-    return DesignOracle(load_shared_catalogues(bundled_path("registry", "aeat")).sources)
 
 
 def _half_stamped(modelo: ModeloDefinition) -> ModeloDefinition:
@@ -454,7 +451,7 @@ def test_a_partly_stamped_modelo_is_recorded_and_stops_only_itself() -> None:
     """The control plans clean; a planted half-stamped chain is recorded and the run keeps going."""
     loaded, _ = load_corpus((_bundled_source(_LOADABLE),))
     modelo = loaded[_LOADABLE]
-    oracle = _oracle()
+    oracle = design_oracle()
 
     # Negative control: unplanted, the same modelo plans without a record, so a plant that
     # stopped taking would leave the positive assertion below failing rather than vacuously green.
@@ -465,11 +462,11 @@ def test_a_partly_stamped_modelo_is_recorded_and_stops_only_itself() -> None:
     planted = _half_stamped(modelo)
     # The refusal to seed into a partly stamped chain is unchanged: planning it alone still raises.
     with pytest.raises(RegistryError, match="stay partly stamped"):
-        plan_modelo(_PLANTED, planted, oracle, {})
+        plan_modelo(PLANTED_MODELO, planted, oracle, {})
 
-    plans, records = plan_corpus((_LOADABLE, _PLANTED), {_LOADABLE: modelo, _PLANTED: planted}, oracle, {})
+    plans, records = plan_corpus((_LOADABLE, PLANTED_MODELO), {_LOADABLE: modelo, PLANTED_MODELO: planted}, oracle, {})
     assert [plan.modelo for plan in plans] == [_LOADABLE], "a partly stamped modelo must not take another one down"
-    assert [(record.modelo, record.casilla) for record in records] == [(_PLANTED, _PLANTED_ROW)]
+    assert [(record.modelo, record.casilla) for record in records] == [(PLANTED_MODELO, _PLANTED_ROW)]
     record = records[0]
     assert record.chain, "the record must name the chain the stamped editions carry"
     assert record.unstamped == (ordered_revisions(modelo)[0].id,)
@@ -489,7 +486,7 @@ def test_a_partly_stamped_modelo_with_nothing_to_carry_names_no_row(tmp_path: Pa
     for key in unresolved:
         plan.refuse(key.revision, key.casilla, LineageRefusalCategory.NOT_EXAMINED, "planted for this gate")
     record = PartialStamping(
-        modelo=_PLANTED,
+        modelo=PLANTED_MODELO,
         casilla=_PLANTED_ROW,
         chain="dr999-23",
         stamped=("2023", "2024"),
@@ -501,14 +498,14 @@ def test_a_partly_stamped_modelo_with_nothing_to_carry_names_no_row(tmp_path: Pa
     document = parse_toml(path.read_text(encoding="utf-8"))
     assert document["stamping_in_progress"] == [
         {
-            "modelo": _PLANTED,
+            "modelo": PLANTED_MODELO,
             "casilla": _PLANTED_ROW,
             "chain": "dr999-23",
             "stamped": ["2023", "2024"],
             "unstamped": ["2022"],
         }
     ]
-    assert all(entry["modelo"] != _PLANTED for entry in document["refusal"])
+    assert all(entry["modelo"] != PLANTED_MODELO for entry in document["refusal"])
 
     keys = set(load_ledger_refusals(path))
     assert {key.modelo for key in keys} == {_UNRESOLVED}
@@ -521,19 +518,19 @@ def test_a_partly_stamped_modelo_with_nothing_to_carry_names_no_row(tmp_path: Pa
 
 
 _PREVIOUS_RUN = "2026-09-01T08:00:00Z"
-_SKIPPED = {_PLANTED: "modelo could not be compiled this run: no revisions found in revisions/"}
+_SKIPPED = {PLANTED_MODELO: "modelo could not be compiled this run: no revisions found in revisions/"}
 
 
 def _previous_ledger(tmp_path: Path, plan: LineagePlan, skipped_rows: tuple[tuple[str, str], ...]) -> Path:
     """A ledger as a healthy previous run left it: ``plan``'s refusals plus the skipped modelo's own."""
-    skipped = LineagePlan(_PLANTED)
+    skipped = LineagePlan(PLANTED_MODELO)
     for revision, casilla in skipped_rows:
         skipped.refuse(revision, casilla, LineageRefusalCategory.NOT_EXAMINED, "judged by the previous run")
     path = tmp_path / "previous.toml"
     path.write_text(
         render_ledger(
             [plan, skipped],
-            {plan.modelo: [], _PLANTED: []},
+            {plan.modelo: [], PLANTED_MODELO: []},
             (),
             (),
             carried=(),
@@ -558,11 +555,11 @@ def test_a_skipped_modelos_previous_refusals_are_carried_forward_rather_than_dro
     rows = (("2023", "01"), ("2024", "02"))
     previous = load_previous_ledger(_previous_ledger(tmp_path, plan, rows))
     assert previous.judged_at == _PREVIOUS_RUN
-    assert {(entry["revision"], entry["casilla"]) for entry in previous.refusals[_PLANTED]} == set(rows)
+    assert {(entry["revision"], entry["casilla"]) for entry in previous.refusals[PLANTED_MODELO]} == set(rows)
 
     carried = carried_refusals(previous, _SKIPPED)
     assert [(entry.revision, entry.casilla) for entry in carried] == sorted(rows)
-    failure = ModeloLoadFailure(_PLANTED, "registry/aeat/modelos/999: no revisions found in revisions/")
+    failure = ModeloLoadFailure(PLANTED_MODELO, "registry/aeat/modelos/999: no revisions found in revisions/")
 
     path = tmp_path / "carried.toml"
     now = run_identifier()
@@ -571,10 +568,10 @@ def test_a_skipped_modelos_previous_refusals_are_carried_forward_rather_than_dro
         encoding="utf-8",
     )
     entries = load_ledger_refusals(path)
-    assert {key.modelo for key in entries} == {_UNRESOLVED, _PLANTED}, "the skipped modelo must keep its rows"
-    assert {(key.revision, key.casilla) for key in entries if key.modelo == _PLANTED} == set(rows)
+    assert {key.modelo for key in entries} == {_UNRESOLVED, PLANTED_MODELO}, "the skipped modelo must keep its rows"
+    assert {(key.revision, key.casilla) for key in entries if key.modelo == PLANTED_MODELO} == set(rows)
     for key, entry in entries.items():
-        if key.modelo != _PLANTED:
+        if key.modelo != PLANTED_MODELO:
             continue
         assert entry.carried_from_previous_run
         assert entry.reason == "judged by the previous run", "a carried entry is carried verbatim"
@@ -644,53 +641,6 @@ def test_a_carried_refusal_never_collides_with_one_this_run_judged(tmp_path: Pat
 
 
 _PAIR_ROW = "01"
-_NO_PREDECESSOR = {
-    "none": {
-        "reason": "a parallel scheme variant taking effect alongside its siblings",
-        "legal_refs": ("ley-58-2003:art-29",),
-        "source_refs": ("aeat-manual",),
-    },
-}
-
-
-def _revision(
-    revision_id: str,
-    valid_from: date,
-    valid_to: date | None,
-    years: tuple[int, ...],
-    casillas: tuple[CasillaDefinition, ...],
-    *,
-    no_predecessor: bool = False,
-) -> ModeloRevision:
-    payload: dict[str, object] = {
-        "id": revision_id,
-        "localization_key": f"modelo.schema.test.revision.{revision_id}.label",
-        "valid_from": valid_from,
-        "valid_to": valid_to,
-        "period_selector": PeriodSelector(years=years, periods=("0A",)),
-        "legal_refs": ("ley-58-2003:art-29",),
-        "source_refs": ("aeat-manual",),
-        "casillas": casillas,
-    }
-    if no_predecessor:
-        payload["predecessor"] = _NO_PREDECESSOR
-    return ModeloRevision.model_validate(payload)
-
-
-def _planted_modelo(*revisions: ModeloRevision) -> ModeloDefinition:
-    return ModeloDefinition.model_validate(
-        {
-            "id": _PLANTED,
-            "title_localization_key": "modelo.schema.test.modelo.title",
-            "official_name_localization_key": "modelo.schema.test.modelo.official_name",
-            "tax_domain": "irpf",
-            "cadence": "annual",
-            "jurisdiction": "ES-AEAT",
-            "legal_refs": ("ley-58-2003:art-29",),
-            "source_refs": ("aeat-manual",),
-            "revisions": {revision.id: revision for revision in revisions},
-        },
-    )
 
 
 def test_lineage_command_rejects_unknown_arguments_before_loading_or_writing(capsys) -> None:
@@ -702,11 +652,11 @@ def test_lineage_command_rejects_unknown_arguments_before_loading_or_writing(cap
 
 def test_editions_whose_selectors_overlap_but_whose_validity_succeeds_are_paired() -> None:
     """The live 308 shape: one edition closes before the next opens, and both name the same year."""
-    closed = _revision("2009-2011-junio", date(2009, 1, 1), date(2011, 6, 30), (2011,), (_casilla(),))
-    successor = _revision(
-        "2011-julio-2015", date(2011, 7, 1), date(2015, 12, 31), (2011,), (_casilla(),), no_predecessor=True
+    closed = planted_revision("2009-2011-junio", date(2009, 1, 1), date(2011, 6, 30), (2011,), (planted_casilla(),))
+    successor = planted_revision(
+        "2011-julio-2015", date(2011, 7, 1), date(2015, 12, 31), (2011,), (planted_casilla(),), no_predecessor=True
     )
-    modelo = _planted_modelo(closed, successor)
+    modelo = planted_modelo(closed, successor)
 
     # The shape is only interesting while the period selectors DO overlap: that is the reading
     # the seeder used to pair by, and pairing by dates has to disagree with it here.
@@ -719,9 +669,9 @@ def test_editions_whose_selectors_overlap_but_whose_validity_succeeds_are_paired
 def test_concurrent_scheme_variants_sharing_a_validity_window_are_not_paired() -> None:
     """The live 369 shape: siblings that take effect together and never close continue nothing."""
     start = date(2021, 7, 1)
-    first = _revision("esquema-union", start, None, (2021,), (_casilla(),), no_predecessor=True)
-    second = _revision("esquema-importacion", start, None, (2022,), (_casilla(),), no_predecessor=True)
-    modelo = _planted_modelo(first, second)
+    first = planted_revision("esquema-union", start, None, (2021,), (planted_casilla(),), no_predecessor=True)
+    second = planted_revision("esquema-importacion", start, None, (2022,), (planted_casilla(),), no_predecessor=True)
+    modelo = planted_modelo(first, second)
 
     # Their selectors do NOT overlap, so selector-reading would have paired them; the dates must not.
     assert not revisions_overlap(first, second), "the planted selectors now overlap; this gate is vacuous"
@@ -729,12 +679,6 @@ def test_concurrent_scheme_variants_sharing_a_validity_window_are_not_paired() -
 
 
 # --------------------------------------------------------------------------- held stems
-
-
-_HELD_STEM = "planted-held"
-_HELD_ROW = f"{_HELD_STEM}-02"
-_HELD_REASON = "a positional convention the record design cannot settle"
-_NEW_EVIDENCE = "disenos_registro/modelo_999/files/2024.txt:12 box [02] first printed in the successor design"
 
 
 def _held_ruling(predecessor: str, successor: str) -> Ruling:
@@ -748,110 +692,55 @@ def _held_ruling(predecessor: str, successor: str) -> Ruling:
         new_on_form_stems=frozenset(),
         not_on_form=frozenset(),
         held=(),
-        held_stems=frozenset({_HELD_STEM}),
-        held_reason=_HELD_REASON,
+        held_stems=frozenset({HELD_STEM}),
+        held_reason=HELD_REASON,
         withheld=(),
         withheld_reason="",
         merged=(),
         merged_reason="",
         discontinued=frozenset(),
-    )
-
-
-def _held_modelo(*, origin: CasillaLineageOrigin | None) -> ModeloDefinition:
-    """Two editions where the successor adds one row matching a held stem, with or without an origin."""
-    updates: dict[str, object] = {"id": _HELD_ROW, "number": "02", "semantic_role": "importe_planted"}
-    if origin is not None:
-        updates["continuidad_origin"] = origin.value
-        updates["continuidad_evidence"] = _NEW_EVIDENCE
-    return _planted_modelo(
-        _revision("2023", date(2023, 1, 1), date(2023, 12, 31), (2023,), (_casilla(),)),
-        _revision("2024", date(2024, 1, 1), date(2024, 12, 31), (2024,), (_casilla(), _casilla(**updates))),
     )
 
 
 def test_a_held_stem_row_that_already_declares_its_absence_is_not_refused_again() -> None:
     """A row whose kind of none is already written is dispositioned; re-refusing it makes the ledger stale."""
-    rulings = {_PLANTED: [_held_ruling("2023", "2024")]}
-    plan = plan_modelo(_PLANTED, _held_modelo(origin=CasillaLineageOrigin.NEW_ON_FORM), _oracle(), rulings)
+    rulings = {PLANTED_MODELO: [_held_ruling("2023", "2024")]}
+    plan = plan_modelo(PLANTED_MODELO, held_modelo(origin=CasillaLineageOrigin.NEW_ON_FORM), design_oracle(), rulings)
 
     assert [refusal.casilla_id for refusal in plan.refusals] == []
     assert plan.counts[CasillaLineageOrigin.NEW_ON_FORM.value] == 1
 
     # The same row without an origin is still held, so the skip above is the origin's doing.
-    bare = plan_modelo(_PLANTED, _held_modelo(origin=None), _oracle(), rulings)
+    bare = plan_modelo(PLANTED_MODELO, held_modelo(origin=None), design_oracle(), rulings)
     assert [(refusal.casilla_id, refusal.category) for refusal in bare.refusals] == [
-        (_HELD_ROW, LineageRefusalCategory.HELD)
+        (HELD_ROW, LineageRefusalCategory.HELD)
     ]
-    assert bare.refusals[0].reason == _HELD_REASON
-
-
-def _held_pair_ruling(predecessor: str, successor: str) -> Ruling:
-    """The same hold, named as one adjudicated pair rather than by stem."""
-    return Ruling(
-        predecessor=predecessor,
-        successor=successor,
-        refuse_bare=False,
-        rationale="planted for this gate",
-        grounded=(),
-        new_on_form=frozenset(),
-        new_on_form_stems=frozenset(),
-        not_on_form=frozenset(),
-        held=(("01", _HELD_ROW),),
-        held_stems=frozenset(),
-        held_reason=_HELD_REASON,
-        withheld=(),
-        withheld_reason="",
-        merged=(),
-        merged_reason="",
-        discontinued=frozenset(),
-    )
+    assert bare.refusals[0].reason == HELD_REASON
 
 
 def test_a_held_pair_row_that_already_declares_its_absence_is_not_refused_again() -> None:
     """A row an adjudicated pair holds is dispositioned by its own declared origin, like a held stem."""
-    rulings = {_PLANTED: [_held_pair_ruling("2023", "2024")]}
-    plan = plan_modelo(_PLANTED, _held_modelo(origin=CasillaLineageOrigin.NEW_ON_FORM), _oracle(), rulings)
+    rulings = {PLANTED_MODELO: [held_pair_ruling("2023", "2024")]}
+    plan = plan_modelo(PLANTED_MODELO, held_modelo(origin=CasillaLineageOrigin.NEW_ON_FORM), design_oracle(), rulings)
 
     assert [refusal.casilla_id for refusal in plan.refusals] == []
     assert plan.counts[CasillaLineageOrigin.NEW_ON_FORM.value] == 1
 
     # The same row without an origin is still held, so the skip above is the origin's doing.
-    bare = plan_modelo(_PLANTED, _held_modelo(origin=None), _oracle(), rulings)
+    bare = plan_modelo(PLANTED_MODELO, held_modelo(origin=None), design_oracle(), rulings)
     assert [(refusal.casilla_id, refusal.category) for refusal in bare.refusals] == [
-        (_HELD_ROW, LineageRefusalCategory.HELD)
+        (HELD_ROW, LineageRefusalCategory.HELD)
     ]
-    assert bare.refusals[0].reason == _HELD_REASON
+    assert bare.refusals[0].reason == HELD_REASON
 
 
 # --------------------------------------------------------------------------- unclassified absence
 
 
-_ABSENT_ROW = "planted-absent"
-_ABSENT_EVIDENCE = "disenos_registro/modelo_999/files/2023.txt:7 box [02] printed; the 2023 edition declares no row"
-
-
-def _absence_modelo(*, origin: CasillaLineageOrigin | None) -> ModeloDefinition:
-    """Two editions where the successor adds a row with no predecessor and no printed box."""
-    updates: dict[str, object] = {
-        "id": _ABSENT_ROW,
-        # A byte range is not a printed box, so no record design can classify the absence.
-        "number": "0001-0010",
-        "semantic_role": "importe_planted",
-    }
-    if origin is not None:
-        updates["continuidad_origin"] = origin.value
-        updates["continuidad_evidence"] = _ABSENT_EVIDENCE
-    return _planted_modelo(
-        _revision("2023", date(2023, 1, 1), date(2023, 12, 31), (2023,), (_casilla(),)),
-        _revision("2024", date(2024, 1, 1), date(2024, 12, 31), (2024,), (_casilla(), _casilla(**updates))),
-    )
-
-
 def test_an_unclassifiable_absence_that_already_declares_its_origin_is_not_refused() -> None:
     """A row whose kind of none is already written is dispositioned, whatever the record design can say."""
     origin = CasillaLineageOrigin.PREDECESSOR_EDITION_SILENT
-    plan = plan_modelo(_PLANTED, _absence_modelo(origin=origin), _oracle(), {})
+    plan = plan_modelo(PLANTED_MODELO, absence_modelo(origin=origin), design_oracle(), {})
 
     assert [refusal.casilla_id for refusal in plan.refusals] == []
     assert plan.counts[origin.value] == 1
@@ -859,10 +748,10 @@ def test_an_unclassifiable_absence_that_already_declares_its_origin_is_not_refus
 
 def test_an_unclassifiable_absence_with_no_origin_is_still_refused() -> None:
     """The negative control: with nothing declared, the row has no disposition and is refused."""
-    bare = plan_modelo(_PLANTED, _absence_modelo(origin=None), _oracle(), {})
+    bare = plan_modelo(PLANTED_MODELO, absence_modelo(origin=None), design_oracle(), {})
 
     assert [(refusal.casilla_id, refusal.category) for refusal in bare.refusals] == [
-        (_ABSENT_ROW, LineageRefusalCategory.ABSENCE_UNCLASSIFIED)
+        (ABSENT_ROW, LineageRefusalCategory.ABSENCE_UNCLASSIFIED)
     ]
 
 
@@ -871,7 +760,7 @@ def test_an_unclassifiable_absence_with_no_origin_is_still_refused() -> None:
 
 def test_evidence_within_the_schema_cap_is_written_and_reported_rather_than_refused() -> None:
     """The schema's cap is the bound; a long citation is kept and named, not cut to a house style."""
-    plan = LineagePlan(_PLANTED)
+    plan = LineagePlan(PLANTED_MODELO)
     long_evidence = "x" * 700
     assert len(long_evidence) < SCHEMA_EVIDENCE_LIMIT, "the planted evidence no longer fits; this gate is vacuous"
 
@@ -884,7 +773,7 @@ def test_evidence_within_the_schema_cap_is_written_and_reported_rather_than_refu
 
 
 def test_evidence_over_the_schema_cap_refuses() -> None:
-    plan = LineagePlan(_PLANTED)
+    plan = LineagePlan(PLANTED_MODELO)
     with pytest.raises(ValueError, match="exceeds the schema"):
         plan.record_evidence("2024", "01", "x" * (SCHEMA_EVIDENCE_LIMIT + 1))
     assert plan.long_evidence == []
