@@ -797,16 +797,16 @@ wizard:
               LIVA (Ley 37/1992) art. 20.tres.
             label: Carácter social entity
           statutory-information-duty-entity:
-            description: An authority, public body, cámara or corporación, colegio
-              or asociación profesional, mutualidad de previsión social, partido político,
-              sindicato or asociación empresarial subject to the duty to supply tax
+            description: An authority, public body, chamber or corporation, professional
+              college or association, social welfare mutual society, political party,
+              trade union, or business association subject to the duty to supply tax
               information (LGT art. 94.1 and 94.2).
             label: Entity subject to the general information duty
           third-party-fee-collector:
-            description: A sociedad, asociación, colegio profesional or other entity
-              that collects professional fees or intellectual/industrial/authorship-rights
-              income on behalf of its socios, asociados or colegiados (RD 1065/2007
-              art. 31.3).
+            description: A company, association, professional college, or other entity
+              that collects professional fees or income from intellectual property,
+              copyright, or other rights on behalf of its members, associates, or
+              registered professionals (RD 1065/2007 art. 31.3).
             label: Collects fees on behalf of third parties
         help: 'Institutional roles that unlock Modelo 347 claves C, D or E: collecting
           professional fees on behalf of third parties (art. 31.3), a propiedad horizontal
