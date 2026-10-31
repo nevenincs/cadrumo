@@ -771,6 +771,10 @@ async def _serve(
         done, _ = await asyncio.wait((controlling, proof_control), return_when=asyncio.FIRST_COMPLETED)
         for completed in done:
             await completed
+        # The proof loop returns without error only after the worker has failed.
+        # The control loop owns that outcome: it refuses as unavailable, leaving
+        # the actual failure retained with the other task errors.
+        await controlling
     finally:
         human.cancel_all_attempts()
         proof_control.cancel()
