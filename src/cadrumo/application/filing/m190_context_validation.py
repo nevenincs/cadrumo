@@ -220,6 +220,15 @@ def require_m190_signed_reintegro_context(
     refs = tuple(map(str, signed.source_refs))
     source_ref = _m190_reviewed_source_ref(signed, source_digests)
     _require_m190_reviewed_context(by_id, refs)
+    _require_m190_signed_components(wire, by_id, source_ref, clave_scope)
+
+
+def _require_m190_signed_components(
+    wire: str,
+    by_id: Mapping[str, ExportFieldDefinition],
+    source_ref: str,
+    clave_scope: PerceptorClaveScope,
+) -> None:
     key = _field_wire(wire, by_id[_M190_CLAVE_ID])
     subkey = _field_wire(wire, by_id[_M190_SUBCLAVE_ID])
     filing_year = _field_wire(wire, by_id[_M190_FILING_YEAR_ID])

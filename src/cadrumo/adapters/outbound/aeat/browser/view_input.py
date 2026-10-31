@@ -569,11 +569,15 @@ def _key_parameters(event: KeyInput) -> dict[str, object] | None:
     if text and event.action is KeyAction.DOWN:
         parameters["text"] = text
         parameters["unmodifiedText"] = text
-    if event.action is KeyAction.DOWN and event.key.lower() == "a" and event.modifiers in _SELECT_ALL_CHORDS:
+    if _is_select_all(event):
         # Synthetic key events bypass the platform keymap, so a platform whose
         # select-all chord is not Control+A needs the editing command named.
         parameters["commands"] = ["selectAll"]
     return parameters
+
+
+def _is_select_all(event: KeyInput) -> bool:
+    return event.action is KeyAction.DOWN and event.key.lower() == "a" and event.modifiers in _SELECT_ALL_CHORDS
 
 
 def _virtual_key_code(key: str, code: str) -> int | None:

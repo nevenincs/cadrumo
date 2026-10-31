@@ -59,23 +59,30 @@ def legal_citation_language_prose(path: Path, prose: tuple[tuple[int, str], ...]
         return ()
     if path.suffix != ".rst" or path.parts[-3:-1] != ("_generated", "legal"):
         raise ValueError("legal citation markers are only valid on generated legal pages")
-    result: list[tuple[int, str, str]] = []
-    for index, marker in markers:
-        try:
-            value = json.loads(marker[len(prefix) :].strip())
-        except json.JSONDecodeError as exc:
-            raise ValueError("malformed legal citation marker") from exc
-        if not isinstance(value, str) or not value or index + 3 >= len(lines) or lines[index + 1] != "":
-            raise ValueError("invalid legal citation marker")
-        heading = re.sub(r"\\(.)", r"\1", lines[index + 2]).strip()
-        underline = lines[index + 3]
-        if heading != value or not underline or set(underline) not in ({"="}, {"-"}):
-            raise ValueError("legal citation marker does not match its heading")
-        candidates = [(line, text) for line, text in prose if line in (index + 3, index + 4) and text == value]
-        if len(candidates) != 1:
-            raise ValueError("legal citation marker does not match parsed heading")
-        result.append((candidates[0][0], "es", value))
-    return tuple(result)
+    return tuple(_legal_citation_marker(lines, index, marker, prefix, prose) for index, marker in markers)
+
+
+def _legal_citation_marker(
+    lines: list[str], index: int, marker: str, prefix: str, prose: tuple[tuple[int, str], ...]
+) -> tuple[int, str, str]:
+    try:
+        value = json.loads(marker[len(prefix) :].strip())
+    except json.JSONDecodeError as exc:
+        raise ValueError("malformed legal citation marker") from exc
+    if not isinstance(value, str) or not value or index + 3 >= len(lines) or lines[index + 1] != "":
+        raise ValueError("invalid legal citation marker")
+    _require_legal_citation_heading(lines, index, value)
+    candidates = [(line, text) for line, text in prose if line in (index + 3, index + 4) and text == value]
+    if len(candidates) != 1:
+        raise ValueError("legal citation marker does not match parsed heading")
+    return (candidates[0][0], "es", value)
+
+
+def _require_legal_citation_heading(lines: list[str], index: int, value: str) -> None:
+    heading = re.sub(r"\\(.)", r"\1", lines[index + 2]).strip()
+    underline = lines[index + 3]
+    if heading != value or not underline or set(underline) not in ({"="}, {"-"}):
+        raise ValueError("legal citation marker does not match its heading")
 
 
 def node_has_ancestor(node: object, node_types: tuple[type[object], ...]) -> bool:
