@@ -1,16 +1,29 @@
 import { Icon } from "@/components/ui/icon";
+import type { Suggestion } from "@/components/ui/suggestions";
 import { facts } from "@/shell/compose";
 import type { LedgerTrackResult } from "../../../shell/ledger";
-import { effectiveFacts } from "../../../shell/ledgerStage";
+import { effectiveFacts, type StageField } from "../../../shell/ledgerStage";
 import { useStrings } from "../../../shell/strings";
+import { rowCells } from "../editing/editingModel";
 import { periodText } from "../ledgerWords";
+import { emptyFills } from "../suggestions/ledgerSuggestions";
 import { InspectorField } from "./InspectorField";
 import { quarterMove } from "./inspectorModel";
 import { declarationName } from "./inspectorWords";
-import { stagedField, type FieldScope } from "./movementFields";
+import { fieldLock, stagedField, type FieldScope } from "./movementFields";
 import type { InspectorRead } from "./useInspectorReads";
 import { formatAmount } from "../../../shared/numbers";
 import { formatDay, formatTime } from "../../../shared/dateFormats";
+
+/** What a pick offers the fields beside it, by the key the suggestion
+ * carries. */
+const FROM_DESCRIPTION: Partial<Record<string, StageField>> = {
+  counterparty: "counterparty",
+};
+const FROM_COUNTERPARTY: Partial<Record<string, StageField>> = {
+  counterparty_country: "counterparty_country",
+  counterparty_identification_state: "counterparty_identification_state",
+};
 
 /**
  * The inspector's Details section: every fact of the movement, the ones the
@@ -21,14 +34,29 @@ import { formatDay, formatTime } from "../../../shared/dateFormats";
 export function DetailsSection({
   scope,
   track,
+  say,
 }: {
   scope: FieldScope;
   track: InspectorRead<LedgerTrackResult> | null;
+  say?: (text: string) => void;
 }) {
   const t = useStrings();
-  const { row, changes, locale } = scope;
+  const { row, changes, locale, onStage } = scope;
   const tx = row.transaction;
   const effective = effectiveFacts(row, changes);
+  // A pick fills only what is still empty, and stages it where the person
+  // sees it before anything is saved.
+  const fillEmpty =
+    (targets: Partial<Record<string, StageField>>) => (picked: Suggestion) => {
+      const cells = emptyFills<StageField>(picked.fills, effective, targets)
+        .filter(([name]) => fieldLock(scope, name) === null)
+        .flatMap(([name, value]) =>
+          rowCells(tx.transaction_id, row, name, { value }),
+        );
+      if (cells.length === 0) return;
+      onStage({ type: "stage", label: "set", cells });
+      say?.(t("desktop.ledger.suggestions.filled"));
+    };
   const moved = quarterMove(tx, effective);
   const tracked = track?.kind === "ready" ? track.result : null;
   const uses = tracked?.participated_in ?? [];
@@ -58,10 +86,11 @@ export function DetailsSection({
     name: Parameters<typeof stagedField>[1],
     kind: Parameters<typeof stagedField>[2],
     note?: string | null,
+    onPick?: (picked: Suggestion) => void,
   ) => (
     <InspectorField
       key={name}
-      {...stagedField(scope, name, kind)}
+      {...stagedField(scope, name, kind, onPick)}
       note={note ?? undefined}
     />
   );
@@ -116,8 +145,13 @@ export function DetailsSection({
             </span>
           )}
         </dd>
-        {field("description", "text", changes?.description ? identity : null)}
-        {field("counterparty", "text")}
+        {field(
+          "description",
+          "text",
+          changes?.description ? identity : null,
+          fillEmpty(FROM_DESCRIPTION),
+        )}
+        {field("counterparty", "text", null, fillEmpty(FROM_COUNTERPARTY))}
         {field("counterparty_country", "country")}
         {field("counterparty_identification_state", "country")}
         <dt className="pt-1 text-sm text-muted-foreground">

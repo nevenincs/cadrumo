@@ -1,4 +1,4 @@
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
 import { MoneyEditor } from "@/components/editors/MoneyEditor";
 import { PercentEditor } from "@/components/editors/PercentEditor";
 import { TaxIdEditor } from "@/components/editors/TaxIdEditor";
@@ -34,6 +34,7 @@ import {
 import { useStrings } from "../../../shell/strings";
 import { fieldName, refusalText } from "../editing/editingWords";
 import {
+  categoryLabel,
   classificationLabel,
   classificationText,
   ivaCategoryLabel,
@@ -43,8 +44,10 @@ import { InspectorField } from "./InspectorField";
 import { ModelSuggestion } from "./ModelSuggestion";
 import { decidedBy, eventName, ivaCategoryOptions } from "./inspectorWords";
 import { fieldLock, stagedField, type FieldScope } from "./movementFields";
+import { useLedgerRead } from "./useInspectorReads";
+import { useFieldSuggestions } from "../suggestions/SuggestionsProvider";
 import { formatTime } from "../../../shared/dateFormats";
-import { heldDecimal } from "../../../shared/numbers";
+import { formatPercent, heldDecimal } from "../../../shared/numbers";
 
 const CLASSIFICATION_OF: Record<ClassifyKind, string> = {
   business: "BUSINESS",
@@ -442,6 +445,7 @@ export function ClassifySection({
         <AllocateForm
           key={`allocate:${id}`}
           scope={scope}
+          port={port}
           actions={actions}
           lock={lock}
           say={say}
@@ -533,6 +537,10 @@ function M210Form({
   const [values, setValues] = useState(initial);
   const [error, setError] = useState<string | null>(null);
   const incoming = row.transaction.direction === "INCOMING";
+  const offered = {
+    payer_id: useFieldSuggestions("m210_payer"),
+    asset_or_right_id: useFieldSuggestions("m210_asset"),
+  };
   return (
     <form
       className="mt-2 grid gap-1.5"
@@ -592,7 +600,9 @@ function M210Form({
             {name === "gross_income_amount" ? (
               <MoneyEditor {...entry} />
             ) : name === "payer_id" ? (
-              <TaxIdEditor {...entry} />
+              <TaxIdEditor {...entry} {...offered.payer_id} />
+            ) : name === "asset_or_right_id" ? (
+              <TextEditor {...entry} {...offered.asset_or_right_id} />
             ) : (
               <TextEditor {...entry} />
             )}
@@ -631,11 +641,13 @@ function M210Form({
  * it is allocated by. */
 function AllocateForm({
   scope,
+  port,
   actions,
   lock,
   say,
 }: {
   scope: FieldScope;
+  port: LedgerPort;
   actions: readonly StagedAction[];
   lock: string | null;
   say: (text: string) => void;
@@ -652,6 +664,32 @@ function AllocateForm({
   const [ratio, setRatio] = useState("");
   const [prorrata, setProrrata] = useState("");
   const [error, setError] = useState<string | null>(null);
+  // The ratios configured for the movement's year, read when the field is
+  // first entered. A ratio is named by its category, the row's own first.
+  const [ratiosWanted, setRatiosWanted] = useState(false);
+  const year = Number(row.transaction.date.slice(0, 4));
+  const ratios = useLedgerRead(
+    port,
+    "ledger.ratios.list",
+    { year },
+    `ratios:${id}:${year}`,
+    ratiosWanted,
+  );
+  const ownCategory = effectiveFacts(row, scope.changes).category_id;
+  const ratioOptions = useMemo(() => {
+    if (ratios?.kind !== "ready" || ratios.result.outcome !== "available")
+      return null;
+    const own = (category: string) => category === ownCategory;
+    return [
+      ...ratios.result.rows.filter((entry) => own(entry.category)),
+      ...ratios.result.rows.filter((entry) => !own(entry.category)),
+    ].map((entry) => ({
+      value: entry.category,
+      label: categoryLabel(t, entry.category),
+      note: formatPercent(scope.locale, entry.ratio, { unit: "fraction" }),
+      keywords: [entry.category],
+    }));
+  }, [ratios, ownCategory, t, scope.locale]);
   return (
     <form
       className="mt-2 grid gap-1.5"
@@ -715,6 +753,8 @@ function AllocateForm({
           maxLength={128}
           disabled={lock !== null}
           onChange={setRatio}
+          suggestions={ratioOptions}
+          onSuggestionsWanted={() => setRatiosWanted(true)}
         />
       </Field>
       <Field className="gap-0.5">

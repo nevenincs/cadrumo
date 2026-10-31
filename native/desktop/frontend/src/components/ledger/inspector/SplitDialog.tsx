@@ -1,4 +1,4 @@
-import { useId, useState } from "react";
+import { useId, useMemo, useState } from "react";
 import { MoneyEditor } from "@/components/editors/MoneyEditor";
 import { PercentEditor } from "@/components/editors/PercentEditor";
 import { TextEditor } from "@/components/editors/TextEditor";
@@ -33,6 +33,7 @@ import {
   type SplitProblem,
 } from "./inspectorModel";
 import { categoryOptions } from "./inspectorWords";
+import { useFieldSuggestions } from "../suggestions/SuggestionsProvider";
 import { formatAmount } from "../../../shared/numbers";
 
 type Part = {
@@ -73,6 +74,18 @@ export function SplitDialog({
   const reasonId = useId();
   const partId = useId();
   const tx = row.transaction;
+  // A part's words: the movement's own first, then the ledger's.
+  const described = useFieldSuggestions("description");
+  const partWords = useMemo(
+    () =>
+      described.suggestions && [
+        { value: tx.description, label: tx.description },
+        ...described.suggestions.filter(
+          (option) => option.value !== tx.description,
+        ),
+      ],
+    [described.suggestions, tx.description],
+  );
   const [parts, setParts] = useState<Part[]>(() => [
     blank(tx.description),
     blank(tx.description),
@@ -262,6 +275,8 @@ export function SplitDialog({
                       maxLength={4096}
                       value={part.description}
                       onChange={(description) => update(at, { description })}
+                      suggestions={partWords}
+                      onSuggestionsWanted={described.onSuggestionsWanted}
                     />
                   </div>
                   <IconButton

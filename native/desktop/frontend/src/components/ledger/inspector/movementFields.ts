@@ -5,6 +5,7 @@
 // stage the same thing for the same typing.
 
 import type { ComboboxOption } from "@/components/ui/combobox";
+import type { Suggestion } from "@/components/ui/suggestions";
 import type { LedgerRow } from "../../../shell/ledger";
 import { parseFractionPercent } from "../../../shell/ledgerGrammar";
 import {
@@ -32,7 +33,12 @@ import {
   valueText,
 } from "../editing/editingWords";
 import { accountLabel } from "../movements/movementWords";
-import type { FieldControl, FieldEditor, FieldParse } from "./InspectorField";
+import type {
+  FieldControl,
+  FieldEditor,
+  FieldParse,
+  FieldSuggest,
+} from "./InspectorField";
 import {
   accountOptions,
   categoryOptions,
@@ -63,6 +69,16 @@ const CONTROL_OF: Partial<Record<FieldKind, FieldControl>> = {
   percent: "percent",
   country: "country",
   currency: "currency",
+};
+/** What the page's records offer as a field is typed in. A group label is a
+ * short list, so it opens before anything is typed. */
+const OFFERED: Partial<Record<StageField, FieldSuggest>> = {
+  description: { kind: "description" },
+  counterparty: { kind: "counterparty" },
+  counterparty_country: { kind: "country" },
+  counterparty_identification_state: { kind: "state" },
+  currency: { kind: "currency" },
+  group_label: { kind: "group", opensEmpty: true },
 };
 const COUNTRY = /^[A-Z]{2}$/;
 const CURRENCY = /^[A-Z]{3}$/;
@@ -146,11 +162,13 @@ function shownValue(
   return valueText(t, locale, field, value);
 }
 
-/** The inspector field for one movement field. */
+/** The inspector field for one movement field. `onPick` is called when a
+ * suggestion is chosen, to fill the fields beside it. */
 export function stagedField(
   scope: FieldScope,
   field: StageField,
   kind: FieldKind,
+  onPick?: (picked: Suggestion) => void,
 ): InspectorFieldProps {
   const { t, row, changes, accounts, onStage } = scope;
   const id = row.transaction.transaction_id;
@@ -236,11 +254,15 @@ export function stagedField(
         if (parsed.kind === "empty") return { kind: "clear" };
         return { kind: "value", value: parsed.value.value };
       };
+      const offered = OFFERED[field];
       editor = {
         kind: "input",
         control: CONTROL_OF[kind] ?? "text",
         initial: current == null ? "" : heldAs(kind, current),
         parse,
+        ...(offered
+          ? { suggest: { ...offered, ...(onPick ? { onPick } : {}) } }
+          : {}),
       };
     }
   }

@@ -14,12 +14,17 @@ import { TextEditor } from "@/components/editors/TextEditor";
 import { Button } from "@/components/ui/button";
 import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
 import { Icon } from "@/components/ui/icon";
+import type { Suggestion } from "@/components/ui/suggestions";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useStrings } from "../../../shell/strings";
+import {
+  useFieldSuggestions,
+  type SuggestionKind,
+} from "../suggestions/SuggestionsProvider";
 
 /** What a typed value stages: a value, a clear, or why it is refused. */
 export type FieldParse =
@@ -37,10 +42,20 @@ export type FieldParse =
 export type FieldControl =
   "text" | "date" | "money" | "percent" | "country" | "currency";
 
+/** The text the page's records offer a field as it is typed in. */
+export type FieldSuggest = {
+  kind: SuggestionKind;
+  /** Opens with nothing typed, for a short list. */
+  opensEmpty?: boolean;
+  /** Called after the pick is typed in, to fill the fields beside it. */
+  onPick?: (picked: Suggestion) => void;
+};
+
 export type FieldEditor =
   | {
       kind: "input";
       control: FieldControl;
+      suggest?: FieldSuggest;
       /** The text the editor opens with: the value in its canonical
        * spelling. */
       initial: string;
@@ -54,10 +69,14 @@ export type FieldEditor =
       clear?: string;
     };
 
-function Control({
-  control,
-  ...props
-}: { control: FieldControl } & ComponentProps<typeof TextEditor>) {
+/** What every typed editor takes. A field has no calendar bounds, so `min`
+ * and `max` are left to the date editor, whose bounds are ISO days. */
+type EntryProps = { control: FieldControl } & Omit<
+  ComponentProps<typeof TextEditor>,
+  "min" | "max"
+>;
+
+function Control({ control, ...props }: EntryProps) {
   switch (control) {
     case "date":
       return <DateEditor {...props} />;
@@ -72,6 +91,30 @@ function Control({
     case "text":
       return <TextEditor {...props} />;
   }
+}
+
+/** The typed editor, offering what `suggest` names. */
+function OfferingControl({
+  suggest,
+  ...props
+}: { suggest: FieldSuggest } & EntryProps) {
+  const offered = useFieldSuggestions(suggest.kind);
+  return (
+    <Control
+      {...props}
+      {...offered}
+      opensEmpty={suggest.opensEmpty}
+      onPick={suggest.onPick}
+    />
+  );
+}
+
+function Entry({ suggest, ...props }: { suggest?: FieldSuggest } & EntryProps) {
+  return suggest ? (
+    <OfferingControl suggest={suggest} {...props} />
+  ) : (
+    <Control {...props} />
+  );
 }
 
 /** The value the clear choice is listed under; no option takes it. */
@@ -214,7 +257,8 @@ export function InspectorField({
           else commitTyped(typing);
         }}
       >
-        <Control
+        <Entry
+          suggest={editor.suggest}
           control={editor.control}
           controlSize="sm"
           autoFocus

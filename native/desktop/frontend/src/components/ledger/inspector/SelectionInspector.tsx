@@ -75,6 +75,7 @@ import {
   skipName,
 } from "./inspectorWords";
 import { useLedgerRead } from "./useInspectorReads";
+import { useFieldSuggestions } from "../suggestions/SuggestionsProvider";
 import { useWritePause, WriteHold } from "../WritePause";
 import { formatAmount } from "../../../shared/numbers";
 
@@ -195,6 +196,7 @@ export function SelectionInspector({
   const sums = currencySums(selected);
   const [share, setShare] = useState("");
   const [group, setGroup] = useState("");
+  const groups = useFieldSuggestions("group");
   const [notes, setNotes] = useState("");
   const [held, setHeld] = useState<Held | null>(null);
   const [asked, setAsked] = useState<Asked[] | null>(null);
@@ -735,6 +737,9 @@ export function SelectionInspector({
                     value={value}
                     disabled={blocked}
                     onChange={setValue}
+                    {...(field === "group_label"
+                      ? { ...groups, opensEmpty: true }
+                      : {})}
                   />
                 </Field>
                 <Button

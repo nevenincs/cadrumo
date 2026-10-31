@@ -538,7 +538,10 @@ export function MovementInspector({
           />,
           invoiceRef,
         )}
-        {section("details", <DetailsSection scope={scope} track={track} />)}
+        {section(
+          "details",
+          <DetailsSection scope={scope} track={track} say={say} />,
+        )}
         {section(
           "history",
           <HistorySection
