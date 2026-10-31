@@ -300,17 +300,6 @@ def resolve_applicability_rule_from_authority(
     raise RegistryValidationError(f"no declared revision of modelo {modelo.value!r} carries an applicability rule")
 
 
-def resolve_applicability_rule_from_operation(
-    operation: PinnedAuthorityOperation,
-    modelo: Modelo,
-) -> ModeloApplicabilityRule:
-    """Resolve one modelo's applicability rule from a generation-pinned directory."""
-    rule = _declared_applicability_rule(operation, modelo)
-    if rule is None:
-        raise RegistryValidationError(f"no declared revision of modelo {modelo.value!r} carries an applicability rule")
-    return rule
-
-
 def _declared_applicability_rule(
     operation: PinnedAuthorityOperation,
     modelo: Modelo,
@@ -596,6 +585,5 @@ __all__ = [
     "derive_taxpayer_files_economic_activity",
     "iter_modelo_applicability_rules",
     "modelo_requires_iva_regime",
-    "resolve_applicability_rule_from_operation",
     "taxpayer_model_is_declared",
 ]

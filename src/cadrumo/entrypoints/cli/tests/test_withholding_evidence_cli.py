@@ -232,8 +232,10 @@ def test_modelo_aggregate_keeps_capital_out_of_the_raw_mutation_path() -> None:
     """
     from .. import modelo_aggregate_commands
 
-    assert "123" in modelo_aggregate_commands._PERIODIC_WINDOW_MODELOS
-    assert "123" not in modelo_aggregate_commands._INVOICE_EVIDENCE_MODELOS
+    assert "123" in modelo_aggregate_commands.periodic_withholding_modelos()
+    with pytest.raises(typer.BadParameter):
+        modelo_aggregate_commands._refuse_m123_invoice("123", ["{}"])
+    modelo_aggregate_commands._refuse_m123_invoice("111", ["{}"])
 
 
 def test_rent_cli_evidence_refuses_missing_property_detail() -> None:

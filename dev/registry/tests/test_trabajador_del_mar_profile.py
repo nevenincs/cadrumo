@@ -15,6 +15,7 @@ import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.core.toml import load_toml
+from cadrumo.domain.calculations.registry.facts.payloads import MappingFactPayload
 from cadrumo.domain.user_profile.schema import ProfileFieldType
 from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
@@ -250,6 +251,9 @@ def test_the_rebeca_registers_the_runtime_reads_match_the_category_binding() -> 
     payload = (
         compiled_bundled_authority().catalogues.facts.facts["rebeca-eligible-vessel-registries"].variants[0].payload
     )
+    assert isinstance(payload, MappingFactPayload)
     entries = {entry.key: entry.value for entry in payload.entries}
+    registries = entries["registries"]
+    assert isinstance(registries, str)
 
-    assert set(entries["registries"].split(",")) == set(binding["selector"]["vessel_registry"])
+    assert set(registries.split(",")) == set(binding["selector"]["vessel_registry"])

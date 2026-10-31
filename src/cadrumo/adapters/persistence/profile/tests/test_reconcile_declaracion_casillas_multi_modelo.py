@@ -1,8 +1,8 @@
 """Real-behavior tests for casilla-level declaración reconcile enrollment.
 
 Extends the coverage :mod:`test_reconcile_declaracion_casillas` established for
-Modelo 130 to the five modelos enrolled in
-:data:`cadrumo.application.modelo.reconciliation._DECLARATION_CASILLA_RECONCILE_MODELOS`
+Modelo 130 to the five modelos enrolled under
+:data:`cadrumo.application.modelo.reconciliation._DECLARATION_RECONCILE_ROLE`
 in the same slice: Modelo 100 (IRPF annual, printed Renta casilla ids), Modelo
 303 (IVA autoliquidación, compound ``iva.*`` primitive/result casilla ids),
 Modelo 390 (IVA resumen anual, compound ``iva.anual.*`` ids), Modelo 111
@@ -66,13 +66,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PROFILE_TAX_ID = "00000000T"
 _CLOCK = datetime(2026, 4, 20, tzinfo=UTC)
-
-
-@pytest.fixture
-def authority_operation() -> Iterator[PinnedAuthorityOperation]:
-    """Keep one indexed authority generation live across each test."""
-    with bundled_indexed_authority().operation() as operation:
-        yield operation
 
 
 # Seeded through a detached WorkflowState, never a repository read: the

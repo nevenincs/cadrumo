@@ -371,9 +371,10 @@ def projection_block() -> FormRepeatingGroupBlock:
 
 
 def _disposal_rows_block(operation: PinnedAuthorityOperation) -> FormRepeatingGroupBlock:
+    layout = operation.form_layout("100", "2025")
+    assert layout is not None
     return next(
         block
-        for layout in (operation.form_layout("100", "2025"),)
         for page in layout.pages
         for section in page.sections
         for block in section.blocks

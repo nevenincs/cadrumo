@@ -7,6 +7,7 @@ import re
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.facts.payloads import MappingFactPayload
 
 from ..compiler.authority import compiled_bundled_authority
 
@@ -39,8 +40,7 @@ def _declared_slots_by_revision(kind: str) -> dict[str, int]:
     ],
 )
 def test_the_row_count_fact_is_what_every_revision_declares(key: str, kind: str) -> None:
-    payload = compiled_bundled_authority().catalogues.facts.facts["form-row-codes"].variants[0].payload
-    entries = {entry.key: entry.value for entry in payload.entries}
+    entries = _entries()
 
     declared = _declared_slots_by_revision(kind)
 
@@ -50,7 +50,13 @@ def test_the_row_count_fact_is_what_every_revision_declares(key: str, kind: str)
 
 def _entries() -> dict[str, str]:
     payload = compiled_bundled_authority().catalogues.facts.facts["form-row-codes"].variants[0].payload
-    return {entry.key: entry.value for entry in payload.entries}
+    assert isinstance(payload, MappingFactPayload)
+    assert all(isinstance(entry.key, str) and isinstance(entry.value, str) for entry in payload.entries)
+    return {
+        entry.key: entry.value
+        for entry in payload.entries
+        if isinstance(entry.key, str) and isinstance(entry.value, str)
+    }
 
 
 def _all_field_values(name: str) -> dict[str, set[int]]:

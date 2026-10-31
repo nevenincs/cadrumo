@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import re
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from contextvars import ContextVar
 from functools import lru_cache
@@ -89,7 +89,7 @@ _PASS_DIGESTS: ContextVar[dict[str, str] | None] = ContextVar("corpus_pass_diges
 
 
 @contextmanager
-def corpus_digest_pass() -> Iterator[None]:
+def corpus_digest_pass() -> Generator[None]:
     """Hash each corpus file at most once for the duration of one verification pass.
 
     Inside the pass a file is read and hashed on first use and its digest is

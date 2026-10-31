@@ -69,8 +69,8 @@ class ModeloReconciliationDiffKind(StrEnum):
     period, tax id). ``total`` — a filed-amount disagreement between the
     receipt total and the canonical computed result casilla. ``casilla`` — a
     per-casilla value disagreement between the persisted computed revision and
-    a filed declaración, emitted for modelos enrolled in
-    :data:`_DECLARATION_CASILLA_RECONCILE_MODELOS`
+    a filed declaración, emitted for modelos enrolled under
+    :data:`cadrumo.application.modelo.reconciliation._DECLARATION_RECONCILE_ROLE`
     (:func:`application.modelo.reconcile_casilla.detect_casilla_divergences`).
     """
 

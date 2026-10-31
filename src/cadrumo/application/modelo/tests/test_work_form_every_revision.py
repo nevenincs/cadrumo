@@ -109,7 +109,9 @@ def _shown_casillas(form: ModeloWorkForm) -> list[str]:
         for section in page.sections:
             for block in section.blocks:
                 if isinstance(block, ModeloFormRepeatingBlock):
-                    shown.extend(casilla for casilla in block.column_casilla_ids if casilla not in {None, *fields})
+                    shown.extend(
+                        casilla for casilla in block.column_casilla_ids if casilla is not None and casilla not in fields
+                    )
     return shown
 
 

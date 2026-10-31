@@ -85,11 +85,6 @@ def require_invoice_evidence_modelo(value: str) -> str:
     return value
 
 
-def formalization_refused_modelos() -> frozenset[str]:
-    """Return the modelos a formalization projection never files into."""
-    return _routing().codes("formalization.refused.modelos")
-
-
 def annual_withholding_composition(modelo: str) -> AnnualWithholdingComposition:
     """Return how annual ``modelo`` composes its source; a modelo no route names reads its own window."""
     routing = _routing()
@@ -112,7 +107,6 @@ __all__ = [
     "AnnualWithholdingComposition",
     "annual_source_observations_modelo",
     "annual_withholding_composition",
-    "formalization_refused_modelos",
     "invoice_evidence_modelos",
     "ledger_payment_modelos",
     "modelo_for_income_kind",
