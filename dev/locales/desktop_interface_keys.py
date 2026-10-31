@@ -416,6 +416,7 @@ DESKTOP_INTERFACE_KEYS: Final[frozenset[str]] = DESKTOP_PROFILE_INTERFACE_KEYS |
         "desktop.agent.retry",
         "desktop.agent.row_documents",
         "desktop.agent.search_history",
+        "desktop.agent.search_placeholder",
         "desktop.agent.send",
         "desktop.agent.sending",
         "desktop.agent.send_nothing",

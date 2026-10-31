@@ -154,6 +154,7 @@ desktop:
     retry: Try again
     row_documents: 'Documents: {count}'
     search_history: Search conversations
+    search_placeholder: Search
     send: Send
     send_nothing: Write a message or add a file first
     send_too_long: This message has {count} characters; {max} is the most
@@ -317,7 +318,7 @@ desktop:
     saving: Saving…
     search_empty: No matching providers. Try another search.
     search_label: Search providers
-    search_placeholder: Search providers
+    search_placeholder: Search
     sign_in_action: Sign in
     sign_in_busy: Another {provider} sign-in is still finishing. Wait a moment, then
       try again.

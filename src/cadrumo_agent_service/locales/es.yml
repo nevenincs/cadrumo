@@ -156,6 +156,7 @@ desktop:
     retry: Vuelve a intentarlo
     row_documents: 'Documentos: {count}'
     search_history: Buscar conversaciones
+    search_placeholder: Buscar
     send: Enviar
     send_nothing: Escribe un mensaje o añade un archivo primero
     send_too_long: Este mensaje tiene {count} caracteres; el máximo es {max}
@@ -323,7 +324,7 @@ desktop:
     saving: Guardando…
     search_empty: No hay proveedores que coincidan. Prueba otra búsqueda.
     search_label: Buscar proveedores
-    search_placeholder: Buscar proveedores
+    search_placeholder: Buscar
     sign_in_action: Iniciar sesión
     sign_in_busy: Otro inicio de sesión de {provider} aún está terminando. Espera
       un momento y vuelve a intentarlo.

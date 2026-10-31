@@ -156,6 +156,7 @@ desktop:
     retry: Próbáld újra
     row_documents: 'Dokumentumok: {count}'
     search_history: Keresés a beszélgetésekben
+    search_placeholder: Keresés
     send: Küldés
     send_nothing: Előbb írj üzenetet, vagy adj hozzá fájlt
     send_too_long: Ez az üzenet {count} karakter hosszú; legfeljebb {max} lehet
@@ -323,7 +324,7 @@ desktop:
     saving: Mentés…
     search_empty: Nincs találat. Próbálj más keresést.
     search_label: Szolgáltatók keresése
-    search_placeholder: Szolgáltatók keresése
+    search_placeholder: Keresés
     sign_in_action: Bejelentkezés
     sign_in_busy: Egy másik {provider}-bejelentkezés még folyamatban van. Várj egy
       kicsit, majd próbáld újra.

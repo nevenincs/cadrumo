@@ -140,7 +140,7 @@ export const CommandList_: Story = {
     >
       <div className="h-80 w-full max-w-palette overflow-hidden rounded-2xl border shadow-overlay">
         <Command label="Command palette">
-          <CommandInput placeholder="Search documentation and actions">
+          <CommandInput placeholder="Search">
             <Kbd>Esc</Kbd>
           </CommandInput>
           <CommandList>

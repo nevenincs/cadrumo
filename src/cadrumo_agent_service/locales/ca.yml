@@ -156,6 +156,7 @@ desktop:
     retry: Torna-ho a provar
     row_documents: 'Documents: {count}'
     search_history: Cerca converses
+    search_placeholder: Cerca
     send: Envia
     send_nothing: Primer escriu un missatge o afegeix un fitxer
     send_too_long: Aquest missatge té {count} caràcters; el màxim és {max}
@@ -325,7 +326,7 @@ desktop:
     saving: S'està desant…
     search_empty: No hi ha proveïdors que coincideixin. Prova una altra cerca.
     search_label: Cerca proveïdors
-    search_placeholder: Cerca proveïdors
+    search_placeholder: Cerca
     sign_in_action: Inicia la sessió
     sign_in_busy: Un altre inici de sessió de {provider} encara s'està acabant. Espera
       un moment i torna-ho a provar.

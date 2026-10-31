@@ -215,7 +215,7 @@ export function HistoryList({
             type="search"
             controlSize="sm"
             value={query}
-            placeholder={t("desktop.agent.search_history")}
+            placeholder={t("desktop.agent.search_placeholder")}
             onChange={(event) => setQuery(event.target.value)}
             className="pl-7"
           />
