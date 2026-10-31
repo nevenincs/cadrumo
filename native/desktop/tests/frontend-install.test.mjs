@@ -8,6 +8,7 @@ import {
   readFileSync,
   realpathSync,
   rmSync,
+  symlinkSync,
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
@@ -445,4 +446,15 @@ test("setup finds the npm CLI installed beside the selected Node binary", (t) =>
     () => bundledNpmCli(join(root, "absent/node")),
     /No npm CLI is installed beside/,
   );
+  // A package manager may keep node in its own prefix beside an npm link
+  // into a shared module tree, as Homebrew does.
+  if (process.platform !== "win32") {
+    const keg = join(root, "keg/bin");
+    const sharedCli = join(root, "shared/lib/node_modules/npm/bin/npm-cli.js");
+    mkdirSync(keg, { recursive: true });
+    mkdirSync(join(sharedCli, ".."), { recursive: true });
+    writeFileSync(sharedCli, "");
+    symlinkSync(sharedCli, join(keg, "npm"));
+    assert.equal(bundledNpmCli(join(keg, "node")), realpathSync(sharedCli));
+  }
 });
