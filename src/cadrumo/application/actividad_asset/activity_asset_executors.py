@@ -124,6 +124,7 @@ from .operations import (
     ActivityAssetRegisterAuthority,
     SupersedingClaimRequest,
     pinned_edition,
+    pinned_m130_periods,
 )
 from .register_reads import register_years
 from .schedule_walk import error_reason_facts
@@ -219,6 +220,7 @@ def _activity_asset_operations(
                 operation.revision_for_context("130", filing_year=period.filing_year, period=period.registry_token),
                 modelo="130",
             ),
+            m130_periods=pinned_m130_periods(operation),
             admits_filing_year=operation.supported_filing_years().admits_filing_year,
             last_admitted_year=lambda: operation.supported_filing_years().horizon,
             agrarian_activities=agrarian_activities,

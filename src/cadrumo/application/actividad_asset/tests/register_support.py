@@ -9,7 +9,11 @@ from functools import cache
 from cadrumo.application.actividad_asset.activity_asset_read_models import ActivityAssetEdition
 from cadrumo.application.actividad_asset.disposal_calculation import pinned_disposal_bounds
 from cadrumo.application.actividad_asset.history import ActivityAssetHistory, ActivityAssetHistoryClaimResult
-from cadrumo.application.actividad_asset.operations import ActivityAssetRegisterAuthority, pinned_edition
+from cadrumo.application.actividad_asset.operations import (
+    ActivityAssetRegisterAuthority,
+    pinned_edition,
+    pinned_m130_periods,
+)
 from cadrumo.core.casilla_id import CasillaId
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.actividad_asset_bindings import (
@@ -99,6 +103,11 @@ def _published_edition(tax_year: int) -> tuple[ActivityAssetEdition, ModeloRevis
         return pinned_edition(operation)(tax_year)
 
 
+def _published_m130_periods(tax_year: int) -> tuple[str, ...]:
+    with bundled_indexed_authority().operation() as operation:
+        return pinned_m130_periods(operation)(tax_year)
+
+
 def _published_authority(revision: ActivityAssetRevision, tax_year: int) -> ScheduleAuthority:
     with bundled_indexed_authority().operation() as operation:
         return resolve_activity_asset_schedule_authority(
@@ -142,6 +151,7 @@ def memory_register_authority(
 
     return ActivityAssetRegisterAuthority(
         edition=_published_edition,
+        m130_periods=_published_m130_periods,
         admits_filing_year=_published_support().admits_filing_year,
         m130_amortization_casilla=_published_m130_box,
         m100_amortization_casillas=lambda _year: activity_asset_amortization_casillas(_published_modelo_100()),

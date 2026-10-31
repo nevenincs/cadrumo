@@ -102,6 +102,7 @@ def test_the_baja_sentence_fills_in_every_placeholder_in_each_locale(locale: str
         repository.history.record_claim(later)
 
     with override_settings(cadrumo_output_language=locale):
+        assert refused.value.translated_message is not None
         rendered = tr(refused.value.translated_message, **dict(refused.value.context or {}))
 
     assert "2028-12-31" in rendered
