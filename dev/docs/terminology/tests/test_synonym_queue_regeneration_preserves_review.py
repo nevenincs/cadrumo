@@ -158,8 +158,8 @@ def test_carry_forward_reattaches_a_decision_whose_row_the_miner_still_produces(
     assert not reviewed_decisions_dropped(carried, prior)
 
 
-def test_the_cli_refuses_the_losing_mine_and_leaves_the_queue_byte_identical(tmp_path: Path) -> None:
-    """A refusal is atomic: the whole loss set is computed before any write."""
+def _staged_queue_and_observations(tmp_path: Path) -> tuple[SynonymRatificationQueue, Path, str, Path]:
+    """Write the committed queue and a matching observation file; return them with the queue's digest."""
     committed = _committed_queue()
     queue_path = tmp_path / "ratification" / "synonym-candidates.json"
     _write_queue(queue_path, committed)
@@ -167,6 +167,12 @@ def test_the_cli_refuses_the_losing_mine_and_leaves_the_queue_byte_identical(tmp
 
     observations = tmp_path / "observations.json"
     observations.write_text(json.dumps(_observation_payload(committed)), encoding="utf-8", newline="")
+    return committed, queue_path, before, observations
+
+
+def test_the_cli_refuses_the_losing_mine_and_leaves_the_queue_byte_identical(tmp_path: Path) -> None:
+    """A refusal is atomic: the whole loss set is computed before any write."""
+    committed, queue_path, before, observations = _staged_queue_and_observations(tmp_path)
 
     result = CliRunner().invoke(app, ["mine", str(observations), "--out", str(queue_path)])
 
@@ -182,13 +188,7 @@ def test_the_cli_refuses_the_losing_mine_and_leaves_the_queue_byte_identical(tmp
 
 def test_drop_reviewed_is_the_explicit_opt_in_that_retires_them(tmp_path: Path) -> None:
     """The bound is a refusal, not a prohibition: retiring a decision stays possible."""
-    committed = _committed_queue()
-    queue_path = tmp_path / "ratification" / "synonym-candidates.json"
-    _write_queue(queue_path, committed)
-    before = hashlib.sha256(queue_path.read_bytes()).hexdigest()
-
-    observations = tmp_path / "observations.json"
-    observations.write_text(json.dumps(_observation_payload(committed)), encoding="utf-8", newline="")
+    committed, queue_path, before, observations = _staged_queue_and_observations(tmp_path)
 
     result = CliRunner().invoke(app, ["mine", str(observations), "--out", str(queue_path), "--drop-reviewed"])
 
