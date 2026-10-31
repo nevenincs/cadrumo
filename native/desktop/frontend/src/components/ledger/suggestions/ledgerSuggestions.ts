@@ -6,6 +6,7 @@
 
 import type { Suggestion } from "@/components/ui/suggestions";
 import { countryName, currencyName } from "../../../shared/codeNames";
+import { formatDay } from "../../../shared/dateFormats";
 import type { CatalogueInvoice, LedgerRow } from "../../../shell/ledger";
 
 /** The sibling fields a counterparty pick can fill. */
@@ -157,16 +158,21 @@ export function seriesOptions(
   return plainOptions(distinctText(pool.map((invoice) => invoice.series)));
 }
 
-const invoiceNote = (invoice: CatalogueInvoice) =>
-  [invoice.issued_at, invoice.counterparty_name].filter(Boolean).join(" · ") ||
-  undefined;
+const invoiceNote = (invoice: CatalogueInvoice, locale: string) =>
+  [
+    invoice.issued_at && formatDay(locale, invoice.issued_at),
+    invoice.counterparty_name,
+  ]
+    .filter(Boolean)
+    .join(" · ") || undefined;
 
 /** Invoice numbers, of the same kind and then this party first. The fills name
  * the invoice's party; a rectificativa keeps its own series, so none is
  * offered. */
 export function invoiceNumberOptions(
   invoices: readonly CatalogueInvoice[],
-  scope: { kind?: CatalogueInvoice["kind"] | null; party?: string } = {},
+  scope: { kind?: CatalogueInvoice["kind"] | null; party?: string },
+  locale: string,
 ): Suggestion[] {
   const wanted = fold(scope.party ?? "");
   const sameParty = (invoice: CatalogueInvoice) =>
@@ -184,7 +190,7 @@ export function invoiceNumberOptions(
       {
         value: number,
         label: number,
-        note: invoiceNote(invoice),
+        note: invoiceNote(invoice, locale),
         fills: partyFills({
           name: invoice.counterparty_name.trim(),
           taxId: invoice.counterparty_tax_id?.trim() || null,

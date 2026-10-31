@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { expect, userEvent, waitFor } from "storybook/test";
+import { expect, fireEvent, userEvent, waitFor } from "storybook/test";
 import { STORY_READER, useLedgerPort } from "@/dev/LedgerStage";
 import { SEED_ELEMENTS } from "@/dev/assetsSeed";
 import { ledgerClassOf } from "@/dev/ledgerClassesFixture";
@@ -113,14 +113,17 @@ const drawn = <Found extends HTMLElement>(root: Root, selector: string) =>
     { timeout: 5000 },
   );
 
-/** Types into the field the options named `key`. */
+// A change is made as a change event, not by pointer and keys: a person who
+// opens a picker or a list while the form is being filled keeps it open, since
+// nothing here counts as a click outside it.
+
+/** Sets the field the options named `key` to `text`. */
 const typed = async (root: Root, key: string, text: string) => {
   const input = await drawn<HTMLInputElement>(
     root,
     `[data-field="${key}"] input`,
   );
-  await userEvent.clear(input);
-  await userEvent.type(input, text);
+  await fireEvent.change(input, { target: { value: text } });
 };
 
 /** Chooses the `nth` of the choices the options served for `key`. */
@@ -139,7 +142,7 @@ const chosen = async (root: Root, key: string, nth: number) => {
     },
     { timeout: 5000 },
   );
-  await userEvent.selectOptions(select, option.value);
+  await fireEvent.change(select, { target: { value: option.value } });
 };
 
 /** Chooses the choice the options served for `key` under `value`. */
@@ -155,7 +158,7 @@ const chosenValue = async (root: Root, key: string, value: string) => {
     },
     { timeout: 5000 },
   );
-  await userEvent.selectOptions(select, value);
+  await fireEvent.change(select, { target: { value } });
 };
 
 const pressed = async (root: Root, selector: string) => {

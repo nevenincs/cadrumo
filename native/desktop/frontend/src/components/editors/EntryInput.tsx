@@ -1,4 +1,10 @@
-import { useState, type FocusEvent } from "react";
+import {
+  useLayoutEffect,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type FocusEvent,
+} from "react";
 import type { EditorProps } from "@/components/editors/editorProps";
 import { Input } from "@/components/ui/input";
 import { useSuggestions } from "@/components/ui/suggestions";
@@ -7,6 +13,9 @@ export type EntryReading = {
   /** What a typed text holds, or null when it cannot be read: that text then
    * goes to the host as typed, so the host's refusal fires. */
   read(typed: string): string | null;
+  /** How typed text is restyled in the box as it is typed, when it is: a
+   * code is shown in capitals at once. Text it cannot restyle stays as typed. */
+  echo?(typed: string): string;
   /** How a held value looks when the field is not being typed in. */
   shown(value: string): string;
   /** How a held value looks once the person starts typing in it. */
@@ -65,6 +74,27 @@ export function EntryInput({
     setEntry({ text: typed, sent });
     onChange(sent);
   };
+  // Restyled text puts the caret at the end of the box; it goes back to where
+  // the person was typing.
+  const caret = useRef<{ box: HTMLInputElement; at: number } | null>(null);
+  useLayoutEffect(() => {
+    const held = caret.current;
+    caret.current = null;
+    if (held && document.activeElement === held.box)
+      held.box.setSelectionRange(held.at, held.at);
+  });
+  const typedIn = (event: ChangeEvent<HTMLInputElement>) => {
+    const typed = event.target.value;
+    const echoed = lexeme ? typed : (reading.echo?.(typed) ?? typed);
+    if (echoed !== typed) {
+      const before = event.target.selectionStart ?? typed.length;
+      caret.current = {
+        box: event.target,
+        at: reading.echo!(typed.slice(0, before)).length,
+      };
+    }
+    take(echoed);
+  };
   const offered = useSuggestions({
     value: text,
     options: suggestions ?? null,
@@ -98,7 +128,7 @@ export function EntryInput({
         type={type}
         value={text}
         {...(suggestions === undefined ? own : offered.field(own))}
-        onChange={(event) => take(event.target.value)}
+        onChange={typedIn}
         controlSize={controlSize}
         aria-invalid={invalid || undefined}
         aria-required={required || undefined}

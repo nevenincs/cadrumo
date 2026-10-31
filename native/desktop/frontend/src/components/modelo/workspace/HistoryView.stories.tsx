@@ -5,6 +5,7 @@ import type {
   ModeloWorkHistoryEntryV1,
   OutputLanguage,
 } from "../../../shell/modeloContract";
+import { formatAmount } from "../../../shared/numbers";
 import { useStrings, type Translate } from "../../../shell/strings";
 import { HistoryView } from "./HistoryView";
 
@@ -49,7 +50,7 @@ const money = (casilla: string, box: string, label: string, filed: string) => ({
   help: null,
   data_type: "decimal",
   filed_value: filed,
-  filed_value_text: `${filed.replace(".", ",")} €`,
+  filed_value_text: formatAmount("es", filed, { currency: "EUR" }),
   edit_address: { kind: "correction" as const, casilla_id: casilla },
   grammar: {
     data_type: "decimal",

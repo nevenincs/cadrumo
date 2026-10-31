@@ -549,7 +549,9 @@ export function EvidenceRecords({
                     {facts(t, [
                       found.supplier,
                       found.invoice_number,
-                      found.invoice_date,
+                      found.invoice_date
+                        ? formatDay(locale, found.invoice_date)
+                        : null,
                     ]) || t("desktop.ledger.documents.nothing_stated")}
                   </span>
                 </button>

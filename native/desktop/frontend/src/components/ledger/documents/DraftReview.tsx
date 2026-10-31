@@ -1022,7 +1022,7 @@ export function DraftReview({
         return {
           suggestions:
             invoices &&
-            invoiceNumberOptions(invoices, { kind, party: partyName }),
+            invoiceNumberOptions(invoices, { kind, party: partyName }, locale),
         };
       case "currency":
         return currencies;

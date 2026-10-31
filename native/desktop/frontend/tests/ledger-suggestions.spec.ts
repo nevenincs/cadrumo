@@ -117,10 +117,19 @@ test("a fill reaches only what is still empty", () => {
   expect(emptyFills(undefined, {}, { name: "name" })).toEqual([]);
 });
 
+test("an invoice number is noted with its date as the window writes it", () => {
+  const offered = invoiceNumberOptions(
+    [invoice({ issued_at: "2026-01-05", counterparty_name: "Norte, S.L." })],
+    {},
+    "en",
+  );
+  expect(offered.map((one) => one.note)).toEqual(["Jan 5, 2026 · Norte, S.L."]);
+});
+
 test("a pick offers no tax decision", () => {
   const offered = [
     ...partyNameOptions([invoice({})]),
-    ...invoiceNumberOptions([invoice({})]),
+    ...invoiceNumberOptions([invoice({})], {}, "en"),
     ...descriptionOptions([row({ description: "Rent", counterparty: "Lar" })]),
     ...counterpartyOptions(
       [row({ counterparty: "Lar", counterparty_country: "ES" })],

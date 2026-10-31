@@ -969,10 +969,14 @@ function NewInvoice({
                     : []),
                   ...(issued
                     ? []
-                    : invoiceNumberOptions(invoices, {
-                        kind: draft.kind,
-                        party: draft.counterpartyName,
-                      }).map(({ value, label, note }) => ({
+                    : invoiceNumberOptions(
+                        invoices,
+                        {
+                          kind: draft.kind,
+                          party: draft.counterpartyName,
+                        },
+                        locale,
+                      ).map(({ value, label, note }) => ({
                         value,
                         label,
                         note,
@@ -1034,10 +1038,11 @@ function NewInvoice({
                 <TextEditor
                   {...wired(control)}
                   {...bind("rectifies", "rectifies_invoice_number")}
-                  suggestions={invoiceNumberOptions(invoices, {
-                    kind: draft.kind,
-                    party: draft.counterpartyName,
-                  })}
+                  suggestions={invoiceNumberOptions(
+                    invoices,
+                    { kind: draft.kind, party: draft.counterpartyName },
+                    locale,
+                  )}
                   onPick={fillParty}
                 />
               )}
@@ -1650,6 +1655,7 @@ function StoredInvoice({
                     (other) => other.invoice_id !== invoice.invoice_id,
                   ),
                   { kind: invoice.kind, party: correction.counterpartyName },
+                  locale,
                 ),
               })}
             </FormField>

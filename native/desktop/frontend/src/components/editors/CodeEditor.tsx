@@ -29,6 +29,7 @@ export function CodeEditor({
   const reading = useMemo(
     () => ({
       read: ibanText,
+      echo: ibanText,
       shown: (code: string) => (secret || !shown ? code : shown(code)),
       typed: (code: string) => code,
     }),

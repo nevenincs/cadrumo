@@ -172,10 +172,11 @@ function optionsOf(
         invoices.filter((row) => row.kind === "received"),
       );
     case "invoice_number":
-      return invoiceNumberOptions(invoices, {
-        kind: scope.invoiceKind,
-        party: scope.party,
-      });
+      return invoiceNumberOptions(
+        invoices,
+        { kind: scope.invoiceKind, party: scope.party },
+        locale,
+      );
     case "line_description":
       return lineDescriptionOptions(invoices, scope.party);
   }

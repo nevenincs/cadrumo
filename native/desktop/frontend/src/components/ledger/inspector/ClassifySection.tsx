@@ -500,6 +500,9 @@ const M210_LABELS: Record<M210Field, string> = {
   asset_or_right_id: "desktop.ledger.inspector.m210.asset_or_right_id",
 };
 
+const heldRate = (stored: string | null | undefined) =>
+  stored ? heldDecimal(stored) : "";
+
 /** The Modelo 210 facts of income a non-resident earns in Spain, sent with
  * the movement's single classification. */
 function M210Form({
@@ -527,8 +530,9 @@ function M210Form({
       staged?.options.tipo_renta_code ?? stored?.official_tipo_renta_code ?? "",
     gross_income_amount:
       staged?.options.gross_income_amount ?? stored?.gross_income_amount ?? "",
-    applicable_rate:
-      staged?.options.applicable_rate ?? stored?.applicable_rate ?? "",
+    applicable_rate: heldRate(
+      staged?.options.applicable_rate ?? stored?.applicable_rate,
+    ),
     payer_mode: staged?.options.payer_mode ?? stored?.payer_mode ?? "",
     payer_id: staged?.options.payer_id ?? stored?.payer_id ?? "",
     asset_or_right_id:
@@ -536,6 +540,7 @@ function M210Form({
   });
   const [values, setValues] = useState(initial);
   const [error, setError] = useState<string | null>(null);
+  const [rateError, setRateError] = useState<string | null>(null);
   const incoming = row.transaction.direction === "INCOMING";
   const offered = {
     payer_id: useFieldSuggestions("m210_payer"),
@@ -552,12 +557,20 @@ function M210Form({
           setError(t("desktop.ledger.inspector.m210.code_refused"));
           return;
         }
+        const rate = parseFractionPercent(values.applicable_rate);
+        if (rate.kind === "refused") {
+          setError(null);
+          setRateError(refusalText(t, rate.refusal));
+          return;
+        }
         const options: Record<string, string | null> = {};
         for (const name of M210_FIELDS) {
           const text = values[name].trim();
           options[name] = text === "" ? null : text;
         }
+        options.applicable_rate = rate.kind === "value" ? rate.value : null;
         setError(null);
+        setRateError(null);
         onStage({
           type: "stage_action",
           action: {
@@ -584,13 +597,22 @@ function M210Form({
           controlSize: "sm",
           value: values[name],
           disabled: lock !== null || !incoming,
-          invalid: error !== null && name === "tipo_renta_code",
+          invalid:
+            name === "applicable_rate"
+              ? rateError !== null
+              : error !== null && name === "tipo_renta_code",
           describedBy:
-            error !== null && name === "tipo_renta_code"
-              ? `${formId}-error`
-              : undefined,
-          onChange: (next: string) =>
-            setValues((held) => ({ ...held, [name]: next })),
+            name === "applicable_rate"
+              ? rateError !== null
+                ? `${formId}-rate-error`
+                : undefined
+              : error !== null && name === "tipo_renta_code"
+                ? `${formId}-error`
+                : undefined,
+          onChange: (next: string) => {
+            if (name === "applicable_rate") setRateError(null);
+            setValues((held) => ({ ...held, [name]: next }));
+          },
         } as const;
         return (
           <Field key={name} className="gap-0.5">
@@ -599,6 +621,8 @@ function M210Form({
             </FieldLabel>
             {name === "gross_income_amount" ? (
               <MoneyEditor {...entry} />
+            ) : name === "applicable_rate" ? (
+              <PercentEditor unit="fraction" {...entry} />
             ) : name === "payer_id" ? (
               <TaxIdEditor {...entry} {...offered.payer_id} />
             ) : name === "asset_or_right_id" ? (
@@ -612,6 +636,11 @@ function M210Form({
       {error && (
         <p id={`${formId}-error`} className="text-sm">
           {error}
+        </p>
+      )}
+      {rateError && (
+        <p id={`${formId}-rate-error`} className="text-sm">
+          {rateError}
         </p>
       )}
       <div className="flex gap-2">
