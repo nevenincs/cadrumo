@@ -28,7 +28,7 @@ class DependencyRequirementSnapshot(BaseModel):
     """The complete declared requirement, with a public period address."""
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-    source_modelo: str = Field(min_length=1, max_length=8)
+    source_modelo: str = Field(min_length=1, max_length=16)
     filing_year: FilingYear
     period: PublicPeriod
     source_casilla_ids: tuple[CasillaId, ...] = Field(min_length=1)
@@ -69,7 +69,7 @@ class DependencyInventoryItemSnapshot(BaseModel):
     """One target and its complete current registry dependency declarations."""
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-    target_modelo: str = Field(min_length=1, max_length=8)
+    target_modelo: str = Field(min_length=1, max_length=16)
     target_revision_id: RevisionId
     target_filing_year: FilingYear
     target_period: PublicPeriod
@@ -112,7 +112,7 @@ class DependencyEvidenceSnapshot(BaseModel):
     """Only the clean-state evidence fields the CLI currently discloses."""
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-    source_modelo: str = Field(min_length=1, max_length=8)
+    source_modelo: str = Field(min_length=1, max_length=16)
     filing_year: FilingYear
     period: PublicPeriod
     clean: bool
@@ -159,7 +159,7 @@ class DependencyCleanStateSnapshot(BaseModel):
     """One target's bounded evidence rows, including explicit member NIFs."""
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-    target_modelo: str = Field(min_length=1, max_length=8)
+    target_modelo: str = Field(min_length=1, max_length=16)
     target_filing_year: FilingYear
     target_period: PublicPeriod
     requires_clean_state: bool

@@ -64,8 +64,8 @@ class ModeloWorkAmendRequest(BaseModel):
 
     baseline: ModeloWorkAmendBaseline
     amendment_kind: CalculationRevisionAmendmentKind
-    overrides: Annotated[tuple[ModeloWorkAmendOverride, ...], Field(min_length=1, max_length=500)]
-    reason: Annotated[str, Field(min_length=1, max_length=500)]
+    overrides: Annotated[tuple[ModeloWorkAmendOverride, ...], Field(min_length=1, max_length=512)]
+    reason: Annotated[str, Field(min_length=1, max_length=512)]
     m303_rectificativa_motive: M303RectificativaMotive | None = None
 
     #: The rows this amendment declares, or ``None`` where it declares none.

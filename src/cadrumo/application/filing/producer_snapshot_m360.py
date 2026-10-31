@@ -30,6 +30,7 @@ from cadrumo.domain.calculations.registry.tax_id_format import SubjectTaxId
 from ...core.country_code import COUNTRY_CODE_ALPHA2_PATTERN, CountryCodeAlpha2
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.models import STRICT_FROZEN_CONFIG, STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+from ...core.parsing.codes import IsoCurrencyCodeText
 from ...core.period import Period
 from ...domain.calculations.registry.form_codes import RegistryCodedEnum
 from ...domain.deadlines.models import RefundAccount
@@ -55,8 +56,8 @@ _Text148 = Annotated[str, _text(148)]
 #: renders them as full-width digit identifiers, so the fact carries every digit.
 _Digits5 = Annotated[str, StringConstraints(pattern=r"^\d{5}$")]
 _Digits10 = Annotated[str, StringConstraints(pattern=r"^\d{10}$")]
-_Email = Annotated[str, StringConstraints(strip_whitespace=True, max_length=100, pattern=r"^[^@\s]+@[^@\s]+$")]
-_CurrencyCode = Annotated[str, StringConstraints(pattern=r"^[A-Z]{3}$")]
+_Email = Annotated[str, StringConstraints(strip_whitespace=True, max_length=128, pattern=r"^[^@\s]+@[^@\s]+$")]
+_CurrencyCode = IsoCurrencyCodeText
 
 #: DR360 Nota 3: Greece is written ``EL`` in these positions, never its ISO ``GR``.
 _GREECE_ISO_CODE = "GR"

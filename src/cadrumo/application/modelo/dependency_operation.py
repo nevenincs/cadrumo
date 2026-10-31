@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 from functools import partial
-from typing import Annotated, Literal, Self
+from typing import Literal, Self
 from uuid import UUID
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, model_validator
 
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
@@ -16,6 +16,7 @@ from ...core.operations import OperationEffect, OperationTerminalCondition, prof
 from ...core.period import Period
 from ...domain.calculations.registry.applicability import derive_taxpayer_files_economic_activity
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...domain.modelos.codes import ModeloCodeText
 from ..calculations.cross_period_clean_state import (
     cross_period_dependency_inventory,
     cross_period_dependency_requirements,
@@ -52,7 +53,7 @@ class ModeloDependencyRequest(CredentialFreeOperationRequest):
 
     profile_id: UUID
     filing_year: FilingYear
-    modelo: Annotated[str, Field(pattern=r"^[0-9]{3}$")] | None = None
+    modelo: ModeloCodeText | None = None
     period: PublicPeriod | None = None
 
     @model_validator(mode="after")
@@ -67,7 +68,7 @@ class ModeloDependencySnapshot(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     filing_year: FilingYear
-    modelo_filter: Annotated[str, Field(pattern=r"^[0-9]{3}$")] | None
+    modelo_filter: ModeloCodeText | None
     period_filter: PublicPeriod | None
     target_modelos: tuple[str, ...]
     source_modelos: tuple[str, ...]

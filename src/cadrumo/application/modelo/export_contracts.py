@@ -342,7 +342,7 @@ class ModeloExportResult(BaseModel):
     calculation_revision_id: CalculationRevisionId
     work_unit_id: WorkUnitId
     bucket_id: BucketId
-    modelo: str = Field(min_length=1, max_length=8)
+    modelo: str = Field(min_length=1, max_length=16)
     filing_year: FilingYear
     period: Period
     output_path: Path

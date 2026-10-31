@@ -17,6 +17,7 @@ from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operator_action_enums import OperatorActionAxis
 from ...domain.calculations.registry.ids import LegalRefId, RevisionId, SourceRefId, VerificationExpectationId
 from ...domain.modelos.calculation_revision import CalculationRevisionState
+from ...domain.modelos.codes import ModeloCodeText
 from ...domain.modelos.verification_report import (
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
@@ -163,7 +164,7 @@ class ModeloWorkReviewFindingSnapshot(BaseModel):
     severity: ModeloVerificationFindingSeverity
     casilla_id: CasillaId | None = None
     expectation_id: VerificationExpectationId | None = None
-    message_locale_key: str = Field(min_length=1, max_length=200)
+    message_locale_key: str = Field(min_length=1, max_length=256)
     message_facts: tuple[ModeloWorkReviewFact, ...] = ()
     legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
     source_refs: tuple[SourceRefId, ...] = ()
@@ -200,7 +201,7 @@ class ModeloWorkReviewBlockerSnapshot(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     axis: OperatorActionAxis
-    native_code: str = Field(min_length=1, max_length=200)
+    native_code: str = Field(min_length=1, max_length=256)
     facts: tuple[ModeloWorkReviewFact, ...] = ()
 
     @classmethod
@@ -230,7 +231,7 @@ class ModeloWorkReviewSnapshot(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     bucket_id: BucketId
-    modelo: str = Field(min_length=3, max_length=3, pattern=r"^[0-9]{3}$")
+    modelo: ModeloCodeText
     filing_year: FilingYear
     period: PublicPeriod
     registry_revision_id: RevisionId

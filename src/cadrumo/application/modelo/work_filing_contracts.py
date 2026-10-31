@@ -39,7 +39,7 @@ class ModeloWorkFileRequest(CredentialFreeOperationRequest):
     refund_election: RefundElection = RefundElection.COMPENSAR
     payment_election: PaymentElection = PaymentElection.INGRESO
     prior_domiciliation_election: PriorDomiciliationElection = PriorDomiciliationElection.KEEP
-    notes: Annotated[str, Field(min_length=1, max_length=500)] | None = None
+    notes: Annotated[str, Field(min_length=1, max_length=512)] | None = None
 
     #: The operator this invocation acts as. The platform binds an actor at
     #: submission, never at composition, so baking one into a definition would

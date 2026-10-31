@@ -301,7 +301,7 @@ class ModeloEditWritableScalarSurfaceEntryV1(EditModel):
     kind: Literal["writable_scalar"] = "writable_scalar"
     casilla_id: CasillaId
     data_type: CasillaDataTypeValue
-    allowed_intents: Annotated[tuple[ModeloEditScalarIntentKind, ...], Field(min_length=1, max_length=3)]
+    allowed_intents: Annotated[tuple[ModeloEditScalarIntentKind, ...], Field(min_length=1, max_length=16)]
     grammar: ModeloEditValueGrammarV1
 
     @field_validator("allowed_intents")
@@ -327,7 +327,7 @@ class ModeloEditWritableRowGroupSurfaceEntryV1(EditModel):
 
     kind: Literal["writable_row_group"] = "writable_row_group"
     binding_id: BindingId
-    allowed_intents: Annotated[tuple[ModeloEditRowIntentKind, ...], Field(min_length=1, max_length=4)]
+    allowed_intents: Annotated[tuple[ModeloEditRowIntentKind, ...], Field(min_length=1, max_length=16)]
     reorderable: bool
     max_rows: Annotated[int, Field(ge=1)] | None = None
 
@@ -367,7 +367,7 @@ class ModeloEditWritableBindingOverrideSurfaceEntryV1(EditModel):
 
     kind: Literal["writable_binding_override"] = "writable_binding_override"
     binding_id: BindingId
-    allowed_intents: Annotated[tuple[ModeloEditBindingIntentKind, ...], Field(min_length=1, max_length=2)]
+    allowed_intents: Annotated[tuple[ModeloEditBindingIntentKind, ...], Field(min_length=1, max_length=16)]
     grammar: ModeloEditValueGrammarV1
 
     @field_validator("allowed_intents")
@@ -401,7 +401,7 @@ class ModeloEditWritableDetailRowSurfaceEntryV1(EditModel):
 
     kind: Literal["writable_detail_row"] = "writable_detail_row"
     detail_row_kind: _BoundedCode
-    allowed_intents: Annotated[tuple[ModeloEditDetailRowIntentKind, ...], Field(min_length=1, max_length=3)]
+    allowed_intents: Annotated[tuple[ModeloEditDetailRowIntentKind, ...], Field(min_length=1, max_length=16)]
 
     @field_validator("allowed_intents")
     @classmethod
@@ -561,7 +561,7 @@ class ModeloEditParsedValueV1(EditModel):
     outcome: Literal["parsed"] = "parsed"
     address: ModeloEditValueAddressV1
     value: ModeloScalar
-    normalisations: Annotated[tuple[ModeloEditNormalisation, ...], Field(max_length=4)] = ()
+    normalisations: Annotated[tuple[ModeloEditNormalisation, ...], Field(max_length=16)] = ()
 
 
 class ModeloEditParseReason(StrEnum):
@@ -641,7 +641,7 @@ class ModeloEditStaleBaselineRefusalV1(EditModel):
     kind: Literal["stale_edit_baseline"] = "stale_edit_baseline"
     edit_contract_version: Literal[1] = 1
     baseline_id: ModeloEditBaselineId
-    mismatching_coordinates: Annotated[tuple[_BoundedCode, ...], Field(min_length=1, max_length=8)]
+    mismatching_coordinates: Annotated[tuple[_BoundedCode, ...], Field(min_length=1, max_length=16)]
     responsible_owner: _BoundedCode
     reconsideration_condition: _BoundedText
     recovery_action: ActionReference | None = None

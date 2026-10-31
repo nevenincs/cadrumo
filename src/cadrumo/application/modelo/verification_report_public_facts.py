@@ -43,7 +43,7 @@ from .verification_report_scalar_facts import ModeloVerificationFactProjection, 
 
 _FindingLocaleKey = Annotated[
     str,
-    StringConstraints(strip_whitespace=True, min_length=3, max_length=200, pattern=NAMESPACED_ID_PATTERN),
+    StringConstraints(strip_whitespace=True, min_length=1, max_length=256, pattern=NAMESPACED_ID_PATTERN),
 ]
 
 

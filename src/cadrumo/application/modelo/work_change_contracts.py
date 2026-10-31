@@ -28,7 +28,7 @@ ModeloWorkUnitSubjectId = Annotated[str, Field(min_length=1, max_length=128, pat
 #: stripped check at the writer -- so the platform journals a request, takes a
 #: lease and schedules work for a rename that can never settle. Matching the
 #: domain means the request carries exactly what the domain will store.
-ModeloWorkUnitName = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=200)]
+ModeloWorkUnitName = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=256)]
 
 
 class ModeloWorkRenameRequest(CredentialFreeOperationRequest):
@@ -102,7 +102,7 @@ class ModeloWorkDiscardRequest(CredentialFreeOperationRequest):
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
 
     baseline: ModeloWorkDiscardBaseline
-    reason: Annotated[str, Field(min_length=1, max_length=500)] | None = None
+    reason: Annotated[str, Field(min_length=1, max_length=512)] | None = None
 
     #: The operator this invocation acts as. The platform binds an actor at
     #: submission, never at composition, so baking one into a definition would

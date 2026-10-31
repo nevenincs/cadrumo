@@ -37,6 +37,7 @@ from pydantic import BaseModel, Field, NonNegativeInt, TypeAdapter, field_valida
 from ...core.casilla_id import CasillaId, validated_casilla_id_map
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.export_layout_format import ExportLayoutFormat
+from ...core.filing_year import FilingYear
 from ...core.hashing import content_hash_hex, sha256_hex
 from ...core.hex import Hex64Str
 from ...core.identity.bucket import BucketId
@@ -159,7 +160,7 @@ class M145CommunicationValidationResult(BaseModel):
         pattern=r"^cadrumo\.application\.modelo$",
     )
     modelo: str = Field(default=Modelo("145").value, pattern=r"^145$")
-    communication_year: int = Field(ge=2000, le=2099)
+    communication_year: FilingYear
     period_token: M145CommunicationPeriod
     revision_id: RevisionId = Field(min_length=1)
     valid: bool
@@ -188,7 +189,7 @@ class M145CommunicationExportResult(BaseModel):
         pattern=r"^cadrumo\.application\.modelo$",
     )
     modelo: str = Field(default=Modelo("145").value, pattern=r"^145$")
-    communication_year: int = Field(ge=2000, le=2099)
+    communication_year: FilingYear
     period_token: M145CommunicationPeriod
     revision_id: RevisionId = Field(min_length=1)
     export_layout_id: str = Field(min_length=1)
@@ -231,7 +232,7 @@ class M145CommunicationCreateCommand(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    communication_year: int = Field(ge=2000, le=2099)
+    communication_year: FilingYear
     period_token: M145CommunicationPeriod = M145CommunicationPeriod.COMMUNICATION
     field_values: dict[CasillaId, M145CommunicationFieldValue] = Field(min_length=1)
     note: str | None = Field(default=None, max_length=512)
@@ -321,7 +322,7 @@ class M145CommunicationRecord(BaseModel):
         pattern=r"^cadrumo\.application\.modelo$",
     )
     modelo: str = Field(default=Modelo("145").value, pattern=r"^145$")
-    communication_year: int = Field(ge=2000, le=2099)
+    communication_year: FilingYear
     period_token: M145CommunicationPeriod
     revision_id: RevisionId = Field(min_length=1)
     state: M145CommunicationRecordState = M145CommunicationRecordState.CREATED

@@ -9,7 +9,7 @@ from pydantic import AfterValidator, BaseModel, StringConstraints
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.calculations.registry.form_codes import form_width_validator
 
-_NonBlankName = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=200)]
+_NonBlankName = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=256)]
 _AeatReceiptNumber = Annotated[
     str,
     StringConstraints(pattern=r"^\d+$", max_length=16),
@@ -18,7 +18,7 @@ _AeatReceiptNumber = Annotated[
 
 
 _M296SupportType = Annotated[str, StringConstraints(pattern=r"^[TC]$")]
-_M296AmendmentMark = Annotated[str, StringConstraints(min_length=1, max_length=2)]
+_M296AmendmentMark = Annotated[str, StringConstraints(min_length=1, max_length=16)]
 _FourDigitYear = Annotated[str, StringConstraints(pattern=r"^\d{4}$")]
 _DigitString9 = Annotated[str, StringConstraints(pattern=r"^\d{1,9}$")]
 

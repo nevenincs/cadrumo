@@ -16,6 +16,7 @@ from ...core.identity.hex_ids import CalculationRevisionId, FilingRecordId, Work
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.period import Period
 from ...core.time.utc import validate_utc_aware
+from ...domain.modelos.codes import ModeloCodeText
 from ...domain.modelos.filing_record import (
     AeatConfirmationState,
     ExternalEvidenceKind,
@@ -36,7 +37,7 @@ _BoundedPeriod = Annotated[str, Field(min_length=1, max_length=16)]
 _BoundedMemberNif = Annotated[str, Field(min_length=1, max_length=32)]
 
 
-_ModeloCodeValue = Annotated[str, StringConstraints(min_length=3, max_length=3, pattern=r"^[0-9]{3}$")]
+_ModeloCodeValue = ModeloCodeText
 
 
 _EvidenceReferenceValue = Annotated[str, StringConstraints(min_length=1, max_length=128)]

@@ -86,9 +86,9 @@ class ReviewPackageRecipientAddRequest(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     profile_id: UUID
-    recipient_id: str = Field(min_length=1, max_length=200)
+    recipient_id: str = Field(min_length=1, max_length=256)
     public_key_hex: str = Field(strict=True, min_length=64, max_length=64, pattern=HEX_PATTERN_64)
-    label: str = Field(default="", max_length=200)
+    label: str = Field(default="", max_length=256)
 
 
 class ReviewPackageRecipientListRequest(BaseModel):
@@ -105,7 +105,7 @@ class ReviewPackageRecipientRemoveRequest(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     profile_id: UUID
-    recipient_id: str = Field(min_length=1, max_length=200)
+    recipient_id: str = Field(min_length=1, max_length=256)
 
 
 class ReviewPackageRecipientProjection(BaseModel):
@@ -113,8 +113,8 @@ class ReviewPackageRecipientProjection(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
-    recipient_id: str = Field(min_length=1, max_length=200)
-    label: str = Field(max_length=200)
+    recipient_id: str = Field(min_length=1, max_length=256)
+    label: str = Field(max_length=256)
     public_key_hex: str = Field(strict=True, min_length=64, max_length=64, pattern=HEX_PATTERN_64)
     fingerprint_sha256: str = Field(strict=True, min_length=64, max_length=64, pattern=HEX_PATTERN_64)
     added_at: datetime
@@ -191,7 +191,7 @@ class ReviewPackageRecipientRemoveProjection(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     profile_id: UUID
-    recipient_id: str = Field(min_length=1, max_length=200)
+    recipient_id: str = Field(min_length=1, max_length=256)
     remaining: NonNegativeInt
 
 

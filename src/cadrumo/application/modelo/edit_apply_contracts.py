@@ -82,8 +82,8 @@ class ModeloEditApplyDetailRowAddressV1(BaseModel):
     kind: Literal["detail_row"] = "detail_row"
     detail_row_kind: DetailRowKindToken
     identity_components: Annotated[
-        tuple[Annotated[str, Field(min_length=1, max_length=200)], ...],
-        Field(min_length=1, max_length=8),
+        tuple[Annotated[str, Field(min_length=1, max_length=256)], ...],
+        Field(min_length=1, max_length=16),
     ]
 
     def to_address(self) -> ModeloEditDetailRowAddressV1:
@@ -147,14 +147,14 @@ class ModeloEditApplySubmissionV1(BaseModel):
     edit_contract_version: Literal[1] = 1
     baseline: ModeloEditApplyBaselineV1
     mutation_family: ModeloEditMutationFamily
-    scalar_intents: Annotated[tuple[ModeloEditApplyScalarIntentV1, ...], Field(max_length=500)] = ()
-    binding_intents: Annotated[tuple[ModeloEditApplyBindingIntentV1, ...], Field(max_length=500)] = ()
-    row_intents: Annotated[tuple[ModeloEditApplyRowIntentV1, ...], Field(max_length=500)] = ()
-    detail_row_intents: Annotated[tuple[ModeloEditApplyDetailRowIntentV1, ...], Field(max_length=500)] = ()
+    scalar_intents: Annotated[tuple[ModeloEditApplyScalarIntentV1, ...], Field(max_length=512)] = ()
+    binding_intents: Annotated[tuple[ModeloEditApplyBindingIntentV1, ...], Field(max_length=512)] = ()
+    row_intents: Annotated[tuple[ModeloEditApplyRowIntentV1, ...], Field(max_length=512)] = ()
+    detail_row_intents: Annotated[tuple[ModeloEditApplyDetailRowIntentV1, ...], Field(max_length=512)] = ()
     #: Entries as the filer typed them, for a preflight to read; never applied.
-    lexemes: Annotated[tuple[ModeloEditParseRequestV1, ...], Field(max_length=500)] = ()
+    lexemes: Annotated[tuple[ModeloEditParseRequestV1, ...], Field(max_length=512)] = ()
     #: Changes the frontend holds, for a preflight to judge again; never applied.
-    held: Annotated[tuple[ModeloEditHeldChangeV1, ...], Field(max_length=500)] = ()
+    held: Annotated[tuple[ModeloEditHeldChangeV1, ...], Field(max_length=512)] = ()
 
     @model_validator(mode="after")
     def _require_scalar_amounts_within_declared_operand_bounds(self) -> ModeloEditApplySubmissionV1:

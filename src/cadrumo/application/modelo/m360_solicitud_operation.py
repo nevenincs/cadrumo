@@ -24,6 +24,7 @@ from pydantic import BaseModel, Field, model_validator
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
 from ...core.async_cleanup import await_cancellation_complete
+from ...core.country_code import CountryCodeAlpha2
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.filing_year import FilingYear
 from ...core.iban import mask_iban
@@ -97,10 +98,10 @@ class Modelo360RepresentanteAccountInput(BaseModel):
 
     iban: str = Field(min_length=1, max_length=64)
     swift_bic: str = Field(min_length=1, max_length=16)
-    bank_name: str = Field(default="", max_length=70)
-    bank_address: str = Field(default="", max_length=35)
-    bank_city: str = Field(default="", max_length=30)
-    bank_country_code: str = Field(default="", max_length=2)
+    bank_name: str = Field(default="", max_length=128)
+    bank_address: str = Field(default="", max_length=64)
+    bank_city: str = Field(default="", max_length=32)
+    bank_country_code: str = Field(default="", max_length=16)
 
 
 class Modelo360SolicitudRequest(BaseModel):
@@ -137,7 +138,7 @@ class Modelo360SolicitudProjection(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     filing_year: FilingYear
-    pais_destino: str = Field(min_length=2, max_length=2)
+    pais_destino: CountryCodeAlpha2
     causa_presentacion: str = Field(min_length=1)
     titular_en_calidad_de: str = Field(min_length=1)
     has_representante: bool

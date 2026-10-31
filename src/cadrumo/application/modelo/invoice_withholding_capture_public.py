@@ -11,11 +11,11 @@ from typing import Self
 
 from pydantic import BaseModel, Field, field_validator
 
-from ...core.errors.hierarchy import pydantic_validation_boundary
+from ...core.errors.hierarchy import CoreValidationError, pydantic_validation_boundary
 from ...core.hex import Hex64Str
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.spanish_postcode import SpanishProvinceCode
-from ...domain.calculations.registry.form_codes import require_form_fit
+from ...domain.calculations.registry.form_codes import exceeds_form_bound, require_form_fit, require_form_width
 from ..aggregation.invoice_retencion import InvoiceWithholdingEvidenceRequest
 from ..aggregation.retenciones import Modelo180StructuredAddress, Modelo193NonpaymentCause
 from ..aggregation.service import PerModeloAggregationCommand
@@ -40,7 +40,7 @@ class PublicAnnualRecipientDetail(BaseModel):
     source_id: str = Field(min_length=1, max_length=128)
     source_allocation_id: str = Field(default="", max_length=128)
     perceptor_tax_id: str = Field(min_length=1, max_length=64)
-    perceptor_legal_name: str = Field(default="", max_length=200)
+    perceptor_legal_name: str = Field(default="", max_length=256)
     country_code: str | None = None
     transaction_date: date
     clave: str
@@ -49,18 +49,18 @@ class PublicAnnualRecipientDetail(BaseModel):
     percibido_especie: PublicDecimal = PublicDecimal(decimal="0")
     retencion_practicada: PublicDecimal = PublicDecimal(decimal="0")
     ingreso_a_cuenta: PublicDecimal = PublicDecimal(decimal="0")
-    province_code: str | None = Field(default=None, pattern="^\\d{2}$")
+    province_code: str | None = Field(default=None, max_length=16, pattern="^\\d*$")
     territorial_deduction_clave: int | None = None
-    perceptor_birth_year: int | None = Field(default=None, ge=1900, le=2100)
+    perceptor_birth_year: int | None = Field(default=None, ge=1900, le=9999)
     perceptor_situacion_familiar: int | None = None
-    representative_tax_id: str | None = Field(default=None, min_length=9, max_length=9)
-    spouse_or_unit_titular_tax_id: str | None = Field(default=None, min_length=9, max_length=9)
+    representative_tax_id: str | None = Field(default=None, min_length=1, max_length=32)
+    spouse_or_unit_titular_tax_id: str | None = Field(default=None, min_length=1, max_length=32)
     disability_clave: int | None = None
     contract_relation_clave: int | None = None
     unit_convivencia_titular_clave: int | None = None
     geographic_mobility_clave: int | None = None
     ingreso_a_cuenta_repercutido: PublicDecimal = PublicDecimal(decimal="0")
-    accrual_year: int | None = Field(default=None, ge=1900, le=2100)
+    accrual_year: int | None = Field(default=None, ge=1900, le=9999)
     reducciones_aplicables: PublicDecimal = PublicDecimal(decimal="0")
     gastos_deducibles: PublicDecimal = PublicDecimal(decimal="0")
     pension_compensatoria: PublicDecimal = PublicDecimal(decimal="0")
@@ -110,10 +110,10 @@ class PublicAnnualRecipientDetail(BaseModel):
     perceptor_mediador_flag: str | None = Field(default=None, max_length=1)
     clave_codigo: int | None = None
     codigo_emisor: str | None = Field(default=None, max_length=16)
-    naturaleza: str | None = Field(default=None, pattern="^\\d{2}$")
+    naturaleza: str | None = Field(default=None, max_length=16, pattern="^\\d*$")
     pago: int | None = None
     tipo_codigo: str | None = None
-    codigo_cuenta: str | None = Field(default=None, max_length=20)
+    codigo_cuenta: str | None = Field(default=None, max_length=32)
     financial_asset_origin: str | None = None
     financial_asset_acquisition_value: PublicDecimal | None = None
     financial_asset_disposal_value: PublicDecimal | None = None
@@ -124,16 +124,16 @@ class PublicAnnualRecipientDetail(BaseModel):
     base_retenciones: PublicDecimal
     porcentaje_retencion: PublicDecimal = PublicDecimal(decimal="0")
     penalizaciones: PublicDecimal = PublicDecimal(decimal="0")
-    isin_code: str | None = Field(default=None, max_length=12)
+    isin_code: str | None = Field(default=None, max_length=16)
     naturaleza_declarante: str | None = Field(default=None, max_length=1)
-    fecha_inicio_prestamo: str | None = Field(default=None, pattern="^\\d{8}$")
-    fecha_vencimiento_prestamo: str | None = Field(default=None, pattern="^\\d{8}$")
+    fecha_inicio_prestamo: str | None = Field(default=None, max_length=16, pattern="^\\d*$")
+    fecha_vencimiento_prestamo: str | None = Field(default=None, max_length=16, pattern="^\\d*$")
     compensaciones: PublicDecimal = PublicDecimal(decimal="0")
     garantias: PublicDecimal = PublicDecimal(decimal="0")
-    nif_pagador_anterior: str | None = Field(default=None, min_length=9, max_length=9)
-    fecha_devengo: str | None = Field(default=None, pattern="^\\d{8}$")
+    nif_pagador_anterior: str | None = Field(default=None, min_length=1, max_length=32)
+    fecha_devengo: str | None = Field(default=None, max_length=16, pattern="^\\d*$")
     clave_mercado: str | None = None
-    numero_orden: int | None = Field(default=None, ge=1, le=9999999)
+    numero_orden: int | None = Field(default=None, ge=1, le=1_000_000_000)
 
     @classmethod
     def from_domain(cls, value: BaseModel) -> Self:
@@ -145,6 +145,32 @@ class PublicAnnualRecipientDetail(BaseModel):
     @pydantic_validation_boundary
     def _subclave_fits_the_declared_field(cls, value: str | None) -> str | None:
         return require_form_fit(value, "withholding.subclave_max")
+
+    @field_validator("province_code")
+    @classmethod
+    @pydantic_validation_boundary
+    def _province_has_the_declared_width(cls, value: str | None) -> str | None:
+        return require_form_width(value, "withholding.province_digits")
+
+    @field_validator("naturaleza")
+    @classmethod
+    @pydantic_validation_boundary
+    def _naturaleza_has_the_declared_width(cls, value: str | None) -> str | None:
+        return require_form_width(value, "withholding.naturaleza_digits")
+
+    @field_validator("fecha_inicio_prestamo", "fecha_vencimiento_prestamo", "fecha_devengo")
+    @classmethod
+    @pydantic_validation_boundary
+    def _date_has_the_declared_width(cls, value: str | None) -> str | None:
+        return require_form_width(value, "withholding.date_digits")
+
+    @field_validator("numero_orden")
+    @classmethod
+    @pydantic_validation_boundary
+    def _orden_is_within_the_declared_ceiling(cls, value: int | None) -> int | None:
+        if value is not None and exceeds_form_bound(value, "withholding.numero_orden_max"):
+            raise CoreValidationError("the order number is above the ceiling the form declares")
+        return value
 
     @field_validator("codigo_emisor")
     @classmethod
@@ -166,7 +192,7 @@ class PublicModelo180Property(BaseModel):
 
     property_key: str = Field(min_length=1, max_length=128)
     situation: str = Field(min_length=1)
-    cadastral_reference: str | None = Field(default=None, min_length=1, max_length=20)
+    cadastral_reference: str | None = Field(default=None, min_length=1, max_length=32)
     address: PublicModelo180Address
     recipient_province_code: SpanishProvinceCode
     modality: str = Field(min_length=1)

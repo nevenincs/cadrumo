@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import re
 from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Annotated, Final, Literal, override
@@ -16,6 +17,7 @@ from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.filing_year import FilingYear
 from ...core.hashing import canonical_json_bytes, sha256_hex
+from ...core.hex import HEX_PATTERN_12
 from ...core.identity.bucket import BucketId
 from ...core.identity.digest import ContentDigest
 from ...core.identity.hex_ids import CalculationRevisionId, WorkUnitId
@@ -26,7 +28,7 @@ from ...core.period import Period
 from ...core.time.clock import now
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
-from ...domain.modelos.codes import ModeloCode
+from ...domain.modelos.codes import ModeloCode, ModeloCodeText
 from ..ledger.read_access import resolve_ledger_commit_access
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_NON_IDEMPOTENT_JOURNALED_UPDATE_CAPABILITIES
@@ -99,7 +101,7 @@ _WorkUnitLookupId = Annotated[
     str,
     Field(min_length=12, max_length=64, pattern=r"^(?:[0-9a-fA-F]{12}|[0-9a-fA-F]{64})$"),
 ]
-_ModeloSelector = Annotated[str, Field(min_length=3, max_length=3, pattern=r"^[0-9]{3}$")]
+_ModeloSelector = ModeloCodeText
 _PeriodToken = Annotated[str, Field(min_length=1, max_length=16, pattern=r"\S")]
 _RevisionSelector = Annotated[str, Field(min_length=1, max_length=128, pattern=r"\S")]
 _BucketSelector = Annotated[str, Field(min_length=1, max_length=128, pattern=r"\S")]
@@ -273,7 +275,9 @@ def _reconciliation_import_work_selector(payload: ModeloReconciliationImportRequ
     return ModeloWorkSelectorRequest(
         work_unit_id=(work_unit_lookup if work_unit_lookup is not None and len(work_unit_lookup) == 64 else None),
         operator_work_unit_id=(
-            work_unit_lookup if work_unit_lookup is not None and len(work_unit_lookup) == 12 else None
+            work_unit_lookup
+            if work_unit_lookup is not None and re.fullmatch(HEX_PATTERN_12, work_unit_lookup)
+            else None
         ),
         modelo=ModeloCode(payload.modelo) if payload.modelo is not None else None,
         filing_year=payload.filing_year,

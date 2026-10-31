@@ -104,7 +104,7 @@ class ModeloEditApplyRowIntentV1(BaseModel):
 
     address: ModeloEditRowAddressV1
     kind: ModeloEditRowIntentKind
-    row: Annotated[tuple[ModeloEditApplyScalarIntentV1, ...], Field(max_length=200)] | None = None
+    row: Annotated[tuple[ModeloEditApplyScalarIntentV1, ...], Field(max_length=256)] | None = None
     move_to_index: Annotated[int, Field(ge=1)] | None = None
 
     def to_intent(self) -> ModeloRowEditIntentV1:

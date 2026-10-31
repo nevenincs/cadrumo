@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from pydantic import BaseModel, Field
 
+from ...core.country_code import CountryCodeAlpha2
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ..filing.producer_snapshot_m360 import (
     M360AmbitoEstablecimiento,
@@ -20,7 +21,7 @@ class Modelo360SolicitudHeaderInput(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     nivel_calidad_datos: str = Field(min_length=1)
-    pais_destino: str = Field(min_length=2, max_length=2)
+    pais_destino: CountryCodeAlpha2
     causa_presentacion: str = Field(min_length=1)
     numero_registro_declaracion_anterior: str | None = None
     comunicacion_prorrata_definitiva: bool | None = None

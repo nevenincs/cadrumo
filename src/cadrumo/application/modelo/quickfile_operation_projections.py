@@ -10,6 +10,7 @@ from pydantic import BaseModel, Field, model_validator
 from ...core.errors.error_codes import get_registered_error_code
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import OperationEffect
+from ...domain.modelos.codes import ModeloCodeText
 from ...domain.modelos.verification_report import ModeloVerificationFindingSeverity
 from ..operations.public_period import PublicPeriod
 from ..operator_actions.projection import PreconditionVerdictSnapshot
@@ -39,7 +40,7 @@ class QuickfileProjection(BaseModel):
     result_version: Literal[1] = 1
     profile_id: UUID
     operation: Literal["quickfile"] = "quickfile"
-    modelo: Annotated[str, Field(pattern=r"^[0-9]{3}$")]
+    modelo: ModeloCodeText
     filing_year: int
     period: PublicPeriod
     registry_revision_id: Annotated[str, Field(max_length=128)]

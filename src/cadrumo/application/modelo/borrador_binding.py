@@ -80,7 +80,7 @@ class Modelo100BorradorBindingCommand(BaseModel):
     model_config = _STRICT_FROZEN
 
     bucket_id: BucketId
-    modelo: str = Field(min_length=1, max_length=8)
+    modelo: str = Field(min_length=1, max_length=16)
     filing_year: FilingYear
     period: Period
     borrador_snapshot_id: str | None = Field(default=None, min_length=1, max_length=128)

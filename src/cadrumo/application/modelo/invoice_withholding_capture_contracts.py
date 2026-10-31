@@ -50,7 +50,7 @@ MODELO_INVOICE_WITHHOLDING_CAPTURE_MAX_RESULT_BYTES = 16 * 1024
 
 _SAFE_REFUSAL_REASON = Annotated[
     str,
-    Field(min_length=1, max_length=96, pattern=r"^[a-z][a-z0-9_]*$"),
+    Field(min_length=1, max_length=128, pattern=r"^[a-z][a-z0-9_]*$"),
 ]
 
 

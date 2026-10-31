@@ -20,6 +20,7 @@ from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.payment_election import PaymentElection
 from ...core.prior_domiciliation_election import PriorDomiciliationElection
 from ...core.refund_election import RefundElection
+from ...domain.modelos.codes import ModeloCodeText
 from ...domain.transactions.own_accounts import OwnAccountId
 from ..operations.public_period import PublicPeriod
 from ..operator_actions.projection import PreconditionVerdictSnapshot
@@ -64,7 +65,7 @@ class QuickfileRequest(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     profile_id: UUID
     bucket_id: UUID | None = None
-    modelo: Annotated[str, Field(pattern=r"^[0-9]{3}$")]
+    modelo: ModeloCodeText
     period: PublicPeriod
     revision_id: QuickfileReference | None = None
     output_path: Annotated[str, Field(min_length=1, max_length=4096, pattern=r"\S")]

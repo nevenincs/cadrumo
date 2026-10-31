@@ -113,7 +113,7 @@ class ModeloReviewPackageManifestPublic(BaseModel):
     work_unit_id: WorkUnitId
     calculation_revision_id: CalculationRevisionId
     registry_snapshot_ref: ModeloRegistrySnapshotCoordinates
-    modelo: str = Field(min_length=1, max_length=8)
+    modelo: str = Field(min_length=1, max_length=16)
     filing_year: FilingYear
     period: PublicPeriod
     revision_state: str = Field(min_length=1)

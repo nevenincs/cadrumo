@@ -7,6 +7,7 @@ at the application addressing boundary.
 
 from __future__ import annotations
 
+import re
 from enum import StrEnum
 from typing import Annotated
 
@@ -15,6 +16,7 @@ from pydantic import BaseModel, StringConstraints, field_validator
 from ...core.bucket_pointer import resolve_active_bucket_id
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.filing_year import FilingYear
+from ...core.hex import HEX_PATTERN_12
 from ...core.identity.bucket import BucketId
 from ...core.identity.hex_ids import CalculationRevisionId, FilingRecordId, WorkUnitId
 from ...core.models import STRICT_FROZEN_CONFIG
@@ -246,7 +248,7 @@ def _resolve_operator_work_unit_selection(
     )
 
     operator_id = request.operator_work_unit_id
-    if operator_id is None or len(operator_id) != 12:
+    if operator_id is None or not re.fullmatch(HEX_PATTERN_12, operator_id):
         raise ModeloWorkSelectorContradictionError(
             translated_message="errors.refused.modelo_work_selector_contradiction",
         )

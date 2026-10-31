@@ -117,7 +117,7 @@ class ModeloReviewPackageEncryptForRecipientRequest(_Request):
     """One trusted recipient and the existing review-only/expiry choices."""
 
     package: Path
-    recipient_id: Annotated[str, Field(min_length=1, max_length=200)]
+    recipient_id: Annotated[str, Field(min_length=1, max_length=256)]
     output: Path
     review_only: bool = False
     valid_for_days: Annotated[int, Field(gt=0)] | None = None
@@ -138,7 +138,7 @@ class ModeloReviewPackageEncryptFeedbackRequest(_Request):
     request carries.
     """
 
-    originator_id: Annotated[str, Field(min_length=1, max_length=200)]
+    originator_id: Annotated[str, Field(min_length=1, max_length=256)]
     work_unit_id: WorkUnitId
     calculation_revision_id: CalculationRevisionId
     submitted_by: ReviewPackageActor

@@ -29,11 +29,13 @@ See Also:
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from ...core.authority_grade import RegistryAuthorityGrade
 from ...core.filing_year import FilingYear
+from ...core.hex import HEX_PATTERN_12
 from ...core.identity.hex_ids import CalculationRevisionId, WorkUnitId
 from ...core.operator_action_enums import ActionEvidenceProvenance
 from ...core.period import Period
@@ -421,7 +423,9 @@ def modelo_work_address_from_operator_target(
         )
     normalized_work_unit_id = work_unit_id.strip().lower() if work_unit_id is not None else None
     operator_work_unit_id = (
-        normalized_work_unit_id if normalized_work_unit_id is not None and len(normalized_work_unit_id) == 12 else None
+        normalized_work_unit_id
+        if normalized_work_unit_id is not None and re.fullmatch(HEX_PATTERN_12, normalized_work_unit_id)
+        else None
     )
     return ModeloWorkAddress(
         work_unit_id=None if operator_work_unit_id is not None else normalized_work_unit_id,

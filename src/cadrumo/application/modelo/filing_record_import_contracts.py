@@ -14,6 +14,7 @@ from ...core.identity.bucket import BucketId
 from ...core.identity.hex_ids import FilingRecordId, WorkUnitId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.period import Period
+from ...domain.modelos.codes import ModeloCodeText
 from ...domain.modelos.filing_record import (
     ExternalEvidenceKind,
     FilingDeclarationKind,
@@ -156,7 +157,7 @@ class ModeloFilingRecordImportReconciliationProjection(BaseModel):
 
     outcome: FilingReconciliationOutcome
     bucket_id: BucketId
-    modelo: Annotated[str, Field(min_length=3, max_length=3, pattern=r"^[0-9]{3}$")]
+    modelo: ModeloCodeText
     filing_year: FilingYear
     period: Annotated[str, Field(min_length=1, max_length=16, pattern=r"\S")]
     member_nif: Annotated[str, Field(min_length=1, max_length=32)] | None = None

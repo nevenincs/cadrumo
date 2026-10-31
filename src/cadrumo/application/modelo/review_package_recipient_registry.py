@@ -82,8 +82,8 @@ class RecipientFingerprintRecord(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    recipient_id: str = Field(min_length=1, max_length=200)
-    label: str = Field(default="", max_length=200)
+    recipient_id: str = Field(min_length=1, max_length=256)
+    label: str = Field(default="", max_length=256)
     public_key_hex: str = Field(pattern=_HEX_PATTERN_64)
     added_at: datetime
 
