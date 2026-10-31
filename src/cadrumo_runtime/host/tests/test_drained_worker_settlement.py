@@ -15,10 +15,10 @@ from cadrumo.adapters.persistence.operations.journal import OperationJournalRepo
 from cadrumo.adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
 from cadrumo.adapters.persistence.operations.tests.supervisor_test_support import (
     IdleExecutor,
-    _registry,
-    _request,
-    _supervisor,
     operation_repositories,
+    operation_supervisor,
+    supervisor_registry,
+    supervisor_request,
 )
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.operations.models import OperationReconciliationOutcome
@@ -142,13 +142,13 @@ def test_a_stop_records_unfinished_work_as_interrupted_with_its_effect(tmp_path:
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         root = tmp_path / "runtime"
         journal, leases, operands = operation_repositories(storage_root=root, profile_objects=profile.repository)
-        registry = _registry(executor_type=IdleExecutor, build=IdleExecutor)
+        registry = supervisor_registry(executor_type=IdleExecutor, build=IdleExecutor)
         profiles, stop = _profiles(root, registry)
         identity = _identity(profiles.boot)
         running, created, foreign = "3" * 64, "4" * 64, "5" * 64
 
         async def seed() -> None:
-            ours = _supervisor(
+            ours = operation_supervisor(
                 registry=registry,
                 journal=journal,
                 leases=leases,
@@ -157,10 +157,10 @@ def test_a_stop_records_unfinished_work_as_interrupted_with_its_effect(tmp_path:
                 token="2" * 64,
                 clock=now,
             )
-            await ours.submit(_request(subject_ref="subject:running"), operation_id=running)
-            await ours.submit(_request(subject_ref="subject:created"), operation_id=created)
+            await ours.submit(supervisor_request(subject_ref="subject:running"), operation_id=running)
+            await ours.submit(supervisor_request(subject_ref="subject:created"), operation_id=created)
             await _enter_executor(journal, leases, running)
-            theirs = _supervisor(
+            theirs = operation_supervisor(
                 registry=registry,
                 journal=journal,
                 leases=leases,
@@ -169,7 +169,7 @@ def test_a_stop_records_unfinished_work_as_interrupted_with_its_effect(tmp_path:
                 token="7" * 64,
                 clock=now,
             )
-            await theirs.submit(_request(subject_ref="subject:foreign"), operation_id=foreign)
+            await theirs.submit(supervisor_request(subject_ref="subject:foreign"), operation_id=foreign)
 
         asyncio.run(seed())
         foreign_before = asyncio.run(journal.load(foreign))
@@ -202,13 +202,13 @@ def test_unconfirmed_containment_leaves_unfinished_work_running(tmp_path: Path) 
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         root = tmp_path / "runtime"
         journal, leases, operands = operation_repositories(storage_root=root, profile_objects=profile.repository)
-        registry = _registry(executor_type=IdleExecutor, build=IdleExecutor)
+        registry = supervisor_registry(executor_type=IdleExecutor, build=IdleExecutor)
         profiles, stop = _profiles(root, registry)
         identity = _identity(profiles.boot)
         running = "3" * 64
 
         async def seed() -> None:
-            supervisor = _supervisor(
+            supervisor = operation_supervisor(
                 registry=registry,
                 journal=journal,
                 leases=leases,
@@ -217,7 +217,7 @@ def test_unconfirmed_containment_leaves_unfinished_work_running(tmp_path: Path) 
                 token="2" * 64,
                 clock=now,
             )
-            await supervisor.submit(_request(subject_ref="subject:running"), operation_id=running)
+            await supervisor.submit(supervisor_request(subject_ref="subject:running"), operation_id=running)
             await _enter_executor(journal, leases, running)
 
         asyncio.run(seed())
@@ -236,13 +236,13 @@ def test_a_settlement_that_cannot_run_leaves_the_record_for_lapse_reconciliation
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         root = tmp_path / "runtime"
         journal, leases, operands = operation_repositories(storage_root=root, profile_objects=profile.repository)
-        registry = _registry(executor_type=IdleExecutor, build=IdleExecutor)
+        registry = supervisor_registry(executor_type=IdleExecutor, build=IdleExecutor)
         profiles, stop = _profiles(root, None)
         identity = _identity(profiles.boot)
         running = "3" * 64
 
         async def seed() -> None:
-            supervisor = _supervisor(
+            supervisor = operation_supervisor(
                 registry=registry,
                 journal=journal,
                 leases=leases,
@@ -251,7 +251,7 @@ def test_a_settlement_that_cannot_run_leaves_the_record_for_lapse_reconciliation
                 token="2" * 64,
                 clock=now,
             )
-            await supervisor.submit(_request(subject_ref="subject:running"), operation_id=running)
+            await supervisor.submit(supervisor_request(subject_ref="subject:running"), operation_id=running)
             await _enter_executor(journal, leases, running)
 
         asyncio.run(seed())

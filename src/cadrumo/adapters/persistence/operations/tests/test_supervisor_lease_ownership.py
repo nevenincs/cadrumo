@@ -58,12 +58,12 @@ from .supervisor_test_support import (
     _drifted_registry,
     _lapse_settler,
     _leave_settlement_lease_behind,
-    _registry,
-    _request,
     _settle_failed,
     _shared_scope_holder,
-    _supervisor,
     operation_repositories,
+    operation_supervisor,
+    supervisor_registry,
+    supervisor_request,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
@@ -79,8 +79,8 @@ def test_a_lease_renewed_within_the_last_interval_is_confirmed_and_not_rewritten
         )
         started = asyncio.Event()
         executor = WaitingExecutor(started=started, release=asyncio.Event())
-        supervisor = _supervisor(
-            registry=_registry(executor_type=WaitingExecutor, build=lambda: executor),
+        supervisor = operation_supervisor(
+            registry=supervisor_registry(executor_type=WaitingExecutor, build=lambda: executor),
             journal=journal,
             leases=leases,
             operands=operands,
@@ -89,7 +89,7 @@ def test_a_lease_renewed_within_the_last_interval_is_confirmed_and_not_rewritten
             clock=lambda: observed_at[0],
             lease_duration=timedelta(minutes=1),
         )
-        operation_id = asyncio.run(supervisor.submit(_request(), operation_id="3" * 64))
+        operation_id = asyncio.run(supervisor.submit(supervisor_request(), operation_id="3" * 64))
 
         observed_at[0] = _NOW + timedelta(seconds=5)
         running = asyncio.run(_close_host_over_live_executor(supervisor, operation_id, started))
@@ -114,8 +114,8 @@ def test_supervisor_renews_exact_lease_before_expiry_and_settles_beyond_original
         )
         started = asyncio.Event()
         executor = WaitingExecutor(started=started, release=asyncio.Event())
-        supervisor = _supervisor(
-            registry=_registry(executor_type=WaitingExecutor, build=lambda: executor),
+        supervisor = operation_supervisor(
+            registry=supervisor_registry(executor_type=WaitingExecutor, build=lambda: executor),
             journal=journal,
             leases=leases,
             operands=operands,
@@ -124,7 +124,7 @@ def test_supervisor_renews_exact_lease_before_expiry_and_settles_beyond_original
             clock=lambda: observed_at[0],
             lease_duration=timedelta(minutes=1),
         )
-        operation_id = asyncio.run(supervisor.submit(_request(), operation_id="3" * 64))
+        operation_id = asyncio.run(supervisor.submit(supervisor_request(), operation_id="3" * 64))
 
         observed_at[0] = _NOW + timedelta(seconds=30)
         running = asyncio.run(_close_host_over_live_executor(supervisor, operation_id, started))
@@ -170,8 +170,8 @@ def test_start_heartbeats_a_quiet_executor_past_the_initial_lease_window(tmp_pat
         started = asyncio.Event()
         release = asyncio.Event()
         executor = WaitingExecutor(started=started, release=release, result_ref="result:heartbeat-settlement")
-        registry = _registry(executor_type=WaitingExecutor, build=lambda: executor)
-        supervisor = _supervisor(
+        registry = supervisor_registry(executor_type=WaitingExecutor, build=lambda: executor)
+        supervisor = operation_supervisor(
             registry=registry,
             journal=journal,
             leases=leases,
@@ -181,7 +181,7 @@ def test_start_heartbeats_a_quiet_executor_past_the_initial_lease_window(tmp_pat
             clock=lambda: observed_at[0],
             lease_duration=timedelta(milliseconds=30),
         )
-        contender = _supervisor(
+        contender = operation_supervisor(
             registry=registry,
             journal=journal,
             leases=leases,
@@ -193,7 +193,7 @@ def test_start_heartbeats_a_quiet_executor_past_the_initial_lease_window(tmp_pat
         )
 
         async def run_quiet_executor() -> OperationPersistedSnapshot:
-            operation_id = await supervisor.submit(_request(), operation_id="3" * 64)
+            operation_id = await supervisor.submit(supervisor_request(), operation_id="3" * 64)
             start_task = asyncio.create_task(run_to_settlement(supervisor, operation_id))
             await started.wait()
             observed_at[0] = _NOW + timedelta(milliseconds=20)
@@ -210,7 +210,7 @@ def test_start_heartbeats_a_quiet_executor_past_the_initial_lease_window(tmp_pat
 
             observed_at[0] = _NOW + timedelta(milliseconds=45)
             with pytest.raises(OperationSubjectBusyError):
-                await contender.submit(_request(), operation_id="6" * 64)
+                await contender.submit(supervisor_request(), operation_id="6" * 64)
 
             # The released executor returns its result, and its own settlement
             # commits under the renewed lease after the first window expired.
@@ -237,8 +237,8 @@ def test_heartbeat_owner_loss_cancels_executor_without_mutating_winner_bytes(tmp
         started = asyncio.Event()
         release = asyncio.Event()
         executor = WaitingExecutor(started=started, release=release)
-        registry = _registry(executor_type=WaitingExecutor, build=lambda: executor)
-        owner = _supervisor(
+        registry = supervisor_registry(executor_type=WaitingExecutor, build=lambda: executor)
+        owner = operation_supervisor(
             registry=registry,
             journal=journal,
             leases=leases,
@@ -248,7 +248,7 @@ def test_heartbeat_owner_loss_cancels_executor_without_mutating_winner_bytes(tmp
             clock=lambda: observed_at[0],
             lease_duration=timedelta(milliseconds=30),
         )
-        replacement = _supervisor(
+        replacement = operation_supervisor(
             registry=registry,
             journal=journal,
             leases=leases,
@@ -260,7 +260,7 @@ def test_heartbeat_owner_loss_cancels_executor_without_mutating_winner_bytes(tmp
         )
 
         async def lose_owner_lease() -> None:
-            operation_id = await owner.submit(_request(subject_ref="subject:shared"), operation_id="3" * 64)
+            operation_id = await owner.submit(supervisor_request(subject_ref="subject:shared"), operation_id="3" * 64)
             start_task = asyncio.create_task(run_to_settlement(owner, operation_id))
             await started.wait()
             running = await journal.load(operation_id)
@@ -273,7 +273,7 @@ def test_heartbeat_owner_loss_cancels_executor_without_mutating_winner_bytes(tmp
             assert (
                 await leases.release(held.current, observed_at=observed_at[0])
             ).disposition is OperationLeaseDisposition.RELEASED
-            await replacement.submit(_request(subject_ref="subject:shared"), operation_id="6" * 64)
+            await replacement.submit(supervisor_request(subject_ref="subject:shared"), operation_id="6" * 64)
 
             journal_path = storage_root / "operation-journals" / f"{operation_id}.json"
             lease_path = storage_root / "operation-journals" / f"{scope_ref}.lease.json"
@@ -305,8 +305,8 @@ def test_exact_lease_renewal_owner_loss_refuses_without_changing_durable_bytes(t
             storage_root=storage_root,
             profile_objects=SecureObjectRepository(namespace_registry=STORAGE_NAMESPACE_REGISTRY),
         )
-        registry = _registry(executor_type=IdleExecutor, build=IdleExecutor)
-        owner = _supervisor(
+        registry = supervisor_registry(executor_type=IdleExecutor, build=IdleExecutor)
+        owner = operation_supervisor(
             registry=registry,
             journal=journal,
             leases=leases,
@@ -316,7 +316,9 @@ def test_exact_lease_renewal_owner_loss_refuses_without_changing_durable_bytes(t
             clock=lambda: observed_at[0],
             lease_duration=timedelta(minutes=1),
         )
-        operation_id = asyncio.run(owner.submit(_request(subject_ref="subject:shared"), operation_id="3" * 64))
+        operation_id = asyncio.run(
+            owner.submit(supervisor_request(subject_ref="subject:shared"), operation_id="3" * 64)
+        )
         original = asyncio.run(journal.load(operation_id))
         scope_ref = operation_conflict_scope_reference(
             definition_id=original.identity.definition_id,
@@ -329,7 +331,7 @@ def test_exact_lease_renewal_owner_loss_refuses_without_changing_durable_bytes(t
             is OperationLeaseDisposition.RELEASED
         )
 
-        intruder = _supervisor(
+        intruder = operation_supervisor(
             registry=registry,
             journal=journal,
             leases=leases,
@@ -339,7 +341,7 @@ def test_exact_lease_renewal_owner_loss_refuses_without_changing_durable_bytes(t
             clock=lambda: observed_at[0],
             lease_duration=timedelta(minutes=1),
         )
-        asyncio.run(intruder.submit(_request(subject_ref="subject:shared"), operation_id="6" * 64))
+        asyncio.run(intruder.submit(supervisor_request(subject_ref="subject:shared"), operation_id="6" * 64))
         journal_path = storage_root / "operation-journals" / f"{operation_id}.json"
         lease_path = storage_root / "operation-journals" / f"{scope_ref}.lease.json"
         journal_before = journal_path.read_bytes()
@@ -372,12 +374,12 @@ def test_stale_settle_preserves_declared_resource_and_winner_evidence(tmp_path: 
             built.append(executor)
             return executor
 
-        registry = _registry(
+        registry = supervisor_registry(
             executor_type=DeclaredResourceExecutor,
             build=build_executor,
             capabilities=_capabilities(owned_resources=frozenset({OperationOwnedResource.ASYNC_TASK})),
         )
-        owner = _supervisor(
+        owner = operation_supervisor(
             registry=registry,
             journal=journal,
             leases=leases,
@@ -385,7 +387,7 @@ def test_stale_settle_preserves_declared_resource_and_winner_evidence(tmp_path: 
             owner_id="1" * 64,
             token="2" * 64,
         )
-        contender = _supervisor(
+        contender = operation_supervisor(
             registry=registry,
             journal=journal,
             leases=leases,
@@ -393,7 +395,9 @@ def test_stale_settle_preserves_declared_resource_and_winner_evidence(tmp_path: 
             owner_id="4" * 64,
             token="5" * 64,
         )
-        operation_id = asyncio.run(owner.submit(_request(subject_ref="subject:shared"), operation_id="3" * 64))
+        operation_id = asyncio.run(
+            owner.submit(supervisor_request(subject_ref="subject:shared"), operation_id="3" * 64)
+        )
         running = asyncio.run(_close_host_over_live_executor(owner, operation_id, executors[0].started))
         assert running.lifecycle is OperationLifecycle.RUNNING
         assert len(built) == 1
@@ -409,7 +413,9 @@ def test_stale_settle_preserves_declared_resource_and_winner_evidence(tmp_path: 
             asyncio.run(leases.release(held.current, observed_at=_NOW)).disposition
             is OperationLeaseDisposition.RELEASED
         )
-        winner_id = asyncio.run(contender.submit(_request(subject_ref="subject:shared"), operation_id="6" * 64))
+        winner_id = asyncio.run(
+            contender.submit(supervisor_request(subject_ref="subject:shared"), operation_id="6" * 64)
+        )
         journal_path = storage_root / "operation-journals" / f"{operation_id}.json"
         lease_path = storage_root / "operation-journals" / f"{scope_ref}.lease.json"
         journal_before = journal_path.read_bytes()
@@ -462,20 +468,24 @@ def test_a_settled_operation_frees_its_subject_for_an_immediate_resubmission(tmp
         journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "durable-state", profile_objects=profile.repository
         )
-        registry = _registry(executor_type=IdleExecutor, build=IdleExecutor)
-        owner = _supervisor(
+        registry = supervisor_registry(executor_type=IdleExecutor, build=IdleExecutor)
+        owner = operation_supervisor(
             registry=registry, journal=journal, leases=leases, operands=operands, owner_id="1" * 64, token="2" * 64
         )
-        contender = _supervisor(
+        contender = operation_supervisor(
             registry=registry, journal=journal, leases=leases, operands=operands, owner_id="3" * 64, token="4" * 64
         )
-        settled_operation = asyncio.run(owner.submit(_request(subject_ref=_SHARED_SUBJECT), operation_id="5" * 64))
+        settled_operation = asyncio.run(
+            owner.submit(supervisor_request(subject_ref=_SHARED_SUBJECT), operation_id="5" * 64)
+        )
 
         terminal = _settle_failed(owner, settled_operation)
         assert terminal.lifecycle is OperationLifecycle.TERMINAL
         assert _shared_scope_holder(leases, observed_at=_NOW) is None
 
-        resubmitted = asyncio.run(contender.submit(_request(subject_ref=_SHARED_SUBJECT), operation_id="6" * 64))
+        resubmitted = asyncio.run(
+            contender.submit(supervisor_request(subject_ref=_SHARED_SUBJECT), operation_id="6" * 64)
+        )
 
         assert resubmitted == "6" * 64
         holder = _shared_scope_holder(leases, observed_at=_NOW)
@@ -488,18 +498,20 @@ def test_a_live_unsettled_holder_refuses_resubmission_with_the_registered_busy_r
         journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "durable-state", profile_objects=profile.repository
         )
-        registry = _registry(executor_type=IdleExecutor, build=IdleExecutor)
-        owner = _supervisor(
+        registry = supervisor_registry(executor_type=IdleExecutor, build=IdleExecutor)
+        owner = operation_supervisor(
             registry=registry, journal=journal, leases=leases, operands=operands, owner_id="1" * 64, token="2" * 64
         )
-        contender = _supervisor(
+        contender = operation_supervisor(
             registry=registry, journal=journal, leases=leases, operands=operands, owner_id="3" * 64, token="4" * 64
         )
-        held_operation = asyncio.run(owner.submit(_request(subject_ref=_SHARED_SUBJECT), operation_id="5" * 64))
+        held_operation = asyncio.run(
+            owner.submit(supervisor_request(subject_ref=_SHARED_SUBJECT), operation_id="5" * 64)
+        )
         held_lease = _shared_scope_holder(leases, observed_at=_NOW)
 
         with pytest.raises(OperationSubjectBusyError) as refused:
-            asyncio.run(contender.submit(_request(subject_ref=_SHARED_SUBJECT), operation_id="6" * 64))
+            asyncio.run(contender.submit(supervisor_request(subject_ref=_SHARED_SUBJECT), operation_id="6" * 64))
 
         assert not isinstance(refused.value, ValueError)
         registered = get_registered_error_code(refused.value)
@@ -521,8 +533,8 @@ def test_a_submission_interrupts_an_unstarted_holder_whose_lease_lapsed(tmp_path
         journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "durable-state", profile_objects=profile.repository
         )
-        registry = _registry(executor_type=IdleExecutor, build=IdleExecutor)
-        owner = _supervisor(
+        registry = supervisor_registry(executor_type=IdleExecutor, build=IdleExecutor)
+        owner = operation_supervisor(
             registry=registry,
             journal=journal,
             leases=leases,
@@ -532,7 +544,7 @@ def test_a_submission_interrupts_an_unstarted_holder_whose_lease_lapsed(tmp_path
             lease_duration=timedelta(minutes=1),
         )
         lapsed_at = _NOW + timedelta(minutes=2)
-        contender = _supervisor(
+        contender = operation_supervisor(
             registry=registry,
             journal=journal,
             leases=leases,
@@ -541,11 +553,11 @@ def test_a_submission_interrupts_an_unstarted_holder_whose_lease_lapsed(tmp_path
             token="4" * 64,
             clock=lambda: lapsed_at,
         )
-        unstarted = asyncio.run(owner.submit(_request(subject_ref=_SHARED_SUBJECT), operation_id="5" * 64))
+        unstarted = asyncio.run(owner.submit(supervisor_request(subject_ref=_SHARED_SUBJECT), operation_id="5" * 64))
         expired_lease = _shared_scope_holder(leases, observed_at=lapsed_at)
         assert expired_lease is not None and expired_lease.expires_at <= lapsed_at
 
-        admitted = asyncio.run(contender.submit(_request(subject_ref=_SHARED_SUBJECT), operation_id="6" * 64))
+        admitted = asyncio.run(contender.submit(supervisor_request(subject_ref=_SHARED_SUBJECT), operation_id="6" * 64))
 
         assert admitted == "6" * 64
         holder = _shared_scope_holder(leases, observed_at=lapsed_at)
@@ -565,8 +577,8 @@ def test_a_live_unstarted_holder_still_refuses_and_names_itself_to_the_runtime(t
         journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "durable-state", profile_objects=profile.repository
         )
-        registry = _registry(executor_type=IdleExecutor, build=IdleExecutor)
-        owner = _supervisor(
+        registry = supervisor_registry(executor_type=IdleExecutor, build=IdleExecutor)
+        owner = operation_supervisor(
             registry=registry,
             journal=journal,
             leases=leases,
@@ -576,7 +588,7 @@ def test_a_live_unstarted_holder_still_refuses_and_names_itself_to_the_runtime(t
             lease_duration=timedelta(minutes=1),
         )
         within_lease = _NOW + timedelta(seconds=30)
-        contender = _supervisor(
+        contender = operation_supervisor(
             registry=registry,
             journal=journal,
             leases=leases,
@@ -585,10 +597,10 @@ def test_a_live_unstarted_holder_still_refuses_and_names_itself_to_the_runtime(t
             token="4" * 64,
             clock=lambda: within_lease,
         )
-        unstarted = asyncio.run(owner.submit(_request(subject_ref=_SHARED_SUBJECT), operation_id="5" * 64))
+        unstarted = asyncio.run(owner.submit(supervisor_request(subject_ref=_SHARED_SUBJECT), operation_id="5" * 64))
 
         with pytest.raises(OperationSubjectBusyError) as refused:
-            asyncio.run(contender.submit(_request(subject_ref=_SHARED_SUBJECT), operation_id="6" * 64))
+            asyncio.run(contender.submit(supervisor_request(subject_ref=_SHARED_SUBJECT), operation_id="6" * 64))
 
         assert refused.value.holder_operation_id == unstarted
         assert asyncio.run(journal.load(unstarted)).lifecycle is OperationLifecycle.CREATED
@@ -623,7 +635,7 @@ def test_settle_lapsed_leaves_an_operation_whose_owner_still_renews(tmp_path: Pa
             storage_root=tmp_path / "durable-state", profile_objects=profile.repository
         )
         owner = _lapse_settler(journal=journal, leases=leases, operands=operands, at=_NOW)
-        operation_id = asyncio.run(owner.submit(_request(subject_ref=_SHARED_SUBJECT), operation_id="5" * 64))
+        operation_id = asyncio.run(owner.submit(supervisor_request(subject_ref=_SHARED_SUBJECT), operation_id="5" * 64))
         held = _shared_scope_holder(leases, observed_at=_NOW)
 
         assert asyncio.run(owner.settle_lapsed(operation_id, grace=timedelta())) is None
@@ -635,7 +647,7 @@ def test_settle_lapsed_settles_an_operation_a_changed_definition_can_no_longer_r
     """An operation left by an older build cannot be resumed, and must not be left unsettled for good."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         journal, leases, operands, operation_id = _abandon_running_operation(tmp_path, profile.repository)
-        changed = _drifted_registry(_registry(executor_type=WaitingExecutor, build=IdleExecutor))
+        changed = _drifted_registry(supervisor_registry(executor_type=WaitingExecutor, build=IdleExecutor))
         settled_at = _NOW + timedelta(minutes=12)
         newer_build = _lapse_settler(journal=journal, leases=leases, operands=operands, at=settled_at, registry=changed)
         before = asyncio.run(journal.load(operation_id))
@@ -660,15 +672,15 @@ def test_a_lease_whose_holder_has_no_journal_yet_is_a_live_conflict(tmp_path: Pa
         journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "durable-state", profile_objects=profile.repository
         )
-        contender = _supervisor(
-            registry=_registry(executor_type=IdleExecutor, build=IdleExecutor),
+        contender = operation_supervisor(
+            registry=supervisor_registry(executor_type=IdleExecutor, build=IdleExecutor),
             journal=journal,
             leases=leases,
             operands=operands,
             owner_id="3" * 64,
             token="4" * 64,
         )
-        request = _request(subject_ref=_SHARED_SUBJECT)
+        request = supervisor_request(subject_ref=_SHARED_SUBJECT)
         in_flight = OperationOwnerLease(
             operation_id="9" * 64,
             scope_ref=operation_conflict_scope_reference(
@@ -698,16 +710,18 @@ def test_the_next_submission_reclaims_a_lease_left_by_a_crash_after_settlement(
         journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "durable-state", profile_objects=profile.repository
         )
-        registry = _registry(executor_type=IdleExecutor, build=IdleExecutor)
-        owner = _supervisor(
+        registry = supervisor_registry(executor_type=IdleExecutor, build=IdleExecutor)
+        owner = operation_supervisor(
             registry=registry, journal=journal, leases=leases, operands=operands, owner_id="1" * 64, token="2" * 64
         )
-        settled_operation = asyncio.run(owner.submit(_request(subject_ref=_SHARED_SUBJECT), operation_id="5" * 64))
+        settled_operation = asyncio.run(
+            owner.submit(supervisor_request(subject_ref=_SHARED_SUBJECT), operation_id="5" * 64)
+        )
         terminal = _settle_failed(owner, settled_operation)
         leftover = _leave_settlement_lease_behind(leases, terminal)
         submitted_at = leftover.expires_at + timedelta(minutes=1) if leftover_expired else _NOW + timedelta(seconds=1)
         assert _shared_scope_holder(leases, observed_at=submitted_at) == leftover
-        contender = _supervisor(
+        contender = operation_supervisor(
             registry=registry,
             journal=journal,
             leases=leases,
@@ -717,7 +731,9 @@ def test_the_next_submission_reclaims_a_lease_left_by_a_crash_after_settlement(
             clock=lambda: submitted_at,
         )
 
-        resubmitted = asyncio.run(contender.submit(_request(subject_ref=_SHARED_SUBJECT), operation_id="6" * 64))
+        resubmitted = asyncio.run(
+            contender.submit(supervisor_request(subject_ref=_SHARED_SUBJECT), operation_id="6" * 64)
+        )
 
         assert resubmitted == "6" * 64
         holder = _shared_scope_holder(leases, observed_at=submitted_at)
@@ -732,15 +748,17 @@ def test_reconciling_a_settled_operation_releases_the_lease_its_crash_left_behin
         journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "durable-state", profile_objects=profile.repository
         )
-        registry = _registry(executor_type=IdleExecutor, build=IdleExecutor)
-        owner = _supervisor(
+        registry = supervisor_registry(executor_type=IdleExecutor, build=IdleExecutor)
+        owner = operation_supervisor(
             registry=registry, journal=journal, leases=leases, operands=operands, owner_id="1" * 64, token="2" * 64
         )
-        settled_operation = asyncio.run(owner.submit(_request(subject_ref=_SHARED_SUBJECT), operation_id="5" * 64))
+        settled_operation = asyncio.run(
+            owner.submit(supervisor_request(subject_ref=_SHARED_SUBJECT), operation_id="5" * 64)
+        )
         terminal = _settle_failed(owner, settled_operation)
         _leave_settlement_lease_behind(leases, terminal)
         recovered_at = _NOW + timedelta(seconds=1)
-        recovery = _supervisor(
+        recovery = operation_supervisor(
             registry=registry,
             journal=journal,
             leases=leases,
@@ -755,7 +773,9 @@ def test_reconciling_a_settled_operation_releases_the_lease_its_crash_left_behin
         assert asyncio.run(recovery.reconcile(settled_operation)) == terminal
         assert _shared_scope_holder(leases, observed_at=recovered_at) is None
 
-        resubmitted = asyncio.run(recovery.submit(_request(subject_ref=_SHARED_SUBJECT), operation_id="6" * 64))
+        resubmitted = asyncio.run(
+            recovery.submit(supervisor_request(subject_ref=_SHARED_SUBJECT), operation_id="6" * 64)
+        )
         successor_lease = _shared_scope_holder(leases, observed_at=recovered_at)
         assert successor_lease is not None and successor_lease.operation_id == resubmitted
 
@@ -770,20 +790,20 @@ def test_an_executor_settlement_frees_its_subject_for_an_immediate_same_subject_
         journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "durable-state", profile_objects=profile.repository
         )
-        registry = _registry(executor_type=ImmediateResultExecutor, build=ImmediateResultExecutor)
-        owner = _supervisor(
+        registry = supervisor_registry(executor_type=ImmediateResultExecutor, build=ImmediateResultExecutor)
+        owner = operation_supervisor(
             registry=registry, journal=journal, leases=leases, operands=operands, owner_id="1" * 64, token="2" * 64
         )
-        contender = _supervisor(
+        contender = operation_supervisor(
             registry=registry, journal=journal, leases=leases, operands=operands, owner_id="3" * 64, token="4" * 64
         )
 
         async def settle_then_resubmit() -> tuple[OperationPersistedSnapshot, OperationPersistedSnapshot, str]:
-            first = await owner.submit(_request(subject_ref=_SHARED_SUBJECT), operation_id="5" * 64)
+            first = await owner.submit(supervisor_request(subject_ref=_SHARED_SUBJECT), operation_id="5" * 64)
             first_terminal = await run_to_settlement(owner, first)
-            again = await owner.submit(_request(subject_ref=_SHARED_SUBJECT), operation_id="6" * 64)
+            again = await owner.submit(supervisor_request(subject_ref=_SHARED_SUBJECT), operation_id="6" * 64)
             again_terminal = await run_to_settlement(owner, again)
-            other = await contender.submit(_request(subject_ref=_SHARED_SUBJECT), operation_id="7" * 64)
+            other = await contender.submit(supervisor_request(subject_ref=_SHARED_SUBJECT), operation_id="7" * 64)
             return first_terminal, again_terminal, other
 
         first_terminal, again_terminal, other = asyncio.run(settle_then_resubmit())

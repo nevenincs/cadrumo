@@ -19,7 +19,14 @@ from cadrumo.application.operations.persistence.leases import OperationOwnerLeas
 from cadrumo.application.operations.terminated_owner import settle_terminated_operation
 from cadrumo.core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
 
-from .supervisor_test_support import _NOW, IdleExecutor, _registry, _request, _supervisor, operation_repositories
+from .supervisor_test_support import (
+    _NOW,
+    IdleExecutor,
+    operation_repositories,
+    operation_supervisor,
+    supervisor_registry,
+    supervisor_request,
+)
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
@@ -30,10 +37,10 @@ def test_dead_owner_settlement_is_atomic_and_never_resolves_operands(tmp_path: P
         journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "journal", profile_objects=profile.repository
         )
-        registry = _registry(executor_type=IdleExecutor, build=IdleExecutor)
+        registry = supervisor_registry(executor_type=IdleExecutor, build=IdleExecutor)
 
         async def exercise() -> None:
-            supervisor = _supervisor(
+            supervisor = operation_supervisor(
                 registry=registry,
                 journal=journal,
                 leases=leases,
@@ -42,7 +49,7 @@ def test_dead_owner_settlement_is_atomic_and_never_resolves_operands(tmp_path: P
                 token="2" * 64,
             )
             operation_id = "3" * 64
-            await supervisor.submit(_request(), operation_id=operation_id)
+            await supervisor.submit(supervisor_request(), operation_id=operation_id)
             snapshot = await journal.load(operation_id)
             scope = operation_conflict_scope_reference(
                 definition_id=snapshot.identity.definition_id, subject_ref=snapshot.identity.subject_ref
@@ -115,10 +122,10 @@ def test_expired_dead_owner_lease_is_not_renewed_or_released(tmp_path: Path) -> 
         journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "journal", profile_objects=profile.repository
         )
-        registry = _registry(executor_type=IdleExecutor, build=IdleExecutor)
+        registry = supervisor_registry(executor_type=IdleExecutor, build=IdleExecutor)
 
         async def exercise() -> None:
-            supervisor = _supervisor(
+            supervisor = operation_supervisor(
                 registry=registry,
                 journal=journal,
                 leases=leases,
@@ -128,7 +135,7 @@ def test_expired_dead_owner_lease_is_not_renewed_or_released(tmp_path: Path) -> 
                 lease_duration=timedelta(seconds=1),
             )
             operation_id = "3" * 64
-            await supervisor.submit(_request(), operation_id=operation_id)
+            await supervisor.submit(supervisor_request(), operation_id=operation_id)
             snapshot = await journal.load(operation_id)
             scope = operation_conflict_scope_reference(
                 definition_id=snapshot.identity.definition_id, subject_ref=snapshot.identity.subject_ref
@@ -154,7 +161,7 @@ def test_raced_lease_replacement_cannot_be_settled_by_dead_owner(tmp_path: Path)
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         root = tmp_path / "journal"
         journal, leases, operands = operation_repositories(storage_root=root, profile_objects=profile.repository)
-        registry = _registry(executor_type=IdleExecutor, build=IdleExecutor)
+        registry = supervisor_registry(executor_type=IdleExecutor, build=IdleExecutor)
 
         class RacingJournal(OperationJournalRepository):
             @override
@@ -175,7 +182,7 @@ def test_raced_lease_replacement_cannot_be_settled_by_dead_owner(tmp_path: Path)
                 await super().commit_settlement(snapshot, expected_revision=expected_revision, lease=lease)
 
         async def exercise() -> None:
-            supervisor = _supervisor(
+            supervisor = operation_supervisor(
                 registry=registry,
                 journal=journal,
                 leases=leases,
@@ -184,7 +191,7 @@ def test_raced_lease_replacement_cannot_be_settled_by_dead_owner(tmp_path: Path)
                 token="2" * 64,
             )
             operation_id = "3" * 64
-            await supervisor.submit(_request(), operation_id=operation_id)
+            await supervisor.submit(supervisor_request(), operation_id=operation_id)
             before = await journal.load(operation_id)
             with pytest.raises(RepositoryError):
                 await settle_terminated_operation(

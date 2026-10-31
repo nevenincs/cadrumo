@@ -69,10 +69,10 @@ from .supervisor_test_support import (
     _assert_sensitive_detail_absent_from_operation_bytes,
     _capabilities,
     _drifted_registry,
-    _registry,
-    _request,
-    _supervisor,
     operation_repositories,
+    operation_supervisor,
+    supervisor_registry,
+    supervisor_request,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
@@ -88,8 +88,8 @@ def test_timed_out_settlement_refuses_live_executor_before_durable_terminal_comm
         journal, leases, operands = operation_repositories(
             storage_root=storage_root, profile_objects=profile.repository
         )
-        supervisor = _supervisor(
-            registry=_registry(executor_type=WaitingExecutor, build=lambda: executor),
+        supervisor = operation_supervisor(
+            registry=supervisor_registry(executor_type=WaitingExecutor, build=lambda: executor),
             journal=journal,
             leases=leases,
             operands=operands,
@@ -98,7 +98,7 @@ def test_timed_out_settlement_refuses_live_executor_before_durable_terminal_comm
         )
 
         async def refuse_live_timeout_then_settle() -> OperationPersistedSnapshot:
-            operation_id = await supervisor.submit(_request(), operation_id="3" * 64)
+            operation_id = await supervisor.submit(supervisor_request(), operation_id="3" * 64)
             start_task = asyncio.create_task(run_to_settlement(supervisor, operation_id))
             await started.wait()
             running = await supervisor.inspect(operation_id)
@@ -164,8 +164,8 @@ def test_interrupted_settlement_refuses_known_live_executor_without_mutating_the
         journal, leases, operands = operation_repositories(
             storage_root=storage_root, profile_objects=profile.repository
         )
-        supervisor = _supervisor(
-            registry=_registry(
+        supervisor = operation_supervisor(
+            registry=supervisor_registry(
                 executor_type=WaitingExecutor,
                 build=lambda: executor,
                 capabilities=_capabilities(
@@ -180,7 +180,7 @@ def test_interrupted_settlement_refuses_known_live_executor_without_mutating_the
         )
 
         async def refuse_live_interruption() -> None:
-            operation_id = await supervisor.submit(_request(), operation_id="3" * 64)
+            operation_id = await supervisor.submit(supervisor_request(), operation_id="3" * 64)
             start_task = asyncio.create_task(run_to_settlement(supervisor, operation_id))
             await started.wait()
             running = await supervisor.inspect(operation_id)
@@ -221,8 +221,8 @@ def test_filesystem_journal_refuses_non_current_operation_snapshots_without_rewr
         journal, leases, operands = operation_repositories(
             storage_root=storage_root, profile_objects=profile.repository
         )
-        registry = _registry(executor_type=IdleExecutor, build=IdleExecutor)
-        supervisor = _supervisor(
+        registry = supervisor_registry(executor_type=IdleExecutor, build=IdleExecutor)
+        supervisor = operation_supervisor(
             registry=registry,
             journal=journal,
             leases=leases,
@@ -230,7 +230,7 @@ def test_filesystem_journal_refuses_non_current_operation_snapshots_without_rewr
             owner_id="1" * 64,
             token="2" * 64,
         )
-        operation_id = asyncio.run(supervisor.submit(_request(), operation_id="3" * 64))
+        operation_id = asyncio.run(supervisor.submit(supervisor_request(), operation_id="3" * 64))
         created = asyncio.run(journal.load(operation_id))
         assert (
             created.definition_contract_digest
@@ -253,8 +253,8 @@ def test_supervisor_refuses_registry_drift_against_the_pinned_invocation_digest(
         journal, leases, operands = operation_repositories(
             storage_root=storage_root, profile_objects=profile.repository
         )
-        original_registry = _registry(executor_type=IdleExecutor, build=IdleExecutor)
-        owner = _supervisor(
+        original_registry = supervisor_registry(executor_type=IdleExecutor, build=IdleExecutor)
+        owner = operation_supervisor(
             registry=original_registry,
             journal=journal,
             leases=leases,
@@ -262,8 +262,8 @@ def test_supervisor_refuses_registry_drift_against_the_pinned_invocation_digest(
             owner_id="1" * 64,
             token="2" * 64,
         )
-        operation_id = asyncio.run(owner.submit(_request(), operation_id="3" * 64))
-        restarted = _supervisor(
+        operation_id = asyncio.run(owner.submit(supervisor_request(), operation_id="3" * 64))
+        restarted = operation_supervisor(
             registry=_drifted_registry(original_registry),
             journal=journal,
             leases=leases,
@@ -299,8 +299,8 @@ def test_loaded_snapshot_routes_refuse_definition_drift_before_return_or_mutatio
         journal, leases, operands = operation_repositories(
             storage_root=storage_root, profile_objects=profile.repository
         )
-        registry = _registry(executor_type=IdleExecutor, build=IdleExecutor)
-        owner = _supervisor(
+        registry = supervisor_registry(executor_type=IdleExecutor, build=IdleExecutor)
+        owner = operation_supervisor(
             registry=registry,
             journal=journal,
             leases=leases,
@@ -308,11 +308,11 @@ def test_loaded_snapshot_routes_refuse_definition_drift_before_return_or_mutatio
             owner_id="1" * 64,
             token="2" * 64,
         )
-        operation_id = asyncio.run(owner.submit(_request(), operation_id="3" * 64))
+        operation_id = asyncio.run(owner.submit(supervisor_request(), operation_id="3" * 64))
         snapshot = asyncio.run(journal.load(operation_id))
         journal_path = storage_root / "operation-journals" / f"{operation_id}.json"
         original_bytes = journal_path.read_bytes()
-        restarted = _supervisor(
+        restarted = operation_supervisor(
             registry=_drifted_registry(registry),
             journal=journal,
             leases=leases,
@@ -343,8 +343,8 @@ def test_submit_replays_a_durable_idempotency_claim_without_second_lease_acquisi
         journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "durable-state", profile_objects=profile.repository
         )
-        registry = _registry(executor_type=IdleExecutor, build=IdleExecutor)
-        supervisor = _supervisor(
+        registry = supervisor_registry(executor_type=IdleExecutor, build=IdleExecutor)
+        supervisor = operation_supervisor(
             registry=registry,
             journal=journal,
             leases=leases,
@@ -353,8 +353,12 @@ def test_submit_replays_a_durable_idempotency_claim_without_second_lease_acquisi
             token="2" * 64,
         )
 
-        original = asyncio.run(supervisor.submit(_request(idempotency_key="submit-once"), operation_id="3" * 64))
-        replayed = asyncio.run(supervisor.submit(_request(idempotency_key="submit-once"), operation_id="4" * 64))
+        original = asyncio.run(
+            supervisor.submit(supervisor_request(idempotency_key="submit-once"), operation_id="3" * 64)
+        )
+        replayed = asyncio.run(
+            supervisor.submit(supervisor_request(idempotency_key="submit-once"), operation_id="4" * 64)
+        )
 
         persisted = asyncio.run(journal.load(original))
         assert original == replayed == "3" * 64
@@ -369,8 +373,8 @@ def test_submit_excludes_only_the_exact_definition_subject_conflict_scope(tmp_pa
         journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "durable-state", profile_objects=profile.repository
         )
-        registry = _registry(executor_type=IdleExecutor, build=IdleExecutor)
-        first = _supervisor(
+        registry = supervisor_registry(executor_type=IdleExecutor, build=IdleExecutor)
+        first = operation_supervisor(
             registry=registry,
             journal=journal,
             leases=leases,
@@ -378,7 +382,7 @@ def test_submit_excludes_only_the_exact_definition_subject_conflict_scope(tmp_pa
             owner_id="1" * 64,
             token="2" * 64,
         )
-        second = _supervisor(
+        second = operation_supervisor(
             registry=registry,
             journal=journal,
             leases=leases,
@@ -387,10 +391,14 @@ def test_submit_excludes_only_the_exact_definition_subject_conflict_scope(tmp_pa
             token="4" * 64,
         )
 
-        first_operation = asyncio.run(first.submit(_request(subject_ref="subject:shared"), operation_id="5" * 64))
+        first_operation = asyncio.run(
+            first.submit(supervisor_request(subject_ref="subject:shared"), operation_id="5" * 64)
+        )
         with pytest.raises(OperationSubjectBusyError):
-            asyncio.run(second.submit(_request(subject_ref="subject:shared"), operation_id="6" * 64))
-        separate_operation = asyncio.run(second.submit(_request(subject_ref="subject:separate"), operation_id="7" * 64))
+            asyncio.run(second.submit(supervisor_request(subject_ref="subject:shared"), operation_id="6" * 64))
+        separate_operation = asyncio.run(
+            second.submit(supervisor_request(subject_ref="subject:separate"), operation_id="7" * 64)
+        )
 
         assert asyncio.run(journal.load(first_operation)).identity.subject_ref == "subject:shared"
         assert asyncio.run(journal.load(separate_operation)).identity.subject_ref == "subject:separate"
@@ -402,8 +410,8 @@ def test_submit_refuses_a_subclass_of_the_registered_request_type(tmp_path: Path
         journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "durable-state", profile_objects=profile.repository
         )
-        supervisor = _supervisor(
-            registry=_registry(executor_type=IdleExecutor, build=IdleExecutor),
+        supervisor = operation_supervisor(
+            registry=supervisor_registry(executor_type=IdleExecutor, build=IdleExecutor),
             journal=journal,
             leases=leases,
             operands=operands,
@@ -431,7 +439,7 @@ def test_submit_refuses_a_subclass_of_the_registered_request_type(tmp_path: Path
             )
         )
         assert observation.current is None
-        assert asyncio.run(supervisor.submit(_request(), operation_id=operation_id)) == operation_id
+        assert asyncio.run(supervisor.submit(supervisor_request(), operation_id=operation_id)) == operation_id
 
 
 def test_start_hands_the_executor_exactly_the_registered_request_type(tmp_path: Path) -> None:
@@ -441,15 +449,15 @@ def test_start_hands_the_executor_exactly_the_registered_request_type(tmp_path: 
         journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "durable-state", profile_objects=profile.repository
         )
-        supervisor = _supervisor(
-            registry=_registry(executor_type=PayloadTypeRecordingExecutor, build=lambda: executor),
+        supervisor = operation_supervisor(
+            registry=supervisor_registry(executor_type=PayloadTypeRecordingExecutor, build=lambda: executor),
             journal=journal,
             leases=leases,
             operands=operands,
             owner_id="1" * 64,
             token="2" * 64,
         )
-        operation_id = asyncio.run(supervisor.submit(_request(), operation_id="3" * 64))
+        operation_id = asyncio.run(supervisor.submit(supervisor_request(), operation_id="3" * 64))
         terminal = asyncio.run(run_to_settlement(supervisor, operation_id))
 
         assert terminal.terminal_condition is OperationTerminalCondition.SUCCEEDED
@@ -463,15 +471,15 @@ def test_start_refuses_a_restored_operand_that_is_not_exactly_the_registered_typ
         journal, leases, store = operation_repositories(
             storage_root=tmp_path / "durable-state", profile_objects=profile.repository
         )
-        supervisor = _supervisor(
-            registry=_registry(executor_type=PayloadTypeRecordingExecutor, build=lambda: executor),
+        supervisor = operation_supervisor(
+            registry=supervisor_registry(executor_type=PayloadTypeRecordingExecutor, build=lambda: executor),
             journal=journal,
             leases=leases,
             operands=SubclassResolvingOperands(store),
             owner_id="1" * 64,
             token="2" * 64,
         )
-        operation_id = asyncio.run(supervisor.submit(_request(), operation_id="3" * 64))
+        operation_id = asyncio.run(supervisor.submit(supervisor_request(), operation_id="3" * 64))
 
         with pytest.raises(ValueError, match="request payload does not match definition"):
             asyncio.run(supervisor.start(operation_id))
@@ -506,15 +514,15 @@ def test_start_refuses_each_undeclared_executor_mutation_after_only_the_safe_sta
         journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "durable-state", profile_objects=profile.repository
         )
-        supervisor = _supervisor(
-            registry=_registry(executor_type=type(executor), build=lambda: executor),
+        supervisor = operation_supervisor(
+            registry=supervisor_registry(executor_type=type(executor), build=lambda: executor),
             journal=journal,
             leases=leases,
             operands=operands,
             owner_id="1" * 64,
             token="2" * 64,
         )
-        operation_id = asyncio.run(supervisor.submit(_request(), operation_id="3" * 64))
+        operation_id = asyncio.run(supervisor.submit(supervisor_request(), operation_id="3" * 64))
 
         with pytest.raises(OperationDeclarationError, match="not declared"):
             asyncio.run(run_to_settlement(supervisor, operation_id))
@@ -542,15 +550,15 @@ def test_start_settles_registered_executor_refusal_without_persisting_its_sensit
         journal, leases, operands = operation_repositories(
             storage_root=storage_root, profile_objects=profile.repository
         )
-        supervisor = _supervisor(
-            registry=_registry(executor_type=RegisteredRefusalExecutor, build=RegisteredRefusalExecutor),
+        supervisor = operation_supervisor(
+            registry=supervisor_registry(executor_type=RegisteredRefusalExecutor, build=RegisteredRefusalExecutor),
             journal=journal,
             leases=leases,
             operands=operands,
             owner_id="1" * 64,
             token="2" * 64,
         )
-        operation_id = asyncio.run(supervisor.submit(_request(), operation_id="3" * 64))
+        operation_id = asyncio.run(supervisor.submit(supervisor_request(), operation_id="3" * 64))
         terminal = asyncio.run(run_to_settlement(supervisor, operation_id))
 
         assert terminal.terminal_condition is OperationTerminalCondition.REFUSED
@@ -573,8 +581,8 @@ def test_start_settles_unexpected_executor_failure_with_correlated_opaque_diagno
         journal, leases, operands = operation_repositories(
             storage_root=storage_root, profile_objects=profile.repository
         )
-        supervisor = _supervisor(
-            registry=_registry(
+        supervisor = operation_supervisor(
+            registry=supervisor_registry(
                 executor_type=UnexpectedFailureExecutor,
                 build=lambda: executor,
                 capabilities=_capabilities(
@@ -590,7 +598,7 @@ def test_start_settles_unexpected_executor_failure_with_correlated_opaque_diagno
             owner_id="1" * 64,
             token="2" * 64,
         )
-        operation_id = asyncio.run(supervisor.submit(_request(), operation_id="3" * 64))
+        operation_id = asyncio.run(supervisor.submit(supervisor_request(), operation_id="3" * 64))
         terminal = asyncio.run(run_to_settlement(supervisor, operation_id))
         replay = asyncio.run(journal.read_after(operation_id, 0, limit=10))
 
@@ -627,15 +635,15 @@ def test_start_normalizes_registered_non_refusal_error_to_safe_failed_diagnostic
         journal, leases, operands = operation_repositories(
             storage_root=storage_root, profile_objects=profile.repository
         )
-        supervisor = _supervisor(
-            registry=_registry(executor_type=RegisteredErrorExecutor, build=RegisteredErrorExecutor),
+        supervisor = operation_supervisor(
+            registry=supervisor_registry(executor_type=RegisteredErrorExecutor, build=RegisteredErrorExecutor),
             journal=journal,
             leases=leases,
             operands=operands,
             owner_id="1" * 64,
             token="2" * 64,
         )
-        operation_id = asyncio.run(supervisor.submit(_request(), operation_id="3" * 64))
+        operation_id = asyncio.run(supervisor.submit(supervisor_request(), operation_id="3" * 64))
         terminal = asyncio.run(run_to_settlement(supervisor, operation_id))
         replay = asyncio.run(journal.read_after(operation_id, 0, limit=10))
 
@@ -668,8 +676,8 @@ def test_submit_conflict_does_not_publish_an_orphan_idempotency_claim(tmp_path: 
         journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "durable-state", profile_objects=profile.repository
         )
-        registry = _registry(executor_type=IdleExecutor, build=IdleExecutor)
-        owner = _supervisor(
+        registry = supervisor_registry(executor_type=IdleExecutor, build=IdleExecutor)
+        owner = operation_supervisor(
             registry=registry,
             journal=journal,
             leases=leases,
@@ -677,7 +685,7 @@ def test_submit_conflict_does_not_publish_an_orphan_idempotency_claim(tmp_path: 
             owner_id="1" * 64,
             token="2" * 64,
         )
-        contender = _supervisor(
+        contender = operation_supervisor(
             registry=registry,
             journal=journal,
             leases=leases,
@@ -685,8 +693,10 @@ def test_submit_conflict_does_not_publish_an_orphan_idempotency_claim(tmp_path: 
             owner_id="3" * 64,
             token="4" * 64,
         )
-        held_operation = asyncio.run(owner.submit(_request(subject_ref="subject:shared"), operation_id="5" * 64))
-        retry_request = _request(subject_ref="subject:shared", idempotency_key="retry-after-conflict")
+        held_operation = asyncio.run(
+            owner.submit(supervisor_request(subject_ref="subject:shared"), operation_id="5" * 64)
+        )
+        retry_request = supervisor_request(subject_ref="subject:shared", idempotency_key="retry-after-conflict")
 
         with pytest.raises(OperationSubjectBusyError):
             asyncio.run(contender.submit(retry_request, operation_id="6" * 64))
@@ -721,8 +731,8 @@ def test_submit_journal_create_refusal_releases_the_exact_lease_for_retry(tmp_pa
             storage_root=storage_root,
             profile_objects=SecureObjectRepository(namespace_registry=STORAGE_NAMESPACE_REGISTRY),
         )
-        supervisor = _supervisor(
-            registry=_registry(executor_type=IdleExecutor, build=IdleExecutor),
+        supervisor = operation_supervisor(
+            registry=supervisor_registry(executor_type=IdleExecutor, build=IdleExecutor),
             journal=journal,
             leases=leases,
             operands=operands,
@@ -730,7 +740,7 @@ def test_submit_journal_create_refusal_releases_the_exact_lease_for_retry(tmp_pa
             token="2" * 64,
         )
         operation_id = "3" * 64
-        request = _request()
+        request = supervisor_request()
         journal_root = storage_root / "operation-journals"
         journal_root.mkdir(parents=True)
         refused_path = journal_root / f"{operation_id}.json"

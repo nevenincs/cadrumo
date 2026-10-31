@@ -31,7 +31,7 @@ from cadrumo.application.operations.persistence.leases import (
 from cadrumo.application.operations.tests.authority_test_support import unread_authority_operation
 from cadrumo.core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
 
-from .supervisor_test_support import WaitingExecutor, _registry
+from .supervisor_test_support import WaitingExecutor, supervisor_registry
 from .test_journal import _STARTED, _snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
@@ -139,7 +139,7 @@ def test_inventory_pages_include_terminal_and_refused_entries_without_changing_f
         } == original_bytes
 
         services = compose_operation_services(
-            registry=_registry(
+            registry=supervisor_registry(
                 executor_type=WaitingExecutor,
                 build=lambda: WaitingExecutor(started=asyncio.Event(), release=asyncio.Event()),
             ),

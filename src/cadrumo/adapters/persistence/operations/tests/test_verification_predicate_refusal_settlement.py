@@ -48,10 +48,10 @@ from .supervision_support import run_to_settlement
 from .supervisor_test_support import (
     SupervisorRequest,
     SupervisorResult,
-    _registry,
-    _request,
-    _supervisor,
     operation_repositories,
+    operation_supervisor,
+    supervisor_registry,
+    supervisor_request,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
@@ -76,7 +76,7 @@ class _MalformedPredicateExecutor:
 
 
 def _opted_in_registry() -> OperationRegistry:
-    base = _registry(executor_type=_MalformedPredicateExecutor, build=_MalformedPredicateExecutor)
+    base = supervisor_registry(executor_type=_MalformedPredicateExecutor, build=_MalformedPredicateExecutor)
     item = base.lookup("operation.supervisor.test").model_copy(update={"public_error_detail": True})
     registration = OperationPublicDefinitionRegistrationV1.compose(
         definition=item,
@@ -97,7 +97,7 @@ def test_a_malformed_predicate_settles_refused_with_its_code_and_refusal_reason(
         journal, leases, operands = operation_repositories(
             storage_root=storage_root, profile_objects=profile.repository
         )
-        supervisor = _supervisor(
+        supervisor = operation_supervisor(
             registry=registry,
             journal=journal,
             leases=leases,
@@ -105,7 +105,7 @@ def test_a_malformed_predicate_settles_refused_with_its_code_and_refusal_reason(
             owner_id="1" * 64,
             token="2" * 64,
         )
-        operation_id = asyncio.run(supervisor.submit(_request(), operation_id="3" * 64))
+        operation_id = asyncio.run(supervisor.submit(supervisor_request(), operation_id="3" * 64))
         terminal = asyncio.run(run_to_settlement(supervisor, operation_id))
         contract = registry.lookup_public_contract(terminal.identity.definition_id)
         service = OperationResultProjectionService(reader=journal, registry=registry, operands=operands)

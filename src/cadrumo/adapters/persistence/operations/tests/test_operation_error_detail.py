@@ -72,10 +72,10 @@ from .supervisor_test_support import (
     UnexpectedFailureExecutor,
     _assert_sensitive_detail_absent_from_operation_bytes,
     _capabilities,
-    _registry,
-    _request,
-    _supervisor,
     operation_repositories,
+    operation_supervisor,
+    supervisor_registry,
+    supervisor_request,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
@@ -146,7 +146,7 @@ def _settle_and_read(
         journal, leases, operands = operation_repositories(
             storage_root=storage_root, profile_objects=profile.repository
         )
-        supervisor = _supervisor(
+        supervisor = operation_supervisor(
             registry=registry,
             journal=journal,
             leases=leases,
@@ -154,7 +154,7 @@ def _settle_and_read(
             owner_id="1" * 64,
             token="2" * 64,
         )
-        operation_id = asyncio.run(supervisor.submit(_request(), operation_id="3" * 64))
+        operation_id = asyncio.run(supervisor.submit(supervisor_request(), operation_id="3" * 64))
         terminal = asyncio.run(run_to_settlement(supervisor, operation_id))
         contract = registry.lookup_public_contract(terminal.identity.definition_id)
         service = OperationResultProjectionService(reader=journal, registry=registry, operands=operands)
@@ -188,7 +188,7 @@ def _opted_in(registry: OperationRegistry) -> OperationRegistry:
 
 
 def _executor_registry(executor_type: type[object], build: Callable[[], object]) -> OperationRegistry:
-    return _opted_in(_registry(executor_type=executor_type, build=build))
+    return _opted_in(supervisor_registry(executor_type=executor_type, build=build))
 
 
 def test_a_registered_refusal_releases_its_code_key_scrubbed_context_and_verdict(tmp_path: Path) -> None:
@@ -244,7 +244,7 @@ def test_an_unexpected_failure_records_no_detail_and_keeps_its_prose_out_of_stor
     """An exception with no public facts leaves only the opaque correlation the journal already had."""
     executor = UnexpectedFailureExecutor()
     registry = _opted_in(
-        _registry(
+        supervisor_registry(
             executor_type=UnexpectedFailureExecutor,
             build=lambda: executor,
             capabilities=_capabilities(
@@ -278,7 +278,7 @@ def test_the_detail_is_read_only_under_its_own_schema_identity(tmp_path: Path) -
 
 def test_a_definition_that_does_not_opt_in_records_no_detail(tmp_path: Path) -> None:
     """Without the opt-in, the same refusal keeps only its registered code, as before."""
-    registry = _registry(executor_type=_ContextualRefusalExecutor, build=_ContextualRefusalExecutor)
+    registry = supervisor_registry(executor_type=_ContextualRefusalExecutor, build=_ContextualRefusalExecutor)
     case = _settle_and_read(tmp_path, registry)
 
     receipt = case.terminal.terminal_receipt
@@ -327,7 +327,7 @@ def test_modelo_scope_failure_retains_its_public_detail_over_durable_settlement(
         journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "scope-state", profile_objects=profile.repository
         )
-        supervisor = _supervisor(
+        supervisor = operation_supervisor(
             registry=registry,
             journal=journal,
             leases=leases,

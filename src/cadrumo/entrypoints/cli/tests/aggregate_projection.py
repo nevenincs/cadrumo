@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 
 from ....application.aggregation.service import PerModeloAggregationResult
-from ....domain.calculations.registry.withholding_bindings import WithholdingClaveBreakdown
+from ....domain.calculations.registry.withholding_clave_breakdown import WithholdingClaveBreakdown
 from ..modelo_aux_payloads import WithholdingClaveBreakdownPayload
 from ..modelo_query_results import ModeloAggregateResult, WithholdingWindowReadbackPayload
 

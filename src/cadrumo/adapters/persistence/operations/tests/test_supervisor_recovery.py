@@ -44,11 +44,11 @@ from .supervisor_test_support import (
     WaitingExecutor,
     _capabilities,
     _close_host_over_live_executor,
-    _registry,
-    _request,
     _response,
-    _supervisor,
     operation_repositories,
+    operation_supervisor,
+    supervisor_registry,
+    supervisor_request,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
@@ -61,15 +61,15 @@ def test_detach_preserves_real_journal_cursor_replay_and_pending_interaction(tmp
         journal, leases, operands = operation_repositories(
             storage_root=storage_root, profile_objects=profile.repository
         )
-        registry = _registry(
+        registry = supervisor_registry(
             executor_type=ReviewExecutor,
             build=ReviewExecutor,
             interaction_kinds=frozenset({OperationInteractionKind.REVIEW}),
         )
-        supervisor = _supervisor(
+        supervisor = operation_supervisor(
             registry=registry, journal=journal, leases=leases, operands=operands, owner_id="1" * 64, token="2" * 64
         )
-        operation_id = asyncio.run(supervisor.submit(_request(), operation_id="3" * 64))
+        operation_id = asyncio.run(supervisor.submit(supervisor_request(), operation_id="3" * 64))
         waiting = asyncio.run(run_to_settlement(supervisor, operation_id))
         initial_replay = asyncio.run(supervisor.replay(operation_id, 0, limit=20))
         saved_cursor = initial_replay.next_cursor
@@ -80,7 +80,7 @@ def test_detach_preserves_real_journal_cursor_replay_and_pending_interaction(tmp
         observer_journal, observer_leases, observer_operands = operation_repositories(
             storage_root=storage_root, profile_objects=profile.repository
         )
-        observer = _supervisor(
+        observer = operation_supervisor(
             registry=registry,
             journal=observer_journal,
             leases=observer_leases,
@@ -109,26 +109,26 @@ def test_duplicate_response_is_refused_after_detach_and_same_owner_supervisor_re
         journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "durable-state", profile_objects=profile.repository
         )
-        registry = _registry(
+        registry = supervisor_registry(
             executor_type=ReviewExecutor,
             build=ReviewExecutor,
             interaction_kinds=frozenset({OperationInteractionKind.REVIEW}),
         )
-        owner = _supervisor(
+        owner = operation_supervisor(
             registry=registry, journal=journal, leases=leases, operands=operands, owner_id="1" * 64, token="2" * 64
         )
-        operation_id = asyncio.run(owner.submit(_request(), operation_id="3" * 64))
+        operation_id = asyncio.run(owner.submit(supervisor_request(), operation_id="3" * 64))
         waiting = asyncio.run(run_to_settlement(owner, operation_id))
         assert waiting.pending_interaction is not None
         assert asyncio.run(owner.detach(operation_id)) == waiting
         response = _response(intent="reject", operation_id=operation_id, revision=waiting.revision)
         assert isinstance(response, OperationRejectResponse)
-        restarted = _supervisor(
+        restarted = operation_supervisor(
             registry=registry, journal=journal, leases=leases, operands=operands, owner_id="1" * 64, token="2" * 64
         )
         consumed = asyncio.run(restarted.reject(response))
         persisted = asyncio.run(journal.load(operation_id))
-        duplicate = _supervisor(
+        duplicate = operation_supervisor(
             registry=registry, journal=journal, leases=leases, operands=operands, owner_id="1" * 64, token="2" * 64
         )
 
@@ -160,7 +160,7 @@ def test_expired_resumable_checkpoint_restarts_through_real_storage_and_replays_
         journal, leases, operands = operation_repositories(
             storage_root=storage_root, profile_objects=profile.repository
         )
-        registry = _registry(
+        registry = supervisor_registry(
             executor_type=ResumableReviewExecutor,
             build=build,
             capabilities=_capabilities(
@@ -170,7 +170,7 @@ def test_expired_resumable_checkpoint_restarts_through_real_storage_and_replays_
             interaction_kinds=frozenset({OperationInteractionKind.REVIEW}),
             reconciliation_policy=OperationReconciliationPolicy.RESUME_FROM_CHECKPOINT,
         )
-        owner = _supervisor(
+        owner = operation_supervisor(
             registry=registry,
             journal=journal,
             leases=leases,
@@ -179,10 +179,10 @@ def test_expired_resumable_checkpoint_restarts_through_real_storage_and_replays_
             token="2" * 64,
             lease_duration=timedelta(minutes=1),
         )
-        operation_id = asyncio.run(owner.submit(_request(), operation_id="3" * 64))
+        operation_id = asyncio.run(owner.submit(supervisor_request(), operation_id="3" * 64))
         checkpoint = asyncio.run(run_to_settlement(owner, operation_id))
         recovered_at = _NOW + timedelta(minutes=2)
-        recovery = _supervisor(
+        recovery = operation_supervisor(
             registry=registry,
             journal=journal,
             leases=leases,
@@ -245,8 +245,8 @@ def test_expired_running_operation_reconciles_to_unknown_interruption_without_fa
         journal, leases, operands = operation_repositories(
             storage_root=storage_root, profile_objects=profile.repository
         )
-        registry = _registry(executor_type=WaitingExecutor, build=lambda: executor)
-        owner = _supervisor(
+        registry = supervisor_registry(executor_type=WaitingExecutor, build=lambda: executor)
+        owner = operation_supervisor(
             registry=registry,
             journal=journal,
             leases=leases,
@@ -255,11 +255,11 @@ def test_expired_running_operation_reconciles_to_unknown_interruption_without_fa
             token="2" * 64,
             lease_duration=timedelta(minutes=1),
         )
-        operation_id = asyncio.run(owner.submit(_request(), operation_id="3" * 64))
+        operation_id = asyncio.run(owner.submit(supervisor_request(), operation_id="3" * 64))
         abandoned = asyncio.run(_close_host_over_live_executor(owner, operation_id, started))
         assert abandoned.lifecycle is OperationLifecycle.RUNNING
         recovered_at = _NOW + timedelta(minutes=2)
-        recovery = _supervisor(
+        recovery = operation_supervisor(
             registry=registry,
             journal=journal,
             leases=leases,
@@ -301,8 +301,8 @@ def test_detached_cancellation_race_persists_acknowledgement_before_terminal_set
         reloaded_journal, reloaded_leases, _ = operation_repositories(
             storage_root=storage_root, profile_objects=profile.repository
         )
-        supervisor = _supervisor(
-            registry=_registry(
+        supervisor = operation_supervisor(
+            registry=supervisor_registry(
                 executor_type=DeadlineAcknowledgingExecutor,
                 build=lambda: executor,
                 capabilities=_capabilities(
@@ -323,7 +323,7 @@ def test_detached_cancellation_race_persists_acknowledgement_before_terminal_set
             OperationPersistedSnapshot,
             OperationPersistedSnapshot,
         ]:
-            operation_id = await supervisor.submit(_request(), operation_id="3" * 64)
+            operation_id = await supervisor.submit(supervisor_request(), operation_id="3" * 64)
             start_task = asyncio.create_task(run_to_settlement(supervisor, operation_id))
             await executor.started.wait()
             detached = await supervisor.detach(operation_id)
@@ -377,8 +377,8 @@ def test_detached_deadline_race_persists_cooperative_stop_before_terminal_settle
         reloaded_journal, reloaded_leases, _ = operation_repositories(
             storage_root=storage_root, profile_objects=profile.repository
         )
-        supervisor = _supervisor(
-            registry=_registry(
+        supervisor = operation_supervisor(
+            registry=supervisor_registry(
                 executor_type=DeadlineAcknowledgingExecutor,
                 build=lambda: executor,
                 capabilities=_capabilities(
@@ -402,7 +402,7 @@ def test_detached_deadline_race_persists_cooperative_stop_before_terminal_settle
             OperationPersistedSnapshot,
             OperationPersistedSnapshot,
         ]:
-            operation_id = await supervisor.submit(_request(), operation_id="3" * 64)
+            operation_id = await supervisor.submit(supervisor_request(), operation_id="3" * 64)
             start_task = asyncio.create_task(run_to_settlement(supervisor, operation_id))
             await executor.started.wait()
             detached = await supervisor.detach(operation_id)

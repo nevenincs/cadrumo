@@ -60,11 +60,11 @@ from .supervisor_test_support import (
     WaitingExecutor,
     _capabilities,
     _close_host_over_live_executor,
-    _registry,
-    _request,
     _response,
-    _supervisor,
     operation_repositories,
+    operation_supervisor,
+    supervisor_registry,
+    supervisor_request,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
@@ -78,12 +78,12 @@ def test_reconcile_takes_over_expired_owner_settles_and_releases_scope(tmp_path:
         )
         started = asyncio.Event()
         executor = WaitingExecutor(started=started, release=asyncio.Event())
-        registry = _registry(
+        registry = supervisor_registry(
             executor_type=WaitingExecutor,
             build=lambda: executor,
             capabilities=_capabilities(permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN})),
         )
-        owner = _supervisor(
+        owner = operation_supervisor(
             registry=registry,
             journal=journal,
             leases=leases,
@@ -92,11 +92,13 @@ def test_reconcile_takes_over_expired_owner_settles_and_releases_scope(tmp_path:
             token="2" * 64,
             lease_duration=timedelta(minutes=1),
         )
-        operation_id = asyncio.run(owner.submit(_request(subject_ref="subject:shared"), operation_id="3" * 64))
+        operation_id = asyncio.run(
+            owner.submit(supervisor_request(subject_ref="subject:shared"), operation_id="3" * 64)
+        )
         abandoned = asyncio.run(_close_host_over_live_executor(owner, operation_id, started))
         assert abandoned.lifecycle is OperationLifecycle.RUNNING
         recovered_at = _NOW + timedelta(minutes=2)
-        recovery = _supervisor(
+        recovery = operation_supervisor(
             registry=registry,
             journal=journal,
             leases=leases,
@@ -118,7 +120,9 @@ def test_reconcile_takes_over_expired_owner_settles_and_releases_scope(tmp_path:
                 observed_at=recovered_at,
             )
         )
-        replacement = asyncio.run(recovery.submit(_request(subject_ref="subject:shared"), operation_id="6" * 64))
+        replacement = asyncio.run(
+            recovery.submit(supervisor_request(subject_ref="subject:shared"), operation_id="6" * 64)
+        )
 
         assert terminal.lifecycle is OperationLifecycle.TERMINAL
         assert terminal.terminal_condition is OperationTerminalCondition.INTERRUPTED
@@ -138,12 +142,12 @@ def test_a_submission_recovers_a_started_holder_whose_owner_lapsed(tmp_path: Pat
         )
         started = asyncio.Event()
         executor = WaitingExecutor(started=started, release=asyncio.Event())
-        registry = _registry(
+        registry = supervisor_registry(
             executor_type=WaitingExecutor,
             build=lambda: executor,
             capabilities=_capabilities(permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN})),
         )
-        owner = _supervisor(
+        owner = operation_supervisor(
             registry=registry,
             journal=journal,
             leases=leases,
@@ -152,11 +156,13 @@ def test_a_submission_recovers_a_started_holder_whose_owner_lapsed(tmp_path: Pat
             token="2" * 64,
             lease_duration=timedelta(minutes=1),
         )
-        operation_id = asyncio.run(owner.submit(_request(subject_ref="subject:shared"), operation_id="3" * 64))
+        operation_id = asyncio.run(
+            owner.submit(supervisor_request(subject_ref="subject:shared"), operation_id="3" * 64)
+        )
         abandoned = asyncio.run(_close_host_over_live_executor(owner, operation_id, started))
         assert abandoned.lifecycle is OperationLifecycle.RUNNING
         recovered_at = _NOW + timedelta(minutes=2)
-        successor = _supervisor(
+        successor = operation_supervisor(
             registry=registry,
             journal=journal,
             leases=leases,
@@ -166,7 +172,9 @@ def test_a_submission_recovers_a_started_holder_whose_owner_lapsed(tmp_path: Pat
             clock=lambda: recovered_at,
         )
 
-        replacement = asyncio.run(successor.submit(_request(subject_ref="subject:shared"), operation_id="6" * 64))
+        replacement = asyncio.run(
+            successor.submit(supervisor_request(subject_ref="subject:shared"), operation_id="6" * 64)
+        )
 
         assert replacement == "6" * 64
         recovered = asyncio.run(journal.load(operation_id))
@@ -182,8 +190,8 @@ def test_reconcile_foreign_expired_lease_orphans_target_without_mutating_foreign
         journal, leases, operands = operation_repositories(
             storage_root=storage_root, profile_objects=profile.repository
         )
-        registry = _registry(executor_type=IdleExecutor, build=IdleExecutor)
-        owner = _supervisor(
+        registry = supervisor_registry(executor_type=IdleExecutor, build=IdleExecutor)
+        owner = operation_supervisor(
             registry=registry,
             journal=journal,
             leases=leases,
@@ -192,7 +200,7 @@ def test_reconcile_foreign_expired_lease_orphans_target_without_mutating_foreign
             token="2" * 64,
             lease_duration=timedelta(minutes=1),
         )
-        target_id = asyncio.run(owner.submit(_request(subject_ref="subject:shared"), operation_id="3" * 64))
+        target_id = asyncio.run(owner.submit(supervisor_request(subject_ref="subject:shared"), operation_id="3" * 64))
         target = asyncio.run(journal.load(target_id))
         scope_ref = operation_conflict_scope_reference(
             definition_id=target.identity.definition_id,
@@ -236,7 +244,7 @@ def test_reconcile_foreign_expired_lease_orphans_target_without_mutating_foreign
         foreign_path = storage_root / "operation-journals" / f"{foreign_lease.operation_id}.json"
         foreign_before = foreign_path.read_bytes()
         recovered_at = foreign_at + timedelta(minutes=2)
-        recovery = _supervisor(
+        recovery = operation_supervisor(
             registry=registry,
             journal=journal,
             leases=leases,
@@ -268,8 +276,8 @@ def test_reconcile_recovers_an_unstarted_expired_entry_with_new_durable_ownershi
         )
         started = asyncio.Event()
         executor = WaitingExecutor(started=started, release=asyncio.Event())
-        registry = _registry(executor_type=WaitingExecutor, build=lambda: executor)
-        owner = _supervisor(
+        registry = supervisor_registry(executor_type=WaitingExecutor, build=lambda: executor)
+        owner = operation_supervisor(
             registry=registry,
             journal=journal,
             leases=leases,
@@ -278,8 +286,8 @@ def test_reconcile_recovers_an_unstarted_expired_entry_with_new_durable_ownershi
             token="2" * 64,
             lease_duration=timedelta(minutes=1),
         )
-        operation_id = asyncio.run(owner.submit(_request(), operation_id="3" * 64))
-        recovery = _supervisor(
+        operation_id = asyncio.run(owner.submit(supervisor_request(), operation_id="3" * 64))
+        recovery = operation_supervisor(
             registry=registry,
             journal=journal,
             leases=leases,
@@ -318,7 +326,7 @@ def test_reconcile_reenters_only_a_declared_valid_checkpoint(tmp_path: Path) -> 
         journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "durable-state", profile_objects=profile.repository
         )
-        registry = _registry(
+        registry = supervisor_registry(
             executor_type=ResumableReviewExecutor,
             build=build,
             capabilities=_capabilities(
@@ -328,7 +336,7 @@ def test_reconcile_reenters_only_a_declared_valid_checkpoint(tmp_path: Path) -> 
             interaction_kinds=frozenset({OperationInteractionKind.REVIEW}),
             reconciliation_policy=OperationReconciliationPolicy.RESUME_FROM_CHECKPOINT,
         )
-        owner = _supervisor(
+        owner = operation_supervisor(
             registry=registry,
             journal=journal,
             leases=leases,
@@ -337,9 +345,9 @@ def test_reconcile_reenters_only_a_declared_valid_checkpoint(tmp_path: Path) -> 
             token="2" * 64,
             lease_duration=timedelta(minutes=1),
         )
-        operation_id = asyncio.run(owner.submit(_request(), operation_id="3" * 64))
+        operation_id = asyncio.run(owner.submit(supervisor_request(), operation_id="3" * 64))
         waiting = asyncio.run(run_to_settlement(owner, operation_id))
-        recovery = _supervisor(
+        recovery = operation_supervisor(
             registry=registry,
             journal=journal,
             leases=leases,
@@ -385,7 +393,7 @@ def test_resumed_executor_result_reference_settles_the_recovered_operation(tmp_p
             storage_root=tmp_path / "resumed-result-state",
             profile_objects=profile.repository,
         )
-        registry = _registry(
+        registry = supervisor_registry(
             executor_type=ResumableReviewExecutor,
             build=build,
             capabilities=_capabilities(
@@ -395,7 +403,7 @@ def test_resumed_executor_result_reference_settles_the_recovered_operation(tmp_p
             interaction_kinds=frozenset({OperationInteractionKind.REVIEW}),
             reconciliation_policy=OperationReconciliationPolicy.RESUME_FROM_CHECKPOINT,
         )
-        owner = _supervisor(
+        owner = operation_supervisor(
             registry=registry,
             journal=journal,
             leases=leases,
@@ -404,9 +412,9 @@ def test_resumed_executor_result_reference_settles_the_recovered_operation(tmp_p
             token="2" * 64,
             lease_duration=timedelta(minutes=1),
         )
-        operation_id = asyncio.run(owner.submit(_request(), operation_id="3" * 64))
+        operation_id = asyncio.run(owner.submit(supervisor_request(), operation_id="3" * 64))
         waiting = asyncio.run(run_to_settlement(owner, operation_id))
-        recovery = _supervisor(
+        recovery = operation_supervisor(
             registry=registry,
             journal=journal,
             leases=leases,
@@ -441,7 +449,7 @@ def test_reconcile_refuses_changed_definition_digest_before_reentry(tmp_path: Pa
         journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "durable-state", profile_objects=profile.repository
         )
-        owner_registry = _registry(
+        owner_registry = supervisor_registry(
             executor_type=ResumableReviewExecutor,
             build=build,
             capabilities=_capabilities(
@@ -451,7 +459,7 @@ def test_reconcile_refuses_changed_definition_digest_before_reentry(tmp_path: Pa
             interaction_kinds=frozenset({OperationInteractionKind.REVIEW}),
             reconciliation_policy=OperationReconciliationPolicy.RESUME_FROM_CHECKPOINT,
         )
-        owner = _supervisor(
+        owner = operation_supervisor(
             registry=owner_registry,
             journal=journal,
             leases=leases,
@@ -460,9 +468,9 @@ def test_reconcile_refuses_changed_definition_digest_before_reentry(tmp_path: Pa
             token="2" * 64,
             lease_duration=timedelta(minutes=1),
         )
-        operation_id = asyncio.run(owner.submit(_request(), operation_id="3" * 64))
+        operation_id = asyncio.run(owner.submit(supervisor_request(), operation_id="3" * 64))
         waiting = asyncio.run(run_to_settlement(owner, operation_id))
-        changed_registry = _registry(
+        changed_registry = supervisor_registry(
             executor_type=ResumableReviewExecutor,
             build=build,
             capabilities=_capabilities(
@@ -472,7 +480,7 @@ def test_reconcile_refuses_changed_definition_digest_before_reentry(tmp_path: Pa
             interaction_kinds=frozenset({OperationInteractionKind.INPUT}),
             reconciliation_policy=OperationReconciliationPolicy.RESUME_FROM_CHECKPOINT,
         )
-        recovery = _supervisor(
+        recovery = operation_supervisor(
             registry=changed_registry,
             journal=journal,
             leases=leases,
@@ -505,7 +513,7 @@ def test_reconcile_refuses_resume_without_a_declared_valid_checkpoint(tmp_path: 
         journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "durable-state", profile_objects=profile.repository
         )
-        registry = _registry(
+        registry = supervisor_registry(
             executor_type=ResumableIdleExecutor,
             build=ResumableIdleExecutor,
             capabilities=_capabilities(
@@ -515,7 +523,7 @@ def test_reconcile_refuses_resume_without_a_declared_valid_checkpoint(tmp_path: 
             interaction_kinds=frozenset({OperationInteractionKind.REVIEW}),
             reconciliation_policy=OperationReconciliationPolicy.RESUME_FROM_CHECKPOINT,
         )
-        owner = _supervisor(
+        owner = operation_supervisor(
             registry=registry,
             journal=journal,
             leases=leases,
@@ -524,9 +532,9 @@ def test_reconcile_refuses_resume_without_a_declared_valid_checkpoint(tmp_path: 
             token="2" * 64,
             lease_duration=timedelta(minutes=1),
         )
-        operation_id = asyncio.run(owner.submit(_request(), operation_id="3" * 64))
+        operation_id = asyncio.run(owner.submit(supervisor_request(), operation_id="3" * 64))
         abandoned = asyncio.run(_close_host_over_live_executor(owner, operation_id, ResumableIdleExecutor.started))
-        recovery = _supervisor(
+        recovery = operation_supervisor(
             registry=registry,
             journal=journal,
             leases=leases,
@@ -550,8 +558,8 @@ def test_reconcile_classifies_absent_lease_as_orphan_before_unknown_interruption
         journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "durable-state", profile_objects=profile.repository
         )
-        registry = _registry(executor_type=IdleExecutor, build=IdleExecutor)
-        owner = _supervisor(
+        registry = supervisor_registry(executor_type=IdleExecutor, build=IdleExecutor)
+        owner = operation_supervisor(
             registry=registry,
             journal=journal,
             leases=leases,
@@ -559,7 +567,7 @@ def test_reconcile_classifies_absent_lease_as_orphan_before_unknown_interruption
             owner_id="1" * 64,
             token="2" * 64,
         )
-        operation_id = asyncio.run(owner.submit(_request(), operation_id="3" * 64))
+        operation_id = asyncio.run(owner.submit(supervisor_request(), operation_id="3" * 64))
         scope_ref = operation_conflict_scope_reference(
             definition_id="operation.supervisor.test", subject_ref="subject:one"
         )
@@ -569,7 +577,7 @@ def test_reconcile_classifies_absent_lease_as_orphan_before_unknown_interruption
             asyncio.run(leases.release(observed.current, observed_at=_NOW)).disposition
             is OperationLeaseDisposition.RELEASED
         )
-        recovery = _supervisor(
+        recovery = operation_supervisor(
             registry=registry,
             journal=journal,
             leases=leases,
@@ -598,7 +606,7 @@ def test_secure_review_publication_and_consumed_continuation_recover_without_rea
         journal, leases, operands = operation_repositories(
             storage_root=storage_root, profile_objects=profile.repository
         )
-        registry = _registry(
+        registry = supervisor_registry(
             executor_type=DurableContinuationExecutor,
             build=DurableContinuationExecutor,
             capabilities=_capabilities(
@@ -608,7 +616,7 @@ def test_secure_review_publication_and_consumed_continuation_recover_without_rea
             interaction_kinds=frozenset({OperationInteractionKind.REVIEW}),
             reconciliation_policy=OperationReconciliationPolicy.RESUME_FROM_CHECKPOINT,
         )
-        owner = _supervisor(
+        owner = operation_supervisor(
             registry=registry,
             journal=journal,
             leases=leases,
@@ -619,7 +627,7 @@ def test_secure_review_publication_and_consumed_continuation_recover_without_rea
         )
 
         async def publish_consume_and_schedule() -> tuple[str, OperationConsumedInteraction]:
-            operation_id = await owner.submit(_request(), operation_id="3" * 64)
+            operation_id = await owner.submit(supervisor_request(), operation_id="3" * 64)
             waiting = await run_to_settlement(owner, operation_id)
             pending = waiting.pending_interaction
             assert pending is not None
@@ -644,7 +652,7 @@ def test_secure_review_publication_and_consumed_continuation_recover_without_rea
 
         operation_id, consumed = asyncio.run(publish_consume_and_schedule())
         persisted = asyncio.run(journal.load(operation_id))
-        recovery = _supervisor(
+        recovery = operation_supervisor(
             registry=registry,
             journal=journal,
             leases=leases,
@@ -691,8 +699,8 @@ def test_reconcile_refuses_active_or_corrupt_lease_without_journal_mutation(tmp_
         journal, leases, operands = operation_repositories(
             storage_root=storage_root, profile_objects=profile.repository
         )
-        registry = _registry(executor_type=IdleExecutor, build=IdleExecutor)
-        owner = _supervisor(
+        registry = supervisor_registry(executor_type=IdleExecutor, build=IdleExecutor)
+        owner = operation_supervisor(
             registry=registry,
             journal=journal,
             leases=leases,
@@ -700,10 +708,10 @@ def test_reconcile_refuses_active_or_corrupt_lease_without_journal_mutation(tmp_
             owner_id="1" * 64,
             token="2" * 64,
         )
-        operation_id = asyncio.run(owner.submit(_request(), operation_id="3" * 64))
+        operation_id = asyncio.run(owner.submit(supervisor_request(), operation_id="3" * 64))
         journal_path = storage_root / "operation-journals" / f"{operation_id}.json"
         journal_before = journal_path.read_bytes()
-        recovery = _supervisor(
+        recovery = operation_supervisor(
             registry=registry,
             journal=journal,
             leases=leases,

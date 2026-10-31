@@ -652,7 +652,7 @@ def _definition(
     )
 
 
-def _registry(
+def supervisor_registry(
     *,
     executor_type: type[object],
     build: Callable[[], object],
@@ -725,7 +725,7 @@ def _drifted_registry(registry: OperationRegistry) -> OperationRegistry:
     return OperationRegistry(definitions=(item,), public_registrations=(registration,))
 
 
-def _supervisor(
+def operation_supervisor(
     *,
     registry: OperationRegistry,
     journal: OperationJournalRepository,
@@ -757,7 +757,9 @@ def _supervisor(
     )
 
 
-def _request(*, subject_ref: str = "subject:one", idempotency_key: str | None = None) -> OperationRequest[BaseModel]:
+def supervisor_request(
+    *, subject_ref: str = "subject:one", idempotency_key: str | None = None
+) -> OperationRequest[BaseModel]:
     return OperationRequest[BaseModel](
         definition_id="operation.supervisor.test",
         subject_ref=subject_ref,
@@ -859,8 +861,8 @@ def _admission_supervisor(
     journal, leases, operands = operation_repositories(
         storage_root=tmp_path / "durable-state", profile_objects=profile_objects
     )
-    supervisor = _supervisor(
-        registry=_registry(executor_type=executor_type, build=build, capabilities=capabilities),
+    supervisor = operation_supervisor(
+        registry=supervisor_registry(executor_type=executor_type, build=build, capabilities=capabilities),
         journal=journal,
         leases=leases,
         operands=operands,
@@ -878,7 +880,7 @@ def _start_and_walk_away(tmp_path: Path, caplog: pytest.LogCaptureFixture) -> Op
         )
 
         async def scenario() -> OperationPersistedSnapshot:
-            operation_id = await supervisor.submit(_request(), operation_id="3" * 64)
+            operation_id = await supervisor.submit(supervisor_request(), operation_id="3" * 64)
             await supervisor.start(operation_id)
             for _ in range(500):
                 if _failure_logged(caplog):
@@ -902,7 +904,7 @@ def _shared_scope_holder(
     observed_at: datetime,
 ) -> OperationOwnerLease | None:
     """Return whichever lease currently holds the shared definition subject."""
-    request = _request(subject_ref=_SHARED_SUBJECT)
+    request = supervisor_request(subject_ref=_SHARED_SUBJECT)
     observed = asyncio.run(
         leases.inspect(
             operation_conflict_scope_reference(definition_id=request.definition_id, subject_ref=request.subject_ref),
@@ -964,8 +966,8 @@ def _abandon_running_operation(
     )
     started = asyncio.Event()
     executor = WaitingExecutor(started=started, release=asyncio.Event())
-    owner = _supervisor(
-        registry=_registry(executor_type=WaitingExecutor, build=lambda: executor),
+    owner = operation_supervisor(
+        registry=supervisor_registry(executor_type=WaitingExecutor, build=lambda: executor),
         journal=journal,
         leases=leases,
         operands=operands,
@@ -973,7 +975,7 @@ def _abandon_running_operation(
         token="2" * 64,
         lease_duration=timedelta(minutes=1),
     )
-    operation_id = asyncio.run(owner.submit(_request(subject_ref=_SHARED_SUBJECT), operation_id="3" * 64))
+    operation_id = asyncio.run(owner.submit(supervisor_request(subject_ref=_SHARED_SUBJECT), operation_id="3" * 64))
     abandoned = asyncio.run(_close_host_over_live_executor(owner, operation_id, started))
     assert abandoned.lifecycle is OperationLifecycle.RUNNING
     return journal, leases, operands, operation_id
@@ -987,8 +989,10 @@ def _lapse_settler(
     at: datetime,
     registry: OperationRegistry | None = None,
 ) -> OperationSupervisor:
-    return _supervisor(
-        registry=_registry(executor_type=WaitingExecutor, build=IdleExecutor) if registry is None else registry,
+    return operation_supervisor(
+        registry=supervisor_registry(executor_type=WaitingExecutor, build=IdleExecutor)
+        if registry is None
+        else registry,
         journal=journal,
         leases=leases,
         operands=operands,

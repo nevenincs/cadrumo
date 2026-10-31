@@ -27,9 +27,9 @@ from .supervisor_test_support import (
     _NOW,
     IdleExecutor,
     SupervisorRequest,
-    _registry,
-    _supervisor,
     operation_repositories,
+    operation_supervisor,
+    supervisor_registry,
 )
 from .test_journal import _claim_lease, _lease, _snapshot
 
@@ -42,7 +42,7 @@ _OWNER_MARKER = "provenance-owner-marker-never-in-journal"
 _DESTINATION_ID = UUID("59653ea3-aaaa-4aaa-8aaa-aaaaaaaaaaaa")
 
 
-def _request(*, value: str = "encrypted-operation-input") -> OperationRequest[SupervisorRequest]:
+def supervisor_request(*, value: str = "encrypted-operation-input") -> OperationRequest[SupervisorRequest]:
     return OperationRequest[SupervisorRequest](
         definition_id=_DEFINITION_ID,
         subject_ref="subject:admission-provenance",
@@ -97,8 +97,8 @@ def _provenance(
 
 def _services(root: Path, profile_objects):
     journal, leases, operands = operation_repositories(storage_root=root, profile_objects=profile_objects)
-    supervisor = _supervisor(
-        registry=_registry(executor_type=IdleExecutor, build=IdleExecutor),
+    supervisor = operation_supervisor(
+        registry=supervisor_registry(executor_type=IdleExecutor, build=IdleExecutor),
         journal=journal,
         leases=leases,
         operands=operands,
@@ -112,7 +112,7 @@ def test_provenance_survives_encrypted_round_trip_without_plaintext_or_replay_re
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         root = tmp_path / "durable-state"
         journal, supervisor, service = _services(root, profile.repository)
-        request = _request()
+        request = supervisor_request()
         original = _provenance(_ORIGINAL_ID, request, profile_id=UUID(profile.bucket_id))
 
         first = asyncio.run(
@@ -159,7 +159,7 @@ def test_provenance_survives_encrypted_round_trip_without_plaintext_or_replay_re
 @pytest.mark.parametrize("damage", ["old_schema", "missing_request", "foreign_profile", "other_definition"])
 def test_admitted_request_is_required_and_bound_to_original_invocation(damage: str) -> None:
     profile_id = uuid4()
-    provenance = _provenance(_ORIGINAL_ID, _request(), profile_id=profile_id)
+    provenance = _provenance(_ORIGINAL_ID, supervisor_request(), profile_id=profile_id)
     payload = provenance.model_dump(mode="json")
     if damage == "old_schema":
         payload["schema_version"] = 1
@@ -179,12 +179,12 @@ def test_substituted_provenance_refuses_before_journal_creation(tmp_path: Path, 
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         root = tmp_path / "durable-state"
         journal, supervisor, _ = _services(root, profile.repository)
-        request = _request()
+        request = supervisor_request()
         provenance = _provenance(_ORIGINAL_ID, request, profile_id=UUID(profile.bucket_id))
         if substitution == "identity":
             provenance = _provenance(_RETRY_ID, request, profile_id=UUID(profile.bucket_id))
         else:
-            request = _request(value="altered-payload")
+            request = supervisor_request(value="altered-payload")
 
         with pytest.raises(ValueError, match="does not match stored invocation"):
             asyncio.run(supervisor.submit(request, operation_id=_ORIGINAL_ID, provenance=provenance))
@@ -198,7 +198,7 @@ def test_missing_or_corrupt_encrypted_provenance_refuses_stored_invocation(tmp_p
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         root = tmp_path / "durable-state"
         journal, supervisor, _ = _services(root, profile.repository)
-        request = _request()
+        request = supervisor_request()
         provenance = _provenance(_ORIGINAL_ID, request, profile_id=UUID(profile.bucket_id))
         asyncio.run(supervisor.submit(request, operation_id=_ORIGINAL_ID, provenance=provenance))
         reference = asyncio.run(journal.load(_ORIGINAL_ID)).admission_provenance_reference

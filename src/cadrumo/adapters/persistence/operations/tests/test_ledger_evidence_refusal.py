@@ -49,7 +49,7 @@ from cadrumo.core.operations import OperationEffect, OperationTerminalCondition,
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
 from .supervision_support import run_to_settlement
-from .supervisor_test_support import _supervisor, operation_repositories
+from .supervisor_test_support import operation_repositories, operation_supervisor
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -112,7 +112,7 @@ def test_ledger_view_settles_only_declared_static_refusal_detail(
         journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "durable-state", profile_objects=profile.repository
         )
-        supervisor = _supervisor(
+        supervisor = operation_supervisor(
             registry=registry,
             journal=journal,
             leases=leases,

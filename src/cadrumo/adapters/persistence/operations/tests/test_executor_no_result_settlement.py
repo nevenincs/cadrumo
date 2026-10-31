@@ -51,11 +51,11 @@ from .supervisor_test_support import (
     ReviewExecutor,
     _capabilities,
     _pending_interaction,
-    _registry,
-    _request,
     _response,
-    _supervisor,
     operation_repositories,
+    operation_supervisor,
+    supervisor_registry,
+    supervisor_request,
 )
 from .test_censal_operation_executor import (
     _OPERATOR_SCOPE_PORTS,
@@ -154,8 +154,8 @@ def test_running_executor_returning_no_result_settles_failed_with_its_registered
         journal, leases, operands = operation_repositories(
             storage_root=storage_root, profile_objects=profile.repository
         )
-        supervisor = _supervisor(
-            registry=_registry(executor_type=EffectThenNoResultExecutor, build=EffectThenNoResultExecutor),
+        supervisor = operation_supervisor(
+            registry=supervisor_registry(executor_type=EffectThenNoResultExecutor, build=EffectThenNoResultExecutor),
             journal=journal,
             leases=leases,
             operands=operands,
@@ -164,7 +164,7 @@ def test_running_executor_returning_no_result_settles_failed_with_its_registered
         )
 
         async def run() -> tuple[OperationPersistedSnapshot, OperationPersistedSnapshot]:
-            operation_id = await supervisor.submit(_request(), operation_id="3" * 64)
+            operation_id = await supervisor.submit(supervisor_request(), operation_id="3" * 64)
             await supervisor.start(operation_id)
             # The blocking caller gets the terminal snapshot, not an unsettled error.
             settled = await supervisor.settled(operation_id)
@@ -204,7 +204,7 @@ def test_resumed_executor_returning_no_result_settles_failed_with_its_registered
         journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "durable-state", profile_objects=profile.repository
         )
-        registry = _registry(
+        registry = supervisor_registry(
             executor_type=ResumableReviewExecutor,
             build=ResumableReviewExecutor,
             capabilities=_capabilities(
@@ -214,7 +214,7 @@ def test_resumed_executor_returning_no_result_settles_failed_with_its_registered
             interaction_kinds=frozenset({OperationInteractionKind.REVIEW}),
             reconciliation_policy=OperationReconciliationPolicy.RESUME_FROM_CHECKPOINT,
         )
-        owner = _supervisor(
+        owner = operation_supervisor(
             registry=registry,
             journal=journal,
             leases=leases,
@@ -223,9 +223,9 @@ def test_resumed_executor_returning_no_result_settles_failed_with_its_registered
             token="2" * 64,
             lease_duration=timedelta(minutes=1),
         )
-        operation_id = asyncio.run(owner.submit(_request(), operation_id="3" * 64))
+        operation_id = asyncio.run(owner.submit(supervisor_request(), operation_id="3" * 64))
         waiting = asyncio.run(run_to_settlement(owner, operation_id))
-        recovery = _supervisor(
+        recovery = operation_supervisor(
             registry=registry,
             journal=journal,
             leases=leases,
@@ -250,8 +250,8 @@ def test_executor_suspended_at_an_interaction_stays_unsettled(tmp_path: Path) ->
         journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "durable-state", profile_objects=profile.repository
         )
-        supervisor = _supervisor(
-            registry=_registry(
+        supervisor = operation_supervisor(
+            registry=supervisor_registry(
                 executor_type=ReviewExecutor,
                 build=ReviewExecutor,
                 interaction_kinds=frozenset({OperationInteractionKind.REVIEW}),
@@ -262,7 +262,7 @@ def test_executor_suspended_at_an_interaction_stays_unsettled(tmp_path: Path) ->
             owner_id="1" * 64,
             token="2" * 64,
         )
-        operation_id = asyncio.run(supervisor.submit(_request(), operation_id="3" * 64))
+        operation_id = asyncio.run(supervisor.submit(supervisor_request(), operation_id="3" * 64))
         waiting = asyncio.run(run_to_settlement(supervisor, operation_id))
         persisted = asyncio.run(journal.load(operation_id))
         replay = asyncio.run(journal.read_after(operation_id, 0, limit=20))
@@ -281,8 +281,8 @@ def test_suspended_executor_answered_before_it_returns_is_not_failed(tmp_path: P
         journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "durable-state", profile_objects=profile.repository
         )
-        supervisor = _supervisor(
-            registry=_registry(
+        supervisor = operation_supervisor(
+            registry=supervisor_registry(
                 executor_type=AnsweredBeforeReturnExecutor,
                 build=AnsweredBeforeReturnExecutor,
                 capabilities=_capabilities(
@@ -300,7 +300,7 @@ def test_suspended_executor_answered_before_it_returns_is_not_failed(tmp_path: P
         )
 
         async def answer_then_return() -> tuple[OperationPersistedSnapshot, OperationPersistedSnapshot]:
-            operation_id = await supervisor.submit(_request(), operation_id="3" * 64)
+            operation_id = await supervisor.submit(supervisor_request(), operation_id="3" * 64)
             start_task = asyncio.create_task(run_to_settlement(supervisor, operation_id))
             await AnsweredBeforeReturnExecutor.published.wait()
             waiting = await supervisor.inspect(operation_id)
