@@ -78,7 +78,7 @@ class ActivityAssetDisposalProvider(BaseModel):
     """What a scalar figure is; a row column names its ``row_field`` instead."""
     target_casilla_id: CasillaId
     fact: Literal["amount_sum", "element_type_clave", "row_field"] = "amount_sum"
-    clave: str | None = Field(default=None, min_length=1, max_length=8)
+    clave: str | None = Field(default=None, min_length=1, max_length=16)
     """The clave the revision gives an element affected to an activity, on its element-type binding."""
     record: Literal["elemento_patrimonial"] | None = None
     grouping: Literal["per_disposal"] | None = None

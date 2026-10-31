@@ -22,6 +22,7 @@ from ...core.irnr import M210PayerMode
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.clock import today_madrid
 from ...core.unit_proportion import UnitProportion
+from ...domain.calculations.registry.form_codes import require_form_width
 from .errors import TransactionValidationError
 
 if TYPE_CHECKING:
@@ -213,7 +214,7 @@ class M210IncomeClassification(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    official_tipo_renta_code: str = Field(min_length=2, max_length=2)
+    official_tipo_renta_code: str = Field(min_length=1, max_length=16)
     gross_income_amount: Decimal = Field(ge=Decimal("0"))
     applicable_rate: UnitProportion
     # A registry-derived default rather than a model-level before-validator: a
@@ -260,6 +261,12 @@ class M210IncomeClassification(BaseModel):
                 "official_tipo_renta_code requires the registry-declared payer mode",
             )
         return self
+
+    @field_validator("official_tipo_renta_code")
+    @classmethod
+    @pydantic_validation_boundary
+    def _has_the_declared_width(cls, value: str | None) -> str | None:
+        return require_form_width(value, "m210.tipo_renta_digits")
 
 
 __all__ = [

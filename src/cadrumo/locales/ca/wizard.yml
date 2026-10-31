@@ -77,7 +77,7 @@ wizard:
       title: Capacitats de serveis
     certificate:
       path:
-        prompt: Introdueix el camí del certificat digital (.p12, .pfx)
+        prompt: Introdueix el camí del certificat digital (`.p12`, `.pfx`)
     codes:
       disability-grade:
         choices:

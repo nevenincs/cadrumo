@@ -1834,6 +1834,10 @@ export function assetOperations(tools: Tools) {
           ? null
           : dec(fromCents(Math.max(toCents(amount) - toCents(accumulated), 0))),
       pending_applies: true,
+      opening_remedy_field_key:
+        accumulated === null
+          ? "ledger.actividad_asset.field.opening_history.accumulated_amount"
+          : null,
       findings: {
         missing: 0,
         incomplete: 0,

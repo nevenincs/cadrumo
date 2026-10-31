@@ -6,8 +6,10 @@ from decimal import Decimal, InvalidOperation
 
 from pydantic import BaseModel, Field, field_validator
 
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.identity.transaction_ids import TransactionId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+from ...domain.calculations.registry.form_codes import require_form_width
 from ...domain.transactions.own_accounts import OwnAccountId
 from ..review.filter import LedgerReviewStatus
 from .models import LedgerTransactionPayload
@@ -18,7 +20,7 @@ class LedgerM210IncomeProjection(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
-    official_tipo_renta_code: str = Field(min_length=2, max_length=2)
+    official_tipo_renta_code: str = Field(min_length=1, max_length=16)
     gross_income_amount: str
     applicable_rate: str
     payer_mode: str
@@ -35,6 +37,12 @@ class LedgerM210IncomeProjection(BaseModel):
         if not parsed.is_finite():
             raise ValueError("income projection requires a finite decimal string")
         return value
+
+    @field_validator("official_tipo_renta_code")
+    @classmethod
+    @pydantic_validation_boundary
+    def _has_the_declared_width(cls, value: str | None) -> str | None:
+        return require_form_width(value, "m210.tipo_renta_digits")
 
 
 class LedgerTransactionProjection(BaseModel):

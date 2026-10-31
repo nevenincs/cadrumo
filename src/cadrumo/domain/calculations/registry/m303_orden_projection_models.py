@@ -54,14 +54,12 @@ def _require_invariant(condition: bool, message: str) -> None:
 def _has_m303_2022_record_design_source(
     source_ref: str,
     source_content_digest: str,
-    *,
-    record_design_epoch: str | None = None,
 ) -> bool:
     """Return whether one source axis retains the pinned 2022 design identity."""
     return (source_ref, source_content_digest) == (
         _M303_2022_RECORD_DESIGN_SOURCE_REF,
         _M303_2022_RECORD_DESIGN_SOURCE_DIGEST,
-    ) and record_design_epoch in (None, "2022")
+    )
 
 
 class ActividadOrdenAnualRef(RegistryModel):
@@ -199,7 +197,6 @@ def _validate_projection_axis_shape(projection: M303AnnualOrdenProjection) -> No
     if projection.ejercicio == 2022:
         _validate_2022_annual_orden_coordinate(
             ejercicio=projection.ejercicio,
-            registry_revision_id=projection.registry_revision_id,
             source_ref=projection.source_ref,
             source_content_digest=projection.source_content_digest,
             scope="projection",
@@ -326,7 +323,6 @@ def _validate_snapshot_source_authority(snapshot: M303AnnualOrdenSnapshot) -> No
     if snapshot.ejercicio == 2022:
         _validate_2022_annual_orden_coordinate(
             ejercicio=snapshot.ejercicio,
-            registry_revision_id=snapshot.registry_revision_id,
             source_ref=snapshot.source_ref,
             source_content_digest=snapshot.source_content_digest,
             scope="snapshot",
@@ -395,7 +391,6 @@ def _validate_regimen_simplificado_coordinate(snapshot: M303RegimenSimplificadoS
     if snapshot.filing_year == 2022:
         _validate_2022_annual_orden_coordinate(
             ejercicio=snapshot.orden.ejercicio,
-            registry_revision_id=snapshot.orden.registry_revision_id,
             source_ref=snapshot.orden.source_ref,
             source_content_digest=snapshot.orden.source_content_digest,
             scope="resolved snapshot",
@@ -404,7 +399,6 @@ def _validate_regimen_simplificado_coordinate(snapshot: M303RegimenSimplificadoS
             _has_m303_2022_record_design_source(
                 snapshot.record_design.id,
                 snapshot.record_design.sha256,
-                record_design_epoch=snapshot.record_design.record_design_epoch,
             ),
             "M303 regimen simplificado 2022 snapshot must retain its exact AEAT design source",
         )

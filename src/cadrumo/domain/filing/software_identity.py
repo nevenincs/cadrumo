@@ -17,6 +17,7 @@ from ...core.hashing import sha256_hex
 from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.package_version import PACKAGE_VERSION
+from ..calculations.registry.form_codes import resolve_form_codes_leased
 from .errors import FilingExportValidationError
 
 _PACKAGE_VERSION_AEAT_AUX_PATTERN = re.compile(r"^[0-9]+\.[0-9]+\.[0-9]+$", re.ASCII)
@@ -36,9 +37,10 @@ def aeat_aux_version() -> str:
             "PACKAGE_VERSION must contain exactly three ASCII decimal components for AEAT Aux/VERSION",
         )
     aux_version = PACKAGE_VERSION.replace(".", "")
-    if len(aux_version) > 4:
+    limit = int(resolve_form_codes_leased("form-row-codes").code("aeat.aux.version_width"))
+    if len(aux_version) > limit:
         raise FilingExportValidationError(
-            "PACKAGE_VERSION exceeds AEAT Aux/VERSION's four-character limit after removing dots",
+            f"PACKAGE_VERSION exceeds AEAT Aux/VERSION's {limit}-character limit after removing dots",
         )
     return aux_version
 
@@ -115,10 +117,13 @@ class AeatProductSoftwareIdentity(BaseModel):
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _require_exact_wire_widths(self) -> AeatProductSoftwareIdentity:
-        if len(self.program_identifier.encode("ascii")) != 4:
-            raise ValueError("AEAT program identifier must encode to exactly four ASCII bytes")
-        if len(self.developer_tax_id.encode("ascii")) != 9:
-            raise ValueError("AEAT developer tax identifier must encode to exactly nine ASCII bytes")
+        widths = resolve_form_codes_leased("form-row-codes")
+        program_width = int(widths.code("aeat.aux.program_identifier_width"))
+        if len(self.program_identifier.encode("ascii")) != program_width:
+            raise ValueError(f"AEAT program identifier must encode to exactly {program_width} ASCII bytes")
+        developer_width = int(widths.code("aeat.aux.developer_tax_id_width"))
+        if len(self.developer_tax_id.encode("ascii")) != developer_width:
+            raise ValueError(f"AEAT developer tax identifier must encode to exactly {developer_width} ASCII bytes")
         references = tuple(item.reference for item in self.evidence)
         if len(set(references)) != len(references):
             raise ValueError("AEAT product software evidence must not repeat a reference")

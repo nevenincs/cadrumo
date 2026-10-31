@@ -28,6 +28,7 @@ from .binding_selector_utils import (
     uppercase_alpha_code,
 )
 from .errors import RegistryValidationError
+from .form_codes import require_form_width
 from .ids import BindingId
 from .schema_exports import ExportFieldDataType
 
@@ -398,8 +399,8 @@ class AtributionMemberObservation(BaseModel):
     base_imponible_assigned: Decimal
 
     clave: str = Field(min_length=1, max_length=1)
-    subclave: str | None = Field(default=None, min_length=2, max_length=2)
-    codigo_provincia: str | None = Field(default=None, min_length=2, max_length=2)
+    subclave: str | None = Field(default=None, min_length=1, max_length=16)
+    codigo_provincia: str | None = Field(default=None, min_length=1, max_length=16)
     miembro_a_31_diciembre: str | None = Field(default=None, min_length=1, max_length=1)
     """``"X"`` when the member remained one at 31 December, else ``None``.
 
@@ -435,6 +436,18 @@ class AtributionMemberObservation(BaseModel):
     @pydantic_validation_boundary
     def _decimal_amount(cls, value: Decimal) -> Decimal:
         return value
+
+    @field_validator("subclave")
+    @classmethod
+    @pydantic_validation_boundary
+    def _subclave_has_the_declared_width(cls, value: str | None) -> str | None:
+        return require_form_width(value, "m184.row.subclave_digits")
+
+    @field_validator("codigo_provincia")
+    @classmethod
+    @pydantic_validation_boundary
+    def _provincia_has_the_declared_width(cls, value: str | None) -> str | None:
+        return require_form_width(value, "m184.row.provincia_digits")
 
 
 class AtribucionMemberProvider(BaseModel):

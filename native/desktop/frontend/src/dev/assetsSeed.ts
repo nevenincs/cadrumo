@@ -611,6 +611,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
       pending: {
         decimal: "14641.98",
       },
+      opening_remedy_field_key: null,
       pending_applies: true,
       findings: {
         missing: 1,
@@ -1477,6 +1478,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
       pending: {
         decimal: "0.00",
       },
+      opening_remedy_field_key: null,
       pending_applies: true,
       findings: {
         missing: 0,
@@ -2580,6 +2582,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
       pending: {
         decimal: "1200.00",
       },
+      opening_remedy_field_key: null,
       pending_applies: true,
       findings: {
         missing: 0,
@@ -3486,6 +3489,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
       pending: {
         decimal: "400.00",
       },
+      opening_remedy_field_key: null,
       pending_applies: true,
       findings: {
         missing: 2,
@@ -4259,6 +4263,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
       pending: {
         decimal: "3482.96",
       },
+      opening_remedy_field_key: null,
       pending_applies: false,
       findings: {
         missing: 0,
@@ -5172,6 +5177,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
       pending: {
         decimal: "1110.49",
       },
+      opening_remedy_field_key: null,
       pending_applies: true,
       findings: {
         missing: 1,
@@ -5939,6 +5945,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
       pending: {
         decimal: "353.83",
       },
+      opening_remedy_field_key: null,
       pending_applies: true,
       findings: {
         missing: 0,
@@ -6645,6 +6652,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
       pending: {
         decimal: "2800.00",
       },
+      opening_remedy_field_key: null,
       pending_applies: true,
       findings: {
         missing: 1,
@@ -7280,6 +7288,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
       },
       accumulated: null,
       pending: null,
+      opening_remedy_field_key:
+        "ledger.actividad_asset.field.opening_history.accumulated_amount",
       pending_applies: true,
       findings: {
         missing: 0,
@@ -7660,6 +7670,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
       pending: {
         decimal: "0.00",
       },
+      opening_remedy_field_key: null,
       pending_applies: true,
       findings: {
         missing: 0,
@@ -8098,6 +8109,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
       pending: {
         decimal: "250.00",
       },
+      opening_remedy_field_key: null,
       pending_applies: true,
       findings: {
         missing: 1,

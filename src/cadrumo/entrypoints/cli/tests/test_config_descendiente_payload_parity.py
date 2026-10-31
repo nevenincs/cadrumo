@@ -19,6 +19,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.descendant_relacion import DescendantRelacion
+from ....domain.calculations.registry.descendant_disability_catalogue import accepted_descendant_disability_grades
 from ....domain.contribuyente.descendant import DescendantInfo
 from .._config_descendiente_payloads import ProfileDescendientePayload
 
@@ -147,6 +148,21 @@ def test_payload_refuses_values_the_canonical_record_refuses(
 
     with pytest.raises(ValidationError):
         ProfileDescendientePayload.model_validate(fields)
+
+
+def test_disability_grade_uses_the_same_governed_catalogue_at_both_boundaries() -> None:
+    grades = accepted_descendant_disability_grades()
+    assert grades
+    for grade in grades:
+        canonical = DescendantInfo(birth_date=date(2020, 1, 1), discapacidad_grado=grade)
+        assert _payload_from(canonical).discapacidad_grado == grade
+
+    for record, fields in (
+        (DescendantInfo, {"birth_date": date(2020, 1, 1), "discapacidad_grado": 50}),
+        (ProfileDescendientePayload, {"index": 0, "birth_date": date(2020, 1, 1), "discapacidad_grado": 50}),
+    ):
+        with pytest.raises(ValidationError, match="governed catalogue"):
+            record.model_validate(fields)
 
 
 def test_payload_refuses_an_entry_event_predating_birth() -> None:

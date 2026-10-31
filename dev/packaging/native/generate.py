@@ -4,16 +4,16 @@ from __future__ import annotations
 
 import argparse
 import json
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from pathlib import Path
 from typing import Any, TypedDict
 
 from cadrumo.core.product_identity import PRODUCT_IDENTITY
 from cadrumo_client.contracts.deadline_budget import DEFAULT_TIMEOUT_POLICY
-from dev.locales.manager_chrome import manager_chrome_strings
 
 from . import application_environment, environment_compile
 from .build_directory import require_enrolled_output
+from .discovered_inputs import record_discovered_inputs
 from .environment_models import ApplicationEnvironment
 from .environment_root import channel_directory
 from .identity import identity
@@ -282,10 +282,60 @@ def _build_contract(root: Path, layout: dict[str, Any], channel: str) -> tuple[d
     return contract, declaration
 
 
-def generate(root: Path, destination: Path, channel: str = "stable", *, target: str | None = None) -> None:
+MANAGER_STRINGS_FILE = "manager-chrome.json"
+"""The manager's localized strings, projected from the locale catalogues apart from the contract."""
+
+
+def project_manager_strings(destination: Path) -> Path:
+    """Write the manager's localized strings, the one part of the contract the locale tooling owns.
+
+    The projection executes the locale tooling, whose import closure is far
+    wider than the contract's own, so it is its own cached action: an edit in
+    that closure that leaves the strings unchanged leaves the contract, and
+    everything compiled from it, current.
+    """
+    from dev.locales.manager_chrome import manager_chrome_strings
+
+    destination.mkdir(parents=True, exist_ok=True)
+    output = destination / MANAGER_STRINGS_FILE
+    write_text(output, json.dumps(manager_chrome_strings(), ensure_ascii=False, sort_keys=True) + "\n")
+    return output
+
+
+def _manager_strings(source: Path | None) -> Mapping[str, Mapping[str, str]]:
+    if source is None:
+        from dev.locales.manager_chrome import manager_chrome_strings
+
+        return manager_chrome_strings()
+    document = json.loads(source.read_text(encoding="utf-8"))
+    if not isinstance(document, dict):
+        raise ValueError("manager strings must be a language-to-strings object")
+    result: dict[str, dict[str, str]] = {}
+    for language, entries in document.items():
+        if not isinstance(language, str) or not isinstance(entries, dict):
+            raise ValueError("manager strings must map languages to string objects")
+        values: dict[str, str] = {}
+        for key, value in entries.items():
+            if not isinstance(key, str) or not isinstance(value, str):
+                raise ValueError("manager strings must contain only string keys and values")
+            values[key] = value
+        result[language] = values
+    return result
+
+
+def generate(
+    root: Path,
+    destination: Path,
+    channel: str = "stable",
+    *,
+    target: str | None = None,
+    manager_strings: Path | None = None,
+) -> None:
     """Write C, Rust and inspection projections from their authored owners in one run.
 
     ``channel`` is the release channel the identity projection validated for this build.
+    ``manager_strings`` is a :func:`project_manager_strings` output; without it the
+    strings are projected in this process.
     """
     layout = load_layout(target, root=root)
     contract, declaration = _build_contract(root, layout, channel)
@@ -311,7 +361,7 @@ def generate(root: Path, destination: Path, channel: str = "stable", *, target: 
             f"pub const MANAGER_LANGUAGE_DEFAULT: &str = {_rust_string(components['language_default'])};",
             f"pub const LOCAL_AI_ADDRESS: &str = {_rust_string(components['local_ai_address'])};",
             "pub const MANAGER_STRINGS_JSON: &str = "
-            f"{_rust_string(json.dumps(manager_chrome_strings(), ensure_ascii=False, sort_keys=True))};",
+            f"{_rust_string(json.dumps(_manager_strings(manager_strings), ensure_ascii=False, sort_keys=True))};",
             f"pub const LOG_MAX_BYTES: u64 = {contract['desktop_defaults']['log_max_bytes']};",
             f"pub const LOG_BACKUPS: u32 = {contract['desktop_defaults']['log_backups']};",
         ]
@@ -346,5 +396,19 @@ if __name__ == "__main__":
     parser.add_argument("destination", type=require_enrolled_output)
     parser.add_argument("--channel", default="stable")
     parser.add_argument("--target")
+    parser.add_argument("--manager-strings", type=Path, help="a projected manager strings file to embed")
+    parser.add_argument(
+        "--project-manager-strings", action="store_true", help="write only the manager strings projection"
+    )
     args = parser.parse_args()
-    generate(Path(__file__).resolve().parents[3], args.destination, args.channel, target=args.target)
+    record_discovered_inputs()
+    if args.project_manager_strings:
+        project_manager_strings(args.destination)
+    else:
+        generate(
+            Path(__file__).resolve().parents[3],
+            args.destination,
+            args.channel,
+            target=args.target,
+            manager_strings=args.manager_strings,
+        )

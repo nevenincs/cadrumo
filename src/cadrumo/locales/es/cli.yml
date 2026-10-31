@@ -22,7 +22,7 @@ cli:
         opened_on_help: Fecha de apertura de la cuenta (AAAA-MM-DD).
         remove_help: Elimina una cuenta propia que ningún movimiento usa ni ninguna
           designación nombra.
-        role_help: 'La función: charge (domiciliación) o refund (devolución).'
+        role_help: 'La función: `charge` (domiciliación) o `refund` (devolución).'
         show_help: Muestra una cuenta propia, enmascarada, y las designaciones que
           la nombran.
         undesignate_help: Elimina la designación de una función, para un modelo o
@@ -386,7 +386,7 @@ cli:
         movement_date_help: Fecha del movimiento (AAAA-MM-DD)
         movement_group_help: Gestiona los movimientos del registro de existencias
         movement_id_help: Identificador del movimiento dentro del registro de existencias
-        movement_kind_help: Tipo de movimiento (opening, purchase, cogs o count)
+        movement_kind_help: Tipo de movimiento (`opening`, `purchase`, `cogs` o `count`)
         movement_reverse_help: Saca un movimiento del inventario; se queda en el historial.
         opening_stock_help: Valor inicial de existencias
         options_help: Muestra los valores que ofrece un formulario de inventario,
@@ -409,7 +409,7 @@ cli:
         taxable_base_help: Base imponible asociada al movimiento
         unit_cost_help: Coste unitario en movimientos de compra
         valuation_group_help: Calcula y previsualiza la valoración de existencias
-        valuation_method_help: Método de valoración (fifo o pmp)
+        valuation_method_help: Método de valoración (`fifo` o `pmp`)
         valuation_preview_help: Previsualiza existencias finales y coste de ventas
         year_help: Ejercicio fiscal
       invoice:
@@ -633,8 +633,8 @@ cli:
         list_help: Listar snapshots persistidos del borrador del modelo 100
         modelo_100_help: Comandos de snapshots del borrador del modelo 100
         snapshot_id_help: Id del snapshot (o prefijo no ambiguo)
-        state_help: 'Filtro de estado del snapshot: active, superseded, discarded
-          o all'
+        state_help: 'Filtro de estado del snapshot: `active`, `superseded`, `discarded`
+          o `all`'
         view_help: Mostrar un snapshot del borrador del modelo 100
       expediente_help: Identificador de expediente AEAT
       expedientes:
@@ -778,8 +778,8 @@ cli:
       to_year_help: Último ejercicio de presentación
       verify:
         app_help: Registro de solo lectura de las comprobaciones de NIF
-        expected_help: Resultado esperado opcional (valid, invalid o unknown)
-        expected_values_error: '--expected debe ser uno de: valid, invalid, unknown.'
+        expected_help: Resultado esperado opcional (`valid`, `invalid` o `unknown`)
+        expected_values_error: '--expected debe ser uno de: `valid`, `invalid`, `unknown`.'
         latest_help: Muestra la observación más reciente para superficie y NIF
         latest_nif_help: NIF que quieres consultar
         latest_surface_help: 'Tipo de comprobación: nif_iva o tgvi'
@@ -923,8 +923,8 @@ cli:
         form_number_help: Filtrar casillas por número de casilla impreso en el BOE
           (p. ej. 46)
         help: Listar todas las casillas definidas para la revisión de un modelo específico.
-        input_kind_help: Filtrar las casillas por tipo de entrada (manual, bound,
-          computed, informational, projection_only)
+        input_kind_help: Filtrar las casillas por tipo de entrada (`manual`, `bound`,
+          `computed`, `informational`, `projection_only`)
         modelo_help: Código del modelo tributario (p. ej. 303, 130, 100)
         number_help: Filtrar casillas por número impreso o id canónico (p. ej. 0596).
         period_help: 'Código de periodo para elegir la versión del modelo oficial:
@@ -1168,7 +1168,7 @@ cli:
           (p. ej. 4T).'
       list:
         domain_help: Filtra el catálogo de modelos por familia tributaria (p. ej.
-          iva, irpf, is)
+          `iva`, `irpf`, `is`)
         help: Listar todos los modelos tributarios oficiales registrados en el sistema.
         year_help: Filtrar el catálogo de modelos por un único ejercicio fiscal
       m036:
@@ -1276,9 +1276,9 @@ cli:
           (SHA-256 de 64 caracteres).
         export_work_unit_scope: Exporta todas las diferencias de conciliación guardadas
           de la declaración seleccionada.
-        file_kind_help: 'Tipo de documento de evidencia: justificante (recibo AEAT,
-          todos los modelos) o declaration (PDF de declaración presentada, conciliación
-          a nivel de casilla, solo modelos habilitados). Por defecto justificante.'
+        file_kind_help: 'Tipo de documento de evidencia: `justificante` (recibo AEAT,
+          todos los modelos) o `declaration` (PDF de declaración presentada, conciliación
+          a nivel de casilla, solo modelos habilitados). Por defecto `justificante`.'
         file_path_help: Ruta al PDF local de justificante o declaración con el que
           conciliar.
         import_help: Concilia una declaración con un PDF local de justificante o de
@@ -1289,8 +1289,8 @@ cli:
           (SHA-256 o prefijo inequívoco).
         pull_help: Descarga evidencia de la AEAT y compárala con el cálculo local
           guardado (solo lectura en la AEAT).
-        source_help: 'Evidencia a comparar: justificante comprueba identidad e importes
-          vinculados; declaration compara las casillas presentadas con el cálculo
+        source_help: 'Evidencia a comparar: `justificante` comprueba identidad e importes
+          vinculados; `declaration` compara las casillas presentadas con el cálculo
           guardado.'
         work_unit_id_help: Identificador de la declaración (SHA-256 o prefijo inequívoco).
       requires:
@@ -1318,10 +1318,10 @@ cli:
           y en el evento de exportación subyacente.
         bucket_id_help: Id del bucket sobre el que opera el paquete de revisión (por
           defecto el perfil activo).
-        build_help: Ensambla un paquete de revisión compartible y verificable por
-          checksum (borrador fichero-BOE, origen del cálculo guardado y justificantes
-          de tus registros incluidos) para entregar al asesor. Solo local; nunca contacta
-          con la AEAT.
+        build_help: Ensambla un paquete de revisión compartible y verificable mediante
+          sumas de comprobación (borrador fichero-BOE, origen del cálculo guardado
+          y justificantes de tus registros incluidos) para entregar al asesor. Solo
+          local; nunca contacta con la AEAT.
         counter_sign_help: Contrafirma un paquete de revisión ya firmado por el declarante
           en nombre del asesor fiscal que lo recibe y escribe el sobre del recibo
           en --output. Solo local; nunca contacta con la AEAT.
@@ -1409,9 +1409,9 @@ cli:
         signature_path_help: Ruta del sobre de firma JSON generado por `sign`.
         valid_for_days_help: Ventana de validez opcional en días; omítela para un
           paquete que nunca caduque.
-        verify_help: Verifica el manifiesto de checksum de un paquete de revisión
-          (solo integridad; no certifica quién lo construyó). Solo local; nunca contacta
-          con la AEAT.
+        verify_help: Verifica el manifiesto de sumas de comprobación de un paquete
+          de revisión (solo integridad; no certifica quién lo construyó). Solo local;
+          nunca contacta con la AEAT.
         verify_receipt_help: 'Verifica ambas capas de firma de un recibo contrafirmado
           de un paquete de revisión: la firma original del declarante y la contrafirma
           del asesor fiscal. Solo local; nunca contacta con la AEAT.'
@@ -1620,9 +1620,9 @@ cli:
         discard_requires_yes: El descarte es una transición de estado auditable. Vuelve
           a ejecutar 'aeat app modelo work discard %{work_unit_id} --yes' para confirmar.
         discard_yes_help: Confirmar explícitamente la operación de descarte
-        document_format_help: 'Formato de documento del informe de cálculo: csv, o
-          pdf para el resumen del cálculo firmado (requiere el complemento opcional
-          pdf).'
+        document_format_help: 'Formato de documento del informe de cálculo: `csv`,
+          o `pdf` para el resumen del cálculo firmado (requiere el complemento opcional
+          `pdf`).'
         document_only_help: Comprueba solo el documento, sin abrir el almacén del
           perfil activo; sin --trusted-key, un resultado válido queda sin clave anclada.
         file:
@@ -1959,8 +1959,8 @@ cli:
         verify_idempotent_noop: 'Operación idempotente sin efecto: el cálculo guardado
           %{calculation_revision_id} ya está comprobado; se devolvió el informe de
           comprobación existente sin cambios.'
-        verify_selector_help: Selector de revisión borrador (current, latest-draft
-          o explicit).
+        verify_selector_help: Selector de revisión borrador (`current`, `latest-draft`
+          o `explicit`).
         wizard_help: Guía paso a paso por las casillas manuales pendientes de la declaración
           y calcula
         wizard_prompt: Casilla %{number} (%{label})
@@ -2223,7 +2223,7 @@ cli:
         secrets_stdin_too_large: El contenido de secretos de máquina supera el tamaño
           máximo permitido.
       profile_auth_method_help: 'Método de autenticación del canal protegido de secretos
-        del perfil: password o api-key.'
+        del perfil: `password` o `api-key`.'
       profile_credential_ref_help: Autentica un perfil del servicio local mediante
         un UUID de credencial del almacenamiento nativo protegido (requiere --profile-auth-method
         api-key).
@@ -2428,7 +2428,7 @@ cli:
         change:
           help: Solicita la rotación, renovación o cambio de permisos de una autorización
             API existente.
-          kind_help: 'Cambio de autorización: rotate, renew o change_scope.'
+          kind_help: 'Cambio de autorización: `rotate`, `renew` o `change_scope`.'
         create:
           help: Emite una clave API a partir de una propuesta completa proporcionada
             mediante --secrets-stdin o --secrets-fd. La clave llega al almacenamiento
@@ -2440,7 +2440,7 @@ cli:
           request_help: UUID de la solicitud revisada.
         deny:
           help: Revoca una clave, una concesión o todo el acceso automatizado.
-          kind_help: 'Tipo de revocación: key, grant o all.'
+          kind_help: 'Tipo de revocación: `key`, `grant` o `all`.'
           target_help: UUID de la clave o concesión que se va a revocar.
           target_mismatch: La revocación de una clave o concesión requiere su UUID;
             all no admite destino.
@@ -2486,7 +2486,7 @@ cli:
         no_active_profile: No hay perfil activo; inicia sesión en uno con 'aeat config
           login <nombre>' antes de configurar una capacidad.
         set_help: Activa o desactiva una capacidad de servicio para el perfil activo.
-        state_help: Si activar (on) o desactivar (off) la capacidad.
+        state_help: Si activar (`on`) o desactivar (`off`) la capacidad.
         state_label: estado
         view_help: Muestra el estado resuelto de cada capacidad de servicio para el
           perfil activo.
@@ -2683,7 +2683,8 @@ cli:
           demostrar su contraseña; el código se muestra una sola vez y debe escribirse
           de vuelta.
         enabled_notice: La recuperación está configurada. Si olvidas la contraseña,
-          ejecuta el comando 'config passphrase reset NOMBRE' con este código.
+          ejecuta el comando `cadrumo-runtime config passphrase reset NOMBRE` con
+          este código.
         handoff_fd_help: Escribe el código de recuperación de un solo uso como un
           objeto JSON secreto acotado en este descriptor heredado de escritura.
         handoff_too_large: La entrega de recuperación superó su límite de 8192 bytes;
@@ -3496,7 +3497,7 @@ cli:
       offset_help: 'Omitir este número de filas antes de listar (por defecto: 0).'
       sort_by_help: Ordena las filas listadas por este campo (date, amount, description,
         created_at, modified_at, ...).
-      sort_order_help: 'Orden: asc (ascendente) o desc (descendente).'
+      sort_order_help: 'Orden: `asc` (ascendente) o `desc` (descendente).'
       ungrouped_label: (sin grupo)
     llm_diagnostics:
       bad_date: '%{option} debe ser una fecha ISO (AAAA-MM-DD); se recibió %{value}.'
@@ -4029,7 +4030,7 @@ cli:
     detail_help: Habilitar salida detallada.
     errors:
       did_you_mean_command: ¿Quería decir '%{command}'?
-    format_help: 'Formato de salida: text, json.'
+    format_help: 'Formato de salida: `text`, `json`.'
     help_help: Mostrar la ayuda.
     landing:
       context_heading: Contexto actual

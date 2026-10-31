@@ -395,7 +395,7 @@ class AuxiliaryEnvelopeHeaderDefinition(RegistryModel):
     source_ref: SourceRefId
     source_sha256: ContentDigest
     record_identity: str = Field(min_length=1)
-    prefix_fields: tuple[FilingEnvelopePrefixFieldDeclaration, ...] = Field(min_length=13, max_length=13)
+    prefix_fields: tuple[FilingEnvelopePrefixFieldDeclaration, ...] = Field(min_length=1)
     prefix_extent: int = Field(gt=0)
     product_identity_requirement: Literal["aeat-product-software-identity-v1"]
 

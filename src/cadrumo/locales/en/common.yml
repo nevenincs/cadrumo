@@ -4893,8 +4893,8 @@ ledger:
       claims_exceed_amortizable_basis: The opening amount and the dotaciones in effect
         exceed the lawful amortisable basis.
       claims_overlap: The dotaciones of one element cannot cover overlapping intervals.
-      constant_percentage_weighting_not_enrolled: 'Cadrumo doesn''t support this yet:
-        the constant-percentage weighting for this amortisation period.'
+      constant_percentage_weighting_not_enrolled: 'This isn''t supported yet: the
+        constant-percentage weighting for this amortisation period.'
       correction_below_effective_claims: The correction leaves the dotaciones in effect
         above the new amortisable basis; replace them in the same correction.
       correction_must_supersede_current: This changed since you opened it. Refresh

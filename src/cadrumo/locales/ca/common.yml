@@ -4978,8 +4978,8 @@ ledger:
       claims_exceed_amortizable_basis: L'import inicial i els càrrecs vigents superen
         la base amortitzable legal.
       claims_overlap: Els càrrecs d'un element no poden cobrir intervals que se solapin.
-      constant_percentage_weighting_not_enrolled: 'Cadrumo encara no admet això: la
-        ponderació del percentatge constant per a aquest termini d''amortització.'
+      constant_percentage_weighting_not_enrolled: 'Això encara no s''admet: la ponderació
+        del percentatge constant per a aquest termini d''amortització.'
       correction_below_effective_claims: La correcció deixa càrrecs vigents per sobre
         de la nova base amortitzable; substitueix-los en la mateixa correcció.
       correction_must_supersede_current: Això ha canviat des que ho vas obrir. Actualitza

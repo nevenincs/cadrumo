@@ -22,7 +22,7 @@ cli:
         opened_on_help: Data d'obertura del compte (AAAA-MM-DD).
         remove_help: Elimina un compte propi que cap moviment utilitza ni cap designació
           esmenta.
-        role_help: 'La funció: charge (domiciliació) o refund (devolució).'
+        role_help: 'La funció: `charge` (domiciliació) o `refund` (devolució).'
         show_help: Mostra un compte propi, emmascarat, i les designacions que l'esmenten.
         undesignate_help: Elimina la designació d'una funció, per a un model o per
           a tots.
@@ -384,7 +384,7 @@ cli:
         movement_date_help: Data del moviment (AAAA-MM-DD)
         movement_group_help: Gestiona els moviments del registre d'existències
         movement_id_help: Identificador del moviment dins del registre d'existències
-        movement_kind_help: Tipus de moviment (opening, purchase, cogs o count)
+        movement_kind_help: Tipus de moviment (`opening`, `purchase`, `cogs` o `count`)
         movement_reverse_help: Treu un moviment de l'inventari; es queda a l'historial.
         opening_stock_help: Valor inicial d'existències
         options_help: Mostra els valors que ofereix un formulari d'inventari, cadascun
@@ -407,7 +407,7 @@ cli:
         taxable_base_help: Base imposable associada al moviment
         unit_cost_help: Cost unitari en moviments de compra
         valuation_group_help: Calcula i previsualitza la valoració d'existències
-        valuation_method_help: Mètode de valoració (fifo o pmp)
+        valuation_method_help: Mètode de valoració (`fifo` o `pmp`)
         valuation_preview_help: Previsualitza existències finals i cost de vendes
         year_help: Exercici fiscal
       invoice:
@@ -631,8 +631,8 @@ cli:
         list_help: Llistar snapshots persistits de l'esborrany del model 100
         modelo_100_help: Ordres de snapshots de l'esborrany del model 100
         snapshot_id_help: Id del snapshot (o prefix no ambigu)
-        state_help: 'Filtre d''estat del snapshot: active, superseded, discarded o
-          all'
+        state_help: 'Filtre d''estat del snapshot: `active`, `superseded`, `discarded`
+          o `all`'
         view_help: Mostrar un snapshot de l'esborrany del model 100
       expediente_help: Identificador d'expedient AEAT
       expedientes:
@@ -776,8 +776,8 @@ cli:
       to_year_help: Últim exercici de presentació
       verify:
         app_help: Registre de només lectura de les comprovacions de NIF
-        expected_help: Resultat esperat opcional (valid, invalid o unknown)
-        expected_values_error: '--expected ha de ser un de: valid, invalid, unknown.'
+        expected_help: Resultat esperat opcional (`valid`, `invalid` o `unknown`)
+        expected_values_error: '--expected ha de ser un de: `valid`, `invalid`, `unknown`.'
         latest_help: Mostra l'observació més recent per superfície i NIF
         latest_nif_help: NIF que vols consultar
         latest_surface_help: 'Tipus de comprovació: nif_iva o tgvi'
@@ -915,8 +915,8 @@ cli:
         explain_help: Incloure el text d'ajuda localitzat a la sortida de text.
         form_number_help: Filtrar caselles pel número imprès al BOE (p. ex. 46)
         help: Llistar totes les caselles definides per a la revisió d'un model específic.
-        input_kind_help: Filtrar les caselles per tipus d'entrada (manual, bound,
-          computed, informational, projection_only)
+        input_kind_help: Filtrar les caselles per tipus d'entrada (`manual`, `bound`,
+          `computed`, `informational`, `projection_only`)
         modelo_help: Codi del model tributari (p. ex. 303, 130, 100)
         number_help: Filtrar caselles pel número imprès o id canònic (p. ex. 0596).
         period_help: 'Codi de període per triar la versió del model oficial: 0A anual,
@@ -1159,8 +1159,8 @@ cli:
         seed_period_help: 'Període de la presentació del Model 303: trimestres 1T-4T
           (p. ex. 4T).'
       list:
-        domain_help: Filtra el catàleg de models per família tributària (p. ex. iva,
-          irpf, is)
+        domain_help: Filtra el catàleg de models per família tributària (p. ex. `iva`,
+          `irpf`, `is`)
         help: Llistar tots els models tributaris oficials registrats en el sistema.
         year_help: Filtrar el catàleg de models per un únic exercici fiscal
       m036:
@@ -1266,9 +1266,9 @@ cli:
           de 64 caràcters).
         export_work_unit_scope: Exporta totes les diferències de conciliació desades
           de la declaració seleccionada.
-        file_kind_help: 'Tipus de document d''evidència: justificante (rebut AEAT,
-          tots els models) o declaration (PDF de declaració presentada, conciliació
-          a nivell de casella, només models habilitats). Per defecte justificante.'
+        file_kind_help: 'Tipus de document d''evidència: `justificante` (rebut AEAT,
+          tots els models) o `declaration` (PDF de declaració presentada, conciliació
+          a nivell de casella, només models habilitats). Per defecte `justificante`.'
         file_path_help: Camí al PDF local de justificant o declaració amb el qual
           conciliar.
         import_help: Concilia una declaració amb un PDF local de justificant o de
@@ -1279,8 +1279,9 @@ cli:
           (SHA-256 o un prefix inequívoc).
         pull_help: Descarrega evidència de l’AEAT i compara-la amb el càlcul local
           desat (només lectura a l’AEAT).
-        source_help: 'Evidència a comparar: justificante comprova identitat i imports
-          vinculats; declaration compara les caselles presentades amb el càlcul desat.'
+        source_help: 'Evidència a comparar: `justificante` comprova identitat i imports
+          vinculats; `declaration` compara les caselles presentades amb el càlcul
+          desat.'
         work_unit_id_help: Identificador de la declaració (SHA-256 o prefix inequívoc).
       requires:
         help: 'Mostra la llista de dades necessàries per a un model i un període:
@@ -1307,10 +1308,10 @@ cli:
           l'esdeveniment d'exportació subjacent.
         bucket_id_help: Id del bucket sobre el qual opera el paquet de revisió (per
           defecte el perfil actiu).
-        build_help: Assembla un paquet de revisió compartible i verificable per checksum
-          (esborrany fichero-BOE, origen del càlcul desat i justificants dels teus
-          registres inclosos) per lliurar a l'assessor. Només local; mai contacta
-          amb l'AEAT.
+        build_help: Assembla un paquet de revisió compartible i verificable mitjançant
+          sumes de verificació (esborrany fichero-BOE, origen del càlcul desat i justificants
+          dels teus registres inclosos) per lliurar a l'assessor. Només local; mai
+          contacta amb l'AEAT.
         counter_sign_help: Contrasigna un paquet de revisió ja signat pel declarant
           en nom de l'assessor fiscal que el rep i escriu el sobre del rebut a --output.
           Només local; mai contacta amb l'AEAT.
@@ -1398,8 +1399,8 @@ cli:
         signature_path_help: Camí del sobre de signatura JSON generat per `sign`.
         valid_for_days_help: Finestra de validesa opcional en dies; omet-la per a
           un paquet que mai caduqui.
-        verify_help: Verifica el manifest de checksum d'un paquet de revisió (només
-          integritat; no certifica qui l'ha construït). Només local; mai contacta
+        verify_help: Verifica el manifest de sumes de verificació d'un paquet de revisió
+          (només integritat; no certifica qui l'ha construït). Només local; mai contacta
           amb l'AEAT.
         verify_receipt_help: 'Verifica les dues capes de signatura d''un rebut contrasignat
           d''un paquet de revisió: la signatura original del declarant i la contrasignatura
@@ -1609,8 +1610,9 @@ cli:
         discard_requires_yes: El descart és una transició d'estat auditable. Torna
           a executar 'aeat app modelo work discard %{work_unit_id} --yes' per confirmar.
         discard_yes_help: Confirmar explícitament l'operació de descart
-        document_format_help: 'Format de document de l''informe de càlcul: csv, o
-          pdf per al resum del càlcul signat (requereix el complement opcional pdf).'
+        document_format_help: 'Format de document de l''informe de càlcul: `csv`,
+          o `pdf` per al resum del càlcul signat (requereix el complement opcional
+          `pdf`).'
         document_only_help: Comprova només el document, sense obrir el magatzem del
           perfil actiu; sense --trusted-key, un resultat vàlid queda sense clau ancorada.
         file:
@@ -1947,8 +1949,8 @@ cli:
         verify_idempotent_noop: 'Operació idempotent sense efecte: el càlcul desat
           %{calculation_revision_id} ja està comprovat; s''ha retornat l''informe
           de comprovació existent sense canvis.'
-        verify_selector_help: Selector de revisió esborrany (current, latest-draft
-          o explícit).
+        verify_selector_help: Selector de revisió esborrany (`current`, `latest-draft`
+          o `explicit`).
         wizard_help: Guia pas a pas per les caselles manuals pendents de la declaració
           i calcula
         wizard_prompt: Casella %{number} (%{label})
@@ -2208,7 +2210,7 @@ cli:
         secrets_stdin_too_large: El contingut de secrets de màquina supera la mida
           màxima permesa.
       profile_auth_method_help: 'Mètode d''autenticació del canal protegit de secrets
-        del perfil: password o api-key.'
+        del perfil: `password` o `api-key`.'
       profile_credential_ref_help: Autentica un perfil del servei local amb un UUID
         de credencial de l'emmagatzematge natiu protegit (requereix --profile-auth-method
         api-key).
@@ -2413,7 +2415,7 @@ cli:
         change:
           help: Sol·licita la rotació, renovació o canvi de permisos d'una autorització
             API existent.
-          kind_help: 'Canvi d''autorització: rotate, renew o change_scope.'
+          kind_help: 'Canvi d''autorització: `rotate`, `renew` o `change_scope`.'
         create:
           help: Emet una clau API a partir d'una proposta completa proporcionada mitjançant
             --secrets-stdin o --secrets-fd. La clau arriba a l'emmagatzematge protegit
@@ -2425,7 +2427,7 @@ cli:
           request_help: UUID de la sol·licitud revisada.
         deny:
           help: Revoca una clau, una concessió o tot l'accés automatitzat.
-          kind_help: 'Tipus de revocació: key, grant o all.'
+          kind_help: 'Tipus de revocació: `key`, `grant` o `all`.'
           target_help: UUID de la clau o concessió que es revocarà.
           target_mismatch: La revocació d'una clau o concessió requereix el seu UUID;
             all no admet cap destinació.
@@ -2472,7 +2474,7 @@ cli:
         no_active_profile: No hi ha cap perfil actiu; inicia la sessió en un amb 'aeat
           config login <nom>' abans de configurar una capacitat.
         set_help: Activa o desactiva una capacitat de servei per al perfil actiu.
-        state_help: Si activar (on) o desactivar (off) la capacitat.
+        state_help: Si activar (`on`) o desactivar (`off`) la capacitat.
         state_label: estat
         view_help: Mostra l'estat resolt de cada capacitat de servei per al perfil
           actiu.
@@ -2662,7 +2664,8 @@ cli:
           demostrar-ne la contrasenya; el codi es mostra una sola vegada i s'ha d'escriure
           de tornada.
         enabled_notice: La recuperació està configurada. Si oblides la contrasenya,
-          executa l'ordre 'config passphrase reset NOM' amb aquest codi.
+          executa l'ordre `cadrumo-runtime config passphrase reset NOM` amb aquest
+          codi.
         handoff_fd_help: Escriu el codi de recuperació d'un sol ús com un objecte
           JSON secret acotat en aquest descriptor heretat d'escriptura.
         handoff_too_large: El lliurament de recuperació ha superat el límit de 8192
@@ -3476,7 +3479,7 @@ cli:
       offset_help: 'Omet aquest nombre de files abans de llistar (per defecte: 0).'
       sort_by_help: Ordena les files llistades per aquest camp (date, amount, description,
         created_at, modified_at, ...).
-      sort_order_help: 'Ordre: asc (ascendent) o desc (descendent).'
+      sort_order_help: 'Ordre: `asc` (ascendent) o `desc` (descendent).'
       ungrouped_label: (sense grup)
     llm_diagnostics:
       bad_date: '%{option} ha de ser una data ISO (AAAA-MM-DD); s''ha rebut %{value}.'
@@ -4000,7 +4003,7 @@ cli:
     detail_help: Habilita la sortida detallada.
     errors:
       did_you_mean_command: Volies dir '%{command}'?
-    format_help: 'Format de sortida: text, json.'
+    format_help: 'Format de sortida: `text`, `json`.'
     help_help: Mostra l'ajuda.
     landing:
       context_heading: Context actual

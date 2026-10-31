@@ -43,8 +43,7 @@ from collections.abc import Iterator, Mapping, Sequence
 from datetime import datetime
 from decimal import Decimal
 from enum import StrEnum
-from types import MappingProxyType
-from typing import Final, TypedDict, override
+from typing import TypedDict, override
 
 from pydantic import (
     BaseModel,
@@ -64,6 +63,7 @@ from ...core.identity.hex_ids import CalculationRevisionId, SnapshotId, WorkUnit
 from ...core.irnr import M210GrossIncomeSourceMode
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.utc import validate_utc_aware
+from ...domain.calculations.registry.form_codes import require_form_width
 from ..calculations.record_row_membership import ClosedRecordRowSet, validate_closed_record_row_sets
 from ..calculations.registry.bindings import CasillaObservation
 from ..calculations.registry.formula_runtime import RegistryCalculationUnresolvedOutcome
@@ -99,22 +99,6 @@ from .errors import ModeloError, ModeloValidationError
 from .filing_text import ModeloActorLabel, OperatorReason
 from .ledger_filing_snapshot import LedgerFilingEvidence, LedgerFilingSnapshot
 from .row_models import ModeloDetailRow
-
-PERSISTED_BOOLEAN_BINDING_TOKENS: Final[Mapping[bool, str]] = MappingProxyType({True: "true", False: "false"})
-"""How a boolean-channel binding's value is written into ``binding_overrides``.
-
-The overrides mapping carries every binding channel as text: decimals as
-canonical decimal strings, enums as their member, dates in ISO form, and a
-boolean as one of these two tokens. A reader that expects a quantity must
-recognise a truth token rather than refuse it as corrupt storage."""
-
-
-def persisted_boolean_binding_value(raw: str) -> bool | None:
-    """Read a persisted truth token back, or return ``None`` when ``raw`` is none."""
-    for value, token in PERSISTED_BOOLEAN_BINDING_TOKENS.items():
-        if raw == token:
-            return value
-    return None
 
 
 class CalculationRevisionState(StrEnum):
@@ -725,7 +709,7 @@ class CalculationRevision(BaseModel):
     )
     relation_overrides: Mapping[RelationId, str] = Field(default_factory=dict)
     source_transaction_ids: tuple[CalculationRevisionId, ...] = Field(default_factory=tuple)
-    m210_official_tipo_renta_code: str | None = Field(default=None, min_length=2, max_length=2)
+    m210_official_tipo_renta_code: str | None = Field(default=None, min_length=1, max_length=16)
     m210_gross_income_source_mode: M210GrossIncomeSourceMode | None = None
     borrador_snapshot_id: SnapshotId | None = None
     bindings_sourced_from_borrador: tuple[BindingId, ...] = Field(default_factory=tuple)
@@ -1078,6 +1062,12 @@ class CalculationRevision(BaseModel):
         payload["row_casilla_provenance"] = canonical_row_casilla_provenance(self.row_casilla_provenance)
         return payload
 
+    @field_validator("m210_official_tipo_renta_code")
+    @classmethod
+    @pydantic_validation_boundary
+    def _has_the_declared_width(cls, value: str | None) -> str | None:
+        return require_form_width(value, "m210.tipo_renta_digits")
+
 
 def calculation_revision_identity_inputs_from_revision(
     revision: CalculationRevision,
@@ -1228,7 +1218,6 @@ def assert_revision_snapshot_evidence_coverage(revision: CalculationRevision) ->
 
 
 __all__ = [
-    "PERSISTED_BOOLEAN_BINDING_TOKENS",
     "CalculationRevision",
     "CalculationRevisionAmendmentIdentity",
     "CalculationRevisionAmendmentKind",
@@ -1242,5 +1231,4 @@ __all__ = [
     "calculation_revision_identity_inputs_from_revision",
     "derive_calculation_revision_id",
     "derive_calculation_revision_id_from_revision",
-    "persisted_boolean_binding_value",
 ]

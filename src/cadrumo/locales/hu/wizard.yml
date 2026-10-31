@@ -87,7 +87,7 @@ wizard:
       title: Szolgáltatási képességek
     certificate:
       path:
-        prompt: Add meg a digitális tanúsítvány elérési útját (.p12, .pfx)
+        prompt: Add meg a digitális tanúsítvány elérési útját (`.p12`, `.pfx`)
     codes:
       disability-grade:
         choices:

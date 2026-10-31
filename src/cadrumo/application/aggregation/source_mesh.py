@@ -44,6 +44,7 @@ from ...core.type_adapters import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTE
 from ...domain.calculations.record_row_membership import ClosedRecordRowSet, validate_closed_record_row_sets
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
+from ...domain.calculations.registry.form_codes import require_form_width
 from ...domain.calculations.registry.ids import (
     BindingId,
     LegalRefId,
@@ -211,12 +212,18 @@ class CalculationSourceContext(BaseModel):
     filing_year: FilingYear
     period: Period
     revision: ModeloRevision
-    m210_official_tipo_renta_code: str | None = Field(default=None, min_length=2, max_length=2)
+    m210_official_tipo_renta_code: str | None = Field(default=None, min_length=1, max_length=16)
     m210_gross_income_source_mode: M210GrossIncomeSourceMode | None = None
     calculated_at: datetime | None = None
     profile: InstanceOf[ModeloWorkProfile] | None = None
     operation: InstanceOf[PinnedAuthorityOperation] | None = Field(default=None, exclude=True, repr=False)
     """Caller-owned generation lease; transient and excluded from serialization."""
+
+    @field_validator("m210_official_tipo_renta_code")
+    @classmethod
+    @pydantic_validation_boundary
+    def _has_the_declared_width(cls, value: str | None) -> str | None:
+        return require_form_width(value, "m210.tipo_renta_digits")
 
 
 #: Cap on a diagnostic's operator-facing message.

@@ -158,10 +158,6 @@ def _prorrata_sector_letters(entries: Mapping[str, str]) -> tuple[_models.Sector
 
 
 def _validate_prorrata_register_catalogue(catalogue: _models.ProrrataRegisterCatalogue) -> None:
-    if len(catalogue.regimes) < 3 or len(catalogue.apportioning_regimes) != 2:
-        raise RegistryValidationError("0116 must retain the two canonical apportioning regimes and add register states")
-    if len(catalogue.transition_kinds) != 2 or len(catalogue.provenances) != 4 or len(catalogue.sector_letters) != 4:
-        raise RegistryValidationError("0116 register vocabulary cardinalities do not match the declared scope")
     if not set(catalogue.apportioning_regimes).issubset(catalogue.all_regimes):
         raise RegistryValidationError("0116 apportioning regimes must be declared in the regime vocabulary")
 

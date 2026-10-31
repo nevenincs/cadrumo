@@ -52,6 +52,14 @@ class DescendantRecordFields(BaseModel):
     gastos_guarderia_mensuales: tuple[GuarderiaMonthSpend, ...] = ()
     nif: str | None = None
 
+    @field_validator("discapacidad_grado")
+    @classmethod
+    @pydantic_validation_boundary
+    def _require_governed_disability_grade(cls, value: int | None) -> int | None:
+        if value is not None and value not in accepted_descendant_disability_grades():
+            raise ValueError("discapacidad_grado must be a grade the governed catalogue accepts")
+        return value
+
 
 class DescendantRecordBase(DescendantRecordFields):
     """Structured per-descendant data for Art. 58 mínimo-por-descendientes.
@@ -372,14 +380,6 @@ class DescendantRecordBase(DescendantRecordFields):
         self._refuse_out_of_range_entry_dates()
         self._refuse_incoherent_entry_dates()
         return self
-
-    @field_validator("discapacidad_grado")
-    @classmethod
-    @pydantic_validation_boundary
-    def _require_governed_disability_grade(cls, value: int | None) -> int | None:
-        if value is not None and value not in accepted_descendant_disability_grades():
-            raise ValueError("discapacidad_grado must be a grade the governed catalogue accepts")
-        return value
 
     @field_validator("meses_madre_trabajo")
     @classmethod

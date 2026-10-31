@@ -23,7 +23,7 @@ from decimal import Decimal
 from enum import StrEnum
 from typing import Literal
 
-from pydantic import BaseModel, Field, InstanceOf, NonNegativeInt, field_validator, model_validator
+from pydantic import BaseModel, Field, InstanceOf, NonNegativeInt, ValidationInfo, field_validator, model_validator
 
 from ...core.aggregation import (
     COUNTERPART_SOURCE_KIND_ORDER,
@@ -41,7 +41,7 @@ from ...core.period import Period
 from ...core.spanish_postcode import SpanishPostcode, SpanishProvinceCode
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
-from ...domain.calculations.registry.form_codes import form_for_role, resolve_form_codes
+from ...domain.calculations.registry.form_codes import form_for_role, require_form_fit, resolve_form_codes
 from ...domain.calculations.registry.governed_fact_scope import GovernedFactSource, require_governed_fact_authority
 from ...domain.calculations.registry.schema_base import DateAxis
 from ...domain.calculations.registry.withholding_bindings import WithholdingObservation
@@ -72,20 +72,40 @@ class Modelo180StructuredAddress(BaseModel):
 
     province_code: SpanishProvinceCode
     municipality_code: str = Field(pattern=r"^\d{3}$")
-    municipality: str = Field(min_length=1, max_length=30)
-    locality: str = Field(min_length=1, max_length=30)
+    municipality: str = Field(min_length=1, max_length=64)
+    locality: str = Field(min_length=1, max_length=64)
     postal_code: SpanishPostcode
-    street_type: str = Field(min_length=1, max_length=5)
-    street_name: str = Field(min_length=1, max_length=50)
-    number_type: str = Field(min_length=1, max_length=3)
-    house_number: str = Field(min_length=1, max_length=5)
-    number_qualifier: str = Field(default="", max_length=3)
-    block: str = Field(default="", max_length=3)
-    portal: str = Field(default="", max_length=3)
-    staircase: str = Field(default="", max_length=3)
-    floor: str = Field(default="", max_length=3)
-    door: str = Field(default="", max_length=3)
-    complement: str = Field(default="", max_length=40)
+    street_type: str = Field(min_length=1, max_length=64)
+    street_name: str = Field(min_length=1, max_length=64)
+    number_type: str = Field(min_length=1, max_length=64)
+    house_number: str = Field(min_length=1, max_length=64)
+    number_qualifier: str = Field(default="", max_length=64)
+    block: str = Field(default="", max_length=64)
+    portal: str = Field(default="", max_length=64)
+    staircase: str = Field(default="", max_length=64)
+    floor: str = Field(default="", max_length=64)
+    door: str = Field(default="", max_length=64)
+    complement: str = Field(default="", max_length=64)
+
+    @field_validator(
+        "municipality",
+        "locality",
+        "street_type",
+        "street_name",
+        "number_type",
+        "house_number",
+        "number_qualifier",
+        "block",
+        "portal",
+        "staircase",
+        "floor",
+        "door",
+        "complement",
+    )
+    @classmethod
+    @pydantic_validation_boundary
+    def _fits_the_declared_field(cls, value: str, info: ValidationInfo) -> str | None:
+        return require_form_fit(value, f"m180.address.{info.field_name}")
 
 
 _M180_FORM_CODES_FACT = "modelo-180-perceptor-form-codes"

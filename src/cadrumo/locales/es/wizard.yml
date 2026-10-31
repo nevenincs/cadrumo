@@ -76,7 +76,7 @@ wizard:
       title: Capacidades de servicios
     certificate:
       path:
-        prompt: Introduce la ruta a tu certificado digital (.p12, .pfx)
+        prompt: Introduce la ruta a tu certificado digital (`.p12`, `.pfx`)
     codes:
       disability-grade:
         choices:

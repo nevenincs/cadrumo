@@ -65,17 +65,18 @@ _SHA256_HEX: Final = 64
 _STANDARD_SHAPE_NAME: Final = re.compile(
     r"(?:^|_)(?:hash|digest|sha256|nonce|ciphertext|id|country|pais|iso|currency|nif|tax_id|year|ejercicio|period|"
     r"modelo|path|state|periodo|years|update_fields|classify_fields|separator|ref|locale|language|date|on|attachment|generation|public_key|member_?state|"
-    r"isin|intents|normalisations|fields?|filters|parties|reversed|coordinates|components)(?:_|$|\b)",
+    r"isin|intents|normalisations|filters|parties|reversed|coordinates|components)(?:_|$|\b)",
     re.IGNORECASE,
 )
 _STRUCTURE_LEN_NAME: Final = re.compile(
-    r"args$|parts?$|parts\[|segments|split|groups?$|groups\[|fraction$|tokens?$|head$|pieces|pair|anchors|spans|children|candidates|"
+    r"(?:^|_)period$|args$|parts?$|parts\[|segments|split|groups?$|groups\[|fraction$|tokens?$|head$|pieces|pair|anchors|spans|children|candidates|"
     r"keys$|ids$|boundaries|endpoints|arguments|suffix|outcomes|years$|actions|agenda|digits|"
     r"grant|dek|operator_id|work_unit|_id$|stripped|\\bcase_id",
     re.IGNORECASE,
 )
 _STANDARD_SHAPE_FUNCTION: Final = re.compile(
-    r"(?:^|_)(?:date|year|month|day|calendar|country|currency|iso|member|ccaa|alpha|amount|number|decimal|modelo_id)(?:_|s?$)",
+    r"(?:^|_|\.)(?:date|year|month|day|calendar|yyyymmdd|ddmmyyyy|country|currency|iso|member|ccaa|territory_definition|"
+    r"jurisdictions|alpha|amount|number|decimal|modelo_id|modelo_code|selector_address)(?:_|\.|s?$)",
     re.IGNORECASE,
 )
 _ORDERING_OPERATORS: Final = (ast.Lt, ast.LtE, ast.Gt, ast.GtE)
@@ -214,12 +215,14 @@ class _Sweep(ast.NodeVisitor):
         return ""
 
     def _enclosing_function(self, node: ast.AST) -> str:
+        """Return the enclosing function and class names, innermost first, in snake case."""
+        names = []
         current = node
         while current in self._parents:
             current = self._parents[current]
-            if isinstance(current, (ast.FunctionDef, ast.AsyncFunctionDef)):
-                return current.name
-        return ""
+            if isinstance(current, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+                names.append(re.sub(r"(?<=[a-z])(?=[A-Z])", "_", current.name))
+        return ".".join(names)
 
     def _month_keyed(self, node: ast.Constant) -> bool:
         """A month number keying a text that names that same month is a calendar table."""
