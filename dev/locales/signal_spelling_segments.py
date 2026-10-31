@@ -27,6 +27,9 @@ from .signal_tokens import filtered_translation_text, translation_words
 # exception closed over complete forms; a productive suffix rule could conceal
 # a misspelled or malformed host from the dictionary check.
 _CATALAN_HYPHENATED_CLITIC_RE = re.compile(r"(?P<form>Mantén-lo|revisar-los)(?![^\W\d_])")
+# The export labels retain this complete English serialization-format name.
+# Route it to its dictionary rather than exempting its words from spelling.
+_ENGLISH_FORMAT_NAME_RE = re.compile(r"(?<!\w)JSON Lines(?!\w)")
 
 
 def html_spelling_segments(value: str, foreign: list[tuple[int, int, str, str, int]]) -> None:
@@ -136,6 +139,10 @@ def translation_spelling_segments(
     markdown_link_spelling_segments(value, foreign)
     rst_link_spelling_segments(value, foreign)
     legal_title_spelling_segments(value, default_locale, foreign)
+    if default_locale != "en":
+        for match in _ENGLISH_FORMAT_NAME_RE.finditer(value):
+            text = match.group()
+            foreign.append((match.start(), match.end(), "en", text, filtered_translation_text(text)[1]))
 
     # Keep the first structured span when two recognizers describe the same
     # source range (for example a legal title inside a marked link).

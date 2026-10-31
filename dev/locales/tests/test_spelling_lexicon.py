@@ -149,6 +149,41 @@ def test_observed_technical_spellings_keep_case_and_near_misses_distinct(monkeyp
     assert not is_project_spelling("es", "sectorised")
 
 
+def test_json_lines_format_uses_english_without_exempting_ordinary_lines_or_typos(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    class Dictionary:
+        def __init__(self, accepted: set[str]) -> None:
+            self.accepted = accepted
+
+        def lookup(self, word: str) -> bool:
+            return word in self.accepted
+
+    dictionaries = {locale: Dictionary(set()) for locale in ("en", "es", "ca", "hu")}
+    dictionaries["en"].accepted.add("Lines")
+    dictionaries["hu"].accepted.add("fájl")
+    monkeypatch.setattr("dev.locales.signal_spelling.load_dictionaries", lambda repository: dictionaries)
+    spelling, _inventory, _findings = spellcheck_catalogues(
+        {"format", "typo", "ordinary"},
+        {
+            locale: {
+                "format": "JSON Lines-fájl misspeling" if locale == "hu" else "JSON Lines misspeling",
+                "typo": "JSON Liness",
+                "ordinary": "Lines",
+            }
+            for locale in ("es", "ca", "hu")
+        },
+        REPO_ROOT,
+    )
+    for locale in ("es", "ca", "hu"):
+        assert spelling[(locale, "format")] == ("misspeling",)
+        assert spelling[(locale, "typo")] == ("Liness",)
+        assert spelling[(locale, "ordinary")] == ("Lines",)
+    dictionaries["en"].accepted.clear()
+    spelling, _inventory, _findings = spellcheck_catalogues({"format"}, {"es": {"format": "JSON Lines"}}, REPO_ROOT)
+    assert spelling[("es", "format")] == ("Lines",)
+
+
 def test_only_english_possessives_of_exact_project_stems_are_accepted() -> None:
     assert is_project_spelling("en", "Cadrumo's")
     assert is_project_spelling("en", "modelo's")
