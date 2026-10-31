@@ -99,10 +99,10 @@ export function optionScore(
  * option, and within a group the options follow their score. Ties keep
  * their given order.
  */
-export function rankOptions(
-  options: readonly ComboboxOption[],
+export function rankOptions<Option extends ComboboxOption>(
+  options: readonly Option[],
   search: string,
-): { heading: string | undefined; options: ComboboxOption[] }[] {
+): { heading: string | undefined; options: Option[] }[] {
   const scored = options
     .map((option, at) => ({
       option,

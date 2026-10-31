@@ -94,6 +94,18 @@ function CommandGroup({
   );
 }
 
+/** How a listed option looks, for any list that sets `data-selected`. */
+const commandItemClass = cn(
+  "relative flex min-h-control-lg cursor-pointer items-center gap-2.5 rounded-lg px-2.5 py-2 text-base outline-none select-none",
+  "data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50",
+  // The chosen row: a stronger surface and a bar on its edge, so the
+  // choice is clear in either scheme and where colours are forced.
+  "data-[selected=true]:bg-selected data-[selected=true]:text-accent-foreground",
+  "before:absolute before:inset-y-2 before:left-0 before:w-0.5 before:rounded-xs before:bg-brand before:opacity-0 data-[selected=true]:before:opacity-100",
+  "forced-colors:data-[selected=true]:bg-[Highlight] forced-colors:data-[selected=true]:text-[HighlightText]",
+  "[&_svg]:pointer-events-none [&_svg]:shrink-0",
+);
+
 function CommandItem({
   className,
   ...props
@@ -101,17 +113,7 @@ function CommandItem({
   return (
     <CommandPrimitive.Item
       data-slot="command-item"
-      className={cn(
-        "relative flex min-h-control-lg cursor-pointer items-center gap-2.5 rounded-lg px-2.5 py-2 text-base outline-none select-none",
-        "data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50",
-        // The chosen row: a stronger surface and a bar on its edge, so the
-        // choice is clear in either scheme and where colours are forced.
-        "data-[selected=true]:bg-selected data-[selected=true]:text-accent-foreground",
-        "before:absolute before:inset-y-2 before:left-0 before:w-0.5 before:rounded-xs before:bg-brand before:opacity-0 data-[selected=true]:before:opacity-100",
-        "forced-colors:data-[selected=true]:bg-[Highlight] forced-colors:data-[selected=true]:text-[HighlightText]",
-        "[&_svg]:pointer-events-none [&_svg]:shrink-0",
-        className,
-      )}
+      className={cn(commandItemClass, className)}
       {...props}
     />
   );
@@ -123,5 +125,6 @@ export {
   CommandGroup,
   CommandInput,
   CommandItem,
+  commandItemClass,
   CommandList,
 };
