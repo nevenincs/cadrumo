@@ -1387,6 +1387,7 @@ test("a baja ends the plan at the year of its last day, lists the element out of
       ["disposal.proceeds", "9000.00"],
       ["disposal.transmission_costs", "150.00"],
     ].map(([field, after]) => ({
+      kind: "added",
       field,
       field_key: `ledger.actividad_asset.field.${field}`,
       before: null,
@@ -2436,7 +2437,7 @@ test("a value the backend worded by key is drawn by that key, and anything else 
       ),
       "after",
     ),
-  ).toBe(t("desktop.ledger.assets.timeline.value_changed"));
+  ).toBe(t("desktop.ledger.assets.timeline.value_recorded"));
 });
 
 test("a purchase states the ledger's own account of its non-deductible IVA", async () => {
