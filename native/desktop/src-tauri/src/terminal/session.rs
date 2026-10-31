@@ -181,6 +181,10 @@ pub struct Session {
     input: SyncSender<Input>,
     master: Master,
     killer: Killer,
+    /// The shell's own process group: the terminal starts it in a session of its
+    /// own, outside the window's process scope, so stopping it ends that group.
+    #[cfg(unix)]
+    group: Option<i32>,
     kill_error: Option<ApplicationError>,
     finisher: Option<JoinHandle<Result<()>>>,
     /// Closed when the finisher returns, so settlement is awaited as an event.
@@ -341,6 +345,8 @@ impl Session {
             input,
             master,
             killer,
+            #[cfg(unix)]
+            group: i32::try_from(pid).ok().filter(|pid| *pid > 0),
             kill_error: None,
             finisher: Some(finisher),
             finished,
@@ -505,7 +511,14 @@ impl Session {
         if !self.shared.exited.load(Ordering::Acquire) {
             // A child that exits concurrently can refuse termination; only a
             // missed settlement deadline makes this error the reported cause.
-            self.kill_error = terminate(&mut self.killer)
+            #[cfg(unix)]
+            let group = self
+                .group
+                .map_or(Ok(()), cadrumo_platform::process_scope::kill_group);
+            #[cfg(windows)]
+            let group = Ok(());
+            self.kill_error = group
+                .and_then(|()| terminate(&mut self.killer))
                 .err()
                 .map(|e| failure(ErrorCode::CleanupFailed).caused_by(e));
         }

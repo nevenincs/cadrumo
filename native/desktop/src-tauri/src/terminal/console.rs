@@ -10,7 +10,7 @@ use cadrumo_application::{
 use serde::Deserialize;
 use std::{
     collections::BTreeMap,
-    ffi::{OsStr, OsString},
+    ffi::OsString,
     path::{Path, PathBuf},
 };
 
@@ -57,8 +57,11 @@ fn bin_beside(interpreter: &Path, executable: &str, native: &str) -> Result<Path
     Ok(native.under(root))
 }
 
-#[cfg(any(windows, test))]
-fn variable<'a>(environment: &'a BTreeMap<OsString, OsString>, name: &str) -> Option<&'a OsStr> {
+#[cfg(windows)]
+fn variable<'a>(
+    environment: &'a BTreeMap<OsString, OsString>,
+    name: &str,
+) -> Option<&'a std::ffi::OsStr> {
     environment
         .iter()
         .find(|(key, _)| {
@@ -153,7 +156,7 @@ pub fn with_bin_first(
 
 /// PowerShell 7 from the 64-bit program directory when installed, otherwise
 /// Windows PowerShell 5.1 from the system directory.
-#[cfg(any(windows, test))]
+#[cfg(windows)]
 fn windows_shell(
     environment: &BTreeMap<OsString, OsString>,
     is_file: impl Fn(&Path) -> bool,
@@ -211,17 +214,41 @@ pub fn shell(environment: &BTreeMap<OsString, OsString>) -> Result<(PathBuf, Vec
             .map(|shell| (shell, Vec::new()))
             .ok_or_else(|| failure(ErrorCode::SpawnFailed))
     }
-    #[cfg(not(any(windows, target_os = "linux")))]
+    #[cfg(target_os = "macos")]
     {
         let _ = environment;
-        Err(failure(ErrorCode::UnsupportedPlatform))
+        let recorded = cadrumo_platform::account::current_login_shell()
+            .map_err(|e| failure(ErrorCode::SpawnFailed).caused_by(e))?;
+        let shells = std::fs::read_to_string("/etc/shells").unwrap_or_default();
+        let shell = recorded
+            .filter(|shell| listed_shell(shell, &shells) && shell.is_file())
+            .unwrap_or_else(|| PathBuf::from(FALLBACK_SHELL));
+        // A login shell, as Terminal starts one, so the system's search path is set up.
+        Ok((shell, vec!["-l".into()]))
     }
+}
+
+/// The shell the system installs for every account, used when the account's
+/// recorded one is not a listed system shell.
+#[cfg(target_os = "macos")]
+const FALLBACK_SHELL: &str = "/bin/zsh";
+
+/// Whether `shell` is an absolute path the system's list of shells names.
+#[cfg(any(target_os = "macos", test))]
+fn listed_shell(shell: &Path, shells: &str) -> bool {
+    shell.is_absolute()
+        && shells
+            .lines()
+            .map(str::trim)
+            .filter(|line| !line.starts_with('#'))
+            .any(|line| Path::new(line) == shell)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
+    #[cfg(windows)]
     fn environment(pairs: &[(&str, &str)]) -> BTreeMap<OsString, OsString> {
         pairs
             .iter()
@@ -266,6 +293,37 @@ mod tests {
     }
 
     #[test]
+    fn only_an_absolute_shell_the_system_lists_is_started() {
+        let shells =
+            "# List of acceptable shells\n/bin/bash\n/bin/zsh\n  /opt/homebrew/bin/fish  \n";
+        assert!(listed_shell(Path::new("/bin/zsh"), shells));
+        assert!(listed_shell(Path::new("/opt/homebrew/bin/fish"), shells));
+        assert!(!listed_shell(Path::new("/usr/local/bin/evil"), shells));
+        assert!(!listed_shell(Path::new("zsh"), shells));
+        assert!(!listed_shell(
+            Path::new("# List of acceptable shells"),
+            shells
+        ));
+    }
+
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn the_shell_is_the_accounts_listed_login_shell_started_as_a_login_shell() {
+        let (shell, arguments) = shell(&BTreeMap::new()).unwrap();
+        let recorded = cadrumo_platform::account::current_login_shell()
+            .unwrap()
+            .unwrap();
+        let shells = std::fs::read_to_string("/etc/shells").unwrap();
+        let expected = if listed_shell(&recorded, &shells) && recorded.is_file() {
+            recorded
+        } else {
+            PathBuf::from(FALLBACK_SHELL)
+        };
+        assert_eq!(shell, expected);
+        assert_eq!(arguments, [OsString::from("-l")]);
+    }
+
+    #[test]
     fn the_login_shell_comes_from_the_matching_passwd_entry() {
         let passwd = "root:x:0:0:root:/root:/bin/bash\n\
                       broken line\n\
@@ -296,7 +354,7 @@ mod tests {
         );
         let created = with_bin_first(BTreeMap::new(), &bin).unwrap();
         assert_eq!(
-            created.get(OsStr::new("PATH")),
+            created.get(std::ffi::OsStr::new("PATH")),
             Some(&bin.clone().into_os_string())
         );
     }

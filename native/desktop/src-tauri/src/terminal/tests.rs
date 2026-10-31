@@ -686,6 +686,53 @@ fn a_child_that_exits_while_input_is_idle_settles_the_session() {
     session.stop().unwrap();
 }
 
+/// A shell starts a session of its own, outside the window's process scope;
+/// stopping it ends its process group, including what ignores the hangup.
+#[cfg(unix)]
+#[test]
+fn stopping_a_shell_ends_what_it_started_in_its_own_group() {
+    let mut program = chatty_program();
+    program.arguments = [
+        "-c",
+        "trap '' HUP; /bin/sh -c \"trap '' HUP; while :; do /bin/sleep 1; done\" & echo \"started $!\"; wait",
+    ]
+    .iter()
+    .map(OsString::from)
+    .collect();
+    let captured = Arc::new(Mutex::new(Vec::new()));
+    let output = captured.clone();
+    let sink: Sink = Arc::new(move |frame| {
+        if frame.first() == Some(&0) {
+            output.lock().unwrap().extend_from_slice(&frame[1..]);
+        }
+        Ok(())
+    });
+    let mut session =
+        Session::start(program, 80, 24, sink, Arc::new(Diagnostics::default())).unwrap();
+    let began = Instant::now();
+    let started = loop {
+        let text = String::from_utf8_lossy(&captured.lock().unwrap()).into_owned();
+        if let Some(pid) = text
+            .split("started ")
+            .nth(1)
+            .and_then(|rest| rest.split_whitespace().next())
+            .and_then(|pid| pid.parse::<u32>().ok())
+        {
+            break pid;
+        }
+        session.acknowledge(text.len() as u64).unwrap();
+        assert!(began.elapsed() < Duration::from_secs(10), "no started line");
+        std::thread::sleep(Duration::from_millis(20));
+    };
+    assert!(crate::agent::runner::tests::alive(started));
+    session.stop().unwrap();
+    let deadline = Instant::now() + Duration::from_secs(10);
+    while crate::agent::runner::tests::alive(started) {
+        assert!(Instant::now() < deadline, "the shell's group outlived it");
+        std::thread::sleep(Duration::from_millis(20));
+    }
+}
+
 /// A webview may disappear before it answers ConPTY's initial cursor query.
 /// Closing that session must still reap the child and join its workers.
 #[cfg(windows)]

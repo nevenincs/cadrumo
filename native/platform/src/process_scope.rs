@@ -143,6 +143,25 @@ impl Drop for ProcessScope {
     }
 }
 
+/// Kills every process of the process group `group` at once. A group that no longer
+/// exists is already ended.
+///
+/// The caller names a group whose leader it started and has not yet reaped, so the id
+/// still names that group and cannot have been reused by another.
+pub fn kill_group(group: i32) -> io::Result<()> {
+    if group <= 0 {
+        return Err(io::ErrorKind::InvalidInput.into());
+    }
+    // SAFETY: a signal to a process group of this account's own, by its positive id.
+    if unsafe { libc::killpg(group, libc::SIGKILL) } != 0 {
+        let error = io::Error::last_os_error();
+        if error.raw_os_error() != Some(libc::ESRCH) {
+            return Err(error);
+        }
+    }
+    Ok(())
+}
+
 static CURRENT: OnceLock<ProcessScope> = OnceLock::new();
 
 /// Gives this process a scope for its children for the rest of its life, so a child
@@ -263,6 +282,26 @@ mod tests {
         assert_eq!(
             scope.join(&mut member(Stdio::null())).unwrap_err().kind(),
             io::ErrorKind::BrokenPipe
+        );
+    }
+
+    #[test]
+    fn a_killed_group_ends_every_member_and_an_ended_group_is_not_an_error() {
+        let (reader, writer) = io::pipe().unwrap();
+        let mut command = member(writer.into());
+        // The member leads a group of its own, as a terminal's shell does.
+        command.process_group(0);
+        let mut started = command.spawn().unwrap();
+        drop(command);
+        let mut stdout = BufReader::new(reader);
+        both_running(&mut stdout);
+        let group = i32::try_from(started.id()).unwrap();
+        kill_group(group).unwrap();
+        every_holder_ended(&mut stdout);
+        assert_eq!(started.wait().unwrap().signal(), Some(9));
+        assert_eq!(
+            kill_group(0).unwrap_err().kind(),
+            io::ErrorKind::InvalidInput
         );
     }
 
