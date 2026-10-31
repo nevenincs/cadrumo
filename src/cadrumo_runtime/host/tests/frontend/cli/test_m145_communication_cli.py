@@ -32,25 +32,13 @@ from cadrumo.core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from cadrumo.tests.cli_envelope import unwrap_schema_envelope
 
 from ...native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
+from ...native_profile_facts import native_general_iva_facts
 from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
-_PROFILE_FACTS = {
-    "taxpayer_type.entity_type": "natural_person",
-    "identity.name": "Native",
-    "identity.surnames": "M145 CLI",
-    "activities.description": "design",
-    "censo.activity_start_date": "2025-01-01",
-    "tax_residence.jurisdiction_scope": "common_regime",
-    "iva.regime": "GENERAL",
-    "iva.m303_regime_composition": "general",
-    "iva.redeme_enrolled": "false",
-    "iva.cash_accounting_regime_enrolled": "false",
-    "iva.voluntary_sii_enrolled": "false",
-    "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
-}
+_PROFILE_FACTS = native_general_iva_facts(surnames="M145 CLI", description="design")
 _CREATE_ARGS = [
     "app",
     "modelo",

@@ -11,6 +11,7 @@ import pytest
 from cadrumo.tests.cli_envelope import require_error_document, unwrap_cli_result
 
 from ...native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
+from ...native_profile_facts import native_general_iva_facts
 from ._profile_cli_support import invoke_native_profile_revealing
 
 pytestmark = [
@@ -20,20 +21,7 @@ pytestmark = [
     pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers"),
 ]
 
-_PROFILE_FACTS = {
-    "taxpayer_type.entity_type": "natural_person",
-    "identity.name": "Native",
-    "identity.surnames": "Modelo 036",
-    "activities.description": "design",
-    "censo.activity_start_date": "2025-01-01",
-    "tax_residence.jurisdiction_scope": "common_regime",
-    "iva.regime": "GENERAL",
-    "iva.m303_regime_composition": "general",
-    "iva.redeme_enrolled": "false",
-    "iva.cash_accounting_regime_enrolled": "false",
-    "iva.voluntary_sii_enrolled": "false",
-    "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
-}
+_PROFILE_FACTS = native_general_iva_facts(surnames="Modelo 036", description="design")
 
 
 def _record_event(

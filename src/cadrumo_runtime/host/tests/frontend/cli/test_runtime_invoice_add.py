@@ -36,6 +36,7 @@ from cadrumo_client.contracts.access_vocabulary import (
     DisclosurePermission,
 )
 
+from ...native_profile_facts import native_general_iva_facts
 from .native_api_cli_support import NativeApiCliSession, native_api_cli_session
 
 pytestmark = [
@@ -99,20 +100,7 @@ def _scope(
     )
 
 
-_LEDGER_ADD_PROFILE_FACTS = {
-    "taxpayer_type.entity_type": "natural_person",
-    "identity.name": "Native",
-    "identity.surnames": "Add",
-    "activities.description": "design",
-    "censo.activity_start_date": "2025-01-01",
-    "tax_residence.jurisdiction_scope": "common_regime",
-    "iva.regime": "GENERAL",
-    "iva.m303_regime_composition": "general",
-    "iva.redeme_enrolled": "false",
-    "iva.cash_accounting_regime_enrolled": "false",
-    "iva.voluntary_sii_enrolled": "false",
-    "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
-}
+_LEDGER_ADD_PROFILE_FACTS = native_general_iva_facts(surnames="Add", description="design")
 
 
 def _prepare_profile(

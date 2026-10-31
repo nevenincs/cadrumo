@@ -37,6 +37,8 @@ from cadrumo_runtime.host.tests.frontend.cli.test_runtime_invoice_add import (
     password_profile_session,
 )
 
+from ...native_profile_facts import native_general_iva_facts
+
 pytestmark = [
     pytest.mark.integration,
     pytest.mark.hex_entrypoint,
@@ -53,20 +55,7 @@ _PROFILE_OPERATIONS = frozenset(
     }
 )
 _PROFILE_VALUE_OPERATIONS = frozenset({LEDGER_EXPORT_OPERATION_DEFINITION_ID, LEDGER_LINK_OPERATION_DEFINITION_ID})
-_PROFILE_FACTS = {
-    "taxpayer_type.entity_type": "natural_person",
-    "identity.name": "Native",
-    "identity.surnames": "Export Link",
-    "activities.description": "design",
-    "censo.activity_start_date": "2025-01-01",
-    "tax_residence.jurisdiction_scope": "common_regime",
-    "iva.regime": "GENERAL",
-    "iva.m303_regime_composition": "general",
-    "iva.redeme_enrolled": "false",
-    "iva.cash_accounting_regime_enrolled": "false",
-    "iva.voluntary_sii_enrolled": "false",
-    "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
-}
+_PROFILE_FACTS = native_general_iva_facts(surnames="Export Link", description="design")
 _SUPPLIER_CIF = "A58818501"
 
 

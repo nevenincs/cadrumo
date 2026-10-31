@@ -17,6 +17,7 @@ from cadrumo.entrypoints.cli.bienes_inversion_results import (
 from cadrumo.tests.cli_envelope import unwrap_cli_result
 
 from ...native_commands.runtime_profile_cli_fixture import native_cli_profile_scope
+from ...native_profile_facts import native_general_iva_facts
 from ._profile_cli_support import invoke_native_profile
 
 pytestmark = [
@@ -30,20 +31,7 @@ pytestmark = [
 _ACQUISITION_LEDGER_ID = "ledger-capital-good-1"
 _PRORRATA_SECTOR_ID = "sector-services"
 
-_PROFILE_FACTS = {
-    "taxpayer_type.entity_type": "natural_person",
-    "identity.name": "Native",
-    "identity.surnames": "Capital goods",
-    "activities.description": "synthetic capital goods profile",
-    "censo.activity_start_date": "2025-01-01",
-    "tax_residence.jurisdiction_scope": "common_regime",
-    "iva.regime": "GENERAL",
-    "iva.m303_regime_composition": "general",
-    "iva.redeme_enrolled": "false",
-    "iva.cash_accounting_regime_enrolled": "false",
-    "iva.voluntary_sii_enrolled": "false",
-    "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
-}
+_PROFILE_FACTS = native_general_iva_facts(surnames="Capital goods", description="synthetic capital goods profile")
 
 
 def test_bienes_inversion_declare_and_list_preserve_schema_two_identity_fields(tmp_path: Path) -> None:

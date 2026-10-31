@@ -52,6 +52,7 @@ from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture impo
     native_cli_profile_scope,
 )
 
+from ...native_profile_facts import native_general_iva_facts
 from .cli_runner import invoke_cached_cli
 from .native_api_cli_support import NativeApiCliSession, native_api_cli_session
 
@@ -71,20 +72,7 @@ _MISSING_ID = "b" * 16
 
 
 def _facts() -> dict[str, str]:
-    return {
-        "taxpayer_type.entity_type": "natural_person",
-        "identity.name": "Native",
-        "identity.surnames": "Workflow",
-        "activities.description": "consulting",
-        "censo.activity_start_date": "2025-01-01",
-        "tax_residence.jurisdiction_scope": "common_regime",
-        "iva.regime": "GENERAL",
-        "iva.m303_regime_composition": "general",
-        "iva.redeme_enrolled": "false",
-        "iva.cash_accounting_regime_enrolled": "false",
-        "iva.voluntary_sii_enrolled": "false",
-        "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
-    }
+    return native_general_iva_facts(surnames="Workflow", description="consulting")
 
 
 def _run(run_id: str, *, period: Period | None) -> WorkflowResult:

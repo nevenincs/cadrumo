@@ -22,6 +22,7 @@ from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture impo
     native_cli_profile_scope,
 )
 
+from ...native_profile_facts import native_general_iva_facts
 from ._profile_cli_support import invoke_native_profile
 
 pytestmark = [
@@ -32,20 +33,7 @@ pytestmark = [
     pytest.mark.usefixtures("authority_operation"),
 ]
 
-_PROFILE_FACTS = {
-    "taxpayer_type.entity_type": "natural_person",
-    "identity.name": "Native",
-    "identity.surnames": "Evidence",
-    "activities.description": "design",
-    "censo.activity_start_date": "2025-01-01",
-    "tax_residence.jurisdiction_scope": "common_regime",
-    "iva.regime": "GENERAL",
-    "iva.m303_regime_composition": "general",
-    "iva.redeme_enrolled": "false",
-    "iva.cash_accounting_regime_enrolled": "false",
-    "iva.voluntary_sii_enrolled": "false",
-    "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
-}
+_PROFILE_FACTS = native_general_iva_facts(surnames="Evidence", description="design")
 
 
 def test_native_exact_profile_evidence_add_replay_and_readback(
