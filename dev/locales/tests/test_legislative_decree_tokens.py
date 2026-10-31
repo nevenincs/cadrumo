@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 
 from ..signal_spelling import spellcheck_catalogues
-from ..signal_tokens import filtered_translation_text
+from ..signal_tokens import _NUMBERED_ARTICLE_REFERENCE_RE, filtered_translation_text
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -21,6 +21,13 @@ def test_misspelled_decree_abbreviation_is_not_hidden_by_its_citation_number(wor
 
 def test_bare_decree_abbreviation_is_not_enrolled_as_vocabulary() -> None:
     assert filtered_translation_text("RDLeg misspeling") == ("RDLeg misspeling", 0)
+
+
+def test_bis_is_structural_only_as_a_complete_numbered_article_suffix() -> None:
+    assert filtered_translation_text("30 bis cikk misspeling") == ("cikk misspeling", 1)
+    for text in ("bis", "30 biss", "R30 bis", "30bis", "30 bis-level"):
+        assert _NUMBERED_ARTICLE_REFERENCE_RE.search(text) is None
+    assert filtered_translation_text("bis misspeling")[0] == "bis misspeling"
 
 
 @pytest.mark.parametrize("locale", ["en", "es", "ca", "hu"])

@@ -91,6 +91,7 @@ def test_attested_spanish_technical_forms_are_bounded_by_language_and_spelling()
         "rehidratación",
         "instalable",
         "reintentos",
+        "reembolsos",
         "recalculada",
         "recalculando",
         "recalcules",
@@ -108,7 +109,7 @@ def test_attested_spanish_technical_forms_are_bounded_by_language_and_spelling()
 
 
 def test_attested_catalan_verb_and_technical_forms_keep_exact_language_and_spelling() -> None:
-    for word in ("publiques", "especifiques", "recapitulatiu", "recomprovació", "enllaçable", "inclusives"):
+    for word in ("publiques", "especifiques", "recapitulatiu", "recomprovació", "enllaçable", "inclusives", "calcules"):
         assert is_project_spelling("ca", word)
         assert not is_project_spelling("ca", word + "x")
         for locale in ("en", "es", "hu"):

@@ -151,6 +151,8 @@ _NUMBER_ENDINGS = {
     "editable": "s",
     "instalable": "s",
     "reintento": "s",
+    # https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/guia-practica-cumplimentacion-modelo-censal-036/capitulo-09-retenciones-ingresos-cuenta/modelo-117.html
+    "reembolso": "s",
     "subpaquete": "s",
     "subcomando": "s",
     "reanudable": "s",

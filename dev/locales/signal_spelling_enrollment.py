@@ -583,6 +583,9 @@ _LOCALE_SPELLINGS: dict[str, frozenset[str]] = {
             "recomprovació",
             "enllaçable",
             "inclusives",
+            # Reference Hunspell accepts this present-tense form; spylls does not.
+            # https://www.softcatala.org/conjugador-de-verbs/verb/calcular/
+            "calcules",
             # Generalitat uses these exact forms in legal and form guidance:
             # https://repositori.justicia.gencat.cat/bitstream/handle/20.500.14226/576/llei_enjudiciament_civil_qdl88.pdf
             # https://canalempresa.gencat.cat/ca/ajuda/ajuda/ajuda-a-larea-privada/preferencies/dades/
