@@ -20,7 +20,6 @@ from datetime import UTC, datetime
 
 import pytest
 
-from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.storage.tests.active_profile_isolated_backend_fixture import (
     active_profile_isolated_backend_fixture,
 )
@@ -28,14 +27,10 @@ from cadrumo.application.modelo.reconciliation import (
     ModeloReconciliationCommand,
 )
 from cadrumo.application.workflow.persistence import workflow_state_repository
-from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import (
     PinnedAuthorityOperation,
     bundled_indexed_authority,
 )
-from cadrumo.domain.modelos.codes import ModeloCode
-from cadrumo.domain.modelos.repository import upsert_work_unit
-from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from cadrumo.tests.inventory import FIXTURES_DIR
 
 from .....application.modelo.reconciliation_evidence_kind import ModeloReconciliationEvidenceKind
@@ -44,7 +39,7 @@ from .....application.modelo.reconciliation_records import (
     ModeloReconciliationVerdict,
     list_modelo_reconciliations,
 )
-from .reconciliation_persist_support import modelo_reconcile
+from .reconciliation_persist_support import modelo_reconcile, persist_work_unit
 
 __all__ = ["isolated_backend"]
 
@@ -68,28 +63,14 @@ def _seed_work_unit(*, modelo: str, filing_year: int, period: str) -> str:
     # one, so the seeded unit carries the revision the registry actually selects.
     with bundled_indexed_authority().operation() as operation:
         revision_id = str(operation.revision_for_context(modelo, filing_year=filing_year, period=period).id)
-    typed_period = Period.from_year_and_code(filing_year, period)
-    work_unit_id = derive_work_unit_id(
+    return persist_work_unit(
         bucket_id=bucket_id,
         modelo=modelo,
         filing_year=filing_year,
-        period=typed_period,
+        period=period,
         revision_id=revision_id,
+        timestamp=_WORK_UNIT_TIMESTAMP,
     )
-    work_unit = WorkUnit(
-        work_unit_id=work_unit_id,
-        bucket_id=bucket_id,
-        modelo=ModeloCode(modelo),
-        filing_year=filing_year,
-        period=typed_period,
-        revision_id=revision_id,
-        name=f"{modelo}-{filing_year}-{typed_period.registry_token}",
-        created_at=_WORK_UNIT_TIMESTAMP,
-        updated_at=_WORK_UNIT_TIMESTAMP,
-    )
-    repo = WorkUnitCatalogueRepository()
-    repo.save(upsert_work_unit(repo.load(), work_unit))
-    return work_unit_id
 
 
 def _reconcile(work_unit_id: str, *, operation: PinnedAuthorityOperation) -> None:

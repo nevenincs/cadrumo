@@ -31,7 +31,7 @@ from cadrumo.tests.inventory import FIXTURES_DIR
 
 from .....application.modelo.reconciliation_evidence_kind import ModeloReconciliationEvidenceKind
 from .....application.modelo.reconciliation_records import ModeloReconciliationVerdict
-from .reconciliation_persist_support import modelo_reconcile, reconcile_parsed_justificante
+from .reconciliation_persist_support import modelo_reconcile, persist_work_unit, reconcile_parsed_justificante
 
 isolated_backend = active_profile_isolated_backend_fixture(profile_overrides={"identity.tax_id": "00000000T"})
 
@@ -48,28 +48,14 @@ def _seed_work_unit(*, modelo: str, filing_year: int, period: str) -> str:
     bucket_id = state.active_profile_bucket_id()
     assert bucket_id is not None
     revision_id = "r" + "0" * 63
-    typed_period = Period.from_year_and_code(filing_year, period)
-    work_unit_id = derive_work_unit_id(
+    return persist_work_unit(
         bucket_id=bucket_id,
         modelo=modelo,
         filing_year=filing_year,
-        period=typed_period,
+        period=period,
         revision_id=revision_id,
+        timestamp=_WORK_UNIT_TIMESTAMP,
     )
-    work_unit = WorkUnit(
-        work_unit_id=work_unit_id,
-        bucket_id=bucket_id,
-        modelo=ModeloCode(modelo),
-        filing_year=filing_year,
-        period=typed_period,
-        revision_id=revision_id,
-        name=f"{modelo}-{filing_year}-{typed_period.registry_token}",
-        created_at=_WORK_UNIT_TIMESTAMP,
-        updated_at=_WORK_UNIT_TIMESTAMP,
-    )
-    repo = WorkUnitCatalogueRepository()
-    repo.save(upsert_work_unit(repo.load(), work_unit))
-    return work_unit_id
 
 
 def _stored_work_unit(work_unit_id: str) -> WorkUnit:

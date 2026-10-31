@@ -51,9 +51,6 @@ from .....core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
 from .....domain.buckets.event import BucketEventType
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from .....domain.calculations.registry.schema_references import RegistrySnapshotRef
-from .....domain.modelos.codes import ModeloCode
-from .....domain.modelos.repository import upsert_work_unit
-from .....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from .....tests.inventory import FIXTURES_DIR
 from ....inbound.justificante.parser import parse_justificante
 from ...storage.errors import SecureObjectRevisionConflictError
@@ -65,7 +62,7 @@ from ..buckets import BucketEventHistoryRepository
 from ..modelo_reconciliation import ModeloReconciliationRecordRepository, modelo_reconciliation_record_key
 from ..modelos_work_units import WorkUnitCatalogueRepository
 from .published_authority_support import published_authority_operation
-from .reconciliation_persist_support import modelo_reconcile, reconcile_parsed_justificante
+from .reconciliation_persist_support import modelo_reconcile, persist_work_unit, reconcile_parsed_justificante
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter, pytest.mark.usefixtures("authority_operation")]
 
@@ -103,27 +100,14 @@ def _seed_work_unit(*, modelo: str = "130", filing_year: int = 2026, period: str
         .snapshot(modelo, filing_year=filing_year, period=typed_period.registry_token)
         .revision.id
     )
-    work_unit_id = derive_work_unit_id(
+    return persist_work_unit(
         bucket_id=bucket_id,
         modelo=modelo,
         filing_year=filing_year,
-        period=typed_period,
+        period=period,
         revision_id=revision_id,
+        timestamp=_WORK_UNIT_TIMESTAMP,
     )
-    work_unit = WorkUnit(
-        work_unit_id=work_unit_id,
-        bucket_id=bucket_id,
-        modelo=ModeloCode(modelo),
-        filing_year=filing_year,
-        period=typed_period,
-        revision_id=revision_id,
-        name=f"{modelo}-{filing_year}-{typed_period.registry_token}",
-        created_at=_WORK_UNIT_TIMESTAMP,
-        updated_at=_WORK_UNIT_TIMESTAMP,
-    )
-    repo = WorkUnitCatalogueRepository()
-    repo.save(upsert_work_unit(repo.load(), work_unit))
-    return work_unit_id
 
 
 def _registry_snapshot_ref_for_work_unit(work_unit_id: str) -> RegistrySnapshotRef:

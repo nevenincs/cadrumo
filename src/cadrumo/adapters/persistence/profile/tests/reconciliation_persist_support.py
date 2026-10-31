@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from datetime import datetime
+
 from .....application.modelo.reconciliation import (
     ModeloReconciliationCommand,
     ModeloReconciliationReport,
@@ -11,15 +13,54 @@ from .....application.modelo.reconciliation import (
 )
 from .....application.modelo.reconciliation_evidence_kind import ModeloReconciliationEvidenceKind
 from .....application.modelo.reconciliation_parsing import ReconciliationDeclaracionObservation
+from .....core.period import Period
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation
 from .....domain.justificante.schema import Justificante
-from .....domain.modelos.work_unit import WorkUnit
+from .....domain.modelos.codes import ModeloCode
+from .....domain.modelos.repository import upsert_work_unit
+from .....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
+from ..modelos_work_units import WorkUnitCatalogueRepository
 
 __all__ = [
     "modelo_reconcile",
+    "persist_work_unit",
     "reconcile_parsed_declaracion",
     "reconcile_parsed_justificante",
 ]
+
+
+def persist_work_unit(
+    *,
+    bucket_id: str,
+    modelo: str,
+    filing_year: int,
+    period: str,
+    revision_id: str,
+    timestamp: datetime,
+) -> str:
+    """Save a work unit for the exact coordinates in the active profile and return its id."""
+    typed_period = Period.from_year_and_code(filing_year, period)
+    work_unit_id = derive_work_unit_id(
+        bucket_id=bucket_id,
+        modelo=modelo,
+        filing_year=filing_year,
+        period=typed_period,
+        revision_id=revision_id,
+    )
+    work_unit = WorkUnit(
+        work_unit_id=work_unit_id,
+        bucket_id=bucket_id,
+        modelo=ModeloCode(modelo),
+        filing_year=filing_year,
+        period=typed_period,
+        revision_id=revision_id,
+        name=f"{modelo}-{filing_year}-{typed_period.registry_token}",
+        created_at=timestamp,
+        updated_at=timestamp,
+    )
+    repository = WorkUnitCatalogueRepository()
+    repository.save(upsert_work_unit(repository.load(), work_unit))
+    return work_unit_id
 
 
 def modelo_reconcile(
