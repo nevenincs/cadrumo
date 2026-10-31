@@ -632,6 +632,27 @@ def test_modelo_130_second_period_carry_forward_picks_up_first_period_saldo(
 # ---------------------------------------------------------------------------
 
 
+def _casilla_17_and_standard_subtraction(
+    modelo_130_registry: _ModeloFixture, inputs: dict[CasillaId, Decimal]
+) -> tuple[object, Decimal]:
+    """Calculate the 1T 2026 return; give casilla 17 and the standard subtraction (c14 - c15) - c16."""
+    result = calculate_registry_snapshot(
+        _snapshot_130(modelo_130_registry),
+        inputs=inputs,
+        date_context={"filing_period": date(2026, 4, 20)},
+        binding_values={
+            "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
+            "modelo-130-resultados-negativos-anteriores": Decimal("0"),
+        },
+    )
+    casilla_17 = next(obs for obs in result.observations if obs.casilla_id == _M130_DIFERENCIA_CASILLA)
+    casilla_14 = next(obs for obs in result.observations if obs.casilla_id == _M130_DIFERENCIA_PREVIA_CASILLA)
+    casilla_15 = next(obs for obs in result.observations if obs.casilla_id == _M130_CARRY_FORWARD_CASILLA)
+    casilla_16 = next(obs for obs in result.observations if obs.casilla_id == _M130_HOME_DEDUCTION_CASILLA)
+    expected = _decimal_value(casilla_14) - _decimal_value(casilla_15) - _decimal_value(casilla_16)
+    return casilla_17.value, expected
+
+
 def test_modelo_130_high_casilla_06_amount_does_not_zero_casilla_17(
     modelo_130_registry: _ModeloFixture,
 ) -> None:
@@ -640,9 +661,9 @@ def test_modelo_130_high_casilla_06_amount_does_not_zero_casilla_17(
     A positive apartado-II lane keeps the official casilla 17 result non-zero,
     making the retired branch observable.
     """
-    result = calculate_registry_snapshot(
-        _snapshot_130(modelo_130_registry),
-        inputs={
+    casilla_17, expected = _casilla_17_and_standard_subtraction(
+        modelo_130_registry,
+        {
             _M130_INGRESOS_CASILLA: Decimal("15000"),
             _M130_GASTOS_CASILLA: Decimal("5000"),
             _M130_RETENCIONES_CASILLA: Decimal("10500"),
@@ -651,21 +672,10 @@ def test_modelo_130_high_casilla_06_amount_does_not_zero_casilla_17(
             _M130_HOME_DEDUCTION_CASILLA: Decimal("0"),
             _M130_PRIOR_RETURN_CASILLA: Decimal("0"),
         },
-        date_context={"filing_period": date(2026, 4, 20)},
-        binding_values={
-            "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
-            "modelo-130-resultados-negativos-anteriores": Decimal("0"),
-        },
     )
 
-    casilla_17 = next(obs for obs in result.observations if obs.casilla_id == _M130_DIFERENCIA_CASILLA)
-    casilla_14 = next(obs for obs in result.observations if obs.casilla_id == _M130_DIFERENCIA_PREVIA_CASILLA)
-    casilla_15 = next(obs for obs in result.observations if obs.casilla_id == _M130_CARRY_FORWARD_CASILLA)
-    casilla_16 = next(obs for obs in result.observations if obs.casilla_id == _M130_HOME_DEDUCTION_CASILLA)
-
-    expected = _decimal_value(casilla_14) - _decimal_value(casilla_15) - _decimal_value(casilla_16)
     assert expected != Decimal("0")
-    assert casilla_17.value == expected
+    assert casilla_17 == expected
 
 
 def test_modelo_130_casilla_17_uses_standard_subtraction_for_low_retention_amount(
@@ -678,9 +688,9 @@ def test_modelo_130_casilla_17_uses_standard_subtraction_for_low_retention_amoun
     Formula chain: c04=8000, c05=0, c07=7000, c12=7000, c13=0, c14=7000,
     c15=0, c16=0 -> c17 = 7000.
     """
-    result = calculate_registry_snapshot(
-        _snapshot_130(modelo_130_registry),
-        inputs={
+    casilla_17, expected = _casilla_17_and_standard_subtraction(
+        modelo_130_registry,
+        {
             _M130_INGRESOS_CASILLA: Decimal("50000"),
             _M130_GASTOS_CASILLA: Decimal("10000"),
             # c03 (rendimiento neto) is computed via the
@@ -694,26 +704,14 @@ def test_modelo_130_casilla_17_uses_standard_subtraction_for_low_retention_amoun
             _M130_HOME_DEDUCTION_CASILLA: Decimal("0"),
             _M130_PRIOR_RETURN_CASILLA: Decimal("0"),
         },
-        date_context={"filing_period": date(2026, 4, 20)},
-        binding_values={
-            "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
-            "modelo-130-resultados-negativos-anteriores": Decimal("0"),
-        },
     )
 
-    casilla_17 = next(obs for obs in result.observations if obs.casilla_id == _M130_DIFERENCIA_CASILLA)
-    casilla_14 = next(obs for obs in result.observations if obs.casilla_id == _M130_DIFERENCIA_PREVIA_CASILLA)
-    casilla_15 = next(obs for obs in result.observations if obs.casilla_id == _M130_CARRY_FORWARD_CASILLA)
-    casilla_16 = next(obs for obs in result.observations if obs.casilla_id == _M130_HOME_DEDUCTION_CASILLA)
-
-    # The standard subtraction formula: (c14 - c15) - c16
-    expected = _decimal_value(casilla_14) - _decimal_value(casilla_15) - _decimal_value(casilla_16)
-    assert casilla_17.value == expected, (
-        f"Below-threshold case: casilla 17 must equal (c14-c15)-c16 = {expected}; got {casilla_17.value}"
+    assert casilla_17 == expected, (
+        f"Below-threshold case: casilla 17 must equal (c14-c15)-c16 = {expected}; got {casilla_17}"
     )
     # Standard formula must yield a positive payment when income > costs and
     # retenciones are small.
-    assert casilla_17.value != Decimal("0"), "casilla 17 must not be zero when income=50000 and retenciones=1000"
+    assert casilla_17 != Decimal("0"), "casilla 17 must not be zero when income=50000 and retenciones=1000"
 
 
 # ---------------------------------------------------------------------------
