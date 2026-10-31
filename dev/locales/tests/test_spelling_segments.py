@@ -31,6 +31,22 @@ def test_rst_prose_omits_parser_diagnostics_but_keeps_authored_text(tmp_path) ->
     assert "Unknown directive type toctree is a sentence with misspeling." in prose
 
 
+def test_rst_escapes_restore_complete_identifiers_and_keep_surrounding_prose(tmp_path) -> None:
+    page = tmp_path / "legal.rst"
+    page.write_text(
+        "The resident\\_irpf and fecha\\_notificacion values are checked.\n\n"
+        "This ordinary misspeling is still visible.\n",
+        encoding="utf-8",
+    )
+    prose = {text for _line, text in visible_document_prose(page)}
+    identifier_line = next(text for text in prose if "resident" in text)
+    assert "resident_irpf" in identifier_line and "fecha_notificacion" in identifier_line
+    assert "\0" not in identifier_line
+    assert "resident_irpf" not in filtered_translation_text(identifier_line)[0]
+    assert "fecha_notificacion" not in filtered_translation_text(identifier_line)[0]
+    assert "This ordinary misspeling is still visible." in prose
+
+
 @pytest.mark.parametrize(
     "name,component",
     [

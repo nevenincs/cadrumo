@@ -199,8 +199,12 @@ def _record_rst_prose_block(
     parsed_titles: dict[int | None, list[str]],
 ) -> None:
     """Normalize a parsed RST node and retain its visible block/heading text."""
+    from docutils.utils import unescape
+
     parts = [str(text) for text in node.findall(nodes.Text) if not node_has_ancestor(text, excluded)]
-    value = " ".join("".join(parts).split())
+    # Docutils represents escaped RST characters with an internal NUL marker.
+    # Recover its rendered text before classifying complete identifiers.
+    value = " ".join(unescape("".join(parts)).split())
     if not value:
         return
     line = int(node.line) if node.line is not None else None
