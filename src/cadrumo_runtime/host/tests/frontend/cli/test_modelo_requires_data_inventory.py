@@ -14,7 +14,6 @@ of the classifier under test.
 
 from __future__ import annotations
 
-import json
 import sys
 from collections.abc import Callable, Iterator
 from pathlib import Path
@@ -22,12 +21,10 @@ from pathlib import Path
 import pytest
 from click.testing import Result
 
-from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.tests.cli_envelope import unwrap_envelope_notices, unwrap_schema_envelope
 
-from ...native_commands.runtime_profile_cli_fixture import native_cli_profile_scope
-from .cli_runner import invoke_cached_cli
+from ._profile_cli_support import partial_taxpayer_invoker
 
 pytestmark = [
     pytest.mark.integration,
@@ -57,39 +54,7 @@ _M390_PERIOD = "0A"
 @pytest.fixture
 def invoke_requires(tmp_path: Path) -> Iterator[Callable[[list[str]], Result]]:
     """Serve the real registered inventory reader for a partial taxpayer profile."""
-    with native_cli_profile_scope(tmp_path) as profile:
-        profile.register(
-            label="native-requires",
-            facts={
-                "taxpayer_type.entity_type": "natural_person",
-                "identity.tax_id": "12345678Z",
-                "identity.name": "Operator",
-                "identity.surnames": "Example",
-                "activities.description": "design",
-                "censo.activity_start_date": "2024-01-01",
-                "contact.postcode": "28013",
-                "tax_residence.jurisdiction_scope": "common_regime",
-                "tax_residence.ccaa": "cataluna",
-                "renta_filing.declaration_type": "1",
-                "renta_taxpayer.birth_date": "1980-03-15",
-                "renta_family.minor_children_in_unit": "false",
-                "iva.regime": "GENERAL",
-                "iva.m303_regime_composition": "general",
-                "iva.redeme_enrolled": "false",
-                "iva.cash_accounting_regime_enrolled": "false",
-                "iva.voluntary_sii_enrolled": "false",
-                "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
-            },
-        )
-
-        def invoke(args: list[str]) -> Result:
-            assert profile.label is not None
-            close_active_bucket_session()
-            return invoke_cached_cli(
-                ("--language", "en", "--profile", profile.label, "--profile-secrets-stdin", *args),
-                input=json.dumps({"profile_passphrase": profile.passphrase}),
-            )
-
+    with partial_taxpayer_invoker(tmp_path, label="native-requires") as invoke:
         yield invoke
 
 

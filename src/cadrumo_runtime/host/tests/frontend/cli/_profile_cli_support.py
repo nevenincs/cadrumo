@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 import json
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
+from contextlib import contextmanager
 from pathlib import Path
 
 import pytest
@@ -13,7 +14,10 @@ from cadrumo.adapters.persistence.profile.tests.profile_registration import regi
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.core.config import override_settings
 from cadrumo_runtime.host.tests.frontend.cli.config.tests.isolated_storage_fixture import native_profile_view_server
-from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture
+from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import (
+    NativeCliProfileFixture,
+    native_cli_profile_scope,
+)
 
 from .cli_runner import invoke_cached_cli
 
@@ -155,3 +159,42 @@ def invoke_native_profile_revealing(profile: NativeCliProfileFixture, *command: 
     """Run one JSON command as ``invoke_native_profile`` does, with identifiers left unmasked."""
     with override_settings(cadrumo_cli_reveal_identifiers=True):
         return invoke_native_profile(profile, *command)
+
+
+@contextmanager
+def partial_taxpayer_invoker(tmp_path: Path, *, label: str) -> Iterator[Callable[[list[str]], Result]]:
+    """Serve one native profile holding a partial Catalan taxpayer and yield a command runner bound to it."""
+    with native_cli_profile_scope(tmp_path) as profile:
+        profile.register(
+            label=label,
+            facts={
+                "taxpayer_type.entity_type": "natural_person",
+                "identity.tax_id": "12345678Z",
+                "identity.name": "Operator",
+                "identity.surnames": "Example",
+                "activities.description": "design",
+                "censo.activity_start_date": "2024-01-01",
+                "contact.postcode": "28013",
+                "tax_residence.jurisdiction_scope": "common_regime",
+                "tax_residence.ccaa": "cataluna",
+                "renta_filing.declaration_type": "1",
+                "renta_taxpayer.birth_date": "1980-03-15",
+                "renta_family.minor_children_in_unit": "false",
+                "iva.regime": "GENERAL",
+                "iva.m303_regime_composition": "general",
+                "iva.redeme_enrolled": "false",
+                "iva.cash_accounting_regime_enrolled": "false",
+                "iva.voluntary_sii_enrolled": "false",
+                "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
+            },
+        )
+
+        def invoke(args: list[str]) -> Result:
+            assert profile.label is not None
+            close_active_bucket_session()
+            return invoke_cached_cli(
+                ("--language", "en", "--profile", profile.label, "--profile-secrets-stdin", *args),
+                input=json.dumps({"profile_passphrase": profile.passphrase}),
+            )
+
+        yield invoke
