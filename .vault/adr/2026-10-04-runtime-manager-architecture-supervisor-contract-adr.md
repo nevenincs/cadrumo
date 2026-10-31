@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#runtime-manager-architecture'
 date: '2026-10-04'
-modified: '2026-10-28'
+modified: '2026-10-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:48eddd73b6663d01a57848056710231f9b261c306c1e9f757f59f3cb1059cb58'
+body_hash: 'sha256:6e766f2d202510d8c8d79c2f6e659e73e615859c9cf2c43c5a0aac6e7c06e2b7'
 related:
   - "[[2026-10-04-runtime-manager-architecture-adr]]"
   - "[[2026-10-04-runtime-manager-architecture-requirements-research]]"
@@ -175,6 +175,18 @@ OS signals give the manager a stop that works on adopted runtimes and older vers
 ## Amendment 2026-10-28: startup timeout ownership
 
 Accepted under the user's signal/slot-driven startup instruction recorded in2026-10-28-debug-startup-reliability-adr. Startup readiness follows the exact runtime's readiness or exit signal under the shared owner timeout. Timeout contains the owned startup attempt, reports its distinct cause and preserves unknown effects when containment is unconfirmed; it does not start a fresh drain budget or authorize replay. Heartbeat health and already-published runtime supervision retain their existing rules.
+
+## Amendment 2026-10-31: every stop records the work it cut short
+
+Basis: the user pre-approved ADR changes for the macOS platform bring-up, recorded in the Description of `2026-10-30-macos-platform-plan`; this is its Step `S14`. The root-cause analysis of the macOS start failures (failure mode F5) found that a quit during a change left nothing that recorded it. Tracing the runtime showed that a supervisor stop or signal drained each profile worker, cancelled the settlement of work still running and left its journal record running under the dead worker's lease. Lapse reconciliation settled it only after the lease and its grace expired, about twenty minutes later and only once the profile was used again.
+
+What changed:
+
+- The session-end order above (fence, confirm termination, record, release) now also closes every other stop. After a profile worker's drain receipt arrives and its native containment is confirmed, the runtime settles each operation that receipt names as needing recovery. It uses the same credential-free terminated-owner settlement as session end: `INTERRUPTED`, effect `UNKNOWN` where the executor had entered and `NONE` where it had not, with an `ORPHANED` reconciliation event, and the dead owner's exact lease released. A record leased by another owner is untouched. The receipt names the work, so no journal scan is needed. Implemented in `src/cadrumo_runtime/host/profile_connection_drain.py` and `src/cadrumo_runtime/host/terminated_operations.py`.
+- If that settlement cannot run within the stop's deadline, it is logged by error type, and the record stays running for lapse reconciliation as before. It does not make the stop unsettled. Unconfirmed containment still leaves both the record and the lease untouched.
+- A timeout is still not proof that a mutation is safe to retry. The unknown effect stays on the terminal receipt, and the subject is released only because the owner is confirmed dead.
+
+The accepted cost "Interrupted work at session end may stay leased for up to 10 minutes" still applies only to work whose termination is unconfirmed.
 
 **Reconsider if:**
 - stream rewiring breaks a dependency that needs fd 1 or fd 2
