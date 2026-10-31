@@ -29,9 +29,9 @@ from ....domain.calculations.registry.export_xml_dictionary import xml_dictionar
 from ....domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from ....domain.filing.errors import FilingExportValidationError
-from .._export_xml_dictionary import (
-    _modelo_100_comunidad_block,
-    _modelo_100_unfiled_comunidad_paths,
+from .._export_xml_dictionary_modelo100 import (
+    modelo_100_comunidad_block,
+    modelo_100_unfiled_comunidad_paths,
     registry_modelo_100_xml_declarations,
 )
 
@@ -67,7 +67,7 @@ def _own_casillas(block: str, *, declarations: Mapping[str, str]) -> list[str]:
         {
             entry.casilla_id
             for entry in _entries()
-            if _modelo_100_comunidad_block(entry.path, declarations=declarations) == block
+            if modelo_100_comunidad_block(entry.path, declarations=declarations) == block
             and entry.casilla_id is not None
             and entry.casilla_id != _SHARED_TOTAL
         }
@@ -97,7 +97,7 @@ def test_only_the_filed_comunidad_survives(_declarations: Mapping[str, str]) -> 
     entries = _entries()
     madrid_casilla = _own_casillas("MadridRes", declarations=_declarations)[0]
 
-    unfiled = _modelo_100_unfiled_comunidad_paths(
+    unfiled = modelo_100_unfiled_comunidad_paths(
         entries,
         {madrid_casilla: Decimal("250.00")},
         declarations=_declarations,
@@ -105,7 +105,7 @@ def test_only_the_filed_comunidad_survives(_declarations: Mapping[str, str]) -> 
 
     written: set[str] = set()
     for entry in entries:
-        block = _modelo_100_comunidad_block(entry.path, declarations=_declarations)
+        block = modelo_100_comunidad_block(entry.path, declarations=_declarations)
         if block is not None and entry.path not in unfiled:
             written.add(block)
     assert written == {"MadridRes"}, f"expected only MadridRes to survive, got {sorted(written)}"
@@ -116,7 +116,7 @@ def test_the_shared_total_reaches_exactly_one_comunidad_block(_declarations: Map
     entries = _entries()
     madrid_casilla = _own_casillas("MadridRes", declarations=_declarations)[0]
 
-    unfiled = _modelo_100_unfiled_comunidad_paths(
+    unfiled = modelo_100_unfiled_comunidad_paths(
         entries,
         {madrid_casilla: Decimal("250.00")},
         declarations=_declarations,
@@ -127,21 +127,20 @@ def test_the_shared_total_reaches_exactly_one_comunidad_block(_declarations: Map
     assert len(total_paths) == 16, f"casilla {_SHARED_TOTAL} no longer declares sixteen paths"
     assert len(surviving) == 2, f"expected the summary plus one block, got {surviving}"
     assert (
-        sum(1 for path in surviving if _modelo_100_comunidad_block(path, declarations=_declarations) == "MadridRes")
-        == 1
+        sum(1 for path in surviving if modelo_100_comunidad_block(path, declarations=_declarations) == "MadridRes") == 1
     )
-    assert sum(1 for path in surviving if _modelo_100_comunidad_block(path, declarations=_declarations) is None) == 1
+    assert sum(1 for path in surviving if modelo_100_comunidad_block(path, declarations=_declarations) is None) == 1
 
 
 def test_no_autonomic_deductions_writes_no_block_and_no_total(_declarations: Mapping[str, str]) -> None:
     """A filer claiming none carries neither the summary nor any comunidad block."""
     entries = _entries()
 
-    unfiled = _modelo_100_unfiled_comunidad_paths(entries, {}, declarations=_declarations)
+    unfiled = modelo_100_unfiled_comunidad_paths(entries, {}, declarations=_declarations)
 
     for entry in entries:
         if (
-            _modelo_100_comunidad_block(entry.path, declarations=_declarations) is not None
+            modelo_100_comunidad_block(entry.path, declarations=_declarations) is not None
             or entry.casilla_id == _SHARED_TOTAL
         ):
             assert entry.path in unfiled, f"{entry.path} would still be written with no deductions claimed"
@@ -155,12 +154,12 @@ def test_zero_only_cross_block_values_are_absent_not_a_conflict(_declarations: M
         _own_casillas("MadridRes", declarations=_declarations)[0]: "0.00",
     }
 
-    unfiled = _modelo_100_unfiled_comunidad_paths(entries, values, declarations=_declarations)
+    unfiled = modelo_100_unfiled_comunidad_paths(entries, values, declarations=_declarations)
 
     assert all(
         entry.path in unfiled
         for entry in entries
-        if _modelo_100_comunidad_block(entry.path, declarations=_declarations) is not None
+        if modelo_100_comunidad_block(entry.path, declarations=_declarations) is not None
         or entry.casilla_id == _SHARED_TOTAL
     )
 
@@ -174,7 +173,7 @@ def test_two_comunidades_refuses_and_names_both(_declarations: Mapping[str, str]
     }
 
     with pytest.raises(FilingExportValidationError) as excinfo:
-        _modelo_100_unfiled_comunidad_paths(entries, values, declarations=_declarations)
+        modelo_100_unfiled_comunidad_paths(entries, values, declarations=_declarations)
 
     message = str(excinfo.value)
     assert "MadridRes" in message and "CatalunyaRes" in message, f"the refusal names neither comunidad: {message}"
@@ -189,14 +188,14 @@ def test_nothing_outside_the_autonomic_blocks_is_ever_withheld(_declarations: Ma
     entries = _entries()
     madrid_casilla = _own_casillas("MadridRes", declarations=_declarations)[0]
 
-    unfiled = _modelo_100_unfiled_comunidad_paths(
+    unfiled = modelo_100_unfiled_comunidad_paths(
         entries,
         {madrid_casilla: Decimal("250.00")},
         declarations=_declarations,
     )
 
     for path in unfiled:
-        assert _modelo_100_comunidad_block(path, declarations=_declarations) is not None, (
+        assert modelo_100_comunidad_block(path, declarations=_declarations) is not None, (
             f"{path} is outside the comunidad blocks"
         )
     carried = {entry.path for entry in entries if entry.casilla_id in {"0435", "0460"}}
@@ -213,7 +212,7 @@ def test_restoring_all_write_fails_the_single_block_assertion(_declarations: Map
     unfiled = all_write(entries, {})
     written: set[str] = set()
     for entry in entries:
-        block = _modelo_100_comunidad_block(entry.path, declarations=_declarations)
+        block = modelo_100_comunidad_block(entry.path, declarations=_declarations)
         if block is not None and entry.path not in unfiled:
             written.add(block)
     assert len(written) == 15, "all-write no longer writes every comunidad block; the control is stale"

@@ -33,7 +33,7 @@ from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.export_xml_dictionary import XmlDictionaryEntry, xml_dictionary_entries
 from ....domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
-from .._export_xml_dictionary import modelo_100_sign_branch_value, registry_modelo_100_xml_declarations
+from .._export_xml_dictionary_modelo100 import modelo_100_sign_branch_value, registry_modelo_100_xml_declarations
 from ..export_verification import _xml_dictionary_expected_wire_value
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

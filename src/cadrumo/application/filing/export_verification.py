@@ -31,13 +31,12 @@ from ...domain.filing.errors import FilingExportError, FilingExportValidationErr
 from ...domain.filing.schema import ModeloCasillaProvenance, ModeloDraft
 from ._export_xml_dictionary import (
     expected_xml_dictionary_root_identity,
-    format_xml_dictionary_value,
     mismatched_xml_dictionary_repeated_casillas,
-    modelo_100_sign_branch_value,
     read_xml_dictionary_root_identity,
-    registry_modelo_100_xml_declarations,
     xml_dictionary_repeated_rows,
 )
+from ._export_xml_dictionary_modelo100 import modelo_100_sign_branch_value, registry_modelo_100_xml_declarations
+from ._export_xml_dictionary_values import format_xml_dictionary_value
 from .runtime import RegistryModeloSubview, RegistrySchemaAccessor, build_runtime_schema_provider
 
 _logger = get_logger(__name__)
@@ -484,20 +483,33 @@ def _mismatched_xml_dictionary_casilla_ids(
             )
         if any(rows.holds(entry.path) for rows in repeated_rows):
             continue
-        try:
-            expected_wire = _xml_dictionary_expected_wire_value(
-                entry,
-                expected,
-                modelo=draft.modelo,
-                modelo_100_declarations=modelo_100_declarations,
-            )
-        except FilingExportValidationError as exc:
-            raise FilingExportValidationError(
-                f"XML dictionary field {parsed.field_id!r} could not render its expected verification value"
-            ) from exc
+        expected_wire = _xml_dictionary_checked_wire_value(
+            entry,
+            expected,
+            modelo=draft.modelo,
+            modelo_100_declarations=modelo_100_declarations,
+        )
         if expected_wire != parsed.raw:
             mismatched.append(casilla_id)
     return tuple(dict.fromkeys(mismatched)), tuple(dict.fromkeys(checked))
+
+
+def _xml_dictionary_checked_wire_value(
+    entry: XmlDictionaryEntry,
+    value: object,
+    *,
+    modelo: str,
+    modelo_100_declarations: Mapping[str, str] | None,
+) -> str:
+    """Attach the signed field identity to an expected-value rendering refusal."""
+    try:
+        return _xml_dictionary_expected_wire_value(
+            entry, value, modelo=modelo, modelo_100_declarations=modelo_100_declarations
+        )
+    except FilingExportValidationError as exc:
+        raise FilingExportValidationError(
+            f"XML dictionary field {entry.field_id!r} could not render its expected verification value"
+        ) from exc
 
 
 def _xml_dictionary_expected_wire_value(

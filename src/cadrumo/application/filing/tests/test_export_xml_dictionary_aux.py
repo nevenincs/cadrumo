@@ -12,8 +12,8 @@ from ....domain.filing.errors import FilingExportError, FilingExportValidationEr
 from .._export_xml_dictionary import (
     _append_declaration_aux,
     _prune_zero_only_xml_subtrees,
-    format_xml_dictionary_value,
 )
+from .._export_xml_dictionary_values import format_xml_dictionary_value
 from ..export_parity import assert_xml_declaration_aux_declared
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]

@@ -230,6 +230,19 @@ def test_the_scalar_totals_stay_on_the_draft(operation: PinnedAuthorityOperation
     assert values["1654"] == sum((Decimal(row.findtext("G2DS") or "0") for row in rows), Decimal("0"))
 
 
+def test_a_typed_date_row_refuses_an_invalid_iso_date(operation: PinnedAuthorityOperation) -> None:
+    provider = _provider(operation, 2025)
+    draft = _draft(provider, 2025, _inputs(_resolved()))
+    date_binding = "renta-activity-asset-disposal-row-transmission-date-1631"
+    rows = tuple(
+        value.model_copy(update={"value": "2025-99-01"}) if value.binding_id == date_binding else value
+        for value in draft.binding_values
+    )
+    assert any(value.binding_id == date_binding for value in rows)
+    with pytest.raises(FilingExportValidationError, match=r"date row binding .* carries an invalid date"):
+        _render(provider, draft.model_copy(update={"binding_values": rows}))
+
+
 def test_a_box_total_the_rows_do_not_add_up_to_refuses(operation: PinnedAuthorityOperation) -> None:
     provider = _provider(operation, 2025)
     inputs = _inputs(_resolved(second_proceeds="13000.00"))

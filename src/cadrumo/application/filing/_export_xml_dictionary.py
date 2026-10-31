@@ -23,11 +23,10 @@ See Also:
 
 from __future__ import annotations
 
-import re
 from collections.abc import Callable, Iterator, Mapping
 from dataclasses import dataclass
 from datetime import date
-from decimal import ROUND_HALF_UP, Decimal
+from decimal import Decimal
 from types import MappingProxyType
 from xml.etree import ElementTree
 
@@ -36,29 +35,28 @@ from defusedxml import ElementTree as DefusedElementTree
 from ...core.aggregation import BindingAggregationOp
 from ...core.casilla_id import CasillaId
 from ...core.decimal.coercion import coerce_decimal
-from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.external_constants import UTF_8_ENCODING as _UTF_8
 from ...core.filing_producer_key import FilingProducerKey
 from ...core.modelo import Modelo
-from ...core.time.clock import today_madrid
 from ...domain.calculations.registry.binding_aggregation import binding_aggregation_op
 from ...domain.calculations.registry.binding_selector_utils import selector_as_dict
+from ...domain.calculations.registry.binding_value_contract import BindingDataType
 from ...domain.calculations.registry.export_xml_dictionary import (
-    SINO_DICTIONARY_TYPE,
-    XML_DICTIONARY_BOOLEAN_TYPES,
     XmlDictionaryEntry,
     xml_dictionary_entries,
 )
-from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
-from ...domain.calculations.registry.form_codes import resolve_form_codes
-from ...domain.calculations.registry.governed_fact_scope import governed_facts_in_scope
 from ...domain.calculations.registry.schema import BindingDefinition
-from ...domain.calculations.registry.schema_base import DateAxis
 from ...domain.calculations.registry.schema_exports import ExportLayoutDefinition
 from ...domain.calculations.registry.schema_references import SourceReference
 from ...domain.contribuyente.renta_codes import modelo100_ccaa_codigo, modelo100_ecivil_export_code
 from ...domain.filing.errors import FilingExportError, FilingExportValidationError
 from ...domain.filing.schema import ModeloBindingValue, ModeloDraft
+from ._export_xml_dictionary_modelo100 import (
+    modelo_100_sign_branch_value,
+    modelo_100_unfiled_comunidad_paths,
+    registry_modelo_100_xml_declarations,
+)
+from ._export_xml_dictionary_values import format_xml_dictionary_value, is_xml_dictionary_numeric_type
 from .runtime import RegistrySchemaAccessor
 
 _XML_SCHEMA_INSTANCE_NS = "http://www.w3.org/2001/XMLSchema-instance"
@@ -83,37 +81,6 @@ _TOMA_DATOS_TAG = "TomaDatosAmpliada"
 # elements.
 _XSD_MODEL_GROUP_TAGS = frozenset({"complexType", "complexContent", "sequence", "choice", "all"})
 
-# The two boolean row types (``S_N``'s spelled-out ``SI``/``NO`` and ``LGC``'s
-# ``tipo_logico`` pattern ``([0-1]){1}``) and their complete set are the one
-# canonical declaration in ``domain.calculations.registry`` (``_export_parse.py``),
-# imported above rather than re-declared here. Naming the set positively is what
-# makes a boolean on any other row an error by default: a row type added to the
-# dictionary later is simply not in it, so it refuses rather than inheriting
-# whatever the last branch happened to do.
-
-# The date row type, and the exact form AEAT accepts in it. The pattern is
-# copied from the ``tipo_Fecha`` facet the bundled XSD declares -- an
-# ``xs:string`` restricted to ``([0-9]{1,2}/[0-9]{1,2}/[0-9]{4})`` -- so day and
-# month may be one or two digits and the year must be four. That is exactly what
-# rendering a :class:`~datetime.date` below produces, which is why a value that
-# arrives already typed never meets this check.
-_DATE_DICTIONARY_TYPE = "FEC"
-_DATE_DICTIONARY_TEXT = re.compile(r"[0-9]{1,2}/[0-9]{1,2}/[0-9]{4}")
-
-_HOLDER_DICTIONARY_TYPE = "TIT"
-_HOLDER_CODES_FACT = "modelo-100-profile-form-codes"
-
-# The dictionary's numeric type codes are self-describing: ``P<width><scale>``
-# and ``N<width><scale>`` name the field's integer width and its fractional-digit
-# count, so the trailing digit is the scale to render at. Confirmed against every
-# code the Modelo 100 dictionary uses across all six revisions by reading the
-# ``fractionDigits`` facet of the XSD type each code lands on: ``P010``/``P020``/
-# ``P030``/``P040`` resolve to ``xs:integer`` types carrying no fractional digits,
-# while ``P012``/``P032``/``P072``/``P102``/``N102`` resolve to ``xs:decimal``
-# types declaring ``fractionDigits="2"``. Reading the scale off the code keeps a
-# future code correct without this module being edited.
-_NUMERIC_DICTIONARY_TYPE = re.compile(r"^[NP]\d{2}(?P<scale>\d)$")
-
 
 def _modelo100_render_exclusions(
     draft: ModeloDraft,
@@ -127,7 +94,7 @@ def _modelo100_render_exclusions(
     if draft.modelo == Modelo("100"):
         if declarations is None:
             raise FilingExportValidationError("Modelo 100 XML declarations were not resolved")
-        unfiled_paths = _modelo_100_unfiled_comunidad_paths(
+        unfiled_paths = modelo_100_unfiled_comunidad_paths(
             entries,
             casilla_values,
             declarations=declarations,
@@ -620,25 +587,6 @@ def _record_xsd_child(
         )
 
 
-def registry_modelo_100_xml_declarations() -> Mapping[str, str]:
-    """Resolve the selected XML export declarations without a Python copy."""
-    authority = governed_facts_in_scope()
-    if authority is None:
-        raise FilingExportValidationError(
-            "Modelo 100 XML export declarations require a generation-pinned authority operation"
-        )
-    resolved = authority.resolve_governed_fact(
-        MappingFactQuery(
-            fact_id="modelo-100-xml-export-declarations-mapping",
-            date_axis=DateAxis.FILING_PERIOD,
-            effective_date=today_madrid(),
-        ),
-    )
-    if not isinstance(resolved, ResolvedMappingFact):
-        raise FilingExportValidationError("selected Modelo 100 XML declarations must be a mapping fact")
-    return {str(entry.key): str(entry.value) for entry in resolved.payload.entries}
-
-
 #: The value converters a registry XML declaration may name, by that name. An
 #: explicit table rather than a module-namespace lookup, so an import tidy-up
 #: cannot silently make a declared converter unavailable.
@@ -855,15 +803,26 @@ def xml_dictionary_repeated_rows(
     occurrences: dict[str, dict[int, dict[str, str]]] = {}
     casillas: dict[str, dict[str, CasillaId]] = {}
     for value in values:
-        element, entry = _row_column_entry(bindings[value.binding_id], entries, repeating)
+        binding = bindings[value.binding_id]
+        element, entry = _row_column_entry(binding, entries, repeating)
         row = occurrences.setdefault(element, {}).setdefault(value.row_index or 0, {})
-        row[entry.path] = format_xml_dictionary_value(entry.data_type, value.value)
+        row[entry.path] = _render_bound_row_value(binding, entry, value.value)
         if entry.casilla_id is not None:
             casillas.setdefault(element, {})[entry.path] = entry.casilla_id
     return tuple(
         _bounded_repeated_rows(element, rows, casillas.get(element, {}), limit=repeating[element])
         for element, rows in occurrences.items()
     )
+
+
+def _render_bound_row_value(binding: BindingDefinition, entry: XmlDictionaryEntry, value: object) -> str:
+    """Restore dates transported as ISO strings using the binding's declared scalar type."""
+    if binding.value.data_type is BindingDataType.DATE and isinstance(value, str):
+        try:
+            value = date.fromisoformat(value)
+        except ValueError as error:
+            raise FilingExportValidationError(f"date row binding {binding.id!r} carries an invalid date") from error
+    return format_xml_dictionary_value(entry.data_type, value)
 
 
 def _bounded_repeated_rows(
@@ -898,7 +857,7 @@ def _require_value_stated_by_rows(
     if _is_zero_token(rendered):
         return
     tokens = tuple(row[entry.path] for row in rows.occurrences if entry.path in row)
-    numeric = _NUMERIC_DICTIONARY_TYPE.match(entry.data_type.upper()) is not None
+    numeric = is_xml_dictionary_numeric_type(entry.data_type)
     if numeric and tokens:
         stated = sum((Decimal(token) for token in tokens), Decimal("0"))
         accounted = stated == Decimal(rendered)
@@ -1001,166 +960,6 @@ def _nonzero_token(token: str | None) -> str | None:
     return None if _is_zero_token(token) else token
 
 
-def _modelo_100_comunidad_block(path: str, *, declarations: Mapping[str, str]) -> str | None:
-    """Return the comunidad block ``path`` sits in, or ``None`` when it is elsewhere."""
-    block_prefix = declarations.get("xml.comunidad.block_prefix")
-    if block_prefix is None:
-        raise FilingExportValidationError("registry-selected comunidad block prefix is missing")
-    if not path.startswith(block_prefix):
-        return None
-    return path[len(block_prefix) :].split("/", 1)[0]
-
-
-def _modelo_100_casilla_is_populated(value: object) -> bool:
-    """Return whether a CCAA casilla value selects a comunidad block.
-
-    Calculated drafts carry zero-valued placeholders for every CCAA aggregate,
-    sometimes as strings. Those placeholders are absent for the XSD ``choice``
-    and must not select a block. A nonempty value that cannot be parsed remains
-    populated so the later row formatter raises its typed validation error
-    instead of silently suppressing the invalid input as if it were absent.
-    """
-    if value is None or value == "":
-        return False
-    amount = coerce_decimal(value)
-    return amount is None or not amount.is_zero()
-
-
-def _modelo_100_unfiled_comunidad_paths(
-    entries: tuple[XmlDictionaryEntry, ...],
-    casilla_values: Mapping[CasillaId, object],
-    *,
-    declarations: Mapping[str, str],
-) -> frozenset[str]:
-    """Return the autonomic-deduction paths this draft must not write.
-
-    Args:
-        entries: Every dictionary row for the layout being rendered.
-        casilla_values: Casilla values the draft carries.
-        declarations: Generation-pinned XML routing declarations.
-
-    Returns:
-        Paths belonging to a comunidad the draft does not file, plus the shared
-        total when no comunidad is filed at all.
-
-    Raises:
-        FilingExportValidationError: when the draft populates casillas belonging
-            to more than one comunidad. The schema admits only one, so there is
-            no correct rendering and picking one would launder the conflict.
-    """
-    own_casillas_by_block = _modelo_100_comunidad_casillas(entries, declarations=declarations)
-    filed = _modelo_100_filed_comunidades(own_casillas_by_block, casilla_values)
-    resident = _modelo_100_resident_comunidad(filed)
-    unfiled = _modelo_100_unfiled_block_paths(entries, resident, declarations=declarations)
-    if resident is None:
-        unfiled.update(_modelo_100_shared_total_paths(entries, declarations=declarations))
-    return frozenset(unfiled)
-
-
-def _modelo_100_comunidad_casillas(
-    entries: tuple[XmlDictionaryEntry, ...],
-    *,
-    declarations: Mapping[str, str],
-) -> dict[str, set[CasillaId]]:
-    """Collect each comunidad block's own casillas, excluding the shared total."""
-    own_casillas_by_block: dict[str, set[CasillaId]] = {}
-    for entry in entries:
-        block = _modelo_100_comunidad_block(entry.path, declarations=declarations)
-        if block is None or entry.casilla_id is None:
-            continue
-        shared_total = declarations.get("xml.comunidad.shared_total_casilla")
-        if shared_total is None:
-            raise FilingExportValidationError("registry-selected comunidad total casilla is missing")
-        if entry.casilla_id != shared_total:
-            own_casillas_by_block.setdefault(block, set()).add(entry.casilla_id)
-    return own_casillas_by_block
-
-
-def _modelo_100_filed_comunidades(
-    own_casillas_by_block: Mapping[str, set[CasillaId]],
-    casilla_values: Mapping[CasillaId, object],
-) -> list[str]:
-    """Return comunidad blocks with at least one populated own casilla."""
-    return sorted(
-        block
-        for block, own in own_casillas_by_block.items()
-        if any(_modelo_100_casilla_is_populated(casilla_values.get(casilla)) for casilla in own)
-    )
-
-
-def _modelo_100_resident_comunidad(filed: list[str]) -> str | None:
-    """Require at most one filed comunidad and return the selected block."""
-    if len(filed) > 1:
-        raise FilingExportValidationError(
-            "draft populates autonomic deductions for more than one comunidad "
-            f"({', '.join(filed)}); a declaration may carry only one",
-        )
-    return filed[0] if filed else None
-
-
-def _modelo_100_unfiled_block_paths(
-    entries: tuple[XmlDictionaryEntry, ...],
-    resident: str | None,
-    *,
-    declarations: Mapping[str, str],
-) -> set[str]:
-    """Return all dictionary paths belonging to non-resident comunidad blocks."""
-    return {
-        entry.path
-        for entry in entries
-        if (block := _modelo_100_comunidad_block(entry.path, declarations=declarations)) is not None
-        and block != resident
-    }
-
-
-def _modelo_100_shared_total_paths(
-    entries: tuple[XmlDictionaryEntry, ...],
-    *,
-    declarations: Mapping[str, str],
-) -> frozenset[str]:
-    """Return shared total paths when no comunidad block is filed."""
-    shared_total = declarations.get("xml.comunidad.shared_total_casilla")
-    if shared_total is None:
-        raise FilingExportValidationError("registry-selected comunidad total casilla is missing")
-    return frozenset(entry.path for entry in entries if str(entry.casilla_id) == shared_total)
-
-
-def modelo_100_sign_branch_value(
-    entry: XmlDictionaryEntry,
-    raw: object,
-    *,
-    declarations: Mapping[str, str],
-) -> object | None:
-    """Return ``raw`` for the sign branch it belongs to and omit the other.
-
-    Args:
-        entry: Dictionary row being rendered.
-        raw: Value resolved for the row's casilla.
-        declarations: Generation-pinned XML sign-branch declarations.
-
-    Returns:
-        ``raw`` when the row's branch matches its sign, ``None`` when the row is
-        the opposite branch, and ``raw`` unchanged for every other row.
-
-        A value that will not coerce carries no sign to route on, so it is read
-        as zero for the purpose of choosing a branch. This selects a branch
-        rather than validating a value: deciding what an uncoercible amount
-        means is :func:`format_xml_dictionary_value`'s job, and it is the job
-        it does for every other casilla. Without the default, ``coerce_decimal``
-        answers ``None`` and the comparison below raises ``TypeError`` on the
-        export path.
-    """
-    negative_field = declarations.get("xml.sign.negative_field")
-    non_negative_field = declarations.get("xml.sign.non_negative_field")
-    if negative_field is None or non_negative_field is None:
-        raise FilingExportValidationError("registry-selected XML sign declarations are incomplete")
-    negative_branch = entry.field_id == negative_field
-    if not negative_branch and entry.field_id != non_negative_field:
-        return raw
-    amount = coerce_decimal(raw, default=Decimal("0"))
-    return raw if (amount < 0) is negative_branch else None
-
-
 def _xml_dictionary_non_casilla_value(
     entry: XmlDictionaryEntry,
     *,
@@ -1196,146 +995,6 @@ def _xml_dictionary_non_casilla_value(
     """
     del headers
     return dictionary_values.get(entry.field_id)
-
-
-def format_xml_dictionary_value(data_type: str, value: object) -> str:
-    """Render one value in the form the dictionary row's declared type accepts.
-
-    The row's ``data_type`` decides the rendering, not the Python type of the
-    value. Deciding from the value alone cannot distinguish rows that happen to
-    carry the same Python type but are declared differently by AEAT: every
-    boolean rendered as ``"S"``/``"N"`` regardless of whether the row was
-    ``tipo_logico`` (which accepts only ``0``/``1``) or ``tipo_SINO_Exclusivo``
-    (only ``SI``/``NO``), and every numeric row was rendered with two decimals
-    even where the row is an ``xs:integer``.
-
-    Args:
-        data_type: The dictionary row's declared type code.
-        value: The scalar to render.
-
-    Returns:
-        The rendered text for the XML element or attribute.
-    """
-    normalized_type = data_type.upper()
-    if isinstance(value, bool):
-        return _format_xml_dictionary_boolean_value(data_type, normalized_type, value)
-    if isinstance(value, date):
-        return f"{value.day}/{value.month}/{value.year}"
-    numeric = _NUMERIC_DICTIONARY_TYPE.match(normalized_type)
-    if numeric is not None:
-        return _format_xml_dictionary_numeric_value(data_type, value, numeric)
-    if normalized_type == _HOLDER_DICTIONARY_TYPE:
-        holder = str(value).strip().casefold()
-        holder_codes = resolve_form_codes(_HOLDER_CODES_FACT).under("holder")
-        if holder in holder_codes.values():
-            return holder
-        try:
-            return holder_codes[holder]
-        except KeyError as exc:
-            raise FilingExportValidationError(
-                f"holder for a {data_type} row must be one of {', '.join(holder_codes)}, got {value!r}"
-            ) from exc
-    return _format_xml_dictionary_text_value(data_type, normalized_type, value)
-
-
-def _format_xml_dictionary_boolean_value(data_type: str, normalized_type: str, value: bool) -> str:
-    """Render a boolean only for the two dictionary types AEAT declares boolean."""
-    # A boolean renders on exactly the two rows AEAT declares boolean, and is a
-    # type error anywhere else. Stated this way round on purpose: asking what the
-    # row IS keeps the declared type in charge, which is the rule this whole
-    # function exists to enforce, while asking what it is NOT inverts the
-    # dependency and leaves every unlisted row inheriting the last branch by
-    # accident.
-    #
-    # The damage that makes this worth refusing rather than rendering is clearest
-    # on an amount row: ``True`` on a euro-cent row reads as one euro, the XSD
-    # accepts it, nothing on the export path validates anyway, and a taxpayer
-    # files a figure they never stated. Same decision the unreadable-amount
-    # branch below makes, for the same reason -- a wrong number that satisfies
-    # every downstream check is worse than a refusal, because the refusal is the
-    # only place the error is still visible.
-    #
-    # No route delivers a boolean here today: the casilla input door refuses one
-    # for every declared family, and no Modelo 100 revision declares a boolean
-    # casilla on a non-boolean row. This guards a route added later, so it stays
-    # total and cheap rather than trying to interpret the value.
-    if normalized_type not in XML_DICTIONARY_BOOLEAN_TYPES:
-        raise FilingExportValidationError(
-            f"a {data_type} row cannot carry the boolean {value!r}. Only "
-            f"{'/'.join(sorted(XML_DICTIONARY_BOOLEAN_TYPES))} rows are declared boolean by AEAT. "
-            "The value reaching this row has the wrong type; correct it at the source rather "
-            "than rendering it, because a boolean written to an amount row is filed as 1 or 0.",
-        )
-    if normalized_type == SINO_DICTIONARY_TYPE:
-        return "SI" if value else "NO"
-    return "1" if value else "0"
-
-
-def _format_xml_dictionary_numeric_value(data_type: str, value: object, numeric: re.Match[str]) -> str:
-    """Parse and quantize one dictionary numeric value at its declared scale."""
-    scale = int(numeric["scale"])
-    # A text amount is read through the canonical grammar, which refuses on two
-    # independent grounds and they are easy to confuse.
-    #
-    # The CAP is precision: at most ``scale`` fractional digits, never below two.
-    # Capping an integer row at its own scale of zero would refuse ``1.6``,
-    # unambiguous input this renderer has always rounded.
-    #
-    # The AMBIGUITY guard is separate and the row's scale does not relax it.
-    # ``european_thousands_reading_is_ambiguous`` refuses a token that could
-    # equally be read as a Spanish thousands group -- a lead of one to three
-    # digits with no leading zero, then exactly three fractional digits. The
-    # scale disambiguates the FIELD, never the STRING: an operator writing one
-    # thousand types the same characters whatever the row declares, so ``1.000``
-    # refuses on a three-decimal row exactly as it does on a euro-cent one. Tokens
-    # carrying their own evidence still parse at any scale -- ``0.239`` (a lead
-    # of zero was never grouped) and ``1234.239`` (a four-digit lead would itself
-    # have been grouped).
-    #
-    # A value that already arrives typed carries no such ambiguity and skips the
-    # text grammar entirely.
-    amount = (
-        try_parse_canonical_decimal(value, max_fraction_digits=max(scale, 2))
-        if isinstance(value, str)
-        else coerce_decimal(value)
-    )
-    if amount is None:
-        raise FilingExportValidationError(
-            f"amount for a {data_type} row could not be read: {value!r}. "
-            f"The accepted form is a dot decimal separator with at most {scale} "
-            "fractional digit(s) and no thousands grouping, e.g. 1234.56. A value "
-            "is also refused when its shape cannot be told from a Spanish thousands "
-            "group -- a lead of one to three digits with no leading zero, then "
-            "exactly three more, as in 1.000 or 100.000 -- because that text reads "
-            "as both one and one thousand and no parser can choose. This row's "
-            "declared scale does not settle it: the scale says what the field can "
-            "hold, not which reading was meant. Write the amount unambiguously "
-            "(1000 or 1.0) at the source.",
-        )
-    return f"{amount.quantize(Decimal(1).scaleb(-scale), rounding=ROUND_HALF_UP)}"
-
-
-def _format_xml_dictionary_text_value(data_type: str, normalized_type: str, value: object) -> str:
-    """Pass through text values, validating the XML dictionary date shape."""
-    text = str(value).strip()
-    if normalized_type == _DATE_DICTIONARY_TYPE and not _DATE_DICTIONARY_TEXT.fullmatch(text):
-        # A date row reached by text rather than by a ``date``. The typed value
-        # is rendered above and never arrives here, so this is the case where
-        # something upstream held a date as a string -- and an ISO one renders
-        # verbatim, which AEAT's own ``tipo_Fecha`` pattern rejects.
-        #
-        # Checked rather than parsed, deliberately. Reading ``03/04/2024`` would
-        # mean choosing between day-month and month-day, and this renderer has no
-        # basis for that choice; the numeric branch above refuses an ambiguous
-        # amount for the same reason. Text already in AEAT's form passes through
-        # untouched, so the check costs a correct caller nothing.
-        raise FilingExportValidationError(
-            f"date for a {data_type} row is not in the form AEAT accepts: {value!r}. "
-            "The accepted form is d/m/yyyy with a four-digit year, e.g. 2/1/1980. "
-            "Supply the value as a date rather than as text and it is rendered "
-            "correctly without this check.",
-        )
-    return text
 
 
 def _set_xml_dictionary_path(

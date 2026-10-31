@@ -17,7 +17,8 @@ from ....domain.calculations.registry.tests.published_authority import (
     published_revision_definitions,
     published_source_reference,
 )
-from .._export_xml_dictionary import _set_xml_dictionary_path, format_xml_dictionary_value
+from .._export_xml_dictionary import _set_xml_dictionary_path
+from .._export_xml_dictionary_values import format_xml_dictionary_value
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 

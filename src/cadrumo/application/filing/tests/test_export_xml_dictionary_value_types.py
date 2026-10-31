@@ -33,7 +33,7 @@ from defusedxml import ElementTree as DefusedElementTree
 
 from ....core.resources.bundled_data import bundled_path
 from ....domain.filing.errors import FilingExportValidationError
-from .._export_xml_dictionary import format_xml_dictionary_value
+from .._export_xml_dictionary_values import format_xml_dictionary_value
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
