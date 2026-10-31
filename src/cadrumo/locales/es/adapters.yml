@@ -8,8 +8,8 @@ adapters:
   auth:
     authenticator:
       errors:
-        already_active: AeatAuthenticator ya tiene una sesión activa; llama a close()
-          o reauthenticate() antes de autenticar de nuevo.
+        already_active: AeatAuthenticator ya tiene una sesión activa; llama a AeatAuthenticator.close()
+          antes de autenticar de nuevo.
         assertion_failed: La autenticación AEAT no produjo una aserción de inicio
           de sesión válida.
         capture_requires_active_session: Guardar la sesión del navegador requiere
@@ -17,7 +17,7 @@ adapters:
         capture_requires_certificate: Guardar la sesión del navegador requiere una
           sesión activa con certificado y metadatos del recurso protegido.
         metadata_parse_failed: Los metadatos persistidos no produjeron un modelo analizado.
-        no_active_context: No hay contexto de navegador activo; llama a authenticate()
+        no_active_context: No hay contexto de navegador activo; llama a AeatAuthenticator.authenticate()
           primero.
         no_context_capture_storage: No hay contexto de navegador activo; no se puede
           capturar el estado de almacenamiento.
@@ -28,8 +28,8 @@ adapters:
         session_stale: La sesión AEAT ha caducado; el plazo de inactividad ha expirado.
     clave_movil:
       errors:
-        already_active: Cl@ve Móvil ya tiene una sesión activa; llama a close() antes
-          de autenticarte de nuevo.
+        already_active: Cl@ve Móvil ya tiene una sesión activa; llama a ClaveMovilAuthProvider.close()
+          antes de autenticarte de nuevo.
         approval_timeout: La autenticación por navegador Cl@ve Móvil no se completó
           en el tiempo configurado.
         desktop_unavailable: 'No hay un escritorio interactivo disponible. No se ha
@@ -45,8 +45,8 @@ adapters:
         session_expired: La sesión de Cl@ve Móvil ha superado su plazo de inactividad.
         storage_state_hash_mismatch: El hash del estado de almacenamiento de Cl@ve
           Móvil no coincide; los datos de sesión pueden estar corruptos.
-        verify_requires_active_context: Cl@ve Móvil verify() requiere un contexto
-          de navegador activo; llama primero a authenticate().
+        verify_requires_active_context: Cl@ve Móvil ClaveMovilAuthProvider.verify()
+          requiere un contexto de navegador activo; llama primero a ClaveMovilAuthProvider.authenticate().
   browser:
     errors:
       not_available: El navegador no está instalado, así que esto no se puede ejecutar.

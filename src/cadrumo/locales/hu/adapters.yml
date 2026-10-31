@@ -8,8 +8,7 @@ adapters:
     authenticator:
       errors:
         already_active: Az AeatAuthenticator már rendelkezik aktív munkamenettel;
-          hívja meg a close() vagy reauthenticate() metódust az újabb hitelesítés
-          előtt.
+          újabb hitelesítés előtt hívd meg az AeatAuthenticator.close() metódust.
         assertion_failed: Az AEAT hitelesítés nem hozott létre érvényes bejelentkezési
           állítást.
         capture_requires_active_session: A böngésző-munkamenet mentéséhez az aktuálisan
@@ -17,7 +16,7 @@ adapters:
         capture_requires_certificate: A böngésző-munkamenet mentéséhez aktív tanúsítványalapú
           munkamenet és védett erőforrás-metaadatok szükségesek.
         metadata_parse_failed: A mentett metaadatok nem eredményeztek elemzett modellt.
-        no_active_context: Nincs aktív böngészőkontextus; először hívja meg az authenticate()
+        no_active_context: Nincs aktív böngészőkontextus; először hívd meg az AeatAuthenticator.authenticate()
           metódust.
         no_context_capture_storage: Nincs aktív böngészőkontextus; nem lehet rögzíteni
           a tárolási állapotot.
@@ -29,7 +28,7 @@ adapters:
     clave_movil:
       errors:
         already_active: A Cl@ve Móvil már aktív munkamenettel rendelkezik; hitelesítés
-          előtt hívja meg a close() metódust.
+          előtt hívd meg a ClaveMovilAuthProvider.close() metódust.
         approval_timeout: A Cl@ve Móvil böngészős hitelesítés nem fejeződött be a
           beállított időkorláton belül.
         desktop_unavailable: 'Nem érhető el interaktív asztal. A QR-kódos böngésző
@@ -45,8 +44,8 @@ adapters:
         session_expired: A Cl@ve Móvil munkamenet túllépte a tétlenségi határidőt.
         storage_state_hash_mismatch: A Cl@ve Móvil tárolási állapot hash nem egyezik;
           a munkamenet adatai sérülhetnek.
-        verify_requires_active_context: A Cl@ve Móvil verify() aktív böngészőkontextust
-          igényel; először hívja meg az authenticate() metódust.
+        verify_requires_active_context: A ClaveMovilAuthProvider.verify() aktív böngészőkontextust
+          igényel; először hívd meg a ClaveMovilAuthProvider.authenticate() metódust.
   browser:
     errors:
       not_available: A böngésző nincs telepítve, ezért ez nem futtatható.

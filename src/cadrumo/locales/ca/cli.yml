@@ -892,7 +892,7 @@ cli:
           coneguts per a {code}@{revision} ({period}): {suggestion}.'
         unscoped_revision_warning: La llista d'orígens no està acotada per %{missing_filters};
           pot incloure ids d'orígens d'una versió del model oficial que no coincideix
-          amb la declaració usada per work calculate.
+          amb la declaració emprada per aeat app modelo work calculate.
         year_help: Exercici fiscal del model (p. ex. 2026)
       casilla:
         casilla_help: Id de casella o número imprès de casella que cal descriure (p.
@@ -1237,8 +1237,9 @@ cli:
       readiness_help: Informa de si el perfil actiu està a punt per presentar un model
         / exercici / període.
       reconcile:
-        app_help: 'Compara un càlcul local desat amb evidència de l''AEAT: pull descarrega
-          un justificant o una declaració presentada; import compara un PDF local;
+        app_help: 'Compara un càlcul local desat amb evidència de l''AEAT: aeat app
+          modelo reconcile pull descarrega un justificant o una declaració presentada;
+          aeat app modelo reconcile import compara un PDF local; aeat app modelo reconcile
           list mostra les comparacions anteriors.'
         calculation_revision_help: ID de revisió de càlcul desada que es compararà.
           Per defecte, presentada o verificada, després la darrera desada.
@@ -1996,7 +1997,8 @@ cli:
     auth:
       apoderado:
         check_help: Verificar contra l'AEAT (no disponible; les lectures en viu estan
-          segellades). Fes servir 'status' per a la lectura sense connexió.
+          segellades). Fes servir 'cadrumo-runtime config auth apoderado status' per
+          a la lectura sense connexió.
         clear_help: Retirar la configuració d'apoderat
         configure:
           no_console_hint: 'La configuració interactiva de l''apoderament requereix
@@ -2392,7 +2394,8 @@ cli:
             el fitxer existent; no s'ha llegit cap perfil.
       automation:
         approve:
-          digest_help: Empremta exacta de revisió mostrada per inspect.
+          digest_help: Empremta exacta de revisió mostrada per cadrumo-runtime config
+            profile automation inspect.
           help: Aprovar la sol·licitud exacta revisada tornant a introduir la contrasenya
             del perfil.
           request_help: UUID de la sol·licitud revisada.
@@ -2405,7 +2408,8 @@ cli:
             --secrets-stdin o --secrets-fd. La clau arriba a l'emmagatzematge protegit
             després de la teva aprovació per separat.
         decline:
-          digest_help: Empremta exacta de revisió mostrada per inspect.
+          digest_help: Empremta exacta de revisió mostrada per cadrumo-runtime config
+            profile automation inspect.
           help: Rebutjar la sol·licitud exacta revisada.
           request_help: UUID de la sol·licitud revisada.
         deny:
@@ -2499,7 +2503,7 @@ cli:
         incomplete: 'Falten dades obligatòries al perfil: {paths}'
       create_confirm_passphrase_prompt: 'Confirma la contrasenya del nou perfil: '
       create_guidance_unavailable: El perfil s'ha creat correctament, però no s'han
-        pogut preparar els avisos amb els passos següents. Consulta 'config profile
+        pogut preparar els avisos amb els passos següents. Consulta 'aeat config profile
         status' per veure què falta.
       create_help: Crea un perfil protegit per una contrasenya. En un terminal ofereix
         després un codi de recuperació opcional; pots ometre'l o afegir-lo més tard
@@ -2675,8 +2679,8 @@ cli:
       row:
         invalid_row: '''%{row}'' no és una clau de fila vàlida; fes servir un enter
           no negatiu o base.'
-        row_help: Clau estable de la fila mostrada per profile view; fes servir base
-          per a la fila sense índex.
+        row_help: Clau estable de la fila mostrada per aeat config profile view; fes
+          servir base per a la fila sense índex.
         section_help: Clau de la secció repetible del perfil.
       sandbox:
         active_indicator_info: Estàs operant dins del sandbox %{label}, no en un perfil
@@ -3140,7 +3144,7 @@ cli:
         afectada no és fiable.'
       period_help: 'Període de declaració opcional com a codi de període AEAT: 1T-4T
         (trimestres), 0A (anual), 01-12 (mesos). Combina''l amb --year per coincidir
-        amb ledger status.'
+        amb aeat app ledger status.'
       year_help: Any de declaració per a --period (p. ex. 2024).
     classify:
       apply_help: 'Desa el suggeriment de l''LLM amb origen llm: en lloc de només
@@ -3242,8 +3246,8 @@ cli:
       reason_empty: Rebutjat. --reason ha de registrar per què classifiques aquesta
         transacció. Indica un motiu no buit, o omet --reason.
       reason_help: Motiu en text lliure que es registra com a notes del moviment i
-        com a motiu de la decisió de classificació (visible a ledger view), o amb
-        una decisió --reject.
+        com a motiu de la decisió de classificació (visible a aeat app ledger view),
+        o amb una decisió --reject.
       reject_apply_exclusive: '--reject no es pot combinar amb --apply: reject registra
         un suggeriment rebutjat, apply un d''acceptat.'
       reject_help: Registra un rebuig explícit del suggeriment del model com a esdeveniment

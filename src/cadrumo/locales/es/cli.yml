@@ -906,7 +906,7 @@ cli:
           conocidos para {code}@{revision} ({period}): {suggestion}.'
         unscoped_revision_warning: La lista de orígenes no está acotada por %{missing_filters};
           puede incluir ids de orígenes de una versión del modelo oficial que no coincide
-          con la declaración usada por work calculate.
+          con la declaración usada por aeat app modelo work calculate.
         year_help: Ejercicio fiscal del modelo (p. ej. 2026)
       casilla:
         casilla_help: Id de casilla o número impreso de casilla que se debe describir
@@ -1255,9 +1255,10 @@ cli:
       readiness_help: Informa de si el perfil activo está listo para presentar un
         modelo / ejercicio / periodo.
       reconcile:
-        app_help: 'Compara un cálculo local guardado con evidencia de la AEAT: pull
-          descarga un justificante o una declaración presentada; import compara un
-          PDF local; list muestra las comparaciones anteriores.'
+        app_help: 'Compara un cálculo local guardado con evidencia de la AEAT: aeat
+          app modelo reconcile pull descarga un justificante o una declaración presentada;
+          aeat app modelo reconcile import compara un PDF local; aeat app modelo reconcile
+          list muestra las comparaciones anteriores.'
         calculation_revision_help: ID de revisión de cálculo guardada que se comparará.
           Por defecto, presentada o verificada, después la última guardada.
         export_all_help: Exportar explícitamente todo el historial de conciliación
@@ -2017,7 +2018,8 @@ cli:
     auth:
       apoderado:
         check_help: Verificar contra la AEAT (no disponible; las lecturas en vivo
-          están selladas). Usa 'status' para la lectura sin conexión.
+          están selladas). Usa 'cadrumo-runtime config auth apoderado status' para
+          la lectura sin conexión.
         clear_help: Retirar la configuración de apoderado
         configure:
           no_console_hint: 'La configuración interactiva del apoderamiento requiere
@@ -2415,7 +2417,8 @@ cli:
             el archivo existente; no se ha leído ningún perfil.
       automation:
         approve:
-          digest_help: Huella exacta de revisión mostrada por inspect.
+          digest_help: Huella exacta de revisión mostrada por cadrumo-runtime config
+            profile automation inspect.
           help: Aprobar la solicitud exacta revisada introduciendo de nuevo la contraseña
             del perfil.
           request_help: UUID de la solicitud revisada.
@@ -2428,7 +2431,8 @@ cli:
             mediante --secrets-stdin o --secrets-fd. La clave llega al almacenamiento
             protegido tras tu aprobación por separado.
         decline:
-          digest_help: Huella exacta de revisión mostrada por inspect.
+          digest_help: Huella exacta de revisión mostrada por cadrumo-runtime config
+            profile automation inspect.
           help: Rechazar la solicitud exacta revisada.
           request_help: UUID de la solicitud revisada.
         deny:
@@ -2523,7 +2527,7 @@ cli:
         incomplete: 'Faltan datos obligatorios en el perfil: {paths}'
       create_confirm_passphrase_prompt: 'Confirma la contraseña del nuevo perfil: '
       create_guidance_unavailable: El perfil se ha creado correctamente, pero no se
-        han podido preparar los avisos con los pasos siguientes. Consulta 'config
+        han podido preparar los avisos con los pasos siguientes. Consulta 'aeat config
         profile status' para ver qué falta.
       create_help: Crea un perfil protegido por una contraseña. En un terminal ofrece
         después un código de recuperación opcional; puedes omitirlo o añadirlo más
@@ -2703,8 +2707,8 @@ cli:
       row:
         invalid_row: '''%{row}'' no es una clave de fila válida; usa un entero no
           negativo o base.'
-        row_help: Clave estable de la fila mostrada por profile view; usa base para
-          la fila sin índice.
+        row_help: Clave estable de la fila mostrada por aeat config profile view;
+          usa base para la fila sin índice.
         section_help: Clave de la sección repetible del perfil.
       sandbox:
         active_indicator_info: Estás operando dentro del sandbox %{label}, no en un
@@ -3171,7 +3175,7 @@ cli:
         afectada no es fiable.'
       period_help: 'Periodo de declaración opcional como código de periodo AEAT: 1T-4T
         (trimestres), 0A (anual), 01-12 (meses). Combínalo con --year para coincidir
-        con ledger status.'
+        con aeat app ledger status.'
       year_help: Año de declaración para --period (p. ej. 2024).
     classify:
       apply_help: 'Guarda la sugerencia del LLM con origen llm: en lugar de solo previsualizarla.'
@@ -3271,8 +3275,8 @@ cli:
       reason_empty: Rechazado. --reason debe registrar por qué clasificas esta transacción.
         Indica un motivo no vacío, u omite --reason.
       reason_help: Motivo en texto libre que se registra como notas del movimiento
-        y como motivo de la decisión de clasificación (visible en ledger view), o
-        con una decisión --reject.
+        y como motivo de la decisión de clasificación (visible en aeat app ledger
+        view), o con una decisión --reject.
       reject_apply_exclusive: '--reject no se puede combinar con --apply: reject registra
         una sugerencia rechazada, apply una aceptada.'
       reject_help: Registra un rechazo explícito de la sugerencia del modelo como

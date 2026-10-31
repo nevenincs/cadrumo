@@ -833,7 +833,7 @@ cli:
           ({period}): {suggestion}.'
         unscoped_revision_warning: The list of box sources is not scoped by %{missing_filters};
           it may include source ids from a version of the official form that does
-          not match the declaration used by work calculate.
+          not match the declaration used by aeat app modelo work calculate.
         year_help: Tax year of the modelo (e.g. 2026)
       casilla:
         casilla_help: Casilla id or printed casilla number to describe (e.g. 0596).
@@ -1159,9 +1159,10 @@ cli:
       readiness_help: Report whether the active profile is ready to file one modelo
         / year / period.
       reconcile:
-        app_help: 'Compare a saved local calculation with AEAT evidence: pull downloads
-          a receipt or filed declaration; import compares a local PDF; list shows
-          past comparisons.'
+        app_help: 'Compare a saved local calculation with AEAT evidence: aeat app
+          modelo reconcile pull downloads a receipt or filed declaration; aeat app
+          modelo reconcile import compares a local PDF; aeat app modelo reconcile
+          list shows past comparisons.'
         calculation_revision_help: Saved calculation revision ID to compare. Defaults
           to the filed or verified revision, then the latest saved revision.
         export_all_help: Export the complete saved reconciliation history explicitly.
@@ -1884,7 +1885,7 @@ cli:
     auth:
       apoderado:
         check_help: Verify against AEAT (unavailable; live reads are sealed). Use
-          'status' for the offline read.
+          'cadrumo-runtime config auth apoderado status' for the offline read.
         clear_help: Retire the apoderado configuration
         configure:
           no_console_hint: 'Interactive apoderado configuration needs a console. Configure
@@ -2235,7 +2236,8 @@ cli:
             file first; no profile was read.
       automation:
         approve:
-          digest_help: Exact review digest shown by inspect.
+          digest_help: Exact review digest shown by cadrumo-runtime config profile
+            automation inspect.
           help: Approve the exact reviewed request using a fresh profile password.
           request_help: Reviewed request UUID.
         change:
@@ -2246,7 +2248,8 @@ cli:
             or --secrets-fd. The key reaches protected storage after your separate
             approval.
         decline:
-          digest_help: Exact review digest shown by inspect.
+          digest_help: Exact review digest shown by cadrumo-runtime config profile
+            automation inspect.
           help: Decline the exact reviewed request.
           request_help: Reviewed request UUID.
         deny:
@@ -2336,7 +2339,8 @@ cli:
         incomplete: 'The profile is still missing required data: {paths}'
       create_confirm_passphrase_prompt: 'Confirm new profile passphrase: '
       create_guidance_unavailable: The profile was created successfully, but the next-step
-        notices could not be prepared. Check 'config profile status' to see what remains.
+        notices could not be prepared. Check 'aeat config profile status' to see what
+        remains.
       create_help: Create a profile protected by a passphrase. At a terminal it then
         offers an optional recovery code; skip it, or add it later with 'cadrumo-runtime
         config profile recovery enable'.
@@ -2502,8 +2506,8 @@ cli:
       row:
         invalid_row: '''%{row}'' is not a valid row key; use a non-negative integer
           or base.'
-        row_help: Stable row key shown by profile view; use base for the unindexed
-          row.
+        row_help: Stable row key shown by aeat config profile view; use base for the
+          unindexed row.
         section_help: Repeatable profile section key.
       sandbox:
         active_indicator_info: You are operating inside the sandbox %{label}, not
@@ -2927,7 +2931,8 @@ cli:
         invoice and transaction catalogues; the affected invoice association cannot
         be trusted.'
       period_help: 'Optional filing period as an AEAT period code: 1T-4T (quarters),
-        0A (annual), 01-12 (months). Combine with --year to match ledger status.'
+        0A (annual), 01-12 (months). Combine with --year to match aeat app ledger
+        status.'
       year_help: Filing year for --period (e.g. 2024).
     classify:
       apply_help: 'Save the LLM suggestion with source llm: instead of only previewing
@@ -3023,8 +3028,8 @@ cli:
       reason_empty: Refused. --reason must record why you are classifying this transaction.
         Pass a non-empty rationale, or omit --reason.
       reason_help: Free-text reason recorded as the transaction notes and as the reason
-        behind the classification decision (visible on ledger view), or with a --reject
-        decision.
+        behind the classification decision (visible on aeat app ledger view), or with
+        a --reject decision.
       reject_apply_exclusive: '--reject cannot be combined with --apply: reject records
         a declined suggestion, apply records an accepted one.'
       reject_help: Record an explicit rejection of the LLM suggestion as an audit
