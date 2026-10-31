@@ -195,6 +195,23 @@ def test_an_idle_subscription_waits_once_and_an_exchange_claims_the_connection_a
         connection.close()
 
 
+def _handshake(pool: ThreadPoolExecutor, server: WindowsChannel, client: WindowsChannel) -> VerifiedConnection:
+    """Complete the hello exchange: the client opens on ``pool`` while the server side answers here."""
+    connecting = pool.submit(
+        VerifiedConnection,
+        client,
+        expected=ClientHello(product_version="test", storage_identity=_IDENTITY),
+        deadline=time.monotonic() + 5,
+    )
+    read_frame_payload(server, kind=DOCUMENT_FRAME_KIND, deadline=time.monotonic() + 5)
+    write_document(
+        server,
+        ServerHello(product_version="test", storage_identity=_IDENTITY, boot_id=uuid4()),
+        deadline=time.monotonic() + 5,
+    )
+    return connecting.result(timeout=5)
+
+
 @pytest.mark.parametrize("closure", ["local", "peer", "exchange"])
 @pytest.mark.parametrize("broken_subscriber", [False, True])
 def test_every_connection_close_wakes_subscribers_once(
@@ -202,19 +219,7 @@ def test_every_connection_close_wakes_subscribers_once(
 ) -> None:
     server, client = pair
     with ThreadPoolExecutor(max_workers=1) as pool:
-        connecting = pool.submit(
-            VerifiedConnection,
-            client,
-            expected=ClientHello(product_version="test", storage_identity=_IDENTITY),
-            deadline=time.monotonic() + 5,
-        )
-        read_frame_payload(server, kind=DOCUMENT_FRAME_KIND, deadline=time.monotonic() + 5)
-        write_document(
-            server,
-            ServerHello(product_version="test", storage_identity=_IDENTITY, boot_id=uuid4()),
-            deadline=time.monotonic() + 5,
-        )
-        connection = connecting.result(timeout=5)
+        connection = _handshake(pool, server, client)
     disconnected = Event()
     calls: list[None] = []
 
@@ -296,19 +301,7 @@ def test_disconnect_is_delivered_once_when_an_exchange_owns_the_reader(
 ) -> None:
     server, client = pair
     with ThreadPoolExecutor(max_workers=1) as pool:
-        connecting = pool.submit(
-            VerifiedConnection,
-            client,
-            expected=ClientHello(product_version="test", storage_identity=_IDENTITY),
-            deadline=time.monotonic() + 5,
-        )
-        read_frame_payload(server, kind=DOCUMENT_FRAME_KIND, deadline=time.monotonic() + 5)
-        write_document(
-            server,
-            ServerHello(product_version="test", storage_identity=_IDENTITY, boot_id=uuid4()),
-            deadline=time.monotonic() + 5,
-        )
-        connection = connecting.result(timeout=5)
+        connection = _handshake(pool, server, client)
     disconnected: list[None] = []
     try:
         # Holding the exchange prevents the idle reader from being the one
@@ -377,19 +370,7 @@ def test_connection_close_cancels_a_held_native_reply_without_claiming_its_excha
     server, client = pair
     pool = ThreadPoolExecutor(max_workers=2)
     try:
-        connecting = pool.submit(
-            VerifiedConnection,
-            client,
-            expected=ClientHello(product_version="test", storage_identity=_IDENTITY),
-            deadline=time.monotonic() + 5,
-        )
-        read_frame_payload(server, kind=DOCUMENT_FRAME_KIND, deadline=time.monotonic() + 5)
-        write_document(
-            server,
-            ServerHello(product_version="test", storage_identity=_IDENTITY, boot_id=uuid4()),
-            deadline=time.monotonic() + 5,
-        )
-        connection = connecting.result(timeout=5)
+        connection = _handshake(pool, server, client)
         pending = pool.submit(
             connection.session,
             SessionRequest(action="session_status", request_id=uuid4(), profile_id=uuid4(), session_id=uuid4()),
