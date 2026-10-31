@@ -157,6 +157,35 @@ def _income_transaction(
     )
 
 
+def _seed_prior_year_m100_net_income(objects: SecureObjectRepository) -> None:
+    """Store a real prior-year M100 net-income observation (upstream minoración substrate)."""
+    observation = RegistryModeloObservation(
+        modelo="100",
+        filing_year=_M130_PRIOR_YEAR,
+        period="0A",
+        observations=registry_grounded_observations(
+            modelo="100",
+            filing_year=_M130_PRIOR_YEAR,
+            period="0A",
+            casilla_values={
+                _M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: _M130_PRIOR_YEAR_NET_INCOME,
+                _M100_RENDIMIENTO_SOURCE_1479_CASILLA: Decimal("0"),
+                _M100_RENDIMIENTO_SOURCE_1553_CASILLA: Decimal("0"),
+                _M100_RENDIMIENTO_SOURCE_1577_CASILLA: Decimal("0"),
+            },
+        ),
+    )
+    obs_repo = CalculationObservationRepository(objects=objects)
+    obs_repo.save(
+        obs_repo.prepare_observation_envelope(
+            observation,
+            source_kind=APP_FILING_SOURCE_KIND,
+            captured_at=_T0,
+            stamped_revision_id=revision_id_for_observation(observation),
+        )
+    )
+
+
 def test_m130_casilla_01_folds_seeded_ledger_income_on_live_calculate(
     m130_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
@@ -180,48 +209,7 @@ def test_m130_casilla_01_folds_seeded_ledger_income_on_live_calculate(
     )
     tx_repo.save(TransactionCatalogue.from_transactions(transactions))
 
-    # Real prior-year M100 net-income observation (upstream minoración substrate).
-    obs_repo = CalculationObservationRepository(objects=m130_objects)
-    obs_repo.save(
-        obs_repo.prepare_observation_envelope(
-            RegistryModeloObservation(
-                modelo="100",
-                filing_year=_M130_PRIOR_YEAR,
-                period="0A",
-                observations=registry_grounded_observations(
-                    modelo="100",
-                    filing_year=_M130_PRIOR_YEAR,
-                    period="0A",
-                    casilla_values={
-                        _M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: _M130_PRIOR_YEAR_NET_INCOME,
-                        _M100_RENDIMIENTO_SOURCE_1479_CASILLA: Decimal("0"),
-                        _M100_RENDIMIENTO_SOURCE_1553_CASILLA: Decimal("0"),
-                        _M100_RENDIMIENTO_SOURCE_1577_CASILLA: Decimal("0"),
-                    },
-                ),
-            ),
-            source_kind=APP_FILING_SOURCE_KIND,
-            captured_at=_T0,
-            stamped_revision_id=revision_id_for_observation(
-                RegistryModeloObservation(
-                    modelo="100",
-                    filing_year=_M130_PRIOR_YEAR,
-                    period="0A",
-                    observations=registry_grounded_observations(
-                        modelo="100",
-                        filing_year=_M130_PRIOR_YEAR,
-                        period="0A",
-                        casilla_values={
-                            _M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: _M130_PRIOR_YEAR_NET_INCOME,
-                            _M100_RENDIMIENTO_SOURCE_1479_CASILLA: Decimal("0"),
-                            _M100_RENDIMIENTO_SOURCE_1553_CASILLA: Decimal("0"),
-                            _M100_RENDIMIENTO_SOURCE_1577_CASILLA: Decimal("0"),
-                        },
-                    ),
-                )
-            ),
-        )
-    )
+    _seed_prior_year_m100_net_income(m130_objects)
 
     # Non-vacuity: casilla 01 binds the income aggregation source under test, and
     # the seeds are distinct (so a copy/contamination cannot satisfy the sum).
@@ -304,47 +292,7 @@ def test_m130_casilla_06_withholds_a_reconstructed_retencion_and_reports_it_on_l
     )
     tx_repo.save(TransactionCatalogue.from_transactions((tx,)))
 
-    obs_repo = CalculationObservationRepository(objects=m130_objects)
-    obs_repo.save(
-        obs_repo.prepare_observation_envelope(
-            RegistryModeloObservation(
-                modelo="100",
-                filing_year=_M130_PRIOR_YEAR,
-                period="0A",
-                observations=registry_grounded_observations(
-                    modelo="100",
-                    filing_year=_M130_PRIOR_YEAR,
-                    period="0A",
-                    casilla_values={
-                        _M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: _M130_PRIOR_YEAR_NET_INCOME,
-                        _M100_RENDIMIENTO_SOURCE_1479_CASILLA: Decimal("0"),
-                        _M100_RENDIMIENTO_SOURCE_1553_CASILLA: Decimal("0"),
-                        _M100_RENDIMIENTO_SOURCE_1577_CASILLA: Decimal("0"),
-                    },
-                ),
-            ),
-            source_kind=APP_FILING_SOURCE_KIND,
-            captured_at=_T0,
-            stamped_revision_id=revision_id_for_observation(
-                RegistryModeloObservation(
-                    modelo="100",
-                    filing_year=_M130_PRIOR_YEAR,
-                    period="0A",
-                    observations=registry_grounded_observations(
-                        modelo="100",
-                        filing_year=_M130_PRIOR_YEAR,
-                        period="0A",
-                        casilla_values={
-                            _M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: _M130_PRIOR_YEAR_NET_INCOME,
-                            _M100_RENDIMIENTO_SOURCE_1479_CASILLA: Decimal("0"),
-                            _M100_RENDIMIENTO_SOURCE_1553_CASILLA: Decimal("0"),
-                            _M100_RENDIMIENTO_SOURCE_1577_CASILLA: Decimal("0"),
-                        },
-                    ),
-                )
-            ),
-        )
-    )
+    _seed_prior_year_m100_net_income(m130_objects)
 
     revision = _revision("130", _M130_REVISION)
     assert any(

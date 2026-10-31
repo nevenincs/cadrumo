@@ -128,38 +128,42 @@ def _seed_revision(
     return revision
 
 
+def _seed_complete_profile(profile_id: str) -> None:
+    seed_test_profile_record(
+        _create_profile_record_for_test(
+            setup_state=ProfileSetupState.COMPLETE,
+            profile_id=profile_id,
+            facts=(
+                UserProfileFact(path="identity.tax_id", value="12345678Z"),
+                UserProfileFact(path="identity.name", value="Test"),
+                UserProfileFact(path="identity.surnames", value="Operator"),
+                UserProfileFact(path="activities.description", value="economic activity"),
+                UserProfileFact(path="tax_residence.ccaa", value="madrid"),
+                UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+                UserProfileFact(path="iva.regime", value="GENERAL"),
+                UserProfileFact(path="iva.m303_regime_composition", value="general"),
+                UserProfileFact(path="iva.redeme_enrolled", value=False),
+                UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
+                UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
+                UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
+                UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+                UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
+                UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
+                UserProfileFact(path="censo.activity_start_date", value="2020-01-01"),
+            ),
+            created_at=_T0,
+            updated_at=_T0,
+            context=_profile_creation_context_for_test(),
+        ),
+    )
+
+
 def test_compare_uses_revision_observation_rowsfrom_registry_snapshot(
     tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
     """Comparison rows must not lose registry-grounded provenance."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        seed_test_profile_record(
-            _create_profile_record_for_test(
-                setup_state=ProfileSetupState.COMPLETE,
-                profile_id=profile.bucket_id,
-                facts=(
-                    UserProfileFact(path="identity.tax_id", value="12345678Z"),
-                    UserProfileFact(path="identity.name", value="Test"),
-                    UserProfileFact(path="identity.surnames", value="Operator"),
-                    UserProfileFact(path="activities.description", value="economic activity"),
-                    UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-                    UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-                    UserProfileFact(path="iva.regime", value="GENERAL"),
-                    UserProfileFact(path="iva.m303_regime_composition", value="general"),
-                    UserProfileFact(path="iva.redeme_enrolled", value=False),
-                    UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-                    UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-                    UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-                    UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-                    UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-                    UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
-                    UserProfileFact(path="censo.activity_start_date", value="2020-01-01"),
-                ),
-                created_at=_T0,
-                updated_at=_T0,
-                context=_profile_creation_context_for_test(),
-            ),
-        )
+        _seed_complete_profile(profile.bucket_id)
         work_repository = WorkUnitCatalogueRepository(objects=profile.repository)
         calculation_repository = CalculationRevisionCatalogueRepository(objects=profile.repository)
         work_2025 = _seed_work_unit(
@@ -235,33 +239,7 @@ def test_compare_reports_a_one_cent_delta_exactly_with_no_tolerance_absorption(
     )
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        seed_test_profile_record(
-            _create_profile_record_for_test(
-                setup_state=ProfileSetupState.COMPLETE,
-                profile_id=profile.bucket_id,
-                facts=(
-                    UserProfileFact(path="identity.tax_id", value="12345678Z"),
-                    UserProfileFact(path="identity.name", value="Test"),
-                    UserProfileFact(path="identity.surnames", value="Operator"),
-                    UserProfileFact(path="activities.description", value="economic activity"),
-                    UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-                    UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-                    UserProfileFact(path="iva.regime", value="GENERAL"),
-                    UserProfileFact(path="iva.m303_regime_composition", value="general"),
-                    UserProfileFact(path="iva.redeme_enrolled", value=False),
-                    UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-                    UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-                    UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-                    UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-                    UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-                    UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
-                    UserProfileFact(path="censo.activity_start_date", value="2020-01-01"),
-                ),
-                created_at=_T0,
-                updated_at=_T0,
-                context=_profile_creation_context_for_test(),
-            ),
-        )
+        _seed_complete_profile(profile.bucket_id)
         work_repository = WorkUnitCatalogueRepository(objects=profile.repository)
         calculation_repository = CalculationRevisionCatalogueRepository(objects=profile.repository)
         work_2025 = _seed_work_unit(
