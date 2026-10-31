@@ -53,6 +53,7 @@ non-income-tax obligations.
 The rule a revision declares in the registry is the single source for modelo-level
 applicability. Any question of the form "does this taxpayer ever owe this modelo?" is
 answered through :func:`derive_modelo_applicability`; code does not hold a second copy.
+Each revision's inputs come from :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
 
 **Relation to ``applicability_conditions`` on ``ModeloDeadlineWindow``.**
 ``ModeloDeadlineWindow`` carries a

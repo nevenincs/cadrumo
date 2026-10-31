@@ -39,6 +39,7 @@ import pathspec
 from ._paths import REPO_ROOT, UTF_8
 
 __all__ = [
+    "byte_preserving_paths",
     "content_digest",
     "ignored_paths",
     "member_content_digest",
@@ -238,6 +239,12 @@ def normalised_content(root: Path, relative: str, *, attributes: Sequence[_Scope
     rules = attributes if attributes is not None else _attribute_rules(root, (relative,))
     text, eol = _line_ending_policy(relative, rules)
     return _normalise((root / relative).read_bytes(), text=text, eol=eol)
+
+
+def byte_preserving_paths(root: Path, files: Sequence[str]) -> tuple[str, ...]:
+    """Return paths whose effective repository attributes disable text conversion."""
+    rules = _attribute_rules(root, files)
+    return tuple(relative for relative in files if _line_ending_policy(relative, rules)[0] == "binary")
 
 
 def normalised_contents(root: Path, files: Sequence[str]) -> Iterator[tuple[str, bytes]]:

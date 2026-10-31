@@ -781,7 +781,7 @@ def xml_dictionary_repeated_rows(
 
     Args:
         layout: The ``xml_dictionary`` layout being rendered or verified.
-        draft: The draft holding the row values.
+        draft: The :class:`~cadrumo.domain.filing.schema.ModeloDraft` holding the row values.
         entries: Every dictionary row of the layout.
         schema_provider: Resolves the revision's bindings and the layout's XSD.
 

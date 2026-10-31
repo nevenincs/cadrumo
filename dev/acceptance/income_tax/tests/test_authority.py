@@ -90,6 +90,7 @@ class _Operation:
         return _Snapshot(revision=_Revision(id=f"{modelo}-{filing_year}", export_layouts=(layout,)))
 
 
+@pytest.mark.usefixtures("authority_operation")
 def test_latest_mode_keeps_the_latest_completed_year_when_runtime_aux_identity_replaces_static_layout_token() -> None:
     report = resolve_income_tax_authority(_Operation(), as_of=date(2026, 9, 21))
 
@@ -102,6 +103,7 @@ def test_latest_mode_keeps_the_latest_completed_year_when_runtime_aux_identity_r
     assert (m100_export.admission, m100_export.refusal_code, m100_export.undeclared_fields) == ("admitted", None, ())
 
 
+@pytest.mark.usefixtures("authority_operation")
 def test_runtime_aux_contract_does_not_require_an_obsolete_static_layout_field() -> None:
     operation = _Operation()
     layout = operation.snapshot("100", filing_year=2025, period="0A").revision.export_layouts[0]
@@ -134,6 +136,7 @@ def test_xml_layout_cannot_be_declared_without_the_official_dictionary_source() 
         )
 
 
+@pytest.mark.usefixtures("authority_operation")
 def test_fixed_width_layout_without_records_remains_blocked() -> None:
     report = resolve_income_tax_authority(_Operation(m130_records=False), as_of=date(2026, 9, 21))
 
@@ -145,6 +148,7 @@ def test_fixed_width_layout_without_records_remains_blocked() -> None:
     } == {("blocked", "no_export_records", "application.filing.export.errors.layout_not_renderable")}
 
 
+@pytest.mark.usefixtures("authority_operation")
 def test_explicit_year_keeps_the_completed_year_gap_visible() -> None:
     report = resolve_income_tax_authority(_Operation(), as_of=date(2026, 9, 21), year=2024)
 
@@ -152,6 +156,7 @@ def test_explicit_year_keeps_the_completed_year_gap_visible() -> None:
     assert (report.latest_completed_year, report.support_gap_years) == (2025, 1)
 
 
+@pytest.mark.usefixtures("authority_operation")
 def test_latest_mode_reports_a_missing_newest_coordinate_before_selecting_an_older_one() -> None:
     report = resolve_income_tax_authority(_Operation(missing_years=frozenset({2025})), as_of=date(2026, 9, 21))
 

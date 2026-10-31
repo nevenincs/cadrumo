@@ -63,7 +63,7 @@ def test_iva_regime_coverage_is_derived_from_the_applicability_owner() -> None:
     """No core constant repeats the IVA-regime applicability classification."""
     assert modelo_requires_iva_regime("303") is True
     assert modelo_requires_iva_regime("390") is True
-    assert modelo_requires_iva_regime("unknown") is False
+    assert modelo_requires_iva_regime("999") is False
 
 
 def _write_directory_modelo(root: Path, *, inline_in_manifest: bool = False) -> Path:

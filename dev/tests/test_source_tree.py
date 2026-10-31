@@ -10,7 +10,14 @@ from pathlib import Path
 
 import pytest
 
-from dev.source_tree import content_digest, normalised_content, normalised_contents, repository_files, snapshot
+from dev.source_tree import (
+    byte_preserving_paths,
+    content_digest,
+    normalised_content,
+    normalised_contents,
+    repository_files,
+    snapshot,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -133,6 +140,16 @@ def test_a_path_marked_binary_or_minus_text_keeps_every_byte(tmp_path: Path) -> 
 
     assert normalised_content(tmp_path, "corpus/source.html") == b"<p>\r\n</p>\r\n"
     assert normalised_content(tmp_path, "form.pdf") == b"%PDF\r\n"
+    assert byte_preserving_paths(tmp_path, ("corpus/source.html", "form.pdf")) == ("corpus/source.html", "form.pdf")
+
+
+def test_byte_preservation_reports_nested_text_overrides_even_for_lf_input(tmp_path: Path) -> None:
+    _write(tmp_path, ".gitattributes", "* text=auto eol=lf\ncorpus/** -text\n")
+    _write(tmp_path, "corpus/.gitattributes", "sub/*.html text eol=lf\n")
+    _write(tmp_path, "corpus/safe.html", "already LF\n")
+    _write(tmp_path, "corpus/sub/unprotected.html", "also LF\n")
+
+    assert byte_preserving_paths(tmp_path, ("corpus/safe.html", "corpus/sub/unprotected.html")) == ("corpus/safe.html",)
 
 
 def test_auto_detection_leaves_a_file_with_a_nul_byte_untouched(tmp_path: Path) -> None:

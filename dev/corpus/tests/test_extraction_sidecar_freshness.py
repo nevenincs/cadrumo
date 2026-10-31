@@ -14,6 +14,7 @@ from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.text_fold import normalise_corpus_text
 from cadrumo.domain.calculations.registry.schema_catalogues import SociedadesAnnualManualCoverageStatus
 from dev.registry.compiler.authority import compiled_bundled_authority
+from dev.source_tree import byte_preserving_paths
 
 from ..extract_corpus_sidecars import check_all as check_corpus_sidecars
 from ..extract_manual_corpus_text import extract_raw_text
@@ -116,40 +117,26 @@ def _sociedades_annual_manual_statuses() -> dict[int, SociedadesAnnualManualCove
     return statuses
 
 
-def test_enrolled_corpus_html_trees_use_canonical_lf_bytes() -> None:
-    """Enrolled HTML trees must hash identically on Windows and Unix checkouts.
+def test_enrolled_corpus_html_trees_disable_checkout_text_conversion() -> None:
+    """Every enrolled capture keeps its publisher bytes on every checkout.
 
-    A CR in a hash-pinned corpus file makes its ``sha256`` depend on how the
-    checkout materialised the bytes, so the registry pin stops being a
-    platform-independent integrity claim. That is why this gate exists.
-
-    ``aeat_official/calendars`` is enrolled because a CRLF file did slip into it
-    (``calendario-contribuyente-2026-hasta-2-febrero.html``) while three siblings
-    were LF, leaving one directory with two byte conventions and pins that could
-    not be reproduced by the same command.
-
-    The remaining ``aeat_official`` HTML trees are deliberately NOT enrolled yet:
-    36 files under ``instructions/`` and ``renta_web_open/`` still carry CR, so
-    enrolling them here would land this gate red on material this tree does not
-    own. Add a tree to the tuple in the same change that canonicalises it and
-    re-pins its sources -- never before.
+    Corpus hashes bind the actual source bytes, including original line endings.
+    The repository's attribute owner decides whether each path is byte-preserving;
+    source digests and derivative freshness are independently checked below.
     """
     enrolled = (Path("normatives") / "html", Path("aeat_official") / "calendars")
-    noncanonical: list[str] = []
-    scanned = 0
+    scanned: list[str] = []
 
     for relative_tree in enrolled:
         tree = _CORPUS_ROOT / relative_tree
         assert tree.is_dir(), f"enrolled canonical-LF tree is missing: {relative_tree.as_posix()}"
         sources = scan_directory(tree, pattern="*.html", recursive=True)
         assert sources, f"no HTML sources found under enrolled tree {relative_tree.as_posix()}"
-        scanned += len(sources)
-        noncanonical.extend(
-            source.relative_to(_CORPUS_ROOT).as_posix() for source in sources if b"\r" in source.read_bytes()
-        )
+        scanned.extend(source.relative_to(_REPO_ROOT).as_posix() for source in sources)
 
-    assert scanned, "canonical-LF gate scanned no HTML at all"
-    assert not noncanonical, f"enrolled corpus HTML contains non-LF line endings: {sorted(noncanonical)!r}"
+    assert scanned, "byte-preservation gate scanned no HTML at all"
+    unprotected = sorted(set(scanned) - set(byte_preserving_paths(_REPO_ROOT, scanned)))
+    assert not unprotected, f"enrolled corpus HTML permits text conversion: {unprotected!r}"
 
 
 def test_enrolled_html_and_workbook_sidecars_match_the_owner_check() -> None:

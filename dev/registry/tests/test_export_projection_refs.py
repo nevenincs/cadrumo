@@ -18,6 +18,7 @@ from cadrumo.core.filing_projection_ref import (
     M303RegimenSimplificadoCohort,
     M303RegimenSimplificadoModuleProjectionRef,
     M303RegimenSimplificadoModuleValue,
+    compile_filing_projection_ref,
     filing_projection_ref_casilla_id,
 )
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError, RegistryValidationError
@@ -428,6 +429,29 @@ def test_generated_projection_fields_must_biject_revision_owned_declarations() -
         revision=declared,
     )
     assert clean == []
+
+
+@pytest.mark.usefixtures("authority_operation")
+@pytest.mark.parametrize(
+    "payload",
+    [
+        {"projection_kind": "m390_activity", "slot": 7, "field": "activity_code"},
+        {"projection_kind": "m390_regimen_simplificado_module", "slot": 1, "module_order": 8, "value": "units"},
+        {"projection_kind": "m390_prorrata_activity", "slot": 6, "field": "cnae"},
+        {"projection_kind": "m390_differentiated_deduction", "slot": 4, "field": "total"},
+    ],
+)
+def test_m390_undeclared_positive_references_cannot_enter_an_export(payload: dict[str, object]) -> None:
+    """A structural reference does not enroll a row the revision does not declare."""
+    revision = compiled_bundled_authority().snapshot("390", filing_year=2025, period="0A").revision
+    assert revision.projection_endpoints == ()
+    assert all(record.repeat != "projection_rows" for layout in revision.export_layouts for record in layout.records)
+    reference = compile_filing_projection_ref(payload)
+    proposed_layout = _revision(_field(projection_ref=reference)).export_layouts
+    proposed = revision.model_copy(update={"export_layouts": proposed_layout})
+    failures: list[str] = []
+    validate_generated_projection_layout_bijection(failures, prefix="modelo 390 revision 2025", revision=proposed)
+    assert any("undeclared generated refs" in failure for failure in failures)
 
 
 def test_projection_endpoint_loader_hydrates_only_the_canonical_toml_payload() -> None:
