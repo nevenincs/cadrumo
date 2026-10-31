@@ -60,7 +60,12 @@ _AREA_UNIT_RE = re.compile(r"(?<!\w)m²(?!\w)")
 _LEGISLATIVE_DECREE_REFERENCE_RE = re.compile(r"(?<!\w)RDLeg[ \t]+\d{1,4}/\d{4}(?!\w)")
 # Dotted suffixes in workbook/statement prompts are file-format notation.
 # Keep the list closed to these attested formats; bare words remain prose.
-_SPREADSHEET_SUFFIX_RE = re.compile(r"(?<![\w.])\.(?:xlsx|csv)(?!\w)")
+_SPREADSHEET_SUFFIX_RE = re.compile(r"(?<![\w.])\.(?:xlsx|xlsm|xls|csv|tsv)(?!\w)")
+# Legal notes quote the formula engine's binary percent operator with numeric
+# operands. Only the complete call is structural: names, arity, and operands
+# outside this observed syntax remain prose for the spelling audit.
+# See domain/calculations/registry/_formula_operator_contracts.py (percent).
+_PERCENT_FORMULA_CALL_RE = re.compile(r"(?<![\w.])percent\([ \t]*\d+[ \t]*,[ \t]*\d+[ \t]*\)(?![\w])")
 # These exact Latin suffixes identify statutory articles, rather than prose in
 # the surrounding locale. They are attested by Ley 37/1992's article headings:
 # https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740
@@ -153,6 +158,7 @@ def filtered_translation_text(value: str) -> tuple[str, int]:
         (command_path_pattern(), " "),
         (TRANSLATION_OPTION_RE, " "),
         (_LEDGER_PERIOD_FILTER_RE, " "),
+        (_PERCENT_FORMULA_CALL_RE, " "),
         (TRANSLATION_FORMULA_RE, " "),
         (_AREA_UNIT_RE, " "),
         (_NUMBERED_ARTICLE_REFERENCE_RE, " "),

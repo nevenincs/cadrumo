@@ -1752,8 +1752,9 @@ def test_reviewed_technical_nouns_keep_bounded_plural_and_case() -> None:
     ):
         assert not is_project_spelling("en", typo)
     assert is_project_spelling("en", "ZIPs")
+    assert is_project_spelling("en", "UUIDs")
     assert is_project_spelling("en", "uploadable")
-    for typo in ("ZIPss", "zipS", "uploadible"):
+    for typo in ("ZIPss", "zipS", "UUIDss", "UuidS", "uploadible"):
         assert not is_project_spelling("en", typo)
 
 

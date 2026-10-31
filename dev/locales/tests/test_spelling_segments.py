@@ -62,6 +62,25 @@ def test_catalan_reviewed_clitics_keep_verbs_and_reject_malformed_hosts() -> Non
         assert _CATALAN_HYPHENATED_CLITIC_RE.search(value) is None
 
 
+def test_binary_percent_formula_is_structural_but_bad_calls_remain_visible() -> None:
+    prose, excluded = filtered_translation_text("motor: percent(1550, 25) con misspeling")
+    assert "percent" not in prose
+    assert "misspeling" in prose
+    assert excluded == 1
+    for call in ("percentx(1550, 25)", "percent(1550, typo)", "percent(1550, 25, 3)", "percent"):
+        prose, _excluded = filtered_translation_text(call)
+        assert "percent" in prose
+
+
+def test_actual_import_extensions_are_structural_only_when_complete_and_dotted() -> None:
+    prose, excluded = filtered_translation_text(".csv, .tsv, .xlsx, .xlsm or .xls; typo misspeling")
+    assert excluded == 5
+    assert "misspeling" in prose
+    for value in ("csv", "tsv", "xlsm", ".xlsmm"):
+        prose, _excluded = filtered_translation_text(value)
+        assert value.lstrip(".") in prose
+
+
 @pytest.mark.parametrize(
     "name,component",
     [

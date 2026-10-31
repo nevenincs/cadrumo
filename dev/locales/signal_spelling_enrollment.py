@@ -292,6 +292,9 @@ _LOCALE_SPELLINGS: dict[str, frozenset[str]] = {
             # https://www.mediawiki.org/wiki/Extension:Page_Forms/Input_types
             "ZIPs",
             "uploadable",
+            # Plural of the standard identifier acronym in runtime access help:
+            # https://docs.python.org/3/library/uuid.html
+            "UUIDs",
             # These exact source forms are accepted by the English (US) SCOWL
             # reference dictionary but absent from our pinned en-GB data.
             # Keep them finite: do not infer arbitrary -ize forms or casing.
