@@ -45,7 +45,10 @@ from ...calculations.ports import (
     FiledDeclaracionObservationProtocol,
     ObservedCasillaValueProtocol,
 )
+from ...live.expedientes import PersistedExpedientesSnapshot
+from ...live.expedientes_ports import ExpedientesDeclaration
 from ..calendar import build_overview_calendar
+from ..calendar_events import calendar_events_from_expedientes_snapshots
 from ..calendar_models import (
     OverviewCalendar,
     OverviewCalendarEvent,
@@ -185,6 +188,42 @@ def calendar_engine() -> DeadlineEngine:
 @cache
 def april_2025_range() -> OverviewCalendarRange:
     return OverviewCalendarRange(from_date=date(2025, 4, 1), to_date=date(2025, 4, 30))
+
+
+def expediente_declaration(
+    expediente_id: str,
+    *,
+    presented_at: datetime = datetime(2025, 4, 15, 9, 30, tzinfo=UTC),
+    period: Period = PERIOD_2025_1T,
+    estado: str = "ALTA",
+) -> ExpedientesDeclaration:
+    return ExpedientesDeclaration(
+        modelo="303",
+        ejercicio=2025,
+        period=period,
+        expediente_id=expediente_id,
+        estado=estado,
+        presented_at=presented_at,
+    )
+
+
+def expedientes_filing_events(
+    *declarations: ExpedientesDeclaration,
+    snapshot_id: str = "f" * 64,
+    authenticated_identity: str | None = None,
+    captured_at: datetime = datetime(2025, 4, 16, 10, 0, tzinfo=UTC),
+    calendar_range: OverviewCalendarRange | None = None,
+) -> tuple[OverviewCalendarEvent, ...]:
+    snapshot = PersistedExpedientesSnapshot(
+        snapshot_id=snapshot_id,
+        bucket_id=BUCKET_ID,
+        captured_at=captured_at,
+        source_url=SOURCE_URL,
+        authenticated_identity=authenticated_identity,
+        declarations=declarations,
+        persisted_at=captured_at.replace(minute=5),
+    )
+    return calendar_events_from_expedientes_snapshots((snapshot,), calendar_range or april_2025_range())
 
 
 def calendar_with_evidence(

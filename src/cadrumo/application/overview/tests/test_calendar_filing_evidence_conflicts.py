@@ -8,15 +8,9 @@ import pytest
 
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.modelos.filing_record import ExternalEvidenceKind
-from ...live.expedientes import PersistedExpedientesSnapshot
-from ...live.expedientes_ports import ExpedientesDeclaration
 from ..calendar import build_overview_calendar
-from ..calendar_events import calendar_events_from_expedientes_snapshots
 from ..calendar_evidence import calendar_filing_evidence_from_sources
 from ..calendar_models import OverviewAeatSubmissionState, OverviewCalendarRange
-from .calendar_test_support import (
-    BUCKET_ID as _BUCKET_ID,
-)
 from .calendar_test_support import (
     FILED_JUSTIFICANTE_STORAGE_REF as _FILED_JUSTIFICANTE_STORAGE_REF,
 )
@@ -24,10 +18,11 @@ from .calendar_test_support import (
     PERIOD_2025_1T as _PERIOD_2025_1T,
 )
 from .calendar_test_support import (
-    SOURCE_URL as _SOURCE_URL,
+    calculation_observation_payload as _calculation_observation_payload,
 )
 from .calendar_test_support import (
-    calculation_observation_payload as _calculation_observation_payload,
+    expediente_declaration,
+    expedientes_filing_events,
 )
 from .calendar_test_support import (
     external_evidence as _external_evidence,
@@ -58,28 +53,7 @@ def test_calendar_entry_warns_when_local_and_filed_history_aeat_references_disag
     local_ref = "LOCAL-LIVE-CAPTURE-CSV"
     remote_ref = "12345678901234567890"
     verified_csv = "CSVFILED3031T2025"
-    event = calendar_events_from_expedientes_snapshots(
-        (
-            PersistedExpedientesSnapshot(
-                snapshot_id="3" * 64,
-                bucket_id=_BUCKET_ID,
-                captured_at=datetime(2025, 4, 16, 10, 0, tzinfo=UTC),
-                source_url=_SOURCE_URL,
-                declarations=(
-                    ExpedientesDeclaration(
-                        modelo="303",
-                        ejercicio=2025,
-                        period=_PERIOD_2025_1T,
-                        expediente_id=remote_ref,
-                        estado="ALTA",
-                        presented_at=datetime(2025, 4, 15, 9, 30, tzinfo=UTC),
-                    ),
-                ),
-                persisted_at=datetime(2025, 4, 16, 10, 5, tzinfo=UTC),
-            ),
-        ),
-        OverviewCalendarRange(from_date=date(2025, 4, 1), to_date=date(2025, 4, 30)),
-    )
+    event = expedientes_filing_events(expediente_declaration(remote_ref), snapshot_id="3" * 64)
     evidence = calendar_filing_evidence_from_sources(
         filing_records=(
             _modelo_record(

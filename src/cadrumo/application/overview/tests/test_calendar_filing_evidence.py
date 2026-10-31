@@ -14,12 +14,9 @@ from ....domain.calculations.registry.applicability_models import ApplicabilityV
 from ....domain.deadlines.festivos import DeadlineHolidayCoverage
 from ....domain.deadlines.models import ObligationStatus
 from ....domain.modelos.filing_record import ExternalEvidenceKind
-from ...live.expedientes import PersistedExpedientesSnapshot
-from ...live.expedientes_ports import ExpedientesDeclaration
 from ...live.justificante import JustificanteCaptureSnapshot, derive_justificante_capture_snapshot_id
 from ...live.snapshot_base import SnapshotLifecycleState
 from ..calendar_events import (
-    calendar_events_from_expedientes_snapshots,
     calendar_events_from_justificante_capture_snapshots,
     calendar_events_from_modelo_records,
 )
@@ -42,13 +39,14 @@ from .calendar_test_support import (
     PERIOD_2025_1T as _PERIOD_2025_1T,
 )
 from .calendar_test_support import (
-    SOURCE_URL as _SOURCE_URL,
-)
-from .calendar_test_support import (
     calculation_observation_payload as _calculation_observation_payload,
 )
 from .calendar_test_support import (
     calendar_with_evidence as _calendar_with_evidence,
+)
+from .calendar_test_support import (
+    expediente_declaration,
+    expedientes_filing_events,
 )
 from .calendar_test_support import (
     external_evidence as _external_evidence,
@@ -429,28 +427,8 @@ def test_live_capture_external_evidence_without_metadata_is_not_justificante_ver
 
 
 def test_expedientes_event_marks_observed_submission_but_not_justificante_verified() -> None:
-    event = calendar_events_from_expedientes_snapshots(
-        (
-            PersistedExpedientesSnapshot(
-                snapshot_id="e" * 64,
-                bucket_id=_BUCKET_ID,
-                captured_at=datetime(2025, 4, 16, 10, 0, tzinfo=UTC),
-                source_url=_SOURCE_URL,
-                authenticated_identity="X1234567L",
-                declarations=(
-                    ExpedientesDeclaration(
-                        modelo="303",
-                        ejercicio=2025,
-                        period=_PERIOD_2025_1T,
-                        expediente_id="12345678901234567890",
-                        estado="ALTA",
-                        presented_at=datetime(2025, 4, 15, 9, 30, tzinfo=UTC),
-                    ),
-                ),
-                persisted_at=datetime(2025, 4, 16, 10, 5, tzinfo=UTC),
-            ),
-        ),
-        OverviewCalendarRange(from_date=date(2025, 4, 1), to_date=date(2025, 4, 30)),
+    event = expedientes_filing_events(
+        expediente_declaration("12345678901234567890"), snapshot_id="e" * 64, authenticated_identity="X1234567L"
     )
     evidence = calendar_filing_evidence_from_sources(
         filing_records=(_modelo_record(),),
@@ -467,28 +445,8 @@ def test_expedientes_event_marks_observed_submission_but_not_justificante_verifi
 
 
 def test_expedientes_event_for_wrong_authenticated_identity_is_not_submission_evidence() -> None:
-    event = calendar_events_from_expedientes_snapshots(
-        (
-            PersistedExpedientesSnapshot(
-                snapshot_id="e" * 64,
-                bucket_id=_BUCKET_ID,
-                captured_at=datetime(2025, 4, 16, 10, 0, tzinfo=UTC),
-                source_url=_SOURCE_URL,
-                authenticated_identity="Y7654321G",
-                declarations=(
-                    ExpedientesDeclaration(
-                        modelo="303",
-                        ejercicio=2025,
-                        period=_PERIOD_2025_1T,
-                        expediente_id="12345678901234567890",
-                        estado="ALTA",
-                        presented_at=datetime(2025, 4, 15, 9, 30, tzinfo=UTC),
-                    ),
-                ),
-                persisted_at=datetime(2025, 4, 16, 10, 5, tzinfo=UTC),
-            ),
-        ),
-        OverviewCalendarRange(from_date=date(2025, 4, 1), to_date=date(2025, 4, 30)),
+    event = expedientes_filing_events(
+        expediente_declaration("12345678901234567890"), snapshot_id="e" * 64, authenticated_identity="Y7654321G"
     )
 
     evidence = calendar_filing_evidence_from_sources(
@@ -500,28 +458,7 @@ def test_expedientes_event_for_wrong_authenticated_identity_is_not_submission_ev
 
 
 def test_non_alta_expedientes_event_does_not_create_submission_evidence() -> None:
-    event = calendar_events_from_expedientes_snapshots(
-        (
-            PersistedExpedientesSnapshot(
-                snapshot_id="f" * 64,
-                bucket_id=_BUCKET_ID,
-                captured_at=datetime(2025, 4, 16, 10, 0, tzinfo=UTC),
-                source_url=_SOURCE_URL,
-                declarations=(
-                    ExpedientesDeclaration(
-                        modelo="303",
-                        ejercicio=2025,
-                        period=_PERIOD_2025_1T,
-                        expediente_id="12345678901234567890",
-                        estado="BAJA",
-                        presented_at=datetime(2025, 4, 15, 9, 30, tzinfo=UTC),
-                    ),
-                ),
-                persisted_at=datetime(2025, 4, 16, 10, 5, tzinfo=UTC),
-            ),
-        ),
-        OverviewCalendarRange(from_date=date(2025, 4, 1), to_date=date(2025, 4, 30)),
-    )
+    event = expedientes_filing_events(expediente_declaration("12345678901234567890", estado="BAJA"))
 
     assert len(event) == 1
     assert event[0].status == "BAJA"

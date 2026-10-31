@@ -169,13 +169,13 @@ def test_entry_is_frozen() -> None:
 # ---------------------------------------------------------------------
 
 
-def test_expedientes_snapshots_project_filing_events_inside_range() -> None:
-    snapshot = PersistedExpedientesSnapshot(
+def _expedientes_snapshot(authenticated_identity: str) -> PersistedExpedientesSnapshot:
+    return PersistedExpedientesSnapshot(
         snapshot_id="e" * 64,
         bucket_id=_BUCKET_ID,
         captured_at=datetime(2025, 4, 16, 10, 0, tzinfo=UTC),
         source_url=_SOURCE_URL,
-        authenticated_identity="X1234567L",
+        authenticated_identity=authenticated_identity,
         declarations=(
             ExpedientesDeclaration(
                 modelo="303",
@@ -188,6 +188,10 @@ def test_expedientes_snapshots_project_filing_events_inside_range() -> None:
         ),
         persisted_at=datetime(2025, 4, 16, 10, 5, tzinfo=UTC),
     )
+
+
+def test_expedientes_snapshots_project_filing_events_inside_range() -> None:
+    snapshot = _expedientes_snapshot("X1234567L")
 
     events = calendar_events_from_expedientes_snapshots(
         (snapshot,),
@@ -207,24 +211,7 @@ def test_expedientes_snapshots_project_filing_events_inside_range() -> None:
 
 
 def test_expedientes_snapshot_for_wrong_identity_does_not_project_filing_event() -> None:
-    snapshot = PersistedExpedientesSnapshot(
-        snapshot_id="e" * 64,
-        bucket_id=_BUCKET_ID,
-        captured_at=datetime(2025, 4, 16, 10, 0, tzinfo=UTC),
-        source_url=_SOURCE_URL,
-        authenticated_identity="Y7654321G",
-        declarations=(
-            ExpedientesDeclaration(
-                modelo="303",
-                ejercicio=2025,
-                period=_PERIOD_2025_1T,
-                expediente_id="12345678901234567890",
-                estado="ALTA",
-                presented_at=datetime(2025, 4, 15, 9, 30, tzinfo=UTC),
-            ),
-        ),
-        persisted_at=datetime(2025, 4, 16, 10, 5, tzinfo=UTC),
-    )
+    snapshot = _expedientes_snapshot("Y7654321G")
 
     events = calendar_events_from_expedientes_snapshots(
         (snapshot,),
