@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import sys
+from dataclasses import dataclass
 from pathlib import Path
 from typing import cast
 
@@ -167,6 +168,174 @@ def _assert_no_lifecycle_write(
     assert not _added_events(before, after)
 
 
+@dataclass(frozen=True)
+class _Session:
+    """The registered profile, its failure observations and the bucket under test."""
+
+    profile: NativeCliProfileFixture
+    failures: list[RuntimeFailureObservation]
+    bucket_id: str
+    authority_operation: PinnedAuthorityOperation
+
+
+def _apply_transition(
+    session: _Session,
+    transaction_id: str,
+    *,
+    verb: str,
+    result_schema: type[BaseModel],
+    event_type: BucketEventType,
+    prior_state: TransactionLifecycleState,
+    next_state: TransactionLifecycleState,
+    reason: str,
+) -> None:
+    """Run one lifecycle verb and check the transaction, its event and the full result it returned."""
+    assert _reauthenticate(session.profile, authority_operation=session.authority_operation) == session.bucket_id
+    ports = compose_ledger_action_ports(bucket_id=session.bucket_id, operation=session.authority_operation)
+    before_transaction = ports.transaction_repository.load().get(transaction_id)
+    assert before_transaction is not None
+    assert before_transaction.lifecycle_state is prior_state
+    before_history = ports.bucket_event_repository.load()
+
+    changed = _invoke(
+        session.profile,
+        "app",
+        "ledger",
+        verb,
+        transaction_id,
+        "--yes",
+        "--actor",
+        _ACTOR,
+        "--reason",
+        reason,
+    )
+    assert changed.exit_code == 0, (changed.output, session.failures)
+    payload = unwrap_cli_result(changed)
+
+    assert _reauthenticate(session.profile, authority_operation=session.authority_operation) == session.bucket_id
+    ports = compose_ledger_action_ports(bucket_id=session.bucket_id, operation=session.authority_operation)
+    after_transaction = ports.transaction_repository.load().get(transaction_id)
+    assert after_transaction is not None
+    assert after_transaction.lifecycle_state is next_state
+    if verb == "exclude":
+        assert after_transaction.business_classification is BusinessClassification.REVIEWED_EXCLUDED
+        assert after_transaction.business_pct is None
+    else:
+        assert after_transaction.business_classification is before_transaction.business_classification
+        assert after_transaction.business_pct == before_transaction.business_pct
+    after_history = ports.bucket_event_repository.load()
+    event_id = _assert_lifecycle_event(
+        before_history,
+        after_history,
+        bucket_id=session.bucket_id,
+        transaction_id=transaction_id,
+        event_type=event_type,
+        actor=_ACTOR,
+        payload=(
+            {
+                "business_classification": BusinessClassification.REVIEWED_EXCLUDED.value,
+                # The added row carries no proportion, which the event records as empty text.
+                "previous_business_pct": "",
+                "previous_classification": before_transaction.business_classification.value,
+                "reason": reason,
+                "source_command": "aeat app ledger exclude",
+            }
+            if verb == "exclude"
+            else {
+                "lifecycle_state": next_state.value,
+                "previous_lifecycle_state": prior_state.value,
+                "reason": reason,
+                "source_command": f"aeat app ledger {verb}",
+            }
+        ),
+    )
+    result_event_ids = tuple(cast("list[str]", payload["bucket_event_ids"]))
+    assert result_event_ids == (event_id,)
+    assert payload == _expected_result(
+        result_schema,
+        bucket_id=session.bucket_id,
+        transaction=after_transaction,
+        event_ids=(event_id,),
+    )
+    if verb == "exclude":
+        viewed = _invoke(session.profile, "app", "ledger", "view", transaction_id)
+        assert viewed.exit_code == 0, viewed.output
+        view_payload = unwrap_cli_result(viewed)
+        assert view_payload["transaction_id"] == transaction_id
+        assert view_payload["review_status"] == "excluded"
+        assert view_payload["transaction"] == payload["transaction"]
+
+
+def _finalized_revision_blocks_archive(session: _Session, transaction_id: str) -> None:
+    """A finalized revision citing the transaction refuses archiving with its reference and writes nothing."""
+    assert _reauthenticate(session.profile, authority_operation=session.authority_operation) == session.bucket_id
+    ports = compose_ledger_action_ports(bucket_id=session.bucket_id, operation=session.authority_operation)
+    finalized_revision_id = seed_revision_citing_transaction(
+        secure_object_repository_for_active_bucket(),
+        transaction_id=transaction_id,
+        state=CalculationRevisionState.VERIFICADO_COMPLETO,
+        period_code="1T",
+        bucket_id=session.bucket_id,
+        operation=session.authority_operation,
+    )
+    blockers = blocking_modelo_references(
+        bucket_id=session.bucket_id,
+        transaction_ids=(transaction_id,),
+        work_unit_repository=ports.work_unit_repository,
+        calculation_repository=ports.calculation_repository,
+    )
+    assert len(blockers) == 1
+    blocker = blockers[0]
+    assert blocker.calculation_revision_id == finalized_revision_id
+    before_blocked_transaction = ports.transaction_repository.load().get(transaction_id)
+    assert before_blocked_transaction is not None
+    history_before_block = ports.bucket_event_repository.load()
+
+    refused = _invoke(
+        session.profile,
+        "app",
+        "ledger",
+        "archive",
+        transaction_id,
+        "--yes",
+        "--actor",
+        _ACTOR,
+        "--reason",
+        "blocked by sealed filing",
+    )
+    assert refused.exit_code == 2, refused.output
+    document = require_error_document(refused.output)
+    assert document["command"] == "ledger.archive"
+    error = cast("dict[str, object]", document["error"])
+    assert error["category"] == "REFUSED"
+    assert error["code"] == "REFUSED_LEDGER_LIFECYCLE_VALIDATION"
+    context = cast("dict[str, object]", error["context"])
+    assert context["transaction_id"] == transaction_id
+    assert context["transaction_ids"] == transaction_id
+    assert "transaction_ids_omitted_count" not in context
+    assert context["blocking_reference_count"] == "1"
+    assert context["work_unit_id"] == blocker.work_unit_id
+    assert context["calculation_revision_id"] == blocker.calculation_revision_id
+    assert "revision_state" not in context
+    assert context["modelo"] == blocker.modelo
+    assert context["filing_year"] == str(blocker.filing_year)
+    assert context["period"] == blocker.period
+    assert (
+        context["validation_messages"]
+        == "ledger transaction lifecycle transition refused because finalized modelo revisions cite the transaction"
+    )
+
+    assert _reauthenticate(session.profile, authority_operation=session.authority_operation) == session.bucket_id
+    ports = compose_ledger_action_ports(bucket_id=session.bucket_id, operation=session.authority_operation)
+    after_blocked_transaction = ports.transaction_repository.load().get(transaction_id)
+    assert after_blocked_transaction == before_blocked_transaction
+    _assert_no_lifecycle_write(
+        history_before_block,
+        ports.bucket_event_repository.load(),
+        bucket_id=session.bucket_id,
+    )
+
+
 def test_native_lifecycle_commands_preserve_full_results_history_and_blocker_refusal(
     tmp_path: Path,
     authority_operation: PinnedAuthorityOperation,
@@ -258,154 +427,21 @@ def test_native_lifecycle_commands_preserve_full_results_history_and_blocker_ref
                 "native lifecycle exclusion",
             ),
         )
-        command_by_verb = {
-            "archive": "archive",
-            "stash": "stash",
-            "restore": "restore",
-            "exclude": "exclude",
-        }
+        session = _Session(
+            profile=profile, failures=failures, bucket_id=bucket_id, authority_operation=authority_operation
+        )
         for verb, result_schema, event_type, prior_state, next_state, reason in transitions:
-            assert _reauthenticate(profile, authority_operation=authority_operation) == bucket_id
-            ports = compose_ledger_action_ports(bucket_id=bucket_id, operation=authority_operation)
-            before_transaction = ports.transaction_repository.load().get(transaction_id)
-            assert before_transaction is not None
-            assert before_transaction.lifecycle_state is prior_state
-            before_history = ports.bucket_event_repository.load()
-
-            changed = _invoke(
-                profile,
-                "app",
-                "ledger",
-                command_by_verb[verb],
+            _apply_transition(
+                session,
                 transaction_id,
-                "--yes",
-                "--actor",
-                _ACTOR,
-                "--reason",
-                reason,
-            )
-            assert changed.exit_code == 0, (changed.output, failures)
-            payload = unwrap_cli_result(changed)
-
-            assert _reauthenticate(profile, authority_operation=authority_operation) == bucket_id
-            ports = compose_ledger_action_ports(bucket_id=bucket_id, operation=authority_operation)
-            after_transaction = ports.transaction_repository.load().get(transaction_id)
-            assert after_transaction is not None
-            assert after_transaction.lifecycle_state is next_state
-            if verb == "exclude":
-                assert after_transaction.business_classification is BusinessClassification.REVIEWED_EXCLUDED
-                assert after_transaction.business_pct is None
-            else:
-                assert after_transaction.business_classification is before_transaction.business_classification
-                assert after_transaction.business_pct == before_transaction.business_pct
-            after_history = ports.bucket_event_repository.load()
-            event_id = _assert_lifecycle_event(
-                before_history,
-                after_history,
-                bucket_id=bucket_id,
-                transaction_id=transaction_id,
+                verb=verb,
+                result_schema=result_schema,
                 event_type=event_type,
-                actor=_ACTOR,
-                payload=(
-                    {
-                        "business_classification": BusinessClassification.REVIEWED_EXCLUDED.value,
-                        # The added row carries no proportion, which the event records as empty text.
-                        "previous_business_pct": "",
-                        "previous_classification": before_transaction.business_classification.value,
-                        "reason": reason,
-                        "source_command": "aeat app ledger exclude",
-                    }
-                    if verb == "exclude"
-                    else {
-                        "lifecycle_state": next_state.value,
-                        "previous_lifecycle_state": prior_state.value,
-                        "reason": reason,
-                        "source_command": f"aeat app ledger {verb}",
-                    }
-                ),
+                prior_state=prior_state,
+                next_state=next_state,
+                reason=reason,
             )
-            result_event_ids = tuple(cast("list[str]", payload["bucket_event_ids"]))
-            assert result_event_ids == (event_id,)
-            assert payload == _expected_result(
-                result_schema,
-                bucket_id=bucket_id,
-                transaction=after_transaction,
-                event_ids=(event_id,),
-            )
-            if verb == "exclude":
-                viewed = _invoke(profile, "app", "ledger", "view", transaction_id)
-                assert viewed.exit_code == 0, viewed.output
-                view_payload = unwrap_cli_result(viewed)
-                assert view_payload["transaction_id"] == transaction_id
-                assert view_payload["review_status"] == "excluded"
-                assert view_payload["transaction"] == payload["transaction"]
-
-        assert _reauthenticate(profile, authority_operation=authority_operation) == bucket_id
-        ports = compose_ledger_action_ports(bucket_id=bucket_id, operation=authority_operation)
-        finalized_revision_id = seed_revision_citing_transaction(
-            secure_object_repository_for_active_bucket(),
-            transaction_id=transaction_id,
-            state=CalculationRevisionState.VERIFICADO_COMPLETO,
-            period_code="1T",
-            bucket_id=bucket_id,
-            operation=authority_operation,
-        )
-        blockers = blocking_modelo_references(
-            bucket_id=bucket_id,
-            transaction_ids=(transaction_id,),
-            work_unit_repository=ports.work_unit_repository,
-            calculation_repository=ports.calculation_repository,
-        )
-        assert len(blockers) == 1
-        blocker = blockers[0]
-        assert blocker.calculation_revision_id == finalized_revision_id
-        before_blocked_transaction = ports.transaction_repository.load().get(transaction_id)
-        assert before_blocked_transaction is not None
-        history_before_block = ports.bucket_event_repository.load()
-
-        refused = _invoke(
-            profile,
-            "app",
-            "ledger",
-            "archive",
-            transaction_id,
-            "--yes",
-            "--actor",
-            _ACTOR,
-            "--reason",
-            "blocked by sealed filing",
-        )
-        assert refused.exit_code == 2, refused.output
-        document = require_error_document(refused.output)
-        assert document["command"] == "ledger.archive"
-        error = cast("dict[str, object]", document["error"])
-        assert error["category"] == "REFUSED"
-        assert error["code"] == "REFUSED_LEDGER_LIFECYCLE_VALIDATION"
-        context = cast("dict[str, object]", error["context"])
-        assert context["transaction_id"] == transaction_id
-        assert context["transaction_ids"] == transaction_id
-        assert "transaction_ids_omitted_count" not in context
-        assert context["blocking_reference_count"] == "1"
-        assert context["work_unit_id"] == blocker.work_unit_id
-        assert context["calculation_revision_id"] == blocker.calculation_revision_id
-        assert "revision_state" not in context
-        assert context["modelo"] == blocker.modelo
-        assert context["filing_year"] == str(blocker.filing_year)
-        assert context["period"] == blocker.period
-        assert (
-            context["validation_messages"]
-            == "ledger transaction lifecycle transition refused because finalized modelo revisions cite the transaction"
-        )
-
-        assert _reauthenticate(profile, authority_operation=authority_operation) == bucket_id
-        ports = compose_ledger_action_ports(bucket_id=bucket_id, operation=authority_operation)
-        after_blocked_transaction = ports.transaction_repository.load().get(transaction_id)
-        assert after_blocked_transaction == before_blocked_transaction
-        _assert_no_lifecycle_write(
-            history_before_block,
-            ports.bucket_event_repository.load(),
-            bucket_id=bucket_id,
-        )
+        _finalized_revision_blocks_archive(session, transaction_id)
 
         returned_definitions = {
             observation.definition_id
