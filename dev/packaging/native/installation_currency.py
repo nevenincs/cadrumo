@@ -79,10 +79,14 @@ def _validate_current(
     expected_manifest = member(root, f"{plan.destination}/data/package-manifest.json")
     if expected_manifest.read_bytes() != member(payload, "data/package-manifest.json").read_bytes():
         raise ValueError("Installation package manifest differs from current source")
-    if receipt["files"] != plan.files:
+    if not plan.admits(receipt["files"]):
         raise ValueError("Installation inventory differs from current payload and controls")
     _validate_metadata(receipt_file, metadata, plan)
     _permissions(root, metadata, plan)
+    if plan.seal is not None:
+        # The receipt cannot vouch for the sealed members; their seal over the
+        # projected members does.
+        plan.seal.sealer.verify(member(root, plan.seal.application), plan.seal.application_id)
 
 
 def _validate_manifest_anchor(receipt: _Receipt, recorded: object, root: Path) -> None:
@@ -131,7 +135,7 @@ def existing(
     current = bool(recorded == plan.identity)
     if current:
         _validate_current(receipt, receipt_file, payload, root, metadata, plan)
-    elif not allow_change and (recorded is not None or receipt["files"] != plan.files):
+    elif not allow_change and (recorded is not None or not plan.admits(receipt["files"])):
         raise ValueError("Native installation stage differs from the requested payload; select a fresh build directory")
     # Full membership and bytes are checked against the independently projected
     # current map when currency matches, and the admitted prior owner otherwise.

@@ -43,13 +43,47 @@ def cmake_paths(tmp_path: Path) -> None:
     )
 
 
-def bundle_fixture(tmp_path: Path) -> BundleInputs:
-    """Synthetic stand-ins for the source build's bundle main executable and icon."""
+class DigestSeal:
+    """Pure stand-in for codesign: rewrites the main executable and hashes every other member.
+
+    It isolates the staging order and receipt admission from the native tool, which
+    ``test_macos_bundle`` exercises for real.
+    """
+
+    def __init__(self) -> None:
+        self.sealed: list[dict[str, str]] = []
+
+    def binding(self) -> dict[str, str]:
+        return {"identity": "-"}
+
+    @staticmethod
+    def _members(bundle: Path) -> dict[str, str]:
+        return {
+            path.relative_to(bundle).as_posix(): digest(path)
+            for path in sorted(bundle.rglob("*"))
+            if path.is_file() and path.parent.name != "_CodeSignature"
+        }
+
+    def seal(self, bundle: Path, main_executable: Path, application_id: str) -> None:
+        main_executable.write_bytes(main_executable.read_bytes() + b" sealed:" + application_id.encode())
+        members = self._members(bundle)
+        self.sealed.append(members)
+        (bundle / "Contents/_CodeSignature").mkdir()
+        (bundle / "Contents/_CodeSignature/CodeResources").write_text(json.dumps(members), encoding="utf-8")
+
+    def verify(self, bundle: Path, application_id: str) -> None:
+        recorded = json.loads((bundle / "Contents/_CodeSignature/CodeResources").read_text(encoding="utf-8"))
+        if recorded != self._members(bundle):
+            raise ValueError("synthetic seal is broken")
+
+
+def bundle_fixture(tmp_path: Path, sealer: DigestSeal | None = None) -> BundleInputs:
+    """Synthetic stand-ins for the source build's bundle main executable, icon and sealer."""
     inputs = tmp_path / "bundle-inputs"
     inputs.mkdir(exist_ok=True)
     (inputs / "bundle-launcher").write_bytes(b"synthetic bundle launcher")
     (inputs / "icon.icns").write_bytes(b"synthetic icon")
-    return BundleInputs(inputs / "bundle-launcher", inputs / "icon.icns")
+    return BundleInputs(inputs / "bundle-launcher", inputs / "icon.icns", sealer or DigestSeal())
 
 
 def bundle_for(tmp_path: Path, target: str) -> BundleInputs | None:
@@ -133,7 +167,8 @@ def test_native_layout_projects_registration(tmp_path: Path, target: str) -> Non
         assert metadata["CFBundleIconFile"] == "cadrumo.icns"
         assert metadata["LSUIElement"] is False
         # The main executable is the wrapper; the payload stays whole beneath the resources.
-        assert (contents / "MacOS/cadrumo").read_bytes() == bundle.launcher.read_bytes()
+        assert (contents / "MacOS/cadrumo").read_bytes().startswith(bundle.launcher.read_bytes() + b" sealed:")
+        assert (contents / "_CodeSignature/CodeResources").is_file()
         # Windows exposes only the read-only bit, not POSIX executable permissions.
         expected_mode = 0o666 if os.name == "nt" else 0o755
         assert (contents / "MacOS/cadrumo").stat().st_mode & 0o777 == expected_mode
@@ -172,7 +207,30 @@ def test_macos_bundle_tracks_wrapper_input_changes(tmp_path: Path) -> None:
     with pytest.raises(ValueError, match="differs from the requested payload"):
         prepare(payload, identity_file, tmp_path / "build", "cadrumo", bundle=bundle)
     refresh(payload, identity_file, tmp_path / "build", "cadrumo", bundle)
-    assert launcher.read_bytes() == b"rebuilt bundle launcher"
+    assert launcher.read_bytes().startswith(b"rebuilt bundle launcher sealed:")
+
+
+def test_macos_bundle_seal_is_the_last_write_and_binds_the_receipt(tmp_path: Path) -> None:
+    payload, identity_file = payload_fixture(tmp_path, "macos-arm64")
+    sealer = DigestSeal()
+    bundle = bundle_fixture(tmp_path, sealer)
+    root = prepare(payload, identity_file, tmp_path / "build", "cadrumo", bundle=bundle)
+    application = member(root, f"{identity('macos-arm64').name}.app")
+    # The seal saw every member that the stage finally holds, so nothing was written after it.
+    assert sealer.sealed == [DigestSeal._members(application)]
+    assert "Contents/Info.plist" in sealer.sealed[0]
+    assert "Contents/Resources/app/data/package-manifest.json" in sealer.sealed[0]
+    receipt = json.loads((tmp_path / "build/installation/metadata/installation.json").read_text(encoding="utf-8"))
+    sealed = f"{application.name}/Contents/_CodeSignature/CodeResources"
+    assert receipt["files"][sealed] == digest(member(root, sealed))
+    # The receipt lives outside the bundle it describes.
+    assert not any(path.name == "installation.json" for path in application.rglob("*"))
+    # An unchanged stage is admitted again only while its seal still verifies.
+    assert prepare(payload, identity_file, tmp_path / "build", "cadrumo", bundle=bundle) == root
+    assert len(sealer.sealed) == 1
+    (application / "Contents/_CodeSignature/CodeResources").write_text("{}", encoding="utf-8")
+    with pytest.raises(ValueError, match="synthetic seal is broken"):
+        prepare(payload, identity_file, tmp_path / "build", "cadrumo", bundle=bundle)
 
 
 @pytest.mark.parametrize("desktop", [True, False])

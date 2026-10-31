@@ -263,6 +263,10 @@ def _prepare_fresh(
         output = member(root, name)
         if output.stat().st_mode & 0o777 != mode:
             output.chmod(mode)
+    if plan.seal is not None:
+        # The bundle is complete; its seal is the last write beneath it.
+        application = member(root, plan.seal.application)
+        plan.seal.sealer.seal(application, member(root, plan.seal.main_executable), plan.seal.application_id)
     for name, contents in plan.metadata.items():
         output = member(build, name)
         output.write_bytes(contents)
@@ -271,7 +275,7 @@ def _prepare_fresh(
     inventory(root, build / "installation.json", value["application_id"], staging_generation=1)
     receipt_file = build / "installation.json"
     receipt = json.loads(receipt_file.read_text(encoding="utf-8"))
-    if receipt["files"] != plan.files:
+    if not plan.admits(receipt["files"]):
         raise ValueError("Installation candidate differs from current payload and controls")
     receipt["preparation"] = plan.identity
     receipt_file.write_text(json.dumps(receipt, indent=2) + "\n", encoding="utf-8")

@@ -1,5 +1,0 @@
-# CPack pre-build script: seal the application bundle in CPack's staging copy.
-execute_process(COMMAND "@CADRUMO_DEV_PYTHON@" -B -m dev.packaging.native.macos_bundle
-  --root "${CPACK_TEMPORARY_INSTALL_DIRECTORY}" --identity "@CADRUMO_PATH_GENERATED@/identity.json"
-  --codesign "@CADRUMO_CODESIGN@" --signing-identity "@CADRUMO_NATIVE_SIGNING_IDENTITY@"
-  WORKING_DIRECTORY "@CADRUMO_SOURCE_ROOT@" COMMAND_ERROR_IS_FATAL ANY)
