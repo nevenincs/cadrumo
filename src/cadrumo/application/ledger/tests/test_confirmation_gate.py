@@ -29,6 +29,7 @@ from ..confirmation_gate import (
     resolved_blockers,
 )
 from ..invoice_draft_records import DraftDiscrepancyFinding, FieldAmbiguityCandidate, FieldProvenance, InvoiceDraft
+from .clean_invoice_draft_support import clean_invoice_draft
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -41,25 +42,7 @@ def _clean_draft() -> InvoiceDraft:
     nothing here can block --- which is what makes a refusal elsewhere
     attributable to the finding under test rather than to the fixture.
     """
-    return InvoiceDraft(
-        supplier_tax_id="ESB12345674",
-        supplier_name="Proveedor Ejemplo SL",
-        invoice_number="PROV-2024-0001",
-        invoice_date="2024-11-15",
-        taxable_base=Decimal("100.00"),
-        iva_rate=Decimal("21"),
-        iva_amount=Decimal("21.00"),
-        grand_total=Decimal("121.00"),
-        currency="EUR",
-        provenance=(
-            FieldProvenance(
-                field="supplier_tax_id",
-                origin=FieldOrigin.EXACT_STRUCTURED,
-                grounding=FieldGroundingOutcome.ANCHORED,
-                anchor="ESB12345674",
-            ),
-        ),
-    )
+    return clean_invoice_draft()
 
 
 def _draft_with_finding(kind: DraftDiscrepancyKind) -> InvoiceDraft:

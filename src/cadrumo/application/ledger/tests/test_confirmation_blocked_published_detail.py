@@ -16,11 +16,10 @@ import pytest
 from ....core.confirmation_gate import ConfirmationBlockReason
 from ....core.draft_discrepancy import DraftDiscrepancyKind
 from ....core.errors.error_codes import build_error_envelope
-from ....core.field_grounding import FieldGroundingOutcome
-from ....core.field_origin import FieldOrigin
 from ...operations.error_detail import build_operation_error_detail
 from ..confirmation_gate import ConfirmationBlockedError, confirmation_blockers, resolved_blockers
-from ..invoice_draft_records import DraftDiscrepancyFinding, FieldProvenance, InvoiceDraft
+from ..invoice_draft_records import DraftDiscrepancyFinding, InvoiceDraft
+from .clean_invoice_draft_support import clean_invoice_draft
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -29,33 +28,18 @@ _PRINTED_VALUE = "Talleres Berrocal prints 4.528,32"
 
 
 def _blocked_draft() -> InvoiceDraft:
-    return InvoiceDraft(
-        supplier_tax_id="ESB12345674",
-        supplier_name="Proveedor Ejemplo SL",
-        invoice_number="PROV-2024-0001",
-        invoice_date="2024-11-15",
-        taxable_base=Decimal("100.00"),
-        iva_rate=Decimal("21"),
-        iva_amount=Decimal("21.00"),
-        grand_total=Decimal("121.00"),
-        currency="EUR",
-        provenance=(
-            FieldProvenance(
-                field="supplier_tax_id",
-                origin=FieldOrigin.EXACT_STRUCTURED,
-                grounding=FieldGroundingOutcome.ANCHORED,
-                anchor="ESB12345674",
+    return clean_invoice_draft().model_copy(
+        update={
+            "discrepancies": (
+                DraftDiscrepancyFinding(
+                    kind=DraftDiscrepancyKind.ARITHMETIC_CLOSURE,
+                    field="grand_total",
+                    detail=f"the total does not close: {_PRINTED_VALUE}",
+                    expected=Decimal("121.00"),
+                    observed=Decimal("126.20"),
+                ),
             ),
-        ),
-        discrepancies=(
-            DraftDiscrepancyFinding(
-                kind=DraftDiscrepancyKind.ARITHMETIC_CLOSURE,
-                field="grand_total",
-                detail=f"the total does not close: {_PRINTED_VALUE}",
-                expected=Decimal("121.00"),
-                observed=Decimal("126.20"),
-            ),
-        ),
+        }
     )
 
 
