@@ -112,7 +112,7 @@ effective_from = 2025-12-13
 review_status = "agent_reviewed"
 reviewed_at = 2026-08-30
 reviewed_by = "agent-authored from the bundled canonical BOE-A-2025-25390 HTML final provision, read verbatim"
-notes = "La disposicion final unica declara la orden aplicable POR PRIMERA VEZ a los modelos 347, 190 y 270 correspondientes al ejercicio 2025 y siguientes: abre una ventana continua desde 2025, no una aplicabilidad limitada a ese ejercicio."
+notes = "La disposición final unica declara la orden aplicable POR PRIMERA VEZ a los modelos 347, 190 y 270 correspondientes al ejercicio 2025 y siguientes: abre una ventana continua desde 2025, no una aplicabilidad limitada a ese ejercicio."
 required_text = [
     "Disposición final única. Entrada en vigor.",
     "modelos 347, 190 y 270 correspondientes al ejercicio 2025 y siguientes",

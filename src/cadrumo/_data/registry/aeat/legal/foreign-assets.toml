@@ -128,7 +128,7 @@ effective_from = 2013-02-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-06
 reviewed_by = "operator"
-notes = "Aprueba el modelo 720 'Declaracion informativa de bienes y derechos situados en el extranjero' y aprueba sus diseños físicos y lógicos."
+notes = "Aprueba el modelo 720 'Declaración informativa de bienes y derechos situados en el extranjero' y aprueba sus diseños físicos y lógicos."
 required_text = [
     "Aprobación del Modelo 720",
     "Declaración informativa de bienes y derechos situados en el extranjero",

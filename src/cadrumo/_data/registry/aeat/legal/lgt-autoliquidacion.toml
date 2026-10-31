@@ -45,7 +45,7 @@ review_status = "operator_reviewed"
 reviewed_at = 2026-05-15
 reviewed_by = "operator"
 notes = """\
-LGT art 93: obligaciones de informacion. Base sustantiva de toda obligacion informativa frente a \
+LGT art 93: obligaciones de información. Base sustantiva de toda obligacion informativa frente a \
 AEAT - personas fisicas y juridicas obligadas a proporcionar datos, informes, antecedentes y \
 justificantes con trascendencia tributaria. Enumera obligados especificos (retenedores, sociedades \
 de cobro de honorarios profesionales, entidades bancarias y de mediacion). Base sustantiva de las \
@@ -91,7 +91,7 @@ effective_from = 2004-07-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-14
 reviewed_by = "operator"
-notes = "Declaracion tributaria: any document presented before AEAT acknowledging a tax-relevant fact. Filing does not imply acceptance of the tax obligation. Options exercised via a declaration cannot be rectified after the filing period closes. Pending compensation / deduction balances cannot be modified through complementarias after AEAT initiates an application procedure."
+notes = "Declaración tributaria: any document presented before AEAT acknowledging a tax-relevant fact. Filing does not imply acceptance of the tax obligation. Options exercised via a declaration cannot be rectified after the filing period closes. Pending compensation / deduction balances cannot be modified through complementarias after AEAT initiates an application procedure."
 required_text = [
     "todo documento presentado ante la Administración tributaria",
     "La presentación de una declaración no implica aceptación o reconocimiento",

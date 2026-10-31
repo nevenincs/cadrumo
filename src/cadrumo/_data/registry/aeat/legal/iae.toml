@@ -92,7 +92,7 @@ effective_from = 2003-09-19
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-06
 reviewed_by = "operator"
-notes = "Apartado primero de la Orden HAC/2572/2003: aprobacion del modelo 840 de Declaracion del Impuesto sobre Actividades Economicas."
+notes = "Apartado primero de la Orden HAC/2572/2003: aprobación del modelo 840 de Declaración del Impuesto sobre Actividades Economicas."
 required_text = [
     "Aprobación",
     "modelo 840",
@@ -112,7 +112,7 @@ effective_from = 2003-09-19
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-06
 reviewed_by = "operator"
-notes = "Apartado sexto de la Orden HAC/2572/2003: plazos de presentacion del Modelo 840 (alta, variacion, baja) por remision a los articulos 5, 6 y 7 del Real Decreto 243/1995."
+notes = "Apartado sexto de la Orden HAC/2572/2003: plazos de presentación del Modelo 840 (alta, variacion, baja) por remision a los articulos 5, 6 y 7 del Real Decreto 243/1995."
 required_text = [
     "Plazo de presentación",
     "alta, variación o baja",

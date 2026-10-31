@@ -154,7 +154,7 @@ effective_from = 2023-04-25
 review_status = "agent_reviewed"
 reviewed_at = 2026-10-01
 reviewed_by = "agent-prepared (corpus-grounded against the bundled as-published BOE-A-2023-9634 disposicion final unica and its BOE analysis; pending operator re-stamp)"
-notes = "Orden HFP/381/2023 disposicion final unica: entra en vigor el mismo dia que el Real Decreto 249/2023, which BOE's analysis of this orden records as 25/04/2023 (its articulo segundo from 1 July 2023). That day closes the modelo 036 design of Orden HAC/609/2021 and opens the one this orden's anexo replaces it with."
+notes = "Orden HFP/381/2023 disposición final unica: entra en vigor el mismo dia que el Real Decreto 249/2023, which BOE's analysis of this orden records as 25/04/2023 (its articulo segundo from 1 July 2023). That day closes the modelo 036 design of Orden HAC/609/2021 and opens the one this orden's anexo replaces it with."
 required_text = [
     "La presente orden entrará en vigor el mismo día de la entrada en vigor del Real Decreto 249/2023",
     "No obstante, el artículo 2 entrará en vigor el 1 de julio de 2023.",
@@ -388,7 +388,7 @@ repunta al documento consolidado empaquetado rd-1065-2007.html, cuya unidad #a25
 articulo vigente y solo el vigente (4619 caracteres, titulo 'Articulo 25. Especialidades del numero \
 de identificacion fiscal de los empresarios...'). Las tres frases de required_text se han verificado \
 presentes en esa unidad leyendo el fichero empaquetado. OBSERVACION NO RESUELTA AQUI: effective_from \
-sigue declarando 2008-01-01, que corresponde a la redaccion original; el texto en vigor procede de \
+sigue declarando 2008-01-01, que corresponde a la redacción original; el texto en vigor procede de \
 BOE-A-2010-3370. Determinar la fecha citable exige leer la nota de la norma modificante y no el \
 atributo fecha_vigencia, que no es la fecha de efectos, por lo que se deja constancia en lugar de \
 cambiarla."""

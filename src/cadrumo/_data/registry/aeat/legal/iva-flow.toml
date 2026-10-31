@@ -31,7 +31,7 @@ effective_from = 2020-03-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-06-27
 reviewed_by = "agent-review"
-notes = "LIVA art 9 bis: acuerdo de ventas de bienes en consigna. Define las transferencias intracomunitarias en consigna, el plazo de doce meses, y la inclusion reglamentaria en declaracion recapitulativa. Base sustantiva de las claves M349 R, D y C desde la revision 2020."
+notes = "LIVA art 9 bis: acuerdo de ventas de bienes en consigna. Define las transferencias intracomunitarias en consigna, el plazo de doce meses, y la inclusion reglamentaria en declaración recapitulativa. Base sustantiva de las claves M349 R, D y C desde la revision 2020."
 required_text = [
     "Acuerdo de ventas de bienes en consigna",
     "declaración recapitulativa a que se refiere el artículo 164",
@@ -227,7 +227,7 @@ effective_from = 2020-03-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-06-09
 reviewed_by = "operator"
-notes = "LIVA art 15: concepto de adquisicion intracomunitaria de bienes. Define la adquisicion intracomunitaria como la obtencion del poder de disposicion sobre bienes muebles corporales expedidos o transportados al territorio de aplicacion del Impuesto desde otro Estado miembro. Base definitoria del enrutamiento intracomunitario M303 (Tier-2 routing)."
+notes = "LIVA art 15: concepto de adquisicion intracomunitaria de bienes. Define la adquisicion intracomunitaria como la obtencion del poder de disposición sobre bienes muebles corporales expedidos o transportados al territorio de aplicación del Impuesto desde otro Estado miembro. Base definitoria del enrutamiento intracomunitario M303 (Tier-2 routing)."
 required_text = [
     "Concepto de adquisición intracomunitaria de bienes",
     "Se entenderá por adquisición intracomunitaria de bienes",
@@ -330,7 +330,7 @@ notes = """\
 LIVA art 25: exenciones en las entregas de bienes destinados a otro Estado miembro (entregas \
 intracomunitarias). Exime las entregas de bienes expedidos o transportados al territorio de otro \
 Estado miembro cuando el adquirente disponga de un NIF-IVA asignado por otro Estado miembro y la \
-operacion se incluya en la declaracion recapitulativa. Base sustantiva de la clasificacion exenta \
+operacion se incluya en la declaración recapitulativa. Base sustantiva de la clasificacion exenta \
 intracomunitaria en el enrutamiento M303 (Tier-2 routing). REDACTION HISTORY, read from the BOE \
 open-data article endpoint (6 redacciones): first vigencia 19930101 by BOE-A-1992-28740, last \
 20200301 by BOE-A-2020-1651. Same authoring inconsistency corrected as on art-22: effective_from had \
@@ -534,7 +534,7 @@ effective_from = 2020-03-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-06-27
 reviewed_by = "agent-review"
-notes = "Reglamento del IVA art 79: obligation to present the declaracion recapitulativa. Enumerates the M349 operation universe: intracommunity deliveries, acquisitions, services, triangular subsequent deliveries, and consignment-sale movements."
+notes = "Reglamento del IVA art 79: obligation to present the declaración recapitulativa. Enumerates the M349 operation universe: intracommunity deliveries, acquisitions, services, triangular subsequent deliveries, and consignment-sale movements."
 required_text = [
     "Obligación de presentar la declaración recapitulativa",
     "Las prestaciones intracomunitarias de servicios",
@@ -554,7 +554,7 @@ effective_from = 2020-03-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-06-27
 reviewed_by = "agent-review"
-notes = "Reglamento del IVA art 80: content of the declaracion recapitulativa, including identification data, operation bases/importes, consignment-sale information, and rectification of erroneous recapitulativa data."
+notes = "Reglamento del IVA art 80: content of the declaración recapitulativa, including identification data, operation bases/importes, consignment-sale information, and rectification of erroneous recapitulativa data."
 required_text = [
     "Contenido de la declaración recapitulativa",
     "Los datos de identificación de los proveedores y adquirentes",
@@ -574,7 +574,7 @@ effective_from = 2020-03-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-06-28
 reviewed_by = "agent-review"
-notes = "Reglamento del IVA art 81: place, form, filing periods, and deadlines for the declaracion recapitulativa. Grounds Modelo 349 monthly cadence and the 50,000 EUR quarterly-threshold exception across the reference quarter and four prior natural quarters."
+notes = "Reglamento del IVA art 81: place, form, filing periods, and deadlines for the declaración recapitulativa. Grounds Modelo 349 monthly cadence and the 50,000 EUR quarterly-threshold exception across the reference quarter and four prior natural quarters."
 required_text = [
     "Lugar, forma y plazos de presentacion de la declaracion recapitulativa",
     "por cada mes natural durante los veinte primeros dias naturales",
@@ -687,7 +687,7 @@ registro a traves de la Sede electronica de la AEAT, mediante el suministro elec
 los registros de facturacion (SII), a quienes tengan un periodo de liquidacion mensual \
 conforme al art 71.3, y permite optar por el mismo sistema al resto de sujetos pasivos en los \
 terminos del art 68 bis. Es el supuesto al que remite el art 32.e del RD 1065/2007 para \
-excluir de la declaracion anual de operaciones con terceras personas (Modelo 347) tanto a los \
+excluir de la declaración anual de operaciones con terceras personas (Modelo 347) tanto a los \
 obligados como a los acogidos voluntariamente. Apartado 6 anadido con efectos desde el \
 1 de enero de 2017 por el RD 596/2016 (BOE-A-2016-11575); texto verificado contra el \
 consolidado bundled corpus/normatives/html/rd-1624-1992.html."""
