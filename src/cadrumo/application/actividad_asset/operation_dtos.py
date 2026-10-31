@@ -595,7 +595,15 @@ class ActivityAssetM100GapSnapshot(BaseModel):
     kind: M100GapKind
     covered_from: date
     covered_until: date
+    covered_through: date
+    """The last day the interval covers, the day before the exclusive ``covered_until``."""
     accrued: PublicDecimal | None = None
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _inclusive_end_follows(self) -> Self:
+        _require_covered_through(self.covered_until, self.covered_through)
+        return self
 
     @classmethod
     def from_domain(cls, value: M100ClaimGapProjection) -> Self:
@@ -605,6 +613,7 @@ class ActivityAssetM100GapSnapshot(BaseModel):
             kind=value.kind,
             covered_from=value.covered_from,
             covered_until=value.covered_until,
+            covered_through=last_day_covered(value.covered_until),
             accrued=None if value.accrued is None else project_scalar(value.accrued),
         )
 
