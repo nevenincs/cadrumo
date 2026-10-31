@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import contextvars
+import json
 from collections.abc import Iterator
 from datetime import date
 from importlib import import_module
@@ -12,8 +13,10 @@ from pydantic import BaseModel, TypeAdapter, ValidationError
 
 from ....contribuyente.descendant import DescendantInfo
 from ..authority import bundled_indexed_authority
+from ..export_value_policy import ExportValuePolicy
 from ..form_codes import resolve_form_codes
 from ..nif_iva_catalogue import resolve_nif_iva_catalogue
+from ..schema_exports import ExportRecordDefinition
 from ..schema_scalars import NifIvaString
 from ..withholding_bindings import WithholdingObservation
 
@@ -84,3 +87,54 @@ def test_a_nif_iva_of_a_body_outside_the_envelope_is_refused() -> None:
     for body in ("1" * (shortest - 1), "1" * (longest + 1)):
         with pytest.raises(ValidationError):
             _NIF_IVA.validate_python("BE" + body)
+
+
+def test_a_signed_component_layout_of_an_undeclared_geometry_is_refused() -> None:
+    declared = resolve_form_codes("form-row-codes").codes("export.signed_amount.component_lengths")
+    assert declared
+    for group in declared:
+        widths = tuple(int(width) for width in group.split("."))
+        _component_record(widths)
+    with pytest.raises(ValidationError, match="adjacent components"):
+        _component_record((1, 9, 2))
+
+
+def _component_record(widths: tuple[int, ...]) -> ExportRecordDefinition:
+    policies = (
+        ExportValuePolicy.SIGNED_COMPONENT_ZERO_SIGN,
+        ExportValuePolicy.SIGNED_COMPONENT_INTEGER_PART,
+        ExportValuePolicy.SIGNED_COMPONENT_FRACTIONAL_DIGITS,
+    )
+    offset = 1
+    fields = []
+    for order, (policy, width) in enumerate(zip(policies, widths, strict=True)):
+        fields.append(
+            {
+                "id": f"test.f{order}",
+                "offset": offset,
+                "length": width,
+                "kind": "binding",
+                "binding": "test-binding",
+                "data_type": "text" if order == 0 else "integer",
+                "required": False,
+                "padding": "none" if order == 0 else "left_zero",
+                "justification": "none" if order == 0 else "right",
+                "signed": False,
+                "value_policy": policy.value,
+                "legal_refs": ["ley-37-1992:art-164"],
+                "source_refs": ["aeat-dr-280-2022"],
+            }
+        )
+        offset += width
+    return ExportRecordDefinition.model_validate_json(
+        json.dumps(
+            {
+                "id": "test-record",
+                "record_type": "declarado",
+                "order": 1,
+                "encoding": "iso-8859-1",
+                "line_ending": "crlf",
+                "fields": fields,
+            }
+        )
+    )

@@ -6,7 +6,7 @@ family = "mapping"
 variant_id = "form-row-codes:design"
 date_axis = "filing_period"
 legal_refs = ["ley-37-1992:art-164"]
-source_refs = ["aeat-dr-232-2018", "enrolled-modelo-156-layout", "aeat-dr-347-2025", "boe-orden-hfp-1335-2021-iva-authority", "aeat-dr-303-2026", "aeat-dr-222-2025", "aeat-dr-353-2026", "aeat-dr-296-2024", "aeat-dr-360-2010"]
+source_refs = ["aeat-dr-232-2018", "enrolled-modelo-156-layout", "aeat-dr-347-2025", "boe-orden-hfp-1335-2021-iva-authority", "aeat-dr-303-2026", "aeat-dr-222-2025", "aeat-dr-353-2026", "aeat-dr-296-2024", "aeat-dr-360-2010", "aeat-dr-280-2022", "aeat-dr-165-2016-2022", "aeat-dr-190-2020"]
 review_status = "agent_reviewed"
 ownership = "authored"
 
@@ -66,6 +66,20 @@ required_text = ["116-140 Alfanumérico REFERENCIA CATASTRAL"]
 [[fact.variants.source_citations]]
 source_ref = "aeat-dr-303-2026"
 required_text = ["Constante. </T+ modelo+discriminante+Ejercicio+periodo+Tipo+>", "</T3030AAAAPP0000>"]
+
+# Signed amounts split across adjacent fields: Modelo 280 sign at 176 and integer part at 177-184,
+# Modelo 165 sign at 168 before a 13-digit integer part, Modelo 190 sign before 13 positions.
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-280-2022"
+required_text = ["176. SIGNO", "177-184 Numérico ENTERO"]
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-165-2016-2022"
+required_text = ["168 SIGNO"]
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-190-2020"
+required_text = ["Campo numérico de 13 posiciones"]
 
 [fact.variants.payload]
 kind = "mapping"
@@ -169,5 +183,7 @@ entries = [
   { key = "m360.account.holder_name_max", value = "25" },
   { key = "m347.inmueble.referencia_catastral_max", value = "25" },
   { key = "aeat.envelope.closer_extent", value = "18" },
+  { key = "export.signed_amount.component_lengths", value = "1.13.2,1.8.2" },
+  { key = "export.signed_magnitude.component_lengths", value = "1.13" },
   { key = "aeat.envelope.period_extent", value = "2" },
 ]
