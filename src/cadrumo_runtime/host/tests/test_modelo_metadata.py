@@ -7,7 +7,6 @@ import sys
 import time
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Literal
 from uuid import UUID, uuid4
 
 import pytest
@@ -34,12 +33,9 @@ from cadrumo.application.modelo.work_change_contracts import (
 )
 from cadrumo.application.operations.frontend_requests import (
     OPERATION_OBSERVATION_PROJECTION_ID,
-    OperationObservationRequestV1,
-    OperationObservationSuccessV1,
     OperationResultProjectionRequestV1,
     OperationResultProjectionSuccessV1,
 )
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition
 from cadrumo.core.period import Period
 from cadrumo.domain.modelos.repository import upsert_work_unit
@@ -56,12 +52,8 @@ from cadrumo_client.contracts.access_vocabulary import (
 from cadrumo_client.contracts.contracts import ClientHello
 from cadrumo_client.contracts.deadline_budget import exchange_deadline
 from cadrumo_client.contracts.operation_access import (
-    OperationAcknowledged,
     OperationContract,
     OperationContractReply,
-    OperationControl,
-    OperationObserve,
-    OperationObserved,
     OperationProjected,
     OperationReply,
     OperationResult,
@@ -70,8 +62,6 @@ from cadrumo_client.contracts.operation_access import (
 )
 from cadrumo_client.contracts.profile_access import (
     AccessRefusal,
-    ProfileLogin,
-    ProfileStatus,
     SessionRequest,
     SessionsLocked,
 )
@@ -80,7 +70,7 @@ from cadrumo_client.transport.installation import installation
 from cadrumo_client.transport.windows import WindowsEndpoint
 
 from ...adapters.tests.profile_worker_support import owner_id
-from .served_runtime import SyntheticLogin, serving_runtime
+from .served_runtime import SyntheticLogin, admit_session, serving_runtime, start_and_settle
 
 pytestmark = [
     pytest.mark.integration,
@@ -202,30 +192,6 @@ def _connect(endpoint: WindowsEndpoint) -> VerifiedConnection:
     )
 
 
-def _admit(
-    connection: VerifiedConnection,
-    profile_id: UUID,
-    *,
-    method: Literal["password", "api_key"],
-    proof: bytes,
-) -> UUID:
-    secret = bytearray(proof)
-    reply = connection.login(
-        ProfileLogin(
-            request_id=uuid4(),
-            profile_id=profile_id,
-            frontend=OperationFrontendProjection.CLI,
-            method=method,
-        ),
-        secret,
-        deadline=exchange_deadline(),
-    )
-    assert secret == bytes(len(proof))
-    assert isinstance(reply, ProfileStatus), reply
-    assert reply.status.session_id is not None
-    return reply.status.session_id
-
-
 def _submit(
     connection: VerifiedConnection,
     profile_id: UUID,
@@ -272,8 +238,8 @@ def test_native_modelo_metadata_scope_uses_persisted_period_and_fences_result(tm
             api, human = _connect(endpoint), _connect(endpoint)
             try:
                 # The person signs in first; the key admits only while they are signed in.
-                human_session = _admit(human, profile_id, method="password", proof=PROFILE_INPUT.encode())
-                api_session = _admit(api, profile_id, method="api_key", proof=api_key)
+                human_session = admit_session(human, profile_id, method="password", proof=PROFILE_INPUT.encode())
+                api_session = admit_session(api, profile_id, method="api_key", proof=api_key)
                 contract = api.operation(
                     OperationContract(
                         request_id=uuid4(),
@@ -301,37 +267,7 @@ def test_native_modelo_metadata_scope_uses_persisted_period_and_fences_result(tm
                 )
                 assert isinstance(submitted, OperationSubmitted), submitted
                 operation_id = submitted.receipt.operation_id
-                started = api.operation(
-                    OperationControl(
-                        action="operation_start",
-                        request_id=uuid4(),
-                        profile_id=profile_id,
-                        session_id=api_session,
-                        operation_id=operation_id,
-                    ),
-                    deadline=time.monotonic() + 10,
-                )
-                assert isinstance(started, OperationAcknowledged), started
-                deadline = time.monotonic() + 10
-                while True:
-                    observed = api.operation(
-                        OperationObserve(
-                            request_id=uuid4(),
-                            profile_id=profile_id,
-                            session_id=api_session,
-                            observation=OperationObservationRequestV1(
-                                operation_id=operation_id, after_cursor=0, page_limit=32
-                            ),
-                        ),
-                        deadline=deadline,
-                    )
-                    assert isinstance(observed, OperationObserved), observed
-                    assert isinstance(observed.observation, OperationObservationSuccessV1)
-                    projection = observed.observation.projection
-                    if projection.terminal_condition is not None:
-                        break
-                    assert time.monotonic() < deadline
-                    time.sleep(0.02)
+                projection = start_and_settle(api, profile_id, api_session, operation_id, settle_seconds=10)
                 assert projection.terminal_condition is OperationTerminalCondition.SUCCEEDED
                 assert projection.effect is OperationEffect.UPDATED
                 result_schema = contract.contract.result_schema

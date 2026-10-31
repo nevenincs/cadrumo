@@ -7,7 +7,6 @@ import sys
 import time
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Literal
 from uuid import UUID, uuid4
 
 import pytest
@@ -36,7 +35,6 @@ from cadrumo.application.operations.frontend_requests import (
 )
 from cadrumo.application.operations.models import OperationId
 from cadrumo.application.operations.public_period import PublicPeriod
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from cadrumo.core.period import Period
 from cadrumo.domain.modelos.repository import upsert_work_unit
@@ -50,7 +48,6 @@ from cadrumo_client.contracts.access_vocabulary import (
     DisclosurePermission,
 )
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode
-from cadrumo_client.contracts.deadline_budget import exchange_deadline
 from cadrumo_client.contracts.operation_access import (
     OperationAcknowledged,
     OperationContract,
@@ -65,8 +62,6 @@ from cadrumo_client.contracts.operation_access import (
 )
 from cadrumo_client.contracts.profile_access import (
     AccessRefusal,
-    ProfileLogin,
-    ProfileStatus,
     SessionRequest,
     SessionsLocked,
 )
@@ -75,7 +70,7 @@ from cadrumo_client.transport.installation import installation
 from cadrumo_client.transport.windows import WindowsEndpoint
 
 from ...adapters.tests.profile_worker_support import owner_id
-from .served_runtime import SyntheticLogin, connect_verified, serving_runtime
+from .served_runtime import SyntheticLogin, admit_session, connect_verified, serving_runtime
 
 pytestmark = [
     pytest.mark.integration,
@@ -175,30 +170,6 @@ def _issue_scoped_key(subject: AdministrationSubject) -> bytes:
     return credential.get_secret_value()
 
 
-def _admit(
-    connection: VerifiedConnection,
-    profile_id: UUID,
-    *,
-    method: Literal["password", "api_key"],
-    proof: bytes,
-) -> UUID:
-    secret = bytearray(proof)
-    reply = connection.login(
-        ProfileLogin(
-            request_id=uuid4(),
-            profile_id=profile_id,
-            frontend=OperationFrontendProjection.CLI,
-            method=method,
-        ),
-        secret,
-        deadline=exchange_deadline(),
-    )
-    assert secret == bytes(len(proof))
-    assert isinstance(reply, ProfileStatus), reply
-    assert reply.status.session_id is not None
-    return reply.status.session_id
-
-
 def _submit(
     connection: VerifiedConnection,
     profile_id: UUID,
@@ -279,8 +250,8 @@ def test_recorded_read_keeps_original_revision_after_new_catalogue_candidate(tmp
             api, human = connect_verified(endpoint), connect_verified(endpoint)
             try:
                 # The person signs in first; the key admits only while they are signed in.
-                human_session = _admit(human, profile_id, method="password", proof=PROFILE_INPUT.encode())
-                api_session = _admit(api, profile_id, method="api_key", proof=api_key)
+                human_session = admit_session(human, profile_id, method="password", proof=PROFILE_INPUT.encode())
+                api_session = admit_session(api, profile_id, method="api_key", proof=api_key)
                 contract = api.operation(
                     OperationContract(
                         request_id=uuid4(),

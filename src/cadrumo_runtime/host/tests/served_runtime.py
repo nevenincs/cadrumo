@@ -11,13 +11,29 @@ from dataclasses import dataclass
 from importlib.metadata import version
 from pathlib import Path
 from threading import Event
+from typing import Literal
 from uuid import UUID, uuid4
 
+from cadrumo.application.operations.frontend_projection import OperationPublicProjectionV1
+from cadrumo.application.operations.frontend_requests import (
+    OperationObservationRequestV1,
+    OperationObservationSuccessV1,
+)
+from cadrumo.application.operations.models import OperationId
+from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.access_contracts import LoginEligibility, OsLockState, OsLoginContext
 from cadrumo.application.user_profile.automation_custody_port import AutomationSecretStore
 from cadrumo_client.contracts.access_vocabulary import Availability
 from cadrumo_client.contracts.contracts import ByteChannel, ClientHello
+from cadrumo_client.contracts.deadline_budget import exchange_deadline
 from cadrumo_client.contracts.login import LoginEvidence
+from cadrumo_client.contracts.operation_access import (
+    OperationAcknowledged,
+    OperationControl,
+    OperationObserve,
+    OperationObserved,
+)
+from cadrumo_client.contracts.profile_access import ProfileLogin, ProfileStatus
 from cadrumo_client.transport.framing import VerifiedConnection
 from cadrumo_client.transport.startup import LaunchDoor
 from cadrumo_client.transport.windows import WindowsEndpoint
@@ -121,3 +137,69 @@ def connect_installed(endpoint: WindowsEndpoint) -> VerifiedConnection:
         expected=ClientHello(product_version=version("cadrumo"), storage_identity=endpoint.storage_identity),
         deadline=time.monotonic() + 3,
     )
+
+
+def admit_session(
+    connection: VerifiedConnection,
+    profile_id: UUID,
+    *,
+    method: Literal["password", "api_key"],
+    proof: bytes,
+) -> UUID:
+    """Sign in over ``connection`` and return the admitted session, checking the proof buffer was wiped."""
+    secret = bytearray(proof)
+    reply = connection.login(
+        ProfileLogin(
+            request_id=uuid4(),
+            profile_id=profile_id,
+            frontend=OperationFrontendProjection.CLI,
+            method=method,
+        ),
+        secret,
+        deadline=exchange_deadline(),
+    )
+    assert secret == bytes(len(proof))
+    assert isinstance(reply, ProfileStatus), reply
+    assert reply.status.session_id is not None
+    return reply.status.session_id
+
+
+def start_and_settle(
+    connection: VerifiedConnection,
+    profile_id: UUID,
+    session_id: UUID,
+    operation_id: OperationId,
+    *,
+    settle_seconds: float,
+    start_seconds: float = 10,
+) -> OperationPublicProjectionV1:
+    """Start an accepted operation and poll its observation until it reaches a terminal condition."""
+    started = connection.operation(
+        OperationControl(
+            action="operation_start",
+            request_id=uuid4(),
+            profile_id=profile_id,
+            session_id=session_id,
+            operation_id=operation_id,
+        ),
+        deadline=time.monotonic() + start_seconds,
+    )
+    assert isinstance(started, OperationAcknowledged), started
+    deadline = time.monotonic() + settle_seconds
+    while True:
+        observed = connection.operation(
+            OperationObserve(
+                request_id=uuid4(),
+                profile_id=profile_id,
+                session_id=session_id,
+                observation=OperationObservationRequestV1(operation_id=operation_id, after_cursor=0, page_limit=32),
+            ),
+            deadline=deadline,
+        )
+        assert isinstance(observed, OperationObserved), observed
+        assert isinstance(observed.observation, OperationObservationSuccessV1)
+        projection = observed.observation.projection
+        if projection.terminal_condition is not None:
+            return projection
+        assert time.monotonic() < deadline
+        time.sleep(0.02)

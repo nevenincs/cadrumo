@@ -67,8 +67,8 @@ from cadrumo_client.transport.installation import installation
 from cadrumo_client.transport.windows import WindowsEndpoint
 
 from ...adapters.tests.profile_worker_support import owner_id
-from .served_runtime import SyntheticLogin, serving_runtime
-from .test_modelo_metadata import _admit, _connect, _submit
+from .served_runtime import SyntheticLogin, admit_session, serving_runtime
+from .test_modelo_metadata import _connect, _submit
 from .test_modelo_metadata_history import _observe
 
 pytestmark = [
@@ -243,7 +243,7 @@ def test_native_scoped_revision_verify_and_file_return_actual_receipts(
         ):
             client = _connect(endpoint)
             try:
-                session_id = _admit(client, profile_id, method="api_key", proof=key)
+                session_id = admit_session(client, profile_id, method="api_key", proof=key)
                 if calculate_in_runtime:
                     calculate = ModeloWorkCalculateRequest.model_validate_json(
                         canonical_json_bytes(

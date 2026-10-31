@@ -85,8 +85,8 @@ from cadrumo_client.transport.windows import WindowsEndpoint
 from ...adapters.tests.profile_worker_support import owner_id
 from ...adapters.tests.retained_server import RetainedRuntimeTransportServer
 from ..profile_connections import RuntimeProfileConnections
-from .served_runtime import SyntheticLogin
-from .test_modelo_metadata import _admit, _connect, _issue_scoped_key, _seed_periods
+from .served_runtime import SyntheticLogin, admit_session
+from .test_modelo_metadata import _connect, _issue_scoped_key, _seed_periods
 from .test_modelo_metadata_history import _observe
 
 pytestmark = [
@@ -378,7 +378,7 @@ def test_native_bulk_submission_survives_disconnect_and_session_lock(native_bulk
     with ExitStack() as clients:
         initial = _connect(endpoint)
         clients.callback(initial.close)
-        initial_session = _admit(initial, profile_id, method="api_key", proof=native_bulk_runtime.api_key)
+        initial_session = admit_session(initial, profile_id, method="api_key", proof=native_bulk_runtime.api_key)
 
         # The padding tests the byte-framed transport threshold only; it does not cover financial-row payloads.
         work_unit = _rename_and_execute(
@@ -393,7 +393,9 @@ def test_native_bulk_submission_survives_disconnect_and_session_lock(native_bulk
 
         interrupted = _connect(endpoint)
         clients.callback(interrupted.close)
-        interrupted_session = _admit(interrupted, profile_id, method="api_key", proof=native_bulk_runtime.api_key)
+        interrupted_session = admit_session(
+            interrupted, profile_id, method="api_key", proof=native_bulk_runtime.api_key
+        )
         partial_json = (
             " " * SUBMISSION_PAYLOAD_CHUNK_BYTES
             + _rename_request(work_unit, "Must not be submitted after disconnect").model_dump_json()
@@ -414,7 +416,7 @@ def test_native_bulk_submission_survives_disconnect_and_session_lock(native_bulk
 
         survivor = _connect(endpoint)
         clients.callback(survivor.close)
-        survivor_session = _admit(survivor, profile_id, method="api_key", proof=native_bulk_runtime.api_key)
+        survivor_session = admit_session(survivor, profile_id, method="api_key", proof=native_bulk_runtime.api_key)
         work_unit = _rename_and_execute(
             survivor,
             profile_id=profile_id,
@@ -426,13 +428,13 @@ def test_native_bulk_submission_survives_disconnect_and_session_lock(native_bulk
 
         uploader = _connect(endpoint)
         clients.callback(uploader.close)
-        upload_session = _admit(uploader, profile_id, method="api_key", proof=native_bulk_runtime.api_key)
+        upload_session = admit_session(uploader, profile_id, method="api_key", proof=native_bulk_runtime.api_key)
         survivor = _connect(endpoint)
         clients.callback(survivor.close)
-        survivor_session = _admit(survivor, profile_id, method="api_key", proof=native_bulk_runtime.api_key)
+        survivor_session = admit_session(survivor, profile_id, method="api_key", proof=native_bulk_runtime.api_key)
         human = _connect(endpoint)
         clients.callback(human.close)
-        human_session = _admit(human, profile_id, method="password", proof=PROFILE_INPUT.encode())
+        human_session = admit_session(human, profile_id, method="password", proof=PROFILE_INPUT.encode())
 
         locked_json = (
             " " * SUBMISSION_PAYLOAD_CHUNK_BYTES
@@ -495,7 +497,7 @@ def test_native_financial_batch_uses_volatile_intake_and_amount_free_journals(
     assert encoded is not None
     client = _connect(runtime.endpoint)
     try:
-        session_id = _admit(client, runtime.profile_id, method="password", proof=PROFILE_INPUT.encode())
+        session_id = admit_session(client, runtime.profile_id, method="password", proof=PROFILE_INPUT.encode())
         for definition_id, expected_effect in (
             ("modelo.edit.preflight", OperationEffect.NONE),
             ("modelo.edit.apply", OperationEffect.UPDATED),
@@ -555,7 +557,7 @@ def test_native_financial_input_its_readers_refuse_is_answered_with_their_reason
     unread["submission"]["binding_intents"][0]["synthetic_member"] = "synthetic"
     client = _connect(runtime.endpoint)
     try:
-        session_id = _admit(client, runtime.profile_id, method="password", proof=PROFILE_INPUT.encode())
+        session_id = admit_session(client, runtime.profile_id, method="password", proof=PROFILE_INPUT.encode())
 
         def submit(
             subject_ref: str, payload_json: str, definition_id: str = "modelo.edit.preflight"
