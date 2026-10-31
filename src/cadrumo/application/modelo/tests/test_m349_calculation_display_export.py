@@ -372,8 +372,8 @@ def test_a_supported_explicit_empty_family_is_known_but_an_omitted_legacy_family
     assert _records(snapshot, empty, block.model_copy(update={"export_record_id": "unknown-record"})) == (False, ())
 
 
-def test_generic_saved_binding_rows_preserve_sparse_indices_zero_and_text(operation: PinnedAuthorityOperation) -> None:
-    snapshot, _, revision = _record_calculation()
+def _with_operator_record_owned_elsewhere(snapshot: RegistrySnapshot) -> RegistrySnapshot:
+    """Re-point the operator record at a binding owner other than the one the rows were saved under."""
     layouts = tuple(
         layout.model_copy(
             update={
@@ -387,9 +387,12 @@ def test_generic_saved_binding_rows_preserve_sparse_indices_zero_and_text(operat
         )
         for layout in snapshot.revision.export_layouts
     )
-    snapshot = snapshot.model_copy(
-        update={"revision": snapshot.revision.model_copy(update={"export_layouts": layouts})}
-    )
+    return snapshot.model_copy(update={"revision": snapshot.revision.model_copy(update={"export_layouts": layouts})})
+
+
+def test_generic_saved_binding_rows_preserve_sparse_indices_zero_and_text(operation: PinnedAuthorityOperation) -> None:
+    snapshot, _, revision = _record_calculation()
+    snapshot = _with_operator_record_owned_elsewhere(snapshot)
     revision = revision.model_copy(
         update={
             "detail_rows": (),
@@ -445,22 +448,7 @@ def test_a_malformed_numeric_row_preserves_its_index_and_unknown_cell(
     raw: str,
 ) -> None:
     snapshot, _, revision = _record_calculation()
-    layouts = tuple(
-        layout.model_copy(
-            update={
-                "records": tuple(
-                    record.model_copy(update={"binding_record": "other-owner"})
-                    if record.id == "modelo-349-operador"
-                    else record
-                    for record in layout.records
-                )
-            }
-        )
-        for layout in snapshot.revision.export_layouts
-    )
-    snapshot = snapshot.model_copy(
-        update={"revision": snapshot.revision.model_copy(update={"export_layouts": layouts})}
-    )
+    snapshot = _with_operator_record_owned_elsewhere(snapshot)
     revision = revision.model_copy(
         update={
             "detail_rows": (),
