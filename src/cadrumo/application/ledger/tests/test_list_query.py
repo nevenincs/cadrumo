@@ -10,7 +10,7 @@ frontend rely on it rather than reimplementing it.
 
 from __future__ import annotations
 
-from collections.abc import Generator, Iterable
+from collections.abc import Generator
 from contextlib import contextmanager
 from datetime import UTC, date, datetime
 from decimal import Decimal
@@ -33,7 +33,7 @@ from ....domain.transactions.protocols import TransactionCatalogueRepositoryProt
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....domain.usage_ratios.model import UsageRatioProfile
 from ...review.filter import LedgerReviewFilterSpec
-from ...tests.ledger_partition_support import partition_by_filing_date
+from ...tests.ledger_partition_support import CatalogueTransactionRepository
 from ..action_ports import LedgerActionPorts
 from ..list_operation import ledger_list_row
 from ..list_query import LedgerTransactionListQuery, query_ledger_transaction_list, sort_ledger_results
@@ -108,54 +108,10 @@ def _query(**overrides: Unpack[_QueryOverrides]) -> LedgerTransactionListQuery:
 @contextmanager
 def _stored(*transactions: Transaction) -> Generator[TransactionCatalogueRepositoryProtocol]:
     """Build a deterministic transaction catalogue through the read protocol."""
-    yield _InMemoryTransactionRepository(
+    yield CatalogueTransactionRepository(
         bucket_id=_BUCKET,
         catalogue=TransactionCatalogue.from_transactions(transactions),
     )
-
-
-class _InMemoryTransactionRepository(TransactionCatalogueRepositoryProtocol):
-    """Deterministic inward fake for the application transaction read port."""
-
-    def __init__(self, *, bucket_id: str, catalogue: TransactionCatalogue) -> None:
-        self._bucket_id = bucket_id
-        self._catalogue = catalogue
-
-    @property
-    @override
-    def bucket_id(self) -> str:
-        return self._bucket_id
-
-    @override
-    def exists(self) -> bool:
-        return bool(self._catalogue.transactions)
-
-    @override
-    def load(self) -> TransactionCatalogue:
-        return self._catalogue
-
-    @override
-    def load_for_date_range(self, start: date, end: date) -> TransactionCatalogue:
-        return TransactionCatalogue.from_transactions(
-            transaction
-            for transaction in self._catalogue
-            if start <= (transaction.raw.value_date or transaction.raw.booked_date) <= end
-        )
-
-    @override
-    def load_by_ids(self, transaction_ids: Iterable[str]) -> TransactionCatalogue:
-        requested = frozenset(transaction_ids)
-        return TransactionCatalogue.from_transactions(
-            transaction for transaction in self._catalogue if transaction.transaction_id in requested
-        )
-
-    @override
-    def partition_by_date_range(self, start: date, end: date) -> LedgerDatePartition:
-        return partition_by_filing_date(self._catalogue, start, end)
-
-    @override
-    def save(self, catalogue: TransactionCatalogue) -> None:
-        self._catalogue = catalogue
 
 
 class _MissingEventHistoryRepository:
@@ -356,7 +312,7 @@ def _cash_accounting_transaction(*, provider_id: str, filing_date: date, operati
     )
 
 
-class _PartitionOnlyRepository(_InMemoryTransactionRepository):
+class _PartitionOnlyRepository(CatalogueTransactionRepository):
     """A read port that serves a period read from its date partition alone.
 
     The in-window half is chosen by overlap with each row's eligible date span,

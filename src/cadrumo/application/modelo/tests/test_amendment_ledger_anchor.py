@@ -18,7 +18,6 @@ row-field scalar inputs that would produce one.
 
 from __future__ import annotations
 
-from collections.abc import Iterable
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -43,14 +42,11 @@ from ....domain.modelos.calculation_revision import (
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.errors import ModeloValidationError
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
-from ....domain.transactions.date_partition import (
-    LedgerDatePartition,
-)
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ...aggregation.ledger_filing_snapshot import row_fingerprint
-from ...tests.ledger_partition_support import partition_by_filing_date
+from ...tests.ledger_partition_support import CatalogueTransactionRepository
 from .._calculation_helpers import build_typed_observations
 from .._calculation_modelo_adjustments import drop_row_field_template_outputs
 from ..amendment_actions import _amendment_ledger_anchor
@@ -142,48 +138,14 @@ def _revision(*source_transaction_ids: str):
     )
 
 
-class _TransactionRepository:
-    """Inward fake for the application transaction-catalogue port."""
-
-    def __init__(self, catalogue: TransactionCatalogue) -> None:
-        self._catalogue = catalogue
-
-    @property
-    def bucket_id(self) -> str:
-        return _WORK_BUCKET
-
-    def load(self) -> TransactionCatalogue:
-        return self._catalogue
-
-    def exists(self) -> bool:
-        return bool(self._catalogue.transactions)
-
-    def load_for_date_range(self, start: date, end: date) -> TransactionCatalogue:
-        return TransactionCatalogue.from_transactions(
-            transaction
-            for transaction in self._catalogue
-            if start <= (transaction.raw.value_date or transaction.raw.booked_date) <= end
-        )
-
-    def load_by_ids(self, transaction_ids: Iterable[str]) -> TransactionCatalogue:
-        requested = frozenset(transaction_ids)
-        return TransactionCatalogue.from_transactions(
-            transaction for transaction in self._catalogue if transaction.transaction_id in requested
-        )
-
-    def partition_by_date_range(self, start: date, end: date) -> LedgerDatePartition:
-        return partition_by_filing_date(self._catalogue, start, end)
-
-    def save(self, catalogue: TransactionCatalogue) -> None:
-        self._catalogue = catalogue
-
-
 def test_a_revision_with_no_contributors_anchors_to_nothing_and_says_so() -> None:
     """``None`` rather than an empty snapshot, which would read as a checked ledger."""
     snapshot, evidence = _amendment_ledger_anchor(
         amendment_draft=_revision(),
         work_unit=_work_unit(),
-        transaction_repository=_TransactionRepository(TransactionCatalogue.from_transactions(())),
+        transaction_repository=CatalogueTransactionRepository(
+            bucket_id=_WORK_BUCKET, catalogue=TransactionCatalogue.from_transactions(())
+        ),
         now=_AMENDED_AT,
     )
 
@@ -210,7 +172,9 @@ def test_the_anchor_describes_the_ledger_at_amend_time_not_at_baseline_time() ->
         taxable_base=Decimal("200.00"),
     )
     revision = _revision(purchase.transaction_id)
-    tx_repo = _TransactionRepository(TransactionCatalogue.from_transactions((sale, purchase)))
+    tx_repo = CatalogueTransactionRepository(
+        bucket_id=_WORK_BUCKET, catalogue=TransactionCatalogue.from_transactions((sale, purchase))
+    )
 
     # Base and cuota restated against the SAME gross, because the catalogue
     # enforces the identity and derives the transaction id from `raw`.
@@ -247,7 +211,9 @@ def test_the_anchor_bundles_evidence_covering_every_fingerprinted_contributor() 
         taxable_base=Decimal("200.00"),
     )
     revision = _revision(purchase.transaction_id)
-    tx_repo = _TransactionRepository(TransactionCatalogue.from_transactions((sale, purchase)))
+    tx_repo = CatalogueTransactionRepository(
+        bucket_id=_WORK_BUCKET, catalogue=TransactionCatalogue.from_transactions((sale, purchase))
+    )
 
     snapshot, evidence = _amendment_ledger_anchor(
         amendment_draft=revision,
@@ -336,13 +302,15 @@ def _m193_revision(
     )
 
 
-def _contributing_purchase() -> tuple[Transaction, _TransactionRepository]:
+def _contributing_purchase() -> tuple[Transaction, CatalogueTransactionRepository]:
     purchase = _iva_transaction(
         "irene-purchase-no-evidence",
         direction=TransactionDirection.OUTGOING,
         taxable_base=Decimal("200.00"),
     )
-    return purchase, _TransactionRepository(TransactionCatalogue.from_transactions((purchase,)))
+    return purchase, CatalogueTransactionRepository(
+        bucket_id=_WORK_BUCKET, catalogue=TransactionCatalogue.from_transactions((purchase,))
+    )
 
 
 def test_an_amendment_of_a_revision_without_row_field_inputs_bundles_every_manual_fact() -> None:

@@ -14,26 +14,23 @@ model, not about how the operator typed the command.
 
 from __future__ import annotations
 
-from collections.abc import Generator, Iterable
+from collections.abc import Generator
 from contextlib import contextmanager
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
-from typing import TypedDict, override
+from typing import TypedDict
 
 import pytest
 
 from ....core.irnr import M210PayerMode
-from ....domain.transactions.date_partition import (
-    LedgerDatePartition,
-)
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.errors import TransactionValidationError
 from ....domain.transactions.m210_income_classification import resolve_m210_payer_mode
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from ...tests.ledger_partition_support import partition_by_filing_date
+from ...tests.ledger_partition_support import CatalogueTransactionRepository
 from ..m210_classification import resolve_m210_income_classification
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
@@ -79,54 +76,10 @@ def _transaction(*, provider_id: str, direction: TransactionDirection) -> Transa
 @contextmanager
 def _stored(*transactions: Transaction) -> Generator[TransactionCatalogueRepositoryProtocol]:
     """Build a deterministic catalogue through the application read protocol."""
-    yield _InMemoryTransactionRepository(
+    yield CatalogueTransactionRepository(
         bucket_id=_BUCKET,
         catalogue=TransactionCatalogue.from_transactions(transactions),
     )
-
-
-class _InMemoryTransactionRepository(TransactionCatalogueRepositoryProtocol):
-    """Deterministic inward fake for the transaction catalogue read port."""
-
-    def __init__(self, *, bucket_id: str, catalogue: TransactionCatalogue) -> None:
-        self._bucket_id = bucket_id
-        self._catalogue = catalogue
-
-    @property
-    @override
-    def bucket_id(self) -> str:
-        return self._bucket_id
-
-    @override
-    def exists(self) -> bool:
-        return bool(self._catalogue.transactions)
-
-    @override
-    def load(self) -> TransactionCatalogue:
-        return self._catalogue
-
-    @override
-    def load_for_date_range(self, start: date, end: date) -> TransactionCatalogue:
-        return TransactionCatalogue.from_transactions(
-            transaction
-            for transaction in self._catalogue
-            if start <= (transaction.raw.value_date or transaction.raw.booked_date) <= end
-        )
-
-    @override
-    def load_by_ids(self, transaction_ids: Iterable[str]) -> TransactionCatalogue:
-        requested = frozenset(transaction_ids)
-        return TransactionCatalogue.from_transactions(
-            transaction for transaction in self._catalogue if transaction.transaction_id in requested
-        )
-
-    @override
-    def partition_by_date_range(self, start: date, end: date) -> LedgerDatePartition:
-        return partition_by_filing_date(self._catalogue, start, end)
-
-    @override
-    def save(self, catalogue: TransactionCatalogue) -> None:
-        self._catalogue = catalogue
 
 
 class _Answers(TypedDict, total=False):

@@ -19,7 +19,6 @@ Anti-tautology proof: the GENERAL-regime case with the same inputs MUST raise
 
 from __future__ import annotations
 
-from collections.abc import Iterable
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -32,9 +31,6 @@ from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.work_unit import WorkUnit, WorkUnitState, derive_work_unit_id
-from cadrumo.domain.transactions.date_partition import (
-    LedgerDatePartition,
-)
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
@@ -42,7 +38,7 @@ from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransa
 from cadrumo.domain.usage_ratios.model import UsageRatioProfile
 
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
-from ...tests.ledger_partition_support import partition_by_filing_date
+from ...tests.ledger_partition_support import CatalogueTransactionRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -108,46 +104,9 @@ def _blocking_transaction() -> Transaction:
     )
 
 
-class _InMemoryTransactionRepository:
-    """Minimal in-memory implementation of the application transaction port."""
-
-    def __init__(self, *, bucket_id: str, catalogue: TransactionCatalogue) -> None:
-        self._bucket_id = bucket_id
-        self._catalogue = catalogue
-
-    @property
-    def bucket_id(self) -> str:
-        return self._bucket_id
-
-    def exists(self) -> bool:
-        return bool(self._catalogue.transactions)
-
-    def load(self) -> TransactionCatalogue:
-        return self._catalogue
-
-    def load_for_date_range(self, start: date, end: date) -> TransactionCatalogue:
-        return TransactionCatalogue.from_transactions(
-            transaction
-            for transaction in self._catalogue
-            if start <= (transaction.raw.value_date or transaction.raw.booked_date) <= end
-        )
-
-    def load_by_ids(self, transaction_ids: Iterable[str]) -> TransactionCatalogue:
-        requested = frozenset(transaction_ids)
-        return TransactionCatalogue.from_transactions(
-            transaction for transaction in self._catalogue if transaction.transaction_id in requested
-        )
-
-    def partition_by_date_range(self, start: date, end: date) -> LedgerDatePartition:
-        return partition_by_filing_date(self._catalogue, start, end)
-
-    def save(self, catalogue: TransactionCatalogue) -> None:
-        self._catalogue = catalogue
-
-
 def _seed_blocking_transaction(bucket_id: str) -> TransactionCatalogueRepositoryProtocol:
     tx = _blocking_transaction()
-    return _InMemoryTransactionRepository(
+    return CatalogueTransactionRepository(
         bucket_id=bucket_id,
         catalogue=TransactionCatalogue(transactions={tx.transaction_id: tx}),
     )
