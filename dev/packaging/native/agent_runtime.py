@@ -30,14 +30,15 @@ from .agent_runtime_validation import (
 from .hashing import digest
 from .tree_copy import copy_tree
 
-_STAGED_RECEIPT_NAME = "agent-runtime.json"
+STAGED_RECEIPT_NAME = "agent-runtime.json"
+STAGED_RUNTIME_TREES = ("node", "node_modules")
 _STAGED_NAMES = (
     "node",
     "node_modules",
     "package.json",
     "package-lock.json",
     ".node-version",
-    _STAGED_RECEIPT_NAME,
+    STAGED_RECEIPT_NAME,
 )
 
 
@@ -177,11 +178,11 @@ def stage_agent_runtime(
         raise ValueError(f"Agent runtime destination already contains owned paths: {', '.join(collisions)}")
 
     source = source.resolve(strict=True)
-    for name in ("node", "node_modules"):
+    for name in STAGED_RUNTIME_TREES:
         copy_tree(source / name, destination / name, copy_function=copy_function)
     for name in RUNTIME_FILES:
         copy_function(source / name, destination / name)
-    copy_function(source / RECEIPT_NAME, destination / _STAGED_RECEIPT_NAME)
+    copy_function(source / RECEIPT_NAME, destination / STAGED_RECEIPT_NAME)
 
 
 def _npm_environment(node: Path, user_config: Path, global_config: Path, cache: Path) -> dict[str, str]:

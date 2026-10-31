@@ -6,7 +6,6 @@ import os
 import subprocess
 import sys
 import tempfile
-from pathlib import Path
 from typing import cast
 
 from ._kdf_attestation import kdf_worker_platform, validate_ready_attestation_shape
@@ -51,13 +50,24 @@ def _validate_environment(
 ) -> None:
     if neutral_directory is None or environment_keys is None:
         raise ValueError("profile KDF neutral directory is unavailable")
-    neutral_root = Path(neutral_directory.name).resolve()
-    if payload["cwd"] != str(neutral_root):
+    if not _is_neutral_directory(payload["cwd"], neutral_directory.name):
         raise ValueError("profile KDF worker cwd is not neutral")
     reported = payload["environment_keys"]
     if not isinstance(reported, list):
         raise ValueError(KDF_WORKER_ENVIRONMENT_REFUSAL)
     _validate_environment_keys(cast("list[object]", reported), environment_keys)
+
+
+def _is_neutral_directory(reported: object, neutral_directory: str) -> bool:
+    # The kernel reports a directory in its on-disk spelling, which a link or a
+    # case-insensitive volume can make textually different from the path the
+    # parent created. Identity of the directory itself is the neutrality claim.
+    if not isinstance(reported, str) or not reported:
+        return False
+    try:
+        return os.path.samefile(reported, neutral_directory)
+    except OSError:
+        return False
 
 
 def _validate_environment_keys(reported: list[object], environment_keys: frozenset[str]) -> None:

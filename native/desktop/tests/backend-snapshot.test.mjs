@@ -47,7 +47,9 @@ function pathDependencies(crate) {
 }
 
 function fixture(t) {
-  const root = mkdtempSync(join(tmpdir(), "cadrumo-backend-snapshot-"));
+  const root = mkdtempSync(
+    join(realpathSync(tmpdir()), "cadrumo-backend-snapshot-"),
+  );
   t.after(() => rmSync(root, { recursive: true, force: true }));
   const source = join(root, "source");
   const build = join(root, "build");
