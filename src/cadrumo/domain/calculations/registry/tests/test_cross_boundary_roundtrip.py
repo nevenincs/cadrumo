@@ -328,6 +328,29 @@ def test_filing_draft_full_roundtrip() -> None:
     assert computed.formula_trace_casilla_ids == _IVA_RESULTADO_OPERANDS
 
 
+def _draft_common_kwargs() -> _ModeloDraftCommonKwargs:
+    """The Modelo 303 2025 1T draft fields every tax-id boundary test shares."""
+    return {
+        "draft_id": "f" * 64,
+        "modelo": "303",
+        "period": Period.from_year_and_code(2025, "1T"),
+        "profile_tax_id": "12345678Z",
+        "snapshot_ref": RegistrySnapshotRef(
+            modelo="303",
+            revision_id="2025-y-siguientes",
+            modelo_year=2025,
+            period="1T",
+        ),
+        "status": ModeloDraftStatus.BORRADOR,
+        "values": (),
+        "binding_values": (),
+        "findings": (),
+        "created_at": _DRAFT_TIMESTAMP,
+        "updated_at": _DRAFT_TIMESTAMP,
+        "schema_version": registry_schema_version(modelo="303", revision_id="2025-y-siguientes"),
+    }
+
+
 def test_filing_draft_subject_tax_id_validates_at_boundary() -> None:
     """``ModeloDraft.subject_tax_id`` runs the AEAT NIF/NIE/CIF checksum.
 
@@ -337,28 +360,7 @@ def test_filing_draft_subject_tax_id_validates_at_boundary() -> None:
 
     import pytest as _pytest
 
-    from ..schema_references import RegistrySnapshotRef
-
-    snapshot_ref = RegistrySnapshotRef(
-        modelo="303",
-        revision_id="2025-y-siguientes",
-        modelo_year=2025,
-        period="1T",
-    )
-    common_kwargs: _ModeloDraftCommonKwargs = {
-        "draft_id": "f" * 64,
-        "modelo": "303",
-        "period": Period.from_year_and_code(2025, "1T"),
-        "profile_tax_id": "12345678Z",
-        "snapshot_ref": snapshot_ref,
-        "status": ModeloDraftStatus.BORRADOR,
-        "values": (),
-        "binding_values": (),
-        "findings": (),
-        "created_at": _DRAFT_TIMESTAMP,
-        "updated_at": _DRAFT_TIMESTAMP,
-        "schema_version": registry_schema_version(modelo="303", revision_id="2025-y-siguientes"),
-    }
+    common_kwargs = _draft_common_kwargs()
 
     # 12345678Z is a valid Spanish NIF (checksum letter for 12345678 is Z).
     valid = ModeloDraft(subject_tax_id="12345678Z", **common_kwargs)
@@ -377,28 +379,7 @@ def test_filing_draft_profile_tax_id_validates_at_boundary() -> None:
     ``subject_tax_id`` is validated.
     """
 
-    from ..schema_references import RegistrySnapshotRef
-
-    snapshot_ref = RegistrySnapshotRef(
-        modelo="303",
-        revision_id="2025-y-siguientes",
-        modelo_year=2025,
-        period="1T",
-    )
-    common_kwargs: _ModeloDraftCommonKwargs = {
-        "draft_id": "f" * 64,
-        "modelo": "303",
-        "period": Period.from_year_and_code(2025, "1T"),
-        "profile_tax_id": "12345678Z",
-        "snapshot_ref": snapshot_ref,
-        "status": ModeloDraftStatus.BORRADOR,
-        "values": (),
-        "binding_values": (),
-        "findings": (),
-        "created_at": _DRAFT_TIMESTAMP,
-        "updated_at": _DRAFT_TIMESTAMP,
-        "schema_version": registry_schema_version(modelo="303", revision_id="2025-y-siguientes"),
-    }
+    common_kwargs = _draft_common_kwargs()
 
     valid = ModeloDraft(subject_tax_id="12345678Z", **common_kwargs)
     assert valid.profile_tax_id == "12345678Z"
