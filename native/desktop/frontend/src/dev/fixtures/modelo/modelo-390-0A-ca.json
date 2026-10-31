@@ -32944,6 +32944,7 @@
     "nie_leaders": "XYZ",
     "cif_leaders": "ABCDEFGHJNPQRSUVW",
     "nif_letters": "TRWAGMYFPDXBNJZSQVHLCKE",
+    "nif_check_modulus": 23,
     "nie_prefix_substitutions": [
       ["X", "0"],
       ["Y", "1"],

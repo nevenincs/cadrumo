@@ -18022,9 +18022,9 @@
       "workspace_contract_version": 1,
       "edit_contract_version": 1,
       "operation_manifest_version": 4,
-      "contract_set_digest": "4c57a7cd8ffb2de9fc6fce1204e77d13f8ea6fcdf5bb4efed6a736f9c4a981c5",
+      "contract_set_digest": "469ea4f43b88ef7d3ddc8e46a53e6236bcfa37167341fad56c8be0be19fb1acf",
       "operation_definition_id": "modelo.edit.apply",
-      "definition_contract_digest": "6b37be16acf22e172dcafd43befa599a92a16043f3f81ca6836a5ca1a2857646",
+      "definition_contract_digest": "0a5464be70052921dbed5abd7efac24eb9efb7a371218d2af75ca7442aedf91f",
       "request_schema": {
         "schema_id": "modelo.edit.apply.request",
         "schema_version": 2,
@@ -18048,7 +18048,7 @@
       "financial_operand_schema": {
         "schema_id": "modelo.edit.submission",
         "schema_version": 1,
-        "schema_fingerprint": "071dc760f85f95503b711314955cdc61b45de1765f60fb15b7b746a638b38314"
+        "schema_fingerprint": "44a9fbf9f745a918fa95987868c324d253b905a0a55adb35134a5bac000ec353"
       }
     },
     "bucket_id": "13000000-0000-4000-8000-000000000730",
@@ -21138,9 +21138,9 @@
     ],
     "permitted_surface_digest": "55e1f327f6ef11017b79b42e78ea5e991f50ab537a901307c3c3b3b06b6f049a",
     "mutation_family": "calculate",
-    "issued_at": "2026-10-31T07:42:03.599722Z",
-    "expires_at": "2026-10-31T07:47:03.599722Z",
-    "baseline_id": "bad0340f06ba52f52415ab91fcc49f282126653e0242648a7aa4e40eb1066338"
+    "issued_at": "2026-10-31T21:55:43.498847Z",
+    "expires_at": "2026-10-31T22:00:43.498847Z",
+    "baseline_id": "0465c207321ef5c30008df22c727e1b3b033171245a1a9afa60e2b182db57176"
   },
   "admission_refusal": null,
   "admission_refusal_words": null,
@@ -21202,6 +21202,7 @@
     "nie_leaders": "XYZ",
     "cif_leaders": "ABCDEFGHJNPQRSUVW",
     "nif_letters": "TRWAGMYFPDXBNJZSQVHLCKE",
+    "nif_check_modulus": 23,
     "nie_prefix_substitutions": [
       ["X", "0"],
       ["Y", "1"],
@@ -21646,10 +21647,7 @@
         "default": "ingreso",
         "choices": [
           { "value": "ingreso", "words": "Befizetés (ingreso)" },
-          {
-            "value": "domiciliacion",
-            "words": "Csoportos beszedés (domiciliación)"
-          },
+          { "value": "domiciliacion", "words": "Csoportos beszedés" },
           {
             "value": "cuenta_corriente",
             "words": "Adófolyószámla (cuenta corriente tributaria)"

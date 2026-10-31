@@ -1599,9 +1599,9 @@
       "workspace_contract_version": 1,
       "edit_contract_version": 1,
       "operation_manifest_version": 4,
-      "contract_set_digest": "4c57a7cd8ffb2de9fc6fce1204e77d13f8ea6fcdf5bb4efed6a736f9c4a981c5",
+      "contract_set_digest": "469ea4f43b88ef7d3ddc8e46a53e6236bcfa37167341fad56c8be0be19fb1acf",
       "operation_definition_id": "modelo.edit.apply",
-      "definition_contract_digest": "6b37be16acf22e172dcafd43befa599a92a16043f3f81ca6836a5ca1a2857646",
+      "definition_contract_digest": "0a5464be70052921dbed5abd7efac24eb9efb7a371218d2af75ca7442aedf91f",
       "request_schema": {
         "schema_id": "modelo.edit.apply.request",
         "schema_version": 2,
@@ -1625,7 +1625,7 @@
       "financial_operand_schema": {
         "schema_id": "modelo.edit.submission",
         "schema_version": 1,
-        "schema_fingerprint": "071dc760f85f95503b711314955cdc61b45de1765f60fb15b7b746a638b38314"
+        "schema_fingerprint": "44a9fbf9f745a918fa95987868c324d253b905a0a55adb35134a5bac000ec353"
       }
     },
     "bucket_id": "13000000-0000-4000-8000-000000000730",
@@ -1939,9 +1939,9 @@
     ],
     "permitted_surface_digest": "2705e6476442c123bb8c6979cb9d82e81dc02301b0f923b4b78f24941d4686dd",
     "mutation_family": "calculate",
-    "issued_at": "2026-10-31T07:42:36.728938Z",
-    "expires_at": "2026-10-31T07:47:36.728938Z",
-    "baseline_id": "dd52dd98ff7cc6c14152681627f86e90c6155a237c7e3f313e6432baf2041046"
+    "issued_at": "2026-10-31T21:56:13.937458Z",
+    "expires_at": "2026-10-31T22:01:13.937458Z",
+    "baseline_id": "2ee19996a64828ebbcfdc7911b853654f154a9658904131c1ed95ea519eb9bd1"
   },
   "admission_refusal": null,
   "admission_refusal_words": null,
@@ -2003,6 +2003,7 @@
     "nie_leaders": "XYZ",
     "cif_leaders": "ABCDEFGHJNPQRSUVW",
     "nif_letters": "TRWAGMYFPDXBNJZSQVHLCKE",
+    "nif_check_modulus": 23,
     "nie_prefix_substitutions": [
       ["X", "0"],
       ["Y", "1"],

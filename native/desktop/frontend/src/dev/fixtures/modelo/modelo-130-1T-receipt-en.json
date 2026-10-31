@@ -9,7 +9,7 @@
       "period": { "filing_year": 2026, "code": "1T" },
       "registry_revision_id": "2019-y-siguientes",
       "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
-      "calculation_revision_id": "95da96e7d100d7678f400ca1a3ea7dd49e60782e4fa97b7a55fa376ec20b18a0",
+      "calculation_revision_id": "1ddce0eff2b503a82514f66443ae0d50a8db23703facfe75e9e176b716ad86a0",
       "language": "en",
       "layout_provenance": "generated",
       "inspection_reason": null,
@@ -1573,7 +1573,7 @@
         "days_overdue": 194
       },
       "aeat_data": null,
-      "filing": { "recorded_at": "2026-10-31T07:42:59.367008Z" },
+      "filing": { "recorded_at": "2026-10-31T21:56:34.020415Z" },
       "last_export": null,
       "edit_closure": "recorded_as_filed",
       "modelo_title": "Modelo 130 · IRPF instalment payment, direct assessment",
@@ -1589,9 +1589,9 @@
       "workspace_contract_version": 1,
       "edit_contract_version": 1,
       "operation_manifest_version": 4,
-      "contract_set_digest": "4c57a7cd8ffb2de9fc6fce1204e77d13f8ea6fcdf5bb4efed6a736f9c4a981c5",
+      "contract_set_digest": "469ea4f43b88ef7d3ddc8e46a53e6236bcfa37167341fad56c8be0be19fb1acf",
       "operation_definition_id": "modelo.edit.apply",
-      "definition_contract_digest": "6b37be16acf22e172dcafd43befa599a92a16043f3f81ca6836a5ca1a2857646",
+      "definition_contract_digest": "0a5464be70052921dbed5abd7efac24eb9efb7a371218d2af75ca7442aedf91f",
       "request_schema": {
         "schema_id": "modelo.edit.apply.request",
         "schema_version": 2,
@@ -1615,7 +1615,7 @@
       "financial_operand_schema": {
         "schema_id": "modelo.edit.submission",
         "schema_version": 1,
-        "schema_fingerprint": "071dc760f85f95503b711314955cdc61b45de1765f60fb15b7b746a638b38314"
+        "schema_fingerprint": "44a9fbf9f745a918fa95987868c324d253b905a0a55adb35134a5bac000ec353"
       }
     },
     "bucket_id": "13000000-0000-4000-8000-000000000730",
@@ -1624,9 +1624,9 @@
     "period_filing_year": 2026,
     "period_code": "1T",
     "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
-    "work_unit_record_digest": "60d090233ddcb1d9298d5a17685e2a6524afca1d9f44163cb5aa69fdc82c9358",
-    "calculation_head_digest": "e533bdfc8e39d5c865f68bd34de66551af75bc031f3f19a4f5963585e35c8ee8",
-    "current_calculation_revision_id": "95da96e7d100d7678f400ca1a3ea7dd49e60782e4fa97b7a55fa376ec20b18a0",
+    "work_unit_record_digest": "877db94d46c80d361eb863e9b9891879e4ebf68d181b89c98e15028c7825dd15",
+    "calculation_head_digest": "40ff3f160951483aeed2e0345ffffe88bf602a1870844dd4bb26dca19effbc5f",
+    "current_calculation_revision_id": "1ddce0eff2b503a82514f66443ae0d50a8db23703facfe75e9e176b716ad86a0",
     "law_selected_revision_id": "2019-y-siguientes",
     "schema_identity": {
       "schema_id": "modelo-130-2019-y-siguientes",
@@ -1929,9 +1929,9 @@
     ],
     "permitted_surface_digest": "2705e6476442c123bb8c6979cb9d82e81dc02301b0f923b4b78f24941d4686dd",
     "mutation_family": "calculate",
-    "issued_at": "2026-10-31T07:43:13.708207Z",
-    "expires_at": "2026-10-31T07:48:13.708207Z",
-    "baseline_id": "065ea76c3f8a9573fcfc7f8c3f67e5015256ea6535bdfaed246bb31926070da1"
+    "issued_at": "2026-10-31T21:56:46.706139Z",
+    "expires_at": "2026-10-31T22:01:46.706139Z",
+    "baseline_id": "dfa9a5b4646702fdcc7f3d8162c81da0220998c4c4076483ed3149848070499f"
   },
   "admission_refusal": null,
   "admission_refusal_words": null,
@@ -1940,7 +1940,7 @@
     "action": "recorded",
     "count": 0,
     "findings_lead": false,
-    "recorded_at": "2026-10-31T07:42:59.367008Z",
+    "recorded_at": "2026-10-31T21:56:34.020415Z",
     "file_created_at": null,
     "receipt_to_add": false
   },
@@ -1985,8 +1985,8 @@
     "words": "The check passed.",
     "unapplied_words": "The saved calculation passed its check; your changes are not applied."
   },
-  "calculation_revision_id": "95da96e7d100d7678f400ca1a3ea7dd49e60782e4fa97b7a55fa376ec20b18a0",
-  "verification_report_id": "4c7b5c6d7d3e9b235b35f17bc792fab371918388aef55a4dc8c1fffd49e2581f",
+  "calculation_revision_id": "1ddce0eff2b503a82514f66443ae0d50a8db23703facfe75e9e176b716ad86a0",
+  "verification_report_id": "3106ead26b25e27b205addeaed2fae996dec95d40a9470b088342209672cdcf6",
   "asks_m303_evidence": false,
   "asks_modelo_390": false,
   "registry_revision_id": "2019-y-siguientes",
@@ -1999,6 +1999,7 @@
     "nie_leaders": "XYZ",
     "cif_leaders": "ABCDEFGHJNPQRSUVW",
     "nif_letters": "TRWAGMYFPDXBNJZSQVHLCKE",
+    "nif_check_modulus": 23,
     "nie_prefix_substitutions": [
       ["X", "0"],
       ["Y", "1"],
@@ -2047,7 +2048,7 @@
     "file_format_words": "AEAT file in the fixed-width BOE design"
   },
   "receipt": {
-    "recorded_at": "2026-10-31T07:42:59.367008Z",
+    "recorded_at": "2026-10-31T21:56:34.020415Z",
     "verified": true,
     "verified_at": "2026-04-21T09:30:00Z",
     "words": "AEAT receipt verified on 21/04/2026."

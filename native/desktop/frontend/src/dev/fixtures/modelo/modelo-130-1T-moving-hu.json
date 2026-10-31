@@ -9,7 +9,7 @@
       "period": { "filing_year": 2026, "code": "1T" },
       "registry_revision_id": "2019-y-siguientes",
       "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
-      "calculation_revision_id": "dc5fc11ddc5a2176a47176d3817e7da1c5ff2e32680ef6a44f2cbf611eb8a7a7",
+      "calculation_revision_id": "6a44b85123b26ec3f77eeccd732bc2a9a4c94ed623d6dfa80724ec39a3e449e2",
       "language": "hu",
       "layout_provenance": "generated",
       "inspection_reason": null,
@@ -1589,8 +1589,8 @@
       "aeat_data": null,
       "filing": null,
       "last_export": {
-        "exported_at": "2026-10-31T07:43:26.705851Z",
-        "calculation_revision_id": "95da96e7d100d7678f400ca1a3ea7dd49e60782e4fa97b7a55fa376ec20b18a0",
+        "exported_at": "2026-10-31T21:56:57.702727Z",
+        "calculation_revision_id": "1ddce0eff2b503a82514f66443ae0d50a8db23703facfe75e9e176b716ad86a0",
         "current": false
       },
       "edit_closure": null,
@@ -1607,9 +1607,9 @@
       "workspace_contract_version": 1,
       "edit_contract_version": 1,
       "operation_manifest_version": 4,
-      "contract_set_digest": "4c57a7cd8ffb2de9fc6fce1204e77d13f8ea6fcdf5bb4efed6a736f9c4a981c5",
+      "contract_set_digest": "469ea4f43b88ef7d3ddc8e46a53e6236bcfa37167341fad56c8be0be19fb1acf",
       "operation_definition_id": "modelo.edit.apply",
-      "definition_contract_digest": "6b37be16acf22e172dcafd43befa599a92a16043f3f81ca6836a5ca1a2857646",
+      "definition_contract_digest": "0a5464be70052921dbed5abd7efac24eb9efb7a371218d2af75ca7442aedf91f",
       "request_schema": {
         "schema_id": "modelo.edit.apply.request",
         "schema_version": 2,
@@ -1633,7 +1633,7 @@
       "financial_operand_schema": {
         "schema_id": "modelo.edit.submission",
         "schema_version": 1,
-        "schema_fingerprint": "071dc760f85f95503b711314955cdc61b45de1765f60fb15b7b746a638b38314"
+        "schema_fingerprint": "44a9fbf9f745a918fa95987868c324d253b905a0a55adb35134a5bac000ec353"
       }
     },
     "bucket_id": "13000000-0000-4000-8000-000000000730",
@@ -1642,9 +1642,9 @@
     "period_filing_year": 2026,
     "period_code": "1T",
     "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
-    "work_unit_record_digest": "334f771b794b49212fc7575a1eae1b1b49a3020ca2a950692b58d108e8c37b20",
-    "calculation_head_digest": "937d5017afbc449251facb4e2f3cf6edc2b5db3a4eb63a38dc3139f53d3a9904",
-    "current_calculation_revision_id": "dc5fc11ddc5a2176a47176d3817e7da1c5ff2e32680ef6a44f2cbf611eb8a7a7",
+    "work_unit_record_digest": "b625a2790ca8b6ef030945b00e029a99f1738de7f6d86bfae810d43f7cf6dfb4",
+    "calculation_head_digest": "4637fdf71c489ac4cbcba5f328b28286e9b03167edcbdb6ba570b791fdf0ad52",
+    "current_calculation_revision_id": "6a44b85123b26ec3f77eeccd732bc2a9a4c94ed623d6dfa80724ec39a3e449e2",
     "law_selected_revision_id": "2019-y-siguientes",
     "schema_identity": {
       "schema_id": "modelo-130-2019-y-siguientes",
@@ -1947,9 +1947,9 @@
     ],
     "permitted_surface_digest": "2705e6476442c123bb8c6979cb9d82e81dc02301b0f923b4b78f24941d4686dd",
     "mutation_family": "calculate",
-    "issued_at": "2026-10-31T07:44:07.489420Z",
-    "expires_at": "2026-10-31T07:49:07.489420Z",
-    "baseline_id": "2a4fd831244b55c6e501ff93cfa25d378000bc0411d3c0d64bdb67f5658da7db"
+    "issued_at": "2026-10-31T21:57:35.178944Z",
+    "expires_at": "2026-10-31T22:02:35.178944Z",
+    "baseline_id": "879d6447134edd5f52f4662b16e137470b39b8cb4de1dbecf0633f63712f08bf"
   },
   "admission_refusal": null,
   "admission_refusal_words": null,
@@ -1959,7 +1959,7 @@
     "count": 0,
     "findings_lead": false,
     "recorded_at": null,
-    "file_created_at": "2026-10-31T07:43:26.705851Z",
+    "file_created_at": "2026-10-31T21:56:57.702727Z",
     "receipt_to_add": false
   },
   "header": {
@@ -1985,7 +1985,7 @@
       "help": null
     },
     "file": {
-      "exported_at": "2026-10-31T07:43:26.705851Z",
+      "exported_at": "2026-10-31T21:56:57.702727Z",
       "created_on": "2026. 10. 31.",
       "current": false,
       "words": "A(z) 2026. 10. 31. napi fájl elavult. Hozd létre újra."
@@ -2017,7 +2017,7 @@
     "words": "A bevallást még nem ellenőrizték.",
     "unapplied_words": null
   },
-  "calculation_revision_id": "dc5fc11ddc5a2176a47176d3817e7da1c5ff2e32680ef6a44f2cbf611eb8a7a7",
+  "calculation_revision_id": "6a44b85123b26ec3f77eeccd732bc2a9a4c94ed623d6dfa80724ec39a3e449e2",
   "verification_report_id": null,
   "asks_m303_evidence": false,
   "asks_modelo_390": false,
@@ -2031,6 +2031,7 @@
     "nie_leaders": "XYZ",
     "cif_leaders": "ABCDEFGHJNPQRSUVW",
     "nif_letters": "TRWAGMYFPDXBNJZSQVHLCKE",
+    "nif_check_modulus": 23,
     "nie_prefix_substitutions": [
       ["X", "0"],
       ["Y", "1"],
