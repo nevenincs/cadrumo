@@ -12,7 +12,7 @@ from ..compiler.authority import compiled_bundled_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_PROJECTED_ROW = re.compile(r'projection_kind = "(?P<kind>\w+)"\s+slot = (?P<slot>\d+)')
+_PROJECTED_ROW = re.compile(r'projection_kind = "(?P<kind>\w+)"\s+(?:cohort = "\w+"\s+)?slot = (?P<slot>\d+)')
 
 
 def _declared_slots_by_revision(kind: str) -> dict[str, int]:
