@@ -36,7 +36,7 @@ _EXPECTED_ANNOTATIONS: Final[frozenset[tuple[str, str, str]]] = frozenset(
             "ActivityAssetFormOptionsView",
             "declared_activities",
         ),
-        ("application/actividad_asset/operation_dtos.py", "ActivityAssetRevisionSnapshot", "declared_activity"),
+        ("application/actividad_asset/operation_dtos.py", "_ActivityAssetRevisionFields", "declared_activity"),
         ("application/actividad_asset/operations.py", "ActivityAssetRegisterAuthority", "agrarian_activities"),
     }
 )
