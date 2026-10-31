@@ -42,6 +42,7 @@ def _transaction(index: int, year: int, base: str, retention: str) -> Withholdin
 
 
 @pytest.mark.parametrize("epoch", ["2019", "2023", "2024"])
+@pytest.mark.usefixtures("governed_fact_scope")
 def test_official_five_box_summary_uses_the_actual_registry_formulas(epoch: str) -> None:
     revision = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/194")).revisions[epoch]
     observations = tuple(

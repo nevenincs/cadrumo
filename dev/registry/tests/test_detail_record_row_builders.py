@@ -100,6 +100,7 @@ def _valued(
     )
 
 
+@pytest.mark.usefixtures("governed_fact_scope")
 def test_build_foreign_asset_rows_sorts_by_country_class_identifier_date() -> None:
     revision = _modelo720_revision()
     rows = (
@@ -115,6 +116,7 @@ def test_build_foreign_asset_rows_sorts_by_country_class_identifier_date() -> No
     assert [resolved[("modelo-720-asset-row-class", index)] for index in (1, 2, 3)] == ["C", "V", "C"]
 
 
+@pytest.mark.usefixtures("governed_fact_scope")
 def test_resolve_foreign_asset_binding_row_values_emits_per_column_indexed_values() -> None:
     revision = _modelo720_revision()
     rows = (_valued("a1", M720AssetClassCode.CUENTA, "CH", "CH-iban-001", date(2020, 1, 1), "120000"),)

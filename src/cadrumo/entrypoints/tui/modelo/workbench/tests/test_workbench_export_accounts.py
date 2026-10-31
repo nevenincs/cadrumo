@@ -75,6 +75,7 @@ def _offer(door: MemoryOwnAccountDoor, modelo: str) -> WorkbenchExportOffer:
 
 
 @pytest.mark.asyncio
+@pytest.mark.usefixtures("authority_operation")
 async def test_export_prefills_each_role_from_its_designation_and_submits_the_choice() -> None:
     door = _register(refund_scope="303")
     app = ScreenHostApp(WorkbenchExportScreen(_offer(door, "303")))
@@ -104,6 +105,7 @@ async def test_export_prefills_each_role_from_its_designation_and_submits_the_ch
 
 
 @pytest.mark.asyncio
+@pytest.mark.usefixtures("authority_operation")
 async def test_a_designation_scoped_to_another_modelo_leaves_the_role_to_the_designations() -> None:
     door = _register(refund_scope="111")
     app = ScreenHostApp(WorkbenchExportScreen(_offer(door, "303")))
