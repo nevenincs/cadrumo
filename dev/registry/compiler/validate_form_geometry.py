@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 
+from cadrumo.domain.calculations.registry.export import derive_export_layouts_from_bindings
 from cadrumo.domain.calculations.registry.form_codes import FormCodes, resolve_form_codes
 from cadrumo.domain.calculations.registry.irnr_tipo_renta import resolve_tipo_renta_irnr_catalogue
 from cadrumo.domain.calculations.registry.prorrata_register_catalogue import resolve_prorrata_register_catalogue
@@ -38,7 +39,7 @@ def modelo_geometry_failures(modelos: Iterable[ModeloDefinition], codes: FormCod
     failures: list[str] = []
     for modelo in modelos:
         for revision_id, revision in modelo.revisions.items():
-            for layout in revision.export_layouts:
+            for layout in derive_export_layouts_from_bindings(revision):
                 header = layout.auxiliary_envelope_header
                 if header is not None and len(header.prefix_fields) != prefix_fields:
                     failures.append(
