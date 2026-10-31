@@ -35,11 +35,8 @@ from weakref import WeakKeyDictionary
 from pydantic import TypeAdapter, ValidationError
 
 from ...core.period import Period
-from ...core.result_disposition import (
-    derive_result_disposition,
-    result_disposition_casilla_ids,
-    result_disposition_is_refund,
-)
+from ...core.result_disposition import result_disposition_is_refund
+from ...domain.calculations.registry.result_casillas import derive_result_disposition, result_disposition_casilla_ids
 from .errors import DeadlineValidationError
 from .models import RecargoBand, Recovery
 

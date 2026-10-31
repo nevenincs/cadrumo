@@ -21,11 +21,7 @@ from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from cadrumo.core.period import Period
-from cadrumo.core.result_disposition import (
-    ResultDisposition,
-    derive_result_disposition,
-    result_disposition_casilla_ids,
-)
+from cadrumo.core.result_disposition import ResultDisposition
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.binding_selector_utils import provider_member
 from cadrumo.domain.calculations.registry.bindings import (
@@ -49,6 +45,10 @@ from cadrumo.domain.calculations.registry.ledger_iva_bindings import (
     IvaLedgerObservation,
     LedgerIvaProvider,
     resolve_ledger_iva_aggregation_binding_values,
+)
+from cadrumo.domain.calculations.registry.result_casillas import (
+    derive_result_disposition,
+    result_disposition_casilla_ids,
 )
 from cadrumo.domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.tests.relation_fixture import (

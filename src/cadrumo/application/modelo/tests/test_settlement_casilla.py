@@ -19,7 +19,7 @@ from ..settlement_casilla import (
     declaration_result_casillas,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 
 def _revision(modelo: str, year: int, period: str):

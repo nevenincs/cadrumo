@@ -27,7 +27,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Final, Protocol
 
 from ...core.errors.hierarchy import CadrumoError
-from ...core.result_disposition import result_disposition_casilla_ids
+from ...domain.calculations.registry.result_casillas import result_disposition_casilla_ids
 
 if TYPE_CHECKING:
     from ...core.casilla_id import CasillaId

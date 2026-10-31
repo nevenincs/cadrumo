@@ -8,12 +8,7 @@ from decimal import Decimal
 from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.identity.hex_ids import VerificationReportId
 from ...core.modelo import Modelo
-from ...core.result_disposition import (
-    ResultDisposition,
-    canonical_result_amount,
-    result_disposition_casilla_ids,
-    result_disposition_is_refund,
-)
+from ...core.result_disposition import ResultDisposition, result_disposition_is_refund
 from ...core.secure_object_write import SecureObjectWrite
 from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
 from ...domain.buckets.event_repository import bucket_event_history_write
@@ -23,6 +18,7 @@ from ...domain.calculations.registry.prorrata_register_catalogue import (
     general_prorrata_register_regime,
     ninguna_prorrata_register_regime,
 )
+from ...domain.calculations.registry.result_casillas import canonical_result_amount, result_disposition_casilla_ids
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...domain.iva.m303_settlement import is_m303_annual_settlement_period
 from ...domain.justificante.protocols import JustificanteRepositoryProtocol

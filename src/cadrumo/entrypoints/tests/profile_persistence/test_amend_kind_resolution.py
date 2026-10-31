@@ -58,8 +58,9 @@ from ....application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.modelo import Modelo
 from ....core.period import Period
-from ....core.result_disposition import ResultDisposition, derive_result_disposition
+from ....core.result_disposition import ResultDisposition
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ....domain.calculations.registry.result_casillas import derive_result_disposition
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from ....domain.modelos.calculation_repository import upsert_calculation_revision
