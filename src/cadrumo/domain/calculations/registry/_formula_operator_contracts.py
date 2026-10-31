@@ -72,13 +72,13 @@ FORMULA_OPERATOR_ARITIES: Final[dict[FormulaOperator, FormulaOperatorArity]] = {
     "previous_period_sum": _ONE_OR_MORE,
     "cross_model_sum": _UNARY,
     "age_at_year_end": _UNARY,
-    "m131_resolve_modulos_previo": _exact(9),
+    "m131_resolve_modulos_previo": FormulaOperatorArity(minimum=3),
     "m131_resolve_modulos_minoracion_empleo": _exact(6),
     "m131_resolve_modulos_indice_exceso": _exact(4),
     "m131_resolve_modulos_indices_generales": _exact(7),
     "m131_resolve_modulos_pequena_dimension_ignorado_flag": _BINARY,
     "m131_resolve_modulos_temporada_inicio_conflicto_flag": _BINARY,
-    "m100_resolve_eo_agraria_indices_correctores": _exact(9),
+    "m100_resolve_eo_agraria_indices_correctores": FormulaOperatorArity(minimum=2),
 }
 
 

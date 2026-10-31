@@ -316,13 +316,6 @@ def _m100_validate_imputation_days(
         )
 
 
-#: Índice-corrector casilla count the M100 estimación-objetiva agraria Fase 3ª
-#: dispatcher carries (Anexo I instrucción 2.3, letras a) to h) — índices 1 to 8;
-#: índice 9, mejillón en batea (letra i), applies to a separate producto
-#: (casilla 0160) outside this cascade).
-_M100_EO_AGRARIA_INDICE_ARITY = 8
-
-
 @dataclass(frozen=True, slots=True)
 class _M100ResolveEoAgrariaIndicesCorrectoresArgs:
     """Resolved registry ids for the M100 EO-agraria Fase 3ª índices-correctores dispatcher."""
@@ -335,13 +328,6 @@ def _m100_resolve_eo_agraria_indices_correctores_args(
     expression: FormulaExpression,
 ) -> _M100ResolveEoAgrariaIndicesCorrectoresArgs:
     op = "m100_resolve_eo_agraria_indices_correctores"
-    expected_arg_count = 1 + _M100_EO_AGRARIA_INDICE_ARITY
-    if len(expression.args) != expected_arg_count:
-        raise RegistryValidationError(
-            f"formula op {op!r} expects {expected_arg_count} args, got {len(expression.args)}",
-            translated_message="errors.calc.lookup_dispatch_arg_count",
-            context={"op": op, "expected": str(expected_arg_count)},
-        )
     minorado_arg = expression.args[0]
     if minorado_arg.casilla_id is None:
         raise RegistryValidationError(

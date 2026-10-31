@@ -17,6 +17,7 @@ from cadrumo_client.contracts.command_ports import (
     CommandWriteRoute,
 )
 
+from ...core.filing_year import FILING_YEAR_MAX, FILING_YEAR_MIN
 from ._app_live_command_spec_support import (
     _ENCRYPTED_LOCAL_READ_POLICY,
     _LEAF_INVOCATION,
@@ -85,7 +86,7 @@ LIVE_IVA_WALLET_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 multiple=False,
                 is_flag=False,
                 flag_value=None,
-                constraint=ParameterConstraint(minimum=2000, maximum=2099),
+                constraint=ParameterConstraint(minimum=FILING_YEAR_MIN, maximum=FILING_YEAR_MAX),
             ),
         ),
         policy=_ENCRYPTED_LOCAL_READ_POLICY,
@@ -139,7 +140,7 @@ LIVE_IVA_WALLET_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 multiple=False,
                 is_flag=False,
                 flag_value=None,
-                constraint=ParameterConstraint(minimum=2000, maximum=2099),
+                constraint=ParameterConstraint(minimum=FILING_YEAR_MIN, maximum=FILING_YEAR_MAX),
             ),
             OptionSpec(
                 name="target_period",

@@ -20,7 +20,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from enum import StrEnum
-from typing import Literal
+from typing import Final, Literal
 
 from pydantic import BaseModel, model_validator
 
@@ -37,6 +37,9 @@ from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.time.utc import validate_utc_aware
 from ..operations.models import OperationDefinitionId, OperationId, OperationReference
 from ..operations.schema_identity import OperationSchemaIdentityV1
+
+MAX_REPEATED_ROW_VALUES: Final = 256
+"""How many scalar values one repeated row may carry across an operation payload; a capacity, not a form limit."""
 
 
 class EditModel(BaseModel):
@@ -129,6 +132,7 @@ class ModeloEditCompatibilityTupleV1(EditModel):
 
 
 __all__ = [
+    "MAX_REPEATED_ROW_VALUES",
     "ModeloEditCompatibilityTupleV1",
     "ModeloEditExecutionEffect",
     "ModeloEditMutationFamily",

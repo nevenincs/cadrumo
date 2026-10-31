@@ -38,6 +38,7 @@ from ...domain.modelos.work_unit import WorkUnitState
 from ..operator_actions.models import ActionReference
 from ..state_projection_models import ProjectionModeloReadiness
 from . import _workspace_model_validation as _workspace_validation
+from .edit_contract import MAX_REPEATED_ROW_VALUES
 from .work_addressing import ModeloExactWorkUnitTarget, ModeloVisibleFilingTarget
 from .work_review import ModeloWorkReview
 
@@ -64,7 +65,6 @@ _MAX_CONTRIBUTORS = 32
 _MAX_SCHEMA_RECORD_FAMILY_DEPTH = 16
 _MAX_SCHEMA_RELATIONSHIPS = 128
 _MAX_SCHEMA_EVIDENCE_REFERENCES = 64
-_MAX_REPEATED_ROW_VALUES = 200
 _MAX_SAFE_FACTS = 32
 _MAX_SAFE_FACT_TEXT_LENGTH = 256
 
@@ -654,7 +654,7 @@ class ModeloWorkspaceRepeatedRowMaterializationV1(_WorkspaceModel):
     binding_id: BindingId
     row_index: Annotated[int, Field(ge=1)]
     values: Annotated[
-        tuple[ModeloWorkspaceScalarMaterializationV1, ...], Field(min_length=1, max_length=_MAX_REPEATED_ROW_VALUES)
+        tuple[ModeloWorkspaceScalarMaterializationV1, ...], Field(min_length=1, max_length=MAX_REPEATED_ROW_VALUES)
     ]
 
 

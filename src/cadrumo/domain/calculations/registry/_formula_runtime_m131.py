@@ -62,29 +62,14 @@ class _M131ResolveModulosPrevioArgs:
     """Resolved registry ids for the M131 estimación-objetiva módulos Fase 1ª dispatcher."""
 
     epigrafe_casilla_id: CasillaId
-    modulo_unit_casilla_ids: tuple[CasillaId, CasillaId, CasillaId, CasillaId, CasillaId, CasillaId, CasillaId]
+    modulo_unit_casilla_ids: tuple[CasillaId, ...]
     coefficient_parameter: ParameterId
-
-
-#: Módulo slot count the M131 first-slice coefficient tables carry (the
-#: highest-cardinality tabled activities — 644.1 "Comercio al por menor de
-#: pan, pastelería..." and 644.2/644.3 — use all seven; activities with fewer
-#: signos pass a literal ``0`` for the unused trailing slots).
-_M131_MODULOS_ARITY = 7
 
 
 def _m131_resolve_modulos_previo_args(expression: FormulaExpression) -> _M131ResolveModulosPrevioArgs:
     op = "m131_resolve_modulos_previo"
-    expected_arg_count = 2 + _M131_MODULOS_ARITY
-    if len(expression.args) != expected_arg_count:
-        raise RegistryValidationError(
-            f"formula op {op!r} expects {expected_arg_count} args, got {len(expression.args)}",
-            translated_message="errors.calc.lookup_dispatch_arg_count",
-            context={"op": op, "expected": str(expected_arg_count)},
-        )
-    epigrafe_arg = expression.args[0]
-    modulo_args = expression.args[1 : 1 + _M131_MODULOS_ARITY]
-    coefficient_arg = expression.args[1 + _M131_MODULOS_ARITY]
+    # The registry formula declares the slots: the epígrafe, then its módulo casillas, then the table.
+    epigrafe_arg, *modulo_args, coefficient_arg = expression.args
     if epigrafe_arg.casilla_id is None:
         raise RegistryValidationError(
             f"formula op {op!r} requires args[0] to be a casilla leaf",
@@ -102,26 +87,17 @@ def _m131_resolve_modulos_previo_args(expression: FormulaExpression) -> _M131Res
         resolved_modulo_ids.append(modulo_arg.casilla_id)
     if coefficient_arg.parameter is None:
         raise RegistryValidationError(
-            f"formula op {op!r} requires args[{1 + _M131_MODULOS_ARITY}] to be a parameter leaf",
+            f"formula op {op!r} requires its last arg to be a parameter leaf",
             translated_message="errors.calc.lookup_dispatch_arg_kind",
             context={
                 "op": op,
-                "position": f"args[{1 + _M131_MODULOS_ARITY}]",
+                "position": f"args[{len(expression.args) - 1}]",
                 "expected_kind": "parameter",
             },
         )
-    modulo_ids = (
-        resolved_modulo_ids[0],
-        resolved_modulo_ids[1],
-        resolved_modulo_ids[2],
-        resolved_modulo_ids[3],
-        resolved_modulo_ids[4],
-        resolved_modulo_ids[5],
-        resolved_modulo_ids[6],
-    )
     return _M131ResolveModulosPrevioArgs(
         epigrafe_casilla_id=epigrafe_arg.casilla_id,
-        modulo_unit_casilla_ids=modulo_ids,
+        modulo_unit_casilla_ids=tuple(resolved_modulo_ids),
         coefficient_parameter=coefficient_arg.parameter,
     )
 

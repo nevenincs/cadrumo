@@ -39,6 +39,7 @@ from ...domain.modelos.row_models import ModeloDetailRow
 from ..operations.models import OperationId
 from ..operator_actions.models import ActionReference
 from .edit_contract import (
+    MAX_REPEATED_ROW_VALUES,
     EditModel,
 )
 from .edit_contract import (
@@ -61,7 +62,6 @@ MAX_MODELO_EDIT_SURFACE_ENTRIES = 4096
 """Bound the edit surface above the published 2025 Modelo 100's 2,320 entries."""
 _MAX_MESSAGE_ARGUMENTS = 16
 _MAX_EVIDENCE_REFERENCES = 64
-_MAX_ROW_VALUES = 200
 
 type _BoundedText = Annotated[str, Field(min_length=1, max_length=256)]
 type _BoundedCode = Annotated[str, Field(min_length=1, max_length=128, pattern=r"^[a-z][a-z0-9_.-]*$")]
@@ -858,7 +858,7 @@ class ModeloRowEditIntentV1(EditModel):
 
     address: ModeloEditRowAddressV1
     kind: ModeloEditRowIntentKind
-    row: Annotated[tuple[ModeloScalarEditIntentV1, ...], Field(max_length=_MAX_ROW_VALUES)] | None = None
+    row: Annotated[tuple[ModeloScalarEditIntentV1, ...], Field(max_length=MAX_REPEATED_ROW_VALUES)] | None = None
     move_to_index: Annotated[int, Field(ge=1)] | None = None
 
     @model_validator(mode="after")

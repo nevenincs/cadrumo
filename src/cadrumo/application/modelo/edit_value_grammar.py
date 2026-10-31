@@ -39,14 +39,14 @@ from .edit_contract import EditModel
 MONEY_FRACTION_DIGITS: Final = 2
 """A euro amount is entered in cents at most; the parser never rounds a finer value."""
 
-_MONEY_INTEGER_DIGITS: Final = 12
-
-MONEY_OPERAND_MAXIMUM: Final = Decimal(10**_MONEY_INTEGER_DIGITS) - Decimal("0.01")
+MONEY_OPERAND_MAXIMUM: Final = Decimal(10**15) - Decimal("0.01")
 """The magnitude bound of one hand-entered euro amount, applied to money addresses only.
 
-The manual-override financial-operand declaration of the edit operation states
-the same bound from here, so the parser, the executor and the wire cannot
-disagree about which amounts an operator may enter.
+This is an input guard, not a form's field width: it sits above the widest money field a
+form declares, so it never refuses an amount a form could hold, and the record design
+refuses what its own field cannot hold at export. The manual-override financial-operand
+declaration of the edit operation states the same bound from here, so the parser, the
+executor and the wire cannot disagree about which amounts an operator may enter.
 """
 
 type _BoundedToken = Annotated[str, Field(min_length=1, max_length=128)]
