@@ -65,10 +65,17 @@ DEPENDENCY_INPUTS = {
     # changes. Non-root lock records are identical; the root only adds macOS
     # objc2 dependencies. This refresh admits source drift, not new imported
     # symbol or minimum-host proof; the native artifact restrictions still apply.
-    "native/desktop/src-tauri/Cargo.lock": "224974233ee997aac6a3fef5aa635569fb1f35b4d2ef5bfa46e8329895fb40b6",
-    "native/desktop/src-tauri/Cargo.toml": "ff6c01cda3117130e4a563fc71d30d59b34e128d7090793aa1964952b0e85126",
+    # Later source-level review of the manifest and lock diffs: the macOS AppKit
+    # dependencies (objc2, objc2-app-kit, objc2-foundation) sit under macOS-target tables
+    # and an optional platform feature, so they are absent from the Linux graph. The
+    # platform test-support feature is empty and the desktop selects it only as a
+    # dev-dependency. The unix-target tokio "signal" feature adds no package and, per the
+    # note above, tokio's process feature already enables its Unix signal dependencies.
+    # This is declaration-level evidence; a Linux cargo tree was not rerun for it.
+    "native/desktop/src-tauri/Cargo.lock": "9d3a54b29eadb1891a27cb97a076478905791fe6467abececd32ddf154023182",
+    "native/desktop/src-tauri/Cargo.toml": "68e950d08aeabb86ab3da5ba5161499856b36c9d40acdd32cb45668f848b42a4",
     "native/application/Cargo.toml": "45b431600a5da6caa057865bdb39afc3aae4f9512d51d598f9d04e380cc03499",
-    "native/platform/Cargo.toml": "45e633cefce86ce0a233670b94839e23bca14aba65b8d1c3b870718f50d01c37",
+    "native/platform/Cargo.toml": "7b47f615156cee781579b50b3d2ad66a3996a431ad84830ecd9150845ada6c12",
 }
 
 
