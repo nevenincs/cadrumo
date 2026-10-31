@@ -4874,8 +4874,8 @@ ledger:
         with at most two decimals.
       disposal_before_service: The baja date cannot be before the element entered
         service.
-      disposal_claim_past_boundary: This claim runs to %{covered_until}, past the
-        element's baja, which ends its charges at %{boundary}.
+      disposal_claim_past_boundary: This claim runs to %{covered_through}, past the
+        element's baja, which ends its charges on %{boundary_through}.
       disposal_donation_refused: A donation is not supported as a baja of an activity
         asset.
       disposal_excess_without_table_class: The excess for %{tax_year} needs a table
@@ -5077,9 +5077,9 @@ ledger:
         asset enters service.
       useful_life_not_positive: A useful life must be a positive finite number of
         years.
-      vehicle_affectation_required_for_class: Asset {asset_id} is in a table class
-        that can include a vehicle RIRPF art. 22.4 restricts, so it needs a vehicle
-        affectation declaration.
+      vehicle_affectation_required_for_class: This asset is in a table class that
+        can include a vehicle RIRPF art. 22.4 restricts, so it needs a vehicle affectation
+        declaration.
       vehicle_missing_from_books: A vehicle missing from the activity's books is not
         an affected asset (RIRPF art. 22.2.2º).
       vehicle_private_use_category_restricted: A vehicle with any private use is affected

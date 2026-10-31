@@ -7,6 +7,7 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.core.config import override_settings
 from cadrumo.core.i18n.render import tr
 from cadrumo.domain.renta.actividad_asset.claims import effective_claims
 from cadrumo.domain.renta.actividad_asset.errors import (
@@ -81,3 +82,29 @@ def test_the_election_limits_state_the_last_day_of_the_period_beside_the_boundar
 
     assert limits.maximum_period_ends_on == date(2035, 1, 1)
     assert limits.maximum_period_last_day == date(2034, 12, 31)
+
+
+@pytest.mark.parametrize("locale", ["en", "es", "ca", "hu"])
+def test_the_baja_sentence_fills_in_every_placeholder_in_each_locale(locale: str) -> None:
+    _, repository, _ = _disposed()
+    shortened = next(claim for claim in effective_claims(repository.history.claims) if claim.tax_year == 2026)
+    later = shortened.model_copy(
+        update={
+            "tax_year": 2028,
+            "covered_from": date(2028, 1, 1),
+            "covered_until": date(2029, 1, 1),
+            "amount": Decimal("10.00"),
+            "supersedes_claim_id": None,
+            "disposal_revision_id": None,
+        },
+    )
+    with pytest.raises(ActividadAssetClaimConflictError) as refused:
+        repository.history.record_claim(later)
+
+    with override_settings(cadrumo_output_language=locale):
+        rendered = tr(refused.value.translated_message, **dict(refused.value.context or {}))
+
+    assert "2028-12-31" in rendered
+    assert "2026-06-30" in rendered
+    assert "%{" not in rendered
+    assert "{" not in rendered
