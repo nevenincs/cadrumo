@@ -28,12 +28,17 @@ from .signal_tokens import filtered_translation_text, translation_words
 # a misspelled or malformed host from the dictionary check.
 _CATALAN_HYPHENATED_CLITIC_RE = re.compile(r"(?P<form>Mantén-lo|revisar-los)(?![^\W\d_])")
 # The export/VIES definitions and architecture/CLI guides retain these
-# complete English standard names (PDF, OFX, AES, TOML and MCP).
+# complete English standard and product names (PDF, OFX, AES, TOML, MCP and HMAC).
 # Route each word to English rather than exempting its spelling.
+# https://csrc.nist.gov/glossary/term/hash_based_message_authentication_code
+# https://cloud.google.com/products
+# https://workspace.google.com/products/sheets/
+# https://developer.apple.com/documentation/apple-silicon
 _ENGLISH_REFERENCE_NAME_RE = re.compile(
     r"(?<!\w)(?:JSON Lines|VAT Information Exchange System|Model Context Protocol|"
     r"Portable Document Format|Open Financial Exchange|Advanced Encryption Standard|"
-    r"Tom['’]s Obvious Minimal Language)(?!\w)"
+    r"Tom['’]s Obvious Minimal Language|hash-based message authentication code|"
+    r"Google Cloud|Google Sheets?|Apple silicon)(?!\w)"
 )
 # Fact 0129-renta-ccaa-tax-residence-catalogue owns these region identities;
 # profile/schema and

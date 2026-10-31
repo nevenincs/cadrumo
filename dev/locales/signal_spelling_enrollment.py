@@ -69,8 +69,9 @@ from .signal_tokens import filtered_translation_text
 # Pydantic is the product name used by its own documentation; the lowercase
 # Python distribution/module remains code syntax, not an alternate brand.
 # https://docs.pydantic.dev/latest/
+# https://developer.apple.com/documentation/apple-silicon
 _SOFTWARE_PROPER_NAMES = frozenset(
-    {"GitHub", "Linux", "Markdown", "OpenSSL", "PowerShell", "Pydantic", "Sphinx", "reStructuredText"}
+    {"Apple", "GitHub", "Linux", "Markdown", "OpenSSL", "PowerShell", "Pydantic", "Sphinx", "reStructuredText"}
 )
 _SHARED_SPELLINGS = (
     frozenset(
@@ -560,6 +561,9 @@ _LOCALE_SPELLINGS: dict[str, frozenset[str]] = {
     ),
     "ca": frozenset(
         {
+            # Exact name of the recurring Spanish persona in the two lifecycle guides.
+            "Ana",
+            "García",
             # Generalitat uses these exact forms in legal and form guidance:
             # https://repositori.justicia.gencat.cat/bitstream/handle/20.500.14226/576/llei_enjudiciament_civil_qdl88.pdf
             # https://canalempresa.gencat.cat/ca/ajuda/ajuda/ajuda-a-larea-privada/preferencies/dades/
@@ -671,6 +675,13 @@ _LOCALE_SPELLINGS: dict[str, frozenset[str]] = {
     ),
     "hu": frozenset(
         {
+            # The lifecycle guides retain the Spanish persona's original name.
+            "Ana",
+            "García",
+            "López",
+            # The payment name takes the assimilated Hungarian instrumental -val:
+            # https://helyesiras.mta.hu/helyesiras/default/akh12
+            "Bizummal",
             # All three forms are accepted by reference Hunspell with the pinned
             # original dictionary, but not by the pinned spylls implementation.
             "felülvizsgálati",

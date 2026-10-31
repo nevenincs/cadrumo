@@ -36,11 +36,46 @@ def test_identifier_labels_are_exact_shared_technical_terms() -> None:
 
 @pytest.mark.parametrize("locale", ["ca", "en", "es", "hu"])
 def test_software_proper_names_preserve_exact_case_and_stem_boundaries(locale: str) -> None:
-    for name in ("GitHub", "Linux", "Markdown", "OpenSSL", "PowerShell", "Pydantic", "Sphinx", "reStructuredText"):
+    for name in (
+        "Apple",
+        "GitHub",
+        "Linux",
+        "Markdown",
+        "OpenSSL",
+        "PowerShell",
+        "Pydantic",
+        "Sphinx",
+        "reStructuredText",
+    ):
         assert is_project_spelling(locale, name)
         assert not is_project_spelling(locale, name + "x")
-    for bad in ("GitHup", "Linuz", "Markdwon", "OpenSSl", "Powershell", "Pydantci", "Sphinxx", "reStructuredTex"):
+    for bad in (
+        "Appel",
+        "apple",
+        "GitHup",
+        "Linuz",
+        "Markdwon",
+        "OpenSSl",
+        "Powershell",
+        "Pydantci",
+        "Sphinxx",
+        "reStructuredTex",
+    ):
         assert not is_project_spelling(locale, bad)
+
+
+def test_retained_persona_and_hungarian_payment_name_are_exact_and_scoped() -> None:
+    for locale in ("ca", "hu"):
+        assert is_project_spelling(locale, "Ana")
+        assert is_project_spelling(locale, "García")
+        for typo in ("Anas", "anaa", "Garciaa"):
+            assert not is_project_spelling(locale, typo)
+    assert is_project_spelling("hu", "López")
+    assert is_project_spelling("hu", "Bizummal")
+    for typo in ("Bizumval", "Bizumal", "bizummal", "Bizummall"):
+        assert not is_project_spelling("hu", typo)
+    for locale in ("ca", "en", "es"):
+        assert not is_project_spelling(locale, "Bizummal")
 
 
 @pytest.mark.parametrize("locale,word", [("ca", "declarables"), ("es", "heredables")])

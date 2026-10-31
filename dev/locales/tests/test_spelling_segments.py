@@ -26,6 +26,11 @@ def words_by_language(value: str, locale: str = "en") -> dict[str, set[str]]:
         ("Open Financial Exchange", "Financial"),
         ("Advanced Encryption Standard", "Encryption"),
         ("Tom's Obvious Minimal Language", "Minimal"),
+        ("hash-based message authentication code", "authentication"),
+        ("Google Cloud", "Cloud"),
+        ("Google Sheet", "Sheet"),
+        ("Google Sheets", "Sheets"),
+        ("Apple silicon", "silicon"),
     ],
 )
 @pytest.mark.parametrize("locale", ["ca", "es", "hu"])
@@ -38,6 +43,12 @@ def test_complete_standard_names_keep_dictionary_ownership_and_adjacent_typos(
     assert "en" not in words_by_language(name + "x misspellledd", locale)
     assert "en" not in words_by_language("`" + name + "` misspellledd", locale)
     assert "en" not in words_by_language('<span lang="es">' + name + "</span>", "hu")
+
+
+@pytest.mark.parametrize("locale", ["ca", "es", "hu"])
+def test_standard_name_mutations_and_unpaired_product_words_stay_local(locale: str) -> None:
+    for value in ("hash-based message authentlcation code", "Google Cloudd", "Apple siliccon", "Cloud"):
+        assert "en" not in words_by_language(value, locale)
 
 
 @pytest.mark.parametrize(
