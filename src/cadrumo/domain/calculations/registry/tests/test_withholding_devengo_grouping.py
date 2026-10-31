@@ -165,6 +165,26 @@ def _observation(
     )
 
 
+def _ordinary_pending_and_settled_observations() -> tuple[WithholdingObservation, ...]:
+    return (
+        _observation(source_id="ordinary", base="100.00", withholding="19.00", transaction_date=date(2025, 3, 1)),
+        _observation(
+            source_id="pending",
+            base="200.00",
+            withholding="38.00",
+            transaction_date=date(2025, 6, 30),
+            pendiente_flag="X",
+        ),
+        _observation(
+            source_id="settled",
+            base="300.00",
+            withholding="57.00",
+            transaction_date=date(2025, 9, 15),
+            accrual_year=2024,
+        ),
+    )
+
+
 def _pending(*, source_id: str, base: str, withholding: str, recognized_on: date) -> WithholdingObservation:
     """The prescribed PENDING representation the phase materialiser emits."""
     return _observation(
@@ -190,23 +210,7 @@ def test_ordinary_pending_and_settled_rows_for_one_perceptor_and_clave_stay_thre
     base = _row_binding("modelo-193-perceptor-row-base", "base_retenciones", BindingDataType.MONEY)
     count = _record_count()
     revision = _revision_with(nif, pendiente, devengo, base, count)
-    observations = (
-        _observation(source_id="ordinary", base="100.00", withholding="19.00", transaction_date=date(2025, 3, 1)),
-        _observation(
-            source_id="pending",
-            base="200.00",
-            withholding="38.00",
-            transaction_date=date(2025, 6, 30),
-            pendiente_flag="X",
-        ),
-        _observation(
-            source_id="settled",
-            base="300.00",
-            withholding="57.00",
-            transaction_date=date(2025, 9, 15),
-            accrual_year=2024,
-        ),
-    )
+    observations = _ordinary_pending_and_settled_observations()
 
     row_values = resolve_withholding_binding_row_values(revision, observations)
     scalar_values = resolve_withholding_binding_values(revision, observations)
@@ -237,23 +241,7 @@ def test_the_clave_grouping_merges_the_same_phase_rows_into_one_record() -> None
     )
     count = _record_count(grouping="per_perceptor_clave")
     revision = _revision_with(nif, base, devengo, count)
-    observations = (
-        _observation(source_id="ordinary", base="100.00", withholding="19.00", transaction_date=date(2025, 3, 1)),
-        _observation(
-            source_id="pending",
-            base="200.00",
-            withholding="38.00",
-            transaction_date=date(2025, 6, 30),
-            pendiente_flag="X",
-        ),
-        _observation(
-            source_id="settled",
-            base="300.00",
-            withholding="57.00",
-            transaction_date=date(2025, 9, 15),
-            accrual_year=2024,
-        ),
-    )
+    observations = _ordinary_pending_and_settled_observations()
 
     row_values = resolve_withholding_binding_row_values(revision, observations)
     scalar_values = resolve_withholding_binding_values(revision, observations)
