@@ -40,7 +40,7 @@ from pydantic import ValidationError
 
 from cadrumo.adapters.outbound.fx.ecb_provider import ECB_RATE_SOURCE_ID
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
-from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from cadrumo.core.aggregation import IntracomOperationType, TravelAgencyMediationType
 from cadrumo.core.classification.policies import SensitivityClass
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
@@ -258,6 +258,28 @@ def test_invoice_catalogue_with_retention_and_oss_axes_survives_encrypted_storag
     assert oss.lines[0].oss_rate_kind == IvaRateKind("general")
 
 
+def _delete_stored_invoice_field(profile: TestRuntimeProfile, invoice_id: str, field: str) -> object:
+    """Remove ``field`` from one invoice inside the stored envelope and return the removed value."""
+    record = profile.repository.load(
+        _INVOICE_NAMESPACE,
+        _INVOICE_OBJECT_KEY,
+        expected_class=SensitivityClass.FINANCIAL,
+        max_supported_version=_INVOICE_CATALOGUE_VERSION,
+    )
+    assert record is not None
+    envelope = _json.loads(record.payload.decode("utf-8"))
+    removed = envelope["payload"]["invoices"][invoice_id].pop(field, None)
+    profile.repository.save(
+        namespace=_INVOICE_NAMESPACE,
+        object_key=_INVOICE_OBJECT_KEY,
+        classification=record.classification,
+        schema_version=record.schema_version,
+        written_at=record.written_at,
+        payload=_json.dumps(envelope).encode("utf-8"),
+    )
+    return removed
+
+
 def test_invoice_catalogue_dropped_oss_transaction_kind_surfaces_at_load(
     tmp_path: Path,
 ) -> None:
@@ -281,30 +303,11 @@ def test_invoice_catalogue_dropped_oss_transaction_kind_surfaces_at_load(
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         oss = _oss_union_scheme_invoice()
         catalogue = InvoiceCatalogue(invoices={oss.invoice_id: oss})
-        repo = InvoiceCatalogueRepository()
-        repo.save(catalogue)
+        InvoiceCatalogueRepository().save(catalogue)
 
-        record = profile.repository.load(
-            _INVOICE_NAMESPACE,
-            _INVOICE_OBJECT_KEY,
-            expected_class=SensitivityClass.FINANCIAL,
-            max_supported_version=_INVOICE_CATALOGUE_VERSION,
-        )
-        assert record is not None
-        envelope = _json.loads(record.payload.decode("utf-8"))
-        invoices = envelope["payload"]["invoices"]
-        invoice_dict = invoices[oss.invoice_id]
-        assert invoice_dict.get("oss_transaction_kind") == "oss_union_services", (
+        removed = _delete_stored_invoice_field(profile, oss.invoice_id, "oss_transaction_kind")
+        assert removed == "oss_union_services", (
             "fixture must persist oss_transaction_kind for this proof to be meaningful"
-        )
-        del invoice_dict["oss_transaction_kind"]
-        profile.repository.save(
-            namespace=_INVOICE_NAMESPACE,
-            object_key=_INVOICE_OBJECT_KEY,
-            classification=record.classification,
-            schema_version=record.schema_version,
-            written_at=record.written_at,
-            payload=_json.dumps(envelope).encode("utf-8"),
         )
 
         with pytest.raises(ValidationError, match="supplied together"):
@@ -459,27 +462,8 @@ def test_dropping_either_fx_provenance_field_surfaces_at_load(tmp_path: Path, dr
         invoice = _foreign_currency_invoice()
         InvoiceCatalogueRepository().save(InvoiceCatalogue(invoices={invoice.invoice_id: invoice}))
 
-        record = profile.repository.load(
-            _INVOICE_NAMESPACE,
-            _INVOICE_OBJECT_KEY,
-            expected_class=SensitivityClass.FINANCIAL,
-            max_supported_version=_INVOICE_CATALOGUE_VERSION,
-        )
-        assert record is not None
-        envelope = _json.loads(record.payload.decode("utf-8"))
-        invoice_dict = envelope["payload"]["invoices"][invoice.invoice_id]
-        assert invoice_dict.get(dropped_field) is not None, (
-            f"fixture must persist {dropped_field} for this proof to be meaningful"
-        )
-        del invoice_dict[dropped_field]
-        profile.repository.save(
-            namespace=_INVOICE_NAMESPACE,
-            object_key=_INVOICE_OBJECT_KEY,
-            classification=record.classification,
-            schema_version=record.schema_version,
-            written_at=record.written_at,
-            payload=_json.dumps(envelope).encode("utf-8"),
-        )
+        removed = _delete_stored_invoice_field(profile, invoice.invoice_id, dropped_field)
+        assert removed is not None, f"fixture must persist {dropped_field} for this proof to be meaningful"
 
         with pytest.raises(ValidationError, match="set together"):
             InvoiceCatalogueRepository().load()
@@ -567,27 +551,8 @@ def test_dropped_created_at_surfaces_as_inequality_at_load(tmp_path: Path) -> No
         invoice = _record_lifecycle_stamped_invoice()
         InvoiceCatalogueRepository().save(InvoiceCatalogue(invoices={invoice.invoice_id: invoice}))
 
-        record = profile.repository.load(
-            _INVOICE_NAMESPACE,
-            _INVOICE_OBJECT_KEY,
-            expected_class=SensitivityClass.FINANCIAL,
-            max_supported_version=_INVOICE_CATALOGUE_VERSION,
-        )
-        assert record is not None
-        envelope = _json.loads(record.payload.decode("utf-8"))
-        invoice_dict = envelope["payload"]["invoices"][invoice.invoice_id]
-        assert invoice_dict.get("created_at") is not None, (
-            "fixture must persist created_at for this proof to be meaningful"
-        )
-        del invoice_dict["created_at"]
-        profile.repository.save(
-            namespace=_INVOICE_NAMESPACE,
-            object_key=_INVOICE_OBJECT_KEY,
-            classification=record.classification,
-            schema_version=record.schema_version,
-            written_at=record.written_at,
-            payload=_json.dumps(envelope).encode("utf-8"),
-        )
+        removed = _delete_stored_invoice_field(profile, invoice.invoice_id, "created_at")
+        assert removed is not None, "fixture must persist created_at for this proof to be meaningful"
 
         restored = next(iter(InvoiceCatalogueRepository().load().values()))
 
