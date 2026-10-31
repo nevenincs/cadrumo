@@ -11,7 +11,7 @@ effective_from = 2015-10-30
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-06
 reviewed_by = "operator"
-notes = "Articulo 1 de la Orden HAP/2250/2015: aprobacion del modelo 184 'Declaracion informativa anual de Entidades en regimen de atribucion de rentas' y de los disenos de registro a los que deberan ajustarse los ficheros que contengan la informacion a suministrar."
+notes = "Articulo 1 de la Orden HAP/2250/2015: aprobación del modelo 184 'Declaración informativa anual de Entidades en regimen de atribucion de rentas' y de los disenos de registro a los que deberan ajustarse los ficheros que contengan la información a suministrar."
 required_text = [
     "Aprobación del modelo 184",
     "Declaración informativa anual de Entidades en régimen de atribución de rentas",
@@ -51,7 +51,7 @@ effective_from = 2015-10-30
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-06
 reviewed_by = "operator"
-notes = "Articulo 3 de la Orden HAP/2250/2015: objeto de la informacion. Sera objeto de declaracion la informacion definida en el apartado 1 del articulo 70 del Reglamento del IRPF (RD 439/2007). Las entidades constituidas en el extranjero con presencia en territorio espanol unicamente declararan la parte de renta atribuible a los miembros residentes."
+notes = "Articulo 3 de la Orden HAP/2250/2015: objeto de la información. Sera objeto de declaración la información definida en el apartado 1 del articulo 70 del Reglamento del IRPF (RD 439/2007). Las entidades constituidas en el extranjero con presencia en territorio espanol unicamente declararan la parte de renta atribuible a los miembros residentes."
 required_text = [
     "Objeto de la información",
     "artículo 70 del Reglamento del Impuesto sobre la Renta de las Personas Físicas",
@@ -71,7 +71,7 @@ effective_from = 2015-10-30
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-06
 reviewed_by = "operator"
-notes = "Articulo 4 de la Orden HAP/2250/2015: plazo de presentacion del Modelo 184. La presentacion se realizara en el mes de febrero de cada ano en relacion con las rentas obtenidas por la entidad y las rentas atribuibles a cada uno de sus miembros en el ano natural inmediato anterior."
+notes = "Articulo 4 de la Orden HAP/2250/2015: plazo de presentación del Modelo 184. La presentación se realizara en el mes de febrero de cada ano en relacion con las rentas obtenidas por la entidad y las rentas atribuibles a cada uno de sus miembros en el ano natural inmediato anterior."
 required_text = [
     "Plazo de presentación",
     "mes de febrero",
@@ -91,7 +91,7 @@ effective_from = 2015-10-30
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-06
 reviewed_by = "operator"
-notes = "Articulo 5 de la Orden HAP/2250/2015: formas de presentacion del modelo 184. Presentacion electronica por Internet conforme a los articulos 12 y 13 de la Orden HAP/2194/2013 que regula los procedimientos generales para presentacion de autoliquidaciones y declaraciones informativas tributarias."
+notes = "Articulo 5 de la Orden HAP/2250/2015: formas de presentación del modelo 184. Presentación electronica por Internet conforme a los articulos 12 y 13 de la Orden HAP/2194/2013 que regula los procedimientos generales para presentación de autoliquidaciones y declaraciones informativas tributarias."
 required_text = [
     "Formas de presentación del modelo 184",
     "presentación electrónica por Internet",

@@ -634,15 +634,15 @@ text = "c\u00e1nones EN SU REDACCI\u00d3N VIGENTE tras el Protocolo de 2013 (Art
 
 [[legal."orden-eha-3290-2008:art-1"]]
 language = "es"
-text = "Orden EHA/3290/2008 art 1: aprobacion del modelo 216, Impuesto sobre la Renta de no Residentes, rentas obtenidas sin mediacion de establecimiento permanente, retenciones e ingresos a cuenta, declaracion-documento de ingreso."
+text = "Orden EHA/3290/2008 art 1: aprobación del modelo 216, Impuesto sobre la Renta de no Residentes, rentas obtenidas sin mediacion de establecimiento permanente, retenciones e ingresos a cuenta, declaracion-documento de ingreso."
 
 [[legal."orden-eha-3290-2008:art-11"]]
 language = "es"
-text = "sera el comprendido entre el 1 de enero y el 31 de enero del ano siguiente al que corresponde la declaracion anual."
+text = "sera el comprendido entre el 1 de enero y el 31 de enero del ano siguiente al que corresponde la declaración anual."
 
 [[legal."orden-eha-3290-2008:art-4"]]
 language = "es"
-text = "Orden EHA/3290/2008 art 4: plazo de presentacion del modelo 216. Con caracter general (trimestral), la presentacion e ingreso se efectua en los veinte primeros dias naturales de los meses de abril, julio, octubre y enero por el trimestre natural inmediato anterior. Para grandes empresas, mensual, en los veinte primeros dias naturales de cada mes."
+text = "Orden EHA/3290/2008 art 4: plazo de presentación del modelo 216. Con caracter general (trimestral), la presentación e ingreso se efectua en los veinte primeros dias naturales de los meses de abril, julio, octubre y enero por el trimestre natural inmediato anterior. Para grandes empresas, mensual, en los veinte primeros dias naturales de cada mes."
 
 [[legal."orden-eha-3290-2008:art-6"]]
 language = "es"
@@ -658,15 +658,15 @@ text = "Articulo segundo de la Orden HAC/623/2026: modifica en el registro de ti
 
 [[legal."orden-hac-623-2026:disposicion-final-unica"]]
 language = "es"
-text = "Disposicion final unica de la Orden HAC/623/2026, punto 1: la modificacion del modelo 296 se aplica por primera vez a la declaracion informativa del ejercicio 2026, que se presentara en 2027."
+text = "Disposición final unica de la Orden HAC/623/2026, punto 1: la modificacion del modelo 296 se aplica por primera vez a la declaración informativa del ejercicio 2026, que se presentara en 2027."
 
 [[legal."orden-hfp-1351-2021:art-quinto"]]
 language = "es"
-text = "Articulo quinto de la Orden HFP/1351/2021: modifica el anexo III de la Orden EHA/3290/2008 (registro de tipo 2 del modelo 296: subclave, ingresos a cuenta repercutidos en 389-401, blancos en 402-432). Aplicable por primera vez a las declaraciones de 2021; es la redaccion vigente para el ejercicio 2022."
+text = "Articulo quinto de la Orden HFP/1351/2021: modifica el anexo III de la Orden EHA/3290/2008 (registro de tipo 2 del modelo 296: subclave, ingresos a cuenta repercutidos en 389-401, blancos en 402-432). Aplicable por primera vez a las declaraciones de 2021; es la redacción vigente para el ejercicio 2022."
 
 [[legal."trlirnr-rdleg-5-2004:art-2"]]
 language = "es"
-text = "TRLIRNR art 2: ambito de aplicacion territorial del impuesto. Incluye salvedad de los regimenes forales (Pais Vasco, Navarra) y especialidades de Canarias, Ceuta y Melilla. Fundamento territorial para la atribucion de obligacion IRNR a contribuyentes no residentes que obtienen rentas con fuente en territorio espanol."
+text = "TRLIRNR art 2: ambito de aplicación territorial del impuesto. Incluye salvedad de los regimenes forales (Pais Vasco, Navarra) y especialidades de Canarias, Ceuta y Melilla. Fundamento territorial para la atribucion de obligacion IRNR a contribuyentes no residentes que obtienen rentas con fuente en territorio espanol."
 
 [[legal."trlirnr-rdleg-5-2004:art-24"]]
 language = "es"
@@ -678,7 +678,7 @@ text = "TRLIRNR art 25.1.a: tipo de gravamen general 24 por ciento para rentas o
 
 [[legal."trlirnr-rdleg-5-2004:art-25.1.a"]]
 language = "es"
-text = "El mismo apartado fija un tipo reducido del 19 por ciento cuando el contribuyente es residente en otro Estado miembro de la UE o del EEE con efectivo intercambio de informacion tributaria, lo que motiva la fila tipo_renta=ue_residente del parametro "
+text = "El mismo apartado fija un tipo reducido del 19 por ciento cuando el contribuyente es residente en otro Estado miembro de la UE o del EEE con efectivo intercambio de información tributaria, lo que motiva la fila tipo_renta=ue_residente del parametro "
 
 [[legal."trlirnr-rdleg-5-2004:art-25.1.a"]]
 language = "es"

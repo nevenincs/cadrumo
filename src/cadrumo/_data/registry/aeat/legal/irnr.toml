@@ -22,7 +22,7 @@ effective_from = 2009-01-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-08-21
 reviewed_by = "agent-review (verbatim against the bundled articulo 11 excerpt)"
-notes = "Articulo 11 ESTABLISHES the modelo 296 plazo: sera el comprendido entre el 1 de enero y el 31 de enero del ano siguiente al que corresponde la declaracion anual. Articulo 6, previously cited by the deadline window, is titled «Aprobacion del modelo 296» and states no timing."
+notes = "Articulo 11 ESTABLISHES the modelo 296 plazo: sera el comprendido entre el 1 de enero y el 31 de enero del ano siguiente al que corresponde la declaración anual. Articulo 6, previously cited by the deadline window, is titled «Aprobación del modelo 296» and states no timing."
 required_text = [
     "será el comprendido entre el 1 de enero y el 31 de enero",
 ]
@@ -59,7 +59,7 @@ effective_from = 2004-03-13
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-27
 reviewed_by = "operator"
-notes = "TRLIRNR art 2: ambito de aplicacion territorial del impuesto. Incluye salvedad de los regimenes forales (Pais Vasco, Navarra) y especialidades de Canarias, Ceuta y Melilla. Fundamento territorial para la atribucion de obligacion IRNR a contribuyentes no residentes que obtienen rentas con fuente en territorio espanol."
+notes = "TRLIRNR art 2: ambito de aplicación territorial del impuesto. Incluye salvedad de los regimenes forales (Pais Vasco, Navarra) y especialidades de Canarias, Ceuta y Melilla. Fundamento territorial para la atribucion de obligacion IRNR a contribuyentes no residentes que obtienen rentas con fuente en territorio espanol."
 required_text = ["Este impuesto se aplicara en todo el territorio espanol", "regimenes tributarios forales"]
 
 [legal."trlirnr-rdleg-5-2004:art-10"]
@@ -150,7 +150,7 @@ notes = """\
 TRLIRNR art 25.1.a: tipo de gravamen general 24 por ciento para rentas obtenidas sin \
 mediacion de establecimiento permanente. El mismo apartado fija un tipo reducido del 19 \
 por ciento cuando el contribuyente es residente en otro Estado miembro de la UE o del EEE \
-con efectivo intercambio de informacion tributaria, lo que motiva la fila \
+con efectivo intercambio de información tributaria, lo que motiva la fila \
 tipo_renta=ue_residente del parametro registry m210-tipo-gravamen-2025. Los valores \
 numericos vigentes son consolidados a partir de varias reformas posteriores al RDLeg \
 5/2004 original."""
@@ -639,7 +639,7 @@ effective_from = 2009-01-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-04
 reviewed_by = "agent-replaced the bundled excerpt with the BOE published text of arts. 1 and 4 of BOE-A-2008-18497; the prior excerpt was hand-shaped despite claiming a verbatim fetch; operator to re-stamp"
-notes = "Orden EHA/3290/2008 art 1: aprobacion del modelo 216, Impuesto sobre la Renta de no Residentes, rentas obtenidas sin mediacion de establecimiento permanente, retenciones e ingresos a cuenta, declaracion-documento de ingreso. Approval-order anchor for the Modelo 216 quarterly IRNR retencion return."
+notes = "Orden EHA/3290/2008 art 1: aprobación del modelo 216, Impuesto sobre la Renta de no Residentes, rentas obtenidas sin mediacion de establecimiento permanente, retenciones e ingresos a cuenta, declaracion-documento de ingreso. Approval-order anchor for the Modelo 216 quarterly IRNR retencion return."
 required_text = [
     "Se aprueba el modelo 216",
     "Retenciones e ingresos a cuenta",
@@ -659,7 +659,7 @@ effective_from = 2009-01-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-04
 reviewed_by = "agent-replaced the bundled excerpt with the BOE published text of art. 4 of BOE-A-2008-18497; the prior excerpt was hand-shaped despite claiming a verbatim fetch; operator to re-stamp"
-notes = "Orden EHA/3290/2008 art 4: plazo de presentacion del modelo 216. Con caracter general (trimestral), la presentacion e ingreso se efectua en los veinte primeros dias naturales de los meses de abril, julio, octubre y enero por el trimestre natural inmediato anterior. Para grandes empresas, mensual, en los veinte primeros dias naturales de cada mes. Binding deadline provision grounding the M216 trimestral deadline windows."
+notes = "Orden EHA/3290/2008 art 4: plazo de presentación del modelo 216. Con caracter general (trimestral), la presentación e ingreso se efectua en los veinte primeros dias naturales de los meses de abril, julio, octubre y enero por el trimestre natural inmediato anterior. Para grandes empresas, mensual, en los veinte primeros dias naturales de cada mes. Binding deadline provision grounding the M216 trimestral deadline windows."
 required_text = [
     "Plazo de presentación del modelo 216",
     "veinte primeros días naturales de los meses de abril, julio, octubre y enero",
@@ -1023,7 +1023,7 @@ effective_from = 2021-12-04
 review_status = "agent_reviewed"
 reviewed_at = 2026-09-30
 reviewed_by = "agent-prepared-pending-operator"
-notes = "Articulo quinto de la Orden HFP/1351/2021: modifica el anexo III de la Orden EHA/3290/2008 (registro de tipo 2 del modelo 296: subclave, ingresos a cuenta repercutidos en 389-401, blancos en 402-432). Aplicable por primera vez a las declaraciones de 2021; es la redaccion vigente para el ejercicio 2022."
+notes = "Articulo quinto de la Orden HFP/1351/2021: modifica el anexo III de la Orden EHA/3290/2008 (registro de tipo 2 del modelo 296: subclave, ingresos a cuenta repercutidos en 389-401, blancos en 402-432). Aplicable por primera vez a las declaraciones de 2021; es la redacción vigente para el ejercicio 2022."
 required_text = [
     "Modificación de la Orden EHA/3290/2008",
     "Se modifica el campo «SUBCLAVE»",
@@ -1080,7 +1080,7 @@ effective_from = 2026-06-24
 review_status = "agent_reviewed"
 reviewed_at = 2026-09-30
 reviewed_by = "agent-prepared-pending-operator"
-notes = "Disposicion final unica de la Orden HAC/623/2026, punto 1: la modificacion del modelo 296 se aplica por primera vez a la declaracion informativa del ejercicio 2026, que se presentara en 2027."
+notes = "Disposición final unica de la Orden HAC/623/2026, punto 1: la modificacion del modelo 296 se aplica por primera vez a la declaración informativa del ejercicio 2026, que se presentara en 2027."
 required_text = [
     "declaración informativa modelo 296",
     "correspondiente al ejercicio 2026",

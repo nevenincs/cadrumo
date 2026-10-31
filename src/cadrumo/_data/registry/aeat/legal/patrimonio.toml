@@ -340,7 +340,7 @@ review_status = "agent_reviewed"
 reviewed_at = 2026-08-15
 reviewed_by = "agent-review"
 corpus_tier = "full_consolidated"
-notes = "orden-hfp-207-2022 art 4: aprobacion del modelo de declaracion del Impuesto sobre el Patrimonio (Modelo 714), ejercicio 2021."
+notes = "orden-hfp-207-2022 art 4: aprobación del modelo de declaración del Impuesto sobre el Patrimonio (Modelo 714), ejercicio 2021."
 required_text = [
     "Aprobación del modelo de declaración del Impuesto sobre el Patrimonio",
 ]
@@ -378,7 +378,7 @@ review_status = "agent_reviewed"
 reviewed_at = 2026-08-15
 reviewed_by = "agent-review"
 corpus_tier = "full_consolidated"
-notes = "orden-hfp-310-2023 art 4: aprobacion del modelo de declaracion del Impuesto sobre el Patrimonio (Modelo 714), ejercicio 2022."
+notes = "orden-hfp-310-2023 art 4: aprobación del modelo de declaración del Impuesto sobre el Patrimonio (Modelo 714), ejercicio 2022."
 required_text = [
     "Aprobación del modelo de declaración del Impuesto sobre el Patrimonio",
 ]
@@ -416,7 +416,7 @@ review_status = "agent_reviewed"
 reviewed_at = 2026-08-15
 reviewed_by = "agent-review"
 corpus_tier = "full_consolidated"
-notes = "orden-hac-265-2024 art 4: aprobacion del modelo de declaracion del Impuesto sobre el Patrimonio (Modelo 714), ejercicio 2023."
+notes = "orden-hac-265-2024 art 4: aprobación del modelo de declaración del Impuesto sobre el Patrimonio (Modelo 714), ejercicio 2023."
 required_text = [
     "Aprobación del modelo de declaración del Impuesto sobre el Patrimonio",
 ]
@@ -454,7 +454,7 @@ review_status = "agent_reviewed"
 reviewed_at = 2026-08-15
 reviewed_by = "agent-review"
 corpus_tier = "full_consolidated"
-notes = "orden-hac-242-2025 art 4: aprobacion del modelo de declaracion del Impuesto sobre el Patrimonio (Modelo 714), ejercicio 2024."
+notes = "orden-hac-242-2025 art 4: aprobación del modelo de declaración del Impuesto sobre el Patrimonio (Modelo 714), ejercicio 2024."
 required_text = [
     "Aprobación del modelo de declaración del Impuesto sobre el Patrimonio",
 ]
@@ -492,7 +492,7 @@ review_status = "agent_reviewed"
 reviewed_at = 2026-08-15
 reviewed_by = "agent-review"
 corpus_tier = "full_consolidated"
-notes = "orden-hac-277-2026 art 4: aprobacion del modelo de declaracion del Impuesto sobre el Patrimonio (Modelo 714), ejercicio 2025."
+notes = "orden-hac-277-2026 art 4: aprobación del modelo de declaración del Impuesto sobre el Patrimonio (Modelo 714), ejercicio 2025."
 required_text = [
     "Aprobación del modelo de declaración del Impuesto sobre el Patrimonio",
 ]
