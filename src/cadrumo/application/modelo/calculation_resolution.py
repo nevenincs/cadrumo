@@ -45,7 +45,7 @@ from ...domain.calculations.registry.schema import (
 )
 from ...domain.calculations.registry.schema_input_kind import InputKind
 from ...domain.identifiers import canonical_decimal_string as _canonical_decimal_str
-from ...domain.modelos.calculation_revision import PERSISTED_BOOLEAN_BINDING_TOKENS
+from ...domain.modelos.calculation_binding_values import PERSISTED_BOOLEAN_BINDING_TOKENS
 from ...domain.modelos.filing_record import FilingDeclarationKind
 from ...domain.modelos.work_unit import WorkUnit
 from ..aggregation.source_mesh import CalculationSourceResolution

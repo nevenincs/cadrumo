@@ -422,9 +422,7 @@ def _list_row(revision: ActivityAssetRevision, context: RegisterReadContext) -> 
     plan = element_plan(revision, context)
     claims = _effective_asset_claims(context.history.claims, revision.asset_id)
     opening = revision.opening_history.accumulated_amount
-    accumulated = None if opening is None else opening + sum((claim.amount for claim in claims), Decimal("0"))
-    basis = revision.amortizable_ceiling()
-    pending = None if accumulated is None else max(basis - accumulated, Decimal("0"))
+    basis, accumulated, pending = _list_amounts(revision, claims, opening)
     descriptor = context.history.current_descriptor(revision.asset_id)
     readable = _readable_years(plan, context)
     return ActivityAssetListRow(
@@ -447,6 +445,17 @@ def _list_row(revision: ActivityAssetRevision, context: RegisterReadContext) -> 
         projected_years=tuple(year for year in readable if year > context.last_admitted_year),
         disposal=_list_disposal(revision),
     )
+
+
+def _list_amounts(
+    revision: ActivityAssetRevision, claims: tuple[AmortizationClaim, ...], opening: Decimal | None
+) -> tuple[Decimal, Decimal | None, Decimal | None]:
+    """Derive the list's basis, accumulated claims and remaining balance."""
+    basis = revision.amortizable_ceiling()
+    if opening is None:
+        return basis, None, None
+    accumulated = opening + sum((claim.amount for claim in claims), Decimal("0"))
+    return basis, accumulated, max(basis - accumulated, Decimal("0"))
 
 
 def _effective_asset_claims(claims: tuple[AmortizationClaim, ...], asset_id: str) -> tuple[AmortizationClaim, ...]:

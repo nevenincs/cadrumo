@@ -2516,6 +2516,7 @@
         "cadrumo.domain.justificante.protocols",
         "cadrumo.domain.justificante.schema",
         "cadrumo.domain.modelos",
+        "cadrumo.domain.modelos.calculation_binding_values",
         "cadrumo.domain.modelos.calculation_repository",
         "cadrumo.domain.modelos.calculation_revision",
         "cadrumo.domain.modelos.calculation_revision_aggregate",

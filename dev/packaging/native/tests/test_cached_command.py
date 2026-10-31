@@ -228,3 +228,89 @@ cadrumo_finalize_clean_targets()
 
     with zipfile.ZipFile(build / "fixture.zip") as archive:
         assert sorted(Path(name).name for name in archive.namelist() if not name.endswith("/")) == ["a", "b"]
+
+
+_DISCOVERING_PRODUCER = """\
+import pathlib, sys
+from dev.packaging.native.discovered_inputs import record_discovered_inputs
+root, output = map(pathlib.Path, sys.argv[1:3])
+record_discovered_inputs(root)
+sys.path.insert(0, str(root))
+import helper
+(root / "scratch.txt").write_text("written, never read", encoding="utf-8")
+output.write_text(helper.PREFIX + (root / "data.txt").read_text(encoding="utf-8"), encoding="utf-8")
+"""
+
+
+def test_a_discovering_action_keys_on_what_its_producer_imported_and_read(tmp_path: Path) -> None:
+    """Undeclared modules and data the producer used invalidate it; files it never read do not."""
+    checkout = tmp_path / "checkout"
+    checkout.mkdir()
+    (checkout / "helper.py").write_text('PREFIX = "one:"\n', encoding="utf-8")
+    (checkout / "data.txt").write_text("alpha", encoding="utf-8")
+    (checkout / "unrelated.txt").write_text("never read", encoding="utf-8")
+    output = tmp_path / "out.txt"
+    marker = tmp_path / "receipt.json"
+    spec = tmp_path / "spec.json"
+    spec.write_text(
+        json.dumps(
+            {"name": "discover", "inputs": [], "outputs": [str(output)], "marker": str(marker), "discover": True}
+        ),
+        encoding="utf-8",
+    )
+    command = [sys.executable, "-B", "-c", _DISCOVERING_PRODUCER, str(checkout), str(output)]
+
+    assert run_cached(tmp_path, spec, command)
+    discovered = {Path(name).name for name in json.loads(marker.read_text(encoding="utf-8"))["discovered"]}
+    assert discovered == {"helper.py", "data.txt"}, "imports and reads are inputs; writes and unread files are not"
+    # The files first discovered by that run were not inventoried before it, so it reruns once to key on them.
+    assert run_cached(tmp_path, spec, command)
+    assert not run_cached(tmp_path, spec, command)
+
+    (checkout / "unrelated.txt").write_text("changed, still never read", encoding="utf-8")
+    assert not run_cached(tmp_path, spec, command)
+
+    (checkout / "data.txt").write_text("beta", encoding="utf-8")
+    assert run_cached(tmp_path, spec, command)
+    assert output.read_text(encoding="utf-8") == "one:beta"
+
+    (checkout / "helper.py").write_text('PREFIX = "two:"\n', encoding="utf-8")
+    assert run_cached(tmp_path, spec, command)
+    assert output.read_text(encoding="utf-8") == "two:beta"
+    assert not run_cached(tmp_path, spec, command)
+
+
+def test_a_discovered_input_changed_mid_run_leaves_no_receipt_and_no_failure(tmp_path: Path) -> None:
+    """A torn read of a discovered file is never reused, and does not fail the build that saw it."""
+    checkout = tmp_path / "checkout"
+    checkout.mkdir()
+    data = checkout / "data.txt"
+    data.write_text("alpha", encoding="utf-8")
+    output = tmp_path / "out.txt"
+    marker = tmp_path / "receipt.json"
+    spec = tmp_path / "spec.json"
+    spec.write_text(
+        json.dumps({"name": "torn", "inputs": [], "outputs": [str(output)], "marker": str(marker), "discover": True}),
+        encoding="utf-8",
+    )
+    producer = (
+        "import pathlib, sys\n"
+        "from dev.packaging.native.discovered_inputs import record_discovered_inputs\n"
+        "root, output, edit = pathlib.Path(sys.argv[1]), pathlib.Path(sys.argv[2]), sys.argv[3]\n"
+        "record_discovered_inputs(root)\n"
+        "output.write_text((root / 'data.txt').read_text(encoding='utf-8'), encoding='utf-8')\n"
+        "if edit != 'unchanged': (root / 'data.txt').write_text(edit, encoding='utf-8')\n"
+    )
+
+    def command(edit: str) -> list[str]:
+        return [sys.executable, "-B", "-c", producer, str(checkout), str(output), edit]
+
+    assert run_cached(tmp_path, spec, command("unchanged"))
+    assert run_cached(tmp_path, spec, command("unchanged"))
+    assert not run_cached(tmp_path, spec, command("unchanged"))
+
+    data.write_text("beta", encoding="utf-8")
+    assert run_cached(tmp_path, spec, command("gamma"))
+    assert not marker.exists(), "a receipt would name bytes the producer may not have read"
+    assert run_cached(tmp_path, spec, command("unchanged"))
+    assert output.read_text(encoding="utf-8") == "gamma"

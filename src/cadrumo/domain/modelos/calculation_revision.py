@@ -43,8 +43,7 @@ from collections.abc import Iterator, Mapping, Sequence
 from datetime import datetime
 from decimal import Decimal
 from enum import StrEnum
-from types import MappingProxyType
-from typing import Final, TypedDict, override
+from typing import TypedDict, override
 
 from pydantic import (
     BaseModel,
@@ -100,22 +99,6 @@ from .errors import ModeloError, ModeloValidationError
 from .filing_text import ModeloActorLabel, OperatorReason
 from .ledger_filing_snapshot import LedgerFilingEvidence, LedgerFilingSnapshot
 from .row_models import ModeloDetailRow
-
-PERSISTED_BOOLEAN_BINDING_TOKENS: Final[Mapping[bool, str]] = MappingProxyType({True: "true", False: "false"})
-"""How a boolean-channel binding's value is written into ``binding_overrides``.
-
-The overrides mapping carries every binding channel as text: decimals as
-canonical decimal strings, enums as their member, dates in ISO form, and a
-boolean as one of these two tokens. A reader that expects a quantity must
-recognise a truth token rather than refuse it as corrupt storage."""
-
-
-def persisted_boolean_binding_value(raw: str) -> bool | None:
-    """Read a persisted truth token back, or return ``None`` when ``raw`` is none."""
-    for value, token in PERSISTED_BOOLEAN_BINDING_TOKENS.items():
-        if raw == token:
-            return value
-    return None
 
 
 class CalculationRevisionState(StrEnum):
@@ -1235,7 +1218,6 @@ def assert_revision_snapshot_evidence_coverage(revision: CalculationRevision) ->
 
 
 __all__ = [
-    "PERSISTED_BOOLEAN_BINDING_TOKENS",
     "CalculationRevision",
     "CalculationRevisionAmendmentIdentity",
     "CalculationRevisionAmendmentKind",
@@ -1249,5 +1231,4 @@ __all__ = [
     "calculation_revision_identity_inputs_from_revision",
     "derive_calculation_revision_id",
     "derive_calculation_revision_id_from_revision",
-    "persisted_boolean_binding_value",
 ]

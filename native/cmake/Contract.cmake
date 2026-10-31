@@ -38,11 +38,28 @@ if(CADRUMO_TARGET MATCHES "^linux-")
 endif()
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${contract_inputs})
 include("${CMAKE_CURRENT_LIST_DIR}/CachedCommand.cmake")
-file(GLOB manager_locale_inputs CONFIGURE_DEPENDS
-  "${CADRUMO_SOURCE_ROOT}/dev/locales/*.py"
-  "${CADRUMO_SOURCE_ROOT}/src/cadrumo/locales/*/common.yml")
-cadrumo_cached_command(contract_command native_contract SHARED
-  INPUTS ${contract_inputs} ${manager_locale_inputs} "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/generate.py"
+# The manager strings are the contract's one projection of the locale tooling, whose
+# import closure (and the authority it loads) is far wider than the contract's own. They
+# are their own discovering action: an edit in that closure reruns only the projection,
+# and an unchanged projection leaves the contract and everything compiled from it current.
+cadrumo_cached_command(manager_strings_command native_manager_strings SHARED DISCOVER
+  INPUTS "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/generate.py"
+    "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/cached_command.py"
+    "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/stable_output.py"
+    "${CADRUMO_SOURCE_ROOT}/pyproject.toml" "${CADRUMO_SOURCE_ROOT}/uv.lock" "${CADRUMO_DEV_PYTHON}"
+    "${CADRUMO_BUILD_HELPER}"
+  OUTPUTS "${CONTRACT_DIR}/manager-chrome.json")
+cadrumo_build_step(manager_strings_comment native_manager_strings GROUP contract
+  SUMMARY "project the native manager strings from the locale catalogues"
+  OUTPUTS "${CONTRACT_DIR}/manager-chrome.json")
+add_custom_target(native_manager_strings
+  COMMAND ${manager_strings_command} ${CADRUMO_HELPER} run --build "${PROJECT_BINARY_DIR}" -- "${CADRUMO_DEV_PYTHON}" -B
+    -m dev.packaging.native.generate "${CONTRACT_DIR}" --project-manager-strings
+  BYPRODUCTS "${CONTRACT_DIR}/manager-chrome.json"
+  WORKING_DIRECTORY "${CADRUMO_SOURCE_ROOT}" COMMENT "${manager_strings_comment}" VERBATIM)
+cadrumo_cached_command(contract_command native_contract SHARED DISCOVER
+  INPUTS ${contract_inputs} "${CONTRACT_DIR}/manager-chrome.json"
+    "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/generate.py"
     "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/build_directory.py"
     "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/stable_output.py"
     "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/storage_vectors.py"
@@ -67,10 +84,11 @@ cadrumo_build_step(contract_comment native_contract GROUP contract
 add_custom_target(native_contract
   COMMAND ${contract_command} ${CADRUMO_HELPER} run --build "${PROJECT_BINARY_DIR}" -- "${CADRUMO_DEV_PYTHON}" -B
     -m dev.packaging.native.generate "${CONTRACT_DIR}"
-    --channel "${CADRUMO_ID_CHANNEL}" --target "${CADRUMO_TARGET}"
+    --channel "${CADRUMO_ID_CHANNEL}" --target "${CADRUMO_TARGET}" --manager-strings "${CONTRACT_DIR}/manager-chrome.json"
   BYPRODUCTS "${CONTRACT_DIR}/contract.rs" "${CONTRACT_DIR}/contract.h" "${CONTRACT_DIR}/contract.json"
     "${CONTRACT_DIR}/contract_vectors.rs"
   WORKING_DIRECTORY "${CADRUMO_SOURCE_ROOT}" COMMENT "${contract_comment}" VERBATIM)
+add_dependencies(native_contract native_manager_strings)
 # Each native component resolves its own build identity just before it compiles
 # (dev/packaging/native/build_stamp.py): a content fingerprint of its inputs keys the
 # identity, so an unchanged component keeps its number and its generated identity file,
