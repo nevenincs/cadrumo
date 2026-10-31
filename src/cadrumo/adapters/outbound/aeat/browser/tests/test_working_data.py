@@ -2,7 +2,7 @@
 
 from pathlib import Path
 from types import SimpleNamespace
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Any, cast
 
 if TYPE_CHECKING:
     from playwright.async_api import Playwright
@@ -159,3 +159,80 @@ async def test_unusable_root_refuses_browser_launch(tmp_path: Path):
         assert root.read_text(encoding="utf-8") == "synthetic"
     finally:
         await session.close()
+
+
+@pytest.mark.asyncio
+async def test_a_disposed_runtime_does_not_poison_the_next_driver(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    """A later independent driver must not inherit an earlier storage root."""
+    import os
+    from tempfile import TemporaryDirectory
+
+    from playwright.async_api import async_playwright
+
+    ambient = tmp_path / "ambient"
+    ambient.mkdir()
+    for variable in ("TEMP", "TMP", "TMPDIR"):
+        monkeypatch.setenv(variable, str(ambient))
+    browser_cache = os.environ["PLAYWRIGHT_BROWSERS_PATH"]
+    with TemporaryDirectory(prefix="owned-runtime-", dir=tmp_path) as prior_root:
+        session = await create_browser_session(Settings(cadrumo_storage_root=Path(prior_root)), Profile(name="prior"))
+        await session.close()
+    assert os.environ.get("PLAYWRIGHT_BROWSERS_PATH") == browser_cache
+    independent = await async_playwright().start()
+    try:
+        browser = await independent.chromium.launch(headless=True)
+        await browser.close()
+    finally:
+        await independent.stop()
+    assert all(os.environ.get(variable) == str(ambient) for variable in ("TEMP", "TMP", "TMPDIR"))
+
+
+@pytest.mark.asyncio
+async def test_concurrent_drivers_get_their_own_environment(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    import asyncio
+    import os
+
+    from ...tests.process_support import playwright_driver_pid
+
+    variables = ("PLAYWRIGHT_BROWSERS_PATH", "TEMP", "TMP", "TMPDIR")
+    monkeypatch.setenv("TEMP", "ambient-temp")
+    monkeypatch.delenv("TMP", raising=False)
+    before = {variable: os.environ.get(variable) for variable in variables}
+    settings = [Settings(cadrumo_storage_root=tmp_path / name) for name in ("first", "second")]
+    first, second = await asyncio.gather(
+        *(
+            create_browser_session(item, Profile(name=name))
+            for item, name in zip(settings, ("first", "second"), strict=True)
+        )
+    )
+    try:
+        for session, item in zip((first, second), settings, strict=True):
+            environment = cast("Any", psutil.Process(playwright_driver_pid(session.session.playwright))).environ()
+            assert Path(environment["PLAYWRIGHT_BROWSERS_PATH"]) == storage_path(
+                StorageCategory.PLAYWRIGHT_BROWSERS, settings=item
+            )
+            for variable in ("TEMP", "TMP", "TMPDIR"):
+                assert Path(environment[variable]) == storage_path(StorageCategory.TEMPORARY_FILES, settings=item)
+        assert {variable: os.environ.get(variable) for variable in variables} == before
+    finally:
+        await asyncio.gather(first.close(), second.close())
+
+
+@pytest.mark.asyncio
+async def test_driver_start_failure_preserves_ambient_environment(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    import os
+
+    from playwright._impl import _transport
+
+    variables = ("PLAYWRIGHT_BROWSERS_PATH", "TEMP", "TMP", "TMPDIR")
+    monkeypatch.delenv("TMP", raising=False)
+    monkeypatch.delenv("PLAYWRIGHT_BROWSERS_PATH", raising=False)
+    before = {variable: os.environ.get(variable) for variable in variables}
+
+    def missing_driver():
+        raise OSError("synthetic driver failure")
+
+    monkeypatch.setattr(_transport, "compute_driver_executable", missing_driver)
+    with pytest.raises(BrowserError):
+        await create_browser_session(Settings(cadrumo_storage_root=tmp_path / "failed"), Profile(name="failed"))
+    assert {variable: os.environ.get(variable) for variable in variables} == before

@@ -14,14 +14,11 @@ _BOOTSTRAP_BROWSER_CACHE = os.environ["PLAYWRIGHT_BROWSERS_PATH"]
 
 @pytest.fixture(autouse=True)
 def _align_browser_binary_cache(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Restore driver-environment mutations and align direct Playwright starts.
+    """Align direct Playwright starts and restore a test's temporary variables.
 
-    Tests may explicitly choose an empty cache to exercise refusal, and
-    production driver startup writes the browsers and temporary-directory
-    variables for its own process. A test that starts it under a storage root of
-    its own would leave those pointing into a directory that is later removed,
-    so every test starts from the bootstrap browser cache and its own temporary
-    directory variables, and gives them back unchanged.
+    Tests may explicitly choose an empty cache to exercise refusal. The
+    monkeypatch keeps those changes and any temporary-directory changes local
+    to the test, while direct Playwright starts use the bootstrap cache.
     """
     monkeypatch.setenv("PLAYWRIGHT_BROWSERS_PATH", _BOOTSTRAP_BROWSER_CACHE)
     for name in TEMPORARY_VARIABLES:
