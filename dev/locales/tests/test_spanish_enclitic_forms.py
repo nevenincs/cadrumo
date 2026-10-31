@@ -8,10 +8,10 @@ import pytest
 from cadrumo.core.i18n.render import tr
 
 from ..signal_spelling_enrollment import (
-    _spanish_reviewed_imperative,
     check_dictionary_spelling_words,
     is_project_spelling,
 )
+from ..signal_spelling_spanish_forms import is_reviewed_spanish_enclitic
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -171,8 +171,8 @@ class EmptyDictionary:
 def test_observed_forms_keep_language_case_and_adjacent_typo_checks(word: str) -> None:
     assert is_project_spelling("es", word)
     assert is_project_spelling("es", word.capitalize())
-    assert not _spanish_reviewed_imperative(word.upper())
-    assert not _spanish_reviewed_imperative(word[:2] + "x" + word[2:])
+    assert not is_reviewed_spanish_enclitic(word.upper())
+    assert not is_reviewed_spanish_enclitic(word[:2] + "x" + word[2:])
     assert all(not is_project_spelling(locale, word) for locale in ("en", "ca", "hu"))
     key = "application.test.prose"
     unknown_words: set[tuple[str, str]] = set()
@@ -195,26 +195,26 @@ def test_observed_forms_keep_language_case_and_adjacent_typo_checks(word: str) -
 @pytest.mark.parametrize("stem", [*_REVIEWED_STEMS, "recargar", "reconciliar"])
 @pytest.mark.parametrize("suffix", ["lo", "la", "los", "las"])
 def test_only_finite_direct_object_pronouns_attach_to_reviewed_stems(stem: str, suffix: str) -> None:
-    assert _spanish_reviewed_imperative(stem + suffix)
+    assert is_reviewed_spanish_enclitic(stem + suffix)
     for bad_suffix in ("loo", "lass", "mente", "lós"):
-        assert not _spanish_reviewed_imperative(stem + bad_suffix)
+        assert not is_reviewed_spanish_enclitic(stem + bad_suffix)
     if stem != "quíta":
-        assert not _spanish_reviewed_imperative(stem + "le")
-        assert not _spanish_reviewed_imperative(stem + "les")
-    assert not _spanish_reviewed_imperative("x" + stem + suffix)
-    assert not _spanish_reviewed_imperative(stem.upper() + suffix)
+        assert not is_reviewed_spanish_enclitic(stem + "le")
+        assert not is_reviewed_spanish_enclitic(stem + "les")
+    assert not is_reviewed_spanish_enclitic("x" + stem + suffix)
+    assert not is_reviewed_spanish_enclitic(stem.upper() + suffix)
     unaccented = "".join(c for c in unicodedata.normalize("NFD", stem) if unicodedata.category(c) != "Mn")
     if unaccented != stem:
-        assert not _spanish_reviewed_imperative(unaccented + suffix)
+        assert not is_reviewed_spanish_enclitic(unaccented + suffix)
 
 
 @pytest.mark.parametrize("stem", ["indíca", "quíta"])
 @pytest.mark.parametrize("suffix", ["le", "les"])
 def test_reviewed_indirect_object_forms_keep_stem_and_suffix_boundaries(stem: str, suffix: str) -> None:
-    assert _spanish_reviewed_imperative(stem + suffix)
-    assert not _spanish_reviewed_imperative(stem + suffix + "x")
-    assert not _spanish_reviewed_imperative(stem.replace("í", "i") + suffix)
-    assert not _spanish_reviewed_imperative("x" + stem + suffix)
+    assert is_reviewed_spanish_enclitic(stem + suffix)
+    assert not is_reviewed_spanish_enclitic(stem + suffix + "x")
+    assert not is_reviewed_spanish_enclitic(stem.replace("í", "i") + suffix)
+    assert not is_reviewed_spanish_enclitic("x" + stem + suffix)
 
 
 @pytest.mark.parametrize(
@@ -235,7 +235,7 @@ def test_reviewed_indirect_object_forms_keep_stem_and_suffix_boundaries(stem: st
     ],
 )
 def test_unreviewed_words_and_wrong_stress_are_not_guessed(word: str) -> None:
-    assert not _spanish_reviewed_imperative(word)
+    assert not is_reviewed_spanish_enclitic(word)
 
 
 @pytest.mark.parametrize(

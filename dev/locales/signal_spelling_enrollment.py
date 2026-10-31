@@ -13,6 +13,7 @@ from .signal_spelling_segments import (
     spanish_word_context,
     translation_spelling_segments,
 )
+from .signal_spelling_spanish_forms import is_reviewed_spanish_form
 from .signal_tokens import filtered_translation_text
 
 # Exact, attested forms absent from the pinned dictionaries. AEAT and modelo
@@ -880,122 +881,6 @@ _LOCALE_SPELLINGS: dict[str, frozenset[str]] = {
 }
 
 
-# Reviewed tú imperatives observed in Spanish operator prose. Each entry is the
-# stem as written before one enclitic (including its required accent), not a
-# license to strip suffixes from arbitrary dictionary words. RAE describes the
-# attachment and accentuation of these pronouns in its orthography:
-# https://www.rae.es/diccionario-estudiante/docs/ortografia.pdf
-_SPANISH_DIRECT_OBJECT_IMPERATIVES = frozenset(
-    {
-        "acóta",
-        "actíva",
-        "actualíza",
-        "adminístra",
-        "adjúnta",
-        "alinéa",
-        "apláza",
-        "archíva",
-        "anóta",
-        "apórta",
-        "calcúla",
-        "clasifíca",
-        "combína",
-        "comuníca",
-        "concília",
-        "configúra",
-        "confírma",
-        "consérva",
-        "cópia",
-        "declára",
-        "desactíva",
-        "descárga",
-        "desígna",
-        "edíta",
-        "elimína",
-        "elíge",
-        "enuméra",
-        "establéce",
-        "examína",
-        "exclúye",
-        "expórta",
-        "gestióna",
-        "guía",
-        "impórta",
-        "instála",
-        "inicialíza",
-        "introdúce",
-        "investíga",
-        "manten",
-        "muéstra",
-        "márca",
-        "nómbra",
-        "omíte",
-        "presénta",
-        "previsualíza",
-        "proporcióna",
-        "quíta",
-        "reanúda",
-        "recompíla",
-        "reconstrúye",
-        "regístra",
-        "repíte",
-        "respónde",
-        "resuélve",
-        "restáura",
-        "revóca",
-        "revísa",
-        "rastréa",
-        "sálta",
-        "sepára",
-        "termína",
-        "tráta",
-        "vacía",
-        "vincúla",
-    }
-)
-# These observed infinitives retain their original stress with one clitic.
-# They are deliberately separate from the accented imperative stems above.
-_SPANISH_DIRECT_OBJECT_INFINITIVES = frozenset(
-    {
-        "configurar",
-        "descartar",
-        "indexar",
-        "juntar",
-        "ofrecer",
-        "rastrear",
-        "recargar",
-        "reconciliar",
-        "reejecutar",
-        "sobrescribir",
-    }
-)
-# The observed gerund has a different stress pattern from an imperative.
-_SPANISH_DIRECT_OBJECT_GERUNDS = frozenset({"replicándo"})
-# Only these reviewed imperative stems additionally take an indirect object.
-_SPANISH_INDIRECT_OBJECT_IMPERATIVES = frozenset({"indíca", "quíta"})
-_SPANISH_DIRECT_OBJECT_CLITICS = ("lo", "la", "los", "las")
-
-
-def _spanish_reviewed_imperative(word: str) -> bool:
-    """Recognize one pronoun on a reviewed verb form, preserving its accent."""
-    # Sentence-initial capitalization is grammatical; do not casefold the
-    # entire token, which would admit arbitrary internal capitalization.
-    word = word[:1].lower() + word[1:]
-    if word == "autentícate":
-        return True
-    if any(word == stem + clitic for stem in _SPANISH_INDIRECT_OBJECT_IMPERATIVES for clitic in ("le", "les")):
-        return True
-    return any(
-        word.endswith(clitic)
-        and (
-            word[: -len(clitic)] in _SPANISH_DIRECT_OBJECT_IMPERATIVES
-            or word[: -len(clitic)] in _SPANISH_DIRECT_OBJECT_INFINITIVES
-            or word[: -len(clitic)] in _SPANISH_DIRECT_OBJECT_GERUNDS
-        )
-        for clitic in _SPANISH_DIRECT_OBJECT_CLITICS
-    )
-
-
 def is_project_spelling(locale: str, word: str) -> bool:
     """Accept reviewed dictionary gaps without changing Hunspell data."""
     if locale == "en" and word.endswith("'s"):
@@ -1005,7 +890,7 @@ def is_project_spelling(locale: str, word: str) -> bool:
     return (
         word in _SHARED_SPELLINGS
         or word in _LOCALE_SPELLINGS.get(locale, frozenset())
-        or (locale == "es" and _spanish_reviewed_imperative(word))
+        or (locale == "es" and is_reviewed_spanish_form(word))
     )
 
 
