@@ -104,6 +104,7 @@ export type BindingSourceKind =
   | "m303_regimen_simplificado_annual_summary"
   | "bienes_inversion_regularizacion"
   | "inventory"
+  | "activity_asset_disposal"
   | "prorrata_regularizacion"
   | "borrador"
   | "iva_wallet_decision"
@@ -279,6 +280,12 @@ export type BucketEventType =
   | "ledger.inventory.movement_added"
   | "ledger.inventory.valuation_previewed"
   | "ledger.inventory.removed"
+  | "ledger.inventory.described"
+  | "ledger.inventory.corrected"
+  | "ledger.inventory.movement_corrected"
+  | "ledger.inventory.movement_reversed"
+  | "ledger.inventory.retired"
+  | "ledger.inventory.restored"
   | "modelo.audit.verified"
   | "modelo.audit.exported"
   | "live.notifications.snapshot_captured"
@@ -315,6 +322,59 @@ export type BundleVerificationState =
   "pending" | "verified" | "incomplete" | "failed";
 
 /**
+ * What one note says about its own subject: a catalogue sentence and the
+ * values it names.
+ *
+ * A note's reason says what kind of thing was noticed, and several notes can
+ * share a reason. This says which row, element, interval and amount this one
+ * is about, so what was known at calculation stays readable in every language
+ * after the process that calculated it has gone. Values are text the sentence
+ * prints as they stand.
+ */
+export type CalculationNoteFact = {
+  sentence: CalculationNoteSentence;
+  values: [string, string][];
+};
+
+/**
+ * The catalogue sentence that states one note's facts.
+ */
+export type CalculationNoteSentence =
+  | "claim_gap_accrued"
+  | "claim_gap_free_method"
+  | "instalment_free_gap"
+  | "accrual_unavailable"
+  | "amortization_box_unbound"
+  | "activity_undeclared"
+  | "agrarian_excluded"
+  | "residence_period_unknown"
+  | "row_unregistered"
+  | "register_owned_acquisition"
+  | "possibly_durable_expense"
+  | "register_row_missing"
+  | "register_cost_exceeds_paid"
+  | "register_price_exceeds_base"
+  | "register_partly_accounted"
+  | "disposal_unresolved_income"
+  | "disposal_unresolved_no_box"
+  | "disposal_instalment_excess_unresolved"
+  | "disposal_instalment_agrarian_excess"
+  | "disposal_modules_agrarian_excess"
+  | "disposal_m131_excess"
+  | "disposal_m131_excess_unresolved"
+  | "disposal_later_affectation"
+  | "disposal_figure_no_box"
+  | "disposal_figure_in_box"
+  | "disposal_figure_element_row"
+  | "disposal_figure_property_row"
+  | "disposal_shared_row"
+  | "disposal_claim_gap"
+  | "disposal_minimum_exceeded_deduction"
+  | "disposal_no_minimum_authority"
+  | "disposal_minimum_unresolved"
+  | "disposal_exemption_not_computed";
+
+/**
  * Closed set of serialisations of one modelo calculation report.
  *
  * Attributes: CSV: The report's rows as a delimited table with fixed columns,
@@ -338,7 +398,7 @@ export type CalculationReportDocumentFormat = "csv" | "pdf";
  * Attributes: INPUT: A figure supplied to the calculation, by the operator or
  * by a resolved binding. COMPUTED: A registry formula derived it from other
  * rows. SUBTOTAL: A settlement-chain figure short of the declaration's result
- * -- the liquidaci�n cell an operator reads on the way to the total. RESULT:
+ * -- the liquidación cell an operator reads on the way to the total. RESULT:
  * The figure the declaration settles. INFORMATIONAL: Declared informational:
  * reported but outside the settlement arithmetic. PROJECTION_ONLY: Declared
  * for projection only, so it reaches the filed artefact without taking part in
@@ -440,12 +500,14 @@ export type CalculationSourceDiagnosticSnapshot = {
     | "ledger_amortization_row_unregistered"
     | "activity_asset_foral_territory"
     | "activity_asset_residence_unresolved"
+    | "activity_asset_residence_period_unknown"
     | "activity_asset_claim_gap"
     | "register_acquisition_exceeds_ledger"
     | "register_acquisition_partly_accounted"
     | "register_acquisition_row_missing"
     | "ledger_expense_may_be_durable"
     | "activity_asset_accrual_unavailable"
+    | "activity_asset_disposal_finding"
     | "activity_asset_agrarian_excluded"
     | "activity_asset_activity_undeclared";
   source_kind: string;
@@ -454,6 +516,7 @@ export type CalculationSourceDiagnosticSnapshot = {
   remedy: string | null;
   resolver_id: string | null;
   source_ref: string | null;
+  fact: CalculationNoteFact | null;
   binding_id: BindingId | null;
   relation_id: RelationId | null;
   relation_ids: RelationId[];
@@ -479,7 +542,7 @@ export type CalculationSourceDiagnosticSnapshot = {
  * describes a condition the filing cannot treat as complete.
  * `unrouted_observation` is a row no binding consumes at all.
  * `unrouted_declarable_quantity` is an independent quantity that consumed rows
- * carry and no binding drawing that quantity reaches — the row-keyed screens
+ * carry and no binding drawing that quantity reaches â€” the row-keyed screens
  * are silent on it by construction, so a verify or export gate that saw only
  * the row condition would read their silence as confirmation.
  * `iva_selected_scope_evidence_failure` is a ledger IVA row whose selected
@@ -497,17 +560,22 @@ export type CalculationSourceDiagnosticSnapshot = {
  * zero. `unhandled_binding_source` is a declared source with no executable
  * route. `source_domain_not_ready` is a source store that could not be read
  * yet. `invoice_reverse_charge_cuota_not_derivable` is a reverse-charge
- * invoice whose IVA owed could not be derived.
- * `ledger_amortization_row_unregistered` is a ledger row in an amortization
- * category no registered element owns. `activity_asset_foral_territory` is a
- * foral resident whose registered assets cannot reach these forms.
- * `activity_asset_residence_unresolved` is a tax residence that could not be
- * read while the register holds elements. These seven
- * block filing until a recalculation clears them. `terminal_origin_mismatch` is a value that
+ * invoice whose IVA owed could not be derived. These block filing until a
+ * recalculation clears them. `terminal_origin_mismatch` is a value that
  * reached the declaration by an undeclared route; it persists so a reopened
  * declaration still shows it, but withholds nothing, because the route it
- * reports may lack a terminal origin by design. `binding_source` is `None`
- * only where the condition names no binding source kind.
+ * reports may lack a terminal origin by design.
+ * `ledger_amortization_row_unregistered` is a ledger row in an amortization
+ * category no registered element owns. `activity_asset_foral_territory` is a
+ * period in a foral territory, whose amortization is determined under foral
+ * rules. `activity_asset_residence_unresolved` is a tax residence that could
+ * not be read while the register holds elements. These three persist in the
+ * same way: the amortization is left out and the rest of the declaration
+ * stands. The other activity-asset reasons persist as durable notes for the
+ * same cause: what was known about the register at calculation stays with the
+ * filed record. None of them withholds anything. `fact` states such a note's
+ * own row, element, interval and amount. `binding_source` is `None` only where
+ * the condition names no binding source kind.
  */
 export type CalculationSourceIssue = {
   reason:
@@ -523,12 +591,24 @@ export type CalculationSourceIssue = {
     | "invoice_reverse_charge_cuota_not_derivable"
     | "ledger_amortization_row_unregistered"
     | "activity_asset_foral_territory"
-    | "activity_asset_residence_unresolved";
+    | "activity_asset_residence_unresolved"
+    | "activity_asset_claim_gap"
+    | "activity_asset_accrual_unavailable"
+    | "activity_asset_activity_undeclared"
+    | "activity_asset_agrarian_excluded"
+    | "activity_asset_residence_period_unknown"
+    | "activity_asset_disposal_finding"
+    | "register_acquisition_exceeds_ledger"
+    | "register_acquisition_partly_accounted"
+    | "register_acquisition_row_missing"
+    | "register_owned_capital_acquisition"
+    | "ledger_expense_may_be_durable";
   binding_source: BindingSourceKind | null;
   message: string;
   resolver_id: string | null;
   source_ref: string | null;
   casilla_id: CasillaId | null;
+  fact: CalculationNoteFact | null;
 };
 
 /**
@@ -543,11 +623,11 @@ export type CalculationSourceLineageRole = "primary" | "contributor";
  * each registry binding source through an enrolled resolver and produces a
  * typed `CalculationSourceProvenance` row per contributing source object. This
  * is the DOMAIN-side, persistence-shaped projection of that provenance: it
- * carries exactly the resolver→source-object→fingerprint trace that lets
+ * carries exactly the resolverâ†’source-objectâ†’fingerprint trace that lets
  * an audit reader reconstruct which resolver mesh and which upstream source
  * objects produced a revision, and whether those objects have since drifted.
  *
- * It deliberately does NOT carry `legal_refs` / `source_refs` — those are
+ * It deliberately does NOT carry `legal_refs` / `source_refs` â€” those are
  * the per-casilla regulatory grounding already carried by `CasillaObservation`
  * on the same revision; duplicating them here would fragment the grounding
  * across two surfaces.
@@ -558,7 +638,7 @@ export type CalculationSourceLineageRole = "primary" | "contributor";
  * it for the general (non-row-materialized) case; dropping it here was an
  * omission the application-side `CalculationSourceProvenance` did not itself
  * make (it already carries the field). An empty tuple is honest when the
- * originating resolver call site did not associate this row with a casilla —
+ * originating resolver call site did not associate this row with a casilla â€”
  * it is not fabricated as a claim of "no subject", only carried as "not linked
  * at resolution time".
  *
@@ -578,7 +658,7 @@ export type CalculationSourceLineageRole = "primary" | "contributor";
  * from `source_casilla_ids`. dependency_treatment: The registry's declared
  * dependency treatment for this carry, empty when the revision declares none.
  * Unlike `legal_refs` / `source_refs` this carries no grounding duplicated
- * elsewhere on the revision — it is the sole persisted trace of whether a
+ * elsewhere on the revision â€” it is the sole persisted trace of whether a
  * carry is a `factual_evidence` fact to reconcile against or a
  * `direct_annual_settlement` figure that settles the return, and an audit
  * reader has no other way to recover that distinction after the fact. Carried
@@ -755,19 +835,19 @@ export type ContentDigest = string;
  * Attributes: APPLICABLE_WINDOW_MISSING: The taxpayer model positively
  * triggers the modelo (verdict `APPLICABLE`) but the registry carries no
  * deadline window for it, so the engine never placed it on the calendar. This
- * is the former Modelo-190 shape � a genuine data gap.
+ * is the former Modelo-190 shape — a genuine data gap.
  * APPLICABILITY_UNDETERMINED: The seed applicability table cannot yet decide
- * the modelo for this profile (verdict `INCOMPLETE` � no seed rule, or a
+ * the modelo for this profile (verdict `INCOMPLETE` — no seed rule, or a
  * payer/enrolment fact left undeclared). The operator must investigate whether
  * it applies. REGISTRY_UNMODELED: The modelo is a recognized AEAT obligation
  * (`UNMODELED_OBLIGATIONS`) that the registry does not model at all, so
- * neither a window nor an applicability rule exists. It surfaces as advised �
- * "AEAT may expect this; the app cannot yet scope it" � rather than being
+ * neither a window nor an applicability rule exists. It surfaces as advised —
+ * "AEAT may expect this; the app cannot yet scope it" — rather than being
  * invisible.
  *
  * `UNMODELED_OBLIGATIONS` is intentionally empty today, so no production input
  * reaches this disposition: the out-of-scope partition resolves first. The
- * branch is kept deliberately, not pending deletion � it is the advisory
+ * branch is kept deliberately, not pending deletion — it is the advisory
  * capability for taxpayers whose obligation is registry-less, and populating
  * the declaration is a per-entry tax review against official sources rather
  * than a coding change. See that declaration for the full reasoning.
@@ -817,14 +897,14 @@ export type CrossPeriodDependencyOrigin =
  * checked because the registry has no source for them, so no state claims
  * complete coverage.
  *
- * * `NATIONAL_AND_TERRITORY` � weekends, national holidays and the taxpayer's
- * autonomous-community holidays were checked. * `TERRITORY_UNVERIFIED` � the
+ * * `NATIONAL_AND_TERRITORY` — weekends, national holidays and the taxpayer's
+ * autonomous-community holidays were checked. * `TERRITORY_UNVERIFIED` — the
  * taxpayer's territory is known but its regional holidays for the year are not
  * verified in the registry, so only weekends and national holidays were
- * applied. * `NATIONAL_ONLY` � the taxpayer's territory is not established, so
- * only weekends and national holidays were checked. * `NOT_SHIFTED` � the
+ * applied. * `NATIONAL_ONLY` — the taxpayer's territory is not established, so
+ * only weekends and national holidays were checked. * `NOT_SHIFTED` — the
  * modelo's deadline does not move for non-working days, so no calendar
- * applies. * `CALENDAR_UNAVAILABLE` � the holiday calendar could not be
+ * applies. * `CALENDAR_UNAVAILABLE` — the holiday calendar could not be
  * resolved and the original close date was kept unverified.
  */
 export type DeadlineHolidayCoverage =
@@ -1113,7 +1193,7 @@ export type InputKind =
   "manual" | "bound" | "computed" | "informational" | "projection_only";
 
 /**
- * Why one invoice's retenci�n did not become a store observation.
+ * Why one invoice's retención did not become a store observation.
  *
  * Every member EXCLUDES the invoice from the retenciones store and is reported
  * rather than dropped. None of them is a refusal to record the invoice itself
@@ -1488,16 +1568,6 @@ export type M145CommunicationValidationProjection = {
   source_refs: SourceRefId[];
 };
 
-export type M184Clave = "A" | "C" | "D" | "E" | "F" | "G" | "I" | "J" | "K";
-
-export type M184ClaveDeclarado = "N" | "T" | "U" | "O";
-
-export type M184NaturalezaInmueble = "1" | "2";
-
-export type M184SituacionInmueble = "1" | "2" | "3" | "4" | "5";
-
-export type M184Subclave = "01" | "02" | "03" | "04" | "05" | "06";
-
 /**
  * Authority selected for Modelo 210 `rendimientos_integros` on one revision.
  */
@@ -1510,41 +1580,11 @@ export type M303RectificativaMotive =
   "rectificaciones" | "discrepancia_criterio_administrativo";
 
 /**
- * Where the solicitante is established, which decides DR360 p�gina 1 campos
+ * Where the solicitante is established, which decides DR360 página 1 campos
  * 41-43.
  */
 export type M360AmbitoEstablecimiento =
   "territorio_comun" | "hacienda_foral" | "canarias_ceuta_melilla";
-
-/**
- * DR360 p�gina 1 campo 8, Nota 4.
- *
- * The design's third value, a blank for a communication of the prorrata
- * definitiva on its own, is absent: the published layout requires this
- * position, so a blank could not be emitted, and a contract admitting it would
- * only refuse later.
- */
-export type M360CausaPresentacion = "0" | "1";
-
-/**
- * DR360 p�gina 1 campo 43, Nota 8.
- */
-export type M360DelegacionCanariasCeutaMelilla = "35" | "38" | "55" | "56";
-
-/**
- * DR360 p�gina 1 campo 42, Nota 7.
- */
-export type M360HaciendaForal = "01" | "20" | "31" | "48";
-
-/**
- * DR360 p�gina 1 campo 5, Nota 2.
- */
-export type M360NivelCalidadDatos = "1" | "2";
-
-/**
- * DR360 p�gina 1 campo 114: whose account the refund is paid into.
- */
-export type M360TitularEnCalidadDe = "A" | "R";
 
 /**
  * The existing derived flat view, encoded with a closed row schema.
@@ -1604,16 +1644,16 @@ export type Modelo184MemberRowWireV1 = {
   pais?: string | null;
   porcentaje: string;
   importe: string;
-  clave: M184Clave;
-  subclave?: M184Subclave | null;
+  clave: string;
+  subclave?: string | null;
   codigo_provincia?: string | null;
   miembro_a_31_diciembre?: boolean | null;
   dias_miembro?: number | null;
   domicilio_fiscal?: string | null;
-  naturaleza_inmueble?: M184NaturalezaInmueble | null;
-  situacion_inmueble?: M184SituacionInmueble | null;
+  naturaleza_inmueble?: string | null;
+  situacion_inmueble?: string | null;
   referencia_catastral?: string | null;
-  clave_declarado?: M184ClaveDeclarado | null;
+  clave_declarado?: string | null;
   porcentaje_titularidad_inmueble?: string | null;
   dias_arrendamiento?: number | null;
   reduccion?: string | null;
@@ -1704,7 +1744,7 @@ export type Modelo349RectificacionRowWireV1 = {
 };
 
 /**
- * A Spanish apartado de correos: p�gina 1 campos 36-40, and 98-102.
+ * A Spanish apartado de correos: página 1 campos 36-40, and 98-102.
  */
 export type Modelo360ApartadoCorreos = {
   numero: string;
@@ -1715,19 +1755,16 @@ export type Modelo360ApartadoCorreos = {
 };
 
 /**
- * The refund account's holder facts, p�gina 1 campos 113, 114 and 117.
- *
- * Banking data: the IBAN and BIC beside them stay in the encrypted refund
- * account.
+ * Entered holder facts; the governed holder code resolves on use.
  */
-export type Modelo360CuentaTitularFacts = {
+export type Modelo360CuentaTitularInput = {
   titular_nombre: string;
-  titular_en_calidad_de: M360TitularEnCalidadDe;
+  titular_en_calidad_de: string;
   divisa: string;
 };
 
 /**
- * The representante's foreign address, p�gina 1 campos 93-97.
+ * The representante's foreign address, página 1 campos 93-97.
  *
  * The solicitante has no such block to fill: DR360 prescribes spaces for its
  * campos 31-35.
@@ -1741,7 +1778,7 @@ export type Modelo360DireccionExtranjero = {
 };
 
 /**
- * A Spanish street address in DR360's shape: p�gina 1 campos 16-30, and 78-92.
+ * A Spanish street address in DR360's shape: página 1 campos 16-30, and 78-92.
  */
 export type Modelo360DomicilioEspana = {
   tipo_via?: string | null;
@@ -1762,34 +1799,21 @@ export type Modelo360DomicilioEspana = {
 };
 
 /**
- * Where the solicitante is established, DR360 p�gina 1 campos 41-43 (Notas
- * 6-8).
- *
- * The three positions are one fact written three ways, so they are declared
- * once and derived: the code of a foral hacienda or a Canarias, Ceuta o
- * Melilla delegaci�n exists exactly when that is where the solicitante is
- * established.
+ * Entered establishment and its optional governed territorial codes.
  */
-export type Modelo360EstablecimientoFacts = {
+export type Modelo360EstablecimientoInput = {
   ambito: M360AmbitoEstablecimiento;
-  hacienda_foral?: M360HaciendaForal | null;
-  delegacion_canarias_ceuta_melilla?: M360DelegacionCanariasCeutaMelilla | null;
+  hacienda_foral?: string | null;
+  delegacion_canarias_ceuta_melilla?: string | null;
 };
 
 /**
- * Everything modelo 360's p�gina 1 header cites that no other snapshot fact
- * answers.
- *
- * A solicitante established in the territorio de aplicaci�n del Impuesto --
- * com�n or foral -- asks for IVA borne in OTHER Member States (Orden
- * EHA/789/2010 art. 1.2: "con excepci�n de las realizadas en dicho
- * territorio"), so such a solicitud cannot be addressed to Spain. Canarias,
- * Ceuta and Melilla claimants may address Spain.
+ * Public facts input, independent of authority-backed persistence serializers.
  */
-export type Modelo360ProfileFacts = {
-  solicitud: Modelo360SolicitudFacts;
-  solicitante: Modelo360SolicitanteFacts;
-  cuenta: Modelo360CuentaTitularFacts;
+export type Modelo360ProfileInput = {
+  solicitud: Modelo360SolicitudHeaderInput;
+  solicitante: Modelo360SolicitanteInput;
+  cuenta: Modelo360CuentaTitularInput;
   representante?: Modelo360RepresentanteFacts | null;
 };
 
@@ -1825,23 +1849,23 @@ export type Modelo360RepresentanteFacts = {
 };
 
 /**
- * The solicitante's contact, address and establishment, p�gina 1 campos 14-43.
+ * Contact and establishment supplied for the solicitud.
  */
-export type Modelo360SolicitanteFacts = {
+export type Modelo360SolicitanteInput = {
   email: string;
-  establecimiento: Modelo360EstablecimientoFacts;
+  establecimiento: Modelo360EstablecimientoInput;
   phone?: string | null;
   domicilio?: Modelo360DomicilioEspana | null;
   apartado_correos?: Modelo360ApartadoCorreos | null;
 };
 
 /**
- * The header of the solicitud itself, DR360 p�gina 1 campos 4-10.
+ * Entered header, with form codes checked against the pinned authority on use.
  */
-export type Modelo360SolicitudFacts = {
-  nivel_calidad_datos: M360NivelCalidadDatos;
+export type Modelo360SolicitudHeaderInput = {
+  nivel_calidad_datos: string;
   pais_destino: string;
-  causa_presentacion: M360CausaPresentacion;
+  causa_presentacion: string;
   numero_registro_declaracion_anterior?: string | null;
   comunicacion_prorrata_definitiva?: boolean | null;
   presentacion_en_pruebas?: boolean | null;
@@ -1853,8 +1877,8 @@ export type Modelo360SolicitudFacts = {
 export type Modelo360SolicitudProjection = {
   filing_year: number;
   pais_destino: string;
-  causa_presentacion: M360CausaPresentacion;
-  titular_en_calidad_de: M360TitularEnCalidadDe;
+  causa_presentacion: string;
+  titular_en_calidad_de: string;
   has_representante: boolean;
   account_kind: "own_account" | "representante" | null;
   own_account_id: string | null;
@@ -1873,7 +1897,7 @@ export type Modelo360SolicitudRequest = {
   profile_id: string;
   action: "declare" | "list" | "remove";
   filing_year?: number | null;
-  facts?: Modelo360ProfileFacts | null;
+  facts?: Modelo360ProfileInput | null;
   own_account_id?: string | null;
   representante_account?: Modelo360RepresentanteAccountInput | null;
 };
@@ -3091,7 +3115,7 @@ export type ModeloEditCorrectionAddressV1 = {
  * `detail_row_kind` is the discriminated `ModeloDetailRow.row_type` value
  * (e.g. `"miembro"`, `"operador"`). `natural_key` is the row's own already-
  * declared identity field, joined with `|` for a compound key (M349
- * operador/rectificaci�n key on `nif_comunitario|clave_operacion`, since one
+ * operador/rectificación key on `nif_comunitario|clave_operacion`, since one
  * counterparty can carry more than one operation type) -- never a minted or
  * positional identity. This mirrors the codebase's established whole-set-
  * replacement convention for repeating declared rows
@@ -3925,6 +3949,7 @@ export type ModeloFicheroBoePublicReceipt = {
   domiciliation_cutoff_unverified: boolean;
   completeness_unverified: boolean;
   software_identity_grade: AeatSoftwareIdentityGrade | null;
+  calculation_notes: RecordedCalculationNote[];
 };
 
 /**
@@ -4243,6 +4268,8 @@ export type ModeloFormBlocker = {
  * own answer: the gate refuses the file and the recording while such a note
  * stands, whatever its attention says, so the editor withholds them too
  * (`blocking_calculation_notes`), as it does for a note at the blocking level.
+ * `fact` is what this note says about its own subject, when its reason alone
+ * does not.
  */
 export type ModeloFormCalculationNote = {
   reason: string;
@@ -4250,6 +4277,7 @@ export type ModeloFormCalculationNote = {
   casilla_id: CasillaId | null;
   box: string | null;
   withholds_filing: boolean;
+  fact: CalculationNoteFact | null;
 };
 
 /**
@@ -4951,7 +4979,7 @@ export type ModeloInventoryCasillaV1 = {
 /**
  * Closed CLI-safe aggregate summary or bounded refusal outcome.
  *
- * `refusal_defects` names every defect that keeps the invoice's retenci�n out
+ * `refusal_defects` names every defect that keeps the invoice's retención out
  * of capture, as stable untranslated tokens in the projection's sweep order; a
  * frontend renders their explanations in the operator's language.
  */
@@ -5437,7 +5465,7 @@ export type ModeloReconciliationAdvisoryProjection = {
  * `diff_kind` is the closed category (header field, filed total, or per-
  * casilla). `kind` remains the specific mismatch token (`modelo_mismatch`,
  * `total_ingresar_mismatch`, `casilla_value_mismatch`,
- * `casilla_missing_in_filed`, `casilla_extra_in_filed`, �). A `total` or
+ * `casilla_missing_in_filed`, `casilla_extra_in_filed`, …). A `total` or
  * `casilla` diff carries the reconciling verification expectation's /
  * casilla's `legal_refs` / `source_refs` so the divergence surfaces with its
  * legal grounding (`aeat-calculation-grounding`); header diffs carry empty
@@ -5459,11 +5487,11 @@ export type ModeloReconciliationDiff = {
 /**
  * Closed category for a `ModeloReconciliationDiff`.
  *
- * `header_field` � a receipt-identity disagreement (modelo, ejercicio, period,
- * tax id). `total` � a filed-amount disagreement between the receipt total and
- * the canonical computed result casilla. `casilla` � a per-casilla value
+ * `header_field` — a receipt-identity disagreement (modelo, ejercicio, period,
+ * tax id). `total` — a filed-amount disagreement between the receipt total and
+ * the canonical computed result casilla. `casilla` — a per-casilla value
  * disagreement between the persisted computed revision and a filed
- * declaraci�n, emitted for modelos enrolled in
+ * declaración, emitted for modelos enrolled in
  * `_DECLARATION_CASILLA_RECONCILE_MODELOS` (`detect_casilla_divergences`).
  */
 export type ModeloReconciliationDiffKind = "header_field" | "total" | "casilla";
@@ -5604,8 +5632,8 @@ export type ModeloReconciliationVerdict = "matches" | "mismatches";
 /**
  * Closed enumeration of filing-record lifecycle states.
  *
- * * `VIGENTE` � the record is the currently-effective filed answer for its
- * (bucket, modelo, year, period) tuple. * `SUPERSEDIDO` � a later filing
+ * * `VIGENTE` — the record is the currently-effective filed answer for its
+ * (bucket, modelo, year, period) tuple. * `SUPERSEDIDO` — a later filing
  * replaced this one. The record remains for audit;
  * `superseded_by_filing_record_id` points at the successor.
  */
@@ -6134,6 +6162,7 @@ export type ModeloVerificationSnapshot = {
   report: ModeloVerificationReportSnapshot;
   published: boolean;
   finding_preconditions: ModeloFindingPreconditionSnapshot[];
+  calculation_notes: RecordedCalculationNote[];
 };
 
 /**
@@ -7092,13 +7121,13 @@ export type ProjectCasillaObservationProjection = {
  * All seven canonical M100 summary values.
  */
 export type ProjectM100SummaryProjection = {
-  base_liquidable_general_0505: string;
-  pagos_fraccionados_0604: string;
-  cuota_integra_estatal_0545: string;
-  cuota_integra_autonomica_0546: string;
-  cuota_liquida_estatal_0595: string;
-  cuota_liquida_autonomica_0596: string;
-  cuota_resultante_0597: string;
+  base_liquidable_general: string;
+  pagos_fraccionados: string;
+  cuota_integra_estatal: string;
+  cuota_integra_autonomica: string;
+  cuota_liquida_estatal: string;
+  cuota_liquida_autonomica: string;
+  cuota_resultante: string;
 };
 
 /**
@@ -7200,10 +7229,10 @@ export type PublicAnnualRecipientDetail = {
   pago?: number | null;
   tipo_codigo?: string | null;
   codigo_cuenta?: string | null;
-  financial_asset_origin?: "A" | "B" | "C" | "D" | "E" | null;
+  financial_asset_origin?: string | null;
   financial_asset_acquisition_value?: PublicDecimal | null;
   financial_asset_disposal_value?: PublicDecimal | null;
-  financial_asset_related_entity?: "V" | "" | null;
+  financial_asset_related_entity?: string | null;
   pendiente_flag?: string | null;
   tipo_percepcion?: number | null;
   reducciones?: PublicDecimal;
@@ -7378,11 +7407,11 @@ export type PublicModelo180Address = {
  */
 export type PublicModelo180Property = {
   property_key: string;
-  situation: "1" | "2" | "3" | "4";
+  situation: string;
   cadastral_reference?: string | null;
   address: PublicModelo180Address;
   recipient_province_code: string;
-  modality: "1" | "2";
+  modality: string;
   accrual_year: number;
   withholding_percentage: PublicDecimal;
   representative_nif?: string | null;
@@ -7392,7 +7421,7 @@ export type PublicModelo180Property = {
  * Complete pending-payment evidence with typed actual-recipient detail.
  */
 export type PublicModelo193PendingPayment = {
-  perception_key: "A" | "B" | "D";
+  perception_key: string;
   nonpayment_cause: Modelo193NonpaymentCause;
   actual_recipient_detail: PublicAnnualRecipientDetail;
 };
@@ -7400,7 +7429,7 @@ export type PublicModelo193PendingPayment = {
 /**
  * Caller-authored observation families and one canonical filing period.
  *
- * Retenci�n rows are never caller-authored: the operation reads them from the
+ * Retención rows are never caller-authored: the operation reads them from the
  * stored windows and annual sources the calculation itself reads.
  */
 export type PublicModeloAggregateCommand = {
@@ -7879,11 +7908,11 @@ export type QuickfileStageSnapshot = {
 /**
  * Outcome status for one quickfile stage.
  *
- * `OK` � the stage completed and the chain may proceed. `WARNING` � the stage
+ * `OK` — the stage completed and the chain may proceed. `WARNING` — the stage
  * completed but surfaced a non-blocking advisory (e.g. readiness reported the
  * profile is not yet source-ready, which a caller-supplied `--binding` may
- * still satisfy). `REFUSED` � the stage refused and the chain halted here.
- * `SKIPPED` � a downstream stage that never ran because an earlier stage
+ * still satisfy). `REFUSED` — the stage refused and the chain halted here.
+ * `SKIPPED` — a downstream stage that never ran because an earlier stage
  * refused.
  */
 export type QuickfileStageStatus = "ok" | "warning" | "refused" | "skipped";
@@ -7923,22 +7952,30 @@ export type ReconciliationExportXlsxRequest = {
 };
 
 /**
+ * A note kept with a calculation, as verification and export restate it.
+ */
+export type RecordedCalculationNote = {
+  reason: string;
+  fact: CalculationNoteFact;
+};
+
+/**
  * The operator's per-filing Modelo 303 negative-result disposition election.
  *
  * A non-REDEME taxpayer may, in the last filing period of the year (the annual
- * liquidaci�n, Ley 37/1992 art. 116), choose to request a negative result back
+ * liquidación, Ley 37/1992 art. 116), choose to request a negative result back
  * as a refund (`DEVOLVER`) instead of carrying the credit forward
- * (`COMPENSAR`). The default is `COMPENSAR` � the non-regressive carry-forward
+ * (`COMPENSAR`). The default is `COMPENSAR` — the non-regressive carry-forward
  * that requires no opt-in and is the only lawful disposition outside an
  * eligible period. `DEVOLVER` is the gated opt-in: it is honoured only when
  * the eligibility gate permits a refund, and refused otherwise.
  *
- * REDEME inscription is treated as the standing monthly-devoluci�n disposition
+ * REDEME inscription is treated as the standing monthly-devolución disposition
  * policy; this per-filing election is the separate, explicit opt-in a non-
- * REDEME taxpayer makes for the annual liquidaci�n.
+ * REDEME taxpayer makes for the annual liquidación.
  *
- * Attributes: COMPENSAR: Keep the negative result as compensaci�n (`C`), the
- * default carry-forward disposition. DEVOLVER: Request devoluci�n (`D`)
+ * Attributes: COMPENSAR: Keep the negative result as compensación (`C`), the
+ * default carry-forward disposition. DEVOLVER: Request devolución (`D`)
  * through the shared Modelo 303 resolver. The resolver honours it only when
  * `refund_disposition_available` says the period can lawfully refund;
  * otherwise it raises the application-level refund-election refusal.
@@ -7954,28 +7991,28 @@ export type RegistryUnresolvedOutcomeReason =
 export type RelationId = string;
 
 /**
- * The plan-de-pensiones capital-rescate type (LIRPF DT 12� guidance axis).
+ * The plan-de-pensiones capital-rescate type (LIRPF DT 12ª guidance axis).
  *
- * Attributes: TOTAL: The whole accumulated capital is rescued at once � a
+ * Attributes: TOTAL: The whole accumulated capital is rescued at once — a
  * single apartado-3 time-window eligibility check applies. PARCIAL: Staged
  * partial withdrawals of the same contingency. Every partial cobro shares the
  * single apartado-3 window measured once from the contingencia year (it does
  * not restart per withdrawal), and a mixed capital/renta rescate may forfeit
- * the transitional r�gimen.
+ * the transitional régimen.
  */
 export type RescateType = "total" | "parcial";
 
 /**
- * AEAT fichero "Tipo de declaraci�n" result-disposition codes (all modelos).
+ * AEAT fichero "Tipo de declaración" result-disposition codes (all modelos).
  *
  * The member *value* is the single-character code the fichero expects. Not
- * every modelo admits every code � the per-modelo derivation only selects
- * codes that modelo's dise�o declares.
+ * every modelo admits every code — the per-modelo derivation only selects
+ * codes that modelo's diseño declares.
  *
  * See Also: `RefundElection` Operator input that can request a Modelo 303 `C`
  * credit be filed as `D` after the application resolver applies the refund
  * gate. `result_disposition_is_refund` Classifier for the refund dispositions
- * that suppress compensaci�n carry-forward.
+ * that suppress compensación carry-forward.
  */
 export type ResultDisposition =
   "C" | "D" | "G" | "I" | "N" | "V" | "U" | "X" | "B" | "R";
@@ -8069,11 +8106,11 @@ export type TransactionId = string;
  * Each member identifies one distinct check the verifier executes against the
  * bundle manifest and the backing object store:
  *
- * * `MANIFEST_DIGEST` � recompute `bundle_id` and compare. * `RECORD_DIGESTS`
- * � re-hash each referenced object payload. * `BUCKET_BINDING` � confirm the
+ * * `MANIFEST_DIGEST` — recompute `bundle_id` and compare. * `RECORD_DIGESTS`
+ * — re-hash each referenced object payload. * `BUCKET_BINDING` — confirm the
  * bundle's `bucket_id` matches the repository it was loaded from. *
- * `WORK_UNIT_BINDING` � confirm the `work_unit_id` exists. *
- * `OBJECT_REACHABILITY` � confirm every referenced object is present in the
+ * `WORK_UNIT_BINDING` — confirm the `work_unit_id` exists. *
+ * `OBJECT_REACHABILITY` — confirm every referenced object is present in the
  * bucket's object store.
  */
 export type VerificationCheck =
@@ -8086,10 +8123,10 @@ export type VerificationCheck =
 /**
  * Top-level verdict from one verification run.
  *
- * * `COMPLETE` � every required input resolved, zero blocking findings. The
- * revision transitions to `VERIFICADO_COMPLETO`. * `INCOMPLETE` � required
+ * * `COMPLETE` — every required input resolved, zero blocking findings. The
+ * revision transitions to `VERIFICADO_COMPLETO`. * `INCOMPLETE` — required
  * inputs missing or unresolved casillas remain. Soft refusal: operator can act
- * on the missing-inputs list. * `BLOCKED` � blocking validation findings exist
+ * on the missing-inputs list. * `BLOCKED` — blocking validation findings exist
  * (e.g. reconciliation total mismatch over tolerance, schema violation). Hard
  * refusal: operator must fix the finding before the revision can be verified.
  */
@@ -8131,9 +8168,9 @@ export type WorkUnitId = string;
 /**
  * Closed enumeration of work-unit lifecycle states.
  *
- * * `BORRADOR` � default state at creation. The work unit participates in
+ * * `BORRADOR` — default state at creation. The work unit participates in
  * default listings and accepts mutation (rename, future calculation
- * revisions). * `DESCARTADO` � operator marked the work unit abandoned.
+ * revisions). * `DESCARTADO` — operator marked the work unit abandoned.
  * Excluded from default listings; mutations are rejected. Revision payloads
  * remain in storage for audit; the work unit cannot be re-activated.
  */

@@ -39,6 +39,7 @@ const producer = resolve(frontend, "scripts/modelo_fixtures.py");
 const ENVELOPE = /^[A-Za-z0-9-]+\.json$/;
 
 const environment = { ...process.env };
+environment.PYTHONPATH = repository;
 const authority = resolve(repository, ".authority");
 if (!environment.CADRUMO_AUTHORITY_ROOT && existsSync(authority))
   environment.CADRUMO_AUTHORITY_ROOT = authority;
@@ -128,7 +129,7 @@ if (!values.contract) {
       "python",
       "-B",
       "-c",
-      "from dev._paths import prepare_temp_root; print(prepare_temp_root())",
+      "from dev.temporary_output import prepare_temp_root; print(prepare_temp_root())",
     ],
     { cwd: repository, env: environment, encoding: "utf8", windowsHide: true },
   );
