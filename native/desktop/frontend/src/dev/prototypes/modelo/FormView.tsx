@@ -5,11 +5,12 @@ import {
   type KeyboardEvent,
   type ReactNode,
 } from "react";
+import { TypedField } from "@/components/editors/TypedField";
+import { entryField } from "@/components/modelo/form/entryField";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/components/ui/cn";
 import { Icon } from "@/components/ui/icon";
-import { Input } from "@/components/ui/input";
 import {
   Popover,
   PopoverAnchor,
@@ -20,6 +21,8 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import type { ModeloEditValueGrammarV1 } from "@/shell/modeloContract";
+import { translator } from "@/shell/strings";
 import type {
   FormBlock,
   FormField,
@@ -259,13 +262,29 @@ function ValueEditor({
   onDone: (text: string | null, advance: boolean) => void;
 }) {
   const [text, setText] = useState(initial);
-  const ref = useRef<HTMLInputElement>(null);
-  useEffect(() => ref.current?.select(), []);
-  const numeric = ["money", "integer", "decimal", "ratio"].includes(
-    field.data_type,
-  );
+  const ref = useRef<HTMLSpanElement>(null);
+  useEffect(() => ref.current?.querySelector("input")?.select(), []);
+  // The prototype's fields carry a data type and no constraints.
+  const grammar: ModeloEditValueGrammarV1 = {
+    data_type: field.data_type,
+    family: field.data_type === "boolean" ? "boolean" : "text",
+    channel: "text",
+    max_fraction_digits: null,
+    sign: "any",
+    minimum: null,
+    maximum: null,
+    choices: null,
+    min_length: null,
+    max_length: null,
+    pattern: null,
+    ratio_unit: null,
+    money_operand_bound: false,
+    required: field.required,
+    constraints_declared: false,
+  };
   const onKey = (event: KeyboardEvent) => {
     event.stopPropagation();
+    if (!(event.target instanceof HTMLInputElement)) return;
     if (event.key === "Enter") {
       event.preventDefault();
       onDone(text, true);
@@ -274,19 +293,33 @@ function ValueEditor({
     if (event.key === "Escape") onDone(null, false);
   };
   return (
-    <Input
+    <span
       ref={ref}
-      controlSize="sm"
-      value={text}
-      onChange={(e) => setText(e.target.value)}
+      className="block w-40"
       onKeyDown={onKey}
-      onBlur={() => onDone(text, false)}
-      inputMode={numeric ? "decimal" : "text"}
-      className={cn("w-40", numeric && "text-right tabular-nums")}
-      aria-label={w("workspace.modelo.editor.new_value_for_box", locale, {
-        box: field.box ?? "",
-      })}
-    />
+      onBlur={(event) => {
+        const next = event.relatedTarget;
+        if (
+          next instanceof Element &&
+          (event.currentTarget.contains(next) ||
+            next.closest("[data-slot=popover-content]"))
+        )
+          return;
+        onDone(text, false);
+      }}
+    >
+      <TypedField
+        field={entryField(translator(locale), grammar)}
+        mode="lexeme"
+        controlSize="sm"
+        autoFocus
+        value={text}
+        onChange={setText}
+        aria-label={w("workspace.modelo.editor.new_value_for_box", locale, {
+          box: field.box ?? "",
+        })}
+      />
+    </span>
   );
 }
 
