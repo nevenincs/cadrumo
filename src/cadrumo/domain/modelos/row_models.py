@@ -54,6 +54,7 @@ from ...core.time.clock import today_madrid
 from ...core.unit_proportion import UnitProportion
 from ..calculations.registry.authority import PinnedAuthorityOperation
 from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
+from ..calculations.registry.form_codes import resolve_form_codes
 from ..calculations.registry.governed_fact_scope import GovernedFactSource, require_governed_fact_authority
 from ..calculations.registry.nif_iva_catalogue import nif_iva_format_for_country
 from ..calculations.registry.schema_base import DateAxis
@@ -170,11 +171,15 @@ def resolve_detail_bearing_modelos(*, effective_date: date) -> frozenset[str]:
 # ---------------------------------------------------------------------------
 
 
-type M184Clave = Literal["A", "C", "D", "E", "F", "G", "I", "J", "K"]
-type M184Subclave = Literal["01", "02", "03", "04", "05", "06"]
-type M184NaturalezaInmueble = Literal["1", "2"]
-type M184SituacionInmueble = Literal["1", "2", "3", "4", "5"]
-type M184ClaveDeclarado = Literal["N", "T", "U", "O"]
+_M184_FORM_CODES_FACT = "modelo-184-member-form-codes"
+#: Each coded row field and the fact key declaring its codes.
+_M184_CODED_FIELDS = {
+    "clave": "clave.codes",
+    "subclave": "subclave.codes",
+    "naturaleza_inmueble": "naturaleza_inmueble.codes",
+    "situacion_inmueble": "situacion_inmueble.codes",
+    "clave_declarado": "clave_declarado.codes",
+}
 
 
 class Modelo184MemberRow(BaseModel):
@@ -232,8 +237,8 @@ class Modelo184MemberRow(BaseModel):
     # (member, clave, subclave) repetition axis. clave is required -- the
     # socio record's own diseño has no row without one; subclave is optional
     # because claves C and E carry no subclave table at all.
-    clave: M184Clave
-    subclave: M184Subclave | None = None
+    clave: str = Field(min_length=1)
+    subclave: str | None = None
 
     # Always-present-per-row facts, independent of clave.
     codigo_provincia: Annotated[str, StringConstraints(strip_whitespace=True, max_length=2)] | None = None
@@ -242,10 +247,10 @@ class Modelo184MemberRow(BaseModel):
     domicilio_fiscal: Annotated[str, StringConstraints(strip_whitespace=True, max_length=40)] | None = None
 
     # Clave-C inmueble sub-block.
-    naturaleza_inmueble: M184NaturalezaInmueble | None = None
-    situacion_inmueble: M184SituacionInmueble | None = None
+    naturaleza_inmueble: str | None = None
+    situacion_inmueble: str | None = None
     referencia_catastral: Annotated[str, StringConstraints(strip_whitespace=True, max_length=20)] | None = None
-    clave_declarado: M184ClaveDeclarado | None = None
+    clave_declarado: str | None = None
     porcentaje_titularidad_inmueble: Decimal | None = None
     dias_arrendamiento: int | None = Field(default=None, ge=0, le=366)
 
@@ -294,8 +299,18 @@ class Modelo184MemberRow(BaseModel):
         return value.upper()
 
     @model_validator(mode="after")
+    def _declared_form_codes(self) -> Modelo184MemberRow:
+        codes = resolve_form_codes(_M184_FORM_CODES_FACT)
+        for name, key in _M184_CODED_FIELDS.items():
+            value = getattr(self, name)
+            if value is not None and value not in codes.codes(key):
+                raise ValueError(f"{name} is not a code the Modelo 184 record design declares")
+        return self
+
+    @model_validator(mode="after")
     def _subclave_only_where_the_diseno_declares_one(self) -> Modelo184MemberRow:
-        if self.subclave is not None and self.clave not in {"A", "D", "F", "G", "I", "J", "K"}:
+        codes = resolve_form_codes(_M184_FORM_CODES_FACT)
+        if self.subclave is not None and self.clave not in codes.codes("subclave.bearing_claves"):
             raise ValueError(f"clave {self.clave!r} carries no subclave table; leave subclave unset")
         return self
 
@@ -1050,11 +1065,6 @@ def validate_m184_member_share_sum(rows: Sequence[Modelo184MemberRow]) -> None:
 
 
 __all__ = [
-    "M184Clave",
-    "M184ClaveDeclarado",
-    "M184NaturalezaInmueble",
-    "M184SituacionInmueble",
-    "M184Subclave",
     "Modelo184MemberRow",
     "Modelo184ShareSumError",
     "Modelo210AgrupacionRentaRow",

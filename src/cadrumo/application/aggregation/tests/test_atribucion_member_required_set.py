@@ -43,7 +43,7 @@ from ..atribucion_member import (
     _SocioFacts,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _SECTION = "attribution_entity_socios"
 _FILING_YEAR = 2024

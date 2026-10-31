@@ -34,7 +34,7 @@ from ..historical_filing_projection import (
 )
 from .test_filing_record_view_operation import _PROFILE, _bundle, _Repository, _source
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 
 def _revision() -> CalculationRevision:

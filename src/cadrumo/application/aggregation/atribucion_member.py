@@ -15,8 +15,6 @@ from datetime import date
 from decimal import Decimal, InvalidOperation
 from typing import TYPE_CHECKING, ClassVar
 
-from pydantic import TypeAdapter
-
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.hashing import content_hash_hex
 from ...core.identity.tax_id import tax_id_identity_token
@@ -27,11 +25,6 @@ from ...domain.calculations.registry.detail_record_bindings import (
     resolve_atribucion_binding_row_values,
 )
 from ...domain.modelos.row_models import (
-    M184Clave,
-    M184ClaveDeclarado,
-    M184NaturalezaInmueble,
-    M184SituacionInmueble,
-    M184Subclave,
     Modelo184MemberRow,
 )
 from ...domain.user_profile.errors import ProfileNotFoundError
@@ -360,39 +353,32 @@ def _optional_str(value: object) -> str | None:
     return str(value).strip() or None
 
 
-_CLAVE_ADAPTER: TypeAdapter[M184Clave] = TypeAdapter(M184Clave)
-_SUBCLAVE_ADAPTER: TypeAdapter[M184Subclave] = TypeAdapter(M184Subclave)
-_NATURALEZA_INMUEBLE_ADAPTER: TypeAdapter[M184NaturalezaInmueble] = TypeAdapter(M184NaturalezaInmueble)
-_SITUACION_INMUEBLE_ADAPTER: TypeAdapter[M184SituacionInmueble] = TypeAdapter(M184SituacionInmueble)
-_CLAVE_DECLARADO_ADAPTER: TypeAdapter[M184ClaveDeclarado] = TypeAdapter(M184ClaveDeclarado)
+def _clave(value: object) -> str:
+    return str(value).strip()
 
 
-def _clave(value: object) -> M184Clave:
-    return _CLAVE_ADAPTER.validate_python(str(value).strip())
-
-
-def _optional_subclave(value: object) -> M184Subclave | None:
+def _optional_subclave(value: object) -> str | None:
     if value is None:
         return None
-    return _SUBCLAVE_ADAPTER.validate_python(str(value).strip())
+    return str(value).strip()
 
 
-def _optional_naturaleza_inmueble(value: object) -> M184NaturalezaInmueble | None:
+def _optional_naturaleza_inmueble(value: object) -> str | None:
     if value is None:
         return None
-    return _NATURALEZA_INMUEBLE_ADAPTER.validate_python(str(value).strip())
+    return str(value).strip()
 
 
-def _optional_situacion_inmueble(value: object) -> M184SituacionInmueble | None:
+def _optional_situacion_inmueble(value: object) -> str | None:
     if value is None:
         return None
-    return _SITUACION_INMUEBLE_ADAPTER.validate_python(str(value).strip())
+    return str(value).strip()
 
 
-def _optional_clave_declarado(value: object) -> M184ClaveDeclarado | None:
+def _optional_clave_declarado(value: object) -> str | None:
     if value is None:
         return None
-    return _CLAVE_DECLARADO_ADAPTER.validate_python(str(value).strip())
+    return str(value).strip()
 
 
 def _optional_bool(value: object) -> bool | None:

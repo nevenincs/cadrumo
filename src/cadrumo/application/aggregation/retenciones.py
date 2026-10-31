@@ -41,6 +41,7 @@ from ...core.period import Period
 from ...core.spanish_postcode import SpanishPostcode, SpanishProvinceCode
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
+from ...domain.calculations.registry.form_codes import resolve_form_codes
 from ...domain.calculations.registry.governed_fact_scope import GovernedFactSource, require_governed_fact_authority
 from ...domain.calculations.registry.schema_base import DateAxis
 from ...domain.calculations.registry.withholding_bindings import WithholdingObservation
@@ -87,6 +88,16 @@ class Modelo180StructuredAddress(BaseModel):
     complement: str = Field(default="", max_length=40)
 
 
+_M180_FORM_CODES_FACT = "modelo-180-perceptor-form-codes"
+
+
+def _require_m180_percentage(value: Decimal) -> Decimal:
+    """Refuse a percentage above the maximum the Modelo 180 record design can carry."""
+    if value > Decimal(resolve_form_codes(_M180_FORM_CODES_FACT).code("withholding_percentage.maximum")):
+        raise ValueError("withholding percentage exceeds the Modelo 180 record design")
+    return value
+
+
 class Modelo180PropertyEvidence(BaseModel):
     """One allocation's explicit property and annual-recipient evidence.
 
@@ -100,22 +111,28 @@ class Modelo180PropertyEvidence(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     property_key: str = Field(min_length=1, max_length=128)
-    situation: Literal["1", "2", "3", "4"]
+    situation: str = Field(min_length=1)
     cadastral_reference: str | None = Field(default=None, min_length=1, max_length=20)
     address: Modelo180StructuredAddress
     recipient_province_code: SpanishProvinceCode
-    modality: Literal["1", "2"]
+    modality: str = Field(min_length=1)
     accrual_year: int = Field(ge=1900, le=9999)
-    withholding_percentage: Decimal = Field(ge=Decimal("0"), le=Decimal("99.99"), decimal_places=2)
+    withholding_percentage: Decimal = Field(ge=Decimal("0"), decimal_places=2)
     representative_nif: TaxIdIdentityToken | None = Field(default=None, min_length=1, max_length=16)
 
     @model_validator(mode="after")
     def _conditional_property_identity(self) -> Modelo180PropertyEvidence:
-        if self.situation in {"1", "2", "3"}:
+        codes = resolve_form_codes(_M180_FORM_CODES_FACT)
+        if self.situation not in codes.codes("situation.codes"):
+            raise ValueError("situation is not a code the Modelo 180 record design declares")
+        if self.modality not in codes.codes("modality.codes"):
+            raise ValueError("modality is not a code the Modelo 180 record design declares")
+        _require_m180_percentage(self.withholding_percentage)
+        if self.situation in codes.codes("situation.with_cadastral_reference"):
             if self.cadastral_reference is None:
-                raise ValueError("situations 1-3 require a cadastral reference")
+                raise ValueError("this situation requires a cadastral reference")
         elif self.cadastral_reference is not None:
-            raise ValueError("situation 4 requires no cadastral reference and a structured address")
+            raise ValueError("this situation requires no cadastral reference and a structured address")
         return self
 
     @property
@@ -123,7 +140,7 @@ class Modelo180PropertyEvidence(BaseModel):
         """Return the accepted property identity, without recipient/grouping axes."""
         if self.cadastral_reference is not None:
             return f"{self.situation}:cadastral:{self.cadastral_reference.upper()}"
-        return f"4:local:{self.property_key}"
+        return f"{self.situation}:local:{self.property_key}"
 
 
 class Modelo193NonpaymentCause(StrEnum):
@@ -144,9 +161,19 @@ class Modelo193PendingPaymentEvidence(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    perception_key: Literal["A", "B", "D"]
+    perception_key: str = Field(min_length=1)
     nonpayment_cause: Modelo193NonpaymentCause
     actual_recipient_detail: WithholdingObservation
+
+    @field_validator("perception_key")
+    @classmethod
+    def _declared_pending_key(cls, value: str) -> str:
+        declared = resolve_form_codes("modelo-190-193-withholding-binding-catalogue").codes(
+            "identification_block_claves",
+        )
+        if value not in declared:
+            raise ValueError("this perception key has no pending-payment treatment in the record design")
+        return value
 
     @model_validator(mode="after")
     def _is_a_supported_unpaid_perception(self) -> Modelo193PendingPaymentEvidence:
@@ -258,7 +285,12 @@ class Modelo180Type2Row(BaseModel):
     observations_count: NonNegativeInt
     taxable_base: Decimal
     retencion_amount: Decimal = Field(ge=Decimal("0"))
-    withholding_percentage: Decimal = Field(ge=Decimal("0"), le=Decimal("99.99"), decimal_places=2)
+    withholding_percentage: Decimal = Field(ge=Decimal("0"), decimal_places=2)
+
+    @field_validator("withholding_percentage")
+    @classmethod
+    def _percentage_within_design(cls, value: Decimal) -> Decimal:
+        return _require_m180_percentage(value)
 
     @property
     def sign(self) -> Literal["positive", "reimbursement"]:

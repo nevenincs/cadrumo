@@ -12,6 +12,7 @@ from ....core.aggregation import BindingSourceKind
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.models import STRICT_FROZEN_CONFIG
+from ....core.period import StandardPeriodCode
 from .errors import RegistryValidationError
 
 __all__ = [
@@ -64,7 +65,12 @@ _PRORRATA_REGULARIZACION_SOURCE_IDS: tuple[CasillaId, ...] = (
     "iva.prorrata-volumen-total",
     _PRORRATA_DEFINITIVE_PERCENTAGE_SOURCE_ID,
 )
-_PRORRATA_REGULARIZACION_SOURCE_PERIODS: tuple[str, ...] = ("1T", "2T", "3T", "4T")
+_PRORRATA_REGULARIZACION_SOURCE_PERIODS: tuple[str, ...] = (
+    StandardPeriodCode.Q1.value,
+    StandardPeriodCode.Q2.value,
+    StandardPeriodCode.Q3.value,
+    StandardPeriodCode.Q4.value,
+)
 
 
 def prorrata_definitive_percentage_source_casilla_id(
@@ -110,6 +116,6 @@ class ProrrataRegularizacionProvider(BaseModel):
     def _source_periods_are_full_year(cls, value: tuple[str, ...]) -> tuple[str, ...]:
         if value != _PRORRATA_REGULARIZACION_SOURCE_PERIODS:
             raise RegistryValidationError(
-                "prorrata_regularizacion selector must declare source_periods ('1T', '2T', '3T', '4T')",
+                "prorrata_regularizacion selector must declare all four quarters as source_periods",
             )
         return value

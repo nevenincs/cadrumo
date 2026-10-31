@@ -22,7 +22,7 @@ from .._calculation_modelo_adjustments import (
 )
 from ..action_errors import ModeloAggregationBindingError
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _TARGET_BINDING = "modelo-390-prev-303-cuota-devengada-total"
 _OTHER_BINDING = "modelo-390-prev-303-cuota-deducible-total"

@@ -22,6 +22,7 @@ from ...core.filing_year import FilingYear
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...domain.calculations.registry.form_codes import resolve_form_codes
 from ...domain.calculations.registry.withholding_bindings import WithholdingObservation
 from .retenciones import Modelo193CapitalDetail, RetencionObservation
 
@@ -29,6 +30,11 @@ _PENDING_PERCEPTOR_NIF = "999999999"
 _PENDING_PERCEPTOR_NAME = "VALORES PENDIENTE DE ABONO"
 _PENDING_FLAG_ROLE = "payee_pendiente_flag"
 _ANNUAL_PERIOD = "0A"
+
+
+def _pending_flag() -> str:
+    """Return the mark the Modelo 193 record design prints for a pending payment."""
+    return resolve_form_codes("modelo-190-193-withholding-binding-catalogue").code("modelo.193.pendiente.flag")
 
 
 def modelo_193_pending_disclosure_years(operation: PinnedAuthorityOperation) -> frozenset[int]:
@@ -147,7 +153,7 @@ def _validate_pending_phase_row(row: Modelo193PhaseRow) -> None:
         detail.perceptor_tax_id != _PENDING_PERCEPTOR_NIF
         or detail.representative_tax_id != _PENDING_PERCEPTOR_NIF
         or detail.perceptor_legal_name != _PENDING_PERCEPTOR_NAME
-        or detail.pendiente_flag != "X"
+        or detail.pendiente_flag != _pending_flag()
         or detail.accrual_year is not None
     ):
         raise ValueError("Modelo 193 pending disclosure must use the prescribed recipient values")
@@ -303,7 +309,7 @@ def _pending_row(
             "country_code": None,
             "province_code": None,
             "perceptor_mediador_flag": None,
-            "pendiente_flag": "X",
+            "pendiente_flag": _pending_flag(),
             "accrual_year": None,
             "transaction_date": recognized_on,
         }
