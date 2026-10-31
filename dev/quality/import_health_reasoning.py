@@ -9,6 +9,8 @@ from .import_check_models import CheckResult, Finding
 from .import_health_models import CandidateInventory, GraphSummary, RatchetReport
 from .import_loadability_projection import loadability_int
 
+_MOVED_SOURCES_NAMED = 20
+
 
 def operational_health_reasons(
     authority_findings: tuple[str, ...],
@@ -19,6 +21,7 @@ def operational_health_reasons(
     graph: GraphSummary,
     source_snapshot_before: str,
     source_snapshot_after: str,
+    moved_sources: tuple[str, ...] = (),
 ) -> list[str]:
     """Operational health reasons."""
     operational_reasons = list(authority_findings)
@@ -36,7 +39,13 @@ def operational_health_reasons(
             f"Import Linter saw {graph['files']} file(s), subordinate saw {checker.files_scanned}"
         )
     if source_snapshot_before != source_snapshot_after:
-        operational_reasons.append("governed source tree changed while the gate was running")
+        named = ", ".join(moved_sources[:_MOVED_SOURCES_NAMED])
+        more = len(moved_sources) - _MOVED_SOURCES_NAMED
+        operational_reasons.append(
+            "governed source tree changed while the gate was running"
+            + (f": {named}" if named else "")
+            + (f" and {more} more" if more > 0 else "")
+        )
     return operational_reasons
 
 

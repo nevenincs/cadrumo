@@ -25,6 +25,7 @@ def build_import_health(
     source_snapshot_before: str,
     source_snapshot_after: str,
     component_durations: dict[str, float],
+    moved_sources: tuple[str, ...] = (),
     component_cpu_seconds: dict[str, float] | None = None,
     step_budget: dict[str, float] | None = None,
 ) -> tuple[dict[str, object], int]:
@@ -44,6 +45,7 @@ def build_import_health(
         graph,
         source_snapshot_before,
         source_snapshot_after,
+        moved_sources,
     )
     supplemental_occurrences = _supplemental_occurrences(authority, candidate, graph)
     operational_reasons.extend(finding.message for finding in fatal_findings)

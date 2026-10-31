@@ -666,6 +666,7 @@ def run_import_gate(
         load_returncode=load_component.returncode,
         source_snapshot_before=source_snapshot_before.digest,
         source_snapshot_after=source_snapshot_after.digest,
+        moved_sources=_moved_sources(source_snapshot_before, source_snapshot_after),
         component_durations={
             "import_linter": linter_seconds,
             "loadability": load_seconds,
@@ -690,12 +691,14 @@ class _SourceSnapshot:
 
     digest: str
     governed_bytes: int
+    stamps: dict[str, tuple[int, int]]
 
 
 def _source_snapshot(authority: Authority) -> _SourceSnapshot:
     """Fingerprint the governed inputs so concurrent mutation fails closed."""
     digest = hashlib.sha256()
     governed_bytes = 0
+    stamps: dict[str, tuple[int, int]] = {}
     paths: set[Path] = {authority.config_path}
     for root in authority.roots:
         paths.update(root.path.rglob("*.py"))
@@ -714,9 +717,21 @@ def _source_snapshot(authority: Authority) -> _SourceSnapshot:
             digest.update(f"unavailable:{path}:{exc}".encode(UTF_8))
             continue
         digest.update(f"{relative}\0{stat.st_size}\0{stat.st_mtime_ns}\n".encode(UTF_8))
+        stamps[relative] = (stat.st_size, stat.st_mtime_ns)
         if path.suffix == ".py":
             governed_bytes += stat.st_size
-    return _SourceSnapshot(digest.hexdigest(), governed_bytes)
+    return _SourceSnapshot(digest.hexdigest(), governed_bytes, stamps)
+
+
+def _moved_sources(before: _SourceSnapshot, after: _SourceSnapshot) -> tuple[str, ...]:
+    """Name the governed files that appeared, vanished or changed between two snapshots."""
+    return tuple(
+        sorted(
+            relative
+            for relative in before.stamps.keys() | after.stamps.keys()
+            if before.stamps.get(relative) != after.stamps.get(relative)
+        )
+    )
 
 
 def _emit_failure(components: list[ComponentResult]) -> None:
