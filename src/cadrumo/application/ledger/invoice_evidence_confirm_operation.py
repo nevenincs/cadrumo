@@ -16,7 +16,7 @@ from ...core.aggregation import IntracomOperationType
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.confirmation_gate import FindingResolutionAction
 from ...core.country_code import CountryCodeAlpha2
-from ...core.hex import Hex64Str
+from ...core.hex import Hex16Str, Hex64Str
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import (
     OperationEffect,
@@ -65,7 +65,7 @@ class FindingResolutionInputV1(BaseModel):
     """Bounded wire form restored to the canonical finding-resolution record."""
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-    blocker_id: Annotated[str, Field(min_length=16, max_length=16)]
+    blocker_id: Hex16Str
     action: FindingResolutionAction
     value: InvoiceEvidenceLabel | None = None
     note: InvoiceEvidenceNote = ""
@@ -93,7 +93,7 @@ class LedgerEvidenceConfirmRequest(BaseModel):
     taxable_base: InvoiceEvidenceDecimalText | None = None
     iva_rate: InvoiceEvidenceDecimalText | None = None
     iva_amount: InvoiceEvidenceDecimalText | None = None
-    currency: Annotated[str, Field(min_length=3, max_length=3)] | None = None
+    currency: Annotated[str, Field(min_length=1, max_length=16)] | None = None
     iva_category: Annotated[str, Field(min_length=1, max_length=128)] | None = None
     operation_type: IntracomOperationType | None = None
     operation_date: date | None = None

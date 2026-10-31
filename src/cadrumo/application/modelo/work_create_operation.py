@@ -16,8 +16,10 @@ from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...core.period import Period
 from ...core.time.clock import now
+from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.contribuyente.ccaa import CCAA
 from ...domain.contribuyente.tax_residence import parse_tax_region
+from ...domain.modelos.codes import ModeloCodeText
 from ..operations.access_resolution import (
     COMMITTING_LIFECYCLE_SELECTED_PERIODS_REGISTERED_RESULT_TAX_VALUES_ACCESS,
     OperationAccessContext,
@@ -79,10 +81,10 @@ class ModeloWorkCreateRequest(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     profile_id: UUID
-    modelo: Annotated[str, Field(pattern=r"^[0-9]{3}$")]
+    modelo: ModeloCodeText
     period: PublicPeriod
     revision_id: Annotated[str, Field(min_length=1, max_length=128)] | None = None
-    name: Annotated[str, Field(min_length=1, max_length=200)] | None = None
+    name: Annotated[str, Field(min_length=1, max_length=256)] | None = None
     actor: Annotated[str, Field(min_length=1, max_length=128)]
     causante_ccaa: Annotated[str, Field(min_length=1, max_length=64)] | None = None
     allow_not_applicable: bool = False
@@ -96,9 +98,9 @@ class ModeloWorkCreateSuccess(BaseModel):
     kind: Literal["success"] = "success"
     unit: ModeloWorkMetadataSnapshot
     reused: bool
-    name_applied: Annotated[str, Field(min_length=1, max_length=200)] | None
+    name_applied: Annotated[str, Field(min_length=1, max_length=256)] | None
     applicability_guard_bypassed: bool
-    advisory_keys: tuple[Annotated[str, Field(min_length=1, max_length=160)], ...]
+    advisory_keys: tuple[Annotated[str, Field(min_length=1, max_length=256)], ...]
 
     @model_validator(mode="after")
     def _coherent_name(self) -> Self:
@@ -113,7 +115,7 @@ class ModeloWorkCreateRefusal(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     kind: Literal["refused"] = "refused"
-    modelo: Annotated[str, Field(pattern=r"^[0-9]{3}$")]
+    modelo: ModeloCodeText
     reason: Annotated[str, Field(min_length=1, max_length=2048)]
 
 
@@ -308,7 +310,7 @@ class ModeloWorkCreateExecutor:
                     filing_year=period.filing_year,
                     operation=operation,
                 )
-                if payload.modelo == "100"
+                if payload.modelo == form_for_role("renta.annual")
                 else ()
             )
             return ports, profile, None, causante, advisory_keys

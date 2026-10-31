@@ -32,7 +32,7 @@ from ..lifecycle_advisories import (
 )
 from ..work_plazo import calculated_m210_plazo_resolution
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.usefixtures("authority_operation"), pytest.mark.unit, pytest.mark.hex_application]
 
 _NOW = datetime(2026, 1, 1, tzinfo=UTC)
 _BUCKET_ID = "915b0469-91b1-4787-a650-9aad55564dd3"

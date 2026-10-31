@@ -76,7 +76,7 @@ from ..m145_communication_records_ports import (
     M145CommunicationRecordsPortsFactory,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.usefixtures("authority_operation"), pytest.mark.unit, pytest.mark.hex_application]
 
 _PROFILE = UUID("44444444-4444-4444-8444-444444444444")
 _BUCKET = str(_PROFILE)

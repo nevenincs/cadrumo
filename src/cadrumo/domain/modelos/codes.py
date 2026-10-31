@@ -7,7 +7,9 @@ filing-grade availability is resolved from registry snapshots.
 
 from __future__ import annotations
 
-from pydantic import GetCoreSchemaHandler
+from typing import Annotated
+
+from pydantic import Field, GetCoreSchemaHandler
 from pydantic_core import core_schema
 
 from ...core.errors.hierarchy import pydantic_validation_boundary
@@ -37,3 +39,7 @@ class ModeloCode(str):
         """Teach pydantic to run the three-digit check on validation."""
         del source_type, handler
         return core_schema.no_info_after_validator_function(pydantic_validation_boundary(cls), core_schema.str_schema())
+
+
+ModeloCodeText = Annotated[str, Field(pattern=r"^[0-9]{3}$")]
+"""An ASCII three-digit modelo identifier declared directly in a public wire schema."""

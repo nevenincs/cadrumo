@@ -15,13 +15,15 @@ diagnostics boundary-specific.
 
 from __future__ import annotations
 
-from typing import Annotated
+from typing import Annotated, Final
 
-from pydantic import BeforeValidator
+from pydantic import BeforeValidator, StringConstraints
 
 from ..errors.hierarchy import CoreValidationError, pydantic_validation_boundary
 
 _ISO_4217_LENGTH: int = 3
+ISO_4217_CURRENCY_PATTERN: Final = r"^[A-Z]{3}$"
+"""The shape of an already-normalised currency code, for public schemas that cannot carry a validator."""
 _ISO_3166_ALPHA2_LENGTH: int = 2
 
 
@@ -99,8 +101,13 @@ a length-only bound that accepted ``eur`` and ``$$$``, and two hand-rolled
 ``^[A-Z]{3}$`` patterns that refused padding the normaliser exists to absorb.
 """
 
+IsoCurrencyCodeText = Annotated[str, StringConstraints(pattern=ISO_4217_CURRENCY_PATTERN)]
+"""A currency code on a public wire schema: three uppercase letters, refused rather than folded."""
+
 __all__ = [
+    "ISO_4217_CURRENCY_PATTERN",
     "IsoCurrencyCode",
+    "IsoCurrencyCodeText",
     "normalise_iso_3166_alpha2_jurisdiction",
     "normalise_iso_4217_currency",
 ]

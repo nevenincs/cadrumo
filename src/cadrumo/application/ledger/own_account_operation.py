@@ -88,15 +88,15 @@ class LedgerOwnAccountRequest(BaseModel):
     profile_id: UUID
     action: OwnAccountAction
     own_account_id: OwnAccountId | None = None
-    label: str | None = Field(default=None, min_length=1, max_length=80)
+    label: str | None = Field(default=None, min_length=1, max_length=128)
     holding: OwnAccountHolding | None = None
     iban: str | None = Field(default=None, max_length=64)
     swift_bic: str | None = Field(default=None, max_length=16)
-    bank_name: str | None = Field(default=None, max_length=70)
-    bank_address: str | None = Field(default=None, max_length=35)
-    bank_city: str | None = Field(default=None, max_length=30)
-    bank_country_code: str | None = Field(default=None, max_length=2)
-    currency: str | None = Field(default=None, max_length=3)
+    bank_name: str | None = Field(default=None, max_length=128)
+    bank_address: str | None = Field(default=None, max_length=64)
+    bank_city: str | None = Field(default=None, max_length=32)
+    bank_country_code: CountryCodeAlpha2 | None = None
+    currency: str | None = Field(default=None, max_length=16)
     opened_on: date | None = None
     closed_on: date | None = None
     role: OwnAccountRole | None = None
@@ -143,7 +143,7 @@ class OwnAccountProjection(BaseModel):
     sepa_marca: str = Field(min_length=1, max_length=1)
     has_swift_bic: bool
     has_bank_block: bool
-    currency: str = Field(min_length=3, max_length=3)
+    currency: str = Field(min_length=1, max_length=16)
     opened_on: date | None = None
     closed_on: date | None = None
 

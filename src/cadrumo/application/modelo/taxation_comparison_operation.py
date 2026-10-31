@@ -19,6 +19,8 @@ from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import OperationEffect, profile_operation_subject
 from ...core.period import Period
 from ...core.time.clock import now
+from ...domain.calculations.registry.form_codes import form_for_role
+from ...domain.modelos.codes import ModeloCodeText
 from ..operations.access_resolution import (
     ADMISSION_REPLAY_ACTIONS,
     LIFECYCLE_SELECTED_PERIODS_REGISTERED_RESULT_TAX_VALUES_ACCESS,
@@ -67,7 +69,7 @@ class ModeloTaxationComparisonProjection(BaseModel):
     profile_id: UUID
     work_unit_id: _WorkUnitId
     filing_year: FilingYear
-    modelo: Literal["100"]
+    modelo: ModeloCodeText
     revision: Annotated[str, Field(min_length=1, max_length=128)]
     conjunta_cuota_resultante: _AmountText
     individual_cuota_resultante: _AmountText
@@ -102,7 +104,10 @@ class ModeloTaxationComparisonProjection(BaseModel):
         cls, comparison: TaxationComparisonResult, *, profile_id: UUID, work_unit_id: str
     ) -> ModeloTaxationComparisonProjection:
         """Copy only closed public fields from the application comparison."""
-        if comparison.modelo != "100" or comparison.individual_branch_single_earner_only is not True:
+        if (
+            comparison.modelo != form_for_role("renta.annual")
+            or comparison.individual_branch_single_earner_only is not True
+        ):
             raise TaxationComparisonError("comparison has an unsupported filing scope")
         return cls(
             profile_id=profile_id,

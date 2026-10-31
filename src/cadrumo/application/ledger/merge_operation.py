@@ -43,8 +43,8 @@ LEDGER_MERGE_OPERATION_DEFINITION_ID = "ledger.merge"
 LEDGER_MERGE_PHASE = "ledger.merge"
 _MAX_MERGE_CHILDREN = 128
 _MAX_MERGE_RESULT_JSON_BYTES = 16_384
-_TransactionPrefix = Annotated[str, Field(min_length=1, max_length=96)]
-_Reason = Annotated[str, Field(max_length=500)]
+_TransactionPrefix = Annotated[str, Field(min_length=1, max_length=128)]
+_Reason = Annotated[str, Field(max_length=512)]
 _Actor = Annotated[str, Field(min_length=1, max_length=64)]
 _ChildPrefixes = Annotated[tuple[_TransactionPrefix, ...], Field(min_length=2, max_length=_MAX_MERGE_CHILDREN)]
 _TransactionIds = Annotated[tuple[TransactionId, ...], Field(min_length=2, max_length=_MAX_MERGE_CHILDREN)]

@@ -48,10 +48,10 @@ LedgerSplitRemergeOperationId = Literal["ledger.merge"]
 _SPLIT_REMERGED_BY: tuple[LedgerSplitRemergeOperationId, ...] = ("ledger.merge",)
 _MAX_SPLIT_CHILDREN = 128
 _MAX_SPLIT_RESULT_JSON_BYTES = 16_384
-_TransactionPrefix = Annotated[str, Field(min_length=1, max_length=96)]
+_TransactionPrefix = Annotated[str, Field(min_length=1, max_length=128)]
 _DecimalText = Annotated[str, Field(min_length=1, max_length=128)]
 _Description = Annotated[str, Field(min_length=1, max_length=1024)]
-_Reason = Annotated[str, Field(max_length=500)]
+_Reason = Annotated[str, Field(max_length=512)]
 _Actor = Annotated[str, Field(min_length=1, max_length=64)]
 
 

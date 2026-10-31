@@ -117,7 +117,7 @@ class InventoryCreateRequest(_InventoryRequest):
     """Create one inventory ledger for the exact profile and activity."""
 
     actividad_id: str = Field(min_length=1)
-    year: int = Field(ge=1900)
+    year: int = Field(ge=1900, le=9999)
     valuation_method: str = Field(min_length=1)
     opening_stock: PublicDecimal = Field(default_factory=lambda: PublicDecimal(decimal="0"))
 
@@ -239,7 +239,7 @@ class InventoryMovementAddRequest(_InventoryRequest):
     """Append one typed movement without putting source evidence on argv."""
 
     actividad_id: str = Field(min_length=1)
-    year: int = Field(ge=1900)
+    year: int = Field(ge=1900, le=9999)
     movement_id: str = Field(min_length=1, max_length=64)
     movement_date: date
     kind: MovementKind
@@ -253,28 +253,28 @@ class InventoryValuationPreviewRequest(_InventoryRequest):
     """Run and audit a valuation preview for one exact activity ledger."""
 
     actividad_id: str = Field(min_length=1)
-    year: int = Field(ge=1900)
+    year: int = Field(ge=1900, le=9999)
 
 
 class InventoryInspectRequest(_InventoryRequest):
     """Read one exact activity ledger with its movements and retained history."""
 
     actividad_id: str = Field(min_length=1)
-    year: int = Field(ge=1900)
+    year: int = Field(ge=1900, le=9999)
 
 
 class InventoryLedgerChangeRequest(_InventoryRequest):
     """One change to an exact ledger; repeating ``correction_id`` with the same request is a replay."""
 
     actividad_id: str = Field(min_length=1)
-    year: int = Field(ge=1900)
+    year: int = Field(ge=1900, le=9999)
     correction_id: str = Field(min_length=1, max_length=64)
 
 
 class InventoryDescribeRequest(InventoryLedgerChangeRequest):
     """Replace the descriptive facts, which never enter valuation."""
 
-    label: str = Field(min_length=1, max_length=120)
+    label: str = Field(min_length=1, max_length=128)
     description: str | None = Field(default=None, min_length=1, max_length=1024)
 
 
@@ -371,7 +371,7 @@ class InventoryClosingValueRecordRequest(_InventoryRequest):
     """Record one book's closing value from plain facts."""
 
     actividad_id: str = Field(min_length=1)
-    year: int = Field(ge=1900)
+    year: int = Field(ge=1900, le=9999)
     facts: InventoryClosingValueFactsInput
 
 
@@ -408,8 +408,8 @@ class InventoryPriorClosingLinkRequest(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     actividad_id: str = Field(min_length=1)
-    current_filing_year: int = Field(ge=2001, le=2100)
-    prior_filing_year: int = Field(ge=2000, le=2099)
+    current_filing_year: FilingYear
+    prior_filing_year: FilingYear
     prior_authoritative_closing_value: PublicDecimal
     current_opening_value: PublicDecimal
     prior_authoritative_source_fingerprint: ContentDigest
@@ -551,7 +551,7 @@ class InventoryClosingAuthorityRecordRequest(_InventoryRequest):
     """Record one complete typed closing-authority source in the profile."""
 
     actividad_id: str = Field(min_length=1)
-    year: int = Field(ge=1900)
+    year: int = Field(ge=1900, le=9999)
     authority_record: InventoryClosingAuthorityRecordInput
 
 

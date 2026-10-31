@@ -10,6 +10,7 @@ from pydantic import BaseModel, Field, model_validator
 
 from ...core.identity.hex_ids import CalculationRevisionId, WorkUnitId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+from ...domain.modelos.codes import ModeloCodeText
 from ..modelo.selectors import ModeloCalculationRevisionSelector
 from ..operations.public_period import PublicPeriod
 from .abort import WorkflowAbortReason
@@ -64,7 +65,7 @@ class WorkflowResumeRequest(BaseModel):
     target: Annotated[str, Field(pattern=r"^(?:[0-9a-f]{16}|[0-9a-f]{64})$")] | None = None
     work_unit_id: WorkUnitId | None = None
     calculation_revision_id: CalculationRevisionId | None = None
-    modelo: Annotated[str, Field(pattern=r"^[0-9]{3}$")] | None = None
+    modelo: ModeloCodeText | None = None
     period: PublicPeriod | None = None
     expected_period: PublicPeriod | None = None
     revision_id: Annotated[str, Field(min_length=1, max_length=128)] | None = None
@@ -92,7 +93,7 @@ class WorkflowResumeAddress(BaseModel):
         "visible_target",
         "visible_target_revision_selector",
     ]
-    modelo: Annotated[str, Field(pattern=r"^[0-9]{3}$")] | None
+    modelo: ModeloCodeText | None
     period: PublicPeriod | None
     filing_year: int | None
     work_unit_id: WorkUnitId | None
@@ -176,7 +177,7 @@ class WorkflowResumeCandidateSnapshot(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     run_id: Annotated[str, Field(pattern=r"^[0-9a-f]{16}$")]
-    modelo: Annotated[str, Field(pattern=r"^[0-9]{3}$")]
+    modelo: ModeloCodeText
     period: PublicPeriod
     final_stage: WorkflowStage
     aborted_reason: WorkflowAbortReason | None
@@ -225,7 +226,7 @@ class WorkflowResumeAmbiguity(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     kind: Literal["ambiguous"] = "ambiguous"
-    modelo: Annotated[str, Field(pattern=r"^[0-9]{3}$")]
+    modelo: ModeloCodeText
     period: PublicPeriod
     candidates: tuple[WorkflowResumeCandidateSnapshot, ...] = Field(min_length=2)
 

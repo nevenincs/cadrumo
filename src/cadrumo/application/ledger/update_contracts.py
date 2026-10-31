@@ -60,11 +60,11 @@ LedgerUpdatePatchField = Literal[
     "group_label",
     "own_account_id",
 ]
-_UpdateFields = Annotated[tuple[LedgerUpdatePatchField, ...], Field(min_length=1, max_length=14)]
+_UpdateFields = Annotated[tuple[LedgerUpdatePatchField, ...], Field(min_length=1, max_length=16)]
 _UpdateText = Annotated[str, Field(max_length=4096)]
 _DecimalText = Annotated[str, Field(min_length=1, max_length=128)]
-_IsoDateText = Annotated[str, Field(min_length=10, max_length=10)]
-_TransactionPrefix = Annotated[str, Field(min_length=1, max_length=96)]
+_IsoDateText = Annotated[str, Field(pattern=r"^\d{4}-\d{2}-\d{2}$")]
+_TransactionPrefix = Annotated[str, Field(min_length=1, max_length=128)]
 _ValidationMessage = Annotated[str, Field(min_length=1, max_length=2048)]
 LedgerUpdateValidationMessages = Annotated[
     tuple[_ValidationMessage, ...], Field(max_length=LEDGER_UPDATE_MAX_VALIDATION_MESSAGES)
@@ -80,7 +80,7 @@ class LedgerUpdatePatch(BaseModel):
     value_date: _IsoDateText | None = None
     amount: _DecimalText | None = None
     direction: Annotated[str, Field(min_length=1, max_length=32)] | None = None
-    currency: Annotated[str, Field(min_length=3, max_length=3)] | None = None
+    currency: Annotated[str, Field(min_length=1, max_length=16)] | None = None
     counterparty: _UpdateText | None = None
     description: _UpdateText | None = None
     taxable_base: _DecimalText | None = None

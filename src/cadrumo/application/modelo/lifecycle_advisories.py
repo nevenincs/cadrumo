@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal, InvalidOperation
+from functools import partial
 from typing import Literal, Self
 
 from pydantic import BaseModel, Field, field_validator, model_validator
@@ -17,9 +18,11 @@ from ...core.filing_year import FilingYear
 from ...core.identity.hex_ids import CalculationRevisionId, WorkUnitId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.modelo_rendering import modelo_rendering_value
 from ...domain.deadlines.models import TaxpayerProfile
 from ...domain.modelos.calculation_revision import CalculationRevision
+from ...domain.modelos.codes import ModeloCodeText
 from ...domain.modelos.row_models import Modelo184MemberRow
 from ...domain.modelos.work_unit import WorkUnit
 from .calculation_revision_gate import require_calculation_revision_coordinates_current
@@ -47,17 +50,17 @@ class ModeloM210PlazoAdvisoryV1(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     version: Literal[1] = 1
-    modelo: Literal["210"] = "210"
+    modelo: ModeloCodeText = Field(default_factory=partial(form_for_role, "irnr.income"))
     filing_year: FilingYear
     period: str = Field(min_length=1, max_length=16)
     resultado: str = Field(min_length=1, max_length=16)
     deadline_window_id: str = Field(min_length=1, max_length=128)
-    opens_on: str = Field(min_length=10, max_length=10)
-    closes_on: str = Field(min_length=10, max_length=10)
+    opens_on: str = Field(min_length=1, max_length=16)
+    closes_on: str = Field(min_length=1, max_length=16)
     legal_refs: str = Field(max_length=4096)
     source_refs: str = Field(max_length=4096)
     tipo_renta_code: str | None = Field(default=None, min_length=1, max_length=32)
-    payment_cutoff_on: str | None = Field(default=None, min_length=10, max_length=10)
+    payment_cutoff_on: str | None = Field(default=None, min_length=1, max_length=16)
 
     @field_validator("opens_on", "closes_on", "payment_cutoff_on")
     @classmethod
@@ -86,6 +89,8 @@ class ModeloM210PlazoAdvisoryV1(BaseModel):
             _M210_CONTEXT_KEYS | _M210_OPTIONAL_CONTEXT_KEYS
         ):
             raise ValueError("M210 plazo resolution has an unsupported context shape")
+        if context["modelo"] != form_for_role("irnr.income"):
+            raise ValueError("M210 plazo resolution has an unsupported modelo")
         if context["closes_on"] != resolution.closes_on:
             raise ValueError("M210 plazo resolution disagrees with its context")
         try:
@@ -133,7 +138,7 @@ class Modelo184SocioHandoffV1(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     nif: str = Field(min_length=1, max_length=32)
-    nombre: str = Field(max_length=200)
+    nombre: str = Field(max_length=256)
     porcentaje: str = Field(min_length=1, max_length=128)
     importe: str = Field(min_length=1, max_length=128)
     code: str = Field(min_length=1, max_length=128)
@@ -168,7 +173,7 @@ class ModeloLifecycleAdvisories(BaseModel):
     version: Literal[1] = 1
     work_unit_id: WorkUnitId
     calculation_revision_id: CalculationRevisionId
-    modelo: str = Field(min_length=1, max_length=8)
+    modelo: str = Field(min_length=1, max_length=16)
     filing_year: FilingYear
     period: str = Field(min_length=1, max_length=16)
     m210_plazo: ModeloM210PlazoAdvisoryV1 | None = None
@@ -178,13 +183,11 @@ class ModeloLifecycleAdvisories(BaseModel):
     def _modelo_membership(self) -> Self:
         """Refuse notices attached to a different form or filing period."""
         if self.m210_plazo is not None and (
-            self.modelo != "210"
+            self.modelo != self.m210_plazo.modelo
             or self.m210_plazo.filing_year != self.filing_year
             or self.m210_plazo.period != self.period
         ):
             raise ValueError("M210 plazo advisory does not match its work unit")
-        if self.m184_socio_handoffs and self.modelo != "184":
-            raise ValueError("M184 handoff cannot belong to another modelo")
         return self
 
 
@@ -217,7 +220,7 @@ def build_modelo_lifecycle_advisories(
     require_calculation_revision_coordinates_current(revision, operation=operation)
 
     m210_plazo = None
-    if str(work_unit.modelo) == "210":
+    if str(work_unit.modelo) == form_for_role("irnr.income"):
         resolution = calculated_m210_plazo_resolution(
             work_unit=work_unit,
             revision=revision,
@@ -228,7 +231,7 @@ def build_modelo_lifecycle_advisories(
             m210_plazo = ModeloM210PlazoAdvisoryV1.from_resolution(resolution)
 
     handoffs: tuple[Modelo184SocioHandoffV1, ...] = ()
-    if str(work_unit.modelo) == "184":
+    if str(work_unit.modelo) == form_for_role("attribution.annual_informative"):
         rows = tuple(row for row in revision.detail_rows if isinstance(row, Modelo184MemberRow))
         if rows:
             code = modelo_rendering_value("m184.socio_handoff.code", authority=operation)

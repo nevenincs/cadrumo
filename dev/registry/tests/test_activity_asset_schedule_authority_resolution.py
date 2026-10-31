@@ -17,6 +17,7 @@ from functools import cache
 from itertools import pairwise
 
 import pytest
+from pydantic import ValidationError
 
 from cadrumo.application.actividad_asset.activity_asset_read_models import ActivityAssetClaimState
 from cadrumo.application.actividad_asset.history import ActivityAssetHistory
@@ -108,9 +109,16 @@ def _refused(
     ``rendered`` additionally matches the English text the catalogue produces for
     the refusal, so a legal citation the message must keep is still asserted.
     """
-    with pytest.raises(error_type) as caught:
+    with pytest.raises((error_type, ValidationError)) as caught:
         yield
     error = caught.value
+    if isinstance(error, ValidationError):
+        details = error.errors()
+        assert len(details) == 1
+        wrapper = details[0].get("ctx", {}).get("error")
+        assert isinstance(wrapper, ValueError)
+        error = wrapper.__cause__
+        assert isinstance(error, error_type)
     assert getattr(error, "translated_message", None) == _ERRORS + key
     recorded = getattr(error, "context", None) or {}
     for name, value in context.items():
@@ -399,7 +407,7 @@ def test_an_expert_valuation_of_the_original_price_proceeds_as_a_known_price() -
     )
 
     assert _charge(asset).amount == Decimal("3000.00")  # 25,000 x 12%
-    with pytest.raises(ValueError, match="requires its evidence_reference"):
+    with _refused(ActividadAssetValidationError, "original_price_expert_requires_evidence", field="evidence_reference"):
         _original("25000.00", OriginalPriceDetermination.EXPERT_VALUATION)
 
 
@@ -413,7 +421,12 @@ def test_a_change_of_original_price_is_a_change_of_election() -> None:
 
 
 def test_an_original_price_is_a_fact_of_the_linear_method_only() -> None:
-    with pytest.raises(ValueError, match="not a fact of the constant_percentage method"):
+    with _refused(
+        ActividadAssetValidationError,
+        "election_fact_not_of_method",
+        method=AmortizationMethod.CONSTANT_PERCENTAGE.value,
+        field="used_original_price",
+    ):
         _election(
             AmortizationMethod.CONSTANT_PERCENTAGE,
             authority_class_key="maquinaria",
@@ -1045,7 +1058,7 @@ def test_a_vehicle_not_proven_affected_refuses_with_its_provision() -> None:
 
 
 def test_the_goods_transport_use_belongs_to_a_mixed_vehicle_only() -> None:
-    with pytest.raises(ValueError, match="mixed vehicle"):
+    with _refused(ActividadAssetValidationError, "goods_transport_use_requires_mixed_vehicle", field="listed_use"):
         _vehicle(listed_use=VehicleListedUse.MIXED_VEHICLE_GOODS_TRANSPORT)
     assert (
         _vehicle(
@@ -1191,7 +1204,12 @@ def test_job_creating_free_depreciation_refuses_each_unmet_condition() -> None:
             free_amount="1",
             workforce=_GROWING,
         )
-    with pytest.raises(ValueError, match="requires small_enterprise"):
+    with _refused(
+        ActividadAssetValidationError,
+        "election_requires_fact",
+        method=AmortizationMethod.SMALL_ENTERPRISE_EMPLOYMENT_FREE.value,
+        field="small_enterprise",
+    ):
         _election(AmortizationMethod.SMALL_ENTERPRISE_EMPLOYMENT_FREE, authority_class_key="maquinaria")
 
 
@@ -1346,7 +1364,12 @@ def test_renewable_free_depreciation_refuses_each_unmet_condition() -> None:
             free_amount="1",
             workforce=_KEPT,
         )
-    with pytest.raises(ValueError, match=re.escape("DA 17a.6")):
+    with _refused(
+        ActividadAssetValidationError,
+        "renewable_documentation_mismatch",
+        field="documentation_kind",
+        purpose=RenewableInstallationPurpose.ELECTRICITY_SELF_CONSUMPTION.value,
+    ):
         _renewable_evidence(documentation=RenewableDocumentationKind.ENERGY_EFFICIENCY_CERTIFICATE)
 
 

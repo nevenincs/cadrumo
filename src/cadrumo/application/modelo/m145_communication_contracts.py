@@ -11,6 +11,7 @@ from pydantic import BaseModel, Field, model_validator
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
 from ...core.casilla_id import CasillaId
+from ...core.filing_year import FilingYear
 from ...core.hashing import sha256_hex
 from ...core.hex import Hex64Str
 from ...core.identity.bucket import BucketId
@@ -18,7 +19,9 @@ from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import OperationEffect
 from ...domain.calculations.registry.fixed_width_codec import ExportEncoding
+from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.ids import LegalRefId, RevisionId, SourceRefId
+from ...domain.modelos.codes import ModeloCodeText
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .m145_communication_period import M145CommunicationPeriod
 from .m145_communication_records import (
@@ -112,14 +115,14 @@ _MAX_CONTEXT_VALUE_LENGTH = 32768
 
 _MAX_REFUSAL_MESSAGE_LENGTH = 32768
 
-_M145Year = Annotated[int, Field(ge=2000, le=2099)]
+_M145Year = FilingYear
 
 
 def _canonical_m145_identity(
     service_owner: str,
     modelo: str,
-) -> tuple[Literal["cadrumo.application.modelo"], Literal["145"]]:
-    if service_owner != "cadrumo.application.modelo" or modelo != "145":
+) -> tuple[Literal["cadrumo.application.modelo"], str]:
+    if service_owner != "cadrumo.application.modelo" or modelo != form_for_role("withholding.payer_communication"):
         raise ValueError("M145 projection requires the canonical service owner and modelo")
     return service_owner, modelo
 
@@ -253,7 +256,7 @@ class M145CommunicationRecordProjection(BaseModel):
     communication_record_id: Hex64Str
     bucket_id: BucketId
     service_owner: Literal["cadrumo.application.modelo"]
-    modelo: Literal["145"]
+    modelo: ModeloCodeText
     communication_year: _M145Year
     period_token: M145CommunicationPeriod
     revision_id: RevisionId
@@ -368,7 +371,7 @@ class M145CommunicationValidationProjection(BaseModel):
     communication_record_id: Hex64Str
     bucket_id: BucketId
     service_owner: Literal["cadrumo.application.modelo"]
-    modelo: Literal["145"]
+    modelo: ModeloCodeText
     communication_year: _M145Year
     period_token: M145CommunicationPeriod
     revision_id: RevisionId
@@ -431,7 +434,7 @@ class M145CommunicationExportProjection(BaseModel):
     communication_record_id: Hex64Str
     bucket_id: BucketId
     service_owner: Literal["cadrumo.application.modelo"]
-    modelo: Literal["145"]
+    modelo: ModeloCodeText
     communication_year: _M145Year
     period_token: M145CommunicationPeriod
     revision_id: RevisionId
