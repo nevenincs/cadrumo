@@ -5,7 +5,7 @@ tags:
 date: '2026-10-30'
 modified: '2026-10-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:a93c1e3eb3818933ab073270cbb2a023ebb6321a6a0e28186062ca657055e9da'
+body_hash: 'sha256:b07e7cfd104b98f9a58e47476afee8586e2fd79f857a084bd8f4a6d95a3d7f3b'
 related:
   - "[[2026-10-30-macos-platform-plan]]"
 ---
@@ -194,6 +194,25 @@ native/manager/src/supervision/supervisor.rs`
 - `S12` `verify:` `ctest fmt and clippy for platform, manager, application and desktop, manager.fixture.clippy, application.features.clippy` -> `pass`
 - `S12` `verify:` `build.sh Debug desktop-host-unit-test and desktop-host-unit-clippy` -> `pass`
 - `S12` `verify:` `pytest test_transport_contract.py test_connection_transport.py test_generator_imports.py` -> `pass`
+- `S13` `M` `native/application/src/diagnostics/lifecycle.rs`
+- `S13` `M` `native/application/src/diagnostics/logging.rs`
+- `S13` `M` `native/application/src/lib.rs`
+- `S13` `M` `native/application/src/shutdown.rs`
+- `S13` `M` `native/CONTRACT.md`
+- `S13` `M` `native/desktop/src-tauri/src/main.rs`
+- `S13` `M` `native/desktop/src-tauri/src/role.rs`
+- `S13` `M` `native/desktop/src-tauri/src/shell/single_instance/mod.rs`
+- `S13` `M` `native/desktop/src-tauri/src/startup_logging.rs`
+- `S13` `M` `native/desktop/src-tauri/src/startup_outcome.rs`
+- `S13` `M` `native/desktop/src-tauri/src/startup.rs`
+- `S13` `M` `native/manager/src/desktop_host.rs`
+- `S13` `M` `native/manager/src/diagnostics.rs`
+- `S13` `M` `native/manager/src/macos/desktop_host.rs`
+- `S13` `M` `native/manager/src/supervision/exit.rs`
+- `S13` `M` `native/manager/src/supervision/supervisor.rs`
+- `S13` `M` `native/manager/tests/supervision.rs`
+- `S13` `verify:` `build.sh Debug desktop-host-unit-test` -> `pass`
+- `S13` `verify:` `ctest -C Debug -R manager.supervision` -> `pass`
 
 ## Notes
 
