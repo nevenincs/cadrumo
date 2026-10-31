@@ -12,6 +12,7 @@ from ...domain.renta.actividad_asset.lifecycle import (
     FURTHER_ACQUISITION_SHAPES,
     OPENING_STATUS_FACTS,
     REGISTERABLE_ACQUISITION_SHAPES,
+    WHOLLY_BUSINESS_STAGE_FACTS,
     AssetBasisStage,
     AssetKind,
 )
@@ -23,6 +24,7 @@ from .activity_asset_read_models import (
     ActivityAssetEdition,
     ActivityAssetFormOptionsView,
     ActivityAssetOpeningStatusOption,
+    ActivityAssetStageFactValue,
     ActivityAssetTableGroup,
     activity_asset_label_key,
 )
@@ -69,7 +71,15 @@ def form_options_view(
             for reason in ADMITTED_DISPOSAL_REASONS
         ),
         basis_stages=tuple(
-            ActivityAssetBasisStageOption(stage=stage, facts=facts, is_property=stage is AssetBasisStage.WHOLE_PROPERTY)
+            ActivityAssetBasisStageOption(
+                stage=stage,
+                facts=facts,
+                is_property=stage is AssetBasisStage.WHOLE_PROPERTY,
+                wholly_business_facts=tuple(
+                    ActivityAssetStageFactValue(fact=fact, value=project_scalar(value))
+                    for fact, value in WHOLLY_BUSINESS_STAGE_FACTS.get(stage, {}).items()
+                ),
+            )
             for stage, facts in BASIS_STAGE_FACTS.items()
         ),
         opening_statuses=tuple(

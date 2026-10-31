@@ -558,14 +558,25 @@ class ActivityAssetDisposalReasonOption(_ReadModel):
     label_key: str
 
 
+class ActivityAssetStageFactValue(_ReadModel):
+    """One basis fact and the value that states it."""
+
+    fact: str
+    value: PublicDecimal
+
+
 class ActivityAssetBasisStageOption(_ReadModel):
     """One stage a basis can be stated at, with the facts only that stage carries."""
 
     stage: AssetBasisStage
     facts: tuple[str, ...]
-    """Names of the basis facts this stage states; the form carries these and no others of the stages."""
+    """Names of the basis facts this stage states and requires; the form carries these and no others of the stages."""
     is_property: bool
     """Whether the basis is the whole-property one, which flags the element as property."""
+    wholly_business_facts: tuple[ActivityAssetStageFactValue, ...] = ()
+    """The values of ``facts`` that state a purchase affected wholly to the activity from the start; none when this
+    stage cannot state it. A purchase that was split before it reached the register uses the stage that names the
+    source of that split."""
 
 
 class ActivityAssetOpeningStatusOption(_ReadModel):
@@ -696,6 +707,7 @@ __all__ = [
     "ActivityAssetReasonFact",
     "ActivityAssetReasonFactKind",
     "ActivityAssetRegisterState",
+    "ActivityAssetStageFactValue",
     "ActivityAssetTableGroup",
     "ActivityAssetTimelineChange",
     "ActivityAssetTimelineClaimUse",

@@ -10,6 +10,7 @@ from pydantic import ValidationError
 from ..lifecycle import (
     BASIS_STAGE_FACTS,
     OPENING_STATUS_FACTS,
+    WHOLLY_BUSINESS_STAGE_FACTS,
     ActivityAssetBasis,
     AssetBasisStage,
     OpeningAmortizationHistory,
@@ -88,3 +89,27 @@ def test_a_missing_opening_history_states_no_fact_and_a_known_one_may_state_each
         "accumulated_amount",
         "covered_through_tax_year",
     }
+
+
+def test_a_wholly_business_purchase_states_no_split_source_and_keeps_its_full_cost() -> None:
+    ((stage, facts),) = WHOLLY_BUSINESS_STAGE_FACTS.items()
+
+    basis = ActivityAssetBasis.model_validate(
+        {"stage": stage, "basis_amount": Decimal("1000"), "non_deductible_iva": Decimal("210"), **facts}
+    )
+
+    assert basis.prior_allocation_provenance is None
+    assert {name for name in _ALL_STAGE_FACTS if getattr(basis, name) is not None} == set(facts)
+    assert set(facts) == set(BASIS_STAGE_FACTS[stage])
+    assert basis.deductible_basis() == basis.acquisition_cost() == Decimal("1210")
+
+
+def test_a_split_that_really_happened_still_needs_its_source() -> None:
+    with pytest.raises(ValidationError, match="basis_stage_requires_fact"):
+        ActivityAssetBasis.model_validate(
+            {
+                "stage": AssetBasisStage.BUSINESS_ALLOCATED,
+                "basis_amount": Decimal("1000"),
+                "non_deductible_iva": Decimal("0"),
+            }
+        )

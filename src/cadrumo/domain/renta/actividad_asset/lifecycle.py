@@ -184,6 +184,16 @@ BASIS_STAGE_FACTS: Mapping[AssetBasisStage, tuple[str, ...]] = {
 }
 """The facts of a basis, beyond its amounts, that each stage states and no other stage may."""
 
+WHOLLY_BUSINESS_STAGE_FACTS: Mapping[AssetBasisStage, Mapping[str, Decimal]] = {
+    AssetBasisStage.TAXPAYER_OWNED: {"business_use_share": Decimal("1")},
+}
+"""The stages that state a purchase affected wholly to the activity from the start, with the facts that say so.
+
+Such a purchase has no earlier split to name: the taxpayer owns it and the whole of it serves the activity,
+so the basis is its full cost. A purchase split before it reached the register uses the business-allocated
+stage and names where that split comes from.
+"""
+
 OPENING_STATUS_FACTS: Mapping[OpeningHistoryStatus, tuple[str, ...]] = {
     OpeningHistoryStatus.KNOWN: ("accumulated_amount", "amortization_method", "covered_through_tax_year"),
     OpeningHistoryStatus.MISSING: (),
@@ -612,6 +622,7 @@ __all__ = [
     "FURTHER_ACQUISITION_SHAPES",
     "OPENING_STATUS_FACTS",
     "REGISTERABLE_ACQUISITION_SHAPES",
+    "WHOLLY_BUSINESS_STAGE_FACTS",
     "AcquisitionLineageReference",
     "AcquisitionShape",
     "ActivityAssetBasis",
