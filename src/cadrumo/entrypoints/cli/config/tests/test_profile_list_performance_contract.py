@@ -9,35 +9,23 @@ writes, which storage functions it calls -- are invisible in-process.
 
 from __future__ import annotations
 
-import base64
 from dataclasses import dataclass
 from pathlib import Path
-from uuid import UUID, uuid4
+from uuid import UUID
 
 import pytest
 
-from .....adapters.persistence.storage.custody.capsule import publish_profile_custody_capsule
-from .....adapters.persistence.storage.custody.capsule_records import ProfileCustodyCapsuleLabel
-from .....adapters.persistence.storage.custody.records import (
-    ProfileCustodyEnvelope,
-    ProfileCustodyKdfParameters,
-    ProfileCustodyWrappedDek,
-)
-from .....adapters.persistence.storage.custody.sentinel import create_profile_custody_sentinel
-from .....core.config import Settings
-from .....core.profile_publication import ProfilePublicationKind
 from ...tests.cli_performance import (
     CliPerformanceObservation,
     CliPerformanceProfile,
     is_non_authoritative_artifact,
     profile_cli_path,
 )
+from ...tests.profile_custody_label_support import publish_labelled_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _LIST_PATH = ("config", "profile", "list")
-_DEK = bytes(range(32))
-_EPOCH = base64.b64encode(b"e" * 16).decode("ascii")
 
 # Custody functions that authenticate, derive, publish, or repair. A pure
 # listing may call none of them; each is named by its own qualified name so a
@@ -54,42 +42,6 @@ _FORBIDDEN_STORAGE_CALL_MARKERS = (
     "mint_profile_session",
     "resume_profile_session",
 )
-
-
-def _publish(root: Path, profile_id: UUID, label: str) -> None:
-    envelope = ProfileCustodyEnvelope.create(
-        profile_id=profile_id,
-        password_generation=1,
-        dek_epoch=_EPOCH,
-        kdf=ProfileCustodyKdfParameters(
-            algorithm="argon2id",
-            version=19,
-            memory_mib=19,
-            iterations=2,
-            parallelism=1,
-            salt_b64=base64.b64encode(b"k" * 16).decode("ascii"),
-            output_bytes=32,
-        ),
-        wrapped_dek=ProfileCustodyWrappedDek(
-            nonce_b64=base64.b64encode(b"n" * 12).decode("ascii"),
-            ciphertext_b64=base64.b64encode(b"c" * 32).decode("ascii"),
-            tag_b64=base64.b64encode(b"t" * 16).decode("ascii"),
-        ),
-    )
-    publish_profile_custody_capsule(
-        profile_id=profile_id,
-        transaction_id=uuid4(),
-        publication_kind=ProfilePublicationKind.ENROLL,
-        password_envelope=envelope,
-        sentinel=create_profile_custody_sentinel(envelope=envelope, dek=_DEK),
-        data_files={
-            "profile-label.v1.json": ProfileCustodyCapsuleLabel.create(
-                profile_id=profile_id,
-                label=label,
-            ).canonical_json_bytes()
-        },
-        settings=Settings(cadrumo_storage_root=root),
-    )
 
 
 def _storage_state(paths: tuple[str, ...]) -> list[str]:
@@ -134,8 +86,8 @@ def populated_listing(tmp_path_factory: pytest.TempPathFactory) -> _PopulatedLis
     """
     root = tmp_path_factory.mktemp("profile-list") / "populated"
     root.mkdir()
-    _publish(root, UUID("11111111-1111-4111-8111-111111111111"), "Alpha")
-    _publish(root, UUID("22222222-2222-4222-8222-222222222222"), "Beta")
+    publish_labelled_profile(root, UUID("11111111-1111-4111-8111-111111111111"), "Alpha")
+    publish_labelled_profile(root, UUID("22222222-2222-4222-8222-222222222222"), "Beta")
     state_before = _root_state(root)
     profile = profile_cli_path(_LIST_PATH, storage_root=root)
     return _PopulatedListing(profile=profile, state_before=state_before, state_after=_root_state(root))
