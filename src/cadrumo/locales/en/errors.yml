@@ -1247,7 +1247,7 @@ errors:
       the quota is exhausted.
     refused_outbound_storage_validation: The storage operation parameters failed validation.
     refused_output_format: The requested output format is not supported.
-    refused_pension_reduccion_computation: A pension reducción computation input violated
+    refused_pension_reduccion_computation: A pension reduction computation input violated
       a numeric pre-condition. Correct the supplied amounts.
     refused_profile_already_exists: A profile with those details already exists.
     refused_profile_basis_cap_exceeded: The cumulative amortisation would exceed the

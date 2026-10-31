@@ -189,8 +189,8 @@ cli:
           számla javít. Az RD 1619/2012 6.1.a.2 cikke a saját sorozattal együtt megköveteli,
           és a dokumentumból olvassuk ki, ha megadja.
         confirm_resolve_help: 'Válaszolj egy blokkoló problémára: <finding-id>=<choose|supply|attest>:<érték-vagy-indok>.
-          A choose esetén az olvasatot az értékével vagy a review által mutatott kivonattal
-          nevezd meg. Problémánként egyszer ismételd; nincs tömeges kapcsoló.'
+          A `choose` esetén az olvasatot az értékével vagy a `review` által mutatott
+          kivonattal nevezd meg. Problémánként egyszer ismételd; nincs tömeges kapcsoló.'
         confirm_retention_amount_help: A számlán szereplő jövedelemadó-levonás összege.
         confirm_retention_rate_help: A számlán szereplő jövedelemadó-levonás százaléka.
         confirm_review_contradicted_regime_message: Ez a dokumentum ellentmond önmagának
@@ -329,7 +329,7 @@ cli:
             mellékletazonosító.
           resolve_action: Ismeretlen feloldási művelet.
           resolve_shape: Minden --resolve alakja <finding-id>=<choose|supply|attest>:<érték-vagy-indok>.
-            A choose az olvasatot az értékével vagy a review által mutatott kivonattal
+            A `choose` az olvasatot az értékével vagy a `review` által mutatott kivonattal
             nevezi meg.
           view_help: Megjeleníti egy függőben lévő piszkozat minden ellenőrizhető
             mezőjét, a blokkoló problémákkal együtt.
@@ -1083,7 +1083,7 @@ cli:
           éve.
         correct_help: A helyi előzményeket megelőző időszakra korábban beállított,
           hibás Modelo 303 nyitó átvihető egyenleg javítása. Felülírja a meglévő beállított
-          összeget; elutasítja, ha az időszakhoz nincs rekord (előbb futtasd a seed
+          összeget; elutasítja, ha az időszakhoz nincs rekord (előbb futtasd a `seed`
           parancsot), és ha egy benyújtottként rögzített Modelo 303 felhasználta a
           beállított alapot (a javítás egy benyújtottként rögzített bevallást változtatna
           meg). A --reason értéket auditeseménybe rögzíti. Szükséges a --confirm.
@@ -1131,10 +1131,10 @@ cli:
           \n  --amount X   Áthozott egyenleg: az adózó korábbi M303 bevallásokat nyújtott\
           \ be más eszközzel vagy közvetlenül az AEAT-nál. X az utolsó benyújtott\
           \ M303 bevallásból származó, későbbi időszakokra függőben maradó kompenzáció.\n\
-          \nAz automatikus first_period_zero eset független a seed parancstól: a számítás\
-          \ és az egyeztetés során a tevékenységkezdési és nyilvántartási feltételek\
-          \ bizonyítják, hogy ez az első IVA-időszak; ekkor az AEAT 110-es rovat nulla\
-          \ a LIVA 99.5. cikke (37/1992. törvény) alapján, és nem blokkol."
+          \nAz automatikus `first_period_zero` eset független a `seed` parancstól:\
+          \ a számítás és az egyeztetés során a tevékenységkezdési és nyilvántartási\
+          \ feltételek bizonyítják, hogy ez az első IVA-időszak; ekkor az AEAT 110-es\
+          \ rovat nulla a LIVA 99.5. cikke (37/1992. törvény) alapján, és nem blokkol."
         seed_invalid_amount: 'Az IVA kezdőösszege érvénytelen: %{amount}.'
         seed_period_help: 'A Modelo 303 benyújtásának időszaka: 1T-4T negyedévek (pl.
           4T).'
@@ -1403,7 +1403,7 @@ cli:
           output_help: Az .xlsx munkafüzet célútvonala; a meglévő fájlt elutasítja,
             hacsak nincs megadva a --replace
         export_help: Egy nyomtatvány és időszak számításának exportálása a nyomtatványdefiníciók
-          szerint egy helyi .xlsx munkafüzetbe élő képletekkel (a push offline megfelelője)
+          szerint egy helyi .xlsx munkafüzetbe élő képletekkel (a `push` offline megfelelője)
         modelo_help: Az exportálandó nyomtatvány azonosítója (pl. 130, 303, 100).
         period_help: Benyújtási időszak kódja (pl. 1T, 2T, 0A).
         publish:
@@ -2414,7 +2414,7 @@ cli:
           kind_help: 'A visszavonás típusa: `key`, `grant` vagy `all`.'
           target_help: A visszavonandó kulcs vagy jogosultság UUID-azonosítója.
           target_mismatch: Kulcs vagy jogosultság visszavonásához szükséges a cél
-            UUID-ja; az all típus nem fogad el célt.
+            UUID-ja; az `all` típus nem fogad el célt.
         disclosures:
           expected_digest_help: Egy korábbi oldal által kiírt kivonat; az olvasást
             elutasítja, ha a lista azóta megváltozott.
@@ -2534,7 +2534,7 @@ cli:
             a --yes kapcsolóval a törléshez.'
         yes_help: Kifejezetten megerősíti a törlést
       descendiente:
-        add_flag_help: NACIMIENTO=ÉÉÉÉ-HH-NN[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela][,INSCRIPCION=ÉÉÉÉ-HH-NN][,ACOGIMIENTO=ÉÉÉÉ-HH-NN][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=MM|MM-MM[;MM...]][,ALTA_POSTERIOR_MES=1..12][,SEGUNDO_CICLO_INFANTIL_INICIO_MES=1..12][,GASTOS_GUARDERIA=N][,GASTOS_GUARDERIA_MENSUAL=MM:N;MM-MM:N][,NIF=XXXXXXXXX].
+        add_flag_help: NACIMIENTO=ÉÉÉÉ-HH-NN[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela|guarda_y_custodia_judicial][,INSCRIPCION=ÉÉÉÉ-HH-NN][,ACOGIMIENTO=ÉÉÉÉ-HH-NN][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=MM|MM-MM[;MM...]][,ALTA_POSTERIOR_MES=1..12][,SEGUNDO_CICLO_INFANTIL_INICIO_MES=1..12][,GASTOS_GUARDERIA=N][,GASTOS_GUARDERIA_MENSUAL=MM:N;MM-MM:N][,NIF=XXXXXXXXX].
           Ismételhető. Futtasd az `aeat config profile descendiente` parancsot alparancs
           nélkül a vezetett bevitelhez.
         add_help: Egy vagy több leszármazott hozzáadása az aktív profilhoz.
@@ -3135,7 +3135,7 @@ cli:
         a bontási döntés a számláról olvasódik be.'
       auto_split_single_line: 'egysoros számla: nincs szükség bontásra; a --apply
         helyben osztályozza'
-      bulk_all_failed: 'bulk classify sikertelen: minden sor hibás volt; egyetlen
+      bulk_all_failed: 'A tömeges besorolás sikertelen: minden sor hibás volt; egyetlen
         sor sem frissült a nyilvántartásban'
       bulk_summary: 'tömeges osztályozás: %{total} sor, %{applied} alkalmazva, %{skipped}
         kihagyva, %{fail} sikertelen'
@@ -3226,7 +3226,7 @@ cli:
         és a besorolási döntés indokaként (az `aeat app ledger view` parancsban látható)
         is rögzít, vagy egy `--reject` döntéssel együtt rögzít.
       reject_apply_exclusive: 'A --reject nem kombinálható a --apply kapcsolóval:
-        a reject elutasított javaslatot, az apply elfogadottat rögzít.'
+        a `reject` elutasított javaslatot, az `apply` elfogadottat rögzít.'
       reject_help: A modell javaslatának kifejezett elutasítását naplóeseményként
         rögzíti, a sor osztályozása nélkül (nem kombinálható a --apply kapcsolóval).
       saturate_help: 'Telítés LLM-mel: az IVA-kategória kiválasztása, valamint a kulcs,
@@ -3459,7 +3459,7 @@ cli:
       child_id_help: Egy gyermek azonosítója (vagy egyértelmű előtag) az egyesítéshez.
         Ismételd meg minden testvér esetén; részleges egyesítések elutasítva.
       errors:
-        min_two_children: A ledger merge parancshoz legalább két --child-id értéke
+        min_two_children: A `ledger merge` parancshoz legalább két --child-id értéke
           szükséges.
       help: Felosztott gyermekek teljes kohortjának újraegyesítése egy friss tranzakcióba.
       reason_help: A bucket-esemény adatcsomagjában és az életciklus-előzményekben
@@ -3488,7 +3488,7 @@ cli:
     reset:
       dry_run_help: A visszaállítás hatásainak jelentése a nyilvántartás törlése nélkül.
       help: Az aktív profil nyilvántartásának alaphelyzetbe állítása.
-      reason_help: A reset-előzményekben rögzített ok.
+      reason_help: A `reset` parancs előzményeiben rögzített ok.
       yes_help: Az aktív profil nyilvántartása törlésének megerősítése.
     restore:
       help: Egy elrejtett vagy archivált tranzakció visszaállítása aktívra
@@ -3514,10 +3514,10 @@ cli:
       classification_dropped: A szülő %{classification} besorolását a felosztás gyermekei
         nem örökölték; minden gyermek NOT_YET_PROCESSED állapotban marad.
       errors:
-        child_args_mismatch: A ledger split parancshoz ugyanannyi --child-amount és
-          --child-description argumentum szükséges.
-        min_two_children: A ledger split parancshoz legalább két --child-amount /
-          --child-description pár szükséges.
+        child_args_mismatch: A `ledger split` parancshoz ugyanannyi --child-amount
+          és --child-description argumentum szükséges.
+        min_two_children: A `ledger split` parancshoz legalább két --child-amount
+          / --child-description pár szükséges.
       help: Egy szülőtranzakció felosztása N gyermek tranzakcióra, amelyek összege
         pontosan egyenlő a szülő összegével.
       id_help: A felosztandó szülőtranzakció azonosítója (vagy egyértelmű hexadecimális
@@ -3531,7 +3531,8 @@ cli:
       yes_help: A felosztás megerősítése (a szülőt SPLIT állapotba viszi és megőriz
         N gyermek tranzakciót).
     stash:
-      help: Egyetlen tranzakció félretétele (stash) a nyilvántartásban az aktív profilban.
+      help: Egyetlen tranzakció félretétele (`stash`) a nyilvántartásban az aktív
+        profilban.
       id_help: A félreteendő tranzakció azonosítója.
       yes_help: A tranzakció félretételének megerősítése.
     status:
@@ -3621,7 +3622,7 @@ cli:
         modelo_verification_report: Nyomtatvány-ellenőrzési jelentések listázása és
           megtekintése.
         modelo_work: Nyomtatvány-bevallások létrehozása és kezelése.
-        overview_status: Az aktuális profil és munkállapot összefoglalása.
+        overview_status: Az aktuális profil és munkaállapot összefoglalása.
         paragraph_operational_workflow: Az app-parancsok az aktív profilon működnek.
         review_queue: A felülvizsgálatodra váró elemek listázása.
         review_view: Egyetlen felülvizsgálati elem megtekintése.

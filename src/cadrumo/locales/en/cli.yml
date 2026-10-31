@@ -1394,7 +1394,7 @@ cli:
           kind, then record it'
         amend_wizard_kind_help: complementaria adds to the prior tax due; sustitutiva
           fully replaces the prior filing; rectificativa is the unified correction
-          mechanism for modelos whose orden implements it (e.g. Modelo 303 from filing
+          mechanism for modelos whose order implements it (e.g. Modelo 303 from filing
           year 2023).
         amend_wizard_kind_prompt: Amendment kind (%{choices})
         amend_wizard_m303_rectificativa_motive_prompt: Modelo 303 rectificativa motive
@@ -1460,12 +1460,12 @@ cli:
           Vasco and Navarra are foral regimes; consult the corresponding regional
           Hacienda.
         compare_taxation_error: 'Joint vs. individual comparison not available: {detail}'
-        compare_taxation_help: 'Compare the IRPF cuota under joint filing (conjunta,
-          Art. 82-84 LIRPF) and individual filing for an existing Modelo 100 declaration.
-          Cadrumo calculates twice, once with declaration_type=2 (conjunta) and once
-          with declaration_type=1 (individual), from the same profile data, and outputs
-          the cuota difference and a recommendation. Nothing is saved: no calculation
-          is stored.'
+        compare_taxation_help: 'Compare the IRPF tax liability under joint filing
+          (conjunta, Art. 82-84 LIRPF) and individual filing for an existing Modelo
+          100 declaration. Cadrumo calculates twice, once with declaration_type=2
+          (conjunta) and once with declaration_type=1 (individual), from the same
+          profile data, and outputs the tax liability difference and a recommendation.
+          Nothing is saved: no calculation is stored.'
         compare_taxation_recommendation_line: 'RECOMMENDATION: {recommendation} -
           {reason}'
         compare_taxation_work_unit_not_found: Declaration {work_unit_id} not found;
@@ -1578,10 +1578,10 @@ cli:
         list_single_status_summary: One declaration is available for inspection.
         m184_socio_handoff_message: 'Régimen de atribución de rentas: socio %{nif}
           (%{nombre}) receives an attributed base of %{importe} EUR (%{porcentaje}%
-          share). On the socio''s own workspace, record it as attribution_received
+          share). On the member''s own workspace, record it as attribution_received
           facts (entity_nif, entity_name, share_pct, base_imponible_attributed, filing_year),
-          then fold the base into their Modelo 100 régimen-de-atribución (actividad
-          económica) casilla %{casilla} (LIRPF arts. 86-89).'
+          then fold the base into their Modelo 100 régimen-de-atribución (economic
+          activity) casilla %{casilla} (LIRPF arts. 86-89).'
         m210_gross_income_source_help: 'Source of Modelo 210 box [5]: manual (default)
           or the sum of Spanish-source income entries in your records.'
         m210_plazo_resolved: 'Modelo 210 filing window resolved: voluntary filing
@@ -2383,7 +2383,7 @@ cli:
           preflight: 'Preflight only: nothing was deleted. Re-run with --yes to delete.'
         yes_help: Explicitly confirm the deletion
       descendiente:
-        add_flag_help: NACIMIENTO=YYYY-MM-DD[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela][,INSCRIPCION=YYYY-MM-DD][,ACOGIMIENTO=YYYY-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=MM|MM-MM[;MM...]][,ALTA_POSTERIOR_MES=1..12][,SEGUNDO_CICLO_INFANTIL_INICIO_MES=1..12][,GASTOS_GUARDERIA=N][,GASTOS_GUARDERIA_MENSUAL=MM:N;MM-MM:N][,NIF=XXXXXXXXX].
+        add_flag_help: NACIMIENTO=YYYY-MM-DD[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela|guarda_y_custodia_judicial][,INSCRIPCION=YYYY-MM-DD][,ACOGIMIENTO=YYYY-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=MM|MM-MM[;MM...]][,ALTA_POSTERIOR_MES=1..12][,SEGUNDO_CICLO_INFANTIL_INICIO_MES=1..12][,GASTOS_GUARDERIA=N][,GASTOS_GUARDERIA_MENSUAL=MM:N;MM-MM:N][,NIF=XXXXXXXXX].
           Repeatable. Run `aeat config profile descendiente` with no subcommand to
           enter these guided.
         add_help: Add one or more descendants to the active profile.
@@ -2866,9 +2866,9 @@ cli:
       prorrata_sector_help: Differentiated-sector id (LIVA arts. 9.1.c / 101) to which
         this input belongs; it must match an already declared sector.
       purchase_invoice_evidence_help: Canonical purchase-invoice evidence id
-      recargo_amount_help: Recargo de equivalencia cuota charged on this sale to a
-        recargo-regime retailer (LIVA art. 161); aggregated into the Modelo 303 recargo
-        cuota by IVA rate tier
+      recargo_amount_help: Amount of recargo de equivalencia charged on this sale
+        to a retailer under that regime (LIVA art. 161); aggregated into the Modelo
+        303 surcharge amount by VAT rate tier
       sector_unmatched: --sector '{sector_id}' matches no declared differentiated
         sector (LIVA arts. 9.1.c / 101), so this input is deducted at the common-use
         percentage rather than the sector percentage. The sector must exist before

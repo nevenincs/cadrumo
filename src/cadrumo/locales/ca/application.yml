@@ -2612,8 +2612,8 @@ application:
         missing_tax_id: 'El perfil actiu no ha indicat: %{requirements}.'
         no_active_profile: No hi ha cap perfil actiu configurat.
         projection_failed: El perfil actiu no supera la projecció de l'assistent.
-        unexpected_projection_type: Les respostes del flux de setup no es van projectar
-          com SetupAnswers.
+        unexpected_projection_type: Les respostes del flux de configuració no es van
+          projectar com `SetupAnswers`.
   workflow:
     errors:
       no_active_profile_bucket: No hi ha cap perfil actiu.

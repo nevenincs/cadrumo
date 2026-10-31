@@ -193,8 +193,8 @@ cli:
           El RD 1619/2012 art. 6.1.a.2 lo exige junto con su propia serie, y se lee
           del documento cuando este lo indica.
         confirm_resolve_help: 'Responde a una incidencia bloqueante: <finding-id>=<choose|supply|attest>:<valor-o-motivo>.
-          Para choose, indica la lectura por su valor o por el resumen que mostró
-          review. Repite una vez por incidencia; no hay opción masiva.'
+          Para `choose`, indica la lectura por su valor o por el resumen que mostró
+          `review`. Repite una vez por incidencia; no hay opción masiva.'
         confirm_retention_amount_help: Importe de retención de IRPF de la factura.
         confirm_retention_rate_help: Porcentaje de retención de IRPF de la factura.
         confirm_review_contradicted_regime_message: Este documento se contradice a
@@ -332,7 +332,8 @@ cli:
             pendiente.
           resolve_action: Acción de resolución desconocida.
           resolve_shape: Cada --resolve es <finding-id>=<choose|supply|attest>:<valor-o-motivo>.
-            Un choose indica la lectura por su valor o por el resumen que mostró review.
+            Un `choose` indica la lectura por su valor o por el resumen que mostró
+            `review`.
           view_help: Muestra todos los campos revisables de un borrador pendiente,
             junto con sus incidencias bloqueantes.
         source_path_help: Ruta al PDF o imagen de la factura
@@ -1432,7 +1433,7 @@ cli:
             se rechaza salvo que se indique --replace
         export_help: Exporta el cálculo de un modelo y periodo, tal como lo fijan
           las definiciones de los modelos, a un libro .xlsx local con fórmulas activas
-          (la contrapartida sin conexión de push)
+          (la contrapartida sin conexión de `push`)
         modelo_help: Identificador del modelo a exportar (p. ej. 130, 303, 100)
         period_help: Código de período (p. ej. 1T, 2T, 0A)
         publish:
@@ -2447,7 +2448,7 @@ cli:
           kind_help: 'Tipo de revocación: `key`, `grant` o `all`.'
           target_help: UUID de la clave o concesión que se va a revocar.
           target_mismatch: La revocación de una clave o concesión requiere su UUID;
-            all no admite destino.
+            `all` no admite destino.
         disclosures:
           expected_digest_help: El resumen criptográfico que mostró una página anterior;
             la lectura se rechaza si la lista ha cambiado desde entonces.
@@ -2567,7 +2568,7 @@ cli:
             con --yes para eliminar.'
         yes_help: Confirma explícitamente la eliminación
       descendiente:
-        add_flag_help: NACIMIENTO=AAAA-MM-DD[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela][,INSCRIPCION=AAAA-MM-DD][,ACOGIMIENTO=AAAA-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=MM|MM-MM[;MM...]][,ALTA_POSTERIOR_MES=1..12][,SEGUNDO_CICLO_INFANTIL_INICIO_MES=1..12][,GASTOS_GUARDERIA=N][,GASTOS_GUARDERIA_MENSUAL=MM:N;MM-MM:N][,NIF=XXXXXXXXX].
+        add_flag_help: NACIMIENTO=AAAA-MM-DD[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela|guarda_y_custodia_judicial][,INSCRIPCION=AAAA-MM-DD][,ACOGIMIENTO=AAAA-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=MM|MM-MM[;MM...]][,ALTA_POSTERIOR_MES=1..12][,SEGUNDO_CICLO_INFANTIL_INICIO_MES=1..12][,GASTOS_GUARDERIA=N][,GASTOS_GUARDERIA_MENSUAL=MM:N;MM-MM:N][,NIF=XXXXXXXXX].
           Repetible. Ejecuta `aeat config profile descendiente` sin subcomando para
           introducirlos de forma guiada.
         add_help: Añadir uno o varios descendientes al perfil activo.
@@ -3283,8 +3284,8 @@ cli:
       reason_help: Motivo en texto libre que se registra como notas del movimiento
         y como motivo de la decisión de clasificación (visible en `aeat app ledger
         view`), o con una decisión `--reject`.
-      reject_apply_exclusive: '--reject no se puede combinar con --apply: reject registra
-        una sugerencia rechazada, apply una aceptada.'
+      reject_apply_exclusive: '--reject no se puede combinar con --apply: `reject`
+        registra una sugerencia rechazada, `apply` una aceptada.'
       reject_help: Registra un rechazo explícito de la sugerencia del modelo como
         evento de auditoría, sin clasificar la fila (no se puede combinar con --apply).
       saturate_help: 'Satura con IA: selecciona también la categoría de IVA y deriva

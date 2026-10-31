@@ -74,8 +74,8 @@ profile:
       monedas_virtuales_extranjero_above_threshold: Virtual currencies held abroad
         above Modelo 721 threshold
       premio_loteria_gravamen_especial_sin_retencion: Lottery or betting prize subject
-        to the gravamen especial obtained without retención or ingreso a cuenta (Modelo
-        136)
+        to the gravamen especial obtained without withholding or a payment on account
+        (Modelo 136)
       premio_loteria_gravamen_especial_trimestres: Quarters in which such a lottery
         or betting prize was cashed (Modelo 136), as YYYY-nT tokens separated by |
       third_party_transactions_above_347_threshold: In the calendar year the Modelo
