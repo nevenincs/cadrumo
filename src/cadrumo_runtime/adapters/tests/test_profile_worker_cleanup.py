@@ -458,7 +458,11 @@ class _Fixture:
 
         pending = iter(self.endpoints)
 
-        monkeypatch.setattr(profile_worker, "sys", SimpleNamespace(platform="win32", executable=sys.executable))
+        monkeypatch.setattr(
+            profile_worker,
+            "sys",
+            SimpleNamespace(platform="win32", executable=sys.executable, prefix=sys.prefix, base_prefix=sys.prefix),
+        )
 
         monkeypatch.setattr(profile_worker, "version", lambda _: "worker-test")
 
