@@ -8,7 +8,7 @@ related:
   - '[[2026-08-14-test-harness-sanity-successor-adr]]'
 modified: '2026-10-31'
 body_schema: body-v2
-body_hash: 'sha256:097ad1e99c6fc7bbf7610fbb8f8b1772cfdf58564bd694574b27b91f8c83897e'
+body_hash: 'sha256:a7c5e7f9ee6b8989ab54931fe3a91f4194c9c84e2ea562a180b785aa605420d9'
 ---
 
 # `test-suite-budget` plan
@@ -40,7 +40,7 @@ Operator authorization, 2026-10-31: heavy real builds move from the full lane to
 - [ ] `S09` - Remove whole-function and token-level clones across test trees; `src, dev test trees`.
 - [ ] `S10` - Prune redundant tests by per-test coverage and mutation evidence on critical modules; `src, dev test trees`.
 - [ ] `S11` - Add a lane time budget and per-test ceiling so the suite cannot drift back; `justfile, dev/test_runs`.
-- [ ] `S12` - Move heavy real builds from the full lane to a release lane, keeping a fast contract check in the full lane; `justfile, dev/packaging/tests, dev/tests, dev/registry/tests`.
+- [x] `S12` - Move heavy real builds from the full lane to a release lane, keeping a fast contract check in the full lane; `justfile, dev/packaging/tests, dev/tests, dev/registry/tests`.
 - [ ] `S13` - Replace the snapshot embedded in each stored revision with a digest reference and migrate stored revisions, under a new ADR; `src/cadrumo/adapters/persistence/profile/modelos_calculation.py, src/cadrumo/domain/modelos/calculation_revision_rendering.py`.
 - [ ] `S14` - Measure the Defender exclusion on the worktree test temp folder against the same runs without it; `.tmp/, dev/test_runs`.
 - [ ] `S15` - Account for the non-read, non-write I/O of one CLI command by measurement and remove what no invariant justifies; `src/cadrumo, src/cadrumo_runtime, src/cadrumo_client`.
