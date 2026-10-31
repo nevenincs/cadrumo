@@ -77,6 +77,7 @@ entries = [
   { key = "tax_id.leaders.nie", value = "XYZ" },
   { key = "tax_id.leaders.cif", value = "ABCDEFGHJNPQRSUVW" },
   { key = "tax_id.check.nif_letters", value = "TRWAGMYFPDXBNJZSQVHLCKE" },
+  { key = "tax_id.check.nif_modulus", value = "23" },
   { key = "tax_id.check.nie_prefix.X", value = "0" },
   { key = "tax_id.check.nie_prefix.Y", value = "1" },
   { key = "tax_id.check.nie_prefix.Z", value = "2" },

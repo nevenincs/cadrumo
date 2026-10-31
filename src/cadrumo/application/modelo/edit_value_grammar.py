@@ -39,7 +39,9 @@ from .edit_contract import EditModel
 MONEY_FRACTION_DIGITS: Final = 2
 """A euro amount is entered in cents at most; the parser never rounds a finer value."""
 
-MONEY_OPERAND_MAXIMUM: Final = Decimal("999999999999.99")
+_MONEY_INTEGER_DIGITS: Final = 12
+
+MONEY_OPERAND_MAXIMUM: Final = Decimal(10**_MONEY_INTEGER_DIGITS) - Decimal("0.01")
 """The magnitude bound of one hand-entered euro amount, applied to money addresses only.
 
 The manual-override financial-operand declaration of the edit operation states

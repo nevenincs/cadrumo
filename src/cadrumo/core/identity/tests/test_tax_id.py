@@ -60,6 +60,7 @@ def test_kernel_obeys_an_entirely_altered_injected_format() -> None:
         nie_leaders="Q",
         cif_leaders="TU",
         nif_letters="EKCLHVQSZJNBXDPFYMGAWRT",
+        nif_check_modulus=23,
         nie_prefix_substitutions=(("Q", "5"),),
         cif_digit_only_kinds="T",
         cif_letter_only_kinds="U",

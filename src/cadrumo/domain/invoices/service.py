@@ -296,9 +296,7 @@ def _reconciliation_counterparty_matches(invoice: Invoice, transaction: Transact
 
 def _reconciliation_score(*, amount_match: bool, counterparty_match: bool) -> Decimal:
     """Calculate the existing amount and counterparty confidence score."""
-    score = Decimal("0.5") * (1 if amount_match else 0)
-    score += Decimal("0.5") * (1 if counterparty_match else 0)
-    return score
+    return (Decimal(int(amount_match) + int(counterparty_match)) / 2).quantize(Decimal("0.1"))
 
 
 def _suggestion_for_pair(

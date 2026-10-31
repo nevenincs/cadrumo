@@ -38,6 +38,7 @@ entries = [
   { key = "tax_id.leaders.nie", value = "Q" },
   { key = "tax_id.leaders.cif", value = "TU" },
   { key = "tax_id.check.nif_letters", value = "EKCLHVQSZJNBXDPFYMGAWRT" },
+  { key = "tax_id.check.nif_modulus", value = "23" },
   { key = "tax_id.check.nie_prefix.Q", value = "5" },
   { key = "tax_id.check.cif_digit_only_kinds", value = "T" },
   { key = "tax_id.check.cif_letter_only_kinds", value = "U" },

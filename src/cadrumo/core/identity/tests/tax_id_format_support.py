@@ -11,6 +11,7 @@ SPANISH_TAX_ID_FORMAT = SpanishTaxIdFormat(
     nie_leaders="XYZ",
     cif_leaders="ABCDEFGHJNPQRSUVW",
     nif_letters="TRWAGMYFPDXBNJZSQVHLCKE",
+    nif_check_modulus=23,
     nie_prefix_substitutions=(("X", "0"), ("Y", "1"), ("Z", "2")),
     cif_digit_only_kinds="ABEH",
     cif_letter_only_kinds="PQRSNW",

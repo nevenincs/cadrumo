@@ -37,6 +37,7 @@ validated registry authority.
 
 from __future__ import annotations
 
+from calendar import SATURDAY, SUNDAY
 from collections import OrderedDict
 from collections.abc import Callable, Iterable
 from datetime import date, timedelta
@@ -160,9 +161,13 @@ class DeadlineHolidayCoverage(StrEnum):
 # ---------------------------------------------------------------------------
 
 
+_SHORT_TEXT_MAX_LENGTH: Final = 200
+_FIRST_CALENDAR_YEAR: Final = 2000
+_LAST_CALENDAR_YEAR: Final = 2100
+
 _NonEmptyShortString = Annotated[
     str,
-    StringConstraints(strip_whitespace=True, min_length=1, max_length=200),
+    StringConstraints(strip_whitespace=True, min_length=1, max_length=_SHORT_TEXT_MAX_LENGTH),
 ]
 
 
@@ -192,7 +197,7 @@ class HolidayCalendar(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    year: Annotated[int, Field(ge=2000, le=2100)]
+    year: Annotated[int, Field(ge=_FIRST_CALENDAR_YEAR, le=_LAST_CALENDAR_YEAR)]
     boe_ref: _NonEmptyShortString
     boe_url: str | None = None
     national: tuple[Holiday, ...] = Field(default_factory=tuple)
@@ -288,7 +293,7 @@ def holiday_calendar_from_authority(
     unpublished calendar year.  All individual holiday values are then read
     through exact event queries, retaining the authority's provenance.
     """
-    coordinate = date(year, 7, 1)
+    coordinate = date(year, 1, 1)
     publication = _resolve_holiday_publication(year, coordinate, operation=operation)
     boe_ref_value, boe_url_value, verified_value = _publication_fields(publication, year=year)
     territory = _calendar_territory_resolver(operation=operation)
@@ -538,9 +543,9 @@ def _reason_for(
     holidays: Iterable[Holiday],
 ) -> tuple[str, tuple[HolidayJurisdiction, ...], tuple[str, ...]]:
     """Build the structured shift reason for one non-business day."""
-    if candidate.weekday() == 5:
+    if candidate.weekday() == SATURDAY:
         weekend_token = "sabado"
-    elif candidate.weekday() == 6:
+    elif candidate.weekday() == SUNDAY:
         weekend_token = "domingo"
     else:
         weekend_token = ""

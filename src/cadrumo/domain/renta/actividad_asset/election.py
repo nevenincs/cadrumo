@@ -325,7 +325,8 @@ class RenewableDocumentationKind(StrEnum):
     """Letter d): the after-works energy-efficiency certificate of climate or hot-water systems."""
 
 
-_HOURS_PER_DAY = Decimal("24")
+_HOURS_PER_DAY = 24
+_SUM_OF_DIGITS_PERIOD_CAP = 100
 
 _ELECTRICITY_DOCUMENTS = frozenset(
     {
@@ -431,7 +432,7 @@ class ActivityAssetAmortizationElection(CachedIdentityModel):
     authority_class_key: ClassKey | None = Field(default=None, min_length=1, max_length=64)
     linear_coefficient: Share | None = None
     shift_hours_per_day: Decimal | None = None
-    sum_of_digits_period_years: int | None = Field(default=None, ge=1, le=100)
+    sum_of_digits_period_years: int | None = Field(default=None, ge=1, le=_SUM_OF_DIGITS_PERIOD_CAP)
     digit_order: DigitOrder | None = None
     approved_plan: ApprovedAmortizationPlan | None = None
     useful_life: DefiniteUsefulLife | None = None

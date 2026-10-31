@@ -53,6 +53,7 @@ def _require_tax_id_declarations(declarations: Mapping[str, str]) -> str:
         "tax_id.leaders.nie",
         "tax_id.leaders.cif",
         "tax_id.check.nif_letters",
+        "tax_id.check.nif_modulus",
         "tax_id.check.cif_digit_only_kinds",
         "tax_id.check.cif_letter_only_kinds",
         "tax_id.check.cif_letter_table",
@@ -80,6 +81,13 @@ def _tax_id_widths(declarations: Mapping[str, str]) -> tuple[int, int, int]:
     return width, prefixed_width, strip_width
 
 
+def _nif_check_modulus(declarations: Mapping[str, str]) -> int:
+    try:
+        return int(declarations["tax_id.check.nif_modulus"])
+    except (TypeError, ValueError) as exc:
+        raise ValueError(f"{TAX_ID_FORMAT_FACT_ID} NIF check modulus must be a decimal integer") from exc
+
+
 def _nie_prefix_substitutions(declarations: Mapping[str, str]) -> tuple[tuple[str, str], ...]:
     prefix = "tax_id.check.nie_prefix."
     return tuple(
@@ -100,6 +108,7 @@ def tax_id_format_from_declarations(declarations: Mapping[str, str]) -> SpanishT
         nie_leaders=declarations["tax_id.leaders.nie"],
         cif_leaders=declarations["tax_id.leaders.cif"],
         nif_letters=declarations["tax_id.check.nif_letters"],
+        nif_check_modulus=_nif_check_modulus(declarations),
         nie_prefix_substitutions=_nie_prefix_substitutions(declarations),
         cif_digit_only_kinds=declarations["tax_id.check.cif_digit_only_kinds"],
         cif_letter_only_kinds=declarations["tax_id.check.cif_letter_only_kinds"],

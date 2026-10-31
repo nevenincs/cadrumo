@@ -12,11 +12,15 @@ malformed input.  Callers that need the canonical string form use
 from __future__ import annotations
 
 import re
+import string
 from dataclasses import dataclass
 from enum import StrEnum
 
 from ..errors.hierarchy import CadrumoError
 from .nif_iva import normalise_nif_iva
+
+_SHORTEST_WIDTH = 3
+"""A leader, a body character and a check character."""
 
 TAX_ID_FORMAT_CONTEXT = "spanish_tax_id_format"
 
@@ -37,6 +41,7 @@ class SpanishTaxIdFormat:
     nie_leaders: str
     cif_leaders: str
     nif_letters: str
+    nif_check_modulus: int
     nie_prefix_substitutions: tuple[tuple[str, str], ...]
     cif_digit_only_kinds: str
     cif_letter_only_kinds: str
@@ -58,7 +63,7 @@ class SpanishTaxIdFormat:
 
 def _validate_width_declarations(tax_id_format: SpanishTaxIdFormat) -> None:
     if (
-        tax_id_format.width < 3
+        tax_id_format.width < _SHORTEST_WIDTH
         or tax_id_format.country_prefixed_width != tax_id_format.width + tax_id_format.country_prefix_strip_width
     ):
         raise ValueError("Spanish tax-ID format has invalid widths")
@@ -84,19 +89,22 @@ def _validate_required_leader_sets(tax_id_format: SpanishTaxIdFormat) -> None:
 def _validate_nif_check_letters(tax_id_format: SpanishTaxIdFormat) -> None:
     letters = tax_id_format.nif_letters
     if (
-        len(letters) != 23
+        len(letters) != tax_id_format.nif_check_modulus
         or not letters.isascii()
         or not letters.isalpha()
         or not letters.isupper()
         or len(set(letters)) != len(letters)
     ):
-        raise ValueError("Spanish tax-ID format NIF check-letter table must contain 23 unique uppercase ASCII letters")
+        raise ValueError(
+            f"Spanish tax-ID format NIF check-letter table must contain {tax_id_format.nif_check_modulus}"
+            " unique uppercase ASCII letters"
+        )
 
 
 def _validate_cif_check_letters(tax_id_format: SpanishTaxIdFormat) -> None:
     letters = tax_id_format.cif_letter_table
     if (
-        len(letters) != 10
+        len(letters) != len(string.digits)
         or not letters.isascii()
         or not letters.isalpha()
         or not letters.isupper()
