@@ -30,7 +30,6 @@ from ...core.hex import Hex64Str
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...core.tipos_actividad import TipoActividad
-from ...domain.calculations.registry.actividad_asset_disposal_bindings import ELEMENT_ROW_ROUTES
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from ...domain.calculations.registry.errors import RegistryError
@@ -236,21 +235,18 @@ def m100_activity_asset_projection(
     reader = ActivityAssetBajaReader(
         context, operation, period=period, transactions=transactions, resolver_id=resolver_id
     )
-    bajas = tuple(reader.read(revision, history) for revision in disposed)
+    bajas = reader.read_all(disposed, history)
     return ActivityAssetProjection(
         observations=observations,
         diagnostics=(
             *_residence_period_findings(territory, period=period, resolver_id=resolver_id),
             *diagnostics,
-            *(note for baja in bajas for note in baja.notes),
-            *reader.shared_row_findings(bajas),
+            *bajas.notes,
         ),
         disposal_revision_ids=tuple(revision.revision_id for revision in disposed),
         disposal_digests=_disposal_digests(disposed, history, operation=operation),
-        disposal_observations=tuple(item for baja in bajas for item in baja.observations),
-        disposal_rows=tuple(
-            figure for baja in bajas for figure in baja.row_figures if figure.route in ELEMENT_ROW_ROUTES
-        ),
+        disposal_observations=bajas.observations,
+        disposal_rows=bajas.row_figures,
     )
 
 

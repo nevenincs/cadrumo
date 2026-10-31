@@ -90,6 +90,21 @@ def counterpart_operation_catalogue_entries(
     return entries
 
 
+def _active_counterpart_modelos(
+    entries: Mapping[str, str],
+    *,
+    effective_date: date,
+    operation: PinnedAuthorityOperation,
+) -> tuple[str, ...]:
+    """Validate that every counterpart vocabulary has a revision in force."""
+    modelos = tuple(str(match.group(1)) for key in entries if (match := _OPERATION_KINDS_KEY.fullmatch(key)))
+    for modelo in modelos:
+        directory = operation.modelo_directory(modelo)
+        if not any(metadata.contains_date(effective_date) for metadata in directory.revisions):
+            raise ValueError(f"{modelo} has no registry revision in force on {effective_date.isoformat()}")
+    return modelos
+
+
 # Registry authority: selected M347/M349 counterpart declarations are consumed through
 # one generation-pinned operation and the dated mapping fact.
 def _registry_counterpart_catalogue(
@@ -99,11 +114,7 @@ def _registry_counterpart_catalogue(
 ) -> _CounterpartRegistryCatalogue:
     """Resolve counterpart kinds and readiness gates from registry authority."""
     entries = counterpart_operation_catalogue_entries(effective_date, operation=operation)
-    modelos = tuple(match[1] for key in entries if (match := _OPERATION_KINDS_KEY.fullmatch(key)))
-    for modelo in modelos:
-        directory = operation.modelo_directory(modelo)
-        if not any(metadata.contains_date(effective_date) for metadata in directory.revisions):
-            raise ValueError(f"{modelo} has no registry revision in force on {effective_date.isoformat()}")
+    modelos = _active_counterpart_modelos(entries, effective_date=effective_date, operation=operation)
     readiness_modelos = tuple(match[1] for key in entries if (match := _READINESS_KEY.fullmatch(key)))
     if len(readiness_modelos) != 1:
         raise ValueError("counterpart registry mapping must name one form with readiness gates")
