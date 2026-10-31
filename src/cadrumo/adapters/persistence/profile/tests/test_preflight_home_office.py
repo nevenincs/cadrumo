@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import sys
 from collections.abc import Callable, Iterator
-from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 from types import FrameType
@@ -18,16 +17,16 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runti
 from cadrumo.application.ledger.preflight import LedgerPreflightIssueReason, preflight_ledger_tax_readiness
 from cadrumo.application.user_profile.capsule_record import ProfileRecordStore
 from cadrumo.application.user_profile.censo_sync import bound_raw_afectacion_ratio
-from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.categories.spending_category import SpendingCategory
-from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
-from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
-from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
+from cadrumo.domain.transactions.enums import BusinessClassification
+from cadrumo.domain.transactions.models import TransactionCatalogue
 from cadrumo.domain.usage_ratios.model import UsageRatioProfile
 from cadrumo.domain.usage_ratios.service import derive_home_office_ratios_from_censo
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
+
+from .preflight_transaction_support import preflight_transaction
 
 _BUCKET_ID = "22222222-2222-4222-8222-222222222222"
 _HOME_OFFICE_PROFILE_ID = "11111111-1111-4111-8111-111111111111"
@@ -39,59 +38,6 @@ def operation() -> Iterator[PinnedAuthorityOperation]:
     """Expose the published facts and profile schema through one leased operation."""
     with bundled_indexed_authority().operation() as pinned:
         yield pinned
-
-
-def _transaction(
-    provider_id: str,
-    *,
-    direction: TransactionDirection = TransactionDirection.OUTGOING,
-    amount: Decimal = Decimal("121.00"),
-    business_classification: BusinessClassification = BusinessClassification.BUSINESS,
-    business_pct: Decimal | None = None,
-    category_id: str | None = SpendingCategory.from_registry("material_oficina").value,
-    usage_ratio_id: str | None = None,
-) -> Transaction:
-    booked_date = date(2026, 4, 5)
-    raw = RawTransaction(
-        provider_transaction_id=provider_id,
-        booked_date=booked_date,
-        value_date=booked_date,
-        amount=amount,
-        currency="EUR",
-        counterparty="Cliente o proveedor",
-        description=f"ledger row {provider_id}",
-        provenance=RawProvenance(
-            source_path=Path(__file__),
-            source_sha256="c" * 64,
-            source_row_index=1,
-            source_format=SourceFormat.MANUAL,
-            ingested_at=datetime(2026, 4, 6, 12, 0, tzinfo=UTC),
-            provider_name="manual-ledger",
-        ),
-        raw_fields={"source_kind": BindingSourceKind.LEDGER_TRANSACTION.value},
-    )
-    return Transaction.model_validate(
-        {
-            "raw": raw,
-            "direction": direction,
-            "group_label": None,
-            "business_classification": business_classification,
-            "source_jurisdiction": "ES",
-            "business_pct": business_pct,
-            "category_id": category_id,
-            "taxable_base": Decimal("100.00"),
-            "iva_rate": Decimal("0.21"),
-            "iva_amount": Decimal("21.00"),
-            "iva_category": None,
-            "counterparty_country": None,
-            "counterparty_identification_state": None,
-            "irpf_category": None,
-            "usage_ratio_id": usage_ratio_id,
-            "lifecycle_state": TransactionLifecycleState.ACTIVE,
-            "classified_at": datetime(2026, 4, 6, 13, 0, tzinfo=UTC),
-            "classified_by": "manual",
-        },
-    )
 
 
 def _declare_home_office_m2(bucket_id: str, *, operation: PinnedAuthorityOperation) -> None:
@@ -154,7 +100,7 @@ def test_declaring_vivienda_office_facts_clears_the_missing_censo_refusal(
         repository.save(
             TransactionCatalogue.from_transactions(
                 (
-                    _transaction(
+                    preflight_transaction(
                         "row-home-office-instruction",
                         business_classification=BusinessClassification.MIXED,
                         business_pct=Decimal("0.060"),
@@ -203,7 +149,7 @@ def test_preflight_flags_home_office_ratio_without_applied_censo(
         repository.save(
             TransactionCatalogue.from_transactions(
                 (
-                    _transaction(
+                    preflight_transaction(
                         "row-home-office",
                         business_classification=BusinessClassification.MIXED,
                         business_pct=Decimal("0.30"),
@@ -240,7 +186,7 @@ def test_preflight_accepts_home_office_ratio_after_matching_censo_apply(
         repository.save(
             TransactionCatalogue.from_transactions(
                 (
-                    _transaction(
+                    preflight_transaction(
                         "row-home-office-censo",
                         business_classification=BusinessClassification.MIXED,
                         business_pct=Decimal("0.060"),
@@ -279,7 +225,7 @@ def test_preflight_flags_home_office_ratio_that_disagrees_with_applied_censo(
         repository.save(
             TransactionCatalogue.from_transactions(
                 (
-                    _transaction(
+                    preflight_transaction(
                         "row-home-office-stale-censo",
                         business_classification=BusinessClassification.MIXED,
                         business_pct=Decimal("0.30"),
@@ -338,7 +284,7 @@ def test_preflight_flags_a_home_office_category_with_no_usage_ratio_id(
         repository.save(
             TransactionCatalogue.from_transactions(
                 (
-                    _transaction(
+                    preflight_transaction(
                         "row-category-only",
                         business_classification=BusinessClassification.BUSINESS,
                         business_pct=None,
@@ -389,7 +335,7 @@ def test_preflight_stays_silent_for_a_non_home_office_category(
         repository.save(
             TransactionCatalogue.from_transactions(
                 (
-                    _transaction(
+                    preflight_transaction(
                         "row-unrelated",
                         business_classification=BusinessClassification.BUSINESS,
                         business_pct=None,
@@ -443,7 +389,7 @@ def test_preflight_with_home_office_rows_decrypts_the_profile_once(
         repository.save(
             TransactionCatalogue.from_transactions(
                 (
-                    _transaction(
+                    preflight_transaction(
                         "row-home-office-once",
                         business_classification=BusinessClassification.MIXED,
                         business_pct=Decimal("0.060"),
