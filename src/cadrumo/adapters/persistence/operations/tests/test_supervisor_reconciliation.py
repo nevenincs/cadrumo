@@ -184,15 +184,7 @@ def test_reconcile_foreign_expired_lease_orphans_target_without_mutating_foreign
         foreign_path = storage_root / "operation-journals" / f"{foreign_lease.operation_id}.json"
         foreign_before = foreign_path.read_bytes()
         recovered_at = foreign_at + timedelta(minutes=2)
-        recovery = operation_supervisor(
-            registry=registry,
-            journal=journal,
-            leases=leases,
-            operands=operands,
-            owner_id="4" * 64,
-            token="5" * 64,
-            clock=lambda: recovered_at,
-        )
+        recovery = _lapse_settler(journal=journal, leases=leases, operands=operands, at=recovered_at, registry=registry)
 
         terminal = asyncio.run(recovery.reconcile(target_id))
         released = asyncio.run(leases.inspect(scope_ref, target_id, observed_at=recovered_at))
@@ -227,14 +219,8 @@ def test_reconcile_recovers_an_unstarted_expired_entry_with_new_durable_ownershi
             lease_duration=timedelta(minutes=1),
         )
         operation_id = asyncio.run(owner.submit(supervisor_request(), operation_id="3" * 64))
-        recovery = operation_supervisor(
-            registry=registry,
-            journal=journal,
-            leases=leases,
-            operands=operands,
-            owner_id="4" * 64,
-            token="5" * 64,
-            clock=lambda: _NOW + timedelta(minutes=2),
+        recovery = _lapse_settler(
+            journal=journal, leases=leases, operands=operands, at=_NOW + timedelta(minutes=2), registry=registry
         )
 
         recovered = asyncio.run(recovery.reconcile(operation_id))
@@ -287,14 +273,8 @@ def test_reconcile_reenters_only_a_declared_valid_checkpoint(tmp_path: Path) -> 
         )
         operation_id = asyncio.run(owner.submit(supervisor_request(), operation_id="3" * 64))
         waiting = asyncio.run(run_to_settlement(owner, operation_id))
-        recovery = operation_supervisor(
-            registry=registry,
-            journal=journal,
-            leases=leases,
-            operands=operands,
-            owner_id="4" * 64,
-            token="5" * 64,
-            clock=lambda: _NOW + timedelta(minutes=2),
+        recovery = _lapse_settler(
+            journal=journal, leases=leases, operands=operands, at=_NOW + timedelta(minutes=2), registry=registry
         )
 
         async def observe_live_resume() -> tuple[OperationPersistedSnapshot, OperationPersistedSnapshot]:
@@ -354,14 +334,8 @@ def test_resumed_executor_result_reference_settles_the_recovered_operation(tmp_p
         )
         operation_id = asyncio.run(owner.submit(supervisor_request(), operation_id="3" * 64))
         waiting = asyncio.run(run_to_settlement(owner, operation_id))
-        recovery = operation_supervisor(
-            registry=registry,
-            journal=journal,
-            leases=leases,
-            operands=operands,
-            owner_id="4" * 64,
-            token="5" * 64,
-            clock=lambda: _NOW + timedelta(minutes=2),
+        recovery = _lapse_settler(
+            journal=journal, leases=leases, operands=operands, at=_NOW + timedelta(minutes=2), registry=registry
         )
 
         terminal = asyncio.run(recovery.reconcile(operation_id))
@@ -420,14 +394,8 @@ def test_reconcile_refuses_changed_definition_digest_before_reentry(tmp_path: Pa
             interaction_kinds=frozenset({OperationInteractionKind.INPUT}),
             reconciliation_policy=OperationReconciliationPolicy.RESUME_FROM_CHECKPOINT,
         )
-        recovery = operation_supervisor(
-            registry=changed_registry,
-            journal=journal,
-            leases=leases,
-            operands=operands,
-            owner_id="4" * 64,
-            token="5" * 64,
-            clock=lambda: _NOW + timedelta(minutes=2),
+        recovery = _lapse_settler(
+            journal=journal, leases=leases, operands=operands, at=_NOW + timedelta(minutes=2), registry=changed_registry
         )
 
         journal_path = tmp_path / "durable-state" / "operation-journals" / f"{operation_id}.json"
@@ -474,14 +442,8 @@ def test_reconcile_refuses_resume_without_a_declared_valid_checkpoint(tmp_path: 
         )
         operation_id = asyncio.run(owner.submit(supervisor_request(), operation_id="3" * 64))
         abandoned = asyncio.run(_close_host_over_live_executor(owner, operation_id, ResumableIdleExecutor.started))
-        recovery = operation_supervisor(
-            registry=registry,
-            journal=journal,
-            leases=leases,
-            operands=operands,
-            owner_id="4" * 64,
-            token="5" * 64,
-            clock=lambda: _NOW + timedelta(minutes=2),
+        recovery = _lapse_settler(
+            journal=journal, leases=leases, operands=operands, at=_NOW + timedelta(minutes=2), registry=registry
         )
 
         terminal = asyncio.run(recovery.reconcile(operation_id))
@@ -592,14 +554,8 @@ def test_secure_review_publication_and_consumed_continuation_recover_without_rea
 
         operation_id, consumed = asyncio.run(publish_consume_and_schedule())
         persisted = asyncio.run(journal.load(operation_id))
-        recovery = operation_supervisor(
-            registry=registry,
-            journal=journal,
-            leases=leases,
-            operands=operands,
-            owner_id="4" * 64,
-            token="5" * 64,
-            clock=lambda: _NOW + timedelta(minutes=2),
+        recovery = _lapse_settler(
+            journal=journal, leases=leases, operands=operands, at=_NOW + timedelta(minutes=2), registry=registry
         )
 
         async def observe_recovered_continuation() -> tuple[OperationPersistedSnapshot, OperationPersistedSnapshot]:

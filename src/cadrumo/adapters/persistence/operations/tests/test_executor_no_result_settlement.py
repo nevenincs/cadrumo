@@ -50,6 +50,7 @@ from .supervisor_test_support import (
     ResumableReviewExecutor,
     ReviewExecutor,
     _capabilities,
+    _lapse_settler,
     _pending_interaction,
     _response,
     operation_repositories,
@@ -225,14 +226,8 @@ def test_resumed_executor_returning_no_result_settles_failed_with_its_registered
         )
         operation_id = asyncio.run(owner.submit(supervisor_request(), operation_id="3" * 64))
         waiting = asyncio.run(run_to_settlement(owner, operation_id))
-        recovery = operation_supervisor(
-            registry=registry,
-            journal=journal,
-            leases=leases,
-            operands=operands,
-            owner_id="4" * 64,
-            token="5" * 64,
-            clock=lambda: _NOW + timedelta(minutes=2),
+        recovery = _lapse_settler(
+            journal=journal, leases=leases, operands=operands, at=_NOW + timedelta(minutes=2), registry=registry
         )
         terminal = asyncio.run(recovery.reconcile(operation_id))
 

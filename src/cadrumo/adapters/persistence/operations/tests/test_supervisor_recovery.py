@@ -182,15 +182,7 @@ def test_expired_resumable_checkpoint_restarts_through_real_storage_and_replays_
         operation_id = asyncio.run(owner.submit(supervisor_request(), operation_id="3" * 64))
         checkpoint = asyncio.run(run_to_settlement(owner, operation_id))
         recovered_at = _NOW + timedelta(minutes=2)
-        recovery = operation_supervisor(
-            registry=registry,
-            journal=journal,
-            leases=leases,
-            operands=operands,
-            owner_id="4" * 64,
-            token="5" * 64,
-            clock=lambda: recovered_at,
-        )
+        recovery = _lapse_settler(journal=journal, leases=leases, operands=operands, at=recovered_at, registry=registry)
         reloaded_journal, reloaded_leases, _ = operation_repositories(
             storage_root=storage_root, profile_objects=profile.repository
         )
