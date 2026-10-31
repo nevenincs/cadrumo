@@ -1,4 +1,5 @@
 import { useId, useMemo, useRef, useState, type KeyboardEvent } from "react";
+import { PercentEditor } from "@/components/editors/PercentEditor";
 import { Button } from "@/components/ui/button";
 import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
 import {
@@ -9,8 +10,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { FieldError } from "@/components/ui/field";
 import { Icon } from "@/components/ui/icon";
-import { Input } from "@/components/ui/input";
 import { facts } from "@/shell/compose";
 import type {
   ClassifyKind,
@@ -83,7 +84,7 @@ export function ClassifyDialog({
   const shareId = useId();
   const form = useRef<HTMLFormElement>(null);
   const [category, setCategory] = useState<string | null>(null);
-  const [share, setShare] = useState(initialShare);
+  const [share, setShare] = useState(initialShare.replace(/\s*%\s*$/, ""));
   const mixed = kind === "mixed";
   const options = useMemo<ComboboxOption[]>(
     () =>
@@ -181,24 +182,16 @@ export function ClassifyDialog({
               <label htmlFor={shareId} className="text-sm font-medium">
                 {t("desktop.ledger.classify.share")}
               </label>
-              <Input
+              <PercentEditor
                 id={shareId}
+                unit="points"
                 autoFocus
-                inputMode="decimal"
                 value={share}
-                aria-invalid={error ? true : undefined}
-                aria-describedby={`${shareId}-note`}
-                onChange={(event) => setShare(event.target.value)}
+                onChange={setShare}
+                invalid={error ? true : undefined}
+                describedBy={error ? `${shareId}-note` : undefined}
               />
-              <p
-                id={`${shareId}-note`}
-                className="flex items-center gap-1.5 text-sm text-muted-foreground"
-              >
-                {error && (
-                  <Icon name="alert" size="xs" className="text-destructive" />
-                )}
-                {error ?? t("desktop.ledger.classify.share_hint")}
-              </p>
+              <FieldError id={`${shareId}-note`}>{error}</FieldError>
             </div>
           )}
           {asksCategory && (

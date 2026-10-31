@@ -1,16 +1,26 @@
-import { useId, useLayoutEffect, useMemo, useRef, useState } from "react";
+import {
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { TypedField } from "@/components/editors/TypedField";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/components/ui/cn";
 import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
 import type { EditorContext } from "@/components/ui/data-grid";
 import { commitKeyOf, type CommitKey } from "@/components/ui/dataGridModel";
 import { Icon } from "@/components/ui/icon";
-import { inputVariants } from "@/components/ui/input";
 import {
   Popover,
   PopoverAnchor,
   PopoverContent,
 } from "@/components/ui/popover";
+import { formatDay } from "@/shared/dateFormats";
+import type { FieldSpec } from "@/shared/fieldKind";
+import { formatDecimal } from "@/shared/numbers";
 import type { DraftField, StageField } from "../../../shell/ledgerStage";
 import {
   DIRECTIONS,
@@ -31,6 +41,7 @@ import {
   NO_ACCOUNT,
   clearRefusal,
   parseCell,
+  textLimitOf,
   type CellValue,
   type EditKind,
   type EditRefusal,
@@ -53,12 +64,47 @@ const TYPED: ReadonlySet<EditKind> = new Set([
 ]);
 export const isTyped = (kind: EditKind) => TYPED.has(kind);
 
+/** The field a typed cell is: money to the cent, a percentage typed in
+ * points, a day, or a line of text. */
+function specOf(kind: EditKind, field: StageField | DraftField): FieldSpec {
+  switch (kind) {
+    case "amount":
+    case "figure":
+      return { kind: "money" };
+    case "percent":
+      return { kind: "percent", unit: "points" };
+    case "date":
+      return { kind: "date" };
+    default:
+      return { kind: "text", maxLength: textLimitOf(field) };
+  }
+}
+
+/** A suggestion the way the window writes it: the canonical text the grammar
+ * offers, in the language's marks and day order. */
+function suggestionText(
+  locale: string,
+  kind: EditKind,
+  suggestion: string,
+): string {
+  if (kind === "date") return formatDay(locale, suggestion);
+  if (kind === "text" || !/^-?\d+(\.\d+)?$/.test(suggestion)) return suggestion;
+  const figure = formatDecimal(locale, suggestion, { grouping: false });
+  return kind === "percent" ? `${figure}%` : figure;
+}
+
+/** Whether a focus or key target is in a floating part of another editor, a
+ * calendar for one, which is still part of this edit. */
+const inCompanion = (target: EventTarget | null) =>
+  target instanceof Element &&
+  target.closest("[data-slot=popover-content]:not(.ledger-cell-note)");
+
 /**
- * A typed cell editor: the value in the product's grammar, with the
- * grammar's hint, and a refusal that echoes what was typed and keeps the
- * editor open until it is fixed or cancelled. Left by the pointer, a
- * refused value is kept as typed and marked in the cell. A date takes a
- * wider field than its column, laid over the cell.
+ * A typed cell editor: the value in the product's grammar, and a refusal
+ * that echoes what was typed and keeps the editor open until it is fixed or
+ * cancelled. Left by the pointer, a refused value is kept as typed and
+ * marked in the cell. A date takes a wider field than its column, laid over
+ * the cell.
  */
 export function TypedEditor({
   context,
@@ -70,15 +116,16 @@ export function TypedEditor({
   context: EditorContext;
   kind: EditKind;
   field: StageField | DraftField;
-  /** The value as the editor opens with it, in the grammar's spelling. */
+  /** The value as the editor opens with it, in canonical text. */
   value: string;
   /** Whether the cell holds a value now: an empty cell left empty is no
    * clear. */
   stored: boolean;
 }) {
   const t = useStrings();
+  const locale = t.locale ?? "en";
   const id = useId();
-  const input = useRef<HTMLInputElement>(null);
+  const control = useRef<HTMLDivElement>(null);
   const anchor = useRef<HTMLSpanElement>(null);
   const [text, setText] = useState(context.initial ?? value);
   const [error, setError] = useState<EditRefusal | null>(null);
@@ -89,26 +136,29 @@ export function TypedEditor({
   useLayoutEffect(() => {
     if (floating) setLift(anchor.current?.offsetHeight ?? 0);
   }, [floating]);
-  useLayoutEffect(() => {
-    const element = input.current;
+  useEffect(() => {
+    const element = control.current?.querySelector("input");
     if (!element) return;
     element.focus({ preventScroll: true });
     if (context.initial === undefined) element.select();
     else element.setSelectionRange(element.value.length, element.value.length);
   }, [context.initial, lift]);
 
-  /** What the text stages, or why it cannot. */
-  const decide = (): EditCommit | "nothing" => {
-    const parsed = parseCell(kind, field, text, labels);
+  /** What the held text stages, or why it cannot. A percentage is typed in
+   * points and the grammar reads it as such. */
+  const decide = (held: string): EditCommit | "nothing" => {
+    const typed =
+      kind === "percent" && held.trim() !== "" ? `${held.trim()}%` : held;
+    const parsed = parseCell(kind, field, typed, labels);
     if (parsed.kind === "refused")
-      return { kind: "refused", refusal: parsed.refusal };
+      return { kind: "refused", refusal: { ...parsed.refusal, raw: held } };
     if (parsed.kind === "value") return { kind: "value", value: parsed.value };
     if (!stored) return "nothing";
     const refusal = clearRefusal(field);
     return refusal ? { kind: "refused", refusal } : { kind: "clear" };
   };
-  const finish = (via: CommitKey) => {
-    const decided = decide();
+  const finish = (via: CommitKey, held = text) => {
+    const decided = decide(held);
     if (decided === "nothing") {
       done.current = true;
       context.cancel(via !== "pointer");
@@ -116,38 +166,27 @@ export function TypedEditor({
     }
     if (decided.kind === "refused" && via !== "pointer") {
       setError(decided.refusal);
-      input.current?.focus();
+      control.current?.querySelector("input")?.focus();
       return;
     }
     done.current = true;
     context.commit(decided, via);
   };
-  const hint = kind === "text" ? null : t(`desktop.ledger.edit.hint.${kind}`);
-  const message = error ? refusalText(t, error) : hint;
+  const shown = error && {
+    ...error,
+    ...(error.suggestion
+      ? { suggestion: suggestionText(locale, kind, error.suggestion) }
+      : {}),
+  };
+  const message = shown ? refusalText(t, shown) : null;
   const noteId = `${id}-note`;
-  const control = (
-    <input
-      ref={input}
+  const editor = (
+    <div
+      ref={control}
       data-slot="data-grid-editor"
-      aria-label={context.label}
-      aria-describedby={
-        [context.describedBy, message ? noteId : null]
-          .filter(Boolean)
-          .join(" ") || undefined
-      }
-      aria-invalid={error ? true : undefined}
-      inputMode={
-        kind === "amount" || kind === "figure" || kind === "percent"
-          ? "decimal"
-          : undefined
-      }
-      spellCheck={kind === "text" ? undefined : false}
-      value={text}
-      onChange={(event) => {
-        setText(event.target.value);
-        setError(null);
-      }}
+      className={floating ? "w-field" : "h-full w-full"}
       onKeyDown={(event) => {
+        if (!event.currentTarget.contains(event.target as Node)) return;
         const how = commitKeyOf(event);
         if (!how) return;
         event.preventDefault();
@@ -159,8 +198,11 @@ export function TypedEditor({
         }
         finish(how);
       }}
-      onBlur={() => {
-        if (done.current) return;
+      onBlur={(event) => {
+        const next = event.relatedTarget;
+        if (done.current || inCompanion(event.target) || inCompanion(next))
+          return;
+        if (next instanceof Node && event.currentTarget.contains(next)) return;
         if (text === value && context.initial === undefined) {
           done.current = true;
           context.cancel(false);
@@ -168,25 +210,34 @@ export function TypedEditor({
         }
         finish("pointer");
       }}
-      className={cn(
-        inputVariants({ controlSize: "sm" }),
-        "ledger-cell-editor h-full rounded-none border-ring",
-        kind !== "text" && "tabular-nums",
-        floating && "h-control-sm w-field",
-      )}
-    />
+    >
+      <TypedField
+        field={specOf(kind, field)}
+        value={text}
+        onChange={(held) => {
+          setText(held);
+          setError(null);
+        }}
+        onPicked={(picked) => finish("pointer", picked)}
+        aria-label={context.label}
+        describedBy={
+          [context.describedBy, message ? noteId : null]
+            .filter(Boolean)
+            .join(" ") || undefined
+        }
+        invalid={error ? true : undefined}
+        controlSize="sm"
+        className={cn(
+          "ledger-cell-editor rounded-none border-ring",
+          floating ? "h-control-sm" : "h-full",
+        )}
+        autoFocus
+      />
+    </div>
   );
   const note = message ? (
-    <p
-      id={noteId}
-      className={cn(
-        "flex items-start gap-1.5 text-sm",
-        error ? "text-foreground" : "text-muted-foreground",
-      )}
-    >
-      {error && (
-        <Icon name="alert" size="xs" className="mt-0.5 text-destructive" />
-      )}
+    <p id={noteId} className="flex items-start gap-1.5 text-sm text-foreground">
+      <Icon name="alert" size="xs" className="mt-0.5 text-destructive" />
       {message}
       {/* The refusal names the form it would take: one press uses it,
           nothing is guessed silently. */}
@@ -205,7 +256,7 @@ export function TypedEditor({
           }}
         >
           {t("desktop.ledger.edit.refusal.use", {
-            suggestion: error.suggestion,
+            suggestion: shown?.suggestion ?? "",
           })}
         </Button>
       )}
@@ -215,7 +266,7 @@ export function TypedEditor({
     <Popover open>
       <PopoverAnchor asChild>
         <span ref={anchor} className="relative flex h-full w-full">
-          {!floating && control}
+          {!floating && editor}
         </span>
       </PopoverAnchor>
       {(floating || note) && (
@@ -231,7 +282,7 @@ export function TypedEditor({
           onCloseAutoFocus={(event) => event.preventDefault()}
           onEscapeKeyDown={(event) => event.preventDefault()}
         >
-          {floating && control}
+          {floating && editor}
           {note && <div className={floating ? "p-2" : undefined}>{note}</div>}
         </PopoverContent>
       )}

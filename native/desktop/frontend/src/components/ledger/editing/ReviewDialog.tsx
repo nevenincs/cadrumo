@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { CurrencyEditor } from "@/components/editors/CurrencyEditor";
+import { PercentEditor } from "@/components/editors/PercentEditor";
 import { Alert, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -371,7 +373,9 @@ function BlockerFixes({
             const parsed = parsePercent(share);
             if (parsed.kind !== "value") {
               setShareError(
-                t("desktop.ledger.classify.share_refused", { raw: share }),
+                t("desktop.ledger.classify.share_refused", {
+                  raw: share,
+                }),
               );
               return;
             }
@@ -402,16 +406,15 @@ function BlockerFixes({
             }
           }}
         >
-          <Input
+          <PercentEditor
+            unit="points"
             controlSize="sm"
             className="w-24"
-            inputMode="decimal"
             aria-label={t("desktop.ledger.classify.share")}
-            aria-invalid={shareError ? true : undefined}
-            placeholder="50"
+            invalid={shareError ? true : undefined}
             value={share}
-            onChange={(event) => {
-              setShare(event.target.value);
+            onChange={(held) => {
+              setShare(held);
               setShareError(null);
             }}
           />
@@ -564,13 +567,12 @@ function BlockerFixes({
                   });
               }}
             >
-              <Input
+              <CurrencyEditor
                 controlSize="sm"
-                className="w-24 uppercase"
-                maxLength={3}
+                className="w-24"
                 aria-label={t("desktop.ledger.field.currency")}
                 value={currency}
-                onChange={(event) => setCurrency(event.target.value)}
+                onChange={setCurrency}
               />
               <Button type="submit" variant="outline" size="xs">
                 {t("desktop.ledger.apply.fix.set_currency")}

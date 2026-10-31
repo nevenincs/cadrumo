@@ -93,6 +93,10 @@ const TEXT_LIMITS: Partial<Record<StageField, number>> = {
   group_label: 64,
 };
 
+/** The most a text field takes. */
+export const textLimitOf = (field: StageField | DraftField): number =>
+  TEXT_LIMITS[field as StageField] ?? 4096;
+
 /** The columns whose value is a tax fact, which a transfer never takes. */
 const TAX_COLUMNS: ReadonlySet<ColumnId> = new Set([
   "category",
@@ -275,7 +279,7 @@ export function parseCell(
 ): CellParse {
   switch (kind) {
     case "text":
-      return lift(parseLine(raw, TEXT_LIMITS[field as StageField] ?? 4096));
+      return lift(parseLine(raw, textLimitOf(field)));
     case "amount":
       return lift(parseDecimal(raw, AMOUNT_RULE));
     case "figure":

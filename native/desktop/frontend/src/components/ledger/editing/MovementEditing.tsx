@@ -79,7 +79,11 @@ import {
 } from "./editingModel";
 import { choiceLabels, fieldName, lockText, refusalText } from "./editingWords";
 import { CostDialog, PasteDialog } from "./PasteDialog";
-import { formatAmount, formatPercent } from "../../../shared/numbers";
+import {
+  formatAmount,
+  formatPercent,
+  heldDecimal,
+} from "../../../shared/numbers";
 import { formatDay } from "../../../shared/dateFormats";
 
 /** More saves one at a time than this, added by one change, asks first. */
@@ -326,9 +330,9 @@ export function useMovementEditing(input: MovementEditingInput) {
                   value === null
                     ? ""
                     : kind === "percent"
-                      ? (percentOf(value) ?? value)
+                      ? heldDecimal(percentOf(value) ?? value)
                       : kind === "amount" || kind === "figure"
-                        ? copyAmount(value)
+                        ? heldDecimal(copyAmount(value))
                         : value
                 }
                 stored={value !== null && value !== ""}

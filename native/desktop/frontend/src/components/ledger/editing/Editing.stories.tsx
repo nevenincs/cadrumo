@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useEffect, useRef } from "react";
 import { userEvent, waitFor } from "storybook/test";
+import type { EditorContext } from "@/components/ui/data-grid";
 import {
   STORY_READER,
   useLedgerPort,
@@ -11,11 +12,12 @@ import type { LedgerShape } from "@/dev/ledgerFixture";
 import type { StageCell } from "../../../shell/ledgerStage";
 import { PausedBanner, usePagePause, WritePauseContext } from "../WritePause";
 import { useSealedMovements } from "../useSealedMovements";
+import { TypedEditor } from "./CellEditor";
 import { ChangesTray } from "./ChangesTray";
 import { LeaveDialog } from "./LeaveDialog";
 import { useLedgerEditing } from "./LedgerEditing";
 import { PasteDialog } from "./PasteDialog";
-import { stageTally, type PastePlan } from "./editingModel";
+import { stageTally, type EditKind, type PastePlan } from "./editingModel";
 
 // What is staged and not yet saved: the tray at the foot of the page, the
 // review that checks it against the ledger and saves it, the guard before
@@ -240,3 +242,79 @@ export const PasteRefusedCells = paste({
   blanks: 1,
 });
 export const PasteNothingChanges = paste({ changes: 0, blanks: 4 });
+
+// A cell open for typing, one story for each kind of typed cell. The refused
+// ones are typed into and committed with Enter, so the refusal shows.
+const cellContext = (label: string): EditorContext => ({
+  key: "row",
+  column: label,
+  label,
+  commit: noop,
+  cancel: noop,
+});
+
+const cell = (
+  kind: EditKind,
+  field: "description" | "amount" | "booked_date" | "iva_rate",
+  label: string,
+  value: string,
+  typed?: string,
+): StoryObj => ({
+  render: (_args, { globals }) => (
+    <div className="grid h-full content-start p-8">
+      <div
+        className="relative h-control-sm w-48"
+        lang={String(globals.locale ?? "en")}
+      >
+        <TypedEditor
+          context={cellContext(label)}
+          kind={kind}
+          field={field}
+          value={value}
+          stored={value !== ""}
+        />
+      </div>
+    </div>
+  ),
+  ...(typed === undefined
+    ? {}
+    : {
+        play: async ({ canvasElement }) => {
+          const input = await waitFor(() => {
+            const found = canvasElement.querySelector<HTMLInputElement>(
+              ".ledger-cell-editor",
+            );
+            if (!found) throw new Error("the cell is not open yet");
+            return found;
+          });
+          await userEvent.clear(input);
+          await userEvent.type(input, `${typed}{Enter}`);
+        },
+      }),
+});
+
+export const CellText = cell("text", "description", "Description", "Rent");
+export const CellAmount = cell("amount", "amount", "Amount", "1234.5");
+export const CellDate = cell("date", "booked_date", "Booked", "2026-10-23");
+export const CellPercent = cell("percent", "iva_rate", "IVA rate", "21");
+export const CellAmountRefused = cell(
+  "amount",
+  "amount",
+  "Amount",
+  "1234.5",
+  "12.345",
+);
+export const CellDateRefused = cell(
+  "date",
+  "booked_date",
+  "Booked",
+  "2026-10-23",
+  "2026-13-45",
+);
+export const CellPercentRefused = cell(
+  "percent",
+  "iva_rate",
+  "IVA rate",
+  "21",
+  "150",
+);

@@ -1,8 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
-import { userEvent, waitFor } from "storybook/test";
+import { expect, fn, userEvent, waitFor } from "storybook/test";
 import { STORY_PERIOD, useLedgerPort, useLedgerRead } from "@/dev/LedgerStage";
 import type { Readiness } from "../../../shell/ledgerWindow";
+import { parsePercent } from "../../../shell/ledgerGrammar";
 import { useStrings } from "../../../shell/strings";
 import { periodText } from "../ledgerWords";
 import { ClassifyDialog } from "./ClassifyDialog";
@@ -248,6 +249,34 @@ export const ClassifyMixedShareRefused = classify({
   initialShare: "140",
   error: "A share is between 0 and 100.",
 });
+const staged = fn();
+export const ClassifyMixedShareTyped: StoryObj = {
+  render: () => (
+    <Classify
+      kind="mixed"
+      movements={3}
+      split={{ expenses: 0, income: 3 }}
+      onStage={staged}
+    />
+  ),
+  play: async () => {
+    staged.mockClear();
+    const share = await waitFor(() => {
+      const found = document.body.querySelector<HTMLInputElement>(
+        ".ledger-classify input",
+      );
+      if (!found) throw new Error("the share is not drawn yet");
+      return found;
+    });
+    await userEvent.type(share, "50");
+    await userEvent.click(
+      document.body.querySelector<HTMLElement>(".ledger-classify-stage")!,
+    );
+    await waitFor(() => expect(staged).toHaveBeenCalledWith({ share: "50" }));
+    // The page reads that answer with the grammar, as it did before.
+    expect(parsePercent("50")).toEqual({ kind: "value", value: "0.5" });
+  },
+};
 export const ClassifyPersonal = classify({
   kind: "personal",
   overwritten: 3,
