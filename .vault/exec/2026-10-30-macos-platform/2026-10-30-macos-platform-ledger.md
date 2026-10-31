@@ -5,7 +5,7 @@ tags:
 date: '2026-10-30'
 modified: '2026-10-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:f80ab2da1240f033bef401cdf706938f2b5114774860e1c52100a50fb5a5e3af'
+body_hash: 'sha256:fcaa552b04c8421f3c8039382e7b2f2037616ed2d3d4211c80c2c7f625681ac5'
 related:
   - "[[2026-10-30-macos-platform-plan]]"
 ---
@@ -63,6 +63,80 @@ src/cadrumo/core/tests/test_output_dir_state_root.py`
 - `S06` `verify:` `codesign --verify --strict --deep Cadrumo.app` -> `pass`
 - `S06` `verify:` `open -n Cadrumo.app (window opens, LaunchServices md.neve.cadrumo)` -> `pass`
 - `S06` `by:` `vaultspec-high-executor`
+- `S01` `M` `.gitignore
+dev/packaging/native/platforms/posix.py
+dev/packaging/native/platforms/tests/test_posix.py
+native/cmake/BinaryDirectory.cmake
+native/cmake/BuildLog.cmake
+native/cmake/BuildPaths.cmake
+native/CONTRACT.md`
+- `S01` `verify:` `cmake --preset macos-arm64 with the macos-arm64 user-preset inputs` -> `pass`
+- `S04` `M` `native/CMakeLists.txt
+native/desktop/scripts/backend-snapshot.mjs
+native/desktop/src-tauri/Cargo.toml
+native/desktop/src-tauri/src/agent/person.rs
+native/desktop/src-tauri/src/agent/supervisor.rs
+native/desktop/src-tauri/src/app.rs
+native/desktop/src-tauri/src/environment.rs
+native/desktop/src-tauri/src/launch.rs
+native/desktop/src-tauri/src/manager.rs
+native/desktop/src-tauri/src/manager/tests.rs
+native/desktop/src-tauri/src/role.rs
+native/desktop/src-tauri/src/shell/settle.rs
+native/desktop/src-tauri/src/shell/sign_in/mod.rs
+native/desktop/src-tauri/src/shell/sign_in/process.rs
+native/desktop/src-tauri/src/shell/single_instance/mod.rs
+native/desktop/src-tauri/src/shell/single_instance/posix.rs
+native/desktop/src-tauri/src/shell/user_profile.rs
+native/desktop/tests/backend-snapshot.test.mjs
+native/interpreter_host/build.rs
+native/interpreter_host/Cargo.toml
+native/interpreter_host/src/lib.rs
+native/interpreter/posix/host.c
+native/manager/src/macos.rs
+native/manager/src/macos/desktop_host.rs
+native/manager/src/macos/ipc.rs
+native/manager/src/main.rs`
+- `S04` `verify:` `desktop GUI launch on macOS: window, single-instance handoff, runtime ready, clean Cmd+Q` -> `pass`
+- `S08` `M` `native/application/src/canonical_json.rs
+native/application/src/lib.rs
+native/application/src/runtime_client.rs
+native/application/src/view_stream.rs
+native/application/src/view_stream/attach.rs
+native/application/src/view_stream/lane.rs
+native/desktop/src-tauri/src/agent/person.rs
+native/desktop/src-tauri/src/agent/recovery.rs
+native/desktop/src-tauri/src/agent/runner.rs
+native/desktop/src-tauri/src/app.rs
+native/desktop/src-tauri/src/main.rs
+native/desktop/src-tauri/src/shell/sign_in/mod.rs
+native/desktop/src-tauri/src/shell/sign_in/process.rs
+native/desktop/src-tauri/src/shell/sign_in/watch.rs
+native/desktop/src-tauri/src/startup_logging.rs
+native/desktop/src-tauri/src/terminal/console.rs
+native/desktop/src-tauri/src/terminal/session.rs
+native/desktop/src-tauri/src/terminal/tests.rs
+native/platform/src/account.rs
+native/platform/src/keychain.rs
+native/platform/src/keychain/tests.rs
+native/platform/src/lib.rs
+native/platform/src/process_scope.rs
+native/platform/src/runtime_connect.rs
+native/platform/src/runtime_pipe.rs
+native/platform/src/runtime_socket.rs
+native/platform/src/runtime_socket/tests.rs
+native/platform/src/transport.rs
+src/cadrumo_runtime/adapters/macos_process.py
+src/cadrumo_runtime/adapters/service_verification.py
+src/cadrumo_runtime/adapters/tests/test_macos_process.py
+src/cadrumo_runtime/adapters/tests/test_macos_worker_containment.py
+src/cadrumo_runtime/adapters/tests/test_worker_storage_environment.py
+src/cadrumo_runtime/adapters/worker_environment.py
+src/cadrumo_runtime/host/desktop_holder_identity.py
+src/cadrumo_runtime/host/tests/test_desktop_holder_ancestry.py
+src/cadrumo_runtime/host/tests/test_desktop_window_holder_macos.py
+src/cadrumo_runtime/host/tests/test_desktop_window_holder.py`
+- `S08` `verify:` `dev/runtime_lifecycle/native_client_live.py against the real Python runtime on macOS` -> `pass`
 
 ## Notes
 

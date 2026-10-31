@@ -55,6 +55,9 @@ tokio = { version = "1", features = ["test-util"] }
 cadrumo-manager = { path = "../../manager" }
 cadrumo-platform = { path = "../../platform", features = ["webview2"] }
 cadrumo-installer = { path = "../../installer" }
+
+[target.'cfg(any(windows, unix))'.dependencies]
+# Every role the binary runs is hosted by the platform's linked interpreter host.
 cadrumo-interpreter-host = { path = "../../interpreter_host" }
 
 [target.'cfg(target_os = "macos")'.dependencies]

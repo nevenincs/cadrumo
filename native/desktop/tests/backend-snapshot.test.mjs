@@ -170,9 +170,11 @@ function crates(t) {
   for (const entry of ["Cargo.lock", "build.rs"])
     writeFileSync(join(native, "desktop/src-tauri", entry), entry);
   mkdirSync(join(native, "interpreter/windows"), { recursive: true });
+  mkdirSync(join(native, "interpreter/posix"), { recursive: true });
   for (const source of [
     "interpreter/windows/host.manifest",
     "interpreter/windows/host.c",
+    "interpreter/posix/host.c",
     "interpreter/launch_guard.h",
     "interpreter/launch_profile.h",
   ])

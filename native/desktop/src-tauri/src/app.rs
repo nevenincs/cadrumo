@@ -10,7 +10,10 @@ use cadrumo_application::{
     diagnostics::{Diagnostics, EventKind, HostStage},
     error::application::{ApplicationError, ErrorCode, Operation, Result},
 };
-use std::{collections::BTreeSet, sync::Arc};
+use std::{
+    collections::BTreeSet,
+    sync::{Arc, OnceLock},
+};
 use tauri::{
     Manager, Runtime,
     http::HeaderMap,
@@ -270,14 +273,37 @@ pub fn run(
             ApplicationError::new(ErrorCode::WebviewFailed, Operation::Webview).caused_by(e)
         })?;
     let handle = app.handle().clone();
-    let code = app.run_return(move |_, event| {
-        if matches!(event, tauri::RunEvent::ExitRequested { .. }) {
+    // The application can end without returning from the run loop: on macOS a Quit
+    // terminates the process right after the loop reports its exit. Shutdown therefore
+    // runs when the loop reports its exit, once, and the return path reuses its outcome.
+    let shutdown: Arc<OnceLock<Result<()>>> = Arc::new(OnceLock::new());
+    let settle = {
+        let startup = startup.clone();
+        let shutdown = shutdown.clone();
+        move |handle: &tauri::AppHandle| {
+            shutdown
+                .get_or_init(|| {
+                    startup.cancel();
+                    tauri::async_runtime::block_on(startup.settle());
+                    close_clients_and_supervision(handle)
+                })
+                .clone()
+        }
+    };
+    let exiting = settle.clone();
+    let code = app.run_return(move |handle, event| match event {
+        tauri::RunEvent::ExitRequested { .. } => {
             diagnostics.host_event(EventKind::HostExitRequested, HostStage::Shutdown);
         }
+        tauri::RunEvent::Exit => {
+            // The process may end before the failure could be returned.
+            if let Err(error) = exiting(handle) {
+                diagnostics.failure(error);
+            }
+        }
+        _ => {}
     });
-    startup.cancel();
-    tauri::async_runtime::block_on(startup.settle());
-    close_clients_and_supervision(&handle)?;
+    settle(&handle)?;
     if startup.failed() {
         return Ok(1);
     }

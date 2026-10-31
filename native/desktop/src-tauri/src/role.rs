@@ -22,7 +22,7 @@ pub fn dispatch() -> Option<i32> {
     })
 }
 
-#[cfg(windows)]
+#[cfg(any(windows, unix))]
 fn run(role: Role, forwarded: &[OsString]) -> i32 {
     let hosted = role.hosted();
     let Ok(executable) = std::env::current_exe() else {
@@ -37,7 +37,7 @@ fn run(role: Role, forwarded: &[OsString]) -> i32 {
     .unwrap_or_else(|| refuse(ErrorCode::InvalidArguments))
 }
 
-#[cfg(not(windows))]
+#[cfg(not(any(windows, unix)))]
 fn run(_: Role, _: &[OsString]) -> i32 {
     refuse(ErrorCode::UnsupportedPlatform)
 }
