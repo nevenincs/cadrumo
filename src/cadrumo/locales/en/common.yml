@@ -1099,6 +1099,7 @@ desktop:
       next_month: Next month
       open: Choose date
       previous_month: Previous month
+      refused: “{raw}” isn’t a date.
       year: Year
   error:
     internal: An internal error occurred. Open Logs for details.
@@ -2262,11 +2263,16 @@ desktop:
         date_not_iso: '“{raw}”: write the date year first, {suggestion}.'
         exponent: '“{raw}” is written as a power of ten: write the digits.'
         grouping: '“{raw}” groups thousands: write {suggestion}.'
+        iban_check: This IBAN has a wrong digit.
         line_break: '“{raw}” holds a tab or line break: keep it on one line.'
         locked: Not editable here
         needs_share: '“{raw}”: Mixed needs a business share, such as Mixed 50%.'
+        not_a_bic: This isn’t a BIC.
+        not_a_country: “{raw}” isn’t a two-letter country code.
+        not_a_currency: “{raw}” isn’t a three-letter currency code.
         not_a_date: '“{raw}” is not a date: write 2026-10-05.'
         not_a_number: “{raw}” is not a number.
+        not_an_iban: This isn’t an IBAN.
         percent_above_100: “{raw}” is above 100%.
         percent_as_fraction: '“{raw}” looks like a fraction: write {suggestion} for
           {suggestion}%.'
@@ -4461,6 +4467,7 @@ desktop:
     checking: Checking your sign-in…
     choose_profile: Choose a profile
     dismiss: Not now
+    hide_code: Hide code
     hide_password: Hide password
     install_machine_permission: Installing for all users requires administrator permission.
     install_machine_services: Install for all users
@@ -4501,6 +4508,7 @@ desktop:
       runtime_unavailable: Cadrumo's background services aren't running.
       throttled: Too many attempts. You can try again in {seconds} s.
     services_recovered: Background services are ready. Checking sign-in…
+    show_code: Show code
     show_password: Show password
     signed_out_lead: Sign in to open your workspace.
     start_services: Start background services

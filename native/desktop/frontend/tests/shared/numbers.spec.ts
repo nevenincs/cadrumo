@@ -1,11 +1,18 @@
 import { expect, test } from "@playwright/test";
+import { readFileSync } from "node:fs";
 import {
   formatAmount,
   formatCount,
   formatDecimal,
   formatPercent,
+  heldDecimal,
   marksOf,
+  readLocaleDecimal,
 } from "../../src/shared/numbers";
+import {
+  parseDecimal,
+  parseFractionPercent,
+} from "../../src/shell/ledgerGrammar";
 
 const NBSP = " ";
 const LOCALES = ["en", "es", "ca", "hu"] as const;
@@ -233,4 +240,77 @@ test("marks are the locale's own", () => {
   expect(marksOf("es")).toEqual({ group: ".", decimal: "," });
   expect(marksOf("ca")).toEqual({ group: ".", decimal: "," });
   expect(marksOf("hu")).toEqual({ group: NBSP, decimal: "," });
+});
+
+// Each row was written by the backend's own reader, and
+// `test_edit_number_table.py` holds that reader to it.
+const READINGS = JSON.parse(
+  readFileSync(
+    new URL("./locale-decimal-readings.json", import.meta.url),
+    "utf8",
+  ),
+) as ({ lexeme: string } & Record<(typeof LOCALES)[number], string | null>)[];
+
+test("typed numbers read as the backend reads them", () => {
+  expect(READINGS.length).toBeGreaterThan(50);
+  for (const row of READINGS)
+    for (const locale of LOCALES)
+      expect(
+        readLocaleDecimal(locale, row.lexeme),
+        `${JSON.stringify(row.lexeme)} in ${locale}`,
+      ).toBe(row[locale]);
+});
+
+test("reading settles what a text alone cannot", () => {
+  // Written out from the rule, not from the table.
+  expect(readLocaleDecimal("es", "1,234")).toBe("1.234");
+  expect(readLocaleDecimal("es", "1.234")).toBeNull();
+  expect(readLocaleDecimal("en", "1.234")).toBe("1.234");
+  expect(readLocaleDecimal("en", "1,234")).toBeNull();
+  expect(readLocaleDecimal("hu", "1 234,5")).toBe("1234.5");
+  expect(readLocaleDecimal("es", "1 234,5")).toBeNull();
+  expect(readLocaleDecimal("es", "1,000")).toBe("1.000");
+  expect(readLocaleDecimal("en", "9007199254740993.123456")).toBe(
+    "9007199254740993.123456",
+  );
+});
+
+test("a read two-way decimal passes the grammar and an unread one does not", () => {
+  const six = { decimals: 6, zero: true };
+  const cents = { decimals: 2, zero: true };
+  expect(parseDecimal(heldDecimal("1.234"), six)).toEqual({
+    kind: "value",
+    value: "1.234",
+  });
+  expect(parseDecimal("1.234", six)).toMatchObject({
+    refusal: { key: "ambiguous_grouping" },
+  });
+  // In Spanish `1,000` is one, typed to three places: an amount refuses it
+  // rather than turning a thousand into one.
+  expect(parseDecimal(heldDecimal("1.000"), cents)).toMatchObject({
+    refusal: { key: "too_many_decimals", limit: 2 },
+  });
+  expect(heldDecimal("1234.5")).toBe("1234.5");
+  expect(heldDecimal("0.333")).toBe("0.333");
+});
+
+test("a fraction percent checks what the editor holds", () => {
+  expect(parseFractionPercent("0.21")).toEqual({
+    kind: "value",
+    value: "0.21",
+  });
+  expect(parseFractionPercent("")).toEqual({ kind: "empty" });
+  expect(parseFractionPercent("1")).toEqual({ kind: "value", value: "1" });
+  expect(parseFractionPercent("1.5")).toMatchObject({
+    refusal: { key: "percent_above_100" },
+  });
+  expect(parseFractionPercent("1.234")).toMatchObject({
+    refusal: { key: "ambiguous_grouping" },
+  });
+  expect(parseFractionPercent("0.1234567")).toMatchObject({
+    refusal: { key: "too_many_decimals" },
+  });
+  expect(parseFractionPercent("abc")).toMatchObject({
+    refusal: { key: "not_a_number" },
+  });
 });

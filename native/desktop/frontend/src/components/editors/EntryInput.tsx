@@ -12,6 +12,13 @@ export type EntryReading = {
   typed(value: string): string;
 };
 
+/** For text with nothing to read: the value is what was typed. */
+export const PLAIN_READING: EntryReading = {
+  read: (typed) => typed,
+  shown: (value) => value,
+  typed: (value) => value,
+};
+
 /**
  * The control under every text editor: it shows the held value in the window's
  * language and hands back canonical text at each keystroke, so a host that
@@ -35,7 +42,7 @@ export function EntryInput({
   ...native
 }: EditorProps & {
   reading: EntryReading;
-  type?: "text" | "email" | "tel" | "url";
+  type?: "text" | "email" | "tel" | "url" | "password";
 }) {
   const list = useId();
   const [entry, setEntry] = useState<{ text: string; sent: string } | null>(

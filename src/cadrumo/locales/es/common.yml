@@ -1138,6 +1138,7 @@ desktop:
       next_month: Mes siguiente
       open: Elige la fecha
       previous_month: Mes anterior
+      refused: “{raw}” no es una fecha.
       year: Año
   error:
     internal: Se ha producido un error interno. Abre los registros para ver los detalles.
@@ -2302,13 +2303,18 @@ desktop:
         date_not_iso: '«{raw}»: escribe la fecha empezando por el año, {suggestion}.'
         exponent: '«{raw}» está en notación exponencial: escribe las cifras.'
         grouping: '«{raw}» separa los miles: escribe {suggestion}.'
+        iban_check: Este IBAN tiene un dígito incorrecto.
         line_break: '«{raw}» contiene un tabulador o un salto de línea: déjalo en
           una línea.'
         locked: No se edita aquí
         needs_share: '«{raw}»: Mixto necesita una parte profesional, como Mixto 50
           %.'
+        not_a_bic: Esto no es un BIC.
+        not_a_country: “{raw}” no es un código de país de dos letras.
+        not_a_currency: “{raw}” no es un código de moneda de tres letras.
         not_a_date: '«{raw}» no es una fecha: escribe 2026-10-05.'
         not_a_number: «{raw}» no es un número.
+        not_an_iban: Esto no es un IBAN.
         percent_above_100: «{raw}» supera el 100 %.
         percent_as_fraction: '«{raw}» parece una fracción: escribe {suggestion} para
           el {suggestion} %.'
@@ -4536,6 +4542,7 @@ desktop:
     checking: Comprobando tu sesión…
     choose_profile: Elige un perfil
     dismiss: Ahora no
+    hide_code: Oculta el código
     hide_password: Ocultar la contraseña
     install_machine_permission: La instalación para todos los usuarios requiere permisos
       de administrador.
@@ -4579,6 +4586,7 @@ desktop:
       throttled: Demasiados intentos. Podrás volver a intentarlo en {seconds} s.
     services_recovered: Los servicios en segundo plano están listos. Comprobando el
       inicio de sesión…
+    show_code: Muestra el código
     show_password: Mostrar la contraseña
     signed_out_lead: Inicia sesión para abrir tu espacio de trabajo.
     start_services: Iniciar servicios en segundo plano

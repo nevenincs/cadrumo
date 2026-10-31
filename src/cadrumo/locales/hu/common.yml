@@ -1112,6 +1112,7 @@ desktop:
       next_month: Következő hónap
       open: Válassz dátumot
       previous_month: Előző hónap
+      refused: „{raw}” nem dátum.
       year: Év
   error:
     internal: Belső hiba történt. A részleteket a naplóban találod.
@@ -2289,11 +2290,16 @@ desktop:
         date_not_iso: '„{raw}”: évvel kezdve írd a dátumot: {suggestion}.'
         exponent: '„{raw}” hatványalakban van: írd ki a számjegyeket.'
         grouping: '„{raw}” ezreseket tagol: írd így: {suggestion}.'
+        iban_check: Ebben az IBAN-ban hibás egy számjegy.
         line_break: '„{raw}” tabulátort vagy sortörést tartalmaz: maradjon egy sorban.'
         locked: Itt nem szerkeszthető
         needs_share: '„{raw}”: a Vegyes üzleti arányt kér, például Vegyes 50%.'
+        not_a_bic: Ez nem BIC.
+        not_a_country: „{raw}” nem kétbetűs országkód.
+        not_a_currency: „{raw}” nem hárombetűs pénznemkód.
         not_a_date: '„{raw}” nem dátum: írd így: 2026-10-05.'
         not_a_number: „{raw}” nem szám.
+        not_an_iban: Ez nem IBAN.
         percent_above_100: „{raw}” több mint 100%.
         percent_as_fraction: '„{raw}” törtnek tűnik: írj {suggestion}-t a {suggestion}%-hoz.'
         period_unknown: „{raw}” nem időszak.
@@ -4514,6 +4520,7 @@ desktop:
     checking: A bejelentkezésed ellenőrzése…
     choose_profile: Válassz profilt
     dismiss: Most nem
+    hide_code: Rejtsd el a kódot
     hide_password: Jelszó elrejtése
     install_machine_permission: A minden felhasználóra érvényes telepítéshez rendszergazdai
       engedély szükséges.
@@ -4554,6 +4561,7 @@ desktop:
       runtime_unavailable: A Cadrumo háttérszolgáltatásai nem futnak.
       throttled: Túl sok próbálkozás. {seconds} mp múlva próbálhatod újra.
     services_recovered: A háttérszolgáltatások készen állnak. Bejelentkezés ellenőrzése…
+    show_code: Mutasd a kódot
     show_password: Jelszó megjelenítése
     signed_out_lead: Jelentkezz be a munkaterületed megnyitásához.
     start_services: Háttérszolgáltatások indítása

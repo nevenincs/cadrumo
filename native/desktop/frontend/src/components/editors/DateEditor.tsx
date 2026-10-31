@@ -28,9 +28,16 @@ import { useStrings } from "@/shell/strings";
 export function DateEditor({
   min,
   max,
+  onPicked,
   className,
   ...editor
-}: EditorProps & { min?: string; max?: string }) {
+}: EditorProps & {
+  min?: string;
+  max?: string;
+  /** Called after a day is picked from the calendar, which also calls
+   * `onChange`. A grid cell commits here. */
+  onPicked?(iso: string): void;
+}) {
   const t = useStrings();
   const locale = t.locale ?? "en";
   const [open, setOpen] = useState(false);
@@ -80,6 +87,7 @@ export function DateEditor({
           onSelect={(iso) => {
             editor.onChange(iso);
             setOpen(false);
+            onPicked?.(iso);
           }}
           labels={{
             previousMonth: t("desktop.editor.date.previous_month"),

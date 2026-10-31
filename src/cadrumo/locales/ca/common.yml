@@ -1132,6 +1132,7 @@ desktop:
       next_month: Mes següent
       open: Tria la data
       previous_month: Mes anterior
+      refused: “{raw}” no és una data.
       year: Any
   error:
     internal: S'ha produït un error intern. Obre els registres per veure'n els detalls.
@@ -2307,12 +2308,17 @@ desktop:
         date_not_iso: '«{raw}»: escriu la data començant per l''any, {suggestion}.'
         exponent: '«{raw}» està en notació exponencial: escriu les xifres.'
         grouping: '«{raw}» separa els milers: escriu {suggestion}.'
+        iban_check: Aquest IBAN té un dígit incorrecte.
         line_break: '«{raw}» conté un tabulador o un salt de línia: deixa-ho en una
           línia.'
         locked: No s'edita aquí
         needs_share: '«{raw}»: Mixt necessita una part professional, com Mixt 50 %.'
+        not_a_bic: Això no és un BIC.
+        not_a_country: “{raw}” no és un codi de país de dues lletres.
+        not_a_currency: “{raw}” no és un codi de moneda de tres lletres.
         not_a_date: '«{raw}» no és una data: escriu 2026-10-05.'
         not_a_number: «{raw}» no és un número.
+        not_an_iban: Això no és un IBAN.
         percent_above_100: «{raw}» supera el 100 %.
         percent_as_fraction: '«{raw}» sembla una fracció: escriu {suggestion} per
           al {suggestion} %.'
@@ -4537,6 +4543,7 @@ desktop:
     checking: S'està comprovant la teva sessió…
     choose_profile: Tria un perfil
     dismiss: Ara no
+    hide_code: Amaga el codi
     hide_password: Amaga la contrasenya
     install_machine_permission: La instal·lació per a tots els usuaris requereix permisos
       d’administrador.
@@ -4580,6 +4587,7 @@ desktop:
       throttled: Massa intents. Podràs tornar-ho a provar d'aquí a {seconds} s.
     services_recovered: Els serveis en segon pla estan preparats. S’està comprovant
       l’inici de sessió…
+    show_code: Mostra el codi
     show_password: Mostra la contrasenya
     signed_out_lead: Inicia la sessió per obrir el teu espai de treball.
     start_services: Inicia els serveis en segon pla

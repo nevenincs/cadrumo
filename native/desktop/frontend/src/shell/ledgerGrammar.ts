@@ -4,6 +4,7 @@
 // it could be read two ways. A refusal is a key and the raw text, never a
 // sentence: the page says it in the person's language.
 
+import { isTwoWayDecimal } from "../shared/numbers";
 import type { PublicPeriod } from "./ledger";
 
 export type GrammarRefusalKey =
@@ -25,7 +26,12 @@ export type GrammarRefusalKey =
   | "year_not_a_number"
   | "year_out_of_range"
   | "period_unknown"
-  | "line_break";
+  | "line_break"
+  | "not_an_iban"
+  | "iban_check"
+  | "not_a_bic"
+  | "not_a_country"
+  | "not_a_currency";
 
 /** Why a typed value was refused. `suggestion` is the canonical text the
  * person most likely meant, where one reading is certain; `limit` is the
@@ -54,9 +60,6 @@ const value = <T>(found: T): Parsed<T> => ({ kind: "value", value: found });
 /** The longest decimal text the product's contracts take. */
 const DECIMAL_TEXT_MAX = 128;
 const PLAIN = /^\d+(\.\d+)?$/;
-// A dot and exactly three digits after a lead that could open a thousands
-// run: `1.000` is one thousand in Spanish and one in English.
-const AMBIGUOUS = /^[1-9]\d{0,2}\.\d{3}$/;
 
 // ---- Exact decimal arithmetic over canonical text ------------------------
 
@@ -192,7 +195,7 @@ export function parseDecimal(raw: string, rule: DecimalRule): Parsed<string> {
   if (text.length > DECIMAL_TEXT_MAX)
     return refuse("too_long", raw, { limit: DECIMAL_TEXT_MAX });
   if (!PLAIN.test(text)) return shapeRefusal(text, raw);
-  if (AMBIGUOUS.test(text)) return refuse("ambiguous_grouping", raw);
+  if (isTwoWayDecimal(text)) return refuse("ambiguous_grouping", raw);
   const decimals = text.split(".")[1]?.length ?? 0;
   if (decimals > rule.decimals)
     return refuse("too_many_decimals", raw, { limit: rule.decimals });
@@ -242,6 +245,22 @@ export function parsePercent(raw: string): Parsed<string> {
       suggestion: shiftDecimal(text, 2)!,
     });
   return value(shiftDecimal(text, -2)!);
+}
+
+/** What a percent editor holds with a fraction as its unit: `0.21` is 21%, and
+ * the value is that fraction in canonical spelling. Text the editor could not
+ * read arrives as typed and is refused here for what it is. */
+export function parseFractionPercent(raw: string): Parsed<string> {
+  const text = raw.trim();
+  if (text === "") return { kind: "empty" };
+  if (isTwoWayDecimal(text)) return refuse("ambiguous_grouping", raw);
+  if (!PLAIN.test(text)) return parsePercent(raw);
+  const canonical = canonicalDecimal(text)!;
+  if ((canonical.split(".")[1]?.length ?? 0) > PERCENT_DECIMALS + 2)
+    return refuse("too_many_decimals", raw, { limit: PERCENT_DECIMALS });
+  if (compareDecimal(canonical, "1") > 0)
+    return refuse("percent_above_100", raw);
+  return value(canonical);
 }
 
 /** The percentage a stored fraction names, without the sign: `0.21` is
