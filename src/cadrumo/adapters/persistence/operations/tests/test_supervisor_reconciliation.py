@@ -58,8 +58,10 @@ from .supervisor_test_support import (
     ResumableReviewExecutor,
     ReviewedOperand,
     WaitingExecutor,
+    _abandon_running_operation,
     _capabilities,
     _close_host_over_live_executor,
+    _lapse_settler,
     _response,
     operation_repositories,
     operation_supervisor,
@@ -73,40 +75,9 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 def test_reconcile_takes_over_expired_owner_settles_and_releases_scope(tmp_path: Path) -> None:
     """A new owner with no local task admits genuine owner-loss interruption and frees the scope."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        journal, leases, operands = operation_repositories(
-            storage_root=tmp_path / "durable-state", profile_objects=profile.repository
-        )
-        started = asyncio.Event()
-        executor = WaitingExecutor(started=started, release=asyncio.Event())
-        registry = supervisor_registry(
-            executor_type=WaitingExecutor,
-            build=lambda: executor,
-            capabilities=_capabilities(permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN})),
-        )
-        owner = operation_supervisor(
-            registry=registry,
-            journal=journal,
-            leases=leases,
-            operands=operands,
-            owner_id="1" * 64,
-            token="2" * 64,
-            lease_duration=timedelta(minutes=1),
-        )
-        operation_id = asyncio.run(
-            owner.submit(supervisor_request(subject_ref="subject:shared"), operation_id="3" * 64)
-        )
-        abandoned = asyncio.run(_close_host_over_live_executor(owner, operation_id, started))
-        assert abandoned.lifecycle is OperationLifecycle.RUNNING
+        journal, leases, operands, operation_id = _abandon_running_operation(tmp_path, profile.repository)
         recovered_at = _NOW + timedelta(minutes=2)
-        recovery = operation_supervisor(
-            registry=registry,
-            journal=journal,
-            leases=leases,
-            operands=operands,
-            owner_id="4" * 64,
-            token="5" * 64,
-            clock=lambda: recovered_at,
-        )
+        recovery = _lapse_settler(journal=journal, leases=leases, operands=operands, at=recovered_at)
 
         assert operation_id not in recovery._executor_tasks
         terminal = asyncio.run(recovery.reconcile(operation_id))
@@ -137,40 +108,9 @@ def test_reconcile_takes_over_expired_owner_settles_and_releases_scope(tmp_path:
 def test_a_submission_recovers_a_started_holder_whose_owner_lapsed(tmp_path: Path) -> None:
     """A runtime that died mid-run must not hold its subject until someone reconciles by hand."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        journal, leases, operands = operation_repositories(
-            storage_root=tmp_path / "durable-state", profile_objects=profile.repository
-        )
-        started = asyncio.Event()
-        executor = WaitingExecutor(started=started, release=asyncio.Event())
-        registry = supervisor_registry(
-            executor_type=WaitingExecutor,
-            build=lambda: executor,
-            capabilities=_capabilities(permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN})),
-        )
-        owner = operation_supervisor(
-            registry=registry,
-            journal=journal,
-            leases=leases,
-            operands=operands,
-            owner_id="1" * 64,
-            token="2" * 64,
-            lease_duration=timedelta(minutes=1),
-        )
-        operation_id = asyncio.run(
-            owner.submit(supervisor_request(subject_ref="subject:shared"), operation_id="3" * 64)
-        )
-        abandoned = asyncio.run(_close_host_over_live_executor(owner, operation_id, started))
-        assert abandoned.lifecycle is OperationLifecycle.RUNNING
+        journal, leases, operands, operation_id = _abandon_running_operation(tmp_path, profile.repository)
         recovered_at = _NOW + timedelta(minutes=2)
-        successor = operation_supervisor(
-            registry=registry,
-            journal=journal,
-            leases=leases,
-            operands=operands,
-            owner_id="4" * 64,
-            token="5" * 64,
-            clock=lambda: recovered_at,
-        )
+        successor = _lapse_settler(journal=journal, leases=leases, operands=operands, at=recovered_at)
 
         replacement = asyncio.run(
             successor.submit(supervisor_request(subject_ref="subject:shared"), operation_id="6" * 64)

@@ -41,9 +41,9 @@ from .supervisor_test_support import (
     DeadlineAcknowledgingExecutor,
     ResumableReviewExecutor,
     ReviewExecutor,
-    WaitingExecutor,
+    _abandon_running_operation,
     _capabilities,
-    _close_host_over_live_executor,
+    _lapse_settler,
     _response,
     operation_repositories,
     operation_supervisor,
@@ -238,36 +238,11 @@ def test_expired_resumable_checkpoint_restarts_through_real_storage_and_replays_
 
 def test_expired_running_operation_reconciles_to_unknown_interruption_without_false_success(tmp_path: Path) -> None:
     """A fresh supervisor classifies owner loss from the real lease before publishing interruption."""
-    started = asyncio.Event()
-    executor = WaitingExecutor(started=started, release=asyncio.Event())
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         storage_root = tmp_path / "durable-state"
-        journal, leases, operands = operation_repositories(
-            storage_root=storage_root, profile_objects=profile.repository
-        )
-        registry = supervisor_registry(executor_type=WaitingExecutor, build=lambda: executor)
-        owner = operation_supervisor(
-            registry=registry,
-            journal=journal,
-            leases=leases,
-            operands=operands,
-            owner_id="1" * 64,
-            token="2" * 64,
-            lease_duration=timedelta(minutes=1),
-        )
-        operation_id = asyncio.run(owner.submit(supervisor_request(), operation_id="3" * 64))
-        abandoned = asyncio.run(_close_host_over_live_executor(owner, operation_id, started))
-        assert abandoned.lifecycle is OperationLifecycle.RUNNING
+        journal, leases, operands, operation_id = _abandon_running_operation(tmp_path, profile.repository)
         recovered_at = _NOW + timedelta(minutes=2)
-        recovery = operation_supervisor(
-            registry=registry,
-            journal=journal,
-            leases=leases,
-            operands=operands,
-            owner_id="4" * 64,
-            token="5" * 64,
-            clock=lambda: recovered_at,
-        )
+        recovery = _lapse_settler(journal=journal, leases=leases, operands=operands, at=recovered_at)
         terminal = asyncio.run(recovery.reconcile(operation_id))
         reloaded_journal, reloaded_leases, _ = operation_repositories(
             storage_root=storage_root, profile_objects=profile.repository
