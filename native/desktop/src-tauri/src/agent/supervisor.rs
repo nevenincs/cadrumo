@@ -428,9 +428,9 @@ impl Supervisor {
             .cloned()
             .ok_or_else(changed)?;
         let answer = endpoint.exchange(request, None)?;
-        if !lock(&self.shared.admin)
+        if lock(&self.shared.admin)
             .as_ref()
-            .is_some_and(|endpoint| endpoint.generation == generation)
+            .is_none_or(|endpoint| endpoint.generation != generation)
         {
             return Err(changed());
         }
@@ -1398,9 +1398,9 @@ async fn handle(shared: &Arc<Shared>, generation: u64, signal: Signal) -> bool {
                     return false;
                 }
             }
-            if !lock(&shared.admin)
+            if lock(&shared.admin)
                 .as_ref()
-                .is_some_and(|endpoint| endpoint.generation == generation)
+                .is_none_or(|endpoint| endpoint.generation != generation)
             {
                 let _ =
                     stop_running(shared, Some(generation), AgentStopCause::ProtocolRefused).await;

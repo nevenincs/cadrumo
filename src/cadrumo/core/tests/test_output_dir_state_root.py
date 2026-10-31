@@ -36,7 +36,12 @@ from ...tests.env_scope import isolated_aeat_env, settings_without_env_file
 from ..config import Settings
 from ..config_state_root import default_storage_root
 from ..storage_taxonomy import StorageCategory
-from ..storage_taxonomy_locations import MATERIALISED_STORAGE_LOCATIONS, storage_path
+from ..storage_taxonomy_locations import (
+    MATERIALISED_STORAGE_LOCATIONS,
+    storage_location,
+    storage_path,
+    uses_external_transport,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -104,6 +109,15 @@ def test_the_oracle_and_the_declaration_name_the_same_locations() -> None:
     )
 
 
+def _root_relative_categories() -> dict[StorageCategory, str]:
+    """The pinned locations the root owns; an OS-derived connection namespace sits outside it by design."""
+    return {
+        category: subpath
+        for category, subpath in DERIVED_OUTPUT_SUBPATHS.items()
+        if not uses_external_transport(storage_location(category))
+    }
+
+
 def _settings_from_env(**env: str) -> Settings:
     with isolated_aeat_env(**env):
         return settings_without_env_file()
@@ -120,7 +134,7 @@ def test_every_output_resolves_beneath_the_storage_root(tmp_path: Path) -> None:
     settings = _settings_from_env(CADRUMO_STORAGE_ROOT=str(storage_root))
 
     assert settings.cadrumo_storage_root == storage_root
-    for category, subpath in DERIVED_OUTPUT_SUBPATHS.items():
+    for category, subpath in _root_relative_categories().items():
         resolved = storage_path(category, settings=settings)
         assert resolved.relative_to(storage_root).as_posix() == subpath, category.value
 
@@ -131,7 +145,7 @@ def test_default_outputs_follow_the_per_user_storage_root() -> None:
         settings = Settings()
         root = default_storage_root()
     assert settings.cadrumo_storage_root == root
-    for category, subpath in DERIVED_OUTPUT_SUBPATHS.items():
+    for category, subpath in _root_relative_categories().items():
         assert storage_path(category, settings=settings).relative_to(root).as_posix() == subpath, category.value
 
 

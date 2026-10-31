@@ -903,6 +903,7 @@ mod tests {
 
     const PROFILE_ID: &str = "11111111-1111-4111-8111-111111111111";
 
+    #[cfg(windows)]
     fn host() -> ProfileHost {
         ProfileHost::new(Arc::new(
             SignIn::new(&crate::terminal::tests::unit_launch()),

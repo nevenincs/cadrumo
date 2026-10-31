@@ -1153,7 +1153,7 @@ mod tests {
             assert_eq!(status.refusal.unwrap().code, "runtime_unavailable");
         }
         check(crate::manager::StartOutcome::Dispatched);
-        #[cfg(not(windows))]
+        #[cfg(not(any(windows, target_os = "macos")))]
         check(crate::manager::StartOutcome::Unsupported);
     }
 

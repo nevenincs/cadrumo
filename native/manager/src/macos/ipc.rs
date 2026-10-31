@@ -138,43 +138,72 @@ pub struct Server {
     owner: Peer,
 }
 
+/// The package's exact canonical manager image, and every image the package
+/// runs a manager core in: the manager itself and each present desktop host.
+fn package_images(package: &Path) -> io::Result<(PathBuf, Vec<PathBuf>)> {
+    let contract: cadrumo_application::installation::DiscoveryContract =
+        serde_json::from_str(crate::contract::INSTALLATION_CONTRACT).map_err(io::Error::other)?;
+    let manager = fs::canonicalize(
+        contract
+            .manager_member()
+            .map_err(io::Error::other)?
+            .under(package),
+    )?;
+    let mut images = vec![manager.clone()];
+    for image in contract
+        .layout
+        .application_images
+        .iter()
+        .filter(|image| image.target == "desktop-host-build")
+    {
+        let leaf = format!("{}{}", image.name, contract.layout.entrypoint_suffix);
+        let member = cadrumo_application::value::RelativePath::new(if image.placement == "." {
+            leaf
+        } else {
+            format!("{}/{leaf}", image.placement)
+        })
+        .map_err(io::Error::other)?;
+        let path = member.under(package);
+        if path.is_file() {
+            images.push(fs::canonicalize(path)?);
+        }
+    }
+    Ok((manager, images))
+}
+
 impl Server {
-    /// Package admission and the session lock precede this call.
+    /// Package admission and the session lock precede this call. Only the
+    /// package's manager image binds here.
     pub fn bind_installed(
         package: &Path,
         session_lock: &crate::session::instance::SessionLock,
     ) -> io::Result<Self> {
-        let contract: cadrumo_application::installation::DiscoveryContract =
-            serde_json::from_str(crate::contract::INSTALLATION_CONTRACT)
-                .map_err(io::Error::other)?;
-        let manager = fs::canonicalize(
-            contract
-                .manager_member()
-                .map_err(io::Error::other)?
-                .under(package),
-        )?;
+        let (manager, images) = package_images(package)?;
         if manager != fs::canonicalize(std::env::current_exe()?)? {
             return Err(io::ErrorKind::PermissionDenied.into());
         }
-        let mut images = vec![manager.clone()];
-        for image in contract
-            .layout
-            .application_images
-            .iter()
-            .filter(|image| image.target == "desktop-host-build")
-        {
-            let leaf = format!("{}{}", image.name, contract.layout.entrypoint_suffix);
-            let member = cadrumo_application::value::RelativePath::new(if image.placement == "." {
-                leaf
-            } else {
-                format!("{}/{leaf}", image.placement)
-            })
-            .map_err(io::Error::other)?;
-            let path = member.under(package);
-            if path.is_file() {
-                images.push(fs::canonicalize(path)?);
-            }
+        Self::bind(manager, images, session_lock)
+    }
+
+    /// Binds for a desktop that hosts the manager core itself: this process must
+    /// run one of the package's own desktop host images, by exact canonical path.
+    pub fn bind_embedded(
+        package: &Path,
+        session_lock: &crate::session::instance::SessionLock,
+    ) -> io::Result<Self> {
+        let (manager, images) = package_images(package)?;
+        let current = fs::canonicalize(std::env::current_exe()?)?;
+        if current == manager || !images.contains(&current) {
+            return Err(io::ErrorKind::PermissionDenied.into());
         }
+        Self::bind(manager, images, session_lock)
+    }
+
+    fn bind(
+        manager: PathBuf,
+        images: Vec<PathBuf>,
+        session_lock: &crate::session::instance::SessionLock,
+    ) -> io::Result<Self> {
         let process = Process::open(std::process::id())?;
         let session = Login::open()?.current(&process)?;
         let owner = Peer {
@@ -322,6 +351,18 @@ impl Server {
 
 /// Bounded client exchange; authenticate the manager before transmitting a request.
 pub fn request(manager: &Path, request: &Request) -> io::Result<Response> {
+    request_any(&[fs::canonicalize(manager)?], request)
+}
+
+/// Bounded client exchange with whichever image of `package` hosts the session's
+/// manager core: its manager, or a desktop running the core itself. The peer is
+/// admitted only at one of those exact canonical images, owner and session.
+pub fn request_host(package: &Path, request: &Request) -> io::Result<Response> {
+    let (_, images) = package_images(package)?;
+    request_any(&images, request)
+}
+
+fn request_any(images: &[PathBuf], request: &Request) -> io::Result<Response> {
     let owner = Process::open(std::process::id())?;
     let session = Login::open()?.current(&owner)?;
     let directory = Directory::installed(false)?;
@@ -346,7 +387,7 @@ pub fn request(manager: &Path, request: &Request) -> io::Result<Response> {
     if directory.private_socket(&name)? != identity {
         return Err(io::ErrorKind::PermissionDenied.into());
     }
-    let peer = Peer::inspect(&stream, &session, &[fs::canonicalize(manager)?])?;
+    let peer = Peer::inspect(&stream, &session, images)?;
     let bytes = serde_json::to_vec(request).map_err(io::Error::other)?;
     decode(&bytes)?;
     let bytes = encode(&bytes)?;
