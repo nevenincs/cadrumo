@@ -2234,17 +2234,18 @@ application:
       engine:
         anchors:
           final: RESULTADO
-          start: 'INICIO: Entradas'
+          start: 'INICIO: %{inputs_tab}'
         errors:
           parameter_no_dated_value: El motor de exportación de hojas de cálculo no
             encontró un valor de parámetro vigente para la fecha de devengo.
           unsupported_rounding: El motor de exportación de hojas de cálculo encontró
             una regla de redondeo de las definiciones del modelo que no admite.
         guide:
-          editable_cells: 'Edita únicamente las celdas de la pestaña ''Entradas''.
-            El resto de pestañas están protegidas: ''Cálculos'' contiene las casillas
-            derivadas con fórmulas, ''Procedencia'' audita cada casilla calculada
-            y ''Tarifas'' refleja los parámetros vigentes consultados por las fórmulas.'
+          editable_cells: 'Edita únicamente las celdas de la pestaña ''%{inputs_tab}''.
+            El resto de pestañas están protegidas: ''%{calculations_tab}'' contiene
+            las casillas derivadas con fórmulas, ''%{provenance_tab}'' audita cada
+            casilla calculada y ''%{tariffs_tab}'' refleja los parámetros vigentes
+            consultados por las fórmulas.'
           period: '%{modelo_title} - período %{period} / %{filing_year}.'
           pull_command: Las ediciones de la hoja de cálculo no se importan al perfil
             de Cadrumo; revisa los cambios e introdúcelos en Cadrumo.
@@ -2274,8 +2275,8 @@ application:
       form:
         communication_caption: Formulario de datos · cambia las entradas en sus hojas
           de origen
-        communication_guide: Cambia los datos en Entradas. Modelo muestra la comunicación;
-          no calcula retenciones.
+        communication_guide: Cambia los datos en %{inputs_tab}. Modelo muestra la
+          comunicación; no calcula retenciones.
         reported_data_caption: Datos declarados · edita las entradas en las hojas
           de origen
       layout:

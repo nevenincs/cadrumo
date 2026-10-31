@@ -5545,6 +5545,7 @@ sheets:
     headers:
       accrual_year: Accrual year
       acquisition_date: Acquisition date
+      acquisition_value: Acquisition value
       amount: Amount
       amount_donated: Amount donated
       anualidades_alimentos: Food annuities
@@ -5633,6 +5634,7 @@ sheets:
       donor_legal_name: Donor legal name
       donor_tax_id: Donor tax id
       door: Door
+      element_type: Asset type
       emerging_stock_excess_clave: Emerging-company stock excess
       fecha_devengo: Accrual date
       fecha_inicio_prestamo: Loan start date
@@ -5648,6 +5650,7 @@ sheets:
       foral_retention_estatal: Withholdings and payments on account paid to the State
       foral_retention_gipuzkoa: Withholdings and payments on account paid to Gipuzkoa
       foral_retention_navarra: Withholdings and payments on account paid to Navarre
+      gain: Capital gain
       garantias: Guarantees
       gastos_deducibles: Deductible expenses
       geographic_mobility_clave: Geographic mobility
@@ -5669,6 +5672,7 @@ sheets:
       is_recurrent: Recurrent donation
       isin_code: ISIN code
       locality: Locality
+      loss: Capital loss
       member_legal_name: Member legal name
       member_state_code: Member state
       member_tax_id: Member tax id
@@ -5751,6 +5755,8 @@ sheets:
       tipo_codigo: Code type
       tipo_percepcion: Perception type
       transfer_pricing_method_code: Transfer pricing method
+      transmission_date: Disposal date
+      transmission_value: Disposal value
       unit_convivencia_titular_clave: Coexistence unit holder
       valuation_amount: Valuation
       valuation_event: Valuation event

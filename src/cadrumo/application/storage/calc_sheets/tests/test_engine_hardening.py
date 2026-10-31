@@ -10,6 +10,7 @@ from cadrumo.domain.calculations.registry.tests.published_authority import publi
 
 from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.config import override_settings
+from .....core.i18n.render import I18N_STRICT_PLACEHOLDERS, tr
 from .....core.resources.bundled_data import bundled_path
 from .....domain.calculations.registry.relations import (
     relation_prefill_bindings_for_period,
@@ -21,7 +22,7 @@ from .....domain.calculations.registry.tests.registry_tree import bundled_regist
 from .....domain.calculations.registry.tests.snapshot_support import build_snapshot
 from ..engine import _rounding_rule_for, build_export_plan
 from ..errors import CalcSheetsEngineError
-from ..records import RelationValues
+from ..records import RelationValues, TabName
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -54,6 +55,27 @@ def test_guide_paragraphs_resolve_through_output_language() -> None:
     assert plan.guide.paragraphs[2] == (
         "Spreadsheet edits are not imported into the Cadrumo profile; review the changes and enter them in Cadrumo."
     )
+
+
+def test_localized_guides_and_anchors_name_the_actual_worksheet_identifiers() -> None:
+    """Translated guidance names tabs that exist, with all placeholders supplied."""
+    snapshot = published_snapshot("130", filing_year=2025, period="1T", on=date(2025, 4, 1))
+    strict = I18N_STRICT_PLACEHOLDERS.set(True)
+    try:
+        for locale in ("en", "es", "ca", "hu"):
+            with override_settings(cadrumo_output_language=locale):
+                plan = build_export_plan(snapshot)
+                communication = tr(
+                    "application.storage.calc_sheets.form.communication_guide", inputs_tab=TabName.ENTRADAS.value
+                )
+            for tab in (TabName.ENTRADAS, TabName.CALCULOS, TabName.PROVENANCE, TabName.TARIFFS):
+                assert tab in plan.tabs
+                assert f"'{tab.value}'" in plan.guide.paragraphs[1]
+            assert any(anchor.label.endswith(": " + TabName.ENTRADAS.value) for anchor in plan.anchors)
+            assert TabName.ENTRADAS.value in communication
+            assert "Procedència" not in plan.guide.paragraphs[1]
+    finally:
+        I18N_STRICT_PLACEHOLDERS.reset(strict)
 
 
 def test_blank_relation_values_carry_registry_grounding() -> None:

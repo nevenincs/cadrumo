@@ -2196,17 +2196,18 @@ application:
       engine:
         anchors:
           final: EREDMÉNY
-          start: 'KEZDET: Entradas'
+          start: 'KEZDET: %{inputs_tab}'
         errors:
           parameter_no_dated_value: A táblázatexportáló motor nem talált az elszámolási
             dátumra érvényes paraméterértéket.
           unsupported_rounding: A táblázatexportáló motor olyan kerekítési szabályt
             talált a nyomtatványdefiníciókban, amelyet nem támogat.
         guide:
-          editable_cells: 'Csak az ''Entradas'' munkalap celláit szerkeszd. A többi
-            munkalap védett: a ''Cálculos'' a képletekkel számított cellákat, a ''Procedencia''
-            az egyes számított mezők auditját, a ''Tarifas'' pedig a képletek által
-            használt érvényes paramétereket tartalmazza.'
+          editable_cells: 'Csak az ''%{inputs_tab}'' munkalap celláit szerkeszd. A
+            többi munkalap védett: a ''%{calculations_tab}'' a képletekkel számított
+            cellákat, a ''%{provenance_tab}'' az egyes számított mezők auditját, a
+            ''%{tariffs_tab}'' pedig a képletek által használt érvényes paramétereket
+            tartalmazza.'
           period: '%{modelo_title} - időszak %{period} / %{filing_year}.'
           pull_command: A táblázat módosításai nem kerülnek be a Cadrumo-profilba;
             ellenőrizd őket, és rögzítsd a változásokat a Cadrumo alkalmazásban.
@@ -2235,8 +2236,8 @@ application:
           tariffs: Tarifák / aktív paraméterek - védett
       form:
         communication_caption: Adatlap · az adatokat a forráslapokon módosíthatod
-        communication_guide: Módosítsd az adatokat az Entradas lapon. A Modelo az
-          adatközlést mutatja; adóelőleget nem számít.
+        communication_guide: Módosítsd az adatokat az %{inputs_tab} lapon. A Modelo
+          az adatközlést mutatja; adóelőleget nem számít.
         reported_data_caption: Bevallott adatok · szerkeszd a bemeneteket a forráslapokon
       layout:
         errors:

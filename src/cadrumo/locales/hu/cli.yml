@@ -2221,9 +2221,9 @@ cli:
         ezért nem használtuk. Futtasd az `aeat config login` parancsot az újbóli bejelentkezéshez.
     google:
       detail:
-        sync_push_limit_requires_dry_run: A Google sync push csak --dry-run mellett
-          használhat --limit kapcsolót, mert egy korlátozott éles futás részleges
-          távoli tükör manifestet hozna létre.
+        sync_push_limit_requires_dry_run: Az adatok feltöltése a Google rendszerébe
+          csak --dry-run mellett használhat --limit kapcsolót, mert egy korlátozott
+          éles futás a távoli másolat hiányos jegyzékét hozná létre.
       errors:
         auth_failed: 'Google-hitelesítés sikertelen: {detail}'
         browser_open: 'Nem sikerült megnyitni a böngészőt a Google-hozzáférés engedélyezéséhez:

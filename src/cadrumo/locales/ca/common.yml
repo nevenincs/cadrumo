@@ -5656,6 +5656,7 @@ sheets:
     headers:
       accrual_year: Exercici de meritació
       acquisition_date: Data d'adquisició
+      acquisition_value: Valor d'adquisició
       amount: Import
       amount_donated: Import donat
       anualidades_alimentos: Anualitats per aliments
@@ -5746,6 +5747,7 @@ sheets:
       donor_legal_name: Nom o raó social del donant
       donor_tax_id: NIF del donant
       door: Porta
+      element_type: Tipus d'element patrimonial
       emerging_stock_excess_clave: Excessos de lliurament d'accions d'empreses emergents
       fecha_devengo: Data de meritació
       fecha_inicio_prestamo: Data d'inici del préstec
@@ -5761,6 +5763,7 @@ sheets:
       foral_retention_estatal: Retencions i ingressos a compte ingressats a l'Estat
       foral_retention_gipuzkoa: Retencions i ingressos a compte ingressats a Gipuzkoa
       foral_retention_navarra: Retencions i ingressos a compte ingressats a Navarra
+      gain: Guany patrimonial
       garantias: Garanties
       gastos_deducibles: Despeses deduïbles
       geographic_mobility_clave: Mobilitat geogràfica
@@ -5784,6 +5787,7 @@ sheets:
       is_recurrent: Donatiu recurrent
       isin_code: Codi ISIN
       locality: Localitat
+      loss: Pèrdua patrimonial
       member_legal_name: Raó social del membre
       member_state_code: Estat membre
       member_tax_id: NIF del membre
@@ -5868,6 +5872,8 @@ sheets:
       tipo_codigo: Tipus codi
       tipo_percepcion: Tipus de percepció
       transfer_pricing_method_code: Mètode de valoració
+      transmission_date: Data de transmissió
+      transmission_value: Valor de transmissió
       unit_convivencia_titular_clave: Titular de la unitat de convivència
       valuation_amount: Valoració
       valuation_event: Esdeveniment de valoració

@@ -2257,9 +2257,9 @@ cli:
         así que no se usó. Ejecuta `aeat config login` para volver a iniciar sesión.
     google:
       detail:
-        sync_push_limit_requires_dry_run: La sincronización push de Google no puede
-          usar --limit salvo que --dry-run este activado, porque una ejecución real
-          acotada crearía un manifiesto remoto parcial.
+        sync_push_limit_requires_dry_run: La sincronización de datos hacia Google
+          solo admite --limit con --dry-run, porque una ejecución real limitada crearía
+          un manifiesto remoto parcial.
       errors:
         auth_failed: 'La autenticación con Google falló: {detail}'
         browser_open: 'No se pudo abrir un navegador para autorizar el acceso a Google:
