@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 import sys
 from collections.abc import Callable
 from datetime import date
@@ -30,11 +29,7 @@ from cadrumo.application.ledger.llm_diagnostics_operation import (
 )
 from cadrumo.application.operations.frontend_requests import (
     OPERATION_OBSERVATION_PROJECTION_ID,
-    OperationObservationRequestV1,
-    OperationObservationSuccessV1,
-    OperationResultProjectionRequestV1,
     OperationResultProjectionSuccessV1,
-    OperationSubmissionReceiptV1,
 )
 from cadrumo.application.operations.public_scalar import PublicDecimal
 from cadrumo.application.operations.registry import OperationPublicDefinitionContractV1
@@ -42,9 +37,6 @@ from cadrumo.core.config_support import LLMProvider, RetiredLLMProvider
 from cadrumo.core.hashing import canonical_json_bytes
 from cadrumo.core.operations import (
     OperationEffect,
-    OperationLifecycle,
-    OperationTerminalCondition,
-    profile_operation_subject,
 )
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.authority_location import bundled_authority_descriptor_path
@@ -64,10 +56,10 @@ from cadrumo_runtime.host.tests.frontend.cli.test_ledger_llm_diagnostics import 
     seed_ledger_llm_usage_records,
 )
 
+from .installed_mcp_stdio_support import release_query_result, structured_object
 from .test_installed_authenticated_stdio import (
     _installed_mcp_executable,
     _native_backend_for_current_platform,
-    _object,
     _unused_reference,
 )
 
@@ -196,13 +188,19 @@ async def test_installed_mcp_roundtrips_encrypted_ledger_llm_diagnostics(
                     assert found.is_error is False
                     assert any(
                         item["definition_id"] == _DEFINITION
-                        for item in cast("list[dict[str, Any]]", _object(found.structured_content)["operations"])
+                        for item in cast(
+                            "list[dict[str, Any]]", structured_object(found.structured_content)["operations"]
+                        )
                     )
 
                     described = await client.call_tool("describe", {"definition_id": _DEFINITION})
                     assert described.is_error is False
                     contract = OperationPublicDefinitionContractV1.model_validate_json(
-                        canonical_json_bytes(_object(_object(described.structured_content)["description"])["contract"])
+                        canonical_json_bytes(
+                            structured_object(structured_object(described.structured_content)["description"])[
+                                "contract"
+                            ]
+                        )
                     )
                     assert contract.definition_id == _DEFINITION
                     assert contract.result_schema is not None
@@ -213,54 +211,14 @@ async def test_installed_mcp_roundtrips_encrypted_ledger_llm_diagnostics(
                         until=_UNTIL,
                         low_confidence_threshold=PublicDecimal(decimal=str(_THRESHOLD)),
                     )
-                    submitted = await client.call_tool(
-                        "execute",
-                        {
-                            "definition_id": _DEFINITION,
-                            "subject_ref": profile_operation_subject(str(profile.profile_id)),
-                            "payload": request.model_dump(mode="json"),
-                        },
-                    )
-                    assert submitted.is_error is False
-                    receipt = OperationSubmissionReceiptV1.model_validate_json(
-                        canonical_json_bytes(_object(submitted.structured_content)["receipt"])
-                    )
-
-                    observation_request = OperationObservationRequestV1(
-                        operation_id=receipt.operation_id,
-                        after_cursor=0,
-                        page_limit=32,
-                    )
-                    terminal: OperationObservationSuccessV1 | None = None
-                    for _attempt in range(100):
-                        observed = await client.call_tool(
-                            "observe", {"observation": observation_request.model_dump(mode="json")}
-                        )
-                        assert observed.is_error is False
-                        candidate = OperationObservationSuccessV1.model_validate_json(
-                            canonical_json_bytes(_object(_object(observed.structured_content)["reply"])["observation"])
-                        )
-                        if candidate.projection.lifecycle is OperationLifecycle.TERMINAL:
-                            terminal = candidate
-                            break
-                        await asyncio.sleep(0.05)
-
-                    assert terminal is not None, "ledger LLM diagnostics did not settle"
-                    assert terminal.projection.operation_id == receipt.operation_id
-                    assert terminal.projection.definition_id == _DEFINITION
-                    assert terminal.projection.terminal_condition is OperationTerminalCondition.SUCCEEDED
-                    assert terminal.projection.effect is OperationEffect.NONE
-
-                    result_request = OperationResultProjectionRequestV1(
-                        operation_id=receipt.operation_id,
-                        terminal_revision=terminal.projection.revision,
-                        definition_contract_digest=contract.definition_contract_digest,
-                        result_schema=contract.result_schema,
-                    )
-                    released = await client.call_tool("result", {"result": result_request.model_dump(mode="json")})
-                    assert released.is_error is False
-                    result = OperationResultProjectionSuccessV1[LedgerLlmDiagnosticsProjection].model_validate_json(
-                        canonical_json_bytes(_object(released.structured_content)["document"])
+                    result, _document = await release_query_result(
+                        client,
+                        definition_id=_DEFINITION,
+                        profile_id=profile.profile_id,
+                        request=request,
+                        contract=contract,
+                        result_model=OperationResultProjectionSuccessV1[LedgerLlmDiagnosticsProjection],
+                        label="ledger LLM diagnostics",
                     )
                     projection = result.projection
                     assert projection.profile_id == profile.profile_id
