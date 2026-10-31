@@ -70,6 +70,27 @@ def _install_committed_profile_schema(root: Path) -> None:
     _install_cited_catalogue_entries(root)
 
 
+def _write_minimal_registry_sources(tmp_path: Path) -> tuple[Path, Path, Path]:
+    """Lay out a one-modelo registry tree with corpus files; return its root, revision dir and a corpus file."""
+    registry_root = tmp_path / "registry" / "aeat"
+    _install_committed_profile_schema(tmp_path)
+    legal_dir = registry_root / "legal"
+    revision_dir = registry_root / "modelos" / "999" / "revisions" / "2025"
+    revision_dir.mkdir(parents=True)
+    legal_dir.mkdir(parents=True, exist_ok=True)
+    corpus_file = tmp_path / "corpus" / "test" / "test-source-001.pdf"
+    corpus_file.parent.mkdir(parents=True)
+    corpus_file.write_bytes(b"x" * 1000)
+    (corpus_file.parent / "test-source-002.pdf").write_bytes(b"x" * 1000)
+    legal_corpus = corpus_file.parent / "test-ley-001.html"
+    legal_corpus.write_text("<html>test provision text</html>", encoding="utf-8")
+    write_extracted_corpus_sidecar(legal_corpus, anchor="a1", text="test provision text")
+
+    (legal_dir / "catalogue.toml").write_text(_MINIMAL_CATALOGUE_TOML, encoding="utf-8")
+    (registry_root / "modelos" / "999" / "manifest.toml").write_text(_MINIMAL_MANIFEST_TOML, encoding="utf-8")
+    return registry_root, revision_dir, corpus_file
+
+
 def _install_cited_catalogue_entries(root: Path) -> None:
     """Carry the legal and source entries the installed inputs cite, with their corpus files.
 
@@ -340,22 +361,7 @@ def test_authority_cache_invalidates_when_fragmented_revision_changes(
     that says nothing about recursive coverage.
     """
 
-    registry_root = tmp_path / "registry" / "aeat"
-    _install_committed_profile_schema(tmp_path)
-    legal_dir = registry_root / "legal"
-    revision_dir = registry_root / "modelos" / "999" / "revisions" / "2025"
-    revision_dir.mkdir(parents=True)
-    legal_dir.mkdir(parents=True, exist_ok=True)
-    corpus_file = tmp_path / "corpus" / "test" / "test-source-001.pdf"
-    corpus_file.parent.mkdir(parents=True)
-    corpus_file.write_bytes(b"x" * 1000)
-    (corpus_file.parent / "test-source-002.pdf").write_bytes(b"x" * 1000)
-    legal_corpus = corpus_file.parent / "test-ley-001.html"
-    legal_corpus.write_text("<html>test provision text</html>", encoding="utf-8")
-    write_extracted_corpus_sidecar(legal_corpus, anchor="a1", text="test provision text")
-
-    (legal_dir / "catalogue.toml").write_text(_MINIMAL_CATALOGUE_TOML, encoding="utf-8")
-    (registry_root / "modelos" / "999" / "manifest.toml").write_text(_MINIMAL_MANIFEST_TOML, encoding="utf-8")
+    registry_root, revision_dir, _ = _write_minimal_registry_sources(tmp_path)
 
     write_fragmented_revision(
         revision_dir,
@@ -392,22 +398,7 @@ def test_authority_compiles_each_state_of_a_real_aba_tree_cycle_from_its_own_byt
     tree must compile afresh and a restored tree must compile back to its
     original content rather than to the state it last saw.
     """
-    registry_root = tmp_path / "registry" / "aeat"
-    _install_committed_profile_schema(tmp_path)
-    legal_dir = registry_root / "legal"
-    revision_dir = registry_root / "modelos" / "999" / "revisions" / "2025"
-    revision_dir.mkdir(parents=True)
-    legal_dir.mkdir(parents=True, exist_ok=True)
-    corpus_file = tmp_path / "corpus" / "test" / "test-source-001.pdf"
-    corpus_file.parent.mkdir(parents=True)
-    corpus_file.write_bytes(b"x" * 1000)
-    (corpus_file.parent / "test-source-002.pdf").write_bytes(b"x" * 1000)
-    legal_corpus = corpus_file.parent / "test-ley-001.html"
-    legal_corpus.write_text("<html>test provision text</html>", encoding="utf-8")
-    write_extracted_corpus_sidecar(legal_corpus, anchor="a1", text="test provision text")
-
-    (legal_dir / "catalogue.toml").write_text(_MINIMAL_CATALOGUE_TOML, encoding="utf-8")
-    (registry_root / "modelos" / "999" / "manifest.toml").write_text(_MINIMAL_MANIFEST_TOML, encoding="utf-8")
+    registry_root, revision_dir, _ = _write_minimal_registry_sources(tmp_path)
 
     write_fragmented_revision(
         revision_dir,
@@ -446,22 +437,7 @@ def test_authority_cache_invalidates_when_source_evidence_changes(
     tmp_path: Path, isolated_provider_registration: None
 ) -> None:
     """Authority validation must rerun when corpus evidence changes under the same source root."""
-    registry_root = tmp_path / "registry" / "aeat"
-    _install_committed_profile_schema(tmp_path)
-    legal_dir = registry_root / "legal"
-    revision_dir = registry_root / "modelos" / "999" / "revisions" / "2025"
-    revision_dir.mkdir(parents=True)
-    legal_dir.mkdir(parents=True, exist_ok=True)
-    corpus_file = tmp_path / "corpus" / "test" / "test-source-001.pdf"
-    corpus_file.parent.mkdir(parents=True)
-    corpus_file.write_bytes(b"x" * 1000)
-    (corpus_file.parent / "test-source-002.pdf").write_bytes(b"x" * 1000)
-    legal_corpus = corpus_file.parent / "test-ley-001.html"
-    legal_corpus.write_text("<html>test provision text</html>", encoding="utf-8")
-    write_extracted_corpus_sidecar(legal_corpus, anchor="a1", text="test provision text")
-
-    (legal_dir / "catalogue.toml").write_text(_MINIMAL_CATALOGUE_TOML, encoding="utf-8")
-    (registry_root / "modelos" / "999" / "manifest.toml").write_text(_MINIMAL_MANIFEST_TOML, encoding="utf-8")
+    registry_root, revision_dir, corpus_file = _write_minimal_registry_sources(tmp_path)
     write_fragmented_revision(
         revision_dir,
         _MINIMAL_REVISION_TOML_TEMPLATE.format(source_ref="test-source-001"),
@@ -482,22 +458,7 @@ def test_authority_ignores_legacy_validated_marker_and_revalidates_ambiguity(
 ) -> None:
     """A filesystem validation marker must not bypass casilla-reference guards."""
 
-    registry_root = tmp_path / "registry" / "aeat"
-    _install_committed_profile_schema(tmp_path)
-    legal_dir = registry_root / "legal"
-    revision_dir = registry_root / "modelos" / "999" / "revisions" / "2025"
-    revision_dir.mkdir(parents=True)
-    legal_dir.mkdir(parents=True, exist_ok=True)
-    corpus_file = tmp_path / "corpus" / "test" / "test-source-001.pdf"
-    corpus_file.parent.mkdir(parents=True)
-    corpus_file.write_bytes(b"x" * 1000)
-    (corpus_file.parent / "test-source-002.pdf").write_bytes(b"x" * 1000)
-    legal_corpus = corpus_file.parent / "test-ley-001.html"
-    legal_corpus.write_text("<html>test provision text</html>", encoding="utf-8")
-    write_extracted_corpus_sidecar(legal_corpus, anchor="a1", text="test provision text")
-
-    (legal_dir / "catalogue.toml").write_text(_MINIMAL_CATALOGUE_TOML, encoding="utf-8")
-    (registry_root / "modelos" / "999" / "manifest.toml").write_text(_MINIMAL_MANIFEST_TOML, encoding="utf-8")
+    registry_root, revision_dir, _ = _write_minimal_registry_sources(tmp_path)
 
     ambiguous_revision = _MINIMAL_REVISION_TOML_TEMPLATE.format(source_ref="test-source-001").replace(
         'number = "01"',
@@ -544,22 +505,7 @@ def test_authority_load_rejects_reused_number_with_bare_casilla_owner(
 ) -> None:
     """A reused printed number with one bare-id owner must fail at authority load."""
 
-    registry_root = tmp_path / "registry" / "aeat"
-    _install_committed_profile_schema(tmp_path)
-    legal_dir = registry_root / "legal"
-    revision_dir = registry_root / "modelos" / "999" / "revisions" / "2025"
-    revision_dir.mkdir(parents=True)
-    legal_dir.mkdir(parents=True, exist_ok=True)
-    corpus_file = tmp_path / "corpus" / "test" / "test-source-001.pdf"
-    corpus_file.parent.mkdir(parents=True)
-    corpus_file.write_bytes(b"x" * 1000)
-    (corpus_file.parent / "test-source-002.pdf").write_bytes(b"x" * 1000)
-    legal_corpus = corpus_file.parent / "test-ley-001.html"
-    legal_corpus.write_text("<html>test provision text</html>", encoding="utf-8")
-    write_extracted_corpus_sidecar(legal_corpus, anchor="a1", text="test provision text")
-
-    (legal_dir / "catalogue.toml").write_text(_MINIMAL_CATALOGUE_TOML, encoding="utf-8")
-    (registry_root / "modelos" / "999" / "manifest.toml").write_text(_MINIMAL_MANIFEST_TOML, encoding="utf-8")
+    registry_root, revision_dir, _ = _write_minimal_registry_sources(tmp_path)
 
     ambiguous_revision = (
         _MINIMAL_REVISION_TOML_TEMPLATE.format(source_ref="test-source-001")
