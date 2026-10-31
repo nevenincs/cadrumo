@@ -72,6 +72,16 @@ def compile_m303_annual_orden_projection(
         raise RegistryValidationError(
             "annual Orden projection must cite exactly its source-scoped legal authority axes",
         )
+    difficult_refs = tuple(
+        legal_refs[difficult_justification_legal_key(cohort)] for cohort in ("agricola", "no_agricola")
+    )
+    required_axes = int(
+        resolve_form_codes("form-row-codes", effective_date=date(census.ejercicio, 1, 1)).code(
+            "m303.orden.difficult_justification_legal_refs"
+        )
+    )
+    if len(difficult_refs) != required_axes:
+        raise RegistryValidationError(f"annual Orden difficult justification must cite {required_axes} legal axes")
     auxiliary_indicators = resolve_annual_orden_auxiliary_activity_indicators(
         effective_date=date(census.ejercicio, 1, 1),
         authority=governed_facts_in_scope(),
@@ -137,10 +147,7 @@ def compile_m303_annual_orden_projection(
         ),
         difficult_justification=DificilJustificacionOrdenAnual(
             percentage=census.difficult_justification.percentage,
-            legal_refs=(
-                legal_refs[difficult_justification_legal_key("agricola")],
-                legal_refs[difficult_justification_legal_key("no_agricola")],
-            ),
+            legal_refs=difficult_refs,
             source_refs=(census.source_ref,),
         ),
         lorca_reduction=(
