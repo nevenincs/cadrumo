@@ -20,7 +20,7 @@ from ....domain.iva.schema import InvoiceKind as CatalogueInvoiceKind
 from ....domain.iva.schema import InvoiceKind as IvaInvoiceKind
 from ....domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
-from ....domain.transactions.models import TransactionCatalogue
+from ....domain.transactions.models import Transaction, TransactionCatalogue
 from .._preconditions import AggregationPreconditionCondition
 from ..errors import (
     AggregationValidationError,
@@ -289,7 +289,10 @@ def test_iva_source_mesh_resolver_attributes_a_q1_operation_invoiced_in_q2_to_q1
     }
 
 
-def test_iva_source_mesh_resolver_accepts_m303_invoice_domestic_iva_when_transaction_ledger_matches() -> None:
+def _resolve_laura_first_quarter_sale(
+    *, operation_date: date | None = None
+) -> tuple[Transaction, CalculationSourceResolution]:
+    """Resolve the one issued sale, optionally declaring its operation date."""
     revision = _m303_revision()
     tx_repo = InMemoryTransactionCatalogueRepository(bucket_id=BUCKET_ID)
     invoice_repo = _InMemoryInvoiceCatalogueRepository()
@@ -308,11 +311,12 @@ def test_iva_source_mesh_resolver_accepts_m303_invoice_domestic_iva_when_transac
         taxable_base=Decimal("10000.00"),
         iva_amount=Decimal("2100.00"),
         linked_transaction_ids=(transaction.transaction_id,),
+        operation_date=operation_date,
     )
     tx_repo.save(TransactionCatalogue.from_transactions((transaction,)))
     invoice_repo.save(build_invoice_catalogue((invoice,)))
 
-    resolution = _ledger_iva_resolver(
+    return transaction, _ledger_iva_resolver(
         transaction_repository=tx_repo,
         invoice_repository=invoice_repo,
         prorrata_register_repository=empty_prorrata_repository(),
@@ -325,6 +329,10 @@ def test_iva_source_mesh_resolver_accepts_m303_invoice_domestic_iva_when_transac
             revision=revision,
         ),
     )
+
+
+def test_iva_source_mesh_resolver_accepts_m303_invoice_domestic_iva_when_transaction_ledger_matches() -> None:
+    transaction, resolution = _resolve_laura_first_quarter_sale()
 
     assert resolution.binding_values["modelo-303-iva-repercutido-general-cuota"] == Decimal("2100.00")
     assert resolution.source_transaction_ids == (transaction.transaction_id,)
@@ -343,42 +351,7 @@ def test_iva_source_mesh_resolver_raises_no_devengo_advisory_when_the_operation_
     correctly, so the declared-date case is asserted silent as explicitly as
     the proxy case is asserted noisy.
     """
-    revision = _m303_revision()
-    tx_repo = InMemoryTransactionCatalogueRepository(bucket_id=BUCKET_ID)
-    invoice_repo = _InMemoryInvoiceCatalogueRepository()
-    transaction = iva_transaction(
-        "laura-1t-sale",
-        direction=TransactionDirection.INCOMING,
-        amount=Decimal("12100.00"),
-        taxable_base=Decimal("10000.00"),
-        iva_amount=Decimal("2100.00"),
-        booked_date=date(2025, 2, 10),
-    )
-    invoice = _domestic_iva_invoice(
-        "LAURA-1T-SALE",
-        kind=CatalogueInvoiceKind.ISSUED,
-        issued_at=date(2025, 2, 10),
-        taxable_base=Decimal("10000.00"),
-        iva_amount=Decimal("2100.00"),
-        linked_transaction_ids=(transaction.transaction_id,),
-        operation_date=date(2025, 2, 5),
-    )
-    tx_repo.save(TransactionCatalogue.from_transactions((transaction,)))
-    invoice_repo.save(build_invoice_catalogue((invoice,)))
-
-    resolution = _ledger_iva_resolver(
-        transaction_repository=tx_repo,
-        invoice_repository=invoice_repo,
-        prorrata_register_repository=empty_prorrata_repository(),
-    ).resolve(
-        CalculationSourceContext(
-            bucket_id=BUCKET_ID,
-            modelo="303",
-            filing_year=2025,
-            period=Period.from_year_and_code(2025, "1T"),
-            revision=revision,
-        ),
-    )
+    _, resolution = _resolve_laura_first_quarter_sale(operation_date=date(2025, 2, 5))
 
     assert resolution.binding_values["modelo-303-iva-repercutido-general-cuota"] == Decimal("2100.00")
     assert resolution.diagnostics == ()
