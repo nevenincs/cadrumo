@@ -36,8 +36,13 @@ use std::{
 const CLI_ENTRYPOINT: &str = include_str!("python/cli.py");
 
 fn run(diagnostics: Arc<Diagnostics>) -> Result<i32> {
-    let arguments = std::env::args_os().skip(1).collect();
-    let mode = launch::select(arguments, launch::desktop_available());
+    let arguments: Vec<OsString> = std::env::args_os().skip(1).collect();
+    // A launch with no arguments asks for a window; when it gets the CLI instead,
+    // the refused desktop is the reason it records.
+    let desktop = launch::desktop_available();
+    let available = desktop.is_ok();
+    let refused_window = desktop.err().filter(|_| arguments.is_empty());
+    let mode = launch::select(arguments, available);
     diagnostics.event(EventKind::HostStarted, None, None);
     diagnostics.host_event(EventKind::StageStarted, HostStage::Admission);
     let parent = environment::Parent::current()?;
@@ -105,7 +110,7 @@ fn run(diagnostics: Arc<Diagnostics>) -> Result<i32> {
             tauri::async_runtime::block_on(check_health(&launch, hold_seconds))
         }
         launch::Mode::Cli(arguments) => {
-            diagnostics.event(EventKind::HeadlessSelected, None, None);
+            diagnostics.event(EventKind::HeadlessSelected, None, refused_window);
             let configuration = headless(&launch, parent.working_directory)?;
             let mut forwarded: Vec<OsString> =
                 vec!["-u".into(), "-c".into(), CLI_ENTRYPOINT.into()];
