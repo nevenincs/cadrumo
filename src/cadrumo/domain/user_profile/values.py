@@ -42,12 +42,12 @@ _FieldPath = Annotated[
     str,
     StringConstraints(
         strip_whitespace=True,
-        min_length=3,
-        max_length=192,
+        min_length=1,
+        max_length=256,
         pattern=r"^[a-z][a-z0-9_]*(?:\.(?:[0-9]+|[a-z][a-z0-9_]*))+$",
     ),
 ]
-_Source = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=80)]
+_Source = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=128)]
 
 
 def declared_provenance_sources(schema: ProfileSchemaDefinition) -> frozenset[str]:

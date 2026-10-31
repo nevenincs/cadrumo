@@ -81,13 +81,13 @@ _NODE_ID_RE: Final[str] = r"^[a-z0-9][a-z0-9_-]*$"
 _HEADING_KEY_RE: Final[str] = r"^[a-z0-9][a-z0-9_]*(\.[a-z0-9][a-z0-9_-]*)+$"
 _SHA256_RE: Final = re.compile(r"^[0-9a-f]{64}$")
 
-type FormNodeId = Annotated[str, Field(min_length=1, max_length=96, pattern=_NODE_ID_RE)]
+type FormNodeId = Annotated[str, Field(min_length=1, max_length=128, pattern=_NODE_ID_RE)]
 """A page, section, block, row or column id, stable within its layout."""
 
-type FormHeadingKey = Annotated[str, Field(min_length=3, max_length=200, pattern=_HEADING_KEY_RE)]
+type FormHeadingKey = Annotated[str, Field(min_length=1, max_length=256, pattern=_HEADING_KEY_RE)]
 """A catalogue key naming a heading; the catalogue may not yet translate it."""
 
-type OfficialHeading = Annotated[str, Field(min_length=1, max_length=400)]
+type OfficialHeading = Annotated[str, Field(min_length=1, max_length=512)]
 """The official design's own Spanish words, quoted verbatim."""
 
 
@@ -327,7 +327,7 @@ class FormGridBlock(RegistryModel):
     id: FormNodeId
     row_heading_key: FormHeadingKey | None = None
     official_row_heading: OfficialHeading | None = None
-    columns: tuple[FormGridColumn, ...] = Field(min_length=2)
+    columns: tuple[FormGridColumn, ...]
     rows: tuple[FormGridRow, ...] = Field(min_length=1)
 
     @model_validator(mode="after")
@@ -337,6 +337,8 @@ class FormGridBlock(RegistryModel):
         owner = f"form grid {self.id!r}"
         _require_unique(owner, "column keys", tuple(column.key for column in self.columns))
         _require_unique(owner, "row keys", tuple(row.key for row in self.rows))
+        if len(self.columns) < 2:
+            raise RegistryValidationError(f"{owner} needs at least two columns")
         width = len(self.columns)
         for row in self.rows:
             if len(row.cells) != width:

@@ -140,13 +140,13 @@ class InvoiceObservation(BaseModel):
     base_amount: Decimal
     invoice_total_amount: Decimal | None = None
     iva_regime: str | None = Field(default=None, max_length=64)
-    intracommunity_clave: str | None = Field(default=None, max_length=2)
+    intracommunity_clave: str | None = Field(default=None, max_length=16)
     operation_clave: str | None = Field(default=None, max_length=1)
     is_rectification: bool = False
     rectified_year: FilingYear | None = None
-    rectified_period: str | None = Field(default=None, max_length=8)
+    rectified_period: str | None = Field(default=None, max_length=16)
     rectified_base_previous: Decimal | None = None
-    party_legal_name: str | None = Field(default=None, max_length=200)
+    party_legal_name: str | None = Field(default=None, max_length=256)
     cash_accounting_operation: bool = False
     """The operation falls under the régimen especial del criterio de caja (LIVA arts. 163 decies ff.).
 
@@ -175,7 +175,7 @@ class InvoiceObservation(BaseModel):
     """
     situacion_inmueble: str | None = Field(default=None, min_length=1, max_length=1)
     """The leased premises' SITUACIÓN DEL INMUEBLE code, when the lease records it."""
-    referencia_catastral: str | None = Field(default=None, min_length=1, max_length=25)
+    referencia_catastral: str | None = Field(default=None, min_length=1, max_length=32)
     """The leased premises' referencia catastral, when the lease records it."""
 
     _country_code_uppercase = field_validator("country_code")(uppercase_alpha_code("country_code"))

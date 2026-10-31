@@ -645,11 +645,11 @@ def _parse_group_member_roster_key(key: str) -> tuple[str | None, int | None, st
     for prefix in ("cross_period.group_member_roster.", "iva_grupo.member_roster."):
         if not key.startswith(prefix):
             continue
-        parts = key[len(prefix) :].split(".")
-        if len(parts) == 3 and parts[1].isdigit():
-            return parts[0], int(parts[1]), parts[2]
-        if len(parts) == 2 and parts[0].isdigit():
-            return Modelo("322").value, int(parts[0]), parts[1]
+        match key[len(prefix) :].split("."):
+            case [modelo, year, token] if year.isdigit():
+                return modelo, int(year), token
+            case [year, token] if year.isdigit():
+                return Modelo("322").value, int(year), token
     return None, None, None
 
 

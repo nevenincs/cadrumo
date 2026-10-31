@@ -42,8 +42,8 @@ _FieldPath = Annotated[
     str,
     StringConstraints(
         strip_whitespace=True,
-        min_length=3,
-        max_length=160,
+        min_length=1,
+        max_length=256,
         pattern=r"^[a-z][a-z0-9_]*(?:\.[a-z0-9_]+)+$",
     ),
 ]
@@ -59,8 +59,8 @@ _DerivedSelectorPattern = Annotated[
     str,
     StringConstraints(
         strip_whitespace=True,
-        min_length=3,
-        max_length=160,
+        min_length=1,
+        max_length=256,
         pattern=r"^[a-z][a-z0-9_]*(?:\.[a-z0-9_{}]+)+$",
     ),
 ]

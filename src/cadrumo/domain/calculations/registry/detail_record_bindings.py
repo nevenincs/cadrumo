@@ -381,7 +381,7 @@ class AtributionMemberObservation(BaseModel):
 
     source_id: str = Field(min_length=1, max_length=128)
     member_tax_id: TaxIdIdentityToken
-    member_legal_name: str = Field(default="", max_length=200)
+    member_legal_name: str = Field(default="", max_length=256)
     country_code: CountryCodeAlpha2 | None = None
     """The party's country, or ``None`` when the source stated none.
 
@@ -410,10 +410,10 @@ class AtributionMemberObservation(BaseModel):
     field expects.
     """
     dias_miembro: int | None = None
-    domicilio_fiscal: str | None = Field(default=None, max_length=40)
+    domicilio_fiscal: str | None = Field(default=None, max_length=64)
     naturaleza_inmueble: str | None = Field(default=None, min_length=1, max_length=1)
     situacion_inmueble: str | None = Field(default=None, min_length=1, max_length=1)
-    referencia_catastral: str | None = Field(default=None, max_length=20)
+    referencia_catastral: str | None = Field(default=None, max_length=32)
     clave_declarado: str | None = Field(default=None, min_length=1, max_length=1)
     porcentaje_titularidad_inmueble: Decimal | None = None
     dias_arrendamiento: int | None = None

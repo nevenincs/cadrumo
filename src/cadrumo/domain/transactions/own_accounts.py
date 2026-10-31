@@ -51,7 +51,7 @@ class OwnAccountRegisterValidationError(OwnAccountRegisterError):
     """Raised when a register document, account or designation fails its invariants."""
 
 
-OwnAccountId = Annotated[str, StringConstraints(pattern=r"^acc-[0-9]{2,}$")]
+OwnAccountId = Annotated[str, StringConstraints(pattern=r"^acc-[0-9]+$")]
 """Opaque register-assigned ordinal identity of one own account."""
 
 
@@ -101,13 +101,13 @@ class OwnBankAccountDetails(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
-    label: str = Field(min_length=1, max_length=80)
+    label: str = Field(min_length=1, max_length=128)
     holding: OwnAccountHolding
     iban: str
     swift_bic: str = ""
-    bank_name: str = Field(default="", max_length=70)
-    bank_address: str = Field(default="", max_length=35)
-    bank_city: str = Field(default="", max_length=30)
+    bank_name: str = Field(default="", max_length=128)
+    bank_address: str = Field(default="", max_length=64)
+    bank_city: str = Field(default="", max_length=32)
     bank_country_code: str = ""
     currency: IsoCurrencyCode = DEFAULT_CURRENCY
     opened_on: date | None = None

@@ -241,7 +241,7 @@ class WithholdingObservation(BaseModel):
     remain traceable without becoming duplicate type-2 records.
     """
     perceptor_tax_id: TaxIdIdentityToken = Field(min_length=1, max_length=64)
-    perceptor_legal_name: str = Field(default="", max_length=200)
+    perceptor_legal_name: str = Field(default="", max_length=256)
     country_code: CountryCodeAlpha2 | None = None
     """The party's country, or ``None`` when the source stated none.
 
@@ -433,7 +433,7 @@ class WithholdingObservation(BaseModel):
     tipo_codigo: str | None = None
     """Modelo 193 tipo codigo (position 96): what the codigo cuenta field
     holds, always recorded for claves A, B and D."""
-    codigo_cuenta: str | None = Field(default=None, max_length=20)
+    codigo_cuenta: str | None = Field(default=None, max_length=32)
     """Modelo 193 codigo cuenta valores / numero operacion prestamo (positions
     97-116), recorded only when a financial entity manages the valores."""
     financial_asset_origin: str | None = None
@@ -475,7 +475,7 @@ class WithholdingObservation(BaseModel):
     penalizaciones: Decimal = Decimal("0")
     """Modelo 193 penalizaciones (positions 182-192), declared only for claves
     B and D; the design's own zeros when none."""
-    isin_code: str | None = Field(default=None, max_length=12)
+    isin_code: str | None = Field(default=None, max_length=16)
     """Modelo 193 codigo ISIN (positions 193-204, 2025 edition), recorded when
     clave codigo is 2 or 4."""
     naturaleza_declarante: str | None = Field(default=None, max_length=1)

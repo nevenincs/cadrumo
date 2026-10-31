@@ -86,7 +86,7 @@ class TestPersonOrEntityName:
             assert _NAME.validate_python(raw) == canonical, raw
 
     def test_rejected(self) -> None:
-        for raw in ("", "   ", "x" * 201):
+        for raw in ("", "   ", "x" * 257):
             with pytest.raises(ValidationError):
                 _NAME.validate_python(raw)
 

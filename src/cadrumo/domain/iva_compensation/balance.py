@@ -25,7 +25,7 @@ from .carry_forward import (
 )
 from .carry_window import resolve_iva_compensation_carry_window_years
 
-CompensationExpiryYear = Annotated[int, Field(ge=2000, le=2200)]
+CompensationExpiryYear = Annotated[int, Field(ge=1900, le=9999)]
 """A coarse year-level carry-window review boundary for a compensation lot.
 
 Deliberately wider than FilingYear. This derived review year may fall beyond

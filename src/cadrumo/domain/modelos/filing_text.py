@@ -45,13 +45,13 @@ ModeloActorLabel = Annotated[
 
 OperatorReason = Annotated[
     str,
-    StringConstraints(strip_whitespace=True, min_length=1, max_length=500),
+    StringConstraints(strip_whitespace=True, min_length=1, max_length=512),
 ]
 """Why an operator discarded or amended a revision, in their own words."""
 
 FilingNotes = Annotated[
     str,
-    StringConstraints(strip_whitespace=True, min_length=1, max_length=500),
+    StringConstraints(strip_whitespace=True, min_length=1, max_length=512),
 ]
 """Free operator commentary attached to a filing record.
 

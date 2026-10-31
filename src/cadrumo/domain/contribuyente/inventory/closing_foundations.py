@@ -150,7 +150,7 @@ class PhysicalClosingObservation(BaseModel):
     filing_year: FilingYear
     closing_value: Decimal = Field(ge=MONEY_ZERO)
     valuation_basis: InventoryClosingValuationBasis
-    evidence: tuple[PhysicalClosingEvidence, ...] = Field(min_length=2)
+    evidence: tuple[PhysicalClosingEvidence, ...]
 
     @field_validator("closing_value")
     @classmethod

@@ -553,7 +553,7 @@ class ExportFieldDefinition(RegistryModel):
     """
     value_policy: ExportValuePolicyValue = None
     allowed_values: tuple[str, ...] | None = None
-    minimum_year: int | None = Field(default=None, ge=1000, le=9999)
+    minimum_year: int | None = Field(default=None, ge=1000)
     """An official lower bound on a four-digit filing-year value."""
     legal_refs: LegalRefs
     source_refs: SourceRefs

@@ -251,6 +251,9 @@ independently of a casilla declaration.
 """
 
 
+_MAX_NAME_LENGTH = 256
+
+
 @pydantic_validation_boundary
 def _validate_name_string(value: object) -> object:
     """Validate a personal or entity name: non-empty unicode within length bounds."""
@@ -259,8 +262,8 @@ def _validate_name_string(value: object) -> object:
     stripped = value.strip()
     if not stripped:
         raise RegistryValidationError("name value must not be blank")
-    if len(stripped) > 200:
-        raise RegistryValidationError(f"name value exceeds 200 characters: {len(stripped)}")
+    if len(stripped) > _MAX_NAME_LENGTH:
+        raise RegistryValidationError(f"name value exceeds {_MAX_NAME_LENGTH} characters: {len(stripped)}")
     return stripped
 
 

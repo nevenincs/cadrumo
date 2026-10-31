@@ -384,7 +384,7 @@ class NonFilingAxisAdmission(RegistryModel):
     """
 
     date_axis: DateAxisField
-    legal_ref: str = Field(min_length=1, max_length=200)
+    legal_ref: str = Field(min_length=1, max_length=256)
     reason: str = Field(min_length=40, max_length=1000)
 
 

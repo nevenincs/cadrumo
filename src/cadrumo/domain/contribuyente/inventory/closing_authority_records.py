@@ -103,7 +103,7 @@ class PriorAuthoritativeClosingLink(BaseModel):
     model_config = _STRICT_FROZEN_CONFIG
 
     actividad_id: str = Field(min_length=1)
-    current_filing_year: int = Field(ge=1901)
+    current_filing_year: int = Field(ge=1)
     prior_filing_year: FilingYear
     prior_authoritative_closing_value: Decimal = Field(ge=MONEY_ZERO)
     current_opening_value: Decimal = Field(ge=MONEY_ZERO)

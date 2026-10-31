@@ -135,7 +135,7 @@ class BienInversionDisposal(BaseModel):
 
     model_config = _STRICT_FROZEN_CONFIG
 
-    year: int = Field(ge=1, le=2099)
+    year: int = Field(ge=1)
     regime: _BienInversionDisposalRegime
 
     @field_validator("year")
@@ -185,7 +185,7 @@ class BienInversionIvaRecord(BaseModel):
 
     identifier: str = Field(min_length=1)
     description: str = Field(min_length=1)
-    acquisition_year: int = Field(ge=1, le=2099)
+    acquisition_year: int = Field(ge=1)
     cuota_soportada: Decimal = Field(gt=Decimal("0"))
     prorrata_inicial_pct: Percentage
     kind: _BienInversionKind

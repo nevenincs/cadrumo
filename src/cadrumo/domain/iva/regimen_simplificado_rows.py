@@ -24,14 +24,14 @@ from ..filing_evidence import FilingEvidenceReference
 from .errors import IvaValidationError
 from .schema import validate_orden_module_identities
 
-_Token = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=160)]
-_OfficialActivityName = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=500)]
+_Token = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=256)]
+_OfficialActivityName = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=512)]
 ActividadOrdenAnualId = Annotated[
     str,
     StringConstraints(
         strip_whitespace=True,
         min_length=1,
-        max_length=160,
+        max_length=256,
         pattern=r"^[a-z0-9][a-z0-9._:-]*[a-z0-9]$|^[a-z0-9]$",
     ),
 ]

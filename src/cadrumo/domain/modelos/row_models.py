@@ -45,6 +45,7 @@ from pydantic import (
     model_validator,
 )
 
+from ...core.country_code import COUNTRY_CODE_LENGTH
 from ...core.errors.hierarchy import CadrumoError, pydantic_validation_boundary
 from ...core.irnr import M210PayerMode
 from ...core.models import STRICT_FROZEN_CONFIG
@@ -63,10 +64,13 @@ from .m156_rows import Modelo156AfiliadoRow
 # Shared type aliases
 # ---------------------------------------------------------------------------
 
-_NifStr = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=20)]
-_NameStr = Annotated[str, StringConstraints(strip_whitespace=True, max_length=200)]
-_RequiredNameStr = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=200)]
-_IsoCountryCode = Annotated[str, StringConstraints(strip_whitespace=True, min_length=2, max_length=2)]
+_NifStr = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=32)]
+_NameStr = Annotated[str, StringConstraints(strip_whitespace=True, max_length=256)]
+_RequiredNameStr = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=256)]
+_IsoCountryCode = Annotated[
+    str,
+    StringConstraints(strip_whitespace=True, min_length=COUNTRY_CODE_LENGTH, max_length=COUNTRY_CODE_LENGTH),
+]
 _M210OfficialTipoRentaCode = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=16)]
 
 
@@ -241,16 +245,16 @@ class Modelo184MemberRow(BaseModel):
     # Always-present-per-row facts, independent of clave.
     codigo_provincia: Annotated[str, StringConstraints(strip_whitespace=True, max_length=16)] | None = None
     miembro_a_31_diciembre: bool | None = None
-    dias_miembro: int | None = Field(default=None, ge=0, le=366)
-    domicilio_fiscal: Annotated[str, StringConstraints(strip_whitespace=True, max_length=40)] | None = None
+    dias_miembro: int | None = Field(default=None, ge=0)
+    domicilio_fiscal: Annotated[str, StringConstraints(strip_whitespace=True, max_length=64)] | None = None
 
     # Clave-C inmueble sub-block.
     naturaleza_inmueble: str | None = None
     situacion_inmueble: str | None = None
-    referencia_catastral: Annotated[str, StringConstraints(strip_whitespace=True, max_length=20)] | None = None
+    referencia_catastral: Annotated[str, StringConstraints(strip_whitespace=True, max_length=32)] | None = None
     clave_declarado: str | None = None
     porcentaje_titularidad_inmueble: Decimal | None = None
-    dias_arrendamiento: int | None = Field(default=None, ge=0, le=366)
+    dias_arrendamiento: int | None = Field(default=None, ge=0)
 
     # The reducción field (diseño positions 109-119); the registry declares which
     # claves and subclaves bear it.
@@ -259,6 +263,13 @@ class Modelo184MemberRow(BaseModel):
     # Clave-D subclave 03/04 rendimiento-neto fields (estimación objetiva).
     rendimiento_neto_previo_eo: Decimal | None = None
     rendimiento_neto_minorado_agricola_eo: Decimal | None = None
+
+    @field_validator("dias_miembro", "dias_arrendamiento")
+    @classmethod
+    def _days_fit_a_leap_year(cls, value: int | None) -> int | None:
+        if value is not None and value > 366:
+            raise ValueError("a day count cannot exceed the days of a leap year")
+        return value
 
     @field_validator("pais")
     @classmethod
@@ -521,7 +532,7 @@ class Modelo349RectificacionRow(BaseModel):
     nif_comunitario: _NifStr
     razon_social: _RequiredNameStr
     clave_operacion: Modelo349ClaveOperacionValue
-    ejercicio: Annotated[str, StringConstraints(strip_whitespace=True, min_length=4, max_length=4)]
+    ejercicio: Annotated[str, StringConstraints(strip_whitespace=True)]
     periodo: str
     base_rectificada: Decimal = Field(description="Base imponible o importe rectificado en EUR")
     base_anterior: Decimal = Field(description="Base imponible declarada anteriormente en EUR")
@@ -561,7 +572,7 @@ class Modelo349RectificacionRow(BaseModel):
     @field_validator("ejercicio")
     @classmethod
     def _ejercicio_four_digit_year(cls, value: str) -> str:
-        if not value.isdigit():
+        if not (value.isdigit() and 1000 <= int(value) <= 9999):
             raise ValueError("ejercicio must be a four-digit year")
         return value
 

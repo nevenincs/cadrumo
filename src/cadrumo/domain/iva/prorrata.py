@@ -364,12 +364,18 @@ def validate_prorrata_reference(reference_id: str) -> ProrrataReference:
     """
     normalized = reference_id.strip()
     parts = normalized.split(":")
-    if len(parts) not in (4, 5) or parts[0] != "prorrata":
-        raise ProrrataInputError(
-            "prorrata_reference must use canonical shape "
-            "'prorrata:{year}:{kind}:{regime}' or "
-            "'prorrata:{year}:{kind}:{regime}:{sector_id}'",
-        )
+    sector_id: str | None = None
+    match parts:
+        case ["prorrata", _, _, _]:
+            pass
+        case ["prorrata", _, _, _, sector]:
+            sector_id = sector
+        case _:
+            raise ProrrataInputError(
+                "prorrata_reference must use canonical shape "
+                "'prorrata:{year}:{kind}:{regime}' or "
+                "'prorrata:{year}:{kind}:{regime}:{sector_id}'",
+            )
     try:
         year = int(parts[1])
     except ValueError as exc:
@@ -383,7 +389,6 @@ def validate_prorrata_reference(reference_id: str) -> ProrrataReference:
         regime = _require_registry_prorrata_regime(parts[3], effective_date=date(year, 1, 1))
     except ValueError as exc:
         raise ProrrataInputError(f"unknown prorrata_reference regime: {parts[3]!r}") from exc
-    sector_id = parts[4] if len(parts) == 5 else None
     try:
         return ProrrataReference(
             reference_id=normalized,

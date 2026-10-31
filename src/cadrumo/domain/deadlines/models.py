@@ -959,6 +959,6 @@ class Schedule(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     profile: TaxpayerProfile
-    year: int = Field(ge=1900, le=2999)
+    year: int = Field(ge=1900, le=9999)
     obligations: tuple[ModeloDeadline, ...]
     generated_at: UtcInstant

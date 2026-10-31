@@ -83,7 +83,7 @@ _SourcePeriods = Annotated[
     BeforeValidator(_coerce_period_sequence),
     Field(min_length=1),
 ]
-_GeneratorToken = Annotated[str, Field(min_length=1, max_length=200)]
+_GeneratorToken = Annotated[str, Field(min_length=1, max_length=256)]
 
 
 def _reject_duplicate_periods(value: tuple[str, ...]) -> tuple[str, ...]:
@@ -451,7 +451,7 @@ class NonCalculation(RegistryModel):
     kind: Literal[BindingApplicabilityKind.NON_CALCULATION] = BindingApplicabilityKind.NON_CALCULATION
     reason: NonCalculationReason
     box_retired_in: RevisionId | None = None
-    consumed_by: Annotated[str, Field(min_length=1, max_length=300)]
+    consumed_by: Annotated[str, Field(min_length=1, max_length=512)]
 
     @model_validator(mode="after")
     @pydantic_validation_boundary

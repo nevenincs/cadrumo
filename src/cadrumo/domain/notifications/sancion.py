@@ -33,7 +33,7 @@ class SancionLiquidacion(BaseModel):
     certificado_id: AeatCertificadoId
     clave_liquidacion: AeatClaveLiquidacion
     referencia: str = Field(min_length=1, max_length=64)
-    nif: str = Field(min_length=8, max_length=16)
+    nif: str = Field(min_length=1, max_length=16)
     objeto_tributario: Literal["sancion", "liquidacion"]
     base_sancion: Decimal
     porcentaje_minimo: Decimal

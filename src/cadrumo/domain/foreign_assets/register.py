@@ -27,7 +27,7 @@ from typing import Annotated, Final, override
 
 from pydantic import BaseModel, Field, StringConstraints, field_validator, model_validator
 
-from ...core.country_code import CountryCodeAlpha2
+from ...core.country_code import COUNTRY_CODE_LENGTH, CountryCodeAlpha2
 from ...core.errors.hierarchy import CadrumoError, pydantic_validation_boundary
 from ...core.foreign_asset_obligation import M720AssetClassCode
 from ...core.iban import IBAN_SHAPE_RE, iban_mod_97, normalise_iban
@@ -111,7 +111,7 @@ def _validate_iban_identifier(value: str) -> None:
 
 def _validate_issuer_country_identifier(value: str) -> None:
     # Positions 132-143: "se reflejará la clave ZXX, siendo XX el código del país emisor".
-    if len(value) != 3 or not value.startswith("Z") or not value[1:].isalpha():
+    if len(value[1:]) != COUNTRY_CODE_LENGTH or not value.startswith("Z") or not value[1:].isalpha():
         raise ForeignAssetRegisterValidationError(
             "a security without ISIN is written Z plus the issuer country",
         )
@@ -125,7 +125,7 @@ class M720AssetIdentifier(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     scheme: M720IdentifierScheme
-    value: str = Field(default="", max_length=34)
+    value: str = Field(default="", max_length=64)
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -163,7 +163,7 @@ class ForeignAssetRegisterEntry(BaseModel):
     subclave: int | None = None
     country_code: CountryCodeAlpha2
     identifier: M720AssetIdentifier
-    description: str = Field(min_length=1, max_length=200)
+    description: str = Field(min_length=1, max_length=256)
     held_since: date
     ceased_on: date | None = None
     schema_version: str = FOREIGN_ASSET_REGISTER_SCHEMA_VERSION
@@ -244,7 +244,7 @@ class ForeignAssetDeclarationEntry(BaseModel):
 
     asset_ref: M720AssetRef
     condition: M720DeclarantCondition
-    titularidad_detail: str | None = Field(default=None, min_length=1, max_length=25)
+    titularidad_detail: str | None = Field(default=None, min_length=1, max_length=32)
     participation_pct: Percentage
     """Position 476-480: the declarant's share, two decimals; 100 for a sole declarant."""
     schema_version: str = FOREIGN_ASSET_REGISTER_SCHEMA_VERSION

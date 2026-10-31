@@ -52,7 +52,7 @@ type LineageMemberId = Annotated[
     str,
     Field(
         min_length=1,
-        max_length=160,
+        max_length=256,
         pattern=r"^[A-Za-z0-9][A-Za-z0-9._:+-]*$",
     ),
 ]

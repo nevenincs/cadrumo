@@ -630,7 +630,7 @@ class InventoryLedgerDescriptor(BaseModel):
 
     model_config = _STRICT_FROZEN_CONFIG
 
-    label: str = Field(min_length=1, max_length=120)
+    label: str = Field(min_length=1, max_length=128)
     description: str | None = Field(default=None, min_length=1, max_length=1024)
 
     @field_validator("label", "description")
@@ -701,7 +701,7 @@ class InventoryLedgerHistoryEntry(BaseModel):
         return self
 
 
-InventoryYear = Annotated[int, Field(ge=1900)]
+InventoryYear = Annotated[int, Field(ge=1)]
 """The calendar year an inventory ledger or movement covers.
 
 Deliberately NOT the filing-year window. An inventory record may reach back

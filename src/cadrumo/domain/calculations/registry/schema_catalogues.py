@@ -45,7 +45,7 @@ class SociedadesAnnualManualCoverageDisposition(RegistryModel):
     Modelo 200 revision selection and filing capability.
     """
 
-    year: int = Field(ge=2000, le=2099)
+    year: int = Field(ge=1900, le=9999)
     status: SociedadesAnnualManualCoverageStatusField
     source_ref: SourceRefId | None = None
     official_locator: RegistryExternalLink

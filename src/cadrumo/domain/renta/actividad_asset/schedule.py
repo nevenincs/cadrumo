@@ -116,7 +116,7 @@ class ScheduleAuthority(BaseModel):
     annual_rate: Decimal | None = None
     useful_life_ends_on: date | None = None
     maximum_period_ends_on: date | None = None
-    sum_of_digits_period_years: int | None = Field(default=None, ge=1, le=100)
+    sum_of_digits_period_years: int | None = Field(default=None, ge=1, le=128)
     digit_order: DigitOrder | None = None
     plan_annual_amount: Decimal | None = None
     plan_total: Decimal | None = None

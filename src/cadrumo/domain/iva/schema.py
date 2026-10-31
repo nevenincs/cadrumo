@@ -381,7 +381,7 @@ _RegistryLegalRef = Annotated[
     StringConstraints(
         strip_whitespace=True,
         min_length=1,
-        max_length=160,
+        max_length=256,
         pattern=r"^[a-z0-9][a-z0-9._:-]*[a-z0-9]$|^[a-z0-9]$",
     ),
 ]
@@ -393,7 +393,7 @@ _RegistrySourceRef = Annotated[
     StringConstraints(
         strip_whitespace=True,
         min_length=1,
-        max_length=160,
+        max_length=256,
         pattern=r"^[a-z0-9][a-z0-9._:-]*[a-z0-9]$|^[a-z0-9]$",
     ),
 ]
