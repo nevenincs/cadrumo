@@ -201,21 +201,21 @@ adapters:
             útvonal-karaktereket tartalmaz.
           namespace_not_found: 'A helyi névtér nem található: {namespace}.'
           object_delete_permission: A helyi tárhely nem tudta törölni az objektum
-            payloadját.
+            adattartalmát.
           object_not_found: 'A helyi objektum {object_key_hmac} nem található ebben
             a névtérben: {namespace}.'
           payload_commit_failed: A helyi tárhely nem tudta atomikusan véglegesíteni
-            az objektum payloadját.
-          payload_read_permission: A helyi tárhely nem tudta olvasni az objektum payloadját.
+            az objektum adattartalmát.
+          payload_read_permission: A helyi tárhely nem tudta olvasni az objektum adattartalmát.
           payload_write_path_too_long: 'A helyi tárhely nem tudta kiírni az objektum
             tartalmát: az útvonal hosszabb a Windows által megengedettnél. Helyezd
             át a CADRUMO_STORAGE_ROOT beállítást egy rövidebb útvonalra, vagy engedélyezd
             a LongPathsEnabled beállítást (lásd `aeat config storage check`).'
-          payload_write_permission: A helyi tárhely nem tudta írni az objektum payloadját.
+          payload_write_permission: A helyi tárhely nem tudta írni az objektum adattartalmát.
           sidecar_malformed: A helyi sidecar {sidecar_path} nem olvasható vagy hibás.
           sidecar_missing: A helyi objektum sidecarja hiányzik.
           sidecar_not_object: A helyi sidecar {sidecar_path} nem JSON objektum.
-          sidecar_write_failed: A helyi tárhely nem tudta írni az objektum sidecarját.
+          sidecar_write_failed: A helyi tárhely nem tudta írni az objektum kísérőfájlját.
           sidecar_write_path_too_long: 'A helyi tárhely nem tudta kiírni az objektum
             sidecar fájlját: az útvonal hosszabb a Windows által megengedettnél. Helyezd
             át a CADRUMO_STORAGE_ROOT beállítást egy rövidebb útvonalra, vagy engedélyezd
