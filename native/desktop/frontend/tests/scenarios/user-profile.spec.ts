@@ -1408,3 +1408,39 @@ test("the AEAT editor does not save over a profile that changed elsewhere", asyn
   await expect(save(editor)).toBeDisabled();
   expect(await page.evaluate(() => window.__scenarioProfile!.writes())).toBe(0);
 });
+
+test("a date left unfinished stays in its field, is refused, and never clears the saved date", async ({
+  page,
+}) => {
+  const profile = await open(page);
+  const birth = row(profile, "renta_taxpayer.birth_date");
+  const writes = () => page.evaluate(() => window.__scenarioProfile!.writes());
+  const dialog = page.getByRole("dialog", { name: "Birth date", exact: true });
+  const field = dialog.getByLabel("Birth date", { exact: true });
+  const edit = async () => {
+    await birth.focus();
+    await page.keyboard.press("Enter");
+    await expect(dialog).toBeVisible();
+  };
+
+  await edit();
+  await field.fill("1985-03-15");
+  await save(dialog).click();
+  await expect(dialog).toHaveCount(0);
+  await expect(birth).toContainText("1985");
+  const saved = await writes();
+
+  await edit();
+  await field.fill("1985-03");
+  await save(dialog).click();
+  await expect(dialog).toBeVisible();
+  await expect(field).toHaveValue("1985-03");
+  await expect(field).toHaveAttribute("aria-invalid", "true");
+  await expect(dialog.getByRole("alert")).toContainText("1985-03");
+  expect(await writes()).toBe(saved);
+
+  await page.keyboard.press("Escape");
+  await expect(dialog).toHaveCount(0);
+  await expect(birth).toContainText("1985");
+  expect(await writes()).toBe(saved);
+});

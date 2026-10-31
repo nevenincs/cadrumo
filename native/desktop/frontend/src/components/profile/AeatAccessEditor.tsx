@@ -9,8 +9,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldLabel,
+} from "@/components/ui/field";
 import { NativeSelect } from "@/components/ui/native-select";
 import { PasswordInput } from "@/components/ui/password-input";
 import { Spinner } from "@/components/ui/spinner";
@@ -20,7 +24,7 @@ import {
   type CensoPort,
   type CensoReadiness,
 } from "../../shell/profileCenso";
-import { profileInput } from "../../shell/profileInput";
+import { unreadDate } from "../../shell/profileInput";
 import {
   AEAT_PROVIDER,
   AEAT_ROUTE,
@@ -28,6 +32,7 @@ import {
   isEmpty,
 } from "../../shell/profileRows";
 import { useStrings } from "../../shell/strings";
+import { ProfileValueEditor } from "./ProfileValueEditor";
 import {
   credentialFailure,
   type AeatAccessPort,
@@ -130,6 +135,9 @@ export function AeatAccessEditor({
   const [method, setMethod] = useState(storedMethod);
   const [route, setRoute] = useState(storedRoute);
   const [facts, setFacts] = useState(() => factsOf(base));
+  // Facts whose unreadable text is told: after the person leaves the field,
+  // or tries to save with it.
+  const [told, setTold] = useState<ReadonlySet<string>>(new Set());
   const [certificate, setCertificate] = useState<AeatCertificate | null>(null);
   const [typedSecret, setTypedSecret] = useState(false);
   const [revealed, setRevealed] = useState(false);
@@ -236,6 +244,13 @@ export function AeatAccessEditor({
 
   const submit = async () => {
     if (!canSave) return;
+    const unread = shownFacts.filter(
+      (field) => unreadDate(field, facts[field.path] ?? "") !== null,
+    );
+    if (unread.length) {
+      setTold(new Set(unread.map((field) => field.path)));
+      return;
+    }
     const typed = secretShown ? (secret.current?.value ?? "") : "";
     clearSecret();
     setOutcome(null);
@@ -386,33 +401,48 @@ export function AeatAccessEditor({
               </NativeSelect>
             </Field>
           )}
-          {shownFacts.map((field, index) => (
-            <Field key={field.path}>
-              <FieldLabel htmlFor={`${id}-fact-${index}`}>
-                {field.label}
-              </FieldLabel>
-              <Input
-                {...profileInput(field)}
-                id={`${id}-fact-${index}`}
-                value={facts[field.path] ?? ""}
-                maxLength={4096}
-                disabled={!idle}
-                aria-describedby={
-                  field.masked && !isEmpty(field)
-                    ? `${id}-fact-${index}-saved`
-                    : undefined
-                }
-                onChange={(event) =>
-                  setFacts({ ...facts, [field.path]: event.target.value })
-                }
-              />
-              {field.masked && !isEmpty(field) && (
-                <FieldDescription id={`${id}-fact-${index}-saved`}>
-                  {t("desktop.profile.aeat.saved_value")}
-                </FieldDescription>
-              )}
-            </Field>
-          ))}
+          {shownFacts.map((field, index) => {
+            const text = unreadDate(field, facts[field.path] ?? "");
+            const refusal = text !== null && told.has(field.path) ? text : null;
+            return (
+              <Field key={field.path} data-invalid={refusal !== null}>
+                <FieldLabel htmlFor={`${id}-fact-${index}`}>
+                  {field.label}
+                </FieldLabel>
+                <ProfileValueEditor
+                  field={field}
+                  id={`${id}-fact-${index}`}
+                  value={facts[field.path] ?? ""}
+                  disabled={!idle}
+                  invalid={refusal !== null || undefined}
+                  describedBy={
+                    [
+                      refusal !== null ? `${id}-fact-${index}-refused` : null,
+                      field.masked && !isEmpty(field)
+                        ? `${id}-fact-${index}-saved`
+                        : null,
+                    ]
+                      .filter(Boolean)
+                      .join(" ") || undefined
+                  }
+                  onBlur={() => setTold(new Set(told).add(field.path))}
+                  onChange={(value) => {
+                    setTold(new Set([...told].filter((p) => p !== field.path)));
+                    setFacts({ ...facts, [field.path]: value });
+                  }}
+                />
+                <FieldError id={`${id}-fact-${index}-refused`}>
+                  {refusal !== null &&
+                    t("desktop.editor.date.refused", { raw: refusal })}
+                </FieldError>
+                {field.masked && !isEmpty(field) && (
+                  <FieldDescription id={`${id}-fact-${index}-saved`}>
+                    {t("desktop.profile.aeat.saved_value")}
+                  </FieldDescription>
+                )}
+              </Field>
+            );
+          })}
           {movil && routeNow === "app_request" && (
             <p className="text-sm text-muted-foreground">
               {t("desktop.profile.aeat.document_hint")}

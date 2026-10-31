@@ -1,4 +1,5 @@
 import { useId, useRef, useState, type RefObject } from "react";
+import { TextEditor } from "@/components/editors/TextEditor";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
@@ -63,6 +64,7 @@ export function CreateProfile({
   const first = useRef<HTMLInputElement>(null);
   const second = useRef<HTMLInputElement>(null);
   const [revealed, setRevealed] = useState(false);
+  const [name, setName] = useState("");
   const [problem, setProblem] = useState<{
     name: NameProblem | null;
     password: PasswordProblem | null;
@@ -84,12 +86,12 @@ export function CreateProfile({
       noValidate
       onSubmit={(event) => {
         event.preventDefault();
-        const name = nameField.current;
+        const field = nameField.current;
         const password = first.current;
         const again = second.current;
-        if (!name || !password || !again || busy) return;
+        if (!field || !password || !again || busy) return;
         const found = {
-          name: nameProblem(name.value, account.profiles),
+          name: nameProblem(name, account.profiles),
           password: passwordProblem(password.value),
           mismatch: password.value !== again.value,
         };
@@ -97,7 +99,7 @@ export function CreateProfile({
         // Nothing is sent while something is known to be wrong: the
         // keyboard goes to the first field that is.
         const wrong = found.name
-          ? name
+          ? field
           : found.password
             ? password
             : found.mismatch
@@ -111,7 +113,7 @@ export function CreateProfile({
         password.value = "";
         again.value = "";
         setRevealed(false);
-        void account.create(name.value.trim(), bytes).then((made) => {
+        void account.create(name.trim(), bytes).then((made) => {
           if (made) onDone();
           // Refused: the passwords are gone, so the form resumes from its
           // start, where the name that may have been refused is.
@@ -123,16 +125,17 @@ export function CreateProfile({
         <FieldLabel htmlFor={nameId}>
           {t("desktop.account.create.name")}
         </FieldLabel>
-        <Input
+        <TextEditor
           ref={nameField}
           id={nameId}
           name="username"
           autoComplete="username"
           autoCapitalize="words"
-          spellCheck={false}
           readOnly={busy}
-          aria-invalid={taken !== null || undefined}
-          aria-describedby={taken ? nameErrorId : undefined}
+          value={name}
+          onChange={setName}
+          invalid={taken !== null || undefined}
+          describedBy={taken ? nameErrorId : undefined}
         />
         <FieldError id={nameErrorId}>
           {taken && t(NAME_PROBLEMS[taken])}

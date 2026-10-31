@@ -6,6 +6,7 @@ import {
   type FormEvent,
   type ReactNode,
 } from "react";
+import { TextEditor } from "@/components/editors/TextEditor";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/components/ui/cn";
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
@@ -200,13 +201,12 @@ function SecretForm({
   const secretId = useId();
   const addressId = useId();
   const secret = useRef<HTMLInputElement>(null);
-  const address = useRef<HTMLInputElement>(null);
   const [filled, setFilled] = useState(false);
   const gateway = provider.authKind === "api_key_with_base_url";
   // A gateway without a default address needs one written.
   const needsAddress = gateway && !provider.defaultBaseUrl;
-  const [addressFilled, setAddressFilled] = useState(Boolean(provider.baseUrl));
-  const held = !filled || (needsAddress && !addressFilled) || saving;
+  const [address, setAddress] = useState(provider.baseUrl ?? "");
+  const held = !filled || (needsAddress && address.trim() === "") || saving;
 
   const save = (event: FormEvent) => {
     event.preventDefault();
@@ -218,7 +218,7 @@ function SecretForm({
     if (value === "") return;
     onSave({
       secret: value,
-      ...(gateway ? { baseUrl: address.current?.value.trim() ?? "" } : {}),
+      ...(gateway ? { baseUrl: address.trim() } : {}),
     });
   };
 
@@ -247,17 +247,13 @@ function SecretForm({
           <FieldLabel htmlFor={addressId}>
             {t("desktop.providers.base_url_label")}
           </FieldLabel>
-          <Input
-            ref={address}
+          <TextEditor
             id={addressId}
             type="url"
             inputMode="url"
-            spellCheck={false}
-            defaultValue={provider.baseUrl ?? ""}
-            aria-required={needsAddress}
-            onInput={(event) =>
-              setAddressFilled(event.currentTarget.value.trim() !== "")
-            }
+            value={address}
+            onChange={setAddress}
+            required={needsAddress}
           />
           <FieldDescription>
             {provider.defaultBaseUrl

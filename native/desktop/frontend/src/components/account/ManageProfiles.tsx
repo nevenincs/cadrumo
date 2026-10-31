@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, useState } from "react";
+import { TextEditor } from "@/components/editors/TextEditor";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -10,7 +11,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { ProfileDeleteReview, ProfileList } from "@/ipc/contract";
 import { nameable, type ProfileAccounts } from "@/shell/profiles";
@@ -202,13 +202,11 @@ export function ManageProfiles({
                   name: review.name,
                 })}
               </Label>
-              <Input
+              <TextEditor
                 ref={nameInput}
                 id={confirmationId}
-                autoComplete="off"
-                spellCheck={false}
                 value={confirmation}
-                onChange={(event) => setConfirmation(event.target.value)}
+                onChange={setConfirmation}
                 readOnly={busy}
               />
             </div>

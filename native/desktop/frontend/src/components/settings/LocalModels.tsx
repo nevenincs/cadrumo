@@ -1,9 +1,9 @@
 import { useId, useState, type FormEvent } from "react";
+import { TextEditor } from "@/components/editors/TextEditor";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Icon } from "@/components/ui/icon";
-import { Input } from "@/components/ui/input";
 import {
   addedTo,
   laneModelList,
@@ -165,14 +165,12 @@ function AddModel({
         <FieldLabel htmlFor={nameId}>
           {t("desktop.providers.local_model_add_label")}
         </FieldLabel>
-        <Input
+        <TextEditor
           id={nameId}
           value={name}
-          autoComplete="off"
-          spellCheck={false}
           autoCapitalize="off"
           autoCorrect="off"
-          onChange={(event) => setName(event.currentTarget.value)}
+          onChange={setName}
         />
       </Field>
       <Button
