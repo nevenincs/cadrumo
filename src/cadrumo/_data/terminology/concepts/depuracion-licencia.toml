@@ -15,9 +15,9 @@ created_at = 2026-06-12
 updated_at = 2026-07-22
 
 [language.es]
-short_description = "La frontera que permite shippear solo identificadores y rankings limpios de datos de embedding."
-definition = "Regla de transformación que elimina de los artefactos de búsqueda cualquier dato model-derived no permitido, como vectores, pesos sparse, scores crudos, rutas o snippets, y conserva solo identificadores, destinos, superficies y pesos normalizados. Bajo la restricción de licencias de las fuentes, esta depuración mantiene limpio el backend shipped aunque el oraculo dev use recuperación híbrida."
-scope_note = "No cambia la fuente legal de un resultado; solo define que informacion derivada puede cruzar al artefacto shipped."
+short_description = "Límite que permite distribuir solo identificadores y ordenaciones por relevancia sin datos internos de las representaciones vectoriales."
+definition = "Regla de transformación que elimina de los artefactos de búsqueda cualquier dato derivado del modelo que no esté permitido, como vectores, pesos dispersos, puntuaciones sin procesar, rutas o fragmentos, y conserva solo identificadores, destinos, superficies y pesos normalizados. Según las restricciones de licencia de las fuentes, esta depuración mantiene limpio el componente distribuido aunque el oráculo de desarrollo utilice recuperación híbrida."
+scope_note = "No cambia la fuente jurídica de un resultado; solo define qué información derivada puede entrar en el artefacto distribuido."
 
 [[language.es.term]]
 label = "depuracion de licencia"
@@ -41,13 +41,13 @@ term_status = "preferred"
 part_of_speech = "noun"
 
 [language.ca]
-short_description = "La frontera que envia nomes identificadors i rankings nets, mai dades internes d'embedding."
+short_description = "La frontera que envia només identificadors i rànquings nets, mai dades internes de les representacions vectorials."
 definition = "Regla de transformació que elimina dels artefactes de cerca qualsevol dada derivada del model que no estigui permesa, com ara vectors, pesos dispersos, puntuacions en brut, rutes o fragments, i conserva només identificadors, destinacions, superfícies i pesos normalitzats. Sota la restricció de llicències de les fonts, aquesta depuració manté net el backend distribuït encara que l'oracle de desenvolupament utilitzi recuperació híbrida."
 scope_note = "No canvia la font legal d'un resultat; només defineix quina informació derivada pot passar a l'artefacte distribuït."
 
 
 [language.hu]
-short_description = "A határ, amely csak tiszta azonosítókat és rangsorokat szállít, embedding-belső adatokat nem."
+short_description = "A határ, amely csak tiszta azonosítókat és rangsorokat enged át, a beágyazások belső adatait nem."
 definition = "Átalakítási szabály, amely eltávolítja a keresési artefaktumokból a nem engedélyezett, modellből származtatott adatokat, például a vektorokat, ritka súlyokat, nyers pontszámokat, útvonalakat vagy részleteket, és csak azonosítókat, célpontokat, felületeket és normalizált súlyokat őriz meg. A források licencfeltételei mellett ez a tisztítás tisztán tartja a kiadott hátteret akkor is, ha a fejlesztési orákulum hibrid visszakeresést használ."
 scope_note = "Nem módosítja a találat jogi forrását, csak meghatározza, hogy mely származtatott információ kerülhet a kiadott artefaktumba."
 

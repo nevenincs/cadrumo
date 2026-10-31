@@ -49,7 +49,7 @@ authority = "boe"
 
 [language.hu]
 short_description = "Nyilvántartási bejelentés: kezdés, módosítás, megszűnés."
-definition = "Censal bevallás, amellyel a vállalkozók, szabadfoglalkozásúak és levonásra kötelezettek nyilvántartásában (Censo) történő regisztrációt, módosítást vagy törlést jelentik be az AEAT-nak."
+definition = "Az AEAT-hoz benyújtott bevallás a vállalkozók, szabadfoglalkozásúak és levonásra kötelezettek nyilvántartásába (Censo) történő felvétel, módosítás vagy törlés bejelentésére."
 
 [language.hu.source]
 citation = "Az 1065/2007. királyi rendelet 9. és 10. cikke."

@@ -9,8 +9,8 @@ updated_at = 2026-06-12
 
 [language.es]
 short_description = "El árbol TOML curado que gobierna los conceptos y términos de la documentación."
-definition = "Superficie de autoría comprometida que contiene un fragmento TOML por concepto, compila esos fragmentos en registros estrictos y alimenta el glosario generado y la búsqueda terminológica. Es la capa intermedia entre las fuentes de enrolment y los artefactos de documentación generados."
-scope_note = "No es el indice Pagefind ni una pagina escrita a mano; es la fuente unica de los conceptos que luego se proyectan a la busqueda y al glosario."
+definition = "Superficie de autoría versionada que contiene un fragmento TOML por concepto, compila esos fragmentos en registros estrictos y alimenta el glosario generado y la búsqueda terminológica. Es la capa intermedia entre las fuentes de incorporación y los artefactos de documentación generados."
+scope_note = "No es el índice Pagefind ni una página escrita a mano; es la fuente única de los conceptos que luego se proyectan a la búsqueda y al glosario."
 
 [language.es.source]
 citation = "Documentacion interna de la aplicacion."
@@ -40,12 +40,12 @@ part_of_speech = "noun"
 
 [language.ca]
 short_description = "L'arbre TOML curat que governa els conceptes i termes de la documentació."
-definition = "Superfície d'autoria compromesa que conté un fragment TOML per concepte, compila aquests fragments en registres estrictes i alimenta el glossari generat i la cerca terminològica. És la capa intermèdia entre les fonts d'enrolment i els artefactes documentals generats."
+definition = "Superfície d'autoria versionada que conté un fragment TOML per concepte, compila aquests fragments en registres estrictes i alimenta el glossari generat i la cerca terminològica. És la capa intermèdia entre les fonts d'incorporació i els artefactes documentals generats."
 scope_note = "No és l'índex Pagefind ni una pàgina escrita a mà; és la font única dels conceptes que després es projecten a la cerca i al glossari."
 
 
 [language.hu]
-short_description = "A kuralt TOML-fa, amely a dokumentacio fogalmait es terminusait iranyitja."
+short_description = "A gondozott TOML-fa, amely a dokumentáció fogalmait és terminusait irányítja."
 definition = "Elkötelezett szerzői felület, amely fogalmanként egy TOML-részletet tartalmaz, ezeket szigorú rekordokká fordítja össze, és a létrehozott szójegyzéket, valamint a terminológiai keresést táplálja. Ez a bejelentkezési források és a létrehozott dokumentációs artefaktumok közötti köztes réteg."
 scope_note = "Nem a Pagefind-index és nem kézzel írt oldal, hanem azoknak a fogalmaknak az egyetlen forrása, amelyeket később a keresésbe és a szójegyzékbe vetítünk."
 

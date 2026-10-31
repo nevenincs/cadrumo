@@ -31,7 +31,7 @@ label = "modulos"
 term_status = "admitted"
 
 [language.en]
-short_description = "The simplified VAT regime (modulos)."
+short_description = "The simplified VAT regime (módulos)."
 definition = "Special VAT regime in which the tax due is determined by modules or objective indices rather than by actual transactions, for activities included by ministerial order."
 
 [language.en.source]

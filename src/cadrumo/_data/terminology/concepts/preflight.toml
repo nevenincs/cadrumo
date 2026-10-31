@@ -16,7 +16,7 @@ updated_at = 2026-07-22
 [language.es]
 short_description = "La comprobación de que el ledger esta completo para un periodo antes de calcular un modelo."
 definition = "Comprobación de disponibilidad del ledger para un periodo. Informa de las filas a las que les falta una categoría, un importe de base, un tipo de IVA, una divisa o una referencia de prorrata antes de calcular un modelo, para que la persona corrija los datos antes de continuar."
-scope_note = "Concepto interno de la maquinaria de busqueda/calculo de la aplicacion; documentado para el RAG de desarrollo, no es un termino tributario de cara al contribuyente y por eso queda fuera del glosario."
+scope_note = "Concepto interno de la maquinaria de búsqueda/cálculo de la aplicación; documentado para el RAG de desarrollo, no es un término tributario de cara al contribuyente y por eso queda fuera del glosario."
 
 [language.es.source]
 citation = "Documentacion de la aplicacion aeat; concepto interno del producto."

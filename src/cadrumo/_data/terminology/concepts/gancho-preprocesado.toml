@@ -15,9 +15,9 @@ created_at = 2026-06-12
 updated_at = 2026-07-22
 
 [language.es]
-short_description = "El contrato upstream para transformar fuentes PDF, XLS, HTML u otras antes de indexarlas."
-definition = "Interfaz genérica solicitada al servicio RAG de desarrollo para registrar preprocessors por patrón de fichero, emitir una salida versionada con texto extraído o unidades pre-chunked, incluir identidad del preprocessor en la clave de cache y declarar fallos de forma explicita. Este contrato permite que los corpus BOE y AEAT sean indexables sin codificar conocimiento AEAT dentro del indexador."
-scope_note = "Mientras el gancho upstream no exista, este proyecto usa sidecars de extraccion como camino interino."
+short_description = "El contrato del proyecto de origen para transformar fuentes PDF, XLS, HTML u otras antes de indexarlas."
+definition = "Interfaz genérica solicitada al servicio RAG de desarrollo para registrar preprocesadores por patrón de archivo, emitir una salida versionada con texto extraído o unidades ya fragmentadas, incluir la identidad del preprocesador en la clave de caché y declarar los fallos de forma explícita. Este contrato permite indexar los corpus del BOE y la AEAT sin codificar conocimiento de la AEAT en el indexador."
+scope_note = "Mientras no exista el punto de extensión del proyecto de origen, este proyecto usa archivos auxiliares de extracción como solución provisional."
 
 [[language.es.term]]
 label = "gancho de preprocesado"
@@ -42,12 +42,12 @@ part_of_speech = "noun"
 
 [language.ca]
 short_description = "El contracte upstream per transformar fonts PDF, XLS, HTML o altres abans d'indexar-les."
-definition = "Interfície genèrica sol·licitada al servei RAG de desenvolupament per registrar preprocessadors per patró de fitxer, emetre una sortida versionada amb text extret o unitats prefragmentades, incloure la identitat del preprocessador a la clau de memòria cau i declarar els errors explícitament. Aquest contracte permet indexar els corpus del BOE i l'AEAT sense codificar coneixement de l'AEAT a l'indexador."
+definition = "Interfície genèrica sol·licitada al servei RAG de desenvolupament per registrar preprocessadors per patró de fitxer, emetre una sortida versionada amb text extret o unitats fragmentades prèviament, incloure la identitat del preprocessador a la clau de memòria cau i declarar els errors explícitament. Aquest contracte permet indexar els corpus del BOE i l'AEAT sense codificar coneixement de l'AEAT a l'indexador."
 scope_note = "Mentre no existeixi el ganxo upstream, aquest projecte utilitza sidecars d'extracció com a via provisional."
 
 
 [language.hu]
-short_description = "Az upstream szerződés PDF, XLS, HTML és más források indexelés előtti átalakítása."
+short_description = "A fejlesztői RAG-szolgáltatás szerződése a PDF, XLS, HTML és más források indexelés előtti átalakítására."
 definition = "A fejlesztési RAG-szolgáltatástól kért általános felület, amely fájlminta szerint regisztrál előfeldolgozókat, verziózott kimenetet ad ki kinyert szöveggel vagy előre darabolt egységekkel, az előfeldolgozó azonosítóját a gyorsítótár kulcsába foglalja, és kifejezetten jelzi a hibákat. A szerződés indexelhetővé teszi a BOE- és AEAT-korpuszt anélkül, hogy AEAT-ismeretet kódolna az indexelőbe."
-scope_note = "Amíg a felfelé irányuló hook nem létezik, a projekt átmeneti megoldásként kinyerési sidecarokat használ."
+scope_note = "Amíg a fejlesztői RAG-szolgáltatás nem biztosítja ezt a bővítési pontot, a projekt átmeneti megoldásként a kinyert szöveget tartalmazó kiegészítő fájlokat használ."
 

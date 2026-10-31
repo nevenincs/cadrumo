@@ -15,9 +15,9 @@ created_at = 2026-06-12
 updated_at = 2026-07-22
 
 [language.es]
-short_description = "El dato comprometido que asocia cada termino barrido con destinos documentales rankeados."
-definition = "Archivo de datos laundered que materializa los resultados del barrido RAG como mapeos de termino a destino: identificadores de registro, tipo de superficie, destino y peso normalizado. El mapa se compromete al repositorio porque CI y el build offline no ejecutan RAG, y sus targets deben resolver contra la documentación actual."
-scope_note = "El mapa no contiene vectores, pesos sparse, snippets ni rutas de hits crudos."
+short_description = "Dato versionado que asocia cada término examinado con destinos documentales ordenados por relevancia."
+definition = "Archivo de datos depurados que materializa resultados del barrido RAG como asociaciones entre términos y destinos: identificadores de registro, tipo de superficie, destino y peso normalizado. El mapa se guarda en el repositorio porque CI y las compilaciones sin conexión no ejecutan RAG, y sus destinos deben resolverse con respecto a la documentación actual."
+scope_note = "El mapa no contiene vectores, pesos dispersos, fragmentos ni rutas de resultados sin procesar."
 
 [[language.es.term]]
 label = "mapa de relevancia"
@@ -48,6 +48,6 @@ scope_note = "El mapa no conté vectors, pesos dispersos, fragments ni rutes de 
 
 [language.hu]
 short_description = "Az eltárolt adat, amely a terminusokat rangsorolt dokumentációs célokhoz köti."
-definition = "Tisztított adatfájl, amely a RAG-pásztázás eredményeit kifejezés–célpont leképezésekként rögzíti: regiszterazonosítókat, felülettípust, célpontot és normalizált súlyt. A térkép a tároló része, mert a CI és az offline build nem futtat RAG-ot, célpontjainak pedig az aktuális dokumentációra kell feloldódniuk."
+definition = "Tisztított adatfájl, amely a RAG-pásztázás eredményeit kifejezés–célpont leképezésekként rögzíti: regiszterazonosítókat, felülettípust, célpontot és normalizált súlyt. A térkép a tároló része, mert a CI és a kapcsolat nélküli összeállítás nem futtat RAG-ot, célpontjainak pedig az aktuális dokumentációra kell feloldódniuk."
 scope_note = "A térkép nem tartalmaz vektorokat, ritka súlyokat, találatrészleteket vagy nyers találati útvonalakat."
 

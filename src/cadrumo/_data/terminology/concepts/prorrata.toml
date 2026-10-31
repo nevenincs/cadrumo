@@ -23,7 +23,7 @@ source_entry_id = "1126728"
 [language.es]
 short_description = "Porcentaje de IVA soportado deducible cuando se realizan a la vez operaciones con y sin derecho a deducción."
 definition = "Regla que determina la parte de las cuotas de IVA soportado que un sujeto pasivo puede deducir cuando en su actividad concurren operaciones que originan el derecho a deducir y operaciones que no lo originan. El porcentaje se calcula como el cociente entre el importe de las operaciones con derecho a deducción y el total de operaciones, redondeado por exceso a la unidad superior."
-scope_note = "Cubre tanto la prorrata general como la especial. La regularizacion de bienes de inversion se rige por los articulos 107 a 110 LIVA y se trata como concepto aparte."
+scope_note = "Cubre tanto la prorrata general como la especial. La regularización de bienes de inversión se rige por los artículos 107 a 110 LIVA y se trata como concepto aparte."
 
 [language.es.source]
 citation = "Articulos 102 y 104 de la Ley 37/1992 del IVA (LIVA)."

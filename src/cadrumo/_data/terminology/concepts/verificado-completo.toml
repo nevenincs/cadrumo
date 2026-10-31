@@ -16,7 +16,7 @@ updated_at = 2026-07-22
 [language.es]
 short_description = "El estado de verificado completo: el borrador ha superado el contrato de completitud de la verificación."
 definition = "Estado del ciclo de vida de un calculo que indica que un borrador ha superado el contrato de completitud de la comprobación de verificación. Es un control de completitud y coherencia que se ejecuta en el ordenador de la persona; no comprueba el modelo contra el portal de la AEAT ni garantiza que la agencia lo vaya a aceptar."
-scope_note = "Concepto interno de la maquinaria de busqueda/calculo de la aplicacion; documentado para el RAG de desarrollo, no es un termino tributario de cara al contribuyente y por eso queda fuera del glosario."
+scope_note = "Concepto interno de la maquinaria de búsqueda/cálculo de la aplicación; documentado para el RAG de desarrollo, no es un término tributario de cara al contribuyente y por eso queda fuera del glosario."
 
 [language.es.source]
 citation = "Documentacion de la aplicacion aeat; estado interno del ciclo de vida del calculo."
@@ -35,7 +35,7 @@ scope_note = "An internal concept in the application's search and calculation ma
 
 [language.ca]
 short_description = "L'estat de verificat complet: l'esborrany ha superat el contracte de completesa de la verificació."
-definition = "Estat del cicle de vida d'un càlcul que indica que un esborrany ha superat el contracte de completitud de la comprovació de verificació. És un control de completitud i coherència que s'executa a l'ordinador de la persona; no comprova el model contra el portal de l'AEAT ni garanteix que l'agència l'accepti."
+definition = "Estat del cicle de vida d'un càlcul que indica que un esborrany ha superat el contracte de completesa de la comprovació de verificació. És un control de completesa i coherència que s'executa a l'ordinador de la persona; no comprova el model contra el portal de l'AEAT ni garanteix que l'agència l'accepti."
 scope_note = "Concepte intern de la maquinària de cerca i càlcul de l'aplicació; es documenta per al RAG de desenvolupament, no és un terme tributari adreçat al contribuent i per això queda fora del glossari."
 
 

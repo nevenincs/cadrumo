@@ -16,8 +16,8 @@ created_at = 2026-06-10
 updated_at = 2026-07-22
 
 [language.es]
-short_description = "Pago fraccionado del IRPF en estimacion objetiva."
-definition = "Pago fraccionado trimestral del IRPF para actividades económicas en estimacion objetiva (módulos)."
+short_description = "Pago fraccionado del IRPF en estimación objetiva."
+definition = "Pago fraccionado trimestral del IRPF para actividades económicas en estimación objetiva (módulos)."
 
 [language.es.source]
 citation = "Articulo 110 del RD 439/2007; Orden EHA/672/2007."
@@ -32,7 +32,7 @@ label = "pago fraccionado por modulos"
 term_status = "admitted"
 
 [language.en]
-short_description = "Quarterly IRPF instalment under the objective-estimation (modulos) regime."
+short_description = "Quarterly IRPF instalment under the objective-estimation (módulos) regime."
 definition = "Quarterly IRPF instalment payment for economic activities under the objective-estimation (modules) regime."
 
 [language.en.source]

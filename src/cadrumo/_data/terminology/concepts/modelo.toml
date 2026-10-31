@@ -16,7 +16,7 @@ updated_at = 2026-07-22
 
 [language.es]
 short_description = "Un formulario oficial de declaración de la AEAT, identificado por un numero."
-definition = "Formulario normalizado de declaración que la AEAT prescribe para una obligación tributaria y un periodo concretos, identificado de forma única por su numero oficial de tres dígitos (por ejemplo, Modelo 100, Modelo 303, Modelo 720). Cada modelo se publica mediante Orden Ministerial en el BOE y se cataloga en la Sede Electrónica de la AEAT. El numero forma parte del nombre legal: el Modelo 303 y el Modelo 100 no son intercambiables. No designa informes ad hoc, hojas de calculo internas ni documentos censales."
+definition = "Formulario normalizado de declaración que la AEAT prescribe para una obligación tributaria y un período concretos, identificado de forma única por su número oficial de tres dígitos (por ejemplo, Modelo 100, Modelo 303, Modelo 720). Cada modelo se publica mediante Orden Ministerial en el BOE y se cataloga en la Sede Electrónica de la AEAT. El número forma parte del nombre legal: el Modelo 303 y el Modelo 100 no son intercambiables. No designa informes ad hoc, hojas de cálculo internas ni documentos censales."
 
 [language.es.source]
 citation = "AEAT, Sede Electronica - Todas las gestiones / Modelos y formularios; cada modelo se aprueba por Orden Ministerial publicada en el BOE."

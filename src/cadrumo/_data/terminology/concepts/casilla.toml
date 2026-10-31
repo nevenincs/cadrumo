@@ -17,7 +17,7 @@ updated_at = 2026-07-22
 [language.es]
 short_description = "Cada uno de los recuadros numerados de un modelo en los que se anota un dato de la declaración."
 definition = "Recuadro numerado de un modelo tributario en el que se consigna un importe, una base, una cuota o un dato identificativo de la declaración. Cada casilla tiene un numero, una etiqueta oficial y, cuando procede, una formula que la relaciona con otras casillas."
-scope_note = "El termino designa el recuadro en abstracto. Las casillas concretas de cada modelo y revision se proyectan desde el registro y se buscan por modelo mas numero."
+scope_note = "El término designa el recuadro en abstracto. Las casillas concretas de cada modelo y revisión se proyectan desde el registro y se buscan por modelo más número."
 
 [language.es.source]
 citation = "Disenos de Registro y manuales practicos publicados por la AEAT."

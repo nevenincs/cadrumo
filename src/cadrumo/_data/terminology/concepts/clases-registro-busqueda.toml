@@ -10,9 +10,9 @@ created_at = 2026-06-12
 updated_at = 2026-06-12
 
 [language.es]
-short_description = "Las categorías de resultado que la búsqueda offline combina y rankea juntas."
-definition = "Conjunto tipado de registros que la búsqueda de documentación combina: tarjetas de concepto del Handbook, proyecciones de casilla desde el registro, superficies CLI y paginas documentales. Estas clases permiten que una consulta devuelva significado, casillas, grounding legal y navegación en un único ranking."
-scope_note = "La clase de registro no es una clase Python concreta solamente; es la categoria semantica que viaja en los metadatos de busqueda."
+short_description = "Categorías de resultados que la búsqueda sin conexión combina y ordena por relevancia."
+definition = "Conjunto tipado de registros que combina la búsqueda documental: tarjetas de conceptos del manual de terminología, proyecciones de casillas del registro, superficies de la CLI y páginas documentales. Estas clases permiten que una consulta devuelva significado, casillas, fundamento jurídico y navegación en una única ordenación por relevancia."
+scope_note = "La clase de registro no es solamente una clase concreta de Python; es la categoría semántica que aparece en los metadatos de búsqueda."
 
 [[language.es.term]]
 label = "clases de registro de busqueda"
@@ -37,12 +37,12 @@ part_of_speech = "noun"
 
 [language.ca]
 short_description = "Les categories de resultat que la cerca offline combina i ordena conjuntament."
-definition = "Conjunt tipat de registres que combina la cerca documental: targetes de conceptes del Handbook, projeccions de caselles del registre, superfícies de la CLI i pàgines documentals. Aquestes classes permeten que una consulta retorni significat, caselles, fonamentació legal i navegació en un únic rànquing."
+definition = "Conjunt tipat de registres que combina la cerca documental: targetes de conceptes del manual de terminologia, projeccions de caselles del registre, superfícies de la CLI i pàgines documentals. Aquestes classes permeten que una consulta retorni significat, caselles, fonamentació legal i navegació en un únic rànquing."
 scope_note = "La classe de registre no és només una classe concreta de Python; és la categoria semàntica que viatja a les metadades de cerca."
 
 
 [language.hu]
-short_description = "Az eredmenykategoriak, amelyeket az offline kereses egyutt rangsorol."
-definition = "A dokumentációs keresés által kombinált, típusos rekordok halmaza: a Handbook fogalomkártyái, a regiszter mezővetületei, a CLI-felületek és a dokumentációs oldalak. Ezek a kategóriák lehetővé teszik, hogy egy lekérdezés egyetlen rangsorban jelentést, mezőket, jogi megalapozást és navigációt adjon vissza."
+short_description = "Az eredménykategóriák, amelyeket a kapcsolat nélküli keresés együtt rangsorol."
+definition = "A dokumentációs keresés által kombinált, típusos rekordok halmaza: a terminológiai kézikönyv fogalomkártyái, a regiszter mezővetületei, a CLI-felületek és a dokumentációs oldalak. Ezek a kategóriák lehetővé teszik, hogy egy lekérdezés egyetlen rangsorban jelentést, mezőket, jogi megalapozást és navigációt adjon vissza."
 scope_note = "A regiszterosztály nem csupán egy konkrét Python-osztály, hanem a keresési metaadatokban továbbított szemantikai kategória."
 

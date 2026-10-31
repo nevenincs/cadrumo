@@ -28,7 +28,7 @@ part_of_speech = "noun"
 
 [language.en]
 short_description = "The fixed-width text file format the AEAT accepts for filing a modelo."
-definition = "A fixed-width text file format the AEAT accepts for the electronic filing of a modelo. The application generates this file when exporting a return, so the person can upload it themselves to the Sede Electronica. It takes its name from the Boletin Oficial del Estado (BOE), where each modelo record layout is published."
+definition = "A fixed-width text file format the AEAT accepts for the electronic filing of a modelo. The application generates this file when exporting a return, so the person can upload it themselves to the Sede Electrónica. It takes its name from the Boletín Oficial del Estado (BOE), where each modelo record layout is published."
 
 [language.en.source]
 citation = "AEAT, record layouts published by Ministerial Order in the BOE for each modelo."
