@@ -38,6 +38,7 @@ def test_identifier_labels_are_exact_shared_technical_terms() -> None:
 def test_software_proper_names_preserve_exact_case_and_stem_boundaries(locale: str) -> None:
     for name in (
         "Apple",
+        "Bizum",
         "GitHub",
         "Linux",
         "Markdown",
@@ -45,6 +46,7 @@ def test_software_proper_names_preserve_exact_case_and_stem_boundaries(locale: s
         "PowerShell",
         "Pydantic",
         "Sphinx",
+        "poppler",
         "reStructuredText",
     ):
         assert is_project_spelling(locale, name)
@@ -52,6 +54,7 @@ def test_software_proper_names_preserve_exact_case_and_stem_boundaries(locale: s
     for bad in (
         "Appel",
         "apple",
+        "Bizumm",
         "GitHup",
         "Linuz",
         "Markdwon",
@@ -59,6 +62,7 @@ def test_software_proper_names_preserve_exact_case_and_stem_boundaries(locale: s
         "Powershell",
         "Pydantci",
         "Sphinxx",
+        "popplre",
         "reStructuredTex",
     ):
         assert not is_project_spelling(locale, bad)
@@ -213,9 +217,21 @@ def test_pydantic_brand_keeps_code_literal_and_adjacent_typo_distinct() -> None:
                 "withholders",
             ),
         ),
-        ("es", ("idempotencia", "reintentos", "sectorizado", "serialización")),
+        ("es", ("idempotencia", "reintentos", "sectorizado", "serialización", "megabytes")),
         ("ca", ("declarable", "Preomple", "subpaquet", "subpaquets", "Subpaquets")),
-        ("hu", ("bájtokkal", "bájtjait", "bájtnál", "bájtszámát", "felülvizsgálati", "kisvállalati", "tartalmi")),
+        (
+            "hu",
+            (
+                "bájtokkal",
+                "bájtjait",
+                "bájtnál",
+                "bájtszámát",
+                "megabájt",
+                "felülvizsgálati",
+                "kisvállalati",
+                "tartalmi",
+            ),
+        ),
     ],
 )
 def test_attested_current_terms_are_exact_and_belong_to_their_locale(locale: str, forms: tuple[str, ...]) -> None:

@@ -284,7 +284,7 @@ def test_misspelled_pascal_case_identifier_remains_dictionary_input() -> None:
     assert excluded == 0
 
 
-@pytest.mark.parametrize("notation", ["ÉÉÉÉ-HH-NN", "ÉÉÉÉ-HH-NNTÓÓ:PP:MMZ"])
+@pytest.mark.parametrize("notation", ["ÉÉÉÉ-HH-NN", "ÉÉÉÉ-HH-NNTÓÓ:PP:MMZ", "ÉÉÉÉ-nT"])
 def test_hungarian_date_notation_excludes_structure_and_preserves_prose(notation: str) -> None:
     segments = translation_spelling_segments(f"Dátum ({notation}) hibásszó", "date", "hu")
     assert segments == (("hu", ("Dátum", "hibásszó"), 1),)
@@ -341,6 +341,8 @@ def test_malformed_hungarian_percentage_suffix_remains_spelling_input(token: str
 def test_malformed_date_and_suffix_are_not_suppressed() -> None:
     words = words_by_language("ÉÉÉÉ-HH-NNx AEAT-náll hibásszó", "hu")["hu"]
     assert {"ÉÉÉÉ", "náll", "hibásszó"} <= words
+    words = words_by_language("ÉÉÉÉ-nTT nT hibásszó", "hu")["hu"]
+    assert {"nTT", "nT", "hibásszó"} <= words
 
 
 @pytest.mark.parametrize(

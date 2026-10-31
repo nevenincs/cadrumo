@@ -70,8 +70,22 @@ from .signal_tokens import filtered_translation_text
 # Python distribution/module remains code syntax, not an alternate brand.
 # https://docs.pydantic.dev/latest/
 # https://developer.apple.com/documentation/apple-silicon
+# https://bizum.com/es/sobre-bizum/
+# https://poppler.freedesktop.org/
 _SOFTWARE_PROPER_NAMES = frozenset(
-    {"Apple", "GitHub", "Linux", "Markdown", "OpenSSL", "PowerShell", "Pydantic", "Sphinx", "reStructuredText"}
+    {
+        "Apple",
+        "Bizum",
+        "GitHub",
+        "Linux",
+        "Markdown",
+        "OpenSSL",
+        "PowerShell",
+        "Pydantic",
+        "Sphinx",
+        "poppler",
+        "reStructuredText",
+    }
 )
 _SHARED_SPELLINGS = (
     frozenset(
@@ -211,7 +225,6 @@ _LOCALE_SPELLINGS: dict[str, frozenset[str]] = {
             # search terminology definitions.
             # These names are absent from the pinned English dictionary too.
             "DEHú",
-            "Bizum",
             "macOS",
             "Homebrew",
             "PyPI",
@@ -436,6 +449,9 @@ _LOCALE_SPELLINGS: dict[str, frozenset[str]] = {
             # https://dle.rae.es/rehidrataci%C3%B3n
             "extrapolación",
             "rehidratación",
+            # RAE records both this unit and its ordinary plural:
+            # https://temporalraeweb.rae.es/dhle/megabyte
+            "megabytes",
             # The Spanish technical and fiscal forms are attested by Microsoft
             # and AEAT, respectively; do not infer unobserved inflections.
             # https://learn.microsoft.com/es-es/azure/architecture/patterns/retry
@@ -813,6 +829,9 @@ _LOCALE_SPELLINGS: dict[str, frozenset[str]] = {
             # Microsoft uses this exact Hungarian possessive byte-count form:
             # https://learn.microsoft.com/hu-hu/windows-hardware/drivers/debugger/using-poolmon-to-find-a-kernel-mode-memory-leak
             "bájtszámát",
+            # Microsoft uses this Hungarian spelling of the storage unit:
+            # https://learn.microsoft.com/hu-hu/powershell/scripting/lang-spec/chapter-02
+            "megabájt",
             # Exact native, technical and retained tax forms attested in
             # _data/terminology/concepts; no new casing or inflections implied.
             "artefaktumokból",

@@ -269,7 +269,11 @@ TRANSLATION_CLAVE_NAME_RE: Final[re.Pattern[str]] = re.compile(
 )
 
 
-TRANSLATION_HUNGARIAN_DATE_RE: Final[re.Pattern[str]] = re.compile(r"(?<![\w])ÉÉÉÉ-HH-NN(?:TÓÓ:PP:MMZ)?(?![\w-])")
+# The quarter example uses the same Hungarian year placeholder with the
+# domain's documented nT quarter notation (user_profile/quarter_sets.py).
+TRANSLATION_HUNGARIAN_DATE_RE: Final[re.Pattern[str]] = re.compile(
+    r"(?<![\w])ÉÉÉÉ-(?:HH-NN(?:TÓÓ:PP:MMZ)?|nT)(?![\w-])"
+)
 
 
 # Hungarian attaches case suffixes to foreign words, abbreviations, and numbers
