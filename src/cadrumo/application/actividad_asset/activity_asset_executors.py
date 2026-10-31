@@ -118,7 +118,7 @@ from .activity_asset_results import (
 )
 from .disposal_calculation import pinned_disposal_bounds, project_disposal_calculation
 from .modality import direct_estimation_modality
-from .operation_dtos import ActivityAssetRevisionSnapshot
+from .operation_dtos import ActivityAssetCorrectionRevisionSnapshot, ActivityAssetRevisionSnapshot
 from .operations import (
     ActivityAssetOperations,
     ActivityAssetRegisterAuthority,
@@ -488,6 +488,24 @@ class ActivityAssetInspectExecutor:
         return await await_cancellation_complete(capture(), task_name="activity-asset-inspect")
 
 
+def _assigned_correction(
+    operations: ActivityAssetOperations,
+    snapshot: ActivityAssetCorrectionRevisionSnapshot,
+) -> ActivityAssetRevision:
+    """Give a correction the number after the revision it supersedes, so a retry rebuilds the same revision."""
+    if snapshot.revision_number is not None:
+        return snapshot.to_domain()
+    superseded = next(
+        (item for item in operations.inspect(snapshot.asset_id) if item.revision_id == snapshot.supersedes_revision_id),
+        None,
+    )
+    if superseded is None:
+        raise ActividadAssetValidationError(
+            translated_message="ledger.actividad_asset.errors.correction_must_supersede_current"
+        )
+    return snapshot.to_domain(revision_number=superseded.revision_number + 1)
+
+
 class ActivityAssetCorrectExecutor:
     """Append one validated revision through the exact profile repository."""
 
@@ -522,7 +540,7 @@ class ActivityAssetCorrectExecutor:
                 try:
                     history = await asyncio.to_thread(
                         operations.correct,
-                        payload.revision.to_domain(),
+                        _assigned_correction(operations, payload.revision),
                         tuple(
                             SupersedingClaimRequest(
                                 supersedes_claim_id=item.supersedes_claim_id,
