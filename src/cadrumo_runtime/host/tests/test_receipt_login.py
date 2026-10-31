@@ -29,7 +29,7 @@ from cadrumo.application.user_profile.login_session import authenticate_profile_
 from cadrumo.core.profile_session import ProfileSessionRefusalReason
 from cadrumo.tests.in_memory_keyring import IN_MEMORY_KEYRING, InMemoryKeyring
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
-from cadrumo_client.contracts.contracts import ClientHello, RefusalCode
+from cadrumo_client.contracts.contracts import RefusalCode
 from cadrumo_client.contracts.profile_access import (
     AccessRefusal,
     ProfileLogin,
@@ -52,6 +52,7 @@ from ...adapters.tests.retained_server import RetainedRuntimeTransportServer
 from ..profile_connections import RuntimeProfileConnections
 from ..session_owner import ProfileWorkerSessionOwner
 from .test_profile_connections import LoginObservation
+from .verified_connection_support import connect_test_client
 
 pytestmark = [
     pytest.mark.integration,
@@ -60,14 +61,6 @@ pytestmark = [
     pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows worker and protected pipes"),
     pytest.mark.usefixtures("authority_operation"),
 ]
-
-
-def _connect(endpoint: WindowsEndpoint) -> VerifiedConnection:
-    return VerifiedConnection(
-        endpoint.connect(timeout=3),
-        expected=ClientHello(product_version="test", storage_identity=endpoint.storage_identity),
-        deadline=time.monotonic() + 3,
-    )
 
 
 def _login(
@@ -175,7 +168,9 @@ def test_receipt_proof_reenters_without_password_or_api_promotion(
                 running = pool.submit(server.serve)
                 try:
                     assert server.ready.wait(3)
-                    api, human, stranger, invalid_api, invalid_receipt = (_connect(endpoint) for _ in range(5))
+                    api, human, stranger, invalid_api, invalid_receipt = (
+                        connect_test_client(endpoint) for _ in range(5)
+                    )
                     clients.extend((api, human, stranger, invalid_api, invalid_receipt))
                     presence = human.sign_in_status(
                         SignInStatusRequest(request_id=uuid4(), profile_id=profile_id),
@@ -295,7 +290,7 @@ def test_receipt_proof_reenters_without_password_or_api_promotion(
                     assert absent.status.presence is SignInPresence.ABSENT
 
                     stranger.close()
-                    replacement = _connect(endpoint)
+                    replacement = connect_test_client(endpoint)
                     clients.append(replacement)
                     assert isinstance(
                         _session(replacement, profile_id, second_human_id, "session_status"), AccessRefusal
@@ -395,7 +390,7 @@ def test_password_login_mints_its_receipt_only_after_publication(
         clients: list[VerifiedConnection] = []
 
         def password_login() -> ProfileStatus | AccessRefusal:
-            client = _connect(endpoint)
+            client = connect_test_client(endpoint)
             clients.append(client)
             return _login(client, profile_id, "password", bytearray(PROFILE_INPUT.encode()), persist_receipt=True)
 
@@ -512,7 +507,7 @@ def test_a_receipt_bound_elsewhere_is_refused_typed_and_deleted_by_the_worker(
             try:
                 assert server.ready.wait(3)
                 client = FrontendClient(
-                    _connect(endpoint), profile_id=profile_id, frontend=OperationFrontendProjection.CLI
+                    connect_test_client(endpoint), profile_id=profile_id, frontend=OperationFrontendProjection.CLI
                 )
                 clients.append(client)
                 with pytest.raises(ProfileReceiptRefusedError) as refused:

@@ -12,7 +12,6 @@ import asyncio
 import json
 import logging
 import sys
-import time
 from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import ExitStack
@@ -65,8 +64,7 @@ from cadrumo.entrypoints.tui.operations.palette import WorkbenchOperationProvide
 from cadrumo.entrypoints.tui.operations.run_screen import OperationRunScreen
 from cadrumo.tests.log_records import delivered_records
 from cadrumo_client.contracts.access_vocabulary import Availability
-from cadrumo_client.contracts.contracts import ClientHello, RefusalCode, RefusalError
-from cadrumo_client.transport.framing import VerifiedConnection
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.installation import installation
 from cadrumo_client.transport.operation_controller import OperationController
@@ -78,6 +76,7 @@ from cadrumo_mcp.mcp.surfaces import DEFAULT_MCP_SURFACE, mcp_surface
 from cadrumo_runtime.adapters.tests.profile_worker_support import owner_id
 from cadrumo_runtime.adapters.tests.retained_server import RetainedRuntimeTransportServer
 from cadrumo_runtime.host.profile_connections import RuntimeProfileConnections
+from cadrumo_runtime.host.tests.verified_connection_support import connect_installed_client
 
 pytestmark = [
     pytest.mark.integration,
@@ -112,14 +111,6 @@ class _LoginObservation:
             unattended=LoginEligibility.ELIGIBLE,
             credential_facilities=credential_facilities,
         )
-
-
-def _connect(endpoint: WindowsEndpoint) -> VerifiedConnection:
-    return VerifiedConnection(
-        endpoint.connect(timeout=3),
-        expected=ClientHello(product_version=version("cadrumo"), storage_identity=endpoint.storage_identity),
-        deadline=time.monotonic() + 3,
-    )
 
 
 async def _until(pilot: Pilot[None], predicate: Callable[[], bool], *, seconds: float = 30) -> None:
@@ -509,7 +500,9 @@ def test_every_registered_operation_is_listed_and_a_read_a_change_and_a_secret_r
                 assert server.ready.wait(3)
                 with ExitStack() as cleanup:
                     client = FrontendClient(
-                        _connect(endpoint), profile_id=profile_id, frontend=OperationFrontendProjection.TUI
+                        connect_installed_client(endpoint),
+                        profile_id=profile_id,
+                        frontend=OperationFrontendProjection.TUI,
                     )
                     cleanup.callback(client.close)
                     proof = bytearray(PROFILE_INPUT.encode())
