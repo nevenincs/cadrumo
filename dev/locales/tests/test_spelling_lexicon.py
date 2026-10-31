@@ -117,6 +117,47 @@ def test_attested_catalan_verb_and_technical_forms_keep_exact_language_and_spell
         assert not is_project_spelling("ca", typo)
 
 
+def test_reference_hunspell_hungarian_forms_preserve_case_locale_and_typo_checks() -> None:
+    # Each form was independently accepted by reference Hunspell using the
+    # exact original dictionary whose digest is pinned in our source receipt.
+    forms = (
+        "Adatvédelmi",
+        "Felülvizsgálati",
+        "Késedelmi",
+        "Nagyvállalati",
+        "Pénzforgalmi",
+        "adatbázisbájtjait",
+        "adatvédelmi",
+        "ellenőrzik",
+        "ellenőrzöd",
+        "ellenőrzöl",
+        "előtakarékossági",
+        "jövedelmi",
+        "komponensbájtot",
+        "nagyvállalati",
+        "netót",
+        "percentiliseit",
+        "pozicionális",
+        "pénzforgalmi",
+        "áthozatot",
+        "érintetti",
+        "örökbefogadási",
+    )
+    for form in forms:
+        assert is_project_spelling("hu", form)
+        assert not is_project_spelling("hu", form + "x")
+        for locale in ("ca", "en", "es"):
+            assert not is_project_spelling(locale, form)
+    for typo in ("barmit", "felülvizsgalati", "pénzforgalmii", "ellenorzod", "felÜlvizsgálati"):
+        assert not is_project_spelling("hu", typo)
+
+    unknown, inventory, _ = spellcheck_catalogues(
+        set(), {}, REPO_ROOT, additional_values={"hu": {"sentence": "ellenőrzik. ellenőrzöl. ellenorzodd."}}
+    )
+    assert not inventory["spelling_tool_failures"]
+    assert unknown[("hu", "sentence")] == ("ellenorzodd.",)
+
+
 @pytest.mark.parametrize("locale,word", [("ca", "declarables"), ("es", "heredables")])
 def test_attested_native_plurals_are_exact_and_locale_scoped(locale: str, word: str) -> None:
     assert is_project_spelling(locale, word)

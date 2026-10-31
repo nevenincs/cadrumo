@@ -706,6 +706,31 @@ _LOCALE_SPELLINGS: dict[str, frozenset[str]] = {
             "felülvizsgálati",
             "kisvállalati",
             "tartalmi",
+            # These additional observed native forms were checked individually
+            # with reference Hunspell against our exact vendored 1.8 dictionary.
+            # spylls misses their compounds, inflections or initial capitals.
+            # Do not accept arbitrary unaccented words or general suffixes.
+            "Adatvédelmi",
+            "Felülvizsgálati",
+            "Késedelmi",
+            "Nagyvállalati",
+            "Pénzforgalmi",
+            "adatbázisbájtjait",
+            "adatvédelmi",
+            "ellenőrzik",
+            "ellenőrzöd",
+            "ellenőrzöl",
+            "előtakarékossági",
+            "jövedelmi",
+            "komponensbájtot",
+            "nagyvállalati",
+            "netót",
+            "percentiliseit",
+            "pozicionális",
+            "pénzforgalmi",
+            "áthozatot",
+            "érintetti",
+            "örökbefogadási",
             # Attested Hungarian byte forms, not a general suffix rule:
             # https://people.inf.elte.hu/szlavi/Magamnak/C%2B%2B/ansi_Cpp.pdf
             # https://fbenjih.web.elte.hu/Algoritmusok%20%C3%A9s%20adatszerkezetek%202/El%C5%91ad%C3%A1s%20%28%C3%81sv%C3%A1nyi%29/%C3%81sv%C3%A1nyi%20jegyzet.pdf
