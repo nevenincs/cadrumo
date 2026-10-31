@@ -153,6 +153,19 @@ written beside that tree rather than into it. Removed in a ``finally`` block on
 every path the probe returns from, and left behind by every path it does not.
 """
 
+SHARED_COHORT_WORK_FAMILY: Final[ScratchFamily] = ScratchFamily(
+    prefix=".shared-cohort-",
+    suffix=".work",
+    auto_reclaim_on_dead_owner=False,
+    operator_age_reclaim=False,
+)
+"""Bracket one shared-cohort build under the development cache.
+
+The parent can die while a build subprocess still uses its snapshot; neither
+the parent's PID nor an elapsed time proves that subprocess has stopped.
+Completed builds remove their own work, and abandoned builds require review.
+"""
+
 VAR_SCRATCH_FAMILIES: Final[tuple[ScratchFamily, ...]] = (
     RELEASE_COHORT_INTEGRATION_FAMILY,
     RELEASE_STAGING_FAMILY,
@@ -160,6 +173,7 @@ VAR_SCRATCH_FAMILIES: Final[tuple[ScratchFamily, ...]] = (
     COHORT_BUILD_TREE_FAMILY,
     COHORT_SOURCE_ARCHIVE_FAMILY,
     COMMAND_SPEC_BYTECODE_FAMILY,
+    SHARED_COHORT_WORK_FAMILY,
 )
 """Every family this sweep will consider. Anything not matching one is spared.
 
@@ -677,6 +691,7 @@ __all__ = [
     "RELEASE_COHORT_INTEGRATION_FAMILY",
     "RELEASE_SOURCE_SNAPSHOT_FAMILY",
     "RELEASE_STAGING_FAMILY",
+    "SHARED_COHORT_WORK_FAMILY",
     "VAR_SCRATCH_FAMILIES",
     "ScratchFamily",
     "matching_family",

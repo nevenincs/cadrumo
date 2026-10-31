@@ -44,6 +44,7 @@ from dev.cache_root import dev_cache_dir
 from dev.source_tree import normalised_contents, repository_files
 
 from .authority_staging import selected_published_authority
+from .build_scratch_reclaim import SHARED_COHORT_WORK_FAMILY, remove_source_snapshot, var_scratch_name
 from .command_execution import run_command
 from .google_oauth import build_client_json, client_build_identity
 from .hashing import sha256_path
@@ -302,18 +303,22 @@ def shared_cohort(repo_root: Path = REPO_ROOT) -> SharedCohort:
         if cohort is not None:
             os.utime(cache / requested / _MANIFEST)
             return cohort
-        # Holding this key's lock means no live writer owns its work trees; any
-        # left behind belong to an interrupted build.
-        for abandoned in cache.glob(f".{requested}.*.work"):
-            shutil.rmtree(abandoned, ignore_errors=True)
-        work = cache / f".{requested}.{uuid.uuid4().hex}.work"
+        # A dead parent may leave a build subprocess using its work tree. The
+        # key lock does not prove that child has stopped, so do not reap peers.
+        work = cache / var_scratch_name(SHARED_COHORT_WORK_FAMILY, f"{requested}-{uuid.uuid4().hex}")
         try:
             build_root = build_root_snapshot(repo_root, work)
             built = cohort_key(build_root, client_root=repo_root)
             _build_from(build_root, work, repo_root, work / "entry", built)
             cohort = _publish(cache, work / "entry", built)
-        finally:
-            shutil.rmtree(work, ignore_errors=True)
+        except BaseException as error:
+            if work.exists():
+                message = f"shared cohort work remains for review: {work}"
+                error.add_note(message)
+                if isinstance(error, SystemExit):
+                    print(message, file=sys.stderr)
+            raise
+        remove_source_snapshot(work)
         _prune(cache, built)
         return cohort
 
