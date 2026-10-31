@@ -14,6 +14,7 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from textual.pilot import Pilot
 from textual.widgets import OptionList, Static
 
 from ......adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -41,6 +42,7 @@ from ......domain.invoices.tests.modelo_349_invoice_facts import (
     M349_INVOICES,
     intra_community_invoice,
 )
+from ......domain.modelos.work_unit import WorkUnit
 from ......tests.env_scope import ready_clave_settings
 from .....tests.modelo_operator_work_storage import SEEDED_AT, SeededOperatorWork, seeded_operator_work
 from .....tests.profile_persistence.verification_repository_support import (
@@ -214,6 +216,92 @@ def test_explicit_empty_and_omitted_legacy_detail_channels_survive_real_encrypte
     assert blocks and all(not block.rows_known and not block.rows for block in blocks)
 
 
+def _assert_read_only_records_chrome(screen: ModeloWorkbenchScreen) -> None:
+    visible = {key for key, active in screen.active_bindings.items() if active.binding.show}
+    assert {"enter", "s"}.isdisjoint(visible)
+    assert {"up", "question_mark", "escape"} <= visible
+    next_line = str(screen.query_one("#wb-next", Static).render())
+    named = next_line.rpartition("[")[2].removesuffix("]").lower()
+    assert named and named in visible
+
+
+def _assert_populated_records_wording(screen: ModeloWorkbenchScreen, unit: WorkUnit) -> None:
+    heading = str(screen.query_one("#wb-page", Static).render())
+    help_text = str(screen.query_one("#wb-help", Static).render())
+    assert tr("workspace.modelo.filter.empty") not in heading
+    assert tr("workspace.modelo.filter.empty_next", page="") not in heading
+    assert does_not_apply_words(unit.period) not in heading
+    assert tr("workspace.modelo.help.empty") not in help_text
+    assert tr("workspace.modelo.grid.records_read_only") in help_text
+
+
+async def _page_through_records(listing: CasillaList, pilot: Pilot[None]) -> str:
+    """Page to the end of the listing and return every drawn line, in scroll order."""
+    drawn: dict[int, str] = {}
+    for _ in range(listing.virtual_size.height + 1):
+        for y in range(listing.size.height):
+            drawn[int(listing.scroll_y) + y] = listing.render_line(y).text
+        if listing.scroll_y == listing.max_scroll_y:
+            break
+        before_scroll = listing.scroll_y
+        await pilot.press("pagedown")
+        await settle(pilot)
+        assert listing.scroll_y > before_scroll
+    assert listing.scroll_y == listing.max_scroll_y
+    rendered_rows = "\n".join(line for _, line in sorted(drawn.items()))
+    return rendered_rows
+
+
+async def _scroll_back_and_activate_without_editing(
+    screen: ModeloWorkbenchScreen, listing: CasillaList, pilot: Pilot[None]
+) -> None:
+    end_scroll = listing.scroll_y
+    await pilot.press("pageup")
+    await settle(pilot)
+    assert listing.scroll_y == max(end_scroll - max(listing.scrollable_content_region.height - 2, 1), 0)
+    await pilot.press("home")
+    await settle(pilot)
+    assert listing.scroll_y == 0
+    assert listing.focus_address(("casilla", "op.base-imponible"))
+    assert listing.highlighted is None
+    await pilot.press("enter")
+    await settle(pilot)
+    assert pilot.app.screen is screen
+    await pilot.press("end")
+    await settle(pilot)
+    assert listing.scroll_y == listing.max_scroll_y
+
+
+async def _return_from_column_finding(
+    screen: ModeloWorkbenchScreen,
+    app: ScreenHostApp,
+    listing: CasillaList,
+    pilot: Pilot[None],
+    key: tuple[str, str],
+    target: int,
+) -> None:
+    # A real persisted check's column finding must return here from a different page.
+    assert screen.form is not None
+    lines = issue_lines(screen.form)
+    line_index = next(index for index, line in enumerate(lines) if line.in_records and line.key == key)
+    await pilot.press("]", "i")
+    await settle(pilot)
+    assert isinstance(app.screen, WorkbenchIssuesScreen)
+    options = app.screen.query_one(OptionList)
+    option_index = options.get_option_index(f"issue-{line_index}")
+    await pilot.press("home")
+    for _ in range(options.option_count):
+        if options.highlighted == option_index:
+            break
+        await pilot.press("down")
+    assert options.highlighted == option_index
+    await pilot.press("enter")
+    await settle(pilot)
+    assert app.screen is screen and app.focused is listing
+    assert screen._page_index == target and listing.highlighted is None
+    assert listing.focus_address(key)
+
+
 @pytest.mark.integration
 @pytest.mark.asyncio
 @pytest.mark.parametrize("language", tuple(OutputLanguage))
@@ -240,20 +328,9 @@ async def test_installed_saved_records_are_read_only_visible_content_in_each_ter
             assert len(records) == 1 and len(records[0].rows) == 3
             assert not any(isinstance(item, CasillaListEntry) for item in listing.items)
             assert listing.highlighted is None
-            visible = {key for key, active in screen.active_bindings.items() if active.binding.show}
-            assert {"enter", "s"}.isdisjoint(visible)
-            assert {"up", "question_mark", "escape"} <= visible
-            next_line = str(screen.query_one("#wb-next", Static).render())
-            named = next_line.rpartition("[")[2].removesuffix("]").lower()
-            assert named and named in visible
+            _assert_read_only_records_chrome(screen)
             assert screen._empty_listing_note() is None
-            heading = str(screen.query_one("#wb-page", Static).render())
-            help_text = str(screen.query_one("#wb-help", Static).render())
-            assert tr("workspace.modelo.filter.empty") not in heading
-            assert tr("workspace.modelo.filter.empty_next", page="") not in heading
-            assert does_not_apply_words(unit.period) not in heading
-            assert tr("workspace.modelo.help.empty") not in help_text
-            assert tr("workspace.modelo.grid.records_read_only") in help_text
+            _assert_populated_records_wording(screen, unit)
             assert all(
                 widget.region.right <= size[0] and widget.region.bottom <= size[1]
                 for widget in (listing, screen.query_one("#wb-page", Static))
@@ -267,18 +344,7 @@ async def test_installed_saved_records_are_read_only_visible_content_in_each_ter
             await pilot.press("up")
             await settle(pilot)
             assert listing.scroll_y == 0
-            drawn: dict[int, str] = {}
-            for _ in range(listing.virtual_size.height + 1):
-                for y in range(listing.size.height):
-                    drawn[int(listing.scroll_y) + y] = listing.render_line(y).text
-                if listing.scroll_y == listing.max_scroll_y:
-                    break
-                before_scroll = listing.scroll_y
-                await pilot.press("pagedown")
-                await settle(pilot)
-                assert listing.scroll_y > before_scroll
-            assert listing.scroll_y == listing.max_scroll_y
-            rendered_rows = "\n".join(line for _, line in sorted(drawn.items()))
+            rendered_rows = await _page_through_records(listing, pilot)
             assert "EU Customer GmbH" in " ".join(rendered_rows.split())
             for identifier in ("123456789", "12345678901"):
                 assert identifier in rendered_rows
@@ -287,21 +353,7 @@ async def test_installed_saved_records_are_read_only_visible_content_in_each_ter
             for *_, amount in M349_INVOICES:
                 shown = format_casilla_value(amount, data_type="money", language=language)
                 assert " ".join(shown.split()) in " ".join(rendered_rows.split())
-            end_scroll = listing.scroll_y
-            await pilot.press("pageup")
-            await settle(pilot)
-            assert listing.scroll_y == max(end_scroll - max(listing.scrollable_content_region.height - 2, 1), 0)
-            await pilot.press("home")
-            await settle(pilot)
-            assert listing.scroll_y == 0
-            assert listing.focus_address(("casilla", "op.base-imponible"))
-            assert listing.highlighted is None
-            await pilot.press("enter")
-            await settle(pilot)
-            assert app.screen is screen
-            await pilot.press("end")
-            await settle(pilot)
-            assert listing.scroll_y == listing.max_scroll_y
+            await _scroll_back_and_activate_without_editing(screen, listing, pilot)
             assert screen.form is not None and screen.form.calculation_revision_id == calculated.calculation_revision_id
 
 
@@ -338,12 +390,7 @@ async def test_installed_known_empty_records_keep_source_guidance_and_column_fin
             assert len(records) == 1 and not records[0].rows and column in records[0].column_casilla_ids
             assert not any(isinstance(item, CasillaListEntry) for item in listing.items)
             assert listing.highlighted is None
-            visible = {key for key, active in screen.active_bindings.items() if active.binding.show}
-            assert {"enter", "s"}.isdisjoint(visible)
-            assert {"up", "question_mark", "escape"} <= visible
-            next_line = str(screen.query_one("#wb-next", Static).render())
-            named = next_line.rpartition("[")[2].removesuffix("]").lower()
-            assert named and named in visible
+            _assert_read_only_records_chrome(screen)
             count_text = tr("workspace.modelo.repeating", count=0)
             body = "\n".join(listing.render_line(y).text for y in range(listing.size.height))
             assert count_text in body
@@ -364,25 +411,7 @@ async def test_installed_known_empty_records_keep_source_guidance_and_column_fin
             await settle(pilot)
             assert app.screen is screen
 
-            # A real persisted check's column finding must return here from a different page.
-            lines = issue_lines(screen.form)
-            line_index = next(index for index, line in enumerate(lines) if line.in_records and line.key == key)
-            await pilot.press("]", "i")
-            await settle(pilot)
-            assert isinstance(app.screen, WorkbenchIssuesScreen)
-            options = app.screen.query_one(OptionList)
-            option_index = options.get_option_index(f"issue-{line_index}")
-            await pilot.press("home")
-            for _ in range(options.option_count):
-                if options.highlighted == option_index:
-                    break
-                await pilot.press("down")
-            assert options.highlighted == option_index
-            await pilot.press("enter")
-            await settle(pilot)
-            assert app.screen is screen and app.focused is listing
-            assert screen._page_index == target and listing.highlighted is None
-            assert listing.focus_address(key)
+            await _return_from_column_finding(screen, app, listing, pilot, key, target)
             body = "\n".join(listing.render_line(y).text for y in range(listing.size.height))
             assert count_text in body
             assert screen.form.calculation_revision_id == result.revision.calculation_revision_id
