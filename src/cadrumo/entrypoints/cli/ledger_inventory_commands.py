@@ -10,6 +10,7 @@ from pydantic import ValidationError
 
 from ...application.inventory.registered_evidence_operation import InventoryEvidenceAddRequest
 from ...application.inventory.registered_options_operation import InventoryOptionsRequest
+from ...application.inventory.registered_projections import InventoryLedgerProjection, InventoryListRowProjection
 from ...application.inventory.registered_requests import (
     InventoryAcquisitionCostRequest,
     InventoryClosingAuthorityRecordInput,
@@ -32,6 +33,7 @@ from ...application.operations.public_scalar import PublicDecimal
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.i18n.render import tr
+from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.contribuyente.inventory.closing_authority_records import InventoryClosingAuthorityRecord
 from ...domain.contribuyente.inventory.records import (
     InventoryCorrectionReason,
@@ -57,6 +59,21 @@ from .operation_ledger_inventory import (
     record_inventory_closing_authority,
     record_inventory_closing_value,
 )
+
+
+def _inventory_notices(ledger: InventoryLedgerProjection | InventoryListRowProjection | None) -> list[Notice]:
+    """Present worker-owned inventory advisories on the shared diagnostic channel."""
+    if ledger is None:
+        raise InternalInvariantError("inventory completion returned no canonical ledger")
+    return [
+        Notice(
+            severity=NoticeSeverity.WARNING,
+            code=f"ledger.inventory.{item.code}",
+            message=tr(item.key, year=item.year),
+            context={"actividad_id": ledger.actividad_id, "year": str(item.year)},
+        )
+        for item in ledger.advisories
+    ]
 
 
 def _parse_acquisition_cost(*, from_stdin: bool) -> InventoryAcquisitionCostRequest | None:
@@ -86,7 +103,13 @@ def inventory_list(ctx: typer.Context) -> None:
             f"opening={row.opening_stock.decimal}\tmovements={row.movement_count}"
             f"\tcorrections={row.correction_count}\tretired={row.retired}",
         )
-    emit_envelope(ctx, command="ledger.inventory.list", result=payload, lines=lines)
+    emit_envelope(
+        ctx,
+        command="ledger.inventory.list",
+        result=payload,
+        lines=lines,
+        notices=[notice for row in completion.projection.rows for notice in _inventory_notices(row)],
+    )
 
 
 def inventory_create(
@@ -113,6 +136,7 @@ def inventory_create(
         ctx,
         command="ledger.inventory.create",
         result=payload,
+        notices=_inventory_notices(ledger),
         lines=(
             f"bucket\t{bucket_id}",
             f"actividad_id\t{ledger.actividad_id}",
@@ -152,11 +176,12 @@ def inventory_movement_add(
         taxable_base=PublicDecimal(decimal=str(taxable_base_amount)) if taxable_base_amount is not None else None,
         acquisition_cost=_parse_acquisition_cost(from_stdin=acquisition_cost_stdin),
     )
-    _completion, payload = add_inventory_movement(ctx, request=request)
+    completion, payload = add_inventory_movement(ctx, request=request)
     emit_envelope(
         ctx,
         command="ledger.inventory.movement.add",
         result=payload,
+        notices=_inventory_notices(completion.projection.ledger),
         lines=(
             f"bucket\t{bucket_id}",
             f"actividad_id\t{payload.actividad_id}",
@@ -169,11 +194,12 @@ def inventory_movement_add(
 
 def _emit_ledger_change(ctx: typer.Context, *, command: str, request: InventoryLedgerChangeRequest) -> None:
     """Submit one change and report the worker's own outcome and resulting state."""
-    _completion, payload = apply_inventory_ledger_change(ctx, request=request)
+    completion, payload = apply_inventory_ledger_change(ctx, request=request)
     emit_envelope(
         ctx,
         command=command,
         result=payload,
+        notices=_inventory_notices(completion.projection.ledger),
         lines=(
             f"outcome\t{payload.outcome}",
             f"actividad_id\t{payload.actividad_id}",
@@ -189,7 +215,7 @@ def _emit_ledger_change(ctx: typer.Context, *, command: str, request: InventoryL
 def inventory_inspect(ctx: typer.Context, actividad_id: str, year: int) -> None:
     """Show one ledger with its effective movements and retained history."""
     request = InventoryInspectRequest(profile_id=UUID(_inventory_bucket_id()), actividad_id=actividad_id, year=year)
-    _completion, payload = inspect_inventory_ledger(ctx, request=request)
+    completion, payload = inspect_inventory_ledger(ctx, request=request)
     lines = [
         f"actividad_id\t{payload.actividad_id}",
         f"year\t{payload.year}",
@@ -202,8 +228,13 @@ def inventory_inspect(ctx: typer.Context, actividad_id: str, year: int) -> None:
         for item in payload.period_movements
     )
     lines.extend(f"history\t{item.correction_id}\t{item.kind}\t{item.recorded_at}" for item in payload.history)
-    lines.extend(f"advisory\t{tr(item.key, year=item.year)}" for item in payload.advisories)
-    emit_envelope(ctx, command="ledger.inventory.inspect", result=payload, lines=lines)
+    emit_envelope(
+        ctx,
+        command="ledger.inventory.inspect",
+        result=payload,
+        lines=lines,
+        notices=_inventory_notices(completion.projection.ledger),
+    )
 
 
 def inventory_describe(
