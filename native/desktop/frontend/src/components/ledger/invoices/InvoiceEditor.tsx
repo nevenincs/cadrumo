@@ -1,10 +1,17 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { CountryEditor } from "@/components/editors/CountryEditor";
+import { CurrencyEditor } from "@/components/editors/CurrencyEditor";
+import { DateEditor } from "@/components/editors/DateEditor";
+import { MoneyEditor } from "@/components/editors/MoneyEditor";
+import { NotesEditor } from "@/components/editors/NotesEditor";
+import { PercentEditor } from "@/components/editors/PercentEditor";
+import { TaxIdEditor } from "@/components/editors/TaxIdEditor";
+import { TextEditor } from "@/components/editors/TextEditor";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/components/ui/cn";
 import { Icon } from "@/components/ui/icon";
-import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
 import {
   SegmentedControl,
@@ -41,6 +48,7 @@ import {
   EditorSection,
   FixedField,
   FormField,
+  wired,
   type ControlProps,
 } from "./InvoiceFields";
 import { DraftLines, StoredLines } from "./InvoiceLines";
@@ -720,26 +728,14 @@ function NewInvoice({
   onOpenInvoice(invoiceId: string): void;
 }) {
   const t = useStrings();
+  const bind = (key: keyof InvoiceDraft, field: string) => ({
+    value: draft[key] as string,
+    onChange: (value: string) => edit(key, value as never),
+    onBlur: () => touch(field),
+  });
   const text =
-    (
-      key: keyof InvoiceDraft,
-      field: string,
-      transform?: (value: string) => string,
-    ) =>
-    (control: ControlProps) => (
-      <Input
-        {...control}
-        value={draft[key] as string}
-        onChange={(event) =>
-          edit(
-            key,
-            (transform
-              ? transform(event.target.value)
-              : event.target.value) as never,
-          )
-        }
-        onBlur={() => touch(field)}
-      />
+    (key: keyof InvoiceDraft, field: string) => (control: ControlProps) => (
+      <TextEditor {...wired(control)} {...bind(key, field)} />
     );
   const issued = draft.kind === "issued";
   const year = /^\d{4}-\d{2}-\d{2}$/.test(draft.issuedAt.trim())
@@ -851,23 +847,22 @@ function NewInvoice({
             error={shown("counterparty_tax_id")}
           >
             {(control) => (
-              <Input
-                {...control}
-                className="font-mono"
-                value={draft.taxId}
-                onChange={(event) => edit("taxId", event.target.value)}
-                onBlur={() => touch("counterparty_tax_id")}
+              <TaxIdEditor
+                {...wired(control)}
+                {...bind("taxId", "counterparty_tax_id")}
               />
             )}
           </FormField>
           <FormField
             label={t("desktop.ledger.invoices.field.counterparty_country")}
-            hint={t("desktop.ledger.invoices.hint.country")}
             required
             error={shown("counterparty_country")}
           >
-            {text("country", "counterparty_country", (value) =>
-              value.toUpperCase(),
+            {(control) => (
+              <CountryEditor
+                {...wired(control)}
+                {...bind("country", "counterparty_country")}
+              />
             )}
           </FormField>
         </div>
@@ -912,26 +907,39 @@ function NewInvoice({
           </FormField>
           <FormField
             label={t("desktop.ledger.invoices.field.issued_at")}
-            hint={t("desktop.ledger.invoices.hint.date")}
             required
             error={shown("issued_at")}
           >
-            {text("issuedAt", "issued_at")}
+            {(control) => (
+              <DateEditor
+                {...wired(control)}
+                {...bind("issuedAt", "issued_at")}
+              />
+            )}
           </FormField>
           <FormField
             label={t("desktop.ledger.invoices.field.operation_date")}
             hint={t("desktop.ledger.invoices.hint.operation_date")}
             error={shown("operation_date")}
           >
-            {text("operationDate", "operation_date")}
+            {(control) => (
+              <DateEditor
+                {...wired(control)}
+                {...bind("operationDate", "operation_date")}
+              />
+            )}
           </FormField>
           <FormField
             label={t("desktop.ledger.invoices.field.currency")}
-            hint={t("desktop.ledger.invoices.hint.currency")}
             required
             error={shown("currency")}
           >
-            {text("currency", "currency", (value) => value.toUpperCase())}
+            {(control) => (
+              <CurrencyEditor
+                {...wired(control)}
+                {...bind("currency", "currency")}
+              />
+            )}
           </FormField>
           {rectificativa && (
             <FormField
@@ -1022,14 +1030,10 @@ function NewInvoice({
                   error={shown("recargo")}
                 >
                   {(control) => (
-                    <Input
-                      {...control}
+                    <MoneyEditor
+                      {...wired(control)}
+                      {...bind("recargo", "recargo")}
                       controlSize="sm"
-                      inputMode="decimal"
-                      className="text-end tabular-nums"
-                      value={draft.recargo}
-                      onChange={(event) => edit("recargo", event.target.value)}
-                      onBlur={() => touch("recargo")}
                     />
                   )}
                 </FormField>
@@ -1041,14 +1045,10 @@ function NewInvoice({
               error={shown("printed")}
             >
               {(control) => (
-                <Input
-                  {...control}
+                <MoneyEditor
+                  {...wired(control)}
+                  {...bind("printedTotal", "printed")}
                   controlSize="sm"
-                  inputMode="decimal"
-                  className="text-end tabular-nums"
-                  value={draft.printedTotal}
-                  onChange={(event) => edit("printedTotal", event.target.value)}
-                  onBlur={() => touch("printed")}
                 />
               )}
             </FormField>
@@ -1107,13 +1107,11 @@ function NewInvoice({
                 error={shown("referencia")}
               >
                 {(control) => (
-                  <Input
-                    {...control}
-                    className="font-mono"
+                  <TextEditor
+                    {...wired(control)}
+                    {...bind("referencia", "referencia")}
+                    mono
                     maxLength={25}
-                    value={draft.referencia}
-                    onChange={(event) => edit("referencia", event.target.value)}
-                    onBlur={() => touch("referencia")}
                   />
                 )}
               </FormField>
@@ -1267,16 +1265,15 @@ function Retention({
       <div className="grid grid-cols-2 gap-2">
         <FormField
           label={t("desktop.ledger.invoices.field.retention_rate")}
-          hint={t("desktop.ledger.invoices.hint.percent")}
           error={rateError}
         >
           {(control) => (
-            <Input
-              {...control}
+            <PercentEditor
+              {...wired(control)}
+              unit="points"
               controlSize="sm"
-              inputMode="decimal"
               value={rate}
-              onChange={(event) => onRate(event.target.value)}
+              onChange={onRate}
               onBlur={() => onBlur("retention_rate")}
             />
           )}
@@ -1286,13 +1283,11 @@ function Retention({
           error={amountError}
         >
           {(control) => (
-            <Input
-              {...control}
+            <MoneyEditor
+              {...wired(control)}
               controlSize="sm"
-              inputMode="decimal"
-              className="text-end tabular-nums"
               value={amount}
-              onChange={(event) => onAmount(event.target.value)}
+              onChange={onAmount}
               onBlur={() => onBlur("retention_amount")}
             />
           )}
@@ -1381,12 +1376,11 @@ function NotesField({
   return (
     <FormField label={t("desktop.ledger.invoices.field.notes")}>
       {(control) => (
-        <textarea
-          {...control}
+        <NotesEditor
+          {...wired(control)}
           rows={3}
-          className="w-full min-w-0 rounded-md border border-input bg-card px-2.5 py-1.5 text-base text-foreground transition-colors"
           value={value}
-          onChange={(event) => onChange(event.target.value)}
+          onChange={onChange}
         />
       )}
     </FormField>
@@ -1415,26 +1409,14 @@ function StoredInvoice({
 }) {
   const t = useStrings();
   const fixed = t("desktop.ledger.invoices.fixed");
+  const bind = (key: keyof CorrectionDraft, field: string) => ({
+    value: correction[key] as string,
+    onChange: (value: string) => correct(key, value as never),
+    onBlur: () => touch(field),
+  });
   const text =
-    (
-      key: keyof CorrectionDraft,
-      field: string,
-      transform?: (value: string) => string,
-    ) =>
-    (control: ControlProps) => (
-      <Input
-        {...control}
-        value={correction[key] as string}
-        onChange={(event) =>
-          correct(
-            key,
-            (transform
-              ? transform(event.target.value)
-              : event.target.value) as never,
-          )
-        }
-        onBlur={() => touch(field)}
-      />
+    (key: keyof CorrectionDraft, field: string) => (control: ControlProps) => (
+      <TextEditor {...wired(control)} {...bind(key, field)} />
     );
   const rectificativa = correction.invoiceClass === "RECTIFICATIVA";
   const amount = shownRetentionAmount(correction, invoice.base_total.decimal);
@@ -1468,12 +1450,14 @@ function StoredInvoice({
           />
           <FormField
             label={t("desktop.ledger.invoices.field.counterparty_country")}
-            hint={t("desktop.ledger.invoices.hint.country")}
             required
             error={shown("counterparty_country")}
           >
-            {text("country", "counterparty_country", (value) =>
-              value.toUpperCase(),
+            {(control) => (
+              <CountryEditor
+                {...wired(control)}
+                {...bind("country", "counterparty_country")}
+              />
             )}
           </FormField>
         </div>
@@ -1524,10 +1508,14 @@ function StoredInvoice({
           ) : (
             <FormField
               label={t("desktop.ledger.invoices.field.operation_date")}
-              hint={t("desktop.ledger.invoices.hint.date")}
               error={shown("operation_date")}
             >
-              {text("operationDate", "operation_date")}
+              {(control) => (
+                <DateEditor
+                  {...wired(control)}
+                  {...bind("operationDate", "operation_date")}
+                />
+              )}
             </FormField>
           )}
           <FixedField
@@ -1642,12 +1630,11 @@ function StoredInvoice({
             error={shown("payment_id")}
           >
             {(control) => (
-              <Input
-                {...control}
-                className="font-mono"
-                value={correction.paymentId}
-                onChange={(event) => correct("paymentId", event.target.value)}
-                onBlur={() => touch("payment_id")}
+              <TextEditor
+                {...wired(control)}
+                {...bind("paymentId", "payment_id")}
+                mono
+                maxLength={64}
               />
             )}
           </FormField>

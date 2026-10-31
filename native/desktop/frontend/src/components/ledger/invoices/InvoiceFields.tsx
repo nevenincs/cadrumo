@@ -22,6 +22,14 @@ export type ControlProps = {
   "aria-required"?: true;
 };
 
+/** The same wiring in the form a typed editor takes. */
+export const wired = (control: ControlProps) => ({
+  id: control.id,
+  describedBy: control["aria-describedby"],
+  invalid: control["aria-invalid"],
+  required: control["aria-required"],
+});
+
 /**
  * One labelled field of the invoice editor. The control is drawn by
  * `children` with the props it is handed, so its hint and its refusal are

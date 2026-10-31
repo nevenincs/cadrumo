@@ -1,8 +1,10 @@
 import { useId } from "react";
+import { DecimalEditor } from "@/components/editors/DecimalEditor";
+import { MoneyEditor } from "@/components/editors/MoneyEditor";
+import { TextEditor } from "@/components/editors/TextEditor";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { IconButton } from "@/components/ui/icon-button";
-import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
 import { useTableView, type ViewColumn } from "@/components/ui/table-view";
 import type { CatalogueInvoiceLine, InvoiceKind } from "../../../shell/ledger";
@@ -149,48 +151,39 @@ export function DraftLines({
               return (
                 <tr key={line.key} className="border-b border-border">
                   <td className={CELL}>
-                    <Input
+                    <TextEditor
                       controlSize="sm"
                       value={line.description}
                       aria-label={name("description")}
-                      aria-invalid={
-                        problemOf(line, "description") ? true : undefined
-                      }
-                      aria-describedby={described(line, "description")}
-                      onChange={(event) =>
-                        onChange(line.key, "description", event.target.value)
+                      invalid={Boolean(problemOf(line, "description"))}
+                      describedBy={described(line, "description")}
+                      onChange={(value) =>
+                        onChange(line.key, "description", value)
                       }
                     />
                   </td>
                   <td className={CELL}>
-                    <Input
+                    <DecimalEditor
                       controlSize="sm"
-                      className="text-end tabular-nums"
-                      inputMode="decimal"
                       value={line.quantity}
                       aria-label={name("quantity")}
-                      aria-invalid={
-                        problemOf(line, "quantity") ? true : undefined
-                      }
-                      aria-describedby={described(line, "quantity")}
-                      onChange={(event) =>
-                        onChange(line.key, "quantity", event.target.value)
+                      invalid={Boolean(problemOf(line, "quantity"))}
+                      describedBy={described(line, "quantity")}
+                      onChange={(value) =>
+                        onChange(line.key, "quantity", value)
                       }
                     />
                   </td>
                   <td className={CELL}>
-                    <Input
+                    <MoneyEditor
+                      decimals={6}
                       controlSize="sm"
-                      className="text-end tabular-nums"
-                      inputMode="decimal"
                       value={line.unitPrice}
                       aria-label={name("unit_price")}
-                      aria-invalid={
-                        problemOf(line, "unitPrice") ? true : undefined
-                      }
-                      aria-describedby={described(line, "unitPrice")}
-                      onChange={(event) =>
-                        onChange(line.key, "unitPrice", event.target.value)
+                      invalid={Boolean(problemOf(line, "unitPrice"))}
+                      describedBy={described(line, "unitPrice")}
+                      onChange={(value) =>
+                        onChange(line.key, "unitPrice", value)
                       }
                     />
                   </td>
