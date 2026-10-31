@@ -8,7 +8,6 @@ from pathlib import Path
 
 import pytest
 
-from .. import package_index_probe
 from ..pypi_publication_state import (
     PublicationConflictError,
     PublicationState,
@@ -16,6 +15,7 @@ from ..pypi_publication_state import (
     local_files,
     publication_state,
 )
+from ._https_connection_double import install_https_connection
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -94,10 +94,7 @@ def test_index_files_uses_https_full_metadata_and_encoded_path_segments(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     body = json.dumps({"urls": [{"filename": "cadrumo.whl", "digests": {"sha256": "a" * 64}}]}).encode("utf-8")
-    connection_args: list[tuple[str, int | None, int]] = []
-    requests: list[tuple[str, str, dict[str, str]]] = []
     read_calls: list[tuple[int, ...]] = []
-    closed: list[bool] = []
     statuses = [200]
 
     class _Response:
@@ -109,20 +106,7 @@ def test_index_files_uses_https_full_metadata_and_encoded_path_segments(
             read_calls.append(args)
             return body[: args[0]] if args else body
 
-    class _Connection:
-        def __init__(self, hostname: str, port: int | None, *, timeout: int) -> None:
-            connection_args.append((hostname, port, timeout))
-
-        def request(self, method: str, target: str, *, headers: dict[str, str]) -> None:
-            requests.append((method, target, headers))
-
-        def getresponse(self) -> _Response:
-            return _Response()
-
-        def close(self) -> None:
-            closed.append(True)
-
-    monkeypatch.setattr(package_index_probe.http.client, "HTTPSConnection", _Connection)
+    recorded = install_https_connection(monkeypatch, _Response)
 
     served = index_files(
         "project/name",
@@ -131,10 +115,12 @@ def test_index_files_uses_https_full_metadata_and_encoded_path_segments(
     )
 
     assert served == {"cadrumo.whl": "a" * 64}
-    assert connection_args == [("index.example", 8443, 30)]
-    assert requests == [("GET", "/custom/pypi/project%2Fname/1.2%2Bbuild/json", {"Accept": "application/json"})]
+    assert recorded.connection_args == [("index.example", 8443, 30)]
+    assert recorded.requests == [
+        ("GET", "/custom/pypi/project%2Fname/1.2%2Bbuild/json", {"Accept": "application/json"})
+    ]
     assert read_calls == [()]
-    assert closed == [True]
+    assert recorded.closed == [True]
 
     statuses[0] = 404
     assert (
@@ -154,14 +140,13 @@ def test_index_files_uses_https_full_metadata_and_encoded_path_segments(
             index_url="https://index.example:8443/custom/pypi/?token=omit#fragment",
         )
 
-    assert len(requests) == 3
+    assert len(recorded.requests) == 3
     assert read_calls == [(), (), ()]
-    assert closed == [True, True, True]
+    assert recorded.closed == [True, True, True]
 
 
 def test_index_files_refuses_when_connection_close_fails(monkeypatch: pytest.MonkeyPatch) -> None:
     body = json.dumps({"urls": []}).encode("utf-8")
-    closed: list[bool] = []
 
     class _Response:
         status = 200
@@ -169,23 +154,9 @@ def test_index_files_refuses_when_connection_close_fails(monkeypatch: pytest.Mon
         def read(self) -> bytes:
             return body
 
-    class _Connection:
-        def __init__(self, hostname: str, port: int | None, *, timeout: int) -> None:
-            del hostname, port, timeout
-
-        def request(self, method: str, target: str, *, headers: dict[str, str]) -> None:
-            del method, target, headers
-
-        def getresponse(self) -> _Response:
-            return _Response()
-
-        def close(self) -> None:
-            closed.append(True)
-            raise OSError("close failed")
-
-    monkeypatch.setattr(package_index_probe.http.client, "HTTPSConnection", _Connection)
+    recorded = install_https_connection(monkeypatch, _Response, close_error=OSError("close failed"))
 
     with pytest.raises(PublicationConflictError, match="index check failed for cadrumo: close failed"):
         index_files("cadrumo", "1.2.0", index_url="https://index.example/pypi")
 
-    assert closed == [True]
+    assert recorded.closed == [True]

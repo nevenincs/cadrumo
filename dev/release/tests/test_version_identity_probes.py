@@ -39,8 +39,8 @@ from cadrumo.core.product_identity import PRODUCT_IDENTITY
 from dev._paths import REPO_ROOT, UTF_8
 from dev.packaging.command_execution import run_command
 
-from .. import package_index_probe
 from ..version_identity import VersionIdentityError, pypi_projects_owning
+from ._https_connection_double import install_https_connection
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -104,10 +104,7 @@ def test_an_answer_that_is_not_404_is_read_as_carried() -> None:
 def test_https_ownership_probe_reads_one_byte_with_its_explicit_transport_policy(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    connection_args: list[tuple[str, int | None, int]] = []
-    requests: list[tuple[str, str, dict[str, str]]] = []
     read_calls: list[tuple[int, ...]] = []
-    closed: list[bool] = []
 
     class _Response:
         status = 200
@@ -116,20 +113,7 @@ def test_https_ownership_probe_reads_one_byte_with_its_explicit_transport_policy
             read_calls.append(args)
             return b"x" if args else b"whole metadata body"
 
-    class _Connection:
-        def __init__(self, hostname: str, port: int | None, *, timeout: int) -> None:
-            connection_args.append((hostname, port, timeout))
-
-        def request(self, method: str, target: str, *, headers: dict[str, str]) -> None:
-            requests.append((method, target, headers))
-
-        def getresponse(self) -> _Response:
-            return _Response()
-
-        def close(self) -> None:
-            closed.append(True)
-
-    monkeypatch.setattr(package_index_probe.http.client, "HTTPSConnection", _Connection)
+    recorded = install_https_connection(monkeypatch, _Response)
 
     owning = pypi_projects_owning(
         "v9.9.9",
@@ -138,14 +122,13 @@ def test_https_ownership_probe_reads_one_byte_with_its_explicit_transport_policy
     )
 
     assert owning == ("team/name",)
-    assert connection_args == [("index.example", 8443, 20)]
-    assert requests == [("GET", "/pypi/team%2Fname/9.9.9/json?token=keep", {"Accept": "application/json"})]
+    assert recorded.connection_args == [("index.example", 8443, 20)]
+    assert recorded.requests == [("GET", "/pypi/team%2Fname/9.9.9/json?token=keep", {"Accept": "application/json"})]
     assert read_calls == [(1,)]
-    assert closed == [True]
+    assert recorded.closed == [True]
 
 
 def test_ownership_probe_refuses_when_connection_close_fails(monkeypatch: pytest.MonkeyPatch) -> None:
-    closed: list[bool] = []
 
     class _Response:
         status = 200
@@ -154,21 +137,7 @@ def test_ownership_probe_refuses_when_connection_close_fails(monkeypatch: pytest
             assert amount == 1
             return b"x"
 
-    class _Connection:
-        def __init__(self, hostname: str, port: int | None, *, timeout: int) -> None:
-            del hostname, port, timeout
-
-        def request(self, method: str, target: str, *, headers: dict[str, str]) -> None:
-            del method, target, headers
-
-        def getresponse(self) -> _Response:
-            return _Response()
-
-        def close(self) -> None:
-            closed.append(True)
-            raise OSError("close failed")
-
-    monkeypatch.setattr(package_index_probe.http.client, "HTTPSConnection", _Connection)
+    recorded = install_https_connection(monkeypatch, _Response, close_error=OSError("close failed"))
 
     with pytest.raises(VersionIdentityError, match="index check failed for cadrumo: close failed"):
         pypi_projects_owning(
@@ -177,7 +146,7 @@ def test_ownership_probe_refuses_when_connection_close_fails(monkeypatch: pytest
             index_url="https://index.example/pypi",
         )
 
-    assert closed == [True]
+    assert recorded.closed == [True]
 
 
 @pytest.mark.parametrize(
