@@ -53,8 +53,10 @@ from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.export_parse import parse_export_payload
+from cadrumo.domain.calculations.registry.export_parse_models import ParsedExportFieldValue, ParsedExportPayload
 from cadrumo.domain.calculations.registry.ids import BindingId
 from cadrumo.domain.calculations.registry.ledger_oss_bindings import OssIossLedgerObservation
+from cadrumo.domain.calculations.registry.schema_exports import ExportLayoutDefinition
 from cadrumo.domain.deadlines.models import IVARegime, TaxpayerProfile
 from cadrumo.domain.invoices.catalogue import InvoiceCatalogue
 from cadrumo.domain.invoices.enums import InvoiceOperationDateRole, IvaRate, PaymentStatus
@@ -63,6 +65,7 @@ from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalo
 from cadrumo.domain.iva.oss import OssIossRegime
 from cadrumo.domain.iva.schema import IvaRateKind
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
+from cadrumo.domain.modelos.work_unit import WorkUnit
 from cadrumo.domain.transactions.date_partition import LedgerDatePartition
 from cadrumo.domain.transactions.models import TransactionCatalogue
 from cadrumo.entrypoints.tests.profile_persistence._dormant_resolver_live_support import (
@@ -311,6 +314,83 @@ def _m369_invoice(
     )
 
 
+def _assert_exterior_revision(
+    result: BucketAggregationCalculationResult,
+    work_unit: WorkUnit,
+    cr_repo: CalculationRevisionCatalogueRepository,
+    period_token: str,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    period_casilla = validated_casilla_id("decl.periodo")
+    exterior_cuota = validated_casilla_id("iva.exterior.de.services-cuota")
+    assert result.revision.input_values_by_casilla_id[period_casilla] == period_token
+    assert Decimal(result.revision.casilla_values[exterior_cuota]) == Decimal("19.00")
+    (membership,) = result.revision.closed_record_row_sets
+    assert membership.work_unit_id == work_unit.work_unit_id
+    assert membership.registry_snapshot_ref.period == period_token
+    assert membership.authority_generation == operation.pin().logical_generation
+    assert len(membership.rows) == 28
+    assert sum(row.occupied for row in membership.rows) == 1
+    reloaded = cr_repo.load(operation=operation).get(result.revision.calculation_revision_id)
+    assert reloaded is not None
+    assert reloaded.closed_record_row_sets == (membership,)
+    assert all(
+        result.revision.binding_overrides[binding] == value for binding, value in _EXTERIOR_DECLARANT_BINDINGS.items()
+    )
+
+
+def _assert_exterior_detail(
+    detail: tuple[ParsedExportFieldValue, ...], period_token: str, expected_detail_period: bytes
+) -> None:
+    def detail_value(binding_name: str) -> object:
+        binding_id = f"modelo-369-exterior-fichero.{binding_name}"
+        matches = [field.value for field in detail if str(field.binding_id) == binding_id]
+        assert len(matches) == 1, [(field.field_id, field.binding_id, field.value) for field in detail]
+        return matches[0]
+
+    assert detail_value("regimen") == "VOES"
+    assert detail_value("categoria") == "D"
+    assert detail_value("1-declarante-pais") == "US"
+    assert detail_value("1-declarante-numero-de-operador-en-el-regimen-neuoss") == "EU724000000001"
+    assert detail_value("2-ejercicio-y-periodo-ejercicio") == 2026
+    assert detail_value("2-ejercicio-y-periodo-tipo-de-periodo") == "T"
+    assert detail_value("2-ejercicio-y-periodo-periodo") == int(period_token[-2])
+    assert (
+        next(
+            field.raw
+            for field in detail
+            if field.binding_id == "modelo-369-exterior-fichero.2-ejercicio-y-periodo-periodo"
+        ).encode("ascii")
+        == expected_detail_period
+    )
+    assert detail_value("2-ejercicio-y-periodo-declaracion-sin-actividad") == "0"
+    assert detail_value("3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-1") == "DE"
+    assert detail_value("3-prestaciones-de-servicios-tipo-de-iva-1") == Decimal("19")
+    assert detail_value("3-prestaciones-de-servicios-tipo-iva-1") == "S"
+    assert detail_value("3-prestaciones-de-servicios-base-imponible-1") == Decimal("100")
+    assert detail_value("3-prestaciones-de-servicios-cuota-iva-1") == Decimal("19")
+
+
+def _assert_exterior_correction_pages(layout: ExportLayoutDefinition, parsed: ParsedExportPayload, wire: bytes) -> None:
+    record_ids = {field.record_id for field in parsed.fields}
+    # DR369 selects pages T36901..T36903 for Exterior. General notes 6-7
+    # require empty correction groups to be entirely blank, including numeric
+    # slots; the presence of that fixed page does not declare a correction.
+    assert "modelo-369-exterior-t36902" in record_ids
+    corrections = tuple(
+        field
+        for field in parsed.fields
+        if field.record_id == "modelo-369-exterior-t36902" and field.binding_id is not None
+    )
+    assert corrections
+    assert all(field.raw == " " * len(field.raw) and field.value is None for field in corrections), corrections
+    assert "modelo-369-exterior-t36903" in record_ids
+    closure_start = wire.index(b"<T36903>")
+    malformed_correction_page = wire[:closure_start] + b"<T36902>" + wire[closure_start:]
+    with pytest.raises(RegistryValidationError):
+        parse_export_payload(layout, malformed_correction_page)
+
+
 @pytest.mark.parametrize(
     ("period_token", "operation_date", "issued_at", "expected_envelope_period", "expected_detail_period"),
     (
@@ -390,22 +470,7 @@ def test_m369_exterior_period_calculate_review_export_e2e(
             },
             clock=_T1,
         )
-    period_casilla = validated_casilla_id("decl.periodo")
-    exterior_cuota = validated_casilla_id("iva.exterior.de.services-cuota")
-    assert result.revision.input_values_by_casilla_id[period_casilla] == period_token
-    assert Decimal(result.revision.casilla_values[exterior_cuota]) == Decimal("19.00")
-    (membership,) = result.revision.closed_record_row_sets
-    assert membership.work_unit_id == work_unit.work_unit_id
-    assert membership.registry_snapshot_ref.period == period_token
-    assert membership.authority_generation == operation.pin().logical_generation
-    assert len(membership.rows) == 28
-    assert sum(row.occupied for row in membership.rows) == 1
-    reloaded = cr_repo.load(operation=operation).get(result.revision.calculation_revision_id)
-    assert reloaded is not None
-    assert reloaded.closed_record_row_sets == (membership,)
-    assert all(
-        result.revision.binding_overrides[binding] == value for binding, value in _EXTERIOR_DECLARANT_BINDINGS.items()
-    )
+    _assert_exterior_revision(result, work_unit, cr_repo, period_token, operation)
 
     with bundled_indexed_authority().operation() as operation:
         report = verify_modelo_revision_with_preconditions(
@@ -457,50 +522,8 @@ def test_m369_exterior_period_calculate_review_export_e2e(
     parsed = parse_export_payload(layout, wire)
     detail = tuple(field for field in parsed.fields if field.record_id == "modelo-369-exterior-t36901")
 
-    def detail_value(binding_name: str) -> object:
-        binding_id = f"modelo-369-exterior-fichero.{binding_name}"
-        matches = [field.value for field in detail if str(field.binding_id) == binding_id]
-        assert len(matches) == 1, [(field.field_id, field.binding_id, field.value) for field in detail]
-        return matches[0]
-
-    assert detail_value("regimen") == "VOES"
-    assert detail_value("categoria") == "D"
-    assert detail_value("1-declarante-pais") == "US"
-    assert detail_value("1-declarante-numero-de-operador-en-el-regimen-neuoss") == "EU724000000001"
-    assert detail_value("2-ejercicio-y-periodo-ejercicio") == 2026
-    assert detail_value("2-ejercicio-y-periodo-tipo-de-periodo") == "T"
-    assert detail_value("2-ejercicio-y-periodo-periodo") == int(period_token[-2])
-    assert (
-        next(
-            field.raw
-            for field in detail
-            if field.binding_id == "modelo-369-exterior-fichero.2-ejercicio-y-periodo-periodo"
-        ).encode("ascii")
-        == expected_detail_period
-    )
-    assert detail_value("2-ejercicio-y-periodo-declaracion-sin-actividad") == "0"
-    assert detail_value("3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-1") == "DE"
-    assert detail_value("3-prestaciones-de-servicios-tipo-de-iva-1") == Decimal("19")
-    assert detail_value("3-prestaciones-de-servicios-tipo-iva-1") == "S"
-    assert detail_value("3-prestaciones-de-servicios-base-imponible-1") == Decimal("100")
-    assert detail_value("3-prestaciones-de-servicios-cuota-iva-1") == Decimal("19")
-    record_ids = {field.record_id for field in parsed.fields}
-    # DR369 selects pages T36901..T36903 for Exterior. General notes 6-7
-    # require empty correction groups to be entirely blank, including numeric
-    # slots; the presence of that fixed page does not declare a correction.
-    assert "modelo-369-exterior-t36902" in record_ids
-    corrections = tuple(
-        field
-        for field in parsed.fields
-        if field.record_id == "modelo-369-exterior-t36902" and field.binding_id is not None
-    )
-    assert corrections
-    assert all(field.raw == " " * len(field.raw) and field.value is None for field in corrections), corrections
-    assert "modelo-369-exterior-t36903" in record_ids
-    closure_start = wire.index(b"<T36903>")
-    malformed_correction_page = wire[:closure_start] + b"<T36902>" + wire[closure_start:]
-    with pytest.raises(RegistryValidationError):
-        parse_export_payload(layout, malformed_correction_page)
+    _assert_exterior_detail(detail, period_token, expected_detail_period)
+    _assert_exterior_correction_pages(layout, parsed, wire)
 
 
 @pytest.mark.parametrize("unsupported_rate_kind", (IvaRateKind("super_reduced"), IvaRateKind("zero")))
