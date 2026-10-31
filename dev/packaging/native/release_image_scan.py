@@ -1,11 +1,11 @@
 """Refuse a staged release package that knows about a source checkout or a retired storage override.
 
-A release image resolves storage from the one storage variable, which names an absolute
-directory, or from the per-user default; a Debug build's development root is baked in at compile
-time. So no product-owned file of a release package may name a storage variable the package
-declaration retired, the development default root or the checkout the
-build ran in. Third-party payloads (the Python standard library and dependencies, the Node
-runtime and modules) are outside this product's control and are not scanned.
+Every image resolves storage from the one storage variable, which names an absolute directory,
+or from the per-user default; no build bakes a root in. So no product-owned file of a release
+package may name a storage variable the package declaration retired, the former development
+default root or the checkout the build ran in. Third-party payloads (the Python standard library
+and dependencies, the Node runtime and modules) are outside this product's control and are not
+scanned.
 """
 
 from __future__ import annotations

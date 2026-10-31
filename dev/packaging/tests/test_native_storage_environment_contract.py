@@ -142,7 +142,7 @@ def test_schema_one_contract_projects_the_storage_declaration(tmp_path: Path) ->
         generate(REPO_ROOT, tmp_path / "unknown", "nightly")
 
     root = contract["root"]
-    # Every image carries the one storage rule; a Debug build's root is baked in by CMake.
+    # Every image carries the one storage rule, whatever configuration built it.
     assert set(root) == set(declaration.root)
     assert not {"precedence", "relative_override", "development_variable", "development_default"} & set(root)
     # The command line keeps its own built-in rule for runs outside a package; both state the same rule.

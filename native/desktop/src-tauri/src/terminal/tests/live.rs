@@ -971,7 +971,7 @@ mod relocated {
     use std::collections::BTreeMap;
 
     // Reports the storage root this process resolves through both owners.
-    const PROBE: &str = "import json, os, sys; from cadrumo.core.config import load_settings; from cadrumo.core.storage_environment import StorageMode, configured_storage_root, storage_mode; assert storage_mode().mode is StorageMode.INSTALLED; open(sys.argv[1], 'w', encoding='utf-8').write(json.dumps([str(configured_storage_root()), str(load_settings().cadrumo_local_storage_root), os.getcwd()]))";
+    const PROBE: &str = "import json, os, sys; from cadrumo.core.config import load_settings; from cadrumo.core.storage_environment import configured_storage_root; open(sys.argv[1], 'w', encoding='utf-8').write(json.dumps([str(configured_storage_root()), str(load_settings().cadrumo_storage_root), os.getcwd()]))";
 
     struct Scratch(PathBuf);
     impl Drop for Scratch {
@@ -987,7 +987,6 @@ mod relocated {
     }
 
     /// A fresh directory under the runner's configured temporary root.
-    /// The probe verifies installed mode from the imported package itself.
     fn relocation_scratch(label: &str) -> Scratch {
         let base = std::env::temp_dir().join(format!(
             "cadrumo-{label}-{}-{}",
@@ -1004,7 +1003,7 @@ mod relocated {
         vec![root_variable()]
     }
 
-    /// The one storage variable, which wins in every mode.
+    /// The one storage variable.
     fn root_variable() -> String {
         contract()["root"]["variable"].as_str().unwrap().to_owned()
     }
@@ -1065,7 +1064,7 @@ mod relocated {
 
     fn assert_resolves(values: &[PathBuf], storage: &Path, cwd: &Path) {
         assert_eq!(values[0], storage, "configured_storage_root");
-        assert_eq!(values[1], storage, "Settings.cadrumo_local_storage_root");
+        assert_eq!(values[1], storage, "Settings.cadrumo_storage_root");
         assert!(same_path(&values[2], cwd), "child working directory");
     }
 
