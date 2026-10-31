@@ -94,8 +94,8 @@ from __future__ import annotations
 
 from collections.abc import Collection, Mapping
 from datetime import date
-
 from functools import cache
+
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path

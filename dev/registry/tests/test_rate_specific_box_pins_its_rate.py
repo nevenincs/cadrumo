@@ -62,8 +62,8 @@ share. This module asserts the structural precondition that shape assumes.
 
 from __future__ import annotations
 
-from functools import cache
 import re
+from functools import cache
 from pathlib import Path
 
 import pytest

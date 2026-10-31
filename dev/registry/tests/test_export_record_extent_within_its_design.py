@@ -48,10 +48,11 @@ tomorrow.
 
 from __future__ import annotations
 
+from functools import cache
+
 # Development-only record-design corpus gate.
 from pathlib import Path
 
-from functools import cache
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path

@@ -24,8 +24,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _SECTION_KEY = "attribution_entity_socios"
 
-# Every field this schema coverage adds. Excludes the clave-A reducción
-# (blocked pending its own citation research), provisiones-gastos-dificil-
+# Every field this schema coverage adds. Excludes provisiones-gastos-dificil-
 # justificacion (computed, not collected) and any clave-E eligibility fact
 # (out of scope, tracked gap).
 _NEW_FIELD_KEYS = (
@@ -126,19 +125,17 @@ def test_clave_c_inmueble_subblock_fields_are_declared_and_optional(
         assert field.required is False, f"{field_key} must stay optional -- it is clave-C conditional"
 
 
-def test_reduccion_field_cites_both_clave_c_and_clave_d_provisions(
+def test_reduccion_field_cites_the_provision_of_every_clave_it_serves(
     schema: ProfileSchemaDefinition,
     legal_ids: frozenset[str],
 ) -> None:
     """The shared REDUCCIÓN field (diseño positions 109-119) covers clave C
-    (LIRPF art. 23) and clave D (LIRPF art. 32.1); the clave-A branch of this
-    same physical field is deliberately excluded pending its own blocked
-    legal citation.
+    (LIRPF art. 23), clave D (LIRPF art. 32.1) and clave A subclave 02 (LIRPF art. 26.2).
     """
     field = schema.field(f"{_SECTION_KEY}.reduccion")
 
     assert field.type is ProfileFieldType.MONEY
-    expected_refs = {"ley-35-2006:art-23", "ley-35-2006:art-32", "orden-hap-2250-2015:art-3"}
+    expected_refs = {"ley-35-2006:art-23", "ley-35-2006:art-26", "ley-35-2006:art-32", "orden-hap-2250-2015:art-3"}
     assert set(field.legal_refs) == expected_refs
     assert expected_refs <= legal_ids
 

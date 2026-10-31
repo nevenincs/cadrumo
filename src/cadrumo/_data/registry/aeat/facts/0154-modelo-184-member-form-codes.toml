@@ -5,18 +5,30 @@ family = "mapping"
 [[fact.variants]]
 variant_id = "modelo-184-member-form-codes:design"
 date_axis = "filing_period"
-source_refs = ["aeat-dr-184-2025"]
+# The socio record's REDUCCION field (109-119) names "A" with subclave "02" and cites
+# "articulo 24.2 de la Ley IRPF"; "C" and "D" any subclave; "En los demas casos este campo no
+# tendra contenido". Art. 24 of Ley 35/2006 has no apartado 2 and governs parentesco. The citation
+# is a stale number: art. 24.2 of the earlier refundido, RDLeg 3/2004, held this reduction for
+# the same income under the heading "Gastos deducibles y reducciones". Under Ley 35/2006 the rule
+# is art. 26.2, which reduces "los rendimientos netos previstos en el apartado 4 del articulo 25",
+# subclave "02" of this record, and which the entity record of this same design names for clave A.
+legal_refs = ["ley-35-2006:art-26"]
+source_refs = ["aeat-dr-184-2025", "boe-a-2004-4347-rdleg-3-2004"]
 review_status = "agent_reviewed"
 ownership = "authored"
 
 [[fact.variants.source_citations]]
 source_ref = "aeat-dr-184-2025"
-required_text = ["CLAVE TIPO DE PARTÍCIPE", "No residente sin establecimiento permanente", "NATURALEZA DEL INMUEBLE", "CLAVE DE DECLARADO", "Nudo propietario"]
+required_text = ["CLAVE TIPO DE PARTÍCIPE", "No residente sin establecimiento permanente", "NATURALEZA DEL INMUEBLE", "CLAVE DE DECLARADO", "Nudo propietario", "artículo 24.2 de la Ley IRPF", "26.2 de la Ley del IRPF"]
+
+[[fact.variants.source_citations]]
+source_ref = "boe-a-2004-4347-rdleg-3-2004"
+required_text = ["Artículo 24. Gastos deducibles y reducciones", "notoriamente irregular en el tiempo, se reducirán en un 40 por ciento"]
 
 [fact.variants.payload]
 kind = "mapping"
 entries = [
-  { key = "reduccion.blocked_claves", value = "A" },
+  { key = "reduccion.bearing", value = "A:02,C,D" },
   { key = "clave.codes", value = "A,C,D,E,F,G,I,J,K" },
   { key = "subclave.codes", value = "01,02,03,04,05,06" },
   { key = "subclave.bearing_claves", value = "A,D,F,G,I,J,K" },

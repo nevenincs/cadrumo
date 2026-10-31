@@ -244,3 +244,15 @@ required_text = [
     "NÚMERO TOTAL DE REGISTROS DE ENTIDAD",
     "221‑229",
 ]
+
+[sources."boe-a-2004-4347-rdleg-3-2004"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/rdleg-3-2004.html"
+sha256 = "04f1b736b4389ce862a396555eb730cbdb6fb8a7c969a947d94aa3d693e87786"
+bytes = 435073
+retrieved_at = 2026-10-31
+applies_from = 2004-03-11
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2004-4347"
+review_status = "pending_review"

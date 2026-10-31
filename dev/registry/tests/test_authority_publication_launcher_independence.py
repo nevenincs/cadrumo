@@ -1,20 +1,27 @@
 """Every publishing path records the legal identity of the sources it published.
 
-The build hook and the ``publish-authority`` command each compile the bundled
-registry in the canonical child interpreter. Whatever either launcher had
-imported, both record the one identity the legal sources derive. Both
-publications compile and validate the bundled registry for real, which is why
-this is an integration test.
+The build hook and the ``publish-authority`` command both compile through the
+one publisher, in the canonical child interpreter, so what a launcher had
+imported cannot reach the compile. The run's one publication of the committed
+sources is that publisher's real output, so it is the proof of the recorded
+identity, and this test asserts against it rather than publishing the same
+input again.
+
+What stays on the launcher's side is checked here after the heavier launcher's
+modules are loaded: the build hook admits the descriptor-selected pair the
+publisher wrote, and the command, deriving the live identity in its own process,
+finds that pair current and leaves it untouched.
 """
 
 from __future__ import annotations
 
 import importlib
 import importlib.util
+import shutil
 import sys
-import time
 from pathlib import Path
 from types import ModuleType
+from typing import TYPE_CHECKING
 
 import pytest
 from typer.testing import CliRunner
@@ -25,6 +32,9 @@ from dev._paths import REPO_ROOT
 
 from ..pipeline.authority_publication import authority_source_identity
 from ..pipeline.cli import app as pipeline_app
+
+if TYPE_CHECKING:
+    from .committed_authority_publication import RunPublishedAuthority
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
@@ -45,32 +55,36 @@ def _hook_module() -> ModuleType:
 
 
 def test_the_cli_and_the_build_hook_publish_the_legal_identity_whatever_the_launcher_imported(
+    committed_published_authority: RunPublishedAuthority,
     tmp_path: Path,
 ) -> None:
-    hook_destination = tmp_path / "hook"
-    cli_destination = tmp_path / "cli"
-
-    started = time.monotonic()
-    _hook_module()._publish_source_tree_authority(REPO_ROOT, hook_destination)
-    hook_seconds = time.monotonic() - started
-
     for module_name in _LAUNCHER_ONLY_MODULES:
         importlib.import_module(module_name)
     assert all(module_name in sys.modules for module_name in _LAUNCHER_ONLY_MODULES), (
         "the heavier launcher must hold the launcher-only modules"
     )
-
-    started = time.monotonic()
-    result = CliRunner().invoke(pipeline_app, ["publish-authority", "--destination", str(cli_destination)])
-    cli_seconds = time.monotonic() - started
-    assert result.exit_code == 0, result.output
-    print(f"publication wall time: hook {hook_seconds:.0f}s, cli {cli_seconds:.0f}s")
-
     legal_identity = authority_source_identity(
         registry_root=bundled_path("registry", "aeat"),
         source_root=bundled_path(),
     )
-    hook_descriptor = AuthorityDescriptor.read(hook_destination / "authority.current.json")
-    cli_descriptor = AuthorityDescriptor.read(cli_destination / "authority.current.json")
-    assert hook_descriptor.logical_generation == legal_identity
-    assert cli_descriptor.logical_generation == legal_identity
+    publication = committed_published_authority
+    assert publication.descriptor.logical_generation == legal_identity
+
+    descriptor_path, database = _hook_module()._selected_pair(publication.root)
+    assert AuthorityDescriptor.read(descriptor_path) == publication.descriptor
+    assert database.name == publication.descriptor.database
+
+    # The command runs against a copy: a stale verdict would publish, and the
+    # shared publication is read by every other worker.
+    destination = tmp_path / "cli"
+    destination.mkdir()
+    shutil.copyfile(publication.descriptor_path, destination / publication.descriptor_path.name)
+    shutil.copyfile(database, destination / database.name)
+    result = CliRunner().invoke(
+        pipeline_app,
+        ["publish-authority", "--if-stale", "--destination", str(destination)],
+    )
+    assert result.exit_code == 0, result.output
+    assert f"identity_digest={legal_identity}" in result.output
+    assert "published=skipped-current" in result.output
+    assert AuthorityDescriptor.read(destination / publication.descriptor_path.name) == publication.descriptor

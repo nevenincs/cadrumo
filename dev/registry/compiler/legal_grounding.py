@@ -18,7 +18,6 @@ from pydantic import ValidationError
 
 from cadrumo.core.errors.hierarchy import CorpusAnchorResolutionError
 from cadrumo.core.hashing import blake2b_hex, sha256_hex
-from cadrumo.core.paths import path_stat_fingerprint
 from cadrumo.core.resources.bundled_data import resolve_companion_binary
 from cadrumo.core.text_fold import normalise_corpus_text
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
@@ -28,7 +27,12 @@ from cadrumo.domain.calculations.registry.schema_references import LegalReferenc
 from dev.corpus.text import corpus_redaction_marks, extracted_unit_count, resolve_anchored_extracted_unit
 
 from .compiler_source_tree import compiler_source_tree_digest
-from .corpus_provenance import classify_normative_corpus_provenance, resolve_normative_corpus_path
+from .corpus_provenance import (
+    classify_normative_corpus_provenance,
+    corpus_content_digest,
+    corpus_digest_pass,
+    resolve_normative_corpus_path,
+)
 from .source_evidence_fingerprint import is_source_evidence_path
 
 if TYPE_CHECKING:
@@ -189,24 +193,21 @@ def verify_legal_catalogue(legal: Mapping[str, LegalReference], *, source_root: 
 
 
 def _verify_catalogue(legal: Mapping[str, LegalReference], *, source_root: Path, include_review: bool) -> None:
-    # The corpus digest memo is keyed on stat identity, which is exactly what a
-    # metadata-preserving rewrite forges, so a memo that outlived a verification
-    # pass would answer the next one with the superseded digest and the text
-    # cache behind it would hand back the superseded evidence. Dropping it here
-    # bounds the memo to one pass: references still share the hash of a file
-    # they cite in common, and no pass inherits another's answer.
-    _corpus_file_digest.cache_clear()
+    # One pass hashes each cited corpus file once from its bytes; every memo
+    # behind the proof is keyed on those content digests, never on stat
+    # identity, which a metadata-preserving rewrite forges.
     evidence: dict[str, _GroundingEvidence | None] = {}
     failures: list[str] = []
-    for ref_id, reference in legal.items():
-        if ref_id != reference.id:
-            failures.append(f"legal catalogue key {ref_id!r} does not match reference id {reference.id!r}")
-        try:
-            if include_review:
-                _verify_filing_eligibility(reference)
-            _verify_grounding_once(reference, source_root=source_root, evidence=evidence)
-        except RegistryValidationError as exc:
-            failures.append(str(exc))
+    with corpus_digest_pass():
+        for ref_id, reference in legal.items():
+            if ref_id != reference.id:
+                failures.append(f"legal catalogue key {ref_id!r} does not match reference id {reference.id!r}")
+            try:
+                if include_review:
+                    _verify_filing_eligibility(reference)
+                _verify_grounding_once(reference, source_root=source_root, evidence=evidence)
+            except RegistryValidationError as exc:
+                failures.append(str(exc))
     if failures:
         prefix = (
             "legal catalogue validation failed" if include_review else "legal catalogue grounding validation failed"
@@ -215,7 +216,7 @@ def _verify_catalogue(legal: Mapping[str, LegalReference], *, source_root: Path,
 
 
 _GroundingEvidence = tuple[tuple[str, str | None], ...]
-"""Each file one reference's proof can read, as ``(resolved path, SHA-256 or None when absent)``."""
+"""Each file one reference's proof can read, as ``(resolved path, content digest or None when absent)``."""
 
 _GroundingProofKey = tuple[str, str, _GroundingEvidence, str]
 _GROUNDED_REFERENCES: set[_GroundingProofKey] = set()
@@ -281,7 +282,7 @@ def _grounding_evidence(reference: LegalReference, source_root: Path, path_text:
             else None
         )
         return tuple(
-            (str(path), sha256_hex(path.read_bytes()) if path.is_file() else None)
+            (str(path), corpus_content_digest(path) if path.is_file() else None)
             for path in (document, annotation, sidecar, normative, companion)
             if path is not None
         )
@@ -399,7 +400,7 @@ def _validate_corpus_tier_declaration(reference: LegalReference, source_root: Pa
         )
 
 
-_LegalCorpusCacheKey = tuple[str, int, int, str, str, str, str, tuple[str, ...]]
+_LegalCorpusCacheKey = tuple[str, str, str, str, str, tuple[str, ...]]
 _LEGAL_CORPUS_CACHE: dict[_LegalCorpusCacheKey, str] = {}
 
 
@@ -424,20 +425,6 @@ def _resolved_corpus_paths(root: Path, path_text: str) -> tuple[Path, Path, Path
         path.with_name(path.name + ".annotation.json").resolve(),
         path.with_name(path.name + ".extracted.json").resolve(),
     )
-
-
-@lru_cache(maxsize=1024)
-def _corpus_file_digest(path: str, byte_count: int, modified_ns: int) -> str:
-    """Fingerprint one corpus file, once per observed identity in this process.
-
-    The corpus-text cache keys on this digest, so it had to be recomputed
-    before the cache could be consulted -- the hit path cost a full read and
-    hash of the sidecar. References share files, so 1404 of them hashed 1422
-    times what 388 files would answer. Keyed on the stat identity the
-    record-design and loader caches already use.
-    """
-    del byte_count, modified_ns
-    return blake2b_hex(Path(path).read_bytes())
 
 
 def _legal_corpus_text(source_root: Path, reference: LegalReference) -> str:
@@ -474,9 +461,8 @@ def _sidecar_cache_identity(
             f"legal reference {reference.id!r} missing extracted corpus sidecar {path_text!r}"
         )
     _assert_redactions_are_not_fused(path, sidecar, reference, path_text)
-    stat = sidecar.stat()
     try:
-        digest = _corpus_file_digest(str(sidecar), stat.st_size, stat.st_mtime_ns)
+        digest = corpus_content_digest(sidecar)
     except OSError as exc:
         raise RegistryValidationError(
             f"legal reference {reference.id!r} extracted corpus sidecar could not be fingerprinted: {exc}"
@@ -492,8 +478,8 @@ def _sidecar_cache_identity(
                 f"legal reference {reference.id!r} missing annotated PDF source {path_text!r}"
             )
         try:
-            annotation_digest = _corpus_file_digest(*path_stat_fingerprint(annotation))
-            source_digest = _corpus_file_digest(*path_stat_fingerprint(source_path))
+            annotation_digest = corpus_content_digest(annotation)
+            source_digest = corpus_content_digest(source_path)
         except OSError as exc:
             raise RegistryValidationError(
                 f"legal reference {reference.id!r} PDF annotation could not be fingerprinted: {exc}"
@@ -501,8 +487,6 @@ def _sidecar_cache_identity(
     return (
         (
             str(sidecar),
-            stat.st_size,
-            stat.st_mtime_ns,
             digest,
             annotation_digest,
             source_digest,
@@ -586,25 +570,34 @@ def _unique_xml_corpus_unit(
     return matches[0]
 
 
-@lru_cache(maxsize=1024)
-def _corpus_redaction_mark_count(path: str, byte_count: int, modified_ns: int) -> int:
-    """Count one corpus document's dated redactions, once per observed identity.
+_REDACTION_MARK_COUNTS: dict[str, int] = {}
+
+
+def _corpus_redaction_mark_count(document: Path) -> int:
+    """Count one corpus document's dated redactions, once per distinct content.
 
     The count is decided by the document's bytes but was asked per REFERENCE,
     and the check decodes the whole document: 1404 references re-read and
     re-decoded 388 files, 1.88s of a 3.2s catalogue verification, with
-    ``ley-35-2006.html`` (1.9 MB) decoded 86 times. Only the count reaches the
-    caller, so only the count is held.
+    ``ley-35-2006.html`` (1.9 MB) decoded 86 times. The count is stored under
+    the digest of the bytes it was decided from, so a rewrite that preserves
+    size and mtime is still recounted.
     """
-    del byte_count, modified_ns
-    return len(corpus_redaction_marks(Path(path).read_text(encoding="utf-8", errors="replace")))
+    count = _REDACTION_MARK_COUNTS.get(corpus_content_digest(document))
+    if count is None:
+        payload = document.read_bytes()
+        # Universal newlines, as a text-mode read decodes the document.
+        text = payload.decode("utf-8", errors="replace").replace("\r\n", "\n").replace("\r", "\n")
+        count = len(corpus_redaction_marks(text))
+        _REDACTION_MARK_COUNTS[blake2b_hex(payload)] = count
+    return count
 
 
 def _assert_redactions_are_not_fused(document: Path, sidecar: Path, reference: LegalReference, path_text: str) -> None:
     if not document.is_file():
         return
     try:
-        mark_count = _corpus_redaction_mark_count(*path_stat_fingerprint(document))
+        mark_count = _corpus_redaction_mark_count(document)
     except OSError as exc:
         raise RegistryValidationError(
             f"legal reference {reference.id!r} corpus document {path_text!r} could not be read: {exc}"

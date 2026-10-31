@@ -53,7 +53,7 @@ _MONTH_NAME: Final = re.compile(r"month", re.IGNORECASE)
 _DAY_NAME: Final = re.compile(r"days?(?:_|$)|dias", re.IGNORECASE)
 _QUARTER_NAME: Final = re.compile(r"quarter", re.IGNORECASE)
 _TECHNICAL_BOUND_NAME: Final = re.compile(
-    r"http_status|seconds|pixels|width|height|rounding_scale|_count$|generation$|(?:^|_)row$|(?:inventory|replay)_?limit",
+    r"http_status|seconds|pixels|width|height|rounding_scale|generation$|(?:^|_)row$|(?:inventory|replay)_?limit",
     re.IGNORECASE,
 )
 _NON_TAX_DECIMAL_NAME: Final = re.compile(r"confidence|score|hours_per_day", re.IGNORECASE)
@@ -64,7 +64,7 @@ _ORDERED_PAYLOAD_GUARD: Final = 64
 _SHA256_HEX: Final = 64
 _STANDARD_SHAPE_NAME: Final = re.compile(
     r"(?:^|_)(?:hash|digest|sha256|nonce|ciphertext|id|country|pais|iso|currency|nif|tax_id|year|ejercicio|period|"
-    r"modelo|path|state|periodo|years|update_fields|classify_fields|emisor|selector|separator|ref|locale|language|date|on|attachment|generation|public_key|member_?state|"
+    r"modelo|path|state|periodo|years|update_fields|classify_fields|separator|ref|locale|language|date|on|attachment|generation|public_key|member_?state|"
     r"isin|intents|normalisations|fields?|filters|parties|reversed|coordinates|components)(?:_|$|\b)",
     re.IGNORECASE,
 )
@@ -131,6 +131,8 @@ def _all_nines(value: object) -> bool:
 def _lawful_bound(owner: str, value: float) -> bool:
     """Return whether a numeric bound on ``owner`` is a calendar range or a technical limit."""
     if _all_nines(value) or _TECHNICAL_BOUND_NAME.search(owner):
+        return True
+    if owner.endswith("_count") and value >= _ORDERED_PAYLOAD_GUARD:
         return True
     if _YEAR_NAME.search(owner):
         return value % 100 in {0, 1, 99}
@@ -347,7 +349,9 @@ class _Sweep(ast.NodeVisitor):
         if _CODE_SHAPED.match(value):
             if value == self._own_form or self._month_keyed(node):
                 return
-            if _EDITION_NAME.search(self._annotated_context(node)):
+            if _EDITION_NAME.search(self._annotated_context(node)) and not isinstance(
+                self._parents.get(node), ast.Compare
+            ):
                 return
             if (
                 value.isdigit()
@@ -419,6 +423,8 @@ _FAKE_PERIODS: Final = frozenset({"0A", "1T", "01"})
         ("rows: tuple[int, ...] = Field(max_length=12)\n", "field_max_length"),
         ("ok = len(row) == 3\n", "len_compare"),
         ("BOX = '0208'\n", "code"),
+        ("descendant_count: int = Field(ge=0, le=10)\n", "field_le"),
+        ("if revision_id == '2022':\n    pass\n", "code"),
         ("box = '303'\n", "code"),
         ("ROUTED = frozenset({Modelo('111').value, Modelo('303').value})\n", "modelo_set"),
         ("ok = modelo in {'111', '303'}\n", "modelo_set"),
@@ -463,7 +469,7 @@ def test_the_sweep_rejects_a_representative_tax_literal(line: str, kind: str) ->
         "_LOW_CONFIDENCE = Decimal('0.5')\n",
         "_SPAIN_COUNTRY_CODE = 'ES'\n",
         "NAMES = {'01': 'finding.month_01'}\n",
-        "if revision_id == '2022':\n    pass\n",
+        "REVISION_ID = '2022'\n",
     ],
 )
 def test_the_sweep_admits_what_stands_where_no_tax_fact_can(line: str) -> None:
