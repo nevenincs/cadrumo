@@ -1085,7 +1085,8 @@ def test_current_registry_generates_form_geometry_and_xlsx(case: DemoCase) -> No
         assert "4500" in form_text
         assert len(plan.row_sets) == 2
     elif case.result_casilla is not None:
-        inputs, bindings = demonstration_inputs(snapshot, case)
+        with validating_governed_facts(compiled_bundled_authority()):
+            inputs, bindings = demonstration_inputs(snapshot, case)
         values = _numeric_inputs(inputs)
         assert not {str(c.id) for c in snapshot.revision.casillas if c.formula is not None} & set(values)
         assert _expected_result(snapshot, values, bindings, case.result_casilla) == case.expected_result
