@@ -607,6 +607,7 @@ application:
         movement_already_superseded: "Aquest moviment ja es va corregir o anul·lar."
         movement_not_found: "L'inventari %{year} d'aquesta activitat no té aquest moviment."
         movement_outside_year: "Aquest moviment té una data fora de l'inventari %{year}."
+        prior_closing_document_needed: "Aquest valor de tancament necessita el document de tancament de l'any anterior. Afegeix-lo i torna-ho a provar."
         stock_would_go_negative: 'Això deixaria les existències per sota de zero:
           %{sku} necessitaria més unitats de les que queden.'
     workbench:

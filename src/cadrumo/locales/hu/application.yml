@@ -588,6 +588,7 @@ application:
         movement_already_superseded: "Ezt a mozgást már javították vagy sztornózták."
         movement_not_found: "Ennek a tevékenységnek a(z) %{year}. évi készletében nincs ilyen mozgás."
         movement_outside_year: "Ennek a mozgásnak a dátuma kívül esik a(z) %{year}. évi készleten."
+        prior_closing_document_needed: "Ehhez a záróértékhez szükség van az előző év záró dokumentumára. Add hozzá, és próbáld újra."
         stock_would_go_negative: 'Ettől a készlet nulla alá csökkenne: a(z) %{sku}
           tételből több egység kellene, mint amennyi maradt.'
     workbench:

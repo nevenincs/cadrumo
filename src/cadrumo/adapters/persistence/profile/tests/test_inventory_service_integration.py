@@ -1322,7 +1322,8 @@ class TestClosingValueFromPlainFacts:
 
         with pytest.raises(InventoryServiceInputError) as refused:
             _closing_value(svc, bucket, _closing_facts(prior_evidence=()))
-        assert refused.value.translated_message == "application.inventory.service.errors.closing_authority_invalid"
+        assert refused.value.translated_message == "application.inventory.service.errors.prior_closing_document_needed"
+        assert svc.show(bucket_id=bucket, actividad_id="A1", year=2025).closing_authority_record is None
 
     def test_a_missing_book_is_named(self, secure_engine: TestRuntimeProfile) -> None:
         svc = _make_svc(secure_engine)

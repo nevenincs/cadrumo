@@ -74,6 +74,7 @@ InventoryRefusalReason = Literal[
     "closing_authority_conflict",
     "closing_authority_invalid",
     "evidence_file_not_admitted",
+    "prior_closing_document_needed",
 ]
 type InventoryRefusalCode = Literal[
     "REFUSED_PROFILE_INVENTORY_VALIDATION",

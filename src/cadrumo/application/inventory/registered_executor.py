@@ -98,6 +98,7 @@ _SERVICE_INPUT_REASONS: dict[str, InventoryRefusalReason] = {
     "application.inventory.service.errors.closing_authority_conflict": "closing_authority_conflict",
     "errors.refused.refused_profile_inventory_validation": "inventory_validation",
     inventory_refusal_key("closing_authority_invalid"): "closing_authority_invalid",
+    inventory_refusal_key("prior_closing_document_needed"): "prior_closing_document_needed",
     **{
         inventory_refusal_key(reason): reason
         for reason in INVENTORY_CORRECTION_REFUSAL_REASONS

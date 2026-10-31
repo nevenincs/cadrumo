@@ -27,8 +27,11 @@ from .closing_foundations import (
     fingerprint_prior_authoritative_closing,
     fingerprint_prior_closing_source,
 )
+from .corrections import inventory_refusal_key
 from .records import InventoryLedger, InventoryLedgerDocument
 from .valuation import derive_inventory_authoritative_closing_value
+
+PRIOR_CLOSING_DOCUMENT_NEEDED_KEY = inventory_refusal_key("prior_closing_document_needed")
 
 
 @dataclass(frozen=True, slots=True)
@@ -96,7 +99,10 @@ def _prior_closing_link(
         source = record.fingerprint
     else:
         if not facts.prior_evidence:
-            raise InventoryValidationError("an opening with no closed prior book needs a document that shows it")
+            raise InventoryValidationError(
+                "an opening with no closed prior book needs a document that shows it",
+                translated_message=PRIOR_CLOSING_DOCUMENT_NEEDED_KEY,
+            )
         prior_value = ledger.opening_stock
         evidence = facts.prior_evidence
         source = fingerprint_prior_closing_source(
@@ -165,6 +171,7 @@ def build_closing_authority_record(
 
 
 __all__ = [
+    "PRIOR_CLOSING_DOCUMENT_NEEDED_KEY",
     "InventoryClosingValueFacts",
     "InventoryPhysicalCountFacts",
     "build_closing_authority_record",

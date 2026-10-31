@@ -23,6 +23,7 @@ from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.contribuyente.inventory.closing_authority_records import InventoryClosingAuthorityRecord
 from ...domain.contribuyente.inventory.closing_foundations import InventoryLedgerError
 from ...domain.contribuyente.inventory.closing_value_facts import (
+    PRIOR_CLOSING_DOCUMENT_NEEDED_KEY,
     InventoryClosingValueFacts,
     build_closing_authority_record,
 )
@@ -602,8 +603,15 @@ class InventoryService:
                 now=_now_utc(),
             )
         except (InventoryLedgerError, ValidationError) as exc:
+            needs_document = (
+                isinstance(exc, InventoryLedgerError) and exc.translated_message == PRIOR_CLOSING_DOCUMENT_NEEDED_KEY
+            )
             raise InventoryServiceInputError(
-                translated_message=inventory_refusal_key("closing_authority_invalid"),
+                translated_message=(
+                    PRIOR_CLOSING_DOCUMENT_NEEDED_KEY
+                    if needs_document
+                    else inventory_refusal_key("closing_authority_invalid")
+                ),
                 context=coordinate,
             ) from exc
 

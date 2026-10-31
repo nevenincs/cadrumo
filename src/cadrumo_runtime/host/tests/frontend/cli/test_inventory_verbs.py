@@ -14,6 +14,7 @@ import pytest
 from click.testing import Result
 
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
+from cadrumo.application.inventory.registered_requests import InventoryClosingValueFactsInput
 from cadrumo.domain.contribuyente.inventory.closing_foundations import (
     InventoryClosingAuthority,
     InventoryClosingDecisionEvidence,
@@ -452,6 +453,67 @@ def test_native_inventory_document_of_a_type_not_kept_is_refused_in_its_own_word
         assert "evidence_file_not_admitted" in refused.output, refused.output
         assert "purchase-invoice" not in refused.output, refused.output
         assert "private-notes" not in refused.output, refused.output
+
+
+def _closing_value_facts(*, prior_document: bool) -> str:
+    return InventoryClosingValueFactsInput(
+        decision_id="closing-2026",
+        authority=InventoryClosingAuthority.MOVEMENT_DERIVED,
+        reason="Reviewed movement-derived closing.",
+        decision_evidence=(
+            InventoryClosingDecisionEvidence(
+                reference=FilingEvidenceReference(reference="closing-decision"),
+                role=InventoryClosingDecisionEvidenceRole.AUTHORITY_RECONCILIATION,
+                content_digest="e" * 64,
+            ),
+        ),
+        prior_evidence=(
+            (
+                PriorClosingContinuityEvidence(
+                    reference=FilingEvidenceReference(reference="prior-closing"),
+                    content_digest="f" * 64,
+                ),
+            )
+            if prior_document
+            else ()
+        ),
+    ).model_dump_json()
+
+
+def test_native_closing_value_asks_for_the_prior_document_and_a_retry_replays_the_backend_stamp(
+    tmp_path: Path,
+) -> None:
+    with native_cli_profile_scope(tmp_path) as profile:
+        profile.register(label="native-inventory-closing-value", facts=_PROFILE_FACTS)
+        created = _create_ledger(profile, "closing", opening_stock="100.00")
+        assert created.exit_code == 0, created.output
+        facts_file = tmp_path / "closing-value.json"
+        command = (
+            "app",
+            "ledger",
+            "inventory",
+            "closing-value-record",
+            "closing",
+            "--year",
+            "2026",
+            "--file",
+            str(facts_file),
+        )
+
+        facts_file.write_text(_closing_value_facts(prior_document=False), encoding="utf-8")
+        refused = _invoke(profile, *command)
+        assert refused.exit_code != 0, refused.output
+        assert json.loads(refused.output)["error"]["context"]["reason"] == "prior_closing_document_needed"
+        assert "previous year's closing document" in refused.output, refused.output
+
+        facts_file.write_text(_closing_value_facts(prior_document=True), encoding="utf-8")
+        first = _invoke(profile, *command)
+        replay = _invoke(profile, *command)
+        assert first.exit_code == replay.exit_code == 0, (first.output, replay.output)
+        assert (
+            unwrap_cli_result(first)["authority_record_fingerprint"]
+            == unwrap_cli_result(replay)["authority_record_fingerprint"]
+        )
 
 
 def test_native_inventory_closing_authority_replay_and_divergence(tmp_path: Path) -> None:

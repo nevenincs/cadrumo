@@ -608,6 +608,7 @@ application:
         movement_already_superseded: "Este movimiento ya se corrigió o se anuló."
         movement_not_found: "El inventario %{year} de esta actividad no tiene este movimiento."
         movement_outside_year: "Este movimiento tiene una fecha fuera del inventario %{year}."
+        prior_closing_document_needed: "Este valor de cierre necesita el documento de cierre del año anterior. Añádelo e inténtalo de nuevo."
         stock_would_go_negative: 'Esto dejaría las existencias por debajo de cero:
           %{sku} necesitaría más unidades de las que quedan.'
     workbench:

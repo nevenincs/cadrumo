@@ -98,6 +98,7 @@ _REFUSAL_LOCALE_KEYS = {
     "closing_authority_conflict": "application.inventory.service.errors.closing_authority_conflict",
     "closing_authority_invalid": "errors.refused.refused_profile_inventory_validation",
     "evidence_file_not_admitted": inventory_refusal_key("evidence_file_not_admitted"),
+    "prior_closing_document_needed": inventory_refusal_key("prior_closing_document_needed"),
     **{reason: inventory_refusal_key(reason) for reason in INVENTORY_CORRECTION_REFUSAL_REASONS},
 }
 
