@@ -37,6 +37,9 @@ from ...domain.transactions.raw_transaction import RawTransaction
 from .diagnostics import LedgerImportDiagnostic, LedgerImportDiagnosticKind, build_ledger_import_diagnostic
 from .import_classification import ImportRowVerdict, classify_import_row
 
+_STATEMENT_GAP_DAYS = 35
+"""A pause longer than a monthly statement cycle is worth pointing out; it decides nothing."""
+
 _logger = get_logger(__name__)
 
 
@@ -228,7 +231,7 @@ def _append_gap_diagnostic(
     source_path: Path,
 ) -> None:
     dates.sort()
-    if any((right - left) > _datetime.timedelta(days=35) for left, right in pairwise(dates)):
+    if any((right - left) > _datetime.timedelta(days=_STATEMENT_GAP_DAYS) for left, right in pairwise(dates)):
         diagnostics.append(
             build_ledger_import_diagnostic(
                 kind=LedgerImportDiagnosticKind.GAP,

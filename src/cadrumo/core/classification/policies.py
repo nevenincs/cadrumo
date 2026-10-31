@@ -244,7 +244,9 @@ class ClassificationPolicy(BaseModel):
 _SHORT_SESSION_RETENTION = timedelta(hours=24)
 """Default upper bound on raw bearer-state retention before invalidation."""
 
-_DIAGNOSTIC_RETENTION = timedelta(days=7)
+_DIAGNOSTIC_RETENTION_DAYS = 7
+
+_DIAGNOSTIC_RETENTION = timedelta(days=_DIAGNOSTIC_RETENTION_DAYS)
 """Default retention for opt-in diagnostic capture."""
 
 _AUDIT_REDACTION_RULES = (

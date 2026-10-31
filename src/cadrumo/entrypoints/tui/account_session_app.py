@@ -27,6 +27,9 @@ if TYPE_CHECKING:
     from ...application.overview.home import HomeAccountSession
 
 
+_ACTIVITY_NOTE_INTERVAL_SECONDS = 15
+
+
 class AccountSessionApp(LanguageSessionApp):
     """Own the admitted session's expiry and input activity observation."""
 
@@ -68,7 +71,10 @@ class AccountSessionApp(LanguageSessionApp):
         if (
             note is None
             or self._activity_pending
-            or (self._last_activity_sent is not None and observed - self._last_activity_sent < 15)
+            or (
+                self._last_activity_sent is not None
+                and observed - self._last_activity_sent < _ACTIVITY_NOTE_INTERVAL_SECONDS
+            )
         ):
             return
         self._activity_pending = True

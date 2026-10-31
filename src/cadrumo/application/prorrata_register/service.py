@@ -60,6 +60,8 @@ from .seed import (
     evaluate_carried_prior_definitiva_seed_from_observations,
 )
 
+_LAST_SEED_ATTEMPT = 3
+
 ProrrataWholeSeedUnavailableReason = Literal[
     "source_absent", "source_blocked", "existing_blocked", "regulated_override_standing"
 ]
@@ -198,7 +200,7 @@ class ProrrataRegisterService:
         observation_repository: ProrrataPriorSettlementSnapshotRepositoryProtocol,
     ) -> ProrrataWholeSeedCommit:
         """Carry the prior 303 definitive under source and register revision fences."""
-        for attempt in range(4):
+        for attempt in range(_LAST_SEED_ATTEMPT + 1):
             current, register_revision = self._repository.load_revisioned()
             source, evaluation = _load_whole_seed_evaluation(
                 ejercicio=ejercicio,
@@ -389,7 +391,7 @@ def _commit_whole_seed_candidate(
             source_snapshot=source,
         )
     except LedgerPersistenceConflictError:
-        if attempt == 3:
+        if attempt == _LAST_SEED_ATTEMPT:
             raise
         return False
     return True

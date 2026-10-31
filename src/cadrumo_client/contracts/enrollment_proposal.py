@@ -19,7 +19,9 @@ from cadrumo.core.time.utc import UtcInstant
 
 from .access_vocabulary import AccessScope
 
-GRANT_DEFAULT_VALIDITY: Final = timedelta(days=365)
+_GRANT_DEFAULT_VALIDITY_DAYS: Final = 365
+
+GRANT_DEFAULT_VALIDITY: Final = timedelta(days=_GRANT_DEFAULT_VALIDITY_DAYS)
 """How long a proposed grant lasts when its proposer names no shorter validity."""
 
 

@@ -49,16 +49,19 @@ __all__ = [
 ]
 
 
+_LOW_CONFIDENCE_PERCENT = 50
+_HIGH_CONFIDENCE_PERCENT = 80
+
 #: Default confidence floor below which an LLM classification is reported as
 #: low-confidence. Operator-facing display threshold, overridable per call.
-DEFAULT_LOW_CONFIDENCE_THRESHOLD = Decimal("0.5")
+DEFAULT_LOW_CONFIDENCE_THRESHOLD = Decimal(_LOW_CONFIDENCE_PERCENT) / 100
 
 #: Fixed distribution-bucket floors. The high/medium/low buckets partition every
 #: classified decision independently of the tunable low-confidence threshold, so
 #: the distribution stays stable while ``low_confidence_count`` tracks the
 #: operator's chosen floor.
-_HIGH_CONFIDENCE_FLOOR = Decimal("0.8")
-_MEDIUM_CONFIDENCE_FLOOR = Decimal("0.5")
+_HIGH_CONFIDENCE_FLOOR = Decimal(_HIGH_CONFIDENCE_PERCENT) / 100
+_MEDIUM_CONFIDENCE_FLOOR = Decimal(_LOW_CONFIDENCE_PERCENT) / 100
 
 _LLM_PROVENANCE_PREFIX = "llm:"
 _MEAN_QUANTUM = Decimal("0.0001")

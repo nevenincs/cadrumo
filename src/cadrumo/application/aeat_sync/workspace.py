@@ -583,13 +583,21 @@ class AeatSyncAreaState(StrEnum):
     UNAVAILABLE = "unavailable"
 
 
+_MODELO_ID_LENGTH: Final = 3
+_MODELO_ID_SHAPE: Final = r"^[0-9]{3}$"
+_PERIOD_TOKEN_MAX_LENGTH: Final = 8
+
+_RARELY_CHANGING_AREA_FRESHNESS_DAYS: Final = 90
+_NOTIFICATIONS_FRESHNESS_DAYS: Final = 7
+_IVA_WALLET_FRESHNESS_DAYS: Final = 30
+
 AEAT_SYNC_STALENESS_HORIZONS: Final[Mapping[AeatSyncStatusArea, timedelta | None]] = MappingProxyType(
     {
-        AeatSyncStatusArea.CENSUS: timedelta(days=90),
-        AeatSyncStatusArea.IDENTITY_CHECKS: timedelta(days=90),
-        AeatSyncStatusArea.NOTIFICATIONS: timedelta(days=7),
-        AeatSyncStatusArea.IVA_WALLET: timedelta(days=30),
-        AeatSyncStatusArea.FILED_DECLARATIONS: timedelta(days=90),
+        AeatSyncStatusArea.CENSUS: timedelta(days=_RARELY_CHANGING_AREA_FRESHNESS_DAYS),
+        AeatSyncStatusArea.IDENTITY_CHECKS: timedelta(days=_RARELY_CHANGING_AREA_FRESHNESS_DAYS),
+        AeatSyncStatusArea.NOTIFICATIONS: timedelta(days=_NOTIFICATIONS_FRESHNESS_DAYS),
+        AeatSyncStatusArea.IVA_WALLET: timedelta(days=_IVA_WALLET_FRESHNESS_DAYS),
+        AeatSyncStatusArea.FILED_DECLARATIONS: timedelta(days=_RARELY_CHANGING_AREA_FRESHNESS_DAYS),
         # An imported Borrador 100 PDF is a document the person chose to bring;
         # no ruling gives it an age after which it may be out of date.
         AeatSyncStatusArea.BORRADOR_100: None,
@@ -659,9 +667,11 @@ class AeatSyncFiledRowV1(BaseModel):
     """
 
     model_config = STRICT_FROZEN_CONFIG
-    modelo: Annotated[str, StringConstraints(min_length=3, max_length=3, pattern=r"^[0-9]{3}$")]
+    modelo: Annotated[
+        str, StringConstraints(min_length=_MODELO_ID_LENGTH, max_length=_MODELO_ID_LENGTH, pattern=_MODELO_ID_SHAPE)
+    ]
     filing_year: FilingYear
-    period: Annotated[str, StringConstraints(min_length=1, max_length=8)] | None
+    period: Annotated[str, StringConstraints(min_length=1, max_length=_PERIOD_TOKEN_MAX_LENGTH)] | None
     """The registry period token, or nothing for an annual declaration."""
     match: AeatSyncFiledMatch
     local_record: AeatSyncFiledLocalRecord

@@ -54,6 +54,8 @@ from .own_account_ports import OwnAccountRepositoryProtocol
 from .protocols import BucketEventHistoryCoCommitWriterProtocol, TransactionCatalogueCoCommitWriterProtocol
 from .read_access import resolve_ledger_commit_access, resolve_ledger_read_access
 
+_FILE_NAME_MAX_LENGTH = 255
+
 LEDGER_IMPORT_OPERATION_DEFINITION_ID = "ledger.import"
 MAX_LEDGER_IMPORT_FILES = 128
 MAX_LEDGER_IMPORT_REFUSALS = 2 * MAX_LEDGER_IMPORT_FILES
@@ -147,7 +149,7 @@ class LedgerImportFileRefusal(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
-    file_name: str = Field(min_length=1, max_length=255)
+    file_name: str = Field(min_length=1, max_length=_FILE_NAME_MAX_LENGTH)
     reason_code: Literal[
         "transaction_validation",
         "own_account_mismatch",
@@ -286,7 +288,7 @@ class _LedgerImportExecutionFile(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
-    file_name: str = Field(min_length=1, max_length=255)
+    file_name: str = Field(min_length=1, max_length=_FILE_NAME_MAX_LENGTH)
     file_index: NonNegativeInt
     source_sha256: ContentDigest | None = None
     result: LedgerSourceImportResult = Field(repr=False)
@@ -308,7 +310,7 @@ class LedgerImportExecutionResult(BaseModel):
 def _safe_file_name(path: Path) -> str:
     name = path.name or "(unnamed)"
     bounded = "".join("_" if ord(character) < 32 or ord(character) == 127 else character for character in name)
-    return bounded[:255] or "(unnamed)"
+    return bounded[:_FILE_NAME_MAX_LENGTH] or "(unnamed)"
 
 
 def _safe_encoding(value: str | None) -> str | None:
