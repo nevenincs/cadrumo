@@ -1,8 +1,9 @@
-"""Author dormant SMAppService metadata; never register unsigned login start.
+"""Author the bundled SMAppService agent declaration; packaging never registers it.
 
 Apple's bundled-agent convention uses Contents/Library/LaunchAgents and a
-bundle-relative BundleProgram. Registration requires a separate signed native
-implementation and runner evidence; merely carrying this plist starts nothing.
+bundle-relative BundleProgram. Carrying this plist starts nothing: the manager of
+a bundle installed in an Applications folder registers it for its own user, and
+only while that user's login-start preference is on.
 """
 
 from __future__ import annotations
