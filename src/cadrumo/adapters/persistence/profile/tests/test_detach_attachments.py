@@ -90,7 +90,7 @@ def test_detach_removes_only_the_named_attachment(secure_objects: SecureObjectRe
     assert detached.bucket_event_ids, "detaching must emit its own lifecycle event"
 
 
-def test_detach_leaves_the_attachment_bytes_in_theattachment_store(secure_objects: SecureObjectRepository) -> None:
+def test_detach_leaves_the_attachment_bytes_in_the_store(secure_objects: SecureObjectRepository) -> None:
     """Detaching drops a REFERENCE, never the content-addressed object itself.
 
     Other transactions and finalized revisions may reference the same digest, so

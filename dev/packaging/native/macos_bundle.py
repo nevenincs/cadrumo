@@ -192,6 +192,15 @@ async def _failure(
     return ValueError(f"{message}; standard error tail: {text}" if text else message)
 
 
+def _ready_report(line: bytes) -> dict[str, object] | None:
+    """Return the runtime role's parsed ready line, or nothing for any other output."""
+    try:
+        ready = json.loads(line)
+    except ValueError:
+        return None
+    return ready if isinstance(ready, dict) and ready.get("kind") == "runtime_ready" else None
+
+
 async def _serve_until_ready(main_executable: Path, root: Path) -> str:
     """Run the runtime role until it reports ready, close its input, require it to stop; return its version.
 
@@ -220,11 +229,8 @@ async def _serve_until_ready(main_executable: Path, root: Path) -> str:
             raise await _failure(
                 process, draining, tail, "Sealed bundle's runtime role did not report ready in time"
             ) from None
-        try:
-            ready = json.loads(line)
-        except ValueError:
-            ready = None
-        if not isinstance(ready, dict) or ready.get("kind") != "runtime_ready":
+        ready = _ready_report(line)
+        if ready is None:
             raise await _failure(
                 process, draining, tail, f"Sealed bundle's runtime role did not report ready: {line[:300]!r}"
             )
