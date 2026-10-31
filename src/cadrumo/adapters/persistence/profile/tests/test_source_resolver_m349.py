@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
-from types import SimpleNamespace
 
 import pytest
 
@@ -27,9 +26,9 @@ from .source_resolver_test_support import (
     _BUCKET_ID,
     _clave_probe_invoice,
     _invoice,
+    _m349_resolution,
     _public_m349_claves,
     _public_resolution,
-    _resolver,
 )
 from .source_resolver_test_support import _generation_pinned_authority as _generation_pinned_authority
 from .source_resolver_test_support import secure_profile as secure_profile
@@ -61,19 +60,7 @@ def test_converted_foreign_invoice_projects_its_euro_value_not_its_face_value(
         fx_rate_source=ECB_RATE_SOURCE_ID,
     )
     repository.save(build_invoice_catalogue((converted,)))
-    _modelos, _catalogues = bundled_registry_tree()
-    _modelo_349 = next(candidate for candidate in _modelos if candidate.id == "349")
-    snapshot = SimpleNamespace(revision=select_revision(_modelo_349, filing_year=2026, period="1T"))
-
-    resolution = _resolver(repository).resolve(
-        CalculationSourceContext(
-            bucket_id=_BUCKET_ID,
-            modelo="349",
-            filing_year=2026,
-            period=Period.from_year_and_code(2026, "1T"),
-            revision=snapshot.revision,
-        ),
-    )
+    resolution = _m349_resolution(repository)
 
     expected_eur = (Decimal("1000.00") * gbp_rate).quantize(Decimal("0.01"))
     assert expected_eur == Decimal("1187.89")
@@ -101,19 +88,7 @@ def test_unconverted_foreign_invoice_is_withheld_from_projection(
         currency="GBP",
     )
     repository.save(build_invoice_catalogue((unconverted,)))
-    _modelos, _catalogues = bundled_registry_tree()
-    _modelo_349 = next(candidate for candidate in _modelos if candidate.id == "349")
-    snapshot = SimpleNamespace(revision=select_revision(_modelo_349, filing_year=2026, period="1T"))
-
-    resolution = _resolver(repository).resolve(
-        CalculationSourceContext(
-            bucket_id=_BUCKET_ID,
-            modelo="349",
-            filing_year=2026,
-            period=Period.from_year_and_code(2026, "1T"),
-            revision=snapshot.revision,
-        ),
-    )
+    resolution = _m349_resolution(repository)
 
     # No operator counted, and no importe declared from the foreign face value.
     assert resolution.binding_values["iva-349-declarante-numero-operadores"] == Decimal("0")
@@ -222,22 +197,6 @@ def test_the_intra_community_service_categories_exist_and_map_to_their_claves() 
     )
 
     assert set(_public_m349_claves((supply, acquisition))) == {"S", "I"}
-
-
-def _m349_resolution(repository: InvoiceCatalogueRepository):
-    """Resolve the committed Modelo 349 revision against a saved catalogue."""
-    _modelos, _catalogues = bundled_registry_tree()
-    _modelo_349 = next(candidate for candidate in _modelos if candidate.id == "349")
-    snapshot = SimpleNamespace(revision=select_revision(_modelo_349, filing_year=2026, period="1T"))
-    return _resolver(repository).resolve(
-        CalculationSourceContext(
-            bucket_id=_BUCKET_ID,
-            modelo="349",
-            filing_year=2026,
-            period=Period.from_year_and_code(2026, "1T"),
-            revision=snapshot.revision,
-        ),
-    )
 
 
 def _ic_supply_without_operation_type() -> Invoice:
@@ -372,19 +331,7 @@ def test_an_unconverted_foreign_invoice_is_excluded_but_reported(
         currency="GBP",
     )
     repository.save(build_invoice_catalogue((unconverted,)))
-    _modelos, _catalogues = bundled_registry_tree()
-    _modelo_349 = next(candidate for candidate in _modelos if candidate.id == "349")
-    snapshot = SimpleNamespace(revision=select_revision(_modelo_349, filing_year=2026, period="1T"))
-
-    resolution = _resolver(repository).resolve(
-        CalculationSourceContext(
-            bucket_id=_BUCKET_ID,
-            modelo="349",
-            filing_year=2026,
-            period=Period.from_year_and_code(2026, "1T"),
-            revision=snapshot.revision,
-        ),
-    )
+    resolution = _m349_resolution(repository)
 
     assert resolution.diagnostics, (
         "the invoice was withheld from Modelo 349 with no advisory: the operator "

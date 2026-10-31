@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
-from types import SimpleNamespace
 
 import pytest
 
@@ -14,8 +13,6 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimePro
 from cadrumo.application.aggregation.source_mesh import CalculationSourceContext
 from cadrumo.core.aggregation import ThirdPartyDeclarationRole, TravelAgencyMediationType
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.temporal import select_revision
-from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from cadrumo.domain.invoices.models import Invoice
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 from cadrumo.domain.iva.schema import IvaCategory
@@ -31,6 +28,7 @@ from .source_resolver_test_support import (
     _domestic_invoice,
     _invoice,
     _m347_2026_context,
+    _m349_resolution,
     _modelo_revision,
     _public_administration_profile_facts,
     _public_resolution,
@@ -106,19 +104,7 @@ def test_capability_parity_m349_declares_every_intracommunity_capability(
     """
     repository = InvoiceCatalogueRepository(objects=secure_profile.repository)
     repository.save(build_invoice_catalogue(_capability_bucket_invoices(_BUCKET_ID)))
-    _modelos, _catalogues = bundled_registry_tree()
-    _modelo_349 = next(candidate for candidate in _modelos if candidate.id == "349")
-    snapshot = SimpleNamespace(revision=select_revision(_modelo_349, filing_year=2026, period="1T"))
-
-    resolution = _resolver(repository).resolve(
-        CalculationSourceContext(
-            bucket_id=_BUCKET_ID,
-            modelo="349",
-            filing_year=2026,
-            period=Period.from_year_and_code(2026, "1T"),
-            revision=snapshot.revision,
-        ),
-    )
+    resolution = _m349_resolution(repository)
 
     from cadrumo.domain.modelos.row_models import Modelo349OperadorRow
 

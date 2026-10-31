@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
-from types import SimpleNamespace
 
 import pytest
 
@@ -13,7 +12,6 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimePro
 from cadrumo.application.aggregation.source_mesh import CalculationSourceContext
 from cadrumo.application.invoices.source_resolver import InvoiceCatalogueSourceResolver
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.temporal import select_revision
 from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from cadrumo.domain.invoices.enums import IvaRate, PaymentStatus
 from cadrumo.domain.invoices.models import Invoice, InvoiceLine
@@ -25,6 +23,7 @@ from .source_resolver_test_support import (
     _BUCKET_ID,
     _OTHER_BUCKET_ID,
     _invoice,
+    _m349_resolution,
     _modelo_revision,
     _public_resolution,
     _resolver,
@@ -421,19 +420,7 @@ def test_an_unattributed_invoice_in_the_bucket_store_is_still_declared(
         iva_category=IvaCategory("intra_community_supply"),
     )
     repository.save(build_invoice_catalogue((unattributed,)))
-    _modelos, _catalogues = bundled_registry_tree()
-    _modelo_349 = next(candidate for candidate in _modelos if candidate.id == "349")
-    snapshot = SimpleNamespace(revision=select_revision(_modelo_349, filing_year=2026, period="1T"))
-
-    resolution = _resolver(repository).resolve(
-        CalculationSourceContext(
-            bucket_id=_BUCKET_ID,
-            modelo="349",
-            filing_year=2026,
-            period=Period.from_year_and_code(2026, "1T"),
-            revision=snapshot.revision,
-        ),
-    )
+    resolution = _m349_resolution(repository)
 
     assert resolution.binding_values["iva-349-declarante-numero-operadores"] == Decimal("1")
     assert resolution.binding_values["iva-349-declarante-importe-operaciones"] == Decimal("1000.00")
@@ -460,19 +447,7 @@ def test_an_invoice_naming_another_bucket_is_still_excluded(
         iva_category=IvaCategory("intra_community_supply"),
     )
     repository.save(build_invoice_catalogue((foreign,)))
-    _modelos, _catalogues = bundled_registry_tree()
-    _modelo_349 = next(candidate for candidate in _modelos if candidate.id == "349")
-    snapshot = SimpleNamespace(revision=select_revision(_modelo_349, filing_year=2026, period="1T"))
-
-    resolution = _resolver(repository).resolve(
-        CalculationSourceContext(
-            bucket_id=_BUCKET_ID,
-            modelo="349",
-            filing_year=2026,
-            period=Period.from_year_and_code(2026, "1T"),
-            revision=snapshot.revision,
-        ),
-    )
+    resolution = _m349_resolution(repository)
 
     assert resolution.binding_values["iva-349-declarante-numero-operadores"] == Decimal("0")
     assert resolution.provenance == ()

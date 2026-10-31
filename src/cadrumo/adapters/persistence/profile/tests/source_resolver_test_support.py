@@ -15,6 +15,8 @@ from cadrumo.application.invoices.source_resolver_ports import InvoiceSourceCata
 from cadrumo.core.aggregation import IntracomOperationType, ThirdPartyDeclarationRole
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.temporal import select_revision
+from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from cadrumo.domain.invoices.catalogue import InvoiceCatalogue
 from cadrumo.domain.invoices.enums import IvaRate, PaymentStatus
 from cadrumo.domain.invoices.models import Invoice, InvoiceLine
@@ -48,6 +50,21 @@ def _generation_pinned_authority() -> Iterator[None]:
 def _resolver(reader: InvoiceSourceCatalogueReader) -> InvoiceCatalogueSourceResolver:
     return InvoiceCatalogueSourceResolver(
         ports=InvoiceSourceResolverPorts(catalogue_reader=reader),
+    )
+
+
+def _m349_resolution(reader: InvoiceSourceCatalogueReader):
+    """Resolve the committed Modelo 349 revision for 2026 1T against a catalogue reader."""
+    modelos, _catalogues = bundled_registry_tree()
+    modelo_349 = next(candidate for candidate in modelos if candidate.id == "349")
+    return _resolver(reader).resolve(
+        CalculationSourceContext(
+            bucket_id=_BUCKET_ID,
+            modelo="349",
+            filing_year=2026,
+            period=Period.from_year_and_code(2026, "1T"),
+            revision=select_revision(modelo_349, filing_year=2026, period="1T"),
+        ),
     )
 
 

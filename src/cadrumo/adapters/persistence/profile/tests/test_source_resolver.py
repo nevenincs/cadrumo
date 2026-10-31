@@ -34,6 +34,7 @@ from .source_resolver_test_support import (
     _OTHER_BUCKET_ID,
     _domestic_invoice,
     _invoice,
+    _m349_resolution,
     _modelo_revision,
     _resolver,
 )
@@ -92,19 +93,7 @@ def test_invoice_catalogue_source_resolver_emits_scalar_values_and_provenance(
         iva_category=IvaCategory("domestic_zero"),
     )
     repository.save(build_invoice_catalogue((declarable, other_bucket, domestic)))
-    _modelos, _catalogues = bundled_registry_tree()
-    _modelo_349 = next(candidate for candidate in _modelos if candidate.id == "349")
-    snapshot = SimpleNamespace(revision=select_revision(_modelo_349, filing_year=2026, period="1T"))
-
-    resolution = _resolver(repository).resolve(
-        CalculationSourceContext(
-            bucket_id=_BUCKET_ID,
-            modelo="349",
-            filing_year=2026,
-            period=Period.from_year_and_code(2026, "1T"),
-            revision=snapshot.revision,
-        ),
-    )
+    resolution = _m349_resolution(repository)
 
     assert resolution.owned_sources == (
         BindingSourceKind.COLLECTIBLE_INVOICE,
@@ -137,19 +126,7 @@ def test_invoice_catalogue_source_resolver_counts_received_acquisition_for_m349(
         linked_transaction_ids=("2" * 64,),
     )
     repository.save(build_invoice_catalogue((acquisition,)))
-    _modelos, _catalogues = bundled_registry_tree()
-    _modelo_349 = next(candidate for candidate in _modelos if candidate.id == "349")
-    snapshot = SimpleNamespace(revision=select_revision(_modelo_349, filing_year=2026, period="1T"))
-
-    resolution = _resolver(repository).resolve(
-        CalculationSourceContext(
-            bucket_id=_BUCKET_ID,
-            modelo="349",
-            filing_year=2026,
-            period=Period.from_year_and_code(2026, "1T"),
-            revision=snapshot.revision,
-        ),
-    )
+    resolution = _m349_resolution(repository)
 
     assert resolution.binding_values["iva-349-declarante-numero-operadores"] == Decimal("1")
     assert resolution.binding_values["iva-349-declarante-importe-operaciones"] == Decimal("1200.00")
@@ -305,19 +282,7 @@ def test_invoice_catalogue_source_resolver_accepts_xi_goods_for_m349(
         iva_category=IvaCategory("intra_community_supply"),
     )
     repository.save(build_invoice_catalogue((declarable,)))
-    _modelos, _catalogues = bundled_registry_tree()
-    _modelo_349 = next(candidate for candidate in _modelos if candidate.id == "349")
-    snapshot = SimpleNamespace(revision=select_revision(_modelo_349, filing_year=2026, period="1T"))
-
-    resolution = _resolver(repository).resolve(
-        CalculationSourceContext(
-            bucket_id=_BUCKET_ID,
-            modelo="349",
-            filing_year=2026,
-            period=Period.from_year_and_code(2026, "1T"),
-            revision=snapshot.revision,
-        ),
-    )
+    resolution = _m349_resolution(repository)
 
     assert resolution.binding_values["iva-349-declarante-numero-operadores"] == Decimal("1")
     assert resolution.binding_values["iva-349-declarante-importe-operaciones"] == Decimal("3000.00")
@@ -364,19 +329,7 @@ def test_invoice_catalogue_source_resolver_reports_a_degraded_catalogue_read() -
         def load(self) -> InvoiceCatalogue:
             raise InvoiceSourcePersistenceError("invoice_catalogue_load")
 
-    _modelos, _catalogues = bundled_registry_tree()
-    _modelo_349 = next(candidate for candidate in _modelos if candidate.id == "349")
-    snapshot = SimpleNamespace(revision=select_revision(_modelo_349, filing_year=2026, period="1T"))
-
-    resolution = _resolver(DegradedReader()).resolve(
-        CalculationSourceContext(
-            bucket_id=_BUCKET_ID,
-            modelo="349",
-            filing_year=2026,
-            period=Period.from_year_and_code(2026, "1T"),
-            revision=snapshot.revision,
-        ),
-    )
+    resolution = _m349_resolution(DegradedReader())
 
     reasons = tuple(d.reason for d in resolution.diagnostics)
     assert reasons, "a degraded catalogue read produced no diagnostic at all"
