@@ -43,7 +43,7 @@ def test_endpoint_never_recreates_external_namespace_after_resolver(
         path.rmdir()
         return path, True
 
-    monkeypatch.setattr(posix_endpoint, "runtime_socket_directory", resolve)
+    monkeypatch.setattr(posix_endpoint, "socket_directory", resolve)
     with pytest.raises(RefusalError):
         posix_endpoint.PosixEndpoint(storage_root=tmp_path)
     assert not external_namespace.path.exists()
@@ -54,7 +54,7 @@ def test_endpoint_uses_external_namespace_and_retains_lock_on_close(
 ) -> None:
     monkeypatch.setattr(
         posix_endpoint,
-        "runtime_socket_directory",
+        "socket_directory",
         lambda root, *, create=False: (external_namespace.verify(create=create), True),
     )
     endpoint = posix_endpoint.PosixEndpoint(storage_root=tmp_path)

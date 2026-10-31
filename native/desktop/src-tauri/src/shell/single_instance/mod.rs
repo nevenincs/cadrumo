@@ -322,8 +322,25 @@ mod tests {
     const PATIENCE_VARIABLE: &str = "CADRUMO_INSTANCE_TEST_PATIENCE_MS";
     const RECORD_VARIABLE: &str = "CADRUMO_INSTANCE_TEST_RECORD";
     const CLOSING_VARIABLE: &str = "CADRUMO_INSTANCE_TEST_CLOSING_MS";
+    /// Names the transport namespace the launching test owns, for a helper to claim in.
+    #[cfg(target_os = "macos")]
+    const NAMESPACE_VARIABLE: &str = "CADRUMO_INSTANCE_TEST_NAMESPACE";
     /// Marks the helper's reports among the test harness's own output.
     const REPORT: &str = "@instance-report ";
+
+    /// Holds the transport namespace a test claims in, so that no test leaves a lock or a
+    /// socket in the account's directory. Other platforms keep no such directory.
+    struct Isolation {
+        #[cfg(target_os = "macos")]
+        _lease: posix::isolation::Lease,
+    }
+
+    fn isolate() -> Isolation {
+        Isolation {
+            #[cfg(target_os = "macos")]
+            _lease: posix::isolation::lease(),
+        }
+    }
 
     /// A family no real installation uses, unique to one test.
     fn unique_family(label: &str) -> String {
@@ -507,8 +524,37 @@ $held.Dispose()
         }
     }
 
+    /// The entry names in the account's private transport directory; empty before it exists.
+    #[cfg(target_os = "macos")]
+    fn account_entries() -> std::collections::BTreeSet<std::ffi::OsString> {
+        cadrumo_platform::transport::DarwinTransport::installed(false)
+            .ok()
+            .and_then(|transport| std::fs::read_dir(transport.directory()).ok())
+            .into_iter()
+            .flatten()
+            .filter_map(|entry| entry.ok().map(|entry| entry.file_name()))
+            .collect()
+    }
+
+    /// A claim, an activation request and a release leave the account's transport directory
+    /// as they found it, so a run never contends with an installed instance.
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn a_test_claim_leaves_the_account_transport_directory_untouched() {
+        let before = account_entries();
+        let _isolation = isolate();
+        let family = unique_family("account-guard");
+        let Admission::Primary(primary) = claim(&family).unwrap() else {
+            panic!("expected the lock");
+        };
+        assert!(matches!(claim(&family).unwrap(), Admission::Activated));
+        drop(primary);
+        assert_eq!(account_entries(), before);
+    }
+
     #[test]
     fn the_headless_passthrough_never_takes_or_contends_for_the_lock() {
+        let _isolation = isolate();
         let family = unique_family("headless");
         let (ready, holding) = mpsc::channel();
         let (release, released) = mpsc::channel::<()>();
@@ -556,6 +602,8 @@ $held.Dispose()
         let Ok(family) = std::env::var(FAMILY_VARIABLE) else {
             return;
         };
+        #[cfg(target_os = "macos")]
+        posix::isolation::adopt(std::env::var_os(NAMESPACE_VARIABLE).unwrap().into());
         let patience = std::env::var(PATIENCE_VARIABLE)
             .ok()
             .and_then(|value| value.parse().ok())
@@ -603,7 +651,7 @@ $held.Dispose()
         }
     }
 
-    struct Scratch(PathBuf);
+    struct Scratch(PathBuf, Isolation);
     impl Drop for Scratch {
         fn drop(&mut self) {
             let _ = std::fs::remove_dir_all(&self.0);
@@ -649,6 +697,8 @@ $held.Dispose()
             .stdin(stdin)
             .stdout(Stdio::piped())
             .stderr(Stdio::inherit());
+        #[cfg(target_os = "macos")]
+        command.env(NAMESPACE_VARIABLE, posix::isolation::base().unwrap());
         // The helper instance never opens a console on the person's screen.
         #[cfg(windows)]
         std::os::windows::process::CommandExt::creation_flags(&mut command, 0x0800_0000);
@@ -679,6 +729,7 @@ $held.Dispose()
             std::fs::canonicalize(std::env::temp_dir())
                 .unwrap()
                 .join(format!("cadrumo-{label}-{}-{nanos}", std::process::id())),
+            isolate(),
         );
         std::fs::create_dir_all(&scratch.0).unwrap();
         scratch

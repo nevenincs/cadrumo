@@ -263,6 +263,7 @@ def test_namespace_permission_and_symlink_substitution_refused(tmp_path: Path, n
         PosixEndpoint(storage_root=tmp_path, namespace=namespace)
 
 
+@pytest.mark.skipif(sys.platform == "darwin", reason="Darwin places the connection sockets outside the storage root")
 def test_the_runtime_endpoint_creates_its_own_private_namespace_over_materialized_storage(namespace: Path) -> None:
     """Client storage materialization leaves the namespace to the runtime, whose endpoint creates it private."""
     root = namespace.parent / "state"
@@ -589,10 +590,12 @@ def test_the_root_connection_namespace_separates_runtime_and_workers(namespace: 
     root.mkdir(mode=0o700)
     worker_id = uuid4()
     with derived_storage_settings(root):
-        expected_namespace = storage_path(StorageCategory.CONNECTION_SOCKETS).resolve()
-        owner = PosixEndpoint(storage_root=root)
-        worker = PosixEndpoint(storage_root=root, worker_namespace=worker_id)
-        contender = PosixEndpoint(storage_root=root, worker_namespace=worker_id)
+        # Darwin resolves the account's transport directory, which a test never uses.
+        connection_namespace = namespace if sys.platform == "darwin" else None
+        expected_namespace = (connection_namespace or storage_path(StorageCategory.CONNECTION_SOCKETS)).resolve()
+        owner = PosixEndpoint(storage_root=root, namespace=connection_namespace)
+        worker = PosixEndpoint(storage_root=root, namespace=connection_namespace, worker_namespace=worker_id)
+        contender = PosixEndpoint(storage_root=root, namespace=connection_namespace, worker_namespace=worker_id)
         try:
             owner.listen()
             worker.listen()

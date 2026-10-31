@@ -92,6 +92,20 @@ pub fn claim_session(manager_id: &str, patience: Duration) -> io::Result<Option<
     claim_platform(manager_id, patience)
 }
 
+/// Claim the lock in a Darwin transport namespace the caller owns beneath `base`, in
+/// place of the account's, so a fixture never contends with an installed manager.
+#[cfg(target_os = "macos")]
+pub fn claim_session_beneath(
+    manager_id: &str,
+    patience: Duration,
+    base: &Path,
+) -> io::Result<Option<SessionLock>> {
+    Ok(
+        crate::macos::ipc::SessionClaim::acquire_beneath(base, validated(manager_id)?, patience)?
+            .map(|claim| SessionLock { claim }),
+    )
+}
+
 #[cfg(windows)]
 fn claim_platform(manager_id: &str, patience: Duration) -> io::Result<Option<SessionLock>> {
     let current = super::ManagerSession::current()?;

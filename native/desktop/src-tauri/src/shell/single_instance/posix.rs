@@ -213,12 +213,99 @@ pub fn claim_instance(family: &str, patience: Duration) -> io::Result<InstanceCl
 pub fn claim_instance(family: &str, patience: Duration) -> io::Result<InstanceClaim> {
     let session = format!("{:x}", crate::launch::graphical_session()?);
     validate(family, &session)?;
-    let transport = cadrumo_platform::transport::DarwinTransport::installed(true)?;
+    let transport = transport()?;
     // Refuses a socket path at or above the platform bound before anything binds it.
     transport.socket_path(&names(family).socket(&session))?;
     claim_in(transport.directory(), family, &session, patience, &|| {
         transport.verify()
     })
+}
+
+/// The account's private transport directory.
+#[cfg(all(target_os = "macos", not(test)))]
+fn transport() -> io::Result<cadrumo_platform::transport::DarwinTransport> {
+    cadrumo_platform::transport::DarwinTransport::installed(true)
+}
+
+/// A test run claims in the namespace its process owns, and refuses when it owns none, so
+/// it never reaches the account's directory.
+#[cfg(all(target_os = "macos", test))]
+fn transport() -> io::Result<cadrumo_platform::transport::DarwinTransport> {
+    let base = isolation::base()
+        .ok_or_else(|| io::Error::other("a test claimed without an isolated namespace"))?;
+    cadrumo_platform::transport::DarwinTransport::beneath(&base, true)
+}
+
+/// The isolated transport namespace of a test run, shared by the test process and the
+/// helper processes it launches.
+#[cfg(all(test, target_os = "macos"))]
+pub(super) mod isolation {
+    use std::{
+        fs,
+        os::unix::fs::PermissionsExt,
+        path::PathBuf,
+        sync::Mutex,
+        time::{SystemTime, UNIX_EPOCH},
+    };
+
+    struct State {
+        base: Option<PathBuf>,
+        leases: usize,
+    }
+
+    static STATE: Mutex<State> = Mutex::new(State {
+        base: None,
+        leases: 0,
+    });
+
+    /// Keeps the namespace alive; the last lease removes it.
+    pub(in crate::shell::single_instance) struct Lease;
+
+    /// Creates the namespace on the first lease. The path is short because a socket
+    /// path must fit its bound, and it is private to this user.
+    pub(in crate::shell::single_instance) fn lease() -> Lease {
+        let mut state = STATE.lock().unwrap();
+        if state.leases == 0 && state.base.is_none() {
+            let nanos = SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_nanos();
+            let base = fs::canonicalize("/tmp").unwrap().join(format!(
+                "ci-ns-{}-{}",
+                std::process::id(),
+                nanos % 1_000_000
+            ));
+            fs::create_dir_all(&base).unwrap();
+            fs::set_permissions(&base, fs::Permissions::from_mode(0o700)).unwrap();
+            state.base = Some(base);
+        }
+        state.leases += 1;
+        Lease
+    }
+
+    impl Drop for Lease {
+        fn drop(&mut self) {
+            let mut state = STATE.lock().unwrap();
+            state.leases -= 1;
+            if state.leases == 0
+                && let Some(base) = state.base.take()
+            {
+                let _ = fs::remove_dir_all(base);
+            }
+        }
+    }
+
+    /// The namespace the process claims in, while a lease or an adoption holds one.
+    pub(in crate::shell::single_instance) fn base() -> Option<PathBuf> {
+        STATE.lock().unwrap().base.clone()
+    }
+
+    /// A helper process claims in the namespace its launching test owns.
+    pub(in crate::shell::single_instance) fn adopt(base: PathBuf) {
+        let mut state = STATE.lock().unwrap();
+        state.base = Some(base);
+        state.leases += 1;
+    }
 }
 
 /// Claims in `directory`, calling `verify` before the lock file opens and
@@ -314,7 +401,16 @@ fn request(socket: &Path, wait: Duration) -> io::Result<Reply> {
         }
         Err(error) => return Err(error),
     };
-    stream.set_read_timeout(Some(wait))?;
+    // A refusing holder drops the connection at once, and a platform may refuse the option
+    // on a connection whose peer has already closed it. That is a refusal, not a failure;
+    // the wait is never zero, which is the other cause of this error.
+    match stream.set_read_timeout(Some(wait)) {
+        Ok(()) => {}
+        Err(error) if error.kind() == io::ErrorKind::InvalidInput && !wait.is_zero() => {
+            return Ok(Reply::Unanswered);
+        }
+        Err(error) => return Err(error),
+    }
     let mut acknowledgement = [0u8; 1];
     match stream.read(&mut acknowledgement) {
         Ok(1) => Ok(Reply::Acknowledged),
@@ -642,6 +738,30 @@ mod tests {
         .unwrap();
         assert_eq!(error.kind(), io::ErrorKind::TimedOut);
         assert!(requests.try_iter().count() >= 1);
+    }
+
+    /// A holder that refuses drops the connection at once, so a request races the close.
+    /// The race is a refusal in every interleaving, never a failure of the claim.
+    #[test]
+    fn a_connection_the_holder_drops_at_once_is_an_unanswered_request() {
+        let scratch = Scratch::new("dropped");
+        let socket = scratch.socket(SESSION);
+        let listener = UnixListener::bind(&socket).unwrap();
+        const REQUESTS: usize = 2000;
+        let holder = thread::spawn(move || {
+            for connection in listener.incoming().take(REQUESTS) {
+                drop(connection);
+            }
+        });
+        for attempt in 0..REQUESTS {
+            let reply = request(&socket, Duration::from_millis(500))
+                .unwrap_or_else(|error| panic!("request {attempt} failed: {error}"));
+            assert!(
+                matches!(reply, Reply::Unanswered),
+                "request {attempt} was answered"
+            );
+        }
+        holder.join().unwrap();
     }
 
     #[test]
