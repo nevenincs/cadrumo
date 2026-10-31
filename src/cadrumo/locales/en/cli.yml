@@ -842,7 +842,7 @@ cli:
           ({period}): {suggestion}.'
         unscoped_revision_warning: The list of box sources is not scoped by %{missing_filters};
           it may include source ids from a version of the official form that does
-          not match the declaration used by aeat app modelo work calculate.
+          not match the declaration used by work calculate.
         year_help: Tax year of the modelo (e.g. 2026)
       casilla:
         casilla_help: Casilla id or printed casilla number to describe (e.g. 0596).
@@ -2350,8 +2350,7 @@ cli:
         incomplete: 'The profile is still missing required data: {paths}'
       create_confirm_passphrase_prompt: 'Confirm new profile passphrase: '
       create_guidance_unavailable: The profile was created successfully, but the next-step
-        notices could not be prepared. Check 'aeat config profile status' to see what
-        remains.
+        notices could not be prepared. Check the profile's status to see what remains.
       create_help: Create a profile protected by a passphrase. At a terminal it then
         offers an optional recovery code; skip it, or add it later with 'cadrumo-runtime
         config profile recovery enable'.

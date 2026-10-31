@@ -56,6 +56,22 @@ Keep `atomic_write.py:443` fsync (durability), `filesystem_primitives.py:356` an
 
 Open and close took 19.8 microseconds before the `.tmp` exclusion and 22.6 after, under different load. This is not a clean comparison; S14 stays open.
 
+### per-page-repetition | high | Paging repeated the whole read path, fixed
+
+A result arrives in 32 KB pages (`src/cadrumo_client/contracts/projection_pages.py`). Each page re-read the journal under lock, decrypted and validated the stored invocation, dumped the model and encoded and hashed the whole document, 69 times in one through-CLI test. `src/cadrumo_runtime/host/operation_host.py` now holds one delivery, for the same reader only, and later pages reuse its invocation and encoded bytes. Every page still takes the disclosure guard and rechecks the settled result. The work-unit catalogue read inside the guard stays, because it is the current authority check.
+
+### lease-rewrite | medium | A just-renewed lease was rewritten at every advance, fixed
+
+`src/cadrumo/application/operations/_supervisor_lease.py` rewrote a ten-minute lease durably at each journal advance. A lease renewed within the last interval is now confirmed against durable state and not rewritten; the schedule still renews it.
+
+### measured-result | info | One through-CLI test, before and after
+
+`test_modelo_200_micro_empresa_pyme_cuota_under_the_first_dt44_scale`: durable journal and lease writes 45 to 27, fsync 60 to 42, SQL commits 365 to 232, journal loads 100 to 31, stored invocation reads 83 to 18, root validation time 0.28s to 0.02s. Before the change the same test spent 16.8s of 39s in those writes in one loaded run and 0.2s of 19.5s in a quieter one, so durable writes are the load-sensitive cost. Wall time was not compared cleanly because the load differed.
+
+### open-import-breadth | medium | Import breadth is not reduced
+
+`aeat --help` still loads 525 to 580 modules, and imports remain 92% of client operations.
+
 ## Recommendations
 
-Decide whether journal writes per command can be reduced by design; this is the largest lead in the record. Decide separately whether journal root resolution may be held per repository instance.
+Decide whether the catalogue read inside each page's authority check can be narrowed. Reduce import breadth under S15.

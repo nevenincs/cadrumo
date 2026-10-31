@@ -5,7 +5,7 @@ tags:
 date: '2026-10-30'
 modified: '2026-10-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:dd71694bd48d6568dc1337426f97143f06644c25f5cc354347e4b9fa608aa0b2'
+body_hash: 'sha256:6b1e4b611ee8c62f8078e50ba309aa4b1e3dd212053ac5b6543d038ade53d56b'
 related:
   - "[[2026-10-30-test-suite-budget-plan]]"
 ---
@@ -60,6 +60,13 @@ related:
 - `S07` `M` `src/cadrumo_runtime/host/tests/frontend/cli/config/tests/isolated_storage_fixture.py`
 - `S07` `verify:` `pytest test_profile_lifecycle_verbs test_active_profile_env_override_name` -> `pass`
 - `S15` `A` `.vault/audit/2026-10-31-test-suite-budget-cli-file-operations-audit.md`
+- `S15` `M` `src/cadrumo/application/journal_repository.py`
+- `S15` `M` `src/cadrumo/application/operations/_supervisor_lease.py`
+- `S15` `M` `src/cadrumo_client/contracts/projection_pages.py`
+- `S15` `M` `src/cadrumo_runtime/host/operation_host.py`
+- `S15` `M` `src/cadrumo_runtime/host/worker_operation_requests.py`
+- `S15` `A` `dev/locales/tests/test_notice_message_catalogue.py`
+- `S15` `verify:` `pytest projection journal lease and bindings suites` -> `pass`
 
 ## Notes
 

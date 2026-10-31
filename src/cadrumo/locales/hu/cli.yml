@@ -885,7 +885,7 @@ cli:
           a(z) {code}@{revision} ({period}) számára: {suggestion}.'
         unscoped_revision_warning: A rovatforrások listája nincs %{missing_filters}
           szerint szűkítve; a hivatalos nyomtatvány olyan változatának forrásazonosítóit
-          is tartalmazhatja, amely nem egyezik a aeat app modelo work calculate által
+          is tartalmazhatja, amely nem egyezik a work calculate által
           használt bevallással.
         year_help: A nyomtatvány adóéve (pl. 2026).
       casilla:
@@ -2497,8 +2497,7 @@ cli:
         incomplete: 'A profilból még hiányoznak kötelező adatok: {paths}'
       create_confirm_passphrase_prompt: 'Erősítsd meg az új profil jelszavát: '
       create_guidance_unavailable: A profil sikeresen elkészült, de a következő lépésekről
-        szóló értesítéseket nem sikerült előállítani. A 'aeat config profile status'
-        megmutatja, mi van még hátra.
+        szóló értesítéseket nem sikerült előállítani. A profil állapota megmutatja, mi van még hátra.
       create_help: Jelszóval védett profilt hoz létre. Terminálon ezután opcionális
         helyreállítási kódot ajánl fel; kihagyható, vagy később hozzáadható az 'cadrumo-runtime
         config profile recovery enable' paranccsal.

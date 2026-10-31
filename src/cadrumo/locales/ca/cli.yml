@@ -903,7 +903,7 @@ cli:
           coneguts per a {code}@{revision} ({period}): {suggestion}.'
         unscoped_revision_warning: La llista d'orígens no està acotada per %{missing_filters};
           pot incloure ids d'orígens d'una versió del model oficial que no coincideix
-          amb la declaració emprada per aeat app modelo work calculate.
+          amb la declaració emprada per work calculate.
         year_help: Exercici fiscal del model (p. ex. 2026)
       casilla:
         casilla_help: Id de casella o número imprès de casella que cal descriure (p.
@@ -2516,8 +2516,7 @@ cli:
         incomplete: 'Falten dades obligatòries al perfil: {paths}'
       create_confirm_passphrase_prompt: 'Confirma la contrasenya del nou perfil: '
       create_guidance_unavailable: El perfil s'ha creat correctament, però no s'han
-        pogut preparar els avisos amb els passos següents. Consulta 'aeat config profile
-        status' per veure què falta.
+        pogut preparar els avisos amb els passos següents. Consulta l'estat del perfil per veure què falta.
       create_help: Crea un perfil protegit per una contrasenya. En un terminal ofereix
         després un codi de recuperació opcional; pots ometre'l o afegir-lo més tard
         amb 'cadrumo-runtime config profile recovery enable'.
