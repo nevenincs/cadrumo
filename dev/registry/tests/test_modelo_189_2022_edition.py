@@ -9,20 +9,19 @@ export layout; 2023 keys only those moves and the 2023 ordenes' citations.
 
 from __future__ import annotations
 
-import json
 from datetime import date
 from functools import cache
 
 import pytest
 
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
-from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 from cadrumo.domain.calculations.registry.schema_references import TemporalProjectionDirection
 from cadrumo.domain.calculations.registry.temporal import revision_temporal_resolution, select_revision
 
 from ..conformance.registry_schema_support import committed_modelo
+from .edition_corpus_text_support import corpus_text
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -68,17 +67,6 @@ def _last_design_year() -> int:
 def _selected(year: int) -> ModeloRevision:
     modelo, catalogues = _modelo()
     return select_revision(modelo, filing_year=year, period="0A", support=catalogues.supported_filing_years)
-
-
-def _corpus_text(source_id: str) -> str:
-    _, catalogues = _modelo()
-    corpus_path = catalogues.sources[source_id].corpus_path
-    assert corpus_path is not None
-    sidecar = bundled_path("manual_corpus_text", *corpus_path.removeprefix("corpus/").split("/"))
-    sidecar = sidecar.with_name(sidecar.name + ".corpus_text.json")
-    text = json.loads(sidecar.read_text(encoding="utf-8"))["normalised_text"]
-    assert isinstance(text, str)
-    return text
 
 
 def _declarado_fields(revision: ModeloRevision) -> dict[str, tuple[int, int, str]]:
@@ -137,7 +125,7 @@ def test_each_edition_writes_the_moved_fields_where_its_design_prints_them(desig
     assert fields[f"filler:{blank_offset}"] == (blank_offset, 501 - blank_offset, "filler")
     assert sum(length for _, length, _ in fields.values()) == 500
     for printed in _PRINTED[design]:
-        assert printed in _corpus_text(design)
+        assert printed in corpus_text(_modelo()[1], design)
 
 
 def test_every_other_casilla_and_field_is_unchanged_across_the_designs() -> None:

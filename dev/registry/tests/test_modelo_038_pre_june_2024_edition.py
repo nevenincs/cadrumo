@@ -10,19 +10,18 @@ edition keys only its design, deadline windows and export source against it.
 from __future__ import annotations
 
 import calendar
-import json
 from datetime import date
 from functools import cache
 
 import pytest
 
-from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 from cadrumo.domain.calculations.registry.schema_references import TemporalProjectionDirection
 from cadrumo.domain.calculations.registry.temporal import revision_temporal_resolution, select_revision
 
 from ..conformance.registry_schema_support import committed_modelo
+from .edition_corpus_text_support import corpus_text
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -53,17 +52,6 @@ def _months_before_amendment() -> list[tuple[int, str]]:
 def _selected(year: int, period: str) -> ModeloRevision:
     modelo, catalogues = _modelo()
     return select_revision(modelo, filing_year=year, period=period, support=catalogues.supported_filing_years)
-
-
-def _corpus_text(source_id: str) -> str:
-    _, catalogues = _modelo()
-    corpus_path = catalogues.sources[source_id].corpus_path
-    assert corpus_path is not None
-    sidecar = bundled_path("manual_corpus_text", *corpus_path.removeprefix("corpus/").split("/"))
-    sidecar = sidecar.with_name(sidecar.name + ".corpus_text.json")
-    text = json.loads(sidecar.read_text(encoding="utf-8"))["normalised_text"]
-    assert isinstance(text, str)
-    return text
 
 
 def test_every_month_before_the_amendment_is_authored_on_the_2012_design() -> None:
@@ -117,8 +105,8 @@ def test_june_2024_onward_keeps_the_irus_design_and_its_own_windows() -> None:
 
 
 def test_the_2012_design_prints_every_2024_field_but_irus() -> None:
-    old = _corpus_text(_OLD_DESIGN)
-    new = _corpus_text(_NEW_DESIGN)
+    old = corpus_text(_modelo()[1], _OLD_DESIGN)
+    new = corpus_text(_modelo()[1], _NEW_DESIGN)
     assert "identificador registral unico de la sociedad (irus)" in new
     assert "irus" not in old
     for field in ("ejercicio", "dec. complementaria", "dec. sustitutiva", "n.i.f. de la entidad", "clave operacion"):

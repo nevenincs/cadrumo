@@ -11,19 +11,18 @@ deadline windows, and the 2024 edition stores against it.
 
 from __future__ import annotations
 
-import json
 from datetime import date
 from functools import cache
 
 import pytest
 
-from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 from cadrumo.domain.calculations.registry.schema_references import TemporalProjectionDirection
 from cadrumo.domain.calculations.registry.temporal import revision_temporal_resolution, select_revision
 
 from ..conformance.registry_schema_support import committed_modelo
+from .edition_corpus_text_support import corpus_text
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -65,17 +64,6 @@ def _selected(year: int) -> ModeloRevision:
     return select_revision(modelo, filing_year=year, period="0A", support=catalogues.supported_filing_years)
 
 
-def _corpus_text(source_id: str) -> str:
-    _, catalogues = _modelo()
-    corpus_path = catalogues.sources[source_id].corpus_path
-    assert corpus_path is not None
-    sidecar = bundled_path("manual_corpus_text", *corpus_path.removeprefix("corpus/").split("/"))
-    sidecar = sidecar.with_name(sidecar.name + ".corpus_text.json")
-    text = json.loads(sidecar.read_text(encoding="utf-8"))["normalised_text"]
-    assert isinstance(text, str)
-    return text
-
-
 def test_each_design_year_is_authored_on_its_own_design() -> None:
     _, catalogues = _modelo()
     years = _design_years()
@@ -110,8 +98,8 @@ def test_the_design_years_state_the_members_2024_states() -> None:
 
 
 def test_the_design_prints_every_bound_field_where_2024_does() -> None:
-    design = _corpus_text(_DESIGN)
-    later = _corpus_text(_NEXT_DESIGN)
+    design = corpus_text(_modelo()[1], _DESIGN)
+    later = corpus_text(_modelo()[1], _NEXT_DESIGN)
     for field in _BOUND_FIELDS:
         assert field in design and field in later, field
     assert "150 euros" in design and "250 euros" not in design
