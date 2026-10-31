@@ -59,7 +59,7 @@ effective_from = 2004-03-13
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-27
 reviewed_by = "operator"
-notes = "TRLIRNR art 2: ámbito de aplicación territorial del impuesto. Incluye salvedad de los regimenes forales (Pais Vasco, Navarra) y especialidades de Canarias, Ceuta y Melilla. Fundamento territorial para la atribución de obligación IRNR a contribuyentes no residentes que obtienen rentas con fuente en territorio espanol."
+notes = "TRLIRNR art 2: ámbito de aplicación territorial del impuesto. Incluye salvedad de los regímenes forales (Pais Vasco, Navarra) y especialidades de Canarias, Ceuta y Melilla. Fundamento territorial para la atribución de obligación IRNR a contribuyentes no residentes que obtienen rentas con fuente en territorio español."
 required_text = ["Este impuesto se aplicara en todo el territorio espanol", "regimenes tributarios forales"]
 
 [legal."trlirnr-rdleg-5-2004:art-10"]
@@ -75,7 +75,7 @@ effective_from = 2004-03-13
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-27
 reviewed_by = "operator"
-notes = "TRLIRNR art 10: obligación de designar representante fiscal con residencia en Espana para los contribuyentes que no sean residentes en otro Estado miembro de la Union Europea, cuando operen mediante establecimiento permanente o cuando la Administracion Tributaria lo requiera por la cuantía o caracteristicas de la renta. Fundamento legal del gate de verification predicate implies_nonzero(['fiscal_residency','representante_fiscal_nif']) en la superficie M210 vigente."
+notes = "TRLIRNR art 10: obligación de designar representante fiscal con residencia en España para los contribuyentes que no sean residentes en otro Estado miembro de la Union Europea, cuando operen mediante establecimiento permanente o cuando la Administración Tributaria lo requiera por la cuantía o caracteristicas de la renta. Fundamento legal del gate de verification predicate implies_nonzero(['fiscal_residency','representante_fiscal_nif']) en la superficie M210 vigente."
 required_text = ["no sean residentes en otro Estado miembro de la Union Europea", "persona fisica o juridica con residencia en Espana", "les represente ante la Administracion Tributaria"]
 
 [legal."trlirnr-rdleg-5-2004:art-13.1"]
@@ -127,9 +127,9 @@ notes = """\
 TRLIRNR art 24: base imponible para contribuyentes que obtienen rentas sin mediación de \
 establecimiento permanente. Apartado 1 fija la regla general (importe integro según LIRPF, \
 sin porcentajes multiplicadores ni reducciones). Apartado 2 establece la base por \
-diferencia para prestaciones de servicios y actividades económicas en Espana. Apartado 6 \
+diferencia para prestaciones de servicios y actividades económicas en España. Apartado 6 \
 permite a residentes UE/EEE deducir gastos vinculados directamente a la renta obtenida en \
-Espana. Fundamento de la base imponible M210 casillas rendimiento_integro y \
+España. Fundamento de la base imponible M210 casillas rendimiento_integro y \
 gastos_deducibles."""
 required_text = ["importe integro", "sin que sean de aplicacion los porcentajes multiplicadores ni las reducciones", "vinculo economico directo e indisociable"]
 
@@ -169,7 +169,7 @@ effective_from = 2004-03-13
 review_status = "agent_reviewed"
 reviewed_at = 2026-06-28
 reviewed_by = "agent-review"
-notes = "TRLIRNR art 25.1.b: escala especial para pensiones y prestaciones similares percibidas por personas fisicas no residentes. This entry grounds the live M210 pension tariff branch, represented as a bracket_table with 8 percent up to 12,000 euros, 960 euros plus 30 percent over 12,000 up to 18,700, and 2,970 euros plus 40 percent above 18,700."
+notes = "TRLIRNR art 25.1.b: escala especial para pensiones y prestaciones similares percibidas por personas físicas no residentes. This entry grounds the live M210 pension tariff branch, represented as a bracket_table with 8 percent up to 12,000 euros, 960 euros plus 30 percent over 12,000 up to 18,700, and 2,970 euros plus 40 percent above 18,700."
 required_text = ["pensiones y demas prestaciones similares", "Importe anual pension hasta 12.000 euros", "tipo aplicable 30 por ciento", "tipo aplicable 40 por ciento"]
 
 [legal."trlirnr-rdleg-5-2004:art-25.1.f"]
@@ -271,7 +271,7 @@ whose beneficial owner is a resident of the other state may be taxed only in tha
 state (source-state exemption). Row-level authority for the DE/interest M210 treaty \
 override (kind=exempt). Agent-prepared grounding cross-checked against the BOE \
 consolidated text BOE-A-2012-10212 (ELI 2011-02-03); pending operator re-stamp. Corrects \
-the _CONVENIO_BY_COUNTRY drift that cited BOE-A-2012-3669 (a Banco de Espana exchange-rate \
+the _CONVENIO_BY_COUNTRY drift that cited BOE-A-2012-3669 (a Banco de España exchange-rate \
 notice)."""
 required_text = ["Los intereses procedentes de un Estado contratante", "solo pueden someterse a imposicion en ese otro Estado"]
 
@@ -659,7 +659,7 @@ effective_from = 2009-01-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-04
 reviewed_by = "agent-replaced the bundled excerpt with the BOE published text of art. 4 of BOE-A-2008-18497; the prior excerpt was hand-shaped despite claiming a verbatim fetch; operator to re-stamp"
-notes = "Orden EHA/3290/2008 art 4: plazo de presentación del modelo 216. Con caracter general (trimestral), la presentación e ingreso se efectua en los veinte primeros días naturales de los meses de abril, julio, octubre y enero por el trimestre natural inmediato anterior. Para grandes empresas, mensual, en los veinte primeros días naturales de cada mes. Binding deadline provision grounding the M216 trimestral deadline windows."
+notes = "Orden EHA/3290/2008 art 4: plazo de presentación del modelo 216. Con carácter general (trimestral), la presentación e ingreso se efectua en los veinte primeros días naturales de los meses de abril, julio, octubre y enero por el trimestre natural inmediato anterior. Para grandes empresas, mensual, en los veinte primeros días naturales de cada mes. Binding deadline provision grounding the M216 trimestral deadline windows."
 required_text = [
     "Plazo de presentación del modelo 216",
     "veinte primeros días naturales de los meses de abril, julio, octubre y enero",

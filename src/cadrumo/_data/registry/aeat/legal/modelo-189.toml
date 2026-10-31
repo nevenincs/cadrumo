@@ -11,7 +11,7 @@ effective_from = 2009-01-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "downloaded official BOE-A-2008-19523 consolidated HTML from BOE on 2026-07-01"
-notes = "Orden EHA/3481/2008 articulo 1: aprueba el Modelo 189, declaración informativa anual acerca de valores, seguros y rentas, y sus diseños fisicos y logicos."
+notes = "Orden EHA/3481/2008 articulo 1: aprueba el Modelo 189, declaración informativa anual acerca de valores, seguros y rentas, y sus diseños físicos y lógicos."
 required_text = [
     "Artículo 1. Aprobación del modelo 189",
     "Se aprueba el modelo 189",

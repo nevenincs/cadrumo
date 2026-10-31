@@ -93,7 +93,7 @@ effective_from = 2023-01-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "downloaded official BOE-A-2022-14168 consolidated HTML from BOE on 2026-07-01"
-notes = "Orden HFP/823/2022 articulo 5: remite la presentación del Modelo 345 a la presentación electronica regulada por Orden HAP/2194/2013."
+notes = "Orden HFP/823/2022 articulo 5: remite la presentación del Modelo 345 a la presentación electrónica regulada por Orden HAP/2194/2013."
 required_text = [
     "Formas de",
     "modelo",

@@ -38,7 +38,7 @@ categorias de gasto que reducen el rendimiento integro del capital inmobiliario:
 y gastos de financiacion, reparacion y conservacion, tributos no estatales, \
 contraprestaciones por servicios, gastos de formalizacion, saldos de dudoso cobro, primas \
 de seguro, suministros y amortización. Base reglamentaria del articulo 23 LIRPF y de la \
-seccion rendimientos_capital_inmobiliario > gastos_deducibles del Modelo 100."""
+sección rendimientos_capital_inmobiliario > gastos_deducibles del Modelo 100."""
 required_text = [
     "Gastos deducibles de los rendimientos del capital inmobiliario",
     "intereses de los capitales ajenos",
@@ -58,7 +58,7 @@ effective_from = 2007-04-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-06-10
 reviewed_by = "operator"
-notes = "RIRPF art 14: gastos de amortización de los rendimientos del capital inmobiliario. Fija la efectividad de la amortización de inmuebles arrendados en el 3 por ciento sobre el mayor del coste de adquisición satisfecho o el valor catastral, excluido el suelo. Provision reglamentaria que establece el tipo del 3 por ciento citado por la seccion rendimientos_capital_inmobiliario > gastos_deducibles > amortización del Modelo 100. Base sustantiva: articulo 23 LIRPF."
+notes = "RIRPF art 14: gastos de amortización de los rendimientos del capital inmobiliario. Fija la efectividad de la amortización de inmuebles arrendados en el 3 por ciento sobre el mayor del coste de adquisición satisfecho o el valor catastral, excluido el suelo. Provision reglamentaria que establece el tipo del 3 por ciento citado por la sección rendimientos_capital_inmobiliario > gastos_deducibles > amortización del Modelo 100. Base sustantiva: articulo 23 LIRPF."
 required_text = [
     "Gastos de amortización de los rendimientos del capital inmobiliario",
     "3 por ciento",
@@ -306,10 +306,10 @@ reviewed_by = "agent-authored from live BOE consolidated text BOE-A-2007-6820 re
 notes = """RIRPF art 76: obligados a retener o ingresar a cuenta. Fixes WHO bears the \
 withholding obligation, which is the provision the IVA component-expectation table \
 relies on when it declares a cross-border counterparty's retención NOT_EXPECTED. \
-Apartado 1 lists the obligados: a) personas juridicas y demas entidades, incluidas \
+Apartado 1 lists the obligados: a) personas jurídicas y demas entidades, incluidas \
 las comunidades de propietarios y las entidades en régimen de atribución de rentas; \
 b) contribuyentes que ejerzan actividades económicas, cuando satisfagan rentas en el \
-ejercicio de sus actividades; c) no residentes que operen en territorio espanol \
+ejercicio de sus actividades; c) no residentes que operen en territorio español \
 MEDIANTE establecimiento permanente; d) no residentes que operen SIN mediación de \
 establecimiento permanente, unicamente en cuanto a los rendimientos del trabajo y a \
 otros rendimientos sometidos a retención que constituyan gasto deducible para las \
@@ -358,8 +358,8 @@ RIRPF art 95: importe de las retenciones sobre rendimientos de actividades econ�
 establece el tipo del 15 por ciento general para actividades profesionales, el tipo reducido del 7 \
 por ciento para nuevos profesionales (inicio + dos siguientes) y para colectivos especificos \
 (recaudadores municipales, mediadores de seguros con auxiliares, delegados comerciales SELAE, \
-actividades artisticas de los grupos IAE 851, 852, 853, 861, 862, 864 y 869 de la seccion segunda y \
-agrupaciones 01, 02, 03 y 05 de la seccion tercera, sujetas a una prueba de ingresos de dos partes: \
+actividades artisticas de los grupos IAE 851, 852, 853, 861, 862, 864 y 869 de la sección segunda y \
+agrupaciones 01, 02, 03 y 05 de la sección tercera, sujetas a una prueba de ingresos de dos partes: \
 menos de 15.000 euros el ejercicio anterior Y mas del 75 por ciento de los rendimientos integros de \
 actividades económicas y trabajo). Los apartados 4, 5 y 6.1 fijan los tipos sectoriales: 2 por \
 ciento agricola/ganadero general con carve-out del 1 por ciento para engorde de porcino y avicultura \
@@ -389,7 +389,7 @@ effective_from = 2007-04-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-15
 reviewed_by = "operator"
-notes = "RIRPF art 108: obligaciones formales del retenedor y del obligado a ingresar a cuenta. Establece la obligación de presentar declaracion-liquidacion trimestral de las cantidades retenidas e ingresadas (M111, M115, M123, art-71 RIVA enlaza mensual cuando aplica), la declaración negativa, y la declaración anual resumen (M180, M190, M193). Base reglamentaria comun de los modelos de retención IRPF."
+notes = "RIRPF art 108: obligaciones formales del retenedor y del obligado a ingresar a cuenta. Establece la obligación de presentar declaracion-liquidacion trimestral de las cantidades retenidas e ingresadas (M111, M115, M123, art-71 RIVA enlaza mensual cuando aplica), la declaración negativa, y la declaración anual resumen (M180, M190, M193). Base reglamentaria común de los modelos de retención IRPF."
 required_text = [
     "Obligaciones formales del retenedor y del obligado a ingresar a cuenta",
     "declaración de las cantidades retenidas y de los ingresos a cuenta",
@@ -625,7 +625,7 @@ effective_from = 2007-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-14
 reviewed_by = "operator"
-notes = "Deducción por actuaciones para la proteccion y difusion del Patrimonio Historico Espanol y de las ciudades, conjuntos y bienes declarados Patrimonio Mundial. 15 per cent of investments or expenses for: (a) acquisition of Patrimonio Historico Espanol assets from abroad with permanence + cultural-interest declaration requirements; (b) conservation/restoration/exhibition of bienes de interes cultural; (c) rehabilitation of buildings in protected city perimeters or Patrimonio Mundial sites."
+notes = "Deducción por actuaciones para la proteccion y difusion del Patrimonio Historico Español y de las ciudades, conjuntos y bienes declarados Patrimonio Mundial. 15 per cent of investments or expenses for: (a) acquisition of Patrimonio Historico Español assets from abroad with permanence + cultural-interest declaration requirements; (b) conservation/restoration/exhibition of bienes de interes cultural; (c) rehabilitation of buildings in protected city perimeters or Patrimonio Mundial sites."
 required_text = [
     "Deducción por actuaciones para la protección y difusión del Patrimonio Histórico Español",
     "deducción en la cuota del 15 por ciento",
@@ -835,7 +835,7 @@ effective_to = 2022-12-31
 review_status = "agent_reviewed"
 reviewed_at = 2026-09-30
 reviewed_by = "agent-authored from bundled orden-hfp-1335-2021.html; operator to re-stamp"
-notes = "Fase 3a: incompatibilidades entre los indices correctores. El indice corrector para empresas de pequena dimension (b.1) nunca se aplica a las actividades que tienen asignados los indices correctores especiales (a.2 a a.5), y cuando resulte aplicable el indice b.1 tampoco se aplica el indice corrector de exceso (b.3); el indice corrector de temporada (b.2) y el de inicio de nuevas actividades (b.4) son a su vez incompatibles entre si."
+notes = "Fase 3a: incompatibilidades entre los indices correctores. El indice corrector para empresas de pequeña dimension (b.1) nunca se aplica a las actividades que tienen asignados los indices correctores especiales (a.2 a a.5), y cuando resulte aplicable el indice b.1 tampoco se aplica el indice corrector de exceso (b.3); el indice corrector de temporada (b.2) y el de inicio de nuevas actividades (b.4) son a su vez incompatibles entre si."
 required_text = [
     "Incompatibilidades entre los índices correctores:",
     "En ningún caso será aplicable el índice corrector para empresas de pequeña dimensión (b.1) a las actividades para las que están previstos los índices correctores especiales enumerados en las letras a.2), a.3), a.4) y a.5).",
@@ -856,7 +856,7 @@ effective_to = 2022-12-31
 review_status = "agent_reviewed"
 reviewed_at = 2026-09-30
 reviewed_by = "agent-authored from bundled orden-hfp-1335-2021.html; operator to re-stamp"
-notes = "Fase 3a: indice corrector para empresas de pequena dimension. Se aplica el indice que corresponda (0,70/0,75/0,80 según la población del municipio, o 0,90 si ademas hay personal asalariado hasta 2 trabajadores) cuando concurren todas las circunstancias: titular persona fisica, un solo local, no mas de un vehiculo afecto de hasta 1.000 kg, y sin personal asalariado (salvo el supuesto de hasta 2 trabajadores del indice 0,90)."
+notes = "Fase 3a: indice corrector para empresas de pequeña dimension. Se aplica el indice que corresponda (0,70/0,75/0,80 según la población del municipio, o 0,90 si ademas hay personal asalariado hasta 2 trabajadores) cuando concurren todas las circunstancias: titular persona física, un solo local, no mas de un vehiculo afecto de hasta 1.000 kg, y sin personal asalariado (salvo el supuesto de hasta 2 trabajadores del indice 0,90)."
 required_text = [
     "b.1) Índice corrector para empresas de pequeña dimensión:",
     "Titular persona física.",
@@ -1511,7 +1511,7 @@ effective_to = 2024-12-31
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-15
 reviewed_by = "agent-authored from bundled orden-hfp-1359-2023.html; operator to re-stamp"
-notes = "Fase 3a: indice corrector de exceso. Cuando el rendimiento neto minorado supera la cuantía tabulada para la actividad, al exceso sobre dicha cuantía se le aplica el indice 1,30. Cross-checked byte-identical against the AEAT Manual practico de Renta 2024, Parte 1 (cuantía 30.586,03 euros, epigrafe 673.1)."
+notes = "Fase 3a: indice corrector de exceso. Cuando el rendimiento neto minorado supera la cuantía tabulada para la actividad, al exceso sobre dicha cuantía se le aplica el indice 1,30. Cross-checked byte-identical against the AEAT Manual practico de Renta 2024, Parte 1 (cuantía 30.586,03 euros, epígrafe 673.1)."
 required_text = [
     "b.3) Índice corrector de exceso:",
     "al exceso sobre dichas cuantías se le aplicará el índice 1,30",
@@ -1535,7 +1535,7 @@ notes = """\
 Fase 3a: incompatibilidades entre los índices correctores. El índice corrector para empresas de \
 pequeña dimensión (b.1) nunca se aplica a las actividades que tienen asignados los índices \
 correctores especiales (a.2 transporte por autotaxis, a.3 transporte urbano colectivo, a.4 \
-transporte de mercancias por carretera y servicios de mudanzas, a.5), y cuando resulte aplicable el \
+transporte de mercancías por carretera y servicios de mudanzas, a.5), y cuando resulte aplicable el \
 índice b.1 tampoco se aplica el índice corrector de exceso (b.3); el índice corrector de temporada \
 (b.2) y el de inicio de nuevas actividades (b.4) son a su vez incompatibles entre sí. El motor de \
 módulos M131 2024 (0003-cmodulos-epigrafe__cmodulos-rendimiento-neto-actividad.toml, \
@@ -1846,7 +1846,7 @@ effective_to = 2025-12-31
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-03
 reviewed_by = "agent-authored from bundled orden-hac-1347-2024.html; operator to re-stamp"
-notes = "Fase 2a: minoración por incentivos al empleo. El rendimiento neto previo se minora en el coeficiente de minoración (incremento del modulo personal asalariado x 0,40, mas el coeficiente por tramos del numero de unidades restante) multiplicado por el rendimiento anual por unidad del modulo personal asalariado. Cross-checked byte-identical against the AEAT Manual practico de Renta 2025, Parte 1, worked example epigrafe 673.1."
+notes = "Fase 2a: minoración por incentivos al empleo. El rendimiento neto previo se minora en el coeficiente de minoración (incremento del modulo personal asalariado x 0,40, mas el coeficiente por tramos del numero de unidades restante) multiplicado por el rendimiento anual por unidad del modulo personal asalariado. Cross-checked byte-identical against the AEAT Manual practico de Renta 2025, Parte 1, worked example epígrafe 673.1."
 required_text = [
     "2.2 Fase 2: Rendimiento neto minorado.",
     "El rendimiento neto previo se minorará en el importe de los incentivos al empleo y la inversión",
@@ -1876,7 +1876,7 @@ lineal maximo, minimo derivado del periodo maximo, o cualquier coeficiente inter
 slice del motor no modela un registro de bienes de inversion por elemento; la minoración se recoge \
 como un importe declarado por el operador, grounded en esta instrucción, y se resta del rendimiento \
 neto previo junto con la minoración por incentivos al empleo. Cross-checked byte-identical against \
-the AEAT Manual practico de Renta 2025, Parte 1, worked example epigrafe 673.1 (minoración por \
+the AEAT Manual practico de Renta 2025, Parte 1, worked example epígrafe 673.1 (minoración por \
 incentivos a la inversion 6.050,00 euros, libro registro de bienes de inversion)."""
 required_text = [
     "b) Minoración por incentivos a la inversión.",
@@ -1898,7 +1898,7 @@ effective_to = 2025-12-31
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-03
 reviewed_by = "agent-authored from bundled orden-hac-1347-2024.html; operator to re-stamp"
-notes = "Fase 3a: indice corrector de exceso. Cuando el rendimiento neto minorado supera la cuantía tabulada para la actividad, al exceso sobre dicha cuantía se le aplica el indice 1,30. Cross-checked byte-identical against the AEAT Manual practico de Renta 2025, Parte 1, worked example epigrafe 673.1 (cuantía 30.586,03 euros)."
+notes = "Fase 3a: indice corrector de exceso. Cuando el rendimiento neto minorado supera la cuantía tabulada para la actividad, al exceso sobre dicha cuantía se le aplica el indice 1,30. Cross-checked byte-identical against the AEAT Manual practico de Renta 2025, Parte 1, worked example epígrafe 673.1 (cuantía 30.586,03 euros)."
 required_text = [
     "b.3) Índice corrector de exceso:",
     "al exceso sobre dichas cuantías se le aplicará el índice 1,30",
@@ -1920,16 +1920,16 @@ reviewed_at = 2026-07-03
 reviewed_by = "agent-authored from bundled orden-hac-1347-2024.html; operator to re-stamp"
 notes = """\
 Fase 3a: incompatibilidades entre los indices correctores. El indice corrector para empresas de \
-pequena dimension (b.1) nunca se aplica a las actividades que tienen asignados los indices \
+pequeña dimension (b.1) nunca se aplica a las actividades que tienen asignados los indices \
 correctores especiales (a.2 transporte por autotaxis, a.3 transporte urbano colectivo, a.4 \
-transporte de mercancias por carretera y servicios de mudanzas, a.5), y cuando resulte aplicable el \
+transporte de mercancías por carretera y servicios de mudanzas, a.5), y cuando resulte aplicable el \
 indice b.1 tampoco se aplica el indice corrector de exceso (b.3); el indice corrector de temporada \
 (b.2) y el de inicio de nuevas actividades (b.4) son a su vez incompatibles entre si. El motor de \
 módulos M131 (0003-cmodulos-epigrafe__cmodulos-rendimiento-neto-actividad.toml, \
 m131_resolve_modulos_indices_generales) aplica ahora los cuatro indices generales (b.1, b.2, b.4, \
 b.3) en el orden de la propia Orden y hace cumplir estructuralmente las tres incompatibilidades: el \
 indice b.1 declarado se ignora para las dos actividades tabuladas con indice especial (721.2 \
-transporte por autotaxis, 722 transporte de mercancias); cuando b.1 se aplica, b.3 se omite; cuando \
+transporte por autotaxis, 722 transporte de mercancías); cuando b.1 se aplica, b.3 se omite; cuando \
 ambos b.2 y b.4 se declaran, prevalece la temporada (orden de enumeracion de la Orden) y se ignora \
 el inicio de nuevas actividades. Dos indicadores internos (modulos-pequena-dimension-ignorado-flag, \
 modulos-temporada-inicio-actividad-conflicto-flag) fundamentan los advisories no bloqueantes que \
@@ -1957,10 +1957,10 @@ review_status = "agent_reviewed"
 reviewed_at = 2026-07-04
 reviewed_by = "agent-authored from bundled orden-hac-1347-2024.html; operator to re-stamp"
 notes = """\
-Fase 3a: indice corrector para empresas de pequena dimension. Se aplica el indice que \
+Fase 3a: indice corrector para empresas de pequeña dimension. Se aplica el indice que \
 corresponda (0,70/0,75/0,80 según la población del municipio, o 0,90 si ademas hay \
 personal asalariado hasta 2 trabajadores) cuando concurren todas las circunstancias: \
-titular persona fisica, un solo local, no mas de un vehiculo afecto de hasta 1.000 kg, y \
+titular persona física, un solo local, no mas de un vehiculo afecto de hasta 1.000 kg, y \
 sin personal asalariado (salvo el supuesto de hasta 2 trabajadores del indice 0,90). \
 Cross-checked byte-identical against the bundled orden-hac-1347-2024.html (Anexo II, \
 instrucción 2.3.b.1)."""
@@ -2100,11 +2100,11 @@ sobre el rendimiento minorado o, en su caso, sobre el ya rectificado por los ind
 (aplicación secuencial, no simultanea, siguiendo el orden de letras del Anexo). El motor implementa \
 las letras a) a h) (indices 1 a 8, casillas 1540-1547 del Modelo 100: medios de producción ajenos \
 0,75; personal asalariado 0,90/0,85/0,80/0,75 por tramos; tierras arrendadas 0,90; piensos de \
-terceros 0,50; agricultura ecologica 0,95; regadio electrico 0,75; pequena empresa (rendimiento \
+terceros 0,50; agricultura ecologica 0,95; regadio electrico 0,75; pequeña empresa (rendimiento \
 minorado <= 9.447,91 euros) 0,90; forestales 0,80) sobre la casilla 1539 para obtener la casilla \
 1548 (rendimiento neto de módulos); el indice 9 (mejillon en batea, letra i) se aplica en un \
 producto separado (casilla 0160) fuera de esta cascada. Cada indice es un valor P012 declarado por \
-el operador/preparador según el Diseno de Registros AEAT (aeat-dr-100-2025-dictionary, campos \
+el operador/preparador según el Diseño de Registros AEAT (aeat-dr-100-2025-dictionary, campos \
 E5AI1-E5AI8); una casilla en blanco no aplica ningun indice (factor neutro), nunca fabrica una \
 reducción no declarada. Si el rendimiento neto minorado no es positivo, no se aplica ningun indice \
 corrector (principio general de estimación objetiva, ver el paralelo Anexo II instrucción 2.3 \
@@ -2136,7 +2136,7 @@ ciento durante los periodos impositivos cerrados durante los cinco anos siguient
 instalación como titulares de una explotación prioritaria (capitulo IV, titulo I, Ley 19/1995), \
 siempre que acrediten un plan de mejora de la explotación. Desarrolla, para el ejercicio 2025, la \
 disposición adicional sexta de la Ley del IRPF (ley-35-2006:da-6). Base legal de la casilla 1551 del \
-Modelo 100 2025 (motor: percent(1550, 25) cuando la casilla informativa AJ del Diseno de Registros \
+Modelo 100 2025 (motor: percent(1550, 25) cuando la casilla informativa AJ del Diseño de Registros \
 AEAT declara la elegibilidad; en blanco/No no se fabrica ninguna reducción)."""
 required_text = [
     "Los agricultores jóvenes o asalariados agrarios podrán reducir el rendimiento neto de módulos correspondiente a su actividad agraria en un 25 por ciento",
@@ -2276,7 +2276,7 @@ effective_to = 2026-12-31
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-04
 reviewed_by = "agent-authored from bundled orden-hac-1425-2025.html; operator to re-stamp"
-notes = "Fase 3a: indice corrector de exceso. Cuando el rendimiento neto minorado supera la cuantía tabulada para la actividad, al exceso sobre dicha cuantía se le aplica el indice 1,30. Cross-checked byte-identical against the 2025 instrucción (orden-hac-1347-2024:instruccion-2-3-b-3): same indice 1,30 and per-actividad cuantías for every currently tabled epigrafe (972.1, 721.2, 722, 671.4, 671.5, 672.1, 673.1, 673.2)."
+notes = "Fase 3a: indice corrector de exceso. Cuando el rendimiento neto minorado supera la cuantía tabulada para la actividad, al exceso sobre dicha cuantía se le aplica el indice 1,30. Cross-checked byte-identical against the 2025 instrucción (orden-hac-1347-2024:instruccion-2-3-b-3): same indice 1,30 and per-actividad cuantías for every currently tabled epígrafe (972.1, 721.2, 722, 671.4, 671.5, 672.1, 673.1, 673.2)."
 required_text = [
     "b.3) Índice corrector de exceso:",
     "al exceso sobre dichas cuantías se le aplicará el índice 1,30",
@@ -2296,7 +2296,7 @@ effective_to = 2026-12-31
 review_status = "agent_reviewed"
 reviewed_at = 2026-09-12
 reviewed_by = "agent-authored from bundled orden-hac-1425-2025.html; operator to re-stamp"
-notes = """Fase 3a: indice corrector para empresas de pequena dimension. Se aplica el indice que corresponda (0,70/0,75/0,80 según la población del municipio, o 0,90 si ademas hay personal asalariado hasta 2 trabajadores) cuando concurren todas las circunstancias: titular persona fisica, un solo local, no mas de un vehiculo afecto de hasta 1.000 kg, y sin personal asalariado (salvo el supuesto de hasta 2 trabajadores del indice 0,90). Cross-checked byte-identical against the 2025 instrucción (orden-hac-1347-2024:anexo-ii-instruccion-2-3-b-1): same 27-line b.1 block, same 0,70/0,75/0,80/0,90 indices and the same four concurrent circumstances."""
+notes = """Fase 3a: indice corrector para empresas de pequeña dimension. Se aplica el indice que corresponda (0,70/0,75/0,80 según la población del municipio, o 0,90 si ademas hay personal asalariado hasta 2 trabajadores) cuando concurren todas las circunstancias: titular persona física, un solo local, no mas de un vehiculo afecto de hasta 1.000 kg, y sin personal asalariado (salvo el supuesto de hasta 2 trabajadores del indice 0,90). Cross-checked byte-identical against the 2025 instrucción (orden-hac-1347-2024:anexo-ii-instruccion-2-3-b-1): same 27-line b.1 block, same 0,70/0,75/0,80/0,90 indices and the same four concurrent circumstances."""
 required_text = [
     "b.1) Índice corrector para empresas de pequeña dimensión:",
     "Titular persona física.",
@@ -2359,15 +2359,15 @@ reviewed_at = 2026-07-04
 reviewed_by = "agent-authored from bundled orden-hac-1425-2025.html; operator to re-stamp"
 notes = """\
 Fase 3a: incompatibilidades entre los indices correctores. El indice corrector para empresas de \
-pequena dimension (b.1) nunca se aplica a las actividades que tienen asignados los indices \
+pequeña dimension (b.1) nunca se aplica a las actividades que tienen asignados los indices \
 correctores especiales (a.2 transporte por autotaxis, a.3 transporte urbano colectivo, a.4 \
-transporte de mercancias por carretera y servicios de mudanzas, a.5), y cuando resulte aplicable el \
+transporte de mercancías por carretera y servicios de mudanzas, a.5), y cuando resulte aplicable el \
 indice b.1 tampoco se aplica el indice corrector de exceso (b.3), y cuando resulte aplicable el \
 indice corrector de temporada (b.2) no se aplica el de inicio de nuevas actividades (b.4). El motor \
 de módulos M131 (0003-modulos-engine.toml) aplica para 2026 la cascada completa b.1 -> b.2 -> b.3 \
 -> b.4 mediante el op m131_resolve_modulos_indices_generales, que modela estructuralmente ambas \
-incompatibilidades: el indice b.1 se ignora para los epigrafes tabulados que llevan indice especial \
-(721.2 transporte por autotaxis, letra a.2; 722 transporte de mercancias por carretera, letra a.4), \
+incompatibilidades: el indice b.1 se ignora para los epígrafes tabulados que llevan indice especial \
+(721.2 transporte por autotaxis, letra a.2; 722 transporte de mercancías por carretera, letra a.4), \
 y el indice de temporada desplaza al de inicio de nuevas actividades. Esta entrada fundamenta los \
 advisories no bloqueantes que senalan al operador la declaración ignorada, per \
 orden-hac-1425-2025-Anexo-II-instruccion-2-3 y no-silent-under-declaration. Cross-checked \
@@ -2521,7 +2521,7 @@ effective_from = 2019-01-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "agent-review"
-notes = "Aprobación del Modelo 117 como autoliquidación periodica de retenciones, ingresos a cuenta y pagos a cuenta sobre rentas o ganancias por transmisiones o reembolsos de participaciones de IIC y transmisiones de derechos de suscripcion."
+notes = "Aprobación del Modelo 117 como autoliquidación periódica de retenciones, ingresos a cuenta y pagos a cuenta sobre rentas o ganancias por transmisiones o reembolsos de participaciones de IIC y transmisiones de derechos de suscripcion."
 required_text = [
     "ANEXO I",
     "Se sustituye por el que figura como anexo de la Orden HAC/1417/2018",
@@ -2541,7 +2541,7 @@ effective_from = 2008-04-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-05
 reviewed_by = "operator"
-notes = "Aprobación de Modelo 123 como autoliquidación periodica de retenciones e ingresos a cuenta sobre determinados rendimientos del capital mobiliario y determinadas rentas."
+notes = "Aprobación de Modelo 123 como autoliquidación periódica de retenciones e ingresos a cuenta sobre determinados rendimientos del capital mobiliario y determinadas rentas."
 required_text = [
     "Modelo 123",
     "Autoliquidación periódica-Modelo 123",
@@ -2561,7 +2561,7 @@ effective_from = 2008-04-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "agent-review"
-notes = "Aprobación del Modelo 126 como autoliquidación periodica de retenciones e ingresos a cuenta sobre rendimientos del capital mobiliario y rentas por la contraprestación de cuentas en instituciones financieras."
+notes = "Aprobación del Modelo 126 como autoliquidación periódica de retenciones e ingresos a cuenta sobre rendimientos del capital mobiliario y rentas por la contraprestación de cuentas en instituciones financieras."
 required_text = ["ANEXO IV"]
 
 [legal."orden-eha-3435-2007:anexo-v"]
@@ -2577,7 +2577,7 @@ effective_from = 2008-04-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "agent-review"
-notes = "Aprobación del Modelo 128 como autoliquidación periodica de retenciones e ingresos a cuenta sobre rentas o rendimientos del capital mobiliario procedentes de operaciones de capitalización y contratos de seguro."
+notes = "Aprobación del Modelo 128 como autoliquidación periódica de retenciones e ingresos a cuenta sobre rentas o rendimientos del capital mobiliario procedentes de operaciones de capitalización y contratos de seguro."
 required_text = ["ANEXO V"]
 
 [legal."orden-hac-56-2024:art-1"]
@@ -2615,7 +2615,7 @@ effective_from = 2014-09-27
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-05
 reviewed_by = "operator"
-notes = "Sustituye el anexo VI de la Orden de 20 de noviembre de 2000 para los diseños fisicos y logicos del Modelo 180."
+notes = "Sustituye el anexo VI de la Orden de 20 de noviembre de 2000 para los diseños físicos y lógicos del Modelo 180."
 required_text = [
     "Se sustituye el anexo VI",
     "modelo 180",
@@ -2818,7 +2818,7 @@ effective_from = 2014-09-11
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-27
 reviewed_by = "agent-authored from BOE-A-2014-9225#a1 downloaded from boe.es; operator to re-stamp"
-notes = "Orden HAP/1608/2014 articulo 1: aprueba el modelo 187 y sus diseños fisicos y logicos. Bundled because modelos 187, 188 and 194 previously cited orden-eha-3377-2011:art-1, whose own text approves modelo 193; that entry is correct and the citations to it were not."
+notes = "Orden HAP/1608/2014 articulo 1: aprueba el modelo 187 y sus diseños físicos y lógicos. Bundled because modelos 187, 188 and 194 previously cited orden-eha-3377-2011:art-1, whose own text approves modelo 193; that entry is correct and the citations to it were not."
 required_text = [
     "Se aprueba el modelo 187",
     "Aprobación del modelo 187 y de los diseños físicos y lógicos",
@@ -2894,7 +2894,7 @@ effective_from = 2011-12-13
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-05
 reviewed_by = "operator"
-notes = "Aprobación del Modelo 193 y de sus diseños fisicos y logicos para resumen anual de retenciones e ingresos a cuenta sobre rendimientos del capital mobiliario y determinadas rentas."
+notes = "Aprobación del Modelo 193 y de sus diseños físicos y lógicos para resumen anual de retenciones e ingresos a cuenta sobre rendimientos del capital mobiliario y determinadas rentas."
 required_text = [
     "Se aprueba el modelo 193",
     "Declaración resumen anual de retenciones e ingresos a cuenta",
@@ -2974,7 +2974,7 @@ effective_from = 2024-12-20
 review_status = "agent_reviewed"
 reviewed_by = "agent: enrolled from the bundled BOE text alongside art-unico. This disposicion is enrolled SEPARATELY because it is the thing that splits the orden: without it a reader would take the whole article to apply to ejercicio 2024, which is false for apartado uno. Both required_text phrases confirmed present. NOT CLAIMED -- no operator countersignature."
 reviewed_at = 2026-09-12
-notes = """Disposición final única: THE ORDEN HAS TWO EFFECTIVE DATES. Its principal limb applies "por primera vez para la presentación del modelo 190 correspondiente al ejercicio 2024 y cuyo plazo de presentación se inicie a partir del 1 de enero de 2025". Its carve-out defers apartado uno -- the SUBCLAVE field at positions 79-80, where clave C subclaves 07, 08 and 09 are rewritten and created -- to ejercicio 2025. The bundled 2024 diseno de registro corroborates this from the other side: it PRINTS subclaves 07/08/09 in their post-amendment wording and stamps them "Esta modificación no sera aplicable" three times, where the 2025 design stamps them zero times. A modelo 190 2024 row asserting clave C subclave 07, 08 or 09 content is therefore NOT grounded by this orden."""
+notes = """Disposición final única: THE ORDEN HAS TWO EFFECTIVE DATES. Its principal limb applies "por primera vez para la presentación del modelo 190 correspondiente al ejercicio 2024 y cuyo plazo de presentación se inicie a partir del 1 de enero de 2025". Its carve-out defers apartado uno -- the SUBCLAVE field at positions 79-80, where clave C subclaves 07, 08 and 09 are rewritten and created -- to ejercicio 2025. The bundled 2024 diseño de registro corroborates this from the other side: it PRINTS subclaves 07/08/09 in their post-amendment wording and stamps them "Esta modificación no sera aplicable" three times, where the 2025 design stamps them zero times. A modelo 190 2024 row asserting clave C subclave 07, 08 or 09 content is therefore NOT grounded by this orden."""
 required_text = [
     "No obstante, el apartado uno del articulo unico de esta orden sera aplicable por primera vez para la presentacion del modelo 190 correspondiente al ejercicio 2025",
     "Disposicion final unica",
@@ -4334,7 +4334,7 @@ effective_from = 1994-07-08
 review_status = "operator_reviewed"
 reviewed_at = 2026-06-10
 reviewed_by = "operator"
-notes = "REBECA (Registro Especial de Buques de Canarias): el art 75.1 fija como renta exenta el 50 por 100 de los rendimientos del trabajo personal de los tripulantes de buques inscritos en el Registro Especial de Buques y Empresas Navieras devengados con ocasion de la navegacion. Provision que establece el 50 por 100 aplicado por REBECA_MARITIME_EXEMPTION_FRACTION y por la seccion renta exenta del Modelo 100 para trabajadores del mar."
+notes = "REBECA (Registro Especial de Buques de Canarias): el art 75.1 fija como renta exenta el 50 por 100 de los rendimientos del trabajo personal de los tripulantes de buques inscritos en el Registro Especial de Buques y Empresas Navieras devengados con ocasion de la navegacion. Provision que establece el 50 por 100 aplicado por REBECA_MARITIME_EXEMPTION_FRACTION y por la sección renta exenta del Modelo 100 para trabajadores del mar."
 required_text = [
     "renta exenta el 50 por 100",
     "Registro Especial de Buques y Empresas Navieras",
@@ -4394,7 +4394,7 @@ effective_from = 2007-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-15
 reviewed_by = "operator"
-notes = "LIRPF art 57: mínimo del contribuyente. Establece el mínimo personal del contribuyente con caracter general (5.550 euros anuales), con incrementos por edad: +1.150 euros anuales para contribuyentes mayores de 65 años, y +1.400 euros adicionales para mayores de 75 años. Base sustantiva de las casillas del mínimo-del-contribuyente de Modelo 100 (0511 y similares)."
+notes = "LIRPF art 57: mínimo del contribuyente. Establece el mínimo personal del contribuyente con carácter general (5.550 euros anuales), con incrementos por edad: +1.150 euros anuales para contribuyentes mayores de 65 años, y +1.400 euros adicionales para mayores de 75 años. Base sustantiva de las casillas del mínimo-del-contribuyente de Modelo 100 (0511 y similares)."
 required_text = [
     "Mínimo del contribuyente",
     "5.550 euros anuales",

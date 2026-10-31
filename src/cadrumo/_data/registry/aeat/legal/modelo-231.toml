@@ -51,7 +51,7 @@ effective_from = 2016-12-31
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "downloaded official BOE-A-2016-12484 HTML from BOE on 2026-07-01"
-notes = "Orden HFP/1978/2016 articulo 4: forma, condiciones generales y procedimiento para la presentación electronica del Modelo 231."
+notes = "Orden HFP/1978/2016 articulo 4: forma, condiciones generales y procedimiento para la presentación electrónica del Modelo 231."
 required_text = [
     "Artículo 4. Forma de presentación",
     "La presentación del modelo 231",

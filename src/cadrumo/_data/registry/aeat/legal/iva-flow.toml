@@ -208,7 +208,7 @@ effective_from = 2021-07-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-06-09
 reviewed_by = "operator"
-notes = "LIVA art 13: hecho imponible de las adquisiciones intracomunitarias de bienes. Sujeta las adquisiciones intracomunitarias efectuadas a titulo oneroso por empresarios, profesionales o personas juridicas, asi como las adquisiciones de medios de transporte nuevos. Base sustantiva del hecho imponible intracomunitario en el enrutamiento M303 (Tier-2 routing)."
+notes = "LIVA art 13: hecho imponible de las adquisiciones intracomunitarias de bienes. Sujeta las adquisiciones intracomunitarias efectuadas a titulo oneroso por empresarios, profesionales o personas jurídicas, asi como las adquisiciones de medios de transporte nuevos. Base sustantiva del hecho imponible intracomunitario en el enrutamiento M303 (Tier-2 routing)."
 required_text = [
     "Las adquisiciones intracomunitarias de bienes efectuadas a título oneroso",
     "Estarán sujetas las siguientes operaciones realizadas en el ámbito espacial de aplicación del Impuesto",
@@ -424,7 +424,7 @@ reviewed_by = "agent-review"
 notes = """LIVA art 70: special place-of-supply rules for services. Complements art 69 \
 for M349 service keys S and I where official instructions distinguish services localized \
 in or outside the TAI. Its apartado Uno reglas (inmuebles, transporte, acceso a \
-manifestaciones, servicios electronicos, restauracion, mediación, trabajos sobre bienes \
+manifestaciones, servicios electrónicos, restauracion, mediación, trabajos sobre bienes \
 muebles, arrendamiento de medios de transporte) override the art. 69 general rule, so \
 category selection for a cross-border service must be read here before art. 69 is \
 applied; the selection stays a declared operator judgement. \
@@ -636,7 +636,7 @@ effective_from = 1993-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-15
 reviewed_by = "operator"
-notes = "Reglamento del IVA art 30 bis: devolución de cuotas deducibles a los sujetos pasivos que ejerzan la actividad de transporte de viajeros o de mercancias por carretera tributando por el régimen simplificado. Articulo invocado en el official_name del Modelo 308 como el reglamentario de la solicitud de devolución."
+notes = "Reglamento del IVA art 30 bis: devolución de cuotas deducibles a los sujetos pasivos que ejerzan la actividad de transporte de viajeros o de mercancías por carretera tributando por el régimen simplificado. Articulo invocado en el official_name del Modelo 308 como el reglamentario de la solicitud de devolución."
 required_text = [
     "Devolución de cuotas deducibles",
     "transporte de viajeros o de mercancías por carretera",
@@ -683,7 +683,7 @@ review_status = "agent_reviewed"
 reviewed_at = 2026-10-03
 reviewed_by = "agent-review"
 notes = """RIVA art 62: libros registros del IVA. El apartado 6 obliga a llevar los libros \
-registro a traves de la Sede electronica de la AEAT, mediante el suministro electronico de \
+registro a traves de la Sede electrónica de la AEAT, mediante el suministro electrónico de \
 los registros de facturación (SII), a quienes tengan un periodo de liquidación mensual \
 conforme al art 71.3, y permite optar por el mismo sistema al resto de sujetos pasivos en los \
 terminos del art 68 bis. Es el supuesto al que remite el art 32.e del RD 1065/2007 para \

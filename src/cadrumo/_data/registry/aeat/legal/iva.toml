@@ -180,7 +180,7 @@ effective_from = 2003-12-31
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-06
 reviewed_by = "operator"
-notes = "Apartado primero de la Orden HAC/3625/2003: aprobación del modelo 309 'Declaracion-liquidacion no periodica del Impuesto sobre el Valor Anadido'. Filed by sujetos pasivos sin obligación ordinaria de declaracion-liquidacion (adquisiciones de medios de transporte nuevos, ejecuciones forzosas, régimen agricola/ganadero/pesquero, recargo de equivalencia)."
+notes = "Apartado primero de la Orden HAC/3625/2003: aprobación del modelo 309 'Declaracion-liquidacion no periódica del Impuesto sobre el Valor Anadido'. Filed by sujetos pasivos sin obligación ordinaria de declaracion-liquidacion (adquisiciones de medios de transporte nuevos, ejecuciones forzosas, régimen agricola/ganadero/pesquero, recargo de equivalencia)."
 required_text = [
     "Aprobación del modelo 309",
     "Declaración-liquidación no periódica",
@@ -1353,7 +1353,7 @@ effective_from = 2010-04-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-05
 reviewed_by = "operator"
-notes = "Aprobación del modelo 349 de declaración recapitulativa de operaciones intracomunitarias y de sus diseños fisicos y logicos. Base reglamentaria desarrollada por el RD 1624/1992 articulos 78 a 81 y por la Ley 37/1992 articulo 164.5."
+notes = "Aprobación del modelo 349 de declaración recapitulativa de operaciones intracomunitarias y de sus diseños físicos y lógicos. Base reglamentaria desarrollada por el RD 1624/1992 articulos 78 a 81 y por la Ley 37/1992 articulo 164.5."
 required_text = [
     "se aprueba el modelo 349",
     "declaración recapitulativa de operaciones intracomunitarias",
@@ -1520,7 +1520,7 @@ effective_from = 2021-07-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-06
 reviewed_by = "operator"
-notes = "Articulo 1 de la Orden HAC/610/2021: aprobación del modelo 369, autoliquidación de los regimenes especiales OSS/IOSS del IVA."
+notes = "Articulo 1 de la Orden HAC/610/2021: aprobación del modelo 369, autoliquidación de los regímenes especiales OSS/IOSS del IVA."
 required_text = [
     "Aprobación del modelo 369",
     "Impuesto sobre el Valor Añadido",
@@ -2149,12 +2149,12 @@ Articulo 101 LIVA: régimen de deducciones en sectores diferenciados de la activ
 el sujeto pasivo que realiza actividades económicas en sectores diferenciados (art 9.1.c) debe \
 aplicar SEPARADAMENTE el régimen de deducciones respecto de cada uno; la prorrata especial puede \
 aplicarse independientemente por sector (letras a', c', d'); los sectores de la letra b' se rigen \
-por sus regimenes especiales. Las adquisiciones para uso EN COMUN en varios sectores se deducen por \
-el porcentaje del art 104.Dos y siguientes (porcentaje comun). Base legal del enrutado por sector: \
-cada input a la deducción de SU sector; el input de uso comun al porcentaje comun del art 104.Dos. \
-Apartado Dos (DIFERIDO en esta fase): la Administracion puede autorizar un régimen de deducción \
+por sus regímenes especiales. Las adquisiciones para uso EN COMUN en varios sectores se deducen por \
+el porcentaje del art 104.Dos y siguientes (porcentaje común). Base legal del enrutado por sector: \
+cada input a la deducción de SU sector; el input de uso común al porcentaje común del art 104.Dos. \
+Apartado Dos (DIFERIDO en esta fase): la Administración puede autorizar un régimen de deducción \
 COMUN a los sectores de la letra a', autorizacion que NO surte efectos en el ano en que el total de \
-cuotas deducibles por el régimen comun exceda en un 20 por 100 al que resultaria aplicando con \
+cuotas deducibles por el régimen común exceda en un 20 por 100 al que resultaria aplicando con \
 independencia el régimen de cada sector - se registra como caso de autorizacion (register \
 authorisation_reference) y su +20% void test se difiere, con el esquema del register ya preparado \
 para admitirlo."""
@@ -2183,9 +2183,9 @@ reviewed_by = "agent-authored from bundled ley-37-1992.html#a9 definicion de sec
 notes = """\
 Articulo 9, numero 1.o, letra c) LIVA: la definición de los SECTORES DIFERENCIADOS de la actividad \
 (base del art 101). Letra a': actividades económicas con grupos DISTINTOS en la Clasificación \
-Nacional de Actividades Económicas (CNAE) cuyos regimenes de deducción difieran; los regimenes se \
+Nacional de Actividades Económicas (CNAE) cuyos regímenes de deducción difieran; los regímenes se \
 consideran distintos cuando los porcentajes de deducción del art 104 difieran en mas de 50 PUNTOS \
-PORCENTUALES respecto de la actividad principal. Letra b': actividades acogidas a los regimenes \
+PORCENTUALES respecto de la actividad principal. Letra b': actividades acogidas a los regímenes \
 especiales simplificado, agricultura/ganaderia/pesca, oro de inversion o recargo de equivalencia. \
 Letras c'/d': arrendamiento financiero y cesion de creditos/prestamos (salvo factoring). La \
 particion del contribuyente en sectores diferenciados es un juicio legal (que grupos CNAE, si \
@@ -2292,7 +2292,7 @@ effective_from = 1993-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-15
 reviewed_by = "operator"
-notes = "Articulo 163 duovicies LIVA: régimen especial aplicable a empresarios o profesionales no establecidos que presten servicios de telecomunicaciones, radiodifusion, television o servicios prestados por via electronica a destinatarios que no sean empresarios o profesionales (one stop shop). Forma parte del bloque de regimenes especiales del titulo IX, capitulo XI."
+notes = "Articulo 163 duovicies LIVA: régimen especial aplicable a empresarios o profesionales no establecidos que presten servicios de telecomunicaciones, radiodifusion, television o servicios prestados por via electrónica a destinatarios que no sean empresarios o profesionales (one stop shop). Forma parte del bloque de regímenes especiales del titulo IX, capitulo XI."
 required_text = [
     "a) Disponer del número de identificación fiscal al que se refiere el artículo 164.Uno.2.º de esta Ley.",
     "f) Expedir y entregar factura, ajustada a lo que se determine reglamentariamente.",
@@ -2690,7 +2690,7 @@ effective_from = 2017-07-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-06-28
 reviewed_by = "agent-review"
-notes = "Real Decreto 596/2016: moderniza la gestion del IVA e introduce la llevanza de libros registro a traves de la Sede electronica de la AEAT mediante el suministro electronico de registros de facturación."
+notes = "Real Decreto 596/2016: moderniza la gestion del IVA e introduce la llevanza de libros registro a traves de la Sede electrónica de la AEAT mediante el suministro electrónico de registros de facturación."
 required_text = [
     "Sede electrónica de la Agencia Estatal de la Administración Tributaria",
     "suministro electrónico de los registros de facturación",
@@ -3104,16 +3104,16 @@ enero de 2025 y es una provision distinta que necesita su propia entrada; el tex
 LIVA solo anota ese articulo 2, que es la razon por la que este instrumento parecia fijar unicamente \
 una fecha de 2025. Las ventanas anteriores al 1 de julio de 2024 las fijan RDL 20/2022, RDL 18/2022, \
 RDL 5/2023 y RDL 8/2023, ninguno de los cuales esta en el corpus. CONTRASTE INDEPENDIENTE. Las \
-cuatro cifras del recargo (0,62 / 0 / 1 / 0,26) coinciden con los tipos que declara el diseno de \
+cuatro cifras del recargo (0,62 / 0 / 1 / 0,26) coinciden con los tipos que declara el diseño de \
 registro del Modelo 390 en las casillas 665/666, 663/664, 693/694 y 691/692, y 0,62 es estable en \
-las revisiones 2023, 2024 y 2025 del diseno. El preambulo del propio real decreto-ley redondea 0,62 \
-a "0,6"; prevalece el texto operativo, y el diseno lo corrobora de forma independiente. PROVENANCIA \
+las revisiones 2023, 2024 y 2025 del diseño. El preambulo del propio real decreto-ley redondea 0,62 \
+a "0,6"; prevalece el texto operativo, y el diseño lo corrobora de forma independiente. PROVENANCIA \
 DE LA REVISION. Entrada preparada por agente y fundamentada en el texto autoritativo empaquetado \
 (documento BOE integro, sha256 3738875c89c223a8e561eb994d0349affd3006d7b4104e4e9e99b337f64dcc58). No \
 la ha revisado un operador humano; reviewed_by lo declara asi. El modelo tipa review_status como \
 Literal["reviewed"], de modo que la honestidad de la provenance vive en reviewed_by hasta que un \
 operador re-selle la entrada. NOTA PARA QUIEN EDITE required_text. Las cuatro frases operativas son \
-identicas salvo la cifra, de modo que un required_text tomado del prefijo comun coincide con las \
+identicas salvo la cifra, de modo que un required_text tomado del prefijo común coincide con las \
 cuatro y no discrimina nada. Cada entrada lleva su cifra. Ademas el documento separa "del" de la \
 cifra con un espacio duro (U+00A0), pero la puerta lo normaliza a espacio normal antes de comparar, \
 asi que required_text usa espacio normal: incrustar el espacio duro hace fallar todas las \

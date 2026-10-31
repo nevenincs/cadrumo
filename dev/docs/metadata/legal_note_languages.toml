@@ -63,7 +63,7 @@ text = "LIRPF art 42.3.f: exención de rendimientos del trabajo en especie por e
 
 [[legal."ley-35-2006:art-57"]]
 language = "es"
-text = "LIRPF art 57: mínimo del contribuyente. Establece el mínimo personal del contribuyente con caracter general (5.550 euros anuales), con incrementos por edad: +1.150 euros anuales para contribuyentes mayores de 65 años, y +1.400 euros adicionales para mayores de 75 años. Base sustantiva de las casillas del mínimo-del-contribuyente de Modelo 100 (0511 y similares)."
+text = "LIRPF art 57: mínimo del contribuyente. Establece el mínimo personal del contribuyente con carácter general (5.550 euros anuales), con incrementos por edad: +1.150 euros anuales para contribuyentes mayores de 65 años, y +1.400 euros adicionales para mayores de 75 años. Base sustantiva de las casillas del mínimo-del-contribuyente de Modelo 100 (0511 y similares)."
 
 [[legal."ley-35-2006:art-58"]]
 language = "es"
@@ -642,7 +642,7 @@ text = "sera el comprendido entre el 1 de enero y el 31 de enero del ano siguien
 
 [[legal."orden-eha-3290-2008:art-4"]]
 language = "es"
-text = "Orden EHA/3290/2008 art 4: plazo de presentación del modelo 216. Con caracter general (trimestral), la presentación e ingreso se efectua en los veinte primeros días naturales de los meses de abril, julio, octubre y enero por el trimestre natural inmediato anterior. Para grandes empresas, mensual, en los veinte primeros días naturales de cada mes."
+text = "Orden EHA/3290/2008 art 4: plazo de presentación del modelo 216. Con carácter general (trimestral), la presentación e ingreso se efectua en los veinte primeros días naturales de los meses de abril, julio, octubre y enero por el trimestre natural inmediato anterior. Para grandes empresas, mensual, en los veinte primeros días naturales de cada mes."
 
 [[legal."orden-eha-3290-2008:art-6"]]
 language = "es"
@@ -666,11 +666,11 @@ text = "Articulo quinto de la Orden HFP/1351/2021: modifica el anexo III de la O
 
 [[legal."trlirnr-rdleg-5-2004:art-2"]]
 language = "es"
-text = "TRLIRNR art 2: ámbito de aplicación territorial del impuesto. Incluye salvedad de los regimenes forales (Pais Vasco, Navarra) y especialidades de Canarias, Ceuta y Melilla. Fundamento territorial para la atribución de obligación IRNR a contribuyentes no residentes que obtienen rentas con fuente en territorio espanol."
+text = "TRLIRNR art 2: ámbito de aplicación territorial del impuesto. Incluye salvedad de los regímenes forales (Pais Vasco, Navarra) y especialidades de Canarias, Ceuta y Melilla. Fundamento territorial para la atribución de obligación IRNR a contribuyentes no residentes que obtienen rentas con fuente en territorio español."
 
 [[legal."trlirnr-rdleg-5-2004:art-24"]]
 language = "es"
-text = "TRLIRNR art 24: base imponible para contribuyentes que obtienen rentas sin mediación de establecimiento permanente. Apartado 1 fija la regla general (importe integro según LIRPF, sin porcentajes multiplicadores ni reducciones). Apartado 2 establece la base por diferencia para prestaciones de servicios y actividades económicas en Espana. Apartado 6 permite a residentes UE/EEE deducir gastos vinculados directamente a la renta obtenida en Espana. Fundamento de la base imponible M210 casillas rendimiento_integro y gastos_deducibles."
+text = "TRLIRNR art 24: base imponible para contribuyentes que obtienen rentas sin mediación de establecimiento permanente. Apartado 1 fija la regla general (importe integro según LIRPF, sin porcentajes multiplicadores ni reducciones). Apartado 2 establece la base por diferencia para prestaciones de servicios y actividades económicas en España. Apartado 6 permite a residentes UE/EEE deducir gastos vinculados directamente a la renta obtenida en España. Fundamento de la base imponible M210 casillas rendimiento_integro y gastos_deducibles."
 
 [[legal."trlirnr-rdleg-5-2004:art-25.1.a"]]
 language = "es"
@@ -686,7 +686,7 @@ text = "Los valores numericos vigentes son consolidados a partir de varias refor
 
 [[legal."trlirnr-rdleg-5-2004:art-25.1.b"]]
 language = "es"
-text = "TRLIRNR art 25.1.b: escala especial para pensiones y prestaciones similares percibidas por personas fisicas no residentes."
+text = "TRLIRNR art 25.1.b: escala especial para pensiones y prestaciones similares percibidas por personas físicas no residentes."
 
 [[legal."trlirnr-rdleg-5-2004:art-25.1.f"]]
 language = "es"
@@ -762,7 +762,7 @@ text = "contenido del régimen simplificado. Determinación de las cuotas tribut
 
 [[legal."ley-27-2014:art-21"]]
 language = "es"
-text = "exención sobre dividendos y rentas derivadas de la transmisión de valores representativos de los fondos propios de entidades residentes y no residentes en territorio espanol."
+text = "exención sobre dividendos y rentas derivadas de la transmisión de valores representativos de los fondos propios de entidades residentes y no residentes en territorio español."
 
 [[legal."ley-27-2014:art-22"]]
 language = "es"
@@ -770,7 +770,7 @@ text = "exención de las rentas obtenidas en el extranjero a traves de un establ
 
 [[legal."ley-27-2014:art-26"]]
 language = "es"
-text = "compensación de bases imponibles negativas. Establece el limite del 70 por ciento de la base imponible previa para la compensación de BINs con rentas positivas de ejercicios siguientes, con suelo absoluto de 1 millon de euros y plazo de prescripción de 10 anios para la facultad de comprobación."
+text = "compensación de bases imponibles negativas. Establece el limite del 70 por ciento de la base imponible previa para la compensación de BINs con rentas positivas de ejercicios siguientes, con suelo absoluto de 1 millón de euros y plazo de prescripción de 10 anios para la facultad de comprobación."
 
 [[legal."ley-27-2014:art-29"]]
 language = "es"
@@ -786,15 +786,15 @@ text = "deducción para evitar la doble imposición económica internacional - d
 
 [[legal."ley-27-2014:art-36"]]
 language = "es"
-text = "deducción por inversiones en producciones cinematograficas, series audiovisuales y espectaculos en vivo de artes escenicas y musicales. Establece las tasas de deducción (30 por ciento primer millon de base, 25 por ciento exceso), los limites por producción y episodio (20M / 10M EUR), el requisito de gasto territorial espanol (50 por ciento de la base) y el sub-regimen de productor/financiacion (la letra que M200 cita como art-36.1 y 36.3 para entidades cofinanciadoras)."
+text = "deducción por inversiones en producciones cinematograficas, series audiovisuales y espectaculos en vivo de artes escenicas y musicales. Establece las tasas de deducción (30 por ciento primer millón de base, 25 por ciento exceso), los limites por producción y episodio (20M / 10M EUR), el requisito de gasto territorial español (50 por ciento de la base) y el sub-regimen de productor/financiacion (la letra que M200 cita como art-36.1 y 36.3 para entidades cofinanciadoras)."
 
 [[legal."ley-27-2014:art-45"]]
 language = "es"
-text = "uniones temporales de empresas. Las UTE reguladas en la Ley 18/1982 e inscritas en el registro especial tributan con arreglo al art. 43 (agrupaciones de interes economico espanolas), salvo la regla de valoración del segundo parrafo del apartado 4 de ese articulo. Funda la seccion del Modelo 200 cuyo tag nombra el art. 45.1."
+text = "uniones temporales de empresas. Las UTE reguladas en la Ley 18/1982 e inscritas en el registro especial tributan con arreglo al art. 43 (agrupaciones de interes economico españolas), salvo la regla de valoración del segundo parrafo del apartado 4 de ese articulo. Funda la sección del Modelo 200 cuyo tag nombra el art. 45.1."
 
 [[legal."ley-27-2014:art-102"]]
 language = "es"
-text = "libertad de amortización de las entidades de reducida dimension. Los elementos nuevos del inmovilizado material y de las inversiones inmobiliarias afectos a actividades económicas pueden amortizarse libremente siempre que, durante los periodos que la norma fija, la plantilla media total se incremente respecto de la de los doce meses anteriores y ese incremento se mantenga. Funda la seccion empresas_de_reducida_dimension_libertad_de_amortizacion del Modelo 200."
+text = "libertad de amortización de las entidades de reducida dimension. Los elementos nuevos del inmovilizado material y de las inversiones inmobiliarias afectos a actividades económicas pueden amortizarse libremente siempre que, durante los periodos que la norma fija, la plantilla media total se incremente respecto de la de los doce meses anteriores y ese incremento se mantenga. Funda la sección empresas_de_reducida_dimension_libertad_de_amortizacion del Modelo 200."
 
 [[legal."ley-27-2014:dt-44"]]
 language = "es"
@@ -802,19 +802,19 @@ text = "régimen transitorio del tipo de gravamen de las microempresas cuyo INCN
 
 [[legal."ley-27-2014:art-105"]]
 language = "es"
-text = "reserva de nivelacion de bases imponibles. Permite a las entidades que cumplen las condiciones del articulo 101 (cifra de negocios inferior a 10 millones de euros) y aplican el tipo general minorar su base imponible positiva hasta el 10 por ciento de su importe, con tope de 1 millon de euros, computada también a efectos de pagos fraccionados (art 40.3) e incompatible con la reserva de capitalización del articulo 25."
+text = "reserva de nivelacion de bases imponibles. Permite a las entidades que cumplen las condiciones del articulo 101 (cifra de negocios inferior a 10 millones de euros) y aplican el tipo general minorar su base imponible positiva hasta el 10 por ciento de su importe, con tope de 1 millón de euros, computada también a efectos de pagos fraccionados (art 40.3) e incompatible con la reserva de capitalización del articulo 25."
 
 [[legal."ley-27-2014:art-15"]]
 language = "es"
-text = "gastos no deducibles. Enumera los gastos que la LIS expresamente excluye de la deducibilidad fiscal: retribucion de fondos propios (incluidos prestamos participativos intra-grupo), IS contabilizado, multas y sanciones, recargos del periodo ejecutivo y extemporaneos, perdidas del juego, donativos y liberalidades (con excepción de atenciones a clientes limitadas al 1 por ciento del INCN), actuaciones contrarias al ordenamiento juridico, gastos con paraisos fiscales. Base sustantiva de las correcciones positivas al resultado contable en M200."
+text = "gastos no deducibles. Enumera los gastos que la LIS expresamente excluye de la deducibilidad fiscal: retribucion de fondos propios (incluidos prestamos participativos intra-grupo), IS contabilizado, multas y sanciones, recargos del periodo ejecutivo y extemporaneos, perdidas del juego, donativos y liberalidades (con excepción de atenciones a clientes limitadas al 1 por ciento del INCN), actuaciones contrarias al ordenamiento jurídico, gastos con paraísos fiscales. Base sustantiva de las correcciones positivas al resultado contable en M200."
 
 [[legal."ley-27-2014:art-16"]]
 language = "es"
-text = "limitacion en la deducibilidad de gastos financieros. Establece el limite del 30 por ciento del beneficio operativo del ejercicio para los gastos financieros netos deducibles, con un suelo absoluto de 1 millon de euros y traslado a los cinco anios siguientes del exceso no aplicado del limite."
+text = "limitacion en la deducibilidad de gastos financieros. Establece el limite del 30 por ciento del beneficio operativo del ejercicio para los gastos financieros netos deducibles, con un suelo absoluto de 1 millón de euros y traslado a los cinco anios siguientes del exceso no aplicado del limite."
 
 [[legal."ley-27-2014:art-100"]]
 language = "es"
-text = "Transparencia Fiscal Internacional. Imputación de rentas positivas obtenidas por entidades no residentes y establecimientos permanentes cuando el contribuyente tenga (solo o con vinculadas art-18) participación igual o superior al 50 por ciento Y el gravamen extranjero sea inferior al 75 por ciento del que hubiera correspondido en Espana. Base sustantiva de la imputacion-rentas-positivas-art-100-LIS section de M200."
+text = "Transparencia Fiscal Internacional. Imputación de rentas positivas obtenidas por entidades no residentes y establecimientos permanentes cuando el contribuyente tenga (solo o con vinculadas art-18) participación igual o superior al 50 por ciento Y el gravamen extranjero sea inferior al 75 por ciento del que hubiera correspondido en España. Base sustantiva de la imputacion-rentas-positivas-art-100-LIS section de M200."
 
 [[legal."ley-35-2006:art-35"]]
 language = "es"
@@ -950,7 +950,7 @@ text = "reserva de capitalización. Establece la reducción en la base imponible
 
 [[legal."ley-27-2014:art-31"]]
 language = "es"
-text = "deducción para evitar la doble imposición juridica - impuesto soportado por el contribuyente. Permite deducir de la cuota integra la menor de dos cantidades: el impuesto efectivamente satisfecho en el extranjero (con tope del convenio CDI si aplica), o la cuota integra que en Espana correspondería pagar por las mismas rentas. Las cantidades no deducidas se trasladan a periodos siguientes; comprobación prescribe a los 10 anios. Base sustantiva de la deducción por doble imposición juridica internacional en M200."
+text = "deducción para evitar la doble imposición jurídica - impuesto soportado por el contribuyente. Permite deducir de la cuota integra la menor de dos cantidades: el impuesto efectivamente satisfecho en el extranjero (con tope del convenio CDI si aplica), o la cuota integra que en España correspondería pagar por las mismas rentas. Las cantidades no deducidas se trasladan a periodos siguientes; comprobación prescribe a los 10 anios. Base sustantiva de la deducción por doble imposición jurídica internacional en M200."
 
 [[legal."real-decreto-ley-7-2024:art-11.2"]]
 language = "es"
@@ -1034,7 +1034,7 @@ text = "RIRPF art 95: importe de las retenciones sobre rendimientos de actividad
 
 [[legal."rd-439-2007:art-95"]]
 language = "es"
-text = "El apartado 1 establece el tipo del 15 por ciento general para actividades profesionales, el tipo reducido del 7 por ciento para nuevos profesionales (inicio + dos siguientes) y para colectivos especificos (recaudadores municipales, mediadores de seguros con auxiliares, delegados comerciales SELAE, actividades artisticas de los grupos IAE 851, 852, 853, 861, 862, 864 y 869 de la seccion segunda y agrupaciones 01, 02, 03 y 05 de la seccion tercera, sujetas a una prueba de ingresos de dos partes: menos de 15.000 euros el ejercicio anterior Y mas del 75 por ciento de los rendimientos integros de actividades económicas y trabajo)."
+text = "El apartado 1 establece el tipo del 15 por ciento general para actividades profesionales, el tipo reducido del 7 por ciento para nuevos profesionales (inicio + dos siguientes) y para colectivos especificos (recaudadores municipales, mediadores de seguros con auxiliares, delegados comerciales SELAE, actividades artisticas de los grupos IAE 851, 852, 853, 861, 862, 864 y 869 de la sección segunda y agrupaciones 01, 02, 03 y 05 de la sección tercera, sujetas a una prueba de ingresos de dos partes: menos de 15.000 euros el ejercicio anterior Y mas del 75 por ciento de los rendimientos integros de actividades económicas y trabajo)."
 
 [[legal."rd-439-2007:art-95"]]
 language = "es"
@@ -1106,7 +1106,7 @@ text = "Fase 3a: incompatibilidades entre los índices correctores."
 
 [[legal."orden-hfp-1359-2023:anexo-ii-instruccion-2-3-incompatibilidades"]]
 language = "es"
-text = "El índice corrector para empresas de pequeña dimensión (b.1) nunca se aplica a las actividades que tienen asignados los índices correctores especiales (a.2 transporte por autotaxis, a.3 transporte urbano colectivo, a.4 transporte de mercancias por carretera y servicios de mudanzas, a.5), y cuando resulte aplicable el índice b.1 tampoco se aplica el índice corrector de exceso (b.3); el índice corrector de temporada (b.2) y el de inicio de nuevas actividades (b.4) son a su vez incompatibles entre sí."
+text = "El índice corrector para empresas de pequeña dimensión (b.1) nunca se aplica a las actividades que tienen asignados los índices correctores especiales (a.2 transporte por autotaxis, a.3 transporte urbano colectivo, a.4 transporte de mercancías por carretera y servicios de mudanzas, a.5), y cuando resulte aplicable el índice b.1 tampoco se aplica el índice corrector de exceso (b.3); el índice corrector de temporada (b.2) y el de inicio de nuevas actividades (b.4) son a su vez incompatibles entre sí."
 
 [[legal."rd-1065-2007:art-32"]]
 language = "es"
@@ -1126,7 +1126,7 @@ text = "Los AID correspondientes a dotaciones por deterioro de creditos por inso
 
 [[legal."ley-27-2014:art-130"]]
 language = "es"
-text = "Funda la seccion activos_impuesto_diferido_aid_art_130_lis del Modelo 200, que hasta ahora citaba unicamente la lista generica de 18 articulos comun a toda la revision y no el articulo que establece el derecho."
+text = "Funda la sección activos_impuesto_diferido_aid_art_130_lis del Modelo 200, que hasta ahora citaba unicamente la lista generica de 18 articulos común a toda la revision y no el articulo que establece el derecho."
 
 [[legal."real-decreto-ley-4-2024:art-4"]]
 language = "es"
@@ -1202,7 +1202,7 @@ text = "Esta entrada existe para que la aplicabilidad de la reducción se lea de
 
 [[legal."rd-1624-1992:art-62"]]
 language = "es"
-text = "El apartado 6 obliga a llevar los libros registro a traves de la Sede electronica de la AEAT, mediante el suministro electronico de los registros de facturación (SII), a quienes tengan un periodo de liquidación mensual conforme al art 71.3, y permite optar por el mismo sistema al resto de sujetos pasivos en los terminos del art 68 bis."
+text = "El apartado 6 obliga a llevar los libros registro a traves de la Sede electrónica de la AEAT, mediante el suministro electrónico de los registros de facturación (SII), a quienes tengan un periodo de liquidación mensual conforme al art 71.3, y permite optar por el mismo sistema al resto de sujetos pasivos en los terminos del art 68 bis."
 
 [[legal."rd-1624-1992:art-62"]]
 language = "es"
@@ -1234,7 +1234,7 @@ text = "Desarrolla, para el ejercicio 2025, la disposición adicional sexta de l
 
 [[legal."orden-hac-1347-2024:anexo-i-instruccion-3"]]
 language = "es"
-text = "Base legal de la casilla 1551 del Modelo 100 2025 (motor: percent(1550, 25) cuando la casilla informativa AJ del Diseno de Registros AEAT declara la elegibilidad; en blanco/No no se fabrica ninguna reducción)."
+text = "Base legal de la casilla 1551 del Modelo 100 2025 (motor: percent(1550, 25) cuando la casilla informativa AJ del Diseño de Registros AEAT declara la elegibilidad; en blanco/No no se fabrica ninguna reducción)."
 
 [[legal."real-decreto-ley-11-2022:art-18"]]
 language = "es"
@@ -1246,7 +1246,7 @@ text = "Texto original, publicado el 26/06/2022"
 
 [[legal."ley-37-1992:art-70"]]
 language = "es"
-text = "inmuebles, transporte, acceso a manifestaciones, servicios electronicos, restauracion, mediación, trabajos sobre bienes muebles, arrendamiento de medios de transporte"
+text = "inmuebles, transporte, acceso a manifestaciones, servicios electrónicos, restauracion, mediación, trabajos sobre bienes muebles, arrendamiento de medios de transporte"
 
 [[legal."orden-hac-510-2021:dt-unica"]]
 language = "es"

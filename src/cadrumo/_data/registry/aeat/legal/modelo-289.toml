@@ -145,7 +145,7 @@ effective_from = 2016-10-28
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "downloaded official BOE-A-2016-9834 consolidated HTML from BOE on 2026-07-01"
-notes = "Orden HAP/1695/2016 articulo 5: regula las condiciones y procedimiento de presentación electronica del Modelo 289 mediante servicios web."
+notes = "Orden HAP/1695/2016 articulo 5: regula las condiciones y procedimiento de presentación electrónica del Modelo 289 mediante servicios web."
 required_text = [
     "Condiciones y procedimiento",
     "modelo 289 con arreglo a las condiciones",
@@ -165,7 +165,7 @@ effective_from = 2016-10-28
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "downloaded official BOE-A-2016-9834 consolidated HTML from BOE on 2026-07-01"
-notes = "Orden HAP/1695/2016 articulo 6: remite el formato y diseno de los mensajes informaticos del Modelo 289 a la Sede electronica de la Agencia Tributaria."
+notes = "Orden HAP/1695/2016 articulo 6: remite el formato y diseño de los mensajes informaticos del Modelo 289 a la Sede electrónica de la Agencia Tributaria."
 required_text = [
     "Formato y",
     "consten en la Sede",
