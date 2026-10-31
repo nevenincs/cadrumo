@@ -2327,6 +2327,7 @@
         "cadrumo.domain.calculations.registry.renta_expense_policy",
         "cadrumo.domain.calculations.registry.rental_reduction",
         "cadrumo.domain.calculations.registry.restated_families",
+        "cadrumo.domain.calculations.registry.result_casillas",
         "cadrumo.domain.calculations.registry.retenciones_bindings",
         "cadrumo.domain.calculations.registry.revision_context",
         "cadrumo.domain.calculations.registry.revision_contracts",
