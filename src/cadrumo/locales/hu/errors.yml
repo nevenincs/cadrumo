@@ -1292,7 +1292,7 @@ errors:
       a destruktív visszaállítás és az újrabeligazgatás az út.
     refused_profile_displaced_session_retirement: A korábban kiválasztott profil tárolt
       munkamenetét nem sikerült visszavonni, ezért az új profil nem jött létre.
-    refused_profile_foral_regime: A kiválasztott foral adózási rend nem modellezett
+    refused_profile_foral_regime: A kiválasztott forális adózási rend nem modellezett
       ebben a profilban. Válassz egy támogatott adózási rendet.
     refused_profile_foreign_asset_register_validation: Egy 720-as modell szerinti
       külföldi vagyonelem-nyilvántartási bejegyzés nem ment át az ellenőrzésen.

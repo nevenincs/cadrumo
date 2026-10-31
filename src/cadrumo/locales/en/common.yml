@@ -3109,7 +3109,7 @@ desktop:
         operation_date: If it differs from the issue date
         payment_id: Not shown by the catalogue. Type one to replace it.
         printed_total: Optional. Checks that the lines add up.
-        tax_id_optional: Optional on an issued simplificada
+        tax_id_optional: Optional on an issued simplified invoice
       identity_fixed: Kind, number, issue date, tax ID, currency, totals and lines
         are fixed.
       invalid: 'Not added: the ledger didn''t accept it as valid.'
@@ -3193,7 +3193,7 @@ desktop:
         retention_differs: The rate gives {amount}.
         retention_needs_amount: A rate needs its amount.
         series_required: A rectificativa needs a series.
-        tax_id_required: Required, except on an issued simplificada.
+        tax_id_required: Required, except on an issued simplified invoice.
       rate:
         exempt: Exempt
         not_subject: Not subject
@@ -7831,7 +7831,7 @@ tui:
       review_undesignate: Review removing role
       role:
         charge: Charge (direct debit)
-        refund: Refund (devolución)
+        refund: Refund
       scope:
         all: every modelo
         modelo: Modelo %{modelo}
@@ -8205,7 +8205,7 @@ tui:
       open_keys: 'Keys: a {open} · Esc {back}'
     export:
       account:
-        charge_label: Account AEAT debits (domiciliación)
+        charge_label: Account AEAT debits
         designated: As designated in your own accounts
         designated_option: '%{account} (designated)'
         refund_label: Account AEAT pays a refund into
@@ -8217,7 +8217,7 @@ tui:
         label: Document to export
       payment_election:
         cuenta_corriente: Tax current account (cuenta corriente tributaria)
-        domiciliacion: Direct debit (domiciliación)
+        domiciliacion: Direct debit
         ingreso: Payment by the taxpayer (ingreso)
         label: 'Result to pay: how it is paid'
       prior_domiciliation_election:
@@ -8269,7 +8269,7 @@ tui:
             could not confirm that every required box reached the file. Review the
             exported boxes against the official Diseño de Registros before filing.'
           cutoff_unverified: The filing window declares no direct-debit deadline,
-            so whether AEAT still accepts this domiciliación could not be checked.
+            so whether AEAT still accepts this direct debit could not be checked.
           development_software_identity: The file header carries the all-zero development
             software identity; AEAT will not accept this file for presentation.
           development_software_identity_of_filing_file: The filing file for this modelo

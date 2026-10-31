@@ -906,9 +906,9 @@ application:
         what_to_do: Record the depreciation charge for that period if you want to
           deduct it, then calculate again.
       activity_asset_disposal_finding:
-        what: The baja of an asset has a point you should check, though it does not
-          stop this form.
-        what_to_do: Check what this note says about the baja, and record or correct
+        what: The disposal of an asset has a point you should check, though it does
+          not stop this form.
+        what_to_do: Check what this note says about the disposal, and record or correct
           it if it applies to you.
       activity_asset_foral_territory:
         what: You live in the Basque Country or Navarre in this period, where other
@@ -1221,48 +1221,48 @@ application:
       disposal_claim_gap: '{element}: its disposal is on {date} and part of {year}
         has no recorded depreciation charge. Its minimum still reduces the cost.'
       disposal_exemption_not_computed: '{element}: any exemption or deferral on its
-        baja on {date} is not worked out here, so the full result stands.'
+        disposal on {date} is not worked out here, so the full result stands.'
       disposal_figure_element_row: '{element}: {amount} from its sale on {date} enters
         box {box}. On its row, enter the dates and values: {transmission_value} at
         sale and a net value of {net_value}.'
-      disposal_figure_in_box: '{element}: {amount} from its baja on {date} enters
+      disposal_figure_in_box: '{element}: {amount} from its disposal on {date} enters
         box {box}.'
-      disposal_figure_no_box: '{element}: {amount} from its baja on {date} reaches
+      disposal_figure_no_box: '{element}: {amount} from its disposal on {date} reaches
         no box of this edition.'
       disposal_figure_property_row: '{element}: {amount} from its sale on {date} enters
         box {box}. On its row, mark the property as used in an activity and enter
         the dates and values: {transmission_value} at sale and a net value of {net_value}.'
       disposal_instalment_agrarian_excess: '{element}: the excess of {amount} on its
-        baja on {date}, in an agricultural activity, has no established instalment
+        disposal on {date}, in an agricultural activity, has no established instalment
         line. It is left to you.'
-      disposal_instalment_excess_unresolved: '{element}: the excess on its baja on
-        {date} could not be worked out, so this instalment carries none.'
+      disposal_instalment_excess_unresolved: '{element}: the excess on its disposal
+        on {date} could not be worked out, so this instalment carries none.'
       disposal_later_affectation: '{element}: its sale on {date} falls within the
         period after a later change of use that alters its route, so its result of
         {amount} enters no box and is left to you.'
-      disposal_m131_excess: '{element}: the excess of {amount} on its baja on {date}
-        does not reach Modelo 131, whose instructions do not address it.'
-      disposal_m131_excess_unresolved: '{element}: the excess on its baja on {date}
+      disposal_m131_excess: '{element}: the excess of {amount} on its disposal on
+        {date} does not reach Modelo 131, whose instructions do not address it.'
+      disposal_m131_excess_unresolved: '{element}: the excess on its disposal on {date}
         could not be worked out, and Modelo 131, whose instructions do not address
         it, carries none.'
-      disposal_minimum_exceeded_deduction: '{element}: with its baja on {date}, the
-        minimum for {year} exceeded what was deducted, raising the reduction of cost
-        by {effect}.'
-      disposal_minimum_unresolved: '{element}: with its baja on {date}, no edition
+      disposal_minimum_exceeded_deduction: '{element}: with its disposal on {date},
+        the minimum for {year} exceeded what was deducted, raising the reduction of
+        cost by {effect}.'
+      disposal_minimum_unresolved: '{element}: with its disposal on {date}, no edition
         gives the minimum for {year}, so only what was deducted reduces the cost.'
       disposal_modules_agrarian_excess: '{element}: the excess of {amount} on its
-        baja on {date}, in an agricultural activity under modules, has no established
+        disposal on {date}, in an agricultural activity under modules, has no established
         line. It is left to you.'
-      disposal_no_minimum_authority: '{element}: with its baja on {date}, no minimum
+      disposal_no_minimum_authority: '{element}: with its disposal on {date}, no minimum
         applies to {year}, so only what was deducted reduces the cost.'
       disposal_shared_row: '{element}: the form gives each sale its own row, and this
         calculation carries {count} sales together. Enter it on a row of its own:
         sold on {date} for {transmission_value}, net value {net_value}, {amount} in
         box {box}.'
-      disposal_unresolved_income: '{element}: the result of its baja on {date} could
-        not be worked out, so activity income may be understated.'
-      disposal_unresolved_no_box: '{element}: the result of its baja on {date} could
-        not be worked out, so no box carries it.'
+      disposal_unresolved_income: '{element}: the result of its disposal on {date}
+        could not be worked out, so activity income may be understated.'
+      disposal_unresolved_no_box: '{element}: the result of its disposal on {date}
+        could not be worked out, so no box carries it.'
       disposal_zero_result: '{element}: its sale on {date}, at {transmission_value}
         of transmission value against {net_value} of net value, neither gains nor
         loses, so no box carries it.'
@@ -1752,11 +1752,10 @@ application:
         the individual limit of %{sublimit} EUR in Art. 52 LIRPF, and no employer
         contributions are declared. Check that the individual limit was applied.
       attribution_received_uncaptured: Box [%{casilla_id}] for %{filing_year} shows
-        %{casilla_value} EUR of attributed income (renta atribuida), but your profile
-        does not record where it comes from. Add it to your profile.
+        %{casilla_value} EUR of attributed income, but your profile does not record
+        where it comes from. Add it to your profile.
       attribution_received_unfolded: Your profile records %{total_base} EUR of attributed
-        income (renta atribuida) for %{filing_year}, but box [%{casilla_id}] does
-        not include it.
+        income for %{filing_year}, but box [%{casilla_id}] does not include it.
       cross_casilla_invariant_violated: Two or more boxes on this form do not agree
         with each other as the official rules require.
       cross_model_reconciliation_incomplete: 'Comparison between Modelo %{modelo}

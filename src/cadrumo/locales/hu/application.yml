@@ -1826,11 +1826,10 @@ application:
         munkáltatói hozzájárulás nincs bevallva. Ellenőrizd, hogy az egyéni részhatárt
         alkalmazták-e.
       attribution_received_uncaptured: A(z) [%{casilla_id}] rovat %{filing_year} évre
-        %{casilla_value} EUR betudott jövedelmet (renta atribuida) tartalmaz, de a
-        profilod nem rögzíti, honnan származik. Vedd fel a profilodba.
+        %{casilla_value} EUR betudott jövedelmet tartalmaz, de a profilod nem rögzíti,
+        honnan származik. Vedd fel a profilodba.
       attribution_received_unfolded: A profilod %{filing_year} évre %{total_base}
-        EUR betudott jövedelmet (renta atribuida) tartalmaz, de a(z) [%{casilla_id}]
-        rovat ezt nem tartalmazza.
+        EUR betudott jövedelmet tartalmaz, de a(z) [%{casilla_id}] rovat ezt nem tartalmazza.
       cross_casilla_invariant_violated: A nyomtatvány két vagy több rovata nem egyezik
         egymással, ahogy azt a hivatalos szabályok megkövetelik.
       cross_model_reconciliation_incomplete: 'A(z) %{modelo} és %{sibling_modelo}
@@ -2104,7 +2103,7 @@ application:
         add_activity_start: Add meg a profilodban, mikor kezdődött a tevékenységed,
           majd számolj újra.
         add_attribution_to_profile: Rögzítsd a profilodban, honnan származik a betudott
-          jövedelem (renta atribuida), majd számolj újra.
+          jövedelem, majd számolj újra.
         add_base_to_entry: Add meg az adóalapot (base imponible) a nyilvántartásodban
           szereplő tételnél, majd számolj újra.
         attach_document: Csatold a bizonylatot a nyilvántartásaid megfelelő tételéhez.

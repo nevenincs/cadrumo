@@ -3135,7 +3135,7 @@ desktop:
         operation_date: Ha eltér a kiállítás dátumától
         payment_id: A katalógus nem mutatja. Írj be egyet a cseréjéhez.
         printed_total: Nem kötelező. Ellenőrzi, hogy a tételsorok kiadják.
-        tax_id_optional: Kiállított simplificada esetén nem kötelező
+        tax_id_optional: Kiállított egyszerűsített számla esetén nem kötelező
       identity_fixed: A fajta, a szám, a kiállítás dátuma, az adószám, a pénznem,
         az összegek és a tételsorok rögzítettek.
       invalid: 'Nem lett hozzáadva: a napló nem fogadta el érvényesnek.'
@@ -3220,7 +3220,7 @@ desktop:
         retention_differs: A mérték alapján {amount}.
         retention_needs_amount: A mértékhez összeg is kell.
         series_required: A rectificativához sorozat kell.
-        tax_id_required: Kötelező, kivéve kiállított simplificada esetén.
+        tax_id_required: Kötelező, kivéve kiállított egyszerűsített számla esetén.
       rate:
         exempt: Mentes
         not_subject: Nem tárgya
@@ -5087,7 +5087,7 @@ ledger:
       financial_lease_unexercised: A pénzügyi lízingbe vett eszköz csak a vételi jog
         gyakorlása után kerül a nyilvántartásba; a lízingdíjakra az LIS 106. cikke
         vonatkozik.
-      foral_territory: Foral területen élsz, ahol az AEAT 100-as és 130-as modellje
+      foral_territory: Forális területen élsz, ahol az AEAT 100-as és 130-as modellje
         nem alkalmazandó.
       forecast_interval_end_required: Az előrejelzett időszakhoz meg kell adni az
         utolsó lefedett napot vagy azt a napot, amely előtt véget ér.
@@ -7952,7 +7952,7 @@ tui:
       review_undesignate: Szerepkör törlésének ellenőrzése
       role:
         charge: Terhelés (csoportos beszedés)
-        refund: Visszatérítés (devolución)
+        refund: Visszatérítés
       scope:
         all: minden modelo
         modelo: Modelo %{modelo}
@@ -8328,7 +8328,7 @@ tui:
       open_keys: 'Billentyűk: a {open} · Esc {back}'
     export:
       account:
-        charge_label: A számla, amelyet az AEAT megterhel (domiciliación)
+        charge_label: A számla, amelyet az AEAT megterhel
         designated: A saját számláidnál megadott kijelölés szerint
         designated_option: '%{account} (kijelölt)'
         refund_label: A számla, amelyre az AEAT a visszatérítést utalja
@@ -8340,7 +8340,7 @@ tui:
         label: Exportálandó dokumentum
       payment_election:
         cuenta_corriente: Adófolyószámla (cuenta corriente tributaria)
-        domiciliacion: Csoportos beszedés (domiciliación)
+        domiciliacion: Csoportos beszedés
         ingreso: Befizetés (ingreso)
         label: 'Befizetendő eredmény: a fizetés módja'
       prior_domiciliation_election:
