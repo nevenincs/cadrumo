@@ -101,7 +101,7 @@ def spellcheck_catalogues(
             failure_inventory,
             [failure],
         )
-    _discard_known_spanish_search_keywords(unknown_by_cell, dictionaries.get("es"))
+    _discard_known_search_keywords(unknown_by_cell, dictionaries.get("es"), dictionaries.get("en"))
     unknown_words = _collect_unknown_words(unknown_by_cell)
     spelling = {cell: tuple(sorted(words, key=str.casefold)) for cell, words in unknown_by_cell.items()}
     unknown_findings: list[dict[str, object]] = [
@@ -173,20 +173,35 @@ def _is_spanish_search_keyword(word: str, dictionary: object) -> bool:
     return False
 
 
-def _discard_known_spanish_search_keywords(
-    unknown_by_cell: dict[tuple[str, str], set[str]], spanish_dictionary: object | None
+def _discard_known_search_keywords(
+    unknown_by_cell: dict[tuple[str, str], set[str]],
+    spanish_dictionary: object | None,
+    english_dictionary: object | None,
 ) -> None:
-    """Remove dictionary-backed Spanish search terms from the keyword audit."""
-    if spanish_dictionary is None:
+    """Validate bilingual aliases on the three declared search-keyword surfaces.
+
+    Palette actions consume their own keywords and navigation-view keywords
+    through ``scoreAction``; ledger choices consume category keywords through
+    ``categoryKeywords``. These are searchable aliases, including English and
+    accentless Spanish, rather than the translated labels beside them.
+    """
+    english_lookup = getattr(english_dictionary, "lookup", None)
+    if spanish_dictionary is None and not callable(english_lookup):
         return
     for cell, words in tuple(unknown_by_cell.items()):
         _locale, key = cell
         if not (
             key.startswith("desktop.ledger.category_keywords.")
+            or key.startswith("desktop.palette.keywords.")
             or (key.startswith("navigation.view.") and key.endswith(".keywords"))
         ):
             continue
-        accepted = {word for word in words if _is_spanish_search_keyword(word, spanish_dictionary)}
+        accepted = {
+            word
+            for word in words
+            if (callable(english_lookup) and english_lookup(word))
+            or (spanish_dictionary is not None and _is_spanish_search_keyword(word, spanish_dictionary))
+        }
         words.difference_update(accepted)
         if not words:
             del unknown_by_cell[cell]
