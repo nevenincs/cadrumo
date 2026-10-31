@@ -89,6 +89,45 @@ def test_input_tax_phrase_uses_spanish_without_hiding_adjacent_or_phrase_typos(m
     assert not is_project_spelling("hu", "soportada")
 
 
+def test_bilingual_search_aliases_do_not_exempt_prose_or_misspelled_aliases(monkeypatch: pytest.MonkeyPatch) -> None:
+    class Dictionary:
+        def __init__(self, accepted: set[str]) -> None:
+            self.accepted = accepted
+
+        def lookup(self, word: str) -> bool:
+            return word in self.accepted
+
+    monkeypatch.setattr(
+        "dev.locales.signal_spelling.load_dictionaries",
+        lambda repository: {"en": Dictionary(set()), "es": Dictionary({"retenciones"})},
+    )
+    keys = (
+        "desktop.ledger.category_keywords.ibi_local_afecto",
+        "navigation.view.withholding.keywords",
+        "navigation.view.withholding.label",
+        "guide",
+    )
+    spelling, _inventory, _findings = spellcheck_catalogues(
+        set(keys),
+        {"en": {key: "ibi irpf retenciones ibii irpff retencioness misspeling" for key in keys}},
+        REPO_ROOT,
+    )
+    for key in keys[:2]:
+        assert set(spelling[("en", key)]) == {"ibii", "irpff", "retencioness", "misspeling"}
+    for key in keys[2:]:
+        assert set(spelling[("en", key)]) == {
+            "ibi",
+            "irpf",
+            "retenciones",
+            "ibii",
+            "irpff",
+            "retencioness",
+            "misspeling",
+        }
+    assert not is_project_spelling("en", "ibi")
+    assert not is_project_spelling("en", "irpf")
+
+
 def test_only_english_possessives_of_exact_project_stems_are_accepted() -> None:
     assert is_project_spelling("en", "Cadrumo's")
     assert is_project_spelling("en", "modelo's")
