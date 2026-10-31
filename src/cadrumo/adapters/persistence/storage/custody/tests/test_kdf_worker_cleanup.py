@@ -188,57 +188,67 @@ def test_unconfirmed_existing_termination_attempts_refuse_without_closing_pipes(
     assert worker._request_fd is None and worker._result_fd is None
 
 
-def test_real_blocked_reader_cleanup_settles_child_before_descriptor_close(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-) -> None:
+_PAUSED_WRITER_CHILD_SOURCE = (
+    "from cadrumo.adapters.persistence.storage.custody import _kdf_worker as worker\n"
+    "import threading\n"
+    "original_write = worker.write_kdf_frame\n"
+    "result_fd = None\n"
+    "def write(fd, value, *, kind):\n"
+    "    global result_fd\n"
+    "    result_fd = fd\n"
+    "    original_write(fd, value, kind=kind)\n"
+    "def hold_writer(payload):\n"
+    "    original_write(result_fd, b'fixture-paused', kind=worker.KDF_FRAME_CONTROL)\n"
+    "    threading.Event().wait()\n"
+    "worker.write_kdf_frame = write\n"
+    "worker._derive_calibration = hold_writer\n"
+    "raise SystemExit(worker.main())\n"
+)
+
+
+def _launch_paused_writer_child(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Make the worker launch a child that answers one frame and then blocks forever."""
     launch_process = process_boundary._launch_worker_process
-    source = (
-        "from cadrumo.adapters.persistence.storage.custody import _kdf_worker as worker\n"
-        "import threading\n"
-        "original_write = worker.write_kdf_frame\n"
-        "result_fd = None\n"
-        "def write(fd, value, *, kind):\n"
-        "    global result_fd\n"
-        "    result_fd = fd\n"
-        "    original_write(fd, value, kind=kind)\n"
-        "def hold_writer(payload):\n"
-        "    original_write(result_fd, b'fixture-paused', kind=worker.KDF_FRAME_CONTROL)\n"
-        "    threading.Event().wait()\n"
-        "worker.write_kdf_frame = write\n"
-        "worker._derive_calibration = hold_writer\n"
-        "raise SystemExit(worker.main())\n"
-    )
 
     def launch(command: list[str], launch_kwargs: dict[str, object]) -> subprocess.Popen[bytes]:
         entry = command.index("-m")
-        return launch_process([*command[:entry], "-c", source, *command[entry + 2 :]], launch_kwargs)
+        return launch_process(
+            [*command[:entry], "-c", _PAUSED_WRITER_CHILD_SOURCE, *command[entry + 2 :]], launch_kwargs
+        )
 
     monkeypatch.setattr(process_boundary, "_launch_worker_process", launch)
-    worker = _SupervisedKdfWorker(deadline=time.monotonic() + 30, settings=Settings(cadrumo_storage_root=tmp_path))
-    process: subprocess.Popen[bytes] | None = None
-    job: _WindowsJob | None = None
-    reader_threads: list[threading.Thread] = []
-    cleanup_thread: threading.Thread | None = None
-    rescue_thread: threading.Thread | None = None
-    entered_read = threading.Event()
-    entered_close = threading.Event()
-    closed = threading.Event()
-    cleanup_done = threading.Event()
-    rescued = threading.Event()
-    close_exit_codes: list[int | None] = []
-    cleanup_errors: list[BaseException] = []
-    original_reader = supervision._read_kdf_frame_to_queue
-    original_close = supervision._close_fd
-    terminate = supervision._terminate_process_tree
-    cleanup_started = 0.0
-    cleanup_elapsed = 0.0
-    try:
-        worker.__enter__()
-        process = worker._process
-        job = worker._job
-        assert process is not None and worker._result_fd is not None
-        child = process
-        result_fd = worker._result_fd
+
+
+class _BlockedReaderCleanup:
+    """Drive a real worker whose reader is blocked while cleanup must settle the child first."""
+
+    def __init__(self, worker: _SupervisedKdfWorker) -> None:
+        self.worker = worker
+        self.process: subprocess.Popen[bytes] | None = None
+        self.job: _WindowsJob | None = None
+        self.result_fd: int | None = None
+        self.reader_threads: list[threading.Thread] = []
+        self.cleanup_thread: threading.Thread | None = None
+        self.rescue_thread: threading.Thread | None = None
+        self.entered_read = threading.Event()
+        self.entered_close = threading.Event()
+        self.closed = threading.Event()
+        self.cleanup_done = threading.Event()
+        self.rescued = threading.Event()
+        self.close_exit_codes: list[int | None] = []
+        self.cleanup_errors: list[BaseException] = []
+        self.original_reader = supervision._read_kdf_frame_to_queue
+        self.original_close = supervision._close_fd
+        self.terminate = supervision._terminate_process_tree
+        self.cleanup_started = 0.0
+        self.cleanup_elapsed = 0.0
+
+    def start_and_pause_child(self) -> None:
+        self.worker.__enter__()
+        self.process = self.worker._process
+        self.job = self.worker._job
+        assert self.process is not None and self.worker._result_fd is not None
+        self.result_fd = self.worker._result_fd
         kdf = ProfileCustodyKdfParameters(
             algorithm="argon2id",
             version=19,
@@ -248,100 +258,121 @@ def test_real_blocked_reader_cleanup_settles_child_before_descriptor_close(
             salt_b64=base64.b64encode(b"k" * 16).decode("ascii"),
             output_bytes=32,
         )
-        worker._write_request({"version": 1, "operation": KdfOperation.CALIBRATE, "kdf": kdf.model_dump(mode="json")})
-        assert worker._read_response_frame() == (KDF_FRAME_CONTROL, b"fixture-paused")
+        self.worker._write_request(
+            {"version": 1, "operation": KdfOperation.CALIBRATE, "kdf": kdf.model_dump(mode="json")}
+        )
+        assert self.worker._read_response_frame() == (KDF_FRAME_CONTROL, b"fixture-paused")
 
-        def observe_reader(descriptor: int, result_queue: queue.Queue[tuple[int, bytes] | BaseException]) -> None:
-            reader_threads.append(threading.current_thread())
-            entered_read.set()
-            original_reader(descriptor, result_queue)
+    def observe_reader(self, descriptor: int, result_queue: queue.Queue[tuple[int, bytes] | BaseException]) -> None:
+        self.reader_threads.append(threading.current_thread())
+        self.entered_read.set()
+        self.original_reader(descriptor, result_queue)
 
-        def observe_close(descriptor: int | None) -> None:
-            if descriptor != result_fd:
-                original_close(descriptor)
-                return
-            close_exit_codes.append(child.returncode)
-            entered_close.set()
-            try:
-                original_close(descriptor)
-            finally:
-                closed.set()
+    def observe_close(self, descriptor: int | None) -> None:
+        if descriptor != self.result_fd:
+            self.original_close(descriptor)
+            return
+        assert self.process is not None
+        self.close_exit_codes.append(self.process.returncode)
+        self.entered_close.set()
+        try:
+            self.original_close(descriptor)
+        finally:
+            self.closed.set()
 
-        def cleanup() -> None:
-            nonlocal cleanup_elapsed
-            try:
-                worker._close(failed=True)
-            except BaseException as error:
-                cleanup_errors.append(error)
-            finally:
-                cleanup_elapsed = time.monotonic() - cleanup_started
-                cleanup_done.set()
+    def cleanup(self) -> None:
+        try:
+            self.worker._close(failed=True)
+        except BaseException as error:
+            self.cleanup_errors.append(error)
+        finally:
+            self.cleanup_elapsed = time.monotonic() - self.cleanup_started
+            self.cleanup_done.set()
 
-        def rescue() -> None:
-            if entered_close.wait(timeout=5) and close_exit_codes == [None] and not closed.wait(timeout=0.2):
-                rescued.set()
-                child.kill()
-                child.wait(timeout=5)
+    def rescue(self) -> None:
+        if self.entered_close.wait(timeout=5) and self.close_exit_codes == [None] and not self.closed.wait(timeout=0.2):
+            assert self.process is not None
+            self.rescued.set()
+            self.process.kill()
+            self.process.wait(timeout=5)
 
-        monkeypatch.setattr(supervision, "_read_kdf_frame_to_queue", observe_reader)
-        monkeypatch.setattr(supervision, "_close_fd", observe_close)
-        worker._deadline = time.monotonic() + 0.05
+    def block_reader_past_the_deadline(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setattr(supervision, "_read_kdf_frame_to_queue", self.observe_reader)
+        monkeypatch.setattr(supervision, "_close_fd", self.observe_close)
+        self.worker._deadline = time.monotonic() + 0.05
         with pytest.raises(TimeoutError):
-            worker._read_response_frame()
-        assert entered_read.is_set() and reader_threads and reader_threads[0].is_alive()
-        cleanup_started = time.monotonic()
-        rescue_thread = threading.Thread(target=rescue)
-        cleanup_thread = threading.Thread(target=cleanup)
-        rescue_thread.start()
-        cleanup_thread.start()
-        assert cleanup_done.wait(timeout=10), "Owned rescue must release blocked cleanup"
-        assert not cleanup_errors
-        assert close_exit_codes and all(code is not None for code in close_exit_codes)
-        assert not rescued.is_set()
-        assert process.returncode is not None and worker._process is None
-        assert worker._request_fd is None and worker._result_fd is None
-    finally:
-        teardown_errors: list[str] = []
-        if process is not None:
+            self.worker._read_response_frame()
+        assert self.entered_read.is_set() and self.reader_threads and self.reader_threads[0].is_alive()
+
+    def run_cleanup_beside_rescue(self) -> None:
+        self.cleanup_started = time.monotonic()
+        self.rescue_thread = threading.Thread(target=self.rescue)
+        self.cleanup_thread = threading.Thread(target=self.cleanup)
+        self.rescue_thread.start()
+        self.cleanup_thread.start()
+        assert self.cleanup_done.wait(timeout=10), "Owned rescue must release blocked cleanup"
+
+    def assert_child_settled_before_descriptor_close(self) -> None:
+        assert not self.cleanup_errors
+        assert self.close_exit_codes and all(code is not None for code in self.close_exit_codes)
+        assert not self.rescued.is_set()
+        assert self.process is not None and self.process.returncode is not None and self.worker._process is None
+        assert self.worker._request_fd is None and self.worker._result_fd is None
+
+    def _stop_child(self, teardown_errors: list[str]) -> None:
+        process = self.process
+        if process is None:
+            return
+        try:
+            self.terminate(process, self.job)
+            process.wait(timeout=5)
+        except BaseException as error:
+            teardown_errors.append(type(error).__name__)
+            # The fixture retains exact-child ownership independently of
+            # the supervisor, including when its cleanup assertion fails.
             try:
-                terminate(process, job)
+                process.kill()
                 process.wait(timeout=5)
-            except BaseException as error:
-                teardown_errors.append(type(error).__name__)
-                # The fixture retains exact-child ownership independently of
-                # the supervisor, including when its cleanup assertion fails.
-                try:
-                    process.kill()
-                    process.wait(timeout=5)
-                except BaseException as rescue_error:
-                    teardown_errors.append(type(rescue_error).__name__)
-        if cleanup_thread is not None and cleanup_thread.ident is not None:
-            cleanup_thread.join(timeout=10)
-        if rescue_thread is not None:
-            entered_close.set()
-            if rescue_thread.ident is not None:
-                rescue_thread.join(timeout=10)
-        for reader in reader_threads:
+            except BaseException as rescue_error:
+                teardown_errors.append(type(rescue_error).__name__)
+
+    def _join_threads(self) -> None:
+        if self.cleanup_thread is not None and self.cleanup_thread.ident is not None:
+            self.cleanup_thread.join(timeout=10)
+        if self.rescue_thread is not None:
+            self.entered_close.set()
+            if self.rescue_thread.ident is not None:
+                self.rescue_thread.join(timeout=10)
+        for reader in self.reader_threads:
             reader.join(timeout=10)
-        readers_settled = all(not reader.is_alive() for reader in reader_threads)
-        cleanup_settled = cleanup_thread is None or not cleanup_thread.is_alive()
-        rescue_settled = rescue_thread is None or not rescue_thread.is_alive()
+
+    def _close_descriptors(self, teardown_errors: list[str]) -> None:
+        try:
+            close_fd(self.worker._request_fd)
+            close_fd(self.worker._result_fd)
+            self.worker._request_fd = None
+            self.worker._result_fd = None
+            self.worker._cleanup_neutral_directory()
+        except BaseException as error:
+            teardown_errors.append(type(error).__name__)
+
+    def teardown(self, tmp_path: Path) -> None:
+        teardown_errors: list[str] = []
+        process = self.process
+        self._stop_child(teardown_errors)
+        self._join_threads()
+        readers_settled = all(not reader.is_alive() for reader in self.reader_threads)
+        cleanup_settled = self.cleanup_thread is None or not self.cleanup_thread.is_alive()
+        rescue_settled = self.rescue_thread is None or not self.rescue_thread.is_alive()
         child_settled = process is None or process.returncode is not None
         if child_settled and readers_settled and cleanup_settled and rescue_settled:
-            try:
-                close_fd(worker._request_fd)
-                close_fd(worker._result_fd)
-                worker._request_fd = None
-                worker._result_fd = None
-                worker._cleanup_neutral_directory()
-            except BaseException as error:
-                teardown_errors.append(type(error).__name__)
+            self._close_descriptors(teardown_errors)
         facts = {
             "pid": process.pid if process is not None else None,
             "exit_code": process.returncode if process is not None else None,
-            "close_exit_codes": close_exit_codes,
-            "rescued": rescued.is_set(),
-            "cleanup_elapsed_seconds": cleanup_elapsed,
+            "close_exit_codes": self.close_exit_codes,
+            "rescued": self.rescued.is_set(),
+            "cleanup_elapsed_seconds": self.cleanup_elapsed,
             "reader_threads_settled": readers_settled,
             "cleanup_thread_settled": cleanup_settled,
             "rescue_thread_settled": rescue_settled,
@@ -353,3 +384,18 @@ def test_real_blocked_reader_cleanup_settles_child_before_descriptor_close(
         evidence.write_text(json.dumps(facts, indent=2), encoding="utf-8")
         assert child_settled and cleanup_settled and rescue_settled and readers_settled, facts
         assert not teardown_errors, facts
+
+
+def test_real_blocked_reader_cleanup_settles_child_before_descriptor_close(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    _launch_paused_writer_child(monkeypatch)
+    worker = _SupervisedKdfWorker(deadline=time.monotonic() + 30, settings=Settings(cadrumo_storage_root=tmp_path))
+    blocked = _BlockedReaderCleanup(worker)
+    try:
+        blocked.start_and_pause_child()
+        blocked.block_reader_past_the_deadline(monkeypatch)
+        blocked.run_cleanup_beside_rescue()
+        blocked.assert_child_settled_before_descriptor_close()
+    finally:
+        blocked.teardown(tmp_path)
