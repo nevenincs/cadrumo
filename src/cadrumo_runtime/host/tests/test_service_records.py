@@ -55,7 +55,8 @@ from ...adapters.tests.profile_worker_support import PROFILE_INPUT, NativeRuntim
 from ...adapters.tests.retained_server import RetainedRuntimeTransportServer
 from .. import profile_connection_extension_records as extension_records
 from ..profile_connections import RuntimeProfileConnections
-from .test_profile_connections import LoginObservation, connect, login
+from .served_runtime import connect_verified
+from .test_profile_connections import LoginObservation, login
 
 pytestmark = [
     pytest.mark.integration,
@@ -133,7 +134,7 @@ class ServiceRecordRuntime:
     def connect_service(
         self, *, profile_id: UUID | None = None, service_id: str = SERVICE_ID
     ) -> InstalledServiceClient:
-        connection = connect(self.endpoint)
+        connection = connect_verified(self.endpoint)
         self.clients.append(connection)
         self.verifier.accept_next = True
         service = InstalledServiceClient(connection, profile_id=profile_id or self.profile_id, service_id=service_id)
@@ -244,7 +245,7 @@ def service_record_runtime(
         owner.running = pool.submit(server.serve)
         try:
             assert server.ready.wait(3)
-            human = connect(endpoint)
+            human = connect_verified(endpoint)
             profile = targets[0][0].binding.profile_id
             admitted = login(human, profile, "password", PROFILE_INPUT.encode())
             assert isinstance(admitted, ProfileStatus), admitted
@@ -328,7 +329,7 @@ def test_real_service_record_cas_generation_delete_and_payload_wipe(tmp_path: Pa
 
 def test_service_records_refuse_wrong_profile_capability_and_retired_person(tmp_path: Path) -> None:
     with service_record_runtime(tmp_path) as runtime:
-        unverified = connect(runtime.endpoint)
+        unverified = connect_verified(runtime.endpoint)
         runtime.clients.append(unverified)
         with pytest.raises(RefusalError) as refused:
             InstalledServiceClient(unverified, profile_id=runtime.profile_id, service_id=SERVICE_ID).claim()

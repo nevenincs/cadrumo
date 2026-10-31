@@ -17,8 +17,8 @@ from cadrumo_client.transport.installation import installation
 from cadrumo_client.transport.windows import WindowsEndpoint
 
 from ...adapters.tests.profile_worker_support import owner_id
-from .served_runtime import serving_runtime
-from .test_profile_connections import LoginObservation, connect, login
+from .served_runtime import connect_verified, serving_runtime
+from .test_profile_connections import LoginObservation, login
 
 pytestmark = [
     pytest.mark.integration,
@@ -46,7 +46,7 @@ def test_cold_and_shared_human_admission_publish_ready_contracts(tmp_path: Path,
         with serving_runtime(
             endpoint, root, capture_login=lambda _channel: observation, secret_store=lambda: subject.native
         ):
-            first, second = connect(endpoint), connect(endpoint)
+            first, second = connect_verified(endpoint), connect_verified(endpoint)
             try:
                 sessions = []
                 for client in (first, second):

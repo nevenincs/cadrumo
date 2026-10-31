@@ -55,9 +55,7 @@ from cadrumo_client.contracts.access_vocabulary import (
     DisclosureCategory,
     DisclosurePermission,
 )
-from cadrumo_client.contracts.contracts import ClientHello
 from cadrumo_client.contracts.installation_requests import InstallationAct, StorageCheckRequest
-from cadrumo_client.transport.framing import VerifiedConnection
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.installation import installation
 from cadrumo_client.transport.windows import WindowsEndpoint
@@ -68,7 +66,7 @@ from cadrumo_runtime.host.profile_connections import RuntimeProfileConnections
 from cadrumo_runtime.host.tests.installation_runtime import serve_check
 
 from .......frontend.tui.runtime_session import RuntimeRestrictedSessionApp
-from ......served_runtime import SyntheticLogin
+from ......served_runtime import SyntheticLogin, connect_installed
 
 pytestmark = [
     pytest.mark.integration,
@@ -84,14 +82,6 @@ _SETTLE_SECONDS = 180
 _SIZE = (140, 60)
 
 type _Pilot = Pilot[AccountRecomposeRequiredV1 | None]
-
-
-def _connect(endpoint: WindowsEndpoint) -> VerifiedConnection:
-    return VerifiedConnection(
-        endpoint.connect(timeout=3),
-        expected=ClientHello(product_version=version("cadrumo"), storage_identity=endpoint.storage_identity),
-        deadline=time.monotonic() + 3,
-    )
 
 
 def _scope(destination_id: UUID, registry: OperationRegistry) -> AccessScope:
@@ -337,7 +327,7 @@ def test_an_api_key_session_runs_an_admitted_read_is_refused_another_and_reaches
                 assert server.ready.wait(3)
                 with ExitStack() as cleanup:
                     client = FrontendClient(
-                        _connect(endpoint), profile_id=profile_id, frontend=OperationFrontendProjection.TUI
+                        connect_installed(endpoint), profile_id=profile_id, frontend=OperationFrontendProjection.TUI
                     )
                     cleanup.callback(client.close)
                     proof = bytearray(api_key)

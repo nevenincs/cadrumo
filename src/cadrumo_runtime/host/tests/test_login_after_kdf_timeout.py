@@ -32,7 +32,8 @@ from cadrumo_client.transport.windows import WindowsEndpoint
 from ...adapters.tests.profile_worker_support import PROFILE_INPUT, owner_id, worker_profiles
 from ...adapters.tests.retained_server import RetainedRuntimeTransportServer
 from ..profile_connections import RuntimeProfileConnections
-from .test_profile_connections import LoginObservation, connect, login
+from .served_runtime import connect_verified
+from .test_profile_connections import LoginObservation, login
 
 pytestmark = [
     pytest.mark.integration,
@@ -75,7 +76,7 @@ def test_a_refused_kdf_timeout_leaves_the_retry_status_and_listing_unblocked(tmp
             clients: list[VerifiedConnection] = []
             try:
                 assert server.ready.wait(3)
-                human = connect(endpoint)
+                human = connect_verified(endpoint)
                 clients.append(human)
                 holder.start()
                 assert held.wait(30)
@@ -86,7 +87,7 @@ def test_a_refused_kdf_timeout_leaves_the_retry_status_and_listing_unblocked(tmp
                 holder.join(timeout=30)
                 assert not holder.is_alive()
 
-                human = connect(endpoint)
+                human = connect_verified(endpoint)
                 clients.append(human)
                 admitted = login(human, profile, "password", PROFILE_INPUT.encode())
                 assert isinstance(admitted, ProfileStatus), admitted

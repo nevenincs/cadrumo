@@ -89,7 +89,7 @@ from cadrumo_client.contracts.access_vocabulary import (
     DisclosureCategory,
     DisclosurePermission,
 )
-from cadrumo_client.contracts.contracts import ClientHello, RefusalError
+from cadrumo_client.contracts.contracts import RefusalError
 from cadrumo_client.contracts.deadline_budget import MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS
 from cadrumo_client.contracts.operation_access import (
     OperationAcknowledged,
@@ -105,7 +105,6 @@ from cadrumo_client.contracts.operation_access import (
 )
 from cadrumo_client.contracts.profile_access import AccessRefusal
 from cadrumo_client.contracts.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES, ProjectionPageRequest
-from cadrumo_client.transport.framing import VerifiedConnection
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 from cadrumo_client.transport.installation import installation
@@ -123,7 +122,7 @@ from .......frontend.tui.runtime_session import RuntimeRestrictedSessionApp
 from .......frontend.tui.runtime_workbench import RuntimeWorkbenchRoot
 from .......frontend.tui.secret.runtime_login import RuntimeLoginScreen
 from .......frontend.tui.secret.runtime_login_contracts import RuntimeLoginMethod
-from ......served_runtime import SyntheticLogin
+from ......served_runtime import SyntheticLogin, connect_installed
 
 pytestmark = [
     pytest.mark.integration,
@@ -132,14 +131,6 @@ pytestmark = [
     pytest.mark.skipif(sys.platform != "win32", reason="requires real native profile workers"),
     pytest.mark.usefixtures("authority_operation"),
 ]
-
-
-def _connect(endpoint: WindowsEndpoint) -> VerifiedConnection:
-    return VerifiedConnection(
-        endpoint.connect(timeout=3),
-        expected=ClientHello(product_version=version("cadrumo"), storage_identity=endpoint.storage_identity),
-        deadline=time.monotonic() + 3,
-    )
 
 
 def _submit_and_settle(
@@ -416,10 +407,10 @@ def test_native_human_generation_is_exact_profile_and_key_cannot_submit_or_read(
                 assert server.ready.wait(3)
                 with ExitStack() as cleanup:
                     human_raw, api_raw, second_raw, mcp_raw = (
-                        _connect(endpoint),
-                        _connect(endpoint),
-                        _connect(endpoint),
-                        _connect(endpoint),
+                        connect_installed(endpoint),
+                        connect_installed(endpoint),
+                        connect_installed(endpoint),
+                        connect_installed(endpoint),
                     )
                     human = FrontendClient(human_raw, profile_id=profile_id, frontend=OperationFrontendProjection.TUI)
                     api = FrontendClient(api_raw, profile_id=profile_id, frontend=OperationFrontendProjection.TUI)
@@ -929,7 +920,7 @@ def test_installed_launcher_owns_human_and_api_sessions_without_local_custody(
                 assert server.ready.wait(3)
                 with ExitStack() as cleanup:
                     observer = FrontendClient(
-                        _connect(endpoint), profile_id=profile_id, frontend=OperationFrontendProjection.TUI
+                        connect_installed(endpoint), profile_id=profile_id, frontend=OperationFrontendProjection.TUI
                     )
                     cleanup.callback(observer.close)
                     observer_password = bytearray(PROFILE_INPUT.encode())

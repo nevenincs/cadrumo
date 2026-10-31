@@ -43,8 +43,8 @@ from cadrumo_client.transport.tests.delivered_credential import read_delivered_c
 from cadrumo_client.transport.windows import WindowsEndpoint
 
 from ...adapters.tests.profile_worker_support import owner_id
-from .served_runtime import SyntheticLogin, serving_runtime
-from .test_automation_enrollment import _connect, _login, _result, _submit_operation
+from .served_runtime import SyntheticLogin, connect_verified, serving_runtime
+from .test_automation_enrollment import _login, _result, _submit_operation
 
 pytestmark = [
     pytest.mark.integration,
@@ -85,7 +85,7 @@ def test_exact_key_requests_reviewed_grant_change(tmp_path: Path, kind: Enrollme
             ) as served,
             ExitStack() as cleanup,
         ):
-            raw, human, foreign = _connect(endpoint), _connect(endpoint), _connect(endpoint)
+            raw, human, foreign = connect_verified(endpoint), connect_verified(endpoint), connect_verified(endpoint)
             for connection in (raw, human, foreign):
                 cleanup.callback(connection.close)
             # The person signs in first: a key reaches the profile only under a live sign-in.
@@ -128,7 +128,7 @@ def test_exact_key_requests_reviewed_grant_change(tmp_path: Path, kind: Enrollme
                 # generation. A separate connection proves the exact
                 # delivered candidate (or unchanged key) afresh.
                 deadline = time.monotonic() + timeout
-                fresh_raw = _connect(endpoint)
+                fresh_raw = connect_verified(endpoint)
                 fresh = FrontendClient(fresh_raw, profile_id=profile_id, frontend=OperationFrontendProjection.CLI)
                 try:
                     proof = (

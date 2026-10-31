@@ -29,7 +29,8 @@ from ...adapters.tests.retained_server import RetainedRuntimeTransportServer
 from .. import main
 from ..arguments import parse_runtime_arguments
 from ..profile_connections import RuntimeProfileConnections
-from .test_profile_connections import LoginObservation, connect, login
+from .served_runtime import connect_verified
+from .test_profile_connections import LoginObservation, login
 
 pytestmark = [pytest.mark.hex_entrypoint]
 
@@ -178,7 +179,7 @@ def test_login_witness_loss_drains_real_worker_without_revoking_grants(tmp_path:
             running = pool.submit(server.serve)
             try:
                 assert server.ready.wait(3)
-                api, human = connect(endpoint), connect(endpoint)
+                api, human = connect_verified(endpoint), connect_verified(endpoint)
                 clients.extend((api, human))
                 admitted = login(api, profile, "api_key", secret.get_secret_value())
                 assert isinstance(admitted, ProfileStatus) and admitted.status.denial is None

@@ -28,9 +28,7 @@ from cadrumo.application.user_profile.login_interaction import ProfileLoginChoic
 from cadrumo.entrypoints.operation_composition import build_production_operation_registry
 from cadrumo.entrypoints.tui.tests.settled_click import click_when_laid_out
 from cadrumo.entrypoints.tui.tests.settling import settle, settle_until
-from cadrumo_client.contracts.contracts import ClientHello
 from cadrumo_client.transport.credentials import open_installed_credential_client
-from cadrumo_client.transport.framing import VerifiedConnection
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.installation import installation
 from cadrumo_client.transport.windows import WindowsEndpoint
@@ -42,7 +40,7 @@ from .......frontend.tui.runtime_admission import runtime_login_session
 from .......frontend.tui.runtime_session import RuntimeRestrictedSessionApp
 from .......frontend.tui.secret.runtime_login import RuntimeLoginScreen
 from .......frontend.tui.secret.runtime_login_contracts import RuntimeLoginMethod
-from ......served_runtime import SyntheticLogin
+from ......served_runtime import SyntheticLogin, connect_installed
 
 pytestmark = [
     pytest.mark.integration,
@@ -51,14 +49,6 @@ pytestmark = [
     pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows runtime workers and pipes"),
     pytest.mark.usefixtures("authority_operation"),
 ]
-
-
-def _connect(endpoint: WindowsEndpoint) -> VerifiedConnection:
-    return VerifiedConnection(
-        endpoint.connect(timeout=3),
-        expected=ClientHello(product_version=version("cadrumo"), storage_identity=endpoint.storage_identity),
-        deadline=time.monotonic() + 3,
-    )
 
 
 def test_stored_reference_enters_restricted_shell_without_human_fallback(tmp_path: Path) -> None:
@@ -169,7 +159,7 @@ def test_stored_reference_enters_restricted_shell_without_human_fallback(tmp_pat
             try:
                 assert server.ready.wait(3)
                 observer = FrontendClient(
-                    _connect(endpoint), profile_id=profile_id, frontend=OperationFrontendProjection.TUI
+                    connect_installed(endpoint), profile_id=profile_id, frontend=OperationFrontendProjection.TUI
                 )
                 try:
                     observer.login_password(bytearray(PROFILE_INPUT.encode()), timeout=25)

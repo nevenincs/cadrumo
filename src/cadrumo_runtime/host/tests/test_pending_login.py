@@ -29,7 +29,7 @@ from cadrumo_client.transport.frontend_client import FrontendClient
 
 from ...adapters import profile_worker_transport
 from ...adapters.tests.profile_worker_support import PROFILE_INPUT
-from .test_profile_connections import connect
+from .served_runtime import connect_verified
 from .test_service_records import service_record_runtime
 
 pytestmark = [
@@ -46,7 +46,7 @@ def test_pending_login_keeps_reader_free_and_fences_late_proof(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, ending: str
 ) -> None:
     with service_record_runtime(tmp_path) as runtime:
-        contender = connect(runtime.endpoint)
+        contender = connect_verified(runtime.endpoint)
         runtime.clients.append(contender)
         host = runtime.profiles._profiles[runtime.profile_id]
         entered, release, settled = Event(), Event(), Event()
@@ -138,7 +138,7 @@ def test_pending_login_keeps_reader_free_and_fences_late_proof(
             elif ending == "lock":
                 host.authority.retire_human_sessions(reason=AccessDenialCode.PROFILE_LOCKED)
             elif ending == "profile_change":
-                other = connect(runtime.endpoint)
+                other = connect_verified(runtime.endpoint)
                 runtime.clients.append(other)
                 other_profile = FrontendClient(
                     other,
@@ -197,7 +197,7 @@ def test_pending_login_keeps_reader_free_and_fences_late_proof(
 
 def test_named_first_login_selects_product_target_before_terminal_claim(tmp_path: Path) -> None:
     with service_record_runtime(tmp_path) as runtime:
-        contender = connect(runtime.endpoint)
+        contender = connect_verified(runtime.endpoint)
         runtime.clients.append(contender)
         client = FrontendClient(
             contender,
@@ -237,7 +237,7 @@ def test_cancelled_native_proof_settles_while_the_legacy_kdf_permit_is_still_hel
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, ending: str
 ) -> None:
     with service_record_runtime(tmp_path) as runtime:
-        contender = connect(runtime.endpoint)
+        contender = connect_verified(runtime.endpoint)
         runtime.clients.append(contender)
         host = runtime.profiles._profiles[runtime.profile_id]
         worker = host.owner._worker
@@ -286,7 +286,7 @@ def test_cancelled_native_proof_settles_while_the_legacy_kdf_permit_is_still_hel
             assert attempt.secret == bytearray(len(attempt.secret))
             assert host.owner._worker is worker and not worker.stopping
             assert runtime.person_session_id in worker.status().sessions
-            replacement = connect(runtime.endpoint) if ending == "disconnect" else contender
+            replacement = connect_verified(runtime.endpoint) if ending == "disconnect" else contender
             if replacement is not contender:
                 runtime.clients.append(replacement)
             next_request = request.model_copy(update={"request_id": uuid4()})
@@ -325,7 +325,7 @@ def test_cancelling_a_queued_proof_preserves_the_current_owner_and_releases_its_
         owner = runtime.profiles._profiles[runtime.profile_id].owner
         worker = owner._worker
         assert worker is not None
-        first, queued_client, following = (connect(runtime.endpoint) for _ in range(3))
+        first, queued_client, following = (connect_verified(runtime.endpoint) for _ in range(3))
         runtime.clients.extend((first, queued_client, following))
         entered, release, queued = Event(), Event(), Event()
         proof_calls = []

@@ -12,7 +12,6 @@ from __future__ import annotations
 
 import asyncio
 import sys
-import time
 from collections.abc import Callable, Coroutine
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import ExitStack
@@ -42,9 +41,7 @@ from cadrumo.entrypoints.tui.declarations.picker import NewDeclarationPicker
 from cadrumo.entrypoints.tui.modelo.workbench.screen import ModeloWorkbenchScreen
 from cadrumo.entrypoints.tui.navigation import TuiFocusIdentityV1, TuiNavigationTargetV1
 from cadrumo.entrypoints.tui.tests.settling import settle, settle_until
-from cadrumo_client.contracts.contracts import ClientHello
 from cadrumo_client.contracts.deadline_budget import MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS
-from cadrumo_client.transport.framing import VerifiedConnection
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.installation import installation
 from cadrumo_client.transport.windows import WindowsEndpoint
@@ -54,7 +51,7 @@ from cadrumo_runtime.adapters.tests.retained_server import RetainedRuntimeTransp
 from cadrumo_runtime.host.profile_connections import RuntimeProfileConnections
 
 from ........frontend.tui.runtime_workbench import RuntimeWorkbenchRoot
-from .......served_runtime import SyntheticLogin
+from .......served_runtime import SyntheticLogin, connect_installed
 
 pytestmark = [
     pytest.mark.integration,
@@ -64,14 +61,6 @@ pytestmark = [
 ]
 
 _TARGET = Period.from_year_and_code(2025, "2T")
-
-
-def _connect(endpoint: WindowsEndpoint) -> VerifiedConnection:
-    return VerifiedConnection(
-        endpoint.connect(timeout=3),
-        expected=ClientHello(product_version=version("cadrumo"), storage_identity=endpoint.storage_identity),
-        deadline=time.monotonic() + 3,
-    )
 
 
 def _declarations(client: FrontendClient) -> tuple[DeclarationsWorkspaceDeclarationRefV1, ...]:
@@ -223,7 +212,7 @@ def test_installed_creation_opens_a_persisted_new_period_and_returns_to_that_row
                 assert server.ready.wait(3)
                 with ExitStack() as cleanup:
                     human = FrontendClient(
-                        _connect(endpoint), profile_id=profile_id, frontend=OperationFrontendProjection.TUI
+                        connect_installed(endpoint), profile_id=profile_id, frontend=OperationFrontendProjection.TUI
                     )
                     cleanup.callback(human.close)
                     password = bytearray(PROFILE_INPUT.encode())

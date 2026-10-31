@@ -44,7 +44,6 @@ from cadrumo_client.contracts.access_vocabulary import (
     DisclosurePageRequest,
     DisclosurePermission,
 )
-from cadrumo_client.contracts.contracts import ClientHello
 from cadrumo_client.contracts.deadline_budget import exchange_deadline
 from cadrumo_client.contracts.enrollment_access import EnrollmentPrepare, EnrollmentPrepared
 from cadrumo_client.contracts.enrollment_proposal import EnrollmentKind, EnrollmentProposal
@@ -78,7 +77,7 @@ from cadrumo_client.transport.windows import WindowsEndpoint
 from ...adapters.tests.profile_worker_support import owner_id
 from ...adapters.tests.retained_server import RetainedRuntimeTransportServer
 from ..profile_connections import RuntimeProfileConnections
-from .served_runtime import SyntheticLogin
+from .served_runtime import SyntheticLogin, connect_verified
 
 pytestmark = [
     pytest.mark.integration,
@@ -87,14 +86,6 @@ pytestmark = [
     pytest.mark.skipif(sys.platform != "win32", reason="requires real native Windows profile workers"),
     pytest.mark.usefixtures("authority_operation"),
 ]
-
-
-def _connect(endpoint: WindowsEndpoint) -> VerifiedConnection:
-    return VerifiedConnection(
-        endpoint.connect(timeout=3),
-        expected=ClientHello(product_version="test", storage_identity=endpoint.storage_identity),
-        deadline=time.monotonic() + 3,
-    )
 
 
 def _login(
@@ -314,7 +305,7 @@ def test_native_human_renews_existing_grant_and_key_session_cannot_approve(
                     if running.done():
                         running.result()
                         pytest.fail("runtime stopped before readiness")
-                human, api = _connect(endpoint), _connect(endpoint)
+                human, api = connect_verified(endpoint), connect_verified(endpoint)
                 try:
                     human_id = _login(
                         human,

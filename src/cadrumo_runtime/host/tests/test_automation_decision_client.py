@@ -22,7 +22,6 @@ from cadrumo.application.user_profile.automation_enrollment import AutomationRev
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition
 from cadrumo.core.time.clock import now
 from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope, AuthorityState
-from cadrumo_client.contracts.contracts import ClientHello
 from cadrumo_client.contracts.deadline_budget import MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS
 from cadrumo_client.contracts.enrollment_access import EnrollmentPrepare, EnrollmentPrepared
 from cadrumo_client.contracts.enrollment_proposal import EnrollmentKind, EnrollmentProposal
@@ -38,7 +37,7 @@ from cadrumo_client.transport.windows import WindowsEndpoint
 from ...adapters.tests.profile_worker_support import PROFILE_INPUT, owner_id, worker_profiles
 from ...adapters.tests.retained_server import RetainedRuntimeTransportServer
 from ..profile_connections import RuntimeProfileConnections
-from .served_runtime import SyntheticLogin
+from .served_runtime import SyntheticLogin, connect_installed
 
 pytestmark = [
     pytest.mark.integration,
@@ -47,14 +46,6 @@ pytestmark = [
     pytest.mark.skipif(sys.platform != "win32", reason="requires real native Windows profile workers"),
     pytest.mark.usefixtures("authority_operation"),
 ]
-
-
-def _connect(endpoint: WindowsEndpoint) -> VerifiedConnection:
-    return VerifiedConnection(
-        endpoint.connect(timeout=3),
-        expected=ClientHello(product_version=version("cadrumo"), storage_identity=endpoint.storage_identity),
-        deadline=time.monotonic() + 3,
-    )
 
 
 def _proposal() -> EnrollmentProposal:
@@ -78,7 +69,7 @@ def _proposal() -> EnrollmentProposal:
 def _requester(
     endpoint: WindowsEndpoint, profile_id: UUID, native_store: MemoryNativePort
 ) -> tuple[VerifiedConnection, NativeEnrollmentClient]:
-    connection = _connect(endpoint)
+    connection = connect_installed(endpoint)
     prepared = connection.enrollment_prepare(
         EnrollmentPrepare(request_id=uuid4(), profile_id=profile_id, frontend=OperationFrontendProjection.TUI),
         deadline=time.monotonic() + 5,
@@ -132,7 +123,7 @@ def test_native_reviewed_approve_and_decline_use_decision_client_and_requester_p
                         pytest.fail("runtime stopped before readiness")
                 requester, enrollment = _requester(endpoint, profile_id, client_native)
                 human = FrontendClient(
-                    _connect(endpoint), profile_id=profile_id, frontend=OperationFrontendProjection.CLI
+                    connect_installed(endpoint), profile_id=profile_id, frontend=OperationFrontendProjection.CLI
                 )
                 try:
                     first = enrollment.submit(_proposal())
@@ -202,7 +193,7 @@ def test_native_reviewed_approve_and_decline_use_decision_client_and_requester_p
 
                     credential = enrollment.credential()
                     api = FrontendClient(
-                        _connect(endpoint), profile_id=profile_id, frontend=OperationFrontendProjection.CLI
+                        connect_installed(endpoint), profile_id=profile_id, frontend=OperationFrontendProjection.CLI
                     )
                     try:
                         api_key = bytearray(credential.get_secret_value())

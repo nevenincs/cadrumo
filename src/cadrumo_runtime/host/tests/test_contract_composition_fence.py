@@ -27,8 +27,8 @@ from cadrumo_client.transport.windows import WindowsEndpoint
 
 from ...adapters.profile_worker_operation_client import ProfileWorkerOperationClient
 from ...adapters.tests.profile_worker_support import owner_id
-from .served_runtime import serving_runtime
-from .test_profile_connections import LoginObservation, connect, login
+from .served_runtime import connect_verified, serving_runtime
+from .test_profile_connections import LoginObservation, login
 
 pytestmark = [
     pytest.mark.integration,
@@ -75,7 +75,7 @@ def test_a_status_read_is_answered_while_a_first_contract_is_described(
             workers=2,
             ready_seconds=30,
         ) as served:
-            first, second = connect(endpoint), connect(endpoint)
+            first, second = connect_verified(endpoint), connect_verified(endpoint)
             try:
                 sessions: list[UUID] = []
                 for client in (first, second):

@@ -50,7 +50,6 @@ from cadrumo_client.contracts.access_vocabulary import (
     DisclosureCategory,
     DisclosurePermission,
 )
-from cadrumo_client.contracts.contracts import ClientHello
 from cadrumo_client.contracts.deadline_budget import exchange_deadline
 from cadrumo_client.contracts.operation_access import (
     OperationAcknowledged,
@@ -76,7 +75,7 @@ from cadrumo_client.transport.installation import installation
 from cadrumo_client.transport.windows import WindowsEndpoint
 
 from ...adapters.tests.profile_worker_support import owner_id
-from .served_runtime import SyntheticLogin, serving_runtime
+from .served_runtime import SyntheticLogin, connect_verified, serving_runtime
 
 pytestmark = [
     pytest.mark.integration,
@@ -150,14 +149,6 @@ def _issue_scoped_key(subject: AdministrationSubject) -> tuple[UUID, bytes]:
     return receipt.key_id, credential.get_secret_value()
 
 
-def _connect(endpoint: WindowsEndpoint) -> VerifiedConnection:
-    return VerifiedConnection(
-        endpoint.connect(timeout=3),
-        expected=ClientHello(product_version="test", storage_identity=endpoint.storage_identity),
-        deadline=time.monotonic() + 3,
-    )
-
-
 def _admit(
     connection: VerifiedConnection, profile_id: UUID, *, method: Literal["password", "api_key"], proof: bytes
 ) -> UUID:
@@ -222,7 +213,7 @@ def test_refusal_detail_is_fenced_after_authority_revocation(
             capture_login=lambda _channel: SyntheticLogin("native-refusal-detail-authority-test-login"),
             secret_store=lambda: subject.native,
         ):
-            api, human = _connect(endpoint), _connect(endpoint)
+            api, human = connect_verified(endpoint), connect_verified(endpoint)
             try:
                 # The person signs in first; the key admits only while they are signed in.
                 human_session = _admit(human, profile_id, method="password", proof=PROFILE_INPUT.encode())

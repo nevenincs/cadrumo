@@ -36,8 +36,7 @@ from cadrumo_client.transport.windows import WindowsEndpoint
 from ...adapters.tests.profile_worker_support import owner_id
 from ...adapters.tests.retained_server import RetainedRuntimeTransportServer
 from ..profile_connections import RuntimeProfileConnections
-from .served_runtime import SyntheticLogin
-from .test_access_management import _connect
+from .served_runtime import SyntheticLogin, connect_verified
 
 pytestmark = [
     pytest.mark.integration,
@@ -122,7 +121,7 @@ def test_runtime_bootstrap_reset_keeps_proof_and_replay_fences(
             running = pool.submit(server.serve)
             try:
                 assert server.ready.wait(3)
-                wire = _connect(endpoint)
+                wire = connect_verified(endpoint)
                 client = FrontendClient(wire, profile_id=profile, frontend=OperationFrontendProjection.CLI)
                 code = bytearray(handed[0].encode() if valid_proof else b"not-the-recovery-code")
                 replacement = bytearray(b"replacement-bootstrap-password-for-test")
@@ -139,7 +138,7 @@ def test_runtime_bootstrap_reset_keeps_proof_and_replay_fences(
                         assert load_committed_profile_password_material(profile, root=root).envelope == original
                         monkeypatch.setattr(recovery_custody, "rewrap_profile_passphrase_under_lock", original_rewrap)
                         retry = FrontendClient(
-                            _connect(endpoint), profile_id=profile, frontend=OperationFrontendProjection.CLI
+                            connect_verified(endpoint), profile_id=profile, frontend=OperationFrontendProjection.CLI
                         )
                         try:
                             completed = retry.reset_password(

@@ -28,8 +28,8 @@ from cadrumo_client.transport.installation import installation
 from cadrumo_client.transport.windows import WindowsEndpoint
 
 from ...adapters.tests.profile_worker_support import owner_id
-from .served_runtime import serving_runtime
-from .test_profile_connections import LoginObservation, connect, login
+from .served_runtime import connect_verified, serving_runtime
+from .test_profile_connections import LoginObservation, login
 
 pytestmark = [
     pytest.mark.integration,
@@ -66,7 +66,7 @@ def test_a_sign_in_queued_for_a_taken_kdf_permit_ends_with_its_caller_and_leaves
             workers=2,
             ready_seconds=30,
         ) as served:
-            first, second = connect(endpoint), connect(endpoint)
+            first, second = connect_verified(endpoint), connect_verified(endpoint)
             clients = [first, second]
             try:
                 admitted = login(first, profile_id, "password", PROFILE_INPUT.encode())
@@ -107,7 +107,7 @@ def test_a_sign_in_queued_for_a_taken_kdf_permit_ends_with_its_caller_and_leaves
                 assert isinstance(status, ProfileStatus), status
                 assert status.status.session_id == first_session and status.status.denial is None
                 # With the permit free again, the same password signs in on a new connection.
-                retry = connect(endpoint)
+                retry = connect_verified(endpoint)
                 clients.append(retry)
                 again = login(retry, profile_id, "password", PROFILE_INPUT.encode())
                 assert isinstance(again, ProfileStatus), again

@@ -46,7 +46,8 @@ from cadrumo_client.transport.windows import WindowsEndpoint
 from ...adapters.tests.profile_worker_support import owner_id
 from ...adapters.tests.retained_server import RetainedRuntimeTransportServer
 from ..profile_connections import RuntimeProfileConnections
-from .test_access_management import _connect, _login
+from .served_runtime import connect_verified
+from .test_access_management import _login
 from .test_bootstrap_reset import _MutableLogin
 
 pytestmark = [
@@ -77,7 +78,7 @@ def test_runtime_bootstrap_delete_uses_existing_custody_journal(
     case: str,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    login = _MutableLogin()
+    login = _MutableLogin("native-access-management-test-login")
     captured_channels: list[ByteChannel] = []
     completed_after_disconnect = Event()
 
@@ -154,7 +155,7 @@ def test_runtime_bootstrap_delete_uses_existing_custody_journal(
                 assert observed == "ready"
                 hosted_wire = None
                 if case in {"hosted", "selected-hosted"}:
-                    hosted_wire = _connect(endpoint)
+                    hosted_wire = connect_verified(endpoint)
                     admitted = _login(hosted_wire, profile, method="password", proof=PROFILE_INPUT.encode())
                     assert not isinstance(admitted, AccessRefusal), admitted
                     with composed_profile_persistence_ports() as ports:
@@ -165,7 +166,7 @@ def test_runtime_bootstrap_delete_uses_existing_custody_journal(
                         )
                     assert current.fingerprint is not None
                     fingerprint = current.fingerprint
-                wire = _connect(endpoint)
+                wire = connect_verified(endpoint)
                 try:
                     if case == "other-os-owner":
                         original_observe = login.observe
@@ -230,7 +231,7 @@ def test_runtime_bootstrap_delete_uses_existing_custody_journal(
                         assert not capsule.exists()
                         monkeypatch.setattr(ProfileCapsuleLifecycle, "delete", original_delete)
                         wire.close()
-                        wire = _connect(endpoint)
+                        wire = connect_verified(endpoint)
                     deleted = wire.delete_profile(request, deadline=time.monotonic() + 30)
                     assert isinstance(deleted, ProfileDeleted), deleted
                     assert not capsule.exists()
@@ -257,7 +258,7 @@ def test_native_bootstrap_delete_fresh_admission_after_an_actual_poll_handoff(
     tmp_path: Path, overlap: str, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Hold real polling after wire admission; custody stays fresh and owns durable completion."""
-    login = _MutableLogin()
+    login = _MutableLogin("native-access-management-test-login")
     root = tmp_path / "cadrumo-storage"
     root.mkdir()
     endpoint = WindowsEndpoint(storage_root=root)
@@ -310,7 +311,7 @@ def test_native_bootstrap_delete_fresh_admission_after_an_actual_poll_handoff(
                     running.result()
                 assert ready == "ready"
                 # The serving owner already has the protected native wire before its accept loop is held.
-                wire = _connect(endpoint)
+                wire = connect_verified(endpoint)
                 request_cleanup.callback(wire.close)
                 original_poll = profiles._poll_profiles
 

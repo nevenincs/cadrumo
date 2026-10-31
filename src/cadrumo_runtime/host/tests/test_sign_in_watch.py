@@ -19,7 +19,8 @@ from cadrumo_client.transport.windows import WindowsEndpoint
 from ...adapters.tests.profile_worker_support import owner_id
 from ...adapters.tests.retained_server import RetainedRuntimeTransportServer
 from ..profile_connections import RuntimeProfileConnections
-from .test_profile_connections import LoginObservation, connect
+from .served_runtime import connect_verified
+from .test_profile_connections import LoginObservation
 
 pytestmark = [
     pytest.mark.integration,
@@ -50,7 +51,7 @@ def test_a_watching_connection_is_cued_on_a_sign_in_change_and_a_plain_status_re
         clients: list[VerifiedConnection] = []
         try:
             assert server.ready.wait(3)
-            watcher, reader = connect(endpoint), connect(endpoint)
+            watcher, reader = connect_verified(endpoint), connect_verified(endpoint)
             clients.extend((watcher, reader))
             cued, unexpected = Event(), Event()
             watched: list[ConnectionEvent] = []

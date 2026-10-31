@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import sys
-import time
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import ExitStack
 from importlib.metadata import version
@@ -31,8 +30,7 @@ from cadrumo.entrypoints.tui.profile.overview import ProfileManagerScreen
 from cadrumo.entrypoints.tui.secret.passphrase import PassphraseScreen
 from cadrumo.entrypoints.tui.tests.settled_click import click_when_laid_out
 from cadrumo.entrypoints.tui.tests.settling import settle, settle_until
-from cadrumo_client.contracts.contracts import ClientHello, RefusalError
-from cadrumo_client.transport.framing import VerifiedConnection
+from cadrumo_client.contracts.contracts import RefusalError
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 from cadrumo_client.transport.installation import installation
@@ -44,7 +42,7 @@ from cadrumo_runtime.host.profile_connections import RuntimeProfileConnections
 from .......frontend.tui.launcher import main
 from .......frontend.tui.secret.runtime_login import RuntimeLoginScreen
 from .......frontend.tui.secret.runtime_login_contracts import RuntimeLoginMethod
-from ......served_runtime import SyntheticLogin
+from ......served_runtime import SyntheticLogin, connect_installed
 
 pytestmark = [
     pytest.mark.integration,
@@ -55,14 +53,6 @@ pytestmark = [
 ]
 
 _REPLACEMENT = "s16-new-native-tui-passphrase-do-not-print"
-
-
-def _connect(endpoint: WindowsEndpoint) -> VerifiedConnection:
-    return VerifiedConnection(
-        endpoint.connect(timeout=3),
-        expected=ClientHello(product_version=version("cadrumo"), storage_identity=endpoint.storage_identity),
-        deadline=time.monotonic() + 3,
-    )
 
 
 def _require_runtime_app(value: object) -> CadrumoTuiApp:
@@ -188,7 +178,7 @@ def test_installed_account_password_change_retires_old_lease_and_reauthenticates
                 assert server.ready.wait(3)
                 with ExitStack() as cleanup:
                     old = FrontendClient(
-                        _connect(endpoint), profile_id=profile_id, frontend=OperationFrontendProjection.TUI
+                        connect_installed(endpoint), profile_id=profile_id, frontend=OperationFrontendProjection.TUI
                     )
                     cleanup.callback(old.close)
                     old_proof = bytearray(PROFILE_INPUT.encode())
@@ -207,7 +197,7 @@ def test_installed_account_password_change_retires_old_lease_and_reauthenticates
                         old.status()
 
                     fresh = FrontendClient(
-                        _connect(endpoint), profile_id=profile_id, frontend=OperationFrontendProjection.TUI
+                        connect_installed(endpoint), profile_id=profile_id, frontend=OperationFrontendProjection.TUI
                     )
                     cleanup.callback(fresh.close)
                     fresh_proof = bytearray(_REPLACEMENT.encode())

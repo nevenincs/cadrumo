@@ -26,8 +26,8 @@ from cadrumo_client.transport.installation import installation
 from cadrumo_client.transport.windows import WindowsEndpoint
 
 from ...adapters.tests.profile_worker_support import owner_id
-from .served_runtime import serving_runtime
-from .test_profile_connections import LoginObservation, connect, login
+from .served_runtime import connect_verified, serving_runtime
+from .test_profile_connections import LoginObservation, login
 
 pytestmark = [
     pytest.mark.integration,
@@ -58,7 +58,7 @@ def test_a_second_sign_in_is_answered_while_the_first_operation_composes(tmp_pat
             secret_store=lambda: subject.native,
             workers=2,
         ) as served:
-            first, second = connect(endpoint), connect(endpoint)
+            first, second = connect_verified(endpoint), connect_verified(endpoint)
             try:
                 admitted = login(first, profile_id, "password", PROFILE_INPUT.encode())
                 assert isinstance(admitted, ProfileStatus)

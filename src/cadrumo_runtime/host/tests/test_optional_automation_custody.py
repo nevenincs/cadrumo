@@ -36,7 +36,8 @@ from cadrumo_client.transport.windows import WindowsEndpoint
 from ...adapters.tests.profile_worker_support import owner_id
 from ...adapters.tests.retained_server import RetainedRuntimeTransportServer
 from ..profile_connections import RuntimeProfileConnections
-from .test_profile_connections import LoginObservation, connect, login
+from .served_runtime import connect_verified
+from .test_profile_connections import LoginObservation, login
 
 pytestmark = [
     pytest.mark.integration,
@@ -87,7 +88,7 @@ def test_optional_store_acquisition_cannot_block_password_or_admit_automation(
                     if running.done():
                         running.result()
                         pytest.fail("runtime stopped before readiness")
-                human = connect(endpoint)
+                human = connect_verified(endpoint)
                 clients.append(human)
                 admitted = login(human, profile_id, "password", PROFILE_INPUT.encode())
                 assert isinstance(admitted, ProfileStatus), admitted
@@ -99,7 +100,7 @@ def test_optional_store_acquisition_cannot_block_password_or_admit_automation(
                 session_id = admitted.status.session_id
                 assert session_id is not None
 
-                wrong_password = connect(endpoint)
+                wrong_password = connect_verified(endpoint)
                 clients.append(wrong_password)
                 rejected = login(wrong_password, profile_id, "password", b"invalid-synthetic-password")
                 assert isinstance(rejected, AccessRefusal), rejected
@@ -108,14 +109,14 @@ def test_optional_store_acquisition_cannot_block_password_or_admit_automation(
                     AccessDenialCode.AUTHENTICATION_REQUIRED,
                 }
 
-                api = connect(endpoint)
+                api = connect_verified(endpoint)
                 clients.append(api)
                 _, credential = generate_api_key()
                 api_refused = login(api, profile_id, "api_key", credential.get_secret_value())
                 assert isinstance(api_refused, AccessRefusal), api_refused
                 assert api_refused.code is refusal
 
-                requester = connect(endpoint)
+                requester = connect_verified(endpoint)
                 clients.append(requester)
                 enrollment_refused = requester.enrollment_prepare(
                     EnrollmentPrepare(

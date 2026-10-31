@@ -20,8 +20,8 @@ from cadrumo_client.transport.installation import installation
 from cadrumo_client.transport.windows import WindowsEndpoint
 
 from ...adapters.tests.profile_worker_support import owner_id
-from .served_runtime import serving_runtime
-from .test_profile_connections import LoginObservation, connect, login
+from .served_runtime import connect_verified, serving_runtime
+from .test_profile_connections import LoginObservation, login
 
 pytestmark = [
     pytest.mark.integration,
@@ -52,7 +52,7 @@ def test_a_wrong_password_is_rejected_as_a_sign_in_reason_and_throttles_the_next
             secret_store=lambda: subject.native,
             ready_seconds=30,
         ):
-            first, second = connect(endpoint), connect(endpoint)
+            first, second = connect_verified(endpoint), connect_verified(endpoint)
             try:
                 rejected = login(first, profile_id, "password", b"not the profile password")
                 assert isinstance(rejected, AccessRefusal), rejected

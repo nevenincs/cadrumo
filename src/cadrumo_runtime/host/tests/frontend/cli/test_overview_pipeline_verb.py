@@ -24,6 +24,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
+from click.testing import Result
 from pydantic import ValidationError
 
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -110,6 +111,33 @@ def _create_complete_pipeline_profile() -> None:
     _create_profile(activity_start_date="2025-10-01")
 
 
+def _create_calculated_130_unit() -> tuple[str, Result]:
+    """Create a Modelo 130 4T work unit and calculate it, returning its id and the calculation reply."""
+    created = _invoke(
+        [
+            "--format", "json",
+            "app", "modelo", "work", "create",
+            "--modelo", "130", "--year", "2025", "--period", "4T",
+            "--revision", "2019-y-siguientes",
+        ],
+    )  # fmt: skip
+    assert created.exit_code == 0
+    work_unit_id = _payload(created.output)["work_unit_id"]
+
+    calculated = _invoke(
+        [
+            "--format", "json",
+            "app", "modelo", "work", "calculate", work_unit_id,
+            "--casilla", "05=0.00",
+            "--casilla", "06=0.00",
+            "--binding", "irpf.previous_year_economic_activity_net_income=13000",
+            "--binding", "modelo-130-resultados-negativos-anteriores=0",
+        ],
+    )  # fmt: skip
+    assert calculated.exit_code == 0
+    return work_unit_id, calculated
+
+
 @pytest.mark.usefixtures("_native_backend")
 @pytest.mark.windows_only
 @pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers")
@@ -173,28 +201,7 @@ def test_pipeline_shows_filed_modelo_readiness_row_and_reports_ready() -> None:
     is honestly ``ready``."""
 
     _create_profile(activity_start_date="2025-10-01")
-    created = _invoke(
-        [
-            "--format", "json",
-            "app", "modelo", "work", "create",
-            "--modelo", "130", "--year", "2025", "--period", "4T",
-            "--revision", "2019-y-siguientes",
-        ],
-    )  # fmt: skip
-    assert created.exit_code == 0
-    work_unit_id = _payload(created.output)["work_unit_id"]
-
-    calculated = _invoke(
-        [
-            "--format", "json",
-            "app", "modelo", "work", "calculate", work_unit_id,
-            "--casilla", "05=0.00",
-            "--casilla", "06=0.00",
-            "--binding", "irpf.previous_year_economic_activity_net_income=13000",
-            "--binding", "modelo-130-resultados-negativos-anteriores=0",
-        ],
-    )  # fmt: skip
-    assert calculated.exit_code == 0
+    work_unit_id, calculated = _create_calculated_130_unit()
 
     verified = _invoke(
         [
@@ -242,28 +249,7 @@ def test_pipeline_calculated_but_unverified_unit_is_not_ready() -> None:
     reports the ``calculated`` state and keeps the pipeline unready."""
 
     _create_profile(activity_start_date="2025-10-01")
-    created = _invoke(
-        [
-            "--format", "json",
-            "app", "modelo", "work", "create",
-            "--modelo", "130", "--year", "2025", "--period", "4T",
-            "--revision", "2019-y-siguientes",
-        ],
-    )  # fmt: skip
-    assert created.exit_code == 0
-    work_unit_id = _payload(created.output)["work_unit_id"]
-
-    calculated = _invoke(
-        [
-            "--format", "json",
-            "app", "modelo", "work", "calculate", work_unit_id,
-            "--casilla", "05=0.00",
-            "--casilla", "06=0.00",
-            "--binding", "irpf.previous_year_economic_activity_net_income=13000",
-            "--binding", "modelo-130-resultados-negativos-anteriores=0",
-        ],
-    )  # fmt: skip
-    assert calculated.exit_code == 0
+    work_unit_id, calculated = _create_calculated_130_unit()
 
     result = _invoke(
         ["--format", "json", "app", "overview", "pipeline", "--year", "2025", "--period", "4T"],
@@ -316,28 +302,7 @@ def test_pipeline_distinguishes_persisted_incomplete_from_never_verified() -> No
     """
 
     _create_complete_pipeline_profile()
-    created = _invoke(
-        [
-            "--format", "json",
-            "app", "modelo", "work", "create",
-            "--modelo", "130", "--year", "2025", "--period", "4T",
-            "--revision", "2019-y-siguientes",
-        ],
-    )  # fmt: skip
-    assert created.exit_code == 0
-    work_unit_id = _payload(created.output)["work_unit_id"]
-
-    calculated = _invoke(
-        [
-            "--format", "json",
-            "app", "modelo", "work", "calculate", work_unit_id,
-            "--casilla", "05=0.00",
-            "--casilla", "06=0.00",
-            "--binding", "irpf.previous_year_economic_activity_net_income=13000",
-            "--binding", "modelo-130-resultados-negativos-anteriores=0",
-        ],
-    )  # fmt: skip
-    assert calculated.exit_code == 0
+    work_unit_id, calculated = _create_calculated_130_unit()
     calculation_revision_id = _payload(calculated.output)["calculation_revision_id"]
 
     before = _invoke(

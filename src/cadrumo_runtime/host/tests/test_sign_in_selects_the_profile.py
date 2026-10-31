@@ -26,8 +26,8 @@ from cadrumo_client.transport.installation import installation
 from cadrumo_client.transport.windows import WindowsEndpoint
 
 from ...adapters.tests.profile_worker_support import owner_id
-from .served_runtime import serving_runtime
-from .test_profile_connections import LoginObservation, connect, login
+from .served_runtime import connect_verified, serving_runtime
+from .test_profile_connections import LoginObservation, login
 
 pytestmark = [
     pytest.mark.integration,
@@ -75,14 +75,14 @@ def test_a_person_sign_in_selects_its_profile_in_the_runtime(tmp_path: Path) -> 
             secret_store=lambda: subject.native,
             ready_seconds=30,
         ):
-            connection = connect(endpoint)
+            connection = connect_verified(endpoint)
             try:
                 before = connection.active_profile(
                     ActiveProfileRequest(request_id=uuid4()), deadline=exchange_deadline()
                 )
                 per_command = login(connection, profile_id, "password", PROFILE_INPUT.encode())
                 unmoved = read_pointer_selection(root)
-                admitted = _sign_in(connect(endpoint), profile_id)
+                admitted = _sign_in(connect_verified(endpoint), profile_id)
                 written = read_pointer_selection(root)
                 after = connection.active_profile(
                     ActiveProfileRequest(request_id=uuid4()), deadline=exchange_deadline()

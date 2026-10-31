@@ -40,7 +40,6 @@ from cadrumo_client.contracts.access_vocabulary import (
     DisclosureCategory,
     DisclosurePermission,
 )
-from cadrumo_client.contracts.contracts import ClientHello
 from cadrumo_client.contracts.operation_access import (
     OperationAcknowledged,
     OperationContract,
@@ -61,7 +60,7 @@ from cadrumo_client.transport.windows import WindowsEndpoint
 from ...adapters.tests.profile_worker_support import owner_id
 from ...adapters.tests.retained_server import RetainedRuntimeTransportServer
 from ..profile_connections import RuntimeProfileConnections
-from .served_runtime import SyntheticLogin
+from .served_runtime import SyntheticLogin, connect_verified
 
 pytestmark = [
     pytest.mark.integration,
@@ -70,14 +69,6 @@ pytestmark = [
     pytest.mark.skipif(sys.platform != "win32", reason="requires real native Windows profile workers"),
     pytest.mark.usefixtures("authority_operation"),
 ]
-
-
-def _connect(endpoint: WindowsEndpoint) -> VerifiedConnection:
-    return VerifiedConnection(
-        endpoint.connect(timeout=3),
-        expected=ClientHello(product_version="test", storage_identity=endpoint.storage_identity),
-        deadline=time.monotonic() + 3,
-    )
 
 
 def _login(
@@ -184,7 +175,7 @@ def test_password_human_sees_nonsecret_inventory_and_api_key_cannot_submit_or_re
             running = pool.submit(server.serve)
             try:
                 assert server.ready.wait(3)
-                human, api = _connect(endpoint), _connect(endpoint)
+                human, api = connect_verified(endpoint), connect_verified(endpoint)
                 try:
                     human_id = _login(
                         human, profile_id, frontend=frontend, method="password", proof=PROFILE_INPUT.encode()
@@ -346,7 +337,7 @@ def test_pristine_inventory_is_empty_and_missing_optional_store_does_not_block_p
             running = pool.submit(server.serve)
             try:
                 assert server.ready.wait(3)
-                human = _connect(endpoint)
+                human = connect_verified(endpoint)
                 try:
                     human_id = _login(
                         human,

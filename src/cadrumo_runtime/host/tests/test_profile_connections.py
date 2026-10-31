@@ -57,7 +57,6 @@ from cadrumo.core.operations import OperationTerminalCondition
 from cadrumo.domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import Availability, DisclosureCategory, DisclosurePermission
-from cadrumo_client.contracts.contracts import ClientHello
 from cadrumo_client.contracts.operation_access import (
     OperationAcknowledged,
     OperationContract,
@@ -91,6 +90,7 @@ from ...adapters.tests.profile_worker_support import owner_id
 from ...adapters.tests.retained_server import RetainedRuntimeTransportServer
 from ..profile_connections import RuntimeProfileConnections
 from .operation_transport_support import PausedProjectionListener, ProjectionWriteBarrier
+from .served_runtime import connect_verified
 
 pytestmark = [
     pytest.mark.integration,
@@ -118,14 +118,6 @@ class LoginObservation:
             unattended=self.unattended or (LoginEligibility.ELIGIBLE if self.active else LoginEligibility.INELIGIBLE),
             credential_facilities=credential_facilities,
         )
-
-
-def connect(endpoint: WindowsEndpoint) -> VerifiedConnection:
-    return VerifiedConnection(
-        endpoint.connect(timeout=3),
-        expected=ClientHello(product_version="test", storage_identity=endpoint.storage_identity),
-        deadline=time.monotonic() + 3,
-    )
 
 
 def login(client: VerifiedConnection, profile: UUID, method: str, raw: bytes, *, seconds: float = 75):
@@ -181,7 +173,7 @@ def test_real_connection_admission_lock_reconnect_and_native_dependency_loss(tmp
             running = pool.submit(server.serve)
             try:
                 assert server.ready.wait(3)
-                api, human, other = (connect(endpoint) for _ in range(3))
+                api, human, other = (connect_verified(endpoint) for _ in range(3))
                 clients.extend((api, human, other))
                 admitted = login(api, profile, "api_key", secret.get_secret_value())
                 assert isinstance(admitted, ProfileStatus), admitted
@@ -362,7 +354,7 @@ def test_api_authority_reaches_real_effects_and_guards_public_output(tmp_path: P
             clients: list[VerifiedConnection] = []
             try:
                 assert server.ready.wait(3)
-                client = connect(endpoint)
+                client = connect_verified(endpoint)
                 clients.append(client)
                 refused = client.operation(
                     OperationControl(
@@ -588,7 +580,7 @@ def test_api_authority_reaches_real_effects_and_guards_public_output(tmp_path: P
                 assert isinstance(unsupported_review, AccessRefusal)
                 assert unsupported_review.code is AccessDenialCode.OPERATION_DENIED
                 if allow_observation:
-                    human = connect(endpoint)
+                    human = connect_verified(endpoint)
                     clients.append(human)
                     human_login = login(human, profile, "password", PROFILE_INPUT.encode())
                     assert isinstance(human_login, ProfileStatus) and human_login.status.session_id is not None
@@ -702,7 +694,7 @@ def test_fresh_native_host_reconciles_exact_surviving_denial_before_api_admissio
             running = pool.submit(server.serve)
             try:
                 assert server.ready.wait(3)
-                api = connect(endpoint)
+                api = connect_verified(endpoint)
                 clients.append(api)
                 denied = login(api, profile, "api_key", secret.get_secret_value())
                 assert isinstance(denied, AccessRefusal)
@@ -752,7 +744,7 @@ def test_uncertain_native_status_recovers_on_same_connection_but_logout_does_not
             running = pool.submit(server.serve)
             try:
                 assert server.ready.wait(3)
-                client = connect(endpoint)
+                client = connect_verified(endpoint)
                 clients.append(client)
                 admitted = login(client, profile, "password", PROFILE_INPUT.encode())
                 assert isinstance(admitted, ProfileStatus) and admitted.status.session_id is not None

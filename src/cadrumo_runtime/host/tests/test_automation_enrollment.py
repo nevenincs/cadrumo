@@ -41,7 +41,6 @@ from cadrumo.core.operations import OperationEffect, OperationTerminalCondition,
 from cadrumo.core.time.clock import now
 from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope, AuthorityState
 from cadrumo_client.contracts.automation_codes import AutomationCustodyError
-from cadrumo_client.contracts.contracts import ClientHello
 from cadrumo_client.contracts.deadline_budget import MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS, exchange_deadline
 from cadrumo_client.contracts.enrollment_access import EnrollmentInspect, EnrollmentPrepare, EnrollmentPrepared
 from cadrumo_client.contracts.enrollment_proposal import EnrollmentKind, EnrollmentProposal
@@ -67,7 +66,7 @@ from cadrumo_client.transport.windows import WindowsEndpoint
 from ...adapters.tests.profile_worker_support import PROFILE_INPUT, owner_id, worker_profiles
 from ...adapters.tests.retained_server import RetainedRuntimeTransportServer
 from ..profile_connections import RuntimeProfileConnections
-from .served_runtime import SyntheticLogin
+from .served_runtime import SyntheticLogin, connect_verified
 
 pytestmark = [
     pytest.mark.integration,
@@ -94,14 +93,6 @@ class _ObservedClientPort(MemoryNativePort):
     def replace(self, namespace: str, account: str, value: SecretBytes) -> None:
         self.events.append(("write", namespace, account))
         super().replace(namespace, account, value)
-
-
-def _connect(endpoint: WindowsEndpoint) -> VerifiedConnection:
-    return VerifiedConnection(
-        endpoint.connect(timeout=3),
-        expected=ClientHello(product_version="test", storage_identity=endpoint.storage_identity),
-        deadline=time.monotonic() + 3,
-    )
 
 
 def _login(
@@ -261,7 +252,11 @@ def test_preunlock_requester_receives_protected_credential_then_fresh_api_login(
                     if running.done():
                         running.result()
                         pytest.fail("runtime stopped before readiness")
-                requester, human, other = _connect(endpoint), _connect(endpoint), _connect(endpoint)
+                requester, human, other = (
+                    connect_verified(endpoint),
+                    connect_verified(endpoint),
+                    connect_verified(endpoint),
+                )
                 try:
                     prepared = requester.enrollment_prepare(
                         EnrollmentPrepare(
@@ -427,7 +422,7 @@ def test_preunlock_requester_receives_protected_credential_then_fresh_api_login(
                     client_native.unavailable = False
                     credential = client.credential()
                     assert client_native.events[-1] == read_event
-                    api = _connect(endpoint)
+                    api = connect_verified(endpoint)
                     try:
                         api_id = _login(api, profile_id, method="api_key", proof=credential.get_secret_value())
                         assert api_id != human_id
@@ -488,7 +483,7 @@ def test_client_native_store_failure_does_not_complete_enrollment(tmp_path: Path
                     if running.done():
                         running.result()
                         pytest.fail("runtime stopped before readiness")
-                requester, human = _connect(endpoint), _connect(endpoint)
+                requester, human = connect_verified(endpoint), connect_verified(endpoint)
                 try:
                     prepared = requester.enrollment_prepare(
                         EnrollmentPrepare(

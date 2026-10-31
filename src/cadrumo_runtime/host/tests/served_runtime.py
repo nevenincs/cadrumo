@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 import sys
+import time
 from collections.abc import Callable, Generator
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
 from dataclasses import dataclass
+from importlib.metadata import version
 from pathlib import Path
 from threading import Event
 from uuid import UUID, uuid4
@@ -16,6 +18,7 @@ from cadrumo.application.user_profile.automation_custody_port import AutomationS
 from cadrumo_client.contracts.access_vocabulary import Availability
 from cadrumo_client.contracts.contracts import ByteChannel, ClientHello
 from cadrumo_client.contracts.login import LoginEvidence
+from cadrumo_client.transport.framing import VerifiedConnection
 from cadrumo_client.transport.startup import LaunchDoor
 from cadrumo_client.transport.windows import WindowsEndpoint
 
@@ -100,3 +103,21 @@ def serving_runtime(
                         raise
             finally:
                 endpoint.close()
+
+
+def connect_verified(endpoint: WindowsEndpoint) -> VerifiedConnection:
+    """Open a handshaken connection to a test runtime that announces the ``test`` product version."""
+    return VerifiedConnection(
+        endpoint.connect(timeout=3),
+        expected=ClientHello(product_version="test", storage_identity=endpoint.storage_identity),
+        deadline=time.monotonic() + 3,
+    )
+
+
+def connect_installed(endpoint: WindowsEndpoint) -> VerifiedConnection:
+    """Open a handshaken connection to a runtime that announces the installed product version."""
+    return VerifiedConnection(
+        endpoint.connect(timeout=3),
+        expected=ClientHello(product_version=version("cadrumo"), storage_identity=endpoint.storage_identity),
+        deadline=time.monotonic() + 3,
+    )

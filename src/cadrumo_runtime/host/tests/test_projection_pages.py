@@ -57,8 +57,8 @@ from ..profile_connection import ProfileConnection
 from ..profile_connections import RuntimeProfileConnections
 from ..profile_host import RuntimeProfileHost
 from .operation_transport_support import PausedProjectionListener, ProjectionWriteBarrier
-from .served_runtime import SyntheticLogin, serving_runtime
-from .test_automation_enrollment import _connect, _submit_operation
+from .served_runtime import SyntheticLogin, connect_verified, serving_runtime
+from .test_automation_enrollment import _submit_operation
 
 pytestmark = [
     pytest.mark.integration,
@@ -161,11 +161,11 @@ def native_projection_race(tmp_path: Path) -> Generator[_NativeProjectionRace]:
             try:
                 assert server.ready.wait(3)
                 with ExitStack() as cleanup:
-                    raw = _connect(endpoint)
+                    raw = connect_verified(endpoint)
                     cleanup.callback(raw.close)
                     client = FrontendClient(raw, profile_id=profile_id, frontend=OperationFrontendProjection.CLI)
                     cleanup.callback(client.close)
-                    control_raw = _connect(endpoint)
+                    control_raw = connect_verified(endpoint)
                     cleanup.callback(control_raw.close)
                     control = FrontendClient(
                         control_raw, profile_id=profile_id, frontend=OperationFrontendProjection.CLI
@@ -361,7 +361,7 @@ def test_native_paged_inventory_refuses_continuation_after_global_lock(tmp_path:
             ),
             ExitStack() as cleanup,
         ):
-            raw, control_raw = _connect(endpoint), _connect(endpoint)
+            raw, control_raw = connect_verified(endpoint), connect_verified(endpoint)
             client, control = (
                 FrontendClient(raw, profile_id=profile_id, frontend=OperationFrontendProjection.CLI),
                 FrontendClient(control_raw, profile_id=profile_id, frontend=OperationFrontendProjection.CLI),
