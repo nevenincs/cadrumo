@@ -75,7 +75,6 @@ from ....adapters.persistence.profile.transactions import TransactionCatalogueRe
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from ....application.calculations.observations_repository import APP_FILING_SOURCE_KIND, ResultDispositionProjection
 from ....application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
@@ -83,21 +82,16 @@ from ....application.modelo.work_lifecycle import create_work_unit
 from ....application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
-from ....core.result_disposition import ResultDisposition
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.iva_compensation_annual_partition_bindings import (
     M303_COMPENSATION_POSTERIOR_CASILLA,
     M303_COMPENSATION_RESULTADO_CASILLA,
-)
-from ....domain.calculations.registry.tests.registry_observations import (
-    registry_grounded_observations,
-    revision_id_for_observation,
 )
 from ....domain.user_profile.values import ProfileSetupState
 from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 from .file_flow_test_support import calculation_ports_for_test
 from .general_iva_profile_facts_support import general_iva_profile_facts
+from .observation_seeding_support import save_local_m303_compensacion_filings
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -185,42 +179,9 @@ def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
 
 def _seed_m303_compensacion_quarters(*, obs_repo: CalculationObservationRepository) -> None:
     """Persist one M303/2025 filing observation per quarter carrying the FIFO compensacion casillas."""
-    for period, casillas in _M303_COMPENSACION_BY_PERIOD.items():
-        obs_repo.save(
-            obs_repo.prepare_observation_envelope(
-                RegistryModeloObservation(
-                    modelo="303",
-                    filing_year=_YEAR,
-                    period=period,
-                    observations=registry_grounded_observations(
-                        modelo="303",
-                        filing_year=_YEAR,
-                        period=period,
-                        casilla_values=casillas,
-                    ),
-                ),
-                source_kind=APP_FILING_SOURCE_KIND,
-                captured_at=_T0,
-                result_disposition=ResultDispositionProjection(
-                    disposition=ResultDisposition.COMPENSACION,
-                    provenance_kind="app_filing",
-                    provenance_locator=f"test-local-filing:{_YEAR}:{period}",
-                ),
-                stamped_revision_id=revision_id_for_observation(
-                    RegistryModeloObservation(
-                        modelo="303",
-                        filing_year=_YEAR,
-                        period=period,
-                        observations=registry_grounded_observations(
-                            modelo="303",
-                            filing_year=_YEAR,
-                            period=period,
-                            casilla_values=casillas,
-                        ),
-                    )
-                ),
-            )
-        )
+    save_local_m303_compensacion_filings(
+        obs_repo, filing_year=_YEAR, casillas_by_period=_M303_COMPENSACION_BY_PERIOD, captured_at=_T0
+    )
 
 
 def _calculate_m390_annual(secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation):
