@@ -372,15 +372,7 @@ class InventoryOperationExecutor:
         profile: str,
     ) -> str | OperationRefusalEvidence:
         try:
-            movement = InventoryMovementCommand(
-                movement_id=request.movement_id,
-                movement_date=request.movement_date,
-                kind=request.kind,
-                quantity=Decimal(request.quantity.decimal),
-                unit_cost=Decimal(request.unit_cost.decimal) if request.unit_cost is not None else None,
-                taxable_base=Decimal(request.taxable_base.decimal) if request.taxable_base is not None else None,
-                acquisition_cost=request.acquisition_cost.to_domain() if request.acquisition_cost is not None else None,
-            )
+            movement = _movement_command(request)
         except (ValidationError, InventoryLedgerError):
             return await _record_precommit_validation_refusal(
                 context,
@@ -572,7 +564,7 @@ def _ledger_change_work(
             actor=actor,
         )
     if isinstance(request, InventoryMovementCorrectRequest):
-        replacement = _replacement_movement(request)
+        replacement = _movement_command(request)
         return lambda: service.movement_correct(
             bucket_id=profile,
             actividad_id=request.actividad_id,
@@ -613,7 +605,9 @@ def _ledger_change_work(
     raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
 
 
-def _replacement_movement(request: InventoryMovementCorrectRequest) -> InventoryMovementCommand:
+def _movement_command(
+    request: InventoryMovementAddRequest | InventoryMovementCorrectRequest,
+) -> InventoryMovementCommand:
     return InventoryMovementCommand(
         movement_id=request.movement_id,
         movement_date=request.movement_date,

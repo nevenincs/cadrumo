@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
+from dataclasses import dataclass
 from datetime import date
-from typing import ClassVar
+from typing import ClassVar, Protocol
 
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.casilla_id import CasillaId
@@ -50,6 +51,9 @@ from .activity_asset_disposal_projection import disposal_row_source_identities
 from .activity_asset_expense_reconciliation import (
     LedgerExpenseRegisterClassification,
     LedgerRentaExpenseTreatment,
+    RefusedExpenseRow,
+    RegisterOwnedAcquisition,
+    UnregisteredAmortizationRow,
     amortization_labelled_expense_categories,
     classify_ledger_expenses_against_asset_register,
     dwelling_ownership_share,
@@ -96,6 +100,57 @@ from .source_resolution_operations import (
     storage_degradation_resolution,
 )
 from .source_resolution_operations import source_provenance_for as _provenance_for
+
+
+class _TransactionRow(Protocol):
+    @property
+    def transaction_id(self) -> str: ...
+
+
+@dataclass(frozen=True, slots=True)
+class _RegisterSplit[IssueT, LedgerT: _TransactionRow, AssetT]:
+    """Ledger findings and observations once the asset register has answered its rows."""
+
+    register_owned: tuple[RegisterOwnedAcquisition, ...]
+    issues: tuple[IssueT, ...]
+    ledger_observations: tuple[LedgerT, ...]
+    asset_observations: tuple[AssetT, ...]
+    all_observations: tuple[LedgerT | AssetT, ...]
+
+
+def _split_register_owned[IssueT: RefusedExpenseRow, LedgerT: _TransactionRow, AssetT](
+    *,
+    aggregation_issues: Sequence[IssueT],
+    aggregation_observations: Sequence[LedgerT],
+    asset_history: ActivityAssetHistory,
+    classification: LedgerExpenseRegisterClassification,
+    refused: Sequence[UnregisteredAmortizationRow],
+    asset_observations: Sequence[AssetT],
+    tax_year: int,
+) -> _RegisterSplit[IssueT, LedgerT, AssetT]:
+    refused_owned = refused_register_owned_rows(
+        aggregation_issues,
+        assets=asset_history.revisions,
+        tax_year=tax_year,
+        effective_date=date(tax_year, 12, 31),
+    )
+    excluded_transaction_ids = classification.excluded_transaction_ids
+    ledger_observations = tuple(
+        observation
+        for observation in aggregation_observations
+        if observation.transaction_id not in excluded_transaction_ids
+    )
+    assets = tuple(asset_observations)
+    return _RegisterSplit(
+        register_owned=(*classification.withheld, *refused_owned),
+        issues=issues_the_register_does_not_answer(
+            aggregation_issues,
+            answered=(*refused_owned, *refused, *classification.unregistered),
+        ),
+        ledger_observations=ledger_observations,
+        asset_observations=assets,
+        all_observations=(*ledger_observations, *assets),
+    )
 
 
 class LedgerRentaGastosEstimacionDirectaAggregationSourceResolver:
@@ -260,25 +315,18 @@ class LedgerRentaGastosEstimacionDirectaAggregationSourceResolver:
                 source_kind="ledger_renta_gastos_estimacion_directa_aggregation",
                 resolver_id=self.resolver_id,
             )
-        refused_owned = refused_register_owned_rows(
-            aggregation.issues,
-            assets=asset_history.revisions,
+        split = _split_register_owned(
+            aggregation_issues=aggregation.issues,
+            aggregation_observations=aggregation.observations,
+            asset_history=asset_history,
+            classification=classification,
+            refused=refused,
+            asset_observations=asset_projection.observations,
             tax_year=aggregation.period.filing_year,
-            effective_date=date(aggregation.period.filing_year, 12, 31),
         )
-        register_owned = (*classification.withheld, *refused_owned)
-        issues = issues_the_register_does_not_answer(
-            aggregation.issues,
-            answered=(*refused_owned, *refused, *classification.unregistered),
-        )
-        excluded_transaction_ids = classification.excluded_transaction_ids
-        ledger_observations = tuple(
-            observation
-            for observation in aggregation.observations
-            if observation.transaction_id not in excluded_transaction_ids
-        )
-        asset_observations = asset_projection.observations
-        all_observations = (*ledger_observations, *asset_observations)
+        register_owned, issues = split.register_owned, split.issues
+        ledger_observations, asset_observations = split.ledger_observations, split.asset_observations
+        all_observations = split.all_observations
         unrouted = unsupported_ledger_renta_gastos_estimacion_directa_observations(context.revision, all_observations)
         element_types, element_types_inapplicable = resolve_activity_asset_disposal_element_type_values(
             context.revision,
@@ -544,25 +592,18 @@ class LedgerRentaGastosPagoFraccionadoAggregationSourceResolver:
                 source_kinds=self.owned_sources,
                 error=exc,
             )
-        refused_owned = refused_register_owned_rows(
-            aggregation.issues,
-            assets=asset_history.revisions,
+        split = _split_register_owned(
+            aggregation_issues=aggregation.issues,
+            aggregation_observations=aggregation.observations,
+            asset_history=asset_history,
+            classification=classification,
+            refused=refused,
+            asset_observations=asset_projection.observations,
             tax_year=aggregation_period.filing_year,
-            effective_date=date(aggregation_period.filing_year, 12, 31),
         )
-        register_owned = (*classification.withheld, *refused_owned)
-        issues = issues_the_register_does_not_answer(
-            aggregation.issues,
-            answered=(*refused_owned, *refused, *classification.unregistered),
-        )
-        excluded_transaction_ids = classification.excluded_transaction_ids
-        ledger_observations = tuple(
-            observation
-            for observation in aggregation.observations
-            if observation.transaction_id not in excluded_transaction_ids
-        )
-        asset_observations = asset_projection.observations
-        all_observations = (*ledger_observations, *asset_observations)
+        register_owned, issues = split.register_owned, split.issues
+        ledger_observations, asset_observations = split.ledger_observations, split.asset_observations
+        all_observations = split.all_observations
         unrouted = unsupported_ledger_renta_gastos_pago_fraccionado_observations(context.revision, all_observations)
         return CalculationSourceResolution(
             resolver_id=self.resolver_id,

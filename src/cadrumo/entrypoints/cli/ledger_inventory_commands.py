@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from decimal import Decimal
 from pathlib import Path
 from uuid import UUID
 
@@ -74,6 +75,10 @@ def _inventory_notices(ledger: InventoryLedgerProjection | InventoryListRowProje
         )
         for item in ledger.advisories
     ]
+
+
+def _public_or_none(amount: Decimal | None) -> PublicDecimal | None:
+    return PublicDecimal(decimal=str(amount)) if amount is not None else None
 
 
 def _parse_acquisition_cost(*, from_stdin: bool) -> InventoryAcquisitionCostRequest | None:
@@ -172,8 +177,8 @@ def inventory_movement_add(
         movement_date=_parse_iso_date(movement_date, label="--date"),
         kind=kind,
         quantity=PublicDecimal(decimal=str(parse_decimal_amount(quantity, label="quantity"))),
-        unit_cost=PublicDecimal(decimal=str(unit_cost_amount)) if unit_cost_amount is not None else None,
-        taxable_base=PublicDecimal(decimal=str(taxable_base_amount)) if taxable_base_amount is not None else None,
+        unit_cost=_public_or_none(unit_cost_amount),
+        taxable_base=_public_or_none(taxable_base_amount),
         acquisition_cost=_parse_acquisition_cost(from_stdin=acquisition_cost_stdin),
     )
     completion, payload = add_inventory_movement(ctx, request=request)
@@ -280,7 +285,7 @@ def inventory_correct(
             year=year,
             correction_id=correction_id,
             reason=reason,
-            opening_stock=PublicDecimal(decimal=str(amount)) if amount is not None else None,
+            opening_stock=_public_or_none(amount),
             valuation_method=valuation_method,
         ),
     )
@@ -318,8 +323,8 @@ def inventory_movement_correct(
             movement_date=_parse_iso_date(movement_date, label="--date"),
             kind=kind,
             quantity=PublicDecimal(decimal=str(parse_decimal_amount(quantity, label="quantity"))),
-            unit_cost=PublicDecimal(decimal=str(unit_cost_amount)) if unit_cost_amount is not None else None,
-            taxable_base=PublicDecimal(decimal=str(taxable_base_amount)) if taxable_base_amount is not None else None,
+            unit_cost=_public_or_none(unit_cost_amount),
+            taxable_base=_public_or_none(taxable_base_amount),
             acquisition_cost=_parse_acquisition_cost(from_stdin=acquisition_cost_stdin),
         ),
     )
