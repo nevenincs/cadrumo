@@ -35,8 +35,8 @@ msgstr ""
 "tributarias. La AEAT es la autoridad tributaria española externa. Esta "
 "guía te muestra cómo hacer un cambio en la documentación y llevarlo a "
 "través de la revisión. Existen cuatro superficies de documentación: el "
-"markdown del repositorio, los docstrings dentro del código y dos "
-"referencias generadas: una para la interfaz de programación de "
+"Markdown del repositorio, las cadenas de documentación dentro del código "
+"y dos referencias generadas: una para la interfaz de programación de "
 "aplicaciones (API) y otra para la interfaz de línea de comandos (CLI)."
 
 #: ../../authoring-guide.md:5
@@ -52,7 +52,7 @@ msgid ""
 "**Repository markdown** is hand-written. Edit the README or a guide under"
 " `docs/` directly."
 msgstr ""
-"**El markdown del repositorio** se escribe a mano. Edita el README o una "
+"**El Markdown del repositorio** se escribe a mano. Edita el README o una "
 "guía bajo `docs/` directamente."
 
 #: ../../authoring-guide.md:10

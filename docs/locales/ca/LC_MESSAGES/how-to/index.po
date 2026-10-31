@@ -366,7 +366,7 @@ msgstr "Modelo 036"
 #: ../../how-to/index.md:218
 msgid "Record an alta, modificación, or baja you filed at AEAT's sede."
 msgstr ""
-"Registra una alta, modificación o baja que has presentat a la sede de "
+"Registra una alta, modificació o baixa que has presentat a la seu de "
 "l'AEAT."
 
 #: ../../how-to/index.md:221

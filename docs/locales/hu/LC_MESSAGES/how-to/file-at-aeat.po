@@ -238,7 +238,7 @@ msgstr ""
 
 #: ../../how-to/file-at-aeat.md:91
 msgid "Log in at AEAT's Sede Electrónica."
-msgstr "Jelentkezz be az AEAT Sede Electrónicáján."
+msgstr "Jelentkezz be az AEAT elektronikus ügyintézési felületén."
 
 #: ../../how-to/file-at-aeat.md:92
 msgid "Choose the presentation page for your modelo and period."

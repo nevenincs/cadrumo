@@ -126,7 +126,7 @@ msgstr "Cadrumo admet tres proveïdors:"
 
 #: ../../how-to/authenticate-with-aeat.md:49
 msgid "`certificate`: your digital certificate file (certificado digital)."
-msgstr "`certificate`: el fitxer del teu certificat digital (certificado digital)."
+msgstr "`certificate`: el fitxer del teu certificat digital."
 
 #: ../../how-to/authenticate-with-aeat.md:50
 msgid "`clave_movil`: mobile-based Cl@ve, confirmed on your phone."
@@ -453,7 +453,7 @@ msgstr "Per eliminar l'estat d'autenticació local de cada proveïdor configurat
 
 #: ../../how-to/authenticate-with-aeat.md:233
 msgid "Act for someone else (apoderado)"
-msgstr "Actua en nom d'una altra persona (apoderado)"
+msgstr "Actua en nom d'una altra persona (apoderat)"
 
 #: ../../how-to/authenticate-with-aeat.md:235
 msgid ""
@@ -463,8 +463,8 @@ msgid ""
 " asesor."
 msgstr ""
 "Si actues com a representant fiscal autoritzat d'un altre contribuent, "
-"registra localment qui representes i els àmbits d'apoderamiento de l'AEAT"
-" corresponents. Un apoderado és un representant autoritzat, com ara un "
+"registra localment qui representes i els àmbits d'apoderament de l'AEAT "
+"corresponents. Un apoderat és un representant autoritzat, com ara un "
 "gestor o assessor."
 
 #: ../../how-to/authenticate-with-aeat.md:239
@@ -476,13 +476,12 @@ msgid ""
 "renounce an apoderamiento at AEAT. No command writes representation state"
 " to AEAT."
 msgstr ""
-"L'apoderamiento en si es concedeix a l'AEAT. La part representada "
-"t'autoritza mitjançant els procediments d'apoderamiento de la mateixa "
-"AEAT. Les ordres d'aquesta secció registren aquesta concessió al teu "
-"perfil local perquè les ordres de lectura sàpiguen de qui llegeixen les "
-"dades. Mai no registren, amplien, revoquen ni renuncien a un "
-"apoderamiento a l'AEAT. Cap ordre no escriu l'estat de representació a "
-"l'AEAT."
+"L'apoderament en si es concedeix a l'AEAT. La part representada "
+"t'autoritza mitjançant els procediments d'apoderament de la mateixa AEAT."
+" Les ordres d'aquesta secció registren aquesta concessió al teu perfil "
+"local perquè les ordres de lectura sàpiguen de qui llegeixen les dades. "
+"Mai no registren, amplien, revoquen ni renuncien a un apoderament a "
+"l'AEAT. Cap ordre no escriu l'estat de representació a l'AEAT."
 
 #: ../../how-to/authenticate-with-aeat.md:245
 msgid "See the accepted scopes"
@@ -494,7 +493,7 @@ msgstr "Llista els codis d'àmbit que accepta l'eina:"
 
 #: ../../how-to/authenticate-with-aeat.md:253
 msgid "Each scope is an AEAT apoderamiento area. Examples include:"
-msgstr "Cada àmbit és una àrea d'apoderamiento de l'AEAT. Alguns exemples són:"
+msgstr "Cada àmbit és una àrea d'apoderament de l'AEAT. Alguns exemples són:"
 
 #: ../../how-to/authenticate-with-aeat.md:255
 msgid "`RENT` for Modelos 100 and 714."
@@ -550,7 +549,7 @@ msgid ""
 "The active profile holds at most one apoderado configuration; configuring"
 " again replaces it. The represented identifier is stored encrypted."
 msgstr ""
-"El perfil actiu conté com a màxim una configuració d'apoderado; si el "
+"El perfil actiu conté com a màxim una configuració d'apoderat; si el "
 "tornes a configurar, el substitueixes. L'identificador representat "
 "s'emmagatzema xifrat."
 
@@ -586,9 +585,9 @@ msgid ""
 "Clearing removes only the local record. The apoderamiento at AEAT is "
 "unaffected. Revoke it through AEAT's own procedures."
 msgstr ""
-"En esborrar-la només s'elimina el registre local. L'apoderamiento a "
-"l'AEAT no es veu afectat. Revoca'l mitjançant els procediments de la "
-"mateixa AEAT."
+"En esborrar-la només s'elimina el registre local. L'apoderament a l'AEAT "
+"no es veu afectat. Revoca'l mitjançant els procediments de la mateixa "
+"AEAT."
 
 #: ../../how-to/authenticate-with-aeat.md:298
 msgid "Next steps"

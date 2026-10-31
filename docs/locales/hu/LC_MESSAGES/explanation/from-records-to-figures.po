@@ -77,7 +77,7 @@ msgstr ""
 
 #: ../../explanation/from-records-to-figures.md:18
 msgid "Making a record tax-ready"
-msgstr "Egy nyilvántartás adókészre tétele"
+msgstr "Egy nyilvántartás előkészítése adózási célra"
 
 #: ../../explanation/from-records-to-figures.md:20
 msgid ""
@@ -85,7 +85,8 @@ msgid ""
 "record. A tax-ready record carries three things:"
 msgstr ""
 "Ahhoz, hogy egy mozgásnak adóügyi jelentést adj, besorolt, kategorizált "
-"nyilvántartássá alakítod. Egy adókész nyilvántartás három dolgot hordoz:"
+"nyilvántartássá alakítod. Egy adózási szempontból előkészített "
+"nyilvántartás három dolgot hordoz:"
 
 #: ../../explanation/from-records-to-figures.md:22
 msgid "a business, personal, or mixed decision;"
@@ -211,8 +212,8 @@ msgid ""
 " do."
 msgstr ""
 "Itt jelennek meg a számok. Az eszköz két dolgot olvas be: az időszakra "
-"vonatkozó adókész nyilvántartásaidat és a profilodat - azt, hogy ki vagy "
-"és mivel foglalkozol."
+"vonatkozó, adózási szempontból előkészített nyilvántartásaidat és a "
+"profilodat - azt, hogy ki vagy és mivel foglalkozol."
 
 #: ../../explanation/from-records-to-figures.md:57
 msgid ""
@@ -239,9 +240,9 @@ msgid ""
 "keep your profile current; the published rules do the routing and the "
 "arithmetic."
 msgstr ""
-"Ezt nem kell kézzel összekötnöd. Adókésszé teszed a nyilvántartásaidat és"
-" naprakészen tartod a profilodat; a közzétett szabályok végzik az "
-"útválasztást és a számolást."
+"Ezt nem kell kézzel összekötnöd. Előkészíted a nyilvántartásaidat adózási"
+" célra és naprakészen tartod a profilodat; a közzétett szabályok végzik "
+"az útválasztást és a számolást."
 
 #: ../../explanation/from-records-to-figures.md:61
 msgid "Tracing a number back to the law"

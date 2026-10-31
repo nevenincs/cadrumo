@@ -152,9 +152,9 @@ msgid ""
 " and also requires `--year`:"
 msgstr ""
 "El cálculo lee tus movimientos importados, y algunas filas no están "
-"listas. Ejecuta la comprobación previa (preflight) del periodo que estás "
-"calculando: `ledger preflight` toma un token de la AEAT (`1T`-`4T`, `0A`,"
-" `01`-`12`) y también requiere `--year`:"
+"listas. Ejecuta la comprobación previa del periodo que estás calculando: "
+"`ledger preflight` toma un token de la AEAT (`1T`-`4T`, `0A`, `01`-`12`) "
+"y también requiere `--year`:"
 
 #: ../../how-to/troubleshooting.md:73
 msgid ""

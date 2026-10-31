@@ -172,7 +172,7 @@ msgstr ""
 "Si encara no existeix cap treball desat, crea'l primer amb `aeat app "
 "modelo work create` (la cadena i les seqüències d'objectiu visible "
 "anteriors executen la forma completa). Executar de nou la mateixa ordre "
-"create no crea cap duplicat. Retorna el treball desat existent per a "
+"de creació no crea cap duplicat. Retorna el treball desat existent per a "
 "aquella presentació."
 
 #: ../../how-to/filing-spine.md:72

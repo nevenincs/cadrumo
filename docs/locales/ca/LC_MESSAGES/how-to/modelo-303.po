@@ -526,8 +526,8 @@ msgstr ""
 "a partir dels teus registres. La comprovació prèvia pot detectar dades "
 "d'IVA que falten, apunts no classificats, categories no declarables, "
 "divises no admeses i problemes similars abans que un esborrany sigui de "
-"confiança. El régimen simplificado es tracta de manera diferent: aquests "
-"perfils aporten les caselles del simplificado manualment en lloc de "
+"confiança. El règim simplificat es tracta de manera diferent: aquests "
+"perfils aporten les caselles del règim simplificat manualment en lloc de "
 "passar la comprovació prèvia ordinària d'IVA sobre els teus registres."
 
 #: ../../how-to/modelo-303.md:190

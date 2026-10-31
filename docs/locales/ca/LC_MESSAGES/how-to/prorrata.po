@@ -250,7 +250,7 @@ msgid ""
 "`--letra` is the LIVA art. 9.1.c letra that makes the sector "
 "differentiated: `a`, `b`, `c`, or `d`."
 msgstr ""
-"`--letra` és la letra de l'art. 9.1.c de la LIVA que fa que el sector "
+"`--letra` és la lletra de l'art. 9.1.c de la LIVA que fa que el sector "
 "sigui diferenciat: `a`, `b`, `c` o `d`."
 
 #: ../../how-to/prorrata.md:103
@@ -396,4 +396,3 @@ msgid ""
 msgstr ""
 "[Prepara una presentació d'IVA del Modelo 303](modelo-303.md) i [el resum"
 " anual del Modelo 390](modelo-390.md)."
-

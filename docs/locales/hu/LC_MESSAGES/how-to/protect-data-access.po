@@ -379,7 +379,7 @@ msgstr ""
 "`{\"current_passphrase\": \"...\", \"new_passphrase\": \"...\", "
 "\"new_passphrase_confirmation\": \"...\"}` objektumot. Jelmondatot soha "
 "ne adj át parancssori argumentumként: az argumentumok láthatók a "
-"folyamatlistában és a shell előzményeiben."
+"folyamatlistában és a parancsértelmező előzményeiben."
 
 #: ../../how-to/protect-data-access.md:160
 msgid "Run without a passphrase prompt"
@@ -649,9 +649,9 @@ msgstr ""
 "Használj névtelen csövet, ha a szabványos bemenet már más értéket "
 "továbbít. A leíró mögötti objektum és annak élettartama a hívó tulajdona."
 " A Cadrumo egy korlátozott olvasást végez, majd az olvasás megkezdése "
-"után helyileg bezárja a leírót, elutasítás esetén is. A `0` leíró stdin-"
-"megfelelőként engedélyezett; az `1` és `2` leíró, a negatív, a lezárt és "
-"a nem olvasható leírók elutasításra kerülnek."
+"után helyileg bezárja a leírót, elutasítás esetén is. A `0` leíró a "
+"szabványos bemenettel egyenértékűként engedélyezett; az `1` és `2` leíró,"
+" a negatív, a lezárt és a nem olvasható leírók elutasításra kerülnek."
 
 #: ../../how-to/protect-data-access.md:254
 msgid ""
@@ -682,8 +682,8 @@ msgstr ""
 "Hagyd el a `--profile-handle` vagy a `--secrets-handle` kapcsolót, ha a "
 "híváshoz csak egy hatókörre van szükséged. A burkoló beszúrja a megfelelő"
 " kanonikus leíró kapcsolót; ne add hozzá a parancs végéhez is. Egy "
-"közvetlenül elindított hordozható parancshoz az stdin csatornát "
-"részesítsd előnyben."
+"közvetlenül elindított hordozható parancshoz a szabványos bemeneti "
+"csatornát részesítsd előnyben."
 
 #: ../../how-to/protect-data-access.md:272
 msgid ""

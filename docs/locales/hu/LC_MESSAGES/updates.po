@@ -152,7 +152,7 @@ msgstr "a modelók számításának, ellenőrzésének vagy exportálásának m�
 
 #: ../../updates.md:75
 msgid "storage, receipts, or reconciliation steps."
-msgstr "a tárolás, a justificantek vagy az egyeztetés lépéseit."
+msgstr "a tárolás, az igazolások vagy az egyeztetés lépéseit."
 
 #: ../../updates.md:77
 msgid "Download guidance"
@@ -183,7 +183,7 @@ msgid ""
 "Keep that version with the local export, the AEAT receipt (justificante),"
 " and any reconciliation notes for the filing period."
 msgstr ""
-"Tartsd meg ezt a verziót a helyi exporttal, az AEAT-justificantéval és a "
+"Tartsd meg ezt a verziót a helyi exporttal, az AEAT-igazolással és a "
 "benyújtási időszakhoz tartozó egyeztetési jegyzetekkel együtt."
 
 #: ../../updates.md:94
@@ -227,4 +227,3 @@ msgid "issues for open defects, regressions, and documentation gaps."
 msgstr ""
 "a hibajegyek a nyitott hibákhoz, visszalépésekhez és dokumentációs "
 "hiányosságokhoz."
-

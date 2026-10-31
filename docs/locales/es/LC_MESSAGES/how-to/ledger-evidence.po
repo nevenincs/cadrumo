@@ -205,7 +205,8 @@ msgid ""
 msgstr ""
 "Para desvincular un adjunto complementario sin borrar sus bytes, ejecuta "
 "`aeat app ledger detach` con el id del movimiento y el `--attachment-id` "
-"del adjunto. Detach no puede quitar el justificante de factura de compra."
+"del adjunto. La desvinculación no puede quitar el justificante de factura"
+" de compra."
 
 #: ../../how-to/ledger-evidence.md:48
 msgid "Invoice records are a separate feature"

@@ -280,8 +280,7 @@ msgstr ""
 "La sortida mostra les xifres acumulades del Modelo 130 (ingressos, "
 "despeses, resultat net, pagaments fraccionats ingressats) i el resultat "
 "projectat del Modelo 100: la base imposable, la quota íntegra estatal i "
-"autonòmica (cuota íntegra), la quota líquida estatal i autonòmica (cuota "
-"líquida) i la quota resultant (cuota resultante)."
+"autonòmica, la quota líquida estatal i autonòmica i la quota resultant."
 
 #: ../../how-to/filing-readiness.md:94
 msgid ""
@@ -316,7 +315,7 @@ msgid ""
 msgstr ""
 "Les retencions valen zero per defecte quan no es proporcionen, de manera "
 "que una projecció sense elles sobreestima el saldo a pagar si tenies "
-"retenciones. Cada casella projectada porta la seva fórmula i les seves "
+"retencions. Cada casella projectada porta la seva fórmula i les seves "
 "referències legals a la sortida JSON, la mateixa base legal que un càlcul"
 " real."
 

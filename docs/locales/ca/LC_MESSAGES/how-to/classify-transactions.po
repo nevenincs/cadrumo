@@ -391,9 +391,10 @@ msgstr ""
 "Una fila `MIXED` necessita una referència de proporcionalitat abans que "
 "un model pugui calcular a partir d'ella. La referència és una proporció "
 "de categoria desada aplicada mitjançant `--usage-ratio-id`. Un simple "
-"`--business-pct` registra un percentatge però no deixa la fila a punt; el"
-" preflight continua informant de `missing_proportionality_reference` fins"
-" que la fila porti `--usage-ratio-id`."
+"`--business-pct` registra un percentatge però no deixa la fila a punt; la"
+" comprovació prèvia continua informant de "
+"`missing_proportionality_reference` fins que la fila porti `--usage-"
+"ratio-id`."
 
 #: ../../how-to/classify-transactions.md:146
 msgid ""

@@ -75,8 +75,8 @@ msgstr "[Ordres de configuració](../cli/config.rst)"
 #: ../../reference/commands-and-configuration.md
 msgid "Ledger, modelo, review, live-read, export, record, and reconciliation"
 msgstr ""
-"Ledger, modelo, revisió, lectura en directe, exportació, registre i "
-"conciliació"
+"Registre de moviments, modelo, revisió, lectura en directe, exportació, "
+"registre i conciliació"
 
 #: ../../reference/commands-and-configuration.md
 msgid "`aeat app --help` and leaf help"
