@@ -28,6 +28,8 @@ from .review_workbook_overview import append_calculation_overview
 from .theme import StyleRole
 from .workbook_cells import SheetCellValue
 
+_FX_RATE_COLUMN = 17
+
 _MAX_ROWS = 10_000
 _MAX_CELLS = 250_000
 _MAX_TEXT = 40_000
@@ -658,13 +660,13 @@ def _format_ledger_row(layout: _ReviewLayout, index: int, row: LedgerEvidenceRow
         (7, row.value_in_eur),
         (9, row.taxable_base),
         (10, row.iva_amount),
-        (17, row.fx_rate),
+        (_FX_RATE_COLUMN, row.fx_rate),
         (18, row.business_pct),
         (19, row.iva_rate),
         (20, row.recargo_amount),
         (40, row.m210_gross_income_amount),
         (41, row.m210_applicable_rate),
     ):
-        unit = "ratio" if column in {18, 19, 41} else "decimal" if column == 17 else "money"
+        unit = "ratio" if column in {18, 19, 41} else "decimal" if column == _FX_RATE_COLUMN else "money"
         currency = "EUR" if column == 7 else row.currency
         layout.numeric(TabName.DETALLE, index, column, value, unit=unit, currency=currency)

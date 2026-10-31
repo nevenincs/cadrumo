@@ -23,6 +23,8 @@ from ..storage.calc_sheets.theme import StyleRole
 from .reconciliation_list_operation import ModeloReconciliationListEntryProjection, ModeloReconciliationListProjection
 from .verification_report_public_facts import ModeloVerificationRegistrySnapshotProjection
 
+_WORKBOOK_CELL_LIMIT = 250_000
+
 
 class _ReconciliationWorkbook:
     def __init__(self, label: Callable[[str], str]) -> None:
@@ -36,7 +38,7 @@ class _ReconciliationWorkbook:
     def table(
         self, tab: TabName, headers: Sequence[str], rows: Sequence[Sequence[str]], column_widths: Sequence[int]
     ) -> None:
-        if len(rows) > 10_000 or len(self.cells) + (len(rows) + 1) * len(headers) > 250_000:
+        if len(rows) > 10_000 or len(self.cells) + (len(rows) + 1) * len(headers) > _WORKBOOK_CELL_LIMIT:
             raise ValueError("reconciliation exceeds workbook limits; select one work unit")
         for row_index, values in enumerate((tuple(self.label(header) for header in headers), *rows), 1):
             for column, value in enumerate(values, 1):

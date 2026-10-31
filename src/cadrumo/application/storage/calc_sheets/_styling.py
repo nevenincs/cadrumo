@@ -28,6 +28,10 @@ from .records import (
 from .theme import StyleRole
 
 # Column indices shared by the two data tabs.
+_PROVENANCE_CONCEPT_COLUMN = 3
+_PROVENANCE_LEGAL_REFS_COLUMN = 6
+_PROVENANCE_SOURCE_REFS_COLUMN = 7
+
 _COL_SECTION = 1
 _COL_CASILLA = 2
 _COL_CONCEPTO = 3
@@ -256,7 +260,7 @@ def compute_styling(
         ),
     )
     if provenance_last >= 2:
-        for wrap_col in (3, 6, 7):
+        for wrap_col in (_PROVENANCE_CONCEPT_COLUMN, _PROVENANCE_LEGAL_REFS_COLUMN, _PROVENANCE_SOURCE_REFS_COLUMN):
             styled.append(
                 SheetStyledRange(
                     tab=TabName.PROVENANCE,

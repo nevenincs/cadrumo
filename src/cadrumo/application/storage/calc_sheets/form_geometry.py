@@ -26,6 +26,9 @@ from .records import (
     TabName,
 )
 
+_FIXED_LAYOUT_GRID_COLUMNS = 3
+"""A wider grid takes evenly repeated columns instead of the fixed layout."""
+
 
 def form_sources[M: (SheetExportMetadata, SheetReviewMetadata, SheetTemplatePreviewMetadata)](
     plan: SheetExportPlan[M],
@@ -76,7 +79,7 @@ def form_column_widths(layout: FormLayoutDefinition) -> tuple[int, ...]:
     )
     return (
         (3, 12, 12, 12, 12, *(width for _ in range(widest_grid) for width in (9, 18)), 3)
-        if widest_grid > 3
+        if widest_grid > _FIXED_LAYOUT_GRID_COLUMNS
         else (3, 12, 12, 12, 12, 12, 18, 12, 18, 10, 18, 10, 3)
         if widest_grid
         else (3, 12, 12, 12, 12, 12, 12, 12, 7, 10, 10, 10, 3)

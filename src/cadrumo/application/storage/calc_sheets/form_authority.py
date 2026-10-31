@@ -23,6 +23,8 @@ from .records import (
     TabName,
 )
 
+_BINDING_COLUMN = 3
+
 
 def form_binding_addresses[M: (SheetExportMetadata, SheetReviewMetadata, SheetTemplatePreviewMetadata)](
     plan: SheetExportPlan[M],
@@ -36,7 +38,7 @@ def form_binding_addresses[M: (SheetExportMetadata, SheetReviewMetadata, SheetTe
         str(cell.value): SheetCellAddress.at(cell.address.tab, cell.address.row, 4)
         for cell in plan.value_cells
         if cell.address.tab is TabName.ENTRADAS
-        and cell.address.column == 3
+        and cell.address.column == _BINDING_COLUMN
         and cell.value in {binding.id for binding in registry_revision.bindings}
     }
     input_addresses = {

@@ -23,6 +23,8 @@ from .records import (
     TabName,
 )
 
+_EUR_VALUE_COLUMN = 9
+
 Emit = Callable[[TabName, int, tuple[str | Decimal | bool | None, ...]], None]
 ReferenceText = Callable[[tuple[str, ...]], str]
 
@@ -155,7 +157,7 @@ def render_evidence[M: (SheetExportMetadata, SheetReviewMetadata, SheetTemplateP
             raise CalcSheetsEngineError("human evidence requires resolved document references")
         evidence_format(index, 2, "money", row.currency)
         for column, kind in ((4, "money"), (5, "ratio"), (6, "money"), (8, "decimal"), (9, "money")):
-            evidence_format(index, column, kind, "EUR" if column == 9 else row.currency)
+            evidence_format(index, column, kind, "EUR" if column == _EUR_VALUE_COLUMN else row.currency)
         emit(
             TabName.EVIDENCIA,
             index,

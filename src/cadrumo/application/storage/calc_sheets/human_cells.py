@@ -19,6 +19,8 @@ from .records import (
 )
 from .workbook_exclusions import formula_may_read_transport_cell
 
+_BINDING_COLUMN = 3
+
 
 def _origin_label(tab: TabName, row: int, readonly: set[tuple[TabName, int]]) -> str:
     if (tab, row) in readonly:
@@ -43,7 +45,7 @@ def _calculation_label(
     if address.column == 2:
         owner = rows.get((address.tab, address.row))
         return (printed_boxes.get(owner.id, owner.form_number) or "") if owner else ""
-    if address.column == 3 and isinstance(value, str) and value in bindings:
+    if address.column == _BINDING_COLUMN and isinstance(value, str) and value in bindings:
         return label(value)
     return value
 
