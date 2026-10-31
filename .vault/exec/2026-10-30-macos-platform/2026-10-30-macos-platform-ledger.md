@@ -5,7 +5,7 @@ tags:
 date: '2026-10-30'
 modified: '2026-10-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:fcaa552b04c8421f3c8039382e7b2f2037616ed2d3d4211c80c2c7f625681ac5'
+body_hash: 'sha256:074cd3225e6fd01010337f33599a85030f2da4e75bd8eec3e473875f3b453467'
 related:
   - "[[2026-10-30-macos-platform-plan]]"
 ---
@@ -137,8 +137,15 @@ src/cadrumo_runtime/host/tests/test_desktop_holder_ancestry.py
 src/cadrumo_runtime/host/tests/test_desktop_window_holder_macos.py
 src/cadrumo_runtime/host/tests/test_desktop_window_holder.py`
 - `S08` `verify:` `dev/runtime_lifecycle/native_client_live.py against the real Python runtime on macOS` -> `pass`
+- `S09` `M` `native/desktop/src-tauri/src/terminal/tests/live.rs`
+- `S09` `M` `dev/packaging/native/tests/stand_in_launch.py`
+- `S09` `M` `dev/packaging/native/release_image_scan.py`
+- `S09` `M` `dev/packaging/tests/test_native_storage_environment_contract.py`
+- `S09` `verify:` `pytest launch probe, storage vectors, contract, release scan, core storage_environment` -> `pass`
+- `S09` `verify:` `ctest platform resolver/invocation/fmt/clippy, manager fmt, application fmt/clippy, desktop fmt, desktop clippy-backend` -> `pass`
 
 ## Notes
 
 - `S03` Baseline 396 failures reduced to 15 on rerun; remaining platform and in-progress failures fixed or already fixed by concurrent sessions; Chromium provisioned (581 MB)
 - `S05` payload stage built by a parallel session's app-payload run in the shared build dir; relocation edits owned by that session
+- `S09` manager rust/supervision/clippy blocked by foreign uncommitted unsafe blocks in launch.rs; application diagnostics retry test fails, unrelated; bundle.environment-launch not rerun for disk
