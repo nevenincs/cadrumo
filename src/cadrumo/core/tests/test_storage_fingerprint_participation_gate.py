@@ -42,7 +42,7 @@ from ..storage_taxonomy import (
     StorageCategory,
     StorageScope,
 )
-from ..storage_taxonomy_locations import STORAGE_TAXONOMY, storage_path
+from ..storage_taxonomy_locations import STORAGE_TAXONOMY, storage_path, uses_external_transport
 from .storage_taxonomy_views import FINGERPRINT_EXCLUDED_STORAGE_CATEGORIES
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -176,6 +176,8 @@ def _excluded_root_members() -> tuple[StorageCategory, ...]:
         if location.scope is StorageScope.ROOT
         and location.materialised
         and location.fingerprint_participation is FingerprintParticipation.EXCLUDED
+        # An external namespace lies outside the root under test, and a test must not write to it.
+        and not uses_external_transport(location)
     )
 
 

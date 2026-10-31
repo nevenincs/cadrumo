@@ -76,7 +76,15 @@ impl Directory {
     }
 
     pub(super) fn installed(create: bool) -> io::Result<Self> {
-        let transport = DarwinTransport::installed(create)?;
+        Self::in_transport(DarwinTransport::installed(create)?)
+    }
+
+    /// The namespace a caller owns beneath `base`, with the installed checks.
+    pub(super) fn beneath(base: &Path) -> io::Result<Self> {
+        Self::in_transport(DarwinTransport::beneath(base, true)?)
+    }
+
+    fn in_transport(transport: DarwinTransport) -> io::Result<Self> {
         let mut directory = Self::open(transport.directory())?;
         directory.2 = Some(transport);
         directory.verify()?;

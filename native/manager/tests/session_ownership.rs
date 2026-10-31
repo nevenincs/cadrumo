@@ -8,7 +8,9 @@
 
 use cadrumo_manager::session::ManagerSession;
 use cadrumo_manager::session::claim::StartClaim;
-use cadrumo_manager::session::instance::{claim_session, manager_id};
+#[cfg(target_os = "macos")]
+use cadrumo_manager::session::instance::claim_session_beneath;
+use cadrumo_manager::session::instance::{SessionLock, claim_session, manager_id};
 use cadrumo_manager::session::ownership::{
     Located, ObservedRuntime, Ownership, Role, RuntimeLocator, StartKind, WaitReason,
     reserve_restart,
@@ -26,6 +28,8 @@ use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 const USER: &str = "S-1-5-21-1004336348-1177238915-682003330-1001";
 const HELPER_ROLE: &str = "CADRUMO_OWNERSHIP_HELPER";
 const HELPER_TARGET: &str = "CADRUMO_OWNERSHIP_TARGET";
+/// Names the transport namespace a helper claims in, when its parent owns one.
+const HELPER_NAMESPACE: &str = "CADRUMO_OWNERSHIP_NAMESPACE";
 /// Marks the helper's reports among the test harness's own output.
 const REPORT: &str = "@ownership-report ";
 
@@ -55,6 +59,56 @@ fn nanos() -> u128 {
         .duration_since(UNIX_EPOCH)
         .expect("clock")
         .as_nanos()
+}
+
+/// The Darwin transport namespace a test owns in place of the account's, so a run never
+/// leaves locks in the real per-user directory. Its path is short because a socket path
+/// must fit its bound. Other platforms scope the session lock without a directory.
+struct Namespace(Option<PathBuf>);
+
+impl Namespace {
+    #[cfg(target_os = "macos")]
+    fn new(label: &str) -> Self {
+        let path =
+            PathBuf::from("/private/tmp").join(format!("cmo-{label}-{}", nanos() % 1_000_000));
+        std::fs::create_dir_all(&path).expect("namespace base");
+        std::fs::set_permissions(&path, std::os::unix::fs::PermissionsExt::from_mode(0o700))
+            .expect("private namespace base");
+        Self(Some(path))
+    }
+
+    #[cfg(windows)]
+    fn new(_label: &str) -> Self {
+        Self(None)
+    }
+
+    #[cfg(any(windows, target_os = "macos"))]
+    fn claim(&self, manager_id: &str, patience: Duration) -> std::io::Result<Option<SessionLock>> {
+        claim_in(self.0.as_deref(), manager_id, patience)
+    }
+}
+
+impl Drop for Namespace {
+    fn drop(&mut self) {
+        if let Some(path) = &self.0 {
+            let _ = std::fs::remove_dir_all(path);
+        }
+    }
+}
+
+/// Claims the session lock in the namespace beneath `base` when one is named.
+fn claim_in(
+    base: Option<&Path>,
+    manager_id: &str,
+    patience: Duration,
+) -> std::io::Result<Option<SessionLock>> {
+    #[cfg(target_os = "macos")]
+    if let Some(base) = base {
+        return claim_session_beneath(manager_id, patience, base);
+    }
+    #[cfg(not(target_os = "macos"))]
+    let _ = base;
+    claim_session(manager_id, patience)
 }
 
 /// The runtime as the simulated sessions see it: its pid and session, if one runs.
@@ -474,7 +528,15 @@ struct Helper {
 
 impl Helper {
     fn spawn(role: &str, target: &str) -> (Self, String) {
-        let mut child = Command::new(std::env::current_exe().expect("test binary"))
+        Self::spawn_in(role, target, &Namespace(None))
+    }
+
+    fn spawn_in(role: &str, target: &str, namespace: &Namespace) -> (Self, String) {
+        let mut command = Command::new(std::env::current_exe().expect("test binary"));
+        if let Some(base) = &namespace.0 {
+            command.env(HELPER_NAMESPACE, base);
+        }
+        let mut child = command
             .args(["--exact", "helper", "--nocapture", "--test-threads=1"])
             .env(HELPER_ROLE, role)
             .env(HELPER_TARGET, target)
@@ -517,6 +579,7 @@ fn helper() {
         return;
     };
     let target = std::env::var(HELPER_TARGET).expect("helper target");
+    let namespace = std::env::var_os(HELPER_NAMESPACE).map(PathBuf::from);
     let report = |text: &str| println!("{REPORT}{text}");
     let held: Box<dyn std::any::Any> = match role.as_str() {
         "claim" => match StartClaim::take(Path::new(&target), Duration::ZERO).expect("take") {
@@ -526,17 +589,19 @@ fn helper() {
                 return;
             }
         },
-        "session" => match claim_session(&target, Duration::ZERO).expect("claim") {
-            Some(lock) => Box::new(lock),
-            None => {
-                report("busy");
-                return;
+        "session" => {
+            match claim_in(namespace.as_deref(), &target, Duration::ZERO).expect("claim") {
+                Some(lock) => Box::new(lock),
+                None => {
+                    report("busy");
+                    return;
+                }
             }
-        },
+        }
         // As every supervisor of a root claims it: the manager identifier scoped to the root.
         "root" => {
             let scoped = manager_id(Path::new(&target)).expect("scope");
-            match claim_session(&scoped, Duration::ZERO).expect("claim") {
+            match claim_in(namespace.as_deref(), &scoped, Duration::ZERO).expect("claim") {
                 Some(lock) => Box::new(lock),
                 None => {
                     report("busy");
@@ -580,6 +645,42 @@ fn a_crashed_claim_holder_does_not_block_a_takeover() {
     }
 }
 
+/// A claim in the namespace a test owns leaves the account's transport directory as it
+/// found it, so a run never contends with an installed manager.
+#[cfg(target_os = "macos")]
+#[test]
+fn a_claim_in_a_test_namespace_leaves_the_account_transport_directory_untouched() {
+    use cadrumo_platform::transport::DarwinTransport;
+    let entries = || -> std::collections::BTreeSet<std::ffi::OsString> {
+        DarwinTransport::installed(false)
+            .ok()
+            .and_then(|transport| std::fs::read_dir(transport.directory()).ok())
+            .into_iter()
+            .flatten()
+            .filter_map(|entry| entry.ok().map(|entry| entry.file_name()))
+            .collect()
+    };
+    let before = entries();
+    let namespace = Namespace::new("guard");
+    let id = format!(
+        "test.cadrumo.guard-{}-{}.manager",
+        std::process::id(),
+        nanos()
+    );
+    let held = namespace
+        .claim(&id, Duration::ZERO)
+        .expect("claim")
+        .expect("lock");
+    assert!(
+        namespace
+            .claim(&id, Duration::ZERO)
+            .expect("claim")
+            .is_none()
+    );
+    drop(held);
+    assert_eq!(entries(), before);
+}
+
 /// Supervisors of one storage root in one session share its session lock, whichever
 /// path names the root, while a supervisor of another root holds a lock of its own.
 /// The standalone manager and a desktop hosting the manager core derive the lock
@@ -588,6 +689,7 @@ fn a_crashed_claim_holder_does_not_block_a_takeover() {
 #[test]
 fn supervisors_share_one_roots_session_lock_and_other_roots_stay_independent() {
     let base = Root::new("roots");
+    let namespace = Namespace::new("roots");
     // Reached without links, since an absent root is created only on such a path.
     #[cfg(unix)]
     let directory = std::fs::canonicalize(&base.0).expect("resolved base");
@@ -595,7 +697,8 @@ fn supervisors_share_one_roots_session_lock_and_other_roots_stay_independent() {
     let directory = base.0.clone();
     let first = directory.join("first");
     let second = directory.join("second");
-    let (holder, report) = Helper::spawn("root", first.to_str().expect("UTF-8 root"));
+    let (holder, report) =
+        Helper::spawn_in("root", first.to_str().expect("UTF-8 root"), &namespace);
     assert_eq!(report, "holding");
     // The holder created the absent root to read its identity.
     assert!(first.is_dir());
@@ -606,15 +709,17 @@ fn supervisors_share_one_roots_session_lock_and_other_roots_stay_independent() {
         manager_id(&first).expect("scope")
     );
     assert!(
-        claim_session(
-            &manager_id(&same).expect("scope"),
-            Duration::from_millis(80)
-        )
-        .expect("claim")
-        .is_none(),
+        namespace
+            .claim(
+                &manager_id(&same).expect("scope"),
+                Duration::from_millis(80)
+            )
+            .expect("claim")
+            .is_none(),
         "a second supervisor of the held root took its session lock"
     );
-    let (other, report) = Helper::spawn("root", second.to_str().expect("UTF-8 root"));
+    let (other, report) =
+        Helper::spawn_in("root", second.to_str().expect("UTF-8 root"), &namespace);
     assert_eq!(
         report, "holding",
         "another root contended for the held lock"
@@ -623,8 +728,9 @@ fn supervisors_share_one_roots_session_lock_and_other_roots_stay_independent() {
     drop(holder);
     let deadline = Instant::now() + Duration::from_secs(5);
     let released = loop {
-        if let Some(lock) =
-            claim_session(&manager_id(&first).expect("scope"), Duration::ZERO).expect("claim")
+        if let Some(lock) = namespace
+            .claim(&manager_id(&first).expect("scope"), Duration::ZERO)
+            .expect("claim")
         {
             break lock;
         }

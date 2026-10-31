@@ -33,6 +33,23 @@ pub(crate) struct SessionClaim {
 
 impl SessionClaim {
     pub(crate) fn acquire(manager_id: &str, patience: Duration) -> io::Result<Option<Self>> {
+        Self::acquire_in(Directory::installed(true)?, manager_id, patience)
+    }
+
+    /// Acquires in a namespace the caller owns beneath `base`.
+    pub(crate) fn acquire_beneath(
+        base: &Path,
+        manager_id: &str,
+        patience: Duration,
+    ) -> io::Result<Option<Self>> {
+        Self::acquire_in(Directory::beneath(base)?, manager_id, patience)
+    }
+
+    fn acquire_in(
+        directory: Directory,
+        manager_id: &str,
+        patience: Duration,
+    ) -> io::Result<Option<Self>> {
         let process = Process::open(std::process::id())?;
         let session = Login::open()?.current(&process)?;
         let owner = Peer {
@@ -46,9 +63,7 @@ impl SessionClaim {
             &session.uid().to_string(),
             &session.id().to_string(),
         )?;
-        let Some(namespace) =
-            NamespaceClaim::acquire(Directory::installed(true)?, &name, patience)?
-        else {
+        let Some(namespace) = NamespaceClaim::acquire(directory, &name, patience)? else {
             return Ok(None);
         };
         owner.revalidate(&session)?;

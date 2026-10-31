@@ -48,7 +48,7 @@ pytestmark = [
 ]
 
 
-@pytest.mark.parametrize("session_end,running", [(False, False), (True, False), (True, True)])
+@pytest.mark.parametrize("session_end,running", [(False, False), (False, True), (True, False), (True, True)])
 def test_runtime_drain_contains_all_workers_and_settles_intent(
     tmp_path: Path, session_end: bool, running: bool
 ) -> None:
@@ -196,12 +196,9 @@ def test_runtime_drain_contains_all_workers_and_settles_intent(
             with pytest.raises(RefusalError):
                 worker.status()
             after = asyncio.run(OperationJournalRepository(storage_root=root).load(submitted.receipt.operation_id))
-            if session_end:
-                assert after.lifecycle is OperationLifecycle.TERMINAL
-                assert after.terminal_condition is OperationTerminalCondition.INTERRUPTED
-            else:
-                assert after.lifecycle is OperationLifecycle.CREATED
-                assert after.terminal_condition is None
+            # Every stop records the work a contained worker left unfinished.
+            assert after.lifecycle is OperationLifecycle.TERMINAL
+            assert after.terminal_condition is OperationTerminalCondition.INTERRUPTED
             assert after.effect is (OperationEffect.UNKNOWN if running else OperationEffect.NONE)
         finally:
             release_commit.set()
