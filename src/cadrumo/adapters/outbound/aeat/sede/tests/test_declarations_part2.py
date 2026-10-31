@@ -93,6 +93,50 @@ def _casilla_values(values: Mapping[object, Decimal]) -> dict[CasillaId, Decimal
     return validated_casilla_id_map(values, surface="sede declarations part2 casilla values")
 
 
+def _m130_submitted_file_record(body: bytes) -> tuple[ExpedientesDeclaration, FiledDeclaracionArtefact]:
+    declaration = ExpedientesDeclaration(
+        modelo="130",
+        ejercicio=2026,
+        period=Period.from_year_and_code(2026, "1T"),
+        expediente_id="202610013522222A",
+        estado="ALTA",
+        presented_at=datetime(2026, 4, 20, 10, 0, 0, tzinfo=UTC),
+        justificante_link_text="Ver",
+        archive_link_text="Ver",
+    )
+    artefact = FiledDeclaracionArtefact(
+        kind="submitted_file",
+        source_url=AnyHttpUrl(_DECLARATIONS_LISTING_URL),
+        content_type="application/octet-stream",
+        byte_count=len(body),
+        sha256=hashlib.sha256(body).hexdigest(),
+        captured_at=datetime(2026, 4, 20, 10, 0, 0, tzinfo=UTC),
+    )
+    return declaration, artefact
+
+
+def _m100_submitted_file_record(body: bytes) -> tuple[ExpedientesDeclaration, FiledDeclaracionArtefact]:
+    declaration = ExpedientesDeclaration(
+        modelo="100",
+        ejercicio=2023,
+        period=Period.from_year_and_code(2023, "0A"),
+        expediente_id="202310013522222A",
+        estado="ALTA",
+        presented_at=datetime(2024, 2, 1, 19, 15, 34, tzinfo=UTC),
+        justificante_link_text="Ver",
+        archive_link_text="Ver",
+    )
+    artefact = FiledDeclaracionArtefact(
+        kind="submitted_file",
+        source_url=AnyHttpUrl(_DECLARATIONS_LISTING_URL),
+        content_type="application/xml",
+        byte_count=len(body),
+        sha256=hashlib.sha256(body).hexdigest(),
+        captured_at=datetime(2026, 5, 5, 10, 0, 0, tzinfo=UTC),
+    )
+    return declaration, artefact
+
+
 class TestSubmittedFileObservation:
     """Verify submitted-file artefacts are interpreted through the registry layout."""
 
@@ -100,24 +144,7 @@ class TestSubmittedFileObservation:
         with _indexed_authority_for_test().operation() as _authority_operation_for_test:
             snapshot = _modelo_130_snapshot(operation=_authority_operation_for_test)
             body = _submitted_file_payload()
-            declaration = ExpedientesDeclaration(
-                modelo="130",
-                ejercicio=2026,
-                period=Period.from_year_and_code(2026, "1T"),
-                expediente_id="202610013522222A",
-                estado="ALTA",
-                presented_at=datetime(2026, 4, 20, 10, 0, 0, tzinfo=UTC),
-                justificante_link_text="Ver",
-                archive_link_text="Ver",
-            )
-            artefact = FiledDeclaracionArtefact(
-                kind="submitted_file",
-                source_url=AnyHttpUrl(_DECLARATIONS_LISTING_URL),
-                content_type="application/octet-stream",
-                byte_count=len(body),
-                sha256=hashlib.sha256(body).hexdigest(),
-                captured_at=datetime(2026, 4, 20, 10, 0, 0, tzinfo=UTC),
-            )
+            declaration, artefact = _m130_submitted_file_record(body)
 
             observed = observed_casillas_from_submitted_file(
                 snapshot=snapshot,
@@ -266,24 +293,7 @@ class TestSubmittedFileObservation:
         with _indexed_authority_for_test().operation() as _authority_operation_for_test:
             snapshot = _modelo_130_snapshot(operation=_authority_operation_for_test)
             body = _submitted_file_payload()
-            declaration = ExpedientesDeclaration(
-                modelo="130",
-                ejercicio=2026,
-                period=Period.from_year_and_code(2026, "1T"),
-                expediente_id="202610013522222A",
-                estado="ALTA",
-                presented_at=datetime(2026, 4, 20, 10, 0, 0, tzinfo=UTC),
-                justificante_link_text="Ver",
-                archive_link_text="Ver",
-            )
-            artefact = FiledDeclaracionArtefact(
-                kind="submitted_file",
-                source_url=AnyHttpUrl(_DECLARATIONS_LISTING_URL),
-                content_type="application/octet-stream",
-                byte_count=len(body),
-                sha256=hashlib.sha256(body).hexdigest(),
-                captured_at=datetime(2026, 4, 20, 10, 0, 0, tzinfo=UTC),
-            )
+            declaration, artefact = _m130_submitted_file_record(body)
             observed = observed_casillas_from_submitted_file(
                 snapshot=snapshot,
                 declaration=declaration,
@@ -360,24 +370,7 @@ class TestSubmittedFileObservation:
             # submitted file yields every expected result casilla, so coverage is 1.0.
             snapshot = _modelo_130_snapshot(operation=_authority_operation_for_test)
             body = _submitted_file_payload()
-            declaration = ExpedientesDeclaration(
-                modelo="130",
-                ejercicio=2026,
-                period=Period.from_year_and_code(2026, "1T"),
-                expediente_id="202610013522222A",
-                estado="ALTA",
-                presented_at=datetime(2026, 4, 20, 10, 0, 0, tzinfo=UTC),
-                justificante_link_text="Ver",
-                archive_link_text="Ver",
-            )
-            artefact = FiledDeclaracionArtefact(
-                kind="submitted_file",
-                source_url=AnyHttpUrl(_DECLARATIONS_LISTING_URL),
-                content_type="application/octet-stream",
-                byte_count=len(body),
-                sha256=hashlib.sha256(body).hexdigest(),
-                captured_at=datetime(2026, 4, 20, 10, 0, 0, tzinfo=UTC),
-            )
+            declaration, artefact = _m130_submitted_file_record(body)
             casillas = observed_casillas_from_submitted_file(
                 snapshot=snapshot,
                 declaration=declaration,
@@ -461,24 +454,7 @@ class TestSubmittedFileObservation:
         with _indexed_authority_for_test().operation() as _authority_operation_for_test:
             snapshot = _modelo_snapshot("100", filing_year=2023, period="0A", operation=_authority_operation_for_test)
             body = _value_valid_m100_submitted_payload()
-            declaration = ExpedientesDeclaration(
-                modelo="100",
-                ejercicio=2023,
-                period=Period.from_year_and_code(2023, "0A"),
-                expediente_id="202310013522222A",
-                estado="ALTA",
-                presented_at=datetime(2024, 2, 1, 19, 15, 34, tzinfo=UTC),
-                justificante_link_text="Ver",
-                archive_link_text="Ver",
-            )
-            artefact = FiledDeclaracionArtefact(
-                kind="submitted_file",
-                source_url=AnyHttpUrl(_DECLARATIONS_LISTING_URL),
-                content_type="application/xml",
-                byte_count=len(body),
-                sha256=hashlib.sha256(body).hexdigest(),
-                captured_at=datetime(2026, 5, 5, 10, 0, 0, tzinfo=UTC),
-            )
+            declaration, artefact = _m100_submitted_file_record(body)
 
             observed = observed_casillas_from_submitted_file(
                 snapshot=snapshot,
@@ -518,24 +494,7 @@ class TestSubmittedFileObservation:
         with _indexed_authority_for_test().operation() as _authority_operation_for_test:
             snapshot = _modelo_snapshot("100", filing_year=2023, period="0A", operation=_authority_operation_for_test)
             body = _value_valid_m100_submitted_payload()
-            declaration = ExpedientesDeclaration(
-                modelo="100",
-                ejercicio=2023,
-                period=Period.from_year_and_code(2023, "0A"),
-                expediente_id="202310013522222A",
-                estado="ALTA",
-                presented_at=datetime(2024, 2, 1, 19, 15, 34, tzinfo=UTC),
-                justificante_link_text="Ver",
-                archive_link_text="Ver",
-            )
-            artefact = FiledDeclaracionArtefact(
-                kind="submitted_file",
-                source_url=AnyHttpUrl(_DECLARATIONS_LISTING_URL),
-                content_type="application/xml",
-                byte_count=len(body),
-                sha256=hashlib.sha256(body).hexdigest(),
-                captured_at=datetime(2026, 5, 5, 10, 0, 0, tzinfo=UTC),
-            )
+            declaration, artefact = _m100_submitted_file_record(body)
             store = FiledDeclaracionObservationStore(
                 tmp_path / "observations",
             )
