@@ -5,6 +5,7 @@ import {
   formatCount,
   formatDecimal,
   formatPercent,
+  formatSize,
   heldDecimal,
   marksOf,
   readLocaleDecimal,
@@ -233,6 +234,69 @@ test("counts follow the locale's grouping", () => {
     expect(formatCount(locale, 1234)).toBe(
       new Intl.NumberFormat(locale).format(1234),
     );
+});
+
+// Worked by hand in steps of 1024: 1536 / 1024 = 1.5, 1048575 / 1024 =
+// 1023.999 rounds to 1024 KB, which is 1 MB, and 1280 / 1024 = 1.25 is a half
+// that rounds up.
+test("file sizes use steps of 1024 and the locale's marks", () => {
+  const B = "\u00a0B";
+  const KB = "\u00a0KB";
+  const MB = "\u00a0MB";
+  const GB = "\u00a0GB";
+  expect(formatSize("en", 0)).toBe(`0${B}`);
+  expect(formatSize("es", 0)).toBe(`0${B}`);
+  expect(formatSize("en", 1023)).toBe(`1,023${B}`);
+  expect(formatSize("es", 1023)).toBe(`1023${B}`);
+  expect(formatSize("en", 1024)).toBe(`1${KB}`);
+  expect(formatSize("es", 1024)).toBe(`1${KB}`);
+  expect(formatSize("en", 1536)).toBe(`1.5${KB}`);
+  expect(formatSize("es", 1536)).toBe(`1,5${KB}`);
+  expect(formatSize("ca", 1536)).toBe(`1,5${KB}`);
+  expect(formatSize("hu", 1536)).toBe(`1,5${KB}`);
+  expect(formatSize("en", 1572864)).toBe(`1.5${MB}`);
+  expect(formatSize("es", 3 * 1024 ** 3)).toBe(`3${GB}`);
+  // 1025 / 1024 = 1.0009 and 1127 / 1024 = 1.1006 round to one decimal.
+  expect(formatSize("en", 1025)).toBe(`1${KB}`);
+  expect(formatSize("en", 1127)).toBe(`1.1${KB}`);
+  expect(formatSize("en", 1280)).toBe(`1.3${KB}`);
+  expect(formatSize("es", 1280)).toBe(`1,3${KB}`);
+  // From ten up a unit shows whole numbers: 10240 / 1024 = 10, 15360 = 15.
+  expect(formatSize("en", 10240)).toBe(`10${KB}`);
+  expect(formatSize("en", 15360)).toBe(`15${KB}`);
+  expect(formatSize("en", 10239)).toBe(`10${KB}`);
+  expect(formatSize("en", 15 * 1024 + 512)).toBe(`16${KB}`);
+  // A figure that rounds to a full step takes the next unit.
+  expect(formatSize("en", 1024 * 1024 - 1)).toBe(`1${MB}`);
+  expect(formatSize("en", 1024 ** 3 - 1)).toBe(`1${GB}`);
+  expect(formatSize("en", 1024 ** 2)).toBe(`1${MB}`);
+  expect(formatSize("en", 180 * 1024 ** 2)).toBe(`180${MB}`);
+  // GB is the last unit, so a larger size groups, and Spanish leaves four
+  // digits whole: 5120 GB, then 12 * 1024 = 12288 GB.
+  expect(formatSize("en", 5120 * 1024 ** 3)).toBe(`5,120${GB}`);
+  expect(formatSize("es", 5120 * 1024 ** 3)).toBe(`5120${GB}`);
+  expect(formatSize("en", 12288 * 1024 ** 3)).toBe(`12,288${GB}`);
+  expect(formatSize("es", 12288 * 1024 ** 3)).toBe(`12.288${GB}`);
+  // Nothing readable as a size counts as none.
+  expect(formatSize("en", -5)).toBe(`0${B}`);
+  expect(formatSize("en", Number.NaN)).toBe(`0${B}`);
+  expect(formatSize("en", Number.POSITIVE_INFINITY)).toBe(`0${B}`);
+});
+
+test("file sizes agree with Intl's reading of the same quotient", () => {
+  const cases: [number, number, string][] = [
+    [1536, 1, "KB"],
+    [7 * 1024 + 256, 1, "KB"],
+    [3 * 1024 ** 2 + 512 * 1024, 2, "MB"],
+    [9 * 1024 ** 3, 3, "GB"],
+  ];
+  for (const locale of LOCALES)
+    for (const [bytes, power, unit] of cases) {
+      const figure = new Intl.NumberFormat(locale, {
+        maximumFractionDigits: 1,
+      }).format(bytes / 1024 ** power);
+      expect(formatSize(locale, bytes)).toBe(`${figure}\u00a0${unit}`);
+    }
 });
 
 test("marks are the locale's own", () => {

@@ -176,15 +176,3 @@ export function listRefusalWords(t: Translate, code: string): string {
       return t("desktop.providers.local_models_refused_unknown");
   }
 }
-
-/** A download size in the window's language. */
-export function sizeWords(locale: string, bytes: number): string {
-  const gigabytes = bytes / 1e9;
-  const [value, unit] =
-    gigabytes >= 1 ? [gigabytes, "gigabyte"] : [bytes / 1e6, "megabyte"];
-  return new Intl.NumberFormat(locale, {
-    style: "unit",
-    unit,
-    maximumFractionDigits: 1,
-  }).format(value);
-}

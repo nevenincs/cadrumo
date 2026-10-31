@@ -157,8 +157,9 @@ export function InvoiceSection({
                   : t("desktop.ledger.inspector.invoice.received")}
               </Badge>
               <span className="ml-auto font-medium tabular-nums">
-                {formatAmount(locale, invoice.grand_total.decimal)}{" "}
-                {invoice.currency}
+                {formatAmount(locale, invoice.grand_total.decimal, {
+                  currency: invoice.currency,
+                })}
               </span>
             </p>
             <dl className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-0.5 text-sm">

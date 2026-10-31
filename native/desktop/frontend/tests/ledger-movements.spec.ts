@@ -22,7 +22,10 @@ import {
   statusWidth,
   type SortLabels,
 } from "../src/components/ledger/movements/movementsModel";
-import { statusWord } from "../src/components/ledger/movements/movementWords";
+import {
+  classificationText,
+  statusWord,
+} from "../src/components/ledger/movements/movementWords";
 import type {
   LedgerPreflightReason,
   LedgerRow,
@@ -747,4 +750,30 @@ test("a compact status column widens by one glyph for each kind of mark beside t
 test("a date carrying its year gets the room for it", () => {
   expect(dateWidth(false)).toBe(4.5);
   expect(dateWidth(true)).toBeGreaterThan(dateWidth(false));
+});
+
+test("a mixed classification names its share in the locale's percent form", () => {
+  const t = (key: string, values?: Record<string, string | number>) =>
+    `${key}|${values?.share ?? ""}`;
+  const said = (locale: string, classification: string, pct: string | null) =>
+    classificationText(t, locale, {
+      business_classification: classification,
+      business_pct: pct,
+    });
+  expect(said("en", "MIXED", "0.5")).toBe(
+    "desktop.ledger.classification.mixed_share|50%",
+  );
+  expect(said("es", "MIXED", "0.5")).toBe(
+    "desktop.ledger.classification.mixed_share|50\u00a0%",
+  );
+  expect(said("es", "MIXED", "0.0175")).toBe(
+    "desktop.ledger.classification.mixed_share|1,75\u00a0%",
+  );
+  // Without a share, or for another classification, the share is not said.
+  expect(said("es", "MIXED", null)).toBe(
+    "desktop.ledger.classification.mixed|",
+  );
+  expect(said("es", "BUSINESS", "0.5")).toBe(
+    "desktop.ledger.classification.business|",
+  );
 });

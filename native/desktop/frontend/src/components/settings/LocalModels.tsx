@@ -8,10 +8,10 @@ import {
   addedTo,
   laneModelList,
   listRefusalWords,
-  sizeWords,
   type CatalogLane,
   type LaneModel,
 } from "../../shell/localModelLanes";
+import { formatSize } from "../../shared/numbers";
 import type { AgentModelLicenceFacts } from "../../shell/agentSession";
 import { useLocalModels, type LocalModelHost } from "../../shell/localModels";
 import { useProvisioning } from "../../shell/provisioning";
@@ -47,7 +47,7 @@ function ModelFacts({ model, locale }: { model: LaneModel; locale: string }) {
       {model.sizeBytes !== null && (
         <li data-fact="size">
           {t("desktop.providers.local_model_size", {
-            size: sizeWords(locale, model.sizeBytes),
+            size: formatSize(locale, model.sizeBytes),
           })}
         </li>
       )}

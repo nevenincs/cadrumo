@@ -27,11 +27,11 @@ import type {
 } from "../../../shell/ledger";
 import { useStrings, type Translate } from "../../../shell/strings";
 import { formatTime } from "../../../shared/dateFormats";
+import { formatSize } from "../../../shared/numbers";
 import { SetupOffer } from "../../setup/SetupOffer";
 import { rowTone } from "../../setup/setupWords";
 import { kindChoice } from "../invoices/invoiceWords";
 import { applyDocuments, type DocumentsApplied } from "../transfer/importModel";
-import { sizeText } from "../transfer/transferWords";
 import { write } from "../invoices/invoiceWrites";
 import { landingSettle, useWritePause, WriteHold } from "../WritePause";
 import { batchStatusLabel, sourceLabel } from "./documentWords";
@@ -249,7 +249,7 @@ export function AttachmentQueue({
             <td className={cell}>{sourceLabel(t, item.source)}</td>
             <td className={cell}>{item.mime_type}</td>
             <td className={`${cell} tabular-nums`}>
-              {sizeText(locale, item.bytes_size)}
+              {formatSize(locale, item.bytes_size)}
             </td>
             <td className={`${cell} tabular-nums`}>
               {formatTime(locale, item.captured_at)}

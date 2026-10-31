@@ -3,7 +3,7 @@ import { readPx } from "../../shell/metrics";
 import { useStrings } from "../../shell/strings";
 import { AgentTextAction } from "./AgentAction";
 import { AttachmentTile } from "./AttachmentTile";
-import { formatSize } from "./files";
+import { formatSize } from "../../shared/numbers";
 import type { StagedAttachment } from "./types";
 
 /** The rows of tiles the well shows before it folds the rest away. */

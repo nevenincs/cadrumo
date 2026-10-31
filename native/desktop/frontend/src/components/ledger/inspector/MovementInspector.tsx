@@ -409,8 +409,7 @@ export function MovementInspector({
         </div>
         <p className="flex flex-wrap items-center gap-2 text-sm">
           <span className="font-medium tabular-nums">
-            {formatAmount(locale, tx.amount)}{" "}
-            <span className="text-muted-foreground">{tx.currency}</span>
+            {formatAmount(locale, tx.amount, { currency: tx.currency })}
           </span>
           <span>{directionLabel(t, tx.direction)}</span>
           <Badge variant="neutral" data-status={word}>

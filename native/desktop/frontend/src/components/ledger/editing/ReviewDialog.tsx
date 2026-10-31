@@ -177,7 +177,7 @@ function actionLines(
           valueText(t, locale, "amount", child.amount),
           child.description,
           child.classify
-            ? classificationText(t, {
+            ? classificationText(t, locale, {
                 business_classification: child.classify.classification,
                 business_pct: child.classify.business_pct ?? null,
               })

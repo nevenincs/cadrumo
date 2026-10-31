@@ -173,6 +173,35 @@ export function formatCount(locale: string, n: number | bigint): string {
   return numberFormat(locale, {}).format(n);
 }
 
+const SIZE_UNITS = ["B", "KB", "MB", "GB"] as const;
+const SIZE_STEP = 1024n;
+
+/**
+ * A file size in steps of 1024, labelled B, KB, MB and GB, in the largest unit
+ * that keeps the figure at least one. A figure under ten in a unit above bytes
+ * shows one decimal, any other whole. It is drawn from exact integer arithmetic,
+ * so a figure that rounds up to a full step moves to the next unit. A size that
+ * is not a finite count is none.
+ */
+export function formatSize(locale: string, bytes: number): string {
+  const total = Number.isFinite(bytes)
+    ? BigInt(Math.floor(Math.max(0, bytes)))
+    : 0n;
+  const last = SIZE_UNITS.length - 1;
+  let scale = 1n;
+  for (let unit = 0; ; unit += 1, scale *= SIZE_STEP) {
+    if (unit < last && total >= scale * SIZE_STEP) continue;
+    const places = unit > 0 && total < 10n * scale ? 1 : 0;
+    const tenfold = places === 1 ? 10n : 1n;
+    // Half up on the exact quotient: twice the numerator against twice the scale.
+    const shown = (total * tenfold * 2n + scale) / (2n * scale);
+    if (unit < last && shown >= SIZE_STEP * tenfold) continue;
+    const text =
+      places === 1 ? `${shown / tenfold}.${shown % tenfold}` : shown.toString();
+    return `${formatDecimal(locale, text, { maxFraction: places })}\u00a0${SIZE_UNITS[unit]}`;
+  }
+}
+
 /** The locale's grouping and decimal marks. */
 export function marksOf(locale: string): { group: string; decimal: string } {
   const parts = numberFormat(locale, {

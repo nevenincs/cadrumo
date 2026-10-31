@@ -231,7 +231,7 @@ export function ClassifySection({
       <div className="ledger-decision grid gap-2 rounded-md bg-accent p-2.5">
         <p className="flex flex-wrap items-baseline gap-x-2 text-sm">
           <span className="font-medium">
-            {classificationText(t, row.transaction)}
+            {classificationText(t, locale, row.transaction)}
           </span>
           <span className="text-muted-foreground">
             {facts(t, [
@@ -272,7 +272,7 @@ export function ClassifySection({
               className="h-4 border-l-2 border-dashed border-foreground"
             />
             {t("desktop.ledger.inspector.unsaved_classification", {
-              classification: classificationText(t, {
+              classification: classificationText(t, locale, {
                 business_classification:
                   effective.business_classification ?? "",
                 business_pct: effective.business_pct ?? null,

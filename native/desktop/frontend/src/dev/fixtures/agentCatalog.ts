@@ -257,7 +257,7 @@ const FIXTURES: Record<string, Fixture> = {
         display_name: "Synthetic Text 1",
         efforts: [],
         vision: false,
-        size_bytes: 2_500_000_000,
+        size_bytes: 2_684_354_560,
         licence: {
           spdx: "Apache-2.0",
           name: "Example Apache-style licence",
@@ -271,7 +271,7 @@ const FIXTURES: Record<string, Fixture> = {
         vision: true,
         // Recommended, but not downloaded yet.
         installed: false,
-        size_bytes: 3_200_000_000,
+        size_bytes: 3_435_973_837,
         licence: {
           spdx: null,
           name: "Example community licence",

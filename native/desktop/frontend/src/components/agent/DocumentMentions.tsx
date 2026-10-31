@@ -4,7 +4,8 @@ import type { AgentDocumentRecord } from "../../shell/agentViews";
 import type { Translate } from "../../shell/strings";
 import type { SuggestionSource } from "./ComposerSuggestions";
 import { charTrigger } from "./composerTrigger";
-import { KIND_GLYPH, formatSize } from "./files";
+import { formatSize } from "../../shared/numbers";
+import { KIND_GLYPH } from "./files";
 
 const atToken = charTrigger("@");
 

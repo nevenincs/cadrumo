@@ -293,7 +293,7 @@ export function useMovementEditing(input: MovementEditingInput) {
         case "direction":
           return directionLabel(t, value);
         case "classification":
-          return classificationText(t, {
+          return classificationText(t, locale, {
             business_classification: value,
             business_pct: share,
           });
@@ -489,8 +489,8 @@ export function useMovementEditing(input: MovementEditingInput) {
       const currency = draft.fields.currency;
       const shown = cellText(column, value, draft.fields.business_pct ?? null);
       const text =
-        column === "amount" && shown !== null && currency && currency !== "EUR"
-          ? `${shown} ${currency}`
+        column === "amount" && value && currency && currency !== "EUR"
+          ? formatAmount(locale, value, { currency })
           : shown;
       return (
         <DraftValue text={text} required={DRAFT_REQUIRED.includes(field)} />
@@ -503,6 +503,7 @@ export function useMovementEditing(input: MovementEditingInput) {
     refused,
     content,
     t,
+    locale,
     cellText,
     onStage,
     input.accounts,

@@ -91,8 +91,8 @@ declare global {
   }
 }
 
-const GB = 1_000_000_000;
-const MB = 1_000_000;
+const MB = 1024 * 1024;
+const GB = 1024 * MB;
 
 type Seed = {
   row: SetupRow;

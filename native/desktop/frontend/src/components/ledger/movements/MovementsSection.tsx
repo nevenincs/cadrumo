@@ -566,7 +566,7 @@ export function MovementsSection({
       category: (id) => categoryLabel(t, id),
       ivaCategory: (id) => ivaCategoryLabel(t, id),
       irpfCategory: (id) => irpfCategoryLabel(t, id),
-      classification: (row) => classificationText(t, row.transaction),
+      classification: (row) => classificationText(t, locale, row.transaction),
       direction: (direction) => directionLabel(t, direction),
       lifecycle: (state) => lifecycleLabel(t, state),
       classifiedBy: (source) => classifiedByLabel(t, source),
@@ -578,7 +578,7 @@ export function MovementsSection({
         return statusLabel(t, statusWord(row.review_status, issues), issues);
       },
     }),
-    [t, sets, accounts],
+    [t, locale, sets, accounts],
   );
   const terms = useMemo(() => searchTerms(search), [search]);
   const months = useMemo(() => {

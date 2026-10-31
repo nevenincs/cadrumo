@@ -53,7 +53,7 @@ import type { ShowImportBatch } from "../../../shell/ledgerImports";
 import { useStrings, type Translate } from "../../../shell/strings";
 import { localDay } from "../../../shared/dates";
 import { formatDay } from "../../../shared/dateFormats";
-import { formatAmount, formatCount } from "../../../shared/numbers";
+import { formatAmount, formatCount, formatSize } from "../../../shared/numbers";
 import { listOf } from "../../../shared/lists";
 import { SetupOffer } from "../../setup/SetupOffer";
 import { PeriodSelector } from "../PeriodSelector";
@@ -85,12 +85,7 @@ import {
   type ImportKind,
   type OwnAccount,
 } from "./importModel";
-import {
-  diagnosticText,
-  importRefusal,
-  providerName,
-  sizeText,
-} from "./transferWords";
+import { diagnosticText, importRefusal, providerName } from "./transferWords";
 
 const PURPOSE: Record<ImportKind, Exclude<FilePurpose, "export">> = {
   bank: "bank_statements",
@@ -1152,7 +1147,7 @@ function WhatStep({
             >
               {file.bytes !== null && (
                 <span className="text-xs text-muted-foreground">
-                  {sizeText(locale, file.bytes)}
+                  {formatSize(locale, file.bytes)}
                 </span>
               )}
             </FileRow>
@@ -1483,7 +1478,7 @@ function PlainPreview({
           <FileRow key={file.token} name={file.name}>
             {file.bytes !== null && (
               <span className="text-xs text-muted-foreground">
-                {sizeText(locale, file.bytes)}
+                {formatSize(locale, file.bytes)}
               </span>
             )}
           </FileRow>

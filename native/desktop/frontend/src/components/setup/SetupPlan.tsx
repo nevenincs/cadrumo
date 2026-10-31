@@ -2,7 +2,7 @@ import { Alert } from "@/components/ui/alert";
 import type { SetupPlanEntry, SetupReview } from "../../ipc/contract";
 import { labelled, listed } from "../../shell/compose";
 import { useStrings, type Translate } from "../../shell/strings";
-import { formatSize } from "../agent/files";
+import { formatSize } from "../../shared/numbers";
 import { itemName, partName } from "./setupWords";
 
 // A setup plan as a person approves it: what it downloads in all and the

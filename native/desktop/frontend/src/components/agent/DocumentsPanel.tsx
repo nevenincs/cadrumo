@@ -11,7 +11,8 @@ import { EmptyState } from "@/components/ui/empty";
 import { Icon } from "@/components/ui/icon";
 import { useStrings } from "../../shell/strings";
 import { AgentIconAction, AgentTextAction } from "./AgentAction";
-import { extensionLabel, formatSize, KIND_GLYPH } from "./files";
+import { formatSize } from "../../shared/numbers";
+import { extensionLabel, KIND_GLYPH } from "./files";
 import type { ConversationDocument } from "./types";
 
 /** The conversation's stored files. Using one selects a reference for the

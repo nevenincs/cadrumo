@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { Spinner } from "@/components/ui/spinner";
 import { failureCode } from "../../errors";
+import { formatSize } from "../../shared/numbers";
 import type {
   AgentSkillAppliesWhen,
   AgentSkillDetail,
@@ -96,11 +97,6 @@ function Review({
   locale: string;
 }) {
   const t = useStrings();
-  const size = new Intl.NumberFormat(locale, {
-    style: "unit",
-    unit: "byte",
-    unitDisplay: "narrow",
-  });
   return (
     <>
       <Section title={t("desktop.agent.skill_applies_when")}>
@@ -112,7 +108,7 @@ function Review({
             <li key={file.path} className="flex min-w-0 gap-3">
               <span className="min-w-0 flex-1 truncate">{file.path}</span>
               <span className="shrink-0 text-muted-foreground">
-                {size.format(file.bytes)}
+                {formatSize(locale, file.bytes)}
               </span>
             </li>
           ))}

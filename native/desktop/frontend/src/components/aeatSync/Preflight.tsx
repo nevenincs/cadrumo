@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Icon, type IconName } from "@/components/ui/icon";
 import { useProvisioning } from "../../shell/provisioning";
 import { useStrings } from "../../shell/strings";
-import { formatSize } from "../agent/files";
+import { formatSize } from "../../shared/numbers";
 import { ProvisioningRow } from "../setup/ProvisioningRow";
 
 // The things that can hold an update back before it reads AEAT: the secure

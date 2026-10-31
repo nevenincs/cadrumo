@@ -1,6 +1,5 @@
 // Words and formats the Import and Export dialogs share: how a refusal, a
-// diagnostic and a provider are named, and how an amount, a day and a file
-// size are written in the page's language.
+// diagnostic and a provider are named, and what the save dialog suggests.
 
 import type {
   LedgerExportFormat,
@@ -53,24 +52,6 @@ export const diagnosticText = (
 
 export const providerName = (t: Translate, provider: LedgerProvider) =>
   t(`desktop.ledger.import.provider.${provider.replace("-", "_")}`);
-
-/** A file's size as the platform would say it. */
-export function sizeText(locale: string, bytes: number | null): string {
-  if (bytes === null) return "";
-  const units = ["byte", "kilobyte", "megabyte", "gigabyte"] as const;
-  let value = bytes;
-  let unit = 0;
-  while (value >= 1024 && unit < units.length - 1) {
-    value /= 1024;
-    unit += 1;
-  }
-  return new Intl.NumberFormat(locale, {
-    style: "unit",
-    unit: units[unit],
-    unitDisplay: "short",
-    maximumFractionDigits: unit === 0 ? 0 : 1,
-  }).format(value);
-}
 
 /** The name the save dialog suggests: the ledger, its period and format,
  * with no folder. */

@@ -14,7 +14,7 @@ import type {
 } from "../../ipc/contract";
 import { useProvisioning } from "../../shell/provisioning";
 import { useStrings } from "../../shell/strings";
-import { formatSize } from "../agent/files";
+import { formatSize } from "../../shared/numbers";
 import { approveLabel, PlanEntry, PlanSummary } from "./SetupPlan";
 import {
   actionWords,

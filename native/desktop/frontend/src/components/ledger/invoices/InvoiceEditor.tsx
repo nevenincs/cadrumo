@@ -1307,7 +1307,7 @@ function TotalsList({
         <div className={cn(row, "border-t border-border pt-2 font-medium")}>
           <dt>{t("desktop.ledger.invoices.total")}</dt>
           <dd className="ledger-invoice-total tabular-nums">
-            {formatAmount(locale, total)} {currency}
+            {formatAmount(locale, total, { currency })}
           </dd>
         </div>
       </dl>
@@ -1359,7 +1359,7 @@ function Retention({
             aria-pressed={rate.trim() === preset}
             onClick={() => onRate(preset)}
           >
-            {`${preset}%`}
+            {formatPercent(locale, preset, { unit: "points" })}
           </Button>
         ))}
       </div>

@@ -189,7 +189,7 @@ function movementColumns(
       );
       return (
         <TextCell
-          text={classificationText(t, row.transaction)}
+          text={classificationText(t, locale, row.transaction)}
           quiet={!decided}
         />
       );

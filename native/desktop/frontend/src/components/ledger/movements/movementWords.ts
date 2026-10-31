@@ -7,7 +7,6 @@ import type {
   LedgerReviewStatus,
   LedgerTransaction,
 } from "../../../shell/ledger";
-import { percentOf } from "../../../shell/ledgerGrammar";
 import {
   isClassification,
   isDirection,
@@ -18,6 +17,7 @@ import {
   type SpendingCategoryFamily,
 } from "../../../shell/ledgerVocabulary";
 import type { Translate } from "../../../shell/strings";
+import { formatPercent } from "../../../shared/numbers";
 
 const lower = (token: string) => token.toLowerCase();
 
@@ -61,18 +61,16 @@ export const classificationLabel = (t: Translate, classification: string) =>
 /** The classification as the grid writes it: Mixed with its share. */
 export function classificationText(
   t: Translate,
+  locale: string,
   transaction: Pick<
     LedgerTransaction,
     "business_classification" | "business_pct"
   >,
 ): string {
-  const share =
-    transaction.business_pct === null
-      ? null
-      : percentOf(transaction.business_pct);
-  if (transaction.business_classification === "MIXED" && share !== null)
+  const fraction = transaction.business_pct;
+  if (transaction.business_classification === "MIXED" && fraction !== null)
     return t("desktop.ledger.classification.mixed_share", {
-      share: `${share}%`,
+      share: formatPercent(locale, fraction, { unit: "fraction" }),
     });
   return classificationLabel(t, transaction.business_classification);
 }
