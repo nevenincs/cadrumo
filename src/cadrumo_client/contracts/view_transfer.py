@@ -74,7 +74,7 @@ type _Filename = Annotated[
 type _MimeType = Annotated[
     str,
     Field(
-        min_length=3,
+        min_length=1,
         max_length=VIEW_MAX_MIME_LENGTH,
         pattern=r"^[A-Za-z0-9!#$&^_.+-]+/[A-Za-z0-9!#$&^_.+-]+$",
     ),

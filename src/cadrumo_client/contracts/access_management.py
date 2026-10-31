@@ -14,6 +14,7 @@ from cadrumo.core.identity.digest import ContentDigest
 from cadrumo.core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
 from .automation_lifecycle import AutomationResumeReceipt
+from .submission_payload import MINIMUM_JSON_DOCUMENT_BYTES
 
 
 class AutomationDeny(BaseModel):
@@ -121,7 +122,7 @@ class SessionInventoryTransfer(_AccessManagementReplyIdentity):
     """Bounded complete inventory, correlated before receiving any scope chunks."""
 
     kind: Literal["session_inventory_transfer"] = "session_inventory_transfer"
-    byte_count: Annotated[int, Field(ge=2, le=1_048_576)]
+    byte_count: Annotated[int, Field(ge=MINIMUM_JSON_DOCUMENT_BYTES, le=1_048_576)]
     payload_digest: ContentDigest
 
 

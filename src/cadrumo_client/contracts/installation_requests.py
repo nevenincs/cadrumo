@@ -65,6 +65,7 @@ from cadrumo.core.storage_taxonomy import StorageArea
 from cadrumo.core.text_bounds import NonEmptyStr
 
 from .automation_codes import AutomationCustodyCode
+from .submission_payload import MINIMUM_JSON_DOCUMENT_BYTES
 
 #: Largest reply one act may return across its bounded transfer.
 INSTALLATION_REPLY_MAX_BYTES: Final[int] = 4_194_304
@@ -673,7 +674,7 @@ class InstallationReplyTransfer(_InstallationReply):
     """Announce a reply too large for one frame, correlated before its chunks are read."""
 
     kind: Literal["installation_reply_transfer"] = "installation_reply_transfer"
-    byte_count: Annotated[int, Field(ge=2, le=INSTALLATION_REPLY_MAX_BYTES)]
+    byte_count: Annotated[int, Field(ge=MINIMUM_JSON_DOCUMENT_BYTES, le=INSTALLATION_REPLY_MAX_BYTES)]
     payload_digest: ContentDigest
 
 

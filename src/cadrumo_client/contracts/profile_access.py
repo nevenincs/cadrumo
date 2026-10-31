@@ -62,6 +62,7 @@ from .service_access import (
 )
 from .sign_in import HumanSignedOut, SignInStatusReply, SignInStatusRequest
 from .sign_in_outcomes import SignInRefusal
+from .submission_payload import MINIMUM_JSON_DOCUMENT_BYTES
 from .view_stream import ViewAttachRequest, ViewConnect
 
 type HumanProofMethod = Literal["password", "receipt"]
@@ -278,7 +279,7 @@ class ProfileStatusTransfer(BaseModel):
     request_id: UUID
     runtime_boot_id: UUID
     connection_id: UUID
-    byte_count: Annotated[int, Field(ge=2, le=1_048_576)]
+    byte_count: Annotated[int, Field(ge=MINIMUM_JSON_DOCUMENT_BYTES, le=1_048_576)]
     payload_digest: ContentDigest
 
 

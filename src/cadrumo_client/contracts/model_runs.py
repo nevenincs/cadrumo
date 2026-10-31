@@ -164,7 +164,7 @@ class ModelRunAttachment(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
-    media_type: Annotated[str, Field(min_length=3, max_length=127, pattern=r"^[a-z0-9.+-]+/[a-z0-9.+-]+$")]
+    media_type: Annotated[str, Field(min_length=1, max_length=128, pattern=r"^[a-z0-9.+-]+/[a-z0-9.+-]+$")]
     base64_data: Annotated[str, Field(min_length=1)]
 
     @field_validator("base64_data")

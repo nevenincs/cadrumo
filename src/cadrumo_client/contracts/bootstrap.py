@@ -22,7 +22,7 @@ class ProfilePassphraseResetOutcome(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     profile_id: ProfileId
-    password_generation: int = Field(ge=2)
+    password_generation: int = Field(ge=1)
     dek_epoch_preserved: bool
     recovery_enrollment_retained: bool
 

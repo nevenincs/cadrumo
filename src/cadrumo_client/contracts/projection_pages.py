@@ -15,6 +15,7 @@ from cadrumo.core.identity.digest import ContentDigest
 from cadrumo.core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
 from .access_refusals import AccessDenialCode
+from .submission_payload import MINIMUM_JSON_DOCUMENT_BYTES
 
 # Base64 leaves room for both runtime and worker authority envelopes within
 # the 64 KiB transport frame, while reducing repeated projection work.
@@ -41,9 +42,9 @@ class ProjectionPage(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     offset: Annotated[int, Field(ge=0, lt=PROJECTION_DOCUMENT_MAX_BYTES)]
-    total_bytes: Annotated[int, Field(ge=2, le=PROJECTION_DOCUMENT_MAX_BYTES)]
+    total_bytes: Annotated[int, Field(ge=MINIMUM_JSON_DOCUMENT_BYTES, le=PROJECTION_DOCUMENT_MAX_BYTES)]
     document_digest: ContentDigest
-    encoded: Annotated[str, Field(min_length=4, max_length=4 * ((PROJECTION_PAGE_BYTES + 2) // 3), repr=False)]
+    encoded: Annotated[str, Field(min_length=1, max_length=4 * ((PROJECTION_PAGE_BYTES + 2) // 3), repr=False)]
 
     def decode(self) -> bytes:
         """Reject malformed or noncanonical base64 and impossible byte ranges."""

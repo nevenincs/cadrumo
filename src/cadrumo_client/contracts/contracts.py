@@ -164,6 +164,10 @@ def refusal_exit_reason(code: RefusalCode) -> ExitReason:
 type AuthorityGeneration = Annotated[str, Field(pattern=r"^[0-9a-f]{64}$")]
 
 
+RUNTIME_PROTOCOL_VERSION: Final = 4
+"""The one wire protocol version this client speaks."""
+
+
 def authority_generation_differs(observed: str | None, expected: str | None) -> bool:
     """Compare published authority generations without asserting either side has one."""
     return observed is not None and expected is not None and observed != expected
@@ -175,7 +179,9 @@ class ClientHello(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     kind: Literal["client_hello"] = "client_hello"
-    protocol_version: Annotated[int, Field(strict=True, ge=4, le=4)] = 4
+    protocol_version: Annotated[int, Field(strict=True, ge=RUNTIME_PROTOCOL_VERSION, le=RUNTIME_PROTOCOL_VERSION)] = (
+        RUNTIME_PROTOCOL_VERSION
+    )
     product_version: Annotated[str, Field(min_length=1, max_length=64)]
     storage_identity: ContentDigest
     authority_generation: AuthorityGeneration | None = None
@@ -192,7 +198,9 @@ class ServerHello(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     kind: Literal["server_hello"] = "server_hello"
-    protocol_version: Annotated[int, Field(strict=True, ge=4, le=4)] = 4
+    protocol_version: Annotated[int, Field(strict=True, ge=RUNTIME_PROTOCOL_VERSION, le=RUNTIME_PROTOCOL_VERSION)] = (
+        RUNTIME_PROTOCOL_VERSION
+    )
     product_version: Annotated[str, Field(min_length=1, max_length=64)]
     storage_identity: ContentDigest
     boot_id: UUID
@@ -206,7 +214,7 @@ class Peer(BaseModel):
 
     os_owner_id: Annotated[str, Field(min_length=1, max_length=256)]
     process_id: Annotated[int, Field(gt=0)] | None
-    image_path: Annotated[str, Field(min_length=1, max_length=32767)] | None = None
+    image_path: Annotated[str, Field(min_length=1, max_length=32768)] | None = None
     """The peer's program, read from the process the transport retains; ``None`` where none is read."""
 
     @override

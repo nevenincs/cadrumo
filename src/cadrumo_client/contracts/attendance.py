@@ -75,7 +75,7 @@ class AttendanceCandidate(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     attendance_id: UUID
     process_id: Annotated[int, Field(gt=0)] | None
-    image_path: Annotated[str, Field(min_length=1, max_length=32767)] | None
+    image_path: Annotated[str, Field(min_length=1, max_length=32768)] | None
     frontend: OperationFrontendProjection
     scope: AccessScope
     requested_at: datetime

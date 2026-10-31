@@ -30,7 +30,7 @@ class InstalledParentImage(BaseModel):
     """Installed native parent image permitted to start a human frontend holder."""
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-    launch_image: Annotated[str, Field(min_length=1, max_length=32767)]
+    launch_image: Annotated[str, Field(min_length=1, max_length=32768)]
     image_digest: ContentDigest
 
 
@@ -39,7 +39,7 @@ class InstalledServiceDescriptor(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     service_id: Annotated[str, Field(pattern=r"^[a-z][a-z0-9-]{0,63}$")]
-    launch_image: Annotated[str, Field(min_length=1, max_length=32767)]
+    launch_image: Annotated[str, Field(min_length=1, max_length=32768)]
     launch_module: Annotated[str, Field(min_length=1, max_length=256)]
     image_digest: ContentDigest
     descriptor_digest: ContentDigest
