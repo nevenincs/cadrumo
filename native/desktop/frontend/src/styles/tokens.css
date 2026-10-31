@@ -118,6 +118,7 @@
   /* ── Structural measures the layout code reads as pixel numbers at run
      time (src/shell/metrics.ts). ─────────────────────────────────── */
   --rail-w: var(--spacing-rail);
+  --titlebar-native-controls-inset: 5.25rem;
   --titlebar-height: calc(var(--spacing-control-lg) + var(--spacing) * 2);
   --docs-min: 12.5rem;
   /* Also the panel's floor: enough height for a usable handful of terminal

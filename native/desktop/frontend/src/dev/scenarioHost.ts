@@ -225,7 +225,7 @@ function windowFixture(): NonNullable<Host["window"]> {
       return Promise.resolve();
     },
     observe(listener) {
-      listener({ maximized: false, fullscreen: false });
+      listener({ maximized: false, fullscreen: false, chrome: "custom" });
       return Promise.resolve(() => undefined);
     },
     guardClose(asking) {

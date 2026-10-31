@@ -11,6 +11,27 @@ use tauri::{Manager, Runtime, State, Window, WindowEvent, ipc::Channel};
 pub struct Presentation {
     maximized: bool,
     fullscreen: bool,
+    chrome: Chrome,
+}
+
+/// Who draws the window's minimise, maximise and close controls.
+#[derive(Clone, Copy, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Chrome {
+    /// The page draws them in its header.
+    Custom,
+    /// The system draws them, over the page's header.
+    Native,
+}
+
+impl Chrome {
+    const fn of_platform() -> Self {
+        if cfg!(target_os = "macos") {
+            Self::Native
+        } else {
+            Self::Custom
+        }
+    }
 }
 
 #[derive(Deserialize)]
@@ -95,6 +116,7 @@ fn presentation<R: Runtime>(window: &Window<R>) -> Result<Presentation> {
     Ok(Presentation {
         maximized: window.is_maximized().map_err(failure)?,
         fullscreen: window.is_fullscreen().map_err(failure)?,
+        chrome: Chrome::of_platform(),
     })
 }
 

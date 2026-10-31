@@ -58,6 +58,9 @@ export function Titlebar({
     },
     [native],
   );
+  // The system's own controls, when it draws them, replace the page's. Until
+  // the host reports, a native window shows neither.
+  const chrome = native ? (state?.chrome ?? "pending") : "custom";
   const dragging = (event: React.MouseEvent) => {
     if (event.button !== 0 || (event.target as Element).closest("button"))
       return;
@@ -66,7 +69,11 @@ export function Titlebar({
     } else run("drag");
   };
   return (
-    <header className="titlebar" aria-label={t("desktop.titlebar.label")}>
+    <header
+      className="titlebar"
+      data-chrome={chrome}
+      aria-label={t("desktop.titlebar.label")}
+    >
       <h1
         className="titlebar-brand"
         aria-label={identity.name}
@@ -80,56 +87,58 @@ export function Titlebar({
         onMouseDown={dragging}
       />
       <div className="titlebar-account">{children}</div>
-      <div className="window-controls">
-        <Button
-          variant="ghost"
-          size="icon-lg"
-          className="window-control"
-          disabled={!native}
-          aria-label={t("desktop.titlebar.minimize")}
-          title={t("desktop.titlebar.minimize")}
-          onClick={() => run("minimize")}
-        >
-          <span className="window-glyph minimize" aria-hidden="true" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon-lg"
-          className="window-control"
-          disabled={!native || !state || state.fullscreen}
-          aria-label={t(
-            state?.maximized
-              ? "desktop.titlebar.restore"
-              : "desktop.titlebar.maximize",
-          )}
-          title={t(
-            state?.maximized
-              ? "desktop.titlebar.restore"
-              : "desktop.titlebar.maximize",
-          )}
-          onClick={() => run("toggle_maximize")}
-        >
-          <Icon
-            name={state?.maximized ? "windowRestore" : "windowMaximize"}
-            size="xs"
-          />
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon-lg"
-          className="window-control window-close"
-          disabled={!native}
-          aria-label={t("desktop.titlebar.close")}
-          title={t("desktop.titlebar.close")}
-          onClick={() =>
-            // Once the page has asked, the close goes through without the
-            // host asking the page a second time.
-            guardClose ? guardClose(() => run("close_now")) : run("close")
-          }
-        >
-          <Icon name="close" size="xs" />
-        </Button>
-      </div>
+      {chrome === "custom" && (
+        <div className="window-controls">
+          <Button
+            variant="ghost"
+            size="icon-lg"
+            className="window-control"
+            disabled={!native}
+            aria-label={t("desktop.titlebar.minimize")}
+            title={t("desktop.titlebar.minimize")}
+            onClick={() => run("minimize")}
+          >
+            <span className="window-glyph minimize" aria-hidden="true" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon-lg"
+            className="window-control"
+            disabled={!native || !state || state.fullscreen}
+            aria-label={t(
+              state?.maximized
+                ? "desktop.titlebar.restore"
+                : "desktop.titlebar.maximize",
+            )}
+            title={t(
+              state?.maximized
+                ? "desktop.titlebar.restore"
+                : "desktop.titlebar.maximize",
+            )}
+            onClick={() => run("toggle_maximize")}
+          >
+            <Icon
+              name={state?.maximized ? "windowRestore" : "windowMaximize"}
+              size="xs"
+            />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon-lg"
+            className="window-control window-close"
+            disabled={!native}
+            aria-label={t("desktop.titlebar.close")}
+            title={t("desktop.titlebar.close")}
+            onClick={() =>
+              // Once the page has asked, the close goes through without the
+              // host asking the page a second time.
+              guardClose ? guardClose(() => run("close_now")) : run("close")
+            }
+          >
+            <Icon name="close" size="xs" />
+          </Button>
+        </div>
+      )}
     </header>
   );
 }

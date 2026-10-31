@@ -2248,7 +2248,12 @@ export interface HostCommands {
 }
 
 /** Native presentation only; no profile or runtime authority. */
-export type WindowPresentation = { maximized: boolean; fullscreen: boolean };
+export type WindowPresentation = {
+  maximized: boolean;
+  fullscreen: boolean;
+  /** Who draws the minimise, maximise and close controls. */
+  chrome: "custom" | "native";
+};
 export type WindowAction =
   | "minimize"
   | "toggle_maximize"
