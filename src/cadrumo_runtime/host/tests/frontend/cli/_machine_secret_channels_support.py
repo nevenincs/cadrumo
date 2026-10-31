@@ -611,6 +611,38 @@ def _assert_success(
     return document
 
 
+def seed_certificate_source_for_refusal(storage_root: Path, *, profile_label: str, name: str) -> None:
+    """Prepare real encrypted target state and settle its password custody before a refusal snapshot."""
+    from cadrumo.adapters.persistence.storage.custody.tests.portable_password_custody import portable_password_custody
+    from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
+    from cadrumo.application.auth.certificate_sources import list_certificate_sources, register_certificate_source
+    from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation
+    from cadrumo.application.workflow.persistence import workflow_state_repository
+    from cadrumo.core.config import override_settings
+    from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+
+    certificate_path = storage_root / "s13-certificate.p12"
+    certificate_path.write_bytes(b"registered source placeholder")
+    with (
+        override_settings(cadrumo_storage_root=storage_root),
+        bundled_indexed_authority().operation() as operation,
+        portable_password_custody(),
+    ):
+        try:
+            authenticate_profile_for_invocation(
+                name=profile_label,
+                passphrase_callback=lambda: FIXTURE_PROFILE_INPUT,
+                profile_decode_context=operation.profile_decode_context(),
+            )
+            repository = workflow_state_repository()
+            repository.save(
+                register_certificate_source(repository.load(), name=name, certificate_path=certificate_path)
+            )
+            assert any(source.name == name for source in list_certificate_sources(repository.load()))
+        finally:
+            close_active_bucket_session()
+
+
 def _register_certificate_source(storage_root: Path, *, name: str) -> None:
     certificate_path = storage_root / "s13-certificate.p12"
     certificate_path.write_bytes(b"registered source placeholder")

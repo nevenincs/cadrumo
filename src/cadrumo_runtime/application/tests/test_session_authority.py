@@ -1167,7 +1167,8 @@ def test_paused_human_authentication_allows_status_and_cannot_publish_across_pro
             assert not resumed.reactivated_grants
         return status, receipt
 
-    with ThreadPoolExecutor(max_workers=2) as executor:
+    # Keep joined real password custody active across both authentication threads.
+    with portable_password_custody(), ThreadPoolExecutor(max_workers=2) as executor:
         control_context = copy_context()
 
         def control_work() -> tuple[ProfileAccessStatus, AutomationDenialReceipt]:

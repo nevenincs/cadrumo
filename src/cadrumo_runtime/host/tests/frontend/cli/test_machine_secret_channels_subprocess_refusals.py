@@ -26,6 +26,7 @@ from cadrumo_runtime.host.tests.frontend.cli._machine_secret_channels_support im
     _run,
     _storage_snapshot,
     cleanup_keychain,
+    seed_certificate_source_for_refusal,
 )
 from cadrumo_runtime.host.tests.frontend.cli._machine_secret_channels_support import (
     host_profile_runtime as host_profile_runtime,
@@ -102,7 +103,7 @@ def test_cross_scope_collision_refuses_before_read_authentication_or_mutation(
     root = tmp_path / f"cross-scope-{collision}"
     register_password_only_profile(root, label="collision-operator")
     host_profile_runtime(root)
-    _register_certificate_source(root, name="collision-cert")
+    seed_certificate_source_for_refusal(root, profile_label="collision-operator", name="collision-cert")
     before = _storage_snapshot(root)
     args = ["--format", "json"]
     inherited: tuple[str, ...] = ()
