@@ -93,8 +93,14 @@ def _changes(
             after_label=_changed_value_label(name, new.get(name), new_names),
         )
         for name in sorted({*old, *new})
-        if old.get(name) != new.get(name) and indexed_to_step_path(name) not in TIMELINE_INTERNAL_FIELDS
+        if _in_meaning(old.get(name)) != _in_meaning(new.get(name))
+        and indexed_to_step_path(name) not in TIMELINE_INTERNAL_FIELDS
     )
+
+
+def _in_meaning(value: str | None) -> str | None:
+    """Read a text fact as it means: a blank text states nothing, as an absent one does."""
+    return None if value is None or not value.strip() else value
 
 
 def _class_names_reader(context: RegisterReadContext) -> ClassNames:
