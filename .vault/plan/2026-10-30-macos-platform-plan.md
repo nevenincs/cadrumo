@@ -12,7 +12,7 @@ related:
   - '[[2026-10-03-application-packaging-interpreter-foundation-adr]]'
 modified: '2026-10-31'
 body_schema: body-v2
-body_hash: 'sha256:7ed4cefb6919794cd408be3b4010c79846ea88b411c267d4ef9ba6eccdc8e268'
+body_hash: 'sha256:59b696dfc90314fd8fe6c5448ccaf95a87daae8b9ca52462c0dcc6c9845b632c'
 ---
 
 # `macos-platform` plan
@@ -33,9 +33,10 @@ Bring Cadrumo to a working build, package and run on macOS arm64: configure and 
 - [x] `S06` - Author the macOS application wrapper: .app bundle with Info.plist, icon and nested signed payload, packaged into the CPack DragNDrop DMG; `native/cmake/distribution/CMakeLists.txt, native/desktop/src-tauri, native/package-layout.json`.
 - [ ] `S07` - Verify the assembled bundle and DMG on macOS: CTest verify and verify-package, launch the desktop app, runtime and CLI from the extracted bundle; `native/cmake/ReleaseVerification.cmake, native/tests`.
 - [x] `S08` - Add the POSIX runtime client for the desktop: a Unix-socket runtime transport beside the Windows pipe in the application and platform crates, then lift the macOS refusals in desktop app start, supervision, sign-in, agent launcher, terminal and process containment; `native/application/src/lib.rs, native/application/src/view_stream.rs, native/platform/src, native/desktop/src-tauri/src/app.rs, native/desktop/src-tauri/src/manager.rs, native/desktop/src-tauri/src/shell, native/desktop/src-tauri/src/agent`.
-- [ ] `S09` - Remove the native Development-versus-Installed image classification so native storage resolution follows the environment-driven root alone, matching the Python storage owner, and let a Debug manager start against it; `native/platform/src/storage.rs, native/manager/src/main.rs, native/platform/src/conformance_tests.rs`.
-- [ ] `S10` - Contain the supervised runtime when the macOS window host dies without a clean quit: bring the runtime's process group under the guardian or an equivalent kqueue-observed owner; `native/manager/src/supervision/launch.rs, native/platform/src`.
+- [x] `S09` - Remove the native Development-versus-Installed image classification so native storage resolution follows the environment-driven root alone, matching the Python storage owner, and let a Debug manager start against it; `native/platform/src/storage.rs, native/manager/src/main.rs, native/platform/src/conformance_tests.rs`.
+- [x] `S10` - Contain the supervised runtime when the macOS window host dies without a clean quit: bring the runtime's process group under the guardian or an equivalent kqueue-observed owner; `native/manager/src/supervision/launch.rs, native/platform/src`.
 - [ ] `S11` - Render native macOS window chrome (traffic lights, no custom minimise/maximise/close) and correct the stale macOS contract wording, the interpreter executable path join and re-enable user docs in the payload; `native/desktop/frontend, native/desktop/src-tauri, native/CONTRACT.md, native/interpreter/posix/host.c`.
+- [ ] `S12` - Scope the manager session lock and identifier by storage root on every host so a standalone manager and a desktop host on the same override root recognise each other, and admit an override root in Windows entry dispatch with its successor environment; `native/manager/src/main.rs, native/manager/src/macos/desktop_host.rs, native/manager/src/installation.rs`.
 
 ## Parallelization
 

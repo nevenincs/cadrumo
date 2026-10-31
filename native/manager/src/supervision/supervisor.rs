@@ -823,8 +823,11 @@ impl Supervisor {
             }
             self.target.spawn()
         };
-        let mut child = match launched {
-            Ok(child) => child,
+        let super::launch::Launched {
+            mut child,
+            containment,
+        } = match launched {
+            Ok(launched) => launched,
             Err(error) => {
                 self.emit(Event::LaunchFailed { kind: error.kind() });
                 return None;
@@ -848,11 +851,14 @@ impl Supervisor {
             commands,
             announcements_open,
         };
-        Some(self.watch(
+        let ended = self.watch(
             RuntimeProcess::Launched(child),
             Some(channel),
             Some(startup_deadline),
-        ))
+        );
+        // The runtime's exit is observed; nothing it left in its group outlives it.
+        drop(containment);
+        Some(ended)
     }
 
     fn adopt(&mut self) -> Result<OpenedProcess, ForeignReason> {

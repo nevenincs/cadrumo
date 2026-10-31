@@ -5,7 +5,7 @@ tags:
 date: '2026-10-30'
 modified: '2026-10-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:074cd3225e6fd01010337f33599a85030f2da4e75bd8eec3e473875f3b453467'
+body_hash: 'sha256:32bbb61d3582d92684ff413cca6a3f41a96e9145ad91bc3483bb1870e4036205'
 related:
   - "[[2026-10-30-macos-platform-plan]]"
 ---
@@ -143,6 +143,27 @@ src/cadrumo_runtime/host/tests/test_desktop_window_holder.py`
 - `S09` `M` `dev/packaging/tests/test_native_storage_environment_contract.py`
 - `S09` `verify:` `pytest launch probe, storage vectors, contract, release scan, core storage_environment` -> `pass`
 - `S09` `verify:` `ctest platform resolver/invocation/fmt/clippy, manager fmt, application fmt/clippy, desktop fmt, desktop clippy-backend` -> `pass`
+- `S09` `M` `dev/packaging/native/generate.py
+dev/packaging/tests/test_native_storage_environment_contract.py
+native/application/src/provisioning/installation.rs
+native/cmake/DesktopRust.cmake
+native/cmake/Rust.cmake
+native/CONTRACT.md
+native/desktop/src-tauri/src/manager.rs
+native/desktop/src-tauri/src/startup_logging.rs
+native/manager/src/installation.rs
+native/manager/src/installed.rs
+native/manager/src/supervision/environment.rs
+native/manager/tests/environment.rs
+native/platform/src/conformance_tests.rs
+native/platform/src/lib.rs
+native/platform/src/posix_tests.rs
+native/platform/src/storage.rs`
+- `S09` `verify:` `ctest -C Debug -R platform|manager|application` -> `pass`
+- `S10` `M` `native/CONTRACT.md
+native/manager/src/supervision/launch.rs
+native/manager/src/supervision/supervisor.rs`
+- `S10` `verify:` `manager.rust SIGKILL-host containment test` -> `pass`
 
 ## Notes
 
