@@ -10,8 +10,10 @@ import pytest
 
 from dev.packaging.command_execution import CommandResult
 
+from ..compile_comparison import compare
 from ..compile_once import WITNESS_LANGUAGE
-from . import test_docs_build_localized_compile as localized
+from ..i18n import SITE_ROOT_LANGUAGES
+from . import built_site
 from ._sphinx_build_harness import gate_build_jobs
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
@@ -51,7 +53,7 @@ def test_invalid_explicit_width_still_refuses_inside_an_outer_worker(
 def test_the_real_build_pair_keeps_both_commands_and_their_refusals(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path, worker: str | None, slots: int, refused: str | None
 ) -> None:
-    """Exercise the fixture's actual executor and strict comparison without expensive builds."""
+    """Exercise the shared build publisher and strict comparison without expensive builds."""
     if worker is not None:
         monkeypatch.setenv("PYTEST_XDIST_WORKER", worker)
     else:
@@ -76,8 +78,14 @@ def test_the_real_build_pair_keeps_both_commands_and_their_refusals(
             assert role == "dev.docs.compile_once"
             assert argv[argv.index("--jobs") + 1] == ("1" if worker is not None else "3")
             destination = Path(argv[argv.index("--html-root") + 1]) / WITNESS_LANGUAGE
-        destination.mkdir(parents=True, exist_ok=True)
-        (destination / "index.html").write_text("<html><body>same witness</body></html>", encoding="utf-8")
+        destinations = (
+            (destination,)
+            if role == "dev.docs.build"
+            else tuple(destination.parent / language for language in SITE_ROOT_LANGUAGES)
+        )
+        for root in destinations:
+            root.mkdir(parents=True, exist_ok=True)
+            (root / "index.html").write_text("<html><body>same witness</body></html>", encoding="utf-8")
         now = datetime.now(UTC)
         return CommandResult(
             argv=tuple(argv),
@@ -90,14 +98,16 @@ def test_the_real_build_pair_keeps_both_commands_and_their_refusals(
             stderr="build refusal" if role == refused else "",
         )
 
-    monkeypatch.setattr(localized, "ThreadPoolExecutor", executor)
-    monkeypatch.setattr(localized, "run_command", command)
-    if refused is not None:
-        with pytest.raises(AssertionError, match="reported warnings or errors"):
-            localized._build_pair(tmp_path)
-    else:
-        built = localized._build_pair(tmp_path)
-        assert built.comparison.pages == 1 and built.comparison.equal == 1
-        assert built.comparison.differences == 0 and built.comparison.absent == 0
+    monkeypatch.setattr(built_site, "ThreadPoolExecutor", executor)
+    monkeypatch.setattr(built_site, "run_command", command)
+    built_site._publish(tmp_path, "test-digest")
+    built = built_site._read(tmp_path, "test-digest")
+    assert built is not None
+    for role, outcome in (("dev.docs.build", built.witness_build), ("dev.docs.compile_once", built.compile)):
+        assert outcome.returncode == int(role == refused)
+        assert (outcome.failure() is not None) == (role == refused)
+    comparison = compare(built.html_root / WITNESS_LANGUAGE, built.witness, WITNESS_LANGUAGE)
+    assert comparison.pages == 1 and comparison.equal == 1
+    assert comparison.differences == 0 and comparison.absent == 0
     assert allocated == [slots]
     assert sorted(commands) == ["dev.docs.build", "dev.docs.compile_once"]

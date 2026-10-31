@@ -32,38 +32,18 @@ of builds, not a build each.
 from __future__ import annotations
 
 import json
-import sys
-from collections.abc import Iterator
-from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Final
 
 import pytest
 
-from dev._paths import REPO_ROOT
-from dev.packaging.command_execution import CommandResult, run_command
-
 from ..compile_comparison import INTENDED_DIFFERENCES, Comparison, compare
-from ..compile_once import WITNESS_LANGUAGE, witness_build
+from ..compile_once import WITNESS_LANGUAGE
 from ..i18n import SITE_ROOT_LANGUAGES
-from ._sphinx_build_harness import gate_build_concurrency, gate_build_env, gate_build_jobs
+from .built_site import built_documentation_site
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
-
-#: The flavour the gate compiles. The web flavour with an address of its own is
-#: the superset of the mark mechanisms: it is the only flavour that writes page
-#: descriptions, canonical and OpenGraph URLs, the error page and the sitemap,
-#: each of which carries strings that depend on the language. The packaged
-#: desktop flavour's own compile is held to the same standard by the packaging
-#: driver (:func:`dev.packaging.native.docs_build.compile_command`).
-_FLAVOR: Final[str] = "web"
-
-#: An address for the site above the language directories. Any address does:
-#: what it has to be is the same one both builds are given, because a page
-#: states where it is served and two roots told different addresses differ
-#: wherever it does.
-_BASE_URL: Final[str] = "https://docs.example.test/docs"
 
 #: Floor for the pages the comparison reads. The user-scope site is a little
 #: over three hundred pages in each language; a floor rather than a count,
@@ -90,93 +70,28 @@ class _Built:
     stored: Path
 
 
-def _compile_command(html_root: Path, build_root: Path, stored: Path) -> list[str]:
-    """Return the one compile of every language, as this gate runs it."""
-    return [
-        sys.executable,
-        "-m",
-        "dev.docs.compile_once",
-        "--html-root",
-        str(html_root),
-        "--build-root",
-        str(build_root),
-        "--stored",
-        str(stored),
-        "--flavor",
-        _FLAVOR,
-        "--base-url",
-        _BASE_URL,
-        "--strict",
-        "--jobs",
-        gate_build_jobs(),
-    ]
-
-
-def _succeeded(result: CommandResult, what: str) -> CommandResult:
-    """Return one finished build, reporting its own output when it failed."""
-    assert result.returncode == 0, (
-        f"the {what} reported warnings or errors:\n" + result.stdout[-6000:] + result.stderr[-6000:]
-    )
-    return result
-
-
 @pytest.fixture(scope="module")
-def built(tmp_path_factory: pytest.TempPathFactory) -> Iterator[_Built]:
-    """Run the compile and witness within the harness's machine-share budget."""
-    root = tmp_path_factory.mktemp("localized-compile")
-    yield _build_pair(root)
+def built() -> _Built:
+    """Read the run's one compile and its witness, failing on either build's own report.
 
-
-def _build_pair(root: Path) -> _Built:
-    """Execute both strict builds and compare their complete witness roots."""
-    html_root, build_root = root / "html", root / "build"
-    # The stored form is the roots' own intermediate, removed once they are
-    # composed from it, so the gate that reads what the compile carried asks
-    # for it to be kept.
-    stored = build_root / "compiled-text"
-    witness = root / "witness" / WITNESS_LANGUAGE
-    environment = gate_build_env(root)
-    witness_command, witness_environment = witness_build(
-        WITNESS_LANGUAGE,
-        witness,
-        flavor=_FLAVOR,
-        base_url=_BASE_URL,
-        build_root=root / "witness" / "build",
-        # The witness reads as narrowly as the compile beside it: the gate's own
-        # bounded width, not one worker per core. The compile is told with
-        # ``--jobs``; a build driven directly reads the same key, which the
-        # compile's selectors keep from its caller for exactly this.
-        base=gate_build_env(root / "witness-state", CADRUMO_DOCS_JOBS=gate_build_jobs()),
-    )
-    # The standalone gate overlaps the builds. An xdist worker already owns
-    # one slot, so it completes both commands sequentially within that slot.
-    with ThreadPoolExecutor(max_workers=gate_build_concurrency()) as pool:
-        building = pool.submit(
-            run_command,
-            witness_command,
-            cwd=REPO_ROOT,
-            environment=witness_environment,
-            errors="replace",
-        )
-        compiling = pool.submit(
-            run_command,
-            _compile_command(html_root, build_root, stored),
-            cwd=REPO_ROOT,
-            environment=environment,
-            errors="replace",
-        )
-        compiled = _succeeded(compiling.result(), "one nitpicky compile")
-        witnessed = _succeeded(building.result(), f"nitpicky {WITNESS_LANGUAGE} build the compile is measured against")
+    The pair is built once per run by :func:`~dev.docs.tests.built_site.built_documentation_site`,
+    which every reader of rendered pages shares; this gate is where a warning in
+    either build is reported.
+    """
+    site = built_documentation_site()
+    for outcome in (site.compile, site.witness_build):
+        failure = outcome.failure()
+        assert failure is None, failure
     print(
-        f"One compile of {len(SITE_ROOT_LANGUAGES)} language(s) in {compiled.duration_seconds:.0f} s, "
-        f"beside the {WITNESS_LANGUAGE} build it is measured against in {witnessed.duration_seconds:.0f} s",
+        f"One compile of {len(SITE_ROOT_LANGUAGES)} language(s) in {site.compile.duration_seconds:.0f} s, "
+        f"beside the {WITNESS_LANGUAGE} build it is measured against in {site.witness_build.duration_seconds:.0f} s",
         flush=True,
     )
     return _Built(
-        comparison=compare(html_root / WITNESS_LANGUAGE, witness, WITNESS_LANGUAGE),
-        html_root=html_root,
-        witness=witness,
-        stored=stored,
+        comparison=compare(site.html_root / WITNESS_LANGUAGE, site.witness, WITNESS_LANGUAGE),
+        html_root=site.html_root,
+        witness=site.witness,
+        stored=site.stored,
     )
 
 
