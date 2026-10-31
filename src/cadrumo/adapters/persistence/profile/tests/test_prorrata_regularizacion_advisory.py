@@ -105,6 +105,27 @@ def _seed_prior_year_percentage(obs_repo: CalculationObservationRepository, *, p
     )
 
 
+def _collect_settlement_diagnostics(obs_repo: CalculationObservationRepository):
+    """Collect the settlement-period diagnostics for an 80 percent definitive ratio over 100000 of volume."""
+    casilla_values = {
+        _VOLUMEN_TOTAL_ID: Decimal("100000"),
+        _VOLUMEN_CON_DERECHO_ID: Decimal("80000"),
+        _PORCENTAJE_ID: Decimal("80"),
+        _CUOTA_DEDUCIBLE_TOTAL_ID: Decimal("20000.00"),
+    }
+    return collect_prorrata_regularizacion_diagnostics(
+        _revision(),
+        casilla_values,
+        modelo=Modelo("303").value,
+        period_token=_SETTLEMENT_PERIOD_CODE,
+        filing_year=_YEAR,
+        observation_repository=obs_repo,
+        prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET),
+        transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET),
+        bienes_inversion_repository=BienesInversionIvaRegisterRepository(bucket_id=_BUCKET),
+    )
+
+
 def test_advisory_fires_when_prior_year_percentage_available_and_differs(tmp_path: Path) -> None:
     """A real prior-year percentage lets the pure builder run and surface the delta.
 
@@ -117,23 +138,7 @@ def test_advisory_fires_when_prior_year_percentage_available_and_differs(tmp_pat
         obs_repo = CalculationObservationRepository(objects=profile.repository)
         _seed_prior_year_percentage(obs_repo, percentage=Decimal("90"))
 
-        casilla_values = {
-            _VOLUMEN_TOTAL_ID: Decimal("100000"),
-            _VOLUMEN_CON_DERECHO_ID: Decimal("80000"),
-            _PORCENTAJE_ID: Decimal("80"),
-            _CUOTA_DEDUCIBLE_TOTAL_ID: Decimal("20000.00"),
-        }
-        diagnostics = collect_prorrata_regularizacion_diagnostics(
-            _revision(),
-            casilla_values,
-            modelo=Modelo("303").value,
-            period_token=_SETTLEMENT_PERIOD_CODE,
-            filing_year=_YEAR,
-            observation_repository=obs_repo,
-            prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET),
-            transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET),
-            bienes_inversion_repository=BienesInversionIvaRegisterRepository(bucket_id=_BUCKET),
-        )
+        diagnostics = _collect_settlement_diagnostics(obs_repo)
 
     assert len(diagnostics) == 1
     diagnostic = diagnostics[0]
@@ -221,23 +226,7 @@ def test_advisory_fires_pending_when_no_prior_year_observation_exists(tmp_path: 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET) as profile:
         obs_repo = CalculationObservationRepository(objects=profile.repository)
 
-        casilla_values = {
-            _VOLUMEN_TOTAL_ID: Decimal("100000"),
-            _VOLUMEN_CON_DERECHO_ID: Decimal("80000"),
-            _PORCENTAJE_ID: Decimal("80"),
-            _CUOTA_DEDUCIBLE_TOTAL_ID: Decimal("20000.00"),
-        }
-        diagnostics = collect_prorrata_regularizacion_diagnostics(
-            _revision(),
-            casilla_values,
-            modelo=Modelo("303").value,
-            period_token=_SETTLEMENT_PERIOD_CODE,
-            filing_year=_YEAR,
-            observation_repository=obs_repo,
-            prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET),
-            transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET),
-            bienes_inversion_repository=BienesInversionIvaRegisterRepository(bucket_id=_BUCKET),
-        )
+        diagnostics = _collect_settlement_diagnostics(obs_repo)
 
     assert len(diagnostics) == 1
     diagnostic = diagnostics[0]
