@@ -135,9 +135,6 @@ export function ManageProfiles({
     >
       <DialogContent
         closeLabel={t("desktop.signin.dismiss")}
-        onEscapeKeyDown={(event) => {
-          if (busy) event.preventDefault();
-        }}
         onInteractOutside={(event) => {
           if (busy) event.preventDefault();
         }}

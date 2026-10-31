@@ -47,7 +47,10 @@ type ComboboxProps = {
   initialQuery?: string;
   placeholder?: string;
   hint?: React.ReactNode;
-  error?: React.ReactNode;
+  /** Marks the trigger and the search field, as for a typed editor: the host
+   * puts the words in `FieldError` and passes its id in `describedBy`. */
+  invalid?: boolean;
+  describedBy?: string;
   footer?: React.ReactNode;
   /** The trigger. Without one the list opens at once, over the positioned
    * element it is placed in, as a cell editor does. */
@@ -59,7 +62,7 @@ type ComboboxProps = {
  * A searchable choice: a list of options, grouped under headings, filtered
  * by what is typed. Arrow keys move through it, Enter chooses, Tab and
  * Shift+Tab choose and move on, and Escape leaves the value as it was.
- * The hint and the error are read with the field.
+ * The hint is read with the field.
  */
 /** Text as it is compared: lower case, without accents, so "telefono"
  * finds "Teléfono". */
@@ -157,7 +160,8 @@ function Combobox({
   initialQuery,
   placeholder,
   hint,
-  error,
+  invalid,
+  describedBy,
   footer,
   children,
   className,
@@ -169,16 +173,6 @@ function Combobox({
   const [query, setQuery] = React.useState(initialQuery ?? "");
   const pressed = React.useRef<CommitKey | null>(null);
   const escaped = React.useRef(false);
-  // The popover closes on Escape before the key reaches the list, so the
-  // key is noted on its way down, at the document.
-  React.useEffect(() => {
-    if (!open) return;
-    const note = (event: KeyboardEvent) => {
-      if (event.key === "Escape") escaped.current = true;
-    };
-    document.addEventListener("keydown", note, true);
-    return () => document.removeEventListener("keydown", note, true);
-  }, [open]);
 
   // The list is ranked here, not by the command list, so a scattered
   // match can give way to a better one elsewhere in the list.
@@ -211,7 +205,7 @@ function Combobox({
     escaped.current = false;
   };
 
-  const described = [hint ? `${id}-hint` : null, error ? `${id}-error` : null]
+  const described = [hint ? `${id}-hint` : null, describedBy]
     .filter(Boolean)
     .join(" ");
 
@@ -224,7 +218,14 @@ function Combobox({
       }}
     >
       {triggered ? (
-        <PopoverTrigger asChild>{children}</PopoverTrigger>
+        <PopoverTrigger
+          asChild
+          aria-invalid={invalid || undefined}
+          aria-describedby={describedBy}
+          className="aria-invalid:border-destructive"
+        >
+          {children}
+        </PopoverTrigger>
       ) : (
         <PopoverAnchor asChild>
           <span aria-hidden="true" className="absolute inset-0" />
@@ -242,6 +243,9 @@ function Combobox({
         // A cell editor hands focus back to its grid, which chooses the cell.
         onCloseAutoFocus={(event) => {
           if (!triggered) event.preventDefault();
+        }}
+        onEscapeKeyDown={() => {
+          escaped.current = true;
         }}
       >
         <Command
@@ -269,25 +273,15 @@ function Combobox({
             onValueChange={setQuery}
             placeholder={placeholder}
             aria-describedby={described || undefined}
-            aria-invalid={error ? true : undefined}
+            aria-invalid={invalid || undefined}
           />
-          {(hint || error) && (
-            <div className="grid gap-1 border-b px-3.5 py-2 text-sm">
-              {error && (
-                <p
-                  id={`${id}-error`}
-                  className="flex items-center gap-1.5 text-foreground"
-                >
-                  <Icon name="alert" size="xs" className="text-destructive" />
-                  {error}
-                </p>
-              )}
-              {hint && (
-                <p id={`${id}-hint`} className="text-muted-foreground">
-                  {hint}
-                </p>
-              )}
-            </div>
+          {hint && (
+            <p
+              id={`${id}-hint`}
+              className="border-b px-3.5 py-2 text-sm text-muted-foreground"
+            >
+              {hint}
+            </p>
           )}
           <CommandList label={label} className="max-h-72">
             <CommandEmpty>{emptyLabel}</CommandEmpty>

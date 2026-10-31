@@ -1,7 +1,7 @@
 import * as React from "react";
 import { Dialog as DialogPrimitive } from "radix-ui";
-import { suggestionsOpenOn } from "@/components/ui/suggestionsOpen";
 import { cn } from "@/components/ui/cn";
+import { useEscapeLayer } from "@/components/ui/escapeLayers";
 import { revealFocused } from "@/components/ui/reveal";
 import { Icon } from "@/components/ui/icon";
 import { IconButton } from "@/components/ui/icon-button";
@@ -57,9 +57,9 @@ function modalLayerOpen(root: ParentNode = document): boolean {
  * for, such as a palette or a question about leaving, or an editor that
  * weighs its own unsaved work.
  *
- * Escape closes it at the first press. The foundation gives the key to the
- * topmost layer only, so a tooltip open on a focused button inside the
- * dialog would otherwise take the first press and leave the dialog up.
+ * Escape closes it while it is the topmost layer still open (see
+ * `useEscapeLayer`), by way of `onOpenChange`: a dialog that may not close yet
+ * says so there.
  */
 function DialogContent({
   className,
@@ -76,7 +76,7 @@ function DialogContent({
   /** False for a surface that does not hold the window while open. */
   modalLayer?: boolean;
 }) {
-  const dismiss = React.useRef<HTMLButtonElement>(null);
+  const { ref: layer } = useEscapeLayer();
   return (
     <DialogPrimitive.Portal>
       <DialogOverlay />
@@ -87,16 +87,6 @@ function DialogContent({
         onFocusCapture={(event) => {
           onFocusCapture?.(event);
           revealFocused(event);
-        }}
-        onKeyDownCapture={(event) => {
-          // A layer portalled out of the dialog keeps its own Escape.
-          if (
-            event.key === "Escape" &&
-            !event.nativeEvent.isComposing &&
-            event.currentTarget.contains(event.target as Node) &&
-            !suggestionsOpenOn(event.target)
-          )
-            dismiss.current?.click();
         }}
         className={cn(
           "fixed left-1/2 z-(--layer-modal) grid w-dialog max-w-[calc(100%-var(--overlay-gutter))] grid-cols-1 -translate-x-1/2 gap-4 rounded-xl bg-card p-5 text-card-foreground shadow-overlay outline-none",
@@ -111,7 +101,7 @@ function DialogContent({
         {...props}
       >
         {children}
-        <DialogPrimitive.Close ref={dismiss} hidden tabIndex={-1} />
+        <DialogPrimitive.Close ref={layer} hidden tabIndex={-1} />
         {closeLabel && (
           <DialogPrimitive.Close asChild>
             <IconButton

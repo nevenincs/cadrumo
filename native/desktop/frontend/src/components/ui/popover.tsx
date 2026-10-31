@@ -1,7 +1,7 @@
 import * as React from "react";
 import { Popover as PopoverPrimitive } from "radix-ui";
-import { suggestionsOpenOn } from "@/components/ui/suggestionsOpen";
 import { cn } from "@/components/ui/cn";
+import { useEscapeLayer } from "@/components/ui/escapeLayers";
 import { revealFocused } from "@/components/ui/reveal";
 
 function Popover(props: React.ComponentProps<typeof PopoverPrimitive.Root>) {
@@ -31,19 +31,14 @@ const EnclosingPopover = React.createContext<{
  * press outside and hands focus back to the trigger. It never grows past the
  * window: tall content scrolls inside it.
  *
- * Escape pressed inside it closes it at the first press. The foundation gives
- * the key to the topmost layer only, so a tooltip showing anywhere in the
- * window would otherwise take the first press and leave the popover up.
+ * Escape closes it while it is the topmost layer still open (see
+ * `useEscapeLayer`), and `onEscapeKeyDown` can leave the key to a field inside.
  *
  * Focus goes back to the trigger a task after the popover has gone, so whatever
  * took focus in between keeps it: a menu opened in that moment would otherwise
  * lose focus to the trigger and close. If what took it is outside the popover
  * around this one, that one closes too: its own watch never saw focus leave,
  * for the element holding it was removed without losing it.
- *
- * A popover already going has no more use for Escape, though the foundation
- * still gives it the key until it is gone, so it passes the press to the one
- * around it.
  */
 function PopoverContent({
   className,
@@ -53,9 +48,10 @@ function PopoverContent({
   children,
   onFocusCapture,
   onCloseAutoFocus,
+  onEscapeKeyDown,
   ...props
 }: React.ComponentProps<typeof PopoverPrimitive.Content>) {
-  const dismiss = React.useRef<HTMLButtonElement>(null);
+  const { ref: layer, button: dismiss } = useEscapeLayer(onEscapeKeyDown);
   const enclosing = React.useContext(EnclosingPopover);
   const self = React.useMemo(
     () => ({
@@ -63,7 +59,7 @@ function PopoverContent({
       holds: (node: Node) =>
         dismiss.current?.parentElement?.contains(node) ?? false,
     }),
-    [],
+    [dismiss],
   );
   return (
     <PopoverPrimitive.Portal>
@@ -82,19 +78,6 @@ function PopoverContent({
           onFocusCapture?.(event);
           revealFocused(event);
         }}
-        onKeyDownCapture={(event) => {
-          // A layer portalled out of the popover keeps its own Escape.
-          if (
-            event.key === "Escape" &&
-            !event.nativeEvent.isComposing &&
-            event.currentTarget.contains(event.target as Node) &&
-            !suggestionsOpenOn(event.target)
-          ) {
-            if (event.currentTarget.dataset.state === "closed")
-              enclosing?.close();
-            else self.close();
-          }
-        }}
         align={align}
         sideOffset={sideOffset}
         collisionPadding={collisionPadding}
@@ -110,7 +93,7 @@ function PopoverContent({
         <EnclosingPopover.Provider value={self}>
           {children}
         </EnclosingPopover.Provider>
-        <PopoverPrimitive.Close ref={dismiss} hidden tabIndex={-1} />
+        <PopoverPrimitive.Close ref={layer} hidden tabIndex={-1} />
       </PopoverPrimitive.Content>
     </PopoverPrimitive.Portal>
   );

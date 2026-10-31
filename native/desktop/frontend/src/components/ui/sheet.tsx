@@ -1,8 +1,8 @@
 import * as React from "react";
 import { Dialog as DialogPrimitive } from "radix-ui";
-import { suggestionsOpenOn } from "@/components/ui/suggestionsOpen";
 import { cn } from "@/components/ui/cn";
 import { DialogOverlay } from "@/components/ui/dialog";
+import { useEscapeLayer } from "@/components/ui/escapeLayers";
 import { Icon } from "@/components/ui/icon";
 import { IconButton } from "@/components/ui/icon-button";
 import { revealFocused } from "@/components/ui/reveal";
@@ -25,7 +25,7 @@ function SheetClose(props: React.ComponentProps<typeof DialogPrimitive.Close>) {
  * A modal surface that slides in from an edge of the window over a scrim:
  * from the right for a record's editor, from the bottom on a narrow window.
  * It is a dialog in every other way: focus is trapped inside, Escape closes
- * it at the first press, and focus returns to the opener. `closeLabel` names
+ * it while it is the topmost layer still open, and focus returns to the opener. `closeLabel` names
  * its corner close button. While open it holds the window, unless
  * `modalLayer={false}`, as for a dialog.
  */
@@ -43,7 +43,7 @@ function SheetContent({
   /** False for a surface that does not hold the window while open. */
   modalLayer?: boolean;
 }) {
-  const dismiss = React.useRef<HTMLButtonElement>(null);
+  const { ref: layer } = useEscapeLayer();
   return (
     <DialogPrimitive.Portal>
       <DialogOverlay />
@@ -54,16 +54,6 @@ function SheetContent({
         onFocusCapture={(event) => {
           onFocusCapture?.(event);
           revealFocused(event);
-        }}
-        onKeyDownCapture={(event) => {
-          // A layer portalled out of the sheet keeps its own Escape.
-          if (
-            event.key === "Escape" &&
-            !event.nativeEvent.isComposing &&
-            event.currentTarget.contains(event.target as Node) &&
-            !suggestionsOpenOn(event.target)
-          )
-            dismiss.current?.click();
         }}
         className={cn(
           "fixed z-(--layer-modal) flex flex-col gap-4 bg-card p-5 text-card-foreground shadow-overlay outline-none",
@@ -80,7 +70,7 @@ function SheetContent({
         {...props}
       >
         {children}
-        <DialogPrimitive.Close ref={dismiss} hidden tabIndex={-1} />
+        <DialogPrimitive.Close ref={layer} hidden tabIndex={-1} />
         <DialogPrimitive.Close asChild>
           <IconButton
             label={closeLabel}

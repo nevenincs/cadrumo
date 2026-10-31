@@ -380,6 +380,39 @@ test("Escape as the list goes closes the settings", async ({
   await expect(composerButton(target)).toBeFocused();
 });
 
+test("Escape closes the list and leaves the settings, then closes those", async ({
+  page: target,
+}) => {
+  await open(target);
+  const settings = await openSettings(target);
+  await providerBox(settings).click();
+  await expect(pickerList(target)).toBeVisible();
+
+  await target.keyboard.press("Escape");
+  await expect(pickerList(target)).toHaveCount(0);
+  await expect(settings).toBeVisible();
+  await expect(providerBox(settings)).toBeFocused();
+
+  await target.keyboard.press("Escape");
+  await expect(settings).toHaveCount(0);
+  await expect(composerButton(target)).toBeFocused();
+});
+
+test("a rapid double Escape from the list closes the list and the settings", async ({
+  page: target,
+}) => {
+  await open(target);
+  const settings = await openSettings(target);
+  await providerBox(settings).click();
+  await expect(pickerList(target)).toBeVisible();
+
+  await target.keyboard.press("Escape");
+  await target.keyboard.press("Escape");
+  await expect(pickerList(target)).toHaveCount(0);
+  await expect(settings).toHaveCount(0);
+  await expect(composerButton(target)).toBeFocused();
+});
+
 test("the message box taking focus just as the list goes closes the settings", async ({
   page: target,
 }) => {

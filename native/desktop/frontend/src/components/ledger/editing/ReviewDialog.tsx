@@ -1912,9 +1912,6 @@ export function ReviewDialog({
         placement="top"
         className="ledger-review w-dialog-xl overflow-y-auto"
         closeLabel={busy ? undefined : t("desktop.ledger.apply.close")}
-        onEscapeKeyDown={(event) => {
-          if (busy) event.preventDefault();
-        }}
         onOpenAutoFocus={(event) => {
           event.preventDefault();
           heading.current?.focus();

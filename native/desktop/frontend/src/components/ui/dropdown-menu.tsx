@@ -1,6 +1,7 @@
 import * as React from "react";
 import { DropdownMenu as DropdownMenuPrimitive } from "radix-ui";
 import { cn } from "@/components/ui/cn";
+import { ownEscapeLayer } from "@/components/ui/escapeLayers";
 import { Icon, type IconName } from "@/components/ui/icon";
 import { Kbd } from "@/components/ui/kbd";
 import { chordParts, type ChordKeys } from "@/shared/chords";
@@ -80,6 +81,7 @@ function DropdownMenuContent({
   className,
   sideOffset = 4,
   collisionPadding = 8,
+  children,
   ...props
 }: React.ComponentProps<typeof DropdownMenuPrimitive.Content>) {
   return (
@@ -94,7 +96,10 @@ function DropdownMenuContent({
           className,
         )}
         {...props}
-      />
+      >
+        {children}
+        <span ref={ownEscapeLayer} hidden />
+      </DropdownMenuPrimitive.Content>
     </DropdownMenuPrimitive.Portal>
   );
 }
