@@ -15,7 +15,7 @@ See Also:
 
 from __future__ import annotations
 
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from pathlib import Path
 
 import pytest
@@ -30,7 +30,7 @@ from .....application.modelo.m145_communication_records import (
 from .....domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....outbound.aeat.export.registry_record_renderer import RegistryFixedWidthRecordRenderer
-from ...storage.tests.secure_sql import isolated_runtime_profile
+from ...storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ..buckets import BucketEventHistoryRepository
 from ..m145_communication_records import build_m145_communication_records_ports
 from .m145_communication_support import communication_command, valid_field_values
@@ -73,6 +73,22 @@ def _assert_no_forbidden_terms(events: Iterable[BucketEvent]) -> None:
             assert term not in event_text
 
 
+def _mark(
+    action: Callable[..., object],
+    communication_record_id: str,
+    runtime: TestRuntimeProfile,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """Apply one lifecycle ``action`` to a record through the profile's real ports."""
+    action(
+        communication_record_id,
+        bucket_id=runtime.bucket_id,
+        actor=_ACTOR,
+        ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
+        operation=operation,
+    )
+
+
 def test_m145_communication_lifecycle_emits_communication_specific_events(
     tmp_path: Path,
     operation: PinnedAuthorityOperation,
@@ -94,20 +110,8 @@ def test_m145_communication_lifecycle_emits_communication_specific_events(
             ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
             operation=operation,
         )
-        mark_m145_communication_record_delivered_to_payer(
-            created.communication_record_id,
-            bucket_id=runtime.bucket_id,
-            actor=_ACTOR,
-            ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
-            operation=operation,
-        )
-        mark_m145_communication_record_locally_completed(
-            created.communication_record_id,
-            bucket_id=runtime.bucket_id,
-            actor=_ACTOR,
-            ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
-            operation=operation,
-        )
+        _mark(mark_m145_communication_record_delivered_to_payer, created.communication_record_id, runtime, operation)
+        _mark(mark_m145_communication_record_locally_completed, created.communication_record_id, runtime, operation)
         events = _events_for_record(event_repository, created.communication_record_id)
 
     events_by_type = {event.event_type: event for event in events}
@@ -157,34 +161,10 @@ def test_m145_communication_idempotent_retries_do_not_duplicate_mutation_events(
             ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
             operation=operation,
         )
-        mark_m145_communication_record_delivered_to_payer(
-            created.communication_record_id,
-            bucket_id=runtime.bucket_id,
-            actor=_ACTOR,
-            ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
-            operation=operation,
-        )
-        mark_m145_communication_record_delivered_to_payer(
-            created.communication_record_id,
-            bucket_id=runtime.bucket_id,
-            actor=_ACTOR,
-            ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
-            operation=operation,
-        )
-        mark_m145_communication_record_locally_completed(
-            created.communication_record_id,
-            bucket_id=runtime.bucket_id,
-            actor=_ACTOR,
-            ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
-            operation=operation,
-        )
-        mark_m145_communication_record_locally_completed(
-            created.communication_record_id,
-            bucket_id=runtime.bucket_id,
-            actor=_ACTOR,
-            ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
-            operation=operation,
-        )
+        _mark(mark_m145_communication_record_delivered_to_payer, created.communication_record_id, runtime, operation)
+        _mark(mark_m145_communication_record_delivered_to_payer, created.communication_record_id, runtime, operation)
+        _mark(mark_m145_communication_record_locally_completed, created.communication_record_id, runtime, operation)
+        _mark(mark_m145_communication_record_locally_completed, created.communication_record_id, runtime, operation)
         events = _events_for_record(event_repository, created.communication_record_id)
 
     event_types = [event.event_type for event in events]
@@ -211,12 +191,8 @@ def test_m145_communication_invalid_delivery_does_not_emit_delivery_event(
             operation=operation,
         )
         with pytest.raises(M145CommunicationRecordValidationError, match="validation passes"):
-            mark_m145_communication_record_delivered_to_payer(
-                created.communication_record_id,
-                bucket_id=runtime.bucket_id,
-                actor=_ACTOR,
-                ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
-                operation=operation,
+            _mark(
+                mark_m145_communication_record_delivered_to_payer, created.communication_record_id, runtime, operation
             )
         events = _events_for_record(event_repository, created.communication_record_id)
 
