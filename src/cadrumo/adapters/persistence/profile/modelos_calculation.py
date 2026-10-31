@@ -62,10 +62,6 @@ from ....domain.modelos.calculation_revision_aggregate import (
     CALCULATION_REVISION_AGGREGATE_CONTEXT_KEY,
     CalculationRevisionAggregateContext,
 )
-from ....domain.modelos.calculation_revision_rendering import (
-    CALCULATION_RENDERING_SERIALIZER_CONTEXT_KEY,
-    CalculationRenderingSerializerScope,
-)
 from ....domain.modelos.errors import raise_catalogue_integrity_error
 from ....domain.modelos.work_unit import WorkUnitCatalogue
 from ..storage.runtime_repository import secure_object_repository_for_bucket
@@ -224,7 +220,6 @@ class CalculationRevisionCatalogueRepository:
                 record.payload,
                 context={
                     CALCULATION_REVISION_AGGREGATE_CONTEXT_KEY: aggregate_context,
-                    CALCULATION_RENDERING_SERIALIZER_CONTEXT_KEY: CalculationRenderingSerializerScope(),
                     "secure_calculation_revision": True,
                 },
             )
@@ -362,10 +357,7 @@ class CalculationRevisionCatalogueRepository:
                 store.
         """
         self._require_parent_coordinates(catalogue)
-        self._storage.save(
-            catalogue,
-            serialization_context={CALCULATION_RENDERING_SERIALIZER_CONTEXT_KEY: CalculationRenderingSerializerScope()},
-        )
+        self._storage.save(catalogue)
 
     def load_revisioned(
         self,
@@ -418,7 +410,6 @@ class CalculationRevisionCatalogueRepository:
         write = self._storage.to_secure_object_write(
             catalogue,
             expected_revision_id=expected_revision_id,
-            serialization_context={CALCULATION_RENDERING_SERIALIZER_CONTEXT_KEY: CalculationRenderingSerializerScope()},
         )
         _catalogue_phase("encode_end")
         return write

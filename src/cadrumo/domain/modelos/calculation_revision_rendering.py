@@ -8,6 +8,7 @@ from __future__ import annotations
 from collections.abc import Callable, Mapping
 from copy import deepcopy
 from dataclasses import dataclass, field
+from functools import partial
 from threading import RLock
 from typing import Literal, Self, TypeGuard
 from weakref import ReferenceType, ref
@@ -43,27 +44,8 @@ _OBJECT_MAPPING_ADAPTER: TypeAdapter[dict[object, object]] = TypeAdapter(dict[ob
 _OBJECT_SEQUENCE_ADAPTER: TypeAdapter[tuple[object, ...]] = TypeAdapter(tuple[object, ...])
 _STRING_MAPPING_ADAPTER: TypeAdapter[dict[str, object]] = TypeAdapter(dict[str, object])
 
-CALCULATION_RENDERING_SERIALIZER_CONTEXT_KEY = "calculation_rendering_serializer"
-
-
-class CalculationRenderingSerializerScope:
-    """Compile public registry serialization once for one complete catalogue call.
-
-    The caller owns this scope in its validation or serialization context. It
-    retains only the public compiled schema, never a snapshot or its payload.
-    """
-
-    __slots__ = ("_serializer",)
-
-    def __init__(self) -> None:
-        """Start a fresh scope with no compiled schema or captured values."""
-        self._serializer: SchemaSerializer | None = None
-
-    def serializer(self) -> SchemaSerializer:
-        """Compile lazily so catalogues without saved rendering pay no build cost."""
-        if self._serializer is None:
-            self._serializer = _compile_registry_serializer()
-        return self._serializer
+_REVISION_ID_SEQUENCE_ADAPTER: TypeAdapter[tuple[RevisionId, ...]] = TypeAdapter(tuple[RevisionId, ...])
+_SAVED_JSON_ADAPTER: TypeAdapter[object] = TypeAdapter(object)
 
 
 def _complete_registry_value(value: object) -> object:
@@ -110,14 +92,37 @@ def _compile_registry_serializer() -> SchemaSerializer:
     return SchemaSerializer(schema, _use_prebuilt=False)
 
 
-def _registry_payload(snapshot: RegistrySnapshot, *, context: object = None) -> dict[str, object]:
-    scope = context.get(CALCULATION_RENDERING_SERIALIZER_CONTEXT_KEY) if is_object_mapping(context) else None
-    if isinstance(scope, CalculationRenderingSerializerScope):
-        serializer = scope.serializer()
-    else:
-        serializer = _compile_registry_serializer()
+class _RegistrySerializerMemo:
+    """Hold the complete serializer of the schema :class:`RegistrySnapshot` currently declares.
+
+    The serializer is derived from the declared model alone and retains no
+    snapshot, so no authority generation or taxpayer value can reach it. A model
+    rebuild replaces the core schema object and so compiles again.
+    """
+
+    __slots__ = ("_compiled_for", "_serializer")
+
+    def __init__(self) -> None:
+        """Start with nothing compiled, so reads without a saved rendering pay no build cost."""
+        self._compiled_for: object = None
+        self._serializer: SchemaSerializer | None = None
+
+    def serializer(self) -> SchemaSerializer:
+        """Return the serializer of the current schema, compiling it on a change."""
+        serializer = self._serializer
+        if serializer is None or self._compiled_for is not RegistrySnapshot.__pydantic_core_schema__:
+            serializer = _compile_registry_serializer()
+            self._compiled_for = RegistrySnapshot.__pydantic_core_schema__
+            self._serializer = serializer
+        return serializer
+
+
+_REGISTRY_SERIALIZER = _RegistrySerializerMemo()
+
+
+def _registry_payload(snapshot: RegistrySnapshot) -> dict[str, object]:
     return _STRING_MAPPING_ADAPTER.validate_python(
-        serializer.to_python(snapshot, mode="json", by_alias=False, exclude_computed_fields=True)
+        _REGISTRY_SERIALIZER.serializer().to_python(snapshot, mode="json", by_alias=False, exclude_computed_fields=True)
     )
 
 
@@ -132,11 +137,18 @@ _REGISTRY_VALIDATION_CONTEXT_KEYS: tuple[str, ...] = (TAX_ID_FORMAT_CONTEXT, TAG
 
 @dataclass(slots=True, eq=False)
 class _VerifiedRegistry:
-    """One validated public registry snapshot and the digests computed over it."""
+    """One validated public registry snapshot and the size of the bytes it stands for."""
 
     owner: ReferenceType[GovernedFactSource]
     snapshot: RegistrySnapshot
     payload_bytes: int
+
+
+@dataclass(slots=True, eq=False)
+class _SnapshotDigests:
+    """Digests computed over one live, frozen snapshot object."""
+
+    snapshot: ReferenceType[RegistrySnapshot]
     registry_digest: str | None = None
     rendering_digests: dict[_RenderingDigestKey, str] = field(default_factory=dict)
 
@@ -159,13 +171,18 @@ class _VerifiedRegistryMemo:
     Retention is bounded by the saved bytes it stands for. A full memo admits
     nothing new rather than evicting: a catalogue read walks its revisions in
     one order, so eviction would discard each entry just before it is needed.
+
+    Digests belong to the snapshot object they were computed over, whichever way
+    it was obtained, and end with it. A calculation captures and then revalidates
+    the same object several times; a saved claim is still compared with them on
+    every read, and any other bytes produce another object.
     """
 
     def __init__(self, *, max_payload_bytes: int) -> None:
         """Start empty with a bound on the saved bytes of retained snapshots."""
         self._max_payload_bytes = max_payload_bytes
         self._entries: dict[_RegistryKey, _VerifiedRegistry] = {}
-        self._by_snapshot: dict[int, _VerifiedRegistry] = {}
+        self._digests: dict[int, _SnapshotDigests] = {}
         self._lock = RLock()
 
     def validated(
@@ -206,18 +223,16 @@ class _VerifiedRegistryMemo:
                 self._forget(stale)
             retained = sum(held.payload_bytes for held in self._entries.values())
             if key not in self._entries and retained + payload_bytes <= self._max_payload_bytes:
-                entry = _VerifiedRegistry(owner=owner, snapshot=snapshot, payload_bytes=payload_bytes)
-                self._entries[key] = entry
-                self._by_snapshot[id(snapshot)] = entry
+                self._entries[key] = _VerifiedRegistry(owner=owner, snapshot=snapshot, payload_bytes=payload_bytes)
 
     def registry_digest(self, snapshot: RegistrySnapshot, compute: Callable[[], str]) -> str:
         """Return the content digest of a :class:`RegistrySnapshot`, computing it once."""
-        entry = self._entry(snapshot)
-        if entry is None:
+        digests = self._digests_of(snapshot)
+        if digests is None:
             return compute()
-        if entry.registry_digest is None:
-            entry.registry_digest = compute()
-        return entry.registry_digest
+        if digests.registry_digest is None:
+            digests.registry_digest = compute()
+        return digests.registry_digest
 
     def rendering_digest(
         self,
@@ -227,27 +242,39 @@ class _VerifiedRegistryMemo:
         compute: Callable[[], str],
     ) -> str:
         """Return the labels and directory digest pinned to a :class:`RegistrySnapshot`."""
-        entry = self._entry(snapshot)
-        if entry is None:
+        digests = self._digests_of(snapshot)
+        if digests is None:
             return compute()
         key = (tuple((label.key, label.text) for label in labels), directory_ids)
-        digest = entry.rendering_digests.get(key)
+        digest = digests.rendering_digests.get(key)
         if digest is None:
             digest = compute()
-            entry.rendering_digests[key] = digest
+            if len(digests.rendering_digests) < _MAX_RENDERING_DIGESTS_PER_SNAPSHOT:
+                digests.rendering_digests[key] = digest
         return digest
 
-    def _entry(self, snapshot: RegistrySnapshot) -> _VerifiedRegistry | None:
+    def _digests_of(self, snapshot: RegistrySnapshot) -> _SnapshotDigests | None:
+        key = id(snapshot)
         with self._lock:
-            entry = self._by_snapshot.get(id(snapshot))
-        if entry is None or entry.snapshot is not snapshot or entry.owner() is None:
-            return None
-        return entry
+            digests = self._digests.get(key)
+            if digests is not None and digests.snapshot() is snapshot:
+                return digests
+            try:
+                reference = ref(snapshot, partial(self._release_digests, key))
+            except TypeError:
+                return None
+            digests = _SnapshotDigests(snapshot=reference)
+            self._digests[key] = digests
+            return digests
+
+    def _release_digests(self, key: int, reference: ReferenceType[RegistrySnapshot]) -> None:
+        # Runs inside garbage collection on any thread, so it must not wait for the lock.
+        held = self._digests.get(key)
+        if held is not None and held.snapshot is reference:
+            self._digests.pop(key, None)
 
     def _forget(self, key: _RegistryKey) -> None:
-        entry = self._entries.pop(key, None)
-        if entry is not None and self._by_snapshot.get(id(entry.snapshot)) is entry:
-            del self._by_snapshot[id(entry.snapshot)]
+        self._entries.pop(key, None)
 
 
 def _is_revision_id_set(value: object) -> TypeGuard[frozenset[str]]:
@@ -257,6 +284,9 @@ def _is_revision_id_set(value: object) -> TypeGuard[frozenset[str]]:
         and all(isinstance(item, str) for item in value)
     )
 
+
+#: Distinct label sets remembered for one snapshot; a saved revision has one.
+_MAX_RENDERING_DIGESTS_PER_SNAPSHOT = 4
 
 #: About 175 MiB resident: a validated snapshot occupies roughly 5.5 times its
 #: saved JSON. This covers a year of quarterly and annual returns; one
@@ -327,10 +357,10 @@ class CalculationRenderingSnapshot(BaseModel):
             return value
         context: dict[object, object] = dict(info.context) if is_object_mapping(info.context) else {}
         if directory_ids is not None:
-            identifiers = TypeAdapter(tuple[RevisionId, ...]).validate_python(directory_ids)
+            identifiers = _REVISION_ID_SEQUENCE_ADAPTER.validate_python(directory_ids)
             context[MODELO_REVISION_IDS_CONTEXT] = frozenset(identifiers)
         if info.mode == "json":
-            payload = TypeAdapter(object).dump_json(value)
+            payload = _SAVED_JSON_ADAPTER.dump_json(value)
             return _VERIFIED_REGISTRY.validated(
                 payload,
                 context=context,
@@ -343,33 +373,20 @@ class CalculationRenderingSnapshot(BaseModel):
         """Persist excluded localization/schema fields required to decode original geometry."""
         if info.mode == "python":
             return _STRING_MAPPING_ADAPTER.validate_python(_complete_registry_value(value))
-        return _registry_payload(value, context=info.context)
+        return _registry_payload(value)
 
     @model_validator(mode="after")
-    def _registry_digest_matches(self, info: ValidationInfo) -> Self:
+    def _registry_digest_matches(self) -> Self:
         if len({label.key for label in self.labels}) != len(self.labels):
             raise ValueError("saved rendering labels contain duplicate identities")
         snapshot = self.registry_snapshot
-        if (
-            _VERIFIED_REGISTRY.registry_digest(snapshot, lambda: content_hash_hex(snapshot.model_dump(mode="json")))
-            != self.registry_digest
-        ):
+        if _registry_digest(snapshot) != self.registry_digest:
             raise ValueError("saved rendering registry digest does not match its captured snapshot")
         if self.revision_directory_ids is not None and frozenset(self.revision_directory_ids) != (
             self.registry_snapshot.modelo.directory_revision_ids
         ):
             raise ValueError("saved rendering directory identities disagree with its captured snapshot")
-        if (
-            _VERIFIED_REGISTRY.rendering_digest(
-                snapshot,
-                self.labels,
-                self.revision_directory_ids,
-                lambda: content_hash_hex(
-                    _rendering_payload(snapshot, self.labels, self.revision_directory_ids, context=info.context)
-                ),
-            )
-            != self.rendering_digest
-        ):
+        if _rendering_digest(snapshot, self.labels, self.revision_directory_ids) != self.rendering_digest:
             raise ValueError("saved rendering metadata digest does not match its captured schema and labels")
         return self
 
@@ -389,23 +406,38 @@ class CalculationRenderingSnapshot(BaseModel):
         directory_ids = tuple(sorted(snapshot.modelo.directory_revision_ids))
         return cls(
             authority_generation=authority_generation,
-            registry_digest=content_hash_hex(snapshot.model_dump(mode="json")),
+            registry_digest=_registry_digest(snapshot),
             registry_snapshot=snapshot,
             revision_directory_ids=directory_ids,
             labels=labels,
-            rendering_digest=content_hash_hex(_rendering_payload(snapshot, labels, directory_ids)),
+            rendering_digest=_rendering_digest(snapshot, labels, directory_ids),
         )
+
+
+def _registry_digest(snapshot: RegistrySnapshot) -> str:
+    return _VERIFIED_REGISTRY.registry_digest(snapshot, lambda: content_hash_hex(snapshot.model_dump(mode="json")))
+
+
+def _rendering_digest(
+    snapshot: RegistrySnapshot,
+    labels: tuple[SavedRenderingLabel, ...],
+    directory_ids: tuple[RevisionId, ...] | None,
+) -> str:
+    return _VERIFIED_REGISTRY.rendering_digest(
+        snapshot,
+        labels,
+        directory_ids,
+        lambda: content_hash_hex(_rendering_payload(snapshot, labels, directory_ids)),
+    )
 
 
 def _rendering_payload(
     snapshot: RegistrySnapshot,
     labels: tuple[SavedRenderingLabel, ...],
     directory_ids: tuple[RevisionId, ...] | None,
-    *,
-    context: object = None,
 ) -> dict[str, object]:
     payload: dict[str, object] = {
-        "registry": _registry_payload(snapshot, context=context),
+        "registry": _registry_payload(snapshot),
         "labels": [label.model_dump(mode="json") for label in labels],
     }
     if directory_ids is not None:

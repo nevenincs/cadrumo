@@ -36,15 +36,17 @@ from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.classification.policies import SensitivityClass
 from .....core.period import Period
 from .....core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
-from .....domain.calculations.registry.authority import bundled_indexed_authority
+from .....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from .....domain.calculations.registry.bindings import CasillaObservation
+from .....domain.calculations.registry.facts.resolution import GovernedFactQuery, ResolvedGovernedFact
 from .....domain.calculations.registry.formula_runtime import RegistryCalculationUnresolvedOutcome
 from .....domain.calculations.registry.formula_runtime_ops import RegistryUnresolvedOutcomeReason
+from .....domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from .....domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from .....domain.calculations.registry.m303_schema_vocabulary import (
     m303_regime_composition_simplified_scope,
 )
-from .....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from .....domain.calculations.registry.schema_references import RegistrySnapshotRef, TemporalSupportEnvelope
 from .....domain.filing_evidence import FilingEvidenceReference
 from .....domain.iva.regimen_simplificado_rows import (
     M303RegimenSimplificadoScopeDecision,
@@ -341,6 +343,82 @@ def test_saved_rendering_snapshot_survives_encrypted_calculation_readback(tmp_pa
     assert revision.rendering_snapshot is not None
     assert revision.rendering_snapshot.registry_snapshot.revision.predecessor == snapshot.revision.predecessor
     assert revision.rendering_snapshot.registry_snapshot.revision.localization_key == snapshot.revision.localization_key
+
+
+@pytest.mark.parametrize("tamper", ("concealed-field", "registry-digest", "rendering-digest", "authority-generation"))
+def test_a_warm_read_refuses_altered_stored_rendering_bytes(tmp_path: Path, tamper: str) -> None:
+    operation = published_authority_operation()
+    snapshot = operation.snapshot("303", filing_year=2026, period="1T")
+    rendering = CalculationRenderingSnapshot.capture(snapshot, authority_generation=operation.pin().logical_generation)
+    definition = MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        _seed_parent_work_unit(profile)
+        repo = CalculationRevisionCatalogueRepository(objects=profile.repository)
+        repo.save(_populated_catalogue(rendering_snapshot=rendering))
+        with validating_governed_facts(operation):
+            warm, _revision_id = repo.load_revisioned(operation=operation)
+            assert repo.load_revisioned(operation=operation)[0] == warm
+        record = profile.repository.load(
+            definition.namespace,
+            definition.require_default_object_key(),
+            expected_class=definition.sensitivity,
+            max_supported_version=definition.schema_version,
+        )
+        assert record is not None
+        stored = _json.loads(record.payload)
+        saved = next(iter(stored["payload"]["revisions"].values()))["rendering_snapshot"]
+        if tamper == "concealed-field":
+            saved["registry_snapshot"]["revision"]["localization_key"] += ".tampered"
+        elif tamper == "authority-generation":
+            saved["authority_generation"] = "not-a-generation"
+        else:
+            saved[tamper.replace("-", "_")] = "0" * 64
+        profile.repository.save(
+            namespace=definition.namespace,
+            object_key=definition.require_default_object_key(),
+            classification=definition.sensitivity,
+            schema_version=definition.schema_version,
+            written_at=record.written_at,
+            payload=_json.dumps(stored).encode(),
+        )
+
+        with validating_governed_facts(operation), pytest.raises(CalculationRevisionPersistenceError) as refused:
+            repo.load_revisioned(operation=operation)
+
+    assert refused.value.context == {"reason": "invalid_payload"}
+
+
+class _RefusingFacts:
+    """A later generation in which the governed facts behind a saved snapshot no longer resolve."""
+
+    def __init__(self, operation: PinnedAuthorityOperation) -> None:
+        self._operation = operation
+
+    def resolve_governed_fact(self, query: GovernedFactQuery) -> ResolvedGovernedFact:
+        raise ValueError("this generation does not declare the fact")
+
+    def supported_filing_years(self) -> TemporalSupportEnvelope:
+        return self._operation.supported_filing_years()
+
+
+def test_a_read_warmed_under_one_generation_is_validated_again_under_another(tmp_path: Path) -> None:
+    operation = published_authority_operation()
+    snapshot = operation.snapshot("303", filing_year=2026, period="1T")
+    rendering = CalculationRenderingSnapshot.capture(snapshot, authority_generation=operation.pin().logical_generation)
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        _seed_parent_work_unit(profile)
+        repo = CalculationRevisionCatalogueRepository(objects=profile.repository)
+        repo.save(_populated_catalogue(rendering_snapshot=rendering))
+        with validating_governed_facts(operation):
+            repo.load_revisioned(operation=operation)
+
+        with (
+            validating_governed_facts(_RefusingFacts(operation)),
+            pytest.raises(CalculationRevisionPersistenceError) as refused,
+        ):
+            repo.load_revisioned(operation=operation)
+
+    assert refused.value.context == {"reason": "invalid_payload"}
 
 
 def test_guarded_reads_join_each_fresh_parent_catalogue_once(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:

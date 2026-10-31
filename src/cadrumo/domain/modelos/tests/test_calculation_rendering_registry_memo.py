@@ -17,11 +17,7 @@ from ...calculations.registry.facts.resolution import GovernedFactQuery, Resolve
 from ...calculations.registry.governed_fact_scope import validating_governed_facts
 from ...calculations.registry.schema_references import TemporalSupportEnvelope
 from .. import calculation_revision_rendering as rendering
-from ..calculation_revision_rendering import (
-    CALCULATION_RENDERING_SERIALIZER_CONTEXT_KEY,
-    CalculationRenderingSerializerScope,
-    CalculationRenderingSnapshot,
-)
+from ..calculation_revision_rendering import CalculationRenderingSnapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -31,6 +27,7 @@ def _fresh_memo(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
         rendering, "_VERIFIED_REGISTRY", rendering._VerifiedRegistryMemo(max_payload_bytes=32 * 1024 * 1024)
     )
+    monkeypatch.setattr(rendering, "_REGISTRY_SERIALIZER", rendering._RegistrySerializerMemo())
 
 
 @pytest.fixture
@@ -56,13 +53,12 @@ def _count_compilers(monkeypatch: pytest.MonkeyPatch) -> list[SchemaSerializer]:
         return serializer
 
     monkeypatch.setattr(rendering, "_compile_registry_serializer", compile_public_schema)
+    monkeypatch.setattr(rendering, "_REGISTRY_SERIALIZER", rendering._RegistrySerializerMemo())
     return compiled
 
 
 def _read(saved: str, **extra: object) -> CalculationRenderingSnapshot:
-    return CalculationRenderingSnapshot.model_validate_json(
-        saved, context={CALCULATION_RENDERING_SERIALIZER_CONTEXT_KEY: CalculationRenderingSerializerScope(), **extra}
-    )
+    return CalculationRenderingSnapshot.model_validate_json(saved, context=extra)
 
 
 def test_a_repeated_read_reuses_the_validated_snapshot_and_its_digests(
