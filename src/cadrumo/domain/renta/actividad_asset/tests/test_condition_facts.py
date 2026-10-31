@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import date
+from typing import Any
 
 import pytest
 from pydantic import ValidationError
@@ -21,9 +22,9 @@ from .test_lifecycle import _revision
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-def _with_condition(condition: AcquiredCondition, **changes: object) -> ActivityAssetRevision:
+def _with_condition(condition: AcquiredCondition, **changes: Any) -> ActivityAssetRevision:
     base = _revision()
-    facts = {name: getattr(base, name) for name in type(base).model_fields}
+    facts: dict[str, Any] = {name: getattr(base, name) for name in type(base).model_fields}
     return ActivityAssetRevision(**{**facts, "acquired_condition": condition, **changes})
 
 
