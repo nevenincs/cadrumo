@@ -108,9 +108,7 @@ def test_committed_modelo_349_invoice_bindings_resolve_substantive_legal_refs() 
         )
 
 
-def test_committed_modelo_349_invoice_binding_resolver_aggregates_synthetic_ledger() -> None:
-    revision = _modelo_349_revision()
-
+def _mixed_invoice_observations() -> tuple[InvoiceObservation, ...]:
     non_rect_obs = (
         InvoiceObservation(
             source_kind=BindingSourceKind.COLLECTIBLE_INVOICE,
@@ -144,7 +142,14 @@ def test_committed_modelo_349_invoice_binding_resolver_aggregates_synthetic_ledg
         rectified_period="4T",
         rectified_year=2025,
     )
-    observations = (*non_rect_obs, rect_obs)
+    return (*non_rect_obs, rect_obs)
+
+
+def test_committed_modelo_349_invoice_binding_resolver_aggregates_synthetic_ledger() -> None:
+    revision = _modelo_349_revision()
+
+    observations = _mixed_invoice_observations()
+    *non_rect_obs, rect_obs = observations
 
     resolved = resolve_invoice_binding_values(revision, observations)
 
@@ -442,40 +447,7 @@ def test_committed_modelo_349_rectificacion_row_resolver_groups_by_operator_clav
 def test_committed_modelo_349_full_invoice_to_casilla_pipeline() -> None:
     revision = _modelo_349_revision()
 
-    non_rect_obs = (
-        InvoiceObservation(
-            source_kind=BindingSourceKind.COLLECTIBLE_INVOICE,
-            invoice_id="inv-de-1",
-            party_tax_id="DE123456789",
-            country_code="DE",
-            transaction_date=date(2026, 3, 1),
-            base_amount=Decimal("1000.00"),
-            intracommunity_clave="E",
-        ),
-        InvoiceObservation(
-            source_kind=BindingSourceKind.COLLECTIBLE_INVOICE,
-            invoice_id="inv-fr-1",
-            party_tax_id="FR12345678901",
-            country_code="FR",
-            transaction_date=date(2026, 3, 5),
-            base_amount=Decimal("500.50"),
-            intracommunity_clave="S",
-        ),
-    )
-    rect_obs = InvoiceObservation(
-        source_kind=BindingSourceKind.COLLECTIBLE_INVOICE,
-        invoice_id="inv-it-1-rect",
-        party_tax_id="IT12345678901",
-        country_code="IT",
-        transaction_date=date(2026, 3, 8),
-        base_amount=Decimal("200.00"),
-        intracommunity_clave="E",
-        is_rectification=True,
-        rectified_base_previous=Decimal("180.00"),
-        rectified_period="4T",
-        rectified_year=2025,
-    )
-    observations = (*non_rect_obs, rect_obs)
+    observations = _mixed_invoice_observations()
 
     binding_values = resolve_invoice_binding_values(revision, observations)
     casilla_values = resolve_available_bound_inputs_by_casilla_id(revision, binding_values)
