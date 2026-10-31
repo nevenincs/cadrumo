@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+import asyncio
+import os
 import plistlib
 import shutil
 import sys
+from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
@@ -27,21 +30,56 @@ from ..macos_bundle import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _CODESIGN = Path("/usr/bin/codesign")
+_SYNTHETIC_EXECUTABLES: set[Path] = set()
 _THIN_ARM64 = b"\xcf\xfa\xed\xfe" + b"\0" * 28
 _UNIVERSAL = b"\xca\xfe\xba\xbe" + b"\0" * 28
 
 # A stand-in codesign that records each invocation and reports a hardened seal.
-_RECORDING_CODESIGN = """#!/bin/sh
-printf '%s\\n' "$*" >> "{log}"
-case "$1" in
-  --display)
-    printf 'Identifier={application_id}\\n' >&2
-    printf 'CodeDirectory v=20500 size=304 flags=0x10002(adhoc,runtime) hashes=3+3 location=embedded\\n' >&2
-    printf 'Info.plist entries=13\\n' >&2
-    printf 'Sealed Resources version=2 rules=13 files=2\\n' >&2 ;;
-esac
-exit 0
+_RECORDING_CODESIGN = """import pathlib, sys
+pathlib.Path(r"{log}").open("a", encoding="utf-8").write(" ".join(sys.argv[1:]) + "\\n")
+if sys.argv[1:2] == ["--display"]:
+    sys.stderr.write("Identifier={application_id}\\n")
+    sys.stderr.write("CodeDirectory v=20500 size=304 flags=0x10002(adhoc,runtime) hashes=3+3 location=embedded\\n")
+    sys.stderr.write("Info.plist entries=13\\n")
+    sys.stderr.write("Sealed Resources version=2 rules=13 files=2\\n")
 """
+
+
+@pytest.fixture(autouse=True)
+def _run_registered_python_executables(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
+    """Run synthetic tool and runtime files through Python on Windows, with real processes."""
+    _SYNTHETIC_EXECUTABLES.clear()
+    real_run_command = run_command
+    real_create_subprocess_exec = asyncio.create_subprocess_exec
+
+    def command_with_python(argv: list[str] | tuple[str, ...]) -> list[str] | tuple[str, ...]:
+        if sys.platform == "win32" and argv and Path(argv[0]) in _SYNTHETIC_EXECUTABLES:
+            return [sys.executable, *argv]
+        return argv
+
+    def adapted_run_command(argv, **kwargs):
+        environment = kwargs.get("environment")
+        adjusted = dict(kwargs)
+        if sys.platform == "win32" and argv and Path(argv[0]) in _SYNTHETIC_EXECUTABLES and environment is not None:
+            environment = dict(environment)
+            if "SYSTEMROOT" in os.environ:
+                environment.setdefault("SystemRoot", os.environ["SYSTEMROOT"])
+            adjusted["environment"] = environment
+        return real_run_command(command_with_python(argv), **adjusted)
+
+    async def adapted_create_subprocess_exec(program, *args, **kwargs):
+        argv = command_with_python((str(program), *args))
+        if sys.platform == "win32" and argv[0] == sys.executable and kwargs.get("env") is not None:
+            environment = dict(kwargs["env"])
+            if "SYSTEMROOT" in os.environ:
+                environment.setdefault("SystemRoot", os.environ["SYSTEMROOT"])
+            kwargs["env"] = environment
+        return await real_create_subprocess_exec(*argv, **kwargs)
+
+    monkeypatch.setattr(macos_bundle, "run_command", adapted_run_command)
+    monkeypatch.setattr(asyncio, "create_subprocess_exec", adapted_create_subprocess_exec)
+    yield
+    _SYNTHETIC_EXECUTABLES.clear()
 
 
 def _bundle(tmp_path: Path, bundle_id: str | None = None) -> tuple[Path, Path]:
@@ -67,6 +105,7 @@ def _recording_codesign(tmp_path: Path) -> tuple[Path, Path]:
         _RECORDING_CODESIGN.format(log=log, application_id=identity("macos-arm64").application_id), encoding="utf-8"
     )
     tool.chmod(0o755)
+    _SYNTHETIC_EXECUTABLES.add(tool)
     return tool, log
 
 
@@ -190,16 +229,28 @@ def test_ad_hoc_seal_is_inside_out_complete_and_breaks_on_later_change(tmp_path:
         verify_seal(_CODESIGN, bundle, product.application_id)
 
 
-def _runtime_main(main: Path, marker: Path, body: str) -> None:
-    main.write_text(f"#!/bin/sh\nprintf '%s\\n' \"$*\" > '{marker}'\n{body}\n", encoding="utf-8")
+def _runtime_main(main: Path, marker: Path, behavior: str) -> None:
+    script = f'''import pathlib, sys, time
+pathlib.Path(r"{marker}").write_text(" ".join(sys.argv[1:]) + "\\n", encoding="utf-8")
+if {behavior!r} == "ready_and_stop":
+    print('{{"kind":"runtime_ready","product_version":"1.2.3"}}', flush=True)
+    sys.stdin.buffer.read()
+elif {behavior!r} == "not_ready":
+    sys.exit(3)
+elif {behavior!r} == "ignore_close":
+    print('{{"kind":"runtime_ready"}}', flush=True)
+    time.sleep(30)
+'''
+    main.write_text(script, encoding="utf-8")
     main.chmod(0o755)
+    _SYNTHETIC_EXECUTABLES.add(main)
 
 
 def test_runtime_role_starts_between_two_seal_verifications(tmp_path: Path) -> None:
     bundle, main = _bundle(tmp_path)
     tool, log = _recording_codesign(tmp_path)
     marker = tmp_path / "ran"
-    _runtime_main(main, marker, 'printf \'{"kind":"runtime_ready","product_version":"1.2.3"}\\n\'\ncat > /dev/null')
+    _runtime_main(main, marker, "ready_and_stop")
     assert verify_runtime_role(tool, bundle, identity("macos-arm64").application_id) == "1.2.3"
     assert marker.read_text(encoding="utf-8").strip() == "--role runtime --configured-root"
     verifications = [call for call in log.read_text(encoding="utf-8").splitlines() if "--deep" in call]
@@ -210,10 +261,11 @@ def test_runtime_role_is_not_started_when_the_seal_is_refused(tmp_path: Path) ->
     bundle, main = _bundle(tmp_path)
     tool = tmp_path / "tools/codesign"
     tool.parent.mkdir()
-    tool.write_text("#!/bin/sh\nexit 1\n", encoding="utf-8")
+    tool.write_text("raise SystemExit(1)\n", encoding="utf-8")
     tool.chmod(0o755)
+    _SYNTHETIC_EXECUTABLES.add(tool)
     marker = tmp_path / "ran"
-    _runtime_main(main, marker, "cat > /dev/null")
+    _runtime_main(main, marker, "ready_and_stop")
     with pytest.raises(ValueError, match="codesign --verify failed"):
         verify_runtime_role(tool, bundle, identity("macos-arm64").application_id)
     assert not marker.exists()
@@ -222,7 +274,7 @@ def test_runtime_role_is_not_started_when_the_seal_is_refused(tmp_path: Path) ->
 def test_runtime_role_refuses_a_bundle_that_does_not_report_ready(tmp_path: Path) -> None:
     bundle, main = _bundle(tmp_path)
     tool, _ = _recording_codesign(tmp_path)
-    _runtime_main(main, tmp_path / "ran", "exit 3")
+    _runtime_main(main, tmp_path / "ran", "not_ready")
     with pytest.raises(ValueError, match="did not report ready"):
         verify_runtime_role(tool, bundle, identity("macos-arm64").application_id)
 
@@ -231,6 +283,6 @@ def test_runtime_role_refuses_a_role_that_ignores_closed_input(tmp_path: Path, m
     bundle, main = _bundle(tmp_path)
     tool, _ = _recording_codesign(tmp_path)
     monkeypatch.setattr(macos_bundle, "_RUNTIME_STOP_SECONDS", 1)
-    _runtime_main(main, tmp_path / "ran", 'printf \'{"kind":"runtime_ready"}\\n\'\nexec sleep 30')
+    _runtime_main(main, tmp_path / "ran", "ignore_close")
     with pytest.raises(ValueError, match="did not stop"):
         verify_runtime_role(tool, bundle, identity("macos-arm64").application_id)
