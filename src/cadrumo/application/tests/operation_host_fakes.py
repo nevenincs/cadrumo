@@ -7,11 +7,13 @@ from contextlib import asynccontextmanager
 from datetime import datetime
 from types import SimpleNamespace
 from typing import cast
+from uuid import UUID
 
 from pydantic import BaseModel
 
 from ...core.operations import OperationEffect, profile_operation_subject
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ..operations.models import OperationRequest
 from ..operations.owner import OperationExecutorContext
 
 
@@ -69,4 +71,12 @@ def executor_context(
             events=events,
             operands=operands,
         ),
+    )
+
+
+def profile_operation_request(
+    payload: BaseModel, definition_id: str, profile_id: UUID | str
+) -> OperationRequest[BaseModel]:
+    return OperationRequest[BaseModel](
+        definition_id=definition_id, subject_ref=profile_operation_subject(str(profile_id)), payload=payload
     )

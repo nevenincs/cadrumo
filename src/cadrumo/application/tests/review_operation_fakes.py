@@ -7,12 +7,11 @@ from contextlib import asynccontextmanager
 from datetime import datetime
 from types import SimpleNamespace
 from typing import cast
-from uuid import UUID
 
 from pydantic import BaseModel
 
 from ...core.hashing import sha256_hex
-from ...core.operations import OperationEffect, OperationInteractionKind, profile_operation_subject
+from ...core.operations import OperationEffect, OperationInteractionKind
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ..operations.interactions import OperationInteractionRequest, OperationPendingInteraction
 from ..operations.models import OperationIdentity, OperationRequest
@@ -112,14 +111,6 @@ class ReviewInteractions:
             baseline_digest=baseline_digest,
             proposed_effect_digest=proposed_effect_digest,
         )
-
-
-def profile_operation_request(
-    payload: BaseModel, definition_id: str, profile_id: UUID | str
-) -> OperationRequest[BaseModel]:
-    return OperationRequest[BaseModel](
-        definition_id=definition_id, subject_ref=profile_operation_subject(str(profile_id)), payload=payload
-    )
 
 
 def review_execution_context(

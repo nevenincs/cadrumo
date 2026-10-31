@@ -25,7 +25,8 @@ from ...operations.interactions import OperationApplyResponse
 from ...operations.models import OperationRequest, OperationTerminalReceipt
 from ...operations.refusal_evidence import OperationRefusalEvidence
 from ...operations.registry import OperationFrontendProjection, OperationRegistry
-from ...tests.review_operation_fakes import profile_operation_request, review_execution_context
+from ...tests.operation_host_fakes import profile_operation_request
+from ...tests.review_operation_fakes import review_execution_context
 from .. import google_configuration_operation as worker
 from .. import google_configuration_operation_contracts as contracts
 from ..access_errors import ProfileAccessRefusedError

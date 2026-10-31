@@ -20,7 +20,7 @@ from ....domain.transactions.own_accounts import OwnAccountRegister
 from ...operations.execution_actor import OperationExecutionCaller
 from ...operations.models import OperationIdentity, OperationRequest
 from ...operations.registry import OperationFrontendProjection
-from ...tests.operation_host_fakes import RecordingEvents
+from ...tests.operation_host_fakes import RecordingEvents, executor_context
 from ...user_profile.access_contracts import SessionKind
 from ..actions_import import LedgerProviderID
 from ..import_operation import (
@@ -185,15 +185,13 @@ def test_over_budget_file_is_refused_before_persist_and_later_small_file_fits(
     monkeypatch.setattr("cadrumo.application.operations.profile_guard.require_active_bucket_id", lambda: str(_PROFILE))
     monkeypatch.setattr(operation_module, "prepare_ledger_source_import", prepare)
     monkeypatch.setattr(operation_module, "persist_prepared_ledger_source_import", persist)
-    context = SimpleNamespace(
-        identity=SimpleNamespace(
-            definition_id=LEDGER_IMPORT_OPERATION_DEFINITION_ID,
-            subject_ref=profile_operation_subject(str(_PROFILE)),
-        ),
-        authority_operation=operation,
+    context = executor_context(
+        LEDGER_IMPORT_OPERATION_DEFINITION_ID,
+        profile_id=str(_PROFILE),
+        operation=operation,
+        cancellation=cancellation,
         events=events,
         operands=_Operands(),
-        cancellation=cancellation,
     )
     request = OperationRequest(
         definition_id=LEDGER_IMPORT_OPERATION_DEFINITION_ID,
@@ -253,15 +251,13 @@ def test_a_file_whose_parsed_bytes_differ_from_the_preview_digest_is_refused_bef
     monkeypatch.setattr("cadrumo.application.operations.profile_guard.require_active_bucket_id", lambda: str(_PROFILE))
     monkeypatch.setattr(operation_module, "prepare_ledger_source_import", prepare)
     monkeypatch.setattr(operation_module, "persist_prepared_ledger_source_import", persist)
-    context = SimpleNamespace(
-        identity=SimpleNamespace(
-            definition_id=LEDGER_IMPORT_OPERATION_DEFINITION_ID,
-            subject_ref=profile_operation_subject(str(_PROFILE)),
-        ),
-        authority_operation=operation,
+    context = executor_context(
+        LEDGER_IMPORT_OPERATION_DEFINITION_ID,
+        profile_id=str(_PROFILE),
+        operation=operation,
+        cancellation=_Cancellation(),
         events=RecordingEvents(),
         operands=_Operands(),
-        cancellation=_Cancellation(),
     )
     request = OperationRequest(
         definition_id=LEDGER_IMPORT_OPERATION_DEFINITION_ID,
@@ -343,15 +339,13 @@ def test_each_source_is_staged_under_the_session_label_for_automation_and_the_pr
     monkeypatch.setattr("cadrumo.application.operations.profile_guard.require_active_bucket_id", lambda: str(_PROFILE))
     monkeypatch.setattr(operation_module, "prepare_ledger_source_import", prepare)
     monkeypatch.setattr(operation_module, "persist_prepared_ledger_source_import", persist)
-    context = SimpleNamespace(
-        identity=SimpleNamespace(
-            definition_id=LEDGER_IMPORT_OPERATION_DEFINITION_ID,
-            subject_ref=profile_operation_subject(str(_PROFILE)),
-        ),
-        authority_operation=operation,
+    context = executor_context(
+        LEDGER_IMPORT_OPERATION_DEFINITION_ID,
+        profile_id=str(_PROFILE),
+        operation=operation,
+        cancellation=_Cancellation(),
         events=RecordingEvents(),
         operands=_Operands(),
-        cancellation=_Cancellation(),
     )
     request = OperationRequest(
         definition_id=LEDGER_IMPORT_OPERATION_DEFINITION_ID,

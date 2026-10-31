@@ -26,7 +26,8 @@ from ...operations.interactions import (
 )
 from ...operations.models import OperationRequest, OperationTerminalReceipt
 from ...operations.registry import OperationFrontendProjection, OperationRegistry
-from ...tests.review_operation_fakes import profile_operation_request, review_execution_context
+from ...tests.operation_host_fakes import profile_operation_request
+from ...tests.review_operation_fakes import review_execution_context
 from ...user_profile import capabilities
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..google_operation import GoogleSheetsExportCapabilityDisabledError
