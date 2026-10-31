@@ -68,7 +68,7 @@ msgstr "A számításhoz használt pontos beépített szabályrevízió"
 
 #: ../../reference/registry-legal-api.md
 msgid "Formula or binding"
-msgstr "Képlet vagy binding"
+msgstr "Képlet vagy hozzárendelés"
 
 #: ../../reference/registry-legal-api.md
 msgid "Deterministic route from source values to a casilla"
@@ -444,9 +444,9 @@ msgstr ""
 "Az `IndexedRegistryAuthority.operation()` útvonalon nincs forrásfordítás,"
 " nyers szerzői fa betöltő, javítási útvonal, mohó JSON futásidejű háttér "
 "vagy JSON-tartalék. Hiányzó leíró vagy adatbázis esetén elérhetetlenségi "
-"hiba keletkezik. Hibás leíró, váratlan adatbázistag, hiányos manifest "
-"vagy érvénytelen komponens formátumhibát okoz. A leíró/adatbázis vagy egy"
-" komponens lenyomatának eltérése integritási hibát okoz. Ezek a hibák "
+"hiba keletkezik. Hibás leíró, váratlan adatbázistag, hiányos jegyzék vagy"
+" érvénytelen komponens formátumhibát okoz. A leíró/adatbázis vagy egy "
+"komponens lenyomatának eltérése integritási hibát okoz. Ezek a hibák "
 "azelőtt jelentkeznek, hogy az autoritásra épülő számítás vagy benyújtás "
 "továbblépne. A komponensek csak akkor töltődnek be, amikor egy rögzített "
 "művelet kéri őket; a sikeres értékek egy korlátos, generációra szűkített "
@@ -513,7 +513,7 @@ msgstr "Futásidejű vetítés"
 
 #: ../../reference/registry-legal-api.md
 msgid "Scalar binding"
-msgstr "Skaláris binding"
+msgstr "Skaláris hozzárendelés"
 
 #: ../../reference/registry-legal-api.md
 msgid "Typed source kind, selector, and aggregation"
@@ -522,8 +522,8 @@ msgstr "Típusos forrástípus, szelektor és aggregáció"
 #: ../../reference/registry-legal-api.md
 msgid "One numeric, enumerated, text, or date value for a binding id"
 msgstr ""
-"Egy binding-azonosítóhoz tartozó numerikus, felsorolt, szöveges vagy "
-"dátumérték"
+"Egy hozzárendelés azonosítójához tartozó numerikus, felsorolt, szöveges "
+"vagy dátumérték"
 
 #: ../../reference/registry-legal-api.md
 msgid "Repeating row binding"
@@ -562,13 +562,13 @@ msgid ""
 "through the `inventory` binding source, which projects Modelo 100 2025 "
 "casillas 0177, 0181, and 0182 per activity."
 msgstr ""
-"A binding nem csatolható adatblokk. Az a szerződés, amelynek segítségével"
-" egy bejegyzett forrásfeloldó egy saját forrásrekordot e benyújtási "
-"bemeneti alakzatok egyikébe vetít. A Modelo 720 külföldi eszközei "
-"bejegyzett, ismétlődő soros vetítést használnak. A titkosított "
-"`InventoryLedger` az `inventory` binding-forráson keresztül van "
-"bejegyezve, amely a Modelo 100 2025-ös casilláit, a 0177-et, a 0181-et és"
-" a 0182-t vetíti tevékenységenként."
+"A hozzárendelés nem csatolható adatblokk. Az a szerződés, amelynek "
+"segítségével egy bejegyzett forrásfeloldó egy saját forrásrekordot e "
+"benyújtási bemeneti alakzatok egyikébe vetít. A Modelo 720 külföldi "
+"eszközei bejegyzett, ismétlődő soros vetítést használnak. A titkosított "
+"`InventoryLedger` az `inventory` hozzárendelési forráson keresztül van "
+"bejegyezve, amely a Modelo 100 2025-ös rovatait, a 0177-et, a 0181-et és "
+"a 0182-t vetíti tevékenységenként."
 
 #: ../../reference/registry-legal-api.md:166
 #, python-brace-format

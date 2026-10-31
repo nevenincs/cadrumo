@@ -52,9 +52,10 @@ msgid ""
 msgstr ""
 "Háromféleképpen töltheted ki a censo-adatokat: lekérheted őket az AEAT-"
 "tól, beolvashatod egy letöltött igazolásból, vagy kézzel is megadhatod "
-"őket. A lekérés az AEAT saját *Mis Datos Censales* consultáját olvassa, "
-"és kitölti a címedet; a rendszeradatokhoz nem fér hozzá, ezért azokat "
-"neked kell megadnod. Az igazolás beolvasása még nem aktív."
+"őket. A lekérés az AEAT saját *<span lang=\"es\">Mis Datos "
+"Censales</span>* lekérdezését olvassa, és kitölti a címedet; a "
+"rendszeradatokhoz nem fér hozzá, ezért azokat neked kell megadnod. Az "
+"igazolás beolvasása még nem aktív."
 
 #: ../../how-to/censo-update.md:16
 msgid ""

@@ -63,8 +63,9 @@ msgstr ""
 "és nem nyújthat be helyetted. Te magad nyújtod be a bevallást a hivatalos"
 " csatornákon keresztül, és kizárólag te felelsz ezért. Mivel az adójog "
 "változik és a körülményeidtől függ, fordulj képzett szakemberhez - "
-"például asesor fiscalhoz vagy gestorhoz - a helyzetedre vonatkozó "
-"tanácsért."
+"például spanyol adótanácsadóhoz (<span lang=\"es\">asesor fiscal</span>) "
+"vagy adóügyi ügyintézőhöz (<span lang=\"es\">gestor</span>) - a "
+"helyzetedre vonatkozó tanácsért."
 
 #: ../../disclaimer.md:16
 msgid ""

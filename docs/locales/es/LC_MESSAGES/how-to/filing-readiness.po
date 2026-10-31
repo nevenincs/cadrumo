@@ -79,9 +79,9 @@ msgid ""
 " modelo's values."
 msgstr ""
 "El comando termina con el estado 2 mientras el objetivo no esté listo, de"
-" modo que un script detecta la carencia por el estado de salida. En este "
-"ejemplo `ready` es `false` porque al perfil recién creado aún le falta el"
-" origen de algunos valores del modelo."
+" modo que una secuencia de comandos detecta la carencia por el estado de "
+"salida. En este ejemplo `ready` es `false` porque al perfil recién creado"
+" aún le falta el origen de algunos valores del modelo."
 
 #: ../../how-to/filing-readiness.md:27
 msgid "The report covers four axes, each reported separately:"

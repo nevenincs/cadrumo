@@ -377,8 +377,8 @@ msgid ""
 "If the AEAT receipt itself appears wrong, contact your asesor or AEAT "
 "directly."
 msgstr ""
-"Ha maga az AEAT-igazolás tűnik hibásnak, fordulj az asesorodhoz vagy "
-"közvetlenül az AEAT-hoz."
+"Ha maga az AEAT-igazolás tűnik hibásnak, fordulj az adótanácsadódhoz "
+"(<span lang=\"es\">asesor</span>) vagy közvetlenül az AEAT-hoz."
 
 #: ../../how-to/reconcile.md:144
 msgid "If a box value looks wrong"

@@ -315,9 +315,9 @@ msgid ""
 msgstr ""
 "A levonások alapértelmezésben nullák, ha nincsenek megadva, így egy "
 "nélkülük készült kivetítés túlbecsli a fizetendő egyenleget, ha voltak "
-"retencionesei. Minden kivetített rovat hordozza a képletét és a "
-"jogszabályi hivatkozásait a JSON-kimenetben, ugyanazzal a jogi alappal, "
-"mint egy valódi számítás."
+"levonásaid. Minden kivetített rovat hordozza a képletét és a jogszabályi "
+"hivatkozásait a JSON-kimenetben, ugyanazzal a jogi alappal, mint egy "
+"valódi számítás."
 
 #: ../../how-to/filing-readiness.md:112
 #, python-brace-format

@@ -361,8 +361,8 @@ msgid ""
 msgstr ""
 "Ezek rovat-megfigyelésekké elemezhetők, ahol az adószabályok teljes "
 "elrendezést tartalmaznak. A támogatás revízióspecifikus, nem általános. "
-"Ez a felület AEAT-archívumbájtokat elemez; a beküldöttadat-importáló nem "
-"általános CSV-importáló."
+"Ez a felület AEAT-archívumból származó bájtokat elemez; a benyújtott "
+"adatok importálója nem általános CSV-importáló."
 
 #: ../../reference/import-export-and-evidence.md:90
 msgid "**AEAT receipts (justificantes):**"

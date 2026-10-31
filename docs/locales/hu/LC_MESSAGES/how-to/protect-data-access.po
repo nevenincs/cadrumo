@@ -101,8 +101,8 @@ msgstr ""
 #: ../../how-to/protect-data-access.md:30
 msgid "Never store it in a shared shell profile, a committed script, or a log."
 msgstr ""
-"Soha ne tárold megosztott shellprofilban, commitolt szkriptben vagy "
-"naplóban."
+"Soha ne tárold megosztott parancsértelmező-profilban, verziókezelőben "
+"tárolt szkriptben vagy naplóban."
 
 #: ../../how-to/protect-data-access.md:32
 msgid ""
