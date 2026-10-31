@@ -92,6 +92,9 @@ def test_attested_spanish_technical_forms_are_bounded_by_language_and_spelling()
         "instalable",
         "reintentos",
         "reembolsos",
+        "resolvedor",
+        "automatizable",
+        "renderice",
         "recalculada",
         "recalculando",
         "recalcules",
@@ -104,7 +107,18 @@ def test_attested_spanish_technical_forms_are_bounded_by_language_and_spelling()
         assert not is_project_spelling("es", word + "x")
         for locale in ("ca", "en", "hu"):
             assert not is_project_spelling(locale, word)
-    for typo in ("subpaqueetes", "editabless", "recompilla", "serialisa", "recapitulatibo", "reuna", "regenerala"):
+    for typo in (
+        "subpaqueetes",
+        "editabless",
+        "recompilla",
+        "serialisa",
+        "recapitulatibo",
+        "reuna",
+        "regenerala",
+        "resolvedorr",
+        "automatizabble",
+        "renderize",
+    ):
         assert not is_project_spelling("es", typo)
 
 

@@ -5,7 +5,12 @@ from __future__ import annotations
 import pytest
 
 from ..signal_document_prose import visible_document_prose
-from ..signal_spelling_segments import locale_spelling_words, spanish_word_context, translation_spelling_segments
+from ..signal_spelling_segments import (
+    _CATALAN_HYPHENATED_CLITIC_RE,
+    locale_spelling_words,
+    spanish_word_context,
+    translation_spelling_segments,
+)
 from ..signal_tokens import filtered_translation_text, translation_words
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -45,6 +50,16 @@ def test_rst_escapes_restore_complete_identifiers_and_keep_surrounding_prose(tmp
     assert "resident_irpf" not in filtered_translation_text(identifier_line)[0]
     assert "fecha_notificacion" not in filtered_translation_text(identifier_line)[0]
     assert "This ordinary misspeling is still visible." in prose
+
+
+def test_catalan_reviewed_clitics_keep_verbs_and_reject_malformed_hosts() -> None:
+    words, _excluded = locale_spelling_words("mantén-lo Mantén-los traçar-lo", "ca")
+    assert set(words) == {"mantén", "Mantén", "traçar"}
+    for value in ("xmantén-lo", "mantén-loo", "traçarr-lo"):
+        words, _excluded = locale_spelling_words(value, "ca")
+        assert "lo" in words or "loo" in words
+    for value in ("xmantén-lo", "mantén-loo", "traçarr-lo", "mantén-lo2", "traçar-lo_foo"):
+        assert _CATALAN_HYPHENATED_CLITIC_RE.search(value) is None
 
 
 @pytest.mark.parametrize(

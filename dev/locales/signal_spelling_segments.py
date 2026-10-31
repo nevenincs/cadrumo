@@ -23,10 +23,10 @@ from .signal_syntax import (
 )
 from .signal_tokens import filtered_translation_text, translation_words
 
-# These two exact Catalan forms were attested by the locale findings. Keep the
-# exception closed over complete forms; a productive suffix rule could conceal
-# a misspelled or malformed host from the dictionary check.
-_CATALAN_HYPHENATED_CLITIC_RE = re.compile(r"(?P<form>Mantén-lo|revisar-los)(?![^\W\d_])")
+# These exact Catalan pronoun forms are attested in the operator guides. Keep
+# the verb visible and the set closed; arbitrary stems still need checking.
+# https://aplicacions.llengua.gencat.cat/llc/AppJava/pdf/ortografia_catalana_versio_digital.pdf
+_CATALAN_HYPHENATED_CLITIC_RE = re.compile(r"(?<![\w-])(?P<form>[Mm]antén-(?:lo|los)|revisar-los|traçar-lo)(?![\w-])")
 # The export/VIES definitions and architecture/CLI guides retain these
 # complete English standard, license and product names.
 # Route each word to English rather than exempting its spelling.

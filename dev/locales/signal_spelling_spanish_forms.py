@@ -155,6 +155,10 @@ _NUMBER_ENDINGS = {
     "reintento": "s",
     # https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/guia-practica-cumplimentacion-modelo-censal-036/capitulo-09-retenciones-ingresos-cuenta/modelo-117.html
     "reembolso": "s",
+    # https://www.udep.edu.pe/castellanoactual/resolvedor-resolvista-resolvente/
+    "resolvedor": "es",
+    # https://redcol.minciencias.gov.co/Record/EDOCUR2_6bdb4ce8b394921fe1d85d6584b1b724/Description
+    "automatizable": "s",
     "subpaquete": "s",
     "subcomando": "s",
     "reanudable": "s",
@@ -170,7 +174,8 @@ _INFINITIVES = frozenset({"previsualizar", "contrafirmar"})
 # https://docs.python.org/es/3.11/tutorial/modules.html
 # https://docs.python.org/es/3.11/library/json.html
 # https://dle.rae.es/calcular ; https://dle.rae.es/clasificar
-_TECHNICAL_VERB_FORMS = frozenset({"recompila", "serializa", "recalculando", "recalcules", "reclasificas"})
+# https://developer.mozilla.org/es/docs/Learn_web_development/Core/Frameworks_libraries/React_getting_started
+_TECHNICAL_VERB_FORMS = frozenset({"recompila", "serializa", "recalculando", "recalcules", "reclasificas", "renderice"})
 
 
 def is_reviewed_spanish_form(word: str) -> bool:
