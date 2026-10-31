@@ -1467,11 +1467,9 @@ function ClosingForm({
 }) {
   const t = useStrings();
   const write = useSetupWrite(t("desktop.ledger.stock.title"));
-  // The decision's reference and its moment are fixed when the form opens, so
-  // a closing sent twice is one closing.
+  // Keep the decision reference stable when the form is submitted again.
   const [ids] = useState(() => ({
     decision: mint(),
-    decidedAt: new Date().toISOString(),
   }));
   const [draft, setDraft] = useState<ClosingDraft>(EMPTY_CLOSING);
   const [tried, setTried] = useState(false);
@@ -2397,7 +2395,11 @@ export function StockPane({
         )}
         {ledger.period_movements.length === 0 ? (
           <p className="ledger-stock-movements-note text-sm text-muted-foreground">
-            {t("desktop.ledger.stock.movements_none")}
+            {t(
+              stopped
+                ? "desktop.ledger.stock.movements_none_retired"
+                : "desktop.ledger.stock.movements_none",
+            )}
           </p>
         ) : (
           <SetupTable<InventoryMovement>

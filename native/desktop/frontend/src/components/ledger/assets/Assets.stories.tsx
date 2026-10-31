@@ -6,12 +6,15 @@ import type { LedgerShape } from "@/dev/ledgerFixture";
 import type { LedgerPort } from "../../../shell/ledger";
 import { translator, useStrings } from "../../../shell/strings";
 import { AssetsSection } from "./AssetsSection";
+import { amountText, dateText } from "../movements/movementWords";
 import { ASSET_KEYS } from "./assetsWords";
 
 // The Assets tab over the scenario's ledger: its list, the detail of one
 // element with its plan and timeline, the forms, the filing handoff, and the
 // states a read can end in. Stock is another part's view and stays a stand-in
 // that names its place.
+
+type LeftOut = "named" | "unnamed" | "unknown";
 
 type Answer = "register" | "empty" | "refused" | "loading";
 
@@ -23,6 +26,9 @@ type Args = {
   parts?: boolean;
   /** The handoff leaves elements out of its Modelo 130 amounts. */
   partial?: boolean;
+  /** What the handoff leaves out of its amounts, named by the made-up list,
+   * by an element the list holds no name for, or with an accrual not worked out. */
+  leftOut?: LeftOut;
   locale: string;
 };
 
@@ -101,18 +107,91 @@ function withPartialHandoff(port: LedgerPort): LedgerPort {
   };
 }
 
+const SPAN = { covered_from: "2026-07-01", covered_until: "2027-01-01" };
+
+/** The scenario's port, with what the filing handoff leaves out stated as the
+ * story asks, whatever the seeded register leaves out of its own. */
+function withLeftOut(port: LedgerPort, leftOut: LeftOut): LedgerPort {
+  return {
+    ...port,
+    submit: ((definition: string, payload: never) => {
+      const sent = port.submit(definition as never, payload) as Promise<{
+        kind: string;
+        result?: unknown;
+      }>;
+      if (definition !== "ledger.actividad-asset.filing-handoff") return sent;
+      return sent.then((answer) => {
+        if (answer.kind !== "settled") return answer;
+        const result = structuredClone(answer.result) as {
+          filing_handoff: {
+            m100_gaps: object[];
+            material_m130: Record<string, string[]> | null;
+            intangible_m130: Record<string, string[]> | null;
+          } | null;
+        };
+        const handoff = result.filing_handoff;
+        if (handoff === null) return answer;
+        const gap = (
+          asset_id: string,
+          kind: string,
+          accrued: string | null,
+        ) => ({
+          asset_id,
+          kind,
+          ...SPAN,
+          accrued: accrued === null ? null : { decimal: accrued },
+        });
+        const quarter = (free: string[], agrarian: string[]) => {
+          for (const found of [handoff.material_m130, handoff.intangible_m130])
+            if (found !== null) {
+              found.free_gap_asset_ids = free;
+              found.agrarian_excluded_asset_ids = agrarian;
+            }
+        };
+        if (leftOut === "named") {
+          handoff.m100_gaps = [
+            gap("furgoneta", "accrued", "1451.84"),
+            gap("impresora", "free_method", null),
+            gap("servidor", "unavailable", null),
+          ];
+          quarter(["impresora"], []);
+        } else if (leftOut === "unnamed") {
+          handoff.m100_gaps = [
+            gap("no-list-name-a", "free_method", null),
+            gap("no-list-name-b", "accrued", "310.00"),
+          ];
+          quarter(["no-list-name-a", "impresora"], ["no-list-name-b"]);
+        } else {
+          handoff.m100_gaps = [gap("furgoneta", "accrued", null)];
+          quarter([], []);
+        }
+        return { ...answer, result };
+      });
+    }) as LedgerPort["submit"],
+  };
+}
+
 function Stage({
   shape,
   answer = "register",
   signedOut,
   parts,
   partial,
+  leftOut,
   locale,
 }: Args) {
   const base = useLedgerPort(shape);
   const port = useMemo(
-    () => withListAnswer(partial ? withPartialHandoff(base) : base, answer),
-    [base, answer, partial],
+    () =>
+      withListAnswer(
+        leftOut
+          ? withLeftOut(base, leftOut)
+          : partial
+            ? withPartialHandoff(base)
+            : base,
+        answer,
+      ),
+    [base, answer, partial, leftOut],
   );
   return (
     <div className="flex h-full min-h-0 flex-col">
@@ -212,6 +291,94 @@ export const FilingHandoffPartialAmount: Story = {
   name: "Filing handoff, an amount that leaves elements out",
   args: { partial: true },
   play: FilingHandoff.play,
+};
+
+/** Waits until the handoff's left-out words say `text`. */
+const saysLeftOut = (context: PlayContext, text: string) =>
+  waitFor(
+    () => {
+      if (!context.canvasElement.textContent?.includes(text))
+        throw new Error(`"${text}" is not drawn yet`);
+    },
+    { timeout: 5000 },
+  );
+
+/** Opens the handoff with a quarter, which is where Modelo 130 is left out. */
+async function openQuarter(context: PlayContext) {
+  await FilingHandoff.play?.(context);
+}
+
+export const FilingHandoffLeftOutNamed: Story = {
+  name: "Filing handoff, left-out intervals and elements named",
+  args: { leftOut: "named" },
+  play: async (context) => {
+    const t = wordsOf(context);
+    await openQuarter(context);
+    const span = {
+      start: dateText(t.locale ?? "en", SPAN.covered_from, true),
+      end: dateText(t.locale ?? "en", SPAN.covered_until, true),
+    };
+    await saysLeftOut(
+      context,
+      t("desktop.ledger.assets.handoff_gap_accrued", {
+        name: "Furgoneta de reparto",
+        ...span,
+        amount: amountText(t.locale ?? "en", "1451.84"),
+      }),
+    );
+    await saysLeftOut(
+      context,
+      t("desktop.ledger.assets.handoff_free_named", {
+        names: "Impresora 3D",
+      }),
+    );
+  },
+};
+
+export const FilingHandoffLeftOutUnnamed: Story = {
+  name: "Filing handoff, left out elements the list holds no name for: a count",
+  args: { leftOut: "unnamed" },
+  play: async (context) => {
+    const t = wordsOf(context);
+    await openQuarter(context);
+    await saysLeftOut(
+      context,
+      t("desktop.ledger.assets.handoff_gap_unnamed", { count: 2 }),
+    );
+    await saysLeftOut(
+      context,
+      t("desktop.ledger.assets.handoff_free_count", { count: 2 }),
+    );
+  },
+};
+
+export const FilingHandoffAccrualUnknown: Story = {
+  name: "Filing handoff, an accrual not worked out: never drawn as zero",
+  args: { leftOut: "unknown" },
+  play: async (context) => {
+    const t = wordsOf(context);
+    await openQuarter(context);
+    const locale = t.locale ?? "en";
+    await saysLeftOut(
+      context,
+      t("desktop.ledger.assets.handoff_gap_unavailable", {
+        name: "Furgoneta de reparto",
+        start: dateText(locale, SPAN.covered_from, true),
+        end: dateText(locale, SPAN.covered_until, true),
+      }),
+    );
+    if (
+      context.canvasElement.textContent?.includes(
+        t("desktop.ledger.assets.handoff_gap_accrued", {
+          name: "Furgoneta de reparto",
+          start: dateText(locale, SPAN.covered_from, true),
+          end: dateText(locale, SPAN.covered_until, true),
+          amount: amountText(locale, "0"),
+        }),
+      )
+    )
+      throw new Error("an accrual not worked out was drawn as zero");
+  },
 };
 
 export const WithoutStock: Story = {

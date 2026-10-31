@@ -140,6 +140,7 @@ export function AssetDetail({
             assetId={row.asset_id}
             locale={locale}
             year={year}
+            disposal={row.disposal}
             onOpenLink={onOpenLink}
             onCorrectClaim={onCorrectClaim}
           />

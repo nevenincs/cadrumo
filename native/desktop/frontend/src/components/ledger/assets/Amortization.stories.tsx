@@ -1,8 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { userEvent, waitFor, within } from "storybook/test";
 import { STORY_READER, useLedgerPort } from "@/dev/LedgerStage";
 import type { LedgerPort } from "../../../shell/ledger";
+import type { ListDisposal } from "../../../shell/ledgerSetup";
+import { setupCall } from "../setup/setupModel";
 import { AmortizationPlan } from "./AmortizationPlan";
 import { AssetTimeline } from "./AssetTimeline";
 
@@ -17,7 +19,12 @@ import { AssetTimeline } from "./AssetTimeline";
 
 type Answer = "register" | "empty" | "refused" | "loading" | "unavailable";
 
-type Tweak = "none" | "opening_remedy" | "long_partial_citations";
+type Tweak =
+  | "none"
+  | "opening_remedy"
+  | "long_partial_citations"
+  | "refusal_facts"
+  | "nothing_left";
 
 type Args = {
   assetId: string;
@@ -32,9 +39,43 @@ type Args = {
 };
 
 type PlanShape = {
-  rows?: { absence: string | null; absence_reason_key: string | null }[] | null;
-  limits?: { legal_citations_complete: boolean } | null;
+  rows?:
+    | {
+        absence: string | null;
+        absence_reason_key: string | null;
+        claim_state: string;
+        claimable_intervals: unknown[];
+        claimable_refusal_key: string | null;
+        claimable_refusal_facts: { key: string; value: string }[];
+      }[]
+    | null;
+  limits?: {
+    legal_citations_complete: boolean;
+    unavailable_reason_key: string | null;
+    unavailable_reason_facts: { key: string; value: string }[];
+  } | null;
 };
+
+const ELAPSED = "ledger.actividad_asset.errors.amortization_period_elapsed";
+
+/** The baja the register records for the element, as the detail passes it. */
+function useDisposal(port: LedgerPort, assetId: string): ListDisposal | null {
+  const [disposal, setDisposal] = useState<ListDisposal | null>(null);
+  useEffect(() => {
+    let active = true;
+    void setupCall(port, "ledger.actividad-asset.list", {}, false).then(
+      (call) => {
+        if (!active || call.kind !== "done") return;
+        const found = call.result.rows?.find((row) => row.asset_id === assetId);
+        setDisposal(found?.disposal ?? null);
+      },
+    );
+    return () => {
+      active = false;
+    };
+  }, [port, assetId]);
+  return disposal;
+}
 
 /** The scenario's port, with the plan changed as the story asks. */
 function withTweak(port: LedgerPort, tweak: Tweak): LedgerPort {
@@ -55,6 +96,25 @@ function withTweak(port: LedgerPort, tweak: Tweak): LedgerPort {
             if (row.absence === "incomplete")
               row.absence_reason_key =
                 "ledger.actividad_asset.errors.opening_history_missing";
+        } else if (tweak === "refusal_facts") {
+          const first = plan.rows?.[0];
+          const facts = [{ key: "ended_on", value: "2024-12-31" }];
+          if (first) {
+            first.claimable_intervals = [];
+            first.claimable_refusal_key = ELAPSED;
+            first.claimable_refusal_facts = facts;
+          }
+          if (plan.limits) {
+            plan.limits.unavailable_reason_key = ELAPSED;
+            plan.limits.unavailable_reason_facts = facts;
+          }
+        } else if (tweak === "nothing_left") {
+          const first = plan.rows?.[0];
+          if (first) {
+            first.claim_state = "missing";
+            first.claimable_intervals = [];
+            first.claimable_refusal_key = null;
+          }
         } else if (plan.limits) plan.limits.legal_citations_complete = false;
         return { ...answer, result: plan };
       });
@@ -130,6 +190,7 @@ function Stage({
     () => withAnswer(withTweak(base, tweak), answer),
     [base, tweak, answer],
   );
+  const disposal = useDisposal(base, assetId);
   return (
     <div
       className={
@@ -145,6 +206,7 @@ function Stage({
           assetId={assetId}
           locale={locale}
           year={year}
+          disposal={disposal}
           onOpenLink={() => undefined}
           onCorrectClaim={() => undefined}
         />
@@ -198,6 +260,18 @@ const open =
       });
       await userEvent.click(control);
     }
+  };
+
+/** Shows the tooltip of the mark or glyph the person can focus by its name. */
+const hint =
+  (name: RegExp): Story["play"] =>
+  async ({ canvasElement }: PlayContext) => {
+    const mark = await waitFor(() => {
+      const found = within(canvasElement).queryAllByRole("img", { name })[0];
+      if (!found) throw new Error("the mark is not drawn yet");
+      return found;
+    });
+    await userEvent.hover(mark);
   };
 
 const plan = (extra: Partial<Story> = {}): Story => ({
@@ -278,8 +352,47 @@ export const PlanCoveredByOpening: Story = plan({
 });
 
 export const PlanProjectedRates: Story = plan({
-  name: "Plan, a year on projected rates",
+  name: "Plan, estimated years carry their own glyph beside the year and each figure",
   args: { assetId: "licencia", year: 2027 },
+  play: hint(/Estimated: official tables/),
+});
+
+export const PlanMinimumAccumulated: Story = plan({
+  name: "Plan, the minimum column is headed as accumulated to year end, with its note",
+  args: { assetId: "furgoneta", year: 2026 },
+  play: hint(/Counts towards the cost/),
+});
+
+export const PlanNothingRecordedMark: Story = plan({
+  name: "Plan, a year with nothing recorded has its own mark, not Not known",
+  args: { assetId: "servidor" },
+  play: hint(/Nothing recorded/),
+});
+
+export const PlanDoesNotApplyMark: Story = plan({
+  name: "Plan, a figure that does not apply has its own mark, not Not known",
+  args: { assetId: "plotter" },
+  play: hint(/Doesn't apply/),
+});
+
+export const PlanReasonWithFacts: Story = plan({
+  name: "Plan, the reason a year cannot be recorded and the limit reason carry their dates",
+  args: { assetId: "cristaleria", tweak: "refusal_facts" },
+});
+
+export const PlanNothingLeftToRecord: Story = plan({
+  name: "Plan, a year with nothing left to record says so only when no reason is given",
+  args: { assetId: "furgoneta", tweak: "nothing_left" },
+});
+
+export const PlanScrollsSideways: Story = plan({
+  name: "Plan, a table wider than the panel fades at the edge that continues",
+  args: { assetId: "furgoneta", narrow: true },
+});
+
+export const PlanBaja: Story = plan({
+  name: "Plan, the baja is said above the table with its date and reason",
+  args: { assetId: "camara" },
 });
 
 export const PlanMaximumPeriodElapsed: Story = plan({
@@ -310,9 +423,15 @@ export const PlanOutOfService: Story = plan({
 });
 
 export const PlanStaleClaim: Story = plan({
-  name: "Plan, a claim that no longer matches the figures is marked and can be corrected",
+  name: "Plan, a dotación that no longer matches says why and what to do",
   args: { assetId: "servidor", narrow: true },
   play: open(2025),
+});
+
+export const PlanStaleClaimCollapsed: Story = plan({
+  name: "Plan, a stale dotación shows a warning on the collapsed year, not a tick",
+  args: { assetId: "servidor", narrow: true },
+  play: hint(/No longer matches the schedule/),
 });
 
 export const PlanInThePanel: Story = plan({

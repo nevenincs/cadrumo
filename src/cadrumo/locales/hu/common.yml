@@ -1512,13 +1512,32 @@ desktop:
       filing:
         choose_year: Válassz évet az értékcsökkenési leírás átadásának megtekintéséhez.
         unavailable: A bevallási átadás nem érhető el.
-      forecast: Értékcsökkenés {amount} · {days} nap · {from} – {until}
+      forecast: Értékcsökkenési leírás {amount} · {days} nap · {from} – {until}
       forecast_note: Az előrejelzés addig nem ment semmit, amíg nem rögzíted az értékcsökkenési
         leírást.
       free: Kért szabad értékcsökkenés
       free_hint: Csak szabad értékcsökkenési módszernél
       from: Ettől
       handoff: Értékcsökkenési leírások a bevallásaidban
+      handoff_agrarian_count: 'Kimarad a 130-asból, mert mezőgazdasági tevékenységhez
+        tartoznak, amely a bevétel egy részét fizeti: {count} elem.'
+      handoff_agrarian_named: 'Kimarad a 130-asból, mert mezőgazdasági tevékenységhez
+        tartoznak, amely a bevétel egy részét fizeti: {names}.'
+      handoff_free_count: 'Nem számít bele a 130-asba, mert a módszerük az értékcsökkenési
+        leírás összegét rád hagyja: {count} elem.'
+      handoff_free_named: 'Nem számít bele a 130-asba, mert a módszerük az értékcsökkenési
+        leírás összegét rád hagyja: {names}.'
+      handoff_gap_accrued: '100-as: {name} esetében nincs rögzített értékcsökkenési
+        leírás {start} és {end} között. Az ez alatt felmerült {amount} EUR nincs benne
+        a fenti összegekben.'
+      handoff_gap_free: '100-as: {name} esetében nincs rögzített értékcsökkenési leírás
+        {start} és {end} között. A módszere az összeget rád hagyja, ezért egyik sem
+        számítható ki.'
+      handoff_gap_unavailable: '100-as: {name} esetében nincs rögzített értékcsökkenési
+        leírás {start} és {end} között, és nem számítható ki.'
+      handoff_gap_unnamed: Emellett kimarad {count} időszak olyan elemekből, amelyeket
+        ez a lista nem nevez meg.
+      handoff_left_out: Kimarad ezekből az összegekből
       handoff_partial: 'Részleges: {count} elem nem számítható ki, ezért kimarad ebből
         az összegből.'
       handoff_year: A bevalláshoz tartozó számok éve
@@ -1539,23 +1558,29 @@ desktop:
         serial_missing: Nincs rögzített gyártási szám.
         summary: Figyelmet igényel, minden évben
         unavailable: A nyilvántartás most nem érhető el.
+      mark:
+        not_applicable: Nem alkalmazandó
+        nothing_recorded: Nincs rögzítve
       not_known: Nem ismert
       opening_unknown: 'Töltsd ki a következő mezőt a kiszámításhoz: „{field}”.'
       plan:
-        claim_correct: A(z) {from} – {until} közötti elszámolás javítása
+        baja: 'Kivezetés: {date}, {reason}'
         claimable: 'Értékcsökkenési leírás még rögzíthető: {from} – {until}'
         claimable_none: Nincs több rögzíthető
-        claimed_missing: Erre az évre nincs rögzítve semmi.
         claims: '{year}. évi értékcsökkenési leírások'
         column:
           claimed: Rögzített
           days: Napok
+          minimum: Minimum az év végéig felhalmozva
+          minimum_note: Beleszámít a költségbe, ha kivezeted ezt az elemet. Nem az
+            idei levonás.
           period: Időszak
           planned: Tervezett
           rate: Mérték
           replaced_by: Helyettesítette
           status: Állapot
           year: Év
+        correct_this: Az értékcsökkenési leírás javítása
         days_missing: Erre az évre nincs figyelembe vett üzemnap.
         edition: '{edition}. évi táblázatok'
         election_changed: Itt változik az értékcsökkenés módszere
@@ -1585,6 +1610,8 @@ desktop:
         rate_missing: Nincs mérték, mert erre az évre nincs kiszámított összeg.
         recorded_zero: Nullaként rögzítve
         replaced: Helyettesítve
+        stale_fix: Ez az értékcsökkenési leírás már nem egyezik a tervvel. Javítsd
+          ki.
       quarter: 130-as negyedév
       quarter_none: 130-as modell negyedéve nélkül
       refused: A nyilvántartás nem fogadta el.
@@ -1626,7 +1653,7 @@ desktop:
         described: Az adatok mentve.
         element_added: Elem hozzáadva.
         fill_in: Töltsd ki
-        fix_marked: Javítsd a megjelölt mezőket.
+        fix_marked: Javítsd a megjelölt bejegyzéseket.
         incomplete: 'Nem lett mentve. Még ki kell töltened: {fields}'
         kept: Semmi sem lett mentve. Amit beírtál, még itt van.
         missing: 'Még ki kell tölteni: {fields}'
@@ -3813,6 +3840,8 @@ desktop:
       movement_correct_note: A javított mozgás a régi helyére lép. A régi az előzményekben
         marad.
       movements_none: Ebben a nyilvántartásban még nincs mozgás. Vedd fel az elsőt.
+      movements_none_retired: Ebben a nyilvántartásban nincs mozgás. Meg van szüntetve,
+        ezért nem vehető fel benne semmi.
       movements_of: '{name} mozgásai'
       options_failed: Az űrlap lehetőségeit nem sikerült betölteni. Zárd be az űrlapot,
         és nyisd meg újra.
@@ -5825,9 +5854,9 @@ sheets:
       withholding_percentage: Visszatartási kulcs
 topic:
   authentication:
-    body: 'Az AEAT-hitelesítés Cl@ve Móvil (push a regisztrált telefonra) vagy digitális
-      tanúsítvány (FNMT / azzal egyenértékű) segítségével működik. Konfigurálj egy
-      szolgáltatót: `cadrumo-runtime config auth configure --provider certificate`,
+    body: 'Az AEAT-hitelesítés Cl@ve Móvil (értesítés a regisztrált telefonra) vagy
+      digitális tanúsítvány (FNMT / azzal egyenértékű) segítségével működik. Konfigurálj
+      egy szolgáltatót: `cadrumo-runtime config auth configure --provider certificate`,
       majd ellenőrizd: `cadrumo-runtime config auth test`.'
     title: Hitelesítés az AEAT-nál
   calendar:
@@ -9487,6 +9516,11 @@ workspace:
         írjanak.
       source_locked: A nyilvántartásaidat követi; ott javítsd, majd számolj újra.
       value_channel_unavailable: Ilyen típusú értéket itt még nem lehet megadni.
+    notes:
+      lead: Ez nem akadályozza a fájlt. Azt mondja el, mit hagynak ki az elemeid értékcsökkenési
+        leírásai, hogy eldönthesd, mit adj hozzá.
+      title: Érdemes tudni a benyújtás előtt
+      unworded: A számítás megjegyzett valamit az elemeidről, amit itt nem lehet megmutatni.
     operation:
       calculated: 'Kiszámítva. {direction}: {value}.'
       checked:

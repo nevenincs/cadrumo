@@ -929,7 +929,7 @@ function documentOf(
  */
 export function closingRequest(
   book: { actividad_id: string; year: number },
-  ids: { decision: string; decidedAt: string },
+  ids: { decision: string },
   draft: ClosingDraft,
   vocabulary: Vocabulary,
 ): Built<InventoryClosingValueRequest> {
@@ -1001,7 +1001,6 @@ export function closingRequest(
           year: book.year,
           facts: {
             decision_id: ids.decision,
-            decided_at: ids.decidedAt,
             authority,
             reason,
             decision_evidence: documents,

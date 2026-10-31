@@ -756,13 +756,13 @@ def test_a_prior_closing_file_is_stated_as_the_backend_kept_it(made: dict[str, d
     assert _closing(made["closing_derived"]).facts.prior_evidence == ()
 
 
-def test_a_closing_value_is_dated_in_utc_and_replays_under_the_reference_it_was_given(
+def test_a_closing_value_keeps_the_reference_it_was_given(
     made: dict[str, dict[str, Any]],
 ) -> None:
     request = _closing(made["closing_derived"])
 
     assert request.facts.decision_id == "decision-1"
-    assert request.facts.decided_at.utcoffset() is not None
+    assert "decided_at" not in type(request.facts).model_fields
 
 
 @pytest.mark.parametrize(

@@ -756,7 +756,6 @@ export type InventoryClosingValueRequest = {
   year: number;
   facts: {
     decision_id: string;
-    decided_at: string;
     authority: string;
     reason: string;
     decision_evidence: InventoryClosingDocument[];
@@ -938,13 +937,28 @@ export type M130Contribution = {
   schedule_fingerprint: string | null;
 };
 /** The accrual of one asset kind for Modelo 130. Elements it could not work
- * out are named: their share is missing from `amount`, not zero. */
+ * out are named: their share is missing from `amount`, not zero. Elements
+ * whose method leaves an amount to the taxpayer, and those of an agricultural
+ * activity, are named too, and are not in `amount` either. */
 export type M130Projection = {
   target_casilla_id: string;
   tax_year: number;
   amount: PublicDecimal;
   contributions: M130Contribution[];
   unavailable_asset_ids: string[];
+  free_gap_asset_ids: string[];
+  agrarian_excluded_asset_ids: string[];
+};
+/** What can be said about an interval of the year no claim covers. */
+export type M100GapKind = "accrued" | "free_method" | "unavailable";
+/** An interval of the year Modelo 100 leaves out of an element because no
+ * claim records it. `accrued` is stated only where it can be worked out. */
+export type M100ClaimGap = {
+  asset_id: string;
+  kind: M100GapKind;
+  covered_from: string;
+  covered_until: string;
+  accrued: PublicDecimal | null;
 };
 export type ActivityAssetFilingResult = ActivityAssetResultBase & {
   tax_year: number | null;
@@ -952,6 +966,7 @@ export type ActivityAssetFilingResult = ActivityAssetResultBase & {
   filing_handoff: {
     material_m100: ClaimProjection;
     intangible_m100: ClaimProjection;
+    m100_gaps: M100ClaimGap[];
     /** Both null when no quarter was asked. */
     material_m130: M130Projection | null;
     intangible_m130: M130Projection | null;
@@ -1061,6 +1076,7 @@ export type PlanRow = {
   claim_state: string;
   claimable_intervals: ClaimableInterval[];
   claimable_refusal_key: string | null;
+  claimable_refusal_facts?: ReasonFact[];
   edition: PlanEdition | null;
   service_days: number | null;
   calendar_days: number | null;
@@ -1085,6 +1101,7 @@ export type ElectionLimits = {
   legal_citations_complete: boolean;
   not_table_bound: string | null;
   unavailable_reason_key: string | null;
+  unavailable_reason_facts?: ReasonFact[];
 };
 
 /** A warning on the plan that changes no figure and refuses nothing; the

@@ -108,7 +108,6 @@ type Scenario =
       kind: "closing";
       book: Book;
       decision: string;
-      decidedAt: string;
       draft: ClosingDraft;
     };
 
@@ -228,7 +227,7 @@ function made(scenario: Scenario, vocabulary: Vocabulary) {
     case "closing":
       return closingRequest(
         scenario.book,
-        { decision: scenario.decision, decidedAt: scenario.decidedAt },
+        { decision: scenario.decision },
         scenario.draft,
         vocabulary,
       );

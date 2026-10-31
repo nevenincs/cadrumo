@@ -1036,7 +1036,6 @@ test("a book never changed has no history, and the history carries no reference 
 
 const DECISION = {
   decision: "decision-1",
-  decidedAt: "2026-12-31T10:00:00.000Z",
 };
 
 /** A closing value worked out from the movements, with the document that
@@ -1064,7 +1063,6 @@ test("a closing value states its facts, its documents and the reference minted f
     year: 2026,
     facts: {
       decision_id: "decision-1",
-      decided_at: "2026-12-31T10:00:00.000Z",
       authority: "movement_derived",
       reason: "Checked against the year's movements",
       decision_evidence: [

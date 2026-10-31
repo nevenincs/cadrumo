@@ -1080,6 +1080,32 @@ export function assetOperations(tools: Tools) {
       }));
   };
 
+  /** The facts of a revision that no charge rests on: the register reads a
+   * claim as matching the current revision whatever they say, so a baja, or
+   * how the element was acquired, never marks a dotación stale. */
+  const FIGURE_NEUTRAL = new Set([
+    "revision_number",
+    "supersedes_revision_id",
+    "out_of_service_date",
+    "disposal",
+    "acquisition",
+    "acquisition_shape",
+    "further_acquisitions",
+    "declared_acquisition_date",
+    "declared_activity",
+  ]);
+  /** Whether a revision states a fact its predecessor's charges rest on
+   * differently. */
+  const movesCharge = (before: JsonObject, after: JsonObject) => {
+    const old = flatten(before);
+    const next = flatten(after);
+    return Object.keys({ ...old, ...next }).some(
+      (path) =>
+        !FIGURE_NEUTRAL.has(path.split(".")[0]!) &&
+        (old[path] ?? null) !== (next[path] ?? null),
+    );
+  };
+
   const latest = (element: Element) => element.revisions.at(-1)!;
   const STAGES = ["taxpayer_owned", "business_allocated", "whole_property"];
   const TABLE_METHODS = ["linear", "constant_percentage", "sum_of_digits"];
@@ -1729,9 +1755,15 @@ export function assetOperations(tools: Tools) {
     const newBasis = decimalOf(obj(revision.basis)!.basis_amount)!;
     if (stays > toCents(newBasis))
       return refuse(VALIDATION, "correction_below_effective_claims", {}, shape);
-    // Every effective claim not recorded again under this revision no longer matches.
+    // Every effective claim not recorded again under this revision no longer
+    // matches, when the revision states a fact a charge rests on differently.
+    const chargeMoved = movesCharge(current.revision, revision);
     for (const event of element.events)
-      if (event.claim !== null && !replaced.includes(event.record_id))
+      if (
+        chargeMoved &&
+        event.claim !== null &&
+        !replaced.includes(event.record_id)
+      )
         event.claim = {
           ...event.claim,
           matches_current_schedule: false,
@@ -1866,6 +1898,49 @@ export function assetOperations(tools: Tools) {
         ),
       };
     };
+    /** The intervals of the year no effective claim covers, said by what can
+     * be said of each: its accrual, that the method leaves it to the person,
+     * or that the schedule cannot be worked out for it. */
+    const m100Gaps = () =>
+      sorted.flatMap((element) => {
+        const row = element.rows.find((found) => found.tax_year === year);
+        if (!row) return [];
+        const free = row.absence === "free_election";
+        const unworkable = [
+          "incomplete",
+          "edition_unavailable",
+          "unsupported",
+          "conflict",
+        ].includes(row.absence ?? "");
+        if (row.planned === null && !free && !unworkable) return [];
+        const { start, end } = serviceWindow(element, row);
+        if (end <= start) return [];
+        return uncovered(row, start, end).map((gap) => {
+          const kind = free
+            ? "free_method"
+            : unworkable
+              ? "unavailable"
+              : "accrued";
+          return {
+            asset_id: element.id,
+            kind,
+            covered_from: gap.covered_from,
+            covered_until: gap.covered_until,
+            accrued:
+              kind === "accrued"
+                ? dec(
+                    chargeFor(
+                      element.annual,
+                      later(element.list.in_service_date, `${year}-01-01`),
+                      gap.covered_from,
+                      gap.covered_until,
+                      year,
+                    ),
+                  )
+                : null,
+          };
+        });
+      });
     const m130 = (kind: string) => {
       const contributions: {
         asset_id: string;
@@ -1874,6 +1949,7 @@ export function assetOperations(tools: Tools) {
         schedule_fingerprint: string | null;
       }[] = [];
       const unavailable: string[] = [];
+      const freeGap: string[] = [];
       for (const element of sorted) {
         if (element.list.asset_kind !== kind) continue;
         const row = element.rows.find((found) => found.tax_year === year);
@@ -1892,6 +1968,10 @@ export function assetOperations(tools: Tools) {
             schedule_fingerprint: null,
           });
         for (const gap of uncovered({ ...row, claims: covered }, start, stop)) {
+          if (row.absence === "free_election") {
+            if (!freeGap.includes(element.id)) freeGap.push(element.id);
+            continue;
+          }
           if (row.planned === null) {
             // Only a span the schedule cannot be worked out for is named.
             if (
@@ -1938,6 +2018,9 @@ export function assetOperations(tools: Tools) {
         ),
         contributions,
         unavailable_asset_ids: unavailable,
+        free_gap_asset_ids: freeGap,
+        // No seeded element belongs to an agricultural activity.
+        agrarian_excluded_asset_ids: [] as string[],
       };
     };
     return json({
@@ -1947,6 +2030,7 @@ export function assetOperations(tools: Tools) {
       filing_handoff: {
         material_m100: m100("material"),
         intangible_m100: m100("intangible"),
+        m100_gaps: m100Gaps(),
         material_m130: period === null ? null : m130("material"),
         intangible_m130: period === null ? null : m130("intangible"),
       },
@@ -2049,14 +2133,7 @@ export function assetOperations(tools: Tools) {
         { history: null },
       );
     judge(element, facts, { history: null });
-    // Every claim stays as recorded, under a revision that is no longer current.
-    for (const event of element.events)
-      if (event.claim !== null)
-        event.claim = {
-          ...event.claim,
-          matches_current_schedule: false,
-          stale_reason: event.claim.stale_reason ?? "revision_changed",
-        };
+    // A baja is neutral to every charge: the claims keep matching.
     const changes = [
       { field: "disposal.disposal_date", after: facts.disposal_date },
       { field: "disposal.reason", after: facts.reason },

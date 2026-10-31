@@ -313,8 +313,9 @@ auth:
     certificate_description: Autenticació basada en certificat X.509 (FNMT-RCM o una
       altra autoritat reconeguda). Compatible amb tots els fluxos de la seu electrònica.
     certificate_label: Certificat digital
-    clave_movil_description: Autenticació amb aprovació push al mòbil del titular
-      registrat a Cl@ve. Requereix DNI/NIE, registre a Cl@ve i el dispositiu vinculat.
+    clave_movil_description: Autenticació mitjançant una sol·licitud d'aprovació al
+      mòbil del titular registrat a Cl@ve. Requereix DNI/NIE, registre a Cl@ve i el
+      dispositiu vinculat.
     clave_movil_label: Cl@ve Móvil
     clave_permanente_description: Autenticació amb DNI/NIE i contrasenya mitjançant
       el proveïdor d'identitat Cl@ve Permanente. Automatitzable sense intervenció
@@ -1530,12 +1531,31 @@ desktop:
       filing:
         choose_year: Tria un any per veure on van les dotacions.
         unavailable: El traspàs a la declaració no està disponible.
-      forecast: Amortització {amount} · {days} dies · {from} – {until}
+      forecast: Dotació {amount} · {days} dies · {from} – {until}
       forecast_note: La previsió no desa res fins que registris la dotació.
       free: Amortització lliure sol·licitada
       free_hint: Només per a un mètode d'amortització lliure
       from: Des de
       handoff: Dotacions a les teves declaracions
+      handoff_agrarian_count: 'Queden fora del Model 130, perquè pertanyen a una activitat
+        agrícola, que paga un percentatge dels ingressos: {count} elements.'
+      handoff_agrarian_named: 'Queden fora del Model 130, perquè pertanyen a una activitat
+        agrícola, que paga un percentatge dels ingressos: {names}.'
+      handoff_free_count: 'No compten al Model 130, perquè el seu mètode et deixa
+        la dotació a tu: {count} elements.'
+      handoff_free_named: 'No compten al Model 130, perquè el seu mètode et deixa
+        la dotació a tu: {names}.'
+      handoff_gap_accrued: 'Model 100: {name} no té dotació registrada del {start}
+        al {end}. Els {amount} EUR que es van meritar en aquest temps no són als imports
+        de dalt.'
+      handoff_gap_free: 'Model 100: {name} no té dotació registrada del {start} al
+        {end}. El seu mètode deixa l''import a les teves mans, així que no se''n pot
+        calcular cap.'
+      handoff_gap_unavailable: 'Model 100: {name} no té dotació registrada del {start}
+        al {end}, i no s''ha pogut calcular.'
+      handoff_gap_unnamed: També queden fora {count} períodes d'elements que aquesta
+        llista no anomena.
+      handoff_left_out: Fora d'aquests imports
       handoff_partial: 'Parcial: {count} elements no es poden calcular i queden fora
         d''aquest import.'
       handoff_year: Any de les xifres per a la declaració
@@ -1556,23 +1576,29 @@ desktop:
         serial_missing: No hi ha cap número de sèrie registrat.
         summary: Pendent d'atenció, tots els anys
         unavailable: El registre no està disponible ara.
+      mark:
+        not_applicable: No s'aplica
+        nothing_recorded: Res registrat
       not_known: Es desconeix
       opening_unknown: Omple «{field}» per poder-ho calcular.
       plan:
-        claim_correct: Corregeix la dotació del {from} al {until}
+        baja: 'Baixa el {date}: {reason}'
         claimable: Es pot registrar la dotació del {from} al {until}
         claimable_none: No queda res per registrar
-        claimed_missing: No hi ha res registrat per a aquest any.
         claims: Dotacions de {year}
         column:
           claimed: Registrada
           days: Dies
+          minimum: Mínim acumulat fins a final d'any
+          minimum_note: Compta com a cost si dónes de baixa aquest element. No és
+            la deducció d'aquest any.
           period: Període
           planned: Prevista
           rate: Percentatge
           replaced_by: Substituïda per
           status: Estat
           year: Any
+        correct_this: Corregeix aquesta dotació
         days_missing: Aquest any no compta dies en servei.
         edition: Taules de {edition}
         election_changed: Aquí canvia el mètode d'amortització
@@ -1602,6 +1628,7 @@ desktop:
         rate_missing: No hi ha percentatge perquè aquest any no té cap xifra calculada.
         recorded_zero: Registrada com a zero
         replaced: Substituïda
+        stale_fix: Aquesta dotació ja no coincideix amb el pla. Corregeix-la.
       quarter: Trimestre del model 130
       quarter_none: Sense trimestre del model 130
       refused: El registre no ho ha admès.
@@ -1643,7 +1670,7 @@ desktop:
         described: Dades desades.
         element_added: Element afegit.
         fill_in: Omple-ho
-        fix_marked: Corregeix els camps marcats.
+        fix_marked: Corregeix les entrades marcades.
         incomplete: 'No s''ha desat. Falta omplir: {fields}'
         kept: No s'ha desat res. El que has escrit continua aquí.
         missing: 'Falta omplir: {fields}'
@@ -3835,6 +3862,8 @@ desktop:
       movement_correct_note: El moviment corregit ocupa el lloc de l'anterior. L'anterior
         queda a l'historial.
       movements_none: Aquest llibre encara no té moviments. Afegeix-ne el primer.
+      movements_none_retired: Aquest llibre no té moviments. Està donat de baixa,
+        així que no s'hi pot afegir res.
       movements_of: Moviments de {name}
       options_failed: No s'han pogut carregar les opcions d'aquest formulari. Tanca'l
         i torna'l a obrir.
@@ -5846,10 +5875,10 @@ sheets:
       withholding_percentage: Percentatge de retenció
 topic:
   authentication:
-    body: L'autenticació AEAT usa Cl@ve Mòbil (push al mòbil registrat) o un certificat
-      digital (FNMT / equivalent). Configura un proveïdor amb 'cadrumo-runtime config
-      auth configure --provider certificate' i verifica amb 'cadrumo-runtime config
-      auth test'.
+    body: L'autenticació AEAT usa Cl@ve Móvil (notificació al mòbil registrat) o un
+      certificat digital (FNMT / equivalent). Configura un proveïdor amb 'cadrumo-runtime
+      config auth configure --provider certificate' i verifica amb 'cadrumo-runtime
+      config auth test'.
     title: Autenticació amb l'AEAT
   calendar:
     body: El calendari mostra les obligacions de presentació (models i períodes) dins
@@ -9522,6 +9551,12 @@ workspace:
         casella.
       source_locked: Segueix els teus registres; corregeix-la allà i recalcula.
       value_channel_unavailable: Encara no s'hi poden introduir valors d'aquest tipus.
+    notes:
+      lead: Això no impedeix el fitxer. Diu què deixen fora les dotacions dels teus
+        elements, perquè decideixis què afegir.
+      title: Convé saber abans de presentar
+      unworded: El càlcul ha anotat alguna cosa sobre els teus elements que no es
+        pot mostrar aquí.
     operation:
       calculated: Calculada. {direction} {value}.
       checked:

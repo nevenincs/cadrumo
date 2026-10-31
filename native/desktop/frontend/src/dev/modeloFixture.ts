@@ -35,10 +35,15 @@ import {
   type ModeloEditHeldChangeV1,
   type ModeloEditPreflightProjectionV1,
   type ModeloEditRenewalProjectionV1,
+  type ModeloExportPublicResultV3,
+  type ModeloFormIssueLine,
   type ModeloWorkbenchFormProjectionV1,
   type PublicModeloFormField,
   type OutputLanguage,
+  type RecordedCalculationNote,
 } from "../shell/modeloContract";
+import { translator } from "../shell/strings";
+import { ASSET_NOTES } from "./modeloAssetNotes";
 import { hex64 } from "./fixtures/ledger";
 
 /** How the scenario's modelo family answers. `checked`, `filed`, `receipt`
@@ -55,7 +60,10 @@ import { hex64 } from "./fixtures/ledger";
  * filing it waits on;
  * `exported` is the checked declaration with its file made, which exports
  * and records, `export-unverified` exports a file whose design carries no
- * completeness manifest, and `export-unknown` loses the export's settlement;
+ * completeness manifest, `export-notes` exports a file whose calculation
+ * noted two gaps of one kind about two elements and one of another kind, and
+ * `export-unknown` loses the export's settlement, and `check-notes` reads the
+ * checked declaration with two durable notes of one kind about two elements;
  * `rebase` stages on a read the declaration then moves under, so its check
  * is stale, renewing its baseline is refused, and the check on the form
  * read again reports each staged change kept, changed or dropped, and
@@ -75,6 +83,8 @@ export const MODELO_SHAPES = [
   "prerequisite",
   "exported",
   "export-unverified",
+  "export-notes",
+  "check-notes",
   "export-unknown",
   "correction-refused",
   "correction-unknown",
@@ -122,6 +132,42 @@ const reject = (
 ): never => {
   throw new Refusal({ code, operation_id: null, ...extra });
 };
+
+/** The sentence a note has in the catalogue, with its values. */
+const noteWords = (language: OutputLanguage, note: RecordedCalculationNote) =>
+  translator(language)(
+    `application.modelo.calc_diagnostic_fact.${note.fact.sentence}`,
+    Object.fromEntries(note.fact.values),
+  );
+
+/** A form read after its calculation kept asset notes: each is a line to
+ * check, worded as the catalogue words it, and a note of the form. */
+function withAssetNotes(
+  form: ModeloWorkbenchFormProjectionV1,
+  language: OutputLanguage,
+): ModeloWorkbenchFormProjectionV1 {
+  const t = translator(language);
+  return {
+    ...form,
+    issue_lines: [
+      ...form.issue_lines,
+      ...ASSET_NOTES.map((note): ModeloFormIssueLine => ({
+        level: "check",
+        box: null,
+        where: null,
+        message: noteWords(language, note),
+        action: t("workspace.modelo.notes.lead"),
+        detail: t(`application.modelo.calc_diagnostic.${note.reason}.what`),
+        technical: note.reason,
+        address: null,
+        in_records: false,
+        surface: null,
+        from_calculation: true,
+        recalculates: false,
+      })),
+    ],
+  };
+}
 
 /** Every envelope by name, each read on first use: the largest forms are
  * over a megabyte. */
@@ -234,11 +280,14 @@ export function modeloFixture(options: Options): ModeloPort {
       case "stale":
       case "receipt":
         return `130-1T-${shape}`;
+      case "check-notes":
+        return "130-1T-checked";
       case "correction-refused":
       case "correction-unknown":
         return "130-1T-receipt";
       case "exported":
       case "export-unverified":
+      case "export-notes":
       case "export-unknown":
         return recorded ? "130-1T-filed" : "130-1T-exported";
       case "edit":
@@ -273,7 +322,10 @@ export function modeloFixture(options: Options): ModeloPort {
       ));
     const admitted = form ? form.admitted_baseline?.baseline_id : undefined;
     if (read && admitted) admittedBy.set(admitted, read);
-    return form || reject("refused", { reason: "profile_mismatch" });
+    if (!form) return reject("refused", { reason: "profile_mismatch" });
+    return shape === "check-notes" && name === LATER_STATES
+      ? withAssetNotes(form, language)
+      : form;
   };
   /** The envelope `name` of a write the scenario answers, or unserved. */
   const written = async (name: string): Promise<unknown> =>
@@ -282,6 +334,20 @@ export function modeloFixture(options: Options): ModeloPort {
   const issued = (token: unknown, picked: boolean) => {
     const file = files.get(token as FileToken);
     if (!file || file.picked !== picked) reject("invalid");
+  };
+  /** The first quarter's export, whose calculation kept notes with it: two
+   * elements with a gap of one kind, and a purchase booked as an expense. */
+  const exportWithNotes = async (): Promise<unknown> => {
+    const exported = (await written(
+      "export-130",
+    )) as ModeloExportPublicResultV3;
+    return {
+      ...exported,
+      fichero_boe: exported.fichero_boe && {
+        ...exported.fichero_boe,
+        calculation_notes: ASSET_NOTES,
+      },
+    };
   };
   const receiptShape =
     shape === "receipt" ||
@@ -434,6 +500,7 @@ export function modeloFixture(options: Options): ModeloPort {
               reject("unknown", { operation_id: nextOperation() });
             if (shape === "export-unverified")
               return written("export-165-unverified");
+            if (shape === "export-notes") return exportWithNotes();
             return shape === "exported" ? written("export-130") : unserved();
           }
           case "modelo.work.file": {

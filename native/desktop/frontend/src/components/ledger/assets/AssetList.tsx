@@ -95,6 +95,28 @@ export function NotKnown({ why }: { why: string }) {
   );
 }
 
+/** A year with nothing recorded in it, drawn as an empty slot: a known state
+ * that needs no explanation beyond its name. */
+export function NothingRecorded({ why }: { why?: string | null }) {
+  const t = useStrings();
+  return (
+    <Hint words={facts(t, [t(ASSET_KEYS.mark.nothing_recorded), why])}>
+      <Icon name="canvas" size="xs" className="text-muted-foreground" />
+    </Hint>
+  );
+}
+
+/** A figure that does not apply to this year, such as one after the basis is
+ * spent: known, and drawn as a circle struck through. */
+export function NotApplicable({ why }: { why?: string | null }) {
+  const t = useStrings();
+  return (
+    <Hint words={facts(t, [t(ASSET_KEYS.mark.not_applicable), why])}>
+      <Icon name="noRate" size="xs" className="text-muted-foreground" />
+    </Hint>
+  );
+}
+
 /** One kind of count as a glyph and its number, the words in the tooltip and
  * the accessible name. */
 export function CountPill({

@@ -21,10 +21,11 @@ import { CallLine, Reading } from "../setup/SetupParts";
 import type {
   ElectionLimits,
   LegalCitation,
+  ListDisposal,
   PlanClaim,
   PlanRow,
 } from "../../../shell/ledgerSetup";
-import { Hint, NotKnown } from "./AssetList";
+import { Hint, NotApplicable, NotKnown, NothingRecorded } from "./AssetList";
 import {
   ASSET_KEYS,
   reasonText,
@@ -34,8 +35,15 @@ import {
   openingRemedy,
   stateIcon,
   tokenWord,
+  wordOfKey,
 } from "./assetsWords";
-import { figureText, isStatedZero, PLAN_KEYS, stateTone } from "./planWords";
+import {
+  absenceNotApplicable,
+  figureText,
+  isStatedZero,
+  PLAN_KEYS,
+  stateTone,
+} from "./planWords";
 import { readPlan, useAssetRead } from "./planRead";
 
 // One element's amortization plan, a row for each tax year it has. The plan
@@ -46,26 +54,56 @@ import { readPlan, useAssetRead } from "./planRead";
 // once, on the divider where it starts, and the table scrolls inside its own
 // frame with the year pinned, so a narrow panel loses no figure.
 
-/** A figure the backend states, or a mark that says it is not known and why. */
+/** A year drawn on tables carried forward: its own glyph, distinct from every
+ * mark, beside the year and beside each figure worked out from them. */
+function Estimated({ year }: { year: number }) {
+  const t = useStrings();
+  return (
+    <Hint words={t(ASSET_KEYS.plan.projected_note, { year })}>
+      <Icon name="calendar" size="xs" className="text-muted-foreground" />
+    </Hint>
+  );
+}
+
+/** A figure the backend states, or the mark of why there is none: not known,
+ * nothing recorded, or a figure that does not apply. */
 function Figure({
   locale,
   amount,
   why,
   absent,
+  mark = "not_known",
+  estimatedYear,
 }: {
   locale: string;
   amount: PlanRow["planned"];
   /** Why the figure is not known, in the mark's tooltip. */
-  why: string;
+  why?: string;
   /** The reason the backend gives, shown under the mark. */
   absent?: string | null;
+  /** Which state the missing figure is. */
+  mark?: "not_known" | "nothing_recorded" | "not_applicable";
+  /** The year whose tables are estimated, beside a figure drawn from them. */
+  estimatedYear?: number;
 }) {
   const text = figureText(locale, amount);
   if (text !== null)
-    return <span className="whitespace-nowrap tabular-nums">{text}</span>;
+    return (
+      <span className="inline-flex items-center justify-end gap-1">
+        {estimatedYear !== undefined && <Estimated year={estimatedYear} />}
+        <span className="whitespace-nowrap tabular-nums">{text}</span>
+      </span>
+    );
+  const reason = absent ?? why ?? null;
   return (
     <span className="flex flex-col items-end gap-0.5">
-      <NotKnown why={absent ?? why} />
+      {mark === "nothing_recorded" ? (
+        <NothingRecorded why={reason} />
+      ) : mark === "not_applicable" ? (
+        <NotApplicable why={reason} />
+      ) : (
+        <NotKnown why={reason ?? ""} />
+      )}
       {absent && (
         <span className="w-40 text-end text-xs text-muted-foreground">
           {absent}
@@ -223,38 +261,38 @@ function Claims({
                   <td className="px-2 py-1">
                     <span className="inline-flex items-center gap-1 whitespace-nowrap">
                       <Icon
-                        name={claim.effective ? "check" : "refused"}
+                        name={
+                          stale
+                            ? "alert"
+                            : claim.effective
+                              ? "check"
+                              : "refused"
+                        }
                         size="xs"
                         className={
-                          claim.effective
-                            ? "text-success"
-                            : "text-muted-foreground"
+                          stale
+                            ? "text-warning"
+                            : claim.effective
+                              ? "text-success"
+                              : "text-muted-foreground"
                         }
                       />
                       {claim.effective
                         ? t(ASSET_KEYS.plan.in_effect)
                         : t(ASSET_KEYS.plan.replaced)}
-                      {stale && (
-                        <Hint
-                          words={facts(t, [
-                            t(ASSET_KEYS.plan.no_match),
-                            claim.stale_reason === null
-                              ? null
-                              : tokenWord(
-                                  t,
-                                  "stale_reason",
-                                  claim.stale_reason,
-                                ),
-                          ])}
-                        >
-                          <Icon
-                            name="alert"
-                            size="xs"
-                            className="text-warning"
-                          />
-                        </Hint>
-                      )}
                     </span>
+                    {stale && (
+                      <span className="mt-0.5 flex flex-col gap-0.5">
+                        {claim.stale_reason !== null && (
+                          <span>
+                            {tokenWord(t, "stale_reason", claim.stale_reason)}
+                          </span>
+                        )}
+                        <span className="font-medium">
+                          {t(ASSET_KEYS.plan.stale_fix)}
+                        </span>
+                      </span>
+                    )}
                     {next && (
                       <span className="mt-0.5 flex flex-wrap items-center gap-x-1">
                         <span>{t(column.replaced_by)}</span>
@@ -273,14 +311,7 @@ function Claims({
                     {claim.effective && onCorrectClaim && (
                       <WriteHold>
                         <IconButton
-                          label={t(ASSET_KEYS.plan.claim_correct, {
-                            from: dateText(locale, claim.covered_from, true),
-                            until: dateText(
-                              locale,
-                              claim.covered_through,
-                              true,
-                            ),
-                          })}
+                          label={t(ASSET_KEYS.plan.correct_this)}
                           onClick={() =>
                             onCorrectClaim(claim.claim_id, planned.tax_year)
                           }
@@ -312,7 +343,16 @@ function Status({ locale, planned }: { locale: string; planned: PlanRow }) {
     planned.claimable_refusal_key !== null &&
     planned.claimable_refusal_key === planned.absence_reason_key
       ? null
-      : reasonText(t, planned.claimable_refusal_key);
+      : reasonText(
+          t,
+          planned.claimable_refusal_key,
+          planned.claimable_refusal_facts,
+        );
+  // A claim in effect that no longer matches the plan is a warning, never a
+  // tick, whatever the year's state says.
+  const stale = planned.claims.some(
+    (claim) => claim.effective && !claim.matches_current_schedule,
+  );
   const first = planned.claimable_intervals[0];
   const notYet = state === "not_due" && first !== undefined;
   return (
@@ -327,11 +367,16 @@ function Status({ locale, planned }: { locale: string; planned: PlanRow }) {
       ) : (
         <>
           <span>
-            <Hint words={tokenWord(t, "claim_state", state)}>
+            <Hint
+              words={facts(t, [
+                tokenWord(t, "claim_state", state),
+                stale ? t(ASSET_KEYS.plan.no_match) : null,
+              ])}
+            >
               <Icon
-                name={stateIcon(state)}
+                name={stale ? "alert" : stateIcon(state)}
                 size="xs"
-                className={stateTone(state)}
+                className={stale ? "text-warning" : stateTone(state)}
               />
             </Hint>
           </span>
@@ -355,7 +400,8 @@ function Status({ locale, planned }: { locale: string; planned: PlanRow }) {
             (refusal !== null ? (
               <span className="text-xs text-muted-foreground">{refusal}</span>
             ) : (
-              open && (
+              open &&
+              planned.claimable_refusal_key === null && (
                 <span className="text-xs text-muted-foreground">
                   {t(ASSET_KEYS.plan.claimable_none)}
                 </span>
@@ -430,7 +476,10 @@ function Citations({
       </Button>
       <ul id={list} hidden={!open} className="flex flex-col gap-0.5 ps-4">
         {citations.map((citation) => (
-          <li key={citation.permalink} className="[overflow-wrap:anywhere]">
+          <li
+            key={`${citation.text}\u0000${citation.permalink}`}
+            className="[overflow-wrap:anywhere]"
+          >
             {onOpenLink ? (
               <Button
                 variant="link"
@@ -467,7 +516,11 @@ function Limits({
 }) {
   const t = useStrings();
   const text = ASSET_KEYS.plan.limits;
-  const why = reasonText(t, limits.unavailable_reason_key);
+  const why = reasonText(
+    t,
+    limits.unavailable_reason_key,
+    limits.unavailable_reason_facts,
+  );
   return (
     <section
       aria-label={t(text.title)}
@@ -561,7 +614,16 @@ function PlanTable({
       },
       {
         id: "minimum",
-        label: t(column.minimum),
+        // The figure runs from entry to the year's end, so the heading says it
+        // is accumulated and explains what it is for.
+        label: (
+          <span className="inline-flex items-center gap-1">
+            {t(column.minimum)}
+            <Hint words={t(column.minimum_note)}>
+              <Icon name="info" size="xs" className="text-muted-foreground" />
+            </Hint>
+          </span>
+        ),
         name: t(column.minimum),
         align: "end" as const,
       },
@@ -595,7 +657,7 @@ function PlanTable({
       role="group"
       tabIndex={0}
       aria-label={t(ASSET_KEYS.detail.plan)}
-      className="ledger-assets-plan @container min-h-0 flex-1 overflow-auto"
+      className="ledger-assets-plan scroll-cue-x @container min-h-0 flex-1 overflow-auto"
     >
       <table
         {...view.tableProps}
@@ -614,6 +676,8 @@ function PlanTable({
             const detail = `${base}-${planned.tax_year}`;
             const current = year === planned.tax_year;
             const kept = planned.claims.some((claim) => claim.effective);
+            const estimated = planned.edition?.projected === true;
+            const applies = !absenceNotApplicable(planned.absence);
             return (
               <Fragment key={planned.tax_year}>
                 {(before === undefined || changed) && (
@@ -669,19 +733,7 @@ function PlanTable({
                         </span>
                         {planned.tax_year}
                       </Button>
-                      {planned.edition?.projected && (
-                        <Hint
-                          words={t(ASSET_KEYS.plan.projected_note, {
-                            year: planned.tax_year,
-                          })}
-                        >
-                          <Icon
-                            name="unknown"
-                            size="xs"
-                            className="text-muted-foreground"
-                          />
-                        </Hint>
-                      )}
+                      {estimated && <Estimated year={planned.tax_year} />}
                     </span>
                   </td>
                   <td className="px-2 py-1.5">
@@ -689,10 +741,17 @@ function PlanTable({
                   </td>
                   <td className="px-2 py-1.5 text-right tabular-nums">
                     {planned.coefficient === null ? (
-                      <NotKnown why={t(ASSET_KEYS.plan.rate_missing)} />
+                      applies ? (
+                        <NotKnown why={t(ASSET_KEYS.plan.rate_missing)} />
+                      ) : (
+                        <NotApplicable why={t(ASSET_KEYS.plan.rate_missing)} />
+                      )
                     ) : (
-                      <span className="whitespace-nowrap">
-                        {percentText(locale, planned.coefficient.decimal)}
+                      <span className="inline-flex items-center gap-1">
+                        {estimated && <Estimated year={planned.tax_year} />}
+                        <span className="whitespace-nowrap">
+                          {percentText(locale, planned.coefficient.decimal)}
+                        </span>
                       </span>
                     )}
                   </td>
@@ -702,14 +761,17 @@ function PlanTable({
                       amount={planned.planned}
                       why={t(ASSET_KEYS.plan.planned_missing)}
                       absent={absentText(t, planned)}
+                      mark={applies ? "not_known" : "not_applicable"}
+                      estimatedYear={estimated ? planned.tax_year : undefined}
                     />
                   </td>
                   <td className="px-2 py-1.5 text-right tabular-nums">
-                    {/* No claim in effect is no figure to draw: the state says why. */}
+                    {/* No claim in effect is no figure to draw: it is a year with
+                        nothing recorded, or one where nothing applies. */}
                     <Figure
                       locale={locale}
                       amount={kept ? planned.claimed : null}
-                      why={t(ASSET_KEYS.plan.claimed_missing)}
+                      mark={applies ? "nothing_recorded" : "not_applicable"}
                     />
                     {kept && isStatedZero(planned.claimed) && (
                       <span className="block text-xs text-muted-foreground">
@@ -727,6 +789,7 @@ function PlanTable({
                           ? null
                           : t(ASSET_KEYS.plan.minimum_incomplete)
                       }
+                      estimatedYear={estimated ? planned.tax_year : undefined}
                     />
                     {!planned.minimum_complete &&
                       planned.minimum_through !== null && (
@@ -777,10 +840,13 @@ export function AmortizationPlan({
   reader,
   onOpenLink,
   onCorrectClaim,
+  disposal = null,
 }: {
   port: LedgerPort;
   assetId: string;
   locale: string;
+  /** The baja the element's current revision records, said above the plan. */
+  disposal?: ListDisposal | null;
   year?: number | null;
   /** Whose ledger; null while the account withholds it. */
   reader?: string | null;
@@ -833,7 +899,7 @@ export function AmortizationPlan({
           ))}
           {estimated && (
             <Alert
-              icon={<Icon name="unknown" />}
+              icon={<Icon name="calendar" />}
               className="ledger-assets-estimated"
             >
               {t(ASSET_KEYS.plan.projected_summary)}
@@ -843,6 +909,17 @@ export function AmortizationPlan({
       )}
       {limits && (
         <Limits locale={locale} limits={limits} onOpenLink={onOpenLink} />
+      )}
+      {disposal !== null && (
+        <p className="ledger-assets-baja flex items-center gap-1.5 border-b px-3 py-2 text-sm">
+          <Icon name="archive" size="xs" className="shrink-0" />
+          {t(ASSET_KEYS.plan.baja, {
+            date: dateText(locale, disposal.disposal_date, true),
+            reason:
+              wordOfKey(t, disposal.reason_key) ??
+              tokenWord(t, "disposal_reason", disposal.reason),
+          })}
+        </p>
       )}
       <PlanTable
         locale={locale}

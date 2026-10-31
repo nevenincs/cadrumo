@@ -5,7 +5,7 @@ tags:
 date: '2026-10-30'
 modified: '2026-10-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:72f437723825b8ba79b81ce49a0b7a5db36afcd4362da64f1397311b8c8af595'
+body_hash: 'sha256:ac73de00f6e1e7ce67ac10799b2e78176f2fecc41dca71c8aced76730c72c6be'
 related:
   - "[[2026-10-30-desktop-ledger-assets-plan]]"
 ---
@@ -279,6 +279,18 @@ related:
 - `S05` `verify:` `pytest-decode-seed` -> `pass`
 - `S05` `verify:` `pytest-vocabulary-chrome` -> `pass`
 - `S05` `verify:` `chrome-build` -> `pass`
+- `S07` `M` `native/desktop/frontend/src/components/modelo/dialogs/FilingView.tsx`
+- `S07` `M` `native/desktop/frontend/src/dev/modeloFixture.ts`
+- `S07` `M` `native/desktop/frontend/tests/scenarios/modelo.spec.ts`
+- `S07` `M` `dev/locales/desktop_workspace_keys.py`
+- `S07` `M` `dev/locales/desktop_chrome.py`
+- `S07` `A` `native/desktop/frontend/src/components/modelo/workspace/CalculationNotes.tsx`
+- `S07` `A` `native/desktop/frontend/src/components/ledger/assets/handoffWords.ts`
+- `S07` `A` `native/desktop/frontend/src/dev/modeloAssetNotes.ts`
+- `S07` `M` `native/desktop/frontend/src/components/ledger/assets/Stock.stories.tsx`
+- `S07` `M` `native/desktop/frontend/src/components/ledger/assets/StockPane.tsx`
+- `S07` `M` `native/desktop/frontend/src/components/ledger/assets/YearStepper.tsx`
+- `S07` `M` `native/desktop/frontend/src/dev/ledgerSetupFixture.ts`
 
 ## Notes
 

@@ -6,6 +6,7 @@ import type {
   ModeloWorkbenchFormProjectionV1,
   PublicModeloFormField,
 } from "../../src/shell/modeloContract";
+import { ASSET_NOTES } from "../../src/dev/modeloAssetNotes";
 import { label } from "../support/strings";
 
 // The Modelo workspace across its states, over the envelopes the
@@ -332,6 +333,49 @@ test("the check lists every finding under its level, in plain words only", async
     await expect(item).toContainText(line.action);
     await expect(item).not.toContainText(line.technical);
   }
+});
+
+/** What the catalogue says of one calculation note: its own sentence with its
+ * values, and the kind of thing it is. */
+const noteWords = (
+  note: (typeof ASSET_NOTES)[number],
+  language: Language = "en",
+) => ({
+  fact: label(
+    `application.modelo.calc_diagnostic_fact.${note.fact.sentence}`,
+    Object.fromEntries(note.fact.values),
+    language,
+  ),
+  kind: label(
+    `application.modelo.calc_diagnostic.${note.reason}.what`,
+    {},
+    language,
+  ),
+});
+
+test("the check draws each asset note as its own line to read, asking for nothing and counting nothing", async ({
+  page: target,
+}) => {
+  const read = form("130-1T-checked");
+  await openDeclaration(target, "130", { shape: "check-notes" });
+  await tab(target, "workspace.modelo.step.review").click();
+  const level = target.getByRole("region", {
+    name: label("workspace.modelo.level.check"),
+  });
+  // Two elements with a gap of one kind are two lines, each stating its own
+  // element and dates, and the kind of thing it is as the second line.
+  for (const note of ASSET_NOTES) {
+    const words = noteWords(note);
+    const item = level.getByRole("listitem").filter({ hasText: words.fact });
+    await expect(item).toHaveCount(1);
+    await expect(item).toContainText(words.kind);
+    // It leads nowhere to fill, and it is not a button to press.
+    await expect(item.getByRole("button")).toHaveCount(0);
+  }
+  await expect(level.getByRole("listitem")).toHaveCount(ASSET_NOTES.length);
+  // The verdict and the counts are the read model's, as without the notes.
+  await expect(target.getByText(read.verdict.words)).toBeVisible();
+  expect(read.verdict.status).toBe("blocked");
 });
 
 test("a file made before the declaration changed is out of date and is to be made again", async ({
@@ -784,6 +828,59 @@ test("an export writes the file the filer saved, through its save token", async 
     .click();
   expect(await calls(target, "modelo revealFile")).toHaveLength(1);
 });
+
+for (const language of LANGUAGES) {
+  test(`an export states what its calculation noted about the assets, in ${language}`, async ({
+    page: target,
+  }) => {
+    await target.goto(
+      `/scenarios.html?scenario=ledger&latency=0&bar=off&lang=${language}&modelo=export-notes`,
+    );
+    await target.locator("[data-rail=declarations]").click();
+    const grid = declarations(target, language);
+    await expect(grid.getByRole("row").nth(1)).toBeVisible({ timeout: 15_000 });
+    const local = list(language).rows.find(
+      (row) => row.modelo === "130" && row.opens_local_work,
+    );
+    if (!local) throw new Error("no local declaration of 130 is listed");
+    await target
+      .getByRole("searchbox", {
+        name: label("desktop.declarations.search.label", {}, language),
+      })
+      .fill("130");
+    await rowsOf(grid, "130")
+      .filter({ hasText: local.period_words ?? local.modelo_title })
+      .filter({ hasText: local.state_words })
+      .first()
+      .dblclick();
+    await expect(views(target, language)).toBeVisible();
+    await tab(target, "workspace.modelo.filing.title", language).click();
+    // Nothing is said before a file is made.
+    const notes = target.getByRole("region", {
+      name: label("workspace.modelo.notes.title", {}, language),
+    });
+    await expect(notes).toHaveCount(0);
+    await target
+      .getByRole("button", {
+        name: label("workspace.modelo.filing.export_again", {}, language),
+      })
+      .click();
+    await expect(notes).toBeVisible();
+    const items = notes.getByRole("listitem");
+    await expect(items).toHaveCount(ASSET_NOTES.length);
+    // Each note is its own item: its sentence with its values, then its kind.
+    for (const note of ASSET_NOTES) {
+      const words = noteWords(note, language);
+      const item = items.filter({ hasText: words.fact });
+      await expect(item).toHaveCount(1);
+      await expect(item).toContainText(words.kind);
+    }
+    await expect(notes.getByRole("button")).toHaveCount(0);
+    // No catalogue key and no unfilled value reaches the filer.
+    const said = await notes.innerText();
+    expect(said).not.toMatch(/application\.modelo|workspace\.modelo|\{\w+\}/);
+  });
+}
 
 test("an export that cannot vouch for its completeness says so", async ({
   page: target,

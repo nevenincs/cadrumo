@@ -33,7 +33,6 @@ from ...domain.contribuyente.tax_residence import ResidenceTerritory
 from ...domain.renta.actividad_asset.claims import (
     AmortizationClaim,
     ClaimProjection,
-    amount_before_baja_zeroed,
     asset_schedule_history,
     claims_through_year,
     current_revisions,
@@ -43,13 +42,10 @@ from ...domain.renta.actividad_asset.claims import (
     record_claim,
 )
 from ...domain.renta.actividad_asset.disposal import (
-    ADMITTED_DISPOSAL_REASONS,
     ActivityAssetDisposal,
     ActivityAssetDisposalCalculation,
-    ActivityAssetDisposalReason,
 )
 from ...domain.renta.actividad_asset.election import FREE_AMOUNT_METHODS, DirectEstimationRegime
-from ...domain.renta.actividad_asset.election_facts import method_is_statable
 from ...domain.renta.actividad_asset.errors import (
     ActividadAssetClaimConflictError,
     ActividadAssetError,
@@ -58,11 +54,7 @@ from ...domain.renta.actividad_asset.errors import (
     ActividadAssetValidationError,
 )
 from ...domain.renta.actividad_asset.lifecycle import (
-    BASIS_STAGE_FACTS,
-    OPENING_STATUS_FACTS,
-    REGISTERABLE_ACQUISITION_SHAPES,
     ActivityAssetRevision,
-    AssetBasisStage,
     AssetKind,
 )
 from ...domain.renta.actividad_asset.register_records import ActivityAssetDescriptorFacts
@@ -71,30 +63,26 @@ from ...domain.renta.actividad_asset.schedule import (
     ScheduledAmortizationCharge,
     require_method_continuity,
 )
-from ..operations.public_scalar import project_scalar
 from .acquisition_candidates import acquisition_candidates
 from .acquisition_ledger import require_acquisition_in_ledger
 from .activity_asset_read_models import (
     PLAN_ADVISORY_FAMILY,
     ActivityAssetAcquisitionCandidate,
-    ActivityAssetBasisStageOption,
-    ActivityAssetDisposalReasonOption,
     ActivityAssetEdition,
     ActivityAssetElectionLimits,
     ActivityAssetFormOptionsView,
     ActivityAssetListRow,
     ActivityAssetNotTableBoundReason,
-    ActivityAssetOpeningStatusOption,
     ActivityAssetPlanAdvisory,
     ActivityAssetPlanAdvisoryKind,
     ActivityAssetPlanRow,
-    ActivityAssetTableGroup,
     ActivityAssetTimelineEvent,
     activity_asset_label_key,
     project_reason_facts,
 )
+from .baja_claims import baja_supersessions, require_profile_modality
 from .disposal_calculation import calculate_element_disposal
-from .fact_wording import token_family
+from .form_options_view import form_options_view
 from .history import ActivityAssetHistory, ActivityAssetHistoryClaimResult
 from .legal_citations import resolve_legal_citations
 from .ports import (
@@ -109,11 +97,11 @@ from .register_reads import (
     election_limits,
     element_list,
     element_plan,
-    method_facts_view,
 )
 from .register_timeline import element_timeline
 from .schedule_walk import (
     M100GapKind,
+    M130ElementAccrual,
     M130ElementOutcome,
     error_reason_facts,
     m100_claim_gaps,
@@ -260,6 +248,77 @@ class ActivityAssetRegisterAuthority:
     m100_amortization_casillas: Callable[[int], Mapping[AssetKind, CasillaId]]
 
 
+def _m130_projection(
+    asset_kind: AssetKind,
+    accruals: tuple[M130ElementAccrual, ...],
+    m130_box: CasillaId,
+    tax_year: int,
+) -> M130AccrualProjection:
+    selected = tuple(accrual for accrual in accruals if accrual.revision.asset_kind is asset_kind)
+    contributions = _m130_contributions(selected)
+    return M130AccrualProjection(
+        target_casilla_id=m130_box,
+        tax_year=tax_year,
+        amount=round_to_cents(sum((item.amount for item in contributions), Decimal("0"))),
+        contributions=contributions,
+        unavailable_asset_ids=tuple(
+            accrual.revision.asset_id for accrual in selected if accrual.outcome is M130ElementOutcome.UNAVAILABLE
+        ),
+        free_gap_asset_ids=tuple(
+            accrual.revision.asset_id for accrual in selected if accrual.outcome is M130ElementOutcome.FREE_GAP
+        ),
+        agrarian_excluded_asset_ids=tuple(
+            accrual.revision.asset_id for accrual in selected if accrual.outcome is M130ElementOutcome.AGRARIAN_EXCLUDED
+        ),
+    )
+
+
+def _m130_contributions(selected: tuple[M130ElementAccrual, ...]) -> tuple[M130Contribution, ...]:
+    return tuple(
+        M130Contribution(
+            asset_id=item.asset_id,
+            amount=item.amount,
+            claim_id=item.claim_id,
+            schedule_fingerprint=item.schedule_fingerprint,
+        )
+        for accrual in selected
+        for item in accrual.contributions
+    )
+
+
+def _forecast_revision(history: ActivityAssetHistory, forecast: ScheduledAmortizationCharge) -> ActivityAssetRevision:
+    revision = max(
+        (item for item in history.revisions if item.asset_id == forecast.asset_id),
+        key=lambda item: item.revision_number,
+        default=None,
+    )
+    if revision is None:
+        raise ActividadAssetValidationError(translated_message="ledger.actividad_asset.errors.asset_not_found")
+    if revision.revision_id != forecast.asset_revision_id:
+        raise ActividadAssetValidationError(
+            translated_message="ledger.actividad_asset.errors.forecast_not_current_revision"
+        )
+    return revision
+
+
+def _m100_gaps(
+    history: ActivityAssetHistory,
+    forecast: ActivityAssetForecastOperation,
+    tax_year: int,
+) -> tuple[M100ClaimGapProjection, ...]:
+    return tuple(
+        M100ClaimGapProjection(
+            asset_id=gap.revision.asset_id,
+            kind=gap.kind,
+            covered_from=gap.covered_from,
+            covered_until=gap.covered_until,
+            accrued=gap.accrued,
+        )
+        for revision in current_revisions(history.revisions).values()
+        for gap in m100_claim_gaps(revision, history, forecast=forecast, tax_year=tax_year)
+    )
+
+
 def _year_end(tax_year: int) -> date:
     return date(tax_year, 12, 31)
 
@@ -398,7 +457,7 @@ class ActivityAssetOperations:
         for disposal in (revision.disposal, current.disposal):
             if disposal is not None:
                 self._require_common_territory(_year_end(disposal.disposal_date.year))
-        return self._baja_supersessions(revision, history, origin=origin)
+        return baja_supersessions(self._forecast_operation, self._taxpayer_modality, revision, history, origin=origin)
 
     def _superseding_claims(
         self,
@@ -422,7 +481,7 @@ class ActivityAssetOperations:
                 )
             self._require_common_territory(_year_end(superseded.tax_year))
             targets.append((superseded, request))
-        _require_profile_modality(revision.amortization.regime, self._taxpayer_modality())
+        require_profile_modality(revision.amortization.regime, self._taxpayer_modality())
         revisions = (*history.revisions, revision)
         working = (*history.claims, *starting_from)
         recorded: list[AmortizationClaim] = []
@@ -452,85 +511,6 @@ class ActivityAssetOperations:
                 recorded.append(claim)
         return tuple(recorded)
 
-    def _baja_supersessions(
-        self,
-        revision: ActivityAssetRevision,
-        history: ActivityAssetHistory,
-        *,
-        origin: str | None,
-    ) -> tuple[AmortizationClaim, ...]:
-        """Work out what a baja, or its removal or new date, replaces in one write.
-
-        Claims after the boundary go to zero and a crossing one is shortened.  A zero
-        claim an earlier baja wrote comes back inside the service window: with no
-        boundary or a later one it would otherwise keep the year's deduction at zero.
-        The claims after the boundary go first, so that later charges are judged
-        without them, and the rest run in date order on the state the earlier ones
-        leave.  A free amount is the taxpayer's election and carries over; any other
-        amount is recomputed.  A shortened claim keeps its interval, because a claim
-        never widens: the rest of its year reads as a gap.
-        """
-        disposal = revision.disposal
-        boundary = None if disposal is None else disposal.boundary
-        creating_operation = origin or revision.asset_id
-        standing = tuple(claim for claim in effective_claims(history.claims) if claim.asset_id == revision.asset_id)
-        recorded = _baja_zero_claims(standing, boundary, revision.revision_id, creating_operation)
-        recompute = sorted(
-            (claim for claim in standing if _baja_needs_recomputation(claim, boundary)),
-            key=lambda claim: claim.covered_from,
-        )
-        if not recompute:
-            return tuple(recorded)
-        _require_profile_modality(revision.amortization.regime, self._taxpayer_modality())
-        for claim in recompute:
-            replacement = self._baja_recomputed_claim(
-                claim,
-                revision,
-                (*history.claims, *recorded),
-                (*history.revisions, revision),
-                boundary=boundary,
-                creating_operation=creating_operation,
-            )
-            if replacement is not None:
-                recorded.append(replacement)
-        return tuple(recorded)
-
-    def _baja_recomputed_claim(
-        self,
-        claim: AmortizationClaim,
-        revision: ActivityAssetRevision,
-        working: tuple[AmortizationClaim, ...],
-        revisions: tuple[ActivityAssetRevision, ...],
-        *,
-        boundary: date | None,
-        creating_operation: str,
-    ) -> AmortizationClaim | None:
-        """Replace one claim under the new boundary; a zero claim stays where the schedule also charges zero."""
-        crossing = boundary is not None and claim.covered_until > boundary
-        free = revision.amortization.method in FREE_AMOUNT_METHODS
-        charge = self._forecast_operation(
-            revision,
-            covered_from=claim.covered_from,
-            covered_until=boundary if boundary is not None and crossing else claim.covered_until,
-            history=asset_schedule_history(
-                claims_through_year(working, claim.tax_year),
-                revisions,
-                asset_id=revision.asset_id,
-                tax_year=claim.tax_year,
-                excluding_claim_id=claim.claim_id,
-            ),
-            requested_free_amount=amount_before_baja_zeroed(claim, working) if free else None,
-        )
-        if not crossing and charge.amount <= Decimal("0"):
-            return None
-        return AmortizationClaim.from_schedule(
-            charge,
-            asset_kind=revision.asset_kind,
-            creating_operation=creating_operation,
-            supersedes_claim_id=claim.claim_id,
-            disposal_revision_id=revision.revision_id if crossing else None,
-        )
-
     def dispose(
         self,
         asset_id: str,
@@ -556,7 +536,7 @@ class ActivityAssetOperations:
                 translated_message="ledger.actividad_asset.errors.disposal_already_recorded",
             )
         revision = current.with_disposal(disposal)
-        claims = self._baja_supersessions(revision, history, origin=origin)
+        claims = baja_supersessions(self._forecast_operation, self._taxpayer_modality, revision, history, origin=origin)
 
         def mutation(latest: ActivityAssetHistory) -> ActivityAssetHistory:
             if not latest.same_tax_facts(history):
@@ -591,7 +571,10 @@ class ActivityAssetOperations:
             raise ActividadAssetIncompleteError(
                 translated_message="ledger.actividad_asset.errors.opening_history_missing",
             )
-        preview = history.apply_correction(revision, self._baja_supersessions(revision, history, origin=None))
+        preview = history.apply_correction(
+            revision,
+            baja_supersessions(self._forecast_operation, self._taxpayer_modality, revision, history, origin=None),
+        )
         return disposal, self._calculate(revision, disposal, preview)
 
     def _calculate(
@@ -643,7 +626,7 @@ class ActivityAssetOperations:
     ) -> ScheduledAmortizationCharge:
         history = self._service.reopen()
         revision = self.inspect(asset_id)[-1]
-        _require_profile_modality(revision.amortization.regime, self._taxpayer_modality())
+        require_profile_modality(revision.amortization.regime, self._taxpayer_modality())
         return self._charge_for_year(
             revision,
             history,
@@ -712,17 +695,7 @@ class ActivityAssetOperations:
         """
         self._require_common_territory(_year_end(forecast.tax_year))
         current_history = self._service.reopen()
-        revision = max(
-            (item for item in current_history.revisions if item.asset_id == forecast.asset_id),
-            key=lambda item: item.revision_number,
-            default=None,
-        )
-        if revision is None:
-            raise ActividadAssetValidationError(translated_message="ledger.actividad_asset.errors.asset_not_found")
-        if revision.revision_id != forecast.asset_revision_id:
-            raise ActividadAssetValidationError(
-                translated_message="ledger.actividad_asset.errors.forecast_not_current_revision"
-            )
+        revision = _forecast_revision(current_history, forecast)
         claim = AmortizationClaim.from_schedule(
             forecast,
             asset_kind=revision.asset_kind,
@@ -739,7 +712,7 @@ class ActivityAssetOperations:
                 context={"tax_year": forecast.tax_year, "last_admitted_year": last_admitted_year},
                 translated_message="ledger.actividad_asset.errors.claim_year_beyond_registry",
             )
-        _require_profile_modality(revision.amortization.regime, self._taxpayer_modality())
+        require_profile_modality(revision.amortization.regime, self._taxpayer_modality())
         recomputed = self._charge_for_year(
             revision,
             current_history,
@@ -778,17 +751,7 @@ class ActivityAssetOperations:
 
         material_m100 = m100(AssetKind.MATERIAL)
         intangible_m100 = m100(AssetKind.INTANGIBLE)
-        m100_gaps = tuple(
-            M100ClaimGapProjection(
-                asset_id=gap.revision.asset_id,
-                kind=gap.kind,
-                covered_from=gap.covered_from,
-                covered_until=gap.covered_until,
-                accrued=gap.accrued,
-            )
-            for revision in current_revisions(history.revisions).values()
-            for gap in m100_claim_gaps(revision, history, forecast=self._forecast_operation, tax_year=tax_year)
-        )
+        m100_gaps = _m100_gaps(history, self._forecast_operation, tax_year)
         if m130_period is None:
             return ActivityAssetFilingHandoff(
                 material_m100=material_m100, intangible_m100=intangible_m100, m100_gaps=m100_gaps
@@ -808,44 +771,12 @@ class ActivityAssetOperations:
 
         m130_box = self._authority.m130_amortization_casilla(m130_period)
 
-        def m130(asset_kind: AssetKind) -> M130AccrualProjection:
-            selected = tuple(accrual for accrual in accruals if accrual.revision.asset_kind is asset_kind)
-            contributions = tuple(
-                M130Contribution(
-                    asset_id=item.asset_id,
-                    amount=item.amount,
-                    claim_id=item.claim_id,
-                    schedule_fingerprint=item.schedule_fingerprint,
-                )
-                for accrual in selected
-                for item in accrual.contributions
-            )
-            return M130AccrualProjection(
-                target_casilla_id=m130_box,
-                tax_year=tax_year,
-                amount=round_to_cents(sum((item.amount for item in contributions), Decimal("0"))),
-                contributions=contributions,
-                unavailable_asset_ids=tuple(
-                    accrual.revision.asset_id
-                    for accrual in selected
-                    if accrual.outcome is M130ElementOutcome.UNAVAILABLE
-                ),
-                free_gap_asset_ids=tuple(
-                    accrual.revision.asset_id for accrual in selected if accrual.outcome is M130ElementOutcome.FREE_GAP
-                ),
-                agrarian_excluded_asset_ids=tuple(
-                    accrual.revision.asset_id
-                    for accrual in selected
-                    if accrual.outcome is M130ElementOutcome.AGRARIAN_EXCLUDED
-                ),
-            )
-
         return ActivityAssetFilingHandoff(
             material_m100=material_m100,
             intangible_m100=intangible_m100,
             m100_gaps=m100_gaps,
-            material_m130=m130(AssetKind.MATERIAL),
-            intangible_m130=m130(AssetKind.INTANGIBLE),
+            material_m130=_m130_projection(AssetKind.MATERIAL, accruals, m130_box, tax_year),
+            intangible_m130=_m130_projection(AssetKind.INTANGIBLE, accruals, m130_box, tax_year),
         )
 
     def _require_common_territory(self, period_end: date) -> None:
@@ -963,81 +894,18 @@ class ActivityAssetOperations:
             regime=regime,
             class_labels=self._authority.class_labels(regime, tax_year),
         )
-        offered = tuple(method for method in options.methods if method_is_statable(method))
-        return ActivityAssetFormOptionsView(
+        return form_options_view(
+            options,
             tax_year=tax_year,
             asset_kind=asset_kind,
             regime=regime,
             edition=edition,
-            acquisition_shapes=REGISTERABLE_ACQUISITION_SHAPES,
-            declared_activities=tuple(TipoActividad),
-            methods=offered,
-            method_facts=tuple(method_facts_view(method) for method in offered),
-            table_groups=tuple(
-                ActivityAssetTableGroup(
-                    class_key=group.class_key,
-                    class_label=group.class_label,
-                    maximum_coefficient=project_scalar(group.maximum_coefficient),
-                    minimum_coefficient=project_scalar(group.minimum_coefficient),
-                    maximum_period_years=project_scalar(group.maximum_period_years),
-                    can_hold_vehicle=group.can_hold_vehicle,
-                )
-                for group in options.table_groups
-            ),
-            disposal_reasons=tuple(
-                ActivityAssetDisposalReasonOption(
-                    reason=reason,
-                    label_key=activity_asset_label_key(token_family(ActivityAssetDisposalReason), reason),
-                )
-                for reason in ADMITTED_DISPOSAL_REASONS
-            ),
-            basis_stages=tuple(
-                ActivityAssetBasisStageOption(
-                    stage=stage, facts=facts, is_property=stage is AssetBasisStage.WHOLE_PROPERTY
-                )
-                for stage, facts in BASIS_STAGE_FACTS.items()
-            ),
-            opening_statuses=tuple(
-                ActivityAssetOpeningStatusOption(status=status, facts=facts)
-                for status, facts in OPENING_STATUS_FACTS.items()
-            ),
-            m130_periods=self._authority.m130_periods(tax_year),
+            m130_periods=self._authority.m130_periods,
         )
 
     def acquisition_candidates(self) -> tuple[ActivityAssetAcquisitionCandidate, ...]:
         """List the business payments no element names as its acquisition yet."""
         return acquisition_candidates(self._ledger.load(), self._service.reopen())
-
-
-def _baja_zero_claims(
-    claims: tuple[AmortizationClaim, ...], boundary: date | None, revision_id: str, creating_operation: str
-) -> list[AmortizationClaim]:
-    if boundary is None:
-        return []
-    return [
-        claim.set_to_zero_by_baja(revision_id, creating_operation=creating_operation)
-        for claim in claims
-        if claim.covered_from >= boundary and claim.amount > Decimal("0")
-    ]
-
-
-def _baja_needs_recomputation(claim: AmortizationClaim, boundary: date | None) -> bool:
-    crossing = boundary is not None and claim.covered_from < boundary < claim.covered_until
-    restored = (
-        claim.disposal_revision_id is not None
-        and claim.amount == Decimal("0")
-        and (boundary is None or claim.covered_until <= boundary)
-    )
-    return crossing or restored
-
-
-def _require_profile_modality(elected: DirectEstimationRegime, declared: DirectEstimationRegime) -> None:
-    """Refuse an election whose modality the taxpayer profile does not declare (RIRPF art. 28.3)."""
-    if declared is not elected:
-        raise ActividadAssetValidationError(
-            context={"elected": elected.value, "declared": declared.value},
-            translated_message="ledger.actividad_asset.errors.profile_modality_mismatch",
-        )
 
 
 __all__ = [
