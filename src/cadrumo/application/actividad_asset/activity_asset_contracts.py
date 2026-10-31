@@ -11,6 +11,7 @@ from uuid import UUID
 from pydantic import BaseModel, Field, model_validator
 
 from ...core.errors.hierarchy import pydantic_validation_boundary
+from ...core.external_constants import DEFAULT_OUTPUT_LANGUAGE, OutputLanguage
 from ...core.hex import Hex64Str
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.period import Period
@@ -378,6 +379,8 @@ class ActivityAssetFilingHandoffRequest(CredentialFreeOperationRequest):
     tax_year: ActivityAssetTaxYear
     m130_period: Annotated[str, Field(min_length=1, max_length=16)] | None = None
     """The Modelo 130 period to project, or null to project the Modelo 100 boxes alone."""
+    output_language: OutputLanguage = DEFAULT_OUTPUT_LANGUAGE
+    """The language the boxes are named in."""
 
     @model_validator(mode="after")
     @pydantic_validation_boundary

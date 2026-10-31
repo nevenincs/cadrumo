@@ -117,6 +117,7 @@ from .activity_asset_results import (
     ActivityAssetTimelineResult,
 )
 from .disposal_calculation import pinned_disposal_bounds, project_disposal_calculation
+from .filing_box_names import pinned_box_name
 from .modality import direct_estimation_modality
 from .operation_dtos import ActivityAssetCorrectionRevisionSnapshot, ActivityAssetRevisionSnapshot
 from .operations import (
@@ -221,6 +222,7 @@ def _activity_asset_operations(
                 modelo="130",
             ),
             m130_periods=pinned_m130_periods(operation),
+            box_name=pinned_box_name(operation),
             admits_filing_year=operation.supported_filing_years().admits_filing_year,
             last_admitted_year=lambda: operation.supported_filing_years().horizon,
             agrarian_activities=agrarian_activities,
@@ -758,6 +760,7 @@ class ActivityAssetFilingHandoffExecutor:
                     operations.filing_handoff,
                     tax_year=payload.tax_year,
                     m130_period=period,
+                    language=payload.output_language,
                 )
             except (
                 ActividadAssetClaimConflictError,

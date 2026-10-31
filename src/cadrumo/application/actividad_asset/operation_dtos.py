@@ -513,14 +513,16 @@ class ClaimProjectionSnapshot(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     target_casilla_id: CasillaId
+    box_name: str | None = None
     tax_year: FilingYear
     claim_ids: tuple[str, ...]
     amount: PublicDecimal
 
     @classmethod
-    def from_domain(cls, value: ClaimProjection) -> Self:
+    def from_domain(cls, value: ClaimProjection, *, box_name: str | None = None) -> Self:
         return cls(
             target_casilla_id=value.target_casilla_id,
+            box_name=box_name,
             tax_year=value.tax_year,
             claim_ids=value.claim_ids,
             amount=project_scalar(value.amount),
@@ -541,9 +543,11 @@ class ClaimProjectionSnapshot(BaseModel):
         return self
 
 
-def _m130_snapshot(value: M130AccrualProjection) -> ActivityAssetM130ProjectionSnapshot:
+def _m130_snapshot(value: M130AccrualProjection, asset_kind: AssetKind) -> ActivityAssetM130ProjectionSnapshot:
     return ActivityAssetM130ProjectionSnapshot(
+        asset_kind=asset_kind,
         target_casilla_id=value.target_casilla_id,
+        box_name=value.box_name,
         tax_year=value.tax_year,
         amount=project_scalar(value.amount),
         contributions=tuple(
@@ -564,6 +568,7 @@ def _m130_snapshot(value: M130AccrualProjection) -> ActivityAssetM130ProjectionS
 def _m130_domain(value: ActivityAssetM130ProjectionSnapshot) -> M130AccrualProjection:
     return M130AccrualProjection(
         target_casilla_id=value.target_casilla_id,
+        box_name=value.box_name,
         tax_year=value.tax_year,
         amount=Decimal(value.amount.decimal),
         contributions=tuple(
@@ -637,11 +642,19 @@ class ActivityAssetFilingHandoffSnapshot(BaseModel):
     def from_domain(cls, value: ActivityAssetFilingHandoff) -> Self:
         """Project the canonical M100 and, when stated, M130 filing destinations."""
         return cls(
-            material_m100=ClaimProjectionSnapshot.from_domain(value.material_m100),
-            intangible_m100=ClaimProjectionSnapshot.from_domain(value.intangible_m100),
+            material_m100=ClaimProjectionSnapshot.from_domain(
+                value.material_m100, box_name=value.material_m100_box_name
+            ),
+            intangible_m100=ClaimProjectionSnapshot.from_domain(
+                value.intangible_m100, box_name=value.intangible_m100_box_name
+            ),
             m100_gaps=tuple(ActivityAssetM100GapSnapshot.from_domain(gap) for gap in value.m100_gaps),
-            material_m130=None if value.material_m130 is None else _m130_snapshot(value.material_m130),
-            intangible_m130=None if value.intangible_m130 is None else _m130_snapshot(value.intangible_m130),
+            material_m130=None
+            if value.material_m130 is None
+            else _m130_snapshot(value.material_m130, AssetKind.MATERIAL),
+            intangible_m130=None
+            if value.intangible_m130 is None
+            else _m130_snapshot(value.intangible_m130, AssetKind.INTANGIBLE),
         )
 
     def to_domain(self) -> ActivityAssetFilingHandoff:
@@ -650,6 +663,8 @@ class ActivityAssetFilingHandoffSnapshot(BaseModel):
             material_m100=self.material_m100.to_domain(),
             intangible_m100=self.intangible_m100.to_domain(),
             m100_gaps=tuple(gap.to_domain() for gap in self.m100_gaps),
+            material_m100_box_name=self.material_m100.box_name,
+            intangible_m100_box_name=self.intangible_m100.box_name,
             material_m130=None if self.material_m130 is None else _m130_domain(self.material_m130),
             intangible_m130=None if self.intangible_m130 is None else _m130_domain(self.intangible_m130),
         )

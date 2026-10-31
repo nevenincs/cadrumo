@@ -608,7 +608,11 @@ class ActivityAssetM130Contribution(_ReadModel):
 class ActivityAssetM130ProjectionSnapshot(_ReadModel):
     """The accrual of one asset kind for the Modelo 130 box its edition binds."""
 
+    asset_kind: AssetKind
+    """Which kind's accrual this row states; both kinds share the one box."""
     target_casilla_id: CasillaId
+    box_name: str | None = None
+    """The box in the filer's words with the asset kind, which tells the two kinds' rows apart."""
     tax_year: int
     amount: PublicDecimal
     contributions: tuple[ActivityAssetM130Contribution, ...] = ()

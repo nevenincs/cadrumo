@@ -15,6 +15,7 @@ from pydantic import BaseModel, Field, model_validator
 
 from ...core.casilla_id import CasillaId
 from ...core.errors.hierarchy import pydantic_validation_boundary
+from ...core.external_constants import DEFAULT_OUTPUT_LANGUAGE, OutputLanguage
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.money.rounding import round_to_cents
 from ...core.period import Period
@@ -82,6 +83,7 @@ from .activity_asset_read_models import (
 )
 from .baja_claims import baja_supersessions, require_profile_modality
 from .disposal_calculation import calculate_element_disposal
+from .filing_box_names import BoxNameReader, box_name_for_kind
 from .form_options_view import form_options_view
 from .history import ActivityAssetHistory, ActivityAssetHistoryClaimResult
 from .legal_citations import resolve_legal_citations
@@ -140,6 +142,8 @@ class M130AccrualProjection(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     target_casilla_id: CasillaId
+    box_name: str | None = None
+    """What the box is called in the filer's words, with the asset kind that tells it from the other kind's row."""
     tax_year: int
     amount: Decimal
     contributions: tuple[M130Contribution, ...] = ()
@@ -171,6 +175,9 @@ class ActivityAssetFilingHandoff(BaseModel):
     material_m100: ClaimProjection
     intangible_m100: ClaimProjection
     m100_gaps: tuple[M100ClaimGapProjection, ...] = ()
+    material_m100_box_name: str | None = None
+    intangible_m100_box_name: str | None = None
+    """What each Modelo 100 box is called in the filer's words; the two boxes are different casillas."""
     material_m130: M130AccrualProjection | None = None
     intangible_m130: M130AccrualProjection | None = None
     """Both set for a Modelo 130 period, and both absent when the handoff states Modelo 100 alone."""
@@ -244,6 +251,7 @@ class ActivityAssetRegisterAuthority:
     disposal_bounds: Callable[[ActivityAssetRevision, int], ActivityAssetDisposalBounds]
     legal_reference: Callable[[str], LegalReference]
     m130_amortization_casilla: Callable[[Period], CasillaId]
+    box_name: BoxNameReader
     m130_periods: Callable[[int], tuple[str, ...]]
     m100_amortization_casillas: Callable[[int], Mapping[AssetKind, CasillaId]]
 
@@ -253,11 +261,13 @@ def _m130_projection(
     accruals: tuple[M130ElementAccrual, ...],
     m130_box: CasillaId,
     tax_year: int,
+    box_name: str,
 ) -> M130AccrualProjection:
     selected = tuple(accrual for accrual in accruals if accrual.revision.asset_kind is asset_kind)
     contributions = _m130_contributions(selected)
     return M130AccrualProjection(
         target_casilla_id=m130_box,
+        box_name=box_name,
         tax_year=tax_year,
         amount=round_to_cents(sum((item.amount for item in contributions), Decimal("0"))),
         contributions=contributions,
@@ -727,7 +737,13 @@ class ActivityAssetOperations:
             )
         return self._service.record_claim(claim, expected_history=current_history, recorded_at=recorded_at)
 
-    def filing_handoff(self, *, tax_year: int, m130_period: Period | None = None) -> ActivityAssetFilingHandoff:
+    def filing_handoff(
+        self,
+        *,
+        tax_year: int,
+        m130_period: Period | None = None,
+        language: OutputLanguage = DEFAULT_OUTPUT_LANGUAGE,
+    ) -> ActivityAssetFilingHandoff:
         """Project M100 from effective claims and, for a stated period, M130 from the accrual route.
 
         Without ``m130_period`` only the Modelo 100 boxes are projected; no Modelo 130 figure is
@@ -752,9 +768,17 @@ class ActivityAssetOperations:
         material_m100 = m100(AssetKind.MATERIAL)
         intangible_m100 = m100(AssetKind.INTANGIBLE)
         m100_gaps = _m100_gaps(history, self._forecast_operation, tax_year)
+
+        def m100_name(projection: ClaimProjection) -> str:
+            return self._authority.box_name("100", tax_year, "0A", projection.target_casilla_id, language)
+
         if m130_period is None:
             return ActivityAssetFilingHandoff(
-                material_m100=material_m100, intangible_m100=intangible_m100, m100_gaps=m100_gaps
+                material_m100=material_m100,
+                intangible_m100=intangible_m100,
+                m100_gaps=m100_gaps,
+                material_m100_box_name=m100_name(material_m100),
+                intangible_m100_box_name=m100_name(intangible_m100),
             )
         period_end = m130_period.end_date
         current = {revision.asset_id: revision for revision in history.revisions}
@@ -770,13 +794,30 @@ class ActivityAssetOperations:
         )
 
         m130_box = self._authority.m130_amortization_casilla(m130_period)
+        m130_name = self._authority.box_name(
+            "130", m130_period.filing_year, m130_period.registry_token, m130_box, language
+        )
 
         return ActivityAssetFilingHandoff(
             material_m100=material_m100,
             intangible_m100=intangible_m100,
             m100_gaps=m100_gaps,
-            material_m130=_m130_projection(AssetKind.MATERIAL, accruals, m130_box, tax_year),
-            intangible_m130=_m130_projection(AssetKind.INTANGIBLE, accruals, m130_box, tax_year),
+            material_m100_box_name=m100_name(material_m100),
+            intangible_m100_box_name=m100_name(intangible_m100),
+            material_m130=_m130_projection(
+                AssetKind.MATERIAL,
+                accruals,
+                m130_box,
+                tax_year,
+                box_name_for_kind(m130_name, AssetKind.MATERIAL, language),
+            ),
+            intangible_m130=_m130_projection(
+                AssetKind.INTANGIBLE,
+                accruals,
+                m130_box,
+                tax_year,
+                box_name_for_kind(m130_name, AssetKind.INTANGIBLE, language),
+            ),
         )
 
     def _require_common_territory(self, period_end: date) -> None:

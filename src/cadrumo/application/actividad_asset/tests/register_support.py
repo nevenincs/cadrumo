@@ -8,6 +8,7 @@ from functools import cache
 
 from cadrumo.application.actividad_asset.activity_asset_read_models import ActivityAssetEdition
 from cadrumo.application.actividad_asset.disposal_calculation import pinned_disposal_bounds
+from cadrumo.application.actividad_asset.filing_box_names import pinned_box_name
 from cadrumo.application.actividad_asset.history import ActivityAssetHistory, ActivityAssetHistoryClaimResult
 from cadrumo.application.actividad_asset.operations import (
     ActivityAssetRegisterAuthority,
@@ -15,6 +16,7 @@ from cadrumo.application.actividad_asset.operations import (
     pinned_m130_periods,
 )
 from cadrumo.core.casilla_id import CasillaId
+from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.actividad_asset_bindings import (
     ActivityAssetDisposalBounds,
@@ -103,6 +105,13 @@ def _published_edition(tax_year: int) -> tuple[ActivityAssetEdition, ModeloRevis
         return pinned_edition(operation)(tax_year)
 
 
+def _published_box_name(
+    modelo: str, filing_year: int, period: str, casilla_id: CasillaId, language: OutputLanguage
+) -> str:
+    with bundled_indexed_authority().operation() as operation:
+        return pinned_box_name(operation)(modelo, filing_year, period, casilla_id, language)
+
+
 def _published_m130_periods(tax_year: int) -> tuple[str, ...]:
     with bundled_indexed_authority().operation() as operation:
         return pinned_m130_periods(operation)(tax_year)
@@ -152,6 +161,7 @@ def memory_register_authority(
     return ActivityAssetRegisterAuthority(
         edition=_published_edition,
         m130_periods=_published_m130_periods,
+        box_name=_published_box_name,
         admits_filing_year=_published_support().admits_filing_year,
         m130_amortization_casilla=_published_m130_box,
         m100_amortization_casillas=lambda _year: activity_asset_amortization_casillas(_published_modelo_100()),
