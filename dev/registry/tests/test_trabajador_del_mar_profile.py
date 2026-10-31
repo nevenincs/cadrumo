@@ -18,6 +18,7 @@ from cadrumo.core.toml import load_toml
 from cadrumo.domain.user_profile.schema import ProfileFieldType
 from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
+from ..compiler.authority import compiled_bundled_authority
 from ..compiler.legal_grounding import verify_legal_catalogue
 from ..conformance.registry_schema_support import committed_registry_tree as _committed_registry_tree
 
@@ -240,3 +241,15 @@ def test_all_binding_entries_carry_nonempty_legal_refs() -> None:
         assert isinstance(legal_refs, list) and legal_refs, f"binding {bid!r} must declare legal_refs ids"
         for ref in legal_refs:
             assert isinstance(ref, str) and ref, f"binding {bid!r} has an empty legal_ref id"
+
+
+def test_the_rebeca_registers_the_runtime_reads_match_the_category_binding() -> None:
+    """The category file has no runtime reader, so the governed fact must say what it says."""
+    category = load_toml(bundled_path("registry", "aeat", "categories", "trabajador_del_mar.toml"))
+    binding = next(item for item in category["exemption_bindings"] if item["id"] == "rebeca-50pct")
+    payload = (
+        compiled_bundled_authority().catalogues.facts.facts["rebeca-eligible-vessel-registries"].variants[0].payload
+    )
+    entries = {entry.key: entry.value for entry in payload.entries}
+
+    assert set(entries["registries"].split(",")) == set(binding["selector"]["vessel_registry"])

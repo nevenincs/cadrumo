@@ -159,7 +159,7 @@ class M145CommunicationValidationResult(BaseModel):
         pattern=r"^cadrumo\.application\.modelo$",
     )
     modelo: str = Field(default=Modelo("145").value, pattern=r"^145$")
-    communication_year: int = Field(ge=2012, le=2099)
+    communication_year: int = Field(ge=2000, le=2099)
     period_token: M145CommunicationPeriod
     revision_id: RevisionId = Field(min_length=1)
     valid: bool
@@ -188,7 +188,7 @@ class M145CommunicationExportResult(BaseModel):
         pattern=r"^cadrumo\.application\.modelo$",
     )
     modelo: str = Field(default=Modelo("145").value, pattern=r"^145$")
-    communication_year: int = Field(ge=2012, le=2099)
+    communication_year: int = Field(ge=2000, le=2099)
     period_token: M145CommunicationPeriod
     revision_id: RevisionId = Field(min_length=1)
     export_layout_id: str = Field(min_length=1)
@@ -231,7 +231,7 @@ class M145CommunicationCreateCommand(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    communication_year: int = Field(ge=2012, le=2099)
+    communication_year: int = Field(ge=2000, le=2099)
     period_token: M145CommunicationPeriod = M145CommunicationPeriod.COMMUNICATION
     field_values: dict[CasillaId, M145CommunicationFieldValue] = Field(min_length=1)
     note: str | None = Field(default=None, max_length=512)
@@ -321,7 +321,7 @@ class M145CommunicationRecord(BaseModel):
         pattern=r"^cadrumo\.application\.modelo$",
     )
     modelo: str = Field(default=Modelo("145").value, pattern=r"^145$")
-    communication_year: int = Field(ge=2012, le=2099)
+    communication_year: int = Field(ge=2000, le=2099)
     period_token: M145CommunicationPeriod
     revision_id: RevisionId = Field(min_length=1)
     state: M145CommunicationRecordState = M145CommunicationRecordState.CREATED

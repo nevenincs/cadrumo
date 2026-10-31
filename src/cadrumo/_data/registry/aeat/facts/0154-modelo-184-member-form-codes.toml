@@ -16,6 +16,7 @@ required_text = ["CLAVE TIPO DE PARTÍCIPE", "No residente sin establecimiento p
 [fact.variants.payload]
 kind = "mapping"
 entries = [
+  { key = "reduccion.blocked_claves", value = "A" },
   { key = "clave.codes", value = "A,C,D,E,F,G,I,J,K" },
   { key = "subclave.codes", value = "01,02,03,04,05,06" },
   { key = "subclave.bearing_claves", value = "A,D,F,G,I,J,K" },

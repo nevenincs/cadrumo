@@ -19,15 +19,14 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Literal
 
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel
 
 from ....core.aggregation import BindingAggregationOp, BindingSourceKind
-from ....core.casilla_id import CasillaId, validated_casilla_id
-from ....core.errors.hierarchy import pydantic_validation_boundary
+from ....core.casilla_id import CasillaId
 from ....core.models import STRICT_FROZEN_CONFIG
-from .binding_selector_utils import selector_against_model
+from .binding_selector_utils import selector_against_model, selector_as_dict
 from .binding_temporal import BindingTemporalSelector, SameTargetContext
-from .errors import RegistryValidationError
+from .form_codes import resolve_form_codes_leased
 
 if TYPE_CHECKING:
     from .schema import BindingDefinition
@@ -37,21 +36,6 @@ type InventoryProjectionOperation = Literal[
     "closing_minus_opening_positive",
     "opening_minus_closing_positive",
 ]
-
-_INVENTORY_DESTINATION_BY_OPERATION: dict[InventoryProjectionOperation, CasillaId] = {
-    "complete_acquisition_cost": validated_casilla_id(
-        "0181",
-        surface="inventory complete-acquisition-cost destination",
-    ),
-    "closing_minus_opening_positive": validated_casilla_id(
-        "0177",
-        surface="inventory positive closing-minus-opening destination",
-    ),
-    "opening_minus_closing_positive": validated_casilla_id(
-        "0182",
-        surface="inventory positive opening-minus-closing destination",
-    ),
-}
 
 
 class InventoryProvider(BaseModel):
@@ -72,7 +56,7 @@ class InventoryProvider(BaseModel):
     # declaration states timeless intent and the filing context supplies the
     # year. The casilla-renumbering hazard the former absolute ``filing_year``
     # guarded against is carried by the revision the binding is declared in
-    # together with ``_INVENTORY_DESTINATION_BY_OPERATION``, which still pins
+    # together with the registry's ``m100.inventory`` row codes, which still pin
     # each operation to the exact destination casilla of its own revision.
     temporal: BindingTemporalSelector = SameTargetContext()
     projection_grain: Literal["taxpayer_year_activity"]
@@ -81,17 +65,6 @@ class InventoryProvider(BaseModel):
     grouping: Literal["per_inventory_activity"]
     row_field: InventoryProjectionOperation
     target_casilla_id: CasillaId
-
-    @model_validator(mode="after")
-    @pydantic_validation_boundary
-    def _require_operation_destination_identity(self) -> InventoryProvider:
-        expected = _INVENTORY_DESTINATION_BY_OPERATION[self.row_field]
-        if self.target_casilla_id != expected:
-            raise RegistryValidationError(
-                f"inventory operation {self.row_field!r} must target casilla {expected!r}, "
-                f"not {self.target_casilla_id!r}",
-            )
-        return self
 
 
 def validate_inventory_binding(binding: BindingDefinition) -> list[str]:
@@ -102,9 +75,17 @@ def validate_inventory_binding(binding: BindingDefinition) -> list[str]:
     built from provider objects that may reach this boundary without having
     passed model validation, and an operation silently landing on another
     operation's casilla is a filing-grade misdeclaration, not a shape detail.
-    The identity itself is never restated here -- the union member owns it.
+    The destination itself is the registry's: its ``m100.inventory`` row codes.
     """
     failures = selector_against_model(binding, InventoryProvider)
+    if not failures:
+        selector = InventoryProvider.model_validate(selector_as_dict(binding))
+        expected = resolve_form_codes_leased("form-row-codes").code(f"m100.inventory.{selector.row_field}")
+        if selector.target_casilla_id != expected:
+            failures.append(
+                f"inventory operation {selector.row_field!r} must target casilla {expected!r}, "
+                f"not {selector.target_casilla_id!r}",
+            )
     if binding.aggregation is None or binding.aggregation.op is not BindingAggregationOp.ROWS:
         failures.append(f"binding {binding.id!r} inventory operation template requires aggregation op 'rows'")
     return failures

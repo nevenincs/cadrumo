@@ -85,12 +85,21 @@ def test_inventory_selector_accepts_each_exact_operation_destination(
         if _OPERATION_DESTINATIONS[operation] != destination
     ),
 )
-def test_inventory_selector_refuses_crossed_operation_destination_identity(
+def test_inventory_binding_validator_refuses_crossed_operation_destination_identity(
     operation: str,
     destination: str,
 ) -> None:
-    with pytest.raises(ValidationError, match="must target casilla"):
-        InventoryProvider.model_validate(_selector(operation, destination))
+    binding = BindingDefinition.model_construct(
+        id="inventory-crossed",
+        provider=_constructed_provider(operation, destination),
+        value=_MONEY_VALUE,
+        aggregation=BindingAggregation(op=BindingAggregationOp.ROWS),
+    )
+
+    failures = validate_inventory_binding(binding)
+
+    assert len(failures) == 1
+    assert "must target casilla" in failures[0]
 
 
 @pytest.mark.parametrize(
@@ -107,7 +116,6 @@ def test_inventory_selector_refuses_crossed_operation_destination_identity(
         {"grouping": "taxpayer_year"},
         {"operation": "complete_acquisition_cost"},
         {"row_field": "signed_stock_variation"},
-        {"target_casilla_id": "0155"},
         {"signed": True},
         {"source_ready": True},
     ],
@@ -140,9 +148,8 @@ def test_inventory_selector_roundtrips_without_taxpayer_activity_identity() -> N
 def test_inventory_binding_validator_preserves_the_operation_destination_failure() -> None:
     binding = BindingDefinition.model_construct(
         id="inventory-stock-increase",
-        # ``model_construct`` on both levels: the crossed operation/destination
-        # pair is exactly what the provider's own validator refuses, and this
-        # test proves the binding-level validator reports it too.
+        # ``model_construct`` on both levels: the binding-level validator owns
+        # the registry's destination for the operation.
         provider=_constructed_provider("closing_minus_opening_positive", "0182"),
         value=_MONEY_VALUE,
         aggregation=BindingAggregation(op=BindingAggregationOp.ROWS),

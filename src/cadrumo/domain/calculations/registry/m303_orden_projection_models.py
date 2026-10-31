@@ -23,6 +23,7 @@ from ...iva.regimen_simplificado_rows import (
     ReduccionLorcaOrdenAnual,
 )
 from .errors import RegistryValidationError
+from .form_codes import resolve_form_codes_leased
 from .ids import LegalRefId, RevisionId, SourceRefId
 from .m303_orden_constants import (
     EXTRACTOR_VERSION,
@@ -308,7 +309,9 @@ def _validate_snapshot_source_authority(snapshot: M303AnnualOrdenSnapshot) -> No
     reduction = snapshot.lorca_reduction
     if snapshot.ejercicio == 2022:
         _require_invariant(
-            reduction is not None and reduction.percentage == Decimal("20"),
+            reduction is not None
+            and reduction.percentage
+            == Decimal(resolve_form_codes_leased("form-row-codes").code("m303.2022.lorca_reduction_percentage")),
             "annual Orden 2022 snapshot lacks its Lorca reduction authority",
         )
     if reduction is not None:

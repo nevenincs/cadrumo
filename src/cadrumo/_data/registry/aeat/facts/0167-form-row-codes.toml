@@ -1,0 +1,41 @@
+[fact]
+fact_id = "form-row-codes"
+family = "mapping"
+
+[[fact.variants]]
+variant_id = "form-row-codes:design"
+date_axis = "filing_period"
+legal_refs = ["ley-37-1992:art-164"]
+source_refs = ["aeat-dr-347-2025", "boe-orden-hfp-1335-2021-iva-authority"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+# "En el caso de no residentes sin establecimiento permanente se consignara 99."
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-347-2025"
+required_text = ["no residentes sin establecimiento permanente"]
+
+# The two activities the Orden's special corrector indices name, and the Lorca reduction:
+# "podran reducir en un 20 por ciento el importe de las cuotas devengadas".
+[[fact.variants.source_citations]]
+source_ref = "boe-orden-hfp-1335-2021-iva-authority"
+required_text = ["Transporte por autotaxis", "Transporte de mercancías por carretera", "20 por ciento"]
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "m347.non_resident_provincia", value = "99" },
+  { key = "m131.special_index_epigrafes", value = "721.2,722" },
+  { key = "m100.inventory.complete_acquisition_cost", value = "0181" },
+  { key = "m100.inventory.closing_minus_opening_positive", value = "0177" },
+  { key = "m100.inventory.opening_minus_closing_positive", value = "0182" },
+  { key = "m303.dp30302.early_epochs", value = "2022,2023,2024-hasta-08-y-2t,2024-desde-09-y-3t" },
+  { key = "m303.dp30302.late_epochs", value = "2025,2026-hasta-01-y-1t,2026-y-siguientes" },
+  { key = "m303.2022.lorca_reduction_percentage", value = "20" },
+  { key = "m210.payer_mode_reference_code", value = "35" },
+  { key = "m303.differentiated.row_slots", value = "2" },
+  { key = "m303.prorrata.activity_slots", value = "5" },
+  { key = "m303.exonerado_390.activity_slots", value = "6" },
+  { key = "m303.dp30302.activities_per_kind", value = "6" },
+  { key = "m303.dp30302.sub_indices", value = "1,2,3,4" },
+]

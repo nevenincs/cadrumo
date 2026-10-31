@@ -65,6 +65,7 @@ from ...core.prorrata_register import (
 from ...core.prorrata_register import (
     SectorDiferenciadoLetra as _SectorDiferenciadoLetra,
 )
+from ..calculations.registry.form_codes import resolve_form_codes_leased
 from ..calculations.registry.prorrata_register_catalogue import (
     carried_prior_definitiva_prorrata_provenance as _carried_prior_definitiva,
 )
@@ -218,6 +219,10 @@ class SectorDefinition(BaseModel):
         return value
 
 
+def _activity_slots() -> int:
+    return int(resolve_form_codes_leased("form-row-codes").code("m303.prorrata.activity_slots"))
+
+
 class ProrrataActivityRow(BaseModel):
     """One canonical Modelo 303 per-activity prorrata filing row.
 
@@ -233,13 +238,21 @@ class ProrrataActivityRow(BaseModel):
 
     ejercicio: FilingYear
     activity_id: str = Field(min_length=1, max_length=128)
-    slot: int = Field(ge=1, le=5)
+    slot: int = Field(ge=1)
     cnae_code: str = Field(min_length=3, max_length=4, pattern=r"^\d{3,4}$")
     operaciones_total: Decimal = Field(ge=Decimal("0"))
     operaciones_con_derecho: Decimal = Field(ge=Decimal("0"))
     prorrata_type: _ProrrataActivityRowType
     percentage: Decimal = Field(ge=Decimal("0"), le=HUNDRED)
     evidence_reference: str = Field(min_length=1, max_length=256)
+
+    @field_validator("slot")
+    @classmethod
+    @pydantic_validation_boundary
+    def _slot_is_a_declared_row(cls, slot: int) -> int:
+        if slot > _activity_slots():
+            raise ValueError(f"activity row slot {slot} is past the form's declared rows")
+        return slot
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -633,11 +646,12 @@ class ProrrataRegister(BaseModel):
         )
 
     def activity_rows_complete_for(self, ejercicio: int) -> bool:
-        """Whether an applicable year has exactly the five declared official rows."""
+        """Whether an applicable year has exactly the declared official rows."""
         if not self.requires_activity_rows_for(ejercicio):
             return True
         rows = self.activity_rows_for_ejercicio(ejercicio)
-        return len(rows) == 5 and {row.slot for row in rows} == {1, 2, 3, 4, 5}
+        slots = range(1, _activity_slots() + 1)
+        return len(rows) == len(slots) and {row.slot for row in rows} == set(slots)
 
     def entry_for(self, ejercicio: int, *, sector_id: str | None = None) -> ProrrataRegisterEntry | None:
         """Return the entry for a ``(ejercicio, sector_id)`` key, or ``None`` when absent."""

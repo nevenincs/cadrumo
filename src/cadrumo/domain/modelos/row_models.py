@@ -320,18 +320,18 @@ class Modelo184MemberRow(BaseModel):
 
         The shared diseño field (positions 109-119) also serves claves C and
         D, whose reductions are grounded (LIRPF arts. 23 and 32.1). The
-        clave-A branch is explicitly BLOCKED by the accepted row-shape ADR:
+        clave-A branch is explicitly blocked:
         the diseño's own citation (LIRPF art. 24.2) does not exist as such,
         and art. 26.2 is only a strong, unconfirmed candidate. Modelling
         reducción as one field (matching the diseño's own physical layout)
         makes it reachable under clave A unless refused here explicitly, so
         the block lives on the row rather than only in prose.
         """
-        if self.clave == "A" and self.reduccion is not None:
+        blocked = resolve_form_codes(_M184_FORM_CODES_FACT).codes("reduccion.blocked_claves")
+        if self.reduccion is not None and self.clave in blocked:
             raise ValueError(
-                "clave A reducción is blocked pending confirmation of its governing provision "
-                "(the diseño's own LIRPF art. 24.2 citation does not exist; see the accepted "
-                "row-shape ADR) -- leave reduccion unset for a clave-A row",
+                f"clave {self.clave} reducción is blocked pending confirmation of its governing provision "
+                "(the diseño's own LIRPF art. 24.2 citation does not exist) -- leave reduccion unset",
             )
         return self
 

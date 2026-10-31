@@ -20,6 +20,7 @@ from ....core.filing_projection_ref import (
 from ....core.models import STRICT_FROZEN_CONFIG
 from ...prorrata_register.register import ProrrataActivityRow, ProrrataRegister
 from .errors import RegistryValidationError
+from .form_codes import resolve_form_codes_leased
 
 _FIELDS = frozenset(M303ProrrataActivityProjectionField)
 
@@ -38,7 +39,7 @@ class M303ProrrataActivityRowProjection(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    slot: int = Field(ge=1, le=5)
+    slot: int = Field(ge=1)
     endpoints: tuple[M303ProrrataActivityEndpointValue, ...] = Field(min_length=5, max_length=5)
 
 
@@ -79,7 +80,8 @@ def _validate_projection_refs(
                 f"m303 prorrata projection has duplicate reference for slot {ref.slot} field {ref.field.value!r}",
             )
         by_field[ref.field] = ref
-    expected = {slot: set(_FIELDS) for slot in range(1, 6)}
+    activity_slots = int(resolve_form_codes_leased("form-row-codes").code("m303.prorrata.activity_slots"))
+    expected = {slot: set(_FIELDS) for slot in range(1, activity_slots + 1)}
     actual = {slot: set(by_field) for slot, by_field in resolved.items()}
     if actual != expected:
         raise RegistryValidationError(

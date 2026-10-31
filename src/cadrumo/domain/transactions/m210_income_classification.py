@@ -160,8 +160,10 @@ def _registry_m210_declarations(
             return _registry_m210_declarations(operation=indexed_operation)
     revision = _selected_m210_revision(operation, effective_date)
     code_catalogue, multiple_payer_codes = _m210_code_and_payer_sets(revision)
+    from ..calculations.registry.form_codes import resolve_form_codes_leased
+
     required_mode = required_m210_payer_mode_for_code(
-        "35",
+        resolve_form_codes_leased("form-row-codes", authority=operation).code("m210.payer_mode_reference_code"),
         effective_date=effective_date,
         operation=operation,
     )

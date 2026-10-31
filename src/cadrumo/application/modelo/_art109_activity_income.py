@@ -65,7 +65,9 @@ _UNRESOLVED_ACTIVITY_STATES = frozenset(
 
 def _is_art109_ratio_parameter(parameter: ParameterDefinition) -> bool:
     """Keep the selected ratio's Art. 109 legal-reference filter."""
-    return parameter.data_type == "ratio" and any("109" in str(legal_ref) for legal_ref in parameter.legal_refs)
+    return parameter.data_type == "ratio" and any(
+        str(legal_ref).endswith(":art-109") for legal_ref in parameter.legal_refs
+    )
 
 
 def _art109_registry_declarations(

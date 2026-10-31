@@ -18,6 +18,7 @@ from ...core.filing_projection_ref import M303_MESA_FACTS, M303_REPEATING_FACTS,
 from ...core.filing_year import FilingYear
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.registry_token import StrictRegistryToken
+from ..calculations.registry.form_codes import resolve_form_codes_leased
 from ..filing_evidence import FilingEvidenceReference
 from .errors import IvaValidationError
 from .schema import validate_orden_module_identities
@@ -69,7 +70,7 @@ class ModuloOrdenAnual(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     identity: _Token
-    order: int = Field(ge=1, le=7)
+    order: int = Field(ge=1)
     coefficient: _PositiveCoefficient
     legal_refs: tuple[_Token, ...] = Field(min_length=1)
     source_refs: tuple[_Token, ...] = Field(min_length=1)
@@ -146,8 +147,8 @@ class IndiceTemporadaOrdenAnual(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    minimum_days: int = Field(ge=1, le=180)
-    maximum_days: int = Field(ge=1, le=180)
+    minimum_days: int = Field(ge=1)
+    maximum_days: int = Field(ge=1)
     coefficient: _PositiveCoefficient
     legal_refs: tuple[_Token, ...] = Field(min_length=1)
     source_refs: tuple[_Token, ...] = Field(min_length=1)
@@ -299,7 +300,7 @@ class HechoActividadSimplificado(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     fact: M303RegimenSimplificadoFact
-    sub_index: int | None = Field(default=None, ge=1, le=4)
+    sub_index: int | None = Field(default=None, ge=1)
     value: str | Decimal
     evidence_reference: FilingEvidenceReference
 
@@ -310,6 +311,9 @@ class HechoActividadSimplificado(BaseModel):
             raise IvaValidationError("a Mesa simplified-regime fact requires sub_index")
         if self.fact not in M303_REPEATING_FACTS and self.sub_index is not None:
             raise IvaValidationError("a singleton simplified-regime fact must not carry sub_index")
+        declared = resolve_form_codes_leased("form-row-codes").codes("m303.dp30302.sub_indices")
+        if self.sub_index is not None and str(self.sub_index) not in declared:
+            raise IvaValidationError("sub_index is not a row the DP30302 record declares")
         return self
 
     @field_validator("value")
@@ -411,8 +415,9 @@ class RegimenSimplificadoFilingRows(BaseModel):
             "simplified-regime activity identities must be unique",
         )
         agricultural, non_agricultural = _activities_by_kind(self.activities)
-        if len(agricultural) > 6 or len(non_agricultural) > 6:
-            raise IvaValidationError("DP30302 permits at most six activities of each kind")
+        per_kind = int(resolve_form_codes_leased("form-row-codes").code("m303.dp30302.activities_per_kind"))
+        if len(agricultural) > per_kind or len(non_agricultural) > per_kind:
+            raise IvaValidationError(f"DP30302 permits at most {per_kind} activities of each kind")
         if self.activities != agricultural + non_agricultural:
             raise IvaValidationError("activities must be ordered agricultural then non-agricultural")
         return self

@@ -18,11 +18,8 @@ from ....core.time.clock import today_madrid
 from .errors import RegistryValidationError
 from .facts.resolution import MappingFactQuery, ResolvedMappingFact
 from .governed_fact_scope import GovernedFactSource, require_governed_fact_authority
-from .schema_references import LegalReferenceKind
 
-_SETUP_FACT_ID = "-".join(
-    (LegalReferenceKind.LEY.value, "49", "2002", "profile", "binding", "catalogue"),
-)
+_SETUP_FACT_ID = "ley-49-2002-profile-binding-catalogue"
 
 
 def mapping_fact_entries(fact_id: str, *, authority: GovernedFactSource | None = None) -> dict[str, str]:
