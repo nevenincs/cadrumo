@@ -741,15 +741,7 @@ class LedgerInventoryScreen(LedgerRegisterScreen):
     @override
     async def send(self, request: BaseModel) -> RegisterOutcomeV1:
         if isinstance(request, InventoryEvidenceAddRequest):
-            held = await self.door.add_evidence(request)
-            if held.refusal is not None:
-                return RegisterOutcomeV1(refusal=inventory_refusal_text(held.refusal))
-            return RegisterOutcomeV1(
-                lines=(
-                    tr("tui.ledger.registers.inventory.evidence_done"),
-                    tr("tui.ledger.registers.inventory.evidence_held", reference=held.reference),
-                )
-            )
+            return await self._send_evidence(request)
         if isinstance(request, InventoryCreateRequest):
             outcome = inventory_outcome(await self.door.create(request))
         elif isinstance(request, InventoryInspectRequest):
@@ -769,6 +761,17 @@ class LedgerInventoryScreen(LedgerRegisterScreen):
         if outcome.refusal is None:
             self.selected_key = inventory_key(request.actividad_id, request.year)
         return outcome
+
+    async def _send_evidence(self, request: InventoryEvidenceAddRequest) -> RegisterOutcomeV1:
+        held = await self.door.add_evidence(request)
+        if held.refusal is not None:
+            return RegisterOutcomeV1(refusal=inventory_refusal_text(held.refusal))
+        return RegisterOutcomeV1(
+            lines=(
+                tr("tui.ledger.registers.inventory.evidence_done"),
+                tr("tui.ledger.registers.inventory.evidence_held", reference=held.reference),
+            )
+        )
 
 
 def inventory_tool(door: LedgerInventoryDoorV1) -> LedgerToolV1:

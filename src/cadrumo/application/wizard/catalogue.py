@@ -449,10 +449,7 @@ def build_setup_flow(operation: PinnedAuthorityOperation) -> WizardFlow:
 
     _iva_regime_tokens = iva_regime_choices()
     _default_iva_regime_value: str = default_iva_regime().value
-    """Wizard default for the iva.regime question.
-
-    Shared between the :data:`wizard_iva_choices` default-marker and the
-    :func:`_iva_section` question's ``default=`` so the two never drift."""
+    # Resolve the IVA default through the same pinned operation as the choices.
 
     (
         wizard_iva_choices,

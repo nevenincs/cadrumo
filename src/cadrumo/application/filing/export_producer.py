@@ -44,12 +44,8 @@ from .producer_snapshot import (
     RefundAccountSelection,
 )
 from .producer_snapshot_m200 import Modelo200ProfileFacts
-from .producer_snapshot_m210 import (
-    Modelo210ProfileFacts,
-)
-from .producer_snapshot_m296 import (
-    Modelo296ProfileFacts,
-)
+from .producer_snapshot_m210 import Modelo210ProfileFacts
+from .producer_snapshot_m296 import Modelo296ProfileFacts
 
 
 @dataclass(frozen=True)
