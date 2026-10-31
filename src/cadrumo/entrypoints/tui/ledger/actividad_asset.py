@@ -9,16 +9,18 @@ from typing import Protocol, override
 
 from pydantic import TypeAdapter
 from textual.app import ComposeResult
+from textual.widget import Widget
 from textual.widgets import Button, Input, Static
 
 from ....application.actividad_asset.activity_asset_contracts import ActivityAssetSupersedingClaim
-from ....application.actividad_asset.activity_asset_projections import ActivityAssetPlanProjection
+from ....application.actividad_asset.activity_asset_projections import (
+    ActivityAssetListProjection,
+    ActivityAssetPlanProjection,
+)
 from ....application.actividad_asset.activity_asset_read_models import (
     ActivityAssetAcquisitionCandidate,
     ActivityAssetDisposalCalculationView,
     ActivityAssetFormOptionsView,
-    ActivityAssetListRow,
-    ActivityAssetPlanRow,
     ActivityAssetTimelineEvent,
 )
 from ....application.actividad_asset.history import ActivityAssetHistory, ActivityAssetHistoryClaimResult
@@ -41,6 +43,14 @@ from ....domain.renta.actividad_asset.schedule import ScheduledAmortizationCharg
 from ..account import AccountSessionExpiredError
 from ..components.language import localized
 from ..operations.outcome import OperationOutcomeUnknownError, unknown_outcome_of
+from .actividad_asset_words import (
+    limits_line,
+    list_row_line,
+    plan_row_line,
+    quarters_text,
+    reason_text,
+    timeline_line,
+)
 from .controller import LedgerWorkspaceController
 from .models_actividad_asset import (
     ActivityAssetClaimRequestV1,
@@ -86,17 +96,13 @@ _READ_BUTTON_LOCALE_KEYS = {
 }
 
 
-def _minimum_amortization_fields(row: ActivityAssetPlanRow) -> str:
-    """Label the served minimum amortization, naming a year without authority rather than hiding it.
-
-    A figure from an incomplete walk leaves a year out, so it carries the word
-    for incomplete instead of reading as the whole minimum.
-    """
-    figure = row.minimum_through.decimal if row.minimum_through is not None else ""
-    fields = [tr("tui.ledger.activity_asset.plan_minimum"), figure]
-    if not row.minimum_complete:
-        fields.append(tr("tui.ledger.activity_asset.plan_minimum_incomplete"))
-    return "	".join(fields)
+#: The inputs the served reads fill, each worded by the catalogue key that names it.
+_OPEN_INPUT_LOCALE_KEYS = {
+    "asset-covered-from": "desktop.ledger.assets.from",
+    "asset-covered-until": "desktop.ledger.assets.until",
+    "asset-filing-tax-year": "desktop.ledger.assets.year",
+    "asset-filing-m130-period": "desktop.ledger.assets.quarter",
+}
 
 
 @dataclass(frozen=True, slots=True)
@@ -107,6 +113,8 @@ class _ActivityAssetScreenResult:
     current_revision_id: str | None = None
     inspected_asset_id: str | None = None
     """The asset an inspection read, when the action was one."""
+    fills: tuple[tuple[str, str], ...] = ()
+    """The inputs a read's served defaults fill, as input id and text."""
 
 
 class ActivityAssetTuiActionsV1(Protocol):
@@ -148,8 +156,8 @@ class ActivityAssetTuiActionsV1(Protocol):
         """Work out a baja's figures: the stated one as a preview, or else the recorded one."""
         ...
 
-    def list_elements(self) -> tuple[ActivityAssetListRow, ...]:
-        """Summarise the register."""
+    def list_elements(self) -> ActivityAssetListProjection:
+        """Summarise the register, with the year it opens on."""
         ...
 
     def plan(self, asset_id: str) -> ActivityAssetPlanProjection:
@@ -190,6 +198,24 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
         self.held_asset_id: str | None = None
         """The asset the held action named; only an inspection of that asset releases the writes."""
         self._named_asset_id: str | None = None
+        self._default_claim_years: dict[str, int] = {}
+        """The year each listed element opens a claim on, as the last register read served it."""
+        self._filled: dict[str, str] = {}
+        """What the screen put in an input from a served default, so a later read renews it and a typed value stays."""
+
+    @staticmethod
+    def _open_input(input_id: str) -> Widget:
+        """An input that opens empty, named by its catalogue word."""
+        key = _OPEN_INPUT_LOCALE_KEYS[input_id]
+        return localized(Input(placeholder=tr(key), id=input_id), key)
+
+    def _fill(self, fills: tuple[tuple[str, str], ...]) -> None:
+        """Put served defaults in the inputs they are for, leaving anything the operator typed."""
+        for input_id, text in fills:
+            field = self.query_one(f"#{input_id}", Input)
+            if not field.value or field.value == self._filled.get(input_id):
+                field.value = text
+                self._filled[input_id] = text
 
     @property
     @override
@@ -253,8 +279,10 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
             Input(placeholder=tr("tui.ledger.activity_asset.free_amount"), id="asset-free-amount"),
             "tui.ledger.activity_asset.free_amount",
         )
-        yield Input(value="2025-01-01", id="asset-covered-from")
-        yield Input(value="2026-01-01", id="asset-covered-until")
+        # The dates, year and quarter open empty: reading the register, the plan and the form options fills them
+        # from what those reads serve.
+        yield self._open_input("asset-covered-from")
+        yield self._open_input("asset-covered-until")
         yield localized(
             Input(placeholder=tr("tui.ledger.activity_asset.supersedes"), id="asset-supersedes-claim-id"),
             "tui.ledger.activity_asset.supersedes",
@@ -265,8 +293,8 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
         yield localized(
             Button(tr("tui.ledger.activity_asset.claim"), id="asset-claim"), "tui.ledger.activity_asset.claim"
         )
-        yield Input(value="2025", id="asset-filing-tax-year")
-        yield Input(value="4T", id="asset-filing-m130-period")
+        yield self._open_input("asset-filing-tax-year")
+        yield self._open_input("asset-filing-m130-period")
         yield localized(
             Button(tr("tui.ledger.activity_asset.filing"), id="asset-filing-handoff"),
             "tui.ledger.activity_asset.filing",
@@ -324,6 +352,7 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
             self._busy = False
         if self._inspection_releases_writes(result.inspected_asset_id):
             self._release_writes()
+        self._fill(result.fills)
         self.query_one("#asset-result", Static).update(result.message)
         if result.current_revision_id is not None:
             self.query_one("#asset-current-revision-id", Static).update(
@@ -362,6 +391,8 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
         """Discard screen-local financial facts when the retained session is lost."""
         self._last_forecast = None
         self._last_forecast_supersedes = None
+        self._default_claim_years = {}
+        self._filled = {}
         for selector in (
             "#asset-id",
             "#asset-revision-json",
@@ -471,7 +502,7 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
         self, button_id: str | None, asset_id: str, _revision_json: str
     ) -> _ActivityAssetScreenResult:
         if button_id == "asset-filing-handoff":
-            tax_year = int(self.query_one("#asset-filing-tax-year", Input).value)
+            tax_year = self._stated_filing_year()
             m130_period = Period.from_year_and_code(
                 tax_year,
                 self.query_one("#asset-filing-m130-period", Input).value,
@@ -516,11 +547,15 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
         self, button_id: str | None, asset_id: str, _revision_json: str
     ) -> _ActivityAssetScreenResult:
         if button_id == "asset-list":
-            rows = self._actions.list_elements()
+            register = self._actions.list_elements()
+            rows = register.rows or ()
+            self._default_claim_years = {
+                row.asset_id: row.default_claim_year for row in rows if row.default_claim_year is not None
+            }
             return _ActivityAssetScreenResult(
-                message="\n".join(
-                    f"{row.asset_id}\t{row.name or ''}\t{row.state.value}\t{row.pending.decimal if row.pending else ''}"
-                    for row in rows
+                message="\n".join(list_row_line(row) for row in rows) or tr("desktop.ledger.assets.list.empty"),
+                fills=(
+                    () if register.default_year is None else (("asset-filing-tax-year", str(register.default_year)),)
                 ),
             )
         if button_id == "asset-plan":
@@ -528,34 +563,40 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
         if button_id == "asset-timeline":
             self._named_asset_id = asset_id
             return _ActivityAssetScreenResult(
-                message="\n".join(
-                    f"{event.sequence}\t{event.kind.value}\t{event.record_id}"
-                    for event in self._actions.timeline(asset_id)
-                ),
+                message="\n".join(timeline_line(event) for event in self._actions.timeline(asset_id))
+                or tr("desktop.ledger.assets.timeline.empty"),
             )
         raise ValueError("unknown activity-asset action")
 
     def _plan_result(self, asset_id: str) -> _ActivityAssetScreenResult:
         self._named_asset_id = asset_id
         plan = self._actions.plan(asset_id)
-        limits = plan.limits
-        return _ActivityAssetScreenResult(
-            message="\n".join(
-                (
-                    *(
-                        f"{limits.class_key or ''}\t{limits.maximum_period_ends_on or ''}"
-                        f"\t{limits.not_table_bound or ''}"
-                        for _ in ((),)
-                        if limits is not None
-                    ),
-                    *(
-                        f"{row.tax_year}\t{row.planned.decimal if row.planned else row.absence or ''}"
-                        f"\t{row.claimed.decimal}\t{row.claim_state.value}\t{_minimum_amortization_fields(row)}"
-                        for row in plan.rows or ()
-                    ),
-                ),
-            ),
+        minimum_label = tr("tui.ledger.activity_asset.plan_minimum")
+        minimum_incomplete = tr("tui.ledger.activity_asset.plan_minimum_incomplete")
+        lines: list[str] = []
+        if plan.limits is not None and (limits := limits_line(plan.limits)) is not None:
+            lines.append(limits)
+        lines.extend(
+            plan_row_line(row, minimum_label=minimum_label, minimum_incomplete=minimum_incomplete)
+            for row in plan.rows or ()
         )
+        lines.extend(advisory for item in plan.advisories if (advisory := reason_text(item.label_key)) is not None)
+        return _ActivityAssetScreenResult(
+            message="\n".join(lines) or tr("desktop.ledger.assets.plan.empty"),
+            fills=self._claim_period_fills(asset_id, plan),
+        )
+
+    def _claim_period_fills(self, asset_id: str, plan: ActivityAssetPlanProjection) -> tuple[tuple[str, str], ...]:
+        """The first span the year the register opens a claim on can still record, when the list served that year."""
+        year = self._default_claim_years.get(asset_id)
+        for row in plan.rows or ():
+            if row.tax_year == year and row.claimable_intervals:
+                span = row.claimable_intervals[0]
+                return (
+                    ("asset-covered-from", span.covered_from.isoformat()),
+                    ("asset-covered-until", span.covered_until.isoformat()),
+                )
+        return ()
 
     def _dispatch_options(
         self, button_id: str | None, _asset_id: str, _revision_json: str
@@ -563,13 +604,18 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
         if button_id == "asset-form-options":
             options = self._actions.form_options(
                 AssetKind(self.query_one("#asset-options-kind", Input).value),
-                int(self.query_one("#asset-filing-tax-year", Input).value),
+                self._stated_filing_year(),
             )
+            message = (
+                f"methods={','.join(method.value for method in options.methods)}"
+                f"\ttable_groups={len(options.table_groups)}\tedition={options.edition.revision_id}"
+            )
+            if not options.m130_periods:
+                return _ActivityAssetScreenResult(message=message)
+            # The latest served quarter shows the most cumulative handoff.
             return _ActivityAssetScreenResult(
-                message=(
-                    f"methods={','.join(method.value for method in options.methods)}"
-                    f"\ttable_groups={len(options.table_groups)}\tedition={options.edition.revision_id}"
-                ),
+                message=f"{message}\t{quarters_text(options.m130_periods)}",
+                fills=(("asset-filing-m130-period", options.m130_periods[-1]),),
             )
         if button_id == "asset-acquisition-candidates":
             return _ActivityAssetScreenResult(
@@ -579,6 +625,13 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
                 ),
             )
         raise ValueError("unknown activity-asset action")
+
+    def _stated_filing_year(self) -> int:
+        """Read the year the operator chose, or say that one is to be chosen."""
+        text = self.query_one("#asset-filing-tax-year", Input).value.strip()
+        if not text:
+            raise ValueError(tr("desktop.ledger.assets.filing.choose_year"))
+        return int(text)
 
     def _disposal_text(self, input_id: str) -> str:
         return self.query_one(f"#{input_id}", Input).value.strip()

@@ -23,6 +23,7 @@ from .....domain.renta.actividad_asset.errors import (
     ActividadAssetValidationError,
     VehicleAffectationRecovery,
 )
+from .....domain.renta.actividad_asset.lifecycle import AssetKind
 from .....domain.renta.actividad_asset.register_records import ActivityAssetDescriptorFacts
 from .....domain.renta.actividad_asset.schedule import AssetScheduleHistory
 from ...account import AccountSessionExpiredError
@@ -33,8 +34,17 @@ from ..actividad_asset import ActivityAssetScreen
 from ..controller import LedgerWorkspaceController
 from ..models_actividad_asset import ActivityAssetCreationRequestV1, ActivityAssetForecastRequestV1
 from ..workspace_injection import LedgerWorkspaceInjection
-from .actividad_asset_fixtures import ActivityAssetActionStub, activity_asset_forecast, activity_asset_revision
+from .actividad_asset_fixtures import (
+    ActivityAssetActionStub,
+    activity_asset_forecast,
+    activity_asset_form_options,
+    activity_asset_list_rows,
+    activity_asset_revision,
+    activity_asset_timeline_events,
+)
 from .workspace_fixtures import ledger_context, ledger_projection, ledger_review_action
+
+_EURO = "\N{NO-BREAK SPACE}\N{EURO SIGN}"
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -413,10 +423,9 @@ async def test_activity_asset_screen_reaches_describe_and_every_register_read() 
         await _wait_for_screen_result(pilot=pilot, screen=screen, expected_prefix="described\ttui-register-reads")
 
         await _activate(pilot=pilot, screen=screen, selector="#asset-plan")
-        plan = await _wait_for_screen_result(pilot=pilot, screen=screen, expected_prefix="equipo-informacion-software")
-        assert "2035-01-01" in plan
-        assert "2025\t520.00\t0.00\tnot_due" in plan
-        assert "2036\tperiod_elapsed\t0.00\tnot_due" in plan
+        plan = await _wait_for_screen_result(pilot=pilot, screen=screen, expected_prefix="Information equipment")
+        assert "31/12/2034" in plan
+        assert "equipo-informacion-software" not in plan
 
     assert actions.requests[0] == (
         "describe",
@@ -435,16 +444,184 @@ async def test_activity_asset_plan_labels_the_minimum_amortization_and_flags_an_
         async with app.run_test(size=(100, 60)) as pilot:
             screen.query_one("#asset-id", Input).value = revision.asset_id
             await _activate(pilot=pilot, screen=screen, selector="#asset-plan")
-            plan = await _wait_for_screen_result(
-                pilot=pilot, screen=screen, expected_prefix="equipo-informacion-software"
-            )
+            plan = await _wait_for_screen_result(pilot=pilot, screen=screen, expected_prefix="Information equipment")
         label = tr("tui.ledger.activity_asset.plan_minimum")
         incomplete = tr("tui.ledger.activity_asset.plan_minimum_incomplete")
 
     lines = plan.splitlines()
-    # The served figure is shown as served, and only the year that omitted a year's minimum says so.
-    assert f"2025	520.00	0.00	not_due	{label}	130.00" in lines
-    assert f"2036	period_elapsed	0.00	not_due	{label}	130.00	{incomplete}" in lines
+    # Only the year that omitted a year's minimum says so.
+    assert any(line.startswith("2025") and f"{label}: 130.00" in line and incomplete not in line for line in lines)
+    assert any(line.startswith("2036") and f"{label}: 130.00{_EURO} ({incomplete})" in line for line in lines)
+
+
+@pytest.mark.asyncio
+async def test_activity_asset_plan_says_each_year_in_words_with_its_glyph_and_remedy() -> None:
+    revision = activity_asset_revision("tui-plan-words")
+    screen = _screen(ActivityAssetActionStub(revision))
+    app = ScreenHostApp[None](screen)
+
+    with override_settings(cadrumo_output_language="en"):
+        async with app.run_test(size=(100, 60)) as pilot:
+            screen.query_one("#asset-id", Input).value = revision.asset_id
+            await _activate(pilot=pilot, screen=screen, selector="#asset-plan")
+            plan = await _wait_for_screen_result(pilot=pilot, screen=screen, expected_prefix="Information equipment")
+        remedy = tr(
+            "desktop.ledger.assets.opening_unknown",
+            field=tr("ledger.actividad_asset.field.opening_history.accumulated_amount"),
+        )
+        not_applicable = tr("desktop.ledger.assets.mark.not_applicable")
+        missing = tr("ledger.actividad_asset.claim_state.missing")
+        history_missing = tr("ledger.actividad_asset.errors.opening_history_missing")
+
+    lines = {line.split("\t")[0]: line for line in plan.splitlines()[1:]}
+    assert f"! {missing}" in lines["2025"]
+    assert "Maximum period elapsed" in lines["2036"]
+    # The incomplete year says why in the register's sentence, and names the entry that settles it.
+    assert history_missing in lines["2037"]
+    assert remedy in lines["2037"]
+    # A year with nothing to work out says it does not apply instead of reading as a missing figure.
+    assert not_applicable in lines["2038"]
+    assert "basis_exhausted" not in plan
+    assert "period_elapsed" not in plan
+    assert "not_due" not in plan
+
+
+@pytest.mark.asyncio
+async def test_activity_asset_list_does_not_read_a_pending_that_does_not_apply_as_money_owed() -> None:
+    revision = activity_asset_revision("tui-list")
+    actions = ActivityAssetActionStub(revision, list_rows=activity_asset_list_rows(), register_default_year=2027)
+    screen = _screen(actions)
+    app = ScreenHostApp[None](screen)
+
+    with override_settings(cadrumo_output_language="en"):
+        async with app.run_test(size=(100, 60)) as pilot:
+            await _activate(pilot=pilot, screen=screen, selector="#asset-list")
+            listing = await _wait_for_screen_result(pilot=pilot, screen=screen, expected_prefix="laptop")
+        not_applicable = tr("desktop.ledger.assets.mark.not_applicable")
+        in_service = tr("ledger.actividad_asset.register_state.in_service")
+        remedy = tr(
+            "desktop.ledger.assets.opening_unknown",
+            field=tr("ledger.actividad_asset.field.opening_history.accumulated_amount"),
+        )
+
+    rows = {line.split("\t")[0]: line for line in listing.splitlines()}
+    assert "1,480.00" in rows["laptop"]
+    assert "[!] 2" in rows["laptop"]
+    assert remedy in rows["desk"]
+    assert in_service in rows["desk"]
+    assert not_applicable in rows["printer"]
+    assert "900" not in rows["printer"]
+    assert "30/06/2026" in rows["printer"]
+    assert "in_service" not in listing
+    assert "out_of_service" not in listing
+
+
+@pytest.mark.asyncio
+async def test_activity_asset_timeline_says_what_each_record_did_and_changed() -> None:
+    revision = activity_asset_revision("tui-timeline")
+    actions = ActivityAssetActionStub(revision, timeline_events=activity_asset_timeline_events())
+    screen = _screen(actions)
+    app = ScreenHostApp[None](screen)
+
+    with override_settings(cadrumo_output_language="en"):
+        async with app.run_test(size=(100, 60)) as pilot:
+            screen.query_one("#asset-id", Input).value = revision.asset_id
+            await _activate(pilot=pilot, screen=screen, selector="#asset-timeline")
+            timeline = await _wait_for_screen_result(pilot=pilot, screen=screen, expected_prefix="1\t")
+        created = tr("ledger.actividad_asset.event_kind.created")
+        corrected = tr("ledger.actividad_asset.event_kind.corrected")
+        method = tr("ledger.actividad_asset.field.amortization.method")
+        linear = tr("ledger.actividad_asset.method.linear")
+        not_recorded = tr("desktop.ledger.assets.timeline.time_not_recorded")
+        no_changes = tr("desktop.ledger.assets.timeline.no_changes")
+        not_in_calculation = tr("desktop.ledger.assets.timeline.not_in_calculation")
+
+    first, second = timeline.splitlines()
+    assert created in first
+    assert no_changes in first
+    assert corrected in second
+    assert not_recorded in second
+    assert not_in_calculation in second
+    assert f"{method}: {linear}" in second
+    assert "15/03/2025" in second
+    assert "record-one" not in timeline
+    assert "record-two" not in timeline
+    assert "constant_percentage" not in timeline
+
+
+@pytest.mark.asyncio
+async def test_activity_asset_screen_opens_with_no_dates_year_or_quarter_of_its_own() -> None:
+    revision = activity_asset_revision("tui-no-defaults")
+    screen = _screen(ActivityAssetActionStub(revision))
+    app = ScreenHostApp[None](screen)
+
+    async with app.run_test(size=(100, 60)):
+        for selector in (
+            "#asset-covered-from",
+            "#asset-covered-until",
+            "#asset-filing-tax-year",
+            "#asset-filing-m130-period",
+        ):
+            assert screen.query_one(selector, Input).value == ""
+
+
+@pytest.mark.asyncio
+async def test_activity_asset_reads_fill_the_year_the_claim_dates_and_the_quarter_from_what_they_serve() -> None:
+    revision = activity_asset_revision("laptop")
+    options = activity_asset_form_options(m130_periods=("1T", "2T", "3T"))
+    actions = ActivityAssetActionStub(
+        revision, list_rows=activity_asset_list_rows(), register_default_year=2031, form_options_view=options
+    )
+    screen = _screen(actions)
+    app = ScreenHostApp[None](screen)
+
+    async with app.run_test(size=(100, 60)) as pilot:
+        await _activate(pilot=pilot, screen=screen, selector="#asset-list")
+        await _wait_for_screen_result(pilot=pilot, screen=screen, expected_prefix="laptop")
+        assert screen.query_one("#asset-filing-tax-year", Input).value == "2031"
+
+        screen.query_one("#asset-id", Input).value = "laptop"
+        await _activate(pilot=pilot, screen=screen, selector="#asset-plan")
+        await _wait_for_screen_result(pilot=pilot, screen=screen, expected_prefix="Information equipment")
+        assert screen.query_one("#asset-covered-from", Input).value == "2025-01-01"
+        assert screen.query_one("#asset-covered-until", Input).value == "2026-01-01"
+
+        await _activate(pilot=pilot, screen=screen, selector="#asset-form-options")
+        await _wait_for_screen_result(pilot=pilot, screen=screen, expected_prefix="methods=")
+        assert screen.query_one("#asset-filing-m130-period", Input).value == "3T"
+
+    assert ("form_options", (AssetKind.MATERIAL, 2031)) in actions.requests
+
+
+@pytest.mark.asyncio
+async def test_activity_asset_reads_leave_what_the_operator_typed() -> None:
+    revision = activity_asset_revision("laptop")
+    actions = ActivityAssetActionStub(revision, list_rows=activity_asset_list_rows(), register_default_year=2031)
+    screen = _screen(actions)
+    app = ScreenHostApp[None](screen)
+
+    async with app.run_test(size=(100, 60)) as pilot:
+        screen.query_one("#asset-filing-tax-year", Input).value = "2029"
+        await _activate(pilot=pilot, screen=screen, selector="#asset-list")
+        await _wait_for_screen_result(pilot=pilot, screen=screen, expected_prefix="laptop")
+        assert screen.query_one("#asset-filing-tax-year", Input).value == "2029"
+
+
+@pytest.mark.asyncio
+async def test_activity_asset_filing_without_a_year_asks_for_one_instead_of_reading_an_empty_number() -> None:
+    revision = activity_asset_revision("tui-no-year")
+    actions = ActivityAssetActionStub(revision)
+    screen = _screen(actions)
+    app = ScreenHostApp[None](screen)
+
+    with override_settings(cadrumo_output_language="en"):
+        async with app.run_test(size=(100, 60)) as pilot:
+            await _activate(pilot=pilot, screen=screen, selector="#asset-filing-handoff")
+            refused = await _wait_for_screen_result(pilot=pilot, screen=screen, expected_prefix="refused")
+        asked = tr("desktop.ledger.assets.filing.choose_year")
+
+    assert asked in refused
+    assert not [name for name, _ in actions.requests if name == "filing_handoff"]
 
 
 @pytest.mark.asyncio

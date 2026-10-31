@@ -61,7 +61,6 @@ from cadrumo.application.actividad_asset.activity_asset_read_models import (
     ActivityAssetAcquisitionCandidate,
     ActivityAssetDisposalCalculationView,
     ActivityAssetFormOptionsView,
-    ActivityAssetListRow,
     ActivityAssetTimelineEvent,
 )
 from cadrumo.application.actividad_asset.history import ActivityAssetHistory, ActivityAssetHistoryClaimResult
@@ -447,13 +446,13 @@ class RuntimeActivityAssetTuiActionsV1:
             correlate=correlate,
         )
 
-    def list_elements(self) -> tuple[ActivityAssetListRow, ...]:
-        """Summarise the register."""
+    def list_elements(self) -> ActivityAssetListProjection:
+        """Summarise the register, with the year it opens on."""
 
-        def correlate(projection: ActivityAssetListProjection) -> tuple[ActivityAssetListRow, ...]:
+        def correlate(projection: ActivityAssetListProjection) -> ActivityAssetListProjection:
             if projection.rows is None:
                 raise RefusalError(RefusalCode.INVALID_FRAME)
-            return projection.rows
+            return projection
 
         return self._call(
             ActivityAssetListRequest(profile_id=self._profile_id),

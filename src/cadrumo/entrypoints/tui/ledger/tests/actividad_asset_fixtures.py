@@ -7,22 +7,37 @@ revision and action stub from here.
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from threading import Event
 from uuid import UUID
 
 from .....application.actividad_asset.activity_asset_contracts import ActivityAssetAuthorityProvenance
-from .....application.actividad_asset.activity_asset_projections import ActivityAssetPlanProjection
+from .....application.actividad_asset.activity_asset_projections import (
+    ActivityAssetListProjection,
+    ActivityAssetPlanProjection,
+)
 from .....application.actividad_asset.activity_asset_read_models import (
+    OPENING_HISTORY_MISSING_KEY,
     ActivityAssetAcquisitionCandidate,
+    ActivityAssetClaimableInterval,
     ActivityAssetClaimState,
     ActivityAssetDisposalCalculationView,
+    ActivityAssetEdition,
     ActivityAssetElectionLimits,
+    ActivityAssetFindingCounts,
     ActivityAssetFormOptionsView,
+    ActivityAssetListDisposal,
     ActivityAssetListRow,
     ActivityAssetPlanRow,
+    ActivityAssetRegisterState,
+    ActivityAssetTimelineChange,
     ActivityAssetTimelineEvent,
+    ActivityAssetTimelineEventKind,
+    activity_asset_label_key,
+    remedy_field_key,
+    timeline_field_key,
+    timeline_token_key,
 )
 from .....application.actividad_asset.history import ActivityAssetHistory, ActivityAssetHistoryClaimResult
 from .....application.actividad_asset.operation_dtos import ActivityAssetDisposalSnapshot
@@ -47,7 +62,7 @@ from .....domain.renta.actividad_asset.lifecycle import (
     OpeningAmortizationHistory,
     OpeningHistoryStatus,
 )
-from .....domain.renta.actividad_asset.register_records import ActivityAssetDescriptorFacts
+from .....domain.renta.actividad_asset.register_records import ActivityAssetDescriptorFacts, ActivityAssetEventKind
 from .....domain.renta.actividad_asset.schedule import (
     AssetScheduleHistory,
     ScheduleAuthority,
@@ -133,8 +148,16 @@ class ActivityAssetActionStub:
         create_release: Event | None = None,
         create_error: Exception | None = None,
         inspect_error: Exception | None = None,
+        list_rows: tuple[ActivityAssetListRow, ...] = (),
+        register_default_year: int | None = None,
+        timeline_events: tuple[ActivityAssetTimelineEvent, ...] = (),
+        form_options_view: ActivityAssetFormOptionsView | None = None,
     ) -> None:
         self.revision = revision
+        self.list_rows = list_rows
+        self.register_default_year = register_default_year
+        self.timeline_events = timeline_events
+        self.form_options_view = form_options_view
         self.forecast_error = forecast_error
         self.inspect_error = inspect_error
         self.create_started = create_started
@@ -199,8 +222,15 @@ class ActivityAssetActionStub:
                     method=AmortizationMethod.LINEAR,
                     planned=PublicDecimal(decimal="520.00"),
                     claimed=PublicDecimal(decimal="0.00"),
-                    claim_state=ActivityAssetClaimState.NOT_DUE,
+                    claim_state=ActivityAssetClaimState.MISSING,
                     minimum_through=PublicDecimal(decimal="130.00"),
+                    claimable_intervals=(
+                        ActivityAssetClaimableInterval(
+                            covered_from=date(2025, 1, 1),
+                            covered_until=date(2026, 1, 1),
+                            covered_through=date(2025, 12, 31),
+                        ),
+                    ),
                 ),
                 ActivityAssetPlanRow(
                     tax_year=2036,
@@ -211,10 +241,29 @@ class ActivityAssetActionStub:
                     minimum_through=PublicDecimal(decimal="130.00"),
                     minimum_complete=False,
                 ),
+                ActivityAssetPlanRow(
+                    tax_year=2037,
+                    method=AmortizationMethod.LINEAR,
+                    absence=PlanFigureAbsence.INCOMPLETE,
+                    absence_reason_key=OPENING_HISTORY_MISSING_KEY,
+                    absence_remedy_field_key=remedy_field_key(OPENING_HISTORY_MISSING_KEY),
+                    claimed=PublicDecimal(decimal="0.00"),
+                    claim_state=ActivityAssetClaimState.MISSING,
+                ),
+                ActivityAssetPlanRow(
+                    tax_year=2038,
+                    method=AmortizationMethod.LINEAR,
+                    absence=PlanFigureAbsence.BASIS_EXHAUSTED,
+                    applies=False,
+                    claimed=PublicDecimal(decimal="0.00"),
+                    claim_state=ActivityAssetClaimState.NOT_DUE,
+                ),
             ),
             limits=ActivityAssetElectionLimits(
                 class_key="equipo-informacion-software",
+                class_label="Information equipment and software",
                 maximum_period_ends_on=date(2035, 1, 1),
+                maximum_period_last_day=date(2034, 12, 31),
             ),
         )
 
@@ -247,16 +296,25 @@ class ActivityAssetActionStub:
         self.requests.append(("acquisition_candidates", None))
         return ()
 
-    def list_elements(self) -> tuple[ActivityAssetListRow, ...]:
-        raise AssertionError("this screen test does not exercise list execution")
+    def list_elements(self) -> ActivityAssetListProjection:
+        self.requests.append(("list", None))
+        return ActivityAssetListProjection(
+            profile_id=UUID(int=1),
+            authority=ActivityAssetAuthorityProvenance(logical_generation="a" * 64, reader_incarnation="b" * 64),
+            outcome="succeeded",
+            rows=self.list_rows,
+            default_year=self.register_default_year,
+        )
 
     def timeline(self, asset_id: str) -> tuple[ActivityAssetTimelineEvent, ...]:
-        del asset_id
-        raise AssertionError("this screen test does not exercise timeline execution")
+        self.requests.append(("timeline", asset_id))
+        return self.timeline_events
 
     def form_options(self, asset_kind: AssetKind, tax_year: int) -> ActivityAssetFormOptionsView:
-        del asset_kind, tax_year
-        raise AssertionError("this screen test does not exercise form options")
+        self.requests.append(("form_options", (asset_kind, tax_year)))
+        if self.form_options_view is None:
+            raise AssertionError("this screen test does not exercise form options")
+        return self.form_options_view
 
     def filing_handoff(self, request: ActivityAssetFilingRequestV1) -> ActivityAssetFilingHandoff:
         self.requests.append(("filing_handoff", request))
@@ -274,3 +332,116 @@ class ActivityAssetActionStub:
                 target_casilla_id="02", tax_year=request.tax_year, amount=Decimal("0.00")
             ),
         )
+
+
+def _register_row(
+    asset_id: str,
+    name: str,
+    state: ActivityAssetRegisterState,
+    **served: object,
+) -> ActivityAssetListRow:
+    """One element of the register, with the facts every element carries and the ones a case states."""
+    return ActivityAssetListRow.model_validate(
+        {
+            "asset_id": asset_id,
+            "name": name,
+            "state": state,
+            "asset_kind": AssetKind.MATERIAL,
+            "in_service_date": date(2025, 1, 1),
+            "method": AmortizationMethod.LINEAR,
+            "revision_number": 1,
+            "basis": PublicDecimal(decimal="2000.00"),
+            "findings": ActivityAssetFindingCounts(missing=0, incomplete=0, conflict=0, stale=0),
+            **served,
+        },
+    )
+
+
+def activity_asset_list_rows() -> tuple[ActivityAssetListRow, ...]:
+    """Three elements: one with a figure and a year to claim, one whose opening is unknown, one with a baja."""
+    return (
+        _register_row(
+            "laptop",
+            "Office laptop",
+            ActivityAssetRegisterState.IN_SERVICE,
+            pending=PublicDecimal(decimal="1480.00"),
+            findings=ActivityAssetFindingCounts(missing=2, incomplete=0, conflict=0, stale=0),
+            default_claim_year=2025,
+        ),
+        _register_row(
+            "desk",
+            "Standing desk",
+            ActivityAssetRegisterState.IN_SERVICE,
+            opening_remedy_field_key=remedy_field_key(OPENING_HISTORY_MISSING_KEY),
+        ),
+        _register_row(
+            "printer",
+            "Sold printer",
+            ActivityAssetRegisterState.OUT_OF_SERVICE,
+            pending=PublicDecimal(decimal="900.00"),
+            pending_applies=False,
+            disposal=ActivityAssetListDisposal(
+                disposal_date=date(2026, 6, 30),
+                reason=ActivityAssetDisposalReason.SALE,
+                reason_key=activity_asset_label_key("disposal_reason", ActivityAssetDisposalReason.SALE),
+            ),
+        ),
+    )
+
+
+def activity_asset_timeline_events() -> tuple[ActivityAssetTimelineEvent, ...]:
+    """A creation and a correction of the method, each with the facts it changed."""
+    return (
+        ActivityAssetTimelineEvent(
+            sequence=1,
+            recorded_at=datetime(2025, 2, 3, 10, 0, tzinfo=UTC),
+            kind=ActivityAssetEventKind.REVISION,
+            event_kind=ActivityAssetTimelineEventKind.CREATED,
+            asset_id="laptop",
+            record_id="record-one",
+            effect_date=date(2025, 1, 1),
+            affects_calculation=True,
+        ),
+        ActivityAssetTimelineEvent(
+            sequence=2,
+            kind=ActivityAssetEventKind.REVISION,
+            event_kind=ActivityAssetTimelineEventKind.CORRECTED,
+            asset_id="laptop",
+            record_id="record-two",
+            effect_date=date(2025, 1, 1),
+            changes=(
+                ActivityAssetTimelineChange(
+                    field="in_service_date",
+                    field_key=timeline_field_key("in_service_date"),
+                    before="2025-01-01",
+                    after="2025-03-15",
+                ),
+                ActivityAssetTimelineChange(
+                    field="amortization.method",
+                    field_key=timeline_field_key("amortization.method"),
+                    before="linear",
+                    after="constant_percentage",
+                    before_key=timeline_token_key("amortization.method", "linear"),
+                    after_key=timeline_token_key("amortization.method", "constant_percentage"),
+                ),
+            ),
+            affects_calculation=False,
+        ),
+    )
+
+
+def activity_asset_form_options(*, m130_periods: tuple[str, ...]) -> ActivityAssetFormOptionsView:
+    """Form options whose only served content of interest is the Modelo 130 periods."""
+    return ActivityAssetFormOptionsView(
+        tax_year=2031,
+        asset_kind=AssetKind.MATERIAL,
+        regime=DirectEstimationRegime.SIMPLIFIED,
+        edition=ActivityAssetEdition(revision_id="fixture-edition", authored_filing_year=2031, projected=False),
+        acquisition_shapes=(),
+        declared_activities=(),
+        methods=(AmortizationMethod.LINEAR,),
+        method_facts=(),
+        table_groups=(),
+        disposal_reasons=(),
+        m130_periods=m130_periods,
+    )
