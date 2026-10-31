@@ -50,7 +50,7 @@ def _sale(on: date = date(2026, 6, 30), proceeds: str = "2000.00", costs: str = 
 
 
 def _claimed_through(last_year: int) -> tuple[ActivityAssetOperations, MemoryRepository]:
-    operations, repository = _operations(today=_AFTER_ALL)
+    operations, repository = _operations(today=_AFTER_ALL, last_admitted_year=last_year)
     operations.create(_revision(), _NAME)
     for year in range(2025, last_year + 1):
         operations.record_claim(_full_year(operations, year), creating_operation="test.claim")

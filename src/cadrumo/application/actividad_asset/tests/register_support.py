@@ -9,7 +9,7 @@ from functools import cache
 from cadrumo.application.actividad_asset.activity_asset_read_models import ActivityAssetEdition
 from cadrumo.application.actividad_asset.disposal_calculation import pinned_disposal_bounds
 from cadrumo.application.actividad_asset.history import ActivityAssetHistory, ActivityAssetHistoryClaimResult
-from cadrumo.application.actividad_asset.operations import ActivityAssetRegisterAuthority
+from cadrumo.application.actividad_asset.operations import ActivityAssetRegisterAuthority, pinned_edition
 from cadrumo.core.casilla_id import CasillaId
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.actividad_asset_bindings import (
@@ -94,6 +94,11 @@ def _published_support() -> SupportedFilingYearsCatalogue:
         return operation.supported_filing_years()
 
 
+def _published_edition(tax_year: int) -> tuple[ActivityAssetEdition, ModeloRevision]:
+    with bundled_indexed_authority().operation() as operation:
+        return pinned_edition(operation)(tax_year)
+
+
 def _published_authority(revision: ActivityAssetRevision, tax_year: int) -> ScheduleAuthority:
     with bundled_indexed_authority().operation() as operation:
         return resolve_activity_asset_schedule_authority(
@@ -136,18 +141,11 @@ def memory_register_authority(
         return {claim_id: consumers.get(claim_id, ()) for claim_id in claim_ids}
 
     return ActivityAssetRegisterAuthority(
-        edition=lambda tax_year: (
-            ActivityAssetEdition(
-                revision_id=_published_modelo_100().id,
-                authored_filing_year=2025,
-                projected=tax_year != 2025,
-            ),
-            _published_modelo_100(),
-        ),
+        edition=_published_edition,
         admits_filing_year=_published_support().admits_filing_year,
         m130_amortization_casilla=_published_m130_box,
         m100_amortization_casillas=lambda _year: activity_asset_amortization_casillas(_published_modelo_100()),
-        last_admitted_year=lambda: last_admitted_year or max(today.year, _published_support().horizon),
+        last_admitted_year=lambda: last_admitted_year or _published_support().horizon,
         agrarian_activities=lambda _on: frozenset(),
         residence_territory=lambda _on: territory,
         claim_consumers=claim_consumers,

@@ -11,7 +11,10 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.application.actividad_asset.activity_asset_read_models import ActivityAssetRegisterState
+from cadrumo.application.actividad_asset.activity_asset_read_models import (
+    ActivityAssetClaimState,
+    ActivityAssetRegisterState,
+)
 from cadrumo.application.actividad_asset.history import ActivityAssetHistory
 from cadrumo.application.actividad_asset.operations import ActivityAssetOperations
 from cadrumo.application.actividad_asset.schedule_walk import PlanFigureAbsence, WalkedYear, walk_element
@@ -206,3 +209,39 @@ def test_an_opening_through_the_last_walked_year_leaves_no_gap_year() -> None:
     assert covered == [2020, 2021, 2022, 2023, 2024]
     assert all(row.gaps == () and row.charge is None for year, row in rows.items() if year <= 2024)
     assert rows[2025].consumed_before == Decimal("0")
+
+
+def test_the_years_an_opening_covers_offer_nothing_to_claim_and_the_first_uncovered_year_is_claimable() -> None:
+    operations, _ = _register(2022, today=date(2025, 12, 31))
+
+    plan = {item.tax_year: item for item in operations.plan("machine-1")}
+
+    for year in (2020, 2021, 2022):
+        assert plan[year].absence is PlanFigureAbsence.COVERED_BY_OPENING
+        assert plan[year].planned is None
+        assert plan[year].claim_state is ActivityAssetClaimState.NOT_DUE
+        assert plan[year].claimable_intervals == ()
+    assert plan[2023].absence is None
+    assert plan[2023].claim_state is ActivityAssetClaimState.MISSING
+    assert [(item.covered_from, item.covered_until) for item in plan[2023].claimable_intervals] == [
+        (date(2023, 1, 1), date(2024, 1, 1)),
+    ]
+
+
+def test_once_the_missing_years_are_claimed_the_plan_charges_exactly_the_value_still_pending() -> None:
+    operations, _ = _register(2022, today=date(2025, 12, 31))
+    for year in (2023, 2024, 2025):
+        charge = operations.forecast(
+            asset_id="machine-1", covered_from=date(year, 1, 1), covered_until=date(year + 1, 1, 1)
+        )
+        operations.record_claim(charge, creating_operation=f"test.{year}")
+
+    plan = operations.plan("machine-1")
+    (listed,) = operations.list_elements()
+
+    # 10,000.00 less the 3,000.00 opening and the 3,000.00 claimed leaves 4,000.00 for 2026 onward.
+    assert listed.pending is not None
+    assert Decimal(listed.pending.decimal) == Decimal("4000.00")
+    ahead = [row for row in plan if row.tax_year >= 2026 and row.planned is not None]
+    assert [row.tax_year for row in ahead] == [2026, 2027, 2028, 2029]
+    assert sum((Decimal(row.planned.decimal) for row in ahead if row.planned), Decimal("0")) == Decimal("4000.00")

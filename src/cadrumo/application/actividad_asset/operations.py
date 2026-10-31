@@ -24,9 +24,11 @@ from ...domain.calculations.registry.actividad_asset_bindings import (
     takes_used_double_coefficient,
 )
 from ...domain.calculations.registry.actividad_asset_form_options import activity_asset_form_options
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.errors import RegistryError
 from ...domain.calculations.registry.schema import ModeloRevision
-from ...domain.calculations.registry.schema_references import LegalReference
+from ...domain.calculations.registry.schema_references import LegalReference, TemporalProjectionDirection
+from ...domain.calculations.registry.temporal import revision_temporal_resolution
 from ...domain.contribuyente.tax_residence import ResidenceTerritory
 from ...domain.renta.actividad_asset.claims import (
     AmortizationClaim,
@@ -162,6 +164,29 @@ class SupersedingClaimRequest(BaseModel):
 
     supersedes_claim_id: str = Field(min_length=64, max_length=64)
     requested_free_amount: Decimal | None = None
+
+
+def pinned_edition(operation: PinnedAuthorityOperation) -> Callable[[int], tuple[ActivityAssetEdition, ModeloRevision]]:
+    """Read the Modelo 100 edition a tax year falls under in one authority pin, and whether it is projected."""
+
+    def read(tax_year: int) -> tuple[ActivityAssetEdition, ModeloRevision]:
+        revision = operation.revision_for_context("100", filing_year=tax_year, period="0A")
+        resolution = revision_temporal_resolution(
+            revision,
+            filing_year=tax_year,
+            period="0A",
+            support=operation.supported_filing_years(),
+        )
+        return (
+            ActivityAssetEdition(
+                revision_id=revision.id,
+                authored_filing_year=resolution.authored_filing_year,
+                projected=resolution.projection_direction is not TemporalProjectionDirection.AUTHORED,
+            ),
+            revision,
+        )
+
+    return read
 
 
 @dataclass(frozen=True, slots=True)
