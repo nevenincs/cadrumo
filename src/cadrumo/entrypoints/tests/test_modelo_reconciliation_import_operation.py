@@ -11,7 +11,7 @@ from functools import partial
 from pathlib import Path
 from types import SimpleNamespace
 from typing import TYPE_CHECKING, cast, override
-from uuid import UUID, uuid4
+from uuid import UUID
 
 import pytest
 from pydantic import BaseModel
@@ -44,6 +44,7 @@ from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from . import modelo_operation_test_support
 from . import registered_executor_case_support as conformance
+from .foreign_profile_refusal_support import assert_refused_for_foreign_active_profile
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.schema import RegistrySnapshot
@@ -155,25 +156,12 @@ def test_registered_import_checks_exact_profile_and_guards_atomic_persistence(
             actor=modelo_operation_test_support.MODELO_OPERATION_TEST_ACTOR,
         )
 
-        other_profile_id = uuid4()
-        with override_settings(cadrumo_active_profile=str(other_profile_id)):
-            refused_submission, refused_observation = asyncio.run(
-                driver.run(
-                    definition_id=MODELO_RECONCILIATION_IMPORT_OPERATION_DEFINITION_ID,
-                    subject_ref=subject_ref,
-                    payload=request,
-                )
-            )
-        refused_snapshot = asyncio.run(
-            driver.services.submission.supervisor.inspect(refused_submission.receipt.operation_id)
+        assert_refused_for_foreign_active_profile(
+            driver,
+            definition_id=MODELO_RECONCILIATION_IMPORT_OPERATION_DEFINITION_ID,
+            subject_ref=subject_ref,
+            payload=request,
         )
-        refused_receipt = refused_snapshot.terminal_receipt
-        assert refused_receipt is not None
-        assert refused_receipt.identity.subject_ref == subject_ref
-        assert refused_receipt.condition is OperationTerminalCondition.REFUSED
-        assert refused_receipt.effect is OperationEffect.NONE
-        assert refused_receipt.result_ref is None
-        assert refused_observation.projection.terminal_condition is OperationTerminalCondition.REFUSED
         assert witness.events == []
 
         with override_settings(cadrumo_active_profile=str(profile_id)):
