@@ -10,7 +10,10 @@ import pytest
 from click.testing import Result
 
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
+from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
+from cadrumo.core.config import override_settings
 from cadrumo_runtime.host.tests.frontend.cli.config.tests.isolated_storage_fixture import native_profile_view_server
+from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture
 
 from .cli_runner import invoke_cached_cli
 
@@ -134,3 +137,21 @@ def _option_value(options: tuple[str, ...], flag: str) -> str | None:
         return None
     value = options[value_index]
     return None if value.startswith("--") else value
+
+
+def invoke_native_profile(profile: NativeCliProfileFixture, *command: str) -> Result:
+    """Run one JSON command against the registered native profile with its secret on stdin."""
+    assert profile.label is not None
+    close_active_bucket_session()
+    result = invoke_cached_cli(
+        ("--language", "en", "--format", "json", "--profile", profile.label, "--profile-secrets-stdin", *command),
+        input=json.dumps({"profile_passphrase": profile.passphrase}),
+    )
+    assert profile.passphrase not in result.output
+    return result
+
+
+def invoke_native_profile_revealing(profile: NativeCliProfileFixture, *command: str) -> Result:
+    """Run one JSON command as ``invoke_native_profile`` does, with identifiers left unmasked."""
+    with override_settings(cadrumo_cli_reveal_identifiers=True):
+        return invoke_native_profile(profile, *command)

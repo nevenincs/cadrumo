@@ -2,13 +2,11 @@
 
 from __future__ import annotations
 
-import json
 import sys
 from pathlib import Path
 from uuid import UUID
 
 import pytest
-from click.testing import Result
 
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.application.ledger.evidence_followup_contracts import (
@@ -22,12 +20,11 @@ from cadrumo.entrypoints.tests.evidence_followup_operation_test_support import (
 )
 from cadrumo.tests.cli_envelope import unwrap_cli_result
 from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import (
-    NativeCliProfileFixture,
     RuntimeFailureObservation,
     native_cli_profile_scope,
 )
 
-from .cli_runner import invoke_cached_cli
+from ._profile_cli_support import invoke_native_profile
 
 pytestmark = [
     pytest.mark.integration,
@@ -55,17 +52,6 @@ _PROFILE_FACTS = {
 _DRIVE_FILE_ID = "1AbcDEfgHIjkLMnoPQRstuVWxyz12345"
 
 
-def _invoke(profile: NativeCliProfileFixture, *command: str) -> Result:
-    assert profile.label is not None
-    close_active_bucket_session()
-    result = invoke_cached_cli(
-        ("--language", "en", "--format", "json", "--profile", profile.label, "--profile-secrets-stdin", *command),
-        input=json.dumps({"profile_passphrase": profile.passphrase}),
-    )
-    assert profile.passphrase not in result.output
-    return result
-
-
 def test_native_profile_reads_all_evidence_followup_surfaces(
     tmp_path: Path,
     authority_operation: PinnedAuthorityOperation,
@@ -91,7 +77,7 @@ def test_native_profile_reads_all_evidence_followup_surfaces(
         assert isinstance(case.request, LedgerEvidenceAttachmentViewRequest)
         attachment_id = case.request.attachment_id
         close_active_bucket_session()
-        queue = _invoke(profile, "app", "ledger", "evidence", "attachment-queue")
+        queue = invoke_native_profile(profile, "app", "ledger", "evidence", "attachment-queue")
         assert queue.exit_code == 0, (queue.output, failures)
         queued = unwrap_cli_result(queue)
         assert queued["count"] == 1
@@ -99,7 +85,9 @@ def test_native_profile_reads_all_evidence_followup_surfaces(
         assert queued["rows"][0]["source"] == "GOOGLE_DRIVE"
         assert queued["rows"][0]["pending_review"] is True
 
-        viewed_attachment = _invoke(profile, "app", "ledger", "evidence", "attachment-view", attachment_id)
+        viewed_attachment = invoke_native_profile(
+            profile, "app", "ledger", "evidence", "attachment-view", attachment_id
+        )
         assert viewed_attachment.exit_code == 0, (viewed_attachment.output, failures)
         attachment = unwrap_cli_result(viewed_attachment)
         assert attachment["bucket_id"] == queued["bucket_id"]
@@ -109,7 +97,7 @@ def test_native_profile_reads_all_evidence_followup_surfaces(
         assert attachment["pending_review"] is True
         assert not {"metadata", "notes"}.intersection(attachment)
 
-        consent = _invoke(profile, "app", "ledger", "evidence", "consent", "list")
+        consent = invoke_native_profile(profile, "app", "ledger", "evidence", "consent", "list")
         assert consent.exit_code == 0, (consent.output, failures)
         survey = unwrap_cli_result(consent)
         assert survey["bucket_id"] == queued["bucket_id"]
@@ -123,7 +111,7 @@ def test_native_profile_reads_all_evidence_followup_surfaces(
         assert len(derived) == 1
         assert derived[0]["provenance_stamp"]
 
-        review_queue = _invoke(profile, "app", "ledger", "evidence", "review", "list")
+        review_queue = invoke_native_profile(profile, "app", "ledger", "evidence", "review", "list")
         assert review_queue.exit_code == 0, (review_queue.output, failures)
         review = unwrap_cli_result(review_queue)
         assert review["bucket_id"] == queued["bucket_id"]
@@ -132,7 +120,7 @@ def test_native_profile_reads_all_evidence_followup_surfaces(
         evidence_id = review["rows"][0]["evidence_reference"]
         assert derived[0]["evidence_reference"] == evidence_id
 
-        review_view = _invoke(profile, "app", "ledger", "evidence", "review", "view", evidence_id)
+        review_view = invoke_native_profile(profile, "app", "ledger", "evidence", "review", "view", evidence_id)
         assert review_view.exit_code == 0, (review_view.output, failures)
         reviewed = unwrap_cli_result(review_view)
         assert reviewed["bucket_id"] == queued["bucket_id"]

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 import sys
 from datetime import UTC, date, datetime
 from decimal import Decimal
@@ -24,7 +23,6 @@ from cadrumo.application.ledger.manual_read import ledger_transaction_result_pay
 from cadrumo.application.ledger.models import ManualLedgerTransactionCommand, ManualLedgerTransactionResult
 from cadrumo.application.ledger.tests.manual_transaction_support import create_manual_transaction
 from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation, resolve_login_target
-from cadrumo.core.config import override_settings
 from cadrumo.core.decimal.formatting import format_decimal
 from cadrumo.domain.attachments.enums import AttachmentKind, AttachmentSource
 from cadrumo.domain.attachments.service import AttachmentBytesContent, AttachmentIngestionRequest, add_attachment
@@ -47,7 +45,7 @@ from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture impo
     native_cli_profile_scope,
 )
 
-from .cli_runner import invoke_cached_cli
+from ._profile_cli_support import invoke_native_profile_revealing
 
 pytestmark = [
     pytest.mark.integration,
@@ -72,28 +70,6 @@ _PROFILE_FACTS = {
 }
 _PDF_BYTES = b"%PDF-1.4\n1 0 obj<</Type/Catalog>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF\n"
 _SEED_AT = datetime(2026, 5, 8, 10, 15, tzinfo=UTC)
-
-
-def _invoke(profile: NativeCliProfileFixture, *command: str) -> Result:
-    """Invoke one installed CLI command with the real test-profile secret."""
-    assert profile.label is not None
-    close_active_bucket_session()
-    with override_settings(cadrumo_cli_reveal_identifiers=True):
-        result = invoke_cached_cli(
-            (
-                "--language",
-                "en",
-                "--format",
-                "json",
-                "--profile",
-                profile.label,
-                "--profile-secrets-stdin",
-                *command,
-            ),
-            input=json.dumps({"profile_passphrase": profile.passphrase}),
-        )
-    assert profile.passphrase not in result.output
-    return result
 
 
 def _reauthenticate(
@@ -309,7 +285,7 @@ def test_native_attach_detach_preserve_full_results_history_and_historical_manif
         history_before_attach = ports.bucket_event_repository.load()
         close_active_bucket_session()
 
-        attached = _invoke(
+        attached = invoke_native_profile_revealing(
             profile,
             "app",
             "ledger",
@@ -363,7 +339,7 @@ def test_native_attach_detach_preserve_full_results_history_and_historical_manif
         assert linked_manifest != manifest_before
 
         close_active_bucket_session()
-        detached = _invoke(
+        detached = invoke_native_profile_revealing(
             profile,
             "app",
             "ledger",

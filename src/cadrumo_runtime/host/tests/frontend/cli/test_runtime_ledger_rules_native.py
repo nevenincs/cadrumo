@@ -17,7 +17,6 @@ from cadrumo.adapters.persistence.storage.master_key.active_session import close
 from cadrumo.application.ledger.action_ports import LedgerActionPorts
 from cadrumo.application.ledger.rule_contracts import LedgerRuleRowProjection
 from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation, resolve_login_target
-from cadrumo.core.config import override_settings
 from cadrumo.core.decimal.formatting import format_decimal
 from cadrumo.domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -35,7 +34,7 @@ from cadrumo.entrypoints.tests.ledger_rule_operation_test_support import assert_
 from cadrumo.tests.cli_envelope import unwrap_cli_result
 
 from ...native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
-from .cli_runner import invoke_cached_cli
+from ._profile_cli_support import invoke_native_profile_revealing
 
 pytestmark = [
     pytest.mark.integration,
@@ -61,28 +60,6 @@ _PROFILE_FACTS = {
 }
 _ACTOR = "native-rule-journey"
 _CATEGORY = "material_oficina"
-
-
-def _invoke(profile: NativeCliProfileFixture, *command: str) -> Result:
-    """Run one command through the actual profile worker and CLI executable."""
-    assert profile.label is not None
-    close_active_bucket_session()
-    with override_settings(cadrumo_cli_reveal_identifiers=True):
-        result = invoke_cached_cli(
-            (
-                "--language",
-                "en",
-                "--format",
-                "json",
-                "--profile",
-                profile.label,
-                "--profile-secrets-stdin",
-                *command,
-            ),
-            input=json.dumps({"profile_passphrase": profile.passphrase}),
-        )
-    assert profile.passphrase not in result.output
-    return result
 
 
 def _reauthenticate(
@@ -150,7 +127,7 @@ def test_native_rule_add_list_dry_run_and_apply_preserve_encrypted_meaning(
         description = f"Native Rule Matched Transaction {bucket_id.replace('-', '')}"
         pattern = f"^{description}$"
 
-        added_transaction = _invoke(
+        added_transaction = invoke_native_profile_revealing(
             profile,
             "app",
             "ledger",
@@ -172,7 +149,7 @@ def test_native_rule_add_list_dry_run_and_apply_preserve_encrypted_meaning(
         transaction_id = unwrap_cli_result(added_transaction)["transaction_id"]
         assert isinstance(transaction_id, str) and len(transaction_id) == 64
 
-        rule_add = _invoke(
+        rule_add = invoke_native_profile_revealing(
             profile,
             "app",
             "ledger",
@@ -204,7 +181,7 @@ def test_native_rule_add_list_dry_run_and_apply_preserve_encrypted_meaning(
         assert stored_rule.priority == 7
         assert stored_rule.actor == _ACTOR
 
-        listed = _invoke(profile, "app", "ledger", "rule", "list")
+        listed = invoke_native_profile_revealing(profile, "app", "ledger", "rule", "list")
         assert listed.exit_code == 0, listed.output
         list_result = _typed_payload(RuleListResult, listed)
         bucket_id, ports, rule_repository = _canonical_ports(profile, operation=authority_operation)
@@ -221,7 +198,9 @@ def test_native_rule_add_list_dry_run_and_apply_preserve_encrypted_meaning(
         assert transaction_before_preview.business_classification is BusinessClassification.NOT_YET_PROCESSED
         history_before_preview = ports.bucket_event_repository.load()
 
-        preview = _invoke(profile, "app", "ledger", "rule", "apply", "--dry-run", "--actor", _ACTOR)
+        preview = invoke_native_profile_revealing(
+            profile, "app", "ledger", "rule", "apply", "--dry-run", "--actor", _ACTOR
+        )
         assert preview.exit_code == 0, preview.output
         preview_result = _typed_payload(RuleApplyResult, preview)
         assert preview_result == RuleApplyResult(
@@ -245,7 +224,7 @@ def test_native_rule_add_list_dry_run_and_apply_preserve_encrypted_meaning(
         assert not dry_run_additions
         assert rule_repository.list_rules() == rules_after_add
 
-        apply_result_raw = _invoke(profile, "app", "ledger", "rule", "apply", "--actor", _ACTOR)
+        apply_result_raw = invoke_native_profile_revealing(profile, "app", "ledger", "rule", "apply", "--actor", _ACTOR)
         assert apply_result_raw.exit_code == 0, apply_result_raw.output
         apply_result = _typed_payload(RuleApplyResult, apply_result_raw)
         assert apply_result == RuleApplyResult(

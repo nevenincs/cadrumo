@@ -3,19 +3,16 @@
 from __future__ import annotations
 
 import hashlib
-import json
 import sys
 from pathlib import Path
 from typing import cast
 
 import pytest
-from click.testing import Result
 
-from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.tests.cli_envelope import require_error_document, unwrap_cli_result, unwrap_envelope_notices
 
-from ...native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
-from .cli_runner import invoke_cached_cli
+from ...native_commands.runtime_profile_cli_fixture import native_cli_profile_scope
+from ._profile_cli_support import invoke_native_profile
 
 pytestmark = [
     pytest.mark.integration,
@@ -43,27 +40,6 @@ _PROFILE_FACTS = {
 _SUPPLIER_CIF = "A58818501"
 
 
-def _invoke(profile: NativeCliProfileFixture, *command: str) -> Result:
-    """Run one command through a fresh protected-stdin profile binding."""
-    assert profile.label is not None
-    close_active_bucket_session()
-    result = invoke_cached_cli(
-        (
-            "--language",
-            "en",
-            "--format",
-            "json",
-            "--profile",
-            profile.label,
-            "--profile-secrets-stdin",
-            *command,
-        ),
-        input=json.dumps({"profile_passphrase": profile.passphrase}),
-    )
-    assert profile.passphrase not in result.output
-    return result
-
-
 def _tax_id_token(value: str) -> str:
     return f"sha256:{hashlib.sha256(value.encode('utf-8')).hexdigest()[:8]}"
 
@@ -89,7 +65,7 @@ def test_native_import_and_wizard_preserve_worker_results_and_noop_effects(tmp_p
     with native_cli_profile_scope(tmp_path) as profile:
         profile.register(label="native-invoice-intake", facts=_PROFILE_FACTS)
 
-        partial = _invoke(
+        partial = invoke_native_profile(
             profile,
             "app",
             "ledger",
@@ -116,7 +92,7 @@ def test_native_import_and_wizard_preserve_worker_results_and_noop_effects(tmp_p
         ]
         assert len(cast(list[object], partial_payload["created_invoice_ids"])) == 1
 
-        repeated_partial = _invoke(
+        repeated_partial = invoke_native_profile(
             profile,
             "app",
             "ledger",
@@ -137,7 +113,7 @@ def test_native_import_and_wizard_preserve_worker_results_and_noop_effects(tmp_p
             for notice in unwrap_envelope_notices(repeated_partial.output)
         )
 
-        first_import = _invoke(
+        first_import = invoke_native_profile(
             profile,
             "app",
             "ledger",
@@ -154,7 +130,7 @@ def test_native_import_and_wizard_preserve_worker_results_and_noop_effects(tmp_p
         assert first_import_payload["created"] == 1
         assert first_import_payload["created_invoice_ids"]
 
-        repeated_import = _invoke(
+        repeated_import = invoke_native_profile(
             profile,
             "app",
             "ledger",
@@ -200,7 +176,7 @@ def test_native_import_and_wizard_preserve_worker_results_and_noop_effects(tmp_p
             "--notes",
             "manual intake",
         )
-        created = _invoke(profile, *wizard_args)
+        created = invoke_native_profile(profile, *wizard_args)
         assert created.exit_code == 0, created.output
         created_payload = unwrap_cli_result(created)
         assert created_payload["bucket_id"] == profile_id
@@ -211,18 +187,18 @@ def test_native_import_and_wizard_preserve_worker_results_and_noop_effects(tmp_p
         assert created_payload["retention_amount"] == "15.00"
         assert created_payload["notes"] == "manual intake"
 
-        repeated_wizard = _invoke(profile, *wizard_args)
+        repeated_wizard = invoke_native_profile(profile, *wizard_args)
         assert repeated_wizard.exit_code == 0, repeated_wizard.output
         repeated_wizard_payload = unwrap_cli_result(repeated_wizard)
         assert repeated_wizard_payload["bucket_id"] == profile_id
         assert repeated_wizard_payload["already_existed"] is True
         assert repeated_wizard_payload["invoice_id"] == created_payload["invoice_id"]
 
-        before_refusal = _invoke(profile, "app", "ledger", "invoice", "list", "--kind", "received")
+        before_refusal = invoke_native_profile(profile, "app", "ledger", "invoice", "list", "--kind", "received")
         assert before_refusal.exit_code == 0, before_refusal.output
         before_refusal_rows = unwrap_cli_result(before_refusal)["rows"]
 
-        refused_wizard = _invoke(
+        refused_wizard = invoke_native_profile(
             profile,
             "app",
             "ledger",
@@ -262,11 +238,11 @@ def test_native_import_and_wizard_preserve_worker_results_and_noop_effects(tmp_p
         assert refusal_context["effect"] == "none"
         assert refusal_context["refusal_code"] == "REFUSED_INVOICE_WIZARD_VALIDATION"
 
-        after_refusal = _invoke(profile, "app", "ledger", "invoice", "list", "--kind", "received")
+        after_refusal = invoke_native_profile(profile, "app", "ledger", "invoice", "list", "--kind", "received")
         assert after_refusal.exit_code == 0, after_refusal.output
         assert unwrap_cli_result(after_refusal)["rows"] == before_refusal_rows
 
-        listed = _invoke(profile, "app", "ledger", "invoice", "list", "--kind", "received")
+        listed = invoke_native_profile(profile, "app", "ledger", "invoice", "list", "--kind", "received")
         assert listed.exit_code == 0, listed.output
         list_payload = unwrap_cli_result(listed)
         assert list_payload["bucket_id"] == profile_id

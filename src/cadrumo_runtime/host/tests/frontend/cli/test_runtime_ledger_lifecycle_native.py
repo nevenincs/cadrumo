@@ -2,14 +2,12 @@
 
 from __future__ import annotations
 
-import json
 import sys
 from dataclasses import dataclass
 from pathlib import Path
 from typing import cast
 
 import pytest
-from click.testing import Result
 from pydantic import BaseModel
 
 from cadrumo.adapters.persistence.profile.tests.remove_draft_revision_support import seed_revision_citing_transaction
@@ -18,7 +16,6 @@ from cadrumo.adapters.persistence.storage.runtime_repository import secure_objec
 from cadrumo.application.ledger.actions_common import blocking_modelo_references, build_manual_ledger_result
 from cadrumo.application.ledger.manual_read import ledger_transaction_result_payload
 from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation, resolve_login_target
-from cadrumo.core.config import override_settings
 from cadrumo.domain.buckets.event import (
     BucketEvent,
     BucketEventHistoryCatalogue,
@@ -44,7 +41,7 @@ from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture impo
     native_cli_profile_scope,
 )
 
-from .cli_runner import invoke_cached_cli
+from ._profile_cli_support import invoke_native_profile_revealing
 
 pytestmark = [
     pytest.mark.integration,
@@ -68,28 +65,6 @@ _PROFILE_FACTS = {
     "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
 }
 _ACTOR = "native-lifecycle-operator"
-
-
-def _invoke(profile: NativeCliProfileFixture, *command: str) -> Result:
-    """Run one command against the real encrypted profile-worker fixture."""
-    assert profile.label is not None
-    close_active_bucket_session()
-    with override_settings(cadrumo_cli_reveal_identifiers=True):
-        result = invoke_cached_cli(
-            (
-                "--language",
-                "en",
-                "--format",
-                "json",
-                "--profile",
-                profile.label,
-                "--profile-secrets-stdin",
-                *command,
-            ),
-            input=json.dumps({"profile_passphrase": profile.passphrase}),
-        )
-    assert profile.passphrase not in result.output
-    return result
 
 
 def _reauthenticate(
@@ -197,7 +172,7 @@ def _apply_transition(
     assert before_transaction.lifecycle_state is prior_state
     before_history = ports.bucket_event_repository.load()
 
-    changed = _invoke(
+    changed = invoke_native_profile_revealing(
         session.profile,
         "app",
         "ledger",
@@ -258,7 +233,7 @@ def _apply_transition(
         event_ids=(event_id,),
     )
     if verb == "exclude":
-        viewed = _invoke(session.profile, "app", "ledger", "view", transaction_id)
+        viewed = invoke_native_profile_revealing(session.profile, "app", "ledger", "view", transaction_id)
         assert viewed.exit_code == 0, viewed.output
         view_payload = unwrap_cli_result(viewed)
         assert view_payload["transaction_id"] == transaction_id
@@ -291,7 +266,7 @@ def _finalized_revision_blocks_archive(session: _Session, transaction_id: str) -
     assert before_blocked_transaction is not None
     history_before_block = ports.bucket_event_repository.load()
 
-    refused = _invoke(
+    refused = invoke_native_profile_revealing(
         session.profile,
         "app",
         "ledger",
@@ -351,7 +326,7 @@ def test_native_lifecycle_commands_preserve_full_results_history_and_blocker_ref
         assert _reauthenticate(profile, authority_operation=authority_operation) == bucket_id
         ports = compose_ledger_action_ports(bucket_id=bucket_id, operation=authority_operation)
 
-        created = _invoke(
+        created = invoke_native_profile_revealing(
             profile,
             "app",
             "ledger",

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 import sys
 from collections.abc import Mapping
 from dataclasses import dataclass, replace
@@ -10,7 +9,6 @@ from pathlib import Path
 from typing import override
 
 import pytest
-from click.testing import Result
 
 from cadrumo.adapters.outbound.aeat.export.registry_record_renderer import RegistryFixedWidthRecordRenderer
 from cadrumo.adapters.persistence.profile.m145_communication_records import build_m145_communication_records_ports
@@ -22,7 +20,6 @@ from cadrumo.application.modelo.m145_communication_records import (
     validate_m145_communication_record,
 )
 from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation, resolve_login_target
-from cadrumo.core.config import override_settings
 from cadrumo.core.redaction.rules import redact_structured_for_cli_output
 from cadrumo.core.secure_object_write import SecureObjectWrite
 from cadrumo.core.type_guards import is_str_keyed_dict
@@ -43,7 +40,7 @@ from cadrumo.entrypoints.cli.modelo_results_m145 import (
 from cadrumo.tests.cli_envelope import require_error_document, unwrap_cli_result
 
 from ...native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
-from .cli_runner import invoke_cached_cli
+from ._profile_cli_support import invoke_native_profile_revealing
 
 pytestmark = [
     pytest.mark.integration,
@@ -74,27 +71,6 @@ _FIELD_VALUES = {
     "perceptor.anio-nacimiento": "1981",
 }
 _ACTOR = "native-m145-operator"
-
-
-def _invoke(profile: NativeCliProfileFixture, *command: str) -> Result:
-    assert profile.label is not None
-    close_active_bucket_session()
-    with override_settings(cadrumo_cli_reveal_identifiers=True):
-        result = invoke_cached_cli(
-            (
-                "--language",
-                "en",
-                "--format",
-                "json",
-                "--profile",
-                profile.label,
-                "--profile-secrets-stdin",
-                *command,
-            ),
-            input=json.dumps({"profile_passphrase": profile.passphrase}),
-        )
-    assert profile.passphrase not in result.output
-    return result
 
 
 def _reauthenticate(
@@ -245,7 +221,7 @@ def _missing_record_is_refused(session: _Session) -> None:
     """Validating an unknown record is refused with its typed reason and writes no event."""
     ports = build_m145_communication_records_ports(bucket_id=session.bucket_id)
     history_before_missing = ports.bucket_event_repository.load()
-    missing = _invoke(
+    missing = invoke_native_profile_revealing(
         session.profile,
         "app",
         "modelo",
@@ -273,7 +249,7 @@ def _create_record(session: _Session) -> tuple[str, M145CommunicationRecord]:
     """Create a local communication and check the projection, the redaction and the creation event."""
     ports = build_m145_communication_records_ports(bucket_id=session.bucket_id)
     history_before_create = ports.bucket_event_repository.load()
-    created = _invoke(
+    created = invoke_native_profile_revealing(
         session.profile,
         "app",
         "modelo",
@@ -336,7 +312,7 @@ def _premature_completion_is_refused(session: _Session, record_id: str, record: 
     """Completing a record that was never delivered is refused and leaves it and the history unchanged."""
     ports = build_m145_communication_records_ports(bucket_id=session.bucket_id)
     history_before_transition_refusal = ports.bucket_event_repository.load()
-    premature_completion = _invoke(
+    premature_completion = invoke_native_profile_revealing(
         session.profile,
         "app",
         "modelo",
@@ -373,7 +349,7 @@ def _validate_record(session: _Session, record_id: str) -> None:
     """Validation reports the canonical result and writes no event."""
     ports = build_m145_communication_records_ports(bucket_id=session.bucket_id)
     history_before_validate = ports.bucket_event_repository.load()
-    validation = _invoke(session.profile, "app", "modelo", "m145", "validate", record_id[:12])
+    validation = invoke_native_profile_revealing(session.profile, "app", "modelo", "m145", "validate", record_id[:12])
     assert validation.exit_code == 0, validation.output
     assert _reauthenticate(session.profile, authority_operation=session.authority_operation) == session.bucket_id
     ports = build_m145_communication_records_ports(bucket_id=session.bucket_id)
@@ -412,7 +388,9 @@ def _export_record(session: _Session, record_id: str, record: M145CommunicationR
     )
     assert preview_repository.proposed is not None
     assert ports.bucket_event_repository.load() == history_before_export
-    exported = _invoke(session.profile, "app", "modelo", "m145", "export", record_id[:12], "--by", _ACTOR)
+    exported = invoke_native_profile_revealing(
+        session.profile, "app", "modelo", "m145", "export", record_id[:12], "--by", _ACTOR
+    )
     assert exported.exit_code == 0, exported.output
     assert _reauthenticate(session.profile, authority_operation=session.authority_operation) == session.bucket_id
     ports = build_m145_communication_records_ports(bucket_id=session.bucket_id)
@@ -456,7 +434,7 @@ def _mark_delivered(session: _Session, record_id: str) -> M145CommunicationRecor
     """Marking delivery to the payer returns the canonical record and records one delivery event."""
     ports = build_m145_communication_records_ports(bucket_id=session.bucket_id)
     history_before_delivery = ports.bucket_event_repository.load()
-    delivered = _invoke(
+    delivered = invoke_native_profile_revealing(
         session.profile,
         "app",
         "modelo",
@@ -500,7 +478,7 @@ def _mark_locally_completed(session: _Session, record_id: str, delivered_record:
     """Local completion keeps the delivery time and records one completion event."""
     ports = build_m145_communication_records_ports(bucket_id=session.bucket_id)
     history_before_completion = ports.bucket_event_repository.load()
-    completed = _invoke(
+    completed = invoke_native_profile_revealing(
         session.profile,
         "app",
         "modelo",
