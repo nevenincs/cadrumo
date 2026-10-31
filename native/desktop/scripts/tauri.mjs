@@ -1,5 +1,6 @@
 import { spawnSync } from "node:child_process";
 import {
+  copyFileSync,
   existsSync,
   mkdirSync,
   readFileSync,
@@ -86,6 +87,28 @@ const snapshot = snapshotHostSources(
     : buildPath("desktop_host"),
   { incremental: true, tests: backendOnly },
 );
+/** macOS draws an application icon at the size of its whole canvas, and its own
+ * icons keep to Apple's grid: a rounded square 824 points wide, centred in 1024,
+ * the rest clear. The tile fills its canvas edge to edge, so on macOS it would
+ * stand larger than every icon beside it. The macOS icon sets the tile's artwork
+ * in that square instead, over the tile's own ground where its corners differ. */
+function macosIconSource(svg) {
+  const root = svg.match(/<svg\b[^>]*>/);
+  const ground = svg.match(/<path\b[^>]*\bfill="(#[0-9A-Fa-f]{6})"/);
+  if (!root || !ground)
+    throw new Error("The application icon lacks the tile the macOS icon sets.");
+  const placed = root[0]
+    .replace(/\s(?:width|height)="[^"]*"/g, "")
+    .replace("<svg", '<svg x="100" y="100" width="824" height="824"');
+  return [
+    '<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">',
+    '<clipPath id="macos-shape"><rect x="100" y="100" width="824" height="824" rx="185.4"/></clipPath>',
+    '<g clip-path="url(#macos-shape)">',
+    `<rect x="100" y="100" width="824" height="824" fill="${ground[1]}"/>`,
+    svg.replace(/^<\?xml[^>]*>\s*/, "").replace(root[0], placed),
+    "</g></svg>",
+  ].join("\n");
+}
 function run(args) {
   const result = spawnSync(process.execPath, [cli, ...args], {
     cwd: snapshot.project,
@@ -150,13 +173,16 @@ contentBuild(
       arch: process.arch,
     },
   },
-  () =>
-    run([
-      "icon",
-      resolve(desktop, "../../docs/_static/cadrumo-icon.svg"),
-      "--output",
-      icons,
-    ]),
+  () => {
+    const source = resolve(desktop, "../../docs/_static/cadrumo-icon.svg");
+    run(["icon", source, "--output", icons]);
+    const macos = resolve(buildPath("desktop_cache"), "macos-icon");
+    mkdirSync(macos, { recursive: true });
+    const macosSource = resolve(macos, "icon.svg");
+    writeFileSync(macosSource, macosIconSource(readFileSync(source, "utf8")));
+    run(["icon", macosSource, "--output", macos]);
+    copyFileSync(resolve(macos, "icon.icns"), resolve(icons, "icon.icns"));
+  },
 );
 if (action === "prepare") process.exit(0);
 if (action === "build") {
