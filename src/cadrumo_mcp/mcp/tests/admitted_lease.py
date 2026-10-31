@@ -9,7 +9,7 @@ proves through it is the adapter's own handling, never the runtime's decision.
 from __future__ import annotations
 
 from collections.abc import Mapping
-from datetime import timedelta
+from datetime import datetime, timedelta
 from functools import cache
 from types import MappingProxyType, SimpleNamespace
 from typing import NoReturn, cast
@@ -34,6 +34,38 @@ from ..runtime_adapter import RuntimeMcpAdapter
 from ..surfaces import DEFAULT_MCP_SURFACE, MCP_SURFACES, McpSurface
 
 
+def admitted_access_status(
+    profile_id: UUID, session_id: UUID, *, expires_at: datetime, operations: frozenset[str]
+) -> ProfileAccessStatus:
+    """Report a connected, authenticated, bound session under an active grant whose scope holds ``operations``."""
+    return ProfileAccessStatus(
+        connected=True,
+        credential_authenticated=True,
+        profile_id=profile_id,
+        session_id=session_id,
+        session_expires_at=expires_at,
+        grant_state=AuthorityState.ACTIVE,
+        grant_expires_at=expires_at,
+        grant_valid=True,
+        profile_bound=True,
+        storage=Availability.AVAILABLE,
+        automation_custody=Availability.AVAILABLE,
+        published_authority=Availability.AVAILABLE,
+        provider=Availability.NOT_REQUIRED,
+        effective_scope=EffectiveScopeSummary.summarize(
+            AccessScope(
+                operations=operations,
+                actions=frozenset(),
+                disclosures=frozenset(),
+                periods=None,
+                allow_period_independent=True,
+                allow_delegation=False,
+            )
+        ),
+        denial=None,
+    )
+
+
 class AdmittedLease:
     """A lease the runtime reports live and admitted for one profile, under a grant with nothing in scope."""
 
@@ -42,31 +74,8 @@ class AdmittedLease:
         self.frontend = OperationFrontendProjection.EXTERNAL_CLIENT
         self.session_id = uuid4()
         self.closed = False
-        self._status = ProfileAccessStatus(
-            connected=True,
-            credential_authenticated=True,
-            profile_id=profile_id,
-            session_id=self.session_id,
-            session_expires_at=now() + timedelta(minutes=5),
-            grant_state=AuthorityState.ACTIVE,
-            grant_expires_at=now() + timedelta(minutes=5),
-            grant_valid=True,
-            profile_bound=True,
-            storage=Availability.AVAILABLE,
-            automation_custody=Availability.AVAILABLE,
-            published_authority=Availability.AVAILABLE,
-            provider=Availability.NOT_REQUIRED,
-            effective_scope=EffectiveScopeSummary.summarize(
-                AccessScope(
-                    operations=frozenset(),
-                    actions=frozenset(),
-                    disclosures=frozenset(),
-                    periods=None,
-                    allow_period_independent=True,
-                    allow_delegation=False,
-                )
-            ),
-            denial=None,
+        self._status = admitted_access_status(
+            profile_id, self.session_id, expires_at=now() + timedelta(minutes=5), operations=frozenset()
         )
 
     def status(self) -> SimpleNamespace:

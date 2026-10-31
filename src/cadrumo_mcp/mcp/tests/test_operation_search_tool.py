@@ -26,8 +26,7 @@ from cadrumo.application.operations.registry import (
     OperationRegistry,
 )
 from cadrumo.core.time.clock import now
-from cadrumo_client.contracts.access_refusals import ProfileAccessStatus
-from cadrumo_client.contracts.access_vocabulary import AccessScope, AuthorityState, Availability, EffectiveScopeSummary
+from cadrumo_client.contracts.access_vocabulary import AccessScope
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.contracts.deadline_budget import DEFAULT_TIMEOUT_POLICY
 from cadrumo_client.transport.frontend_client import FrontendClient
@@ -41,7 +40,7 @@ from ..operation_contract_cache import OperationContractCache
 from ..protocol_contract import SIGN_IN_REMEDY
 from ..runtime_adapter import RuntimeMcpAdapter
 from ..server import build_server
-from .admitted_lease import public_descriptions
+from .admitted_lease import admitted_access_status, public_descriptions
 from .session import connected_server_and_client_session
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
@@ -88,31 +87,8 @@ class _AdmittedClient:
         self.described: list[str] = []
         self.closed = False
         operations = {definition.definition_id for definition in registry.definitions} | {_DENIED_DEFINITION_ID}
-        self._status = ProfileAccessStatus(
-            connected=True,
-            credential_authenticated=True,
-            profile_id=profile_id,
-            session_id=self.session_id,
-            session_expires_at=now() + timedelta(minutes=5),
-            grant_state=AuthorityState.ACTIVE,
-            grant_expires_at=now() + timedelta(minutes=5),
-            grant_valid=True,
-            profile_bound=True,
-            storage=Availability.AVAILABLE,
-            automation_custody=Availability.AVAILABLE,
-            published_authority=Availability.AVAILABLE,
-            provider=Availability.NOT_REQUIRED,
-            effective_scope=EffectiveScopeSummary.summarize(
-                AccessScope(
-                    operations=frozenset(operations),
-                    actions=frozenset(),
-                    disclosures=frozenset(),
-                    periods=None,
-                    allow_period_independent=True,
-                    allow_delegation=False,
-                )
-            ),
-            denial=None,
+        self._status = admitted_access_status(
+            profile_id, self.session_id, expires_at=now() + timedelta(minutes=5), operations=frozenset(operations)
         )
 
     def status(self) -> SimpleNamespace:

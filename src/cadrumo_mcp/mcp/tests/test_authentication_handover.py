@@ -11,8 +11,8 @@ import pytest
 
 from cadrumo.application.operations.registry import OperationFrontendProjection, OperationPublicDefinitionDescriptionV1
 from cadrumo.core.time.clock import now
-from cadrumo_client.contracts.access_refusals import AccessDenialCode, ProfileAccessStatus
-from cadrumo_client.contracts.access_vocabulary import AccessScope, AuthorityState, Availability, EffectiveScopeSummary
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import AccessScope, AuthorityState
 from cadrumo_client.contracts.deadline_budget import DEFAULT_TIMEOUT_POLICY
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
@@ -23,7 +23,7 @@ from .. import runtime_adapter as mcp_runtime
 from .. import runtime_admission as mcp_admission
 from ..operation_discovery import operation_summary
 from ..runtime_adapter import RuntimeMcpAdapter
-from .admitted_lease import public_descriptions
+from .admitted_lease import admitted_access_status, public_descriptions
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -78,31 +78,11 @@ class _Client:
         self.status_calls += 1
         if self.fail_status:
             raise FrontendRefusedError("session_expired")
-        status = ProfileAccessStatus(
-            connected=True,
-            credential_authenticated=True,
-            profile_id=self.profile_id,
-            session_id=self.session_id,
-            session_expires_at=self.session_expires_at,
-            grant_state=AuthorityState.ACTIVE,
-            grant_expires_at=self.session_expires_at,
-            grant_valid=True,
-            profile_bound=True,
-            storage=Availability.AVAILABLE,
-            automation_custody=Availability.AVAILABLE,
-            published_authority=Availability.AVAILABLE,
-            provider=Availability.NOT_REQUIRED,
-            effective_scope=EffectiveScopeSummary.summarize(
-                AccessScope(
-                    operations=frozenset({"auth.local-read"}),
-                    actions=frozenset(),
-                    disclosures=frozenset(),
-                    periods=None,
-                    allow_period_independent=True,
-                    allow_delegation=False,
-                )
-            ),
-            denial=None,
+        status = admitted_access_status(
+            self.profile_id,
+            self.session_id,
+            expires_at=self.session_expires_at,
+            operations=frozenset({"auth.local-read"}),
         )
         flaws = {
             "denial": {
