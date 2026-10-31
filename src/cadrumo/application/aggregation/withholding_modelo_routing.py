@@ -12,7 +12,7 @@ from dataclasses import dataclass
 from typing import Final
 
 from ...core.modelo import Modelo
-from ...domain.calculations.registry.form_codes import form_codes_in_scope, FormCodes, resolve_form_codes
+from ...domain.calculations.registry.form_codes import FormCodes, form_codes_in_scope, resolve_form_codes
 from ...domain.calculations.registry.governed_fact_scope import GovernedFactSource
 from .withholding_recognition import WithholdingIncomeKind
 
@@ -58,6 +58,12 @@ def periodic_withholding_modelos(*, authority: GovernedFactSource | None = None)
     return _routing(authority).ordered_codes("periodic.modelos")
 
 
+def periodic_withholding_modelos_in_scope() -> tuple[str, ...]:
+    """Return the periodic modelos for a model validator; a client outside every scope has none to check."""
+    routing = form_codes_in_scope(_ROUTING_FACT)
+    return () if routing is None else routing.ordered_codes("periodic.modelos")
+
+
 def modelo_for_income_kind(income_kind: WithholdingIncomeKind) -> str | None:
     """Return the periodic modelo ``income_kind`` settles through, or ``None`` when no route is declared."""
     return _routing().under("income_kind").get(income_kind.value)
@@ -88,6 +94,14 @@ def require_invoice_evidence_modelo(value: str) -> str:
     return value
 
 
+def refuses_ledger_payment_evidence(modelo: str) -> bool:
+    """Report whether the scope's routing says a ledger payment cannot evidence ``modelo``.
+
+    A model validator reads this; a client outside every scope has nothing to decide.
+    """
+    return form_codes_in_scope(_ROUTING_FACT) is not None and modelo not in ledger_payment_modelos()
+
+
 def annual_withholding_composition(modelo: str) -> AnnualWithholdingComposition:
     """Return how annual ``modelo`` composes its source; a modelo no route names reads its own window."""
     routing = _routing()
@@ -114,5 +128,7 @@ __all__ = [
     "ledger_payment_modelos",
     "modelo_for_income_kind",
     "periodic_withholding_modelos",
+    "periodic_withholding_modelos_in_scope",
+    "refuses_ledger_payment_evidence",
     "require_invoice_evidence_modelo",
 ]

@@ -609,6 +609,62 @@ def test_a_defect_added_to_a_copied_tree_is_found(tmp_path: Path) -> None:
     }
 
 
+_STRICT_FORM_READERS = frozenset(
+    {
+        "resolve_form_codes",
+        "form_for_role",
+        "forms_for_role",
+        "periodic_withholding_modelos",
+        "invoice_evidence_modelos",
+        "ledger_payment_modelos",
+    }
+)
+_VALIDATOR_DECORATORS = frozenset({"field_validator", "model_validator"})
+
+
+def _reader_name(node: ast.AST) -> str:
+    return str(getattr(node, "id", getattr(node, "attr", "")))
+
+
+def _strict_reads_in_validators(tree: ast.AST) -> list[tuple[int, str]]:
+    """Return strict form-fact reads inside Pydantic validators, which a scope-free client also runs."""
+    found: list[tuple[int, str]] = []
+    for function in ast.walk(tree):
+        if not isinstance(function, ast.FunctionDef):
+            continue
+        decorators = {_reader_name(n) for d in function.decorator_list for n in ast.walk(d)}
+        if decorators & _VALIDATOR_DECORATORS:
+            found += [
+                (call.lineno, function.name)
+                for call in ast.walk(function)
+                if isinstance(call, ast.Call) and _reader_name(call.func) in _STRICT_FORM_READERS
+            ]
+    return found
+
+
+def test_the_validator_rule_finds_a_strict_read() -> None:
+    source = """
+class M(BaseModel):
+    @model_validator(mode="after")
+    def _v(self):
+        resolve_form_codes("x")
+        return self
+"""
+    assert _strict_reads_in_validators(ast.parse(source)) == [(5, "_v")]
+    assert _strict_reads_in_validators(ast.parse("def f():\n    resolve_form_codes('x')\n")) == []
+
+
+def test_no_validator_turns_a_valid_client_result_into_an_error() -> None:
+    src = Path(__file__).resolve().parents[3] / "src"
+    findings = [
+        f"{path}:{line} {name}"
+        for path in src.rglob("*.py")
+        if "tests" not in path.parts
+        for line, name in _strict_reads_in_validators(ast.parse(path.read_text(encoding="utf-8")))
+    ]
+    assert not findings, "\n".join(findings)
+
+
 def test_the_tax_code_holds_no_tax_literal() -> None:
     found = _current()
     listing = "\n".join(f"{path}: {entry}" for path, entries in sorted(found.items()) for entry in entries)

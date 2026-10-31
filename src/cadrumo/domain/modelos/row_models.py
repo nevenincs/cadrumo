@@ -54,7 +54,7 @@ from ...core.time.clock import today_madrid
 from ...core.unit_proportion import UnitProportion
 from ..calculations.registry.authority import PinnedAuthorityOperation
 from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
-from ..calculations.registry.form_codes import require_form_width, resolve_form_codes
+from ..calculations.registry.form_codes import form_codes_in_scope, require_form_width
 from ..calculations.registry.governed_fact_scope import GovernedFactSource, require_governed_fact_authority
 from ..calculations.registry.nif_iva_catalogue import nif_iva_format_for_country
 from ..calculations.registry.schema_base import DateAxis
@@ -300,7 +300,9 @@ class Modelo184MemberRow(BaseModel):
 
     @model_validator(mode="after")
     def _declared_form_codes(self) -> Modelo184MemberRow:
-        codes = resolve_form_codes(_M184_FORM_CODES_FACT)
+        codes = form_codes_in_scope(_M184_FORM_CODES_FACT)
+        if codes is None:
+            return self
         for name, key in _M184_CODED_FIELDS.items():
             value = getattr(self, name)
             if value is not None and value not in codes.codes(key):
@@ -309,7 +311,9 @@ class Modelo184MemberRow(BaseModel):
 
     @model_validator(mode="after")
     def _subclave_only_where_the_diseno_declares_one(self) -> Modelo184MemberRow:
-        codes = resolve_form_codes(_M184_FORM_CODES_FACT)
+        codes = form_codes_in_scope(_M184_FORM_CODES_FACT)
+        if codes is None:
+            return self
         if self.subclave is not None and self.clave not in codes.codes("subclave.bearing_claves"):
             raise ValueError(f"clave {self.clave!r} carries no subclave table; leave subclave unset")
         return self
@@ -317,7 +321,10 @@ class Modelo184MemberRow(BaseModel):
     @model_validator(mode="after")
     def _reduccion_only_where_the_diseno_declares_one(self) -> Modelo184MemberRow:
         """Refuse a reducción on a row the shared diseño field (positions 109-119) gives none."""
-        bearing = resolve_form_codes(_M184_FORM_CODES_FACT).codes("reduccion.bearing")
+        codes = form_codes_in_scope(_M184_FORM_CODES_FACT)
+        if codes is None:
+            return self
+        bearing = codes.codes("reduccion.bearing")
         if self.reduccion is not None and not {self.clave, f"{self.clave}:{self.subclave}"} & bearing:
             raise ValueError(f"clave {self.clave!r} subclave {self.subclave!r} carries no reducción")
         return self

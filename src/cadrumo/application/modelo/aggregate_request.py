@@ -14,7 +14,7 @@ from ..aggregation.ledger_payment_withholding import (
 from ..aggregation.service import (
     PerModeloAggregationCommand,
 )
-from ..aggregation.withholding_modelo_routing import ledger_payment_modelos
+from ..aggregation.withholding_modelo_routing import refuses_ledger_payment_evidence
 from .aggregate_public import PublicLedgerPaymentEvidenceRequest, PublicModeloAggregateCommand
 
 
@@ -31,7 +31,7 @@ class ModeloAggregateOperationRequest(BaseModel):
     def _closed_aggregate_scope(self) -> Self:
         model = self.command.modelo
         if self.ledger_payment is not None:
-            if model not in ledger_payment_modelos():
+            if refuses_ledger_payment_evidence(model):
                 raise ValueError("ledger-payment withholding capture is not supported for this modelo")
             if self.command.counterpart_observations or self.command.foreign_asset_observations:
                 raise ValueError("ledger-payment capture cannot be mixed with another aggregation provider")

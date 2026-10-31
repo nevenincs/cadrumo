@@ -416,7 +416,7 @@ def _m180_property_evidence(index: int) -> Modelo180PropertyEvidence:
         withholding_percentage=_M180_WITHHOLDING_PERCENTAGE,
         address=Modelo180StructuredAddress(
             province_code="28",
-            municipality_code="079",
+            municipality_code="28079",
             municipality="Madrid",
             locality="Madrid",
             postal_code="28001",

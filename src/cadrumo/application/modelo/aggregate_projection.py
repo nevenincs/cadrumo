@@ -16,7 +16,7 @@ from ...core.operations import OperationEffect, OperationTerminalCondition, prof
 from ..aggregation.service import (
     PerModeloAggregationContributor,
 )
-from ..aggregation.withholding_modelo_routing import periodic_withholding_modelos
+from ..aggregation.withholding_modelo_routing import periodic_withholding_modelos_in_scope
 from ..aggregation.withholding_observation_service import (
     WithholdingGenerationAudit,
     WithholdingMutationMode,
@@ -208,7 +208,7 @@ def _require_aggregated_summary_fields(self: ModeloAggregateProjection, aggregat
     """Require complete summary fields and the exact periodic withholding window."""
     if self.refusal_reason is not None or any(value is None for value in aggregate_fields):
         raise ValueError("aggregated result requires the canonical summary fields")
-    if self.modelo in periodic_withholding_modelos() and self.withholding_window is None:
+    if self.modelo in periodic_withholding_modelos_in_scope() and self.withholding_window is None:
         raise ValueError("withholding aggregate requires its exact window readback")
 
 
@@ -217,7 +217,9 @@ def _require_aggregate_row_metadata(self: ModeloAggregateProjection) -> None:
     has_rows = bool(self.clave_breakdown) or bool(self.absent_source_families)
     if has_rows and self.calculation_revision_id is None:
         raise ValueError("calculation rows require the revision they were read for")
-    if self.modelo in periodic_withholding_modelos() and (has_rows or self.calculation_revision_id is not None):
+    if self.modelo in periodic_withholding_modelos_in_scope() and (
+        has_rows or self.calculation_revision_id is not None
+    ):
         raise ValueError("periodic withholding aggregate cannot carry annual detail metadata")
 
 

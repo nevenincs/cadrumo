@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import contextvars
+from collections.abc import Iterator
 from datetime import date
 from decimal import Decimal
 from types import SimpleNamespace
@@ -40,11 +42,20 @@ from ....core.hashing import content_hash_hex
 from ....core.json_contract import Notice, NoticeSeverity
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....core.period import Period
+from ....domain.calculations.registry.authority import bundled_indexed_authority
 from .. import modelo_aggregate_commands as aggregate_cli
 from .. import operation_modelo_aggregate as bridge
 from ..modelo_query_results import ModeloAggregateResult
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+
+
+@pytest.fixture(autouse=True)
+def _pinned_authority() -> Iterator[None]:
+    """Hold the authority the runtime holds, so code that reads a form fact has it."""
+    with bundled_indexed_authority().operation():
+        yield
+
 
 _PROFILE = UUID("35353535-3535-4353-8353-353535353535")
 _OPERATION_ID = "d" * 64
@@ -151,6 +162,14 @@ def _ledger_payment() -> LedgerPaymentWithholdingEvidenceRequest:
             "exigibility_occurred_on": date(2025, 2, 1),
         }
     )
+
+
+def test_a_client_outside_every_authority_scope_reads_a_valid_aggregate_result() -> None:
+    payload = _projection().model_dump(mode="python")
+
+    parsed = contextvars.Context().run(ModeloAggregateProjection.model_validate, payload)
+
+    assert parsed == _projection()
 
 
 def test_bridge_submits_exact_profile_command_and_correlates_read_receipt(

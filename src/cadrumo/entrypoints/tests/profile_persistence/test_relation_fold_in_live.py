@@ -246,7 +246,7 @@ def _retencion_observation(nif: str) -> RetencionObservation:
             withholding_percentage=Decimal("19.00"),
             address=Modelo180StructuredAddress(
                 province_code="28",
-                municipality_code="079",
+                municipality_code="28079",
                 municipality="Madrid",
                 locality="Madrid",
                 postal_code="28001",

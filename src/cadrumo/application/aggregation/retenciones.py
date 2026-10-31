@@ -41,7 +41,7 @@ from ...core.period import Period
 from ...core.spanish_postcode import SPANISH_MUNICIPALITY_CODE_PATTERN, SpanishPostcode, SpanishProvinceCode
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
-from ...domain.calculations.registry.form_codes import form_for_role, require_form_fit, resolve_form_codes
+from ...domain.calculations.registry.form_codes import form_codes_in_scope, form_for_role, require_form_fit
 from ...domain.calculations.registry.governed_fact_scope import GovernedFactSource, require_governed_fact_authority
 from ...domain.calculations.registry.schema_base import DateAxis
 from ...domain.calculations.registry.withholding_bindings import WithholdingObservation
@@ -120,7 +120,8 @@ _M180_FORM_CODES_FACT = "modelo-180-perceptor-form-codes"
 
 def _require_m180_percentage(value: Decimal) -> Decimal:
     """Refuse a percentage above the maximum the Modelo 180 record design can carry."""
-    if value > Decimal(resolve_form_codes(_M180_FORM_CODES_FACT).code("withholding_percentage.maximum")):
+    codes = form_codes_in_scope(_M180_FORM_CODES_FACT)
+    if codes is not None and value > Decimal(codes.code("withholding_percentage.maximum")):
         raise ValueError("withholding percentage exceeds the Modelo 180 record design")
     return value
 
@@ -149,7 +150,9 @@ class Modelo180PropertyEvidence(BaseModel):
 
     @model_validator(mode="after")
     def _conditional_property_identity(self) -> Modelo180PropertyEvidence:
-        codes = resolve_form_codes(_M180_FORM_CODES_FACT)
+        codes = form_codes_in_scope(_M180_FORM_CODES_FACT)
+        if codes is None:
+            return self
         if self.situation not in codes.codes("situation.codes"):
             raise ValueError("situation is not a code the Modelo 180 record design declares")
         if self.modality not in codes.codes("modality.codes"):
@@ -195,10 +198,8 @@ class Modelo193PendingPaymentEvidence(BaseModel):
     @field_validator("perception_key")
     @classmethod
     def _declared_pending_key(cls, value: str) -> str:
-        declared = resolve_form_codes("modelo-190-193-withholding-binding-catalogue").codes(
-            "identification_block_claves",
-        )
-        if value not in declared:
+        catalogue = form_codes_in_scope("modelo-190-193-withholding-binding-catalogue")
+        if catalogue is not None and value not in catalogue.codes("identification_block_claves"):
             raise ValueError("this perception key has no pending-payment treatment in the record design")
         return value
 
