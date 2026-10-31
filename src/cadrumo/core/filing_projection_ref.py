@@ -156,7 +156,7 @@ class M303ProrrataActivityProjectionRef(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     projection_kind: Literal["m303_prorrata_activity"]
-    slot: int = Field(ge=1, le=5)
+    slot: int = Field(ge=1)
     field: M303ProrrataActivityProjectionField
     casilla_id: CasillaId
 
@@ -167,7 +167,7 @@ class M303DifferentiatedDeductionProjectionRef(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     projection_kind: Literal["m303_differentiated_deduction"]
-    slot: int = Field(ge=1, le=2)
+    slot: int = Field(ge=1)
     field: M303DifferentiatedDeductionProjectionField
     casilla_id: CasillaId
 
@@ -179,7 +179,7 @@ class M303RegimenSimplificadoActivityProjectionRef(BaseModel):
 
     projection_kind: Literal["m303_regimen_simplificado_activity"]
     cohort: M303RegimenSimplificadoCohort
-    slot: int = Field(ge=1, le=2)
+    slot: int = Field(ge=1)
     field: M303RegimenSimplificadoActivityField
 
     @model_validator(mode="after")
@@ -208,9 +208,9 @@ class M303RegimenSimplificadoFactProjectionRef(BaseModel):
 
     projection_kind: Literal["m303_regimen_simplificado_fact"]
     cohort: M303RegimenSimplificadoCohort
-    slot: int = Field(ge=1, le=2)
+    slot: int = Field(ge=1)
     fact: M303RegimenSimplificadoFact
-    sub_index: int | None = Field(default=None, ge=1, le=4)
+    sub_index: int | None = Field(default=None, ge=1)
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -229,8 +229,8 @@ class M303RegimenSimplificadoModuleProjectionRef(BaseModel):
 
     projection_kind: Literal["m303_regimen_simplificado_module"]
     cohort: Literal[M303RegimenSimplificadoCohort.NO_AGRICOLA]
-    slot: int = Field(ge=1, le=2)
-    module_order: int = Field(ge=1, le=7)
+    slot: int = Field(ge=1)
+    module_order: int = Field(ge=1)
     value: M303RegimenSimplificadoModuleValue
 
 
@@ -240,7 +240,7 @@ class M303Exonerado390ActivityProjectionRef(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     projection_kind: Literal["m303_exonerado_390_activity"]
-    slot: int = Field(ge=1, le=6)
+    slot: int = Field(ge=1)
     field: M303Exonerado390ActivityField
 
 
@@ -266,7 +266,7 @@ class M390ActivityProjectionRef(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     projection_kind: Literal["m390_activity"]
-    slot: int = Field(ge=1, le=6)
+    slot: int = Field(ge=1)
     field: M390ActivityField
 
 
@@ -335,7 +335,7 @@ class M390RepresentativeProjectionRef(BaseModel):
 
     projection_kind: Literal["m390_representative"]
     representative_kind: M390RepresentativeKind
-    slot: int = Field(ge=1, le=3)
+    slot: int = Field(ge=1)
     field: M390RepresentativeField
 
     @model_validator(mode="after")
@@ -412,7 +412,7 @@ class M390RegimenSimplificadoActivityProjectionRef(BaseModel):
 
     projection_kind: Literal["m390_regimen_simplificado_activity"]
     cohort: M390RegimenSimplificadoCohort
-    slot: int = Field(ge=1, le=5)
+    slot: int = Field(ge=1)
     field: M390RegimenSimplificadoActivityField
 
     @model_validator(mode="after")
@@ -440,8 +440,8 @@ class M390RegimenSimplificadoModuleProjectionRef(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     projection_kind: Literal["m390_regimen_simplificado_module"]
-    slot: int = Field(ge=1, le=2)
-    module_order: int = Field(ge=1, le=7)
+    slot: int = Field(ge=1)
+    module_order: int = Field(ge=1)
     value: M390RegimenSimplificadoModuleValue
 
 
@@ -462,7 +462,7 @@ class M390ProrrataActivityProjectionRef(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     projection_kind: Literal["m390_prorrata_activity"]
-    slot: int = Field(ge=1, le=5)
+    slot: int = Field(ge=1)
     field: M390ProrrataActivityProjectionField
 
 
@@ -495,7 +495,7 @@ class M390DifferentiatedDeductionProjectionRef(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     projection_kind: Literal["m390_differentiated_deduction"]
-    slot: int = Field(ge=1, le=3)
+    slot: int = Field(ge=1)
     field: M390DifferentiatedDeductionProjectionField
 
 
@@ -516,7 +516,7 @@ class M200EstablecimientoPermanenteProjectionRef(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     projection_kind: Literal["m200_establecimiento_permanente"]
-    slot: int = Field(ge=1, le=18)
+    slot: int = Field(ge=1)
     field: M200EstablecimientoPermanenteField
 
 
@@ -533,7 +533,7 @@ class M200SocioSicavDisolucionProjectionRef(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     projection_kind: Literal["m200_socio_sicav_disolucion"]
-    slot: int = Field(ge=1, le=5)
+    slot: int = Field(ge=1)
     field: M200SocioSicavDisolucionField
 
 
@@ -555,7 +555,7 @@ class M200EntidadMenorDependienteProjectionRef(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     projection_kind: Literal["m200_entidad_menor_dependiente"]
-    slot: int = Field(ge=1, le=10)
+    slot: int = Field(ge=1)
     field: M200EntidadMenorDependienteField
 
 
@@ -572,7 +572,7 @@ class M200IncnGrupoSociedadProjectionRef(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     projection_kind: Literal["m200_incn_grupo_sociedad"]
-    slot: int = Field(ge=1, le=12)
+    slot: int = Field(ge=1)
     field: M200IncnGrupoSociedadField
 
 
@@ -600,7 +600,7 @@ class M200IncnEstablecimientoPermanenteProjectionRef(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     projection_kind: Literal["m200_incn_establecimiento_permanente"]
-    slot: int = Field(ge=1, le=5)
+    slot: int = Field(ge=1)
     field: M200IncnEstablecimientoPermanenteField
 
 
@@ -625,7 +625,7 @@ class M200OperacionReestructuracionProjectionRef(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     projection_kind: Literal["m200_operacion_reestructuracion"]
-    slot: int = Field(ge=1, le=5)
+    slot: int = Field(ge=1)
     field: M200OperacionReestructuracionField
 
 
@@ -648,7 +648,7 @@ class M200ParticipeAieUteProjectionRef(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     projection_kind: Literal["m200_participe_aie_ute"]
-    slot: int = Field(ge=1, le=10)
+    slot: int = Field(ge=1)
     field: M200ParticipeAieUteField
 
 
@@ -677,7 +677,7 @@ class M200TransparenciaFiscalInternacionalProjectionRef(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     projection_kind: Literal["m200_transparencia_fiscal_internacional"]
-    slot: int = Field(ge=1, le=6)
+    slot: int = Field(ge=1)
     field: M200TransparenciaFiscalInternacionalField
 
 
@@ -698,7 +698,7 @@ class M200AdministradorProjectionRef(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     projection_kind: Literal["m200_administrador"]
-    slot: int = Field(ge=1, le=5)
+    slot: int = Field(ge=1)
     field: M200AdministradorField
 
 
@@ -747,7 +747,7 @@ class M200EntidadParticipadaProjectionRef(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     projection_kind: Literal["m200_entidad_participada"]
-    slot: int = Field(ge=1, le=3)
+    slot: int = Field(ge=1)
     field: M200EntidadParticipadaField
 
 
@@ -780,7 +780,7 @@ class M200ParticipacionDirectaProjectionRef(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     projection_kind: Literal["m200_participacion_directa"]
-    slot: int = Field(ge=1, le=3)
+    slot: int = Field(ge=1)
     field: M200ParticipacionDirectaField
 
 
@@ -806,7 +806,7 @@ class M200ParticipacionSocioProjectionRef(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     projection_kind: Literal["m200_participacion_socio"]
-    slot: int = Field(ge=1, le=6)
+    slot: int = Field(ge=1)
     field: M200ParticipacionSocioField
 
 
@@ -828,7 +828,7 @@ class M200SecretarioConsejoProjectionRef(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     projection_kind: Literal["m200_secretario_consejo"]
-    slot: int = Field(ge=1, le=1)
+    slot: int = Field(ge=1)
     field: M200SecretarioConsejoField
 
 
@@ -852,7 +852,7 @@ class M200RepresentanteLegalProjectionRef(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     projection_kind: Literal["m200_representante_legal"]
-    slot: int = Field(ge=1, le=3)
+    slot: int = Field(ge=1)
     field: M200RepresentanteLegalField
 
 

@@ -233,7 +233,7 @@ class ProrrataResult(_ProrrataStrictFrozen):
     )
     inputs: ProrrataInputs
     sector_id: SectorId | None = None
-    year: Annotated[int, Field(ge=2000, le=2100)]
+    year: Annotated[int, Field(ge=1900, le=9999)]
     period: Annotated[
         str | None,
         StringConstraints(strip_whitespace=True, pattern=r"^(Q[1-4]|M(0[1-9]|1[0-2])|annual)$"),
@@ -270,7 +270,7 @@ class ProrrataReference(_ProrrataStrictFrozen):
     """
 
     reference_id: str = Field(min_length=1, max_length=128)
-    year: Annotated[int, Field(ge=2000, le=2100)]
+    year: Annotated[int, Field(ge=1900, le=9999)]
     kind: ProrrataKind
     regime: ProrrataRegime
     sector_id: SectorId | None = None
@@ -318,7 +318,7 @@ class EspecialMandatoryRule(_ProrrataStrictFrozen):
             especial regime mandatory.
     """
 
-    year: Annotated[int, Field(ge=2000, le=2100)]
+    year: Annotated[int, Field(ge=1900, le=9999)]
     multiple: Decimal = Field(..., gt=Decimal("1"))
     margin_percentage: Decimal = Field(..., gt=Decimal("0"))
     inclusive: bool

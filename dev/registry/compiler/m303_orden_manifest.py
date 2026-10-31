@@ -347,6 +347,7 @@ def _annual_orden_projections_for_source(
         record_design_source = _annual_orden_record_design_source(revision.source_refs, sources=sources)
         require_single_page_edition(
             ejercicio=census.ejercicio,
+            source_ref=census.source_ref,
             registry_revision_id=revision.id,
             record_design_epoch=record_design_source.record_design_epoch,
         )

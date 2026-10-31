@@ -27,6 +27,7 @@ from .form_codes import form_codes_in_scope
 from .ids import LegalRefId, RevisionId, SourceRefId
 from .m303_orden_constants import (
     EXTRACTOR_VERSION,
+    M303_2022_ORDEN_SOURCE_REF,
     validate_percentage_shape,
     validate_seasonal_index_shape,
 )
@@ -186,7 +187,7 @@ def _validate_projection_axis_shape(projection: M303AnnualOrdenProjection) -> No
         "annual Orden agricultural refusal must retain its exact annual source reference",
     )
     _require_invariant(
-        projection.ejercicio != 2022
+        projection.source_ref != M303_2022_ORDEN_SOURCE_REF
         or _has_m303_2022_record_design_source(
             projection.agricultural_authority.record_design_source_ref,
             projection.agricultural_authority.record_design_source_content_digest,
@@ -194,9 +195,8 @@ def _validate_projection_axis_shape(projection: M303AnnualOrdenProjection) -> No
         "annual Orden 2022 agricultural refusal must retain its exact AEAT design source",
     )
     reduction = projection.lorca_reduction
-    if projection.ejercicio == 2022:
+    if projection.source_ref == M303_2022_ORDEN_SOURCE_REF:
         _validate_2022_annual_orden_coordinate(
-            ejercicio=projection.ejercicio,
             source_ref=projection.source_ref,
             source_content_digest=projection.source_content_digest,
             scope="projection",
@@ -304,7 +304,7 @@ def _validate_snapshot_activity_coordinates(snapshot: M303AnnualOrdenSnapshot) -
 
 def _validate_snapshot_source_authority(snapshot: M303AnnualOrdenSnapshot) -> None:
     reduction = snapshot.lorca_reduction
-    if snapshot.ejercicio == 2022:
+    if snapshot.source_ref == M303_2022_ORDEN_SOURCE_REF:
         codes = form_codes_in_scope()
         _require_invariant(
             reduction is not None
@@ -320,9 +320,8 @@ def _validate_snapshot_source_authority(snapshot: M303AnnualOrdenSnapshot) -> No
         snapshot.agricultural_authority.annual_orden_source_ref == snapshot.source_ref,
         "annual Orden snapshot agricultural refusal must retain its exact source reference",
     )
-    if snapshot.ejercicio == 2022:
+    if snapshot.source_ref == M303_2022_ORDEN_SOURCE_REF:
         _validate_2022_annual_orden_coordinate(
-            ejercicio=snapshot.ejercicio,
             source_ref=snapshot.source_ref,
             source_content_digest=snapshot.source_content_digest,
             scope="snapshot",
@@ -388,9 +387,8 @@ def _validate_regimen_simplificado_coordinate(snapshot: M303RegimenSimplificadoS
         and agricultural.record_design_source_content_digest == snapshot.record_design.sha256,
         "M303 regimen simplificado snapshot agricultural refusal must retain its resolved record-design source",
     )
-    if snapshot.filing_year == 2022:
+    if snapshot.orden.source_ref == M303_2022_ORDEN_SOURCE_REF:
         _validate_2022_annual_orden_coordinate(
-            ejercicio=snapshot.orden.ejercicio,
             source_ref=snapshot.orden.source_ref,
             source_content_digest=snapshot.orden.source_content_digest,
             scope="resolved snapshot",

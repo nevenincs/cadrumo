@@ -124,7 +124,7 @@ class Modelo184MemberRowWireV1(_WireDetailRowMirror):
     importe: _WireAmount
     clave: str = Field(min_length=1)
     subclave: str | None = None
-    codigo_provincia: Annotated[str, Field(max_length=2)] | None = None
+    codigo_provincia: Annotated[str, Field(max_length=16)] | None = None
     miembro_a_31_diciembre: bool | None = None
     dias_miembro: Annotated[int, Field(ge=0, le=366)] | None = None
     domicilio_fiscal: Annotated[str, Field(max_length=40)] | None = None
@@ -162,6 +162,12 @@ class Modelo184MemberRowWireV1(_WireDetailRowMirror):
             rendimiento_neto_previo_eo=_optional_decimal(self.rendimiento_neto_previo_eo),
             rendimiento_neto_minorado_agricola_eo=_optional_decimal(self.rendimiento_neto_minorado_agricola_eo),
         )
+
+    @field_validator("codigo_provincia")
+    @classmethod
+    @pydantic_validation_boundary
+    def _provincia_has_the_declared_width(cls, value: str | None) -> str | None:
+        return require_form_width(value, "m184.row.provincia_digits")
 
 
 class Modelo232VinculadaRowWireV1(_WireDetailRowMirror):

@@ -113,29 +113,25 @@ def validate_percentage_shape(percentage: Decimal, *, scope: str, subject: str) 
         raise RegistryValidationError(f"annual Orden {scope} {subject} percentage is outside 0-100")
 
 
-_M303_2022_ORDEN_SOURCE_REF = "boe-orden-hfp-1335-2021-iva-authority"
+M303_2022_ORDEN_SOURCE_REF = "boe-orden-hfp-1335-2021-iva-authority"
 _M303_2022_ORDEN_SOURCE_DIGEST = "3fda96dcf2dcb3b3f0863bc07b0eabd45e21c6850d4b611e635627befb450c46"
 
 
 def validate_2022_annual_orden_coordinate(
     *,
-    ejercicio: int,
     source_ref: SourceRefId,
     source_content_digest: str,
     scope: str,
 ) -> None:
     """Require the pinned BOE source coordinate for 2022 annual authority."""
-    if not (
-        ejercicio == 2022
-        and source_ref == _M303_2022_ORDEN_SOURCE_REF
-        and source_content_digest == _M303_2022_ORDEN_SOURCE_DIGEST
-    ):
+    if not (source_ref == M303_2022_ORDEN_SOURCE_REF and source_content_digest == _M303_2022_ORDEN_SOURCE_DIGEST):
         raise RegistryValidationError(f"annual Orden 2022 {scope} must retain its exact BOE source coordinate")
 
 
 __all__ = [
     "EXTRACTOR_VERSION",
     "FIRST_SEASONAL_INDEX_DAY",
+    "M303_2022_ORDEN_SOURCE_REF",
     "MINIMUM_SEASONAL_INDEX_BANDS",
     "validate_2022_annual_orden_coordinate",
     "validate_generated_source_axis_shape",

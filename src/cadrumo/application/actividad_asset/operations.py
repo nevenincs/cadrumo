@@ -204,11 +204,15 @@ def pinned_edition(operation: PinnedAuthorityOperation) -> Callable[[int], tuple
     """Read the Modelo 100 edition a tax year falls under in one authority pin, and whether it is projected."""
 
     def read(tax_year: int) -> tuple[ActivityAssetEdition, ModeloRevision]:
-        revision = operation.revision_for_context("100", filing_year=tax_year, period="0A")
+        revision = operation.revision_for_context(
+            form_for_role("renta.annual", authority=operation),
+            filing_year=tax_year,
+            period=StandardPeriodCode.ANNUAL.value,
+        )
         resolution = revision_temporal_resolution(
             revision,
             filing_year=tax_year,
-            period="0A",
+            period=StandardPeriodCode.ANNUAL.value,
             support=operation.supported_filing_years(),
         )
         return (

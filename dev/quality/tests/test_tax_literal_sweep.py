@@ -1,22 +1,21 @@
-"""Refuse a tax value written into the domain and application code.
+"""Refuse a tax value written into the code that handles tax.
 
 The operator's rule is that a tax number, limit, threshold, period or form code lives in
 the registry. Calendar facts, arithmetic, technical limits and registry ids may stay in code.
-This gate reads syntax and judges a literal by the position it stands in:
+This gate reads syntax and judges a literal by what the value is, never by the name it sits under:
 
-- a ``Decimal`` other than an arithmetic identity or a power-of-ten rounding quantum;
-- a ``Field`` numeric bound, which can hide a closed set of claves;
-- a ``Field`` length or a ``len()`` comparison, which can hide a form's row count or code shape;
-- a code-shaped string that does not stand where a modelo or period address stands, so a
-  modelo id cannot pass for a box id or the reverse;
-- two or more modelo ids held together, which is a routing rule;
+- a ``Decimal`` other than an arithmetic identity or a rounding quantum;
+- a numeric bound or comparison other than arithmetic, a calendar range or a machine capacity;
+- a length or regex width, which can hide a form's row count or code shape;
+- a year in a branch, a ``date`` with a fixed year or day, a ``timedelta`` of days, a month tuple;
+- a code-shaped string, ``Literal`` member, ``match`` case or dict key outside a modelo or period address;
+- a comparison with a modelo id, or two or more modelo ids held together, which is a routing rule;
 - a one or two letter string compared with, or stored under, a name that means a clave.
 
-A literal leaves the findings only through a rule below, read from its own position: a
-calendar bound, a technical limit, a standard's code, or a registry id. There is no record
-of accepted literals, so a value the rules do not cover fails until it moves or a rule that
-states why it may stay is added here. The modelo ids come from the registry tree and the
-period codes from their enum, so neither is listed.
+A literal leaves the findings only through a rule below. There is no record of accepted
+literals: what the rules do not cover fails and stays listed until it moves or a rule states
+why it may stay. The modelo ids come from the registry tree and the period codes from their
+enum, so neither is listed.
 """
 
 from __future__ import annotations
@@ -34,7 +33,16 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _ROOT: Final = Path(__file__).resolve().parents[3]
 _SRC: Final = _ROOT / "src" / "cadrumo"
-_SCANNED: Final = ("domain", "application")
+_SCANNED: Final = (
+    _SRC / "domain",
+    _SRC / "application",
+    _SRC / "core",
+    _SRC / "adapters",
+    _SRC / "entrypoints",
+    _ROOT / "src" / "cadrumo_client",
+)
+_MACHINE_OWNERS: Final = ("cadrumo_client/", "adapters/persistence/storage/", "core/redaction/")
+"""These read operating system answers, framing and byte sizes; no tax value reaches them."""
 
 _NUMERIC_BOUNDS: Final = frozenset({"ge", "gt", "le", "lt"})
 _ARITHMETIC_BOUNDS: Final = frozenset({0, 1})
@@ -48,41 +56,31 @@ _MODELO_ADDRESS_CALLS: Final = frozenset(
     {"Modelo", "modelo_directory", "revision", "revision_for_context", "select_revision_metadata", "snapshot"},
 )
 _FORM_NAMED_MODULE: Final = re.compile(r"(?:^|_)m(\d{3})(?:_|$)")
-_YEAR_NAME: Final = re.compile(r"year|ejercicio", re.IGNORECASE)
 _MONTH_NAME: Final = re.compile(r"month", re.IGNORECASE)
 _DAY_NAME: Final = re.compile(r"days?(?:_|$)|dias", re.IGNORECASE)
-_QUARTER_NAME: Final = re.compile(r"quarter", re.IGNORECASE)
-_TECHNICAL_BOUND_NAME: Final = re.compile(
-    r"http_status|seconds|pixels|width|height|rounding_scale|generation$|(?:^|_)row$|(?:inventory|replay)_?limit",
-    re.IGNORECASE,
-)
-_NON_TAX_DECIMAL_NAME: Final = re.compile(r"confidence|score|hours_per_day", re.IGNORECASE)
 _COUNTRY_NAME: Final = re.compile(r"country|iso", re.IGNORECASE)
 _LENGTH_BOUNDS: Final = frozenset({"min_length", "max_length"})
-_PAYLOAD_GUARD: Final = 16
-_ORDERED_PAYLOAD_GUARD: Final = 64
 _SHA256_HEX: Final = 64
-_STANDARD_SHAPE_NAME: Final = re.compile(
-    r"(?:^|_)(?:hash|digest|sha256|nonce|ciphertext|id|country|pais|iso|currency|nif|tax_id|year|ejercicio|period|"
-    r"modelo|path|state|periodo|years|update_fields|classify_fields|separator|ref|locale|language|date|on|attachment|generation|public_key|member_?state|"
-    r"isin|intents|normalisations|filters|parties|reversed|coordinates|components)(?:_|$|\b)",
-    re.IGNORECASE,
-)
-_STRUCTURE_LEN_NAME: Final = re.compile(
-    r"(?:^|_)period$|args$|parts?$|parts\[|segments|split|groups?$|groups\[|fraction$|tokens?$|head$|pieces|pair|anchors|spans|children|candidates|"
-    r"keys$|ids$|boundaries|endpoints|arguments|suffix|outcomes|years$|actions|agenda|digits|"
-    r"grant|dek|operator_id|work_unit|_id$|stripped|\\bcase_id",
-    re.IGNORECASE,
-)
 _STANDARD_SHAPE_FUNCTION: Final = re.compile(
-    r"(?:^|_|\.)(?:date|year|month|day|calendar|yyyymmdd|ddmmyyyy|country|currency|iso|member|ccaa|territory_definition|"
-    r"jurisdictions|alpha|amount|number|decimal|modelo_id|modelo_code|selector_address)(?:_|\.|s?$)",
+    r"(?:^|_|\.)(?:yyyymmdd|ddmmyyyy|territory_definition|jurisdictions|modelo_code|selector_address)(?:_|\.|s?$)",
     re.IGNORECASE,
 )
-_ORDERING_OPERATORS: Final = (ast.Lt, ast.LtE, ast.Gt, ast.GtE)
-_DAYS_OF_A_YEAR: Final = frozenset({365, 366})
+_PATTERN_CALLS: Final = frozenset({"Field", "StringConstraints", "constr"})
+_REGEX_CALLS: Final = frozenset(
+    {"compile", "match", "fullmatch", "search", "sub", "subn", "findall", "finditer", "split"}
+)
+_WIDTH_QUANTIFIER: Final = re.compile(r"(\[[^\]]*\]|\\[A-Za-z]|\.|\))\{(\d+)(?:,(\d*))?\}")
+_HEX_CLASSES: Final = frozenset({"[0-9a-f]", "[a-f0-9]", "[0-9A-Fa-f]", "[A-Fa-f0-9]", "[0-9a-fA-F]", "[a-fA-F0-9]"})
+_CALENDAR_RANGES: Final = frozenset({(1, 12), (1, 31), (1, 53), (1, 366), (365, 366), (1, 7), (1900, 9999)})
+_CALENDAR_VALUES: Final = frozenset({7, 12, 24, 28, 29, 30, 31, 52, 53, 60, 365, 366, 1900, 9999})
+_ARITHMETIC_COMPARE: Final = frozenset({-1, 0, 1, 2, 100})
+_FIRST_YEAR: Final = 1900
+_LAST_YEAR: Final = 2100
+_YEAR_ENDPOINTS: Final = frozenset({(1, 1), (12, 31)})
+_EXCEL_EPOCH: Final = (1899, 12, 30)
+_MONTH_TUPLE_LENGTH: Final = 3
 _MONTHS_OF_A_YEAR: Final = 12
-_QUARTERS_OF_A_YEAR: Final = 4
+_DAYS_OF_A_YEAR: Final = frozenset({365, 366})
 _ADDRESS_KEYWORDS: Final = frozenset({"modelo", "period", "modelo_id", "source_modelo", "registry_token"})
 
 
@@ -124,44 +122,45 @@ def _docstrings(tree: ast.AST) -> set[ast.AST]:
     return found
 
 
-def _all_nines(value: object) -> bool:
-    """A bound of nines states a field width, whatever the field holds."""
-    return set(str(value).replace(".", "")) == {"9"}
-
-
-def _lawful_bound(owner: str, value: float) -> bool:
-    """Return whether a numeric bound on ``owner`` is a calendar range or a technical limit."""
-    if _all_nines(value) or _TECHNICAL_BOUND_NAME.search(owner):
-        return True
-    if owner.endswith("_count") and value >= _ORDERED_PAYLOAD_GUARD:
-        return True
-    if _YEAR_NAME.search(owner):
-        return value % 100 in {0, 1, 99}
-    if _DAY_NAME.search(owner):
-        return value in _DAYS_OF_A_YEAR
-    if _MONTH_NAME.search(owner):
-        return value <= _MONTHS_OF_A_YEAR
-    return bool(_QUARTER_NAME.search(owner)) and value <= _QUARTERS_OF_A_YEAR
-
-
-def _lawful_length(owner: str, value: int, other: int | None) -> bool:
-    """Return whether a ``Field`` length states a structure, a size guard or a standard's shape."""
-    words = re.sub(r"(?<=[a-z])(?=[A-Z])", "_", owner)
-    if value in _ARITHMETIC_BOUNDS or _STANDARD_SHAPE_NAME.search(words):
-        return True
-    exact = other == value
-    if exact:
+def _machine_capacity(value: float) -> bool:
+    """A power of two or of ten from a thousand up sizes a buffer or payload, not a tax rule."""
+    if not isinstance(value, int) or value < 1:
         return False
-    return value >= _PAYLOAD_GUARD or (other is not None and other >= _PAYLOAD_GUARD) or (other is None and value == 2)
+    return (value >= 16 and value & (value - 1) == 0) or (
+        value >= 1000 and str(value).strip("0") in {"1", "2", "4", "5"}
+    )
 
 
-def _lawful_len_comparison(subject: str, operator: ast.cmpop, value: int) -> bool:
-    """Return whether ``len(subject)`` against ``value`` states arithmetic, structure or a size guard."""
-    if value in _ARITHMETIC_BOUNDS or value == _SHA256_HEX or _STRUCTURE_LEN_NAME.search(subject):
+def _lawful_range(low: float | None, high: float | None) -> bool:
+    """Return whether a ``Field``'s numeric bounds state arithmetic, a calendar range or a capacity."""
+    if (low, high) in _CALENDAR_RANGES:
         return True
-    if isinstance(operator, _ORDERING_OPERATORS):
-        return value == 2 or value >= _ORDERED_PAYLOAD_GUARD
-    return False
+    return all(bound is None or bound in _ARITHMETIC_BOUNDS or _machine_capacity(bound) for bound in (low, high))
+
+
+def _lawful_length(low: float | None, high: float | None, pattern: str | None) -> bool:
+    """Return whether ``Field`` lengths state a digest, a payload guard or nothing at all."""
+    if (
+        pattern is not None
+        and all(group[0] in _HEX_CLASSES for group in _WIDTH_QUANTIFIER.findall(pattern))
+        and (_WIDTH_QUANTIFIER.search(pattern))
+    ):
+        return True
+    if low == high and low == _SHA256_HEX:
+        return True
+    if low is not None and low not in _ARITHMETIC_BOUNDS:
+        return False
+    return high is None or high in _ARITHMETIC_BOUNDS or _machine_capacity(high)
+
+
+def _lawful_width(pattern: str) -> bool:
+    """Return whether every regex width is a digest, a ``yyyy-mm-dd`` part or an open gap."""
+    calendar = pattern.replace(r"\d{4}-\d{2}-\d{2}", "")
+    for token, low, high in _WIDTH_QUANTIFIER.findall(calendar):
+        if token in _HEX_CLASSES or low == "0" or (high == "" and low in {"0", "1"}):
+            continue
+        return False
+    return True
 
 
 def _lawful_decimal(text: str) -> bool:
@@ -169,14 +168,32 @@ def _lawful_decimal(text: str) -> bool:
         value = Decimal(text)
     except InvalidOperation:
         return True
-    if value in {Decimal(0), Decimal(1), Decimal(100), Decimal(-1)} or _all_nines(text):
+    if value in {Decimal(0), Decimal(1), Decimal(100), Decimal(-1)}:
         return True
-    return value.is_finite() and value > 0 and value.as_tuple().digits[0] == 1 and sum(value.as_tuple().digits) == 1
+    return value.is_finite() and 0 < value < 1 and value.as_tuple().digits[0] == 1 and sum(value.as_tuple().digits) == 1
+
+
+def _constant_number(node: ast.AST | None) -> float | None:
+    if isinstance(node, ast.Constant) and isinstance(node.value, (int, float)) and not isinstance(node.value, bool):
+        return node.value
+    if isinstance(node, ast.UnaryOp) and isinstance(node.op, ast.USub):
+        inner = _constant_number(node.operand)
+        return None if inner is None else -inner
+    return None
 
 
 class _Sweep(ast.NodeVisitor):
-    def __init__(self, tree: ast.AST, modelos: frozenset[str], periods: frozenset[str], own_form: str | None) -> None:
+    def __init__(
+        self,
+        tree: ast.AST,
+        modelos: frozenset[str],
+        periods: frozenset[str],
+        own_form: str | None,
+        *,
+        machine: bool = False,
+    ) -> None:
         self._own_form = own_form
+        self._machine = machine
         self._parents = {child: parent for parent in ast.walk(tree) for child in ast.iter_child_nodes(parent)}
         self._docstrings = _docstrings(tree)
         self._modelos = modelos
@@ -185,34 +202,6 @@ class _Sweep(ast.NodeVisitor):
 
     def _report(self, kind: str, value: object, node: ast.AST) -> None:
         self.findings.append(f"{kind}:{value!r}@{getattr(node, 'lineno', 0)}")
-
-    def _owner(self, node: ast.AST) -> str:
-        """Return the name the statement around ``node`` declares, whatever annotation holds it."""
-        current = node
-        while current in self._parents:
-            current = self._parents[current]
-            if isinstance(current, ast.AnnAssign):
-                return _expression_names(current.target)
-            if isinstance(current, ast.Assign):
-                return " ".join(_expression_names(target) for target in current.targets)
-            if isinstance(current, ast.AugAssign):
-                return _expression_names(current.target)
-            if isinstance(current, ast.TypeAlias):
-                return _expression_names(current.name)
-            if isinstance(current, ast.stmt):
-                return ""
-        return ""
-
-    def _annotation_of(self, node: ast.AST) -> str:
-        """Return the annotated type around a ``Field``: a row per month states the calendar."""
-        current = node
-        while current in self._parents:
-            current = self._parents[current]
-            if isinstance(current, ast.AnnAssign):
-                return ast.unparse(current.annotation)
-            if isinstance(current, ast.stmt):
-                return ""
-        return ""
 
     def _enclosing_function(self, node: ast.AST) -> str:
         """Return the enclosing function and class names, innermost first, in snake case."""
@@ -264,58 +253,126 @@ class _Sweep(ast.NodeVisitor):
     @override
     def visit_Call(self, node: ast.Call) -> None:
         name = _called_name(node)
+        keywords = {keyword.arg: keyword.value for keyword in node.keywords}
         if name == "Decimal" and len(node.args) == 1:
             argument = node.args[0]
-            if (
-                isinstance(argument, ast.Constant)
-                and isinstance(argument.value, str)
-                and not _lawful_decimal(argument.value)
-                and not _NON_TAX_DECIMAL_NAME.search(self._owner(node))
-            ):
-                self._report("decimal", argument.value, node)
-        if name == "Field":
-            for keyword in node.keywords:
-                if (
-                    keyword.arg in _NUMERIC_BOUNDS
-                    and isinstance(keyword.value, ast.Constant)
-                    and isinstance(keyword.value.value, (int, float))
-                    and not isinstance(keyword.value.value, bool)
-                    and keyword.value.value not in _ARITHMETIC_BOUNDS
-                    and not _lawful_bound(self._owner(node), keyword.value.value)
-                ):
-                    self._report(f"field_{keyword.arg}", keyword.value.value, keyword.value)
-            lengths = {
-                keyword.arg: keyword.value.value
-                for keyword in node.keywords
-                if keyword.arg in _LENGTH_BOUNDS
-                and isinstance(keyword.value, ast.Constant)
-                and isinstance(keyword.value.value, int)
-            }
-            for bound, value in lengths.items():
-                other = lengths.get("max_length" if bound == "min_length" else "min_length")
-                if value == _MONTHS_OF_A_YEAR and "Monthly" in self._annotation_of(node):
-                    continue
-                if not _lawful_length(self._owner(node), value, other):
-                    self._report(f"field_{bound}", value, node)
+            literal = argument.value if isinstance(argument, ast.Constant) else None
+            if isinstance(literal, (str, int, float)) and not _lawful_decimal(str(literal)):
+                self._report("decimal", literal, node)
+        if name in _PATTERN_CALLS:
+            self._visit_constraints(node, keywords)
+        if name in _REGEX_CALLS and node.args:
+            self._visit_regex(node.args[0], node)
+        if name == "timedelta":
+            days = keywords.get("days", node.args[0] if node.args else None)
+            number = _constant_number(days)
+            if number is not None and number not in _ARITHMETIC_BOUNDS:
+                self._report("timedelta", number, node)
+        if name == "date" and len(node.args) == 3:
+            self._visit_date(node)
         self.generic_visit(node)
+
+    def _visit_constraints(self, node: ast.Call, keywords: dict[str | None, ast.expr]) -> None:
+        pattern = keywords.get("pattern")
+        text = pattern.value if isinstance(pattern, ast.Constant) and isinstance(pattern.value, str) else None
+        if pattern is not None:
+            self._visit_regex(pattern, node)
+        low = _constant_number(keywords.get("ge", keywords.get("gt")))
+        high = _constant_number(keywords.get("le", keywords.get("lt")))
+        if not _lawful_range(low, high):
+            self._report("field_bound", (low, high), node)
+        lengths = {arg: _constant_number(keywords.get(arg)) for arg in _LENGTH_BOUNDS}
+        if not _lawful_length(lengths["min_length"], lengths["max_length"], text):
+            self._report("field_length", (lengths["min_length"], lengths["max_length"]), node)
+
+    def _visit_regex(self, pattern: ast.AST, node: ast.AST) -> None:
+        if isinstance(pattern, ast.Constant) and isinstance(pattern.value, str) and not _lawful_width(pattern.value):
+            self._report("regex_width", pattern.value, node)
+
+    def _visit_date(self, node: ast.Call) -> None:
+        year, month, day = (_constant_number(argument) for argument in node.args)
+        if year is not None:
+            if (year, month, day) != _EXCEL_EPOCH:
+                self._report("date_literal", (year, month, day), node)
+        elif month is not None and day is not None and (month, day) not in _YEAR_ENDPOINTS:
+            self._report("date_literal", (month, day), node)
 
     @override
     def visit_Compare(self, node: ast.Compare) -> None:
-        left = node.left
-        if (
-            len(node.comparators) == 1
-            and isinstance(left, ast.Call)
-            and _called_name(left) == "len"
-            and left.args
-            and isinstance(limit := node.comparators[0], ast.Constant)
-            and isinstance(limit.value, int)
-            and not _lawful_len_comparison(ast.unparse(left.args[0]), node.ops[0], limit.value)
-            and not _STANDARD_SHAPE_FUNCTION.search(self._enclosing_function(node))
-        ):
-            self._report("len_compare", limit.value, node)
+        is_len = isinstance(node.left, ast.Call) and _called_name(node.left) == "len"
+        for side in (node.left, *node.comparators):
+            if self._modelo_literal(side):
+                self._report("modelo_compare", ast.unparse(node), node)
+            number = _constant_number(side)
+            if number is None:
+                continue
+            if _FIRST_YEAR < number < _LAST_YEAR and not is_len:
+                self._report("year_branch", number, node)
+            elif (
+                number not in _ARITHMETIC_COMPARE
+                and not _machine_capacity(number)
+                and not self._machine
+                and number != _SHA256_HEX
+                and (is_len or number not in _CALENDAR_VALUES)
+                and not (is_len and _STANDARD_SHAPE_FUNCTION.search(self._enclosing_function(node)))
+            ):
+                self._report("len_compare" if is_len else "threshold", number, node)
+        if is_len and not self._machine:
+            for side in node.comparators:
+                if isinstance(side, (ast.Set, ast.Tuple, ast.List)):
+                    self._report("len_in", ast.unparse(side), node)
+        self.generic_visit(node)
+
+    def _modelo_literal(self, node: ast.AST) -> bool:
+        if isinstance(node, ast.Attribute) and isinstance(node.value, ast.Call):
+            node = node.value
+        if isinstance(node, ast.Call) and _called_name(node) == "Modelo":
+            return True
+        return isinstance(node, ast.Constant) and isinstance(node.value, str) and node.value in self._modelos
+
+    @override
+    def visit_Match(self, node: ast.Match) -> None:
+        for case in node.cases:
+            for pattern in ast.walk(case.pattern):
+                if isinstance(pattern, ast.MatchValue) and isinstance(pattern.value, ast.Constant):
+                    value = pattern.value.value
+                    if isinstance(value, (int, float)) or (isinstance(value, str) and _CODE_SHAPED.match(value)):
+                        self._report("match_case", value, pattern)
+        self.generic_visit(node)
+
+    @override
+    def visit_Dict(self, node: ast.Dict) -> None:
+        for key in node.keys:
+            if (
+                isinstance(key, ast.Constant)
+                and isinstance(key.value, str)
+                and _CODE_SHAPED.match(key.value)
+                and not self._month_keyed(key)
+            ):
+                self._report("dict_key", key.value, key)
+        for value in node.values:
+            self.visit(value)
+
+    @override
+    def visit_Subscript(self, node: ast.Subscript) -> None:
+        target = node.value
+        if (target.attr if isinstance(target, ast.Attribute) else getattr(target, "id", "")) == "Literal":
+            for member in ast.walk(node.slice):
+                if (
+                    isinstance(member, ast.Constant)
+                    and isinstance(member.value, str)
+                    and _CODE_SHAPED.match(member.value)
+                ):
+                    self._report("literal_type", member.value, member)
+            return
         self.generic_visit(node)
 
     def _visit_collection(self, node: ast.Set | ast.Tuple | ast.List) -> None:
+        months = [_constant_number(element) for element in node.elts]
+        if len(months) >= _MONTH_TUPLE_LENGTH and all(
+            month is not None and 1 <= month <= _MONTHS_OF_A_YEAR for month in months
+        ):
+            self._report("month_tuple", tuple(months), node)
         ids: list[str] = []
         for element in node.elts:
             literal = element
@@ -379,14 +436,22 @@ class _Sweep(ast.NodeVisitor):
             self._report("letter_clave", value, node)
 
 
-def sweep_source(source: str, *, modelos: frozenset[str], periods: frozenset[str], module: str = "") -> list[str]:
+def sweep_source(
+    source: str,
+    *,
+    modelos: frozenset[str],
+    periods: frozenset[str],
+    module: str = "",
+    machine: bool = False,
+) -> list[str]:
     """Return one ``kind:value@line`` entry per literal of ``source`` standing where a tax fact could.
 
-    ``module`` names the file: a module named for one form may name that form.
+    ``module`` names the file: a module named for one form may name that form. ``machine``
+    marks an owner whose comparisons read operating system answers and byte sizes.
     """
     tree = ast.parse(source)
     form_named = _FORM_NAMED_MODULE.search(module)
-    sweep = _Sweep(tree, modelos, periods, form_named[1] if form_named else None)
+    sweep = _Sweep(tree, modelos, periods, form_named[1] if form_named else None, machine=machine)
     sweep.visit(tree)
     return sweep.findings
 
@@ -398,7 +463,14 @@ def sweep_tree(root: Path, *, modelos: frozenset[str], periods: frozenset[str]) 
         relative = path.relative_to(root)
         if "tests" in relative.parts:
             continue
-        findings = sweep_source(path.read_text(encoding="utf-8"), modelos=modelos, periods=periods, module=path.stem)
+        owner = f"{root.name}/{relative.as_posix()}"
+        findings = sweep_source(
+            path.read_text(encoding="utf-8"),
+            modelos=modelos,
+            periods=periods,
+            module=path.stem,
+            machine=owner.startswith(_MACHINE_OWNERS),
+        )
         if findings:
             found[relative.as_posix()] = findings
     return found
@@ -408,8 +480,8 @@ def _current() -> dict[str, list[str]]:
     modelos, periods = _modelo_ids(), _period_codes()
     found: dict[str, list[str]] = {}
     for top in _SCANNED:
-        for path, entries in sweep_tree(_SRC / top, modelos=modelos, periods=periods).items():
-            found[f"{top}/{path}"] = entries
+        for path, entries in sweep_tree(top, modelos=modelos, periods=periods).items():
+            found[f"{top.name}/{path}"] = entries
     return found
 
 
@@ -421,12 +493,12 @@ _FAKE_PERIODS: Final = frozenset({"0A", "1T", "01"})
     ("line", "kind"),
     [
         ("cap = Decimal('300.51')\n", "decimal"),
-        ("clave: int = Field(ge=1, le=7)\n", "field_le"),
-        ("rows: tuple[int, ...] = Field(min_length=18, max_length=18)\n", "field_min_length"),
-        ("rows: tuple[int, ...] = Field(max_length=12)\n", "field_max_length"),
+        ("clave: int = Field(ge=1, le=6)\n", "field_bound"),
+        ("rows: tuple[int, ...] = Field(min_length=18, max_length=18)\n", "field_length"),
+        ("rows: tuple[int, ...] = Field(max_length=12)\n", "field_length"),
         ("ok = len(row) == 3\n", "len_compare"),
         ("BOX = '0208'\n", "code"),
-        ("descendant_count: int = Field(ge=0, le=10)\n", "field_le"),
+        ("descendant_count: int = Field(ge=0, le=10)\n", "field_bound"),
         ("if revision_id == '2022':\n    pass\n", "code"),
         ("box = '303'\n", "code"),
         ("ROUTED = frozenset({Modelo('111').value, Modelo('303').value})\n", "modelo_set"),
@@ -434,11 +506,33 @@ _FAKE_PERIODS: Final = frozenset({"0A", "1T", "01"})
         ("if clave == 'A':\n    pass\n", "letter_clave"),
         ("subclave = 'B'\n", "letter_clave"),
         ("tipo_renta_code: str = 'XY'\n", "letter_clave"),
-        ("first_year: int = Field(ge=2012)\n", "field_ge"),
-        ("month: int = Field(le=13)\n", "field_le"),
-        ("minimum_days: int = Field(le=180)\n", "field_le"),
-        ("slot: int = Field(ge=1, le=5)\n", "field_le"),
-        ("deduction_limit: int = Field(le=300)\n", "field_le"),
+        ("first_year: int = Field(ge=2012)\n", "field_bound"),
+        ("month: int = Field(le=13)\n", "field_bound"),
+        ("minimum_days: int = Field(le=180)\n", "field_bound"),
+        ("slot: int = Field(ge=1, le=5)\n", "field_bound"),
+        ("deduction_limit: int = Field(le=300)\n", "field_bound"),
+        ("code: Annotated[str, StringConstraints(min_length=2, max_length=2)]\n", "field_length"),
+        ("code: str = Field(pattern=r'^\\d{3}$')\n", "regex_width"),
+        ("CODE = re.compile(r'^[A-Z]{2}\\d{3}$')\n", "regex_width"),
+        ("rate = Decimal('0.19')\n", "decimal"),
+        ("cap = Decimal('1000')\n", "decimal"),
+        ("MAX = Decimal('999999.99')\n", "decimal"),
+        ("limit: int = Field(max_length=99)\n", "field_length"),
+        ("code: str = Field(min_length=16, max_length=16)\n", "field_length"),
+        ("if income > 12450:\n    pass\n", "threshold"),
+        ("if width > 77:\n    pass\n", "threshold"),
+        ("slot_width: int = Field(ge=2, le=9)\n", "field_bound"),
+        ("if ejercicio == 2022:\n    pass\n", "year_branch"),
+        ("QUARTERS = (1, 4, 7, 10)\n", "month_tuple"),
+        ("start = date(2023, 1, 1)\n", "date_literal"),
+        ("end = date(year, 7, 30)\n", "date_literal"),
+        ("due = today + timedelta(days=20)\n", "timedelta"),
+        ("modelo: Literal['100']\n", "literal_type"),
+        ("if modelo == '303':\n    pass\n", "modelo_compare"),
+        ("if context.modelo == Modelo('100').value:\n    pass\n", "modelo_compare"),
+        ("match code:\n    case '0208':\n        pass\n", "match_case"),
+        ("ROWS = {'0208': 1}\n", "dict_key"),
+        ("ok = len(code) in {3, 4}\n", "len_in"),
     ],
 )
 def test_the_sweep_rejects_a_representative_tax_literal(line: str, kind: str) -> None:
@@ -452,27 +546,34 @@ def test_the_sweep_rejects_a_representative_tax_literal(line: str, kind: str) ->
         "x = Decimal('0.01')\n",
         "rate = value / Decimal('100')\n",
         "name: str = Field(max_length=128)\n",
+        "name: str = Field(max_length=4096)\n",
         "count: int = Field(ge=0)\n",
         "directory = operation.modelo_directory('303')\n",
         "selected = Modelo('303')\n",
-        "if context.modelo == Modelo('100').value:\n    pass\n",
         "work = load(modelo='303', period='1T')\n",
         '"""A docstring may cite casilla 0208 and clave A."""\n',
         "label = 'A'\n",
         "end = date(year, 12, 31)\n",
+        "start = date(year, 1, 1)\n",
+        "EPOCH = date(1899, 12, 30)\n",
+        "later = now + timedelta(hours=18)\n",
+        "next_day = day + timedelta(days=1)\n",
         "year: int = Field(ge=1900, le=9999)\n",
-        "type Year = Annotated[int, Field(ge=2000, le=2099)]\n",
         "month: Annotated[int, Field(ge=1, le=12)]\n",
         "calendar_days: int = Field(ge=365, le=366)\n",
-        "quarters_filed: int = Field(ge=1, le=4)\n",
-        "http_status: int = Field(ge=100, le=599)\n",
-        "lifetime_seconds: float = Field(gt=0, le=1800)\n",
-        "numero_orden: int = Field(ge=1, le=9999999)\n",
-        "MAXIMUM = Decimal('999999999999.99')\n",
-        "_LOW_CONFIDENCE = Decimal('0.5')\n",
+        "digest: str = Field(pattern=r'^[0-9a-f]{64}$', min_length=64, max_length=64)\n",
+        "run: str = Field(pattern=r'^[0-9a-f]{16}$', min_length=16, max_length=16)\n",
+        "ISO = re.compile(r'\\d{4}-\\d{2}-\\d{2}')\n",
+        "GAP = re.compile(r'Ejercicio.{0,80}?x')\n",
         "_SPAIN_COUNTRY_CODE = 'ES'\n",
         "NAMES = {'01': 'finding.month_01'}\n",
         "REVISION_ID = '2022'\n",
+        "def _validate_yyyymmdd(raw):\n    return len(raw) != 8\n",
+        "def _territory_definition(code):\n    return len(code) != 5\n",
+        "def _impatriado_jurisdictions_are_canonical(values):\n    return all(len(value) == 2 for value in values)\n",
+        "class ModeloCode(str):\n    def __new__(cls, raw):\n        return len(raw) != 3\n",
+        "def _require_selector_address(target):\n    return len(target) == 16\n",
+        "ok = len(target_period) == 2\n",
     ],
 )
 def test_the_sweep_admits_what_stands_where_no_tax_fact_can(line: str) -> None:
@@ -483,6 +584,12 @@ def test_a_module_named_for_one_form_may_name_that_form_and_no_other() -> None:
     line = "box = '303'\nother = '111'\n"
     findings = sweep_source(line, modelos=_FAKE_MODELOS, periods=_FAKE_PERIODS, module="m303_arrivals")
     assert findings == ["code:'111'@2"]
+
+
+def test_a_machine_owner_may_compare_sizes_but_not_hold_a_tax_value() -> None:
+    assert sweep_source("ok = status == 404\n", modelos=_FAKE_MODELOS, periods=_FAKE_PERIODS, machine=True) == []
+    findings = sweep_source("cap = Decimal('300.51')\n", modelos=_FAKE_MODELOS, periods=_FAKE_PERIODS, machine=True)
+    assert findings == ["decimal:'300.51'@1"]
 
 
 def test_a_defect_added_to_a_copied_tree_is_found(tmp_path: Path) -> None:
@@ -502,6 +609,7 @@ def test_a_defect_added_to_a_copied_tree_is_found(tmp_path: Path) -> None:
     }
 
 
-def test_the_domain_and_application_code_holds_no_tax_literal() -> None:
+def test_the_tax_code_holds_no_tax_literal() -> None:
     found = _current()
-    assert not found, f"a tax value belongs to the registry: {found}"
+    listing = "\n".join(f"{path}: {entry}" for path, entries in sorted(found.items()) for entry in entries)
+    assert not found, f"a tax value belongs to the registry:\n{listing}"

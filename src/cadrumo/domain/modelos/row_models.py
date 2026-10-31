@@ -54,7 +54,7 @@ from ...core.time.clock import today_madrid
 from ...core.unit_proportion import UnitProportion
 from ..calculations.registry.authority import PinnedAuthorityOperation
 from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
-from ..calculations.registry.form_codes import resolve_form_codes
+from ..calculations.registry.form_codes import require_form_width, resolve_form_codes
 from ..calculations.registry.governed_fact_scope import GovernedFactSource, require_governed_fact_authority
 from ..calculations.registry.nif_iva_catalogue import nif_iva_format_for_country
 from ..calculations.registry.schema_base import DateAxis
@@ -69,7 +69,7 @@ _NifStr = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, 
 _NameStr = Annotated[str, StringConstraints(strip_whitespace=True, max_length=200)]
 _RequiredNameStr = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=200)]
 _IsoCountryCode = Annotated[str, StringConstraints(strip_whitespace=True, min_length=2, max_length=2)]
-_M210OfficialTipoRentaCode = Annotated[str, StringConstraints(strip_whitespace=True, min_length=2, max_length=2)]
+_M210OfficialTipoRentaCode = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=16)]
 
 
 def _registry_detail_catalogue(
@@ -241,7 +241,7 @@ class Modelo184MemberRow(BaseModel):
     subclave: str | None = None
 
     # Always-present-per-row facts, independent of clave.
-    codigo_provincia: Annotated[str, StringConstraints(strip_whitespace=True, max_length=2)] | None = None
+    codigo_provincia: Annotated[str, StringConstraints(strip_whitespace=True, max_length=16)] | None = None
     miembro_a_31_diciembre: bool | None = None
     dias_miembro: int | None = Field(default=None, ge=0, le=366)
     domicilio_fiscal: Annotated[str, StringConstraints(strip_whitespace=True, max_length=40)] | None = None
@@ -254,8 +254,8 @@ class Modelo184MemberRow(BaseModel):
     porcentaje_titularidad_inmueble: Decimal | None = None
     dias_arrendamiento: int | None = Field(default=None, ge=0, le=366)
 
-    # Shared clave-C/clave-D reducción field (diseño positions 109-119); the
-    # clave-A branch of this same physical field is deliberately excluded.
+    # The reducción field (diseño positions 109-119); the registry declares which
+    # claves and subclaves bear it.
     reduccion: Decimal | None = None
 
     # Clave-D subclave 03/04 rendimiento-neto fields (estimación objetiva).
@@ -321,6 +321,12 @@ class Modelo184MemberRow(BaseModel):
         if self.reduccion is not None and not {self.clave, f"{self.clave}:{self.subclave}"} & bearing:
             raise ValueError(f"clave {self.clave!r} subclave {self.subclave!r} carries no reducción")
         return self
+
+    @field_validator("codigo_provincia")
+    @classmethod
+    @pydantic_validation_boundary
+    def _provincia_has_the_declared_width(cls, value: str | None) -> str | None:
+        return require_form_width(value, "m184.row.provincia_digits")
 
 
 # ---------------------------------------------------------------------------
@@ -860,6 +866,12 @@ class Modelo210AgrupacionRentaRow(BaseModel):
         elif self.bien_derecho_id is not None:
             raise ValueError("bien_derecho_id is only valid when deriva_de_bien_derecho is true")
         return self
+
+    @field_validator("tipo_renta_code")
+    @classmethod
+    @pydantic_validation_boundary
+    def _tipo_renta_has_the_declared_width(cls, value: str | None) -> str | None:
+        return require_form_width(value, "m210.tipo_renta_digits")
 
 
 class Modelo210AgrupacionRentaRowsError(CadrumoError):

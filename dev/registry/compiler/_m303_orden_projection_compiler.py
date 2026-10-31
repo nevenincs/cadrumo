@@ -11,6 +11,7 @@ from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.form_codes import resolve_form_codes
 from cadrumo.domain.calculations.registry.governed_fact_scope import governed_facts_in_scope
 from cadrumo.domain.calculations.registry.ids import LegalRefId, RevisionId, SourceRefId
+from cadrumo.domain.calculations.registry.m303_orden_constants import M303_2022_ORDEN_SOURCE_REF
 from cadrumo.domain.calculations.registry.m303_orden_projection_models import M303AnnualOrdenProjection
 from cadrumo.domain.iva.regimen_simplificado_rows import (
     ActividadOrdenAnual,
@@ -57,11 +58,15 @@ def require_declared_orden_shape(census: M303AnnualOrdenSourceCensus) -> None:
         raise RegistryValidationError(f"annual Orden seasonal band is past the {max_days} days of a seasonal activity")
 
 
-def require_single_page_edition(*, ejercicio: int, registry_revision_id: str, record_design_epoch: str | None) -> None:
+def require_single_page_edition(
+    *, ejercicio: int, source_ref: str, registry_revision_id: str, record_design_epoch: str | None
+) -> None:
     """Refuse a single-page edition year whose revision or record design is of another edition."""
     editions = resolve_form_codes("form-row-codes", effective_date=date(ejercicio, 1, 1)).codes(
         "m303.dp30302.single_page_epochs"
     )
+    if (source_ref == M303_2022_ORDEN_SOURCE_REF) != (str(ejercicio) in editions):
+        raise RegistryValidationError(f"annual Orden {ejercicio} and source {source_ref} are of different editions")
     if str(ejercicio) in editions and (registry_revision_id not in editions or record_design_epoch not in editions):
         raise RegistryValidationError(
             f"annual Orden {ejercicio} must retain its single-page revision and record design"
