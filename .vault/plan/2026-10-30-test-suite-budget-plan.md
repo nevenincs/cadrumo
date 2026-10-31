@@ -8,7 +8,7 @@ related:
   - '[[2026-08-14-test-harness-sanity-successor-adr]]'
 modified: '2026-10-31'
 body_schema: body-v2
-body_hash: 'sha256:0af69ce09a2761f762e84b922f019eb76da1d23ee631a6f83a1e247f4111e7df'
+body_hash: 'sha256:888dff76d009673a18326230e2e12f6805dad2bf1bf28fae9bc47a972384108d'
 ---
 
 # `test-suite-budget` plan
@@ -25,6 +25,8 @@ Speed comes first from removing repeated work in the slowest tests. A removal ne
 
 Constraint on reuse: secure stores stay per test. `2026-07-04-codebase-solidification-audit` disproved the June module-scope hoist, because the store persists a bucket directory, manifest, wrapped-DEK keystore, SQLite database and catalogue on disk, and sharing it let persisted IDs bleed between tests and silenced idempotency and anti-tautology assertions. A savepoint rollback cannot reset those artefacts. Steps may share only stateless work (operation composition, compiled registries, built inputs) at worker or module scope, as S01 does. Where store setup is the cost, build and seal a template store once per worker, then copy it into each test's own `tmp_path` and open a fresh runtime on the copy; never hand one live store, repository or keystore to two tests.
 
+Operator authorization, 2026-10-31: heavy real builds move from the full lane to a release lane (S12); stored revisions reference their snapshot by digest instead of embedding it, under a new ADR with a migration (S13); tests may be deleted on coverage and mutation evidence, with critical tax paths requiring mutation evidence (S10); a Defender exclusion on the worktree's test temp folder is approved and its effect is measured (S14). The operator also requires a measured account of why one CLI command shows 6,000 to 18,000 non-read, non-write I/O operations, with unjustified ones removed (S15).
+
 ## Steps
 
 - [x] `S01` - Compose the conformance runtime once per worker instead of per case: registered-executor conformance and subject binding (7,100s); `src/cadrumo/entrypoints/tests/registered_executor_case_support.py`.
@@ -38,6 +40,10 @@ Constraint on reuse: secure stores stay per test. `2026-07-04-codebase-solidific
 - [ ] `S09` - Remove whole-function and token-level clones across test trees; `src, dev test trees`.
 - [ ] `S10` - Prune redundant tests by per-test coverage and mutation evidence on critical modules; `src, dev test trees`.
 - [ ] `S11` - Add a lane time budget and per-test ceiling so the suite cannot drift back; `justfile, dev/test_runs`.
+- [ ] `S12` - Move heavy real builds from the full lane to a release lane, keeping a fast contract check in the full lane; `justfile, dev/packaging/tests, dev/tests, dev/registry/tests`.
+- [ ] `S13` - Replace the snapshot embedded in each stored revision with a digest reference and migrate stored revisions, under a new ADR; `src/cadrumo/adapters/persistence/profile/modelos_calculation.py, src/cadrumo/domain/modelos/calculation_revision_rendering.py`.
+- [ ] `S14` - Measure the Defender exclusion on the worktree test temp folder against the same runs without it; `.tmp/, dev/test_runs`.
+- [ ] `S15` - Account for the non-read, non-write I/O of one CLI command by measurement and remove what no invariant justifies; `src/cadrumo, src/cadrumo_runtime, src/cadrumo_client`.
 
 ## Parallelization
 
