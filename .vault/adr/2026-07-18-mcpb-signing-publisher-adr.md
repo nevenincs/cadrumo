@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#mcpb-signing-publisher'
 date: '2026-07-18'
-modified: '2026-07-19'
-body_hash: 'sha256:c44ce7bd43135b3b717b3d2a37994954aebd740f0fdc3997805acee315a6bf28'
+modified: '2026-10-31'
+body_hash: 'sha256:fcac489954d6aa77e0cda10d8986f0b0826607cbc8efd3f3034c4aed246334da'
 related:
   - "[[2026-07-17-mcpb-signing-publisher-research]]"
 ---
@@ -76,3 +76,9 @@ documentation owns setting that expectation. The distribution ADR's MCPB
 signing constraint is satisfied by this declared policy rather than a
 signature. If the posture changes later, signing rides a new version and
 cohort per the rollback rules, never a re-signed in-place artifact.
+
+## Amendment 2026-10-31 - the unsigned posture is permanent
+
+Basis: the user's ruling of 2026-10-31 that Cadrumo, an open-source project, will never hold an Apple Developer ID or any other real code-signing certificate and will never be notarized, and that this was never planned. The ad-hoc identity `-`, with a seal that `codesign --verify --deep --strict` accepts as a build gate, is the permanent macOS distribution signature. The ruling names any real code-signing certificate, so it covers Windows Authenticode equally: Windows images and installers ship without a publisher signature. The user pre-approved ADR changes for the macOS platform bring-up, recorded in the Description of `2026-10-30-macos-platform-plan`; this is its Step `S19`.
+
+Decision: "Revisit only if the project gains funding or a free trusted code-signing path for open-source projects becomes available." is withdrawn. The MCPB stays unsigned, with its published digest as the integrity channel, and the decision is not revisited on either trigger.

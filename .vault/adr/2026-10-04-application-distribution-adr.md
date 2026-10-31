@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#application-distribution'
 date: '2026-10-04'
-modified: '2026-10-29'
+modified: '2026-10-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:42cbfd5a72a7d871788c9dac00ce5f65a28911d4449a9862a9a09267dd37f147'
+body_hash: 'sha256:358fa514e65cd58ed6fabd9e44780cabf0eae16f0699362eaceb07de58a0f2ea'
 related:
   - '[[2026-10-04-application-distribution-research]]'
   - '[[2026-10-03-application-packaging-interpreter-foundation-adr]]'
@@ -96,3 +96,9 @@ One shared identity projection keeps product names, installer IDs and platform r
 ## Consequences
 
 This extends the earlier interpreter foundation's installer exclusion for this authorized work. PyPI release delivery remains unchanged; native application packaging is an additional authorized deliverable, refining the earlier CLI distribution deferral without replacing its Python release pipeline. Public publication and signing credentials remain separate external actions. Final acceptance requires real payload build/install/uninstall evidence on every declared target, including the runtime manager's registration and lifecycle on disposable hosts.
+
+## Amendment 2026-10-31 - no publisher signing
+
+Basis: the user's ruling of 2026-10-31 that Cadrumo, an open-source project, will never hold an Apple Developer ID or any other real code-signing certificate and will never be notarized, and that this was never planned. The ad-hoc identity `-`, with a seal that `codesign --verify --deep --strict` accepts as a build gate, is the permanent macOS distribution signature. The ruling names any real code-signing certificate, so it covers Windows Authenticode equally: Windows images and installers ship without a publisher signature. The user pre-approved ADR changes for the macOS platform bring-up, recorded in the Description of `2026-10-30-macos-platform-plan`; this is its Step `S19`.
+
+"Signing is explicit and must not claim publisher verification without actual credentials and verification." stands and is now permanent: no distributed artifact claims publisher verification, because no credentials will exist. macOS bundles carry the ad-hoc seal; Windows and Linux artifacts carry no code signature. The authorization phrase "everything except signing certificates" in this record's amendments describes a permanent exclusion, not deferred work. `RELEASING.md` and the user installation page, `docs/workstation-setup.md`, state the unsigned posture and the macOS first-run path; neither describes a signing step.

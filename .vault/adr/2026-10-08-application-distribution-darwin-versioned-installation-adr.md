@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#application-distribution'
 date: '2026-10-08'
-modified: '2026-10-08'
+modified: '2026-10-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:f95336e102124cd9ecf5c30e6624b92785f5c13672ebc3a79b571eb70df1a672'
+body_hash: 'sha256:7e59b7a8a5cad40fcbd0350d7ec5ee9c058b758da0ae8b9d3b3dbf04ec1cd521'
 related:
   - "[[2026-10-08-application-distribution-darwin-versioned-installation-research]]"
   - "[[2026-10-04-application-distribution-adr]]"
@@ -128,3 +128,18 @@ A one-shot completion owner supplies the missing observation and publication bou
 ## Consequences
 
 The DMG remains the delivery format, with CLI-first CMake maintenance instead of an assumed drag-copy workflow. Darwin needs a real native backend, scoped package admission and an explicit remover. Source and unsigned build work can proceed after acceptance, while native installation remains gated by specific missing evidence. Machine scope may remain unavailable on hosts where complete opposite-scope discovery cannot be proved.
+
+## Amendment 2026-10-31 - signing gates withdrawn
+
+Basis: the user's ruling of 2026-10-31 that Cadrumo, an open-source project, will never hold an Apple Developer ID or any other real code-signing certificate and will never be notarized, and that this was never planned. The ad-hoc identity `-`, with a seal that `codesign --verify --deep --strict` accepts as a build gate, is the permanent macOS distribution signature. The ruling names any real code-signing certificate, so it covers Windows Authenticode equally: Windows images and installers ship without a publisher signature. The user pre-approved ADR changes for the macOS platform bring-up, recorded in the Description of `2026-10-30-macos-platform-plan`; this is its Step `S19`.
+
+This proposal's signing gates are withdrawn. No release, activation or acceptance stage waits for a certificate, a Developer ID, a hardened runtime bound to a team identifier, or notarization. The ad-hoc seal and its strict verification take their place.
+
+Superseded sentences:
+
+- Problem Statement: "The user's instruction to code and build everything except unavailable signing certificates supports implementation and unsigned artifact work after decision review. It does not supply missing native receipt, signing or interactive lifecycle evidence" now reads: "The user's instruction supports implementation and ad-hoc sealed artifact work after decision review. It does not supply missing native receipt or interactive lifecycle evidence".
+- Declare the Darwin topology: "signing-aware nested-code placement" reads as placement that keeps the ad-hoc seal valid.
+- Preserve installed-scope login defaults: "Signing gates remain in force." is withdrawn.
+- Implement in independently verifiable stages: "Signing and notarization remain release prerequisites; unavailable certificates do not block the authorized unsigned work." is withdrawn. Elsewhere in this record "unsigned" package or artifact reads "ad-hoc sealed".
+
+Unchanged: native receipt evidence, authenticated package preflight, complete scope admission and disposable-host lifecycle evidence remain gates. Until this proposal is accepted and implemented, the drag-copy bundle registers its own per-user login agent from the installed manager, as the 2026-10-31 amendment of `2026-10-04-runtime-manager-architecture-adr` records. A scoped LaunchAgent written by a native package, as proposed here, would replace that registration once scoped packages ship.
