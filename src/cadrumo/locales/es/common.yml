@@ -4985,8 +4985,8 @@ ledger:
         la base amortizable legal.
       claims_overlap: Los cargos de un elemento no pueden cubrir intervalos que se
         solapen.
-      constant_percentage_weighting_not_enrolled: 'Cadrumo todavía no admite esto:
-        la ponderación del porcentaje constante para este plazo de amortización.'
+      constant_percentage_weighting_not_enrolled: 'Esto todavía no se admite: la ponderación
+        del porcentaje constante para este plazo de amortización.'
       correction_below_effective_claims: La corrección deja cargos vigentes por encima
         de la nueva base amortizable; sustitúyelos en la misma corrección.
       correction_must_supersede_current: Esto cambió desde que lo abriste. Actualiza
