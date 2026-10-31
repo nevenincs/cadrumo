@@ -4871,6 +4871,8 @@ ledger:
     disposal_finding:
       claim_gap: Elszámolatlan értékcsökkenési leírású év
       exemption_not_computed: A nyereség mentessége nincs kiszámítva
+      method_has_no_minimum: Ennek a módszernek nincs táblázatos minimuma, ezért az
+        év nem ad hozzá semmit a bekerülési érték csökkentéséhez
       minimum_exceeded_deduction: A minimális értékcsökkenési leírást meghaladó levonás
       minimum_unresolved: 'Erre az évre nem érhető el a minimális értékcsökkenés:
         egyetlen kiadás sem fedi le, ezért a bekerülési érték csökkentése alacsonyabb

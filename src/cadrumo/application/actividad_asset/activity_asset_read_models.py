@@ -77,6 +77,9 @@ def timeline_field_word_key(path: str) -> str:
     return f"{ACTIVITY_ASSET_LABEL_NAMESPACE}{TIMELINE_FIELD_FAMILY}.{path.replace(SEQUENCE_STEP, '')}"
 
 
+NO_TABLE_MINIMUM_REASON_KEY: Final = "ledger.actividad_asset.disposal_finding.method_has_no_minimum"
+"""Words a minimum that cannot be summed because the method has no table minimum, though an edition covers the year."""
+
 OPENING_REMEDY_FIELD: Final = "opening_history.accumulated_amount"
 """The field whose entry settles a reason that the amortization already deducted is unknown."""
 
@@ -651,6 +654,7 @@ __all__ = [
     "ACTIVITY_ASSET_LABEL_NAMESPACE",
     "DISPOSAL_FINDING_FAMILY",
     "NON_DEDUCTIBLE_IVA_STATE_FAMILY",
+    "NO_TABLE_MINIMUM_REASON_KEY",
     "OPENING_REMEDY_FIELD",
     "OPENING_REMEDY_REASON_KEYS",
     "PLAN_ADVISORY_FAMILY",

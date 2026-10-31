@@ -4889,6 +4889,8 @@ ledger:
     disposal_finding:
       claim_gap: Any amb amortització sense registrar
       exemption_not_computed: Exempció del guany no calculada
+      method_has_no_minimum: Aquest mètode no té mínim a les taules, de manera que
+        l'any no suma res a la reducció del cost
       minimum_exceeded_deduction: Deducció superior a l'amortització mínima
       minimum_unresolved: 'Amortització mínima no disponible per a aquest any: cap
         edició no el cobreix, de manera que la reducció del cost pot quedar per sota

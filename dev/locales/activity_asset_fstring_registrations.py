@@ -11,6 +11,7 @@ if TYPE_CHECKING:
 def activity_asset_dynamic_registrations() -> tuple[FStringKeyRegistration, ...]:
     """Register the timeline's fact words from the facts the record models carry."""
     from cadrumo.application.actividad_asset.activity_asset_read_models import (
+        NO_TABLE_MINIMUM_REASON_KEY,
         TIMELINE_FIELD_PATHS,
         timeline_field_word_key,
     )
@@ -22,5 +23,10 @@ def activity_asset_dynamic_registrations() -> tuple[FStringKeyRegistration, ...]
             description="ledger.actividad_asset.field.* (facts of an asset record that the timeline words)",
             key_factory=lambda key: key,
             values=tuple(timeline_field_word_key(path) for path in TIMELINE_FIELD_PATHS),
+        ),
+        FStringKeyRegistration(
+            description="ledger.actividad_asset.disposal_finding.method_has_no_minimum (a plan minimum reason)",
+            key_factory=lambda key: key,
+            values=(NO_TABLE_MINIMUM_REASON_KEY,),
         ),
     )

@@ -4809,6 +4809,8 @@ ledger:
     disposal_finding:
       claim_gap: Year with depreciation not recorded
       exemption_not_computed: Gain exemption not computed
+      method_has_no_minimum: This method has no table minimum, so the year adds nothing
+        to the reduction of cost
       minimum_exceeded_deduction: Deduction above the minimum amortisation
       minimum_unresolved: 'Minimum amortisation not available for this year: no edition
         covers it, so the reduction of cost may be understated'

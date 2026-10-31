@@ -4898,6 +4898,8 @@ ledger:
     disposal_finding:
       claim_gap: Año con amortización sin registrar
       exemption_not_computed: Exención de la ganancia no calculada
+      method_has_no_minimum: Este método no tiene mínimo en las tablas, así que el
+        año no suma nada a la reducción del coste
       minimum_exceeded_deduction: Deducción superior a la amortización mínima
       minimum_unresolved: 'Amortización mínima no disponible para este año: ninguna
         edición lo cubre, así que la reducción del coste puede quedar por debajo de
