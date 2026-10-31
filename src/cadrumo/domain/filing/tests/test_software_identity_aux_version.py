@@ -33,5 +33,5 @@ def test_aeat_aux_version_refuses_non_release_package_versions(
 def test_aeat_aux_version_refuses_a_release_that_exceeds_aeat_wire_width(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(identity_module, "PACKAGE_VERSION", "0.123.4")
 
-    with pytest.raises(FilingExportValidationError, match="four-character limit"):
+    with pytest.raises(FilingExportValidationError, match="4-character limit"):
         aeat_aux_version()

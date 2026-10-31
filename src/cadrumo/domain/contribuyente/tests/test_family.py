@@ -60,8 +60,7 @@ def test_renta_family_member_tax_id_rejects_blank_via_the_checksum_validator() -
 
 
 def test_renta_ascendant_cohabiting_descendant_count_follows_dictionary_range() -> None:
-    # Field constraint: le=10. Pydantic emits "less than or equal to 10"
-    # for the violation.
+    # The declared bound is read from the registry at the parse boundary.
     invalid_count: int = 11
-    with pytest.raises(ValueError, match=r"less than or equal to 10"):
+    with pytest.raises(ValueError, match=r"must be at most 10"):
         RentaAscendantProfile(birth_date=date(1940, 1, 1), cohabiting_descendant_count=invalid_count)
