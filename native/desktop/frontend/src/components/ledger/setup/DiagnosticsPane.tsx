@@ -2,7 +2,10 @@ import { useState } from "react";
 import { DateEditor } from "@/components/editors/DateEditor";
 import { PercentEditor } from "@/components/editors/PercentEditor";
 import { Button } from "@/components/ui/button";
-import { parseFractionPercent, parseIsoDate } from "../../../shell/ledgerGrammar";
+import {
+  parseFractionPercent,
+  parseIsoDate,
+} from "../../../shell/ledgerGrammar";
 import type { LedgerLlmDiagnosticsResult } from "../../../shell/ledgerSetup";
 import { useStrings } from "../../../shell/strings";
 import {
