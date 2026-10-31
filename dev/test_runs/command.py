@@ -14,6 +14,8 @@ from pathlib import Path
 from typing import Any, Final
 
 from dev._paths import REPO_ROOT, UTF_8
+from dev.cache_root import dev_cache_root
+from dev.tool_storage import storage_directory
 
 from .dead_weight_signal import _AUDIT_DEAD_WEIGHT_SIGNAL, _DeadWeightSignalProcessor
 from .import_boundaries_signal import _IMPORT_BOUNDARIES_SIGNAL, _ImportBoundariesProcessor
@@ -262,6 +264,9 @@ def _run_in_scratch(
     environment["CADRUMO_DEV_ARTIFACTS_DIR"] = str(artifacts)
     environment["CADRUMO_DEV_CACHE_DIR"] = str(cache)
     environment["CADRUMO_DEV_SCRATCH_DIR"] = str(scratch)
+    environment["CADRUMO_RUN_ARTIFACT_ROOT"] = str(
+        storage_directory("CADRUMO_RUN_ARTIFACT_ROOT", "run-artifacts", root=dev_cache_root())
+    )
     environment.update(scratch_environment(scratch))
     with log_path.open("x", encoding=UTF_8, newline="\n") as transcript:
         transcript.write(f"START {started.isoformat()} pid={os.getpid()}\n")

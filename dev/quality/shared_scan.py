@@ -50,7 +50,9 @@ from typing import Final, cast, override
 from pydantic import BaseModel
 
 from cadrumo.core.hashing import content_hash_hex, hash_file
-from cadrumo.tests.run_artifact import file_inputs_digest, run_artifact
+from cadrumo.tests.run_artifact import RUN_ARTIFACT_ROOT_ENV, file_inputs_digest, run_artifact
+from dev.cache_root import dev_cache_root
+from dev.tool_storage import storage_directory
 
 __all__ = [
     "SourceSnapshot",
@@ -285,6 +287,8 @@ def shared_scan_result[T](
 
 
 def _shared(kind: str, key: str, produce: Callable[[], object], *, cache_root: Path | None) -> object:
+    if cache_root is None:
+        cache_root = storage_directory(RUN_ARTIFACT_ROOT_ENV, "run-artifacts", root=dev_cache_root())
     remembered = _memo.get((kind, key))
     if remembered is not None:
         return remembered
