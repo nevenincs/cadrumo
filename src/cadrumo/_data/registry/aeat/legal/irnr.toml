@@ -125,9 +125,9 @@ reviewed_at = 2026-05-27
 reviewed_by = "operator"
 notes = """\
 TRLIRNR art 24: base imponible para contribuyentes que obtienen rentas sin mediacion de \
-establecimiento permanente. Apartado 1 fija la regla general (importe integro segun LIRPF, \
+establecimiento permanente. Apartado 1 fija la regla general (importe integro según LIRPF, \
 sin porcentajes multiplicadores ni reducciones). Apartado 2 establece la base por \
-diferencia para prestaciones de servicios y actividades economicas en Espana. Apartado 6 \
+diferencia para prestaciones de servicios y actividades económicas en Espana. Apartado 6 \
 permite a residentes UE/EEE deducir gastos vinculados directamente a la renta obtenida en \
 Espana. Fundamento de la base imponible M210 casillas rendimiento_integro y \
 gastos_deducibles."""
@@ -659,7 +659,7 @@ effective_from = 2009-01-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-04
 reviewed_by = "agent-replaced the bundled excerpt with the BOE published text of art. 4 of BOE-A-2008-18497; the prior excerpt was hand-shaped despite claiming a verbatim fetch; operator to re-stamp"
-notes = "Orden EHA/3290/2008 art 4: plazo de presentación del modelo 216. Con caracter general (trimestral), la presentación e ingreso se efectua en los veinte primeros dias naturales de los meses de abril, julio, octubre y enero por el trimestre natural inmediato anterior. Para grandes empresas, mensual, en los veinte primeros dias naturales de cada mes. Binding deadline provision grounding the M216 trimestral deadline windows."
+notes = "Orden EHA/3290/2008 art 4: plazo de presentación del modelo 216. Con caracter general (trimestral), la presentación e ingreso se efectua en los veinte primeros días naturales de los meses de abril, julio, octubre y enero por el trimestre natural inmediato anterior. Para grandes empresas, mensual, en los veinte primeros días naturales de cada mes. Binding deadline provision grounding the M216 trimestral deadline windows."
 required_text = [
     "Plazo de presentación del modelo 216",
     "veinte primeros días naturales de los meses de abril, julio, octubre y enero",
@@ -1042,7 +1042,7 @@ effective_from = 2023-12-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-09-30
 reviewed_by = "agent-prepared-pending-operator"
-notes = "Artículo 9 de la Orden HFP/1284/2023: crea en el registro de tipo 2 del modelo 296 el campo IDENTIFICADOR DE REGISTRO O NUMERO DE ORDEN (posiciones 77-84) y el Anexo de desglose (tipo de hoja F). Aplicable por primera vez al ejercicio 2023 según su disposición final unica; antes, las posiciones 77-90 eran blancos y no existia el anexo."
+notes = "Artículo 9 de la Orden HFP/1284/2023: crea en el registro de tipo 2 del modelo 296 el campo IDENTIFICADOR DE REGISTRO O NUMERO DE ORDEN (posiciones 77-84) y el Anexo de desglose (tipo de hoja F). Aplicable por primera vez al ejercicio 2023 según su disposición final única; antes, las posiciones 77-90 eran blancos y no existia el anexo."
 required_text = [
     "Modificación de la Orden EHA/3290/2008",
     "IDENTIFICADOR DE REGISTRO O NÚMERO DE ORDEN",
@@ -1080,7 +1080,7 @@ effective_from = 2026-06-24
 review_status = "agent_reviewed"
 reviewed_at = 2026-09-30
 reviewed_by = "agent-prepared-pending-operator"
-notes = "Disposición final unica de la Orden HAC/623/2026, punto 1: la modificación del modelo 296 se aplica por primera vez a la declaración informativa del ejercicio 2026, que se presentara en 2027."
+notes = "Disposición final única de la Orden HAC/623/2026, punto 1: la modificación del modelo 296 se aplica por primera vez a la declaración informativa del ejercicio 2026, que se presentara en 2027."
 required_text = [
     "declaración informativa modelo 296",
     "correspondiente al ejercicio 2026",

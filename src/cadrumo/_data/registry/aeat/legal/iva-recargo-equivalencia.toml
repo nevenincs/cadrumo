@@ -11,7 +11,7 @@ effective_from = 1993-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-06
 reviewed_by = "operator"
-notes = "LIVA art 161: tipos del recargo de equivalencia aplicables por los proveedores en sus entregas a comerciantes minoristas acogidos al regimen especial. Tipo general 5,2 por ciento; tipo reducido 1,4 por ciento (aplicable a las entregas del articulo 91 uno); tipo super-reducido 0,5 por ciento (aplicable a las entregas del articulo 91 dos); tipo aplicable a las labores del tabaco 1,75 por ciento."
+notes = "LIVA art 161: tipos del recargo de equivalencia aplicables por los proveedores en sus entregas a comerciantes minoristas acogidos al régimen especial. Tipo general 5,2 por ciento; tipo reducido 1,4 por ciento (aplicable a las entregas del articulo 91 uno); tipo super-reducido 0,5 por ciento (aplicable a las entregas del articulo 91 dos); tipo aplicable a las labores del tabaco 1,75 por ciento."
 required_text = [
     "Tipos",
     "5,2 por ciento",
@@ -36,7 +36,7 @@ reviewed_by = "agent-review"
 notes = """\
 LIVA art 158: sujetos pasivos del recargo de equivalencia. Apartado 1o obliga al proveedor que \
 efectua la entrega sometida al recargo. Apartado 2o obliga al propio comerciante minorista acogido \
-al regimen especial en sus adquisiciones intracomunitarias de bienes, en sus importaciones, y en los \
+al régimen especial en sus adquisiciones intracomunitarias de bienes, en sus importaciones, y en los \
 supuestos de inversion del sujeto pasivo del articulo 84 apartado uno numero 2o. Es la base por la \
 que un recargo de equivalencia puede existir tanto en una entrega interior repercutida como en una \
 adquisición intracomunitaria, una importacion o una operacion con inversion del sujeto pasivo. Texto \

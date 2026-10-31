@@ -317,11 +317,11 @@ reviewed_by = "agent-review"
 corpus_tier = "full_consolidated"
 notes = """\
 Orden HAP/2783/2015 art 1: aprobación del modelo 151 de declaración del IRPF para el \
-regimen especial de trabajadores desplazados (impatriados), ejercicio 2015. Disposición \
+régimen especial de trabajadores desplazados (impatriados), ejercicio 2015. Disposición \
 final sexta: el modelo se utiliza por primera vez para la declaración del periodo \
 impositivo 2015. Fetched via curl, bytes read back from disk before authoring this entry. \
 Superseded in part by Orden HFP/1338/2023 (arts 6-10 derogados por su Disposición \
-Derogatoria Unica), which replaces this orden as the governing instrument from ejercicio \
+Derogatoria Única), which replaces this orden as the governing instrument from ejercicio \
 2023 onward."""
 required_text = [
     "Aprobación del modelo 151",
@@ -344,9 +344,9 @@ reviewed_by = "agent-review"
 corpus_tier = "full_consolidated"
 notes = """\
 Orden HFP/1338/2023 art 1: aprobación del modelo 151 actualizado, para contribuyentes del \
-regimen especial de trabajadores, profesionales, emprendedores e inversores desplazados. \
+régimen especial de trabajadores, profesionales, emprendedores e inversores desplazados. \
 Disposición Final Segunda(a): se utiliza por primera vez para la declaración del ejercicio \
-2023, presentada en 2024. Disposición Derogatoria Unica: deroga los articulos 6 a 10 de la \
+2023, presentada en 2024. Disposición Derogatoria Única: deroga los articulos 6 a 10 de la \
 Orden HAP/2783/2015. Fetched via curl, bytes read back from disk before authoring this \
 entry. AEAT's own bundled record-design file (01-151-ejercicio-2023-y-siguientes.xls) \
 independently confirms this same 2023 boundary."""
@@ -380,7 +380,7 @@ review_status = "agent_reviewed"
 reviewed_at = 2026-08-16
 reviewed_by = "agent-review"
 corpus_tier = "full_consolidated"
-notes = "Orden HAP/2783/2015 art 2: obligados a presentar el modelo 151. Remite al articulo 114 del Reglamento del IRPF (RD 439/2007) y obliga a los contribuyentes del IRPF a los que resulte de aplicación el regimen especial de trabajadores desplazados vigente desde 1 de enero de 2015 a presentar y suscribir el modelo aprobado en el articulo 1. Verified against the bundled consolidated corpus file before authoring."
+notes = "Orden HAP/2783/2015 art 2: obligados a presentar el modelo 151. Remite al articulo 114 del Reglamento del IRPF (RD 439/2007) y obliga a los contribuyentes del IRPF a los que resulte de aplicación el régimen especial de trabajadores desplazados vigente desde 1 de enero de 2015 a presentar y suscribir el modelo aprobado en el articulo 1. Verified against the bundled consolidated corpus file before authoring."
 required_text = [
     "Obligados a presentar el modelo 151",
     "estarán obligados a presentar y suscribir el modelo de declaración",

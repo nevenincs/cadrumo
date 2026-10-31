@@ -419,7 +419,7 @@ text = "Orden HFP/1284/2023 artículo 15: modifica los anexos I y II de la Orden
 
 [[legal."orden-hfp-1284-2023:art-9"]]
 language = "es"
-text = "Artículo 9 de la Orden HFP/1284/2023: crea en el registro de tipo 2 del modelo 296 el campo IDENTIFICADOR DE REGISTRO O NUMERO DE ORDEN (posiciones 77-84) y el Anexo de desglose (tipo de hoja F). Aplicable por primera vez al ejercicio 2023 según su disposición final unica; antes, las posiciones 77-90 eran blancos y no existia el anexo."
+text = "Artículo 9 de la Orden HFP/1284/2023: crea en el registro de tipo 2 del modelo 296 el campo IDENTIFICADOR DE REGISTRO O NUMERO DE ORDEN (posiciones 77-84) y el Anexo de desglose (tipo de hoja F). Aplicable por primera vez al ejercicio 2023 según su disposición final única; antes, las posiciones 77-90 eran blancos y no existia el anexo."
 
 [[legal."orden-hfp-1359-2023:anexo-i-instruccion-2-1"]]
 language = "es"
@@ -642,7 +642,7 @@ text = "sera el comprendido entre el 1 de enero y el 31 de enero del ano siguien
 
 [[legal."orden-eha-3290-2008:art-4"]]
 language = "es"
-text = "Orden EHA/3290/2008 art 4: plazo de presentación del modelo 216. Con caracter general (trimestral), la presentación e ingreso se efectua en los veinte primeros dias naturales de los meses de abril, julio, octubre y enero por el trimestre natural inmediato anterior. Para grandes empresas, mensual, en los veinte primeros dias naturales de cada mes."
+text = "Orden EHA/3290/2008 art 4: plazo de presentación del modelo 216. Con caracter general (trimestral), la presentación e ingreso se efectua en los veinte primeros días naturales de los meses de abril, julio, octubre y enero por el trimestre natural inmediato anterior. Para grandes empresas, mensual, en los veinte primeros días naturales de cada mes."
 
 [[legal."orden-eha-3290-2008:art-6"]]
 language = "es"
@@ -658,7 +658,7 @@ text = "Articulo segundo de la Orden HAC/623/2026: modifica en el registro de ti
 
 [[legal."orden-hac-623-2026:disposicion-final-unica"]]
 language = "es"
-text = "Disposición final unica de la Orden HAC/623/2026, punto 1: la modificación del modelo 296 se aplica por primera vez a la declaración informativa del ejercicio 2026, que se presentara en 2027."
+text = "Disposición final única de la Orden HAC/623/2026, punto 1: la modificación del modelo 296 se aplica por primera vez a la declaración informativa del ejercicio 2026, que se presentara en 2027."
 
 [[legal."orden-hfp-1351-2021:art-quinto"]]
 language = "es"
@@ -670,7 +670,7 @@ text = "TRLIRNR art 2: ámbito de aplicación territorial del impuesto. Incluye 
 
 [[legal."trlirnr-rdleg-5-2004:art-24"]]
 language = "es"
-text = "TRLIRNR art 24: base imponible para contribuyentes que obtienen rentas sin mediacion de establecimiento permanente. Apartado 1 fija la regla general (importe integro segun LIRPF, sin porcentajes multiplicadores ni reducciones). Apartado 2 establece la base por diferencia para prestaciones de servicios y actividades economicas en Espana. Apartado 6 permite a residentes UE/EEE deducir gastos vinculados directamente a la renta obtenida en Espana. Fundamento de la base imponible M210 casillas rendimiento_integro y gastos_deducibles."
+text = "TRLIRNR art 24: base imponible para contribuyentes que obtienen rentas sin mediacion de establecimiento permanente. Apartado 1 fija la regla general (importe integro según LIRPF, sin porcentajes multiplicadores ni reducciones). Apartado 2 establece la base por diferencia para prestaciones de servicios y actividades económicas en Espana. Apartado 6 permite a residentes UE/EEE deducir gastos vinculados directamente a la renta obtenida en Espana. Fundamento de la base imponible M210 casillas rendimiento_integro y gastos_deducibles."
 
 [[legal."trlirnr-rdleg-5-2004:art-25.1.a"]]
 language = "es"
@@ -722,15 +722,15 @@ text = "orden-hac-277-2026 art 2: obligación de declarar por el Impuesto sobre 
 
 [[legal."ley-37-1992:art-163-octiesdecies"]]
 language = "es"
-text = "ámbito del regimen exterior para empresarios o profesionales no establecidos en la Comunidad."
+text = "ámbito del régimen exterior para empresarios o profesionales no establecidos en la Comunidad."
 
 [[legal."ley-37-1992:art-163-quinvicies"]]
 language = "es"
-text = "ámbito del regimen de importacion para ventas a distancia de bienes importados de paises o territorios terceros."
+text = "ámbito del régimen de importacion para ventas a distancia de bienes importados de paises o territorios terceros."
 
 [[legal."ley-37-1992:art-163-quaterdecies"]]
 language = "es"
-text = "efectos de renuncia o exclusion del regimen especial del criterio de caja sobre operaciones efectuadas durante su vigencia."
+text = "efectos de renuncia o exclusion del régimen especial del criterio de caja sobre operaciones efectuadas durante su vigencia."
 
 [[legal."ley-37-1992:art-79"]]
 language = "es"
@@ -754,11 +754,11 @@ text = "tipos impositivos reducidos. Apartado Uno establece el tipo reducido del
 
 [[legal."ley-37-1992:art-122"]]
 language = "es"
-text = "regimen simplificado del IVA. Seran de aplicación a los sujetos pasivos que reglamentariamente se determinen en atencion al volumen de operaciones u otras circunstancias."
+text = "régimen simplificado del IVA. Seran de aplicación a los sujetos pasivos que reglamentariamente se determinen en atencion al volumen de operaciones u otras circunstancias."
 
 [[legal."ley-37-1992:art-123"]]
 language = "es"
-text = "contenido del regimen simplificado. Determinacion de las cuotas tributarias para las actividades acogidas al regimen simplificado mediante el metodo de indices, módulos o signos."
+text = "contenido del régimen simplificado. Determinacion de las cuotas tributarias para las actividades acogidas al régimen simplificado mediante el metodo de indices, módulos o signos."
 
 [[legal."ley-27-2014:art-21"]]
 language = "es"
@@ -782,7 +782,7 @@ text = "cuota integra. Define la cuota integra como la cantidad resultante de ap
 
 [[legal."ley-27-2014:art-32"]]
 language = "es"
-text = "deducción para evitar la doble imposicion economica internacional - dividendos y participaciones en beneficios. Permite deducir el impuesto efectivamente pagado por la entidad no residente sobre los beneficios distribuidos como dividendos, condicionado a participacion minima del 5 por ciento mantenida ininterrumpidamente durante un anio y a la inclusion de la cuantia en la base imponible."
+text = "deducción para evitar la doble imposicion económica internacional - dividendos y participaciones en beneficios. Permite deducir el impuesto efectivamente pagado por la entidad no residente sobre los beneficios distribuidos como dividendos, condicionado a participacion minima del 5 por ciento mantenida ininterrumpidamente durante un anio y a la inclusion de la cuantia en la base imponible."
 
 [[legal."ley-27-2014:art-36"]]
 language = "es"
@@ -794,7 +794,7 @@ text = "uniones temporales de empresas. Las UTE reguladas en la Ley 18/1982 e in
 
 [[legal."ley-27-2014:art-102"]]
 language = "es"
-text = "libertad de amortización de las entidades de reducida dimension. Los elementos nuevos del inmovilizado material y de las inversiones inmobiliarias afectos a actividades economicas pueden amortizarse libremente siempre que, durante los periodos que la norma fija, la plantilla media total se incremente respecto de la de los doce meses anteriores y ese incremento se mantenga. Funda la seccion empresas_de_reducida_dimension_libertad_de_amortizacion del Modelo 200."
+text = "libertad de amortización de las entidades de reducida dimension. Los elementos nuevos del inmovilizado material y de las inversiones inmobiliarias afectos a actividades económicas pueden amortizarse libremente siempre que, durante los periodos que la norma fija, la plantilla media total se incremente respecto de la de los doce meses anteriores y ese incremento se mantenga. Funda la seccion empresas_de_reducida_dimension_libertad_de_amortizacion del Modelo 200."
 
 [[legal."ley-27-2014:dt-44"]]
 language = "es"
@@ -802,7 +802,7 @@ text = "régimen transitorio del tipo de gravamen de las microempresas cuyo INCN
 
 [[legal."ley-27-2014:art-105"]]
 language = "es"
-text = "reserva de nivelacion de bases imponibles. Permite a las entidades que cumplen las condiciones del articulo 101 (cifra de negocios inferior a 10 millones de euros) y aplican el tipo general minorar su base imponible positiva hasta el 10 por ciento de su importe, con tope de 1 millon de euros, computada tambien a efectos de pagos fraccionados (art 40.3) e incompatible con la reserva de capitalizacion del articulo 25."
+text = "reserva de nivelacion de bases imponibles. Permite a las entidades que cumplen las condiciones del articulo 101 (cifra de negocios inferior a 10 millones de euros) y aplican el tipo general minorar su base imponible positiva hasta el 10 por ciento de su importe, con tope de 1 millon de euros, computada también a efectos de pagos fraccionados (art 40.3) e incompatible con la reserva de capitalizacion del articulo 25."
 
 [[legal."ley-27-2014:art-15"]]
 language = "es"
@@ -848,7 +848,7 @@ text = "tributación de los socios o partícipes de las instituciones de inversi
 
 [[legal."orden-hac-96-2003:art-3"]]
 language = "es"
-text = "la información mensual se presentara en el plazo de los diez dias naturales siguientes a la finalizacion del mes a que se refiera la información."
+text = "la información mensual se presentara en el plazo de los diez días naturales siguientes a la finalizacion del mes a que se refiera la información."
 
 
 [[legal."canarias-dl-1-2009:art-18-quater"]]
@@ -978,11 +978,11 @@ text = "Cuando la reducción rige no lo dice este articulo sino la disposición 
 
 [[legal."real-decreto-ley-7-2024:art-11"]]
 language = "es"
-text = "Reducción DANA 2024 para actividades economicas en estimación objetiva en municipios afectados; fundamenta el APARTADO 1 del articulo, que opera sobre el rendimiento neto de módulos del IRPF."
+text = "Reducción DANA 2024 para actividades económicas en estimación objetiva en municipios afectados; fundamenta el APARTADO 1 del articulo, que opera sobre el rendimiento neto de módulos del IRPF."
 
 [[legal."real-decreto-ley-7-2024:art-11"]]
 language = "es"
-text = "El apartado 2 del mismo articulo reduce la cuota devengada por operaciones corrientes del regimen simplificado del IVA y tiene su propia entrada, real-decreto-ley-7-2024:art-11.2."
+text = "El apartado 2 del mismo articulo reduce la cuota devengada por operaciones corrientes del régimen simplificado del IVA y tiene su propia entrada, real-decreto-ley-7-2024:art-11.2."
 
 [[legal."real-decreto-ley-7-2024:art-11"]]
 language = "es"
@@ -1030,11 +1030,11 @@ text = "Mismo patron honesto-escalar que la minoracion por incentivos a la inver
 
 [[legal."rd-439-2007:art-95"]]
 language = "es"
-text = "RIRPF art 95: importe de las retenciones sobre rendimientos de actividades economicas."
+text = "RIRPF art 95: importe de las retenciones sobre rendimientos de actividades económicas."
 
 [[legal."rd-439-2007:art-95"]]
 language = "es"
-text = "El apartado 1 establece el tipo del 15 por ciento general para actividades profesionales, el tipo reducido del 7 por ciento para nuevos profesionales (inicio + dos siguientes) y para colectivos especificos (recaudadores municipales, mediadores de seguros con auxiliares, delegados comerciales SELAE, actividades artisticas de los grupos IAE 851, 852, 853, 861, 862, 864 y 869 de la seccion segunda y agrupaciones 01, 02, 03 y 05 de la seccion tercera, sujetas a una prueba de ingresos de dos partes: menos de 15.000 euros el ejercicio anterior Y mas del 75 por ciento de los rendimientos integros de actividades economicas y trabajo)."
+text = "El apartado 1 establece el tipo del 15 por ciento general para actividades profesionales, el tipo reducido del 7 por ciento para nuevos profesionales (inicio + dos siguientes) y para colectivos especificos (recaudadores municipales, mediadores de seguros con auxiliares, delegados comerciales SELAE, actividades artisticas de los grupos IAE 851, 852, 853, 861, 862, 864 y 869 de la seccion segunda y agrupaciones 01, 02, 03 y 05 de la seccion tercera, sujetas a una prueba de ingresos de dos partes: menos de 15.000 euros el ejercicio anterior Y mas del 75 por ciento de los rendimientos integros de actividades económicas y trabajo)."
 
 [[legal."rd-439-2007:art-95"]]
 language = "es"
@@ -1042,7 +1042,7 @@ text = "Los apartados 4, 5 y 6.1 fijan los tipos sectoriales: 2 por ciento agric
 
 [[legal."rd-439-2007:art-95"]]
 language = "es"
-text = "Base reglamentaria de la retención sobre rendimientos de actividades economicas en Modelo 111 y del crédito de pagos a cuenta en Modelo 130."
+text = "Base reglamentaria de la retención sobre rendimientos de actividades económicas en Modelo 111 y del crédito de pagos a cuenta en Modelo 130."
 
 [[legal."rdl-16-2025:art-17"]]
 language = "es"
@@ -1170,7 +1170,7 @@ text = "Fase 2a: minoracion por incentivos a la inversion."
 
 [[legal."orden-hac-1347-2024:instruccion-2-2-b"]]
 language = "es"
-text = "Son deducibles las cantidades que, en concepto de amortización del inmovilizado material o intangible afecto a la actividad, correspondan a la depreciacion efectiva, calculada segun la tabla de amortización de la propia orden (coeficiente lineal maximo, minimo derivado del periodo maximo, o cualquier coeficiente intermedio)."
+text = "Son deducibles las cantidades que, en concepto de amortización del inmovilizado material o intangible afecto a la actividad, correspondan a la depreciacion efectiva, calculada según la tabla de amortización de la propia orden (coeficiente lineal maximo, minimo derivado del periodo maximo, o cualquier coeficiente intermedio)."
 
 [[legal."orden-hac-1347-2024:instruccion-2-2-b"]]
 language = "es"
@@ -1186,7 +1186,7 @@ text = "Es la base de que las claves F (ventas agencia viaje) y G (compras agenc
 
 [[legal."rd-1619-2012:disp-adicional-4.7"]]
 language = "es"
-text = "El apartado 7 esta en la redacción del RD 1075/2017 (BOE-A-2017-15843), en vigor desde el 1 de enero de 2018 segun las notas de vigencia del mismo real decreto en el consolidado; por eso se fecha en 2018."
+text = "El apartado 7 esta en la redacción del RD 1075/2017 (BOE-A-2017-15843), en vigor desde el 1 de enero de 2018 según las notas de vigencia del mismo real decreto en el consolidado; por eso se fecha en 2018."
 
 [[legal."real-decreto-ley-7-2024:df-14"]]
 language = "es"

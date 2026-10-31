@@ -386,7 +386,7 @@ effective_from = 2025-12-17
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "downloaded official BOE-A-2025-25389 HTML from BOE on 2026-07-01"
-notes = "Orden HAC/1430/2025 disposición final unica: aplica por primera vez las modificaciones del Modelo 289 a las declaraciones del ejercicio 2025 presentadas desde 2026."
+notes = "Orden HAC/1430/2025 disposición final única: aplica por primera vez las modificaciones del Modelo 289 a las declaraciones del ejercicio 2025 presentadas desde 2026."
 required_text = [
     "disposición final única",
     "declaraciones informativas correspondientes al ejercicio 2025",

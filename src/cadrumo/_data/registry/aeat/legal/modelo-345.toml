@@ -11,7 +11,7 @@ effective_from = 2023-01-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "downloaded official BOE-A-2022-14168 consolidated HTML from BOE on 2026-07-01"
-notes = "Orden HFP/823/2022 articulo 1: aprueba el Modelo 345 y sus disenos de registro."
+notes = "Orden HFP/823/2022 articulo 1: aprueba el Modelo 345 y sus diseños de registro."
 required_text = [
     "Se aprueba el modelo 345",
     "anexo de la presente orden",
@@ -113,7 +113,7 @@ effective_from = 2023-05-31
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "downloaded official BOE-A-2023-12666 HTML from BOE on 2026-07-01"
-notes = "Orden HFP/528/2023 articulo unico: modifica los campos clave, subclave y nuevos campos adicionales del registro de declarado del Modelo 345."
+notes = "Orden HFP/528/2023 articulo único: modifica los campos clave, subclave y nuevos campos adicionales del registro de declarado del Modelo 345."
 required_text = [
     "Se modifica el campo",
     "SUBCLAVE",
@@ -133,7 +133,7 @@ effective_from = 2023-05-31
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "downloaded official BOE-A-2023-12666 HTML from BOE on 2026-07-01"
-notes = "Orden HFP/528/2023 disposición final unica: aplica por primera vez sus modificaciones del Modelo 345 a declaraciones del ejercicio 2023."
+notes = "Orden HFP/528/2023 disposición final única: aplica por primera vez sus modificaciones del Modelo 345 a declaraciones del ejercicio 2023."
 required_text = [
     "declaraciones informativas correspondientes al ejercicio",
     "2023",
@@ -174,7 +174,7 @@ effective_from = 2024-01-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "downloaded official BOE-A-2023-26632 HTML from BOE on 2026-07-01"
-notes = "Orden HFP/1397/2023 disposición final unica: aplica por primera vez su modificación del Modelo 345 a declaraciones del ejercicio 2023."
+notes = "Orden HFP/1397/2023 disposición final única: aplica por primera vez su modificación del Modelo 345 a declaraciones del ejercicio 2023."
 required_text = [
     "modelo",
     "345",

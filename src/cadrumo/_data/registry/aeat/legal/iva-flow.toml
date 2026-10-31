@@ -168,7 +168,7 @@ effective_from = 1993-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-15
 reviewed_by = "operator"
-notes = "LIVA art 21: exenciones en las exportaciones de bienes. Cubre entregas a fuera de la Comunidad por el transmitente o por el adquirente no establecido, regimen de viajeros (residentes fuera de la UE), tiendas libres de impuestos, trabajos sobre bienes muebles para exportacion y entregas a Organismos reconocidos. Es la base sustantiva del Modelo 308 cuando este lo invoca."
+notes = "LIVA art 21: exenciones en las exportaciones de bienes. Cubre entregas a fuera de la Comunidad por el transmitente o por el adquirente no establecido, régimen de viajeros (residentes fuera de la UE), tiendas libres de impuestos, trabajos sobre bienes muebles para exportacion y entregas a Organismos reconocidos. Es la base sustantiva del Modelo 308 cuando este lo invoca."
 required_text = [
     "Exenciones en las exportaciones de bienes",
     "expedidos o transportados fuera de la Comunidad",
@@ -188,7 +188,7 @@ effective_from = 1993-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-06-09
 reviewed_by = "operator"
-notes = "LIVA art 7: operaciones no sujetas al impuesto. Enumera los supuestos de no sujecion (transmisión de unidad economica autonoma, muestras gratuitas, entregas publicitarias, servicios en regimen de dependencia, operaciones de Administraciones Publicas sin contraprestacion, concesiones administrativas, entregas de dinero). Base sustantiva para la clasificacion no-sujeta en el enrutamiento M303 (Tier-2 routing)."
+notes = "LIVA art 7: operaciones no sujetas al impuesto. Enumera los supuestos de no sujecion (transmisión de unidad económica autonoma, muestras gratuitas, entregas publicitarias, servicios en régimen de dependencia, operaciones de Administraciones Publicas sin contraprestacion, concesiones administrativas, entregas de dinero). Base sustantiva para la clasificacion no-sujeta en el enrutamiento M303 (Tier-2 routing)."
 required_text = [
     "Operaciones no sujetas al impuesto",
     "No estarán sujetas al impuesto",
@@ -636,7 +636,7 @@ effective_from = 1993-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-15
 reviewed_by = "operator"
-notes = "Reglamento del IVA art 30 bis: devolucion de cuotas deducibles a los sujetos pasivos que ejerzan la actividad de transporte de viajeros o de mercancias por carretera tributando por el regimen simplificado. Articulo invocado en el official_name del Modelo 308 como el reglamentario de la solicitud de devolucion."
+notes = "Reglamento del IVA art 30 bis: devolucion de cuotas deducibles a los sujetos pasivos que ejerzan la actividad de transporte de viajeros o de mercancias por carretera tributando por el régimen simplificado. Articulo invocado en el official_name del Modelo 308 como el reglamentario de la solicitud de devolucion."
 required_text = [
     "Devolución de cuotas deducibles",
     "transporte de viajeros o de mercancías por carretera",
