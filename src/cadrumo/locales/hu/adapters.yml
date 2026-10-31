@@ -2,8 +2,8 @@ adapters:
   aeat:
     clave_movil:
       errors:
-        pending_petition_blocked: Az AEAT elutasította az új Cl@ve Móvil push kiadását,
-          mert egy korábbi hitelesítési kérelem még szerver oldalon függőben van.
+        pending_petition_blocked: Az AEAT elutasította egy új Cl@ve Móvil értesítés
+          küldését, mert egy korábbi hitelesítési kérelem még függőben van a szerveren.
   auth:
     authenticator:
       errors:

@@ -2,9 +2,9 @@ adapters:
   aeat:
     clave_movil:
       errors:
-        pending_petition_blocked: L'AEAT s'ha negat a emetre una nova petició push
-          de Cl@ve Móvil perquè una sol·licitud d'autenticació anterior encara està
-          pendent al servidor.
+        pending_petition_blocked: L'AEAT ha rebutjat enviar una nova notificació de
+          Cl@ve Móvil perquè una sol·licitud d'autenticació anterior encara està pendent
+          al servidor.
   auth:
     authenticator:
       errors:
