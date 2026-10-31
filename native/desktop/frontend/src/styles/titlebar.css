@@ -3,6 +3,9 @@
     display: flex;
     align-items: center;
     flex: 0 0 var(--titlebar-height);
+    /* The row the system seats its controls in, also where an error fallback
+       mounts the header outside the window's column. */
+    height: var(--titlebar-height);
     min-width: 0;
     background: var(--chrome);
     user-select: none;
