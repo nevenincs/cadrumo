@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from uuid import UUID, uuid4
@@ -19,7 +20,7 @@ from cadrumo_client.contracts.access_vocabulary import (
 )
 
 from ..operations.access_resolution import ResolvedOperationAccess
-from ..operations.registry import OperationRegistry
+from ..operations.registry import OperationFrontendProjection, OperationRegistry
 from ..user_profile.access_contracts import (
     AccessEvaluationContext,
     AccessSession,
@@ -245,3 +246,18 @@ def disclosure_decision_without_category(
         profile_scope=complete,
     )
     return authority.evaluate(registry=registry, request=resolved.request, policy=resolved.policy)
+
+
+def assert_admitted_alike_without_commit_door(
+    resolved: Mapping[OperationFrontendProjection, ResolvedOperationAccess], profile_id: UUID
+) -> None:
+    """Every frontend answers the one policy, period-independent, human-neutral and with no commit door."""
+    assert len({answer.policy for answer in resolved.values()}) == 1
+    for frontend, answer in resolved.items():
+        assert answer.request.frontend is frontend
+        assert answer.request.profile_id == profile_id
+        assert answer.request.period_independent is True
+        # A session under the person's sign-in and one under an enrolled key differ
+        # in kind alone, and only a human-only policy tells the two apart.
+        assert answer.policy.requires_human is False
+        assert AccessAction.COMMIT not in answer.policy.actions

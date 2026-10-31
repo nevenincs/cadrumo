@@ -102,6 +102,7 @@ from ....core.field_origin import FieldOrigin
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....core.time.clock import now
 from ....domain.attachments.enums import AttachmentSource
+from ...tests.access_authority_support import assert_admitted_alike_without_commit_door
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -659,15 +660,7 @@ def test_the_review_summary_is_admitted_alike_on_every_frontend_without_a_commit
         for frontend in OperationFrontendProjection
     }
 
-    assert len({answer.policy for answer in resolved.values()}) == 1
-    for frontend, answer in resolved.items():
-        assert answer.request.frontend is frontend
-        assert answer.request.profile_id == _PROFILE
-        assert answer.request.period_independent is True
-        # A session under the person's sign-in and one under an enrolled key differ
-        # in kind alone, and only a human-only policy tells the two apart.
-        assert answer.policy.requires_human is False
-        assert AccessAction.COMMIT not in answer.policy.actions
+    assert_admitted_alike_without_commit_door(resolved, _PROFILE)
 
 
 def test_the_review_summary_keeps_every_finding_and_figure_and_no_text_from_the_document() -> None:

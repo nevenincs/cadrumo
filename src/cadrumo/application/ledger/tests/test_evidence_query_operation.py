@@ -22,6 +22,7 @@ from ...operations.access_resolution import OperationAccessContext, resolve_oper
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
 from ...operations.owner import OperationExecutorContext
 from ...operations.registry import OperationFrontendProjection, OperationRegistry
+from ...tests.access_authority_support import assert_admitted_alike_without_commit_door
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from .. import evidence_read_operation as worker
 from ..evidence import MediaKind, PurchaseInvoiceEvidence
@@ -222,15 +223,7 @@ def test_the_query_is_admitted_alike_on_every_frontend_for_either_kind_of_sessio
         for frontend in OperationFrontendProjection
     }
 
-    assert len({answer.policy for answer in resolved.values()}) == 1
-    for frontend, answer in resolved.items():
-        assert answer.request.frontend is frontend
-        assert answer.request.profile_id == _PROFILE
-        assert answer.request.period_independent is True
-        # A session under the person's sign-in and one under an enrolled key differ
-        # in kind alone, and only a human-only policy tells the two apart.
-        assert answer.policy.requires_human is False
-        assert AccessAction.COMMIT not in answer.policy.actions
+    assert_admitted_alike_without_commit_door(resolved, _PROFILE)
 
 
 def test_the_query_refuses_a_request_addressed_to_another_profile() -> None:
