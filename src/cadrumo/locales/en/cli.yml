@@ -59,15 +59,14 @@ cli:
         art108_help: Whether the good qualifies as a bien de inversión under LIVA
           art. 108.
         cuota_soportada_help: Total input IVA borne on acquisition (positive).
-        declare_help: Declare one capital good tracked for IVA regularización.
+        declare_help: Declare one capital good tracked for VAT deduction adjustments.
         description_help: Human description of the good.
         disposal_regime_help: Disposal regime (sujeta_no_exenta or exenta_o_no_sujeta);
           required with --disposal-year.
         disposal_requires_both: --disposal-year and --disposal-regime must be supplied
           together.
         disposal_year_help: Optional art-110 disposal year.
-        group_help: Capital-goods IVA deduction regularización register (LIVA arts.
-          107-110).
+        group_help: Capital-goods VAT deduction adjustment register (LIVA arts. 107-110).
         identifier_help: Stable register identifier.
         kind_help: 'Regularisation window: mueble (4yr) or inmueble (9yr).'
         list_help: List every tracked capital good on the active profile register.
@@ -393,7 +392,7 @@ cli:
           relating to a business premises lease. Use the situation and cadastral reference
           options to record the premises details.
         country_code_help: 'Counterparty ISO 3166-1 alpha-2 country code. Required:
-          it routes both informativas, so it is never assumed.'
+          it routes both information returns, so it is never assumed.'
         euro_rate_unavailable_message: No euro exchange rate for {currency} on {date}
           was found, so this invoice was recorded without a euro value and is left
           out of euro totals until a rate is added.
@@ -422,9 +421,10 @@ cli:
         line_help: Repeatable JSON object for one invoice line; pass one object per
           --line. For structured input it replaces scalar --taxable-base and --iva-rate.
         list_help: List reconciliation catalogue invoices.
-        operation_date_help: Date the entrega or prestacion took place (YYYY-MM-DD).
-          This is the LIVA art. 75 devengo date that decides which period declares
-          the cuota; without it the invoice date stands in for it.
+        operation_date_help: Date the goods were delivered or the service was supplied
+          (YYYY-MM-DD). This is the LIVA art. 75 tax accrual date that decides which
+          period declares the VAT amount; without it the invoice date stands in for
+          it.
         operation_type_help: 'M349 operation key: E supplies of goods, M supplies
           after an exempt import, H the same via a fiscal representative, A acquisitions
           of goods, T triangular supplies, S services supplied, I services acquired,
@@ -475,7 +475,7 @@ cli:
         group_help: 'Cross-period IVA prorrata register: elect the regime (general
           / especial) and declare differentiated sectors (LIVA arts. 101 / 103 / 105
           / 106).'
-        letra_help: LIVA art. 9.1.c letra (a/b/c/d) that makes this sector differentiated.
+        letra_help: LIVA art. 9.1.c letter (a/b/c/d) that makes this sector differentiated.
         list_help: List every register entry and declared differentiated sector on
           the active profile.
         optional_evidence_reference_help: Your own supporting document for an option
@@ -513,8 +513,8 @@ cli:
         seed_local_authority: The provisional percentage was carried locally from
           your stored {modelo} {filing_year} {period} settlement observation (LIVA
           art. 105.Uno). It is not a percentage AEAT issued for this ejercicio.
-        seed_regulated_override_standing: Ejercicio {ejercicio} already carries a
-          {provenance} provisional prorrata, which outranks the art. 105.Uno carry.
+        seed_regulated_override_standing: Filing year {ejercicio} already carries
+          a {provenance} provisional prorrata, which outranks the art. 105.Uno carry.
           Nothing was written; replace that declaration explicitly before seeding.
         seed_sector_help: Seed one differentiated sector's provisional prorrata from
           that sector's own prior-year definitive held in the register (LIVA arts.
@@ -684,7 +684,7 @@ cli:
             with identical content, so nothing was stored again and the fetch timestamp
             was left as it was. The record returned is the one already in custody.
           app_help: Fetch and read back the document AEAT served behind one notification.
-          certificado_id_help: AEAT numero de certificado of the notification.
+          certificado_id_help: AEAT certificate number of the notification.
           comparecencia_notice: This document was fetched only because AEAT already
             reports the notification as read by the taxpayer. Opening an unread notification
             is the comparecencia that makes it legally served and starts its appeal
@@ -1064,7 +1064,7 @@ cli:
         override_reason_required: Provide --reason explaining why the prior-compensation
           carry is being overridden; it must not be blank.
         seed_amount_help: Carry-forward balance amount in EUR (decimal, e.g. 1200.50).
-          This is the compensación pendiente de periodos anteriores for the NEXT period
+          This is the credit carried forward from previous periods for the NEXT period
           after the seeded one.
         seed_confirm_help: Required confirmation flag. Acknowledge that seeding declares
           a carry-forward balance and filing accuracy depends on the value supplied.
@@ -1079,8 +1079,8 @@ cli:
           \ compensation balance exists (LIVA art. 99.5, Ley 37/1992). The reconciliation\
           \ layer treats this as first_period_zero: non-blocking and legally certain.\n\
           \n  --amount X   Carry-in: the taxpayer has filed prior M303s under a different\
-          \ tool or directly with AEAT. X is the compensacion pendiente de periodos\
-          \ posteriores from the last filed M303."
+          \ tool or directly with AEAT. X is the credit carried forward to later periods\
+          \ from the last filed M303."
         seed_invalid_amount: 'The IVA seed amount is invalid: %{amount}.'
         seed_period_help: 'Period of the Modelo 303 filing: 1T-4T quarters (e.g. 4T).'
       list:
@@ -1089,10 +1089,10 @@ cli:
         help: List all official tax forms (modelos) registered in the system.
         year_help: Filter the modelo catalogue to a single fiscal year
       m036:
-        alta_help: Record an M036 alta (initial census registration) declaration filed
-          through the AEAT online filing service (sede).
-        baja_help: Record an M036 baja (census deregistration) declaration filed through
-          the AEAT online filing service (sede).
+        alta_help: Record an M036 initial census registration declaration filed through
+          the AEAT online filing service.
+        baja_help: Record an M036 census deregistration declaration filed through
+          the AEAT online filing service.
         declaration_id_help: The declaration id (or an unambiguous prefix of it) to
           view.
         declared_on_help: ISO date (YYYY-MM-DD) when you filed the M036 through the
@@ -1104,12 +1104,12 @@ cli:
         group_help: 'Record an M036 declaration filed through the AEAT online filing
           service (sede): alta (registration), modificacion (change), or baja (deregistration).
           The local app never files; AEAT is the authority.'
-        justificante_help: Optional AEAT acuse de recibo (filing receipt) identifier
-          issued by sede for the filing.
+        justificante_help: Optional AEAT filing receipt identifier issued by its online
+          filing service for the filing.
         list_empty: No M036 declarations recorded yet.
         list_help: List the M036 declarations recorded in the active profile.
-        modificacion_help: Record an M036 modificacion (census update) declaration
-          filed through the AEAT online filing service (sede).
+        modificacion_help: Record an M036 census update declaration filed through
+          the AEAT online filing service.
         note_help: Optional note of your own (up to 512 chars).
         view_help: View one recorded M036 declaration by id (or unambiguous prefix).
       m145:
@@ -1187,9 +1187,9 @@ cli:
         file_kind_help: 'Evidence document kind: `justificante` (AEAT receipt, every
           modelo) or `declaration` (filed tax return PDF, box-level reconcile, enrolled
           modelos only). Defaults to `justificante`.'
-        file_path_help: Path to the local justificante or declaración PDF to reconcile
+        file_path_help: Path to the local filing receipt or declaration PDF to reconcile
           against.
-        import_help: Reconcile a declaration against a local justificante or declaración
+        import_help: Reconcile a declaration against a local filing receipt or declaration
           PDF. Local-only; never contacts AEAT.
         list_empty: No reconciliations recorded yet.
         list_help: List past reconciliations recorded in the active profile.
@@ -1458,8 +1458,7 @@ cli:
           600/620). Determines the competent Hacienda (Ley 22/2009 Art. 32). País
           Vasco and Navarra are foral regimes; consult the corresponding regional
           Hacienda.
-        compare_taxation_error: 'Conjunta vs. individual comparison not available:
-          {detail}'
+        compare_taxation_error: 'Joint vs. individual comparison not available: {detail}'
         compare_taxation_help: 'Compare the IRPF cuota under joint filing (conjunta,
           Art. 82-84 LIRPF) and individual filing for an existing Modelo 100 declaration.
           Cadrumo calculates twice, once with declaration_type=2 (conjunta) and once

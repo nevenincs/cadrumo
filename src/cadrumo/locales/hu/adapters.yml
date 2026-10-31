@@ -145,7 +145,7 @@ adapters:
           google_token_missing: 'Nincs Google OAuth-token mentve az aktív profilhoz.
             Futtasd először: `cadrumo-runtime config google login`.'
           kind_empty: Az CADRUMO_STORAGE_PROVIDER_KIND üres.
-          kind_unhandled: A(z) {kind} tárhelyszolgáltató-típust a factory nem kezeli.
+          kind_unhandled: A(z) {kind} tárhelyszolgáltató-típus nem támogatott.
           kind_unknown: 'A(z) {value} tárhelyszolgáltató-típus nem ismert; várt értékek:
             {expected}.'
       google_drive:
@@ -156,15 +156,15 @@ adapters:
           create_namespace_no_id: A Google Drive nem adott vissza azonosítót a névtér
             mappa létrehozásakor.
           create_vault_folder_no_id: A Google Drive nem adott vissza azonosítót a
-            vault mappa létrehozásakor.
+            Cadrumo mappa létrehozásakor.
           folder_not_owned: A Drive mappa {folder_name} nincs az alkalmazás tulajdonaként
             jelölve; az adataid védelmében az írás megtagadva.
-          former_vault_folder: A Google Drive vault mappa {vault_folder_name} az előző
-            termékhez tartozik és nem használható; használd a Cadrumo vault mappát.
+          former_vault_folder: A Google Drive {vault_folder_name} mappája az előző
+            termékhez tartozik és nem használható; használd a Cadrumo mappát.
           googleapiclient_import_failed: 'A google-api-python-client függőség nem
             importálható; futtasd: `uv sync`, majd próbáld újra.'
           media_non_bytes: A Google Drive médiatartalom-letöltése {payload_type} típusú
-            értéket adott vissza bytes helyett.
+            értéket adott vissza `bytes` helyett.
           modified_time_invalid: A Google Drive nem adott vissza használható módosítási
             időpontot ehhez az objektumhoz; a metaadatai nem megbízhatók.
           namespace_blank: A Google Drive tárhely névtere nem lehet üres.
@@ -179,7 +179,8 @@ adapters:
             objektumhoz; a metaadatai nem megbízhatók.
           vault_entry_not_folder: 'A beállított Drive gyökér tartalmazza ezt: {vault_folder_name},
             de ez nem mappa.'
-          vault_folder_name_blank: A Google Drive vault mappa neve nem lehet üres.
+          vault_folder_name_blank: A Cadrumo mappa neve a Google Drive tárhelyen nem
+            lehet üres.
           write_non_dict_response: A Google Drive {action} írási válasza váratlan
             alakú volt.
       local:
@@ -285,7 +286,8 @@ adapters:
         config auth status' parancsot, és próbáld újra. Ne tekintsd ezt üres postafióknak.
       parse_failed: Nem sikerült elemezni az AEAT nyilatkozatválaszt; az oldal struktúrája
         megváltozhatott.
-      playwright_alert_modal_failed: Hiba az AEAT riasztási modal folytatásakor.
+      playwright_alert_modal_failed: Nem sikerült továbblépni az AEAT figyelmeztető
+        párbeszédablakában.
       playwright_buscar_click_failed: Hiba a Buscar gombra való kattintáskor a Sede
         oldalon.
       playwright_combobox_open_failed: Hiba a Sede legördülő lista megnyitásakor.

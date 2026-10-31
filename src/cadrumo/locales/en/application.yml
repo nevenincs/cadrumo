@@ -273,7 +273,7 @@ application:
         registry_scope_invalid: The Modelo 303 carry needs a modelo and a period;
           it received modelo {modelo}, tax year {filing_year}, period {period}.
         result_casilla_required: Modelo 303 carry normalisation requires the recorded
-          resultado box {casilla_id}, which the observation does not carry.
+          result box {casilla_id}, which the observation does not carry.
         supplied_available_contradicts_derivation: The supplied available compensation
           {supplied_available} contradicts the {basis} derivation {derived_available}.
           Only the taxpayer can decide which figure was filed; there is no safe automatic
@@ -303,7 +303,7 @@ application:
           the supported range {minimum} to {maximum}.
         iva_wallet_target_year_out_of_range: The IVA wallet target year {target_year}
           is outside the supported range {minimum} to {maximum}.
-        member_nif_blank: The grupo member NIF must not be blank when it widens the
+        member_nif_blank: The group member NIF must not be blank when it widens the
           observation key.
         period_type_invalid: The observation key requires a period value; it received
           {observed_type}.
@@ -380,7 +380,7 @@ application:
       errors:
         aux_block_undeclared: The export layout cannot write the declaration's mandatory
           Aux block.
-        casilla_metadata_drift: Box numbering or segmento differs from the official
+        casilla_metadata_drift: Box numbering or record segment differs from the official
           record design in the modelo definitions.
         rate_boxes_understate_total: The rate boxes do not cover all recorded amounts.
         record_emit_order_drift: The export would write records out of the order declared
@@ -678,8 +678,8 @@ application:
       first_period_zero_local_recurrence: An initial local zero establishes that no
         previous compensación exists in the first recorded IVA period.
       local_evidence_unreadable: A previous Modelo 303 record exists, but it cannot
-        be read as previous-compensación evidence and no AEAT wallet observation is
-        available.
+        be read as evidence of credit carried forward and no AEAT wallet observation
+        is available.
       local_recurrence_requires_override: The AEAT wallet is unavailable; the local
         recurrence requires an express taxpayer override before the automatic result
         is produced.
@@ -1666,10 +1666,9 @@ application:
         aeat app modelo reconcile import, or wait for this modelo to be enrolled.
       reconcile_no_active_bucket: No active profile bucket; run `aeat config profile
         create NAME` before reconciling a declaration.
-      refund_election_not_eligible: Refund (devolver) was elected for Modelo %{modelo}
-        %{filing_year} %{period}, but a refund is only available in the year's last
-        filing period. Carry the credit forward (compensar), or make the election
-        in the last period.
+      refund_election_not_eligible: Refund was elected for Modelo %{modelo} %{filing_year}
+        %{period}, but a refund is only available in the year's last filing period.
+        Carry the credit forward, or make the election in the last period.
       review_package_generic: An error occurred while building the review package.
       review_package_integrity: 'Review package %{package_path} failed the checksum
         check: %{detail}.'
@@ -1742,7 +1741,8 @@ application:
       activity_asset_register_drift: 'Your asset register changed after modelo %{modelo}
         %{filing_year}, period %{period}, was calculated (amortisation charges added:
         %{claims_added}, replaced or removed: %{claims_removed}, schedules changed:
-        %{schedules_changed}, bajas changed: %{disposals_changed}). Calculate it again.'
+        %{schedules_changed}, disposals changed: %{disposals_changed}). Calculate
+        it again.'
       art20_reduccion_possible: Box [%{rnt_id}] shows %{rnt_value} EUR of net income
         from work (rendimiento neto del trabajo), within the Art. 20 LIRPF limit,
         so box [%{reduccion_id}] may give you a reduction you are not using yet. Check
@@ -1771,8 +1771,8 @@ application:
         %{source_filing_year}, period %{source_period}, does not apply to you because
         your activity started on %{activity_start_date}.
       cross_period_m111_no_retenciones: Modelo %{source_modelo} for %{source_filing_year},
-        period %{source_period}, declares no withholdings (retenciones) to carry into
-        modelo %{target_modelo} for %{target_filing_year}, period %{target_period}.
+        period %{source_period}, declares no withholdings to carry into modelo %{target_modelo}
+        for %{target_filing_year}, period %{target_period}.
       cross_period_modelo_not_applicable:
         message: '%{source_modelo_count} modelos were not used, because they do not
           apply to you.'
@@ -1790,8 +1790,8 @@ application:
       cuota_less_ledger_row_base_missing: An entry in your records has no taxable
         amount (base imponible) to declare.
       dt12a_reduccion_antiquity_possible: Box [%{reduccion_id}] shows a DT 12ª reduction
-        of %{reduccion_value} EUR. Check that you meet the seniority (antigüedad)
-        condition it requires.
+        of %{reduccion_value} EUR. Check that you meet the seniority condition it
+        requires.
       dt12a_reduccion_possible: Box [%{ingreso_id}] shows %{ingreso_value} EUR of
         employment income (rendimientos del trabajo), above the DT 12ª threshold,
         so box [%{reduccion_id}] may give you a reduction you are not using yet. Check
@@ -1827,7 +1827,7 @@ application:
         a reference, %{unidentified_source_count} without one). Correct your records
         and calculate again before checking this declaration.
       iva_wallet_precondition_failed: A condition for carrying VAT forward from earlier
-        periods (compensar) is not met.
+        periods is not met.
       ledger_snapshot_drift: 'Your records changed after modelo %{modelo} %{filing_year},
         period %{period}, was calculated: %{changed_count} entries changed and %{removed_count}
         removed. Calculate it again.'
@@ -1912,17 +1912,17 @@ application:
         for modelo %{source_modelo} is empty, so nothing declares them. Enter them
         in this modelo''s per-payee detail before you check it.'
       withholding_detail_absent_attested: 'Modelo %{modelo} %{filing_year} declares
-        no payments (percepciones) to anyone, and your profile records that you paid
-        no income subject to withholding (retención) in the periods you confirmed.
-        No annual summary is due for a year in which you paid none of the income it
-        declares. Review the year if you paid exempt income, or income below the withholding
-        threshold: those are declared even when nothing was withheld. This is a local
-        preparation, not a submission to AEAT.'
+        no payments to anyone, and your profile records that you paid no income subject
+        to withholding in the periods you confirmed. No annual summary is due for
+        a year in which you paid none of the income it declares. Review the year if
+        you paid exempt income, or income below the withholding threshold: those are
+        declared even when nothing was withheld. This is a local preparation, not
+        a submission to AEAT.'
       withholding_detail_absent_unproven: 'Modelo %{modelo} %{filing_year} declares
-        no payments (percepciones) to anyone, and nothing confirms that: the withholdings
-        detail for modelo %{source_modelo} is empty, and you have not confirmed for
-        every period that nothing was withheld. Enter the payments for each payee
-        in this modelo''s detail, or confirm each period in your profile.'
+        no payments to anyone, and nothing confirms that: the withholdings detail
+        for modelo %{source_modelo} is empty, and you have not confirmed for every
+        period that nothing was withheld. Enter the payments for each payee in this
+        modelo''s detail, or confirm each period in your profile.'
     help:
       constraint:
         at_least: At least {minimum}.

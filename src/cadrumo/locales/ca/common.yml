@@ -26,9 +26,9 @@ aggregation:
       incomplete_m210_classification: L'operació entrant de font espanyola no té una
         classificació explícita de renda del Model 210; la projecció de l'IRNR mai
         no infereix un codi oficial de tipus de renda a partir de irpf_category.
-      source_jurisdiction_unresolved: source_jurisdiction no està resolta (None) en
-        una candidata entrant del Model 210; l'art. 13 del TRLIRNR només admet rendes
-        de font espanyola en aquesta projecció de l'IRNR.
+      source_jurisdiction_unresolved: source_jurisdiction no està resolta (`None`)
+        en una candidata entrant del Model 210; l'art. 13 del TRLIRNR només admet
+        rendes de font espanyola en aquesta projecció de l'IRNR.
       tipo_renta_code_not_declared: El codi oficial de tipus de renda %{tipo_renta_code}
         del Model 210 no està declarat per a la revisió i el període de presentació
         %{period} seleccionats.

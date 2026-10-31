@@ -15,8 +15,8 @@ aggregation:
       non_resident_supplier: The supplier is not resident in Spain; withholding on
         payments to non-residents is declared under non-resident income tax.
       not_a_retenedor_liability: With this IVA treatment and invoice type, the withholding
-        is not something you owe as the payer who withholds (retenedor); withholding
-        on an invoice you issued is a credit in your favour.
+        is not something you owe as the payer who withholds; withholding on an invoice
+        you issued is a credit in your favour.
   irnr_income_ledger:
     diagnostics:
       foreign_source_out_of_scope: source_jurisdiction %{source_jurisdiction} is outside
@@ -1583,7 +1583,7 @@ desktop:
       not_known: Not known
       opening_unknown: Fill in “{field}” to work this out.
       plan:
-        baja: 'Baja on {date}: {reason}'
+        baja: 'Disposal on {date}: {reason}'
         claimable: A depreciation charge can still be recorded {from} – {until}
         claimable_none: Nothing left to record
         claims: Depreciation charges for {year}
@@ -2326,7 +2326,8 @@ desktop:
       copy_selection: Copy as TSV
       count_unknown: The number of movements couldn't be read.
       counting: Counting…
-      description: A local file for you or your gestor. Nothing is sent to the AEAT.
+      description: A local file for you or your tax adviser. Nothing is sent to the
+        AEAT.
       done: The file is written
       done_note: 'Movements written to {name}: {count}.'
       file: Save as
@@ -3039,9 +3040,9 @@ desktop:
       cancel: Cancel
       check: Check
       class:
-        ordinaria: Ordinaria (full)
-        rectificativa: Rectificativa (corrective)
-        simplificada: Simplificada (simplified)
+        ordinaria: Full invoice
+        rectificativa: Corrective invoice
+        simplificada: Simplified invoice
       class_filter: Invoice class
       close: Close
       column:
@@ -4972,7 +4973,7 @@ ledger:
         activity it belongs to.
       disposal_already_recorded: This element already has a baja dated %{disposal_date}.
         To change or remove it, correct the element and edit or clear its baja.
-      disposal_amount_invalid: The baja's amounts must be non-negative euro figures
+      disposal_amount_invalid: The disposal amounts must be non-negative euro figures
         with at most two decimals.
       disposal_before_service: The baja date cannot be before the element entered
         service.
@@ -4982,7 +4983,8 @@ ledger:
         asset.
       disposal_excess_without_table_class: The excess for %{tax_year} needs a table
         class on the election, and it has none.
-      disposal_not_recorded: This element has no baja. State one to preview its figures.
+      disposal_not_recorded: This element has no disposal. State one to preview its
+        figures.
       disposal_scrapping_with_proceeds: Scrapping has no proceeds. Record a scrap
         sale as a sale.
       disposal_withdrawal_with_amounts: A withdrawal from the activity computes no
@@ -5254,9 +5256,9 @@ ledger:
         be measured from calendar-year averages.
       workforce_year_not_declared: The average workforce of %{year} is not declared.
     event_kind:
-      baja_changed: Baja changed
+      baja_changed: Disposal changed
       baja_recorded: Baja recorded
-      baja_removed: Baja removed
+      baja_removed: Disposal removed
       claim_recorded: Depreciation charge recorded
       claim_replaced: Depreciation charge replaced
       corrected: Details corrected
@@ -7605,9 +7607,9 @@ tui:
       cancel: Cancel
       cancelled: Cancelled. Nothing was recorded.
       class:
-        ordinaria: Full invoice (ordinaria)
+        ordinaria: Full invoice
         rectificativa: Corrective invoice (rectificativa)
-        simplificada: Simplified invoice (simplificada)
+        simplificada: Simplified invoice
       confirm: Record invoice
       confirming: Check the invoice below, then record it.
       euro_rate_unavailable: No euro exchange rate for {currency} on that date was
@@ -8218,15 +8220,15 @@ tui:
       payment_election:
         cuenta_corriente: Tax current account (cuenta corriente tributaria)
         domiciliacion: Direct debit
-        ingreso: Payment by the taxpayer (ingreso)
+        ingreso: Payment by the taxpayer
         label: 'Result to pay: how it is paid'
       prior_domiciliation_election:
         cancel_or_modify: Cancel or modify it
         keep: Keep it
         label: Earlier direct debit (corrective return only)
       refund_election:
-        compensar: Carry forward to later periods (compensar)
-        devolver: Request a refund (devolver)
+        compensar: Carry forward to later periods
+        devolver: Request a refund
         label: 'Negative result: carry it forward or request a refund'
       replace_existing:
         label: Replace a file already at this path

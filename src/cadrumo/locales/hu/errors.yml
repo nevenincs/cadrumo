@@ -527,8 +527,8 @@ errors:
     source_file_is_symlink: 'A forrásfájl elérési útja szimbolikus link, ami nem engedélyezett
       adóügyi adatok behozatalához: {path}'
     source_file_not_found: 'A forrásfájl nem létezik: {path}'
-    source_file_too_large: 'A forrásfájl túl nagy: {path} ({size_bytes} bytes; maximum
-      {max_bytes} bytes)'
+    source_file_too_large: 'A forrásfájl túl nagy: {path} ({size_bytes} bájt; maximum
+      {max_bytes} bájt)'
     unsupported_date_format: 'Érvénytelen dátumformátum a(z) {label} mezőben: {raw}.
       Várt forma: {expected_format}.'
   identity:
@@ -602,8 +602,8 @@ errors:
       használ.
     integrity_active_profile_pointer: Az aktívprofil-mutató érvénytelen; javítsd a
       kiválasztott profilt a folytatás előtt.
-    integrity_apoderado_configuration_identity: A tárolt apoderado-beállítás nem ahhoz
-      a profilhoz tartozik, amelyből beolvasták.
+    integrity_apoderado_configuration_identity: A tárolt meghatalmazotti beállítás
+      nem ahhoz a profilhoz tartozik, amelyből beolvasták.
     integrity_cadrumo_core_validation: Belső adatintegritás-ellenőrzés meghiúsult.
     integrity_cadrumo_toml_decode: Egy TOML-dokumentum nem dolgozható fel.
     integrity_cli_output_schema: A CLI kimeneti séma nyilvántartása helytelenül van

@@ -23,7 +23,7 @@ docs:
       ledger_renta_gastos_estimacion_directa_aggregation: from your expense records
         under estimación directa
       ledger_renta_gastos_pago_fraccionado_aggregation: from your expense records
-        for the pago fraccionado
+        for the advance payment
       ledger_renta_income_aggregation: from your income entries
       ledger_transaction: from your records
       m303_regimen_simplificado_annual_summary: from Modelo 303's simplified-regime
@@ -37,7 +37,7 @@ docs:
       prorrata_regularizacion: from your prorrata regularisation
       purchase_invoice_evidence: from the supporting documents of your received invoices
       relation_prefill: from a related modelo's result
-      retenciones_aggregation: from the retenciones you recorded
+      retenciones_aggregation: from the withholdings you recorded
       withholding: from the withholdings you recorded
       withholding296: from the modelo 296 withholdings per recipient
     cadence:
@@ -71,7 +71,7 @@ docs:
       required: Required
       revisions: Revisions
       sections_nav: Sections of this modelo
-      segmento: Segmento {segmento}
+      segmento: Segment {segmento}
       semantic_role: Semantic role
       sources: Sources
     data_type:

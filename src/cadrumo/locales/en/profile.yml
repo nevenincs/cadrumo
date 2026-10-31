@@ -12,8 +12,8 @@ profile:
     source:
       censal_review:
         action: Review census
-        description: Read the taxpayer's own censal record and review any proposed
-          changes before adopting them.
+        description: Read the taxpayer's own tax registration record and review any
+          proposed changes before adopting them.
         title: AEAT census
       credential_requirement:
         held: AEAT credential on file
@@ -571,7 +571,7 @@ profile:
       attribution_entity_socios:
         summary: The partners of that entity and the share of income attributed to
           each.
-        title: Attribution entity socios
+        title: Attribution entity members
       attribution_received:
         summary: Income attributed to you by entities in which you are a partner.
         title: Attribution received from entities

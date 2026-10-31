@@ -162,14 +162,13 @@ adapters:
             ha fallat la comprovació d'integritat.
           create_namespace_no_id: Google Drive no ha retornat cap id en crear la carpeta
             d'espai de noms.
-          create_vault_folder_no_id: Google Drive no ha retornat cap id en crear la
-            carpeta vault.
+          create_vault_folder_no_id: Google Drive no ha retornat cap identificador
+            en crear la carpeta de Cadrumo.
           folder_not_owned: La carpeta de Drive {folder_name} no està marcada com
             a propietat d'aquesta app; es rebutja l'escriptura per protegir les teves
             dades.
-          former_vault_folder: La carpeta vault de Google Drive {vault_folder_name}
-            pertany al producte anterior i no es pot utilitzar; usa la carpeta vault
-            de Cadrumo.
+          former_vault_folder: La carpeta de Google Drive {vault_folder_name} pertany
+            al producte anterior i no es pot utilitzar; usa la carpeta de Cadrumo.
           googleapiclient_import_failed: La dependència google-api-python-client no
             es pot importar; executa `uv sync` i torna-ho a provar.
           media_non_bytes: La descàrrega de mitjans de Google Drive ha retornat {payload_type}
@@ -192,8 +191,8 @@ adapters:
             objecte; no es poden considerar fiables les seves metadades.
           vault_entry_not_folder: L'arrel configurada de Drive conté {vault_folder_name},
             però aquesta entrada no és una carpeta.
-          vault_folder_name_blank: El nom de carpeta vault de Google Drive no pot
-            estar buit.
+          vault_folder_name_blank: El nom de la carpeta de Cadrumo a Google Drive
+            no pot estar buit.
           write_non_dict_response: La resposta d'escriptura de Google Drive per a
             {action} tenia una forma inesperada.
       local:

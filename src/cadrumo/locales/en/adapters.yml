@@ -283,9 +283,9 @@ adapters:
       playwright_alert_modal_failed: Continuing the AEAT alert modal failed.
       playwright_buscar_click_failed: Clicking the Buscar (Search) button on the AEAT
         electronic office page failed.
-      playwright_combobox_open_failed: Opening the Sede combobox failed.
-      playwright_combobox_select_failed: Selecting a combobox option on the Sede page
-        failed.
+      playwright_combobox_open_failed: Opening the AEAT drop-down list failed.
+      playwright_combobox_select_failed: Selecting an option from the AEAT drop-down
+        list failed.
       session_expired_nav_failed: The AEAT declarations register did not load; your
         session has likely expired. Run 'cadrumo-runtime config auth test' and retry.
       submitted_file_layout_parse_failed: The submitted file could not be read through

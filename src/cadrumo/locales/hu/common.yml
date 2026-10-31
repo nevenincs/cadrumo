@@ -25,8 +25,8 @@ aggregation:
         kifejezett M210-es jövedelem-besorolás; az IRNR-projekció soha nem következtet
         hivatalos tipo-renta kódra az irpf_category mezőből.
       source_jurisdiction_unresolved: Az M210-es jelölt bejövő tétel source_jurisdiction
-        értéke nincs feloldva (None); a TRLIRNR 13. cikke csak a spanyol forrású jövedelmet
-        engedi ebbe az IRNR-projekcióba.
+        értéke nincs feloldva (`None`); a TRLIRNR 13. cikke csak a spanyol forrású
+        jövedelmet engedi ebbe az IRNR-projekcióba.
       tipo_renta_code_not_declared: A Modelo 210 %{tipo_renta_code} hivatalos tipo-renta
         kódja nincs deklarálva a kiválasztott %{period} felülvizsgálathoz és benyújtási
         időszakhoz.

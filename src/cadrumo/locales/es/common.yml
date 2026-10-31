@@ -26,7 +26,7 @@ aggregation:
       incomplete_m210_classification: La operación entrante de fuente española no
         tiene una clasificación expresa de renta del Modelo 210; la proyección del
         IRNR nunca infiere un código oficial de tipo de renta desde irpf_category.
-      source_jurisdiction_unresolved: source_jurisdiction no está resuelta (None)
+      source_jurisdiction_unresolved: source_jurisdiction no está resuelta (`None`)
         en una candidata entrante al Modelo 210; el art. 13 del TRLIRNR solo admite
         rentas de fuente española en esta proyección del IRNR.
       tipo_renta_code_not_declared: El código oficial de tipo de renta %{tipo_renta_code}

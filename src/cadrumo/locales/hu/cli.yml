@@ -2004,7 +2004,7 @@ cli:
         check_help: Ellenőrzés az AEAT-nál (nem érhető el; az élő lekérdezés le van
           zárva). Használd a 'cadrumo-runtime config auth apoderado status' parancsot
           az offline olvasáshoz.
-        clear_help: Az apoderado-konfiguráció megszüntetése.
+        clear_help: A meghatalmazotti beállítás megszüntetése.
         configure:
           no_console_hint: 'Az apoderamiento interaktív beállításához konzol szükséges.
             Állítsd be nem interaktív módon: cadrumo-runtime config auth apoderado
@@ -2013,8 +2013,8 @@ cli:
           scope_help: Hatóköri tokenek (ismételhető).
           scope_required: 'Nincs megadva hatókör. Add meg a --scope kapcsolót az alábbiak
             közül eggyel vagy többel: %{codes}.'
-        configure_help: Aktív apoderado-konfiguráció beállítása.
-        help: Apoderado-konfiguráció kezelése.
+        configure_help: Aktív meghatalmazotti beállítás konfigurálása.
+        help: Meghatalmazotti beállítás kezelése.
         scope:
           censo: Nyilvántartási nyilatkozatok (bejegyzés, módosítás, törlés) (Modelo
             036).
@@ -2027,9 +2027,9 @@ cli:
           rent: Jövedelemadó és vagyonbevallás (Modelo 100 és 714).
           reten: Visszatartási adóbevallások (Modelo 111, 115, 123, 180, 190 és 193).
         scopes:
-          help: Apoderado hatóköri szójegyzék kezelése.
-          list_help: Elfogadott apoderado hatókörök listázása.
-        status_help: Aktív apoderado-konfiguráció megjelenítése.
+          help: Meghatalmazotti hatókörök kezelése.
+          list_help: Elfogadott meghatalmazotti hatókörök listázása.
+        status_help: Aktív meghatalmazotti beállítás megjelenítése.
       certificate:
         check_help: Ellenőrzi minden regisztrált tanúsítványforrás lejáratát és rotációs
           állapotát

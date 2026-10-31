@@ -26,7 +26,7 @@ application:
           konfigurálj egyet.
         operator_completion_required: Kész; a Cl@ve-lépést neked kell elvégezned.
     errors:
-      session_field_not_datetime: A(z) {field} munkamenet-mező csak datetime vagy
+      session_field_not_datetime: A(z) {field} munkamenet-mező csak `datetime` vagy
         ISO-8601 karakterlánc lehet.
     operator:
       alignment:
@@ -2597,14 +2597,14 @@ application:
       resume_target_contradiction: 'Csak egy folytatási célt adj meg: munkafolyamat-futtatás
         azonosítót, bevallás-azonosítót, mentett számítás azonosítót, vagy nyomtatvány/év/időszak
         értéket.'
-      resume_target_invalid: 'Érvénytelen resume cél: {target}. Használd: --modelo
+      resume_target_invalid: 'Érvénytelen folytatási cél: {target}. Használd: --modelo
         --year --period, vagy futtasd: `aeat app modelo work runs`.'
       resume_target_required: Add meg a --modelo --year --period opciókat, egy munkafolyamat-futtatás
         azonosítót, egy bevallás-azonosítót vagy egy mentett számítás azonosítót a
         folytatáshoz.
-      resume_visible_target_incomplete: 'A természetes kulcsú resume együtt igényli
-        a --modelo, --year és --period opciókat; kapott: modelo={modelo}, year={year},
-        period={period}.'
+      resume_visible_target_incomplete: 'A természetes kulccsal megadott folytatáshoz
+        a --modelo, --year és --period opciókat együtt kell megadnod; kapott: modelo={modelo},
+        year={year}, period={period}.'
       run_id_invalid_blank: A futásazonosító nem lehet üres.
       run_id_invalid_separators: A futásazonosító nem tartalmazhat elérési út elválasztókat.
       run_identity_mismatch: A tárolt futás nem egyezik azzal az azonosítóval, amellyel
