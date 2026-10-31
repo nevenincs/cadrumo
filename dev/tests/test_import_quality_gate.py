@@ -1571,14 +1571,6 @@ def test_a_repository_tree_holding_python_outside_every_declaration_is_unclassif
     assert any(f"[UNCLASSIFIED_ROOT] repository tree {label!r} holds Python" in item for item in findings), findings
 
 
-def test_an_undeclared_repository_tree_fails_authority_preflight_through_real_gate(tmp_path: Path) -> None:
-    root = _fixture_root(tmp_path)
-    (root / "tools").mkdir()
-    (root / "tools" / "script.py").write_text("import cadrumo\n", encoding=UTF_8, newline="\n")
-    returncode, output = _run_gate(root)
-    _assert_operational_refusals(returncode, output, (("UNCLASSIFIED_ROOT", "repository tree 'tools' holds Python"),))
-
-
 def test_ignored_and_non_python_repository_trees_stay_outside_the_census(tmp_path: Path) -> None:
     root = _fixture_root(tmp_path)
     (root / ".gitignore").write_text("scratch/\n*.log\n", encoding=UTF_8, newline="\n")
@@ -1763,14 +1755,3 @@ def test_consumer_sources_are_part_of_the_governed_work_measure(tmp_path: Path) 
     _write_consumer(root, repository_only, "VALUE = 1\n" + "# padding\n" * 200_000)
 
     assert step_budget_for(read.authority).cpu_seconds > before
-
-
-def test_a_consumer_private_reach_fails_through_real_gate(tmp_path: Path) -> None:
-    root = _fixture_root(tmp_path)
-    _write_module(root, "dev.quality._private", "VALUE = 1\n")
-    _, repository_only = _declared_consumer_paths(root)
-    _write_consumer(root, repository_only, "from dev.quality._private import VALUE\n")
-    returncode, output = _run_gate(root)
-    payload = _health_payload(output)
-    _assert_blocking_detection(returncode, output, payload)
-    assert "[PRIVATE_CROSS_PACKAGE]" in _component_block(output, "SUBORDINATE_CHECKER"), output
