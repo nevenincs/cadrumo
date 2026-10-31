@@ -39,6 +39,30 @@ def test_english_redaction_version_terms_are_exact() -> None:
     assert not is_project_spelling("en", "redactionss")
 
 
+def test_attested_english_technical_words_remain_exact_and_language_scoped() -> None:
+    words = (
+        "updatable",
+        "toolset",
+        "cutover",
+        "ungrouped",
+        "stylesheet",
+        "misconfigured",
+        "unresolvable",
+        "deregistered",
+        "Deregistered",
+        "scriptable",
+        "unpromoted",
+        "handoffs",
+    )
+    for word in words:
+        assert is_project_spelling("en", word)
+        assert not is_project_spelling("en", word + "x")
+        for locale in ("ca", "es", "hu"):
+            assert not is_project_spelling(locale, word)
+    assert not is_project_spelling("en", "unresolveable")
+    assert not is_project_spelling("en", "styleesheet")
+
+
 def test_english_citation_retains_exact_aeat_terms_and_possessives() -> None:
     for word in ("casilla", "casilla's", "borrador", "borrador's"):
         assert is_project_spelling("en", word)

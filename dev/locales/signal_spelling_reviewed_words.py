@@ -36,6 +36,28 @@ REVIEWED_SPANISH_LEGAL_SPELLINGS = frozenset(
 REVIEWED_LOCALE_SPELLINGS: dict[str, frozenset[str]] = {
     "en": frozenset(
         {
+            # Technical prose forms used in the project documentation and UI.
+            # https://learn.microsoft.com/en-us/dynamics365/guidance/implementation-guide/extend-your-solution-guidance-product-fo
+            # https://learn.microsoft.com/en-us/dynamics365/fin-ops-core/dev-itpro/data-entities/dual-write/dual-write-async-faq
+            # https://learn.microsoft.com/en-us/previous-versions/windows/desktop/htmlhelp/creating-a-cascading-style-sheet
+            # https://learn.microsoft.com/en-us/windows-server/storage/storage-migration-service/cutover
+            # https://learn.microsoft.com/en-us/windows/win32/termserv/scriptable-virtual-channels
+            # https://learn.microsoft.com/en-us/windows/win32/tapi/handoffs-ovr
+            # https://learn.microsoft.com/en-us/ecdn/troubleshooting/troubleshoot-ecdn-performance-issues
+            # https://learn.microsoft.com/en-us/sql/linux/sql-server-linux-pacemaker-basics
+            # https://learn.microsoft.com/en-us/uwp/api/windows.networking.connectivity.wwannetworkregistrationstate
+            "updatable",
+            "toolset",
+            "cutover",
+            "ungrouped",
+            "stylesheet",
+            "misconfigured",
+            "unresolvable",
+            "deregistered",
+            "Deregistered",
+            "scriptable",
+            "unpromoted",
+            "handoffs",
             # Exact territory names used in the IVA geographic source notes:
             # https://www.gov.uk/government/publications/geographical-names-and-information
             # https://www.boe.es/biblioteca_juridica/abrir_pdf.php?id=PUB-PB-2025-386
