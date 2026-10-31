@@ -23,6 +23,7 @@ export function CodeEditor({
   onPick,
   onSuggestionsWanted,
   opensEmpty,
+  commitsOnPick,
   ...editor
 }: EditorProps & SecretProps & { shown?: (code: string) => string }) {
   const reading = useMemo(
@@ -40,7 +41,13 @@ export function CodeEditor({
       // A secret is never offered, whichever kind of code it is.
       {...(secret
         ? {}
-        : { suggestions, onPick, onSuggestionsWanted, opensEmpty })}
+        : {
+            suggestions,
+            onPick,
+            onSuggestionsWanted,
+            opensEmpty,
+            commitsOnPick,
+          })}
       type={secret ? "password" : "text"}
       reading={reading}
       className={cn("font-mono", className)}

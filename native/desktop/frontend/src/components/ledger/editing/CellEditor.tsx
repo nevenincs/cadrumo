@@ -7,6 +7,7 @@ import {
   useState,
 } from "react";
 import { TypedField } from "@/components/editors/TypedField";
+import type { Suggestion } from "@/components/ui/suggestions";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/components/ui/cn";
 import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
@@ -48,6 +49,10 @@ import {
   type EditRefusal,
 } from "./editingModel";
 import { choiceLabels, refusalText } from "./editingWords";
+import {
+  useFieldSuggestions,
+  type SuggestionKind,
+} from "../suggestions/SuggestionsProvider";
 
 /** What a cell editor hands the grid: a value to stage, a clear, or a
  * refusal to mark in the cell. Delete hands it null, a clear. */
@@ -113,10 +118,16 @@ export function TypedEditor({
   field,
   value,
   stored,
+  offers = null,
+  onFill,
 }: {
   context: EditorContext;
   kind: EditKind;
   field: StageField | DraftField;
+  /** The text this cell may be picked from, where it offers any. */
+  offers?: SuggestionKind | null;
+  /** A pick's offer to the fields beside this cell. */
+  onFill?(picked: Suggestion): void;
   /** The value as the editor opens with it, in canonical text. */
   value: string;
   /** Whether the cell holds a value now: an empty cell left empty is no
@@ -134,6 +145,7 @@ export function TypedEditor({
   const done = useRef(false);
   const floating = kind === "date";
   const labels = useMemo(() => choiceLabels(t, null), [t]);
+  const offered = useFieldSuggestions(offers);
   useLayoutEffect(() => {
     if (floating) setLift(anchor.current?.offsetHeight ?? 0);
   }, [floating]);
@@ -219,6 +231,17 @@ export function TypedEditor({
           setError(null);
         }}
         onPicked={(picked) => finish("pointer", picked)}
+        {...(offers
+          ? {
+              ...offered,
+              commitsOnPick: true,
+              opensEmpty: offers === "group",
+              onPick: (picked: Suggestion, via: CommitKey) => {
+                onFill?.(picked);
+                finish(via, picked.value);
+              },
+            }
+          : {})}
         aria-label={context.label}
         describedBy={
           [context.describedBy, message ? noteId : null]

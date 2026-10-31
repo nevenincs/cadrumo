@@ -50,6 +50,7 @@ export function TypedField({
   onPick,
   onSuggestionsWanted,
   opensEmpty,
+  commitsOnPick,
   mode,
   ...common
 }: TypedFieldProps) {
@@ -61,6 +62,7 @@ export function TypedField({
     onPick,
     onSuggestionsWanted,
     opensEmpty,
+    commitsOnPick,
   };
   switch (field.kind) {
     case "text":

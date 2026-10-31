@@ -41,6 +41,7 @@ export function EntryInput({
   onPick,
   onSuggestionsWanted,
   opensEmpty,
+  commitsOnPick,
   reading,
   type,
   ref,
@@ -73,6 +74,7 @@ export function EntryInput({
     },
     onWanted: onSuggestionsWanted,
     opensEmpty,
+    commitsOnPick,
   });
   const own = {
     ref,

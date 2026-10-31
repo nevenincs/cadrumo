@@ -29,6 +29,9 @@ export type SuggestionProps = {
   onSuggestionsWanted?(): void;
   /** Opens on focus with nothing typed, for a short list. */
   opensEmpty?: boolean;
+  /** The host moves on by itself when a pick is made, as a grid cell does, so
+   * Tab must not also move focus. */
+  commitsOnPick?: boolean;
 };
 
 /**

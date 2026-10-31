@@ -78,6 +78,7 @@ import {
   type RefusedCell,
 } from "./editingModel";
 import { choiceLabels, fieldName, lockText, refusalText } from "./editingWords";
+import type { SuggestionKind } from "../suggestions/SuggestionsProvider";
 import { CostDialog, PasteDialog } from "./PasteDialog";
 import {
   formatAmount,
@@ -87,6 +88,13 @@ import {
 import { formatDay } from "../../../shared/dateFormats";
 
 /** More saves one at a time than this, added by one change, asks first. */
+
+/** The text a typed column may be picked from. */
+const CELL_OFFERS: Partial<Record<ColumnId, SuggestionKind>> = {
+  description: "description",
+  counterparty: "counterparty",
+  group_label: "group",
+};
 
 /** The fields whose staged value differs between two stages, over every
  * movement either stages. */
@@ -336,6 +344,25 @@ export function useMovementEditing(input: MovementEditingInput) {
                         : value
                 }
                 stored={value !== null && value !== ""}
+                offers={CELL_OFFERS[column] ?? null}
+                onFill={(picked) => {
+                  // A new movement's empty party follows its description; a
+                  // stored movement changes only the cell that was edited.
+                  const party = picked.fills?.counterparty;
+                  if (
+                    subject.kind === "draft" &&
+                    column === "description" &&
+                    party &&
+                    !subject.draft.fields.counterparty?.trim()
+                  )
+                    applyDrafts([
+                      {
+                        key: subject.draft.key,
+                        field: "counterparty",
+                        value: party,
+                      },
+                    ]);
+                }}
               />
             );
           const transfer =
@@ -471,6 +498,7 @@ export function useMovementEditing(input: MovementEditingInput) {
     }
   }, [
     subjectOf,
+    applyDrafts,
     drafts,
     refused,
     content,

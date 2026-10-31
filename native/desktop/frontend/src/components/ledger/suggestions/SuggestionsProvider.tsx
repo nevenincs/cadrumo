@@ -183,7 +183,7 @@ function optionsOf(
 /** What a field of `kind` offers, as props for an editor. Outside the page, and
  * while nothing is held, it offers nothing and the field stays free. */
 export function useFieldSuggestions(
-  kind: SuggestionKind,
+  kind: SuggestionKind | null,
   scope: SuggestionScope = {},
 ): {
   suggestions: readonly Suggestion[] | null;
@@ -193,7 +193,10 @@ export function useFieldSuggestions(
   const locale = useStrings().locale ?? "en";
   const { invoiceKind, party } = scope;
   const suggestions = useMemo(
-    () => (held ? optionsOf(held, kind, { invoiceKind, party }, locale) : null),
+    () =>
+      held && kind
+        ? optionsOf(held, kind, { invoiceKind, party }, locale)
+        : null,
     [held, kind, invoiceKind, party, locale],
   );
   const want = held?.want;
