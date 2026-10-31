@@ -85,3 +85,18 @@ def test_worker_drops_service_agent_executable_from_operator_environment(
     assert _PACKAGE_AGENT_VARIABLE not in profile_worker._worker_launch_environment(
         storage_root=tmp_path / "worker-storage", profile_id=_PROFILE
     )
+
+
+@pytest.mark.parametrize("platform", ["linux", "darwin"])
+def test_the_launch_environment_of_a_profile_worker_passes_its_isolated_scope(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, platform: str
+) -> None:
+    from ..macos_worker_process import _validated_environment
+
+    monkeypatch.setattr(profile_worker, "sys", SimpleNamespace(platform=platform))
+    environment = profile_worker._worker_launch_environment(
+        storage_root=tmp_path / "worker-storage", profile_id=_PROFILE
+    )
+    environment["PYDANTIC_DISABLE_PLUGINS"] = "__all__"
+    assert PROFILE_ROOT_VARIABLE in environment
+    assert _validated_environment(environment) == environment

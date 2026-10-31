@@ -3148,21 +3148,29 @@ mod live_tests {
 
         // The stored sign-in is resumed with the proof its receipt names, as a
         // window resumes it when it finds the profile signed in; timed from connecting.
-        assert!(stored_sign_in_proof(&live.root, &live.profile_id).is_ok());
-        let started = Instant::now();
-        let resumed = Connection::open(&endpoint, &live.cohort, soon()).unwrap();
-        let session = resumed
-            .resume_receipt(&live.root, &live.profile_id, Frontend::Cli, soon())
-            .unwrap();
-        let resumed_in = started.elapsed();
-        assert_eq!(session.profile_id, live.profile_id);
-        assert_eq!(
-            resumed.connection_id().as_deref(),
-            Some(session.connection_id.as_str())
-        );
-        let status = resumed.status(&session, soon()).unwrap();
-        assert_eq!(status["session_id"], json!(session.session_id));
-        resumed.note_activity(&session, soon()).unwrap();
+        // A keychain that guards the command line's item from other programs refuses
+        // the window at once, without asking, and the window signs in with the password.
+        let resumed = match stored_sign_in_proof(&live.root, &live.profile_id) {
+            Ok(_) => {
+                let started = Instant::now();
+                let resumed = Connection::open(&endpoint, &live.cohort, soon()).unwrap();
+                let session = resumed
+                    .resume_receipt(&live.root, &live.profile_id, Frontend::Cli, soon())
+                    .unwrap();
+                let resumed_in = started.elapsed();
+                assert_eq!(session.profile_id, live.profile_id);
+                assert_eq!(
+                    resumed.connection_id().as_deref(),
+                    Some(session.connection_id.as_str())
+                );
+                let status = resumed.status(&session, soon()).unwrap();
+                assert_eq!(status["session_id"], json!(session.session_id));
+                resumed.note_activity(&session, soon()).unwrap();
+                Some((resumed, session, resumed_in))
+            }
+            Err(ProofRefusal::KeyringUnavailable) if cfg!(target_os = "macos") => None,
+            Err(refusal) => panic!("stored sign-in proof: {refusal:?}"),
+        };
 
         // The window's own password sign-in, on a development root, timed from
         // connecting. Storing it for the other frontends is admitted only from
@@ -3170,7 +3178,9 @@ mod live_tests {
         let started = Instant::now();
         let window = Connection::open(&endpoint, &live.cohort, soon()).unwrap();
         let connected = started.elapsed();
-        let retirements = resumed.subscribe();
+        let retirements = resumed
+            .as_ref()
+            .map(|(connection, _, _)| connection.subscribe());
         let held = window
             .login_password(
                 &live.profile_id,
@@ -3182,10 +3192,10 @@ mod live_tests {
             .unwrap();
         let signed_in = started.elapsed();
         println!(
-            "native sign-in: connect {} ms, password sign-in {} ms; receipt resume {} ms",
+            "native sign-in: connect {} ms, password sign-in {} ms; receipt resume {:?}",
             connected.as_millis(),
             signed_in.as_millis(),
-            resumed_in.as_millis()
+            resumed.as_ref().map(|(_, _, resumed_in)| resumed_in)
         );
         assert_eq!(held.profile_id, live.profile_id);
         assert!(
@@ -3285,13 +3295,15 @@ mod live_tests {
         let out = window.sign_out(&held, soon()).unwrap();
         assert!(out.automation_enabled.is_some() || out.automation_access_remains.is_none());
         assert!(out.session_ids.contains(&held.session_id));
-        assert!(out.session_ids.contains(&session.session_id));
         assert!(out.receipt_removed);
-        let retired = retirements.recv_timeout(Duration::from_secs(10)).unwrap();
-        assert!(
-            matches!(retired, Event::SessionRetired { .. }),
-            "{retired:?}"
-        );
+        if let (Some((_, session, _)), Some(retirements)) = (&resumed, &retirements) {
+            assert!(out.session_ids.contains(&session.session_id));
+            let retired = retirements.recv_timeout(Duration::from_secs(10)).unwrap();
+            assert!(
+                matches!(retired, Event::SessionRetired { .. }),
+                "{retired:?}"
+            );
+        }
         let cue = cues.recv_timeout(Duration::from_secs(10)).unwrap();
         assert_eq!(cue, Event::SignInChanged);
         let after = watcher
@@ -3302,11 +3314,13 @@ mod live_tests {
             stored_sign_in_proof(&live.root, &live.profile_id).unwrap_err(),
             ProofRefusal::Absent
         );
-        let refused = resumed.status(&session, soon()).unwrap_err();
-        assert!(
-            matches!(refused, Refusal::Denied { .. } | Refusal::ConnectionClosed),
-            "{refused}"
-        );
+        if let Some((resumed, session, _)) = &resumed {
+            let refused = resumed.status(session, soon()).unwrap_err();
+            assert!(
+                matches!(refused, Refusal::Denied { .. } | Refusal::ConnectionClosed),
+                "{refused}"
+            );
+        }
         window.close();
         watcher.close();
     }

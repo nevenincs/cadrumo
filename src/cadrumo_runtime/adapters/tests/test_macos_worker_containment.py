@@ -20,6 +20,7 @@ from typing import Any, cast
 import pytest
 
 from cadrumo.core.async_cleanup import close_async_resources
+from cadrumo.core.profile_root_environment import PROFILE_ROOT_VARIABLE, profile_root
 from cadrumo.core.storage_taxonomy import StorageCategory
 from cadrumo.core.storage_taxonomy_locations import storage_location
 from cadrumo.tests.audited_process import run_audited_process
@@ -332,6 +333,10 @@ def _assert_worker_inherited_nothing(directory: Path, worker_pid: int) -> None:
     temporary_root = root / storage_location(StorageCategory.TEMPORARY_FILES).relative_path()
     expected.update({name: str(temporary_root) for name in ("TEMP", "TMP", "TMPDIR")})
     expected["CADRUMO_AUTHORITY_ROOT"] = os.environ["CADRUMO_AUTHORITY_ROOT"]
+    # The worker is told the folder of the one profile it serves, beneath that root.
+    profile_folder = environment.get(PROFILE_ROOT_VARIABLE)
+    assert profile_folder is not None and Path(profile_folder) == profile_root(root, Path(profile_folder).name)
+    expected[PROFILE_ROOT_VARIABLE] = profile_folder
     assert {name: value for name, value in environment.items() if name != "__CF_USER_TEXT_ENCODING"} == expected
     marker = _read_json(directory / "macos-parent-marker.json")
     identities = {(int(device), int(inode)) for _fd, device, inode in record["descriptors"]}
