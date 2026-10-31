@@ -852,20 +852,20 @@ fn unmanaged(launch: &Launch) -> Result<Option<&'static str>> {
     }
     let executable = std::env::current_exe()
         .map_err(|error| failure(ErrorCode::EnvironmentFailed).caused_by(error))?;
-    let evidence =
-        storage::detect_mode(&executable).map_err(|_| failure(ErrorCode::EnvironmentFailed))?;
-    if !evidence.packaged {
+    let package =
+        storage::Package::locate(&executable).map_err(|_| failure(ErrorCode::EnvironmentFailed))?;
+    if !package.packaged {
         return Ok(Some("image_not_installed"));
     }
-    let actual_package = std::fs::canonicalize(&evidence.package)
+    let actual_package = std::fs::canonicalize(&package.root)
         .map_err(|error| failure(ErrorCode::PackageUnavailable).caused_by(error))?;
     let selected_package = std::fs::canonicalize(&launch.package_root)
         .map_err(|error| failure(ErrorCode::PackageUnavailable).caused_by(error))?;
     if actual_package != selected_package {
         return Ok(Some("image_outside_selected_package"));
     }
-    let resolved = storage::resolve_storage_root(&evidence)
-        .map_err(|_| failure(ErrorCode::EnvironmentFailed))?;
+    let resolved =
+        storage::resolve_storage_root().map_err(|_| failure(ErrorCode::EnvironmentFailed))?;
     let own_root = std::fs::canonicalize(&resolved.root)
         .map_err(|error| failure(ErrorCode::EnvironmentFailed).caused_by(error))?
         == std::fs::canonicalize(&launch.working_directory)

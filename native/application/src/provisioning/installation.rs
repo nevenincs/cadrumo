@@ -67,8 +67,10 @@ pub fn installation_config() -> Result<EngineConfig, Error> {
     let lookup = |name: &str| std::env::var_os(name);
     let text = |name: &str| std::env::var(name).ok();
     let executable = std::env::current_exe()?;
-    let evidence = storage::detect_mode(&executable).map_err(Error::Invalid)?;
-    let root = storage::resolve_storage_root_with(&evidence, &lookup)
+    let package = storage::Package::installed(&executable)
+        .map_err(Error::Invalid)?
+        .root;
+    let root = storage::resolve_storage_root_with(&lookup)
         .map_err(|refusal| Error::Invalid(format!("storage root refused: {}", refusal.code)))?
         .root;
     let mut locations = Locations::under(&root);
@@ -81,7 +83,6 @@ pub fn installation_config() -> Result<EngineConfig, Error> {
     }
     let scratch =
         storage::member_path(&root, cadrumo_platform::TEMPORARY_MEMBER).map_err(refused)?;
-    let package = evidence.package;
     let pins = ComponentPins::load(&package_path(&package, cadrumo_platform::COMPONENT_PINS))?;
     let driver = DriverManifest::read(
         &package_path(&package, cadrumo_platform::PACKAGES).join(DRIVER_PACKAGE),

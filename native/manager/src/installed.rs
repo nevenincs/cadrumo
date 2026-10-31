@@ -172,7 +172,7 @@ fn require_package_cancellable(
     #[cfg(test)]
     PACKAGE_INSPECTIONS.with(|count| count.set(count.get() + 1));
     let manifest_path =
-        RelativePath::new(crate::contract::MODE_PACKAGE_MANIFEST).map_err(package_failure)?;
+        RelativePath::new(crate::contract::PACKAGE_MANIFEST).map_err(package_failure)?;
     let manifest = PackageManifest::read_cancellable(package, &manifest_path, cancellation)
         .map_err(package_failure)?;
     let contract: cadrumo_application::installation::DiscoveryContract =
@@ -353,7 +353,7 @@ mod tests {
     fn a_runtime_start_checks_the_package_target_and_never_its_files() {
         let scratch = Scratch::new();
         let package = scratch.0.join("package");
-        let manifest = package.join(crate::contract::MODE_PACKAGE_MANIFEST);
+        let manifest = package.join(crate::contract::PACKAGE_MANIFEST);
         fs::create_dir_all(manifest.parent().unwrap()).unwrap();
         let contract: cadrumo_application::installation::DiscoveryContract =
             serde_json::from_str(crate::contract::INSTALLATION_CONTRACT).unwrap();

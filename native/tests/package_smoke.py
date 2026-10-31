@@ -115,8 +115,20 @@ with zipfile.ZipFile(root / manifest["layout"]["paths"]["stdlib"]) as library:
         not any(n.startswith(("test/", "ensurepip/", "tkinter/", "idlelib/")) for n in library.namelist()),
         "Unpruned stdlib",
     )
+
+
+def _shipped_exactly(relative: str) -> bool:
+    # A case-insensitive file system would answer for the POSIX `lib` directory too.
+    parent = root
+    for part in relative.split("/"):
+        if not parent.is_dir() or part not in {child.name for child in parent.iterdir()}:
+            return False
+        parent = parent / part
+    return True
+
+
 require(
-    not any((root / p).exists() for p in ("Lib", "Libs", "Scripts", "python/Lib")), "Unexpected SDK directories shipped"
+    not any(_shipped_exactly(p) for p in ("Lib", "Libs", "Scripts", "python/Lib")), "Unexpected SDK directories shipped"
 )
 authority_root = configured_authority_root()
 if authority_root is None:

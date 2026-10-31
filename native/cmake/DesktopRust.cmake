@@ -22,9 +22,7 @@ function(cadrumo_desktop_rust_environment output)
   endif()
   set(environment "CADRUMO_DESKTOP_RUST_BIN=${rust_bin}"
     "RUSTC=${rust_bin}/rustc${CMAKE_EXECUTABLE_SUFFIX}"
-    "RUSTDOC=${rust_bin}/rustdoc${CMAKE_EXECUTABLE_SUFFIX}"
-    # Only a Debug build bakes its development storage root; a release image carries none.
-    "CADRUMO_BUILD_STORAGE_ROOT=$<$<CONFIG:Debug>:${CADRUMO_BUILD_STORAGE_ROOT}>")
+    "RUSTDOC=${rust_bin}/rustdoc${CMAKE_EXECUTABLE_SUFFIX}")
   if(TARGET rust_platform)
     get_directory_property(names DIRECTORY "${CADRUMO_SOURCE_ROOT}/native"
       DEFINITION CADRUMO_RUST_ENVIRONMENT_NAMES)

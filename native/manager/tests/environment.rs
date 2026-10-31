@@ -11,7 +11,7 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 
 #[cfg(unix)]
 use cadrumo_manager::{
-    contract::{EXECUTABLE, INSTALLED_DEFAULTS, MODE_PACKAGE_MANIFEST},
+    contract::{EXECUTABLE, INSTALLED_DEFAULTS, PACKAGE_MANIFEST},
     supervision::{boot_record::boot_record_path, launch::LaunchTarget},
 };
 
@@ -232,17 +232,9 @@ fn normalized_default_root_is_shared_by_manager_arguments_and_child_pins() {
         let discarded = fixture.join("unused");
         let selected = fixture.join("selected");
         assert!(!discarded.exists() && !selected.exists());
-        let resolved = ManagedLocations::resolve(&package.join(EXECUTABLE));
-        if option_env!("CADRUMO_BUILD_STORAGE_ROOT").is_some_and(|root| !root.is_empty()) {
-            // An image that carries its build's storage root never manages a root.
-            assert_eq!(
-                resolved.unwrap_err().kind(),
-                std::io::ErrorKind::InvalidInput
-            );
-            assert!(!discarded.exists() && !selected.exists());
-            return;
-        }
-        let locations = resolved.unwrap();
+        // Every configuration, Debug included, manages the root its environment selects.
+        let locations = ManagedLocations::resolve(&package.join(EXECUTABLE)).unwrap();
+        assert!(locations.is_default_root());
         assert_eq!(locations.package_root(), package);
         assert!(locations.storage_root().starts_with(&selected));
         assert!(!discarded.exists() && !selected.exists());
@@ -268,7 +260,7 @@ fn normalized_default_root_is_shared_by_manager_arguments_and_child_pins() {
     }
     let fixture = Root::new();
     let package = fixture.0.join("package");
-    let manifest = package.join(MODE_PACKAGE_MANIFEST);
+    let manifest = package.join(PACKAGE_MANIFEST);
     std::fs::create_dir_all(manifest.parent().unwrap()).unwrap();
     std::fs::write(manifest, b"{}").unwrap();
     let rule = INSTALLED_DEFAULTS
@@ -312,4 +304,43 @@ fn invalid_paths_are_refused_before_creating_storage() {
 #[test]
 fn a_checkout_binary_is_not_a_managed_installation() {
     assert!(ManagedLocations::resolve(&std::env::current_exe().unwrap()).is_err());
+}
+
+#[cfg(unix)]
+#[test]
+fn an_installed_package_manages_the_operator_root_its_environment_selects() {
+    const FIXTURE: &str = "B2_MANAGER_OPERATOR_ROOT_FIXTURE";
+    if let Some(fixture) = std::env::var_os(FIXTURE) {
+        let fixture = PathBuf::from(fixture);
+        let package = fixture.join("package");
+        let locations = ManagedLocations::resolve(&package.join(EXECUTABLE)).unwrap();
+        assert!(!locations.is_default_root());
+        assert_eq!(locations.package_root(), package);
+        assert_eq!(locations.storage_root(), fixture.join("operator"));
+        assert!(!fixture.join("operator").exists());
+        return;
+    }
+    let fixture = Root::new();
+    let manifest = fixture.0.join("package").join(PACKAGE_MANIFEST);
+    std::fs::create_dir_all(manifest.parent().unwrap()).unwrap();
+    std::fs::write(manifest, b"{}").unwrap();
+    let mut child = std::process::Command::new(std::env::current_exe().unwrap());
+    child
+        .args([
+            "--exact",
+            "an_installed_package_manages_the_operator_root_its_environment_selects",
+            "--nocapture",
+        ])
+        .env(FIXTURE, &fixture.0)
+        .env(ROOT_VARIABLE, fixture.0.join("operator"));
+    for name in HOST_INHERITED_ENV {
+        child.env_remove(name);
+    }
+    let outcome = child.output().unwrap();
+    assert!(
+        outcome.status.success(),
+        "{}{}",
+        String::from_utf8_lossy(&outcome.stdout),
+        String::from_utf8_lossy(&outcome.stderr)
+    );
 }

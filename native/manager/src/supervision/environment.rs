@@ -1,12 +1,13 @@
 //! Canonical installed locations and strict child environments for the manager.
 //!
-//! The platform owner resolves the root. Only its installed default is managed;
-//! developer roots and authority overrides never become managed by clearing variables.
+//! The platform owner resolves the root from the environment alone: the root variable
+//! when set, otherwise the per-user installed default. An authority override is never
+//! managed.
 
 use crate::contract::{HOST_INHERITED_ENV, LAUNCH_AUTHORITY_PIN, ROOT_VARIABLE};
 use cadrumo_application::role::Role;
 use cadrumo_platform::launch::{self, DefineError};
-use cadrumo_platform::storage::{self, Evidence, Mode, ResolvedRoot, RootSource};
+use cadrumo_platform::storage::{self, Package, ResolvedRoot, RootSource};
 use std::ffi::OsString;
 use std::io;
 use std::path::{Path, PathBuf};
@@ -21,8 +22,7 @@ pub struct ManagedLocations {
 
 impl ManagedLocations {
     /// Admit a packaged desktop host's actual canonical root, including an
-    /// explicit operator-selected root or the root a development build baked
-    /// in. This does not manufacture installation evidence or convert an
+    /// explicit operator-selected root. This does not manufacture installation evidence or convert an
     /// authority override into trusted package authority.
     pub fn for_host(executable: &Path, package: &Path, root: &Path) -> io::Result<Self> {
         if !executable.is_absolute() || !package.is_absolute() || !root.is_absolute() {
@@ -34,21 +34,21 @@ impl ManagedLocations {
                 "host authority override is unsupported",
             ));
         }
-        let evidence = storage::detect_mode(executable).map_err(io::Error::other)?;
-        let resolved = storage::resolve_storage_root(&evidence).map_err(io::Error::from)?;
+        let evidence = Package::locate(executable).map_err(io::Error::other)?;
+        let resolved = storage::resolve_storage_root().map_err(io::Error::from)?;
         if !evidence.packaged
-            || std::fs::canonicalize(&evidence.package)? != std::fs::canonicalize(package)?
+            || std::fs::canonicalize(&evidence.root)? != std::fs::canonicalize(package)?
             || std::fs::canonicalize(&resolved.root)? != std::fs::canonicalize(root)?
         {
             return Err(io::ErrorKind::PermissionDenied.into());
         }
         Ok(Self {
-            package: evidence.package,
+            package: evidence.root,
             storage: resolved.root,
             default_root: resolved.source == RootSource::InstalledDefault,
         })
     }
-    /// Resolve once from executable package evidence and canonical OS defaults.
+    /// Resolve once from executable package evidence and the environment-selected root.
     /// This does not create directories or launch an interpreter.
     pub fn resolve(executable: &Path) -> io::Result<Self> {
         if storage::authority_override_present(std::env::vars_os()) {
@@ -57,38 +57,36 @@ impl ManagedLocations {
                 "an authority override is unmanaged",
             ));
         }
-        let evidence = storage::detect_mode(executable).map_err(io::Error::other)?;
-        let resolved = storage::resolve_storage_root(&evidence).map_err(io::Error::from)?;
-        Self::from_resolved(evidence, resolved)
+        let package = Package::installed(executable).map_err(io::Error::other)?;
+        let resolved = storage::resolve_storage_root().map_err(io::Error::from)?;
+        Self::from_resolved(package, resolved)
     }
 
-    fn from_resolved(evidence: Evidence, resolved: ResolvedRoot) -> io::Result<Self> {
-        if evidence.mode != Mode::Installed || resolved.source != RootSource::InstalledDefault {
+    fn from_resolved(package: Package, resolved: ResolvedRoot) -> io::Result<Self> {
+        if !package.packaged {
             return Err(io::Error::new(
                 io::ErrorKind::InvalidInput,
-                "only the installed default root is managed",
+                "only an installed package is managed",
             ));
         }
-        if !evidence.package.is_absolute() || !resolved.root.is_absolute() {
+        if !package.root.is_absolute() || !resolved.root.is_absolute() {
             return Err(io::Error::new(
                 io::ErrorKind::InvalidInput,
                 "manager locations must be absolute",
             ));
         }
         Ok(Self {
-            package: evidence.package,
+            package: package.root,
+            default_root: resolved.source == RootSource::InstalledDefault,
             storage: resolved.root,
-            default_root: true,
         })
     }
 
     #[cfg(all(windows, any(test, feature = "fixture-test-mode")))]
     pub fn fixture(package: PathBuf, storage: PathBuf) -> io::Result<Self> {
         Self::from_resolved(
-            Evidence {
-                mode: Mode::Installed,
-                package,
-                build_root: None,
+            Package {
+                root: package,
                 packaged: true,
             },
             ResolvedRoot {
@@ -203,26 +201,31 @@ mod tests {
     }
 
     #[test]
-    fn only_an_installed_default_is_managed() {
+    fn an_installed_package_manages_the_root_its_environment_selects() {
         let path = std::env::temp_dir();
-        for (mode, source, accepted) in [
-            (Mode::Installed, RootSource::InstalledDefault, true),
-            (Mode::Installed, RootSource::Override, false),
-            (Mode::Development, RootSource::BuildDefault, false),
+        for (packaged, source, accepted) in [
+            (true, RootSource::InstalledDefault, true),
+            (true, RootSource::Override, true),
+            (false, RootSource::InstalledDefault, false),
+            (false, RootSource::Override, false),
         ] {
             let result = ManagedLocations::from_resolved(
-                Evidence {
-                    mode,
-                    package: path.clone(),
-                    build_root: None,
-                    packaged: true,
+                Package {
+                    root: path.clone(),
+                    packaged,
                 },
                 ResolvedRoot {
                     root: path.clone(),
                     source,
                 },
             );
-            assert_eq!(result.is_ok(), accepted);
+            assert_eq!(result.is_ok(), accepted, "{packaged} {source:?}");
+            if let Ok(locations) = result {
+                assert_eq!(
+                    locations.is_default_root(),
+                    source == RootSource::InstalledDefault
+                );
+            }
         }
     }
 }

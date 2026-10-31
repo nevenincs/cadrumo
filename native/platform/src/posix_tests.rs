@@ -1,5 +1,5 @@
 use crate::conformance_tests::{RETIRED_TEMPORARY_OVERRIDE, Scratch, operator_environment};
-use crate::storage::{Mode, child_environment, resolve_root_vector};
+use crate::storage::{Package, child_environment, resolve_root_vector};
 use crate::*;
 use std::ffi::OsString;
 use std::os::unix::fs::{PermissionsExt, symlink};
@@ -125,25 +125,24 @@ fn package_root_entrypoint_mapping_and_case_match_the_generated_projection() {
 }
 
 #[test]
-fn installed_and_development_evidence_come_from_absolute_executable_ancestors() {
-    let scratch = Scratch::new("mode");
+fn package_evidence_comes_from_absolute_executable_ancestors() {
+    let scratch = Scratch::new("package");
     let package = scratch.0.join("package");
-    let manifest = package.join(storage::relative_components(MODE_PACKAGE_MANIFEST));
+    let manifest = package.join(storage::relative_components(PACKAGE_MANIFEST));
     fs::create_dir_all(manifest.parent().unwrap()).unwrap();
     fs::write(manifest, b"{}").unwrap();
-    let installed = storage::evidence_for(&package.join(EXECUTABLE), None).unwrap();
-    assert_eq!(installed.mode, Mode::Installed);
-    assert_eq!(installed.package, package);
+    let installed = Package::installed(&package.join(EXECUTABLE)).unwrap();
+    assert_eq!(installed.root, package);
     let installed_entrypoint =
-        storage::evidence_for(&package.join(NATIVE).join(ENTRYPOINT_FILES[0]), None).unwrap();
-    assert_eq!(installed_entrypoint.mode, Mode::Installed);
-    assert_eq!(installed_entrypoint.package, package);
-    let baked = scratch.0.join("storage");
-    let built =
-        storage::evidence_for(&scratch.0.join("build").join(EXECUTABLE), Some(&baked)).unwrap();
-    assert_eq!(built.mode, Mode::Development);
-    assert_eq!(built.build_root.as_deref(), Some(baked.as_path()));
-    assert!(!built.packaged);
+        Package::installed(&package.join(NATIVE).join(ENTRYPOINT_FILES[0])).unwrap();
+    assert_eq!(installed_entrypoint.root, package);
+    let unpackaged = scratch.0.join("build").join(EXECUTABLE);
+    assert!(!Package::locate(&unpackaged).unwrap().packaged);
+    assert!(
+        Package::installed(&unpackaged)
+            .unwrap_err()
+            .contains(PACKAGE_MANIFEST)
+    );
 }
 
 #[test]
