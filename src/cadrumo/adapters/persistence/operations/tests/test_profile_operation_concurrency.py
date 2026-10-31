@@ -119,10 +119,83 @@ def _row_request(
     )
 
 
+_SCALAR_EDIT_VALUES = {"stale": "ca", "first": "en", "fresh": "ca", "wrong_digest": "hu", "wrong_revision": "hu"}
+_ROW_EDIT_VALUES = {
+    "stale": "Stale activity",
+    "first": "First activity",
+    "fresh": "Fresh activity",
+    "wrong_digest": "Wrong digest activity",
+    "wrong_revision": "Wrong revision activity",
+}
+
+
+def _edit_request(request_kind: str, profile: UUID, *, revision: int, digest: str, value: str) -> OperationRequest[Any]:
+    if request_kind == "field":
+        return _field_request(profile, revision=revision, digest=digest, value=value)
+    if request_kind == "patch":
+        return OperationRequest(
+            definition_id=PROFILE_PATCH_OPERATION_DEFINITION_ID,
+            subject_ref=f"profile:{profile}",
+            payload=ProfilePatchOperationRequest(
+                profile_id=profile,
+                expected_revision=revision,
+                expected_content_digest=digest,
+                values=(ProfilePatchValue(question_id="output-language", value=value),),
+            ),
+        )
+    return _row_request(profile, revision=revision, digest=digest, value=value)
+
+
+async def _submit_and_settle(supervisor: OperationSupervisor, request: OperationRequest[Any], operation_id: str):
+    submitted = await supervisor.submit(request, operation_id=operation_id)
+    return await run_to_settlement(supervisor, submitted)
+
+
+def _assert_edit_applied(terminal) -> None:
+    assert terminal.terminal_condition is OperationTerminalCondition.SUCCEEDED
+    assert terminal.effect is OperationEffect.UPDATED
+
+
+def _assert_edit_conflict_refused(terminal) -> None:
+    assert terminal.terminal_condition is OperationTerminalCondition.FAILED
+    assert terminal.terminal_receipt is not None
+    assert terminal.terminal_receipt.failure_error_code == "FAIL_PROFILE_RECORD_CONFLICT"
+    assert terminal.effect is OperationEffect.NONE
+
+
+def _assert_conflict_diagnostic_omits_digests(
+    caplog: pytest.LogCaptureFixture, stale_intent: OperationRequest[Any], initial: Any, after_first: Any
+) -> None:
+    diagnostics = [
+        record.getMessage()
+        for record in delivered_records(caplog)
+        if record.name.endswith("user_profile.profile_operation_execution")
+    ]
+    assert diagnostics == [
+        f"profile edit conflict operation={'b' * 64} definition={stale_intent.definition_id} "
+        f"fields={(PROFILE_OUTPUT_LANGUAGE_PATH,)} "
+        f"expected_revision={initial.record_revision} current_revision={after_first.record_revision} "
+        "digest_matches=False"
+    ]
+    assert initial.content_digest not in diagnostics[0]
+    assert after_first.content_digest not in diagnostics[0]
+
+
+def _assert_surviving_edits(request_kind: str, final: Any) -> None:
+    values = record_to_path_values(final)
+    if request_kind != "row":
+        assert values[PROFILE_OUTPUT_LANGUAGE_PATH] == "ca"
+    else:
+        assert values["activities.0.description"] == "First activity"
+        assert values["activities.1.description"] == "Fresh activity"
+        assert "Stale activity" not in values.values()
+
+
 @pytest.mark.parametrize("request_kind", ["field", "row", "patch"])
 def test_separately_submitted_edits_cannot_overwrite_a_changed_profile(
     tmp_path: Path, request_kind: str, caplog: pytest.LogCaptureFixture, monkeypatch: pytest.MonkeyPatch
 ) -> None:
+    values = _ROW_EDIT_VALUES if request_kind == "row" else _SCALAR_EDIT_VALUES
     with isolated_profile_storage_root(tmp_path=tmp_path) as root:
         profile_id = _register_profile()
         with bundled_indexed_authority().operation() as authority:
@@ -131,21 +204,8 @@ def test_separately_submitted_edits_cannot_overwrite_a_changed_profile(
             )
             initial = repository.load(profile_id)
 
-            def build_request(profile: UUID, *, revision: int, digest: str, value: str) -> OperationRequest[Any]:
-                if request_kind == "field":
-                    return _field_request(profile, revision=revision, digest=digest, value=value)
-                if request_kind == "patch":
-                    return OperationRequest(
-                        definition_id=PROFILE_PATCH_OPERATION_DEFINITION_ID,
-                        subject_ref=f"profile:{profile}",
-                        payload=ProfilePatchOperationRequest(
-                            profile_id=profile,
-                            expected_revision=revision,
-                            expected_content_digest=digest,
-                            values=(ProfilePatchValue(question_id="output-language", value=value),),
-                        ),
-                    )
-                return _row_request(profile, revision=revision, digest=digest, value=value)
+            def build_request(label: str, *, revision: int, digest: str) -> OperationRequest[Any]:
+                return _edit_request(request_kind, profile_id, revision=revision, digest=digest, value=values[label])
 
             with profile_custody_secure_object_repository(profile_id=profile_id, dek=b"", root=root) as objects:
                 assert isinstance(objects, SecureObjectRepository)
@@ -159,101 +219,37 @@ def test_separately_submitted_edits_cannot_overwrite_a_changed_profile(
 
                 async def _exercise() -> None:
                     stale_intent = build_request(
-                        profile_id,
-                        revision=initial.record_revision,
-                        digest=initial.content_digest,
-                        value="ca" if request_kind != "row" else "Stale activity",
+                        "stale", revision=initial.record_revision, digest=initial.content_digest
                     )
-                    first = await supervisor.submit(
-                        build_request(
-                            profile_id,
-                            revision=initial.record_revision,
-                            digest=initial.content_digest,
-                            value="en" if request_kind != "row" else "First activity",
-                        ),
-                        operation_id="a" * 64,
+                    first_request = build_request(
+                        "first", revision=initial.record_revision, digest=initial.content_digest
                     )
-                    first_terminal = await run_to_settlement(supervisor, first)
-                    assert first_terminal.terminal_condition is OperationTerminalCondition.SUCCEEDED
-                    assert first_terminal.effect is OperationEffect.UPDATED
+                    _assert_edit_applied(await _submit_and_settle(supervisor, first_request, "a" * 64))
                     after_first = repository.load(profile_id)
                     assert after_first.record_revision > initial.record_revision
                     # The subject lease serializes submission; retain the second operator's
                     # earlier intent and submit it after the first publication.
-                    stale = await supervisor.submit(stale_intent, operation_id="b" * 64)
-                    stale_terminal = await run_to_settlement(supervisor, stale)
-                    assert stale_terminal.terminal_condition is OperationTerminalCondition.FAILED
-                    assert stale_terminal.terminal_receipt is not None
-                    assert stale_terminal.terminal_receipt.failure_error_code == "FAIL_PROFILE_RECORD_CONFLICT"
-                    assert stale_terminal.effect is OperationEffect.NONE
+                    _assert_edit_conflict_refused(await _submit_and_settle(supervisor, stale_intent, "b" * 64))
                     assert repository.load(profile_id).content_digest == after_first.content_digest
                     if request_kind != "row":
-                        diagnostics = [
-                            record.getMessage()
-                            for record in delivered_records(caplog)
-                            if record.name.endswith("user_profile.profile_operation_execution")
-                        ]
-                        assert diagnostics == [
-                            f"profile edit conflict operation={'b' * 64} definition={stale_intent.definition_id} "
-                            f"fields={(PROFILE_OUTPUT_LANGUAGE_PATH,)} "
-                            f"expected_revision={initial.record_revision} current_revision={after_first.record_revision} "
-                            "digest_matches=False"
-                        ]
-                        assert initial.content_digest not in diagnostics[0]
-                        assert after_first.content_digest not in diagnostics[0]
+                        _assert_conflict_diagnostic_omits_digests(caplog, stale_intent, initial, after_first)
 
-                    fresh = await supervisor.submit(
-                        build_request(
-                            profile_id,
-                            revision=after_first.record_revision,
-                            digest=after_first.content_digest,
-                            value="ca" if request_kind != "row" else "Fresh activity",
-                        ),
-                        operation_id="c" * 64,
+                    fresh_request = build_request(
+                        "fresh", revision=after_first.record_revision, digest=after_first.content_digest
                     )
-                    fresh_terminal = await run_to_settlement(supervisor, fresh)
-                    assert fresh_terminal.terminal_condition is OperationTerminalCondition.SUCCEEDED
-                    assert fresh_terminal.effect is OperationEffect.UPDATED
+                    _assert_edit_applied(await _submit_and_settle(supervisor, fresh_request, "c" * 64))
                     after_fresh = repository.load(profile_id)
                     assert after_fresh.record_revision > after_first.record_revision
 
-                    wrong_digest = await supervisor.submit(
-                        build_request(
-                            profile_id,
-                            revision=after_fresh.record_revision,
-                            digest="0" * 64,
-                            value="hu" if request_kind != "row" else "Wrong digest activity",
-                        ),
-                        operation_id="d" * 64,
+                    wrong_digest = build_request("wrong_digest", revision=after_fresh.record_revision, digest="0" * 64)
+                    _assert_edit_conflict_refused(await _submit_and_settle(supervisor, wrong_digest, "d" * 64))
+                    wrong_revision = build_request(
+                        "wrong_revision", revision=initial.record_revision, digest=after_fresh.content_digest
                     )
-                    wrong_digest_terminal = await run_to_settlement(supervisor, wrong_digest)
-                    assert wrong_digest_terminal.terminal_condition is OperationTerminalCondition.FAILED
-                    assert wrong_digest_terminal.terminal_receipt is not None
-                    assert wrong_digest_terminal.terminal_receipt.failure_error_code == "FAIL_PROFILE_RECORD_CONFLICT"
-                    assert wrong_digest_terminal.effect is OperationEffect.NONE
-                    wrong_revision = await supervisor.submit(
-                        build_request(
-                            profile_id,
-                            revision=initial.record_revision,
-                            digest=after_fresh.content_digest,
-                            value="hu" if request_kind != "row" else "Wrong revision activity",
-                        ),
-                        operation_id="e" * 64,
-                    )
-                    wrong_revision_terminal = await run_to_settlement(supervisor, wrong_revision)
-                    assert wrong_revision_terminal.terminal_condition is OperationTerminalCondition.FAILED
-                    assert wrong_revision_terminal.terminal_receipt is not None
-                    assert wrong_revision_terminal.terminal_receipt.failure_error_code == "FAIL_PROFILE_RECORD_CONFLICT"
-                    assert wrong_revision_terminal.effect is OperationEffect.NONE
+                    _assert_edit_conflict_refused(await _submit_and_settle(supervisor, wrong_revision, "e" * 64))
                     final = repository.load(profile_id)
                     assert final.record_revision == after_fresh.record_revision
                     assert final.content_digest == after_fresh.content_digest
-                    values = record_to_path_values(final)
-                    if request_kind != "row":
-                        assert values[PROFILE_OUTPUT_LANGUAGE_PATH] == "ca"
-                    else:
-                        assert values["activities.0.description"] == "First activity"
-                        assert values["activities.1.description"] == "Fresh activity"
-                        assert "Stale activity" not in values.values()
+                    _assert_surviving_edits(request_kind, final)
 
                 asyncio.run(_exercise())
