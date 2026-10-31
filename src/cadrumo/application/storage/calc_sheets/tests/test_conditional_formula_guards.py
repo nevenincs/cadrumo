@@ -15,7 +15,7 @@ from ..layout import plan_layout
 from ..records import TabName
 from .test_form_workbook import form_source as form_source
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
 
 def _conditional():

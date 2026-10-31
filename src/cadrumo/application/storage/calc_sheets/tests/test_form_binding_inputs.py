@@ -27,7 +27,7 @@ from ..form_workbook import add_form_workbook
 from ..layout import plan_layout
 from ..records import TabName
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
 
 def _with_bindings(snapshot, bindings, blocks):

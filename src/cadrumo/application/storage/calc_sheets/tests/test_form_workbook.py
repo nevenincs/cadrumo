@@ -42,7 +42,7 @@ from ..records import (
 from ..theme import StyleRole
 from ..workbook_cells import plan_value_blocks
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
 
 @pytest.fixture
