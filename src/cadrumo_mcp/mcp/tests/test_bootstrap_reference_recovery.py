@@ -2,17 +2,13 @@
 
 from __future__ import annotations
 
-from datetime import timedelta
-from types import SimpleNamespace
 from typing import cast
 from uuid import UUID, uuid4
 
 import pytest
 
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.core.time.clock import now
-from cadrumo_client.contracts.access_refusals import ProfileAccessStatus
-from cadrumo_client.contracts.access_vocabulary import AccessScope, AuthorityState, Availability, EffectiveScopeSummary
+from cadrumo_client.contracts.access_vocabulary import AccessScope
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.contracts.deadline_budget import DEFAULT_TIMEOUT_POLICY
 from cadrumo_client.transport.frontend_client import FrontendClient
@@ -22,58 +18,10 @@ from cadrumo_mcp.mcp.surfaces import DEFAULT_MCP_SURFACE, MCP_SURFACES
 from .. import runtime_adapter as mcp_runtime
 from ..runtime_adapter import RuntimeMcpAdapter
 from ..server import build_server
+from .admitted_lease import AdmittedLease
 from .session import connected_server_and_client_session
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
-
-
-class _AdmittedClient:
-    """A candidate lease exercising only the adapter's status handover."""
-
-    def __init__(self, profile_id: UUID) -> None:
-        self.profile_id = profile_id
-        self.frontend = OperationFrontendProjection.EXTERNAL_CLIENT
-        self.session_id = uuid4()
-        self.closed = False
-        self._status = ProfileAccessStatus(
-            connected=True,
-            credential_authenticated=True,
-            profile_id=profile_id,
-            session_id=self.session_id,
-            session_expires_at=now() + timedelta(minutes=5),
-            grant_state=AuthorityState.ACTIVE,
-            grant_expires_at=now() + timedelta(minutes=5),
-            grant_valid=True,
-            profile_bound=True,
-            storage=Availability.AVAILABLE,
-            automation_custody=Availability.AVAILABLE,
-            published_authority=Availability.AVAILABLE,
-            provider=Availability.NOT_REQUIRED,
-            effective_scope=EffectiveScopeSummary.summarize(
-                AccessScope(
-                    operations=frozenset(),
-                    actions=frozenset(),
-                    disclosures=frozenset(),
-                    periods=None,
-                    allow_period_independent=True,
-                    allow_delegation=False,
-                )
-            ),
-            denial=None,
-        )
-
-    def status(self) -> SimpleNamespace:
-        assert not self.closed
-        return SimpleNamespace(status=self._status)
-
-    def subscribe_session_retirement(self, receive: object) -> None:
-        """The runtime retires no lease of this double."""
-
-    def subscribe_lifecycle_notices(self, receive: object) -> None:
-        """The runtime sends this double no lifecycle notice."""
-
-    def close(self) -> None:
-        self.closed = True
 
 
 _REMOVED_TOOLS = frozenset(
@@ -150,7 +98,7 @@ async def test_a_configured_key_the_runtime_refused_admits_the_server_once_the_r
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     profile_id, reference = uuid4(), uuid4()
-    candidate = _AdmittedClient(profile_id)
+    candidate = AdmittedLease(profile_id)
     opened: list[UUID] = []
 
     async def open_candidate(
