@@ -60,11 +60,20 @@ def intracommunity_observations(year: int) -> tuple[InvoiceObservation, ...]:
     )
 
 
+def _demo_filing_date(snapshot: RegistrySnapshot) -> date:
+    """Use the snapshot period, or this example's explicit fourth quarter."""
+    return snapshot.filing_period.end_date if snapshot.filing_period is not None else date(snapshot.filing_year, 12, 31)
+
+
 def intracommunity_summary(snapshot: RegistrySnapshot) -> dict[BindingId, Decimal]:
     """Let the registry decide grouping, counts and corrected-base totals."""
     if str(snapshot.modelo.id) != "349":
         raise ValueError("intracommunity example requires Modelo 349")
-    return resolve_invoice_binding_values(snapshot.revision, intracommunity_observations(snapshot.filing_year))
+    return resolve_invoice_binding_values(
+        snapshot.revision,
+        intracommunity_observations(snapshot.filing_year),
+        effective_date=_demo_filing_date(snapshot),
+    )
 
 
 def intracommunity_records(snapshot: RegistrySnapshot) -> CalculationRevision:
@@ -73,7 +82,7 @@ def intracommunity_records(snapshot: RegistrySnapshot) -> CalculationRevision:
         raise ValueError("intracommunity example requires Modelo 349")
     bindings: dict[BindingId, dict[str, str]] = {}
     for (binding, index), value in resolve_invoice_binding_row_values(
-        snapshot.revision, intracommunity_observations(snapshot.filing_year)
+        snapshot.revision, intracommunity_observations(snapshot.filing_year), effective_date=_demo_filing_date(snapshot)
     ).items():
         bindings.setdefault(binding, {})[str(index)] = str(value)
     work_id = sha256_hex(f"fictional-349-{snapshot.revision.id}-{snapshot.filing_year}-4T".encode())

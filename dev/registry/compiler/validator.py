@@ -23,10 +23,15 @@ See Also:
 from __future__ import annotations
 
 from collections.abc import Iterable, Iterator
+from datetime import date, timedelta
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.governed_fact_scope import CandidateFactAuthority
+from cadrumo.domain.calculations.registry.ids import BindingId
+from cadrumo.domain.calculations.registry.invoice_bindings import InvoiceProviderBase
+from cadrumo.domain.calculations.registry.m347_threshold import resolve_counterpart_operation_claves
 from cadrumo.domain.calculations.registry.runtime_catalogues import RuntimeRegistryCatalogues
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_base import REGISTRY_SOURCE_GROUNDING_TIERS
@@ -78,6 +83,7 @@ from .validation_memoization import (
 from .validation_verdict_cache import ValidationVerdictScope, is_validated, record_validated
 
 if TYPE_CHECKING:
+    from cadrumo.domain.calculations.registry.facts.variants import GovernedFactVariant
     from cadrumo.domain.user_profile.schema import ProfileSchemaDefinition
 
 
@@ -487,7 +493,74 @@ class RegistryValidator:
         for failure in validate_producer_inventory(prefix, revision):
             if failure not in failures:
                 failures.append(failure)
+        failures.extend(self._invoice_clave_failures(modelo, revision, prefix=prefix))
         return failures
+
+    def _invoice_clave_failures(self, modelo: ModeloDefinition, revision: ModeloRevision, *, prefix: str) -> list[str]:
+        """Validate selectors against this candidate's dated operation catalogue."""
+        if modelo.id not in ("347", "349"):
+            return []
+        selectors = tuple(
+            (binding.id, binding.provider.claves)
+            for binding in revision.bindings
+            if isinstance(binding.provider, InvoiceProviderBase) and binding.provider.claves
+        )
+        if not selectors:
+            return []
+        if self._support is None:
+            return [f"{prefix}: invoice operation claves require the candidate support envelope"]
+        authority = CandidateFactAuthority(self._facts, self._support)
+        return [
+            failure
+            for point in _candidate_clave_dates(revision, authority)
+            for failure in _candidate_clave_failures_at(modelo.id, selectors, point, authority, prefix)
+        ]
+
+
+def _candidate_clave_dates(revision: ModeloRevision, authority: CandidateFactAuthority) -> tuple[date, ...]:
+    """Cover the supported revision window and each fact start or end transition."""
+    support = authority.supported_filing_years()
+    floor = max(revision.valid_from, date(support.floor, 1, 1))
+    ceiling = revision.valid_to or date.max
+    if support.hard_ceiling is not None:
+        ceiling = min(ceiling, date(support.hard_ceiling, 12, 31))
+    if floor > ceiling:
+        return ()
+    points = {floor}
+    fact = authority.catalogue.facts.get("m347-m349-counterpart-operation-catalogue")
+    if fact is not None:
+        for variant in fact.variants:
+            points.update(point for point in _fact_transition_dates(variant) if floor <= point <= ceiling)
+    return tuple(sorted(points))
+
+
+def _fact_transition_dates(variant: GovernedFactVariant) -> tuple[date, ...]:
+    """Return the coordinates where this variant starts or ceases to apply."""
+    points = []
+    if variant.valid_from is not None:
+        points.append(variant.valid_from)
+    if variant.valid_to is not None and variant.valid_to < date.max:
+        points.append(variant.valid_to + timedelta(days=1))
+    return tuple(points)
+
+
+def _candidate_clave_failures_at(
+    modelo: Literal["347", "349"],
+    selectors: tuple[tuple[BindingId, tuple[str, ...]], ...],
+    point: date,
+    authority: CandidateFactAuthority,
+    prefix: str,
+) -> list[str]:
+    """Compare one candidate fact window with every authored selector."""
+    try:
+        vocabulary = resolve_counterpart_operation_claves(modelo, effective_date=point, authority=authority)
+    except RegistryValidationError as error:
+        return [f"{prefix}: invoice operation clave catalogue at {point}: {error}"]
+    return [
+        f"{prefix}: binding {binding_id!r} selects unknown operation claves {sorted(unknown)} at {point}"
+        for binding_id, claves in selectors
+        if (unknown := set(claves) - vocabulary)
+    ]
 
 
 def runtime_legal_reference_ids(runtime: RuntimeRegistryCatalogues) -> frozenset[str]:

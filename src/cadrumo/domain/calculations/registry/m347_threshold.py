@@ -27,7 +27,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
-from typing import Final
+from typing import Final, Literal
 
 from .errors import RegistryValidationError
 from .facts.resolution import ResolvedScalarFact, ScalarFactQuery, required_mapping_entry, unique_mapping_tokens
@@ -47,6 +47,7 @@ __all__ = [
     "M347ThresholdBuckets",
     "m347_declarable_party_buckets",
     "m347_threshold_decimal",
+    "resolve_counterpart_operation_claves",
     "resolve_m347_threshold_buckets",
 ]
 
@@ -69,10 +70,35 @@ _COUNTERPART_OPERATION_FACT: Final = StringMappingFact(
         value_whitespace=MappingValueWhitespace.STRIP,
     ),
 )
-_M347_OPERATION_CLAVES_KEY: Final = "modelo.347.operation_claves"
 _BUCKET_ORDER_KEY: Final = "bucket.order"
 _BUCKET_PREFIX: Final = "bucket."
 _BUCKET_FIELDS: Final = frozenset({"claves", "floor_fact", "declared_regardless_of_amount", "reading_unsettled"})
+
+
+def resolve_counterpart_operation_claves(
+    modelo: Literal["347", "349"], *, effective_date: date, authority: GovernedFactSource | None = None
+) -> frozenset[str]:
+    """Resolve one modelo's operation letters from the pinned filing-period fact.
+
+    Args:
+        modelo: The declaration whose own vocabulary is required.
+        effective_date: Filing-period coordinate for the governed fact.
+        authority: Explicit candidate or pinned authority; a validation scope may supply it.
+
+    Returns:
+        The distinct uppercase ASCII letters declared for that coordinate.
+
+    Raises:
+        RegistryValidationError: When the catalogue or its declared letters are invalid.
+    """
+    selected = require_governed_fact_authority(authority, subject=_M347_OPERATION_CLAVES_SUBJECT)
+    entries = _COUNTERPART_OPERATION_FACT.resolve_entries(selected, effective_date=effective_date)
+    tokens = unique_mapping_tokens(entries, f"modelo.{modelo}.operation_claves", subject=_M347_OPERATION_CLAVES_SUBJECT)
+    if any(len(token) != 1 or not token.isascii() or not token.isalpha() or not token.isupper() for token in tokens):
+        raise RegistryValidationError(
+            f"{_M347_OPERATION_CLAVES_SUBJECT} for {modelo} must contain ASCII uppercase letters"
+        )
+    return frozenset(tokens)
 
 
 @dataclass(frozen=True, slots=True)
@@ -194,13 +220,7 @@ def resolve_m347_threshold_buckets(
     entries = _M347_THRESHOLD_BUCKETS_FACT.resolve_entries(selected, effective_date=effective_date)
     tokens = unique_mapping_tokens(entries, _BUCKET_ORDER_KEY, subject=_M347_THRESHOLD_BUCKETS_SUBJECT)
     _refuse_undeclared_bucket_entries(entries, frozenset(tokens))
-    vocabulary = frozenset(
-        unique_mapping_tokens(
-            _COUNTERPART_OPERATION_FACT.resolve_entries(selected, effective_date=effective_date),
-            _M347_OPERATION_CLAVES_KEY,
-            subject=_M347_OPERATION_CLAVES_SUBJECT,
-        )
-    )
+    vocabulary = resolve_counterpart_operation_claves("347", effective_date=effective_date, authority=selected)
     buckets = tuple(
         _bucket(entries, token, vocabulary=vocabulary, effective_date=effective_date, authority=selected)
         for token in tokens

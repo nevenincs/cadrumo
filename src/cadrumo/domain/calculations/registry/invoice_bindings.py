@@ -33,7 +33,7 @@ from .binding_selector_utils import (
 )
 from .errors import RegistryValidationError
 from .ids import BindingId
-from .m347_threshold import M347DeclarableSet, m347_declarable_party_buckets
+from .m347_threshold import M347DeclarableSet, m347_declarable_party_buckets, resolve_counterpart_operation_claves
 from .schema_base import coerce_enum_member
 from .schema_exports import ExportFieldDataType
 
@@ -122,8 +122,8 @@ class InvoiceObservation(BaseModel):
     floor is not the taxable-base amount. ``intracommunity_clave`` follows the
     AEAT clave-de-operacion enum (E, M, H, A, T, S, I, R, D, C) for M349.
     ``operation_clave`` carries M347's OWN, unrelated clave-de-operacion
-    vocabulary (A-G; see :func:`m347_operation_clave`) -- the two claves share
-    no values in common and a row must never mix them.
+    vocabulary (A-G; see :func:`m347_operation_clave`). The fields have separate
+    meanings even where their permitted letters overlap.
     ``iva_regime`` is open-ended so domestic-IVA modelos can carry their regime
     classification alongside.
     """
@@ -721,10 +721,11 @@ def resolve_invoice_binding_values(
     Args:
         revision: The :class:`ModeloRevision` whose bindings are resolved.
         observations: Invoice ledger lines to aggregate over.
-        effective_date: Filing-period date required when the revision contains
-            M347 declarante-summary threshold bindings; otherwise unused.
+        effective_date: Filing-period date used by governed operation claves
+            and M347 declarante-summary thresholds when those facts are present.
     """
     available = tuple(observations)
+    _validate_invoice_operation_claves(revision, available, effective_date=effective_date)
     m347_summary_values, invoice_family_revision = _resolve_m347_declarante_summary_values(
         revision,
         available,
@@ -759,10 +760,11 @@ def resolve_invoice_binding_row_values(
         revision: The :class:`ModeloRevision` whose row-producer bindings to resolve.
         observations: Typed :class:`InvoiceObservation` rows the row-producer
             bindings group, filter, and aggregate into indexed row values.
-        effective_date: Filing-period date required when a ``contraparte_clave``
-            row family needs the M347 declaration threshold; otherwise unused.
+        effective_date: Filing-period date used by governed operation claves and
+            the M347 declaration threshold when those facts are present.
     """
     available = tuple(observations)
+    _validate_invoice_operation_claves(revision, available, effective_date=effective_date)
     rows = resolve_invoice_family_row_values(
         revision,
         source_kinds=INVOICE_BINDING_SOURCE_KINDS,
@@ -775,6 +777,46 @@ def resolve_invoice_binding_row_values(
         ),
     )
     return normalise_m349_nif_export_rows(rows)
+
+
+def _validate_invoice_operation_claves(
+    revision: ModeloRevision, observations: tuple[InvoiceObservation, ...], *, effective_date: date | None
+) -> None:
+    """Refuse undeclared input letters at the filing-period calculation boundary."""
+    sources = {binding.source for binding in revision.bindings}
+    for source, modelo, field in (
+        (BindingSourceKind.M347_THIRD_PARTY_OPERATION, "347", "operation_clave"),
+        (BindingSourceKind.M349_INTRACOMMUNITY_OPERATION, "349", "intracommunity_clave"),
+    ):
+        if source in sources:
+            _validate_observation_clave_family(observations, modelo, field, effective_date)
+
+
+def _validate_observation_clave_family(
+    observations: tuple[InvoiceObservation, ...],
+    modelo: Literal["347", "349"],
+    field: Literal["operation_clave", "intracommunity_clave"],
+    effective_date: date | None,
+) -> None:
+    present = [
+        (
+            observation.invoice_id,
+            observation.operation_clave if field == "operation_clave" else observation.intracommunity_clave,
+        )
+        for observation in observations
+        if observation.source_kind in (BindingSourceKind.PAYABLE_INVOICE, BindingSourceKind.COLLECTIBLE_INVOICE)
+    ]
+    present = [(invoice_id, value) for invoice_id, value in present if value is not None]
+    if not present:
+        return
+    if effective_date is None:
+        raise RegistryValidationError(f"{modelo} invoice operation claves require a filing-period date")
+    vocabulary = resolve_counterpart_operation_claves(modelo, effective_date=effective_date)
+    for invoice_id, value in present:
+        if value not in vocabulary:
+            raise RegistryValidationError(
+                f"invoice observation {invoice_id!r} has undeclared {modelo} operation clave {value!r}"
+            )
 
 
 def _observations_for_binding_source(

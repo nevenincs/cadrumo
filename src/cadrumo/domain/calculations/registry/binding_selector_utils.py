@@ -777,7 +777,7 @@ def operation_clave_validator(
             return None
         if value != value.upper():
             raise RegistryValidationError(f"{field_label} must be uppercase")
-        if len(value) != 1 or not value.isalpha():
+        if len(value) != 1 or not value.isascii() or not value.isalpha():
             raise RegistryValidationError(f"{field_label} {value!r} is not an AEAT clave de operacion")
         return value
 

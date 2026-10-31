@@ -165,7 +165,7 @@ def test_committed_modelo_349_invoice_binding_resolver_aggregates_synthetic_ledg
     observations = _mixed_invoice_observations()
     *non_rect_obs, rect_obs = observations
 
-    resolved = resolve_invoice_binding_values(revision, observations)
+    resolved = resolve_invoice_binding_values(revision, observations, effective_date=date(2026, 3, 31))
 
     assert set(resolved) == {
         "iva-349-declarante-numero-operadores",
@@ -204,7 +204,7 @@ def test_committed_modelo_349_invoice_binding_resolver_counts_payable_service_ac
         ),
     )
 
-    resolved = resolve_invoice_binding_values(revision, observations)
+    resolved = resolve_invoice_binding_values(revision, observations, effective_date=date(2026, 3, 31))
 
     assert resolved["iva-349-declarante-numero-operadores"] == Decimal("1")
     assert resolved["iva-349-declarante-importe-operaciones"] == Decimal("3000.00")
@@ -246,7 +246,7 @@ def test_committed_modelo_349_row_resolver_reads_both_directions_into_one_record
         ),
     )
 
-    rows = resolve_invoice_binding_row_values(revision, observations)
+    rows = resolve_invoice_binding_row_values(revision, observations, effective_date=date(2026, 3, 31))
 
     assert rows[("iva-349-operador-row-clave", 1)] == "E"
     assert rows[("iva-349-operador-row-nif", 1)] == "111111111"
@@ -277,8 +277,8 @@ def test_committed_modelo_349_triangular_operation_from_both_directions_is_one_r
         )
     )
 
-    rows = resolve_invoice_binding_row_values(revision, observations)
-    values = resolve_invoice_binding_values(revision, observations)
+    rows = resolve_invoice_binding_row_values(revision, observations, effective_date=date(2026, 3, 31))
+    values = resolve_invoice_binding_values(revision, observations, effective_date=date(2026, 3, 31))
 
     assert rows[("iva-349-operador-row-clave", 1)] == "T"
     assert rows[("iva-349-operador-row-base", 1)] == Decimal("650.00")
@@ -384,7 +384,7 @@ def test_committed_modelo_349_operador_row_resolver_groups_by_operator_and_clave
         ),
     )
 
-    rows = resolve_invoice_binding_row_values(revision, observations)
+    rows = resolve_invoice_binding_row_values(revision, observations, effective_date=date(2026, 3, 31))
 
     # Two row groups: (DE, DE123456789, E) at row 1 and (FR, FR12345678901, S) at row 2.
     assert rows[("iva-349-operador-row-codigo-pais", 1)] == "DE"
@@ -442,7 +442,7 @@ def test_committed_modelo_349_rectificacion_row_resolver_groups_by_operator_clav
         ),
     )
 
-    rows = resolve_invoice_binding_row_values(revision, observations)
+    rows = resolve_invoice_binding_row_values(revision, observations, effective_date=date(2026, 3, 31))
 
     # DE/DE123456789/E/2025/2T at row 1, IT/IT12345678901/E/2025/4T at row 2.
     assert rows[("iva-349-rectificacion-row-codigo-pais", 1)] == "DE"
@@ -463,7 +463,7 @@ def test_committed_modelo_349_full_invoice_to_casilla_pipeline() -> None:
 
     observations = _mixed_invoice_observations()
 
-    binding_values = resolve_invoice_binding_values(revision, observations)
+    binding_values = resolve_invoice_binding_values(revision, observations, effective_date=date(2026, 3, 31))
     casilla_values = resolve_available_bound_inputs_by_casilla_id(revision, binding_values)
 
     # Assert the four expected casilla keys are present — wiring check.
