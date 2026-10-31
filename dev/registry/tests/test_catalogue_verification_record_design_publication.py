@@ -38,6 +38,29 @@ def _remove_unrelated_invalid_provision_tiers(registry_root: Path) -> None:
     assert suppressed > 0
 
 
+def _source_declaration_path(registry_root: Path, source_id: str) -> Path:
+    """Locate the unique source definition, rather than an earlier reference."""
+    header = f'[sources."{source_id}"]'
+    declarations = tuple(
+        path
+        for path in (registry_root / "legal").glob("*.toml")
+        if header in path.read_text(encoding="utf-8").splitlines()
+    )
+    assert len(declarations) == 1, (source_id, declarations)
+    return declarations[0]
+
+
+def test_source_declaration_lookup_ignores_source_references(tmp_path: Path) -> None:
+    source_id = "aeat-dr-fixture"
+    legal = tmp_path / "legal"
+    legal.mkdir()
+    (legal / "0000-reference.toml").write_text(f'[legal."fixture"]\nsource_refs = ["{source_id}"]\n', encoding="utf-8")
+    declaration = legal / "0001-source.toml"
+    declaration.write_text(f'[sources."{source_id}"]\nsource_url = "https://example.test/design"\n', encoding="utf-8")
+
+    assert _source_declaration_path(tmp_path, source_id) == declaration
+
+
 def test_authority_publication_rejects_divergent_record_design_manifest_binding(tmp_path: Path) -> None:
     """A real authority publishes only while its catalog identity join is exact."""
     registry_root = _copied_registry_root(tmp_path)
@@ -62,9 +85,7 @@ def test_authority_publication_rejects_divergent_record_design_manifest_binding(
     # Explicit UTF-8: the registry tree is UTF-8 and ``read_text`` without an
     # encoding takes the platform default, which on Windows is cp1252 and
     # cannot decode it.
-    declaration_path = next(
-        path for path in registry_root.rglob("*.toml") if f'"{source.id}"' in path.read_text(encoding="utf-8")
-    )
+    declaration_path = _source_declaration_path(registry_root, source.id)
     declaration = declaration_path.read_text(encoding="utf-8")
     section_start = declaration.index(f'[sources."{source.id}"]')
     section_end = declaration.find("\n[sources.", section_start + 1)
