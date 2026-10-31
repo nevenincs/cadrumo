@@ -268,18 +268,7 @@ def test_shared_session_starts_runtime_first_and_reuses_one_profile_holder_and_s
         assert shared.catalog() == {"kind": "catalog", "rows": []}
         assert shared.status() == {"kind": "status", "rows": []}
 
-        calls: list[tuple[tuple[str, ...], Mapping[str, str], Mapping[str, str] | None]] = []
-
-        def cli(
-            _programs: Programs,
-            environment: Mapping[str, str],
-            *arguments: str,
-            secret: Mapping[str, str] | None,
-        ) -> tuple[int, dict[str, Any]]:
-            calls.append((arguments, environment, secret))
-            return 0, {"status": "success"}
-
-        monkeypatch.setattr(session_module, "run_cli", cli)
+        calls = _record_cli_calls(monkeypatch, (0, {"status": "success"}))
         assert shared.cli_read("app", "ledger", "list", reveal_identifiers=True) == (0, {"status": "success"})
         arguments, environment, secret = calls[0]
         assert arguments[0] == "--profile-secrets-stdin"
@@ -528,15 +517,10 @@ def test_service_stderr_retains_only_bounded_native_machine_codes() -> None:
     assert "private-stage-token" not in repr(process.stderr_machine_codes)
 
 
-@pytest.mark.parametrize("persisted", [True, False], ids=["stored-sign-in", "profile-input"])
-def test_cli_read_uses_exactly_one_authority_for_person_owned_read(
-    monkeypatch: pytest.MonkeyPatch, persisted: bool
-) -> None:
-    session = object.__new__(session_module.AgentServiceSession)
-    session.programs = Programs(Path("aeat"), Path("runtime"), Path("mcp"))
-    session.environment = {"CADRUMO_STORAGE_ROOT": "synthetic-root"}
-    session.profile = Profile("session-profile", "test-profile-password", _PROFILE_ID)
-    session.login_session_persisted = persisted
+def _record_cli_calls(
+    monkeypatch: pytest.MonkeyPatch, reply: tuple[int, dict[str, Any]]
+) -> list[tuple[tuple[str, ...], Mapping[str, str], Mapping[str, str] | None]]:
+    """Replace the session's CLI runner with one that records each call and answers ``reply``."""
     calls: list[tuple[tuple[str, ...], Mapping[str, str], Mapping[str, str] | None]] = []
 
     def cli(
@@ -546,9 +530,22 @@ def test_cli_read_uses_exactly_one_authority_for_person_owned_read(
         secret: Mapping[str, str] | None,
     ) -> tuple[int, dict[str, Any]]:
         calls.append((arguments, environment, secret))
-        return 1, {"status": "refused", "code": "sign_in_required"}
+        return reply
 
     monkeypatch.setattr(session_module, "run_cli", cli)
+    return calls
+
+
+@pytest.mark.parametrize("persisted", [True, False], ids=["stored-sign-in", "profile-input"])
+def test_cli_read_uses_exactly_one_authority_for_person_owned_read(
+    monkeypatch: pytest.MonkeyPatch, persisted: bool
+) -> None:
+    session = object.__new__(session_module.AgentServiceSession)
+    session.programs = Programs(Path("aeat"), Path("runtime"), Path("mcp"))
+    session.environment = {"CADRUMO_STORAGE_ROOT": "synthetic-root"}
+    session.profile = Profile("session-profile", "test-profile-password", _PROFILE_ID)
+    session.login_session_persisted = persisted
+    calls = _record_cli_calls(monkeypatch, (1, {"status": "refused", "code": "sign_in_required"}))
     result = session.cli_read("app", "ledger", "list", reveal_identifiers=True)
 
     assert result == (1, {"status": "refused", "code": "sign_in_required"})

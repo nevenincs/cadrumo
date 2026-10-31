@@ -79,15 +79,40 @@ pytestmark = [
 ]
 
 
+async def _until(pilot: Pilot[object], predicate, *, timeout: float = 90) -> None:
+    async with asyncio.timeout(timeout):
+        while not predicate():
+            await asyncio.sleep(0.05)
+
+
+def _human_automation_cli(profile_id: UUID, *leaf: str) -> dict[str, Any]:
+    result = invoke_typer_app(
+        build_command_app(RUNTIME_COMMAND_GRAPH, dispatcher=dispatch_runtime_behavior),
+        (
+            "--format",
+            "json",
+            "--profile",
+            str(profile_id),
+            "--profile-secrets-stdin",
+            "config",
+            "profile",
+            "automation",
+            *leaf,
+        ),
+        input=json.dumps({"profile_passphrase": PROFILE_INPUT}),
+    )
+    assert result.exit_code == 0, result.output
+    assert PROFILE_INPUT not in result.output
+    document = json.loads(result.stdout)
+    assert document["status"] in {"success", "warning"}
+    assert isinstance(document["result"], dict)
+    return document["result"]
+
+
 def test_human_tui_enrollment_review_delivery_is_inspected_and_revoked_by_cli(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Real Windows transport/workers bridge both interfaces; secret stores are memory ports."""
-
-    async def _until(pilot: Pilot[object], predicate, *, timeout: float = 90) -> None:
-        async with asyncio.timeout(timeout):
-            while not predicate():
-                await asyncio.sleep(0.05)
 
     storage_root = tmp_path / "cadrumo-storage"
     storage_root.mkdir()
@@ -314,30 +339,7 @@ def test_human_tui_enrollment_review_delivery_is_inspected_and_revoked_by_cli(
                 resources.insert(0, TransportCleanup(api))
                 assert api.status().status.grant_valid
 
-                def human_cli(*leaf: str) -> dict[str, Any]:
-                    result = invoke_typer_app(
-                        build_command_app(RUNTIME_COMMAND_GRAPH, dispatcher=dispatch_runtime_behavior),
-                        (
-                            "--format",
-                            "json",
-                            "--profile",
-                            str(profile_id),
-                            "--profile-secrets-stdin",
-                            "config",
-                            "profile",
-                            "automation",
-                            *leaf,
-                        ),
-                        input=json.dumps({"profile_passphrase": PROFILE_INPUT}),
-                    )
-                    assert result.exit_code == 0, result.output
-                    assert PROFILE_INPUT not in result.output
-                    document = json.loads(result.stdout)
-                    assert document["status"] in {"success", "warning"}
-                    assert isinstance(document["result"], dict)
-                    return document["result"]
-
-                inspected = human_cli("inspect", str(outcome.request_id))
+                inspected = _human_automation_cli(profile_id, "inspect", str(outcome.request_id))
                 receipt = inspected["review"]["receipt"]
                 assert (
                     receipt["request_id"] == str(outcome.request_id)
@@ -345,7 +347,7 @@ def test_human_tui_enrollment_review_delivery_is_inspected_and_revoked_by_cli(
                 )
                 assert receipt["grant_id"] == str(metadata.grant_id) and receipt["key_id"] == str(metadata.key_id)
                 assert receipt["review_digest"] == outcome.review_digest
-                denied = human_cli("deny", "key", str(metadata.key_id))
+                denied = _human_automation_cli(profile_id, "deny", "key", str(metadata.key_id))
                 assert denied["target_id"] == str(metadata.key_id) and denied["kind"] == "key"
                 assert denied["receipt"]["access_denied"] is True
                 try:
@@ -385,11 +387,6 @@ def test_cli_created_requests_are_listed_reviewed_and_settled_by_tui(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """The TUI can review CLI-created enrollments and settle approval and decline."""
-
-    async def _until(pilot: Pilot[object], predicate, *, timeout: float = 90) -> None:
-        async with asyncio.timeout(timeout):
-            while not predicate():
-                await asyncio.sleep(0.05)
 
     storage_root = tmp_path / "cadrumo-storage"
     storage_root.mkdir()
@@ -452,29 +449,6 @@ def test_cli_created_requests_are_listed_reviewed_and_settled_by_tui(
 
         def invoke_in_context(context: Context, operation: Callable[[], Result]) -> Result:
             return context.run(operation)
-
-        def human_cli(*leaf: str) -> dict[str, Any]:
-            result = invoke_typer_app(
-                build_command_app(RUNTIME_COMMAND_GRAPH, dispatcher=dispatch_runtime_behavior),
-                (
-                    "--format",
-                    "json",
-                    "--profile",
-                    str(profile_id),
-                    "--profile-secrets-stdin",
-                    "config",
-                    "profile",
-                    "automation",
-                    *leaf,
-                ),
-                input=json.dumps({"profile_passphrase": PROFILE_INPUT}),
-            )
-            assert result.exit_code == 0, result.output
-            assert PROFILE_INPUT not in result.output
-            document = json.loads(result.stdout)
-            assert document["status"] in {"success", "warning"}
-            assert isinstance(document["result"], dict)
-            return document["result"]
 
         with (
             override_settings(
@@ -674,13 +648,13 @@ def test_cli_created_requests_are_listed_reviewed_and_settled_by_tui(
 
                 approved_request_id = UUID(approved_result["terminal"]["request_id"])
                 declined_request_id = UUID(declined_result["terminal"]["request_id"])
-                approved_inspection = human_cli("inspect", str(approved_request_id))["review"]
-                declined_inspection = human_cli("inspect", str(declined_request_id))["review"]
+                approved_inspection = _human_automation_cli(profile_id, "inspect", str(approved_request_id))["review"]
+                declined_inspection = _human_automation_cli(profile_id, "inspect", str(declined_request_id))["review"]
                 assert approved_inspection["receipt"]["stage"] == EnrollmentStage.COMPLETE.value
                 assert declined_inspection["receipt"]["stage"] == EnrollmentStage.DECLINED.value
                 assert approved_inspection["receipt"]["key_id"] == approved_result["terminal"]["key_id"]
                 assert declined_inspection["receipt"]["key_id"] is None
-                listed = human_cli("list")["inventory"]
+                listed = _human_automation_cli(profile_id, "list")["inventory"]
                 assert len(listed["grants"]) == len(listed["keys"]) == 1
                 assert listed["grants"][0]["grant_id"] == approved_result["terminal"]["grant_id"]
                 assert listed["keys"][0]["key_id"] == approved_result["terminal"]["key_id"]
