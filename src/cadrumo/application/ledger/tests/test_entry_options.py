@@ -144,9 +144,7 @@ def test_a_code_the_calculation_must_fetch_is_not_offered(
 
 
 @pytest.mark.parametrize("locale", ["en", "es", "ca", "hu"])
-def test_every_word_exists_in_every_locale(
-    locale: str, served: dict[str, tuple[tuple[str, str | None], ...]]
-) -> None:
+def test_every_word_exists_in_every_locale(locale: str, served: dict[str, tuple[tuple[str, str | None], ...]]) -> None:
     catalogue = yaml.safe_load(
         files("cadrumo").joinpath("locales", locale, "application.yml").read_text(encoding="utf-8")
     )

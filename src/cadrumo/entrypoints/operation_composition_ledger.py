@@ -200,6 +200,18 @@ def compose_ledger_evidence_ingestion_operation(inputs: OperationCompositionInpu
     return built(definitions, build_ledger_evidence_ingestion_registrations(definitions))
 
 
+def compose_ledger_entry_options_operation(inputs: OperationCompositionInputs) -> OperationGroupBuild:
+    """Compose the read of the ledger entry vocabularies."""
+    from ..application.ledger.entry_options_operation import (
+        build_ledger_entry_options_definition,
+        build_ledger_entry_options_registration,
+    )
+
+    del inputs
+    definition = build_ledger_entry_options_definition()
+    return built((definition,), (build_ledger_entry_options_registration(definition),))
+
+
 def compose_ledger_ratios_operation(inputs: OperationCompositionInputs) -> OperationGroupBuild:
     """Compose ledger ratios operation."""
     from ..application.ledger.ratios_operation import (
@@ -703,6 +715,25 @@ def compose_ledger_list_operation(inputs: OperationCompositionInputs) -> Operati
 
     definition = build_ledger_list_definition(inputs.ledger_reads())
     return built((definition,), (build_ledger_list_registration(definition),))
+
+
+def compose_ledger_known_values_operation(inputs: OperationCompositionInputs) -> OperationGroupBuild:
+    """Compose the ledger known-values read."""
+    from ..adapters.persistence.profile.actividad_asset import ActividadAssetHistoryRepository
+    from ..application.ledger.known_values_operation import (
+        LedgerKnownValuesPorts,
+        build_ledger_known_values_definition,
+        build_ledger_known_values_registration,
+    )
+
+    definition = build_ledger_known_values_definition(
+        LedgerKnownValuesPorts(
+            ledger=inputs.ledger_reads(),
+            invoices=inputs.invoice_inspection(),
+            asset_history=lambda bucket_id: ActividadAssetHistoryRepository(bucket_id=bucket_id),
+        )
+    )
+    return built((definition,), (build_ledger_known_values_registration(definition),))
 
 
 def compose_ledger_view_operation(inputs: OperationCompositionInputs) -> OperationGroupBuild:

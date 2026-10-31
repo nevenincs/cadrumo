@@ -43,7 +43,9 @@ def entry_options(ctx: typer.Context) -> None:
         or completed.projection.profile_id != client.profile_id
     ):
         raise invalid_completion_error(completed)
-    result = LedgerEntryOptionsResult.model_validate(completed.projection.model_dump(mode="json", exclude={"profile_id"}))
+    result = LedgerEntryOptionsResult.model_validate(
+        completed.projection.model_dump(mode="json", exclude={"profile_id"})
+    )
     emit_envelope(
         ctx,
         command="ledger.entry-options",

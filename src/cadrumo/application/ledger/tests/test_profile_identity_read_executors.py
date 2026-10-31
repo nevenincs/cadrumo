@@ -12,6 +12,7 @@ from pydantic import BaseModel
 
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
+from ....core.ledger_known_values import LedgerKnownValueKind
 from ....core.operations import profile_operation_subject
 from ....core.period import Period
 from ...operations import profile_guard
@@ -23,6 +24,9 @@ from .. import (
 )
 from .. import (
     history_operation as history,
+)
+from .. import (
+    known_values_operation as known_values,
 )
 from .. import (
     list_operation as list_ledger,
@@ -96,6 +100,22 @@ def _read_cases() -> tuple[_ReadCase, ...]:
                 history.LedgerHistoryRequest(profile_id=_PROFILE_ID, transaction_prefix="a" * 12),
             ),
             lambda ports: history.LedgerHistoryTypedExecutor(cast(Any, ports)),
+        ),
+        _ReadCase(
+            "known-values",
+            _request(
+                known_values.LEDGER_KNOWN_VALUES_OPERATION_DEFINITION_ID,
+                known_values.LedgerKnownValuesRequest(
+                    profile_id=_PROFILE_ID, kinds=(LedgerKnownValueKind.DESCRIPTION,)
+                ),
+            ),
+            lambda ports: known_values.LedgerKnownValuesExecutor(
+                known_values.LedgerKnownValuesPorts(
+                    ledger=cast(Any, ports),
+                    invoices=cast(Any, ports),
+                    asset_history=cast(Any, ports),
+                )
+            ),
         ),
         _ReadCase(
             "list",

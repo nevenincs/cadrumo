@@ -28,7 +28,9 @@ def _ordered(fact_file: str, order_key: str, excluded_key: str | None = None) ->
         entries = {entry["key"]: entry["value"] for entry in variant["payload"]["entries"]}
         excluded = {token.strip() for token in entries.get(excluded_key, "").split(",")} if excluded_key else set()
         members |= dict.fromkeys(
-            token.strip() for token in entries.get(order_key, "").split(",") if token.strip() and token.strip() not in excluded
+            token.strip()
+            for token in entries.get(order_key, "").split(",")
+            if token.strip() and token.strip() not in excluded
         )
     return tuple(members)
 

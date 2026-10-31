@@ -66,6 +66,26 @@ if TYPE_CHECKING:
 # ---------------------------------------------------------------------------
 
 
+class LedgerEntryOptionPayload(OutputSchema):
+    """One offered value and, where the backend words it, the key of its word."""
+
+    value: str
+    label_key: str | None = None
+
+
+class LedgerEntryOptionFamilyPayload(OutputSchema):
+    """One vocabulary."""
+
+    family: str
+    options: list[LedgerEntryOptionPayload]
+
+
+class LedgerEntryOptionsResult(OutputSchema):
+    """JSON envelope for ``aeat app ledger entry-options``."""
+
+    families: list[LedgerEntryOptionFamilyPayload]
+
+
 class M210IncomeClassificationPayload(OutputSchema):
     """Operator-visible persisted M210 classification facts for one ledger row."""
 
@@ -572,6 +592,43 @@ class LedgerListRowPayload(OutputSchema):
     modified_at: str
     # List-builder extras
     group_label: str | None = None
+
+
+class LedgerKnownCounterpartyPayload(OutputSchema):
+    """One party as ``aeat app ledger known-values`` names it."""
+
+    name: str
+    tax_id: str | None = None
+    country: str | None = None
+    identification_state: str | None = None
+    uses: int
+    last_used: str
+
+
+class LedgerKnownTextPayload(OutputSchema):
+    """One free text as ``aeat app ledger known-values`` names it."""
+
+    text: str
+    uses: int
+    last_used: str
+    counterparty: str | None = None
+
+
+class LedgerKnownValuesResult(OutputSchema):
+    """JSON envelope for ``aeat app ledger known-values``.
+
+    Each list is most recent first and capped; ``truncated`` names the kinds that
+    hold more than they show.
+    """
+
+    bucket_id: BucketId
+    counterparties: list[LedgerKnownCounterpartyPayload]
+    descriptions: list[LedgerKnownTextPayload]
+    group_labels: list[LedgerKnownTextPayload]
+    m210_payers: list[LedgerKnownTextPayload]
+    m210_assets: list[LedgerKnownTextPayload]
+    asset_references: list[LedgerKnownTextPayload]
+    truncated: list[str]
 
 
 class LedgerListResult(OutputSchema):
@@ -1194,6 +1251,9 @@ __all__ = [
     "LedgerClassifyResult",
     "LedgerClassifySingleResult",
     "LedgerDetachResult",
+    "LedgerEntryOptionFamilyPayload",
+    "LedgerEntryOptionPayload",
+    "LedgerEntryOptionsResult",
     "LedgerExcludeResult",
     "LedgerExportPayload",
     "LedgerExportRowPayload",

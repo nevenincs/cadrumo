@@ -742,6 +742,15 @@ _EXPECTATIONS: Mapping[str, RegisteredExecutorConformanceCase] = _expectations_o
             "ledger.list", OperationTerminalCondition.SUCCEEDED, OperationEffect.NONE, ("ledger.list",)
         ),
         RegisteredExecutorConformanceCase(
+            "ledger.entry-options",
+            OperationTerminalCondition.SUCCEEDED,
+            OperationEffect.NONE,
+            ("ledger.entry-options",),
+        ),
+        RegisteredExecutorConformanceCase(
+            "ledger.known-values", OperationTerminalCondition.SUCCEEDED, OperationEffect.NONE, ("ledger.known-values",)
+        ),
+        RegisteredExecutorConformanceCase(
             "ledger.invoice.add", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED, ("ledger.invoice.add",)
         ),
         RegisteredExecutorConformanceCase(

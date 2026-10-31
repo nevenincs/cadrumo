@@ -32,6 +32,7 @@ from ...calculations.registry.schema_base import ThresholdComparison
 from ...calculations.registry.tests.published_authority import PublishedGovernedFactSource
 from ..errors import ProrrataInputError
 from ..prorrata import (
+    PRORRATA_REFERENCE_MAX_LENGTH,
     InputClassification,
     ProrrataInputs,
     ProrrataKind,
@@ -41,6 +42,7 @@ from ..prorrata import (
     compute_prorrata_general,
     especial_mandatory_rule,
     is_especial_mandatory,
+    register_entry_prorrata_reference,
     validate_prorrata_reference,
 )
 from ..prorrata_especial_parameters import ProrrataEspecialMandatoryParameters
@@ -636,3 +638,37 @@ def test_no_parallel_prorrata_cli_surface_exists() -> None:
                 f"`{needle}`. Prorrata is consumed via "
                 f"`app modelo bindings list`."
             )
+
+
+def test_a_settled_register_entry_names_its_definitive_reference() -> None:
+    reference = register_entry_prorrata_reference(ejercicio=2026, regime="general", sector_id=None, settled=True)
+
+    assert reference is not None
+    assert reference.reference_id == "prorrata:2026:definitiva:general"
+
+
+def test_an_unsettled_register_entry_names_its_provisional_reference() -> None:
+    reference = register_entry_prorrata_reference(
+        ejercicio=2026, regime="especial", sector_id="sector-a", settled=False
+    )
+
+    assert reference is not None
+    assert reference.reference_id == "prorrata:2026:provisional:especial:sector-a"
+
+
+@pytest.mark.parametrize(
+    ("regime", "sector_id"),
+    [
+        pytest.param("ninguna", None, id="a-year-under-no-prorrata"),
+        pytest.param("general", "no vale", id="a-sector-the-grammar-cannot-carry"),
+    ],
+)
+def test_a_register_entry_no_reference_can_name_has_none(regime: str, sector_id: str | None) -> None:
+    assert register_entry_prorrata_reference(ejercicio=2026, regime=regime, sector_id=sector_id, settled=True) is None
+
+
+def test_the_longest_register_reference_fits_what_a_request_accepts() -> None:
+    reference = register_entry_prorrata_reference(ejercicio=2026, regime="especial", sector_id="s" * 64, settled=False)
+
+    assert reference is not None
+    assert len(reference.reference_id) <= PRORRATA_REFERENCE_MAX_LENGTH

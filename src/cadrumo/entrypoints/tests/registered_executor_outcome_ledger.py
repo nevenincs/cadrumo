@@ -44,6 +44,7 @@ from ...application.ledger.check_operation import LedgerCheckProjection, LedgerC
 from ...application.ledger.classify_requests import LedgerClassifyRequest
 from ...application.ledger.classify_result_contracts import LedgerClassifyOperationResult
 from ...application.ledger.counterparty_operation import LedgerCounterpartyRequest, LedgerCounterpartyResult
+from ...application.ledger.entry_options_operation import LedgerEntryOptionsProjection, LedgerEntryOptionsRequest
 from ...application.ledger.evidence_add_operation import LedgerEvidenceAddProjection, LedgerEvidenceAddRequest
 from ...application.ledger.evidence_mutation_operation import (
     LedgerEvidenceRemoveProjection,
@@ -60,6 +61,7 @@ from ...application.ledger.evidence_read_operation import (
 )
 from ...application.ledger.history_operation import LedgerHistoryProjection, LedgerHistoryRequest
 from ...application.ledger.import_operation import LedgerImportRequest, LedgerImportResultProjection
+from ...application.ledger.known_values_operation import LedgerKnownValuesProjection, LedgerKnownValuesRequest
 from ...application.ledger.ledger_add_contracts import LedgerAddOperationResult, LedgerAddRequest
 from ...application.ledger.list_operation import LedgerListProjection, LedgerListRequest
 from ...application.ledger.merge_operation import LedgerMergeOperationResult, LedgerMergeRequest
@@ -536,6 +538,36 @@ def assert_ledger_preflight_outcome(ctx: ExecutorOutcome) -> None:
     assert ctx.definition.capabilities.permitted_effects == frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN})
 
 
+def assert_ledger_entry_options_outcome(ctx: ExecutorOutcome) -> None:
+    """Check the ledger.entry-options public result and effects."""
+    assert isinstance(ctx.payload, LedgerEntryOptionsRequest)
+    options = ctx.resolve(LedgerEntryOptionsProjection)
+    assert isinstance(options, LedgerEntryOptionsProjection)
+    assert options.profile_id == ctx.profile_id
+    assert {family.family for family in options.families} == {
+        "country",
+        "currency",
+        "deduction_fact_kind",
+        "m210_payer_mode",
+        "m210_tipo_renta",
+    }
+    assert ctx.definition.capabilities.permitted_effects == frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN})
+
+
+def assert_ledger_known_values_outcome(ctx: ExecutorOutcome) -> None:
+    """Check the ledger.known-values public result and effects."""
+    assert isinstance(ctx.payload, LedgerKnownValuesRequest)
+    values = ctx.resolve(LedgerKnownValuesProjection)
+    assert isinstance(values, LedgerKnownValuesProjection)
+    assert values.profile_id == ctx.profile_id
+    assert [(row.text, row.uses) for row in values.descriptions] == [
+        ("known value other", 1),
+        ("KNOWN VALUE KEPT", 2),
+    ]
+    assert values.truncated == ()
+    assert ctx.definition.capabilities.permitted_effects == frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN})
+
+
 def assert_ledger_list_outcome(ctx: ExecutorOutcome) -> None:
     """Check the ledger.list public result and effects."""
     assert isinstance(ctx.payload, LedgerListRequest)
@@ -741,6 +773,8 @@ LEDGER_OUTCOME_ASSERTIONS: dict[str, Callable[[ExecutorOutcome], None]] = {
     INVOICE_REMOVE_OPERATION_DEFINITION_ID: assert_invoice_remove_outcome,
     INVOICE_UPDATE_OPERATION_DEFINITION_ID: assert_invoice_update_outcome,
     "ledger.preflight": assert_ledger_preflight_outcome,
+    "ledger.entry-options": assert_ledger_entry_options_outcome,
+    "ledger.known-values": assert_ledger_known_values_outcome,
     "ledger.list": assert_ledger_list_outcome,
     "ledger.history": assert_ledger_history_outcome,
     "ledger.view": assert_ledger_view_outcome,

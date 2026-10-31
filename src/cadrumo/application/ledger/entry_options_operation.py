@@ -131,12 +131,17 @@ def ledger_entry_options(profile_id: UUID, *, operation: PinnedAuthorityOperatio
             "deduction_fact_kind",
             _worded("deduction_fact_kind", tuple(kind.value for kind in iva_deduction_fact_kinds(authority=operation))),
         ),
-        ("m210_payer_mode", _worded("m210_payer_mode", tuple(mode.value for mode in m210_payer_modes(operation=operation)))),
+        (
+            "m210_payer_mode",
+            _worded("m210_payer_mode", tuple(mode.value for mode in m210_payer_modes(operation=operation))),
+        ),
         ("m210_tipo_renta", _tipo_renta_options(operation)),
     )
     return LedgerEntryOptionsProjection(
         profile_id=profile_id,
-        families=tuple(LedgerEntryOptionFamilyProjection(family=family, options=options) for family, options in families),
+        families=tuple(
+            LedgerEntryOptionFamilyProjection(family=family, options=options) for family, options in families
+        ),
     )
 
 

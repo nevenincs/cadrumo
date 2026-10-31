@@ -54,6 +54,8 @@ from .errors import (
 )
 
 _log = get_logger(__name__)
+
+_MESSAGE_TEXT_LENGTH = 120
 EXTERNAL = Settings.external_constants()
 
 
@@ -472,7 +474,7 @@ def cell_text(cells: list[str], index: int | None) -> str | None:
     return cells[index].strip() or None
 
 
-def bounded_text(value: object, *, max_length: int = 120) -> str:
+def bounded_text(value: object, *, max_length: int = _MESSAGE_TEXT_LENGTH) -> str:
     """Return ``value`` as tidy text, truncated to at most ``max_length`` characters.
 
     What a page-shape diagnostic records for an attribute it does not interpret,

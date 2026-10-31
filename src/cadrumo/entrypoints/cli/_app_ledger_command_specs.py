@@ -16,6 +16,7 @@ from ._app_ledger_inventory_analysis_command_specs import LEDGER_INVENTORY_ANALY
 from ._app_ledger_inventory_command_specs import LEDGER_INVENTORY_COMMAND_SPECS
 from ._app_ledger_invoice_intake_command_specs import LEDGER_INVOICE_INTAKE_COMMAND_SPECS
 from ._app_ledger_invoice_lifecycle_command_specs import LEDGER_INVOICE_LIFECYCLE_COMMAND_SPECS
+from ._app_ledger_known_values_command_specs import LEDGER_KNOWN_VALUES_COMMAND_SPECS
 from ._app_ledger_lifecycle_command_specs import LEDGER_LIFECYCLE_COMMAND_SPECS
 from ._app_ledger_management_command_specs import LEDGER_MANAGEMENT_COMMAND_SPECS
 from ._app_ledger_operations_command_specs import LEDGER_OPERATIONS_COMMAND_SPECS
@@ -29,6 +30,7 @@ LEDGER_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     *LEDGER_CLASSIFICATION_COMMAND_SPECS,
     *LEDGER_OPERATIONS_COMMAND_SPECS,
     *LEDGER_MANAGEMENT_COMMAND_SPECS,
+    *LEDGER_KNOWN_VALUES_COMMAND_SPECS,
     *LEDGER_LIFECYCLE_COMMAND_SPECS,
     *LEDGER_ACTIVIDAD_ASSET_COMMAND_SPECS,
     *LEDGER_BIENES_INVERSION_COMMAND_SPECS,

@@ -240,6 +240,22 @@ def definitive_prorrata_kind(
     return annual_only[0]
 
 
+def provisional_prorrata_kind(
+    *,
+    effective_date: date | None = None,
+    authority: GovernedFactSource | None = None,
+) -> ProrrataKind:
+    """Return the uniquely period-bound kind declared by fact 0116."""
+    catalogue = resolve_prorrata_kind_catalogue(
+        effective_date=effective_date,
+        authority=authority,
+    )
+    period_bound = tuple(definition.token for definition in catalogue.definitions if definition.period_required)
+    if len(period_bound) != 1:
+        raise RegistryValidationError("0116 must declare exactly one period-bound prorrata kind")
+    return period_bound[0]
+
+
 def resolve_input_classification_catalogue(
     *,
     effective_date: date | None = None,
@@ -354,6 +370,7 @@ __all__ = [
     "default_input_classification",
     "definitive_prorrata_kind",
     "input_classification_tokens",
+    "provisional_prorrata_kind",
     "require_input_classification",
     "require_prorrata_kind",
     "resolve_input_classification_catalogue",

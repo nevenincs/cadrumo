@@ -50,9 +50,7 @@ def command_path_pattern() -> re.Pattern[str]:
     return _compile_command_paths(executable_command_paths())
 
 
-def _admitted_wire_row(
-    model: object, admitted: set[str]
-) -> tuple[str, tuple[frozenset[str], frozenset[str]]] | None:
+def _admitted_wire_row(model: object, admitted: set[str]) -> tuple[str, tuple[frozenset[str], frozenset[str]]] | None:
     """Project one admitted wire model's required and allowed fields."""
     if not isinstance(model, type) or not issubclass(model, BaseModel):
         raise TypeError("detail-row union contains a non-model variant")
