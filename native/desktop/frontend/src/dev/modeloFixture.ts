@@ -41,7 +41,7 @@ import {
   type PublicModeloFormField,
   type OutputLanguage,
 } from "../shell/modeloContract";
-import { translator } from "../shell/strings";
+import type { Translate } from "../shell/strings";
 import { ASSET_NOTES } from "./modeloAssetNotes";
 import { hex64 } from "./fixtures/ledger";
 
@@ -136,9 +136,8 @@ const reject = (
  * check, as the backend words it, and a note of the form. */
 function withAssetNotes(
   form: ModeloWorkbenchFormProjectionV1,
-  language: OutputLanguage,
+  t: Translate,
 ): ModeloWorkbenchFormProjectionV1 {
-  const t = translator(language);
   return {
     ...form,
     issue_lines: [
@@ -188,6 +187,10 @@ type Options = {
   shape: ModeloShape;
   /** Where a runner without the development server reads the envelopes. */
   envelopes?: ModeloEnvelopes;
+  /** The words of a language. The generated catalogue is a build-tool module
+   * that only the bundler resolves, so the caller that has it brings it; a
+   * runner that does not takes the keys as they are. */
+  translate: (language: string) => Translate;
 };
 
 const PURPOSE_FILES: Record<ModeloFilePurpose, string> = {
@@ -316,7 +319,7 @@ export function modeloFixture(options: Options): ModeloPort {
     if (read && admitted) admittedBy.set(admitted, read);
     if (!form) return reject("refused", { reason: "profile_mismatch" });
     return shape === "check-notes" && name === LATER_STATES
-      ? withAssetNotes(form, language)
+      ? withAssetNotes(form, options.translate(language))
       : form;
   };
   /** The envelope `name` of a write the scenario answers, or unserved. */

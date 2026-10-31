@@ -21,6 +21,7 @@ import type {
 import { censoFixture } from "./censoFixture";
 import { ledgerFixture, type LedgerShape } from "./ledgerFixture";
 import { modeloFixture, type ModeloShape } from "./modeloFixture";
+import { translator } from "../shell/strings";
 import { sedeViewFixture } from "./sedeViewFixture";
 import { SCENARIO_PASSWORD } from "./fixtures/password";
 import { userProfileFixture } from "./userProfileFixture";
@@ -225,7 +226,12 @@ function windowFixture(): NonNullable<Host["window"]> {
       return Promise.resolve();
     },
     observe(listener) {
-      listener({ maximized: false, fullscreen: false, chrome: "custom" });
+      listener({
+        maximized: false,
+        fullscreen: false,
+        chrome: "custom",
+        nativeControls: null,
+      });
       return Promise.resolve(() => undefined);
     },
     guardClose(asking) {
@@ -517,6 +523,7 @@ export function scenarioHost(
     wait: () => wait(options.latencyMs),
     signedIn,
     shape: options.modelo ?? "fixture",
+    translate: translator,
   });
 
   // The models this made-up computer holds: setup downloads and removes

@@ -4,7 +4,7 @@ import { userEvent, waitFor } from "storybook/test";
 import { modeloFixture, type ModeloShape } from "@/dev/modeloFixture";
 import type { ModeloPort } from "../../../shell/modelo";
 import type { OutputLanguage } from "../../../shell/modeloContract";
-import { useStrings } from "../../../shell/strings";
+import { translator, useStrings } from "../../../shell/strings";
 import { DeclarationsPage, type DeclarationsMemory } from "./DeclarationsPage";
 
 // The Declarations page over the declarations list the application read for
@@ -96,6 +96,7 @@ function Page({
   if (port.current === null) {
     const fixture = modeloFixture({
       say: noop,
+      translate: translator,
       wait: async () => undefined,
       signedIn: () => !signedOut,
       shape,

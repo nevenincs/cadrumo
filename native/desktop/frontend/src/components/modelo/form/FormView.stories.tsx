@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useEffect, useRef, useState } from "react";
 import { modeloFixture } from "@/dev/modeloFixture";
+import { translator } from "../../../shell/strings";
 import type { ModeloPort } from "../../../shell/modelo";
 import type {
   ModeloWorkbenchFormProjectionV1,
@@ -74,6 +75,7 @@ function Form({
   const port = useRef<ModeloPort | null>(null);
   port.current ??= modeloFixture({
     say: noop,
+    translate: translator,
     wait: async () => undefined,
     signedIn: () => true,
     shape: "fixture",

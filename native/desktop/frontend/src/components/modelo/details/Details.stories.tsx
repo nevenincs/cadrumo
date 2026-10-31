@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { modeloFixture, type ModeloShape } from "../../../dev/modeloFixture";
 import form130 from "../../../dev/fixtures/modelo/modelo-130-1T-en.json";
 import form303 from "../../../dev/fixtures/modelo/modelo-303-1T-en.json";
+import { translator } from "../../../shell/strings";
 import type { ModeloPort } from "../../../shell/modelo";
 import type {
   ModeloWorkbenchFormProjectionV1,
@@ -55,6 +56,7 @@ export function StorySession({
     () =>
       modeloFixture({
         say: () => undefined,
+        translate: translator,
         wait: () => Promise.resolve(),
         signedIn: () => true,
         shape,

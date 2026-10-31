@@ -154,6 +154,7 @@ function scenario(shape: ModeloShape = "fixture") {
     signedIn: () => true,
     shape,
     envelopes: ENVELOPES,
+    translate: (locale) => Object.assign((key: string) => key, { locale }),
   });
   return { port, calls };
 }
