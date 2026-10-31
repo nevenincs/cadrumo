@@ -8,11 +8,11 @@
 import type { FileToken, PublicDecimal } from "../../../shell/ledger";
 import {
   AMOUNT_RULE,
+  canonicalDecimal,
   parseDecimal,
+  parseFractionPercent,
   parseIsoDate,
   parseLine,
-  parsePercent,
-  percentOf,
   QUANTITY_RULE,
   TAX_AMOUNT_RULE,
   UNIT_PRICE_RULE,
@@ -41,6 +41,7 @@ import type {
   InventoryRetireRequest,
   ValuationMethod,
 } from "../../../shell/ledgerSetup";
+import { heldDecimal } from "../../../shared/numbers";
 import type { Landing } from "../WritePause";
 
 // ---- What the backend offers -------------------------------------------------
@@ -172,13 +173,7 @@ export function servedWord(t: (key: string) => string, served: Served): string {
 // ---- The fields a form draws -------------------------------------------------
 
 export type FieldControl =
-  | "text"
-  | "choice"
-  | "money"
-  | "quantity"
-  | "unit_price"
-  | "share"
-  | "date";
+  "text" | "choice" | "money" | "quantity" | "share" | "date";
 
 /** One field of a form: what it is called, how it is typed and whether the
  * request cannot be made without it. A field's key is where its text and its
@@ -243,7 +238,7 @@ export const COST_FIELDS: readonly StockField[] = [
     key: "unit_cost",
     label: "desktop.ledger.inventory.unit_cost",
     hint: "desktop.ledger.stock.field.cost_hint",
-    control: "unit_price",
+    control: "money",
     required: false,
   },
   {
@@ -537,13 +532,13 @@ export function draftOfMovement(
 ): MovementDraft {
   const blank = blankMovement();
   const text = (value: { decimal: string } | null | undefined) =>
-    value ? value.decimal : "";
+    value ? heldDecimal(value.decimal) : "";
   const detail = movement.acquisition_detail ?? null;
   const cost = movement.acquisition_cost ?? null;
   const base: Record<string, string> = {
     date: movement.movement_date,
     kind: movement.kind,
-    quantity: movement.quantity.decimal,
+    quantity: heldDecimal(movement.quantity.decimal),
   };
   if (!plays(vocabulary, "purchase", movement.kind))
     return {
@@ -570,7 +565,8 @@ export function draftOfMovement(
         }
       : blankProof();
   };
-  const share = (fraction: PublicDecimal) => percentOf(fraction.decimal) ?? "";
+  const share = (fraction: PublicDecimal) =>
+    heldDecimal(canonicalDecimal(fraction.decimal) ?? fraction.decimal);
   return {
     values: {
       ...base,
@@ -714,7 +710,7 @@ function acquisitionOf(
   const text = (key: string) => draft.values[key] ?? "";
   const price = c.need("price", parseDecimal(text("price"), TAX_AMOUNT_RULE));
   const iva = c.need("iva", parseDecimal(text("iva"), TAX_AMOUNT_RULE));
-  const share = c.need("share", parsePercent(text("share")));
+  const share = c.need("share", parseFractionPercent(text("share")));
   const consideration = proofOf(
     c,
     "price",
@@ -743,7 +739,7 @@ function acquisitionOf(
     );
     const base = c.need(at("price"), parseDecimal(extra.price, AMOUNT_RULE));
     const tax = c.need(at("iva"), parseDecimal(extra.iva, TAX_AMOUNT_RULE));
-    const ratio = c.need(at("share"), parsePercent(extra.share));
+    const ratio = c.need(at("share"), parseFractionPercent(extra.share));
     const proof = proofOf(c, at("proof"), extra.proof, priceKinds(vocabulary));
     return { extra, kind, base, tax, ratio, proof };
   });

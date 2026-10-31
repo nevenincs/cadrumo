@@ -332,6 +332,38 @@ export const PurchaseForm: Story = {
   },
 };
 
+/** A purchase with its date, units, price, IVA and share written. */
+async function writePurchase(context: PlayContext) {
+  const t = wordsOf(context);
+  await press(context, t("desktop.ledger.stock.action.add_movement"));
+  await pick(context, t("desktop.ledger.inventory.kind_label"), "purchase");
+  const write = async (label: string, text: string) =>
+    userEvent.type(await field(context, label), text);
+  await write(t("desktop.ledger.inventory.date"), "2026-03-04");
+  await write(t("desktop.ledger.inventory.quantity"), "100");
+  await write(t("desktop.ledger.stock.field.price"), "1000.50");
+  await write(t("desktop.ledger.stock.field.iva"), "210.11");
+  await write(t("desktop.ledger.stock.field.share"), "50");
+}
+
+export const PurchaseWritten: Story = {
+  name: "A purchase written in",
+  play: writePurchase,
+};
+
+export const MovementDateNamesNoDay: Story = {
+  name: "A movement date that names no day",
+  play: async (context) => {
+    const t = wordsOf(context);
+    await press(context, t("desktop.ledger.stock.action.add_movement"));
+    await userEvent.type(
+      await field(context, t("desktop.ledger.inventory.date")),
+      "2026-02-30",
+    );
+    await press(context, t("desktop.ledger.stock.submit.movement"));
+  },
+};
+
 export const ValuationShown: Story = {
   name: "A valuation shown",
   play: (context) =>

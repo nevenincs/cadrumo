@@ -1,11 +1,8 @@
-import {
-  useEffect,
-  useId,
-  useMemo,
-  useState,
-  type ReactNode,
-} from "react";
+import { useEffect, useId, useMemo, useState, type ReactNode } from "react";
 import { DateEditor } from "@/components/editors/DateEditor";
+import { DecimalEditor } from "@/components/editors/DecimalEditor";
+import { MoneyEditor } from "@/components/editors/MoneyEditor";
+import { PercentEditor } from "@/components/editors/PercentEditor";
 import { TextEditor } from "@/components/editors/TextEditor";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -323,18 +320,16 @@ function StockEntry({
       <FieldLabel htmlFor={id}>{t(field.label)}</FieldLabel>
       {field.control === "date" ? (
         <DateEditor {...editor} />
+      ) : field.control === "money" ? (
+        <MoneyEditor {...editor} />
+      ) : field.control === "quantity" ? (
+        <DecimalEditor {...editor} />
+      ) : field.control === "share" ? (
+        <PercentEditor {...editor} unit="fraction" />
       ) : (
         <TextEditor
           {...editor}
-          inputMode={field.control === "text" ? "text" : "decimal"}
-          maxLength={
-            field.max ??
-            (field.control === "text"
-              ? field.key === "description"
-                ? 1024
-                : 120
-              : 40)
-          }
+          maxLength={field.max ?? (field.key === "description" ? 1024 : 120)}
         />
       )}
       {hint && <FieldDescription id={`${id}-hint`}>{hint}</FieldDescription>}

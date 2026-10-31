@@ -211,7 +211,7 @@ function purchase(): MovementDraft {
       quantity: "100",
       price: "1000.00",
       iva: "210.00",
-      share: "100",
+      share: "1",
     },
     extras: [],
     proofs: {
@@ -362,7 +362,7 @@ test("each extra cost brings its own component and its own file, and no sum", ()
         kind: "freight",
         price: "100.00",
         iva: "21.00",
-        share: "100",
+        share: "1",
         proof: kept("d", "transport_document"),
       },
     ],
@@ -439,24 +439,24 @@ test("a file that is not kept yet is not a proof, whatever kind it is given", ()
   expect(unkept.missing.has("price:file")).toBe(true);
 });
 
-test("a share is a percentage the person writes, sent as the fraction the backend holds", () => {
+test("a share is held as the fraction the backend holds and sent as it is", () => {
   const whole = purchase();
   const half = movementRequest(BOOK, "m", {
     ...whole,
-    values: { ...whole.values, share: "50" },
+    values: { ...whole.values, share: "0.5" },
   });
   expect(
     half.request?.acquisition_cost?.consideration_deductible_iva_ratio,
   ).toEqual({
     decimal: "0.5",
   });
-  // A bare 0.5 could be half or half of a per cent: it is not guessed.
-  const fraction = movementRequest(BOOK, "m", {
+  // Text the editor could not read as a share arrives as typed and is refused.
+  const above = movementRequest(BOOK, "m", {
     ...whole,
-    values: { ...whole.values, share: "0.5" },
+    values: { ...whole.values, share: "150" },
   });
-  expect(fraction.request).toBeNull();
-  expect(fraction.problems.share?.key).toBe("percent_as_fraction");
+  expect(above.request).toBeNull();
+  expect(above.problems.share?.key).toBe("percent_above_100");
 });
 
 test("an unstated cost is unknown, never zero", () => {
@@ -1233,14 +1233,14 @@ test("correcting a purchase starts from what the book kept of it, so only what w
     kind: "purchase",
     price: "1000",
     iva: "210",
-    share: "100",
+    share: "1",
   });
-  // A share comes back as the percentage the person writes.
+  // A share comes back as the fraction the editor holds.
   expect(draft.extras[0]).toMatchObject({
     key: "freight-1",
     kind: "freight",
     price: "100",
-    share: "50",
+    share: "0.5",
   });
   const sent = movementRequest(BOOK, "movement-new", draft);
   expect(sent.problems).toEqual({});
