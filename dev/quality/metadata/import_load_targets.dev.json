@@ -514,6 +514,7 @@
         "dev.locales.casilla_source_inventory",
         "dev.locales.casilla_text_comparison",
         "dev.locales.casilla_text_policy",
+        "dev.locales.chrome_projection",
         "dev.locales.cli",
         "dev.locales.desktop_assets_keys",
         "dev.locales.desktop_chrome",

@@ -3,7 +3,8 @@
 from cadrumo.core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
 from cadrumo.core.i18n.render import extract_placeholders
 
-from .desktop_chrome import desktop_chrome_strings
+from ._paths import LOCALES_DIR
+from .chrome_projection import project_catalogue_strings
 from .errors import LocaleError
 
 MANAGER_CHROME_KEYS = frozenset(
@@ -32,7 +33,7 @@ MANAGER_CHROME_KEYS = frozenset(
 
 def manager_chrome_strings() -> dict[str, dict[str, str]]:
     """Require every locale and refuse formatting placeholders absent in native UI."""
-    strings = desktop_chrome_strings(keys=MANAGER_CHROME_KEYS, locales=SUPPORTED_OUTPUT_LANGUAGES)
+    strings = project_catalogue_strings(LOCALES_DIR, keys=MANAGER_CHROME_KEYS, locales=SUPPORTED_OUTPUT_LANGUAGES)
     for values in strings.values():
         for key, value in values.items():
             if extract_placeholders(value):

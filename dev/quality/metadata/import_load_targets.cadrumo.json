@@ -2383,6 +2383,7 @@
         "cadrumo.domain.calculations.registry.verification_tolerance",
         "cadrumo.domain.calculations.registry.withholding296_bindings",
         "cadrumo.domain.calculations.registry.withholding_bindings",
+        "cadrumo.domain.calculations.registry.withholding_clave_breakdown",
         "cadrumo.domain.calculations.registry.withholding_observation_codes",
         "cadrumo.domain.calculations.row_casilla",
         "cadrumo.domain.calculations.row_coordinate",

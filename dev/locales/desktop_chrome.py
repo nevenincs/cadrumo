@@ -34,11 +34,10 @@ from typing import Final
 
 from cadrumo.core.atomic_write import atomic_write_text
 from cadrumo.core.external_constants import UTF_8_ENCODING
-from cadrumo.core.i18n.render import extract_placeholders
 from cadrumo_client.contracts.navigation import load_navigation_register
 
-from ._paths import LOCALES_DIR, RUNTIME_SRC_DIR, SRC_DIR
-from ._status import CatalogueLeafState, classify_catalogue_leaf
+from ._paths import LOCALES_DIR
+from .chrome_projection import project_catalogue_strings
 from .desktop_assets_keys import (
     ASSET_FAMILIES,
     ASSET_KEYS,
@@ -53,14 +52,9 @@ from .desktop_ledger_document_keys import DESKTOP_LEDGER_DOCUMENT_KEYS
 from .desktop_ledger_workflow_keys import DESKTOP_LEDGER_WORKFLOW_KEYS
 from .desktop_workspace_keys import WORKSPACE_FAMILIES, WORKSPACE_KEYS
 from .errors import LocaleError
-from .locale_tree import _flatten_raw_locale_leaves
-from .locale_yaml import locale_catalogue_source
-from .manager import LocaleManager
-from .service_catalogues import SERVICE_LOCALES_DIR
 
 #: The shell's locales, source locale first.
 DESKTOP_LOCALES: Final[tuple[str, ...]] = ("en", "es", "ca", "hu")
-RUNTIME_LOCALES_DIR: Final[Path] = RUNTIME_SRC_DIR / "_data" / "locales"
 
 
 _SPENDING_CATEGORIES: Final[tuple[str, ...]] = (
@@ -965,18 +959,6 @@ def refuse_unbuilt_shell_keys(source: Path) -> None:
         raise LocaleError("The desktop shell names keys the chrome declaration does not carry: " + ", ".join(missing))
 
 
-# The only placeholder form the shell substitutes: ``{name}``.
-_SHELL_PLACEHOLDER: Final[re.Pattern[str]] = re.compile(r"\{(\w+)\}")
-
-
-def _catalogue_leaves(locales_dir: Path, locale: str) -> dict[str, object]:
-    """Read one locale's catalogue leaves through the catalogue authority."""
-    source = locale_catalogue_source(locales_dir, locale)
-    if source is None:
-        raise LocaleError(f"No catalogue for desktop locale {locale!r} under {locales_dir}")
-    return _flatten_raw_locale_leaves(LocaleManager(SRC_DIR, locales_dir).load_locale(source))
-
-
 #: The navigation register's label keys, read through its validating loader.
 #: The shell reads them by key from its generated navigation projection, never
 #: by name in its source, so they are generated beside the declared keys rather
@@ -991,16 +973,6 @@ DESKTOP_NAVIGATION_LABEL_KEYS: Final[frozenset[str]] = frozenset(
 DESKTOP_NAVIGATION_KEYWORD_KEYS: Final[frozenset[str]] = frozenset(
     element.keywords for element in load_navigation_register().elements
 )
-
-
-def _shell_placeholders(key: str, locale: str, value: str) -> frozenset[str]:
-    """Return the ``{name}`` placeholders of ``value``, refusing any other form."""
-    shell = frozenset(str(match.group(1)) for match in _SHELL_PLACEHOLDER.finditer(value))
-    if shell != extract_placeholders(value) or "%{" in value:
-        raise LocaleError(
-            f"{locale}:{key} carries a placeholder the desktop shell cannot substitute; use plain {{name}}"
-        )
-    return shell
 
 
 _PERCENT_PLACEHOLDER: Final[re.Pattern[str]] = re.compile(r"%\{([A-Za-z_][A-Za-z0-9_]*)\}")
@@ -1018,29 +990,6 @@ def _in_shell_form(key: str, value: str) -> str:
     return _PERCENT_PLACEHOLDER.sub(r"{\1}", value)
 
 
-def _project_locale(locales_dir: Path, locale: str, keys: frozenset[str], refusals: list[str]) -> dict[str, str]:
-    leaves = _catalogue_leaves(locales_dir, locale)
-    if locales_dir == LOCALES_DIR:
-        for owner, owned_locales in (("runtime", RUNTIME_LOCALES_DIR), ("service", SERVICE_LOCALES_DIR)):
-            if not owned_locales.is_dir():
-                continue
-            owned_leaves = _catalogue_leaves(owned_locales, locale)
-            collisions = leaves.keys() & owned_leaves.keys()
-            if collisions:
-                raise LocaleError(f"Desktop and {owner} catalogue keys overlap: {sorted(collisions)}")
-            leaves.update(owned_leaves)
-    values: dict[str, str] = {}
-    for key in sorted(keys):
-        leaf = leaves.get(key)
-        value = leaf if isinstance(leaf, str) else None
-        state = classify_catalogue_leaf(key, value)
-        if state is not CatalogueLeafState.AUTHORED or value is None:
-            refusals.append(f"{locale}:{key} is {state.value}")
-            continue
-        values[key] = _in_shell_form(key, value)
-    return values
-
-
 def desktop_chrome_strings(
     locales_dir: Path = LOCALES_DIR,
     *,
@@ -1054,16 +1003,7 @@ def desktop_chrome_strings(
             locale, or its placeholders differ between locales or use a form
             the shell does not substitute.
     """
-    refusals: list[str] = []
-    strings = {locale: _project_locale(locales_dir, locale, keys, refusals) for locale in locales}
-    if refusals:
-        raise LocaleError("Desktop chrome strings are incomplete: " + "; ".join(refusals))
-    for key in sorted(keys):
-        placeholders = {locale: _shell_placeholders(key, locale, strings[locale][key]) for locale in locales}
-        if len(set(placeholders.values())) != 1:
-            detail = ", ".join(f"{locale} {sorted(names)}" for locale, names in placeholders.items())
-            raise LocaleError(f"{key} has different placeholders across locales: {detail}")
-    return strings
+    return project_catalogue_strings(locales_dir, keys=keys, locales=locales, shell_form=_in_shell_form)
 
 
 def render_desktop_chrome(strings: Mapping[str, Mapping[str, str]]) -> str:
