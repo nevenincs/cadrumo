@@ -5,11 +5,11 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { TypedField } from "@/components/editors/TypedField";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/components/ui/cn";
 import { commitKeyOf, type CommitKey } from "@/components/ui/dataGridModel";
 import { Icon } from "@/components/ui/icon";
-import { inputVariants } from "@/components/ui/input";
 import {
   Popover,
   PopoverAnchor,
@@ -18,12 +18,12 @@ import {
 import { Spinner } from "@/components/ui/spinner";
 import type {
   ModeloEditValueGrammarV1,
-  ModeloEditWritableScalarSurfaceEntryV1,
   PublicModeloFormField,
   SourceSurface,
 } from "../../../shell/modeloContract";
 import { factsGap } from "../../../shell/compose";
 import { useStrings, type Translate } from "../../../shell/strings";
+import { entryField } from "./entryField";
 import { ORIGIN_LOOK, TONE_TEXT } from "./originLook";
 import type { EntryOutcome, FormSession, StagedEdit } from "./session";
 import { stagedText } from "./stagedWords";
@@ -39,51 +39,6 @@ import { stagedText } from "./stagedWords";
 /** A request to open a box's editor, holding the character that opened it
  * when one did. */
 export type EditRequest = { seed?: string };
-
-/** A casilla's data type, as the registry declares it. */
-type CasillaDataType = ModeloEditWritableScalarSurfaceEntryV1["data_type"];
-/** The kinds of entry the editor's placeholder names. */
-type EntryKind =
-  | "boolean"
-  | "date"
-  | "decimal"
-  | "integer"
-  | "money"
-  | "ratio"
-  | "text"
-  | "year";
-
-/** How each data type is typed: the placeholder it shows and whether it
- * reads as a figure. Keyed by the generated type, so a type the registry
- * gains does not compile until it is placed here. */
-const TYPING: Record<CasillaDataType, { entry: EntryKind; figure: boolean }> = {
-  decimal: { entry: "decimal", figure: true },
-  money: { entry: "money", figure: true },
-  integer: { entry: "integer", figure: true },
-  ratio: { entry: "ratio", figure: true },
-  year: { entry: "year", figure: false },
-  boolean: { entry: "boolean", figure: false },
-  date: { entry: "date", figure: false },
-  text: { entry: "text", figure: false },
-  nif: { entry: "text", figure: false },
-  period_code: { entry: "text", figure: false },
-  country_code: { entry: "text", figure: false },
-  iban: { entry: "text", figure: false },
-  name: { entry: "text", figure: false },
-  nif_iva: { entry: "text", figure: false },
-  ccaa_code: { entry: "text", figure: false },
-  province_code: { entry: "text", figure: false },
-  postal_code: { entry: "text", figure: false },
-  municipality_code: { entry: "text", figure: false },
-  bic: { entry: "text", figure: false },
-};
-const typing = (field: PublicModeloFormField) =>
-  Object.hasOwn(TYPING, field.data_type)
-    ? TYPING[field.data_type as CasillaDataType]
-    : TYPING.text;
-
-const placeholder = (t: Translate, field: PublicModeloFormField) =>
-  t(`workspace.modelo.editor.placeholder.${typing(field).entry}`);
 
 /** The surfaces a value fed by a source can be corrected at. */
 const CORRECTABLE: ReadonlySet<SourceSurface> = new Set([
@@ -104,8 +59,12 @@ export function cellText(
   return field.value_text ?? "—";
 }
 
+const controlIn = (holder: HTMLElement | null) =>
+  holder?.querySelector<HTMLInputElement | HTMLSelectElement>("input, select");
+
 function Editor({
   field,
+  grammar,
   initial,
   seed,
   label,
@@ -113,6 +72,7 @@ function Editor({
   onClose,
 }: {
   field: PublicModeloFormField;
+  grammar: ModeloEditValueGrammarV1;
   initial: string;
   seed: string | undefined;
   label: string;
@@ -120,16 +80,21 @@ function Editor({
   onClose: (how: CommitKey | "cancel") => void;
 }) {
   const t = useStrings();
-  const input = useRef<HTMLInputElement>(null);
-  const [text, setText] = useState(seed ?? initial);
+  const spec = entryField(t, grammar);
+  const holder = useRef<HTMLSpanElement>(null);
+  // A list has no typed character to start from.
+  const [text, setText] = useState(
+    spec.kind === "choice" ? initial : (seed ?? initial),
+  );
   const [pending, setPending] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const settled = useRef(false);
   const describedBy = useId();
   useLayoutEffect(() => {
-    const element = input.current;
+    const element = controlIn(holder.current);
     if (!element) return;
     element.focus({ preventScroll: true });
+    if (!(element instanceof HTMLInputElement)) return;
     if (seed === undefined) element.select();
     else element.setSelectionRange(element.value.length, element.value.length);
   }, [seed]);
@@ -158,7 +123,7 @@ function Editor({
     const refusal = said(outcome);
     if (refusal) {
       setMessage(refusal);
-      input.current?.focus({ preventScroll: true });
+      controlIn(holder.current)?.focus({ preventScroll: true });
       return;
     }
     settled.current = true;
@@ -174,21 +139,11 @@ function Editor({
             label={t("workspace.modelo.editor.reading")}
           />
         )}
-        <input
-          ref={input}
+        <span
+          ref={holder}
           data-slot="modelo-value-editor"
-          aria-label={label}
-          aria-describedby={message ? describedBy : undefined}
-          aria-invalid={message ? true : undefined}
           aria-busy={pending || undefined}
-          readOnly={pending}
-          value={text}
-          placeholder={placeholder(t, field)}
-          inputMode={typing(field).figure ? "decimal" : "text"}
-          onChange={(event) => {
-            setText(event.target.value);
-            setMessage(null);
-          }}
+          className="block w-40"
           onKeyDown={(event) => {
             event.stopPropagation();
             const how = commitKeyOf(event);
@@ -203,13 +158,22 @@ function Editor({
             if (settled.current || pending || message) return;
             void keep("pointer");
           }}
-          className={cn(
-            inputVariants({ controlSize: "sm" }),
-            "w-40",
-            typing(field).figure && "text-right tabular-nums",
-            message && "border-destructive",
-          )}
-        />
+        >
+          <TypedField
+            field={spec}
+            mode="lexeme"
+            controlSize="sm"
+            aria-label={label}
+            invalid={message !== null}
+            describedBy={message ? describedBy : undefined}
+            value={text}
+            onChange={(next) => {
+              if (pending) return;
+              setText(next);
+              setMessage(null);
+            }}
+          />
+        </span>
       </span>
       {message && (
         <span
@@ -313,6 +277,7 @@ export type ValueCellProps = {
 export function ValueCell({
   field,
   staged,
+  grammar,
   editable,
   editing,
   onEditingChange,
@@ -327,10 +292,11 @@ export function ValueCell({
   const label = t("workspace.modelo.editor.new_value_for_box", {
     box: field.box ?? "",
   });
-  if (editing && editable && (!fromSource || replacing))
+  if (editing && editable && grammar && (!fromSource || replacing))
     return (
       <Editor
         field={field}
+        grammar={grammar}
         initial={staged?.entry ?? ""}
         seed={editing.seed}
         label={label}

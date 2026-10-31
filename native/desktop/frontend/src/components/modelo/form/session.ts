@@ -19,6 +19,7 @@ import type {
   PublicModeloFormField,
   PublicModeloWorkForm,
 } from "../../../shell/modeloContract";
+import { takesEntry } from "./entryField";
 
 // The form's working state: the edits staged on it and the box chosen. It
 // lives in memory only, for one declaration, and is handed to the review and
@@ -417,7 +418,7 @@ export type FormSession = {
   /** What a box's edit address takes, or null where it takes nothing. */
   grammarOf(field: PublicModeloFormField): ModeloEditValueGrammarV1 | null;
   /** Whether a box can be typed into here: the form admits edits, the
-   * application says the box takes a typed value, and a channel carries it. */
+   * application says the box takes a typed value, and its grammar takes one. */
   editable(field: PublicModeloFormField): boolean;
   selectedKey: string | null;
   selected: PublicModeloFormField | null;
@@ -562,7 +563,7 @@ export function useFormSession({
         admitted &&
         field.takes_typed_value &&
         grammar !== null &&
-        grammar.channel !== "unavailable"
+        takesEntry(grammar)
       );
     },
     [admitted, grammarOf],

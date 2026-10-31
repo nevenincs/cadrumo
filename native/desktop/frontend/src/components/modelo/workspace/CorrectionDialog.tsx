@@ -1,5 +1,6 @@
 import { useId, useState, type ReactNode } from "react";
 import { TextEditor } from "@/components/editors/TextEditor";
+import { TypedField } from "@/components/editors/TypedField";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -9,10 +10,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldLabel,
+} from "@/components/ui/field";
 import { Alert } from "@/components/ui/alert";
 import { Icon } from "@/components/ui/icon";
-import { Input } from "@/components/ui/input";
 import {
   SegmentedControl,
   SegmentedControlItem,
@@ -26,6 +31,7 @@ import type {
 } from "../../../shell/modeloContract";
 import { useStrings } from "../../../shell/strings";
 import { BoxNumber } from "../form/BoxNumber";
+import { entryField, takesEntry } from "../form/entryField";
 
 /** The person's answer to a correction: the kind, the motive where it
  * applies, the reason, and each corrected box's text as typed, which the
@@ -244,21 +250,31 @@ export function CorrectionDialog({
                       <span className="text-sm text-muted-foreground tabular-nums">
                         {row.filed_value_text}
                       </span>
-                      <Input
-                        controlSize="sm"
-                        aria-invalid={refused ? true : undefined}
-                        aria-label={t(
-                          "workspace.modelo.editor.new_value_for_box",
-                          { box: row.box ?? row.label },
-                        )}
-                        value={values[row.casilla_id] ?? ""}
-                        onChange={(e) => type(row.casilla_id, e.target.value)}
-                      />
-                      {refused && (
-                        <span className="col-span-4 text-sm text-destructive">
-                          {refused}
-                        </span>
+                      {takesEntry(row.grammar) ? (
+                        <TypedField
+                          field={entryField(t, row.grammar)}
+                          mode="lexeme"
+                          controlSize="sm"
+                          invalid={refused ? true : undefined}
+                          describedBy={
+                            refused ? `${ids}-${row.casilla_id}` : undefined
+                          }
+                          aria-label={t(
+                            "workspace.modelo.editor.new_value_for_box",
+                            { box: row.box ?? row.label },
+                          )}
+                          value={values[row.casilla_id] ?? ""}
+                          onChange={(text) => type(row.casilla_id, text)}
+                        />
+                      ) : (
+                        <span />
                       )}
+                      <FieldError
+                        id={`${ids}-${row.casilla_id}`}
+                        className="col-span-4"
+                      >
+                        {refused}
+                      </FieldError>
                     </li>
                   );
                 })}
