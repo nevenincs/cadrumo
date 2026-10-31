@@ -49,9 +49,7 @@ from cadrumo.application.operations.frontend_requests import (
     OperationResultProjectionSuccessV1,
 )
 from cadrumo.application.operations.models import OperationRequest
-from cadrumo.application.operations.persistence.journal import OperationPersistedSnapshot
 from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
-from cadrumo.application.operations.supervisor import OperationSupervisor
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.core.operations import (
     OperationEffect,
@@ -65,7 +63,7 @@ from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
-from .supervised_operation_rig import build_supervised_operation
+from .supervised_operation_rig import build_supervised_operation, run_to_terminal
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -217,11 +215,6 @@ class _ResourceScope:
 
     async def close(self) -> None:
         self.closed = True
-
-
-async def _run_to_terminal(supervisor: OperationSupervisor, operation_id: str) -> OperationPersistedSnapshot:
-    await supervisor.start(operation_id)
-    return await supervisor.settled(operation_id)
 
 
 def test_supervisor_binds_single_capture_to_exact_profile_and_projects_guarded_accounting(
@@ -412,7 +405,7 @@ def test_supervisor_binds_single_capture_to_exact_profile_and_projects_guarded_a
 
         async def run():
             operation_id = await supervisor.submit(request, operation_id="3" * 64)
-            terminal = await _run_to_terminal(supervisor, operation_id)
+            terminal = await run_to_terminal(supervisor, operation_id)
             contract = registry.lookup_public_contract(definition.definition_id)
             assert contract.result_schema is not None
             projected = await result_service.resolve(

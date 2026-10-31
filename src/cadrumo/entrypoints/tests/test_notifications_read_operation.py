@@ -68,7 +68,7 @@ from cadrumo.domain.calculations.registry.authority import bundled_indexed_autho
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
-from .supervised_operation_rig import build_supervised_operation
+from .supervised_operation_rig import build_supervised_operation, run_to_terminal
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -163,11 +163,6 @@ def _ports_factory(repository: _SnapshotRepository):
         )
 
     return build
-
-
-async def _run_to_terminal(supervisor: OperationSupervisor, operation_id: str) -> OperationPersistedSnapshot:
-    await supervisor.start(operation_id)
-    return await supervisor.settled(operation_id)
 
 
 def test_registered_notification_reads_are_exact_profile_and_project_closed_results(tmp_path: Path) -> None:
@@ -283,7 +278,7 @@ def test_registered_notification_reads_are_exact_profile_and_project_closed_resu
             request: OperationRequest[BaseModel], operation_id: str, result_type: type[BaseModel]
         ) -> tuple[OperationPersistedSnapshot, OperationResultProjectionSuccessV1[BaseModel]]:
             submitted_id = await supervisor.submit(request, operation_id=operation_id)
-            terminal = await _run_to_terminal(supervisor, submitted_id)
+            terminal = await run_to_terminal(supervisor, submitted_id)
             contract = registry.lookup_public_contract(request.definition_id)
             assert contract.result_schema is not None
             projected = await result_service.resolve(
@@ -300,7 +295,7 @@ def test_registered_notification_reads_are_exact_profile_and_project_closed_resu
 
         async def run_terminal(request: OperationRequest[BaseModel], operation_id: str) -> OperationPersistedSnapshot:
             submitted_id = await supervisor.submit(request, operation_id=operation_id)
-            return await _run_to_terminal(supervisor, submitted_id)
+            return await run_to_terminal(supervisor, submitted_id)
 
         list_terminal, list_projected = asyncio.run(run(requests[0][0], "3" * 64, requests[0][1]))
         show_terminal, show_projected = asyncio.run(run(requests[1][0], "4" * 64, requests[1][1]))
@@ -433,7 +428,7 @@ def test_notification_read_operations_reject_foreign_bucket_rows(tmp_path: Path)
             for index, request in enumerate(requests, start=1):
                 operation_id = str(index) * 64
                 submitted_id = await supervisor.submit(request, operation_id=operation_id)
-                terminals.append(await _run_to_terminal(supervisor, submitted_id))
+                terminals.append(await run_to_terminal(supervisor, submitted_id))
             return tuple(terminals)
 
         terminals = asyncio.run(run_all())

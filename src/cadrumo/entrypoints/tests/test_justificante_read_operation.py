@@ -44,7 +44,6 @@ from cadrumo.application.operations.models import OperationIdentity, OperationRe
 from cadrumo.application.operations.owner import OperationExecutorContext
 from cadrumo.application.operations.persistence.journal import OperationPersistedSnapshot
 from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
-from cadrumo.application.operations.supervisor import OperationSupervisor
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.core.errors.hierarchy import NoActiveProfileError
 from cadrumo.core.operations import (
@@ -58,7 +57,7 @@ from cadrumo.domain.calculations.registry.authority import bundled_indexed_autho
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
-from .supervised_operation_rig import build_supervised_operation
+from .supervised_operation_rig import build_supervised_operation, run_to_terminal
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -156,11 +155,6 @@ def _service_factory(bucket_id: str, snapshots: tuple[JustificanteCaptureSnapsho
         return service
 
     return build
-
-
-async def _run_to_terminal(supervisor: OperationSupervisor, operation_id: str) -> OperationPersistedSnapshot:
-    await supervisor.start(operation_id)
-    return await supervisor.settled(operation_id)
 
 
 class _ExecutorEvents:
@@ -364,7 +358,7 @@ def test_registered_justificante_reads_project_only_existing_cli_fields(tmp_path
             request: OperationRequest[BaseModel], operation_id: str, result_type: type[BaseModel]
         ) -> tuple[OperationPersistedSnapshot, OperationResultProjectionSuccessV1[BaseModel]]:
             submitted_id = await supervisor.submit(request, operation_id=operation_id)
-            terminal = await _run_to_terminal(supervisor, submitted_id)
+            terminal = await run_to_terminal(supervisor, submitted_id)
             contract = registry.lookup_public_contract(request.definition_id)
             assert contract.result_schema is not None
             projected = await result_service.resolve(

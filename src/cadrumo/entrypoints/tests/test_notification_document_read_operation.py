@@ -60,7 +60,7 @@ from cadrumo.domain.notifications.sancion import SancionLiquidacion
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, DisclosureCategory
 
-from .supervised_operation_rig import build_supervised_operation
+from .supervised_operation_rig import build_supervised_operation, run_to_terminal
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -176,11 +176,6 @@ def _registry(repository: _DocumentRepository) -> OperationRegistry:
         definitions=tuple(sorted((view, history), key=lambda item: item.definition_id)),
         public_registrations=tuple(sorted(registrations, key=lambda item: item.contract.definition_id)),
     )
-
-
-async def _run_to_terminal(supervisor: OperationSupervisor, operation_id: str) -> OperationPersistedSnapshot:
-    await supervisor.start(operation_id)
-    return await supervisor.settled(operation_id)
 
 
 def _access_context(
@@ -311,7 +306,7 @@ def test_registered_document_reads_project_safe_local_results_with_none_receipts
             request: OperationRequest[BaseModel], operation_id: str, result_type: type[BaseModel]
         ) -> tuple[OperationPersistedSnapshot, BaseModel]:
             submitted_id = await supervisor.submit(request, operation_id=operation_id)
-            terminal = await _run_to_terminal(supervisor, submitted_id)
+            terminal = await run_to_terminal(supervisor, submitted_id)
             contract = registry.lookup_public_contract(request.definition_id)
             assert contract.result_schema is not None
             projected = await result_service.resolve(
@@ -412,7 +407,7 @@ def test_document_read_operations_reject_foreign_bucket_records_before_projectio
             terminals: list[OperationPersistedSnapshot] = []
             for index, request in enumerate(requests, start=1):
                 submitted_id = await supervisor.submit(request, operation_id=str(index + 6) * 64)
-                terminals.append(await _run_to_terminal(supervisor, submitted_id))
+                terminals.append(await run_to_terminal(supervisor, submitted_id))
             return tuple(terminals)
 
         terminals = asyncio.run(run_all())

@@ -57,6 +57,7 @@ from ...core.operations import (
 )
 from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from .supervised_operation_rig import run_to_terminal
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -123,11 +124,6 @@ class _ExecutionAuthority:
             yield
         finally:
             self.events.append("guard-exit")
-
-
-async def _run_to_terminal(supervisor: OperationSupervisor, operation_id: str) -> OperationPersistedSnapshot:
-    await supervisor.start(operation_id)
-    return await supervisor.settled(operation_id)
 
 
 def _declaration(modelo: str = "303") -> ExpedientesDeclaration:
@@ -265,7 +261,7 @@ def test_single_capture_is_profile_bound_guarded_deduplicated_and_supervised(
 
         async def run(operation_id: str) -> tuple[OperationPersistedSnapshot, BaseModel]:
             submitted_id = await supervisor.submit(request, operation_id=operation_id)
-            terminal = await _run_to_terminal(supervisor, submitted_id)
+            terminal = await run_to_terminal(supervisor, submitted_id)
             contract = registry.lookup_public_contract(EXPEDIENTES_SINGLE_CAPTURE_DEFINITION_ID)
             assert contract.result_schema is not None
             projected = await result_service.resolve(

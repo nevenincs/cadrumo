@@ -117,6 +117,7 @@ from ...core.operations import (
 from ...core.period import Period
 from ...core.register_scoping_signal import RegisterScopingSignal
 from ...domain.deadlines.models import TaxpayerProfile
+from .supervised_operation_rig import run_to_terminal
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
@@ -136,12 +137,6 @@ class _TestFiledHistoryComposition:
     certificate_secret_backend_factory: CertificateSecretBackendFactory
     browser_session_factory: BrowserSessionFactoryPort
     operator_scope_ports: OperatorScopePorts
-
-
-async def _run_to_terminal(supervisor: OperationSupervisor, operation_id: str) -> OperationPersistedSnapshot:
-    """Admit the operation and wait for the supervised task that settles it."""
-    await supervisor.start(operation_id)
-    return await supervisor.settled(operation_id)
 
 
 def _test_filed_history_composition(
@@ -481,7 +476,7 @@ def test_supervisor_refuses_a_foreign_payload_profile_before_capture(tmp_path: P
 
         async def run() -> OperationPersistedSnapshot:
             operation_id = await supervisor.submit(request, operation_id="3" * 64)
-            return await _run_to_terminal(supervisor, operation_id)
+            return await run_to_terminal(supervisor, operation_id)
 
         terminal = asyncio.run(run())
         assert terminal.terminal_condition is OperationTerminalCondition.FAILED
@@ -535,7 +530,7 @@ def test_supervisor_records_ordered_safe_progress_and_truthful_zero_effect(tmp_p
 
         async def run():
             operation_id = await supervisor.submit(request, operation_id="3" * 64)
-            start_task = asyncio.create_task(_run_to_terminal(supervisor, operation_id))
+            start_task = asyncio.create_task(run_to_terminal(supervisor, operation_id))
             # Admission and the executor's first phases do real journal I/O, so
             # the discovery barrier is awaited on time rather than on a count of
             # scheduler turns. A task that ends first surfaces its own failure.
@@ -658,7 +653,7 @@ def test_supervisor_records_a_dry_run_with_no_effect(tmp_path: Path, names_root:
 
         async def run():
             operation_id = await supervisor.submit(request, operation_id="4" * 64)
-            snapshot = await _run_to_terminal(supervisor, operation_id)
+            snapshot = await run_to_terminal(supervisor, operation_id)
             events = (await supervisor.replay(operation_id, 0, limit=100)).events
             receipt = snapshot.terminal_receipt
             assert receipt is not None
@@ -744,7 +739,7 @@ def test_supervisor_receipt_joins_the_exact_encrypted_child_after_settlement(tmp
 
         async def run():
             operation_id = await supervisor.submit(request, operation_id="7" * 64)
-            terminal = await _run_to_terminal(supervisor, operation_id)
+            terminal = await run_to_terminal(supervisor, operation_id)
             reloaded = await journal.load(operation_id)
             replay = await journal.read_after(operation_id, 0, limit=100)
             assert terminal.terminal_receipt is not None
@@ -867,7 +862,7 @@ def test_frontend_projects_the_public_result_without_the_private_type(tmp_path: 
 
         async def run():
             operation_id = await supervisor.submit(request, operation_id="a" * 64)
-            terminal = await _run_to_terminal(supervisor, operation_id)
+            terminal = await run_to_terminal(supervisor, operation_id)
             contract = registry.lookup_public_contract(definition.definition_id)
             assert contract.result_schema is not None
             resolved = await result_service.resolve(
@@ -1152,7 +1147,7 @@ def test_supervisor_retains_filed_provider_cleanup_before_terminal_settlement(
 
         async def run() -> None:
             operation_id = await supervisor.submit(request, operation_id="5" * 64)
-            settlement = asyncio.create_task(_run_to_terminal(supervisor, operation_id))
+            settlement = asyncio.create_task(run_to_terminal(supervisor, operation_id))
             entered = asyncio.create_task(owner.retry_entered.wait())
             try:
                 await asyncio.wait({entered, settlement}, timeout=10, return_when=asyncio.FIRST_COMPLETED)

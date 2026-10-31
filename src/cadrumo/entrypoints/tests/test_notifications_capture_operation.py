@@ -60,6 +60,7 @@ from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...tests.aeat_literal_fixtures import (
     SEDE_NOTIFICATIONS_URL_FIXTURE,
 )
+from .supervised_operation_rig import run_to_terminal
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -211,11 +212,6 @@ def _snapshot() -> NotificationsSnapshot:
         captured_at=_NOW,
         source_url=SEDE_NOTIFICATIONS_URL_FIXTURE,
     )
-
-
-async def _run_to_terminal(supervisor: OperationSupervisor, operation_id: str) -> OperationPersistedSnapshot:
-    await supervisor.start(operation_id)
-    return await supervisor.settled(operation_id)
 
 
 def test_capture_executor_fetches_before_fresh_guard_and_projects_receipt(
@@ -439,7 +435,7 @@ def test_supervisor_settles_capture_with_fresh_commit_and_dedup_receipts(
 
         async def run(operation_id: str) -> tuple[OperationPersistedSnapshot, BaseModel]:
             submitted_id = await supervisor.submit(request, operation_id=operation_id)
-            terminal = await _run_to_terminal(supervisor, submitted_id)
+            terminal = await run_to_terminal(supervisor, submitted_id)
             contract = registry.lookup_public_contract(NOTIFICATIONS_CAPTURE_DEFINITION_ID)
             assert contract.result_schema is not None
             projected = await result_service.resolve(
@@ -528,7 +524,7 @@ def test_an_ended_aeat_session_during_the_notifications_query_settles_as_its_own
 
         async def run() -> OperationPersistedSnapshot:
             submitted_id = await supervisor.submit(request, operation_id="5" * 64)
-            return await _run_to_terminal(supervisor, submitted_id)
+            return await run_to_terminal(supervisor, submitted_id)
 
         terminal = asyncio.run(run())
 

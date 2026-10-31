@@ -54,7 +54,6 @@ from ...application.operations.frontend_requests import (
     OperationResultProjectionSuccessV1,
 )
 from ...application.operations.models import OperationRequest
-from ...application.operations.persistence.journal import OperationPersistedSnapshot
 from ...application.operations.projection_services import OperationResultProjectionService
 from ...application.operations.registry import OperationFrontendProjection, OperationRegistry
 from ...application.operations.supervisor import OperationSupervisor
@@ -71,6 +70,7 @@ from ...domain.justificante.schema import Justificante
 from ...tests.aeat_literal_fixtures import (
     CSV_CONSULTATION_URL_FIXTURE,
 )
+from .supervised_operation_rig import run_to_terminal
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -326,11 +326,6 @@ class _FilingReconciliation:
         )
 
 
-async def _run_to_terminal(supervisor: OperationSupervisor, operation_id: str) -> OperationPersistedSnapshot:
-    await supervisor.start(operation_id)
-    return await supervisor.settled(operation_id)
-
-
 def _parsed_receipt() -> Justificante:
     return Justificante(
         csv=_CSV,
@@ -455,7 +450,7 @@ def test_registered_capture_supervises_guarded_writes_and_projects_only_safe_rec
         )
         operation_id = "3" * 64 if refuse_guard is None else "4" * 64
         submitted_id = asyncio.run(supervisor.submit(request, operation_id=operation_id))
-        terminal = asyncio.run(_run_to_terminal(supervisor, submitted_id))
+        terminal = asyncio.run(run_to_terminal(supervisor, submitted_id))
 
         assert terminal.lifecycle is OperationLifecycle.TERMINAL
         assert composition_calls == [(profile.bucket_id, authority)]

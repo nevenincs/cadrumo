@@ -10,6 +10,7 @@ from cadrumo.adapters.persistence.operations.journal import OperationJournalRepo
 from cadrumo.adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
 from cadrumo.adapters.persistence.operations.secure_references import operation_secure_reference_repository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from cadrumo.application.operations.persistence.journal import OperationPersistedSnapshot
 from cadrumo.application.operations.projection_services import OperationResultProjectionService
 from cadrumo.application.operations.registry import OperationRegistry
 from cadrumo.application.operations.supervisor import OperationSupervisor
@@ -53,3 +54,9 @@ def build_supervised_operation(
     )
     result_service = OperationResultProjectionService(reader=journal, registry=registry, operands=operands)
     return SupervisedOperation(journal, leases, operands, supervisor, result_service)
+
+
+async def run_to_terminal(supervisor: OperationSupervisor, operation_id: str) -> OperationPersistedSnapshot:
+    """Admit the operation and wait for the supervised task that settles it."""
+    await supervisor.start(operation_id)
+    return await supervisor.settled(operation_id)

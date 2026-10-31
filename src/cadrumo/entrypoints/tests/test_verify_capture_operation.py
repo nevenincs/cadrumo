@@ -54,6 +54,7 @@ from ...core.operations import (
     profile_operation_subject,
 )
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from .supervised_operation_rig import run_to_terminal
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -140,11 +141,6 @@ class _VerifyPersistence:
         assert observation.bucket_id == self.bucket_id
         self.events.append("observation-save")
         self.rows[str(observation.observation_id)] = observation
-
-
-async def _run_to_terminal(supervisor: OperationSupervisor, operation_id: str) -> OperationPersistedSnapshot:
-    await supervisor.start(operation_id)
-    return await supervisor.settled(operation_id)
 
 
 def _supervisor(
@@ -266,7 +262,7 @@ def test_real_supervisor_captures_exact_profile_under_commit_guard_and_reports_e
 
         async def run(operation_id: str) -> tuple[OperationPersistedSnapshot, BaseModel]:
             submitted_id = await supervisor.submit(request, operation_id=operation_id)
-            terminal = await _run_to_terminal(supervisor, submitted_id)
+            terminal = await run_to_terminal(supervisor, submitted_id)
             contract = registry.lookup_public_contract(VERIFY_TGVI_CAPTURE_DEFINITION_ID)
             assert contract.result_schema is not None
             result = await result_service.resolve(
@@ -287,7 +283,7 @@ def test_real_supervisor_captures_exact_profile_under_commit_guard_and_reports_e
 
         monkeypatch.setattr(capture_module, "require_active_bucket_id", lambda: str(_FOREIGN_PROFILE_ID))
         wrong_scope_id = asyncio.run(supervisor.submit(request, operation_id="5" * 64))
-        wrong_scope_terminal = asyncio.run(_run_to_terminal(supervisor, wrong_scope_id))
+        wrong_scope_terminal = asyncio.run(run_to_terminal(supervisor, wrong_scope_id))
 
     assert first_terminal.lifecycle is second_terminal.lifecycle is OperationLifecycle.TERMINAL
     assert (
@@ -390,7 +386,7 @@ def _settle_tgvi(
         )
 
         async def run() -> OperationPersistedSnapshot:
-            return await _run_to_terminal(supervisor, await supervisor.submit(request, operation_id="7" * 64))
+            return await run_to_terminal(supervisor, await supervisor.submit(request, operation_id="7" * 64))
 
         terminal = asyncio.run(run())
     return terminal, [f"acquired:{nif}" for nif in acquired_nifs]
@@ -499,7 +495,7 @@ def test_nif_iva_check_refuses_before_any_browser_or_provider_work(
         )
 
         async def run() -> OperationPersistedSnapshot:
-            return await _run_to_terminal(supervisor, await supervisor.submit(request, operation_id="6" * 64))
+            return await run_to_terminal(supervisor, await supervisor.submit(request, operation_id="6" * 64))
 
         terminal = asyncio.run(run())
 
