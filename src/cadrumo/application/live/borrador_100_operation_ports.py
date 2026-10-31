@@ -11,6 +11,7 @@ from ...core.casilla_id import CasillaId
 from ...core.identity.digest import ContentDigest
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.schema_extraction import ExtractionProfileDefinition
+from ...domain.calculations.registry.schema_references import TemporalSupportEnvelope
 from .borrador_100 import Borrador100SnapshotRepository
 
 type Borrador100ArtefactKind = Literal["BORRADOR", "PREDECLARACION", "DECLARACION"]
@@ -45,6 +46,7 @@ class Borrador100ImportParserPort(Protocol):
         pdf_bytes: bytes,
         *,
         filing_year: int,
+        supported_filing_years: TemporalSupportEnvelope,
         extraction_profile: ExtractionProfileDefinition,
     ) -> Borrador100ImportObservation:
         """Return the canonical parser's observed values and profile receipt."""

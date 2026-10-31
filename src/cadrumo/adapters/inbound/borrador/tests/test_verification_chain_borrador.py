@@ -245,11 +245,14 @@ def test_verification_chain_m100_borrador_engine_recomputes_cuota_integra(year: 
     extraction_profile = _borrador_extraction_profile(snapshot)
 
     # Parse the borrador PDF.
+    support = published_supported_filing_years()
+    assert support is not None
     try:
         borrador = parse_borrador(
             pdf_path,
             artefact_kind_override=ArtefactKind.BORRADOR,
-            año_override=year,
+            filing_year=year,
+            supported_filing_years=support,
             extraction_profile=extraction_profile,
             parse_mode=BorradorParseMode.REGISTRY_PROFILE,
         )

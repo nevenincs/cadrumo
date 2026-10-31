@@ -18,6 +18,7 @@ from ..application.user_profile.access_errors import ProfileAccessRefusedError
 from ..core.bucket_pointer import require_active_bucket_id
 from ..domain.calculations.registry.authority import PinnedAuthorityOperation
 from ..domain.calculations.registry.schema_extraction import ExtractionProfileDefinition
+from ..domain.calculations.registry.schema_references import TemporalSupportEnvelope
 from .adapter_composition_ports import build_borrador_100_snapshot_repository
 
 
@@ -29,11 +30,13 @@ class _CanonicalBorradorParser:
         pdf_bytes: bytes,
         *,
         filing_year: int,
+        supported_filing_years: TemporalSupportEnvelope,
         extraction_profile: ExtractionProfileDefinition,
     ) -> Borrador100ImportObservation:
         observation = parse_borrador(
             pdf_bytes,
-            año_override=filing_year,
+            filing_year=filing_year,
+            supported_filing_years=supported_filing_years,
             extraction_profile=extraction_profile,
             parse_mode=BorradorParseMode.REGISTRY_PROFILE,
         )

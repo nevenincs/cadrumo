@@ -19,6 +19,7 @@ from cadrumo_client.contracts.access_vocabulary import DisclosurePermission
 from ....core.operations import OperationEffect
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.schema_extraction import ExtractionProfileDefinition
+from ....domain.calculations.registry.schema_references import TemporalSupportEnvelope
 from ...operations.access_resolution import ResolvedOperationAccess
 from ...operations.owner import OperationExecutorContext
 from ...operations.registry import OperationRegistry
@@ -96,7 +97,12 @@ class Parser:
         self.receipt: Borrador100ImportObservation | None = None
 
     def parse(
-        self, pdf_bytes: bytes, *, filing_year: int, extraction_profile: ExtractionProfileDefinition
+        self,
+        pdf_bytes: bytes,
+        *,
+        filing_year: int,
+        supported_filing_years: TemporalSupportEnvelope,
+        extraction_profile: ExtractionProfileDefinition,
     ) -> Borrador100ImportObservation:
         assert not self.fence.active, "PDF parsing must finish before COMMIT authority"
         self.calls += 1

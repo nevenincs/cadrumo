@@ -1,12 +1,9 @@
 """Modelo 100 (IRPF / Renta) observed-value extractor implementation.
 
 The extractor reads printed casilla/value rows from a Renta artefact using the
-year-stable ``NNNN label amount`` grammar used by the supported 2021-2025
-extractor registrations and exercised by the checked 2021-2023 fixture PDFs
-plus the generated 2025 parser tests. The class name records the original 2025
-implementation point, but :mod:`adapters.inbound.borrador._extractors`
-deliberately maps every supported year to this implementation while the observed
-row grammar remains stable.
+``NNNN label amount`` grammar, which does not vary by year in the fixture PDFs and
+generated parser tests that exercise it. One implementation therefore serves every
+year; the support envelope, not this adapter, decides which years are admitted.
 
 This is a read-only inbound adapter. It does not define Modelo 100
 completeness, resolve a
@@ -25,7 +22,6 @@ from __future__ import annotations
 
 import re
 from decimal import Decimal
-from typing import ClassVar
 
 from .....core.aeat_csv import AEAT_CSV_PATTERN, normalise_aeat_csv
 from .....core.casilla_id import CasillaId, validated_casilla_id
@@ -52,20 +48,13 @@ _CSV_RE = re.compile(
 )
 
 
-class Modelo100ObservedV2025Extractor:
+class Modelo100ObservedExtractor:
     """Concrete Modelo 100 observed-value extractor implementation.
 
     Receives the printed page text the parser has read, locates printed
     casilla rows, and returns a strict
     :class:`~adapters.inbound.borrador.schema.InboundBorradorObservation`.
-
-    Attributes:
-        año: The original implementation year. The extractor registry may map
-            additional years to this class while the observed row grammar stays
-            compatible.
     """
-
-    año: ClassVar[int] = 2025
 
     def extract_pages(
         self,
@@ -215,4 +204,4 @@ def _require_match(pattern: re.Pattern[str], text: str, field: str) -> str:
     return captured.strip()
 
 
-__all__ = ["Modelo100ObservedV2025Extractor"]
+__all__ = ["Modelo100ObservedExtractor"]

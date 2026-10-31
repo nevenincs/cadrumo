@@ -2,10 +2,10 @@
 
 Reads the PDF's page text once and composes the artefact-kind detector
 (:func:`~adapters.inbound.borrador._detect.detect_artefact_kind_from_pages`) with the
-per-año extractor registry (:mod:`adapters.inbound.borrador._extractors`)
-into the single function callers should depend on. The parser does not infer
-the tax year from the PDF today; callers that need a non-default year must pass
-``año_override`` explicitly.
+observed-value extractor into the single function callers should depend on. The parser
+does not infer the tax year from the PDF: every caller names the filing year, and the
+pinned support envelope decides whether it is inside what the product claims. The row
+grammar does not vary by year, so the year selects no implementation.
 
 Unlike the declaración parser, this adapter does not resolve registry snapshots.
 The default parse mode returns observed PDF rows. Registry-profile validation is
@@ -20,10 +20,11 @@ from pathlib import Path
 
 from ....core.hashing import sha256_hex
 from ....core.logging import get_logger
+from ....domain.calculations.registry.schema_references import TemporalSupportEnvelope
 from ..pdf.page_text_extraction import extract_pages_text_from_bytes
 from ..pdf.source_provenance import sha256_file
 from ._detect import detect_artefact_kind_from_pages
-from ._extractors.selection import get_extractor
+from ._extractors.modelo_100_summary import Modelo100ObservedExtractor
 from ._parsers.pdfplumber_backend import extract_pages_text
 from .errors import BorradorParseError
 from .schema import (
@@ -39,8 +40,9 @@ _logger = get_logger(__name__)
 def parse_borrador(
     pdf_path: Path | bytes,
     *,
+    filing_year: int,
+    supported_filing_years: TemporalSupportEnvelope,
     artefact_kind_override: ArtefactKind | None = None,
-    año_override: int | None = None,
     extraction_profile: BorradorExtractionProfile | None = None,
     parse_mode: BorradorParseMode = BorradorParseMode.OBSERVED,
 ) -> InboundBorradorObservation:
@@ -48,10 +50,11 @@ def parse_borrador(
 
     Args:
         pdf_path: Path to the borrador / predeclaración / declaración PDF, or its observed bytes.
+        filing_year: The filing year the caller reads this artefact for.
+        supported_filing_years: The pinned authority's support envelope; a year outside
+            its hard gates is refused before any PDF work.
         artefact_kind_override: Skip auto-detection and force the
             :class:`~adapters.inbound.borrador.schema.ArtefactKind`.
-        año_override: Select the year-keyed extractor explicitly. When omitted,
-            the parser uses the current default extractor year (``2025``).
         extraction_profile: Optional caller-supplied registry extraction-profile
             projection. When provided, parsing filters to the profile's target
             casillas and fails when coverage is below the profile minimum.
@@ -63,17 +66,20 @@ def parse_borrador(
         with observed casilla rows extracted.
 
     Raises:
-        BorradorParseError: When the PDF has no recognisable VISTA PREVIA / BORRADOR /
+        BorradorParseError: When ``filing_year`` is outside the support envelope,
+            when the PDF has no recognisable VISTA PREVIA / BORRADOR /
             CSV marker and ``artefact_kind_override`` is not supplied, or for other
             parse errors (PDF not found, empty text, missing header fields,
             missing registry profile in ``REGISTRY_PROFILE`` mode, or coverage
             below the supplied profile minimum).
     """
+    if not supported_filing_years.admits_coordinate(filing_year):
+        raise BorradorParseError(f"filing year {filing_year} is outside the supported filing years")
     if isinstance(pdf_path, bytes):
         return _parse_borrador_bytes(
             pdf_path,
+            filing_year=filing_year,
             artefact_kind_override=artefact_kind_override,
-            año_override=año_override,
             extraction_profile=extraction_profile,
             parse_mode=parse_mode,
         )
@@ -87,13 +93,11 @@ def parse_borrador(
         artefact_kind = detect_artefact_kind_from_pages(pages)
     else:
         artefact_kind = artefact_kind_override
-    año = año_override or 2025
-    _logger.debug("parse_borrador: source=<input-pdf> kind=%s año=%d", artefact_kind, año)
+    _logger.debug("parse_borrador: source=<input-pdf> kind=%s año=%d", artefact_kind, filing_year)
 
-    extractor = get_extractor(año)
     if pages is None:
         pages = extract_pages_text(path)
-    result = extractor.extract_pages(
+    result = Modelo100ObservedExtractor().extract_pages(
         pages,
         artefact_kind,
         source_pdf_sha256=sha256_file(path),
@@ -102,7 +106,7 @@ def parse_borrador(
     _logger.info(
         "parse_borrador: parsed source=<input-pdf> kind=%s año=%d",
         artefact_kind,
-        año,
+        filing_year,
     )
     return result
 
@@ -110,21 +114,20 @@ def parse_borrador(
 def _parse_borrador_bytes(
     pdf_bytes: bytes,
     *,
+    filing_year: int,
     artefact_kind_override: ArtefactKind | None = None,
-    año_override: int | None = None,
     extraction_profile: BorradorExtractionProfile | None = None,
     parse_mode: BorradorParseMode = BorradorParseMode.OBSERVED,
 ) -> InboundBorradorObservation:
     """Parse one in-memory PDF capture, sharing detection and extraction text."""
     if parse_mode is BorradorParseMode.REGISTRY_PROFILE and extraction_profile is None:
         raise BorradorParseError("registry-profile parsing requires a registry extraction profile")
-    año = año_override if año_override is not None else 2025
-    extractor = get_extractor(año)
     pages = extract_pages_text_from_bytes(
         pdf_bytes, error_class=BorradorParseError, pdf_label="PDF", source_label="<input-pdf>"
     )
     artefact_kind = artefact_kind_override or detect_artefact_kind_from_pages(pages)
-    return extractor.extract_pages(
+    _logger.debug("parse_borrador: source=<input-pdf> kind=%s año=%d", artefact_kind, filing_year)
+    return Modelo100ObservedExtractor().extract_pages(
         pages,
         artefact_kind,
         source_pdf_sha256=sha256_hex(pdf_bytes),

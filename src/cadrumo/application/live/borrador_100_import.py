@@ -55,7 +55,12 @@ def prepare_borrador_100_import(
     profile = _resolve_import_profile(operation, filing_year=filing_year, period=period)
     pdf_bytes = source_path.read_bytes()
     digest = sha256_hex(pdf_bytes)
-    observation = parser.parse(pdf_bytes, filing_year=filing_year, extraction_profile=profile)
+    observation = parser.parse(
+        pdf_bytes,
+        filing_year=filing_year,
+        supported_filing_years=operation.supported_filing_years(),
+        extraction_profile=profile,
+    )
     coverage = _require_parser_receipt(observation, profile=profile, digest=digest, filing_year=filing_year)
     binding_values, blanks = _collect_import_values(profile, observation.values)
     return PreparedBorrador100Import(

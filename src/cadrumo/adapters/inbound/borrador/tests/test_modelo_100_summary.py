@@ -5,22 +5,31 @@ from __future__ import annotations
 import logging
 from collections.abc import Mapping
 from decimal import Decimal
+from functools import partial
 from pathlib import Path
 
 import pytest
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....domain.calculations.registry.schema_extraction import ExtractionProfileDefinition, ExtractionTargetDefinition
+from .....domain.calculations.registry.schema_references import TemporalSupportEnvelope
 from .....tests.log_records import delivered_records
 from ...pdf.source_provenance import source_pdf_reference_path
 from ..errors import BorradorParseError
-from ..parser import parse_borrador
+from ..parser import parse_borrador as _parse_borrador
 from ..schema import ArtefactKind, BorradorParseMode, InboundBorradorObservation
 
 pytestmark = [
     pytest.mark.unit,
     pytest.mark.hex_inbound_adapter,
 ]
+
+
+_SUPPORT = TemporalSupportEnvelope(floor=2022, horizon=2026)
+"""A synthetic envelope: these tests read one artefact, not the published span."""
+
+
+parse_borrador = partial(_parse_borrador, filing_year=2025, supported_filing_years=_SUPPORT)
 
 
 _CUOTA_INTEGRA_GENERAL_ESTATAL_CASILLA = validated_casilla_id(
