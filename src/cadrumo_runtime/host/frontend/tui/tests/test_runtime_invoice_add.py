@@ -45,7 +45,6 @@ from cadrumo.core.operations import (
     OperationTerminalCondition,
     profile_operation_subject,
 )
-from cadrumo.domain.invoices.business_premises import BusinessPremisesLease, SituacionInmueble
 from cadrumo.domain.invoices.enums import PaymentStatus
 from cadrumo.domain.iva.schema import InvoiceKind, IvaCategory
 from cadrumo.entrypoints.tui.account import AccountSessionExpiredError
@@ -550,9 +549,7 @@ def test_the_tui_request_carries_the_business_premises_lease_facts() -> None:
 
     request = _request_from_entry(_PROFILE_ID, entry)
 
-    assert request.business_premises_lease == InvoiceAddBusinessPremisesLease.from_domain(
-        BusinessPremisesLease(
-            situacion_inmueble=SituacionInmueble.SPAIN_OTHER_THAN_BASQUE_NAVARRE,
-            referencia_catastral="9872023VH5797S0001WX",
-        )
+    assert request.business_premises_lease == InvoiceAddBusinessPremisesLease(
+        situacion_inmueble="1",
+        referencia_catastral="9872023VH5797S0001WX",
     )

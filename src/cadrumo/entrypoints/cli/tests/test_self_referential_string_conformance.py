@@ -171,17 +171,60 @@ def _cited_from_text(text: str) -> list[CitedCommand]:
     surrounding words.
     """
     out: list[CitedCommand] = []
-    for raw_line in text.replace("`", " ").splitlines():
+
+    def unquoted(raw_line: str) -> None:
         match = _AEAT_TOKEN_RE.search(raw_line)
         if match is None:
-            continue
+            return
         span = _command_span(raw_line[match.end() :].strip())
         if not span:
-            continue
+            return
         parsed = _parse_command_line(f"aeat {span}")
         if parsed is not None:
             out.append(parsed)
+
+    for raw_line in text.splitlines():
+        start = 0
+        for literal in re.finditer(r"`([^`]+)`", raw_line):
+            if _AEAT_TOKEN_RE.search(literal.group(1)) is None:
+                continue
+            unquoted(raw_line[start : literal.start()].replace("`", " "))
+            # An explicit command literal is validated whole. Do not trim a
+            # bad flag/suffix or structured argument into a safe prefix.
+            parsed = _parse_command_line(literal.group(1))
+            if parsed is not None:
+                out.append(parsed)
+            start = literal.end()
+        unquoted(raw_line[start:].replace("`", " "))
     return out
+
+
+def test_inline_command_boundary_excludes_surrounding_decision_prose() -> None:
+    [cited] = _cited_from_text("Visible on `aeat app ledger view`), or with a `--reject` decision.")
+    assert cited.raw == "aeat app ledger view"
+    assert validate_cited_command(cited) == []
+
+
+@pytest.mark.parametrize(
+    "literal",
+    [
+        "aeat app ledger view --not-a-real-option",
+        "aeat app ledger not-a-real-verb",
+        "aeat app ledger view), or --reject",
+    ],
+)
+def test_inline_command_does_not_discard_an_invalid_flag_or_suffix(literal: str) -> None:
+    [cited] = _cited_from_text(f"Use `{literal}` for this case.")
+    assert cited.raw == literal
+    assert validate_cited_command(cited)
+
+
+def test_inline_command_preserves_structured_argument_punctuation() -> None:
+    literal = 'aeat app ledger classify ROW --reason \'{"notes": ["a,b)"]}\''
+    [cited] = _cited_from_text(f"Use `{literal}` for this case.")
+    assert cited.raw == literal
+    assert cited.tokens[-1] == '{"notes": ["a,b)"]}'
+    assert validate_cited_command(cited) == []
 
 
 def test_locale_command_strings_resolve() -> None:

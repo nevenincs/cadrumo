@@ -17,7 +17,6 @@ from cadrumo.application.invoices.catalogue_add_contracts import (
 from cadrumo.application.operations.frontend_projection import OperationPublicProjectionV1
 from cadrumo.application.operations.public_scalar import PublicDecimal
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition
-from cadrumo.domain.invoices.business_premises import business_premises_lease_from_inputs
 from cadrumo.domain.invoices.errors import InvoiceValidationError
 from cadrumo.entrypoints.tui.ledger.models import LedgerInvoiceAddResultV1, LedgerInvoiceEntryV1
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
@@ -196,12 +195,10 @@ def _request_from_entry(profile_id: UUID, entry: LedgerInvoiceEntryV1) -> Invoic
         series=entry.series,
         rectifies_invoice_number=entry.rectifies_invoice_number,
         recargo_amount=_public_decimal(entry.recargo_amount),
-        business_premises_lease=InvoiceAddBusinessPremisesLease.from_domain(
-            business_premises_lease_from_inputs(
-                lease_selected=entry.arrendamiento_local_negocio,
-                situacion_inmueble=entry.situacion_inmueble,
-                referencia_catastral=entry.referencia_catastral,
-            )
+        business_premises_lease=InvoiceAddBusinessPremisesLease.from_inputs(
+            lease_selected=entry.arrendamiento_local_negocio,
+            situacion_inmueble=entry.situacion_inmueble,
+            referencia_catastral=entry.referencia_catastral,
         ),
         lines=tuple(
             InvoiceAddLine(

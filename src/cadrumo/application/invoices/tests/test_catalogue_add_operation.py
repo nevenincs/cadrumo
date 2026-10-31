@@ -597,6 +597,7 @@ def test_a_lease_on_a_received_invoice_is_an_invalid_invoice_refusal(monkeypatch
             "9872023VH5797S0001WX",
             id="domain-invalid-situation-reference-pair",
         ),
+        pytest.param("not-a-declared-situation", "", id="unknown-raw-situation"),
     ),
 )
 def test_executor_rechecks_poisoned_lease_before_creating_ports(

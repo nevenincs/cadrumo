@@ -25,6 +25,9 @@ import httpx
 import pytest
 
 from cadrumo.core.directory_scan import scan_directory
+from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.schema_references import SourceReference
 from dev._paths import REPO_ROOT
 from dev.corpus import fetch_boe_normative
 from dev.corpus.fetch_boe_normative import (
@@ -38,6 +41,9 @@ from dev.corpus.fetch_boe_normative import (
     corpus_destination,
     version_selections,
 )
+from dev.docs.preprocess.sidecar import PreprocessSidecarError, load_sidecar, sidecar_paths_for
+from dev.registry.compiler.corpus_catalogue import verify_source_file
+from dev.registry.compiler.loader import load_shared_catalogues
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -380,31 +386,76 @@ def test_canonicalisation_normalises_crlf_and_leaves_legal_text_alone() -> None:
     assert canonical_lf_bytes(b"a lone \r stays") == b"a lone \r stays"
 
 
-#: Below this the normative walk has stopped covering the corpus. A floor
-#: rather than a pinned count: 476 bundled normatives ship today.
-_MINIMUM_BUNDLED_NORMATIVES = 100
+@pytest.fixture(scope="module")
+def normative_source_references() -> tuple[SourceReference, ...]:
+    """Read acquired byte identities from the existing authored catalogue."""
+    return tuple(
+        source
+        for source in load_shared_catalogues(bundled_path("registry", "aeat")).sources.values()
+        if source.corpus_path.startswith("corpus/normatives/") and Path(source.corpus_path).suffix in {".html", ".xml"}
+    )
 
 
-def test_every_bundled_normative_is_already_canonical() -> None:
-    """The corpus the registry pins hashes identically on Windows and Unix."""
+def test_enrolled_normatives_and_extracted_captures_retain_their_recorded_identity(
+    normative_source_references: tuple[SourceReference, ...],
+) -> None:
+    """Existing captures retain their recorded bytes, including original CRLF.
+
+    New acquisitions use the writer's LF convention. Existing evidence is
+    bound by the catalogue or extraction receipt, so rewriting its line ends
+    would replace evidence rather than make a checkout portable.
+    """
     assert _CORPUS.is_dir(), (
         f"the bundled normative corpus is not at {_CORPUS}; a relocated root walks nothing "
-        "and this gate would report every normative canonical"
+        "and this gate would verify no acquired evidence"
     )
 
-    walked = (
-        *scan_directory(_CORPUS, pattern="*.html"),
-        *scan_directory(_CORPUS.parent / "xml", pattern="*.xml"),
-    )
+    # HTML extraction receipts independently bind captures not yet enrolled in
+    # the catalogue. Bare acquisition XML has no such receipt: its endpoint and
+    # version semantics are exercised below, rather than inventing an identity
+    # from the current payload and then comparing it to itself.
+    walked = tuple(scan_directory(_CORPUS, pattern="*.html"))
 
-    assert len(walked) >= _MINIMUM_BUNDLED_NORMATIVES, (
-        f"only {len(walked)} bundled normative(s) were walked; below this an empty finding "
-        "list says nothing about whether the corpus still hashes identically across platforms"
-    )
+    assert walked
+    assert normative_source_references
+    verified = {verify_source_file(bundled_path(), source).resolve() for source in normative_source_references}
+    for path in walked:
+        if path.resolve() not in verified:
+            load_sidecar(path)
 
-    noncanonical = [path.name for path in walked if canonical_lf_bytes(payload := path.read_bytes()) != payload]
 
-    assert not noncanonical, f"bundled normatives carry CRLF line endings: {noncanonical!r}"
+def test_a_changed_capture_cannot_borrow_its_unchanged_catalogue_identity(
+    tmp_path: Path, normative_source_references: tuple[SourceReference, ...]
+) -> None:
+    source = normative_source_references[0]
+    original = verify_source_file(bundled_path(), source)
+    target = tmp_path / source.corpus_path
+    target.parent.mkdir(parents=True)
+    payload = original.read_bytes()
+    assert payload
+    target.write_bytes(payload)
+    assert verify_source_file(tmp_path, source) == target.resolve()
+
+    target.write_bytes(payload[:-1] + bytes((payload[-1] ^ 1,)))
+
+    with pytest.raises(RegistryValidationError, match="sha256 mismatch"):
+        verify_source_file(tmp_path, source)
+
+
+def test_a_changed_capture_cannot_borrow_its_unchanged_extraction_receipt(tmp_path: Path) -> None:
+    original = _CORPUS / _MULTI_BLOCK
+    target = tmp_path / original.name
+    payload = original.read_bytes()
+    assert payload
+    target.write_bytes(payload)
+    for recorded, copied in zip(sidecar_paths_for(original), sidecar_paths_for(target), strict=True):
+        copied.write_bytes(recorded.read_bytes())
+    assert load_sidecar(target) == load_sidecar(original)
+
+    target.write_bytes(payload[:-1] + bytes((payload[-1] ^ 1,)))
+
+    with pytest.raises(PreprocessSidecarError, match="source file now hashes"):
+        load_sidecar(target)
 
 
 def test_the_in_force_assertion_accepts_the_bundled_redactions_payload() -> None:

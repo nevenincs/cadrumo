@@ -3282,8 +3282,8 @@ cli:
       reason_empty: Rechazado. --reason debe registrar por qué clasificas esta transacción.
         Indica un motivo no vacío, u omite --reason.
       reason_help: Motivo en texto libre que se registra como notas del movimiento
-        y como motivo de la decisión de clasificación (visible en aeat app ledger
-        view), o con una decisión --reject.
+        y como motivo de la decisión de clasificación (visible en `aeat app ledger
+        view`), o con una decisión `--reject`.
       reject_apply_exclusive: '--reject no se puede combinar con --apply: reject registra
         una sugerencia rechazada, apply una aceptada.'
       reject_help: Registra un rechazo explícito de la sugerencia del modelo como
