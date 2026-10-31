@@ -1755,15 +1755,18 @@ desktop:
       asesoria_fiscal: asesoria gestoria fiscal impuestos
       asesoria_juridica: abogado asesoria juridica legal notario
       comunidad_vivienda_afecto: comunidad propietarios cuota
-      cuotas_autonomos_ss: autonomos seguridad social reta tgss cuota
+      cuotas_autonomos_ss: autonomos seguridad social reta tgss cuota self-employed
+        contributions social security fee
       cuotas_colegiales: colegio colegiado cuota colegial
       formacion_profesional: course training curso formacion academia master taller
       gastos_bancarios: bank fee commission comision banco mantenimiento cuenta transferencia
       gastos_financieros: intereses prestamo financiacion
       hardware_amortizable: computer laptop monitor ordenador portatil pc monitor
         hardware
-      ibi_local_afecto: ibi impuesto bienes inmuebles ayuntamiento local
-      ibi_vivienda_afecto: ibi impuesto bienes inmuebles ayuntamiento vivienda
+      ibi_local_afecto: ibi impuesto bienes inmuebles ayuntamiento local property
+        tax real estate municipal premises business
+      ibi_vivienda_afecto: ibi impuesto bienes inmuebles ayuntamiento vivienda property
+        tax home dwelling residence business
       manutencion_dietas_extranjero: restaurante comida dietas extranjero
       manutencion_dietas_nacional: restaurante comida dietas menu bar
       material_oficina: stationery paper toner papeleria material oficina folios toner

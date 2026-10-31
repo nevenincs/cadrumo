@@ -16,6 +16,15 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 _LOCALIZED_KEYWORDS = {
+    ("ca", "cuotas_autonomos_ss"): {"autònom", "cotització", "seguretat"},
+    ("ca", "ibi_local_afecto"): {"impost", "béns", "immobles", "negoci"},
+    ("ca", "ibi_vivienda_afecto"): {"impost", "habitatge", "pis", "activitat"},
+    ("en", "cuotas_autonomos_ss"): {"self-employed", "contributions", "security"},
+    ("en", "ibi_local_afecto"): {"property", "tax", "premises", "business"},
+    ("en", "ibi_vivienda_afecto"): {"property", "tax", "home", "dwelling"},
+    ("hu", "cuotas_autonomos_ss"): {"egyéni", "vállalkozó", "társadalombiztosítási", "járulék"},
+    ("hu", "ibi_local_afecto"): {"ingatlanadó", "önkormányzati", "üzlethelyiség", "telephely"},
+    ("hu", "ibi_vivienda_afecto"): {"ingatlanadó", "lakás", "otthon", "üzleti"},
     ("ca", "arrendamiento_local"): {"lloguer", "negoci", "arrendament"},
     ("ca", "arrendamiento_vivienda_afecto"): {"lloguer", "habitatge", "pis"},
     ("ca", "gastos_bancarios"): {"comissió", "bancària", "transferència"},

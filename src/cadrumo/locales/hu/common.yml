@@ -1778,15 +1778,18 @@ desktop:
       asesoria_fiscal: asesoria gestoria fiscal impuestos
       asesoria_juridica: abogado asesoria juridica legal notario
       comunidad_vivienda_afecto: comunidad propietarios cuota
-      cuotas_autonomos_ss: autonomos seguridad social reta tgss cuota
+      cuotas_autonomos_ss: autonomos seguridad social reta tgss cuota egyéni vállalkozó
+        társadalombiztosítási járulék
       cuotas_colegiales: colegio colegiado cuota colegial
       formacion_profesional: curso formacion academia master taller
       gastos_bancarios: comision banco mantenimiento cuenta transferencia banki díj
         jutalék bankszámla számlavezetés átutalás
       gastos_financieros: intereses prestamo financiacion
       hardware_amortizable: ordenador portatil pc monitor hardware
-      ibi_local_afecto: ibi impuesto bienes inmuebles ayuntamiento local
-      ibi_vivienda_afecto: ibi impuesto bienes inmuebles ayuntamiento vivienda
+      ibi_local_afecto: ibi impuesto bienes inmuebles ayuntamiento local helyi ingatlanadó
+        önkormányzati üzlethelyiség telephely
+      ibi_vivienda_afecto: ibi impuesto bienes inmuebles ayuntamiento vivienda ingatlanadó
+        lakás otthon üzleti célra
       manutencion_dietas_extranjero: restaurante comida dietas extranjero
       manutencion_dietas_nacional: restaurante comida dietas menu bar
       material_oficina: papeleria material oficina folios toner
