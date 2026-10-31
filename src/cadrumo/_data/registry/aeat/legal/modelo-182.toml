@@ -84,7 +84,7 @@ effective_from = 2021-12-04
 governs_periods_from = 2021-01-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-10-01
-reviewed_by = "agent-prepared (corpus-grounded against the bundled BOE-A-2021-20004 disposicion final unica; pending operator re-stamp)"
+reviewed_by = "agent-prepared (corpus-grounded against the bundled BOE-A-2021-20004 disposición final única; pending operator re-stamp)"
 notes = "Orden HFP/1351/2021 disposición final única: entrada en vigor al día siguiente de su publicación y primera aplicación a las declaraciones correspondientes a 2021 que se presentan en 2022. Opens the ejercicio from which the design its articulo cuarto amends governs."
 required_text = [
     "será aplicable, por primera vez, para las declaraciones correspondientes a 2021 que se presentarán en 2022",

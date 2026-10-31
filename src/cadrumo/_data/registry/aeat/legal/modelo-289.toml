@@ -218,7 +218,7 @@ authority = "boe"
 kind = "orden"
 corpus_ref = "corpus/normatives/html/orden-hac-1276-2019.html#a7"
 document_id = "BOE-A-2019-18752"
-article = "septimo"
+article = "séptimo"
 permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2019-18752#a7"
 published_at = 2019-12-31
 effective_from = 2019-12-31
@@ -339,7 +339,7 @@ authority = "boe"
 kind = "orden"
 corpus_ref = "corpus/normatives/html/orden-hac-1504-2024.html#a7"
 document_id = "BOE-A-2024-27528"
-article = "septimo"
+article = "séptimo"
 permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-27528#a7"
 published_at = 2024-12-31
 effective_from = 2025-01-01

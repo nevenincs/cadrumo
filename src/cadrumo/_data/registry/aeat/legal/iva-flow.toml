@@ -128,7 +128,7 @@ effective_from = 1993-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-06
 reviewed_by = "operator"
-notes = "LIVA art 88: repercusión del impuesto. Establece la obligación del sujeto pasivo de repercutir integramente el importe del IVA sobre el destinatario de la operación gravada, quedando este obligado a soportarlo. Es la base legal del flujo IVA repercutido."
+notes = "LIVA art 88: repercusión del impuesto. Establece la obligación del sujeto pasivo de repercutir íntegramente el importe del IVA sobre el destinatario de la operación gravada, quedando este obligado a soportarlo. Es la base legal del flujo IVA repercutido."
 required_text = [
     "Repercusión del impuesto",
     "deberán repercutir íntegramente el importe del impuesto",

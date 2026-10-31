@@ -153,7 +153,7 @@ published_at = 2023-04-20
 effective_from = 2023-04-25
 review_status = "agent_reviewed"
 reviewed_at = 2026-10-01
-reviewed_by = "agent-prepared (corpus-grounded against the bundled as-published BOE-A-2023-9634 disposicion final unica and its BOE analysis; pending operator re-stamp)"
+reviewed_by = "agent-prepared (corpus-grounded against the bundled as-published BOE-A-2023-9634 disposición final única and its BOE analysis; pending operator re-stamp)"
 notes = "Orden HFP/381/2023 disposición final única: entra en vigor el mismo día que el Real Decreto 249/2023, which BOE's analysis of this orden records as 25/04/2023 (its articulo segundo from 1 July 2023). That day closes the modelo 036 design of Orden HAC/609/2021 and opens the one this orden's anexo replaces it with."
 required_text = [
     "La presente orden entrará en vigor el mismo día de la entrada en vigor del Real Decreto 249/2023",
@@ -186,7 +186,7 @@ authority = "boe"
 kind = "orden"
 corpus_ref = "corpus/normatives/html/orden-hac-1526-2024-df-unica.html#df-unica"
 document_id = "BOE-A-2025-410"
-article = "disposicion final unica"
+article = "disposición final única"
 permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-410#disposicionfinalunica"
 published_at = 2025-01-09
 effective_from = 2025-02-03

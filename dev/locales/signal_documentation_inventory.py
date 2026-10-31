@@ -12,6 +12,7 @@ from .signal_contracts import DocumentationEchoDictionaries
 from .signal_document_prose import (
     embedded_document_language_prose,
     legal_citation_language_prose,
+    legal_citation_link_language_prose,
     visible_document_prose,
 )
 from .signal_documentation_counts import docs_extraction_finding, documentation_counts
@@ -223,7 +224,8 @@ def inventory_generated_document_file(
     """Inventory generated document file."""
     try:
         prose = visible_document_prose(path)
-        citations = legal_citation_language_prose(path, prose)
+        links = legal_citation_link_language_prose(path, prose)
+        citations = legal_citation_language_prose(path, prose) + links
     except Exception as exc:  # Parsing is part of the measured docs surface.
         counts["docs_generated_source_failures"] += 1
         findings.append(
@@ -245,10 +247,13 @@ def inventory_generated_document_file(
     counts["docs_generated_prose_cells"] += len(prose) + len(embedded)
     if spelling_values is not None:
         relative = path.relative_to(repository).as_posix()
+        link_chrome_lines = {line for line, language, _text in links if language == "en"}
         for line, text in prose:
             spelling_values.setdefault("en", {})[f"parallel:{relative}:line[{line}]"] = text
         for line, language, text in embedded:
-            spelling_values.setdefault(language, {})[f"parallel:{relative}:line[{line}]:lang[{language}]"] = text
+            suffix = ":legal-link-chrome" if language == "en" and line in link_chrome_lines else ""
+            key = f"parallel:{relative}:line[{line}]:lang[{language}]{suffix}"
+            spelling_values.setdefault(language, {})[key] = text
 
 
 _LEGAL_NOTE_BODY = re.compile(

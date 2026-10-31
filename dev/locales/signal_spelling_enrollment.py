@@ -1022,6 +1022,7 @@ def _spanish_legal_note_word(
         dictionary_locale == "en"
         and key.startswith("parallel:docs/_generated/legal/")
         and ".rst:line[" in key
+        and not key.endswith(":legal-link-chrome")
         and (word in _SPANISH_LEGAL_REFERENCE_SPELLINGS or dictionaries["es"].lookup(word))
     )
 

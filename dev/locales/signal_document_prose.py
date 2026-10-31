@@ -7,7 +7,7 @@ import json
 import re
 from collections.abc import Mapping
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 from dev._paths import UTF_8
 
@@ -60,6 +60,54 @@ def legal_citation_language_prose(path: Path, prose: tuple[tuple[int, str], ...]
     if path.suffix != ".rst" or path.parts[-3:-1] != ("_generated", "legal"):
         raise ValueError("legal citation markers are only valid on generated legal pages")
     return tuple(_legal_citation_marker(lines, index, marker, prefix, prose) for index, marker in markers)
+
+
+def legal_citation_link_language_prose(
+    path: Path, prose: tuple[tuple[int, str], ...]
+) -> tuple[tuple[int, str, str], ...]:
+    """Split a generated official link into Spanish citation and English chrome."""
+    lines = path.read_text(encoding=UTF_8).splitlines()
+    prefix = ".. cadrumo-legal-link-citation:"
+    markers = [(index, line) for index, line in enumerate(lines) if line.startswith(prefix)]
+    if not markers:
+        return ()
+    if path.suffix != ".rst" or path.parts[-3:-1] != ("_generated", "legal"):
+        raise ValueError("legal link citation markers are only valid on generated legal pages")
+    return tuple(
+        segment
+        for index, marker in markers
+        for segment in _legal_link_citation_marker(lines, index, marker, prefix, prose)
+    )
+
+
+def _legal_link_citation_marker(
+    lines: list[str], index: int, marker: str, prefix: str, prose: tuple[tuple[int, str], ...]
+) -> tuple[tuple[int, str, str], ...]:
+    try:
+        value = json.loads(marker[len(prefix) :].strip())
+    except json.JSONDecodeError as exc:
+        raise ValueError("malformed legal link citation marker") from exc
+    if not isinstance(value, dict) or set(value) != {"label", "citation", "target"}:
+        raise ValueError("invalid legal link citation marker")
+    payload = cast(dict[str, object], value)
+    label, citation, target = (payload[key] for key in ("label", "citation", "target"))
+    if not isinstance(label, str) or not isinstance(citation, str) or not isinstance(target, str):
+        raise ValueError("invalid legal link citation marker")
+    if not label or not citation or not target:
+        raise ValueError("invalid legal link citation marker")
+    if label.count(citation) != 1 or index + 4 >= len(lines):
+        raise ValueError("legal link citation must occur exactly once in its label")
+    if lines[index + 1 : index + 4] != ["", ".. container:: cadrumo-legal-official", ""]:
+        raise ValueError("legal link citation marker does not precede its official link")
+    match = re.fullmatch(r"   `(?P<label>.*) <(?P<target>[^<>]+)>`__", lines[index + 4])
+    if match is None or re.sub(r"\\(.)", r"\1", match.group("label")) != label or match.group("target") != target:
+        raise ValueError("legal link citation marker does not match its official link")
+    line = index + 5
+    if sum(item_line == line and text == label for item_line, text in prose) != 1:
+        raise ValueError("legal link citation marker does not match parsed link text")
+    before, after = label.split(citation)
+    chrome = " ".join(part.strip() for part in (before, after) if part.strip())
+    return ((line, "en", chrome), (line, "es", citation)) if chrome else ((line, "es", citation),)
 
 
 def _legal_citation_marker(

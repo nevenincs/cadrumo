@@ -308,14 +308,14 @@ review_status = "agent_reviewed"
 reviewed_at = 2026-08-27
 reviewed_by = "agent-review"
 notes = """\
-RGAT art 34: cumplimentacion de la declaración anual de operaciones con terceras \
+RGAT art 34: cumplimentación de la declaración anual de operaciones con terceras \
 personas. Apartado 1 enumera los datos a consignar, incluido el NIF de cada \
 contraparte (letra b) y el importe total anual de las operaciones (letra c). Letra i) \
 exige declarar SEPARADAMENTE de otras operaciones las cantidades percibidas en \
-contraprestacion por transmisiones de inmuebles sujetas a IVA -- la base legal del \
-campo "IMPORTE PERCIBIDO POR TRANSMISIONES" del diseno de registro, pareado con cada \
+contraprestación por transmisiones de inmuebles sujetas a IVA -- la base legal del \
+campo "IMPORTE PERCIBIDO POR TRANSMISIONES" del diseño de registro, pareado con cada \
 importe trimestral. Apartado 2.a) fija que el importe declarado es el total de la \
-contraprestacion, incluidas cuotas y recargos repercutidos o soportados. Texto \
+contraprestación, incluidas cuotas y recargos repercutidos o soportados. Texto \
 verificado contra el consolidado bundled corpus/normatives/html/rd-1065-2007.html.\
 """
 required_text = [
@@ -413,7 +413,7 @@ effective_from = 2014-01-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-10-03
 reviewed_by = "agent-authored from the bundled corpus capture; operator to re-stamp"
-notes = """RGAT art 34.1.h: se hacen constar los importes superiores a 6.000 euros percibidos en metalico de cada persona o entidad relacionada. Fundamenta el campo IMPORTE PERCIBIDO EN METALICO del diseno del Modelo 347 y el aviso de que las facturas no registran el cobro en efectivo. Texto verificado contra el consolidado bundled corpus/normatives/html/rd-1065-2007.html (apartado 1 en la redacción del RD 828/2013, en vigor desde 2014-01-01)."""
+notes = """RGAT art 34.1.h: se hacen constar los importes superiores a 6.000 euros percibidos en metálico de cada persona o entidad relacionada. Fundamenta el campo IMPORTE PERCIBIDO EN METALICO del diseño del Modelo 347 y el aviso de que las facturas no registran el cobro en efectivo. Texto verificado contra el consolidado bundled corpus/normatives/html/rd-1065-2007.html (apartado 1 en la redacción del RD 828/2013, en vigor desde 2014-01-01)."""
 required_text = [
     "Se harán constar los importes superiores a 6.000 euros que se hubieran percibido en metálico",
 ]

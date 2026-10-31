@@ -25,6 +25,7 @@ from ..legal_catalogue import load_legal_provisions
 from ..legal_page_rendering import _rst_escape
 from ..legal_reference import generate_legal_reference, render_legal_reference
 from ..legal_reference_models import LegalProvisionRecord, LegalReferenceError
+from ..legal_reference_routing import legal_provision_anchor
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 
@@ -202,6 +203,104 @@ def test_generated_inventory_checks_wording_in_spanish_and_commentary_in_english
     assert "no serán deducibles las cuotas soportadas" in values["es"].values()
     assert any("English curator commentary remains checked." in text for text in values["en"].values())
     assert all("no serán deducibles las cuotas soportadas" not in text for text in values["en"].values())
+
+
+def test_official_link_routes_only_its_citation_to_spanish(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Both the citation and the surrounding link text remain spellchecked in their own languages."""
+    from dev.locales import signal_spelling
+
+    class Dictionary:
+        def __init__(self, language: str) -> None:
+            self.language = language
+
+        def lookup(self, word: str) -> bool:
+            return word.casefold() != "uníco" and (self.language == "es" or word.casefold() != "reed")
+
+    record = LegalProvisionRecord(
+        legal_id="ley-37-1992:art-unico",
+        kind="ley",
+        document_id="BOE-A-1992-28740",
+        corpus_ref="corpus/normatives/html/ley-37-1992.html#a96",
+        permalink="https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a96",
+        article="uníco",
+    )
+    page = tmp_path / "docs/_generated/legal/example.rst"
+    page.parent.mkdir(parents=True)
+    rendered = render_legal_reference(_REPO_ROOT, records=(record,)).pages[0].rst
+    page.write_text(rendered.replace("Read ", "Reed "), encoding="utf-8")
+    values: dict[str, dict[str, str]] = {}
+    findings: list[dict[str, object]] = []
+    inventory_generated_document_file(page, tmp_path, Counter(), findings, values)
+    monkeypatch.setattr(
+        signal_spelling,
+        "load_dictionaries",
+        lambda _root: {"en": Dictionary("en"), "es": Dictionary("es")},
+    )
+
+    spelling, _inventory, _findings = signal_spelling.spellcheck_catalogues(
+        set(), {}, tmp_path, additional_values=values
+    )
+    assert not findings
+    assert any("uníco" in words for (language, _key), words in spelling.items() if language == "es")
+    assert any("Reed" in words for (language, _key), words in spelling.items() if language == "en")
+    assert all("uníco" not in words for (language, _key), words in spelling.items() if language == "en")
+
+
+def test_official_link_marker_must_match_the_visible_link(tmp_path: Path) -> None:
+    record = LegalProvisionRecord(
+        legal_id="ley-37-1992:art-unico",
+        kind="ley",
+        document_id="BOE-A-1992-28740",
+        corpus_ref="corpus/normatives/html/ley-37-1992.html#a96",
+        permalink="https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a96",
+        article="único",
+    )
+    page = tmp_path / "docs/_generated/legal/example.rst"
+    page.parent.mkdir(parents=True)
+    rendered = render_legal_reference(_REPO_ROOT, records=(record,)).pages[0].rst
+    page.write_text(rendered.replace("#a96>`__", "#a97>`__"), encoding="utf-8")
+    findings: list[dict[str, object]] = []
+    inventory_generated_document_file(page, tmp_path, Counter(), findings, {})
+
+    assert [finding["kind"] for finding in findings] == ["docs_generated_source_unreadable"]
+
+
+def test_corrected_legal_citations_keep_their_identifiers_and_anchors() -> None:
+    records = {record.legal_id: record for record in load_legal_provisions(_REPO_ROOT)}
+    record = records["rdleg-1175-1990:art-unico"]
+    assert record.article == "único"
+    assert record.corpus_ref.endswith("#aunico")
+    assert record.permalink.endswith("#aunico")
+    accented = legal_provision_anchor(
+        record.legal_id,
+        article=record.article,
+        section=record.section,
+        corpus_ref=record.corpus_ref,
+        permalink=record.permalink,
+    )
+    original = legal_provision_anchor(
+        record.legal_id,
+        article="unico",
+        section=record.section,
+        corpus_ref=record.corpus_ref,
+        permalink=record.permalink,
+    )
+    assert accented == original
+    rendered = render_legal_reference(_REPO_ROOT, records=(record,), language=OutputLanguage.EN)
+    assert "art. único" in rendered.pages[0].rst
+
+
+def test_corrected_extract_matches_its_exact_official_provision() -> None:
+    from dev.corpus.text import resolve_anchored_extracted_unit
+
+    records = {record.legal_id: record for record in load_legal_provisions(_REPO_ROOT)}
+    record = records["orden-hac-1432-2024:df-unica"]
+    assert record.required_text[1] == "Disposición final única"
+    source, _separator, anchor = record.corpus_ref.partition("#")
+    sidecar = _REPO_ROOT / "src/cadrumo/_data" / f"{source}.extracted.json"
+    actual = resolve_anchored_extracted_unit(sidecar, anchor=anchor, include_title=True)
+    normalized = " ".join(actual.split()).casefold()
+    assert all(" ".join(phrase.split()).casefold() in normalized for phrase in record.required_text)
 
 
 def test_mixed_catalogue_note_tags_only_source_verified_quote_and_keeps_english_checked(tmp_path: Path) -> None:

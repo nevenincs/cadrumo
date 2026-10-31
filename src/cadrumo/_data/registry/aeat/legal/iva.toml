@@ -219,7 +219,7 @@ authority = "boe"
 kind = "orden"
 corpus_ref = "corpus/normatives/html/orden-hfp-1245-2022.html#articulo-unico"
 document_id = "BOE-A-2022-21458"
-article = "unico"
+article = "único"
 permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-21458"
 published_at = 2022-12-19
 effective_from = 2023-01-01
@@ -1406,7 +1406,7 @@ authority = "boe"
 kind = "orden"
 corpus_ref = "corpus/normatives/html/orden-hac-174-2020.html#articulo-unico"
 document_id = "BOE-A-2020-2898"
-article = "unico"
+article = "único"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2020-2898"
 published_at = 2020-02-29
 effective_from = 2020-03-01
@@ -2728,7 +2728,7 @@ authority = "boe"
 kind = "real_decreto"
 corpus_ref = "corpus/normatives/html/rd-1007-2023.html#df-4"
 document_id = "BOE-A-2023-24840"
-article = "disposicion final cuarta"
+article = "disposición final cuarta"
 section = "Entrada en vigor y efectos"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2023-24840#df-4"
 published_at = 2023-12-06

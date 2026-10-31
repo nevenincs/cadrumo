@@ -52,7 +52,7 @@ effective_from = 2015-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-06-02
 reviewed_by = "operator"
-notes = "LIS art 11: imputación temporal e inscripcion contable de ingresos y gastos. Los ingresos y gastos se imputan al periodo de su devengo con arreglo a la normativa contable, con independencia de su pago o cobro. Gobierna el criterio de devengo de las partidas que forman el resultado contable que alimenta la determinación de la base del Modelo 200."
+notes = "LIS art 11: imputación temporal e inscripción contable de ingresos y gastos. Los ingresos y gastos se imputan al periodo de su devengo con arreglo a la normativa contable, con independencia de su pago o cobro. Gobierna el criterio de devengo de las partidas que forman el resultado contable que alimenta la determinación de la base del Modelo 200."
 required_text = [
     "se imputarán al período impositivo en que se produzca su devengo",
     "con independencia de la fecha de su pago o de su cobro",
@@ -203,7 +203,7 @@ LIS art 31: deducción para evitar la doble imposición jurídica - impuesto sop
 contribuyente. Permite deducir de la cuota integra la menor de dos cantidades: el impuesto \
 efectivamente satisfecho en el extranjero (con tope del convenio CDI si aplica), o la \
 cuota integra que en España correspondería pagar por las mismas rentas. Las cantidades no \
-deducidas se trasladan a periodos siguientes; comprobación prescribe a los 10 anios. Base \
+deducidas se trasladan a periodos siguientes; comprobación prescribe a los 10 años. Base \
 sustantiva de la deducción por doble imposición jurídica internacional en M200."""
 required_text = [
     "Deducción para evitar la doble imposición jurídica",
@@ -271,7 +271,7 @@ effective_from = 2015-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-15
 reviewed_by = "operator"
-notes = "LIS art 16: limitación en la deducibilidad de gastos financieros. Establece el limite del 30 por ciento del beneficio operativo del ejercicio para los gastos financieros netos deducibles, con un suelo absoluto de 1 millón de euros y traslado a los cinco anios siguientes del exceso no aplicado del limite."
+notes = "LIS art 16: limitación en la deducibilidad de gastos financieros. Establece el limite del 30 por ciento del beneficio operativo del ejercicio para los gastos financieros netos deducibles, con un suelo absoluto de 1 millón de euros y traslado a los cinco años siguientes del exceso no aplicado del limite."
 required_text = [
     "Limitación en la deducibilidad de gastos financieros",
     "30 por ciento del beneficio operativo",
@@ -499,7 +499,7 @@ effective_from = 2015-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-15
 reviewed_by = "operator"
-notes = "LIS art 25: reserva de capitalización. Establece la reducción en la base imponible del 15 por ciento del incremento de los fondos propios (23 por ciento si la plantilla media aumenta), condicionada al mantenimiento durante 3 anios y a la dotacion de una reserva indisponible."
+notes = "LIS art 25: reserva de capitalización. Establece la reducción en la base imponible del 15 por ciento del incremento de los fondos propios (23 por ciento si la plantilla media aumenta), condicionada al mantenimiento durante 3 años y a la dotación de una reserva indisponible."
 required_text = [
     "Reserva de capitalización",
     "reducción en la base imponible",
@@ -519,7 +519,7 @@ effective_from = 2015-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-15
 reviewed_by = "operator"
-notes = "LIS art 26: compensación de bases imponibles negativas. Establece el limite del 70 por ciento de la base imponible previa para la compensación de BINs con rentas positivas de ejercicios siguientes, con suelo absoluto de 1 millón de euros y plazo de prescripción de 10 anios para la facultad de comprobación."
+notes = "LIS art 26: compensación de bases imponibles negativas. Establece el limite del 70 por ciento de la base imponible previa para la compensación de BINs con rentas positivas de ejercicios siguientes, con suelo absoluto de 1 millón de euros y plazo de prescripción de 10 años para la facultad de comprobación."
 required_text = [
     "Compensación de bases imponibles negativas",
     "70 por ciento de la base imponible previa",
@@ -773,7 +773,7 @@ effective_from = 2015-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-15
 reviewed_by = "operator"
-notes = "LIS art 39: normas comunes a las deducciones para incentivar la realización de determinadas actividades. Establece el plazo de 15 anios para aplicar deducciones no utilizadas por insuficiencia de cuota, el régimen de abono por insuficiencia de cuota para deducciones de I+D+i y animacion, y los limites anuales de 1 millón de euros (innovacion tecnologica) y 3 millones (conjunto)."
+notes = "LIS art 39: normas comunes a las deducciones para incentivar la realización de determinadas actividades. Establece el plazo de 15 años para aplicar deducciones no utilizadas por insuficiencia de cuota, el régimen de abono por insuficiencia de cuota para deducciones de I+D+i y animación, y los limites anuales de 1 millón de euros (innovación tecnológica) y 3 millones (conjunto)."
 required_text = [
     "Normas comunes a las deducciones",
     "15 años inmediatos y sucesivos",
@@ -2336,8 +2336,8 @@ reviewed_by = "agent: enrolled from the bundled consolidated LIS (ley-27-2014.ht
 reviewed_at = 2026-09-12
 notes = """LIS art. 75.2: plazo de la declaración del grupo fiscal. The group declaration is filed within the plazo of the REPRESENTANTE's own individual declaration rather than on a plazo of its own, which is why modelo 220's deadline routes through art. 124.1 by way of the representante rather than directly. Orden HAC/529/2026 art. 6.3 grounds the Modelo 220 plazo on this provision; until now the registry could only cite that orden, not the provision it rests on."""
 required_text = [
-    "La declaracion del grupo fiscal debera presentarse dentro del plazo correspondiente a la declaracion en regimen de tributacion individual de la entidad representante",
-    "Declaracion y autoliquidacion del grupo fiscal",
+    "La declaración del grupo fiscal deberá presentarse dentro del plazo correspondiente a la declaración en régimen de tributación individual de la entidad representante",
+    "Declaración y autoliquidación del grupo fiscal",
 ]
 
 [legal."ley-27-2014:art-130"]
@@ -2600,7 +2600,7 @@ permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#dadecimoctava
 published_at = 2014-11-28
 effective_from = 2023-01-01
 review_status = "agent_reviewed"
-reviewed_by = "agent-prepared; ANCHOR NOTE -- BOE anchors this disposicion as #da-3, which _canonical_anchor folds onto 'da3' and so collides with DA tercera; the compact ordinal form #dadecimoctava reaches it through the resolver's structural-title fallback and resolves to exactly one unit, verified through the production resolver before this entry was written. required_text confirmed present in that unit. The percentage and investment ceilings the disposicion states are described in notes but deliberately NOT asserted in required_text, pending a live-BOE numeric cross-check; pending operator re-stamp"
+reviewed_by = "agent-prepared; ANCHOR NOTE -- BOE anchors this disposición as #da-3, which _canonical_anchor folds onto 'da3' and so collides with DA tercera; the compact ordinal form #dadecimoctava reaches it through the resolver's structural-title fallback and resolves to exactly one unit, verified through the production resolver before this entry was written. required_text confirmed present in that unit. The percentage and investment ceilings the disposición states are described in notes but deliberately NOT asserted in required_text, pending a live-BOE numeric cross-check; pending operator re-stamp"
 reviewed_at = 2026-08-26
 notes = "LIS disposición adicional decimoctava: libertad de amortización en determinados vehículos y en nuevas infraestructuras de recarga. Permite amortizar libremente las inversiones en vehículos eléctricos y en puntos de recarga afectos a actividades económicas y puestos a disposición en los ejercicios que la propia disposición acota. Funda la sección libertad_de_amortizacion_de_determinados_vehiculos del Modelo 200, cuyo nombre reproduce el rubrico de la disposición."
 required_text = [
@@ -2640,7 +2640,7 @@ published_at = 2014-11-28
 effective_from = 2022-10-20
 review_status = "agent_reviewed"
 reviewed_at = 2026-09-23
-reviewed_by = "agent-prepared; BOE anchors this disposicion as #da-2, which collides with another unit, so the compact ordinal form #dadecimoseptima reaches it through the resolver's structural-title fallback; verified to resolve to exactly one unit through resolve_anchored_extracted_unit with every required_text phrase present; pending operator re-stamp"
+reviewed_by = "agent-prepared; BOE anchors this disposición as #da-2, which collides with another unit, so the compact ordinal form #dadecimoseptima reaches it through the resolver's structural-title fallback; verified to resolve to exactly one unit through resolve_anchored_extracted_unit with every required_text phrase present; pending operator re-stamp"
 notes = "LIS disposición adicional decimoséptima (added by RDL 18/2022): libertad de amortización en instalaciones de autoconsumo eléctrico y de uso térmico de consumo propio con energía renovable que sustituyan instalaciones fósiles, condicionada a mantener la plantilla media total de los 24 meses siguientes al inicio del periodo impositivo respecto de la de los doce meses anteriores. Excluye edificios; inversion máxima 500.000 euros. The consolidated text carries a chain of RDL amendments and derogations (RDL 9/2024, 16/2025, 2/2026 derogated; RDL 7/2026 for periods not concluded at 22 March 2026) that governs which entry-into-service years apply to a given period."
 required_text = [
     "Libertad de amortización en inversiones que utilicen energía procedente de fuentes renovables",

@@ -406,6 +406,12 @@ def _render_entry(
 
     lines.extend(
         [
+            ".. cadrumo-legal-link-citation: "
+            + json.dumps(
+                {"label": read_label, "citation": designation, "target": record.permalink},
+                ensure_ascii=False,
+            ),
+            "",
             ".. container:: cadrumo-legal-official",
             "",
             f"   `{_rst_escape(read_label)} <{record.permalink}>`__",

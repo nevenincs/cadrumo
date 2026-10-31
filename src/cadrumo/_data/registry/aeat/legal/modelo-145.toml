@@ -24,7 +24,7 @@ authority = "boe"
 kind = "resolucion"
 corpus_ref = "corpus/normatives/html/boe-a-2014-59-modelo-145-amendment.html#apartado-unico"
 document_id = "BOE-A-2014-59"
-article = "unico"
+article = "único"
 permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2014-59"
 published_at = 2014-01-03
 effective_from = 2014-01-03
@@ -44,7 +44,7 @@ authority = "boe"
 kind = "resolucion"
 corpus_ref = "corpus/normatives/html/boe-a-2014-13679-modelo-145-amendment.html#apartado-unico"
 document_id = "BOE-A-2014-13679"
-article = "apartado unico"
+article = "apartado único"
 permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2014-13679"
 published_at = 2014-12-31
 effective_from = 2014-12-31
