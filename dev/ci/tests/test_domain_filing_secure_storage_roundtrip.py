@@ -16,7 +16,6 @@ inequality, not a flaky equality check.
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
 
@@ -29,30 +28,27 @@ from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.core.storage_taxonomy import StorageCategory
 from cadrumo.core.storage_taxonomy_locations import storage_path
-from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.filing.schema import (
-    ModeloApprovalBasis,
-    ModeloCasillaProvenance,
     ModeloDraft,
     ModeloValue,
     ModeloValueKind,
-    compute_modelo_draft_id,
-    registry_schema_version,
 )
-from cadrumo.domain.submission.models import ModeloDraftStatus
 from dev.registry.compiler.authority import compiled_bundled_authority
+
+from ._filing_draft_support import (
+    APPROVED_AT,
+    DRAFT_TIMESTAMP,
+    IVA_DEVENGADO_CASILLA,
+    IVA_RESULTADO_OPERANDS,
+    approved_modelo_303_draft,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 _BUCKET_ID = "d4c9ced7-e9c3-4ca7-87f7-4659a32d49e3"  # was 'filing-runtime'
-_DRAFT_TIMESTAMP = datetime(2026, 5, 25, 13, 45, 0, tzinfo=UTC)
-_APPROVED_AT = datetime(2026, 5, 25, 14, 30, tzinfo=UTC)
 
 
-_IVA_DEVENGADO_CASILLA: CasillaId = validated_casilla_id("iva.devengado")
-_IVA_DEDUCIBLE_CASILLA: CasillaId = validated_casilla_id("iva.deducible")
 _IVA_RESULTADO_REGIMEN_GENERAL_CASILLA: CasillaId = validated_casilla_id("iva.resultado-regimen-general")
-_IVA_RESULTADO_OPERANDS = (_IVA_DEVENGADO_CASILLA, _IVA_DEDUCIBLE_CASILLA)
 
 
 def _populated_draft() -> ModeloDraft:
@@ -64,16 +60,9 @@ def _populated_draft() -> ModeloDraft:
     field.
     """
 
-    period = Period.from_year_and_code(2025, "1T")
-    snapshot_ref = RegistrySnapshotRef(
-        modelo="303",
-        revision_id="2025-y-siguientes",
-        modelo_year=2025,
-        period="1T",
-    )
     values = (
         ModeloValue(
-            casilla_id=_IVA_DEVENGADO_CASILLA,
+            casilla_id=IVA_DEVENGADO_CASILLA,
             value=Decimal("20000.00"),
             kind=ModeloValueKind.LITERAL,
             source="user-supplied",
@@ -83,52 +72,10 @@ def _populated_draft() -> ModeloDraft:
             value=Decimal("12345.67"),
             kind=ModeloValueKind.COMPUTED,
             source="computed from iva.devengado - iva.deducible",
-            formula_trace_casilla_ids=_IVA_RESULTADO_OPERANDS,
+            formula_trace_casilla_ids=IVA_RESULTADO_OPERANDS,
         ),
     )
-    return ModeloDraft(
-        draft_id=compute_modelo_draft_id(
-            modelo="303",
-            period=period,
-            profile_tax_id="12345678Z",
-            snapshot_ref=snapshot_ref,
-            values=values,
-        ),
-        modelo="303",
-        period=period,
-        profile_tax_id="12345678Z",
-        subject_tax_id="12345678Z",
-        snapshot_ref=snapshot_ref,
-        status=ModeloDraftStatus.BORRADOR,
-        values=values,
-        binding_values=(),
-        casilla_provenance=(
-            ModeloCasillaProvenance(
-                casilla_id=_IVA_DEVENGADO_CASILLA,
-                formula_id="iva-cuota-devengada-formula",
-                legal_refs=("ley-37-1992:art-92",),
-                source_refs=("aeat-iva-2025",),
-            ),
-        ),
-        findings=(),
-        created_at=_DRAFT_TIMESTAMP,
-        updated_at=_DRAFT_TIMESTAMP,
-        schema_version=registry_schema_version(modelo="303", revision_id="2025-y-siguientes"),
-        notes="Draft pending operator review",
-        approved_at=_APPROVED_AT,
-        approved_by="operator-reviewer-1",
-        review_checksum="a" * 64,
-        approval_basis=ModeloApprovalBasis(
-            draft_payload_fingerprint="b" * 16,
-            draft_review_fingerprint="c" * 64,
-            transaction_catalogue_fingerprint="d" * 64,
-            invoice_catalogue_fingerprint="1" * 64,
-            prior_filing_observations_fingerprint="2" * 64,
-            profile_activity_fingerprint="3" * 64,
-            category_profiles_fingerprint="e" * 64,
-            schema_formula_fingerprint="f" * 64,
-        ),
-    )
+    return approved_modelo_303_draft(values)
 
 
 def test_filing_draft_survives_encrypted_storage_roundtrip(
@@ -167,12 +114,12 @@ def test_filing_draft_survives_encrypted_storage_roundtrip(
     assert loaded.snapshot_ref.modelo_year == 2025
     assert loaded.snapshot_ref.period == "1T"
     computed = next(v for v in loaded.values if v.kind is ModeloValueKind.COMPUTED)
-    assert computed.formula_trace_casilla_ids == _IVA_RESULTADO_OPERANDS
+    assert computed.formula_trace_casilla_ids == IVA_RESULTADO_OPERANDS
     assert len(loaded.casilla_provenance) == 1
-    assert loaded.casilla_provenance[0].casilla_id == _IVA_DEVENGADO_CASILLA
+    assert loaded.casilla_provenance[0].casilla_id == IVA_DEVENGADO_CASILLA
     assert loaded.casilla_provenance[0].formula_id == "iva-cuota-devengada-formula"
     assert loaded.notes == "Draft pending operator review"
-    assert loaded.approved_at == _APPROVED_AT
+    assert loaded.approved_at == APPROVED_AT
     assert loaded.approved_by == "operator-reviewer-1"
     assert loaded.review_checksum == "a" * 64
     assert loaded.approval_basis is not None
@@ -215,7 +162,7 @@ def test_modelo_value_rejects_legacy_formula_trace_key() -> None:
                 "value": Decimal("12345.67"),
                 "kind": ModeloValueKind.COMPUTED,
                 "source": "computed from iva.devengado - iva.deducible",
-                "formula_trace": _IVA_RESULTADO_OPERANDS,
+                "formula_trace": IVA_RESULTADO_OPERANDS,
             },
         )
 
@@ -253,8 +200,8 @@ def test_calculation_revision_observations_survive_encrypted_storage(
             casilla_id=_IVA_RESULTADO_REGIMEN_GENERAL_CASILLA,
             value=Decimal("12345.67"),
             formula_id="iva.formula.resultado",
-            operand_refs=_IVA_RESULTADO_OPERANDS,
-            operand_casilla_refs=_IVA_RESULTADO_OPERANDS,
+            operand_refs=IVA_RESULTADO_OPERANDS,
+            operand_casilla_refs=IVA_RESULTADO_OPERANDS,
             operand_values=(Decimal("20000.00"), Decimal("7654.33")),
             legal_refs=("ley-37-1992:art-94",),
             source_refs=("aeat-iva-2025",),
@@ -288,8 +235,8 @@ def test_calculation_revision_observations_survive_encrypted_storage(
                         revision_id=registry_snapshot_ref.revision_id,
                         name=f"{registry_snapshot_ref.modelo}-{registry_snapshot_ref.modelo_year}-"
                         f"{registry_snapshot_ref.period}",
-                        created_at=_DRAFT_TIMESTAMP,
-                        updated_at=_DRAFT_TIMESTAMP,
+                        created_at=DRAFT_TIMESTAMP,
+                        updated_at=DRAFT_TIMESTAMP,
                     )
                 }
             )
@@ -309,8 +256,8 @@ def test_calculation_revision_observations_survive_encrypted_storage(
             state=CalculationRevisionState.BORRADOR,
             casilla_values=casilla_values,
             observations=(observation,),
-            created_at=_DRAFT_TIMESTAMP,
-            updated_at=_DRAFT_TIMESTAMP,
+            created_at=DRAFT_TIMESTAMP,
+            updated_at=DRAFT_TIMESTAMP,
             filing_instance_evidence=None,
             source_provenance=(),
         )

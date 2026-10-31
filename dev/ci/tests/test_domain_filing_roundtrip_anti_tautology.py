@@ -22,7 +22,6 @@ re-audited.
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
 
@@ -37,24 +36,17 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import (
     mutate_encrypted_secure_object_json,
 )
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
-from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.filing.schema import (
-    ModeloApprovalBasis,
-    ModeloCasillaProvenance,
     ModeloDraft,
     ModeloValue,
     ModeloValueKind,
-    compute_modelo_draft_id,
-    registry_schema_version,
 )
-from cadrumo.domain.submission.models import ModeloDraftStatus
+
+from ._filing_draft_support import IVA_RESULTADO_OPERANDS, approved_modelo_303_draft
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 _BUCKET_ID = "d4c9ced7-e9c3-4ca7-87f7-4659a32d49e3"  # was 'filing-runtime'
-_DRAFT_TIMESTAMP = datetime(2026, 5, 25, 13, 45, 0, tzinfo=UTC)
-_APPROVED_AT = datetime(2026, 5, 25, 14, 30, tzinfo=UTC)
 _OPTIONAL_FIELD_DROP_FIELDS = (
     "casilla_provenance",
     "notes",
@@ -65,72 +57,20 @@ _OPTIONAL_FIELD_DROP_FIELDS = (
 )
 
 
-_IVA_DEVENGADO_CASILLA: CasillaId = validated_casilla_id("iva.devengado")
-_IVA_DEDUCIBLE_CASILLA: CasillaId = validated_casilla_id("iva.deducible")
 _IVA_RESULTADO_CASILLA: CasillaId = validated_casilla_id("iva.resultado")
-_IVA_RESULTADO_OPERANDS = (_IVA_DEVENGADO_CASILLA, _IVA_DEDUCIBLE_CASILLA)
 
 
 def _populated_draft(*, resultado: Decimal = Decimal("12345.67")) -> ModeloDraft:
-    period = Period.from_year_and_code(2025, "1T")
-    snapshot_ref = RegistrySnapshotRef(
-        modelo="303",
-        revision_id="2025-y-siguientes",
-        modelo_year=2025,
-        period="1T",
-    )
     values = (
         ModeloValue(
             casilla_id=_IVA_RESULTADO_CASILLA,
             value=resultado,
             kind=ModeloValueKind.COMPUTED,
             source="computed from inputs",
-            formula_trace_casilla_ids=_IVA_RESULTADO_OPERANDS,
+            formula_trace_casilla_ids=IVA_RESULTADO_OPERANDS,
         ),
     )
-    return ModeloDraft(
-        draft_id=compute_modelo_draft_id(
-            modelo="303",
-            period=period,
-            profile_tax_id="12345678Z",
-            snapshot_ref=snapshot_ref,
-            values=values,
-        ),
-        modelo="303",
-        period=period,
-        profile_tax_id="12345678Z",
-        subject_tax_id="12345678Z",
-        snapshot_ref=snapshot_ref,
-        status=ModeloDraftStatus.BORRADOR,
-        values=values,
-        binding_values=(),
-        casilla_provenance=(
-            ModeloCasillaProvenance(
-                casilla_id=_IVA_DEVENGADO_CASILLA,
-                formula_id="iva-cuota-devengada-formula",
-                legal_refs=("ley-37-1992:art-92",),
-                source_refs=("aeat-iva-2025",),
-            ),
-        ),
-        findings=(),
-        created_at=_DRAFT_TIMESTAMP,
-        updated_at=_DRAFT_TIMESTAMP,
-        schema_version=registry_schema_version(modelo="303", revision_id="2025-y-siguientes"),
-        notes="Draft pending operator review",
-        approved_at=_APPROVED_AT,
-        approved_by="operator-reviewer-1",
-        review_checksum="a" * 64,
-        approval_basis=ModeloApprovalBasis(
-            draft_payload_fingerprint="b" * 16,
-            draft_review_fingerprint="c" * 64,
-            transaction_catalogue_fingerprint="d" * 64,
-            invoice_catalogue_fingerprint="1" * 64,
-            prior_filing_observations_fingerprint="2" * 64,
-            profile_activity_fingerprint="3" * 64,
-            category_profiles_fingerprint="e" * 64,
-            schema_formula_fingerprint="f" * 64,
-        ),
-    )
+    return approved_modelo_303_draft(values)
 
 
 def test_boundary_catches_simulated_field_drop_via_corrupted_payload(
