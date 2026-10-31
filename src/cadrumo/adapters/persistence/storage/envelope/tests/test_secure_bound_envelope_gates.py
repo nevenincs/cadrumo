@@ -25,6 +25,8 @@ from typing import override
 
 import pytest
 
+from cadrumo.adapters.persistence.storage.tests.source_call_support import source_calls
+
 from ...errors import ClassificationError, EnvelopeVersionError
 from ..secure_bound_repository import SecureBoundRepository
 
@@ -43,13 +45,13 @@ def test_both_read_paths_route_through_the_one_envelope_gate() -> None:
     iter_source = inspect.getsource(SecureBoundRepository._iter_validated_rows)
 
     for name, source in (("load", load_source), ("_iter_validated_rows", iter_source)):
-        assert _calls(source, "_validate_envelope"), f"{name} does not route through the shared envelope gate"
+        assert source_calls(source, "_validate_envelope"), f"{name} does not route through the shared envelope gate"
         assert "model_validate_json(" not in source, f"{name} parses the envelope itself instead of delegating"
         assert "classification is not" not in source, f"{name} re-implements the classification gate"
         assert "schema_version !=" not in source, f"{name} re-implements the schema-version gate"
 
     gate_source = inspect.getsource(SecureBoundRepository._validate_envelope)
-    assert _calls(gate_source, "model_validate_json")
+    assert source_calls(gate_source, "model_validate_json")
     assert "classification is not" in gate_source
     assert "schema_version !=" in gate_source
 
@@ -173,26 +175,6 @@ def test_sensitivity_and_schema_version_are_the_gate_inputs() -> None:
     assert "self.schema_version" in gate_source
 
 
-def _calls(source: str, callee: str) -> bool:
-    """Whether ``source`` actually CALLS ``callee``, not merely mentions it.
-
-    A membership test on source text passes when the name appears in a
-    docstring or a comment, so a surface that stopped delegating while keeping
-    its prose reads as compliant. That is the mention-versus-containment hole:
-    the check answers "does this code discuss the shared path" when the
-    property is "does this code take it".
-    """
-    tree = ast.parse(textwrap.dedent(source))
-    return any(
-        isinstance(node, ast.Call)
-        and (
-            (isinstance(node.func, ast.Attribute) and node.func.attr == callee)
-            or (isinstance(node.func, ast.Name) and node.func.id == callee)
-        )
-        for node in ast.walk(tree)
-    )
-
-
 def test_the_delegation_check_rejects_a_docstring_mention() -> None:
     """DISCRIMINATING: the shape the text check waved through.
 
@@ -207,5 +189,5 @@ def test_the_delegation_check_rejects_a_docstring_mention() -> None:
         "    return self._fetch(key)\n"
     )
 
-    assert _calls(calling, "_validate_envelope")
-    assert not _calls(mentioning, "_validate_envelope")
+    assert source_calls(calling, "_validate_envelope")
+    assert not source_calls(mentioning, "_validate_envelope")

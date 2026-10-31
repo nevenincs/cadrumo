@@ -15,14 +15,14 @@ carried its own copy, so such a change moved only one.
 
 from __future__ import annotations
 
-import ast
 import inspect
 import sqlite3
-import textwrap
 from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
+
+from cadrumo.adapters.persistence.storage.tests.source_call_support import source_calls
 
 from ......core.classification.policies import SensitivityClass
 from ...tests.ephemeral_bucket_session import EphemeralBucketSession
@@ -57,7 +57,7 @@ def test_every_integrity_surface_routes_through_the_shared_probe() -> None:
 
     for surface in surfaces:
         source = inspect.getsource(surface)
-        assert _calls(source, "probe_row_decryptability"), (
+        assert source_calls(source, "probe_row_decryptability"), (
             f"{surface.__name__} does not route through the shared decryptability probe"
         )
         assert "decrypt_secure_object_payload(" not in source, (
@@ -227,24 +227,6 @@ def test_all_rows_readable_reports_clean_across_surfaces(tmp_path: Path) -> None
     assert namespace_report.unreadable == 0
 
 
-def _calls(source: str, callee: str) -> bool:
-    """Whether ``source`` actually CALLS ``callee``, not merely mentions it.
-
-    A membership test on source text passes when the name appears in a
-    docstring or comment, so a surface that stopped delegating while keeping
-    its prose reads as compliant.
-    """
-    tree = ast.parse(textwrap.dedent(source))
-    return any(
-        isinstance(node, ast.Call)
-        and (
-            (isinstance(node.func, ast.Attribute) and node.func.attr == callee)
-            or (isinstance(node.func, ast.Name) and node.func.id == callee)
-        )
-        for node in ast.walk(tree)
-    )
-
-
 def test_the_delegation_check_rejects_a_docstring_mention() -> None:
     """DISCRIMINATING: a mention is not a call.
 
@@ -256,5 +238,5 @@ def test_the_delegation_check_rejects_a_docstring_mention() -> None:
     calling = "def surface(row):\n    return shared_routine(row)\n"
     mentioning = 'def surface(row):\n    """Delegates to shared_routine( ) in the core."""\n    return row\n'
 
-    assert _calls(calling, "shared_routine")
-    assert not _calls(mentioning, "shared_routine")
+    assert source_calls(calling, "shared_routine")
+    assert not source_calls(mentioning, "shared_routine")
