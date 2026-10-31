@@ -266,6 +266,38 @@ def test_registry_casilla_collection_rejects_dangling_formula_inputs() -> None:
     }
 
 
+def _modelo_999_snapshot(revision: ModeloRevision) -> RegistrySnapshot:
+    """Wrap ``revision`` in a bare annual Modelo 999 snapshot with no registry side tables."""
+    modelo = ModeloDefinition(
+        id="999",
+        title_localization_key="test.schema.modelo.999.title",
+        official_name_localization_key="test.schema.modelo.999.official_name",
+        tax_domain=TaxDomain("iva"),
+        cadence="annual",
+        jurisdiction="ES-AEAT",
+        legal_refs=("ley-58-2003:art-29",),
+        source_refs=("aeat-manual",),
+        revisions={"2025": revision},
+    )
+    return RegistrySnapshot(
+        modelo=modelo,
+        revision=revision,
+        filing_year=2025,
+        period="0A",
+        legal={},
+        sources={},
+        extraction_profiles={},
+        live_cross_references={},
+        workbook_parity_refs={},
+        verification_expectations={},
+        application_links={},
+        deadline_windows={},
+        filing_schedules={},
+        constructs={},
+        dependency_classifications={},
+    )
+
+
 def test_runtime_projection_rejects_ambiguous_revision_casilla_identity() -> None:
     revision = ModeloRevision.model_validate(
         {
@@ -296,34 +328,7 @@ def test_runtime_projection_rejects_ambiguous_revision_casilla_identity() -> Non
             ),
         },
     )
-    modelo = ModeloDefinition(
-        id="999",
-        title_localization_key="test.schema.modelo.999.title",
-        official_name_localization_key="test.schema.modelo.999.official_name",
-        tax_domain=TaxDomain("iva"),
-        cadence="annual",
-        jurisdiction="ES-AEAT",
-        legal_refs=("ley-58-2003:art-29",),
-        source_refs=("aeat-manual",),
-        revisions={"2025": revision},
-    )
-    snapshot = RegistrySnapshot(
-        modelo=modelo,
-        revision=revision,
-        filing_year=2025,
-        period="0A",
-        legal={},
-        sources={},
-        extraction_profiles={},
-        live_cross_references={},
-        workbook_parity_refs={},
-        verification_expectations={},
-        application_links={},
-        deadline_windows={},
-        filing_schedules={},
-        constructs={},
-        dependency_classifications={},
-    )
+    snapshot = _modelo_999_snapshot(revision)
 
     with pytest.raises(ModeloBuilderError) as exc_info:
         collection_from_snapshot(snapshot)
@@ -378,34 +383,7 @@ def test_runtime_projection_rejects_casilla_binding_id_collision() -> None:
             ),
         },
     )
-    modelo = ModeloDefinition(
-        id="999",
-        title_localization_key="test.schema.modelo.999.title",
-        official_name_localization_key="test.schema.modelo.999.official_name",
-        tax_domain=TaxDomain("iva"),
-        cadence="annual",
-        jurisdiction="ES-AEAT",
-        legal_refs=("ley-58-2003:art-29",),
-        source_refs=("aeat-manual",),
-        revisions={"2025": revision},
-    )
-    snapshot = RegistrySnapshot(
-        modelo=modelo,
-        revision=revision,
-        filing_year=2025,
-        period="0A",
-        legal={},
-        sources={},
-        extraction_profiles={},
-        live_cross_references={},
-        workbook_parity_refs={},
-        verification_expectations={},
-        application_links={},
-        deadline_windows={},
-        filing_schedules={},
-        constructs={},
-        dependency_classifications={},
-    )
+    snapshot = _modelo_999_snapshot(revision)
 
     with pytest.raises(ModeloBuilderError) as exc_info:
         collection_from_snapshot(snapshot)
