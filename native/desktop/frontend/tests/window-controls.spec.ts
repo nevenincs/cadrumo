@@ -200,6 +200,62 @@ test("window controls use authenticated commands and native presentation", async
     "data-chrome",
     "native",
   );
+  const brand = page.locator("header.titlebar .titlebar-brand");
+  const windowed = await brand.evaluate(
+    (element) => getComputedStyle(element).paddingInlineStart,
+  );
+  await page.evaluate(() => {
+    (
+      window as unknown as {
+        __windowTest: {
+          publish: (next: {
+            maximized: boolean;
+            fullscreen: boolean;
+            chrome: "custom" | "native";
+          }) => void;
+        };
+      }
+    ).__windowTest.publish({
+      maximized: false,
+      fullscreen: true,
+      chrome: "native",
+    });
+  });
+  // Full screen hides the system's controls, so the brand gives back their inset.
+  await expect(page.locator("header.titlebar")).toHaveAttribute(
+    "data-fullscreen",
+    "",
+  );
+  await expect
+    .poll(() =>
+      brand.evaluate((element) => getComputedStyle(element).paddingInlineStart),
+    )
+    .not.toBe(windowed);
+  await page.evaluate(() => {
+    (
+      window as unknown as {
+        __windowTest: {
+          publish: (next: {
+            maximized: boolean;
+            fullscreen: boolean;
+            chrome: "custom" | "native";
+          }) => void;
+        };
+      }
+    ).__windowTest.publish({
+      maximized: false,
+      fullscreen: false,
+      chrome: "native",
+    });
+  });
+  await expect(page.locator("header.titlebar")).not.toHaveAttribute(
+    "data-fullscreen",
+  );
+  await expect
+    .poll(() =>
+      brand.evaluate((element) => getComputedStyle(element).paddingInlineStart),
+    )
+    .toBe(windowed);
   await page.evaluate(() => {
     (
       window as unknown as {
