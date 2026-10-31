@@ -277,3 +277,10 @@ export function readLocaleDecimal(locale: string, raw: string): string | null {
  */
 export const heldDecimal = (canonical: string): string =>
   isTwoWayDecimal(canonical) ? `${canonical}0` : canonical;
+
+/** The digits after the point of a held decimal, as they were written. */
+export function writtenPlaces(held: string): number {
+  const settled = held.endsWith("0") && isTwoWayDecimal(held.slice(0, -1));
+  const written = settled ? held.slice(0, -1) : held;
+  return written.split(".")[1]?.length ?? 0;
+}

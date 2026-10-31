@@ -3,7 +3,7 @@ import { EntryInput } from "@/components/editors/EntryInput";
 import type { EditorProps } from "@/components/editors/editorProps";
 import { decimalReading } from "@/components/editors/numberReading";
 import { cn } from "@/components/ui/cn";
-import { formatDecimal } from "@/shared/numbers";
+import { formatDecimal, writtenPlaces } from "@/shared/numbers";
 import { useStrings } from "@/shell/strings";
 
 /**
@@ -20,15 +20,11 @@ export function MoneyEditor({
   const locale = useStrings().locale ?? "en";
   const reading = useMemo(
     () =>
-      decimalReading(locale, (value) => {
-        const typed = value.replace(/0+$/, "").split(".")[1]?.length ?? 0;
-        const places = value.includes(".") ? typed : 0;
-        return formatDecimal(
-          locale,
-          value,
-          places > decimals ? {} : { minFraction: decimals },
-        );
-      }),
+      decimalReading(locale, (value) =>
+        formatDecimal(locale, value, {
+          minFraction: Math.max(writtenPlaces(value), decimals),
+        }),
+      ),
     [locale, decimals],
   );
   return (

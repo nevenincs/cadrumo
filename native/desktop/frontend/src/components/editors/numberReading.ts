@@ -4,6 +4,7 @@ import {
   heldDecimal,
   isTwoWayDecimal,
   readLocaleDecimal,
+  writtenPlaces,
 } from "@/shared/numbers";
 
 const WRITTEN = /^-?\d+(\.\d+)?$/;
@@ -13,11 +14,12 @@ const WRITTEN = /^-?\d+(\.\d+)?$/;
 export const isReadDecimal = (value: string): boolean =>
   WRITTEN.test(value) && !isTwoWayDecimal(value);
 
-/** How a decimal editor reads: the language's marks going in, every digit kept,
- * and unread text shown as it came. */
+/** How a decimal editor reads: the language's marks going in, every digit kept
+ * and shown, trailing zeros too, and unread text shown as it came. */
 export function decimalReading(
   locale: string,
-  shown: (value: string) => string = (value) => formatDecimal(locale, value),
+  shown: (value: string) => string = (value) =>
+    formatDecimal(locale, value, { minFraction: writtenPlaces(value) }),
 ): EntryReading {
   return {
     read(typed) {
@@ -28,7 +30,10 @@ export function decimalReading(
     shown: (value) => (isReadDecimal(value) ? shown(value) : value),
     typed: (value) =>
       isReadDecimal(value)
-        ? formatDecimal(locale, value, { grouping: false })
+        ? formatDecimal(locale, value, {
+            grouping: false,
+            minFraction: writtenPlaces(value),
+          })
         : value,
   };
 }

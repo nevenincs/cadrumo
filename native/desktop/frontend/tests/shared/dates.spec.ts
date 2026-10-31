@@ -10,7 +10,10 @@ import {
 } from "../../src/shared/dates";
 import {
   dateFormats,
+  dayOrderOf,
   formatDay,
+  formatDayFigures,
+  readLocaleDay,
   formatTime,
 } from "../../src/shared/dateFormats";
 import { evaluatedLabel, evaluatedWord } from "../../src/shell/calendar";
@@ -179,4 +182,34 @@ test("formatter reuse is bounded and keeps recently used locales", () => {
   for (let index = 16; index < 33; index++) dateFormats(`en-x-cache-${index}`);
   expect(dateFormats("en-US")).not.toBe(held);
   expect(() => dateFormats("not_a_locale")).toThrow(RangeError);
+});
+
+test("typed dates read in each language's order", () => {
+  expect(dayOrderOf("en")).toEqual(["month", "day", "year"]);
+  expect(dayOrderOf("es")).toEqual(["day", "month", "year"]);
+  expect(dayOrderOf("hu")).toEqual(["year", "month", "day"]);
+  expect(readLocaleDay("en", "10/11/2026")).toBe("2026-10-11");
+  expect(readLocaleDay("es", "10/11/2026")).toBe("2026-11-10");
+  expect(readLocaleDay("ca", "1.2.2026")).toBe("2026-02-01");
+  expect(readLocaleDay("hu", "2026. 10. 31.")).toBe("2026-10-31");
+  // Year first is ISO's order in any language.
+  expect(readLocaleDay("en", "2026-10-31")).toBe("2026-10-31");
+  expect(readLocaleDay("es", "2026/1/2")).toBe("2026-01-02");
+  // A century is never guessed, and no day is invented.
+  expect(readLocaleDay("es", "31/10/26")).toBeNull();
+  expect(readLocaleDay("es", "31/02/2026")).toBeNull();
+  expect(readLocaleDay("en", "31/10/2026")).toBeNull();
+  expect(readLocaleDay("es", "abc")).toBeNull();
+  expect(readLocaleDay("es", "")).toBeNull();
+  expect(readLocaleDay("es", "29/02/2028")).toBe("2028-02-29");
+});
+
+test("a date is drawn in the figures it is typed in", () => {
+  expect(formatDayFigures("en", "2026-10-31")).toBe("10/31/2026");
+  expect(formatDayFigures("es", "2026-10-31")).toBe("31/10/2026");
+  expect(formatDayFigures("es", "31/13/2026")).toBe("31/13/2026");
+  for (const locale of ["en", "es", "ca", "hu"])
+    expect(readLocaleDay(locale, formatDayFigures(locale, "2026-03-09"))).toBe(
+      "2026-03-09",
+    );
 });

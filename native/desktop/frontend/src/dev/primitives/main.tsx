@@ -9,6 +9,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import "../index.css";
 import { CompanionsHarness } from "./CompanionsHarness";
 import { DataGridHarness, DataTableHarness } from "./DataGridHarness";
+import { EditorHarness } from "./EditorHarness";
 import { LedgerExportHarness } from "./LedgerExportHarness";
 
 import "virtual:desktop-palette.css";
@@ -28,6 +29,8 @@ ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
           <DataTableHarness />
         ) : harness === "companions" ? (
           <CompanionsHarness />
+        ) : harness === "editor" ? (
+          <EditorHarness params={params} />
         ) : harness === "ledger-export" ? (
           <LedgerExportHarness
             staged={Math.max(0, Math.trunc(Number(params.get("staged")) || 0))}

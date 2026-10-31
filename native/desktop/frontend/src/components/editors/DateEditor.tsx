@@ -41,6 +41,7 @@ export function DateEditor({
   const t = useStrings();
   const locale = t.locale ?? "en";
   const [open, setOpen] = useState(false);
+  const [opened, setOpened] = useState(0);
   const reading = useMemo(
     () => ({
       read: (typed: string) =>
@@ -51,7 +52,13 @@ export function DateEditor({
     [locale],
   );
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover
+      open={open}
+      onOpenChange={(next) => {
+        setOpen(next);
+        if (next) setOpened((count) => count + 1);
+      }}
+    >
       <PopoverAnchor asChild>
         <div data-slot="date-editor" className="relative">
           <EntryInput
@@ -79,7 +86,10 @@ export function DateEditor({
         className="w-auto"
         onOpenAutoFocus={(event) => event.preventDefault()}
       >
+        {/* Reopened while it is still closing, the popover keeps its content, so
+            a calendar of its own each time is what puts focus on the day. */}
         <Calendar
+          key={opened}
           locale={locale}
           value={editor.value}
           min={min}
