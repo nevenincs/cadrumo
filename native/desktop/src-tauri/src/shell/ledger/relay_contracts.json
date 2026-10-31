@@ -153,7 +153,7 @@
       }
     },
     "ledger.bienes_inversion.list": {
-      "may_write": true,
+      "may_write": false,
       "review": false,
       "subject": {
         "kind": "profile",
@@ -443,7 +443,7 @@
       }
     },
     "ledger.inventory.list": {
-      "may_write": true,
+      "may_write": false,
       "review": false,
       "subject": {
         "kind": "profile",
@@ -651,7 +651,7 @@
       }
     },
     "ledger.prorrata.list": {
-      "may_write": true,
+      "may_write": false,
       "review": false,
       "subject": {
         "kind": "profile",

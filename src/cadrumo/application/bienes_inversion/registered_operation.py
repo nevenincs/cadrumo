@@ -12,7 +12,10 @@ from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
 from ..ledger.read_access import resolve_ledger_read_access
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess, with_commit_action
-from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES
+from ..operations.capabilities import (
+    RECORDED_IDEMPOTENT_SECURE_INPUT_READ_CAPABILITIES,
+    RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES,
+)
 from ..operations.models import OperationRequest
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.registry import (
@@ -94,7 +97,11 @@ def _definition(
         result_type=BienesInversionOperationExecutionResult,
         executor_type=BienesInversionOperationExecutor,
         build=lambda: BienesInversionOperationExecutor(repository_factory, definition_id=definition_id),
-        capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES,
+        capabilities=(
+            RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES
+            if definition_id == BIENES_INVERSION_DECLARE_OPERATION_DEFINITION_ID
+            else RECORDED_IDEMPOTENT_SECURE_INPUT_READ_CAPABILITIES
+        ),
         refusal_detail_codes=shape.refusal_codes,
     )
 

@@ -39,9 +39,6 @@ _COMMITTED_EFFECTS = frozenset({OperationEffect.UPDATED, OperationEffect.PARTIAL
 
 _PERMITS_MORE_THAN_IT_DOES: Mapping[str, str] = {
     "auth.local-read": "reads stored authentication state under an update capability set",
-    "ledger.bienes_inversion.list": "lists the register under its family's update capability set",
-    "ledger.inventory.list": "lists the register under its family's update capability set",
-    "ledger.prorrata.list": "lists the register under its family's update capability set",
 }
 """Definitions that permit a committed effect although the operation only reads.
 

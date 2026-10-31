@@ -9,7 +9,10 @@ from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from ..ledger.read_access import resolve_ledger_read_access
 from ..modelo.calculation_action_ports import CalculationActionPortsFactory
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess, with_commit_action
-from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES
+from ..operations.capabilities import (
+    RECORDED_IDEMPOTENT_SECURE_INPUT_READ_CAPABILITIES,
+    RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES,
+)
 from ..operations.models import OperationRequest
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.registry import (
@@ -92,7 +95,11 @@ def _definition(
             definition_id=definition_id,
             calculation_action_ports_factory=calculation_action_ports_factory,
         ),
-        capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES,
+        capabilities=(
+            RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES
+            if shape.mutation
+            else RECORDED_IDEMPOTENT_SECURE_INPUT_READ_CAPABILITIES
+        ),
         refusal_detail_codes=shape.refusal_codes,
     )
 

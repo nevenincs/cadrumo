@@ -152,7 +152,12 @@ def _registration(
 
 def build_inventory_list_definition(ports_factory: InventoryServicePortsFactory) -> OperationDefinition:
     """Build the exact-profile inventory-list worker definition."""
-    return _definition(INVENTORY_LIST_OPERATION_DEFINITION_ID, InventoryListRequest, ports_factory)
+    return _definition(
+        INVENTORY_LIST_OPERATION_DEFINITION_ID,
+        InventoryListRequest,
+        ports_factory,
+        capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_READ_CAPABILITIES,
+    )
 
 
 def build_inventory_create_definition(

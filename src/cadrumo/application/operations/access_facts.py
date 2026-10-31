@@ -55,8 +55,6 @@ _LOCAL_READS: Final = (
     "ledger.actividad-asset.list",
     "ledger.actividad-asset.plan",
     "ledger.actividad-asset.timeline",
-    # The register listings of bienes de inversión, inventory and prorrata read
-    # only, although their definitions permit an update.
     "ledger.bienes_inversion.list",
     "ledger.check",
     "ledger.evidence.attachment_queue",
