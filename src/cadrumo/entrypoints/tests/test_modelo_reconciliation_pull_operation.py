@@ -8,7 +8,7 @@ from datetime import UTC, datetime
 from decimal import Decimal
 from functools import partial
 from pathlib import Path
-from uuid import UUID, uuid4
+from uuid import UUID
 
 import pytest
 
@@ -51,6 +51,7 @@ from ...tests.aeat_literal_fixtures import (
 from ..justificante_composition import build_justificante_capture_service
 from . import modelo_operation_test_support
 from . import registered_executor_case_support as conformance
+from .foreign_profile_refusal_support import assert_refused_for_foreign_active_profile
 from .test_modelo_reconciliation_import_operation import _CommitWitness
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -263,21 +264,12 @@ def test_registered_pull_reconciles_encrypted_capture_under_exact_profile_guard(
             else None,
             actor=modelo_operation_test_support.MODELO_OPERATION_TEST_ACTOR,
         )
-        with override_settings(cadrumo_active_profile=str(uuid4())):
-            refused_submission, refused_observation = asyncio.run(
-                driver.run(
-                    definition_id=MODELO_RECONCILIATION_PULL_OPERATION_DEFINITION_ID,
-                    subject_ref=subject_ref,
-                    payload=request,
-                )
-            )
-        refused = asyncio.run(
-            driver.services.submission.supervisor.inspect(refused_submission.receipt.operation_id)
-        ).terminal_receipt
-        assert refused is not None
-        assert refused.condition is OperationTerminalCondition.REFUSED
-        assert refused.effect is OperationEffect.NONE
-        assert refused_observation.projection.terminal_condition is OperationTerminalCondition.REFUSED
+        assert_refused_for_foreign_active_profile(
+            driver,
+            definition_id=MODELO_RECONCILIATION_PULL_OPERATION_DEFINITION_ID,
+            subject_ref=subject_ref,
+            payload=request,
+        )
         assert witness.events == []
 
         with override_settings(cadrumo_active_profile=str(profile_id)):
