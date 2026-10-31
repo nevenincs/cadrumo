@@ -674,9 +674,8 @@ cli:
           que no s''hagi presentat res.'
         pull_dry_run_help: Mostra que capturaria aquesta descarrega massiva sense
           escriure res. Nomes en mode massiu.
-        pull_dry_run_single_mode_error: --dry-run nomes es valid per a una descarrega
-          massiva amb --from-year/--to-year; la descarrega d'un sol model no admet
-          simulació.
+        pull_dry_run_single_mode_error: --dry-run només és vàlid per a una baixada
+          massiva amb --from-year/--to-year; la baixada d'un sol model no admet simulació.
         pull_help: Descarrega dades de declaracions presentades a l'AEAT des de la
           teva sessió autenticada de l'AEAT.
         pull_modelo_help: Limita aquesta descàrrega a aquest model.
@@ -2516,7 +2515,8 @@ cli:
         incomplete: 'Falten dades obligatòries al perfil: {paths}'
       create_confirm_passphrase_prompt: 'Confirma la contrasenya del nou perfil: '
       create_guidance_unavailable: El perfil s'ha creat correctament, però no s'han
-        pogut preparar els avisos amb els passos següents. Consulta l'estat del perfil per veure què falta.
+        pogut preparar els avisos amb els passos següents. Consulta l'estat del perfil
+        per veure què falta.
       create_help: Crea un perfil protegit per una contrasenya. En un terminal ofereix
         després un codi de recuperació opcional; pots ometre'l o afegir-lo més tard
         amb 'cadrumo-runtime config profile recovery enable'.
@@ -3385,7 +3385,7 @@ cli:
       amount: Import
       archived: Arxivades
       attachment_ids: Adjunts
-      bucket: Bucket
+      bucket: Contenidor
       business_classification: Classificació
       business_pct: Percentatge de negoci
       category_id: Categoria
@@ -3781,8 +3781,8 @@ cli:
       horizon_help: Finestra cap endavant (en dies) que considera la cohort `due_soon`.
     app_help: Revisar l'estat actual de l'espai de treball fiscal
     backlog:
-      allow_incomplete_help: Generar el backlog encara que les dades del perfil siguin
-        incompletes.
+      allow_incomplete_help: Generar la llista de pendents encara que les dades del
+        perfil siguin incompletes.
       from_help: Data d'inici inclusiva (ISO YYYY-MM-DD); per defecte 365 dies abans
         d'avui.
       help: Llista les obligacions vençudes que encara no has registrat com a presentades.
@@ -3804,7 +3804,7 @@ cli:
       to_help: Data de fi inclusiva del calendari (ISO YYYY-MM-DD).
     calendar_local_filing_evidence_unavailable: No s'ha pogut carregar l'evidència
       de presentació local del calendari; el calendari es deriva del calendari de
-      terminis i pot sobrenotificar una obligació com a encara pendent.
+      terminis i pot indicar erròniament que una obligació continua pendent.
     calendar_local_live_events_unavailable: L'evidència local d'esdeveniments en viu
       no està disponible per a aquesta fila del calendari.
     calendar_local_modelo_events_unavailable: L'evidència local d'esdeveniments de

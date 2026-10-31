@@ -73,8 +73,8 @@ adapters:
           nem tartalmazta az openid+email hatókört.
         id_token_module_not_importable: A google-auth id_token modul nem importálható.
         id_token_verification_failed: A Google id_token ellenőrzése sikertelen.
-        loopback_bind_failed: A helyi loopback OAuth-visszahívási végpont nem tudott
-          portot foglalni.
+        loopback_bind_failed: A helyi visszacsatolási címen működő OAuth-visszahívás
+          nem tudott portot foglalni.
         non_interactive: 'A Google OAuth elutasítva: az interaktív böngészős hozzájárulási
           folyamathoz vezérlő terminál szükséges, de ezt a parancsot nem interaktívan
           futtatták.'

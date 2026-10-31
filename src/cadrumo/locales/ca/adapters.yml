@@ -70,13 +70,13 @@ adapters:
         consent_declined: S'ha rebutjat el consentiment de Google, de manera que no
           s'ha iniciat la sessió ni s'ha desat res. Torna a executar `cadrumo-runtime
           config google login` i aprova la sol·licitud.
-        endpoint_unreachable: L'endpoint OAuth de Google no és accessible.
+        endpoint_unreachable: El punt de connexió OAuth de Google no és accessible.
         id_token_missing: Google no ha retornat un id_token; el consentiment OAuth
           no incloïa els àmbits openid+email.
         id_token_module_not_importable: El mòdul id_token de google-auth no es pot
           importar.
         id_token_verification_failed: La comprovació de l'id_token de Google ha fallat.
-        loopback_bind_failed: El receptor OAuth loopback local no ha pogut assignar
+        loopback_bind_failed: El receptor OAuth de bucle local no ha pogut assignar
           cap port.
         non_interactive: 'Google OAuth rebutjat: el flux interactiu de consentiment
           al navegador necessita un terminal interactiu, però aquesta ordre s''ha

@@ -2530,7 +2530,8 @@ cli:
         incomplete: 'Faltan datos obligatorios en el perfil: {paths}'
       create_confirm_passphrase_prompt: 'Confirma la contraseña del nuevo perfil: '
       create_guidance_unavailable: El perfil se ha creado correctamente, pero no se
-        han podido preparar los avisos con los pasos siguientes. Consulta el estado del perfil para ver qué falta.
+        han podido preparar los avisos con los pasos siguientes. Consulta el estado
+        del perfil para ver qué falta.
       create_help: Crea un perfil protegido por una contraseña. En un terminal ofrece
         después un código de recuperación opcional; puedes omitirlo o añadirlo más
         tarde con 'cadrumo-runtime config profile recovery enable'.
@@ -3403,7 +3404,7 @@ cli:
       amount: Importe
       archived: Archivadas
       attachment_ids: Adjuntos
-      bucket: Bucket
+      bucket: Contenedor
       business_classification: Clasificación
       business_pct: Porcentaje de negocio
       category_id: Categoría
@@ -3805,8 +3806,8 @@ cli:
       horizon_help: Ventana hacia adelante (en días) que considera la cohorte `due_soon`.
     app_help: Revisar el estado actual del espacio de trabajo fiscal
     backlog:
-      allow_incomplete_help: Generar el backlog aunque los datos del perfil estén
-        incompletos.
+      allow_incomplete_help: Generar la lista de tareas pendientes aunque los datos
+        del perfil estén incompletos.
       from_help: Fecha de inicio inclusiva (ISO YYYY-MM-DD); por defecto 365 días
         antes de hoy.
       help: Lista las obligaciones vencidas que aún no has registrado como presentadas.
@@ -3828,7 +3829,7 @@ cli:
       to_help: Fecha de fin inclusiva del calendario (ISO YYYY-MM-DD).
     calendar_local_filing_evidence_unavailable: No se pudo cargar la evidencia de
       presentación local del calendario; el calendario se deriva del calendario de
-      plazos y puede sobrenotificar una obligación como aún pendiente.
+      plazos y puede indicar erróneamente que una obligación sigue pendiente.
     calendar_local_live_events_unavailable: La evidencia local de eventos en vivo
       no está disponible para esta fila del calendario.
     calendar_local_modelo_events_unavailable: La evidencia local de eventos de modelo

@@ -84,7 +84,7 @@ errors:
     bracket_no_window: El paràmetre escalonat {parameter_id} no té cap tram vàlid
       per a {as_of}.
     casilla_constraint_violation: 'La casella {casilla_id} amb valor {value} infringeix
-      la restricció declarada: {violation}. Refs: {legal_refs}.'
+      la restricció declarada: {violation}. Referències: {legal_refs}.'
     casilla_referenced_before_evaluation: La casella {casilla_id} s'ha referenciat
       abans d'avaluar la seva fórmula.
     computed_supplied_as_input: 'No es poden subministrar com a entrada les caselles
@@ -267,7 +267,7 @@ errors:
     error_ledger_own_account_register_record: Un registre de comptes bancaris propis
       no és estructuralment vàlid.
     error_llm: S'ha produït un error en el model de llenguatge.
-    error_modelo_aggregation_binding: Els bindings d'agregació derivats del bucket
+    error_modelo_aggregation_binding: Les vinculacions d'agregació derivades del contenidor
       entren en conflicte amb les dades indicades.
     error_modelo_amendment_evidence_missing: No es pot complementar una declaració
       que no té evidència oficial importada. Importa primer el justificant de la declaració
@@ -353,8 +353,8 @@ errors:
     error_sede_navigation: Ha fallat un pas de navegació en la Seu de l'AEAT.
     error_storage_bucket: S'ha produït un error en el cicle de vida del bucket d'emmagatzematge.
     error_storage_bucket_path_too_long: El camí del directori del bucket supera el
-      límit MAX_PATH de Windows. Trasllada CADRUMO_STORAGE_ROOT a un camí més
-      curt o activa LongPathsEnabled (consulta `aeat config storage check`).
+      límit MAX_PATH de Windows. Trasllada CADRUMO_STORAGE_ROOT a un camí més curt
+      o activa LongPathsEnabled (consulta `aeat config storage check`).
     error_storage_management: No s'ha pogut llegir ni alliberar l'arbre d'emmagatzematge
       local.
     error_submission_validation: Un model d'enviament no ha superat la validació.
@@ -642,7 +642,7 @@ errors:
     canonical_modelo_workspace_materialization_provenance_missing: Un valor de fila
       repetida emmagatzemat no indica la seva vinculació d'origen.
     canonical_relation_binding_join: No s'ha pogut llegir d'acord amb el que s'ha
-      declarat la correspondència inclosa entre relacions i bindings.
+      declarat la correspondència inclosa entre relacions i vinculacions.
     canonical_tampered_manifest_payload: El resum del manifest del corpus no coincideix
       amb el seu contingut; pot estar malmès o manipulat.
     canonical_unsupported_manifest_version: El manifest del corpus fa servir una versió
@@ -1182,7 +1182,7 @@ errors:
       client de Google que necessita per iniciar la sessió. Les funcions de Google
       no estan disponibles.
     refused_google_non_interactive: L'inici de sessió de Google necessita un terminal
-      interactiu amb navegador; executa'l des d'una shell interactiva.
+      interactiu amb navegador; executa'l des d'un terminal interactiu.
     refused_google_profile_unbound: No hi ha cap perfil actiu vinculat. Selecciona
       un perfil o fes servir --profile.
     refused_google_sign_in_required: L'accés a Google d'aquest perfil ha caducat o

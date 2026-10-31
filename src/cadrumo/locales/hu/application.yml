@@ -867,8 +867,8 @@ application:
           jelentett.
         service_bucket_mismatch: A pillanatkép-szolgáltatás bucketje nem egyezik a
           tárolójának bucketjével.
-        snapshot_bucket_mismatch: A pillanatkép payload bucketje nem egyezik a repository
-          bucketjével.
+        snapshot_bucket_mismatch: A pillanatkép adatcsomagjának tárolóazonosítója
+          nem egyezik az adattár tárolóazonosítójával.
         snapshot_key_mismatch: A pillanatkép egy másik pillanatkép kulcsa alatt van
           tárolva.
         state_active_supersession_pointer: Aktív pillanatkép nem hordozhat felülírási
@@ -2563,7 +2563,7 @@ application:
     output_labels:
       active_profile: active_profile
       next: Következő
-      profile: profile
+      profile: Profil
       status: állapot
     status:
       errors:

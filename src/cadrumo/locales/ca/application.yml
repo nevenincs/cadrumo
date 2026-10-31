@@ -500,8 +500,8 @@ application:
         {ref}.
       copy_source_duplicate: Ja hi ha un resolutor de font de text registrat per al
         tipus {kind}.
-      copy_source_locale_builtin: La font de text basada en claus de locale és integrada
-        i no es pot tornar a registrar.
+      copy_source_locale_builtin: La font de text basada en claus de traducció és
+        integrada i no es pot tornar a registrar.
       copy_source_unregistered: No hi ha cap resolutor de font de text registrat per
         al tipus {kind}, que exigeix la referència {ref}.
       jump_target_not_visible: 'El flux {flow_id} no pot saltar a {page_key}: aquesta
@@ -1528,8 +1528,8 @@ application:
         per al país {pais}.
       calculate_pension_inputs_incomplete: Les dades del rescat del pla de pensions
         s'han d'indicar juntes.
-      calculate_relation_unknown: '--relation %{key} no coincideix amb cap relation
-        d''aquesta revisió. Relations acceptades: %{accepted}.'
+      calculate_relation_unknown: '--relation %{key} no coincideix amb cap relació
+        d''aquesta revisió. Relacions acceptades: %{accepted}.'
       calculate_sal_inputs_incomplete: Les dades de la reserva especial SAL/SLL s'han
         d'indicar juntes.
       calculate_semantic_role_ambiguous: La revisió del model conté més d'una casella

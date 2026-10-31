@@ -5962,8 +5962,9 @@ topic:
       basis Ley 58/2003 art-27.
     title: Late-filing surcharge
   regimens:
-    body: Set of tax regimes applicable to an autonomo. The two main axes are IVA
-      (general, simplified, recargo de equivalencia, exempt) and IRPF (direct, objective).
+    body: Set of tax regimes applicable to a self-employed person. The two main axes
+      are IVA (general, simplified, recargo de equivalencia, exempt) and IRPF (direct,
+      objective).
     title: Tax regimes
   sii:
     body: IVA Suministro Inmediato de Información. It requires taxpayers on monthly

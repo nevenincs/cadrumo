@@ -2428,7 +2428,7 @@ desktop:
       investment_asset_id: Beruházási javak
       m210_income_classification: 210-es modell jövedelme
       own_account_id: Számla
-      recargo_amount: Recargo
+      recargo_amount: Egyenértékűségi pótdíj
       usage_ratio_id: Használati arány
       value_date: Értéknap
     fill:
@@ -3098,7 +3098,7 @@ desktop:
         number: Szám
         operation_date: Teljesítés
         payment: Fizetés
-        recargo: Recargo
+        recargo: Egyenértékűségi pótdíj
         retention: Retención
         tax_id: Adószám
         total: Összesen
@@ -3132,7 +3132,7 @@ desktop:
         payment_id: Fizetési hivatkozás
         payment_status: Fizetés
         printed_total: Nyomtatott végösszeg
-        recargo: Recargo
+        recargo: Egyenértékűségi pótdíj
         rectifies_invoice_number: Helyesbített számla
         referencia: Kataszteri hivatkozás
         retention_amount: Retención összege
@@ -3577,7 +3577,7 @@ desktop:
     reading: 'Beolvasás: {loaded} / {total}'
     reason:
       anomaly_non_declarable_iva_category: IVA-kategória
-      anomaly_non_declarable_recargo_equivalencia: Recargo
+      anomaly_non_declarable_recargo_equivalencia: Egyenértékűségi pótdíj
       censo_ratio_mismatch: Cenzusarány
       domestic_identification_on_intra_community_transaction: Spanyol adószám
       eu_member_state_on_export_transaction: Exportállam

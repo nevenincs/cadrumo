@@ -502,8 +502,8 @@ application:
         la referencia {ref}.
       copy_source_duplicate: Ya hay un resolutor de fuente de texto registrado para
         el tipo {kind}.
-      copy_source_locale_builtin: La fuente de texto basada en claves de locale está
-        integrada y no se puede volver a registrar.
+      copy_source_locale_builtin: La fuente de texto basada en claves de traducción
+        está integrada y no se puede volver a registrar.
       copy_source_unregistered: No hay ningún resolutor de fuente de texto registrado
         para el tipo {kind}, que exige la referencia {ref}.
       jump_target_not_visible: 'El flujo {flow_id} no puede saltar a {page_key}: esa
@@ -1525,8 +1525,8 @@ application:
         para el país {pais}.
       calculate_pension_inputs_incomplete: Los datos del rescate del plan de pensiones
         deben indicarse juntos.
-      calculate_relation_unknown: '--relation %{key} no coincide con ninguna relation
-        de esta revisión. Relations aceptadas: %{accepted}.'
+      calculate_relation_unknown: '--relation %{key} no coincide con ninguna relación
+        de esta revisión. Relaciones aceptadas: %{accepted}.'
       calculate_sal_inputs_incomplete: Los datos de la reserva especial SAL/SLL deben
         indicarse juntos.
       calculate_semantic_role_ambiguous: La revisión del modelo contiene más de una

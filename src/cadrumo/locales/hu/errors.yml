@@ -210,10 +210,10 @@ errors:
       megadva helyettesítő érték.'
     error_declaracion_template_not_detected: A bevallás PDF sablon-revíziója nem ismerhető
       fel automatikusan.
-    error_domain_submission: Benyújtási domain hiba történt.
+    error_domain_submission: Benyújtási doménhiba történt.
     error_domain_submission_preflight: A tervezet nem ment át a helyi benyújtás előzetes
       ellenőrzésén.
-    error_domain_validation: Egy domain azonosító vagy modell érvénytelen.
+    error_domain_validation: Egy doménazonosító vagy modell érvénytelen.
     error_filing_application: Hiba történt a benyújtási alkalmazási rétegben.
     error_filing_builder: A benyújtási építő kiválasztása vagy végrehajtása meghiúsult.
     error_filing_computation: Az építő nem tudta kiértékelni egy képlet-mezőt.
@@ -330,9 +330,9 @@ errors:
     error_sede_navigation: Az AEAT Sede navigációs lépése meghiúsult.
     error_storage_bucket: Hiba történt a tároló-bucket életciklusában.
     error_storage_bucket_path_too_long: A bucket könyvtár elérési útja meghaladja
-      a Windows MAX_PATH korlátját. Helyezd át a CADRUMO_STORAGE_ROOT beállítást
-      egy rövidebb útvonalra, vagy engedélyezd a LongPathsEnabled beállítást (lásd
-      `aeat config storage check`).
+      a Windows MAX_PATH korlátját. Helyezd át a CADRUMO_STORAGE_ROOT beállítást egy
+      rövidebb útvonalra, vagy engedélyezd a LongPathsEnabled beállítást (lásd `aeat
+      config storage check`).
     error_storage_management: A helyi tárolófát nem sikerült beolvasni vagy felszabadítani.
     error_submission_validation: Egy benyújtási modell nem ment át az érvényesítésen.
     error_transaction_catalogue: A tranzakció-katalógus érvénytelen vagy ellentmondásos.
@@ -342,7 +342,8 @@ errors:
     error_transaction_not_found: A kért tranzakció nem található.
     error_transaction_persistence: A tranzakció-katalógus nem menthető.
     error_transaction_validation: Egy tranzakció-mezőérték érvénytelen.
-    error_usage_ratios_validation: Egy használati arány profil sérti a domain invariánsait.
+    error_usage_ratios_validation: Egy használati arányokat tartalmazó profil sérti
+      a domén invariánsait.
     error_user_profile: Felhasználói profil hiba történt.
     error_wizard: Varázsló hiba történt.
     error_wizard_compile: A varázsló-katalógus hibás formátumú és nem fordítható le.
@@ -642,10 +643,10 @@ errors:
       kompatibilis az adattárával.
     integrity_storage_corpus_bundle: A corpuscsomagot nem sikerült feldolgozni vagy
       ellenőrizni.
-    integrity_storage_corpus_manifest: A corpus manifesztet nem sikerült elemezni
-      vagy érvényesíteni.
-    integrity_storage_corpus_manifest_tamper: A corpus manifeszt önigazoló kivonata
-      nem egyezik a testével. A manifeszt sérült vagy manipulált lehet.
+    integrity_storage_corpus_manifest: A korpuszjegyzéket nem sikerült elemezni vagy
+      érvényesíteni.
+    integrity_storage_corpus_manifest_tamper: A korpuszjegyzék önellenőrzéshez használt
+      lenyomata nem felel meg a tartalmának. A jegyzék sérült vagy manipulált lehet.
     integrity_storage_decryption: Egy tárolt objektum visszafejtése meghiúsult. Az
       adatok sérültek lehetnek, vagy helytelen a kulcs.
     integrity_storage_encryption: Titkosítási vagy visszafejtési hiba történt a biztonságos
