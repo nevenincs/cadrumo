@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import re
+import tomllib
+
 import pytest
 
 from dev._paths import REPO_ROOT
@@ -50,3 +53,21 @@ def test_prek_replay_uses_locked_local_ruff_and_never_repairs() -> None:
     assert 'entry = "uv run --no-sync ruff format --check"' in config
     assert "ruff check --fix" not in config
     assert "ty check --fix" not in config
+
+
+@pytest.mark.parametrize(
+    ("path", "excluded"),
+    [
+        ("src/cadrumo/_data/corpus/aeat_official/capture.html", True),
+        ("src/cadrumo/_data/corpus/normatives/html/rdleg-3-2004.html", True),
+        ("src/cadrumo/_data/corpus/eu_official/evidence.html", True),
+        ("src/cadrumo/_data/manual_corpus_text/manual.txt", False),
+        ("src/cadrumo/core/runtime.py", False),
+        ("docs/how-to/filing.md", False),
+    ],
+)
+def test_line_ending_check_preserves_evidence_and_still_covers_authored_text(path: str, excluded: bool) -> None:
+    config = tomllib.loads((REPO_ROOT / "prek.toml").read_text(encoding="utf-8"))
+    hook = next(hook for repo in config["repos"] for hook in repo["hooks"] if hook["id"] == "mixed-line-ending")
+    assert hook["args"] == ["--fix=no"]
+    assert bool(re.search(hook["exclude"], path)) is excluded
