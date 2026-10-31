@@ -11,8 +11,7 @@ from __future__ import annotations
 import asyncio
 import threading
 from collections.abc import Callable
-from dataclasses import dataclass, field
-from datetime import UTC, datetime
+from dataclasses import dataclass
 from pathlib import Path
 from typing import cast
 from uuid import UUID
@@ -100,15 +99,7 @@ from cadrumo.application.ledger.extraction_draft_repository import ExtractionDra
 from cadrumo.application.ledger.invoice_evidence_operation_dtos import InvoiceDraftProjectionV1
 from cadrumo.application.ledger.transaction_projection import LedgerTransactionProjection
 from cadrumo.application.operations.error_detail import OperationErrorDetailKind, OperationErrorDetailV1
-from cadrumo.application.operations.frontend_projection import (
-    OperationNoPendingInteractionV1,
-    OperationPublicProjectionV1,
-)
-from cadrumo.application.operations.frontend_requests import OperationObservationSuccessV1, OperationPublicEventPageV1
-from cadrumo.application.operations.persistence.replay import OperationReplayStatus
 from cadrumo.application.operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicDefinitionContractV1,
     OperationRegistry,
 )
 from cadrumo.application.review.filter import LedgerReviewStatus
@@ -116,9 +107,7 @@ from cadrumo.core.config import Settings
 from cadrumo.core.errors.hierarchy import RecordedRegisteredError
 from cadrumo.core.operations import (
     OperationEffect,
-    OperationLifecycle,
     OperationTerminalCondition,
-    profile_operation_subject,
 )
 from cadrumo.domain.attachments.enums import AttachmentSource
 from cadrumo.domain.iva.schema import InvoiceKind
@@ -126,28 +115,32 @@ from cadrumo.entrypoints.tui.account import AccountSessionExpiredError
 from cadrumo.entrypoints.tui.ledger.evidence_files_doors import LedgerEvidenceFilesDoorsV1
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.transport.frontend_client import FrontendClient
-from cadrumo_client.transport.operation_controller import OperationController
 
 from ....frontend.tui.runtime_ledger_evidence_files import (
     RuntimeEvidenceFilesTuiDoorV1,
     compose_evidence_files_tools,
     compose_runtime_evidence_files_doors,
 )
+from ._door_session_support import (
+    NOW,
+    OTHER_PROFILE_ID,
+    PROFILE_ID,
+    RECORDED_CODE,
+    RECORDED_KEY,
+    SESSION_ID,
+    ScriptedController,
+    SessionClient,
+    install_scripted_controller,
+    terminal_observation,
+)
 from .unsupported_result import raises_unsupported_result
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
-_PROFILE_ID = UUID("5aa00000-0000-4000-8000-0000000000aa")
-_OTHER_PROFILE_ID = UUID("6cc00000-0000-4000-8000-0000000000cc")
-_SESSION_ID = UUID("6bb00000-0000-4000-8000-0000000000bb")
-_OPERATION_ID = "a" * 64
-_NOW = datetime(2026, 10, 4, tzinfo=UTC)
 _EVIDENCE_ID = "0000000000000001"
 _DIGEST = "d" * 64
 _TRANSACTION_ID = "a" * 64
 _EVENT_ID = "e" * 64
-_RECORDED_CODE = "REFUSED_LEDGER_EVIDENCE_INPUT"
-_RECORDED_KEY = "errors.refused.refused_ledger_evidence_input"
 
 
 def _registry() -> OperationRegistry:
@@ -193,146 +186,10 @@ def _registry() -> OperationRegistry:
 _REGISTRY = _registry()
 
 
-class _Client:
-    frontend = OperationFrontendProjection.TUI
-
-    def __init__(self) -> None:
-        self.profile_id = _PROFILE_ID
-        self.session_id = _SESSION_ID
-        self.session_read_threads: list[int] = []
-        """The thread of each blocking session read: at composition, then around each operation."""
-
-
-@dataclass
-class _Controller:
-    operation_id = _OPERATION_ID
-    observation: OperationObservationSuccessV1
-    result: BaseModel | None
-    detail: OperationErrorDetailV1 | None = None
-    client: _Client = field(default_factory=_Client)
-    deadline: float | None = None
-    result_reads: list[tuple[type[BaseModel], int, bool]] = field(default_factory=list)
-    detail_reads: int = 0
-
-    @property
-    def definition_contract(self) -> OperationPublicDefinitionContractV1:
-        return self.observation.projection.definition_contract
-
-    async def start(self) -> str:
-        return self.operation_id
-
-    async def observe(self, after_cursor: int, *, page_limit: int) -> OperationObservationSuccessV1:
-        assert after_cursor == 0
-        assert page_limit == 1
-        return self.observation
-
-    async def read_settled_result(
-        self,
-        projection: OperationPublicProjectionV1,
-        result_type: type[BaseModel],
-        *,
-        result_version: int,
-        allow_refusal_detail: bool = False,
-    ) -> BaseModel:
-        assert projection.operation_id == self.operation_id
-        self.result_reads.append((result_type, result_version, allow_refusal_detail))
-        assert self.result is not None
-        return self.result
-
-    async def settled_error_detail(self, projection: OperationPublicProjectionV1) -> OperationErrorDetailV1 | None:
-        assert projection.operation_id == self.operation_id
-        self.detail_reads += 1
-        return self.detail
-
-
-def _observation(
-    definition_id: str,
-    *,
-    condition: OperationTerminalCondition = OperationTerminalCondition.SUCCEEDED,
-    effect: OperationEffect = OperationEffect.NONE,
-    refusal_ref: str | None = None,
-) -> OperationObservationSuccessV1:
-    contract = _REGISTRY.lookup_public_contract(definition_id)
-    refused = condition is OperationTerminalCondition.REFUSED
-    state = OperationPublicProjectionV1(
-        operation_id=_OPERATION_ID,
-        definition_id=definition_id,
-        subject_ref=profile_operation_subject(str(_PROFILE_ID)),
-        revision=1,
-        anchor_cursor=0,
-        definition_contract=contract,
-        contract_set_digest=_REGISTRY.public_contract_set.contract_set_digest,
-        lifecycle=OperationLifecycle.TERMINAL,
-        terminal_condition=condition,
-        effect=effect,
-        phase_code=None,
-        started_at=_NOW,
-        updated_at=_NOW,
-        progress=None,
-        close_policy=contract.close_policy,
-        cancellation=contract.cancellation,
-        cancellable_now=False,
-        cancellation_requested=False,
-        cancellation_acknowledged=False,
-        execution_deadline_at=None,
-        cleanup_deadline_at=None,
-        pending_interaction=OperationNoPendingInteractionV1(),
-        result_ref=None if refused else "f" * 64,
-        refusal_ref=refusal_ref if refused else None,
-        failure_error_code=None,
-        diagnostic_ref=None,
-    )
-    return OperationObservationSuccessV1(
-        projection=state,
-        event_page=OperationPublicEventPageV1(
-            operation_id=_OPERATION_ID,
-            anchor_cursor=0,
-            requested_cursor=0,
-            status=OperationReplayStatus.CAUGHT_UP,
-            events=(),
-            next_cursor=0,
-            restart_cursor=None,
-        ),
-    )
-
-
-def _install(monkeypatch: pytest.MonkeyPatch, client: _Client, controller: _Controller) -> list[dict[str, object]]:
-    from ....frontend.tui.operations import runtime_profile_session as bridge
-
-    def read_session(
-        _client: FrontendClient,
-        *,
-        profile_id: UUID,
-        session_id: UUID,
-        profile_label: str,
-    ) -> object:
-        assert profile_label == "Fixture profile"
-        client.session_read_threads.append(threading.get_ident())
-        if client.profile_id != profile_id or client.session_id != session_id:
-            raise AccountSessionExpiredError()
-        return object()
-
-    monkeypatch.setattr(bridge, "read_runtime_account_session", read_session)
-    submissions: list[dict[str, object]] = []
-
-    async def submit(
-        _controller_type: type[OperationController],
-        received_client: FrontendClient,
-        **kwargs: object,
-    ) -> _Controller:
-        assert received_client is client
-        submissions.append(kwargs)
-        controller.client = client
-        return controller
-
-    monkeypatch.setattr(OperationController, "submit", classmethod(submit))
-    return submissions
-
-
 # Synthetic results, each built from the operation's own public model.
 
 
-def _record(profile_id: UUID = _PROFILE_ID, **changes: object) -> LedgerEvidenceRecordProjection:
+def _record(profile_id: UUID = PROFILE_ID, **changes: object) -> LedgerEvidenceRecordProjection:
     record = LedgerEvidenceRecordProjection(
         evidence_id=_EVIDENCE_ID,
         bucket_id=str(profile_id),
@@ -346,8 +203,8 @@ def _record(profile_id: UUID = _PROFILE_ID, **changes: object) -> LedgerEvidence
         taxable_base="100",
         iva_rate="21",
         iva_amount="21",
-        created_at=_NOW,
-        updated_at=_NOW,
+        created_at=NOW,
+        updated_at=NOW,
     )
     return record.model_copy(update=changes)
 
@@ -360,23 +217,23 @@ def _attachment() -> AttachmentReviewItem:
         bytes_size=2048,
         source=AttachmentSource.LOCAL_FILE,
         provider_locator="not-exposed",
-        captured_at=_NOW.isoformat(),
+        captured_at=NOW.isoformat(),
         linked_invoice_ids=(),
         pending_review=True,
     )
 
 
-def _review(profile_id: UUID = _PROFILE_ID) -> LedgerEvidenceReviewViewProjection:
+def _review(profile_id: UUID = PROFILE_ID) -> LedgerEvidenceReviewViewProjection:
     return LedgerEvidenceReviewViewProjection(
         profile_id=profile_id,
         evidence_reference=_EVIDENCE_ID,
         extractor="local-reader",
-        drafted_at=_NOW,
+        drafted_at=NOW,
         draft=InvoiceDraftProjectionV1(supplier_name="Suministros Delta SL"),
     )
 
 
-def _batch(profile_id: UUID = _PROFILE_ID) -> LedgerEvidenceBatchProjection:
+def _batch(profile_id: UUID = PROFILE_ID) -> LedgerEvidenceBatchProjection:
     return LedgerEvidenceBatchProjection(
         profile_id=profile_id,
         write_count=0,
@@ -422,13 +279,13 @@ def _transaction(attachment_ids: tuple[str, ...]) -> LedgerTransactionProjection
         source_jurisdiction=None,
         value_in_eur=None,
         fx_rate=None,
-        created_at=_NOW.isoformat(),
-        modified_at=_NOW.isoformat(),
+        created_at=NOW.isoformat(),
+        modified_at=NOW.isoformat(),
     )
 
 
 def _attachment_result(
-    operation_id: LedgerAttachmentOperationId, profile_id: UUID = _PROFILE_ID
+    operation_id: LedgerAttachmentOperationId, profile_id: UUID = PROFILE_ID
 ) -> LedgerAttachmentOperationResult:
     return LedgerAttachmentOperationResult(
         outcome="updated",
@@ -463,7 +320,7 @@ class _Case:
 
 
 _UPDATE_REQUEST = LedgerEvidenceUpdateRequest(
-    profile_id=_PROFILE_ID,
+    profile_id=PROFILE_ID,
     evidence_id=_EVIDENCE_ID,
     patch=LedgerEvidenceUpdatePatch(supplier="Suministros Gamma SL"),
     patch_fields=("supplier",),
@@ -473,7 +330,7 @@ _CASES = (
     _Case(
         "query",
         "ledger.evidence.query",
-        LedgerEvidenceQueryRequest(profile_id=_PROFILE_ID),
+        LedgerEvidenceQueryRequest(profile_id=PROFILE_ID),
         lambda profile: LedgerEvidenceQueryProjection(
             profile_id=profile,
             count=1,
@@ -485,7 +342,7 @@ _CASES = (
     _Case(
         "view",
         "ledger.evidence.view",
-        LedgerEvidenceViewRequest(profile_id=_PROFILE_ID, evidence_id=_EVIDENCE_ID),
+        LedgerEvidenceViewRequest(profile_id=PROFILE_ID, evidence_id=_EVIDENCE_ID),
         lambda profile: LedgerEvidenceViewProjection(
             profile_id=profile, outcome=LedgerEvidenceViewSuccess(record=_record(profile))
         ),
@@ -507,7 +364,7 @@ _CASES = (
     _Case(
         "remove",
         "ledger.evidence.remove",
-        LedgerEvidenceRemoveRequest(profile_id=_PROFILE_ID, evidence_id=_EVIDENCE_ID),
+        LedgerEvidenceRemoveRequest(profile_id=PROFILE_ID, evidence_id=_EVIDENCE_ID),
         lambda profile: LedgerEvidenceRemoveProjection(
             profile_id=profile, record=_record(profile), bucket_event_ids=(_EVENT_ID,)
         ),
@@ -518,7 +375,7 @@ _CASES = (
         "batch",
         "ledger.evidence.batch",
         LedgerEvidenceBatchRequest(
-            profile_id=_PROFILE_ID,
+            profile_id=PROFILE_ID,
             sources=("facturas",),
             source_directory=str(Path.cwd()),
             direction=InvoiceKind.RECEIVED,
@@ -530,7 +387,7 @@ _CASES = (
     _Case(
         "attachment_queue",
         "ledger.evidence.attachment_queue",
-        LedgerEvidenceAttachmentQueueRequest(profile_id=_PROFILE_ID),
+        LedgerEvidenceAttachmentQueueRequest(profile_id=PROFILE_ID),
         lambda profile: LedgerEvidenceAttachmentQueueProjection(profile_id=profile, count=1, rows=(_attachment(),)),
         OperationEffect.NONE,
         LedgerEvidenceAttachmentQueueProjection,
@@ -538,7 +395,7 @@ _CASES = (
     _Case(
         "attachment_view",
         "ledger.evidence.attachment_view",
-        LedgerEvidenceAttachmentViewRequest(profile_id=_PROFILE_ID, attachment_id=_DIGEST),
+        LedgerEvidenceAttachmentViewRequest(profile_id=PROFILE_ID, attachment_id=_DIGEST),
         lambda profile: LedgerEvidenceAttachmentViewProjection(profile_id=profile, item=_attachment()),
         OperationEffect.NONE,
         LedgerEvidenceAttachmentViewProjection,
@@ -546,7 +403,7 @@ _CASES = (
     _Case(
         "consent_list",
         "ledger.evidence.consent.list",
-        LedgerEvidenceConsentListRequest(profile_id=_PROFILE_ID),
+        LedgerEvidenceConsentListRequest(profile_id=PROFILE_ID),
         lambda profile: LedgerEvidenceConsentListProjection(
             profile_id=profile, survey=ConsentWithdrawalSurveyProjection()
         ),
@@ -556,7 +413,7 @@ _CASES = (
     _Case(
         "review_view",
         "ledger.evidence.review.view",
-        LedgerEvidenceReviewViewRequest(profile_id=_PROFILE_ID, evidence_reference=_EVIDENCE_ID),
+        LedgerEvidenceReviewViewRequest(profile_id=PROFILE_ID, evidence_reference=_EVIDENCE_ID),
         _review,
         OperationEffect.NONE,
         LedgerEvidenceReviewViewProjection,
@@ -565,7 +422,7 @@ _CASES = (
     _Case(
         "review_summary",
         "ledger.evidence.review.summary",
-        LedgerEvidenceReviewViewRequest(profile_id=_PROFILE_ID, evidence_reference=_EVIDENCE_ID),
+        LedgerEvidenceReviewViewRequest(profile_id=PROFILE_ID, evidence_reference=_EVIDENCE_ID),
         lambda profile: LedgerEvidenceReviewSummaryProjection.from_review_view(_review(profile)),
         OperationEffect.NONE,
         LedgerEvidenceReviewSummaryProjection,
@@ -573,7 +430,7 @@ _CASES = (
     _Case(
         "attach",
         LEDGER_ATTACH_OPERATION_DEFINITION_ID,
-        LedgerAttachRequest(profile_id=_PROFILE_ID, transaction_id=_TRANSACTION_ID, attachment_ids=(_DIGEST,)),
+        LedgerAttachRequest(profile_id=PROFILE_ID, transaction_id=_TRANSACTION_ID, attachment_ids=(_DIGEST,)),
         lambda profile: _attachment_result(LEDGER_ATTACH_OPERATION_DEFINITION_ID, profile),
         OperationEffect.UPDATED,
         LedgerAttachmentOperationResult,
@@ -582,7 +439,7 @@ _CASES = (
     _Case(
         "detach",
         LEDGER_DETACH_OPERATION_DEFINITION_ID,
-        LedgerDetachRequest(profile_id=_PROFILE_ID, transaction_id=_TRANSACTION_ID, attachment_ids=(_DIGEST,)),
+        LedgerDetachRequest(profile_id=PROFILE_ID, transaction_id=_TRANSACTION_ID, attachment_ids=(_DIGEST,)),
         lambda profile: _attachment_result(LEDGER_DETACH_OPERATION_DEFINITION_ID, profile),
         OperationEffect.UPDATED,
         LedgerAttachmentOperationResult,
@@ -592,19 +449,23 @@ _CASES = (
 _IDS = [case.door for case in _CASES]
 
 
-def _doors(client: _Client) -> LedgerEvidenceFilesDoorsV1:
+def _doors(client: SessionClient) -> LedgerEvidenceFilesDoorsV1:
     return compose_runtime_evidence_files_doors(cast(FrontendClient, client), profile_label="Fixture profile")
 
 
-def _door(client: _Client, case: _Case) -> RuntimeEvidenceFilesTuiDoorV1[BaseModel, BaseModel]:
+def _door(client: SessionClient, case: _Case) -> RuntimeEvidenceFilesTuiDoorV1[BaseModel, BaseModel]:
     door = getattr(_doors(client), case.door)
     assert isinstance(door, RuntimeEvidenceFilesTuiDoorV1)
     return cast("RuntimeEvidenceFilesTuiDoorV1[BaseModel, BaseModel]", door)
 
 
 def test_every_door_has_a_case_and_names_its_registered_operation(monkeypatch: pytest.MonkeyPatch) -> None:
-    client = _Client()
-    _install(monkeypatch, client, _Controller(observation=_observation("ledger.evidence.query"), result=None))
+    client = SessionClient()
+    install_scripted_controller(
+        monkeypatch,
+        client,
+        ScriptedController(observation=terminal_observation(_REGISTRY, "ledger.evidence.query"), result=None),
+    )
     doors = _doors(client)
     assert {case.door for case in _CASES} == set(LedgerEvidenceFilesDoorsV1.__dataclass_fields__)
     for case in _CASES:
@@ -618,25 +479,29 @@ def test_every_door_has_a_case_and_names_its_registered_operation(monkeypatch: p
 def test_each_door_submits_the_exact_request_and_reads_its_registered_result(
     monkeypatch: pytest.MonkeyPatch, case: _Case
 ) -> None:
-    client = _Client()
-    result = case.result(_PROFILE_ID)
-    controller = _Controller(observation=_observation(case.definition_id, effect=case.effect), result=result)
-    submissions = _install(monkeypatch, client, controller)
+    client = SessionClient()
+    result = case.result(PROFILE_ID)
+    controller = ScriptedController(
+        observation=terminal_observation(_REGISTRY, case.definition_id, effect=case.effect), result=result
+    )
+    submissions = install_scripted_controller(monkeypatch, client, controller)
     door = _door(client, case)
 
-    assert door.profile_id == _PROFILE_ID
+    assert door.profile_id == PROFILE_ID
     assert asyncio.run(door(case.request)) == result
     assert submissions[0]["definition_id"] == case.definition_id
     assert submissions[0]["payload"] == case.request
-    assert submissions[0]["expected_session_id"] == _SESSION_ID
+    assert submissions[0]["expected_session_id"] == SESSION_ID
     assert controller.result_reads == [(case.result_type, case.result_version, case.allow_refusal_detail)]
 
 
 @pytest.mark.parametrize("case", _CASES, ids=_IDS)
 def test_each_door_refuses_a_result_for_another_profile(monkeypatch: pytest.MonkeyPatch, case: _Case) -> None:
-    client = _Client()
-    observation = _observation(case.definition_id, effect=case.effect)
-    _install(monkeypatch, client, _Controller(observation=observation, result=case.result(_OTHER_PROFILE_ID)))
+    client = SessionClient()
+    observation = terminal_observation(_REGISTRY, case.definition_id, effect=case.effect)
+    install_scripted_controller(
+        monkeypatch, client, ScriptedController(observation=observation, result=case.result(OTHER_PROFILE_ID))
+    )
 
     with raises_unsupported_result(observation.projection.effect, observation.projection.definition_contract):
         asyncio.run(_door(client, case)(case.request))
@@ -644,9 +509,11 @@ def test_each_door_refuses_a_result_for_another_profile(monkeypatch: pytest.Monk
 
 @pytest.mark.parametrize("case", _CASES, ids=_IDS)
 def test_each_door_refuses_a_receipt_reporting_the_wrong_effect(monkeypatch: pytest.MonkeyPatch, case: _Case) -> None:
-    client = _Client()
-    observation = _observation(case.definition_id, effect=case.wrong_effect)
-    _install(monkeypatch, client, _Controller(observation=observation, result=case.result(_PROFILE_ID)))
+    client = SessionClient()
+    observation = terminal_observation(_REGISTRY, case.definition_id, effect=case.wrong_effect)
+    install_scripted_controller(
+        monkeypatch, client, ScriptedController(observation=observation, result=case.result(PROFILE_ID))
+    )
 
     with raises_unsupported_result(observation.projection.effect, observation.projection.definition_contract):
         asyncio.run(_door(client, case)(case.request))
@@ -654,31 +521,35 @@ def test_each_door_refuses_a_receipt_reporting_the_wrong_effect(monkeypatch: pyt
 
 @pytest.mark.parametrize("case", _CASES, ids=_IDS)
 def test_each_door_raises_the_recorded_error_of_a_refusal_receipt(monkeypatch: pytest.MonkeyPatch, case: _Case) -> None:
-    client = _Client()
+    client = SessionClient()
     detail = OperationErrorDetailV1(
         kind=OperationErrorDetailKind.REGISTERED_ERROR,
-        error_code=_RECORDED_CODE,
-        message_key=_RECORDED_KEY,
+        error_code=RECORDED_CODE,
+        message_key=RECORDED_KEY,
         context=(),
     )
-    observation = _observation(
-        case.definition_id, condition=OperationTerminalCondition.REFUSED, refusal_ref=_RECORDED_CODE
+    observation = terminal_observation(
+        _REGISTRY, case.definition_id, condition=OperationTerminalCondition.REFUSED, refusal_ref=RECORDED_CODE
     )
-    controller = _Controller(observation=observation, result=None, detail=detail)
-    _install(monkeypatch, client, controller)
+    controller = ScriptedController(observation=observation, result=None, detail=detail)
+    install_scripted_controller(monkeypatch, client, controller)
 
     with pytest.raises(RecordedRegisteredError) as raised:
         asyncio.run(_door(client, case)(case.request))
 
-    assert raised.value.recorded_code == _RECORDED_CODE
+    assert raised.value.recorded_code == RECORDED_CODE
     assert controller.detail_reads == 1
     assert controller.result_reads == []
 
 
 @pytest.mark.parametrize("case", _CASES, ids=_IDS)
 def test_each_door_fails_closed_when_its_session_lapses(monkeypatch: pytest.MonkeyPatch, case: _Case) -> None:
-    client = _Client()
-    submissions = _install(monkeypatch, client, _Controller(observation=_observation(case.definition_id), result=None))
+    client = SessionClient()
+    submissions = install_scripted_controller(
+        monkeypatch,
+        client,
+        ScriptedController(observation=terminal_observation(_REGISTRY, case.definition_id), result=None),
+    )
     door = _door(client, case)
     client.session_id = UUID("7cc00000-0000-4000-8000-0000000000cc")
 
@@ -691,11 +562,12 @@ def test_each_door_fails_closed_when_its_session_lapses(monkeypatch: pytest.Monk
 @pytest.mark.parametrize("case", _CASES, ids=_IDS)
 def test_each_door_reads_its_session_off_the_event_loop_thread(monkeypatch: pytest.MonkeyPatch, case: _Case) -> None:
     """The session read is a blocking IPC exchange; a door awaited on the loop never runs it there."""
-    client = _Client()
-    controller = _Controller(
-        observation=_observation(case.definition_id, effect=case.effect), result=case.result(_PROFILE_ID)
+    client = SessionClient()
+    controller = ScriptedController(
+        observation=terminal_observation(_REGISTRY, case.definition_id, effect=case.effect),
+        result=case.result(PROFILE_ID),
     )
-    _install(monkeypatch, client, controller)
+    install_scripted_controller(monkeypatch, client, controller)
     door = _door(client, case)
     client.session_read_threads.clear()
 
@@ -707,13 +579,16 @@ def test_each_door_reads_its_session_off_the_event_loop_thread(monkeypatch: pyte
 
 def test_a_success_result_under_a_declared_refusal_receipt_is_refused(monkeypatch: pytest.MonkeyPatch) -> None:
     case = _CASES[1]
-    client = _Client()
-    observation = _observation(
+    client = SessionClient()
+    observation = terminal_observation(
+        _REGISTRY,
         case.definition_id,
         condition=OperationTerminalCondition.REFUSED,
         refusal_ref=LEDGER_EVIDENCE_VIEW_NOT_FOUND_REFUSAL_CODE,
     )
-    _install(monkeypatch, client, _Controller(observation=observation, result=case.result(_PROFILE_ID)))
+    install_scripted_controller(
+        monkeypatch, client, ScriptedController(observation=observation, result=case.result(PROFILE_ID))
+    )
 
     with pytest.raises(RefusalError) as raised:
         asyncio.run(_door(client, case)(case.request))
@@ -722,15 +597,16 @@ def test_a_success_result_under_a_declared_refusal_receipt_is_refused(monkeypatc
 
 
 def test_the_view_s_declared_missing_record_is_read_as_its_refusal(monkeypatch: pytest.MonkeyPatch) -> None:
-    client = _Client()
-    request = LedgerEvidenceViewRequest(profile_id=_PROFILE_ID, evidence_id=_EVIDENCE_ID)
-    missing = LedgerEvidenceViewProjection(profile_id=_PROFILE_ID, outcome=LedgerEvidenceViewRefusal())
-    observation = _observation(
+    client = SessionClient()
+    request = LedgerEvidenceViewRequest(profile_id=PROFILE_ID, evidence_id=_EVIDENCE_ID)
+    missing = LedgerEvidenceViewProjection(profile_id=PROFILE_ID, outcome=LedgerEvidenceViewRefusal())
+    observation = terminal_observation(
+        _REGISTRY,
         "ledger.evidence.view",
         condition=OperationTerminalCondition.REFUSED,
         refusal_ref=LEDGER_EVIDENCE_VIEW_NOT_FOUND_REFUSAL_CODE,
     )
-    _install(monkeypatch, client, _Controller(observation=observation, result=missing))
+    install_scripted_controller(monkeypatch, client, ScriptedController(observation=observation, result=missing))
 
     assert asyncio.run(_doors(client).view(request)) == missing
 
@@ -739,30 +615,31 @@ def test_the_view_s_declared_missing_record_is_read_as_its_refusal(monkeypatch: 
 def test_an_attachment_validation_refusal_is_read_as_its_messages(
     monkeypatch: pytest.MonkeyPatch, operation_id: LedgerAttachmentOperationId
 ) -> None:
-    client = _Client()
+    client = SessionClient()
     refused = LedgerAttachmentOperationResult(
         outcome="validation_error",
-        profile_id=_PROFILE_ID,
+        profile_id=PROFILE_ID,
         operation_id=operation_id,
         validation_messages=("attachment not found",),
     )
-    observation = _observation(
+    observation = terminal_observation(
+        _REGISTRY,
         operation_id,
         condition=OperationTerminalCondition.REFUSED,
         refusal_ref=LEDGER_ATTACHMENT_VALIDATION_REFUSAL_CODE,
     )
-    _install(monkeypatch, client, _Controller(observation=observation, result=refused))
+    install_scripted_controller(monkeypatch, client, ScriptedController(observation=observation, result=refused))
     doors = _doors(client)
     if operation_id == LEDGER_ATTACH_OPERATION_DEFINITION_ID:
         answered = asyncio.run(
             doors.attach(
-                LedgerAttachRequest(profile_id=_PROFILE_ID, transaction_id=_TRANSACTION_ID, attachment_ids=(_DIGEST,))
+                LedgerAttachRequest(profile_id=PROFILE_ID, transaction_id=_TRANSACTION_ID, attachment_ids=(_DIGEST,))
             )
         )
     else:
         answered = asyncio.run(
             doors.detach(
-                LedgerDetachRequest(profile_id=_PROFILE_ID, transaction_id=_TRANSACTION_ID, attachment_ids=(_DIGEST,))
+                LedgerDetachRequest(profile_id=PROFILE_ID, transaction_id=_TRANSACTION_ID, attachment_ids=(_DIGEST,))
             )
         )
 
@@ -771,30 +648,34 @@ def test_an_attachment_validation_refusal_is_read_as_its_messages(
 
 def test_an_update_that_did_not_apply_the_requested_value_is_unknown(monkeypatch: pytest.MonkeyPatch) -> None:
     """The receipt reported an update; a record without the requested value leaves what was saved unknown."""
-    client = _Client()
-    stale = LedgerEvidenceUpdateProjection(profile_id=_PROFILE_ID, record=_record(), bucket_event_ids=(_EVENT_ID,))
-    observation = _observation("ledger.evidence.update", effect=OperationEffect.UPDATED)
-    _install(monkeypatch, client, _Controller(observation=observation, result=stale))
+    client = SessionClient()
+    stale = LedgerEvidenceUpdateProjection(profile_id=PROFILE_ID, record=_record(), bucket_event_ids=(_EVENT_ID,))
+    observation = terminal_observation(_REGISTRY, "ledger.evidence.update", effect=OperationEffect.UPDATED)
+    install_scripted_controller(monkeypatch, client, ScriptedController(observation=observation, result=stale))
 
     with raises_unsupported_result(OperationEffect.UPDATED, observation.projection.definition_contract):
         asyncio.run(_doors(client).update(_UPDATE_REQUEST))
 
 
 def test_a_view_answering_another_record_is_refused(monkeypatch: pytest.MonkeyPatch) -> None:
-    client = _Client()
+    client = SessionClient()
     other = LedgerEvidenceViewProjection(
-        profile_id=_PROFILE_ID, outcome=LedgerEvidenceViewSuccess(record=_record(evidence_id="0000000000000002"))
+        profile_id=PROFILE_ID, outcome=LedgerEvidenceViewSuccess(record=_record(evidence_id="0000000000000002"))
     )
-    _install(monkeypatch, client, _Controller(observation=_observation("ledger.evidence.view"), result=other))
+    install_scripted_controller(
+        monkeypatch,
+        client,
+        ScriptedController(observation=terminal_observation(_REGISTRY, "ledger.evidence.view"), result=other),
+    )
 
     with pytest.raises(RefusalError):
-        asyncio.run(_doors(client).view(LedgerEvidenceViewRequest(profile_id=_PROFILE_ID, evidence_id=_EVIDENCE_ID)))
+        asyncio.run(_doors(client).view(LedgerEvidenceViewRequest(profile_id=PROFILE_ID, evidence_id=_EVIDENCE_ID)))
 
 
 def test_composing_the_doors_observes_the_session_once_and_names_six_tools(monkeypatch: pytest.MonkeyPatch) -> None:
     from ....frontend.tui.operations import runtime_profile_session as bridge
 
-    client = _Client()
+    client = SessionClient()
     reads: list[UUID] = []
 
     def read_session(_client: FrontendClient, *, profile_id: UUID, session_id: UUID, profile_label: str) -> object:
@@ -805,7 +686,7 @@ def test_composing_the_doors_observes_the_session_once_and_names_six_tools(monke
     monkeypatch.setattr(bridge, "read_runtime_account_session", read_session)
     tools = compose_evidence_files_tools(cast(FrontendClient, client), "Fixture profile")
 
-    assert reads == [_SESSION_ID]
+    assert reads == [SESSION_ID]
     assert [tool.key for tool in tools] == [
         "ledger.tool.evidence_files.records",
         "ledger.tool.evidence_files.batch",

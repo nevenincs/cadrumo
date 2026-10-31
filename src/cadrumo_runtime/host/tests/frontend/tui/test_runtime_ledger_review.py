@@ -11,8 +11,7 @@ from __future__ import annotations
 import asyncio
 import threading
 from collections.abc import Callable
-from dataclasses import dataclass, field
-from datetime import UTC, datetime
+from dataclasses import dataclass
 from typing import Protocol, cast
 from uuid import UUID
 
@@ -41,15 +40,7 @@ from cadrumo.application.ledger.review_operation import (
     build_ledger_review_registration,
 )
 from cadrumo.application.operations.error_detail import OperationErrorDetailKind, OperationErrorDetailV1
-from cadrumo.application.operations.frontend_projection import (
-    OperationNoPendingInteractionV1,
-    OperationPublicProjectionV1,
-)
-from cadrumo.application.operations.frontend_requests import OperationObservationSuccessV1, OperationPublicEventPageV1
-from cadrumo.application.operations.persistence.replay import OperationReplayStatus
 from cadrumo.application.operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicDefinitionContractV1,
     OperationRegistry,
 )
 from cadrumo.application.review.filter import LedgerReviewStatus
@@ -59,14 +50,11 @@ from cadrumo.core.errors.hierarchy import RecordedRegisteredError
 from cadrumo.core.identity.transaction_ids import TransactionId
 from cadrumo.core.operations import (
     OperationEffect,
-    OperationLifecycle,
     OperationTerminalCondition,
-    profile_operation_subject,
 )
 from cadrumo.entrypoints.tui.account import AccountSessionExpiredError
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.transport.frontend_client import FrontendClient
-from cadrumo_client.transport.operation_controller import OperationController
 
 from ....frontend.tui.runtime_ledger_review import (
     RuntimeLedgerEvidenceReviewListTuiDoorV1,
@@ -74,17 +62,22 @@ from ....frontend.tui.runtime_ledger_review import (
     RuntimeLedgerReviewTuiDoorV1,
     compose_runtime_ledger_review_doors,
 )
+from ._door_session_support import (
+    NOW,
+    OTHER_PROFILE_ID,
+    PROFILE_ID,
+    RECORDED_CODE,
+    RECORDED_KEY,
+    SESSION_ID,
+    ScriptedController,
+    SessionClient,
+    install_scripted_controller,
+    terminal_observation,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
-_PROFILE_ID = UUID("5aa00000-0000-4000-8000-0000000000aa")
-_OTHER_PROFILE_ID = UUID("6cc00000-0000-4000-8000-0000000000cc")
-_SESSION_ID = UUID("6bb00000-0000-4000-8000-0000000000bb")
-_OPERATION_ID = "a" * 64
-_NOW = datetime(2026, 10, 4, tzinfo=UTC)
 _TRANSACTION_ID = cast("TransactionId", "a" * 64)
-_RECORDED_CODE = "REFUSED_LEDGER_EVIDENCE_INPUT"
-_RECORDED_KEY = "errors.refused.refused_ledger_evidence_input"
 
 
 def _registry() -> OperationRegistry:
@@ -114,142 +107,6 @@ def _registry() -> OperationRegistry:
 _REGISTRY = _registry()
 
 
-class _Client:
-    frontend = OperationFrontendProjection.TUI
-
-    def __init__(self) -> None:
-        self.profile_id = _PROFILE_ID
-        self.session_id = _SESSION_ID
-        self.session_read_threads: list[int] = []
-        """The thread of each blocking session read: at composition, then around each operation."""
-
-
-@dataclass
-class _Controller:
-    operation_id = _OPERATION_ID
-    observation: OperationObservationSuccessV1
-    result: BaseModel | None
-    detail: OperationErrorDetailV1 | None = None
-    client: _Client = field(default_factory=_Client)
-    deadline: float | None = None
-    result_reads: list[tuple[type[BaseModel], int, bool]] = field(default_factory=list)
-    detail_reads: int = 0
-
-    @property
-    def definition_contract(self) -> OperationPublicDefinitionContractV1:
-        return self.observation.projection.definition_contract
-
-    async def start(self) -> str:
-        return self.operation_id
-
-    async def observe(self, after_cursor: int, *, page_limit: int) -> OperationObservationSuccessV1:
-        assert after_cursor == 0
-        assert page_limit == 1
-        return self.observation
-
-    async def read_settled_result(
-        self,
-        projection: OperationPublicProjectionV1,
-        result_type: type[BaseModel],
-        *,
-        result_version: int,
-        allow_refusal_detail: bool = False,
-    ) -> BaseModel:
-        assert projection.operation_id == self.operation_id
-        self.result_reads.append((result_type, result_version, allow_refusal_detail))
-        assert self.result is not None
-        return self.result
-
-    async def settled_error_detail(self, projection: OperationPublicProjectionV1) -> OperationErrorDetailV1 | None:
-        assert projection.operation_id == self.operation_id
-        self.detail_reads += 1
-        return self.detail
-
-
-def _observation(
-    definition_id: str,
-    *,
-    condition: OperationTerminalCondition = OperationTerminalCondition.SUCCEEDED,
-    effect: OperationEffect = OperationEffect.NONE,
-    refusal_ref: str | None = None,
-) -> OperationObservationSuccessV1:
-    contract = _REGISTRY.lookup_public_contract(definition_id)
-    refused = condition is OperationTerminalCondition.REFUSED
-    state = OperationPublicProjectionV1(
-        operation_id=_OPERATION_ID,
-        definition_id=definition_id,
-        subject_ref=profile_operation_subject(str(_PROFILE_ID)),
-        revision=1,
-        anchor_cursor=0,
-        definition_contract=contract,
-        contract_set_digest=_REGISTRY.public_contract_set.contract_set_digest,
-        lifecycle=OperationLifecycle.TERMINAL,
-        terminal_condition=condition,
-        effect=effect,
-        phase_code=None,
-        started_at=_NOW,
-        updated_at=_NOW,
-        progress=None,
-        close_policy=contract.close_policy,
-        cancellation=contract.cancellation,
-        cancellable_now=False,
-        cancellation_requested=False,
-        cancellation_acknowledged=False,
-        execution_deadline_at=None,
-        cleanup_deadline_at=None,
-        pending_interaction=OperationNoPendingInteractionV1(),
-        result_ref=None if refused else "f" * 64,
-        refusal_ref=refusal_ref if refused else None,
-        failure_error_code=None,
-        diagnostic_ref=None,
-    )
-    return OperationObservationSuccessV1(
-        projection=state,
-        event_page=OperationPublicEventPageV1(
-            operation_id=_OPERATION_ID,
-            anchor_cursor=0,
-            requested_cursor=0,
-            status=OperationReplayStatus.CAUGHT_UP,
-            events=(),
-            next_cursor=0,
-            restart_cursor=None,
-        ),
-    )
-
-
-def _install(monkeypatch: pytest.MonkeyPatch, client: _Client, controller: _Controller) -> list[dict[str, object]]:
-    from ....frontend.tui.operations import runtime_profile_session as bridge
-
-    def read_session(
-        _client: FrontendClient,
-        *,
-        profile_id: UUID,
-        session_id: UUID,
-        profile_label: str,
-    ) -> object:
-        assert profile_label == "Fixture profile"
-        client.session_read_threads.append(threading.get_ident())
-        if client.profile_id != profile_id or client.session_id != session_id:
-            raise AccountSessionExpiredError()
-        return object()
-
-    monkeypatch.setattr(bridge, "read_runtime_account_session", read_session)
-    submissions: list[dict[str, object]] = []
-
-    async def submit(
-        _controller_type: type[OperationController],
-        received_client: FrontendClient,
-        **kwargs: object,
-    ) -> _Controller:
-        assert received_client is client
-        submissions.append(kwargs)
-        controller.client = client
-        return controller
-
-    monkeypatch.setattr(OperationController, "submit", classmethod(submit))
-    return submissions
-
-
 def _review(profile_id: UUID, *, prefix: str | None = None) -> LedgerReviewProjection:
     return LedgerReviewProjection(
         profile_id=profile_id,
@@ -274,7 +131,7 @@ def _drafts(profile_id: UUID) -> LedgerEvidenceReviewListProjection:
             EvidenceReviewQueueRowProjection(
                 evidence_reference="0000000000000001",
                 extractor="local-reader",
-                drafted_at=_NOW,
+                drafted_at=NOW,
                 blocking_count=1,
                 reasons=(ConfirmationBlockReason.CLOSURE_DISCREPANCY,),
                 advisory_count=0,
@@ -300,7 +157,7 @@ _CASES = (
         "review",
         RuntimeLedgerReviewTuiDoorV1,
         "ledger.review",
-        LedgerReviewRequest(profile_id=_PROFILE_ID),
+        LedgerReviewRequest(profile_id=PROFILE_ID),
         _review,
         LedgerReviewProjection,
     ),
@@ -308,7 +165,7 @@ _CASES = (
         "evidence_review",
         RuntimeLedgerEvidenceReviewListTuiDoorV1,
         "ledger.evidence.review.list",
-        LedgerEvidenceReviewListRequest(profile_id=_PROFILE_ID),
+        LedgerEvidenceReviewListRequest(profile_id=PROFILE_ID),
         _drafts,
         LedgerEvidenceReviewListProjection,
     ),
@@ -316,7 +173,7 @@ _CASES = (
 _IDS = [case.door for case in _CASES]
 
 
-def _doors(client: _Client) -> RuntimeLedgerReviewDoorsV1:
+def _doors(client: SessionClient) -> RuntimeLedgerReviewDoorsV1:
     return compose_runtime_ledger_review_doors(cast(FrontendClient, client), profile_label="Fixture profile")
 
 
@@ -327,7 +184,7 @@ class _ReadDoor(Protocol):
     async def __call__(self, request: BaseModel, /) -> BaseModel: ...
 
 
-def _door(client: _Client, case: _Case) -> _ReadDoor:
+def _door(client: SessionClient, case: _Case) -> _ReadDoor:
     door = getattr(_doors(client), case.door)
     assert isinstance(door, case.door_type)
     return cast(_ReadDoor, door)
@@ -343,26 +200,28 @@ def test_every_door_has_a_case_and_names_its_registered_operation() -> None:
 def test_each_door_submits_the_exact_request_and_reads_its_registered_result(
     monkeypatch: pytest.MonkeyPatch, case: _Case
 ) -> None:
-    client = _Client()
-    result = case.result(_PROFILE_ID)
-    controller = _Controller(observation=_observation(case.definition_id), result=result)
-    submissions = _install(monkeypatch, client, controller)
+    client = SessionClient()
+    result = case.result(PROFILE_ID)
+    controller = ScriptedController(observation=terminal_observation(_REGISTRY, case.definition_id), result=result)
+    submissions = install_scripted_controller(monkeypatch, client, controller)
     door = _door(client, case)
 
-    assert door.profile_id == _PROFILE_ID
+    assert door.profile_id == PROFILE_ID
     assert asyncio.run(door(case.request)) == result
     assert len(submissions) == 1
     assert submissions[0]["definition_id"] == case.definition_id
     assert submissions[0]["payload"] == case.request
-    assert submissions[0]["expected_session_id"] == _SESSION_ID
+    assert submissions[0]["expected_session_id"] == SESSION_ID
     assert controller.result_reads == [(case.result_type, 1, False)]
 
 
 @pytest.mark.parametrize("case", _CASES, ids=_IDS)
 def test_each_door_refuses_a_result_for_another_profile(monkeypatch: pytest.MonkeyPatch, case: _Case) -> None:
-    client = _Client()
-    observation = _observation(case.definition_id)
-    _install(monkeypatch, client, _Controller(observation=observation, result=case.result(_OTHER_PROFILE_ID)))
+    client = SessionClient()
+    observation = terminal_observation(_REGISTRY, case.definition_id)
+    install_scripted_controller(
+        monkeypatch, client, ScriptedController(observation=observation, result=case.result(OTHER_PROFILE_ID))
+    )
 
     with pytest.raises(RefusalError) as raised:
         asyncio.run(_door(client, case)(case.request))
@@ -376,9 +235,11 @@ def test_each_door_refuses_a_receipt_reporting_an_effect(
     monkeypatch: pytest.MonkeyPatch, case: _Case, effect: OperationEffect
 ) -> None:
     """A read that reports writing something is not the read the screen asked for."""
-    client = _Client()
-    observation = _observation(case.definition_id, effect=effect)
-    _install(monkeypatch, client, _Controller(observation=observation, result=case.result(_PROFILE_ID)))
+    client = SessionClient()
+    observation = terminal_observation(_REGISTRY, case.definition_id, effect=effect)
+    install_scripted_controller(
+        monkeypatch, client, ScriptedController(observation=observation, result=case.result(PROFILE_ID))
+    )
 
     with pytest.raises(RefusalError) as raised:
         asyncio.run(_door(client, case)(case.request))
@@ -388,31 +249,35 @@ def test_each_door_refuses_a_receipt_reporting_an_effect(
 
 @pytest.mark.parametrize("case", _CASES, ids=_IDS)
 def test_each_door_raises_the_recorded_error_of_a_refusal_receipt(monkeypatch: pytest.MonkeyPatch, case: _Case) -> None:
-    client = _Client()
+    client = SessionClient()
     detail = OperationErrorDetailV1(
         kind=OperationErrorDetailKind.REGISTERED_ERROR,
-        error_code=_RECORDED_CODE,
-        message_key=_RECORDED_KEY,
+        error_code=RECORDED_CODE,
+        message_key=RECORDED_KEY,
         context=(),
     )
-    observation = _observation(
-        case.definition_id, condition=OperationTerminalCondition.REFUSED, refusal_ref=_RECORDED_CODE
+    observation = terminal_observation(
+        _REGISTRY, case.definition_id, condition=OperationTerminalCondition.REFUSED, refusal_ref=RECORDED_CODE
     )
-    controller = _Controller(observation=observation, result=None, detail=detail)
-    _install(monkeypatch, client, controller)
+    controller = ScriptedController(observation=observation, result=None, detail=detail)
+    install_scripted_controller(monkeypatch, client, controller)
 
     with pytest.raises(RecordedRegisteredError) as raised:
         asyncio.run(_door(client, case)(case.request))
 
-    assert raised.value.recorded_code == _RECORDED_CODE
+    assert raised.value.recorded_code == RECORDED_CODE
     assert controller.detail_reads == 1
     assert controller.result_reads == []
 
 
 @pytest.mark.parametrize("case", _CASES, ids=_IDS)
 def test_each_door_fails_closed_when_its_session_lapses(monkeypatch: pytest.MonkeyPatch, case: _Case) -> None:
-    client = _Client()
-    submissions = _install(monkeypatch, client, _Controller(observation=_observation(case.definition_id), result=None))
+    client = SessionClient()
+    submissions = install_scripted_controller(
+        monkeypatch,
+        client,
+        ScriptedController(observation=terminal_observation(_REGISTRY, case.definition_id), result=None),
+    )
     door = _door(client, case)
     client.session_id = UUID("7cc00000-0000-4000-8000-0000000000cc")
 
@@ -425,9 +290,11 @@ def test_each_door_fails_closed_when_its_session_lapses(monkeypatch: pytest.Monk
 @pytest.mark.parametrize("case", _CASES, ids=_IDS)
 def test_each_door_reads_its_session_off_the_event_loop_thread(monkeypatch: pytest.MonkeyPatch, case: _Case) -> None:
     """The session read is a blocking IPC exchange; a door awaited on the loop never runs it there."""
-    client = _Client()
-    controller = _Controller(observation=_observation(case.definition_id), result=case.result(_PROFILE_ID))
-    _install(monkeypatch, client, controller)
+    client = SessionClient()
+    controller = ScriptedController(
+        observation=terminal_observation(_REGISTRY, case.definition_id), result=case.result(PROFILE_ID)
+    )
+    install_scripted_controller(monkeypatch, client, controller)
     door = _door(client, case)
     client.session_read_threads.clear()
 
@@ -439,9 +306,13 @@ def test_each_door_reads_its_session_off_the_event_loop_thread(monkeypatch: pyte
 
 def test_a_review_detail_answering_another_selection_is_refused(monkeypatch: pytest.MonkeyPatch) -> None:
     """The detail read names one entry by prefix; a list answer to it is not that entry."""
-    client = _Client()
-    request = LedgerReviewRequest(profile_id=_PROFILE_ID, transaction_prefix="aaaa")
-    _install(monkeypatch, client, _Controller(observation=_observation("ledger.review"), result=_review(_PROFILE_ID)))
+    client = SessionClient()
+    request = LedgerReviewRequest(profile_id=PROFILE_ID, transaction_prefix="aaaa")
+    install_scripted_controller(
+        monkeypatch,
+        client,
+        ScriptedController(observation=terminal_observation(_REGISTRY, "ledger.review"), result=_review(PROFILE_ID)),
+    )
 
     with pytest.raises(RefusalError) as raised:
         asyncio.run(_doors(client).review(request))
@@ -452,7 +323,7 @@ def test_a_review_detail_answering_another_selection_is_refused(monkeypatch: pyt
 def test_composing_the_doors_observes_the_session_once(monkeypatch: pytest.MonkeyPatch) -> None:
     from ....frontend.tui.operations import runtime_profile_session as bridge
 
-    client = _Client()
+    client = SessionClient()
     reads: list[UUID] = []
 
     def read_session(_client: FrontendClient, *, profile_id: UUID, session_id: UUID, profile_label: str) -> object:
@@ -463,5 +334,5 @@ def test_composing_the_doors_observes_the_session_once(monkeypatch: pytest.Monke
     monkeypatch.setattr(bridge, "read_runtime_account_session", read_session)
     doors = _doors(client)
 
-    assert reads == [_SESSION_ID]
-    assert doors.review.profile_id == doors.evidence_review.profile_id == _PROFILE_ID
+    assert reads == [SESSION_ID]
+    assert doors.review.profile_id == doors.evidence_review.profile_id == PROFILE_ID
