@@ -10,10 +10,12 @@ from decimal import Decimal
 from typing import Any
 
 import pytest
+from pydantic import ValidationError
 
 from cadrumo.core.hashing import content_hash_hex
 from cadrumo.core.tipos_actividad import TipoActividad
 from cadrumo.domain.renta.actividad_asset.disposal import ActivityAssetDisposal, ActivityAssetDisposalReason
+from cadrumo.domain.renta.actividad_asset.errors import ActividadAssetValidationError
 from cadrumo.domain.renta.actividad_asset.lifecycle import (
     AcquisitionLineageReference,
     AcquisitionShape,
@@ -46,6 +48,17 @@ def _facts(**changes: Any) -> dict[str, Any]:
 
 def _element(**changes: Any) -> ActivityAssetRevision:
     return ActivityAssetRevision(**_facts(**changes))
+
+
+def _assert_lineage_refusal(error: ValidationError, key: str) -> None:
+    details = error.errors()
+    assert len(details) == 1
+    wrapper = details[0].get("ctx", {}).get("error")
+    assert isinstance(wrapper, ValueError)
+    cause = wrapper.__cause__
+    assert isinstance(cause, ActividadAssetValidationError)
+    assert cause.translated_message == f"ledger.actividad_asset.errors.{key}"
+    assert cause.context == {"field": "acquisition"}
 
 
 def test_it_owns_no_row_and_needs_no_reconciliation() -> None:
@@ -106,8 +119,9 @@ def test_another_shape_cannot_declare_an_activity() -> None:
     purchase = register_asset("press", transaction_id="c" * 64)
     facts = {name: getattr(purchase, name) for name in type(purchase).model_fields}
 
-    with pytest.raises(ValueError, match="declares no date or activity"):
+    with pytest.raises(ValidationError) as caught:
         ActivityAssetRevision(**{**facts, "declared_activity": TipoActividad.B01_AGRICOLA})
+    _assert_lineage_refusal(caught.value, "primary_purchase_lineage_shape")
 
 
 def test_an_agrarian_element_stays_out_of_the_instalment_and_in_the_annual_return() -> None:
@@ -138,15 +152,17 @@ def test_it_is_refused_with_a_date_after_service() -> None:
 def test_it_cannot_also_name_a_ledger_row() -> None:
     row = AcquisitionLineageReference(observed_transaction_id="c" * 64, invoice_evidence_id="reference")
 
-    with pytest.raises(ValueError, match="names no ledger row"):
+    with pytest.raises(ValidationError) as caught:
         _element(acquisition=row)
+    _assert_lineage_refusal(caught.value, "outside_ledger_names_no_row")
 
 
 def test_only_this_shape_may_go_without_a_row() -> None:
     lineage = AcquisitionLineageReference(invoice_evidence_id="reference")
 
-    with pytest.raises(ValueError, match="names its ledger row"):
+    with pytest.raises(ValidationError) as caught:
         _element(acquisition=lineage, acquisition_shape=AcquisitionShape.PRIMARY_PURCHASE)
+    _assert_lineage_refusal(caught.value, "primary_purchase_lineage_shape")
 
 
 def test_the_lease_stays_refused() -> None:

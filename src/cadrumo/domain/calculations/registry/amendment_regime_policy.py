@@ -12,6 +12,8 @@ from ....core.amendment_kind_regime import (
     AmendmentRegimePolicy,
     resolve_amendment_kind_regime,
 )
+from ....core.errors.hierarchy import CoreValidationError
+from ....core.modelo import Modelo
 from ....core.period import Period
 from .errors import RegistryValidationError
 from .facts.resolution import required_mapping_entry, unique_mapping_tokens
@@ -41,6 +43,13 @@ _ENTRIES_POLICY = StringMappingPolicy(subject=_ENTRY_SUBJECT, value_whitespace=M
 _ENTRIES_FACT = StringMappingFact(fact_id=_FACT_ID, date_axis=DateAxis.FILING_PERIOD, policy=_ENTRIES_POLICY)
 
 
+def _boundary_model(value: str) -> Modelo:
+    try:
+        return Modelo(value)
+    except CoreValidationError as exc:
+        raise RegistryValidationError("amendment-regime-policy boundary model must be a Modelo identifier") from exc
+
+
 def _policy(entries: Mapping[str, str]) -> AmendmentRegimePolicy:
     procedure_order = unique_mapping_tokens(entries, _PROCEDURE_ORDER_KEY, subject=_ENTRY_SUBJECT)
     for token in procedure_order:
@@ -58,6 +67,17 @@ def _policy(entries: Mapping[str, str]) -> AmendmentRegimePolicy:
         raise RegistryValidationError("amendment-regime-policy post-regime uses an undeclared procedure")
 
     boundary_models = unique_mapping_tokens(entries, _BOUNDARY_ORDER_KEY, subject=_ENTRY_SUBJECT)
+    declared_models = {_boundary_model(modelo) for modelo in boundary_models}
+    entry_models: set[Modelo] = set()
+    for key in entries:
+        if not key.startswith("boundary.") or key == _BOUNDARY_ORDER_KEY:
+            continue
+        parts = key.split(".")
+        if len(parts) != 3 or parts[2] not in {"date", "source", "source_fact", "source_path"}:
+            raise RegistryValidationError(f"amendment-regime-policy has an invalid boundary entry {key!r}")
+        entry_models.add(_boundary_model(parts[1]))
+    if entry_models != declared_models:
+        raise RegistryValidationError("amendment-regime-policy boundary rows must match boundary.order")
     boundaries: dict[str, date] = {}
     for modelo in boundary_models:
         try:
@@ -68,12 +88,10 @@ def _policy(entries: Mapping[str, str]) -> AmendmentRegimePolicy:
             raise RegistryValidationError(
                 f"amendment-regime-policy boundary for {modelo!r} must be an ISO date",
             ) from exc
-        if not (bool(entries.get(f"boundary.{modelo}.source_fact")) or bool(entries.get(f"boundary.{modelo}.source"))):
+        if not any(entries.get(f"boundary.{modelo}.{field}", "").strip() for field in ("source_fact", "source")):
             raise RegistryValidationError(
                 f"amendment-regime-policy boundary for {modelo!r} lacks source evidence",
             )
-    if len(boundaries) != 3:
-        raise RegistryValidationError("amendment-regime-policy must declare the complete three-model boundary set")
 
     return AmendmentRegimePolicy(
         rectificativa_effective_from=MappingProxyType(boundaries),

@@ -215,7 +215,7 @@ def test_fact_model_only_admits_source_declared_multiplicity(
         )
 
 
-@pytest.mark.parametrize("sub_index", [0, -1, 5, "1", True])
+@pytest.mark.parametrize("sub_index", [0, -1, "1", True])
 def test_fact_ref_requires_a_positive_exact_sub_index_when_present(sub_index: object) -> None:
     with pytest.raises((ValidationError, ValueError)):
         compile_filing_projection_ref(
@@ -227,6 +227,21 @@ def test_fact_ref_requires_a_positive_exact_sub_index_when_present(sub_index: ob
                 "sub_index": sub_index,
             }
         )
+
+
+def test_fact_ref_leaves_the_upper_bound_to_the_pinned_registry_consumer() -> None:
+    reference = compile_filing_projection_ref(
+        {
+            "projection_kind": "m303_regimen_simplificado_fact",
+            "cohort": "no_agricola",
+            "slot": 1,
+            "fact": "mesas_capacidad",
+            "sub_index": 5,
+        }
+    )
+
+    assert isinstance(reference, M303RegimenSimplificadoFactProjectionRef)
+    assert reference.sub_index == 5
 
 
 @pytest.mark.parametrize(
