@@ -65,8 +65,8 @@ from .m193_settled_row_support import (
     m193_bucket,
     persist_manual_row,
     stored_revision,
-    workflow_profile,
 )
+from .modelo_gate_bucket_support import ready_workflow_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -95,7 +95,7 @@ def _verify(revision_id: CalculationRevisionId, *, operation: PinnedAuthorityOpe
         certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
         operator_scope_ports=build_operator_scope_ports(),
         actor="test",
-        workflow_profile=workflow_profile(),
+        workflow_profile=ready_workflow_profile(),
         verification_repositories=build_test_verification_repository_bundle(),
         operation=operation,
     ).report
@@ -111,7 +111,7 @@ def _file(revision_id: CalculationRevisionId, *, operation: PinnedAuthorityOpera
         operator_scope_ports=build_operator_scope_ports(),
         ports=build_filing_action_ports(bucket_id=BUCKET_ID, operation=operation),
         actor="test",
-        workflow_profile=workflow_profile(),
+        workflow_profile=ready_workflow_profile(),
         operation=operation,
     )
 

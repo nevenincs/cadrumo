@@ -51,8 +51,8 @@ from ..m193_settled_row_support import (
     m193_bucket,
     persist_manual_row,
     stored_revision,
-    workflow_profile,
 )
+from ..modelo_gate_bucket_support import ready_workflow_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -77,7 +77,7 @@ def _export(
 ) -> None:
     export_modelo_revision(
         ModeloExportCommand(calculation_revision_id=revision_id, output_path=output_path, actor="test"),
-        workflow_profile=workflow_profile(),
+        workflow_profile=ready_workflow_profile(),
         export_ports=modelo_export_ports_for_test(bucket_id=BUCKET_ID, secure_objects=bucket.objects),
         operation=operation,
     )
