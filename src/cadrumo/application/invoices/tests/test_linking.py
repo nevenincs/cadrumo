@@ -2,17 +2,13 @@
 
 from __future__ import annotations
 
-from datetime import date
-from decimal import Decimal
-
 import pytest
 
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 
-from ....domain.invoices.enums import IvaRate, PaymentStatus
+from ....domain.invoices.enums import PaymentStatus
 from ....domain.invoices.errors import InvoiceLinkError
-from ....domain.invoices.models import Invoice, InvoiceLine
-from ....domain.iva.schema import InvoiceKind
+from ....domain.invoices.tests.catalogue_support import consulting_invoice
 from ....domain.transactions.models import TransactionCatalogue
 from ..transaction_linking import link_invoice_transaction_catalogues
 from .bank_row_support import incoming_bank_transaction
@@ -21,7 +17,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixt
 
 
 def test_link_invoice_transaction_catalogues_roundtrips_bidirectional_link() -> None:
-    invoice = _invoice()
+    invoice = consulting_invoice(payment_status=PaymentStatus.PAID)
     transaction = incoming_bank_transaction()
 
     result = link_invoice_transaction_catalogues(
@@ -42,7 +38,7 @@ def test_link_invoice_transaction_catalogues_roundtrips_bidirectional_link() -> 
 
 
 def test_link_invoice_transaction_catalogues_reports_missing_transaction_context() -> None:
-    invoice = _invoice()
+    invoice = consulting_invoice(payment_status=PaymentStatus.PAID)
 
     with pytest.raises(InvoiceLinkError) as exc_info:
         link_invoice_transaction_catalogues(
@@ -54,33 +50,3 @@ def test_link_invoice_transaction_catalogues_reports_missing_transaction_context
 
     assert exc_info.value.translated_message == "application.invoices.linking.errors.transaction_not_found"
     assert exc_info.value.context == {"transaction_id": "missing-transaction"}
-
-
-def _invoice() -> Invoice:
-    return Invoice.model_validate(
-        {
-            "kind": InvoiceKind.ISSUED,
-            "invoice_number": "INV-001",
-            "issued_at": date(2026, 4, 1),
-            "counterparty_name": "Cliente SL",
-            "counterparty_tax_id": "B12345674",
-            "counterparty_country": "ES",
-            "base_total": Decimal("100.00"),
-            "iva_total": Decimal("21.00"),
-            "grand_total": Decimal("121.00"),
-            "currency": "EUR",
-            "payment_status": PaymentStatus.PAID,
-            "lines": (
-                InvoiceLine.model_validate(
-                    {
-                        "description": "Servicios",
-                        "quantity": Decimal("1"),
-                        "unit_price": Decimal("100.00"),
-                        "subtotal": Decimal("100.00"),
-                        "iva_rate": IvaRate.from_registry("RATE_21"),
-                        "iva_amount": Decimal("21.00"),
-                    },
-                ),
-            ),
-        },
-    )

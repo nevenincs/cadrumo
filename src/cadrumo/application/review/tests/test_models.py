@@ -13,9 +13,8 @@ from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.errors.severity import BaseSeverity
 from ....core.i18n.translatable import Translatable as tr
 from ....domain.filing.schema import ModeloValidationFinding
-from ....domain.invoices.enums import IvaRate, PaymentStatus
-from ....domain.invoices.models import Invoice, InvoiceLine
-from ....domain.iva.schema import InvoiceKind
+from ....domain.invoices.enums import PaymentStatus
+from ....domain.invoices.tests.catalogue_support import consulting_invoice
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
@@ -66,38 +65,6 @@ def _transaction() -> Transaction:
     )
 
 
-def _invoice_line() -> InvoiceLine:
-    return InvoiceLine(
-        description="Consultoría",
-        quantity=Decimal("1"),
-        unit_price=Decimal("100.00"),
-        subtotal=Decimal("100.00"),
-        iva_rate=IvaRate.from_registry("RATE_21"),
-        iva_amount=Decimal("21.00"),
-    )
-
-
-def _invoice() -> Invoice:
-    line = _invoice_line()
-    return Invoice.model_validate(
-        {
-            "kind": InvoiceKind.ISSUED,
-            "invoice_number": "INV-001",
-            "issued_at": date(2026, 4, 1),
-            "counterparty_name": "Cliente SL",
-            "counterparty_tax_id": "B12345674",
-            "counterparty_country": "ES",
-            "base_total": Decimal("100.00"),
-            "iva_total": Decimal("21.00"),
-            "grand_total": Decimal("121.00"),
-            "currency": "EUR",
-            "lines": (line,),
-            "payment_status": PaymentStatus.PENDING,
-            "linked_transaction_ids": (),
-        },
-    )
-
-
 def _finding() -> ModeloValidationFinding:
     return ModeloValidationFinding(
         casilla_id=_REVIEW_FINDING_CASILLA,
@@ -140,7 +107,7 @@ def test_review_item_discriminator_resolves_each_kind() -> None:
             summary=_summary("inv"),
             drill_command="aeat app review view i-1",
             since=datetime(2026, 4, 1, tzinfo=UTC),
-            source=_invoice(),
+            source=consulting_invoice(payment_status=PaymentStatus.PENDING),
         ),
         FindingReviewItem(
             item_id="f-1",
