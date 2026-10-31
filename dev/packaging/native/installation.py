@@ -25,7 +25,7 @@ from .linux_desktop_runtime import validate_payload as validate_linux_desktop_ru
 from .package_inventory import package_inventory
 
 if TYPE_CHECKING:
-    from .installation_plan import BundleInputs
+    from .installation_plan import BundleInputs, Preparation
 
 
 def _validate_member_name(relative: str) -> PurePosixPath:
@@ -252,6 +252,24 @@ def _prepare_fresh(
     destination = member(root, plan.destination)
     shutil.copytree(payload, destination, dirs_exist_ok=True, copy_function=copy_file or shutil.copy2)
     validate_payload(destination, identity_file, desktop)
+    _write_projected_stage(root, plan)
+    for name, contents in plan.metadata.items():
+        output = member(build, name)
+        output.write_bytes(contents)
+        output.chmod(0o644)
+    value = json.loads(identity_file.read_text(encoding="utf-8"))
+    inventory(root, build / "installation.json", value["application_id"], staging_generation=1)
+    receipt_file = build / "installation.json"
+    receipt = json.loads(receipt_file.read_text(encoding="utf-8"))
+    if not plan.admits(receipt["files"]):
+        raise ValueError("Installation candidate differs from current payload and controls")
+    receipt["preparation"] = plan.identity
+    receipt_file.write_text(json.dumps(receipt, indent=2) + "\n", encoding="utf-8")
+    return root
+
+
+def _write_projected_stage(root: Path, plan: Preparation) -> None:
+    """Write the projected controls and modes, then seal the completed bundle."""
     for name, contents in plan.controls.items():
         output = member(root, name)
         output.parent.mkdir(parents=True, exist_ok=True)
@@ -267,19 +285,6 @@ def _prepare_fresh(
         # The bundle is complete; its seal is the last write beneath it.
         application = member(root, plan.seal.application)
         plan.seal.sealer.seal(application, member(root, plan.seal.main_executable), plan.seal.application_id)
-    for name, contents in plan.metadata.items():
-        output = member(build, name)
-        output.write_bytes(contents)
-        output.chmod(0o644)
-    value = json.loads(identity_file.read_text(encoding="utf-8"))
-    inventory(root, build / "installation.json", value["application_id"], staging_generation=1)
-    receipt_file = build / "installation.json"
-    receipt = json.loads(receipt_file.read_text(encoding="utf-8"))
-    if not plan.admits(receipt["files"]):
-        raise ValueError("Installation candidate differs from current payload and controls")
-    receipt["preparation"] = plan.identity
-    receipt_file.write_text(json.dumps(receipt, indent=2) + "\n", encoding="utf-8")
-    return root
 
 
 def main() -> None:

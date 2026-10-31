@@ -119,19 +119,7 @@ def project(
             modes,
         )
     _linux_controls(target, desktop, value, control_root, controls)
-    seal = None
-    if wrapper is not None and desktop is not None:
-        if bundle is None:
-            raise ValueError("A macOS application bundle requires its main executable and icon")
-        _macos_controls(wrapper, bundle, desktop, value, managers, manifest["files"], controls, modes)
-        application = f"{value['name']}.app"
-        seal = BundleSeal(
-            application,
-            f"{application}/{wrapper.executable_directory}/{desktop}",
-            value["application_id"],
-            sealed_members(application, wrapper, desktop),
-            bundle.sealer,
-        )
+    seal = _bundle_seal(wrapper, bundle, desktop, value, managers, manifest["files"], controls, modes)
     metadata = _legacy_windows_metadata(target, desktop, versioned, value, managers, destination)
     _include_controls(controls, files, modes)
     helpers = _installation_helper_hashes()
@@ -153,6 +141,31 @@ def project(
         "payload_manifest": source["data/package-manifest.json"],
     }
     return Preparation(destination, files, modes, controls, metadata, identity, seal)
+
+
+def _bundle_seal(
+    wrapper: ApplicationBundle | None,
+    bundle: BundleInputs | None,
+    desktop: str | None,
+    value: Mapping[str, str],
+    managers: list[ApplicationImage],
+    files: Mapping[str, object],
+    controls: dict[str, bytes],
+    modes: dict[str, int],
+) -> BundleSeal | None:
+    if wrapper is not None and desktop is not None:
+        if bundle is None:
+            raise ValueError("A macOS application bundle requires its main executable and icon")
+        _macos_controls(wrapper, bundle, desktop, value, managers, files, controls, modes)
+        application = f"{value['name']}.app"
+        return BundleSeal(
+            application,
+            f"{application}/{wrapper.executable_directory}/{desktop}",
+            value["application_id"],
+            sealed_members(application, wrapper, desktop),
+            bundle.sealer,
+        )
+    return None
 
 
 def _legacy_windows_metadata(

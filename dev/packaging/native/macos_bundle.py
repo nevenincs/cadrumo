@@ -135,7 +135,11 @@ def verify_seal(codesign: Path, bundle: Path, application_id: str) -> str:
         raise ValueError(f"Application bundle is missing: {bundle}")
     _run(codesign, "--verify", "--deep", "--strict", "--verbose=2", str(bundle))
     details = _run(codesign, "--display", "--verbose=2", str(bundle))
-    lines = details.splitlines()
+    _require_hardened_seal(details.splitlines(), application_id)
+    return details
+
+
+def _require_hardened_seal(lines: list[str], application_id: str) -> None:
     if f"Identifier={application_id}" not in lines:
         raise ValueError("Sealed bundle does not carry the distribution identifier")
     flags = next((line for line in lines if line.startswith("CodeDirectory ")), "")
@@ -145,7 +149,6 @@ def verify_seal(codesign: Path, bundle: Path, application_id: str) -> str:
         raise ValueError("Sealed bundle carries no version 2 resource seal")
     if not any(line.startswith("Info.plist entries=") for line in lines):
         raise ValueError("Sealed bundle signature does not bind its Info.plist")
-    return details
 
 
 def assess(spctl: Path, bundle: Path) -> str:
