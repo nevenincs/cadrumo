@@ -694,7 +694,6 @@ DESKTOP_CHROME_FAMILIES: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType
             "stage_action",
             "drop_action",
         ),
-        "desktop.ledger.edit.hint.": ("amount", "figure", "date", "percent"),
         "desktop.ledger.edit.lock.": ("sealed", "transfer", "after_add", "derived"),
         "desktop.ledger.edit.held.": ("cannot_clear", "needs_classification"),
         "desktop.ledger.field.": (

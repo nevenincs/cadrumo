@@ -97,7 +97,6 @@ def _workspace_families() -> Mapping[str, tuple[str, ...]]:
                 "workspace.declarations.lifecycle.",
                 "workspace.declarations.list.state.",
                 "workspace.modelo.disclosure.",
-                "workspace.modelo.editor.placeholder.",
                 "workspace.modelo.editability.",
                 "workspace.modelo.not_writable.",
                 "workspace.modelo.origin.",

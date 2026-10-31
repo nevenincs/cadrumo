@@ -1184,7 +1184,6 @@ desktop:
         label: Cuenta
         opened: Apertura
       currency: Moneda
-      currency_hint: Tres letras, p. ej. EUR
       designate: Designar para cargos o devoluciones…
       empty: Aún no hay cuentas.
       every_modelo: todos los modelos
@@ -1901,7 +1900,6 @@ desktop:
       select_range: Selecciona el rango
       share: Parte empresarial
       share_categories: Solo categorías que admiten una parte de uso empresarial
-      share_hint: Escribe 30 para el 30 %
       share_refused: '«{raw}» no es una parte: escribe un porcentaje, como 50 para
         el 50 %.'
       skipped: 'Se quedan como están: {count}'
@@ -2276,11 +2274,6 @@ desktop:
       held:
         cannot_clear: No se puede vaciar
         needs_classification: Primero necesita una clasificación
-      hint:
-        amount: 'Punto decimal, sin separador de miles: 1234.56'
-        date: 'Año-mes-día: 2026-10-05'
-        figure: 'Punto decimal, sin separador de miles: 1234.56'
-        percent: 21 para el 21 %
       lock:
         after_add: Se indica cuando el movimiento esté guardado
         derived: Lo calcula Cadrumo
@@ -2481,18 +2474,14 @@ desktop:
       to_match_chip: Por conciliar
     form:
       actions: Acciones
-      amount_hint: Decimal con punto, p. ej. 1500.50
       cancel: Cancelar
       choose: Elige…
       close: Cerrar
-      date_hint: Año-mes-día, p. ej. 2026-10-31
       failed: No ha funcionado
       fill_to_continue: Rellena lo que aún está vacío arriba para continuar, incluidos
         los archivos que pida.
       'no': 'No'
       none: Ninguno
-      percent_hint: Escribe 70 para el 70 %
-      points_hint: Porcentaje, de 0 a 100
       reading: Leyendo…
       refused: No guardado.
       reread: Actualizar
@@ -2500,7 +2489,6 @@ desktop:
       saving: Guardando…
       two_letters: Dos letras, p. ej. ES
       unknown: No podemos saber si esto se guardó. Actualiza para comprobarlo.
-      year_hint: Cuatro cifras, p. ej. 2024
       'yes': Sí
     grid: Movimientos, {period}
     group:
@@ -2636,7 +2624,6 @@ desktop:
         rows: Filas
         skipped: Ya en el libro
       country: País de la contraparte
-      country_hint: Dos letras, para un libro sin columna de país. Opcional.
       country_invalid: «{value}» no es un código de país de dos letras.
       country_none: sin indicar
       country_purpose: Se usa cuando el libro no tiene columna de país. Opcional.
@@ -3161,12 +3148,8 @@ desktop:
       gone_title: Factura no encontrada
       grid: Facturas
       hint:
-        country: Dos letras, p. ej. ES
-        currency: Tres letras, p. ej. EUR
-        date: Año-mes-día
         operation_date: Si es distinta de la de emisión
         payment_id: El catálogo no lo muestra. Escribe uno para sustituirlo.
-        percent: 15 para el 15 %
         printed_total: Opcional. Comprueba que las líneas cuadran.
         tax_id_optional: Opcional en una simplificada emitida
       identity_fixed: El tipo, el número, la fecha de emisión, el NIF, la moneda,

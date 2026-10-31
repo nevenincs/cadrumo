@@ -1158,7 +1158,6 @@ desktop:
         label: Számla
         opened: Nyitás
       currency: Pénznem
-      currency_hint: Három betű, pl. EUR
       designate: Kijelölés terhelésre vagy visszatérítésre…
       empty: Még nincs számla.
       every_modelo: minden nyomtatvány
@@ -1885,7 +1884,6 @@ desktop:
       select_range: Tartomány kijelölése
       share: Üzleti rész
       share_categories: Csak üzleti használati arányt elfogadó kategóriák
-      share_hint: Írj 30-at a 30%-hoz
       share_refused: '„{raw}” nem arány: írj százalékot, például 50-et az 50%-hoz.'
       skipped: 'Változatlan marad: {count}'
       stage: 'Hozzáadás a változtatásokhoz: {count}'
@@ -2263,11 +2261,6 @@ desktop:
       held:
         cannot_clear: Nem törölhető
         needs_classification: Előbb besorolás kell
-      hint:
-        amount: 'Tizedespont, ezres tagolás nélkül: 1234.56'
-        date: 'Év-hónap-nap: 2026-10-05'
-        figure: 'Tizedespont, ezres tagolás nélkül: 1234.56'
-        percent: 21 a 21%-hoz
       lock:
         after_add: A tétel mentése után adható meg
         derived: A Cadrumo számolja
@@ -2464,18 +2457,14 @@ desktop:
       to_match_chip: Párosítandó
     form:
       actions: Műveletek
-      amount_hint: Pont a tizedesjel, pl. 1500.50
       cancel: Mégse
       choose: Válassz…
       close: Bezárás
-      date_hint: Év-hónap-nap, pl. 2026-10-31
       failed: Ez nem sikerült
       fill_to_continue: A folytatáshoz töltsd ki, ami fent még üres, a kért fájlokkal
         együtt.
       'no': Nem
       none: Nincs
-      percent_hint: '70%-hoz írd: 70'
-      points_hint: Százalék, 0 és 100 között
       reading: Beolvasás…
       refused: Nincs mentve.
       reread: Frissítés
@@ -2483,7 +2472,6 @@ desktop:
       saving: Mentés…
       two_letters: Két betű, pl. ES
       unknown: Nem tudjuk, hogy ez mentődött-e. Frissíts az ellenőrzéshez.
-      year_hint: Négy számjegy, pl. 2024
       'yes': Igen
     grid: Tételek, {period}
     group:
@@ -2620,7 +2608,6 @@ desktop:
         rows: Sorok
         skipped: Már a naplóban
       country: A partner országa
-      country_hint: Két betű, ha a könyvben nincs országoszlop. Nem kötelező.
       country_invalid: „{value}” nem kétbetűs országkód.
       country_none: nincs megadva
       country_purpose: Akkor használjuk, ha a könyvben nincs ország oszlop. Nem kötelező.
@@ -3145,12 +3132,8 @@ desktop:
       gone_title: A számla nem található
       grid: Számlák
       hint:
-        country: Két betű, pl. ES
-        currency: Három betű, pl. EUR
-        date: Év-hónap-nap
         operation_date: Ha eltér a kiállítás dátumától
         payment_id: A katalógus nem mutatja. Írj be egyet a cseréjéhez.
-        percent: 15 a 15%-hoz
         printed_total: Nem kötelező. Ellenőrzi, hogy a tételsorok kiadják.
         tax_id_optional: Kiállított simplificada esetén nem kötelező
       identity_fixed: A fajta, a szám, a kiállítás dátuma, az adószám, a pénznem,

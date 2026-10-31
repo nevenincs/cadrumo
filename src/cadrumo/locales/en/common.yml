@@ -1145,7 +1145,6 @@ desktop:
         label: Account
         opened: Opened
       currency: Currency
-      currency_hint: Three letters, e.g. EUR
       designate: Designate for charges or refunds…
       empty: No accounts yet.
       every_modelo: every modelo
@@ -1868,7 +1867,6 @@ desktop:
       select_range: Select range
       share: Business share
       share_categories: Only categories that take a business-use share
-      share_hint: Write 30 for 30%
       share_refused: '“{raw}” is not a share: write a percentage, such as 50 for 50%.'
       skipped: 'Left as is: {count}'
       stage: Add to changes for {count}
@@ -2241,11 +2239,6 @@ desktop:
       held:
         cannot_clear: Can't be cleared
         needs_classification: Needs a classification first
-      hint:
-        amount: 'Dot for decimals, no grouping: 1234.56'
-        date: 'Year-month-day: 2026-10-05'
-        figure: 'Dot for decimals, no grouping: 1234.56'
-        percent: 21 for 21%
       lock:
         after_add: Set once the movement is saved
         derived: Worked out by Cadrumo
@@ -2442,18 +2435,14 @@ desktop:
       to_match_chip: To match
     form:
       actions: Actions
-      amount_hint: Dot decimal, e.g. 1500.50
       cancel: Cancel
       choose: Choose…
       close: Close
-      date_hint: Year-month-day, e.g. 2026-10-31
       failed: That didn't work
       fill_to_continue: Fill in what is still empty above to continue, including any
         files it asks for.
       'no': 'No'
       none: None
-      percent_hint: Write 70 for 70%
-      points_hint: Percentage, 0 to 100
       reading: Reading…
       refused: Not saved.
       reread: Refresh
@@ -2461,7 +2450,6 @@ desktop:
       saving: Saving…
       two_letters: Two letters, e.g. ES
       unknown: We can't tell if this saved. Refresh to check.
-      year_hint: Four digits, e.g. 2024
       'yes': 'Yes'
     grid: Movements, {period}
     group:
@@ -2598,7 +2586,6 @@ desktop:
         rows: Rows
         skipped: Already in the ledger
       country: Counterparty country
-      country_hint: Two letters, used where the book has no country column. Optional.
       country_invalid: “{value}” is not a two-letter country code.
       country_none: not stated
       country_purpose: Used where the book has no country column. Optional.
@@ -3119,12 +3106,8 @@ desktop:
       gone_title: Invoice not found
       grid: Invoices
       hint:
-        country: Two letters, e.g. ES
-        currency: Three letters, e.g. EUR
-        date: Year-month-day
         operation_date: If it differs from the issue date
         payment_id: Not shown by the catalogue. Type one to replace it.
-        percent: 15 for 15%
         printed_total: Optional. Checks that the lines add up.
         tax_id_optional: Optional on an issued simplificada
       identity_fixed: Kind, number, issue date, tax ID, currency, totals and lines

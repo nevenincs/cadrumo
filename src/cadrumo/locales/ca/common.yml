@@ -1178,7 +1178,6 @@ desktop:
         label: Compte
         opened: Obertura
       currency: Moneda
-      currency_hint: Tres lletres, p. ex. EUR
       designate: Designa per a càrrecs o devolucions…
       empty: Encara no hi ha comptes.
       every_modelo: tots els models
@@ -1905,7 +1904,6 @@ desktop:
       select_range: Selecciona el rang
       share: Part empresarial
       share_categories: Només categories que admeten una part d'ús empresarial
-      share_hint: Escriu 30 per al 30 %
       share_refused: '«{raw}» no és una part: escriu un percentatge, com 50 per al
         50 %.'
       skipped: 'Es queden com estan: {count}'
@@ -2281,11 +2279,6 @@ desktop:
       held:
         cannot_clear: No es pot buidar
         needs_classification: Primer necessita una classificació
-      hint:
-        amount: 'Punt decimal, sense separador de milers: 1234.56'
-        date: 'Any-mes-dia: 2026-10-05'
-        figure: 'Punt decimal, sense separador de milers: 1234.56'
-        percent: 21 per al 21 %
       lock:
         after_add: S'indica quan el moviment estigui desat
         derived: El calcula Cadrumo
@@ -2483,18 +2476,14 @@ desktop:
       to_match_chip: Per conciliar
     form:
       actions: Accions
-      amount_hint: Decimal amb punt, p. ex. 1500.50
       cancel: Cancel·la
       choose: Tria…
       close: Tanca
-      date_hint: Any-mes-dia, p. ex. 2026-10-31
       failed: No ha funcionat
       fill_to_continue: Omple el que encara és buit a dalt per continuar, inclosos
         els fitxers que demani.
       'no': 'No'
       none: Cap
-      percent_hint: Escriu 70 per al 70 %
-      points_hint: Percentatge, de 0 a 100
       reading: S'està llegint…
       refused: No desat.
       reread: Actualitza
@@ -2502,7 +2491,6 @@ desktop:
       saving: S'està desant…
       two_letters: Dues lletres, p. ex. ES
       unknown: No podem saber si això s'ha desat. Actualitza per comprovar-ho.
-      year_hint: Quatre xifres, p. ex. 2024
       'yes': Sí
     grid: Moviments, {period}
     group:
@@ -2638,7 +2626,6 @@ desktop:
         rows: Files
         skipped: Ja al llibre
       country: País de la contrapart
-      country_hint: Dues lletres, per a un llibre sense columna de país. Opcional.
       country_invalid: «{value}» no és un codi de país de dues lletres.
       country_none: sense indicar
       country_purpose: S’usa quan el llibre no té columna de país. Opcional.
@@ -3163,12 +3150,8 @@ desktop:
       gone_title: Factura no trobada
       grid: Factures
       hint:
-        country: Dues lletres, p. ex. ES
-        currency: Tres lletres, p. ex. EUR
-        date: Any-mes-dia
         operation_date: Si és diferent de la d'emissió
         payment_id: El catàleg no el mostra. Escriu-ne un per substituir-lo.
-        percent: 15 per al 15 %
         printed_total: Opcional. Comprova que les línies quadren.
         tax_id_optional: Opcional en una simplificada emesa
       identity_fixed: El tipus, el número, la data d'emissió, el NIF, la moneda, els
