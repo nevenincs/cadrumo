@@ -11,7 +11,6 @@ from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.governed_fact_scope import CandidateFactAuthority, validating_governed_facts
 from cadrumo.domain.calculations.registry.record_design_coverage import calculation_closure_casilla_ids
 from cadrumo.domain.calculations.registry.reference_checks import check_all_id_references
-from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.calculations.registry.schema_surfaces import (
     CalculationCompletenessCasilla,
@@ -22,24 +21,24 @@ from cadrumo.domain.calculations.registry.schema_surfaces import (
 from ..compiler.validator import RegistryValidator
 from ..conformance.registry_schema_support import committed_registry_tree as _committed_registry_tree
 from ._referential_integrity_support import (
+    EXTRA_LEGAL_ID,
+    EXTRA_SOURCE_ID,
     PARITY_SOURCE_ID,
     PRIOR_REVISION_ID,
     REFERENCE_LEGAL_ID,
     REFERENCE_SOURCE_ID,
+    assert_extra_catalogue_ids_resolve,
     build_snapshot_with_missing_legal,
     build_snapshot_with_missing_source,
     catalogues_with_executable_parity_source,
     completeness_manifest,
     minimal_casilla,
     minimal_catalogues,
-    minimal_legal_ref,
     minimal_modelo,
     minimal_revision,
-    minimal_source_ref,
     modelo_validation_failures,
     segmented_casilla,
     single_segment_casilla,
-    snapshot_for_revision,
 )
 from .profile_schema_support import committed_supported_filing_years, load_user_profile_schema
 
@@ -65,8 +64,6 @@ _SEGMENTED_TARGET_CASILLA: CasillaId = validated_casilla_id(
 )
 _MISSING_LEGAL_ID = "ley-35-2006:art-9999"
 _MISSING_SOURCE_ID = "aeat-missing-source"
-_EXTRA_LEGAL_ID = "ley-35-2006:art-9998"
-_EXTRA_SOURCE_ID = "aeat-extra-source"
 
 
 def test_segment_qualified_reference_resolves_across_segments() -> None:
@@ -615,9 +612,9 @@ def test_snapshot_carries_manifest_and_continuity_refs() -> None:
         (CalculationCompletenessCasilla(casilla_id=_NUMERIC_CASILLA_01, number="01"),),
     ).model_copy(
         update={
-            "legal_refs": (_EXTRA_LEGAL_ID,),
-            "source_ref": _EXTRA_SOURCE_ID,
-            "source_refs": (_EXTRA_SOURCE_ID,),
+            "legal_refs": (EXTRA_LEGAL_ID,),
+            "source_ref": EXTRA_SOURCE_ID,
+            "source_refs": (EXTRA_SOURCE_ID,),
         },
     )
     evolution = CasillaContinuidadEvolutionDefinition(
@@ -626,33 +623,17 @@ def test_snapshot_carries_manifest_and_continuity_refs() -> None:
         from_revision=PRIOR_REVISION_ID,
         to_revision="test-revision",
         evolution_kind="legal_refs_evolved",
-        legal_refs=(_EXTRA_LEGAL_ID,),
-        source_refs=(_EXTRA_SOURCE_ID,),
+        legal_refs=(EXTRA_LEGAL_ID,),
+        source_refs=(EXTRA_SOURCE_ID,),
     )
     revision = minimal_revision(casillas=(minimal_casilla(_NUMERIC_CASILLA_01),)).model_copy(
         update={
             "completeness_manifest": manifest,
             "casilla_continuidad_evolutions": (evolution,),
-            "source_refs": (REFERENCE_SOURCE_ID, _EXTRA_SOURCE_ID),
+            "source_refs": (REFERENCE_SOURCE_ID, EXTRA_SOURCE_ID),
         },
     )
-    catalogues = minimal_catalogues()
-    catalogues = RegistryCatalogues(
-        legal={
-            **catalogues.legal,
-            _EXTRA_LEGAL_ID: minimal_legal_ref().model_copy(update={"id": _EXTRA_LEGAL_ID}),
-        },
-        sources={
-            **catalogues.sources,
-            _EXTRA_SOURCE_ID: minimal_source_ref().model_copy(update={"id": _EXTRA_SOURCE_ID}),
-        },
-    )
-
-    snapshot = snapshot_for_revision(minimal_modelo(revision), catalogues, revision)
-
-    assert _EXTRA_LEGAL_ID in snapshot.legal
-    assert _EXTRA_SOURCE_ID in snapshot.sources
-    check_all_id_references(snapshot)
+    assert_extra_catalogue_ids_resolve(revision)
 
 
 def test_snapshot_integrity_checks_completeness_manifest_refs() -> None:

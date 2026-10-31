@@ -39,9 +39,12 @@ from cadrumo.domain.calculations.registry.schema_verification import (
 
 from ..compiler.validator import RegistryValidator
 from ._referential_integrity_support import (
+    EXTRA_LEGAL_ID,
+    EXTRA_SOURCE_ID,
     PARITY_SOURCE_ID,
     REFERENCE_LEGAL_ID,
     REFERENCE_SOURCE_ID,
+    assert_extra_catalogue_ids_resolve,
     build_minimal_snapshot,
     build_snapshot_with_missing_legal,
     build_snapshot_with_missing_source,
@@ -51,7 +54,6 @@ from ._referential_integrity_support import (
     minimal_legal_ref,
     minimal_modelo,
     minimal_revision,
-    minimal_source_ref,
     minimal_workbook_ref,
     modelo_validation_failures,
     snapshot_for_revision,
@@ -74,8 +76,6 @@ _NUMERIC_CASILLA_01: CasillaId = validated_casilla_id("01", surface="_NUMERIC_CA
 _ALTERNATE_ALIAS_KEY = "test.schema.casilla.alternate.label"
 _MISSING_LEGAL_ID = "ley-35-2006:art-9999"
 _MISSING_SOURCE_ID = "aeat-missing-source"
-_EXTRA_LEGAL_ID = "ley-35-2006:art-9998"
-_EXTRA_SOURCE_ID = "aeat-extra-source"
 
 
 def _assert_missing_legal_ref_rejected(revision: ModeloRevision, expected_match: str) -> None:
@@ -273,35 +273,19 @@ def test_snapshot_carries_casilla_alias_and_constraints_refs() -> None:
     """Slice snapshots retain nested casilla alias and constraints legal/source evidence."""
     alias = CasillaAlias(
         localization_key=_ALTERNATE_ALIAS_KEY,
-        legal_refs=(_EXTRA_LEGAL_ID,),
-        source_refs=(_EXTRA_SOURCE_ID,),
+        legal_refs=(EXTRA_LEGAL_ID,),
+        source_refs=(EXTRA_SOURCE_ID,),
     )
     constraints = CasillaConstraints(
         sign="non_negative",
-        legal_refs=(_EXTRA_LEGAL_ID,),
-        source_refs=(_EXTRA_SOURCE_ID,),
+        legal_refs=(EXTRA_LEGAL_ID,),
+        source_refs=(EXTRA_SOURCE_ID,),
     )
     casilla = minimal_casilla(_NUMERIC_CASILLA_01).model_copy(
         update={"aliases": (alias,), "constraints": constraints},
     )
     revision = minimal_revision(casillas=(casilla,))
-    catalogues = minimal_catalogues()
-    catalogues = RegistryCatalogues(
-        legal={
-            **catalogues.legal,
-            _EXTRA_LEGAL_ID: minimal_legal_ref().model_copy(update={"id": _EXTRA_LEGAL_ID}),
-        },
-        sources={
-            **catalogues.sources,
-            _EXTRA_SOURCE_ID: minimal_source_ref().model_copy(update={"id": _EXTRA_SOURCE_ID}),
-        },
-    )
-
-    snapshot = snapshot_for_revision(minimal_modelo(revision), catalogues, revision)
-
-    assert _EXTRA_LEGAL_ID in snapshot.legal
-    assert _EXTRA_SOURCE_ID in snapshot.sources
-    check_all_id_references(snapshot)
+    assert_extra_catalogue_ids_resolve(revision)
 
 
 def test_snapshot_integrity_checks_casilla_alias_refs() -> None:
@@ -557,8 +541,8 @@ def test_snapshot_carries_cross_reference_applicability_predicate_refs() -> None
         op="equals",
         value=True,
         explanation="Gated official surface applies only to ROI-enrolled taxpayers.",
-        legal_refs=(_EXTRA_LEGAL_ID,),
-        source_refs=(_EXTRA_SOURCE_ID,),
+        legal_refs=(EXTRA_LEGAL_ID,),
+        source_refs=(EXTRA_SOURCE_ID,),
     )
     cross_ref = LiveCrossReferenceDecision(
         id="test.cross-ref",
@@ -574,23 +558,7 @@ def test_snapshot_carries_cross_reference_applicability_predicate_refs() -> None
         applicability_predicates=(predicate,),
     )
     revision = minimal_revision(live_cross_references=(cross_ref,))
-    catalogues = minimal_catalogues()
-    catalogues = RegistryCatalogues(
-        legal={
-            **catalogues.legal,
-            _EXTRA_LEGAL_ID: minimal_legal_ref().model_copy(update={"id": _EXTRA_LEGAL_ID}),
-        },
-        sources={
-            **catalogues.sources,
-            _EXTRA_SOURCE_ID: minimal_source_ref().model_copy(update={"id": _EXTRA_SOURCE_ID}),
-        },
-    )
-
-    snapshot = snapshot_for_revision(minimal_modelo(revision), catalogues, revision)
-
-    assert _EXTRA_LEGAL_ID in snapshot.legal
-    assert _EXTRA_SOURCE_ID in snapshot.sources
-    check_all_id_references(snapshot)
+    assert_extra_catalogue_ids_resolve(revision)
 
 
 def test_snapshot_integrity_checks_cross_reference_applicability_predicate_refs() -> None:
@@ -687,7 +655,7 @@ def test_snapshot_carries_verification_predicate_legal_refs() -> None:
     predicate = VerificationPredicateDefinition(
         id="any-nonzero:test.predicate",
         predicate_id="test.predicate",
-        legal_refs=(_EXTRA_LEGAL_ID,),
+        legal_refs=(EXTRA_LEGAL_ID,),
         expression='any_nonzero(["01"])',
     )
     revision = minimal_revision().model_copy(update={"verification_predicates": (predicate,)})
@@ -695,14 +663,14 @@ def test_snapshot_carries_verification_predicate_legal_refs() -> None:
     catalogues = RegistryCatalogues(
         legal={
             **catalogues.legal,
-            _EXTRA_LEGAL_ID: minimal_legal_ref().model_copy(update={"id": _EXTRA_LEGAL_ID}),
+            EXTRA_LEGAL_ID: minimal_legal_ref().model_copy(update={"id": EXTRA_LEGAL_ID}),
         },
         sources=catalogues.sources,
     )
 
     snapshot = snapshot_for_revision(minimal_modelo(revision), catalogues, revision)
 
-    assert _EXTRA_LEGAL_ID in snapshot.legal
+    assert EXTRA_LEGAL_ID in snapshot.legal
     check_all_id_references(snapshot)
 
 

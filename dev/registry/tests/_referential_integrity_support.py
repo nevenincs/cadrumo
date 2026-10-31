@@ -65,6 +65,8 @@ from .profile_schema_support import load_user_profile_schema
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 __all__ = [
+    "EXTRA_LEGAL_ID",
+    "EXTRA_SOURCE_ID",
     "PARITY_SOURCE_ID",
     "PRIOR_REVISION_ID",
     "REFERENCE_LEGAL_ID",
@@ -76,6 +78,7 @@ __all__ = [
     "RegistryValidationError",
     "ValidatedRegistryAuthority",
     "ValidationError",
+    "assert_extra_catalogue_ids_resolve",
     "build_minimal_snapshot",
     "build_snapshot_with_missing_legal",
     "build_snapshot_with_missing_source",
@@ -100,6 +103,8 @@ __all__ = [
 ]
 
 PRIOR_REVISION_ID = "test-prior-revision"
+EXTRA_LEGAL_ID = "ley-35-2006:art-9998"
+EXTRA_SOURCE_ID = "aeat-extra-source"
 PARITY_SOURCE_ID = "aeat-open-parity-source"
 
 
@@ -484,3 +489,24 @@ def catalogues_with_executable_parity_source() -> RegistryCatalogues:
         legal=catalogues.legal,
         sources={**catalogues.sources, PARITY_SOURCE_ID: parity_source},
     )
+
+
+def assert_extra_catalogue_ids_resolve(revision: ModeloRevision) -> None:
+    """A snapshot over catalogues that add one legal and one source id resolves every id the revision cites."""
+    catalogues = minimal_catalogues()
+    catalogues = RegistryCatalogues(
+        legal={
+            **catalogues.legal,
+            EXTRA_LEGAL_ID: minimal_legal_ref().model_copy(update={"id": EXTRA_LEGAL_ID}),
+        },
+        sources={
+            **catalogues.sources,
+            EXTRA_SOURCE_ID: minimal_source_ref().model_copy(update={"id": EXTRA_SOURCE_ID}),
+        },
+    )
+
+    snapshot = snapshot_for_revision(minimal_modelo(revision), catalogues, revision)
+
+    assert EXTRA_LEGAL_ID in snapshot.legal
+    assert EXTRA_SOURCE_ID in snapshot.sources
+    check_all_id_references(snapshot)
