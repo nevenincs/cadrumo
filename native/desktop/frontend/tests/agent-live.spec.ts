@@ -25,6 +25,7 @@ import {
   type AgentTurnRecord,
 } from "../src/shell/agentViews";
 import { conditionWords, toolKindWords } from "../src/shell/agentWords";
+import type { Translate } from "../src/shell/strings";
 import { label } from "./support/strings";
 
 // What the column does with a conversation as cadrumo-agent serves it: the
@@ -33,8 +34,10 @@ import { label } from "./support/strings";
 // expected values are written out here, from the agent's contract and from the
 // column's words, and not taken from the code under test.
 
-const t = (key: string, values?: Record<string, string | number>) =>
-  label(key, values);
+const t: Translate = Object.assign(
+  (key: string, values?: Record<string, string | number>) => label(key, values),
+  { locale: "en" },
+);
 const NOW = new Date("2026-10-13T12:00:00Z");
 
 const text = (

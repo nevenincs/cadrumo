@@ -66,13 +66,20 @@ export function testRunDirectory(results) {
   return directory;
 }
 
-/** Where this run builds the scenario bundle its server serves: inside the
- * run's own directory, so another run's build cannot empty it under the
- * server. Null outside a run, where the shared testing directory serves the
- * benchmark and a developer's own build. */
-export function testRunScenariosBuild(results) {
+/** A bundle belongs to its test run, so another build cannot empty it under
+ * the run's live server. Outside a run the ordinary build location is used. */
+function testRunBuild(results, kind) {
   const name = process.env[RUN];
   if (!name) return null;
   if (!NAME.test(name)) throw new Error(`Invalid ${RUN}: ${name}`);
-  return requireBuildOutput(resolve(results, "runs", name, "scenarios"));
+  return requireBuildOutput(resolve(results, "runs", name, kind));
+}
+
+export function testRunScenariosBuild(results) {
+  return testRunBuild(results, "scenarios");
+}
+
+/** This run's product bundle, separate from the ordinary product build. */
+export function testRunProductBuild(results) {
+  return testRunBuild(results, "product");
 }

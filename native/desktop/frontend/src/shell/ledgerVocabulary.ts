@@ -105,7 +105,6 @@ export const USAGE_RATIO_CATEGORIES = [
   "suministros_home_office_agua",
   "suministros_home_office_gas",
   "suministros_home_office_internet",
-  "amortizacion_vivienda_afecto",
   "ibi_vivienda_afecto",
   "comunidad_vivienda_afecto",
   "telefonia_fija",

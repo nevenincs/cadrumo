@@ -2,7 +2,10 @@ import { buildPath, requireBuildOutput } from "../scripts/build-paths.mjs";
 import { identity as readIdentity, server } from "../scripts/configuration.mjs";
 import { docsFixture } from "./dev/docs-fixture/plugin.ts";
 import { productBoundary } from "./dev/product-boundary.ts";
-import { testRunScenariosBuild } from "./scripts/test-run-directory.mjs";
+import {
+  testRunProductBuild,
+  testRunScenariosBuild,
+} from "./scripts/test-run-directory.mjs";
 import { existsSync } from "node:fs";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -73,7 +76,8 @@ export default defineConfig(({ command, mode }) => {
     scenarios
       ? (testRunScenariosBuild(buildPath("desktop_results")) ??
           resolve(buildPath("desktop_testing"), "scenarios"))
-      : buildPath("desktop_frontend"),
+      : (testRunProductBuild(buildPath("desktop_results")) ??
+          buildPath("desktop_frontend")),
   );
   return {
     base: "./",
@@ -83,9 +87,8 @@ export default defineConfig(({ command, mode }) => {
     // display a developer has open reload.
     cacheDir: cacheDirectory,
     build: {
-      // A browser test run builds the scenarios into its own directory: the
-      // build empties its output, so a second run's build under the first
-      // run's live server would remove the page it is serving.
+      // A browser test run builds each bundle into its own directory: a
+      // build empties its output, including when another build is serving it.
       outDir: outputDirectory,
       // The desktop package embeds this whole directory, so nothing from an
       // earlier build may be left in it.

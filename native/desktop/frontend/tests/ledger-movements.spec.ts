@@ -577,6 +577,19 @@ test("income takes no spending category, and Mixed only one a share applies to",
       income,
     ),
   ).toEqual({ kind: "needs", field: "category" });
+  // Home depreciation is recorded through the asset register, not a
+  // usage-ratio deduction on a ledger movement.
+  expect(
+    classifyCells(
+      {
+        kind: "mixed",
+        ids: [OUT],
+        share: "30",
+        category: "amortizacion_vivienda_afecto",
+      },
+      income,
+    ),
+  ).toEqual({ kind: "needs", field: "category" });
   // A mobile line is deductible only in exclusive use, so it takes no share.
   expect(
     classifyCells(
