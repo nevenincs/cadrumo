@@ -143,13 +143,26 @@ function resolvePage(path: string): string | null {
   return name ? page(language, name as PageName) : null;
 }
 
-function answer(path: string): { type: string; body: string } | null {
+// A test run's files do not change under it, and its server is one thread that
+// every browser of the run waits on, so a run reads each once. A development
+// server reads each request, to serve what was last saved.
+const held = new Map<string, string>();
+
+function read(file: string, hold: boolean): string {
+  if (!hold) return readFileSync(file, "utf8");
+  const body = held.get(file) ?? readFileSync(file, "utf8");
+  held.set(file, body);
+  return body;
+}
+
+function answer(
+  path: string,
+  hold: boolean,
+): { type: string; body: string } | null {
   const asset = /^\/_static\/([\w.-]+)$/.exec(path)?.[1];
   if (asset) {
     const entry = STATIC.get(asset);
-    return entry
-      ? { type: entry.type, body: readFileSync(entry.file, "utf8") }
-      : null;
+    return entry ? { type: entry.type, body: read(entry.file, hold) } : null;
   }
   const body = resolvePage(path);
   return body === null ? null : { type: "text/html", body };
@@ -170,7 +183,10 @@ function listen(
     }
     const found =
       request.method === "GET" || request.method === "HEAD"
-        ? answer(new URL(request.url ?? "/", "http://fixture").pathname)
+        ? answer(
+            new URL(request.url ?? "/", "http://fixture").pathname,
+            !!owner,
+          )
         : null;
     if (!found) {
       response.writeHead(404).end();
@@ -236,7 +252,7 @@ export function docsFixture(): Plugin {
           return;
         }
         try {
-          const page = readFileSync(entry, "utf8");
+          const page = read(entry, !!testPorts);
           if (!page.includes("</head>"))
             throw new Error("The built scenario page has no head to extend.");
           response.writeHead(200, {

@@ -1,6 +1,8 @@
 // A Playwright server announces readiness only from the process that bound
 // the run's own listener. A different process answering HTTP is never ready.
 import { randomBytes } from "node:crypto";
+import { readdirSync, readFileSync } from "node:fs";
+import { extname, relative, resolve, sep } from "node:path";
 import { build, createServer, preview } from "vite";
 import { buildPath } from "../../scripts/build-paths.mjs";
 import { releaseTestRunPorts, testRunPorts } from "./test-run-directory.mjs";
@@ -21,6 +23,42 @@ const middleware = (request, response, next) => {
   if (request.url !== path) return next();
   response.writeHead(200, { "Cache-Control": "no-store" }).end(token);
 };
+const TYPES = {
+  ".css": "text/css",
+  ".html": "text/html; charset=utf-8",
+  ".js": "text/javascript",
+  ".json": "application/json",
+  ".woff2": "font/woff2",
+};
+// Vite's preview answers every request with a synchronous stat, on the one
+// thread all the run's browsers wait on, and the volume it stats is the one
+// those browsers write their traces to: a stall of seconds there stops every
+// page. A run's bundle does not change once built, so it is read once and the
+// server never touches the disk for it again.
+function heldBundle(directory) {
+  const files = new Map();
+  for (const entry of readdirSync(directory, {
+    recursive: true,
+    withFileTypes: true,
+  })) {
+    if (!entry.isFile()) continue;
+    const file = resolve(entry.parentPath, entry.name);
+    const type = TYPES[extname(file)];
+    if (!type) throw new Error(`No type for a bundled file: ${file}`);
+    const url = `/${relative(directory, file).split(sep).join("/")}`;
+    files.set(url, { type, body: readFileSync(file) });
+  }
+  return (request, response, next) => {
+    const found = files.get(new URL(request.url, "http://preview").pathname);
+    if (!found || !["GET", "HEAD"].includes(request.method)) return next();
+    response.writeHead(200, {
+      "Content-Type": found.type,
+      "Content-Length": found.body.length,
+      "Cache-Control": "no-cache",
+    });
+    response.end(request.method === "HEAD" ? undefined : found.body);
+  };
+}
 const ownership = {
   name: "browser-test-server-ownership",
   configureServer: (server) => {
@@ -28,6 +66,7 @@ const ownership = {
   },
   configurePreviewServer: (server) => {
     server.middlewares.use(middleware);
+    server.middlewares.use(heldBundle(server.config.build.outDir));
   },
 };
 const options = {
