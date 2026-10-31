@@ -3,13 +3,10 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncGenerator, Callable
-from contextlib import asynccontextmanager
+from collections.abc import Callable
 from dataclasses import replace
 from datetime import UTC, datetime
 from threading import Event
-from types import SimpleNamespace
-from typing import cast
 from uuid import UUID, uuid4
 
 import pytest
@@ -17,22 +14,18 @@ from pydantic import BaseModel
 
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, DisclosureCategory
 
-from ....core.hashing import sha256_hex
 from ....core.operations import (
     OperationEffect,
-    OperationInteractionKind,
     OperationTerminalCondition,
-    profile_operation_subject,
 )
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...operations import profile_guard
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
-from ...operations.interactions import OperationApplyResponse, OperationInteractionRequest, OperationPendingInteraction
-from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
-from ...operations.owner import OperationExecutorContext
-from ...operations.persistence.journal import serialize_operation_operand
+from ...operations.interactions import OperationApplyResponse
+from ...operations.models import OperationRequest, OperationTerminalReceipt
 from ...operations.refusal_evidence import OperationRefusalEvidence
 from ...operations.registry import OperationFrontendProjection, OperationRegistry
+from ...tests.review_operation_fakes import profile_operation_request, review_execution_context
 from .. import google_configuration_operation as worker
 from .. import google_configuration_operation_contracts as contracts
 from ..access_errors import ProfileAccessRefusedError
@@ -64,107 +57,14 @@ def _set_active_profile(monkeypatch: pytest.MonkeyPatch, resolver: Callable[[], 
     monkeypatch.setattr(profile_guard, "require_active_bucket_id", resolver)
 
 
-class _Events:
-    def __init__(self) -> None:
-        self.effects: list[OperationEffect] = []
-
-    async def phase(self, phase: str) -> None:
-        assert phase.startswith("config.google.")
-
-    async def effect(self, effect: OperationEffect) -> None:
-        self.effects.append(effect)
-
-
-class _Fence:
-    def __init__(self) -> None:
-        self.inside = False
-
-    @asynccontextmanager
-    async def irreversible_section(self) -> AsyncGenerator[None]:
-        assert not self.inside
-        self.inside = True
-        try:
-            yield
-        finally:
-            self.inside = False
-
-
-class _Operands:
-    def __init__(self) -> None:
-        self.value: BaseModel | None = None
-        self.proposal: contracts.GoogleConsentProposal | None = None
-
-    async def put(self, value: BaseModel, *, written_at: datetime) -> str:
-        assert written_at.tzinfo is not None
-        self.value = value
-        return "d" * 64
-
-    async def resolve(self, reference: str, model_type: type[BaseModel]) -> BaseModel:
-        assert self.proposal is not None and reference == sha256_hex(serialize_operation_operand(self.proposal))
-        assert model_type is contracts.GoogleConsentProposal
-        return self.proposal
-
-
-class _Interactions:
-    def __init__(self, operands: _Operands) -> None:
-        self.operands = operands
-        self.pending: OperationPendingInteraction | None = None
-
-    async def publish_review(
-        self,
-        *,
-        interaction_id: str,
-        identity: OperationIdentity,
-        revision: int,
-        presentation_code: str,
-        response_schema_ref: str,
-        continuation_digest: str,
-        expires_at: datetime | None,
-        reviewed_operand: BaseModel,
-        baseline_digest: str | None = None,
-        proposed_effect_digest: str | None = None,
-    ) -> None:
-        assert isinstance(reviewed_operand, contracts.GoogleConsentProposal)
-        self.operands.proposal = reviewed_operand
-        self.pending = OperationPendingInteraction.bind(
-            request=OperationInteractionRequest(
-                interaction_id=interaction_id,
-                identity=identity,
-                revision=revision,
-                kind=OperationInteractionKind.REVIEW,
-                presentation_code=presentation_code,
-                response_schema_ref=response_schema_ref,
-                continuation_digest=continuation_digest,
-                expires_at=expires_at,
-            ),
-            response_token="e" * 64,
-            reviewed_proposal_digest=sha256_hex(serialize_operation_operand(reviewed_operand)),
-            baseline_digest=baseline_digest,
-            proposed_effect_digest=proposed_effect_digest,
-        )
-
-
 def _request(payload: BaseModel, definition_id: str) -> OperationRequest[BaseModel]:
-    return OperationRequest[BaseModel](
-        definition_id=definition_id, subject_ref=profile_operation_subject(str(_PROFILE)), payload=payload
-    )
+    return profile_operation_request(payload, definition_id, _PROFILE)
 
 
 def _context(request: OperationRequest[BaseModel], operation: PinnedAuthorityOperation):
-    events, operands, fence = _Events(), _Operands(), _Fence()
-    interactions = _Interactions(operands)
-    value = SimpleNamespace(
-        identity=OperationIdentity(
-            operation_id="a" * 64, definition_id=request.definition_id, subject_ref=request.subject_ref
-        ),
-        revision=0,
-        authority_operation=operation,
-        events=events,
-        operands=operands,
-        cancellation=fence,
-        interactions=interactions,
+    return review_execution_context(
+        request, operation, phase_prefix="config.google.", proposal_type=contracts.GoogleConsentProposal
     )
-    return value, cast(OperationExecutorContext, cast(object, value)), events, operands, fence, interactions
 
 
 def _factory(
