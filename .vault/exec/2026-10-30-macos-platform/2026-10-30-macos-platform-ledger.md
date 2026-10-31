@@ -5,7 +5,7 @@ tags:
 date: '2026-10-30'
 modified: '2026-10-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:ed5086ab2eeecad86a9747915db7d9a2259581bf70d978bd39cd05aadfdf18cb'
+body_hash: 'sha256:f93f13bd61e700bce044e016df3be1654d4134a6057e0e7b8b0b32dbd0429bfe'
 related:
   - "[[2026-10-30-macos-platform-plan]]"
 ---
@@ -39,6 +39,15 @@ src/cadrumo/core/observability/tests/test_sink.py
 src/cadrumo/core/tests/test_bucket_pointer_io.py
 src/cadrumo/core/tests/test_output_dir_state_root.py`
 - `S03` `verify:` `uv run --no-sync pytest -n 2 rerun of baseline failing files` -> `pass`
+- `S03` `M` `dev/packaging/native/platforms/posix.py`
+- `S03` `M` `src/cadrumo/core/tests`
+- `S03` `M` `src/cadrumo_runtime/adapters/macos_coalition.py`
+- `S03` `M` `src/cadrumo/adapters/persistence/storage/custody/tests`
+- `S03` `M` `src/cadrumo/application/actividad_asset/disposal_calculation.py`
+- `S03` `M` `src/cadrumo/application/modelo/tests/test_filed_register_pass_loads.py`
+- `S03` `verify:` `uv run --no-sync pytest --co -q` -> `pass`
+- `S03` `verify:` `rerun of 107 baseline failing files: 15 failures, all fixed` -> `pass`
+- `S03` `by:` `vaultspec-standard-executor`
 
 ## Notes
 
