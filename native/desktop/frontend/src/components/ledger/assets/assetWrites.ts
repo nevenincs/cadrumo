@@ -5,7 +5,11 @@
 // backend; nothing here lists a method, a reason or a year.
 
 import { listed } from "../../../shell/compose";
-import type { LedgerPort, OutputLanguage } from "../../../shell/ledger";
+import type {
+  CatalogueInvoice,
+  LedgerPort,
+  OutputLanguage,
+} from "../../../shell/ledger";
 import { sameDecimal } from "../../../shell/ledgerGrammar";
 import type {
   AcquisitionCandidate,
@@ -13,6 +17,7 @@ import type {
   ActivityAssetFilingRequest,
   ActivityAssetForecastRequest,
   ActivityAssetListResult,
+  ActivityAssetRevision,
   DescriptorFacts,
   DisposalFacts,
   PlanClaim,
@@ -67,6 +72,43 @@ export function purchaseValues(
         ? (purchase.non_deductible_iva?.decimal ?? null)
         : null,
   };
+}
+
+/** The movement a revision names as its acquisition, if it names one. */
+export function purchaseOf(revision: ActivityAssetRevision): string | null {
+  const acquisition = revision.acquisition;
+  if (
+    typeof acquisition !== "object" ||
+    acquisition === null ||
+    Array.isArray(acquisition)
+  )
+    return null;
+  const found = acquisition.observed_transaction_id;
+  return typeof found === "string" && found !== "" ? found : null;
+}
+
+/** What the invoice for a purchase states of its supplier and number, by
+ * descriptor field. The ledger links an invoice to the movement that paid it,
+ * by that movement's id, as an element's acquisition names it. Where no
+ * received invoice, or more than one, is linked, nothing is stated: the choice
+ * is never guessed. */
+export function purchaseInvoiceFacts(
+  invoices: readonly CatalogueInvoice[],
+  transactionId: string,
+): Record<string, string> {
+  const linked = invoices.filter(
+    (invoice) =>
+      invoice.kind === "received" &&
+      invoice.linked_transaction_ids.includes(transactionId),
+  );
+  const only = linked.length === 1 ? linked[0] : undefined;
+  if (only === undefined) return {};
+  const facts = {
+    supplier_name: only.counterparty_name.trim(),
+    supplier_tax_id: only.counterparty_tax_id?.trim() ?? "",
+    document_number: only.invoice_number.trim(),
+  };
+  return Object.fromEntries(Object.entries(facts).filter(([, v]) => v !== ""));
 }
 
 /** What a baja states, from the form: the last day of service, the reason, the

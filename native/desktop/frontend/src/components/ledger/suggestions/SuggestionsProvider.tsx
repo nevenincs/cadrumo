@@ -7,6 +7,7 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
   type ReactNode,
@@ -202,4 +203,17 @@ export function useFieldSuggestions(
   const want = held?.want;
   const onSuggestionsWanted = useCallback(() => want?.(), [want]);
   return { suggestions, onSuggestionsWanted };
+}
+
+/** The catalogue as the page holds it: null while unread, where the read
+ * failed, or outside the page. While `wanted`, using it asks for the read. */
+export function useHeldInvoices(
+  wanted = true,
+): readonly CatalogueInvoice[] | null {
+  const held = useContext(HeldContext);
+  const want = held?.want;
+  useEffect(() => {
+    if (wanted) want?.();
+  }, [wanted, want]);
+  return held?.invoices ?? null;
 }

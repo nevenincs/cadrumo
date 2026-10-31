@@ -63,6 +63,7 @@ import {
   createRequest,
   type RevisionBase,
 } from "./assetRevision";
+import { usePurchasePrefill, useAssetSuggestions } from "./assetSuggestions";
 import {
   correctionLanding,
   currentDescriptor,
@@ -73,6 +74,7 @@ import {
   INCOMPLETE,
   missingLabels,
   neverReused,
+  purchaseOf,
   purchaseValues,
   refusalWord,
   viewOf,
@@ -395,6 +397,7 @@ export function FieldsGrid({
                     required={field.required}
                     value={raw}
                     onChange={choose}
+                    {...field.offers}
                   />
                 )}
               </EditorField>
@@ -682,7 +685,9 @@ export function AssetForm({
     port,
     reader,
     "ledger.actividad-asset.inspect",
-    changesRevision && id !== "" ? { asset_id: id } : null,
+    (changesRevision || kind === "descriptor") && id !== ""
+      ? { asset_id: id }
+      : null,
     id,
   );
   const base: RevisionBase | null =
@@ -765,6 +770,20 @@ export function AssetForm({
   const further = candidates.find(
     (candidate) => candidate.transaction_id === form.draft[FURTHER_PURCHASE],
   );
+  usePurchasePrefill({
+    active: kind === "descriptor",
+    purchase: base === null ? null : purchaseOf(base.revision),
+    stated: context.descriptor,
+    draft: form.draft,
+    set: setDraft,
+  });
+  const offered = useAssetSuggestions({
+    kind,
+    fields,
+    draft: form.draft,
+    set: setDraft,
+    purchase: picked,
+  });
   const answered = answer(fields, form.draft, act.delta ? form.initial : null);
   const view = viewOf(write.last, neverReused);
   const [tried, setTried] = useState(false);
@@ -910,7 +929,7 @@ export function AssetForm({
         }}
       >
         <FieldsGrid
-          fields={fields}
+          fields={offered}
           options={loaded}
           draft={form.draft}
           onField={onField}

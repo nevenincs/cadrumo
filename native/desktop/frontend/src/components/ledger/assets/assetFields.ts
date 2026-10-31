@@ -6,6 +6,7 @@
 // register already states. The form decides nothing about them, and the
 // backend judges what is sent.
 
+import type { SuggestionProps } from "@/components/editors/editorProps";
 import type { FieldSpec } from "../../../shared/fieldKind";
 import { heldDecimal } from "../../../shared/numbers";
 import {
@@ -81,6 +82,8 @@ export type FormField = {
   current?: string | null;
   /** The word that says how to write the value. */
   hint_key?: string | null;
+  /** The text the field offers as it is typed in, where the form holds any. */
+  offers?: SuggestionProps;
 };
 
 /** The text typed into each field of a form, by field key. */
