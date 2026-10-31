@@ -1,6 +1,6 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
+import { TextEditor } from "@/components/editors/TextEditor";
 import { cn } from "@/components/ui/cn";
-import { Input } from "@/components/ui/input";
 import { useStrings } from "../../shell/strings";
 
 /** `MAX_RUN_TITLE_CHARS`: the longest title the agent keeps. */
@@ -23,6 +23,7 @@ export function TitleEditor({
   className?: string;
 }) {
   const t = useStrings();
+  const [text, setText] = useState(title);
   // Enter and Escape settle the field before it loses focus to the redraw;
   // the blur that follows must not settle it again.
   const settled = useRef(false);
@@ -34,10 +35,11 @@ export function TitleEditor({
     else onCancel();
   };
   return (
-    <Input
+    <TextEditor
       controlSize="sm"
       aria-label={t("desktop.agent.rename_label")}
-      defaultValue={title}
+      value={text}
+      onChange={setText}
       maxLength={TITLE_MAX}
       autoFocus
       onFocus={(event) => event.currentTarget.select()}

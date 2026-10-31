@@ -8,7 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
+import { TextEditor } from "@/components/editors/TextEditor";
 import type { SedeViewDialog } from "../../ipc/contract";
 import { useStrings } from "../../shell/strings";
 
@@ -52,11 +52,11 @@ export function PageDialog({
           </DialogDescription>
         </DialogHeader>
         {asking && (
-          <Input
+          <TextEditor
             value={text}
             maxLength={ANSWER_LIMIT}
             aria-label={t("desktop.browser.dialog.prompt_label")}
-            onChange={(event) => setText(event.target.value)}
+            onChange={setText}
             onKeyDown={(event) => {
               if (event.key === "Enter" && !event.nativeEvent.isComposing)
                 onAnswer(true, text);
