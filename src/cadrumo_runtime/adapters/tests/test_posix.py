@@ -263,7 +263,9 @@ def test_namespace_permission_and_symlink_substitution_refused(tmp_path: Path, n
         PosixEndpoint(storage_root=tmp_path, namespace=namespace)
 
 
-@pytest.mark.skipif(sys.platform == "darwin", reason="Darwin places the connection sockets outside the storage root")
+@pytest.mark.skipif(
+    sys.platform == "darwin", reason="the connection sockets live beneath the storage root only off Darwin"
+)
 def test_the_runtime_endpoint_creates_its_own_private_namespace_over_materialized_storage(namespace: Path) -> None:
     """Client storage materialization leaves the namespace to the runtime, whose endpoint creates it private."""
     root = namespace.parent / "state"
@@ -287,6 +289,15 @@ def test_the_runtime_endpoint_creates_its_own_private_namespace_over_materialize
                 server.close()
         finally:
             endpoint.close()
+
+
+@pytest.mark.skipif(sys.platform != "darwin", reason="the transient transport directory is derived by the OS on Darwin")
+def test_the_connection_namespace_resolves_outside_the_storage_root(namespace: Path) -> None:
+    """The OS-derived transport directory replaces the storage member, so the root never holds the sockets."""
+    root = namespace.parent / "state"
+    with derived_storage_settings(root):
+        member = storage_path(StorageCategory.CONNECTION_SOCKETS, settings=load_settings())
+        assert not member.resolve().is_relative_to(root.resolve())
 
 
 def test_materialization_preserves_an_insecure_namespace_for_native_refusal(namespace: Path) -> None:
