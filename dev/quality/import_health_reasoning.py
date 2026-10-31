@@ -39,14 +39,18 @@ def operational_health_reasons(
             f"Import Linter saw {graph['files']} file(s), subordinate saw {checker.files_scanned}"
         )
     if source_snapshot_before != source_snapshot_after:
-        named = ", ".join(moved_sources[:_MOVED_SOURCES_NAMED])
-        more = len(moved_sources) - _MOVED_SOURCES_NAMED
-        operational_reasons.append(
-            "governed source tree changed while the gate was running"
-            + (f": {named}" if named else "")
-            + (f" and {more} more" if more > 0 else "")
-        )
+        operational_reasons.append(_moved_sources_reason(moved_sources))
     return operational_reasons
+
+
+def _moved_sources_reason(moved_sources: tuple[str, ...]) -> str:
+    named = ", ".join(moved_sources[:_MOVED_SOURCES_NAMED])
+    more = len(moved_sources) - _MOVED_SOURCES_NAMED
+    return (
+        "governed source tree changed while the gate was running"
+        + (f": {named}" if named else "")
+        + (f" and {more} more" if more > 0 else "")
+    )
 
 
 def failed_health_reasons(
