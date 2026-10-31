@@ -135,7 +135,12 @@ contentBuild(
         ),
       fileURLToPath(new URL("content-build.mjs", import.meta.url)),
     ],
-    outputs: [icons, resolve(icons, "icon.ico"), resolve(icons, "icon.png")],
+    outputs: [
+      icons,
+      resolve(icons, "icon.ico"),
+      resolve(icons, "icon.png"),
+      resolve(icons, "icon.icns"),
+    ],
     record: resolve(buildPath("desktop_cache"), "icons-build.json"),
     identity: {
       node: process.version,

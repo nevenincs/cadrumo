@@ -5,6 +5,7 @@ from __future__ import annotations
 import importlib
 import json
 import platform
+import posixpath
 import re
 import sys
 import tomllib
@@ -69,6 +70,7 @@ def load_layout(name: str | None = None, *, root: Path = REPO_ROOT) -> dict[str,
             raise ValueError(f"Native entrypoint is not a declared console script: {entrypoint}")
     bundled_images(shared)
     application_images(shared)
+    application_bundle(shared)
     return shared
 
 
@@ -201,6 +203,54 @@ def application_images(layout: dict[str, Any]) -> tuple[ApplicationImage, ...]:
     if sum(image.desktop for image in images) > 1:
         raise ValueError("At most one application image is the desktop application")
     return tuple(images)
+
+
+_BUNDLE_FIELDS = frozenset({"executable_directory", "resources", "payload"})
+_BUNDLE_SEGMENT = re.compile(r"[A-Za-z0-9][A-Za-z0-9_-]*")
+
+
+@dataclass(frozen=True)
+class ApplicationBundle:
+    """Bundle-relative placements of an application wrapper around the flat package.
+
+    The wrapper's main executable lives in the executable directory; the package lives
+    unchanged beneath the resources directory, where non-code files can be sealed.
+    """
+
+    executable_directory: str
+    resources: str
+    payload: str
+
+    @property
+    def payload_from_executable(self) -> str:
+        """Return the package directory relative to the main executable's directory."""
+        return posixpath.relpath(self.payload, self.executable_directory)
+
+
+def _bundle_path(name: str, value: object) -> str:
+    if not isinstance(value, str) or not all(_BUNDLE_SEGMENT.fullmatch(part) for part in value.split("/")):
+        raise ValueError(f"application_bundle.{name} must be a relative path of plain segments: {value!r}")
+    return value
+
+
+def application_bundle(layout: dict[str, Any]) -> ApplicationBundle | None:
+    """Validate the platform's application wrapper placements, when it declares a wrapper."""
+    declared = layout.get("application_bundle")
+    if declared is None:
+        return None
+    if not isinstance(declared, dict) or set(cast(dict[str, object], declared)) != _BUNDLE_FIELDS:
+        raise ValueError(f"application_bundle must declare exactly {sorted(_BUNDLE_FIELDS)}")
+    entry = cast(dict[str, object], declared)
+    bundle = ApplicationBundle(**{name: _bundle_path(name, entry[name]) for name in sorted(_BUNDLE_FIELDS)})
+    if not bundle.payload.startswith(bundle.resources + "/"):
+        raise ValueError("application_bundle.payload must lie beneath its resources directory")
+    if bundle.executable_directory.startswith(bundle.resources + "/") or bundle.resources.startswith(
+        bundle.executable_directory + "/"
+    ):
+        raise ValueError("application_bundle executable and resources directories must be distinct")
+    if desktop_image(layout) is None:
+        raise ValueError("An application bundle requires the platform's desktop image")
+    return bundle
 
 
 def desktop_image(layout: dict[str, Any]) -> ApplicationImage | None:

@@ -13,7 +13,7 @@ from dataclasses import dataclass
 from pathlib import PurePosixPath
 
 from .identity import DistributionIdentity
-from .layout import ApplicationImage
+from .layout import ApplicationBundle, ApplicationImage
 
 
 @dataclass(frozen=True)
@@ -24,7 +24,7 @@ class LaunchAgent:
     contents: bytes
 
 
-def author_agent(identity: DistributionIdentity, manager: ApplicationImage) -> LaunchAgent:
+def author_agent(identity: DistributionIdentity, manager: ApplicationImage, bundle: ApplicationBundle) -> LaunchAgent:
     """Describe the accepted Aqua agent profile without asserting registration."""
     if not identity.target.startswith("macos-"):
         raise ValueError("A macOS target is required for LaunchAgent metadata")
@@ -37,7 +37,7 @@ def author_agent(identity: DistributionIdentity, manager: ApplicationImage) -> L
         or manager.desktop
     ):
         raise ValueError("LaunchAgent requires the declared root-level manager image")
-    program = f"Contents/MacOS/{manager.package_path}"
+    program = f"{bundle.payload}/{manager.package_path}"
     metadata = {
         "Label": identity.manager_id,
         "BundleProgram": program,
@@ -53,7 +53,9 @@ def author_agent(identity: DistributionIdentity, manager: ApplicationImage) -> L
     )
 
 
-def verify_agent(contents: bytes, identity: DistributionIdentity, manager: ApplicationImage) -> None:
+def verify_agent(
+    contents: bytes, identity: DistributionIdentity, manager: ApplicationImage, bundle: ApplicationBundle
+) -> None:
     """Verify exact authored bytes, including types, without native acceptance."""
-    if contents != author_agent(identity, manager).contents:
+    if contents != author_agent(identity, manager, bundle).contents:
         raise ValueError("Bundled LaunchAgent metadata differs from its declared manager profile")

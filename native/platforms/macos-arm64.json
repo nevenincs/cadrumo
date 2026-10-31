@@ -53,6 +53,11 @@
       ]
     }
   ],
+  "application_bundle": {
+    "executable_directory": "Contents/MacOS",
+    "resources": "Contents/Resources",
+    "payload": "Contents/Resources/app"
+  },
   "files": {
     "development_executable": "python_d",
     "path_file": "lib/cadrumo/python.pth",

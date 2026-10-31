@@ -19,6 +19,7 @@ from dev.packaging.tests.test_native_installation import payload_fixture
 from ..distribution_prepare import refresh
 from ..hashing import digest
 from ..identity import cmake_projection, identity
+from ..installation_plan import BundleInputs
 from ..windows_msi_build import compile_products, verify_products
 from ..windows_msi_database import verify_upgrade_order
 
@@ -100,9 +101,10 @@ def test_refresh_refuses_late_mutation_without_publishing_candidate(
             desktop: str | None = None,
             *,
             copy_file: Callable[[str | Path, str | Path], str | Path] | None = None,
+            bundle: BundleInputs | None = None,
         ) -> Path:
             nonlocal injected
-            result = prepare(source, identity, candidate, desktop, copy_file=copy_file)
+            result = prepare(source, identity, candidate, desktop, copy_file=copy_file, bundle=bundle)
             previous.write_bytes(b"late prior mutation")
             injected = True
             return result

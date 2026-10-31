@@ -74,6 +74,28 @@ set(CADRUMO_DESKTOP_HOST_EXECUTABLE
   "${CADRUMO_PATH_DESKTOP_CARGO}/$<IF:$<CONFIG:Debug>,debug,release>/cadrumo${CMAKE_EXECUTABLE_SUFFIX}")
 set(CADRUMO_DESKTOP_HOST_EXECUTABLE "${CADRUMO_DESKTOP_HOST_EXECUTABLE}" PARENT_SCOPE)
 cadrumo_reuse_built(desktop_reuse desktop "${CADRUMO_DESKTOP_HOST_EXECUTABLE}")
+# A platform that wraps the package in an application bundle gets the bundle's main
+# executable, which replaces itself with the desktop image at the declared placement.
+execute_process(COMMAND "${CADRUMO_DEV_PYTHON}" -B -c
+  "import json; from dev.packaging.native.layout import application_bundle, desktop_image, load_layout; l=load_layout('${CADRUMO_TARGET}'); b=application_bundle(l); print(json.dumps(b and {'payload': b.payload_from_executable, 'desktop': desktop_image(l).package_path}))"
+  WORKING_DIRECTORY "${CADRUMO_SOURCE_ROOT}" OUTPUT_VARIABLE desktop_bundle
+  OUTPUT_STRIP_TRAILING_WHITESPACE COMMAND_ERROR_IS_FATAL ANY)
+if(NOT desktop_bundle STREQUAL "null")
+  string(JSON desktop_bundle_payload GET "${desktop_bundle}" payload)
+  string(JSON desktop_bundle_desktop GET "${desktop_bundle}" desktop)
+  add_executable(cadrumo_bundle_launcher macos/bundle_launcher.c)
+  set_target_properties(cadrumo_bundle_launcher PROPERTIES OUTPUT_NAME bundle-launcher
+    RUNTIME_OUTPUT_DIRECTORY "${CADRUMO_PATH_BIN}/$<CONFIG>")
+  target_compile_definitions(cadrumo_bundle_launcher PRIVATE
+    "CADRUMO_BUNDLE_PAYLOAD=\"${desktop_bundle_payload}\"" "CADRUMO_BUNDLE_DESKTOP=\"${desktop_bundle_desktop}\"")
+  cadrumo_compile_policy(cadrumo_bundle_launcher)
+  set(CADRUMO_BUNDLE_LAUNCHER "${CADRUMO_PATH_BIN}/$<CONFIG>/bundle-launcher${CMAKE_EXECUTABLE_SUFFIX}")
+  set(CADRUMO_BUNDLE_LAUNCHER "${CADRUMO_BUNDLE_LAUNCHER}" PARENT_SCOPE)
+  cadrumo_describe_target(cadrumo_bundle_launcher GROUP desktop
+    SUMMARY "compile the application bundle's main executable" OUTPUTS "${CADRUMO_BUNDLE_LAUNCHER}")
+  set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
+    "${CADRUMO_SOURCE_ROOT}/native/package-layout.json" "${CADRUMO_SOURCE_ROOT}/native/platforms/${CADRUMO_TARGET}.json")
+endif()
 
 # The checkout's shared node_modules tree is an explicit developer prerequisite. A build
 # may validate it, but installation and removal belong to the operator outside CMake.

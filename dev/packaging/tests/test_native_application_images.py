@@ -13,7 +13,7 @@ import pytest
 from dev.packaging.command_execution import CommandResult
 from dev.packaging.native.assembly_images import image_artifact, named_application_images, stage_application_images
 from dev.packaging.native.hashing import digest
-from dev.packaging.native.layout import application_images, desktop_image, load_layout
+from dev.packaging.native.layout import application_bundle, application_images, desktop_image, load_layout
 from dev.packaging.native.platforms.windows_verify import verify_application_images
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -372,3 +372,40 @@ def test_an_image_reporting_a_display_version_must_report_its_recorded_build(
     else:
         with pytest.raises(AssertionError, match=re.escape("cadrumo-manager.exe did not report build 2026101903")):
             verify_application_images(root, manifest, execute)
+
+
+def test_macos_declares_a_signable_application_bundle_around_the_flat_package() -> None:
+    bundle = application_bundle(load_layout("macos-arm64"))
+    assert bundle is not None
+    assert (bundle.executable_directory, bundle.resources, bundle.payload) == (
+        "Contents/MacOS",
+        "Contents/Resources",
+        "Contents/Resources/app",
+    )
+    assert bundle.payload_from_executable == "../Resources/app"
+    for target in ("windows-x64", "linux-x86-64", "linux-aarch64"):
+        assert application_bundle(load_layout(target)) is None
+
+
+@pytest.mark.parametrize(
+    ("change", "message"),
+    [
+        ({"payload": "Contents/MacOS/app"}, "beneath its resources"),
+        ({"payload": "Contents/Resources/../app"}, "plain segments"),
+        ({"resources": "/Contents/Resources"}, "plain segments"),
+        ({"executable_directory": "Contents/Resources/bin"}, "distinct"),
+        ({"icon": "Contents/Resources/x.icns"}, "exactly"),
+    ],
+)
+def test_application_bundle_refuses_unsignable_or_malformed_placements(change: dict[str, str], message: str) -> None:
+    layout = load_layout("macos-arm64")
+    layout["application_bundle"] = {**layout["application_bundle"], **change}
+    with pytest.raises(ValueError, match=message):
+        application_bundle(layout)
+
+
+def test_application_bundle_requires_the_desktop_image() -> None:
+    layout = load_layout("macos-arm64")
+    layout["application_images"] = [image for image in layout["application_images"] if not image["desktop"]]
+    with pytest.raises(ValueError, match="desktop image"):
+        application_bundle(layout)

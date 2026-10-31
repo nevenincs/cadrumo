@@ -12,9 +12,11 @@ import pytest
 from defusedxml import ElementTree
 
 from dev.packaging.native import installation, installation_filesystem
+from dev.packaging.native.distribution_prepare import refresh
 from dev.packaging.native.hashing import digest
 from dev.packaging.native.identity import identity
 from dev.packaging.native.installation import inventory, member, prepare, uninstall, validate_payload, verify_inventory
+from dev.packaging.native.installation_plan import BundleInputs
 from dev.packaging.native.layout import load_layout
 from dev.packaging.native.linux_desktop_runtime import MANIFEST
 from dev.packaging.native.linux_desktop_runtime import stage as stage_desktop_runtime
@@ -39,6 +41,19 @@ def cmake_paths(tmp_path: Path) -> None:
         ),
         encoding="utf-8",
     )
+
+
+def bundle_fixture(tmp_path: Path) -> BundleInputs:
+    """Synthetic stand-ins for the source build's bundle main executable and icon."""
+    inputs = tmp_path / "bundle-inputs"
+    inputs.mkdir(exist_ok=True)
+    (inputs / "bundle-launcher").write_bytes(b"synthetic bundle launcher")
+    (inputs / "icon.icns").write_bytes(b"synthetic icon")
+    return BundleInputs(inputs / "bundle-launcher", inputs / "icon.icns")
+
+
+def bundle_for(tmp_path: Path, target: str) -> BundleInputs | None:
+    return bundle_fixture(tmp_path) if target.startswith("macos-") else None
 
 
 def payload_fixture(tmp_path: Path, target: str, *, manager: bool = False) -> tuple[Path, Path]:
@@ -87,6 +102,8 @@ def payload_fixture(tmp_path: Path, target: str, *, manager: bool = False) -> tu
         manifest["layout"]["application_images"].append(dict(manager_image))
         (root / "cadrumo-manager").write_bytes(b"synthetic manager fixture")
         manifest["files"]["cadrumo-manager"] = digest(root / "cadrumo-manager")
+    if target.startswith("macos-"):
+        manifest["layout"]["application_bundle"] = load_layout(target)["application_bundle"]
     if target.startswith("linux-"):
         linux_layout = load_layout(target)
         manifest["layout"].update({key: linux_layout[key] for key in ("platform", "linux_desktop_runtime")})
@@ -99,18 +116,29 @@ def payload_fixture(tmp_path: Path, target: str, *, manager: bool = False) -> tu
 @pytest.mark.parametrize("target", [item.name for item in SUPPORTED_TARGETS])
 def test_native_layout_projects_registration(tmp_path: Path, target: str) -> None:
     payload, identity_file = payload_fixture(tmp_path, target)
-    root = prepare(payload, identity_file, tmp_path / "build", "cadrumo")
+    bundle = bundle_for(tmp_path, target)
+    root = prepare(payload, identity_file, tmp_path / "build", "cadrumo", bundle=bundle)
     if target.startswith("linux-"):
         assert (root / "opt/cadrumo/cadrumo").is_file()
         desktop = (root / "usr/share/applications/md.neve.cadrumo.desktop").read_text(encoding="utf-8")
         assert 'Exec="/opt/cadrumo/cadrumo"' in desktop
         assert (root / "usr/share/icons/hicolor/scalable/apps/md.neve.cadrumo.svg").is_file()
     elif target.startswith("macos-"):
-        contents = root / "CADRUMO.app/Contents"
+        assert bundle is not None
+        contents = member(root, f"{identity(target).name}.app/Contents")
         metadata = plistlib.loads((contents / "Info.plist").read_bytes())
         assert metadata["CFBundleIdentifier"] == "md.neve.cadrumo"
         assert metadata["LSMinimumSystemVersion"] == "14.0"
-        assert (contents / "MacOS/cadrumo").is_file()
+        assert metadata["CFBundleExecutable"] == "cadrumo"
+        assert metadata["CFBundleIconFile"] == "cadrumo.icns"
+        assert metadata["LSUIElement"] is False
+        # The main executable is the wrapper; the payload stays whole beneath the resources.
+        assert (contents / "MacOS/cadrumo").read_bytes() == bundle.launcher.read_bytes()
+        assert (contents / "MacOS/cadrumo").stat().st_mode & 0o777 == 0o755
+        assert (contents / "Resources/cadrumo.icns").read_bytes() == bundle.icon.read_bytes()
+        assert sorted(path.name for path in (contents / "MacOS").iterdir()) == ["cadrumo"]
+        assert (contents / "Resources/app/cadrumo").read_bytes() == (payload / "cadrumo").read_bytes()
+        assert (contents / "Resources/app/data/package-manifest.json").is_file()
     else:
         assert (root / "app/cadrumo").is_file()
         wix = ElementTree.parse(tmp_path / "build/installation/metadata/Desktop.wxs")
@@ -122,6 +150,27 @@ def test_native_layout_projects_registration(tmp_path: Path, target: str) -> Non
         assert registry is not None
         assert registry.attrib["Root"] == "HKLM"
         assert registry.attrib["Key"] == "Software\\md.neve.cadrumo"
+
+
+def test_macos_bundle_refuses_missing_wrapper_inputs(tmp_path: Path) -> None:
+    payload, identity_file = payload_fixture(tmp_path, "macos-arm64")
+    with pytest.raises(ValueError, match="main executable and icon"):
+        prepare(payload, identity_file, tmp_path / "build", "cadrumo")
+
+
+def test_macos_bundle_tracks_wrapper_input_changes(tmp_path: Path) -> None:
+    payload, identity_file = payload_fixture(tmp_path, "macos-arm64")
+    paths = json.loads((tmp_path / "build/build-paths.json").read_text(encoding="utf-8"))
+    paths["paths"]["installation_receipts"] = "installation/receipts"
+    (tmp_path / "build/build-paths.json").write_text(json.dumps(paths), encoding="utf-8")
+    bundle = bundle_fixture(tmp_path)
+    root = prepare(payload, identity_file, tmp_path / "build", "cadrumo", bundle=bundle)
+    launcher = member(root, f"{identity('macos-arm64').name}.app/Contents/MacOS/cadrumo")
+    bundle.launcher.write_bytes(b"rebuilt bundle launcher")
+    with pytest.raises(ValueError, match="differs from the requested payload"):
+        prepare(payload, identity_file, tmp_path / "build", "cadrumo", bundle=bundle)
+    refresh(payload, identity_file, tmp_path / "build", "cadrumo", bundle)
+    assert launcher.read_bytes() == b"rebuilt bundle launcher"
 
 
 @pytest.mark.parametrize("desktop", [True, False])
