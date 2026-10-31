@@ -49,6 +49,7 @@ log record here. The migration reports identifiers only.
 from __future__ import annotations
 
 from collections.abc import Mapping
+from weakref import WeakSet
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -71,6 +72,12 @@ _MIGRATION_MESSAGE = "errors.fail.fail_modelo_calculation_revision_persistence"
 _WRITE_PROVENANCE_REASON = "calculation-revision:relation-override-binding-rekey"
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+#: Repositories, each composed for one operation, whose stored catalogue this
+#: operation has already brought onto binding ids. Nothing writes a retired key,
+#: so one operation has nothing to migrate twice; its later callers still read
+#: and validate the catalogue they use.
+_SETTLED_REPOSITORIES: WeakSet[CalculationRevisionCatalogueRepositoryProtocol] = WeakSet()
 
 
 class OrphanedRelationOverrideError(CalculationRevisionPersistenceError):
@@ -337,7 +344,7 @@ def migrate_stored_relation_overrides_to_binding_ids(
     repository: CalculationRevisionCatalogueRepositoryProtocol,
     *,
     operation: PinnedAuthorityOperation,
-) -> CalculationRevisionOverrideMigrationResult:
+) -> CalculationRevisionOverrideMigrationResult | None:
     """Rekey one profile's stored overrides and persist the result atomically.
 
     The read is revision-guarded and the write is the singleton's own
@@ -355,21 +362,26 @@ def migrate_stored_relation_overrides_to_binding_ids(
 
     Returns:
         The identifier-only record of what moved, carrying the migrated
-        catalogue.
+        catalogue, or ``None`` when this repository already completed a
+        migration and so read nothing. A failed run settles nothing.
 
     Raises:
         OrphanedRelationOverrideError: A stored override key could not be
             resolved to a binding.
     """
+    if repository in _SETTLED_REPOSITORIES:
+        return None
     catalogue, expected_revision_id = repository.load_revisioned(operation=operation)
     result = rekey_calculation_revision_overrides(catalogue, operation=operation)
     if not result.changed:
+        _SETTLED_REPOSITORIES.add(repository)
         return result
     repository.save_with_secure_object_writes(
         result.catalogue,
         (),
         expected_revision_id=expected_revision_id,
     )
+    _SETTLED_REPOSITORIES.add(repository)
     _LOGGER.info(
         "rekeyed persisted calculation-revision relation overrides onto binding ids",
         extra={
