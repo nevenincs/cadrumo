@@ -394,6 +394,10 @@ set(desktop_test_host_record "${CADRUMO_PATH_DESKTOP_TESTING}/packaged/host.json
 cadrumo_reuse_built(desktop_test_host_reuse desktop-test-host
   "${CADRUMO_PATH_DESKTOP_TESTING}/packaged/cargo/$<IF:$<CONFIG:Debug>,debug,release>/cadrumo${CMAKE_EXECUTABLE_SUFFIX}")
 set(desktop_resource_environment)
+set(desktop_identity_environment)
+if(CADRUMO_TARGET MATCHES "^macos-")
+  set(desktop_identity_environment "CADRUMO_DESKTOP_INFO_PLIST=${CADRUMO_PATH_GENERATED}/desktop-info.plist")
+endif()
 if(WIN32)
   get_directory_property(desktop_resource_compiler DIRECTORY "${CADRUMO_SOURCE_ROOT}/native"
     DEFINITION CADRUMO_RUST_ENV_CADRUMO_RC_COMPILER)
@@ -403,6 +407,7 @@ add_custom_target(desktop-packaged-host
   ${desktop_test_host_identity}
   COMMAND ${desktop_test_host_reuse} "${CMAKE_COMMAND}" -E env ${desktop_environment} "${desktop_configuration}"
     "CADRUMO_NATIVE_CONTRACT=${CADRUMO_NATIVE_CONTRACT}" ${desktop_resource_environment}
+    ${desktop_identity_environment}
     "${CADRUMO_NODE}" "${CMAKE_CURRENT_SOURCE_DIR}/tests/packaged/host.mjs"
   COMMAND "${CMAKE_COMMAND}" -E chdir "${CADRUMO_SOURCE_ROOT}" ${CADRUMO_HELPER} run --build "${CMAKE_BINARY_DIR}"
     -- "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.build_stamp --build "${CMAKE_BINARY_DIR}"
