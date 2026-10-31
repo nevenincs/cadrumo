@@ -1,5 +1,6 @@
 import * as React from "react";
 import { Dialog as DialogPrimitive } from "radix-ui";
+import { suggestionsOpenOn } from "@/components/ui/suggestionsOpen";
 import { cn } from "@/components/ui/cn";
 import { DialogOverlay } from "@/components/ui/dialog";
 import { Icon } from "@/components/ui/icon";
@@ -59,7 +60,8 @@ function SheetContent({
           if (
             event.key === "Escape" &&
             !event.nativeEvent.isComposing &&
-            event.currentTarget.contains(event.target as Node)
+            event.currentTarget.contains(event.target as Node) &&
+            !suggestionsOpenOn(event.target)
           )
             dismiss.current?.click();
         }}

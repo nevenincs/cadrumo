@@ -1,5 +1,6 @@
 import * as React from "react";
 import { Popover as PopoverPrimitive } from "radix-ui";
+import { suggestionsOpenOn } from "@/components/ui/suggestionsOpen";
 import { cn } from "@/components/ui/cn";
 import { revealFocused } from "@/components/ui/reveal";
 
@@ -52,7 +53,8 @@ function PopoverContent({
           if (
             event.key === "Escape" &&
             !event.nativeEvent.isComposing &&
-            event.currentTarget.contains(event.target as Node)
+            event.currentTarget.contains(event.target as Node) &&
+            !suggestionsOpenOn(event.target)
           )
             dismiss.current?.click();
         }}
