@@ -100,6 +100,7 @@ def _invoke_json(args: list[str]):
 @contextmanager
 def _serving_resets(root: Path) -> Generator[None]:
     """Serve the reset acts over ``root`` as the installed cohort, so the commands find the runtime."""
+    root.mkdir(parents=True, exist_ok=True)
     with serving_registered_runtime(
         WindowsEndpoint(storage_root=root),
         root,

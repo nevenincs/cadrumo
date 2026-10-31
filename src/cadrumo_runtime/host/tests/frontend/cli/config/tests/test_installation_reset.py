@@ -650,15 +650,24 @@ def _no_package_metadata() -> str:
     raise PackageNotFoundError("cadrumo")
 
 
-def _not_reached(refused: pytest.ExceptionInfo[CliRefusedBoundaryError], *, endpoint: str) -> None:
+def _not_reached(
+    refused: pytest.ExceptionInfo[CliRefusedBoundaryError],
+    *,
+    endpoint: str,
+    runtime_refusals: frozenset[RuntimeRefusalCode] = frozenset({RuntimeRefusalCode.UNAVAILABLE}),
+) -> None:
     """The report says a runtime may be there, that nothing was sent or changed, and to run the command again."""
     assert "run the command again" in str(refused.value)
-    assert refused.value.context == {
+    context = refused.value.context
+    assert context is not None, context
+    reason = context.get("runtime_refusal")
+    assert isinstance(reason, str) and reason in {code.value for code in runtime_refusals}, context
+    assert context == {
         "runtime_endpoint": endpoint,
-        "runtime_refusal": RuntimeRefusalCode.UNAVAILABLE.value,
+        "runtime_refusal": reason,
         "effect": "none",
         "retry": "same_command",
-    }
+    }, context
 
 
 @pytest.mark.parametrize("metadata", ["installed", "missing"])
@@ -721,7 +730,13 @@ def test_a_runtime_whose_endpoint_is_busy_is_reported_with_the_retry_and_nothing
     assert observed is RuntimeEndpointPresence.HELD
     assert printed.exit_code != 0
     assert "run the command again" in printed.output
-    _not_reached(refused, endpoint="held")
+    # The native pipe wait and the enclosing deadline expire together. Both
+    # documented refusal outcomes mean nothing was sent to this held endpoint.
+    _not_reached(
+        refused,
+        endpoint="held",
+        runtime_refusals=frozenset({RuntimeRefusalCode.UNAVAILABLE, RuntimeRefusalCode.TIMEOUT}),
+    )
 
 
 def test_a_client_that_cannot_name_its_cohort_beside_a_running_runtime_never_resets_in_process(
