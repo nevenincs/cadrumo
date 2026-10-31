@@ -293,53 +293,52 @@ def assert_canonical_ledger_rule_update(
     return expected_events
 
 
-def assert_ledger_rule_operation_conformance_result(
-    case: LedgerRuleOperationConformanceCase,
+def _assert_rule_added(
     projection: BaseModel,
-    *,
-    operation_run_id: str,
+    case: LedgerRuleOperationConformanceCase,
+    repository: LedgerClassificationRuleRepository,
+    bucket_id: str,
+    ports: LedgerActionPorts,
 ) -> None:
-    """Compare the public result against the exact-profile encrypted repositories."""
-    assert len(operation_run_id) == 64
-    assert all(character in "0123456789abcdef" for character in operation_run_id)
-    bucket_id = str(case.profile_id)
-    ports = compose_ledger_action_ports(bucket_id=bucket_id, operation=case.operation)
-    repository = LedgerClassificationRuleRepository(bucket_id=bucket_id)
+    """Check one added rule against the stored rules and untouched ledger."""
+    assert isinstance(case.request, LedgerRuleAddRequest)
+    assert isinstance(projection, LedgerRuleAddProjection)
+    assert case.expected_rule_id is not None
+    assert projection.profile_id == case.profile_id
+    assert projection.outcome == "added"
+    assert projection.rule is not None
+    assert projection.rule.rule_id == case.expected_rule_id
+    stored_rules = repository.list_rules()
+    by_id = {str(rule.rule_id): rule for rule in stored_rules}
+    assert case.expected_rule_id in by_id
+    stored = by_id[case.expected_rule_id]
+    assert projection.rule == LedgerRuleRowProjection.from_rule(stored)
+    assert stored.description_pattern == case.request.description_pattern
+    assert stored.classification is case.request.classification
+    assert stored.category_id == case.request.category_id
+    assert stored.priority == case.request.priority
+    assert stored.actor == (case.request.actor or bucket_id)
+    assert len(stored_rules) == len(case.rules_before) + 1
+    assert all(by_id.get(str(rule.rule_id)) == rule for rule in case.rules_before)
+    assert ports.transaction_repository.load() == case.transactions_before
+    assert ports.bucket_event_repository.load() == case.history_before
 
-    if case.definition_id == LEDGER_RULE_ADD_OPERATION_DEFINITION_ID:
-        assert isinstance(case.request, LedgerRuleAddRequest)
-        assert isinstance(projection, LedgerRuleAddProjection)
-        assert case.expected_rule_id is not None
-        assert projection.profile_id == case.profile_id
-        assert projection.outcome == "added"
-        assert projection.rule is not None
-        assert projection.rule.rule_id == case.expected_rule_id
-        stored_rules = repository.list_rules()
-        by_id = {str(rule.rule_id): rule for rule in stored_rules}
-        assert case.expected_rule_id in by_id
-        stored = by_id[case.expected_rule_id]
-        assert projection.rule == LedgerRuleRowProjection.from_rule(stored)
-        assert stored.description_pattern == case.request.description_pattern
-        assert stored.classification is case.request.classification
-        assert stored.category_id == case.request.category_id
-        assert stored.priority == case.request.priority
-        assert stored.actor == (case.request.actor or bucket_id)
-        assert len(stored_rules) == len(case.rules_before) + 1
-        assert all(by_id.get(str(rule.rule_id)) == rule for rule in case.rules_before)
-        assert ports.transaction_repository.load() == case.transactions_before
-        assert ports.bucket_event_repository.load() == case.history_before
-        return
 
-    assert projection == case.expected_projection
-    assert repository.list_rules() == case.rules_before
-    if case.definition_id == LEDGER_RULE_LIST_OPERATION_DEFINITION_ID:
-        assert isinstance(projection, LedgerRuleListProjection)
-        assert projection.profile_id == case.profile_id
-        assert projection.rules == tuple(LedgerRuleRowProjection.from_rule(rule) for rule in case.rules_before)
-        assert ports.transaction_repository.load() == case.transactions_before
-        assert ports.bucket_event_repository.load() == case.history_before
-        return
+def _assert_rule_listed(
+    projection: BaseModel, case: LedgerRuleOperationConformanceCase, ports: LedgerActionPorts
+) -> None:
+    """Check the listed rules and untouched ledger."""
+    assert isinstance(projection, LedgerRuleListProjection)
+    assert projection.profile_id == case.profile_id
+    assert projection.rules == tuple(LedgerRuleRowProjection.from_rule(rule) for rule in case.rules_before)
+    assert ports.transaction_repository.load() == case.transactions_before
+    assert ports.bucket_event_repository.load() == case.history_before
 
+
+def _assert_rules_applied(
+    projection: BaseModel, case: LedgerRuleOperationConformanceCase, bucket_id: str, ports: LedgerActionPorts
+) -> None:
+    """Check an applied rule plan against the ledger and its events."""
     assert case.definition_id == LEDGER_RULE_APPLY_OPERATION_DEFINITION_ID
     assert isinstance(case.request, LedgerRuleApplyRequest)
     assert isinstance(projection, LedgerRuleApplyProjection)
@@ -391,6 +390,32 @@ def assert_ledger_rule_operation_conformance_result(
             "previous_transaction_id": row.transaction_id,
             "source_command": "aeat app ledger rule apply",
         }
+
+
+def assert_ledger_rule_operation_conformance_result(
+    case: LedgerRuleOperationConformanceCase,
+    projection: BaseModel,
+    *,
+    operation_run_id: str,
+) -> None:
+    """Compare the public result against the exact-profile encrypted repositories."""
+    assert len(operation_run_id) == 64
+    assert all(character in "0123456789abcdef" for character in operation_run_id)
+    bucket_id = str(case.profile_id)
+    ports = compose_ledger_action_ports(bucket_id=bucket_id, operation=case.operation)
+    repository = LedgerClassificationRuleRepository(bucket_id=bucket_id)
+
+    if case.definition_id == LEDGER_RULE_ADD_OPERATION_DEFINITION_ID:
+        _assert_rule_added(projection, case, repository, bucket_id, ports)
+        return
+
+    assert projection == case.expected_projection
+    assert repository.list_rules() == case.rules_before
+    if case.definition_id == LEDGER_RULE_LIST_OPERATION_DEFINITION_ID:
+        _assert_rule_listed(projection, case, ports)
+        return
+
+    _assert_rules_applied(projection, case, bucket_id, ports)
 
 
 __all__ = [

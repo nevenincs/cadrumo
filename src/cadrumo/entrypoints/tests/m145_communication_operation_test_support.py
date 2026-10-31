@@ -42,7 +42,7 @@ from ...application.modelo.m145_communication_records import (
 from ...application.modelo.m145_communication_records_ports import M145CommunicationRecordsPorts
 from ...core.operations import OperationEffect
 from ...core.secure_object_write import SecureObjectWrite
-from ...domain.buckets.event import BucketEventHistoryCatalogue, BucketEventObjectType, BucketEventType
+from ...domain.buckets.event import BucketEvent, BucketEventHistoryCatalogue, BucketEventObjectType, BucketEventType
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 
@@ -232,6 +232,127 @@ def prepare_m145_communication_operation_conformance_case(
     )
 
 
+def _assert_created_record(
+    case: M145CommunicationOperationConformanceCase, projection: M145CommunicationOperationResult, bucket_id: str
+) -> M145CommunicationRecord | None:
+    result = projection.result
+    assert isinstance(result, M145CommunicationRecordProjection)
+    record = read_m145_communication_record(
+        result.communication_record_id,
+        bucket_id=bucket_id,
+        ports=case.ports,
+        operation=case.operation,
+    )
+    assert record.state is _EXPECTED_STATE[case.definition_id]
+    assert result == M145CommunicationRecordProjection.from_record(record)
+    return record
+
+
+def _assert_validated_record(
+    case: M145CommunicationOperationConformanceCase, projection: M145CommunicationOperationResult, bucket_id: str
+) -> M145CommunicationRecord | None:
+    assert case.record_id is not None
+    assert case.record_before is not None
+    result = projection.result
+    assert isinstance(result, M145CommunicationValidationProjection)
+    current = read_m145_communication_record(
+        case.record_id,
+        bucket_id=bucket_id,
+        ports=case.ports,
+        operation=case.operation,
+    )
+    assert current == case.record_before
+    expected = validate_m145_communication_record(
+        case.record_id,
+        bucket_id=bucket_id,
+        ports=case.ports,
+        operation=case.operation,
+    )
+    assert result == M145CommunicationValidationProjection.from_result(expected)
+    return None
+
+
+def _assert_exported_record(
+    case: M145CommunicationOperationConformanceCase, projection: M145CommunicationOperationResult, bucket_id: str
+) -> M145CommunicationRecord | None:
+    assert case.record_id is not None
+    result = projection.result
+    assert isinstance(result, M145CommunicationExportProjection)
+    history_port = _NoWriteEventHistory(case.ports.bucket_event_repository)
+    preview_ports = replace(case.ports, bucket_event_repository=history_port)
+    expected = export_m145_communication_record(
+        case.record_id,
+        bucket_id=bucket_id,
+        renderer=RegistryFixedWidthRecordRenderer(),
+        ports=preview_ports,
+        operation=case.operation,
+        actor=_ACTOR,
+    )
+    assert result == M145CommunicationExportProjection.from_result(expected)
+    assert history_port.proposed is not None
+    assert history_port.proposed != case.history_before
+    return case.record_before
+
+
+def _assert_transitioned_record(
+    case: M145CommunicationOperationConformanceCase, projection: M145CommunicationOperationResult, bucket_id: str
+) -> M145CommunicationRecord | None:
+    assert case.record_id is not None
+    result = projection.result
+    assert isinstance(result, M145CommunicationRecordProjection)
+    record = read_m145_communication_record(
+        case.record_id,
+        bucket_id=bucket_id,
+        ports=case.ports,
+        operation=case.operation,
+    )
+    assert record.state is _EXPECTED_STATE[case.definition_id]
+    assert result == M145CommunicationRecordProjection.from_record(record)
+    return record
+
+
+_ACTION_ASSERTIONS = {
+    "create": _assert_created_record,
+    "validate": _assert_validated_record,
+    "export": _assert_exported_record,
+}
+
+
+def _assert_communication_event(
+    case: M145CommunicationOperationConformanceCase,
+    projection: M145CommunicationOperationResult,
+    bucket_id: str,
+    event: BucketEvent,
+    event_type: BucketEventType,
+    canonical_record: M145CommunicationRecord,
+) -> None:
+    assert event.bucket_id == bucket_id
+    assert event.event_type is event_type
+    assert event.object_type is BucketEventObjectType.COMMUNICATION_RECORD
+    assert event.object_id == canonical_record.communication_record_id
+    assert event.actor == _ACTOR
+    assert event.payload_version == 1
+    expected_payload = {
+        "communication_record_id": canonical_record.communication_record_id,
+        "modelo": canonical_record.modelo,
+        "communication_year": str(canonical_record.communication_year),
+        "period": canonical_record.period_token.value,
+        "revision_id": canonical_record.revision_id,
+        "state": canonical_record.state.value,
+    }
+    if case.action == "export":
+        assert isinstance(projection.result, M145CommunicationExportProjection)
+        expected_payload.update(
+            {
+                "export_layout_id": projection.result.export_layout_id,
+                "payload_sha256": projection.result.payload_sha256,
+                "byte_length": str(projection.result.byte_length),
+                "record_count": str(projection.result.record_count),
+            },
+        )
+    assert dict(event.payload) == expected_payload
+
+
 def assert_m145_communication_operation_conformance_result(
     case: M145CommunicationOperationConformanceCase,
     projection: BaseModel,
@@ -250,99 +371,11 @@ def assert_m145_communication_operation_conformance_result(
     )
     event_type = _MUTATION_EVENT[case.definition_id]
     assert len(added_events) == (0 if event_type is None else 1)
-    canonical_record: M145CommunicationRecord | None = None
-
-    if case.action == "create":
-        result = projection.result
-        assert isinstance(result, M145CommunicationRecordProjection)
-        record = read_m145_communication_record(
-            result.communication_record_id,
-            bucket_id=bucket_id,
-            ports=case.ports,
-            operation=case.operation,
-        )
-        assert record.state is _EXPECTED_STATE[case.definition_id]
-        assert result == M145CommunicationRecordProjection.from_record(record)
-        canonical_record = record
-    elif case.action == "validate":
-        assert case.record_id is not None
-        assert case.record_before is not None
-        result = projection.result
-        assert isinstance(result, M145CommunicationValidationProjection)
-        current = read_m145_communication_record(
-            case.record_id,
-            bucket_id=bucket_id,
-            ports=case.ports,
-            operation=case.operation,
-        )
-        assert current == case.record_before
-        expected = validate_m145_communication_record(
-            case.record_id,
-            bucket_id=bucket_id,
-            ports=case.ports,
-            operation=case.operation,
-        )
-        assert result == M145CommunicationValidationProjection.from_result(expected)
-    elif case.action == "export":
-        assert case.record_id is not None
-        result = projection.result
-        assert isinstance(result, M145CommunicationExportProjection)
-        history_port = _NoWriteEventHistory(case.ports.bucket_event_repository)
-        preview_ports = replace(case.ports, bucket_event_repository=history_port)
-        expected = export_m145_communication_record(
-            case.record_id,
-            bucket_id=bucket_id,
-            renderer=RegistryFixedWidthRecordRenderer(),
-            ports=preview_ports,
-            operation=case.operation,
-            actor=_ACTOR,
-        )
-        assert result == M145CommunicationExportProjection.from_result(expected)
-        assert history_port.proposed is not None
-        assert history_port.proposed != case.history_before
-        canonical_record = case.record_before
-    else:
-        assert case.record_id is not None
-        result = projection.result
-        assert isinstance(result, M145CommunicationRecordProjection)
-        record = read_m145_communication_record(
-            case.record_id,
-            bucket_id=bucket_id,
-            ports=case.ports,
-            operation=case.operation,
-        )
-        assert record.state is _EXPECTED_STATE[case.definition_id]
-        assert result == M145CommunicationRecordProjection.from_record(record)
-        canonical_record = record
+    canonical_record = _ACTION_ASSERTIONS.get(case.action, _assert_transitioned_record)(case, projection, bucket_id)
 
     if event_type is not None:
         assert canonical_record is not None
-        event = added_events[0]
-        assert event.bucket_id == bucket_id
-        assert event.event_type is event_type
-        assert event.object_type is BucketEventObjectType.COMMUNICATION_RECORD
-        assert event.object_id == canonical_record.communication_record_id
-        assert event.actor == _ACTOR
-        assert event.payload_version == 1
-        expected_payload = {
-            "communication_record_id": canonical_record.communication_record_id,
-            "modelo": canonical_record.modelo,
-            "communication_year": str(canonical_record.communication_year),
-            "period": canonical_record.period_token.value,
-            "revision_id": canonical_record.revision_id,
-            "state": canonical_record.state.value,
-        }
-        if case.action == "export":
-            assert isinstance(projection.result, M145CommunicationExportProjection)
-            expected_payload.update(
-                {
-                    "export_layout_id": projection.result.export_layout_id,
-                    "payload_sha256": projection.result.payload_sha256,
-                    "byte_length": str(projection.result.byte_length),
-                    "record_count": str(projection.result.record_count),
-                },
-            )
-        assert dict(event.payload) == expected_payload
+        _assert_communication_event(case, projection, bucket_id, added_events[0], event_type, canonical_record)
 
 
 __all__ = [
