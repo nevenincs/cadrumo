@@ -324,7 +324,16 @@ def test_cli_json_reports_the_full_selection(tmp_path: Path, capsys: pytest.Capt
 def test_cli_without_a_manifest_selects_every_test_root(capsys: pytest.CaptureFixture[str]) -> None:
     assert main(["--json"]) == 0
     payload = json.loads(capsys.readouterr().out)
-    assert set(payload["targets"]) == {"src/cadrumo", "src/cadrumo_mcp", "dev", "native", "packaging"}
+    assert set(payload["targets"]) == {
+        "src/cadrumo",
+        "src/cadrumo_client",
+        "src/cadrumo_runtime",
+        "src/cadrumo_mcp",
+        "src/cadrumo_agent_service",
+        "dev",
+        "native",
+        "packaging",
+    }
     assert payload["ci_contracts"] and payload["sequence_goldens"]
 
 

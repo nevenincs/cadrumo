@@ -39,7 +39,7 @@ from grimp.exceptions import GrimpException
 
 from dev._paths import REPO_ROOT
 from dev.docs.sequences.verdict_cache import engine_import_closure
-from dev.first_party_source import DEVELOPMENT_TOOLING, MCP_PACKAGE, PACKAGING_HOOKS, PRODUCT_PACKAGE
+from dev.first_party_source import DEVELOPMENT_TOOLING, PACKAGING_HOOKS, SOURCE_PACKAGES
 
 __all__ = [
     "CHANGE_CLASS_RULES",
@@ -373,7 +373,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     arguments = parser.parse_args(argv)
     if arguments.changed_files is None:
         scope = ChangeScope(
-            targets=(PRODUCT_PACKAGE, MCP_PACKAGE, DEVELOPMENT_TOOLING, "native", PACKAGING_HOOKS),
+            targets=(*SOURCE_PACKAGES, DEVELOPMENT_TOOLING, "native", PACKAGING_HOOKS),
             ci_contracts=True,
             sequence_goldens=True,
             too_broad=False,
