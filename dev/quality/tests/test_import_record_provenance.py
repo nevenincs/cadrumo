@@ -2,16 +2,11 @@
 
 from __future__ import annotations
 
-import configparser
 from pathlib import Path
 
 import pytest
 
-from dev.quality.import_binding_inventory import read_modules
-from dev.quality.import_check_models import Authority, ForbiddenContract, RootPackage
-from dev.quality.import_dynamic_checks import check_dynamic_imports
-from dev.quality.import_occurrences import collect_import_occurrences
-from dev.quality.import_record_provenance import RecordTargetProvenance
+from ._planted_package_support import check_planted_package
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -238,19 +233,7 @@ def _check(tmp_path: Path, sources: dict[str, str]) -> tuple[list[str], set[tupl
     (root / "__init__.py").write_text("")
     for name, source in {"records": _RECORDS, "allowed": "value = 1", "forbidden": "value = 2", **sources}.items():
         (root / f"{name}.py").write_text(source)
-    authority = Authority(
-        tmp_path,
-        tmp_path / "authority.ini",
-        configparser.ConfigParser(),
-        ("sample",),
-        (RootPackage("sample", root),),
-        (),
-        (ForbiddenContract("boundary", "boundary", ("sample.loader",), ("sample.forbidden",)),),
-    )
-    modules, findings = read_modules(authority)
-    provenance = RecordTargetProvenance(modules)
-    check_dynamic_imports(authority, modules, findings, provenance)
-    occurrences = collect_import_occurrences(authority, modules, provenance)
+    findings, occurrences = check_planted_package(tmp_path, root)
     return [finding.category for finding in findings], {
         (item.source_module, item.target_module) for item in occurrences
     }

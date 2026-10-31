@@ -34,8 +34,6 @@ covering whatever was added afterwards.
 
 from __future__ import annotations
 
-import ast
-from collections.abc import Iterator
 from importlib.metadata import packages_distributions
 from pathlib import Path
 
@@ -46,6 +44,7 @@ from cadrumo.core.toml import load_toml
 from dev._paths import REPO_ROOT
 
 from ..distribution_names import normalise_distribution_name
+from ._import_names_support import top_level_imports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -113,16 +112,6 @@ def _is_test_surface(path: Path) -> bool:
     return "tests" in path.parts or path.name == "conftest.py"
 
 
-def _top_level_imports(path: Path) -> Iterator[str]:
-    tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
-    for node in ast.walk(tree):
-        if isinstance(node, ast.Import):
-            for alias in node.names:
-                yield alias.name.split(".")[0]
-        elif isinstance(node, ast.ImportFrom) and node.level == 0 and (node.module is not None and node.module):
-            yield node.module.split(".")[0]
-
-
 def _shipped_modules() -> list[Path]:
     return [
         path for path in scan_directory(_SHIPPED_ROOT, pattern="*.py", recursive=True) if not _is_test_surface(path)
@@ -141,7 +130,7 @@ def test_no_shipped_module_imports_a_development_only_dependency() -> None:
 
     offenders: dict[str, list[str]] = {}
     for path in _shipped_modules():
-        for import_name in _top_level_imports(path):
+        for import_name in top_level_imports(path):
             if import_name in dev_only:
                 offenders.setdefault(path.relative_to(_REPO_ROOT).as_posix(), []).append(import_name)
 
@@ -180,7 +169,7 @@ def test_the_gate_is_looking_at_something() -> None:
         f"only {len(modules)} shipped modules found against a tree of about 2,100; the scan "
         "is reading part of the shipped surface, so a clean result covers less than it appears to"
     )
-    assert any(_top_level_imports(path) for path in modules), "no imports parsed from any shipped module"
+    assert any(top_level_imports(path) for path in modules), "no imports parsed from any shipped module"
 
 
 def test_the_test_surface_is_excluded_because_it_does_not_ship() -> None:

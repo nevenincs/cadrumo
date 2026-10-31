@@ -9,16 +9,13 @@ dynamic loaders evaluated in a definition's enclosing scope, and the per-call
 
 from __future__ import annotations
 
-import configparser
 from pathlib import Path
 
 import pytest
 
-from dev.quality.import_binding_inventory import read_modules
-from dev.quality.import_check_models import Authority, Finding, ForbiddenContract, ImportOccurrence, RootPackage
-from dev.quality.import_dynamic_checks import check_dynamic_imports
-from dev.quality.import_occurrences import collect_import_occurrences
-from dev.quality.import_record_provenance import RecordTargetProvenance
+from dev.quality.import_check_models import Finding, ImportOccurrence
+
+from ._planted_package_support import check_planted_package
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -40,19 +37,7 @@ def _run(tmp_path: Path, loader: str) -> tuple[list[Finding], tuple[ImportOccurr
     }
     for relative, source in sources.items():
         (root / relative).write_text(source, encoding="utf-8")
-    authority = Authority(
-        tmp_path,
-        tmp_path / "authority.ini",
-        configparser.ConfigParser(),
-        ("sample",),
-        (RootPackage("sample", root),),
-        (),
-        (ForbiddenContract("boundary", "boundary", ("sample.loader",), ("sample.forbidden",)),),
-    )
-    modules, findings = read_modules(authority)
-    provenance = RecordTargetProvenance(modules)
-    check_dynamic_imports(authority, modules, findings, provenance)
-    return findings, collect_import_occurrences(authority, modules, provenance)
+    return check_planted_package(tmp_path, root)
 
 
 def _check(tmp_path: Path, loader: str) -> tuple[list[str], set[tuple[str, str, str]]]:

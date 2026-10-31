@@ -40,8 +40,6 @@ it would have made the gate an assertion about its own table.
 
 from __future__ import annotations
 
-import ast
-from collections.abc import Iterator
 from importlib.metadata import packages_distributions
 from pathlib import Path
 
@@ -52,6 +50,7 @@ from cadrumo.core.toml import load_toml
 from dev._paths import REPO_ROOT
 
 from ..distribution_names import normalise_distribution_name
+from ._import_names_support import top_level_imports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -90,21 +89,6 @@ def _declared_distributions() -> set[str]:
     return declared
 
 
-def _top_level_imports(path: Path) -> Iterator[str]:
-    """Yield the top-level module name of every absolute import in ``path``.
-
-    Relative imports are skipped: they address this project, which is not a
-    declarable dependency of itself.
-    """
-    tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
-    for node in ast.walk(tree):
-        if isinstance(node, ast.Import):
-            for alias in node.names:
-                yield alias.name.split(".")[0]
-        elif isinstance(node, ast.ImportFrom) and node.level == 0 and (node.module is not None and node.module):
-            yield node.module.split(".")[0]
-
-
 def _third_party_imports_under(root: Path) -> dict[str, list[str]]:
     """Map each third-party import name to the repo-relative files importing it."""
     stdlib_and_local = _NOT_THIRD_PARTY | _stdlib_names()
@@ -114,7 +98,7 @@ def _third_party_imports_under(root: Path) -> dict[str, list[str]]:
         if "tests" in relative.parts or path.name == "conftest.py":
             # Not shipped by either build target, so not a shipped reliance.
             continue
-        for name in _top_level_imports(path):
+        for name in top_level_imports(path):
             if name in stdlib_and_local:
                 continue
             found.setdefault(name, []).append(path.relative_to(_REPO_ROOT).as_posix())
