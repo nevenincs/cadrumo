@@ -81,8 +81,10 @@ assert project.flush_logging(timeout=HANG)
 logger = project.get_logger('cadrumo.tests.unread_stderr')
 if {fallback!r}:
     logger.propagate = False
+# The text must stay prose: a long unbroken token is redacted to a short placeholder, which
+# would not fill the pipe. 128 lines of about 1 KiB exceed the common 64 KiB pipe capacity.
 for index in range(128):
-    logger.warning('unread stderr %d %s', index, 'x' * 800)
+    logger.warning('unread stderr %d %s', index, 'pending line ' * 80)
 def blocked():
     return any(status.pending > 5 and status.active_seconds > .1
                for name, status in project.diagnostic_delivery_status().items() if name != 'records')
