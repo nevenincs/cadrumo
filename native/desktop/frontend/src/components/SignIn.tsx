@@ -334,6 +334,7 @@ export function SignInDialog({
                 {t("desktop.signin.password")}
               </FieldLabel>
               <PasswordInput
+                autoComplete="current-password"
                 ref={input}
                 id="profile-password"
                 name="password"

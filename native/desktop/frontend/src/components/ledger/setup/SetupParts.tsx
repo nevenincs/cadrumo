@@ -332,6 +332,7 @@ export function TextField({
   maxLength,
   autoFocus,
   name,
+  autoComplete = "off",
 }: {
   label: string;
   value: string;
@@ -346,6 +347,8 @@ export function TextField({
   maxLength?: number;
   autoFocus?: boolean;
   name?: string;
+  /** `new-password` on a masked secret, which browsers do not let `off` guard. */
+  autoComplete?: "off" | "new-password";
 }) {
   const id = useId();
   const hintId = `${id}-hint`;
@@ -357,7 +360,7 @@ export function TextField({
         id={id}
         name={name}
         type={type}
-        autoComplete="off"
+        autoComplete={autoComplete}
         spellCheck={false}
         value={value}
         required={required}

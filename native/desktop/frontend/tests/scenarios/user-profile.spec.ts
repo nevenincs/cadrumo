@@ -607,7 +607,7 @@ test("full schema, collapsible sections, section index and browser autofill", as
   await editButton(profile, "Given name").click();
   await expect(
     page.getByRole("dialog").getByLabel("Given name", { exact: true }),
-  ).toHaveAttribute("autocomplete", "given-name");
+  ).toHaveAttribute("autocomplete", "off");
   await page
     .getByRole("dialog")
     .getByRole("button", { name: label("desktop.profile.cancel"), exact: true })
@@ -1296,7 +1296,7 @@ test("a certificate is chosen in the native dialog and its passphrase is kept ou
     exact: true,
   });
   await expect(secret).toHaveAttribute("type", "password");
-  await expect(secret).toHaveAttribute("autocomplete", "off");
+  await expect(secret).toHaveAttribute("autocomplete", "new-password");
   await secret.fill("correct horse battery");
   await save(editor).click();
   await expect(editor).toContainText(label("desktop.profile.aeat.saved"));

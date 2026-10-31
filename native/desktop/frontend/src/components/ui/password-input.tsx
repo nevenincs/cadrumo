@@ -11,6 +11,9 @@ type PasswordInputProps = Omit<React.ComponentProps<typeof Input>, "type"> & {
   /** The names of the reveal control in its two states. */
   showLabel: string;
   hideLabel: string;
+  /** What a password manager may do with it: no default, since the right
+   * token differs between signing in and entering a new secret. */
+  autoComplete: NonNullable<React.ComponentProps<typeof Input>["autoComplete"]>;
 };
 
 /**
@@ -26,7 +29,7 @@ function PasswordInput({
   showLabel,
   hideLabel,
   disabled,
-  autoComplete = "current-password",
+  autoComplete,
   ...props
 }: PasswordInputProps) {
   return (

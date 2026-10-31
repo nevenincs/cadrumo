@@ -2102,6 +2102,7 @@ function DataGridTextEditor({
     <input
       ref={input}
       data-slot="data-grid-editor"
+      autoComplete="off"
       aria-label={context.label}
       aria-describedby={context.describedBy}
       value={value}

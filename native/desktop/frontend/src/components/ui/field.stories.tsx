@@ -22,6 +22,7 @@ function Password(props: { invalid?: boolean; disabled?: boolean }) {
       onRevealedChange={setRevealed}
       showLabel="Show password"
       hideLabel="Hide password"
+      autoComplete="current-password"
       aria-invalid={props.invalid || undefined}
       disabled={props.disabled}
       defaultValue={props.invalid ? "not-it" : undefined}

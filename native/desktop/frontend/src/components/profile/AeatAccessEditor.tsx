@@ -489,7 +489,7 @@ export function AeatAccessEditor({
                 ref={secret}
                 id={`${id}-secret`}
                 name="secret"
-                autoComplete="off"
+                autoComplete="new-password"
                 disabled={!idle}
                 revealed={revealed}
                 onRevealedChange={setRevealed}

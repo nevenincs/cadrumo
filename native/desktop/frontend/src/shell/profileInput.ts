@@ -2,30 +2,19 @@ import { heldDecimal } from "@/shared/numbers";
 import { parseIsoDate } from "./ledgerGrammar";
 import type { ProfileField } from "./userProfile";
 
-const AUTOFILL: Readonly<Record<string, string>> = {
-  "identity.name": "given-name",
-  "identity.surnames": "family-name",
-  "identity.legal_name": "organization",
-  "identity.email": "email",
-  "contact.contact_person_name": "section-contact name",
-  "contact.contact_person_phone": "section-contact tel-national",
-  "contact.fiscal_address": "street-address",
-  "contact.postcode": "postal-code",
-  "contact.fiscal_municipality": "address-level2",
-  "contact.fiscal_province": "address-level1",
-  "contact.fiscal_country": "country",
-};
+const PHONE_FIELDS: ReadonlySet<string> = new Set([
+  "contact.contact_person_phone",
+]);
 
 /** The kinds of detail the profile enters with a typed editor; anything else
  * is a line of text. */
 export type ProfileEntryKind =
   "date" | "integer" | "decimal" | "money" | "tax_id" | "text";
 
-/** Which editor a detail is entered in, and the browser hints that follow
- * canonical fields, never a guessed current value. */
+/** Which editor a detail is entered in. Every detail asks the browser to
+ * remember nothing: taxpayer facts are kept only in the profile's encrypted
+ * custody, never in browser form history. */
 export function profileInput(field: ProfileField) {
-  const secret = field.masked || field.path.startsWith("auth.");
-  const autoComplete = secret ? "off" : (AUTOFILL[field.path] ?? "off");
   const kind: ProfileEntryKind =
     field.path === "auth.dni_nie" || field.path === "identity.tax_id"
       ? "tax_id"
@@ -38,10 +27,10 @@ export function profileInput(field: ProfileField) {
   const type =
     field.field_type === "email"
       ? "email"
-      : autoComplete.endsWith("tel-national")
+      : PHONE_FIELDS.has(field.path)
         ? "tel"
         : "text";
-  return { name: field.path, autoComplete, kind, type } as const;
+  return { name: field.path, autoComplete: "off", kind, type } as const;
 }
 
 /** The text typed in a date detail that names no day, or null when the detail
