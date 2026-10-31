@@ -26,10 +26,15 @@ from .binding_selector_utils import (
     provider_member,
 )
 from .errors import RegistryValidationError
-from .form_codes import resolve_form_codes
 from .governed_fact_scope import GovernedFactSource, require_governed_fact_authority
 from .ids import BindingId
 from .schema_exports import ExportFieldDataType
+from .withholding_observation_codes import (
+    OBSERVATION_CODE_FIELDS,
+    WITHHOLDING_CATALOGUE_FACT,
+    validate_financial_asset_conditions,
+    validate_observation_form_codes,
+)
 
 if TYPE_CHECKING:
     from .schema import BindingDefinition, ModeloRevision
@@ -223,79 +228,8 @@ def _retencion_clave_declared_models(token: str, declarations: Mapping[str, str]
     return models
 
 
-_OBSERVATION_COUNT_FIELDS = frozenset(
-    {
-        "descendants_under_3_total",
-        "descendants_under_3_whole",
-        "descendants_rest_total",
-        "descendants_rest_whole",
-        "descendants_disabled_33_65_total",
-        "descendants_disabled_33_65_whole",
-        "descendants_disabled_mobility_total",
-        "descendants_disabled_mobility_whole",
-        "descendants_disabled_65_plus_total",
-        "descendants_disabled_65_plus_whole",
-        "ascendants_under_75_total",
-        "ascendants_under_75_whole",
-        "ascendants_75_plus_total",
-        "ascendants_75_plus_whole",
-        "ascendants_disabled_33_65_total",
-        "ascendants_disabled_33_65_whole",
-        "ascendants_disabled_mobility_total",
-        "ascendants_disabled_mobility_whole",
-        "ascendants_disabled_65_plus_total",
-        "ascendants_disabled_65_plus_whole",
-    }
-)
-_OBSERVATION_CODE_FIELDS = (
-    "territorial_deduction_clave",
-    "perceptor_situacion_familiar",
-    "disability_clave",
-    "contract_relation_clave",
-    "unit_convivencia_titular_clave",
-    "geographic_mobility_clave",
-    "first_child_compute",
-    "second_child_compute",
-    "third_child_compute",
-    "housing_loan_communication_clave",
-    "complemento_infancia_clave",
-    "emerging_stock_excess_clave",
-    "startup_fund_rendimientos_clave",
-    "pension_prestacion_jubilacion",
-    "pension_prestacion_viudedad",
-    "pension_prestacion_incapacidad",
-    "pension_prestacion_no_contributiva",
-    "pension_prestacion_resto",
-    "clave_codigo",
-    "pago",
-    "tipo_percepcion",
-    "tipo_codigo",
-    "clave_mercado",
-    "financial_asset_origin",
-    "financial_asset_related_entity",
-    *_OBSERVATION_COUNT_FIELDS,
-)
-#: The Modelo 194 related-entity indicator is written blank when the entity is not related.
-_OBSERVATION_BLANK_ADMITTING_FIELDS = frozenset({"financial_asset_related_entity"})
-_WITHHOLDING_CATALOGUE_FACT = "modelo-190-193-withholding-binding-catalogue"
-
-
-def _no_declared_values_origin() -> str:
-    """Return the Modelo 194 origin whose acquisition and disposal values stay absent."""
-    return resolve_form_codes(_WITHHOLDING_CATALOGUE_FACT).code("modelo.194.origin.without_values")
-
-
 class WithholdingObservation(BaseModel):
-    """Per-perceptor retencion / ingreso-a-cuenta observation for modelo 190 / 193.
-
-    ``perceptor_tax_id`` is normalised to its canonical identity token on
-    construction, so the identity the clave/subclave aggregations count is the
-    identity the encrypted percepciones store keys by. Holding the raw
-    declaration here split the two: the repository trimmed and uppercased the
-    tax ID before hashing it into the object key, so two canonically-equal
-    declarations were counted as two distinct percepciones while sharing one
-    stored row, and the later write overwrote the earlier evidence.
-    """
+    """Per-perceptor withholding observation with a canonical tax identity token."""
 
     model_config = STRICT_FROZEN_CONFIG
 
@@ -641,40 +575,21 @@ class WithholdingObservation(BaseModel):
     @pydantic_validation_boundary
     def _declared_form_codes(self) -> WithholdingObservation:
         """Refuse a code or count the published record design does not declare."""
-        populated = {name: getattr(self, name) for name in _OBSERVATION_CODE_FIELDS}
-        if all(value is None for value in populated.values()):
-            return self
-        declared = resolve_form_codes(_WITHHOLDING_CATALOGUE_FACT)
-        for name, value in populated.items():
-            if value is None or (value == "" and name in _OBSERVATION_BLANK_ADMITTING_FIELDS):
-                continue
-            if name in _OBSERVATION_COUNT_FIELDS:
-                if not isinstance(value, int) or not 0 <= value <= declared.integer(
-                    f"observation_count.{name}.maximum"
-                ):
-                    raise RegistryValidationError(f"{name} exceeds the width the record design declares")
-            elif str(value) not in declared.codes(f"observation_code.{name}"):
-                raise RegistryValidationError(f"{name} is not a code the record design declares")
-        if (
-            self.financial_asset_origin is not None
-            and self.clave_codigo is not None
-            and str(self.clave_codigo) not in declared.codes("modelo.194.clave_codigo")
-        ):
-            raise RegistryValidationError("clave_codigo is not a code the Modelo 194 record design declares")
+        populated = {name: getattr(self, name) for name in OBSERVATION_CODE_FIELDS}
+        validate_observation_form_codes(populated, self.financial_asset_origin, self.clave_codigo)
         return self
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _financial_asset_conditions(self) -> WithholdingObservation:
         """Preserve the source design's absent amounts and negative-base rule."""
-        if (
-            self.financial_asset_origin is not None
-            and self.financial_asset_origin == _no_declared_values_origin()
-            and (self.financial_asset_acquisition_value is not None or self.financial_asset_disposal_value is not None)
-        ):
-            raise RegistryValidationError("financial-asset origin D requires absent acquisition and disposal values")
-        if self.financial_asset_origin is not None and self.base_retenciones < 0 and self.retencion_practicada != 0:
-            raise RegistryValidationError("a negative financial-asset withholding base requires zero withholding")
+        validate_financial_asset_conditions(
+            self.financial_asset_origin,
+            self.financial_asset_acquisition_value,
+            self.financial_asset_disposal_value,
+            self.base_retenciones,
+            self.retencion_practicada,
+        )
         return self
 
 
@@ -895,7 +810,7 @@ def _withholding_role_declarations(
     selected_authority = require_governed_fact_authority(authority, subject="withholding role catalogue")
     resolved = selected_authority.resolve_governed_fact(
         MappingFactQuery(
-            fact_id=_WITHHOLDING_CATALOGUE_FACT,
+            fact_id=WITHHOLDING_CATALOGUE_FACT,
             date_axis=DateAxis.FILING_PERIOD,
             effective_date=effective_date,
         ),
@@ -1308,24 +1223,7 @@ class WithholdingClaveBreakdown(BaseModel):
 def aggregate_withholding_by_clave(
     observations: Iterable[WithholdingObservation],
 ) -> tuple[WithholdingClaveBreakdown, ...]:
-    """Project withholding observations into :class:`WithholdingClaveBreakdown` rows.
-
-    Pure function: identical observations in any order yield the same tuple,
-    sorted by ``clave``. No new aggregation is introduced — each magnitude is
-    produced by the same :func:`distinct_percepcion_keys` /
-    :func:`percibido_total` / :func:`retencion_total` helper that
-    :func:`resolve_withholding_binding_values` uses for the corresponding bound
-    fact, so the breakdown cannot drift from the facts that feed the
-    calculation. The clave is the grouping axis here and part of the key there;
-    grouping first and counting the clave-bearing key within each group gives
-    the same per-clave totals.
-
-    That sentence used to be a claim rather than a guarantee: this function
-    re-implemented all three formulas inline. An operator reconciles the annual
-    Modelo 190 against the four quarterly Modelo 111 filings from this
-    breakdown, so a formula changed in the resolver alone would have shown up
-    as a reconciliation mismatch with nothing pointing at the cause.
-    """
+    """Aggregate by clave using the same totals as the binding resolver."""
     by_clave: dict[RetencionClave, list[WithholdingObservation]] = {}
     for observation in observations:
         by_clave.setdefault(observation.clave, []).append(observation)
