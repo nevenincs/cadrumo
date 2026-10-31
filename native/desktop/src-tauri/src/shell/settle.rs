@@ -1049,7 +1049,9 @@ mod tests {
     }
 
     /// A session the window still holds, or one it lost.
+    #[cfg(windows)]
     struct Holding(bool);
+    #[cfg(windows)]
     impl Session for Holding {
         async fn holds(&self, _person: &HeldPerson) -> Result<()> {
             if self.0 {

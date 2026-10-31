@@ -370,7 +370,7 @@ fn pins_storage(projection: &Projection) -> bool {
             .eq([projection.storage.as_path()])
 }
 
-#[cfg(test)]
+#[cfg(all(test, windows))]
 impl Parent {
     fn clone_for_test(&self) -> Self {
         Self {

@@ -673,6 +673,7 @@ fn read(
 #[cfg(test)]
 pub(crate) mod tests {
     use super::*;
+    #[cfg(windows)]
     pub(super) const TEST_IDENTITY: HelperIdentity = HelperIdentity {
         command: "config.login",
         executable: cadrumo_application::diagnostics::helper::HelperExecutable::Cli,

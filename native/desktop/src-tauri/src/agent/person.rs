@@ -6,7 +6,7 @@ use cadrumo_application::error::application::{
 use cadrumo_application::person_operations::{PROJECTION_DOCUMENT_MAX_BYTES, wipe};
 use cadrumo_application::{runtime_client::Refusal, view_stream::attach::ViewAttachGrant};
 use serde_json::{Value, json};
-#[cfg(test)]
+#[cfg(all(test, windows))]
 use std::time::Duration;
 use std::{
     io::Write,
@@ -15,7 +15,8 @@ use std::{
 };
 
 mod native;
-#[cfg(test)]
+// The scripted holder drives a PowerShell stand-in.
+#[cfg(all(test, windows))]
 mod scripted;
 
 /// The longest request: the longest document the relay carries, and one
@@ -142,11 +143,11 @@ trait Bridge: Send {
     fn rebind_password(&mut self, _password: &[u8]) -> std::result::Result<(), Refusal> {
         Err(Refusal::Unavailable)
     }
-    #[cfg(test)]
+    #[cfg(all(test, windows))]
     fn scripted(&self) -> Option<&scripted::ScriptedHold> {
         None
     }
-    #[cfg(test)]
+    #[cfg(all(test, windows))]
     fn scripted_mut(&mut self) -> Option<&mut scripted::ScriptedHold> {
         None
     }
@@ -197,7 +198,7 @@ impl Person {
     }
 
     /// A scripted holder's person, whose replies are awaited within `reply_limit`.
-    #[cfg(test)]
+    #[cfg(all(test, windows))]
     pub(crate) fn hold_answering_within(
         command: std::process::Command,
         profile: &str,
@@ -208,17 +209,17 @@ impl Person {
         Self::held(Box::new(hold), events, identity, profile, 5)
     }
 
-    #[cfg(test)]
+    #[cfg(all(test, windows))]
     pub(crate) fn scripted(command: std::process::Command, profile: &str) -> Result<Self> {
         Self::hold_answering_within(command, profile, Duration::from_secs(140))
     }
 
-    #[cfg(test)]
+    #[cfg(all(test, windows))]
     pub(crate) fn child_id(&self) -> u32 {
         self.bridge.scripted().map_or(0, |hold| hold.child.id())
     }
 
-    #[cfg(test)]
+    #[cfg(all(test, windows))]
     fn scripted_mut(&mut self) -> &mut scripted::ScriptedHold {
         self.bridge
             .scripted_mut()
@@ -255,10 +256,10 @@ impl Person {
     }
 
     fn require_held(&self, profile: &str, members: usize) -> Result<()> {
-        if !self
+        if self
             .identity
             .as_object()
-            .is_some_and(|object| object.len() == members)
+            .is_none_or(|object| object.len() != members)
             || self.identity["kind"] != "session_held"
             || self.identity["profile_id"] != profile
             || ["session_id", "runtime_boot_id", "connection_id"]
