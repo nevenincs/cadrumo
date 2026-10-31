@@ -180,7 +180,7 @@ effective_from = 2003-12-31
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-06
 reviewed_by = "operator"
-notes = "Apartado primero de la Orden HAC/3625/2003: aprobación del modelo 309 'Declaracion-liquidacion no periodica del Impuesto sobre el Valor Anadido'. Filed by sujetos pasivos sin obligacion ordinaria de declaracion-liquidacion (adquisiciones de medios de transporte nuevos, ejecuciones forzosas, regimen agricola/ganadero/pesquero, recargo de equivalencia)."
+notes = "Apartado primero de la Orden HAC/3625/2003: aprobación del modelo 309 'Declaracion-liquidacion no periodica del Impuesto sobre el Valor Anadido'. Filed by sujetos pasivos sin obligación ordinaria de declaracion-liquidacion (adquisiciones de medios de transporte nuevos, ejecuciones forzosas, regimen agricola/ganadero/pesquero, recargo de equivalencia)."
 required_text = [
     "Aprobación del modelo 309",
     "Declaración-liquidación no periódica",
@@ -206,7 +206,7 @@ effective_from = 2003-12-31
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-06
 reviewed_by = "operator"
-notes = "Apartado tercero de la Orden HAC/3625/2003: plazo de presentación del Modelo 309. Veinte primeros dias naturales de abril, julio y octubre; ultimo periodo en los treinta primeros dias naturales del mes de enero del ano siguiente. Casos especiales: medios de transporte nuevos 30 dias desde la transmision; ejecuciones forzosas 1 mes desde el pago de la adjudicacion."
+notes = "Apartado tercero de la Orden HAC/3625/2003: plazo de presentación del Modelo 309. Veinte primeros dias naturales de abril, julio y octubre; ultimo periodo en los treinta primeros dias naturales del mes de enero del ano siguiente. Casos especiales: medios de transporte nuevos 30 dias desde la transmisión; ejecuciones forzosas 1 mes desde el pago de la adjudicacion."
 required_text = [
     "Plazo de presentación del modelo 309",
     "veinte primeros días naturales",
@@ -783,7 +783,7 @@ effective_from = 2009-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-06
 reviewed_by = "operator"
-notes = "Articulo 11 de la Orden EHA/3786/2008: plazos de presentación del Modelo 308. Sujetos pasivos ocasionales (medios de transporte nuevos): 30 dias naturales desde la entrega. Regimen simplificado actividad de transporte: primeros 20 dias naturales del mes siguiente a la adquisicion."
+notes = "Articulo 11 de la Orden EHA/3786/2008: plazos de presentación del Modelo 308. Sujetos pasivos ocasionales (medios de transporte nuevos): 30 dias naturales desde la entrega. Regimen simplificado actividad de transporte: primeros 20 dias naturales del mes siguiente a la adquisición."
 required_text = [
     "Plazos de presentación del modelo 308",
     "treinta días naturales",
@@ -1413,7 +1413,7 @@ effective_from = 2020-03-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-05
 reviewed_by = "operator"
-notes = "Modificacion de la Orden EHA/769/2010 que aprueba el modelo 349. Anade las claves R, D y C para acuerdos de ventas de bienes en consigna y suprime la presentación anual del modelo 349. Aplicable a declaraciones del ejercicio 2020 y siguientes."
+notes = "Modificación de la Orden EHA/769/2010 que aprueba el modelo 349. Anade las claves R, D y C para acuerdos de ventas de bienes en consigna y suprime la presentación anual del modelo 349. Aplicable a declaraciones del ejercicio 2020 y siguientes."
 required_text = [
     "Artículo único. Modificación de la Orden EHA/769/2010",
     "modelo 349",
@@ -1580,7 +1580,7 @@ effective_from = 2021-07-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-06
 reviewed_by = "operator"
-notes = "Ley 37/1992, articulo 163 octiesdecies: ambito del regimen exterior para empresarios o profesionales no establecidos en la Comunidad."
+notes = "Ley 37/1992, articulo 163 octiesdecies: ámbito del regimen exterior para empresarios o profesionales no establecidos en la Comunidad."
 required_text = [
     "Artículo 163 octiesdecies",
     "empresarios o profesionales no establecidos en la Comunidad",
@@ -1642,7 +1642,7 @@ effective_from = 2021-07-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-06
 reviewed_by = "operator"
-notes = "Ley 37/1992, articulo 163 quinvicies: ambito del regimen de importacion para ventas a distancia de bienes importados de paises o territorios terceros."
+notes = "Ley 37/1992, articulo 163 quinvicies: ámbito del regimen de importacion para ventas a distancia de bienes importados de paises o territorios terceros."
 required_text = [
     "Artículo 163 quinvicies",
     "ventas a distancia de bienes importados",
@@ -2085,11 +2085,11 @@ tiene dos modalidades, general y especial; la general se aplica cuando no concur
 circunstancias del apartado siguiente. Apartado Dos: la prorrata especial es aplicable (1) cuando el \
 sujeto pasivo opta por ella en plazo y forma reglamentarios, o (2) cuando el montante total de las \
 cuotas deducibles del ano natural por la regla general excede del que resultaria por la regla \
-especial en el margen legal del ejercicio (obligacion de especial). ATENCION - el apartado Dos \
+especial en el margen legal del ejercicio (obligación de especial). ATENCION - el apartado Dos \
 numero 2 NO es invariante en la ventana de ejercicios que la aplicación sirve: la redacción original \
 de la Ley 37/1992 (en vigor 01-01-1993 a 31-12-2014) exigia que excediera 'en un 20 por 100', sin 'o \
 mas', mientras que el art. 1.26 de la Ley 28/2014 (BOE-A-2014-12329, en vigor desde 01-01-2015) lo \
-sustituyo por 'en un 10 por ciento o mas'. La modificacion rebajo el margen Y lo hizo inclusivo: el \
+sustituyo por 'en un 10 por ciento o mas'. La modificación rebajo el margen Y lo hizo inclusivo: el \
 preambulo de la Ley 28/2014 lo describe como 'disminuir del 20 al 10 por ciento la diferencia \
 admisible'. Base legal del aviso de prorrata especial obligatoria. El margen y su \
 direccion de comparacion se declaran como dato de registro en el parametro \
@@ -2117,9 +2117,9 @@ review_status = "agent_reviewed"
 reviewed_at = 2026-07-07
 reviewed_by = "agent-authored from bundled ley-37-1992.html#a106 la prorrata especial; operator to re-stamp"
 notes = """\
-Articulo 106 LIVA: la prorrata especial. Apartado Uno, tres reglas de deduccion por uso del input: \
+Articulo 106 LIVA: la prorrata especial. Apartado Uno, tres reglas de deducción por uso del input: \
 1a las cuotas soportadas en bienes/servicios utilizados EXCLUSIVAMENTE en operaciones con derecho a \
-deduccion se deducen INTEGRAMENTE (100%); 2a las utilizadas EXCLUSIVAMENTE en operaciones sin \
+deducción se deducen INTEGRAMENTE (100%); 2a las utilizadas EXCLUSIVAMENTE en operaciones sin \
 derecho NO son deducibles (0%); 3a las utilizadas SOLO EN PARTE en operaciones con derecho se \
 deducen en la proporcion del porcentaje general del art 104.Dos y siguientes, con el procedimiento \
 del art 105. Base legal del enrutado por InputClassification \
@@ -2151,8 +2151,8 @@ aplicar SEPARADAMENTE el regimen de deducciones respecto de cada uno; la prorrat
 aplicarse independientemente por sector (letras a', c', d'); los sectores de la letra b' se rigen \
 por sus regimenes especiales. Las adquisiciones para uso EN COMUN en varios sectores se deducen por \
 el porcentaje del art 104.Dos y siguientes (porcentaje comun). Base legal del enrutado por sector: \
-cada input a la deduccion de SU sector; el input de uso comun al porcentaje comun del art 104.Dos. \
-Apartado Dos (DIFERIDO en esta fase): la Administracion puede autorizar un regimen de deduccion \
+cada input a la deducción de SU sector; el input de uso comun al porcentaje comun del art 104.Dos. \
+Apartado Dos (DIFERIDO en esta fase): la Administracion puede autorizar un regimen de deducción \
 COMUN a los sectores de la letra a', autorizacion que NO surte efectos en el ano en que el total de \
 cuotas deducibles por el regimen comun exceda en un 20 por 100 al que resultaria aplicando con \
 independencia el regimen de cada sector - se registra como caso de autorizacion (register \
@@ -2183,8 +2183,8 @@ reviewed_by = "agent-authored from bundled ley-37-1992.html#a9 definicion de sec
 notes = """\
 Articulo 9, numero 1.o, letra c) LIVA: la definicion de los SECTORES DIFERENCIADOS de la actividad \
 (base del art 101). Letra a': actividades economicas con grupos DISTINTOS en la Clasificacion \
-Nacional de Actividades Economicas (CNAE) cuyos regimenes de deduccion difieran; los regimenes se \
-consideran distintos cuando los porcentajes de deduccion del art 104 difieran en mas de 50 PUNTOS \
+Nacional de Actividades Economicas (CNAE) cuyos regimenes de deducción difieran; los regimenes se \
+consideran distintos cuando los porcentajes de deducción del art 104 difieran en mas de 50 PUNTOS \
 PORCENTUALES respecto de la actividad principal. Letra b': actividades acogidas a los regimenes \
 especiales simplificado, agricultura/ganaderia/pesca, oro de inversion o recargo de equivalencia. \
 Letras c'/d': arrendamiento financiero y cesion de creditos/prestamos (salvo factoring). La \
@@ -3021,7 +3021,7 @@ place-of-supply rule set that decides WHICH IVA category a cross-border operatio
 belongs to. That selection is a declared judgement made by the operator, never derived \
 by the system from the counterparty's country: two invoices with identical counterparty \
 countries can fall in different categories depending on where the entrega or the \
-prestacion is localised under these articles. \
+prestación is localised under these articles. \
 Bundled text checked against the live BOE consolidated text on 2026-08-05: the anchored \
 #a68 unit of the bundled ley-37-1992.html is character-identical to the current \
 redaction BOE-A-2022-22128 (in force 2023-01-01), apart from the BOE amendment-history \
@@ -3227,7 +3227,7 @@ RDL 20/2012 art. 23, apartado Dos: da nueva redacción al art. 90 Uno LIVA y fij
 el 21 por ciento, con efectos desde el 1 de septiembre de 2012. Esta es la provision que ESTABLECE \
 el valor; el art. 90 LIVA es el articulo marco que lo aloja, y citarlo solo no basta cuando una \
 norma modificativa fija la cifra. El texto consolidado del art. 90 lo confirma en su nota de \
-modificacion: 'Se modifica el apartado 1, con efectos desde el 1 de septiembre de 2012, por el art. \
+modificación: 'Se modifica el apartado 1, con efectos desde el 1 de septiembre de 2012, por el art. \
 23.2 del Real Decreto-ley 20/2012, de 13 de julio. Ref. BOE-A-2012-9364'. DOS TRAMPAS DE CITA, ambas \
 verificadas sobre el fichero empaquetado. Primera: el documento contiene TRES cadenas 'Articulo 23' \
 y la primera pertenece a otra ley -- el articulo 23 sobre el Servicio de Ayuda a Domicilio -- de \
@@ -3236,7 +3236,7 @@ aparicion. Segunda: los apartados difieren por tipo. El 21 por ciento lo fija el
 10 por ciento el apartado Tres, por lo que citar 23.2 para el tipo reducido seria erroneo en un \
 apartado. El tipo super-reducido del 4 por ciento es ANTERIOR a esta norma y NO puede heredarla por \
 proximidad: necesita su propia provision. PROVENANCIA. Documento adquirido mediante la herramienta \
-de adquisicion del corpus consolidado oficial (API de legislacion consolidada del portal oficial), \
+de adquisición del corpus consolidado oficial (API de legislacion consolidada del portal oficial), \
 26 bloques servidos cada uno en su ultima version, sha256 \
 d0ef2bae3d07e5a2fed52315c29808306f0a3ec197b1bc0501186ce16181c9df, 733051 bytes. Entrada preparada \
 por agente y fundamentada en el texto empaquetado leido directamente; no la ha revisado un operador \
@@ -3262,12 +3262,12 @@ notes = """\
 RDL 20/2012 art. 23, apartado Tres: da nueva redacción al art. 91 LIVA y fija el tipo reducido en el \
 10 por ciento, con efectos desde el 1 de septiembre de 2012. Entrada SEPARADA de la del apartado Dos \
 deliberadamente: el mismo articulo fija dos tipos en dos apartados distintos, y una sola entrada \
-obligaria a cada tipo a citar una provision que no es exactamente la suya. La nota de modificacion \
+obligaria a cada tipo a citar una provision que no es exactamente la suya. La nota de modificación \
 del art. 90 consolidado cita 23.2, que es correcta para el 21 por ciento y NO para este tipo. El \
 tipo super-reducido del 4 por ciento es anterior a esta norma y necesita su propia provision. \
 PROVENANCIA. Mismo documento y mismo sha256 que la entrada del apartado Dos, \
 d0ef2bae3d07e5a2fed52315c29808306f0a3ec197b1bc0501186ce16181c9df; adquirido mediante la herramienta \
-de adquisicion del corpus consolidado oficial. Entrada preparada por agente, no revisada por un \
+de adquisición del corpus consolidado oficial. Entrada preparada por agente, no revisada por un \
 operador humano."""
 required_text = [
     "Se aplicará el tipo del 10 por ciento",
@@ -3304,7 +3304,7 @@ contiene tres 'Articulo 23' de los cuales el primero pertenece a otra ley. CORRO
 INDEPENDIENTE: recorrer las 41 redacciones consolidadas del art. 91 LIVA muestra Dos = 3 por 100 \
 hasta la redacción previa a esta norma y Dos = 4 por 100 desde ella, ininterrumpidamente hasta hoy; \
 es un diff antes/despues, no una lectura de prosa. PROVENANCIA. Documento adquirido mediante la \
-herramienta de adquisicion del corpus consolidado oficial (modo articulo), sha256 \
+herramienta de adquisición del corpus consolidado oficial (modo articulo), sha256 \
 1c484707bac3ccf0ef6a252fe1272fb8dedde5150a9bf35f81048450b8308b61, 15448 bytes, leido de nuevo desde \
 disco antes de redactar esta entrada. La captura se hizo SIN required_text a proposito: fijar la \
 frase del 4 por ciento antes de leer el fichero habria hecho tautologica la comprobacion. Entrada \
