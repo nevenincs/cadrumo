@@ -502,10 +502,12 @@ _REGISTRATIONS: Final[tuple[BindingProviderRegistration, ...]] = (
         BindingSourceKind.ACTIVITY_ASSET_DISPOSAL,
         ActivityAssetDisposalProvider,
         validate_activity_asset_disposal_binding,
-        channels=_MONEY_CHANNELS | frozenset({BindingValueChannel.TEXT}),
-        ops=LEDGER_AGGREGATION_OPS | frozenset({BindingAggregationOp.COPY}),
+        # A baja's totals are scalars the form's sums read; each sale also states its
+        # own row of other elements, so both shapes belong to this registration.
+        channels=_MONEY_CHANNELS | frozenset({BindingValueChannel.TEXT}) | _ROW_CHANNELS,
+        ops=LEDGER_AGGREGATION_OPS | frozenset({BindingAggregationOp.COPY}) | _ROW_OPS,
         origins=frozenset({TerminalOriginClass.LEDGER_AGGREGATE}),
-        output="scalar",
+        output="scalar_and_rows",
         resolver_id="ledger_renta_gastos_estimacion_directa_aggregation",
         stage="mesh",
     ),

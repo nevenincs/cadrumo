@@ -46,6 +46,17 @@ class ActivityAssetDisposalRoute(StrEnum):
     EXCESS_OBJECTIVE_ESTIMATION = "excess_objective_estimation"
 
 
+class ActivityAssetDisposalRowField(StrEnum):
+    """What one column of a sale's row of other elements states."""
+
+    ELEMENT_TYPE = "element_type"
+    TRANSMISSION_DATE = "transmission_date"
+    TRANSMISSION_VALUE = "transmission_value"
+    ACQUISITION_VALUE = "acquisition_value"
+    LOSS = "loss"
+    GAIN = "gain"
+
+
 _AMOUNT_FACTS: frozenset[str] = frozenset({"amount_sum"})
 ELEMENT_ROW_ROUTES: Final[frozenset[ActivityAssetDisposalRoute]] = frozenset(
     {ActivityAssetDisposalRoute.TRANSMISSION_GAIN_ELEMENT, ActivityAssetDisposalRoute.TRANSMISSION_LOSS_ELEMENT},
@@ -61,11 +72,33 @@ class ActivityAssetDisposalProvider(BaseModel):
     kind: Literal[BindingSourceKind.ACTIVITY_ASSET_DISPOSAL] = BindingSourceKind.ACTIVITY_ASSET_DISPOSAL
     modelo: Literal["100"] = "100"
     period: Literal["0A"] = "0A"
-    route: Annotated[ActivityAssetDisposalRoute, BeforeValidator(coerce_enum_member(ActivityAssetDisposalRoute))]
+    route: (
+        Annotated[ActivityAssetDisposalRoute, BeforeValidator(coerce_enum_member(ActivityAssetDisposalRoute))] | None
+    ) = None
+    """What a scalar figure is; a row column names its ``row_field`` instead."""
     target_casilla_id: CasillaId
-    fact: Literal["amount_sum", "element_type_clave"] = "amount_sum"
+    fact: Literal["amount_sum", "element_type_clave", "row_field"] = "amount_sum"
     clave: str | None = Field(default=None, min_length=1, max_length=8)
-    """The clave the revision gives an element affected to an activity, with its fact."""
+    """The clave the revision gives an element affected to an activity, on its element-type binding."""
+    record: Literal["elemento_patrimonial"] | None = None
+    grouping: Literal["per_disposal"] | None = None
+    row_field: (
+        Annotated[ActivityAssetDisposalRowField, BeforeValidator(coerce_enum_member(ActivityAssetDisposalRowField))]
+        | None
+    ) = None
+
+
+class ActivityAssetDisposalRowProtocol(Protocol):
+    """What one sale states on a row of its own, a missing column left off the row."""
+
+    @property
+    def source_identity(self) -> str:
+        """Identify the sale the row comes from."""
+        ...
+
+    def column(self, row_field: ActivityAssetDisposalRowField) -> Decimal | str | None:
+        """Return this sale's value for a column; the clave column is the revision's own."""
+        ...
 
 
 class ActivityAssetDisposalObservationProtocol(Protocol):
@@ -82,12 +115,28 @@ class ActivityAssetDisposalObservationProtocol(Protocol):
         ...
 
 
+def _validate_row_definition(binding: BindingDefinition, selector: ActivityAssetDisposalProvider) -> None:
+    if selector.route is not None or selector.row_field is None:
+        raise RegistryValidationError(f"binding {binding.id!r} names a row column and no route")
+    if selector.record is None or selector.grouping is None:
+        raise RegistryValidationError(f"binding {binding.id!r} names the record and the grouping of its rows")
+    if (selector.row_field is ActivityAssetDisposalRowField.ELEMENT_TYPE) != (selector.clave is not None):
+        raise RegistryValidationError(f"binding {binding.id!r} states a clave only on the element-type column")
+    if binding_aggregation_op(binding) is not BindingAggregationOp.ROWS:
+        raise RegistryValidationError(f"binding {binding.id!r} requires aggregation op 'rows'")
+
+
 def _validate_definition(binding: BindingDefinition) -> None:
     selector = ledger_binding_selector(
         binding,
         BindingSourceKind.ACTIVITY_ASSET_DISPOSAL,
         ActivityAssetDisposalProvider,
     )
+    if selector.fact == "row_field":
+        _validate_row_definition(binding, selector)
+        return
+    if selector.route is None or selector.row_field is not None:
+        raise RegistryValidationError(f"binding {binding.id!r} names a route and no row column")
     if selector.route is ActivityAssetDisposalRoute.TRANSMISSION_ELEMENT_TYPE:
         if selector.fact != "element_type_clave" or selector.clave is None:
             raise RegistryValidationError(f"binding {binding.id!r} states the clave of the element type")
@@ -109,12 +158,16 @@ def validate_activity_asset_disposal_binding(binding: BindingDefinition) -> list
     return ledger_binding_build_diagnostics(binding, ActivityAssetDisposalProvider, _validate_definition)
 
 
-def _family_bindings(revision: ModeloRevision) -> tuple[tuple[BindingDefinition, ActivityAssetDisposalProvider], ...]:
+def _all_bindings(revision: ModeloRevision) -> tuple[tuple[BindingDefinition, ActivityAssetDisposalProvider], ...]:
     return tuple(
         (binding, provider_member(binding, ActivityAssetDisposalProvider))
         for binding in revision.bindings
         if binding.source == BindingSourceKind.ACTIVITY_ASSET_DISPOSAL
     )
+
+
+def _family_bindings(revision: ModeloRevision) -> tuple[tuple[BindingDefinition, ActivityAssetDisposalProvider], ...]:
+    return tuple(item for item in _all_bindings(revision) if item[1].fact != "row_field")
 
 
 def activity_asset_disposal_route_casillas(revision: ModeloRevision) -> Mapping[ActivityAssetDisposalRoute, CasillaId]:
@@ -123,7 +176,11 @@ def activity_asset_disposal_route_casillas(revision: ModeloRevision) -> Mapping[
     Returns:
         The destination of every route the revision binds.
     """
-    return {provider.route: provider.target_casilla_id for _binding, provider in _family_bindings(revision)}
+    return {
+        provider.route: provider.target_casilla_id
+        for _binding, provider in _family_bindings(revision)
+        if provider.route is not None
+    }
 
 
 def resolve_activity_asset_disposal_binding_values(
@@ -162,13 +219,49 @@ def resolve_activity_asset_disposal_element_type_values(
     return {}, tuple(binding_id for binding_id, _clave in claves)
 
 
+def activity_asset_disposal_row_binding_ids(revision: ModeloRevision) -> tuple[BindingId, ...]:
+    """Return the row columns this :class:`ModeloRevision` declares for a sale of an element."""
+    return tuple(binding.id for binding, provider in _all_bindings(revision) if provider.fact == "row_field")
+
+
+def resolve_activity_asset_disposal_row_values(
+    revision: ModeloRevision,
+    rows: Iterable[ActivityAssetDisposalRowProtocol],
+) -> tuple[dict[tuple[BindingId, int], Decimal | str], dict[tuple[BindingId, int], str]]:
+    """Give each sale its own row on every column this :class:`ModeloRevision` declares.
+
+    The scalar bindings keep the totals the form's own sums read; these columns say what
+    each sale states. A column a sale has no value for stays absent from its row.
+
+    Returns:
+        The values by binding and row, and the sale each coordinate comes from.
+    """
+    values: dict[tuple[BindingId, int], Decimal | str] = {}
+    identities: dict[tuple[BindingId, int], str] = {}
+    columns = tuple(item for item in _all_bindings(revision) if item[1].fact == "row_field")
+    for index, row in enumerate(rows):
+        for binding, provider in columns:
+            field = provider.row_field
+            if field is None:  # defensive: a row column names its field at build time
+                continue
+            value = provider.clave if field is ActivityAssetDisposalRowField.ELEMENT_TYPE else row.column(field)
+            if value is not None:
+                values[(binding.id, index)] = value
+                identities[(binding.id, index)] = row.source_identity
+    return values, identities
+
+
 __all__ = [
     "ELEMENT_ROW_ROUTES",
     "ActivityAssetDisposalObservationProtocol",
     "ActivityAssetDisposalProvider",
     "ActivityAssetDisposalRoute",
+    "ActivityAssetDisposalRowField",
+    "ActivityAssetDisposalRowProtocol",
     "activity_asset_disposal_route_casillas",
+    "activity_asset_disposal_row_binding_ids",
     "resolve_activity_asset_disposal_binding_values",
     "resolve_activity_asset_disposal_element_type_values",
+    "resolve_activity_asset_disposal_row_values",
     "validate_activity_asset_disposal_binding",
 ]

@@ -737,9 +737,12 @@ source_refs = ["aeat-renta-2022-manual-parte1"]
 source_ref = "aeat-renta-2022-manual-parte1"
 required_text = ["Ganancias y pérdidas patrimoniales"]
 
-# The type of the element on a row of other elements. The AEAT dictionaries of 2024 and
-# 2025 give its fifth option (OT5) to elements affected to economic activities, and every
-# element in the register is affected; 2020 and 2021 numbered that option 7.
+# The type of the element on a row of other elements. Clave 5 is confirmed by the AEAT Renta
+# 2024 help ("Otros elementos patrimoniales afectos a actividades economicas"), and every
+# element in the register is affected. The bundled sources do not state the digit, and no 2025
+# edition of that help was found, so this revision's later inheritors rest on the 2024 edition
+# alone. The 2024 and 2025 dictionaries give the option its place (OT5); 2020 and 2021 numbered
+# that option 7.
 [[revisions."2022".bindings]]
 id = "renta-activity-asset-disposal-element-type-1626"
 provider = { kind = "activity_asset_disposal", modelo = "100", period = "0A", route = "transmission_element_type", target_casilla_id = "1626", fact = "element_type_clave", clave = "5" }
@@ -747,6 +750,81 @@ value = { data_type = "text", channel = "text" }
 aggregation = { op = "copy" }
 legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-33"]
 source_refs = ["aeat-dr-100-2022-dictionary", "aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Ganancias y pérdidas patrimoniales"]
+
+# Each sale of an element affected to an activity states its own row: the design repeats
+# ElementoPatrimonial up to 80 times per return. The scalar bindings above keep the totals
+# the form's own sums read, so these columns add the rows and move no total.
+[[revisions."2022".bindings]]
+id = "renta-activity-asset-disposal-row-element-type-1626"
+provider = { kind = "activity_asset_disposal", modelo = "100", period = "0A", fact = "row_field", record = "elemento_patrimonial", grouping = "per_disposal", row_field = "element_type", target_casilla_id = "1626", clave = "5" }
+value = { data_type = "text", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-33"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Ganancias y pérdidas patrimoniales"]
+
+[[revisions."2022".bindings]]
+id = "renta-activity-asset-disposal-row-transmission-date-1631"
+provider = { kind = "activity_asset_disposal", modelo = "100", period = "0A", fact = "row_field", record = "elemento_patrimonial", grouping = "per_disposal", row_field = "transmission_date", target_casilla_id = "1631" }
+value = { data_type = "text", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-33"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Ganancias y pérdidas patrimoniales"]
+
+[[revisions."2022".bindings]]
+id = "renta-activity-asset-disposal-row-transmission-value-1633"
+provider = { kind = "activity_asset_disposal", modelo = "100", period = "0A", fact = "row_field", record = "elemento_patrimonial", grouping = "per_disposal", row_field = "transmission_value", target_casilla_id = "1633" }
+value = { data_type = "money", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-33"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Ganancias y pérdidas patrimoniales"]
+
+[[revisions."2022".bindings]]
+id = "renta-activity-asset-disposal-row-acquisition-value-1637"
+provider = { kind = "activity_asset_disposal", modelo = "100", period = "0A", fact = "row_field", record = "elemento_patrimonial", grouping = "per_disposal", row_field = "acquisition_value", target_casilla_id = "1637" }
+value = { data_type = "money", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-33"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Ganancias y pérdidas patrimoniales"]
+
+[[revisions."2022".bindings]]
+id = "renta-activity-asset-disposal-row-loss-1639"
+provider = { kind = "activity_asset_disposal", modelo = "100", period = "0A", fact = "row_field", record = "elemento_patrimonial", grouping = "per_disposal", row_field = "loss", target_casilla_id = "1639" }
+value = { data_type = "money", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-33"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Ganancias y pérdidas patrimoniales"]
+
+[[revisions."2022".bindings]]
+id = "renta-activity-asset-disposal-row-gain-1654"
+provider = { kind = "activity_asset_disposal", modelo = "100", period = "0A", fact = "row_field", record = "elemento_patrimonial", grouping = "per_disposal", row_field = "gain", target_casilla_id = "1654" }
+value = { data_type = "money", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-33"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
 
 [[revisions."2022".bindings.source_citations]]
 source_ref = "aeat-renta-2022-manual-parte1"
