@@ -9,15 +9,15 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.ids import RevisionId
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistrySnapshot
 from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
+from cadrumo.domain.calculations.registry.tests._formula_runtime_support import (
+    _committed_modelo_130_snapshot,
+    _committed_modelo_180_snapshot,
+)
 from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 
 from ..compiler import fact_providers
 from ..compiler.authority import compiled_bundled_authority
-from ._formula_runtime_support import (
-    _committed_modelo_130_snapshot,
-    _committed_modelo_180_snapshot,
-)
 
 
 @pytest.fixture

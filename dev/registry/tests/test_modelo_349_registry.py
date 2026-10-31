@@ -19,14 +19,7 @@ from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefinition
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.calculations.registry.temporal import select_revision
-from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
-from cadrumo.tests.aeat_literal_fixtures import AEAT_HOST_SUFFIX_EXPECTED
-from cadrumo.tests.inventory import REPO_ROOT
-from dev.registry.compiler.authority import compiled_bundled_authority
-
-from ..compiler.corpus_catalogue import verify_source_file
-from ..compiler.legal_grounding import verify_legal_catalogue
-from ._modelo_349_registry_support import (
+from cadrumo.domain.calculations.registry.tests._modelo_349_registry_support import (
     _DECL_IMPORTE_OPERACIONES_CASILLA,
     _DECL_IMPORTE_RECTIFICACIONES_CASILLA,
     _DECL_NUMERO_OPERADORES_CASILLA,
@@ -55,6 +48,13 @@ from ._modelo_349_registry_support import (
     _load_modelo_349,
     _modelo_349_revision,
 )
+from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
+from cadrumo.tests.aeat_literal_fixtures import AEAT_HOST_SUFFIX_EXPECTED
+from cadrumo.tests.inventory import REPO_ROOT
+from dev.registry.compiler.authority import compiled_bundled_authority
+
+from ..compiler.corpus_catalogue import verify_source_file
+from ..compiler.legal_grounding import verify_legal_catalogue
 from .profile_schema_support import committed_registry_validator, committed_supported_filing_years
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
