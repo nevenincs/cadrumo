@@ -2579,9 +2579,9 @@ export function StockPane({
             ]}
           />
         )}
-        <h4 className="font-medium">
+        <h3 className="font-medium">
           {t("desktop.ledger.stock.history_of", { name: bookName(book) })}
-        </h4>
+        </h3>
         <History
           ledger={ledger}
           locale={locale}

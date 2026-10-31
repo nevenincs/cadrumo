@@ -259,10 +259,7 @@ export function FixedAssetsPane({
         {!onElement && <div key={asked}>{form()}</div>}
         {body()}
         {loaded && (
-          <section
-            aria-label={t("desktop.ledger.assets.handoff")}
-            className="ledger-assets-filing flex flex-col gap-2"
-          >
+          <div className="ledger-assets-filing flex flex-col gap-2">
             <div className="flex flex-wrap items-center gap-2">
               <span className="text-sm text-muted-foreground">
                 {t("desktop.ledger.assets.handoff_year")}
@@ -288,7 +285,7 @@ export function FixedAssetsPane({
               assetKind={rows[0]?.asset_kind ?? null}
               names={names}
             />
-          </section>
+          </div>
         )}
       </div>
       {row && (

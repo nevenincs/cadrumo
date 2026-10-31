@@ -1,15 +1,20 @@
-import { server } from "../scripts/configuration.mjs";
 import { buildPath } from "../scripts/build-paths.mjs";
-import { testRunDirectory } from "./scripts/test-run-directory.mjs";
+import {
+  testRunDirectory,
+  reserveTestRunPorts,
+} from "./scripts/test-run-directory.mjs";
 import { defineConfig } from "@playwright/test";
 import { resolve } from "node:path";
 
-const { previewPort, scenariosPort, hotPort } = server();
+const results = testRunDirectory(buildPath("desktop_results"));
+const { previewPort, scenariosPort, hotPort } = await reserveTestRunPorts(
+  buildPath("desktop_results"),
+);
 const preview = `http://127.0.0.1:${previewPort}`;
 const scenarios = `http://127.0.0.1:${scenariosPort}`;
 const hot = `http://127.0.0.1:${hotPort}`;
 const viewport = { width: 1440, height: 1050 };
-const results = testRunDirectory(buildPath("desktop_results"));
+const run = process.env.CADRUMO_DESKTOP_TEST_RUN!;
 // The record `--last-failed` reads sits beside the runs, not in one of them.
 process.env.PLAYWRIGHT_LAST_RUN_OUTPUT_FILE = resolve(
   buildPath("desktop_results"),
@@ -61,27 +66,24 @@ export default defineConfig({
       name: "product",
       // Built by the run that tests it, so the product project and the
       // bundle check never read a stale build.
-      command:
-        "npx vite build --configLoader runner && npx vite preview --configLoader runner",
-      url: preview,
-      reuseExistingServer: false,
+      command: "node scripts/test-server.mjs product",
+      wait: { stdout: new RegExp(`^CADRUMO_TEST_READY ${run} product$`, "m") },
       timeout: 120_000,
     },
     {
       name: "scenarios",
       // Built by the run that tests it, into the testing directory beside
       // the benchmark's, never the product's.
-      command:
-        "npx vite build --configLoader runner --mode scenarios && npx vite preview --configLoader runner --mode scenarios",
-      url: `${scenarios}/scenarios.html`,
-      reuseExistingServer: false,
+      command: "node scripts/test-server.mjs scenarios",
+      wait: {
+        stdout: new RegExp(`^CADRUMO_TEST_READY ${run} scenarios$`, "m"),
+      },
       timeout: 120_000,
     },
     {
       name: "hot-reload",
-      command: "npx vite --configLoader runner --mode scenarios",
-      url: `${hot}/scenarios.html`,
-      reuseExistingServer: false,
+      command: "node scripts/test-server.mjs hot",
+      wait: { stdout: new RegExp(`^CADRUMO_TEST_READY ${run} hot$`, "m") },
       timeout: 120_000,
     },
   ],

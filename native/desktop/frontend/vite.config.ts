@@ -4,6 +4,7 @@ import { docsFixture } from "./dev/docs-fixture/plugin.ts";
 import { productBoundary } from "./dev/product-boundary.ts";
 import {
   testRunProductBuild,
+  testRunPorts,
   testRunScenariosBuild,
 } from "./scripts/test-run-directory.mjs";
 import { existsSync } from "node:fs";
@@ -32,7 +33,10 @@ const GENERATED_INPUTS: Record<string, string> = {
 export default defineConfig(({ command, mode }) => {
   const identity = readIdentity();
   const generated = buildPath("desktop_frontend_generated");
-  const ports = server();
+  const ports = {
+    ...server(),
+    ...testRunPorts(buildPath("desktop_results")),
+  };
   const environment = loadEnv(mode, root, "CADRUMO_DESKTOP_");
   const allowedHosts = (
     process.env.CADRUMO_DESKTOP_ALLOWED_HOSTS ??
