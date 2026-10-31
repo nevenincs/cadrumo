@@ -286,8 +286,8 @@ msgid ""
 "Store invoices and receipts as supporting documents and link them to the "
 "entries they support."
 msgstr ""
-"Desa factures i rebuts com a justificants i enllaça'ls amb els apunts que"
-" respalden."
+"Desa factures i rebuts com a justificants i enllaça'ls amb els apunts "
+"corresponents."
 
 #: ../../how-to/index.md:170
 msgid "Manage business invoices"

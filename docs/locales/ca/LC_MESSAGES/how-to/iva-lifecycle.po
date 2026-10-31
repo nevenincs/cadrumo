@@ -329,7 +329,7 @@ msgstr ""
 "El flux de treball complet (les factures, les claus d'operació, les "
 "rectificacions de períodes anteriors) és [Prepara una declaració "
 "recapitulativa del Modelo 349](modelo-349.md). Les mateixes operacions "
-"també alimenten les caselles intracomunitàries del 303; mantén-los "
+"també alimenten les caselles intracomunitàries del 303; mantén-les "
 "coherents corregint els registres subjacents, mai les declaracions."
 
 #: ../../how-to/iva-lifecycle.md:133

@@ -182,9 +182,10 @@ msgid ""
 "For a scripted update, pass the field flags with `--quiet`. Without a "
 "profile name, the edit applies to the active profile:"
 msgstr ""
-"A varázsló végigvezet a profil mezőin, beleértve a censo-alapúakat is. "
-"Szkriptelt frissítéshez add meg a mezőkapcsolókat a `--quiet` "
-"kapcsolóval. Profilnév nélkül a szerkesztés az aktív profilra vonatkozik:"
+"A varázsló végigvezet a profil mezőin, beleértve a censo-adatokon alapuló"
+" mezőket is. Szkriptből végzett frissítéshez add meg a mezőkhöz tartozó "
+"kapcsolókat a `--quiet` kapcsolóval. Profilnév nélkül a szerkesztés az "
+"aktív profilra vonatkozik:"
 
 #: ../../how-to/censo-update.md:77
 msgid ""

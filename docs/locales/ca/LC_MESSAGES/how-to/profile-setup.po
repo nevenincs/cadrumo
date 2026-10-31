@@ -959,9 +959,9 @@ msgstr ""
 "`acogimiento_temporal` o `tutela`), `INSCRIPCION`, `DISCAPACIDAD` (`0`, "
 "`33` o `65`), `CONVIVENCIA`, `CUSTODIA`, `MESES_TRABAJO`, "
 "`GASTOS_GUARDERIA` i `NIF`. Executa `aeat config profile descendiente add"
-" --help` per veure la llista completa. Un descendiente sense "
-"identificador fiscal és correcte. Omet `NIF`. `remove` pren la posició de"
-" `list`, comptant des de `0`."
+" --help` per veure la llista completa. Un descendent sense identificador "
+"fiscal és correcte. Omet `NIF`. `remove` pren la posició de `list`, "
+"comptant des de `0`."
 
 #: ../../how-to/profile-setup.md:383
 msgid ""

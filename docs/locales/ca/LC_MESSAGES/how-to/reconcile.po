@@ -51,8 +51,8 @@ msgid ""
 "receipt from the AEAT sede (read-only), stores an encrypted copy in your "
 "profile, and reconciles in one step."
 msgstr ""
-"**Obtén-lo de l'AEAT** amb `reconcile pull` - l'eina recupera el rebut de"
-" la sede de l'AEAT (només lectura), en desa una còpia xifrada al teu "
+"**Obté'l de l'AEAT** amb `reconcile pull` - l'eina recupera el rebut de "
+"la sede de l'AEAT (només lectura), en desa una còpia xifrada al teu "
 "perfil i concilia en un sol pas."
 
 #: ../../how-to/reconcile.md:16
