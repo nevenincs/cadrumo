@@ -24,7 +24,8 @@ See Also:
 from __future__ import annotations
 
 import re
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Iterator, Mapping
+from dataclasses import dataclass
 from datetime import date
 from decimal import ROUND_HALF_UP, Decimal
 from types import MappingProxyType
@@ -32,6 +33,7 @@ from xml.etree import ElementTree
 
 from defusedxml import ElementTree as DefusedElementTree
 
+from ...core.aggregation import BindingAggregationOp
 from ...core.casilla_id import CasillaId
 from ...core.decimal.coercion import coerce_decimal
 from ...core.decimal.grammar import try_parse_canonical_decimal
@@ -39,6 +41,8 @@ from ...core.external_constants import UTF_8_ENCODING as _UTF_8
 from ...core.filing_producer_key import FilingProducerKey
 from ...core.modelo import Modelo
 from ...core.time.clock import today_madrid
+from ...domain.calculations.registry.binding_aggregation import binding_aggregation_op
+from ...domain.calculations.registry.binding_selector_utils import selector_as_dict
 from ...domain.calculations.registry.export_xml_dictionary import (
     SINO_DICTIONARY_TYPE,
     XML_DICTIONARY_BOOLEAN_TYPES,
@@ -48,12 +52,13 @@ from ...domain.calculations.registry.export_xml_dictionary import (
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ...domain.calculations.registry.form_codes import resolve_form_codes
 from ...domain.calculations.registry.governed_fact_scope import governed_facts_in_scope
+from ...domain.calculations.registry.schema import BindingDefinition
 from ...domain.calculations.registry.schema_base import DateAxis
 from ...domain.calculations.registry.schema_exports import ExportLayoutDefinition
 from ...domain.calculations.registry.schema_references import SourceReference
 from ...domain.contribuyente.renta_codes import modelo100_ccaa_codigo, modelo100_ecivil_export_code
 from ...domain.filing.errors import FilingExportError, FilingExportValidationError
-from ...domain.filing.schema import ModeloDraft
+from ...domain.filing.schema import ModeloBindingValue, ModeloDraft
 from .runtime import RegistrySchemaAccessor
 
 _XML_SCHEMA_INSTANCE_NS = "http://www.w3.org/2001/XMLSchema-instance"
@@ -141,6 +146,7 @@ def _write_xml_dictionary_entries(
     dictionary_values: Mapping[str, object],
     declarations: Mapping[str, str] | None,
     element_order: dict[str, tuple[str, ...]],
+    repeated_rows: tuple[XmlDictionaryRepeatedRows, ...] = (),
 ) -> None:
     for entry in entries:
         if entry.path in unfiled_paths:
@@ -155,7 +161,13 @@ def _write_xml_dictionary_entries(
         )
         if rendered is None or rendered == "":
             continue
-        _set_xml_dictionary_path(root, entry.path, rendered, element_order=element_order)
+        rows = next((item for item in repeated_rows if item.holds(entry.path)), None)
+        if rows is None:
+            _set_xml_dictionary_path(root, entry.path, rendered, element_order=element_order)
+        else:
+            _require_value_stated_by_rows(entry, rendered, rows)
+    for rows in repeated_rows:
+        _append_repeated_rows(root, rows, element_order=element_order)
 
 
 def _finish_xml_dictionary_root(
@@ -223,6 +235,7 @@ def render_xml_dictionary_layout(
     _append_declaration_aux(root, layout, aux_version=aux_version)
     casilla_values: dict[CasillaId, object] = {value.casilla_id: value.value for value in draft.values}
     declarations, unfiled_paths = _modelo100_render_exclusions(draft, entries, casilla_values)
+    repeated_rows = xml_dictionary_repeated_rows(layout, draft=draft, entries=entries, schema_provider=schema_provider)
     _write_xml_dictionary_entries(
         root,
         entries,
@@ -233,6 +246,7 @@ def render_xml_dictionary_layout(
         dictionary_values=dictionary_values or {},
         declarations=declarations,
         element_order=element_order,
+        repeated_rows=repeated_rows,
     )
     _finish_xml_dictionary_root(root, draft, optional_element_paths=optional_element_paths)
     return _serialize_xml_dictionary(root)
@@ -476,6 +490,34 @@ def _xml_dictionary_element_order(
     return order
 
 
+def _xml_dictionary_repeating_element_paths(
+    source: SourceReference, *, source_payloads: Mapping[str, bytes]
+) -> Mapping[str, int | None]:
+    """Return each repeating element's absolute path and the occurrences it admits; ``None`` is unbounded."""
+    root = _xml_dictionary_xsd_root(source, source_payloads=source_payloads)
+    named_types = {
+        name: node for node in root.iter(f"{_XSD_NS}complexType") if ((name := node.get("name")) is not None and name)
+    }
+    declaration = next(
+        (node for node in root if node.tag == f"{_XSD_NS}element" and node.get("name") == _XML_DICTIONARY_ROOT_TAG),
+        None,
+    )
+    if declaration is None:
+        raise FilingExportValidationError(
+            f"XML dictionary XSD source {source.id!r} declares no {_XML_DICTIONARY_ROOT_TAG!r} root element",
+        )
+    repeating_paths: dict[str, int | None] = {}
+    _record_xsd_child_order(
+        "",
+        declaration.find(f"{_XSD_NS}complexType"),
+        named_types=named_types,
+        order={},
+        seen=frozenset(),
+        repeating_paths=repeating_paths,
+    )
+    return repeating_paths
+
+
 def _xml_dictionary_optional_element_paths(
     source: SourceReference, *, source_payloads: Mapping[str, bytes]
 ) -> frozenset[str]:
@@ -512,6 +554,7 @@ def _record_xsd_child_order(
     order: dict[str, tuple[str, ...]],
     seen: frozenset[str],
     optional_paths: set[str] | None = None,
+    repeating_paths: dict[str, int | None] | None = None,
 ) -> None:
     """Record ``path``'s declared child order into ``order``, then descend into each child's type.
 
@@ -532,6 +575,7 @@ def _record_xsd_child_order(
             order=order,
             seen=seen,
             optional_paths=optional_paths,
+            repeating_paths=repeating_paths,
         )
 
 
@@ -543,10 +587,14 @@ def _record_xsd_child(
     order: dict[str, tuple[str, ...]],
     seen: frozenset[str],
     optional_paths: set[str] | None,
+    repeating_paths: dict[str, int | None] | None,
 ) -> None:
     child_path = f"{path}/{child.get('name')}"
     if optional_paths is not None and child.get("minOccurs", "1") == "0":
         optional_paths.add(child_path)
+    max_occurs = child.get("maxOccurs", "1")
+    if repeating_paths is not None and max_occurs != "1":
+        repeating_paths[child_path] = None if max_occurs == "unbounded" else int(max_occurs)
     declared_type = child.get("type")
     if declared_type is None or declared_type not in named_types:
         _record_xsd_child_order(
@@ -556,6 +604,7 @@ def _record_xsd_child(
             order=order,
             seen=seen,
             optional_paths=optional_paths,
+            repeating_paths=repeating_paths,
         )
     elif declared_type not in seen:
         # A type that reaches itself would recurse without end; its
@@ -567,6 +616,7 @@ def _record_xsd_child(
             order=order,
             seen=seen | {declared_type},
             optional_paths=optional_paths,
+            repeating_paths=repeating_paths,
         )
 
 
@@ -672,6 +722,14 @@ def _xml_dictionary_rendered_value(
     return _apply_xml_dictionary_value_converter(entry, rendered, declarations)
 
 
+def _is_zero_token(value: str | None) -> bool:
+    """Say whether a rendered token states nothing: blank, or an amount of zero."""
+    if value is None or not value.strip():
+        return True
+    parsed = coerce_decimal(value.strip())
+    return parsed is not None and parsed.is_zero()
+
+
 def _prune_zero_only_xml_subtrees(root: ElementTree.Element[str], *, optional_element_paths: frozenset[str]) -> None:
     """Omit optional Modelo 100 branches containing only calculated zero placeholders.
 
@@ -684,12 +742,6 @@ def _prune_zero_only_xml_subtrees(root: ElementTree.Element[str], *, optional_el
     and are exercised by whole-document XSD validation in acceptance.
     """
 
-    def is_zero_token(value: str | None) -> bool:
-        if value is None or not value.strip():
-            return True
-        parsed = coerce_decimal(value.strip())
-        return parsed is not None and parsed.is_zero()
-
     def prune(node: ElementTree.Element[str], path: str) -> bool:
         retained_child_states: list[bool] = []
         for child in tuple(node):
@@ -701,11 +753,252 @@ def _prune_zero_only_xml_subtrees(root: ElementTree.Element[str], *, optional_el
                 retained_child_states.append(child_is_zero_only)
         return (
             all(retained_child_states)
-            and is_zero_token(node.text)
-            and all(is_zero_token(value) for value in node.attrib.values())
+            and _is_zero_token(node.text)
+            and all(_is_zero_token(value) for value in node.attrib.values())
         )
 
     prune(root, "")
+
+
+@dataclass(frozen=True, slots=True)
+class XmlDictionaryRepeatedRows:
+    """The occurrences one repeating element takes, one per row of the columns declared on it.
+
+    The element and its bound come from the XSD, and each column's place from the
+    dictionary row of the box its binding targets, so no form is named here.
+    """
+
+    element_path: str
+    occurrences: tuple[Mapping[str, str], ...]
+    """Each occurrence's rendered tokens, by the absolute path of the dictionary row."""
+    casilla_by_path: Mapping[str, CasillaId]
+
+    def holds(self, path: str) -> bool:
+        """Say whether a dictionary row sits inside the repeating element."""
+        return path.startswith(f"{self.element_path}/")
+
+
+def _nearest_repeating_path(path: str, repeating: Mapping[str, int | None]) -> str | None:
+    """Return the innermost repeating element that encloses ``path``."""
+    parts = path.split("/")
+    return next(
+        (candidate for end in range(len(parts) - 1, 0, -1) if (candidate := "/".join(parts[:end])) in repeating),
+        None,
+    )
+
+
+def _row_column_entry(
+    binding: BindingDefinition,
+    entries: tuple[XmlDictionaryEntry, ...],
+    repeating: Mapping[str, int | None],
+) -> tuple[str, XmlDictionaryEntry]:
+    """Find the one dictionary row a row binding fills, and the repeating element around it."""
+    target = selector_as_dict(binding).get("target_casilla_id")
+    if binding_aggregation_op(binding) is not BindingAggregationOp.ROWS or target is None:
+        raise FilingExportValidationError(f"binding {binding.id!r} carries rows but declares no row column")
+    placed = tuple(
+        (element, entry)
+        for entry in entries
+        if entry.casilla_id == target and (element := _nearest_repeating_path(entry.path, repeating)) is not None
+    )
+    if len(placed) != 1:
+        raise FilingExportValidationError(
+            f"row column {binding.id!r} needs one repeating dictionary row for box {target}, found {len(placed)}",
+        )
+    return placed[0]
+
+
+def _row_values(draft: ModeloDraft) -> tuple[ModeloBindingValue, ...]:
+    """Return the draft's row values in row order; a column a row has no value for stays off it."""
+    return tuple(
+        sorted(
+            (
+                value
+                for value in draft.binding_values
+                if value.row_index is not None and value.value is not None and value.value != ""
+            ),
+            key=lambda value: (value.row_index or 0, value.binding_id),
+        ),
+    )
+
+
+def xml_dictionary_repeated_rows(
+    layout: ExportLayoutDefinition,
+    *,
+    draft: ModeloDraft,
+    entries: tuple[XmlDictionaryEntry, ...],
+    schema_provider: RegistrySchemaAccessor,
+) -> tuple[XmlDictionaryRepeatedRows, ...]:
+    """Read the draft's row values as occurrences of the repeating elements the XSD declares.
+
+    Args:
+        layout: The ``xml_dictionary`` layout being rendered or verified.
+        draft: The draft holding the row values.
+        entries: Every dictionary row of the layout.
+        schema_provider: Resolves the revision's bindings and the layout's XSD.
+
+    Returns:
+        One row set per repeating element the draft fills; empty when it holds no rows.
+
+    Raises:
+        FilingExportValidationError: A row has no place in the dictionary, or a row
+            set exceeds the occurrences the XSD admits.
+    """
+    values = _row_values(draft)
+    if not values:
+        return ()
+    repeating = _xml_dictionary_repeating_element_paths(
+        _xml_dictionary_xsd_source(layout, schema_provider.sources),
+        source_payloads=schema_provider.source_payloads,
+    )
+    bindings = {binding.id: binding for binding in schema_provider.get_snapshot(draft.modelo).revision.bindings}
+    occurrences: dict[str, dict[int, dict[str, str]]] = {}
+    casillas: dict[str, dict[str, CasillaId]] = {}
+    for value in values:
+        element, entry = _row_column_entry(bindings[value.binding_id], entries, repeating)
+        row = occurrences.setdefault(element, {}).setdefault(value.row_index or 0, {})
+        row[entry.path] = format_xml_dictionary_value(entry.data_type, value.value)
+        if entry.casilla_id is not None:
+            casillas.setdefault(element, {})[entry.path] = entry.casilla_id
+    return tuple(
+        _bounded_repeated_rows(element, rows, casillas.get(element, {}), limit=repeating[element])
+        for element, rows in occurrences.items()
+    )
+
+
+def _bounded_repeated_rows(
+    element: str,
+    rows: Mapping[int, Mapping[str, str]],
+    casilla_by_path: Mapping[str, CasillaId],
+    *,
+    limit: int | None,
+) -> XmlDictionaryRepeatedRows:
+    if limit is not None and len(rows) > limit:
+        raise FilingExportValidationError(
+            f"{len(rows)} rows do not fit {element}, which the official schema admits {limit} times",
+        )
+    return XmlDictionaryRepeatedRows(
+        element_path=element,
+        occurrences=tuple(rows[index] for index in sorted(rows)),
+        casilla_by_path=casilla_by_path,
+    )
+
+
+def _require_value_stated_by_rows(
+    entry: XmlDictionaryEntry,
+    rendered: str,
+    rows: XmlDictionaryRepeatedRows,
+) -> None:
+    """Refuse a value for one box of a repeating element that its rows do not account for.
+
+    Once the element repeats, a value held for the whole box belongs to no occurrence.
+    It stands only as the total of the rows, which the form's own sums already read.
+    Anything else would be filed against a sale it does not describe, or dropped.
+    """
+    if _is_zero_token(rendered):
+        return
+    tokens = tuple(row[entry.path] for row in rows.occurrences if entry.path in row)
+    numeric = _NUMERIC_DICTIONARY_TYPE.match(entry.data_type.upper()) is not None
+    if numeric and tokens:
+        stated = sum((Decimal(token) for token in tokens), Decimal("0"))
+        accounted = stated == Decimal(rendered)
+    else:
+        accounted = rendered in tokens
+    if not accounted:
+        raise FilingExportValidationError(
+            f"box {entry.casilla_id} holds {rendered}, which the rows of {rows.element_path} do not add up to. "
+            "Correct the box or the rows so that each sale states its own figures.",
+        )
+
+
+def _append_repeated_rows(
+    root: ElementTree.Element[str],
+    rows: XmlDictionaryRepeatedRows,
+    *,
+    element_order: dict[str, tuple[str, ...]],
+) -> None:
+    """Write one new occurrence per row, each child at the place the schema gives it."""
+    parent_parts = _xml_dictionary_path_parts(rows.element_path)
+    parent = root
+    parent_path = ""
+    for part in parent_parts[:-1]:
+        parent = _get_or_create_xml_dictionary_child(
+            parent, part, current_path=parent_path, element_order=element_order
+        )
+        parent_path = f"{parent_path}/{part}"
+    tag = parent_parts[-1]
+    for row in rows.occurrences:
+        occurrence = ElementTree.Element(tag)
+        parent.insert(_declared_child_position(parent, tag, element_order.get(parent_path)), occurrence)
+        for path, token in row.items():
+            _set_occurrence_child(occurrence, rows.element_path, path, token, element_order=element_order)
+
+
+def _set_occurrence_child(
+    occurrence: ElementTree.Element[str],
+    element_path: str,
+    path: str,
+    token: str,
+    *,
+    element_order: dict[str, tuple[str, ...]],
+) -> None:
+    current = occurrence
+    current_path = element_path
+    for part in _xml_dictionary_path_parts(path.removeprefix(element_path)):
+        current = _get_or_create_xml_dictionary_child(
+            current, part, current_path=current_path, element_order=element_order
+        )
+        current_path = f"{current_path}/{part}"
+    current.text = token
+
+
+def _occurrence_tokens(node: ElementTree.Element[str], path: str) -> Iterator[tuple[str, str]]:
+    for child in node:
+        child_path = f"{path}/{child.tag}"
+        if len(child):
+            yield from _occurrence_tokens(child, child_path)
+        else:
+            yield child_path, child.text or ""
+
+
+def mismatched_xml_dictionary_repeated_casillas(
+    payload: bytes,
+    repeated_rows: tuple[XmlDictionaryRepeatedRows, ...],
+) -> tuple[CasillaId, ...]:
+    """Compare each occurrence in a written file with the row it should state, column by column.
+
+    A value of zero may have been pruned as an optional branch, so a zero and an
+    absence read alike here, as they do on the form.
+
+    Returns:
+        The boxes of every column that differs in any occurrence.
+    """
+    root = DefusedElementTree.fromstring(payload)
+    mismatched: list[CasillaId] = []
+    for rows in repeated_rows:
+        written = tuple(
+            dict(_occurrence_tokens(node, rows.element_path))
+            for node in _elements_at(root, _xml_dictionary_path_parts(rows.element_path))
+        )
+        expected = rows.occurrences
+        for path, casilla in rows.casilla_by_path.items():
+            stated = tuple(_nonzero_token(row.get(path)) for row in expected)
+            if stated != tuple(_nonzero_token(row.get(path)) for row in written):
+                mismatched.append(casilla)
+    return tuple(mismatched)
+
+
+def _elements_at(node: ElementTree.Element[str], parts: tuple[str, ...]) -> Iterator[ElementTree.Element[str]]:
+    if not parts:
+        yield node
+        return
+    for child in node:
+        if child.tag == parts[0]:
+            yield from _elements_at(child, parts[1:])
+
+
+def _nonzero_token(token: str | None) -> str | None:
+    return None if _is_zero_token(token) else token
 
 
 def _modelo_100_comunidad_block(path: str, *, declarations: Mapping[str, str]) -> str | None:
@@ -1141,4 +1434,9 @@ def _declared_child_position(
     return len(parent)
 
 
-__all__ = ["render_xml_dictionary_layout"]
+__all__ = [
+    "XmlDictionaryRepeatedRows",
+    "mismatched_xml_dictionary_repeated_casillas",
+    "render_xml_dictionary_layout",
+    "xml_dictionary_repeated_rows",
+]

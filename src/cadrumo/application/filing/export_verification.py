@@ -32,9 +32,11 @@ from ...domain.filing.schema import ModeloCasillaProvenance, ModeloDraft
 from ._export_xml_dictionary import (
     expected_xml_dictionary_root_identity,
     format_xml_dictionary_value,
+    mismatched_xml_dictionary_repeated_casillas,
     modelo_100_sign_branch_value,
     read_xml_dictionary_root_identity,
     registry_modelo_100_xml_declarations,
+    xml_dictionary_repeated_rows,
 )
 from .runtime import RegistryModeloSubview, RegistrySchemaAccessor, build_runtime_schema_provider
 
@@ -450,17 +452,18 @@ def _mismatched_xml_dictionary_casilla_ids(
     dictionary.  Resolve that same signed projection used by both renderer and
     parser, then compare the filed token with the renderer's canonical token.
     """
-    entries = {
-        entry.field_id: entry
-        for entry in xml_dictionary_entries(
-            layout,
-            sources=schema_provider.sources,
-            source_payloads=schema_provider.source_payloads,
-        )
-    }
+    declared_entries = xml_dictionary_entries(
+        layout,
+        sources=schema_provider.sources,
+        source_payloads=schema_provider.source_payloads,
+    )
+    entries = {entry.field_id: entry for entry in declared_entries}
+    repeated_rows = xml_dictionary_repeated_rows(
+        layout, draft=draft, entries=declared_entries, schema_provider=schema_provider
+    )
     values = {value.casilla_id: value.value for value in draft.values}
     modelo_100_declarations = registry_modelo_100_xml_declarations() if draft.modelo == Modelo("100") else None
-    mismatched: list[CasillaId] = []
+    mismatched: list[CasillaId] = list(mismatched_xml_dictionary_repeated_casillas(payload, repeated_rows))
     checked: list[CasillaId] = []
     parsed_payload = parse_export_payload(
         layout,
@@ -479,6 +482,8 @@ def _mismatched_xml_dictionary_casilla_ids(
             raise FilingExportValidationError(
                 f"XML dictionary field {parsed.field_id!r} could not resolve its signed entry for verification"
             )
+        if any(rows.holds(entry.path) for rows in repeated_rows):
+            continue
         try:
             expected_wire = _xml_dictionary_expected_wire_value(
                 entry,
