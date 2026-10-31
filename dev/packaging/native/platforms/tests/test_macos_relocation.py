@@ -7,9 +7,9 @@ from pathlib import Path
 
 import pytest
 
-from ...command_execution import run_command
-from ..agent_runtime import STAGED_RECEIPT_NAME, STAGED_RUNTIME_TREES
-from ..platforms.macos import _require_relocatable_as_shipped, _split_vendor_images
+from ....command_execution import run_command
+from ...agent_runtime import STAGED_RECEIPT_NAME, STAGED_RUNTIME_TREES
+from ..macos import _require_relocatable_as_shipped, _split_vendor_images
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

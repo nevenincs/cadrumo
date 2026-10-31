@@ -187,18 +187,6 @@ def iva_regime_no_aplica_token(
     ).no_aplica_token
 
 
-def iva_regime_self_assessment_tokens(
-    *,
-    effective_date: date | None = None,
-    authority: GovernedFactSource | None = None,
-) -> frozenset[IVARegime]:
-    """Return IVA regimes marked for self-assessment by the registry."""
-    return resolve_iva_regime_catalogue(
-        effective_date=effective_date,
-        authority=authority,
-    ).self_assessment_tokens
-
-
 def _iva_regime_semantic_token(
     key: str,
     *,
@@ -260,7 +248,6 @@ __all__ = [
     "iva_regime_exento_token",
     "iva_regime_no_aplica_token",
     "iva_regime_reagp_token",
-    "iva_regime_self_assessment_tokens",
     "iva_regime_simplificado_token",
     "require_iva_regime",
     "resolve_iva_regime_catalogue",

@@ -147,7 +147,7 @@ def test_annual_context_rejects_incomplete_projection_population(annual_saved):
     broken = snapshot.model_copy(
         update={"revision": snapshot.revision.model_copy(update={"export_layouts": (export,)})}
     )
-    with pytest.raises(RegistryValidationError, match="six activity-code/IAE pairs"):
+    with pytest.raises(RegistryValidationError, match="every declared activity-code/IAE pair"):
         form_context_value(broken, _annual_block(broken, 6), revision=revision)
 
 
@@ -371,9 +371,10 @@ def projection_block() -> FormRepeatingGroupBlock:
 
 
 def _disposal_rows_block(operation: PinnedAuthorityOperation) -> FormRepeatingGroupBlock:
+    layout = operation.form_layout("100", "2025")
+    assert layout is not None
     return next(
         block
-        for layout in (operation.form_layout("100", "2025"),)
         for page in layout.pages
         for section in page.sections
         for block in section.blocks

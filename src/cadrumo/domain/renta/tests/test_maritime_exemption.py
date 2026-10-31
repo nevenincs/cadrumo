@@ -340,6 +340,8 @@ class TestCalculateArt7pExemption:
             ).value
             for year in (2023, 2024)
         )
+        assert isinstance(in_a_common_year, Decimal)
+        assert isinstance(in_a_leap_year, Decimal)
         assert in_a_common_year.quantize(Decimal("0.01")) == Decimal("10000.00")
         assert in_a_leap_year.quantize(Decimal("0.01")) == Decimal("9972.68")
 

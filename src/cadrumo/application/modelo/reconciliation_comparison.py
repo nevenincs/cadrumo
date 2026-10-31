@@ -29,7 +29,8 @@ class ReconciliationDeclaracionSourceUnsupportedError(CadrumoError):
     """Raised when a declaración reconcile targets a modelo not yet enrolled.
 
     Casilla-level declaración reconciliation is enrolled one modelo at a time
-    in :data:`_DECLARATION_CASILLA_RECONCILE_MODELOS`; a modelo outside that set
+    through the registry role
+    :data:`cadrumo.application.modelo.reconciliation._DECLARATION_RECONCILE_ROLE`; an unenrolled modelo
     refuses cleanly rather than silently degrading to a header-only compare.
     """
 

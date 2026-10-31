@@ -180,7 +180,7 @@ effective_from = 2003-12-31
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-06
 reviewed_by = "operator"
-notes = "Apartado primero de la Orden HAC/3625/2003: aprobación del modelo 309 'Declaracion-liquidacion no periódica del Impuesto sobre el Valor Añadido'. Filed by sujetos pasivos sin obligación ordinaria de declaracion-liquidacion (adquisiciones de medios de transporte nuevos, ejecuciones forzosas, régimen agricola/ganadero/pesquero, recargo de equivalencia)."
+notes = "Apartado primero de la Orden HAC/3625/2003: aprobación del modelo 309 'Declaración-liquidación no periódica del Impuesto sobre el Valor Añadido'. Filed by sujetos pasivos sin obligación ordinaria de declaracion-liquidacion (adquisiciones de medios de transporte nuevos, ejecuciones forzosas, régimen agricola/ganadero/pesquero, recargo de equivalencia)."
 required_text = [
     "Aprobación del modelo 309",
     "Declaración-liquidación no periódica",
@@ -920,7 +920,7 @@ effective_from = 2010-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-06
 reviewed_by = "operator"
-notes = "Articulo 1 de la Orden EHA/3111/2009: aprobación del modelo 390 'Declaracion-resumen anual del Impuesto sobre el Valor Añadido'."
+notes = "Articulo 1 de la Orden EHA/3111/2009: aprobación del modelo 390 'Declaración-resumen anual del Impuesto sobre el Valor Añadido'."
 required_text = [
     "Aprobación del modelo 390",
     "Declaración-resumen anual",

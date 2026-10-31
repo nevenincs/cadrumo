@@ -162,7 +162,9 @@ def test_the_seeded_table_classes_carry_the_registrys_official_names() -> None:
     assert all(official[key] == label for key, label in seeded.items())
 
 
-_VEHICLE_FLAG = re.compile(r'class_key:\s*"(?P<key>[^"]+)",.*?requires_vehicle_declaration:\s*(?P<flag>true|false)', re.DOTALL)
+_VEHICLE_FLAG = re.compile(
+    r'class_key:\s*"(?P<key>[^"]+)",.*?requires_vehicle_declaration:\s*(?P<flag>true|false)', re.DOTALL
+)
 
 
 @pytest.mark.parametrize(
@@ -189,7 +191,7 @@ def test_the_seeded_vehicle_flag_of_each_class_is_the_registrys_classification(k
 
 
 def _quoted(block: str) -> tuple[str, ...]:
-    return tuple(re.findall(r'"(\w+)"', block))
+    return tuple(str(match.group(1)) for match in re.finditer(r'"(\w+)"', block))
 
 
 def test_the_seeded_basis_stages_serve_the_facts_the_domain_table_states() -> None:
@@ -223,9 +225,7 @@ def test_every_seeded_limit_states_its_last_day_as_the_day_before_the_boundary()
     from datetime import date, timedelta
 
     text = _SEED.read_text(encoding="utf-8")
-    pairs = re.findall(
-        r'maximum_period_ends_on:\s*(null|"[^"]+"),\s*maximum_period_last_day:\s*(null|"[^"]+")', text
-    )
+    pairs = re.findall(r'maximum_period_ends_on:\s*(null|"[^"]+"),\s*maximum_period_last_day:\s*(null|"[^"]+")', text)
 
     assert pairs
     for boundary, last in pairs:

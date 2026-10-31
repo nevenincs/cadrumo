@@ -14,7 +14,7 @@ reviewed_by = "agent-review"
 notes = """\
 RGAT art 31: obligados a suministrar información sobre operaciones con terceras personas. \
 Apartado 1 obliga a quienes desarrollen actividades empresariales o profesionales a presentar \
-la declaración anual (base reglamentaria del Modelo 347); apartado 2 extiende la obligacion a \
+la declaración anual (base reglamentaria del Modelo 347); apartado 2 extiende la obligación a \
 las adquisiciones al margen de la actividad de las entidades del art 94.1 y 2 LGT; apartado 3 \
 alcanza a las entidades que cobran honorarios o derechos por cuenta de sus socios, asociados o \
 colegiados. El articulo no fija ningun importe: el umbral por contraparte lo establece el art 33 \
@@ -43,9 +43,9 @@ review_status = "agent_reviewed"
 reviewed_at = 2026-10-03
 reviewed_by = "agent-review"
 notes = """\
-RGAT art 32: personas o entidades excluidas de la obligacion de presentar la declaración \
+RGAT art 32: personas o entidades excluidas de la obligación de presentar la declaración \
 anual de operaciones con terceras personas (Modelo 347). Letra b) excluye las actividades en \
-estimacion objetiva del IRPF que tributan simultaneamente en los regimenes especiales \
+estimación objetiva del IRPF que tributan simultaneamente en los regimenes especiales \
 simplificado, agricultura o recargo de equivalencia del IVA, salvo por las operaciones por las \
 que emitan factura, y su segundo párrafo hace que los acogidos al regimen simplificado incluyan \
 además las adquisiciones anotadas en el libro registro de facturas recibidas del art 40.1 RIVA \
@@ -77,7 +77,7 @@ effective_from = 2008-10-23
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-06
 reviewed_by = "operator"
-notes = "Aprueba el modelo 347 'Declaración anual de operaciones con terceras personas', formato electronico, ajustado a los disenos logicos del anexo."
+notes = "Aprueba el modelo 347 'Declaración anual de operaciones con terceras personas', formato electronico, ajustado a los diseños logicos del anexo."
 required_text = [
     "Aprobación del modelo 347",
     "Declaración anual de operaciones con terceras personas",
@@ -118,7 +118,7 @@ effective_from = 2025-12-13
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-06
 reviewed_by = "operator"
-notes = "Articulo 1 de la Orden HAC/1431/2025: modificacion de la Orden EHA/3012/2008 que aprobo el Modelo 347; ajusta los disenos logicos del anexo aplicables al ejercicio 2025 y siguientes."
+notes = "Articulo 1 de la Orden HAC/1431/2025: modificación de la Orden EHA/3012/2008 que aprobo el Modelo 347; ajusta los diseños logicos del anexo aplicables al ejercicio 2025 y siguientes."
 required_text = [
     "Se introducen las siguientes modificaciones en la Orden EHA/3012/2008",
     "Se crea un nuevo campo, de carácter numérico denominado «NÚMERO DE CONVOCATORIA BDNS»",
@@ -282,7 +282,7 @@ subvenciones satisfechas por las Administraciones Publicas cualquiera que sea su
 apartado 2 se aplican la letra g), que excluye las importaciones y exportaciones de mercancias \
 cualquiera que sea la residencia de la contraparte, y la letra i), que excluye las operaciones ya \
 incluidas en otra declaración periodica de contenido coincidente (Modelo 349, y el resumen anual de \
-retenciones del art 108.2 RIRPF para quien practica la retencion). Texto verificado contra el \
+retenciones del art 108.2 RIRPF para quien practica la retención). Texto verificado contra el \
 consolidado bundled corpus/normatives/html/rd-1065-2007.html.\
 """
 required_text = [
@@ -356,7 +356,7 @@ effective_from = 2014-01-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-10-03
 reviewed_by = "agent-authored from the bundled corpus capture; operator to re-stamp"
-notes = """RGAT art 33.2.i: excluye las operaciones sujetas a una obligacion periodica de suministro de información que, por ello, ya figuren en otra declaración de contenido coincidente (el Modelo 349, o el resumen anual de retenciones del art 108.2 RIRPF para quien practica la retencion). Se declara con el id compuesto porque la exclusión de las facturas recibidas con retencion y el aviso sobre las emitidas con retencion afirman esta letra. Texto verificado contra el consolidado bundled corpus/normatives/html/rd-1065-2007.html (redacción en vigor desde 2014-01-01)."""
+notes = """RGAT art 33.2.i: excluye las operaciones sujetas a una obligación periodica de suministro de información que, por ello, ya figuren en otra declaración de contenido coincidente (el Modelo 349, o el resumen anual de retenciones del art 108.2 RIRPF para quien practica la retención). Se declara con el id compuesto porque la exclusión de las facturas recibidas con retención y el aviso sobre las emitidas con retención afirman esta letra. Texto verificado contra el consolidado bundled corpus/normatives/html/rd-1065-2007.html (redacción en vigor desde 2014-01-01)."""
 required_text = [
     "quedan excluidas del deber de declaración las siguientes operaciones",
     "En general, todas aquellas operaciones respecto de las que exista una obligación periódica de suministro de información",
@@ -375,7 +375,7 @@ effective_from = 2014-01-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-10-03
 reviewed_by = "agent-authored from the bundled corpus capture; operator to re-stamp"
-notes = """RGAT art 34.1.d: los arrendamientos de locales de negocios se hacen constar separadamente de las demás operaciones entre las mismas partes, y el arrendador consigna arrendatarios, referencias catastrales y localizacion de los inmuebles. Fundamenta que el arrendador relacione el arrendamiento aunque el arrendatario le haya practicado retencion. Texto verificado contra el consolidado bundled corpus/normatives/html/rd-1065-2007.html (apartado 1 en la redacción del RD 828/2013, en vigor desde 2014-01-01)."""
+notes = """RGAT art 34.1.d: los arrendamientos de locales de negocios se hacen constar separadamente de las demás operaciones entre las mismas partes, y el arrendador consigna arrendatarios, referencias catastrales y localizacion de los inmuebles. Fundamenta que el arrendador relacione el arrendamiento aunque el arrendatario le haya practicado retención. Texto verificado contra el consolidado bundled corpus/normatives/html/rd-1065-2007.html (apartado 1 en la redacción del RD 828/2013, en vigor desde 2014-01-01)."""
 required_text = [
     "los arrendamientos de locales de negocios",
     "el arrendador consignará el nombre y apellidos o razón social o denominación completa",
@@ -431,7 +431,7 @@ effective_from = 2014-01-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-10-03
 reviewed_by = "agent-authored from the bundled corpus capture; operator to re-stamp"
-notes = """RGAT art 34.1.j: las operaciones del regimen especial del criterio de caja se hacen constar separadamente, por su devengo segun la regla general del art 75 LIVA y por el devengo del art 163 terdecies LIVA. Fundamenta la marca de criterio de caja del registro de declarado del Modelo 347 y su importe anual devengado. Texto verificado contra el consolidado bundled corpus/normatives/html/rd-1065-2007.html (redacción del RD 828/2013, en vigor desde 2014-01-01)."""
+notes = """RGAT art 34.1.j: las operaciones del regimen especial del criterio de caja se hacen constar separadamente, por su devengo según la regla general del art 75 LIVA y por el devengo del art 163 terdecies LIVA. Fundamenta la marca de criterio de caja del registro de declarado del Modelo 347 y su importe anual devengado. Texto verificado contra el consolidado bundled corpus/normatives/html/rd-1065-2007.html (redacción del RD 828/2013, en vigor desde 2014-01-01)."""
 required_text = [
     "las operaciones a las que sea de aplicación el régimen especial del criterio de caja del Impuesto sobre el Valor Añadido",
 ]

@@ -3,8 +3,8 @@
 These lock the ``reconcile-declaration-casillas`` contract: a filed declaración
 PDF is compared casilla-by-casilla against the
 persisted computed :class:`~CalculationRevision`, not only
-at the header / total level. Modelo 130 is the first modelo enrolled in
-:data:`cadrumo.application.modelo.reconciliation._DECLARATION_CASILLA_RECONCILE_MODELOS`
+at the header / total level. Modelo 130 is the first modelo enrolled under
+:data:`cadrumo.application.modelo.reconciliation._DECLARATION_RECONCILE_ROLE`
 because its ``declaracion_pdf`` extraction profile targets registry casilla ids
 ``"01"``..``"19"`` directly.
 
@@ -66,13 +66,6 @@ _CLOCK = datetime(2026, 4, 20, tzinfo=UTC)
 _MODELO_130 = "130"
 _FILING_YEAR = 2026
 _PERIOD = "1T"
-
-
-@pytest.fixture
-def authority_operation() -> Iterator[PinnedAuthorityOperation]:
-    """Keep one indexed authority generation live across each test."""
-    with bundled_indexed_authority().operation() as operation:
-        yield operation
 
 
 # Seeded through a detached WorkflowState, never a repository read: the

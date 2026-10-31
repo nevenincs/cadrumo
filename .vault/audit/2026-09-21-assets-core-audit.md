@@ -300,3 +300,9 @@ Executed. `work_form_next_step.py:269`.
 
 ### m131 | low | An uncalculable excess says nothing on Modelo 131
 `modelo_bindings_actividad_assets.py:630`.
+
+## Modelo 184 clave A reduction
+
+### Reduction citation | info | The block on clave A lifted once the design's citation was explained as a stale renumbering
+
+The socio record of the Modelo 184 design cites LIRPF art. 24.2, which does not fit Ley 35/2006, whose art. 24 has no apartado 2. RDLeg 3/2004 art. 24 (BOE-A-2004-4347) is the old number: its apartado 2 reduced income of more than two years' generation. The current rule is LIRPF art. 26.2, reducing the net income of art. 25.4, which is the socio record's clave A subclave 02. The entity record of the same design cites art. 26.2 itself. `2026-08-26-tui-architecture-m184-socio-clave-subclave-row-shape-adr` allowed the block to lift on this explanation. The fact key `reduccion.bearing` now reads `A:02,C,D`; clave A without 02 and clave E refuse. No filing-grade example has confirmed the reading.
