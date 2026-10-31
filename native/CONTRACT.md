@@ -2446,13 +2446,34 @@ application ID, name, version and canonical floor as `LSMinimumSystemVersion`,
 `Contents/Resources/<desktop>.icns`, the `icon.icns` the desktop icon step renders
 from `docs/_static/cadrumo-icon.svg`. `native-installer` passes the launcher, the
 icon, `CADRUMO_CODESIGN` and `CADRUMO_NATIVE_SIGNING_IDENTITY` to the distribution
-preset. The installation stage stays receipt-bound and unsigned; a CPack pre-build
-script seals CPack's own copy with the hardened runtime and verifies it with
-`codesign --verify --strict --deep`, so the DMG and the distribution ZIP carry the
-sealed bundle. Nested images keep the seals package assembly gave them. The
-ad-hoc identity `-` is a local seal, not a distributable release: Developer ID
-signing, notarization, hardened-runtime entitlements for the nested images and
-Gatekeeper acceptance remain release gates.
+preset.
+
+`installation_prepare` seals the bundle inside-out in its candidate stage, after
+every other member is written and before the receipt inventory is taken. It first
+requires every nested Mach-O image to carry the valid signature package assembly
+gave it; those bytes are inventory-bound and are never re-signed. It then signs the
+bundle with the hardened runtime, which signs the main executable, binds
+`Info.plist` and writes `Contents/_CodeSignature/CodeResources` over every other
+member, and verifies the result with `codesign --verify --deep --strict`. The
+receipt, outside the bundle, records the sealed bytes; the projection admits the
+two members the seal produces by presence and re-verifies the seal whenever an
+existing stage is reused. The stage, a `cmake --install` prefix, the ZIP and the
+DMG therefore carry the same seal, and nothing writes beneath the bundle after it.
+CPack only copies the stage: its pre-build script verifies the seal of its staging
+copy and its post-build script verifies the bundle inside each built package, the
+DMG attached read-only and the ZIP extracted with `ditto`. Either refusal fails the
+package build. Each check also records `spctl --assess`, which rejects an ad-hoc
+seal; that assessment is informational.
+
+A bundle's nested-code directories admit only code, so the flat payload with its
+data cannot lie beneath `Contents/Frameworks` or `Contents/MacOS`; its nested
+images are sealed as signed resources beneath `Contents/Resources/app`. Splitting
+code from data across nested-code and resource directories would require the
+package-root containment checks to accept the joining links. Nested images carry
+ad-hoc signatures without the hardened runtime. The ad-hoc identity `-` is a local
+seal, not a distributable release: Developer ID signing, notarization, the
+hardened runtime and its entitlements for the nested images and Gatekeeper
+acceptance remain release gates.
 
 For development, `cmake --install <build> --prefix <absolute-test-prefix>` uses
 relative installation definitions. Set `CADRUMO_UNINSTALL_PREFIX` to that exact

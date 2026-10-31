@@ -17,6 +17,7 @@ from xml.etree.ElementTree import Element, SubElement, tostring
 from .hashing import digest
 from .identity import DistributionIdentity
 from .layout import ApplicationBundle, ApplicationImage, application_bundle, application_images, load_layout
+from .macos_bundle import BundleSealer, sealed_members
 from .macos_launchagent import author_agent, verify_agent
 from .package_inventory import package_inventory
 
@@ -36,10 +37,26 @@ def output_mode(name: str, mode: int = 0o644) -> int:
 
 @dataclass(frozen=True)
 class BundleInputs:
-    """Build artifacts an application wrapper needs beyond the payload it nests."""
+    """Build artifacts an application wrapper needs beyond the payload it nests, and its sealer."""
 
     launcher: Path
     icon: Path
+    sealer: BundleSealer
+
+
+@dataclass(frozen=True)
+class BundleSeal:
+    """The stage-relative application bundle that is sealed after every other member is written.
+
+    ``sealed`` names the members the seal rewrites or creates. Their bytes come from
+    the seal over the projected members, not from the projection itself.
+    """
+
+    application: str
+    main_executable: str
+    application_id: str
+    sealed: frozenset[str]
+    sealer: BundleSealer
 
 
 @dataclass
@@ -52,6 +69,20 @@ class Preparation:
     controls: dict[str, bytes]
     metadata: dict[str, bytes]
     identity: dict[str, object]
+    seal: BundleSeal | None = None
+
+    def admits(self, files: Mapping[str, str]) -> bool:
+        """Return whether an actual stage inventory is this projection, sealed when declared.
+
+        Unsealed members must match their projected bytes exactly. The bundle seal's
+        own members must all be present; the seal verification proves their bytes.
+        """
+        if self.seal is None:
+            return dict(files) == self.files
+        sealed = self.seal.sealed
+        projected = {name: value for name, value in self.files.items() if name not in sealed}
+        actual = {name: value for name, value in files.items() if name not in sealed}
+        return actual == projected and sealed <= files.keys()
 
 
 def project(
@@ -88,8 +119,19 @@ def project(
             modes,
         )
     _linux_controls(target, desktop, value, control_root, controls)
+    seal = None
     if wrapper is not None and desktop is not None:
+        if bundle is None:
+            raise ValueError("A macOS application bundle requires its main executable and icon")
         _macos_controls(wrapper, bundle, desktop, value, managers, manifest["files"], controls, modes)
+        application = f"{value['name']}.app"
+        seal = BundleSeal(
+            application,
+            f"{application}/{wrapper.executable_directory}/{desktop}",
+            value["application_id"],
+            sealed_members(application, wrapper, desktop),
+            bundle.sealer,
+        )
     metadata = _legacy_windows_metadata(target, desktop, versioned, value, managers, destination)
     _include_controls(controls, files, modes)
     helpers = _installation_helper_hashes()
@@ -103,13 +145,14 @@ def project(
         "modes": modes,
         "metadata": {name: checksum(data) for name, data in metadata.items()},
         "layout": load_layout(),
+        "seal": None if seal is None else seal.sealer.binding(),
     }
     identity: dict[str, object] = {
         "schema": 1,
         "inputs": checksum(json.dumps(binding, sort_keys=True).encode("utf-8")),
         "payload_manifest": source["data/package-manifest.json"],
     }
-    return Preparation(destination, files, modes, controls, metadata, identity)
+    return Preparation(destination, files, modes, controls, metadata, identity, seal)
 
 
 def _legacy_windows_metadata(
@@ -155,6 +198,7 @@ def _installation_helper_hashes() -> dict[str, str]:
             "package_inventory",
             "docs_stage",
             "macos_launchagent",
+            "macos_bundle",
             "linux_desktop_runtime",
         )
     }
@@ -224,7 +268,7 @@ def _linux_controls(
 
 def _macos_controls(
     wrapper: ApplicationBundle,
-    bundle: BundleInputs | None,
+    bundle: BundleInputs,
     desktop: str,
     value: Mapping[str, str],
     managers: list[ApplicationImage],
@@ -232,8 +276,6 @@ def _macos_controls(
     controls: dict[str, bytes],
     modes: dict[str, int],
 ) -> None:
-    if bundle is None:
-        raise ValueError("A macOS application bundle requires its main executable and icon")
     application = f"{value['name']}.app"
     icon = f"{PurePosixPath(desktop).name}.icns"
     plist = {

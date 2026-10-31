@@ -14,6 +14,7 @@ from .installation import member, prepare, verify_inventory
 from .installation_currency import existing
 from .installation_plan import BundleInputs
 from .installation_reuse import InstallationReuse, public_directory, publish
+from .macos_bundle import CodesignSeal
 
 
 def refresh(
@@ -91,8 +92,19 @@ if __name__ == "__main__":
     parser.add_argument("--desktop")
     parser.add_argument("--bundle-launcher", type=Path, help="Application bundle main executable")
     parser.add_argument("--bundle-icon", type=Path, help="Application bundle icon")
+    parser.add_argument("--codesign", type=Path, help="Configured absolute codesign tool that seals the bundle")
+    parser.add_argument("--signing-identity", help="Explicit bundle signing identity; - is an ad-hoc local seal")
     arguments = parser.parse_args()
-    if (arguments.bundle_launcher is None) != (arguments.bundle_icon is None):
-        parser.error("--bundle-launcher and --bundle-icon are supplied together")
-    bundle = BundleInputs(arguments.bundle_launcher, arguments.bundle_icon) if arguments.bundle_launcher else None
+    wrapper = (arguments.bundle_launcher, arguments.bundle_icon, arguments.codesign, arguments.signing_identity)
+    if any(value is None for value in wrapper) and any(value is not None for value in wrapper):
+        parser.error("--bundle-launcher, --bundle-icon, --codesign and --signing-identity are supplied together")
+    bundle = (
+        BundleInputs(
+            arguments.bundle_launcher,
+            arguments.bundle_icon,
+            CodesignSeal(arguments.codesign, arguments.signing_identity),
+        )
+        if arguments.bundle_launcher
+        else None
+    )
     refresh(arguments.payload, arguments.identity, arguments.build, arguments.desktop, bundle)

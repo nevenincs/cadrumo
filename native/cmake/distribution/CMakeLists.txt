@@ -48,9 +48,19 @@ if(CADRUMO_TARGET MATCHES "^macos-" AND CADRUMO_DESKTOP_EXECUTABLE)
       message(FATAL_ERROR "A macOS application bundle needs ${input} from the source build")
     endif()
   endforeach()
-  set(bundle_inputs "${CADRUMO_BUNDLE_LAUNCHER}" "${CADRUMO_BUNDLE_ICON}")
-  list(APPEND desktop_args --bundle-launcher "${CADRUMO_BUNDLE_LAUNCHER}" --bundle-icon "${CADRUMO_BUNDLE_ICON}")
+  # Staging seals the bundle once, after every member is written, so the stage, a
+  # prefix installation and every package copy carry the same receipt-bound seal.
+  set(CADRUMO_CODESIGN "" CACHE FILEPATH "Reviewed absolute codesign tool that seals the application bundle")
+  set(CADRUMO_NATIVE_SIGNING_IDENTITY "" CACHE STRING "Explicit bundle signing identity; - is an ad-hoc local seal")
+  if(NOT IS_ABSOLUTE "${CADRUMO_CODESIGN}" OR NOT EXISTS "${CADRUMO_CODESIGN}"
+      OR CADRUMO_NATIVE_SIGNING_IDENTITY STREQUAL "")
+    message(FATAL_ERROR "Supply CADRUMO_CODESIGN and CADRUMO_NATIVE_SIGNING_IDENTITY to seal the application bundle")
+  endif()
+  set(bundle_inputs "${CADRUMO_BUNDLE_LAUNCHER}" "${CADRUMO_BUNDLE_ICON}" "${CADRUMO_CODESIGN}")
+  list(APPEND desktop_args --bundle-launcher "${CADRUMO_BUNDLE_LAUNCHER}" --bundle-icon "${CADRUMO_BUNDLE_ICON}"
+    --codesign "${CADRUMO_CODESIGN}" --signing-identity "${CADRUMO_NATIVE_SIGNING_IDENTITY}")
   cadrumo_build_fact("Bundle executable" "${CADRUMO_BUNDLE_LAUNCHER}")
+  cadrumo_build_fact("Bundle signing identity" "${CADRUMO_NATIVE_SIGNING_IDENTITY}")
 endif()
 cadrumo_build_fact("Payload" "${CADRUMO_PAYLOAD}")
 if(CADRUMO_DESKTOP_EXECUTABLE)
@@ -78,7 +88,7 @@ include(../CachedCommand.cmake)
 set(installation_inputs "${CADRUMO_PAYLOAD}" "${CADRUMO_PATH_GENERATED}/identity.json"
   "${CMAKE_BINARY_DIR}/build-paths.json" "${CADRUMO_SOURCE_ROOT}/LICENSE" "${CADRUMO_SOURCE_ROOT}/NOTICE"
   "${CADRUMO_SOURCE_ROOT}/docs/_static/cadrumo-icon.svg" ${bundle_inputs})
-foreach(helper installation installation_plan installation_currency installation_filesystem installation_reuse distribution_prepare build_paths hashing layout package_inventory docs_stage docs_scan docs_errors macos_launchagent macos_bundle linux_desktop_runtime)
+foreach(helper installation installation_plan installation_currency installation_filesystem installation_reuse distribution_prepare build_paths hashing layout package_inventory docs_stage docs_scan docs_errors macos_launchagent macos_bundle platforms/posix_images linux_desktop_runtime)
   list(APPEND installation_inputs "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/${helper}.py")
 endforeach()
 if(CADRUMO_TARGET MATCHES "^linux-")
@@ -223,18 +233,20 @@ elseif(CADRUMO_TARGET STREQUAL "macos-arm64")
   set(CPACK_DMG_VOLUME_NAME "${CADRUMO_ID_NAME}")
   set(CPACK_DMG_DISABLE_APPLICATIONS_SYMLINK OFF)
   if(CADRUMO_DESKTOP_EXECUTABLE)
-    # CPack seals its own copy of the staged bundle, so the receipt-bound stage stays
-    # unchanged; every archive built from this configuration carries the sealed bundle.
-    set(CADRUMO_CODESIGN "" CACHE FILEPATH "Reviewed absolute codesign tool that seals the application bundle")
-    set(CADRUMO_NATIVE_SIGNING_IDENTITY "" CACHE STRING "Explicit bundle signing identity; - is an ad-hoc local seal")
-    if(NOT IS_ABSOLUTE "${CADRUMO_CODESIGN}" OR NOT EXISTS "${CADRUMO_CODESIGN}"
-        OR CADRUMO_NATIVE_SIGNING_IDENTITY STREQUAL "")
-      message(FATAL_ERROR "Supply CADRUMO_CODESIGN and CADRUMO_NATIVE_SIGNING_IDENTITY to seal the application bundle")
-    endif()
-    configure_file(MacosBundleSeal.cmake.in "${CMAKE_BINARY_DIR}/MacosBundleSeal.cmake" @ONLY)
-    set(CPACK_PRE_BUILD_SCRIPTS "${CMAKE_BINARY_DIR}/MacosBundleSeal.cmake")
+    # The stage carries the sealed bundle. CPack only copies it, so every staging
+    # copy and every built image is verified against that seal, never re-signed.
+    foreach(tool spctl hdiutil ditto)
+      string(TOUPPER "${tool}" tool_variable)
+      find_program(CADRUMO_${tool_variable} NAMES ${tool} PATHS /usr/sbin /usr/bin NO_DEFAULT_PATH
+        DOC "macOS ${tool} used to inspect built packages without changing them")
+      if(NOT CADRUMO_${tool_variable})
+        message(FATAL_ERROR "The macOS package verification requires ${tool}")
+      endif()
+    endforeach()
+    configure_file(MacosBundleVerify.cmake.in "${CMAKE_BINARY_DIR}/MacosBundleVerify.cmake" @ONLY)
+    set(CPACK_PRE_BUILD_SCRIPTS "${CMAKE_BINARY_DIR}/MacosBundleVerify.cmake")
+    set(CPACK_POST_BUILD_SCRIPTS "${CMAKE_BINARY_DIR}/MacosBundleVerify.cmake")
     set(CPACK_PACKAGE_ICON "${CADRUMO_BUNDLE_ICON}")
-    cadrumo_build_fact("Bundle signing identity" "${CADRUMO_NATIVE_SIGNING_IDENTITY}")
   endif()
 endif()
 set(distribution_archive "${CADRUMO_PATH_PACKAGES}/${CPACK_PACKAGE_FILE_NAME}.zip")
