@@ -28,4 +28,6 @@ if(target_system STREQUAL "Darwin")
     message(FATAL_ERROR "Supply CADRUMO_NATIVE_SIGNING_IDENTITY for macOS package assembly")
   endif()
   string(JSON build_toolchain SET "${build_toolchain}" native_signing_identity "\"${CADRUMO_NATIVE_SIGNING_IDENTITY}\"")
+  # The desktop image must embed exactly the identity this build generated for it.
+  string(JSON build_toolchain SET "${build_toolchain}" desktop_info_plist "\"${CADRUMO_PATH_GENERATED}/desktop-info.plist\"")
 endif()

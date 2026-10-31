@@ -22,7 +22,7 @@ _ENTRYPOINT_NAME = re.compile(r"[a-z][a-z0-9]*(-[a-z0-9]+)*")
 _CMAKE_TARGET = re.compile(r"[A-Za-z0-9_.+-]+")
 _CMAKE_VARIABLE = re.compile(r"[A-Z][A-Z0-9_]*")
 _IMAGE_REQUIRED = frozenset({"name", "placement", "target", "artifact", "desktop", "signed", "version_arguments"})
-_IMAGE_OPTIONAL = frozenset({"startup"})
+_IMAGE_OPTIONAL = frozenset({"startup", "entitlements"})
 # The platform context maps only an image in the package root, or a declared entrypoint in the
 # native directory, back to the package; any other placement could not find its package.
 _PACKAGE_ROOT = "."
@@ -41,6 +41,8 @@ class ApplicationImage:
     signed: bool
     startup: bool
     version_arguments: tuple[str, ...]
+    entitlements: str | None = None
+    """Repository-relative property list of the entitlements the image is signed with, when it has any."""
 
     @property
     def package_path(self) -> str:
@@ -165,8 +167,20 @@ def _image(entry: object, suffix: str) -> ApplicationImage:
         target=target,
         artifact=artifact,
         version_arguments=arguments,
+        entitlements=_image_entitlements(name, entry),
         **flags,
     )
+
+
+def _image_entitlements(name: str, entry: dict[str, object]) -> str | None:
+    declared = entry.get("entitlements")
+    if declared is None:
+        return None
+    if not isinstance(declared, str) or not re.fullmatch(r"[A-Za-z0-9_.-]+(/[A-Za-z0-9_.-]+)*", declared):
+        raise ValueError(f"Application image {name} entitlements must be a plain relative path: {declared!r}")
+    if declared.startswith("."):
+        raise ValueError(f"Application image {name} entitlements must be a plain relative path: {declared!r}")
+    return declared
 
 
 def _check_image_collision(

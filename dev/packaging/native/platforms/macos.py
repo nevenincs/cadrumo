@@ -9,10 +9,13 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from dev._paths import REPO_ROOT
+
 from ...runtime_wheelhouse_contract import target_platform
 from ..agent_runtime import STAGED_RECEIPT_NAME, STAGED_RUNTIME_TREES
 from ..build_stamp import BuildStamp
 from ..identity import DistributionIdentity
+from ..layout import application_images
 from .posix import (
     acquire_sdk,
     command,
@@ -36,6 +39,8 @@ class MachO:
     rpaths: tuple[str, ...]
     identity: str | None
     minimum: tuple[int, int, int]
+    info_plist: bytes | None = None
+    """The property list embedded in the image's ``__TEXT,__info_plist`` section, when it has one."""
 
 
 def _select_arm64(path: Path) -> None:
@@ -125,9 +130,12 @@ def inspect(path: Path) -> MachO:
     rpaths: list[str] = []
     identity = None
     minimum = None
+    info_plist = None
     offset = 32
     for _ in range(count):
         command_id, length = _macho_command_header(data, offset, end, path)
+        if command_id == 0x19:
+            info_plist = _macho_info_plist(data, offset, length, path) or info_plist
         if command_id in {0xC, 0xD, 0x20, 0x80000018, 0x8000001F, 0x80000023, 0x8000001C}:
             value = _macho_command_path(data, offset, length, path)
             if command_id == 0xD:
@@ -142,7 +150,28 @@ def inspect(path: Path) -> MachO:
         offset += length
     if offset != end or minimum is None:
         raise ValueError(f"Mach-O image lacks a valid deployment floor: {path}")
-    return MachO(tuple(dependencies), tuple(rpaths), identity, minimum)
+    return MachO(tuple(dependencies), tuple(rpaths), identity, minimum, info_plist)
+
+
+def _macho_info_plist(data: bytes, offset: int, length: int, path: Path) -> bytes | None:
+    """Return the bytes of a segment's ``__TEXT,__info_plist`` section, or nothing."""
+    segment_header, section_size = 72, 80
+    if length < segment_header:
+        raise ValueError(f"Truncated Mach-O segment command: {path}")
+    sections = struct.unpack_from("<I", data, offset + 64)[0]
+    if length < segment_header + sections * section_size:
+        raise ValueError(f"Truncated Mach-O segment sections: {path}")
+    for index in range(sections):
+        start = offset + segment_header + index * section_size
+        section, segment = (data[start + shift : start + shift + 16].rstrip(b"\0") for shift in (0, 16))
+        if (segment, section) != (b"__TEXT", b"__info_plist"):
+            continue
+        size = struct.unpack_from("<Q", data, start + 40)[0]
+        position = struct.unpack_from("<I", data, start + 48)[0]
+        if position + size > len(data):
+            raise ValueError(f"Mach-O info_plist section lies outside the image: {path}")
+        return bytes(data[position : position + size])
+    return None
 
 
 def _macho_command_header(data: bytes, offset: int, end: int, path: Path) -> tuple[int, int]:
@@ -202,10 +231,36 @@ def relocate(images: list[Path], root: Path, contract: dict[str, Any]) -> None:
         _select_arm64(path)
     names = load_targets(owned)
     system = set(contract["native_system_libraries"])
+    declared = application_images(contract) if contract.get("application_images") else ()
+    desktop = {
+        root / image.package_path: None if image.entitlements is None else REPO_ROOT / image.entitlements
+        for image in declared
+        if image.desktop
+    }
+    shipped = sorted(desktop.keys() & set(owned))
+    if shipped:
+        expected = Path(contract["desktop_info_plist"]).read_bytes()
+        for path in shipped:
+            _require_embedded_identity(path, expected)
     for path in vendor:
         _require_relocatable_as_shipped(path, floor, system)
     for path in owned:
-        _relocate_image(path, floor, names, system, tools, signing_identity)
+        _relocate_image(
+            path,
+            floor,
+            names,
+            system,
+            tools,
+            signing_identity,
+            hardened=path in desktop,
+            entitlements=desktop.get(path),
+        )
+
+
+def _require_embedded_identity(path: Path, expected: bytes) -> None:
+    """Refuse a desktop image whose embedded identity is not the one this build generated."""
+    if inspect(path).info_plist != expected:
+        raise ValueError(f"Desktop image does not embed the generated identity property list: {path}")
 
 
 def _split_vendor_images(images: list[Path], root: Path) -> tuple[list[Path], list[Path]]:
@@ -249,6 +304,9 @@ def _relocate_image(
     system: set[str],
     tools: Mapping[str, str],
     signing_identity: str,
+    *,
+    hardened: bool = False,
+    entitlements: Path | None = None,
 ) -> None:
     image = inspect(path)
     if image.minimum > floor:
@@ -260,7 +318,13 @@ def _relocate_image(
         arguments.extend(["-id", f"@rpath/{path.name}"])
     if arguments:
         command(tools["install_name_tool"], *arguments, str(path))
-    command(tools["codesign"], "--force", "--sign", signing_identity, str(path))
+    # The desktop image is the application's own program: it takes the hardened runtime, and
+    # its identifier comes from the identity property list it embeds. Its entitlements are the
+    # declared ones only: ad-hoc code carries no team identity for library validation to accept.
+    options = ["--options", "runtime"] if hardened else []
+    if entitlements is not None:
+        options.extend(["--entitlements", str(entitlements)])
+    command(tools["codesign"], "--force", "--sign", signing_identity, *options, str(path))
     command(tools["codesign"], "--verify", "--strict", str(path))
     rewritten = inspect(path)
     if rewritten.rpaths or any(

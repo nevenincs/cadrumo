@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
+import plistlib
 import struct
 import sys
 import zipfile
 from pathlib import Path
 
 import pytest
+
+from dev._paths import REPO_ROOT
 
 from ...runtime_wheelhouse_contract import SUPPORTED_TARGETS
 from ..layout import application_images, backend, distribution_target, load_layout
@@ -91,3 +94,95 @@ def test_macos_system_admission_requires_the_measured_install_name(
         with pytest.raises(ValueError, match="Unresolved Mach-O dependency"):
             macos.relocate([image], tmp_path, layout)
         assert not tool_calls
+
+
+def _desktop_image(path: Path, plist: bytes | None) -> None:
+    """Write a dependency-free ARM64 image that embeds ``plist`` the way the desktop link does."""
+    build = struct.pack("<6I", 0x32, 24, 1, 14 << 16, 0, 0)
+    sections = b""
+    if plist is not None:
+        sections = (
+            b"__info_plist".ljust(16, b"\0")
+            + b"__TEXT".ljust(16, b"\0")
+            + struct.pack("<QQIIIIIIII", 0, len(plist), 0, 0, 0, 0, 0, 0, 0, 0)
+        )
+    segment = b"".join(
+        [
+            struct.pack("<2I", 0x19, 72 + len(sections)),
+            b"__TEXT".ljust(16, b"\0"),
+            struct.pack("<4Q", 0, 0, 0, 0),
+            struct.pack("<4I", 0, 0, 1 if plist is not None else 0, 0),
+            sections,
+        ]
+    )
+    commands = build + segment
+    offset = 32 + len(commands)
+    if plist is not None:
+        segment = segment[: 72 + 48] + struct.pack("<I", offset) + segment[72 + 52 :]
+        commands = build + segment
+    header = struct.pack("<8I", 0xFEEDFACF, 0x0100000C, 0, 2, 2, len(commands), 0, 0)
+    path.write_bytes(header + commands + (plist or b""))
+
+
+def _desktop_layout(tmp_path: Path, expected: bytes, is_desktop: bool) -> dict:
+    layout = load_layout("macos-arm64")
+    layout["native_tools"] = {"codesign": "fixture-codesign"}
+    layout["native_signing_identity"] = "-"
+    generated = tmp_path / "desktop-info.plist"
+    generated.write_bytes(expected)
+    layout["desktop_info_plist"] = str(generated)
+    for declared in layout["application_images"]:
+        declared["desktop"] = declared["name"] == "cadrumo" and is_desktop
+    return layout
+
+
+@pytest.mark.parametrize(("is_desktop", "hardened"), [(True, True), (False, False)])
+def test_only_the_desktop_image_is_sealed_with_the_hardened_runtime(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, is_desktop: bool, hardened: bool
+) -> None:
+    """Drive the live relocation of an image declared as the desktop or not."""
+    identity = b"<plist>identity</plist>"
+    image = tmp_path / "cadrumo"
+    _desktop_image(image, identity)
+    calls: list[tuple[str, ...]] = []
+    monkeypatch.setattr(macos, "command", lambda *arguments: calls.append(arguments))
+    macos.relocate([image], tmp_path, _desktop_layout(tmp_path, identity, is_desktop))
+    signing = next(call for call in calls if "--sign" in call)
+    assert ("--options" in signing and "runtime" in signing) is hardened
+    # The declared entitlements ride on the desktop image alone, and are the minimal set.
+    assert ("--entitlements" in signing) is hardened
+    if hardened:
+        entitlements = Path(signing[signing.index("--entitlements") + 1])
+        assert plistlib.loads(entitlements.read_bytes()) == {"com.apple.security.cs.disable-library-validation": True}
+
+
+@pytest.mark.parametrize("embedded", [None, b"<plist>another</plist>"])
+def test_the_desktop_image_must_embed_the_generated_identity(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, embedded: bytes | None
+) -> None:
+    image = tmp_path / "cadrumo"
+    _desktop_image(image, embedded)
+    calls: list[tuple[str, ...]] = []
+    monkeypatch.setattr(macos, "command", lambda *arguments: calls.append(arguments))
+    layout = _desktop_layout(tmp_path, b"<plist>identity</plist>", True)
+    with pytest.raises(ValueError, match="does not embed the generated identity"):
+        macos.relocate([image], tmp_path, layout)
+    assert not calls
+    # The same image is acceptable when it is not the desktop: nothing is compared.
+    macos.relocate([image], tmp_path, _desktop_layout(tmp_path, b"<plist>identity</plist>", False))
+
+
+@pytest.mark.parametrize("declared", ["../escape.entitlements", "/abs/path", "has space", ".hidden", 7])
+def test_image_entitlements_must_be_a_plain_relative_path(declared: object) -> None:
+    layout = load_layout("macos-arm64")
+    layout["application_images"][0]["entitlements"] = declared
+    with pytest.raises(ValueError, match="entitlements must be a plain relative path"):
+        application_images(layout)
+
+
+def test_the_macos_desktop_image_declares_the_one_library_validation_entitlement() -> None:
+    desktop = next(image for image in application_images(load_layout("macos-arm64")) if image.desktop)
+    assert desktop.entitlements is not None
+    assert plistlib.loads((REPO_ROOT / desktop.entitlements).read_bytes()) == {
+        "com.apple.security.cs.disable-library-validation": True
+    }
