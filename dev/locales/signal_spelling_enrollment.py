@@ -195,6 +195,11 @@ _LOCALE_SPELLINGS: dict[str, frozenset[str]] = {
     ),
     "es": frozenset(
         {
+            # The unchanged surname names the impatriate regime in CLI help,
+            # wizard choices and the Modelo 151 title; retain its exact case.
+            "Beckham",
+            # Singular taxpayer term in the same regime-help diagnostics.
+            "impatriado",
             "Google",
             "Drive",
             "Python",
@@ -360,6 +365,9 @@ _LOCALE_SPELLINGS: dict[str, frozenset[str]] = {
     ),
     "ca": frozenset(
         {
+            # The unchanged surname names the impatriate regime in CLI help,
+            # wizard choices and the Modelo 151 title; retain its exact case.
+            "Beckham",
             "Sheets",
             "Windows",
             "macOS",
@@ -389,6 +397,7 @@ _LOCALE_SPELLINGS: dict[str, frozenset[str]] = {
             # profile.yml and modelo schemas. The pinned Catalan dictionary
             # rejects each exact form, so enroll only these observed spellings.
             "impatriats",
+            "impatriat",
             "reembolcallen",
             "oblides",
             "tipada",

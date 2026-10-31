@@ -790,8 +790,21 @@ def test_hungarian_aeat_names_and_jurisdictions_are_exact_and_scoped() -> None:
     for near_miss in ("Navara", "Becham", "Agenciaa", "Estatall", "Administracion", "Tributarianál"):
         assert not is_project_spelling("hu", near_miss)
     for locale in ("en", "es", "ca"):
-        shared_legal_names = {"Navarra", "Beckham"} if locale == "en" else set()
+        shared_legal_names = {"Navarra", "Beckham"} if locale == "en" else {"Beckham"}
         assert all(not is_project_spelling(locale, form) for form in forms if form not in shared_legal_names)
+
+
+@pytest.mark.parametrize("locale", ["es", "ca"])
+def test_impatriate_regime_surname_keeps_its_exact_spelling(locale: str) -> None:
+    dictionary = load_dictionaries(REPO_ROOT)[locale]
+    assert not dictionary.lookup("Beckham")
+    assert is_project_spelling(locale, "Beckham")
+    for near_miss in ("Becham", "Beckam", "Beckhamm", "beckham", "BECKHAM"):
+        assert not is_project_spelling(locale, near_miss)
+    term = "impatriado" if locale == "es" else "impatriat"
+    assert not dictionary.lookup(term)
+    assert is_project_spelling(locale, term)
+    assert not is_project_spelling(locale, term + "x")
 
 
 def test_audit_hungarian_terms_and_cli_tokens_are_exact_and_language_scoped() -> None:
