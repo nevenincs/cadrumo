@@ -19,7 +19,7 @@ from pydantic import BaseModel, Field, model_validator
 
 from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.models import STRICT_FROZEN_CONFIG
-from .errors import ActividadAssetUnsupportedError
+from .errors import ActividadAssetUnsupportedError, ActividadAssetValidationError
 
 
 class VehicleCategory(StrEnum):
@@ -102,7 +102,10 @@ class VehicleAffectation(BaseModel):
             self.listed_use is VehicleListedUse.MIXED_VEHICLE_GOODS_TRANSPORT
             and self.category is not VehicleCategory.MIXED_VEHICLE
         ):
-            raise ValueError("the goods-transport listed use applies only to a mixed vehicle")
+            raise ActividadAssetValidationError(
+                context={"field": "listed_use"},
+                translated_message="ledger.actividad_asset.errors.goods_transport_use_requires_mixed_vehicle",
+            )
         return self
 
 

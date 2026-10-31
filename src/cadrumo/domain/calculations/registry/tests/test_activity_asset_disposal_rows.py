@@ -16,6 +16,7 @@ from ..actividad_asset_disposal_bindings import (
     resolve_activity_asset_disposal_row_values,
 )
 from ..authority import bundled_indexed_authority
+from ..binding_targets import BindingConsumerKind, binding_consumers
 from ..schema import ModeloRevision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -90,3 +91,42 @@ def test_the_columns_move_no_scalar_total() -> None:
     assert row_ids
     assert not row_ids & set(totals)
     assert Decimal("350.00") in totals.values()
+
+
+@pytest.mark.parametrize("revision_id", ["2022", "2023", "2024", "2025"])
+def test_application_row_consumers_match_the_disposal_columns_actually_resolved(revision_id: str) -> None:
+    revision = _revision(revision_id)
+    sales = (
+        _Sale("sale-a", {field: Decimal("10") for field in ActivityAssetDisposalRowField}),
+        _Sale("sale-b", {field: Decimal("20") for field in ActivityAssetDisposalRowField}),
+    )
+    values, identities = resolve_activity_asset_disposal_row_values(revision, sales)
+    emitted = {binding_id for binding_id, _index in values}
+    assert len(emitted) == 10
+    consumers = binding_consumers(revision)
+    application_rows = {
+        binding_id
+        for binding_id, refs in consumers.items()
+        if any(ref.kind is BindingConsumerKind.APPLICATION_ROW_VALUE for ref in refs)
+    }
+    # Compare against real resolver output, not merely row declarations or names.
+    assert application_rows == emitted
+    assert set(values) == set(identities) == {(binding_id, row) for binding_id in emitted for row in (1, 2)}
+    assert {identities[(binding_id, 2)] for binding_id in emitted} == {"sale-b"}
+
+
+def test_a_disposal_column_without_a_field_earns_no_application_consumer() -> None:
+    revision = _revision("2025")
+    column_id = activity_asset_disposal_row_binding_ids(revision)[0]
+    column = next(binding for binding in revision.bindings if binding.id == column_id)
+    malformed = column.model_copy(update={"provider": column.provider.model_copy(update={"row_field": None})})
+    changed = revision.model_copy(
+        update={"bindings": tuple(malformed if binding.id == column_id else binding for binding in revision.bindings)}
+    )
+    values, _identities = resolve_activity_asset_disposal_row_values(
+        changed, (_Sale("sale-a", {field: Decimal("10") for field in ActivityAssetDisposalRowField}),)
+    )
+    assert not any(binding_id == column_id for binding_id, _index in values)
+    assert not any(
+        ref.kind is BindingConsumerKind.APPLICATION_ROW_VALUE for ref in binding_consumers(changed)[column_id]
+    )

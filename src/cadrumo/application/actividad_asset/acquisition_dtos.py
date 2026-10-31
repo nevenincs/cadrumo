@@ -5,10 +5,9 @@ from __future__ import annotations
 from decimal import Decimal
 from typing import Self
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field
 
 from ...application.operations.public_scalar import PublicDecimal, project_scalar
-from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.filing_year import FilingYear
 from ...core.hex import Hex64Str
 from ...core.identity.transaction_ids import TransactionId
@@ -99,12 +98,6 @@ class OpeningHistorySnapshot(BaseModel):
             covered_through_tax_year=self.covered_through_tax_year,
         )
 
-    @model_validator(mode="after")
-    @pydantic_validation_boundary
-    def _canonical(self) -> Self:
-        self.to_domain()
-        return self
-
 
 class ActivityAssetBasisSnapshot(BaseModel):
     """Public basis DTO with explicit decimal allocation facts."""
@@ -159,9 +152,3 @@ class ActivityAssetBasisSnapshot(BaseModel):
             business_use_share=_decimal(self.business_use_share),
             prior_allocation_provenance=self.prior_allocation_provenance,
         )
-
-    @model_validator(mode="after")
-    @pydantic_validation_boundary
-    def _canonical(self) -> Self:
-        self.to_domain()
-        return self

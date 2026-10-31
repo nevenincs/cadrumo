@@ -18,7 +18,6 @@ from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.operations import OperationEffect, profile_operation_subject
-from ...core.period import Period
 from ...core.time.clock import now
 from ...core.tipos_actividad import TipoActividad
 from ...domain.calculations.registry.actividad_asset_bindings import (
@@ -750,16 +749,11 @@ class ActivityAssetFilingHandoffExecutor:
                 bucket_id=bucket_id,
                 operation=context.authority_operation,
             )
-            period = (
-                None
-                if payload.m130_period is None
-                else Period.from_year_and_code(payload.tax_year, payload.m130_period)
-            )
             try:
                 handoff = await asyncio.to_thread(
                     operations.filing_handoff,
                     tax_year=payload.tax_year,
-                    m130_period=period,
+                    m130_period=payload.requested_period(),
                     language=payload.output_language,
                 )
             except (

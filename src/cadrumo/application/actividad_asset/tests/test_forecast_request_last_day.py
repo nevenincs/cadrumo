@@ -14,6 +14,7 @@ from cadrumo.application.actividad_asset.activity_asset_contracts import Activit
 from cadrumo.application.actividad_asset.operations import ActivityAssetOperations
 from cadrumo.core.hashing import content_hash_hex
 from cadrumo.domain.renta.actividad_asset.election import DirectEstimationRegime
+from cadrumo.domain.renta.actividad_asset.errors import ActividadAssetValidationError
 from cadrumo.domain.renta.actividad_asset.register_records import ActivityAssetDescriptorFacts
 from cadrumo.domain.renta.actividad_asset.schedule import covered_until_after, last_day_covered
 
@@ -62,14 +63,20 @@ def test_a_year_end_last_day_reaches_the_next_new_year() -> None:
         {"covered_until": "2025-07-01", "covered_through": "2025-07-01"},
         {"covered_until": "2025-07-01", "covered_through": "2025-06-29"},
         {},
-        {"covered_through": "not a date"},
         {"covered_through": "9999-12-31"},
         {"covered_until": None, "covered_through": None},
     ],
 )
-def test_a_disagreeing_or_missing_end_is_refused(interval: dict[str, str | None]) -> None:
+def test_a_disagreeing_or_missing_end_decodes_and_is_refused_with_its_reason(interval: dict[str, str | None]) -> None:
+    request = _decode(**interval)
+
+    with pytest.raises(ActividadAssetValidationError):
+        request.exclusive_end()
+
+
+def test_an_end_that_is_not_a_date_does_not_decode() -> None:
     with pytest.raises(ValidationError):
-        _decode(**interval)
+        _decode(covered_through="not a date")
 
 
 def test_the_stated_form_does_not_change_the_forecast_or_its_fingerprint() -> None:

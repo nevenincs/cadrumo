@@ -4959,6 +4959,8 @@ ledger:
         %{taxable_base} de la transacción de adquisición.
       acquisition_row_named_twice: Este elemento nombra dos veces el mismo apunte
         del libro entre sus filas de adquisición.
+      acquisition_shape_not_registerable: Un elemento se registra como compra o como
+        adquirido fuera del libro.
       acquisition_transaction_missing: Una transacción de adquisición que indicaste
         no está en el libro mayor.
       acquisition_transaction_not_payment: Una transacción de adquisición que indicaste
@@ -4982,6 +4984,27 @@ ledger:
       asset_not_found: El elemento de la actividad no existe.
       authority_incomplete: Las tablas tributarias publicadas para este método están
         incompletas, así que todavía no se puede calcular.
+      basis_amount_not_positive: El precio del elemento debe ser superior a cero.
+      basis_fractional_share_not_below_one: La titularidad compartida implica una
+        cuota inferior a uno.
+      basis_mixed_use_needs_whole_property: Un inmueble de uso mixto debe indicar
+        su coste de propiedad completa.
+      basis_property_area_invalid: La superficie del despacho debe ser superior a
+        cero y no mayor que la superficie total.
+      basis_property_cost_split_mismatch: El coste de la construcción más el del suelo
+        debe igualar el precio, y el de la construcción debe ser superior a cero.
+      basis_share_out_of_range: Una cuota debe ser superior a cero y como máximo uno.
+      basis_sole_share_not_one: Un propietario único tiene la totalidad del inmueble,
+        así que la cuota debe ser exactamente uno.
+      basis_stage_refuses_fact: Esta etapa del coste no admite ese dato; quítalo o
+        elige la etapa a la que pertenece.
+      basis_stage_requires_fact: Esta etapa del coste necesita un dato más; rellénalo.
+      basis_whole_property_only_for_property: Solo un inmueble puede tener un coste
+        de propiedad completa.
+      building_construction_date_after_service: La fecha de construcción de un edificio
+        no puede ser posterior a la de su puesta en servicio.
+      building_construction_date_requires_used_asset: La fecha de construcción de
+        un edificio solo se indica en un elemento adquirido usado.
       business_use_share_missing: Un elemento ordinario carece de su porcentaje de
         uso empresarial.
       charging_infrastructure_new_only: La libertad de amortización de infraestructuras
@@ -5015,6 +5038,12 @@ ledger:
         de un ejercicio.
       covered_interval_without_service_days: El intervalo cubierto no tiene días en
         servicio en ese ejercicio.
+      covered_through_has_no_boundary: El último día cubierto no puede ser el último
+        día que admite el calendario.
+      covered_through_not_day_before_until: El último día cubierto debe ser el día
+        anterior al que termina el periodo.
+      covered_until_has_no_day_before: El día en que termina el periodo necesita un
+        día anterior.
       creation_requires_first_revision: Esto cambió desde que lo abriste. Actualiza
         e inténtalo de nuevo.
       declared_acquisition_after_service: La fecha de adquisición no puede ser posterior
@@ -5041,6 +5070,8 @@ ledger:
         Registra la venta como chatarra como una venta.
       disposal_withdrawal_with_amounts: La desafectación no calcula ganancia, así
         que no indica importe de venta, gastos ni valor de mercado.
+      document_number_and_kind_together: Indica el tipo de documento y su número a
+        la vez, o deja ambos sin rellenar.
       earlier_year_depends_on_pending_value: Ya hay un ejercicio posterior con cargo
         y este método calcula sobre el valor pendiente, así que ahora no puedes reclamar
         un ejercicio anterior.
@@ -5051,6 +5082,11 @@ ledger:
         del intervalo admisible [%{minimum}, %{maximum}].
       election_changes_only_at_year_boundary: La elección de amortización de un elemento
         solo puede cambiar al empezar un ejercicio.
+      election_fact_not_of_method: Ese dato no pertenece al método de amortización
+        elegido; quítalo o cambia el método.
+      election_multi_shift_with_small_enterprise: La amortización por turnos múltiples
+        y la de empresa de reducida dimensión no pueden combinarse en una misma opción.
+      election_requires_fact: Este método de amortización necesita un dato más; rellénalo.
       electric_vehicle_declaration_required: La libertad de amortización de vehículos
         eléctricos requiere una declaración del vehículo.
       electric_vehicle_new_only: La libertad de amortización de vehículos eléctricos
@@ -5067,6 +5103,8 @@ ledger:
         el art. 106 de la LIS.
       foral_territory: Resides en territorio foral, donde no se aplican los Modelos
         100 y 130 de la AEAT.
+      forecast_interval_end_required: Un periodo de previsión necesita su último día
+        cubierto o el día anterior al que termina.
       forecast_no_longer_matches: Esto cambió desde que lo abriste. Actualiza e inténtalo
         de nuevo.
       forecast_not_current_revision: Esto cambió desde que lo abriste. Actualiza e
@@ -5087,9 +5125,19 @@ ledger:
         discrepan sobre el límite anual.
       free_claims_exceed_annual_cap: Los cargos vigentes de libertad de amortización
         superan el límite anual.
+      free_depreciation_only_low_value: Solo un elemento de escaso valor lleva los
+        datos de la opción de libertad de amortización.
+      free_depreciation_requires_provenance: La libertad de amortización de un elemento
+        de escaso valor necesita la referencia de la opción y del límite anual.
       from_start_method_after_other_election: El porcentaje constante y los números
         dígitos se aplican desde el inicio de la amortización; un elemento ya amortizado
         con otra elección no puede adoptarlos.
+      further_acquisition_requires_ledger_row: Un pago posterior de una adquisición
+        debe indicar su movimiento del libro.
+      further_acquisition_shape_invalid: Un pago posterior de una adquisición es un
+        pago fraccionado o un gasto accesorio.
+      goods_transport_use_requires_mixed_vehicle: El uso de transporte de mercancías
+        solo se aplica a un vehículo mixto.
       history_changed_after_forecast: El historial del elemento cambió después de
         calcular esta cifra; vuelve a calcularla.
       interval_has_different_claim: Ese periodo ya tiene otro cargo; corrige ese cargo
@@ -5117,6 +5165,7 @@ ledger:
         supera el umbral de escaso valor.
       low_value_unit_value_not_cents: El valor unitario de adquisición del elemento
         debe estar en céntimos enteros.
+      m130_period_invalid: Ese no es un periodo del Modelo 130 del ejercicio.
       method_admission_invalid: Las tablas tributarias no indican con claridad si
         este método se admite para este tipo de elemento, así que todavía no se puede
         aceptar.
@@ -5142,15 +5191,28 @@ ledger:
       opening_amount_must_attest_from_start_method: Un importe inicial distinto de
         cero debe acreditar el mismo método para que el porcentaje constante o los
         números dígitos lo continúen.
+      opening_amount_requires_covered_year: Un importe inicial superior a cero necesita
+        el último ejercicio que cubre.
+      opening_covered_year_requires_amount: El último ejercicio cubierto solo se aplica
+        a un importe inicial superior a cero; un importe cero no cubre ningún ejercicio,
+        así que quítalo.
       opening_history_amount_missing: El historial inicial conocido no indica su importe.
       opening_history_missing: Falta el historial inicial de amortización del elemento.
+      opening_known_requires_amount: Un historial inicial conocido necesita la amortización
+        ya deducida.
+      opening_missing_states_nothing: Un historial inicial desconocido no puede indicar
+        importe ni método; déjalos sin rellenar.
       opening_year_before_in_service: El importe inicial no puede cubrir los años
         hasta %{opening_tax_year}, que es anterior al año de puesta en funcionamiento
         del elemento, %{in_service_tax_year}.
+      original_price_expert_requires_evidence: Una tasación pericial del precio original
+        necesita la referencia de su justificante.
       out_of_service_date_not_the_boundary: La fecha de fin de servicio debe ser el
         día siguiente a la fecha de baja.
       out_of_service_date_without_disposal: La fecha de fin de servicio solo procede
         de una baja. Registra la baja.
+      outside_ledger_names_no_row: Un elemento adquirido fuera del libro no indica
+        ningún movimiento del libro como su compra.
       ownership_treatment_unknown: La base del inmueble completo tiene un tratamiento
         de titularidad desconocido.
       parameter_absent: Las tablas del Modelo 100 de este ejercicio no incluyen una
@@ -5162,6 +5224,12 @@ ledger:
       parameter_not_resolvable_for_year: Las tablas del Modelo 100 no tienen para
         el ejercicio %{tax_year} una cifra que esta amortización necesita, así que
         no se puede calcular.
+      plan_resolution_precedes_submission: El plan no puede resolverse antes de presentarse.
+      plan_year_repeated: El plan indica un mismo ejercicio más de una vez.
+      plan_years_not_ascending: El plan debe indicar sus ejercicios en orden ascendente.
+      primary_purchase_lineage_shape: Una compra indica su movimiento del libro y
+        la huella de su justificante, y no declara fecha de adquisición ni actividad
+        propias.
       profile_modality_mismatch: La modalidad de estimación de este elemento (normal
         o simplificada) debe coincidir con la declarada en tu perfil (RIRPF art. 28.3).
       reduced_size_acceleration_new_only: La aceleración de empresa de reducida dimensión
@@ -5170,6 +5238,8 @@ ledger:
         requiere su justificación.
       reduced_size_turnover_reached: El importe neto de la cifra de negocios del periodo
         anterior alcanza el umbral de empresa de reducida dimensión (LIS art. 101.1).
+      renewable_documentation_mismatch: Ese documento no acredita este tipo de instalación
+        renovable.
       renewable_entry_year_not_enrolled: 'Cadrumo todavía no admite esto: instalación
         renovable que entra en funcionamiento en este año (LIS DA 17a.1).'
       renewable_evidence_required: La libertad de amortización de renovables requiere
@@ -5189,6 +5259,8 @@ ledger:
       renewable_thermal_requires_fossil_replacement: Una instalación térmica solo
         cumple los requisitos cuando sustituye a otra que utiliza energía fósil (LIS
         DA 17a.1).
+      request_record_invalid: La solicitud tiene un dato que el registro no puede
+        aceptar; revisa los datos del elemento.
       research_development_building_requires_building_class: El método de edificio
         de I+D requiere una clase de tabla de edificio.
       research_development_building_table_class_required: La elección de edificio
@@ -5197,8 +5269,14 @@ ledger:
         I+D excluye los edificios (LIS art. 12.3.b).
       research_development_free_table_class_required: La libertad de amortización
         de I+D material requiere una clase de tabla.
+      residual_value_not_below_basis: El valor residual debe ser inferior al coste
+        amortizable.
       revision_begins_after_tax_year: La edición disponible del Modelo 100 empieza
         después del ejercicio %{tax_year}.
+      revision_first_cannot_supersede: La primera revisión de un elemento no puede
+        sustituir a otra revisión.
+      revision_requires_superseded: Una revisión posterior debe indicar la revisión
+        que sustituye.
       schedule_authority_election_mismatch: Esto cambió desde que lo abriste. Actualiza
         e inténtalo de nuevo.
       schedule_authority_kind_mismatch: Esto cambió desde que lo abriste. Actualiza
@@ -5253,6 +5331,8 @@ ledger:
       vehicle_affectation_required_for_class: Este elemento está en una clase de tabla
         que puede incluir un vehículo restringido por el RIRPF art. 22.4, por lo que
         necesita una declaración de afectación del vehículo.
+      vehicle_affectation_requires_material: Una declaración de vehículo solo se aplica
+        a un elemento material.
       vehicle_missing_from_books: Un vehículo que falta en los libros de la actividad
         no es un elemento afecto (RIRPF art. 22.2.2º).
       vehicle_private_use_category_restricted: Un vehículo con cualquier uso privado

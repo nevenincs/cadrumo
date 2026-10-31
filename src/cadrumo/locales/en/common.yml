@@ -4871,6 +4871,8 @@ ledger:
         base of the acquisition transaction.
       acquisition_row_named_twice: This element names the same ledger entry twice
         among its acquisition rows.
+      acquisition_shape_not_registerable: An element is registered as a purchase or
+        as acquired outside the ledger.
       acquisition_transaction_missing: An acquisition transaction you named is not
         in the ledger.
       acquisition_transaction_not_payment: An acquisition transaction you named is
@@ -4894,6 +4896,27 @@ ledger:
       asset_not_found: The activity asset does not exist.
       authority_incomplete: The published tax tables for this method are incomplete,
         so it can't be worked out yet.
+      basis_amount_not_positive: The price of the element must be above zero.
+      basis_fractional_share_not_below_one: Shared ownership means a share below one.
+      basis_mixed_use_needs_whole_property: A property used for business and private
+        purposes must state its whole-property cost basis.
+      basis_property_area_invalid: The office area must be above zero and no greater
+        than the total area.
+      basis_property_cost_split_mismatch: The building cost plus the land cost must
+        equal the price, and the building cost must be above zero.
+      basis_share_out_of_range: A share must be above zero and at most one.
+      basis_sole_share_not_one: A sole owner holds the whole of the property, so the
+        share must be exactly one.
+      basis_stage_refuses_fact: This stage of the cost basis does not take that fact;
+        remove it or choose the stage it belongs to.
+      basis_stage_requires_fact: This stage of the cost basis needs one more fact;
+        fill it in.
+      basis_whole_property_only_for_property: Only a property can have a whole-property
+        cost basis.
+      building_construction_date_after_service: The construction date of a building
+        cannot be after the date it entered service.
+      building_construction_date_requires_used_asset: The construction date of a building
+        is only stated for an element acquired used.
       business_use_share_missing: An ordinary asset lacks its business-use share.
       charging_infrastructure_new_only: Charging-infrastructure free depreciation
         applies only to new elements.
@@ -4923,6 +4946,12 @@ ledger:
         tax year.
       covered_interval_without_service_days: The covered interval has no days in service
         in that tax year.
+      covered_through_has_no_boundary: The last covered day cannot be the last day
+        the calendar allows.
+      covered_through_not_day_before_until: The last covered day must be the day before
+        the day the period ends.
+      covered_until_has_no_day_before: The day the period ends before needs a day
+        ahead of it.
       creation_requires_first_revision: This changed since you opened it. Refresh
         and try again.
       declared_acquisition_after_service: The acquisition date cannot be later than
@@ -4948,6 +4977,8 @@ ledger:
         sale as a sale.
       disposal_withdrawal_with_amounts: A withdrawal from the activity computes no
         gain, so it states no proceeds, costs or market value.
+      document_number_and_kind_together: State the document kind and its number together
+        or leave both out.
       earlier_year_depends_on_pending_value: A later year is already claimed, and
         this method's charge follows the pending value, so an earlier year cannot
         be claimed now.
@@ -4957,6 +4988,12 @@ ledger:
         the admissible range [%{minimum}, %{maximum}].
       election_changes_only_at_year_boundary: An element's amortisation election can
         change only at a tax-year boundary.
+      election_fact_not_of_method: That fact does not belong to the chosen amortisation
+        method; remove it or change the method.
+      election_multi_shift_with_small_enterprise: Multi-shift and reduced-size acceleration
+        cannot be combined in one election.
+      election_requires_fact: This amortisation method needs one more fact; fill it
+        in.
       electric_vehicle_declaration_required: Electric-vehicle free depreciation requires
         a vehicle declaration.
       electric_vehicle_new_only: Electric-vehicle free depreciation applies only to
@@ -4973,6 +5010,8 @@ ledger:
         106.
       foral_territory: You reside in a foral territory, where Modelos 100 and 130
         of the AEAT do not apply.
+      forecast_interval_end_required: A forecast period needs its last covered day
+        or the day it ends before.
       forecast_no_longer_matches: This changed since you opened it. Refresh and try
         again.
       forecast_not_current_revision: This changed since you opened it. Refresh and
@@ -4992,9 +5031,19 @@ ledger:
         disagree on the annual cap.
       free_claims_exceed_annual_cap: The dotaciones in effect for free depreciation
         exceed the annual cap.
+      free_depreciation_only_low_value: Only a low-value element carries the facts
+        of the free-depreciation election.
+      free_depreciation_requires_provenance: Free depreciation of a low-value element
+        needs the reference of the election and of the annual cap.
       from_start_method_after_other_election: Constant percentage and sum of digits
         run from the start of amortisation; an element already charged under another
         election cannot adopt them.
+      further_acquisition_requires_ledger_row: A later payment of an acquisition must
+        name its ledger row.
+      further_acquisition_shape_invalid: A later payment of an acquisition is a payment
+        in parts or an ancillary cost.
+      goods_transport_use_requires_mixed_vehicle: The goods-transport use only applies
+        to a mixed vehicle.
       history_changed_after_forecast: The element's history changed after this figure
         was worked out; work it out again.
       interval_has_different_claim: That period already holds a dotación with different
@@ -5020,6 +5069,7 @@ ledger:
         low-value threshold.
       low_value_unit_value_not_cents: The element's unit acquisition value must be
         in whole cents.
+      m130_period_invalid: That is not a Modelo 130 period of the tax year.
       method_admission_invalid: The tax tables don't say clearly whether this method
         is allowed for this kind of asset, so it can't be accepted yet.
       method_excluded_by_law: This method is excluded by law for this kind of asset
@@ -5045,14 +5095,26 @@ ledger:
       opening_amount_must_attest_from_start_method: A non-zero opening amount must
         attest the same method before constant percentage or sum of digits can continue
         it.
+      opening_amount_requires_covered_year: An opening amount above zero needs the
+        last tax year it covers.
+      opening_covered_year_requires_amount: The last tax year covered only applies
+        to an opening amount above zero; a zero amount covers no year, so remove it.
       opening_history_amount_missing: The known opening history lacks its amount.
       opening_history_missing: The element's opening amortisation history is missing.
+      opening_known_requires_amount: A known opening history needs the amortisation
+        already deducted.
+      opening_missing_states_nothing: An unknown opening history cannot state an amount
+        or a method; leave them out.
       opening_year_before_in_service: The opening amount cannot cover the years through
         %{opening_tax_year}, which is before the element's in-service year %{in_service_tax_year}.
+      original_price_expert_requires_evidence: An expert valuation of the original
+        price needs its evidence reference.
       out_of_service_date_not_the_boundary: The out-of-service date must be the day
         after the baja date.
       out_of_service_date_without_disposal: An out-of-service date comes only from
         a baja. Record the baja instead.
+      outside_ledger_names_no_row: An element acquired outside the ledger names no
+        ledger row as its purchase.
       ownership_treatment_unknown: The whole-property basis has an unknown ownership
         treatment.
       parameter_absent: The Modelo 100 tables for this tax year lack a figure this
@@ -5062,6 +5124,12 @@ ledger:
         on %{on_date} that this amortisation needs, so it can't be worked out.
       parameter_not_resolvable_for_year: The Modelo 100 tables have no figure for
         tax year %{tax_year} that this amortisation needs, so it can't be worked out.
+      plan_resolution_precedes_submission: The plan cannot be resolved before it was
+        submitted.
+      plan_year_repeated: The plan lists a tax year more than once.
+      plan_years_not_ascending: The plan must list its tax years in ascending order.
+      primary_purchase_lineage_shape: A purchase names its ledger row and the fingerprint
+        of its evidence, and states no acquisition date or activity of its own.
       profile_modality_mismatch: The estimation modality of this asset (normal or
         simplified) must match the one declared in your profile (RIRPF art. 28.3).
       reduced_size_acceleration_new_only: Reduced-size acceleration applies only to
@@ -5069,6 +5137,8 @@ ledger:
       reduced_size_evidence_required: Reduced-size acceleration requires its evidence.
       reduced_size_turnover_reached: The prior-period net turnover reaches the reduced-size
         threshold (LIS art. 101.1).
+      renewable_documentation_mismatch: That document does not evidence this kind
+        of renewable installation.
       renewable_entry_year_not_enrolled: 'Cadrumo doesn''t support this yet: a renewable
         installation entering service in this year (LIS DA 17a.1).'
       renewable_evidence_required: Renewable free depreciation requires its table
@@ -5085,6 +5155,8 @@ ledger:
         taken then cannot be taken freely later.
       renewable_thermal_requires_fossil_replacement: A thermal installation qualifies
         only when it replaces one using fossil energy (LIS DA 17a.1).
+      request_record_invalid: The request has a fact that the register cannot accept;
+        check the facts of the element.
       research_development_building_requires_building_class: The R&D building method
         requires a building table class.
       research_development_building_table_class_required: An R&D building election
@@ -5093,8 +5165,13 @@ ledger:
         buildings (LIS art. 12.3.b).
       research_development_free_table_class_required: Material R&D free depreciation
         requires a table class.
+      residual_value_not_below_basis: The residual value must be below the cost that
+        can be amortised.
       revision_begins_after_tax_year: The available Modelo 100 edition begins after
         tax year %{tax_year}.
+      revision_first_cannot_supersede: The first revision of an element cannot replace
+        another revision.
+      revision_requires_superseded: A later revision must name the revision it replaces.
       schedule_authority_election_mismatch: This changed since you opened it. Refresh
         and try again.
       schedule_authority_kind_mismatch: This changed since you opened it. Refresh
@@ -5144,6 +5221,8 @@ ledger:
       vehicle_affectation_required_for_class: This asset is in a table class that
         can include a vehicle RIRPF art. 22.4 restricts, so it needs a vehicle affectation
         declaration.
+      vehicle_affectation_requires_material: A vehicle declaration only applies to
+        a tangible asset.
       vehicle_missing_from_books: A vehicle missing from the activity's books is not
         an affected asset (RIRPF art. 22.2.2º).
       vehicle_private_use_category_restricted: A vehicle with any private use is affected

@@ -131,11 +131,20 @@ def test_a_year_alone_still_refuses_a_foral_residence() -> None:
         build_operations(territory=ResidenceTerritory.FORAL).filing_handoff(tax_year=2025)
 
 
-@pytest.mark.parametrize("period", ["9T", "", "2025"])
-def test_the_request_still_refuses_a_stated_period_that_is_not_one(period: str) -> None:
+@pytest.mark.parametrize("period", ["9T", "2025"])
+def test_a_stated_period_that_is_not_one_decodes_and_is_refused_with_its_reason(period: str) -> None:
+    request = ActivityAssetFilingHandoffRequest.model_validate_json(
+        f'{{"profile_id":"{uuid4()}","tax_year":2025,"m130_period":"{period}"}}'
+    )
+
+    with pytest.raises(ActividadAssetValidationError, match="m130_period_invalid"):
+        request.requested_period()
+
+
+def test_an_empty_period_does_not_decode() -> None:
     with pytest.raises(ValidationError):
         ActivityAssetFilingHandoffRequest.model_validate_json(
-            f'{{"profile_id":"{uuid4()}","tax_year":2025,"m130_period":"{period}"}}'
+            f'{{"profile_id":"{uuid4()}","tax_year":2025,"m130_period":""}}'
         )
 
 

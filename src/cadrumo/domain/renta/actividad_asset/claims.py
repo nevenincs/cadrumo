@@ -10,6 +10,7 @@ from functools import cached_property
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ....core.casilla_id import CasillaId
+from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.filing_year import FilingYear
 from ....core.hashing import content_hash_hex
 from ....core.hex import Hex64Str
@@ -67,6 +68,7 @@ class AmortizationClaim(CachedIdentityModel):
         return require_euro_cents(value, allow_zero=False, label="free-depreciation claim amount")
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_interval(self) -> AmortizationClaim:
         if self.covered_until <= self.covered_from:
             raise ValueError("claim covered interval must be half-open and non-empty")

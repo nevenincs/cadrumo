@@ -4936,6 +4936,8 @@ ledger:
         tranzakció %{taxable_base} összegű alapját.
       acquisition_row_named_twice: Ez az eszköz kétszer nevezi meg ugyanazt a naplótételt
         a beszerzési sorai között.
+      acquisition_shape_not_registerable: Az eszközt vásárlásként vagy a főkönyvön
+        kívül szerzettként lehet nyilvántartásba venni.
       acquisition_transaction_missing: Az általad megjelölt beszerzési tranzakció
         nincs a főkönyvben.
       acquisition_transaction_not_payment: Az általad megjelölt beszerzési tranzakció
@@ -4961,6 +4963,29 @@ ledger:
       asset_not_found: A tevékenységi eszköz nem létezik.
       authority_incomplete: A módszerhez közzétett adótáblák hiányosak, ezért még
         nem lehet kiszámítani.
+      basis_amount_not_positive: Az eszköz árának nullánál nagyobbnak kell lennie.
+      basis_fractional_share_not_below_one: A közös tulajdon egynél kisebb hányadot
+        jelent.
+      basis_mixed_use_needs_whole_property: A vegyes használatú ingatlannak a teljes
+        ingatlan szerinti bekerülési értéket kell megadnia.
+      basis_property_area_invalid: Az iroda területének nullánál nagyobbnak kell lennie,
+        és nem lehet nagyobb az összterületnél.
+      basis_property_cost_split_mismatch: Az épület és a telek költségének összege
+        egyezzen az árral, az épület költsége pedig legyen nullánál nagyobb.
+      basis_share_out_of_range: A hányadnak nullánál nagyobbnak és legfeljebb egynek
+        kell lennie.
+      basis_sole_share_not_one: Az egyedüli tulajdonos az ingatlan egészét birtokolja,
+        ezért a hányadnak pontosan egynek kell lennie.
+      basis_stage_refuses_fact: A bekerülési érték ezen szakasza nem fogadja el ezt
+        az adatot; töröld, vagy válaszd azt a szakaszt, amelyhez tartozik.
+      basis_stage_requires_fact: A bekerülési érték ezen szakaszához még egy adat
+        kell; töltsd ki.
+      basis_whole_property_only_for_property: Csak ingatlan bekerülési értéke lehet
+        teljes ingatlan szerinti.
+      building_construction_date_after_service: Az épület építési dátuma nem lehet
+        későbbi az üzembe helyezés dátumánál.
+      building_construction_date_requires_used_asset: Az épület építési dátumát csak
+        használtan szerzett eszköznél kell megadni.
       business_use_share_missing: Egy rendes eszközhöz hiányzik az üzleti felhasználási
         arány.
       charging_infrastructure_new_only: A töltőinfrastruktúra szabad értékcsökkenése
@@ -4993,6 +5018,12 @@ ledger:
         maradnia.
       covered_interval_without_service_days: A fedezett időszakban nincs használatban
         töltött nap abban az adóévben.
+      covered_through_has_no_boundary: Az utolsó lefedett nap nem lehet a naptár által
+        megengedett utolsó nap.
+      covered_through_not_day_before_until: Az utolsó lefedett napnak az időszak záró
+        napját megelőző napnak kell lennie.
+      covered_until_has_no_day_before: Az időszak záró napjának kell, hogy legyen
+        előző napja.
       creation_requires_first_revision: Ez megváltozott, mióta megnyitottad. Frissíts,
         és próbáld újra.
       declared_acquisition_after_service: A beszerzés dátuma nem lehet későbbi az
@@ -5020,6 +5051,8 @@ ledger:
         történő eladást eladásként rögzítsd.
       disposal_withdrawal_with_amounts: A tevékenységből való kivonás nem számol nyereséget,
         ezért nem ad meg bevételt, költséget vagy piaci értéket.
+      document_number_and_kind_together: A dokumentum fajtáját és számát együtt add
+        meg, vagy hagyd üresen mindkettőt.
       earlier_year_depends_on_pending_value: Egy későbbi évre már van elszámolás,
         és ez a módszer a fennmaradó értékből számol, ezért most nem számolhatsz el
         korábbi évet.
@@ -5029,6 +5062,12 @@ ledger:
         a megengedett [%{minimum}, %{maximum}] tartományon.
       election_changes_only_at_year_boundary: Egy elem értékcsökkenési választása
         csak adóév fordulóján változhat.
+      election_fact_not_of_method: Ez az adat nem tartozik a választott értékcsökkenési
+        módszerhez; töröld, vagy módosítsd a módszert.
+      election_multi_shift_with_small_enterprise: A többműszakos és a kisméretű vállalkozásra
+        vonatkozó gyorsítás nem vonható össze egyetlen választásban.
+      election_requires_fact: Ehhez az értékcsökkenési módszerhez még egy adat kell;
+        töltsd ki.
       electric_vehicle_declaration_required: Az elektromos járművek szabad értékcsökkenéséhez
         járműnyilatkozat szükséges.
       electric_vehicle_new_only: Az elektromos járművek szabad értékcsökkenése csak
@@ -5045,6 +5084,8 @@ ledger:
         vonatkozik.
       foral_territory: Foral területen élsz, ahol az AEAT 100-as és 130-as modellje
         nem alkalmazandó.
+      forecast_interval_end_required: Az előrejelzett időszakhoz meg kell adni az
+        utolsó lefedett napot vagy azt a napot, amely előtt véget ér.
       forecast_no_longer_matches: Ez megváltozott, mióta megnyitottad. Frissíts, és
         próbáld újra.
       forecast_not_current_revision: Ez megváltozott, mióta megnyitottad. Frissíts,
@@ -5065,9 +5106,19 @@ ledger:
         eltérő éves korlátot adnak meg.
       free_claims_exceed_annual_cap: Az érvényes szabad értékcsökkenési elszámolások
         meghaladják az éves korlátot.
+      free_depreciation_only_low_value: A szabad értékcsökkenés választásának adatait
+        csak az alacsony értékű eszköz viseli.
+      free_depreciation_requires_provenance: Az alacsony értékű eszköz szabad értékcsökkenéséhez
+        meg kell adni a választás és az éves korlát hivatkozását.
       from_start_method_after_other_election: Az állandó százalék és a számjegyösszeg
         a leírás kezdetétől érvényes; más választással már leírt elem nem térhet át
         rájuk.
+      further_acquisition_requires_ledger_row: A beszerzés későbbi kifizetésének meg
+        kell neveznie a főkönyvi tételét.
+      further_acquisition_shape_invalid: Egy beszerzés későbbi kifizetése részletfizetés
+        vagy járulékos költség.
+      goods_transport_use_requires_mixed_vehicle: Az árufuvarozási használat csak
+        vegyes járműre vonatkozik.
       history_changed_after_forecast: Az elem előzményei megváltoztak az összeg kiszámítása
         után; számold ki újra.
       interval_has_different_claim: Erre az időszakra már van másik elszámolás; azt
@@ -5095,6 +5146,7 @@ ledger:
         a kis értékű határt.
       low_value_unit_value_not_cents: Az elem egységnyi beszerzési értékének egész
         centnek kell lennie.
+      m130_period_invalid: Ez nem a Modelo 130 időszaka az adóévben.
       method_admission_invalid: Az adótáblák nem mondják ki egyértelműen, hogy ez
         a módszer engedélyezett-e ilyen típusú eszközre, ezért még nem fogadható el.
       method_excluded_by_law: Ez a módszer jogszabály szerint ki van zárva ilyen típusú
@@ -5120,14 +5172,27 @@ ledger:
       opening_amount_must_attest_from_start_method: A nem nulla nyitó összegnek ugyanazt
         a módszert kell igazolnia, hogy az állandó százalék vagy a számjegyösszeg
         folytathassa.
+      opening_amount_requires_covered_year: A nullánál nagyobb nyitó összeghez meg
+        kell adni az utolsó adóévet, amelyet lefed.
+      opening_covered_year_requires_amount: Az utolsó lefedett adóév csak a nullánál
+        nagyobb nyitó összegre vonatkozik; a nulla összeg egyetlen évet sem fed le,
+        ezért töröld.
       opening_history_amount_missing: Az ismert nyitó előzményből hiányzik az összeg.
       opening_history_missing: Hiányzik az elem nyitó értékcsökkenési előzménye.
+      opening_known_requires_amount: Az ismert nyitó előzmény megköveteli a már leírt
+        értékcsökkenési összeget.
+      opening_missing_states_nothing: Az ismeretlen nyitó előzmény nem adhat meg összeget
+        vagy módszert; hagyd üresen őket.
       opening_year_before_in_service: A nyitó összeg utolsó fedett éve (%{opening_tax_year})
         nem lehet korábbi az elem üzembe helyezésének événél (%{in_service_tax_year}).
+      original_price_expert_requires_evidence: Az eredeti ár szakértői értékeléséhez
+        meg kell adni a bizonylat hivatkozását.
       out_of_service_date_not_the_boundary: Az üzemen kívül helyezés dátumának a kivezetés
         dátumát követő napnak kell lennie.
       out_of_service_date_without_disposal: Az üzemen kívül helyezés dátuma csak kivezetésből
         származhat. Rögzítsd a kivezetést.
+      outside_ledger_names_no_row: A főkönyvön kívül szerzett eszköz nem nevez meg
+        főkönyvi tételt vásárlásként.
       ownership_treatment_unknown: Az egész ingatlanra vonatkozó alap tulajdonosi
         kezelése ismeretlen.
       parameter_absent: A Modelo 100 erre az adóévre szóló táblái nem tartalmaznak
@@ -5139,6 +5204,12 @@ ledger:
       parameter_not_resolvable_for_year: A Modelo 100 táblái nem tartalmaznak a(z)
         %{tax_year}. adóévre olyan értéket, amelyre ennek az értékcsökkenésnek szüksége
         van, ezért nem lehet kiszámítani.
+      plan_resolution_precedes_submission: A tervet nem lehet a benyújtása előtt elbírálni.
+      plan_year_repeated: A terv ugyanazt az adóévet többször is felsorolja.
+      plan_years_not_ascending: A tervnek az adóéveket növekvő sorrendben kell felsorolnia.
+      primary_purchase_lineage_shape: A vásárlás megnevezi a főkönyvi tételét és a
+        bizonylata ujjlenyomatát, saját beszerzési dátumot vagy tevékenységet pedig
+        nem ad meg.
       profile_modality_mismatch: Az eszköz becslési módozatának (normál vagy egyszerűsített)
         egyeznie kell a profilodban megadottal (RIRPF 28.3 cikk).
       reduced_size_acceleration_new_only: A kisméretű vállalkozásokra vonatkozó gyorsítás
@@ -5147,6 +5218,8 @@ ledger:
         igazolás szükséges.
       reduced_size_turnover_reached: Az előző időszak nettó árbevétele eléri a kisméretű
         vállalkozás küszöbét (LIS 101.1 cikk).
+      renewable_documentation_mismatch: Ez a dokumentum nem igazolja ezt a fajta megújuló
+        berendezést.
       renewable_entry_year_not_enrolled: 'A Cadrumo ezt még nem támogatja: ebben az
         évben üzembe álló megújuló energiás létesítmény (LIS DA 17a.1).'
       renewable_evidence_required: A megújuló energiás szabad értékcsökkenéshez táblázati
@@ -5165,6 +5238,8 @@ ledger:
         szabadon.
       renewable_thermal_requires_fossil_replacement: Hőtermelő létesítmény csak akkor
         jogosult, ha fosszilis energiát használó létesítményt vált ki (LIS DA 17a.1).
+      request_record_invalid: A kérés olyan adatot tartalmaz, amelyet a nyilvántartás
+        nem fogadhat el; ellenőrizd az eszköz adatait.
       research_development_building_requires_building_class: A K+F épület módszerhez
         épület táblázati osztály szükséges.
       research_development_building_table_class_required: A K+F épület szerinti választáshoz
@@ -5173,8 +5248,14 @@ ledger:
         terjed ki épületekre (LIS 12.3.b cikk).
       research_development_free_table_class_required: Az anyagi K+F szabad értékcsökkenéshez
         táblázati osztály szükséges.
+      residual_value_not_below_basis: A maradványértéknek az értékcsökkenthető költségnél
+        kisebbnek kell lennie.
       revision_begins_after_tax_year: A rendelkezésre álló Modelo 100 kiadás a(z)
         %{tax_year}. adóév után kezdődik.
+      revision_first_cannot_supersede: Egy eszköz első változata nem válthat le másik
+        változatot.
+      revision_requires_superseded: A későbbi változatnak meg kell neveznie a lecserélt
+        változatot.
       schedule_authority_election_mismatch: Ez megváltozott, mióta megnyitottad. Frissíts,
         és próbáld újra.
       schedule_authority_kind_mismatch: Ez megváltozott, mióta megnyitottad. Frissíts,
@@ -5229,6 +5310,8 @@ ledger:
       vehicle_affectation_required_for_class: Ez az eszköz olyan táblázati osztályba
         tartozik, amely a RIRPF 22.4 cikk által korlátozott járművet is tartalmazhat,
         ezért járműhasználati nyilatkozat szükséges.
+      vehicle_affectation_requires_material: A járműnyilatkozat csak tárgyi eszközre
+        vonatkozik.
       vehicle_missing_from_books: A tevékenység könyveiből hiányzó jármű nem tartozik
         a tevékenységhez kötött eszközök közé (RIRPF 22.2.2º cikk).
       vehicle_private_use_category_restricted: A magánhasználattal is érintett jármű

@@ -21,6 +21,7 @@ from typing import Self
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ....core.decimal.grammar import try_parse_canonical_decimal
+from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.filing_year import FilingYear
 from ....core.hashing import content_hash_hex
 from ....core.hex import Hex64Str
@@ -230,6 +231,7 @@ class ScheduledAmortizationCharge(BaseModel):
         return require_euro_cents(value, allow_zero=False, label="free-depreciation schedule amount")
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_interval(self) -> Self:
         if self.covered_until <= self.covered_from:
             raise ValueError("covered_until must be after covered_from")

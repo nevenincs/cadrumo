@@ -129,9 +129,9 @@ def binding_consumers(revision: ModeloRevision) -> Mapping[BindingId, tuple[Bind
 
     The reverse of the forward references the compiler already closes: a
     binding is *referenced* when a bound casilla, formula operand, export field
-    or record, relation evidence, or the enrolled foreign-asset application
-    row route consumes it. Bindings with no entry at all are returned as an
-    empty tuple rather than omitted, so an orphan is a value in the mapping
+    or record, relation evidence, or an enrolled application row route consumes it.
+    Bindings with no entry at all are returned as an empty tuple rather than
+    omitted, so an orphan is a value in the mapping
     rather than a missing key a caller has to infer.
 
     Core types:
@@ -167,7 +167,33 @@ def binding_consumers(revision: ModeloRevision) -> Mapping[BindingId, tuple[Bind
     _record_export_consumers(revision, record)
     _record_relation_evidence_consumers(revision, record)
     _record_foreign_asset_row_consumers(revision, record)
+    _record_activity_asset_disposal_row_consumers(revision, record)
     return {binding_id: tuple(refs) for binding_id, refs in consumers.items()}
+
+
+def _record_activity_asset_disposal_row_consumers(
+    revision: ModeloRevision,
+    record: Callable[[BindingId, BindingConsumerKind, str], None],
+) -> None:
+    """Index the disposal columns the renta source resolver carries into calculation.
+
+    ``modelo_bindings_renta_expenses`` calls the domain row resolver and returns
+    its indexed values and source identities. Only row fields that resolver can
+    emit earn this consumer; scalar disposal totals keep their own consumers.
+    """
+    from .actividad_asset_disposal_bindings import ActivityAssetDisposalProvider
+    from .binding_selector_utils import provider_member
+
+    for binding in revision.bindings:
+        if binding.source is not BindingSourceKind.ACTIVITY_ASSET_DISPOSAL:
+            continue
+        provider = provider_member(binding, ActivityAssetDisposalProvider)
+        if provider.fact == "row_field" and provider.row_field is not None:
+            record(
+                binding.id,
+                BindingConsumerKind.APPLICATION_ROW_VALUE,
+                f"activity_asset_disposal_row_values.{provider.row_field}",
+            )
 
 
 def _record_foreign_asset_row_consumers(

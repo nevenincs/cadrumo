@@ -132,7 +132,7 @@ def test_correction_keeps_asset_identity_and_links_to_prior_revision() -> None:
 
 
 def test_initial_unsupported_acquisition_shapes_refuse() -> None:
-    with pytest.raises(ValidationError, match="primary purchase"):
+    with pytest.raises(ValidationError, match="acquisition_shape_not_registerable"):
         _revision(acquisition_shape=AcquisitionShape.SPLIT_PAYMENT)
 
 
@@ -157,7 +157,7 @@ def test_ordinary_material_and_intangible_assets_do_not_need_property_facts() ->
     assert already_allocated.deductible_basis() == Decimal("800")
     assert material.basis.is_property is False
     assert intangible.basis.is_property is False
-    with pytest.raises(ValidationError, match="only valid for property"):
+    with pytest.raises(ValidationError, match="basis_stage_refuses_fact"):
         ActivityAssetBasis(
             stage=AssetBasisStage.TAXPAYER_OWNED,
             basis_amount=Decimal("1000"),
@@ -165,7 +165,7 @@ def test_ordinary_material_and_intangible_assets_do_not_need_property_facts() ->
             business_use_share=Decimal("1"),
             construction_cost=Decimal("800"),
         )
-    with pytest.raises(ValidationError, match="whole-property"):
+    with pytest.raises(ValidationError, match="basis_mixed_use_needs_whole_property"):
         ActivityAssetBasis(
             stage=AssetBasisStage.TAXPAYER_OWNED,
             basis_amount=Decimal("1000"),
@@ -176,7 +176,7 @@ def test_ordinary_material_and_intangible_assets_do_not_need_property_facts() ->
             office_area=Decimal("10"),
             total_area=Decimal("100"),
         )
-    with pytest.raises(ValidationError, match="prior_allocation_provenance"):
+    with pytest.raises(ValidationError, match="basis_stage_requires_fact"):
         ActivityAssetBasis(
             stage=AssetBasisStage.BUSINESS_ALLOCATED,
             basis_amount=Decimal("800"),
@@ -204,15 +204,15 @@ def test_spousal_property_and_missing_opening_history_fail_closed() -> None:
 
 
 def test_a_non_zero_opening_amount_requires_the_last_tax_year_it_covers() -> None:
-    with pytest.raises(ValidationError, match="covered_through_tax_year"):
+    with pytest.raises(ValidationError, match="opening_amount_requires_covered_year"):
         OpeningAmortizationHistory(status=OpeningHistoryStatus.KNOWN, accumulated_amount=Decimal("3000"))
-    with pytest.raises(ValidationError, match="non-zero opening amount"):
+    with pytest.raises(ValidationError, match="opening_covered_year_requires_amount"):
         OpeningAmortizationHistory(
             status=OpeningHistoryStatus.KNOWN,
             accumulated_amount=Decimal("0"),
             covered_through_tax_year=2022,
         )
-    with pytest.raises(ValidationError, match="non-zero opening amount"):
+    with pytest.raises(ValidationError, match="opening_covered_year_requires_amount"):
         OpeningAmortizationHistory(status=OpeningHistoryStatus.MISSING, covered_through_tax_year=2022)
 
 

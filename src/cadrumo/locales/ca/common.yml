@@ -4954,6 +4954,8 @@ ledger:
         de la transacció d'adquisició.
       acquisition_row_named_twice: Aquest element anomena dues vegades el mateix apunt
         del llibre entre les seves files d'adquisició.
+      acquisition_shape_not_registerable: Un element es registra com a compra o com
+        a adquirit fora del llibre.
       acquisition_transaction_missing: Una transacció d'adquisició que has indicat
         no és al llibre major.
       acquisition_transaction_not_payment: Una transacció d'adquisició que has indicat
@@ -4977,6 +4979,28 @@ ledger:
       asset_not_found: L'element de l'activitat no existeix.
       authority_incomplete: Les taules tributàries publicades per a aquest mètode
         estan incompletes, així que encara no es pot calcular.
+      basis_amount_not_positive: El preu de l'element ha de ser superior a zero.
+      basis_fractional_share_not_below_one: La titularitat compartida implica una
+        quota inferior a u.
+      basis_mixed_use_needs_whole_property: Un immoble d'ús mixt ha d'indicar el seu
+        cost de propietat completa.
+      basis_property_area_invalid: La superfície del despatx ha de ser superior a
+        zero i no major que la superfície total.
+      basis_property_cost_split_mismatch: El cost de la construcció més el del sòl
+        ha d'igualar el preu, i el de la construcció ha de ser superior a zero.
+      basis_share_out_of_range: Una quota ha de ser superior a zero i com a màxim
+        u.
+      basis_sole_share_not_one: Un propietari únic té la totalitat de l'immoble, així
+        que la quota ha de ser exactament u.
+      basis_stage_refuses_fact: Aquesta etapa del cost no admet aquesta dada; treu-la
+        o tria l'etapa a què pertany.
+      basis_stage_requires_fact: Aquesta etapa del cost necessita una dada més; omple-la.
+      basis_whole_property_only_for_property: Només un immoble pot tenir un cost de
+        propietat completa.
+      building_construction_date_after_service: La data de construcció d'un edifici
+        no pot ser posterior a la de la seva posada en servei.
+      building_construction_date_requires_used_asset: La data de construcció d'un
+        edifici només s'indica en un element adquirit usat.
       business_use_share_missing: Un element ordinari no té el seu percentatge d'ús
         empresarial.
       charging_infrastructure_new_only: La llibertat d'amortització d'infraestructures
@@ -5009,6 +5033,12 @@ ledger:
         exercici.
       covered_interval_without_service_days: L'interval cobert no té dies en servei
         en aquest exercici.
+      covered_through_has_no_boundary: L'últim dia cobert no pot ser l'últim dia que
+        admet el calendari.
+      covered_through_not_day_before_until: L'últim dia cobert ha de ser el dia anterior
+        al que acaba el període.
+      covered_until_has_no_day_before: El dia en què acaba el període necessita un
+        dia anterior.
       creation_requires_first_revision: Això ha canviat des que ho vas obrir. Actualitza
         i torna-ho a provar.
       declared_acquisition_after_service: La data d'adquisició no pot ser posterior
@@ -5036,6 +5066,8 @@ ledger:
         Si la vens, registra-la com una venda.
       disposal_withdrawal_with_amounts: La desafectació no calcula guany, així que
         no indica import de venda, despeses ni valor de mercat.
+      document_number_and_kind_together: Indica el tipus de document i el seu número
+        alhora, o deixa'ls tots dos en blanc.
       earlier_year_depends_on_pending_value: Ja hi ha un exercici posterior amb càrrec
         i aquest mètode calcula sobre el valor pendent, així que ara no pots reclamar
         un exercici anterior.
@@ -5046,6 +5078,12 @@ ledger:
         de l'interval admissible [%{minimum}, %{maximum}].
       election_changes_only_at_year_boundary: L'elecció d'amortització d'un element
         només pot canviar en començar un exercici.
+      election_fact_not_of_method: Aquesta dada no pertany al mètode d'amortització
+        triat; treu-la o canvia el mètode.
+      election_multi_shift_with_small_enterprise: L'amortització per torns múltiples
+        i la d'empresa de dimensió reduïda no es poden combinar en una mateixa opció.
+      election_requires_fact: Aquest mètode d'amortització necessita una dada més;
+        omple-la.
       electric_vehicle_declaration_required: La llibertat d'amortització de vehicles
         elèctrics requereix una declaració del vehicle.
       electric_vehicle_new_only: La llibertat d'amortització de vehicles elèctrics
@@ -5062,6 +5100,8 @@ ledger:
         l'art. 106 de la LIS.
       foral_territory: Resideixes en territori foral, on no s'apliquen els Models
         100 i 130 de l'AEAT.
+      forecast_interval_end_required: Un període de previsió necessita el seu últim
+        dia cobert o el dia anterior al que acaba.
       forecast_no_longer_matches: Això ha canviat des que ho vas obrir. Actualitza
         i torna-ho a provar.
       forecast_not_current_revision: Això ha canviat des que ho vas obrir. Actualitza
@@ -5082,9 +5122,19 @@ ledger:
         discrepen sobre el límit anual.
       free_claims_exceed_annual_cap: Els càrrecs vigents de llibertat d'amortització
         superen el límit anual.
+      free_depreciation_only_low_value: Només un element de poc valor porta les dades
+        de l'opció de llibertat d'amortització.
+      free_depreciation_requires_provenance: La llibertat d'amortització d'un element
+        de poc valor necessita la referència de l'opció i del límit anual.
       from_start_method_after_other_election: El percentatge constant i els nombres
         dígits s'apliquen des de l'inici de l'amortització; un element ja amortitzat
         amb una altra elecció no els pot adoptar.
+      further_acquisition_requires_ledger_row: Un pagament posterior d'una adquisició
+        ha d'indicar el seu moviment del llibre.
+      further_acquisition_shape_invalid: Un pagament posterior d'una adquisició és
+        un pagament fraccionat o una despesa accessòria.
+      goods_transport_use_requires_mixed_vehicle: L'ús de transport de mercaderies
+        només s'aplica a un vehicle mixt.
       history_changed_after_forecast: L'historial de l'element va canviar després
         de calcular aquesta xifra; torna a calcular-la.
       interval_has_different_claim: Aquest període ja té un altre càrrec; corregeix
@@ -5112,6 +5162,7 @@ ledger:
         el llindar d'escàs valor.
       low_value_unit_value_not_cents: El valor unitari d'adquisició de l'element ha
         d'estar en cèntims sencers.
+      m130_period_invalid: Aquest no és un període del Modelo 130 de l'exercici.
       method_admission_invalid: Les taules tributàries no indiquen amb claredat si
         aquest mètode s'admet per a aquest tipus d'element, així que encara no es
         pot acceptar.
@@ -5137,16 +5188,29 @@ ledger:
       opening_amount_must_attest_from_start_method: Un import inicial diferent de
         zero ha d'acreditar el mateix mètode perquè el percentatge constant o els
         nombres dígits el continuïn.
+      opening_amount_requires_covered_year: Un import inicial superior a zero necessita
+        l'últim exercici que cobreix.
+      opening_covered_year_requires_amount: L'últim exercici cobert només s'aplica
+        a un import inicial superior a zero; un import zero no cobreix cap exercici,
+        així que treu-lo.
       opening_history_amount_missing: L'historial inicial conegut no indica el seu
         import.
       opening_history_missing: Falta l'historial inicial d'amortització de l'element.
+      opening_known_requires_amount: Un historial inicial conegut necessita l'amortització
+        ja deduïda.
+      opening_missing_states_nothing: Un historial inicial desconegut no pot indicar
+        import ni mètode; deixa'ls en blanc.
       opening_year_before_in_service: L'import inicial no pot cobrir els anys fins
         a %{opening_tax_year}, que és anterior a l'any de posada en funcionament de
         l'element, %{in_service_tax_year}.
+      original_price_expert_requires_evidence: Una taxació pericial del preu original
+        necessita la referència del seu justificant.
       out_of_service_date_not_the_boundary: La data de fi de servei ha de ser l'endemà
         de la data de baixa.
       out_of_service_date_without_disposal: La data de fi de servei només prové d'una
         baixa. Registra la baixa.
+      outside_ledger_names_no_row: Un element adquirit fora del llibre no indica cap
+        moviment del llibre com a compra.
       ownership_treatment_unknown: La base de l'immoble complet té un tractament de
         titularitat desconegut.
       parameter_absent: Les taules del Model 100 d'aquest exercici no inclouen una
@@ -5158,6 +5222,12 @@ ledger:
       parameter_not_resolvable_for_year: Les taules del Model 100 no tenen per a l'exercici
         %{tax_year} una xifra que aquesta amortització necessita, així que no es pot
         calcular.
+      plan_resolution_precedes_submission: El pla no es pot resoldre abans de presentar-se.
+      plan_year_repeated: El pla indica un mateix exercici més d'una vegada.
+      plan_years_not_ascending: El pla ha d'indicar els seus exercicis en ordre ascendent.
+      primary_purchase_lineage_shape: Una compra indica el seu moviment del llibre
+        i l'empremta del seu justificant, i no declara data d'adquisició ni activitat
+        pròpies.
       profile_modality_mismatch: La modalitat d'estimació d'aquest element (normal
         o simplificada) ha de coincidir amb la declarada al teu perfil (RIRPF art.
         28.3).
@@ -5167,6 +5237,8 @@ ledger:
         requereix la seva justificació.
       reduced_size_turnover_reached: L'import net de la xifra de negocis del període
         anterior assoleix el llindar d'empresa de reduïda dimensió (LIS art. 101.1).
+      renewable_documentation_mismatch: Aquest document no acredita aquest tipus d'instal·lació
+        renovable.
       renewable_entry_year_not_enrolled: 'Cadrumo encara no admet això: instal·lació
         renovable que entra en funcionament aquest any (LIS DA 17a.1).'
       renewable_evidence_required: La llibertat d'amortització de renovables requereix
@@ -5185,6 +5257,8 @@ ledger:
       renewable_thermal_requires_fossil_replacement: Una instal·lació tèrmica només
         compleix els requisits quan en substitueix una que utilitza energia fòssil
         (LIS DA 17a.1).
+      request_record_invalid: La sol·licitud té una dada que el registre no pot acceptar;
+        revisa les dades de l'element.
       research_development_building_requires_building_class: El mètode d'edifici de
         R+D requereix una classe de taula d'edifici.
       research_development_building_table_class_required: L'elecció d'edifici de R+D
@@ -5193,8 +5267,14 @@ ledger:
         R+D exclou els edificis (LIS art. 12.3.b).
       research_development_free_table_class_required: La llibertat d'amortització
         de R+D material requereix una classe de taula.
+      residual_value_not_below_basis: El valor residual ha de ser inferior al cost
+        amortitzable.
       revision_begins_after_tax_year: L'edició disponible del Model 100 comença després
         de l'exercici %{tax_year}.
+      revision_first_cannot_supersede: La primera revisió d'un element no pot substituir
+        una altra revisió.
+      revision_requires_superseded: Una revisió posterior ha d'indicar la revisió
+        que substitueix.
       schedule_authority_election_mismatch: Això ha canviat des que ho vas obrir.
         Actualitza i torna-ho a provar.
       schedule_authority_kind_mismatch: Això ha canviat des que ho vas obrir. Actualitza
@@ -5247,6 +5327,8 @@ ledger:
       vehicle_affectation_required_for_class: Aquest element és en una classe de taula
         que pot incloure un vehicle restringit pel RIRPF art. 22.4, per la qual cosa
         necessita una declaració d'afectació del vehicle.
+      vehicle_affectation_requires_material: Una declaració de vehicle només s'aplica
+        a un element material.
       vehicle_missing_from_books: Un vehicle que falta als llibres de l'activitat
         no és un element afecte (RIRPF art. 22.2.2º).
       vehicle_private_use_category_restricted: Un vehicle amb qualsevol ús privat

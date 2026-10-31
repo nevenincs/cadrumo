@@ -21,10 +21,12 @@ from typing import Annotated, Final, Self
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
+from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.filing_year import FilingYear
 from ....core.hashing import content_hash_hex
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.money.rounding import round_to_cents
+from .errors import ActividadAssetValidationError
 from .fact_leaves import Amount, ClassKey, Share
 from .identity_cache import CachedIdentityModel
 
@@ -150,9 +152,15 @@ def require_free_depreciation_facts(
     """
     if method is AmortizationMethod.LOW_VALUE_FREE:
         if any(value is None for value in facts):
-            raise ValueError(f"free-depreciation {subject} requires election and annual-cap provenance")
+            raise ActividadAssetValidationError(
+                context={"subject": subject},
+                translated_message="ledger.actividad_asset.errors.free_depreciation_requires_provenance",
+            )
     elif any(value is not None for value in facts):
-        raise ValueError(f"only a low-value {subject} carries free-depreciation election facts")
+        raise ActividadAssetValidationError(
+            context={"subject": subject},
+            translated_message="ledger.actividad_asset.errors.free_depreciation_only_low_value",
+        )
 
 
 class PlanAnnualAmount(BaseModel):
@@ -181,14 +189,24 @@ class ApprovedAmortizationPlan(BaseModel):
     annual_amounts: tuple[PlanAnnualAmount, ...] = Field(min_length=1)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_distribution(self) -> Self:
         if self.resolved_on < self.submitted_on:
-            raise ValueError("plan resolution cannot precede its submission")
+            raise ActividadAssetValidationError(
+                context={"field": "resolved_on"},
+                translated_message="ledger.actividad_asset.errors.plan_resolution_precedes_submission",
+            )
         years = [item.tax_year for item in self.annual_amounts]
         if len(set(years)) != len(years):
-            raise ValueError("plan distribution declares a tax year more than once")
+            raise ActividadAssetValidationError(
+                context={"field": "annual_amounts"},
+                translated_message="ledger.actividad_asset.errors.plan_year_repeated",
+            )
         if years != sorted(years):
-            raise ValueError("plan distribution must list tax years in ascending order")
+            raise ActividadAssetValidationError(
+                context={"field": "annual_amounts"},
+                translated_message="ledger.actividad_asset.errors.plan_years_not_ascending",
+            )
         return self
 
     def amount_for(self, tax_year: int) -> Decimal | None:
@@ -250,9 +268,13 @@ class UsedAssetOriginalPrice(BaseModel):
         return require_euro_cents(value, allow_zero=False, label="original_price")
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_valuation_evidence(self) -> Self:
         if self.determination is OriginalPriceDetermination.EXPERT_VALUATION and self.evidence_reference is None:
-            raise ValueError("an expert valuation of the original price requires its evidence_reference")
+            raise ActividadAssetValidationError(
+                context={"field": "evidence_reference"},
+                translated_message="ledger.actividad_asset.errors.original_price_expert_requires_evidence",
+            )
         return self
 
 
@@ -335,11 +357,13 @@ class RenewableSelfConsumptionEvidence(BaseModel):
     required_by_building_code: bool
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_documentation(self) -> Self:
         electricity = self.purpose is RenewableInstallationPurpose.ELECTRICITY_SELF_CONSUMPTION
         if electricity != (self.documentation_kind in _ELECTRICITY_DOCUMENTS):
-            raise ValueError(
-                f"{self.documentation_kind.value} does not evidence a {self.purpose.value} installation (LIS DA 17a.6)",
+            raise ActividadAssetValidationError(
+                context={"field": "documentation_kind", "purpose": self.purpose.value},
+                translated_message="ledger.actividad_asset.errors.renewable_documentation_mismatch",
             )
         return self
 
@@ -433,19 +457,29 @@ class ActivityAssetAmortizationElection(CachedIdentityModel):
         return value
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_method_shape(self) -> Self:
         for field_name, methods in ELECTION_FACT_ADMISSION.items():
             self._admit(field_name, getattr(self, field_name), methods)
         for field_name in ELECTION_REQUIRED_FACTS.get(self.method, ()):
             if getattr(self, field_name) is None:
-                raise ValueError(f"{self.method.value} election requires {field_name}")
+                raise ActividadAssetValidationError(
+                    context={"method": self.method.value, "field": field_name},
+                    translated_message="ledger.actividad_asset.errors.election_requires_fact",
+                )
         if self.shift_hours_per_day is not None and self.small_enterprise is not None:
-            raise ValueError("multi-shift and reduced-size acceleration cannot be combined in one election")
+            raise ActividadAssetValidationError(
+                context={"field": "shift_hours_per_day"},
+                translated_message="ledger.actividad_asset.errors.election_multi_shift_with_small_enterprise",
+            )
         return self
 
     def _admit(self, field_name: str, value: object, methods: frozenset[AmortizationMethod]) -> None:
         if value is not None and self.method not in methods:
-            raise ValueError(f"{field_name} is not a fact of the {self.method.value} method")
+            raise ActividadAssetValidationError(
+                context={"method": self.method.value, "field": field_name},
+                translated_message="ledger.actividad_asset.errors.election_fact_not_of_method",
+            )
 
     @cached_property
     def fingerprint(self) -> str:

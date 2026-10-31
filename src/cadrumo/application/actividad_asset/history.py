@@ -211,6 +211,7 @@ class ActivityAssetHistory(BaseModel):
         current = self.current_descriptor(asset_id)
         if current is not None and current.facts == facts:
             return self
+        facts.require_document_pair()
         descriptor = ActivityAssetDescriptor(
             asset_id=asset_id,
             descriptor_number=1 if current is None else current.descriptor_number + 1,

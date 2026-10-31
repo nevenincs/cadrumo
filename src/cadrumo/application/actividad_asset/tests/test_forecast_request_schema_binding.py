@@ -6,12 +6,12 @@ from datetime import date
 from uuid import uuid4
 
 import pytest
-from pydantic import ValidationError
 
 from cadrumo.application.actividad_asset.activity_asset_contracts import ActivityAssetForecastRequest
 from cadrumo.application.operations.registry import OperationSchemaBindingV1
 from cadrumo.application.operations.registry_schema_validation import strict_model_json_schema
 from cadrumo.core.hashing import content_hash_hex
+from cadrumo.domain.renta.actividad_asset.errors import ActividadAssetValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -38,11 +38,13 @@ def test_direct_construction_normalizes_both_interval_forms() -> None:
     assert inclusive.model_dump_json() == exclusive.model_dump_json() == validated.model_dump_json()
 
 
-def test_minimum_boundary_is_refused_as_validation_error() -> None:
-    with pytest.raises(ValidationError):
-        ActivityAssetForecastRequest(
-            profile_id=uuid4(), asset_id="laptop-1", covered_from=date.min, covered_until=date.min
-        )
+def test_minimum_boundary_decodes_and_is_refused_with_its_reason() -> None:
+    request = ActivityAssetForecastRequest(
+        profile_id=uuid4(), asset_id="laptop-1", covered_from=date.min, covered_until=date.min
+    )
+
+    with pytest.raises(ActividadAssetValidationError, match="covered_until_has_no_day_before"):
+        request.exclusive_end()
 
 
 def test_request_binds_to_its_closed_public_schema() -> None:
