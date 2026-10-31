@@ -2198,6 +2198,7 @@
         "cadrumo.domain.calculations.registry.convenio",
         "cadrumo.domain.calculations.registry.counterpart_bindings",
         "cadrumo.domain.calculations.registry.deadline_coordinate",
+        "cadrumo.domain.calculations.registry.descendant_disability_catalogue",
         "cadrumo.domain.calculations.registry.descendant_relacion_catalogue",
         "cadrumo.domain.calculations.registry.design_constant_bindings",
         "cadrumo.domain.calculations.registry.detail_record_bindings",
