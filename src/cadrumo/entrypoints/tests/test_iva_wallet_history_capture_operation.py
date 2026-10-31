@@ -62,6 +62,7 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
 from .supervised_operation_rig import (
+    ProcessResourceScope,
     assert_foreign_profile_refused,
     build_supervised_operation,
     settle_and_project,
@@ -244,30 +245,6 @@ class _Composition:
     iva_remote_state_port: IvaRemoteStatePort
 
 
-class _ResourceScope:
-    """Track the operation-owned process resource lifecycle without launching one."""
-
-    def __init__(self) -> None:
-        self.activation_depth = 0
-        self.activation_entries = 0
-        self.closed = False
-        self.close_calls = 0
-
-    @contextmanager
-    def activate(self) -> Generator[None]:
-        self.activation_entries += 1
-        self.activation_depth += 1
-        try:
-            yield
-        finally:
-            self.activation_depth -= 1
-
-    async def close(self) -> None:
-        assert self.activation_depth == 0
-        self.close_calls += 1
-        self.closed = True
-
-
 @pytest.mark.parametrize("names_root", [True, False], ids=["named_root", "configured_default_root"])
 def test_supervisor_admits_exact_external_client_profile_and_projects_guarded_iva_history_capture(
     tmp_path: Path, names_root: bool
@@ -279,7 +256,7 @@ def test_supervisor_admits_exact_external_client_profile_and_projects_guarded_iv
     with isolated_runtime_profile(tmp_path=tmp_path) as profile, bundled_indexed_authority().operation() as authority:
         profile_id = UUID(profile.bucket_id)
         trace: list[str] = []
-        resources = _ResourceScope()
+        resources = ProcessResourceScope()
         port = _SyntheticIvaRemoteStatePort(
             load_settings(),
             resource_is_active=lambda: resources.activation_depth == 1,
@@ -298,7 +275,7 @@ def test_supervisor_admits_exact_external_client_profile_and_projects_guarded_iv
             trace.append("composition")
             return cast(FiledHistoryComposition, composition)
 
-        def browser_resources_factory() -> _ResourceScope:
+        def browser_resources_factory() -> ProcessResourceScope:
             trace.append("resources")
             return resources
 

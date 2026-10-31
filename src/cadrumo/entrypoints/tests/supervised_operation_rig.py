@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator
+from contextlib import contextmanager
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, NamedTuple
@@ -136,3 +138,27 @@ def cli_submit_context(
         published_authority=Availability.AVAILABLE,
         authority_operation=authority_operation,
     )
+
+
+class ProcessResourceScope:
+    """Track worker-owned PROCESS activation and cleanup without launching a process."""
+
+    def __init__(self) -> None:
+        self.activation_depth = 0
+        self.activation_entries = 0
+        self.close_calls = 0
+        self.closed = False
+
+    @contextmanager
+    def activate(self) -> Generator[None]:
+        self.activation_entries += 1
+        self.activation_depth += 1
+        try:
+            yield
+        finally:
+            self.activation_depth -= 1
+
+    async def close(self) -> None:
+        assert self.activation_depth == 0
+        self.close_calls += 1
+        self.closed = True

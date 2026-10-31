@@ -44,6 +44,7 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
 from .supervised_operation_rig import (
+    ProcessResourceScope,
     assert_foreign_profile_refused,
     build_supervised_operation,
     settle_and_project,
@@ -148,28 +149,6 @@ class _Composition:
     iva_remote_state_port: IvaRemoteStatePort
 
 
-class _ResourceScope:
-    """Track operation-owned browser cleanup without launching a process."""
-
-    def __init__(self) -> None:
-        self.activation_depth = 0
-        self.closed = False
-        self.close_calls = 0
-
-    @contextmanager
-    def activate(self) -> Generator[None]:
-        self.activation_depth += 1
-        try:
-            yield
-        finally:
-            self.activation_depth -= 1
-
-    async def close(self) -> None:
-        assert self.activation_depth == 0
-        self.close_calls += 1
-        self.closed = True
-
-
 def test_supervisor_admits_exact_profile_and_projects_guarded_wallet_capture(tmp_path: Path) -> None:
     """Record one synthetic wallet observation with profile-scoped authority."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile, bundled_indexed_authority().operation() as authority:
@@ -180,7 +159,7 @@ def test_supervisor_admits_exact_profile_and_projects_guarded_wallet_capture(tmp
             output_root=Path("synthetic-wallet-output"),
             iva_remote_state_port=cast(IvaRemoteStatePort, port),
         )
-        resources = _ResourceScope()
+        resources = ProcessResourceScope()
 
         def provider_preflight(profile_id_arg: UUID, pinned_authority: PinnedAuthorityOperation) -> None:
             assert profile_id_arg == profile_id
@@ -191,7 +170,7 @@ def test_supervisor_admits_exact_profile_and_projects_guarded_wallet_capture(tmp
             events.append("composition")
             return composition
 
-        def resources_factory() -> _ResourceScope:
+        def resources_factory() -> ProcessResourceScope:
             events.append("browser-resources")
             return resources
 

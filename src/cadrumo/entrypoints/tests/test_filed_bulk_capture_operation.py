@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from contextlib import AbstractAsyncContextManager, contextmanager
+from contextlib import AbstractAsyncContextManager
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
@@ -55,6 +55,7 @@ from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo_client.contracts.access_vocabulary import AccessAction
 
 from .supervised_operation_rig import (
+    ProcessResourceScope,
     assert_foreign_profile_refused,
     build_supervised_operation,
     cli_submit_context,
@@ -120,18 +121,6 @@ class _NeverOpenFiledDataPort:
         raise AssertionError("unsupported-only preview unexpectedly captured deferred filed observations")
 
 
-class _ResourceScope:
-    def __init__(self) -> None:
-        self.closed = False
-
-    @contextmanager
-    def activate(self):
-        yield
-
-    async def close(self) -> None:
-        self.closed = True
-
-
 @pytest.mark.parametrize("names_root", [True, False], ids=["named_root", "configured_default_root"])
 def test_supervisor_records_bulk_preview_for_exact_profile_without_register_access(
     tmp_path: Path, names_root: bool
@@ -147,7 +136,7 @@ def test_supervisor_records_bulk_preview_for_exact_profile_without_register_acce
         bundle = in_memory_filed_observation_test_bundle()
         filed_data_port = _NeverOpenFiledDataPort()
         composition = _Composition(ports=bundle.ports, filed_data_port=filed_data_port)
-        resources = _ResourceScope()
+        resources = ProcessResourceScope()
         preflight_calls: list[tuple[UUID, PinnedAuthorityOperation]] = []
 
         def provider_preflight(profile_id_arg: UUID, pinned_authority: PinnedAuthorityOperation) -> None:

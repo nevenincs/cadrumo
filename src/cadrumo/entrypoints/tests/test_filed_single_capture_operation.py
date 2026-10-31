@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import AsyncGenerator, Callable
-from contextlib import asynccontextmanager, contextmanager
+from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from hashlib import sha256
@@ -61,6 +61,7 @@ from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo_client.contracts.access_vocabulary import AccessAction
 
 from .supervised_operation_rig import (
+    ProcessResourceScope,
     assert_foreign_profile_refused,
     build_supervised_operation,
     cli_submit_context,
@@ -207,18 +208,6 @@ class _Composition:
     filed_data_port: FiledDataCapturePort
 
 
-class _ResourceScope:
-    def __init__(self) -> None:
-        self.closed = False
-
-    @contextmanager
-    def activate(self):
-        yield
-
-    async def close(self) -> None:
-        self.closed = True
-
-
 def test_supervisor_binds_single_capture_to_exact_profile_and_projects_guarded_accounting(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -258,7 +247,7 @@ def test_supervisor_binds_single_capture_to_exact_profile_and_projects_guarded_a
         bundle = in_memory_filed_observation_test_bundle()
         register = _SyntheticRegister(declaration, observation, is_guarded)
         filed_port = _SyntheticFiledPort(register)
-        resource_scope = _ResourceScope()
+        resource_scope = ProcessResourceScope()
 
         observation_persistence = bundle.ports.observation_persistence
         persist_artefact = observation_persistence.persist_artefact

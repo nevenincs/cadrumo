@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncGenerator, Callable, Generator
-from contextlib import asynccontextmanager, contextmanager
+from collections.abc import AsyncGenerator, Callable
+from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
@@ -59,7 +59,12 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 from cadrumo.domain.deadlines.models import TaxpayerProfile
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
-from .supervised_operation_rig import assert_foreign_profile_refused, build_supervised_operation, run_to_terminal
+from .supervised_operation_rig import (
+    ProcessResourceScope,
+    assert_foreign_profile_refused,
+    build_supervised_operation,
+    run_to_terminal,
+)
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -186,30 +191,6 @@ class _Composition:
     filed_data_port: FiledDataCapturePort
 
 
-class _ResourceScope:
-    """Track worker-owned PROCESS activation and cleanup without launching AEAT."""
-
-    def __init__(self) -> None:
-        self.activation_depth = 0
-        self.activation_entries = 0
-        self.close_calls = 0
-        self.closed = False
-
-    @contextmanager
-    def activate(self) -> Generator[None]:
-        self.activation_entries += 1
-        self.activation_depth += 1
-        try:
-            yield
-        finally:
-            self.activation_depth -= 1
-
-    async def close(self) -> None:
-        assert self.activation_depth == 0
-        self.close_calls += 1
-        self.closed = True
-
-
 def _assert_exact_external_client_access[RequestPayloadT: BaseModel](
     *,
     registry: OperationRegistry,
@@ -247,7 +228,7 @@ def test_supervisor_records_filed_list_and_discover_for_exact_external_client_pr
     with isolated_runtime_profile(tmp_path=tmp_path) as profile, bundled_indexed_authority().operation() as authority:
         profile_id = UUID(profile.bucket_id)
         trace: list[str] = []
-        resources: list[_ResourceScope] = []
+        resources: list[ProcessResourceScope] = []
 
         def resource_is_active() -> bool:
             return any(resource.activation_depth == 1 for resource in resources)
@@ -274,9 +255,9 @@ def test_supervisor_records_filed_list_and_discover_for_exact_external_client_pr
             return build
 
         def resource_factory(label: str) -> FiledHistoryBrowserResourcesFactory:
-            def build() -> _ResourceScope:
+            def build() -> ProcessResourceScope:
                 trace.append(f"{label}-resources")
-                resource = _ResourceScope()
+                resource = ProcessResourceScope()
                 resources.append(resource)
                 return resource
 

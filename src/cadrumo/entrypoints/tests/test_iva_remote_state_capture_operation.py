@@ -63,6 +63,7 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
 from .supervised_operation_rig import (
+    ProcessResourceScope,
     assert_foreign_profile_refused,
     build_supervised_operation,
     settle_and_project,
@@ -292,36 +293,12 @@ class _Composition:
     iva_remote_state_port: IvaRemoteStatePort
 
 
-class _ResourceScope:
-    """Track PROCESS ownership and cleanup without starting a browser."""
-
-    def __init__(self) -> None:
-        self.activation_depth = 0
-        self.activation_entries = 0
-        self.close_calls = 0
-        self.closed = False
-
-    @contextmanager
-    def activate(self) -> Generator[None]:
-        self.activation_entries += 1
-        self.activation_depth += 1
-        try:
-            yield
-        finally:
-            self.activation_depth -= 1
-
-    async def close(self) -> None:
-        assert self.activation_depth == 0
-        self.close_calls += 1
-        self.closed = True
-
-
 def test_supervisor_captures_iva_remote_state_for_exact_external_client_profile(tmp_path: Path) -> None:
     """Record both IVA evidence surfaces through pinned, guarded synthetic ports."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile, bundled_indexed_authority().operation() as authority:
         profile_id = UUID(profile.bucket_id)
         trace: list[str] = []
-        resources: list[_ResourceScope] = []
+        resources: list[ProcessResourceScope] = []
 
         def resource_is_active() -> bool:
             return any(resource.activation_depth == 1 for resource in resources)
@@ -345,9 +322,9 @@ def test_supervisor_captures_iva_remote_state_for_exact_external_client_profile(
             trace.append("composition")
             return cast(FiledHistoryComposition, composition)
 
-        def browser_resources_factory() -> _ResourceScope:
+        def browser_resources_factory() -> ProcessResourceScope:
             trace.append("resources")
-            resource = _ResourceScope()
+            resource = ProcessResourceScope()
             resources.append(resource)
             return resource
 
