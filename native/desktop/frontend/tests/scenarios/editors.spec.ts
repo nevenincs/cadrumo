@@ -206,7 +206,8 @@ test("a date also reads ISO, and refuses what names no day", async ({
   await expect(checked(page)).toHaveText("refused not_a_date");
 });
 
-const dayIn = (page: Page, iso: string) => page.locator(`button[data-day="${iso}"]`);
+const dayIn = (page: Page, iso: string) =>
+  page.locator(`button[data-day="${iso}"]`);
 const openCalendar = (page: Page) =>
   page.getByRole("button", { name: /Choose date|Elige|Tria|Válassz/ }).click();
 
