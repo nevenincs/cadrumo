@@ -25,7 +25,6 @@ from ....domain.calculations.registry.tests.published_authority import published
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
-    derive_calculation_revision_id,
 )
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.ledger_filing_snapshot import FiledRegisterState
@@ -54,6 +53,7 @@ from .. import filed_register_reader as reader_module
 from ..calculation_bucket_actions import _source_provenance_refs
 from ..filed_register_reader import filed_register_reader
 from ..work_profile import ModeloWorkProfile
+from .empty_borrador_revision_support import empty_borrador_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -124,27 +124,7 @@ def _seal(operation: PinnedAuthorityOperation, history: ActivityAssetHistory, ro
             updated_at=_AT,
         )
         provenance = _source_provenance_refs(resolve_m100(history, rows=rows, year=year))
-        draft = CalculationRevision(
-            calculation_revision_id=derive_calculation_revision_id(
-                work_unit_id=unit.work_unit_id,
-                input_values_by_casilla_id={},
-                binding_overrides={},
-                casilla_values={},
-                filing_instance_evidence=None,
-                source_provenance=provenance,
-            ),
-            work_unit_id=unit.work_unit_id,
-            registry_snapshot_ref=snapshot.snapshot_ref,
-            state=CalculationRevisionState.BORRADOR,
-            input_values_by_casilla_id={},
-            binding_overrides={},
-            casilla_values={},
-            observations=(),
-            created_at=_AT,
-            updated_at=_AT,
-            filing_instance_evidence=None,
-            source_provenance=provenance,
-        )
+        draft = empty_borrador_revision(unit, snapshot.snapshot_ref, provenance, at=_AT)
         units[unit.work_unit_id] = unit
         filed = draft.model_copy(update={"state": CalculationRevisionState.PRESENTADO})
         sealed[filed.calculation_revision_id] = filed

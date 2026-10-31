@@ -17,8 +17,6 @@ from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 from cadrumo.domain.modelos.calculation_revision import (
     CalculationRevision,
-    CalculationRevisionState,
-    derive_calculation_revision_id,
 )
 from cadrumo.domain.modelos.calculation_revision_sources import ActivityAssetConsumption, CalculationSourceRef
 from cadrumo.domain.modelos.codes import ModeloCode
@@ -28,6 +26,7 @@ from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ...aggregation.ledger_membership import LedgerSourceMembership
 from .._ledger_drift_gate import ledger_drift_findings
 from .advisory_diagnostic_repositories import EmptyTransactionCatalogueRepository
+from .empty_borrador_revision_support import empty_borrador_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -74,27 +73,7 @@ def _draft(*source_refs: str) -> tuple[WorkUnit, CalculationRevision]:
         updated_at=_AT,
     )
     provenance = _provenance(*source_refs)
-    revision = CalculationRevision(
-        calculation_revision_id=derive_calculation_revision_id(
-            work_unit_id=work_unit.work_unit_id,
-            input_values_by_casilla_id={},
-            binding_overrides={},
-            casilla_values={},
-            filing_instance_evidence=None,
-            source_provenance=provenance,
-        ),
-        work_unit_id=work_unit.work_unit_id,
-        registry_snapshot_ref=snapshot.snapshot_ref,
-        state=CalculationRevisionState.BORRADOR,
-        input_values_by_casilla_id={},
-        binding_overrides={},
-        casilla_values={},
-        observations=(),
-        created_at=_AT,
-        updated_at=_AT,
-        filing_instance_evidence=None,
-        source_provenance=provenance,
-    )
+    revision = empty_borrador_revision(work_unit, snapshot.snapshot_ref, provenance, at=_AT)
     return work_unit, revision
 
 

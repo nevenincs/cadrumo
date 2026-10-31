@@ -14,7 +14,6 @@ from ....domain.calculations.registry.tests.published_authority import published
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
-    derive_calculation_revision_id,
 )
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.ledger_filing_snapshot import FiledRegisterState
@@ -34,6 +33,7 @@ from ...aggregation.tests.test_modelo_bindings_asset_disposal import disposed_as
 from ...ledger.stale_filing_query import read_stale_ledger_filings
 from ..calculation_bucket_actions import _source_provenance_refs
 from ..filed_register_reader import filed_register_reader
+from .empty_borrador_revision_support import empty_borrador_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -68,27 +68,7 @@ def _filed(history: ActivityAssetHistory, *, state: CalculationRevisionState) ->
     snapshot = published_snapshot("100", filing_year=2025, period="0A")
     work_unit = _work_unit(snapshot.revision.id)
     provenance = _source_provenance_refs(resolve_m100(history))
-    revision = CalculationRevision(
-        calculation_revision_id=derive_calculation_revision_id(
-            work_unit_id=work_unit.work_unit_id,
-            input_values_by_casilla_id={},
-            binding_overrides={},
-            casilla_values={},
-            filing_instance_evidence=None,
-            source_provenance=provenance,
-        ),
-        work_unit_id=work_unit.work_unit_id,
-        registry_snapshot_ref=snapshot.snapshot_ref,
-        state=CalculationRevisionState.BORRADOR,
-        input_values_by_casilla_id={},
-        binding_overrides={},
-        casilla_values={},
-        observations=(),
-        created_at=_AT,
-        updated_at=_AT,
-        filing_instance_evidence=None,
-        source_provenance=provenance,
-    )
+    revision = empty_borrador_revision(work_unit, snapshot.snapshot_ref, provenance, at=_AT)
     return work_unit, revision.model_copy(update={"state": state})
 
 
