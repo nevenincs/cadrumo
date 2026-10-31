@@ -43,7 +43,7 @@ just docs-check            # validates cross-references and command references
 
 A change to the README or a guide under `docs/` moves through a staged review. Each stage has a distinct reviewer, and each completes before the next begins:
 
-1. **Wireframe.** Outline the document as titles and section intents. Assign each page a Diataxis type — Diataxis is a documentation framework that sorts pages into four kinds: tutorial, how-to, reference, or explanation.
+1. **Wireframe.** Outline the document as titles and section intents. Assign each page a Diátaxis type — Diátaxis is a documentation framework that sorts pages into four kinds: tutorial, how-to, reference, or explanation.
 2. **Refinement.** A reviewer with no project context reads only the wireframe and confirms a newcomer would understand what each section delivers. Revise until every section passes.
 3. **Context.** Researchers gather the facts, commands, paths, and source locations each section needs.
 4. **Drafting.** Authors write each section from the gathered context and the project's prose-style rules.
