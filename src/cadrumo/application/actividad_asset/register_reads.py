@@ -32,6 +32,7 @@ from ...domain.renta.actividad_asset.schedule import (
 from ..operations.public_scalar import PublicDecimal, project_scalar
 from .activity_asset_read_models import (
     NO_TABLE_MINIMUM_REASON_KEY,
+    OPENING_HISTORY_MISSING_KEY,
     ActivityAssetClaimableInterval,
     ActivityAssetClaimStaleReason,
     ActivityAssetClaimState,
@@ -438,6 +439,7 @@ def _list_row(revision: ActivityAssetRevision, context: RegisterReadContext) -> 
         basis=_amount(basis),
         accumulated=_optional_amount(accumulated),
         pending=_optional_amount(pending),
+        opening_remedy_field_key=remedy_field_key(OPENING_HISTORY_MISSING_KEY) if opening is None else None,
         pending_applies=not _left_service(revision, context.today),
         findings=_finding_counts(plan, claims, revision, context),
         default_claim_year=default_claim_year(plan, today=context.today),

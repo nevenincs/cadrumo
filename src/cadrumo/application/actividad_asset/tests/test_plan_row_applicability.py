@@ -86,3 +86,32 @@ def test_a_reason_that_is_not_about_opening_data_serves_no_remedy_and_the_served
     assert OPENING_REMEDY_FIELD in TIMELINE_FIELD_PATHS
     assert lookup_translation(f"ledger.actividad_asset.field.{OPENING_REMEDY_FIELD}", locale="en") is not None
     assert all(lookup_translation(key, locale="en") is not None for key in OPENING_REMEDY_REASON_KEYS)
+
+
+def _unknown_opening_register() -> ActivityAssetOperations:
+    base = _revision(in_service=date(2020, 1, 1))
+    facts = {name: getattr(base, name) for name in type(base).model_fields}
+    facts["opening_history"] = OpeningAmortizationHistory(status=OpeningHistoryStatus.MISSING)
+    operations, _ = _operations()
+    operations.create(ActivityAssetRevision(**facts), _NAME)
+    return operations
+
+
+def test_a_list_row_with_an_unknown_opening_amount_serves_the_same_remedy_as_the_plan_row() -> None:
+    operations = _unknown_opening_register()
+
+    (listed,) = operations.list_elements()
+
+    assert listed.pending is None
+    assert listed.opening_remedy_field_key is not None
+    assert listed.opening_remedy_field_key == operations.plan(_ASSET)[0].absence_remedy_field_key
+
+
+def test_a_list_row_with_a_known_opening_amount_serves_no_opening_remedy() -> None:
+    operations, _ = _operations()
+    operations.create(_revision(), _NAME)
+
+    (listed,) = operations.list_elements()
+
+    assert listed.pending is not None
+    assert listed.opening_remedy_field_key is None
