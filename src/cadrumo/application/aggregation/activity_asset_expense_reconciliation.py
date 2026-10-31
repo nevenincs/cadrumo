@@ -48,6 +48,7 @@ class LedgerRentaExpenseTreatment(BaseModel):
     transaction_id: TransactionId
     category: str | None = Field(default=None, min_length=1, max_length=128)
     tax_year: int
+    booked_on: date
     deductible_amount: Decimal
     amortization_labelled: bool
 
@@ -67,6 +68,7 @@ class RegisterOwnedAcquisition(BaseModel):
     transaction_id: TransactionId
     category: str | None = Field(default=None, min_length=1, max_length=128)
     tax_year: int
+    booked_on: date | None = None
     purchase_amount: Decimal | None = None
 
 
@@ -91,6 +93,8 @@ class UnregisteredAmortizationRow(BaseModel):
     transaction_id: TransactionId
     category: str | None = Field(default=None, min_length=1, max_length=128)
     tax_year: int
+    booked_on: date | None = None
+    amount: Decimal | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -141,6 +145,7 @@ def classify_ledger_expenses_against_asset_register(
                 transaction_id=treatment.transaction_id,
                 category=treatment.category,
                 tax_year=treatment.tax_year,
+                booked_on=treatment.booked_on,
                 purchase_amount=treatment.deductible_amount,
             )
             for asset_id, transaction_id in owners
@@ -152,6 +157,8 @@ def classify_ledger_expenses_against_asset_register(
                 transaction_id=treatment.transaction_id,
                 category=treatment.category,
                 tax_year=treatment.tax_year,
+                booked_on=treatment.booked_on,
+                amount=treatment.deductible_amount,
             )
             for treatment in treatments
             if treatment.amortization_labelled and treatment.transaction_id not in owned
@@ -293,11 +300,15 @@ def unregistered_amortization_row_diagnostics(
             "register the element in the activity-asset register, naming this transaction as its acquisition, "
             "or reclassify the row if it is not an amortizable element"
         ),
-        fact=lambda row: CalculationNoteFact.of(
-            CalculationNoteSentence.ROW_UNREGISTERED,
-            row=row.transaction_id[-12:],
-            category=row.category or "",
-            year=row.tax_year,
+        fact=lambda row: (
+            CalculationNoteFact.of(
+                CalculationNoteSentence.ROW_UNREGISTERED,
+                rows=(row.transaction_id,),
+                row_date=row.booked_on.isoformat(),
+                row_amount=row.amount,
+            )
+            if row.booked_on is not None and row.amount is not None
+            else CalculationNoteFact.of(CalculationNoteSentence.ROW_UNREGISTERED_UNDATED, rows=(row.transaction_id,))
         ),
     )
 
@@ -336,10 +347,20 @@ def register_owned_acquisition_diagnostics(
             "the register owns this asset's Renta deduction: record the year's amortization charge so the "
             "schedule's claim is declared instead of the purchase"
         ),
-        fact=lambda acquisition: CalculationNoteFact.of(
-            CalculationNoteSentence.REGISTER_OWNED_ACQUISITION,
-            row=acquisition.transaction_id[-12:],
-            element=acquisition.asset_id,
+        fact=lambda acquisition: (
+            CalculationNoteFact.of(
+                CalculationNoteSentence.REGISTER_OWNED_ACQUISITION,
+                elements=(acquisition.asset_id,),
+                rows=(acquisition.transaction_id,),
+                row_date=acquisition.booked_on.isoformat(),
+                row_amount=acquisition.purchase_amount,
+            )
+            if acquisition.booked_on is not None and acquisition.purchase_amount is not None
+            else CalculationNoteFact.of(
+                CalculationNoteSentence.REGISTER_OWNED_ACQUISITION_UNDATED,
+                elements=(acquisition.asset_id,),
+                rows=(acquisition.transaction_id,),
+            )
         ),
     )
 

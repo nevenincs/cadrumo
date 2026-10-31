@@ -189,6 +189,7 @@ class LedgerRentaGastosEstimacionDirectaAggregationSourceResolver:
                     transaction_id=observation.transaction_id,
                     category=str(observation.category),
                     tax_year=observation.tax_year,
+                    booked_on=observation.operation_date,
                     deductible_amount=observation.deductible_amount,
                     amortization_labelled=(
                         observation.target_casilla_id in amortization_boxes
@@ -676,6 +677,7 @@ def _m130_asset_register_treatments(
             transaction_id=observation.transaction_id,
             category=observation.category_id,
             tax_year=observation.filing_date.year,
+            booked_on=observation.filing_date,
             deductible_amount=observation.deductible_amount,
             amortization_labelled=observation.category_id in labelled or observation.transaction_id in capital_goods,
         )

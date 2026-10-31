@@ -31,6 +31,7 @@ from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryPr
 from ...domain.prorrata_register.protocols import ProrrataRegisterRepositoryProtocol
 from ...domain.transactions.own_accounts import OwnAccountRegister
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
+from ..actividad_asset.ports import ActivityAssetHistoryRepository
 from ..aggregation.retencion_observations_repository import RetencionObservationPorts
 from ..bienes_inversion.ports import BienesInversionIvaRegisterRepositoryProtocol
 from ..calculations.iva_compensation_history_ports import IvaCompensationHistoryRepositoryProtocol
@@ -79,6 +80,8 @@ class ModeloExportPorts:
     own_accounts: OwnAccountRegisterReaderProtocol
     """The own-account register every charge and refund account is resolved from."""
     transaction: TransactionCatalogueRepositoryProtocol
+    activity_assets: ActivityAssetHistoryRepository
+    """Read for the names the export's notes call the taxpayer's elements by."""
     draft_review_ports: DraftReviewPorts
     retencion_observation_ports: RetencionObservationPorts
     product_software_identity: AeatProductSoftwareIdentity

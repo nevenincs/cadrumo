@@ -47,6 +47,7 @@ class CalculationSourceDiagnosticSnapshot(BaseModel):
     resolver_id: str | None = Field(default=None, min_length=1, max_length=128)
     source_ref: str | None = Field(default=None, min_length=1, max_length=256)
     fact: CalculationNoteFact | None = None
+    element_names: tuple[tuple[str, str], ...] = ()
     binding_id: BindingId | None = None
     relation_id: RelationId | None = None
     relation_ids: tuple[RelationId, ...] = ()

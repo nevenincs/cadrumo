@@ -7,6 +7,7 @@ Core types: :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevi
 from __future__ import annotations
 
 import re
+from collections.abc import Mapping
 from typing import Final
 
 from ...core.casilla_id import CasillaId
@@ -130,9 +131,11 @@ class WorkFormContext:
         overridden_binding_ids: frozenset[BindingId] | None,
         language: OutputLanguage,
         unworked_casilla_ids: frozenset[str] = frozenset(),
+        element_names: Mapping[str, str] | None = None,
     ) -> None:
         """Index one work review and its pinned revision for repeated form lookups."""
         self.review = review
+        self.element_names: Mapping[str, str] = element_names or {}
         self.unworked = unworked_casilla_ids
         self.language = language
         self.revision = revision

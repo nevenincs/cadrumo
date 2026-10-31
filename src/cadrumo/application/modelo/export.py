@@ -73,6 +73,7 @@ from ...domain.modelos.errors import (
     ModeloExportPriorDomiciliationElectionRequiredError,
 )
 from ...domain.modelos.work_unit import WorkUnit
+from ..actividad_asset.ports import ActivityAssetHistoryRepository
 from ..calculations.cross_period_models import CrossPeriodExpectedMemberSet
 from ..calculations.m303_regimen_simplificado_annual_summary import (
     validate_m303_regimen_simplificado_annual_summary_target_revision,
@@ -101,6 +102,7 @@ from .action_errors import (
     WorkUnitNotFoundError,
 )
 from .calculation_note_gate import require_work_unit_calculation_unblocked
+from .calculation_notes import read_element_names
 from .calculation_revision_gate import require_calculation_revision_coordinates_current
 from .export_accounts import (
     build_export_producer_snapshot,
@@ -287,6 +289,7 @@ def _persist_exported_draft(
         command=command,
         work_unit=work_unit,
         revision=revision,
+        activity_assets=export_ports.activity_assets,
         period=period,
         receipt=receipt,
         event=event,
@@ -327,6 +330,7 @@ def _export_result(
     command: ModeloExportCommand,
     work_unit: WorkUnit,
     revision: CalculationRevision,
+    activity_assets: ActivityAssetHistoryRepository,
     period: Period,
     receipt: DeclaracionExportResult | FilingExportConsumedResult,
     event: BucketEvent,
@@ -346,7 +350,7 @@ def _export_result(
     completeness_unverified = export_completeness_unverified(work_unit, schema_provider)
 
     return ModeloExportResult(
-        calculation_notes=recorded_calculation_notes(revision.source_issues),
+        calculation_notes=recorded_calculation_notes(revision.source_issues, names=read_element_names(activity_assets)),
         calculation_revision_id=command.calculation_revision_id,
         work_unit_id=work_unit.work_unit_id,
         bucket_id=work_unit.bucket_id,

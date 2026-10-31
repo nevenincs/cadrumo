@@ -132,6 +132,7 @@ def build_modelo_export_ports(
     Parameter types: ``objects``
     (:class:`~cadrumo.adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`).
     """
+    from ..adapters.persistence.profile.actividad_asset import ActividadAssetHistoryRepository
     from ..adapters.persistence.profile.bienes_inversion import BienesInversionIvaRegisterRepository
     from ..adapters.persistence.profile.buckets import BucketEventHistoryRepository
     from ..adapters.persistence.profile.calculation_observations import (
@@ -160,6 +161,7 @@ def build_modelo_export_ports(
         taxpayer_tax_id=m303_rectificativa_taxpayer_tax_id,
     )
     return ModeloExportPorts(
+        activity_assets=ActividadAssetHistoryRepository(bucket_id=normalized_bucket_id, objects=objects),
         calculation=calculation_binding.calculation_repository(),
         work_unit=WorkUnitCatalogueRepository(
             bucket_id=normalized_bucket_id,

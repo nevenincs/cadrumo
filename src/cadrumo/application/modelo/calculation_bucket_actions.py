@@ -66,7 +66,7 @@ from .calculation_action_ports import (
     CalculationActionPorts,
 )
 from .calculation_diagnostics import collect_bucket_aggregation_advisory_diagnostics
-from .calculation_notes import CALCULATION_NOTES, PRINTED_BOX_REASONS, durable_binding_source
+from .calculation_notes import CALCULATION_NOTES, PRINTED_BOX_REASONS, durable_binding_source, with_element_names
 from .calculation_publication import CalculationRevisionPublication
 from .calculation_source_policy import BUCKET_AGGREGATION_LOCK_SOURCES, CALLER_OVERRIDABLE_CARRY_SOURCES
 from .printed_boxes import PrintedBoxes, snapshot_printed_boxes
@@ -743,6 +743,7 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         + advisory_diagnostics
         + profile_text_diagnostics
     )
+    source_diagnostics = with_element_names(source_diagnostics, ports.activity_asset_history_repository)
     # Held for the editor form until the next calculation of this declaration; those that withhold filing and
     # the activity-asset notes also persist on the revision, so a reopened declaration still shows them.
     CALCULATION_NOTES.record(revision.work_unit_id, revision.calculation_revision_id, source_diagnostics)

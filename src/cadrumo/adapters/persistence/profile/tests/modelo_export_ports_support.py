@@ -57,6 +57,7 @@ from cadrumo.domain.modelos.work_unit_repository import WorkUnitCatalogueReposit
 from cadrumo.domain.prorrata_register.protocols import ProrrataRegisterRepositoryProtocol
 from cadrumo.domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 
+from ..actividad_asset import ActividadAssetHistoryRepository
 from ..iva_compensation_history import IvaCompensationHistoryRepository
 
 _EMPTY_EXPORT_BUCKET_ID = "ephemeral"
@@ -92,6 +93,7 @@ def _compose_modelo_export_ports(
 ) -> ModeloExportPorts:
     """Compose every concrete export and draft-review authority over one store."""
     return ModeloExportPorts(
+        activity_assets=ActividadAssetHistoryRepository(bucket_id=bucket_id, objects=objects),
         calculation=CalculationRevisionCatalogueRepository(
             bucket_id=bucket_id,
             objects=objects,

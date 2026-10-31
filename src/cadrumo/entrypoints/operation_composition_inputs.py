@@ -134,6 +134,7 @@ def build_modelo_workbench_read_ports(bucket_id: str, operation: PinnedAuthority
         work_units=ports.work_unit_repository,
         calculations=ports.calculation_repository,
         verifications=calculation_binding.verification_repository(),
+        activity_assets=ports.activity_asset_history_repository,
         borrador_snapshots=build_borrador_100_snapshot_repository(bucket_id=bucket_id),
         holiday_territory=partial(profile_holiday_territory, bucket_id, operation),
         bucket_events=ports.bucket_event_repository,

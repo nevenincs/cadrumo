@@ -25,6 +25,7 @@ from ...core.identity.documents import SpanishTaxIdFormat
 from ...domain.calculations.registry.bindings_previous_filing import PreviousFilingProvider
 from ...domain.calculations.registry.tax_id_format import runtime_tax_id_format
 from ...domain.modelos.work_unit import WorkUnit
+from ..actividad_asset.ports import ActivityAssetHistoryRepository
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .casilla_help import ModeloCasillaHelpCardV1, build_casilla_help_card
 from .edit_admission import admit_modelo_edit_baseline
@@ -73,6 +74,7 @@ class ModeloWorkbenchReadPorts:
     work_units: WorkUnitCatalogueRepositoryProtocol
     calculations: CalculationRevisionCatalogueRepositoryProtocol
     verifications: VerificationReportCatalogueRepositoryProtocol
+    activity_assets: ActivityAssetHistoryRepository | None = None
     borrador_snapshots: Borrador100SnapshotRepository | None = None
     holiday_territory: Callable[[], CalendarCCAA | None] | None = None
     bucket_events: BucketEventHistoryRepositoryProtocol | None = None
@@ -206,6 +208,7 @@ def read_modelo_workbench_form(
         borrador_snapshots=ports.borrador_snapshots,
         holiday_territory=None if territory is None else territory(),
         bucket_events=ports.bucket_events,
+        activity_assets=ports.activity_assets,
     )
     form = loaded.form
     head_id = form.calculation_revision_id

@@ -28,7 +28,7 @@ def _gap(element: str, amount: str) -> RecordedCalculationNote:
         reason="activity_asset_claim_gap",
         fact=CalculationNoteFact.of(
             CalculationNoteSentence.CLAIM_GAP_ACCRUED,
-            element=element,
+            elements=(element,),
             start="2025-01-01",
             end="2026-01-01",
             amount=amount,
@@ -59,7 +59,7 @@ def test_an_export_says_each_note_in_its_notices_and_its_lines(tmp_path: Path) -
 
     notices = [notice.message for notice in _export_notices(restored)]
     lines = _export_text_lines(restored)
-    for figure in ("1200.00 EUR", "600.00 EUR"):
+    for figure in ("1.200,00", "600,00"):
         assert any(figure in message for message in notices)
         assert any(figure in line for line in lines)
 
@@ -67,9 +67,10 @@ def test_an_export_says_each_note_in_its_notices_and_its_lines(tmp_path: Path) -
 def test_a_restated_note_says_its_level_its_facts_and_what_to_do() -> None:
     note = RecordedCalculationNote(
         reason="activity_asset_disposal_finding",
+        element_names=(("furniture", "Office desk"),),
         fact=CalculationNoteFact.of(
             CalculationNoteSentence.DISPOSAL_FIGURE_IN_BOX,
-            element="furniture",
+            elements=("furniture",),
             date=date(2025, 6, 30).isoformat(),
             amount="897.53",
             box="1654",
@@ -78,7 +79,7 @@ def test_a_restated_note_says_its_level_its_facts_and_what_to_do() -> None:
 
     (notice,), (line,) = recorded_note_notices((note,), code="modelo.calculation_note")
 
-    assert all(part in notice.message for part in ("897.53 EUR", "furniture", "2025-06-30", "1654"))
+    assert all(part in notice.message for part in ("897,53", "Office desk", "30/06/2025", "1654"))
     assert notice.context is not None
     assert notice.context["level"] == "check"
     assert notice.message in line

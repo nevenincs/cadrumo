@@ -220,9 +220,7 @@ def source_diagnostic_notice(
     }
     optional: dict[str, str | None] = {
         "resolver_id": diagnostic.resolver_id,
-        "binding_source": diagnostic.binding_source.value
-        if (diagnostic.binding_source is not None and diagnostic.binding_source)
-        else None,
+        "binding_source": diagnostic.binding_source.value if diagnostic.binding_source else None,
         "binding_id": diagnostic.binding_id,
         "relation_id": diagnostic.relation_id,
         "casilla_id": diagnostic.casilla_id,
@@ -254,7 +252,7 @@ def source_diagnostic_notice(
         message=(
             tr(what_locale_key(diagnostic.reason), box=_box_words(box))
             if diagnostic.fact is None
-            else note_fact_text(diagnostic.fact)
+            else note_fact_text(diagnostic.fact, element_names=diagnostic.element_names)
         ),
         context=context,
     )
@@ -269,7 +267,7 @@ def recorded_note_notice(note: RecordedCalculationNote, *, code: str) -> Notice:
     return Notice(
         severity=NoticeSeverity.INFO if attention is ModeloFormAttention.INFO else NoticeSeverity.WARNING,
         code=code,
-        message=note_fact_text(note.fact),
+        message=note_fact_text(note.fact, element_names=note.element_names),
         context={"reason": note.reason, "level": attention.value},
     )
 

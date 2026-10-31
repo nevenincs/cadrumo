@@ -33,16 +33,27 @@ declaration opened afresh says to calculate again to see them.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
+from datetime import date
+from decimal import Decimal
 from threading import Lock
 from types import MappingProxyType
 from typing import Final, get_args
 
 from ...core.aggregation import BindingSourceKind
-from ...core.i18n.render import tr
-from ...domain.modelos.calculation_revision_sources import CalculationNoteFact, CalculationNoteSentence
+from ...core.errors.hierarchy import CadrumoError
+from ...core.external_constants import OutputLanguage
+from ...core.i18n.render import output_language, tr
+from ...core.logging import get_logger
+from ...domain.modelos.calculation_revision_sources import (
+    CalculationNoteFact,
+    CalculationNoteSentence,
+    element_names_of,
+)
+from ..actividad_asset.ports import ActivityAssetHistoryRepository
 from ..aggregation.source_diagnostic_reason import CalculationSourceDiagnosticReason
 from ..aggregation.source_mesh import CalculationSourceDiagnostic
+from .value_presentation import format_casilla_value
 from .work_form_findings import ModeloFormAttention
 
 _B = ModeloFormAttention.BLOCKS
@@ -189,6 +200,13 @@ RECORDS_REASONS: Final[frozenset[str]] = frozenset(
 
 _KEY_ROOT: Final[str] = "application.modelo.calc_diagnostic"
 _FACT_KEY_ROOT: Final[str] = "application.modelo.calc_diagnostic_fact"
+_ELEMENT_NAME_LOCALE_KEY: Final[str] = "application.modelo.calc_diagnostic_words.named_element"
+_UNNAMED_ELEMENT_LOCALE_KEY: Final[str] = "application.modelo.calc_diagnostic_words.unnamed_element"
+_DATE_VALUES: Final[frozenset[str]] = frozenset({"date", "start", "end", "row_date", "period_end"})
+_AMOUNT_VALUES: Final[frozenset[str]] = frozenset(
+    {"amount", "cost", "paid", "price", "base", "remainder", "effect", "transmission_value", "net_value", "row_amount"}
+)
+_logger = get_logger(__name__)
 STALE_LOCALE_KEY: Final[str] = "application.modelo.calc_diagnostic.stale"
 REOPEN_HINT_LOCALE_KEY: Final[str] = "application.modelo.calc_diagnostic.reopen_hint"
 
@@ -219,9 +237,69 @@ def fact_locale_key(sentence: CalculationNoteSentence) -> str:
     return f"{_FACT_KEY_ROOT}.{sentence.value}"
 
 
-def note_fact_text(fact: CalculationNoteFact, *, locale: str | None = None) -> str:
-    """State a note's facts in words, in ``locale`` or the active language."""
-    return tr(fact_locale_key(fact.sentence), locale=locale, **dict(fact.values))
+def note_fact_text(
+    fact: CalculationNoteFact,
+    *,
+    element_names: Iterable[tuple[str, str]] = (),
+    locale: str | None = None,
+) -> str:
+    """State a note's facts in words, in ``locale`` or the active language.
+
+    Dates and amounts read as a box writes them. An element goes by the name it
+    has now, or by a plain phrase when it has none or has left the register.
+    """
+    language = OutputLanguage(locale or output_language())
+    names = dict(element_names)
+    elements = ", ".join(
+        tr(_ELEMENT_NAME_LOCALE_KEY, locale=language.value, name=names[ref])
+        if ref in names
+        else tr(_UNNAMED_ELEMENT_LOCALE_KEY, locale=language.value)
+        for ref in dict.fromkeys(fact.element_refs)
+    )
+    return tr(
+        fact_locale_key(fact.sentence),
+        locale=language.value,
+        element=elements,
+        elements=elements,
+        **{name: _fact_value_text(name, value, language) for name, value in fact.values},
+    )
+
+
+def _fact_value_text(name: str, value: str, language: OutputLanguage) -> str:
+    if name in _DATE_VALUES and value:
+        return format_casilla_value(date.fromisoformat(value), data_type="date", language=language)
+    if name in _AMOUNT_VALUES:
+        return format_casilla_value(Decimal(value), data_type="money", language=language)
+    return value
+
+
+def read_element_names(repository: ActivityAssetHistoryRepository | None) -> dict[str, str]:
+    """Read the name each element of the register goes by now.
+
+    A note is still worth showing if the register cannot be read, so a failed read
+    leaves every element to the plain phrase rather than failing the read it serves.
+    """
+    if repository is None:
+        return {}
+    try:
+        history = repository.load()
+    except (CadrumoError, OSError):
+        _logger.warning("activity_asset_names_unavailable")
+        return {}
+    return {descriptor.asset_id: descriptor.facts.name for descriptor in history.descriptors}
+
+
+def with_element_names(
+    diagnostics: tuple[CalculationSourceDiagnostic, ...], repository: ActivityAssetHistoryRepository | None
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    """Give each diagnostic that speaks of elements the names they go by now, for a command that shows them."""
+    if not any(diagnostic.fact is not None and diagnostic.fact.element_refs for diagnostic in diagnostics):
+        return diagnostics
+    names = read_element_names(repository)
+    return tuple(
+        diagnostic.model_copy(update={"element_names": element_names_of(diagnostic.fact, names)})
+        for diagnostic in diagnostics
+    )
 
 
 def durable_binding_source(diagnostic: CalculationSourceDiagnostic) -> BindingSourceKind | None:
@@ -306,6 +384,8 @@ __all__ = [
     "fact_locale_key",
     "note_attention",
     "note_fact_text",
+    "read_element_names",
     "what_locale_key",
     "what_to_do_locale_key",
+    "with_element_names",
 ]

@@ -44,7 +44,7 @@ def m130_accrual_diagnostics(
             remedy="record the elected amortization charge to deduct it",
             fact=CalculationNoteFact.of(
                 CalculationNoteSentence.INSTALMENT_FREE_GAP,
-                element=revision.asset_id,
+                elements=(revision.asset_id,),
                 start=start.isoformat(),
                 end=period.end_date.isoformat(),
                 box=target_casilla_id,
@@ -69,7 +69,7 @@ def accrual_unavailable_diagnostic(
         casilla_id=casilla_id,
         message=f"the schedule of element {revision.asset_id!r} could not be worked out: {error}",
         remedy="complete or correct the element in the register, then calculate again",
-        fact=CalculationNoteFact.of(CalculationNoteSentence.ACCRUAL_UNAVAILABLE, element=revision.asset_id),
+        fact=CalculationNoteFact.of(CalculationNoteSentence.ACCRUAL_UNAVAILABLE, elements=(revision.asset_id,)),
     )
 
 
@@ -91,8 +91,8 @@ def agrarian_excluded_diagnostic(
         ),
         fact=CalculationNoteFact.of(
             CalculationNoteSentence.AGRARIAN_EXCLUDED,
-            element=revision.asset_id,
-            period=period.registry_token,
+            elements=(revision.asset_id,),
+            period_end=period.end_date.isoformat(),
         ),
     )
 
@@ -113,5 +113,5 @@ def activity_undeclared_diagnostic(
             "taxpayer is agrarian; it is counted as non-agrarian"
         ),
         remedy="set the type of activity on the acquisition entry, then calculate again",
-        fact=CalculationNoteFact.of(CalculationNoteSentence.ACTIVITY_UNDECLARED, element=revision.asset_id),
+        fact=CalculationNoteFact.of(CalculationNoteSentence.ACTIVITY_UNDECLARED, elements=(revision.asset_id,)),
     )

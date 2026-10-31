@@ -388,7 +388,11 @@ def _note_line(note: ModeloFormCalculationNote, context: _Context) -> ModeloForm
     field, box_text, codes = _note_identifiers(note, context)
     what = context.say(what_locale_key(note.reason), box=box_text)
     # What this note is about comes first, so it is read without opening anything; the kind explains it.
-    message, detail = (what, None) if note.fact is None else (note_fact_text(note.fact, locale=context.language), what)
+    message, detail = (
+        (what, None)
+        if note.fact is None
+        else (note_fact_text(note.fact, element_names=note.element_names, locale=context.language), what)
+    )
     return ModeloFormIssueLine(
         # A note the filing gate refuses on is listed with what blocks filing, as the counts count it.
         level=ModeloFormAttention.BLOCKS if note.withholds_filing else note.attention,

@@ -55,7 +55,8 @@ from ...domain.modelos.protocols import (
     VerificationReportCatalogueRepositoryProtocol,
 )
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
-from .calculation_notes import CALCULATION_NOTES
+from ..actividad_asset.ports import ActivityAssetHistoryRepository
+from .calculation_notes import CALCULATION_NOTES, read_element_names
 from .caller_context import caller_context_of
 from .edit_models import ModeloEditAdmissionResultV1, ModeloEditAdmittedV1
 from .effective_deadline import resolve_effective_filing_deadline
@@ -220,6 +221,7 @@ def load_modelo_work_form(
     holiday_territory: CalendarCCAA | None = None,
     reference_on: date | None = None,
     bucket_events: BucketEventHistoryRepositoryProtocol | None = None,
+    activity_assets: ActivityAssetHistoryRepository | None = None,
 ) -> ModeloWorkFormLoadV1:
     """Read one declaration's review, layout and operator layer and build its form.
 
@@ -284,6 +286,7 @@ def load_modelo_work_form(
         ),
         aeat_data_imported_at=_aeat_data_imported_at(context.borrador_snapshot_id, borrador_snapshots),
         calculation_diagnostics=CALCULATION_NOTES.diagnostics_for(review.work_unit_id, review.calculation_revision_id),
+        element_names=read_element_names(activity_assets),
     )
     form = form.model_copy(
         update={

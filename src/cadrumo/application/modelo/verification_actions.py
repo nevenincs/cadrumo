@@ -63,6 +63,7 @@ from .action_errors import (
     WorkUnitNotFoundError,
 )
 from .calculation_note_gate import require_work_unit_calculation_unblocked
+from .calculation_notes import read_element_names
 from .calculation_revision_gate import require_calculation_revision_coordinates_current
 from .filing_revision_persistence import require_filing_instance_evidence_for_work_unit
 from .lifecycle_clock_gate import (
@@ -169,7 +170,10 @@ def _existing_verification(
                     existing.findings,
                     failures_by_finding_id={},
                 ),
-                calculation_notes=recorded_calculation_notes(target.source_issues),
+                calculation_notes=recorded_calculation_notes(
+                    target.source_issues,
+                    names=read_element_names(repos.ledger_membership_ports.activity_asset_history_repository),
+                ),
             )
         raise CalculationRevisionStateError(
             translated_message="errors.error.error_modelo_calculation_revision_state",
@@ -434,7 +438,10 @@ def _finish_verification(
             findings,
             failures_by_finding_id=failures_by_finding_id,
         ),
-        calculation_notes=recorded_calculation_notes(target.source_issues),
+        calculation_notes=recorded_calculation_notes(
+            target.source_issues,
+            names=read_element_names(repos.ledger_membership_ports.activity_asset_history_repository),
+        ),
     )
 
 

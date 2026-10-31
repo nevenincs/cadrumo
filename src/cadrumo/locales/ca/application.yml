@@ -941,7 +941,7 @@ application:
           d'esborrany.
     calc_diagnostic:
       activity_asset_accrual_unavailable:
-        what: No s'ha pogut calcular l'amortització d'un bé, de manera que no s'inclou.
+        what: No s'ha pogut calcular la dotació d'un bé, de manera que no s'inclou.
         what_to_do: Completa o corregeix el bé al registre i torna a calcular.
       activity_asset_activity_undeclared:
         what: La compra d'un bé no indica el tipus d'activitat, de manera que es compta
@@ -950,11 +950,11 @@ application:
       activity_asset_agrarian_excluded:
         what: Un bé d'una activitat agrària queda fora d'aquest pagament fraccionat,
           que es calcula sobre els ingressos d'aquesta activitat.
-        what_to_do: No has de fer res. La seva amortització es dedueix a la teva declaració
+        what_to_do: No has de fer res. La seva dotació es dedueix a la teva declaració
           anual.
       activity_asset_claim_gap:
-        what: Un bé no té amortització registrada per a part de l'any, de manera que
-          aquesta part no es dedueix.
+        what: Un bé no té dotació registrada per a part de l'any, de manera que aquesta
+          part no es dedueix.
         what_to_do: Registra la dotació d'aquest període si la vols deduir i torna
           a calcular.
       activity_asset_disposal_finding:
@@ -1076,8 +1076,10 @@ application:
         what_to_do: Obre els teus registres d'aquest període, corregeix els que estiguin
           marcats i torna a calcular.
       ledger_expense_may_be_durable:
-        what: "Un moviment deduït com a despesa corrent pot ser un bé que dura més d'un any. Ho és?"
-        what_to_do: "Si ho és, dona d'alta el bé, perquè es dedueix per amortització, i torna a calcular. Si és un consumible, deixa el moviment com està."
+        what: Un moviment deduït com a despesa corrent pot ser un bé que dura més
+          d'un any. Ho és?
+        what_to_do: Si ho és, dona d'alta el bé, perquè es dedueix mitjançant dotacions,
+          i torna a calcular. Si és un consumible, deixa el moviment com està.
       ledger_amortization_row_unregistered:
         what: Un moviment registra una compra amortitzable que no és al teu registre
           de béns, de manera que no dedueix res.
@@ -1161,7 +1163,7 @@ application:
         what_to_do: "Torna a introduir aquell moviment, o corregeix el bé al teu registre, i torna a calcular."
       register_owned_capital_acquisition:
         what: Una compra d'equipament es deixa fora de les teves despeses, perquè
-          es dedueix mitjançant la seva amortització anual.
+          es dedueix mitjançant la seva dotació anual.
         what_to_do: No has de fer res.
       reopen_hint: Torna a calcular per veure les notes del càlcul.
       settlement_not_computed:
@@ -1252,95 +1254,99 @@ application:
           mostra un zero sense suport.
         what_to_do: Afegeix als teus registres el detall de l'any i torna a calcular.
     calc_diagnostic_fact:
-      accrual_unavailable: No s'ha pogut calcular l'amortització de l'element {element},
-        de manera que no s'inclou.
-      activity_undeclared: La compra de l'element {element} no indica tipus d'activitat
+      accrual_unavailable: '{element}: no s''ha pogut calcular la seva dotació, de
+        manera que no s''inclou.'
+      activity_undeclared: '{element}: la seva compra no indica tipus d''activitat
         i un altre dels teus elements és agrari, de manera que es compta com a no
-        agrària.
-      agrarian_excluded: L'element {element} pertany a una activitat agrària, de manera
-        que queda fora del pagament fraccionat {period}.
-      amortization_box_unbound: Aquesta edició no té casella per a l'amortització
-        de l'element {element}, de manera que no suma res a aquest càlcul.
-      claim_gap_accrued: 'L''element {element} no té amortització registrada de {start}
-        a {end}: s''han meritat {amount} EUR, i la casella {box} només declara el
-        que està registrat.'
-      claim_gap_free_method: L'element {element} no té amortització registrada de
-        {start} a {end}. El seu mètode deixa l'import a la teva elecció, de manera
-        que no es pot calcular, i la casella {box} només declara el que està registrat.
-      disposal_claim_gap: L'element {element}, donat de baixa el {date}, no té amortització
-        registrada per a part de {year}. El seu mínim redueix igualment el cost.
-      disposal_exemption_not_computed: Qualsevol exempció o diferiment de la baixa
-        de l'element {element} el {date} no es calcula aquí, de manera que es manté
-        el resultat complet.
-      disposal_figure_element_row: '{amount} EUR de la venda de l''element {element}
-        el {date} entren a la casella {box}. A la seva fila, indica les dates i els
-        valors: {transmission_value} EUR de transmissió i {net_value} EUR de valor
-        net.'
-      disposal_figure_in_box: '{amount} EUR de la baixa de l''element {element} el
-        {date} entren a la casella {box}.'
-      disposal_figure_no_box: '{amount} EUR de la baixa de l''element {element} el
-        {date} no arriben a cap casella d''aquesta edició.'
-      disposal_figure_property_row: '{amount} EUR de la venda de l''element {element}
-        el {date} entren a la casella {box}. A la seva fila, marca l''immoble com
-        a afecte a una activitat i indica les dates i els valors: {transmission_value}
-        EUR de transmissió i {net_value} EUR de valor net.'
-      disposal_instalment_agrarian_excess: L'excés de {amount} EUR de la baixa de
-        l'element {element} el {date}, en una activitat agrària, no té una línia establerta
-        al pagament fraccionat. Queda a càrrec teu.
-      disposal_instalment_excess_unresolved: No s'ha pogut calcular l'excés de la
-        baixa de l'element {element} el {date}, de manera que aquest pagament fraccionat
-        no n'inclou cap.
-      disposal_later_affectation: La venda de l'element {element} el {date} cau dins
-        del termini posterior a una afectació que en canvia la destinació, de manera
-        que el seu resultat de {amount} EUR no entra a cap casella i queda a càrrec
-        teu.
-      disposal_m131_excess: L'excés de {amount} EUR de la baixa de l'element {element}
-        el {date} no arriba al Model 131, les instruccions del qual no el tracten.
-      disposal_m131_excess_unresolved: No s'ha pogut calcular l'excés de la baixa
-        de l'element {element} el {date}, i el Model 131, les instruccions del qual
-        no el tracten, no n'inclou cap.
-      disposal_minimum_exceeded_deduction: A l'element {element}, donat de baixa el
-        {date}, el mínim de {year} va superar el que es va deduir i augmenta en {effect}
-        EUR la reducció del cost.
-      disposal_minimum_unresolved: A l'element {element}, donat de baixa el {date},
-        cap edició no dona el mínim de {year}, de manera que només el que es va deduir
-        redueix el cost.
-      disposal_modules_agrarian_excess: L'excés de {amount} EUR de la baixa de l'element
-        {element} el {date}, en una activitat agrària en mòduls, no té una línia establerta.
-        Queda a càrrec teu.
-      disposal_no_minimum_authority: A l'element {element}, donat de baixa el {date},
-        no s'aplica cap mínim a {year}, de manera que només el que es va deduir redueix
-        el cost.
-      disposal_shared_row: 'El model dona a cada venda la seva pròpia fila i aquest
-        càlcul reuneix {count} vendes. Indica l''element {element} en una fila pròpia:
-        venut el {date} per {transmission_value} EUR, valor net {net_value} EUR, {amount}
-        EUR a la casella {box}.'
-      disposal_unresolved_income: No s'ha pogut calcular el resultat de la baixa de
-        l'element {element} el {date}, de manera que el rendiment de l'activitat pot
-        quedar per sota del real.
-      disposal_unresolved_no_box: No s'ha pogut calcular el resultat de la baixa de
-        l'element {element} el {date}, de manera que cap casella no el recull.
-      instalment_free_gap: L'element {element} no té amortització registrada de {start}
-        a {end}. El seu mètode deixa l'import a la teva elecció, de manera que no
-        suma res a la casella {box}.
-      possibly_durable_expense: El moviment {row} (categoria {category}) es dedueix
+        agrària.'
+      agrarian_excluded: '{element}: pertany a una activitat agrària, de manera que
+        queda fora del pagament fraccionat del període que acaba el {period_end}.'
+      amortization_box_unbound: '{element}: aquesta edició no té casella per a la
+        seva dotació, de manera que no suma res a aquest càlcul.'
+      claim_gap_accrued: '{element}: no hi ha dotació registrada de {start} a {end}.
+        S''han meritat {amount}, i la casella {box} només declara el que està registrat.'
+      claim_gap_free_method: '{element}: no hi ha dotació registrada de {start} a
+        {end}. El seu mètode deixa l''import a la teva elecció, de manera que no es
+        pot calcular, i la casella {box} només declara el que està registrat.'
+      disposal_claim_gap: '{element}: la seva baixa és el {date} i part de {year}
+        no té dotació registrada. El seu mínim redueix igualment el cost.'
+      disposal_exemption_not_computed: '{element}: qualsevol exempció o diferiment
+        de la seva baixa el {date} no es calcula aquí, de manera que es manté el resultat
+        complet.'
+      disposal_figure_element_row: '{element}: {amount} de la seva venda el {date}
+        entren a la casella {box}. A la seva fila, indica les dates i els valors:
+        {transmission_value} de transmissió i {net_value} de valor net.'
+      disposal_figure_in_box: '{element}: {amount} de la seva baixa el {date} entren
+        a la casella {box}.'
+      disposal_figure_no_box: '{element}: {amount} de la seva baixa el {date} no arriben
+        a cap casella d''aquesta edició.'
+      disposal_figure_property_row: '{element}: {amount} de la seva venda el {date}
+        entren a la casella {box}. A la seva fila, marca l''immoble com a afecte a
+        una activitat i indica les dates i els valors: {transmission_value} de transmissió
+        i {net_value} de valor net.'
+      disposal_instalment_agrarian_excess: '{element}: l''excés de {amount} de la
+        seva baixa el {date}, en una activitat agrària, no té una línia establerta
+        al pagament fraccionat. Queda a càrrec teu.'
+      disposal_instalment_excess_unresolved: '{element}: no s''ha pogut calcular l''excés
+        de la seva baixa el {date}, de manera que aquest pagament fraccionat no n''inclou
+        cap.'
+      disposal_later_affectation: '{element}: la seva venda el {date} cau dins del
+        termini posterior a una afectació que en canvia la destinació, de manera que
+        el seu resultat de {amount} no entra a cap casella i queda a càrrec teu.'
+      disposal_m131_excess: '{element}: l''excés de {amount} de la seva baixa el {date}
+        no arriba al Model 131, les instruccions del qual no el tracten.'
+      disposal_m131_excess_unresolved: '{element}: no s''ha pogut calcular l''excés
+        de la seva baixa el {date}, i el Model 131, les instruccions del qual no el
+        tracten, no n''inclou cap.'
+      disposal_minimum_exceeded_deduction: '{element}: amb la seva baixa el {date},
+        el mínim de {year} va superar el que es va deduir i augmenta en {effect} la
+        reducció del cost.'
+      disposal_minimum_unresolved: '{element}: amb la seva baixa el {date}, cap edició
+        no dona el mínim de {year}, de manera que només el que es va deduir redueix
+        el cost.'
+      disposal_modules_agrarian_excess: '{element}: l''excés de {amount} de la seva
+        baixa el {date}, en una activitat agrària en mòduls, no té una línia establerta.
+        Queda a càrrec teu.'
+      disposal_no_minimum_authority: '{element}: amb la seva baixa el {date}, no s''aplica
+        cap mínim a {year}, de manera que només el que es va deduir redueix el cost.'
+      disposal_shared_row: '{element}: el model dona a cada venda la seva pròpia fila
+        i aquest càlcul reuneix {count} vendes. Indica''l en una fila pròpia: venut
+        el {date} per {transmission_value}, valor net {net_value}, {amount} a la casella
+        {box}.'
+      disposal_unresolved_income: '{element}: no s''ha pogut calcular el resultat
+        de la seva baixa el {date}, de manera que el rendiment de l''activitat pot
+        quedar per sota del real.'
+      disposal_unresolved_no_box: '{element}: no s''ha pogut calcular el resultat
+        de la seva baixa el {date}, de manera que cap casella no el recull.'
+      instalment_free_gap: '{element}: no hi ha dotació registrada de {start} a {end}.
+        El seu mètode deixa l''import a la teva elecció, de manera que no suma res
+        a la casella {box}.'
+      possibly_durable_expense: El moviment del {row_date} per {row_amount} es dedueix
         com a despesa corrent i la seva descripció sembla la d'un element durador.
-      register_cost_exceeds_paid: Els elements {elements} indiquen un cost de {cost}
-        EUR, i els moviments que anomenen van pagar {paid} EUR.
-      register_owned_acquisition: El moviment {row} és la compra de l'element {element},
-        de manera que s'amortitza en lloc de deduir-se.
-      register_partly_accounted: Els moviments dels elements {elements} declaren una
-        base de {base} EUR i els elements justifiquen {price} EUR, de manera que els
-        {remainder} EUR restants no dedueixen res.
-      register_price_exceeds_base: Els elements {elements} indiquen un preu de {price}
-        EUR, i els moviments que anomenen declaren una base de {base} EUR.
-      register_row_missing: 'Els elements {elements} indiquen moviments que ja no
-        existeixen: {rows}.'
-      residence_period_unknown: No hi ha residència fiscal registrada per a {date},
+      register_cost_exceeds_paid: '{elements}: aquests elements indiquen un cost de
+        {cost}, i els moviments que anomenen van pagar {paid}.'
+      register_owned_acquisition: '{element}: el moviment del {row_date} per {row_amount}
+        és la seva compra, de manera que es dedueix mitjançant dotacions i no com
+        a despesa.'
+      register_owned_acquisition_undated: '{element}: un moviment correspon a la seva
+        compra, de manera que es dedueix mitjançant dotacions i no com a despesa.'
+      register_partly_accounted: '{elements}: els moviments d''aquests elements declaren
+        una base de {base} i els elements justifiquen {price}, de manera que els {remainder}
+        restants no dedueixen res.'
+      register_price_exceeds_base: '{elements}: aquests elements indiquen un preu
+        de {price}, i els moviments que anomenen declaren una base de {base}.'
+      register_row_missing: '{elements}: aquests elements indiquen {count} moviments
+        que ja no existeixen.'
+      residence_period_unknown: No hi ha residència fiscal registrada per al {date},
         de manera que els teus elements es compten com si s'apliquessin els Models
         100 i 130.
-      row_unregistered: El moviment {row} (categoria {category}, {year}) registra
-        un element que no és al teu registre.
+      row_unregistered: El moviment del {row_date} per {row_amount} registra un element
+        que no és al teu registre.
+      row_unregistered_undated: Un moviment registra un element que no consta al teu
+        registre.
+    calc_diagnostic_words:
+      named_element: «{name}»
+      unnamed_element: Un element sense nom
     calculation_report:
       local_calculation_notice: 'Informe de càlcul local de Cadrumo. No és evidència
         oficial de presentació davant l''AEAT. L''evidència oficial l''emet l''AEAT

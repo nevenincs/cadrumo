@@ -30,7 +30,7 @@ from cadrumo.domain.user_profile.values import create_user_profile_record as _cr
 from ...actividad_asset.history import ActivityAssetHistory
 from ...modelo.calculation_notes import GATE_REFUSED_REASONS
 from ...modelo.work_profile import ModeloWorkProfile
-from .. import modelo_bindings_actividad_assets
+from .. import activity_asset_disposal_projection
 from ..source_mesh import CalculationSourceResolution
 from .test_modelo_source_mesh_ledger import (
     _PRIOR_YEAR_ROW_NOTE,
@@ -141,7 +141,7 @@ def test_a_registry_failure_behind_a_baja_is_an_unresolved_finding(monkeypatch: 
 
         return read
 
-    monkeypatch.setattr(modelo_bindings_actividad_assets, "pinned_disposal_bounds", failing_bounds)
+    monkeypatch.setattr(activity_asset_disposal_projection, "pinned_disposal_bounds", failing_bounds)
     asset = register_asset("furniture", transaction_id=_TRANSACTION)
     baja = ActivityAssetDisposal(
         disposal_date=date(2025, 6, 30),

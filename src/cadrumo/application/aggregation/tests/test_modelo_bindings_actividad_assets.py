@@ -8,6 +8,7 @@ from functools import cache
 
 import pytest
 
+from ....core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
 from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.ledger_renta_gastos_estimacion_directa_bindings import (
     activity_asset_amortization_casillas,
@@ -31,11 +32,13 @@ from ....domain.renta.actividad_asset.lifecycle import (
     OpeningHistoryStatus,
 )
 from ....domain.renta.ledger_expenses import renta_first_slice_expense_routing
+from ...modelo.calculation_notes import note_fact_text
 from ..activity_asset_expense_reconciliation import (
     LedgerRentaExpenseTreatment,
     amortization_labelled_expense_categories,
     classify_ledger_expenses_against_asset_register,
     refused_amortization_rows,
+    refused_register_owned_rows,
     register_owned_acquisition_diagnostics,
     unregistered_amortization_row_diagnostics,
 )
@@ -94,6 +97,7 @@ def _treatment(
         transaction_id=transaction_id,
         category=category,
         tax_year=tax_year,
+        booked_on=date(tax_year, 1, 1),
         deductible_amount=amount,
         amortization_labelled=amortization_labelled,
     )
@@ -194,6 +198,35 @@ def test_a_row_refused_once_its_route_is_gone_still_counts_as_unowned() -> None:
         )
 
     assert [row.transaction_id for row in rows] == ["a" * 64]
+
+
+def test_refused_rows_do_not_invent_dates_or_amounts_in_notes() -> None:
+    asset = _asset(2025)
+    assert asset.acquisition.observed_transaction_id is not None
+    issues = tuple(
+        _refused(
+            RentaLedgerAggregationIssueReason.INVALID_LEDGER_FACT,
+            transaction_id=transaction_id,
+            category="hardware_amortizable",
+        )
+        for transaction_id in ("a" * 64, asset.acquisition.observed_transaction_id)
+    )
+    with bundled_indexed_authority().operation():
+        unregistered = refused_amortization_rows(
+            issues, assets=(asset,), tax_year=2025, effective_date=date(2025, 12, 31)
+        )
+        owned = refused_register_owned_rows(issues, assets=(asset,), tax_year=2025, effective_date=date(2025, 12, 31))
+    diagnostics = (
+        *unregistered_amortization_row_diagnostics(unregistered, resolver_id="test"),
+        *register_owned_acquisition_diagnostics(owned, source_kind="test", resolver_id="test"),
+    )
+    assert len(diagnostics) == 2
+    for diagnostic in diagnostics:
+        assert diagnostic.fact is not None
+        assert diagnostic.fact.values == ()
+        for language in SUPPORTED_OUTPUT_LANGUAGES:
+            text = note_fact_text(diagnostic.fact, locale=language)
+            assert text and "{" not in text
 
 
 @pytest.mark.parametrize("year", _supported_years())

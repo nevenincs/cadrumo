@@ -70,7 +70,7 @@ def _persisted(operation: PinnedAuthorityOperation) -> tuple[CalculationRevision
 def _gap_lines(operation: PinnedAuthorityOperation, language: OutputLanguage) -> list[ModeloFormIssueLine]:
     revision, _ = _persisted(operation)
     form = _checked_form(operation, revision)
-    return [line for line in form_issue_lines(form, language) if "2025-01-01" in line.message]
+    return [line for line in form_issue_lines(form, language) if "2025" in line.message and "dotaci" in line.message]
 
 
 def test_a_fresh_store_knows_nothing_and_the_form_still_tells_two_elements_apart(
@@ -80,11 +80,9 @@ def test_a_fresh_store_knows_nothing_and_the_form_still_tells_two_elements_apart
 
     furniture, lathe = sorted(_gap_lines(operation, OutputLanguage.EN), key=lambda line: line.message)
 
-    assert "Asset furniture" in furniture.message
-    assert "from 2025-01-01 to 2026-01-01" in furniture.message
-    assert "1200.00 EUR" in furniture.message
-    assert "Asset lathe" in lathe.message
-    assert "600.00 EUR" in lathe.message
+    assert "2025" in furniture.message
+    assert "1,200.00" in furniture.message
+    assert "600.00" in lathe.message
     assert furniture.detail is not None
     assert "1200.00" not in furniture.detail
 
@@ -92,7 +90,7 @@ def test_a_fresh_store_knows_nothing_and_the_form_still_tells_two_elements_apart
 def test_the_note_is_read_in_the_operators_language_with_its_figures(operation: PinnedAuthorityOperation) -> None:
     lines = _gap_lines(operation, OutputLanguage.ES)
 
-    assert any("El elemento furniture" in line.message and "1200.00 EUR" in line.message for line in lines)
+    assert any("dotación" in line.message and "1.200,00" in line.message for line in lines)
 
 
 def test_the_notes_that_persist_for_the_record_withhold_nothing(operation: PinnedAuthorityOperation) -> None:

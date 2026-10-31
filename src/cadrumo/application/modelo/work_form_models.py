@@ -933,6 +933,7 @@ class ModeloFormCalculationNote(_FormModel):
     box: str | None = None
     withholds_filing: bool = False
     fact: CalculationNoteFact | None = None
+    element_names: tuple[tuple[str, str], ...] = ()
 
 
 class ModeloFormAeatData(_FormModel):

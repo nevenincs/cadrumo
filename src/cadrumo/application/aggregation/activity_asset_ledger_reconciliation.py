@@ -143,8 +143,8 @@ def activity_asset_ledger_findings(
     return tuple(findings)
 
 
-def _element_words(group: _AcquisitionGroup) -> str:
-    return ", ".join(revision.asset_id for revision in group.revisions)
+def _element_refs(group: _AcquisitionGroup) -> tuple[str, ...]:
+    return tuple(revision.asset_id for revision in group.revisions)
 
 
 def _missing_row_finding(
@@ -158,8 +158,9 @@ def _missing_row_finding(
         "enter the missing ledger entry again, or correct the element's acquisition in the register",
         CalculationNoteFact.of(
             CalculationNoteSentence.REGISTER_ROW_MISSING,
-            elements=_element_words(group),
-            rows=", ".join(row[-12:] for row in missing),
+            elements=_element_refs(group),
+            rows=missing,
+            count=len(missing),
         ),
     )
 
@@ -192,7 +193,7 @@ def _payment_finding(
                 "correct the element's price in the register, or the ledger entry it names",
                 CalculationNoteFact.of(
                     CalculationNoteSentence.REGISTER_COST_EXCEEDS_PAID,
-                    elements=_element_words(group),
+                    elements=_element_refs(group),
                     cost=cost,
                     paid=paid,
                 ),
@@ -219,7 +220,7 @@ def _base_finding(
             "correct the element's price in the register, or the ledger entry it names",
             CalculationNoteFact.of(
                 CalculationNoteSentence.REGISTER_PRICE_EXCEEDS_BASE,
-                elements=_element_words(group),
+                elements=_element_refs(group),
                 price=price,
                 base=base,
             ),
@@ -232,7 +233,7 @@ def _base_finding(
             "register what else those entries paid for, or correct the element's price if it is understated",
             CalculationNoteFact.of(
                 CalculationNoteSentence.REGISTER_PARTLY_ACCOUNTED,
-                elements=_element_words(group),
+                elements=_element_refs(group),
                 price=price,
                 base=base,
                 remainder=base - price,
@@ -343,20 +344,8 @@ def possibly_durable_expense_findings(
     Returns:
         One finding per row, naming it through ``source_ref``.
     """
-    owned = frozenset(
-        row for revision in current_revisions(revisions).values() for row in revision.acquisition_transaction_ids
-    )
-    addressed = frozenset(transaction_ids) - owned
-    if not addressed:
-        return ()
-    amortizable = amortizable_spending_categories(effective_date=date(tax_year, 12, 31))
-    excluded = {category.value for category in amortizable}
-    capital_goods = capital_good_transaction_ids(addressed, ledger=ledger, tax_year=tax_year)
-    found = ledger.load().transactions
-    candidates = tuple(
-        found[row]
-        for row in sorted(addressed - capital_goods)
-        if row in found and found[row].category_id not in excluded
+    candidates, amortizable = _durable_candidates(
+        transaction_ids, revisions=revisions, ledger=ledger, tax_year=tax_year
     )
     if not candidates:
         return ()
@@ -381,6 +370,31 @@ def possibly_durable_expense_findings(
     invoice_lines = _purchase_invoice_lines(candidates, catalogue)
     findings = _durable_findings(candidates, invoice_lines, keywords, source_kind=source_kind, resolver_id=resolver_id)
     return (*degraded, *findings)
+
+
+def _durable_candidates(
+    transaction_ids: Iterable[str],
+    *,
+    revisions: tuple[ActivityAssetRevision, ...],
+    ledger: TransactionCatalogueReader,
+    tax_year: int,
+) -> tuple[tuple[Transaction, ...], tuple[SpendingCategory, ...]]:
+    owned = frozenset(
+        row for revision in current_revisions(revisions).values() for row in revision.acquisition_transaction_ids
+    )
+    addressed = frozenset(transaction_ids) - owned
+    if not addressed:
+        return (), ()
+    amortizable = amortizable_spending_categories(effective_date=date(tax_year, 12, 31))
+    excluded = {category.value for category in amortizable}
+    capital_goods = capital_good_transaction_ids(addressed, ledger=ledger, tax_year=tax_year)
+    found = ledger.load().transactions
+    candidates = tuple(
+        found[row]
+        for row in sorted(addressed - capital_goods)
+        if row in found and found[row].category_id not in excluded
+    )
+    return candidates, amortizable
 
 
 def _durable_findings(
@@ -408,8 +422,9 @@ def _durable_findings(
                     remedy="register the element if it is durable, or leave the entry if it is a consumable",
                     fact=CalculationNoteFact.of(
                         CalculationNoteSentence.POSSIBLY_DURABLE_EXPENSE,
-                        row=row.transaction_id[-12:],
-                        category=row.category_id or "",
+                        rows=(row.transaction_id,),
+                        row_date=row.raw.booked_date.isoformat(),
+                        row_amount=abs(row.raw.amount),
                     ),
                 ),
             )

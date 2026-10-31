@@ -274,6 +274,8 @@ class CalculationSourceDiagnostic(BaseModel):
     source_ref: str | None = Field(default=None, min_length=1, max_length=256)
     fact: CalculationNoteFact | None = None
     """What this diagnostic says about its own subject, in catalogue words; ``None`` when its reason says it all."""
+    element_names: tuple[tuple[str, str], ...] = ()
+    """The current name of each element ``fact`` speaks of, read for showing and never persisted."""
     binding_id: BindingId | None = None
     relation_id: RelationId | None = None
     relation_ids: tuple[RelationId, ...] = ()

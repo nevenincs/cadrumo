@@ -54,6 +54,7 @@ See Also:
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import datetime
 
 from ...core.casilla_id import CasillaId
@@ -119,6 +120,7 @@ def build_modelo_work_form(
     deadline: ModeloFormDeadline | None = None,
     aeat_data_imported_at: datetime | None = None,
     calculation_diagnostics: tuple[CalculationSourceDiagnostic, ...] | None = None,
+    element_names: Mapping[str, str] | None = None,
 ) -> ModeloWorkForm:
     """Join one work review with its revision's declared layout into a classified editor form.
 
@@ -133,6 +135,9 @@ def build_modelo_work_form(
     ``deadline`` is the resolved filing deadline, and ``aeat_data_imported_at``
     when the AEAT tax data the revision replays was imported; the caller reads
     both, since neither is a fact of the review or the layout.
+
+    ``element_names`` are the names the register's elements go by now, for the
+    notes that speak of them.
 
     ``calculation_diagnostics`` are the diagnostics the latest calculation
     raised, when this session ran it; ``None`` when it did not, in which case
@@ -162,6 +167,7 @@ def build_modelo_work_form(
             for reason, casilla_id, _, _ in sources
             if reason in UNWORKED_BOX_REASONS and casilla_id is not None
         ),
+        element_names=element_names,
     )
     held = calculation_diagnostics is not None
     inspection = _inspection_only_for_unusable_layout(

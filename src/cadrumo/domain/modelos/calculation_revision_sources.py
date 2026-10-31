@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from enum import StrEnum
 from typing import Final, Literal, Self
 
@@ -135,7 +135,9 @@ class CalculationNoteSentence(StrEnum):
     AGRARIAN_EXCLUDED = "agrarian_excluded"
     RESIDENCE_PERIOD_UNKNOWN = "residence_period_unknown"
     ROW_UNREGISTERED = "row_unregistered"
+    ROW_UNREGISTERED_UNDATED = "row_unregistered_undated"
     REGISTER_OWNED_ACQUISITION = "register_owned_acquisition"
+    REGISTER_OWNED_ACQUISITION_UNDATED = "register_owned_acquisition_undated"
     POSSIBLY_DURABLE_EXPENSE = "possibly_durable_expense"
     REGISTER_ROW_MISSING = "register_row_missing"
     REGISTER_COST_EXCEEDS_PAID = "register_cost_exceeds_paid"
@@ -167,22 +169,47 @@ class CalculationNoteFact(BaseModel):
     A note's reason says what kind of thing was noticed, and several notes can share
     a reason. This says which row, element, interval and amount this one is about, so
     what was known at calculation stays readable in every language after the process
-    that calculated it has gone. Values are text the sentence prints as they stand.
+    that calculated it has gone. Values are the sentence's dates, amounts and box.
+
+    A fact is part of its revision's identity, and an element's name is not a tax
+    fact, so ``element_refs`` holds which elements it speaks of and the name is
+    read when the note is shown: renaming an element moves no revision. ``row_refs``
+    keeps two rows of one date and amount apart; neither is ever shown.
     """
 
     model_config = STRICT_FROZEN_CONFIG
 
     sentence: CalculationNoteSentence
     values: tuple[tuple[str, str], ...] = ()
+    element_refs: tuple[str, ...] = ()
+    row_refs: tuple[str, ...] = ()
 
     @classmethod
-    def of(cls, sentence: CalculationNoteSentence, /, **values: object) -> Self:
-        """Build the fact from named values, in a stable order."""
-        return cls(sentence=sentence, values=tuple(sorted((name, str(value)) for name, value in values.items())))
+    def of(
+        cls,
+        sentence: CalculationNoteSentence,
+        /,
+        *,
+        elements: Iterable[str] = (),
+        rows: Iterable[str] = (),
+        **values: object,
+    ) -> Self:
+        """Build the fact from the elements and rows it speaks of and its named values, in a stable order."""
+        return cls(
+            sentence=sentence,
+            values=tuple(sorted((name, str(value)) for name, value in values.items())),
+            element_refs=tuple(elements),
+            row_refs=tuple(rows),
+        )
 
     def identity(self) -> tuple[str, ...]:
         """Flatten the fact for a revision's content identity and for telling two notes apart."""
-        return (self.sentence.value, *(part for pair in self.values for part in pair))
+        return (
+            self.sentence.value,
+            *(part for pair in self.values for part in pair),
+            *self.element_refs,
+            *self.row_refs,
+        )
 
 
 class RecordedCalculationNote(BaseModel):
@@ -192,6 +219,8 @@ class RecordedCalculationNote(BaseModel):
 
     reason: str = Field(min_length=1, max_length=64)
     fact: CalculationNoteFact
+    element_names: tuple[tuple[str, str], ...] = ()
+    """The current name of each element the fact speaks of that still has one, read for this showing."""
 
 
 class CalculationSourceIssue(BaseModel):
@@ -378,10 +407,23 @@ def validate_revision_source_provenance(rows: Sequence[CalculationSourceRef]) ->
         raise ModeloValidationError("source provenance contributor parent does not resolve to a primary")
 
 
-def recorded_calculation_notes(issues: Iterable[CalculationSourceIssue]) -> tuple[RecordedCalculationNote, ...]:
+def element_names_of(fact: CalculationNoteFact | None, names: Mapping[str, str]) -> tuple[tuple[str, str], ...]:
+    """Pick out the names a fact's elements go by now; an element that no longer has one is simply absent."""
+    if fact is None:
+        return ()
+    return tuple((ref, names[ref]) for ref in fact.element_refs if ref in names)
+
+
+def recorded_calculation_notes(
+    issues: Iterable[CalculationSourceIssue], *, names: Mapping[str, str] | None = None
+) -> tuple[RecordedCalculationNote, ...]:
     """The notes a calculation kept that state their own facts, once each and in the order they were raised."""
     return tuple(
         dict.fromkeys(
-            RecordedCalculationNote(reason=issue.reason, fact=issue.fact) for issue in issues if issue.fact is not None
+            RecordedCalculationNote(
+                reason=issue.reason, fact=issue.fact, element_names=element_names_of(issue.fact, names or {})
+            )
+            for issue in issues
+            if issue.fact is not None
         )
     )

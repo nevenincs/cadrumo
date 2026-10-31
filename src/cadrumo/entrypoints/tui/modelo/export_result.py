@@ -171,7 +171,7 @@ def export_result_warnings(
         )
     if receipt is not None:
         warnings.extend(
-            NoticePresentation(severity="warning", message=note_fact_text(note.fact))
+            NoticePresentation(severity="warning", message=note_fact_text(note.fact, element_names=note.element_names))
             for note in receipt.calculation_notes
         )
     return tuple(warnings)

@@ -58,7 +58,7 @@ _M130 = "2019-y-siguientes"
 _INCOME_BINDING = "modelo-130-actividad-economica-ingresos-cumulative"
 
 
-def _disposed(
+def disposed_asset_history(
     *,
     reason: ActivityAssetDisposalReason = ActivityAssetDisposalReason.SALE,
     proceeds: str = "12000.00",
@@ -84,7 +84,7 @@ def _disposed(
 
 def _excess_history(transaction_id: str = _TRANSACTION) -> ActivityAssetHistory:
     """5,000.00 charged in 2024 against table maxima of 1,200.00 and 12,000 x 10% x 181 / 365 = 595.07."""
-    return _disposed(
+    return disposed_asset_history(
         regime=PriorFreeDepreciationRegime.TRLIS_DT_37,
         in_service=date(2024, 1, 1),
         prior_claim="5000.00",
@@ -137,7 +137,7 @@ def _boxes(resolution: CalculationSourceResolution) -> dict[str, Decimal]:
 
 
 def test_a_sale_gain_enters_its_box_and_states_clave_5_on_the_row() -> None:
-    resolution = resolve_m100(_disposed())
+    resolution = resolve_m100(disposed_asset_history())
 
     # No claim: reduction is the minimum 12,000 x 5% x 181 / 365 = 297.53, all of it gain.
     assert _boxes(resolution) == {"1654": Decimal("297.53")}
@@ -149,7 +149,7 @@ def test_a_sale_gain_enters_its_box_and_states_clave_5_on_the_row() -> None:
 
 
 def test_the_stated_clave_is_not_reported_as_a_missing_box() -> None:
-    resolution = resolve_m100(_disposed())
+    resolution = resolve_m100(disposed_asset_history())
 
     checked = apply_expected_missing_binding_diagnostics(_revision("100", "2025"), resolution)
 
@@ -171,17 +171,17 @@ def test_a_year_with_no_element_row_states_no_clave_and_owes_none() -> None:
 
 def test_a_sale_loss_enters_the_loss_box_as_a_magnitude() -> None:
     # 10,000.00 less the net value 11,702.47.
-    assert _boxes(resolve_m100(_disposed(proceeds="10000.00"))) == {"1639": Decimal("1702.47")}
+    assert _boxes(resolve_m100(disposed_asset_history(proceeds="10000.00"))) == {"1639": Decimal("1702.47")}
 
 
 def test_a_theft_with_compensation_goes_to_the_no_transmission_box() -> None:
-    resolution = resolve_m100(_disposed(reason=ActivityAssetDisposalReason.THEFT, proceeds="12000.00"))
+    resolution = resolve_m100(disposed_asset_history(reason=ActivityAssetDisposalReason.THEFT, proceeds="12000.00"))
 
     assert _boxes(resolution) == {"0304": Decimal("297.53")}
 
 
 def test_a_withdrawal_reaches_no_box() -> None:
-    resolution = resolve_m100(_disposed(reason=ActivityAssetDisposalReason.WITHDRAWAL, proceeds="0.00"))
+    resolution = resolve_m100(disposed_asset_history(reason=ActivityAssetDisposalReason.WITHDRAWAL, proceeds="0.00"))
 
     assert _boxes(resolution) == {}
     assert _blocks(resolution) == set()
@@ -208,7 +208,7 @@ def test_each_supported_edition_binds_every_route() -> None:
 
 
 def test_the_calculation_consumes_the_baja_revision() -> None:
-    history = _disposed()
+    history = disposed_asset_history()
     expected = f"activity-asset-disposal:{history.revisions[-1].revision_id}"
 
     assert expected in {item.source_ref for item in resolve_m100(history).provenance}
@@ -248,7 +248,7 @@ def test_the_excess_enters_box_0179_of_modelo_100_and_stays_out_of_casilla_02() 
 
 
 def test_no_attestation_means_no_excess() -> None:
-    history = _disposed(in_service=date(2024, 1, 1), prior_claim="5000.00")
+    history = disposed_asset_history(in_service=date(2024, 1, 1), prior_claim="5000.00")
 
     assert _income_box(_income(history, "2T")) == Decimal("0")
 
@@ -304,8 +304,8 @@ def test_a_claim_of_an_earlier_year_moves_the_baja_and_the_calculation_records_t
     12,000.00 - (12,000.00 - 897.53) = 897.53. With a 2024 claim of 1,200.00 the deduction exceeds
     the minimum and the gain is 1,200.00. The revision and the 2025 claims are the same in both.
     """
-    unclaimed = _disposed(in_service=date(2024, 1, 1))
-    claimed = _disposed(in_service=date(2024, 1, 1), prior_claim="1200.00")
+    unclaimed = disposed_asset_history(in_service=date(2024, 1, 1))
+    claimed = disposed_asset_history(in_service=date(2024, 1, 1), prior_claim="1200.00")
 
     before, after = resolve_m100(unclaimed), resolve_m100(claimed)
 
@@ -320,7 +320,7 @@ def test_a_claim_of_an_earlier_year_moves_the_baja_and_the_calculation_records_t
 
 
 def test_the_digest_stands_while_nothing_behind_the_baja_moved() -> None:
-    history = _disposed(in_service=date(2024, 1, 1))
+    history = disposed_asset_history(in_service=date(2024, 1, 1))
 
     assert _consumption(resolve_m100(history)) == _consumption(resolve_m100(history))
 
@@ -329,7 +329,7 @@ def test_a_modelo_130_excess_records_the_figures_it_rests_on() -> None:
     """A 2024 claim of 4,000.00 gives 4,000.00 - 1,795.07 = 2,204.93 of excess; 5,000.00 gives 3,204.93."""
 
     def history(prior_claim: str) -> ActivityAssetHistory:
-        return _disposed(
+        return disposed_asset_history(
             regime=PriorFreeDepreciationRegime.TRLIS_DT_37,
             in_service=date(2024, 1, 1),
             prior_claim=prior_claim,
@@ -367,12 +367,9 @@ def _two_sales(*, second_proceeds: str) -> ActivityAssetHistory:
 
 def _shared_row_facts(resolution: CalculationSourceResolution) -> dict[str, dict[str, str]]:
     return {
-        values["element"]: values
-        for values in (
-            dict(item.fact.values)
-            for item in resolution.diagnostics
-            if item.fact is not None and item.fact.sentence is CalculationNoteSentence.DISPOSAL_SHARED_ROW
-        )
+        item.fact.element_refs[0]: dict(item.fact.values)
+        for item in resolution.diagnostics
+        if item.fact is not None and item.fact.sentence is CalculationNoteSentence.DISPOSAL_SHARED_ROW
     }
 
 
@@ -402,4 +399,4 @@ def test_two_gains_keep_their_sum_for_the_forms_total_and_each_is_still_stated()
 
 
 def test_one_sale_has_its_row_and_needs_no_such_statement() -> None:
-    assert _shared_row_facts(resolve_m100(_disposed())) == {}
+    assert _shared_row_facts(resolve_m100(disposed_asset_history())) == {}

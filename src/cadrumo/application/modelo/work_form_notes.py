@@ -12,7 +12,7 @@ from typing import Final
 
 from ...core.aggregation import BindingSourceKind
 from ...domain.modelos.calculation_revision import CalculationRevision
-from ...domain.modelos.calculation_revision_sources import CalculationNoteFact
+from ...domain.modelos.calculation_revision_sources import CalculationNoteFact, element_names_of
 from ...domain.modelos.verification_report import ModeloVerificationFinding, ModeloVerificationFindingSeverity
 from ..aggregation.source_mesh import CalculationSourceDiagnostic
 from .calculation_note_gate import gate_refuses
@@ -123,6 +123,7 @@ def project_calculation_notes(
             box=box,
             withholds_filing=gate_refuses(reason, binding_source),
             fact=fact,
+            element_names=element_names_of(fact, context.element_names),
         )
     return tuple(sorted(notes.values(), key=lambda note: _ATTENTION_ORDER.index(note.attention)))
 
