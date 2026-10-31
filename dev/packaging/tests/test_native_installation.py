@@ -134,7 +134,9 @@ def test_native_layout_projects_registration(tmp_path: Path, target: str) -> Non
         assert metadata["LSUIElement"] is False
         # The main executable is the wrapper; the payload stays whole beneath the resources.
         assert (contents / "MacOS/cadrumo").read_bytes() == bundle.launcher.read_bytes()
-        assert (contents / "MacOS/cadrumo").stat().st_mode & 0o777 == 0o755
+        # Windows exposes only the read-only bit, not POSIX executable permissions.
+        expected_mode = 0o666 if os.name == "nt" else 0o755
+        assert (contents / "MacOS/cadrumo").stat().st_mode & 0o777 == expected_mode
         assert (contents / "Resources/cadrumo.icns").read_bytes() == bundle.icon.read_bytes()
         assert sorted(path.name for path in (contents / "MacOS").iterdir()) == ["cadrumo"]
         assert (contents / "Resources/app/cadrumo").read_bytes() == (payload / "cadrumo").read_bytes()
