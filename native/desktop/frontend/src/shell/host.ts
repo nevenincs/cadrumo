@@ -137,6 +137,9 @@ export interface Host {
   environment(): Promise<DesktopEnvironment>;
   /** What this installation is, where the host reads it from the package. */
   about?(): Promise<AboutInfo>;
+  /** How many changes the previous close of this window ended before they
+   * reported, once: their outcome is unknown. Zero after a settled close. */
+  previousClose?(): Promise<number>;
   readonly language?: {
     read(): Promise<DesktopLanguage>;
     set(language: string): Promise<DesktopLanguage>;

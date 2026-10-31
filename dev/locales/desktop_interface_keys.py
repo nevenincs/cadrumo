@@ -1126,6 +1126,7 @@ DESKTOP_INTERFACE_KEYS: Final[frozenset[str]] = DESKTOP_PROFILE_INTERFACE_KEYS |
         "desktop.toast.open_failed",
         "desktop.toast.paste_failed",
         "desktop.toast.paste_too_large",
+        "desktop.toast.previous_close_interrupted",
         "desktop.tui.hide",
         "desktop.tui.label",
         "desktop.tui.show",

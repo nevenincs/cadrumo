@@ -9,7 +9,7 @@
 //! connection is tried again with a growing pause.
 
 use super::{
-    failure,
+    closing, failure,
     wire::{Presence, Refusal, SignInStatus},
 };
 use cadrumo_application::error::application::{ErrorCode, Result};
@@ -128,7 +128,7 @@ impl Watch {
         let mut receiver = self.inner.snapshot.subscribe();
         loop {
             if self.inner.closed.load(Ordering::Acquire) {
-                return Err(failure(ErrorCode::SessionUnavailable));
+                return Err(closing());
             }
             {
                 let fence = lock(&self.inner.fence);

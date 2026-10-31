@@ -612,7 +612,8 @@ export type HelperTiming = {
     | "spawn_failed"
     | "execution_failed"
     | "nonzero_exit"
-    | "completed";
+    | "completed"
+    | "interrupted";
   admissionWaitMs: number;
   spawnMs: number | null;
   executionMs: number | null;
@@ -1817,6 +1818,8 @@ export interface HostCommands {
     result: DesktopEnvironment;
   };
   about_info: { args: Authorized; result: AboutInfo };
+  /** The changes the previous close ended before they reported, once. */
+  previous_close: { args: Authorized; result: number };
   /** Each setup command refuses with `SetupRefusal` or a `HostFailure`. */
   desktop_setup_read: { args: Authorized; result: DesktopSetup };
   /** Starts a status read; "quick" reads local facts only, "full" also

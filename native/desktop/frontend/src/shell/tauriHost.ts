@@ -288,6 +288,7 @@ export function tauriHost(): Host {
     },
     environment: () => call("desktop_environment", {}),
     about: () => call("about_info", {}),
+    previousClose: () => call("previous_close", {}),
     language: {
       read: () => call("desktop_language_read", {}),
       set: (language) => call("desktop_language_set", { language }),

@@ -4583,6 +4583,8 @@ desktop:
     open_failed: No s'ha pogut obrir.
     paste_failed: No s'ha pogut enganxar.
     paste_too_large: És massa text per enganxar d'una vegada.
+    previous_close_interrupted: Cadrumo es va tancar durant un canvi; el resultat
+      és desconegut. Comprova'l abans de repetir-lo.
   tui:
     hide: Amaga l'espai de treball
     label: Espai de treball de Cadrumo

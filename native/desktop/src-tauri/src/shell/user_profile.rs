@@ -120,6 +120,18 @@ impl ProfileHost {
             files: Files::default(),
         }
     }
+    /// Refuses every further operation of the window's profile, then waits until the one
+    /// already submitted, if any, has its answer or `deadline` passes. Says whether one
+    /// was still waiting for its answer then.
+    pub async fn settle(&self, deadline: std::time::Instant) -> bool {
+        self.closed.store(true, Ordering::Release);
+        tokio::time::timeout_at(
+            tokio::time::Instant::from_std(deadline),
+            self.operation.lock(),
+        )
+        .await
+        .is_err()
+    }
     pub fn close(&self) {
         self.closed.store(true, Ordering::Release);
         self.observer.end();

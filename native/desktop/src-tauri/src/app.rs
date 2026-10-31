@@ -157,6 +157,7 @@ pub fn run(
         manager::commands(),
         agent::commands(),
         crate::startup::commands(),
+        crate::close_outcome::commands(),
     ];
     let registered = logs::frontend::RegisteredCommands(
         modules
@@ -273,6 +274,12 @@ pub fn run(
             ApplicationError::new(ErrorCode::WebviewFailed, Operation::Webview).caused_by(e)
         })?;
     let handle = app.handle().clone();
+    #[cfg(unix)]
+    quit_on_signal(
+        &handle,
+        &diagnostics,
+        tokio::signal::unix::SignalKind::terminate(),
+    )?;
     // The application can end without returning from the run loop: on macOS a Quit
     // terminates the process right after the loop reports its exit. Shutdown therefore
     // runs when the loop reports its exit, once, and the return path reuses its outcome.
@@ -308,6 +315,45 @@ pub fn run(
         return Ok(1);
     }
     Ok(code)
+}
+
+/// A termination request (a logout, a system shutdown or a stop sent to the process)
+/// ends the window as a quit does, so the changes it submitted get the same settle
+/// window and its runtime the same drain. Registered before the run loop starts, so
+/// no such request meanwhile ends the process without them.
+#[cfg(unix)]
+fn quit_on_signal<R: Runtime>(
+    handle: &tauri::AppHandle<R>,
+    diagnostics: &Arc<Diagnostics>,
+    kind: tokio::signal::unix::SignalKind,
+) -> Result<()> {
+    let host = handle.clone();
+    let requests = on_signal(kind, move || host.exit(0)).map_err(|cause| {
+        ApplicationError::new(ErrorCode::EnvironmentFailed, Operation::Launch).caused_by(cause)
+    })?;
+    spawn_detached(
+        handle.clone(),
+        diagnostics.clone(),
+        HostStage::Shutdown,
+        requests,
+    );
+    Ok(())
+}
+
+/// Takes `kind` from its default disposition now and answers each delivery with `act`
+/// once the returned task runs. Every further delivery asks again; the close already
+/// under way answers it.
+#[cfg(unix)]
+fn on_signal(
+    kind: tokio::signal::unix::SignalKind,
+    act: impl Fn() + Send + 'static,
+) -> std::io::Result<impl std::future::Future<Output = ()> + Send + 'static> {
+    let mut requests = tauri::async_runtime::block_on(async { tokio::signal::unix::signal(kind) })?;
+    Ok(async move {
+        while requests.recv().await.is_some() {
+            act();
+        }
+    })
 }
 
 /// Hides `window` and lets `view` publish behind it, closing the window again
@@ -347,6 +393,7 @@ fn close_clients_and_supervision<R: Runtime>(handle: &tauri::AppHandle<R>) -> Re
     if let Some(view) = handle.try_state::<Arc<shell::sede_view::SedeViewHost>>() {
         view.close();
     }
+    settle_changes(handle);
     if let Some(modelo) = handle.try_state::<Arc<shell::modelo::ModeloHost>>() {
         modelo.close();
     }
@@ -397,6 +444,52 @@ fn close_clients_and_supervision<R: Runtime>(handle: &tauri::AppHandle<R>) -> Re
         .and(manager_cleanup)
 }
 
+/// Stops admitting changes, then gives the changes the window already submitted one
+/// shared settle window to report before any client ends. What is still running then
+/// is ended with its client; the runtime's journal keeps what happened to it, and this
+/// root's next window says that its outcome is unknown.
+fn settle_changes<R: Runtime>(handle: &tauri::AppHandle<R>) {
+    let deadline =
+        std::time::Instant::now() + cadrumo_application::shutdown::OPERATION_SETTLE_BOUND;
+    let profile = handle
+        .try_state::<Arc<shell::user_profile::ProfileHost>>()
+        .map(|profile| profile.inner().clone());
+    let sign_in = handle
+        .try_state::<Arc<shell::sign_in::SignIn>>()
+        .map(|sign_in| sign_in.inner().clone());
+    let interrupted = tauri::async_runtime::block_on(async move {
+        let relayed = async {
+            match profile {
+                Some(profile) => profile.settle(deadline).await,
+                None => false,
+            }
+        };
+        let helper = async {
+            match sign_in {
+                Some(sign_in) => sign_in.settle_changes(deadline).await,
+                None => None,
+            }
+        };
+        let (relayed, helper) = tokio::join!(relayed, helper);
+        relayed
+            .then_some(crate::close_outcome::PROFILE_RELAY)
+            .into_iter()
+            .chain(helper)
+            .collect::<Vec<_>>()
+    });
+    if interrupted.is_empty() {
+        return;
+    }
+    if let Some(outcomes) = handle
+        .try_state::<Option<Arc<crate::close_outcome::CloseOutcomes>>>()
+        .and_then(|outcomes| outcomes.inner().clone())
+        && let Err(error) = outcomes.interrupted(&interrupted)
+        && let Some(state) = handle.try_state::<Arc<TerminalState>>()
+    {
+        state.launch.diagnostics.failure(error);
+    }
+}
+
 pub(crate) async fn assemble<R: Runtime>(
     app: tauri::AppHandle<R>,
     launch: Launch,
@@ -424,6 +517,7 @@ pub(crate) async fn assemble<R: Runtime>(
     }
     let manager = Arc::new(ManagerStart::new(&launch));
     app.manage(manager.clone());
+    app.manage(crate::close_outcome::of(&launch));
     app.manage(Arc::new(TerminalState::new(launch)));
     let sign_in = app.state::<Arc<shell::sign_in::SignIn>>().inner().clone();
     let agent = app.state::<Arc<agent::AgentHost>>().inner().clone();
@@ -617,6 +711,31 @@ pub(crate) fn supervision_continues(
 
 #[cfg(test)]
 mod tests {
+    #[cfg(unix)]
+    #[test]
+    fn a_signal_delivered_to_the_process_asks_the_window_to_close() {
+        // A signal nothing else in this test binary uses, so the delivery is this test's alone.
+        let (asked, answered) = std::sync::mpsc::channel();
+        let requests = super::on_signal(
+            tokio::signal::unix::SignalKind::user_defined1(),
+            move || {
+                let _ = asked.send(());
+            },
+        )
+        .unwrap();
+        tauri::async_runtime::spawn(requests);
+        for _ in 0..2 {
+            let delivered = std::process::Command::new("/bin/kill")
+                .args(["-USR1", &std::process::id().to_string()])
+                .status()
+                .unwrap();
+            assert!(delivered.success());
+            answered
+                .recv_timeout(std::time::Duration::from_secs(10))
+                .expect("the delivery asked the window to close");
+        }
+    }
+
     #[test]
     fn healthy_gui_allows_bounded_repair_but_fails_prolonged_or_terminal_supervision_loss() {
         use super::*;

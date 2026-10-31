@@ -1,4 +1,4 @@
-use super::failure;
+use super::{closing, failure};
 use cadrumo_application::{
     diagnostics::{
         Diagnostics,
@@ -6,6 +6,7 @@ use cadrumo_application::{
     },
     error::application::{ApplicationError, ErrorCode, Result},
     process::status::{ProcessPhase, ProcessRole},
+    shutdown::is_host_closing,
 };
 use cadrumo_platform::process_exit::ProcessExitWatch;
 use std::{
@@ -99,6 +100,8 @@ struct Active {
     pending_readers: usize,
     child: Option<Child>,
     process: Option<u64>,
+    /// What the running child was started for, while it runs.
+    identity: Option<HelperIdentity>,
 }
 
 #[derive(Default)]
@@ -111,6 +114,8 @@ struct Lane {
 pub struct Children {
     // The same gate fences both lanes and excludes publication of a late child.
     closed: Mutex<bool>,
+    /// Set when the host begins to close: no further change starts, reads go on.
+    changes_closed: AtomicBool,
     read: Lane,
     mutation: Lane,
     diagnostics: Arc<Diagnostics>,
@@ -172,6 +177,29 @@ impl Children {
             Err(error) => Err(error),
         }
     }
+    /// Refuses every further change, then waits until the change already running, if any,
+    /// ends by itself or `deadline` passes. Reads are untouched. Returns what the change
+    /// still running at `deadline` was started for; [`Children::stop`] then ends it, and
+    /// its effect is unknown to this host.
+    pub fn settle(&self, deadline: Instant) -> Option<HelperIdentity> {
+        self.changes_closed.store(true, Ordering::Release);
+        let lane = &self.mutation;
+        let mut active = lane.active.lock().unwrap_or_else(|e| e.into_inner());
+        // A child that has exited wakes the lane through its exit watch.
+        while active.busy {
+            let remaining = deadline.saturating_duration_since(self.clock.now());
+            if remaining.is_zero() {
+                return active.identity;
+            }
+            active = lane
+                .changed
+                .wait_timeout(active, remaining)
+                .unwrap_or_else(|e| e.into_inner())
+                .0;
+        }
+        None
+    }
+
     /// Permanently fence both lanes, then kill and reap each owned child.
     pub fn stop(&self) -> Result<()> {
         self.close_with(|active| self.settle_active(active))
@@ -252,10 +280,12 @@ impl Children {
                     return Err(error);
                 }
             };
-            if closed {
+            if closed
+                || (kind == HelperKind::Mutation && self.changes_closed.load(Ordering::Acquire))
+            {
                 Self::release_pending(&mut active, &mut pending);
                 lane.changed.notify_all();
-                return Err(failure(ErrorCode::SessionUnavailable));
+                return Err(closing());
             }
             if self.clock.now() >= deadline {
                 Self::release_pending(&mut active, &mut pending);
@@ -313,7 +343,8 @@ impl Children {
     ) -> Result<Output> {
         let deadline = self.clock.now() + timeout;
         let mut measurement = Measurement::new(kind);
-        let outcome = self.execute_measured(command, secret, kind, deadline, &mut measurement);
+        let outcome =
+            self.execute_measured(identity, command, secret, kind, deadline, &mut measurement);
         {
             let mut fact = match &outcome {
                 Ok(output) => {
@@ -333,12 +364,19 @@ impl Children {
                 outcome.as_ref().err().cloned(),
             );
         }
-        if let Ok(output) = &outcome {
-            measurement.timing.outcome = if output.success {
-                HelperOutcome::Completed
-            } else {
-                HelperOutcome::NonzeroExit
-            };
+        match &outcome {
+            Ok(output) => {
+                measurement.timing.outcome = if output.success {
+                    HelperOutcome::Completed
+                } else {
+                    HelperOutcome::NonzeroExit
+                };
+            }
+            // Refused or ended because the host is closing: an expected outcome.
+            Err(error) if is_host_closing(error) => {
+                measurement.timing.outcome = HelperOutcome::Interrupted;
+            }
+            Err(_) => {}
         }
         measurement.timing.total_ms = milliseconds(measurement.started.elapsed());
         self.diagnostics
@@ -348,6 +386,7 @@ impl Children {
 
     fn execute_measured(
         &self,
+        identity: HelperIdentity,
         mut command: Command,
         secret: Option<Zeroizing<Vec<u8>>>,
         kind: HelperKind,
@@ -378,7 +417,10 @@ impl Children {
                         milliseconds(admission_started.elapsed());
                     // No OS spawn was attempted. Only the closed admission
                     // refusal leaves this boundary, never command or password.
-                    self.diagnostics.failure(error.clone());
+                    // A closing host's refusal is its timing row, not a failure.
+                    if !is_host_closing(&error) {
+                        self.diagnostics.failure(error.clone());
+                    }
                     return Err(error);
                 }
             };
@@ -398,9 +440,7 @@ impl Children {
             measurement.timing.admission_wait_ms = milliseconds(admission_started.elapsed());
             if *fence {
                 drop(fence);
-                let error = failure(ErrorCode::SessionUnavailable);
-                self.diagnostics.failure(error.clone());
-                return Err(error);
+                return Err(closing());
             }
             measurement.timing.outcome = HelperOutcome::SpawnFailed;
             let spawn_started = Instant::now();
@@ -434,6 +474,7 @@ impl Children {
             let pid = child.id();
             active.busy = true;
             active.child = Some(child);
+            active.identity = Some(identity);
             drop(fence);
             let child = active.child.as_mut().unwrap();
             let pipes = (
@@ -556,10 +597,13 @@ impl Children {
                     .finish_helper(process, status.code(), ProcessPhase::Exited);
             }
             active.child = None;
+            active.identity = None;
             active.busy = false;
             lane.changed.notify_all();
         }
-        if let Err(error) = &outcome {
+        if let Err(error) = &outcome
+            && !is_host_closing(error)
+        {
             self.diagnostics.failure_for(process, error.clone());
         }
         outcome
@@ -578,7 +622,7 @@ impl Children {
             .map_err(|_| failure(ErrorCode::LockPoisoned))?;
         loop {
             if self.is_closed()? {
-                return Err(failure(ErrorCode::SessionUnavailable));
+                return Err(closing());
             }
             if overflow.load(Ordering::Acquire) {
                 return Err(failure(ErrorCode::OutputLimit));
@@ -719,6 +763,139 @@ pub(crate) mod tests {
             ErrorCode::OutputLimit
         );
         assert!(overflow.load(Ordering::Acquire));
+    }
+
+    #[cfg(unix)]
+    const CHANGE: HelperIdentity = HelperIdentity {
+        command: "config.profile.create",
+        executable: cadrumo_application::diagnostics::helper::HelperExecutable::Cli,
+    };
+
+    #[cfg(unix)]
+    fn shell(script: &str) -> Command {
+        let mut command = Command::new("/bin/sh");
+        command.args(["-c", script]);
+        command
+    }
+
+    /// Returns once the change lane has published its running child.
+    #[cfg(unix)]
+    fn until_a_change_runs(children: &Children) {
+        let deadline = Instant::now() + Duration::from_secs(10);
+        while children.mutation.active.lock().unwrap().child.is_none() {
+            assert!(Instant::now() < deadline, "the change never started");
+            thread::sleep(Duration::from_millis(10));
+        }
+    }
+
+    #[cfg(unix)]
+    fn failures(children: &Children) -> Vec<ApplicationError> {
+        children
+            .diagnostics
+            .snapshot(0)
+            .events
+            .into_iter()
+            .filter(|event| {
+                matches!(
+                    event.kind,
+                    cadrumo_application::diagnostics::EventKind::Failure
+                )
+            })
+            .filter_map(|event| event.failure)
+            .collect()
+    }
+
+    #[cfg(unix)]
+    fn timings(children: &Children) -> Vec<HelperTiming> {
+        children
+            .diagnostics
+            .snapshot(0)
+            .events
+            .into_iter()
+            .filter_map(|event| event.helper_timing)
+            .collect()
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn a_change_that_ends_within_the_settle_window_reports_its_own_outcome() {
+        let children = Children::default();
+        thread::scope(|scope| {
+            let running =
+                scope.spawn(|| children.run(CHANGE, shell("sleep 0.3; printf done"), None));
+            until_a_change_runs(&children);
+            let started = Instant::now();
+            assert!(
+                children
+                    .settle(Instant::now() + Duration::from_secs(20))
+                    .is_none()
+            );
+            // The window ended when the change did, not at its bound.
+            assert!(started.elapsed() < Duration::from_secs(10));
+            let output = running.join().unwrap().unwrap();
+            assert!(output.success);
+            assert_eq!(&output.stdout[..], b"done");
+        });
+        children.stop().unwrap();
+        assert!(failures(&children).is_empty());
+        assert_eq!(timings(&children)[0].outcome, HelperOutcome::Completed);
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn a_change_still_running_after_the_settle_window_is_ended_as_an_expected_interruption() {
+        let children = Children::default();
+        thread::scope(|scope| {
+            let running = scope.spawn(|| children.run(CHANGE, shell("sleep 60"), None));
+            until_a_change_runs(&children);
+            let settled = children.settle(Instant::now() + Duration::from_millis(200));
+            assert_eq!(
+                settled.map(|identity| identity.command),
+                Some(CHANGE.command)
+            );
+            let started = Instant::now();
+            children.stop().unwrap();
+            let ended = running.join().unwrap().err().unwrap();
+            assert!(is_host_closing(&ended));
+            assert!(started.elapsed() < Duration::from_secs(10));
+        });
+        assert!(failures(&children).is_empty(), "a close is not a failure");
+        let timing = timings(&children)[0];
+        assert_eq!(timing.helper_kind, HelperKind::Mutation);
+        assert_eq!(timing.outcome, HelperOutcome::Interrupted);
+        let snapshot = children.diagnostics.snapshot(0);
+        assert_eq!(snapshot.processes[0].phase, ProcessPhase::Terminated);
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn a_settling_window_refuses_new_changes_but_still_answers_reads() {
+        let children = Children::default();
+        assert!(children.settle(Instant::now()).is_none());
+        let refused = children.run(CHANGE, shell("exit 0"), None).err().unwrap();
+        assert!(is_host_closing(&refused));
+        assert!(
+            children
+                .read(CHANGE, shell("printf status"))
+                .unwrap()
+                .success
+        );
+        children.stop().unwrap();
+        let after = children.read(CHANGE, shell("exit 0")).err().unwrap();
+        assert!(is_host_closing(&after));
+        assert!(failures(&children).is_empty());
+        let outcomes: Vec<_> = timings(&children)
+            .into_iter()
+            .map(|timing| timing.outcome)
+            .collect();
+        assert_eq!(
+            outcomes,
+            [
+                HelperOutcome::Interrupted,
+                HelperOutcome::Completed,
+                HelperOutcome::Interrupted
+            ]
+        );
     }
 
     /// Bounds only a fixture that never arrives; arriving is the event awaited.

@@ -56,6 +56,10 @@ cadrumo-manager = { path = "../../manager" }
 cadrumo-platform = { path = "../../platform", features = ["webview2"] }
 cadrumo-installer = { path = "../../installer" }
 
+[target.'cfg(unix)'.dependencies]
+# A termination request ends the window through the same close as a quit.
+tokio = { version = "1", features = ["signal"] }
+
 [target.'cfg(any(windows, unix))'.dependencies]
 # Every role the binary runs is hosted by the platform's linked interpreter host.
 cadrumo-interpreter-host = { path = "../../interpreter_host" }
