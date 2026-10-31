@@ -61,7 +61,6 @@ fn run(diagnostics: Arc<Diagnostics>) -> Result<i32> {
     // Before the window exists, so a panic in any webview callback has a durable sink.
     startup_logging::configure(&parent, &diagnostics);
     if matches!(mode, Ok(launch::Mode::Gui)) {
-        #[cfg(windows)]
         contain_application()?;
         return app::run(root, parent, diagnostics);
     }
@@ -114,6 +113,19 @@ fn contain_application() -> Result<()> {
         })?;
     let _ = APPLICATION.set(job);
     Ok(())
+}
+
+/// One process scope for everything the window starts: session holders, the
+/// agent service, short calls and browser checks are created into it and end
+/// with the window however it ends. A descendant that leaves its process group,
+/// and a terminal shell, which starts a session of its own, are outside it.
+#[cfg(unix)]
+fn contain_application() -> Result<()> {
+    cadrumo_platform::process_scope::contain_current()
+        .map(|_| ())
+        .map_err(|cause| {
+            ApplicationError::new(ErrorCode::SpawnFailed, Operation::Launch).caused_by(cause)
+        })
 }
 
 async fn check_health(launch: &environment::Launch, hold_seconds: u64) -> Result<i32> {

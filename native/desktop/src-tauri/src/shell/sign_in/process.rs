@@ -404,6 +404,11 @@ impl Children {
             }
             measurement.timing.outcome = HelperOutcome::SpawnFailed;
             let spawn_started = Instant::now();
+            // The window's process scope holds the child and what it starts.
+            #[cfg(unix)]
+            let spawned = cadrumo_application::process::group::place(&mut command)
+                .and_then(|()| cadrumo_application::process::creation::run(|| command.spawn()));
+            #[cfg(windows)]
             let spawned = cadrumo_application::process::creation::run(|| command.spawn());
             measurement.timing.spawn_ms = Some(milliseconds(spawn_started.elapsed()));
             let mut child = match spawned {

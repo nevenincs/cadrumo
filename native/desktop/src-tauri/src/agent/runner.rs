@@ -1,32 +1,27 @@
 //! The supervised runner: one long-lived launcher child for as long as the
 //! agent may serve, unlike the sign-in runner's short calls. The child and
-//! everything it starts live in a kill-on-close Job Object, so they end with
-//! this host however it ends. Standard input carries the bearer and then stays
-//! open: closing it is the stop request.
+//! everything it starts are contained, so they end with this host however it
+//! ends. Standard input carries the bearer and then stays open: closing it is
+//! the stop request.
 
 use super::launcher::{self, Event, LINE_LIMIT};
-#[cfg(windows)]
-use cadrumo_application::process::status::ProcessRole;
 use cadrumo_application::{
     diagnostics::Diagnostics,
     error::application::{ApplicationError, ErrorCode, Operation, Result},
-    process::status::ProcessPhase,
+    process::status::{ProcessPhase, ProcessRole},
 };
 use std::{
-    io::Read,
-    process::{Child, ChildStdin, Command},
+    io::{Read, Write},
+    process::{Child, ChildStdin, Command, Stdio},
     sync::Arc,
     thread::{self, JoinHandle},
     time::{Duration, Instant},
 };
-#[cfg(windows)]
-use std::{io::Write, process::Stdio};
 
 /// How long the launcher has to stop its agent and exit after its standard
-/// input closes, before the job ends it.
+/// input closes, before its containment ends it.
 pub const STOP_GRACE: Duration = Duration::from_secs(10);
-/// How long the job's ended processes have to finish exiting.
-#[cfg(windows)]
+/// How long the contained processes, once ended, have to finish exiting.
 const SETTLE_BOUND: Duration = Duration::from_secs(10);
 
 fn failure(code: ErrorCode) -> ApplicationError {
@@ -49,17 +44,25 @@ pub enum Signal {
 pub enum Ending {
     /// It exited within its grace after its standard input closed.
     Exited(Option<i32>),
-    /// It overran its grace and the job ended it.
+    /// It overran its grace and its containment ended it.
     Terminated,
 }
 
-/// A running launcher. Dropping it closes the job, which ends every process
-/// still in it.
+/// What holds a launcher and everything it starts. Dropping it ends every
+/// process still in it.
+#[cfg(windows)]
+type Containment = cadrumo_manager::process_job::ProcessJob;
+/// What holds a launcher and everything it starts. Dropping it ends every
+/// process still in it; a descendant that leaves its process group escapes it.
+#[cfg(unix)]
+type Containment = cadrumo_platform::process_scope::ProcessScope;
+
+/// A running launcher. Dropping it drops its containment, which ends every
+/// process still in it.
 pub struct Supervised {
     child: Child,
     stdin: Option<ChildStdin>,
-    #[cfg(windows)]
-    job: cadrumo_manager::process_job::ProcessJob,
+    containment: Containment,
     process: u64,
     threads: Vec<JoinHandle<()>>,
     diagnostics: Arc<Diagnostics>,
@@ -67,7 +70,7 @@ pub struct Supervised {
 
 /// Starts `command` contained, writes the bearer frame, and reports each
 /// output line to `signals` from a reader thread.
-#[cfg(all(windows, test))]
+#[cfg(test)]
 pub fn start(
     command: Command,
     bearer: &str,
@@ -118,13 +121,49 @@ pub fn start_child(
         diagnostics.spawn_failure(ProcessRole::AgentLauncher, error.clone());
         return Err(error);
     }
+    supervise(child, job, bearer, signals, diagnostics)
+}
+
+/// Starts `command` contained, as [`start`] does: its process is created into a
+/// process scope of its own, so it and what it starts end with the scope.
+#[cfg(unix)]
+pub fn start_child(
+    mut command: Command,
+    bearer: Option<(&str, &str)>,
+    signals: impl Fn(Signal) + Send + 'static,
+    diagnostics: Arc<Diagnostics>,
+) -> Result<Supervised> {
+    let spawn_failure = |cause: std::io::Error| {
+        let error = failure(ErrorCode::SpawnFailed).caused_by(cause);
+        diagnostics.spawn_failure(ProcessRole::AgentLauncher, error.clone());
+        error
+    };
+    let scope = cadrumo_platform::process_scope::ProcessScope::new().map_err(spawn_failure)?;
+    scope.join(&mut command).map_err(spawn_failure)?;
+    command
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped());
+    let child = command.spawn().map_err(spawn_failure)?;
+    supervise(child, scope, bearer, signals, diagnostics)
+}
+
+/// Supervises a launcher its containment already holds: reads its output, and
+/// writes the bearer frame when it speaks the launcher protocol.
+fn supervise(
+    mut child: Child,
+    containment: Containment,
+    bearer: Option<(&str, &str)>,
+    signals: impl Fn(Signal) + Send + 'static,
+    diagnostics: Arc<Diagnostics>,
+) -> Result<Supervised> {
     let process = diagnostics.start(child.id(), ProcessRole::AgentLauncher);
     let stdout = child.stdout.take();
     let stderr = child.stderr.take();
     let mut supervised = Supervised {
         stdin: child.stdin.take(),
         child,
-        job,
+        containment,
         process,
         threads: Vec::new(),
         diagnostics,
@@ -168,23 +207,12 @@ pub fn start_child(
     Ok(supervised)
 }
 
-/// Nothing else contains a child's descendants, so no other platform starts one.
-#[cfg(not(windows))]
-pub fn start_child(
-    _command: Command,
-    _bearer: Option<(&str, &str)>,
-    _signals: impl Fn(Signal) + Send + 'static,
-    _diagnostics: Arc<Diagnostics>,
-) -> Result<Supervised> {
-    Err(failure(ErrorCode::UnsupportedPlatform))
-}
-
 impl Supervised {
     pub fn process_ref(&self) -> u64 {
         self.process
     }
     /// Closes standard input, waits up to `grace` for the launcher to exit,
-    /// and ends the job either way, so nothing it started outlives it.
+    /// and ends its containment either way, so nothing it started outlives it.
     pub fn stop(mut self, grace: Duration) -> Result<Ending> {
         drop(self.stdin.take());
         let started = Instant::now();
@@ -233,11 +261,11 @@ impl Supervised {
     #[cfg(windows)]
     fn terminate(&self) -> Result<()> {
         let cleanup = |cause| failure(ErrorCode::CleanupFailed).caused_by(cause);
-        self.job.terminate().map_err(cleanup)?;
+        self.containment.terminate().map_err(cleanup)?;
         // Termination is asynchronous: a process the job ended can still be
         // exiting when the call returns. Stopped means the job is empty.
         let deadline = Instant::now() + SETTLE_BOUND;
-        while self.job.active_processes().map_err(cleanup)? != 0 {
+        while self.containment.active_processes().map_err(cleanup)? != 0 {
             if Instant::now() >= deadline {
                 return Err(failure(ErrorCode::CleanupFailed));
             }
@@ -246,12 +274,15 @@ impl Supervised {
         Ok(())
     }
 
-    #[cfg(not(windows))]
+    #[cfg(unix)]
     fn terminate(&self) -> Result<()> {
-        Ok(())
+        // Stopped means no process of the scope's group still runs.
+        self.containment
+            .terminate(SETTLE_BOUND)
+            .map_err(|cause| failure(ErrorCode::CleanupFailed).caused_by(cause))
     }
 
-    /// Ends the job after a failure, records it, and reaps what it can.
+    /// Ends the containment after a failure, records it, and reaps what it can.
     fn abandon(&mut self, error: ApplicationError) {
         drop(self.stdin.take());
         if let Err(cleanup) = self.terminate() {
@@ -404,15 +435,63 @@ pub(crate) mod tests {
         )
     }
 
+    /// A real child that reads the bearer line, reports ready, starts a
+    /// grandchild, and stops when its standard input ends, unless told to
+    /// ignore it.
+    #[cfg(unix)]
+    pub(crate) fn launcher(ignore_end: bool) -> Command {
+        const SCRIPT: &str = r#"IFS= read -r line || exit 1
+bearer=$(printf '%s' "$line" | /usr/bin/sed -n 's/^{"bearer":"\([^"]*\)".*/\1/p')
+gateway=$(printf '%s' "$line" | /usr/bin/sed -n 's/.*"gateway_bearer":"\([^"]*\)".*/\1/p')
+if [ -z "$gateway" ] || [ "$gateway" = "$bearer" ]; then exit 1; fi
+/bin/sleep 120 </dev/null >/dev/null 2>&1 &
+grandchild=$!
+printf '{"event":"agent_ready","gateway_port":4000,"agent_version":"%s-%s","hosting_contract":1,"workspace_root":"/lane/ws"}\n' "${#bearer}" "$grandchild"
+if [ "$1" = ignore ]; then
+  trap '' HUP
+  while :; do /bin/sleep 120; done
+fi
+/bin/cat >/dev/null
+printf '{"event":"agent_stopped","reason":"agent_host_closed"}\n'
+exit 0
+"#;
+        let mut command = Command::new("/bin/sh");
+        command.args([
+            "-c",
+            SCRIPT,
+            "launcher",
+            if ignore_end { "ignore" } else { "stop" },
+        ]);
+        command
+    }
+
+    #[cfg(unix)]
+    pub(crate) fn alive(pid: u32) -> bool {
+        // A zombie still answers a probe; one that exited and was reaped does not.
+        let status = Command::new("/bin/ps")
+            .args(["-o", "stat=", "-p", &pid.to_string()])
+            .output()
+            .unwrap();
+        let state = String::from_utf8_lossy(&status.stdout);
+        let state = state.trim();
+        !state.is_empty() && !state.starts_with('Z')
+    }
+
+    /// The platform's test launcher.
+    fn test_launcher(ignore_end: bool) -> Command {
+        #[cfg(windows)]
+        return powershell(&launcher_script(ignore_end));
+        #[cfg(unix)]
+        return launcher(ignore_end);
+    }
+
     /// The bearer length and grandchild id the test launcher reports as its
     /// version.
-    #[cfg(windows)]
     pub(crate) fn reported(version: &str) -> (u32, String) {
         let (length, grandchild) = version.split_once('-').unwrap();
         (grandchild.parse().unwrap(), length.to_owned())
     }
 
-    #[cfg(windows)]
     pub(crate) fn ready(seen: &Mutex<Vec<Signal>>) -> (u32, String) {
         let deadline = Instant::now() + Duration::from_secs(30);
         loop {
@@ -426,7 +505,6 @@ pub(crate) mod tests {
         }
     }
 
-    #[cfg(windows)]
     #[test]
     fn a_real_launcher_gets_the_bearer_and_stops_when_its_input_closes() {
         let seen = Arc::new(Mutex::new(Vec::new()));
@@ -434,7 +512,7 @@ pub(crate) mod tests {
         let diagnostics = Arc::new(Diagnostics::default());
         let bearer = "b".repeat(64);
         let running = start(
-            powershell(&launcher_script(false)),
+            test_launcher(false),
             &bearer,
             "synthetic-gateway-secret",
             move |signal| sink.lock().unwrap().push(signal),
@@ -467,14 +545,13 @@ pub(crate) mod tests {
         );
     }
 
-    #[cfg(windows)]
     #[test]
     fn a_launcher_that_overruns_its_grace_is_ended_with_its_tree() {
         let seen = Arc::new(Mutex::new(Vec::new()));
         let sink = seen.clone();
         let diagnostics = Arc::new(Diagnostics::default());
         let running = start(
-            powershell(&launcher_script(true)),
+            test_launcher(true),
             "bearer",
             "synthetic-gateway-secret",
             move |signal| sink.lock().unwrap().push(signal),
@@ -497,13 +574,12 @@ pub(crate) mod tests {
         );
     }
 
-    #[cfg(windows)]
     #[test]
     fn dropping_a_running_launcher_ends_its_tree() {
         let seen = Arc::new(Mutex::new(Vec::new()));
         let sink = seen.clone();
         let running = start(
-            powershell(&launcher_script(true)),
+            test_launcher(true),
             "bearer",
             "synthetic-gateway-secret",
             move |signal| sink.lock().unwrap().push(signal),
