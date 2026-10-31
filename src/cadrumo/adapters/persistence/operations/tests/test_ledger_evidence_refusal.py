@@ -4,10 +4,10 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Sequence
-from dataclasses import replace
+from dataclasses import dataclass, replace
 from datetime import timedelta
 from pathlib import Path
-from typing import Literal
+from typing import Any, Literal
 from uuid import UUID
 
 import pytest
@@ -71,6 +71,65 @@ class _ContextualMissingRepository:
     def save(self, *, bucket_id: str, records: Sequence[PurchaseInvoiceEvidence]) -> None:
         del bucket_id, records
         raise AssertionError("a no-effect read must not save evidence")
+
+
+@dataclass
+class _SettledRefusalRead:
+    """A settled ledger view operation and the projection service positioned to read it."""
+
+    terminal: Any
+    receipt: Any
+    request: OperationResultProjectionRequestV1
+    schema: Any
+    service: OperationResultProjectionService
+    operands: Any
+    resolved: Any
+
+
+async def _assert_declared_not_found_projection(read: _SettledRefusalRead) -> None:
+    receipt = read.receipt
+    assert read.terminal.terminal_condition is OperationTerminalCondition.REFUSED
+    assert receipt.refusal_ref == LEDGER_EVIDENCE_VIEW_NOT_FOUND_REFUSAL_CODE
+    assert receipt.refusal_detail_ref is not None
+    assert isinstance(read.resolved, OperationResultProjectionSuccessV1)
+    projection = read.resolved.projection
+    assert isinstance(projection, LedgerEvidenceViewProjection)
+    assert projection.profile_id == _PROFILE
+    assert projection.outcome == LedgerEvidenceViewRefusal()
+    private = await read.operands.resolve(receipt.refusal_detail_ref, LedgerEvidenceViewExecutionResult)
+    assert private.result == projection
+    assert _EVIDENCE_ID not in private.model_dump_json()
+    assert _PRIVATE_CONTEXT not in private.model_dump_json()
+
+
+async def _assert_changed_requests_are_refused(read: _SettledRefusalRead) -> None:
+    stale = await read.service.resolve(
+        read.request.model_copy(update={"terminal_revision": read.terminal.revision + 1}),
+        LedgerEvidenceViewProjection,
+    )
+    assert isinstance(stale, OperationResultProjectionRefusalV1)
+    assert stale.code is OperationResultProjectionRefusalCode.STALE_OPERATION_REVISION
+    old_schema = await read.service.resolve(
+        read.request.model_copy(update={"result_schema": read.schema.model_copy(update={"schema_version": 1})}),
+        LedgerEvidenceViewProjection,
+    )
+    assert isinstance(old_schema, OperationResultProjectionRefusalV1)
+    assert old_schema.code is OperationResultProjectionRefusalCode.RESULT_SCHEMA_MISMATCH
+    raw_private = await read.service.resolve(read.request, LedgerEvidenceViewExecutionResult)
+    assert isinstance(raw_private, OperationResultProjectionRefusalV1)
+    assert raw_private.code is OperationResultProjectionRefusalCode.RESULT_PROJECTION_UNAVAILABLE
+
+
+def _assert_code_only_refusal(read: _SettledRefusalRead, case: str) -> None:
+    receipt = read.receipt
+    assert receipt.refusal_detail_ref is None
+    assert isinstance(read.resolved, OperationResultProjectionRefusalV1)
+    if case == "unexpected":
+        assert read.terminal.terminal_condition is OperationTerminalCondition.FAILED
+        assert receipt.failure_error_code is None and receipt.diagnostic_ref is not None
+    else:
+        assert read.terminal.terminal_condition is OperationTerminalCondition.REFUSED
+        assert receipt.refusal_ref == get_registered_error_code(ProfileAccessRefusedError).code
 
 
 @pytest.mark.parametrize("case", ["missing", "contextual_missing", "unexpected", "other_refusal"])
@@ -148,44 +207,20 @@ def test_ledger_view_settles_only_declared_static_refusal_detail(
             )
             service = OperationResultProjectionService(reader=journal, registry=registry, operands=operands)
             resolved = await service.resolve(request, LedgerEvidenceViewProjection)
+            read = _SettledRefusalRead(
+                terminal=terminal,
+                receipt=receipt,
+                request=request,
+                schema=schema,
+                service=service,
+                operands=operands,
+                resolved=resolved,
+            )
             if case in {"missing", "contextual_missing"}:
-                assert terminal.terminal_condition is OperationTerminalCondition.REFUSED
-                assert receipt.refusal_ref == LEDGER_EVIDENCE_VIEW_NOT_FOUND_REFUSAL_CODE
-                assert receipt.refusal_detail_ref is not None
-                assert isinstance(resolved, OperationResultProjectionSuccessV1)
-                projection = resolved.projection
-                assert isinstance(projection, LedgerEvidenceViewProjection)
-                assert projection.profile_id == _PROFILE
-                assert projection.outcome == LedgerEvidenceViewRefusal()
-                private = await operands.resolve(receipt.refusal_detail_ref, LedgerEvidenceViewExecutionResult)
-                assert private.result == projection
-                assert _EVIDENCE_ID not in private.model_dump_json()
-                assert _PRIVATE_CONTEXT not in private.model_dump_json()
-
-                stale = await service.resolve(
-                    request.model_copy(update={"terminal_revision": terminal.revision + 1}),
-                    LedgerEvidenceViewProjection,
-                )
-                assert isinstance(stale, OperationResultProjectionRefusalV1)
-                assert stale.code is OperationResultProjectionRefusalCode.STALE_OPERATION_REVISION
-                old_schema = await service.resolve(
-                    request.model_copy(update={"result_schema": schema.model_copy(update={"schema_version": 1})}),
-                    LedgerEvidenceViewProjection,
-                )
-                assert isinstance(old_schema, OperationResultProjectionRefusalV1)
-                assert old_schema.code is OperationResultProjectionRefusalCode.RESULT_SCHEMA_MISMATCH
-                raw_private = await service.resolve(request, LedgerEvidenceViewExecutionResult)
-                assert isinstance(raw_private, OperationResultProjectionRefusalV1)
-                assert raw_private.code is OperationResultProjectionRefusalCode.RESULT_PROJECTION_UNAVAILABLE
+                await _assert_declared_not_found_projection(read)
+                await _assert_changed_requests_are_refused(read)
             else:
-                assert receipt.refusal_detail_ref is None
-                assert isinstance(resolved, OperationResultProjectionRefusalV1)
-                if case == "unexpected":
-                    assert terminal.terminal_condition is OperationTerminalCondition.FAILED
-                    assert receipt.failure_error_code is None and receipt.diagnostic_ref is not None
-                else:
-                    assert terminal.terminal_condition is OperationTerminalCondition.REFUSED
-                    assert receipt.refusal_ref == get_registered_error_code(ProfileAccessRefusedError).code
+                _assert_code_only_refusal(read, case)
 
             generic_detail = await service.resolve(
                 request.model_copy(update={"result_schema": operation_error_detail_schema()}), OperationErrorDetailV1
