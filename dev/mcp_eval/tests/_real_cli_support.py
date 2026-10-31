@@ -13,6 +13,12 @@ from functools import cache
 from typer._click.core import Command
 from typer.main import get_command
 
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+    profile_authority_contexts,
+    seed_test_profile_record,
+)
+from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
+from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from cadrumo.entrypoints.cli.command_specs import COMMAND_GRAPH
 from cadrumo.entrypoints.cli.tests.modelo_cli import create_modelo_work_unit_via_cli
 from cadrumo_client.commands.compiler import build_command_app
@@ -58,4 +64,39 @@ def create_m130_work_unit(*, filing_year: int, period: str, revision: str) -> st
         filing_year=filing_year,
         period=period,
         revision=revision,
+    )
+
+
+def seed_natural_person_profile(runtime_profile: TestRuntimeProfile, *, name: str, label: str) -> None:
+    """Seed a natural-person (IRPF estimacion directa) profile into the active bucket.
+
+    Written directly to bypass ``config profile create``, which would
+    re-provision the already-present bucket manifest.
+    """
+    seed_test_profile_record(
+        create_user_profile_record(
+            context=profile_authority_contexts()[0],
+            profile_id=runtime_profile.bucket_id,
+            setup_state=ProfileSetupState.COMPLETE,
+            facts=(
+                UserProfileFact(path="identity.name", value=name),
+                UserProfileFact(path="identity.surnames", value="Golden Eval"),
+                UserProfileFact(path="identity.tax_id", value="12345678Z"),
+                UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+                UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
+                UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
+                UserProfileFact(path="iva.regime", value="GENERAL"),
+                UserProfileFact(path="iva.m303_regime_composition", value="general"),
+                UserProfileFact(path="iva.redeme_enrolled", value=False),
+                UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
+                UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
+                UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
+                UserProfileFact(path="activities.description", value="economic activity"),
+                UserProfileFact(path="tax_residence.ccaa", value="madrid"),
+                UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+                UserProfileFact(path="provenance.source", value="manual_cli"),
+            ),
+        ),
+        root=runtime_profile.storage_root,
+        label=label,
     )

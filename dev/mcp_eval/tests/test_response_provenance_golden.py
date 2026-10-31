@@ -32,8 +32,6 @@ from click.testing import Result
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     open_test_profile_session,
-    profile_authority_contexts,
-    seed_test_profile_record,
 )
 from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from cadrumo.core.bucket_pointer import resolve_active_bucket_id
@@ -41,7 +39,6 @@ from cadrumo.domain.calculations.registry.authority import bundled_indexed_autho
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from cadrumo.entrypoints.cli.tests.cli_fixture_worlds import CliWorldProvider, bind_cli_fixture_ports
 from cadrumo.tests.cli_envelope import require_schema_envelope
 from cadrumo.tests.cli_fixture_ports import CliInvocation
@@ -53,7 +50,7 @@ from cadrumo_runtime.host.tests.frontend.cli.runtime_profile_backend import runt
 
 from .._models import GoldenScenario
 from .._runner import load_scenario, run_golden_scenario
-from ._real_cli_support import create_m130_work_unit, valid_cli_commands
+from ._real_cli_support import create_m130_work_unit, seed_natural_person_profile, valid_cli_commands
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -84,44 +81,6 @@ def runtime_profile(
         ) as profile,
     ):
         yield profile
-
-
-def _seed_natural_person_profile(runtime_profile: TestRuntimeProfile) -> None:
-    """Seed a natural-person (IRPF estimacion directa) profile into the active bucket.
-
-    Written directly (mirrors the pattern in
-    ``entrypoints.cli.tests.test_modelo_calculation_through_real_cli``) to bypass
-    ``config profile create``, which would re-provision the already-present
-    bucket manifest.
-    """
-    record = create_user_profile_record(
-        context=profile_authority_contexts()[0],
-        profile_id=runtime_profile.bucket_id,
-        setup_state=ProfileSetupState.COMPLETE,
-        facts=(
-            UserProfileFact(path="identity.name", value="Response Provenance Operator"),
-            UserProfileFact(path="identity.surnames", value="Golden Eval"),
-            UserProfileFact(path="identity.tax_id", value="12345678Z"),
-            UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-            UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-            UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
-            UserProfileFact(path="iva.regime", value="GENERAL"),
-            UserProfileFact(path="iva.m303_regime_composition", value="general"),
-            UserProfileFact(path="iva.redeme_enrolled", value=False),
-            UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-            UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-            UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-            UserProfileFact(path="activities.description", value="economic activity"),
-            UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-            UserProfileFact(path="provenance.source", value="manual_cli"),
-        ),
-    )
-    seed_test_profile_record(
-        record,
-        root=runtime_profile.storage_root,
-        label="Response-provenance golden-eval test profile",
-    )
 
 
 def _seed_ledger_row(*, direction: TransactionDirection, amount: Decimal, filing_year: int, label: str) -> None:
@@ -192,7 +151,9 @@ def _dispatch_real_m130_calculate(
     ledger rows -> calculate). Every returned value is what the real registry
     engine and the real CLI envelope serializer produced — not a hand-rolled dict.
     """
-    _seed_natural_person_profile(runtime_profile)
+    seed_natural_person_profile(
+        runtime_profile, name="Response Provenance Operator", label="Response-provenance golden-eval test profile"
+    )
     _seed_ledger_row(
         direction=TransactionDirection.INCOMING,
         amount=Decimal("12000.00"),

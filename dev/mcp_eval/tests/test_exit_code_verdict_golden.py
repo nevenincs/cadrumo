@@ -21,8 +21,6 @@ from click.testing import Result
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     open_test_profile_session,
-    profile_authority_contexts,
-    seed_test_profile_record,
 )
 from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from cadrumo.application.modelo.preconditions import build_modelo_precondition_failure
@@ -34,7 +32,6 @@ from cadrumo.domain.calculations.registry.authority import bundled_indexed_autho
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from cadrumo.tests.cli_envelope import require_schema_envelope
 from cadrumo_client.contracts.command_program import CommandProgram
 from cadrumo_runtime.host.tests.frontend.cli.cli_runner import bind_public_cli_runner, invoke_cached_cli
@@ -44,6 +41,7 @@ from .. import _runner as evaluation_runner
 from .._action_coverage import LeafConditionScenario, production_leaf_condition_scenario_matrix
 from .._models import ExitCodeScenario
 from .._runner import check_exit_code_scenario
+from ._real_cli_support import seed_natural_person_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -75,36 +73,6 @@ def runtime_profile(tmp_path: Path, run_cadrumo_cli: Callable[..., Result]) -> I
             yield profile
 
 
-def _seed_natural_person_profile(runtime_profile: TestRuntimeProfile) -> None:
-    seed_test_profile_record(
-        create_user_profile_record(
-            context=profile_authority_contexts()[0],
-            profile_id=runtime_profile.bucket_id,
-            setup_state=ProfileSetupState.COMPLETE,
-            facts=(
-                UserProfileFact(path="identity.name", value="Exit Code Operator"),
-                UserProfileFact(path="identity.surnames", value="Golden Eval"),
-                UserProfileFact(path="identity.tax_id", value="12345678Z"),
-                UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-                UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-                UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
-                UserProfileFact(path="iva.regime", value="GENERAL"),
-                UserProfileFact(path="iva.m303_regime_composition", value="general"),
-                UserProfileFact(path="iva.redeme_enrolled", value=False),
-                UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-                UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-                UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-                UserProfileFact(path="activities.description", value="economic activity"),
-                UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-                UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-                UserProfileFact(path="provenance.source", value="manual_cli"),
-            ),
-        ),
-        root=runtime_profile.storage_root,
-        label="Exit-code golden-eval test profile",
-    )
-
-
 def _recovery_coverage() -> LeafConditionScenario:
     return production_leaf_condition_scenario_matrix().row_for(
         (
@@ -131,7 +99,7 @@ def _dispatch_unprepared_m347_verify(runtime_profile: TestRuntimeProfile) -> tup
     This is the safe recovery chain: the declared recovery action calculates the
     exact work unit, and the runner retries the original verify leaf afterwards.
     """
-    _seed_natural_person_profile(runtime_profile)
+    seed_natural_person_profile(runtime_profile, name="Exit Code Operator", label="Exit-code golden-eval test profile")
     created = invoke_cached_cli(
         [
             "--format", "json",
@@ -220,7 +188,7 @@ def _seed_m130_income_transaction(*, amount: Decimal, filing_year: int) -> None:
 
 def _dispatch_m130_verify_with_cross_period_finding(runtime_profile: TestRuntimeProfile) -> tuple[int, dict[str, Any]]:
     """Dispatch a real M130 verify that reaches an explicit operator-decision outcome."""
-    _seed_natural_person_profile(runtime_profile)
+    seed_natural_person_profile(runtime_profile, name="Exit Code Operator", label="Exit-code golden-eval test profile")
     _seed_m130_income_transaction(amount=Decimal("12000.00"), filing_year=_FILING_YEAR)
     created = invoke_cached_cli(
         [
