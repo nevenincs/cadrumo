@@ -23,8 +23,8 @@ explains that step.
    **Not started**, Enter asks you to confirm that you want to start it.
 
 To choose another declaration, press `+`. Choose the Modelo first. In the
-period picker, press Enter to select a period, then select **Create and open**.
-Esc on the period picker returns to the Modelo picker; Esc there cancels.
+period picker, press `Enter` to select a period, then select **Create and open**.
+`Esc` on the period picker returns to the Modelo picker; `Esc` there cancels.
 
 The list shows the state, result direction, deadline and next action. Use `/`
 to search by modelo number, name or period in words; accents do not affect the
@@ -286,7 +286,7 @@ is refused. To change it, {ref}`start a correction <correct-an-already-filed-loc
 - Press `?` once. The help band opens and its first line lists the symbols on
   this screen, with counts.
 - Press `?` a second time to open **Symbols and keys**: every symbol with its
-  meaning, grouped, and the keys. Press Esc or `?` to close it.
+  meaning, grouped, and the keys. Press `Esc` or `?` to close it.
 - The first time you open a declaration, a notice says "New here? Press ? to
   see what each symbol means."
 

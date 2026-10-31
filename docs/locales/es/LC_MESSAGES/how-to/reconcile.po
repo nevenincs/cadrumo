@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-02 00:43+0200\n"
+"POT-Creation-Date: 2026-10-31 12:58+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: es\n"
@@ -275,9 +275,9 @@ msgid "Both routes report one of two verdicts:"
 msgstr "Ambas vías informan de uno de dos veredictos:"
 
 #: ../../how-to/reconcile.md:109
-msgid "**matches** - every compared field agrees with the local filing record."
+msgid "**`matches`** - every compared field agrees with the local filing record."
 msgstr ""
-"**matches**: todos los campos comparados coinciden con el registro de "
+"**`matches`**: todos los campos comparados coinciden con el registro de "
 "presentación local."
 
 #: ../../how-to/reconcile.md:110

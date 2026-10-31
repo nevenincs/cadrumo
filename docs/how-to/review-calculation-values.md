@@ -67,7 +67,7 @@ source-bound casillas` (for example, Modelo 130 box `02` Gastos is `bound`). Fix
 the source instead. See [Supply a missing field value](#supply-a-missing-field-value).
 
 A first-period filing also needs its prior-period values supplied (record them
-as `0` when you have no prior figure). Supply the manual box and the values in the same calculate call. This example sets box `06` (Retenciones e ingresos a
+as `0` when you have no prior figure). Supply the manual box and the values in the same `calculate` call. This example sets box `06` (Retenciones e ingresos a
 cuenta, a manual box) and seeds the three first-period values:
 
 ```{cli-sequence} review-values-manual-casilla

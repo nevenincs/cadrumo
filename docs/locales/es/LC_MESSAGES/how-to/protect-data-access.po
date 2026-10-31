@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-12 16:47+0200\n"
+"POT-Creation-Date: 2026-10-31 12:58+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: es\n"
@@ -606,12 +606,12 @@ msgid "Choose sources before either is read:"
 msgstr "Elige las fuentes antes de leer ninguna de las dos:"
 
 #: ../../how-to/protect-data-access.md:235
-msgid "Do not select both stdin and a descriptor for the same option pair."
-msgstr "No selecciones stdin y un descriptor para el mismo par de opciones."
+msgid "Do not select both `stdin` and a descriptor for the same option pair."
+msgstr "No selecciones `stdin` y un descriptor para el mismo par de opciones."
 
 #: ../../how-to/protect-data-access.md:236
-msgid "Do not assign stdin to both the root and leaf scopes."
-msgstr "No asignes stdin a los ámbitos de raíz y de hoja a la vez."
+msgid "Do not assign `stdin` to both the root and leaf scopes."
+msgstr "No asignes `stdin` a los ámbitos de raíz y de hoja a la vez."
 
 #: ../../how-to/protect-data-access.md:237
 msgid "Do not assign the same descriptor number to both scopes."
@@ -619,12 +619,12 @@ msgstr "No asignes el mismo número de descriptor a ambos ámbitos."
 
 #: ../../how-to/protect-data-access.md:238
 msgid ""
-"Use root fd plus leaf stdin, root stdin plus leaf fd, or two different "
-"descriptors when one invocation needs both objects."
+"Use root fd plus leaf `stdin`, root `stdin` plus leaf fd, or two "
+"different descriptors when one invocation needs both objects."
 msgstr ""
-"Usa root fd en la raíz más stdin en la hoja, stdin en la raíz más fd en "
-"la hoja, o dos descriptores distintos cuando una invocación necesite "
-"ambos objetos."
+"Usa un descriptor de archivo para la raíz y `stdin` para la hoja, `stdin`"
+" para la raíz y un descriptor de archivo para la hoja, o dos descriptores"
+" distintos cuando una invocación necesite ambos objetos."
 
 #: ../../how-to/protect-data-access.md:241
 msgid ""

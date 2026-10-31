@@ -238,7 +238,7 @@ When nothing else recovers the problem, and only then, clear the saved progress 
 :verify: Confirm the saved interrupted-command progress is cleared for the unlocked profile.
 ```
 
-It removes saved interrupted-command progress and requires `--yes`. Like the participation verbs, it reads the active profile's storage, so log in to the profile first if it refuses because the profile is locked or none is active.
+It removes saved interrupted-command progress and requires `--yes`. Like the `participation` verbs, it reads the active profile's storage, so log in to the profile first if it refuses because the profile is locked or none is active.
 
 (prepare-a-privacy-safe-support-request)=
 ## Prepare a privacy-safe support request

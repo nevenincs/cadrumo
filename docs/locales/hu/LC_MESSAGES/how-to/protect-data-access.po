@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-12 16:47+0200\n"
+"POT-Creation-Date: 2026-10-31 12:58+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: hu\n"
@@ -598,16 +598,16 @@ msgid "Choose sources before either is read:"
 msgstr "Válaszd ki a forrásokat, mielőtt bármelyiket beolvasnák:"
 
 #: ../../how-to/protect-data-access.md:235
-msgid "Do not select both stdin and a descriptor for the same option pair."
+msgid "Do not select both `stdin` and a descriptor for the same option pair."
 msgstr ""
-"Ne válaszd ki egyszerre az stdint és egy leírót ugyanahhoz a "
-"kapcsolópárhoz."
+"Ne válaszd ki egyszerre a szabványos bemenetet (`stdin`) és egy leírót "
+"ugyanahhoz a kapcsolópárhoz."
 
 #: ../../how-to/protect-data-access.md:236
-msgid "Do not assign stdin to both the root and leaf scopes."
+msgid "Do not assign `stdin` to both the root and leaf scopes."
 msgstr ""
-"Ne rendeld az stdint egyszerre a gyökérszintű és a parancsszintű "
-"hatókörhöz."
+"A szabványos bemenetet (`stdin`) ne rendeld egyszerre a gyökérszintű és a"
+" parancsszintű hatókörhöz."
 
 #: ../../how-to/protect-data-access.md:237
 msgid "Do not assign the same descriptor number to both scopes."
@@ -615,12 +615,12 @@ msgstr "Ne rendeld ugyanazt a leírószámot mindkét hatókörhöz."
 
 #: ../../how-to/protect-data-access.md:238
 msgid ""
-"Use root fd plus leaf stdin, root stdin plus leaf fd, or two different "
-"descriptors when one invocation needs both objects."
+"Use root fd plus leaf `stdin`, root `stdin` plus leaf fd, or two "
+"different descriptors when one invocation needs both objects."
 msgstr ""
 "Ha egy híváshoz mindkét objektumra szükséged van, használj gyökérszintű "
-"leírót és parancsszintű stdint, gyökérszintű stdint és parancsszintű "
-"leírót, vagy két különböző leírót."
+"leírót és parancsszintű `stdin` bemenetet, gyökérszintű `stdin` bemenetet"
+" és parancsszintű leírót, vagy két különböző leírót."
 
 #: ../../how-to/protect-data-access.md:241
 msgid ""

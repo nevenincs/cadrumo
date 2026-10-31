@@ -232,10 +232,10 @@ credential or transferable bearer token.
 
 Choose sources before either is read:
 
-- Do not select both stdin and a descriptor for the same option pair.
-- Do not assign stdin to both the root and leaf scopes.
+- Do not select both `stdin` and a descriptor for the same option pair.
+- Do not assign `stdin` to both the root and leaf scopes.
 - Do not assign the same descriptor number to both scopes.
-- Use root fd plus leaf stdin, root stdin plus leaf fd, or two different
+- Use root fd plus leaf `stdin`, root `stdin` plus leaf fd, or two different
   descriptors when one invocation needs both objects.
 
 A selected source that does not apply to the resolved command or exact profile

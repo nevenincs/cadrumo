@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-12 16:47+0200\n"
+"POT-Creation-Date: 2026-10-31 12:58+0100\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo translation team\n"
 "Language: ca\n"
@@ -605,14 +605,14 @@ msgid "Choose sources before either is read:"
 msgstr "Tria les fonts abans que se'n llegeixi cap:"
 
 #: ../../how-to/protect-data-access.md:235
-msgid "Do not select both stdin and a descriptor for the same option pair."
+msgid "Do not select both `stdin` and a descriptor for the same option pair."
 msgstr ""
-"No seleccionis alhora stdin i un descriptor per al mateix parell "
+"No seleccionis alhora `stdin` i un descriptor per al mateix parell "
 "d'opcions."
 
 #: ../../how-to/protect-data-access.md:236
-msgid "Do not assign stdin to both the root and leaf scopes."
-msgstr "No assignis stdin als dos àmbits, arrel i fulla."
+msgid "Do not assign `stdin` to both the root and leaf scopes."
+msgstr "No assignis `stdin` als dos àmbits, arrel i fulla."
 
 #: ../../how-to/protect-data-access.md:237
 msgid "Do not assign the same descriptor number to both scopes."
@@ -620,12 +620,12 @@ msgstr "No assignis el mateix número de descriptor als dos àmbits."
 
 #: ../../how-to/protect-data-access.md:238
 msgid ""
-"Use root fd plus leaf stdin, root stdin plus leaf fd, or two different "
-"descriptors when one invocation needs both objects."
+"Use root fd plus leaf `stdin`, root `stdin` plus leaf fd, or two "
+"different descriptors when one invocation needs both objects."
 msgstr ""
-"Utilitza servir fd d'arrel més stdin de fulla, stdin d'arrel més fd de "
-"fulla, o dos descriptors diferents quan una invocació necessiti tots dos "
-"objectes."
+"Utilitza servir fd d'arrel més `stdin` de fulla, `stdin` d'arrel més fd "
+"de fulla, o dos descriptors diferents quan una invocació necessiti tots "
+"dos objectes."
 
 #: ../../how-to/protect-data-access.md:241
 msgid ""

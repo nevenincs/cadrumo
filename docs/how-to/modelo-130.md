@@ -92,7 +92,7 @@ complementary results). Inspect which boxes are filled in, missing, or manual:
 ## Supply a manual box value
 
 Box `06` (Retenciones e ingresos a cuenta) is a manual box: your records do not
-fill it, so you supply it by hand with `--casilla`. Pass it in the same calculate
+fill it, so you supply it by hand with `--casilla`. Pass it in the same `calculate`
 call as the first-period `--binding` values, then review the saved calculation to
 confirm your value landed:
 

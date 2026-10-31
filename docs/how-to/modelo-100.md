@@ -102,7 +102,7 @@ create the register before you file. Don't put stock figures in box 0155:
 calculation doesn't read it as an inventory figure.
 
 Supply a manual box value and recalculate by passing `--casilla 0003=24000` on the
-calculate command, alongside the `--binding` values the declaration still needs
+`calculate` command, alongside the `--binding` values the declaration still needs
 (the main sequence above shows the full form). Recalculating replaces the current
 draft calculation.
 

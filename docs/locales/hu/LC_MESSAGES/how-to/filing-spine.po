@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-02 00:01+0200\n"
+"POT-Creation-Date: 2026-10-31 12:58+0100\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo localization <docs@cadrumo>\n"
 "Language: hu\n"
@@ -348,9 +348,11 @@ msgid "the saved calculation reference, from `aeat app modelo work revisions`"
 msgstr "a mentett számítás hivatkozása, az `aeat app modelo work revisions`-ból"
 
 #: ../../how-to/filing-spine.md:156
-msgid "the rules version reference, shown in status output (you rarely need this)"
+msgid ""
+"the rules version reference, shown in `status` output (you rarely need "
+"this)"
 msgstr ""
-"a szabályverzió hivatkozása, amely a status kimenetben látható (erre "
+"a szabályverzió hivatkozása, amely a `status` kimenetben látható (erre "
 "ritkán van szükséged)"
 
 #: ../../how-to/filing-spine.md:157
