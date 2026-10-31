@@ -29,7 +29,6 @@ two would not land on the expected refusal.
 
 from __future__ import annotations
 
-from collections.abc import Sequence
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -37,12 +36,12 @@ from pathlib import Path
 import pytest
 
 from ....core.period import Period
-from ....domain.calculations.registry.ledger_iva_bindings import IvaLedgerObservation
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ..iva_ledger import IvaLedgerAggregationIssueReason
 from .iva_authority_support import aggregate_iva_ledger_observations
+from .iva_ledger_row_support import aggregate_row
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -96,12 +95,6 @@ def _transaction(row_id: str, *, iva_rate: Decimal | None, iva_amount: Decimal) 
     )
 
 
-def _aggregate(transaction: Transaction) -> tuple[Sequence[IvaLedgerObservation], list[str]]:
-    catalogue = TransactionCatalogue.model_validate({"transactions": {transaction.transaction_id: transaction}})
-    aggregation = aggregate_iva_ledger_observations(catalogue, period=_PERIOD)
-    return aggregation.observations, [issue.reason.value for issue in aggregation.issues]
-
-
 def test_a_rate_less_row_is_already_refused_and_never_reaches_the_zero_tier() -> None:
     """Control, and the reason this refusal does not need to cover the drop case.
 
@@ -111,14 +104,16 @@ def test_a_rate_less_row_is_already_refused_and_never_reaches_the_zero_tier() ->
     refusal below correctly scoped -- if this ever stops refusing, a rate-less
     row starts reaching the zero tier and the drop becomes live.
     """
-    observations, reasons = _aggregate(_transaction("row-no-rate", iva_rate=None, iva_amount=_CUOTA))
+    observations, reasons = aggregate_row(_transaction("row-no-rate", iva_rate=None, iva_amount=_CUOTA), _PERIOD)
     assert observations == ()
     assert reasons == [IvaLedgerAggregationIssueReason.MISSING_IVA_RATE.value]
 
 
 def test_a_zero_rated_row_carrying_a_cuota_is_refused() -> None:
     """The live defect: 0 % plus a non-zero cuota is arithmetically impossible."""
-    observations, reasons = _aggregate(_transaction("row-zero-with-cuota", iva_rate=Decimal("0"), iva_amount=_CUOTA))
+    observations, reasons = aggregate_row(
+        _transaction("row-zero-with-cuota", iva_rate=Decimal("0"), iva_amount=_CUOTA), _PERIOD
+    )
     assert observations == (), "a self-contradicting zero-rated row produced an observation instead of being refused"
     assert reasons == [IvaLedgerAggregationIssueReason.CUOTA_ON_ZERO_RATED_ROW.value]
 
@@ -144,7 +139,9 @@ def test_a_legitimate_zero_rated_row_still_produces_its_observation() -> None:
     alone, or a zero base -- fails here rather than silently deleting every
     legitimate zero-rated supply from the return.
     """
-    observations, reasons = _aggregate(_transaction("row-zero-clean", iva_rate=Decimal("0"), iva_amount=Decimal("0")))
+    observations, reasons = aggregate_row(
+        _transaction("row-zero-clean", iva_rate=Decimal("0"), iva_amount=Decimal("0")), _PERIOD
+    )
     assert reasons == []
     assert len(observations) == 1
     observation = observations[0]
@@ -159,8 +156,9 @@ def test_a_rated_row_carrying_its_cuota_is_untouched() -> None:
     "row has a cuota" rather than "row has a cuota at a zero tipo" would delete
     ordinary sales. This is the mutation that guard would not survive.
     """
-    observations, reasons = _aggregate(
+    observations, reasons = aggregate_row(
         _transaction("row-general", iva_rate=Decimal("0.21"), iva_amount=Decimal("210.00")),
+        _PERIOD,
     )
     assert reasons == []
     assert len(observations) == 1

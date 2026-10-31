@@ -37,7 +37,6 @@ taxpayer data, which this repository does not hold.
 
 from __future__ import annotations
 
-from collections.abc import Sequence
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -46,7 +45,6 @@ import pytest
 
 from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from ....core.period import Period
-from ....domain.calculations.registry.ledger_iva_bindings import IvaLedgerObservation
 from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from ....domain.iva.schema import IvaCategory
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
@@ -54,6 +52,7 @@ from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ..iva_ledger import IvaLedgerAggregationIssueReason
 from .iva_authority_support import aggregate_iva_ledger_observations
+from .iva_ledger_row_support import aggregate_row
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -133,12 +132,6 @@ def _transaction(
     )
 
 
-def _aggregate(transaction: Transaction) -> tuple[Sequence[IvaLedgerObservation], list[str]]:
-    catalogue = TransactionCatalogue.model_validate({"transactions": {transaction.transaction_id: transaction}})
-    aggregation = aggregate_iva_ledger_observations(catalogue, period=_PERIOD)
-    return aggregation.observations, [issue.reason.value for issue in aggregation.issues]
-
-
 def _issued_reverse_charge(row_id: str, *, iva_rate: Decimal, iva_amount: Decimal) -> Transaction:
     """A supply the taxpayer made under inversión del sujeto pasivo.
 
@@ -156,8 +149,9 @@ def _issued_reverse_charge(row_id: str, *, iva_rate: Decimal, iva_amount: Decima
 
 def test_an_issued_reverse_charge_row_declaring_a_tipo_is_refused() -> None:
     """The live shape: an art. 84.Uno.2 supply cannot carry a 21 % tipo."""
-    observations, reasons = _aggregate(
+    observations, reasons = aggregate_row(
         _issued_reverse_charge("row-issued-rc-rated", iva_rate=Decimal("0.21"), iva_amount=_CUOTA),
+        _PERIOD,
     )
     assert list(observations) == [], "a self-contradicting reverse-charge supply produced an observation"
     assert reasons == [IvaLedgerAggregationIssueReason.NON_ZERO_RATE_ON_ZERO_CUOTA_CATEGORY.value]
@@ -170,8 +164,9 @@ def test_a_clean_issued_reverse_charge_row_still_produces_its_observation() -> N
     contradiction would delete every issued reverse-charge supply from the
     return, which is a silent under-declaration of its base.
     """
-    observations, reasons = _aggregate(
+    observations, reasons = aggregate_row(
         _issued_reverse_charge("row-issued-rc-clean", iva_rate=Decimal("0"), iva_amount=Decimal("0")),
+        _PERIOD,
     )
     assert reasons == []
     assert len(observations) == 1
@@ -187,7 +182,7 @@ def test_a_received_reverse_charge_row_at_the_same_rate_is_untouched() -> None:
     delete the devengada AND deducible entries of every acquisition under
     inversión del sujeto pasivo.
     """
-    observations, reasons = _aggregate(
+    observations, reasons = aggregate_row(
         _transaction(
             "row-received-rc",
             direction=TransactionDirection.OUTGOING,
@@ -196,6 +191,7 @@ def test_a_received_reverse_charge_row_at_the_same_rate_is_untouched() -> None:
             iva_amount=_CUOTA,
             gross=_BASE,
         ),
+        _PERIOD,
     )
     assert reasons == []
     assert len(observations) == 1
@@ -209,7 +205,7 @@ def test_an_exempt_row_declaring_a_tipo_is_refused_by_the_same_screen() -> None:
     21 % tipo on one is the same contradiction. This is what a hand-listed set of
     reverse-charge categories would have missed.
     """
-    observations, reasons = _aggregate(
+    observations, reasons = aggregate_row(
         _transaction(
             "row-exempt-rated",
             direction=TransactionDirection.INCOMING,
@@ -218,6 +214,7 @@ def test_an_exempt_row_declaring_a_tipo_is_refused_by_the_same_screen() -> None:
             iva_amount=Decimal("0"),
             gross=_BASE,
         ),
+        _PERIOD,
     )
     assert list(observations) == []
     assert reasons == [IvaLedgerAggregationIssueReason.NON_ZERO_RATE_ON_ZERO_CUOTA_CATEGORY.value]
@@ -230,7 +227,7 @@ def test_an_ordinary_rated_sale_is_untouched() -> None:
     ordinary case. A screen that fired on "row declares a tipo" would empty the
     return.
     """
-    observations, reasons = _aggregate(
+    observations, reasons = aggregate_row(
         _transaction(
             "row-general",
             direction=TransactionDirection.INCOMING,
@@ -239,6 +236,7 @@ def test_an_ordinary_rated_sale_is_untouched() -> None:
             iva_amount=_CUOTA,
             gross=_BASE + _CUOTA,
         ),
+        _PERIOD,
     )
     assert reasons == []
     assert len(observations) == 1

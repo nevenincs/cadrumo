@@ -37,7 +37,7 @@ not taxpayer data, which this repository does not hold.
 
 from __future__ import annotations
 
-from collections.abc import Iterator, Sequence
+from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -47,7 +47,6 @@ import pytest
 from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_indexed_authority
-from ....domain.calculations.registry.ledger_iva_bindings import IvaLedgerObservation
 from ....domain.iva.components import IvaKindApplicability, registry_component_catalogue
 from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from ....domain.iva.schema import InvoiceKind, IvaCategory
@@ -57,6 +56,7 @@ from ....domain.transactions.raw_transaction import RawProvenance, RawTransactio
 from ..invoice_kind import invoice_kind_for_direction
 from ..iva_ledger import IvaLedgerAggregationIssueReason
 from .iva_authority_support import aggregate_iva_ledger_observations
+from .iva_ledger_row_support import aggregate_row
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -149,12 +149,6 @@ def _transaction(
     return Transaction.model_validate(payload)
 
 
-def _aggregate(transaction: Transaction) -> tuple[Sequence[IvaLedgerObservation], list[str]]:
-    catalogue = TransactionCatalogue.model_validate({"transactions": {transaction.transaction_id: transaction}})
-    aggregation = aggregate_iva_ledger_observations(catalogue, period=_PERIOD)
-    return aggregation.observations, [issue.reason.value for issue in aggregation.issues]
-
-
 def _direction_for(kind: InvoiceKind) -> TransactionDirection:
     """The ledger direction the classifier reads back as ``kind``.
 
@@ -197,12 +191,13 @@ def test_a_mis_sided_intra_community_supply_is_refused() -> None:
     unguarded the row projected to ``SOPORTADO`` and claimed 210.00 of input IVA
     the taxpayer never bore.
     """
-    observations, reasons = _aggregate(
+    observations, reasons = aggregate_row(
         _transaction(
             "row-ics-received",
             direction=_direction_for(InvoiceKind.RECEIVED),
             category=IvaCategory("intra_community_supply"),
         ),
+        _PERIOD,
     )
     assert list(observations) == [], "a mis-sided intra-community supply produced a deducible observation"
     assert reasons == [IvaLedgerAggregationIssueReason.NON_ARISING_CATEGORY_FOR_INVOICE_SIDE.value]
@@ -219,7 +214,7 @@ def test_the_same_category_on_its_own_side_is_untouched() -> None:
     Its cuota is zero because the operation carries none — art. 25 exempts it —
     which the sibling zero-cuota screen enforces separately.
     """
-    observations, reasons = _aggregate(
+    observations, reasons = aggregate_row(
         _transaction(
             "row-ics-issued",
             direction=_direction_for(InvoiceKind.ISSUED),
@@ -227,6 +222,7 @@ def test_the_same_category_on_its_own_side_is_untouched() -> None:
             iva_rate=Decimal("0"),
             iva_amount=Decimal("0"),
         ),
+        _PERIOD,
     )
 
     assert reasons == []
@@ -242,13 +238,14 @@ def test_an_ordinary_two_sided_category_is_untouched_on_both_sides() -> None:
     pair — would empty the return here.
     """
     for kind in (InvoiceKind.ISSUED, InvoiceKind.RECEIVED):
-        observations, reasons = _aggregate(
+        observations, reasons = aggregate_row(
             _transaction(
                 f"row-general-{kind.value}",
                 direction=_direction_for(kind),
                 category=IvaCategory("domestic_general"),
                 eu_member_state=None,
             ),
+            _PERIOD,
         )
         assert reasons == [], f"an ordinary domestic row was refused on the {kind.value} side"
         assert len(observations) == 1
@@ -277,7 +274,7 @@ def test_every_declared_non_arising_pair_is_refused_at_ingest() -> None:
         except ValueError:
             unconstructible.append(label)
             continue
-        observations, reasons = _aggregate(transaction)
+        observations, reasons = aggregate_row(transaction, _PERIOD)
         assert list(observations) == [], f"{label} describes no operation yet produced an observation"
         if IvaLedgerAggregationIssueReason.NON_ARISING_CATEGORY_FOR_INVOICE_SIDE.value in reasons:
             refused_here.append(label)
