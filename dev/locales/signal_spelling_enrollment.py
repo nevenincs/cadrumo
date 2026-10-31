@@ -73,6 +73,8 @@ _LOCALE_SPELLINGS: dict[str, frozenset[str]] = {
             "Withholdings",
             "lifecycle",
             "Lifecycle",
+            # British spelling used by sector-based IVA apportionment errors.
+            "sectorised",
             "namespace",
             "Namespace",
             "preflight",
@@ -231,6 +233,8 @@ _LOCALE_SPELLINGS: dict[str, frozenset[str]] = {
             "certificate",
             "snapshot",
             "snapshots",
+            # Initial word of the live borrador/expedientes/notifications help.
+            "Snapshots",
             "bucket",
             "buckets",
             "OAuth",
@@ -393,6 +397,7 @@ _LOCALE_SPELLINGS: dict[str, frozenset[str]] = {
             "certificate",
             "snapshot",
             "snapshots",
+            "Snapshots",
             "bucket",
             "buckets",
             "OAuth",

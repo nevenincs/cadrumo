@@ -128,6 +128,27 @@ def test_bilingual_search_aliases_do_not_exempt_prose_or_misspelled_aliases(monk
     assert not is_project_spelling("en", "irpf")
 
 
+def test_observed_technical_spellings_keep_case_and_near_misses_distinct(monkeypatch: pytest.MonkeyPatch) -> None:
+    dictionaries = load_dictionaries(REPO_ROOT)
+    monkeypatch.setattr("dev.locales.signal_spelling.load_dictionaries", lambda repository: dictionaries)
+    forms = {"en": ("sectorised", "sectorisedd"), "es": ("Snapshots", "Snapshotss"), "ca": ("Snapshots", "Snapshotss")}
+    for locale, (word, typo) in forms.items():
+        assert not dictionaries[locale].lookup(word)
+        assert is_project_spelling(locale, word)
+        assert not is_project_spelling(locale, typo)
+        assert not is_project_spelling(locale, word.upper())
+    spelling, _inventory, _findings = spellcheck_catalogues(
+        {"technical"},
+        {locale: {"technical": f"{word} {typo} misspeling"} for locale, (word, typo) in forms.items()},
+        REPO_ROOT,
+    )
+    assert {cell: set(words) for cell, words in spelling.items()} == {
+        (locale, "technical"): {typo, "misspeling"} for locale, (_word, typo) in forms.items()
+    }
+    assert not is_project_spelling("hu", "Snapshots")
+    assert not is_project_spelling("es", "sectorised")
+
+
 def test_only_english_possessives_of_exact_project_stems_are_accepted() -> None:
     assert is_project_spelling("en", "Cadrumo's")
     assert is_project_spelling("en", "modelo's")
