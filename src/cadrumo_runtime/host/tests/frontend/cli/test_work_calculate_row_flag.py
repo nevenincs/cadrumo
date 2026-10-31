@@ -164,27 +164,15 @@ class TestRevisionViewSurfacesDetailRows:
             timeout=None,
         )
 
-    def test_work_calculate_help_documents_quoted_m349_legal_name(self, tmp_path: Path) -> None:
-        """The real CLI help shows the shell-safe M349 spaced-name row contract."""
-        result = self._run_cli(tmp_path, ["app", "modelo", "work", "calculate", "--help"])
-
-        assert result.returncode == 0, result.stderr
-        # Whitespace-normalized: Click's plain help formatter wraps prose to the
-        # real terminal width, so the quoted spaced legal name legitimately
-        # spans a line break between ``razon_social="DE`` and ``Auto GmbH"``.
-        flat = " ".join(result.stdout.split())
-        assert 'razon_social="DE Auto GmbH"' in flat
-        assert "operador codigo_pais=DE" in flat
-
-    def test_m349_json_calculate_materialises_operador_detail_rows(self, tmp_path: Path) -> None:
-        """M349 ``--row operador`` data reaches JSON calculate and revision payloads."""
+    def _create_m349_work(self, tmp_path: Path, profile_name: str) -> None:
+        """Create an intra-community profile, complete its setup and open the 2026 first-quarter M349 work unit."""
         setup = self._run_cli(
             tmp_path,
             [
                 "config",
                 "profile",
                 "create",
-                "m349",
+                profile_name,
                 "--tax-id",
                 "12345678Z",
                 "--entity-type",
@@ -231,6 +219,22 @@ class TestRevisionViewSurfacesDetailRows:
             ],
         )
         assert created.returncode == 0, f"work create failed: {created.stdout}\n{created.stderr}"
+
+    def test_work_calculate_help_documents_quoted_m349_legal_name(self, tmp_path: Path) -> None:
+        """The real CLI help shows the shell-safe M349 spaced-name row contract."""
+        result = self._run_cli(tmp_path, ["app", "modelo", "work", "calculate", "--help"])
+
+        assert result.returncode == 0, result.stderr
+        # Whitespace-normalized: Click's plain help formatter wraps prose to the
+        # real terminal width, so the quoted spaced legal name legitimately
+        # spans a line break between ``razon_social="DE`` and ``Auto GmbH"``.
+        flat = " ".join(result.stdout.split())
+        assert 'razon_social="DE Auto GmbH"' in flat
+        assert "operador codigo_pais=DE" in flat
+
+    def test_m349_json_calculate_materialises_operador_detail_rows(self, tmp_path: Path) -> None:
+        """M349 ``--row operador`` data reaches JSON calculate and revision payloads."""
+        self._create_m349_work(tmp_path, "m349")
 
         de_row = (
             'operador codigo_pais=DE nif_comunitario=DE123456789 razon_social="DE Auto GmbH" '
@@ -399,59 +403,7 @@ class TestRevisionViewSurfacesDetailRows:
         them in the revision output, and populate the declarant summary totals
         that the M349 fixed-width record defines over the operator records.
         """
-        setup = self._run_cli(
-            tmp_path,
-            [
-                "config",
-                "profile",
-                "create",
-                "m349",
-                "--tax-id",
-                "12345678Z",
-                "--entity-type",
-                "natural_person",
-                "--name",
-                "Ana",
-                "--surnames",
-                "M349",
-                "--irpf-income-categories",
-                "actividad_economica",
-                "--activity",
-                "consultoria intracomunitaria",
-                "--tax-residence-jurisdiction-scope",
-                "common_regime",
-                "--iva-regime",
-                "GENERAL",
-                "--iva-m303-regime-composition",
-                "general",
-                "--no-iva-redeme-enrolled",
-                "--no-iva-cash-accounting-regime-enrolled",
-                "--no-iva-voluntary-sii-enrolled",
-                "--no-iva-hydrocarbon-deposit-advance-payment-deduction-entitled",
-                "--quiet",
-            ],
-        )
-        assert setup.returncode == 0, f"profile create failed: {setup.stdout}\n{setup.stderr}"
-        completed = self._run_cli(tmp_path, ["config", "profile", "complete-setup"])
-        assert completed.returncode == 0, completed.stdout + completed.stderr
-        created = self._run_cli(
-            tmp_path,
-            [
-                "app",
-                "modelo",
-                "work",
-                "create",
-                "--modelo",
-                "349",
-                "--year",
-                "2026",
-                "--period",
-                "1T",
-                "--revision",
-                "2020-y-siguientes",
-            ],
-        )
-        assert created.returncode == 0, f"work create failed: {created.stdout}\n{created.stderr}"
+        self._create_m349_work(tmp_path, "m349")
 
         calc = self._run_cli(
             tmp_path,
@@ -538,59 +490,7 @@ class TestRevisionViewSurfacesDetailRows:
 
     def test_m349_post_transition_gb_operador_row_fails_before_calculation(self, tmp_path: Path) -> None:
         """Ordinary post-transition GB rows are refused at the CLI calculation boundary."""
-        setup = self._run_cli(
-            tmp_path,
-            [
-                "config",
-                "profile",
-                "create",
-                "m349-gb",
-                "--tax-id",
-                "12345678Z",
-                "--entity-type",
-                "natural_person",
-                "--name",
-                "Ana",
-                "--surnames",
-                "M349",
-                "--irpf-income-categories",
-                "actividad_economica",
-                "--activity",
-                "consultoria intracomunitaria",
-                "--tax-residence-jurisdiction-scope",
-                "common_regime",
-                "--iva-regime",
-                "GENERAL",
-                "--iva-m303-regime-composition",
-                "general",
-                "--no-iva-redeme-enrolled",
-                "--no-iva-cash-accounting-regime-enrolled",
-                "--no-iva-voluntary-sii-enrolled",
-                "--no-iva-hydrocarbon-deposit-advance-payment-deduction-entitled",
-                "--quiet",
-            ],
-        )
-        assert setup.returncode == 0, f"profile create failed: {setup.stdout}\n{setup.stderr}"
-        completed = self._run_cli(tmp_path, ["config", "profile", "complete-setup"])
-        assert completed.returncode == 0, completed.stdout + completed.stderr
-        created = self._run_cli(
-            tmp_path,
-            [
-                "app",
-                "modelo",
-                "work",
-                "create",
-                "--modelo",
-                "349",
-                "--year",
-                "2026",
-                "--period",
-                "1T",
-                "--revision",
-                "2020-y-siguientes",
-            ],
-        )
-        assert created.returncode == 0, f"work create failed: {created.stdout}\n{created.stderr}"
+        self._create_m349_work(tmp_path, "m349-gb")
 
         calc = self._run_cli(
             tmp_path,
