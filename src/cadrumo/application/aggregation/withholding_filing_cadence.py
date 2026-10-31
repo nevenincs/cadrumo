@@ -102,7 +102,7 @@ class WithholdingModeloSchedule(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    modelo: str = Field(min_length=1, max_length=8)
+    modelo: str = Field(min_length=1, max_length=16)
     filing_year: FilingYear
     scheduled_periods: tuple[str, ...]
     quarterly_periods: tuple[str, ...]

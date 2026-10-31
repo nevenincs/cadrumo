@@ -19,7 +19,7 @@ class BienInversionDisposalProjection(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     year: int
-    regime: Annotated[str, Field(min_length=1, max_length=96)]
+    regime: Annotated[str, Field(min_length=1, max_length=128)]
 
 
 class BienInversionRecordProjection(BaseModel):
@@ -32,7 +32,7 @@ class BienInversionRecordProjection(BaseModel):
     acquisition_year: int
     cuota_soportada: PublicDecimal
     prorrata_inicial_pct: PublicDecimal
-    kind: Annotated[str, Field(min_length=1, max_length=96)]
+    kind: Annotated[str, Field(min_length=1, max_length=128)]
     art108_elegible: bool
     acquisition_ledger_id: str
     prorrata_sector_id: str | None

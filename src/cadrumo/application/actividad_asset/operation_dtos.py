@@ -124,7 +124,7 @@ class ActivityAssetAmortizationElectionSnapshot(BaseModel):
     authority_class_key: str | None = Field(default=None, min_length=1, max_length=64)
     linear_coefficient: PublicDecimal | None = None
     shift_hours_per_day: PublicDecimal | None = None
-    sum_of_digits_period_years: int | None = Field(default=None, ge=1, le=100)
+    sum_of_digits_period_years: int | None = Field(default=None, ge=1, le=128)
     digit_order: DigitOrder | None = None
     approved_plan: ApprovedAmortizationPlanSnapshot | None = None
     useful_life: DefiniteUsefulLife | None = None

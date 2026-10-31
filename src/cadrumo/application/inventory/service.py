@@ -72,7 +72,7 @@ class InventoryActividadSummary(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     actividad_id: str = Field(min_length=1)
-    year: int = Field(ge=1900)
+    year: int = Field(ge=1900, le=9999)
     valuation_method: ValuationMethod
     opening_stock: Decimal = Field(ge=Decimal("0"))
     movement_count: NonNegativeInt
@@ -119,7 +119,7 @@ class InventoryValuationPreview(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     actividad_id: str = Field(min_length=1)
-    year: int = Field(ge=1900)
+    year: int = Field(ge=1900, le=9999)
     valuation_method: ValuationMethod
     derived_closing_value: Decimal = Field(ge=Decimal("0"))
     cogs: Decimal = Field(ge=Decimal("0"))

@@ -657,7 +657,7 @@ class ActivityAssetAcquisitionCandidate(_ReadModel):
     booked_date: date
     description: str
     amount: PublicDecimal
-    currency: str = Field(min_length=3, max_length=3)
+    currency: str = Field(min_length=1, max_length=16)
     paid_in_euro: PublicDecimal | None = None
     taxable_base: PublicDecimal | None = None
     iva_amount: PublicDecimal | None = None

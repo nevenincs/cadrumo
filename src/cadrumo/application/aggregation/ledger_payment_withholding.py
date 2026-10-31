@@ -133,7 +133,7 @@ class LedgerPaymentWithholdingEvidenceRequest(BaseModel):
     supersedes_generation_id: str | None = None
     modelo_190_detail: WithholdingObservation | None = None
     perceptor_nif: TaxIdIdentityToken | None = Field(default=None, min_length=1, max_length=16)
-    perceptor_name: str | None = Field(default=None, max_length=200)
+    perceptor_name: str | None = Field(default=None, max_length=256)
     exigibility_event_id: str | None = Field(default=None, min_length=1, max_length=128)
     exigibility_occurred_on: date | None = None
     modelo_193_pending_payment: Modelo193PendingPaymentEvidence | None = None

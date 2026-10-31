@@ -143,7 +143,7 @@ class ActivityAssetExpenseObservation(BaseModel):
 
     source: ActivityAssetClaimSource | ActivityAssetScheduleSource
     modelo: str
-    period: str = Field(min_length=2, max_length=2)
+    period: str = Field(min_length=1, max_length=16)
     target_casilla_id: CasillaId
     deductible_amount: Decimal = Field(ge=Decimal("0"))
 

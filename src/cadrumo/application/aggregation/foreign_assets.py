@@ -150,12 +150,12 @@ class ForeignAssetIngestObservation(BaseModel):
     asset_class: ForeignAssetClass
     asset_external_id: str = Field(min_length=1, max_length=128)
     country: CountryCodeAlpha2
-    issuer_or_institution: str = Field(default="", max_length=200)
+    issuer_or_institution: str = Field(default="", max_length=256)
     valuation_amount: Decimal = Field(ge=Decimal("0"))
     currency_code: IsoCurrencyCode
     valuation_event: M720ValuationEvent
-    valuation_event_date: IsoDateString | None = Field(default=None, min_length=10, max_length=10)
-    acquisition_date: IsoDateString = Field(min_length=10, max_length=10)
+    valuation_event_date: IsoDateString | None = None
+    acquisition_date: IsoDateString
 
     @property
     def held_at_year_end(self) -> bool:

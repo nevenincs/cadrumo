@@ -27,12 +27,12 @@ class BienesInversionDeclareRequest(BienesInversionProfileRequest):
 
     identifier: str = Field(min_length=1)
     description: str = Field(min_length=1)
-    acquisition_year: int = Field(ge=1, le=2099)
+    acquisition_year: int = Field(ge=1900, le=9999)
     acquisition_ledger_id: str = Field(min_length=1, max_length=128)
     cuota_soportada: PublicDecimal
     prorrata_inicial_pct: PublicDecimal
     kind: str = Field(min_length=1)
     art108_elegible: bool = True
     prorrata_sector_id: str | None = Field(default=None, min_length=1, max_length=64)
-    disposal_year: int | None = Field(default=None, ge=1, le=2099)
+    disposal_year: int | None = Field(default=None, ge=1900, le=9999)
     disposal_regime: str | None = Field(default=None, min_length=1)

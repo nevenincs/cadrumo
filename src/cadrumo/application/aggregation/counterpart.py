@@ -205,8 +205,8 @@ class CounterpartObservation(_CounterpartBoundaryModel):
 
     source_kind: CounterpartSourceKind
     source_object_id: str = Field(min_length=1)
-    counterparty_nif: str = Field(min_length=1, max_length=20)
-    counterparty_name: str = Field(default="", max_length=200)
+    counterparty_nif: str = Field(min_length=1, max_length=32)
+    counterparty_name: str = Field(default="", max_length=256)
     # Required, and deliberately not defaulted to Spain. This is an operator
     # boundary, so a default is an INFERENCE about a fact the operator did not
     # state -- and it was the one inference the Modelo 349 readiness rule turns
@@ -226,7 +226,7 @@ class CounterpartObservation(_CounterpartBoundaryModel):
     operation_period: FilingPeriodCode
     taxable_base: Decimal = Field(ge=Decimal("0"))
     invoice_total: Decimal = Field(ge=Decimal("0"))
-    accrued_on: IsoDateString = Field(min_length=10, max_length=10)
+    accrued_on: IsoDateString
     groi_verified: bool = False
     nif_iva_verified: bool = False
 
@@ -235,8 +235,8 @@ class CounterpartRollup(_CounterpartBoundaryModel):
     """One (source_kind, counterparty_nif, operation_kind) rollup row."""
 
     source_kind: CounterpartSourceKind
-    counterparty_nif: str = Field(min_length=1, max_length=20)
-    counterparty_name: str = Field(default="", max_length=200)
+    counterparty_nif: str = Field(min_length=1, max_length=32)
+    counterparty_name: str = Field(default="", max_length=256)
     counterparty_country: CountryCodeAlpha2
     operation_kind: str = Field(min_length=1)
     observations_count: NonNegativeInt

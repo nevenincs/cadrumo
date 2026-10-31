@@ -253,7 +253,7 @@ class CrossPeriodDependencyRequirement(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    source_modelo: str = Field(min_length=1, max_length=8)
+    source_modelo: str = Field(min_length=1, max_length=16)
     filing_year: FilingYear
     period: Period
     source_casilla_ids: tuple[CasillaId, ...] = Field(min_length=1)
@@ -297,7 +297,7 @@ class CrossPeriodExpectedMemberSet(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    source_modelo: str = Field(min_length=1, max_length=8)
+    source_modelo: str = Field(min_length=1, max_length=16)
     filing_year: FilingYear
     period: Period
     member_nifs: tuple[str, ...] = Field(min_length=1)
@@ -319,7 +319,7 @@ class CrossPeriodDependencyInventoryItem(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    target_modelo: str = Field(min_length=1, max_length=8)
+    target_modelo: str = Field(min_length=1, max_length=16)
     target_revision_id: RevisionId = Field(min_length=1)
     target_filing_year: FilingYear
     target_period: Period
@@ -515,7 +515,7 @@ class CrossPeriodCleanStateVerdict(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     bucket_id: BucketId
-    target_modelo: str = Field(min_length=1, max_length=8)
+    target_modelo: str = Field(min_length=1, max_length=16)
     target_filing_year: FilingYear
     target_period: Period
     dependencies: tuple[CrossPeriodDependencyEvidence, ...] = ()

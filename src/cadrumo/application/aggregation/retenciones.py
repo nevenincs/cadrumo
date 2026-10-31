@@ -140,7 +140,7 @@ class Modelo180PropertyEvidence(BaseModel):
 
     property_key: str = Field(min_length=1, max_length=128)
     situation: str = Field(min_length=1)
-    cadastral_reference: str | None = Field(default=None, min_length=1, max_length=20)
+    cadastral_reference: str | None = Field(default=None, min_length=1, max_length=32)
     address: Modelo180StructuredAddress
     recipient_province_code: SpanishProvinceCode
     modality: str = Field(min_length=1)
@@ -260,11 +260,11 @@ class RetencionObservation(BaseModel):
     source_kind: BindingSourceKind
     source_object_id: str = Field(min_length=1)
     perceptor_nif: TaxIdIdentityToken = Field(min_length=1, max_length=16)
-    perceptor_name: str = Field(default="", max_length=200)
+    perceptor_name: str = Field(default="", max_length=256)
     scheme: RetencionScheme
     taxable_base: Decimal = Field(ge=Decimal("0"))
     retencion_amount: Decimal = Field(ge=Decimal("0"))
-    accrued_on: IsoDateString = Field(min_length=10, max_length=10)
+    accrued_on: IsoDateString
     modelo_180_property: Modelo180PropertyEvidence | None = None
     modelo_193_capital: Modelo193CapitalDetail | None = None
 
@@ -288,7 +288,7 @@ class RetencionPerceptorRollup(BaseModel):
 
     source_kind: BindingSourceKind
     perceptor_nif: TaxIdIdentityToken = Field(min_length=1, max_length=16)
-    perceptor_name: str = Field(default="", max_length=200)
+    perceptor_name: str = Field(default="", max_length=256)
     scheme: RetencionScheme
     observations_count: NonNegativeInt
     total_taxable_base: Decimal = Field(ge=Decimal("0"))

@@ -73,7 +73,7 @@ class WithholdingEvidenceCaptureCommand(BaseModel):
     source_revision_id: str = Field(min_length=1, max_length=128)
     allocation_id: str = Field(min_length=1, max_length=128)
     perceptor_nif: TaxIdIdentityToken = Field(min_length=1, max_length=16)
-    perceptor_name: str = Field(default="", max_length=200)
+    perceptor_name: str = Field(default="", max_length=256)
     scheme: RetencionScheme
     taxable_base: Decimal = Field(ge=Decimal("0"))
     retencion_amount: Decimal = Field(ge=Decimal("0"))
@@ -83,7 +83,7 @@ class WithholdingEvidenceCaptureCommand(BaseModel):
     mode: WithholdingMutationMode = WithholdingMutationMode.APPEND
     idempotency_key: str = Field(min_length=1, max_length=128)
     baseline: WithholdingWindowBaseline | None = None
-    reason: str | None = Field(default=None, min_length=1, max_length=500)
+    reason: str | None = Field(default=None, min_length=1, max_length=512)
     supersedes_generation_id: str | None = Field(default=None, min_length=64, max_length=64)
     modelo_180_property: Modelo180PropertyEvidence | None = None
     modelo_190_detail: WithholdingObservation | None = None

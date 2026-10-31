@@ -82,7 +82,7 @@ class WithholdingRecognitionEvidence(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    applicable_year: int = Field(ge=2000, le=9999)
+    applicable_year: int = Field(ge=1900, le=9999)
     recipient_tax_status: WithholdingRecipientTaxStatus
     recipient_tax_regime: WithholdingRecipientTaxRegime
     income_kind: WithholdingIncomeKind

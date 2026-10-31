@@ -64,7 +64,7 @@ class WithholdingWindowScope(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    modelo: str = Field(min_length=1, max_length=8)
+    modelo: str = Field(min_length=1, max_length=16)
     period: Period
 
     @property
@@ -241,7 +241,7 @@ class WithholdingMutationEnvelope(BaseModel):
     idempotency_key: str = Field(min_length=1, max_length=128)
     entries: tuple[WithholdingProjectionEntry, ...] = ()
     baseline: WithholdingWindowBaseline | None = None
-    reason: str | None = Field(default=None, min_length=1, max_length=500)
+    reason: str | None = Field(default=None, min_length=1, max_length=512)
     supersedes_generation_id: WithholdingGenerationId | None = None
     # Admission control for the write, independent of the evidence's replay identity.
     source_catalogue_baseline: WithholdingSourceCatalogueBaseline | None = Field(default=None, exclude=True, repr=False)
