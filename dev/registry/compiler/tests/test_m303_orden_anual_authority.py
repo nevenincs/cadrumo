@@ -8,6 +8,7 @@ from decimal import Decimal
 from hashlib import sha256
 from pathlib import Path
 from shutil import copyfile
+from typing import NamedTuple
 
 import pytest
 from pydantic import ValidationError
@@ -25,6 +26,7 @@ from cadrumo.domain.calculations.registry.m303_schema_vocabulary import (
 )
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
+from cadrumo.domain.calculations.registry.schema_references import SourceReference
 from cadrumo.domain.iva.regimen_simplificado_rows import (
     M303RegimenSimplificadoScope,
     M303RegimenSimplificadoScopeDecision,
@@ -223,17 +225,40 @@ def test_pinned_boe_orden_compiler_translates_malformed_html_to_registry_load_er
         )
 
 
-def test_pinned_boe_orden_compiler_refuses_a_divergent_markdown_sidecar(
-    tmp_path: Path,
-    registry_tree: tuple[tuple[ModeloDefinition, ...], RegistryCatalogues],
-) -> None:
-    """The committed Markdown and JSON sidecars are one inseparable generated pair."""
+class _StagedOrdenCopy(NamedTuple):
+    source: SourceReference
+    source_path: Path
+    copied_path: Path
+
+    @property
+    def json_source(self) -> Path:
+        return self.source_path.with_name(self.source_path.name + ".extracted.json")
+
+    @property
+    def json_copy(self) -> Path:
+        return self.copied_path.with_name(self.copied_path.name + ".extracted.json")
+
+
+def _stage_orden_copy(
+    tmp_path: Path, registry_tree: tuple[tuple[ModeloDefinition, ...], RegistryCatalogues]
+) -> _StagedOrdenCopy:
+    """Copy the pinned BOE orden corpus file under ``tmp_path`` so a test can corrupt its sidecars."""
     _, catalogues = registry_tree
     source = catalogues.sources["boe-orden-hac-1425-2025-iva-authority"]
     source_path = bundled_path() / source.corpus_path
     copied_path = tmp_path / source.corpus_path
     copied_path.parent.mkdir(parents=True)
     copyfile(source_path, copied_path)
+    return _StagedOrdenCopy(source, source_path, copied_path)
+
+
+def test_pinned_boe_orden_compiler_refuses_a_divergent_markdown_sidecar(
+    tmp_path: Path,
+    registry_tree: tuple[tuple[ModeloDefinition, ...], RegistryCatalogues],
+) -> None:
+    """The committed Markdown and JSON sidecars are one inseparable generated pair."""
+    staged = _stage_orden_copy(tmp_path, registry_tree)
+    source, source_path, copied_path = staged.source, staged.source_path, staged.copied_path
     copyfile(
         source_path.with_name(source_path.name + ".extracted.json"),
         copied_path.with_name(copied_path.name + ".extracted.json"),
@@ -269,14 +294,9 @@ def test_pinned_boe_orden_compiler_refuses_noncanonical_sidecar_shape(
     registry_tree: tuple[tuple[ModeloDefinition, ...], RegistryCatalogues],
 ) -> None:
     """Copied sidecars must retain the exact canonical envelope and unit shapes."""
-    _, catalogues = registry_tree
-    source = catalogues.sources["boe-orden-hac-1425-2025-iva-authority"]
-    source_path = bundled_path() / source.corpus_path
-    copied_path = tmp_path / source.corpus_path
-    copied_path.parent.mkdir(parents=True)
-    copyfile(source_path, copied_path)
-    json_source = source_path.with_name(source_path.name + ".extracted.json")
-    json_copy = copied_path.with_name(copied_path.name + ".extracted.json")
+    staged = _stage_orden_copy(tmp_path, registry_tree)
+    source, source_path, copied_path = staged.source, staged.source_path, staged.copied_path
+    json_source, json_copy = staged.json_source, staged.json_copy
     payload = json.loads(json_source.read_text(encoding="utf-8"))
     if unknown_scope == "top":
         payload[field] = "forbidden"
@@ -312,14 +332,9 @@ def test_pinned_boe_orden_compiler_refuses_invalid_units_before_pair_comparison(
     registry_tree: tuple[tuple[ModeloDefinition, ...], RegistryCatalogues],
 ) -> None:
     """Unit-envelope defects retain precedence over the sidecar-pair comparison."""
-    _, catalogues = registry_tree
-    source = catalogues.sources["boe-orden-hac-1425-2025-iva-authority"]
-    source_path = bundled_path() / source.corpus_path
-    copied_path = tmp_path / source.corpus_path
-    copied_path.parent.mkdir(parents=True)
-    copyfile(source_path, copied_path)
-    json_source = source_path.with_name(source_path.name + ".extracted.json")
-    json_copy = copied_path.with_name(copied_path.name + ".extracted.json")
+    staged = _stage_orden_copy(tmp_path, registry_tree)
+    source, source_path, copied_path = staged.source, staged.source_path, staged.copied_path
+    json_source, json_copy = staged.json_source, staged.json_copy
     payload = json.loads(json_source.read_text(encoding="utf-8"))
     if isinstance(invalid_value, list):
         payload["units"][0] = invalid_value
@@ -344,14 +359,9 @@ def test_pinned_boe_orden_compiler_refuses_duplicate_semantic_table_anchor(
     registry_tree: tuple[tuple[ModeloDefinition, ...], RegistryCatalogues],
 ) -> None:
     """The complete sidecar pair cannot collapse two official tables onto one anchor."""
-    _, catalogues = registry_tree
-    source = catalogues.sources["boe-orden-hac-1425-2025-iva-authority"]
-    source_path = bundled_path() / source.corpus_path
-    copied_path = tmp_path / source.corpus_path
-    copied_path.parent.mkdir(parents=True)
-    copyfile(source_path, copied_path)
-    json_source = source_path.with_name(source_path.name + ".extracted.json")
-    json_copy = copied_path.with_name(copied_path.name + ".extracted.json")
+    staged = _stage_orden_copy(tmp_path, registry_tree)
+    source, source_path, copied_path = staged.source, staged.source_path, staged.copied_path
+    json_source, json_copy = staged.json_source, staged.json_copy
     payload = json.loads(json_source.read_text(encoding="utf-8"))
     first_anchor = "#m303-anexo-ii-iva-419-1-industrias-del-pan-y-de-la-bolleria"
     second_anchor = "#m303-anexo-ii-iva-419-2-industrias-de-la-bolleria-pasteleria-y-galletas"

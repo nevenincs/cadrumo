@@ -288,11 +288,11 @@ def test_missing_context_owner_fails_layout_integrity() -> None:
     assert form_layout_failures(revision.model_copy(update={"form_layouts": (layout,)}))
 
 
-def test_changed_activity_slot_invalidates_the_authored_source_digest() -> None:
+def _failures_after_moving_activity_slot(record_id: str, field_id: str) -> tuple[str, ...]:
     revision = _revision()
     export = revision.export_layouts[0]
-    record = next(record for record in export.records if record.id == "m303-regimen-simplificado")
-    field = next(field for field in record.fields if field.id == "m303-2026.dp30302.f024")
+    record = next(record for record in export.records if record.id == record_id)
+    field = next(field for field in record.fields if field.id == field_id)
     assert field.projection_ref is not None
     changed = field.model_copy(update={"projection_ref": field.projection_ref.model_copy(update={"slot": 2})})
     record = record.model_copy(
@@ -301,22 +301,14 @@ def test_changed_activity_slot_invalidates_the_authored_source_digest() -> None:
     export = export.model_copy(
         update={"records": tuple(record if item.id == record.id else item for item in export.records)}
     )
-    broken = revision.model_copy(update={"export_layouts": (export,)})
-    assert any("stale" in failure for failure in form_layout_failures(broken))
+    return tuple(form_layout_failures(revision.model_copy(update={"export_layouts": (export,)})))
+
+
+def test_changed_activity_slot_invalidates_the_authored_source_digest() -> None:
+    failures = _failures_after_moving_activity_slot("m303-regimen-simplificado", "m303-2026.dp30302.f024")
+    assert any("stale" in failure for failure in failures)
 
 
 def test_changed_annual_activity_slot_invalidates_the_authored_source_digest() -> None:
-    revision = _revision()
-    export = revision.export_layouts[0]
-    record = next(record for record in export.records if record.id == "m303-exonerado-390")
-    field = next(field for field in record.fields if field.id == "m303-2026.dp30304.f006")
-    assert field.projection_ref is not None
-    changed = field.model_copy(update={"projection_ref": field.projection_ref.model_copy(update={"slot": 2})})
-    record = record.model_copy(
-        update={"fields": tuple(changed if item.id == field.id else item for item in record.fields)}
-    )
-    export = export.model_copy(
-        update={"records": tuple(record if item.id == record.id else item for item in export.records)}
-    )
-    broken = revision.model_copy(update={"export_layouts": (export,)})
-    assert any("stale" in failure for failure in form_layout_failures(broken))
+    failures = _failures_after_moving_activity_slot("m303-exonerado-390", "m303-2026.dp30304.f006")
+    assert any("stale" in failure for failure in failures)
