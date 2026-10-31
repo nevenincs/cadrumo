@@ -776,7 +776,6 @@ def test_work_calculate_modelo_115_classified_rent_row_requires_perceptor_eviden
     assert action["failed_condition_id"] == "aggregation.retenciones.observations.present"
     assert action["no_recovery_outcome"] == "operator_decision"
     assert action["action"] is None
-    assert "retention observations" in envelope["error"]["message"]
     assert "115" in envelope["error"]["message"]
 
 

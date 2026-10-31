@@ -158,8 +158,11 @@ def test_a_started_process_left_running_is_a_survivor_until_it_ends() -> None:
     scope = WindowsProcessScope()
     try:
         (owned,) = _sleepers(scope, "--left-running")
+        # The venv launcher can create its interpreter between these snapshots.
+        # Only ask WMI for job members that already existed when its scan began.
+        started_pids = scope.active_process_ids()
         table = process_table()
-        started = {_record(table, pid) for pid in scope.active_process_ids()} | descendants(table, [os.getpid()])
+        started = {_record(table, pid) for pid in started_pids} | descendants(table, [os.getpid()])
         assert owned in {process.pid for process in started}
         assert owned in {process.pid for process in survivors(started, process_table())}
     finally:
