@@ -23,7 +23,7 @@ from ..service_descriptors import stage_service_descriptors
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
-def test_agent_descriptor_can_attend_tools_but_session_holder_cannot(tmp_path: Path) -> None:
+def _staged_service_descriptors(tmp_path: Path) -> tuple[InstalledServiceDescriptor, InstalledServiceDescriptor]:
     native = tmp_path / "bin"
     native.mkdir()
     for name in ("cadrumo-agent-service", "cadrumo-runtime"):
@@ -40,6 +40,11 @@ def test_agent_descriptor_can_attend_tools_but_session_holder_cannot(tmp_path: P
         InstalledServiceDescriptor.model_validate_json(json.dumps(item))
         for item in json.loads((tmp_path / member).read_bytes())
     ]
+    return service, holder
+
+
+def test_agent_descriptor_can_attend_tools_but_session_holder_cannot(tmp_path: Path) -> None:
+    service, holder = _staged_service_descriptors(tmp_path)
     assert service.allow_descendants and service.operation_scope.allow_delegation
     assert service.operation_scope.operations
     assert not holder.allow_descendants and not holder.operation_scope.allow_delegation
@@ -47,22 +52,7 @@ def test_agent_descriptor_can_attend_tools_but_session_holder_cannot(tmp_path: P
 
 def test_agent_descriptor_keeps_model_role_selections_in_their_own_registered_namespace(tmp_path: Path) -> None:
     """A selection must never share the provider records' namespace, whose generation binds the agent tree."""
-    native = tmp_path / "bin"
-    native.mkdir()
-    for name in ("cadrumo-agent-service", "cadrumo-runtime"):
-        (native / name).write_bytes(b"test image")
-    layout = {
-        "paths": {"native": "bin"},
-        "entrypoint_suffix": "",
-        "entrypoints": ["cadrumo-agent-service", "cadrumo-runtime"],
-        "files": {"service_descriptors": "services.json"},
-        "backend": "windows",
-    }
-    member = stage_service_descriptors(tmp_path, layout, ())
-    service, holder = [
-        InstalledServiceDescriptor.model_validate_json(json.dumps(item))
-        for item in json.loads((tmp_path / member).read_bytes())
-    ]
+    service, holder = _staged_service_descriptors(tmp_path)
     capabilities = {capability.capability: capability for capability in service.record_capabilities}
 
     for name, definition in (

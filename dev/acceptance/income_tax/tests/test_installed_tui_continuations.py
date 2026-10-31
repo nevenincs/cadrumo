@@ -55,56 +55,58 @@ def test_partial_handoff_has_four_work_units_but_only_q1_is_locally_filed() -> N
     assert evidence.completion_state.exported_modelos == ("100",)
 
 
-def test_cli_readback_uses_public_ledger_and_work_list_collections() -> None:
-    class Cli:
-        def __init__(self) -> None:
-            self.calls: list[tuple[str, ...]] = []
+class _PublicReadbackCli:
+    """A CLI whose public ledger and invoice lists are complete and whose work list is supplied."""
 
-        def run(self, args: tuple[str, ...]) -> dict[str, object]:
-            self.calls.append(args)
-            if args == ("app", "ledger", "list"):
-                return {"result": {"rows": [{"transaction_id": str(index)} for index in range(8)]}}
-            if args == ("app", "ledger", "invoice", "list"):
-                return {
-                    "result": {
-                        "count": 8,
-                        "rows": [{"linked_transaction_ids": [str(index)]} for index in range(8)],
-                    }
-                }
+    def __init__(self, work_units: list[dict[str, object]]) -> None:
+        self.work_units = work_units
+        self.calls: list[tuple[str, ...]] = []
+
+    def run(self, args: tuple[str, ...]) -> dict[str, object]:
+        self.calls.append(args)
+        if args == ("app", "ledger", "list"):
+            return {"result": {"rows": [{"transaction_id": str(index)} for index in range(8)]}}
+        if args == ("app", "ledger", "invoice", "list"):
             return {
                 "result": {
-                    "work_units": [
-                        {
-                            "modelo": "130",
-                            "filing_year": 2025,
-                            "period": {"filing_year": 2025, "code": "1T"},
-                            "work_unit_id": "q1",
-                            "filed_calculation_revision_id": "revision-q1",
-                            "current_filing_record_id": "filing-q1",
-                        },
-                        {
-                            "modelo": "130",
-                            "filing_year": 2025,
-                            "period": {"filing_year": 2025, "code": "2T"},
-                            "work_unit_id": "q2",
-                        },
-                        {
-                            "modelo": "130",
-                            "filing_year": 2025,
-                            "period": {"filing_year": 2025, "code": "3T"},
-                            "work_unit_id": "q3",
-                        },
-                        {
-                            "modelo": "130",
-                            "filing_year": 2025,
-                            "period": {"filing_year": 2025, "code": "4T"},
-                            "work_unit_id": "q4",
-                        },
-                    ]
+                    "count": 8,
+                    "rows": [{"linked_transaction_ids": [str(index)]} for index in range(8)],
                 }
             }
+        return {"result": {"work_units": self.work_units}}
 
-    cli = Cli()
+
+def test_cli_readback_uses_public_ledger_and_work_list_collections() -> None:
+    cli = _PublicReadbackCli(
+        [
+            {
+                "modelo": "130",
+                "filing_year": 2025,
+                "period": {"filing_year": 2025, "code": "1T"},
+                "work_unit_id": "q1",
+                "filed_calculation_revision_id": "revision-q1",
+                "current_filing_record_id": "filing-q1",
+            },
+            {
+                "modelo": "130",
+                "filing_year": 2025,
+                "period": {"filing_year": 2025, "code": "2T"},
+                "work_unit_id": "q2",
+            },
+            {
+                "modelo": "130",
+                "filing_year": 2025,
+                "period": {"filing_year": 2025, "code": "3T"},
+                "work_unit_id": "q3",
+            },
+            {
+                "modelo": "130",
+                "filing_year": 2025,
+                "period": {"filing_year": 2025, "code": "4T"},
+                "work_unit_id": "q4",
+            },
+        ]
+    )
     state = _cli_public_readback(cast("InstalledCli", cli), generation=_GENERATION, year=2025)
 
     assert cli.calls == [
@@ -117,62 +119,36 @@ def test_cli_readback_uses_public_ledger_and_work_list_collections() -> None:
 
 
 def test_cli_readback_refuses_a_partial_public_work_list() -> None:
-    class Cli:
-        def run(self, args: tuple[str, ...]) -> dict[str, object]:
-            if args == ("app", "ledger", "list"):
-                return {"result": {"rows": [{"transaction_id": str(index)} for index in range(8)]}}
-            if args == ("app", "ledger", "invoice", "list"):
-                return {
-                    "result": {
-                        "count": 8,
-                        "rows": [{"linked_transaction_ids": [str(index)]} for index in range(8)],
-                    }
-                }
-            return {
-                "result": {
-                    "work_units": [
-                        {
-                            "modelo": "130",
-                            "filing_year": 2025,
-                            "period": {"filing_year": 2025, "code": "1T"},
-                            "work_unit_id": "q1",
-                        }
-                    ]
-                }
+    cli = _PublicReadbackCli(
+        [
+            {
+                "modelo": "130",
+                "filing_year": 2025,
+                "period": {"filing_year": 2025, "code": "1T"},
+                "work_unit_id": "q1",
             }
+        ]
+    )
 
     with pytest.raises(InstalledContinuationError, match="four-unit handoff"):
-        _cli_public_readback(cast("InstalledCli", Cli()), generation=_GENERATION, year=2025)
+        _cli_public_readback(cast("InstalledCli", cli), generation=_GENERATION, year=2025)
 
 
 def test_cli_readback_refuses_when_q1_has_no_public_filing_pointers() -> None:
-    class Cli:
-        def run(self, args: tuple[str, ...]) -> dict[str, object]:
-            if args == ("app", "ledger", "list"):
-                return {"result": {"rows": [{"transaction_id": str(index)} for index in range(8)]}}
-            if args == ("app", "ledger", "invoice", "list"):
-                return {
-                    "result": {
-                        "count": 8,
-                        "rows": [{"linked_transaction_ids": [str(index)]} for index in range(8)],
-                    }
-                }
-            return {
-                "result": {
-                    "work_units": [
-                        {
-                            "modelo": "130",
-                            "filing_year": 2025,
-                            "period": {"filing_year": 2025, "code": period},
-                            "work_unit_id": period,
-                        }
-                        for period in ("1T", "2T", "3T", "4T")
-                    ]
-                }
+    cli = _PublicReadbackCli(
+        [
+            {
+                "modelo": "130",
+                "filing_year": 2025,
+                "period": {"filing_year": 2025, "code": period},
+                "work_unit_id": period,
             }
+            for period in ("1T", "2T", "3T", "4T")
+        ]
+    )
 
     with pytest.raises(InstalledContinuationError, match="Q1 local filing"):
-        _cli_public_readback(cast("InstalledCli", Cli()), generation=_GENERATION, year=2025)
+        _cli_public_readback(cast("InstalledCli", cli), generation=_GENERATION, year=2025)
 
 
 def test_cli_completion_reuses_public_handoff_work_ids(monkeypatch, tmp_path: Path) -> None:

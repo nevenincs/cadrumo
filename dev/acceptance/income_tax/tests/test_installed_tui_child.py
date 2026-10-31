@@ -331,39 +331,41 @@ async def test_public_root_diagnostic_distinguishes_pending_and_refused_home_wit
         assert "private-profile-value" not in receipt.read_text()
 
 
+class _KeyedTable:
+    """A focusable table whose rows are addressed by semantic key."""
+
+    def __init__(self, *row_values: str) -> None:
+        self.rows = tuple(SimpleNamespace(value=value) for value in row_values)
+        self.focused = False
+        self.cursor_row: int | None = None
+
+    def focus(self) -> None:
+        self.focused = True
+
+    def get_row_index(self, row_key: object) -> int:
+        return self.rows.index(row_key)
+
+    def move_cursor(self, *, row: int) -> None:
+        self.cursor_row = row
+
+
 def test_profile_manager_field_opens_the_visible_canonical_row_without_field_selector() -> None:
-    class Table:
-        rows = (SimpleNamespace(value="identity.tax_id"), SimpleNamespace(value="activities.description"))
-
-        def __init__(self) -> None:
-            self.focused = False
-            self.cursor_row: int | None = None
-
-        def focus(self) -> None:
-            self.focused = True
-
-        def get_row_index(self, row_key: object) -> int:
-            return self.rows.index(row_key)
-
-        def move_cursor(self, *, row: int) -> None:
-            self.cursor_row = row
-
     class ManagerScreen:
-        def __init__(self, table: Table) -> None:
+        def __init__(self, table: _KeyedTable) -> None:
             self.table = table
 
-        def query(self, expected_type: object) -> tuple[Table, ...]:
+        def query(self, expected_type: object) -> tuple[_KeyedTable, ...]:
             return (self.table,)
 
     class ManagerPilot:
-        def __init__(self, table: Table) -> None:
+        def __init__(self, table: _KeyedTable) -> None:
             self.app = SimpleNamespace(screen=ManagerScreen(table))
             self.keys: list[str] = []
 
         async def press(self, key: str) -> None:
             self.keys.append(key)
 
-    table = Table()
+    table = _KeyedTable("identity.tax_id", "activities.description")
     pilot = ManagerPilot(table)
     asyncio.run(open_profile_manager_field(pilot=pilot, path="activities.description"))
 
@@ -419,33 +421,17 @@ def test_child_process_runner_uses_stdin_credentials_and_hash_only_artifacts(tmp
 
 
 def test_public_table_row_selection_uses_semantic_key_not_position() -> None:
-    class Table:
-        rows = (SimpleNamespace(value="ledger.overview"), SimpleNamespace(value="ledger.import"))
-
-        def __init__(self) -> None:
-            self.focused = False
-            self.cursor_row: int | None = None
-
-        def focus(self) -> None:
-            self.focused = True
-
-        def get_row_index(self, row_key: object) -> int:
-            return self.rows.index(row_key)
-
-        def move_cursor(self, *, row: int) -> None:
-            self.cursor_row = row
-
     class Screen:
         def query(self, selector: str) -> tuple[object, ...]:
             raise AssertionError(f"screen fallback should not be used for {selector}")
 
     class App:
-        def __init__(self, table: Table) -> None:
+        def __init__(self, table: _KeyedTable) -> None:
             self.table = table
             self.screen = Screen()
 
         @property
-        def focused(self) -> Table | None:
+        def focused(self) -> _KeyedTable | None:
             return self.table if self.table.focused else None
 
         def query_one(self, selector: str, expected_type: object | None = None) -> object:
@@ -453,7 +439,7 @@ def test_public_table_row_selection_uses_semantic_key_not_position() -> None:
             return self.table
 
     class Pilot:
-        def __init__(self, table: Table) -> None:
+        def __init__(self, table: _KeyedTable) -> None:
             self.app = App(table)
             self.keys: list[str] = []
             self.pauses = 0
@@ -466,7 +452,7 @@ def test_public_table_row_selection_uses_semantic_key_not_position() -> None:
             assert self.app.table.cursor_row == 1
             self.pauses += 1
 
-    table = Table()
+    table = _KeyedTable("ledger.overview", "ledger.import")
     pilot = Pilot(table)
     asyncio.run(
         select_public_data_table_row(

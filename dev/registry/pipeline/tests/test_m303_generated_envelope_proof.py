@@ -75,7 +75,7 @@ from ...compiler.loader import load_modelo_directory, load_registry_tree
 from ...compiler.supplementary_orden import compile_supplementary_ordenes
 from ...tests.authored_edition_support import authored_revisions_where
 from .._export_tree import render_complete_export_tree
-from .._tree_check import GeneratedExportTreeCheckContext, check_generated_export_tree
+from .._tree_check import CheckedGeneratedExportTree, GeneratedExportTreeCheckContext, check_generated_export_tree
 from .._tree_validation import GeneratedExportTreeValidationContext
 from ..edition_candidate_staging import stage_continuity_metadata
 from ..export_fragment_provenance import (
@@ -516,63 +516,46 @@ def test_m303_generated_publication_is_twice_reproducible_and_check_mode_is_non_
         published_modelo_root = stage_published_modelo(check_root, modelo=tree.modelo, revision=tree.revision)
         joined, semantic_map, transport, render_profile, evidence = isolated_authorities(tree)
         before = _committed_tree_hashes(tree)
+
         # While the revision is drift-pinned, check mode REFUSES rather than
         # agreeing: the shipped manifest attests digests the corrected generator
         # no longer produces. Non-mutation is the property this half is named
         # for and it is asserted in both branches, because a refusal that
         # scribbled on the committed tree on its way out would be the worse bug.
+        def run_check() -> CheckedGeneratedExportTree:
+            return check_generated_export_tree(
+                context=GeneratedExportTreeCheckContext(
+                    validation=GeneratedExportTreeValidationContext(
+                        registry_root=check_registry_root,
+                        source_root=bundled_path(),
+                        target=ExportFragmentTarget(
+                            modelo=tree.modelo, revision_id=tree.revision, design_epoch=tree.epoch
+                        ),
+                        filing_year=tree.filing_year,
+                        period=tree.period,
+                        supporting_modelos=supporting_modelos(tree),
+                        continuity_metadata_modelo_root=metadata_root,
+                    ),
+                    temporary_root=check_root,
+                    target_registry_root=bundled_path("registry", "aeat"),
+                    target_export_root=tree.committed,
+                    published_modelo_root=published_modelo_root,
+                ),
+                joined=joined,
+                semantic_map=semantic_map,
+                transport_profile=transport,
+                render_profile=render_profile,
+                render_profile_source_evidence=evidence,
+            )
+
         if subject in drifting:
             with pytest.raises(RegistryValidationError, match="do not match generated tree"):
-                check_generated_export_tree(
-                    context=GeneratedExportTreeCheckContext(
-                        validation=GeneratedExportTreeValidationContext(
-                            registry_root=check_registry_root,
-                            source_root=bundled_path(),
-                            target=ExportFragmentTarget(
-                                modelo=tree.modelo, revision_id=tree.revision, design_epoch=tree.epoch
-                            ),
-                            filing_year=tree.filing_year,
-                            period=tree.period,
-                            supporting_modelos=supporting_modelos(tree),
-                            continuity_metadata_modelo_root=metadata_root,
-                        ),
-                        temporary_root=check_root,
-                        target_registry_root=bundled_path("registry", "aeat"),
-                        target_export_root=tree.committed,
-                        published_modelo_root=published_modelo_root,
-                    ),
-                    joined=joined,
-                    semantic_map=semantic_map,
-                    transport_profile=transport,
-                    render_profile=render_profile,
-                    render_profile_source_evidence=evidence,
-                )
+                run_check()
             assert _committed_tree_hashes(tree) == before
             assert transport.encoding is ExportEncoding.ISO_8859_1
             return
 
-        checked = check_generated_export_tree(
-            context=GeneratedExportTreeCheckContext(
-                validation=GeneratedExportTreeValidationContext(
-                    registry_root=check_registry_root,
-                    source_root=bundled_path(),
-                    target=ExportFragmentTarget(modelo=tree.modelo, revision_id=tree.revision, design_epoch=tree.epoch),
-                    filing_year=tree.filing_year,
-                    period=tree.period,
-                    supporting_modelos=supporting_modelos(tree),
-                    continuity_metadata_modelo_root=metadata_root,
-                ),
-                temporary_root=check_root,
-                target_registry_root=bundled_path("registry", "aeat"),
-                target_export_root=tree.committed,
-                published_modelo_root=published_modelo_root,
-            ),
-            joined=joined,
-            semantic_map=semantic_map,
-            transport_profile=transport,
-            render_profile=render_profile,
-            render_profile_source_evidence=evidence,
-        )
+        checked = run_check()
         assert _committed_tree_hashes(tree) == before
         assert checked.published_manifest == checked.candidate.provenance_manifest
         assert normalised_loader_semantics(checked.published_layout) == normalised_loader_semantics(

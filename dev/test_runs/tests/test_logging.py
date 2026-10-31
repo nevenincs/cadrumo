@@ -6,7 +6,6 @@ import json
 import os
 import re
 import shutil
-import subprocess
 import sys
 from io import StringIO
 from pathlib import Path
@@ -16,7 +15,7 @@ import pytest
 from coverage import CoverageData
 
 from dev._paths import REPO_ROOT
-from dev.packaging.command_execution import run_command
+from dev.packaging.command_execution import CommandResult, run_command
 from dev.test_runs.logging import RunLog, _redirect_collection_output
 from dev.test_runs.paths import (
     SCRATCH_PREFIX,
@@ -302,7 +301,16 @@ def test_coverage_refuses_output_outside_the_admitted_temporary_tree(tmp_path: P
     assert not refused.parent.exists()
 
 
-def _child_run_log(result: subprocess.CompletedProcess[str]) -> Path:
+def _run_child_pytest(*pytest_arguments: str, env: dict[str, str]) -> CommandResult:
+    return run_command(
+        [sys.executable, "-m", "pytest", *pytest_arguments],
+        cwd=REPO_ROOT,
+        environment=env,
+        errors="replace",
+    )
+
+
+def _child_run_log(result: CommandResult) -> Path:
     """Return the run log a finished child pytest controller announced."""
     match = re.search(r"test run log: (?P<path>.+?run\.log)", result.stdout)
     assert match is not None, result.stdout + result.stderr
@@ -346,15 +354,11 @@ def test_a_refused_removal_is_recorded_in_the_run_log_and_never_raised(tmp_path:
 
 
 def test_a_passing_run_removes_its_scratch_and_leaves_its_run_log() -> None:
-    result = subprocess.run(
-        [sys.executable, "-m", "pytest", "-q", "-n0", "dev/test_runs/tests/setup_skip_probe.py"],
-        cwd=REPO_ROOT,
+    result = _run_child_pytest(
+        "-q",
+        "-n0",
+        "dev/test_runs/tests/setup_skip_probe.py",
         env=_top_level_environment(),
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-        check=False,
     )
     output, run_log = result.stdout + result.stderr, _child_run_log(result)
 
@@ -367,15 +371,11 @@ def test_a_passing_run_removes_its_scratch_and_leaves_its_run_log() -> None:
 
 
 def test_a_failing_run_removes_its_scratch() -> None:
-    result = subprocess.run(
-        [sys.executable, "-m", "pytest", "-q", "-n0", "dev/test_runs/tests/failing_probe.py"],
-        cwd=REPO_ROOT,
+    result = _run_child_pytest(
+        "-q",
+        "-n0",
+        "dev/test_runs/tests/failing_probe.py",
         env=_top_level_environment(),
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-        check=False,
     )
     output, run_log = result.stdout + result.stderr, _child_run_log(result)
 
@@ -400,15 +400,11 @@ def test_a_passing_run_that_read_the_registry_removes_its_scratch() -> None:
 
     Released at session end, the snapshot and the scratch around it go with the run.
     """
-    result = subprocess.run(
-        [sys.executable, "-m", "pytest", "-q", "-n0", "dev/test_runs/tests/authority_probe.py"],
-        cwd=REPO_ROOT,
+    result = _run_child_pytest(
+        "-q",
+        "-n0",
+        "dev/test_runs/tests/authority_probe.py",
         env=_registry_reading_environment(),
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-        check=False,
     )
     output, run_log = result.stdout + result.stderr, _child_run_log(result)
 
@@ -420,25 +416,14 @@ def test_a_passing_run_that_read_the_registry_removes_its_scratch() -> None:
 
 def test_deselected_prorrata_suite_does_not_retain_authority_at_collection() -> None:
     """A collected but deselected suite never starts its authority lease lifetime."""
-    result = subprocess.run(
-        [
-            sys.executable,
-            "-m",
-            "pytest",
-            "--collect-only",
-            "-q",
-            "-n0",
-            "-m",
-            "serial",
-            "src/cadrumo/adapters/persistence/profile/tests/test_prorrata_lifecycle_atomic_sources.py",
-        ],
-        cwd=REPO_ROOT,
+    result = _run_child_pytest(
+        "--collect-only",
+        "-q",
+        "-n0",
+        "-m",
+        "serial",
+        "src/cadrumo/adapters/persistence/profile/tests/test_prorrata_lifecycle_atomic_sources.py",
         env=_registry_reading_environment(),
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-        check=False,
     )
     output, run_log = result.stdout + result.stderr, _child_run_log(result)
     scratch = _scratch_of(run_log)
@@ -454,15 +439,12 @@ def test_deselected_prorrata_suite_does_not_retain_authority_at_collection() -> 
 
 def test_a_parallel_run_that_read_the_registry_removes_its_scratch() -> None:
     """Workers read the controller's snapshot and are gone before the controller removes it."""
-    result = subprocess.run(
-        [sys.executable, "-m", "pytest", "-q", "-n", "2", "dev/test_runs/tests/authority_probe.py"],
-        cwd=REPO_ROOT,
+    result = _run_child_pytest(
+        "-q",
+        "-n",
+        "2",
+        "dev/test_runs/tests/authority_probe.py",
         env=_registry_reading_environment(),
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-        check=False,
     )
     output, run_log = result.stdout + result.stderr, _child_run_log(result)
 
@@ -473,23 +455,12 @@ def test_a_parallel_run_that_read_the_registry_removes_its_scratch() -> None:
 
 
 def test_a_failing_run_that_read_the_registry_removes_its_scratch() -> None:
-    result = subprocess.run(
-        [
-            sys.executable,
-            "-m",
-            "pytest",
-            "-q",
-            "-n0",
-            "dev/test_runs/tests/authority_probe.py",
-            "dev/test_runs/tests/failing_probe.py",
-        ],
-        cwd=REPO_ROOT,
+    result = _run_child_pytest(
+        "-q",
+        "-n0",
+        "dev/test_runs/tests/authority_probe.py",
+        "dev/test_runs/tests/failing_probe.py",
         env=_registry_reading_environment(),
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-        check=False,
     )
     output, run_log = result.stdout + result.stderr, _child_run_log(result)
     scratch = _scratch_of(run_log)
@@ -503,15 +474,11 @@ def test_a_failing_run_that_read_the_registry_removes_its_scratch() -> None:
 
 def test_a_lease_left_open_is_reported_and_leaves_the_runs_verdict_alone() -> None:
     """A release refused under a live lease is reported, never raised, and the run still passes."""
-    result = subprocess.run(
-        [sys.executable, "-m", "pytest", "-q", "-n0", "dev/test_runs/tests/authority_probe.py"],
-        cwd=REPO_ROOT,
+    result = _run_child_pytest(
+        "-q",
+        "-n0",
+        "dev/test_runs/tests/authority_probe.py",
         env=_registry_reading_environment(leak_lease=True),
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-        check=False,
     )
     output, run_log = result.stdout + result.stderr, _child_run_log(result)
     scratch = _scratch_of(run_log)
@@ -544,24 +511,13 @@ def test_collect_only_terminal_output_is_redirected_to_the_run_log(tmp_path: Pat
 def test_real_child_pytest_persists_internal_error_traceback() -> None:
     environment = _top_level_environment()
     environment["CADRUMO_INTERNAL_ERROR_PROBE"] = "1"
-    result = subprocess.run(
-        [
-            sys.executable,
-            "-m",
-            "pytest",
-            "-q",
-            "-n0",
-            "-p",
-            "dev.test_runs.tests.internal_error_probe",
-            "dev/test_runs/tests/path_probe.py",
-        ],
-        cwd=REPO_ROOT,
+    result = _run_child_pytest(
+        "-q",
+        "-n0",
+        "-p",
+        "dev.test_runs.tests.internal_error_probe",
+        "dev/test_runs/tests/path_probe.py",
         env=environment,
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-        check=False,
     )
 
     assert result.returncode == pytest.ExitCode.INTERNAL_ERROR, result.stdout + result.stderr
@@ -575,15 +531,11 @@ def test_real_child_pytest_persists_internal_error_traceback() -> None:
 def test_real_child_pytest_records_a_setup_skip_as_the_tests_verdict() -> None:
     """A test skipped before its body still ends its ``RUN`` line with a verdict."""
     environment = _top_level_environment()
-    result = subprocess.run(
-        [sys.executable, "-m", "pytest", "-q", "-n0", "dev/test_runs/tests/setup_skip_probe.py"],
-        cwd=REPO_ROOT,
+    result = _run_child_pytest(
+        "-q",
+        "-n0",
+        "dev/test_runs/tests/setup_skip_probe.py",
         env=environment,
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-        check=False,
     )
 
     assert result.returncode == pytest.ExitCode.OK, result.stdout + result.stderr
@@ -605,22 +557,11 @@ def test_real_child_pytest_confines_cache_and_basetemp_to_its_run(tmp_path: Path
     environment["XDG_CACHE_HOME"] = str(ambient_cache)
     configured_storage = tmp_path / "configured-storage"
     environment["CADRUMO_STORAGE_ROOT"] = str(configured_storage)
-    result = subprocess.run(
-        [
-            sys.executable,
-            "-m",
-            "pytest",
-            "-q",
-            "-n0",
-            "dev/test_runs/tests/path_probe.py",
-        ],
-        cwd=REPO_ROOT,
+    result = _run_child_pytest(
+        "-q",
+        "-n0",
+        "dev/test_runs/tests/path_probe.py",
         env=environment,
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-        check=False,
     )
 
     assert result.returncode == 0, result.stdout + result.stderr
@@ -650,28 +591,17 @@ def test_parallel_workers_each_get_a_private_basetemp_inside_the_run(tmp_path: P
     records.mkdir()
     environment = _top_level_environment()
     environment["CADRUMO_WORKER_BASETEMP_PROBE"] = str(records)
-    result = subprocess.run(
-        [
-            sys.executable,
-            "-m",
-            "pytest",
-            "-q",
-            "-n",
-            "2",
-            # `each` rather than the default `load`: the probe's tests are fast
-            # enough that load-balancing hands every one of them to the first
-            # free worker, which proves nothing about two workers at once.
-            "--dist",
-            "each",
-            "dev/test_runs/tests/worker_basetemp_probe.py",
-        ],
-        cwd=REPO_ROOT,
+    result = _run_child_pytest(
+        "-q",
+        "-n",
+        "2",
+        # `each` rather than the default `load`: the probe's tests are fast
+        # enough that load-balancing hands every one of them to the first
+        # free worker, which proves nothing about two workers at once.
+        "--dist",
+        "each",
+        "dev/test_runs/tests/worker_basetemp_probe.py",
         env=environment,
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-        check=False,
     )
 
     assert result.returncode == 0, result.stdout + result.stderr

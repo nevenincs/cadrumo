@@ -49,6 +49,7 @@ from ..workbook_parity_libreoffice import (
 from ..workbook_parity_models import (
     SyntheticInputSet,
     SyntheticInputValue,
+    WorkbookArtefactReport,
     WorkbookCellRef,
 )
 from ..workbook_parity_scanning import (
@@ -346,7 +347,7 @@ def test_discover_workbooks_requires_existing_root(tmp_path: Path) -> None:
         discover_workbooks(missing)
 
 
-def test_compare_registry_to_workbook_reports_mismatch(tmp_path: Path) -> None:
+def _scanned_formula_workbook_with_synthetic_input(tmp_path: Path) -> tuple[WorkbookArtefactReport, SyntheticInputSet]:
     workbook_path = tmp_path / "modelo_303" / "files" / "303-test.xlsx"
     _write_formula_workbook(workbook_path)
     workbook = scan_workbook(workbook_path, root=tmp_path)
@@ -363,6 +364,11 @@ def test_compare_registry_to_workbook_reports_mismatch(tmp_path: Path) -> None:
             ),
         ),
     )
+    return workbook, synthetic
+
+
+def test_compare_registry_to_workbook_reports_mismatch(tmp_path: Path) -> None:
+    workbook, synthetic = _scanned_formula_workbook_with_synthetic_input(tmp_path)
 
     report = compare_registry_to_workbook(
         synthetic_input=synthetic,
@@ -385,22 +391,7 @@ def test_compare_registry_to_workbook_reports_mismatch(tmp_path: Path) -> None:
 
 
 def test_compare_registry_to_workbook_rejects_missing_grounding(tmp_path: Path) -> None:
-    workbook_path = tmp_path / "modelo_303" / "files" / "303-test.xlsx"
-    _write_formula_workbook(workbook_path)
-    workbook = scan_workbook(workbook_path, root=tmp_path)
-    synthetic = SyntheticInputSet(
-        id="synthetic-303-basic",
-        modelo="303",
-        revision="2026",
-        values=(
-            SyntheticInputValue(
-                id="base",
-                value=Decimal("10"),
-                workbook_cell=WorkbookCellRef(sheet="Modelo", coordinate="A1"),
-                registry_binding="iva.base",
-            ),
-        ),
-    )
+    workbook, synthetic = _scanned_formula_workbook_with_synthetic_input(tmp_path)
 
     with pytest.raises(RegistryValidationError, match="missing legal_refs"):
         compare_registry_to_workbook(
@@ -441,22 +432,7 @@ def test_compare_registry_to_workbook_rejects_missing_grounding(tmp_path: Path) 
 
 
 def test_compare_registry_to_workbook_rejects_missing_registry_output(tmp_path: Path) -> None:
-    workbook_path = tmp_path / "modelo_303" / "files" / "303-test.xlsx"
-    _write_formula_workbook(workbook_path)
-    workbook = scan_workbook(workbook_path, root=tmp_path)
-    synthetic = SyntheticInputSet(
-        id="synthetic-303-basic",
-        modelo="303",
-        revision="2026",
-        values=(
-            SyntheticInputValue(
-                id="base",
-                value=Decimal("10"),
-                workbook_cell=WorkbookCellRef(sheet="Modelo", coordinate="A1"),
-                registry_binding="iva.base",
-            ),
-        ),
-    )
+    workbook, synthetic = _scanned_formula_workbook_with_synthetic_input(tmp_path)
 
     with pytest.raises(RegistryValidationError, match="output ids must match exactly"):
         compare_registry_to_workbook(

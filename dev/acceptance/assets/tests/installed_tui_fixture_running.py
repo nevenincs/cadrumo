@@ -2,20 +2,14 @@
 
 from __future__ import annotations
 
-import argparse
 import json
-from pathlib import Path
+
+from ._installed_tui_fixture_support import parse_receipt_path
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--receipt", required=True, type=Path)
-    parser.add_argument("--workspace-root")
-    parser.add_argument("--profile-label")
-    parser.add_argument("--journey")
-    parser.add_argument("--profile-bootstrap")
-    args = parser.parse_args()
-    args.receipt.write_text(
+    receipt = parse_receipt_path()
+    receipt.write_text(
         json.dumps({"status": "running", "stage": "fixture_running"}) + "\n",
         encoding="utf-8",
     )
