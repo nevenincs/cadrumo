@@ -7,6 +7,7 @@ import {
 } from "react";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
+import { Textarea } from "@/components/ui/textarea";
 import {
   MAX_CONTINUATION_CHARS,
   characters,
@@ -272,7 +273,7 @@ export function Composer({
   return (
     <ComposerSuggestions state={suggestions}>
       <div className="rounded-xl bg-card text-card-foreground shadow-raised has-[textarea:focus-visible]:outline-(length:--focus-ring) has-[textarea:focus-visible]:outline-offset-(length:--focus-ring) has-[textarea:focus-visible]:outline-solid">
-        <textarea
+        <Textarea
           ref={field}
           rows={1}
           value={draft}
@@ -283,7 +284,7 @@ export function Composer({
           onSelect={suggestions.onCaret}
           onClick={suggestions.onCaret}
           onKeyDown={onKeyDown}
-          className="block w-full resize-none bg-transparent px-3 pt-3 pb-1 text-base text-foreground placeholder:text-faint focus-visible:outline-none"
+          className="resize-none rounded-none border-0 bg-transparent px-3 pt-3 pb-1 focus-visible:outline-none"
         />
         <div className="flex min-w-0 items-center gap-1 px-2 pb-2">
           <AgentIconAction

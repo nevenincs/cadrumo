@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Spinner } from "@/components/ui/spinner";
 import {
   Dialog,
@@ -313,6 +313,32 @@ function activeWords(
     case "failed":
       return "";
   }
+}
+
+/** The code is a secret: it stays hidden unless the person shows it, and it
+ * is hidden again whenever the field is drawn anew. */
+function AuthorizationCodeField({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  const t = useStrings();
+  const [revealed, setRevealed] = useState(false);
+  return (
+    <PasswordInput
+      id="provider-authorization-code"
+      value={value}
+      onChange={(event) => onChange(event.target.value)}
+      revealed={revealed}
+      onRevealedChange={setRevealed}
+      showLabel={t("desktop.signin.show_password")}
+      hideLabel={t("desktop.signin.hide_password")}
+      autoComplete="one-time-code"
+      maxLength={2048}
+    />
+  );
 }
 
 /**
@@ -811,13 +837,7 @@ export function ProviderSignInDialog({
                   <label htmlFor="provider-authorization-code">
                     {t("desktop.providers.sign_in_code_label")}
                   </label>
-                  <Input
-                    id="provider-authorization-code"
-                    value={code}
-                    onChange={(event) => setCode(event.target.value)}
-                    autoComplete="off"
-                    maxLength={2048}
-                  />
+                  <AuthorizationCodeField value={code} onChange={setCode} />
                   <Button
                     size="sm"
                     disabled={

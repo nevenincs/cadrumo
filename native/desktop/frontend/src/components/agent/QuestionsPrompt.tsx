@@ -2,6 +2,7 @@ import { RadioGroup as RadioGroupPrimitive } from "radix-ui";
 import { useId, useState } from "react";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Icon } from "@/components/ui/icon";
+import { Textarea } from "@/components/ui/textarea";
 import {
   answerFaults,
   characters,
@@ -194,7 +195,7 @@ function QuestionField({
   return (
     <Field data-invalid={words ? "true" : undefined}>
       {label}
-      <textarea
+      <Textarea
         id={fieldId}
         rows={2}
         value={value}
@@ -208,7 +209,6 @@ function QuestionField({
           if (event.key === "Enter" && !event.nativeEvent.isComposing)
             event.preventDefault();
         }}
-        className="block w-full resize-y rounded-md border bg-background px-2.5 py-1.5 text-base text-foreground aria-invalid:border-destructive focus-visible:outline-(length:--focus-ring) focus-visible:outline-offset-(length:--focus-ring) focus-visible:outline-solid"
       />
       <FieldError id={errorId}>{words}</FieldError>
     </Field>

@@ -1,6 +1,5 @@
 import { useId, useState, type ReactElement } from "react";
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
 import {
   Popover,
@@ -8,6 +7,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { listOf } from "@/shared/lists";
+import { TextEditor } from "@/components/editors/TextEditor";
 import { startingSelection } from "../../shell/agentCatalog";
 import { useStrings } from "../../shell/strings";
 import { ProviderSelect } from "./ProviderSelect";
@@ -130,17 +130,11 @@ export function AgentSettingsPopover({
           <FieldLabel htmlFor={modelId}>{t("desktop.agent.model")}</FieldLabel>
           {way?.modelWritten ? (
             <>
-              <Input
+              <TextEditor
                 id={modelId}
                 controlSize="sm"
                 value={selection.modelId}
-                spellCheck={false}
-                autoCapitalize="off"
-                autoCorrect="off"
-                autoComplete="off"
-                onChange={(event) =>
-                  onChange({ ...selection, modelId: event.target.value })
-                }
+                onChange={(modelId) => onChange({ ...selection, modelId })}
               />
               <FieldDescription>
                 {t("desktop.agent.model_written")}
