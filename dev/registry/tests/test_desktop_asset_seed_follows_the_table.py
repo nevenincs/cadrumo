@@ -229,9 +229,7 @@ def test_the_seeded_wholly_business_facts_have_the_served_values_and_shape() -> 
     }
 
     assert seeded
-    assert seeded == {
-        stage.value: dict(WHOLLY_BUSINESS_STAGE_FACTS.get(stage, {})) for stage in BASIS_STAGE_FACTS
-    }
+    assert seeded == {stage.value: dict(WHOLLY_BUSINESS_STAGE_FACTS.get(stage, {})) for stage in BASIS_STAGE_FACTS}
 
 
 def test_the_seeded_opening_statuses_serve_the_facts_the_domain_table_states() -> None:
