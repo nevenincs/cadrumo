@@ -11,13 +11,13 @@ import pytest
 from ......core.config import override_settings
 from ......tests.log_records import delivered_text
 from ...bucket.errors import BucketLockedError
+from ...tests.registered_bucket import publish_registration_capsule
 from ..active_session import (
     NoActiveBucketSessionError,
     activate_session,
     get_active_master_key,
 )
 from ..bucket_session import BucketSession
-from ._master_key_support import _publish_registration_capsule
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -109,4 +109,4 @@ def _write_registered_bucket(root: Path, bucket_id: str) -> None:
     # Publication owns the bucket directory: it arrives by the capsule's
     # no-replace rename, never by provisioning it first. The plaintext manifest
     # this also wrote is retired, and nothing in production read it back.
-    _publish_registration_capsule(root, bucket_id)
+    publish_registration_capsule(root, bucket_id)

@@ -16,21 +16,16 @@ alike) must call to get it.
 from __future__ import annotations
 
 import json
-from base64 import b64encode
 from pathlib import Path
 from uuid import UUID
 
 import pytest
 
-from cadrumo.adapters.persistence.storage.custody.records import (
-    ProfileCustodyEnvelope,
-    ProfileCustodyKdfParameters,
-    ProfileCustodyWrappedDek,
-)
 from cadrumo.adapters.persistence.storage.custody.sentinel import create_profile_custody_sentinel
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     profile_authority_contexts as _profile_contexts_for_test,
 )
+from cadrumo.adapters.persistence.storage.tests.registered_bucket import registration_envelope
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.operator_output.emit import emit_operator_json_success
 from cadrumo.application.operator_output.sandbox_notice import sandbox_banner_line, sandbox_notice_for_active_bucket
@@ -52,25 +47,7 @@ def _create_committed_profile(root: Path, *, bucket_id: str, label: str) -> None
     """Create and select the real committed capsule that owns the label projection."""
     _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     profile_id = UUID(bucket_id)
-    envelope = ProfileCustodyEnvelope.create(
-        profile_id=profile_id,
-        password_generation=1,
-        dek_epoch=b64encode(b"e" * 16).decode("ascii"),
-        kdf=ProfileCustodyKdfParameters(
-            algorithm="argon2id",
-            version=19,
-            memory_mib=19,
-            iterations=2,
-            parallelism=1,
-            salt_b64=b64encode(b"k" * 16).decode("ascii"),
-            output_bytes=32,
-        ),
-        wrapped_dek=ProfileCustodyWrappedDek(
-            nonce_b64=b64encode(b"n" * 12).decode("ascii"),
-            ciphertext_b64=b64encode(b"c" * 32).decode("ascii"),
-            tag_b64=b64encode(b"t" * 16).decode("ascii"),
-        ),
-    )
+    envelope = registration_envelope(profile_id)
     session = ProfileRecordSession.from_envelope(
         envelope=envelope, dek=_DEK, profile_decode_context=_profile_decode_context_for_test
     )

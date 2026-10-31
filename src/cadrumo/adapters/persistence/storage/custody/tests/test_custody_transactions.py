@@ -28,8 +28,6 @@ from cadrumo.adapters.persistence.storage.custody.capsule_records import Profile
 from cadrumo.adapters.persistence.storage.custody.errors import ProfileCustodyRecordError
 from cadrumo.adapters.persistence.storage.custody.records import (
     ProfileCustodyEnvelope,
-    ProfileCustodyKdfParameters,
-    ProfileCustodyWrappedDek,
 )
 from cadrumo.adapters.persistence.storage.custody.sentinel import create_profile_custody_sentinel
 from cadrumo.adapters.persistence.storage.custody.sentinel_contract import ProfileCustodySentinelRecord
@@ -39,6 +37,7 @@ from cadrumo.adapters.persistence.storage.master_key.active_session import (
     current_active_bucket_session,
 )
 from cadrumo.adapters.persistence.storage.master_key.bucket_session import BucketSession
+from cadrumo.adapters.persistence.storage.tests.registered_bucket import registration_envelope
 from cadrumo.application import user_profile as user_profiles
 from cadrumo.application.evidence.profile_legal_hold import LegalHoldCaseAuthority
 from cadrumo.application.filing.retention import FilingRetentionAuthority
@@ -129,25 +128,7 @@ def _create_capsule_input(
     *,
     profile_id: UUID = _PROFILE_ID,
 ) -> tuple[ProfileCustodyEnvelope, ProfileCustodySentinelRecord, dict[str, bytes]]:
-    envelope = ProfileCustodyEnvelope.create(
-        profile_id=profile_id,
-        password_generation=1,
-        dek_epoch=b64encode(b"e" * 16).decode("ascii"),
-        kdf=ProfileCustodyKdfParameters(
-            algorithm="argon2id",
-            version=19,
-            memory_mib=19,
-            iterations=2,
-            parallelism=1,
-            salt_b64=b64encode(b"k" * 16).decode("ascii"),
-            output_bytes=32,
-        ),
-        wrapped_dek=ProfileCustodyWrappedDek(
-            nonce_b64=b64encode(b"n" * 12).decode("ascii"),
-            ciphertext_b64=b64encode(b"c" * 32).decode("ascii"),
-            tag_b64=b64encode(b"t" * 16).decode("ascii"),
-        ),
-    )
+    envelope = registration_envelope(profile_id)
     return (
         envelope,
         create_profile_custody_sentinel(envelope=envelope, dek=bytes(range(32))),

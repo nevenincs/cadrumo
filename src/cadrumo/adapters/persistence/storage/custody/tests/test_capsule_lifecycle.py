@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from base64 import b64encode
 from hashlib import sha256
 from multiprocessing import get_context
 from pathlib import Path
@@ -22,8 +21,6 @@ from cadrumo.adapters.persistence.storage.custody.errors import (
 from cadrumo.adapters.persistence.storage.custody.label_head_repository import ProfileLabelHeadRepository
 from cadrumo.adapters.persistence.storage.custody.records import (
     ProfileCustodyEnvelope,
-    ProfileCustodyKdfParameters,
-    ProfileCustodyWrappedDek,
 )
 from cadrumo.adapters.persistence.storage.custody.sentinel import create_profile_custody_sentinel
 from cadrumo.adapters.persistence.storage.custody.sentinel_contract import ProfileCustodySentinelRecord
@@ -31,6 +28,7 @@ from cadrumo.adapters.persistence.storage.custody.tests.support import replace_t
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     profile_authority_contexts as _profile_contexts_for_test,
 )
+from cadrumo.adapters.persistence.storage.tests.registered_bucket import registration_envelope
 from cadrumo.application.user_profile.capsule_record import (
     ProfileRecordConflictError,
     ProfileRecordSession,
@@ -67,25 +65,7 @@ def _current_capsule_input(
     *,
     profile_id: UUID = _PROFILE_ID,
 ) -> tuple[ProfileCustodyEnvelope, ProfileCustodySentinelRecord, dict[str, bytes], bytes]:
-    envelope = ProfileCustodyEnvelope.create(
-        profile_id=profile_id,
-        password_generation=1,
-        dek_epoch=b64encode(b"e" * 16).decode("ascii"),
-        kdf=ProfileCustodyKdfParameters(
-            algorithm="argon2id",
-            version=19,
-            memory_mib=19,
-            iterations=2,
-            parallelism=1,
-            salt_b64=b64encode(b"k" * 16).decode("ascii"),
-            output_bytes=32,
-        ),
-        wrapped_dek=ProfileCustodyWrappedDek(
-            nonce_b64=b64encode(b"n" * 12).decode("ascii"),
-            ciphertext_b64=b64encode(b"c" * 32).decode("ascii"),
-            tag_b64=b64encode(b"t" * 16).decode("ascii"),
-        ),
-    )
+    envelope = registration_envelope(profile_id)
     dek = bytes(range(32))
     return (
         envelope,
