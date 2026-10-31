@@ -76,6 +76,8 @@ from cadrumo.domain.calculations.registry.tests.authority_lease_support import p
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, DisclosureCategory
 
+from ...tests.operation_host_fakes import RecordingEvents
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PROFILE = UUID("9aa00000-0000-4000-8000-000000000099")
@@ -250,18 +252,6 @@ def test_only_source_mutations_require_a_commit_grant() -> None:
             assert refused.value.reason is AccessDenialCode.OPERATION_DENIED
 
 
-class _Events:
-    def __init__(self) -> None:
-        self.phases: list[str] = []
-        self.effects: list[OperationEffect] = []
-
-    async def phase(self, phase_code: str) -> None:
-        self.phases.append(phase_code)
-
-    async def effect(self, effect: OperationEffect) -> None:
-        self.effects.append(effect)
-
-
 class _Cancellation:
     def __init__(self) -> None:
         self.inside_irreversible_section = False
@@ -276,7 +266,7 @@ class _Cancellation:
 
 
 class _Operands:
-    def __init__(self, cancellation: _Cancellation, events: _Events) -> None:
+    def __init__(self, cancellation: _Cancellation, events: RecordingEvents) -> None:
         self.cancellation = cancellation
         self.events = events
         self.value: BaseModel | None = None
@@ -299,7 +289,7 @@ class _Context:
             subject_ref=profile_operation_subject(str(_PROFILE)),
         )
         self.authority_operation = authority_operation
-        self.events = _Events()
+        self.events = RecordingEvents()
         self.cancellation = _Cancellation()
         self.operands = _Operands(self.cancellation, self.events)
 

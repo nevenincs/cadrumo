@@ -40,22 +40,12 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
+from ...tests.operation_host_fakes import RecordingEvents
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _DUPLICATE_MESSAGE = "adapters.persistence.profile.bienes_inversion.errors.record_already_exists"
-
-
-class _Events:
-    def __init__(self) -> None:
-        self.effects: list[OperationEffect] = []
-        self.phases: list[str] = []
-
-    async def phase(self, phase: str) -> None:
-        self.phases.append(phase)
-
-    async def effect(self, effect: OperationEffect) -> None:
-        self.effects.append(effect)
 
 
 class _Cancellation:
@@ -92,7 +82,7 @@ class _Context:
         )
         self._authority_operation = authority_operation
         self.authority_operation_reads = 0
-        self.events = _Events()
+        self.events = RecordingEvents()
         self.cancellation = _Cancellation()
         self.operands = _Operands(self.cancellation)
 

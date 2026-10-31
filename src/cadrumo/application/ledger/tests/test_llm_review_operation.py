@@ -35,6 +35,7 @@ from ...operations.models import OperationIdentity, OperationRequest, OperationT
 from ...operations.owner import OperationExecutorContext, OperationResumeCheckpoint
 from ...operations.persistence.journal import serialize_operation_operand
 from ...operations.registry import OperationFrontendProjection, OperationRegistry, operation_public_schema_reference
+from ...tests.operation_host_fakes import RecordingEvents
 from ...user_profile.access_contracts import SessionKind
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from .. import llm_review_execution as review_runtime
@@ -149,18 +150,6 @@ def _suggestion(baseline: Transaction, mode: _Mode, *, children: int = 2) -> Led
     return LLMSaturatedSuggestion.model_validate(basic.model_dump()) if mode == "saturated" else basic
 
 
-class _Events:
-    def __init__(self) -> None:
-        self.phases: list[str] = []
-        self.effects: list[OperationEffect] = []
-
-    async def phase(self, phase: str) -> None:
-        self.phases.append(phase)
-
-    async def effect(self, effect: OperationEffect) -> None:
-        self.effects.append(effect)
-
-
 class _Operands:
     def __init__(self) -> None:
         self.values: dict[str, bytes] = {}
@@ -231,7 +220,7 @@ class _Case:
             llm=cast(LLMClassificationPorts, SimpleNamespace()),
             settings=cast(Settings, object()),
         )
-        self.events = _Events()
+        self.events = RecordingEvents()
         self.operands = _Operands()
         self.interactions = _Interactions(self.operands)
         self.in_commit = False

@@ -24,6 +24,7 @@ from ...operations.models import OperationIdentity, OperationRequest, OperationT
 from ...operations.owner import OperationExecutorContext
 from ...operations.refusal_evidence import OperationRefusalEvidence
 from ...operations.registry import OperationFrontendProjection, OperationRegistry
+from ...tests.operation_host_fakes import RecordingEvents
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from .. import operator_iva_contracts as operator_contracts
 from .. import operator_iva_operation as subject
@@ -41,18 +42,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _OTHER = UUID("6bb00000-0000-4000-8000-0000000000bb")
 _CATEGORY = "domestic_general"
-
-
-class _Events:
-    def __init__(self) -> None:
-        self.effects: list[OperationEffect] = []
-        self.phases: list[str] = []
-
-    async def phase(self, phase: str) -> None:
-        self.phases.append(phase)
-
-    async def effect(self, effect: OperationEffect) -> None:
-        self.effects.append(effect)
 
 
 class _Operands:
@@ -77,7 +66,7 @@ class _ExecutorPort:
         self.loads = 0
         self.writes: list[dict[str, object]] = []
         self.writer_failure: Exception | None = None
-        self.events = _Events()
+        self.events = RecordingEvents()
         self.operands = _Operands()
         owner = self
 

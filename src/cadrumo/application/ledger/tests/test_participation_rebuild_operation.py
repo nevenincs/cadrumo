@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import AsyncGenerator, Iterable
-from contextlib import asynccontextmanager
+from collections.abc import Iterable
 from datetime import datetime
 from typing import cast
 from uuid import UUID, uuid4
@@ -41,6 +40,7 @@ from ...operations.registry import (
     OperationPublicDefinitionRegistrationV1,
     OperationRegistry,
 )
+from ...tests.operation_host_fakes import IrreversibleSectionGrant, RecordingEvents
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..participation_rebuild_operation import (
     LEDGER_PARTICIPATION_REBUILD_OPERATION_DEFINITION_ID,
@@ -86,24 +86,6 @@ class _MisboundIndexRepository:
         raise AssertionError("replace_all ran against a foreign profile bucket")
 
 
-class _Events:
-    def __init__(self) -> None:
-        self.phases: list[str] = []
-        self.effects: list[OperationEffect] = []
-
-    async def phase(self, phase_code: str) -> None:
-        self.phases.append(phase_code)
-
-    async def effect(self, effect: OperationEffect) -> None:
-        self.effects.append(effect)
-
-
-class _Cancellation:
-    @asynccontextmanager
-    async def irreversible_section(self) -> AsyncGenerator[None]:
-        yield
-
-
 class _Operands:
     async def put(self, value: BaseModel, *, written_at: datetime) -> str:
         del value, written_at
@@ -111,7 +93,7 @@ class _Operands:
 
 
 class _Context:
-    def __init__(self, operation: PinnedAuthorityOperation, events: _Events) -> None:
+    def __init__(self, operation: PinnedAuthorityOperation, events: RecordingEvents) -> None:
         self.identity = OperationIdentity(
             operation_id=uuid4().hex * 2,
             definition_id=LEDGER_PARTICIPATION_REBUILD_OPERATION_DEFINITION_ID,
@@ -119,7 +101,7 @@ class _Context:
         )
         self.authority_operation = operation
         self.events = events
-        self.cancellation = _Cancellation()
+        self.cancellation = IrreversibleSectionGrant()
         self.operands = _Operands()
 
 
@@ -295,7 +277,7 @@ async def test_rebuild_refuses_foreign_index_bucket_before_source_reads_or_repla
         subject_ref=profile_operation_subject(str(_PROFILE)),
         payload=LedgerParticipationRebuildRequest(profile_id=_PROFILE),
     )
-    events = _Events()
+    events = RecordingEvents()
     context = _Context(operation, events)
 
     with pytest.raises(ProfileAccessRefusedError) as error:

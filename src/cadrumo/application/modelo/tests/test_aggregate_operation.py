@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Iterator, Mapping, Sequence
-from contextlib import asynccontextmanager
 from dataclasses import replace
 from datetime import UTC, date, datetime
 from decimal import Decimal
@@ -55,6 +54,7 @@ from ...operations.owner import OperationExecutorContext
 from ...operations.public_period import PublicPeriod
 from ...operations.refusal_evidence import OperationRefusalEvidence
 from ...operations.registry import OperationFrontendProjection
+from ...tests.operation_host_fakes import IrreversibleSectionGrant, RecordingEvents
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..aggregate_contracts import (
     MODELO_AGGREGATE_OPERATION_DEFINITION_ID,
@@ -129,24 +129,6 @@ def _request(
             ledger_payment=ledger_payment,
         ),
     )
-
-
-class _Events:
-    def __init__(self) -> None:
-        self.phases: list[str] = []
-        self.effects: list[OperationEffect] = []
-
-    async def phase(self, value: str) -> None:
-        self.phases.append(value)
-
-    async def effect(self, value: OperationEffect) -> None:
-        self.effects.append(value)
-
-
-class _Cancellation:
-    @asynccontextmanager
-    async def irreversible_section(self):
-        yield
 
 
 class _Operands:
@@ -253,7 +235,7 @@ def _ports(
 
 
 def _executor_context(
-    events: _Events, operands: _Operands, *, authority_operation: PinnedAuthorityOperation | None = None
+    events: RecordingEvents, operands: _Operands, *, authority_operation: PinnedAuthorityOperation | None = None
 ) -> OperationExecutorContext:
     return cast(
         OperationExecutorContext,
@@ -264,7 +246,7 @@ def _executor_context(
                 subject_ref=profile_operation_subject(str(_PROFILE)),
             ),
             authority_operation=authority_operation,
-            cancellation=_Cancellation(),
+            cancellation=IrreversibleSectionGrant(),
             events=events,
             operands=operands,
         ),
@@ -435,7 +417,7 @@ def test_regular_aggregate_reads_profile_rows_and_publishes_no_evidence(
     monkeypatch: pytest.MonkeyPatch,
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
-    events = _Events()
+    events = RecordingEvents()
     operands = _Operands()
     retenciones = _RetencionRepository()
     window_service = _WindowService()
@@ -507,8 +489,8 @@ def _run_annual_190(
     monkeypatch: pytest.MonkeyPatch,
     authority_operation: PinnedAuthorityOperation,
     percepciones: _PercepcionRepository,
-) -> tuple[ModeloAggregateProjection, _Events]:
-    events = _Events()
+) -> tuple[ModeloAggregateProjection, RecordingEvents]:
+    events = RecordingEvents()
     operands = _Operands()
     window_service = _WindowService()
     ports = _ports(window_service=window_service, percepciones=percepciones)
@@ -595,7 +577,7 @@ def test_read_aggregate_retains_rows_and_generation_from_prepared_snapshot(
     monkeypatch: pytest.MonkeyPatch,
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
-    events = _Events()
+    events = RecordingEvents()
     operands = _Operands()
     service = _WindowService(generation=1, observations=(_snapshot_observation(),))
     ports = _ports(window_service=service)
@@ -640,7 +622,7 @@ def test_ledger_capture_reports_updated_or_replay_without_releasing_rows(
     replayed: bool,
     expected_effect: OperationEffect,
 ) -> None:
-    events = _Events()
+    events = RecordingEvents()
     operands = _Operands()
     window_service = _WindowService(generation=2, observations=(_snapshot_observation(),))
     ports = _ports(window_service=window_service)
@@ -713,7 +695,7 @@ def test_ledger_source_conflict_refuses_and_ambiguous_write_keeps_effect_unknown
     monkeypatch: pytest.MonkeyPatch,
     refusal_code: str,
 ) -> None:
-    events = _Events()
+    events = RecordingEvents()
     operands = _Operands()
     ports = _ports()
     executor = ModeloAggregateExecutor(
@@ -773,7 +755,7 @@ def test_ledger_source_conflict_refuses_and_ambiguous_write_keeps_effect_unknown
 def test_catalogue_revision_change_before_commit_refuses_without_producer_write(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    events = _Events()
+    events = RecordingEvents()
     operands = _Operands()
     transaction_repository = _TransactionRepository()
     transaction_repository.revisions = ["f" * 64]
@@ -818,7 +800,7 @@ def test_canonically_invalid_public_ledger_operands_refuse_before_capture(
     monkeypatch: pytest.MonkeyPatch,
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
-    events = _Events()
+    events = RecordingEvents()
     operands = _Operands()
     repository = _TransactionRepository()
     repository.revisions = ["b" * 64]

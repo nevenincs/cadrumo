@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-from contextlib import asynccontextmanager
 from dataclasses import replace
 from datetime import UTC, datetime
 from decimal import Decimal
@@ -25,6 +24,7 @@ from ...operations.capabilities import OperationRequestStoragePolicy
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
 from ...operations.owner import OperationExecutorContext
 from ...operations.registry import OperationFrontendProjection
+from ...tests.operation_host_fakes import IrreversibleSectionGrant, RecordingEvents
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..iva_wallet_balance_operation import (
     MODELO_IVA_WALLET_BALANCE_OPERATION_DEFINITION_ID,
@@ -44,24 +44,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _PROFILE = UUID("21212121-2121-4121-8121-212121212121")
 _OTHER_PROFILE = UUID("33333333-3333-4333-8333-333333333333")
 _AUTHORITY = object()
-
-
-class _Events:
-    def __init__(self) -> None:
-        self.phases: list[str] = []
-        self.effects: list[OperationEffect] = []
-
-    async def phase(self, value: str) -> None:
-        self.phases.append(value)
-
-    async def effect(self, value: OperationEffect) -> None:
-        self.effects.append(value)
-
-
-class _Cancellation:
-    @asynccontextmanager
-    async def irreversible_section(self):
-        yield
 
 
 class _Operands:
@@ -178,7 +160,7 @@ def test_balance_read_is_admitted_on_the_external_client_frontend_without_a_comm
     assert AccessAction.COMMIT not in resolved.policy.actions
 
 
-def _executor_context(events: _Events, operands: _Operands) -> OperationExecutorContext:
+def _executor_context(events: RecordingEvents, operands: _Operands) -> OperationExecutorContext:
     return cast(
         OperationExecutorContext,
         SimpleNamespace(
@@ -188,7 +170,7 @@ def _executor_context(events: _Events, operands: _Operands) -> OperationExecutor
                 subject_ref=profile_operation_subject(str(_PROFILE)),
             ),
             authority_operation=_AUTHORITY,
-            cancellation=_Cancellation(),
+            cancellation=IrreversibleSectionGrant(),
             events=events,
             operands=operands,
         ),
@@ -198,7 +180,7 @@ def _executor_context(events: _Events, operands: _Operands) -> OperationExecutor
 def test_executor_reads_exact_profile_and_year_inside_pinned_fact_scope(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    events = _Events()
+    events = RecordingEvents()
     operands = _Operands()
     repository = object()
     factory = _Factory(repository)
@@ -257,7 +239,7 @@ def test_executor_reads_exact_profile_and_year_inside_pinned_fact_scope(
 
 
 def test_executor_refuses_a_factory_bundle_for_another_profile(monkeypatch: pytest.MonkeyPatch) -> None:
-    events = _Events()
+    events = RecordingEvents()
     operands = _Operands()
     factory = _Factory(object(), selected_bucket=str(_OTHER_PROFILE))
     monkeypatch.setattr(

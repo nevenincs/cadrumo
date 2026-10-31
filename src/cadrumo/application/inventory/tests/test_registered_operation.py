@@ -34,6 +34,7 @@ from ...operations.models import OperationIdentity, OperationRequest, OperationT
 from ...operations.owner import OperationExecutorContext
 from ...operations.public_scalar import PublicDecimal
 from ...operations.refusal_evidence import OperationRefusalEvidence
+from ...tests.operation_host_fakes import RecordingEvents
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..errors import InventoryServiceInputError
 from ..ports import InventoryServicePorts
@@ -328,18 +329,6 @@ def test_every_correction_refusal_reason_is_a_public_reason_with_a_catalogue_key
     )
 
 
-class _Events:
-    def __init__(self) -> None:
-        self.effects: list[OperationEffect] = []
-        self.phases: list[str] = []
-
-    async def phase(self, phase: str) -> None:
-        self.phases.append(phase)
-
-    async def effect(self, effect: OperationEffect) -> None:
-        self.effects.append(effect)
-
-
 class _Cancellation:
     def __init__(self) -> None:
         self.inside = False
@@ -372,7 +361,7 @@ class _Context:
             definition_id=INVENTORY_CREATE_OPERATION_DEFINITION_ID,
             subject_ref=profile_operation_subject(str(_PROFILE)),
         )
-        self.events = _Events()
+        self.events = RecordingEvents()
         self.cancellation = _Cancellation()
         self.operands = _Operands(self.cancellation)
 

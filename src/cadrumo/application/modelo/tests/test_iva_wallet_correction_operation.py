@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-from contextlib import asynccontextmanager
 from dataclasses import replace
 from datetime import UTC, datetime
 from decimal import Decimal
@@ -32,6 +31,7 @@ from ...operations.models import OperationIdentity, OperationRequest, OperationT
 from ...operations.owner import OperationExecutorContext
 from ...operations.public_period import PublicPeriod
 from ...operations.registry import OperationFrontendProjection
+from ...tests.operation_host_fakes import IrreversibleSectionGrant, RecordingEvents
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..iva_wallet_correction_operation import (
     MODELO_IVA_WALLET_CORRECTION_OPERATION_DEFINITION_ID,
@@ -109,24 +109,6 @@ def _history_state(
         available_end_amount=amount,
         source_observation_key="synthetic-correction-history",
     )
-
-
-class _Events:
-    def __init__(self) -> None:
-        self.phases: list[str] = []
-        self.effects: list[OperationEffect] = []
-
-    async def phase(self, value: str) -> None:
-        self.phases.append(value)
-
-    async def effect(self, value: OperationEffect) -> None:
-        self.effects.append(value)
-
-
-class _Cancellation:
-    @asynccontextmanager
-    async def irreversible_section(self):
-        yield
 
 
 class _Operands:
@@ -240,7 +222,7 @@ def test_access_is_exact_profile_period_scoped_and_requires_commit() -> None:
     assert refused.value.reason is AccessDenialCode.PROFILE_MISMATCH
 
 
-def _executor_context(events: _Events, operands: _Operands) -> OperationExecutorContext:
+def _executor_context(events: RecordingEvents, operands: _Operands) -> OperationExecutorContext:
     return cast(
         OperationExecutorContext,
         SimpleNamespace(
@@ -250,7 +232,7 @@ def _executor_context(events: _Events, operands: _Operands) -> OperationExecutor
                 subject_ref=profile_operation_subject(str(_PROFILE)),
             ),
             authority_operation=_AUTHORITY,
-            cancellation=_Cancellation(),
+            cancellation=IrreversibleSectionGrant(),
             events=events,
             operands=operands,
         ),
@@ -263,7 +245,7 @@ def test_executor_uses_exact_bucket_pinned_authority_and_commit_receipt(
 ) -> None:
     prior = _history_state(Decimal("500.00"))
     state = _history_state(Decimal("1200.50"), provenance=IvaCompensationStateProvenance.OPERATOR_CORRECTION)
-    events = _Events()
+    events = RecordingEvents()
     operands = _Operands()
     factory = _Factory(history=_History(prior))
     seen: list[dict[str, object]] = []
@@ -318,7 +300,7 @@ def test_executor_uses_exact_bucket_pinned_authority_and_commit_receipt(
 
 @pytest.mark.usefixtures("operation")
 def test_known_seed_refusal_is_settled_with_no_effect(monkeypatch: pytest.MonkeyPatch) -> None:
-    events = _Events()
+    events = RecordingEvents()
     operands = _Operands()
     factory = _Factory(history=_History(_history_state(Decimal("500.00"))))
     monkeypatch.setattr(

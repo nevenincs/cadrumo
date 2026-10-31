@@ -20,6 +20,7 @@ from ....domain.transactions.own_accounts import OwnAccountRegister
 from ...operations.execution_actor import OperationExecutionCaller
 from ...operations.models import OperationIdentity, OperationRequest
 from ...operations.registry import OperationFrontendProjection
+from ...tests.operation_host_fakes import RecordingEvents
 from ...user_profile.access_contracts import SessionKind
 from ..actions_import import LedgerProviderID
 from ..import_operation import (
@@ -57,18 +58,6 @@ def test_import_request_refuses_a_path_the_runtime_would_place_itself(
         LedgerImportRequest(
             profile_id=_PROFILE, files=(statement,), provider=LedgerProviderID.CSV, verify_source=verify_source
         )
-
-
-class _Events:
-    def __init__(self) -> None:
-        self.phases: list[str] = []
-        self.effects: list[OperationEffect] = []
-
-    async def phase(self, phase: str) -> None:
-        self.phases.append(phase)
-
-    async def effect(self, effect: OperationEffect) -> None:
-        self.effects.append(effect)
 
 
 class _Cancellation:
@@ -166,7 +155,7 @@ def test_over_budget_file_is_refused_before_persist_and_later_small_file_fits(
     prepared_paths: list[str] = []
     persisted_paths: list[str] = []
     cancellation = _Cancellation()
-    events = _Events()
+    events = RecordingEvents()
     stored: list[LedgerImportExecutionResult] = []
     repository = ProfileOnlyCatalogueRepository[TransactionCatalogue](str(_PROFILE))
 
@@ -270,7 +259,7 @@ def test_a_file_whose_parsed_bytes_differ_from_the_preview_digest_is_refused_bef
             subject_ref=profile_operation_subject(str(_PROFILE)),
         ),
         authority_operation=operation,
-        events=_Events(),
+        events=RecordingEvents(),
         operands=_Operands(),
         cancellation=_Cancellation(),
     )
@@ -360,7 +349,7 @@ def test_each_source_is_staged_under_the_session_label_for_automation_and_the_pr
             subject_ref=profile_operation_subject(str(_PROFILE)),
         ),
         authority_operation=operation,
-        events=_Events(),
+        events=RecordingEvents(),
         operands=_Operands(),
         cancellation=_Cancellation(),
     )

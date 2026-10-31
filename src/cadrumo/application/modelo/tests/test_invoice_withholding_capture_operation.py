@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-from contextlib import asynccontextmanager
 from dataclasses import replace
 from datetime import UTC, datetime
 from decimal import Decimal
@@ -50,6 +49,7 @@ from ...operations.owner import OperationExecutorContext
 from ...operations.public_period import PublicPeriod
 from ...operations.refusal_evidence import OperationRefusalEvidence
 from ...operations.registry import OperationFrontendProjection
+from ...tests.operation_host_fakes import IrreversibleSectionGrant, RecordingEvents
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..invoice_withholding_capture_contracts import (
     MODELO_INVOICE_WITHHOLDING_CAPTURE_OPERATION_DEFINITION_ID,
@@ -296,24 +296,6 @@ def test_typed_annual_detail_preserves_all_canonical_fields_under_pinned_authori
         assert set(type(public.modelo_190_detail).model_fields) == set(WithholdingObservation.model_fields)
 
 
-class _Events:
-    def __init__(self) -> None:
-        self.phases: list[str] = []
-        self.effects: list[OperationEffect] = []
-
-    async def phase(self, value: str) -> None:
-        self.phases.append(value)
-
-    async def effect(self, value: OperationEffect) -> None:
-        self.effects.append(value)
-
-
-class _Cancellation:
-    @asynccontextmanager
-    async def irreversible_section(self):
-        yield
-
-
 class _Operands:
     def __init__(self) -> None:
         self.values: list[BaseModel] = []
@@ -325,7 +307,7 @@ class _Operands:
 
 
 def _executor_context(
-    events: _Events, operands: _Operands, *, authority_operation: PinnedAuthorityOperation | None = None
+    events: RecordingEvents, operands: _Operands, *, authority_operation: PinnedAuthorityOperation | None = None
 ) -> OperationExecutorContext:
     return cast(
         OperationExecutorContext,
@@ -336,7 +318,7 @@ def _executor_context(
                 subject_ref=profile_operation_subject(str(_PROFILE)),
             ),
             authority_operation=authority_operation,
-            cancellation=_Cancellation(),
+            cancellation=IrreversibleSectionGrant(),
             events=events,
             operands=operands,
         ),
@@ -419,7 +401,7 @@ def test_executor_effect_matches_replay_and_publishes_only_safe_result(
     replayed: bool,
     expected_effect: OperationEffect,
 ) -> None:
-    events = _Events()
+    events = RecordingEvents()
     operands = _Operands()
     executor = ModeloInvoiceWithholdingCaptureExecutor(
         cast(ModeloInvoiceWithholdingCapturePortsFactory, cast(object, lambda **_kwargs: None))
@@ -488,7 +470,7 @@ def test_executor_effect_matches_replay_and_publishes_only_safe_result(
 def test_prewrite_refusal_is_bounded_and_stored_as_secure_result_detail(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    events = _Events()
+    events = RecordingEvents()
     operands = _Operands()
     executor = ModeloInvoiceWithholdingCaptureExecutor(
         cast(ModeloInvoiceWithholdingCapturePortsFactory, cast(object, lambda **_kwargs: None))
@@ -539,7 +521,7 @@ def test_invoice_retencion_defects_refuse_naming_every_defect_under_their_own_co
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Every defect travels as a stable token under the defects code, never as a flattened generic reason."""
-    events = _Events()
+    events = RecordingEvents()
     operands = _Operands()
     executor = ModeloInvoiceWithholdingCaptureExecutor(
         cast(ModeloInvoiceWithholdingCapturePortsFactory, cast(object, lambda **_kwargs: None))
@@ -614,7 +596,7 @@ def test_invoice_source_conflict_refuses_and_ambiguous_mutation_keeps_effect_unk
     monkeypatch: pytest.MonkeyPatch,
     refusal_code: str,
 ) -> None:
-    events = _Events()
+    events = RecordingEvents()
     operands = _Operands()
     executor = ModeloInvoiceWithholdingCaptureExecutor(
         cast(ModeloInvoiceWithholdingCapturePortsFactory, cast(object, lambda **_kwargs: None))

@@ -29,6 +29,7 @@ from ...operations.access_resolution import OperationAccessContext, resolve_oper
 from ...operations.models import OperationRequest
 from ...operations.owner import OperationExecutorContext
 from ...operations.registry import OperationFrontendProjection, OperationRegistry
+from ...tests.operation_host_fakes import RecordingEvents
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from .. import projection_operation
 from ..calculation_action_ports import CalculationActionPorts, CalculationActionPortsFactory
@@ -251,18 +252,6 @@ def test_comparison_public_result_retains_order_and_every_provenance_reference()
         )
 
 
-class _Events:
-    def __init__(self) -> None:
-        self.phases: list[str] = []
-        self.effects: list[OperationEffect] = []
-
-    async def phase(self, value: str) -> None:
-        self.phases.append(value)
-
-    async def effect(self, value: OperationEffect) -> None:
-        self.effects.append(value)
-
-
 class _Fence:
     active = False
 
@@ -328,7 +317,7 @@ async def test_only_cas_commit_is_fenced_and_effect_is_truthful(
     failure: Exception | None,
     effects: tuple[OperationEffect, ...],
 ) -> None:
-    events = _Events()
+    events = RecordingEvents()
     fence = _Fence()
     migration = _Migration(changed=changed, fence=fence, failure=failure)
     context = cast(
@@ -364,7 +353,7 @@ async def test_only_cas_commit_is_fenced_and_effect_is_truthful(
 async def test_preparation_failure_never_enters_commit_or_claims_a_write(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
-    events = _Events()
+    events = RecordingEvents()
     fence = _Fence()
     migration = _Migration(changed=True, fence=fence, prepare_failure=ValueError("bad legacy relation"))
     context = cast(
@@ -387,7 +376,7 @@ async def test_preparation_failure_never_enters_commit_or_claims_a_write(
 async def test_confirmed_migration_remains_updated_if_later_projection_fails(
     authority_operation: PinnedAuthorityOperation, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    events = _Events()
+    events = RecordingEvents()
     fence = _Fence()
     migration = _Migration(changed=True, fence=fence)
     repository = SimpleNamespace(bucket_id=str(_PROFILE))

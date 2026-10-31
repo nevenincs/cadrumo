@@ -36,6 +36,7 @@ from ...operations.owner import OperationExecutorContext
 from ...operations.refusal_evidence import OperationRefusalEvidence
 from ...operations.registry import OperationFrontendProjection, OperationRegistry
 from ...tests.agent_refusal_support import model_not_installed_verdict
+from ...tests.operation_host_fakes import RecordingEvents
 from ...user_profile.access_contracts import SessionKind
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from .. import catalogue_intake_contracts as intake_contracts
@@ -55,18 +56,6 @@ from ._catalogue_creation_fakes import in_memory_catalogue_creation_ports
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _PROFILE = UUID("29292929-2929-4292-8292-292929292929")
 _SESSION_CLIENT = UUID("29292929-2929-4292-8292-2929292929dd")
-
-
-class _Events:
-    def __init__(self) -> None:
-        self.phases: list[str] = []
-        self.effects: list[OperationEffect] = []
-
-    async def phase(self, phase: str) -> None:
-        self.phases.append(phase)
-
-    async def effect(self, effect: OperationEffect) -> None:
-        self.effects.append(effect)
 
 
 class _Operands:
@@ -134,7 +123,7 @@ def _wire(payload: BaseModel, definition_id: str) -> OperationRequest[BaseModel]
 
 
 def _context(request: OperationRequest[BaseModel], operation: PinnedAuthorityOperation):
-    events, operands, fence = _Events(), _Operands(), _Fence()
+    events, operands, fence = RecordingEvents(), _Operands(), _Fence()
     context = cast(
         OperationExecutorContext,
         cast(

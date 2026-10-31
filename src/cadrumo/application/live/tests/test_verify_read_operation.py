@@ -26,6 +26,7 @@ from ...operations.access_resolution import OperationAccessContext
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
 from ...operations.owner import OperationExecutorContext
 from ...operations.registry import OperationFrontendProjection
+from ...tests.operation_host_fakes import RecordingEvents
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..verify import VerifyObservation, VerifySurface
 from ..verify_read_contracts import (
@@ -104,18 +105,6 @@ class _MemoryPersistence:
 
     def save(self, observation: VerifyObservation) -> None:
         self.observations += (observation,)
-
-
-class _Events:
-    def __init__(self) -> None:
-        self.phases: list[str] = []
-        self.effects: list[OperationEffect] = []
-
-    async def phase(self, value: str) -> None:
-        self.phases.append(value)
-
-    async def effect(self, value: OperationEffect) -> None:
-        self.effects.append(value)
 
 
 class _Operands:
@@ -298,14 +287,14 @@ def _executor_context(
     definition_id: str,
     *,
     identity_subject_ref: str | None = None,
-    events: _Events | None = None,
+    events: RecordingEvents | None = None,
 ) -> tuple[OperationExecutorContext, _Operands]:
     identity = OperationIdentity(
         operation_id="e" * 64,
         definition_id=definition_id,
         subject_ref=identity_subject_ref or profile_operation_subject(str(_PROFILE)),
     )
-    events = events or _Events()
+    events = events or RecordingEvents()
     operands = _Operands()
     context = cast(OperationExecutorContext, SimpleNamespace(identity=identity, events=events, operands=operands))
     return context, operands
@@ -363,7 +352,7 @@ def test_list_executor_refuses_request_or_context_identity_mismatch_before_work(
 ) -> None:
     import cadrumo.application.live.verify_read_operation as operation
 
-    events = _Events()
+    events = RecordingEvents()
     factory_buckets: list[str] = []
     context, operands = _executor_context(
         context_definition_id,
@@ -394,7 +383,7 @@ def test_list_executor_refuses_request_or_context_identity_mismatch_before_work(
 def test_list_executor_preserves_missing_profile_precedence_before_work(monkeypatch: pytest.MonkeyPatch) -> None:
     import cadrumo.application.live.verify_read_operation as operation
 
-    events = _Events()
+    events = RecordingEvents()
     factory_buckets: list[str] = []
     context, operands = _executor_context(
         "live.verify.other",

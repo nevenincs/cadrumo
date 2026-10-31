@@ -61,6 +61,7 @@ from ...operations.models import OperationIdentity, OperationRequest, OperationT
 from ...operations.owner import OperationExecutorContext
 from ...operations.person_acts import operation_is_persons_act
 from ...operations.registry import OperationFrontendProjection, OperationRegistry
+from ...tests.operation_host_fakes import RecordingEvents
 from ...tests.operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from .. import sede_view_operation as module
@@ -172,18 +173,6 @@ class _Cancellation:
         yield
 
 
-class _Events:
-    def __init__(self) -> None:
-        self.phases: list[str] = []
-        self.effects: list[OperationEffect] = []
-
-    async def phase(self, phase: str) -> None:
-        self.phases.append(phase)
-
-    async def effect(self, effect: OperationEffect) -> None:
-        self.effects.append(effect)
-
-
 class _Operands:
     def __init__(self) -> None:
         self.values: list[BaseModel] = []
@@ -229,7 +218,7 @@ class _Subject:
         self.browser = _Browser(end, self.journal, polls=polls)
         self.openings: list[SedeViewOpening] = []
         self.cancellation = _Cancellation(requested=cancel)
-        self.events = _Events()
+        self.events = RecordingEvents()
         self.operands = _Operands()
         self.cleanup = _Cleanup()
         self.publication = publication
