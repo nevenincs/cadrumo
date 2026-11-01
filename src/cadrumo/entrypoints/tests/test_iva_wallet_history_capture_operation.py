@@ -245,6 +245,63 @@ class _Composition:
     iva_remote_state_port: IvaRemoteStatePort
 
 
+def _assert_external_client_commit_admission(admitted, profile_id):
+    assert admitted.request.profile_id == profile_id
+    assert admitted.request.period_independent
+    assert admitted.request.periods == frozenset()
+    assert admitted.policy.requires_all_periods
+    assert AccessAction.COMMIT in admitted.policy.actions
+
+
+def _assert_history_terminal(definition, terminal):
+    assert definition.definition_id == "live.iva-wallet.history-capture"
+    assert terminal.lifecycle is OperationLifecycle.TERMINAL
+    assert terminal.terminal_condition is OperationTerminalCondition.SUCCEEDED
+    assert terminal.effect is OperationEffect.UPDATED
+    assert terminal.terminal_receipt is not None
+    assert terminal.terminal_receipt.effect is OperationEffect.UPDATED
+
+
+def _assert_history_result(projected, output_root):
+    assert isinstance(projected, OperationResultProjectionSuccessV1)
+    assert isinstance(projected.projection, IvaWalletHistoryCapturePublicResultV1)
+    result = projected.projection
+    assert result.model_dump() == {
+        "output_root": str(output_root),
+        "year_from": 2025,
+        "year_to": 2026,
+        "captured_count": 2,
+        "observation_paths": ("encrypted-observations/2025.json", "encrypted-observations/2026.json"),
+        "artefact_refs": ("encrypted-artefact:2025", "encrypted-artefact:2026"),
+        "casilla_count": 7,
+        "calculation_observation_count": 2,
+        "calculation_observation_keys": ("303:2025:1T", "303:2026:1T"),
+        "reloaded_history_count": 1,
+        "failed_declaration_count": 1,
+        "failed_declarations": ("303:2026:2T:synthetic capture failure",),
+    }
+    assert not hasattr(result, "reloaded_rows")
+
+
+def _assert_history_capture_effects(
+    preflight_calls, profile_id, authority, composition_calls, output_root, trace, resources, port
+):
+    assert preflight_calls == [(profile_id, authority)]
+    assert composition_calls == [output_root]
+    assert trace == ["provider_preflight", "composition", "resources", "capture"]
+    assert resources.activation_entries == 1
+    assert resources.closed
+    assert resources.close_calls == 1
+    assert port.session_requests == [("live-filed-read", None)]
+    assert port.authority_operation is authority
+    assert port.capture_calls == [(2025, 2026, output_root)]
+    assert port.storage_span_entries == port.storage_span_exits == 1
+    assert port.storage_span_depth == 0
+    assert port.guard_entries == 1
+    assert port.guard_depth == 0
+    assert port.local_effects == 1
+
+
 @pytest.mark.parametrize("names_root", [True, False], ids=["named_root", "configured_default_root"])
 def test_supervisor_admits_exact_external_client_profile_and_projects_guarded_iva_history_capture(
     tmp_path: Path, names_root: bool
@@ -308,12 +365,7 @@ def test_supervisor_admits_exact_external_client_profile_and_projects_guarded_iv
             published_authority=Availability.AVAILABLE,
         )
         admitted = resolve_operation_access(registry=registry, request=request, context=access_context)
-        assert admitted.request.profile_id == profile_id
-        assert admitted.request.period_independent
-        assert admitted.request.periods == frozenset()
-        assert admitted.policy.requires_all_periods
-        assert AccessAction.COMMIT in admitted.policy.actions
-
+        _assert_external_client_commit_admission(admitted, profile_id)
         assert_foreign_profile_refused(registry=registry, request=request, context=access_context)
 
         _, _, _, supervisor, result_service = build_supervised_operation(
@@ -330,44 +382,11 @@ def test_supervisor_admits_exact_external_client_profile_and_projects_guarded_iv
             )
         )
 
-    assert definition.definition_id == "live.iva-wallet.history-capture"
-    assert terminal.lifecycle is OperationLifecycle.TERMINAL
-    assert terminal.terminal_condition is OperationTerminalCondition.SUCCEEDED
-    assert terminal.effect is OperationEffect.UPDATED
-    assert terminal.terminal_receipt is not None
-    assert terminal.terminal_receipt.effect is OperationEffect.UPDATED
-    assert isinstance(projected, OperationResultProjectionSuccessV1)
-    assert isinstance(projected.projection, IvaWalletHistoryCapturePublicResultV1)
-    result = projected.projection
-    assert result.model_dump() == {
-        "output_root": str(output_root),
-        "year_from": 2025,
-        "year_to": 2026,
-        "captured_count": 2,
-        "observation_paths": ("encrypted-observations/2025.json", "encrypted-observations/2026.json"),
-        "artefact_refs": ("encrypted-artefact:2025", "encrypted-artefact:2026"),
-        "casilla_count": 7,
-        "calculation_observation_count": 2,
-        "calculation_observation_keys": ("303:2025:1T", "303:2026:1T"),
-        "reloaded_history_count": 1,
-        "failed_declaration_count": 1,
-        "failed_declarations": ("303:2026:2T:synthetic capture failure",),
-    }
-    assert not hasattr(result, "reloaded_rows")
-    assert preflight_calls == [(profile_id, authority)]
-    assert composition_calls == [output_root]
-    assert trace == ["provider_preflight", "composition", "resources", "capture"]
-    assert resources.activation_entries == 1
-    assert resources.closed
-    assert resources.close_calls == 1
-    assert port.session_requests == [("live-filed-read", None)]
-    assert port.authority_operation is authority
-    assert port.capture_calls == [(2025, 2026, output_root)]
-    assert port.storage_span_entries == port.storage_span_exits == 1
-    assert port.storage_span_depth == 0
-    assert port.guard_entries == 1
-    assert port.guard_depth == 0
-    assert port.local_effects == 1
+    _assert_history_terminal(definition, terminal)
+    _assert_history_result(projected, output_root)
+    _assert_history_capture_effects(
+        preflight_calls, profile_id, authority, composition_calls, output_root, trace, resources, port
+    )
 
 
 def test_an_ended_aeat_session_stops_the_history_walk_instead_of_recording_a_failed_declaration(

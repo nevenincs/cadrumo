@@ -1052,6 +1052,55 @@ def test_filed_history_access_requires_whole_profile_commit_and_result_disclosur
     assert refusal.value.reason is AccessDenialCode.PROFILE_MISMATCH
 
 
+async def _assert_cleanup_failure_settles_terminal(owner, settlement):
+    terminal = await asyncio.wait_for(settlement, timeout=10)
+    assert terminal.lifecycle is OperationLifecycle.TERMINAL
+    assert terminal.terminal_condition is OperationTerminalCondition.FAILED
+    assert terminal.effect is OperationEffect.UNKNOWN
+    assert terminal.terminal_receipt is not None
+    assert owner.calls == 3
+    assert owner.released is True
+
+
+async def _assert_persistent_cleanup_failure_retains_operation(owner, settlement, supervisor, operation_id):
+    with pytest.raises(OperationUnsettledError) as unsettled:
+        await asyncio.wait_for(settlement, timeout=10)
+    retained = unsettled.value.__cause__
+    assert isinstance(retained, AsyncResourceCleanupError)
+    assert retained.resources == (owner,)
+    pending = await supervisor.inspect(operation_id)
+    assert pending.lifecycle is OperationLifecycle.RUNNING
+    assert pending.effect is OperationEffect.UNKNOWN
+    assert pending.terminal_receipt is None
+    assert owner.calls == 3
+    assert owner.released is False
+    owner.fail_settlement = False
+    await retained.retry_cleanup()
+    assert owner.calls == 4
+    assert owner.released is True
+    assert (await supervisor.inspect(operation_id)).terminal_receipt is None
+
+
+async def _assert_provider_cleanup_in_flight(
+    owner, settlement, supervisor, operation_id, failures, primary, attached_primary
+):
+    assert owner.calls == 3
+    assert owner.released is False
+    assert settlement.done() is False
+    in_flight = await supervisor.inspect(operation_id)
+    assert in_flight.lifecycle is OperationLifecycle.RUNNING
+    assert in_flight.effect is OperationEffect.UNKNOWN
+    assert in_flight.terminal_receipt is None
+    assert len(failures) == 1
+    if attached_primary:
+        assert failures[0] is primary
+        original_cleanup = primary.__dict__["async_cleanup_error"]
+    else:
+        original_cleanup = failures[0]
+    assert isinstance(original_cleanup, AsyncResourceCleanupError)
+    assert original_cleanup.resources == (owner,)
+
+
 @pytest.mark.parametrize("attached_primary", [False, True], ids=["direct-cleanup", "attached-primary"])
 @pytest.mark.parametrize("persistent_failure", [False, True], ids=["released", "unsettled"])
 def test_supervisor_retains_filed_provider_cleanup_before_terminal_settlement(
@@ -1155,21 +1204,9 @@ def test_supervisor_retains_filed_provider_cleanup_before_terminal_settlement(
                     if settlement.done():
                         await settlement
                     raise AssertionError("the original failed provider owner was not adopted for settlement")
-                assert owner.calls == 3
-                assert owner.released is False
-                assert settlement.done() is False
-                in_flight = await supervisor.inspect(operation_id)
-                assert in_flight.lifecycle is OperationLifecycle.RUNNING
-                assert in_flight.effect is OperationEffect.UNKNOWN
-                assert in_flight.terminal_receipt is None
-                assert len(failures) == 1
-                if attached_primary:
-                    assert failures[0] is primary
-                    original_cleanup = primary.__dict__["async_cleanup_error"]
-                else:
-                    original_cleanup = failures[0]
-                assert isinstance(original_cleanup, AsyncResourceCleanupError)
-                assert original_cleanup.resources == (owner,)
+                await _assert_provider_cleanup_in_flight(
+                    owner, settlement, supervisor, operation_id, failures, primary, attached_primary
+                )
             finally:
                 owner.allow_retry.set()
                 if not entered.done():
@@ -1177,30 +1214,9 @@ def test_supervisor_retains_filed_provider_cleanup_before_terminal_settlement(
                 await asyncio.gather(entered, return_exceptions=True)
 
             if persistent_failure:
-                with pytest.raises(OperationUnsettledError) as unsettled:
-                    await asyncio.wait_for(settlement, timeout=10)
-                retained = unsettled.value.__cause__
-                assert isinstance(retained, AsyncResourceCleanupError)
-                assert retained.resources == (owner,)
-                pending = await supervisor.inspect(operation_id)
-                assert pending.lifecycle is OperationLifecycle.RUNNING
-                assert pending.effect is OperationEffect.UNKNOWN
-                assert pending.terminal_receipt is None
-                assert owner.calls == 3
-                assert owner.released is False
-                owner.fail_settlement = False
-                await retained.retry_cleanup()
-                assert owner.calls == 4
-                assert owner.released is True
-                assert (await supervisor.inspect(operation_id)).terminal_receipt is None
+                await _assert_persistent_cleanup_failure_retains_operation(owner, settlement, supervisor, operation_id)
             else:
-                terminal = await asyncio.wait_for(settlement, timeout=10)
-                assert terminal.lifecycle is OperationLifecycle.TERMINAL
-                assert terminal.terminal_condition is OperationTerminalCondition.FAILED
-                assert terminal.effect is OperationEffect.UNKNOWN
-                assert terminal.terminal_receipt is not None
-                assert owner.calls == 3
-                assert owner.released is True
+                await _assert_cleanup_failure_settles_terminal(owner, settlement)
 
         asyncio.run(run())
 
