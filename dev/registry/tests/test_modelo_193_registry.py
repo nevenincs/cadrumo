@@ -8,20 +8,17 @@ from decimal import Decimal
 import pytest
 
 from cadrumo.core.aggregation import BindingAggregationOp, BindingSourceKind, RetencionClave
-from cadrumo.core.casilla_id import CasillaId
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
 from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
-from cadrumo.domain.calculations.registry.ids import BindingId
 from cadrumo.domain.calculations.registry.relations import (
     relation_prefill_bindings_for_period,
-    relation_source_requirements,
 )
-from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
-from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_modelo_observation
-from cadrumo.domain.calculations.registry.tests.relation_fixture import resolve_relation_values_from_observations
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
+from cadrumo.domain.calculations.registry.tests.synthetic_quarterly_relations import (
+    relation_values_from_synthetic_quarters,
+)
 from cadrumo.domain.calculations.registry.withholding_bindings import (
     WithholdingObservation,
     resolve_withholding_binding_values,
@@ -255,44 +252,14 @@ def test_modelo_193_relations_resolve_against_modelo_123_registry() -> None:
     } == {("1T", "2T", "3T", "4T")}
 
 
-def _modelo_123_relation_values(
-    snapshot: RegistrySnapshot,
-    snapshot_123: RegistrySnapshot,
-    filing_year: int,
-) -> dict[BindingId, Decimal]:
-    """Resolve the 193 relations from synthetic quarterly modelo 123 observations."""
-    source_casilla_ids = {casilla.id: casilla for casilla in snapshot_123.revision.casillas}
-    requirements = relation_source_requirements(snapshot.revision, filing_year=filing_year, period="0A")
-    observed_by_period: dict[str, dict[CasillaId, Decimal]] = {}
-    for requirement in requirements:
-        source_casilla_id = requirement.source_casilla_ids[0]
-        source_casilla = source_casilla_ids[source_casilla_id]
-        for index, period in enumerate(requirement.periods):
-            value = _value_for(source_casilla.data_type, index)
-            observed_by_period.setdefault(period, {})[source_casilla_id] = value
-    observations = tuple(
-        registry_grounded_modelo_observation(
-            modelo="123",
-            filing_year=filing_year,
-            period=period,
-            casilla_values=casilla_values,
-        )
-        for period, casilla_values in sorted(observed_by_period.items())
-    )
-    return resolve_relation_values_from_observations(
-        snapshot.revision,
-        observations,
-        filing_year=filing_year,
-        period="0A",
-    )
-
-
 def test_modelo_193_quarterly_aggregate_edition_sums_modelo_123_quarterly_observations() -> None:
     year = _QUARTERLY_AGGREGATE_EDITION
     authority = compiled_bundled_authority()
     snapshot = authority.snapshot("193", filing_year=year, period="0A")
     snapshot_123 = authority.snapshot("123", filing_year=year, period="1T")
-    relation_values = _modelo_123_relation_values(snapshot, snapshot_123, year)
+    relation_values = relation_values_from_synthetic_quarters(
+        snapshot, snapshot_123, source_modelo="123", filing_year=year
+    )
     binding_values = {"modelo-193-perceptores-anual": Decimal("2")}
     result = calculate_registry_snapshot(
         snapshot,
@@ -349,7 +316,9 @@ def test_modelo_193_declarant_totals_count_and_sum_the_type_2_records() -> None:
     authority = compiled_bundled_authority()
     snapshot = authority.snapshot("193", filing_year=year, period="0A")
     snapshot_123 = authority.snapshot("123", filing_year=year, period="1T")
-    relation_values = _modelo_123_relation_values(snapshot, snapshot_123, year)
+    relation_values = relation_values_from_synthetic_quarters(
+        snapshot, snapshot_123, source_modelo="123", filing_year=year
+    )
     # One holder on three type-2 records: clave A paid twice in the exercise (one
     # record), a settlement of the previous exercise's accrual, and a clave B payment.
     observations = (
@@ -405,10 +374,3 @@ def test_modelo_193_perceptor_count_counts_type_2_records_in_every_supported_yea
         )
         binding_values = resolve_withholding_binding_values(snapshot.revision, observations)
         assert binding_values[binding.id] == Decimal("2"), year
-
-
-def _value_for(data_type: str, period_index: int) -> Decimal:
-    quarter = Decimal(period_index + 1)
-    if data_type == "integer":
-        return quarter
-    return Decimal("10") * quarter
