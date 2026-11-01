@@ -886,7 +886,7 @@ export const UserProfilePage = memo(function UserProfilePage({
           type="search"
           aria-label={t("desktop.profile.search")}
           aria-keyshortcuts="/"
-          placeholder={t("desktop.profile.search")}
+          placeholder={t("desktop.profile.search_placeholder")}
           className="h-control-sm pr-8 pl-8"
           value={search}
           onChange={(event) => setSearch(event.target.value)}

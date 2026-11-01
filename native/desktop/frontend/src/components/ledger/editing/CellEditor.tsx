@@ -410,7 +410,7 @@ export function ChoiceEditor({
       options={options}
       initialQuery={context.initial}
       emptyLabel={t("desktop.ledger.edit.no_match")}
-      placeholder={t("desktop.ledger.edit.search", { column: label })}
+      placeholder={t("desktop.ledger.edit.search")}
       className="ledger-cell-choice"
       onCommit={(chosen, via) =>
         context.commit(
