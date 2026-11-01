@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import re
 from collections.abc import Mapping
-from typing import Final
 
 from ...core.casilla_id import CasillaId
 from ...core.external_constants import OutputLanguage
@@ -19,7 +18,7 @@ from ...domain.calculations.registry.export_field_casilla import (
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.schema import BindingDefinition, RegistrySnapshot
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
-from ...domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState
+from ...domain.modelos.calculation_revision import FILED_REVISION_STATES, CalculationRevision
 from .caller_context import caller_context_of
 from .edit_models import (
     ModeloEditNonWritableBindingOverrideSurfaceEntryV1,
@@ -31,12 +30,6 @@ from .edit_models import (
 from .required_inputs import filer_required_casilla_ids
 from .work_form_localization import render_box_locator_patterns
 from .work_review import ModeloWorkReview, ModeloWorkReviewCasilla
-
-_FILED_STATES: Final[frozenset[CalculationRevisionState]] = frozenset(
-    {CalculationRevisionState.PRESENTADO, CalculationRevisionState.PRESENTADO_SUPERSEDIDO}
-)
-
-"""The lifecycle states of a calculation recorded as filed."""
 
 
 def _review_indexes(
@@ -145,7 +138,7 @@ class WorkFormContext:
         self._export_decimals: dict[str, int] | None = None
         self._box_locators: tuple[re.Pattern[str], ...] | None = None
         self.required: frozenset[str] = filer_required_casilla_ids(snapshot.revision)
-        self.filed = review.lifecycle_state in _FILED_STATES
+        self.filed = review.lifecycle_state in FILED_REVISION_STATES
         self.surface = _surface_index(permitted_surface, filed=self.filed)
         self.aeat_data_bindings = _aeat_data_binding_ids(revision)
         self.entered = entered_casilla_ids

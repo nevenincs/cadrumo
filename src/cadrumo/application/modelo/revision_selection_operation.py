@@ -23,6 +23,7 @@ from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.ids import RevisionId
 from ...domain.modelos.calculation_revision import (
+    FILED_REVISION_STATES,
     CalculationRevision,
     CalculationRevisionCatalogue,
     CalculationRevisionState,
@@ -215,7 +216,7 @@ def _filed_external_without_report(
     """Recognize a co-committed AEAT import by its exact filing receipt."""
     if (
         revision.amendment_identity is not None
-        or revision.state not in {CalculationRevisionState.PRESENTADO, CalculationRevisionState.PRESENTADO_SUPERSEDIDO}
+        or revision.state not in FILED_REVISION_STATES
         or revision.verified_at is None
         or revision.filed_at is None
         or revision.filed_by is None
@@ -234,7 +235,7 @@ def _filed_external_without_report(
 def _filed_amendment_without_grant(revision: CalculationRevision, granting: tuple[VerificationReport, ...]) -> bool:
     return (
         revision.amendment_identity is not None
-        and revision.state in {CalculationRevisionState.PRESENTADO, CalculationRevisionState.PRESENTADO_SUPERSEDIDO}
+        and revision.state in FILED_REVISION_STATES
         and revision.verified_at is not None
         and not granting
     )

@@ -20,7 +20,7 @@ from ...core.parsing.codes import IsoCurrencyCode
 from ...core.period import Period
 from ...domain.calculations.registry.ids import LegalRefId, ModeloId, SourceRefId
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
-from ...domain.modelos.calculation_revision import CalculationRevisionState
+from ...domain.modelos.calculation_revision import FILED_REVISION_STATES, CalculationRevisionState
 from ...domain.modelos.filing_record import AeatConfirmationState, ModeloRecordStatus
 from ...domain.modelos.ledger_filing_snapshot import LedgerEvidenceRow
 from .review_form_data import ReviewSavedForm
@@ -192,10 +192,7 @@ class ReviewCalculationLifecycle(BaseModel):
             raise ValueError("review filing status requires the exact saved filing record")
         if self.is_current_filing and self.state is not CalculationRevisionState.PRESENTADO:
             raise ValueError("only a presented revision can be the current local filing")
-        if self.filing_record_id is not None and self.state not in {
-            CalculationRevisionState.PRESENTADO,
-            CalculationRevisionState.PRESENTADO_SUPERSEDIDO,
-        }:
+        if self.filing_record_id is not None and self.state not in FILED_REVISION_STATES:
             raise ValueError("review filing evidence requires a filed calculation revision")
         return self
 

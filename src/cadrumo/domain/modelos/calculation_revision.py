@@ -87,7 +87,6 @@ from .calculation_revision_m303_handoff import (
     FilingInstanceEvidence,
     M303RegimenSimplificadoAnnualSummaryHandoff,
 )
-from .calculation_screen_stamp import CalculationScreenStamp
 from .calculation_revision_operator_layer import CalculationOperatorLayer
 from .calculation_revision_rendering import CalculationRenderingSnapshot
 from .calculation_revision_sources import (
@@ -96,6 +95,7 @@ from .calculation_revision_sources import (
     CalculationSourceRef,
     validate_revision_source_provenance,
 )
+from .calculation_screen_stamp import CalculationScreenStamp
 from .errors import ModeloError, ModeloValidationError
 from .filing_text import ModeloActorLabel, OperatorReason
 from .ledger_filing_snapshot import LedgerFilingEvidence, LedgerFilingSnapshot
@@ -127,6 +127,11 @@ superseded filing still occurred.
 
 This is NOT the same as the narrower "currently authoritative" set, which
 additionally excludes :attr:`CalculationRevisionState.PRESENTADO_SUPERSEDIDO`."""
+
+FILED_REVISION_STATES: frozenset[CalculationRevisionState] = frozenset(
+    {CalculationRevisionState.PRESENTADO, CalculationRevisionState.PRESENTADO_SUPERSEDIDO},
+)
+"""The lifecycle states of a calculation recorded as filed, superseded filings included."""
 
 
 CURRENT_SEALED_REVISION_STATES: frozenset[CalculationRevisionState] = frozenset(

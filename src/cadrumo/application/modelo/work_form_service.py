@@ -32,7 +32,7 @@ See Also:
 from __future__ import annotations
 
 from datetime import date, datetime
-from typing import TYPE_CHECKING, Final
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel
 
@@ -45,9 +45,10 @@ from ...domain.buckets.event import BucketEventType
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.deadlines.festivos import CalendarCCAA
 from ...domain.modelos.calculation_revision import (
+    FILED_REVISION_STATES,
+    SEALED_REVISION_STATES,
     CalculationRevision,
     CalculationRevisionCatalogue,
-    CalculationRevisionState,
 )
 from ...domain.modelos.codes import ModeloCode
 from ...domain.modelos.protocols import (
@@ -79,17 +80,6 @@ if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ...domain.calculations.registry.schema import RegistrySnapshot
     from ..live.borrador_100 import Borrador100SnapshotRepository
-
-_VERIFIED_STATES: Final[frozenset[CalculationRevisionState]] = frozenset(
-    {
-        CalculationRevisionState.VERIFICADO_COMPLETO,
-        CalculationRevisionState.PRESENTADO,
-        CalculationRevisionState.PRESENTADO_SUPERSEDIDO,
-    }
-)
-_FILED_STATES: Final[frozenset[CalculationRevisionState]] = frozenset(
-    {CalculationRevisionState.PRESENTADO, CalculationRevisionState.PRESENTADO_SUPERSEDIDO}
-)
 
 
 class ModeloWorkFormLoadV1(BaseModel):
@@ -294,7 +284,9 @@ def load_modelo_work_form(
         }
     )
     state = review.lifecycle_state
-    return ModeloWorkFormLoadV1(form=form, verified=state in _VERIFIED_STATES, filed=state in _FILED_STATES)
+    return ModeloWorkFormLoadV1(
+        form=form, verified=state in SEALED_REVISION_STATES, filed=state in FILED_REVISION_STATES
+    )
 
 
 def _last_export(
