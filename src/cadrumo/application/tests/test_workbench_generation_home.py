@@ -5,7 +5,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import UTC, date, datetime
 from pathlib import Path
-from typing import Any, cast
 
 import pytest
 from pydantic import ValidationError
@@ -45,10 +44,8 @@ from ..workbench_generation_contracts import (
     WorkbenchGenerationInputsV1,
     WorkbenchGenerationSourceResultV1,
 )
-from ..workbench_generation_reader import SecureProfileWorkbenchGenerationReadDoorV1
 from ._workbench_generation_support import (
     _NOW,
-    _PROFILE_ID,
     _admission,
     _ChangingLedgerStore,
     _inputs,
@@ -57,6 +54,7 @@ from ._workbench_generation_support import (
     _profile_record,
     _Repository,
     _StableStore,
+    _stub_empty_calendar,
     _synthetic_transaction,
 )
 
@@ -82,24 +80,14 @@ def test_secure_profile_provider_refuses_a_ledger_written_during_capture(
     revisions = _Repository(CalculationRevisionCatalogue())
     filings = _Repository(ModeloRecordCatalogue())
 
-    def empty_calendar(_profile: object, calendar_range: object, **_kwargs: object) -> OverviewCalendar:
-        return OverviewCalendar(range=calendar_range, entries=(), generated_at=_NOW, evaluated_on=_NOW.date())  # type: ignore[arg-type]
-
-    monkeypatch.setattr(calendar_module, "build_overview_calendar", empty_calendar)
+    _stub_empty_calendar(monkeypatch)
     written = TransactionCatalogue.model_validate([_synthetic_transaction()])
-    door = SecureProfileWorkbenchGenerationReadDoorV1(
-        profile_id=_PROFILE_ID,
-        operation=authority_operation,
-        profile_repository=cast(Any, profile),
-        work_unit_repository=cast(Any, work_units),
-        calculation_repository=cast(Any, revisions),
-        filing_repository=cast(Any, filings),
-        clock=lambda: _NOW,
-        account_session_reader=lambda: HomeAccountSession(
-            posture=HomeSessionPosture.ACTIVE,
-            profile_label="Perfil local",
-            expires_at=_NOW,
-        ),
+    door = _plain_generation_door(
+        authority_operation,
+        profile=profile,
+        work_units=work_units,
+        revisions=revisions,
+        filings=filings,
         ledger_action_ports=_ledger_ports(
             authority_operation,
             transactions=_ChangingLedgerStore(TransactionCatalogue(), written),
@@ -124,23 +112,13 @@ def test_a_quiet_ledger_publishes_its_generation(
     revisions = _Repository(CalculationRevisionCatalogue())
     filings = _Repository(ModeloRecordCatalogue())
 
-    def empty_calendar(_profile: object, calendar_range: object, **_kwargs: object) -> OverviewCalendar:
-        return OverviewCalendar(range=calendar_range, entries=(), generated_at=_NOW, evaluated_on=_NOW.date())  # type: ignore[arg-type]
-
-    monkeypatch.setattr(calendar_module, "build_overview_calendar", empty_calendar)
-    door = SecureProfileWorkbenchGenerationReadDoorV1(
-        profile_id=_PROFILE_ID,
-        operation=authority_operation,
-        profile_repository=cast(Any, profile),
-        work_unit_repository=cast(Any, work_units),
-        calculation_repository=cast(Any, revisions),
-        filing_repository=cast(Any, filings),
-        clock=lambda: _NOW,
-        account_session_reader=lambda: HomeAccountSession(
-            posture=HomeSessionPosture.ACTIVE,
-            profile_label="Perfil local",
-            expires_at=_NOW,
-        ),
+    _stub_empty_calendar(monkeypatch)
+    door = _plain_generation_door(
+        authority_operation,
+        profile=profile,
+        work_units=work_units,
+        revisions=revisions,
+        filings=filings,
         ledger_action_ports=_ledger_ports(
             authority_operation,
             transactions=_StableStore(TransactionCatalogue()),
@@ -346,7 +324,7 @@ def test_a_zone_awaiting_a_pull_is_never_captured_not_unavailable() -> None:
     """
     from datetime import UTC, datetime
 
-    from ..overview.home import HomeAccountSession, HomeAvailability, HomeSessionPosture, HomeZoneState
+    from ..overview.home import HomeAvailability, HomeZoneState
     from ..workbench_generation_home import _secure_profile_home_input
 
     observed_at = datetime(2026, 9, 4, tzinfo=UTC)
