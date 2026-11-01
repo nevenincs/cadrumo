@@ -4,7 +4,8 @@
 the rules here, so a figure a preview accepts is the figure acceptance accepts.
 A rule answers with a :class:`FigureFinding` carrying a stable code rather than
 raising, and :func:`figure_refusal` turns that finding into the refusal the
-model raises.
+model raises. The document rules outside the figures answer the same way, with
+an :class:`InvoiceRuleFinding` and :func:`invoice_rule_refusal`.
 
 Stated figures stay the operator's: a line subtotal or cuota within its cent is
 accepted as printed and stored as printed. A computed figure is what the backend
@@ -435,6 +436,154 @@ def _retention_agrees_with_rate(rate: Decimal | None, amount: Decimal | None, ba
     return None
 
 
+class InvoiceRuleFindingCode(StrEnum):
+    """Stable, closed names of what a rule outside the figures found on one invoice document."""
+
+    SERIES_REQUIRED_FOR_RECTIFICATIVA = "series_required_for_rectificativa"
+    RECTIFIED_INVOICE_REQUIRED = "rectified_invoice_required"
+    RECTIFIED_INVOICE_NOT_ALLOWED = "rectified_invoice_not_allowed"
+    SIMPLIFICADA_NOT_FOR_INTRA_COMMUNITY = "simplificada_not_for_intra_community"
+    COUNTERPARTY_TAX_ID_REQUIRED = "counterparty_tax_id_required"
+    COUNTERPARTY_TAX_ID_REQUIRED_BY_CATEGORY = "counterparty_tax_id_required_by_category"
+    COUNTERPARTY_TAX_ID_INVALID = "counterparty_tax_id_invalid"
+    COUNTERPARTY_COUNTRY_INVALID = "counterparty_country_invalid"
+    COUNTERPARTY_NAME_BLANK = "counterparty_name_blank"
+    INVOICE_NUMBER_BLANK = "invoice_number_blank"
+    CURRENCY_INVALID = "currency_invalid"
+    INVOICE_CLASS_UNDECLARED = "invoice_class_undeclared"
+    IVA_CATEGORY_UNDECLARED = "iva_category_undeclared"
+    INTRA_COMMUNITY_SPANISH_IDENTIFICATION = "intra_community_spanish_identification"
+    OPERATION_TYPE_REQUIRED = "operation_type_required"
+    OPERATION_DATE_ROLE_MISMATCH = "operation_date_role_mismatch"
+    LEASE_ONLY_ON_ISSUED = "lease_only_on_issued"
+    LEASE_SITUATION_UNDECLARED = "lease_situation_undeclared"
+    LEASE_REFERENCE_NOT_ALLOWED = "lease_reference_not_allowed"
+    LEASE_REFERENCE_TOO_LONG = "lease_reference_too_long"
+    LINE_DESCRIPTION_BLANK = "line_description_blank"
+    LINE_DESCRIPTION_TOO_LONG = "line_description_too_long"
+    LINE_OSS_RATE_KIND_REFUSED = "line_oss_rate_kind_refused"
+    OTHER_INVOICE_RULE = "other_invoice_rule"
+
+
+@dataclass(frozen=True, slots=True)
+class InvoiceRuleFinding:
+    """One document rule's answer. It always refuses, and names the fields it concerns."""
+
+    code: InvoiceRuleFindingCode
+    message: str
+    fields: tuple[str, ...]
+    values: Mapping[str, Decimal | str] = field(default_factory=dict[str, Decimal | str])
+
+
+def invoice_rule_refusal(finding: InvoiceRuleFinding) -> InvoiceValidationError:
+    """Return the refusal a validator raises for ``finding``, carrying its stable code."""
+    return InvoiceValidationError(
+        finding.message,
+        context={"rule_finding_code": finding.code.value, "fields": finding.fields},
+    )
+
+
+def raise_first_rule_finding(findings: Iterable[InvoiceRuleFinding | None]) -> None:
+    """Raise the refusal of the first present rule finding, in the order given."""
+    for finding in findings:
+        if finding is not None:
+            raise invoice_rule_refusal(finding)
+
+
+def invoice_class_rule_findings(
+    *,
+    rectificativa: bool,
+    simplificada: bool,
+    issued: bool | None,
+    series: str | None,
+    rectifies_invoice_number: str | None,
+    intra_community_supply: bool,
+    tax_id_missing: bool,
+    category_mandates_tax_id: bool,
+    category_value: str = "",
+) -> tuple[InvoiceRuleFinding, ...]:
+    """Answer the RD 1619/2012 art. 6.1 class axis, in the order the rules are refused.
+
+    ``issued`` is ``None`` while a draft has no kind yet: whether the simplificada
+    relief applies is then unknown, so the rule that needs it stays unasked.
+    """
+    findings: list[InvoiceRuleFinding] = []
+    if rectificativa and series in (None, ""):
+        findings.append(
+            InvoiceRuleFinding(
+                InvoiceRuleFindingCode.SERIES_REQUIRED_FOR_RECTIFICATIVA,
+                "a factura rectificativa must be issued in a specific series (RD 1619/2012 art. 6.1.a.2.º)",
+                ("series",),
+            )
+        )
+    if rectificativa and rectifies_invoice_number in (None, ""):
+        findings.append(
+            InvoiceRuleFinding(
+                InvoiceRuleFindingCode.RECTIFIED_INVOICE_REQUIRED,
+                "a factura rectificativa must name the invoice it rectifies (LIVA art. 89)",
+                ("rectifies_invoice_number",),
+            )
+        )
+    if not rectificativa and rectifies_invoice_number is not None:
+        findings.append(
+            InvoiceRuleFinding(
+                InvoiceRuleFindingCode.RECTIFIED_INVOICE_NOT_ALLOWED,
+                "rectifies_invoice_number only applies to a factura rectificativa",
+                ("rectifies_invoice_number", "invoice_class"),
+            )
+        )
+    if simplificada and intra_community_supply:
+        findings.append(
+            InvoiceRuleFinding(
+                InvoiceRuleFindingCode.SIMPLIFICADA_NOT_FOR_INTRA_COMMUNITY,
+                "a factura simplificada must not be issued for an entrega intracomunitaria exenta "
+                "(RD 1619/2012 art. 4.4.a); issue an ordinaria or rectificativa instead",
+                ("invoice_class", "iva_category"),
+            )
+        )
+    if tax_id_missing and issued is not None and not (simplificada and issued):
+        findings.append(
+            InvoiceRuleFinding(
+                InvoiceRuleFindingCode.COUNTERPARTY_TAX_ID_REQUIRED,
+                "counterparty_tax_id is required unless the invoice is simplified and kind is ISSUED; "
+                "on a RECEIVED invoice it names the issuer's own identity, which stays mandatory",
+                ("counterparty_tax_id",),
+            )
+        )
+    if tax_id_missing and category_mandates_tax_id:
+        findings.append(
+            InvoiceRuleFinding(
+                InvoiceRuleFindingCode.COUNTERPARTY_TAX_ID_REQUIRED_BY_CATEGORY,
+                "counterparty_tax_id is required on a factura simplificada whose iva_category is "
+                f"{category_value!r} (RD 1619/2012 art. 6.1.d)",
+                ("counterparty_tax_id", "iva_category"),
+            )
+        )
+    return tuple(findings)
+
+
+def operation_date_role_finding(*, date_stated: bool, role_stated: bool) -> InvoiceRuleFinding | None:
+    """An operation date and its LIVA art. 75 role travel together."""
+    if date_stated != role_stated:
+        return InvoiceRuleFinding(
+            InvoiceRuleFindingCode.OPERATION_DATE_ROLE_MISMATCH,
+            "operation_date and operation_date_role must be set together",
+            ("operation_date",),
+        )
+    return None
+
+
+def lease_kind_finding(*, lease_stated: bool, issued: bool) -> InvoiceRuleFinding | None:
+    """The lessor records a business-premises lease, so only an issued invoice carries one."""
+    if lease_stated and not issued:
+        return InvoiceRuleFinding(
+            InvoiceRuleFindingCode.LEASE_ONLY_ON_ISSUED,
+            "a business-premises lease only applies to an issued invoice",
+            ("business_premises_lease", "kind"),
+        )
+    return None
+
+
 def printed_total_finding(printed_total: Decimal | None, total: Decimal | None) -> FigureFinding | None:
     """Warn that the document prints another total; the printed total never blocks."""
     if printed_total is None or total is None or printed_total == total:
@@ -665,16 +814,20 @@ def compute_invoice_figures(
     retention_rate: Decimal | None = None,
     retention_amount: Decimal | None = None,
     printed_total: Decimal | None = None,
+    stored_grand_total: Decimal | None = None,
 ) -> InvoiceFigures:
     """Answer one draft's totals, retención and recargo by the rules acceptance applies.
 
     ``stated_base_total`` stands in for lines where a draft has none. It gives
-    the retención a base and leaves the cuota, and so the total, unknown.
+    the retención a base and leaves the cuota unknown. ``stored_grand_total`` is
+    the total a stored invoice already holds: a correction cannot change it, so
+    it is what a changed retención settles against.
     """
     try:
         return _compute_invoice_figures(
             lines=lines,
             stated_base_total=stated_base_total,
+            stored_grand_total=stored_grand_total,
             recargo_amount=recargo_amount,
             retention_rate=retention_rate,
             retention_amount=retention_amount,
@@ -698,6 +851,7 @@ def _compute_invoice_figures(
     *,
     lines: Sequence[LineFigures],
     stated_base_total: Decimal | None,
+    stored_grand_total: Decimal | None,
     recargo_amount: Decimal | None,
     retention_rate: Decimal | None,
     retention_amount: Decimal | None,
@@ -712,7 +866,9 @@ def _compute_invoice_figures(
     if iva is not None:
         recargo_findings.append(recargo_ceiling_finding(recargo_amount, iva))
     every_line_nonnumeric = bool(lines) and all(line.numeric_slot is False for line in lines)
-    total = None if base is None or iva is None else computed_grand_total(base, iva, recargo_amount)
+    total = stored_grand_total if not lines else None
+    if base is not None and iva is not None:
+        total = computed_grand_total(base, iva, recargo_amount)
     nonnumeric: tuple[FigureFinding, ...] = ()
     if every_line_nonnumeric and base is not None and iva is not None and total is not None:
         nonnumeric = nonnumeric_invoice_findings(
@@ -754,6 +910,8 @@ __all__ = [
     "FigureFindingCode",
     "FigureFindingSeverity",
     "InvoiceFigures",
+    "InvoiceRuleFinding",
+    "InvoiceRuleFindingCode",
     "LineFigures",
     "StatedFigure",
     "StatedFigureVerdict",
@@ -767,15 +925,20 @@ __all__ = [
     "expected_line_subtotal",
     "figure_out_of_range_finding",
     "figure_refusal",
+    "invoice_class_rule_findings",
+    "invoice_rule_refusal",
     "invoice_total_findings",
+    "lease_kind_finding",
     "line_amount_finding",
     "line_iva_finding",
     "line_rate_refusal_finding",
     "line_subtotal_finding",
     "nonnumeric_invoice_findings",
+    "operation_date_role_finding",
     "printed_total_finding",
     "quantity_finding",
     "raise_first_figure_finding",
+    "raise_first_rule_finding",
     "recargo_ceiling_finding",
     "recargo_sign_finding",
     "retention_findings",

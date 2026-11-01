@@ -8,6 +8,10 @@ because a stamp enters only the euro projections.
 
 A duplicate is decided at commit against the stored catalogue, so a preview
 that would accept can still meet a ``duplicate_invoice`` refusal on add.
+
+A correction states a ``stored`` invoice and a bare base. Nothing here reads that
+record, so its verdict covers only the facts the request states; see
+``InvoiceFiguresPreviewVerdictScope``.
 """
 
 from __future__ import annotations
@@ -16,7 +20,7 @@ import asyncio
 from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal, DecimalException
-from typing import Literal
+from typing import Literal, NamedTuple
 
 from pydantic import BaseModel, ValidationError
 
@@ -25,12 +29,22 @@ from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.errors.hierarchy import CoreValidationError, InternalInvariantError
 from ...core.hashing import content_hash_hex
+from ...core.identity.documents import IdentityError
+from ...core.identity.tax_id import tax_id_identity_token
 from ...core.operations import OperationEffect, profile_operation_subject
+from ...core.parsing.codes import normalise_iso_4217_currency
 from ...core.time.clock import now, today_madrid
+from ...core.type_adapters import OBJECT_TUPLE_ADAPTER
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...domain.currency.models import EurRateLookup, EurRateLookupStatus
+from ...domain.invoices.business_premises import (
+    lease_reference_fit_finding,
+    lease_reference_situation_finding,
+    require_situacion_inmueble,
+)
+from ...domain.invoices.enums import InvoiceClass, default_invoice_class
 from ...domain.invoices.errors import InvoiceValidationError
 from ...domain.invoices.figures import (
     DatedRateSlot,
@@ -38,12 +52,19 @@ from ...domain.invoices.figures import (
     FigureFindingCode,
     FigureFindingSeverity,
     InvoiceFigures,
+    InvoiceRuleFinding,
+    InvoiceRuleFindingCode,
     LineFigures,
     StatedFigure,
     compute_invoice_figures,
     compute_line_figures,
     dated_rate_slots,
+    lease_kind_finding,
+    operation_date_role_finding,
 )
+from ...domain.invoices.models import invoice_class_findings
+from ...domain.invoices.validators import validate_counterparty_tax_id, validate_country_code
+from ...domain.iva.schema import InvoiceKind, IvaCategory
 from ..ledger.read_access import resolve_ledger_read_access
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_READ_CAPABILITIES
@@ -54,9 +75,11 @@ from ..operations.public_scalar import PublicDecimal, project_facts
 from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
-from .catalogue_add_contracts import InvoiceAddLine, InvoiceAddRequest
+from .catalogue_add_contracts import INVOICE_LINE_DESCRIPTION_MAX_LENGTH, InvoiceAddLine, InvoiceAddRequest
 from .catalogue_add_operation import (
     build_invoice_from_add_request,
+    declared_invoice_category,
+    declared_invoice_class,
     invoice_add_lease,
     invoice_date_outside_registry_support,
 )
@@ -74,12 +97,29 @@ from .figures_preview_contracts import (
     InvoiceFiguresPreviewRequest,
     InvoiceFiguresPreviewResult,
     InvoiceFiguresPreviewRetention,
+    InvoiceFiguresPreviewRuleFinding,
+    InvoiceFiguresPreviewStored,
     InvoiceFiguresPreviewTotals,
 )
 
 _NO_RATE_SOURCE = "no-rate-source"
 
 type _RefusalCode = FigureFindingCode | Literal["invalid_invoice"]
+
+
+class _LocatedRuleFinding(NamedTuple):
+    """A rule's answer and, when it concerns one line, that line's key."""
+
+    finding: InvoiceRuleFinding
+    line_key: str | None = None
+
+
+class _Verdict(NamedTuple):
+    """How a draft was answered, and the rule that refused it when a refusal named one."""
+
+    refusal_code: _RefusalCode | None = None
+    invoice_id: str | None = None
+    refused_by: InvoiceRuleFinding | None = None
 
 
 class _NoRateSource:
@@ -185,7 +225,19 @@ def _line_figures(
     )
 
 
+def _correction_missing_fields(request: InvoiceFiguresPreviewRequest) -> tuple[str, ...]:
+    """A correction restates the facts its rules read; the stored record holds the rest."""
+    required: Mapping[str, object] = {
+        "kind": request.kind,
+        "issued_at": request.issued_at,
+        "invoice_class": request.invoice_class,
+    }
+    return tuple(name for name, value in required.items() if value is None)
+
+
 def _missing_fields(request: InvoiceFiguresPreviewRequest) -> tuple[str, ...]:
+    if request.stored is not None:
+        return _correction_missing_fields(request)
     required: Mapping[str, object] = {
         "kind": request.kind,
         "invoice_number": request.invoice_number,
@@ -284,7 +336,9 @@ def _validated_invoice_id(
             "series": request.series,
             "rectifies_invoice_number": request.rectifies_invoice_number,
             "recargo_amount": request.recargo_amount,
-            "business_premises_lease": request.business_premises_lease,
+            "business_premises_lease": (
+                None if request.business_premises_lease is None else request.business_premises_lease.model_dump()
+            ),
             "lines": lines,
         }
     )
@@ -312,6 +366,33 @@ def _refusal_code_of(error: ValidationError | InvoiceValidationError) -> _Refusa
     return None
 
 
+def _rule_finding_of(error: ValidationError | InvoiceValidationError) -> InvoiceRuleFinding:
+    """Read the rule a refusal names, or the fields a nameless one concerns."""
+    causes: list[object] = [error]
+    located: tuple[str, ...] = ()
+    if isinstance(error, ValidationError):
+        details = error.errors()
+        causes = [getattr(detail.get("ctx", {}).get("error"), "__cause__", None) for detail in details]
+        located = tuple(str(detail["loc"][-1]) for detail in details if detail["loc"])
+    for cause in causes:
+        if isinstance(cause, InvoiceValidationError) and cause.context is not None:
+            code = cause.context.get("rule_finding_code")
+            if code is not None:
+                named = tuple(
+                    str(name) for name in OBJECT_TUPLE_ADAPTER.validate_python(cause.context.get("fields", ()))
+                )
+                return InvoiceRuleFinding(InvoiceRuleFindingCode(str(code)), str(cause), named or located)
+    return _other_rule_finding(located)
+
+
+def _other_rule_finding(fields: tuple[str, ...] = ()) -> InvoiceRuleFinding:
+    return InvoiceRuleFinding(
+        InvoiceRuleFindingCode.OTHER_INVOICE_RULE,
+        "the invoice is refused by a rule outside the figures",
+        fields or ("invoice",),
+    )
+
+
 def _first_refusal_code(findings: tuple[FigureFinding, ...]) -> FigureFindingCode | None:
     return next((item.code for item in findings if item.severity is FigureFindingSeverity.REFUSAL), None)
 
@@ -323,27 +404,248 @@ def _verdict(
     on_date: date,
     *,
     operation: PinnedAuthorityOperation,
-) -> tuple[_RefusalCode | None, str | None]:
+) -> _Verdict:
     """Answer a complete draft by acceptance itself: a refusal code, or the invoice's id."""
-    add_lines = _add_lines(request, lines)
-    if add_lines is None:
-        code = _first_refusal_code(findings)
-        if code is None:
-            raise InternalInvariantError("a complete invoice draft has an unknown figure and no finding")
-        return code, None
     try:
-        return None, _validated_invoice_id(request, add_lines, operation=operation)
+        add_lines = _add_lines(request, lines)
+        if add_lines is None:
+            code = _first_refusal_code(findings)
+            if code is None:
+                raise InternalInvariantError("a complete invoice draft has an unknown figure and no finding")
+            return _Verdict(code)
+        return _Verdict(invoice_id=_validated_invoice_id(request, add_lines, operation=operation))
     except RegistryValidationError:
         # Caught first: it is a CoreValidationError, and corrupt authority must stay a failure.
         if invoice_date_outside_registry_support(on_date, operation):
-            return FigureFindingCode.RATE_DATE_UNRESOLVED, None
+            return _Verdict(FigureFindingCode.RATE_DATE_UNRESOLVED)
         raise
     except (InvoiceValidationError, ValidationError) as refused:
-        return _refusal_code_of(refused) or _first_refusal_code(findings) or INVALID_INVOICE_REFUSAL, None
+        code = _refusal_code_of(refused) or _first_refusal_code(findings) or INVALID_INVOICE_REFUSAL
+        return _Verdict(code, refused_by=_rule_finding_of(refused))
     except CoreValidationError:
-        return INVALID_INVOICE_REFUSAL, None
+        return _Verdict(INVALID_INVOICE_REFUSAL, refused_by=_other_rule_finding())
     except DecimalException:
-        return FigureFindingCode.FIGURE_OUT_OF_RANGE, None
+        return _Verdict(FigureFindingCode.FIGURE_OUT_OF_RANGE)
+
+
+def _correction_verdict(
+    stored: InvoiceFiguresPreviewStored,
+    findings: tuple[FigureFinding, ...],
+    rule_findings: tuple[_LocatedRuleFinding, ...],
+) -> _Verdict:
+    """Answer the stated facts of a correction; the update validates the whole record again."""
+    code = _first_refusal_code(findings)
+    if code is not None:
+        return _Verdict(code)
+    if rule_findings:
+        return _Verdict(INVALID_INVOICE_REFUSAL)
+    return _Verdict(invoice_id=stored.invoice_id)
+
+
+def _blank_finding(value: str | None, code: InvoiceRuleFindingCode, field: str) -> tuple[InvoiceRuleFinding, ...]:
+    if value is None or value.strip():
+        return ()
+    return (InvoiceRuleFinding(code, f"{field} must not be blank", (field,)),)
+
+
+def _valid_country(country: str | None) -> tuple[str | None, tuple[InvoiceRuleFinding, ...]]:
+    """Return the canonical country a tax id is judged under, and what refuses the stated one."""
+    if country is None:
+        return None, ()
+    try:
+        return validate_country_code(country), ()
+    except RegistryValidationError:
+        raise
+    except (InvoiceValidationError, CoreValidationError) as refused:
+        return None, (
+            InvoiceRuleFinding(
+                InvoiceRuleFindingCode.COUNTERPARTY_COUNTRY_INVALID, str(refused), ("counterparty_country",)
+            ),
+        )
+
+
+def _counterparty_rule_findings(request: InvoiceFiguresPreviewRequest) -> tuple[InvoiceRuleFinding, ...]:
+    """Judge the country and the tax id as the invoice's own normaliser judges them."""
+    country, findings = _valid_country(request.counterparty_country)
+    if request.counterparty_tax_id is None:
+        return findings
+    try:
+        validate_counterparty_tax_id(tax_id_identity_token(request.counterparty_tax_id), country=country)
+    except RegistryValidationError:
+        raise
+    except (InvoiceValidationError, IdentityError, CoreValidationError) as refused:
+        return (
+            *findings,
+            InvoiceRuleFinding(
+                InvoiceRuleFindingCode.COUNTERPARTY_TAX_ID_INVALID,
+                str(refused),
+                ("counterparty_tax_id", "counterparty_country"),
+            ),
+        )
+    return findings
+
+
+def _currency_rule_findings(request: InvoiceFiguresPreviewRequest) -> tuple[InvoiceRuleFinding, ...]:
+    if request.currency is None:
+        return ()
+    try:
+        normalise_iso_4217_currency(request.currency)
+    except CoreValidationError as refused:
+        return (InvoiceRuleFinding(InvoiceRuleFindingCode.CURRENCY_INVALID, str(refused), ("currency",)),)
+    return ()
+
+
+def _stated_class(request: InvoiceFiguresPreviewRequest) -> InvoiceClass | InvoiceRuleFinding:
+    try:
+        return declared_invoice_class(request.invoice_class) or default_invoice_class()
+    except InvoiceValidationError as refused:
+        return InvoiceRuleFinding(InvoiceRuleFindingCode.INVOICE_CLASS_UNDECLARED, str(refused), ("invoice_class",))
+
+
+def _stated_category(
+    request: InvoiceFiguresPreviewRequest,
+    on_date: date,
+    operation: PinnedAuthorityOperation,
+) -> IvaCategory | InvoiceRuleFinding | None:
+    try:
+        return declared_invoice_category(request.iva_category, effective_date=on_date, authority_operation=operation)
+    except InvoiceValidationError as refused:
+        return InvoiceRuleFinding(InvoiceRuleFindingCode.IVA_CATEGORY_UNDECLARED, str(refused), ("iva_category",))
+
+
+def _class_rule_findings(
+    request: InvoiceFiguresPreviewRequest,
+    on_date: date,
+    operation: PinnedAuthorityOperation,
+) -> tuple[InvoiceRuleFinding, ...]:
+    """Ask the class axis over the text as the invoice normalises it."""
+    invoice_class = _stated_class(request)
+    category = _stated_category(request, on_date, operation)
+    undeclared = tuple(item for item in (invoice_class, category) if isinstance(item, InvoiceRuleFinding))
+    if isinstance(invoice_class, InvoiceRuleFinding):
+        return undeclared
+    return (
+        *undeclared,
+        *invoice_class_findings(
+            invoice_class=invoice_class,
+            kind=request.kind,
+            series=(request.series or "").strip() or None,
+            rectifies_invoice_number=(request.rectifies_invoice_number or "").strip().upper() or None,
+            category=None if isinstance(category, InvoiceRuleFinding) else category,
+            tax_id_missing=request.counterparty_tax_id is None,
+        ),
+    )
+
+
+def _lease_situation_findings(situacion_inmueble: str | None, reference: str | None) -> tuple[InvoiceRuleFinding, ...]:
+    try:
+        situation = None if situacion_inmueble is None else require_situacion_inmueble(situacion_inmueble)
+    except InvoiceValidationError as refused:
+        return (
+            InvoiceRuleFinding(
+                InvoiceRuleFindingCode.LEASE_SITUATION_UNDECLARED, str(refused), ("situacion_inmueble",)
+            ),
+        )
+    finding = lease_reference_situation_finding(situation, reference)
+    return () if finding is None else (finding,)
+
+
+def _lease_rule_findings(request: InvoiceFiguresPreviewRequest) -> tuple[InvoiceRuleFinding, ...]:
+    lease = request.business_premises_lease
+    if lease is None:
+        return ()
+    reference = (lease.referencia_catastral or "").strip().upper() or None
+    kind_finding = (
+        None
+        if request.kind is None
+        else lease_kind_finding(lease_stated=True, issued=request.kind is InvoiceKind.ISSUED)
+    )
+    return (
+        *(() if kind_finding is None else (kind_finding,)),
+        *_lease_situation_findings(lease.situacion_inmueble, reference),
+        *(fit for fit in (lease_reference_fit_finding(reference),) if fit is not None),
+    )
+
+
+def _line_description_findings(description: str) -> tuple[InvoiceRuleFinding, ...]:
+    if len(description) > INVOICE_LINE_DESCRIPTION_MAX_LENGTH:
+        return (
+            InvoiceRuleFinding(
+                InvoiceRuleFindingCode.LINE_DESCRIPTION_TOO_LONG,
+                "a line description is longer than an invoice line holds",
+                ("description",),
+                values={"limit": str(INVOICE_LINE_DESCRIPTION_MAX_LENGTH)},
+            ),
+        )
+    return _blank_finding(description, InvoiceRuleFindingCode.LINE_DESCRIPTION_BLANK, "description")
+
+
+def _line_rule_findings(request: InvoiceFiguresPreviewRequest) -> tuple[_LocatedRuleFinding, ...]:
+    return tuple(
+        _LocatedRuleFinding(finding, line.key)
+        for line in request.lines
+        if line.description is not None
+        for finding in _line_description_findings(line.description)
+    )
+
+
+def _operation_date_rule_findings(request: InvoiceFiguresPreviewRequest) -> tuple[InvoiceRuleFinding, ...]:
+    if request.stored is None:
+        return ()
+    finding = operation_date_role_finding(
+        date_stated=request.operation_date is not None,
+        role_stated=request.stored.operation_date_role is not None,
+    )
+    return () if finding is None else (finding,)
+
+
+def _draft_rule_findings(
+    request: InvoiceFiguresPreviewRequest,
+    on_date: date,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> tuple[_LocatedRuleFinding, ...]:
+    """Ask every document rule whose inputs the draft states, complete or not.
+
+    A date the registry does not serve leaves the dated vocabularies unasked; its
+    own finding already says so. On a complete draft the verdict stays acceptance's.
+    """
+    lines = _line_rule_findings(request)
+    try:
+        with validating_governed_facts(operation):
+            document = (
+                *_blank_finding(
+                    request.counterparty_name, InvoiceRuleFindingCode.COUNTERPARTY_NAME_BLANK, "counterparty_name"
+                ),
+                *_blank_finding(request.invoice_number, InvoiceRuleFindingCode.INVOICE_NUMBER_BLANK, "invoice_number"),
+                *_counterparty_rule_findings(request),
+                *_currency_rule_findings(request),
+                *_class_rule_findings(request, on_date, operation),
+                *_lease_rule_findings(request),
+                *_operation_date_rule_findings(request),
+            )
+    except RegistryValidationError:
+        if invoice_date_outside_registry_support(on_date, operation):
+            return lines
+        raise
+    return (*(_LocatedRuleFinding(item) for item in document), *lines)
+
+
+def _with_refusing_rule(
+    rule_findings: tuple[_LocatedRuleFinding, ...],
+    verdict: _Verdict,
+) -> tuple[_LocatedRuleFinding, ...]:
+    """Add the rule acceptance named, unless asking the draft had already found it."""
+    refused_by = verdict.refused_by
+    if refused_by is None:
+        return rule_findings
+    if refused_by.code is InvoiceRuleFindingCode.OTHER_INVOICE_RULE and (
+        rule_findings or verdict.refusal_code != INVALID_INVOICE_REFUSAL
+    ):
+        return rule_findings
+    if any(item.finding.code is refused_by.code for item in rule_findings):
+        return rule_findings
+    return (*rule_findings, _LocatedRuleFinding(refused_by))
 
 
 def _project_figure(figure: StatedFigure) -> InvoiceFiguresPreviewFigure:
@@ -381,6 +683,17 @@ def _project_finding(finding: FigureFinding, line_key: str | None = None) -> Inv
     )
 
 
+def _project_rule_finding(located: _LocatedRuleFinding) -> InvoiceFiguresPreviewRuleFinding:
+    finding = located.finding
+    return InvoiceFiguresPreviewRuleFinding(
+        code=finding.code,
+        fields=finding.fields,
+        line_key=located.line_key,
+        values=project_facts(finding.values),
+        label_key=f"{INVOICE_FIGURES_PREVIEW_LABEL_PREFIX}rule_finding.{finding.code.value}",
+    )
+
+
 def _project_totals(figures: InvoiceFigures) -> InvoiceFiguresPreviewTotals:
     return InvoiceFiguresPreviewTotals(
         base=_public(figures.base_total),
@@ -409,6 +722,9 @@ def preview_invoice_figures(
     A date the registry serves no rates for yields no slots and no cuota, and a
     finding saying so. The moment the registry answers for that date, the same
     path returns its slots with no other change here.
+
+    A refused draft always says why: a refusing figure finding, a rule finding, or
+    ``other_invoice_rule`` when acceptance refused by a rule no code names yet.
     """
     on_date, on_date_source = _resolve_on_date(request)
     slots = _slots_on_date(on_date, operation)
@@ -420,15 +736,23 @@ def preview_invoice_figures(
         retention_rate=_decimal(request.retention_rate),
         retention_amount=_decimal(request.retention_amount),
         printed_total=_decimal(request.printed_total),
+        stored_grand_total=None if request.stored is None else _decimal(request.stored.grand_total),
     )
     date_findings = () if slots is not None else (_rate_date_unresolved_finding(on_date),)
     line_findings = tuple(finding for figures in lines for finding in figures.findings)
     every_finding = (*date_findings, *line_findings, *invoice.findings)
     missing = _missing_fields(request)
-    refusal_code: _RefusalCode | None = None
-    invoice_id: str | None = None
+    rule_findings = _draft_rule_findings(request, on_date, operation=operation)
+    verdict = _Verdict()
     if not missing:
-        refusal_code, invoice_id = _verdict(request, lines, every_finding, on_date, operation=operation)
+        verdict = (
+            _verdict(request, lines, every_finding, on_date, operation=operation)
+            if request.stored is None
+            else _correction_verdict(request.stored, every_finding, rule_findings)
+        )
+    rule_findings = _with_refusing_rule(rule_findings, verdict)
+    if verdict.refusal_code is not None and not rule_findings and _first_refusal_code(every_finding) is None:
+        rule_findings = (_LocatedRuleFinding(_other_rule_finding()),)
     return InvoiceFiguresPreviewResult(
         profile_id=request.profile_id,
         input_digest=content_hash_hex(request.model_dump(mode="json")),
@@ -455,9 +779,11 @@ def preview_invoice_figures(
             *(_project_finding(finding) for finding in invoice.findings),
         ),
         missing_fields=missing,
-        verdict="incomplete" if missing else "would_accept" if invoice_id is not None else "would_refuse",
-        refusal_code=refusal_code,
-        invoice_id=invoice_id,
+        verdict="incomplete" if missing else "would_accept" if verdict.invoice_id is not None else "would_refuse",
+        refusal_code=verdict.refusal_code,
+        invoice_id=verdict.invoice_id,
+        rule_findings=tuple(_project_rule_finding(item) for item in rule_findings),
+        verdict_scope="whole_draft" if request.stored is None else "correction_facts",
     )
 
 

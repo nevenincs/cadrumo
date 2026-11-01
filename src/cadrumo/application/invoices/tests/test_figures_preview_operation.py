@@ -7,6 +7,7 @@ preview's own path. Expected figures are worked by hand in the comments.
 from __future__ import annotations
 
 import asyncio
+import json
 from collections.abc import Iterator
 from dataclasses import dataclass
 from datetime import date, timedelta
@@ -18,6 +19,7 @@ from uuid import UUID
 import pytest
 from pydantic import ValidationError
 
+from ....core.aggregation import IntracomOperationType
 from ....core.errors.hierarchy import CoreValidationError
 from ....core.operations import profile_operation_subject
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -26,14 +28,15 @@ from ....domain.calculations.registry.tests.authority_lease_support import priva
 from ....domain.currency.models import EurRateLookup, EurRateLookupStatus
 from ....domain.invoices.enums import IvaRate
 from ....domain.invoices.errors import InvoiceValidationError
-from ....domain.invoices.figures import FigureFindingCode, StatedFigureVerdict
+from ....domain.invoices.figures import FigureFindingCode, InvoiceRuleFindingCode, StatedFigureVerdict
 from ....domain.invoices.models import InvoiceLine
 from ....domain.iva.schema import InvoiceKind
 from ...operations.models import OperationIdentity, OperationRequest
 from ...operations.owner import OperationExecutorContext
-from ...operations.public_scalar import PublicDecimal
+from ...operations.public_scalar import PublicDecimal, restore_facts
 from .. import figures_preview_operation as preview_operation
-from ..catalogue_add_operation import _prepare_invoice_add
+from ..catalogue_add_contracts import InvoiceAddRequest
+from ..catalogue_add_operation import _prepare_invoice_add, build_invoice_from_add_request, invoice_add_lease
 from ..catalogue_creation import build_catalogue_invoice
 from ..figures_preview_contracts import (
     INVOICE_FIGURES_PREVIEW_OPERATION_DEFINITION_ID,
@@ -41,6 +44,7 @@ from ..figures_preview_contracts import (
     InvoiceFiguresPreviewLine,
     InvoiceFiguresPreviewRequest,
     InvoiceFiguresPreviewResult,
+    InvoiceFiguresPreviewStored,
 )
 from ..figures_preview_operation import (
     InvoiceFiguresPreviewExecutor,
@@ -168,6 +172,7 @@ class _Case:
     verdict: str
     code: FigureFindingCode | str | None = None
     total: str | None = None
+    rule: InvoiceRuleFindingCode | None = None
 
 
 def _lines(*lines: InvoiceFiguresPreviewLine) -> dict[str, object]:
@@ -317,12 +322,243 @@ _TABLE = (
         FigureFindingCode.RETENTION_RATE_OUT_OF_RANGE,
     ),
     # A rule outside the figures owner still refuses, under the add operation's own code.
-    _Case("tax-id-missing", {"counterparty_tax_id": None}, "would_refuse", "invalid_invoice"),
-    _Case("country-malformed", {"counterparty_country": "SPAIN"}, "would_refuse", "invalid_invoice"),
-    _Case("description-blank", _lines(_line(description="  ")), "would_refuse", "invalid_invoice"),
-    _Case("currency-malformed", {"currency": "E1"}, "would_refuse", "invalid_invoice"),
-    _Case("tax-id-malformed", {"counterparty_tax_id": "NOT-A-TAX-ID"}, "would_refuse", "invalid_invoice"),
+    _Case(
+        "tax-id-missing",
+        {"counterparty_tax_id": None},
+        "would_refuse",
+        "invalid_invoice",
+        rule=InvoiceRuleFindingCode.COUNTERPARTY_TAX_ID_REQUIRED,
+    ),
+    _Case(
+        "country-malformed",
+        {"counterparty_country": "SPAIN"},
+        "would_refuse",
+        "invalid_invoice",
+        rule=InvoiceRuleFindingCode.COUNTERPARTY_COUNTRY_INVALID,
+    ),
+    _Case(
+        "description-blank",
+        _lines(_line(description="  ")),
+        "would_refuse",
+        "invalid_invoice",
+        rule=InvoiceRuleFindingCode.LINE_DESCRIPTION_BLANK,
+    ),
+    _Case(
+        "currency-malformed",
+        {"currency": "E1"},
+        "would_refuse",
+        "invalid_invoice",
+        rule=InvoiceRuleFindingCode.CURRENCY_INVALID,
+    ),
+    _Case(
+        "tax-id-malformed",
+        {"counterparty_tax_id": "NOT-A-TAX-ID"},
+        "would_refuse",
+        "invalid_invoice",
+        rule=InvoiceRuleFindingCode.COUNTERPARTY_TAX_ID_INVALID,
+    ),
 )
+
+_ISSUED_FRENCH = {
+    "kind": InvoiceKind.ISSUED,
+    "counterparty_tax_id": "FR40303265045",
+    "counterparty_country": "FR",
+}
+_ON_SPANISH_PREMISES = "spain_other_than_basque_navarre"
+
+
+def _leased(situation: str, reference: str | None) -> dict[str, object]:
+    return {
+        "kind": InvoiceKind.ISSUED,
+        "business_premises_lease": {"situacion_inmueble": situation, "referencia_catastral": reference},
+    }
+
+
+# Each rule's row runs add's own request decoding and builder, so an answer here
+# cannot agree merely because it read its own path.
+_RULE_TABLE = (
+    _Case("ordinary", {}, "would_accept"),
+    _Case(
+        "checksum-wrong",
+        {"counterparty_tax_id": "A58818502"},
+        "would_refuse",
+        "invalid_invoice",
+        rule=InvoiceRuleFindingCode.COUNTERPARTY_TAX_ID_INVALID,
+    ),
+    _Case(
+        "rectificativa-without-series-or-number",
+        {"invoice_class": "RECTIFICATIVA"},
+        "would_refuse",
+        "invalid_invoice",
+        rule=InvoiceRuleFindingCode.SERIES_REQUIRED_FOR_RECTIFICATIVA,
+    ),
+    _Case(
+        "rectificativa-without-number",
+        {"invoice_class": "RECTIFICATIVA", "series": "R"},
+        "would_refuse",
+        "invalid_invoice",
+        rule=InvoiceRuleFindingCode.RECTIFIED_INVOICE_REQUIRED,
+    ),
+    _Case(
+        "rectificativa-with-blank-series",
+        {"invoice_class": "RECTIFICATIVA", "series": "   ", "rectifies_invoice_number": "F-1"},
+        "would_refuse",
+        "invalid_invoice",
+        rule=InvoiceRuleFindingCode.SERIES_REQUIRED_FOR_RECTIFICATIVA,
+    ),
+    _Case(
+        "rectificativa-whole",
+        {"invoice_class": "RECTIFICATIVA", "series": "R", "rectifies_invoice_number": "F-1"},
+        "would_accept",
+    ),
+    _Case(
+        "rectified-number-on-ordinary",
+        {"rectifies_invoice_number": "F-1"},
+        "would_refuse",
+        "invalid_invoice",
+        rule=InvoiceRuleFindingCode.RECTIFIED_INVOICE_NOT_ALLOWED,
+    ),
+    # RD 1619/2012 art. 6.1.d: the relief covers an issued simplificada, not a received one.
+    _Case(
+        "simplificada-issued-relieved",
+        {"invoice_class": "SIMPLIFICADA", "kind": InvoiceKind.ISSUED, "counterparty_tax_id": None},
+        "would_accept",
+    ),
+    _Case(
+        "simplificada-received-needs-tax-id",
+        {"invoice_class": "SIMPLIFICADA", "counterparty_tax_id": None},
+        "would_refuse",
+        "invalid_invoice",
+        rule=InvoiceRuleFindingCode.COUNTERPARTY_TAX_ID_REQUIRED,
+    ),
+    _Case(
+        "simplificada-category-mandates-tax-id",
+        {
+            "invoice_class": "SIMPLIFICADA",
+            "kind": InvoiceKind.ISSUED,
+            "counterparty_tax_id": None,
+            "iva_category": "domestic_reverse_charge",
+        },
+        "would_refuse",
+        "invalid_invoice",
+        rule=InvoiceRuleFindingCode.COUNTERPARTY_TAX_ID_REQUIRED_BY_CATEGORY,
+    ),
+    _Case(
+        "simplificada-for-intra-community",
+        {
+            **_ISSUED_FRENCH,
+            "invoice_class": "SIMPLIFICADA",
+            "iva_category": "intra_community_supply",
+            "operation_type": IntracomOperationType("E"),
+        },
+        "would_refuse",
+        "invalid_invoice",
+        rule=InvoiceRuleFindingCode.SIMPLIFICADA_NOT_FOR_INTRA_COMMUNITY,
+    ),
+    _Case(
+        "operation-type-required",
+        {**_ISSUED_FRENCH, "iva_category": "intra_community_supply"},
+        "would_refuse",
+        "invalid_invoice",
+        rule=InvoiceRuleFindingCode.OPERATION_TYPE_REQUIRED,
+    ),
+    _Case(
+        "operation-type-stated",
+        {**_ISSUED_FRENCH, "iva_category": "intra_community_supply", "operation_type": IntracomOperationType("E")},
+        "would_accept",
+    ),
+    _Case(
+        "class-undeclared",
+        {"invoice_class": "UNDECLARED"},
+        "would_refuse",
+        "invalid_invoice",
+        rule=InvoiceRuleFindingCode.INVOICE_CLASS_UNDECLARED,
+    ),
+    _Case(
+        "category-undeclared",
+        {"iva_category": "undeclared"},
+        "would_refuse",
+        "invalid_invoice",
+        rule=InvoiceRuleFindingCode.IVA_CATEGORY_UNDECLARED,
+    ),
+    _Case(
+        "name-blank",
+        {"counterparty_name": "   "},
+        "would_refuse",
+        "invalid_invoice",
+        rule=InvoiceRuleFindingCode.COUNTERPARTY_NAME_BLANK,
+    ),
+    _Case(
+        "lease-on-received",
+        {**_leased(_ON_SPANISH_PREMISES, None), "kind": InvoiceKind.RECEIVED},
+        "would_refuse",
+        "invalid_invoice",
+        rule=InvoiceRuleFindingCode.LEASE_ONLY_ON_ISSUED,
+    ),
+    _Case("lease-reference-25", _leased(_ON_SPANISH_PREMISES, "A" * 25), "would_accept"),
+    # The Modelo 347 design gives the reference 25 positions; add's wire takes 32 and the record 64.
+    _Case(
+        "lease-reference-26",
+        _leased(_ON_SPANISH_PREMISES, "A" * 26),
+        "would_refuse",
+        "invalid_invoice",
+        rule=InvoiceRuleFindingCode.LEASE_REFERENCE_TOO_LONG,
+    ),
+    _Case(
+        "lease-reference-33",
+        _leased(_ON_SPANISH_PREMISES, "A" * 33),
+        "would_refuse",
+        "invalid_invoice",
+        rule=InvoiceRuleFindingCode.LEASE_REFERENCE_TOO_LONG,
+    ),
+    _Case(
+        "lease-reference-abroad",
+        _leased("abroad", "A"),
+        "would_refuse",
+        "invalid_invoice",
+        rule=InvoiceRuleFindingCode.LEASE_REFERENCE_NOT_ALLOWED,
+    ),
+    _Case(
+        "lease-situation-undeclared",
+        _leased("nowhere", None),
+        "would_refuse",
+        "invalid_invoice",
+        rule=InvoiceRuleFindingCode.LEASE_SITUATION_UNDECLARED,
+    ),
+    _Case(
+        "description-beyond-the-line",
+        _lines(_line(description="x" * 4097)),
+        "would_refuse",
+        "invalid_invoice",
+        rule=InvoiceRuleFindingCode.LINE_DESCRIPTION_TOO_LONG,
+    ),
+)
+
+
+def _added_by_add_itself(
+    draft: InvoiceFiguresPreviewRequest,
+    answer: InvoiceFiguresPreviewResult,
+    operation: PinnedAuthorityOperation,
+) -> str:
+    """Send the draft through add's own wire decoding and builder."""
+    body = draft.model_dump(mode="json", exclude={"printed_total", "base_total", "stored"})
+    for raw, result in zip(body["lines"], answer.lines, strict=True):
+        raw.pop("key")
+        raw["subtotal"] = {"decimal": _figure_for_builder(result.subtotal).__str__()}
+        raw["iva_amount"] = {"decimal": _figure_for_builder(result.iva_amount).__str__()}
+    payload = InvoiceAddRequest.model_validate_json(json.dumps(body))
+    invoice, _advisory = build_invoice_from_add_request(
+        payload=payload,
+        business_premises_lease=invoice_add_lease(payload, authority_operation=operation),
+        profile=str(_PROFILE),
+        authority_operation=operation,
+        rate_provider=_NoRate(),
+    )
+    return invoice.invoice_id
+
+
+def _rule_codes(answer: InvoiceFiguresPreviewResult) -> set[InvoiceRuleFindingCode]:
+    return {finding.code for finding in answer.rule_findings}
 
 
 @pytest.mark.parametrize("case", _TABLE, ids=lambda case: case.name)
@@ -343,6 +579,175 @@ def test_every_verdict_is_the_builders_own(case: _Case, operation: PinnedAuthori
     assert answer.invoice_id is None
     with pytest.raises((InvoiceValidationError, ValidationError, CoreValidationError)):
         _accepted_by_the_builder(draft, answer, operation)
+    if case.rule is not None:
+        assert case.rule in _rule_codes(answer)
+
+
+@pytest.mark.parametrize("case", _RULE_TABLE, ids=lambda case: case.name)
+def test_every_rule_names_itself_and_its_verdict_is_adds_own(case: _Case, operation: PinnedAuthorityOperation) -> None:
+    draft = _draft(**case.draft)
+    answer = preview_invoice_figures(draft, operation=operation)
+
+    assert answer.verdict == case.verdict
+    assert answer.verdict_scope == "whole_draft"
+    if case.verdict == "would_accept":
+        assert _added_by_add_itself(draft, answer, operation) == answer.invoice_id
+        assert answer.rule_findings == ()
+        return
+    assert answer.refusal_code == case.code
+    assert case.rule in _rule_codes(answer)
+    assert all(
+        finding.label_key == f"application.invoices.figures_preview.rule_finding.{finding.code.value}"
+        for finding in answer.rule_findings
+    )
+    with pytest.raises((InvoiceValidationError, ValidationError, CoreValidationError)):
+        _added_by_add_itself(draft, answer, operation)
+
+
+@pytest.mark.parametrize("case", (*_TABLE, *_RULE_TABLE), ids=lambda case: case.name)
+def test_a_refused_draft_always_says_why(case: _Case, operation: PinnedAuthorityOperation) -> None:
+    answer = preview_invoice_figures(_draft(**case.draft), operation=operation)
+
+    said = answer.rule_findings or tuple(item for item in answer.findings if item.severity.value == "refusal")
+    assert bool(said) == (answer.verdict == "would_refuse")
+
+
+def test_the_rule_findings_locate_a_field_and_serve_the_limit(operation: PinnedAuthorityOperation) -> None:
+    too_long = preview_invoice_figures(_draft(**_leased(_ON_SPANISH_PREMISES, "A" * 26)), operation=operation)
+    finding = next(
+        item for item in too_long.rule_findings if item.code is InvoiceRuleFindingCode.LEASE_REFERENCE_TOO_LONG
+    )
+    assert finding.fields == ("referencia_catastral",)
+    assert restore_facts(finding.values) == {"limit": "25"}
+
+    described = preview_invoice_figures(_draft(_line("long", description="x" * 4097)), operation=operation)
+    line_finding = described.rule_findings[0]
+    assert (line_finding.line_key, line_finding.fields) == ("long", ("description",))
+    assert restore_facts(line_finding.values) == {"limit": "4096"}
+
+
+def test_an_incomplete_draft_hears_every_rule_it_can_be_asked(operation: PinnedAuthorityOperation) -> None:
+    answer = preview_invoice_figures(
+        InvoiceFiguresPreviewRequest(
+            profile_id=_PROFILE,
+            kind=InvoiceKind.RECEIVED,
+            invoice_class="RECTIFICATIVA",
+            counterparty_country="ES",
+        ),
+        operation=operation,
+    )
+
+    assert answer.verdict == "incomplete"
+    assert answer.refusal_code is None
+    assert _rule_codes(answer) == {
+        InvoiceRuleFindingCode.SERIES_REQUIRED_FOR_RECTIFICATIVA,
+        InvoiceRuleFindingCode.RECTIFIED_INVOICE_REQUIRED,
+        InvoiceRuleFindingCode.COUNTERPARTY_TAX_ID_REQUIRED,
+    }
+
+
+def test_without_a_kind_the_tax_id_rule_stays_unasked(operation: PinnedAuthorityOperation) -> None:
+    answer = preview_invoice_figures(InvoiceFiguresPreviewRequest(profile_id=_PROFILE), operation=operation)
+
+    assert answer.rule_findings == ()
+
+
+def _correction(**overrides: object) -> InvoiceFiguresPreviewRequest:
+    values: dict[str, object] = {
+        "profile_id": _PROFILE,
+        "kind": InvoiceKind.ISSUED,
+        "invoice_class": "ORDINARIA",
+        "counterparty_tax_id": "A58818501",
+        "counterparty_country": "ES",
+        "issued_at": _APRIL,
+        "base_total": _decimal("1000.00"),
+        "stored": InvoiceFiguresPreviewStored(invoice_id="f" * 64, grand_total=PublicDecimal(decimal="1210.00")),
+    }
+    values.update(overrides)
+    return InvoiceFiguresPreviewRequest.model_validate(values)
+
+
+def test_a_correction_serves_what_is_left_to_pay_on_the_stored_total(operation: PinnedAuthorityOperation) -> None:
+    # 1000.00 x 0.07 = 70.00 of retención; 1210.00 stored - 70.00 = 1140.00 to pay.
+    answer = preview_invoice_figures(
+        _correction(retention_rate=_decimal("0.07"), retention_amount=_decimal("70.00")),
+        operation=operation,
+    )
+
+    assert answer.verdict == "would_accept"
+    assert answer.verdict_scope == "correction_facts"
+    assert answer.invoice_id == "f" * 64
+    assert answer.missing_fields == ()
+    assert answer.totals.total == PublicDecimal(decimal="1210.00")
+    assert answer.totals.net_of_retention == PublicDecimal(decimal="1140.00")
+    assert answer.totals.iva is None
+
+
+def test_a_correction_with_no_retention_owes_its_total(operation: PinnedAuthorityOperation) -> None:
+    answer = preview_invoice_figures(_correction(), operation=operation)
+
+    assert answer.totals.net_of_retention == PublicDecimal(decimal="1210.00")
+
+
+def test_a_correction_refuses_a_retention_that_disagrees_with_the_stored_base(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    # 1000.00 x 0.07 = 70.00; 70.02 is beyond the cent.
+    answer = preview_invoice_figures(
+        _correction(retention_rate=_decimal("0.07"), retention_amount=_decimal("70.02")),
+        operation=operation,
+    )
+
+    assert answer.verdict == "would_refuse"
+    assert answer.refusal_code is FigureFindingCode.RETENTION_AMOUNT_MISMATCH
+    assert answer.invoice_id is None
+
+
+@pytest.mark.parametrize(
+    ("overrides", "expected"),
+    (
+        ({"invoice_class": "RECTIFICATIVA"}, InvoiceRuleFindingCode.SERIES_REQUIRED_FOR_RECTIFICATIVA),
+        ({"invoice_class": "RECTIFICATIVA", "series": "R"}, InvoiceRuleFindingCode.RECTIFIED_INVOICE_REQUIRED),
+        ({"rectifies_invoice_number": "F-1"}, InvoiceRuleFindingCode.RECTIFIED_INVOICE_NOT_ALLOWED),
+        ({"counterparty_tax_id": None}, InvoiceRuleFindingCode.COUNTERPARTY_TAX_ID_REQUIRED),
+        ({"counterparty_tax_id": "A58818502"}, InvoiceRuleFindingCode.COUNTERPARTY_TAX_ID_INVALID),
+        ({"operation_date": date(2026, 4, 1)}, InvoiceRuleFindingCode.OPERATION_DATE_ROLE_MISMATCH),
+    ),
+    ids=("no-series", "no-rectified-number", "number-on-ordinary", "no-tax-id", "bad-checksum", "date-without-role"),
+)
+def test_a_correction_serves_a_verdict_for_each_stated_rule(
+    overrides: dict[str, object],
+    expected: InvoiceRuleFindingCode,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    answer = preview_invoice_figures(_correction(**overrides), operation=operation)
+
+    assert answer.verdict == "would_refuse"
+    assert answer.refusal_code == "invalid_invoice"
+    assert expected in _rule_codes(answer)
+
+
+def test_a_stored_operation_date_can_move_and_cannot_be_taken_away(operation: PinnedAuthorityOperation) -> None:
+    stored = InvoiceFiguresPreviewStored(
+        invoice_id="f" * 64,
+        grand_total=PublicDecimal(decimal="1210.00"),
+        operation_date_role="OPERATION_PERFORMED",
+    )
+
+    moved = preview_invoice_figures(_correction(stored=stored, operation_date=date(2026, 4, 1)), operation=operation)
+    taken = preview_invoice_figures(_correction(stored=stored), operation=operation)
+
+    assert moved.verdict == "would_accept"
+    assert taken.verdict == "would_refuse"
+    assert _rule_codes(taken) == {InvoiceRuleFindingCode.OPERATION_DATE_ROLE_MISMATCH}
+
+
+def test_a_correction_needs_only_the_facts_its_rules_read(operation: PinnedAuthorityOperation) -> None:
+    answer = preview_invoice_figures(_correction(kind=None, issued_at=None, invoice_class=None), operation=operation)
+
+    assert answer.verdict == "incomplete"
+    assert answer.missing_fields == ("kind", "issued_at", "invoice_class")
+    assert answer.verdict_scope == "correction_facts"
 
 
 @pytest.mark.parametrize(
@@ -576,8 +981,9 @@ def test_the_digest_binds_the_answer_to_the_draft(operation: PinnedAuthorityOper
     (
         {"lines": (_line(),), "base_total": _decimal("1")},
         {"lines": (_line("same"), _line("same"))},
+        {"stored": {"invoice_id": "f" * 64, "grand_total": {"decimal": "1"}}},
     ),
-    ids=("lines-and-base", "duplicate-keys"),
+    ids=("lines-and-base", "duplicate-keys", "stored-without-its-base"),
 )
 def test_the_request_refuses_an_incoherent_shape(values: dict[str, object]) -> None:
     with pytest.raises(ValidationError):

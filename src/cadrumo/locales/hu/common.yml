@@ -3202,7 +3202,6 @@ desktop:
       not_saved: Nem lett mentve. A módosításaid megmaradtak.
       not_stated: Nincs megadva
       open_duplicate: Megnyitás
-      operation_date_fixed: Csak a számla hozzáadásakor adható meg
       operation_key: '{key} kulcs'
       party: Partner
       payment:
@@ -3218,15 +3217,9 @@ desktop:
         choose_rate: Válassz kulcsot.
         country_letters: Két betű, pl. ES.
         currency_letters: Három betű, pl. EUR.
-        lease_reference_not_allowed: Ennél a helyzetnél nincs kataszteri hivatkozás.
         missing: Kötelező.
         no_line: Adj hozzá legalább egy tételsort.
-        operation_date_fixed: Hozzáadás után módosítható, de nem adható hozzá és nem
-          törölhető.
         payment_id_shape: 64 hexadecimális karakter.
-        rectifies_required: Add meg a helyesbített számlát.
-        series_required: Helyesbítő számlához sorozat szükséges.
-        tax_id_required: Kötelező, kivéve kiállított egyszerűsített számla esetén.
       read_failed: A számlák nem olvashatók be.
       refusal:
         ambiguous_grouping: '"{raw}" kétféleképpen érthető. Írd így: 1500 vagy 1,5.'

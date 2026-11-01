@@ -289,6 +289,28 @@ def _invoice_add_lines(
     )
 
 
+def declared_invoice_category(
+    category_input: str | None,
+    *,
+    effective_date: date,
+    authority_operation: PinnedAuthorityOperation,
+) -> IvaCategory | None:
+    """Read a stated IVA category as add reads it, under the governed scope the caller holds."""
+    return _invoice_add_category(
+        category_input,
+        _resolve_invoice_add_category_catalogue(
+            category_input,
+            effective_date=effective_date,
+            authority_operation=authority_operation,
+        ),
+    )
+
+
+def declared_invoice_class(class_input: str | None) -> InvoiceClass | None:
+    """Read a stated invoice class as add reads it, under the governed scope the caller holds."""
+    return _invoice_add_class(class_input, _resolve_invoice_add_class_catalogue(class_input))
+
+
 def invoice_date_outside_registry_support(on_date: date, operation: PinnedAuthorityOperation) -> bool:
     """Tell a date the registry does not serve from a registry failure on one it does."""
     return not operation.supported_filing_years().date_envelope().admits_coordinate(on_date)
@@ -445,6 +467,8 @@ __all__ = [
     "build_invoice_add_definition",
     "build_invoice_add_registration",
     "build_invoice_from_add_request",
+    "declared_invoice_category",
+    "declared_invoice_class",
     "invoice_add_lease",
     "invoice_date_outside_registry_support",
     "resolve_invoice_add_access",

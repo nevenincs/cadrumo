@@ -8,8 +8,11 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-from ..calculations.registry.form_codes import RegistryCodedEnum, require_form_fit
+from ..calculations.registry.form_codes import RegistryCodedEnum, form_codes_in_scope, require_form_fit
 from .errors import InvoiceValidationError
+from .figures import InvoiceRuleFinding, InvoiceRuleFindingCode, raise_first_rule_finding
+
+_REFERENCE_WIDTH_KEY = "m347.inmueble.referencia_catastral_max"
 
 
 class SituacionInmueble(RegistryCodedEnum):
@@ -43,6 +46,39 @@ def require_situacion_inmueble(value: object) -> SituacionInmueble:
     raise InvoiceValidationError("situacion_inmueble must be a declared Modelo 347 situation")
 
 
+def lease_reference_situation_finding(
+    situacion_inmueble: SituacionInmueble | None,
+    referencia_catastral: str | None,
+) -> InvoiceRuleFinding | None:
+    """A situation the Modelo 347 design states as having no cadastral reference carries none."""
+    if referencia_catastral is not None and situacion_inmueble in {
+        SituacionInmueble.SPAIN_WITHOUT_CATASTRAL_REFERENCE,
+        SituacionInmueble.ABROAD,
+    }:
+        return InvoiceRuleFinding(
+            InvoiceRuleFindingCode.LEASE_REFERENCE_NOT_ALLOWED,
+            "a situation without a cadastral reference cannot carry one",
+            ("referencia_catastral", "situacion_inmueble"),
+        )
+    return None
+
+
+def lease_reference_fit_finding(referencia_catastral: str | None) -> InvoiceRuleFinding | None:
+    """A cadastral reference fits the width the Modelo 347 design gives it, read from the scope's fact."""
+    codes = form_codes_in_scope()
+    if codes is None or referencia_catastral is None:
+        return None
+    limit = codes.integer(_REFERENCE_WIDTH_KEY)
+    if len(referencia_catastral) <= limit:
+        return None
+    return InvoiceRuleFinding(
+        InvoiceRuleFindingCode.LEASE_REFERENCE_TOO_LONG,
+        "a value is longer than the form declares for the cadastral reference",
+        ("referencia_catastral",),
+        values={"limit": str(limit)},
+    )
+
+
 class BusinessPremisesLease(BaseModel):
     """The lessor's captured lease facts; missing premises detail stays explicit."""
 
@@ -70,16 +106,14 @@ class BusinessPremisesLease(BaseModel):
     @classmethod
     @pydantic_validation_boundary
     def _reference_fits_the_design(cls, value: str | None) -> str | None:
-        return require_form_fit(value, "m347.inmueble.referencia_catastral_max")
+        return require_form_fit(value, _REFERENCE_WIDTH_KEY)
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _validate_reference_situation(self) -> BusinessPremisesLease:
-        if self.referencia_catastral is not None and self.situacion_inmueble in {
-            SituacionInmueble.SPAIN_WITHOUT_CATASTRAL_REFERENCE,
-            SituacionInmueble.ABROAD,
-        }:
-            raise InvoiceValidationError("a situation without a cadastral reference cannot carry one")
+        raise_first_rule_finding(
+            (lease_reference_situation_finding(self.situacion_inmueble, self.referencia_catastral),)
+        )
         return self
 
 
@@ -139,6 +173,8 @@ __all__ = [
     "BusinessPremisesLease",
     "SituacionInmueble",
     "business_premises_lease_from_inputs",
+    "lease_reference_fit_finding",
+    "lease_reference_situation_finding",
     "normalise_legacy_business_premises_lease",
     "require_situacion_inmueble",
 ]

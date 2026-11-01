@@ -759,6 +759,49 @@ application:
         rate_4: IVA 4 %
         rate_5: IVA 5 %
         rate_7_5: IVA 7,5 %
+      rule_finding:
+        counterparty_country_invalid: No es un código de país de dos letras que el
+          libro reconozca.
+        counterparty_name_blank: El nombre de la contraparte no puede quedar en blanco.
+        counterparty_tax_id_invalid: Este NIF no es válido para el país de la contraparte.
+        counterparty_tax_id_required: Esta factura necesita el NIF de la contraparte.
+          Solo una factura simplificada emitida puede prescindir de él.
+        counterparty_tax_id_required_by_category: Una factura simplificada de esta
+          categoría de IVA necesita el NIF de la contraparte.
+        currency_invalid: No es un código de moneda ISO 4217 de tres letras.
+        intra_community_spanish_identification: Una entrega intracomunitaria exenta
+          no puede indicar un adquirente que compra con un NIF-IVA español.
+        invoice_class_undeclared: El registro no declara esa clase de factura.
+        invoice_number_blank: El número de factura no puede quedar en blanco.
+        iva_category_undeclared: El registro no declara esa categoría de IVA en esta
+          fecha.
+        lease_only_on_issued: Solo una factura emitida registra un arrendamiento de
+          local de negocio.
+        lease_reference_not_allowed: Un inmueble en esta situación no tiene referencia
+          catastral.
+        lease_reference_too_long: El Modelo 347 admite una referencia catastral de
+          hasta {limit} caracteres.
+        lease_situation_undeclared: No es una situación del inmueble que declare el
+          Modelo 347.
+        line_description_blank: La descripción de una línea no puede quedar en blanco.
+        line_description_too_long: La descripción de una línea admite hasta {limit}
+          caracteres.
+        line_oss_rate_kind_refused: Este tipo de OSS no está disponible para esta
+          línea.
+        operation_date_role_mismatch: 'La fecha de operación va unida a su función
+          guardada: en una factura guardada puedes moverla, pero no añadirla ni quitarla.'
+        operation_type_required: Esta categoría de IVA necesita una clave de operación
+          del Modelo 349.
+        other_invoice_rule: El libro rechazaría esta factura por otra regla. Comprueba
+          sus datos con el documento.
+        rectified_invoice_not_allowed: Solo una factura rectificativa indica la factura
+          que rectifica.
+        rectified_invoice_required: Una factura rectificativa debe indicar la factura
+          que rectifica.
+        series_required_for_rectificativa: Una factura rectificativa debe emitirse
+          en una serie propia.
+        simplificada_not_for_intra_community: No se puede emitir una factura simplificada
+          por una entrega intracomunitaria exenta.
     lifecycle:
       errors:
         ambiguous_invoice_prefix: 'El prefijo de identificador de factura %{invoice_id}

@@ -708,6 +708,46 @@ application:
         rate_4: IVA 4 %
         rate_5: IVA 5 %
         rate_7_5: IVA 7.5 %
+      rule_finding:
+        counterparty_country_invalid: This is not a two-letter country code the ledger
+          recognises.
+        counterparty_name_blank: The counterparty's name cannot be blank.
+        counterparty_tax_id_invalid: This tax ID is not valid for the counterparty's
+          country.
+        counterparty_tax_id_required: This invoice needs the counterparty's tax ID.
+          Only an issued factura simplificada can go without it.
+        counterparty_tax_id_required_by_category: A factura simplificada in this IVA
+          category needs the counterparty's tax ID.
+        currency_invalid: This is not a three-letter ISO 4217 currency code.
+        intra_community_spanish_identification: An exempt intra-community supply cannot
+          name an acquirer buying under a Spanish IVA number.
+        invoice_class_undeclared: The registry declares no such invoice class.
+        invoice_number_blank: The invoice number cannot be blank.
+        iva_category_undeclared: The registry declares no such IVA category on this
+          date.
+        lease_only_on_issued: Only an issued invoice records a business-premises lease.
+        lease_reference_not_allowed: Premises in this situation have no cadastral
+          reference.
+        lease_reference_too_long: The Modelo 347 holds a cadastral reference of up
+          to {limit} characters.
+        lease_situation_undeclared: This is not a premises situation the Modelo 347
+          declares.
+        line_description_blank: A line's description cannot be blank.
+        line_description_too_long: A line's description holds up to {limit} characters.
+        line_oss_rate_kind_refused: This OSS rate kind is not available for this line.
+        operation_date_role_mismatch: The operation date travels with its stored role,
+          so on a stored invoice it can be moved but not added or removed.
+        operation_type_required: This IVA category needs a Modelo 349 operation key.
+        other_invoice_rule: The ledger would refuse this invoice under another rule.
+          Check its facts against the document.
+        rectified_invoice_not_allowed: Only a factura rectificativa names an invoice
+          it rectifies.
+        rectified_invoice_required: A factura rectificativa must name the invoice
+          it rectifies.
+        series_required_for_rectificativa: A factura rectificativa must be issued
+          in its own series.
+        simplificada_not_for_intra_community: A factura simplificada cannot be issued
+          for an exempt intra-community supply.
     lifecycle:
       errors:
         ambiguous_invoice_prefix: 'The invoice id prefix %{invoice_id} is ambiguous;

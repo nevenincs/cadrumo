@@ -55,7 +55,12 @@ from ...domain.invoices.enums import (
     resolve_iva_rate_slot as resolve_iva_rate_slot_for_date,
 )
 from ...domain.invoices.errors import InvoiceValidationError
-from ...domain.invoices.figures import computed_grand_total, computed_line_iva, rounded_line_totals
+from ...domain.invoices.figures import (
+    InvoiceRuleFindingCode,
+    computed_grand_total,
+    computed_line_iva,
+    rounded_line_totals,
+)
 from ...domain.invoices.models import Invoice, InvoiceLine
 from ...domain.iva.errors import IvaRateNotFoundError
 from ...domain.iva.schema import InvoiceKind, IvaCategory
@@ -219,7 +224,11 @@ def _require_operation_type_where_the_category_cannot_settle_it(
         "an intra-community supply must state its Modelo 349 operation type: the category alone "
         f"cannot distinguish among {candidate_labels}, because all candidates carry this same IVA category",
         translated_message="application.invoices.creation.errors.intracom_operation_type_required",
-        context={"iva_category": required_category.value},
+        context={
+            "iva_category": required_category.value,
+            "rule_finding_code": InvoiceRuleFindingCode.OPERATION_TYPE_REQUIRED.value,
+            "fields": ("operation_type", "iva_category"),
+        },
     )
 
 

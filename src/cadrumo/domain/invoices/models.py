@@ -72,15 +72,22 @@ from .enums import (
 )
 from .errors import InvoiceValidationError
 from .figures import (
+    InvoiceRuleFinding,
+    InvoiceRuleFindingCode,
     figure_refusal,
+    invoice_class_rule_findings,
+    invoice_rule_refusal,
     invoice_total_findings,
+    lease_kind_finding,
     line_amount_finding,
     line_iva_finding,
     line_rate_refusal_finding,
     line_subtotal_finding,
     nonnumeric_invoice_findings,
+    operation_date_role_finding,
     quantity_finding,
     raise_first_figure_finding,
+    raise_first_rule_finding,
     recargo_ceiling_finding,
     recargo_sign_finding,
     retention_findings,
@@ -159,6 +166,29 @@ def _simplificada_mandatory_tax_id_categories(
         )
     except ValueError as exc:
         raise RegistryValidationError("invoice applicability contains an unknown IVA category") from exc
+
+
+def invoice_class_findings(
+    *,
+    invoice_class: InvoiceClass,
+    kind: InvoiceKind | None,
+    series: str | None,
+    rectifies_invoice_number: str | None,
+    category: IvaCategory | None,
+    tax_id_missing: bool,
+) -> tuple[InvoiceRuleFinding, ...]:
+    """Answer the invoice-class axis under the authority in scope, as the invoice itself is refused."""
+    return invoice_class_rule_findings(
+        rectificativa=invoice_class == answer_once(invoice_class_rectificativa),
+        simplificada=invoice_class == answer_once(invoice_class_simplificada),
+        issued=None if kind is None else kind is InvoiceKind.ISSUED,
+        series=series,
+        rectifies_invoice_number=rectifies_invoice_number,
+        intra_community_supply=category == answer_once(require_iva_category, "intra_community_supply"),
+        tax_id_missing=tax_id_missing,
+        category_mandates_tax_id=category in answer_once(_simplificada_mandatory_tax_id_categories),
+        category_value=getattr(category, "value", ""),
+    )
 
 
 _COLLECTED_PAYMENT_STATUSES: Final[frozenset[PaymentStatus]] = frozenset(
@@ -905,49 +935,15 @@ class Invoice(BaseModel):
         record nor any field on it can express; that axis is a declared,
         documented gap, not modelled here or anywhere on this class.
         """
-        category = self.iva_category
-        missing_tax_id = self.counterparty_tax_id is None
-        category_value = getattr(category, "value", "")
-        simplificada = answer_once(invoice_class_simplificada)
-        rectificativa = answer_once(invoice_class_rectificativa)
-        intra_community_supply = answer_once(require_iva_category, "intra_community_supply")
-        relief_case = (self.invoice_class, self.kind) == (simplificada, InvoiceKind.ISSUED)
-        _normalization.raise_first_invoice_violation(
-            (
-                (
-                    (self.invoice_class == rectificativa, not (self.series is not None and self.series))
-                    == (True, True),
-                    "a factura rectificativa must be issued in a specific series (RD 1619/2012 art. 6.1.a.2.º)",
-                ),
-                (
-                    (
-                        self.invoice_class == rectificativa,
-                        not (self.rectifies_invoice_number is not None and self.rectifies_invoice_number),
-                    )
-                    == (True, True),
-                    "a factura rectificativa must name the invoice it rectifies (LIVA art. 89)",
-                ),
-                (
-                    (self.invoice_class != rectificativa, self.rectifies_invoice_number is not None) == (True, True),
-                    "rectifies_invoice_number only applies to a factura rectificativa",
-                ),
-                (
-                    (self.invoice_class, category) == (simplificada, intra_community_supply),
-                    "a factura simplificada must not be issued for an entrega intracomunitaria exenta "
-                    "(RD 1619/2012 art. 4.4.a); issue an ordinaria or rectificativa instead",
-                ),
-                (
-                    (missing_tax_id, not relief_case) == (True, True),
-                    "counterparty_tax_id is required unless the invoice is simplified and kind is ISSUED; "
-                    "on a RECEIVED invoice it names the issuer's own identity, which stays mandatory",
-                ),
-                (
-                    (missing_tax_id, category in answer_once(_simplificada_mandatory_tax_id_categories))
-                    == (True, True),
-                    "counterparty_tax_id is required on a factura simplificada whose iva_category is "
-                    f"{category_value!r} (RD 1619/2012 art. 6.1.d)",
-                ),
-            ),
+        raise_first_rule_finding(
+            invoice_class_findings(
+                invoice_class=self.invoice_class,
+                kind=self.kind,
+                series=self.series,
+                rectifies_invoice_number=self.rectifies_invoice_number,
+                category=self.iva_category,
+                tax_id_missing=self.counterparty_tax_id is None,
+            )
         )
         return self
 
@@ -955,8 +951,14 @@ class Invoice(BaseModel):
     @pydantic_validation_boundary
     def _validate_business_premises_lease_kind(self) -> Self:
         """The lessor records a business-premises lease on an issued invoice."""
-        if self.business_premises_lease is not None and self.kind is not InvoiceKind.ISSUED:
-            raise InvoiceValidationError("a business-premises lease only applies to an issued invoice")
+        raise_first_rule_finding(
+            (
+                lease_kind_finding(
+                    lease_stated=self.business_premises_lease is not None,
+                    issued=self.kind is InvoiceKind.ISSUED,
+                ),
+            )
+        )
         return self
 
     @model_validator(mode="after")
@@ -994,10 +996,14 @@ class Invoice(BaseModel):
         if self.iva_category == intra_community_supply and (
             self.counterparty_identification_state == answer_once(spanish_eu_member_state)
         ):
-            raise InvoiceValidationError(
-                "an entrega intracomunitaria exenta cannot name an acquirer purchasing under a "
-                "Spanish IVA identification (LIVA art. 25); its country of establishment does not "
-                "change that",
+            raise invoice_rule_refusal(
+                InvoiceRuleFinding(
+                    InvoiceRuleFindingCode.INTRA_COMMUNITY_SPANISH_IDENTIFICATION,
+                    "an entrega intracomunitaria exenta cannot name an acquirer purchasing under a "
+                    "Spanish IVA identification (LIVA art. 25); its country of establishment does not "
+                    "change that",
+                    ("counterparty_tax_id", "iva_category"),
+                )
             )
         return self
 
@@ -1019,8 +1025,14 @@ class Invoice(BaseModel):
         pagos-anticipados rule, so that category always devengues under
         art. 75.Uno.8.º regardless of any advance received.
         """
-        if (self.operation_date is None) != (self.operation_date_role is None):
-            raise InvoiceValidationError("operation_date and operation_date_role must be set together")
+        raise_first_rule_finding(
+            (
+                operation_date_role_finding(
+                    date_stated=self.operation_date is not None,
+                    role_stated=self.operation_date_role is not None,
+                ),
+            )
+        )
         advance_payment_role = answer_once(advance_payment_received_role)
         if self.operation_date_role == advance_payment_role:
             if self.iva_category == answer_once(require_iva_category, "intra_community_supply"):
@@ -1042,12 +1054,16 @@ class Invoice(BaseModel):
         has_oss_line_rate = any(line.oss_rate_kind is not None for line in self.lines)
         axis_flags = (self.oss_ioss_regime is None, self.oss_transaction_kind is None)
         if axis_flags != (False, False):
+            if (axis_flags, has_oss_line_rate) == ((True, True), True):
+                raise invoice_rule_refusal(
+                    InvoiceRuleFinding(
+                        InvoiceRuleFindingCode.LINE_OSS_RATE_KIND_REFUSED,
+                        "oss_rate_kind requires invoice-level OSS/IOSS axes",
+                        ("lines",),
+                    )
+                )
             _normalization.raise_first_invoice_violation(
                 (
-                    (
-                        (axis_flags, has_oss_line_rate) == ((True, True), True),
-                        "oss_rate_kind requires invoice-level OSS/IOSS axes",
-                    ),
                     (
                         axis_flags not in ((True, True), (False, False)),
                         "oss_ioss_regime and oss_transaction_kind must be supplied together",

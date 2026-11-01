@@ -14,21 +14,37 @@ from pydantic import BaseModel, Field, model_validator
 
 from ...core.aggregation import IntracomOperationType
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-from ...domain.invoices.figures import FigureFindingCode, FigureFindingSeverity, StatedFigureVerdict
+from ...domain.invoices.figures import (
+    FigureFindingCode,
+    FigureFindingSeverity,
+    InvoiceRuleFindingCode,
+    StatedFigureVerdict,
+)
 from ...domain.iva.schema import InvoiceKind
 from ..operations.public_scalar import PublicDecimal, PublicNamedScalar
-from .catalogue_add_contracts import InvoiceAddBusinessPremisesLease
 
 INVOICE_FIGURES_PREVIEW_OPERATION_DEFINITION_ID: Final = "ledger.invoice.preview"
 
 INVOICE_FIGURES_PREVIEW_LABEL_PREFIX: Final = "application.invoices.figures_preview."
-"""Where the words of the served codes live: ``finding.<code>`` and ``rate_slot.<slot>``."""
+"""Where the words of the served codes live: ``finding.<code>``, ``rule_finding.<code>`` and ``rate_slot.<slot>``."""
 
 INVALID_INVOICE_REFUSAL: Final[Literal["invalid_invoice"]] = "invalid_invoice"
 """A refusal by a rule outside the figures owner, the same code the add operation reports."""
 
 type InvoiceFiguresPreviewVerdict = Literal["incomplete", "would_accept", "would_refuse"]
 type InvoiceFiguresPreviewOnDateSource = Literal["operation_date", "issued_at", "today"]
+type InvoiceFiguresPreviewVerdictScope = Literal["whole_draft", "correction_facts"]
+"""What a verdict was reached over.
+
+``whole_draft`` is acceptance itself: the add operation's own construction ran
+on the draft. ``correction_facts`` judges only the facts a correction request
+states, against the stored figures it restates: the retención against the stored
+base, the class facts, the tax id against the country, the operation date against
+its stored role. It reads no stored record, so ``would_accept`` there means no
+rule it could ask refuses, and not that ``ledger.invoice.update`` will commit: the
+update validates the whole stored record again, its lines included, and a moved
+operation date can still take a stored line's rate out of force.
+"""
 
 
 class InvoiceFiguresPreviewLine(BaseModel):
@@ -37,7 +53,8 @@ class InvoiceFiguresPreviewLine(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     key: str = Field(min_length=1, max_length=128)
-    description: str | None = Field(default=None, max_length=4096)
+    # Any length is asked about: too long for an add is a served finding, not a failed read.
+    description: str | None = None
     quantity: PublicDecimal | None = None
     unit_price: PublicDecimal | None = None
     iva_rate: str | None = Field(default=None, max_length=128)
@@ -45,6 +62,25 @@ class InvoiceFiguresPreviewLine(BaseModel):
     iva_amount: PublicDecimal | None = None
     spending_category_id: str | None = Field(default=None, max_length=128)
     oss_rate_kind: str | None = Field(default=None, max_length=128)
+
+
+class InvoiceFiguresPreviewLease(BaseModel):
+    """A draft's premises facts as typed; any length is asked about, and a served finding answers it."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    situacion_inmueble: str | None = Field(default=None, min_length=1)
+    referencia_catastral: str | None = None
+
+
+class InvoiceFiguresPreviewStored(BaseModel):
+    """What a correction restates of the stored invoice it corrects; nothing here is read from storage."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    invoice_id: str = Field(min_length=1, max_length=64)
+    grand_total: PublicDecimal
+    operation_date_role: str | None = Field(default=None, max_length=128)
 
 
 class InvoiceFiguresPreviewRequest(BaseModel):
@@ -73,7 +109,8 @@ class InvoiceFiguresPreviewRequest(BaseModel):
     series: str | None = None
     rectifies_invoice_number: str | None = None
     notes: str = ""
-    business_premises_lease: InvoiceAddBusinessPremisesLease | None = None
+    business_premises_lease: InvoiceFiguresPreviewLease | None = None
+    stored: InvoiceFiguresPreviewStored | None = None
 
     @model_validator(mode="after")
     def _line_input_shape(self) -> InvoiceFiguresPreviewRequest:
@@ -81,6 +118,8 @@ class InvoiceFiguresPreviewRequest(BaseModel):
             raise ValueError("a draft states lines or a base_total, never both")
         if len({line.key for line in self.lines}) != len(self.lines):
             raise ValueError("draft line keys must be unique")
+        if self.stored is not None and self.base_total is None:
+            raise ValueError("a stored invoice is corrected on its stored base_total")
         return self
 
 
@@ -152,8 +191,26 @@ class InvoiceFiguresPreviewFinding(BaseModel):
     label_key: str
 
 
+class InvoiceFiguresPreviewRuleFinding(BaseModel):
+    """One closed finding of a rule outside the figures, in the shape of a figure finding."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    code: InvoiceRuleFindingCode
+    severity: FigureFindingSeverity = FigureFindingSeverity.REFUSAL
+    fields: tuple[str, ...]
+    line_key: str | None = None
+    values: tuple[PublicNamedScalar, ...] = ()
+    label_key: str
+
+
 class InvoiceFiguresPreviewResult(BaseModel):
-    """The backend's whole answer for one draft, bound to it by ``input_digest``."""
+    """The backend's whole answer for one draft, bound to it by ``input_digest``.
+
+    ``refusal_code`` keeps its meaning for every draft: a figure's code, or
+    ``invalid_invoice`` for a rule outside the figures. ``rule_findings`` names
+    those rules and their fields, on an incomplete draft as far as they can be asked.
+    """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
@@ -170,6 +227,8 @@ class InvoiceFiguresPreviewResult(BaseModel):
     verdict: InvoiceFiguresPreviewVerdict
     refusal_code: FigureFindingCode | Literal["invalid_invoice"] | None = None
     invoice_id: str | None = None
+    rule_findings: tuple[InvoiceFiguresPreviewRuleFinding, ...] = ()
+    verdict_scope: InvoiceFiguresPreviewVerdictScope = "whole_draft"
 
     @model_validator(mode="after")
     def _coherent_verdict(self) -> InvoiceFiguresPreviewResult:
@@ -197,6 +256,7 @@ __all__ = [
     "InvoiceFiguresPreviewExecutionResult",
     "InvoiceFiguresPreviewFigure",
     "InvoiceFiguresPreviewFinding",
+    "InvoiceFiguresPreviewLease",
     "InvoiceFiguresPreviewLine",
     "InvoiceFiguresPreviewLineResult",
     "InvoiceFiguresPreviewOnDateSource",
@@ -204,6 +264,9 @@ __all__ = [
     "InvoiceFiguresPreviewRequest",
     "InvoiceFiguresPreviewResult",
     "InvoiceFiguresPreviewRetention",
+    "InvoiceFiguresPreviewRuleFinding",
+    "InvoiceFiguresPreviewStored",
     "InvoiceFiguresPreviewTotals",
     "InvoiceFiguresPreviewVerdict",
+    "InvoiceFiguresPreviewVerdictScope",
 ]

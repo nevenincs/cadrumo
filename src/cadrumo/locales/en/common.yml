@@ -3177,7 +3177,6 @@ desktop:
       not_saved: It wasn't saved. Your edits are kept.
       not_stated: Not stated
       open_duplicate: Open it
-      operation_date_fixed: Set only when the invoice is added
       operation_key: Key {key}
       party: Counterparty
       payment:
@@ -3193,14 +3192,9 @@ desktop:
         choose_rate: Choose a rate.
         country_letters: Two letters, e.g. ES.
         currency_letters: Three letters, e.g. EUR.
-        lease_reference_not_allowed: No cadastral reference for this situation.
         missing: Required.
         no_line: Add at least one line.
-        operation_date_fixed: Once added, it can move but not be added or removed.
         payment_id_shape: 64 hexadecimal characters.
-        rectifies_required: Name the invoice it rectifies.
-        series_required: A rectificativa needs a series.
-        tax_id_required: Required, except on an issued simplified invoice.
       read_failed: Couldn't read the invoices.
       refusal:
         ambiguous_grouping: '"{raw}" can be read two ways. Write 1500 or 1.5.'

@@ -3219,7 +3219,6 @@ desktop:
       not_saved: No se ha guardado. Tus cambios se conservan.
       not_stated: Sin indicar
       open_duplicate: Abrirla
-      operation_date_fixed: Solo se indica al añadir la factura
       operation_key: Clave {key}
       party: Contraparte
       payment:
@@ -3235,15 +3234,9 @@ desktop:
         choose_rate: Elige un tipo.
         country_letters: Dos letras, p. ej. ES.
         currency_letters: Tres letras, p. ej. EUR.
-        lease_reference_not_allowed: Sin referencia catastral en esta situación.
         missing: Obligatorio.
         no_line: Añade al menos una línea.
-        operation_date_fixed: Una vez añadida, se puede cambiar, pero no añadir ni
-          quitar.
         payment_id_shape: 64 caracteres hexadecimales.
-        rectifies_required: Indica la factura que rectifica.
-        series_required: Una rectificativa necesita serie.
-        tax_id_required: Obligatorio, salvo en una simplificada emitida.
       read_failed: No se han podido leer las facturas.
       refusal:
         ambiguous_grouping: '"{raw}" se puede leer de dos maneras. Escribe 1500 o

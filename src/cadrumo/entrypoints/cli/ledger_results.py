@@ -162,6 +162,8 @@ class LedgerInvoicePreviewResult(OutputSchema):
     verdict: str
     refusal_code: str | None
     invoice_id: str | None
+    rule_findings: list[LedgerInvoicePreviewFindingPayload]
+    verdict_scope: str
 
 
 class M210IncomeClassificationPayload(OutputSchema):

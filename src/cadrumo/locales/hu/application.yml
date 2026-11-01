@@ -742,6 +742,45 @@ application:
         rate_4: ÁFA 4%
         rate_5: ÁFA 5%
         rate_7_5: ÁFA 7,5%
+      rule_finding:
+        counterparty_country_invalid: Ez nem olyan kétbetűs országkód, amelyet a főkönyv
+          felismer.
+        counterparty_name_blank: A partner neve nem maradhat üresen.
+        counterparty_tax_id_invalid: Ez az adószám nem érvényes a partner országában.
+        counterparty_tax_id_required: Ehhez a számlához kell a partner adószáma. Csak
+          a kiállított factura simplificada lehet meg nélküle.
+        counterparty_tax_id_required_by_category: Ebben az IVA-kategóriában a factura
+          simplificadához kell a partner adószáma.
+        currency_invalid: Ez nem háromjegyű ISO 4217 pénznemkód.
+        intra_community_spanish_identification: Mentes Közösségen belüli értékesítés
+          nem nevezhet meg spanyol IVA-számmal vásárló partnert.
+        invoice_class_undeclared: A nyilvántartás nem ismer ilyen számlaosztályt.
+        invoice_number_blank: A számla sorszáma nem maradhat üresen.
+        iva_category_undeclared: A nyilvántartás ezen a napon nem ismer ilyen IVA-kategóriát.
+        lease_only_on_issued: Üzlethelyiség-bérletet csak kiállított számla rögzít.
+        lease_reference_not_allowed: Az ilyen helyzetű ingatlannak nincs kataszteri
+          hivatkozása.
+        lease_reference_too_long: A Modelo 347 legfeljebb {limit} karakteres kataszteri
+          hivatkozást fogad el.
+        lease_situation_undeclared: Ezt az ingatlanhelyzetet a Modelo 347 nem ismeri.
+        line_description_blank: A tétel leírása nem maradhat üresen.
+        line_description_too_long: A tétel leírása legfeljebb {limit} karakter lehet.
+        line_oss_rate_kind_refused: Ez az OSS-kulcstípus ennél a tételnél nem érhető
+          el.
+        operation_date_role_mismatch: 'A teljesítési dátum a tárolt szerepéhez tartozik:
+          tárolt számlán áthelyezheted, de nem adhatod hozzá és nem veheted el.'
+        operation_type_required: Ehhez az IVA-kategóriához kell a Modelo 349 műveleti
+          kódja.
+        other_invoice_rule: A főkönyv egy másik szabály miatt elutasítaná ezt a számlát.
+          Ellenőrizd az adatait a bizonylat alapján.
+        rectified_invoice_not_allowed: Helyesbített számlát csak factura rectificativa
+          nevezhet meg.
+        rectified_invoice_required: A factura rectificativának meg kell neveznie a
+          helyesbített számlát.
+        series_required_for_rectificativa: A factura rectificativát külön sorozatban
+          kell kiállítani.
+        simplificada_not_for_intra_community: Mentes Közösségen belüli értékesítésről
+          nem állítható ki factura simplificada.
     lifecycle:
       errors:
         ambiguous_invoice_prefix: 'A(z) %{invoice_id} számlaazonosító-előtag nem egyértelmű;

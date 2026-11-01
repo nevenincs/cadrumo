@@ -13,13 +13,15 @@ from cadrumo_client.commands.profile_binding import require_profile_client
 from cadrumo_client.commands.registered_operation import run_registered_operation
 from cadrumo_client.commands.registered_operation_errors import invalid_completion_error
 
-from ...application.invoices.catalogue_add_contracts import InvoiceAddBusinessPremisesLease
 from ...application.invoices.figures_preview_contracts import (
     INVOICE_FIGURES_PREVIEW_OPERATION_DEFINITION_ID,
     InvoiceFiguresPreviewFinding,
+    InvoiceFiguresPreviewLease,
     InvoiceFiguresPreviewLine,
     InvoiceFiguresPreviewRequest,
     InvoiceFiguresPreviewResult,
+    InvoiceFiguresPreviewRuleFinding,
+    InvoiceFiguresPreviewStored,
 )
 from ...application.operations.public_scalar import PublicDecimal, restore_facts
 from ...core.aggregation import IntracomOperationType
@@ -69,6 +71,43 @@ def _draft_line(raw_line: str, position: int) -> InvoiceFiguresPreviewLine:
     return InvoiceFiguresPreviewLine.model_validate(values)
 
 
+def _draft_lease(
+    *,
+    lease_selected: bool,
+    situacion_inmueble: str | None,
+    referencia_catastral: str | None,
+) -> InvoiceFiguresPreviewLease | None:
+    """Carry the premises facts as typed; the read answers their rules with a served finding."""
+    if lease_selected:
+        return InvoiceFiguresPreviewLease(
+            situacion_inmueble=situacion_inmueble,
+            referencia_catastral=referencia_catastral,
+        )
+    if situacion_inmueble is not None or referencia_catastral is not None:
+        raise InvoiceValidationError("premises facts require the business-premises lease choice")
+    return None
+
+
+def _stored_invoice(
+    *,
+    stored_invoice_id: str | None,
+    stored_grand_total: str | None,
+    operation_date_role: str | None,
+) -> InvoiceFiguresPreviewStored | None:
+    """Name the invoice a correction restates; its id and total travel together."""
+    if stored_invoice_id is None and stored_grand_total is None:
+        if operation_date_role is not None:
+            raise InvoiceValidationError("operation-date-role restates a stored invoice")
+        return None
+    if stored_invoice_id is None or stored_grand_total is None:
+        raise InvoiceValidationError("a stored invoice states both its id and its grand total")
+    return InvoiceFiguresPreviewStored(
+        invoice_id=stored_invoice_id,
+        grand_total=PublicDecimal(decimal=str(parse_decimal_amount(stored_grand_total, label="stored-grand-total"))),
+        operation_date_role=operation_date_role,
+    )
+
+
 def _draft_request(
     *,
     profile_id: UUID,
@@ -95,6 +134,7 @@ def _draft_request(
     referencia_catastral: str | None,
     line: tuple[str, ...],
     notes: str,
+    stored: InvoiceFiguresPreviewStored | None,
 ) -> InvoiceFiguresPreviewRequest:
     """Parse every stated option at the boundary; an option left out stays absent in the draft."""
     return InvoiceFiguresPreviewRequest(
@@ -117,13 +157,14 @@ def _draft_request(
         retention_rate=_fraction(retention_rate, label="retention-rate"),
         retention_amount=_amount(retention_amount, label="retention-amount"),
         printed_total=_amount(printed_total, label="printed-total"),
-        business_premises_lease=InvoiceAddBusinessPremisesLease.from_inputs(
+        business_premises_lease=_draft_lease(
             lease_selected=arrendamiento_local_negocio,
             situacion_inmueble=situacion_inmueble,
             referencia_catastral=referencia_catastral,
         ),
         lines=tuple(_draft_line(raw, position) for position, raw in enumerate(line, start=1)),
         notes=notes,
+        stored=stored,
     )
 
 
@@ -138,7 +179,7 @@ def _unwrapped(value: object) -> object:
     return value
 
 
-def _finding_line(finding: InvoiceFiguresPreviewFinding) -> str:
+def _finding_line(finding: InvoiceFiguresPreviewFinding | InvoiceFiguresPreviewRuleFinding) -> str:
     words = {key: str(value) for key, value in restore_facts(finding.values).items()}
     where = finding.line_key or ""
     return f"finding\t{finding.severity.value}\t{finding.code.value}\t{where}\t{tr(finding.label_key, **words)}"
@@ -149,7 +190,7 @@ def _result_lines(answer: InvoiceFiguresPreviewResult) -> tuple[str, ...]:
         return "" if value is None else value.decimal
 
     return (
-        f"verdict\t{answer.verdict}",
+        f"verdict\t{answer.verdict}\t{answer.verdict_scope}",
         f"refusal_code\t{answer.refusal_code or ''}",
         f"invoice_id\t{answer.invoice_id or ''}",
         f"on_date\t{answer.on_date.isoformat()}\t{answer.on_date_source}",
@@ -164,6 +205,7 @@ def _result_lines(answer: InvoiceFiguresPreviewResult) -> tuple[str, ...]:
         f"net_of_retention\t{amount(answer.totals.net_of_retention)}",
         *(f"missing\t{name}" for name in answer.missing_fields),
         *(_finding_line(finding) for finding in answer.findings),
+        *(_finding_line(finding) for finding in answer.rule_findings),
     )
 
 
@@ -192,6 +234,9 @@ def invoice_preview(
     referencia_catastral: str | None = None,
     line: tuple[str, ...] = (),
     notes: str = "",
+    stored_invoice_id: str | None = None,
+    stored_grand_total: str | None = None,
+    operation_date_role: str | None = None,
 ) -> None:
     """Answer one invoice draft with the figures and verdict the add operation would reach."""
     client = require_profile_client(ctx, expected_profile_id=UUID(require_active_bucket_id()))
@@ -221,6 +266,11 @@ def invoice_preview(
             referencia_catastral=referencia_catastral,
             line=line,
             notes=notes,
+            stored=_stored_invoice(
+                stored_invoice_id=stored_invoice_id,
+                stored_grand_total=stored_grand_total,
+                operation_date_role=operation_date_role,
+            ),
         )
     except (InvoiceValidationError, ValidationError) as exc:
         if (refusal := ledger_invoice_validation_no_recovery(exc)) is not None:

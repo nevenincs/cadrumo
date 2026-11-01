@@ -464,8 +464,14 @@ cli:
           amb `key`, `description`, `quantity`, `unit_price`, `iva_rate`, `subtotal`
           i `iva_amount` opcionals. Una xifra que ometis queda sense conèixer. Fes-lo
           servir en lloc de --taxable-base.
+        preview_operation_date_role_help: Funció desada de la data d'operació de la
+          factura que repeteix una correcció.
         preview_printed_total_help: El total imprès al document, que es compara amb
           el total calculat.
+        preview_stored_grand_total_help: Total desat de la factura que repeteix una
+          correcció, del qual surt el que queda per pagar.
+        preview_stored_invoice_id_help: Id de la factura desada que repeteix una correcció;
+          amb ell, el veredicte cobreix només les dades indicades.
         recargo_help: Recàrrec d'equivalència repercutit sobre la quota (LIVA art.
           161). Va inclòs en el total de la factura, a diferència d'una retenció.
         rectifies_help: Número de la factura que corregeix aquesta rectificativa.

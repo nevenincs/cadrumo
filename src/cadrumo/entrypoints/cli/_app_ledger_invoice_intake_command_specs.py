@@ -159,6 +159,29 @@ LEDGER_INVOICE_INTAKE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 hidden=False,
             ),
             INVOICE_INTAKE_WIZARD_TRAILING_OPTIONS[1],
+            *(
+                OptionSpec(
+                    name=name,
+                    declarations=(flag,),
+                    value=ValueContract(DeferredTarget("builtins", "str")),
+                    default=ParameterDefault.value(None),
+                    help_key=TranslationKey(f"cli.app.ledger.invoice.preview_{name}_help"),
+                    metavar=None,
+                    is_flag=False,
+                    flag_value=None,
+                    multiple=False,
+                    count=False,
+                    eager=False,
+                    constraint=ParameterConstraint(),
+                    show_default=True,
+                    hidden=False,
+                )
+                for name, flag in (
+                    ("stored_invoice_id", "--stored-invoice-id"),
+                    ("stored_grand_total", "--stored-grand-total"),
+                    ("operation_date_role", "--operation-date-role"),
+                )
+            ),
         ),
         policy=_POLICY_6,
         handler=LazyBinding.available(DeferredTarget(".invoice_preview_commands", "invoice_preview", __package__)),

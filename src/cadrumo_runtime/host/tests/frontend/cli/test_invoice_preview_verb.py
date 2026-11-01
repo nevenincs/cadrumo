@@ -160,3 +160,63 @@ def test_a_bare_draft_is_incomplete_and_invents_no_figure(tmp_path: Path) -> Non
         assert "lines" in answer["missing_fields"]
         assert answer["totals"] == {"base": None, "iva": None, "recargo": None, "total": None, "net_of_retention": None}
         assert answer["invoice_id"] is None
+
+
+def test_a_rule_refusal_names_itself_and_a_correction_serves_what_is_left_to_pay(tmp_path: Path) -> None:
+    with native_cli_profile_scope(tmp_path) as profile:
+        profile.register(label="native-invoice-preview-rules", facts=_PROFILE_FACTS)
+
+        rectificativa = _invoke(
+            profile,
+            "app",
+            "ledger",
+            "invoice",
+            "preview",
+            *_COMPLETE_DRAFT,
+            "--invoice-class",
+            "RECTIFICATIVA",
+            "--line",
+            _line(iva_rate="RATE_21"),
+        )
+        assert rectificativa.exit_code == 0, rectificativa.output
+        refused = unwrap_cli_result(rectificativa)
+        assert (refused["verdict"], refused["refusal_code"]) == ("would_refuse", "invalid_invoice")
+        assert [item["code"] for item in refused["rule_findings"]] == [
+            "series_required_for_rectificativa",
+            "rectified_invoice_required",
+        ]
+        assert all(tr(item["label_key"]) != item["label_key"] for item in refused["rule_findings"])
+
+        # 1000.00 x 0.07 = 70.00 of retención, so 1210.00 stored - 70.00 = 1140.00 is left to pay.
+        corrected = _invoke(
+            profile,
+            "app",
+            "ledger",
+            "invoice",
+            "preview",
+            "--kind",
+            "issued",
+            "--invoice-class",
+            "ORDINARIA",
+            "--counterparty-nif",
+            "A58818501",
+            "--country-code",
+            "ES",
+            "--invoice-date",
+            "2026-04-15",
+            "--taxable-base",
+            "1000.00",
+            "--retention-rate",
+            "0.07",
+            "--retention-amount",
+            "70.00",
+            "--stored-invoice-id",
+            "f" * 64,
+            "--stored-grand-total",
+            "1210.00",
+        )
+        assert corrected.exit_code == 0, corrected.output
+        answer = unwrap_cli_result(corrected)
+        assert (answer["verdict"], answer["verdict_scope"]) == ("would_accept", "correction_facts")
+        assert answer["invoice_id"] == "f" * 64
+        assert answer["totals"]["net_of_retention"] == "1140.00"

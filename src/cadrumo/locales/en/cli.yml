@@ -435,8 +435,14 @@ cli:
         preview_line_help: Repeatable JSON object for one draft line, with optional
           `key`, `description`, `quantity`, `unit_price`, `iva_rate`, `subtotal` and
           `iva_amount`. A figure left out stays unknown. Use it instead of --taxable-base.
+        preview_operation_date_role_help: Stored role of the operation date on the
+          invoice a correction restates.
         preview_printed_total_help: The total printed on the document, compared with
           the calculated total.
+        preview_stored_grand_total_help: Stored grand total of the invoice a correction
+          restates, from which what is left to pay is worked out.
+        preview_stored_invoice_id_help: Id of the stored invoice a correction restates;
+          with it the verdict covers only the facts stated.
         recargo_help: Equivalence surcharge charged on top of the tax quota (LIVA
           art. 161). It is included in the invoice total, unlike withholding.
         rectifies_help: Number of the invoice this rectificativa corrects.

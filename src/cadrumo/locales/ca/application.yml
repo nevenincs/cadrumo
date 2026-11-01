@@ -756,6 +756,49 @@ application:
         rate_4: IVA 4 %
         rate_5: IVA 5 %
         rate_7_5: IVA 7,5 %
+      rule_finding:
+        counterparty_country_invalid: No és un codi de país de dues lletres que el
+          llibre reconegui.
+        counterparty_name_blank: El nom de la contrapart no pot quedar en blanc.
+        counterparty_tax_id_invalid: Aquest NIF no és vàlid per al país de la contrapart.
+        counterparty_tax_id_required: Aquesta factura necessita el NIF de la contrapart.
+          Només una factura simplificada emesa en pot prescindir.
+        counterparty_tax_id_required_by_category: Una factura simplificada d'aquesta
+          categoria d'IVA necessita el NIF de la contrapart.
+        currency_invalid: No és un codi de moneda ISO 4217 de tres lletres.
+        intra_community_spanish_identification: Un lliurament intracomunitari exempt
+          no pot indicar un adquirent que compra amb un NIF-IVA espanyol.
+        invoice_class_undeclared: El registre no declara aquesta classe de factura.
+        invoice_number_blank: El número de factura no pot quedar en blanc.
+        iva_category_undeclared: El registre no declara aquesta categoria d'IVA en
+          aquesta data.
+        lease_only_on_issued: Només una factura emesa registra un arrendament de local
+          de negoci.
+        lease_reference_not_allowed: Un immoble en aquesta situació no té referència
+          cadastral.
+        lease_reference_too_long: El Modelo 347 admet una referència cadastral de
+          fins a {limit} caràcters.
+        lease_situation_undeclared: No és una situació de l'immoble que declari el
+          Modelo 347.
+        line_description_blank: La descripció d'una línia no pot quedar en blanc.
+        line_description_too_long: La descripció d'una línia admet fins a {limit}
+          caràcters.
+        line_oss_rate_kind_refused: Aquest tipus d'OSS no està disponible per a aquesta
+          línia.
+        operation_date_role_mismatch: 'La data d''operació va unida a la seva funció
+          desada: en una factura desada pots moure-la, però no afegir-la ni treure-la.'
+        operation_type_required: Aquesta categoria d'IVA necessita una clau d'operació
+          del Modelo 349.
+        other_invoice_rule: El llibre rebutjaria aquesta factura per una altra regla.
+          Comprova'n les dades amb el document.
+        rectified_invoice_not_allowed: Només una factura rectificativa indica la factura
+          que rectifica.
+        rectified_invoice_required: Una factura rectificativa ha d'indicar la factura
+          que rectifica.
+        series_required_for_rectificativa: Una factura rectificativa s'ha d'emetre
+          en una sèrie pròpia.
+        simplificada_not_for_intra_community: No es pot emetre una factura simplificada
+          per un lliurament intracomunitari exempt.
     lifecycle:
       errors:
         ambiguous_invoice_prefix: 'El prefix d''identificador de factura %{invoice_id}

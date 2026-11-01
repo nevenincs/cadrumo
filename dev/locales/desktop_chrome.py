@@ -55,7 +55,7 @@ from .desktop_ledger_workflow_keys import DESKTOP_LEDGER_WORKFLOW_KEYS
 from .desktop_modelo_choice_keys import MODELO_CHOICE_FAMILIES, MODELO_CHOICE_KEYS
 from .desktop_workspace_keys import WORKSPACE_FAMILIES, WORKSPACE_KEYS
 from .errors import LocaleError
-from .invoice_figures_preview_keys import FINDING_KEYS, RATE_SLOT_KEYS
+from .invoice_figures_preview_keys import FINDING_KEYS, RATE_SLOT_KEYS, RULE_FINDING_KEYS
 
 #: The shell's locales, source locale first.
 DESKTOP_LOCALES: Final[tuple[str, ...]] = ("en", "es", "ca", "hu")
@@ -528,14 +528,9 @@ DESKTOP_CHROME_FAMILIES: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType
             "choose_kind",
             "country_letters",
             "currency_letters",
-            "tax_id_required",
-            "series_required",
-            "rectifies_required",
             "choose_rate",
             "no_line",
-            "lease_reference_not_allowed",
             "payment_id_shape",
-            "operation_date_fixed",
         ),
         "desktop.ledger.invoices.refusal.": (
             "too_long",
@@ -893,6 +888,7 @@ DESKTOP_CHROME_KEYS: Final[frozenset[str]] = (
     | ENTRY_OPTION_KEYS
     | MODELO_CHOICE_KEYS
     | FINDING_KEYS
+    | RULE_FINDING_KEYS
     | RATE_SLOT_KEYS
 )
 
@@ -906,7 +902,9 @@ DESKTOP_CHROME_AWAITING_CONSUMER: Final[frozenset[str]] = frozenset({"desktop.si
 #: Keys the application serves with its data and the shell translates as they
 #: come, so its source never names them. Their declaration reads the same
 #: shape that serves them, and generation refuses until each word is authored.
-DESKTOP_CHROME_SERVED_KEYS: Final[frozenset[str]] = MODELO_CHOICE_KEYS | FINDING_KEYS | RATE_SLOT_KEYS
+DESKTOP_CHROME_SERVED_KEYS: Final[frozenset[str]] = (
+    MODELO_CHOICE_KEYS | FINDING_KEYS | RULE_FINDING_KEYS | RATE_SLOT_KEYS
+)
 
 #: A whole key in quotes, or the fixed head of a template literal up to ``${``.
 _SHELL_LITERAL_KEY: Final[re.Pattern[str]] = re.compile(

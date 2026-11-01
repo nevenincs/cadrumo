@@ -13,7 +13,7 @@ from typing import Final
 
 from cadrumo.application.invoices.figures_preview_contracts import INVOICE_FIGURES_PREVIEW_LABEL_PREFIX
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.invoices.figures import FigureFindingCode
+from cadrumo.domain.invoices.figures import FigureFindingCode, InvoiceRuleFindingCode
 
 _RATE_SLOT_FACT: Final[str] = "0094-iva-rate-slot-catalogue.toml"
 
@@ -37,6 +37,11 @@ def rate_slot_key(slot: str) -> str:
 #: Every finding key, one per member of the closed finding vocabulary.
 FINDING_KEYS: Final[frozenset[str]] = frozenset(
     f"{INVOICE_FIGURES_PREVIEW_LABEL_PREFIX}finding.{code.value}" for code in FigureFindingCode
+)
+
+#: Every rule-finding key, one per member of the closed document-rule vocabulary.
+RULE_FINDING_KEYS: Final[frozenset[str]] = frozenset(
+    f"{INVOICE_FIGURES_PREVIEW_LABEL_PREFIX}rule_finding.{code.value}" for code in InvoiceRuleFindingCode
 )
 
 #: Every rate-slot key, one per slot the registry declares.

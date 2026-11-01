@@ -466,8 +466,14 @@ cli:
           `key`, `description`, `quantity`, `unit_price`, `iva_rate`, `subtotal` e
           `iva_amount` opcionales. Una cifra que omitas queda sin conocer. Úsalo en
           lugar de --taxable-base.
+        preview_operation_date_role_help: Función guardada de la fecha de operación
+          de la factura que repite una corrección.
         preview_printed_total_help: El total impreso en el documento, que se compara
           con el total calculado.
+        preview_stored_grand_total_help: Total guardado de la factura que repite una
+          corrección, del que sale lo que queda por pagar.
+        preview_stored_invoice_id_help: Id de la factura guardada que repite una corrección;
+          con él, el veredicto cubre solo los datos indicados.
         recargo_help: Recargo de equivalencia repercutido sobre la cuota (LIVA art.
           161). Va incluido en el total de la factura, a diferencia de una retención.
         rectifies_help: Número de la factura que corrige esta rectificativa.
