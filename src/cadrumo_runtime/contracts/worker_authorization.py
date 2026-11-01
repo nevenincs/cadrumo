@@ -17,7 +17,12 @@ from cadrumo.core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from cadrumo.core.time.utc import UtcInstant
 from cadrumo_client.contracts.access_refusals import AccessAllowed, OperationResponseScopeAllowed
 from cadrumo_client.contracts.access_vocabulary import AccessAction, OperationAccessPolicy, OperationAccessRequest
-from cadrumo_client.contracts.model_runs import MODEL_RUN_MAX_BODY_BYTES, ModelRunHeader, ModelRunOutcome
+from cadrumo_client.contracts.model_runs import (
+    MODEL_RUN_MAX_BODY_BYTES,
+    ModelRunHeader,
+    ModelRunOutcome,
+    require_run_carries_a_body,
+)
 from cadrumo_client.contracts.profile_access import AccessRefusal
 
 from .worker_enrollment import (
@@ -253,10 +258,7 @@ class WorkerModelRun(BaseModel):
 
     @model_validator(mode="after")
     def _run_carries_a_body(self) -> WorkerModelRun:
-        if (self.header is None) != (self.body_byte_count == 0):
-            raise ValueError("a run carries a body and a lookup carries none")
-        if self.header is not None and self.header.role != self.role:
-            raise ValueError("a run names the role its header names")
+        require_run_carries_a_body(header=self.header, role=self.role, body_byte_count=self.body_byte_count)
         return self
 
 

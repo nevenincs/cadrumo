@@ -308,6 +308,14 @@ class ModelRunFetchRequest(BaseModel):
     run_id: UUID
 
 
+def require_run_carries_a_body(*, header: ModelRunHeader | None, role: str, body_byte_count: int) -> None:
+    """Refuse a run whose body and header disagree, on every hop that carries one."""
+    if (header is None) != (body_byte_count == 0):
+        raise ValueError("a run carries a body and a lookup carries none")
+    if header is not None and header.role != role:
+        raise ValueError("a run names the role its header names")
+
+
 class ModelRunFetched(BaseModel):
     """The waiting request: a run when ``header`` is present, whose body follows, otherwise a lookup of ``role``."""
 
@@ -324,10 +332,7 @@ class ModelRunFetched(BaseModel):
 
     @model_validator(mode="after")
     def _run_carries_a_body(self) -> Self:
-        if (self.header is None) != (self.body_byte_count == 0):
-            raise ValueError("a run carries a body and a lookup carries none")
-        if self.header is not None and self.header.role != self.role:
-            raise ValueError("a run names the role its header names")
+        require_run_carries_a_body(header=self.header, role=self.role, body_byte_count=self.body_byte_count)
         return self
 
 
@@ -405,4 +410,5 @@ __all__ = [
     "decode_model_run_body",
     "encode_model_run_body",
     "model_run_media_kind",
+    "require_run_carries_a_body",
 ]
