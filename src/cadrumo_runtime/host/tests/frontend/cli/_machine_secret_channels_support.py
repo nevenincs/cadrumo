@@ -537,8 +537,20 @@ def _storage_snapshot(root: Path) -> dict[str, bytes]:
     return {
         path.relative_to(root).as_posix(): path.read_bytes()
         for path in root.rglob("*")
-        if path.is_file() and "log" not in path.name.lower() and not path.is_relative_to(receipts)
+        if path.is_file()
+        and "log" not in path.name.lower()
+        and not path.is_relative_to(receipts)
+        and not _is_diagnostic(root, path)
     }
+
+
+def _is_diagnostic(root: Path, path: Path) -> bool:
+    """Whether ``path`` sits in the diagnostic log directory, whatever it is named.
+
+    A worker leaves a stall-dump file there for as long as it runs; it records
+    stack frames, not custody.
+    """
+    return path.is_relative_to(root / storage_location(StorageCategory.LOGS).relative_path())
 
 
 def _assert_no_prompts(combined: str) -> None:
@@ -555,7 +567,7 @@ def _assert_no_secrets(combined: str, extra_secrets: Sequence[str]) -> None:
 def _assert_secret_free_logs(root: Path, secrets: Sequence[str]) -> None:
     """Ensure diagnostic logs do not persist any machine-secret payload."""
     for path in root.rglob("*") if root.exists() else ():
-        if path.is_file() and "log" in path.name.lower():
+        if path.is_file() and ("log" in path.name.lower() or _is_diagnostic(root, path)):
             contents = path.read_text(encoding="utf-8", errors="replace")
             for secret in secrets:
                 assert secret not in contents
