@@ -36,6 +36,7 @@ from ...application.prorrata_register.ports import ProrrataRegisterRepositoryFac
 from ...application.prorrata_register.projection_contracts import (
     ProrrataEntryProjection,
     ProrrataFindingProjection,
+    ProrrataListedEntryProjection,
     ProrrataListProjection,
     ProrrataMutationProjection,
     ProrrataSectorDefinitionProjection,
@@ -215,10 +216,23 @@ def _register_with_sector(register: ProrrataRegister, definition: SectorDefiniti
     )
 
 
+def _listed_entry(entry: ProrrataRegisterEntry) -> ProrrataListedEntryProjection:
+    settled = entry.definitive_percentage is not None
+    held = settled or entry.provisional_percentage is not None
+    named = held and not entry.interrupted and entry.regime.value in {"general", "especial"}
+    kind = "definitiva" if settled else "provisional"
+    sector = f":{entry.sector_id}" if entry.sector_id is not None else ""
+    return ProrrataListedEntryProjection(
+        **dict(ProrrataEntryProjection.from_entry(entry)),
+        reference_id=f"prorrata:{entry.ejercicio}:{kind}:{entry.regime.value}{sector}" if named else None,
+        reference_kind=kind if named else None,
+    )
+
+
 def _list_projection(profile_id: UUID, register: ProrrataRegister) -> ProrrataListProjection:
     return ProrrataListProjection(
         profile_id=profile_id,
-        entries=tuple(ProrrataEntryProjection.from_entry(entry) for entry in register.entries),
+        entries=tuple(_listed_entry(entry) for entry in register.entries),
         sectors=tuple(
             ProrrataSectorDefinitionProjection.from_definition(definition) for definition in register.sector_definitions
         ),

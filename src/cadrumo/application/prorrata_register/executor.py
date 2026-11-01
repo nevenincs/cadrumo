@@ -15,8 +15,10 @@ from ...core.operations import OperationEffect, profile_operation_subject
 from ...core.time.clock import now
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
+from ...domain.iva.prorrata import register_entry_prorrata_reference
 from ...domain.prorrata_register.register import (
     ProrrataRegister,
+    ProrrataRegisterEntry,
     ProrrataRegisterValidationError,
 )
 from ..modelo.calculation_action_ports import CalculationActionPortsFactory
@@ -204,12 +206,13 @@ async def _read_prorrata_list(
     context: OperationExecutorContext,
 ) -> str | OperationRefusalEvidence:
     async def read() -> str:
-        register = await asyncio.to_thread(_load_prorrata_list, repository_factory, payload, context)
+        register, references = await asyncio.to_thread(_load_prorrata_list, repository_factory, payload, context)
         result = _result_contracts.ProrrataOperationExecutionResult(
             operation_id="list",
             profile_id=payload.profile_id,
             outcome="success",
             register_snapshot=register,
+            listed_references=references,
             count=len(register.entries),
         )
         reference = await context.operands.put(result, written_at=now())
@@ -223,9 +226,28 @@ def _load_prorrata_list(
     repository_factory: ProrrataRegisterRepositoryFactory,
     payload: _requests.ProrrataProfileRequest,
     context: OperationExecutorContext,
-) -> ProrrataRegister:
+) -> tuple[ProrrataRegister, tuple[_result_contracts.ProrrataListedReference | None, ...]]:
     with validating_governed_facts(context.authority_operation):
-        return _prorrata_service(repository_factory, payload.profile_id, context.authority_operation).list_all()
+        register = _prorrata_service(repository_factory, payload.profile_id, context.authority_operation).list_all()
+        return register, tuple(_listed_reference(entry) for entry in register.entries)
+
+
+def _listed_reference(entry: ProrrataRegisterEntry) -> _result_contracts.ProrrataListedReference | None:
+    """The reference of an entry's percentage in force; an entry holding none has none."""
+    if entry.interrupted or (entry.definitive_percentage is None and entry.provisional_percentage is None):
+        return None
+    reference = register_entry_prorrata_reference(
+        ejercicio=entry.ejercicio,
+        regime=entry.regime.value,
+        sector_id=entry.sector_id,
+        settled=entry.definitive_percentage is not None,
+    )
+    if reference is None:
+        return None
+    return _result_contracts.ProrrataListedReference(
+        reference_id=reference.reference_id,
+        kind=reference.kind.value,
+    )
 
 
 def _prorrata_service(

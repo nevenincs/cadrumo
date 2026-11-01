@@ -125,6 +125,17 @@ class ProrrataEntryProjection(BaseModel):
         )
 
 
+class ProrrataListedEntryProjection(ProrrataEntryProjection):
+    """One listed entry with the reference that names its percentage in force.
+
+    An entry whose regime has no reference, or which holds no percentage, has
+    neither field.
+    """
+
+    reference_id: str | None
+    reference_kind: str | None
+
+
 class ProrrataSectorDefinitionProjection(BaseModel):
     """Complete projection of one operator-authored differentiated-sector row."""
 
@@ -224,7 +235,7 @@ class ProrrataListProjection(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     profile_id: UUID
-    entries: tuple[ProrrataEntryProjection, ...]
+    entries: tuple[ProrrataListedEntryProjection, ...]
     sectors: tuple[ProrrataSectorDefinitionProjection, ...]
     count: NonNegativeInt
 
@@ -325,6 +336,7 @@ __all__ = [
     "ProrrataEspecialTransitionProjection",
     "ProrrataFindingProjection",
     "ProrrataListProjection",
+    "ProrrataListedEntryProjection",
     "ProrrataMutationProjection",
     "ProrrataRefusalCode",
     "ProrrataRefusalProjection",

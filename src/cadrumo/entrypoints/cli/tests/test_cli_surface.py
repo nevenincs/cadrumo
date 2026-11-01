@@ -172,6 +172,12 @@ def _ledger_list_and_view(transaction_id: str, *, bucket_id: str) -> None:
     transaction = cast(dict[str, object], read["transaction"])
     assert transaction["description"] == "cash office supplies"
 
+    known = _run_ledger_cli_json(["app", "ledger", "known-values", "--kind", "description"])
+    assert bucket_id not in json.dumps(known, sort_keys=True)
+    assert [row["text"] for row in cast(list[dict[str, object]], known["descriptions"])] == ["cash office supplies"]
+    assert known["counterparties"] == []
+    assert known["truncated"] == []
+
 
 def _ledger_update_transaction(transaction_id: str) -> dict[str, object]:
     """Update the seed transaction's amount + description; assert the diff."""

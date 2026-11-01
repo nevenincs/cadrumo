@@ -3306,6 +3306,7 @@ cli:
       help: Separa adjunts d'un moviment dels teus registres sense esborrar-ne els
         bytes.
       id_help: Id del moviment (o un prefix inequívoc).
+    entry_options_help: Mostra els valors que ofereix un formulari d'entrada del llibre.
     errors:
       business_pct_out_of_range: La proporció d'ús professional %{value} (= %{percent})
         està fora de rang. Introdueix una proporció entre 0 i 1, p. ex. 0.5 per al
@@ -3382,6 +3383,11 @@ cli:
       verify_help: Comprovar els apunts després de la importació
       verify_source_help: Fitxer original usat per comprovar les files importades.
       year_help: Any del filtre --period (p. ex. 2024).
+    known_values:
+      help: Llista els noms, les descripcions i les referències que ja fan servir
+        els teus registres, primer els més recents.
+      kind_help: Només aquest tipus de valor; repeteix-lo per a diversos. Sense això,
+        tots els tipus.
     labels:
       active: Actives
       amount: Import

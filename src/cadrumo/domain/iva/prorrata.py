@@ -72,7 +72,7 @@ from __future__ import annotations
 from datetime import date
 from decimal import ROUND_CEILING, Decimal
 from enum import StrEnum
-from typing import Annotated
+from typing import Annotated, Final
 
 from pydantic import (
     BaseModel,
@@ -259,6 +259,10 @@ class ProrrataResult(_ProrrataStrictFrozen):
         return self
 
 
+PRORRATA_REFERENCE_MAX_LENGTH: Final = 128
+"""The longest prorrata reference, for any request that carries one."""
+
+
 class ProrrataReference(_ProrrataStrictFrozen):
     """Stable identifier for a persisted IVA prorrata percentage.
 
@@ -269,7 +273,7 @@ class ProrrataReference(_ProrrataStrictFrozen):
     proportional-use ratio and it is not derived from usage-ratio data.
     """
 
-    reference_id: str = Field(min_length=1, max_length=128)
+    reference_id: str = Field(min_length=1, max_length=PRORRATA_REFERENCE_MAX_LENGTH)
     year: Annotated[int, Field(ge=1900, le=9999)]
     kind: ProrrataKind
     regime: ProrrataRegime
@@ -399,6 +403,39 @@ def validate_prorrata_reference(reference_id: str) -> ProrrataReference:
         )
     except ValidationError as exc:
         raise ProrrataInputError(f"invalid prorrata_reference: {normalized!r}") from exc
+
+
+def register_entry_prorrata_reference(
+    *,
+    ejercicio: int,
+    regime: str,
+    sector_id: str | None,
+    settled: bool,
+) -> ProrrataReference | None:
+    """Name the percentage one register entry holds in force, or ``None`` where no reference can name it.
+
+    A settled entry holds its definitive percentage, an unsettled one its
+    provisional percentage. A register regime outside the reference regimes, such
+    as a year under no prorrata, and a sector identifier the reference grammar
+    cannot carry have no reference.
+    """
+    from ..calculations.registry.prorrata_vocabulary import definitive_prorrata_kind, provisional_prorrata_kind
+
+    effective_date = date(ejercicio, 1, 1)
+    kind = (definitive_prorrata_kind if settled else provisional_prorrata_kind)(effective_date=effective_date)
+    try:
+        reference_regime = _require_registry_prorrata_regime(regime, effective_date=effective_date)
+        return ProrrataReference(
+            reference_id=_canonical_prorrata_reference_id(
+                year=ejercicio, kind=kind, regime=reference_regime, sector_id=sector_id
+            ),
+            year=ejercicio,
+            kind=kind,
+            regime=reference_regime,
+            sector_id=sector_id,
+        )
+    except (ProrrataInputError, ValidationError):
+        return None
 
 
 def _compute_percentage_general(inputs: ProrrataInputs) -> Decimal:
@@ -747,6 +784,7 @@ def compute_regularizacion_prorrata_anual(
 
 
 __all__ = (
+    "PRORRATA_REFERENCE_MAX_LENGTH",
     "EspecialMandatoryRule",
     "InputClassification",
     "ProrrataInputs",
@@ -762,5 +800,6 @@ __all__ = (
     "deductible_percentage_for",
     "especial_mandatory_rule",
     "is_especial_mandatory",
+    "register_entry_prorrata_reference",
     "validate_prorrata_reference",
 )

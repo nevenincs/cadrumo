@@ -3327,6 +3327,8 @@ cli:
       attachment_help: Id del adjunto que se separa; repetible.
       help: Separa adjuntos de un movimiento de tus registros sin borrar sus bytes.
       id_help: Id del movimiento (o un prefijo inequívoco).
+    entry_options_help: Muestra los valores que ofrece un formulario de entrada del
+      libro.
     errors:
       business_pct_out_of_range: La proporción de uso profesional %{value} (= %{percent})
         está fuera de rango. Introduce una proporción entre 0 y 1, p. ej. 0.5 para
@@ -3403,6 +3405,11 @@ cli:
       verify_help: Comprobar los apuntes después de la importación
       verify_source_help: Fichero original usado para comprobar las filas importadas.
       year_help: Año del filtro --period (p. ej. 2024).
+    known_values:
+      help: Lista los nombres, descripciones y referencias que ya usan tus registros,
+        primero los más recientes.
+      kind_help: Solo este tipo de valor; repítelo para varios. Sin él, todos los
+        tipos.
     labels:
       active: Activas
       amount: Importe

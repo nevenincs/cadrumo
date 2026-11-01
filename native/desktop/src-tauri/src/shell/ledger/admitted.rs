@@ -53,7 +53,7 @@ use Kind::{Read, Review, Write};
 /// holds only the movement it asks about.
 const FIELD_SUBJECTS: [(&str, &[&str]); 1] = [("ledger.classify.review", &["transaction_id"])];
 
-const ADMITTED: [(&str, Kind); 105] = [
+const ADMITTED: [(&str, Kind); 107] = [
     ("ledger.actividad-asset.acquisition-candidates", Read),
     ("ledger.actividad-asset.claim", Write),
     ("ledger.actividad-asset.correct", Write),
@@ -81,6 +81,7 @@ const ADMITTED: [(&str, Kind); 105] = [
     ("ledger.classify.single", Write),
     ("ledger.counterparty", Write),
     ("ledger.detach", Write),
+    ("ledger.entry-options", Read),
     ("ledger.evidence.add", Write),
     ("ledger.evidence.attachment_queue", Read),
     ("ledger.evidence.attachment_view", Read),
@@ -124,6 +125,7 @@ const ADMITTED: [(&str, Kind); 105] = [
     ("ledger.invoice.update", Write),
     ("ledger.invoice.view", Read),
     ("ledger.invoice.wizard", Write),
+    ("ledger.known-values", Read),
     ("ledger.link", Write),
     ("ledger.list", Read),
     ("ledger.llm-diagnostics", Read),

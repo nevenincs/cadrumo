@@ -218,6 +218,14 @@
         "path": []
       }
     },
+    "ledger.entry-options": {
+      "may_write": false,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
     "ledger.evidence.add": {
       "may_write": true,
       "review": false,
@@ -556,6 +564,14 @@
     },
     "ledger.invoice.wizard": {
       "may_write": true,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
+    "ledger.known-values": {
+      "may_write": false,
       "review": false,
       "subject": {
         "kind": "profile",

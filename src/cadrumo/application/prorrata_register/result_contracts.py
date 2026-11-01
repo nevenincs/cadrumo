@@ -40,6 +40,15 @@ from .projection_contracts import (
 )
 
 
+class ProrrataListedReference(BaseModel):
+    """The canonical reference of one listed entry's percentage in force."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    reference_id: str
+    kind: str
+
+
 class ProrrataOperationExecutionResult(BaseModel):
     """Private complete outcome retained under secure operation custody."""
 
@@ -49,6 +58,7 @@ class ProrrataOperationExecutionResult(BaseModel):
     profile_id: UUID
     outcome: Literal["success", "refused"]
     register_snapshot: ProrrataRegister | None = None
+    listed_references: tuple[ProrrataListedReference | None, ...] = ()
     entry: ProrrataRegisterEntry | None = None
     sector_definition: SectorDefinition | None = None
     seed_source: _ProrrataSeedSourceProjection | None = None
@@ -98,6 +108,8 @@ def _validate_successful_execution_result(result: ProrrataOperationExecutionResu
 def _validate_list_execution_result(result: ProrrataOperationExecutionResult) -> None:
     if any(value is not None for value in (result.entry, result.sector_definition, result.seed_source)):
         raise ValueError("prorrata list result contains mutation details")
+    if result.register_snapshot is None or len(result.listed_references) != len(result.register_snapshot.entries):
+        raise ValueError("prorrata list result names a reference per entry")
 
 
 def _validate_sector_declaration_execution_result(result: ProrrataOperationExecutionResult) -> None:

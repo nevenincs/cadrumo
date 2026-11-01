@@ -16,6 +16,9 @@ from .projection_contracts import (
     ProrrataEntryProjection as _ProrrataEntryProjection,
 )
 from .projection_contracts import (
+    ProrrataListedEntryProjection as _ProrrataListedEntryProjection,
+)
+from .projection_contracts import (
     ProrrataListProjection as _ProrrataListProjection,
 )
 from .projection_contracts import (
@@ -151,7 +154,14 @@ def project_prorrata_list_result(
         raise ValueError("prorrata list result has an incompatible payload")
     return _ProrrataListProjection(
         profile_id=profile_id,
-        entries=tuple(_ProrrataEntryProjection.from_entry(entry) for entry in register.entries),
+        entries=tuple(
+            _ProrrataListedEntryProjection(
+                **dict(_ProrrataEntryProjection.from_entry(entry)),
+                reference_id=reference.reference_id if reference is not None else None,
+                reference_kind=reference.kind if reference is not None else None,
+            )
+            for entry, reference in zip(register.entries, private.listed_references, strict=True)
+        ),
         sectors=tuple(
             _ProrrataSectorDefinitionProjection.from_definition(sector) for sector in register.sector_definitions
         ),

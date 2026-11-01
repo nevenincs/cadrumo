@@ -3270,6 +3270,7 @@ cli:
       help: Csatolmányok leválasztása egy tranzakcióról a nyilvántartásban, a bájtjaik
         törlése nélkül.
       id_help: A tranzakció azonosítója (vagy egyértelmű előtagja).
+    entry_options_help: Megmutatja, milyen értékeket kínál a könyvelési beviteli űrlap.
     errors:
       business_pct_out_of_range: A(z) %{value} (= %{percent}) üzleti használati arány
         tartományon kívül esik. Adj meg 0 és 1 közötti arányt, pl. 0.5 az 50 százalékhoz.
@@ -3343,6 +3344,10 @@ cli:
       verify_help: Tételek ellenőrzése importálás után.
       verify_source_help: Az importált sorok ellenőrzésére használt eredeti fájl.
       year_help: A --period szűrő éve (pl. 2024).
+    known_values:
+      help: Kilistázza a nyilvántartásaidban már használt neveket, leírásokat és hivatkozásokat,
+        a legfrissebbekkel kezdve.
+      kind_help: Csak ez az értéktípus; többhöz ismételd meg. Nélküle minden típus.
     labels:
       active: Aktív
       amount: Összeg
