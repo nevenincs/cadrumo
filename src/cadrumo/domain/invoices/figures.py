@@ -93,7 +93,7 @@ class FigureFinding:
     message: str
     fields: tuple[str, ...]
     severity: FigureFindingSeverity = FigureFindingSeverity.REFUSAL
-    values: Mapping[str, Decimal | str] = field(default_factory=dict)
+    values: Mapping[str, Decimal | str] = field(default_factory=dict[str, Decimal | str])
 
 
 def figure_refusal(finding: FigureFinding) -> InvoiceValidationError:
