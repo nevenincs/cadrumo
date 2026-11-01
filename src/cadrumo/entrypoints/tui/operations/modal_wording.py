@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
-from ....core.i18n.render import tr
+from ....application.modelo.value_presentation import format_casilla_value
+from ....core.external_constants import OutputLanguage
+from ....core.i18n.render import output_language, tr
 from ....core.operator_notice_messages import operation_notice_message
 from .logs import OperationModalLogRowV1
 
@@ -25,7 +27,10 @@ def progress_text(completed: int, total: int, unit_code: str | None, subject_cod
     """Word the runtime's measured progress with its subject and unit."""
     subject = "" if subject_code is None else f"{tr(subject_code)}: "
     unit = "" if unit_code is None else f" {tr(unit_code)}"
-    return f"{subject}{completed:,} / {total:,}{unit} ({completed * 100 // total}%)"
+    language = OutputLanguage(output_language())
+    done = format_casilla_value(completed, data_type="integer", language=language)
+    of = format_casilla_value(total, data_type="integer", language=language)
+    return f"{subject}{done} / {of}{unit} ({completed * 100 // total}%)"
 
 
 def phase_text(code: str) -> str:

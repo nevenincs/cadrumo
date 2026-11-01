@@ -30,10 +30,9 @@ const NBSP = " ";
 
 for (const [locale, typed, shown] of [
   ["en", "1,234.56", "1,234.56"],
-  // Spanish and Hungarian leave four figures without a thousands mark.
-  ["es", "1.234,56", "1234,56"],
+  ["es", "1.234,56", "1.234,56"],
   ["ca", "1.234,56", "1.234,56"],
-  ["hu", "1 234,56", "1234,56"],
+  ["hu", "1 234,56", `1${NBSP}234,56`],
 ] as const)
   test(`money reads and shows ${locale} marks`, async ({ page }) => {
     const entry = await open(page, { field: { kind: "money" }, locale });

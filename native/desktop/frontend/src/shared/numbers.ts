@@ -68,9 +68,11 @@ function draw(
   style: Intl.NumberFormatOptions,
   grouping: boolean,
 ): string {
-  // Left unset, grouping follows the locale's rule, which leaves `1234` whole
-  // in Spanish; `true` would force a mark there.
-  const ungrouped = grouping ? {} : { useGrouping: false };
+  // "always" marks every thousands run. The locale's own rule would leave
+  // `1234` whole in Spanish and Hungarian beside `24.000,00` in one column.
+  const ungrouped: Intl.NumberFormatOptions = {
+    useGrouping: grouping ? "always" : false,
+  };
   const shape = numberFormat(locale, {
     ...style,
     ...ungrouped,
@@ -168,9 +170,10 @@ export function formatPercent(
   return draw(locale, fit(points, 0, maxFraction), { style: "percent" }, true);
 }
 
-/** A count of things, in the locale's grouping. */
+/** A count of things, in the locale's grouping. Years and identifiers are not
+ * counts and are never drawn here. */
 export function formatCount(locale: string, n: number | bigint): string {
-  return numberFormat(locale, {}).format(n);
+  return numberFormat(locale, { useGrouping: "always" }).format(n);
 }
 
 const SIZE_UNITS = ["B", "KB", "MB", "GB"] as const;

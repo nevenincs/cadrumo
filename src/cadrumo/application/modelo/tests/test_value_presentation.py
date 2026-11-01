@@ -69,6 +69,43 @@ def test_money_reads_in_the_language_convention_with_two_places(
     assert rendered == expected
 
 
+# What the window's `Intl.NumberFormat(locale, {minimumFractionDigits: 2, maximumFractionDigits: 2,
+# useGrouping: "always"})` writes for 999.00, 1234.56, 12345.67 and 1234567.89, produced once by Node 26 (ICU 78, CLDR 48)
+# and held as literals so this table does not agree with the formatter by construction.
+_INTL_FIGURES = (
+    (OutputLanguage.EN, ("999.00", "1,234.56", "12,345.67", "1,234,567.89")),
+    (OutputLanguage.ES, ("999,00", "1.234,56", "12.345,67", "1.234.567,89")),
+    (OutputLanguage.CA, ("999,00", "1.234,56", "12.345,67", "1.234.567,89")),
+    (OutputLanguage.HU, ("999,00", f"1{_NBSP}234,56", f"12{_NBSP}345,67", f"1{_NBSP}234{_NBSP}567,89")),
+)
+_INTL_AMOUNTS = (Decimal("999.00"), Decimal("1234.56"), Decimal("12345.67"), Decimal("1234567.89"))
+
+
+@pytest.mark.parametrize(("language", "expected"), _INTL_FIGURES)
+def test_a_decimal_groups_exactly_where_the_windows_intl_does(
+    language: OutputLanguage, expected: tuple[str, ...]
+) -> None:
+    rendered = tuple(format_casilla_value(value, data_type="decimal", language=language) for value in _INTL_AMOUNTS)
+
+    assert rendered == expected
+
+
+@pytest.mark.parametrize(("language", "expected"), _INTL_FIGURES)
+def test_money_groups_exactly_where_the_windows_intl_does(language: OutputLanguage, expected: tuple[str, ...]) -> None:
+    rendered = tuple(format_casilla_value(value, data_type="money", language=language) for value in _INTL_AMOUNTS)
+
+    assert rendered == tuple(f"{figure}{_EURO}" for figure in expected)
+
+
+@pytest.mark.parametrize(("language", "expected"), _INTL_FIGURES)
+def test_a_negative_figure_groups_by_its_digits_not_its_sign(
+    language: OutputLanguage, expected: tuple[str, ...]
+) -> None:
+    rendered = tuple(format_casilla_value(-value, data_type="decimal", language=language) for value in _INTL_AMOUNTS)
+
+    assert rendered == tuple(f"{_MINUS}{figure}" for figure in expected)
+
+
 def test_quantities_keep_every_place_they_carry_and_are_never_rounded() -> None:
     assert format_casilla_value(Decimal("1234.5678"), data_type="decimal", language=OutputLanguage.ES) == "1.234,5678"
     assert format_casilla_value(Decimal("21"), data_type="ratio", language=OutputLanguage.ES) == "21"

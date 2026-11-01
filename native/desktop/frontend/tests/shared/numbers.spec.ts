@@ -23,6 +23,50 @@ const LOCALES = ["en", "es", "ca", "hu"] as const;
 // configured library types only list number and bigint.
 const exactly = (text: string) => text as unknown as number;
 
+// The same literals pin the backend's figure formatter in
+// `value_presentation` (tests/test_value_presentation.py). Produced once by
+// `new Intl.NumberFormat(locale, { minimumFractionDigits: 2,
+// maximumFractionDigits: 2, useGrouping: "always" })` on Node 26, then held as
+// text so neither side agrees with itself by construction.
+const SHARED_FIGURES = {
+  en: ["999.00", "1,234.56", "12,345.67", "1,234,567.89"],
+  es: ["999,00", "1.234,56", "12.345,67", "1.234.567,89"],
+  ca: ["999,00", "1.234,56", "12.345,67", "1.234.567,89"],
+  hu: [
+    "999,00",
+    `1${NBSP}234,56`,
+    `12${NBSP}345,67`,
+    `1${NBSP}234${NBSP}567,89`,
+  ],
+} as const;
+
+test("every amount groups, four digits included, as the backend writes it", () => {
+  for (const locale of LOCALES) {
+    const shown = ["999.00", "1234.56", "12345.67", "1234567.89"].map((v) =>
+      formatDecimal(locale, v, { minFraction: 2, maxFraction: 2 }),
+    );
+    expect(shown).toEqual(SHARED_FIGURES[locale]);
+    const amounts = ["999.00", "1234.56", "12345.67", "1234567.89"].map((v) =>
+      formatAmount(locale, v),
+    );
+    expect(amounts).toEqual(SHARED_FIGURES[locale]);
+  }
+});
+
+test("typed text reads grouped or plain, and a held value shows grouped", () => {
+  for (const locale of ["es", "ca"] as const) {
+    expect(readLocaleDecimal(locale, "1.234,56")).toBe("1234.56");
+    expect(readLocaleDecimal(locale, "1234,56")).toBe("1234.56");
+    expect(formatDecimal(locale, "1234.56", { minFraction: 2 })).toBe(
+      "1.234,56",
+    );
+  }
+  expect(readLocaleDecimal("hu", `1${NBSP}234,56`)).toBe("1234.56");
+  expect(readLocaleDecimal("hu", "1234,56")).toBe("1234.56");
+  expect(readLocaleDecimal("en", "1,234.56")).toBe("1234.56");
+  expect(readLocaleDecimal("en", "1234.56")).toBe("1234.56");
+});
+
 test("decimals carry each locale's marks", () => {
   const expected = {
     en: "1,234,567.89",
@@ -85,16 +129,21 @@ test("exact text agrees with Intl's own exact reading in every locale", () => {
     "123456789012345678901234567890.123456",
   ];
   for (const locale of LOCALES) {
-    const plain = new Intl.NumberFormat(locale, { maximumFractionDigits: 20 });
+    const plain = new Intl.NumberFormat(locale, {
+      maximumFractionDigits: 20,
+      useGrouping: "always",
+    });
     const money = new Intl.NumberFormat(locale, {
       style: "currency",
       currency: "EUR",
       minimumFractionDigits: 2,
       maximumFractionDigits: 6,
+      useGrouping: "always",
     });
     const percent = new Intl.NumberFormat(locale, {
       style: "percent",
       maximumFractionDigits: 20,
+      useGrouping: "always",
     });
     for (const value of values) {
       expect(formatDecimal(locale, value)).toBe(plain.format(exactly(value)));
@@ -232,8 +281,9 @@ test("counts follow the locale's grouping", () => {
   expect(formatCount("en", 0)).toBe("0");
   for (const locale of LOCALES)
     expect(formatCount(locale, 1234)).toBe(
-      new Intl.NumberFormat(locale).format(1234),
+      new Intl.NumberFormat(locale, { useGrouping: "always" }).format(1234),
     );
+  expect(formatCount("es", 1234)).toBe("1.234");
 });
 
 // Worked by hand in steps of 1024: 1536 / 1024 = 1.5, 1048575 / 1024 =
@@ -247,7 +297,7 @@ test("file sizes use steps of 1024 and the locale's marks", () => {
   expect(formatSize("en", 0)).toBe(`0${B}`);
   expect(formatSize("es", 0)).toBe(`0${B}`);
   expect(formatSize("en", 1023)).toBe(`1,023${B}`);
-  expect(formatSize("es", 1023)).toBe(`1023${B}`);
+  expect(formatSize("es", 1023)).toBe(`1.023${B}`);
   expect(formatSize("en", 1024)).toBe(`1${KB}`);
   expect(formatSize("es", 1024)).toBe(`1${KB}`);
   expect(formatSize("en", 1536)).toBe(`1.5${KB}`);
@@ -271,10 +321,10 @@ test("file sizes use steps of 1024 and the locale's marks", () => {
   expect(formatSize("en", 1024 ** 3 - 1)).toBe(`1${GB}`);
   expect(formatSize("en", 1024 ** 2)).toBe(`1${MB}`);
   expect(formatSize("en", 180 * 1024 ** 2)).toBe(`180${MB}`);
-  // GB is the last unit, so a larger size groups, and Spanish leaves four
-  // digits whole: 5120 GB, then 12 * 1024 = 12288 GB.
+  // GB is the last unit, so a larger size groups, four digits included:
+  // 5120 GB, then 12 * 1024 = 12288 GB.
   expect(formatSize("en", 5120 * 1024 ** 3)).toBe(`5,120${GB}`);
-  expect(formatSize("es", 5120 * 1024 ** 3)).toBe(`5120${GB}`);
+  expect(formatSize("es", 5120 * 1024 ** 3)).toBe(`5.120${GB}`);
   expect(formatSize("en", 12288 * 1024 ** 3)).toBe(`12,288${GB}`);
   expect(formatSize("es", 12288 * 1024 ** 3)).toBe(`12.288${GB}`);
   // Nothing readable as a size counts as none.
