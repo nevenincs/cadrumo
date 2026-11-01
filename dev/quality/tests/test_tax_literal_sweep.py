@@ -642,18 +642,9 @@ def _annotation_kind(
         kinds = {_annotation_kind(part, tree, module, seen) for part in (node.left, node.right)} - {"unknown"}
         return kinds.pop() if len(kinds) == 1 else "unknown"
     if isinstance(node, ast.Subscript):
-        name = _reader_name(node.value)
-        first = node.slice.elts[0] if isinstance(node.slice, ast.Tuple) else node.slice
-        if name in {"Annotated", "Optional"}:
-            return _annotation_kind(first, tree, module, seen)
-        if (
-            name in {"dict", "Mapping"}
-            and isinstance(node.slice, ast.Tuple)
-            and all(_annotation_kind(part, tree, module, seen) == "text" for part in node.slice.elts)
-        ):
-            return "text_mapping"
-        if name in {"tuple", "list", "set", "frozenset", "dict", "Mapping", "Sequence"}:
-            return "collection"
+        kind = _subscript_annotation_kind(node, tree, module, seen)
+        if kind is not None:
+            return kind
     if not isinstance(node, ast.Name):
         return "unknown"
     if node.id in {"str", "bytes", "StrEnum"}:
@@ -672,6 +663,28 @@ def _annotation_kind(
         imported_tree = _module_tree(target)
         if imported_tree is not None:
             return _annotation_kind(ast.Name(id=symbol, ctx=ast.Load()), imported_tree, target, seen)
+    return _declared_annotation_kind(node, tree, module, seen)
+
+
+def _subscript_annotation_kind(
+    node: ast.Subscript, tree: ast.AST, module: str, seen: frozenset[tuple[str, str]]
+) -> str | None:
+    name = _reader_name(node.value)
+    first = node.slice.elts[0] if isinstance(node.slice, ast.Tuple) else node.slice
+    if name in {"Annotated", "Optional"}:
+        return _annotation_kind(first, tree, module, seen)
+    if (
+        name in {"dict", "Mapping"}
+        and isinstance(node.slice, ast.Tuple)
+        and all(_annotation_kind(part, tree, module, seen) == "text" for part in node.slice.elts)
+    ):
+        return "text_mapping"
+    if name in {"tuple", "list", "set", "frozenset", "dict", "Mapping", "Sequence"}:
+        return "collection"
+    return None
+
+
+def _declared_annotation_kind(node: ast.Name, tree: ast.AST, module: str, seen: frozenset[tuple[str, str]]) -> str:
     for declaration in getattr(tree, "body", []):
         if isinstance(declaration, ast.ClassDef) and declaration.name == node.id:
             if any(_annotation_kind(base, tree, module, seen) == "text" for base in declaration.bases):
@@ -950,6 +963,13 @@ class _Sweep(ast.NodeVisitor):
         return "", None
 
     def _expression_kind(self, node: ast.AST, seen: frozenset[tuple[int, str]] = frozenset()) -> str:
+        for phase in (self._projection_kind, self._call_kind, self._name_kind):
+            kind = phase(node, seen)
+            if kind is not None:
+                return kind
+        return "unknown"
+
+    def _projection_kind(self, node: ast.AST, seen: frozenset[tuple[int, str]]) -> str | None:
         if isinstance(node, ast.Constant) and isinstance(node.value, (str, bytes)):
             return "text"
         if isinstance(node, ast.ListComp) and all(
@@ -970,144 +990,169 @@ class _Sweep(ast.NodeVisitor):
             and self._expression_kind(node.value, seen) == "expression"
         ):
             return "grammar_sequence"
-        if isinstance(node, ast.Call):
-            name = _called_name(node)
-            if name == "str":
-                return "text"
-            if isinstance(node.func, ast.Attribute):
-                receiver = self._expression_kind(node.func.value, seen)
-                if receiver == "text":
-                    if name in {"split", "rsplit", "partition", "rpartition"}:
-                        return "grammar_sequence"
-                    if name in {"strip", "lstrip", "rstrip", "replace", "upper", "lower", "casefold", "join"}:
-                        return "text"
-                if name == "items" and receiver == "text_mapping":
-                    return "text_items"
-                if name == "compile" and _reader_name(node.func.value) == "re":
-                    return "pattern"
-                if name in {"match", "fullmatch", "search"} and receiver == "pattern":
-                    return "match"
-                if name == "group" and receiver == "match":
-                    return "text"
-                if self._owner.startswith("adapters/") and _dom_cell_call(node):
-                    return "grammar_sequence"
-            for function in ast.walk(self._tree):
-                if isinstance(function, ast.FunctionDef) and function.name == name:
-                    kind = _annotation_kind(function.returns, self._tree, self._module)
-                    if kind != "unknown":
-                        if (
-                            kind == "collection"
-                            and self._owner.startswith("adapters/")
-                            and any(isinstance(call, ast.Call) and _dom_cell_call(call) for call in ast.walk(function))
-                        ):
-                            return "grammar_sequence"
-                        return kind
-        if isinstance(node, ast.Name):
-            scope = self._scope(node)
-            key = (id(scope), node.id)
-            if key in seen:
-                return "unknown"
-            seen = seen | {key}
-            assignments = [
-                part.value
-                for part in _scope_nodes(scope)
-                if isinstance(part, ast.Assign) and any(_reader_name(target) == node.id for target in part.targets)
-            ]
-            if len(assignments) > 1:
-                for assigned in assignments:
+        return None
+
+    def _call_kind(self, node: ast.AST, seen: frozenset[tuple[int, str]]) -> str | None:
+        if not isinstance(node, ast.Call):
+            return None
+        name = _called_name(node)
+        if name == "str":
+            return "text"
+        if isinstance(node.func, ast.Attribute):
+            kind = self._method_call_kind(node, node.func, name, seen)
+            if kind is not None:
+                return kind
+        for function in ast.walk(self._tree):
+            if isinstance(function, ast.FunctionDef) and function.name == name:
+                kind = _annotation_kind(function.returns, self._tree, self._module)
+                if kind != "unknown":
                     if (
-                        isinstance(assigned, ast.Subscript)
-                        and isinstance(assigned.slice, ast.Slice)
-                        and ast.dump(assigned.value) == ast.dump(node)
+                        kind == "collection"
+                        and self._owner.startswith("adapters/")
+                        and any(isinstance(call, ast.Call) and _dom_cell_call(call) for call in ast.walk(function))
                     ):
-                        continue
-                    if self._expression_kind(assigned, seen) not in {"text", "grammar_sequence", "pattern", "match"}:
-                        return "unknown"
-            local_binding = False
-            for declaration in _scope_nodes(scope):
-                value = None
-                if isinstance(declaration, ast.arg) and declaration.arg == node.id:
-                    local_binding = True
-                    kind = _annotation_kind(declaration.annotation, self._tree, self._module)
-                    if kind == "collection" and isinstance(scope, (ast.FunctionDef, ast.AsyncFunctionDef)):
-                        arguments = [*scope.args.posonlyargs, *scope.args.args]
-                        if declaration in arguments:
-                            index = arguments.index(declaration)
-                            callers = [
-                                call
-                                for call in ast.walk(self._tree)
-                                if isinstance(call, ast.Call)
-                                and _called_name(call) == scope.name
-                                and len(call.args) > index
-                            ]
-                            if callers and all(
-                                self._expression_kind(call.args[index], seen) == "grammar_sequence" for call in callers
-                            ):
-                                return "grammar_sequence"
-                    if kind != "unknown":
-                        return kind
-                if isinstance(declaration, ast.AnnAssign) and _reader_name(declaration.target) == node.id:
-                    kind = _annotation_kind(declaration.annotation, self._tree, self._module)
-                    if kind != "unknown":
-                        return kind
-                    local_binding = True
-                    value = declaration.value
-                if isinstance(declaration, ast.Assign) and any(_reader_name(t) == node.id for t in declaration.targets):
-                    local_binding = True
-                    value = declaration.value
-                if isinstance(declaration, ast.Assign) and any(
-                    isinstance(target, (ast.Tuple, ast.List))
-                    and any(_reader_name(part) == node.id for part in target.elts)
-                    for target in declaration.targets
-                ):
-                    local_binding = True
-                    if self._expression_kind(declaration.value, seen) == "grammar_sequence":
-                        return "text"
+                        return "grammar_sequence"
+                    return kind
+        return None
+
+    def _method_call_kind(
+        self, node: ast.Call, func: ast.Attribute, name: str, seen: frozenset[tuple[int, str]]
+    ) -> str | None:
+        receiver = self._expression_kind(func.value, seen)
+        if receiver == "text":
+            if name in {"split", "rsplit", "partition", "rpartition"}:
+                return "grammar_sequence"
+            if name in {"strip", "lstrip", "rstrip", "replace", "upper", "lower", "casefold", "join"}:
+                return "text"
+        if name == "items" and receiver == "text_mapping":
+            return "text_items"
+        if name == "compile" and _reader_name(func.value) == "re":
+            return "pattern"
+        if name in {"match", "fullmatch", "search"} and receiver == "pattern":
+            return "match"
+        if name == "group" and receiver == "match":
+            return "text"
+        if self._owner.startswith("adapters/") and _dom_cell_call(node):
+            return "grammar_sequence"
+        return None
+
+    def _name_kind(self, node: ast.AST, seen: frozenset[tuple[int, str]]) -> str | None:
+        if not isinstance(node, ast.Name):
+            return None
+        scope = self._scope(node)
+        key = (id(scope), node.id)
+        if key in seen:
+            return "unknown"
+        seen = seen | {key}
+        assignments = [
+            part.value
+            for part in _scope_nodes(scope)
+            if isinstance(part, ast.Assign) and any(_reader_name(target) == node.id for target in part.targets)
+        ]
+        if len(assignments) > 1:
+            for assigned in assignments:
                 if (
-                    isinstance(declaration, (ast.comprehension, ast.For))
-                    and _reader_name(declaration.target) == node.id
-                    and self._expression_kind(declaration.iter, seen) == "grammar_sequence"
+                    isinstance(assigned, ast.Subscript)
+                    and isinstance(assigned.slice, ast.Slice)
+                    and ast.dump(assigned.value) == ast.dump(node)
                 ):
-                    return "text"
-                if (
-                    isinstance(declaration, ast.For)
-                    and isinstance(declaration.target, (ast.Tuple, ast.List))
-                    and any(_reader_name(part) == node.id for part in declaration.target.elts)
+                    continue
+                if self._expression_kind(assigned, seen) not in {"text", "grammar_sequence", "pattern", "match"}:
+                    return "unknown"
+        local_binding = False
+        for declaration in _scope_nodes(scope):
+            kind, bound = self._declaration_kind(declaration, node, scope, seen)
+            local_binding = local_binding or bound
+            if kind is not None:
+                return kind
+        if scope is not self._tree and not local_binding:
+            for declaration in self._tree.body:
+                if isinstance(declaration, (ast.Assign, ast.AnnAssign)):
+                    targets = declaration.targets if isinstance(declaration, ast.Assign) else [declaration.target]
+                    if any(_reader_name(t) == node.id for t in targets) and declaration.value is not None:
+                        return self._expression_kind(declaration.value, seen)
+        return None
+
+    def _declaration_kind(
+        self, declaration: ast.AST, node: ast.Name, scope: ast.AST, seen: frozenset[tuple[int, str]]
+    ) -> tuple[str | None, bool]:
+        """Return the kind one declaration gives ``node`` (``None`` for none) and whether it binds the name."""
+        value = None
+        bound = False
+        if isinstance(declaration, ast.arg) and declaration.arg == node.id:
+            bound = True
+            kind = self._argument_kind(declaration, scope, seen)
+            if kind != "unknown":
+                return kind, bound
+        if isinstance(declaration, ast.AnnAssign) and _reader_name(declaration.target) == node.id:
+            kind = _annotation_kind(declaration.annotation, self._tree, self._module)
+            if kind != "unknown":
+                return kind, bound
+            bound = True
+            value = declaration.value
+        if isinstance(declaration, ast.Assign) and any(_reader_name(t) == node.id for t in declaration.targets):
+            bound = True
+            value = declaration.value
+        if isinstance(declaration, ast.Assign) and any(
+            isinstance(target, (ast.Tuple, ast.List)) and any(_reader_name(part) == node.id for part in target.elts)
+            for target in declaration.targets
+        ):
+            bound = True
+            if self._expression_kind(declaration.value, seen) == "grammar_sequence":
+                return "text", bound
+        if (
+            isinstance(declaration, (ast.comprehension, ast.For))
+            and _reader_name(declaration.target) == node.id
+            and self._expression_kind(declaration.iter, seen) == "grammar_sequence"
+        ):
+            return "text", bound
+        if (
+            isinstance(declaration, ast.For)
+            and isinstance(declaration.target, (ast.Tuple, ast.List))
+            and any(_reader_name(part) == node.id for part in declaration.target.elts)
+        ):
+            bound = True
+            if self._expression_kind(declaration.iter, seen) == "text_items":
+                return "text", bound
+        if isinstance(declaration, ast.For) and _reader_name(declaration.target) == node.id:
+            bound = True
+            if self._iterates_text_keys(declaration, scope):
+                return "text", bound
+        if value is not None:
+            kind = self._expression_kind(value, seen)
+            if kind != "unknown":
+                return kind, bound
+        return None, bound
+
+    def _argument_kind(self, declaration: ast.arg, scope: ast.AST, seen: frozenset[tuple[int, str]]) -> str:
+        kind = _annotation_kind(declaration.annotation, self._tree, self._module)
+        if kind == "collection" and isinstance(scope, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            arguments = [*scope.args.posonlyargs, *scope.args.args]
+            if declaration in arguments:
+                index = arguments.index(declaration)
+                callers = [
+                    call
+                    for call in ast.walk(self._tree)
+                    if isinstance(call, ast.Call) and _called_name(call) == scope.name and len(call.args) > index
+                ]
+                if callers and all(
+                    self._expression_kind(call.args[index], seen) == "grammar_sequence" for call in callers
                 ):
-                    local_binding = True
-                    if self._expression_kind(declaration.iter, seen) == "text_items":
-                        return "text"
-                if isinstance(declaration, ast.For) and _reader_name(declaration.target) == node.id:
-                    local_binding = True
-                    if isinstance(declaration.iter, ast.Name):
-                        for argument in _scope_nodes(scope):
-                            annotation = (
-                                argument.annotation
-                                if isinstance(argument, ast.arg) and argument.arg == declaration.iter.id
-                                else None
-                            )
-                            if isinstance(annotation, ast.Subscript) and _reader_name(annotation.value) in {
-                                "Mapping",
-                                "dict",
-                            }:
-                                first = (
-                                    annotation.slice.elts[0]
-                                    if isinstance(annotation.slice, ast.Tuple)
-                                    else annotation.slice
-                                )
-                                if _annotation_kind(first, self._tree, self._module) == "text":
-                                    return "text"
-                if value is not None:
-                    kind = self._expression_kind(value, seen)
-                    if kind != "unknown":
-                        return kind
-            if scope is not self._tree and not local_binding:
-                for declaration in self._tree.body:
-                    if isinstance(declaration, (ast.Assign, ast.AnnAssign)):
-                        targets = declaration.targets if isinstance(declaration, ast.Assign) else [declaration.target]
-                        if any(_reader_name(t) == node.id for t in targets) and declaration.value is not None:
-                            return self._expression_kind(declaration.value, seen)
-        return "unknown"
+                    return "grammar_sequence"
+        return kind
+
+    def _iterates_text_keys(self, declaration: ast.For, scope: ast.AST) -> bool:
+        if not isinstance(declaration.iter, ast.Name):
+            return False
+        for argument in _scope_nodes(scope):
+            annotation = (
+                argument.annotation if isinstance(argument, ast.arg) and argument.arg == declaration.iter.id else None
+            )
+            if isinstance(annotation, ast.Subscript) and _reader_name(annotation.value) in {"Mapping", "dict"}:
+                first = annotation.slice.elts[0] if isinstance(annotation.slice, ast.Tuple) else annotation.slice
+                if _annotation_kind(first, self._tree, self._module) == "text":
+                    return True
+        return False
 
     def _structural_length(self, length: ast.Call, comparison: ast.Compare) -> bool:
         if not length.args:
@@ -1115,44 +1160,13 @@ class _Sweep(ast.NodeVisitor):
         value = length.args[0]
         if self._expression_kind(value) in {"text", "grammar_sequence"}:
             return True
-        # A character predicate establishes text grammar even when a library's
-        # generic validator parameter is deliberately annotated as object.
         scope = self._scope(comparison)
         spelling = ast.dump(value)
-        if any(
-            isinstance(call, ast.Call)
-            and isinstance(call.func, ast.Attribute)
-            and call.func.attr in {"isdigit", "isascii", "isdecimal"}
-            and ast.dump(call.func.value) == spelling
-            for call in _scope_nodes(scope)
-        ):
+        if self._reads_character_predicate(scope, spelling):
             return True
         numbers = {_constant_number(side) for side in (comparison.left, *comparison.comparators)} - {None}
-        # Fixed text record fields are checked against literal field labels.
-        indices = [
-            part.slice.value
-            for part in _scope_nodes(scope)
-            if isinstance(part, ast.Subscript)
-            and ast.dump(part.value) == spelling
-            and isinstance(part.slice, ast.Constant)
-            and isinstance(part.slice.value, int)
-        ]
-        if (
-            indices
-            and max(indices) + 1 in numbers
-            and any(
-                isinstance(part, ast.Compare)
-                and any(
-                    isinstance(side, ast.Constant) and isinstance(side.value, str)
-                    for side in (part.left, *part.comparators)
-                )
-                and any(
-                    isinstance(side, ast.Subscript) and ast.dump(side.value) == spelling
-                    for side in (part.left, *part.comparators)
-                )
-                for part in _scope_nodes(scope)
-            )
-        ):
+        indices = self._literal_indices(scope, spelling)
+        if indices and max(indices) + 1 in numbers and self._compares_fields_to_labels(scope, spelling):
             return True
         if self._owner == "adapters/outbound/aeat/sede/_declarations_listbox.py":
             return (
@@ -1162,20 +1176,63 @@ class _Sweep(ast.NodeVisitor):
                 and max(indices) + 1 in numbers
             )
         if self._owner == "domain/calculations/registry/export_components.py":
-            return any(
-                isinstance(part, ast.Compare)
-                and any(
-                    isinstance(side, ast.Tuple) and len(side.elts) in numbers for side in (part.left, *part.comparators)
-                )
-                and any(
-                    isinstance(member, ast.Attribute)
-                    and isinstance(member.value, ast.Name)
-                    and member.value.id == "ExportValuePolicy"
-                    for member in ast.walk(part)
-                )
-                for part in _scope_nodes(scope)
-            )
+            return self._counts_export_policy_tuple(scope, numbers)
         return False
+
+    @staticmethod
+    def _reads_character_predicate(scope: ast.AST, spelling: str) -> bool:
+        # A character predicate establishes text grammar even when a library's
+        # generic validator parameter is deliberately annotated as object.
+        return any(
+            isinstance(call, ast.Call)
+            and isinstance(call.func, ast.Attribute)
+            and call.func.attr in {"isdigit", "isascii", "isdecimal"}
+            and ast.dump(call.func.value) == spelling
+            for call in _scope_nodes(scope)
+        )
+
+    @staticmethod
+    def _literal_indices(scope: ast.AST, spelling: str) -> list[int]:
+        return [
+            part.slice.value
+            for part in _scope_nodes(scope)
+            if isinstance(part, ast.Subscript)
+            and ast.dump(part.value) == spelling
+            and isinstance(part.slice, ast.Constant)
+            and isinstance(part.slice.value, int)
+        ]
+
+    @staticmethod
+    def _compares_fields_to_labels(scope: ast.AST, spelling: str) -> bool:
+        # Fixed text record fields are checked against literal field labels.
+        return any(
+            isinstance(part, ast.Compare)
+            and any(
+                isinstance(side, ast.Constant) and isinstance(side.value, str)
+                for side in (part.left, *part.comparators)
+            )
+            and any(
+                isinstance(side, ast.Subscript) and ast.dump(side.value) == spelling
+                for side in (part.left, *part.comparators)
+            )
+            for part in _scope_nodes(scope)
+        )
+
+    @staticmethod
+    def _counts_export_policy_tuple(scope: ast.AST, numbers: set[float | None]) -> bool:
+        return any(
+            isinstance(part, ast.Compare)
+            and any(
+                isinstance(side, ast.Tuple) and len(side.elts) in numbers for side in (part.left, *part.comparators)
+            )
+            and any(
+                isinstance(member, ast.Attribute)
+                and isinstance(member.value, ast.Name)
+                and member.value.id == "ExportValuePolicy"
+                for member in ast.walk(part)
+            )
+            for part in _scope_nodes(scope)
+        )
 
     def _constraint_class(self, node: ast.AST) -> ast.ClassDef | None:
         current = node
@@ -1195,33 +1252,7 @@ class _Sweep(ast.NodeVisitor):
         if field == "http_status" and (low, high) == (100, 599):
             return owner in {"application/connectivity_probe.py", "application/workflow/run_models.py"}
         if (low, high) == (0, 366) and field in {"dias_miembro", "dias_arrendamiento"}:
-            # The calendar envelope belongs to this wire mirror's unchanged
-            # transfer into the canonical domain row, not to an arbitrary cap.
-            owner_class = self._constraint_class(node)
-            row_type = _imports_for(self._tree, self._module).get("Modelo184MemberRow")
-            return (
-                owner == "application/modelo/edit_apply_row_contracts.py"
-                and row_type == ("cadrumo.domain.modelos.row_models", "Modelo184MemberRow")
-                and owner_class is not None
-                and any(
-                    isinstance(function, ast.FunctionDef)
-                    and function.name == "to_row"
-                    and any(
-                        isinstance(call, ast.Call)
-                        and _called_name(call) == "Modelo184MemberRow"
-                        and any(
-                            arg.arg == field
-                            and isinstance(arg.value, ast.Attribute)
-                            and isinstance(arg.value.value, ast.Name)
-                            and arg.value.value.id == "self"
-                            and arg.value.attr == field
-                            for arg in call.keywords
-                        )
-                        for call in ast.walk(function)
-                    )
-                    for function in owner_class.body
-                )
-            )
+            return self._member_days_wire_mirror(node, field)
         if field == "quarters_filed" and (low, high) == (1, 4):
             return owner in {"application/modelo/projection.py", "application/modelo/projection_operation.py"} and any(
                 isinstance(part, ast.Attribute) and part.attr in {"is_quarterly", "quarters_available"}
@@ -1243,6 +1274,35 @@ class _Sweep(ast.NodeVisitor):
                 for keyword in node.keywords
             )
         return False
+
+    def _member_days_wire_mirror(self, node: ast.Call, field: str) -> bool:
+        # The calendar envelope belongs to this wire mirror's unchanged
+        # transfer into the canonical domain row, not to an arbitrary cap.
+        owner_class = self._constraint_class(node)
+        row_type = _imports_for(self._tree, self._module).get("Modelo184MemberRow")
+        return (
+            self._owner == "application/modelo/edit_apply_row_contracts.py"
+            and row_type == ("cadrumo.domain.modelos.row_models", "Modelo184MemberRow")
+            and owner_class is not None
+            and any(
+                isinstance(function, ast.FunctionDef)
+                and function.name == "to_row"
+                and any(
+                    isinstance(call, ast.Call)
+                    and _called_name(call) == "Modelo184MemberRow"
+                    and any(
+                        arg.arg == field
+                        and isinstance(arg.value, ast.Attribute)
+                        and isinstance(arg.value.value, ast.Name)
+                        and arg.value.value.id == "self"
+                        and arg.value.attr == field
+                        for arg in call.keywords
+                    )
+                    for call in ast.walk(function)
+                )
+                for function in owner_class.body
+            )
+        )
 
     def _plurality_bound(self, node: ast.Call, low: float | None, high: float | None) -> bool:
         if (low, high) == (2, 2):
@@ -1345,14 +1405,7 @@ class _Sweep(ast.NodeVisitor):
         name = _called_name(node)
         keywords = {keyword.arg: keyword.value for keyword in node.keywords}
         if name in self._decimal_names and (len(node.args) == 1 or "value" in keywords):
-            argument = node.args[0] if node.args else keywords["value"]
-            literal = argument.value if isinstance(argument, ast.Constant) else None
-            if isinstance(literal, (str, int, float)) and not self._quantizes_to(node, str(literal)):
-                held_under_tax = _cent_or_finer_text(str(literal)) and _tax_name(
-                    self._annotated_context(node).replace(" ", "_")
-                )
-                if held_under_tax or not _lawful_decimal(str(literal)):
-                    self._report("decimal", literal, node)
+            self._visit_decimal_call(node, keywords)
         if name == "Fraction" and len(node.args) == 2 and _is_hundred(node.args[1]):
             self._report("percent", _constant_number(node.args[0]), node)
         if name in _NUMBER_CALLS and node.args and self._holds_facts():
@@ -1372,15 +1425,28 @@ class _Sweep(ast.NodeVisitor):
         if name in _REGEX_CALLS and node.args:
             self._visit_regex(node.args[0], node)
         if name == "timedelta":
-            for span in (keywords.get("days", node.args[0] if node.args else None), keywords.get("weeks")):
-                number = _constant_number(span)
-                if number is not None and number not in _ARITHMETIC_BOUNDS:
-                    self._report("timedelta", number, node)
+            self._visit_timedelta(node, keywords)
         if name in _DATE_CALLS and (len(node.args) >= 3 or {"month", "day"} <= keywords.keys()):
             self._visit_date(node, keywords)
         if self._holds_facts():
             self._visit_number_arguments(node, name)
         self.generic_visit(node)
+
+    def _visit_decimal_call(self, node: ast.Call, keywords: dict[str | None, ast.expr]) -> None:
+        argument = node.args[0] if node.args else keywords["value"]
+        literal = argument.value if isinstance(argument, ast.Constant) else None
+        if isinstance(literal, (str, int, float)) and not self._quantizes_to(node, str(literal)):
+            held_under_tax = _cent_or_finer_text(str(literal)) and _tax_name(
+                self._annotated_context(node).replace(" ", "_")
+            )
+            if held_under_tax or not _lawful_decimal(str(literal)):
+                self._report("decimal", literal, node)
+
+    def _visit_timedelta(self, node: ast.Call, keywords: dict[str | None, ast.expr]) -> None:
+        for span in (keywords.get("days", node.args[0] if node.args else None), keywords.get("weeks")):
+            number = _constant_number(span)
+            if number is not None and number not in _ARITHMETIC_BOUNDS:
+                self._report("timedelta", number, node)
 
     def _visit_number_call(self, node: ast.Call) -> None:
         """``int('12450')`` and ``float('300.51')`` hold what the text says; ``int(raw, 16)`` holds nothing."""
@@ -1414,28 +1480,9 @@ class _Sweep(ast.NodeVisitor):
 
     def _visit_number_arguments(self, node: ast.Call, name: str) -> None:
         if name in {"min", "max"}:
-            for argument in node.args:
-                number = _constant_number(argument)
-                spoken_of_tax = _tax_name(self._annotated_context(node).replace(" ", "_"))
-                if (
-                    number is not None
-                    and number not in _ARITHMETIC_OPERANDS
-                    and (spoken_of_tax or not _machine_capacity(number))
-                ):
-                    self._report("clamp", number, node)
+            self._visit_clamp(node)
         if name in _YEAR_ARITHMETIC_CALLS:
-            for argument in node.args:
-                number = _constant_number(argument)
-                if number is not None and _FIRST_YEAR < number < _LAST_YEAR:
-                    self._report("year_range", number, node)
-                elif (
-                    number is not None
-                    and number >= _SMALL_COUNT
-                    and number != _MONTHS_OF_A_YEAR + 1
-                    and number not in _ARITHMETIC_OPERANDS
-                    and not _machine_capacity(number)
-                ):
-                    self._report("call_value", f"{name}({number})", node)
+            self._visit_year_arithmetic(node, name)
         if name == "getattr" and len(node.args) == 3 and isinstance(node.args[1], ast.Constant):
             number = _constant_number(node.args[2])
             if number is not None and self._may_be_fact(number, str(node.args[1].value)):
@@ -1444,6 +1491,40 @@ class _Sweep(ast.NodeVisitor):
             self._visit_field_default(node)
         if name in _PATTERN_CALLS or name in {"Decimal", "timedelta", *_DATE_CALLS}:
             return
+        self._visit_positional_numbers(node, name)
+        keywords = {keyword.arg: _constant_number(keyword.value) for keyword in node.keywords}
+        if (keywords.get("minimum"), keywords.get("maximum")) in _CALENDAR_RANGES:
+            return
+        for keyword, number in keywords.items():
+            if number is not None and self._may_be_fact(number, keyword or ""):
+                self._report("keyword_value", f"{keyword}={number}", node)
+
+    def _visit_clamp(self, node: ast.Call) -> None:
+        for argument in node.args:
+            number = _constant_number(argument)
+            spoken_of_tax = _tax_name(self._annotated_context(node).replace(" ", "_"))
+            if (
+                number is not None
+                and number not in _ARITHMETIC_OPERANDS
+                and (spoken_of_tax or not _machine_capacity(number))
+            ):
+                self._report("clamp", number, node)
+
+    def _visit_year_arithmetic(self, node: ast.Call, name: str) -> None:
+        for argument in node.args:
+            number = _constant_number(argument)
+            if number is not None and _FIRST_YEAR < number < _LAST_YEAR:
+                self._report("year_range", number, node)
+            elif (
+                number is not None
+                and number >= _SMALL_COUNT
+                and number != _MONTHS_OF_A_YEAR + 1
+                and number not in _ARITHMETIC_OPERANDS
+                and not _machine_capacity(number)
+            ):
+                self._report("call_value", f"{name}({number})", node)
+
+    def _visit_positional_numbers(self, node: ast.Call, name: str) -> None:
         for argument in node.args:
             number = _constant_number(argument)
             if (
@@ -1452,12 +1533,6 @@ class _Sweep(ast.NodeVisitor):
                 and self._may_be_fact(number, "")
             ):
                 self._report("call_value", f"{name}({number})", node)
-        keywords = {keyword.arg: _constant_number(keyword.value) for keyword in node.keywords}
-        if (keywords.get("minimum"), keywords.get("maximum")) in _CALENDAR_RANGES:
-            return
-        for keyword, number in keywords.items():
-            if number is not None and self._may_be_fact(number, keyword or ""):
-                self._report("keyword_value", f"{keyword}={number}", node)
 
     def _visit_field_default(self, node: ast.Call) -> None:
         """A field's default is judged under the field's own name, not under the word ``default``."""
@@ -1762,15 +1837,7 @@ class _Sweep(ast.NodeVisitor):
                 continue
             if _FIRST_YEAR < number < _LAST_YEAR and not is_len:
                 self._report("year_branch", number, node)
-            elif (
-                number not in _ARITHMETIC_COMPARE
-                and (spoken_of_tax or not _machine_capacity(number))
-                and not self._machine
-                and not structural_len
-                and (spoken_of_tax or number != _SHA256_HEX)
-                and (is_len or spoken_of_tax or not self._compares_its_calendar_unit(number, node))
-                and not (is_len and self._standard_shape(node))
-            ):
+            elif self._is_threshold(number, node, is_len=is_len, structural_len=structural_len, spoken=spoken_of_tax):
                 self._report("len_compare" if is_len else "threshold", number, node)
         self._visit_compared_members(node)
         if self._form_handing and is_len and not self._standard_shape(node):
@@ -1780,6 +1847,19 @@ class _Sweep(ast.NodeVisitor):
                 if isinstance(side, (ast.Set, ast.Tuple, ast.List)):
                     self._report("len_in", ast.unparse(side), node)
         self.generic_visit(node)
+
+    def _is_threshold(
+        self, number: float, node: ast.Compare, *, is_len: bool, structural_len: bool, spoken: bool
+    ) -> bool:
+        return (
+            number not in _ARITHMETIC_COMPARE
+            and (spoken or not _machine_capacity(number))
+            and not self._machine
+            and not structural_len
+            and (spoken or number != _SHA256_HEX)
+            and (is_len or spoken or not self._compares_its_calendar_unit(number, node))
+            and not (is_len and self._standard_shape(node))
+        )
 
     def _standard_shape(self, node: ast.Compare) -> bool:
         """A function named for a standard shape may compare a length with that shape's one width."""
@@ -2006,33 +2086,32 @@ class _Sweep(ast.NodeVisitor):
         ):
             self._report("number_text", value, node)
         elif _CODE_SHAPED.match(value):
-            if value == self._own_form or self._month_keyed(node):
-                return
-            if self._defines_period_code(node) or self._is_command_path_segment(node):
-                return
-            if any(_EDITION_TAIL.search(name) for name in self._own_side_names(node)) and not isinstance(
-                self._parents.get(node), ast.Compare
-            ):
-                return
-            if (
-                value.isdigit()
-                and int(value) <= _MONTHS_OF_A_YEAR
-                and _MONTH_NAME.search(self._annotated_context(node))
-            ):
-                return
-            if value.isdigit() and int(value) in _DAYS_OF_A_YEAR and _DAY_NAME.search(self._annotated_context(node)):
-                return
-            if value in self._periods and self._stands_as_address(node, _PERIOD_TAIL):
-                return
-            if value in self._modelos and self._stands_as_address(node, _MODELO_TAIL):
-                return
-            self._report("code", value, node)
+            if not self._code_is_admitted(node, value):
+                self._report("code", value, node)
         elif (
             _LETTER_CLAVE.match(value)
             and _CLAVE_NAME.search(context := self._annotated_context(node))
             and not _COUNTRY_NAME.search(context)
         ):
             self._report("letter_clave", value, node)
+
+    def _code_is_admitted(self, node: ast.Constant, value: str) -> bool:
+        """Return whether a code-shaped string stands where no tax fact can."""
+        if value == self._own_form or self._month_keyed(node):
+            return True
+        if self._defines_period_code(node) or self._is_command_path_segment(node):
+            return True
+        if any(_EDITION_TAIL.search(name) for name in self._own_side_names(node)) and not isinstance(
+            self._parents.get(node), ast.Compare
+        ):
+            return True
+        if value.isdigit() and int(value) <= _MONTHS_OF_A_YEAR and _MONTH_NAME.search(self._annotated_context(node)):
+            return True
+        if value.isdigit() and int(value) in _DAYS_OF_A_YEAR and _DAY_NAME.search(self._annotated_context(node)):
+            return True
+        if value in self._periods and self._stands_as_address(node, _PERIOD_TAIL):
+            return True
+        return value in self._modelos and self._stands_as_address(node, _MODELO_TAIL)
 
 
 def sweep_source(
