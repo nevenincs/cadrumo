@@ -273,7 +273,6 @@ def process_hold_request(
         return 1
     finally:
         log_slow_hold_request(action, request_id, started)
-    return None
 
 
 def log_slow_hold_request(action: str, request_id: UUID, started: float) -> None:
