@@ -5,7 +5,7 @@ tags:
 date: '2026-11-01'
 modified: '2026-11-01'
 body_schema: 'body-v2'
-body_hash: 'sha256:37df0bc1154311862e6e64efdbfae2d33c8ccbe1bfc900a48a8a749bd97fb11c'
+body_hash: 'sha256:2131eb33061f1e02f9ba3bb44f6d69d824f6a3b85f21a0412b3caf2d4a2543d8'
 related:
   - "[[2026-06-10-calculation-aggregation-taxonomy-adr]]"
   - "[[2026-09-27-export-parity-renta-withholding-sources-adr]]"
@@ -13,8 +13,9 @@ related:
   - '[[2026-09-27-export-parity-renta-withholding-sources-research]]'
 ---
 
-# `calculation-aggregation-taxonomy` adr: `Block filing-bound precedence tier divergence instead of overwriting silently` | (**status:** `proposed`)
+# `calculation-aggregation-taxonomy` adr: `Block filing-bound precedence tier divergence instead of overwriting silently` | (**status:** `accepted`)
 
+Accepted 2026-11-01 on the operator's rulings recorded below.
 This is a proposed amendment to the accepted `2026-06-10-calculation-aggregation-taxonomy-adr`, drafted on the operator's ruling of 2026-11-01. The accepted record is unchanged until this proposal is authorized; the wording to apply then is given under "Proposed wording for the accepted record". It realises the amendment that `2026-09-27-export-parity-renta-withholding-sources-adr` (Constraints) announces and that its Step 4 relies on.
 
 ## Problem Statement
@@ -64,7 +65,7 @@ These are the transitions that actually change a value today, measured at HEAD o
 
 We will replace the silent cross-tier overwrite with a comparing overlay. A higher tier that replaces a different lower-tier value on a filing-bound binding persists a blocking `precedence_tier_divergence` finding. The scope is plan Step P04.S07 of `2026-11-01-export-parity-plan`. Its write set is `src/cadrumo/application/aggregation/source_resolution_operations.py`, plus the tier construction and caller-channel merges it must reach: `calculation_resolution.py`, `binding_resolution.py`, `borrador_binding.py`, `calculation_bucket_actions.py`, `calculation_notes.py`, `calculation_note_gate.py` (for `gate_refuses`) and the domain helper that derives filing-boundness. Any path correction to that Step is recorded through the plan verbs.
 
-Dependency needing an operator ruling. The overlay is shared, so this change alters other modelos' command-sequence and evaluation goldens (see "Impact on other modelos"). Plan Step P01.S28 must coordinate those sessions before P04.S07 lands, and the scope of that coordination is an open operator question below (P01.S27). The dependency adds no product scope to P04.S07.
+Cross-domain dependency, authorized by the operator (Operator rulings 2026-11-01). The overlay is shared, so this change alters other modelos' command-sequence and evaluation goldens (see "Impact on other modelos"). Plan Step P01.S28 coordinates those sessions before P04.S07 lands; the operator authorized the other domains' goldens to be re-run and cross-domain coordination. The dependency adds no product scope to P04.S07.
 
 1. **Filing-bound binding, defined.** A binding B of revision R is filing-bound when both of the following hold:
    - R's declared `authority_grade` is `RegistryAuthorityGrade.FILING`. The test reads the declared grade, not the rung the operation pins, because calculate pins `CALCULATION` (`src/cadrumo/application/modelo/_calculation_preparation.py:207`) while its persisted revision feeds check and export.
@@ -139,7 +140,7 @@ The ladder answers which value the calculation uses. It never answered whether a
 - Gains: no tier can silently replace a different filed value. Borrador, certificates and operator overrides become visible, auditable claims rather than winners, and the 0596 to 0606 credit work in P03 and P04 lands on a ladder that already refuses silent replacement.
 - Costs: lower tiers do more resolution work. A new persisted reason, catalogue entry and locale text. A legacy-revision recalculation requirement.
 - Workflow change: operators who override carried values must add a resolution record before checking or exporting. A recorded live invocation such as `--binding irpf.previous_year_economic_activity_net_income=<total>` (accepted record, amendment of 2026-08-13) now blocks until it is resolved, wherever the carried value differs.
-- Reconsider if the resolution-record friction on legitimate carry overrides proves disproportionate. The candidate refinement is an override that carries its reason and mints the keyed record in the same invocation; it is not decided here.
+- A caller override may carry its resolution reason in the same command, which then creates the keyed resolution record (Operator rulings 2026-11-01). The design belongs to P04.S20; the record is still the one owned by the export-parity Step 4 and still accepts the ladder outcome. Reconsider if the resolution-record friction on legitimate carry overrides proves disproportionate.
 
 ## Impact on other modelos and what they must do
 
@@ -147,7 +148,7 @@ The overlay is shared, so the change reaches every modelo whose revision is grad
 
 - **IVA (M303, M390; wallet sessions).** D3 is unchanged. The changes are these:
   - Caller overrides of `prorrata_regularizacion` and `iva_compensation_annual_partition` values that differ from the resolved value now block.
-  - On filing-bound casillas, the casilla-channel operator override of a bound input becomes blocking. The documented case is the provisional prorrata percentage of LIVA art. 105.Uno (`_operator_override_advisory.py:1-11`).
+  - On filing-bound casillas, the casilla-channel operator override of a bound input becomes blocking. The documented case is the provisional prorrata percentage of LIVA art. 105.Uno (`_operator_override_advisory.py:1-11`). The operator ruled that this override blocks like any other divergence, and the IVA domain is notified of the change.
   - IVA sessions must re-run their command-sequence and evaluation goldens, classify every new finding as a genuine divergence or a fixture artefact, and supply resolution records or corrected fixtures. They must not add exclusions.
 - **Pagos fraccionados and Renta carries (M130, M131, M100).** Caller overrides of `previous_filing` carries and of `relation_prefill` folds (for example the M100 0604 fold) block on divergence. The 2025 M100 CCAA binding starts comparing profile against borrador.
 - **Informative and annual reconciliations (M180, M190, M193, M200, M202, M353).** Caller overrides of relation and per-member carries block on divergence. Each owning session confirms its revision's declared authority grade, since revisions below `FILING` get advisories only.
@@ -160,12 +161,17 @@ The overlay is shared, so the change reaches every modelo whose revision is grad
 
 To be applied to `2026-06-10-calculation-aggregation-taxonomy-adr` only once this proposal is authorized, as a dated amendment section. Accepted item 5 stays in place and is annotated "amended 2026-11-01".
 
+Applying this wording to the accepted taxonomy record is pending; the orchestrator applies it, and this record does not edit the accepted record.
+
 > **Amendment 2026-11-01: tier divergence on filing-bound bindings blocks.** The precedence ladder of item 5 is unchanged in order. A higher tier that replaces a different lower-tier value on a filing-bound binding no longer wins silently: the overlay compares typed values exactly and persists a `precedence_tier_divergence` finding naming each tier, its value and its provenance. While the finding is open, check, export and local filing are refused; calculation and preview proceed with the ladder's value. Equal values produce no finding. The finding is resolved by correcting the source or by the operator resolution record of `2026-09-27-export-parity-renta-withholding-sources-adr` Step 4. Lower tiers resolve without excluding higher-tier keys, so that suppression is compared too. The phrase "the engine's consistency check adjudicates divergence" in item 5.4, and "the D2 carve-out extension ... is the relief valve" under Consequences, are read under this amendment. Caller overrides of carried values remain permitted, and a divergent one blocks until it is resolved. `iva_wallet_decision` remains outside the ladder (D3).
 
-## Open questions
+## Operator rulings 2026-11-01
 
-- Cross-domain coordination scope, pending operator ruling. Which sessions must re-run and classify their goldens before P04.S07 lands, and does P04.S07 wait for all of them or only for the IVA and Renta carry sessions? Plan Step P01.S28 executes whatever the operator rules.
-- Caller override carrying its resolution reason, pending operator ruling. Should a caller override be able to carry its reason and mint the keyed resolution record in the same invocation? Deferred to the P04.S20 design.
-- IVA provisional-prorrata override, pending operator ruling. Should the casilla-channel override of a bound input on filing-bound IVA casillas, the provisional prorrata of LIVA art. 105.Uno, block, or is it a narrowly keyed exception with legal grounding? The operator's "any disagreement blocks" rule was stated for the Modelo 100 credits.
-- Implementation question, not an operator ruling: does the profile resolver refuse a required fact when a higher tier was meant to supply it? If so, unconditional resolution needs an absence result there. This must be confirmed against `src/cadrumo/application/aggregation/source_profile.py`.
-- Closed: the finding is one type shared with the Step 4 reconciliation finding, with the persisted reason as discriminator (Constraints).
+Basis: Operator rulings 2026-11-01, given in conversation.
+
+- Cross-domain coordination: authorized. The operator authorized other domains' goldens to be re-run and classified, and authorized cross-domain coordination (plan Step P01.S28) before P04.S07 lands.
+- Caller override carrying its resolution reason: a caller override may carry its resolution reason in the same command, creating the resolution record. The design is P04.S20.
+- IVA provisional-prorrata override: it blocks like any other divergence on filing-bound casillas, with no keyed exception. The IVA domain is notified.
+- Closed earlier: the finding is one type shared with the Step 4 reconciliation finding, with the persisted reason as discriminator (Constraints).
+
+Still open, and not an operator ruling: does the profile resolver refuse a required fact when a higher tier was meant to supply it? If so, unconditional resolution needs an absence result there. This must be confirmed against `src/cadrumo/application/aggregation/source_profile.py`.

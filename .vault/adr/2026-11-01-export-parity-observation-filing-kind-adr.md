@@ -5,7 +5,7 @@ tags:
 date: '2026-11-01'
 modified: '2026-11-01'
 body_schema: 'body-v2'
-body_hash: 'sha256:d3346c0f47e32c82ecf97122036f0e33738525064a1c006b2eb6946f762a380c'
+body_hash: 'sha256:66d934477a2276f5135d44b3f3be3390c2fb2d477e337ce55c6bae810889d102'
 related:
   - "[[2026-09-27-export-parity-renta-withholding-sources-adr]]"
   - "[[2026-06-10-modelo-130-100-continuity-adr]]"
@@ -14,8 +14,9 @@ related:
   - "[[2026-09-17-filing-chain-reconciliation-reference]]"
   - "[[2026-09-27-export-parity-renta-withholding-sources-research]]"
 ---
-# `export-parity` adr: `Typed filing kind on captured observations proves complementaria-only casillas zero for originals` | (**status:** `proposed`)
+# `export-parity` adr: `Typed filing kind on captured observations proves complementaria-only casillas zero for originals` | (**status:** `accepted`)
 
+Accepted 2026-11-01 on the operator's rulings recorded below.
 ## Problem Statement
 
 Modelo 100 casilla 0604 credits, per quarter of the declarant's Modelo 130, casilla 18 plus the positive part of casilla 19 (Modelo 131: casilla 14 plus the positive part of 15), read from the quarter's effective observation (`src/cadrumo/domain/calculations/registry/observation_fold.py:169-200`). The fold refuses a matched filing that lacks a declared source casilla, so the relation stays unresolved rather than reading zero (`observation_fold.py:56-64`); the live relation capture and the clean-state gate refuse the same gap (`src/cadrumo/adapters/outbound/aeat/sede/declarations_capture.py:405-411`, `src/cadrumo/application/calculations/cross_period_dependency_evaluation.py:311-319`).
@@ -79,7 +80,7 @@ We will add a typed filing-kind projection to the calculation observation envelo
 - Registry: declare complementaria-only on Modelo 130 casilla 18 at the `2019-y-siguientes` revision and on Modelo 131 casilla 14 at the `2019-2023` storage baseline, with source citations, projected onto the relation requirement. A test confirms the declaration is inherited by Modelo 131 `2024`, `2025`, `2026` and `2026-3t-4t`. Source edit, publication and runtime adoption are reported separately.
 - Tests through the real capture, persistence, fold and calculation paths with hand-derived oracles: original quarter from a submitted file with a blank marker and from a local revision credits 0604 with casilla 18 as zero; a PDF-only quarter with an unknown kind stays unresolved; a complementaria without casilla 18 stays unresolved; marker and casilla 18 contradiction and kind disagreement between bases block; a 2024-or-later Modelo 131 file whose DPA indicator disagrees with its page-1 marker blocks; a failed submitted-file parse yields `NONE`; an observation and a capture row stored before this change load and read as `NONE`; a stored revision replays to identical values and identity; a detector test proves removing the registry declaration returns the original-quarter case to unresolved.
 - Hypotheses to confirm in the Step: whether the fixed-width codec already reads a zero-filled casilla 18 from a submitted file as zero (`modelo-130-page-01.toml:575-586`, `left_zero`), and the per-revision marker coverage of every Modelo 131 layout, the two 2026 revisions included.
-- Dependency needing an operator ruling. The new blocking findings and the extra fold outcomes reach the shared relation prefill and clean-state check, which other modelos' sessions own, and can change their goldens. Plan Step P01.S28 coordinates that before S16 lands, and its scope needs an operator ruling (P01.S27). This adds no product scope to S16.
+- Cross-domain dependency, coordination authorized (Operator rulings 2026-11-01). The new blocking findings and the extra fold outcomes reach the shared relation prefill and clean-state check, which other modelos' sessions own, and can change their goldens. Plan Step P01.S28 coordinates that before S16 lands, and the operator has authorized that coordination. This adds no product scope to S16.
 
 ## Rationale
 
@@ -91,3 +92,11 @@ The envelope is where Cadrumo already keeps a filed declaration's non-casilla fa
 - Costs: a new optional envelope and capture field, a registry declaration and a shared predicate. No namespace bump, so no modelo's stored observations need re-capture. A quarter observed before this change keeps 0604 unresolved until it is re-captured from a submitted file or re-filed locally, because its absent projection reads as unknown.
 - Remaining gap: the motivating case, a quarter whose submitted file is unavailable and is captured only from the declaration PDF, still leaves 0604 unresolved. No admitted basis exists for it until a real register `tipo_solicitud` specimen for a known original, or a declaration-PDF specimen showing the printed complementaria box, is observed in an attended live session.
 - Reconsider if AEAT documents the register request-type vocabulary, if register completeness per period is established (admitting the sole-row basis), if the meaning of the Modelo 131 DPA position-12 indicator is settled, or if AEAT adopts the rectificativa for Modelo 130 or 131.
+
+## Operator rulings 2026-11-01
+
+Basis: Operator rulings 2026-11-01, given in conversation.
+
+- The operator accepted the additive optional filing-kind design: an optional `filing_kind` projection on the observation envelope and an optional parsed-marker field on the capture payload, with no schema or namespace version bump. Rows written earlier keep loading and read as basis `NONE`.
+- The evidence gaps stay fail-closed until an attended live session or a real specimen. The register `tipo_solicitud` vocabulary and the declaration-PDF complementaria box are recorded-but-unadmitted readings and admit no basis. A quarter captured only from the declaration PDF, or from the register without the submitted-file marker, keeps casilla 18 unresolved until a real specimen is observed.
+- No question remains open in this record.

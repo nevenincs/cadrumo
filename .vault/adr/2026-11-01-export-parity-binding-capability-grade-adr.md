@@ -5,7 +5,7 @@ tags:
 date: '2026-11-01'
 modified: '2026-11-01'
 body_schema: 'body-v2'
-body_hash: 'sha256:72433558d6819fe26eccd45aaece17fce60b26438b1f51832c668cbd34c6b959'
+body_hash: 'sha256:d461e672bd5744f6cb421917d5d496117d9f922da3a73b2e3f2101c76d9c2b30'
 related:
   - "[[2026-09-27-export-parity-renta-withholding-sources-adr]]"
   - "[[2026-09-27-export-parity-renta-withholding-sources-research]]"
@@ -18,8 +18,9 @@ related:
   - "[[2026-08-24-tui-registry-api-gate-adr]]"
 ---
 
-# `export-parity` adr: `declared per-binding grade cap that blocks verify, export and local filing` | (**status:** `proposed`)
+# `export-parity` adr: `declared per-binding grade cap that blocks verify, export and local filing` | (**status:** `accepted`)
 
+Accepted 2026-11-01 on the operator's rulings recorded below.
 ## Problem Statement
 
 On 2026-11-01 the operator ruled that an advisory value must block verify and export, and must not block calculation or preview. The operator also chose a typed per-binding grade, so that the grade is declared in the registry and not inferred from a fact name.
@@ -96,6 +97,10 @@ The snapshot derives, from those same edges, a read-only map from each capped bi
 
 **Finding shape and locale keys.** The note uses the existing note catalogue. The keys are `application.modelo.calc_diagnostic.advisory_binding_value.what` and `.what_to_do`, `application.modelo.calc_diagnostic.calculation_screen_outdated.what` and `.what_to_do`, and the fact sentence key `application.modelo.calc_diagnostic_fact.advisory_imputation_period_ungrounded`. The fact sentence names the box by its printed number, the amount, and the provisions that leave the year ungrounded. The refusal error is worded by the first blocking note's `what` key, as the gate already does. The keys are authored in every supported locale through the `dev.locales` workflow, with the operator addressed informally in the singular.
 
+**Zero values (decided).** A capped binding that resolves to a proven zero passes, and a capped binding that resolves to zero from rows that carry withholding blocks. A proven zero is a value computed over a window in which the resolver found no withholding-bearing row, so no imputation question arises for it. A zero computed from rows that carry withholding (for example rows whose withholding was excluded as unpaid or as belonging to another window) blocks, because the year question is exactly what produced it. The resolver states which case applies as a typed outcome on the `advisory_binding_value` diagnostic, so the gate reads the outcome and never infers it from the amount. A capped binding with no typed outcome blocks. The proven-zero outcome emits no blocking note, and the diagnostic is still recorded so the form can show that the zero was proven. S14 tests cover both zero cases and the absent-outcome case through the real resolver and gate.
+
+**Previews and certificates (decided).** The signed calculation report and the Google Sheets calculation workbook are previews: they show the capped value with its note and are not refused. An agreeing payer certificate or datos fiscales record for the same ejercicio does not clear a cap for that value; only a promotion by registry delta removes it.
+
 **Interaction with revision grade and screens.** A value's reach is the lower of its revision's declared grade and its binding's cap. Snapshot admission stays revision-level: a filing-grade request on Modelo 100 or 130 is still admitted, and the cap refuses only the revision values it touches. A cap neither demotes the revision nor counts against it in the `grade_earned` screen (`dev/registry/analysis/grade_earned.py`), whose `under_supported` and `under_declared` findings stay revision-level. The cross-period clean-state gate (`src/cadrumo/application/calculations/cross_period_clean_state.py:219`) stays revision-level as well. A revision that carries a capped value cannot be filed locally, so it never becomes a filed prior that a later period could consume.
 
 **Promotion as a registry delta.** Promotion removes `grade_cap` from the binding in the edition where the grounding begins: the baseline for an across-the-board promotion, or a successor edition that restates the binding without the cap when the grounding starts in a later ejercicio. The cap's legal references and reason state the reconsideration condition. Removal lands only with the accepted ruling and goes through publication and runtime adoption, each reported separately. Each capped binding has its own promotion path: 0599 through plan Step P05.S08, and Modelo 130 casilla 06 through P05.S31. The evidence each must present is set by `2026-11-01-export-parity-income-imputation-criterion-adr` (Implementation item 9) as resolver properties proven by tests, not as conditions on a taxpayer, consistent with the rejection of option E. Existing revisions then refuse with `calculation_screen_outdated` until they are recalculated.
@@ -109,7 +114,7 @@ The snapshot derives, from those same edges, a read-only map from each capped bi
 - a publication that changes no screen-relevant declaration leaves a stamped revision current;
 - casilla 0171, fed by the same provider kind, stays filing grade.
 
-**Dependencies needing an operator ruling.** S14 cannot start until the zero-cap and casilla 06 endpoint questions below are answered (plan Step P01.S27). Capping casilla 06 changes Modelo 130 goldens that other sessions own, and the shared screen stamp refuses every unstamped revision of every modelo at verify and export. Both are cross-domain effects that plan Step P01.S28 must coordinate, with an operator ruling on its scope, before S14 lands. This dependency adds no product scope to S14.
+**Cross-domain dependencies.** The operator has ruled on the zero-cap and casilla 06 questions (Operator rulings 2026-11-01 below), so S14 is no longer waiting on them. Capping casilla 06 changes Modelo 130 goldens that other sessions own, and the shared screen stamp refuses every unstamped revision of every modelo at verify and export. Both are cross-domain effects that plan Step P01.S28 coordinates before S14 lands, and cross-domain coordination is authorized by the operator. This dependency adds no product scope to S14.
 
 P02.S05 rebases d5493eed10 onto that work and adds the same cap to `renta-ledger-actividad-retenciones-0599` at the 2022 baseline. It rewrites the binding comment so it no longer names the retired note, and adapts that commit's tests to assert that calculation succeeds while verify and export refuse. Oracle-checked tests with independent oracles prove that inferred and unknown rows still leave 0599 unchanged. Authority publication remains with the shared publication session.
 
@@ -120,9 +125,9 @@ Option A is the only option that meets the operator's ruling exactly and keeps o
 ## Consequences
 
 - Gains: no advisory value reaches an exported file or a local filing. The operator sees why, box by box, in every language. 0599 and casilla 06 can be promoted independently by a reviewable registry delta. The resolver no longer owns a capability claim. A shipped-completeness report can list every capped binding as a bounded disposition with its grounds and reconsideration condition.
-- Costs: a schema field, five build rules, one durable reason, one derived gate reason shared with two other screens, locale keys in every supported locale, and new legal catalogue entries. Every revision that holds a capped value is blocked at verify and export until promotion. With casilla 06 capped, that may mean many Modelo 130 exports for autonomos; the recommended zero rule below limits it to quarters with withholding-bearing rows.
+- Costs: a schema field, five build rules, one durable reason, one derived gate reason shared with two other screens, locale keys in every supported locale, and new legal catalogue entries. Every revision that holds a capped value is blocked at verify and export until promotion. With casilla 06 capped, that may mean many Modelo 130 exports for autonomos; the proven-zero rule limits it to quarters with withholding-bearing rows.
 - Pitfalls: an author may copy a cap onto a binding without a grounded reason. The closed reason vocabulary and the legal-reference rule make that a deliberate act. The screen stamp detects a changed cap map but not an incomplete emission, so the emission must cover every resolved channel, scalar and row alike, and a test proves it.
-- Reconsider if a value proves filing grade only under a taxpayer condition (option E), or if per-value evidence such as an agreeing payer certificate for the same ejercicio should clear a cap for that value only.
+- Reconsider if a value proves filing grade only under a taxpayer condition (option E), or if a later decision lets per-value evidence such as an agreeing payer certificate for the same ejercicio clear a cap for that value only; the operator ruled that today it does not.
 
 ## Proposed edits to accepted records
 
@@ -134,9 +139,12 @@ These are proposals only. No accepted text changes until each is authorized.
 - `2026-08-24-registry-completeness-closure-adr`, Implementation, limb 2. After "a bounded blocked disposition with an owner, review condition, and follow-up", add "including a connected binding under a declared grade cap, whose grounds and removal ruling are its review condition".
 - `2026-09-09-registry-edition-authoring-adr` and `2026-08-24-tui-registry-api-gate-adr` need no edit. The cap is an ordinary binding field under the inheritance rule. A successor that adds a cap is not withholding by design, because that refusal is keyed on revision grades. The workspace receives the cap only through the existing notes and findings.
 
-## Open questions for the operator
+## Operator rulings 2026-11-01
 
-- Zero-cap rule, pending operator ruling. Does a capped binding that resolves exactly zero also block? The recommended answer is the proven-zero rule. A zero computed from a window in which the resolver found no withholding-bearing row passes, because no imputation question arises for it. A zero computed from rows that carry withholding (for example rows whose withholding was excluded as unpaid or as belonging to another window) blocks, because the year question is exactly what produced it. The resolver states which case applies as a typed outcome on the diagnostic, so the gate does not infer it. If the operator rejects this, every capped zero blocks, and every Modelo 130 with casilla 06 at zero is blocked until promotion.
-- Casilla 06 endpoint, pending operator ruling, shared with `2026-11-01-export-parity-income-imputation-criterion-adr`. Is the casilla 06 cap removed through its own promotion (P05.S31) once the imputation resolver properties hold, or does casilla 06 stay capped while 0599 is promoted? This record provides the promotion path; it does not decide the endpoint.
-- Should the signed calculation report and the Google Sheets calculation workbook also refuse a capped value? This record treats both as previews that show the note, because neither claims filing status.
-- Should a payer certificate or datos fiscales record that agrees for the same ejercicio (P04 and P06) be allowed to clear the cap for that value? This record says no, and leaves it to a later decision.
+Basis: Operator rulings 2026-11-01, given in conversation. Each earlier open question is answered as follows, and none remains open.
+
+- Zero-cap rule: an advisory (capped) value that is a proven zero passes, because no withholding-bearing rows exist in the window. A zero computed from rows with withholding blocks. This is the rule decided under Implementation, Zero values.
+- Casilla 06 endpoint: Modelo 130 casilla 06 is capped like Modelo 100 casilla 0599 (the operator's words: "go with recommend"). Casilla 06 is promoted through its own path, P05.S31, once the imputation resolver properties hold, independently of 0599 (P05.S08). The endpoint is shared with `2026-11-01-export-parity-income-imputation-criterion-adr`.
+- Signed calculation report and Google Sheets workbook: both are previews that show the note and are not refused.
+- Payer certificate or datos fiscales record: an agreeing record for the same ejercicio does not clear the cap.
+- Cross-domain coordination: authorized, for the Modelo 130 goldens and the shared screen stamp (plan Step P01.S28).
