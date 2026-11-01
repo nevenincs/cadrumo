@@ -3,8 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncGenerator
-from contextlib import asynccontextmanager, contextmanager
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any, cast
@@ -52,6 +50,7 @@ from ...core.operations import (
     profile_operation_subject,
 )
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from .capture_stand_in_support import FencedExecutionAuthority, ObservableBrowserResources
 from .supervised_operation_rig import cli_submit_context, run_to_terminal, settle_and_project
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -63,63 +62,10 @@ _NIF = "B12345674"
 _RAW_EVIDENCE_LOCATOR = "private://synthetic-verify-evidence"
 
 
-class _ExecutionAuthority:
-    """Supervisor authority port that records each fresh commit fence."""
-
-    def __init__(self, events: list[str]) -> None:
-        self.events = events
-        self.guard_calls = 0
-        self.guard_depth = 0
-
-    async def require(self, *, identity: object, request: object, action: AccessAction) -> None:
-        assert identity is not None and request is not None
-        self.events.append(f"require:{action.value}")
-
-    @asynccontextmanager
-    async def commit_guard(self, identity: object) -> AsyncGenerator[None]:
-        assert identity is not None
-        self.guard_calls += 1
-        guard_number = self.guard_calls
-        self.guard_depth += 1
-        self.events.append(f"commit-guard-enter:{guard_number}")
-        try:
-            yield
-        finally:
-            self.guard_depth -= 1
-            self.events.append(f"commit-guard-exit:{guard_number}")
-
-
-class _Resources:
-    """Synthetic browser owner with observable activation and cleanup."""
-
-    def __init__(self, events: list[str]) -> None:
-        self.events = events
-        self.active = False
-        self.closed = False
-        self.close_calls = 0
-
-    @contextmanager
-    def activate(self):
-        assert not self.active
-        self.active = True
-        self.events.append("browser-activate")
-        try:
-            yield
-        finally:
-            self.active = False
-            self.events.append("browser-deactivate")
-
-    async def close(self) -> None:
-        assert not self.active
-        self.closed = True
-        self.close_calls += 1
-        self.events.append("browser-close")
-
-
 class _VerifyPersistence:
     """In-memory application port whose write requires an active supervisor guard."""
 
-    def __init__(self, *, bucket_id: str, events: list[str], authority: _ExecutionAuthority) -> None:
+    def __init__(self, *, bucket_id: str, events: list[str], authority: FencedExecutionAuthority) -> None:
         self.bucket_id = bucket_id
         self.events = events
         self.authority = authority
@@ -147,7 +93,7 @@ def _supervisor(
     registry: OperationRegistry,
     profile_repository: Any,
     authority: PinnedAuthorityOperation,
-    execution_authority: _ExecutionAuthority,
+    execution_authority: FencedExecutionAuthority,
 ) -> tuple[OperationSupervisor, OperationJournalRepository, Any]:
     durable_root = tmp_path / "operations"
     journal = OperationJournalRepository(storage_root=durable_root)
@@ -204,8 +150,8 @@ def _assert_two_captures_settled_and_projected(
 def _assert_capture_effects_and_guards(
     events: list[str],
     acquisitions: list[tuple[VerifySurface, str, object | None]],
-    execution_authority: _ExecutionAuthority,
-    resources: list[_Resources],
+    execution_authority: FencedExecutionAuthority,
+    resources: list[ObservableBrowserResources],
 ) -> None:
     assert acquisitions == [
         (VerifySurface.TGVI, _NIF, IdentityCheckVerdict.VALID),
@@ -241,9 +187,9 @@ def test_real_supervisor_captures_exact_profile_under_commit_guard_and_reports_e
         profile_id = UUID(profile.bucket_id)
         assert profile_id == _PROFILE_ID
         events: list[str] = []
-        execution_authority = _ExecutionAuthority(events)
+        execution_authority = FencedExecutionAuthority(events)
         persistence = _VerifyPersistence(bucket_id=profile.bucket_id, events=events, authority=execution_authority)
-        resources: list[_Resources] = []
+        resources: list[ObservableBrowserResources] = []
         acquisitions: list[tuple[VerifySurface, str, object | None]] = []
 
         monkeypatch.setattr(capture_module, "require_active_bucket_id", lambda: profile.bucket_id)
@@ -255,8 +201,8 @@ def test_real_supervisor_captures_exact_profile_under_commit_guard_and_reports_e
             assert pinned_authority is authority
             events.append("provider-preflight")
 
-        def resources_factory() -> _Resources:
-            resource = _Resources(events)
+        def resources_factory() -> ObservableBrowserResources:
+            resource = ObservableBrowserResources(events)
             resources.append(resource)
             return resource
 
@@ -350,7 +296,7 @@ def _settle_tgvi(
     with isolated_runtime_profile(tmp_path=tmp_path) as profile, bundled_indexed_authority().operation() as authority:
         events: list[str] = []
         acquired_nifs: list[str] = []
-        execution_authority = _ExecutionAuthority(events)
+        execution_authority = FencedExecutionAuthority(events)
         persistence = _VerifyPersistence(bucket_id=profile.bucket_id, events=events, authority=execution_authority)
         if recorded_tax_id is not None:
             register_minimal_profile(profile_id=profile.bucket_id, overrides={"identity.tax_id": recorded_tax_id})
@@ -373,7 +319,7 @@ def _settle_tgvi(
             VerifySurface.TGVI,
             persistence_factory=lambda _bucket_id: persistence,
             acquire=acquire,
-            browser_resources_factory=lambda: _Resources(events),
+            browser_resources_factory=lambda: ObservableBrowserResources(events),
             provider_preflight=lambda _profile_id, _authority: None,
         )
         registry = OperationRegistry(
@@ -493,7 +439,7 @@ def test_nif_iva_check_refuses_before_any_browser_or_provider_work(
             registry=registry,
             profile_repository=profile.repository,
             authority=authority,
-            execution_authority=_ExecutionAuthority(events),
+            execution_authority=FencedExecutionAuthority(events),
         )
         request = OperationRequest(
             definition_id=VERIFY_NIF_IVA_CAPTURE_DEFINITION_ID,

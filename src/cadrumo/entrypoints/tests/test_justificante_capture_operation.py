@@ -4,8 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import hashlib
-from collections.abc import AsyncGenerator, Sequence
-from contextlib import asynccontextmanager, contextmanager
+from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -15,7 +14,6 @@ from uuid import UUID, uuid4
 
 import pytest
 
-from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
 from ...adapters.persistence.operations.journal import OperationJournalRepository
@@ -62,7 +60,6 @@ from ...application.operations.persistence.journal import OperationPersistedSnap
 from ...application.operations.projection_services import OperationResultProjectionService
 from ...application.operations.registry import OperationFrontendProjection, OperationRegistry
 from ...application.operations.supervisor import OperationSupervisor
-from ...application.user_profile.access_errors import ProfileAccessRefusedError
 from ...core.operations import (
     OperationEffect,
     OperationLifecycle,
@@ -75,6 +72,7 @@ from ...domain.justificante.schema import Justificante
 from ...tests.aeat_literal_fixtures import (
     CSV_CONSULTATION_URL_FIXTURE,
 )
+from .capture_stand_in_support import FencedExecutionAuthority, ObservableBrowserResources
 from .supervised_operation_rig import run_to_terminal
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -91,65 +89,8 @@ _PDF = b"%PDF-1.4\nsynthetic AEAT receipt\n%%EOF"
 _PDF_SHA256 = hashlib.sha256(_PDF).hexdigest()
 
 
-class _ExecutionAuthority:
-    """Real supervisor authority port with an optional deterministic refusal."""
-
-    def __init__(self, events: list[str], *, refuse_guard: int | None = None) -> None:
-        self.events = events
-        self.refuse_guard = refuse_guard
-        self.guard_calls = 0
-        self.guard_depth = 0
-
-    async def require(self, *, identity: object, request: object, action: AccessAction) -> None:
-        assert identity is not None and request is not None
-        self.events.append(f"require:{action.value}")
-
-    @asynccontextmanager
-    async def commit_guard(self, identity: object) -> AsyncGenerator[None]:
-        assert identity is not None
-        self.guard_calls += 1
-        guard_number = self.guard_calls
-        self.events.append(f"commit-guard-enter:{guard_number}")
-        if guard_number == self.refuse_guard:
-            self.events.append(f"commit-guard-refused:{guard_number}")
-            raise ProfileAccessRefusedError(AccessDenialCode.GRANT_INACTIVE)
-        self.guard_depth += 1
-        try:
-            yield
-        finally:
-            self.guard_depth -= 1
-            self.events.append(f"commit-guard-exit:{guard_number}")
-
-
-class _Resources:
-    """Synthetic browser process whose activation and supervisor cleanup are observable."""
-
-    def __init__(self, events: list[str]) -> None:
-        self.events = events
-        self.active = False
-        self.closed = False
-        self.close_calls = 0
-
-    @contextmanager
-    def activate(self):
-        assert not self.active
-        self.active = True
-        self.events.append("browser-activate")
-        try:
-            yield
-        finally:
-            self.active = False
-            self.events.append("browser-deactivate")
-
-    async def close(self) -> None:
-        assert not self.active
-        self.closed = True
-        self.close_calls += 1
-        self.events.append("browser-close")
-
-
 class _SnapshotPersistence:
-    def __init__(self, *, bucket_id: str, events: list[str], authority: _ExecutionAuthority) -> None:
+    def __init__(self, *, bucket_id: str, events: list[str], authority: FencedExecutionAuthority) -> None:
         self.bucket_id = bucket_id
         self.events = events
         self.authority = authority
@@ -195,8 +136,8 @@ class _ReadPort:
         self,
         events: list[str],
         *,
-        resources: _Resources,
-        authority: _ExecutionAuthority,
+        resources: ObservableBrowserResources,
+        authority: FencedExecutionAuthority,
     ) -> None:
         self.events = events
         self.resources = resources
@@ -235,7 +176,7 @@ class _ReadPort:
 
 
 class _Verifier:
-    def __init__(self, events: list[str], *, resources: _Resources) -> None:
+    def __init__(self, events: list[str], *, resources: ObservableBrowserResources) -> None:
         self.events = events
         self.resources = resources
 
@@ -248,7 +189,7 @@ class _Verifier:
 
 
 class _Metadata:
-    def __init__(self, events: list[str], authority: _ExecutionAuthority) -> None:
+    def __init__(self, events: list[str], authority: FencedExecutionAuthority) -> None:
         self.events = events
         self.authority = authority
         self.saved: list[Justificante] = []
@@ -260,7 +201,7 @@ class _Metadata:
 
 
 class _Filing:
-    def __init__(self, events: list[str], authority: _ExecutionAuthority, *, bucket_id: str) -> None:
+    def __init__(self, events: list[str], authority: FencedExecutionAuthority, *, bucket_id: str) -> None:
         self.events = events
         self.authority = authority
         self.bucket_id = bucket_id
@@ -292,7 +233,7 @@ class _FilingReconciliation:
     def __init__(
         self,
         events: list[str],
-        authority: _ExecutionAuthority,
+        authority: FencedExecutionAuthority,
         pinned_authority: PinnedAuthorityOperation,
         *,
         bucket_id: str,
@@ -355,7 +296,7 @@ class _Capture:
     submitted_id: str
     events: list[str]
     writes: list[str]
-    execution_authority: _ExecutionAuthority
+    execution_authority: FencedExecutionAuthority
     composition_calls: list[tuple[str, PinnedAuthorityOperation]]
     authority: PinnedAuthorityOperation
     metadata: _Metadata
@@ -478,7 +419,7 @@ def test_registered_capture_supervises_guarded_writes_and_projects_only_safe_rec
     with isolated_runtime_profile(tmp_path=tmp_path) as profile, bundled_indexed_authority().operation() as authority:
         profile_id = UUID(profile.bucket_id)
         events: list[str] = []
-        execution_authority = _ExecutionAuthority(events, refuse_guard=refuse_guard)
+        execution_authority = FencedExecutionAuthority(events, refuse_guard=refuse_guard)
         persistence = _SnapshotPersistence(
             bucket_id=profile.bucket_id,
             events=events,
@@ -488,7 +429,7 @@ def test_registered_capture_supervises_guarded_writes_and_projects_only_safe_rec
             bucket_id=profile.bucket_id,
             repository=JustificanteCaptureSnapshotRepository(persistence=persistence),
         )
-        resources = _Resources(events)
+        resources = ObservableBrowserResources(events)
         read_port = _ReadPort(events, resources=resources, authority=execution_authority)
         metadata = _Metadata(events, execution_authority)
         filing = _Filing(events, execution_authority, bucket_id=profile.bucket_id)
