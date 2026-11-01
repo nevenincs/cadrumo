@@ -9,13 +9,15 @@ from concurrent.futures import ThreadPoolExecutor
 from importlib.metadata import version
 from pathlib import Path
 from threading import Event
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 import pytest
+from click.testing import Result
 
 from cadrumo.adapters.persistence.storage.custody.acceleration_receipt import delete_profile_session
 from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support import (
     PROFILE_INPUT,
+    AdministrationSubject,
     administration_subject,
     changed,
 )
@@ -53,6 +55,83 @@ pytestmark = [
 ]
 
 
+def _scope_for_inventory(subject: AdministrationSubject, destination_id: UUID) -> None:
+    """Narrow the enrolled scope to the inventory operation and its two disclosures."""
+    scope = changed(
+        subject.proposal.scope,
+        operations=frozenset({AUTOMATION_INVENTORY_OPERATION_DEFINITION_ID}),
+        actions=frozenset(AccessAction),
+        disclosures=frozenset(
+            {
+                DisclosurePermission(
+                    destination_id=destination_id,
+                    projection_id=OPERATION_OBSERVATION_PROJECTION_ID,
+                    category=DisclosureCategory.OPERATION_METADATA,
+                ),
+                DisclosurePermission(
+                    destination_id=destination_id,
+                    projection_id=AUTOMATION_INVENTORY_OPERATION_DEFINITION_ID + ".result",
+                    category=DisclosureCategory.PROFILE_VALUES,
+                ),
+            }
+        ),
+    )
+    facts = subject.owner.current
+    assert facts.session is not None
+    subject.owner.current = changed(
+        facts, profile=changed(facts.profile, scope=scope), session=changed(facts.session, scope=scope)
+    )
+    subject.proposal = changed(subject.proposal, scope=scope)
+
+
+def _assert_inventory_projection(
+    listed: Result,
+    *,
+    approved_request: UUID,
+    pending_request: UUID,
+    approved_grant_id: UUID,
+    approved_key_id: UUID,
+    review_digest: str,
+    credential: bytes,
+) -> None:
+    assert listed.exit_code == 0, listed.output
+    document = json.loads(listed.stdout)
+    assert document["status"] == "warning"
+    assert [notice["code"] for notice in document["notices"]] == ["config.login.session_not_persisted"]
+    assert document["command"] == "config.profile.automation.list"
+    result = document["result"]
+    assert result["profile_id"] == "<profile-id>"
+    assert len(result["operation_id"]) == 64
+    assert all(character in "0123456789abcdef" for character in result["operation_id"])
+    inventory = result["inventory"]
+    assert len(inventory["grants"]) == len(inventory["keys"]) == 1
+    assert inventory["grants"][0]["grant_id"] == str(approved_grant_id)
+    assert inventory["grants"][0]["state"] == "active"
+    assert inventory["keys"][0]["key_id"] == str(approved_key_id)
+    assert inventory["keys"][0]["state"] == "active"
+    reviews = {item["receipt"]["request_id"]: item for item in inventory["requests"]}
+    assert set(reviews) == {str(approved_request), str(pending_request)}
+    assert reviews[str(approved_request)]["receipt"]["stage"] == "complete"
+    assert reviews[str(pending_request)]["receipt"]["stage"] == "requested"
+    assert reviews[str(pending_request)]["receipt"]["review_digest"] == review_digest
+    assert PROFILE_INPUT not in listed.output
+    assert credential.decode("utf-8") not in listed.output
+    assert "verifier" not in listed.output and "dek" not in listed.output
+
+
+def _assert_api_key_denied_inventory(profile_id: UUID, credential: bytes) -> None:
+    api = asyncio.run(open_installed_client(profile_id=profile_id, frontend=OperationFrontendProjection.CLI))
+    try:
+        proof = bytearray(credential)
+        api.login_api_key(proof, timeout=25)
+        assert not any(proof)
+        with pytest.raises(FrontendRefusedError) as denied:
+            read_automation_inventory(api)
+        assert denied.value.reason == AccessDenialCode.HUMAN_AUTHORITY_REQUIRED.value
+    finally:
+        api.close()
+
+
 def test_installed_automation_list_projects_nonempty_exact_profile_and_denies_api_key(tmp_path: Path) -> None:
     """One human command returns the settled grant, key and pending review."""
     root = tmp_path / "cadrumo-storage"
@@ -69,31 +148,7 @@ def test_installed_automation_list_projects_nonempty_exact_profile_and_denies_ap
         subject.owner.delivery.endpoint = NativeEnrollmentRecipient(
             requester=requester, secrets_store=subject.client_native
         )
-        scope = changed(
-            subject.proposal.scope,
-            operations=frozenset({AUTOMATION_INVENTORY_OPERATION_DEFINITION_ID}),
-            actions=frozenset(AccessAction),
-            disclosures=frozenset(
-                {
-                    DisclosurePermission(
-                        destination_id=requester.client_id,
-                        projection_id=OPERATION_OBSERVATION_PROJECTION_ID,
-                        category=DisclosureCategory.OPERATION_METADATA,
-                    ),
-                    DisclosurePermission(
-                        destination_id=requester.client_id,
-                        projection_id=AUTOMATION_INVENTORY_OPERATION_DEFINITION_ID + ".result",
-                        category=DisclosureCategory.PROFILE_VALUES,
-                    ),
-                }
-            ),
-        )
-        facts = subject.owner.current
-        assert facts.session is not None
-        subject.owner.current = changed(
-            facts, profile=changed(facts.profile, scope=scope), session=changed(facts.session, scope=scope)
-        )
-        subject.proposal = changed(subject.proposal, scope=scope)
+        _scope_for_inventory(subject, requester.client_id)
 
         approved_request = uuid4()
         subject.service.request(approved_request, subject.proposal)
@@ -142,42 +197,16 @@ def test_installed_automation_list_projects_nonempty_exact_profile_and_denies_ap
                         ),
                         input=json.dumps({"profile_passphrase": PROFILE_INPUT}),
                     )
-                    assert listed.exit_code == 0, listed.output
-                    document = json.loads(listed.stdout)
-                    assert document["status"] == "warning"
-                    assert [notice["code"] for notice in document["notices"]] == ["config.login.session_not_persisted"]
-                    assert document["command"] == "config.profile.automation.list"
-                    result = document["result"]
-                    assert result["profile_id"] == "<profile-id>"
-                    assert len(result["operation_id"]) == 64
-                    assert all(character in "0123456789abcdef" for character in result["operation_id"])
-                    inventory = result["inventory"]
-                    assert len(inventory["grants"]) == len(inventory["keys"]) == 1
-                    assert inventory["grants"][0]["grant_id"] == str(approved.grant_id)
-                    assert inventory["grants"][0]["state"] == "active"
-                    assert inventory["keys"][0]["key_id"] == str(approved.key_id)
-                    assert inventory["keys"][0]["state"] == "active"
-                    reviews = {item["receipt"]["request_id"]: item for item in inventory["requests"]}
-                    assert set(reviews) == {str(approved_request), str(pending_request)}
-                    assert reviews[str(approved_request)]["receipt"]["stage"] == "complete"
-                    assert reviews[str(pending_request)]["receipt"]["stage"] == "requested"
-                    assert reviews[str(pending_request)]["receipt"]["review_digest"] == pending.review_digest
-                    assert PROFILE_INPUT not in listed.output
-                    assert credential.get_secret_value().decode("utf-8") not in listed.output
-                    assert "verifier" not in listed.output and "dek" not in listed.output
-
-                    api = asyncio.run(
-                        open_installed_client(profile_id=profile_id, frontend=OperationFrontendProjection.CLI)
+                    _assert_inventory_projection(
+                        listed,
+                        approved_request=approved_request,
+                        pending_request=pending_request,
+                        approved_grant_id=approved.grant_id,
+                        approved_key_id=approved.key_id,
+                        review_digest=pending.review_digest,
+                        credential=credential.get_secret_value(),
                     )
-                    try:
-                        proof = bytearray(credential.get_secret_value())
-                        api.login_api_key(proof, timeout=25)
-                        assert not any(proof)
-                        with pytest.raises(FrontendRefusedError) as denied:
-                            read_automation_inventory(api)
-                        assert denied.value.reason == AccessDenialCode.HUMAN_AUTHORITY_REQUIRED.value
-                    finally:
-                        api.close()
+                    _assert_api_key_denied_inventory(profile_id, credential.get_secret_value())
             finally:
                 primary = sys.exception()
                 stop.set()
