@@ -1740,7 +1740,8 @@ cli:
           időszaktokent a --period értékeként. Érvényes tokenek: %{tokens}.'
         period_token_unrecognised: 'A --period "%{token}" nem ismert időszaktokent.
           A --year és a --period külön kompozálódnak: add meg a --year %{year} értéket
-          és egy időszaktokent (0A éves, Qn negyedéves, MM havi) a --period értékeként.'
+          és egy időszaktokent (0A éves, 1T, 2T, 3T vagy 4T negyedéves, illetve 01
+          vagy 12 havi) a --period értékeként.'
         plazo_days_remaining: "hátralévő_napok\t{days_remaining}"
         plazo_vencido_sin_previsualizacion_warning: 'FIGYELMEZTETÉS: Az önkéntes benyújtási
           határidő lejárt (LGT 27. cikk). Az alkalmazás nem állapít meg pótdíj- vagy

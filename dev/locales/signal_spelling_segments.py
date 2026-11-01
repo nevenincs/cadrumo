@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import re
 
-from .signal_command_paths import command_path_pattern
+from .signal_command_paths import command_path_pattern, registered_operation_id_pattern
 from .signal_contracts import DictionaryLike
 from .signal_policy import LOCALES
 from .signal_syntax import (
@@ -211,6 +211,7 @@ def legal_title_spelling_segments(
         for pattern in (
             TRANSLATION_LITERAL_RE,
             command_path_pattern(),
+            registered_operation_id_pattern(),
             _DESCENDANT_BOOL_CHOICES_RE,
             DESCENDANT_RELATION_CHOICES_RE,
         )

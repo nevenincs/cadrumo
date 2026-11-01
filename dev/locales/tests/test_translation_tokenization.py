@@ -36,7 +36,7 @@ def test_catalan_elisions_still_expose_the_lexical_word() -> None:
 
 @pytest.mark.parametrize(
     ("value", "host"),
-    [("Mantén-lo", "Mantén"), ("revisar-los", "revisar")],
+    [("Mantén-lo", "Mantén"), ("Mantén-los", "Mantén"), ("revisar-los", "revisar")],
 )
 def test_catalan_hyphenated_clitics_keep_the_host_as_dictionary_input(value: str, host: str) -> None:
     assert locale_spelling_words(value, "ca") == ((host,), 1)
@@ -49,7 +49,7 @@ def test_bare_or_malformed_catalan_clitics_are_not_silently_excluded(value: str)
     assert words
 
 
-@pytest.mark.parametrize("value", ["Manténn-lo", "revisarr-los", "Mantén-los", "revisar-lo"])
+@pytest.mark.parametrize("value", ["Manténn-lo", "revisarr-los", "Mantén-lós", "revisar-lo"])
 def test_unattested_catalan_clitic_forms_do_not_match_the_closed_exception(value: str) -> None:
     assert _CATALAN_HYPHENATED_CLITIC_RE.subn(lambda match: match.group("form").split("-")[0], value)[1] == 0
 

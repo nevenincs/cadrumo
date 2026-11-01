@@ -50,6 +50,16 @@ def command_path_pattern() -> re.Pattern[str]:
     return _compile_command_paths(executable_command_paths())
 
 
+@lru_cache(maxsize=1)
+def registered_operation_id_pattern() -> re.Pattern[str]:
+    """Match complete operation identifiers from the generated command contract."""
+    from cadrumo.entrypoints.cli.command_operation_table import COMMAND_OPERATION_ROWS
+
+    operations = {operation for _path, operation in COMMAND_OPERATION_ROWS if operation is not None}
+    alternatives = "|".join(re.escape(value) for value in sorted(operations, key=lambda value: (-len(value), value)))
+    return re.compile(r"(?<![\w.-])(?:" + alternatives + r")(?![\w.-])") if alternatives else re.compile(r"(?!)")
+
+
 def _admitted_wire_row(model: object, admitted: set[str]) -> tuple[str, tuple[frozenset[str], frozenset[str]]] | None:
     """Project one admitted wire model's required and allowed fields."""
     if not isinstance(model, type) or not issubclass(model, BaseModel):

@@ -1765,8 +1765,8 @@ cli:
           en --period. Tokens válidos: %{tokens}.'
         period_token_unrecognised: '--period ''%{token}'' no es un token de periodo
           reconocido. --year y --period se componen por separado: pasa --year %{year}
-          para el ejercicio fiscal y un token de periodo (0A para anual, Qn para un
-          trimestre o MM para un mes) en --period.'
+          para el ejercicio fiscal y un token de periodo (0A para anual, 1T, 2T, 3T
+          o 4T para un trimestre, o 01 o 12 para un mes) en --period.'
         plazo_days_remaining: "days_remaining\t{days_remaining}"
         plazo_vencido_sin_previsualizacion_warning: 'AVISO: plazo voluntario vencido
           (Art. 27 LGT). Esta aplicación no determina una deuda por recargo o intereses.'

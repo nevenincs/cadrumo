@@ -1646,8 +1646,8 @@ cli:
           Valid tokens: %{tokens}.'
         period_token_unrecognised: '--period ''%{token}'' is not a recognised period
           token. --year and --period are composed separately: pass --year %{year}
-          for the filing year and a period token (0A for annual, Qn for a quarter,
-          or MM for a month) for --period.'
+          for the filing year and a period token (0A for annual, 1T, 2T, 3T or 4T
+          for a quarter, or 01 or 12 for a month) for --period.'
         plazo_days_remaining: "days_remaining\t{days_remaining}"
         plazo_vencido_sin_previsualizacion_warning: 'WARNING: voluntary filing period
           expired (Art. 27 LGT). This application does not determine surcharge or

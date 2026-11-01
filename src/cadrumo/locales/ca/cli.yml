@@ -1751,8 +1751,8 @@ cli:
           a --period. Tokens vàlids: %{tokens}.'
         period_token_unrecognised: '--period ''%{token}'' no és un token de període
           reconegut. --year i --period es componen per separat: passa --year %{year}
-          per a l''exercici fiscal i un token de període (0A per anual, Qn per a un
-          trimestre o MM per a un mes) a --period.'
+          per a l''exercici fiscal i un token de període (0A per anual, 1T, 2T, 3T
+          o 4T per a un trimestre, o 01 o 12 per a un mes) a --period.'
         plazo_days_remaining: "days_remaining\t{days_remaining}"
         plazo_vencido_sin_previsualizacion_warning: 'AVÍS: termini voluntari vençut
           (Art. 27 LGT). Aquesta aplicació no determina cap deute per recàrrec ni

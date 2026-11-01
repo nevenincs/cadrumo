@@ -10,7 +10,7 @@ from cadrumo.core.i18n.render import extract_placeholders
 from cadrumo.core.period import accepted_filing_period_codes
 from cadrumo.domain.calculations.registry.censo_modelos import CensoModeloEventKind
 
-from .signal_command_paths import command_path_pattern, filter_detail_row_examples
+from .signal_command_paths import command_path_pattern, filter_detail_row_examples, registered_operation_id_pattern
 from .signal_syntax import (
     TRANSLATION_BRACKET_REFERENCE_RE,
     TRANSLATION_CODE_RE,
@@ -78,6 +78,21 @@ _LEGISLATIVE_DECREE_REFERENCE_RE = re.compile(r"(?<!\w)RDLeg[ \t]+\d{1,4}/\d{4}(
 # Dotted suffixes in workbook/statement prompts are file-format notation.
 # Keep the list closed to these attested formats; bare words remain prose.
 _SPREADSHEET_SUFFIX_RE = re.compile(r"(?<![\w.])\.(?:xlsx|xlsm|xls|csv|tsv)(?!\w)")
+# The observation spreadsheet reader names these exact two columns. Keep
+# misspelled headers and all surrounding prose visible to the dictionary.
+_OBSERVATION_HEADER_RE = re.compile(r"(?<![\w])casilla_code,[ \t]*value(?![\w])")
+# These are complete CLI argument/value pairs in the documented root output
+# option and the guided profile example. Bare words and changed values remain
+# prose. The example's residence is checked against the actual profile schema.
+_ROOT_JSON_OPTION_RE = re.compile(r"(?<![\w-])--format(?:[ \t]+|=)json(?![\w-])")
+_PROFILE_RESIDENCE_EXAMPLE_RE = re.compile(r"(?<![\w-])--tax-residence-ccaa[ \t]+madrid(?![\w-])")
+# The two copyable CCAA examples name values admitted by CCAA.from_label;
+# require the whole ordered pair so a bare or misspelled region is still checked.
+_RESIDENCE_EXAMPLE_PAIR_RE = re.compile(r"(?<![\w-])cataluna,[ \t]+comunidad-valenciana(?![\w-])")
+# A keyboard modifier is syntax; leave the key or the localized mouse action
+# visible. Escape is admitted only alongside its actual interpolated back label.
+_CONTROL_MODIFIER_RE = re.compile(r"(?<![\w-])Ctrl\+(?=⏎|[^\W\d_])")
+_ESCAPE_BACK_LABEL_RE = re.compile(r"(?<![\w-])Esc[ \t]+\{back\}(?![\w])")
 # Legal notes quote the formula engine's binary percent operator with numeric
 # operands. Only the complete call is structural: names, arity, and operands
 # outside this observed syntax remain prose for the spelling audit.
@@ -198,6 +213,13 @@ def filtered_translation_text(value: str) -> tuple[str, int]:
         (TRANSLATION_BRACKET_REFERENCE_RE, " "),
         (_PARAMETER_ASSIGNMENT_RE, _visible_assignment_label),
         (_MINUTE_QUANTITY_RE, r"\g<value>"),
+        (_OBSERVATION_HEADER_RE, " "),
+        (_ROOT_JSON_OPTION_RE, " "),
+        (_PROFILE_RESIDENCE_EXAMPLE_RE, " "),
+        (_RESIDENCE_EXAMPLE_PAIR_RE, " "),
+        (_CONTROL_MODIFIER_RE, " "),
+        (_ESCAPE_BACK_LABEL_RE, " "),
+        (registered_operation_id_pattern(), " "),
         (TRANSLATION_PLACEHOLDER_RE, " "),
         (_OUTPUT_LANGUAGE_CHOICES_RE, " "),
         (_CENSO_GLOSSED_CHOICES_RE, _visible_choice_glosses),
