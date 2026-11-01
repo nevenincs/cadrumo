@@ -76,6 +76,11 @@ class OperationTerminalCondition(StrEnum):
     INTERRUPTED = "interrupted"
 
 
+TERMINAL_CONDITIONS_WITH_ERROR_DETAIL: frozenset[OperationTerminalCondition] = frozenset(
+    {OperationTerminalCondition.REFUSED, OperationTerminalCondition.FAILED}
+)
+
+
 class OperationEffect(StrEnum):
     """Authoritative extent of committed effect, independent of terminal condition."""
 

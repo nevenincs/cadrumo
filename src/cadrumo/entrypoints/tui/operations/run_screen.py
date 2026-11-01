@@ -25,7 +25,7 @@ from cadrumo_client.transport.operation_controller import OperationController
 from ....core.errors.error_codes import resolve_error_message
 from ....core.errors.hierarchy import CadrumoError
 from ....core.i18n.render import tr
-from ....core.operations import OperationTerminalCondition
+from ....core.operations import TERMINAL_CONDITIONS_WITH_ERROR_DETAIL
 from ..components.language import localized, refresh_localized_widgets
 from ..components.theme import BASE_CSS, tokenised
 from .catalogue import OperationCatalogueEntryV1
@@ -388,7 +388,7 @@ class OperationRunScreen(Screen[None]):
         projection = outcome.view_model.projection
         self._show_receipt(receipt_text(projection))
         condition = projection.terminal_condition
-        if condition in {OperationTerminalCondition.REFUSED, OperationTerminalCondition.FAILED}:
+        if condition in TERMINAL_CONDITIONS_WITH_ERROR_DETAIL:
             stopped = stopped_operation_text(await controller.settled_error_detail(projection))
             fallback = outcome.error_explanation or public_refusal_explanation(projection.refusal_ref) or ""
             self.query_one("#operation-result-stopped", Static).update(stopped or fallback)

@@ -17,7 +17,12 @@ from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.hex import HEX_PATTERN_64, Hex64Str
 from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_CONFIG
-from ...core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
+from ...core.operations import (
+    TERMINAL_CONDITIONS_WITH_ERROR_DETAIL,
+    OperationEffect,
+    OperationLifecycle,
+    OperationTerminalCondition,
+)
 from ...core.time.utc import validate_utc_aware
 from ...core.type_guards import is_object_collection
 from ._model_contract import require_strict_frozen_operation_model_graph
@@ -138,8 +143,7 @@ class OperationTerminalReceipt(BaseModel):
         if self.refusal_detail_ref is not None and self.condition is not OperationTerminalCondition.REFUSED:
             raise ValueError("refusal detail is valid only for a refused operation")
         if self.error_detail_ref is not None and (
-            self.condition not in {OperationTerminalCondition.REFUSED, OperationTerminalCondition.FAILED}
-            or self.refusal_detail_ref is not None
+            self.condition not in TERMINAL_CONDITIONS_WITH_ERROR_DETAIL or self.refusal_detail_ref is not None
         ):
             raise ValueError("error detail is valid only for a refused or failed operation without refusal detail")
         validate_terminal_reference_meaning(
