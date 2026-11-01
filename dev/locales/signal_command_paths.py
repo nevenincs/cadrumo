@@ -57,7 +57,11 @@ def registered_operation_id_pattern() -> re.Pattern[str]:
 
     operations = {operation for _path, operation in COMMAND_OPERATION_ROWS if operation is not None}
     alternatives = "|".join(re.escape(value) for value in sorted(operations, key=lambda value: (-len(value), value)))
-    return re.compile(r"(?<![\w.-])(?:" + alternatives + r")(?![\w.-])") if alternatives else re.compile(r"(?!)")
+    # A full stop may end a sentence after the identifier, but a dot followed
+    # by another identifier segment means this is only a prefix of a name.
+    if not alternatives:
+        return re.compile(r"(?!)")
+    return re.compile(r"(?<![\w.-])(?:" + alternatives + r")(?![\w-]|\.[\w.-])")
 
 
 def _admitted_wire_row(model: object, admitted: set[str]) -> tuple[str, tuple[frozenset[str], frozenset[str]]] | None:

@@ -100,9 +100,15 @@ def test_only_real_complete_operation_names_protect_their_span() -> None:
     assert pattern.fullmatch("modelo.requires")
     assert not pattern.fullmatch("modelo.requirez")
     assert not pattern.search("modelo.requires_typo")
+    assert not pattern.search("modelo.requires.typo")
+    assert not pattern.search("modelo.requires..typo")
+    assert pattern.search("modelo.requires. Next sentence") is not None
     correct = translation_spelling_segments("modelo.requires definitelywrong", "example", "ca")
+    terminal = translation_spelling_segments("modelo.requires. definitelywrong", "example", "ca")
     wrong = translation_spelling_segments("modelo.requirez definitelywrong", "example", "ca")
     assert any("definitelywrong" in words for _language, words, _excluded in correct)
+    assert any("definitelywrong" in words for _language, words, _excluded in terminal)
+    assert not any("requires" in words for _language, words, _excluded in terminal)
     assert any("requirez" in words for _language, words, _excluded in wrong)
 
 
