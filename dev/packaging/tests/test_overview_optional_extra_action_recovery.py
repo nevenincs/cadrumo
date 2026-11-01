@@ -262,31 +262,9 @@ def _overview_precondition(document: Mapping[str, object]) -> str | None:
     return failed_condition if isinstance(failed_condition, str) else None
 
 
-def test_installed_optional_extra_guard_and_overview_refusals_remain_distinct(
-    installed_cohort: _InstalledCohort,
+def _assert_missing_extra_refusals_are_locale_invariant(
+    absent_matrix: dict[str, object], present_matrix: dict[str, object]
 ) -> None:
-    """Core absence refuses with a registered error; installing the extra admits the guard."""
-    absent = _run_optional_extra_matrix(
-        work_dir=installed_cohort.work_dir,
-        python=installed_cohort.core_python,
-        state_name="core-optional-extra",
-    )
-    present = _run_optional_extra_matrix(
-        work_dir=installed_cohort.work_dir,
-        python=installed_cohort.pdf_python,
-        state_name="pdf-optional-extra",
-    )
-
-    assert Path(str(absent["cadrumo_file"])).is_relative_to(installed_cohort.core_python.parents[1])
-    assert Path(str(present["cadrumo_file"])).is_relative_to(installed_cohort.pdf_python.parents[1])
-    assert absent["extra_available"] is False
-    assert present["extra_available"] is True
-
-    absent_matrix = _object(absent["matrix"], label="absent optional-extra matrix")
-    present_matrix = _object(present["matrix"], label="present optional-extra matrix")
-    assert set(absent_matrix) == set(SUPPORTED_OUTPUT_LANGUAGES)
-    assert set(present_matrix) == set(SUPPORTED_OUTPUT_LANGUAGES)
-
     baseline: dict[str, object] | None = None
     for locale in SUPPORTED_OUTPUT_LANGUAGES:
         row = _object(absent_matrix[locale], label="absent optional-extra row")
@@ -313,7 +291,8 @@ def test_installed_optional_extra_guard_and_overview_refusals_remain_distinct(
             assert structural == baseline
         assert present_matrix[locale] == {"error": None, "text": None}
 
-    overview = _overview_console_matrix(installed_cohort)
+
+def _assert_overview_refusals_are_not_optional_extra_failures(overview: dict[str, dict[str, object]]) -> None:
     assert set(overview) == set(SUPPORTED_OUTPUT_LANGUAGES)
     overview_baseline: tuple[object, object] | None = None
     resolved_action_counts: set[int] = set()
@@ -339,3 +318,31 @@ def test_installed_optional_extra_guard_and_overview_refusals_remain_distinct(
     # product: a locale that resolved fewer would be one whose guidance had
     # decayed back into untranslatable command prose.
     assert len(resolved_action_counts) == 1
+
+
+def test_installed_optional_extra_guard_and_overview_refusals_remain_distinct(
+    installed_cohort: _InstalledCohort,
+) -> None:
+    """Core absence refuses with a registered error; installing the extra admits the guard."""
+    absent = _run_optional_extra_matrix(
+        work_dir=installed_cohort.work_dir,
+        python=installed_cohort.core_python,
+        state_name="core-optional-extra",
+    )
+    present = _run_optional_extra_matrix(
+        work_dir=installed_cohort.work_dir,
+        python=installed_cohort.pdf_python,
+        state_name="pdf-optional-extra",
+    )
+
+    assert Path(str(absent["cadrumo_file"])).is_relative_to(installed_cohort.core_python.parents[1])
+    assert Path(str(present["cadrumo_file"])).is_relative_to(installed_cohort.pdf_python.parents[1])
+    assert absent["extra_available"] is False
+    assert present["extra_available"] is True
+
+    absent_matrix = _object(absent["matrix"], label="absent optional-extra matrix")
+    present_matrix = _object(present["matrix"], label="present optional-extra matrix")
+    assert set(absent_matrix) == set(SUPPORTED_OUTPUT_LANGUAGES)
+    assert set(present_matrix) == set(SUPPORTED_OUTPUT_LANGUAGES)
+    _assert_missing_extra_refusals_are_locale_invariant(absent_matrix, present_matrix)
+    _assert_overview_refusals_are_not_optional_extra_failures(_overview_console_matrix(installed_cohort))
