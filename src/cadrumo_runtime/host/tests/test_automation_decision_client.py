@@ -5,6 +5,7 @@ from __future__ import annotations
 import sys
 import time
 from concurrent.futures import ThreadPoolExecutor
+from dataclasses import dataclass
 from datetime import timedelta
 from importlib.metadata import version
 from pathlib import Path
@@ -18,14 +19,23 @@ from cadrumo.adapters.persistence.storage.custody.automation_profile import curr
 from cadrumo.adapters.persistence.storage.custody.automation_store import AutomationControlStore
 from cadrumo.adapters.persistence.storage.custody.tests.automation_support import MemoryNativePort
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.automation_enrollment import AutomationReviewProjection, EnrollmentStage
+from cadrumo.application.user_profile.automation_enrollment import (
+    AutomationInventoryProjection,
+    AutomationReceiptProjection,
+    AutomationReviewProjection,
+    EnrollmentStage,
+)
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition
 from cadrumo.core.time.clock import now
 from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope, AuthorityState
 from cadrumo_client.contracts.deadline_budget import MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS
 from cadrumo_client.contracts.enrollment_access import EnrollmentPrepare, EnrollmentPrepared
 from cadrumo_client.contracts.enrollment_proposal import EnrollmentKind, EnrollmentProposal
-from cadrumo_client.transport.automation_decision import AutomationDecisionRunError, run_automation_decision
+from cadrumo_client.transport.automation_decision import (
+    AutomationDecisionCompletion,
+    AutomationDecisionRunError,
+    run_automation_decision,
+)
 from cadrumo_client.transport.automation_inventory import read_automation_inventory
 from cadrumo_client.transport.enrollment_client import NativeEnrollmentClient
 from cadrumo_client.transport.framing import VerifiedConnection
@@ -85,6 +95,138 @@ def _review(client: FrontendClient, request_id: UUID) -> AutomationReviewProject
     return matching[0]
 
 
+@dataclass(frozen=True)
+class _Decision:
+    endpoint: WindowsEndpoint
+    profile_id: UUID
+    pool: ThreadPoolExecutor
+    store: AutomationControlStore
+    server_native: MemoryNativePort
+    client_native: MemoryNativePort
+    human: FrontendClient
+    enrollment: NativeEnrollmentClient
+
+
+def _review_and_refuse_wrong_password(
+    decision: _Decision,
+) -> tuple[AutomationReceiptProjection, AutomationReviewProjection, str]:
+    human, enrollment = decision.human, decision.enrollment
+    first = enrollment.submit(_proposal())
+    assert first.stage is EnrollmentStage.REQUESTED
+    human_password = bytearray(PROFILE_INPUT.encode())
+    human.login_password(human_password, timeout=25)
+    assert not any(human_password)
+    review = _review(human, first.request_id)
+    assert review.receipt.review_digest == first.review_digest
+    assert review.client_id == enrollment.prepared.client_id
+
+    wrong_password = bytearray(b"wrong-synthetic-decision-password")
+    with pytest.raises(AutomationDecisionRunError) as wrong:
+        run_automation_decision(human, review, decision="approve", password=wrong_password)
+    assert not any(wrong_password)
+    assert wrong.value.terminal_condition is OperationTerminalCondition.REFUSED
+    assert wrong.value.effect is OperationEffect.NONE
+    assert decision.store.snapshot().grants == ()
+    return first, review, wrong.value.operation_id
+
+
+def _approve_while_polling(decision: _Decision, review: AutomationReviewProjection) -> AutomationDecisionCompletion:
+    done = Event()
+
+    def poll_requester() -> None:
+        while not done.is_set():
+            # A delivery exchange waits behind the publication fence the approval holds
+            # while it commits; a shorter poll ends the delivery being approved.
+            decision.enrollment.poll(timeout=MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS)
+
+    polling = decision.pool.submit(poll_requester)
+    try:
+        password = bytearray(PROFILE_INPUT.encode())
+        approved = run_automation_decision(decision.human, review, decision="approve", password=password)
+        assert not any(password)
+        return approved
+    finally:
+        primary = sys.exception()
+        done.set()
+        try:
+            polling.result()
+        except Exception as error:
+            if primary is None:
+                raise
+            primary.add_note(f"Requester polling cleanup also failed: {type(error).__name__}")
+
+
+def _assert_approved_delivery(
+    decision: _Decision,
+    first: AutomationReceiptProjection,
+    approved: AutomationDecisionCompletion,
+    wrong_operation_id: str,
+) -> AutomationInventoryProjection:
+    store, human = decision.store, decision.human
+    assert approved.operation_id != wrong_operation_id
+    assert approved.effect is OperationEffect.UPDATED
+    assert approved.receipt.stage is EnrollmentStage.COMPLETE
+    assert approved.receipt.request_id == first.request_id
+    assert approved.receipt.review_digest == first.review_digest
+    assert approved.receipt.key_id is not None
+    assert approved.receipt.credential_reference is not None
+    assert store.snapshot().grants[0].state is AuthorityState.ACTIVE
+    assert (CLIENT_NAMESPACE, str(approved.receipt.credential_reference)) in decision.client_native.items
+    assert (CLIENT_NAMESPACE, str(approved.receipt.credential_reference)) not in decision.server_native.items
+    assert decision.enrollment.inspect() == approved.receipt
+    approved_inventory = read_automation_inventory(human).projection
+    assert len(approved_inventory.grants) == len(approved_inventory.keys) == 1
+    assert approved_inventory.grants[0].grant_id == approved.receipt.grant_id
+    assert approved_inventory.grants[0].state is AuthorityState.ACTIVE
+    assert approved_inventory.keys[0].key_id == approved.receipt.key_id
+    assert approved_inventory.keys[0].state is AuthorityState.ACTIVE
+    assert (
+        next(item.receipt for item in approved_inventory.requests if item.receipt.request_id == first.request_id)
+        == approved.receipt
+    )
+    return approved_inventory
+
+
+def _decline_with_delivered_key(decision: _Decision, approved_inventory: AutomationInventoryProjection) -> None:
+    store, human, endpoint = decision.store, decision.human, decision.endpoint
+    credential = decision.enrollment.credential()
+    api = FrontendClient(
+        connect_installed(endpoint), profile_id=decision.profile_id, frontend=OperationFrontendProjection.CLI
+    )
+    try:
+        api_key = bytearray(credential.get_secret_value())
+        api.login_api_key(api_key, timeout=25)
+        assert not any(api_key)
+
+        second_requester, second_enrollment = _requester(endpoint, decision.profile_id, MemoryNativePort())
+        try:
+            second = second_enrollment.submit(_proposal())
+            second_review = _review(human, second.request_id)
+            with pytest.raises(FrontendRefusedError):
+                run_automation_decision(api, second_review, decision="decline")
+            grants_before_decline = store.snapshot().grants
+            declined = run_automation_decision(human, second_review, decision="decline")
+            assert declined.effect is OperationEffect.UPDATED
+            assert declined.receipt.stage is EnrollmentStage.DECLINED
+            assert declined.receipt.request_id == second.request_id
+            assert declined.receipt.review_digest == second.review_digest
+            assert store.snapshot().grants == grants_before_decline
+            assert second_enrollment.inspect() == declined.receipt
+            declined_inventory = read_automation_inventory(human).projection
+            assert declined_inventory.grants == approved_inventory.grants
+            assert declined_inventory.keys == approved_inventory.keys
+            assert (
+                next(
+                    item.receipt for item in declined_inventory.requests if item.receipt.request_id == second.request_id
+                )
+                == declined.receipt
+            )
+        finally:
+            second_requester.close()
+    finally:
+        api.close()
+
+
 def test_native_reviewed_approve_and_decline_use_decision_client_and_requester_possession(tmp_path: Path) -> None:
     """Human decisions settle canonically; only the requester receives its key."""
     with worker_profiles(tmp_path) as (root, targets):
@@ -126,109 +268,13 @@ def test_native_reviewed_approve_and_decline_use_decision_client_and_requester_p
                     connect_installed(endpoint), profile_id=profile_id, frontend=OperationFrontendProjection.CLI
                 )
                 try:
-                    first = enrollment.submit(_proposal())
-                    assert first.stage is EnrollmentStage.REQUESTED
-                    human_password = bytearray(PROFILE_INPUT.encode())
-                    human.login_password(human_password, timeout=25)
-                    assert not any(human_password)
-                    review = _review(human, first.request_id)
-                    assert review.receipt.review_digest == first.review_digest
-                    assert review.client_id == enrollment.prepared.client_id
-
-                    wrong_password = bytearray(b"wrong-synthetic-decision-password")
-                    with pytest.raises(AutomationDecisionRunError) as wrong:
-                        run_automation_decision(human, review, decision="approve", password=wrong_password)
-                    assert not any(wrong_password)
-                    assert wrong.value.terminal_condition is OperationTerminalCondition.REFUSED
-                    assert wrong.value.effect is OperationEffect.NONE
-                    assert store.snapshot().grants == ()
-
-                    done = Event()
-
-                    def poll_requester() -> None:
-                        while not done.is_set():
-                            # A delivery exchange waits behind the publication fence the approval holds
-                            # while it commits; a shorter poll ends the delivery being approved.
-                            enrollment.poll(timeout=MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS)
-
-                    polling = pool.submit(poll_requester)
-                    try:
-                        password = bytearray(PROFILE_INPUT.encode())
-                        approved = run_automation_decision(human, review, decision="approve", password=password)
-                        assert not any(password)
-                    finally:
-                        primary = sys.exception()
-                        done.set()
-                        try:
-                            polling.result()
-                        except Exception as error:
-                            if primary is None:
-                                raise
-                            primary.add_note(f"Requester polling cleanup also failed: {type(error).__name__}")
-                    assert approved.operation_id != wrong.value.operation_id
-                    assert approved.effect is OperationEffect.UPDATED
-                    assert approved.receipt.stage is EnrollmentStage.COMPLETE
-                    assert approved.receipt.request_id == first.request_id
-                    assert approved.receipt.review_digest == first.review_digest
-                    assert approved.receipt.key_id is not None
-                    assert approved.receipt.credential_reference is not None
-                    assert store.snapshot().grants[0].state is AuthorityState.ACTIVE
-                    assert (CLIENT_NAMESPACE, str(approved.receipt.credential_reference)) in client_native.items
-                    assert (CLIENT_NAMESPACE, str(approved.receipt.credential_reference)) not in server_native.items
-                    assert enrollment.inspect() == approved.receipt
-                    approved_inventory = read_automation_inventory(human).projection
-                    assert len(approved_inventory.grants) == len(approved_inventory.keys) == 1
-                    assert approved_inventory.grants[0].grant_id == approved.receipt.grant_id
-                    assert approved_inventory.grants[0].state is AuthorityState.ACTIVE
-                    assert approved_inventory.keys[0].key_id == approved.receipt.key_id
-                    assert approved_inventory.keys[0].state is AuthorityState.ACTIVE
-                    assert (
-                        next(
-                            item.receipt
-                            for item in approved_inventory.requests
-                            if item.receipt.request_id == first.request_id
-                        )
-                        == approved.receipt
+                    decision = _Decision(
+                        endpoint, profile_id, pool, store, server_native, client_native, human, enrollment
                     )
-
-                    credential = enrollment.credential()
-                    api = FrontendClient(
-                        connect_installed(endpoint), profile_id=profile_id, frontend=OperationFrontendProjection.CLI
-                    )
-                    try:
-                        api_key = bytearray(credential.get_secret_value())
-                        api.login_api_key(api_key, timeout=25)
-                        assert not any(api_key)
-
-                        second_requester, second_enrollment = _requester(endpoint, profile_id, MemoryNativePort())
-                        try:
-                            second = second_enrollment.submit(_proposal())
-                            second_review = _review(human, second.request_id)
-                            with pytest.raises(FrontendRefusedError):
-                                run_automation_decision(api, second_review, decision="decline")
-                            grants_before_decline = store.snapshot().grants
-                            declined = run_automation_decision(human, second_review, decision="decline")
-                            assert declined.effect is OperationEffect.UPDATED
-                            assert declined.receipt.stage is EnrollmentStage.DECLINED
-                            assert declined.receipt.request_id == second.request_id
-                            assert declined.receipt.review_digest == second.review_digest
-                            assert store.snapshot().grants == grants_before_decline
-                            assert second_enrollment.inspect() == declined.receipt
-                            declined_inventory = read_automation_inventory(human).projection
-                            assert declined_inventory.grants == approved_inventory.grants
-                            assert declined_inventory.keys == approved_inventory.keys
-                            assert (
-                                next(
-                                    item.receipt
-                                    for item in declined_inventory.requests
-                                    if item.receipt.request_id == second.request_id
-                                )
-                                == declined.receipt
-                            )
-                        finally:
-                            second_requester.close()
-                    finally:
-                        api.close()
+                    first, review, wrong_operation_id = _review_and_refuse_wrong_password(decision)
+                    approved = _approve_while_polling(decision, review)
+                    approved_inventory = _assert_approved_delivery(decision, first, approved, wrong_operation_id)
+                    _decline_with_delivered_key(decision, approved_inventory)
                 finally:
                     requester.close()
                     human.close()
