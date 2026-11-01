@@ -702,9 +702,7 @@ def _held_ruling(predecessor: str, successor: str) -> Ruling:
     )
 
 
-def test_a_held_stem_row_that_already_declares_its_absence_is_not_refused_again() -> None:
-    """A row whose kind of none is already written is dispositioned; re-refusing it makes the ledger stale."""
-    rulings = {PLANTED_MODELO: [_held_ruling("2023", "2024")]}
+def _assert_held_row_with_declared_absence_is_dispositioned(rulings: dict[str, list[Ruling]]) -> None:
     plan = plan_modelo(PLANTED_MODELO, held_modelo(origin=CasillaLineageOrigin.NEW_ON_FORM), design_oracle(), rulings)
 
     assert [refusal.casilla_id for refusal in plan.refusals] == []
@@ -716,22 +714,18 @@ def test_a_held_stem_row_that_already_declares_its_absence_is_not_refused_again(
         (HELD_ROW, LineageRefusalCategory.HELD)
     ]
     assert bare.refusals[0].reason == HELD_REASON
+
+
+def test_a_held_stem_row_that_already_declares_its_absence_is_not_refused_again() -> None:
+    """A row whose kind of none is already written is dispositioned; re-refusing it makes the ledger stale."""
+    rulings = {PLANTED_MODELO: [_held_ruling("2023", "2024")]}
+    _assert_held_row_with_declared_absence_is_dispositioned(rulings)
 
 
 def test_a_held_pair_row_that_already_declares_its_absence_is_not_refused_again() -> None:
     """A row an adjudicated pair holds is dispositioned by its own declared origin, like a held stem."""
     rulings = {PLANTED_MODELO: [held_pair_ruling("2023", "2024")]}
-    plan = plan_modelo(PLANTED_MODELO, held_modelo(origin=CasillaLineageOrigin.NEW_ON_FORM), design_oracle(), rulings)
-
-    assert [refusal.casilla_id for refusal in plan.refusals] == []
-    assert plan.counts[CasillaLineageOrigin.NEW_ON_FORM.value] == 1
-
-    # The same row without an origin is still held, so the skip above is the origin's doing.
-    bare = plan_modelo(PLANTED_MODELO, held_modelo(origin=None), design_oracle(), rulings)
-    assert [(refusal.casilla_id, refusal.category) for refusal in bare.refusals] == [
-        (HELD_ROW, LineageRefusalCategory.HELD)
-    ]
-    assert bare.refusals[0].reason == HELD_REASON
+    _assert_held_row_with_declared_absence_is_dispositioned(rulings)
 
 
 # --------------------------------------------------------------------------- unclassified absence
