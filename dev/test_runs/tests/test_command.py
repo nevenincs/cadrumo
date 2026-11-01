@@ -220,7 +220,11 @@ def _run_locale_payload(
         signal="locales-status",
     )
     assert status == 0
-    finished = json.loads(capsys.readouterr().out.splitlines()[-1])
+    parsed = json.loads(capsys.readouterr().out.splitlines()[-1])
+    assert isinstance(parsed, dict)
+    finished: dict[str, object] = {}
+    for name, member in parsed.items():
+        finished[str(name)] = member
     return finished, next((tmp_path / "logs" / "test-runs").glob("*/*"))
 
 
