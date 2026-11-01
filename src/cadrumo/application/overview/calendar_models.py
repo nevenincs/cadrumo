@@ -340,11 +340,7 @@ class OverviewCalendarEntry(BaseModel):
 
     @model_validator(mode="after")
     def _enforce_holiday_coverage_consistency(self) -> OverviewCalendarEntry:
-        known_territory = self.holiday_coverage in (
-            _DeadlineHolidayCoverage.NATIONAL_AND_TERRITORY,
-            _DeadlineHolidayCoverage.TERRITORY_UNVERIFIED,
-        )
-        if known_territory != (self.holiday_territory is not None):
+        if self.holiday_coverage.names_territory != (self.holiday_territory is not None):
             raise ValueError("OverviewCalendarEntry.holiday_territory is present exactly when the territory is known")
         unevaluated = self.holiday_coverage in (
             _DeadlineHolidayCoverage.NOT_SHIFTED,
