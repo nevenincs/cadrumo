@@ -625,8 +625,15 @@ cli:
           model 100)
         import_period_invalid: El codi de període no és vàlid per a aquest exercici
           fiscal.
+        import_profile_tax_id_unusable: El teu perfil no té un NIF vàlid, així que
+          no es pot confirmar el titular del PDF; registra primer el teu NIF. No s'ha
+          importat res.
         import_profile_unresolved: Les definicions del model no declaren un únic perfil
           d'extracció d'esborrany per a aquest exercici i període.
+        import_tax_id_mismatch: El NIF imprès al PDF no coincideix amb el d'aquest
+          perfil; no s'ha importat res.
+        import_tax_id_unreadable: El PDF no porta un NIF vàlid, així que no es pot
+          confirmar el seu titular; no s'ha importat res.
         latest_help: Mostrar el snapshot actiu més recent d'un exercici fiscal
         list_help: Llistar snapshots persistits de l'esborrany del model 100
         modelo_100_help: Ordres de snapshots de l'esborrany del model 100

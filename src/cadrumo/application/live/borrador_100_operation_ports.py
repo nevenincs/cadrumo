@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from decimal import Decimal
 from typing import Literal, Protocol
@@ -27,13 +28,14 @@ class Borrador100PrintedValue:
 
 @dataclass(frozen=True, slots=True)
 class Borrador100ImportObservation:
-    """Parser receipt without the document's taxpayer identifier or CSV stamp."""
+    """Parser receipt: the document's printed taxpayer identifier, without its CSV stamp."""
 
     ejercicio: str
     extraction_profile_id: str | None
     extraction_coverage: Decimal | None
     artefact_kind: Borrador100ArtefactKind
     source_pdf_sha256: ContentDigest
+    tax_id: str | None
     values: tuple[Borrador100PrintedValue, ...]
     warnings: tuple[str, ...] = ()
 
@@ -61,6 +63,8 @@ class Borrador100OperationPorts:
     operation: PinnedAuthorityOperation
     repository: Borrador100SnapshotRepository
     parser: Borrador100ImportParserPort
+    profile_tax_id: Callable[[], str | None]
+    """Read the exact profile's declared fiscal identifier, or ``None`` when it holds none."""
 
 
 class Borrador100OperationPortsFactory(Protocol):
