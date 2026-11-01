@@ -54,6 +54,7 @@ from cadrumo.core.aggregation import BindingAggregationOp
 from cadrumo.domain.calculations.registry.binding_aggregation import binding_aggregation_op
 from cadrumo.domain.calculations.registry.binding_provider_registration import (
     BINDING_PROVIDER_REGISTRATIONS,
+    binding_temporal_reach_diagnostic,
     require_relative_provider_coordinates,
     validate_binding_against_registration,
 )
@@ -67,8 +68,10 @@ from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 if TYPE_CHECKING:
     from cadrumo.domain.calculations.registry.ids import BindingId
     from cadrumo.domain.calculations.registry.schema import BindingDefinition, ModeloRevision
+    from cadrumo.domain.calculations.registry.schema_references import TemporalSupportEnvelope
 
 __all__ = [
+    "binding_temporal_support_failures",
     "informational_binding_ids",
     "unreferenced_binding_advisories",
     "validate_binding_registration_section",
@@ -150,6 +153,21 @@ def validate_binding_registration_section(*, prefix: str, revision: ModeloRevisi
     failures.extend(_prorrata_duplicate_failures(prefix=prefix, revision=revision))
     failures.extend(_duplicate_row_field_failures(prefix=prefix, revision=revision))
     failures.extend(_deduction_kind_overlap_failures(prefix=prefix, revision=revision))
+    return failures
+
+
+def binding_temporal_support_failures(
+    *,
+    prefix: str,
+    revision: ModeloRevision,
+    support: TemporalSupportEnvelope,
+) -> list[str]:
+    """Return failures for bindings whose temporal reach exceeds the supported filing-year span."""
+    failures: list[str] = []
+    for binding in revision.bindings:
+        diagnostic = binding_temporal_reach_diagnostic(binding, support)
+        if diagnostic is not None:
+            failures.append(f"{prefix}: {diagnostic}")
     return failures
 
 

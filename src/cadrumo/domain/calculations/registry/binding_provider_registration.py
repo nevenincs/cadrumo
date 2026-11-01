@@ -51,6 +51,7 @@ from .afiliado_contribution_bindings import AfiliadoContributionProvider, valida
 from .bienes_inversion_regularizacion_bindings import BienesInversionRegularizacionProvider
 from .binding_aggregation import binding_aggregation_op
 from .binding_provider import BindingProvider
+from .binding_temporal import temporal_reach_diagnostic
 from .binding_terminal_origin import TerminalOriginClass
 from .binding_value_contract import BindingValueChannel
 from .bindings_previous_filing import PreviousFilingProvider, validate_previous_filing_binding
@@ -104,6 +105,7 @@ from .withholding_bindings import WithholdingProvider, validate_withholding_bind
 
 if TYPE_CHECKING:
     from .schema import BindingDefinition
+    from .schema_references import TemporalSupportEnvelope
 
 __all__ = [
     "BINDING_PROVIDER_REGISTRATIONS",
@@ -116,6 +118,7 @@ __all__ = [
     "ProviderOutputShape",
     "ProviderRouteOwnership",
     "RouteOwnership",
+    "binding_temporal_reach_diagnostic",
     "registration_for",
     "validate_binding_against_registration",
     "validate_binding_provider_registrations",
@@ -189,6 +192,36 @@ class BindingProviderRegistration:
     disposition: ProviderDisposition
     route: ProviderRouteOwnership
     authoring: ProviderAuthoringSupport
+    admits_aeat_prefill: bool = False
+    """Whether an AEAT borrador value may replace this kind's value.
+
+    Only a kind whose value is operator- or profile-entered can be superseded
+    by the AEAT-live prefill tier. A kind a resolver computes from governed
+    facts must never be displaced by an imported observation, so the default is
+    refusal and each admitting kind states it on its own row.
+    """
+
+    @property
+    def default_aggregation_op(self) -> BindingAggregationOp:
+        """Return the operation an undeclared aggregation takes, derived from the permitted set.
+
+        A kind permitting one operation takes that operation. Otherwise a kind
+        that groups provider-native rows (other than the scalar-first
+        withholding family) takes ``rows`` when it permits it, and every other
+        kind takes ``sum`` when it permits it and ``copy`` when it does not.
+        """
+        permitted = self.permitted_aggregation_ops
+        if len(permitted) == 1:
+            return next(iter(permitted))
+        if (
+            BindingAggregationOp.ROWS in permitted
+            and self.row_grouping is not None
+            and self.kind is not BindingSourceKind.WITHHOLDING
+        ):
+            return BindingAggregationOp.ROWS
+        if BindingAggregationOp.SUM in permitted:
+            return BindingAggregationOp.SUM
+        return BindingAggregationOp.COPY
 
     @property
     def names_source_casilla(self) -> bool:
@@ -261,6 +294,7 @@ def _filing_grade(
     output: ProviderOutputShape,
     resolver_id: str,
     stage: BindingRouteStage,
+    admits_aeat_prefill: bool = False,
 ) -> BindingProviderRegistration:
     return BindingProviderRegistration(
         kind=kind,
@@ -273,6 +307,7 @@ def _filing_grade(
         disposition="filing_grade",
         route=RouteOwnership(resolver_id=resolver_id, stage=stage),
         authoring="scaffold",
+        admits_aeat_prefill=admits_aeat_prefill,
     )
 
 
@@ -311,6 +346,7 @@ def _non_runtime(
     *,
     origin: TerminalOriginClass,
     resolver_id: str,
+    admits_aeat_prefill: bool = False,
 ) -> BindingProviderRegistration:
     """Register a kind that is enrolled on the route but runs no resolver."""
     return BindingProviderRegistration(
@@ -324,6 +360,7 @@ def _non_runtime(
         disposition="non_runtime",
         route=RouteOwnership(resolver_id=resolver_id, stage="manual"),
         authoring="scaffold",
+        admits_aeat_prefill=admits_aeat_prefill,
     )
 
 
@@ -383,6 +420,7 @@ _REGISTRATIONS: Final[tuple[BindingProviderRegistration, ...]] = (
         None,
         origin=TerminalOriginClass.OPERATOR_INPUT,
         resolver_id=_MANUAL_INPUT_RESOLVER_ID,
+        admits_aeat_prefill=True,
     ),
     _non_runtime(
         BindingSourceKind.DESIGN_CONSTANT,
@@ -405,6 +443,7 @@ _REGISTRATIONS: Final[tuple[BindingProviderRegistration, ...]] = (
         output="scalar_and_rows",
         resolver_id="profile",
         stage="pre_mesh",
+        admits_aeat_prefill=True,
     ),
     _filing_grade(
         BindingSourceKind.PREVIOUS_FILING,
@@ -954,11 +993,10 @@ def validate_binding_against_registration(binding: BindingDefinition) -> tuple[s
     Gating the agreement on an authored ``aggregation`` block made omitting the
     block the way to escape it.
 
-    The permitted-operation check stays on the authored operation. The family
-    default is a ``rows``/not-``rows`` marker rather than an authored intent --
-    it answers ``sum`` for families whose registration permits only ``copy`` --
-    so holding an undeclared binding to it would report the default table rather
-    than the declaration.
+    The permitted-operation check stays on the authored operation: an
+    undeclared binding takes the registration's own derived default, so holding
+    it to the permitted set would only restate the registration.
+
     """
     registration = registration_for(binding.source)
     diagnostics: list[str] = []
@@ -967,7 +1005,35 @@ def validate_binding_against_registration(binding: BindingDefinition) -> tuple[s
     _append_operation_channel_diagnostics(binding, diagnostics)
     _append_row_grouping_diagnostics(binding, registration, diagnostics)
     _append_terminal_origin_diagnostics(binding, registration, diagnostics)
+    _append_aeat_prefill_diagnostic(binding, registration, diagnostics)
     return tuple(diagnostics)
+
+
+def binding_temporal_reach_diagnostic(binding: BindingDefinition, support: TemporalSupportEnvelope) -> str | None:
+    """Return the refusal for a binding whose temporal member outreaches the support envelope.
+
+    The bound is the span of the registry's supported filing years, so no year
+    count is written here. Hydration holds no envelope, which is why this is
+    a separate check run where the compiler has one rather than part of
+    :func:`validate_binding_against_registration`.
+    """
+    temporal = getattr(binding.provider, TEMPORAL_PROVIDER_FIELD_NAME, None)
+    if temporal is None:
+        return None
+    reason = temporal_reach_diagnostic(temporal, supported_year_span=support.horizon - support.floor)
+    return None if reason is None else f"binding {binding.id!r}: {reason}"
+
+
+def _append_aeat_prefill_diagnostic(
+    binding: BindingDefinition,
+    registration: BindingProviderRegistration,
+    diagnostics: list[str],
+) -> None:
+    if binding.aeat_prefilled and not registration.admits_aeat_prefill:
+        diagnostics.append(
+            f"binding {binding.id!r}: provider {registration.kind.value!r} computes a governed value and "
+            f"cannot be marked aeat_prefilled; an AEAT borrador value must not replace it",
+        )
 
 
 def _append_channel_diagnostic(

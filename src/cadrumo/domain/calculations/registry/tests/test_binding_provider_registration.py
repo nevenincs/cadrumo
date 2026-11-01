@@ -43,13 +43,14 @@ from ..binding_provider_registration import (
     NonRuntimeOwnership,
     RouteOwnership,
     absolute_coordinate_offenders,
+    binding_temporal_reach_diagnostic,
     registration_for,
     require_relative_provider_coordinates,
     validate_binding_against_registration,
     validate_binding_provider_registrations,
     validator_for,
 )
-from ..binding_temporal import FilingYearOffset
+from ..binding_temporal import FilingYearOffset, FilingYearOffsetByTargetPeriod
 from ..binding_terminal_origin import TerminalOriginClass, TerminalOriginExpectation
 from ..binding_value_contract import BindingValueChannel
 from ..bindings import validate_binding_selector_shape
@@ -57,6 +58,7 @@ from ..errors import RegistryValidationError
 from ..ids import RevisionId
 from ..invoice_bindings import PayableInvoiceProvider
 from ..ledger_iva_bindings import LedgerIvaProvider
+from ..manual_input_selector import ManualInputProvider
 from ..profile_bindings import ProfileProvider
 from ..relation_prefill_bindings import RelationPrefillProvider
 from ..schema import BindingDefinition
@@ -124,6 +126,7 @@ def _binding(
     op: BindingAggregationOp = BindingAggregationOp.SUM,
     terminal_origins: tuple[TerminalOriginExpectation, ...] = (),
     row_grouping: RowSetGroupingKind | None = None,
+    aeat_prefilled: bool = False,
 ) -> BindingDefinition:
     """Build one binding whose value, aggregation, and origins are stated explicitly."""
     value: dict[str, object] = {"data_type": data_type, "channel": channel}
@@ -135,6 +138,7 @@ def _binding(
         value=value,
         aggregation=BindingAggregation(op=op),
         terminal_origins=terminal_origins,
+        aeat_prefilled=aeat_prefilled,
         legal_refs=("ley-37-1992:art-1",),
         source_refs=("aeat-modelo-303-diseno-registro",),
     )
@@ -499,3 +503,115 @@ def test_a_fabricated_registration_with_an_absolute_coordinate_is_refused() -> N
 
     with pytest.raises(RegistryValidationError, match="stay relative to the target filing context"):
         require_relative_provider_coordinates(fabricated)
+
+
+_AEAT_PREFILL_KINDS = frozenset({BindingSourceKind.MANUAL_INPUT, BindingSourceKind.PROFILE})
+"""The kinds whose value the operator or profile enters, hand-listed from the corpus sweep."""
+
+
+def test_only_operator_and_profile_kinds_admit_an_aeat_prefill() -> None:
+    """Prefill admission is a registration attribute, set exactly on the entered-value kinds."""
+    admitting = {kind for kind, row in BINDING_PROVIDER_REGISTRATIONS.items() if row.admits_aeat_prefill}
+
+    assert admitting == _AEAT_PREFILL_KINDS
+
+
+def test_a_computed_ledger_binding_marked_aeat_prefilled_is_refused() -> None:
+    """A borrador value must not be able to replace a ledger aggregate."""
+    planted = _binding(_LEDGER_IVA_PROVIDER, aeat_prefilled=True)
+
+    diagnostics = validate_binding_against_registration(planted)
+
+    assert len(diagnostics) == 1
+    assert "cannot be marked aeat_prefilled" in diagnostics[0]
+    assert validate_binding_against_registration(_binding(_LEDGER_IVA_PROVIDER)) == ()
+
+
+def test_a_profile_binding_marked_aeat_prefilled_is_accepted() -> None:
+    """A profile-entered value may be superseded by the AEAT prefill tier."""
+    binding = _binding(ProfileProvider(profile_key="tax.id"), op=BindingAggregationOp.COPY, aeat_prefilled=True)
+
+    assert validate_binding_against_registration(binding) == ()
+
+
+def test_a_manual_input_binding_marked_aeat_prefilled_is_accepted() -> None:
+    """An operator-entered value may be superseded by the AEAT prefill tier."""
+    provider = ManualInputProvider(casilla_id="01", data_type=CasillaDataType.BOOLEAN, true_value="1", false_value="0")
+    binding = _binding(provider, op=BindingAggregationOp.COPY, aeat_prefilled=True)
+
+    assert validate_binding_against_registration(binding) == ()
+
+
+def test_every_bundled_aeat_prefilled_binding_is_on_an_admitting_kind() -> None:
+    """The published corpus, hydrated through the real authority, honours the admission attribute."""
+    refused: list[str] = []
+    with bundled_indexed_authority().operation() as operation:
+        for modelo_id, revision_id in operation.revision_ids():
+            for binding in operation.revision(modelo_id, revision_id).bindings:
+                if binding.aeat_prefilled and not registration_for(binding.source).admits_aeat_prefill:
+                    refused.append(f"{modelo_id}/{revision_id}:{binding.id}")
+
+    assert refused == []
+
+
+def _reach_binding(temporal: FilingYearOffset | FilingYearOffsetByTargetPeriod) -> BindingDefinition:
+    provider = RelationPrefillProvider(
+        relation_kind="cross_model_output",
+        dependency_role="direct_calculation",
+        source_modelo="303",
+        source_casilla_id="iva.cuota-devengada",
+        temporal=temporal,
+    )
+    return _binding(provider, op=BindingAggregationOp.COPY)
+
+
+def test_an_absolute_year_masquerading_as_an_offset_is_refused() -> None:
+    """``years = 2024`` is a year, not a relative offset, and exceeds the supported span."""
+    with bundled_indexed_authority().operation() as operation:
+        support = operation.supported_filing_years()
+        for years in (2024, -2024):
+            binding = _reach_binding(FilingYearOffset(years=years, source_periods=("0A",)))
+            diagnostic = binding_temporal_reach_diagnostic(binding, support)
+            assert diagnostic is not None, years
+            assert "beyond" in diagnostic
+
+
+def test_an_overlong_max_years_or_target_period_offset_is_refused() -> None:
+    """Every authored year distance is held to the span, not only ``years``."""
+    with bundled_indexed_authority().operation() as operation:
+        support = operation.supported_filing_years()
+        span = support.horizon - support.floor
+        far_bound = _reach_binding(FilingYearOffset(years=-1, max_years=span + 1, source_periods=("0A",)))
+        far_by_period = _reach_binding(
+            FilingYearOffsetByTargetPeriod(offsets={"1T": -1, "4T": -(span + 1)}, source_periods=("0A",)),
+        )
+
+        assert binding_temporal_reach_diagnostic(far_bound, support) is not None
+        assert binding_temporal_reach_diagnostic(far_by_period, support) is not None
+
+
+def test_real_year_offsets_within_the_supported_span_are_accepted() -> None:
+    """The offsets the corpus uses (-1, -2) and the span edge pass."""
+    with bundled_indexed_authority().operation() as operation:
+        support = operation.supported_filing_years()
+        span = support.horizon - support.floor
+        for years in (-1, -2, -span, span):
+            binding = _reach_binding(FilingYearOffset(years=years, source_periods=("0A",)))
+            assert binding_temporal_reach_diagnostic(binding, support) is None, years
+        by_period = _reach_binding(
+            FilingYearOffsetByTargetPeriod(offsets={"1T": -2, "4T": -1}, source_periods=("0A",)),
+        )
+        assert binding_temporal_reach_diagnostic(by_period, support) is None
+
+
+def test_every_bundled_temporal_member_is_within_the_supported_span() -> None:
+    """The published corpus passes the reach bound through the real authority."""
+    refused: list[str] = []
+    with bundled_indexed_authority().operation() as operation:
+        support = operation.supported_filing_years()
+        for modelo_id, revision_id in operation.revision_ids():
+            for binding in operation.revision(modelo_id, revision_id).bindings:
+                if binding_temporal_reach_diagnostic(binding, support) is not None:
+                    refused.append(f"{modelo_id}/{revision_id}:{binding.id}")
+
+    assert refused == []
