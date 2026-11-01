@@ -84,8 +84,8 @@ from cadrumo.application.aggregation.iva_ledger import (
     IvaDifferentiatedDeductionContribution,
 )
 from cadrumo.application.aggregation.m303_arrivals import (
-    M303ProrrataTransitionArrival,
     M303SupplierRegimeArrival,
+    resolve_m303_prorrata_transition_arrival,
 )
 from cadrumo.application.calculations.m303_regimen_simplificado import calculate_m303_regimen_simplificado_result
 from cadrumo.application.filing.producer_snapshot import (
@@ -487,6 +487,7 @@ def _m303_filing_facts(
     parameters = resolve_bienes_inversion_regularizacion_parameters(
         registry_snapshot.revision, modelo_id=str(Modelo("303")), filing_period_date=period.end_date
     )
+    prorrata_register = _m303_prorrata_register(period, operation=operation)
     return M303FilingFacts(
         joint_return_elected=False,
         annual_volume_nonzero=False,
@@ -514,8 +515,10 @@ def _m303_filing_facts(
         supplier_regime=M303SupplierRegimeArrival(
             period=period, recipient_of_cash_accounting_operations=False, source_ledger_ids=()
         ),
-        prorrata_transition=M303ProrrataTransitionArrival(period=period, transition=None, register_evidence=()),
-        prorrata_register=_m303_prorrata_register(period, operation=operation),
+        prorrata_transition=resolve_m303_prorrata_transition_arrival(
+            period=period, prorrata_register=prorrata_register, operation=operation
+        ),
+        prorrata_register=prorrata_register,
         differentiated_contributions=_m303_differentiated_contributions(period=period, operation=operation),
         bienes_register=BienesInversionIvaRegister(),
         regularisation_result=RegistroRegularizacionResult(

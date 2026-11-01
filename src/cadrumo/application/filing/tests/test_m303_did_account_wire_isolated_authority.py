@@ -389,6 +389,7 @@ def _m303_filing_facts(
         ),
         prorrata_transition=M303ProrrataTransitionArrival(
             period=period,
+            is_applicable=False,
             transition=None,
             register_evidence=(),
         ),

@@ -236,6 +236,7 @@ def _m303_prorrata_and_differentiated_producer(*, snapshot, catalogues, operatio
         ),
         prorrata_transition=m303_did.M303ProrrataTransitionArrival(
             period=period,
+            is_applicable=False,
             transition=None,
             register_evidence=(),
         ),

@@ -41,8 +41,8 @@ from ....domain.prorrata_register.register import (
     ProrrataRegisterEntry,
 )
 from ...aggregation.m303_arrivals import (
-    M303ProrrataTransitionArrival,
     M303SupplierRegimeArrival,
+    resolve_m303_prorrata_transition_arrival,
 )
 from ...calculations.tests.filing_evidence import regimen_simplificado_filing_evidence
 from ..producer_snapshot import (
@@ -136,6 +136,10 @@ def _m303_filing_facts(
     period = Period.from_year_and_code(filing_year, period_code)
     register, bienes_register, regularisation = _empty_m303_export_arrivals(period.filing_year)
     evidence = _m303_instance_evidence(period)
+    with bundled_indexed_authority().operation() as operation:
+        prorrata_transition = resolve_m303_prorrata_transition_arrival(
+            period=period, prorrata_register=register, operation=operation
+        )
     return M303FilingFacts(
         joint_return_elected=False,
         annual_volume_nonzero=annual_volume_nonzero,
@@ -149,7 +153,7 @@ def _m303_filing_facts(
             recipient_of_cash_accounting_operations=False,
             source_ledger_ids=(),
         ),
-        prorrata_transition=M303ProrrataTransitionArrival(period=period, transition=None, register_evidence=()),
+        prorrata_transition=prorrata_transition,
         prorrata_register=register,
         differentiated_contributions=(),
         bienes_register=bienes_register,
