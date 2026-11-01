@@ -16,6 +16,8 @@ from ..signal_spelling_spanish_forms import is_reviewed_spanish_enclitic
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _REVIEWED_FORMS = [
+    "renuévalo",
+    "revertirlo",
     "alinéalo",
     "aplázalo",
     "calcúlala",
@@ -232,6 +234,9 @@ def test_reviewed_indirect_object_forms_keep_stem_and_suffix_boundaries(stem: st
         "reconstrúielos",
         "recargárlo",
         "reconciliárlos",
+        "renuevalo",
+        "renuévaloo",
+        "revertírlo",
     ],
 )
 def test_unreviewed_words_and_wrong_stress_are_not_guessed(word: str) -> None:

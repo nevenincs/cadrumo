@@ -1982,3 +1982,25 @@ def test_reference_us_english_forms_are_exact_and_do_not_accept_nearby_typos() -
             assert not is_project_spelling(locale, form)
     for typo in ("authorizess", "categorizd", "enrollmentss", "personallized", "sumarizes"):
         assert not is_project_spelling("en", typo)
+
+
+def test_reviewed_technical_forms_keep_exact_spelling_and_language_scope() -> None:
+    forms = (
+        "discardable",
+        "undecryptable",
+        "unhandled",
+        "untrusted",
+        "Unmapped",
+        "computable",
+        "Telecoms",
+        "upgrader",
+        "Subcode",
+        "Sectorised",
+    )
+    for form in forms:
+        assert is_project_spelling("en", form)
+        assert not is_project_spelling("en", form + "x")
+        for locale in ("ca", "es", "hu"):
+            assert not is_project_spelling(locale, form)
+    for typo in ("discardible", "undecryptible", "unhandld", "untrustted", "Unmaped", "Sectorizedd"):
+        assert not is_project_spelling("en", typo)

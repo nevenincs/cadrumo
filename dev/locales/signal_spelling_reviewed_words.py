@@ -36,6 +36,25 @@ REVIEWED_SPANISH_LEGAL_SPELLINGS = frozenset(
 REVIEWED_LOCALE_SPELLINGS: dict[str, frozenset[str]] = {
     "en": frozenset(
         {
+            # Technical forms in resource, security, import and model prose.
+            # https://learn.microsoft.com/en-us/windows/win32/menurc/common-resource-attributes
+            # https://learn.microsoft.com/en-us/deployedge/microsoft-edge-browser-policies/deletingundecryptablepasswordsenabled
+            # https://learn.microsoft.com/en-us/visualstudio/debugger/debug-using-the-just-in-time-debugger
+            # https://learn.microsoft.com/en-us/power-apps/maker/data-platform/data-platform-import-export
+            # https://analysisfunction.civilservice.gov.uk/careers/role-profiles-and-career-pathways/role-profile-econometric-modeller/
+            # https://www.gov.uk/government/publications/telecoms-supply-chain-diversification-report-and-recommendations
+            # https://learn.microsoft.com/en-us/visualstudio/extensibility/visual-cpp-project-extensibility
+            # https://learn.microsoft.com/en-gb/azure/communication-services/resources/troubleshooting/voice-video-calling/troubleshooting-codes
+            "discardable",
+            "undecryptable",
+            "unhandled",
+            "untrusted",
+            "Unmapped",
+            "computable",
+            "Telecoms",
+            "upgrader",
+            "Subcode",
+            "Sectorised",
             # Exact English legal-note dictionary gaps, independently attested:
             # https://www.merriam-webster.com/dictionary/transitorily
             # https://www.merriam-webster.com/dictionary/unseizable

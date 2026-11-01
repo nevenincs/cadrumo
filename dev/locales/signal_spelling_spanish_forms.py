@@ -22,6 +22,8 @@ _SPANISH_DIRECT_OBJECT_IMPERATIVES = frozenset(
         # https://dle.rae.es/asociar
         "asócia",
         "reinténta",
+        # https://dle.rae.es/renovar
+        "renuéva",
         "lísta",
         "archíva",
         "anóta",
@@ -98,6 +100,8 @@ _SPANISH_DIRECT_OBJECT_INFINITIVES = frozenset(
         "recargar",
         "reconciliar",
         "reejecutar",
+        # https://dle.rae.es/revertir
+        "revertir",
         "sobrescribir",
     }
 )
@@ -161,6 +165,8 @@ _NUMBER_ENDINGS = {
     # https://redcol.minciencias.gov.co/Record/EDOCUR2_6bdb4ce8b394921fe1d85d6584b1b724/Description
     "automatizable": "s",
     "subpaquete": "s",
+    # https://learn.microsoft.com/es-es/windows/win32/shell/about-user-profiles
+    "subcarpeta": "s",
     "subcomando": "s",
     "reanudable": "s",
     "auditable": "s",
@@ -168,7 +174,8 @@ _NUMBER_ENDINGS = {
     "exigibilidad": "es",
     "sobrescritura": "s",
 }
-_INFINITIVES = frozenset({"previsualizar", "contrafirmar"})
+# https://docs.python.org/es/3/tutorial/inputoutput.html
+_INFINITIVES = frozenset({"previsualizar", "contrafirmar", "deserializar"})
 # Closed, reviewed conjugations of technical verbs in the documentation. Prefix
 # re- is not stripped from arbitrary words, so unrelated accents stay checked.
 # https://www.rae.es/sites/default/files/principales_novedades_de_la_ortografia_de_la_lengua_espanola.pdf
@@ -189,6 +196,8 @@ _TECHNICAL_VERB_FORMS = frozenset(
         "renderice",
         "renderizó",
         "reescanea",
+        # https://learn.microsoft.com/es-es/azure/virtual-network/virtual-network-optimize-network-bandwidth
+        "reconectando",
     }
 )
 

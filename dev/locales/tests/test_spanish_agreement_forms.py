@@ -19,6 +19,7 @@ _FORMS = [
         stem + ending
         for stem, plural in (
             ("subcomando", "s"),
+            ("subcarpeta", "s"),
             ("reanudable", "s"),
             ("auditable", "s"),
             ("contrafirmante", "s"),
@@ -29,6 +30,8 @@ _FORMS = [
     ],
     "previsualizar",
     "contrafirmar",
+    "deserializar",
+    "reconectando",
     "atómicamente",
     *[stem + ending for stem in ("apruéba", "reinténta", "lísta") for ending in ("lo", "la", "los", "las")],
 ]
@@ -66,6 +69,9 @@ def test_reviewed_native_forms_preserve_language_case_stem_and_ending(word: str)
         "atómicomente",
         "auditableses",
         "apruebalo",
+        "deserialisar",
+        "subcarpetass",
+        "reconectándo",
     ],
 )
 def test_nearby_typos_foreign_prose_and_missing_legal_accents_remain_unknown(word: str) -> None:
