@@ -62,7 +62,7 @@ from ...domain.user_profile.labels import (
 # ``ProfileSetupState`` is a pydantic FIELD type below, so it must resolve at
 # runtime; deferring it to TYPE_CHECKING leaves the model undefined and every
 # construction raises. The rest of the domain surface is annotation-only.
-from ...domain.user_profile.schema import ProfileFieldType, derived_selector_for_path
+from ...domain.user_profile.schema import ProfileFieldCodeList, ProfileFieldType, derived_selector_for_path
 from ...domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from ...domain.user_profile.values import ProfileSetupState
 from .completeness import (
@@ -80,7 +80,6 @@ if TYPE_CHECKING:
 
     from ...domain.user_profile.schema import (
         ProfileDerivedSelectorDefinition,
-        ProfileFieldCodeList,
         ProfileFieldDefinition,
         ProfileSchemaDefinition,
         ProfileSectionDefinition,
