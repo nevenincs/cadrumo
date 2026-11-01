@@ -897,6 +897,11 @@ DESKTOP_CHROME_KEYS: Final[frozenset[str]] = (
 #: this set when its view lands and the set only shrinks.
 DESKTOP_CHROME_AWAITING_CONSUMER: Final[frozenset[str]] = frozenset({"desktop.signin.unsupported"})
 
+#: Keys the application serves with its data and the shell translates as they
+#: come, so its source never names them. Their declaration reads the same
+#: shape that serves them, and generation refuses until each word is authored.
+DESKTOP_CHROME_SERVED_KEYS: Final[frozenset[str]] = MODELO_CHOICE_KEYS
+
 #: A whole key in quotes, or the fixed head of a template literal up to ``${``.
 _SHELL_LITERAL_KEY: Final[re.Pattern[str]] = re.compile(
     r"""["'`]((?:desktop|workspace|ledger\.actividad_asset|tui\.ledger\.activity_asset|application\.inventory\.labels|application\.inventory\.service|application\.ledger\.entry_options|application\.modelo\.edit_choice|auth\.sync\.requirement)\.[A-Za-z0-9_.]+|application\.inventory\.advisories\.)["'`]"""
@@ -944,7 +949,7 @@ def shell_named_keys(
 
 def shell_drift(
     source: Path,
-    keys: frozenset[str] = DESKTOP_CHROME_KEYS - DESKTOP_CHROME_AWAITING_CONSUMER,
+    keys: frozenset[str] = DESKTOP_CHROME_KEYS - DESKTOP_CHROME_AWAITING_CONSUMER - DESKTOP_CHROME_SERVED_KEYS,
     families: Mapping[str, tuple[str, ...]] = DESKTOP_CHROME_FAMILIES,
 ) -> dict[str, list[str]]:
     """Compare what the shell source names with a key declaration."""
