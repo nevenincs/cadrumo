@@ -20,7 +20,7 @@ from cadrumo.application.ledger.import_operation import (
 )
 from cadrumo.application.operations.frontend_projection import OperationPublicProjectionV1
 from cadrumo.core.i18n.render import tr
-from cadrumo.core.operations import OperationEffect, OperationTerminalCondition
+from cadrumo.core.operations import OperationTerminalCondition
 from cadrumo.domain.transactions.errors import TransactionValidationError
 from cadrumo.entrypoints.tui.ledger.models import (
     LedgerImportDoorV1,
@@ -53,7 +53,7 @@ def _result_matches(
     terminal: OperationPublicProjectionV1,
 ) -> bool:
     """Whether the result answers exactly the submitted files under its settled receipt."""
-    expected_effect = OperationEffect.UPDATED if not request.dry_run and result.imported > 0 else OperationEffect.NONE
+    expected_effect = result.settled_effect
     return (
         condition is OperationTerminalCondition.SUCCEEDED
         and terminal.refusal_ref is None

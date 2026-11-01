@@ -36,7 +36,7 @@ def require_ledger_import_correlation(
 ) -> None:
     """Require ledger import correlation."""
     result = completed.projection
-    expected_effect = OperationEffect.UPDATED if not dry_run and result.imported > 0 else OperationEffect.NONE
+    expected_effect = result.settled_effect
     invalid = (
         invalid_ledger_import_receipt(completed, result, profile_id, expected_effect)
         or invalid_ledger_import_selection(result, dry_run, verify, period)
