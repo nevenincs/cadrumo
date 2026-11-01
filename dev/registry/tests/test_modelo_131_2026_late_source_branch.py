@@ -72,7 +72,7 @@ def _assert_late_layout_and_rate_follow_the_late_design(early, late) -> None:
     assert len(late.form_layouts) == 1
     design_sources = {str(source.source_ref) for source in late.form_layouts[0].design_sources}
     assert {ref for ref in design_sources if ref.startswith("aeat-dr-")} == {"aeat-dr-131-2026-late"}
-    assert design_sources - {"aeat-dr-131-2026-late"} == {"boe-2015-1656-modelo-130-131-form"}
+    assert design_sources - {"aeat-dr-131-2026-late"} == {"boe-2015-1656-modelos-130-131-form"}
     assert "aeat-dr-131-2026-late" in late.constructs[0].source_refs
     assert "aeat-modelo-131-instructions-2026-late" in late.constructs[0].source_refs
 
