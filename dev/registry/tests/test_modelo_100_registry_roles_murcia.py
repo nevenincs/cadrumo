@@ -87,6 +87,13 @@ def test_modelo_100_murcia_mu4_recursos_energeticos_roles_are_family_specific(fi
     assert _AUTONOMIC_DEDUCTION_ART_77_REF in pending.legal_refs
 
 
+def _assert_murcia_deduction_casilla(casilla, *, label: str, role: str) -> None:
+    assert casilla.label == label
+    assert tuple(casilla.section) == _MURCIA_DEDUCTION_SECTION
+    assert casilla.semantic_role == role
+    assert _AUTONOMIC_DEDUCTION_ART_77_REF in casilla.legal_refs
+
+
 def test_modelo_100_murcia_generated_pending_rows_follow_official_mu_families() -> None:
     revision = _modelo_100_snapshot(_REVIEWED_EDITION).revision
     expected_ids = {"2155", "2156", "2157", "2162", "2163", "2164", "2165", "2166"}
@@ -100,50 +107,30 @@ def test_modelo_100_murcia_generated_pending_rows_follow_official_mu_families() 
     assert not legacy_roles
     assert set(casillas_by_id) == expected_ids
 
-    mu4_previous = casillas_by_id["2163"]
-    assert mu4_previous.label == f"Importe generado en {_REVIEWED_EDITION - 1} pendiente de aplicación"
-    assert tuple(mu4_previous.section) == _MURCIA_DEDUCTION_SECTION
-    assert mu4_previous.semantic_role == _MURCIA_RECURSOS_ENERGETICOS_PENDIENTE_1_ROLE
-    assert _AUTONOMIC_DEDUCTION_ART_77_REF in mu4_previous.legal_refs
-
-    mu4_previous_extra = casillas_by_id["2166"]
-    assert mu4_previous_extra.label == f"Importe generado en {_REVIEWED_EDITION - 1} pendiente de aplicación"
-    assert tuple(mu4_previous_extra.section) == _MURCIA_DEDUCTION_SECTION
-    assert mu4_previous_extra.semantic_role == _MURCIA_RECURSOS_ENERGETICOS_PENDIENTE_EJERCICIO_ANTERIOR_ROLE
-    assert _AUTONOMIC_DEDUCTION_ART_77_REF in mu4_previous_extra.legal_refs
-
-    vehicle_amount = casillas_by_id["2155"]
-    assert vehicle_amount.label == "Importe de la deducción"
-    assert tuple(vehicle_amount.section) == _MURCIA_DEDUCTION_SECTION
-    assert vehicle_amount.semantic_role == _MURCIA_VEHICULO_IMPORTE_ROLE
-    assert _AUTONOMIC_DEDUCTION_ART_77_REF in vehicle_amount.legal_refs
-
-    vehicle_generated = casillas_by_id["2156"]
-    assert vehicle_generated.label == f"Importe generado en {_REVIEWED_EDITION}"
-    assert tuple(vehicle_generated.section) == _MURCIA_DEDUCTION_SECTION
-    assert vehicle_generated.semantic_role == _MURCIA_VEHICULO_GENERADO_ROLE
-    assert _AUTONOMIC_DEDUCTION_ART_77_REF in vehicle_generated.legal_refs
-
-    vehicle_pending = casillas_by_id["2164"]
-    assert vehicle_pending.label == f"Importe generado en {_REVIEWED_EDITION} pendiente de aplicación"
-    assert tuple(vehicle_pending.section) == _MURCIA_DEDUCTION_SECTION
-    assert vehicle_pending.semantic_role == _MURCIA_VEHICULO_PENDIENTE_ROLE
-    assert _AUTONOMIC_DEDUCTION_ART_77_REF in vehicle_pending.legal_refs
-
-    infrastructure = casillas_by_id["2157"]
-    assert infrastructure.label == "Por gastos en la instalación de infraestructuras de recarga de vehículos eléctricos"
-    assert tuple(infrastructure.section) == _MURCIA_DEDUCTION_SECTION
-    assert infrastructure.semantic_role == _MURCIA_INFRAESTRUCTURAS_ROLE
-    assert _AUTONOMIC_DEDUCTION_ART_77_REF in infrastructure.legal_refs
-
-    infrastructure_generated = casillas_by_id["2162"]
-    assert infrastructure_generated.label == f"Importe generado en {_REVIEWED_EDITION}"
-    assert tuple(infrastructure_generated.section) == _MURCIA_DEDUCTION_SECTION
-    assert infrastructure_generated.semantic_role == _MURCIA_INFRAESTRUCTURAS_GENERADO_ROLE
-    assert _AUTONOMIC_DEDUCTION_ART_77_REF in infrastructure_generated.legal_refs
-
-    infrastructure_pending = casillas_by_id["2165"]
-    assert infrastructure_pending.label == f"Importe generado en {_REVIEWED_EDITION} pendiente de aplicación"
-    assert tuple(infrastructure_pending.section) == _MURCIA_DEDUCTION_SECTION
-    assert infrastructure_pending.semantic_role == _MURCIA_INFRAESTRUCTURAS_PENDIENTE_ROLE
-    assert _AUTONOMIC_DEDUCTION_ART_77_REF in infrastructure_pending.legal_refs
+    previous_pending_label = f"Importe generado en {_REVIEWED_EDITION - 1} pendiente de aplicación"
+    generated_label = f"Importe generado en {_REVIEWED_EDITION}"
+    pending_label = f"Importe generado en {_REVIEWED_EDITION} pendiente de aplicación"
+    _assert_murcia_deduction_casilla(
+        casillas_by_id["2163"], label=previous_pending_label, role=_MURCIA_RECURSOS_ENERGETICOS_PENDIENTE_1_ROLE
+    )
+    _assert_murcia_deduction_casilla(
+        casillas_by_id["2166"],
+        label=previous_pending_label,
+        role=_MURCIA_RECURSOS_ENERGETICOS_PENDIENTE_EJERCICIO_ANTERIOR_ROLE,
+    )
+    _assert_murcia_deduction_casilla(
+        casillas_by_id["2155"], label="Importe de la deducción", role=_MURCIA_VEHICULO_IMPORTE_ROLE
+    )
+    _assert_murcia_deduction_casilla(casillas_by_id["2156"], label=generated_label, role=_MURCIA_VEHICULO_GENERADO_ROLE)
+    _assert_murcia_deduction_casilla(casillas_by_id["2164"], label=pending_label, role=_MURCIA_VEHICULO_PENDIENTE_ROLE)
+    _assert_murcia_deduction_casilla(
+        casillas_by_id["2157"],
+        label="Por gastos en la instalación de infraestructuras de recarga de vehículos eléctricos",
+        role=_MURCIA_INFRAESTRUCTURAS_ROLE,
+    )
+    _assert_murcia_deduction_casilla(
+        casillas_by_id["2162"], label=generated_label, role=_MURCIA_INFRAESTRUCTURAS_GENERADO_ROLE
+    )
+    _assert_murcia_deduction_casilla(
+        casillas_by_id["2165"], label=pending_label, role=_MURCIA_INFRAESTRUCTURAS_PENDIENTE_ROLE
+    )
