@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 import time
 from dataclasses import dataclass, field, replace
-from typing import TypeIs, cast
+from typing import cast
 from uuid import UUID, uuid4
 
 from pydantic import BaseModel, JsonValue, RootModel, TypeAdapter, ValidationError
@@ -136,19 +136,19 @@ def _parse_settled_result[ResultT: BaseModel](
     return result
 
 
-def _is_review_success(value: BaseModel) -> TypeIs[OperationReviewProjectionSuccessV1[BaseModel]]:
-    return isinstance(value, OperationReviewProjectionSuccessV1)
-
-
-def _parse_review_success(raw: bytes, model: type[BaseModel]) -> OperationReviewProjectionSuccessV1[BaseModel]:
-    """Validate a review success envelope specialised to ``model``; any other shape is an invalid frame."""
-    success_type = OperationReviewProjectionSuccessV1.__class_getitem__(model)
-    if not (isinstance(success_type, type) and issubclass(success_type, BaseModel)):
-        raise RefusalError(RefusalCode.INVALID_FRAME)
-    parsed = success_type.model_validate_json(raw)
-    if not _is_review_success(parsed):
-        raise RefusalError(RefusalCode.INVALID_FRAME)
-    return parsed
+def _parse_review_success[ReviewT: BaseModel](
+    raw: bytes, model: type[ReviewT]
+) -> OperationReviewProjectionSuccessV1[ReviewT]:
+    """Validate a review success envelope specialised to ``model``."""
+    # CAST-RATIONALE-TUI-REVIEW-GENERIC: Pydantic's runtime specialization binds
+    # the success envelope's projection field to this exact model;
+    # __class_getitem__ has an overly broad typing stub, so restore that generic
+    # result for static checking.
+    success_type = cast(
+        "type[OperationReviewProjectionSuccessV1[ReviewT]]",
+        OperationReviewProjectionSuccessV1.__class_getitem__(model),
+    )
+    return success_type.model_validate_json(raw)
 
 
 def _settled_result_matches_binding[ResultT: BaseModel](
