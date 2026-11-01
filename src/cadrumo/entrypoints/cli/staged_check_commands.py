@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 from uuid import UUID
 
 import typer
@@ -33,9 +32,9 @@ def _request(
     try:
         return LedgerStagedCheckRequest(
             profile_id=profile_id,
-            rows=tuple(LedgerStagedRow.model_validate(json.loads(text)) for text in row),
-            drafts=tuple(LedgerStagedDraft.model_validate(json.loads(text)) for text in draft),
-            categories=category,
+            rows=tuple(LedgerStagedRow.model_validate_json(text) for text in row),
+            drafts=tuple(LedgerStagedDraft.model_validate_json(text) for text in draft),
+            categories=tuple(category),
         )
     except (ValueError, ValidationError) as exc:
         # The values are private figures, so the refusal names the shape and not the input.
