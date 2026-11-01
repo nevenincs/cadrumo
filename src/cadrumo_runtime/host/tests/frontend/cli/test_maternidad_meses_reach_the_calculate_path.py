@@ -662,7 +662,8 @@ def test_declaring_working_months_under_the_default_relacion_is_disclosed_immedi
     notices = unwrap_envelope_notices(result.output)
     matching = [n for n in notices if n["code"] == "config.profile.descendiente.ambiguous_relacion"]
     assert matching, f"expected the ambiguous-relación notice; got {notices}"
-    assert "guarda y custodia" in matching[0]["message"]
+    assert "nieto" in matching[0]["message"]
+    assert "consanguinidad" in matching[0]["message"]
     assert matching[0]["context"] == {"indices": "0"}
 
 
