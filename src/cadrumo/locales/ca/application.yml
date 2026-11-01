@@ -340,14 +340,80 @@ application:
         taxpayer_nif_blank: El NIF del contribuent no pot estar en blanc quan forma
           la clau de decisió de la cartera d'IVA.
     prorrata_regularizacion:
-      advisory: 'Regularització de prorrata per percentatge definitiu (LIVA arts.
-        104-105) per a %{year}: prorrata provisional %{provisional}% → definitiva
-        %{definitiva}% (%{sentido}). Regularització proposada per a %{target}: %{value}.
-        Confirma el valor abans de presentar.'
-      sentido_deduccion: deducció complementària
-      sentido_ingreso: ingrés
       target_casilla: casella %{number}
       target_declared: la casella de regularització declarada
+      unresolved:
+        current_year_inputs: 'La regularització de prorrata necessita aquests valors
+          de l''exercici abans de calcular-se: %{casillas}.'
+        gross_negative: Les quotes suportades deduïbles brutes de les liquidacions
+          anteriors són negatives (%{amount}) després de les rectificacions. La llei
+          no preveu cap regularització sobre una base negativa, així que rectifica
+          les deduccions a les liquidacions afectades i calcula tu la casella.
+        provisional_missing: La regularització de prorrata del %{year} necessita el
+          percentatge provisional, del teu registre de prorrata o de l'última liquidació
+          presentada de l'exercici anterior.
+        regime_not_derived: 'La regularització del %{year} de les quotes suportades
+          d''ús comú en diversos sectors diferenciats no es calcula automàticament:
+          el seu percentatge només computa les operacions dels sectors que comparteixen
+          l''ús i tracta com a sense dret a deducció les operacions dels règims d''agricultura
+          i de recàrrec d''equivalència, cosa que els volums declarats no mostren.
+          Calcula tu la casella abans de presentar.'
+        register_regime_not_apportioning: El teu registre de prorrata no recull cap
+          règim que reparteixi la deducció el %{year}, però els volums declarats mostren
+          operacions sense dret a deducció; corregeix el registre o els volums abans
+          de regularitzar.
+        sector_definitive_missing: 'Aquests sectors diferenciats no tenen percentatge
+          definitiu liquidat per al %{year}: %{sectors}; liquida cada sector abans
+          de regularitzar.'
+        selector_unmapped: La vinculació de la regularització de prorrata no correspon
+          a cap sortida del resolutor.
+        settlement_observation_ambiguous: Consta més d'una última liquidació del model
+          303 (%{periods}); conserva només la periodicitat que vas presentar.
+        settlement_observation_missing: La regularització anual de prorrata reprodueix
+          l'última liquidació presentada del model 303, i no en consta cap per a %{periods}.
+        settlement_observation_refused: L'última liquidació presentada del model 303
+          %{periods} porta una revisió del formulari que ja no coincideix amb la que
+          fixa la llei; torna-la a calcular i a presentar.
+        settlement_observation_without_regularizacion: L'última liquidació presentada
+          del model 303 %{periods} no inclou cap valor de regularització de prorrata.
+        sin_derecho_volume_absent: El teu registre aplica prorrata el %{year}, però
+          els volums declarats no mostren operacions sense dret a deducció; la regularització
+          d'aquest cas no es calcula automàticament. Revisa els volums o calcula tu
+          la casella.
+        source_period_cuotas_missing: 'La liquidació %{period} es va presentar sense
+          les caselles deduïbles que necessita la regularització: %{casillas}.'
+        source_period_gross_disagreement: La liquidació %{period} té quotes suportades
+          deduïbles al llibre amb una base bruta de %{ledger}, però hi vas declarar
+          una base bruta de %{declared}; corregeix el llibre o substitueix la declaració
+          abans de regularitzar.
+        source_period_gross_unavailable: La liquidació %{period} va declarar quotes
+          suportades deduïbles, però el llibre no conté cap quota deduïble d'aquest
+          període, així que es desconeixen les quotes brutes abans de la prorrata;
+          registra al llibre les quotes suportades d'aquest període, o declara'n les
+          quotes brutes amb 'aeat app ledger prorrata declare-gross', abans de regularitzar.
+        source_period_ledger_divergence: La liquidació %{period} va declarar %{filed}
+          a %{casilla}, però les quotes del llibre als teus percentatges provisionals
+          de prorrata donen %{expected}; concilia el llibre amb la liquidació presentada
+          abans de regularitzar.
+        source_period_ledger_refused: Les quotes suportades del llibre de la liquidació
+          %{period} no es poden repartir amb el teu registre de prorrata; resol aquest
+          rebuig del llibre abans de regularitzar.
+        source_period_operator_divergence: La liquidació %{period} va declarar %{filed}
+          de quotes suportades deduïbles, però la base bruta que vas declarar als
+          teus percentatges provisionals de prorrata dona %{expected}; concilia la
+          declaració amb la liquidació presentada abans de regularitzar.
+        source_period_sector_gross_disagreement: La liquidació %{period} té quotes
+          suportades deduïbles al llibre per al sector %{sector} amb una base bruta
+          de %{ledger}, però vas declarar una base bruta de %{declared} per a aquest
+          sector; corregeix el llibre o substitueix la declaració abans de regularitzar.
+        source_periods_missing: 'La regularització abasta les liquidacions anteriors
+          de l''exercici, i aquestes no consten presentades: %{periods}.'
+        source_periods_refused: 'Aquestes liquidacions anteriors porten una revisió
+          del formulari que ja no coincideix amb la que fixa la llei: %{periods};
+          torna-les a calcular i a presentar.'
+        volumes_undeclared: La prorrata s'aplica el %{year}, però no consten els volums
+          anuals d'operacions (%{casillas}); declara'ls per poder calcular el percentatge
+          definitiu.
   filing:
     build_draft:
       errors:

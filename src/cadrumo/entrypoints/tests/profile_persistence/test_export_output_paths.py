@@ -360,7 +360,7 @@ def test_public_domiciliacion_export_selects_typed_charge_account_for_did_only(
                 calculation=calc_repo,
                 bucket_event=event_repo,
             ),
-            clock=datetime(2026, 5, 21, 12, 3, tzinfo=UTC),
+            clock=datetime(2026, 4, 15, 10, 3, tzinfo=UTC),
             operation=_authority_operation_for_test,
         )
 
@@ -384,8 +384,9 @@ def test_public_domiciliacion_export_selects_typed_charge_account_for_did_only(
         assert result.resolved_result_disposition is ResultDisposition.DOMICILIACION
         assert result.payment_election is PaymentElection.DOMICILIACION
         assert result.refund_election is None
-        # The 2026 1T window declares no payment cutoff: the U export advises, never refuses.
-        assert result.domiciliation_cutoff_unverified is True
+        # The 2026 1T window authors no payment cutoff; the governed rule derives
+        # 15 April 2026, the export's Madrid date, so the U export is checked and admitted.
+        assert result.domiciliation_cutoff_unverified is False
         assert result.selected_account == ModeloExportAccountReference(
             role=OwnAccountRole.CHARGE, own_account_id="acc-01"
         )

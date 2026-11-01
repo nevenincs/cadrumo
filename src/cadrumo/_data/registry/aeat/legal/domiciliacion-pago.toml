@@ -1,0 +1,98 @@
+# Orden EHA/1658/2009: procedure and periods for ordering the domiciliación (direct
+# debit) of an autoliquidación's payment.
+#
+# Article 3.2 sets the rule: the domiciliación is ordered within the period its
+# Anexo II gives each modelo, extended by the days the filing period is extended
+# when its last day is inhábil. Orden HAC/241/2025 (BOE-A-2025-5048, in force
+# 15/03/2025, no transitional regime) rewrote article 3.2 to add a minimum of three
+# días hábiles or five naturales before the end of the voluntary period, and to
+# define the inhábil days as those of the municipality where AEAT's Departamento
+# de Informática sits.
+#
+# The consolidated text is bundled as served by act.php on its last update; the
+# amending order is bundled as published, because BOE holds no consolidated text
+# for it.
+
+[legal."orden-eha-1658-2009:art-3"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-eha-1658-2009.html#a3"
+document_id = "BOE-A-2009-10326"
+article = "3"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2009-10326#a3"
+published_at = 2009-06-23
+effective_from = 2009-10-01
+consolidated_as_of = 2026-06-23
+review_status = "pending_review"
+notes = "Artículo 3.2 de la Orden EHA/1658/2009: la domiciliación se ordena en el plazo del anexo II, ampliado los mismos días que se amplíe el plazo de presentación cuando su último día sea inhábil. La redacción en vigor desde el 15/03/2025 (Orden HAC/241/2025) añade el margen mínimo de tres días hábiles o cinco naturales y la definición de días inhábiles del municipio del Departamento de Informática."
+required_text = [
+    "a) Con carácter general, en el plazo que a tal efecto se recoge en el anexo II, de la presente orden.",
+    "el plazo de domiciliación establecido en el anexo II, se ampliará el mismo número de días que resulte ampliado el plazo de presentación de la autoliquidación correspondiente.",
+    "deberá existir un mínimo de tres días hábiles o cinco naturales.",
+    "se considerarán días inhábiles los sábados, los domingos, las festividades nacionales y las festividades autonómicas o locales que afecten al municipio en el que radique el Departamento de Informática de la Agencia Tributaria.",
+]
+
+[legal."orden-eha-1658-2009:anexo-ii"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-eha-1658-2009.html#anii"
+document_id = "BOE-A-2009-10326"
+article = "anexo-ii"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2009-10326#anii"
+published_at = 2009-06-23
+effective_from = 2009-10-01
+consolidated_as_of = 2026-06-23
+review_status = "pending_review"
+notes = "Anexo II de la Orden EHA/1658/2009: plazos generales de presentación telemática de autoliquidaciones con domiciliación de pago, por modelo. La entrada del Modelo 303 fija del 1 al 15 de abril, julio y octubre y del 1 al 25 de enero (trimestral), y del 1 al 25 del mes de presentación con el 23 de febrero (24 en año bisiesto) para la autoliquidación de enero (mensual)."
+required_text = [
+    "Plazos generales de presentación telemática de autoliquidaciones con domiciliación de pago",
+    "Obligación trimestral de presentación: Desde el día 1 hasta el 15 de los meses de abril, julio y octubre, y desde el día 1 hasta el 25 del mes de enero.",
+    "Obligación mensual de presentación: Desde el día 1 hasta el 25 de los meses de enero, marzo, abril, mayo, junio, julio, agosto, septiembre, octubre, noviembre y diciembre.",
+    "En el caso de la autoliquidación correspondiente al mes de enero el plazo será desde el día 1 hasta el día 23 del mes de febrero, salvo en el supuesto de año bisiesto que será del 1 hasta el día 24 del mes de febrero.",
+]
+
+[legal."orden-hac-241-2025:art-2"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-241-2025.html#articulo-segundo"
+document_id = "BOE-A-2025-5048"
+article = "2"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-5048"
+published_at = 2025-03-14
+effective_from = 2025-03-15
+review_status = "pending_review"
+notes = "Artículo segundo, apartado Dos, de la Orden HAC/241/2025: nueva redacción del artículo 3.2 de la Orden EHA/1658/2009, con el margen mínimo de tres días hábiles o cinco naturales entre el fin del plazo de domiciliación y el fin del plazo voluntario, y los días inhábiles del municipio del Departamento de Informática de la Agencia Tributaria. Entra en vigor el día siguiente a su publicación (BOE de 14/03/2025)."
+required_text = [
+    "Dos. Se modifica apartado 2 del artículo 3 «Domiciliación del pago de autoliquidaciones», que queda redactado como sigue:",
+    "deberá existir un mínimo de tres días hábiles o cinco naturales.",
+    "se considerarán días inhábiles los sábados, los domingos, las festividades nacionales y las festividades autonómicas o locales que afecten al municipio en el que radique el Departamento de Informática de la Agencia Tributaria.",
+]
+
+[sources."boe-orden-eha-1658-2009-consolidada"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/orden-eha-1658-2009.html"
+sha256 = "950b62a346383c62e64ac8c570f82bc04bb9d92a126952dc448d6aa09e160135"
+bytes = 483372
+retrieved_at = 2026-11-01
+published_at = 2009-06-23
+applies_from = 2009-10-01
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2009-10326"
+review_status = "pending_review"
+
+[sources."boe-orden-hac-241-2025"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/orden-hac-241-2025.html"
+sha256 = "018f341595173b083b4f7f454aa10ad36363fb751eb71837b3c06f3e9d3e89bb"
+bytes = 120472
+retrieved_at = 2026-11-01
+published_at = 2025-03-14
+applies_from = 2025-03-15
+source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-5048"
+review_status = "pending_review"

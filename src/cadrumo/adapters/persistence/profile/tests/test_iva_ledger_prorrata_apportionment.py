@@ -32,6 +32,10 @@ from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObject
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.aggregation import iva_ledger
 from cadrumo.application.aggregation.errors import AggregationValidationError
+from cadrumo.application.aggregation.iva_ledger import (
+    IvaLedgerSettlementApportionment,
+    IvaLedgerSettlementSectorPercentage,
+)
 from cadrumo.application.aggregation.iva_ledger_apportionment import resolve_iva_ledger_binding_values
 from cadrumo.core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from cadrumo.core.period import Period
@@ -526,6 +530,49 @@ def test_especial_all_common_reduces_to_general_byte_identical(
     assert especial_bytes == general_bytes
 
 
+def test_especial_refuses_an_unclassified_deducible_input(
+    tmp_path: Path,
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    """Prorrata especial refuses a deducible input with no art. 106 classification.
+
+    Art. 106.Uno routes each cuota by its use: full, none, or the general
+    percentage only for common-use inputs. An unclassified input has no rule,
+    so it is refused rather than treated as common use, which would deduct
+    the general percentage of a cuota that may be wholly deductible or wholly
+    non-deductible.
+    """
+    revision = published_authority_operation().revision_with_export_layouts("303", "2022")
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        objects = profile.repository
+        tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects)
+        tx_repo.save(
+            TransactionCatalogue.from_transactions(
+                (
+                    _fully_taxable_sale("sale-unclassified"),
+                    _classified_purchase("buy-common", InputClassification.from_registry("common")),
+                    _fully_taxable_purchase("buy-unclassified"),
+                ),
+            ),
+        )
+        _seed_register(objects, regime=ProrrataRegisterRegime.from_registry("especial"), percentage=Decimal("80"))
+        aggregation = aggregate_iva_ledger_observations_from_repositories(
+            bucket_id=_BUCKET_ID,
+            period=_PERIOD,
+            transaction_repository=tx_repo,
+            operation=authority_operation,
+        )
+        with pytest.raises(AggregationValidationError) as raised:
+            resolve_iva_ledger_binding_values(
+                revision,
+                aggregation.observations,
+                prorrata_apportionment=aggregation.prorrata_apportionment,
+                operation=authority_operation,
+            )
+
+    assert str(raised.value) == "aggregation.iva_ledger.errors.especial_missing_input_classification"
+
+
 # --- Sectores diferenciados (LIVA arts. 9.1.c / 101) --------------------------
 
 
@@ -816,3 +863,133 @@ def test_sectorized_register_refuses_missing_inactive_or_unresolved_sector_entry
                 transaction_repository=tx_repo,
                 operation=authority_operation,
             )
+
+
+# --- Settlement liquidation at the definitive percentages (LIVA art. 105.Cuatro) ------
+
+
+def test_especial_settlement_applies_the_definitive_percentage_to_the_common_slice_only(
+    tmp_path: Path,
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    """At settlement the regla 3.ª common slice takes the definitive 56 %; the 100 % and 0 % slices stay.
+
+    Three 10,50 cuotas classified exclusively deductible, exclusively
+    non-deductible and common deduct 10,50 + 0 + 10,50 x 56 % = 16,38 when the
+    settlement liquidation is the quarter they fall in.
+    """
+    revision = published_authority_operation().revision_with_export_layouts("303", "2022")
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        objects = profile.repository
+        tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects)
+        tx_repo.save(
+            TransactionCatalogue.from_transactions(
+                (
+                    _fully_taxable_sale("sale-especial-settlement"),
+                    _classified_purchase("buy-excl-ded", InputClassification.from_registry("exclusively_deductible")),
+                    _classified_purchase(
+                        "buy-excl-non", InputClassification.from_registry("exclusively_non_deductible")
+                    ),
+                    _classified_purchase("buy-common", InputClassification.from_registry("common")),
+                ),
+            ),
+        )
+        _seed_register(objects, regime=ProrrataRegisterRegime.from_registry("especial"), percentage=Decimal("80"))
+        aggregation = aggregate_iva_ledger_observations_from_repositories(
+            bucket_id=_BUCKET_ID,
+            period=_PERIOD,
+            transaction_repository=tx_repo,
+            operation=authority_operation,
+        )
+        assert aggregation.prorrata_apportionment is not None
+        settled = aggregation.prorrata_apportionment.model_copy(
+            update={"settlement": IvaLedgerSettlementApportionment(period=_PERIOD, percentage=Decimal("56"))}
+        )
+        values = resolve_iva_ledger_binding_values(
+            revision,
+            aggregation.observations,
+            prorrata_apportionment=settled,
+            operation=authority_operation,
+        )
+
+    assert values[_DEDUCIBLE_CUOTA_BINDING] == Decimal("10.50") + Decimal("10.50") * Decimal("0.56")
+
+
+def test_sectorized_settlement_applies_each_sector_definitive_and_refuses_a_partial_one(
+    tmp_path: Path,
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    """Each sector deducts its settlement quarter at its own definitive percentage (LIVA art. 101.Uno).
+
+    comercio settles at 70 %, arrendamiento at 40 % and the common slice at
+    60 %: 10,50 x (70 % + 40 % + 60 %) = 17,85. A settlement that names only
+    one of the two declared sectors is refused rather than mixing definitive
+    and provisional sectors.
+    """
+    revision = published_authority_operation().revision_with_export_layouts("303", "2022")
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        objects = profile.repository
+        tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects)
+        tx_repo.save(
+            TransactionCatalogue.from_transactions(
+                (
+                    _fully_taxable_sale("sale-2sec-settlement"),
+                    _sectored_purchase("buy-high", "comercio"),
+                    _sectored_purchase("buy-low", "arrendamiento"),
+                    _sectored_purchase("buy-common", None),
+                ),
+            ),
+        )
+        ProrrataRegisterRepository(bucket_id=_BUCKET_ID, objects=objects).save(
+            ProrrataRegister(
+                entries=(
+                    _sector_entry(None, Decimal("50")),
+                    _sector_entry("comercio", Decimal("90")),
+                    _sector_entry("arrendamiento", Decimal("20")),
+                ),
+                sector_definitions=(
+                    SectorDefinition(
+                        sector_id="comercio",
+                        letra=SectorDiferenciadoLetra.from_registry("a"),
+                        member_activity_codes=("4711",),
+                    ),
+                    SectorDefinition(
+                        sector_id="arrendamiento",
+                        letra=SectorDiferenciadoLetra.from_registry("a"),
+                        member_activity_codes=("6820",),
+                    ),
+                ),
+            ),
+        )
+        aggregation = aggregate_iva_ledger_observations_from_repositories(
+            bucket_id=_BUCKET_ID,
+            period=_PERIOD,
+            transaction_repository=tx_repo,
+            operation=authority_operation,
+        )
+        assert aggregation.prorrata_apportionment is not None
+        both = IvaLedgerSettlementApportionment(
+            period=_PERIOD,
+            percentage=Decimal("60"),
+            sector_percentages=(
+                IvaLedgerSettlementSectorPercentage(sector_id="comercio", percentage=Decimal("70")),
+                IvaLedgerSettlementSectorPercentage(sector_id="arrendamiento", percentage=Decimal("40")),
+            ),
+        )
+        values = resolve_iva_ledger_binding_values(
+            revision,
+            aggregation.observations,
+            prorrata_apportionment=aggregation.prorrata_apportionment.model_copy(update={"settlement": both}),
+            operation=authority_operation,
+        )
+        partial = both.model_copy(update={"sector_percentages": both.sector_percentages[:1]})
+        with pytest.raises(AggregationValidationError) as raised:
+            resolve_iva_ledger_binding_values(
+                revision,
+                aggregation.observations,
+                prorrata_apportionment=aggregation.prorrata_apportionment.model_copy(update={"settlement": partial}),
+                operation=authority_operation,
+            )
+
+    assert values[_DEDUCIBLE_CUOTA_BINDING] == Decimal("10.50") * (Decimal("0.70") + Decimal("0.40") + Decimal("0.60"))
+    assert str(raised.value) == "aggregation.iva_ledger.errors.settlement_apportionment_sector_mismatch"

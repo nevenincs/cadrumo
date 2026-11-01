@@ -341,14 +341,81 @@ application:
         taxpayer_nif_blank: El NIF del contribuyente no puede estar en blanco cuando
           forma la clave de decisión de la cartera de IVA.
     prorrata_regularizacion:
-      advisory: 'Regularización de prorrata por porcentaje definitivo (LIVA arts.
-        104-105) para %{year}: prorrata provisional %{provisional}% → definitiva %{definitiva}%
-        (%{sentido}). Regularización propuesta para %{target}: %{value}. Confirma
-        el valor antes de presentar.'
-      sentido_deduccion: deducción complementaria
-      sentido_ingreso: ingreso
       target_casilla: casilla %{number}
       target_declared: la casilla de regularización declarada
+      unresolved:
+        current_year_inputs: 'La regularización de prorrata necesita estos valores
+          del ejercicio antes de calcularse: %{casillas}.'
+        gross_negative: Las cuotas soportadas deducibles brutas de las liquidaciones
+          anteriores son negativas (%{amount}) tras las rectificaciones. La ley no
+          prevé una regularización sobre una base negativa, así que rectifica las
+          deducciones en las liquidaciones afectadas y calcula tú la casilla.
+        provisional_missing: La regularización de prorrata de %{year} necesita el
+          porcentaje provisional, de tu registro de prorrata o de la última liquidación
+          presentada del ejercicio anterior.
+        regime_not_derived: 'La regularización de %{year} de las cuotas soportadas
+          de uso común en varios sectores diferenciados no se calcula automáticamente:
+          su porcentaje solo computa las operaciones de los sectores que comparten
+          el uso y trata como sin derecho a deducción las operaciones de los regímenes
+          de agricultura y de recargo de equivalencia, algo que los volúmenes declarados
+          no muestran. Calcula tú la casilla antes de presentar.'
+        register_regime_not_apportioning: Tu registro de prorrata no recoge un régimen
+          que reparta la deducción en %{year}, pero los volúmenes declarados muestran
+          operaciones sin derecho a deducción; corrige el registro o los volúmenes
+          antes de regularizar.
+        sector_definitive_missing: 'Estos sectores diferenciados no tienen porcentaje
+          definitivo liquidado para %{year}: %{sectors}; liquida cada sector antes
+          de regularizar.'
+        selector_unmapped: La vinculación de la regularización de prorrata no corresponde
+          a ninguna salida del resolutor.
+        settlement_observation_ambiguous: Consta más de una última liquidación del
+          modelo 303 (%{periods}); conserva solo la periodicidad que presentaste.
+        settlement_observation_missing: La regularización anual de prorrata reproduce
+          la última liquidación presentada del modelo 303, y no consta ninguna para
+          %{periods}.
+        settlement_observation_refused: La última liquidación presentada del modelo
+          303 %{periods} lleva una revisión del formulario que ya no coincide con
+          la que fija la ley; vuelve a calcularla y presentarla.
+        settlement_observation_without_regularizacion: La última liquidación presentada
+          del modelo 303 %{periods} no incluye valor de regularización de prorrata.
+        sin_derecho_volume_absent: Tu registro aplica prorrata en %{year}, pero los
+          volúmenes declarados no muestran operaciones sin derecho a deducción; la
+          regularización de ese caso no se calcula automáticamente. Revisa los volúmenes
+          o calcula tú la casilla.
+        source_period_cuotas_missing: 'La liquidación %{period} se presentó sin las
+          casillas deducibles que necesita la regularización: %{casillas}.'
+        source_period_gross_disagreement: La liquidación %{period} tiene cuotas soportadas
+          deducibles en el libro con una base bruta de %{ledger}, pero declaraste
+          una base bruta de %{declared}; corrige el libro o sustituye la declaración
+          antes de regularizar.
+        source_period_gross_unavailable: La liquidación %{period} declaró cuotas soportadas
+          deducibles, pero el libro no contiene ninguna cuota deducible de ese periodo,
+          así que se desconocen sus cuotas brutas antes de la prorrata; registra en
+          el libro las cuotas soportadas de ese periodo, o declara sus cuotas brutas
+          con 'aeat app ledger prorrata declare-gross', antes de regularizar.
+        source_period_ledger_divergence: La liquidación %{period} declaró %{filed}
+          en %{casilla}, pero sus cuotas del libro a tus porcentajes provisionales
+          de prorrata dan %{expected}; concilia el libro con la liquidación presentada
+          antes de regularizar.
+        source_period_ledger_refused: Las cuotas soportadas del libro de la liquidación
+          %{period} no se pueden repartir con tu registro de prorrata; resuelve ese
+          rechazo del libro antes de regularizar.
+        source_period_operator_divergence: La liquidación %{period} declaró %{filed}
+          de cuotas soportadas deducibles, pero la base bruta que declaraste a tus
+          porcentajes provisionales de prorrata da %{expected}; concilia la declaración
+          con la liquidación presentada antes de regularizar.
+        source_period_sector_gross_disagreement: La liquidación %{period} tiene cuotas
+          soportadas deducibles en el libro para el sector %{sector} con una base
+          bruta de %{ledger}, pero declaraste una base bruta de %{declared} para ese
+          sector; corrige el libro o sustituye la declaración antes de regularizar.
+        source_periods_missing: 'La regularización abarca las liquidaciones anteriores
+          del ejercicio, y estas no constan presentadas: %{periods}.'
+        source_periods_refused: 'Estas liquidaciones anteriores llevan una revisión
+          del formulario que ya no coincide con la que fija la ley: %{periods}; vuelve
+          a calcularlas y presentarlas.'
+        volumes_undeclared: La prorrata se aplica en %{year}, pero no constan los
+          volúmenes anuales de operaciones (%{casillas}); decláralos para poder calcular
+          el porcentaje definitivo.
   filing:
     build_draft:
       errors:

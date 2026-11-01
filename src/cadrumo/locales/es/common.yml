@@ -53,6 +53,9 @@ aggregation:
       cash_accounting_evidence_incoherent: 'Los datos de criterio de caja de este
         apunte de IVA son incoherentes: %{refusal}. Corrige la fecha de la operación
         o la evidencia de cobro o pago del apunte.'
+      cuota_disagrees_with_rate: La cuota de IVA declarada %{declared} no coincide
+        con la base %{base} al tipo %{rate}, que da %{expected}. Corrige la cuota,
+        la base o el tipo de IVA.
       deduction_authority_on_non_deducible_row: Una fila de IVA que no soporta cuota
         deducible no puede llevar una clasificación de deducción; la categoría de
         IVA %{category} se liquida como %{flow_direction}. Elimina el tipo de deducción
@@ -65,6 +68,8 @@ aggregation:
         no tiene porcentaje provisional resuelto.
       domestic_identification_on_intra_community_transaction: Una identificación a
         efectos del IVA española no es válida para una operación intracomunitaria.
+      especial_missing_input_classification: 'La prorrata especial exige declarar
+        el uso de cada entrada deducible: hay una entrada deducible sin clasificación.'
       eu_member_state_on_export_transaction: Las operaciones de exportación o asimiladas
         no pueden llevar un Estado miembro de la UE; recibido %{member_state}.
       exemption_article_outside_domestic_exempt: El artículo de exención %{value}
@@ -98,6 +103,9 @@ aggregation:
         aporta identidad de sector explícita.
       sectorized_input_unknown_sector: Una entrada de IVA sectorizada referencia un
         sector desconocido.
+      settlement_apportionment_sector_mismatch: Los porcentajes definitivos de la
+        última liquidación deben nombrar exactamente los sectores diferenciados que
+        declara tu registro de prorrata.
       unaccepted_registry_value: '%{field} figura como %{value}, un valor que la autoridad
         fijada del registro tributario no admite para %{effective_date}, así que el
         apunte no puede alimentar el cálculo del IVA. Corrige ese valor en el apunte.'

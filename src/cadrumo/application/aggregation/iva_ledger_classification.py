@@ -22,11 +22,9 @@ from ...domain.calculations.registry.facts.resolution import (
     ResolvedScalarFact,
     ScalarFactQuery,
 )
-from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.iva_category_catalogue import require_iva_category
 from ...domain.calculations.registry.ledger_iva_bindings import (
     IvaLedgerObservation,
-    resolve_ledger_iva_aggregation_binding_values,
 )
 from ...domain.calculations.registry.prorrata_register_catalogue import (
     especial_prorrata_register_regime,
@@ -70,31 +68,21 @@ from .iva_ledger import (
 from .iva_ledger_apportionment import deducible_cuota_binding_ids, resolve_iva_ledger_binding_values
 
 
-def _unclassified_deducible_soportado_count(
-    revision: ModeloRevision,
-    observations: Sequence[IvaLedgerObservation],
-    deducible_binding_ids: frozenset[BindingId],
-    *,
-    operation: PinnedAuthorityOperation,
-) -> int:
-    """Count deducible-cuota observations that carry no ``input_classification``.
+def _unclassified_deducible_soportado_count(observations: Sequence[IvaLedgerObservation]) -> int:
+    """Count deducible soportado observations that carry no ``input_classification``.
 
-    A deducible soportado observation is one whose own canonically-resolved
-    contribution lands on at least one deducible cuota binding (the registry
-    selector decides membership; no category is hard-coded here). An observation
-    with no declared ``input_classification`` is one the art. 106 especial total
-    cannot honestly route, so the general filer must classify it before the art. 103.Dos.2.º
-    check can run. The signal drives the CHECK-vs-PROMPT branch in the settlement
-    collector.
+    A deducible soportado observation is one bearing deduction authority, the
+    same criterion the especial apportionment partitions on. An observation with
+    no declared ``input_classification`` is one the art. 106 especial total
+    cannot honestly route, so the filer must classify it before the
+    art. 103.Dos.2.º check can run. The signal drives the CHECK-vs-PROMPT branch
+    in the settlement collector.
     """
-    count = 0
-    for observation in observations:
-        if observation.input_classification is not None:
-            continue
-        single = resolve_ledger_iva_aggregation_binding_values(revision, (observation,))
-        if any(single.get(binding_id, Decimal("0")) != Decimal("0") for binding_id in deducible_binding_ids):
-            count += 1
-    return count
+    return sum(
+        1
+        for observation in observations
+        if observation.deduction_fact_kind is not None and observation.input_classification is None
+    )
 
 
 def compute_annual_deducible_totals_by_regime(
@@ -117,7 +105,10 @@ def compute_annual_deducible_totals_by_regime(
     :func:`resolve_iva_ledger_binding_values` TWICE over the same observations —
     once with a GENERAL-stamped and once with an ESPECIAL-stamped
     :class:`IvaLedgerProrrataApportionment` at the register's resolved percentage
-    — and sums the deducible-cuota binding ids under each. One aggregation, two
+    — and sums the deducible-cuota binding ids under each. The especial pass
+    runs only once every deducible row is classified: art. 106 has no
+    percentage for an input whose use is undeclared, so the especial total is
+    then ``None`` rather than a total built on an assumed use. One aggregation, two
     apportionment passes through the one canonical resolver
     (``aeat-calculation-aggregation``); no second aggregation
     implementation is introduced.
@@ -176,40 +167,39 @@ def compute_annual_deducible_totals_by_regime(
     general_apportionment = apportionment.model_copy(
         update={"regime": general_prorrata_register_regime(authority=operation)},
     )
-    especial_apportionment = apportionment.model_copy(
-        update={"regime": especial_prorrata_register_regime(authority=operation)},
-    )
     general_values = resolve_iva_ledger_binding_values(
         revision,
         observations,
         prorrata_apportionment=general_apportionment,
         operation=operation,
     )
-    especial_values = resolve_iva_ledger_binding_values(
-        revision,
-        observations,
-        prorrata_apportionment=especial_apportionment,
-        operation=operation,
-    )
     deduction_under_general = sum(
         (general_values.get(binding_id, Decimal("0")) for binding_id in deducible_binding_ids),
         Decimal("0"),
     )
-    deduction_under_especial = sum(
-        (especial_values.get(binding_id, Decimal("0")) for binding_id in deducible_binding_ids),
-        Decimal("0"),
-    )
-    if deduction_under_general < Decimal("0") or deduction_under_especial < Decimal("0"):
+    unclassified_deducible_count = _unclassified_deducible_soportado_count(observations)
+    deduction_under_especial: Decimal | None = None
+    if unclassified_deducible_count == 0:
+        especial_values = resolve_iva_ledger_binding_values(
+            revision,
+            observations,
+            prorrata_apportionment=apportionment.model_copy(
+                update={"regime": especial_prorrata_register_regime(authority=operation)},
+            ),
+            operation=operation,
+        )
+        deduction_under_especial = sum(
+            (especial_values.get(binding_id, Decimal("0")) for binding_id in deducible_binding_ids),
+            Decimal("0"),
+        )
+    if deduction_under_general < Decimal("0") or (
+        deduction_under_especial is not None and deduction_under_especial < Decimal("0")
+    ):
         return None
     return AnnualDeducibleTotalsByRegime(
         deduction_under_general=deduction_under_general,
         deduction_under_especial=deduction_under_especial,
-        unclassified_deducible_count=_unclassified_deducible_soportado_count(
-            revision,
-            observations,
-            deducible_binding_ids,
-            operation=operation,
-        ),
+        unclassified_deducible_count=unclassified_deducible_count,
         regime=apportionment.regime,
     )
 

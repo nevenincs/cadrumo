@@ -4,6 +4,7 @@ from typing import Final
 
 from cadrumo_client.commands.parameters import OptionSpec
 from cadrumo_client.commands.shared_contracts import (
+    FLAG_VALUE,
     TEXT_VALUE,
     WHOLE_NUMBER_VALUE,
     DeferredTarget,
@@ -138,8 +139,71 @@ _REFERENCE_OPTION: Final[OptionSpec] = _option(
     help_key="cli.app.ledger.prorrata.reference_help",
 )
 
+_GROSS_YEAR_OPTION: Final[OptionSpec] = _option(
+    name="year",
+    declaration="--year",
+    value=WHOLE_NUMBER_VALUE,
+    default=_REQUIRED,
+    help_key="cli.app.ledger.prorrata.gross_year_help",
+)
+_GROSS_PERIOD_OPTION: Final[OptionSpec] = _option(
+    name="period",
+    declaration="--period",
+    value=TEXT_VALUE,
+    default=_REQUIRED,
+    help_key="cli.app.ledger.prorrata.gross_period_help",
+)
+_GROSS_REPLACE_OPTION: Final[OptionSpec] = OptionSpec(
+    name="replace",
+    declarations=("--replace",),
+    value=FLAG_VALUE,
+    default=ParameterDefault.value(False),
+    help_key=TranslationKey("cli.app.ledger.prorrata.gross_replace_help"),
+    metavar=None,
+    is_flag=True,
+    flag_value=True,
+    multiple=False,
+    count=False,
+    eager=False,
+    constraint=_UNCONSTRAINED,
+    show_default=True,
+    hidden=False,
+)
+
 
 LEDGER_PRORRATA_COMMAND_SPECS: tuple[CommandSpec, ...] = (
+    CommandSpec(
+        "app_ledger_prorrata_declare_gross",
+        "app_ledger_prorrata",
+        "declare-gross",
+        kind=CommandNodeKind.LEAF,
+        help_key=TranslationKey("cli.app.ledger.prorrata.declare_gross_help"),
+        short_help_key=None,
+        invocation=_LEAF_INVOCATION,
+        parameters=(
+            _GROSS_YEAR_OPTION,
+            _GROSS_PERIOD_OPTION,
+            _option(
+                name="amount",
+                declaration="--amount",
+                value=TEXT_VALUE,
+                default=_REQUIRED,
+                help_key="cli.app.ledger.prorrata.gross_amount_help",
+            ),
+            _option(
+                name="evidence",
+                declaration="--evidence",
+                value=TEXT_VALUE,
+                default=_REQUIRED,
+                help_key="cli.app.ledger.prorrata.gross_evidence_help",
+            ),
+            _SECTOR_OPTION,
+            _GROSS_REPLACE_OPTION,
+        ),
+        policy=_POLICY_4,
+        handler=_handler("prorrata_declare_gross"),
+        result_schema=_result_schema("ProrrataDeclareGrossResult", "ledger.prorrata.declare_gross"),
+    ),
     CommandSpec(
         "app_ledger_prorrata_declare_sector",
         "app_ledger_prorrata",
@@ -239,6 +303,19 @@ LEDGER_PRORRATA_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         policy=_POLICY_5,
         handler=_handler("prorrata_list"),
         result_schema=_result_schema("ProrrataListResult", "ledger.prorrata.list"),
+    ),
+    CommandSpec(
+        "app_ledger_prorrata_remove_gross",
+        "app_ledger_prorrata",
+        "remove-gross",
+        kind=CommandNodeKind.LEAF,
+        help_key=TranslationKey("cli.app.ledger.prorrata.remove_gross_help"),
+        short_help_key=None,
+        invocation=_LEAF_INVOCATION,
+        parameters=(_GROSS_YEAR_OPTION, _GROSS_PERIOD_OPTION, _SECTOR_OPTION),
+        policy=_POLICY_4,
+        handler=_handler("prorrata_remove_gross"),
+        result_schema=_result_schema("ProrrataRemoveGrossResult", "ledger.prorrata.remove_gross"),
     ),
     CommandSpec(
         "app_ledger_prorrata_revoke_especial",

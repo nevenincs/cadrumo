@@ -39,6 +39,7 @@ from ....core.secure_object_write import SecureObjectWrite
 from ....domain.calculations.registry.form_codes import form_for_role
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.prorrata_register.register import (
+    ProrrataOperatorGrossDeclaration,
     ProrrataRegister,
     ProrrataRegisterEntry,
     ProrrataRegisterError,
@@ -248,6 +249,7 @@ class ProrrataRegisterRepository:
                 entries=(*retained, entry),
                 sector_definitions=current.sector_definitions,
                 activity_rows=current.activity_rows,
+                gross_declarations=current.gross_declarations,
             )
 
         return self._storage.mutate(_apply)
@@ -343,7 +345,30 @@ class ProrrataRegisterRepository:
                 entries=current.entries,
                 sector_definitions=(*retained, definition),
                 activity_rows=current.activity_rows,
+                gross_declarations=current.gross_declarations,
             )
+
+        return self._storage.mutate(_apply)
+
+    def rewrite_gross_declarations(
+        self,
+        rewrite: Callable[[ProrrataRegister], tuple[ProrrataOperatorGrossDeclaration, ...]],
+    ) -> ProrrataRegister:
+        """Atomically replace the operator gross declarations derived from the latest register.
+
+        ``rewrite`` runs against every compare-and-swap candidate, so a duplicate,
+        absence or sector check it makes always sees the register it commits
+        over; a concurrent writer makes it re-read and re-apply. Only the gross
+        declarations change: entries, sector definitions and activity rows are
+        carried from the same candidate.
+
+        Raises:
+            SecureObjectRevisionConflictError: When contention persists across
+                every attempt.
+        """
+
+        def _apply(current: ProrrataRegister) -> ProrrataRegister:
+            return current.with_gross_declarations(rewrite(current))
 
         return self._storage.mutate(_apply)
 
@@ -363,4 +388,5 @@ def _replace_entry(current: ProrrataRegister, entry: ProrrataRegisterEntry) -> P
         entries=(*retained, entry),
         sector_definitions=current.sector_definitions,
         activity_rows=current.activity_rows,
+        gross_declarations=current.gross_declarations,
     )

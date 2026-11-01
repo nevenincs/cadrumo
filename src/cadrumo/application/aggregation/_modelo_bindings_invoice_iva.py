@@ -292,6 +292,8 @@ def _declared_category_line_observation(
         deduction_provenance=(deduction_authority.deduction_provenance if deduction_authority is not None else None),
         investment_asset_id=(deduction_authority.investment_asset_id if deduction_authority is not None else None),
         rectifies_ledger_id=(deduction_authority.rectifies_ledger_id if deduction_authority is not None else None),
+        input_classification=(deduction_authority.input_classification if deduction_authority is not None else None),
+        prorrata_sector_id=(deduction_authority.prorrata_sector_id if deduction_authority is not None else None),
     )
 
 
@@ -362,6 +364,8 @@ def _standard_invoice_line_iva_observation(
         deduction_provenance=(deduction_authority.deduction_provenance if deduction_authority is not None else None),
         investment_asset_id=(deduction_authority.investment_asset_id if deduction_authority is not None else None),
         rectifies_ledger_id=(deduction_authority.rectifies_ledger_id if deduction_authority is not None else None),
+        input_classification=(deduction_authority.input_classification if deduction_authority is not None else None),
+        prorrata_sector_id=(deduction_authority.prorrata_sector_id if deduction_authority is not None else None),
     )
 
 
@@ -919,6 +923,30 @@ def _screened_invoice_iva_result(
     )
 
 
+def line_eur_amounts_or_refuse(invoice: Invoice, line_index: int, line: InvoiceLine) -> tuple[Decimal, Decimal]:
+    """Return one line's (base, cuota) in EUR, refusing when the invoice cannot convert.
+
+    InvoiceLine carries no currency of its own: its amounts are denominated in
+    ``invoice.currency``, while ledger values and casillas are EUR. Every
+    consumer that weighs a line against a EUR figure converts here, so an
+    invoice that resolves no EUR amount (foreign currency, no ``fx_rate``)
+    refuses loudly instead of contributing a native figure to a EUR comparison.
+    """
+    base_amount_eur = invoice.line_amount_eur(line.subtotal)
+    iva_amount_eur = invoice.line_amount_eur(line.iva_amount)
+    if base_amount_eur is None or iva_amount_eur is None:
+        raise AggregationValidationError(
+            tr("aggregation.modelo_bindings.errors.invoice_line_currency_unconverted"),
+            context={
+                "invoice_id": invoice.invoice_id,
+                "invoice_number": invoice.invoice_number,
+                "currency": invoice.currency,
+                "line_index": str(line_index),
+            },
+        )
+    return base_amount_eur, iva_amount_eur
+
+
 def _screened_invoice_line_observations(
     invoice: Invoice,
     *,
@@ -945,18 +973,7 @@ def _screened_invoice_line_observations(
         # converges"), a would-be-silently-dropped declarable line is a hard
         # stop, not an advisory beside a smaller-but-green figure. Fail-closed
         # AND loud, not fail-closed-and-quiet.
-        base_amount_eur = invoice.line_amount_eur(line.subtotal)
-        iva_amount_eur = invoice.line_amount_eur(line.iva_amount)
-        if base_amount_eur is None or iva_amount_eur is None:
-            raise AggregationValidationError(
-                tr("aggregation.modelo_bindings.errors.invoice_line_currency_unconverted"),
-                context={
-                    "invoice_id": invoice.invoice_id,
-                    "invoice_number": invoice.invoice_number,
-                    "currency": invoice.currency,
-                    "line_index": str(line_index),
-                },
-            )
+        base_amount_eur, iva_amount_eur = line_eur_amounts_or_refuse(invoice, line_index, line)
         # recargo_amount_eur is None both for "no recargo declared" and for
         # "unconverted" (same shape as the six sibling _eur properties), but
         # the base/iva check above already proved this invoice resolves a EUR

@@ -227,6 +227,7 @@ def test_exonerado_complete_revision_evidence_exports_page_four_without_override
             ),
             prorrata_transition=M303ProrrataTransitionArrival(
                 period=period,
+                is_applicable=True,
                 transition=None,
                 register_evidence=(),
             ),

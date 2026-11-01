@@ -50,6 +50,9 @@ aggregation:
       cash_accounting_evidence_incoherent: 'The cash accounting timing on this IVA
         row is inconsistent: %{refusal}. Correct the operation date or the payment
         evidence on the ledger entry.'
+      cuota_disagrees_with_rate: Declared IVA cuota %{declared} does not match base
+        %{base} at rate %{rate}, which gives %{expected}. Correct the cuota, the base
+        or the IVA rate.
       deduction_authority_on_non_deducible_row: An IVA row that bears no deductible
         cuota cannot carry a deduction classification; IVA category %{category} settles
         as %{flow_direction}. Remove the declared deduction kind, or correct the category.
@@ -61,6 +64,8 @@ aggregation:
         has no resolved provisional percentage.
       domestic_identification_on_intra_community_transaction: A Spanish VAT identification
         is not valid for an intra-community transaction.
+      especial_missing_input_classification: 'Prorrata especial needs the use of every
+        deductible input declared: a deductible input has no input classification.'
       eu_member_state_on_export_transaction: Export or export-assimilated operations
         must not carry an EU member state; got %{member_state}.
       exemption_article_outside_domestic_exempt: Exemption article %{value} applies
@@ -89,6 +94,9 @@ aggregation:
         explicit sector identity.
       sectorized_input_unknown_sector: A sectorised IVA input references an unknown
         sector.
+      settlement_apportionment_sector_mismatch: The definitive percentages of the
+        settlement liquidation must name exactly the differentiated sectors your prorrata
+        register declares.
       unaccepted_registry_value: '%{field} is recorded as %{value}, which the pinned
         tax registry authority does not accept for %{effective_date}, so the row cannot
         feed the IVA calculation. Correct that value on the ledger entry.'

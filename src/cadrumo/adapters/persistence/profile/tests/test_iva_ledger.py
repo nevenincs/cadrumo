@@ -429,9 +429,15 @@ def test_repository_backed_projection_partition_matches_full_scan(
     """
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         q2_row_a = _transaction("row-q2-a", value_date=date(2026, 4, 5), taxable_base=Decimal("100.00"))
-        q2_row_b = _transaction("row-q2-b", value_date=date(2026, 6, 20), taxable_base=Decimal("200.00"))
-        q1_row = _transaction("row-q1", value_date=date(2026, 2, 1), taxable_base=Decimal("50.00"))
-        q3_row = _transaction("row-q3", value_date=date(2026, 8, 1), taxable_base=Decimal("75.00"))
+        q2_row_b = _transaction(
+            "row-q2-b", value_date=date(2026, 6, 20), taxable_base=Decimal("200.00"), iva_amount=Decimal("42.00")
+        )
+        q1_row = _transaction(
+            "row-q1", value_date=date(2026, 2, 1), taxable_base=Decimal("50.00"), iva_amount=Decimal("10.50")
+        )
+        q3_row = _transaction(
+            "row-q3", value_date=date(2026, 8, 1), taxable_base=Decimal("75.00"), iva_amount=Decimal("15.75")
+        )
         excluded_q3_row = _transaction(
             "row-q3-excluded",
             value_date=date(2026, 9, 1),

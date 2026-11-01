@@ -331,14 +331,82 @@ application:
         taxpayer_nif_blank: Az adózó adóazonosítója (NIF) nem lehet üres, ha az IVA-tárca
           döntési kulcsát alkotja.
     prorrata_regularizacion:
-      advisory: 'Arányosítás véglegesítése a végleges százalék alapján (LIVA 104-105.
-        cikk) a %{year}. évre: ideiglenes arány %{provisional}% → végleges %{definitiva}%
-        (%{sentido}). Javasolt korrekció ide: %{target}: %{value}. Benyújtás előtt
-        hagyd jóvá az értéket.'
-      sentido_deduccion: további levonás
-      sentido_ingreso: befizetés
       target_casilla: '%{number}. rubrika'
       target_declared: a bejelentett korrekciós rubrika
+      unresolved:
+        current_year_inputs: 'Az arányosítás-korrekció kiszámításához szükség van
+          ezekre a tárgyévi értékekre: %{casillas}.'
+        gross_negative: A korábbi bevallási időszakok levonható bruttó előzetesen
+          felszámított adója a helyesbítések után negatív (%{amount}). A törvény nem
+          ír elő korrekciót negatív alapra, ezért helyesbítsd a levonásokat az érintett
+          bevallásokban, és számold ki magad a rovatot.
+        provisional_missing: A %{year}. évi arányosítás-korrekcióhoz szükség van az
+          ideiglenes százalékra az arányosítási nyilvántartásodból vagy az előző év
+          benyújtott utolsó bevallásából.
+        regime_not_derived: 'Az elkülönült ágazatokban közösen használt beszerzések
+          előzetesen felszámított adójának %{year}. évi korrekciója nem számolódik
+          automatikusan: a százaléka csak a használatban osztozó ágazatok ügyleteit
+          veszi figyelembe, és a mezőgazdasági, valamint a kiegyenlítő pótlékos különleges
+          rendszer ügyleteit levonásra nem jogosítónak tekinti, ezt pedig a megadott
+          volumenek nem mutatják. Benyújtás előtt számold ki magad a rovatot.'
+        register_regime_not_apportioning: Az arányosítási nyilvántartásod a(z) %{year}.
+          évre nem rögzít arányosító rendszert, de a megadott volumenek levonásra
+          nem jogosító ügyleteket mutatnak; a korrekció előtt javítsd a nyilvántartást
+          vagy a volumeneket.
+        sector_definitive_missing: 'Ezeknek az elkülönült ágazatoknak nincs lezárt
+          végleges százaléka a(z) %{year}. évre: %{sectors}; a korrekció előtt zárd
+          le mindegyik ágazatot.'
+        selector_unmapped: Az arányosítás-korrekció kötése egyetlen feloldó kimenethez
+          sem tartozik.
+        settlement_observation_ambiguous: Több utolsó 303-as bevallás is szerepel
+          (%{periods}); csak azt a gyakoriságot tartsd meg, amelyben ténylegesen benyújtottál.
+        settlement_observation_missing: 'Az éves arányosítás-korrekció a benyújtott
+          utolsó 303-as bevallást ismétli meg, de ehhez nincs benyújtott bevallás:
+          %{periods}.'
+        settlement_observation_refused: A benyújtott utolsó 303-as bevallás (%{periods})
+          olyan nyomtatványváltozatot visel, amely már nem egyezik a jogszabály által
+          kijelölttel; számold újra és nyújtsd be ismét.
+        settlement_observation_without_regularizacion: A benyújtott utolsó 303-as
+          bevallás (%{periods}) nem tartalmaz arányosítás-korrekciós értéket.
+        sin_derecho_volume_absent: A nyilvántartásod a(z) %{year}. évre arányosítást
+          alkalmaz, de a megadott volumenek nem mutatnak levonásra nem jogosító ügyletet;
+          ennek az esetnek a korrekciója nem számolódik automatikusan. Ellenőrizd
+          a volumeneket, vagy számold ki magad a rovatot.
+        source_period_cuotas_missing: 'A(z) %{period} bevallás a korrekcióhoz szükséges
+          levonható rovatok nélkül lett benyújtva: %{casillas}.'
+        source_period_gross_disagreement: A(z) %{period} bevallás időszakára a nyilvántartásban
+          levonható előzetesen felszámított adó szerepel %{ledger} bruttó alappal,
+          de te %{declared} bruttó alapot adtál meg; a korrekció előtt javítsd a nyilvántartást
+          vagy cseréld le a megadott értéket.
+        source_period_gross_unavailable: A(z) %{period} bevallás levonható előzetesen
+          felszámított adót tartalmaz, de a nyilvántartásban nincs erre az időszakra
+          levonható tétel, így az arányosítás előtti bruttó adó ismeretlen; a korrekció
+          előtt rögzítsd a nyilvántartásban az időszak előzetesen felszámított adóját,
+          vagy add meg a bruttó adót az 'aeat app ledger prorrata declare-gross' paranccsal.
+        source_period_ledger_divergence: A(z) %{period} bevallás %{filed} összeget
+          tartalmaz a(z) %{casilla} rovatban, de a nyilvántartás adója az ideiglenes
+          arányosítási százalékaid mellett %{expected}; a korrekció előtt egyeztesd
+          a nyilvántartást a benyújtott bevallással.
+        source_period_ledger_refused: A(z) %{period} bevallás nyilvántartott előzetesen
+          felszámított adója nem osztható fel az arányosítási nyilvántartásod szerint;
+          a korrekció előtt oldd meg a nyilvántartás elutasítását.
+        source_period_operator_divergence: A(z) %{period} bevallás %{filed} levonható
+          előzetesen felszámított adót tartalmaz, de az általad megadott bruttó alap
+          az ideiglenes arányosítási százalékaid mellett %{expected}; a korrekció
+          előtt egyeztesd a megadott értéket a benyújtott bevallással.
+        source_period_sector_gross_disagreement: A(z) %{period} bevallás időszakára
+          a nyilvántartásban a(z) %{sector} ágazatra levonható előzetesen felszámított
+          adó szerepel %{ledger} bruttó alappal, de te %{declared} bruttó alapot adtál
+          meg erre az ágazatra; a korrekció előtt javítsd a nyilvántartást vagy cseréld
+          le a megadott értéket.
+        source_periods_missing: 'A korrekció az év korábbi bevallási időszakaira terjed
+          ki, és ezek nincsenek benyújtva: %{periods}.'
+        source_periods_refused: 'Ezek a korábbi bevallások olyan nyomtatványváltozatot
+          viselnek, amely már nem egyezik a jogszabály által kijelölttel: %{periods};
+          számold újra és nyújtsd be őket ismét.'
+        volumes_undeclared: A(z) %{year}. évre arányosítás alkalmazandó, de az éves
+          ügyleti volumenek nincsenek megadva (%{casillas}); add meg őket, hogy a
+          végleges százalék kiszámítható legyen.
   filing:
     build_draft:
       errors:

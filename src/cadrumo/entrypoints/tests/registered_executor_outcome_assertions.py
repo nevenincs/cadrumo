@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable
+from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
 from typing import Any
@@ -260,21 +261,31 @@ def assert_prorrata_effects(ctx: ExecutorOutcome) -> None:
     prorrata_after = read_prorrata_operation_conformance_register(
         ctx.profile_id, repository_factory=build_prorrata_register_repository, operation=ctx.operation
     )
-    assert prorrata_after == ctx.prorrata_case.expected_register
     prorrata_result = ctx.resolve(type(ctx.prorrata_case.expected_projection))
-    assert prorrata_result == ctx.prorrata_case.expected_projection
+    case = ctx.prorrata_case
+    if case.expected_declared_after is not None:
+        assert isinstance(prorrata_result, ProrrataMutationProjection)
+        assert prorrata_result.gross_declaration is not None
+        stamped = prorrata_result.gross_declaration.declared_at
+        assert stamped.utcoffset() is not None
+        assert case.expected_declared_after <= stamped <= datetime.now(UTC)
+        case = case.declared_at(stamped)
+    assert prorrata_after == case.expected_register
+    assert prorrata_result == case.expected_projection
     assert isinstance(prorrata_result, (ProrrataListProjection, ProrrataMutationProjection))
     assert prorrata_result.profile_id == ctx.profile_id
-    assert prorrata_result.count == ctx.prorrata_case.expected_count
-    assert ctx.observed.projection.effect is ctx.prorrata_case.expected_effect
-    if ctx.prorrata_case.operation_id == "list":
+    assert prorrata_result.count == case.expected_count
+    assert ctx.observed.projection.effect is case.expected_effect
+    if case.operation_id == "list":
         assert prorrata_after == ctx.prorrata_before
         assert prorrata_result.count == len(prorrata_after.entries)
     else:
         assert prorrata_after != ctx.prorrata_before
         assert prorrata_result.count == (
             len(prorrata_after.sector_definitions)
-            if ctx.prorrata_case.operation_id == "declare_sector"
+            if case.operation_id == "declare_sector"
+            else len(prorrata_after.gross_declarations)
+            if case.operation_id in {"declare_gross", "remove_gross"}
             else len(prorrata_after.entries)
         )
 

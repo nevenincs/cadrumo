@@ -27,7 +27,7 @@ from ....domain.bienes_inversion.register import (
     compute_registro_regularizacion,
 )
 from ....domain.bienes_inversion.tests.explicit_parameters import params_for
-from ....domain.calculations.registry.authority import bundled_indexed_authority
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.deadlines.models import (
     ModeloIVAProfile,
     TaxpayerProfile,
@@ -77,10 +77,10 @@ _M303_2026_IR_SHA256 = "0be8b156da2250c6b11f6253e0165221ed2e549ec4c65a562021bec6
 
 
 @pytest.fixture(autouse=True)
-def _generation_pinned_authority() -> Iterator[None]:
+def operation() -> Iterator[PinnedAuthorityOperation]:
     """Run every test inside one generation-pinned authority operation."""
-    with bundled_indexed_authority().operation():
-        yield
+    with bundled_indexed_authority().operation() as operation:
+        yield operation
 
 
 def _bien_inversion(identifier: str) -> BienInversionIvaRecord:
@@ -108,6 +108,8 @@ def _m303_filing_facts_payload(
 
 def _m303_prorrata_transition_arrival(
     transition: ProrrataEspecialTransitionKind,
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[M303ProrrataTransitionArrival, ProrrataRegister]:
     period = Period.from_year_and_code(2026, "4T")
     entry = ProrrataRegisterEntry(
@@ -136,7 +138,7 @@ def _m303_prorrata_transition_arrival(
         else ()
     )
     register = ProrrataRegister(entries=(*prior_entries, entry))
-    arrival = resolve_m303_prorrata_transition_arrival(period=period, prorrata_register=register)
+    arrival = resolve_m303_prorrata_transition_arrival(period=period, prorrata_register=register, operation=operation)
     return arrival, register
 
 
@@ -342,9 +344,10 @@ def test_modelo_303_foral_territory_projects_true_without_a_constant_fallback() 
 )
 def test_modelo_303_foral_note_5_overrides_each_a16_to_a30_lexical_branch(
     transition: ProrrataEspecialTransitionKind,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     """DP30301 Nota 5 supersedes the contradictory typed input values."""
-    arrival, register = _m303_prorrata_transition_arrival(transition)
+    arrival, register = _m303_prorrata_transition_arrival(transition, operation=operation)
     snapshot = _m303_foral_snapshot(prorrata_transition=arrival, prorrata_register=register)
 
     values = filing_producer_values(snapshot)
@@ -395,7 +398,9 @@ def test_modelo_303_foral_note_5_overrides_each_a16_to_a30_lexical_branch(
 def test_modelo_303_foral_note_5_retains_blank_prorrata_slots_before_final_period() -> None:
     period = Period.from_year_and_code(2026, "1T")
     snapshot = _m303_foral_snapshot(
-        prorrata_transition=M303ProrrataTransitionArrival(period=period, transition=None, register_evidence=())
+        prorrata_transition=M303ProrrataTransitionArrival(
+            period=period, is_applicable=False, transition=None, register_evidence=()
+        )
     )
 
     values = filing_producer_values(snapshot)
@@ -497,7 +502,9 @@ def test_m303_filing_facts_refuse_annual_and_non_official_filing_periods(period_
                 recipient_of_cash_accounting_operations=False,
                 source_ledger_ids=(),
             ),
-            prorrata_transition=M303ProrrataTransitionArrival(period=period, transition=None, register_evidence=()),
+            prorrata_transition=M303ProrrataTransitionArrival(
+                period=period, is_applicable=False, transition=None, register_evidence=()
+            ),
             prorrata_register=register,
             differentiated_contributions=(),
             bienes_register=bienes_register,
@@ -522,7 +529,9 @@ def test_m303_filing_facts_resolver_refuses_non_official_period_before_producer_
                 recipient_of_cash_accounting_operations=False,
                 source_ledger_ids=(),
             ),
-            prorrata_transition=M303ProrrataTransitionArrival(period=period, transition=None, register_evidence=()),
+            prorrata_transition=M303ProrrataTransitionArrival(
+                period=period, is_applicable=False, transition=None, register_evidence=()
+            ),
             prorrata_register=register,
             differentiated_contributions=(),
             bienes_register=bienes_register,
@@ -753,6 +762,7 @@ def test_m303_filing_facts_refuse_transition_arrival_evidence_from_another_regis
     payload = _m303_filing_facts().model_dump()
     payload["prorrata_transition"] = M303ProrrataTransitionArrival(
         period=period,
+        is_applicable=True,
         transition=ProrrataEspecialTransitionKind.from_registry("opcion"),
         register_evidence=(foreign_entry,),
     )

@@ -110,7 +110,7 @@ _WELL_SHAPED_SELECTORS: dict[str, dict[str, object]] = {
     "prorrata_regularizacion": {
         "source_modelo": "303",
         "source_casilla_ids": _PRORRATA_REGULARIZACION_SOURCE_IDS,
-        "source_periods": ("1T", "2T", "3T", "4T"),
+        "source_period_selection": "filer_liquidation_cadence",
         "regularizacion_output": "modelo_303_casilla_44",
     },
     "bienes_inversion_regularizacion": {

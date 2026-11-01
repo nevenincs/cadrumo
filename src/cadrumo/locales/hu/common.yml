@@ -49,6 +49,9 @@ aggregation:
       cash_accounting_evidence_incoherent: 'A pénzforgalmi elszámolás időzítési adatai
         ezen az IVA-tételen ellentmondásosak: %{refusal}. Javítsd a főkönyvi tétel
         ügyleti dátumát vagy fizetési bizonyítékát.'
+      cuota_disagrees_with_rate: A megadott %{declared} IVA-összeg nem egyezik a(z)
+        %{base} alap és a(z) %{rate} kulcs szorzatával, ami %{expected}. Javítsd az
+        IVA-összeget, az alapot vagy az IVA-kulcsot.
       deduction_authority_on_non_deducible_row: Az olyan IVA-sor, amely nem hordoz
         levonható adóösszeget, nem viselhet levonási osztályozást; a %{category} IVA-kategória
         %{flow_direction} irányban számol el. Töröld a megadott levonási típust, vagy
@@ -61,6 +64,8 @@ aggregation:
         nincs feloldott ideiglenes százalék.
       domestic_identification_on_intra_community_transaction: A spanyol héa-azonosító
         nem érvényes Közösségen belüli ügylethez.
+      especial_missing_input_classification: 'A különleges arányosításhoz minden levonható
+        tétel felhasználását meg kell adni: egy levonható tételnek nincs besorolása.'
       eu_member_state_on_export_transaction: 'Export vagy exporttal egy tekintet alá
         eső ügylet nem tartalmazhat EU-tagállamot; kapott érték: %{member_state}.'
       exemption_article_outside_domestic_exempt: A(z) %{value} mentességi cikk csak
@@ -90,6 +95,9 @@ aggregation:
         kifejezett szektorazonosítót.
       sectorized_input_unknown_sector: Egy szektorizált áfa-tétel ismeretlen szektorra
         hivatkozik.
+      settlement_apportionment_sector_mismatch: Az utolsó bevallási időszak végleges
+        százalékainak pontosan az arányosítási nyilvántartásodban rögzített elkülönült
+        ágazatokat kell megnevezniük.
       unaccepted_registry_value: A(z) %{field} mező értéke %{value}, amelyet a rögzített
         adónyilvántartási jogosultság %{effective_date} dátumra nem fogad el, ezért
         a tétel nem kerülhet be az IVA-számításba. Javítsd ezt az értéket a főkönyvi

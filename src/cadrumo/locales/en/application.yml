@@ -313,14 +313,78 @@ application:
         taxpayer_nif_blank: The taxpayer NIF must not be blank when it forms the IVA
           wallet decision key.
     prorrata_regularizacion:
-      advisory: 'Prorrata regularisation by definitive percentage (LIVA arts. 104-105)
-        for %{year}: provisional prorrata %{provisional}% → definitive %{definitiva}%
-        (%{sentido}). Regularisation proposed for %{target}: %{value}. Confirm the
-        value before filing.'
-      sentido_deduccion: additional deduction
-      sentido_ingreso: payment due
       target_casilla: box %{number}
       target_declared: the declared regularisation box
+      unresolved:
+        current_year_inputs: 'The prorrata regularisation needs these current-year
+          values before it can be calculated: %{casillas}.'
+        gross_negative: The gross deductible input VAT of the earlier liquidations
+          is negative (%{amount}) after rectifications. The law gives no regularisation
+          on a negative base, so rectify the deductions in the liquidations concerned
+          and calculate the box yourself.
+        provisional_missing: The %{year} prorrata regularisation needs the provisional
+          percentage, from your prorrata register or from the prior year's filed settlement
+          liquidation.
+        regime_not_derived: 'The %{year} regularisation of input VAT used in common
+          across differentiated sectors is not derived automatically: its percentage
+          counts only the operations of the sectors that share the use and treats
+          agriculture and equivalence-surcharge operations as without the right to
+          deduct, which the declared volumes do not show. Calculate the box yourself
+          before filing.'
+        register_regime_not_apportioning: Your prorrata register records no apportioning
+          regime for %{year}, but the declared volumes show operations without the
+          right to deduct; correct the register or the volumes before regularising.
+        sector_definitive_missing: 'These differentiated sectors have no settled definitive
+          percentage for %{year}: %{sectors}; settle each sector before regularising.'
+        selector_unmapped: The prorrata regularisation binding does not map to a resolver
+          output.
+        settlement_observation_ambiguous: More than one Modelo 303 settlement liquidation
+          is filed (%{periods}); keep only the cadence you actually filed.
+        settlement_observation_missing: The annual prorrata regularisation restates
+          the filed Modelo 303 settlement liquidation, and none is filed for %{periods}.
+        settlement_observation_refused: The filed Modelo 303 settlement liquidation
+          %{periods} carries a form revision that no longer matches the one the law
+          selects; recalculate and file it again.
+        settlement_observation_without_regularizacion: The filed Modelo 303 settlement
+          liquidation %{periods} carries no prorrata regularisation value.
+        sin_derecho_volume_absent: Your register applies prorrata in %{year}, but
+          the declared volumes show no operations without the right to deduct; the
+          regularisation for that case is not derived automatically. Check the volumes
+          or calculate the box yourself.
+        source_period_cuotas_missing: 'Liquidation %{period} was filed without the
+          deductible boxes the regularisation needs: %{casillas}.'
+        source_period_gross_disagreement: Liquidation %{period} has deductible input
+          VAT in the ledger with a gross base of %{ledger}, but you declared a gross
+          base of %{declared} for it; correct the ledger or replace the declaration
+          before regularising.
+        source_period_gross_unavailable: Liquidation %{period} declared deductible
+          input VAT, but the ledger holds no deductible input for it, so its gross
+          input VAT before prorrata is unknown; record that period's input VAT in
+          the ledger, or declare its gross input VAT with 'aeat app ledger prorrata
+          declare-gross', before regularising.
+        source_period_ledger_divergence: Liquidation %{period} declared %{filed} in
+          %{casilla}, but its ledger input VAT at your provisional prorrata percentages
+          gives %{expected}; reconcile the ledger with the filed liquidation before
+          regularising.
+        source_period_ledger_refused: The ledger input VAT of liquidation %{period}
+          cannot be apportioned under your prorrata register; resolve that ledger
+          refusal before regularising.
+        source_period_operator_divergence: Liquidation %{period} declared %{filed}
+          of deductible input VAT, but the gross base you declared for it at your
+          provisional prorrata percentages gives %{expected}; reconcile the declaration
+          with the filed liquidation before regularising.
+        source_period_sector_gross_disagreement: Liquidation %{period} has deductible
+          input VAT in the ledger for sector %{sector} with a gross base of %{ledger},
+          but you declared a gross base of %{declared} for that sector; correct the
+          ledger or replace the declaration before regularising.
+        source_periods_missing: 'The regularisation covers the year''s earlier liquidations,
+          and these are not filed: %{periods}.'
+        source_periods_refused: 'These earlier liquidations carry a form revision
+          that no longer matches the one the law selects: %{periods}; recalculate
+          and file them again.'
+        volumes_undeclared: Prorrata applies in %{year}, but the annual operation
+          volumes are not declared (%{casillas}); declare them so the definitive percentage
+          can be calculated.
   filing:
     build_draft:
       errors:

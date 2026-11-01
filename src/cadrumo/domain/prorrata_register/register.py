@@ -41,7 +41,9 @@ See Also:
 from __future__ import annotations
 
 from collections.abc import Iterable
+from datetime import datetime
 from decimal import Decimal
+from typing import Final, Literal
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
@@ -50,6 +52,7 @@ from ...core.errors.hierarchy import CadrumoError as _CadrumoError
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.filing_year import FilingYear
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN_CONFIG
+from ...core.period import Period, PeriodKind
 from ...core.prorrata_register import (
     ProrrataActivityRowType as _ProrrataActivityRowType,
 )
@@ -114,8 +117,32 @@ class ProrrataRegisterValidationError(ProrrataRegisterError):
     """Raised when a prorrata-register model fails Pydantic validation."""
 
 
-PRORRATA_REGISTER_SCHEMA_VERSION = "2"
+PRORRATA_REGISTER_SCHEMA_VERSION = "3"
 """Forward-compatible schema version stamped onto every record in this module."""
+
+_READABLE_LEGACY_SCHEMA_VERSIONS: Final[frozenset[str]] = frozenset({"2"})
+"""Stored schema versions this build reads forward without rewriting their facts.
+
+Schema 3 only adds the optional operator gross-base collection to the register;
+every schema-2 entry, sector and activity row means exactly what it meant, so a
+schema-2 record is read with its version stamp moved forward and nothing else
+touched. Schema 1 predates the regime and sector axes and stays unreadable.
+"""
+
+_OPERATOR_GROSS_PERIOD_KINDS: Final[frozenset[PeriodKind]] = frozenset({PeriodKind.QUARTERLY, PeriodKind.MONTHLY})
+
+
+def _read_schema_version_forward(value: str, *, record: str) -> str:
+    """Return the current schema version for a current or readable legacy stamp.
+
+    Raises:
+        ProrrataRegisterValidationError: When ``value`` is neither the current
+            version nor a legacy version this build reads forward.
+    """
+    if value == PRORRATA_REGISTER_SCHEMA_VERSION or value in _READABLE_LEGACY_SCHEMA_VERSIONS:
+        return PRORRATA_REGISTER_SCHEMA_VERSION
+    raise ProrrataRegisterValidationError(f"unsupported {record} schema_version {value!r}")
+
 
 # The ejercicio range is enforced by the FilingYear annotation on every entry,
 # whose bounds live in core.filing_year. Two local constants restated those
@@ -325,7 +352,8 @@ class ProrrataRegisterEntry(BaseModel):
             ``carried_prior_definitiva`` entry was seeded from, so the register
             stays cross-checkable against the prior filing. Permitted only for the
             carried provenance.
-        schema_version: Forward-compatible schema version. ``"2"``.
+        schema_version: Forward-compatible schema version. ``"3"``; a stored
+            ``"2"`` entry is read forward unchanged.
     """
 
     model_config = _STRICT_FROZEN_CONFIG
@@ -366,10 +394,8 @@ class ProrrataRegisterEntry(BaseModel):
     @classmethod
     @pydantic_validation_boundary
     def _schema_version_supported(cls, value: str) -> str:
-        """Reject any schema_version other than :data:`PRORRATA_REGISTER_SCHEMA_VERSION`."""
-        if value != PRORRATA_REGISTER_SCHEMA_VERSION:
-            raise ProrrataRegisterValidationError(f"unsupported ProrrataRegisterEntry schema_version {value!r}")
-        return value
+        """Read a stored schema-2 entry forward unchanged; refuse every other stamp."""
+        return _read_schema_version_forward(value, record="ProrrataRegisterEntry")
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -522,6 +548,75 @@ def resolve_provisional_percentage(
     )
 
 
+class ProrrataOperatorGrossDeclaration(BaseModel):
+    """Operator-declared gross deducible cuota of one earlier liquidation period.
+
+    The annual regularisation (LIVA art. 105.Cuatro) applies the definitive
+    percentage to the gross cuotas each earlier liquidation of the year deducted
+    under the provisional percentage. When that liquidation was entered by hand
+    the ledger holds no input IVA for it, so its gross base is unknown; this
+    record lets the operator state it with a supporting document. It is a
+    declared fact, never a ledger-derived one: the regularisation uses it only
+    for a period whose ledger holds no deducible input, and a ledger that does
+    hold input for the period must agree with it.
+
+    Attributes:
+        ejercicio: Filing year of the liquidation period.
+        period: The Modelo 303 liquidation period (a quarter or a month).
+        sector_id: Differentiated sector the gross cuota belongs to, or
+            ``None`` for the whole entity.
+        gross_cuota: Gross deducible cuota before prorrata, in euros and cents.
+        evidence_reference: Operator-held document supporting the figure.
+        provenance: Always ``operator_declared``.
+        declared_at: When the operator declared it (timezone-aware).
+    """
+
+    model_config = _STRICT_FROZEN_CONFIG
+
+    ejercicio: FilingYear
+    period: Period
+    sector_id: str | None = Field(default=None, min_length=1, max_length=64)
+    gross_cuota: Decimal = Field(ge=Decimal("0"), decimal_places=2)
+    evidence_reference: str = Field(min_length=1, max_length=256)
+    provenance: Literal["operator_declared"] = "operator_declared"
+    declared_at: datetime
+
+    @field_validator("evidence_reference")
+    @classmethod
+    @pydantic_validation_boundary
+    def _evidence_reference_is_not_blank(cls, value: str) -> str:
+        """Refuse whitespace-only evidence before it reaches encrypted storage."""
+        if not value.strip():
+            raise ProrrataRegisterValidationError("operator gross declaration evidence_reference must not be blank")
+        return value
+
+    @field_validator("declared_at")
+    @classmethod
+    @pydantic_validation_boundary
+    def _declared_at_is_aware(cls, value: datetime) -> datetime:
+        """Keep the declaration instant unambiguous across time zones."""
+        if value.tzinfo is None or value.utcoffset() is None:
+            raise ProrrataRegisterValidationError("operator gross declaration declared_at must be timezone-aware")
+        return value
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _period_is_a_liquidation_of_the_ejercicio(self) -> ProrrataOperatorGrossDeclaration:
+        """Require a quarterly or monthly liquidation period inside the declared ejercicio."""
+        if self.period.filing_year != self.ejercicio:
+            raise ProrrataRegisterValidationError("operator gross declaration period must belong to its ejercicio")
+        if self.period.kind not in _OPERATOR_GROSS_PERIOD_KINDS:
+            raise ProrrataRegisterValidationError(
+                "operator gross declaration period must be a quarterly or monthly liquidation period"
+            )
+        return self
+
+    @property
+    def key(self) -> tuple[Period, str | None]:
+        """Return the ``(period, sector)`` identity; the period carries the ejercicio."""
+        return self.period, self.sector_id
+
+
 class ProrrataRegister(BaseModel):
     """Encrypted JSON document holding the per-ejercicio prorrata register.
 
@@ -531,7 +626,8 @@ class ProrrataRegister(BaseModel):
     without a schema migration (no-legacy-compatibility).
 
     Attributes:
-        schema_version: Forward-compatible schema version. ``"2"``.
+        schema_version: Forward-compatible schema version. ``"3"``; a stored
+            ``"2"`` register is read forward unchanged.
         entries: Tuple of :class:`ProrrataRegisterEntry` rows.
         sector_definitions: The operator-declared differentiated-sector partition
             (LIVA arts. 9.1.c / 101). Empty for a whole-entity register — the
@@ -542,6 +638,9 @@ class ProrrataRegister(BaseModel):
             prorrata rows.  They are keyed by ``(ejercicio, activity_id)`` and
             retain their fixed official row slot without owning any global
             prorrata result.
+        gross_declarations: Operator-declared gross deducible cuotas of earlier
+            liquidation periods, one per ``(period, sector)``; each sector
+            declaration names a declared differentiated sector.
     """
 
     model_config = _STRICT_FROZEN_CONFIG
@@ -550,15 +649,14 @@ class ProrrataRegister(BaseModel):
     entries: tuple[ProrrataRegisterEntry, ...] = ()
     sector_definitions: tuple[SectorDefinition, ...] = ()
     activity_rows: tuple[ProrrataActivityRow, ...] = ()
+    gross_declarations: tuple[ProrrataOperatorGrossDeclaration, ...] = ()
 
     @field_validator("schema_version")
     @classmethod
     @pydantic_validation_boundary
     def _schema_version_supported(cls, value: str) -> str:
-        """Reject any schema_version other than :data:`PRORRATA_REGISTER_SCHEMA_VERSION`."""
-        if value != PRORRATA_REGISTER_SCHEMA_VERSION:
-            raise ProrrataRegisterValidationError(f"unsupported ProrrataRegister schema_version {value!r}")
-        return value
+        """Read a stored schema-2 register forward; it holds no gross declarations."""
+        return _read_schema_version_forward(value, record="ProrrataRegister")
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -588,6 +686,29 @@ class ProrrataRegister(BaseModel):
         slot_keys = [(row.ejercicio, row.slot) for row in self.activity_rows]
         if len(slot_keys) != len(set(slot_keys)):
             raise ProrrataRegisterValidationError("register carries duplicate (ejercicio, slot) activity rows")
+        return self
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _gross_declarations_are_unique_and_sector_bound(self) -> ProrrataRegister:
+        """Keep one gross declaration per (period, sector), each naming a declared sector."""
+        keys = [declaration.key for declaration in self.gross_declarations]
+        if len(keys) != len(set(keys)):
+            raise ProrrataRegisterValidationError(
+                "register carries duplicate (ejercicio, period, sector) gross declarations"
+            )
+        declared = set(self.sector_ids())
+        unknown = sorted(
+            {
+                declaration.sector_id
+                for declaration in self.gross_declarations
+                if declaration.sector_id is not None and declaration.sector_id not in declared
+            }
+        )
+        if unknown:
+            raise ProrrataRegisterValidationError(
+                f"gross declarations reference undeclared differentiated sectors {tuple(unknown)}"
+            )
         return self
 
     @model_validator(mode="after")
@@ -666,6 +787,34 @@ class ProrrataRegister(BaseModel):
             if entry.ejercicio == ejercicio and entry.sector_id == sector_id:
                 return entry
         return None
+
+    def gross_declaration_for(
+        self,
+        period: Period,
+        *,
+        sector_id: str | None = None,
+    ) -> ProrrataOperatorGrossDeclaration | None:
+        """Return the operator gross declaration for ``(period, sector_id)``, or ``None``."""
+        for declaration in self.gross_declarations:
+            if declaration.key == (period, sector_id):
+                return declaration
+        return None
+
+    def gross_declarations_for_period(self, period: Period) -> tuple[ProrrataOperatorGrossDeclaration, ...]:
+        """Return every operator gross declaration of one liquidation period, across sectors."""
+        return tuple(declaration for declaration in self.gross_declarations if declaration.period == period)
+
+    def with_gross_declarations(
+        self,
+        gross_declarations: tuple[ProrrataOperatorGrossDeclaration, ...],
+    ) -> ProrrataRegister:
+        """Return this register holding ``gross_declarations``, every other record unchanged."""
+        return ProrrataRegister(
+            entries=self.entries,
+            sector_definitions=self.sector_definitions,
+            activity_rows=self.activity_rows,
+            gross_declarations=gross_declarations,
+        )
 
     def resolve_provisional(self, ejercicio: int, *, sector_id: str | None = None) -> ProrrataProvisionalResolution:
         """Resolve the in-force provisional percentage for a ``(ejercicio, sector_id)`` key.

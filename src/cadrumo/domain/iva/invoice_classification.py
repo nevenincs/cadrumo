@@ -61,6 +61,7 @@ from .flow import (
 # ``_enums`` ban (clause 5 of the structural enum-import placement check).
 # At runtime the helpers are called only after the invoices package init
 # finishes, so the public-package import resolves cleanly.
+from .prorrata import InputClassification
 from .schema import InvoiceKind, IvaCategory, IvaLedgerObservationRole, IvaRateKind
 
 if TYPE_CHECKING:
@@ -215,6 +216,8 @@ def invoice_line_to_iva_observation(
     recargo_amount: Decimal = ZERO,
     investment_asset_id: str | None = None,
     rectifies_ledger_id: str | None = None,
+    input_classification: InputClassification | None = None,
+    prorrata_sector_id: str | None = None,
 ) -> IvaLedgerObservation:
     """Build an :class:`IvaLedgerObservation` from invoice line metadata.
 
@@ -257,6 +260,10 @@ def invoice_line_to_iva_observation(
         investment_asset_id: Reciprocal investment-register identity when the
             deduction family is an investment acquisition.
         rectifies_ledger_id: Corrected ledger identity for a rectification.
+        input_classification: Art. 106 input classification carried from the
+            linked ledger deduction authority, or ``None`` when unclassified.
+        prorrata_sector_id: Sector identity carried from the linked ledger
+            deduction authority, or ``None`` when the input has no sector.
 
     Returns:
         An :class:`IvaLedgerObservation` with the full classification
@@ -290,6 +297,8 @@ def invoice_line_to_iva_observation(
         deduction_provenance=deduction_provenance,
         investment_asset_id=investment_asset_id,
         rectifies_ledger_id=rectifies_ledger_id,
+        input_classification=input_classification,
+        prorrata_sector_id=prorrata_sector_id,
         # The applied rate is measured, not inferred. Transitional food slots can
         # coexist with an ordinary tier, so iva_rate_percentage reads the selected
         # slot's own authority record and confirms it was in force on issued_at

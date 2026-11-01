@@ -507,6 +507,10 @@ cli:
           (repetible, al menos uno).
         con_derecho_volume_help: Volumen anual de operaciones con derecho a deducción
           del sector (LIVA art. 104, con las exclusiones del art. 104.Tres ya aplicadas).
+        declare_gross_help: Declara las cuotas soportadas deducibles brutas antes
+          de la prorrata de una liquidación anterior que introdujiste a mano, para
+          que la regularización anual (LIVA art. 105.Cuatro) pueda usarlas cuando
+          el libro no tenga cuotas de ese periodo.
         declare_sector_help: 'Declara un sector diferenciado (LIVA arts. 9.1.c / 101):
           tu partición del art. 9.1.c, nunca inferida de tus registros.'
         ejercicio_help: Ejercicio (año) que cubre la elección.
@@ -519,6 +523,20 @@ cli:
           de la prorrata especial del período actual.
         general_percentage_help: Porcentaje de deducción provisional 0-100 (LIVA art.
           104.Uno + 105.Uno).
+        gross_absent: No hay ninguna base bruta declarada para esa liquidación de
+          {ejercicio}, así que no hay nada que eliminar.
+        gross_amount_help: Cuotas soportadas deducibles brutas antes de la prorrata,
+          en euros con dos decimales como máximo.
+        gross_duplicate: Ya hay una base bruta declarada para esa liquidación de {ejercicio}.
+          No se ha guardado nada; usa --replace para sustituirla.
+        gross_evidence_help: Referencia a tu propio documento que respalda el importe.
+        gross_period_help: Periodo de liquidación del Modelo 303 anterior a la liquidación
+          final del ejercicio (un trimestre como 1T o un mes como 03).
+        gross_replace_help: Sustituye la base bruta ya declarada para el mismo periodo
+          y sector.
+        gross_sector_unknown: El sector {sector_id} no es un sector diferenciado declarado.
+          No se ha guardado nada; declara antes el sector con declare-sector.
+        gross_year_help: Ejercicio de la liquidación.
         group_help: 'Registro de prorrata de IVA entre ejercicios: elige el régimen
           (general / especial) y declara sectores diferenciados (LIVA arts. 101 /
           103 / 105 / 106).'
@@ -545,6 +563,8 @@ cli:
           o inicio_actividad.
         reference_required: El origen {provenance!r} (LIVA art. 105.Dos / 105.Tres)
           requiere --reference.
+        remove_gross_help: Elimina las cuotas soportadas deducibles brutas que declaraste
+          para una liquidación anterior.
         revoke_especial_help: Revoca la prorrata especial para un ejercicio tras un
           estado especial del ejercicio anterior (LIVA art. 103.Dos.1).
         sector_help: Identificador del sector diferenciado que cubre esta entrada;

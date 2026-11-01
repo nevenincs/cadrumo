@@ -408,6 +408,7 @@ def test_invoice_ledger_refusals_have_exact_application_state_operator_decision_
             ),
             screened=screened,
             transaction_binding_values={},
+            gross_transaction_binding_values={},
             prorrata_apportionment=None,
             operation=_authority_operation_for_test,
         )

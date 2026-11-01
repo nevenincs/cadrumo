@@ -227,9 +227,11 @@ _LOCAL_WRITES: Final = (
     "ledger.own_account",
     # The index is derived from stored revisions and filing records; a rebuild regenerates it.
     "ledger.participation.rebuild",
+    "ledger.prorrata.declare_gross",
     "ledger.prorrata.declare_sector",
     "ledger.prorrata.elect_especial",
     "ledger.prorrata.elect_general",
+    "ledger.prorrata.remove_gross",
     "ledger.prorrata.revoke_especial",
     "ledger.prorrata.seed",
     "ledger.prorrata.seed_sector",

@@ -290,7 +290,6 @@ def collect_bucket_aggregation_advisory_diagnostics(
                 period_token=period_token,
                 filing_year=filing_year,
                 bucket_id=bucket_id,
-                observation_repository=observation_repository,
                 prorrata_register_repository=prorrata_register_repository,
                 transaction_repository=transaction_repository,
                 bienes_inversion_repository=bienes_inversion_repository,

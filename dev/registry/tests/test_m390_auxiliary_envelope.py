@@ -21,6 +21,7 @@ from ..pipeline.m390_auxiliary_envelope import (
     M390_AUXILIARY_ENVELOPE_TARGETS,
     M390AuxiliaryEnvelopeGenerationInput,
     M390AuxiliaryEnvelopeNumberedPage,
+    M390ProspectiveGenerationTarget,
     render_m390_auxiliary_envelope_bytes,
     validate_m390_auxiliary_envelope,
 )
@@ -223,6 +224,45 @@ def test_refuses_current_unreviewed_registry_revision_as_a_prospective_target() 
 
     with pytest.raises(RegistryValidationError, match="has no reviewed source binding"):
         _validate(intermediate, generation_input)
+
+
+def _synthetic_target(year: int, **overrides: object) -> M390ProspectiveGenerationTarget:
+    fields: dict[str, object] = {
+        "target": ExportFragmentTarget(modelo="390", revision_id=str(year), design_epoch=str(year)),
+        "source_ref": f"aeat-dr-390-{year}",
+        "source_sha256": "0" * 64,
+        "design_epoch": str(year),
+        "filing_year_from": year,
+    }
+    fields.update(overrides)
+    return M390ProspectiveGenerationTarget.model_validate(fields)
+
+
+@pytest.mark.parametrize("year", [2022, 2025, 2031, 2019])
+def test_prospective_target_accepts_any_four_digit_design_edition(year: int) -> None:
+    target = _synthetic_target(year)
+
+    assert target.source_ref == f"aeat-dr-390-{year}"
+    assert target.design_epoch == str(year)
+
+
+@pytest.mark.parametrize(
+    "overrides",
+    [
+        {"source_ref": "aeat-dr-390-31"},
+        {"source_ref": "aeat-dr-390-20311"},
+        {"source_ref": "xaeat-dr-390-2031"},
+        {"source_ref": "aeat-dr-390-2031-b"},
+        {"source_ref": "aeat-dr-390-2030"},
+        {"design_epoch": "203x", "source_ref": "aeat-dr-390-203x"},
+        {"design_epoch": "2031 "},
+        {"filing_year_to": 2030},
+        {"source_sha256": "G" * 64},
+    ],
+)
+def test_prospective_target_refuses_malformed_or_inconsistent_edition(overrides: dict[str, object]) -> None:
+    with pytest.raises(ValidationError):
+        _synthetic_target(2031, **overrides)
 
 
 def test_m390_auxiliary_authority_has_no_layout_or_historical_output_dependency() -> None:

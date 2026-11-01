@@ -210,6 +210,28 @@ def build_prorrata_settle_sector_definition(
     )
 
 
+def build_prorrata_declare_gross_definition(
+    repository_factory: ProrrataRegisterRepositoryFactory,
+) -> OperationDefinition:
+    """Build the latest-candidate operator gross-base declaration definition."""
+    return _definition(
+        _requests.PRORRATA_DECLARE_GROSS_OPERATION_DEFINITION_ID,
+        _requests.ProrrataDeclareGrossRequest,
+        repository_factory,
+    )
+
+
+def build_prorrata_remove_gross_definition(
+    repository_factory: ProrrataRegisterRepositoryFactory,
+) -> OperationDefinition:
+    """Build the latest-candidate operator gross-base removal definition."""
+    return _definition(
+        _requests.PRORRATA_REMOVE_GROSS_OPERATION_DEFINITION_ID,
+        _requests.ProrrataRemoveGrossRequest,
+        repository_factory,
+    )
+
+
 def build_prorrata_list_registration(
     definition: OperationDefinition,
 ) -> OperationPublicDefinitionRegistrationV1:
@@ -238,12 +260,14 @@ def build_prorrata_mutation_registration(
 
 
 __all__ = [
+    "build_prorrata_declare_gross_definition",
     "build_prorrata_declare_sector_definition",
     "build_prorrata_elect_especial_definition",
     "build_prorrata_elect_general_definition",
     "build_prorrata_list_definition",
     "build_prorrata_list_registration",
     "build_prorrata_mutation_registration",
+    "build_prorrata_remove_gross_definition",
     "build_prorrata_revoke_especial_definition",
     "build_prorrata_seed_definition",
     "build_prorrata_seed_sector_definition",

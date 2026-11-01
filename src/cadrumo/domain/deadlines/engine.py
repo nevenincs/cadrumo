@@ -37,6 +37,7 @@ if TYPE_CHECKING:
     type DeadlineWindowProjection = tuple[str, RevisionSelectionMetadata, DeadlineWindowDefinition]
     """One projected window: modelo code, its owning revision's selection metadata, and the window."""
 
+from .domiciliation_cutoff import resolve_payment_cutoff
 from .errors import (
     DeadlineValidationError,
     NoDeadlineWindowsError,
@@ -372,7 +373,7 @@ class DeadlineEngine:
             period=window.period,
             opens_on=window.opens_on,
             closes_on=window.closes_on,
-            payment_cutoff_on=window.payment_cutoff_on,
+            payment_cutoff_on=resolve_payment_cutoff(modelo, window, operation=operation).cutoff_on,
             status=obligation_status,
             boe_references=window.legal_refs,
             recovery=_overdue_recovery_or_none(

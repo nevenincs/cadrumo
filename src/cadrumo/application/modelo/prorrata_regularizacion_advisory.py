@@ -1,72 +1,43 @@
-"""Calculate-path advisory wiring for the annual prorrata-general regularización.
+"""Calculate-path advisories for the annual prorrata regularisation.
 
-Modelo 303 casilla ``44`` (Regularización prorrata por porcentaje definitivo -
-Cuota) is ``input_kind = manual``: LIVA art. 105.Cuatro requires comparing the
-year's DEFINITIVE prorrata percentage (art. 104, computed from the year's
-actual annual con-derecho/sin-derecho volumes) against the PROVISIONAL
-percentage applied across the year's liquidations (art. 105.Uno — normally the
-PRIOR year's definitive percentage). The registry already computes the current
-period's definitive percentage from real operator-entered annual volumes
-(``iva.prorrata-porcentaje``, fed by ``iva.prorrata-volumen-total`` /
-``iva.prorrata-volumen-con-derecho``). The automatic feed is now backed by the
-live ``BindingSourceKind.PRORRATA_REGULARIZACION`` resolver when its governed
-inputs are available; this collector remains as the no-silent-under-declaration
-advisory path for missing or unresolved facts. First, for every period, it reads
-the profile-scoped prorrata register and raises a missing-carry advisory when
-prorrata applies but the provisional percentage ladder is unresolved. Second,
-at the settlement period, it reads the CURRENT year's own registry-computed
-prorrata figures (never a fabricated value) and can look up the PRIOR year's
-persisted ``iva.prorrata-porcentaje`` observation from the local
-:class:`~application.calculations.observations_repository.CalculationObservationRepositoryProtocol` — the
-same same-modelo prior-filing lookup pattern
-:mod:`~application.modelo.prior_payment_advisory` already uses for the
-Modelo 130 casilla-05 carry. When a real prior-year percentage is found, the
-pure :func:`~application.calculations.prorrata_regularizacion.buildprorrata_regularizacion_advisory`
-projection runs against real, non-fabricated inputs and its advisory is
-surfaced verbatim (never re-implemented). When no prior-year observation
-exists (a first-filing ejercicio, or the operator has not yet filed the prior
-year through this application), the collector still alerts that a
-regularización may be due once the prior-year percentage is available, rather
-than silently dropping the check.
+The Modelo 303 regularisation box itself (LIVA art. 105.Cuatro) is filled by
+the ``BindingSourceKind.PRORRATA_REGULARIZACION`` source resolver, which
+refuses visibly whenever a governed input is missing. This collector keeps the
+advisories that are not a box value:
 
-The register's LIVA art. 105.Cuatro "último período de liquidación del año
-natural" timing means the regularización is due once a year, at the
-settlement period (the fourth quarter or the annual period for Modelo 303
-filers); the proposed-casilla-44 regularización branch only runs on those
-periods, while the missing-provisional-carry branch is intentionally per-period.
+* for every period, a missing-carry advisory when prorrata applies but the
+  provisional percentage ladder in the profile-scoped register is unresolved;
+* at the annual settlement liquidation, the declared-volume reconciliation
+  against the ledger and the LIVA art. 103.Dos.2.º mandatory-especial check.
+
+It does not recompute the regularisation: a second computation here could
+only disagree with the resolver's value.
 
 See Also:
     :mod:`~application.modelo.calculation_diagnostics`:
         Post-calculation coordinator that calls this collector with the
-        computed casilla values and the shared observation repository.
+        computed casilla values.
     :mod:`~application.calculations.prorrata_regularizacion`:
-        Source resolver and advisory-projection functions this collector shares
-        with the registry-computed annual prorrata figures.
+        Source resolver that owns the regularisation value and its refusals.
     :mod:`~application.modelo._bienes_inversion_advisory`:
         Sibling advisory collector for the capital-goods IVA regularización
         (LIVA arts. 107-110), whose settlement-period gating this module
         mirrors.
-    :mod:`~application.modelo.prior_payment_advisory`:
-        Origin of the same-modelo prior-filing observation lookup pattern
-        this collector reuses for the prior-year definitive-percentage carry.
 """
 
 from __future__ import annotations
 
 from collections.abc import Mapping
 from contextlib import nullcontext
-from datetime import datetime
 from decimal import Decimal
 
 from ...core.aggregation import BindingSourceKind
 from ...core.casilla_id import CasillaId
-from ...core.modelo import Modelo
 from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.calculations.registry.form_codes import form_for_role
-from ...domain.calculations.registry.prorrata_register_catalogue import especial_prorrata_register_regime
 from ...domain.calculations.registry.schema import ModeloRevision
-from ...domain.iva.m303_settlement import is_m303_annual_settlement_period, m303_annual_settlement_order_key
+from ...domain.iva.m303_settlement import is_m303_annual_settlement_period
 from ...domain.iva.prorrata import especial_mandatory_rule
 from ...domain.iva.prorrata_especial_parameters import (
     resolve_prorrata_especial_mandatory_parameters,
@@ -78,16 +49,11 @@ from ..aggregation.iva_ledger_classification import compute_annual_deducible_tot
 from ..aggregation.prorrata_volume import project_prorrata_declared_volume_rollup
 from ..aggregation.source_mesh import CalculationSourceDiagnostic
 from ..bienes_inversion.ports import BienesInversionIvaRegisterRepositoryProtocol
-from ..calculations.observations_repository import (
-    CalculationObservationRepositoryProtocol,
-    require_observation_envelope_coordinates_current,
-)
 from ..calculations.prorrata_especial_advisory import build_prorrata_especial_mandatory_advisory
 from ..calculations.prorrata_regularizacion import (
     ProrrataDeclaredVolumeLedgerRollup,
     build_prorrata_declared_volume_advisory,
     build_prorrata_missing_provisional_advisory,
-    buildprorrata_regularizacion_advisory,
     derive_prorrata_applicability,
 )
 from ..prorrata_register.ports import ProrrataRegisterServiceRepositoryProtocol
@@ -103,10 +69,6 @@ __all__ = ["collect_prorrata_regularizacion_diagnostics"]
 #: silent on those periods (no noise for a compute that is not yet due).
 _VOLUMEN_TOTAL_SEMANTIC_ROLE = "iva_prorrata_volumen_total"
 _VOLUMEN_CON_DERECHO_SEMANTIC_ROLE = "iva_prorrata_volumen_con_derecho"
-_PORCENTAJE_SEMANTIC_ROLE = "iva_prorrata_porcentaje"
-_CUOTA_DEDUCIBLE_TOTAL_SEMANTIC_ROLE = "iva_cuota_deducible_total"
-
-_PENDING_PROVISIONAL_SOURCE_KIND = "prorrata_regularizacion_provisional_pending"
 
 #: Shared ``source_kind`` for both LIVA art. 103.Dos.2.º mandatory-especial
 #: settlement diagnostics — the CHECK-branch obligation advisory and the
@@ -116,134 +78,12 @@ _PENDING_PROVISIONAL_SOURCE_KIND = "prorrata_regularizacion_provisional_pending"
 _ESPECIAL_MANDATORY_SOURCE_KIND = "prorrata_especial_mandatory"
 
 
-def _prior_year_definitiva_pct(
-    repository: CalculationObservationRepositoryProtocol,
-    *,
-    filing_year: int,
-    porcentaje_id: CasillaId,
-    operation: PinnedAuthorityOperation,
-) -> Decimal | None:
-    """Return the prior ejercicio's persisted definitive prorrata percentage.
-
-    Scans the local Modelo 303 observation catalogue (mirroring
-    :mod:`~application.modelo.prior_payment_advisory`'s same-modelo
-    prior-filing lookup) for a settlement-period observation in
-    ``filing_year - 1`` that carries a value for ``porcentaje_id`` — the same
-    ``iva.prorrata-porcentaje`` canonical casilla id shared by every M303
-    revision that declares the prorrata semantic roles. Returns ``None`` when
-    no such observation exists — the first-ejercicio / not-yet-filed case the
-    caller must surface as a pending advisory rather than a fabricated figure.
-    """
-    prior_year = filing_year - 1
-    candidates: list[tuple[tuple[int, datetime], Decimal]] = []
-    for payload in repository.iter_modelo(Modelo("303").value):
-        require_observation_envelope_coordinates_current(payload, operation=operation)
-        observation = payload.observation
-        if observation.filing_year != prior_year:
-            continue
-        settlement_key = m303_annual_settlement_order_key(
-            Period.from_year_and_code(observation.filing_year, observation.period),
-            payload.captured_at,
-        )
-        if settlement_key is None:
-            continue
-        value = observation.casilla_values.get(porcentaje_id)
-        if value is not None:
-            candidates.append((settlement_key, value))
-    return max(candidates, key=lambda item: item[0])[1] if candidates else None
-
-
-def _current_regularizacion_inputs(
-    revision: ModeloRevision,
-    casilla_values: Mapping[CasillaId, Decimal],
-    *,
-    modelo: str,
-) -> tuple[CasillaId, Decimal, Decimal, Decimal] | None:
-    """Resolve the current-year values needed by the casilla-44 projection.
-
-    The semantic-role lookups intentionally stay in registry order.  A missing
-    role, or a current year with no exempt-without-right volume, means that the
-    annual regularización has no grounded projection and must remain silent.
-    The returned tuple carries the percentage id as well as the Decimal values
-    because the pending advisory attaches itself to that canonical casilla.
-    """
-    role_ids = (
-        casilla_id_for_unambiguous_revision_semantic_role(
-            revision,
-            _VOLUMEN_TOTAL_SEMANTIC_ROLE,
-            modelo_id=modelo,
-        ),
-        casilla_id_for_unambiguous_revision_semantic_role(
-            revision,
-            _VOLUMEN_CON_DERECHO_SEMANTIC_ROLE,
-            modelo_id=modelo,
-        ),
-        casilla_id_for_unambiguous_revision_semantic_role(
-            revision,
-            _PORCENTAJE_SEMANTIC_ROLE,
-            modelo_id=modelo,
-        ),
-        casilla_id_for_unambiguous_revision_semantic_role(
-            revision,
-            _CUOTA_DEDUCIBLE_TOTAL_SEMANTIC_ROLE,
-            modelo_id=modelo,
-        ),
-    )
-    volumen_total_id, volumen_con_derecho_id, porcentaje_id, cuota_deducible_id = role_ids
-    if (
-        volumen_total_id is None
-        or volumen_con_derecho_id is None
-        or porcentaje_id is None
-        or cuota_deducible_id is None
-    ):
-        return None
-
-    volumen_total = casilla_values.get(volumen_total_id, Decimal(0))
-    volumen_con_derecho = casilla_values.get(volumen_con_derecho_id, Decimal(0))
-    operaciones_sin_derecho_deduccion = volumen_total - volumen_con_derecho
-    if operaciones_sin_derecho_deduccion <= Decimal(0):
-        return None
-    return (
-        porcentaje_id,
-        operaciones_sin_derecho_deduccion,
-        casilla_values.get(porcentaje_id, Decimal(0)),
-        casilla_values.get(cuota_deducible_id, Decimal(0)),
-    )
-
-
-def _pending_regularizacion_diagnostic(
-    *,
-    filing_year: int,
-    porcentaje_id: CasillaId,
-) -> CalculationSourceDiagnostic:
-    """Build the no-silent-under-declaration pending casilla-44 advisory."""
-    return CalculationSourceDiagnostic(
-        reason="official_box_unpopulated",
-        source_kind=_PENDING_PROVISIONAL_SOURCE_KIND,
-        message=(
-            "Operaciones exentas sin derecho a deducción detectadas en el ejercicio "
-            f"{filing_year} (prorrata general, LIVA arts. 104-105): la regularización de "
-            "casilla 44 no puede comprobarse automáticamente porque no consta el porcentaje "
-            f"de prorrata definitivo de {filing_year - 1} en este equipo. Compruebe manualmente "
-            "si procede una regularización antes de presentar."
-        ),
-        casilla_id=porcentaje_id,
-        # Advisory-asserted: the message states a claim spanning both art.
-        # 104 (the definitive percentage's own computation) and art. 105
-        # (the Cuatro regularización comparison this advisory is about), and
-        # the casilla_id's own ref carries only art. 104.
-        asserted_legal_refs=("ley-37-1992:art-104", "ley-37-1992:art-105"),
-    )
-
-
 def _settlement_prorrata_diagnostics(
     revision: ModeloRevision,
-    casilla_values: Mapping[CasillaId, Decimal],
     *,
     modelo: str,
     filing_year: int,
     missing_carry_diagnostics: tuple[CalculationSourceDiagnostic, ...],
-    observation_repository: CalculationObservationRepositoryProtocol,
     prorrata_register_repository: ProrrataRegisterServiceRepositoryProtocol,
     transaction_repository: TransactionCatalogueRepositoryProtocol,
     bienes_inversion_repository: BienesInversionIvaRegisterRepositoryProtocol,
@@ -261,41 +101,7 @@ def _settlement_prorrata_diagnostics(
         bucket_id=bucket_id,
         operation=operation,
     )
-    current_inputs = _current_regularizacion_inputs(
-        revision,
-        casilla_values,
-        modelo=modelo,
-    )
-    if current_inputs is None:
-        return (*missing_carry_diagnostics, *especial_diagnostics)
-
-    porcentaje_id, operaciones_sin_derecho_deduccion, prorrata_definitiva_pct, cuotas_soportadas_deducibles = (
-        current_inputs
-    )
-    prorrata_provisional_pct = _prior_year_definitiva_pct(
-        observation_repository,
-        filing_year=filing_year,
-        porcentaje_id=porcentaje_id,
-        operation=operation,
-    )
-    if prorrata_provisional_pct is None:
-        pending_diagnostic = _pending_regularizacion_diagnostic(
-            filing_year=filing_year,
-            porcentaje_id=porcentaje_id,
-        )
-        return (*(missing_carry_diagnostics or (pending_diagnostic,)), *especial_diagnostics)
-
-    _result, diagnostic = buildprorrata_regularizacion_advisory(
-        cuotas_soportadas_deducibles=cuotas_soportadas_deducibles,
-        prorrata_provisional_pct=prorrata_provisional_pct,
-        prorrata_definitiva_pct=prorrata_definitiva_pct,
-        operaciones_sin_derecho_deduccion=operaciones_sin_derecho_deduccion,
-        regularizacion_year=filing_year,
-        revision=revision,
-    )
-    if diagnostic is None:
-        return (*missing_carry_diagnostics, *especial_diagnostics)
-    return (*missing_carry_diagnostics, diagnostic, *especial_diagnostics)
+    return (*missing_carry_diagnostics, *especial_diagnostics)
 
 
 def collect_prorrata_regularizacion_diagnostics(
@@ -305,26 +111,13 @@ def collect_prorrata_regularizacion_diagnostics(
     modelo: str,
     period_token: str,
     filing_year: int,
-    observation_repository: CalculationObservationRepositoryProtocol,
     prorrata_register_repository: ProrrataRegisterServiceRepositoryProtocol,
     transaction_repository: TransactionCatalogueRepositoryProtocol,
     bienes_inversion_repository: BienesInversionIvaRegisterRepositoryProtocol,
     bucket_id: str | None = None,
     operation: PinnedAuthorityOperation | None = None,
 ) -> tuple[CalculationSourceDiagnostic, ...]:
-    """Return the annual prorrata-general regularización advisory for one calculation.
-
-    Reads the CURRENT year's registry-computed annual prorrata figures
-    (``iva.prorrata-volumen-total``, ``iva.prorrata-volumen-con-derecho``,
-    ``iva.prorrata-porcentaje``, ``iva.cuota-deducible-total``) from
-    ``casilla_values`` and looks up the PRIOR year's persisted definitive
-    percentage from ``observation_repository``. When both are available, the
-    pure :func:`~application.calculations.prorrata_regularizacion.buildprorrata_regularizacion_advisory`
-    projection runs and its advisory (or silence, when no regularización is
-    due) is returned verbatim. When the prior-year percentage cannot be found,
-    a lighter pending advisory fires whenever the current year shows
-    exempt-without-right operations (prorrata applies), naming casilla 44 as
-    not yet automatically checkable.
+    """Return the annual prorrata advisories for one Modelo 303 calculation.
 
     Args:
         revision: The :class:`ModeloRevision` whose casillas are inspected for
@@ -333,9 +126,8 @@ def collect_prorrata_regularizacion_diagnostics(
         casilla_values: Computed engine values keyed by :class:`CasillaId`.
         modelo: The modelo identifier of the filing being calculated.
         period_token: Bare registry period token for the filing being
-            calculated (e.g. ``"4T"``, ``"1T"``, ``"0A"``).
-        filing_year: The filing year regularised (the year whose prior
-            ejercicio's percentage is looked up).
+            calculated (e.g. ``"4T"``, ``"1T"``, ``"12"``).
+        filing_year: The ejercicio being calculated.
         prorrata_register_repository: Required bucket-bound register capability
             used for the provisional carry and annual regime comparison.
         transaction_repository: Required bucket-bound transaction catalogue
@@ -346,21 +138,16 @@ def collect_prorrata_regularizacion_diagnostics(
         bucket_id: Optional bucket identifier for loading the profile-scoped
             prorrata register. When supplied, unresolved provisional register
             state emits a per-period missing-carry advisory before settlement.
-        observation_repository: The local
-            :class:`~application.calculations.observations_repository.CalculationObservationRepositoryProtocol`
-            scanned for the prior-year definitive-percentage carry.
         operation: The calculation's pinned registry authority. Standalone
             callers may omit it to lease one for this collector.
 
     Returns:
-        A tuple of advisories. At the settlement period it may carry the
-        casilla-44 regularización advisory (or the pending-percentage advisory),
-        the per-period missing-provisional-carry advisory, and the LIVA
-        art. 103.Dos.2.º mandatory-especial advisory (the obligation check
-        when both regime totals are honestly computable, or the
-        classify-to-enable prompt for a general filer whose especial total is
-        not yet derivable). Empty when no advisory fires (non-settlement period,
-        no exempt-without-right operations, no resolvable prorrata register).
+        The per-period missing-provisional-carry advisory and, at the annual
+        settlement liquidation, the declared-volume reconciliation and the
+        LIVA art. 103.Dos.2.º mandatory-especial advisory (the obligation
+        check when both regime totals are computable, or the
+        classify-to-enable prompt while any deducible input is unclassified).
+        Empty when no advisory fires.
     """
     if modelo != form_for_role("iva.periodic"):
         return ()
@@ -403,11 +190,9 @@ def collect_prorrata_regularizacion_diagnostics(
             *volume_diagnostics,
             *_settlement_prorrata_diagnostics(
                 revision,
-                casilla_values,
                 modelo=modelo,
                 filing_year=filing_year,
                 missing_carry_diagnostics=missing_carry_diagnostics,
-                observation_repository=observation_repository,
                 prorrata_register_repository=prorrata_register_repository,
                 transaction_repository=transaction_repository,
                 bienes_inversion_repository=bienes_inversion_repository,
@@ -434,15 +219,14 @@ def _especial_mandatory_diagnostics(
     regimes (one annual aggregation, two apportionment passes) and branches on
     whether the especial total is honestly computable:
 
-    * CHECK branch (register regime ESPECIAL — the general shadow is mechanical —
-      or regime GENERAL with every deducible soportado row classified): run the
+    * CHECK branch (every deducible soportado row classified, whatever the
+      register regime): run the
       real art. 103.Dos.2.º comparison through
       :func:`~application.calculations.prorrata_especial_advisory.build_prorrata_especial_mandatory_advisory`
       and surface its message verbatim as a ``prorrata_especial_obligatoria``
       diagnostic. A non-breach returns nothing (no noise).
-    * PROMPT branch (register regime GENERAL with unclassified deducible soportado
-      rows — the intended general-filer audience whose especial total is not yet
-      derivable): emit one ``prorrata_especial_check_unavailable`` diagnostic that
+    * PROMPT branch (any unclassified deducible soportado row, so the especial
+      total is not derivable): emit one ``prorrata_especial_check_unavailable`` diagnostic that
       names the obligation and the enabling ``--input-classification`` /
       ``elect-especial`` actions, carrying NO fabricated amounts.
 
@@ -464,9 +248,10 @@ def _especial_mandatory_diagnostics(
     if totals is None:
         return ()
 
-    especial_total_is_honest = (
-        totals.regime == especial_prorrata_register_regime() or totals.unclassified_deducible_count == 0
-    )
+    # Art. 106 gives no percentage to an input whose use is undeclared, so the
+    # especial total is honest only once every deducible row is classified,
+    # whatever regime the register records.
+    especial_total = totals.deduction_under_especial if totals.unclassified_deducible_count == 0 else None
     # Resolved BEFORE the branch because both arms need it: the advisory arm
     # passes it to the predicate, and the prompt arm below quotes the margin in
     # its operator-facing wording. Binding it inside the branch left the prompt
@@ -482,10 +267,10 @@ def _especial_mandatory_diagnostics(
         modelo_id=modelo,
         ejercicio=filing_year,
     )
-    if especial_total_is_honest:
+    if especial_total is not None:
         notice = build_prorrata_especial_mandatory_advisory(
             deduction_under_general=totals.deduction_under_general,
-            deduction_under_especial=totals.deduction_under_especial,
+            deduction_under_especial=especial_total,
             ejercicio=filing_year,
             parameters=especial_parameters,
             operation=operation,

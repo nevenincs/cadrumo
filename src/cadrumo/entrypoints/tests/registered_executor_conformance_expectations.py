@@ -791,6 +791,8 @@ _EXPECTATIONS: Mapping[str, RegisteredExecutorConformanceCase] = _expectations_o
                 "seed",
                 "seed_sector",
                 "settle_sector",
+                "declare_gross",
+                "remove_gross",
             )
         ),
         *(

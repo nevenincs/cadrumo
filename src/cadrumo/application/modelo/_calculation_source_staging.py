@@ -34,6 +34,7 @@ from types import MappingProxyType
 
 from ...core.aggregation import BindingSourceKind
 from ...core.casilla_id import CasillaId
+from ...domain.bienes_inversion.register import BienesInversionIvaRegister
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.binding_targets import revision_bindings_by_id
 from ...domain.calculations.registry.casilla_membership import casillas_by_id
@@ -44,6 +45,7 @@ from ...domain.calculations.registry.ids import (
     RelationId,
 )
 from ...domain.calculations.registry.iva_wallet_carry_targets import iva_wallet_owned_binding_ids_for_revision
+from ...domain.calculations.registry.prorrata_regularizacion_bindings import prorrata_source_casilla_ids
 from ...domain.calculations.registry.schema import (
     ModeloRevision,
     RegistrySnapshot,
@@ -51,6 +53,7 @@ from ...domain.calculations.registry.schema import (
 from ...domain.calculations.registry.schema_input_kind import InputKind
 from ...domain.modelos.work_unit import WorkUnit
 from ...domain.prorrata_register.protocols import ProrrataRegisterRepositoryProtocol
+from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ..aggregation.source_mesh import (
     CalculationSourceContext,
     CalculationSourceDiagnostic,
@@ -111,6 +114,13 @@ _PRORRATA_REGULARIZACION_CURRENT_YEAR_CASILLA_IDS: tuple[CasillaId, ...] = (
 )
 
 
+#: Reviewed source order of the registry's prorrata selector: the cuota total,
+#: the two annual volumes, then the definitive percentage.
+_PRORRATA_VOLUME_ROLE_START = 1
+_PRORRATA_VOLUME_ROLE_END = 3
+_PRORRATA_DEFINITIVE_ROLE = 3
+
+
 def resolve_prorrata_regularizacion_sources(
     *,
     registry_snapshot: RegistrySnapshot,
@@ -128,6 +138,9 @@ def resolve_prorrata_regularizacion_sources(
     prorrata_register_repository: ProrrataRegisterRepositoryProtocol,
     bienes_inversion_repository: BienesInversionIvaRegisterRepositoryProtocol,
     observation_repository: CalculationObservationRepositoryProtocol,
+    transaction_repository: TransactionCatalogueRepositoryProtocol,
+    investment_asset_register: BienesInversionIvaRegister | None,
+    investment_asset_profile_id: str | None,
 ) -> CalculationSourceResolution:
     """Resolve prorrata and dependent capital-goods staged mesh sources.
 
@@ -162,6 +175,12 @@ def resolve_prorrata_regularizacion_sources(
             capital-goods IVA register.
         observation_repository: Canonical repository for the work unit's
             persisted calculation observations.
+        transaction_repository: Bucket-bound transaction catalogue the
+            prorrata resolver re-derives earlier liquidations' gross cuotas
+            from.
+        investment_asset_register: Capital-goods authority the ledger
+            aggregation proves investment acquisitions against, when loaded.
+        investment_asset_profile_id: Profile owning that register.
 
     Returns:
         The source resolution unchanged when the revision declares no
@@ -190,8 +209,16 @@ def resolve_prorrata_regularizacion_sources(
         current_year_values=materialised.values,
         missing_current_year_casilla_ids=materialised.missing_casilla_ids,
         unresolved_current_year_casilla_ids=materialised.unresolved_casilla_ids,
+        undeclared_current_year_casilla_ids=undeclared_prorrata_volume_casilla_ids(
+            snapshot_revision,
+            casilla_inputs=casilla_inputs,
+            backend_casilla_inputs=source_resolution.bound_inputs_by_casilla_id,
+        ),
         prorrata_register_repository=prorrata_register_repository,
         observation_repository=observation_repository,
+        transaction_repository=transaction_repository,
+        investment_asset_register=investment_asset_register,
+        investment_asset_profile_id=investment_asset_profile_id,
         registry_snapshot=registry_snapshot,
         operation=operation,
     )
@@ -208,6 +235,80 @@ def resolve_prorrata_regularizacion_sources(
     prorrata_resolution = prorrata_resolver.resolve(context)
     bienes_resolution = bienes_resolver.resolve(context)
     return merge_source_resolutions((source_resolution, prorrata_resolution, bienes_resolution))
+
+
+def undeclared_prorrata_volume_casilla_ids(
+    revision: ModeloRevision,
+    *,
+    casilla_inputs: Mapping[CasillaId, Decimal] | None,
+    backend_casilla_inputs: Mapping[CasillaId, Decimal] | None,
+) -> tuple[CasillaId, ...]:
+    """Return the annual prorrata volume casillas no caller or source supplied.
+
+    The registry engine gives an unsupplied volume its formula default, which
+    is not a declared fact: the definitive percentage it yields must not
+    settle a regularisation.
+    """
+    source_ids = prorrata_source_casilla_ids(revision.bindings)
+    if len(source_ids) < _PRORRATA_VOLUME_ROLE_END:
+        return ()
+    supplied = {**dict(backend_casilla_inputs or {}), **dict(casilla_inputs or {})}
+    return tuple(
+        casilla_id
+        for casilla_id in source_ids[_PRORRATA_VOLUME_ROLE_START:_PRORRATA_VOLUME_ROLE_END]
+        if casilla_id not in supplied
+    )
+
+
+def stage_prorrata_definitive_percentage(
+    *,
+    registry_snapshot: RegistrySnapshot,
+    work_unit: WorkUnit,
+    source_resolution: CalculationSourceResolution,
+    casilla_inputs: Mapping[CasillaId, Decimal] | None,
+    text_casilla_inputs: Mapping[CasillaId, str] | None,
+    binding_values: Mapping[BindingId, Decimal] | None,
+    enum_binding_values: Mapping[BindingId, str] | None,
+    date_binding_values: Mapping[BindingId, date] | None,
+    relation_values: Mapping[RelationId, Decimal] | None,
+    filing_period_date: date | None,
+) -> Decimal | None:
+    """Return the current calculation's definitive prorrata percentage, when declared.
+
+    Runs the staged registry pass over the already-merged source resolution and
+    reads the revision's definitive-percentage casilla. ``None`` when the
+    revision declares no prorrata regularisation, a volume casilla was never
+    supplied, or the percentage did not resolve -- a default percentage must
+    not deduct the settlement liquidation.
+    """
+    revision = registry_snapshot.revision
+    source_ids = prorrata_source_casilla_ids(revision.bindings)
+    if len(source_ids) <= _PRORRATA_DEFINITIVE_ROLE:
+        return None
+    if undeclared_prorrata_volume_casilla_ids(
+        revision,
+        casilla_inputs=casilla_inputs,
+        backend_casilla_inputs=source_resolution.bound_inputs_by_casilla_id,
+    ):
+        return None
+    materialised = _materialise_prorrata_regularizacion_source_values(
+        registry_snapshot=registry_snapshot,
+        work_unit=work_unit,
+        source_resolution=source_resolution,
+        input_channels=_ProrrataRegularizacionInputChannels(
+            casilla_inputs=casilla_inputs,
+            text_casilla_inputs=text_casilla_inputs,
+            binding_values=binding_values,
+            enum_binding_values=enum_binding_values,
+            date_binding_values=date_binding_values,
+            relation_values=relation_values,
+        ),
+        filing_period_date=filing_period_date,
+    )
+    definitive_id = source_ids[_PRORRATA_DEFINITIVE_ROLE]
+    if definitive_id in materialised.unresolved_casilla_ids:
+        return None
+    return materialised.values.get(definitive_id)
 
 
 def _materialise_prorrata_regularizacion_source_values(
