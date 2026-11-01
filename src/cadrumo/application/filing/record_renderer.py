@@ -27,8 +27,8 @@ from ...domain.calculations.registry.schema_exports import (
 from ...domain.filing.errors import FilingExportValidationError
 from ...domain.filing.schema import ModeloDraft
 from ...domain.modelos.perceptor_clave_scope import (
-    PERCEPTOR_CLAVE_SCOPE_MODELO,
     PerceptorClaveScope,
+    governs_perceptor_records,
     resolve_perceptor_clave_scope,
 )
 from .export_parity import did_page_suppressed
@@ -60,7 +60,7 @@ def render_layout_records(
     occurrences: list[RenderedRecordOccurrence] = []
     source_digests = {ref: source.sha256 for ref, source in registry_snapshot.sources.items()}
     clave_scope = (
-        resolve_perceptor_clave_scope(period=draft.period) if draft.modelo == PERCEPTOR_CLAVE_SCOPE_MODELO else None
+        resolve_perceptor_clave_scope(period=draft.period) if governs_perceptor_records(draft.modelo) else None
     )
     for record in sorted(layout.records, key=lambda item: item.order):
         if did_page_suppressed(

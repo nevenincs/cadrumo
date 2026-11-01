@@ -23,8 +23,8 @@ from ...domain.modelos.calculation_revision import (
 )
 from ...domain.modelos.errors import ModeloValidationError
 from ...domain.modelos.perceptor_clave_scope import (
-    PERCEPTOR_CLAVE_SCOPE_MODELO,
     PerceptorClaveScope,
+    governs_perceptor_records,
     resolve_perceptor_clave_scope,
     row_field_value_bindings,
     rows_missing_scoped_casilla,
@@ -54,7 +54,7 @@ def perceptor_clave_scope(work_unit: WorkUnit, *, operation: PinnedAuthorityOper
     """
     from ...domain.calculations.registry.errors import RegistryValidationError
 
-    if str(work_unit.modelo) != PERCEPTOR_CLAVE_SCOPE_MODELO.value:
+    if not governs_perceptor_records(work_unit.modelo, authority=operation):
         return None
     try:
         return resolve_perceptor_clave_scope(period=work_unit.period, authority=operation)

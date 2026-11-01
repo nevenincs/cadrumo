@@ -102,7 +102,7 @@ def _snapshot_checked_facts(restated_on: date | None) -> tuple[GovernedFact, ...
     return (
         _snapshot_checked_fact(
             "modelo-role-routing",
-            (("renta.annual", "100"),),
+            (("renta.annual", "100"), ("withholding.work_annual", "190")),
             restated_on=restated_on,
         ),
         _snapshot_checked_fact(
