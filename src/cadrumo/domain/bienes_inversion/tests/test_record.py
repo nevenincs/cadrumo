@@ -117,7 +117,9 @@ def test_a_stored_identifier_longer_than_the_request_bound_still_loads() -> None
     long_identifier = "i" * 129
 
     register = BienesInversionIvaRegister.model_validate_json(
-        BienesInversionIvaRegister(records=(_record(long_identifier, acquisition_ledger_id="ledger-1"),)).model_dump_json(),
+        BienesInversionIvaRegister(
+            records=(_record(long_identifier, acquisition_ledger_id="ledger-1"),)
+        ).model_dump_json(),
     )
 
     assert register.records[0].identifier == long_identifier
