@@ -163,6 +163,7 @@ class DeadlineHolidayCoverage(StrEnum):
 
 
 _SHORT_TEXT_MAX_LENGTH: Final = 200
+_BUSINESS_DAY_SEARCH = 14
 _FIRST_CALENDAR_YEAR: Final = FILING_YEAR_MIN
 _LAST_CALENDAR_YEAR: Final = 2100
 
@@ -522,7 +523,7 @@ def _first_business_day(
     business_day: Callable[[date], bool],
 ) -> date:
     candidate = start
-    for _ in range(14):
+    for _ in range(_BUSINESS_DAY_SEARCH):
         if business_day(candidate):
             return candidate
         candidate = candidate + timedelta(days=1)

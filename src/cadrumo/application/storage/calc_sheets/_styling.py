@@ -95,7 +95,7 @@ _EVIDENCIA_COLUMNS = 16
 # action bundles it), so the body styling covers a generous fixed window rather
 # than gating on a body count the build pass does not yet know. Wrapping blank
 # cells is harmless; the window keeps note / ref columns readable once rows land.
-_EVIDENCIA_BODY_WINDOW = 250
+_EVIDENCIA_BODY_ROWS = 250
 
 
 def _widths(tab: TabName, pairs: tuple[tuple[int, int], ...]) -> list[SheetColumnWidth]:
@@ -221,7 +221,7 @@ def compute_styling(
     entradas_last = max(entradas_last, binding_last, 1)
     calculos_last = max((row.row for row in layout.calculos_rows), default=1)
     provenance_last = max(len(provenance) + 1, 1)
-    evidencia_last = _EVIDENCIA_HEADER_ROW + _EVIDENCIA_BODY_WINDOW
+    evidencia_last = _EVIDENCIA_HEADER_ROW + _EVIDENCIA_BODY_ROWS
 
     styled: list[SheetStyledRange] = []
     styled += _data_tab_ranges(

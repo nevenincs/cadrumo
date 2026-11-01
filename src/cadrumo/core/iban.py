@@ -84,6 +84,9 @@ def normalise_iban(value: str) -> str:
     return value.replace(" ", "").replace("-", "").upper()
 
 
+_ISO_7064_MODULUS = 97
+
+
 def iban_mod_97(canonical: str) -> int:
     """Compute the ISO 13616 IBAN mod-97 check residue for an already-canonical IBAN.
 
@@ -118,4 +121,4 @@ def iban_mod_97(canonical: str) -> int:
         raise ValueError(f"iban_mod_97 requires an ISO 13616-shaped IBAN, got {canonical!r}")
     rearranged = canonical[4:] + canonical[:4]
     numeric = "".join(ch if ch.isdigit() else str(ord(ch) - ord("A") + 10) for ch in rearranged)
-    return int(numeric) % 97
+    return int(numeric) % _ISO_7064_MODULUS

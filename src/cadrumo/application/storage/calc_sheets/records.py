@@ -77,6 +77,9 @@ from .theme import WORKBOOK_FONT_FAMILY, StyleRole
 DecimalValue = _RegistryDecimalValue
 
 
+_COLUMN_LETTERS = 26
+
+
 class TabName(StrEnum):
     """The closed worksheet vocabulary for local exports and review publications.
 
@@ -149,7 +152,7 @@ def column_letters_to_index(letters: str) -> int:
         )
     cursor = 0
     for char in letters:
-        cursor = cursor * 26 + (ord(char) - ord("A") + 1)
+        cursor = cursor * _COLUMN_LETTERS + (ord(char) - ord("A") + 1)
     return cursor
 
 

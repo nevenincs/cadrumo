@@ -32,7 +32,7 @@ _FX_RATE_COLUMN = 17
 
 _MAX_ROWS = 10_000
 _MAX_CELLS = 250_000
-_MAX_TEXT = 40_000
+_MAX_CELL_TEXT = 40_000
 _HEADER_ROW = 4
 _FIRST_ROW = 5
 _REVIEW_ROWS = 30
@@ -77,7 +77,7 @@ class _ReviewLayout:
         for column, value in enumerate(values, 1):
             if value is None and tab is not TabName.ENTRADAS:
                 value = self.label("not_captured")
-            if isinstance(value, str) and len(value) > _MAX_TEXT:
+            if isinstance(value, str) and len(value) > _MAX_CELL_TEXT:
                 raise ValueError("review text exceeds workbook cell limit")
             if isinstance(value, Decimal) and not value.is_finite():
                 raise ValueError("review numeric value must be finite")

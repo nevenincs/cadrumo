@@ -81,6 +81,9 @@ from .overview_results import (
 _NEXT_STEP_NOTICE_CODE = "overview.status.next_step"
 
 
+_REASON_PREVIEW = 80
+
+
 def _next_step_message(step_id: OverviewStatusNextStepId) -> str:
     """Return the localized explanation for one forward-guidance row.
 
@@ -381,7 +384,7 @@ def _calendar_suppressed_text_line(suppressed: SuppressedCalendarEntry) -> str:
     return (
         f"suppressed\t{suppressed.modelo}\t{suppressed.period}"
         f"\tverdict={suppressed.verdict.value}"
-        f"\treason={suppressed.reason[:80]}"
+        f"\treason={suppressed.reason[:_REASON_PREVIEW]}"
     )
 
 

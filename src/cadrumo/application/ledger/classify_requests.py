@@ -69,7 +69,7 @@ LedgerClassifyTransactionPrefix = Annotated[str, Field(min_length=1, max_length=
 # Hand-typed euro amounts carry at most cent precision, so a thousands-grouped amount is
 # refused instead of being read as a fraction. A share or a rate is a fraction of one whose
 # scale the governed rates set (0.052, 0.0175), so it has no such cap and is bounded by range.
-_MAX_AMOUNT_FRACTION_DIGITS = 2
+_MAX_MONEY_FRACTION_DIGITS = 2
 
 
 class LedgerClassifyPatch(BaseModel):
@@ -111,7 +111,7 @@ class LedgerClassifyPatch(BaseModel):
             return None
         is_fraction = info.field_name in {"business_pct", "iva_rate"}
         parsed = try_parse_canonical_decimal(
-            value, signed=False, max_fraction_digits=None if is_fraction else _MAX_AMOUNT_FRACTION_DIGITS
+            value, signed=False, max_fraction_digits=None if is_fraction else _MAX_MONEY_FRACTION_DIGITS
         )
         if parsed is None or display_decimal(parsed) != value:
             raise ValueError(f"ledger classify {info.field_name} must use canonical decimal text")
@@ -161,7 +161,7 @@ class LedgerClassifyM210Options(BaseModel):
             return None
         is_rate = info.field_name == "applicable_rate"
         parsed = try_parse_canonical_decimal(
-            value, signed=False, max_fraction_digits=None if is_rate else _MAX_AMOUNT_FRACTION_DIGITS
+            value, signed=False, max_fraction_digits=None if is_rate else _MAX_MONEY_FRACTION_DIGITS
         )
         if parsed is None or display_decimal(parsed) != value:
             raise ValueError(f"M210 {info.field_name} must use canonical decimal text")

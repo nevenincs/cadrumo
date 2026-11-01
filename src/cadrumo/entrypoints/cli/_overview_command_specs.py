@@ -24,6 +24,9 @@ _MODULE = ".overview_commands"
 _PAYLOADS = ".overview_results"
 
 
+_AGENDA_HORIZON_DAYS = 14
+
+
 def _option(
     name: str,
     declarations: tuple[str, ...],
@@ -137,7 +140,13 @@ OVERVIEW_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         "OverviewAgendaResult",
         (
             _option("as_of", ("--date",), TEXT_VALUE, "cli.overview.agenda.date_help"),
-            _option("horizon_days", ("--horizon",), WHOLE_NUMBER_VALUE, "cli.overview.agenda.horizon_help", default=14),
+            _option(
+                "horizon_days",
+                ("--horizon",),
+                WHOLE_NUMBER_VALUE,
+                "cli.overview.agenda.horizon_help",
+                default=_AGENDA_HORIZON_DAYS,
+            ),
             _option(
                 "allow_incomplete",
                 ("--allow-incomplete",),

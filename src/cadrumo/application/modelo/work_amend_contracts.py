@@ -49,7 +49,7 @@ class ModeloWorkAmendOverride(BaseModel):
 #: An engineering bound on a journalled request, not a legal cardinality: no
 #: official record design caps the counterparties an M347 declares, so a limit
 #: near the override cap would refuse a lawful return from a busy gestoria.
-_MAX_AMENDMENT_DETAIL_ROWS: Final = 20_000
+_MAX_AMENDMENT_DETAIL_ROWS: Final = 32_768
 
 
 class ModeloWorkAmendRequest(BaseModel):

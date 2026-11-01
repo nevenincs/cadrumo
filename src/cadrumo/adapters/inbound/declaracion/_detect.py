@@ -38,6 +38,10 @@ _ORDEN_HAC_RE = re.compile(
 )
 
 
+_HEAD_SAMPLE = 4000
+_TAIL_SAMPLE = 2000
+
+
 def detect_template_revision(pdf_path: Path) -> TemplateRevision | None:
     """Peek at the PDF's first page and return a :class:`TemplateRevision`.
 
@@ -73,8 +77,8 @@ def detect_template_revision_from_pages(pages: tuple[str, ...]) -> TemplateRevis
         return None
     # Union of pages 1-2 header region: some Modelo 100 PDFs print
     # the ``Ejercicio YYYY`` stamp on page 2, not page 1.
-    head_span = "\n".join(pages[: min(2, len(pages))])[:4000]
-    tail = pages[-1][-2000:]
+    head_span = "\n".join(pages[: min(2, len(pages))])[:_HEAD_SAMPLE]
+    tail = pages[-1][-_TAIL_SAMPLE:]
 
     modelo_match = _HEADER_MODELO_RE.search(head_span)
     ejercicio_match = _HEADER_EJERCICIO_RE.search(head_span)

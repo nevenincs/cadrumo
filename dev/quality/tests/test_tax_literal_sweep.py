@@ -22,13 +22,22 @@ literals: what the rules do not cover fails and stays listed until it moves or a
 why it may stay. The modelo ids come from the registry tree and the period codes from their
 enum, so neither is listed.
 
-A number given a name at module scope stays in reach. It is a finding unless the same value rules
-admit it or what it is says it cannot be a tax value: its name states a machine unit, its module
-owns machine or presentation mechanics, one whole word of its name counts a mechanic of the product
-itself (a page, a retry, a sample, a freshness window), a calendar number stands under the unit it
-counts, or every read of it in its module only cuts a sequence short. A capacity is a power of two,
-or a round thousand whose every read is a ``max_length``. A name can lie, so review keeps reading
-what a new name holds.
+A number given a name at module scope stays in reach. A tax word in the name decides first, whatever
+else the name says and whichever module holds it: ``DEDUCTION_VERSION = 21`` and ``INCOME_PREVIEW_LIMIT
+= 12450`` are findings. Otherwise it is a finding unless the same value rules admit it or what it is
+says it cannot be a tax value: its name states a machine unit, its module owns machine or presentation
+mechanics, one whole word of its name counts a mechanic of the product itself (a page, a retry, a
+sample, a freshness window), a calendar number stands under the unit it counts, or every read of it in
+its module only cuts a sequence short and it counts no part of a form. A limit word alone speaks for
+no capacity, and the units ``S``, ``POINTS`` and ``VERSION`` do not speak for a limit word. A capacity
+is a power of two, or a round thousand whose every read is the ``max_length`` of a text, or a round ten
+thousand on a collection. A name can lie, so review keeps reading what a new name holds.
+
+A modelo or period code is an address only when the literal itself stands under such a name, read on
+its own side and by the name's last word: ``period.casilla == '0208'`` and ``box_token = '0208'`` are
+findings. A form code bound to a name at module scope, or compared through a name, is a finding: a
+role read from the registry says which form it is. A workbook module holds numbers of its own only
+under a name that says it measures the sheet.
 
 A module that hands values to a form may not write a width at all: a fixed digit or code regex, a
 length bound below machine capacity, a text length compared with a number, a slice bound, a padding
@@ -43,7 +52,17 @@ What this sweep cannot see, because catching it would drown the findings in posi
 - a single-letter code as the value of an enum member, as in ``CASTELLANO = "E"``: these are typed vocabularies
   held in records, and they stay in code until the registry declares them and the records can follow;
 - a width in a module that hands nothing to a form, which is lexical grammar there;
-- a fact spelled in the words of a mechanic, as a name can lie.
+- a fact spelled in the words of a mechanic, as a name can lie;
+- a day or month count under its calendar unit, as in ``_RECTIFICATION_WINDOW_MONTHS = 12``,
+  ``if elapsed_days > 30`` or ``if months >= 12``: a plazo and a calendar's own length read alike;
+- a number the arithmetic rules admit, as a result or a member with no name around it: ``return 10``,
+  ``100 if c else 10`` or ``GENERAL = 10`` in an enum;
+- a one percent rate written as a cent with no tax word by it, as in ``x * Decimal('0.01')``;
+- two capital letters compared with an unnamed field, as in ``kind == 'AB'``: country codes read alike;
+- a single letter as a plain result, as in ``'A' if x else 'B'``;
+- a length of text whose characters are tested, as in ``value.isdigit() and len(value) == 18``, in a
+  module that hands nothing to a form;
+- a number or a letter in the TUI or another owner that only lays values out, unless a tax word names it.
 """
 
 from __future__ import annotations
@@ -83,9 +102,7 @@ _MECHANICS_OWNERS: Final = (
     "adapters/outbound/llm/",
     "application/command_search/",
     "application/corpus_search/",
-    "application/modelo/reconciliation_export.py",
     "application/search/",
-    "application/storage/calc_sheets/",
     "core/aeat_csv.py",
     "core/atomic_write.py",
     "core/connection_transport.py",
@@ -155,6 +172,7 @@ _PRODUCT_MECHANIC_WORDS: Final = frozenset(
         "FRESHNESS",
         "LOOKBACK",
         "HORIZON",
+        "INSTANCES",
         "URGENT",
         "SOON",
         "RANK",
@@ -169,7 +187,7 @@ A tax limit counts casillas, rows, amounts or days of a form, so ``RESEARCH_DEDU
 and ``SOLIDARITY_SURCHARGE_THRESHOLD`` no longer reads as an operator's arity."""
 
 _LEXICAL_NAME: Final = re.compile(
-    r"(?:^|_)(?:EVENT_IDS|EXIT_CODE|STATUS_CODE|ISO_\d+|ALPHA\d|GROUP_WIDTH|FILE_NAME|CELL_LIMIT|KEY_MIN|SHORT_TEXT"
+    r"(?:^|_)(?:EVENT_IDS|EXIT_CODE|STATUS_CODE|ISO_\d+|ALPHA\d|GROUP_WIDTH|FILE_NAME|KEY_MIN|SHORT_TEXT"
     r"|MODELO_ID|PERIOD_TOKEN|FRACTION_DIGITS|SHORTEST)(?:_|$)",
     re.IGNORECASE,
 )
@@ -196,20 +214,18 @@ _ARITHMETIC_BOUNDS: Final = frozenset({0, 1})
 _CODE_SHAPED: Final = re.compile(r"^\d{2,4}[A-Z]?$")
 _LETTER_CLAVE: Final = re.compile(r"^[A-Z]{1,2}$")
 _CLAVE_NAME: Final = re.compile(r"clave|subclave|tipo_|_code$|^code$|codigo", re.IGNORECASE)
-_MODELO_NAME: Final = re.compile(r"modelo|model\b", re.IGNORECASE)
-_PERIOD_NAME: Final = re.compile(r"period|token|quarter", re.IGNORECASE)
-_EDITION_NAME: Final = re.compile(r"revision_id|design_epoch", re.IGNORECASE)
 _MODELO_ADDRESS_CALLS: Final = frozenset(
     {"Modelo", "modelo_directory", "revision", "revision_for_context", "select_revision_metadata", "snapshot"},
 )
 _FORM_NAMED_MODULE: Final = re.compile(r"(?:^|_)m(\d{3})(?:_|$)")
 _MONTH_NAME: Final = re.compile(r"month", re.IGNORECASE)
 _DAY_NAME: Final = re.compile(r"days?(?:_|$)|dias", re.IGNORECASE)
-_COUNTRY_NAME: Final = re.compile(r"country|iso", re.IGNORECASE)
+_COUNTRY_NAME: Final = re.compile(r"countr|iso", re.IGNORECASE)
 _LENGTH_BOUNDS: Final = frozenset({"min_length", "max_length"})
 _SHA256_HEX: Final = 64
 _SMALLEST_CAPACITY: Final = 16
 _THOUSAND: Final = 1000
+_COLLECTION_WIRE_FLOOR: Final = 10_000
 _LAST_FOUR_DIGIT_YEAR: Final = 9999
 _CENT: Final = Decimal("0.01")
 _DATE_CALLS: Final = frozenset({"date", "datetime"})
@@ -220,41 +236,94 @@ _CHECKBOX_MARK: Final = "X"
 _YES_NO_LETTERS: Final = frozenset({"S", "N"})
 _ARITHMETIC_OPERANDS: Final = frozenset({-1, 0, 1, 2, 10, 100})
 """Sign, halving, doubling, decimal shift and per cent scale: what a calculation does, not a fact it holds."""
-_FACT_WORDS: Final = frozenset(
+_TAX_WORDS: Final = frozenset(
     {
+        "AMORTIZATION",
         "AMOUNT",
-        "BASE",
-        "BRACKET",
         "BRACKETS",
-        "CAP",
-        "CEILING",
         "CUOTA",
         "CUANTIA",
         "DEDUCTION",
-        "FLOOR",
+        "EDAD",
         "IMPORTE",
         "INCOME",
-        "LIMIT",
         "LIMITE",
-        "MAX",
-        "MAXIMUM",
-        "MIN",
-        "MINIMUM",
         "PERCENT",
+        "PLAZO",
         "PORCENTAJE",
         "RATE",
         "RATES",
         "REDUCCION",
         "RENT",
         "RENTA",
-        "SLOTS",
+        "RETENCION",
+        "RETENTION",
         "THRESHOLD",
         "TIPO",
         "TOPE",
+        "TRAMO",
+        "TRAMOS",
         "TURNOVER",
     }
 )
+"""A word spoken of a tax value. It outranks every unit, mechanic and calendar word in the same name and every owner
+that only lays values out: ``DEDUCTION_VERSION`` holds a deduction, whatever else the name says."""
+_LIMIT_WORDS: Final = frozenset(
+    {"BASE", "CAP", "CEILING", "FLOOR", "LIMIT", "MAX", "MAXIMUM", "MIN", "MINIMUM", "SLOTS"}
+)
+"""A word spoken of limits in general. A clear unit or mechanic can say what it limits; a capacity or a calendar
+number alone cannot, and neither can a unit that also reads as something else."""
+_FACT_WORDS: Final = _TAX_WORDS | _LIMIT_WORDS
 """A number held under one of these words is what it says, however small."""
+_AMBIGUOUS_UNIT_WORDS: Final = frozenset({"S", "POINTS", "VERSION"})
+"""Units too short or too general to speak for a limit word: ``LIMIT_S`` says nothing about seconds."""
+_NON_TAX_PHRASE: Final = re.compile(
+    r"(?:^|_)(?:fx_rate|exchange_rate|rate_limit|(?:diagnostic|run|runs|record|records|cache|usage|settled|log|logs)_retention)",
+    re.IGNORECASE,
+)
+"""Phrases that hold a tax word in another sense: an exchange rate read as data, a request rate, a log kept so long."""
+_SHEET_GEOMETRY_OWNERS: Final = ("application/storage/calc_sheets/", "application/modelo/reconciliation_export.py")
+_SHEET_GEOMETRY_WORDS: Final = frozenset(
+    {
+        "CELL",
+        "CELLS",
+        "COL",
+        "COLUMN",
+        "COLUMNS",
+        "HEIGHT",
+        "HEIGHTS",
+        "PIXELS",
+        "ROW",
+        "ROWS",
+        "SIZE",
+        "WIDTH",
+        "WIDTHS",
+    }
+)
+"""A workbook module holds numbers of its own, but only under one of these names: a constant, a target, a keyword or
+a function that says it measures the sheet. Anything else in such a module is read as in any other."""
+_SHEET_MEASURES: Final = frozenset(
+    {
+        "arithmetic",
+        "call_value",
+        "clamp",
+        "default_value",
+        "inner_value",
+        "keyword_value",
+        "module_value",
+        "number_set",
+        "position",
+        "result_value",
+        "threshold",
+    }
+)
+_FORM_SHAPE_WORDS: Final = frozenset(
+    {"BOX", "BOXES", "CASILLA", "CASILLAS", "FORM", "RECORD", "RECORDS", "ROW", "ROWS"}
+)
+"""A name counting a form's own parts: cutting a sequence short at this number is the form's limit, not a view."""
+_IDENTITY_NUMBERS: Final = frozenset({-1, 0, 1})
+_VALUE_KEYWORDS: Final = frozenset({"base", "count", "default", "offset", "position", "start", "step", "limit_rows"})
+"""These keywords take a position or a count, and a fiscal value just as well: they speak only for a small number."""
 _SMALL_COUNT: Final = 13
 """Below this a bare integer is more often a position, a count or a width than a fact: the stated limit of the sweep."""
 _KEYWORD_MECHANICS: Final = frozenset(
@@ -286,6 +355,21 @@ _KEYWORD_MECHANICS: Final = frozenset(
     }
 )
 _YEAR_ARITHMETIC_CALLS: Final = frozenset({"range"})
+_DECIMAL_MODULE_NAMES: Final = frozenset({"Decimal"})
+_TEXT_NUMBER: Final = re.compile(r"^-?\d+(?:[.,]\d+)?$")
+_NUMBER_CALLS: Final = frozenset({"float", "int"})
+_DATE_TEXTS: Final = (
+    re.compile(r"^(?:0[1-9]|[12]\d|3[01])[/-](?:0[1-9]|1[0-2])[/-](?:19|20)\d{2}$"),
+    re.compile(r"^(?:19|20)\d{2}(?:0[1-9]|1[0-2])(?:0[1-9]|[12]\d|3[01])$"),
+    re.compile(r"^(?:0[1-9]|1[0-2])-(?:0[1-9]|[12]\d|3[01])$"),
+)
+_SPELLED_BOX: Final = re.compile(r"(?i)^(?:[a-z_]*_)?casilla[_ -]?\d{2,4}$")
+_SPELLED_FORM: Final = re.compile(r"^(?:M|MODELO[_ -]?)(\d{3})$")
+_CODE_LIST: Final = re.compile(r"^\d{2,4}[A-Z]?(?:[,;\s]+\d{2,4}[A-Z]?)+$")
+_CODE_LETTERS: Final = re.compile(r"^[A-Z]{2,}$")
+_MODELO_TAIL: Final = re.compile(r"(?:^|_)(?:modelos?(?:_ids?|_codes?)?|models?)$", re.IGNORECASE)
+_PERIOD_TAIL: Final = re.compile(r"(?:^|_)(?:periods?(?:_codes?|_tokens?)?|quarters?|registry_token)$", re.IGNORECASE)
+_EDITION_TAIL: Final = re.compile(r"(?:^|_)(?:revision_id|design_epoch)$", re.IGNORECASE)
 _POSITIONAL_MECHANICS: Final = frozenset(
     {"ElidedProse", "_percentile", "chr", "divmod", "getattr", "int", "open", "sleep", "wait_for_timeout"}
 )
@@ -301,6 +385,15 @@ _STANDARD_SHAPE_FUNCTION: Final = re.compile(
     r"(?:^|_|\.)(?:yyyymmdd|ddmmyyyy|territory_definition|jurisdictions|modelo_code|selector_address)(?:_|\.|s?$)",
     re.IGNORECASE,
 )
+_STANDARD_SHAPE_WIDTHS: Final = {
+    "yyyymmdd": 8,
+    "ddmmyyyy": 8,
+    "territory_definition": 5,
+    "jurisdictions": 2,
+    "modelo_code": 3,
+    "selector_address": 16,
+}
+"""A standard shape states one width: a function so named is excused for that width and no other."""
 _PATTERN_CALLS: Final = frozenset({"Field", "StringConstraints", "constr"})
 _REGEX_CALLS: Final = frozenset(
     {"compile", "match", "fullmatch", "search", "sub", "subn", "findall", "finditer", "split"}
@@ -309,10 +402,10 @@ _WIDTH_QUANTIFIER: Final = re.compile(r"(\[[^\]]*\]|\\[A-Za-z]|\.|\))\{(\d+)(?:,
 _HEX_CLASSES: Final = frozenset({"[0-9a-f]", "[a-f0-9]", "[0-9A-Fa-f]", "[A-Fa-f0-9]", "[0-9a-fA-F]", "[a-fA-F0-9]"})
 _CALENDAR_RANGES: Final = frozenset({(1, 12), (1, 31), (1, 53), (1, 366), (365, 366), (1, 7), (1900, 9999)})
 _CALENDAR_VALUES: Final = frozenset({7, 12, 24, 28, 29, 30, 31, 52, 53, 60, 365, 366, 1900, 9999})
-_DAY_WORDS: Final = frozenset({"DAY", "DAYS", "DIA", "DIAS", "MONTH", "MONTHS", "WEEK", "WEEKS", "YEAR", "YEARS"})
+_DAY_WORDS: Final = frozenset({"DAY", "DAYS", "DIA", "DIAS"})
 _CALENDAR_UNITS: Final = {
     7: frozenset({"WEEK", "WEEKS", "DAY", "DAYS"}),
-    12: frozenset({"MONTH", "MONTHS", "MESES", "YEAR"}),
+    12: frozenset({"MONTH", "MONTHS", "MESES"}),
     24: frozenset({"HOUR", "HOURS", "DAY"}),
     28: _DAY_WORDS,
     29: _DAY_WORDS,
@@ -329,6 +422,8 @@ _ARITHMETIC_PERCENT: Final = 100
 _FIRST_YEAR: Final = 1900
 _LAST_YEAR: Final = 2100
 _YEAR_ENDPOINTS: Final = frozenset({(1, 1), (12, 31)})
+_LEAP_DAY_SHIFT: Final = (2, 28)
+"""Where a year's shift lands the day after a 29 February: the calendar, not a due date."""
 _MONTH_TUPLE_LENGTH: Final = 3
 _MONTHS_OF_A_YEAR: Final = 12
 _DAYS_OF_A_YEAR: Final = frozenset({365, 366})
@@ -389,6 +484,11 @@ def _wire_capacity(value: float) -> bool:
     )
 
 
+def _collection_capacity(value: float) -> bool:
+    """A collection's capacity is a power of two or a round ten thousand: no form holds that many rows of its own."""
+    return _machine_capacity(value) or (_wire_capacity(value) and value >= _COLLECTION_WIRE_FLOOR)
+
+
 def _single_code_letter(value: object) -> bool:
     return isinstance(value, str) and _SINGLE_CODE_LETTER.fullmatch(value) is not None
 
@@ -398,8 +498,52 @@ def _name_words(name: str) -> frozenset[str]:
     return frozenset(str(word).upper() for word in re.split(r"[^A-Za-z0-9]+|(?<=[a-z0-9])(?=[A-Z])", name) if word)
 
 
-def _lawful_range(low: float | None, high: float | None) -> bool:
-    """Return whether a ``Field``'s numeric bounds state arithmetic, a calendar range or a capacity."""
+def _tax_name(name: str) -> bool:
+    return bool(_name_words(_NON_TAX_PHRASE.sub("_", name)) & _TAX_WORDS)
+
+
+def _bare_limit(name: str) -> bool:
+    """A name that is only a limit word says nothing of what it limits."""
+    return _limit_name(name) and _name_words(name) <= _LIMIT_WORDS
+
+
+def _limit_name(name: str) -> bool:
+    return bool(_name_words(name) & _LIMIT_WORDS)
+
+
+def _machine_unit_name(name: str) -> bool:
+    """A unit speaks for a name unless the name also says tax, or a limit under a unit that can mean anything."""
+    if not _MACHINE_UNIT_NAME.search(name) or _tax_name(name):
+        return False
+    return not (_limit_name(name) and _name_words(name) & _AMBIGUOUS_UNIT_WORDS)
+
+
+def _mechanic_name(name: str) -> bool:
+    """A mechanic word or a lexical phrase speaks for a name unless the name also says tax."""
+    if _tax_name(name):
+        return False
+    words = re.split(r"[^A-Za-z0-9]+", name.strip("_"))
+    return bool(_name_words(name) & _PRODUCT_MECHANIC_WORDS) or (
+        bool(_LEXICAL_NAME.search(name)) and words[-1].upper() not in _LIMIT_WORDS
+    )
+
+
+def _terminal_name(node: ast.AST) -> str:
+    """Return the name a side of a comparison ends in: ``casilla`` of ``period.casilla``."""
+    if isinstance(node, ast.Attribute):
+        return node.attr
+    if isinstance(node, ast.Name):
+        return node.id
+    return _called_name(node) if isinstance(node, ast.Call) else ""
+
+
+def _lawful_range(low: float | None, high: float | None, name: str = "") -> bool:
+    """Return whether a ``Field``'s numeric bounds state arithmetic, a calendar range or a capacity.
+
+    A name spoken of a fact keeps only arithmetic bounds: ``rate`` from one to twelve is not a month.
+    """
+    if _tax_name(name) or "clave" in name.lower():
+        return all(bound is None or bound in _ARITHMETIC_BOUNDS for bound in (low, high))
     if (low, high) in _CALENDAR_RANGES:
         return True
     return all(bound is None or bound in _ARITHMETIC_BOUNDS or _machine_capacity(bound) for bound in (low, high))
@@ -417,7 +561,7 @@ def _lawful_length(low: float | None, high: float | None, pattern: str | None) -
         return True
     if low is not None and low not in _ARITHMETIC_BOUNDS:
         return False
-    return high is None or high in _ARITHMETIC_BOUNDS or _wire_capacity(high)
+    return high is None or high in _ARITHMETIC_BOUNDS or _collection_capacity(high)
 
 
 def _lawful_decimal(text: str) -> bool:
@@ -428,6 +572,13 @@ def _lawful_decimal(text: str) -> bool:
     if not value.is_finite():
         return True
     return value in {Decimal(0), Decimal(1), Decimal(100), Decimal(-1)} or _cent_or_finer(value)
+
+
+def _cent_or_finer_text(text: str) -> bool:
+    try:
+        return _cent_or_finer(Decimal(text))
+    except InvalidOperation:
+        return False
 
 
 def _cent_or_finer(value: Decimal) -> bool:
@@ -442,10 +593,25 @@ def _rounding_quantum(value: Decimal) -> bool:
 def _constant_number(node: ast.AST | None) -> float | None:
     if isinstance(node, ast.Constant) and isinstance(node.value, (int, float)) and not isinstance(node.value, bool):
         return node.value
-    if isinstance(node, ast.UnaryOp) and isinstance(node.op, ast.USub):
+    if isinstance(node, ast.UnaryOp) and isinstance(node.op, (ast.USub, ast.UAdd)):
         inner = _constant_number(node.operand)
-        return None if inner is None else -inner
+        if inner is None:
+            return None
+        return -inner if isinstance(node.op, ast.USub) else inner
     return None
+
+
+def _is_hundred(node: ast.AST) -> bool:
+    """Return whether ``node`` spells the per cent scale, as a number or a ``Decimal``."""
+    if _constant_number(node) == _ARITHMETIC_PERCENT:
+        return True
+    return (
+        isinstance(node, ast.Call)
+        and _called_name(node) == "Decimal"
+        and len(node.args) == 1
+        and isinstance(node.args[0], ast.Constant)
+        and str(node.args[0].value) == str(_ARITHMETIC_PERCENT)
+    )
 
 
 @cache
@@ -603,9 +769,67 @@ class _Sweep(ast.NodeVisitor):
         self._docstrings = _docstrings(tree)
         self._modelos = modelos
         self._periods = periods
+        self._modelo_names = self._names_holding_a_form()
+        self._decimal_names = _DECIMAL_MODULE_NAMES | {
+            alias.asname
+            for statement in ast.walk(tree)
+            if isinstance(statement, ast.ImportFrom) and statement.module == "decimal"
+            for alias in statement.names
+            if alias.name == "Decimal" and alias.asname
+        }
         self.findings: list[str] = []
 
+    def _names_holding_a_form(self) -> frozenset[str]:
+        return frozenset(
+            target.id
+            for statement in ast.walk(self._tree)
+            if isinstance(statement, ast.Assign) and self._form_code_of(statement.value) is not None
+            for target in statement.targets
+            if isinstance(target, ast.Name)
+        )
+
+    def _form_code_of(self, node: ast.AST | None) -> str | None:
+        """Return the form code spelled by ``node``: a literal, ``Modelo('303')`` or its ``.value``."""
+        if isinstance(node, ast.Attribute) and node.attr == "value":
+            node = node.value
+        if isinstance(node, ast.Call) and _called_name(node) == "Modelo" and node.args:
+            node = node.args[0]
+        if isinstance(node, ast.Constant) and isinstance(node.value, str) and node.value in self._modelos:
+            return node.value
+        return None
+
+    def _reads_name(self, name: str) -> bool:
+        """A tax word in a name is read even in an owner that only lays values out."""
+        return self._holds_facts() or (not self._machine and _tax_name(name))
+
+    def _measures_the_sheet(self, node: ast.AST) -> bool:
+        """Return whether a name around ``node`` says it measures a worksheet."""
+        current = node
+        while current is not None:
+            names: list[str] = []
+            if isinstance(current, ast.keyword):
+                names.append(current.arg or "")
+            elif isinstance(current, ast.Assign):
+                names += [_expression_names(target) for target in current.targets]
+            elif isinstance(current, (ast.AnnAssign, ast.For)):
+                names.append(_expression_names(current.target))
+            elif isinstance(current, ast.Compare):
+                names.append(_expression_names(current))
+            elif isinstance(current, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                names.append(current.name)
+            joined = "_".join(names).replace(" ", "_")
+            if _name_words(joined) & _SHEET_GEOMETRY_WORDS and not _tax_name(joined):
+                return True
+            current = self._parents.get(current)
+        return False
+
     def _report(self, kind: str, value: object, node: ast.AST) -> None:
+        if (
+            kind in _SHEET_MEASURES
+            and self._owner.startswith(_SHEET_GEOMETRY_OWNERS)
+            and self._measures_the_sheet(node)
+        ):
+            return
         self.findings.append(f"{kind}:{value!r}@{getattr(node, 'lineno', 0)}")
 
     def _enclosing_function(self, node: ast.AST) -> str:
@@ -643,16 +867,27 @@ class _Sweep(ast.NodeVisitor):
                 and not self._named_value_admitted(target.id, number)
             ):
                 self._report("module_value", f"{target.id}={number}", statement)
+            form = self._form_code_of(value)
+            if form is not None and form != self._own_form and isinstance(target, ast.Name):
+                self._report("named_form", f"{target.id}={form}", statement)
         self.generic_visit(node)
 
+    def _spells_another_form(self, value: str) -> bool:
+        spelled = _SPELLED_FORM.match(value)
+        return spelled is not None and spelled[1] in self._modelos and spelled[1] != self._own_form
+
     def _named_value_admitted(self, name: str, number: float) -> bool:
-        if self._machine or self._owner.startswith(_MECHANICS_OWNERS) or _MACHINE_UNIT_NAME.search(name):
+        if self._machine:
             return True
-        if _name_words(name) & _PRODUCT_MECHANIC_WORDS or _LEXICAL_NAME.search(name):
+        if _tax_name(name):
+            return number in _IDENTITY_NUMBERS
+        if self._owner.startswith(_MECHANICS_OWNERS) or _machine_unit_name(name) or _mechanic_name(name):
             return True
         if _FILE_PERMISSION_NAME.search(name) and number in _FILE_PERMISSIONS:
             return True
-        if number in _ARITHMETIC_COMPARE or _machine_capacity(number) or self._names_its_calendar_unit(name, number):
+        if number in _ARITHMETIC_COMPARE:
+            return True
+        if self._names_its_calendar_unit(name, number) or (_machine_capacity(number) and not _bare_limit(name)):
             return True
         if number in {_FIRST_YEAR, _LAST_YEAR} and _YEAR_NAME.search(name):
             return True
@@ -676,11 +911,17 @@ class _Sweep(ast.NodeVisitor):
         return bool(reads) and all(self._is_max_length(read) for read in reads)
 
     def _is_max_length(self, read: ast.Name) -> bool:
+        """A wire capacity bounds a text: the longest a value may be, not how many rows a form holds."""
         parent = self._parents.get(read)
-        return isinstance(parent, ast.keyword) and parent.arg == "max_length"
+        if not (isinstance(parent, ast.keyword) and parent.arg == "max_length"):
+            return False
+        _field, annotation = self._constraint_declaration(read)
+        return _annotation_kind(annotation, self._tree, self._module) != "collection"
 
     def _only_cuts_a_sequence_short(self, name: str) -> bool:
-        """Return whether every read of ``name`` in this module is a slice's end."""
+        """Return whether every read of ``name`` in this module is a slice's end, and it counts no part of a form."""
+        if _name_words(name) & _FORM_SHAPE_WORDS:
+            return False
         reads = [
             node
             for node in ast.walk(self._tree)
@@ -696,6 +937,8 @@ class _Sweep(ast.NodeVisitor):
         current = node
         while current in self._parents:
             current = self._parents[current]
+            if isinstance(current, ast.arg):
+                return current.arg, current.annotation
             if isinstance(current, ast.AnnAssign):
                 return _expression_names(current.target), current.annotation
             if isinstance(current, ast.TypeAlias):
@@ -945,7 +1188,7 @@ class _Sweep(ast.NodeVisitor):
     def _technical_bound(self, node: ast.Call, low: float | None, high: float | None) -> bool:
         field, _annotation = self._constraint_declaration(node)
         owner = self._owner
-        if _MACHINE_UNIT_NAME.search(field):
+        if _machine_unit_name(field):
             return True
         if low == _THOUSAND and high is None and _YEAR_NAME.search(field):
             return True
@@ -1064,28 +1307,62 @@ class _Sweep(ast.NodeVisitor):
             current = parent
         return ""
 
-    def _stands_as_address(self, node: ast.Constant) -> bool:
+    def _own_side_names(self, node: ast.AST) -> tuple[str, ...]:
+        """Return the names the literal itself stands under, read from its own side of what holds it.
+
+        ``period.casilla == '0208'`` stands under ``casilla``, not under ``period``. ``box_token = '0208'`` stands
+        under the whole of its target, which is what a tail rule then reads.
+        """
+        current = node
+        while current in self._parents:
+            parent = self._parents[current]
+            if isinstance(parent, ast.Compare):
+                sides = (parent.left, *parent.comparators)
+                return tuple(_terminal_name(side) for side in sides if side is not current)
+            if isinstance(parent, ast.keyword):
+                return (parent.arg or "",)
+            if isinstance(parent, ast.Assign):
+                return tuple(_terminal_name(target) for target in parent.targets)
+            if isinstance(parent, ast.AnnAssign):
+                return (_terminal_name(parent.target),)
+            if isinstance(parent, ast.Call) and _called_name(parent) not in _COLLECTION_CALLS:
+                return (_called_name(parent),)
+            if isinstance(parent, (ast.stmt, ast.Lambda)):
+                return ()
+            current = parent
+        return ()
+
+    def _stands_as_address(self, node: ast.Constant, tail: re.Pattern[str]) -> bool:
         parent = self._parents.get(node)
         if isinstance(parent, ast.Call) and _called_name(parent) in _MODELO_ADDRESS_CALLS:
-            return True
+            return tail is _MODELO_TAIL
         if isinstance(parent, ast.keyword) and parent.arg in _ADDRESS_KEYWORDS:
             return True
-        context = self._annotated_context(node)
-        return bool(_MODELO_NAME.search(context) or _PERIOD_NAME.search(context))
+        return any(tail.search(name) for name in self._own_side_names(node))
 
     @override
     def visit_Call(self, node: ast.Call) -> None:
         name = _called_name(node)
         keywords = {keyword.arg: keyword.value for keyword in node.keywords}
-        if name == "Decimal" and len(node.args) == 1:
-            argument = node.args[0]
+        if name in self._decimal_names and (len(node.args) == 1 or "value" in keywords):
+            argument = node.args[0] if node.args else keywords["value"]
             literal = argument.value if isinstance(argument, ast.Constant) else None
-            if (
-                isinstance(literal, (str, int, float))
-                and not _lawful_decimal(str(literal))
-                and not self._quantizes_to(node, str(literal))
-            ):
-                self._report("decimal", literal, node)
+            if isinstance(literal, (str, int, float)) and not self._quantizes_to(node, str(literal)):
+                held_under_tax = _cent_or_finer_text(str(literal)) and _tax_name(
+                    self._annotated_context(node).replace(" ", "_")
+                )
+                if held_under_tax or not _lawful_decimal(str(literal)):
+                    self._report("decimal", literal, node)
+        if name == "Fraction" and len(node.args) == 2 and _is_hundred(node.args[1]):
+            self._report("percent", _constant_number(node.args[0]), node)
+        if name in _NUMBER_CALLS and node.args and self._holds_facts():
+            self._visit_number_call(node)
+        if name == "startswith" and self._holds_facts() and node.args:
+            argument = node.args[0]
+            if isinstance(argument, ast.Constant) and _single_code_letter(argument.value):
+                self._report("letter_compare", argument.value, node)
+        if name == "replace" and self._holds_facts():
+            self._visit_date_replacement(node, keywords)
         if name in _PATTERN_CALLS:
             self._visit_constraints(node, keywords)
         if self._form_handing:
@@ -1099,11 +1376,28 @@ class _Sweep(ast.NodeVisitor):
                 number = _constant_number(span)
                 if number is not None and number not in _ARITHMETIC_BOUNDS:
                     self._report("timedelta", number, node)
-        if name in _DATE_CALLS and len(node.args) >= 3:
-            self._visit_date(node)
+        if name in _DATE_CALLS and (len(node.args) >= 3 or {"month", "day"} <= keywords.keys()):
+            self._visit_date(node, keywords)
         if self._holds_facts():
             self._visit_number_arguments(node, name)
         self.generic_visit(node)
+
+    def _visit_number_call(self, node: ast.Call) -> None:
+        """``int('12450')`` and ``float('300.51')`` hold what the text says; ``int(raw, 16)`` holds nothing."""
+        argument = node.args[0]
+        text = argument.value if isinstance(argument, ast.Constant) and isinstance(argument.value, str) else None
+        number = _constant_number(argument)
+        if text is not None and _TEXT_NUMBER.match(text):
+            number = float(text.replace(",", "."))
+        if number is not None and len(node.args) == 1 and self._may_be_fact(number, ""):
+            self._report("call_value", f"{_called_name(node)}({number})", node)
+
+    def _visit_date_replacement(self, node: ast.Call, keywords: dict[str | None, ast.expr]) -> None:
+        month, day = _constant_number(keywords.get("month")), _constant_number(keywords.get("day"))
+        if (month is None and day is None) or (month, day) in _YEAR_ENDPOINTS or (month, day) == _LEAP_DAY_SHIFT:
+            return
+        if month not in {None, 1, 12} or day not in {None, 1, 31}:
+            self._report("date_literal", (month, day), node)
 
     def _quantizes_to(self, node: ast.Call, literal: str) -> bool:
         """A power of ten handed straight to ``quantize`` is a precision, whatever its size."""
@@ -1122,13 +1416,32 @@ class _Sweep(ast.NodeVisitor):
         if name in {"min", "max"}:
             for argument in node.args:
                 number = _constant_number(argument)
-                if number is not None and number not in _ARITHMETIC_OPERANDS and not _machine_capacity(number):
+                spoken_of_tax = _tax_name(self._annotated_context(node).replace(" ", "_"))
+                if (
+                    number is not None
+                    and number not in _ARITHMETIC_OPERANDS
+                    and (spoken_of_tax or not _machine_capacity(number))
+                ):
                     self._report("clamp", number, node)
         if name in _YEAR_ARITHMETIC_CALLS:
             for argument in node.args:
                 number = _constant_number(argument)
                 if number is not None and _FIRST_YEAR < number < _LAST_YEAR:
                     self._report("year_range", number, node)
+                elif (
+                    number is not None
+                    and number >= _SMALL_COUNT
+                    and number != _MONTHS_OF_A_YEAR + 1
+                    and number not in _ARITHMETIC_OPERANDS
+                    and not _machine_capacity(number)
+                ):
+                    self._report("call_value", f"{name}({number})", node)
+        if name == "getattr" and len(node.args) == 3 and isinstance(node.args[1], ast.Constant):
+            number = _constant_number(node.args[2])
+            if number is not None and self._may_be_fact(number, str(node.args[1].value)):
+                self._report("call_value", f"getattr({node.args[1].value}, {number})", node)
+        if name == "Field":
+            self._visit_field_default(node)
         if name in _PATTERN_CALLS or name in {"Decimal", "timedelta", *_DATE_CALLS}:
             return
         for argument in node.args:
@@ -1146,11 +1459,29 @@ class _Sweep(ast.NodeVisitor):
             if number is not None and self._may_be_fact(number, keyword or ""):
                 self._report("keyword_value", f"{keyword}={number}", node)
 
+    def _visit_field_default(self, node: ast.Call) -> None:
+        """A field's default is judged under the field's own name, not under the word ``default``."""
+        defaults = {keyword.arg: keyword.value for keyword in node.keywords}
+        number = _constant_number(defaults.get("default", node.args[0] if node.args else None))
+        field, _annotation = self._constraint_declaration(node)
+        if number is not None and self._may_be_fact(number, field):
+            self._report("field_default", f"{field}={number}", node)
+
     def _may_be_fact(self, number: float, name: str) -> bool:
         """Return whether a bare number under ``name`` can be a tax value rather than a position or unit."""
-        if number in _ARITHMETIC_OPERANDS or _machine_capacity(number) or name in _KEYWORD_MECHANICS:
+        if _tax_name(name):
+            return number not in _IDENTITY_NUMBERS
+        if name in _VALUE_KEYWORDS:
+            return not (isinstance(number, int) and number < _SMALL_COUNT) and not _machine_capacity(number)
+        if self._owner.startswith("core/config") and name.startswith("cadrumo_"):
             return False
-        if _MACHINE_UNIT_NAME.search(name) or _name_words(name) & _PRODUCT_MECHANIC_WORDS or _LEXICAL_NAME.search(name):
+        if number in _ARITHMETIC_OPERANDS or name in _KEYWORD_MECHANICS:
+            return False
+        if _machine_capacity(number):
+            return False
+        if self._owner.startswith(_SHEET_GEOMETRY_OWNERS) and _name_words(name) & _SHEET_GEOMETRY_WORDS:
+            return False
+        if _machine_unit_name(name) or _mechanic_name(name):
             return False
         if _FILE_PERMISSION_NAME.search(name) and number in _FILE_PERMISSIONS:
             return False
@@ -1160,24 +1491,62 @@ class _Sweep(ast.NodeVisitor):
 
     @override
     def visit_BinOp(self, node: ast.BinOp) -> None:
-        if self._holds_facts() and isinstance(node.op, (ast.Add, ast.Sub, ast.Mult, ast.Div, ast.FloorDiv)):
+        if self._holds_facts() and isinstance(node.op, (ast.Add, ast.Sub, ast.Mult, ast.Div, ast.FloorDiv, ast.Mod)):
             scale = self._percent_scale(node)
             if scale is not None:
                 self._report("percent", scale, node)
             elif _folded_number(node) is None:
-                for side in (node.left, node.right):
+                for side, other in ((node.left, node.right), (node.right, node.left)):
                     number = _constant_number(side)
-                    if number is not None and not self._mechanical_operand(number, node):
+                    if number is not None and not self._mechanical_operand(number, node.op, other, node):
                         self._report("arithmetic", number, node)
         self.generic_visit(node)
 
-    def _mechanical_operand(self, number: float, node: ast.BinOp) -> bool:
+    @override
+    def visit_AugAssign(self, node: ast.AugAssign) -> None:
+        number = _constant_number(node.value)
+        if (
+            self._holds_facts()
+            and number is not None
+            and isinstance(node.op, (ast.Add, ast.Sub, ast.Mult, ast.Div, ast.FloorDiv, ast.Mod))
+            and not self._mechanical_operand(number, node.op, node.target, node)
+        ):
+            self._report("arithmetic", number, node)
+        self.generic_visit(node)
+
+    @override
+    def visit_BoolOp(self, node: ast.BoolOp) -> None:
+        for value in node.values:
+            self._visit_bare_result(value, node)
+        self.generic_visit(node)
+
+    @override
+    def visit_NamedExpr(self, node: ast.NamedExpr) -> None:
+        self._visit_inner_binding(node.target, node.value, node)
+        self.generic_visit(node)
+
+    @override
+    def visit_Yield(self, node: ast.Yield) -> None:
+        self._visit_bare_result(node.value, node)
+        self.generic_visit(node)
+
+    @override
+    def visit_Lambda(self, node: ast.Lambda) -> None:
+        self._visit_defaults(node)
+        self._visit_bare_result(node.body, node)
+        self.generic_visit(node)
+
+    @override
+    def visit_FormattedValue(self, node: ast.FormattedValue) -> None:
+        self._visit_bare_result(node.value, node)
+        self.generic_visit(node)
+
+    def _mechanical_operand(self, number: float, op: ast.operator, other: ast.AST, node: ast.AST) -> bool:
         if number in _ARITHMETIC_OPERANDS or _machine_capacity(number):
             return True
-        if number in _UNIT_CONVERSIONS and isinstance(node.op, (ast.Mult, ast.Div, ast.FloorDiv)):
+        if number in _UNIT_CONVERSIONS and isinstance(op, (ast.Mult, ast.Div, ast.FloorDiv)):
             return True
-        clock = node.left if number == _constant_number(node.right) else node.right
-        if isinstance(clock, ast.Call) and _called_name(clock) in _CLOCK_CALLS:
+        if isinstance(other, ast.Call) and _called_name(other) in _CLOCK_CALLS:
             return True
         if number in _CALENDAR_VALUES and _name_words(_expression_names(node).replace(" ", "_")) & _CALENDAR_UNITS.get(
             number, frozenset()
@@ -1187,9 +1556,27 @@ class _Sweep(ast.NodeVisitor):
 
     @staticmethod
     def _percent_scale(node: ast.BinOp) -> float | None:
-        """``amount * 19 / 100`` holds a rate whatever its size: the scale is what proves it."""
-        if not isinstance(node.op, ast.Div) or _constant_number(node.right) != _ARITHMETIC_PERCENT:
+        """A rate written with the per cent scale, whatever its size and whichever order it is written in.
+
+        ``amount * 19 / 100``, ``amount / 100 * 19``, ``amount * (19 / 100)``, ``amount * 19 // 100``.
+        """
+        if isinstance(node.op, ast.Mult):
+            for side, other in ((node.left, node.right), (node.right, node.left)):
+                number = _constant_number(other)
+                if (
+                    number is not None
+                    and number not in _ARITHMETIC_BOUNDS
+                    and isinstance(side, ast.BinOp)
+                    and isinstance(side.op, (ast.Div, ast.FloorDiv))
+                    and _is_hundred(side.right)
+                ):
+                    return number
             return None
+        if not isinstance(node.op, (ast.Div, ast.FloorDiv)) or not _is_hundred(node.right):
+            return None
+        direct = _constant_number(node.left)
+        if direct is not None and direct not in _ARITHMETIC_BOUNDS and direct != _ARITHMETIC_PERCENT:
+            return direct
         product = node.left
         if not isinstance(product, ast.BinOp) or not isinstance(product.op, ast.Mult):
             return None
@@ -1226,15 +1613,13 @@ class _Sweep(ast.NodeVisitor):
         if number is not None and self._holds_facts() and self._may_be_fact(number, self._annotated_context(node)):
             self._report("result_value", number, node)
 
-    def _visit_defaults(self, node: ast.FunctionDef | ast.AsyncFunctionDef) -> None:
-        if not self._holds_facts():
-            return
+    def _visit_defaults(self, node: ast.FunctionDef | ast.AsyncFunctionDef | ast.Lambda) -> None:
         arguments = [*node.args.posonlyargs, *node.args.args]
         positional = zip(reversed(arguments), reversed(node.args.defaults), strict=False)
         keyword_only = zip(node.args.kwonlyargs, node.args.kw_defaults, strict=True)
         for argument, default in (*positional, *keyword_only):
             number = _constant_number(default)
-            if number is not None and self._may_be_fact(number, argument.arg):
+            if number is not None and self._reads_name(argument.arg) and self._may_be_fact(number, argument.arg):
                 self._report("default_value", f"{argument.arg}={number}", node)
 
     @override
@@ -1249,13 +1634,13 @@ class _Sweep(ast.NodeVisitor):
             self._visit_inner_binding(node.target, node.value, node)
         self.generic_visit(node)
 
-    def _visit_inner_binding(self, target: ast.AST, value: ast.AST, node: ast.stmt) -> None:
+    def _visit_inner_binding(self, target: ast.AST, value: ast.AST, node: ast.AST) -> None:
         """A class attribute or a local holds a number as a module constant does."""
-        if isinstance(self._parents.get(node), ast.Module) or not self._holds_facts():
+        if isinstance(self._parents.get(node), ast.Module):
             return
         number = _folded_number(value)
         name = _reader_name(target)
-        if number is not None and name and self._may_be_fact(number, name):
+        if number is not None and name and self._reads_name(name) and self._may_be_fact(number, name):
             self._report("inner_value", f"{name}={number}", node)
 
     def _visit_form_width_call(self, node: ast.Call, name: str, keywords: dict[str | None, ast.expr]) -> None:
@@ -1301,7 +1686,8 @@ class _Sweep(ast.NodeVisitor):
             self._visit_regex(pattern, node)
         low = _constant_number(keywords.get("ge", keywords.get("gt")))
         high = _constant_number(keywords.get("le", keywords.get("lt")))
-        if not _lawful_range(low, high) and not self._technical_bound(node, low, high):
+        declared, _ = self._constraint_declaration(node)
+        if not _lawful_range(low, high, declared.replace(" ", "_")) and not self._technical_bound(node, low, high):
             self._report("field_bound", (low, high), node)
         lengths = {arg: _constant_number(keywords.get(arg)) for arg in _LENGTH_BOUNDS}
         _field, annotation = self._constraint_declaration(node)
@@ -1343,8 +1729,10 @@ class _Sweep(ast.NodeVisitor):
             if members and _CLAVE_NAME.search(field) and not _COUNTRY_NAME.search(field):
                 self._report("letter_clave", members, node)
 
-    def _visit_date(self, node: ast.Call) -> None:
-        year, month, day = (_constant_number(argument) for argument in node.args[:3])
+    def _visit_date(self, node: ast.Call, keywords: dict[str | None, ast.expr]) -> None:
+        parts = [*node.args[:3]]
+        parts += [keywords.get(part) for part in ("year", "month", "day")[len(parts) :]]
+        year, month, day = (_constant_number(argument) for argument in parts)
         if year is not None:
             if (year, month, day) not in _EPOCHS:
                 self._report("date_literal", (year, month, day), node)
@@ -1363,8 +1751,9 @@ class _Sweep(ast.NodeVisitor):
         reads_code_point = any(
             isinstance(side, ast.Call) and _called_name(side) == "ord" for side in (node.left, *node.comparators)
         )
+        spoken_of_tax = _tax_name(_expression_names(node).replace(" ", "_"))
         for side in (node.left, *node.comparators):
-            if self._modelo_literal(side):
+            if self._modelo_literal(side) or (isinstance(side, ast.Name) and side.id in self._modelo_names):
                 self._report("modelo_compare", ast.unparse(node), node)
             number = _constant_number(side)
             if number is None or reads_code_point:
@@ -1375,22 +1764,32 @@ class _Sweep(ast.NodeVisitor):
                 self._report("year_branch", number, node)
             elif (
                 number not in _ARITHMETIC_COMPARE
-                and not _machine_capacity(number)
+                and (spoken_of_tax or not _machine_capacity(number))
                 and not self._machine
                 and not structural_len
-                and number != _SHA256_HEX
-                and (is_len or not self._compares_its_calendar_unit(number, node))
-                and not (is_len and _STANDARD_SHAPE_FUNCTION.search(self._enclosing_function(node)))
+                and (spoken_of_tax or number != _SHA256_HEX)
+                and (is_len or spoken_of_tax or not self._compares_its_calendar_unit(number, node))
+                and not (is_len and self._standard_shape(node))
             ):
                 self._report("len_compare" if is_len else "threshold", number, node)
         self._visit_compared_members(node)
-        if self._form_handing and is_len and not _STANDARD_SHAPE_FUNCTION.search(self._enclosing_function(node)):
+        if self._form_handing and is_len and not self._standard_shape(node):
             self._visit_form_width_comparison(node, length_calls)
         if is_len and not self._machine and not structural_len:
             for side in node.comparators:
                 if isinstance(side, (ast.Set, ast.Tuple, ast.List)):
                     self._report("len_in", ast.unparse(side), node)
         self.generic_visit(node)
+
+    def _standard_shape(self, node: ast.Compare) -> bool:
+        """A function named for a standard shape may compare a length with that shape's one width."""
+        function = self._enclosing_function(node)
+        if not _STANDARD_SHAPE_FUNCTION.search(function) or _name_words(function.replace(".", "_")) & _FORM_SHAPE_WORDS:
+            return False
+        lowered = function.lower()
+        widths = {width for shape, width in _STANDARD_SHAPE_WIDTHS.items() if shape in lowered}
+        numbers = {_constant_number(side) for side in (node.left, *node.comparators)} - {None}
+        return numbers <= widths
 
     @staticmethod
     def _four_digit_year_shape(node: ast.Compare) -> bool:
@@ -1406,10 +1805,24 @@ class _Sweep(ast.NodeVisitor):
                     number = _constant_number(member)
                     if number is not None and _FIRST_YEAR < number < _LAST_YEAR:
                         self._report("year_branch", number, node)
+                    if self._modelo_literal(member):
+                        self._report("modelo_compare", ast.unparse(node), node)
                     if isinstance(member, ast.Constant) and self._letter_may_be_code(member.value, node):
                         self._report("letter_compare", member.value, node)
-            elif isinstance(side, ast.Constant) and self._letter_may_be_code(side.value, node):
+            elif isinstance(side, ast.Constant) and (
+                self._letter_may_be_code(side.value, node) or self._letters_may_be_codes(side.value, node)
+            ):
                 self._report("letter_compare", side.value, node)
+
+    def _letters_may_be_codes(self, value: object, node: ast.Compare) -> bool:
+        """``kind in 'AE'`` lists code letters in one string; country codes under their own name are not those."""
+        return (
+            isinstance(value, str)
+            and _CODE_LETTERS.fullmatch(value) is not None
+            and self._holds_facts()
+            and any(isinstance(operator, (ast.In, ast.NotIn)) for operator in node.ops)
+            and not _COUNTRY_NAME.search(_expression_names(node))
+        )
 
     def _reads_a_design_letter(self, value: object) -> bool:
         return value in _RECORD_DESIGN_LETTERS and self._owner.startswith(_RECORD_DESIGN_OWNERS)
@@ -1452,7 +1865,11 @@ class _Sweep(ast.NodeVisitor):
             for pattern in ast.walk(case.pattern):
                 if isinstance(pattern, ast.MatchValue) and isinstance(pattern.value, ast.Constant):
                     value = pattern.value.value
-                    if isinstance(value, (int, float)) or (isinstance(value, str) and _CODE_SHAPED.match(value)):
+                    if (
+                        isinstance(value, (int, float))
+                        or (isinstance(value, str) and _CODE_SHAPED.match(value))
+                        or (_single_code_letter(value) and self._holds_facts())
+                    ):
                         self._report("match_case", value, pattern)
         self.generic_visit(node)
 
@@ -1468,13 +1885,16 @@ class _Sweep(ast.NodeVisitor):
                 self._report("dict_key", key.value, key)
             if isinstance(key, ast.Constant) and _single_code_letter(key.value) and self._holds_facts():
                 self._report("letter_key", key.value, key)
+            key_number = _constant_number(key)
+            if key_number is not None and self._holds_facts() and self._may_be_fact(key_number, ""):
+                self._report("dict_key", key_number, key)
         for key, value in zip(node.keys, node.values, strict=True):
             number = _constant_number(value)
             if (
                 number is not None
-                and self._holds_facts()
                 and isinstance(key, ast.Constant)
                 and isinstance(key.value, str)
+                and self._reads_name(key.value)
                 and self._may_be_fact(number, key.value)
             ):
                 self._report("dict_value", f"{key.value}={number}", value)
@@ -1498,13 +1918,35 @@ class _Sweep(ast.NodeVisitor):
                     and spelled != _YES_NO_LETTERS
                 ):
                     self._report("literal_type", member.value, member)
+                number = _constant_number(member)
+                if (
+                    number is not None
+                    and number not in _IDENTITY_NUMBERS
+                    and self._holds_facts()
+                    and not self._literal_names_a_unit(node)
+                ):
+                    self._report("literal_type", number, member)
             return
         if self._form_handing and isinstance(node.slice, ast.Slice):
             for bound in (node.slice.lower, node.slice.upper):
                 number = _constant_number(bound)
                 if number is not None and number not in _ARITHMETIC_COMPARE and not _machine_capacity(number):
                     self._report("form_width", f"slice({number})", node)
+        self._visit_position(node)
         self.generic_visit(node)
+
+    def _visit_position(self, node: ast.Subscript) -> None:
+        """A position past the small counts can only be a count of rows some form holds."""
+        if not self._holds_facts():
+            return
+        for bound in (node.slice.lower, node.slice.upper) if isinstance(node.slice, ast.Slice) else (node.slice,):
+            number = _constant_number(bound)
+            if number is not None and number >= _SMALL_COUNT and not _machine_capacity(number):
+                self._report("position", number, node)
+
+    def _literal_names_a_unit(self, node: ast.AST) -> bool:
+        field, _annotation = self._constraint_declaration(node)
+        return _machine_unit_name(field.replace(" ", "_"))
 
     def _visit_collection(self, node: ast.Set | ast.Tuple | ast.List) -> None:
         months = [_constant_number(element) for element in node.elts]
@@ -1551,14 +1993,24 @@ class _Sweep(ast.NodeVisitor):
         parent = self._parents.get(node)
         if isinstance(parent, ast.Call) and _called_name(parent) == "Decimal":
             return
-        if _ISO_DATE.match(value):
+        if _ISO_DATE.match(value) or any(pattern.match(value) for pattern in _DATE_TEXTS):
             self._report("date_text", value, node)
+        elif _SPELLED_BOX.match(value) or _CODE_LIST.match(value) or self._spells_another_form(value):
+            self._report("code", value, node)
+        elif (
+            _TEXT_NUMBER.match(value)
+            and not _CODE_SHAPED.match(value)
+            and float(value.replace(",", ".")) not in _IDENTITY_NUMBERS
+            and self._holds_facts()
+            and bool(_name_words(self._annotated_context(node).replace(" ", "_")) & _FACT_WORDS)
+        ):
+            self._report("number_text", value, node)
         elif _CODE_SHAPED.match(value):
             if value == self._own_form or self._month_keyed(node):
                 return
             if self._defines_period_code(node) or self._is_command_path_segment(node):
                 return
-            if _EDITION_NAME.search(self._annotated_context(node)) and not isinstance(
+            if any(_EDITION_TAIL.search(name) for name in self._own_side_names(node)) and not isinstance(
                 self._parents.get(node), ast.Compare
             ):
                 return
@@ -1570,11 +2022,9 @@ class _Sweep(ast.NodeVisitor):
                 return
             if value.isdigit() and int(value) in _DAYS_OF_A_YEAR and _DAY_NAME.search(self._annotated_context(node)):
                 return
-            if value in self._periods and self._stands_as_address(node):
+            if value in self._periods and self._stands_as_address(node, _PERIOD_TAIL):
                 return
-            if value in self._modelos and self._stands_as_address(node):
-                return
-            if value not in self._modelos and value not in self._periods and self._stands_as_address(node):
+            if value in self._modelos and self._stands_as_address(node, _MODELO_TAIL):
                 return
             self._report("code", value, node)
         elif (
@@ -1717,7 +2167,7 @@ def test_the_sweep_rejects_a_representative_tax_literal(line: str, kind: str) ->
         "name: str = Field(max_length=4096)\n",
         "count: int = Field(ge=0)\n",
         "directory = operation.modelo_directory('303')\n",
-        "selected = Modelo('303')\n",
+        "def f():\n    selected = Modelo('303')\n    return load(selected)\n",
         "work = load(modelo='303', period='1T')\n",
         '"""A docstring may cite casilla 0208 and clave A."""\n',
         "label = 'A'\n",
@@ -2027,10 +2477,220 @@ def test_the_narrow_rules_do_not_reach_past_what_they_describe(source: str, owne
 
 @pytest.mark.parametrize(
     "source",
-    ["r = i - 5\n", "x = rows[3]\n", "LETTER = 'A'\n", "class Kind(StrEnum):\n    ENTREGA = 'E'\n"],
+    [
+        "r = i - 5\n",
+        "x = rows[3]\n",
+        "LETTER = 'A'\n",
+        "class Kind(StrEnum):\n    ENTREGA = 'E'\n",
+        "_RECTIFICATION_WINDOW_MONTHS = 12\n",
+        "if elapsed_days > 30:\n    pass\n",
+        "if months >= 12:\n    pass\n",
+        "def f():\n    return 10\n",
+        "r = 100 if c else 10\n",
+        "class T(IntEnum):\n    GENERAL = 10\n",
+        "r = x * Decimal('0.01')\n",
+        "ok = kind == 'AB'\n",
+        "r = 'A' if x else 'B'\n",
+        "def f(value):\n    return value.isdigit() and len(value) == 18\n",
+    ],
 )
 def test_the_stated_limit_of_the_sweep_holds(source: str) -> None:
     """Pins what the module docstring says the sweep cannot see, so the statement stays true."""
+    assert sweep_source(source, modelos=_FAKE_MODELOS, periods=_FAKE_PERIODS) == []
+
+
+@pytest.mark.parametrize(
+    "source",
+    [
+        "r = i * 0.19\n",
+        "r = min(i, 12450)\n",
+        "_LIMIT = 12450\n",
+        "kind: Literal['A']\n",
+        "ok = kind == 'A'\n",
+    ],
+)
+def test_the_stated_limit_of_a_layout_owner_holds(source: str) -> None:
+    owner = "entrypoints/tui/ledger/x.py"
+    assert sweep_source(source, modelos=_FAKE_MODELOS, periods=_FAKE_PERIODS, owner=owner) == []
+
+
+@pytest.mark.parametrize(
+    "source",
+    [
+        "MAX_AMORTIZATION_YEARS = 30\n",
+        "_PLAZO_DIAS = 30\n",
+        "_RETENTION_YEAR = 12\n",
+        "INCOME_PREVIEW_LIMIT = 12450\n",
+        "DEDUCTION_STATUS = 2000\n",
+        "REDUCCION_GAP = 2000\n",
+        "RATE_SUMMARY = 21\n",
+        "TIPO_DISPLAY = 21\n",
+        "LIMIT_S = 12450\n",
+        "CAP_POINTS = 2000\n",
+        "DEDUCTION_VERSION = 21\n",
+        "TIPO = 16\n",
+        "_MINIMUM = 64\n",
+        "RENTA_LINES = 18\n",
+        "MODELO_ID_LIMIT = 300\n",
+        "amount_s: int = Field(le=300)\n",
+    ],
+)
+def test_a_fact_word_outranks_a_unit_or_a_mechanic(source: str) -> None:
+    assert sweep_source(source, modelos=_FAKE_MODELOS, periods=_FAKE_PERIODS), source
+
+
+@pytest.mark.parametrize(
+    "source", ["RATE_SUMMARY = 21\n", "def f(deduction=300):\n    pass\n", "RATES = {'tipo': 21}\n"]
+)
+def test_a_tax_word_is_read_in_an_owner_that_only_lays_values_out(source: str) -> None:
+    owner = "entrypoints/tui/ledger/x.py"
+    assert sweep_source(source, modelos=_FAKE_MODELOS, periods=_FAKE_PERIODS, owner=owner), source
+
+
+@pytest.mark.parametrize(
+    "source",
+    [
+        "if period.casilla == '0208':\n    pass\n",
+        "if work.modelo_box == '0208':\n    pass\n",
+        "box_token = '0208'\n",
+        "PERIOD_BOX = '0208'\n",
+        "revision_id_box = '0208'\n",
+        "ok = modelo in ('303',)\n",
+        "ok = modelo in ['303']\n",
+        "_IVA_MODELO = '303'\n",
+        "_IVA = Modelo('303')\n",
+        "def f(x):\n    iva = Modelo('303')\n    return x == iva\n",
+    ],
+)
+def test_an_address_is_read_on_the_literals_own_side(source: str) -> None:
+    assert sweep_source(source, modelos=_FAKE_MODELOS, periods=_FAKE_PERIODS), source
+
+
+@pytest.mark.parametrize(
+    "source",
+    [
+        "i -= 5550\n",
+        "i *= 0.19\n",
+        "total += 300\n",
+        "r = i or 12450\n",
+        "(cap := 12450)\n",
+        "f = lambda i, cap=12450: i\n",
+        "def g():\n    yield 12450\n",
+        "def g():\n    for i in range(18):\n        pass\n",
+        "r = rows[18]\n",
+        "r = sum(rows[:18])\n",
+        "year: Literal[2023, 2024]\n",
+        "rate: Literal[21, 10, 4]\n",
+        "TABLE = {2023: 300, 2024: 400}\n",
+        "threshold: int = Field(default=12450)\n",
+        "threshold: int = Field(12450)\n",
+        "amount: Decimal = Field(default_factory=lambda: 12450)\n",
+        "r = f(i, base=12450)\n",
+        "r = f(i, default=12450)\n",
+        "r = f(i, count=18)\n",
+        "r = f(i, start=12450)\n",
+        "r = getattr(x, 'cap', 12450)\n",
+        "r = int(12450)\n",
+        "r = int('12450')\n",
+        "CAP = float('300.51')\n",
+        "LIMIT = '300.51'\n",
+        "RATES = {'general': '0.21'}\n",
+        "from decimal import Decimal as D\ncap = D('300.51')\n",
+        "cap = decimal.Decimal('300.51')\n",
+        "cap = Decimal(value='300.51')\n",
+        "rate = x * 4 / Decimal(100)\n",
+        "rate = x * 4 // 100\n",
+        "rate = x / 100 * 4\n",
+        "rate = x * (4 / 100)\n",
+        "x = Fraction(19, 100)\n",
+        "due = date(year=2024, month=6, day=30)\n",
+        "due = d.replace(month=6, day=30)\n",
+        "due = d.replace(month=7)\n",
+        "DEADLINE = '07-30'\n",
+        "DEADLINE = '30/06/2024'\n",
+        "DEADLINE = '20240630'\n",
+        "box = 'casilla_0208'\n",
+        "box = 'M303'\n",
+        "box = f'casilla_{208}'\n",
+        "_BOXES = '0208,0209'.split(',')\n",
+        "if income > 1900:\n    pass\n",
+        "if rent > 9999:\n    pass\n",
+        "if edad < 16:\n    pass\n",
+        "if turnover >= 1024:\n    pass\n",
+        "edad: int = Field(ge=16)\n",
+        "rate: int = Field(ge=1, le=12)\n",
+        "tipo: int = Field(ge=1, le=31)\n",
+        "clave: int = Field(ge=1, le=7)\n",
+        "rate = min(i, 64)\n",
+        "_FORM_ROWS = 18\nkept = rows[:_FORM_ROWS]\n",
+        "rows: tuple[int, ...] = Field(max_length=2000)\n",
+        "_ROWS = 40000\nrows: tuple[int, ...] = Field(max_length=_ROWS)\n",
+        "ok = kind in 'AE'\n",
+        "match kind:\n    case 'A':\n        pass\n",
+        "ok = kind.startswith('A')\n",
+        "def _row_modelo_code(rows):\n    return len(rows) == 18\n",
+        "def _rows_yyyymmdd(rows):\n    return len(rows) == 18\n",
+        "def _modelo_code(raw):\n    return len(raw) != 18\n",
+        "r = i % 300\n",
+        "_RATE = +21\n",
+    ],
+)
+def test_a_shape_a_value_could_hide_in_is_a_finding(source: str) -> None:
+    assert sweep_source(source, modelos=_FAKE_MODELOS, periods=_FAKE_PERIODS), source
+
+
+@pytest.mark.parametrize(
+    "source",
+    [
+        "r = i * 0.19\n",
+        "r = min(i, 12450)\n",
+        "RATES = {'general': 21}\n",
+        "_LIMIT = 12450\n",
+        "if income > 12450:\n    pass\n",
+        "r = i - 5550\n",
+    ],
+)
+@pytest.mark.parametrize(
+    "owner", ["application/storage/calc_sheets/engine.py", "application/modelo/reconciliation_export.py"]
+)
+def test_a_workbook_module_is_read_as_any_other(source: str, owner: str) -> None:
+    assert sweep_source(source, modelos=_FAKE_MODELOS, periods=_FAKE_PERIODS, owner=owner), source
+
+
+@pytest.mark.parametrize(
+    "source",
+    [
+        "_EUR_VALUE_COLUMN = 9\n",
+        "_VIEW_ROWS = 1000\n",
+        "_DATA_WIDTHS = ((1, 30), (2, 52))\n",
+        "def _column_width(header):\n    return 60\n",
+        "def height(text):\n    return max(44, 20 * (len(text) + 99))\n",
+        "protect(start_row=1, end_row=1000)\n",
+        "for wrap_col in (12, 15, 16):\n    pass\n",
+    ],
+)
+def test_a_workbook_module_holds_its_measures_under_names_that_say_so(source: str) -> None:
+    owner = "application/storage/calc_sheets/engine.py"
+    assert sweep_source(source, modelos=_FAKE_MODELOS, periods=_FAKE_PERIODS, owner=owner) == []
+
+
+@pytest.mark.parametrize(
+    "source",
+    [
+        "site_rate_limit_retry_after = 3\n",
+        "CADRUMO_RUNS_RETENTION_DAYS = 30\n",
+        "business_total: str = '0.00'\n",
+        "income_total: str = '0.00'\n",
+        "moment = d.replace(month=2, day=28)\n",
+        "for month in range(1, 13):\n    pass\n",
+        "_MAX_LEDGER_IMPORT_ROWS = 4096\n",
+        "_FILE_NAME_MAX_LENGTH = 255\n",
+        "_SCHEMA_VERSION = 3\n",
+        "def f(version: Literal[2]):\n    pass\n",
+        "ok = 'ES' in countries\n",
+    ],
+)
+def test_a_word_in_another_sense_is_not_a_finding(source: str) -> None:
     assert sweep_source(source, modelos=_FAKE_MODELOS, periods=_FAKE_PERIODS) == []
 
 
@@ -2109,7 +2769,7 @@ def test_the_same_width_is_lexical_in_a_module_no_form_reads_from() -> None:
 def test_a_module_named_for_one_form_may_name_that_form_and_no_other() -> None:
     line = "box = '303'\nother = '111'\n"
     findings = sweep_source(line, modelos=_FAKE_MODELOS, periods=_FAKE_PERIODS, module="m303_arrivals")
-    assert findings == ["code:'111'@2"]
+    assert sorted(findings) == ["code:'111'@2", "named_form:'other=111'@2"]
 
 
 def test_a_machine_owner_may_compare_sizes_but_not_hold_a_tax_value() -> None:

@@ -30,15 +30,15 @@ from __future__ import annotations
 
 from enum import StrEnum
 
-from ...core.modelo import Modelo
 from ...core.operator_action_enums import ActionEvidenceProvenance
+from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.modelos.errors import ModeloError
 from ...domain.modelos.work_unit import WorkUnit
 from ..aggregation.retencion_observations_repository import RetencionObservationPorts
 from .action_errors import ModeloPreconditionErrorMixin
 from .preconditions import ModeloPreconditionFailure, build_modelo_precondition_failure_for_scenario
 
-_MODELO_123 = Modelo("123")
+_CAPITAL_PERIODIC_ROLE = "withholding.capital_periodic"
 
 
 class Modelo123CountAuthorityStage(StrEnum):
@@ -61,9 +61,10 @@ def require_modelo_123_count_authority(
     stage: Modelo123CountAuthorityStage,
 ) -> None:
     """Refuse a Modelo 123 period whose window holds captured withholding at ``stage``."""
-    if work_unit.modelo != _MODELO_123:
+    modelo = form_for_role(_CAPITAL_PERIODIC_ROLE)
+    if work_unit.modelo != modelo:
         return
-    captured = retencion_ports.repository.load_observations(str(_MODELO_123), work_unit.period)
+    captured = retencion_ports.repository.load_observations(modelo, work_unit.period)
     if not captured:
         return
     raise Modelo123CountAuthorityUnresolvedError(

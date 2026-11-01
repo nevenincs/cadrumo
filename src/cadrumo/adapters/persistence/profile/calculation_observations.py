@@ -50,6 +50,7 @@ from cadrumo.core.time.clock import now
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError
+from cadrumo.domain.calculations.registry.form_codes import form_for_role
 from cadrumo.domain.calculations.registry.ids import RevisionId
 from cadrumo.domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
 
@@ -228,7 +229,7 @@ class CalculationObservationRepository:
             revisions: list[ProrrataSourceRevision] = []
             objects = self._layers.secure_object_repository
             for period_token in (StandardPeriodCode.Q4.value, StandardPeriodCode.DEC.value):
-                identifier = observation_key_for_token("303", prior_year, period_token)
+                identifier = observation_key_for_token(form_for_role("iva.periodic"), prior_year, period_token)
                 layers, revision = self._layers.load_revisioned(identifier)
                 if layers is not None and layers.effective is not None:
                     observations.append(layers.effective)

@@ -15,9 +15,9 @@ from dataclasses import dataclass
 from datetime import date
 from enum import StrEnum
 
-from ....core.modelo import Modelo
 from .authority import PinnedAuthorityOperation, ValidatedRegistryAuthority
 from .errors import RegistrySnapshotError, RegistryValidationError
+from .form_codes import form_for_role, resolve_form_codes
 from .schema import ModeloRevision
 from .temporal import select_revision
 
@@ -52,8 +52,9 @@ class CensoModeloOwnership:
     superseded_by: str | None = None
 
 
-_ACTIVE_CENSO_MODELO = Modelo("036").value
-_HISTORICAL_CENSO_MODELO = Modelo("037").value
+_ACTIVE_CENSO_ROLE = "census.active"
+_SUPERSEDED_CENSO_KEY = "census.superseded_form"
+_FORM_ROW_CODES_FACT = "form-row-codes"
 _HISTORICAL_037_SOURCE_REF = "boe-modelo-037-historical-suppression"
 
 
@@ -79,9 +80,9 @@ def censo_ownership_refusing_work_units(
     refuse in those terms instead of failing later on a missing revision.
     """
     modelo = _require_modelo_string(modelo)
-    if modelo == _ACTIVE_CENSO_MODELO:
+    if modelo == form_for_role(_ACTIVE_CENSO_ROLE, authority=operation):
         ownership = active_036_ownership_from_registry(operation)
-    elif modelo == _HISTORICAL_CENSO_MODELO:
+    elif modelo == resolve_form_codes(_FORM_ROW_CODES_FACT, authority=operation).code(_SUPERSEDED_CENSO_KEY):
         ownership = _historical_037_ownership_from_registry(operation)
     else:
         return None
@@ -105,10 +106,11 @@ def active_036_ownership_from_registry(
     Returns:
         The modelo 036 ownership the supplied authority declares.
     """
+    active = form_for_role(_ACTIVE_CENSO_ROLE, authority=authority)
     if isinstance(authority, PinnedAuthorityOperation):
         try:
-            directory = authority.modelo_directory(_ACTIVE_CENSO_MODELO)
-            revisions = tuple(authority.revision(_ACTIVE_CENSO_MODELO, metadata.id) for metadata in directory.revisions)
+            directory = authority.modelo_directory(active)
+            revisions = tuple(authority.revision(active, metadata.id) for metadata in directory.revisions)
             tax_domain = directory.modelo.tax_domain
             cadence = directory.modelo.cadence
         except (RegistrySnapshotError, ValueError) as exc:
@@ -116,14 +118,14 @@ def active_036_ownership_from_registry(
 
         def select_revision_for_event(*, filing_year: int, period: str, on: date) -> ModeloRevision:
             return authority.revision_for_context(
-                _ACTIVE_CENSO_MODELO,
+                active,
                 filing_year=filing_year,
                 period=period,
                 on=on,
             )
     else:
         try:
-            modelo_definition = authority.validate_modelo(_ACTIVE_CENSO_MODELO)
+            modelo_definition = authority.validate_modelo(active)
             revisions = tuple(modelo_definition.revisions.values())
             tax_domain = modelo_definition.tax_domain
             cadence = modelo_definition.cadence
@@ -172,7 +174,7 @@ def active_036_ownership_from_registry(
         )
         _require_active_036_foundation_revision(selected, revision)
     return CensoModeloOwnership(
-        modelo=_ACTIVE_CENSO_MODELO,
+        modelo=active,
         role=CensoModeloRole.ACTIVE_FOUNDATION,
         service_owner=CENSO_MODELO_SERVICE_OWNER,
         event_kinds=event_kinds,
@@ -215,8 +217,9 @@ def _foundation_year_from_latest_revision(revision: ModeloRevision) -> int:
 def _historical_037_ownership_from_registry(
     authority: PinnedAuthorityOperation | ValidatedRegistryAuthority,
 ) -> CensoModeloOwnership:
+    superseded = resolve_form_codes(_FORM_ROW_CODES_FACT, authority=authority).code(_SUPERSEDED_CENSO_KEY)
     if isinstance(authority, PinnedAuthorityOperation):
-        if _HISTORICAL_CENSO_MODELO in authority.modelo_ids():
+        if superseded in authority.modelo_ids():
             raise RegistryValidationError("historical censo modelo 037 must not have an active registry definition")
         try:
             authority.source_reference(_HISTORICAL_037_SOURCE_REF)
@@ -225,17 +228,17 @@ def _historical_037_ownership_from_registry(
                 "historical censo modelo 037 suppression source metadata is missing"
             ) from None
     else:
-        if any(modelo.id == _HISTORICAL_CENSO_MODELO for modelo in authority.modelos):
+        if any(modelo.id == superseded for modelo in authority.modelos):
             raise RegistryValidationError("historical censo modelo 037 must not have an active registry definition")
         if _HISTORICAL_037_SOURCE_REF not in authority.catalogues.sources:
             raise RegistryValidationError("historical censo modelo 037 suppression source metadata is missing")
     return CensoModeloOwnership(
-        modelo=_HISTORICAL_CENSO_MODELO,
+        modelo=superseded,
         role=CensoModeloRole.HISTORICAL_METADATA,
         service_owner=CENSO_MODELO_SERVICE_OWNER,
         event_kinds=(),
         active_work_unit_allowed=False,
-        superseded_by=_ACTIVE_CENSO_MODELO,
+        superseded_by=form_for_role(_ACTIVE_CENSO_ROLE, authority=authority),
     )
 
 

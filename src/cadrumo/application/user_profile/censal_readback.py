@@ -20,6 +20,9 @@ from .censal_preview_operation import CENSAL_PREVIEW_OPERATION_DEFINITION_ID, Ce
 type CensalObservationReader = Callable[[UUID], Awaitable[CensalObservation | None]]
 
 
+_INVENTORY_PAGE = 128
+
+
 async def read_latest_censal_observation(
     profile_id: UUID,
     *,
@@ -39,7 +42,7 @@ async def read_latest_censal_observation(
     }
     after: str | None = None
     while True:
-        page = await journal.inventory_page(after=after, limit=128)
+        page = await journal.inventory_page(after=after, limit=_INVENTORY_PAGE)
         for entry in page.entries:
             if entry.disposition is OperationRecoveryInventoryDisposition.REFUSED:
                 raise InternalInvariantError("census capture history cannot be verified")

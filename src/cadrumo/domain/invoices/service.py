@@ -47,7 +47,7 @@ _LOGGER = get_logger(__name__)
 #: rounding means. The two agreeing today is a coincidence of scale, and folding
 #: this onto CENT would make a later loosening of link suggestions silently
 #: loosen every rounding check in the codebase.
-_DEFAULT_AMOUNT_TOLERANCE = Decimal("0.01")
+_DEFAULT_MATCH_TOLERANCE = Decimal("0.01")
 
 
 class ReconciliationSuggestion(BaseModel):
@@ -156,7 +156,7 @@ def suggest_reconciliations(
     invoices: InvoiceCatalogue,
     transactions: TransactionCatalogue,
     *,
-    amount_tolerance: Decimal = _DEFAULT_AMOUNT_TOLERANCE,
+    amount_tolerance: Decimal = _DEFAULT_MATCH_TOLERANCE,
 ) -> tuple[ReconciliationSuggestion, ...]:
     """Return auto-suggested invoice/transaction links sorted by score.
 
