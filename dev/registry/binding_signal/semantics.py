@@ -276,8 +276,6 @@ def _registered_route_status(
         return "closed_non_runtime", ()
     if disposition == "deferred":
         return "closed_deferred", ()
-    if disposition == "advisory":
-        return "closed_advisory", ()
     if disposition != "filing_grade":
         return "open_disposition", ("unknown_registration_disposition",)
     if not isinstance(resolver_id, str):

@@ -87,6 +87,7 @@ from .calculation_revision_m303_handoff import (
     FilingInstanceEvidence,
     M303RegimenSimplificadoAnnualSummaryHandoff,
 )
+from .calculation_screen_stamp import CalculationScreenStamp
 from .calculation_revision_operator_layer import CalculationOperatorLayer
 from .calculation_revision_rendering import CalculationRenderingSnapshot
 from .calculation_revision_sources import (
@@ -205,6 +206,7 @@ class CalculationRevisionIdentityInputs(TypedDict):
     cleared_casilla_ids: Sequence[CasillaId]
     operator_layer: CalculationOperatorLayer | None
     rendering_snapshot: CalculationRenderingSnapshot | None
+    screen_stamp: CalculationScreenStamp | None
 
 
 def calculation_revision_identity_inputs(
@@ -233,6 +235,7 @@ def calculation_revision_identity_inputs(
     cleared_casilla_ids: Sequence[CasillaId] = (),
     operator_layer: CalculationOperatorLayer | None = None,
     rendering_snapshot: CalculationRenderingSnapshot | None = None,
+    screen_stamp: CalculationScreenStamp | None = None,
 ) -> CalculationRevisionIdentityInputs:
     """Build the one complete target-id-free calculation-revision identity input.
 
@@ -266,6 +269,7 @@ def calculation_revision_identity_inputs(
         "cleared_casilla_ids": cleared_casilla_ids,
         "operator_layer": operator_layer,
         "rendering_snapshot": rendering_snapshot,
+        "screen_stamp": screen_stamp,
     }
 
 
@@ -295,6 +299,7 @@ def derive_calculation_revision_id(
     cleared_casilla_ids: Sequence[CasillaId] = (),
     operator_layer: CalculationOperatorLayer | None = None,
     rendering_snapshot: CalculationRenderingSnapshot | None = None,
+    screen_stamp: CalculationScreenStamp | None = None,
 ) -> str:
     """Return the deterministic SHA-256 id for a calculation attempt."""
     return derive_calculation_revision_id_from_identity_inputs(
@@ -323,6 +328,7 @@ def derive_calculation_revision_id(
             cleared_casilla_ids=cleared_casilla_ids,
             operator_layer=operator_layer,
             rendering_snapshot=rendering_snapshot,
+            screen_stamp=screen_stamp,
         ),
     )
 
@@ -727,6 +733,11 @@ class CalculationRevision(BaseModel):
     # calculation that knew its caller tier records an empty layer instead. It
     # joins the content address only when present, so stored ids are unchanged.
     operator_layer: CalculationOperatorLayer | None = Field(default=None, repr=False)
+    # The screen declarations of the pinned registry revision this calculation
+    # was screened against. ``None`` means UNKNOWN -- every revision stored
+    # before stamps existed -- and a check, export or filing refuses it until a
+    # recalculation stamps it. It joins the content address only when present.
+    screen_stamp: CalculationScreenStamp | None = Field(default=None, repr=False)
     casilla_values: Mapping[CasillaId, Decimal] = Field(default_factory=dict)
     # Typed envelope carrying formula provenance for every computed
     # casilla. Revisions with output values must populate this from the
@@ -1103,6 +1114,7 @@ def calculation_revision_identity_inputs_from_revision(
         cleared_casilla_ids=revision.cleared_casilla_ids,
         operator_layer=revision.operator_layer,
         rendering_snapshot=revision.rendering_snapshot,
+        screen_stamp=revision.screen_stamp,
     )
 
 

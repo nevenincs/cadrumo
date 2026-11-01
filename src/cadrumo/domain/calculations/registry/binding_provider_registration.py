@@ -132,8 +132,13 @@ BindingRouteStage = Literal["pre_mesh", "mesh", "conditional", "post_mesh", "man
 ProviderOutputShape = Literal["scalar", "rows", "scalar_and_rows"]
 """What a resolver for this kind can emit."""
 
-ProviderDisposition = Literal["filing_grade", "advisory", "deferred", "non_runtime"]
-"""How much weight a value from this kind may carry in a filing."""
+ProviderDisposition = Literal["filing_grade", "deferred", "non_runtime"]
+"""How a value from this kind is routed: by an executable resolver, not yet, or never at runtime.
+
+A value's grade is not routing. A routed binding whose value stops short of
+filing grade carries its own declared cap (:mod:`.binding_grade_cap`), so
+this vocabulary has no member that could restate a grade per kind.
+"""
 
 ProviderAuthoringSupport = Literal["scaffold", "generator", "none"]
 """How much help an author gets writing a row of this kind."""

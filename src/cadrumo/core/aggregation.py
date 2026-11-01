@@ -707,6 +707,22 @@ class LedgerWithholdingDerivation(StrEnum):
     """
 
 
+class BindingValueOutcome(StrEnum):
+    """What a resolver states about the rows one binding's value rests on.
+
+    A zero from a window with nothing to sum and a zero from rows whose quantity
+    was left out are one ``Decimal("0")``. Only the resolver that read the rows
+    can tell them apart, so it states which case applies beside the value and no
+    consumer infers it from the amount.
+    """
+
+    PROVEN_ZERO = "proven_zero"
+    """The window held no row carrying the binding's quantity, so the value is zero."""
+
+    FROM_BEARING_ROWS = "from_bearing_rows"
+    """At least one row in the window carried the binding's quantity."""
+
+
 _RETENCION_SCHEME_PATTERN = re.compile(r"^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$")
 
 
