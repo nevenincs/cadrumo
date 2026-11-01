@@ -29,7 +29,7 @@ inversion and rounding are computed here.
 from __future__ import annotations
 
 from collections.abc import Iterator
-from datetime import UTC, date, datetime
+from datetime import date
 from decimal import Decimal
 from pathlib import Path
 
@@ -42,10 +42,10 @@ from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepos
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from cadrumo.application.aggregation.tests.fx_conversion_support import USD_AMOUNT, usd_raw
 from cadrumo.application.ledger.actions_import import import_ledger_transactions
 from cadrumo.domain.currency.service import CurrencyNormalizationService
 from cadrumo.domain.transactions.enums import TransactionDirection
-from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from cadrumo.tests.ecb_stub import ecb_csv_fetch
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter, pytest.mark.usefixtures("operation")]
@@ -67,8 +67,7 @@ _ECB_2024_01_15_USD_QUOTE = Decimal("1.0945")
 _ECB_2024_01_15_USD_RATE = Decimal("1") / _ECB_2024_01_15_USD_QUOTE
 
 # Oracle: 100.00 USD * (1 / 1.0945) = 91.365920... -> rounded half-even 0.01 = 91.37 EUR
-_USD_AMOUNT = Decimal("100.00")
-_EXPECTED_EUR = (_USD_AMOUNT * _ECB_2024_01_15_USD_RATE).quantize(Decimal("0.01"))
+_EXPECTED_EUR = (USD_AMOUNT * _ECB_2024_01_15_USD_RATE).quantize(Decimal("0.01"))
 assert Decimal("91.37") == _EXPECTED_EUR, f"Oracle mismatch: {_EXPECTED_EUR}"
 
 
@@ -77,30 +76,9 @@ def _ecb_provider(*, usd_quote: Decimal | None = _ECB_2024_01_15_USD_QUOTE) -> E
     return EcbReferenceRateProvider(fetch=ecb_csv_fetch(quotes))
 
 
-def _usd_raw(provider_id: str, *, amount: Decimal = _USD_AMOUNT) -> RawTransaction:
-    return RawTransaction(
-        provider_transaction_id=provider_id,
-        booked_date=date(2024, 1, 15),
-        value_date=date(2024, 1, 15),
-        amount=amount,
-        currency="USD",
-        counterparty="Acme Corp",
-        description=f"USD invoice {provider_id}",
-        provenance=RawProvenance(
-            source_path=Path(__file__),
-            source_sha256="c" * 64,
-            source_row_index=1,
-            source_format=SourceFormat.CSV,
-            ingested_at=datetime(2024, 1, 16, 9, 0, tzinfo=UTC),
-            provider_name="CSV provider",
-        ),
-        raw_fields={"Reference": provider_id},
-    )
-
-
-def _usd_parsed(provider_id: str, *, amount: Decimal = _USD_AMOUNT) -> ParsedLedgerRow:
+def _usd_parsed(provider_id: str, *, amount: Decimal = USD_AMOUNT) -> ParsedLedgerRow:
     """Wrap a USD magnitude row with an explicit OUTGOING direction."""
-    return ParsedLedgerRow(raw=_usd_raw(provider_id, amount=amount), direction=TransactionDirection.OUTGOING)
+    return ParsedLedgerRow(raw=usd_raw(provider_id, amount=amount), direction=TransactionDirection.OUTGOING)
 
 
 def test_usd_import_populates_fx_rate_and_value_in_eur(

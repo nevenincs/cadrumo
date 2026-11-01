@@ -35,7 +35,6 @@ from .....domain.calculations.registry.bindings import CasillaObservation
 from .....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from .....domain.modelos.calculation_revision import (
     CalculationRevision,
-    CalculationRevisionCatalogue,
     CalculationRevisionState,
     derive_calculation_revision_id,
     derive_calculation_revision_id_from_revision,
@@ -50,6 +49,7 @@ from ..calculation_revision_override_migration import (
 from ..modelos_calculation import CalculationRevisionCatalogueRepository
 from ..modelos_work_units import WorkUnitCatalogueRepository
 from ..relation_binding_join import bundled_relation_binding_join
+from .override_migration_support import override_migration_catalogue
 from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
@@ -130,10 +130,6 @@ def _revision(*, relation_overrides: dict[str, str]) -> CalculationRevision:
     )
 
 
-def _catalogue(revision: CalculationRevision) -> CalculationRevisionCatalogue:
-    return CalculationRevisionCatalogue(revisions={revision.calculation_revision_id: revision})
-
-
 def _parent_work_unit() -> WorkUnit:
     return WorkUnit(
         work_unit_id=_work_unit_id(),
@@ -164,7 +160,9 @@ def test_pre_cut_relation_override_is_rekeyed_and_the_revision_id_recomputed() -
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         stored = _revision(relation_overrides={_RETIRED_RELATION_ID: _OVERRIDE_VALUE})
 
-        result = rekey_calculation_revision_overrides(_catalogue(stored), operation=_authority_operation_for_test)
+        result = rekey_calculation_revision_overrides(
+            override_migration_catalogue(stored), operation=_authority_operation_for_test
+        )
 
         assert result.changed
         (remap,) = result.rekeyed_revisions
@@ -188,7 +186,7 @@ def test_override_value_appears_in_no_reported_field() -> None:
     """The run's report carries identifiers only, never the taxpayer's figure."""
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         result = rekey_calculation_revision_overrides(
-            _catalogue(_revision(relation_overrides={_RETIRED_RELATION_ID: _OVERRIDE_VALUE})),
+            override_migration_catalogue(_revision(relation_overrides={_RETIRED_RELATION_ID: _OVERRIDE_VALUE})),
             operation=_authority_operation_for_test,
         )
 
@@ -201,7 +199,7 @@ def test_second_run_over_a_migrated_catalogue_changes_nothing() -> None:
     """Idempotence: re-running rekeys nothing and moves no content address."""
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         first = rekey_calculation_revision_overrides(
-            _catalogue(_revision(relation_overrides={_RETIRED_RELATION_ID: _OVERRIDE_VALUE})),
+            override_migration_catalogue(_revision(relation_overrides={_RETIRED_RELATION_ID: _OVERRIDE_VALUE})),
             operation=_authority_operation_for_test,
         )
 
@@ -221,7 +219,9 @@ def test_unknown_override_key_is_refused_rather_than_dropped() -> None:
         stored = _revision(relation_overrides={orphan: _OVERRIDE_VALUE})
 
         with pytest.raises(OrphanedRelationOverrideError) as refusal:
-            rekey_calculation_revision_overrides(_catalogue(stored), operation=_authority_operation_for_test)
+            rekey_calculation_revision_overrides(
+                override_migration_catalogue(stored), operation=_authority_operation_for_test
+            )
 
         context = refusal.value.context
         assert context is not None
@@ -236,7 +236,9 @@ def test_revision_without_overrides_is_untouched_and_keeps_its_id() -> None:
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         stored = _revision(relation_overrides={})
 
-        result = rekey_calculation_revision_overrides(_catalogue(stored), operation=_authority_operation_for_test)
+        result = rekey_calculation_revision_overrides(
+            override_migration_catalogue(stored), operation=_authority_operation_for_test
+        )
 
         assert not result.changed
         assert result.unchanged_revision_ids == (stored.calculation_revision_id,)
@@ -252,7 +254,7 @@ def test_migration_rekeys_a_catalogue_through_encrypted_storage(tmp_path: Path) 
         _seed_parent_work_unit(profile)
         repository = CalculationRevisionCatalogueRepository(objects=profile.repository)
         stored = _revision(relation_overrides={_RETIRED_RELATION_ID: _OVERRIDE_VALUE})
-        repository.save(_catalogue(stored))
+        repository.save(override_migration_catalogue(stored))
 
         result = migrate_stored_relation_overrides_to_binding_ids(repository, operation=_authority_operation_for_test)
 
@@ -281,7 +283,9 @@ def test_one_operation_reads_the_catalogue_for_migration_once(tmp_path: Path) ->
     ):
         _seed_parent_work_unit(profile)
         repository = CalculationRevisionCatalogueRepository(objects=profile.repository)
-        repository.save(_catalogue(_revision(relation_overrides={_ABSORBING_BINDING_ID: _OVERRIDE_VALUE})))
+        repository.save(
+            override_migration_catalogue(_revision(relation_overrides={_ABSORBING_BINDING_ID: _OVERRIDE_VALUE}))
+        )
 
         first = migrate_stored_relation_overrides_to_binding_ids(repository, operation=operation)
         second = migrate_stored_relation_overrides_to_binding_ids(repository, operation=operation)
@@ -297,10 +301,14 @@ def test_the_next_operation_still_refuses_an_unknown_stored_override_key(tmp_pat
     ):
         _seed_parent_work_unit(profile)
         settled = CalculationRevisionCatalogueRepository(objects=profile.repository)
-        settled.save(_catalogue(_revision(relation_overrides={_ABSORBING_BINDING_ID: _OVERRIDE_VALUE})))
+        settled.save(
+            override_migration_catalogue(_revision(relation_overrides={_ABSORBING_BINDING_ID: _OVERRIDE_VALUE}))
+        )
         migrate_stored_relation_overrides_to_binding_ids(settled, operation=operation)
         next_operation = CalculationRevisionCatalogueRepository(objects=profile.repository)
-        next_operation.save(_catalogue(_revision(relation_overrides={"not-a-known-key": _OVERRIDE_VALUE})))
+        next_operation.save(
+            override_migration_catalogue(_revision(relation_overrides={"not-a-known-key": _OVERRIDE_VALUE}))
+        )
 
         for _attempt in range(2):
             # A refused run settles nothing, so the operation's next caller is refused too.

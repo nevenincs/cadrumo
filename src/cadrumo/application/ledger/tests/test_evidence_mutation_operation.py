@@ -4,8 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from contextlib import asynccontextmanager
-from datetime import UTC, datetime
-from decimal import Decimal
+from datetime import datetime
 from types import SimpleNamespace
 from typing import cast
 from uuid import UUID
@@ -16,7 +15,6 @@ from pydantic import BaseModel, ValidationError
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
 from ....application.ledger.evidence import (
-    MediaKind,
     PurchaseInvoiceEvidence,
     PurchaseInvoiceEvidencePatch,
     PurchaseInvoiceEvidenceResult,
@@ -43,34 +41,13 @@ from ....application.operations.registry import OperationFrontendProjection, Ope
 from ....application.user_profile.access_contracts import SessionKind
 from ....core.operations import OperationEffect, profile_operation_subject
 from ....core.secure_object_write import SecureObjectWrite
+from .evidence_mutation_support import EVIDENCE_MUTATION_PROFILE, evidence_mutation_record
 from .unused_repository_ports import UnusedBucketEventRepository, UnusedEvidenceAttachmentIngestor
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _SESSION_CLIENT = UUID("5aa00000-0000-4000-8000-0000000000dd")
-_AT = datetime(2026, 5, 8, 10, 15, tzinfo=UTC)
 _TYPED_DIRECTORY = "/home/synthetic-person/invoices"
-
-
-def _record() -> PurchaseInvoiceEvidence:
-    return PurchaseInvoiceEvidence(
-        evidence_id="evidence-target",
-        bucket_id=str(_PROFILE),
-        source_path="invoice.pdf",
-        source_sha256="a" * 64,
-        attachment_id="a" * 64,
-        media_kind=MediaKind.PDF,
-        supplier="Before SL",
-        invoice_number="INV-2026-05",
-        invoice_date="2026-05-08",
-        taxable_base=Decimal("100.00"),
-        iva_rate=Decimal("0.21"),
-        iva_amount=Decimal("21.00"),
-        notes="invoice note",
-        created_at=_AT,
-        updated_at=_AT,
-    )
 
 
 def _unused_factory(*, bucket_id: str) -> LedgerEvidencePorts:
@@ -81,14 +58,14 @@ def test_update_contracts_allow_only_explicit_empty_mask_and_only_update_permits
     patch = LedgerEvidenceUpdatePatch(supplier="After SL")
     with pytest.raises(ValidationError, match="explicit patch field mask"):
         LedgerEvidenceUpdateRequest(
-            profile_id=_PROFILE,
+            profile_id=EVIDENCE_MUTATION_PROFILE,
             evidence_id="evidence-target",
             patch=patch,
             patch_fields=(),
         )
 
     explicit_patch = LedgerEvidenceUpdateRequest(
-        profile_id=_PROFILE,
+        profile_id=EVIDENCE_MUTATION_PROFILE,
         evidence_id="evidence-target",
         patch=patch,
         patch_fields=("supplier",),
@@ -97,7 +74,7 @@ def test_update_contracts_allow_only_explicit_empty_mask_and_only_update_permits
     assert restored_patch.patch_fields == ("supplier",)
 
     no_op = LedgerEvidenceUpdateRequest(
-        profile_id=_PROFILE,
+        profile_id=EVIDENCE_MUTATION_PROFILE,
         evidence_id="evidence-target",
         patch=LedgerEvidenceUpdatePatch(),
         patch_fields=(),
@@ -144,9 +121,9 @@ def test_update_is_open_to_every_frontend_under_one_policy(
     registry = OperationRegistry(definitions=(definition,), public_registrations=(registration,))
     request = OperationRequest[BaseModel](
         definition_id=LEDGER_EVIDENCE_UPDATE_OPERATION_DEFINITION_ID,
-        subject_ref=profile_operation_subject(str(_PROFILE)),
+        subject_ref=profile_operation_subject(str(EVIDENCE_MUTATION_PROFILE)),
         payload=LedgerEvidenceUpdateRequest(
-            profile_id=_PROFILE,
+            profile_id=EVIDENCE_MUTATION_PROFILE,
             evidence_id="evidence-target",
             patch=LedgerEvidenceUpdatePatch(supplier="After SL"),
             patch_fields=("supplier",),
@@ -155,7 +132,7 @@ def test_update_is_open_to_every_frontend_under_one_policy(
 
     def context(asked_from: OperationFrontendProjection) -> OperationAccessContext:
         return OperationAccessContext(
-            profile_id=_PROFILE,
+            profile_id=EVIDENCE_MUTATION_PROFILE,
             destination_id=_SESSION_CLIENT,
             action=action,
             frontend=asked_from,
@@ -177,11 +154,11 @@ class _StoredEvidence:
 
     def __init__(self, record: PurchaseInvoiceEvidence, backend: object) -> None:
         self.secure_object_repository = backend
-        self._record = record
+        self.evidence_mutation_record = record
 
     def load(self, *, bucket_id: str) -> tuple[PurchaseInvoiceEvidence, ...]:
-        assert bucket_id == str(_PROFILE)
-        return (self._record,)
+        assert bucket_id == str(EVIDENCE_MUTATION_PROFILE)
+        return (self.evidence_mutation_record,)
 
     def load_revisioned(self, *, bucket_id: str) -> tuple[tuple[PurchaseInvoiceEvidence, ...], str]:
         return self.load(bucket_id=bucket_id), "0" * 64
@@ -216,7 +193,7 @@ async def test_update_result_carries_the_stored_record_whole_whichever_frontend_
     monkeypatch: pytest.MonkeyPatch, frontend: OperationFrontendProjection
 ) -> None:
     """The record's path is sealed as stored: no frontend's result is a reduced form of another's."""
-    current = _record().model_copy(update={"source_path": f"{_TYPED_DIRECTORY}/invoice.pdf"})
+    current = evidence_mutation_record().model_copy(update={"source_path": f"{_TYPED_DIRECTORY}/invoice.pdf"})
     backend = object()
     ports = LedgerEvidencePorts(
         evidence_repository=_StoredEvidence(current, backend),
@@ -225,7 +202,7 @@ async def test_update_result_carries_the_stored_record_whole_whichever_frontend_
     )
     monkeypatch.setattr(
         "cadrumo.application.ledger.evidence_mutation_operation.require_active_bucket_id",
-        lambda: str(_PROFILE),
+        lambda: str(EVIDENCE_MUTATION_PROFILE),
     )
     sealed: list[BaseModel] = []
     effects: list[OperationEffect] = []
@@ -244,21 +221,24 @@ async def test_update_result_carries_the_stored_record_whole_whichever_frontend_
             return "d" * 64
 
     def ports_factory(*, bucket_id: str) -> LedgerEvidencePorts:
-        assert bucket_id == str(_PROFILE)
+        assert bucket_id == str(EVIDENCE_MUTATION_PROFILE)
         return ports
 
     executor = LedgerEvidenceUpdateExecutor(ports_factory, execution_caller_reader=_session_host(frontend))
     request = OperationRequest[LedgerEvidenceUpdateRequest](
         definition_id=LEDGER_EVIDENCE_UPDATE_OPERATION_DEFINITION_ID,
-        subject_ref=profile_operation_subject(str(_PROFILE)),
+        subject_ref=profile_operation_subject(str(EVIDENCE_MUTATION_PROFILE)),
         payload=LedgerEvidenceUpdateRequest(
-            profile_id=_PROFILE, evidence_id=current.evidence_id, patch=LedgerEvidenceUpdatePatch(), patch_fields=()
+            profile_id=EVIDENCE_MUTATION_PROFILE,
+            evidence_id=current.evidence_id,
+            patch=LedgerEvidenceUpdatePatch(),
+            patch_fields=(),
         ),
     )
     context = SimpleNamespace(
         identity=SimpleNamespace(
             definition_id=LEDGER_EVIDENCE_UPDATE_OPERATION_DEFINITION_ID,
-            subject_ref=profile_operation_subject(str(_PROFILE)),
+            subject_ref=profile_operation_subject(str(EVIDENCE_MUTATION_PROFILE)),
         ),
         events=Events(),
         operands=Operands(),
@@ -277,14 +257,14 @@ async def test_update_result_carries_the_stored_record_whole_whichever_frontend_
 async def test_update_effect_is_unknown_before_guarded_mutation_and_updated_after(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    current = _record()
+    current = evidence_mutation_record()
     backend = object()
 
     class EvidenceRepository:
         secure_object_repository = backend
 
         def load(self, *, bucket_id: str) -> tuple[PurchaseInvoiceEvidence, ...]:
-            assert bucket_id == str(_PROFILE)
+            assert bucket_id == str(EVIDENCE_MUTATION_PROFILE)
             return (current,)
 
         def load_revisioned(self, *, bucket_id: str) -> tuple[tuple[PurchaseInvoiceEvidence, ...], str]:
@@ -356,7 +336,7 @@ async def test_update_effect_is_unknown_before_guarded_mutation_and_updated_afte
         occurred_at: datetime,
     ) -> PurchaseInvoiceEvidenceResult:
         nonlocal mutated
-        assert bucket_id == str(_PROFILE)
+        assert bucket_id == str(EVIDENCE_MUTATION_PROFILE)
         assert evidence_id == current.evidence_id
         assert actor == "cli"
         assert expected_current == current
@@ -369,19 +349,19 @@ async def test_update_effect_is_unknown_before_guarded_mutation_and_updated_afte
     monkeypatch.setattr(PurchaseInvoiceEvidenceService, "update", update_service)
     monkeypatch.setattr(
         "cadrumo.application.ledger.evidence_mutation_operation.require_active_bucket_id",
-        lambda: str(_PROFILE),
+        lambda: str(EVIDENCE_MUTATION_PROFILE),
     )
 
     def ports_factory(*, bucket_id: str) -> LedgerEvidencePorts:
-        assert bucket_id == str(_PROFILE)
+        assert bucket_id == str(EVIDENCE_MUTATION_PROFILE)
         return ports
 
     executor = LedgerEvidenceUpdateExecutor(ports_factory)
     request = OperationRequest[LedgerEvidenceUpdateRequest](
         definition_id=LEDGER_EVIDENCE_UPDATE_OPERATION_DEFINITION_ID,
-        subject_ref=profile_operation_subject(str(_PROFILE)),
+        subject_ref=profile_operation_subject(str(EVIDENCE_MUTATION_PROFILE)),
         payload=LedgerEvidenceUpdateRequest(
-            profile_id=_PROFILE,
+            profile_id=EVIDENCE_MUTATION_PROFILE,
             evidence_id=current.evidence_id,
             patch=LedgerEvidenceUpdatePatch(supplier="After SL"),
             patch_fields=("supplier",),
@@ -390,7 +370,7 @@ async def test_update_effect_is_unknown_before_guarded_mutation_and_updated_afte
     context = SimpleNamespace(
         identity=SimpleNamespace(
             definition_id=LEDGER_EVIDENCE_UPDATE_OPERATION_DEFINITION_ID,
-            subject_ref=profile_operation_subject(str(_PROFILE)),
+            subject_ref=profile_operation_subject(str(EVIDENCE_MUTATION_PROFILE)),
         ),
         cancellation=cancellation,
         events=Events(),

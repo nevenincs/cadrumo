@@ -9,7 +9,6 @@ from typing import cast
 from uuid import UUID, uuid4
 
 import pytest
-from pydantic import BaseModel
 
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
@@ -37,52 +36,13 @@ from ..expedientes_read_operation import (
     build_expedientes_show_registration,
     resolve_expedientes_show_access,
 )
+from .read_executor_support import ExecutorEvents, ExecutorOperands
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PROFILE = UUID("11111111-1111-4111-8111-111111111111")
 _OTHER_PROFILE = UUID("22222222-2222-4222-8222-222222222222")
 _NOW = datetime(2025, 4, 15, 10, tzinfo=UTC)
-
-
-class _ExecutorEvents:
-    def __init__(self) -> None:
-        self.phases: list[str] = []
-        self.effects: list[OperationEffect] = []
-
-    async def phase(self, value: str) -> None:
-        self.phases.append(value)
-
-    async def effect(self, value: OperationEffect) -> None:
-        self.effects.append(value)
-
-
-class _ExecutorOperands:
-    def __init__(self) -> None:
-        self.values: list[BaseModel] = []
-
-    async def put(self, value: BaseModel, *, written_at: datetime) -> str:
-        assert written_at.tzinfo is not None
-        self.values.append(value)
-        return "synthetic-encrypted-result-reference"
-
-
-def _executor_context(
-    definition_id: str,
-    *,
-    subject_ref: str | None = None,
-    events: _ExecutorEvents,
-) -> tuple[OperationExecutorContext, _ExecutorOperands]:
-    identity = OperationIdentity(
-        operation_id="e" * 64,
-        definition_id=definition_id,
-        subject_ref=subject_ref or profile_operation_subject(str(_PROFILE)),
-    )
-    operands = _ExecutorOperands()
-    return cast(
-        OperationExecutorContext,
-        SimpleNamespace(identity=identity, events=events, operands=operands),
-    ), operands
 
 
 class _EmptySnapshotRepository:
@@ -103,6 +63,24 @@ class _EmptySnapshotRepository:
 
     def save(self, snapshot: PersistedExpedientesSnapshot) -> None:
         raise AssertionError("read-only list executor must not save snapshots")
+
+
+def _executor_context(
+    definition_id: str,
+    *,
+    subject_ref: str | None = None,
+    events: ExecutorEvents,
+) -> tuple[OperationExecutorContext, ExecutorOperands]:
+    identity = OperationIdentity(
+        operation_id="e" * 64,
+        definition_id=definition_id,
+        subject_ref=subject_ref or profile_operation_subject(str(_PROFILE)),
+    )
+    operands = ExecutorOperands()
+    return cast(
+        OperationExecutorContext,
+        SimpleNamespace(identity=identity, events=events, operands=operands),
+    ), operands
 
 
 def _registration():
@@ -131,7 +109,7 @@ def _receipt(*, effect: OperationEffect = OperationEffect.NONE) -> OperationTerm
 def test_list_executor_reads_the_exact_profile_and_records_empty_result(monkeypatch: pytest.MonkeyPatch) -> None:
     import cadrumo.application.live.expedientes_read_operation as operation
 
-    events = _ExecutorEvents()
+    events = ExecutorEvents()
     composed_buckets: list[str] = []
     context, operands = _executor_context(EXPEDIENTES_LIST_DEFINITION_ID, events=events)
     request = OperationRequest[ExpedientesListRequest](
@@ -190,7 +168,7 @@ def test_list_executor_refuses_request_or_context_identity_mismatch_before_work(
 ) -> None:
     import cadrumo.application.live.expedientes_read_operation as operation
 
-    events = _ExecutorEvents()
+    events = ExecutorEvents()
     composed_buckets: list[str] = []
     context, operands = _executor_context(
         context_definition_id,
@@ -222,7 +200,7 @@ def test_list_executor_refuses_request_or_context_identity_mismatch_before_work(
 def test_list_executor_preserves_missing_profile_precedence_before_work(monkeypatch: pytest.MonkeyPatch) -> None:
     import cadrumo.application.live.expedientes_read_operation as operation
 
-    events = _ExecutorEvents()
+    events = ExecutorEvents()
     composed_buckets: list[str] = []
     context, operands = _executor_context(
         "live.expedientes.other",

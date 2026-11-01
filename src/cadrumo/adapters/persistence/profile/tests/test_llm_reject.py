@@ -23,7 +23,6 @@ from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObject
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.ledger.llm_classification import reject_llm_suggestion
 from cadrumo.application.ledger.llm_classification_ports import (
-    LLMClassificationSuggestion,
     LLMSaturatedSuggestion,
     LLMSuggestionRejectionResult,
 )
@@ -39,6 +38,8 @@ from cadrumo.domain.transactions.enums import BusinessClassification, Transactio
 from cadrumo.domain.transactions.errors import TransactionNotFoundError
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
+
+from .llm_suggestion_support import classification_suggestion
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
@@ -86,17 +87,6 @@ def _seed_parent(repository: TransactionCatalogueRepository, *, amount: Decimal 
     return tx.transaction_id
 
 
-def _classification_suggestion(tx_id: str) -> LLMClassificationSuggestion:
-    return LLMClassificationSuggestion(
-        transaction_id=tx_id,
-        provenance="llm:claude:test-model",
-        classification=BusinessClassification.BUSINESS,
-        category=SpendingCategory.from_registry("material_oficina"),
-        confidence=Decimal("0.9"),
-        reason="looks like office supplies",
-    )
-
-
 def _rejection_events(events: BucketEventHistoryRepository) -> tuple[BucketEvent, ...]:
     return events.load().for_bucket(
         _BUCKET,
@@ -111,7 +101,7 @@ def test_reject_records_event_and_does_not_mutate(
     tx_id = _seed_parent(repository)
 
     result = reject_llm_suggestion(
-        _classification_suggestion(tx_id),
+        classification_suggestion(tx_id),
         bucket_id=_BUCKET,
         reason="wrong category, this is personal",
         source_command="aeat app ledger classify --llm --reject",
@@ -176,7 +166,7 @@ def test_reject_unknown_transaction_raises(
     repository, events, _objects = repositories
     with pytest.raises(TransactionNotFoundError):
         reject_llm_suggestion(
-            _classification_suggestion(_UNKNOWN_TRANSACTION_ID),
+            classification_suggestion(_UNKNOWN_TRANSACTION_ID),
             bucket_id=_BUCKET,
             source_command="aeat app ledger classify --llm --reject",
             transaction_repository=repository,
@@ -196,7 +186,7 @@ def test_reject_via_workflow_matches_the_direct_primitive_default(
     tx_id = _seed_parent(repository)
 
     reject_llm_suggestion(
-        _classification_suggestion(tx_id),
+        classification_suggestion(tx_id),
         bucket_id=_BUCKET,
         reason="direct primitive path",
         source_command="aeat app ledger classify --llm --reject",
@@ -211,7 +201,7 @@ def test_reject_via_workflow_matches_the_direct_primitive_default(
         bucket_event_repository=events,
     ) as ports:
         execute_reviewed_decision(
-            _classification_suggestion(tx_id),
+            classification_suggestion(tx_id),
             origin=LlmReviewInvocationOrigin.CLASSIFY_LLM_REJECT,
             decision=LlmReviewDecision.REJECT,
             bucket_id=_BUCKET,
