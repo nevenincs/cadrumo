@@ -1150,4 +1150,9 @@ def main(argv: list[str] | None = None) -> int:
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    # Under ``-m`` this module is ``__main__``, so the shared graph would pickle as
+    # ``__main__.RuntimeImportGraph``, which the shared-scan reader refuses. Run the
+    # importable copy so its types carry their real module path.
+    from importlib import import_module
+
+    raise SystemExit(import_module("dev.registry.analysis.load_census").main())
