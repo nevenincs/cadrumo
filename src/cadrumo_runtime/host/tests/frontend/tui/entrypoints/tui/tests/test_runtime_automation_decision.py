@@ -43,8 +43,6 @@ from cadrumo_client.transport.framing import VerifiedConnection
 from cadrumo_client.transport.installation import installation
 from cadrumo_client.transport.windows import WindowsEndpoint
 from cadrumo_runtime.adapters.tests.profile_worker_support import owner_id
-from cadrumo_runtime.adapters.tests.retained_server import RetainedRuntimeTransportServer
-from cadrumo_runtime.host.profile_connections import RuntimeProfileConnections
 
 from .......frontend.tui.launcher import main
 from .......frontend.tui.profile.automation_inventory import RuntimeAutomationInventoryScreen
@@ -52,7 +50,7 @@ from .......frontend.tui.runtime_access_management import RuntimeAccessManagemen
 from .......frontend.tui.secret.automation_decision import RuntimeAutomationDecisionScreen
 from .......frontend.tui.secret.runtime_login import RuntimeLoginScreen
 from .......frontend.tui.secret.runtime_login_contracts import RuntimeLoginMethod
-from ......served_runtime import SyntheticLogin
+from ......served_runtime import SyntheticLogin, serving_runtime
 
 pytestmark = [
     pytest.mark.integration,
@@ -339,51 +337,33 @@ def test_installed_tui_approves_and_declines_exact_review_with_protected_request
         profile_id = subject.store.binding.profile_id
         close_active_bucket_session()
         delete_profile_session(storage_root=storage_root, profile_id=profile_id)
-        stop, boot = Event(), uuid4()
-        profiles = RuntimeProfileConnections(
-            storage_root=storage_root,
-            storage_identity=endpoint.storage_identity,
-            runtime_boot_id=boot,
-            stop=stop,
-            capture_login=lambda _channel: SyntheticLogin("tui-automation-decision-native-login"),
-            secret_store=lambda: subject.native,
-        )
-        profiles.prepare_registry()
-        server = RetainedRuntimeTransportServer(
-            endpoint, product_version=version("cadrumo"), stop=stop, profiles=profiles, boot_id=boot
-        )
+        with (
+            override_settings(cadrumo_storage_root=storage_root),
+            serving_runtime(
+                endpoint,
+                storage_root,
+                capture_login=lambda _channel: SyntheticLogin("tui-automation-decision-native-login"),
+                secret_store=lambda: subject.native,
+                workers=3,
+                product_version=version("cadrumo"),
+            ) as served,
+            ExitStack() as cleanup,
+        ):
+            requester, enrollment = _requester(endpoint, profile_id, subject.client_native)
+            cleanup.callback(requester.close)
+            first = enrollment.submit(subject.proposal)
+            assert first.stage is EnrollmentStage.REQUESTED
+            second_requester, second_enrollment = _requester(endpoint, profile_id, MemoryNativePort())
+            cleanup.callback(second_requester.close)
+            second = second_enrollment.submit(subject.proposal)
+            assert second.stage is EnrollmentStage.REQUESTED
 
-        with override_settings(cadrumo_storage_root=storage_root), ThreadPoolExecutor(max_workers=3) as pool:
-            running = pool.submit(server.serve)
+            journey = _DecisionJourney(served.pool, enrollment, first, second)
             try:
-                assert server.ready.wait(3)
-                with ExitStack() as cleanup:
-                    requester, enrollment = _requester(endpoint, profile_id, subject.client_native)
-                    cleanup.callback(requester.close)
-                    first = enrollment.submit(subject.proposal)
-                    assert first.stage is EnrollmentStage.REQUESTED
-                    second_requester, second_enrollment = _requester(endpoint, profile_id, MemoryNativePort())
-                    cleanup.callback(second_requester.close)
-                    second = second_enrollment.submit(subject.proposal)
-                    assert second.stage is EnrollmentStage.REQUESTED
-
-                    journey = _DecisionJourney(pool, enrollment, first, second)
-                    try:
-                        assert main(headless=True, auto_pilot=journey.drive) == 0
-                    finally:
-                        journey.done.set()
-                        if journey.polling is not None:
-                            journey.polling.result(timeout=15)
-                    assert journey.stages == ["human-login", "approved", "declined"]
-                    _assert_decisions_reached_requesters(subject, enrollment, second_enrollment, first, second)
+                assert main(headless=True, auto_pilot=journey.drive) == 0
             finally:
-                primary = sys.exception()
-                stop.set()
-                try:
-                    try:
-                        running.result(timeout=20)
-                    except Exception:
-                        if primary is None:
-                            raise
-                finally:
-                    endpoint.close()
+                journey.done.set()
+                if journey.polling is not None:
+                    journey.polling.result(timeout=15)
+            assert journey.stages == ["human-login", "approved", "declined"]
+            _assert_decisions_reached_requesters(subject, enrollment, second_enrollment, first, second)

@@ -35,12 +35,10 @@ from cadrumo_client.transport.framing import VerifiedConnection
 from cadrumo_client.transport.installation import installation
 from cadrumo_client.transport.windows import WindowsEndpoint
 from cadrumo_runtime.adapters.tests.profile_worker_support import PROFILE_INPUT, owner_id, worker_profiles
-from cadrumo_runtime.adapters.tests.retained_server import RetainedRuntimeTransportServer
 from cadrumo_runtime.commands.tests.config.runtime_cli import invoke_runtime_cli
-from cadrumo_runtime.host.profile_connections import RuntimeProfileConnections
 
 from ..automation_proposal_support import enrollment_proposal
-from ..served_runtime import SyntheticLogin
+from ..served_runtime import SyntheticLogin, serving_runtime
 
 pytestmark = [
     pytest.mark.integration,
@@ -317,33 +315,13 @@ def test_installed_cli_inspect_approve_and_decline_preserve_two_proof_channels(t
         )
         server_native, client_native = MemoryNativePort(), MemoryNativePort()
         store = AutomationControlStore(root=root, binding=binding, secrets_store=server_native)
-        stop, boot = Event(), uuid4()
-        profiles = RuntimeProfileConnections(
-            storage_root=root,
-            storage_identity=endpoint.storage_identity,
-            runtime_boot_id=boot,
-            stop=stop,
+        with serving_runtime(
+            endpoint,
+            root,
             capture_login=lambda _channel: SyntheticLogin("cli-automation-decision-native-login"),
             secret_store=lambda: server_native,
-        )
-        profiles.prepare_registry()
-        server = RetainedRuntimeTransportServer(
-            endpoint, product_version=version("cadrumo"), stop=stop, profiles=profiles, boot_id=boot
-        )
-        with ThreadPoolExecutor(max_workers=3) as pool:
-            running = pool.submit(server.serve)
-            try:
-                assert server.ready.wait(3)
-                _assert_untrusted_frontend_cannot_prepare(endpoint, profile_id, store, server_native, client_native)
-                _review_and_decide(endpoint, pool, root, profile_id, store, server_native, client_native)
-            finally:
-                primary = sys.exception()
-                stop.set()
-                try:
-                    try:
-                        running.result(timeout=20)
-                    except Exception:
-                        if primary is None:
-                            raise
-                finally:
-                    endpoint.close()
+            workers=3,
+            product_version=version("cadrumo"),
+        ) as served:
+            _assert_untrusted_frontend_cannot_prepare(endpoint, profile_id, store, server_native, client_native)
+            _review_and_decide(endpoint, served.pool, root, profile_id, store, server_native, client_native)

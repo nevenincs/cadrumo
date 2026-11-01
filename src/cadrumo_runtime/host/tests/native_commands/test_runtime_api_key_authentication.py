@@ -4,10 +4,8 @@ from __future__ import annotations
 
 import json
 import sys
-from concurrent.futures import ThreadPoolExecutor
 from importlib.metadata import version
 from pathlib import Path
-from threading import Event
 from uuid import UUID, uuid4
 
 import pytest
@@ -34,11 +32,9 @@ from cadrumo_client.transport import credentials as runtime_credentials
 from cadrumo_client.transport.installation import installation
 from cadrumo_client.transport.windows import WindowsEndpoint
 from cadrumo_runtime.adapters.tests.profile_worker_support import owner_id
-from cadrumo_runtime.adapters.tests.retained_server import RetainedRuntimeTransportServer
 from cadrumo_runtime.commands.tests.config.runtime_cli import invoke_runtime_cli
-from cadrumo_runtime.host.profile_connections import RuntimeProfileConnections
 
-from ..served_runtime import SyntheticLogin
+from ..served_runtime import SyntheticLogin, serving_runtime
 
 pytestmark = [
     pytest.mark.integration,
@@ -164,125 +160,106 @@ def test_enrolled_api_key_and_reference_read_only_their_profile_and_cannot_becom
         foreign_id = UUID(foreign.profile_id)
         close_active_bucket_session()
 
-        stop, boot = Event(), uuid4()
-        profiles = RuntimeProfileConnections(
-            storage_root=root,
-            storage_identity=endpoint.storage_identity,
-            runtime_boot_id=boot,
-            stop=stop,
+        monkeypatch.setattr(runtime_credentials, "installed_automation_secret_store", lambda: subject.client_native)
+        with serving_runtime(
+            endpoint,
+            root,
             capture_login=lambda _channel: SyntheticLogin("cli-api-key-test-login"),
             secret_store=lambda: subject.native,
-        )
-        profiles.prepare_registry()
-        server = RetainedRuntimeTransportServer(
-            endpoint, product_version=version("cadrumo"), stop=stop, profiles=profiles, boot_id=boot
-        )
-        monkeypatch.setattr(runtime_credentials, "installed_automation_secret_store", lambda: subject.client_native)
-        with ThreadPoolExecutor(max_workers=1) as pool:
-            running = pool.submit(server.serve)
-            try:
-                assert server.ready.wait(3)
-                with override_settings(cadrumo_storage_root=root, cadrumo_output_language="en"):
-                    shown = _invoke_api(
-                        invoke_cli=run_cadrumo_cli,
-                        profile_id=profile_id,
-                        secret=secret,
-                        command=("config", "profile", "view"),
-                    )
-                    assert shown.exit_code == 0, f"{shown!r}: {shown.output!r}; {shown.exception!r}"
-                    document = json.loads(shown.stdout)
-                    assert document["command"] == "config.profile.view"
-                    assert document["result"]["display_name"] == "Enrollment tests"
-                    assert document["result"]["profile_id"] == "<profile-id>"
+            workers=1,
+            product_version=version("cadrumo"),
+        ):
+            with override_settings(cadrumo_storage_root=root, cadrumo_output_language="en"):
+                shown = _invoke_api(
+                    invoke_cli=run_cadrumo_cli,
+                    profile_id=profile_id,
+                    secret=secret,
+                    command=("config", "profile", "view"),
+                )
+                assert shown.exit_code == 0, f"{shown!r}: {shown.output!r}; {shown.exception!r}"
+                document = json.loads(shown.stdout)
+                assert document["command"] == "config.profile.view"
+                assert document["result"]["display_name"] == "Enrollment tests"
+                assert document["result"]["profile_id"] == "<profile-id>"
 
-                    by_reference = _invoke_reference(
-                        invoke_cli=run_cadrumo_cli,
-                        profile_id=profile_id,
-                        reference=reference,
-                        command=("config", "profile", "view"),
-                    )
-                    assert by_reference.exit_code == 0, by_reference.output
-                    assert json.loads(by_reference.stdout)["result"] == document["result"]
+                by_reference = _invoke_reference(
+                    invoke_cli=run_cadrumo_cli,
+                    profile_id=profile_id,
+                    reference=reference,
+                    command=("config", "profile", "view"),
+                )
+                assert by_reference.exit_code == 0, by_reference.output
+                assert json.loads(by_reference.stdout)["result"] == document["result"]
 
-                    reference_admin = _invoke_reference(
-                        invoke_cli=invoke_runtime_cli,
-                        profile_id=profile_id,
-                        reference=reference,
-                        command=("config", "profile", "sessions"),
-                    )
-                    assert reference_admin.exit_code == 2
-                    missing_reference = _invoke_reference(
-                        invoke_cli=run_cadrumo_cli,
-                        profile_id=profile_id,
-                        reference=uuid4(),
-                        command=("config", "profile", "view"),
-                    )
-                    assert missing_reference.exit_code == 2
-                    foreign_reference = _invoke_reference(
-                        invoke_cli=run_cadrumo_cli,
-                        profile_id=foreign_id,
-                        reference=reference,
-                        command=("config", "profile", "view"),
-                    )
-                    assert foreign_reference.exit_code == 2
+                reference_admin = _invoke_reference(
+                    invoke_cli=invoke_runtime_cli,
+                    profile_id=profile_id,
+                    reference=reference,
+                    command=("config", "profile", "sessions"),
+                )
+                assert reference_admin.exit_code == 2
+                missing_reference = _invoke_reference(
+                    invoke_cli=run_cadrumo_cli,
+                    profile_id=profile_id,
+                    reference=uuid4(),
+                    command=("config", "profile", "view"),
+                )
+                assert missing_reference.exit_code == 2
+                foreign_reference = _invoke_reference(
+                    invoke_cli=run_cadrumo_cli,
+                    profile_id=foreign_id,
+                    reference=reference,
+                    command=("config", "profile", "view"),
+                )
+                assert foreign_reference.exit_code == 2
 
-                    human_only = _invoke_api(
-                        invoke_cli=invoke_runtime_cli,
-                        profile_id=profile_id,
-                        secret=secret,
-                        command=("config", "profile", "sessions"),
-                    )
-                    assert human_only.exit_code == 2
+                human_only = _invoke_api(
+                    invoke_cli=invoke_runtime_cli,
+                    profile_id=profile_id,
+                    secret=secret,
+                    command=("config", "profile", "sessions"),
+                )
+                assert human_only.exit_code == 2
 
-                    prefix, key_id, random_part = secret.split(".")
-                    wrong_part = ("A" if random_part[0] != "A" else "B") + random_part[1:]
-                    wrong_secret = ".".join((prefix, key_id, wrong_part))
-                    bad_key = _invoke_api(
-                        invoke_cli=run_cadrumo_cli,
-                        profile_id=profile_id,
-                        secret=wrong_secret,
-                        command=("config", "profile", "view"),
-                    )
-                    assert bad_key.exit_code == 2
+                prefix, key_id, random_part = secret.split(".")
+                wrong_part = ("A" if random_part[0] != "A" else "B") + random_part[1:]
+                wrong_secret = ".".join((prefix, key_id, wrong_part))
+                bad_key = _invoke_api(
+                    invoke_cli=run_cadrumo_cli,
+                    profile_id=profile_id,
+                    secret=wrong_secret,
+                    command=("config", "profile", "view"),
+                )
+                assert bad_key.exit_code == 2
 
-                    wrong_profile = _invoke_api(
-                        invoke_cli=run_cadrumo_cli,
-                        profile_id=foreign_id,
-                        secret=secret,
-                        command=("config", "profile", "view"),
-                    )
-                    assert wrong_profile.exit_code == 2
+                wrong_profile = _invoke_api(
+                    invoke_cli=run_cadrumo_cli,
+                    profile_id=foreign_id,
+                    secret=secret,
+                    command=("config", "profile", "view"),
+                )
+                assert wrong_profile.exit_code == 2
 
-                for result in (
-                    shown,
-                    by_reference,
-                    reference_admin,
-                    missing_reference,
-                    foreign_reference,
-                    human_only,
-                    bad_key,
-                    wrong_profile,
-                ):
-                    assert secret not in result.output
-                    assert wrong_secret not in result.output
-                    assert str(reference) not in result.output
-                for result in (
-                    reference_admin,
-                    missing_reference,
-                    foreign_reference,
-                    human_only,
-                    bad_key,
-                    wrong_profile,
-                ):
-                    assert '"facts"' not in result.output
-                    assert '"result"' not in result.output
-            finally:
-                primary = sys.exception()
-                stop.set()
-                try:
-                    running.result(timeout=20)
-                except Exception:
-                    if primary is None:
-                        raise
-                finally:
-                    endpoint.close()
+            for result in (
+                shown,
+                by_reference,
+                reference_admin,
+                missing_reference,
+                foreign_reference,
+                human_only,
+                bad_key,
+                wrong_profile,
+            ):
+                assert secret not in result.output
+                assert wrong_secret not in result.output
+                assert str(reference) not in result.output
+            for result in (
+                reference_admin,
+                missing_reference,
+                foreign_reference,
+                human_only,
+                bad_key,
+                wrong_profile,
+            ):
+                assert '"facts"' not in result.output
+                assert '"result"' not in result.output

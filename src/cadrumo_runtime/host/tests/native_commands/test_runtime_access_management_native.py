@@ -5,10 +5,8 @@ from __future__ import annotations
 import asyncio
 import json
 import sys
-from concurrent.futures import ThreadPoolExecutor
 from importlib.metadata import version
 from pathlib import Path
-from threading import Event
 from typing import Any
 from uuid import UUID, uuid4
 
@@ -31,11 +29,9 @@ from cadrumo_client.transport.installation import installation
 from cadrumo_client.transport.installed_client import open_installed_client
 from cadrumo_client.transport.windows import WindowsEndpoint
 from cadrumo_runtime.adapters.tests.profile_worker_support import owner_id
-from cadrumo_runtime.adapters.tests.retained_server import RetainedRuntimeTransportServer
 from cadrumo_runtime.commands.tests.config.runtime_cli import invoke_runtime_cli
-from cadrumo_runtime.host.profile_connections import RuntimeProfileConnections
 
-from ..served_runtime import SyntheticLogin
+from ..served_runtime import SyntheticLogin, serving_runtime
 
 pytestmark = [
     pytest.mark.integration,
@@ -212,57 +208,40 @@ def test_cli_session_lock_global_resume_and_key_denial_use_native_authority(tmp_
         assert selected_grant != held_grant and selected_key != held_key
         close_active_bucket_session()
 
-        stop, boot = Event(), uuid4()
-        profiles = RuntimeProfileConnections(
-            storage_root=root,
-            storage_identity=endpoint.storage_identity,
-            runtime_boot_id=boot,
-            stop=stop,
-            capture_login=lambda _channel: SyntheticLogin("cli-access-management-native-login"),
-            secret_store=lambda: subject.native,
-        )
-        profiles.prepare_registry()
-        server = RetainedRuntimeTransportServer(
-            endpoint, product_version=version("cadrumo"), stop=stop, profiles=profiles, boot_id=boot
-        )
-        with ThreadPoolExecutor(max_workers=1) as pool:
-            running = pool.submit(server.serve)
+        with (
+            serving_runtime(
+                endpoint,
+                root,
+                capture_login=lambda _channel: SyntheticLogin("cli-access-management-native-login"),
+                secret_store=lambda: subject.native,
+                workers=1,
+                product_version=version("cadrumo"),
+            ),
+            override_settings(
+                cadrumo_storage_root=root,
+                cadrumo_output_language="en",
+            ),
+        ):
+            api = _api(profile_id, selected_secret)
+            opened = [api]
             try:
-                assert server.ready.wait(3)
-                with override_settings(
-                    cadrumo_storage_root=root,
-                    cadrumo_output_language="en",
-                ):
-                    api = _api(profile_id, selected_secret)
-                    opened = [api]
-                    try:
-                        api_session_id = _assert_selected_and_global_lock(subject, root, profile_id, api)
-                        wrong = _assert_resume_reactivates_only_the_selected_grant(
-                            subject,
-                            profile_id,
-                            api,
-                            opened,
-                            selected_grant=selected_grant,
-                            held_grant=held_grant,
-                            selected_secret=selected_secret,
-                            held_secret=held_secret,
-                            api_session_id=api_session_id,
-                        )
-                        _assert_key_denial_revokes_only_that_key(
-                            subject, root, profile_id, opened[-1], selected_key=selected_key, held_key=held_key
-                        )
-                        assert PROFILE_INPUT not in wrong.output
-                        assert selected_secret.decode("ascii") not in wrong.output
-                    finally:
-                        for client in reversed(opened):
-                            client.close()
+                api_session_id = _assert_selected_and_global_lock(subject, root, profile_id, api)
+                wrong = _assert_resume_reactivates_only_the_selected_grant(
+                    subject,
+                    profile_id,
+                    api,
+                    opened,
+                    selected_grant=selected_grant,
+                    held_grant=held_grant,
+                    selected_secret=selected_secret,
+                    held_secret=held_secret,
+                    api_session_id=api_session_id,
+                )
+                _assert_key_denial_revokes_only_that_key(
+                    subject, root, profile_id, opened[-1], selected_key=selected_key, held_key=held_key
+                )
+                assert PROFILE_INPUT not in wrong.output
+                assert selected_secret.decode("ascii") not in wrong.output
             finally:
-                primary = sys.exception()
-                stop.set()
-                try:
-                    running.result(timeout=20)
-                except Exception:
-                    if primary is None:
-                        raise
-                finally:
-                    endpoint.close()
+                for client in reversed(opened):
+                    client.close()
