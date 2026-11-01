@@ -4183,7 +4183,7 @@ desktop:
       unknown: We couldn't confirm the sync finished. Refresh to check. Another sync
         can't start until this one is settled.
       unknown_start: We could not confirm whether the sync started. Do not start another
-        sync; contact support with code unknown.
+        sync; contact support.
       unsupported: This sign-in needs an interaction available in the terminal. Cancel
         this attempt and use Censo sync in the terminal.
     close: Close profile

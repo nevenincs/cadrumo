@@ -1491,7 +1491,7 @@ application:
         filing year {filing_year} period {period} would lower the declared result
         from {baseline_result} to {corrected_result}. Before the autoliquidación rectificativa
         unification, a complementaria you file yourself cannot lawfully decrease liability;
-        use the solicitud de rectificación procedure instead.
+        use a rectification request instead.
       amendment_kind_not_permitted: 'The requested amendment kind {requested_kind}
         is not legally available for modelo {modelo} filing year {filing_year} period
         {period}. Accepted kinds for this period: {accepted_kinds}.'
@@ -2095,8 +2095,8 @@ application:
           must be a date; got %{value_type}.
         decimal_value_type_invalid: The profile fact for decimal-channel value source
           %{binding_id} has unsupported value type %{value_type}.
-        enum_boolean_invalid: The profile fact for enum-channel value source %{binding_id}
-          resolved to a boolean; boolean facts are not valid enum dispatch keys.
+        enum_boolean_invalid: The profile fact for value source %{binding_id} resolved
+          to a boolean; boolean facts are not valid keys.
     quickfile:
       stage_incomplete: The `quickfile` %{stage} stage finished with status %{status}.
       stage_refused: '`quickfile` stopped at the %{stage} stage: the stage was refused

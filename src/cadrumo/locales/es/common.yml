@@ -4244,7 +4244,7 @@ desktop:
       unknown: No hemos podido confirmar que la sincronización haya terminado. Actualiza
         para comprobarlo. No se puede iniciar otra hasta que esta se resuelva.
       unknown_start: No se ha podido confirmar si se inició la sincronización. No
-        inicies otra; contacta con soporte e indica el código unknown.
+        inicies otra; contacta con soporte.
       unsupported: Este acceso requiere una interacción disponible en el terminal.
         Cancela este intento y sincroniza el Censo desde el terminal.
     close: Cerrar perfil

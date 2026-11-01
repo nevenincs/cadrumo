@@ -416,6 +416,20 @@ REVIEWED_LOCALE_SPELLINGS: dict[str, frozenset[str]] = {
             # translated operator guidance and official legal references.
             "minoración",
             "autoconsumo",
+            # Plural of the file format, in the document import prompt:
+            "PDFs",
+            # The ledger's action that takes a row's mark off again:
+            "Unmark",
+            # AEAT's own names for the declaration kinds:
+            "Complementaria",
+            "Rectificativa",
+            "Sustitutiva",
+            # LIS art. 12.3 names these entities in Spanish:
+            "sociedades",
+            "laborales",
+            "explotaciones",
+            "asociativas",
+            "prioritarias",
         }
     ),
     "es": frozenset(
@@ -678,6 +692,14 @@ REVIEWED_LOCALE_SPELLINGS: dict[str, frozenset[str]] = {
             "impórtalo",
             "Impórtalo",
             "confírmala",
+            # Ordinary desktop terms in the document viewer, the asset categories and setup:
+            "zoom",
+            "Zoom",
+            "Hardware",
+            "proxy",
+            # The log viewer's own words for its source and its level:
+            "logger",
+            "Info",
         }
     ),
     "ca": frozenset(
@@ -816,6 +838,15 @@ REVIEWED_LOCALE_SPELLINGS: dict[str, frozenset[str]] = {
             "preomplert",
             "reanomenament",
             "reprenable",
+            # The key's label on a Spanish keyboard:
+            "Supr",
+            # The setup message's term for the network setting:
+            "proxy",
+            # The log viewer's own words for its source and its level:
+            "logger",
+            "Info",
+            # The title of a Spanish ministerial order, as cited:
+            "Orden",
         }
     ),
     "hu": frozenset(
@@ -1188,6 +1219,20 @@ REVIEWED_LOCALE_SPELLINGS: dict[str, frozenset[str]] = {
             "notifications",
             "LongPathsEnabled",
             "Decimal",
+            # The key's label on a keyboard:
+            "Delete",
+            # The log viewer's own words for its source and its level:
+            "logger",
+            "Info",
+            # Spanish legal names kept as cited: estimación objetiva por módulos, LIS art. 12.3 entities, an Orden:
+            "módulos",
+            "sociedades",
+            "explotaciones",
+            "asociativas",
+            "Orden",
+            # A formula's function name and a depreciation method's stored token, both shown as written:
+            "max",
+            "linear",
         }
     ),
 }

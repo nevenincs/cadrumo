@@ -1721,8 +1721,8 @@ application:
       iva_wallet_amount_mismatch: 'Az IVA-tárca egyeztetése blokkolva van a Modelo
         303 esetén: a megadott korábbi kompenzációs összeg eltér a tárca hiteles összegétől.
         Futtasd újra az egyeztetést, vagy javítsd a megadott összeget az egyezésig.'
-      iva_wallet_backend_casilla_conflict: A Modelo 303 előző kompenzációjának backend
-        rovat bemenete ütközik az IVA-tárca egyeztetési döntésével.
+      iva_wallet_backend_casilla_conflict: A Modelo 303 előző kompenzációjának rovatbemenete
+        ütközik az IVA-tárca egyeztetési döntésével.
       iva_wallet_blocked: 'Az IVA-tárca egyeztetése blokkolva van a Modelo 303 esetén
         (%{divergence}): %{reason}'
       iva_wallet_caller_binding_conflict: Az általad megadott érték a Modelo 303 előző
@@ -2181,9 +2181,8 @@ application:
           dátum kell legyen; kapott típus: %{value_type}.'
         decimal_value_type_invalid: 'A(z) %{binding_id} decimális csatornás értékforrás
           profiladata nem támogatott típusú: %{value_type}.'
-        enum_boolean_invalid: A(z) %{binding_id} enumcsatornás értékforrás profiladata
-          logikai értékre oldódott fel; a logikai adatok nem érvényes enum dispatch
-          kulcsok.
+        enum_boolean_invalid: A(z) %{binding_id} értékforrás profiladata logikai értékre
+          oldódott fel; a logikai adatok nem érvényes kulcsok.
     quickfile:
       stage_incomplete: A `quickfile` %{stage} szakasza %{status} állapottal fejeződött
         be.

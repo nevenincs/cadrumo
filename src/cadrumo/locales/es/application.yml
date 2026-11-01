@@ -2220,8 +2220,8 @@ application:
           %{binding_id} debe ser una fecha; se recibió %{value_type}.
         decimal_value_type_invalid: 'El dato de perfil para el origen de valor de
           canal decimal %{binding_id} tiene un tipo no soportado: %{value_type}.'
-        enum_boolean_invalid: El dato de perfil para el origen de valor enum %{binding_id}
-          resolvió a booleano; los booleanos no son claves válidas de despacho enum.
+        enum_boolean_invalid: El dato de perfil para el origen de valor %{binding_id}
+          resolvió a booleano; los booleanos no son claves válidas.
     quickfile:
       stage_incomplete: La etapa %{stage} de `quickfile` terminó con el estado %{status}.
       stage_refused: '`quickfile` se detuvo en la etapa %{stage}: la etapa se rechazó

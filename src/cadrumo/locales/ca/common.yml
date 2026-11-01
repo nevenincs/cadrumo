@@ -4243,7 +4243,7 @@ desktop:
       unknown: No hem pogut confirmar que la sincronització hagi acabat. Actualitza
         per comprovar-ho. No se'n pot iniciar cap altra fins que aquesta es resolgui.
       unknown_start: No s’ha pogut confirmar si s’ha iniciat la sincronització. No
-        n’iniciïs cap altra; contacta amb suport i indica el codi unknown.
+        n’iniciïs cap altra; contacta amb suport.
       unsupported: Aquest accés requereix una interacció disponible al terminal. Cancel·la
         aquest intent i sincronitza el Cens des del terminal.
     close: Tanca el perfil

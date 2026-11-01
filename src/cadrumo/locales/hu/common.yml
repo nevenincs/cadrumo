@@ -2670,7 +2670,7 @@ desktop:
       kind_received: Kapott számlák
       left_out: 'Kihagyva, mert nem ilyen típusú: {count}'
       no_account: Számla nélkül
-      nothing_new: Nincs új importálnivaló
+      nothing_new: Nincs új elem importálásra
       nothing_new_note: Minden sor már szerepel a naplóban.
       only_period: Csak egy időszakra datált tételek
       period: Importálási időszak
@@ -3968,7 +3968,7 @@ desktop:
   logs:
     all_loggers: Minden naplózó
     all_origins: Minden forrás
-    clear_logger: Loggerszűrő törlése
+    clear_logger: A logger szűrő törlése
     copy_all: Összes másolása
     details: Részletek
     dropped: 'A nézetből elvetett régebbi bejegyzések: {count}'
@@ -4227,7 +4227,7 @@ desktop:
         az ellenőrzéshez. Másik szinkronizálás addig nem indítható, amíg ez le nem
         zárul.
       unknown_start: Nem sikerült megerősíteni, hogy elindult-e a szinkronizálás.
-        Ne indíts másikat; fordulj az ügyfélszolgálathoz az unknown kóddal.
+        Ne indíts másikat; fordulj az ügyfélszolgálathoz.
       unsupported: Ehhez a bejelentkezéshez a terminálban elérhető művelet szükséges.
         Szakítsd meg ezt a próbálkozást, és használd a terminál Censo-szinkronizálását.
     close: Profil bezárása
@@ -4458,7 +4458,7 @@ desktop:
     refused_local_ai_not_removed: A Cadrumo nem tudta eltávolítani a helyi MI-t. Ellenőrizd
       újra, majd próbáld meg még egyszer.
     refused_model_selection_unusable: A Cadrumo nem tudja letölteni ezt a modellt.
-      Ellenőrizd a helyi MI modelllistáját az ügynök beállításaiban, majd próbáld
+      Ellenőrizd a helyi modellek listáját az ügynök beállításaiban, majd próbáld
       újra.
     refused_not_cancellable: A beállítás most nem állítható le. Hamarosan befejeződik.
     refused_not_pending: Ez a terv már nem vár rád.
@@ -9969,6 +9969,6 @@ workspace:
       none: Ezen a nyomtatványon semmi sem vár rád.
       title: Teendők
     value:
-      not_applicable: nem alk.
+      not_applicable: nem alkalmazható
       not_known_yet: Még nem ismert
     was: 'korábban: {value}'
