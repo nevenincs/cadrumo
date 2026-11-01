@@ -1,4 +1,4 @@
-"""Focused calculation-registry tests split from the original monolith."""
+"""Focused calculation-registry tests."""
 
 from __future__ import annotations
 
@@ -36,7 +36,7 @@ from ..registry_schema_support import (
 from ..registry_schema_support import (
     revision as _revision,
 )
-from ._registry_schema_part1_support import (
+from ._registry_schema_support import (
     _committed_modelo_text,
     _load_modelo_text,
     _validate_revision,

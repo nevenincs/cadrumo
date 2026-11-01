@@ -1,4 +1,4 @@
-"""Focused adapter contract tests split from the original monolith."""
+"""Adapter contract tests for filed-declaration selection, page-shape context and observations."""
 
 from __future__ import annotations
 

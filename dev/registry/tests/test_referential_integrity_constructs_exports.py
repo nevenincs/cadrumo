@@ -1,4 +1,4 @@
-"""Construct/export/revision referential-integrity tests split from part1."""
+"""Referential-integrity tests for construct, export-field and revision references."""
 
 from __future__ import annotations
 

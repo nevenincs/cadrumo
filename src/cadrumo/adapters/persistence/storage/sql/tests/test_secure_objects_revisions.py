@@ -1,4 +1,4 @@
-"""Focused adapter contract tests split from the original monolith."""
+"""Adapter contract tests for SQL secure-object iteration, quarantine and revision metadata."""
 
 from __future__ import annotations
 

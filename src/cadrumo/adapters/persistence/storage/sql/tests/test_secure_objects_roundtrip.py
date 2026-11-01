@@ -1,4 +1,4 @@
-"""Focused adapter contract tests split from the original monolith."""
+"""Focused adapter contract tests for SQL secure objects."""
 
 from __future__ import annotations
 
@@ -138,7 +138,7 @@ def test_save_refuses_a_written_at_that_could_not_be_read_back(
     The revision id hashes the instant canonicalised to UTC, while the SQLite
     column stores the wall clock and drops ``tzinfo``. An offset-bearing
     instant therefore recomputes a different revision on read than the one it
-    was stored under, so the row used to commit and then raise
+    was stored under, so a row committed with such an instant would raise
     :class:`SecureObjectUnreadableError` on every subsequent load -- data
     accepted and then permanently unreachable. A naive instant carries no
     offset to canonicalise at all. Both are refused at the write funnel, and
@@ -311,7 +311,7 @@ def test_secure_object_row_substitution_fails_closed(tmp_path: Path) -> None:
 
         # Copy the first row's (key-alpha) ciphertext into the second row
         # (key-beta) -- same bucket, same DEK -- a within-bucket substitution
-        # the old static AAD allowed to decrypt as the wrong row.
+        # that must not decrypt as the wrong row.
         with sqlite3.connect(db_path) as con:
             ids = [row_id for (row_id,) in con.execute("SELECT id FROM secure_objects ORDER BY id").fetchall()]
             (first_payload,) = con.execute(

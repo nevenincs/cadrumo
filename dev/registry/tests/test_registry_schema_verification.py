@@ -1,19 +1,13 @@
 """Registry validation of verification expectations and verification predicates.
 
-Split from ``test_registry_schema_part2`` when that module crossed its size
-ceiling. The cut is thematic rather than positional: this module holds the
-whole ``_schema_verification`` surface -- the field validation of
-:class:`VerificationExpectationDefinition` and the operator-by-operator
-validation of :class:`VerificationPredicateDefinition` -- and part2 keeps the
-concerns it never shared with them (extraction profiles, application and
-communication links, export fields, dispatch tables, deadline windows and
-keyed-bracket parameter tables).
-
-That boundary also repairs a split concern rather than creating one. The
-predicate-operator cases had drifted into two separate regions of part2, with
-the ``advisory_when_ratio_ge`` family sitting at the end of the file, far from
-the ``advisory_when_positive`` cases it is a direct sibling of. Both families
-are adjacent here.
+This module covers the whole ``_schema_verification`` surface: the field
+validation of :class:`VerificationExpectationDefinition` and the
+operator-by-operator validation of :class:`VerificationPredicateDefinition`.
+Extraction profiles, links, export fields, dispatch tables, deadline windows
+and keyed-bracket parameter tables are covered by
+``test_registry_schema_extraction_links``. Sibling operator families such as
+``advisory_when_positive`` and ``advisory_when_ratio_ge`` sit next to each
+other.
 
 Each predicate operator is covered in the same shape: its malformed forms are
 refused, and where a committed revision uses the operator for real, that

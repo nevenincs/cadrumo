@@ -1,4 +1,4 @@
-"""Focused adapter contract tests split from the original monolith."""
+"""Adapter contract tests for the translated empty-NIF capture refusal."""
 
 from __future__ import annotations
 

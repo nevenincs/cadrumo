@@ -51,7 +51,7 @@ from ..registry_schema_support import (
 from ..registry_schema_support import (
     revision as _revision,
 )
-from ._registry_schema_part1_support import (
+from ._registry_schema_support import (
     _DECL_CNAE_CASILLA,
     _MISSING_CASILLA,
     _NAMED_LABEL_CASILLA,

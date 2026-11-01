@@ -1,4 +1,4 @@
-"""Focused adapter contract tests split from the original monolith."""
+"""Runtime-attached repository defaults refuse missing sessions and isolate profile writes."""
 
 from __future__ import annotations
 

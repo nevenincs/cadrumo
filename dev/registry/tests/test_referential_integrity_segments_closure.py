@@ -1,4 +1,4 @@
-"""Focused calculation-registry tests split from the original monolith."""
+"""Referential-integrity tests for segmented casillas and calculation-closure manifests."""
 
 from __future__ import annotations
 

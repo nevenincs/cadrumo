@@ -1,4 +1,4 @@
-"""Shared builders for the registry schema part 1 tests."""
+"""Shared builders for the registry schema conformance tests."""
 
 from __future__ import annotations
 

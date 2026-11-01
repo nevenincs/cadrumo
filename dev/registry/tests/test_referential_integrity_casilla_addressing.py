@@ -1,4 +1,4 @@
-"""Casilla addressing referential-integrity tests split from part1."""
+"""Referential-integrity tests for casilla addressing: segments, numbers and display tokens."""
 
 from __future__ import annotations
 

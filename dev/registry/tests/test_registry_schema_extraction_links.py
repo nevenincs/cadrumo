@@ -1,11 +1,9 @@
 """Registry validation of extraction, linking, export and parameter-table schema.
 
-Focused calculation-registry tests split from the original monolith. The
-verification-expectation and verification-predicate cases live in
-``test_registry_schema_part3``; what remains here is the schema surface those
-never shared -- extraction profiles and their parsers, application and
-communication links, casilla/export-field agreement, reconciliation totals,
-dispatch tables, deadline windows and keyed-bracket parameter tables.
+Covers extraction profiles and their parsers, application and communication
+links, casilla/export-field agreement, reconciliation totals, dispatch tables,
+deadline windows and keyed-bracket parameter tables. Verification expectations
+and predicates are covered by ``test_registry_schema_verification``.
 """
 
 from __future__ import annotations

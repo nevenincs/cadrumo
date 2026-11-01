@@ -1,4 +1,4 @@
-"""Focused adapter contract tests split from the original monolith."""
+"""Focused adapter contract tests for the AEAT authenticator."""
 
 from __future__ import annotations
 
@@ -146,7 +146,7 @@ def test_extract_nif_rejects_checksum_invalid_serial(tmp_path: Path) -> None:
     """A serialNumber with a DNI shape but the wrong checksum letter is not accepted.
 
     ``12345678`` checksums to ``Z``, so ``12345678A`` is a shape no real FNMT
-    subject carries. The shape-only gate returned it as the taxpayer identity.
+    subject carries.
     """
     cert = _load_cert(
         tmp_path,

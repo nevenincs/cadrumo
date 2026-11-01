@@ -1,4 +1,4 @@
-"""Focused adapter contract tests split from the original monolith."""
+"""Adapter contract tests for submitted-file and declaration-PDF capture and browser routes."""
 
 from __future__ import annotations
 
@@ -91,7 +91,7 @@ _M111_RESULTADO_CASILLA: CasillaId = validated_casilla_id("30", surface="_M111_R
 
 
 def _casilla_values(values: Mapping[object, Decimal]) -> dict[CasillaId, Decimal]:
-    return validated_casilla_id_map(values, surface="sede declarations part2 casilla values")
+    return validated_casilla_id_map(values, surface="sede submitted-file casilla values")
 
 
 def _submitted_file_artefact(body: bytes) -> FiledDeclaracionArtefact:
