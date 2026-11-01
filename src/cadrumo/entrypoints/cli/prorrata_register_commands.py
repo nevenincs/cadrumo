@@ -222,23 +222,36 @@ def _raise_gross_refusal_if_present(
     reason: str,
 ) -> None:
     """Raise the operator gross-declaration refusal the reason names, if any."""
-    keys = {
-        "gross_declaration_duplicate": "cli.app.ledger.prorrata.gross_duplicate",
-        "gross_declaration_absent": "cli.app.ledger.prorrata.gross_absent",
-        "gross_declaration_sector_unknown": "cli.app.ledger.prorrata.gross_sector_unknown",
-    }
-    key = keys.get(reason)
-    if key is None:
+    if reason not in {"gross_declaration_duplicate", "gross_declaration_absent", "gross_declaration_sector_unknown"}:
         return
-    if refusal.ejercicio is None:
+    ejercicio = refusal.ejercicio
+    if ejercicio is None:
+        raise CliRefusedBoundaryError(context={"reason": "invalid_prorrata_refusal"})
+    if reason == "gross_declaration_duplicate":
+        _raise_prorrata_refusal(
+            "cli.app.ledger.prorrata.gross_duplicate",
+            operation_id=operation_id,
+            refusal=refusal,
+            completion=completion,
+            ejercicio=ejercicio,
+        )
+    if reason == "gross_declaration_absent":
+        _raise_prorrata_refusal(
+            "cli.app.ledger.prorrata.gross_absent",
+            operation_id=operation_id,
+            refusal=refusal,
+            completion=completion,
+            ejercicio=ejercicio,
+        )
+    if refusal.sector_id is None:
         raise CliRefusedBoundaryError(context={"reason": "invalid_prorrata_refusal"})
     _raise_prorrata_refusal(
-        key,
+        "cli.app.ledger.prorrata.gross_sector_unknown",
         operation_id=operation_id,
         refusal=refusal,
         completion=completion,
-        ejercicio=refusal.ejercicio,
-        sector_id=refusal.sector_id or "",
+        ejercicio=ejercicio,
+        sector_id=refusal.sector_id,
     )
 
 

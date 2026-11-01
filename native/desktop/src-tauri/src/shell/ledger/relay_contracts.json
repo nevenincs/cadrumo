@@ -642,6 +642,14 @@
         "path": []
       }
     },
+    "ledger.prorrata.declare_gross": {
+      "may_write": true,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
     "ledger.prorrata.declare_sector": {
       "may_write": true,
       "review": false,
@@ -668,6 +676,14 @@
     },
     "ledger.prorrata.list": {
       "may_write": false,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
+    "ledger.prorrata.remove_gross": {
+      "may_write": true,
       "review": false,
       "subject": {
         "kind": "profile",
