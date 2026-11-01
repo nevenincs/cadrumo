@@ -2,6 +2,10 @@
 // and the literals 1n and -1n reach `Intl`, so no value passes through a double
 // at any size. Text that is not a plain decimal is returned as it came.
 
+// The sign a figure carries on screen, as the backend's value presentation
+// writes it. Typed text is read with this sign or the ASCII one.
+const SCREEN_MINUS = "\u2212";
+
 const formats = new Map<string, Intl.NumberFormat>();
 
 function numberFormat(
@@ -94,7 +98,9 @@ function drawParts(
         ? { ...part, value: wholeText }
         : part.type === "fraction"
           ? { ...part, value: fraction }
-          : part,
+          : part.type === "minusSign"
+            ? { ...part, value: SCREEN_MINUS }
+            : part,
     );
 }
 
@@ -120,9 +126,6 @@ export function formatDecimal(
 
 const CENTS = 2;
 const NO_BREAK_SPACE = "\u00a0";
-// The sign a figure carries on screen, as the backend's value presentation
-// writes it, so a negative amount reads as one.
-const SCREEN_MINUS = "\u2212";
 const AMOUNT_PARTS = new Set<Intl.NumberFormatPartTypes>([
   "integer",
   "group",
@@ -134,9 +137,7 @@ const AMOUNT_PARTS = new Set<Intl.NumberFormatPartTypes>([
  * no-break space between them, as the backend writes it. The mark is the
  * currency's symbol where the language has one and its code where not. */
 function markedAfter(parts: Intl.NumberFormatPart[], mark: string): string {
-  const sign = parts.some((part) => part.type === "minusSign")
-    ? SCREEN_MINUS
-    : "";
+  const sign = parts.find((part) => part.type === "minusSign")?.value ?? "";
   const figure = parts
     .filter((part) => AMOUNT_PARTS.has(part.type))
     .map((part) => part.value)
@@ -338,7 +339,7 @@ function readSingle(body: string, mark: string, decimal: string) {
  * of the product's own reader, which `tests/shared/numbers.spec.ts` holds it to.
  */
 export function readLocaleDecimal(locale: string, raw: string): string | null {
-  const text = raw.trim();
+  const text = raw.trim().replace(/^\u2212/, "-");
   if (!/^-?[\d.,\s]+$/.test(text)) return null;
   const negative = text.startsWith("-");
   const body = negative ? text.slice(1) : text;

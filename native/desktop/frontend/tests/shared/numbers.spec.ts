@@ -16,6 +16,7 @@ import {
 } from "../../src/shell/ledgerGrammar";
 
 const NBSP = " ";
+const MINUS = "\u2212";
 const LOCALES = ["en", "es", "ca", "hu"] as const;
 
 // `Intl` reads a decimal string as its exact value, which the module under test
@@ -157,10 +158,10 @@ test("integers beyond 2^53 keep every digit", () => {
 
 test("six decimals and negatives stay exact", () => {
   const expected = {
-    en: ["0.000001", "-12,345.000001", "-0.5"],
-    es: ["0,000001", "-12.345,000001", "-0,5"],
-    ca: ["0,000001", "-12.345,000001", "-0,5"],
-    hu: ["0,000001", `-12${NBSP}345,000001`, "-0,5"],
+    en: ["0.000001", `${MINUS}12,345.000001`, `${MINUS}0.5`],
+    es: ["0,000001", `${MINUS}12.345,000001`, `${MINUS}0,5`],
+    ca: ["0,000001", `${MINUS}12.345,000001`, `${MINUS}0,5`],
+    hu: ["0,000001", `${MINUS}12${NBSP}345,000001`, `${MINUS}0,5`],
   };
   for (const locale of LOCALES) {
     const [tiny, negative, belowOne] = expected[locale];
@@ -209,10 +210,12 @@ test("exact text agrees with Intl's own exact reading in every locale", () => {
       useGrouping: "always",
     });
     for (const value of values) {
-      expect(formatDecimal(locale, value)).toBe(plain.format(exactly(value)));
+      expect(formatDecimal(locale, value)).toBe(
+        plain.format(exactly(value)).replace("-", MINUS),
+      );
       expect(
         formatPercent(locale, value, { unit: "fraction", maxFraction: 20 }),
-      ).toBe(percent.format(exactly(value)));
+      ).toBe(percent.format(exactly(value)).replace("-", MINUS));
     }
     for (const value of ["1234.5", "-12345.67", "0.5", "9007199254740993.25"])
       expect(formatAmount(locale, value, { currency: "EUR" })).toBe(
@@ -225,7 +228,7 @@ test("fraction limits round half away from zero on the decimal text", () => {
   // Each of these sits on a tie that a double stores to one side or the other.
   expect(formatAmount("en", "1.005")).toBe("1.01");
   expect(formatAmount("en", "2.675")).toBe("2.68");
-  expect(formatAmount("en", "-2.675")).toBe("-2.68");
+  expect(formatAmount("en", "-2.675")).toBe(`${MINUS}2.68`);
   expect(formatAmount("en", "1.0049")).toBe("1.00");
   expect(formatAmount("en", "999.995")).toBe("1,000.00");
   expect(formatDecimal("en", "1.123", { minFraction: 1, maxFraction: 2 })).toBe(
@@ -326,9 +329,9 @@ test("a percentage names its unit", () => {
   ).toBe("10.5%");
   expect(formatPercent("en", "1", { unit: "fraction" })).toBe("100%");
   expect(formatPercent("en", "0.5", { unit: "fraction" })).toBe("50%");
-  expect(formatPercent("en", "-0.5", { unit: "fraction" })).toBe("-50%");
+  expect(formatPercent("en", "-0.5", { unit: "fraction" })).toBe(`${MINUS}50%`);
   expect(formatPercent("es", "-0.005", { unit: "fraction" })).toBe(
-    `-0,5${NBSP}%`,
+    `${MINUS}0,5${NBSP}%`,
   );
   expect(formatPercent("en", "12345.6", { unit: "points" })).toBe("12,345.6%");
   expect(

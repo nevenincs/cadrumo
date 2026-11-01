@@ -15,6 +15,7 @@ from .edit_locale_input import SPACE_GROUPS, ModeloEditLocaleMarks, locale_marks
 from .edit_models import ModeloEditNormalisation, ModeloEditParseReason
 from .edit_parse_errors import ModeloEditParseRefusedError
 from .edit_value_grammar import MONEY_OPERAND_MAXIMUM, ModeloEditValueFamily, ModeloEditValueGrammarV1
+from .value_presentation import SCREEN_MINUS_SIGN
 
 _NON_FINITE: Final = frozenset({"nan", "-nan", "inf", "-inf", "infinity", "-infinity", "+inf", "+infinity"})
 
@@ -92,6 +93,8 @@ def read_edit_number_lexeme(
 ) -> Decimal:
     """Read one localized number into a decimal, refusing anything two-way readable."""
     text = lexeme.strip()
+    if text.startswith(SCREEN_MINUS_SIGN):
+        text = f"-{text[1:]}"
     negative, body = _checked_number_lexeme_shape(text)
     canonical = _localized_number_body(body, locale, normalisations, sign="-" if negative else "")
     if not _CANONICAL_DECIMAL_RE.fullmatch(canonical):

@@ -578,7 +578,7 @@ export function modeloFixture(options: Options): ModeloPort {
           );
           const held = submission.held ?? [];
           const read = correction
-            ? /^[-+\d.,\s]+$/.test(correction.lexeme)
+            ? /^[-\u2212+\d.,\s]+$/.test(correction.lexeme)
               ? `preflight-${form}-correction`
               : `preflight-${form}-correction-refused`
             : entries.length > 0
