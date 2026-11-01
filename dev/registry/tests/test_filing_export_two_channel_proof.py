@@ -405,44 +405,37 @@ def test_static_projection_preserves_every_strict_disposition_and_fails_closed_o
     assert {row[6] for row in only_degraded} == {str(classification.strict_validation_error)}
 
 
-def test_every_selected_filing_revision_refuses_each_unenrolled_proof_channel(request: pytest.FixtureRequest) -> None:
-    """Every public candidate retains its exact refusal residue."""
-    try:
-        registry = compiled_bundled_authority()
-    except RegistryValidationError as strict_error:
-        classification = load_registry_diagnostic_classification(
-            bundled_path("registry", "aeat"),
-            source_root=bundled_path(),
-            strict_validation_error=strict_error,
-        )
-        enrollment = derive_diagnostic_filing_export_conformance_enrollment(
-            workspace_root=_REPOSITORY_ROOT,
+def _assert_degraded_registry_leaves_only_residues(strict_error: RegistryValidationError) -> None:
+    classification = load_registry_diagnostic_classification(
+        bundled_path("registry", "aeat"),
+        source_root=bundled_path(),
+        strict_validation_error=strict_error,
+    )
+    enrollment = derive_diagnostic_filing_export_conformance_enrollment(
+        workspace_root=_REPOSITORY_ROOT,
+        registry_root=bundled_path("registry", "aeat"),
+        source_root=bundled_path(),
+        classification=classification,
+        vectors=canonical_filing_export_conformance_vectors(
             registry_root=bundled_path("registry", "aeat"),
             source_root=bundled_path(),
-            classification=classification,
-            vectors=canonical_filing_export_conformance_vectors(
-                registry_root=bundled_path("registry", "aeat"),
-                source_root=bundled_path(),
-            ),
-        )
-        selected_coordinates = {
-            (str(selected.modelo), str(selected.revision)) for selected in classification.filing_revisions
-        }
-        materialized_coordinates = {
-            (str(vector.evidence.coordinate.modelo), str(vector.evidence.coordinate.revision))
-            for vector in enrollment.materializable_vectors
-        }
-        residue_coordinates = {(str(residue.modelo), str(residue.revision)) for residue in enrollment.residues}
-        assert enrollment.full_registry_validation_error == str(strict_error)
-        assert selected_coordinates == residue_coordinates
-        assert not materialized_coordinates
-        return
-    else:
-        full_registry_validation_error = None
-    proof = cast(
-        CanonicalTwoChannelFilingExportProofAuthority,
-        request.getfixturevalue("canonical_filing_export_proof"),
+        ),
     )
+    selected_coordinates = {
+        (str(selected.modelo), str(selected.revision)) for selected in classification.filing_revisions
+    }
+    materialized_coordinates = {
+        (str(vector.evidence.coordinate.modelo), str(vector.evidence.coordinate.revision))
+        for vector in enrollment.materializable_vectors
+    }
+    residue_coordinates = {(str(residue.modelo), str(residue.revision)) for residue in enrollment.residues}
+    assert enrollment.full_registry_validation_error == str(strict_error)
+    assert selected_coordinates == residue_coordinates
+    assert not materialized_coordinates
+
+
+def _assert_selected_revisions_refuse_unenrolled_channels(registry, proof) -> set[tuple[str, str]]:
+    """Assess each filing-grade revision in the support envelope and return the coordinates assessed."""
     assessed = 0
     selected_coordinates = set()
     enrolled_coordinates = {
@@ -480,9 +473,10 @@ def test_every_selected_filing_revision_refuses_each_unenrolled_proof_channel(re
             assert {item.channel for item in assessment.refusals} == expected_channels
             assessed += 1
     assert assessed > 0
+    return selected_coordinates
 
-    enrollment = proof.conformance_enrollment
-    assert enrollment.full_registry_validation_error == full_registry_validation_error
+
+def _assert_enrollment_accounts_for_every_selected_revision(enrollment, selected_coordinates) -> None:
     candidate_coordinates = {
         (str(candidate.evidence.coordinate.modelo), str(candidate.evidence.coordinate.revision))
         for candidate in enrollment.provenance_candidates
@@ -528,4 +522,20 @@ def test_every_selected_filing_revision_refuses_each_unenrolled_proof_channel(re
         }.intersection(type(candidate.evidence).model_fields)
         for candidate in enrollment.provenance_candidates
     )
-    assert full_registry_validation_error is None
+
+
+def test_every_selected_filing_revision_refuses_each_unenrolled_proof_channel(request: pytest.FixtureRequest) -> None:
+    """Every public candidate retains its exact refusal residue."""
+    try:
+        registry = compiled_bundled_authority()
+    except RegistryValidationError as strict_error:
+        _assert_degraded_registry_leaves_only_residues(strict_error)
+        return
+    proof = cast(
+        CanonicalTwoChannelFilingExportProofAuthority,
+        request.getfixturevalue("canonical_filing_export_proof"),
+    )
+    selected_coordinates = _assert_selected_revisions_refuse_unenrolled_channels(registry, proof)
+    enrollment = proof.conformance_enrollment
+    assert enrollment.full_registry_validation_error is None
+    _assert_enrollment_accounts_for_every_selected_revision(enrollment, selected_coordinates)
