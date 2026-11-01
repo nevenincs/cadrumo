@@ -17,6 +17,7 @@ from ...core.config import Settings
 from ...core.config_support import LLMProvider
 from ...core.hashing import canonical_json_bytes
 from ...core.operations import (
+    EFFECTS_WITHOUT_PARTIAL_COMMIT,
     OperationCancellation,
     OperationClosePolicy,
     OperationDeadline,
@@ -102,7 +103,7 @@ def check_invoice_evidence_result_size(result: BaseModel) -> None:
 def invoice_evidence_operation_capabilities(*, mutates: bool, off_host_optional: bool = False) -> OperationCapabilities:
     """Build the shared durable capability policy from operation effect ownership."""
     effects = (
-        frozenset({OperationEffect.NONE, OperationEffect.UPDATED, OperationEffect.UNKNOWN})
+        EFFECTS_WITHOUT_PARTIAL_COMMIT
         if mutates or off_host_optional
         else frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN})
     )

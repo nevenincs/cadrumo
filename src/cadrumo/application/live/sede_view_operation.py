@@ -54,6 +54,7 @@ from ...core.errors.hierarchy import InternalInvariantError
 from ...core.identity.bucket import BucketId
 from ...core.logging import get_logger
 from ...core.operations import (
+    EFFECTS_WITHOUT_PARTIAL_COMMIT,
     OperationCancellation,
     OperationClosePolicy,
     OperationDeadline,
@@ -154,7 +155,7 @@ SEDE_VIEW_CAPABILITIES = OperationCapabilities(
     sensitive_input=OperationSensitiveInputPolicy.NONE,
     conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
     owned_resources=frozenset({OperationOwnedResource.PROCESS}),
-    permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.UPDATED, OperationEffect.UNKNOWN}),
+    permitted_effects=EFFECTS_WITHOUT_PARTIAL_COMMIT,
     close_policy=OperationClosePolicy.REQUEST_CANCEL,
 )
 

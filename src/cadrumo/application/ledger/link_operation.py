@@ -15,6 +15,7 @@ from ...core.errors.hierarchy import CoreValidationError
 from ...core.hashing import canonical_json_bytes
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import (
+    EFFECTS_WITHOUT_PARTIAL_COMMIT,
     OperationCancellation,
     OperationClosePolicy,
     OperationDeadline,
@@ -371,7 +372,7 @@ def build_ledger_link_definition(
             sensitive_input=OperationSensitiveInputPolicy.SECURE_REFERENCE,
             conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
             owned_resources=frozenset(),
-            permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.UPDATED, OperationEffect.UNKNOWN}),
+            permitted_effects=EFFECTS_WITHOUT_PARTIAL_COMMIT,
             close_policy=OperationClosePolicy.DETACH_ALLOWED,
         ),
         refusal_detail_codes=frozenset({LEDGER_LINK_VALIDATION_REFUSAL_CODE}),

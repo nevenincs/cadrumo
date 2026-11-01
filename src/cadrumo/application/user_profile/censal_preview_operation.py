@@ -21,6 +21,7 @@ from ...core.bucket_pointer import require_active_bucket_id
 from ...core.hashing import canonical_json_bytes
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import (
+    EFFECTS_WITHOUT_PARTIAL_COMMIT,
     OperationCancellation,
     OperationClosePolicy,
     OperationDeadline,
@@ -427,7 +428,7 @@ def build_censal_preview_operation_definition(
             sensitive_input=OperationSensitiveInputPolicy.NONE,
             conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
             owned_resources=frozenset({OperationOwnedResource.PROCESS}),
-            permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.UPDATED, OperationEffect.UNKNOWN}),
+            permitted_effects=EFFECTS_WITHOUT_PARTIAL_COMMIT,
             close_policy=OperationClosePolicy.DETACH_ALLOWED,
         ),
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,

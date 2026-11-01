@@ -13,6 +13,7 @@ from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.operations import (
+    EFFECTS_WITHOUT_PARTIAL_COMMIT,
     OperationCancellation,
     OperationClosePolicy,
     OperationDeadline,
@@ -552,7 +553,7 @@ def build_ledger_rule_add_definition(
         result_type=LedgerRuleAddExecutionResult,
         executor_type=LedgerRuleAddExecutor,
         build=lambda: LedgerRuleAddExecutor(repository_factory, execution_caller_reader=execution_caller_reader),
-        effects=frozenset({OperationEffect.NONE, OperationEffect.UPDATED, OperationEffect.UNKNOWN}),
+        effects=EFFECTS_WITHOUT_PARTIAL_COMMIT,
     )
 
 

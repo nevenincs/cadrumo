@@ -17,6 +17,7 @@ from cadrumo_client.contracts.access_vocabulary import (
 )
 
 from ...core.operations import (
+    EFFECTS_WITHOUT_PARTIAL_COMMIT,
     OperationCancellation,
     OperationClosePolicy,
     OperationDeadline,
@@ -186,9 +187,7 @@ def build_apoderado_operation_definitions(factory: ApoderadoOperationPortsFactor
                     sensitive_input=OperationSensitiveInputPolicy.NONE,
                     conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
                     owned_resources=frozenset(),
-                    permitted_effects=frozenset(
-                        {OperationEffect.NONE, OperationEffect.UNKNOWN, OperationEffect.UPDATED}
-                    )
+                    permitted_effects=EFFECTS_WITHOUT_PARTIAL_COMMIT
                     if mutating
                     else frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN}),
                     close_policy=OperationClosePolicy.DETACH_ALLOWED,

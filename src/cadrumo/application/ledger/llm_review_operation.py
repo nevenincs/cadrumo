@@ -14,6 +14,7 @@ from cadrumo_client.contracts.access_vocabulary import (
 
 from ...core.hashing import sha256_hex
 from ...core.operations import (
+    EFFECTS_WITHOUT_PARTIAL_COMMIT,
     OperationCancellation,
     OperationClosePolicy,
     OperationDeadline,
@@ -177,7 +178,7 @@ def build_ledger_llm_review_definition(
             sensitive_input=OperationSensitiveInputPolicy.SECURE_REFERENCE,
             conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
             owned_resources=frozenset(),
-            permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.UPDATED, OperationEffect.UNKNOWN}),
+            permitted_effects=EFFECTS_WITHOUT_PARTIAL_COMMIT,
             close_policy=OperationClosePolicy.DETACH_ALLOWED,
         ),
         reconciliation_policy=OperationReconciliationPolicy.RESUME_FROM_CHECKPOINT,

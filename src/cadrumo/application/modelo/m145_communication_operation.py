@@ -17,6 +17,7 @@ from pydantic import BaseModel
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, DisclosureCategory
 
 from ...core.operations import (
+    EFFECTS_WITHOUT_PARTIAL_COMMIT,
     OperationCancellation,
     OperationClosePolicy,
     OperationDeadline,
@@ -155,11 +156,9 @@ def _build_definition(
             sensitive_input=OperationSensitiveInputPolicy.SECURE_REFERENCE,
             conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
             owned_resources=frozenset(),
-            permitted_effects=frozenset(
-                {OperationEffect.NONE, OperationEffect.UNKNOWN, OperationEffect.UPDATED}
-                if mutating
-                else {OperationEffect.NONE, OperationEffect.UNKNOWN}
-            ),
+            permitted_effects=EFFECTS_WITHOUT_PARTIAL_COMMIT
+            if mutating
+            else frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN}),
             close_policy=OperationClosePolicy.DETACH_ALLOWED,
         ),
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,

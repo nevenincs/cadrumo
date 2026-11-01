@@ -21,6 +21,7 @@ from ...core.async_cleanup import await_cancellation_complete
 from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import (
+    EFFECTS_WITHOUT_PARTIAL_COMMIT,
     OperationCancellation,
     OperationClosePolicy,
     OperationDeadline,
@@ -522,9 +523,7 @@ def build_profile_archive_operation_definitions(
             result_type=ProfileArchiveExportExecutionResult,
             executor_type=ProfileArchiveExportExecutor,
             build=lambda: ProfileArchiveExportExecutor(factory),
-            capabilities=_capabilities(
-                frozenset({OperationEffect.NONE, OperationEffect.UPDATED, OperationEffect.UNKNOWN})
-            ),
+            capabilities=_capabilities(EFFECTS_WITHOUT_PARTIAL_COMMIT),
             # A refused destination names the suffix the path needs, which a
             # client can only act on if the refusal's detail reaches it.
             public_error_detail=True,
@@ -538,9 +537,7 @@ def build_profile_archive_operation_definitions(
             build=lambda: ProfileArchivePushExecutor(factory),
             # Creation receipts are real local writes. Their intermediate
             # acknowledgement does not establish remote mirror completion.
-            capabilities=_capabilities(
-                frozenset({OperationEffect.NONE, OperationEffect.UPDATED, OperationEffect.UNKNOWN})
-            ),
+            capabilities=_capabilities(EFFECTS_WITHOUT_PARTIAL_COMMIT),
         ),
         build_single_phase_definition(
             definition_id=PROFILE_ARCHIVE_RECONCILE_OPERATION_DEFINITION_ID,

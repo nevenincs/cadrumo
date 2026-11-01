@@ -10,6 +10,7 @@ from pydantic import BaseModel
 
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.operations import (
+    EFFECTS_WITHOUT_PARTIAL_COMMIT,
     OperationCancellation,
     OperationClosePolicy,
     OperationDeadline,
@@ -41,7 +42,7 @@ LOCAL_FILE_EXPORT_CAPABILITIES = OperationCapabilities(
     sensitive_input=OperationSensitiveInputPolicy.SECURE_REFERENCE,
     conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
     owned_resources=frozenset(),
-    permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN, OperationEffect.UPDATED}),
+    permitted_effects=EFFECTS_WITHOUT_PARTIAL_COMMIT,
     close_policy=OperationClosePolicy.DETACH_ALLOWED,
 )
 
