@@ -27,7 +27,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
-from typing import Final, Literal
+from typing import Final
 
 from .errors import RegistryValidationError
 from .facts.resolution import ResolvedScalarFact, ScalarFactQuery, required_mapping_entry, unique_mapping_tokens
@@ -76,7 +76,7 @@ _BUCKET_FIELDS: Final = frozenset({"claves", "floor_fact", "declared_regardless_
 
 
 def resolve_counterpart_operation_claves(
-    modelo: Literal["347", "349"], *, effective_date: date, authority: GovernedFactSource | None = None
+    modelo: str, *, effective_date: date, authority: GovernedFactSource | None = None
 ) -> frozenset[str]:
     """Resolve one modelo's operation letters from the pinned filing-period fact.
 

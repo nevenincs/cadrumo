@@ -32,6 +32,7 @@ from .binding_selector_utils import (
     validate_rectification_fields,
 )
 from .errors import RegistryValidationError
+from .form_codes import form_for_role
 from .ids import BindingId
 from .m347_threshold import M347DeclarableSet, m347_declarable_party_buckets, resolve_counterpart_operation_claves
 from .schema_base import coerce_enum_member
@@ -796,28 +797,32 @@ def _validate_invoice_operation_claves(
             )
 
 
+_THIRD_PARTY_OPERATIONS_ROLE = "third_party.annual_operations"
+_INTRACOMMUNITY_SUMMARY_ROLE = "iva.intracommunity_summary"
+
+
 def _binding_clave_families(
     binding: BindingDefinition,
-) -> tuple[tuple[Literal["347", "349"], Literal["operation_clave", "intracommunity_clave"]], ...]:
+) -> tuple[tuple[str, Literal["operation_clave", "intracommunity_clave"]], ...]:
     """Identify each operation-clave channel consumed by a source or selector."""
     selector = binding.provider
     if not isinstance(selector, InvoiceProviderBase):
         return ()
-    families: list[tuple[Literal["347", "349"], Literal["operation_clave", "intracommunity_clave"]]] = []
+    families: list[tuple[str, Literal["operation_clave", "intracommunity_clave"]]] = []
     if binding.source == BindingSourceKind.M347_THIRD_PARTY_OPERATION or selector.grouping == "contraparte_clave":
-        families.append(("347", "operation_clave"))
+        families.append((_THIRD_PARTY_OPERATIONS_ROLE, "operation_clave"))
     if (
         binding.source == BindingSourceKind.M349_INTRACOMMUNITY_OPERATION
         or selector.grouping in ("operator_clave", "operator_clave_period")
         or (selector.claves and selector.grouping != "contraparte_clave")
     ):
-        families.append(("349", "intracommunity_clave"))
+        families.append((_INTRACOMMUNITY_SUMMARY_ROLE, "intracommunity_clave"))
     return tuple(families)
 
 
 def _validate_observation_clave_family(
     observations: tuple[InvoiceObservation, ...],
-    modelo: Literal["347", "349"],
+    role: str,
     field: Literal["operation_clave", "intracommunity_clave"],
     effective_date: date | None,
 ) -> None:
@@ -831,6 +836,7 @@ def _validate_observation_clave_family(
     present = [(invoice_id, value) for invoice_id, value in present if value is not None]
     if not present:
         return
+    modelo = form_for_role(role)
     if effective_date is None:
         raise RegistryValidationError(f"{modelo} invoice operation claves require a filing-period date")
     vocabulary = resolve_counterpart_operation_claves(modelo, effective_date=effective_date)
