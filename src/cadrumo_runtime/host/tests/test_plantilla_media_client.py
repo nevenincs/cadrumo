@@ -10,20 +10,13 @@ from uuid import UUID
 import pytest
 
 from cadrumo.adapters.persistence.storage.custody.tests.automation_support import MemoryNativePort
-from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
-    load_test_profile_record,
-    profile_authority_contexts,
-)
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation
 from cadrumo.application.user_profile.profile_operation_contracts import (
     ProfilePlantillaMediaOperationProjection,
     ProfilePlantillaMediaOperationRequest,
     ProfilePlantillaMediaRemove,
     ProfilePlantillaMediaSet,
 )
-from cadrumo.application.user_profile.view_operation import ProfileViewFactItem, ProfileViewPageKind
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition
 from cadrumo.domain.user_profile.plantilla_media import PlantillaMediaState
 from cadrumo.domain.user_profile.values import UserProfileRecord
@@ -34,6 +27,7 @@ from cadrumo_client.transport.profile_mutations import ProfileMutationRunError, 
 from cadrumo_client.transport.windows import WindowsEndpoint
 
 from ...adapters.tests.profile_worker_support import PROFILE_INPUT, owner_id, worker_profiles
+from .profile_record_support import profile_view_facts, stored_profile_record
 from .served_runtime import SyntheticLogin, serving_runtime
 
 pytestmark = [
@@ -43,15 +37,6 @@ pytestmark = [
     pytest.mark.skipif(sys.platform != "win32", reason="requires real native Windows profile workers"),
     pytest.mark.usefixtures("authority_operation"),
 ]
-
-
-def _view(client: FrontendClient) -> tuple[int, str, dict[str, str]]:
-    collection = client.read_profile_view((ProfileViewPageKind.FACTS,), timeout=90)
-    items = collection.items(ProfileViewPageKind.FACTS)
-    assert all(isinstance(item, ProfileViewFactItem) for item in items)
-    facts = {item.path: item.value for item in items if isinstance(item, ProfileViewFactItem)}
-    assert len(facts) == len(items)
-    return collection.record_revision, collection.content_digest, facts
 
 
 def _request(
@@ -75,23 +60,11 @@ def _set(amount: str, state: PlantillaMediaState) -> ProfilePlantillaMediaSet:
     return ProfilePlantillaMediaSet(average_workforce=amount, state=state)
 
 
-def _record(profile_id: UUID, *, root: Path) -> UserProfileRecord:
-    """Read the real encrypted record, then release process-local custody."""
-    _, decode = profile_authority_contexts()
-    authenticate_profile_for_invocation(
-        name=str(profile_id), passphrase_callback=lambda: PROFILE_INPUT, profile_decode_context=decode
-    )
-    try:
-        return load_test_profile_record(profile_id, root=root)
-    finally:
-        close_active_bucket_session()
-
-
 def _set_and_repeat(client: FrontendClient, profile_id: UUID, baseline: UserProfileRecord) -> tuple[int, str]:
     password = bytearray(PROFILE_INPUT.encode())
     client.login_password(password)
     assert password == bytearray(len(password))
-    revision, digest, _ = _view(client)
+    revision, digest, _ = profile_view_facts(client)
     assert (revision, digest) == (baseline.record_revision, baseline.content_digest)
 
     first = run_profile_mutation(
@@ -109,7 +82,7 @@ def _set_and_repeat(client: FrontendClient, profile_id: UUID, baseline: UserProf
     assert type(first.projection) is ProfilePlantillaMediaOperationProjection
     assert first.projection.year == 2025 and first.projection.changed
     assert first.projection.record_revision == revision + 1
-    revision, digest, facts = _view(client)
+    revision, digest, facts = profile_view_facts(client)
     assert revision == first.projection.record_revision
     assert {path: value for path, value in facts.items() if path.startswith("irpf.plantilla_media.")} == {
         "irpf.plantilla_media.0.year": "2025",
@@ -153,7 +126,7 @@ def _refuse_stale_baseline(
     assert stale.value.reason == "FAIL_PROFILE_RECORD_CONFLICT"
     assert stale.value.terminal_condition is OperationTerminalCondition.FAILED
     assert stale.value.effect is not OperationEffect.UPDATED
-    assert _view(client)[:2] == (revision, digest)
+    assert profile_view_facts(client)[:2] == (revision, digest)
 
 
 def _replace_then_remove(client: FrontendClient, profile_id: UUID, revision: int, digest: str) -> tuple[int, str]:
@@ -171,7 +144,7 @@ def _replace_then_remove(client: FrontendClient, profile_id: UUID, revision: int
     assert replaced.effect is OperationEffect.UPDATED
     assert type(replaced.projection) is ProfilePlantillaMediaOperationProjection
     assert replaced.projection.changed and replaced.projection.record_revision == revision + 1
-    revision, digest, facts = _view(client)
+    revision, digest, facts = profile_view_facts(client)
     assert facts["irpf.plantilla_media.0.average_workforce"] == "11.75"
     assert facts["irpf.plantilla_media.0.state"] == "observed"
 
@@ -189,7 +162,7 @@ def _replace_then_remove(client: FrontendClient, profile_id: UUID, revision: int
     assert removed.effect is OperationEffect.UPDATED
     assert type(removed.projection) is ProfilePlantillaMediaOperationProjection
     assert removed.projection.changed and removed.projection.record_revision == revision + 1
-    revision, digest, facts = _view(client)
+    revision, digest, facts = profile_view_facts(client)
     assert not any(path.startswith("irpf.plantilla_media.") for path in facts)
     return revision, digest
 
@@ -209,7 +182,7 @@ def _add_next_year(client: FrontendClient, profile_id: UUID, revision: int, dige
     assert next_year.effect is OperationEffect.UPDATED
     assert type(next_year.projection) is ProfilePlantillaMediaOperationProjection
     assert next_year.projection.changed and next_year.projection.record_revision == revision + 1
-    revision, digest, facts = _view(client)
+    revision, digest, facts = profile_view_facts(client)
     assert {path: value for path, value in facts.items() if path.startswith("irpf.plantilla_media.")} == {
         "irpf.plantilla_media.1.year": "2024",
         "irpf.plantilla_media.1.average_workforce": "10",
@@ -236,7 +209,7 @@ def _refuse_invalid_and_foreign(
     assert invalid.value.operation_id
     assert invalid.value.terminal_condition is OperationTerminalCondition.REFUSED
     assert invalid.value.effect is not OperationEffect.UPDATED
-    assert _view(client)[:2] == (revision, digest)
+    assert profile_view_facts(client)[:2] == (revision, digest)
 
     with pytest.raises(FrontendRefusedError, match="profile_mismatch"):
         run_profile_mutation(
@@ -268,7 +241,7 @@ def test_native_plantilla_media_set_noop_replace_remove_and_tombstone_index(tmp_
     with worker_profiles(tmp_path) as (root, targets):
         profile_id = targets[0][0].binding.profile_id
         foreign_id = targets[1][0].binding.profile_id
-        baseline = _record(profile_id, root=root)
+        baseline = stored_profile_record(profile_id, root=root)
         endpoint = WindowsEndpoint(storage_root=root)
         installation(storage_root=root, os_owner_id=owner_id(), storage_identity=endpoint.storage_identity)
         native = MemoryNativePort()
@@ -289,4 +262,4 @@ def test_native_plantilla_media_set_noop_replace_remove_and_tombstone_index(tmp_
                 revision, digest = _add_next_year(client, profile_id, revision, digest)
                 _refuse_invalid_and_foreign(client, profile_id, foreign_id, revision, digest)
                 client.lock()
-        _assert_tombstoned_index(_record(profile_id, root=root), baseline)
+        _assert_tombstoned_index(stored_profile_record(profile_id, root=root), baseline)
