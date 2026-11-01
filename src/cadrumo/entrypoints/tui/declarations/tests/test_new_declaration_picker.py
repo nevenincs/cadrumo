@@ -19,6 +19,50 @@ from ..picker import NewDeclarationPicker
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
+def _assert_picker_confirmation_state(picker, selected, app, create, hint, table, size):
+    assert picker.selected == selected
+    assert app.focused is create
+    assert not create.disabled
+    assert not hint.display
+    assert "2025" in str(picker.query_one("#declaration-picker-selection", Static).render())
+    rendered = "\n".join(str(item.render()) for item in picker.query(Static))
+    assert "tui." not in rendered
+    assert geometry_band(app, size[0]) == []
+    assert table.max_scroll_x == 0
+
+
+def _assert_picker_period_selection(picker, table, create):
+    assert picker.modelo == "111"
+    assert table.row_count == 2
+    assert create.disabled and picker.selected is None
+    assert create.display
+    hint = picker.query_one("#declaration-picker-hint", Static)
+    assert hint.display and str(hint.render()) == tr("tui.declarations.list.new.period_selection_hint")
+    assert picker.region.contains_region(hint.region) and hint.region.bottom <= table.region.y
+    assert "2025" in str(table.get_row_at(0)[0])
+    assert "2025" in str(table.get_row_at(1)[0])
+    return hint
+
+
+def _assert_picker_modelo_list(app, table, size):
+    assert tuple(row.key.value for row in table.ordered_rows) == ("111", "130")
+    assert app.focused is table
+    assert geometry_band(app, size[0]) == []
+    assert table.max_scroll_x == 0
+
+
+def _assert_picker_initial_state(app, picker, table, create, size):
+    assert app.focused is table
+    assert tuple(row.key.value for row in table.ordered_rows) == ("130",)
+    assert create.disabled and picker.selected is None
+    assert not create.display
+    assert not picker.query_one("#declaration-picker-hint", Static).display
+    assert str(picker.query_one("#declaration-picker-cancel", Button).label) == tr("workspace.modelo.editor.cancel")
+    assert not picker.query(Input)
+    assert geometry_band(app, size[0]) == []
+    assert table.max_scroll_x == 0
+
+
 @pytest.mark.asyncio
 @pytest.mark.parametrize("locale", tuple(OutputLanguage))
 @pytest.mark.parametrize("theme", ("cadrumo-dark", "cadrumo-light"))
@@ -43,36 +87,15 @@ async def test_picker_requires_modelo_period_and_confirmation_in_every_locale_an
             await settle(pilot)
             table = picker.query_one("#declaration-picker-table", DataTable)
             create = picker.query_one("#declaration-picker-create", Button)
-            assert app.focused is table
-            assert tuple(row.key.value for row in table.ordered_rows) == ("130",)
-            assert create.disabled and picker.selected is None
-            assert not create.display
-            assert not picker.query_one("#declaration-picker-hint", Static).display
-            assert str(picker.query_one("#declaration-picker-cancel", Button).label) == tr(
-                "workspace.modelo.editor.cancel"
-            )
-            assert not picker.query(Input)
-            assert geometry_band(app, size[0]) == []
-            assert table.max_scroll_x == 0
+            _assert_picker_initial_state(app, picker, table, create, size)
             await pilot.press("tab")
             await settle(pilot)
             await pilot.press("enter")
             await settle(pilot)
-            assert tuple(row.key.value for row in table.ordered_rows) == ("111", "130")
-            assert app.focused is table
-            assert geometry_band(app, size[0]) == []
-            assert table.max_scroll_x == 0
+            _assert_picker_modelo_list(app, table, size)
             await pilot.press("enter")
             await settle(pilot)
-            assert picker.modelo == "111"
-            assert table.row_count == 2
-            assert create.disabled and picker.selected is None
-            assert create.display
-            hint = picker.query_one("#declaration-picker-hint", Static)
-            assert hint.display and str(hint.render()) == tr("tui.declarations.list.new.period_selection_hint")
-            assert picker.region.contains_region(hint.region) and hint.region.bottom <= table.region.y
-            assert "2025" in str(table.get_row_at(0)[0])
-            assert "2025" in str(table.get_row_at(1)[0])
+            hint = _assert_picker_period_selection(picker, table, create)
             await pilot.press("escape")
             await settle(pilot)
             assert picker.modelo is None and picker.selected is None
@@ -84,15 +107,7 @@ async def test_picker_requires_modelo_period_and_confirmation_in_every_locale_an
             await settle(pilot)
             await pilot.press("enter")
             await settle(pilot)
-            assert picker.selected == selected
-            assert app.focused is create
-            assert not create.disabled
-            assert not hint.display
-            assert "2025" in str(picker.query_one("#declaration-picker-selection", Static).render())
-            rendered = "\n".join(str(item.render()) for item in picker.query(Static))
-            assert "tui." not in rendered
-            assert geometry_band(app, size[0]) == []
-            assert table.max_scroll_x == 0
+            _assert_picker_confirmation_state(picker, selected, app, create, hint, table, size)
             await pilot.press("enter")
         assert app.return_value == selected
 
