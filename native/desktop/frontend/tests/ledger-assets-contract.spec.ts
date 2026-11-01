@@ -2334,6 +2334,21 @@ test("a reason is said by its catalogue key with its facts, and anything else re
   ).toBe("SC-1");
 });
 
+test("a share in the timeline is drawn from its value in the window's language, the backend's label for it unused, and a class keeps its label", () => {
+  const share = {
+    ...change("amortization.linear_coefficient", "0.255"),
+    after_label: "25.5%",
+  };
+  // The backend writes its label without a language: 25.5%.
+  expect(changeValueText(words({}), "en", share, "after")).toBe("25.5%");
+  expect(changeValueText(words({}), "es", share, "after")).toMatch(/^25,5\s%$/);
+  const kind = {
+    ...change("amortization.authority_class_key", "maquinaria"),
+    after_label: "Maquinaria",
+  };
+  expect(changeValueText(words({}), "es", kind, "after")).toBe("Maquinaria");
+});
+
 test("the list serves the years, and the pane opens on one that has begun", async () => {
   const port = portOf();
   const register = await registerOf(port);
@@ -2967,7 +2982,7 @@ test("a changed fact on the timeline is worded by the key the backend served for
 
 const HANDOFF_WORDS = words({
   "desktop.ledger.assets.handoff_gap_accrued":
-    "{name}: nothing from {start} to {end}, {amount} EUR accrued.",
+    "{name}: nothing from {start} to {end}, {amount} accrued.",
   "desktop.ledger.assets.handoff_gap_free":
     "{name}: nothing from {start} to {end}, left to you.",
   "desktop.ledger.assets.handoff_gap_unavailable":
@@ -3061,7 +3076,7 @@ test("a handoff says what it leaves out by the elements' names, and by their num
   };
   const said = leftOutNotes(HANDOFF_WORDS, "en", handoff, names);
   expect(said).toEqual([
-    "Laptop: nothing from Jan 1, 2025 to Mar 31, 2025, 412.50 EUR accrued.",
+    "Laptop: nothing from Jan 1, 2025 to Mar 31, 2025, €412.50 accrued.",
     "Printer: nothing from Feb 1, 2025 to Mar 31, 2025, left to you.",
     "Laptop: nothing from Apr 1, 2025 to Apr 30, 2025, not worked out.",
     "1 more period.",

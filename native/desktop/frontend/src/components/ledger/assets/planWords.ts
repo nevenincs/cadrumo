@@ -160,10 +160,12 @@ const looksInternal = (value: string) =>
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
 
 /**
- * A changed field's before or after value in words. The backend's own label
- * comes first (a share as a percentage, a class by its official name), then
- * the word the catalogue has for the key it served, then the value drawn by
- * what the field is. A value with no word that looks like a code of the
+ * A changed field's before or after value in words. A share is drawn here
+ * from the value served, by the window's rule for a percentage: the label
+ * the backend serves with it is written without a language. Then comes the
+ * backend's own label (a class by its official name), then the word the
+ * catalogue has for the key it served, then the value drawn by what the
+ * field is. A value with no word that looks like a code of the
  * program reads "Changed", never raw.
  */
 export function changeValueText(
@@ -179,6 +181,10 @@ export function changeValueText(
       : ASSET_KEYS.timeline.value_changed,
   );
   if (value === null) return unworded;
+  const path = unindexed(change.field);
+  const kind = Object.hasOwn(VALUE_KIND, path) ? VALUE_KIND[path] : undefined;
+  if (kind === "fraction")
+    return formatPercent(locale, value, { unit: "fraction" });
   const label = change[`${side}_label`];
   if (label !== null && label.trim() !== "") return label;
   const key = change[`${side}_key`];
@@ -186,15 +192,11 @@ export function changeValueText(
   if (keyed !== null) return keyed;
   // The backend named a word for this value and the catalogue has none.
   if (key !== null) return unworded;
-  const path = unindexed(change.field);
-  const kind = Object.hasOwn(VALUE_KIND, path) ? VALUE_KIND[path] : undefined;
   switch (kind) {
     case "date":
       return formatDay(locale, value);
     case "amount":
       return formatAmount(locale, value);
-    case "fraction":
-      return formatPercent(locale, value, { unit: "fraction" });
     case "method":
       return tokenWord(t, "method", value);
     case "kind":

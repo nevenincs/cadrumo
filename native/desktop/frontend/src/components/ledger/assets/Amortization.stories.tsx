@@ -74,6 +74,7 @@ type PlanShape = {
     | null;
   limits?: {
     legal_citations_complete: boolean;
+    maximum_period_last_day: string | null;
     unavailable_reason_key: string | null;
     unavailable_reason_facts: ReasonFact[];
   } | null;
@@ -133,14 +134,17 @@ function withTweak(port: LedgerPort, tweak: Tweak): LedgerPort {
             row.minimum_complete = false;
           }
         } else if (tweak === "refusal_facts") {
-          const first = plan.rows?.[0];
-          const facts: ReasonFact[] = [
-            { key: "ended_on", value: "2024-12-31", kind: "date" },
-          ];
-          if (first) {
-            first.claimable_intervals = [];
-            first.claimable_refusal_key = ELAPSED;
-            first.claimable_refusal_facts = facts;
+          // The period ended on the day the limits state, and the year that
+          // cannot be recorded is the last one the plan lists, after it.
+          const last = plan.rows?.at(-1);
+          const ended = plan.limits?.maximum_period_last_day;
+          const facts: ReasonFact[] = ended
+            ? [{ key: "ended_on", value: ended, kind: "date" }]
+            : [];
+          if (last && ended) {
+            last.claimable_intervals = [];
+            last.claimable_refusal_key = ELAPSED;
+            last.claimable_refusal_facts = facts;
           }
           if (plan.limits) {
             plan.limits.unavailable_reason_key = ELAPSED;

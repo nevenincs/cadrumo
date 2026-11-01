@@ -1538,8 +1538,8 @@ desktop:
       handoff_free_named: 'Not counted in Modelo 130, because their method leaves
         the depreciation charge to you: {names}.'
       handoff_gap_accrued: 'Modelo 100: {name} has no depreciation charge recorded
-        from {start} to {end}. The {amount} EUR it accrued in that time is not in
-        the amounts above.'
+        from {start} to {end}. The {amount} it accrued in that time is not in the
+        amounts above.'
       handoff_gap_box_unbound: 'Modelo 100: this edition has no box for the depreciation
         of {name}, so nothing is declared for it from {start} to {end}.'
       handoff_gap_free: 'Modelo 100: {name} has no depreciation charge recorded from
@@ -2760,6 +2760,7 @@ desktop:
         none: No documents
         pick_failed: The file dialog did not open.
         purchase_invoice: Purchase invoice · added {date}
+        search: Search documents
       drop: Drop it
       earlier: Earlier decisions
       effective_date: Effective date
@@ -3325,6 +3326,7 @@ desktop:
         transaction_only: The movement cites the invoice; the invoice does not list
           it
       empty: Nothing to match
+      empty_waiting: 'No suggestions · movements waiting for an invoice: {count}'
       invoice_line: '{number} · {counterparty} · {date} · {payment}'
       link: Link · permanent
       link_named: Link {number} to {description} · permanent

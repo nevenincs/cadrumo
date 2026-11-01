@@ -1447,7 +1447,7 @@ desktop:
         casilla: Casilla
         unavailable: Sin calcular
       correct:
-        claim_item: '{year} · {amount} · {from} – {until}'
+        claim_item: '{year} · {amount} · del {from} al {until}'
         supersede: 'Registra de nuevo estas dotaciones con las cifras corregidas,
           en el mismo paso:'
       correct_claim_title: Corregir la dotación de {name} para {year}
@@ -1560,7 +1560,7 @@ desktop:
       filing:
         choose_year: Elige un año para ver a dónde van las dotaciones.
         unavailable: El traspaso a la declaración no está disponible.
-      forecast: Dotación {amount} · {days} días · {from} – {until}
+      forecast: Dotación {amount} · {days} días · del {from} al {until}
       forecast_note: La previsión no guarda nada hasta que registres la dotación.
       free: Amortización libre solicitada
       free_hint: Solo para un método de amortización libre
@@ -1579,8 +1579,8 @@ desktop:
       handoff_free_named: 'No cuentan en el Modelo 130, porque su método te deja la
         dotación a ti: {names}.'
       handoff_gap_accrued: 'Modelo 100: {name} no tiene dotación registrada del {start}
-        al {end}. Los {amount} EUR que se devengaron en ese tiempo no están en los
-        importes de arriba.'
+        al {end}. Los {amount} que se devengaron en ese tiempo no están en los importes
+        de arriba.'
       handoff_gap_box_unbound: 'Modelo 100: esta edición no tiene casilla para la
         dotación de {name}, así que no se declara nada por ese elemento del {start}
         al {end}.'
@@ -1638,7 +1638,7 @@ desktop:
           minimum: Mínimo acumulado hasta fin de año
           minimum_note: Cuenta como coste si das de baja este elemento. No es la deducción
             de este año.
-          period: Período
+          period: Periodo
           planned: Prevista
           rate: Porcentaje
           replaced_by: Sustituida por
@@ -1656,9 +1656,9 @@ desktop:
           citations: Base legal ({count})
           citations_partial: 'La lista es parcial: no se pudieron resolver algunas
             disposiciones.'
-          ends_on: El período máximo termina el
+          ends_on: El periodo máximo termina el
           maximum_coefficient: Coeficiente máximo
-          maximum_period: Período máximo
+          maximum_period: Periodo máximo
           minimum_coefficient: Coeficiente mínimo
           period_years: '{years} años'
           title: Límites de este método
@@ -2800,6 +2800,7 @@ desktop:
         none: Sin documentos
         pick_failed: No se abrió el diálogo de archivos.
         purchase_invoice: Factura de compra · añadida {date}
+        search: Buscar documentos
       drop: Descartar
       earlier: Decisiones anteriores
       effective_date: Fecha efectiva
@@ -3370,6 +3371,7 @@ desktop:
         invoice_only: La factura incluye el movimiento; el movimiento no la cita
         transaction_only: El movimiento cita la factura; la factura no lo incluye
       empty: Nada por conciliar
+      empty_waiting: 'Sin sugerencias · movimientos que esperan factura: {count}'
       invoice_line: '{number} · {counterparty} · {date} · {payment}'
       link: Vincular · permanente
       link_named: Vincular {number} a {description} · permanente
@@ -5495,7 +5497,7 @@ ledger:
       approved_plan: Sigue un plan especial de amortización aprobado
       authority_unavailable: Límites no disponibles para este ejercicio
       free_election: Eliges el importe cada año
-      research_development_period: Sigue el período de los edificios afectos a I+D
+      research_development_period: Sigue el periodo de los edificios afectos a I+D
       twentieth_limit: Limitado a una veinteava parte al año
       useful_life_evidence: Sigue la vida útil que justificas
     opening_history_status:
@@ -5516,7 +5518,7 @@ ledger:
         no puede calcular esta cifra.
       free_election: 'Libertad de amortización: sin cifra prevista'
       incomplete: 'Faltan datos: no se puede calcular'
-      period_elapsed: Período máximo transcurrido
+      period_elapsed: Periodo máximo transcurrido
       unsupported: Aún no admitido
     plan_advisory:
       used_element_group_limit: El último párrafo del art. 4.3 RIS limita los elementos

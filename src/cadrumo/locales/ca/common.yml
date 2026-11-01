@@ -1443,7 +1443,7 @@ desktop:
         casilla: Casella
         unavailable: Sense calcular
       correct:
-        claim_item: '{year} · {amount} · {from} – {until}'
+        claim_item: '{year} · {amount} · del {from} al {until}'
         supersede: 'Registra de nou aquestes dotacions amb les xifres corregides,
           en el mateix pas:'
       correct_claim_title: Corregeix la dotació de {name} per a {year}
@@ -1556,7 +1556,7 @@ desktop:
       filing:
         choose_year: Tria un any per veure on van les dotacions.
         unavailable: El traspàs a la declaració no està disponible.
-      forecast: Dotació {amount} · {days} dies · {from} – {until}
+      forecast: Dotació {amount} · {days} dies · del {from} al {until}
       forecast_note: La previsió no desa res fins que registris la dotació.
       free: Amortització lliure sol·licitada
       free_hint: Només per a un mètode d'amortització lliure
@@ -1575,7 +1575,7 @@ desktop:
       handoff_free_named: 'No compten al Model 130, perquè el seu mètode et deixa
         la dotació a tu: {names}.'
       handoff_gap_accrued: 'Model 100: {name} no té dotació registrada del {start}
-        al {end}. Els {amount} EUR que es van meritar en aquest temps no són als imports
+        al {end}. Els {amount} que es van meritar en aquest temps no són als imports
         de dalt.'
       handoff_gap_box_unbound: 'Model 100: aquesta edició no té casella per a la dotació
         de {name}, així que no es declara res per a aquest element del {start} al
@@ -2802,6 +2802,7 @@ desktop:
         none: Sense documents
         pick_failed: No s'ha obert el diàleg de fitxers.
         purchase_invoice: Factura de compra · afegida {date}
+        search: Cerca documents
       drop: Descarta
       earlier: Decisions anteriors
       effective_date: Data efectiva
@@ -3370,6 +3371,7 @@ desktop:
         invoice_only: La factura inclou el moviment; el moviment no la cita
         transaction_only: El moviment cita la factura; la factura no l'inclou
       empty: Res per conciliar
+      empty_waiting: 'Sense suggeriments · moviments que esperen factura: {count}'
       invoice_line: '{number} · {counterparty} · {date} · {payment}'
       link: Vincula · permanent
       link_named: Vincula {number} a {description} · permanent
