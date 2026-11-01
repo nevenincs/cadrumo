@@ -19,7 +19,10 @@ from ...domain.calculations.registry.ids import (
 from ...domain.calculations.registry.iva_wallet_carry_targets import (
     iva_wallet_owned_binding_ids_for_revision,
 )
-from ...domain.calculations.registry.prorrata_regularizacion_bindings import prorrata_source_casilla_ids
+from ...domain.calculations.registry.prorrata_regularizacion_bindings import (
+    ProrrataSourceRole,
+    prorrata_source_casilla_id,
+)
 from ...domain.iva.m303_settlement import is_m303_annual_settlement_period
 from ...domain.modelos.work_unit import WorkUnit
 from ...domain.prorrata_register.register import ProrrataRegisterError
@@ -306,12 +309,13 @@ def _prorrata_settlement_apportionment(
         filing_year=work_unit.filing_year,
         operation=operation,
     )
-    source_ids = prorrata_source_casilla_ids(revision.bindings)
-    if settlement.payload is None or len(source_ids) < _PRORRATA_SOURCE_ROLE_COUNT:
+    volumen_total_id = prorrata_source_casilla_id(revision.bindings, ProrrataSourceRole.VOLUMEN_TOTAL)
+    definitive_id = prorrata_source_casilla_id(revision.bindings, ProrrataSourceRole.PORCENTAJE_DEFINITIVO)
+    if settlement.payload is None or volumen_total_id is None or definitive_id is None:
         return None
     filed = settlement.payload.observation.casilla_values
-    volumen_total = filed.get(source_ids[_PRORRATA_VOLUME_TOTAL_ROLE])
-    percentage = filed.get(source_ids[_PRORRATA_DEFINITIVE_ROLE])
+    volumen_total = filed.get(volumen_total_id)
+    percentage = filed.get(definitive_id)
     if volumen_total is None or volumen_total <= Decimal("0") or percentage is None:
         return None
     return _settlement_with_sector_definitives(
@@ -343,12 +347,6 @@ def _settlement_with_sector_definitives(
     if sector_percentages is None:
         return None
     return IvaLedgerSettlementApportionment(period=period, percentage=percentage, sector_percentages=sector_percentages)
-
-
-#: Reviewed source order of the registry's prorrata selector.
-_PRORRATA_VOLUME_TOTAL_ROLE = 2
-_PRORRATA_DEFINITIVE_ROLE = 3
-_PRORRATA_SOURCE_ROLE_COUNT = 4
 
 
 def _source_resolution_excluding_iva_compensation(

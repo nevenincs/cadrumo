@@ -58,7 +58,8 @@ from ...domain.calculations.registry.prorrata_register_catalogue import (
 from ...domain.calculations.registry.prorrata_regularizacion_bindings import (
     ProrrataRegularizacionOutput,
     ProrrataRegularizacionProvider,
-    prorrata_source_casilla_ids,
+    ProrrataSourceRole,
+    prorrata_source_casilla_id,
 )
 from ...domain.calculations.registry.schema import (
     ModeloRevision,
@@ -105,13 +106,12 @@ from .revision_carry_gate import revision_carry_outcome
 _SOURCE_KIND: Final = BindingSourceKind.PRORRATA_REGULARIZACION
 
 
-def _prorrata_source_id(revision: ModeloRevision, position: int) -> CasillaId:
-    """Read one role by the registry selector's reviewed source order."""
-    ids = prorrata_source_casilla_ids(revision.bindings)
-    try:
-        return ids[position]
-    except IndexError as exc:
-        raise ValueError("selected prorrata binding does not declare the required source casillas") from exc
+def _prorrata_source_id(revision: ModeloRevision, role: ProrrataSourceRole) -> CasillaId:
+    """Read one role's casilla from the revision's typed prorrata declaration."""
+    casilla_id = prorrata_source_casilla_id(revision.bindings, role)
+    if casilla_id is None:
+        raise ValueError("selected prorrata binding does not declare the required source casillas")
+    return casilla_id
 
 
 def _prorrata_target_casilla(revision: ModeloRevision, output: str) -> CasillaId | None:
@@ -425,21 +425,20 @@ def _prior_definitiva_provenance(
     revision: ModeloRevision,
     source_modelo: str,
 ) -> CalculationSourceProvenance:
+    definitive_id = _prorrata_source_id(revision, ProrrataSourceRole.PORCENTAJE_DEFINITIVO)
     return CalculationSourceProvenance(
         resolver_id=ProrrataRegularizacionSourceResolver.resolver_id,
         resolved_binding_source=_SOURCE_KIND,
         contributor_source_kind=_SOURCE_KIND.value,
         contributor_binding_source=_SOURCE_KIND,
         lineage_role=CalculationSourceLineageRole.PRIMARY,
-        source_ref=(
-            f"{source_modelo}:{carry.source_filing_year}:{carry.source_period}:{_prorrata_source_id(revision, 3)}"
-        ),
+        source_ref=f"{source_modelo}:{carry.source_filing_year}:{carry.source_period}:{definitive_id}",
         parent_source_ref=None,
         terminal_origin=TerminalOriginClass.DERIVED_CALCULATION,
         source_modelo=source_modelo,
         source_filing_year=carry.source_filing_year,
         source_periods=(carry.source_period,),
-        source_casilla_ids=(_prorrata_source_id(revision, 3),),
+        source_casilla_ids=(definitive_id,),
         legal_refs=_binding_legal_refs(revision),
         source_refs=_binding_source_refs(revision),
     )
@@ -459,7 +458,9 @@ def _stamped_prior_year_definitiva(
         observation = payload.observation
         if observation.filing_year != prior_year:
             continue
-        percentage = observation.casilla_values.get(_prorrata_source_id(revision, 3))
+        percentage = observation.casilla_values.get(
+            _prorrata_source_id(revision, ProrrataSourceRole.PORCENTAJE_DEFINITIVO)
+        )
         if percentage is None:
             continue
         refused = revision_carry_outcome(payload.registry_snapshot_ref, operation=operation).refused
@@ -914,7 +915,7 @@ class ProrrataRegularizacionSourceResolver:
         revision: ModeloRevision,
         undeclared: tuple[CasillaId, ...],
     ) -> tuple[CasillaId, ...]:
-        required = tuple(_prorrata_source_id(revision, position) for position in (1, 2, 3))
+        required = tuple(_prorrata_source_id(revision, role) for role in ProrrataSourceRole)
         return tuple(
             casilla_id
             for casilla_id in required
@@ -934,9 +935,9 @@ class ProrrataRegularizacionSourceResolver:
     ) -> CalculationSourceResolution:
         if not is_m303_annual_settlement_period(context.period, authority=self._operation):
             return self._settlement_only_zero(context, revision, declared_binding_ids)
-        volumen_con_derecho_id = _prorrata_source_id(revision, 1)
-        volumen_total_id = _prorrata_source_id(revision, 2)
-        definitiva_id = _prorrata_source_id(revision, 3)
+        volumen_con_derecho_id = _prorrata_source_id(revision, ProrrataSourceRole.VOLUMEN_CON_DERECHO)
+        volumen_total_id = _prorrata_source_id(revision, ProrrataSourceRole.VOLUMEN_TOTAL)
+        definitiva_id = _prorrata_source_id(revision, ProrrataSourceRole.PORCENTAJE_DEFINITIVO)
         undeclared = tuple(
             casilla_id
             for casilla_id in (volumen_con_derecho_id, volumen_total_id)

@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from enum import StrEnum
+from types import MappingProxyType
 from typing import TYPE_CHECKING, Annotated, Literal, Protocol
 
 from pydantic import AfterValidator, BaseModel, field_validator
@@ -20,11 +21,14 @@ if TYPE_CHECKING:
     from .schema import BindingDefinition
 
 __all__ = [
+    "PRORRATA_SOURCE_CASILLA_BY_ROLE",
     "ProrrataRegularizacionOutput",
     "ProrrataRegularizacionOutputValue",
     "ProrrataRegularizacionProvider",
     "ProrrataSourcePeriodSelection",
+    "ProrrataSourceRole",
     "prorrata_definitive_percentage_source_casilla_id",
+    "prorrata_source_casilla_id",
     "prorrata_source_casilla_ids",
     "validate_prorrata_regularizacion_binding",
 ]
@@ -64,13 +68,36 @@ ProrrataRegularizacionOutputValue = Literal[
 """The same vocabulary for a strict model field."""
 
 
-_PRORRATA_DEFINITIVE_PERCENTAGE_SOURCE_ID: CasillaId = "iva.prorrata-porcentaje"
-_PRORRATA_REGULARIZACION_SOURCE_IDS: tuple[CasillaId, ...] = (
-    "iva.cuota-deducible-total",
-    "iva.prorrata-volumen-con-derecho",
-    "iva.prorrata-volumen-total",
-    _PRORRATA_DEFINITIVE_PERCENTAGE_SOURCE_ID,
+class ProrrataSourceRole(StrEnum):
+    """What a declared prorrata source casilla means to the regularisation."""
+
+    VOLUMEN_CON_DERECHO = "volumen_con_derecho"
+    VOLUMEN_TOTAL = "volumen_total"
+    PORCENTAJE_DEFINITIVO = "porcentaje_definitivo"
+
+
+PRORRATA_SOURCE_CASILLA_BY_ROLE: Mapping[ProrrataSourceRole, CasillaId] = MappingProxyType(
+    {
+        ProrrataSourceRole.VOLUMEN_CON_DERECHO: "iva.prorrata-volumen-con-derecho",
+        ProrrataSourceRole.VOLUMEN_TOTAL: "iva.prorrata-volumen-total",
+        ProrrataSourceRole.PORCENTAJE_DEFINITIVO: "iva.prorrata-porcentaje",
+    }
 )
+
+
+def prorrata_source_casilla_id(
+    bindings: Iterable[_BindingWithProvider],
+    role: ProrrataSourceRole,
+) -> CasillaId | None:
+    """Return the casilla a typed prorrata provider declares for ``role``, or ``None`` without one.
+
+    Provider validation guarantees each role's casilla is declared exactly once,
+    so the lookup is by meaning and never by position in the declared list.
+    """
+    for binding in bindings:
+        if isinstance(binding.provider, ProrrataRegularizacionProvider):
+            return PRORRATA_SOURCE_CASILLA_BY_ROLE[role]
+    return None
 
 
 class ProrrataSourcePeriodSelection(StrEnum):
@@ -90,14 +117,7 @@ def prorrata_definitive_percentage_source_casilla_id(
     bindings: Iterable[_BindingWithProvider],
 ) -> CasillaId | None:
     """Return the definitive-percentage source named by a typed provider."""
-    for binding in bindings:
-        provider = binding.provider
-        if (
-            isinstance(provider, ProrrataRegularizacionProvider)
-            and _PRORRATA_DEFINITIVE_PERCENTAGE_SOURCE_ID in provider.source_casilla_ids
-        ):
-            return _PRORRATA_DEFINITIVE_PERCENTAGE_SOURCE_ID
-    return None
+    return prorrata_source_casilla_id(bindings, ProrrataSourceRole.PORCENTAJE_DEFINITIVO)
 
 
 class ProrrataRegularizacionProvider(BaseModel):
@@ -116,10 +136,10 @@ class ProrrataRegularizacionProvider(BaseModel):
     @classmethod
     @pydantic_validation_boundary
     def _source_casilla_ids_match_prorrata_inputs(cls, value: tuple[CasillaId, ...]) -> tuple[CasillaId, ...]:
-        if value != _PRORRATA_REGULARIZACION_SOURCE_IDS:
+        if len(value) != len(set(value)) or set(value) != set(PRORRATA_SOURCE_CASILLA_BY_ROLE.values()):
             raise RegistryValidationError(
-                "prorrata_regularizacion selector must declare the Modelo 303 deductible-total, "
-                "annual prorrata volume, and definitive-percentage casilla ids in canonical order",
+                "prorrata_regularizacion selector must declare each of the annual prorrata volume "
+                "(with right and total) and definitive-percentage casilla ids exactly once",
             )
         return value
 

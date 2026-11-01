@@ -496,6 +496,7 @@ cli:
           up to two decimals.
         gross_duplicate: A gross base is already declared for that liquidation period
           of {ejercicio}. Nothing was written; pass --replace to replace it.
+        gross_ejercicio_help: Filing year of the liquidation period.
         gross_evidence_help: Reference to your own document that supports the amount.
         gross_period_help: Modelo 303 liquidation period before the year's settlement
           liquidation (a quarter such as 1T or a month such as 03).
@@ -503,7 +504,6 @@ cli:
           and sector.
         gross_sector_unknown: Sector {sector_id} is not a declared differentiated
           sector. Nothing was written; declare the sector first with declare-sector.
-        gross_year_help: Filing year of the liquidation period.
         group_help: 'Cross-period IVA prorrata register: elect the regime (general
           / especial) and declare differentiated sectors (LIVA arts. 101 / 103 / 105
           / 106).'

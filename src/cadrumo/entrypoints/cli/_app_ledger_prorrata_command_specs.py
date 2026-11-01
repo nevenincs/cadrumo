@@ -139,12 +139,12 @@ _REFERENCE_OPTION: Final[OptionSpec] = _option(
     help_key="cli.app.ledger.prorrata.reference_help",
 )
 
-_GROSS_YEAR_OPTION: Final[OptionSpec] = _option(
-    name="year",
-    declaration="--year",
+_GROSS_EJERCICIO_OPTION: Final[OptionSpec] = _option(
+    name="ejercicio",
+    declaration="--ejercicio",
     value=WHOLE_NUMBER_VALUE,
     default=_REQUIRED,
-    help_key="cli.app.ledger.prorrata.gross_year_help",
+    help_key="cli.app.ledger.prorrata.gross_ejercicio_help",
 )
 _GROSS_PERIOD_OPTION: Final[OptionSpec] = _option(
     name="period",
@@ -181,7 +181,7 @@ LEDGER_PRORRATA_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         short_help_key=None,
         invocation=_LEAF_INVOCATION,
         parameters=(
-            _GROSS_YEAR_OPTION,
+            _GROSS_EJERCICIO_OPTION,
             _GROSS_PERIOD_OPTION,
             _option(
                 name="amount",
@@ -312,7 +312,7 @@ LEDGER_PRORRATA_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         help_key=TranslationKey("cli.app.ledger.prorrata.remove_gross_help"),
         short_help_key=None,
         invocation=_LEAF_INVOCATION,
-        parameters=(_GROSS_YEAR_OPTION, _GROSS_PERIOD_OPTION, _SECTOR_OPTION),
+        parameters=(_GROSS_EJERCICIO_OPTION, _GROSS_PERIOD_OPTION, _SECTOR_OPTION),
         policy=_POLICY_4,
         handler=_handler("prorrata_remove_gross"),
         result_schema=_result_schema("ProrrataRemoveGrossResult", "ledger.prorrata.remove_gross"),

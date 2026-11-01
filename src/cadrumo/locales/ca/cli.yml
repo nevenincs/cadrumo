@@ -527,6 +527,7 @@ cli:
           en euros amb dos decimals com a màxim.
         gross_duplicate: Ja hi ha una base bruta declarada per a aquesta liquidació
           de {ejercicio}. No s'ha desat res; fes servir --replace per substituir-la.
+        gross_ejercicio_help: Exercici de la liquidació.
         gross_evidence_help: Referència al teu propi document que justifica l'import.
         gross_period_help: Període de liquidació del Model 303 anterior a la liquidació
           final de l'exercici (un trimestre com 1T o un mes com 03).
@@ -534,7 +535,6 @@ cli:
           i sector.
         gross_sector_unknown: El sector {sector_id} no és un sector diferenciat declarat.
           No s'ha desat res; declara abans el sector amb declare-sector.
-        gross_year_help: Exercici de la liquidació.
         group_help: 'Registre de prorrata d''IVA entre exercicis: tria el règim (general
           / especial) i declara sectors diferenciats (LIVA arts. 101 / 103 / 105 /
           106).'

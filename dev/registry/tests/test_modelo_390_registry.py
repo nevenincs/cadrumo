@@ -43,7 +43,6 @@ _M303_COMPENSACION_POSTERIOR_CASILLA: CasillaId = validated_casilla_id(
     "iva.compensacion-pendiente-periodos-posteriores"
 )
 _M303_PRORRATA_REGULARIZACION_SOURCE_CASILLAS: tuple[CasillaId, ...] = (
-    validated_casilla_id("iva.cuota-deducible-total"),
     validated_casilla_id("iva.prorrata-volumen-con-derecho"),
     validated_casilla_id("iva.prorrata-volumen-total"),
     validated_casilla_id("iva.prorrata-porcentaje"),

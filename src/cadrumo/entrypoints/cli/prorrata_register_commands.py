@@ -834,7 +834,7 @@ def _present_gross_declaration(
 
 def prorrata_declare_gross(
     ctx: typer.Context,
-    year: int,
+    ejercicio: int,
     period: str,
     amount: str,
     evidence: str,
@@ -845,7 +845,7 @@ def prorrata_declare_gross(
     profile_id = _profile_id()
     request = ProrrataDeclareGrossRequest(
         profile_id=profile_id,
-        ejercicio=year,
+        ejercicio=ejercicio,
         period=period,
         sector_id=sector,
         gross_cuota=PublicDecimal(decimal=str(parse_decimal_amount(amount, label="amount", signed=False))),
@@ -870,7 +870,7 @@ def prorrata_declare_gross(
 
 def prorrata_remove_gross(
     ctx: typer.Context,
-    year: int,
+    ejercicio: int,
     period: str,
     sector: str | None = None,
 ) -> None:
@@ -878,7 +878,7 @@ def prorrata_remove_gross(
     profile_id = _profile_id()
     request = ProrrataRemoveGrossRequest(
         profile_id=profile_id,
-        ejercicio=year,
+        ejercicio=ejercicio,
         period=period,
         sector_id=sector,
     )

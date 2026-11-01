@@ -25,7 +25,15 @@ _EXPECTED_LEAVES: Final[tuple[tuple[object, ...], ...]] = (
         "ProrrataDeclareGrossResult",
         "ledger.prorrata.declare_gross",
         (
-            ("year", ("--year",), "builtins:int", "REQUIRED", None, "cli.app.ledger.prorrata.gross_year_help", False),
+            (
+                "ejercicio",
+                ("--ejercicio",),
+                "builtins:int",
+                "REQUIRED",
+                None,
+                "cli.app.ledger.prorrata.gross_ejercicio_help",
+                False,
+            ),
             (
                 "period",
                 ("--period",),
@@ -227,7 +235,15 @@ _EXPECTED_LEAVES: Final[tuple[tuple[object, ...], ...]] = (
         "ProrrataRemoveGrossResult",
         "ledger.prorrata.remove_gross",
         (
-            ("year", ("--year",), "builtins:int", "REQUIRED", None, "cli.app.ledger.prorrata.gross_year_help", False),
+            (
+                "ejercicio",
+                ("--ejercicio",),
+                "builtins:int",
+                "REQUIRED",
+                None,
+                "cli.app.ledger.prorrata.gross_ejercicio_help",
+                False,
+            ),
             (
                 "period",
                 ("--period",),
