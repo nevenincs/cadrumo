@@ -33,12 +33,11 @@ _PRORRATA = {
     "kind": "prorrata_regularizacion",
     "source_modelo": "303",
     "source_casilla_ids": (
-        "iva.cuota-deducible-total",
         "iva.prorrata-volumen-con-derecho",
         "iva.prorrata-volumen-total",
         "iva.prorrata-porcentaje",
     ),
-    "source_periods": _QUARTERS,
+    "source_period_selection": "filer_liquidation_cadence",
     "regularizacion_output": "modelo_303_casilla_44",
 }
 _BIENES = {

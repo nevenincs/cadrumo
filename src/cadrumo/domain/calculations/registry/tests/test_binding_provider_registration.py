@@ -654,14 +654,14 @@ def test_a_pagos_fraccionados_ingresados_fold_reading_its_result_pair_is_accepte
     binding = _binding(_pagos_relation_provider("19", "18"), op=BindingAggregationOp.PAGOS_FRACCIONADOS_INGRESADOS)
 
     assert validate_binding_against_registration(binding) == ()
-    assert validate_binding_selector_shape(binding) == []
+    assert validator_for(binding.source)(binding) == []
 
 
 def test_a_pagos_fraccionados_ingresados_fold_missing_the_previously_paid_casilla_is_refused() -> None:
     """With only the result casilla the earlier payment of a complementaria would be lost."""
     binding = _binding(_pagos_relation_provider("19"), op=BindingAggregationOp.PAGOS_FRACCIONADOS_INGRESADOS)
 
-    diagnostics = validate_binding_selector_shape(binding)
+    diagnostics = validator_for(binding.source)(binding)
 
     assert len(diagnostics) == 1
     assert "'pagos_fraccionados_ingresados' must read exactly 2 source casilla(s)" in diagnostics[0]
@@ -671,7 +671,7 @@ def test_a_sum_fold_over_two_source_casillas_is_refused() -> None:
     """A sum folds one casilla per filing; a second declared casilla would silently be dropped."""
     binding = _binding(_pagos_relation_provider("19", "18"), op=BindingAggregationOp.SUM)
 
-    diagnostics = validate_binding_selector_shape(binding)
+    diagnostics = validator_for(binding.source)(binding)
 
     assert len(diagnostics) == 1
     assert "'sum' must read exactly 1 source casilla(s)" in diagnostics[0]

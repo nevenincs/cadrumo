@@ -67,10 +67,22 @@ def test_a_copy_with_two_source_casillas_is_refused() -> None:
     assert "exactly one source casilla" in failures[0]
 
 
-def test_a_sum_over_two_source_casillas_passes() -> None:
-    binding = family_binding(_provider(temporal=_ONE_QUARTER, casillas=("19", "20")), aggregation={"op": "sum"})
+def test_a_fold_reading_a_result_pair_over_two_source_casillas_passes() -> None:
+    binding = family_binding(
+        _provider(temporal=_ONE_QUARTER, casillas=("19", "18")),
+        aggregation={"op": "pagos_fraccionados_ingresados"},
+    )
 
     assert validate_binding_selector_shape(binding) == []
+
+
+def test_a_sum_over_two_source_casillas_is_refused() -> None:
+    binding = family_binding(_provider(temporal=_ONE_QUARTER, casillas=("19", "20")), aggregation={"op": "sum"})
+
+    failures = validate_binding_selector_shape(binding)
+
+    assert len(failures) == 1
+    assert "'sum' must read exactly 1 source casilla(s)" in failures[0]
 
 
 def test_a_copy_over_four_source_periods_is_refused_for_a_target_period() -> None:
