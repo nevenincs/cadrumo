@@ -61,11 +61,11 @@ class M390ProspectiveGenerationTarget(_StrictModel):
     """One pre-authoring M390 source-bound target, not a live registry selection."""
 
     target: ExportFragmentTarget
-    source_ref: str = Field(pattern=r"^aeat-dr-390-(2022|2023|2024|2025)$")
+    source_ref: str = Field(pattern=r"^aeat-dr-390-[0-9]{4}$")
     source_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
-    design_epoch: str = Field(pattern=r"^(2022|2023|2024|2025)$")
-    filing_year_from: int = Field(ge=2022)
-    filing_year_to: int | None = Field(default=None, ge=2022)
+    design_epoch: str = Field(pattern=r"^[0-9]{4}$")
+    filing_year_from: int = Field(ge=1000, le=9999)
+    filing_year_to: int | None = Field(default=None, ge=1000, le=9999)
 
     @model_validator(mode="after")
     def _require_exact_source_epoch_and_window(self) -> M390ProspectiveGenerationTarget:
