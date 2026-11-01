@@ -10,14 +10,21 @@ from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.ledger_iva_bindings import IvaLedgerObservation
-from ...domain.calculations.registry.ledger_iva_screen_bindings import invoice_ledger_screen_binding_ids
+from ...domain.calculations.registry.ledger_iva_screen_bindings import (
+    IvaLedgerScreenBinding,
+    invoice_ledger_screen_binding_ids,
+    invoice_ledger_screen_bindings,
+)
 from ...domain.invoices.models import Invoice
+from ...domain.iva.flow import IvaFlowDirection, issued_flow_direction, received_flow_direction
+from ...domain.iva.schema import InvoiceKind
 from ..invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
 from ._modelo_bindings_invoice_iva import (
     M303_INVOICE_EVIDENCE_SAMPLE_LIMIT,
     InvoiceIvaSilenceReport,
     ScreenedInvoiceIva,
     line_contributes_to_the_iva_screen,
+    line_eur_amounts_or_refuse,
     screened_invoice_iva_observations,
 )
 from ._preconditions import AggregationPreconditionCondition, aggregation_no_recovery_verdict
@@ -32,7 +39,7 @@ from .source_mesh import (
 def _uncovered_withheld_invoice_cuota(
     invoices: Sequence[Invoice],
     *,
-    screened_bindings: tuple[BindingId, ...],
+    screen_bindings: Sequence[IvaLedgerScreenBinding],
     transaction_binding_values: Mapping[BindingId, Decimal],
 ) -> Decimal:
     """Return the withheld invoices' cuota that the transaction ledger does not carry.
@@ -41,7 +48,8 @@ def _uncovered_withheld_invoice_cuota(
     supplies their deduction identity, so they contribute no
     :class:`IvaLedgerObservation` and cannot be compared binding-by-binding the
     way a projected invoice is. Their cuota is therefore weighed against the
-    transaction-ledger total across the screened cuota bindings.
+    transaction-ledger total across the screened cuota bindings of the SAME IVA
+    flow.
 
     That total is the right comparator rather than a per-binding one: the
     withheld invoice has no resolved binding to be compared against, and the
@@ -50,23 +58,35 @@ def _uncovered_withheld_invoice_cuota(
     positive result means the ledger is genuinely short by at least this much and
     the filing would under-declare; zero means the operation is already recorded
     and the invoice merely is not linked to it.
+
+    Two comparisons keep that coarse question honest. Invoice lines are
+    denominated in the invoice's currency while ledger values are EUR, so each
+    line is converted through the shared EUR conversion (refusing when the
+    invoice cannot convert). And each flow is weighed only against its own
+    slots: received-invoice cuota against the input slot, issued against the
+    output slots, so sales IVA cannot cover a missing purchase cuota.
     """
-    if not invoices:
-        return Decimal("0")
-    evidence = sum(
-        (
-            line.iva_amount
-            for invoice in invoices
-            for line in invoice.lines
-            if line_contributes_to_the_iva_screen(line.subtotal, line.iva_amount)
-        ),
-        Decimal("0"),
-    )
-    ledger_total = sum(
-        (transaction_binding_values.get(binding_id, Decimal("0")) for binding_id in screened_bindings),
-        Decimal("0"),
-    )
-    return max(evidence - ledger_total, Decimal("0"))
+    received_flow = received_flow_direction()
+    evidence_by_flow: dict[IvaFlowDirection, Decimal] = {}
+    for invoice in invoices:
+        flow = received_flow if invoice.kind is InvoiceKind.RECEIVED else issued_flow_direction()
+        for line_index, line in enumerate(invoice.lines):
+            if not line_contributes_to_the_iva_screen(line.subtotal, line.iva_amount):
+                continue
+            _base_eur, iva_amount_eur = line_eur_amounts_or_refuse(invoice, line_index, line)
+            evidence_by_flow[flow] = evidence_by_flow.get(flow, Decimal("0")) + iva_amount_eur
+    uncovered = Decimal("0")
+    for flow, evidence in evidence_by_flow.items():
+        ledger_total = sum(
+            (
+                transaction_binding_values.get(screen_binding.binding_id, Decimal("0"))
+                for screen_binding in screen_bindings
+                if screen_binding.selector.flow_direction == flow
+            ),
+            Decimal("0"),
+        )
+        uncovered += max(evidence - ledger_total, Decimal("0"))
+    return uncovered
 
 
 def raise_if_invoice_iva_would_be_silent(
@@ -172,7 +192,11 @@ def _raise_if_screened_invoice_iva_would_be_silent(
     # is told through the diagnostic channel instead.
     uncovered_authority_evidence = _uncovered_withheld_invoice_cuota(
         screened.deduction_authority_missing,
-        screened_bindings=screened_bindings,
+        screen_bindings=tuple(
+            screen_binding
+            for screen_binding in invoice_ledger_screen_bindings(context.revision, modelo=context.modelo)
+            if screen_binding.binding_id in screened_bindings
+        ),
         transaction_binding_values=transaction_binding_values,
     )
     if uncovered_authority_evidence > Decimal("0"):
