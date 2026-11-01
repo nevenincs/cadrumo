@@ -228,9 +228,6 @@ function SumLine({ sums, locale }: { sums: CurrencySum[]; locale: string }) {
     <span className="flex flex-wrap items-center gap-x-3 tabular-nums">
       {sums.map((sum) => (
         <span key={sum.currency} className="flex items-center gap-2">
-          {sum.currency !== "EUR" && (
-            <span className="text-xs">{sum.currency}</span>
-          )}
           {(
             [
               ["incoming", "desktop.ledger.sum.in"],
@@ -240,7 +237,13 @@ function SumLine({ sums, locale }: { sums: CurrencySum[]; locale: string }) {
           ).map(([side, key]) =>
             sum[side] === null ? null : (
               <span key={side}>
-                {t(key, { amount: formatAmount(locale, sum[side]) })}
+                {t(key, {
+                  amount: formatAmount(
+                    locale,
+                    sum[side],
+                    sum.currency === "EUR" ? {} : { currency: sum.currency },
+                  ),
+                })}
               </span>
             ),
           )}

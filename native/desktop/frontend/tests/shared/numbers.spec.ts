@@ -40,6 +40,63 @@ const SHARED_FIGURES = {
   ],
 } as const;
 
+// The euro sign follows the number after one no-break space in every language,
+// and a negative amount carries the screen minus before its digits. The same
+// literals pin the backend's money presentation in `value_presentation`
+// (test_value_presentation.py, _SHARED_EURO_AMOUNTS); both tables are spelled
+// out in full so neither side agrees with the other by construction.
+const SHARED_EURO_INPUTS = [
+  "0",
+  "999",
+  "1234.56",
+  "12345.67",
+  "1234567.89",
+  "-1234.56",
+];
+const SHARED_EURO_AMOUNTS = {
+  en: [
+    "0.00\u00a0\u20ac",
+    "999.00\u00a0\u20ac",
+    "1,234.56\u00a0\u20ac",
+    "12,345.67\u00a0\u20ac",
+    "1,234,567.89\u00a0\u20ac",
+    "\u22121,234.56\u00a0\u20ac",
+  ],
+  es: [
+    "0,00\u00a0\u20ac",
+    "999,00\u00a0\u20ac",
+    "1.234,56\u00a0\u20ac",
+    "12.345,67\u00a0\u20ac",
+    "1.234.567,89\u00a0\u20ac",
+    "\u22121.234,56\u00a0\u20ac",
+  ],
+  ca: [
+    "0,00\u00a0\u20ac",
+    "999,00\u00a0\u20ac",
+    "1.234,56\u00a0\u20ac",
+    "12.345,67\u00a0\u20ac",
+    "1.234.567,89\u00a0\u20ac",
+    "\u22121.234,56\u00a0\u20ac",
+  ],
+  hu: [
+    "0,00\u00a0\u20ac",
+    "999,00\u00a0\u20ac",
+    "1\u00a0234,56\u00a0\u20ac",
+    "12\u00a0345,67\u00a0\u20ac",
+    "1\u00a0234\u00a0567,89\u00a0\u20ac",
+    "\u22121\u00a0234,56\u00a0\u20ac",
+  ],
+} as const;
+
+test("the euro sign follows the number exactly as the backend writes it", () => {
+  for (const locale of LOCALES) {
+    const shown = SHARED_EURO_INPUTS.map((v) =>
+      formatAmount(locale, v, { currency: "EUR" }),
+    );
+    expect(shown).toEqual(SHARED_EURO_AMOUNTS[locale]);
+  }
+});
+
 test("every amount groups, four digits included, as the backend writes it", () => {
   for (const locale of LOCALES) {
     const shown = ["999.00", "1234.56", "12345.67", "1234567.89"].map((v) =>
@@ -133,13 +190,19 @@ test("exact text agrees with Intl's own exact reading in every locale", () => {
       maximumFractionDigits: 20,
       useGrouping: "always",
     });
-    const money = new Intl.NumberFormat(locale, {
-      style: "currency",
-      currency: "EUR",
+    // The number is Intl's own; the sign and the mark after it are the
+    // window's written form of an amount.
+    const figure = new Intl.NumberFormat(locale, {
       minimumFractionDigits: 2,
-      maximumFractionDigits: 6,
+      maximumFractionDigits: 2,
       useGrouping: "always",
     });
+    const money = (value: string) => {
+      const shown = figure.format(exactly(value));
+      return shown.startsWith("-")
+        ? `\u2212${shown.slice(1)}\u00a0€`
+        : `${shown}\u00a0€`;
+    };
     const percent = new Intl.NumberFormat(locale, {
       style: "percent",
       maximumFractionDigits: 20,
@@ -153,7 +216,7 @@ test("exact text agrees with Intl's own exact reading in every locale", () => {
     }
     for (const value of ["1234.5", "-12345.67", "0.5", "9007199254740993.25"])
       expect(formatAmount(locale, value, { currency: "EUR" })).toBe(
-        money.format(exactly(value)),
+        money(value),
       );
   }
 });
@@ -194,12 +257,22 @@ test("grouping can be turned off and non-canonical spellings read the same", () 
   expect(formatDecimal("en", " 1.5 ")).toBe("1.5");
 });
 
-test("amounts show cents and place a named currency by locale", () => {
+test("amounts show cents and put a named currency's mark after the number", () => {
   expect(formatAmount("en", "1234.5")).toBe("1,234.50");
   expect(formatAmount("es", "12345.6")).toBe("12.345,60");
   expect(formatAmount("hu", "12345.6")).toBe(`12${NBSP}345,60`);
-  expect(formatAmount("en", "1234.5", { currency: "USD" })).toBe("$1,234.50");
-  expect(formatAmount("en", "-1234.5", { currency: "EUR" })).toBe("-€1,234.50");
+  expect(formatAmount("en", "1234.5", { currency: "USD" })).toBe(
+    `1,234.50${NBSP}$`,
+  );
+  expect(formatAmount("es", "1234.56", { currency: "GBP" })).toBe(
+    `1.234,56${NBSP}£`,
+  );
+  expect(formatAmount("hu", "1234.56", { currency: "USD" })).toBe(
+    `1${NBSP}234,56${NBSP}$`,
+  );
+  expect(formatAmount("en", "-1234.5", { currency: "EUR" })).toBe(
+    `\u22121,234.50${NBSP}€`,
+  );
   expect(formatAmount("es", "12345.6", { currency: "EUR" })).toBe(
     `12.345,60${NBSP}€`,
   );
@@ -212,12 +285,19 @@ test("amounts show cents and place a named currency by locale", () => {
   expect(formatAmount("en", "1.23456", { decimals: 4 })).toBe("1.2346");
   expect(formatAmount("en", "1234.5", { decimals: 0 })).toBe("1,235");
   // A three-place currency keeps its third place, and two remain the floor.
+  // A currency with no symbol keeps its code in the same place.
   expect(formatAmount("en", "1.234", { currency: "KWD" })).toBe(
-    `KWD${NBSP}1.234`,
+    `1.234${NBSP}KWD`,
   );
-  expect(formatAmount("en", "1.2", { currency: "KWD" })).toBe(`KWD${NBSP}1.20`);
-  expect(formatAmount("en", "1234", { currency: "JPY" })).toBe("¥1,234.00");
-  expect(formatAmount("en", "12.5", { currency: "??" })).toBe("12.50 ??");
+  expect(formatAmount("en", "1.2", { currency: "KWD" })).toBe(`1.20${NBSP}KWD`);
+  expect(formatAmount("en", "1234", { currency: "JPY" })).toBe(
+    `1,234.00${NBSP}¥`,
+  );
+  expect(formatAmount("en", "12.5", { currency: "??" })).toBe(`12.50${NBSP}??`);
+  // Neither the accounting style nor a sign on nothing but zeros.
+  expect(formatAmount("en", "-0.001", { currency: "EUR" })).toBe(
+    `0.00${NBSP}€`,
+  );
 });
 
 test("a percentage names its unit", () => {

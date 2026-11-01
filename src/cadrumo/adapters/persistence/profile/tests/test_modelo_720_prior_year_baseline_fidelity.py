@@ -539,7 +539,7 @@ def test_year_n_plus_1_cuentas_delta_exceeds_redeclaration_threshold(tmp_path: P
 
         delta = val_n1 - val_n
         assert delta > _REDECLARATION_DELTA_EUR, (
-            f"year-N+1 minus year-N delta ({delta}) must exceed €{_REDECLARATION_DELTA_EUR} "
+            f"year-N+1 minus year-N delta ({delta}) must exceed {_REDECLARATION_DELTA_EUR} € "
             f"to satisfy art. 42-bis.5 re-declaration trigger condition in the test scenario"
         )
 

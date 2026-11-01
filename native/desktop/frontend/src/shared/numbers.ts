@@ -62,12 +62,12 @@ function fit(
 
 /** Draws a reading in the shape `style` gives the locale: the sign, the marks
  * and the place of a currency or percent sign come from a sample of it. */
-function draw(
+function drawParts(
   locale: string,
   { negative, whole, fraction }: Reading,
   style: Intl.NumberFormatOptions,
   grouping: boolean,
-): string {
+): Intl.NumberFormatPart[] {
   // "always" marks every thousands run. The locale's own rule would leave
   // `1234` whole in Spanish and Hungarian beside `24.000,00` in one column.
   const ungrouped: Intl.NumberFormatOptions = {
@@ -91,13 +91,17 @@ function draw(
     .formatToParts(negative ? -1n : 1n)
     .map((part) =>
       part.type === "integer"
-        ? wholeText
+        ? { ...part, value: wholeText }
         : part.type === "fraction"
-          ? fraction
-          : part.value,
-    )
-    .join("");
+          ? { ...part, value: fraction }
+          : part,
+    );
 }
+
+const draw = (...drawing: Parameters<typeof drawParts>): string =>
+  drawParts(...drawing)
+    .map((part) => part.value)
+    .join("");
 
 /** A decimal in the locale's marks. Without `maxFraction` every digit shows. */
 export function formatDecimal(
@@ -115,9 +119,43 @@ export function formatDecimal(
 }
 
 const CENTS = 2;
+const NO_BREAK_SPACE = "\u00a0";
+// The sign a figure carries on screen, as the backend's value presentation
+// writes it, so a negative amount reads as one.
+const SCREEN_MINUS = "\u2212";
+const AMOUNT_PARTS = new Set<Intl.NumberFormatPartTypes>([
+  "integer",
+  "group",
+  "decimal",
+  "fraction",
+]);
 
-/** An amount, in the currency's own form when one is named. It shows
- * `decimals` places; without them, two, or more where the currency has more. */
+/** An amount with its currency after the number in every language, one
+ * no-break space between them, as the backend writes it. The mark is the
+ * currency's symbol where the language has one and its code where not. */
+function markedAfter(parts: Intl.NumberFormatPart[], mark: string): string {
+  const sign = parts.some((part) => part.type === "minusSign")
+    ? SCREEN_MINUS
+    : "";
+  const figure = parts
+    .filter((part) => AMOUNT_PARTS.has(part.type))
+    .map((part) => part.value)
+    .join("");
+  return `${sign}${figure}${NO_BREAK_SPACE}${mark}`;
+}
+
+/** A currency as every surface writes it: the narrow symbol, which is `$`, `£`
+ * and `€` in every language where the language's own symbol would be a code,
+ * or the code itself where the currency has none. */
+const currencyStyle = (currency: string): Intl.NumberFormatOptions => ({
+  style: "currency",
+  currency,
+  currencyDisplay: "narrowSymbol",
+});
+
+/** An amount, with its currency's mark after the number when one is named. It
+ * shows `decimals` places; without them, two, or more where the currency has
+ * more. */
 export function formatAmount(
   locale: string,
   canonical: string,
@@ -125,23 +163,42 @@ export function formatAmount(
 ): string {
   const reading = read(canonical);
   if (!reading) return canonical;
-  let style: Intl.NumberFormatOptions = {};
-  let places = CENTS;
-  if (currency) {
-    try {
-      places = numberFormat(locale, {
-        style: "currency",
-        currency,
-        minimumFractionDigits: CENTS,
-      }).resolvedOptions().maximumFractionDigits as number;
-      style = { style: "currency", currency };
-    } catch {
-      const figure = fit(reading, decimals ?? CENTS, decimals ?? CENTS);
-      return `${draw(locale, figure, {}, true)} ${currency}`;
-    }
+  if (!currency)
+    return draw(
+      locale,
+      fit(reading, decimals ?? CENTS, decimals ?? CENTS),
+      {},
+      true,
+    );
+  let places: number;
+  try {
+    places = numberFormat(locale, {
+      ...currencyStyle(currency),
+      minimumFractionDigits: CENTS,
+    }).resolvedOptions().maximumFractionDigits as number;
+  } catch {
+    // A code Intl does not know stands as written.
+    const figure = fit(reading, decimals ?? CENTS, decimals ?? CENTS);
+    return markedAfter(drawParts(locale, figure, {}, true), currency);
   }
   const figure = fit(reading, decimals ?? CENTS, decimals ?? places);
-  return draw(locale, figure, style, true);
+  const parts = drawParts(locale, figure, currencyStyle(currency), true);
+  return markedAfter(
+    parts,
+    parts.find((part) => part.type === "currency")?.value ?? currency,
+  );
+}
+
+/** What the window's language writes beside a figure for a currency. */
+export function currencyMark(locale: string, currency: string): string {
+  try {
+    const symbol = numberFormat(locale, currencyStyle(currency))
+      .formatToParts(0)
+      .find((part) => part.type === "currency");
+    return symbol?.value ?? currency;
+  } catch {
+    return currency;
+  }
 }
 
 const PERCENT_SHIFT = 2;

@@ -3076,7 +3076,7 @@ test("a handoff says what it leaves out by the elements' names, and by their num
   };
   const said = leftOutNotes(HANDOFF_WORDS, "en", handoff, names);
   expect(said).toEqual([
-    "Laptop: nothing from Jan 1, 2025 to Mar 31, 2025, €412.50 accrued.",
+    "Laptop: nothing from Jan 1, 2025 to Mar 31, 2025, 412.50\u00a0€ accrued.",
     "Printer: nothing from Feb 1, 2025 to Mar 31, 2025, left to you.",
     "Laptop: nothing from Apr 1, 2025 to Apr 30, 2025, not worked out.",
     "1 more period.",

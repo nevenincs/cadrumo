@@ -97,6 +97,70 @@ def test_money_groups_exactly_where_the_windows_intl_does(language: OutputLangua
     assert rendered == tuple(f"{figure}{_EURO}" for figure in expected)
 
 
+# The euro sign follows the number after one no-break space in every language, and a negative amount carries the
+# screen minus before its digits. The window's `formatAmount(locale, value, { currency: "EUR" })` writes these same
+# literals (tests/shared/numbers.spec.ts, SHARED_EURO_AMOUNTS); both tables are spelled out in full so neither side
+# agrees with the other by construction.
+_SHARED_EURO_INPUTS = ("0", "999", "1234.56", "12345.67", "1234567.89", "-1234.56")
+_SHARED_EURO_AMOUNTS = (
+    (
+        OutputLanguage.EN,
+        (
+            "0.00\u00a0\u20ac",
+            "999.00\u00a0\u20ac",
+            "1,234.56\u00a0\u20ac",
+            "12,345.67\u00a0\u20ac",
+            "1,234,567.89\u00a0\u20ac",
+            "\u22121,234.56\u00a0\u20ac",
+        ),
+    ),
+    (
+        OutputLanguage.ES,
+        (
+            "0,00\u00a0\u20ac",
+            "999,00\u00a0\u20ac",
+            "1.234,56\u00a0\u20ac",
+            "12.345,67\u00a0\u20ac",
+            "1.234.567,89\u00a0\u20ac",
+            "\u22121.234,56\u00a0\u20ac",
+        ),
+    ),
+    (
+        OutputLanguage.CA,
+        (
+            "0,00\u00a0\u20ac",
+            "999,00\u00a0\u20ac",
+            "1.234,56\u00a0\u20ac",
+            "12.345,67\u00a0\u20ac",
+            "1.234.567,89\u00a0\u20ac",
+            "\u22121.234,56\u00a0\u20ac",
+        ),
+    ),
+    (
+        OutputLanguage.HU,
+        (
+            "0,00\u00a0\u20ac",
+            "999,00\u00a0\u20ac",
+            "1\u00a0234,56\u00a0\u20ac",
+            "12\u00a0345,67\u00a0\u20ac",
+            "1\u00a0234\u00a0567,89\u00a0\u20ac",
+            "\u22121\u00a0234,56\u00a0\u20ac",
+        ),
+    ),
+)
+
+
+@pytest.mark.parametrize(("language", "expected"), _SHARED_EURO_AMOUNTS)
+def test_the_euro_sign_follows_the_number_exactly_as_the_window_writes_it(
+    language: OutputLanguage, expected: tuple[str, ...]
+) -> None:
+    rendered = tuple(
+        format_casilla_value(value, data_type="money", language=language) for value in _SHARED_EURO_INPUTS
+    )
+
+    assert rendered == expected
+
+
 @pytest.mark.parametrize(("language", "expected"), _INTL_FIGURES)
 def test_a_negative_figure_groups_by_its_digits_not_its_sign(
     language: OutputLanguage, expected: tuple[str, ...]
