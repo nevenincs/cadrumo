@@ -21,7 +21,6 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 from decimal import Decimal
-from functools import cache
 from pathlib import Path
 
 import pytest
@@ -29,17 +28,15 @@ import pytest
 from cadrumo.domain.modelos.tests.work_unit_catalogue_support import build_work_unit_catalogue
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
-from .....core.period import Period
 from .....domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from .....domain.calculations.registry.bindings import CasillaObservation
-from .....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from .....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
     derive_calculation_revision_id,
     derive_calculation_revision_id_from_revision,
 )
-from .....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
+from .....domain.modelos.work_unit import WorkUnit
 from ...storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ..calculation_revision_override_migration import (
     OrphanedRelationOverrideError,
@@ -49,36 +46,12 @@ from ..calculation_revision_override_migration import (
 from ..modelos_calculation import CalculationRevisionCatalogueRepository
 from ..modelos_work_units import WorkUnitCatalogueRepository
 from ..relation_binding_join import bundled_relation_binding_join
+from .m303_parent_coordinate_support import parent_work_unit_id, registry_snapshot_ref, work_unit_period
 from .override_migration_support import override_migration_catalogue
-from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _BUCKET_ID = "9a1c77e0-4b22-4c3e-9a0e-5f0b7c1d2e34"
-
-
-@cache
-def _registry_snapshot_ref() -> RegistrySnapshotRef:
-    # Compiled on first use, not at import: collection must stay cheap.
-    return published_authority_operation().snapshot("303", filing_year=2026, period="1T").snapshot_ref
-
-
-@cache
-def _work_unit_period() -> Period:
-    ref = _registry_snapshot_ref()
-    return Period.from_year_and_code(ref.modelo_year, ref.period)
-
-
-@cache
-def _work_unit_id() -> str:
-    ref = _registry_snapshot_ref()
-    return derive_work_unit_id(
-        bucket_id=_BUCKET_ID,
-        modelo=ref.modelo,
-        filing_year=ref.modelo_year,
-        period=_work_unit_period(),
-        revision_id=ref.revision_id,
-    )
 
 
 _CASILLA_01: CasillaId = validated_casilla_id("casilla-01", surface="_CASILLA_01")
@@ -96,7 +69,7 @@ def _revision(*, relation_overrides: dict[str, str]) -> CalculationRevision:
     """Build one synthetic revision whose content address matches its contents."""
     casilla_values = {_CASILLA_01: Decimal("1000.00")}
     revision_id = derive_calculation_revision_id(
-        work_unit_id=_work_unit_id(),
+        work_unit_id=parent_work_unit_id(_BUCKET_ID),
         input_values_by_casilla_id={},
         binding_overrides={},
         casilla_values=casilla_values,
@@ -106,8 +79,8 @@ def _revision(*, relation_overrides: dict[str, str]) -> CalculationRevision:
     )
     return CalculationRevision(
         calculation_revision_id=revision_id,
-        work_unit_id=_work_unit_id(),
-        registry_snapshot_ref=_registry_snapshot_ref(),
+        work_unit_id=parent_work_unit_id(_BUCKET_ID),
+        registry_snapshot_ref=registry_snapshot_ref(),
         state=CalculationRevisionState.BORRADOR,
         filing_instance_evidence=None,
         casilla_values=casilla_values,
@@ -132,12 +105,12 @@ def _revision(*, relation_overrides: dict[str, str]) -> CalculationRevision:
 
 def _parent_work_unit() -> WorkUnit:
     return WorkUnit(
-        work_unit_id=_work_unit_id(),
+        work_unit_id=parent_work_unit_id(_BUCKET_ID),
         bucket_id=_BUCKET_ID,
-        modelo=_registry_snapshot_ref().modelo,
-        filing_year=_registry_snapshot_ref().modelo_year,
-        period=_work_unit_period(),
-        revision_id=_registry_snapshot_ref().revision_id,
+        modelo=registry_snapshot_ref().modelo,
+        filing_year=registry_snapshot_ref().modelo_year,
+        period=work_unit_period(),
+        revision_id=registry_snapshot_ref().revision_id,
         name="303-2026-1T",
         created_at=_CREATED_AT,
         updated_at=_CREATED_AT,
@@ -168,7 +141,7 @@ def test_pre_cut_relation_override_is_rekeyed_and_the_revision_id_recomputed() -
         (remap,) = result.rekeyed_revisions
         assert remap.previous_calculation_revision_id == stored.calculation_revision_id
         assert remap.calculation_revision_id != stored.calculation_revision_id
-        assert remap.work_unit_id == _work_unit_id()
+        assert remap.work_unit_id == parent_work_unit_id(_BUCKET_ID)
 
         migrated = result.catalogue.get(remap.calculation_revision_id)
         assert migrated is not None

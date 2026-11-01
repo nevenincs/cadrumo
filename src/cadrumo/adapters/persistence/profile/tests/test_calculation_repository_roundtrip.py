@@ -24,7 +24,6 @@ from __future__ import annotations
 import json as _json
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
-from functools import cache
 from pathlib import Path
 from typing import Any
 
@@ -47,7 +46,7 @@ from .....domain.calculations.registry.m303_orden_resolution import resolve_m303
 from .....domain.calculations.registry.m303_schema_vocabulary import (
     m303_regime_composition_simplified_scope,
 )
-from .....domain.calculations.registry.schema_references import RegistrySnapshotRef, TemporalSupportEnvelope
+from .....domain.calculations.registry.schema_references import TemporalSupportEnvelope
 from .....domain.filing_evidence import FilingEvidenceReference
 from .....domain.iva.regimen_simplificado_rows import (
     M303RegimenSimplificadoScopeDecision,
@@ -63,12 +62,13 @@ from .....domain.modelos.calculation_revision import (
 from .....domain.modelos.calculation_revision_m303_evidence import M303Exonerado390FilingEvidence
 from .....domain.modelos.calculation_revision_m303_handoff import FilingInstanceEvidence, M303FilingInstanceEvidence
 from .....domain.modelos.calculation_revision_rendering import CalculationRenderingSnapshot
-from .....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
+from .....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
 from ...storage.secure_object_namespaces import MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE
 from ...storage.sql.secure_object_records import SecureObjectRecord
 from ...storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ..modelos_calculation import CalculationRevisionCatalogueRepository
 from ..modelos_work_units import WorkUnitCatalogueRepository
+from .m303_parent_coordinate_support import parent_work_unit_id, registry_snapshot_ref, work_unit_period
 from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter, pytest.mark.usefixtures("authority_operation")]
@@ -86,30 +86,6 @@ _DECL_PERIODO_CASILLA: CasillaId = validated_casilla_id("decl.periodo", surface=
 _DECL_PERIODO_CODE = "1T"
 
 
-@cache
-def _registry_snapshot_ref() -> RegistrySnapshotRef:
-    # Compiled on first use, not at import: collection must stay cheap.
-    return published_authority_operation().snapshot("303", filing_year=2026, period="1T").snapshot_ref
-
-
-@cache
-def _work_unit_period() -> Period:
-    ref = _registry_snapshot_ref()
-    return Period.from_year_and_code(ref.modelo_year, ref.period)
-
-
-@cache
-def _work_unit_id() -> str:
-    ref = _registry_snapshot_ref()
-    return derive_work_unit_id(
-        bucket_id=_BUCKET_ID,
-        modelo=ref.modelo,
-        filing_year=ref.modelo_year,
-        period=_work_unit_period(),
-        revision_id=ref.revision_id,
-    )
-
-
 def _hex(seed: str) -> str:
     """Return a stable 64-char hex blob for typed-id fixture values."""
 
@@ -119,12 +95,12 @@ def _hex(seed: str) -> str:
 
 def _parent_work_unit() -> WorkUnit:
     return WorkUnit(
-        work_unit_id=_work_unit_id(),
+        work_unit_id=parent_work_unit_id(_BUCKET_ID),
         bucket_id=_BUCKET_ID,
-        modelo=_registry_snapshot_ref().modelo,
-        filing_year=_registry_snapshot_ref().modelo_year,
-        period=_work_unit_period(),
-        revision_id=_registry_snapshot_ref().revision_id,
+        modelo=registry_snapshot_ref().modelo,
+        filing_year=registry_snapshot_ref().modelo_year,
+        period=work_unit_period(),
+        revision_id=registry_snapshot_ref().revision_id,
         name="303-2026-1T",
         created_at=datetime(2024, 7, 1, 9, 0, 0, tzinfo=UTC),
         updated_at=datetime(2024, 7, 1, 12, 0, 0, tzinfo=UTC),
@@ -188,7 +164,7 @@ def _populated_catalogue(
     entries carrying real ``legal_refs`` / ``source_refs`` provenance.
     """
 
-    work_unit_id = _work_unit_id()
+    work_unit_id = parent_work_unit_id(_BUCKET_ID)
     created_at = datetime(2024, 7, 1, 9, 0, 0, tzinfo=UTC)
     verified_at = created_at + timedelta(hours=3)
 
@@ -258,7 +234,7 @@ def _populated_catalogue(
     revision = CalculationRevision(
         calculation_revision_id=revision_id,
         work_unit_id=work_unit_id,
-        registry_snapshot_ref=_registry_snapshot_ref(),
+        registry_snapshot_ref=registry_snapshot_ref(),
         state=CalculationRevisionState.VERIFICADO_COMPLETO,
         input_values_by_casilla_id=input_values_by_casilla_id,
         binding_overrides=binding_overrides,
@@ -450,7 +426,10 @@ def test_guarded_reads_join_each_fresh_parent_catalogue_once(tmp_path: Path, mon
         WorkUnitCatalogueRepository(objects=profile.repository).save(build_work_unit_catalogue(()))
         with pytest.raises(CalculationRevisionPersistenceError) as raised:
             repo.load_revisioned(operation=operation)
-        assert raised.value.context == {"reason": "missing_parent_work_unit", "work_unit_id": _work_unit_id()}
+        assert raised.value.context == {
+            "reason": "missing_parent_work_unit",
+            "work_unit_id": parent_work_unit_id(_BUCKET_ID),
+        }
         assert len(parent_reads) == 3
 
 
@@ -650,7 +629,7 @@ def test_calculation_revision_catalogue_dropped_registry_snapshot_ref_refuses_at
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         record, envelope, persisted_revision = _persisted_revision_envelope(profile)
-        assert persisted_revision["registry_snapshot_ref"] == _registry_snapshot_ref().model_dump(mode="json")
+        assert persisted_revision["registry_snapshot_ref"] == registry_snapshot_ref().model_dump(mode="json")
         del persisted_revision["registry_snapshot_ref"]
         _write_envelope(profile, record, envelope)
 
@@ -667,7 +646,7 @@ def test_calculation_revision_catalogue_mismatched_parent_registry_snapshot_ref_
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         record, envelope, persisted_revision = _persisted_revision_envelope(profile)
-        mismatched_ref = _registry_snapshot_ref().model_copy(update={"revision_id": "wrong-parent-revision"})
+        mismatched_ref = registry_snapshot_ref().model_copy(update={"revision_id": "wrong-parent-revision"})
         persisted_revision["registry_snapshot_ref"] = mismatched_ref.model_dump(mode="json")
         _write_envelope(profile, record, envelope)
 
@@ -676,7 +655,7 @@ def test_calculation_revision_catalogue_mismatched_parent_registry_snapshot_ref_
 
     assert raised.value.context == {
         "reason": "parent_registry_coordinate_mismatch",
-        "work_unit_id": _work_unit_id(),
+        "work_unit_id": parent_work_unit_id(_BUCKET_ID),
     }
 
 
