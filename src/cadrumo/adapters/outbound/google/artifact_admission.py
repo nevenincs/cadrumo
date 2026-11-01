@@ -61,7 +61,7 @@ def creation_properties(
 
 def artifact_mime_type(kind: ManagedArtifactKind) -> str:
     """Map the closed admitted kind to its provider MIME boundary."""
-    if kind in {ManagedArtifactKind.ROOT, ManagedArtifactKind.FOLDER}:
+    if kind.is_container:
         return GOOGLE_DRIVE_FOLDER_MIME_TYPE
     if kind is ManagedArtifactKind.REVIEW_SHEET:
         return "application/vnd.google-apps.spreadsheet"
@@ -119,7 +119,7 @@ class GoogleArtifactAdmission:
             if current.parent_id is None:
                 raise _refused("outside_managed_root")
             parent = self.receipts.load(current.parent_id)
-            if parent is None or parent.kind not in {ManagedArtifactKind.ROOT, ManagedArtifactKind.FOLDER}:
+            if parent is None or not parent.kind.is_container:
                 raise _refused("unknown_parent")
             current = parent
         raise _refused("ancestry_bound_exceeded")

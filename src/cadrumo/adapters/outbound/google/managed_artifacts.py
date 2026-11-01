@@ -100,7 +100,7 @@ class ManagedGoogleArtifacts:
     ) -> ArtifactCreationReceipt:
         """Create once with the parent and all ownership evidence in the initial body."""
         if (
-            parent.receipt.kind not in {ManagedArtifactKind.ROOT, ManagedArtifactKind.FOLDER}
+            not parent.receipt.kind.is_container
             or parent.purpose is not ManagedArtifactPurpose.PUBLICATION
             or kind is ManagedArtifactKind.ROOT
             or not name.strip()
