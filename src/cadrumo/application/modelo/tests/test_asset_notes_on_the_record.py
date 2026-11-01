@@ -78,7 +78,7 @@ def _persisted(operation: PinnedAuthorityOperation) -> tuple[CalculationRevision
 def _gap_lines(operation: PinnedAuthorityOperation, language: OutputLanguage) -> list[ModeloFormIssueLine]:
     revision, _ = _persisted(operation)
     form = _checked_form(operation, revision)
-    return [line for line in form_issue_lines(form, language) if "2025" in line.message and "dotaci" in line.message]
+    return [line for line in form_issue_lines(form, language) if "activity_asset_claim_gap" in line.technical]
 
 
 def test_a_fresh_store_knows_nothing_and_the_form_still_tells_two_elements_apart(
