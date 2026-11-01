@@ -35,6 +35,7 @@ from ..authority_store import (
     AuthorityStoreFormatError,
     SQLiteAuthorityReader,
 )
+from .snapshot_proof_support import readdress_edited_database
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_domain]
 
@@ -100,17 +101,7 @@ def _republished_copy(directory: Path, statements: tuple[tuple[str, tuple[str, .
         connection.commit()
     finally:
         connection.close()
-    payload = staging.read_bytes()
-    digest = sha256_hex(payload)
-    staging.replace(directory / f"authority-{digest}.sqlite3")
-    descriptor = AuthorityDescriptor(
-        database=f"authority-{digest}.sqlite3",
-        database_size=len(payload),
-        database_sha256=digest,
-        logical_generation=source.logical_generation,
-    )
-    (directory / _DESCRIPTOR_NAME).write_bytes(descriptor.to_bytes())
-    return directory / _DESCRIPTOR_NAME
+    return readdress_edited_database(directory, staging, source)
 
 
 def test_admission_refuses_a_manifest_naming_another_generation_than_its_descriptor(tmp_path: Path) -> None:

@@ -19,6 +19,21 @@ from ..snapshot_proof import SNAPSHOT_PROOF_DDL, SNAPSHOT_PROOF_TABLES
 _DESCRIPTOR_NAME = "authority.current.json"
 
 
+def readdress_edited_database(directory: Path, staging: Path, source: AuthorityDescriptor) -> Path:
+    """Move the edited ``staging`` database to its digest name and write a descriptor that names it."""
+    payload = staging.read_bytes()
+    digest = sha256_hex(payload)
+    staging.replace(directory / f"authority-{digest}.sqlite3")
+    descriptor = AuthorityDescriptor(
+        database=f"authority-{digest}.sqlite3",
+        database_size=len(payload),
+        database_sha256=digest,
+        logical_generation=source.logical_generation,
+    )
+    (directory / _DESCRIPTOR_NAME).write_bytes(descriptor.to_bytes())
+    return directory / _DESCRIPTOR_NAME
+
+
 def republished_authority(
     directory: Path,
     *,
@@ -49,17 +64,7 @@ def republished_authority(
         connection.commit()
     finally:
         connection.close()
-    payload = staging.read_bytes()
-    digest = sha256_hex(payload)
-    staging.replace(directory / f"authority-{digest}.sqlite3")
-    descriptor = AuthorityDescriptor(
-        database=f"authority-{digest}.sqlite3",
-        database_size=len(payload),
-        database_sha256=digest,
-        logical_generation=source.logical_generation,
-    )
-    (directory / _DESCRIPTOR_NAME).write_bytes(descriptor.to_bytes())
-    return directory / _DESCRIPTOR_NAME
+    return readdress_edited_database(directory, staging, source)
 
 
 def count_cross_checks(monkeypatch: pytest.MonkeyPatch) -> list[int]:
