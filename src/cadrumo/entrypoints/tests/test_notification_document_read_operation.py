@@ -197,6 +197,113 @@ def _access_context(
     )
 
 
+def _assert_document_terminals(view_terminal, history_terminal):
+    for terminal in (view_terminal, history_terminal):
+        assert terminal.lifecycle is OperationLifecycle.TERMINAL
+        assert terminal.terminal_condition is OperationTerminalCondition.SUCCEEDED
+        assert terminal.effect is OperationEffect.NONE
+        assert terminal.terminal_receipt is not None
+        assert terminal.terminal_receipt.effect is OperationEffect.NONE
+
+
+def _assert_view_result(view_result, profile):
+    assert isinstance(view_result, NotificationDocumentViewPublicResultV1)
+    assert view_result.bucket_id == profile.bucket_id
+    assert view_result.certificado_id == _CERTIFICADO
+    assert view_result.sancion_parsed
+    assert view_result.sancion is not None
+    assert view_result.sancion.base_sancion == "3687.120"
+    assert view_result.sancion.reduccion_pronto_pago == "516.20"
+    assert view_result.sancion.document_sha256 == _DIGEST
+    assert set(view_result.model_dump()) == {
+        "bucket_id",
+        "certificado_id",
+        "attachment_id",
+        "document_sha256",
+        "byte_size",
+        "source_url",
+        "fetched_at",
+        "sancion_parsed",
+        "sancion",
+        "parse_refusal",
+        "mode",
+    }
+
+
+def _assert_history_result(history_result, profile):
+    assert isinstance(history_result, NotificationDocumentHistoryPublicResultV1)
+    assert history_result.bucket_id == profile.bucket_id
+    assert history_result.count == 2
+    assert tuple(row.certificado_id for row in history_result.documents) == (_OTHER_CERTIFICADO, _CERTIFICADO)
+    assert tuple(row.sancion.base_sancion for row in history_result.documents) == ("3687.120", "3687.120")
+    assert "attachment_id" not in history_result.model_dump()
+    assert "source_url" not in history_result.model_dump()
+    assert "parse_refusal" not in history_result.model_dump()
+
+
+def _assert_foreign_profile_refused(requests, registry, view_registration, profile_id, authority):
+    foreign_id = uuid4()
+    foreign_request = requests[0][0].model_copy(
+        update={
+            "subject_ref": profile_operation_subject(str(foreign_id)),
+            "payload": requests[0][0].payload.model_copy(update={"profile_id": foreign_id}),
+        }
+    )
+    with pytest.raises(ProfileAccessRefusedError) as refusal:
+        resolve_operation_access(
+            registry=registry,
+            request=foreign_request,
+            context=_access_context(
+                view_registration,
+                profile_id=profile_id,
+                action=AccessAction.SUBMIT,
+                destination_id=uuid4(),
+                authority=authority,
+            ),
+        )
+    assert refusal.value.reason is AccessDenialCode.PROFILE_MISMATCH
+
+
+def _assert_reads_admit_exact_profile(requests, registry, profile_id, authority):
+    for request, _result_type in requests:
+        registration = registry.lookup_public_registration(request.definition_id)
+        submit = resolve_operation_access(
+            registry=registry,
+            request=request,
+            context=_access_context(
+                registration,
+                profile_id=profile_id,
+                action=AccessAction.SUBMIT,
+                destination_id=uuid4(),
+                authority=authority,
+            ),
+        )
+        assert submit.request.period_independent
+        assert submit.policy.requires_all_periods
+        assert AccessAction.COMMIT not in submit.policy.actions
+
+        result_context = _access_context(
+            registration,
+            profile_id=profile_id,
+            action=AccessAction.RESULT,
+            destination_id=uuid4(),
+            authority=authority,
+        )
+        result_access = resolve_operation_access(registry=registry, request=request, context=result_context)
+        assert result_access.policy.disclosures
+        assert registration.contract.result_schema is not None
+        assert all(
+            item.projection_id == registration.contract.result_schema.schema_id
+            for item in result_access.policy.disclosures
+        )
+        expected_category = (
+            {DisclosureCategory.PROFILE_VALUES, DisclosureCategory.TAX_VALUES}
+            if request.definition_id == NOTIFICATION_DOCUMENT_VIEW_DEFINITION_ID
+            else {DisclosureCategory.TAX_VALUES}
+        )
+        assert {item.category for item in result_access.policy.disclosures} == expected_category
+
+
 def test_registered_document_reads_project_safe_local_results_with_none_receipts(tmp_path: Path) -> None:
     """View and history read the bucket repository and disclose closed DTOs only."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile, bundled_indexed_authority().operation() as authority:
@@ -239,65 +346,8 @@ def test_registered_document_reads_project_safe_local_results_with_none_receipts
             ),
         )
 
-        for request, _result_type in requests:
-            registration = registry.lookup_public_registration(request.definition_id)
-            submit = resolve_operation_access(
-                registry=registry,
-                request=request,
-                context=_access_context(
-                    registration,
-                    profile_id=profile_id,
-                    action=AccessAction.SUBMIT,
-                    destination_id=uuid4(),
-                    authority=authority,
-                ),
-            )
-            assert submit.request.period_independent
-            assert submit.policy.requires_all_periods
-            assert AccessAction.COMMIT not in submit.policy.actions
-
-            result_context = _access_context(
-                registration,
-                profile_id=profile_id,
-                action=AccessAction.RESULT,
-                destination_id=uuid4(),
-                authority=authority,
-            )
-            result_access = resolve_operation_access(registry=registry, request=request, context=result_context)
-            assert result_access.policy.disclosures
-            assert registration.contract.result_schema is not None
-            assert all(
-                item.projection_id == registration.contract.result_schema.schema_id
-                for item in result_access.policy.disclosures
-            )
-            expected_category = (
-                {DisclosureCategory.PROFILE_VALUES, DisclosureCategory.TAX_VALUES}
-                if request.definition_id == NOTIFICATION_DOCUMENT_VIEW_DEFINITION_ID
-                else {DisclosureCategory.TAX_VALUES}
-            )
-            assert {item.category for item in result_access.policy.disclosures} == expected_category
-
-        foreign_id = uuid4()
-        foreign_request = requests[0][0].model_copy(
-            update={
-                "subject_ref": profile_operation_subject(str(foreign_id)),
-                "payload": requests[0][0].payload.model_copy(update={"profile_id": foreign_id}),
-            }
-        )
-        with pytest.raises(ProfileAccessRefusedError) as refusal:
-            resolve_operation_access(
-                registry=registry,
-                request=foreign_request,
-                context=_access_context(
-                    view_registration,
-                    profile_id=profile_id,
-                    action=AccessAction.SUBMIT,
-                    destination_id=uuid4(),
-                    authority=authority,
-                ),
-            )
-        assert refusal.value.reason is AccessDenialCode.PROFILE_MISMATCH
-
+        _assert_reads_admit_exact_profile(requests, registry, profile_id, authority)
+        _assert_foreign_profile_refused(requests, registry, view_registration, profile_id, authority)
         _, _, _, supervisor, result_service = build_supervised_operation(
             tmp_path=tmp_path, objects=profile.repository, authority=authority, registry=registry, now=_NOW
         )
@@ -325,43 +375,9 @@ def test_registered_document_reads_project_safe_local_results_with_none_receipts
         view_terminal, view_result = asyncio.run(run(requests[0][0], "3" * 64, requests[0][1]))
         history_terminal, history_result = asyncio.run(run(requests[1][0], "4" * 64, requests[1][1]))
 
-    for terminal in (view_terminal, history_terminal):
-        assert terminal.lifecycle is OperationLifecycle.TERMINAL
-        assert terminal.terminal_condition is OperationTerminalCondition.SUCCEEDED
-        assert terminal.effect is OperationEffect.NONE
-        assert terminal.terminal_receipt is not None
-        assert terminal.terminal_receipt.effect is OperationEffect.NONE
-
-    assert isinstance(view_result, NotificationDocumentViewPublicResultV1)
-    assert view_result.bucket_id == profile.bucket_id
-    assert view_result.certificado_id == _CERTIFICADO
-    assert view_result.sancion_parsed
-    assert view_result.sancion is not None
-    assert view_result.sancion.base_sancion == "3687.120"
-    assert view_result.sancion.reduccion_pronto_pago == "516.20"
-    assert view_result.sancion.document_sha256 == _DIGEST
-    assert set(view_result.model_dump()) == {
-        "bucket_id",
-        "certificado_id",
-        "attachment_id",
-        "document_sha256",
-        "byte_size",
-        "source_url",
-        "fetched_at",
-        "sancion_parsed",
-        "sancion",
-        "parse_refusal",
-        "mode",
-    }
-
-    assert isinstance(history_result, NotificationDocumentHistoryPublicResultV1)
-    assert history_result.bucket_id == profile.bucket_id
-    assert history_result.count == 2
-    assert tuple(row.certificado_id for row in history_result.documents) == (_OTHER_CERTIFICADO, _CERTIFICADO)
-    assert tuple(row.sancion.base_sancion for row in history_result.documents) == ("3687.120", "3687.120")
-    assert "attachment_id" not in history_result.model_dump()
-    assert "source_url" not in history_result.model_dump()
-    assert "parse_refusal" not in history_result.model_dump()
+    _assert_document_terminals(view_terminal, history_terminal)
+    _assert_view_result(view_result, profile)
+    _assert_history_result(history_result, profile)
 
 
 def test_document_read_operations_reject_foreign_bucket_records_before_projection(tmp_path: Path) -> None:

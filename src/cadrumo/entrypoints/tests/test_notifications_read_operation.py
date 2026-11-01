@@ -167,6 +167,96 @@ def _ports_factory(repository: _SnapshotRepository):
     return build
 
 
+def _assert_empty_latest_projection(empty_latest_projected):
+    empty_latest = empty_latest_projected.projection
+    assert isinstance(empty_latest, NotificationsLatestPublicResultV1)
+    assert empty_latest.snapshot_id is None
+    assert empty_latest.captured_at is None
+    assert empty_latest.source_url is None
+    assert empty_latest.row_count is None
+
+
+def _assert_shown_projection(show_projected):
+    shown = show_projected.projection
+    assert isinstance(shown, NotificationsShowPublicResultV1)
+    assert (shown.snapshot_id, shown.source_url, shown.row_count) == ("2" * 64, "https://sede.example/notifications", 1)
+    row = shown.rows[0]
+    assert (row.certificado_id, row.concepto, row.fecha_emision, row.mode) == (
+        "1234567890",
+        "Notificación sintética",
+        _NOW.date(),
+        "read",
+    )
+    assert "authenticated_identity" not in shown.model_dump()
+    assert set(row.model_dump()) == {
+        "certificado_id",
+        "tipo",
+        "concepto",
+        "titular_nif",
+        "titular_nombre",
+        "destinatario_nif",
+        "destinatario_nombre",
+        "fecha_emision",
+        "fecha_notificacion",
+        "modo_notificacion",
+        "leida",
+        "source_url",
+        "mode",
+    }
+
+
+def _assert_terminals(list_terminal, show_terminal, latest_terminal, empty_latest_terminal, unknown_show_terminal):
+    for terminal in (list_terminal, show_terminal, latest_terminal, empty_latest_terminal):
+        assert terminal.lifecycle is OperationLifecycle.TERMINAL
+        assert terminal.terminal_condition is OperationTerminalCondition.SUCCEEDED
+        assert terminal.effect is OperationEffect.NONE
+        assert terminal.terminal_receipt is not None
+        assert terminal.terminal_receipt.effect is OperationEffect.NONE
+    assert unknown_show_terminal.terminal_condition is not OperationTerminalCondition.SUCCEEDED
+
+
+def _assert_action_references(list_definition, show_definition, latest_definition):
+    assert list_definition.action_reference is not None
+    assert list_definition.action_reference.action_id == "operator.live.notifications.list"
+    assert show_definition.action_reference is None
+    assert latest_definition.action_reference is None
+    for definition in (list_definition, show_definition, latest_definition):
+        assert definition.capabilities.owned_resources == frozenset()
+
+
+def _assert_latest_projection(latest_projected):
+    latest = latest_projected.projection
+    assert isinstance(latest, NotificationsLatestPublicResultV1)
+    assert (latest.snapshot_id, latest.row_count, latest.source_url) == (
+        "2" * 64,
+        1,
+        "https://sede.example/notifications",
+    )
+
+
+def _assert_listed_projection(list_projected, profile):
+    listed = list_projected.projection
+    assert isinstance(listed, NotificationsListPublicResultV1)
+    assert listed.bucket_id == profile.bucket_id
+    assert listed.count == 2
+    assert tuple((row.snapshot_id, row.row_count) for row in listed.rows) == (("1" * 64, 1), ("2" * 64, 1))
+    assert "source_url" not in listed.model_dump()
+
+
+def _assert_reads_admit_exact_profile(requests, registry, profile_id, authority):
+    for request, _result_type, registration in requests:
+        access_context = cli_submit_context(
+            profile_id=profile_id, contract=registration.contract, authority_operation=authority
+        )
+        admitted = resolve_operation_access(registry=registry, request=request, context=access_context)
+        assert admitted.request.profile_id == profile_id
+        assert admitted.request.period_independent
+        assert admitted.policy.requires_all_periods
+        assert AccessAction.COMMIT not in admitted.policy.actions
+
+        assert_foreign_profile_refused(registry=registry, request=request, context=access_context)
+
+
 def test_registered_notification_reads_are_exact_profile_and_project_closed_results(tmp_path: Path) -> None:
     """Record list, full view, and latest solely from a synthetic local repository."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile, bundled_indexed_authority().operation() as authority:
@@ -234,25 +324,8 @@ def test_registered_notification_reads_are_exact_profile_and_project_closed_resu
             ),
         )
 
-        for request, _result_type, registration in requests:
-            access_context = cli_submit_context(
-                profile_id=profile_id, contract=registration.contract, authority_operation=authority
-            )
-            admitted = resolve_operation_access(registry=registry, request=request, context=access_context)
-            assert admitted.request.profile_id == profile_id
-            assert admitted.request.period_independent
-            assert admitted.policy.requires_all_periods
-            assert AccessAction.COMMIT not in admitted.policy.actions
-
-            assert_foreign_profile_refused(registry=registry, request=request, context=access_context)
-
-        assert list_definition.action_reference is not None
-        assert list_definition.action_reference.action_id == "operator.live.notifications.list"
-        assert show_definition.action_reference is None
-        assert latest_definition.action_reference is None
-        for definition in (list_definition, show_definition, latest_definition):
-            assert definition.capabilities.owned_resources == frozenset()
-
+        _assert_reads_admit_exact_profile(requests, registry, profile_id, authority)
+        _assert_action_references(list_definition, show_definition, latest_definition)
         _, _, _, supervisor, result_service = build_supervised_operation(
             tmp_path=tmp_path, objects=profile.repository, authority=authority, registry=registry, now=_NOW
         )
@@ -282,62 +355,11 @@ def test_registered_notification_reads_are_exact_profile_and_project_closed_resu
         repository.snapshots.clear()
         empty_latest_terminal, empty_latest_projected = asyncio.run(run(requests[2][0], "a" * 64, requests[2][1]))
 
-    for terminal in (list_terminal, show_terminal, latest_terminal, empty_latest_terminal):
-        assert terminal.lifecycle is OperationLifecycle.TERMINAL
-        assert terminal.terminal_condition is OperationTerminalCondition.SUCCEEDED
-        assert terminal.effect is OperationEffect.NONE
-        assert terminal.terminal_receipt is not None
-        assert terminal.terminal_receipt.effect is OperationEffect.NONE
-    assert unknown_show_terminal.terminal_condition is not OperationTerminalCondition.SUCCEEDED
-
-    listed = list_projected.projection
-    assert isinstance(listed, NotificationsListPublicResultV1)
-    assert listed.bucket_id == profile.bucket_id
-    assert listed.count == 2
-    assert tuple((row.snapshot_id, row.row_count) for row in listed.rows) == (("1" * 64, 1), ("2" * 64, 1))
-    assert "source_url" not in listed.model_dump()
-
-    shown = show_projected.projection
-    assert isinstance(shown, NotificationsShowPublicResultV1)
-    assert (shown.snapshot_id, shown.source_url, shown.row_count) == ("2" * 64, "https://sede.example/notifications", 1)
-    row = shown.rows[0]
-    assert (row.certificado_id, row.concepto, row.fecha_emision, row.mode) == (
-        "1234567890",
-        "Notificación sintética",
-        _NOW.date(),
-        "read",
-    )
-    assert "authenticated_identity" not in shown.model_dump()
-    assert set(row.model_dump()) == {
-        "certificado_id",
-        "tipo",
-        "concepto",
-        "titular_nif",
-        "titular_nombre",
-        "destinatario_nif",
-        "destinatario_nombre",
-        "fecha_emision",
-        "fecha_notificacion",
-        "modo_notificacion",
-        "leida",
-        "source_url",
-        "mode",
-    }
-
-    latest = latest_projected.projection
-    assert isinstance(latest, NotificationsLatestPublicResultV1)
-    assert (latest.snapshot_id, latest.row_count, latest.source_url) == (
-        "2" * 64,
-        1,
-        "https://sede.example/notifications",
-    )
-
-    empty_latest = empty_latest_projected.projection
-    assert isinstance(empty_latest, NotificationsLatestPublicResultV1)
-    assert empty_latest.snapshot_id is None
-    assert empty_latest.captured_at is None
-    assert empty_latest.source_url is None
-    assert empty_latest.row_count is None
+    _assert_terminals(list_terminal, show_terminal, latest_terminal, empty_latest_terminal, unknown_show_terminal)
+    _assert_listed_projection(list_projected, profile)
+    _assert_shown_projection(show_projected)
+    _assert_latest_projection(latest_projected)
+    _assert_empty_latest_projection(empty_latest_projected)
 
 
 def test_notification_read_operations_reject_foreign_bucket_rows(tmp_path: Path) -> None:
