@@ -22,7 +22,7 @@ from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.transactions.errors import TransactionValidationError
 from ._ledger_support import ledger_transaction_validation_no_recovery
 from .common import bad, emit_envelope
-from .ledger_results import LedgerImportPayload
+from .ledger_interchange_results import LedgerImportPayload
 from .operation_ledger_import import import_ledger_sources_for_cli
 from .period_parsing import _optional_canonical_period
 

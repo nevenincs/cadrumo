@@ -448,7 +448,9 @@ LEDGER_MANAGEMENT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         handler=LazyBinding.available(DeferredTarget(".participation_commands", "participation_lookup", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget(".ledger_results", "LedgerTransactionParticipationPayload", __package__),
+            target=DeferredTarget(
+                ".ledger_participation_results", "LedgerTransactionParticipationPayload", __package__
+            ),
             identity="ledger.participation",
         ),
     ),

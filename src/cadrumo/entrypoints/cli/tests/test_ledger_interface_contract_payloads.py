@@ -38,6 +38,11 @@ from ..ledger_catalogue_invoice_results import (
     CatalogueInvoiceRecordPayload,
 )
 from ..ledger_diagnostic_results import LedgerPeriodPayload, LedgerPreflightIssuePayload, LedgerPreflightResult
+from ..ledger_interchange_results import (
+    LedgerExportPayload,
+    LedgerExportRowPayload,
+    LedgerImportTransactionRefPayload,
+)
 from ..ledger_ratios_results import (
     RatiosEligibleResult,
     RatiosEligibleRowPayload,
@@ -48,11 +53,8 @@ from ..ledger_results import (
     LedgerAddResult,
     LedgerClassifyBulkResult,
     LedgerClassifySingleResult,
-    LedgerExportPayload,
-    LedgerExportRowPayload,
     LedgerHistoryEventPayload,
     LedgerHistoryResult,
-    LedgerImportTransactionRefPayload,
     LedgerLinkResult,
     LedgerListRowPayload,
     TransactionPayload,

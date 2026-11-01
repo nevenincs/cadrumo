@@ -20,12 +20,13 @@ if TYPE_CHECKING:
 
 from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
 from ...domain.currency.service import CurrencyNormalizationService
+from ...domain.transactions.classification_effects import fields_cleared_by_classification
 from ...domain.transactions.classification_origin import (
     CLASSIFICATION_DECISION_FIELDS,
     resolved_classification_origin,
     with_classification_origin,
 )
-from ...domain.transactions.enums import BusinessClassification, TransactionLifecycleState
+from ...domain.transactions.enums import TransactionLifecycleState
 from ...domain.transactions.errors import TransactionValidationError
 from ...domain.transactions.lineage_models import (
     TransactionEditLineageEntry,
@@ -727,21 +728,18 @@ def command_from_patch(
     )
     usage_ratio_id = optional_patched(patch, patch_fields, "usage_ratio_id", current.usage_ratio_id)
     prorrata_reference = optional_patched(patch, patch_fields, "prorrata_reference", current.prorrata_reference)
-    if "business_classification" in patch_fields and business_classification is not BusinessClassification.MIXED:
-        business_pct = None
-        usage_ratio_id = None
-    if "business_classification" in patch_fields and business_classification not in {
-        BusinessClassification.BUSINESS,
-        BusinessClassification.MIXED,
-    }:
-        category_id = None
-        taxable_base = None
-        iva_rate = None
-        iva_amount = None
-        recargo_amount = None
-        irpf_category = None
-        m210_income_classification = None
-        prorrata_reference = None
+    if "business_classification" in patch_fields:
+        cleared = fields_cleared_by_classification(business_classification)
+        business_pct = None if "business_pct" in cleared else business_pct
+        usage_ratio_id = None if "usage_ratio_id" in cleared else usage_ratio_id
+        category_id = None if "category_id" in cleared else category_id
+        taxable_base = None if "taxable_base" in cleared else taxable_base
+        iva_rate = None if "iva_rate" in cleared else iva_rate
+        iva_amount = None if "iva_amount" in cleared else iva_amount
+        recargo_amount = None if "recargo_amount" in cleared else recargo_amount
+        irpf_category = None if "irpf_category" in cleared else irpf_category
+        m210_income_classification = None if "m210_income_classification" in cleared else m210_income_classification
+        prorrata_reference = None if "prorrata_reference" in cleared else prorrata_reference
     notes = required_patched(patch, patch_fields, "notes", current.notes)
     attachment_ids = required_patched(patch, patch_fields, "attachment_ids", current.attachment_ids)
     iva_category = optional_patched(patch, patch_fields, "iva_category", current.iva_category)

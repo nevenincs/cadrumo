@@ -100,6 +100,7 @@ from .figures_preview_contracts import (
     InvoiceFiguresPreviewRuleFinding,
     InvoiceFiguresPreviewStored,
     InvoiceFiguresPreviewTotals,
+    InvoiceFiguresPreviewVerdict,
 )
 
 _NO_RATE_SOURCE = "no-rate-source"
@@ -375,14 +376,20 @@ def _rule_finding_of(error: ValidationError | InvoiceValidationError) -> Invoice
         causes = [getattr(detail.get("ctx", {}).get("error"), "__cause__", None) for detail in details]
         located = tuple(str(detail["loc"][-1]) for detail in details if detail["loc"])
     for cause in causes:
-        if isinstance(cause, InvoiceValidationError) and cause.context is not None:
-            code = cause.context.get("rule_finding_code")
-            if code is not None:
-                named = tuple(
-                    str(name) for name in OBJECT_TUPLE_ADAPTER.validate_python(cause.context.get("fields", ()))
-                )
-                return InvoiceRuleFinding(InvoiceRuleFindingCode(str(code)), str(cause), named or located)
+        named = _named_rule_finding(cause, located)
+        if named is not None:
+            return named
     return _other_rule_finding(located)
+
+
+def _named_rule_finding(cause: object, located: tuple[str, ...]) -> InvoiceRuleFinding | None:
+    if not isinstance(cause, InvoiceValidationError) or cause.context is None:
+        return None
+    code = cause.context.get("rule_finding_code")
+    if code is None:
+        return None
+    named = tuple(str(name) for name in OBJECT_TUPLE_ADAPTER.validate_python(cause.context.get("fields", ())))
+    return InvoiceRuleFinding(InvoiceRuleFindingCode(str(code)), str(cause), named or located)
 
 
 def _other_rule_finding(fields: tuple[str, ...] = ()) -> InvoiceRuleFinding:
@@ -712,6 +719,79 @@ def _project_retention(figures: InvoiceFigures) -> InvoiceFiguresPreviewRetentio
     )
 
 
+def _project_lines(
+    request: InvoiceFiguresPreviewRequest,
+    lines: tuple[LineFigures, ...],
+) -> tuple[InvoiceFiguresPreviewLineResult, ...]:
+    return tuple(
+        InvoiceFiguresPreviewLineResult(
+            key=line.key,
+            subtotal=_project_figure(figures.subtotal),
+            iva_amount=_project_figure(figures.iva_amount),
+        )
+        for line, figures in zip(request.lines, lines, strict=True)
+    )
+
+
+def _project_findings(
+    request: InvoiceFiguresPreviewRequest,
+    lines: tuple[LineFigures, ...],
+    date_findings: tuple[FigureFinding, ...],
+    invoice: InvoiceFigures,
+) -> tuple[InvoiceFiguresPreviewFinding, ...]:
+    return (
+        *(_project_finding(finding) for finding in date_findings),
+        *(
+            _project_finding(finding, line.key)
+            for line, figures in zip(request.lines, lines, strict=True)
+            for finding in figures.findings
+        ),
+        *(_project_finding(finding) for finding in invoice.findings),
+    )
+
+
+def _verdict_label(missing: tuple[str, ...], invoice_id: str | None) -> InvoiceFiguresPreviewVerdict:
+    if missing:
+        return "incomplete"
+    return "would_accept" if invoice_id is not None else "would_refuse"
+
+
+def _draft_verdict(
+    request: InvoiceFiguresPreviewRequest,
+    lines: tuple[LineFigures, ...],
+    every_finding: tuple[FigureFinding, ...],
+    on_date: date,
+    rule_findings: tuple[_LocatedRuleFinding, ...],
+    *,
+    operation: PinnedAuthorityOperation,
+) -> _Verdict:
+    if request.stored is None:
+        return _verdict(request, lines, every_finding, on_date, operation=operation)
+    return _correction_verdict(request.stored, every_finding, rule_findings)
+
+
+def _invoice_figures(request: InvoiceFiguresPreviewRequest, lines: tuple[LineFigures, ...]) -> InvoiceFigures:
+    return compute_invoice_figures(
+        lines=lines,
+        stated_base_total=_decimal(request.base_total),
+        recargo_amount=_decimal(request.recargo_amount),
+        retention_rate=_decimal(request.retention_rate),
+        retention_amount=_decimal(request.retention_amount),
+        printed_total=_decimal(request.printed_total),
+        stored_grand_total=None if request.stored is None else _decimal(request.stored.grand_total),
+    )
+
+
+def _with_other_rule_finding(
+    rule_findings: tuple[_LocatedRuleFinding, ...],
+    verdict: _Verdict,
+    every_finding: tuple[FigureFinding, ...],
+) -> tuple[_LocatedRuleFinding, ...]:
+    if verdict.refusal_code is not None and not rule_findings and _first_refusal_code(every_finding) is None:
+        return (_LocatedRuleFinding(_other_rule_finding()),)
+    return rule_findings
+
+
 def preview_invoice_figures(
     request: InvoiceFiguresPreviewRequest,
     *,
@@ -729,57 +809,30 @@ def preview_invoice_figures(
     on_date, on_date_source = _resolve_on_date(request)
     slots = _slots_on_date(on_date, operation)
     lines = tuple(_line_figures(line, slots, on_date) for line in request.lines)
-    invoice = compute_invoice_figures(
-        lines=lines,
-        stated_base_total=_decimal(request.base_total),
-        recargo_amount=_decimal(request.recargo_amount),
-        retention_rate=_decimal(request.retention_rate),
-        retention_amount=_decimal(request.retention_amount),
-        printed_total=_decimal(request.printed_total),
-        stored_grand_total=None if request.stored is None else _decimal(request.stored.grand_total),
-    )
+    invoice = _invoice_figures(request, lines)
     date_findings = () if slots is not None else (_rate_date_unresolved_finding(on_date),)
     line_findings = tuple(finding for figures in lines for finding in figures.findings)
     every_finding = (*date_findings, *line_findings, *invoice.findings)
     missing = _missing_fields(request)
     rule_findings = _draft_rule_findings(request, on_date, operation=operation)
-    verdict = _Verdict()
-    if not missing:
-        verdict = (
-            _verdict(request, lines, every_finding, on_date, operation=operation)
-            if request.stored is None
-            else _correction_verdict(request.stored, every_finding, rule_findings)
-        )
-    rule_findings = _with_refusing_rule(rule_findings, verdict)
-    if verdict.refusal_code is not None and not rule_findings and _first_refusal_code(every_finding) is None:
-        rule_findings = (_LocatedRuleFinding(_other_rule_finding()),)
+    verdict = (
+        _Verdict()
+        if missing
+        else _draft_verdict(request, lines, every_finding, on_date, rule_findings, operation=operation)
+    )
+    rule_findings = _with_other_rule_finding(_with_refusing_rule(rule_findings, verdict), verdict, every_finding)
     return InvoiceFiguresPreviewResult(
         profile_id=request.profile_id,
         input_digest=content_hash_hex(request.model_dump(mode="json")),
         on_date=on_date,
         on_date_source=on_date_source,
         rate_slots=() if slots is None else tuple(_project_slot(slot) for slot in slots),
-        lines=tuple(
-            InvoiceFiguresPreviewLineResult(
-                key=line.key,
-                subtotal=_project_figure(figures.subtotal),
-                iva_amount=_project_figure(figures.iva_amount),
-            )
-            for line, figures in zip(request.lines, lines, strict=True)
-        ),
+        lines=_project_lines(request, lines),
         totals=_project_totals(invoice),
         retention=_project_retention(invoice),
-        findings=(
-            *(_project_finding(finding) for finding in date_findings),
-            *(
-                _project_finding(finding, line.key)
-                for line, figures in zip(request.lines, lines, strict=True)
-                for finding in figures.findings
-            ),
-            *(_project_finding(finding) for finding in invoice.findings),
-        ),
+        findings=_project_findings(request, lines, date_findings, invoice),
         missing_fields=missing,
-        verdict="incomplete" if missing else "would_accept" if verdict.invoice_id is not None else "would_refuse",
+        verdict=_verdict_label(missing, verdict.invoice_id),
         refusal_code=verdict.refusal_code,
         invoice_id=verdict.invoice_id,
         rule_findings=tuple(_project_rule_finding(item) for item in rule_findings),

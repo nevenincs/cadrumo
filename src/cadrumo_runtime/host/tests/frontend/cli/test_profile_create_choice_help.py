@@ -4,12 +4,6 @@ Credential registration is the only creation door, so the ``create`` verb
 refuses every invocation. What survives here is the HELP surface -- the
 advertised choice tokens for a closed enum must be exactly the tokens the
 runtime accepts -- because ``--help`` is rendered before any refusal.
-
-One test was retired: ``profile_create_minimal_example_creates_a_ready_profile``
-executed the ``Minimal freelancer profile:`` command the create help still
-advertises, and that command cannot succeed. Retiring the test does not make
-the help text true; the help text is a live production defect, and it is not
-this module's to fix.
 """
 
 from __future__ import annotations

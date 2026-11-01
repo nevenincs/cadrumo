@@ -1,9 +1,6 @@
 """In-memory reading needs no encryption and no consent gate.
 
-Pins the operator ruling of 2026-08-06 as an executable gate rather than as
-prose, because prose carries none and nothing fails when it goes stale.
-
-**The ruling, and the line it does not cross.** A user who points a *local*
+**The line the exemption does not cross.** A user who points a *local*
 tool at a file has by that action accepted the file will be processed, and the
 secure-storage rule governs how data is STORED inside the product rather than
 what a local processor reads -- that rule already permits decrypted bytes to
@@ -14,14 +11,12 @@ custody wrapper.
 What the exemption does NOT reach is enumerated in the same rule and in terms
 that bear directly on a reading path: "no temp files, no scratch directories,
 no plaintext side stores, no on-disk caches, no logs." Anything DURABLE returns
-to the core's encrypted storage. The rule's own worked failure is exactly this
-shape -- an early design routed decrypted bytes through a temp file for a
-subprocess to read by path, and it was rejected -- so an exemption for
-in-memory bytes cannot be read as reopening the temp-file question.
+to the core's encrypted storage. An exemption for in-memory bytes therefore
+cannot be read as reopening the temp-file question, since routing decrypted
+bytes through a temp file for a subprocess to read by path is not permitted.
 
-These tests therefore guard in BOTH directions. A later automation must not
-reintroduce custody ceremony the operator ruled unnecessary, and must not read
-the exemption as permission to persist.
+These tests therefore guard in BOTH directions. Reading must not reintroduce
+custody ceremony, and the exemption must not be read as permission to persist.
 """
 
 from __future__ import annotations
@@ -53,7 +48,7 @@ def _evidence() -> EvidenceInput:
 def test_in_flight_bytes_are_readable_with_no_consent_gate_and_no_unwrapping() -> None:
     """Constructing and reading in-flight evidence takes no capability check.
 
-    The positive half of the ruling. If a later change adds a consent prompt,
+    The positive half of the exemption. If a change adds a consent prompt,
     a capability toggle or a custody wrapper to this path, this test is what
     fails -- the read must stay a plain attribute access on plain bytes.
     """
@@ -69,7 +64,7 @@ def test_the_resolver_signature_carries_no_consent_or_acknowledgement_parameter(
 
     Structural rather than behavioural on purpose: a consent gate reintroduced
     as an optional parameter defaulting to permissive would pass a behavioural
-    test while re-establishing exactly the ceremony the ruling removed.
+    test while re-establishing exactly the ceremony the exemption removes.
     """
     parameters = set(inspect.signature(EvidenceInput).parameters)
 
@@ -80,7 +75,7 @@ def test_the_resolver_signature_carries_no_consent_or_acknowledgement_parameter(
 def test_the_in_flight_record_still_refuses_to_serialize() -> None:
     """The exemption covers PROCESSING, never PERSISTENCE.
 
-    The other half of the ruling, and the one a later reader is most likely to
+    The other half of the exemption, and the one a reader is most likely to
     get wrong. Decrypted bytes may live in memory freely; the moment anything
     tries to turn them into a durable artefact the tripwires must fire. A
     version of this record that serialized cleanly would let an exemption about

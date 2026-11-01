@@ -507,59 +507,96 @@ def invoice_class_rule_findings(
     ``issued`` is ``None`` while a draft has no kind yet: whether the simplificada
     relief applies is then unknown, so the rule that needs it stays unasked.
     """
-    findings: list[InvoiceRuleFinding] = []
+    findings = (
+        _series_required_finding(rectificativa=rectificativa, series=series),
+        _rectified_invoice_required_finding(
+            rectificativa=rectificativa, rectifies_invoice_number=rectifies_invoice_number
+        ),
+        _rectified_invoice_not_allowed_finding(
+            rectificativa=rectificativa, rectifies_invoice_number=rectifies_invoice_number
+        ),
+        _simplificada_intra_community_finding(simplificada=simplificada, intra_community_supply=intra_community_supply),
+        _tax_id_required_finding(tax_id_missing=tax_id_missing, issued=issued, simplificada=simplificada),
+        _tax_id_required_by_category_finding(
+            tax_id_missing=tax_id_missing,
+            category_mandates_tax_id=category_mandates_tax_id,
+            category_value=category_value,
+        ),
+    )
+    return tuple(finding for finding in findings if finding is not None)
+
+
+def _series_required_finding(*, rectificativa: bool, series: str | None) -> InvoiceRuleFinding | None:
     if rectificativa and series in (None, ""):
-        findings.append(
-            InvoiceRuleFinding(
-                InvoiceRuleFindingCode.SERIES_REQUIRED_FOR_RECTIFICATIVA,
-                "a factura rectificativa must be issued in a specific series (RD 1619/2012 art. 6.1.a.2.º)",
-                ("series",),
-            )
+        return InvoiceRuleFinding(
+            InvoiceRuleFindingCode.SERIES_REQUIRED_FOR_RECTIFICATIVA,
+            "a factura rectificativa must be issued in a specific series (RD 1619/2012 art. 6.1.a.2.º)",
+            ("series",),
         )
+    return None
+
+
+def _rectified_invoice_required_finding(
+    *, rectificativa: bool, rectifies_invoice_number: str | None
+) -> InvoiceRuleFinding | None:
     if rectificativa and rectifies_invoice_number in (None, ""):
-        findings.append(
-            InvoiceRuleFinding(
-                InvoiceRuleFindingCode.RECTIFIED_INVOICE_REQUIRED,
-                "a factura rectificativa must name the invoice it rectifies (LIVA art. 89)",
-                ("rectifies_invoice_number",),
-            )
+        return InvoiceRuleFinding(
+            InvoiceRuleFindingCode.RECTIFIED_INVOICE_REQUIRED,
+            "a factura rectificativa must name the invoice it rectifies (LIVA art. 89)",
+            ("rectifies_invoice_number",),
         )
+    return None
+
+
+def _rectified_invoice_not_allowed_finding(
+    *, rectificativa: bool, rectifies_invoice_number: str | None
+) -> InvoiceRuleFinding | None:
     if not rectificativa and rectifies_invoice_number is not None:
-        findings.append(
-            InvoiceRuleFinding(
-                InvoiceRuleFindingCode.RECTIFIED_INVOICE_NOT_ALLOWED,
-                "rectifies_invoice_number only applies to a factura rectificativa",
-                ("rectifies_invoice_number", "invoice_class"),
-            )
+        return InvoiceRuleFinding(
+            InvoiceRuleFindingCode.RECTIFIED_INVOICE_NOT_ALLOWED,
+            "rectifies_invoice_number only applies to a factura rectificativa",
+            ("rectifies_invoice_number", "invoice_class"),
         )
+    return None
+
+
+def _simplificada_intra_community_finding(
+    *, simplificada: bool, intra_community_supply: bool
+) -> InvoiceRuleFinding | None:
     if simplificada and intra_community_supply:
-        findings.append(
-            InvoiceRuleFinding(
-                InvoiceRuleFindingCode.SIMPLIFICADA_NOT_FOR_INTRA_COMMUNITY,
-                "a factura simplificada must not be issued for an entrega intracomunitaria exenta "
-                "(RD 1619/2012 art. 4.4.a); issue an ordinaria or rectificativa instead",
-                ("invoice_class", "iva_category"),
-            )
+        return InvoiceRuleFinding(
+            InvoiceRuleFindingCode.SIMPLIFICADA_NOT_FOR_INTRA_COMMUNITY,
+            "a factura simplificada must not be issued for an entrega intracomunitaria exenta "
+            "(RD 1619/2012 art. 4.4.a); issue an ordinaria or rectificativa instead",
+            ("invoice_class", "iva_category"),
         )
+    return None
+
+
+def _tax_id_required_finding(
+    *, tax_id_missing: bool, issued: bool | None, simplificada: bool
+) -> InvoiceRuleFinding | None:
     if tax_id_missing and issued is not None and not (simplificada and issued):
-        findings.append(
-            InvoiceRuleFinding(
-                InvoiceRuleFindingCode.COUNTERPARTY_TAX_ID_REQUIRED,
-                "counterparty_tax_id is required unless the invoice is simplified and kind is ISSUED; "
-                "on a RECEIVED invoice it names the issuer's own identity, which stays mandatory",
-                ("counterparty_tax_id",),
-            )
+        return InvoiceRuleFinding(
+            InvoiceRuleFindingCode.COUNTERPARTY_TAX_ID_REQUIRED,
+            "counterparty_tax_id is required unless the invoice is simplified and kind is ISSUED; "
+            "on a RECEIVED invoice it names the issuer's own identity, which stays mandatory",
+            ("counterparty_tax_id",),
         )
+    return None
+
+
+def _tax_id_required_by_category_finding(
+    *, tax_id_missing: bool, category_mandates_tax_id: bool, category_value: str
+) -> InvoiceRuleFinding | None:
     if tax_id_missing and category_mandates_tax_id:
-        findings.append(
-            InvoiceRuleFinding(
-                InvoiceRuleFindingCode.COUNTERPARTY_TAX_ID_REQUIRED_BY_CATEGORY,
-                "counterparty_tax_id is required on a factura simplificada whose iva_category is "
-                f"{category_value!r} (RD 1619/2012 art. 6.1.d)",
-                ("counterparty_tax_id", "iva_category"),
-            )
+        return InvoiceRuleFinding(
+            InvoiceRuleFindingCode.COUNTERPARTY_TAX_ID_REQUIRED_BY_CATEGORY,
+            "counterparty_tax_id is required on a factura simplificada whose iva_category is "
+            f"{category_value!r} (RD 1619/2012 art. 6.1.d)",
+            ("counterparty_tax_id", "iva_category"),
         )
-    return tuple(findings)
+    return None
 
 
 def operation_date_role_finding(*, date_stated: bool, role_stated: bool) -> InvoiceRuleFinding | None:
@@ -663,12 +700,12 @@ def _unchecked(stated: Decimal | None) -> StatedFigure:
     return StatedFigure(stated=stated, verdict=None if stated is None else StatedFigureVerdict.NOT_CHECKED)
 
 
-def _subtotal_figure(
+def _subtotal_shape_findings(
     quantity: Decimal | None,
     unit_price: Decimal | None,
     stated: Decimal | None,
-) -> tuple[StatedFigure, tuple[FigureFinding, ...]]:
-    shape = tuple(
+) -> tuple[FigureFinding, ...]:
+    return tuple(
         finding
         for finding in (
             None if quantity is None else quantity_finding(quantity),
@@ -677,6 +714,22 @@ def _subtotal_figure(
         )
         if finding is not None
     )
+
+
+def _judged_with(
+    computed: Decimal | None,
+    stated: Decimal | None,
+    finding: FigureFinding | None,
+) -> tuple[StatedFigure, tuple[FigureFinding, ...]]:
+    return _judged(computed, stated, finding), () if finding is None else (finding,)
+
+
+def _subtotal_figure(
+    quantity: Decimal | None,
+    unit_price: Decimal | None,
+    stated: Decimal | None,
+) -> tuple[StatedFigure, tuple[FigureFinding, ...]]:
+    shape = _subtotal_shape_findings(quantity, unit_price, stated)
     if quantity is None or unit_price is None or shape:
         return (
             StatedFigure(
@@ -687,11 +740,24 @@ def _subtotal_figure(
         )
     finding = None if stated is None else line_subtotal_finding(quantity, unit_price, stated)
     computed = computed_line_subtotal(quantity, unit_price)
-    return _judged(computed, stated, finding), () if finding is None else (finding,)
+    return _judged_with(computed, stated, finding)
 
 
 def _unverified_verdict(stated: Decimal) -> StatedFigureVerdict:
     return StatedFigureVerdict.REFUSED if stated < _ZERO else StatedFigureVerdict.NOT_CHECKED
+
+
+def _oss_iva_figure(stated: Decimal | None) -> StatedFigure:
+    # An OSS line bears the destination state's rate, which the slot does not name.
+    return StatedFigure(
+        stated=stated,
+        verdict=None if stated is None else StatedFigureVerdict.NOT_CHECKED,
+        submitted=stated,
+    )
+
+
+def _stated_iva_finding(base: Decimal, stated: Decimal | None, fraction: Decimal | None) -> FigureFinding | None:
+    return None if stated is None else line_iva_finding(base, stated, fraction)
 
 
 def _iva_figure(
@@ -707,20 +773,13 @@ def _iva_figure(
     if slot is None or not slot.in_force:
         return _unchecked(stated), ()
     if oss_rate:
-        # An OSS line bears the destination state's rate, which this slot does not name.
-        return StatedFigure(
-            stated=stated,
-            verdict=None if stated is None else StatedFigureVerdict.NOT_CHECKED,
-            submitted=stated,
-        ), ()
+        return _oss_iva_figure(stated), ()
     if slot.fraction is None:
-        finding = None if stated is None else line_iva_finding(_ZERO, stated, None)
-        return _judged(_ZERO, stated, finding), () if finding is None else (finding,)
+        return _judged_with(_ZERO, stated, _stated_iva_finding(_ZERO, stated, None))
     if base is None:
         return _unchecked(stated), ()
-    finding = None if stated is None else line_iva_finding(base, stated, slot.fraction)
-    computed = computed_line_iva(base, slot.fraction)
-    return _judged(computed, stated, finding), () if finding is None else (finding,)
+    finding = _stated_iva_finding(base, stated, slot.fraction)
+    return _judged_with(computed_line_iva(base, slot.fraction), stated, finding)
 
 
 def compute_line_figures(
@@ -862,22 +921,9 @@ def _compute_invoice_figures(
     else:
         base, iva, total_findings = stated_base_total, None, ()
     retention = retention_findings(retention_rate, retention_amount, base)
-    recargo_findings: list[FigureFinding | None] = [recargo_sign_finding(recargo_amount)]
-    if iva is not None:
-        recargo_findings.append(recargo_ceiling_finding(recargo_amount, iva))
-    every_line_nonnumeric = bool(lines) and all(line.numeric_slot is False for line in lines)
-    total = stored_grand_total if not lines else None
-    if base is not None and iva is not None:
-        total = computed_grand_total(base, iva, recargo_amount)
-    nonnumeric: tuple[FigureFinding, ...] = ()
-    if every_line_nonnumeric and base is not None and iva is not None and total is not None:
-        nonnumeric = nonnumeric_invoice_findings(
-            base_total=base,
-            iva_total=iva,
-            grand_total=total,
-            recargo=recargo_amount,
-            suplido=None,
-        )
+    recargo_findings = _recargo_findings(recargo_amount, iva)
+    total = _invoice_grand_total(lines, base, iva, recargo_amount, stored_grand_total)
+    nonnumeric = _nonnumeric_findings(lines, base, iva, total, recargo_amount)
     printed = printed_total_finding(printed_total, total)
     return InvoiceFigures(
         base_total=base,
@@ -891,11 +937,49 @@ def _compute_invoice_figures(
         findings=(
             *total_findings,
             *nonnumeric,
-            *(finding for finding in recargo_findings if finding is not None),
+            *recargo_findings,
             *retention,
             *(() if printed is None else (printed,)),
         ),
     )
+
+
+def _recargo_findings(recargo_amount: Decimal | None, iva: Decimal | None) -> tuple[FigureFinding, ...]:
+    findings: list[FigureFinding | None] = [recargo_sign_finding(recargo_amount)]
+    if iva is not None:
+        findings.append(recargo_ceiling_finding(recargo_amount, iva))
+    return tuple(finding for finding in findings if finding is not None)
+
+
+def _invoice_grand_total(
+    lines: Sequence[LineFigures],
+    base: Decimal | None,
+    iva: Decimal | None,
+    recargo_amount: Decimal | None,
+    stored_grand_total: Decimal | None,
+) -> Decimal | None:
+    if base is not None and iva is not None:
+        return computed_grand_total(base, iva, recargo_amount)
+    return stored_grand_total if not lines else None
+
+
+def _nonnumeric_findings(
+    lines: Sequence[LineFigures],
+    base: Decimal | None,
+    iva: Decimal | None,
+    total: Decimal | None,
+    recargo_amount: Decimal | None,
+) -> tuple[FigureFinding, ...]:
+    every_line_nonnumeric = bool(lines) and all(line.numeric_slot is False for line in lines)
+    if every_line_nonnumeric and base is not None and iva is not None and total is not None:
+        return nonnumeric_invoice_findings(
+            base_total=base,
+            iva_total=iva,
+            grand_total=total,
+            recargo=recargo_amount,
+            suplido=None,
+        )
+    return ()
 
 
 def _implied_retention(rate: Decimal | None, base: Decimal | None) -> Decimal | None:

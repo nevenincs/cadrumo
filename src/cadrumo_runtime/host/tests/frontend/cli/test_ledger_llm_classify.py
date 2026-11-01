@@ -62,7 +62,7 @@ def test_llm_rejects_combination_with_manual_classification(
 
 
 # ---------------------------------------------------------------------------
-# unknown option: --nif is refused, never silently ignored (audit m18)
+# unknown option: --nif is refused, never silently ignored
 # ---------------------------------------------------------------------------
 
 
@@ -75,14 +75,11 @@ def test_llm_classify_rejects_unknown_nif_option(
 ) -> None:
     """``--nif`` is not a classify flag: it must be refused, never silently dropped.
 
-    Audit finding m18 observed ``--nif`` appearing to be *silently ignored* on the
-    LLM-assisted classify surface (the real identity flag is ``--tax-id`` on
-    ``config profile create``, never on ``ledger classify``). The silent-accept
-    appearance only arose when no profile was active and the cold-start write guard
-    refused first, masking option parsing. With an active profile present (this
-    case's native fixture), the unknown option must be rejected with a non-zero
-    exit, the offending flag named, and *nothing* classified — never accepted as a
-    no-op scoping flag. This regression fails the moment a no-op ``--nif`` (or
+    The real identity flag is ``--tax-id`` on ``config profile create``, never on
+    ``ledger classify``. With an active profile present (this case's native
+    fixture), the unknown option must be rejected with a non-zero exit, the
+    offending flag named, and *nothing* classified — never accepted as a no-op
+    scoping flag. This regression fails the moment a no-op ``--nif`` (or
     ``ignore_unknown_options``) is added to the surface.
     """
     tx = _import_one_transaction(ledger_llm_profile, tmp_path)
