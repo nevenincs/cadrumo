@@ -281,6 +281,7 @@ def _verify_resistant_descendants(
     worker_pid: int,
     guardian_pid: int,
 ) -> None:
+    assert sys.platform == "linux", "this helper proves native Linux containment"
     records = json.loads((tmp_path / "linux-worker-descendants.json").read_text(encoding="ascii"))
     assert isinstance(records, list) and len(records) == 2
     assert {record["role"] for record in records} == {"child", "grandchild"}
@@ -326,6 +327,7 @@ def _await_browser_record(
 def _verify_parent_marker(
     tmp_path: Path, parent: subprocess.Popen[bytes], worker_pid: int, guardian_pid: int
 ) -> tuple[int, int]:
+    assert sys.platform == "linux", "this helper proves native Linux containment"
     marker = json.loads((tmp_path / "linux-parent-marker.json").read_text(encoding="ascii"))
     device, inode = marker["device"], marker["inode"]
     assert type(device) is int and type(inode) is int and inode > 0
@@ -342,6 +344,7 @@ def _verify_parent_marker(
 def _verify_worker_marker(
     tmp_path: Path, worker_pid: int, guardian_pid: int, device: int, inode: int
 ) -> tuple[int, int]:
+    assert sys.platform == "linux", "this helper proves native Linux containment"
     worker_marker = json.loads((tmp_path / "linux-worker-marker.json").read_text(encoding="ascii"))
     assert isinstance(worker_marker, dict) and set(worker_marker) == {"pid", "fd", "device", "inode"}
     assert type(worker_marker["pid"]) is int and worker_marker["pid"] == worker_pid
@@ -439,6 +442,7 @@ def _inflict_owner_loss(
     worker_fd: int,
     browser_descendants: bool,
 ) -> None:
+    assert sys.platform == "linux", "this helper proves native Linux containment"
     if failed_owner == "runtime_parent":
         os.kill(parent.pid, signal.SIGKILL)
     elif failed_owner == "guardian":
@@ -608,6 +612,7 @@ def _await_registered_worker(parent: subprocess.Popen[bytes], guardian_pid: int,
 def _verify_registered_worker(
     worker_pid: int, worker_fd: int, worker_start: str, guardian_pid: int, cgroup: str, interpreter: Path
 ) -> None:
+    assert sys.platform == "linux", "this helper proves native Linux containment"
     assert not _dead(worker_fd) and _cgroup_for(worker_pid) == cgroup
     worker_native = Path("/proc") / str(worker_pid)
     assert (worker_native / "exe").resolve(strict=True) == interpreter

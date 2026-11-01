@@ -8,7 +8,6 @@ The name's alphabet is read from the bundled XSD, never from the code under test
 
 from __future__ import annotations
 
-import json
 import re
 from collections.abc import Iterator
 from decimal import Decimal
@@ -20,6 +19,7 @@ from defusedxml import ElementTree as DefusedElementTree
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.core.type_adapters import STRICT_STR_KEYED_MAPPING_ADAPTER
 from cadrumo.domain.user_profile.tests.profile_creation_authority import profile_creation_context_for_test
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from cadrumo.entrypoints.cli.tests.modelo_cli import create_modelo_work_unit_via_cli
@@ -108,7 +108,8 @@ def _verified_work_unit() -> str:
 
 
 def _json_error(output: str) -> dict[str, object]:
-    return json.loads(output)["error"]
+    envelope = STRICT_STR_KEYED_MAPPING_ADAPTER.validate_json(output)
+    return STRICT_STR_KEYED_MAPPING_ADAPTER.validate_python(envelope["error"])
 
 
 def test_a_stored_surname_past_the_profile_bound_refuses_new_work_naming_the_fact(

@@ -490,9 +490,13 @@ def _hold_job_members(
     import win32job
     import win32process
 
-    members = win32job.QueryInformationJobObject(owner.job_handle, win32job.JobObjectBasicProcessIdList)
-    assert isinstance(members, tuple) and 0 < len(members) <= 4096
-    assert all(type(pid) is int and pid > 0 for pid in members)
+    assert owner.job_handle is not None and owner.child_handle is not None
+    observed = win32job.QueryInformationJobObject(owner.job_handle, win32job.JobObjectBasicProcessIdList)
+    assert isinstance(observed, tuple) and 0 < len(observed) <= 4096
+    members: list[int] = []
+    for pid in observed:
+        assert type(pid) is int and pid > 0
+        members.append(pid)
     assert len(set(members)) == len(members)
     assert facts.child_pid in members and facts.owner_pid not in members
     creations = {facts.child_pid: facts.child_created}
@@ -502,10 +506,12 @@ def _hold_job_members(
         else:
             handle = win32api.OpenProcess(win32con.SYNCHRONIZE | win32con.PROCESS_QUERY_INFORMATION, False, pid)
             owner.member_handles[pid] = handle
-            creations[pid] = win32process.GetProcessTimes(handle)["CreationTime"].isoformat()
+            created = win32process.GetProcessTimes(handle)["CreationTime"].isoformat()
+            assert isinstance(created, str)
+            creations[pid] = created
         assert win32event.WaitForSingleObject(handle, 0) == win32event.WAIT_TIMEOUT
         assert win32job.IsProcessInJob(handle, owner.job_handle)
-    return members, creations
+    return tuple(members), creations
 
 
 def _reobserve_job_members(
@@ -518,6 +524,7 @@ def _reobserve_job_members(
     import win32job
     import win32process
 
+    assert owner.owner_handle is not None and owner.child_handle is not None and owner.job_handle is not None
     assert win32event.WaitForSingleObject(owner.owner_handle, 0) == win32event.WAIT_TIMEOUT
     assert win32process.GetProcessTimes(owner.owner_handle)["CreationTime"].isoformat() == facts.owner_created
     assert set(win32job.QueryInformationJobObject(owner.job_handle, win32job.JobObjectBasicProcessIdList)) == set(
@@ -550,6 +557,7 @@ async def test_owner_loss_after_native_creation_before_process_publication(tmp_p
         members, creations = _hold_job_members(owner, facts)
         _reobserve_job_members(owner, facts, members, creations)
         # A controller-held Job would keep the child alive after its owner dies.
+        assert owner.owner_handle is not None and owner.child_handle is not None
         owner.release_job_observation()
         assert owner.job_handle is None
         assert win32event.WaitForSingleObject(owner.child_handle, 0) == win32event.WAIT_TIMEOUT
