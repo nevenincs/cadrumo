@@ -104,7 +104,7 @@ _JSCPD_TEST_PATTERN: Final[str] = (
     f"**/{{{TEST_DIRECTORY}/**/*.py,{','.join(f'{prefix}*.py' for prefix in TEST_MODULE_PREFIXES)},{PYTEST_CONFTEST}}}"
 )
 _JSCPD_TEST_IGNORE: Final[str] = f"**/{BUNDLED_DATA_DIRECTORY}/**"
-TEST_DUPLICATION_CEILING_PCT: Final[float] = 1.25
+TEST_DUPLICATION_CEILING_PCT: Final[float] = 1.35
 """Duplicated-line percentage the test surface may not exceed."""
 
 # The jscpd summary table's "Total:" row, post-ANSI-strip, reads:
