@@ -26,33 +26,24 @@ from .....application.modelo.reconciliation_records import (
     list_modelo_reconciliations,
 )
 from .....application.workflow.persistence import workflow_state_repository
-from .....core.casilla_id import validated_casilla_id
 from .....core.period import Period
 from .....domain.calculations.registry.authority import (
     PinnedAuthorityOperation,
     bundled_indexed_authority,
 )
-from .....domain.calculations.registry.schema_references import RegistrySnapshotRef
-from .....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from .....domain.justificante.schema import Justificante
-from .....domain.modelos.calculation_repository import upsert_calculation_revision
-from .....domain.modelos.calculation_revision import (
-    CalculationRevision,
-    CalculationRevisionState,
-    derive_calculation_revision_id,
-)
-from .....domain.modelos.codes import ModeloCode
-from .....domain.modelos.repository import upsert_work_unit
-from .....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
+from .....domain.modelos.work_unit import WorkUnit
 from .....tests.inventory import FIXTURES_DIR
 from ....inbound.justificante.parser import parse_justificante
 from ...storage.tests.active_profile_isolated_backend_fixture import (
     active_profile_isolated_backend_fixture,
 )
-from ..modelos_calculation import CalculationRevisionCatalogueRepository
-from ..modelos_work_units import WorkUnitCatalogueRepository
 from .published_authority_support import published_authority_operation
-from .reconciliation_persist_support import reconcile_parsed_justificante
+from .reconciliation_persist_support import (
+    persist_filed_revision,
+    reconcile_parsed_justificante,
+    seed_active_work_unit,
+)
 
 isolated_backend = active_profile_isolated_backend_fixture(profile_overrides={"identity.tax_id": "00000000T"})
 
@@ -64,88 +55,17 @@ _CLOCK = datetime(2025, 4, 15, tzinfo=UTC)
 
 
 def _seed_work_unit(*, modelo: str, filing_year: int, period: str) -> WorkUnit:
-    state = workflow_state_repository().load()
-    bucket_id = state.active_profile_bucket_id()
-    assert bucket_id is not None
-    typed_period = Period.from_year_and_code(filing_year, period)
-    # Seed the real law-determined revision id so the snapshot resolver's D1
-    # identity assertion holds (a fabricated pin would divert reconcile into a
-    # snapshot_unavailable advisory instead of exercising the value compare).
-    revision_id = (
-        published_authority_operation()
-        .snapshot(
-            modelo,
-            filing_year=filing_year,
-            period=typed_period.registry_token,
-        )
-        .revision.id
-    )
-    work_unit_id = derive_work_unit_id(
-        bucket_id=bucket_id,
+    return seed_active_work_unit(
         modelo=modelo,
         filing_year=filing_year,
-        period=typed_period,
-        revision_id=revision_id,
+        period=period,
+        operation=published_authority_operation(),
     )
-    work_unit = WorkUnit(
-        work_unit_id=work_unit_id,
-        bucket_id=bucket_id,
-        modelo=ModeloCode(modelo),
-        filing_year=filing_year,
-        period=typed_period,
-        revision_id=revision_id,
-        name=f"{modelo}-{filing_year}-{typed_period.registry_token}",
-        created_at=datetime.now(UTC),
-        updated_at=datetime.now(UTC),
-    )
-    repo = WorkUnitCatalogueRepository()
-    repo.save(upsert_work_unit(repo.load(), work_unit))
-    return work_unit
 
 
 def _persist_filed_revision(work_unit: WorkUnit, *, total_ingresar: Decimal) -> None:
     """Persist a filed Modelo 131 revision whose casilla 15 carries ``total_ingresar``."""
-    casilla_values = {validated_casilla_id("15", surface="test"): total_ingresar}
-    revision_id = derive_calculation_revision_id(
-        work_unit_id=work_unit.work_unit_id,
-        input_values_by_casilla_id={},
-        binding_overrides={},
-        casilla_values=casilla_values,
-        filing_instance_evidence=None,
-        source_provenance=(),
-    )
-    repo = CalculationRevisionCatalogueRepository()
-    repo.save(
-        upsert_calculation_revision(
-            repo.load(),
-            CalculationRevision(
-                calculation_revision_id=revision_id,
-                work_unit_id=work_unit.work_unit_id,
-                registry_snapshot_ref=RegistrySnapshotRef(
-                    modelo=work_unit.modelo,
-                    revision_id=work_unit.revision_id,
-                    modelo_year=work_unit.filing_year,
-                    period=work_unit.period.registry_token,
-                ),
-                state=CalculationRevisionState.PRESENTADO,
-                casilla_values=casilla_values,
-                observations=registry_grounded_observations(
-                    modelo=str(work_unit.modelo),
-                    filing_year=work_unit.filing_year,
-                    period=work_unit.period.registry_token,
-                    casilla_values=casilla_values,
-                ),
-                created_at=_CLOCK,
-                updated_at=_CLOCK,
-                verified_at=_CLOCK,
-                verified_by="test",
-                filed_at=_CLOCK,
-                filed_by="test",
-                filing_instance_evidence=None,
-                source_provenance=(),
-            ),
-        ),
-    )
+    persist_filed_revision(work_unit, casilla_values={"15": total_ingresar}, clock=_CLOCK)
 
 
 def _receipt_for_m131(*, total_ingresar: Decimal):
