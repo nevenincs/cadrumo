@@ -9,6 +9,7 @@ import {
 } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/components/ui/cn";
 import {
   exactly,
   isPrintable,
@@ -167,11 +168,9 @@ function PageTab({ page, panel }: { page: DrawnPage; panel: string }) {
     <TabsTrigger
       value={page.id}
       aria-controls={panel}
-      className={page.applies === false ? "text-faint" : undefined}
+      className={cn("shrink-0", page.applies === false && "text-faint")}
     >
-      <span className="max-w-48 truncate" title={page.heading}>
-        {calm(page.heading)}
-      </span>
+      {calm(page.heading)}
       {todo > 0 && page.applies !== false && (
         <Badge variant="warning">
           <Icon name="alert" size="xs" />
@@ -210,6 +209,7 @@ export function FormView({
     request: EditRequest;
   } | null>(null);
   const scroller = useRef<HTMLDivElement>(null);
+  const pageTabs = useRef<HTMLDivElement>(null);
   // The page tabs control the one scroller the chosen page is drawn in.
   const panel = useId();
   const admitted = editsAdmitted(envelope);
@@ -264,6 +264,10 @@ export function FormView({
   const pageId = page?.id;
   useEffect(() => {
     if (scroller.current) scroller.current.scrollTop = 0;
+    // A page chosen from outside the tabs still shows its tab in the row.
+    pageTabs.current
+      ?.querySelector('[data-state="active"]')
+      ?.scrollIntoView({ block: "nearest", inline: "nearest" });
   }, [pageId]);
 
   const { reveal } = session;
@@ -439,6 +443,7 @@ export function FormView({
             className="flex-none border-b border-border px-4"
           >
             <TabsList
+              ref={pageTabs}
               aria-label={t("desktop.modelo.form.pages")}
               className="overflow-x-auto"
             >
