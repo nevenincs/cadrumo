@@ -11,7 +11,7 @@ from cadrumo.application.aggregation.counterpart import counterpart_operation_ca
 from cadrumo.core.aggregation import BindingSourceKind, IntracomOperationType
 from cadrumo.core.errors.hierarchy import InternalInvariantError
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.facts.payloads import MappingFactPayload
 from cadrumo.domain.calculations.registry.governed_fact_scope import CandidateFactAuthority, validating_governed_facts
@@ -25,7 +25,6 @@ from cadrumo.domain.calculations.registry.invoice_bindings import (
     resolve_invoice_binding_values,
 )
 from cadrumo.domain.calculations.registry.tests.fact_scope import outside_governed_fact_validation
-from cadrumo.domain.calculations.registry.tests.published_authority import bundled_indexed_authority
 
 from ..compiler.loader import load_registry_tree
 from ..compiler.validator import RegistryValidator
@@ -238,3 +237,96 @@ def test_invoice_clave_shape_refuses_non_ascii_letters() -> None:
             base_amount=Decimal("10"),
             intracommunity_clave="Á",
         )
+
+
+@pytest.mark.parametrize(
+    ("modelo_id", "provider_type", "field", "valid", "invalid"),
+    [
+        ("347", M347ThirdPartyOperationProvider, "operation_clave", "A", "I"),
+        ("349", M349IntracommunityOperationProvider, "intracommunity_clave", "E", "B"),
+    ],
+)
+def test_generic_invoice_provider_cannot_emit_an_undeclared_operation_clave(
+    candidate_registry, modelo_id, provider_type, field, valid, invalid
+) -> None:
+    modelos, catalogues = candidate_registry
+    modelo = next(item for item in modelos if item.id == modelo_id)
+    revision = next(iter(modelo.revisions.values()))
+    binding = next(
+        item
+        for item in revision.bindings
+        if isinstance(item.provider, provider_type) and item.provider.row_field == "clave"
+    )
+    provider = CollectibleInvoiceProvider.model_validate(
+        {**binding.provider.model_dump(), "kind": BindingSourceKind.COLLECTIBLE_INVOICE, "claves": ()}
+    )
+    revision = revision.model_copy(update={"bindings": (binding.model_copy(update={"provider": provider}),)})
+    observation = InvoiceObservation(
+        invoice_id="generic-source",
+        source_kind=BindingSourceKind.COLLECTIBLE_INVOICE,
+        party_tax_id="DE123456789",
+        country_code="DE",
+        transaction_date=date(2024, 1, 1),
+        base_amount=Decimal("10"),
+        invoice_total_amount=Decimal("10000"),
+        **{field: invalid},
+    )
+    authority = CandidateFactAuthority(catalogues.facts, catalogues.require_supported_filing_years())
+    with validating_governed_facts(authority):
+        with pytest.raises(RegistryValidationError, match="undeclared"):
+            resolve_invoice_binding_row_values(revision, (observation,), effective_date=date(2024, 12, 31))
+        valid_observation = observation.model_copy(update={field: valid})
+        rows = resolve_invoice_binding_row_values(revision, (valid_observation,), effective_date=date(2024, 12, 31))
+        assert valid in rows.values()
+
+
+def test_generic_scalar_clave_filter_does_not_silently_drop_an_invalid_input(candidate_registry) -> None:
+    modelos, catalogues = candidate_registry
+    modelo = next(item for item in modelos if item.id == "349")
+    revision = next(iter(modelo.revisions.values()))
+    binding = next(
+        item
+        for item in revision.bindings
+        if isinstance(item.provider, M349IntracommunityOperationProvider) and item.provider.fact == "operator_count"
+    )
+    provider = CollectibleInvoiceProvider.model_validate(
+        {**binding.provider.model_dump(), "kind": BindingSourceKind.COLLECTIBLE_INVOICE}
+    )
+    revision = revision.model_copy(update={"bindings": (binding.model_copy(update={"provider": provider}),)})
+    observation = InvoiceObservation(
+        invoice_id="generic-scalar",
+        source_kind=BindingSourceKind.COLLECTIBLE_INVOICE,
+        party_tax_id="DE123456789",
+        country_code="DE",
+        transaction_date=date(2024, 1, 1),
+        base_amount=Decimal("10"),
+        intracommunity_clave="B",
+    )
+    authority = CandidateFactAuthority(catalogues.facts, catalogues.require_supported_filing_years())
+    with validating_governed_facts(authority):
+        with pytest.raises(RegistryValidationError, match="undeclared"):
+            resolve_invoice_binding_values(revision, (observation,), effective_date=date(2024, 12, 31))
+        valid = observation.model_copy(update={"intracommunity_clave": "E"})
+        assert resolve_invoice_binding_values(revision, (valid,), effective_date=date(2024, 12, 31))[binding.id] == 1
+
+
+def test_specialized_provider_checks_each_clave_channel_it_consumes(candidate_registry) -> None:
+    modelos, catalogues = candidate_registry
+    modelo = next(item for item in modelos if item.id == "347")
+    revision = next(iter(modelo.revisions.values()))
+    binding = next(item for item in revision.bindings if isinstance(item.provider, M347ThirdPartyOperationProvider))
+    provider = binding.provider.model_copy(update={"grouping": "operator_clave", "claves": ("E",)})
+    revision = revision.model_copy(update={"bindings": (binding.model_copy(update={"provider": provider}),)})
+    observation = InvoiceObservation(
+        invoice_id="both-channels",
+        source_kind=BindingSourceKind.COLLECTIBLE_INVOICE,
+        party_tax_id="DE123456789",
+        country_code="DE",
+        transaction_date=date(2024, 1, 1),
+        base_amount=Decimal("10"),
+        operation_clave="A",
+        intracommunity_clave="B",
+    )
+    authority = CandidateFactAuthority(catalogues.facts, catalogues.require_supported_filing_years())
+    with validating_governed_facts(authority), pytest.raises(RegistryValidationError, match="undeclared 349"):
+        resolve_invoice_binding_values(revision, (observation,), effective_date=date(2024, 12, 31))

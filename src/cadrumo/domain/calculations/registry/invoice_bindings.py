@@ -783,13 +783,36 @@ def _validate_invoice_operation_claves(
     revision: ModeloRevision, observations: tuple[InvoiceObservation, ...], *, effective_date: date | None
 ) -> None:
     """Refuse undeclared input letters at the filing-period calculation boundary."""
-    sources = {binding.source for binding in revision.bindings}
-    for source, modelo, field in (
-        (BindingSourceKind.M347_THIRD_PARTY_OPERATION, "347", "operation_clave"),
-        (BindingSourceKind.M349_INTRACOMMUNITY_OPERATION, "349", "intracommunity_clave"),
+    checked: set[tuple[BindingSourceKind, str]] = set()
+    for binding in revision.bindings:
+        if binding.source not in INVOICE_BINDING_SOURCE_KINDS:
+            continue
+        for family in _binding_clave_families(binding):
+            if (binding.source, family[0]) in checked:
+                continue
+            checked.add((binding.source, family[0]))
+            _validate_observation_clave_family(
+                _observations_for_binding_source(observations, binding), *family, effective_date
+            )
+
+
+def _binding_clave_families(
+    binding: BindingDefinition,
+) -> tuple[tuple[Literal["347", "349"], Literal["operation_clave", "intracommunity_clave"]], ...]:
+    """Identify each operation-clave channel consumed by a source or selector."""
+    selector = binding.provider
+    if not isinstance(selector, InvoiceProviderBase):
+        return ()
+    families: list[tuple[Literal["347", "349"], Literal["operation_clave", "intracommunity_clave"]]] = []
+    if binding.source == BindingSourceKind.M347_THIRD_PARTY_OPERATION or selector.grouping == "contraparte_clave":
+        families.append(("347", "operation_clave"))
+    if (
+        binding.source == BindingSourceKind.M349_INTRACOMMUNITY_OPERATION
+        or selector.grouping in ("operator_clave", "operator_clave_period")
+        or (selector.claves and selector.grouping != "contraparte_clave")
     ):
-        if source in sources:
-            _validate_observation_clave_family(observations, modelo, field, effective_date)
+        families.append(("349", "intracommunity_clave"))
+    return tuple(families)
 
 
 def _validate_observation_clave_family(
@@ -804,7 +827,6 @@ def _validate_observation_clave_family(
             observation.operation_clave if field == "operation_clave" else observation.intracommunity_clave,
         )
         for observation in observations
-        if observation.source_kind in (BindingSourceKind.PAYABLE_INVOICE, BindingSourceKind.COLLECTIBLE_INVOICE)
     ]
     present = [(invoice_id, value) for invoice_id, value in present if value is not None]
     if not present:
