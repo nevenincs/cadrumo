@@ -6,6 +6,7 @@ import json
 import sys
 import time
 from concurrent.futures import ThreadPoolExecutor
+from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from threading import Event
@@ -29,7 +30,12 @@ from cadrumo.application.operations.frontend_requests import (
     OperationResultProjectionSuccessV1,
 )
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.automation_enrollment import AutomationReceiptProjection, EnrollmentStage
+from cadrumo.application.user_profile.automation_custody_port import AutomationCustodySnapshot
+from cadrumo.application.user_profile.automation_enrollment import (
+    AutomationReceiptProjection,
+    EnrollmentRecord,
+    EnrollmentStage,
+)
 from cadrumo.application.user_profile.automation_operations import (
     AUTOMATION_APPROVE_OPERATION_DEFINITION_ID,
     AutomationOperationRequest,
@@ -270,6 +276,178 @@ def _disclosure_destinations(connection: VerifiedConnection, profile_id: UUID, s
     return destinations
 
 
+@dataclass(frozen=True)
+class _Renewal:
+    enrollment: AdministrationSubject
+    profile_id: UUID
+    human: VerifiedConnection
+    api: VerifiedConnection
+    human_id: UUID
+    api_id: UUID
+    renewal_id: UUID
+    digest: str
+
+
+def _request_renewal(
+    enrollment: AdministrationSubject,
+    profile_id: UUID,
+    human: VerifiedConnection,
+    api: VerifiedConnection,
+    api_key: bytes,
+    renewal_proposal: EnrollmentProposal,
+) -> tuple[_Renewal, set[UUID]]:
+    human_id = _login(
+        human,
+        profile_id,
+        frontend=OperationFrontendProjection.CLI,
+        method="password",
+        proof=PROFILE_INPUT.encode(),
+    )
+    human_status = human.session(
+        SessionRequest(
+            action="session_status",
+            request_id=uuid4(),
+            profile_id=profile_id,
+            session_id=human_id,
+        ),
+        deadline=time.monotonic() + 5,
+    )
+    assert isinstance(human_status, ProfileStatus)
+    human_destinations = _disclosure_destinations(human, profile_id, human_id)
+    api_id = _login(
+        api,
+        profile_id,
+        frontend=OperationFrontendProjection.CLI,
+        method="api_key",
+        proof=api_key,
+    )
+    prepared = api.enrollment_prepare(
+        EnrollmentPrepare(
+            request_id=uuid4(),
+            profile_id=profile_id,
+            frontend=OperationFrontendProjection.CLI,
+            session_id=api_id,
+        ),
+        deadline=time.monotonic() + 5,
+    )
+    assert isinstance(prepared, EnrollmentPrepared)
+    requester = NativeEnrollmentClient(
+        connection=api,
+        prepared=prepared,
+        secrets_store=enrollment.client_native,
+    )
+    requested = requester.submit(renewal_proposal)
+    assert requested.stage is EnrollmentStage.REQUESTED
+    return _Renewal(
+        enrollment, profile_id, human, api, human_id, api_id, requested.request_id, requested.review_digest
+    ), human_destinations
+
+
+def _refuse_api_and_wrong_password(
+    renewal: _Renewal, human_destinations: set[UUID]
+) -> tuple[AutomationCustodySnapshot, EnrollmentRecord, OperationContractReply, str]:
+    enrollment, profile_id, human, human_id = renewal.enrollment, renewal.profile_id, renewal.human, renewal.human_id
+    before = enrollment.store.snapshot()
+    record = next(
+        item for item in enrollment.store.enrollment_state().requests if item.request_id == renewal.renewal_id
+    )
+    assert record.requester.destination_id not in human_destinations
+    contract = human.operation(
+        OperationContract(
+            request_id=uuid4(),
+            profile_id=profile_id,
+            session_id=human_id,
+            definition_id=AUTOMATION_APPROVE_OPERATION_DEFINITION_ID,
+        ),
+        deadline=time.monotonic() + 5,
+    )
+    assert isinstance(contract, OperationContractReply)
+    assert contract.contract.result_schema is not None
+    blocked = _submit(renewal.api, profile_id, renewal.api_id, renewal.renewal_id, renewal.digest)
+    assert isinstance(blocked, AccessRefusal)
+    assert blocked.code is AccessDenialCode.HUMAN_AUTHORITY_REQUIRED
+    wrong, refused = _run_approval(
+        human,
+        profile_id=profile_id,
+        session_id=human_id,
+        request_id=renewal.renewal_id,
+        digest=renewal.digest,
+        password=b"wrong-synthetic-password",
+    )
+    assert refused.projection.terminal_condition is OperationTerminalCondition.REFUSED
+    assert refused.projection.result_ref is None
+    refused_state = enrollment.store.snapshot()
+    assert refused_state.revision == before.revision
+    assert refused_state.grants == before.grants
+    assert enrollment.store.enrollment_state().requests[-1].stage is EnrollmentStage.REQUESTED
+    return before, record, contract, wrong.receipt.operation_id
+
+
+def _complete_renewal(
+    renewal: _Renewal,
+    before: AutomationCustodySnapshot,
+    record: EnrollmentRecord,
+    contract: OperationContractReply,
+    wrong_operation_id: str,
+) -> None:
+    enrollment, profile_id, human_id = renewal.enrollment, renewal.profile_id, renewal.human_id
+    completed, observed = _run_approval(
+        renewal.human,
+        profile_id=profile_id,
+        session_id=human_id,
+        request_id=renewal.renewal_id,
+        digest=renewal.digest,
+        password=PROFILE_INPUT.encode(),
+    )
+    assert completed.receipt.operation_id != wrong_operation_id
+    assert observed.projection.terminal_condition is OperationTerminalCondition.SUCCEEDED
+    assert observed.projection.effect is OperationEffect.UPDATED
+    assert contract.contract.result_schema is not None
+    released = renewal.human.operation(
+        OperationResult(
+            request_id=uuid4(),
+            profile_id=profile_id,
+            session_id=human_id,
+            result=OperationResultProjectionRequestV1(
+                operation_id=completed.receipt.operation_id,
+                terminal_revision=observed.projection.revision,
+                definition_contract_digest=contract.contract.definition_contract_digest,
+                result_schema=contract.contract.result_schema,
+            ),
+        ),
+        deadline=time.monotonic() + 5,
+    )
+    assert isinstance(released, OperationProjected)
+    receipt = (
+        OperationResultProjectionSuccessV1[AutomationReceiptProjection]
+        .model_validate_json(json.dumps(released.document))
+        .projection
+    )
+    assert receipt.request_id == renewal.renewal_id
+    assert receipt.profile_id == profile_id
+    assert receipt.review_digest == renewal.digest
+    assert receipt.stage is EnrollmentStage.COMPLETE
+    assert receipt.grant_id == record.grant_id
+    assert receipt.key_id is None
+    after = enrollment.store.snapshot()
+    assert after.revision == before.revision + 1
+    assert after.grants[0].generation == before.grants[0].generation + 1
+    assert after.grants[0].expires_at == record.proposal.expires_at
+    assert after.grants[0].scope.disclosures == record.proposal.scope.disclosures
+    assert after.keys == before.keys
+
+
+def _assert_secrets_absent(root: Path, api_key: bytes, capsys: pytest.CaptureFixture[str]) -> None:
+    journal_root = root / storage_location(StorageCategory.OPERATION_JOURNAL).subpath
+    journal_bytes = b"".join(path.read_bytes() for path in journal_root.rglob("*") if path.is_file())
+    assert journal_bytes
+    for forbidden in (PROFILE_INPUT.encode(), b"wrong-synthetic-password", api_key):
+        assert forbidden not in journal_bytes
+    output = capsys.readouterr()
+    assert PROFILE_INPUT not in output.out + output.err
+    assert "wrong-synthetic-password" not in output.out + output.err
+
+
 def test_native_human_renews_existing_grant_and_key_session_cannot_approve(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -307,133 +485,14 @@ def test_native_human_renews_existing_grant_and_key_session_cannot_approve(
                         pytest.fail("runtime stopped before readiness")
                 human, api = connect_verified(endpoint), connect_verified(endpoint)
                 try:
-                    human_id = _login(
-                        human,
-                        profile_id,
-                        frontend=OperationFrontendProjection.CLI,
-                        method="password",
-                        proof=PROFILE_INPUT.encode(),
+                    renewal, human_destinations = _request_renewal(
+                        enrollment, profile_id, human, api, api_key, renewal_proposal
                     )
-                    human_status = human.session(
-                        SessionRequest(
-                            action="session_status",
-                            request_id=uuid4(),
-                            profile_id=profile_id,
-                            session_id=human_id,
-                        ),
-                        deadline=time.monotonic() + 5,
+                    before, record, contract, wrong_operation_id = _refuse_api_and_wrong_password(
+                        renewal, human_destinations
                     )
-                    assert isinstance(human_status, ProfileStatus)
-                    human_destinations = _disclosure_destinations(human, profile_id, human_id)
-                    api_id = _login(
-                        api,
-                        profile_id,
-                        frontend=OperationFrontendProjection.CLI,
-                        method="api_key",
-                        proof=api_key,
-                    )
-                    prepared = api.enrollment_prepare(
-                        EnrollmentPrepare(
-                            request_id=uuid4(),
-                            profile_id=profile_id,
-                            frontend=OperationFrontendProjection.CLI,
-                            session_id=api_id,
-                        ),
-                        deadline=time.monotonic() + 5,
-                    )
-                    assert isinstance(prepared, EnrollmentPrepared)
-                    requester = NativeEnrollmentClient(
-                        connection=api,
-                        prepared=prepared,
-                        secrets_store=enrollment.client_native,
-                    )
-                    requested = requester.submit(renewal_proposal)
-                    assert requested.stage is EnrollmentStage.REQUESTED
-                    renewal_id, digest = requested.request_id, requested.review_digest
-                    before = enrollment.store.snapshot()
-                    renewal = next(
-                        item for item in enrollment.store.enrollment_state().requests if item.request_id == renewal_id
-                    )
-                    assert renewal.requester.destination_id not in human_destinations
-                    contract = human.operation(
-                        OperationContract(
-                            request_id=uuid4(),
-                            profile_id=profile_id,
-                            session_id=human_id,
-                            definition_id=AUTOMATION_APPROVE_OPERATION_DEFINITION_ID,
-                        ),
-                        deadline=time.monotonic() + 5,
-                    )
-                    assert isinstance(contract, OperationContractReply)
-                    assert contract.contract.result_schema is not None
-                    blocked = _submit(api, profile_id, api_id, renewal_id, digest)
-                    assert isinstance(blocked, AccessRefusal)
-                    assert blocked.code is AccessDenialCode.HUMAN_AUTHORITY_REQUIRED
-                    wrong, refused = _run_approval(
-                        human,
-                        profile_id=profile_id,
-                        session_id=human_id,
-                        request_id=renewal_id,
-                        digest=digest,
-                        password=b"wrong-synthetic-password",
-                    )
-                    assert refused.projection.terminal_condition is OperationTerminalCondition.REFUSED
-                    assert refused.projection.result_ref is None
-                    refused_state = enrollment.store.snapshot()
-                    assert refused_state.revision == before.revision
-                    assert refused_state.grants == before.grants
-                    assert enrollment.store.enrollment_state().requests[-1].stage is EnrollmentStage.REQUESTED
-                    completed, observed = _run_approval(
-                        human,
-                        profile_id=profile_id,
-                        session_id=human_id,
-                        request_id=renewal_id,
-                        digest=digest,
-                        password=PROFILE_INPUT.encode(),
-                    )
-                    assert completed.receipt.operation_id != wrong.receipt.operation_id
-                    assert observed.projection.terminal_condition is OperationTerminalCondition.SUCCEEDED
-                    assert observed.projection.effect is OperationEffect.UPDATED
-                    released = human.operation(
-                        OperationResult(
-                            request_id=uuid4(),
-                            profile_id=profile_id,
-                            session_id=human_id,
-                            result=OperationResultProjectionRequestV1(
-                                operation_id=completed.receipt.operation_id,
-                                terminal_revision=observed.projection.revision,
-                                definition_contract_digest=contract.contract.definition_contract_digest,
-                                result_schema=contract.contract.result_schema,
-                            ),
-                        ),
-                        deadline=time.monotonic() + 5,
-                    )
-                    assert isinstance(released, OperationProjected)
-                    receipt = (
-                        OperationResultProjectionSuccessV1[AutomationReceiptProjection]
-                        .model_validate_json(json.dumps(released.document))
-                        .projection
-                    )
-                    assert receipt.request_id == renewal_id
-                    assert receipt.profile_id == profile_id
-                    assert receipt.review_digest == digest
-                    assert receipt.stage is EnrollmentStage.COMPLETE
-                    assert receipt.grant_id == renewal.grant_id
-                    assert receipt.key_id is None
-                    after = enrollment.store.snapshot()
-                    assert after.revision == before.revision + 1
-                    assert after.grants[0].generation == before.grants[0].generation + 1
-                    assert after.grants[0].expires_at == renewal.proposal.expires_at
-                    assert after.grants[0].scope.disclosures == renewal.proposal.scope.disclosures
-                    assert after.keys == before.keys
-                    journal_root = root / storage_location(StorageCategory.OPERATION_JOURNAL).subpath
-                    journal_bytes = b"".join(path.read_bytes() for path in journal_root.rglob("*") if path.is_file())
-                    assert journal_bytes
-                    for forbidden in (PROFILE_INPUT.encode(), b"wrong-synthetic-password", api_key):
-                        assert forbidden not in journal_bytes
-                    output = capsys.readouterr()
-                    assert PROFILE_INPUT not in output.out + output.err
-                    assert "wrong-synthetic-password" not in output.out + output.err
+                    _complete_renewal(renewal, before, record, contract, wrong_operation_id)
+                    _assert_secrets_absent(root, api_key, capsys)
                 finally:
                     human.close()
                     api.close()
