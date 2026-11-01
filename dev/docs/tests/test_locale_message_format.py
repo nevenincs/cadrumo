@@ -61,3 +61,25 @@ def test_percent_format_inside_code_is_still_an_exact_literal() -> None:
     source = "Example: `%-format`."
     with pytest.raises(DocumentationLocaleMutationError, match="inline backtick role/literal mismatch"):
         _validate_format_contract(source, "", "Ejemplo: `formato %`.", Path("logging.po"), ("", source))
+
+
+def test_spanish_official_percent_label_can_move_inside_its_language_span() -> None:
+    source = 'Box 65 ("% <span lang="es">atribuible a la Administración del Estado</span>").'
+    translated = 'Casella 65 («<span lang="es">% atribuible a la Administración del Estado</span>»).'
+    _validate_format_contract(source, "", translated, Path("modelo-303.po"), ("", source))
+
+
+@pytest.mark.parametrize(
+    "translated",
+    [
+        '<span lang="es">% atribuible a la Administracion del Estado</span>',
+        '<span lang="es">% atribuible a la Administración del Estado extra</span>',
+        '<span lang="ca">% atribuible a la Administración del Estado</span>',
+        "% a",
+        '<span lang="es">% atribuible a la Administración del Estado</span> % a',
+    ],
+)
+def test_official_percent_label_does_not_hide_other_conversions_or_mutations(translated: str) -> None:
+    source = '% <span lang="es">atribuible a la Administración del Estado</span>'
+    with pytest.raises(DocumentationLocaleMutationError, match="percent placeholder mismatch"):
+        _validate_format_contract(source, "", translated, Path("modelo-303.po"), ("", source))

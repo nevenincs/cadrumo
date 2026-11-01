@@ -31,6 +31,13 @@ _PROSE_PERCENTAGE: Final[re.Pattern[str]] = re.compile(r"(?<=\d)%(?:-[^\W\d_]+| 
 
 _PROSE_PERCENT_FORMAT: Final[re.Pattern[str]] = re.compile(r"%-format(?:ting|ted)?\b")
 
+# Modelo 303 box 65 retains this complete Spanish official label in an
+# explicitly Spanish-language span. Its percent sign denotes the proportion,
+# not Python's space-flagged ``% a`` conversion.
+_M303_STATE_PERCENT_LABEL: Final[re.Pattern[str]] = re.compile(
+    r'<span lang="es">(?P<percent>%)[ \t]+atribuible a la Administración del Estado</span>'
+)
+
 
 def _validate_format_contract(
     msgid: str,
@@ -79,6 +86,7 @@ def _percent_placeholders(value: str) -> frozenset[str]:
     """
     percentages = {match.start() for match in _PROSE_PERCENTAGE.finditer(value)}
     percentages.update(match.start() for match in _PROSE_PERCENT_FORMAT.finditer(value))
+    percentages.update(match.start("percent") for match in _M303_STATE_PERCENT_LABEL.finditer(value))
     return frozenset(
         match.group(0)
         for match in _PYTHON_PERCENT.finditer(value)
