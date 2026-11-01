@@ -250,6 +250,8 @@ aggregation:
         tipus de font en blanc.
       owned_sources_duplicate: Les fonts propietat de la malla de fonts han de ser
         úniques.
+      proven_zero_value_not_zero: Un resolutor de fonts va declarar un zero provat
+        per a una vinculació el valor de la qual no és zero.
       provenance_binding_source_mismatch: El tipus d'origen declarat a la fila de
         procedència no coincideix amb l'origen del valor al qual diu pertànyer. Tots
         dos han de nomenar el mateix origen perquè la traçabilitat sigui comprovable.

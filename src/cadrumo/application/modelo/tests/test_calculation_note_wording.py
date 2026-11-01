@@ -165,8 +165,8 @@ def test_a_rename_leaves_the_calculation_and_its_consumption_alone_and_the_sente
     from ..calculation_bucket_actions import _unrouted_source_issues
 
     boxes = snapshot_printed_boxes(operation, operation.snapshot("100", filing_year=2025, period="0A"))
-    revision_before = _revision(unit, *_unrouted_source_issues(first.diagnostics, boxes))
-    revision_after = _revision(unit, *_unrouted_source_issues(second.diagnostics, boxes))
+    revision_before = _revision(operation, unit, *_unrouted_source_issues(first.diagnostics, boxes))
+    revision_after = _revision(operation, unit, *_unrouted_source_issues(second.diagnostics, boxes))
     assert revision_before.calculation_revision_id == revision_after.calculation_revision_id
 
     (gap,) = [
@@ -184,7 +184,7 @@ def test_the_form_shows_the_current_name_from_the_read_it_was_given(operation: P
 
     boxes = snapshot_printed_boxes(operation, operation.snapshot("100", filing_year=2025, period="0A"))
     diagnostics = resolve_m100(_described("Standing desk")).diagnostics
-    revision = _revision(_work_unit(operation), *_unrouted_source_issues(diagnostics, boxes))
+    revision = _revision(operation, _work_unit(operation), *_unrouted_source_issues(diagnostics, boxes))
 
     form = _checked_form(operation, revision)
     note = next(note for note in form.calculation_notes if note.reason == "activity_asset_claim_gap")

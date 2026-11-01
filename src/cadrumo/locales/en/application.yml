@@ -971,16 +971,22 @@ application:
           the rate that applies.
         what_to_do: Check that rate against the official instructions and correct
           the record if needed.
-      advisory_retencion_credit_grade:
-        what: 'The withholding credit from your issued invoices is not fully confirmed:
-          Cadrumo has not yet confirmed which tax year it belongs to.'
-        what_to_do: Compare the amount with the withholding certificate from each
-          client for this filing year before you file.
+      advisory_binding_value:
+        what: A figure in a box rests on a reading Cadrumo cannot confirm yet, so
+          you can see and preview it, but you cannot check, export or record the declaration
+          with it.
+        what_to_do: Compare the figure with your records and the payer's certificate.
+          While it is held back, Cadrumo cannot check, export or record this declaration;
+          a later version that confirms the period will release it.
       aggregation_activity_undeclared:
         what: Box {box} shows zero, although you have income this period with no type
           of activity.
         what_to_do: Set the type of activity on those income entries, then calculate
           again.
+      calculation_screen_outdated:
+        what: This calculation was made before Cadrumo's current checks on its figures,
+          so it cannot be checked, exported or recorded as it stands.
+        what_to_do: Calculate the declaration again, then check it.
       deferred_binding_source:
         what: Cadrumo does not fill in one figure of this declaration automatically
           yet.
@@ -1250,6 +1256,14 @@ application:
         out, so it is not included.'
       activity_undeclared: '{element}: its purchase has no type of activity and another
         of your assets is agricultural, so it counts as non-agricultural.'
+      advisory_imputation_period_ungrounded: 'Box {box}: {amount} of withholding is
+        held back because the period it belongs to is not confirmed. A withholding
+        counts in the period of the income it was taken from (RIRPF art. 79), and
+        your records date each payment by when it reached the bank, which is right
+        only if you chose to declare income when you are paid (RIRPF art. 7.2; LIRPF
+        art. 14.1.b).'
+      advisory_value_proven_zero: 'Box {box}: the zero stands, because nothing in
+        the period carries a figure whose period could be in doubt.'
       agrarian_excluded: '{element}: it belongs to an agricultural activity, so it
         is left out of the instalment for the period ending {period_end}.'
       amortization_box_unbound: '{element}: this edition has no box for its depreciation

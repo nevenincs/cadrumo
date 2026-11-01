@@ -484,6 +484,7 @@ def _modelo_workbench_registrations() -> tuple[FStringKeyRegistration, ...]:
         what_locale_key,
         what_to_do_locale_key,
     )
+    from cadrumo.application.modelo.calculation_screen import CALCULATION_SCREEN_OUTDATED_REASON
     from cadrumo.application.modelo.edit_models import ModeloEditParseReason
     from cadrumo.application.modelo.edit_review_wording import WORDED_FINDING_CODES
     from cadrumo.application.modelo.source_policy import SourceFamily
@@ -559,14 +560,14 @@ def _modelo_workbench_registrations() -> tuple[FStringKeyRegistration, ...]:
             values=_enum_values(ModeloEditParseReason),
         ),
         FStringKeyRegistration(
-            description="application.modelo.calc_diagnostic.*.what (calculation note reasons)",
+            description="application.modelo.calc_diagnostic.*.what (calculation note and derived gate reasons)",
             key_factory=what_locale_key,
-            values=tuple(CALCULATION_NOTE_ATTENTION),
+            values=(*CALCULATION_NOTE_ATTENTION, CALCULATION_SCREEN_OUTDATED_REASON),
         ),
         FStringKeyRegistration(
-            description="application.modelo.calc_diagnostic.*.what_to_do (calculation note reasons)",
+            description="application.modelo.calc_diagnostic.*.what_to_do (calculation note and derived gate reasons)",
             key_factory=what_to_do_locale_key,
-            values=tuple(CALCULATION_NOTE_ATTENTION),
+            values=(*CALCULATION_NOTE_ATTENTION, CALCULATION_SCREEN_OUTDATED_REASON),
         ),
         FStringKeyRegistration(
             description="application.modelo.calc_diagnostic_fact.* (CalculationNoteSentence)",

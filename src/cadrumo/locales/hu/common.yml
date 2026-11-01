@@ -239,6 +239,8 @@ aggregation:
         megadnia a számot, a legkorábbi és a legkésőbbi benyújtási dátumot.
       owned_sources_blank: A forrásháló saját forrásai nem tartalmazhatnak üres forrástípusokat.
       owned_sources_duplicate: A forrásháló saját forrásainak egyedinek kell lenniük.
+      proven_zero_value_not_zero: Egy forrásfeloldó bizonyított nullát jelzett egy
+        olyan kötéshez, amelynek értéke nem nulla.
       provenance_binding_source_mismatch: A származási soron megadott forrástípus
         nem egyezik azzal az értékforrással, amelyhez tartozónak vallja magát. A nyomon
         követhetőség csak akkor ellenőrizhető, ha mindkettő ugyanazt a forrást nevezi

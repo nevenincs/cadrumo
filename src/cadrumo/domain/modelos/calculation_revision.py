@@ -87,7 +87,6 @@ from .calculation_revision_m303_handoff import (
     FilingInstanceEvidence,
     M303RegimenSimplificadoAnnualSummaryHandoff,
 )
-from .calculation_screen_stamp import CalculationScreenStamp
 from .calculation_revision_operator_layer import CalculationOperatorLayer
 from .calculation_revision_rendering import CalculationRenderingSnapshot
 from .calculation_revision_sources import (
@@ -96,6 +95,7 @@ from .calculation_revision_sources import (
     CalculationSourceRef,
     validate_revision_source_provenance,
 )
+from .calculation_screen_stamp import CalculationScreenStamp
 from .errors import ModeloError, ModeloValidationError
 from .filing_text import ModeloActorLabel, OperatorReason
 from .ledger_filing_snapshot import LedgerFilingEvidence, LedgerFilingSnapshot
