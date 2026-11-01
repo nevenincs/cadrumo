@@ -22,8 +22,6 @@ from ....core.modelo import Modelo
 from ....core.period import Period
 from ....core.prior_domiciliation_election import PriorDomiciliationElection
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from ....domain.calculations.registry.binding_targets import revision_bindings_by_id
-from ....domain.calculations.registry.binding_value_contract import BindingValueChannel
 from ....domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
 from ....domain.calculations.registry.export_xml_dictionary import xml_dictionary_entries
 from ....domain.filing.errors import FilingExportValidationError
@@ -40,7 +38,7 @@ from ..draft_construction import build_draft
 from ..export import export_draft
 from ..export_verification import verify_export
 from ..runtime import ModeloOperatorProfile, RegistrySchemaAccessor, build_runtime_schema_provider
-from .export_support import m151_producer_snapshot
+from .export_support import filer_with_nothing_else, m151_producer_snapshot
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -101,26 +99,17 @@ def _provider(operation: PinnedAuthorityOperation, year: int) -> RegistrySchemaA
     )
 
 
-def _filer_with_nothing_else(provider: RegistrySchemaAccessor) -> dict[str, ModeloInputValue]:
-    """State every fact the revision reads as absent, for a Madrid filer: the sales are the subject here."""
-    inputs: dict[str, ModeloInputValue] = {
-        "renta-profile-tax-residence-ccaa": "madrid",
-        "renta-profile-taxpayer-birth-date": "1975-06-15",
-        "renta-modelo-130-pagos-fraccionados": Decimal("0"),
-        "renta-modelo-131-pagos-fraccionados": Decimal("0"),
-    }
-    for binding_id, binding in revision_bindings_by_id(provider.get_snapshot("100").revision).items():
-        if binding.value.channel in {BindingValueChannel.DECIMAL, BindingValueChannel.INTEGER}:
-            inputs[str(binding_id)] = Decimal("0")
-        elif binding.value.channel is BindingValueChannel.BOOLEAN:
-            inputs[str(binding_id)] = False
-    inputs["renta-profile-declaration-type"] = Decimal("1")
-    inputs["renta-modelo-100-estimacion-directa-es-normal"] = True
-    return inputs
-
-
 def _draft(provider: RegistrySchemaAccessor, year: int, inputs: dict[str, ModeloInputValue]) -> ModeloDraft:
-    stated = {**_filer_with_nothing_else(provider), **inputs}
+    stated = {
+        **filer_with_nothing_else(
+            provider,
+            {
+                "renta-modelo-130-pagos-fraccionados": Decimal("0"),
+                "renta-modelo-131-pagos-fraccionados": Decimal("0"),
+            },
+        ),
+        **inputs,
+    }
     amounts = {key: value for key, value in stated.items() if isinstance(value, Decimal)}
     bound_boxes = resolve_available_bound_inputs_by_casilla_id(provider.get_snapshot("100").revision, amounts)
     return build_draft(

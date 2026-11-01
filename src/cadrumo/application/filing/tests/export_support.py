@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import replace
 from decimal import Decimal
 from functools import cache
@@ -14,11 +15,14 @@ from ....core.period import Period
 from ....core.prior_domiciliation_election import PriorDomiciliationElection
 from ....core.refund_election import RefundElection
 from ....core.result_disposition import ResultDisposition
+from ....domain.calculations.registry.binding_targets import revision_bindings_by_id
+from ....domain.calculations.registry.binding_value_contract import BindingValueChannel
 from ....domain.calculations.registry.schema_exports import (
     ExportFieldDefinition,
     ExportLayoutDefinition,
     ExportRecordDefinition,
 )
+from ....domain.filing.protocols import ModeloInputValue
 from ....domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind
 from ....domain.submission.models import ModeloDraftStatus
 from ..draft_construction import build_draft
@@ -73,6 +77,25 @@ def _typed_producer_snapshot(*, complementaria: bool = False) -> FilingProducerS
         refund_account=None,
         charge_account=None,
     )
+
+
+def filer_with_nothing_else(
+    provider: RegistrySchemaAccessor, extra_facts: Mapping[str, ModeloInputValue] | None = None
+) -> dict[str, ModeloInputValue]:
+    """State every fact the Modelo 100 revision reads as absent, for a Madrid filer, plus any ``extra_facts``."""
+    inputs: dict[str, ModeloInputValue] = {
+        "renta-profile-tax-residence-ccaa": "madrid",
+        "renta-profile-taxpayer-birth-date": "1975-06-15",
+        **(extra_facts or {}),
+    }
+    for binding_id, binding in revision_bindings_by_id(provider.get_snapshot("100").revision).items():
+        if binding.value.channel in {BindingValueChannel.DECIMAL, BindingValueChannel.INTEGER}:
+            inputs[str(binding_id)] = Decimal("0")
+        elif binding.value.channel is BindingValueChannel.BOOLEAN:
+            inputs[str(binding_id)] = False
+    inputs["renta-profile-declaration-type"] = Decimal("1")
+    inputs["renta-modelo-100-estimacion-directa-es-normal"] = True
+    return inputs
 
 
 def _general_ingreso_producer_snapshot(modelo: str) -> FilingProducerSnapshot:
