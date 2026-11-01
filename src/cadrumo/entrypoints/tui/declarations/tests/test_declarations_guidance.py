@@ -34,14 +34,43 @@ def _refuse_creation(modelo: str, year: int, period: Period) -> ModeloWorkCreate
     )
 
 
-@pytest.mark.asyncio
-@pytest.mark.parametrize("locale", tuple(OutputLanguage))
-@pytest.mark.parametrize("theme", ("cadrumo-dark", "cadrumo-light"))
-@pytest.mark.parametrize("size", ((80, 24), (120, 40)))
-async def test_group_and_row_guidance_stays_visible_and_local_recording_stays_separate(
-    locale: OutputLanguage, theme: str, size: tuple[int, int]
-) -> None:
-    workspace, calendar = portfolio_projection()
+def _assert_read_only_guidance_fits(guidance, table, page, app, size):
+    assert "Enter" not in str(guidance.render())
+    assert "+ " not in str(guidance.render())
+    assert geometry_band(app, size[0]) == [] and table.max_scroll_x == 0, (
+        table.size,
+        table.container_size,
+        table.virtual_size,
+        table.scrollbar_size_vertical,
+        [(column.width, column.label) for column in table.columns.values()],
+        page.size,
+        guidance.region,
+    )
+    assert table.max_scroll_y == 0
+
+
+def _assert_guidance_did_not_move(guidance, original_region, screen, app, size, table):
+    assert guidance.region == original_region and screen.region.contains_region(guidance.region)
+    assert geometry_band(app, size[0]) == []
+    assert table.max_scroll_y == 0, (
+        table.styles.max_height,
+        table.styles.height,
+        table.size,
+        table.virtual_size,
+        table.styles.css,
+    )
+
+
+def _assert_guidance_keys(guidance, page):
+    assert "Enter " + tr("workspace.declarations.list.key.toggle_group") in str(guidance.render())
+    assert "+ " + tr("workspace.declarations.list.key.new") in str(guidance.render())
+    for key, label in (("/", "search"), ("f", "filter"), ("s", "sort")):
+        assert key + " " + tr("workspace.modelo.key." + label) in str(guidance.render())
+    assert "t " + tr("workspace.modelo.issues.technical") in str(guidance.render())
+    assert guidance.region.bottom <= page.region.y
+
+
+def _guidance_controller(workspace, calendar):
     draft = workspace.declarations[1].model_copy(
         update={"has_current_calculation": False, "summary": DeclarationSummary(state=DeclarationSummaryState.DRAFT)}
     )
@@ -60,6 +89,35 @@ async def test_group_and_row_guidance_stays_visible_and_local_recording_stays_se
             work_create_handoff=_refuse_creation,
         ),
     )
+    return draft, controller
+
+
+def _assert_selected_row_is_visible(table, page) -> None:
+    row_top = (
+        table.region.y
+        + (table.header_height if table.show_header else 0)
+        + sum(row.height for row in table.ordered_rows[: table.cursor_row])
+    )
+    row_bottom = row_top + table.ordered_rows[table.cursor_row].height
+    viewport = page.scrollable_content_region
+    assert viewport.y <= row_top < row_bottom <= viewport.bottom
+    assert table.max_scroll_y == 0 and table.scroll_y == 0
+
+
+def _select_row(table, key: str) -> None:
+    index = next(index for index, row in enumerate(table.ordered_rows) if row.key.value == key)
+    table.move_cursor(row=index)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("locale", tuple(OutputLanguage))
+@pytest.mark.parametrize("theme", ("cadrumo-dark", "cadrumo-light"))
+@pytest.mark.parametrize("size", ((80, 24), (120, 40)))
+async def test_group_and_row_guidance_stays_visible_and_local_recording_stays_separate(
+    locale: OutputLanguage, theme: str, size: tuple[int, int]
+) -> None:
+    workspace, calendar = portfolio_projection()
+    draft, controller = _guidance_controller(workspace, calendar)
     with override_settings(cadrumo_output_language=locale.value):
         screen = DeclarationsOverviewScreen(controller)
         app = ScreenHostApp(screen)
@@ -69,25 +127,11 @@ async def test_group_and_row_guidance_stays_visible_and_local_recording_stays_se
             table = screen.query_one("#declarations-list", DataTable)
             guidance = screen.query_one("#declarations-keys", Static)
             page = screen.query_one("#declarations-page", VerticalScroll)
-            assert "Enter " + tr("workspace.declarations.list.key.toggle_group") in str(guidance.render())
-            assert "+ " + tr("workspace.declarations.list.key.new") in str(guidance.render())
-            for key, label in (("/", "search"), ("f", "filter"), ("s", "sort")):
-                assert key + " " + tr("workspace.modelo.key." + label) in str(guidance.render())
-            assert "t " + tr("workspace.modelo.issues.technical") in str(guidance.render())
-            assert guidance.region.bottom <= page.region.y
+            _assert_guidance_keys(guidance, page)
             original_region = guidance.region
             page.scroll_end(animate=False)
             await settle(pilot)
-            assert guidance.region == original_region and screen.region.contains_region(guidance.region)
-            assert geometry_band(app, size[0]) == []
-            assert table.max_scroll_y == 0, (
-                table.styles.max_height,
-                table.styles.height,
-                table.size,
-                table.virtual_size,
-                table.styles.css,
-            )
-
+            _assert_guidance_did_not_move(guidance, original_region, screen, app, size, table)
             await pilot.press("down")
             await settle(pilot)
             await pilot.press("ctrl+home")
@@ -99,51 +143,36 @@ async def test_group_and_row_guidance_stays_visible_and_local_recording_stays_se
             assert table.cursor_row == 4
             assert table.max_scroll_y == 0
 
-            def selected_row_is_visible() -> None:
-                row_top = (
-                    table.region.y
-                    + (table.header_height if table.show_header else 0)
-                    + sum(row.height for row in table.ordered_rows[: table.cursor_row])
-                )
-                row_bottom = row_top + table.ordered_rows[table.cursor_row].height
-                viewport = page.scrollable_content_region
-                assert viewport.y <= row_top < row_bottom <= viewport.bottom
-                assert table.max_scroll_y == 0 and table.scroll_y == 0
-
-            selected_row_is_visible()
+            _assert_selected_row_is_visible(table, page)
             for key in ("ctrl+end", "up", "home", "end", "ctrl+home"):
                 await pilot.press(key)
                 await settle(pilot)
-                selected_row_is_visible()
+                _assert_selected_row_is_visible(table, page)
 
-            def select(key: str) -> None:
-                index = next(index for index, row in enumerate(table.ordered_rows) if row.key.value == key)
-                table.move_cursor(row=index)
-
-            select(str(draft.work_unit_id))
+            _select_row(table, str(draft.work_unit_id))
             await settle(pilot)
             assert "Enter " + tr("workspace.declarations.list.next.open_local_draft") in str(guidance.render())
             assert tr("workspace.modelo.origin.not_calculated_yet") in str(table.get_row_at(table.cursor_row)[1])
             external = next(row for row in screen.rows if row.state == "aeat_unlinked")
-            select(external.key)
+            _select_row(table, external.key)
             await settle(pilot)
             assert "Enter " + tr("workspace.declarations.calendar.action.open") in str(guidance.render())
-            select("group:aeat_unlinked")
+            _select_row(table, "group:aeat_unlinked")
             await settle(pilot)
-            selected_row_is_visible()
+            _assert_selected_row_is_visible(table, page)
             assert tr("workspace.declarations.list.state.aeat_unlinked") in str(
                 table.get_row_at(table.cursor_row)[0]
             ).replace("\n", " ")
             await pilot.press("enter")
             await settle(pilot)
-            selected_row_is_visible()
+            _assert_selected_row_is_visible(table, page)
             assert external.key not in {row.key.value for row in table.ordered_rows}
             await pilot.press("enter")
             await settle(pilot)
-            selected_row_is_visible()
+            _assert_selected_row_is_visible(table, page)
             assert external.key in {row.key.value for row in table.ordered_rows}
             due = next(row for row in screen.rows if row.state == "not_started")
-            select(due.key)
+            _select_row(table, due.key)
             await settle(pilot)
             assert "Enter " + tr("workspace.declarations.list.next.start") in str(guidance.render())
 
@@ -160,22 +189,11 @@ async def test_group_and_row_guidance_stays_visible_and_local_recording_stays_se
             await pilot.press("tab")
             await settle(pilot)
             assert table.has_focus
-            selected_row_is_visible()
+            _assert_selected_row_is_visible(table, page)
             controller.modelo_workspace_factory = None
             controller.work_create_handoff = None
             screen.filter_index = 0
             screen._populate()
-            select(str(draft.work_unit_id))
+            _select_row(table, str(draft.work_unit_id))
             await settle(pilot)
-            assert "Enter" not in str(guidance.render())
-            assert "+ " not in str(guidance.render())
-            assert geometry_band(app, size[0]) == [] and table.max_scroll_x == 0, (
-                table.size,
-                table.container_size,
-                table.virtual_size,
-                table.scrollbar_size_vertical,
-                [(column.width, column.label) for column in table.columns.values()],
-                page.size,
-                guidance.region,
-            )
-            assert table.max_scroll_y == 0
+            _assert_read_only_guidance_fits(guidance, table, page, app, size)
