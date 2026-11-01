@@ -79,6 +79,7 @@ def test_english_citation_retains_exact_aeat_terms_and_possessives() -> None:
                 "sublímite",
                 "heurística",
                 "discrepante",
+                "Discrepante",
                 "manejador",
                 "inicialización",
                 "recompilación",
@@ -109,9 +110,11 @@ def test_identifier_labels_are_exact_shared_technical_terms() -> None:
             assert is_project_spelling(locale, form)
         assert not is_project_spelling(locale, "idd")
         assert not is_project_spelling(locale, "idss")
-        for territory in ("Álava", "Guipúzcoa", "Vizcaya"):
+        for territory in ("Álava", "Guipúzcoa", "Vizcaya", "Bizkaia", "Gipuzkoa"):
             assert is_project_spelling(locale, territory)
             assert not is_project_spelling(locale, territory + "x")
+        for typo in ("bizkaia", "Bizkaiaa", "Gipuzkora", "GipuzkoaX"):
+            assert not is_project_spelling(locale, typo)
 
 
 @pytest.mark.parametrize("locale", ["ca", "en", "es", "hu"])
@@ -1996,11 +1999,12 @@ def test_reviewed_technical_forms_keep_exact_spelling_and_language_scope() -> No
         "upgrader",
         "Subcode",
         "Sectorised",
+        "Foral",
     )
     for form in forms:
         assert is_project_spelling("en", form)
         assert not is_project_spelling("en", form + "x")
         for locale in ("ca", "es", "hu"):
             assert not is_project_spelling(locale, form)
-    for typo in ("discardible", "undecryptible", "unhandld", "untrustted", "Unmaped", "Sectorizedd"):
+    for typo in ("discardible", "undecryptible", "unhandld", "untrustted", "Unmaped", "Sectorizedd", "Forall"):
         assert not is_project_spelling("en", typo)

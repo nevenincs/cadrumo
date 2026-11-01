@@ -110,6 +110,11 @@ _SHARED_SPELLINGS = (
             "Álava",
             "Guipúzcoa",
             "Vizcaya",
+            # Exact official names of the same historical territories:
+            # https://www.ine.es/daco/daco42/codmun/cod_provincia.htm
+            # https://www.euskadi.eus/what-is-basque-country/web01-ejeduki/en/
+            "Bizkaia",
+            "Gipuzkoa",
             "WebP",
             "ITPyAJD",
             "LISyD",

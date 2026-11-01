@@ -12,7 +12,15 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 _FORMS = [
     *[
         stem + ending
-        for stem in ("tipad", "intracomunitari", "desactualizad", "malformad", "contrafirmad", "atómic")
+        for stem in (
+            "tipad",
+            "intracomunitari",
+            "desactualizad",
+            "malformad",
+            "contrafirmad",
+            "atómic",
+            "desincronizad",
+        )
         for ending in ("o", "a", "os", "as")
     ],
     *[
@@ -20,6 +28,15 @@ _FORMS = [
         for stem, plural in (
             ("subcomando", "s"),
             ("subcarpeta", "s"),
+            ("tabulación", "es"),
+            ("descartable", "s"),
+            ("enchufable", "s"),
+            ("ratio", "s"),
+            ("percentil", "es"),
+            ("subcontratación", "es"),
+            ("achatarramiento", "s"),
+            ("desafectación", "es"),
+            ("regenerable", "s"),
             ("reanudable", "s"),
             ("auditable", "s"),
             ("contrafirmante", "s"),
@@ -32,6 +49,7 @@ _FORMS = [
     "contrafirmar",
     "deserializar",
     "reconectando",
+    "sobreestima",
     "atómicamente",
     *[stem + ending for stem in ("apruéba", "reinténta", "lísta") for ending in ("lo", "la", "los", "las")],
 ]

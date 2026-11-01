@@ -55,6 +55,8 @@ REVIEWED_LOCALE_SPELLINGS: dict[str, frozenset[str]] = {
             "upgrader",
             "Subcode",
             "Sectorised",
+            # https://www.euskadi.eus/contenidos/informacion/octe/es_def/adjuntos/072024_GMB_Basque_tax_and_financial_Glossary.pdf
+            "Foral",
             # Exact English legal-note dictionary gaps, independently attested:
             # https://www.merriam-webster.com/dictionary/transitorily
             # https://www.merriam-webster.com/dictionary/unseizable
@@ -429,6 +431,7 @@ REVIEWED_LOCALE_SPELLINGS: dict[str, frozenset[str]] = {
             "sublímite",
             "heurística",
             "discrepante",
+            "Discrepante",
             "manejador",
             "inicialización",
             "recompilación",

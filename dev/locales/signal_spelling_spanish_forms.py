@@ -152,6 +152,8 @@ _AGREEMENT_STEMS = frozenset(
         "precalculad",
         "recalculad",
         "recapitulativ",
+        # https://learn.microsoft.com/es-es/sql/t-sql/statements/alter-database-transact-sql-set-hadr
+        "desincronizad",
     }
 )
 _NUMBER_ENDINGS = {
@@ -167,6 +169,25 @@ _NUMBER_ENDINGS = {
     "subpaquete": "s",
     # https://learn.microsoft.com/es-es/windows/win32/shell/about-user-profiles
     "subcarpeta": "s",
+    # Native dictionary and official tax, statistical, transport and legal use:
+    # https://dle.rae.es/tabulaci%C3%B3n
+    # https://dle.rae.es/descartable
+    # https://dle.rae.es/enchufable
+    # https://dle.rae.es/ratio
+    # https://www.ine.es/jaxi/Tabla.htm?L=0&tpx=20412
+    # https://boe.es/diario_boe/txt.php?id=BOE-A-2006-18205
+    # https://boe.es/buscar/doc.php?id=BOE-A-2021-18811
+    # https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2019/capitulo-6-rendimientos-actividades-economicas-generales/elementos-patrimoniales-afectos-actividad-economica/traspaso-elementos-patrimoniales-empresarial-personal.html
+    # https://boe.es/diario_boe/txt.php?id=BOE-B-2010-29037
+    "tabulación": "es",
+    "descartable": "s",
+    "enchufable": "s",
+    "ratio": "s",
+    "percentil": "es",
+    "subcontratación": "es",
+    "achatarramiento": "s",
+    "desafectación": "es",
+    "regenerable": "s",
     "subcomando": "s",
     "reanudable": "s",
     "auditable": "s",
@@ -198,6 +219,8 @@ _TECHNICAL_VERB_FORMS = frozenset(
         "reescanea",
         # https://learn.microsoft.com/es-es/azure/virtual-network/virtual-network-optimize-network-bandwidth
         "reconectando",
+        # https://dle.rae.es/sobreestimar
+        "sobreestima",
     }
 )
 
