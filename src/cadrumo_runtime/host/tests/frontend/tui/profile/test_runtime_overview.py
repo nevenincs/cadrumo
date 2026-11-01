@@ -27,6 +27,9 @@ from cadrumo.application.wizard.catalogue import build_setup_flow
 from cadrumo.core.config import override_settings
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from cadrumo.domain.calculations.registry.renta_codes_catalogue import ue_eea_country_codes
+from cadrumo.domain.iva.establishment import catalogued_country_codes
+from cadrumo.domain.user_profile.schema import ProfileFieldCodeList
 from cadrumo_client.transport.frontend_client_contracts import ProfileViewCollection
 
 from .....frontend.tui.profile.overview_client import profile_overview_from_client_view
@@ -131,6 +134,10 @@ def test_real_encrypted_overview_pages_round_trip_every_field(tmp_path: Path) ->
                     label="Public inventory label",
                     schema=authority.profile_schema(),
                     flow=build_setup_flow(authority),
+                    code_lists={
+                        ProfileFieldCodeList.COUNTRIES: tuple(sorted(catalogued_country_codes(operation=authority))),
+                        ProfileFieldCodeList.EU_EEA_COUNTRIES: tuple(sorted(ue_eea_country_codes(authority=authority))),
+                    },
                 )
             actual = profile_overview_from_client_view(collection, profile_label="Public inventory label")
             assert actual == expected
