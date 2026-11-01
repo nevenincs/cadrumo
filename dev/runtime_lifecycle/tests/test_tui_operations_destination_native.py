@@ -76,7 +76,7 @@ from cadrumo_mcp.mcp.surfaces import DEFAULT_MCP_SURFACE, mcp_surface
 from cadrumo_runtime.adapters.tests.profile_worker_support import owner_id
 from cadrumo_runtime.adapters.tests.retained_server import RetainedRuntimeTransportServer
 from cadrumo_runtime.host.profile_connections import RuntimeProfileConnections
-from cadrumo_runtime.host.tests.verified_connection_support import connect_installed_client
+from cadrumo_runtime.host.tests.served_runtime import connect_installed
 
 pytestmark = [
     pytest.mark.integration,
@@ -500,7 +500,7 @@ def test_every_registered_operation_is_listed_and_a_read_a_change_and_a_secret_r
                 assert server.ready.wait(3)
                 with ExitStack() as cleanup:
                     client = FrontendClient(
-                        connect_installed_client(endpoint),
+                        connect_installed(endpoint),
                         profile_id=profile_id,
                         frontend=OperationFrontendProjection.TUI,
                     )

@@ -51,8 +51,8 @@ from ...adapters.tests.profile_worker_support import owner_id
 from ...adapters.tests.retained_server import RetainedRuntimeTransportServer
 from ..profile_connections import RuntimeProfileConnections
 from ..session_owner import ProfileWorkerSessionOwner
+from .served_runtime import connect_verified
 from .test_profile_connections import LoginObservation
-from .verified_connection_support import connect_test_client
 
 pytestmark = [
     pytest.mark.integration,
@@ -168,9 +168,7 @@ def test_receipt_proof_reenters_without_password_or_api_promotion(
                 running = pool.submit(server.serve)
                 try:
                     assert server.ready.wait(3)
-                    api, human, stranger, invalid_api, invalid_receipt = (
-                        connect_test_client(endpoint) for _ in range(5)
-                    )
+                    api, human, stranger, invalid_api, invalid_receipt = (connect_verified(endpoint) for _ in range(5))
                     clients.extend((api, human, stranger, invalid_api, invalid_receipt))
                     presence = human.sign_in_status(
                         SignInStatusRequest(request_id=uuid4(), profile_id=profile_id),
@@ -290,7 +288,7 @@ def test_receipt_proof_reenters_without_password_or_api_promotion(
                     assert absent.status.presence is SignInPresence.ABSENT
 
                     stranger.close()
-                    replacement = connect_test_client(endpoint)
+                    replacement = connect_verified(endpoint)
                     clients.append(replacement)
                     assert isinstance(
                         _session(replacement, profile_id, second_human_id, "session_status"), AccessRefusal
@@ -390,7 +388,7 @@ def test_password_login_mints_its_receipt_only_after_publication(
         clients: list[VerifiedConnection] = []
 
         def password_login() -> ProfileStatus | AccessRefusal:
-            client = connect_test_client(endpoint)
+            client = connect_verified(endpoint)
             clients.append(client)
             return _login(client, profile_id, "password", bytearray(PROFILE_INPUT.encode()), persist_receipt=True)
 
@@ -507,7 +505,7 @@ def test_a_receipt_bound_elsewhere_is_refused_typed_and_deleted_by_the_worker(
             try:
                 assert server.ready.wait(3)
                 client = FrontendClient(
-                    connect_test_client(endpoint), profile_id=profile_id, frontend=OperationFrontendProjection.CLI
+                    connect_verified(endpoint), profile_id=profile_id, frontend=OperationFrontendProjection.CLI
                 )
                 clients.append(client)
                 with pytest.raises(ProfileReceiptRefusedError) as refused:
