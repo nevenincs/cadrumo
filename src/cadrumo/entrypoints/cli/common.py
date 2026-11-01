@@ -327,7 +327,7 @@ class CliPolicyRefusalProjection(BaseModel):
 
 
 class _CommandGroup(Protocol):
-    def get_command(self, ctx: object, cmd_name: str) -> object | None:
+    def get_command(self, ctx: object, _cmd_name: str, /) -> object | None:
         """Resolve one real child command."""
 
 
