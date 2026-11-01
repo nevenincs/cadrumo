@@ -8,16 +8,11 @@ from uuid import uuid4
 import pytest
 from pydantic import TypeAdapter, ValidationError
 
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.automation_enrollment import AutomationInventory
-from cadrumo.application.user_profile.automation_operations import AUTOMATION_INVENTORY_OPERATION_DEFINITION_ID
 from cadrumo.core.hashing import canonical_json_bytes, sha256_hex
 from cadrumo.core.time.clock import now
 from cadrumo_client.contracts.access_vocabulary import (
     AccessAction,
-    Availability,
-    OperationAccessPolicy,
-    OperationAccessRequest,
 )
 
 from ..worker_authorization import (
@@ -31,43 +26,13 @@ from ..worker_authorization import (
     WorkerAutomationInventoryRequest,
     WorkerAutomationInventoryTransfer,
 )
+from .inventory_request_support import inventory_request
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-def _request() -> WorkerAutomationInventoryRequest:
-    definition_id = AUTOMATION_INVENTORY_OPERATION_DEFINITION_ID
-    return WorkerAutomationInventoryRequest(
-        request_id=uuid4(),
-        connection_id=uuid4(),
-        session_id=uuid4(),
-        operation_id="a" * 64,
-        request=OperationAccessRequest(
-            profile_id=uuid4(),
-            definition_id=definition_id,
-            action=AccessAction.START,
-            frontend=OperationFrontendProjection.CLI,
-            periods=frozenset(),
-            period_independent=True,
-            destination_id=uuid4(),
-        ),
-        policy=OperationAccessPolicy(
-            definition_id=definition_id,
-            definition_contract_digest="b" * 64,
-            actions=frozenset({AccessAction.START}),
-            disclosures=frozenset(),
-            periods=None,
-            allow_period_independent=True,
-            backend=Availability.AVAILABLE,
-            published_authority=Availability.AVAILABLE,
-            provider=Availability.NOT_REQUIRED,
-            transaction_authority_required=False,
-        ),
-    )
-
-
 def test_inventory_request_is_separate_from_persisted_authority_union() -> None:
-    request = _request()
+    request = inventory_request()
     encoded = request.model_dump_json()
     parsed = WorkerAuthorityEnvelope.model_validate_json(encoded).root
     assert isinstance(parsed, WorkerAutomationInventoryRequest)
@@ -90,7 +55,7 @@ def test_inventory_request_is_separate_from_persisted_authority_union() -> None:
 
 
 def test_inventory_request_refuses_wrong_action_and_definition() -> None:
-    request = _request()
+    request = inventory_request()
     document = request.model_dump(mode="json")
     access = document["request"]
     assert isinstance(access, dict)
@@ -105,7 +70,7 @@ def test_inventory_request_refuses_wrong_action_and_definition() -> None:
 
 
 def test_inventory_reply_is_a_transfer_announcement_never_an_ordinary_permit() -> None:
-    request = _request()
+    request = inventory_request()
     permit = WorkerAutomationInventoryPermit(
         request_id=request.request_id,
         runtime_boot_id=uuid4(),
