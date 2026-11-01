@@ -41,6 +41,7 @@ from cadrumo_client.contracts.model_runs import (
 from ...adapters.outbound.llm.column_role_mapping import resolve_column_roles
 from ...adapters.outbound.llm.statement_reading import StatementReader
 from ...adapters.outbound.llm.tests.model_run_support import ON_HOST_LANE, RecordingModelRuns, serving_agent
+from ...adapters.persistence.operations.tests.supervision_support import run_to_settlement
 from ...adapters.persistence.operations.tests.supervisor_test_support import operation_repositories
 from ...adapters.persistence.storage.attachment import AttachmentStore
 from ...adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
@@ -86,7 +87,7 @@ from ...application.operations.frontend_requests import (
     OperationResultProjectionRequestV1,
     OperationResultProjectionSuccessV1,
 )
-from ...application.operations.models import OperationIdentity, OperationRequest
+from ...application.operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
 from ...application.operations.projection_services import OperationResultProjectionService
 from ...application.operations.registry import OperationRegistry
 from ...application.operations.subject_reference import expected_operation_subject
@@ -256,6 +257,33 @@ def supervisor_with_projections(
         execution_authority=execution_authority,
     )
     return supervisor, OperationResultProjectionService(reader=journal, registry=registry, operands=operands)
+
+
+async def settle_to_error_detail(
+    supervisor: OperationSupervisor,
+    projections: OperationResultProjectionService,
+    request: OperationRequest[BaseModel],
+    *,
+    definition_contract_digest: str,
+) -> tuple[OperationTerminalReceipt, OperationErrorDetailV1]:
+    """Submit ``request``, settle it, and read the recorded error detail the way another process does."""
+    operation_id = await supervisor.submit(request, operation_id="4" * 64)
+    terminal = await run_to_settlement(supervisor, operation_id)
+    receipt = terminal.terminal_receipt
+    assert receipt is not None
+    resolved = await projections.resolve(
+        OperationResultProjectionRequestV1(
+            operation_id=operation_id,
+            terminal_revision=terminal.revision,
+            definition_contract_digest=definition_contract_digest,
+            result_schema=operation_error_detail_schema(),
+        ),
+        OperationErrorDetailV1,
+    )
+    assert isinstance(resolved, OperationResultProjectionSuccessV1), resolved
+    detail = resolved.projection
+    assert isinstance(detail, OperationErrorDetailV1)
+    return receipt, detail
 
 
 class RecordingRunsAuthority:
