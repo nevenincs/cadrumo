@@ -24,13 +24,12 @@ correctly and still matches no selector is exactly the failure worth catching.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import date
 from decimal import Decimal
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 from cadrumo.domain.invoices.enums import resolve_iva_rate_token
 from cadrumo.domain.iva.components import IvaComponentPresence, IvaKindApplicability
@@ -46,13 +45,6 @@ from .._modelo_bindings_invoice_iva import _invoice_line_iva_observation
 from ..iva_ledger_apportionment import resolve_iva_ledger_binding_values
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-
-
-@pytest.fixture
-def authority_operation() -> Iterator[PinnedAuthorityOperation]:
-    """Lease one generation for supplier/recipient binding projections."""
-    with bundled_indexed_authority().operation() as operation:
-        yield operation
 
 
 _BASE = Decimal("1000.00")

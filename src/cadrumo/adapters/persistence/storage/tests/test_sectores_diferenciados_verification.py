@@ -32,7 +32,6 @@ already-verified con/total definitive substrate.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -53,7 +52,7 @@ from .....core.prorrata_register import (
     SectorDiferenciadoLetra,
 )
 from .....domain.bienes_inversion.register import BienesInversionIvaRegister
-from .....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from .....domain.calculations.registry.authority import PinnedAuthorityOperation
 from .....domain.calculations.registry.ids import BindingId
 from .....domain.calculations.registry.tests.published_authority import published_revision, published_snapshot
 from .....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
@@ -67,13 +66,6 @@ from ...profile.transactions import TransactionCatalogueRepository
 from .secure_sql import isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
-
-
-@pytest.fixture
-def authority_operation() -> Iterator[PinnedAuthorityOperation]:
-    """Lease one generation across differentiated-sector aggregation."""
-    with bundled_indexed_authority().operation() as operation:
-        yield operation
 
 
 _BUCKET_ID = "5c705c70-5c70-4c70-8c70-5c705c705c70"

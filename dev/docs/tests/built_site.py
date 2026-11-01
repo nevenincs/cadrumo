@@ -27,7 +27,7 @@ from functools import cache
 from pathlib import Path
 from typing import Final
 
-from cadrumo.tests.run_artifact import file_inputs_digest, run_artifact
+from cadrumo.tests.run_artifact import file_inputs_digest, run_artifact, run_scoped_digest
 from dev._paths import REPO_ROOT
 from dev.packaging.command_execution import CommandResult, run_command
 
@@ -64,7 +64,9 @@ _OUTCOME: Final = "outcome.json"
 #: The trees the user-scope build reads, relative to the checkout, with the
 #: generated residue under them that the build writes rather than reads. The
 #: native packaging enrolment (``native/cmake/Docs.cmake``) declares the same
-#: surface for the packaged site.
+#: surface for the packaged site. All of ``src`` stays: even without autodoc the
+#: build imports the CLI command tree, compiles the bundled registry for the
+#: casilla pages and reads the bundled corpora and profile schema under it.
 _INPUT_TREES: Final = {
     "docs": frozenset({"_build", "cli", "_generated", "api", "pot", "__pycache__"}),
     "dev/docs": frozenset({"tests", "__pycache__"}),
@@ -149,7 +151,13 @@ def docs_site_input_paths(repo_root: Path = REPO_ROOT) -> Iterator[Path]:
 @cache
 def built_documentation_site() -> BuiltSite:
     """Return this run's documentation site, building it once for its inputs."""
-    digest = file_inputs_digest(_KIND, REPO_ROOT, docs_site_input_paths())[:32]
+    # One snapshot of the inputs per run: the first process hashes them, every
+    # other reads its digest, so a peer's mid-run edit cannot key a second build.
+    digest = run_scoped_digest(
+        _KIND,
+        lambda: file_inputs_digest(_KIND, REPO_ROOT, docs_site_input_paths())[:32],
+        wait_seconds=_WAIT_SECONDS,
+    )
     artifact = run_artifact(
         _KIND,
         digest,

@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 
 from .audited_process import run_audited_process
-from .run_artifact import run_artifact
+from .run_artifact import run_artifact, run_scoped_digest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -160,3 +160,94 @@ def test_writable_copy_mutations_do_not_reach_the_entry(tmp_path: Path) -> None:
     assert (artifact.root / "payload").read_bytes() == _PAYLOAD
     assert not (artifact.root / "added").exists()
     assert _verify(artifact.root)
+
+
+# The digest analogue of _RACER: the first process computes inside the lock and
+# blocks until the second signals from inside run_scoped_digest, past its
+# unlocked read. The second must then read the first one's record, never
+# compute its own -- the snapshot a mid-run edit would otherwise split.
+_DIGEST_RACER = """
+import sys
+import time
+from pathlib import Path
+
+from cadrumo.tests import run_artifact as cache
+
+cache_root, signals, role = Path(sys.argv[1]), Path(sys.argv[2]), sys.argv[3]
+lock = cache.exclusive_file_lock
+
+
+def signalled_lock(*args, **kwargs):
+    if role == "contender":
+        (signals / "contender-waiting").touch()
+    return lock(*args, **kwargs)
+
+
+cache.exclusive_file_lock = signalled_lock
+
+
+def compute():
+    with (signals / "compute-calls").open("a") as stream:
+        stream.write(role + "\\n")
+    if role == "first":
+        (signals / "computing").touch()
+        guard = time.monotonic() + 120
+        while not (signals / "contender-waiting").exists():
+            if time.monotonic() > guard:
+                raise SystemExit("hang guard: the contender never signalled")
+            time.sleep(0.01)
+    return "digestof" + role
+
+
+print(cache.run_scoped_digest("inputs", compute, cache_root=cache_root))
+"""
+
+
+def test_racing_processes_key_one_run_on_the_first_process_s_digest(tmp_path: Path) -> None:
+    cache_root, signals = tmp_path / "cache", tmp_path / "signals"
+    signals.mkdir()
+
+    def run(role: str):
+        return run_audited_process(
+            [sys.executable, "-c", _DIGEST_RACER, str(cache_root), str(signals), role],
+            capture_output=True,
+            text=True,
+            timeout=180,
+        )
+
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        first = pool.submit(run, "first")
+        guard = time.monotonic() + 120
+        while not (signals / "computing").exists():
+            assert not first.done(), first.result().stderr
+            assert time.monotonic() < guard, "hang guard: the first process never signalled"
+            time.sleep(0.01)
+        contender = pool.submit(run, "contender")
+        outcomes = [first.result(), contender.result()]
+
+    assert [outcome.returncode for outcome in outcomes] == [0, 0], [outcome.stderr for outcome in outcomes]
+    assert (signals / "compute-calls").read_text().splitlines() == ["first"]
+    assert [str(outcome.stdout).strip() for outcome in outcomes] == ["digestoffirst", "digestoffirst"]
+
+
+def test_a_recorded_digest_is_read_without_computing_and_kinds_are_separate(tmp_path: Path) -> None:
+    calls: list[str] = []
+
+    def compute(value: str):
+        def digest() -> str:
+            calls.append(value)
+            return value
+
+        return digest
+
+    assert run_scoped_digest("site", compute("aaaa"), cache_root=tmp_path) == "aaaa"
+    assert run_scoped_digest("site", compute("bbbb"), cache_root=tmp_path) == "aaaa"
+    assert run_scoped_digest("stubs", compute("cccc"), cache_root=tmp_path) == "cccc"
+    assert calls == ["aaaa", "cccc"]
+
+
+def test_a_digest_that_is_not_alphanumeric_is_refused_and_never_recorded(tmp_path: Path) -> None:
+    with pytest.raises(ValueError, match="alphanumeric"):
+        run_scoped_digest("site", lambda: "not/a/digest", cache_root=tmp_path)
+
+    assert run_scoped_digest("site", lambda: "abcd", cache_root=tmp_path) == "abcd"

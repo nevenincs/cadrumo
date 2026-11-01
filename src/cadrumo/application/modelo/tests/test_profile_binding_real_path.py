@@ -29,7 +29,6 @@ Design notes
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from typing import Any
@@ -38,7 +37,7 @@ import pytest
 
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
-from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.profile_bindings import ProfileProvider
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.tests.published_authority import (
@@ -63,13 +62,6 @@ from ..profile_derived_facts import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
-
-
-@pytest.fixture
-def authority_operation() -> Iterator[PinnedAuthorityOperation]:
-    """Lease one generation for each profile-binding path test."""
-    with bundled_indexed_authority().operation() as operation:
-        yield operation
 
 
 _PROFILE_ID = "10000000-0000-4000-8000-000000000477"

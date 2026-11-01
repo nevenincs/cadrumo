@@ -105,6 +105,7 @@ from ...core.auth_provider import AuthProviderKind
 from ...core.external_constants import OutputLanguage
 from ...core.identity_check_verdict import IdentityCheckVerdict
 from ...core.iva_compensation_provenance import IvaCompensationStateProvenance
+from ...core.ledger_known_values import LedgerKnownValueKind
 from ...core.ledger_sort import LedgerSortField
 from ...core.operations import profile_operation_subject
 from ...core.period import Period
@@ -153,12 +154,12 @@ from .registered_executor_seeding_support import (
     _seed_conformance_invoice,
     _seeded_expedientes_snapshot,
     _seeded_justificante_snapshot,
-    _seeded_ledger_track_with_finalized_participation,
     _seeded_modelo_filing_record,
     _seeded_notification_document,
     _seeded_notifications_snapshot,
     _seeded_repeatable_row,
     _workflow_result,
+    seeded_ledger_track_transaction_id,
     seeded_modelo_edit_submission,
 )
 
@@ -1370,12 +1371,33 @@ def _payload(
                 "transaction_prefix": created.ref.transaction_id[:12],
             }
         case "ledger.track":
-            transaction_id = _seeded_ledger_track_with_finalized_participation(profile_id, operation=operation)
+            transaction_id = seeded_ledger_track_transaction_id(profile_id, operation=operation)
             subject_ref = profile_operation_subject(str(profile_id))
             values = {
                 "profile_id": profile_id,
                 "transaction_prefix": transaction_id[:12],
             }
+        case "ledger.entry-options":
+            subject_ref = profile_operation_subject(str(profile_id))
+            values = {"profile_id": profile_id}
+        case "ledger.known-values":
+            ports = compose_ledger_action_ports(bucket_id=str(profile_id), operation=operation)
+            for index, description in enumerate(("known value kept", "KNOWN VALUE KEPT", "known value other")):
+                create_manual_transaction(
+                    ManualLedgerTransactionCommand(
+                        bucket_id=str(profile_id),
+                        booked_date=date(2025, 1 + index, 15),
+                        amount=Decimal(10 + index),
+                        direction=TransactionDirection.OUTGOING,
+                        description=description,
+                        business_classification=BusinessClassification.NOT_YET_PROCESSED,
+                        actor=modelo_operation_test_support.MODELO_OPERATION_TEST_ACTOR,
+                    ),
+                    ports=ports,
+                    occurred_at=now() + timedelta(seconds=index),
+                )
+            subject_ref = profile_operation_subject(str(profile_id))
+            values = {"profile_id": profile_id, "kinds": (LedgerKnownValueKind.DESCRIPTION,)}
         case "ledger.list":
             ports = compose_ledger_action_ports(bucket_id=str(profile_id), operation=operation)
             for index, (booked_date, description) in enumerate(
@@ -1558,11 +1580,11 @@ def _payload(
             else:
                 values["invoice_id"] = invoice.invoice_id
         case "ledger.participation":
-            transaction_id = _seeded_ledger_track_with_finalized_participation(profile_id, operation=operation)
+            transaction_id = seeded_ledger_track_transaction_id(profile_id, operation=operation)
             subject_ref = profile_operation_subject(str(profile_id))
             values = {"profile_id": profile_id, "transaction_prefix": transaction_id[:12]}
         case "ledger.participation.rebuild":
-            _seeded_ledger_track_with_finalized_participation(profile_id, operation=operation)
+            seeded_ledger_track_transaction_id(profile_id, operation=operation)
             subject_ref = profile_operation_subject(str(profile_id))
             values = {"profile_id": profile_id}
         case "ledger.review":

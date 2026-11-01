@@ -25,16 +25,18 @@ if(NOT CADRUMO_DOCS_SHARED_CACHE)
   list(APPEND docs_build_args --no-shared-cache)
 endif()
 include("${CMAKE_CURRENT_LIST_DIR}/PackageInputs.cmake")
-cadrumo_source_inputs(user_docs_source_inputs "${CADRUMO_SOURCE_ROOT}")
-file(GLOB_RECURSE user_docs_inputs CONFIGURE_DEPENDS
-  "${CADRUMO_SOURCE_ROOT}/docs/*" "${CADRUMO_SOURCE_ROOT}/dev/docs/*"
-  "${CADRUMO_SOURCE_ROOT}/native/platforms/*.json")
-list(APPEND user_docs_inputs ${user_docs_source_inputs})
-list(FILTER user_docs_inputs EXCLUDE REGEX "/(__pycache__|\\.git)/|\\.pyc$|\\.lock$|/docs/_build/|/dev/docs/(.*/)?tests/")
-# Documentation scenarios import source test-support modules and their helpers.
-# Retain that tree so fixture changes invalidate the compiled site too.
-list(FILTER user_docs_inputs EXCLUDE REGEX "/\\.aeat-generated-export-transaction-|/\\.generated-export-(backup|stage)-")
-foreach(name pyproject.toml uv.lock native/package-layout.json dev/__init__.py dev/_paths.py dev/cache_root.py
+# The source, docs and dev/docs trees are enumerated when the documentation action runs,
+# never at configure time: a new file there must not re-run configure. They are written
+# as tree lines (see action_cache.enrolled_input_paths) and never reach DEPENDS.
+# Documentation scenarios import source test-support modules and their helpers, so the
+# docs policy retains the source tests tree and fixture changes invalidate the compiled
+# site too.
+set(user_docs_trees)
+foreach(tree_directory src docs dev/docs)
+  list(APPEND user_docs_trees "tree\tdocs\t${CADRUMO_SOURCE_ROOT}\t${tree_directory}")
+endforeach()
+file(GLOB user_docs_inputs CONFIGURE_DEPENDS "${CADRUMO_SOURCE_ROOT}/native/platforms/*.json")
+foreach(name pyproject.toml uv.lock native/package-layout.json dev/__init__.py dev/_paths.py dev/source_tree.py dev/cache_root.py
     dev/packaging/__init__.py dev/packaging/command_execution.py dev/packaging/authority_staging.py
     dev/packaging/native/__init__.py dev/packaging/native/docs_build.py dev/packaging/native/docs_stage.py
     dev/packaging/native/docs_scan.py dev/packaging/native/docs_errors.py
@@ -50,7 +52,8 @@ set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
 list(APPEND user_docs_inputs "${CMAKE_BINARY_DIR}/build-paths.json")
 list(REMOVE_DUPLICATES user_docs_inputs)
 list(JOIN user_docs_inputs "\n" input_lines)
-file(GENERATE OUTPUT "${CMAKE_BINARY_DIR}/inputs-user-docs.txt" CONTENT "${input_lines}\n")
+list(JOIN user_docs_trees "\n" tree_lines)
+file(GENERATE OUTPUT "${CMAKE_BINARY_DIR}/inputs-user-docs.txt" CONTENT "${input_lines}\n${tree_lines}\n")
 cadrumo_build_step(docs_comment user_docs_build GROUP documentation
   SUMMARY "compile the user documentation site in every declared language"
   OUTPUTS "${CADRUMO_PATH_USER_DOCS_BUILD}")

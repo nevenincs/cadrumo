@@ -78,3 +78,18 @@ def test_irpf_category_must_be_declared_by_the_published_taxonomy(operation: Pin
 def test_an_absent_or_blank_category_is_no_category(operation: PinnedAuthorityOperation) -> None:
     assert _resolve_ledger_add_irpf_category(_request(), operation=operation) is None
     assert _resolve_ledger_add_irpf_category(_request(irpf_category="   "), operation=operation) is None
+
+
+@pytest.mark.usefixtures("operation")
+def test_an_added_row_prorrata_reference_must_use_the_reference_grammar() -> None:
+    assert (
+        _request(prorrata_reference="prorrata:2026:definitiva:general").prorrata_reference
+        == "prorrata:2026:definitiva:general"
+    )
+
+    for malformed in ("telefonia_movil", "prorrata:2026:provisional:nonexistent", "prorrata:2026:definitiva"):
+        with pytest.raises(ValidationError, match="prorrata_reference"):
+            _request(prorrata_reference=malformed)
+
+    with pytest.raises(ValidationError, match="at most 128 characters"):
+        _request(prorrata_reference="p" * 129)

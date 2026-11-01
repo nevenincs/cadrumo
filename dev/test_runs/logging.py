@@ -227,6 +227,12 @@ def _apply_run_environment(root: Path, scratch: Path) -> None:
     for path in (artifacts, cache):
         path.mkdir(parents=True, exist_ok=True)
     os.environ["CADRUMO_TEST_RUN_ROOT"] = str(root)
+    # Run artifacts are keyed by their inputs' content, so one persistent root
+    # lets every lane, worker and later run reuse a publication instead of
+    # repeating it; an explicit override still wins.
+    from dev.cache_root import dev_cache_dir
+
+    os.environ.setdefault("CADRUMO_RUN_ARTIFACT_ROOT", str(dev_cache_dir("run-artifacts")))
     os.environ[_RUN_SCRATCH_ENV] = str(scratch)
     os.environ["PYTEST_DEBUG_TEMPROOT"] = str(scratch)
     os.environ.update(scratch_environment(scratch))

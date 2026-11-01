@@ -57,6 +57,7 @@ from .registered_executor_case_support import (
     seeded_conformance_operation_submission,
 )
 from .registered_executor_outcome_assertions import _assert_registered_executor_conformance_outcome
+from .registered_executor_seeding_support import conformance_profile_seed
 
 
 def _run_registered_executor_conformance_case(
@@ -71,7 +72,9 @@ def _run_registered_executor_conformance_case(
     cleanup = OperationRuntimeCloseWitness()
     with (
         family_environment_for_operation(definition_id),
-        conformance_operation_runtime(tmp_path / case.definition_id, cleanup=cleanup) as (driver, registry, profile_id),
+        conformance_operation_runtime(
+            tmp_path / case.definition_id, cleanup=cleanup, profile_seed=conformance_profile_seed(case.definition_id)
+        ) as (driver, registry, profile_id),
     ):
         definitions = {definition.definition_id: definition for definition in registry.definitions}
         definition = definitions[case.definition_id]

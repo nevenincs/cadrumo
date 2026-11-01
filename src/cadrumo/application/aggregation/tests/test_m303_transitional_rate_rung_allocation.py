@@ -30,7 +30,6 @@ rates are exercised on dates where they were actually in force.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -44,7 +43,7 @@ from cadrumo.domain.iva.schema import IvaCategory, IvaRateKind
 
 from ....core.modelo import Modelo
 from ....core.period import Period
-from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.binding_selector_utils import selector_as_dict
 from ....domain.calculations.registry.eu_member_state_catalogue import require_eu_member_state
 from ....domain.calculations.registry.ledger_iva_bindings import IvaLedgerObservation
@@ -58,13 +57,6 @@ from ..iva_ledger_apportionment import resolve_iva_ledger_binding_values
 from .iva_authority_support import aggregate_iva_ledger_observations
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
-
-
-@pytest.fixture
-def authority_operation() -> Iterator[PinnedAuthorityOperation]:
-    """Lease one generation across the transitional-rate binding checks."""
-    with bundled_indexed_authority().operation() as operation:
-        yield operation
 
 
 # Each rung: its two binding ids, the rate a row must carry to reach it, a date

@@ -18,7 +18,7 @@ See Also:
 from __future__ import annotations
 
 import json
-from collections.abc import Iterator, Mapping
+from collections.abc import Mapping
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -41,7 +41,7 @@ from cadrumo.core.prorrata_register import (
     SectorDiferenciadoLetra,
 )
 from cadrumo.domain.bienes_inversion.register import BienesInversionIvaRegister
-from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.ids import BindingId
 from cadrumo.domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from cadrumo.domain.iva.prorrata import InputClassification
@@ -53,13 +53,6 @@ from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransa
 from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter, pytest.mark.usefixtures("authority_operation")]
-
-
-@pytest.fixture
-def authority_operation() -> Iterator[PinnedAuthorityOperation]:
-    """Lease one generation across each IVA aggregation/resolution chain."""
-    with bundled_indexed_authority().operation() as operation:
-        yield operation
 
 
 _BUCKET_ID = "78787878-7878-4878-8878-787878787878"

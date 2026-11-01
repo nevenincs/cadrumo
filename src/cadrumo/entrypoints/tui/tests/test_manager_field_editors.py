@@ -25,11 +25,9 @@ from ....adapters.persistence.storage.tests.profile_capsule_runtime import load_
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import (
     profile_authority_contexts as _profile_contexts_for_test,
 )
-from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....application.user_profile.fact_write import apply_manager_profile_field_mutation
 from ....application.user_profile.login_session import authenticate_profile_for_invocation
 from ....application.user_profile.overview import ProfileOverview, build_profile_overview
-from ....application.user_profile.registration import register_profile_with_credentials
 from ....core.bucket_pointer import require_active_bucket_id
 from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
@@ -37,6 +35,7 @@ from ..components.host import ScreenHostApp
 from ..profile.edit_screens import FieldEditScreen
 from ..profile.overview import ProfileFieldPersist, ProfileManagerScreen
 from .manager_pilot import wait_until_settled
+from .manager_subject_profile import registered_manager_subject
 from .settling import settle
 
 pytestmark = [
@@ -138,17 +137,7 @@ def _open(app: ProfileManagerScreen, path: str) -> None:
 @pytest.mark.asyncio
 async def test_a_boolean_field_is_picked_from_two_options_not_typed_into(tmp_path) -> None:
     """The operator must never have to guess how yes is spelled."""
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        # Registration validates facts against registry authority, so it runs under a real lease.
-        with bundled_indexed_authority().operation():
-            _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-            register_profile_with_credentials(
-                label=_LABEL,
-                passphrase=_CREDENTIAL_INPUT,
-                profile_create_context=_profile_create_context_for_test,
-                profile_decode_context=_profile_decode_context_for_test,
-            )
-
+    with registered_manager_subject(tmp_path, label=_LABEL, passphrase=_CREDENTIAL_INPUT):
         app = _manager()
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await settle(pilot)
@@ -172,17 +161,7 @@ async def test_picking_yes_stores_the_canonical_boolean(tmp_path) -> None:
     so the record carried a token no other writer produces and every reader
     had to recognise a spelling only this surface could create.
     """
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        # Registration validates facts against registry authority, so it runs under a real lease.
-        with bundled_indexed_authority().operation():
-            _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-            register_profile_with_credentials(
-                label=_LABEL,
-                passphrase=_CREDENTIAL_INPUT,
-                profile_create_context=_profile_create_context_for_test,
-                profile_decode_context=_profile_decode_context_for_test,
-            )
-
+    with registered_manager_subject(tmp_path, label=_LABEL, passphrase=_CREDENTIAL_INPUT):
         app = _manager()
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await settle(pilot)
@@ -203,17 +182,7 @@ async def test_picking_no_stores_the_canonical_false(tmp_path) -> None:
     Without this, an editor that ignored the highlight and always wrote the
     first option would pass the affirmative test above.
     """
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        # Registration validates facts against registry authority, so it runs under a real lease.
-        with bundled_indexed_authority().operation():
-            _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-            register_profile_with_credentials(
-                label=_LABEL,
-                passphrase=_CREDENTIAL_INPUT,
-                profile_create_context=_profile_create_context_for_test,
-                profile_decode_context=_profile_decode_context_for_test,
-            )
-
+    with registered_manager_subject(tmp_path, label=_LABEL, passphrase=_CREDENTIAL_INPUT):
         app = _manager()
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await settle(pilot)
@@ -230,17 +199,7 @@ async def test_picking_no_stores_the_canonical_false(tmp_path) -> None:
 @pytest.mark.asyncio
 async def test_an_enum_field_keeps_its_choice_editor(tmp_path) -> None:
     """The editor that already worked must not have been traded for the new one."""
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        # Registration validates facts against registry authority, so it runs under a real lease.
-        with bundled_indexed_authority().operation():
-            _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-            register_profile_with_credentials(
-                label=_LABEL,
-                passphrase=_CREDENTIAL_INPUT,
-                profile_create_context=_profile_create_context_for_test,
-                profile_decode_context=_profile_decode_context_for_test,
-            )
-
+    with registered_manager_subject(tmp_path, label=_LABEL, passphrase=_CREDENTIAL_INPUT):
         app = _manager()
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await settle(pilot)
@@ -258,17 +217,7 @@ async def test_a_plain_text_field_is_still_typed_into(tmp_path) -> None:
     Without this the change could have turned every field into a list and
     the boolean tests would still pass.
     """
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        # Registration validates facts against registry authority, so it runs under a real lease.
-        with bundled_indexed_authority().operation():
-            _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-            register_profile_with_credentials(
-                label=_LABEL,
-                passphrase=_CREDENTIAL_INPUT,
-                profile_create_context=_profile_create_context_for_test,
-                profile_decode_context=_profile_decode_context_for_test,
-            )
-
+    with registered_manager_subject(tmp_path, label=_LABEL, passphrase=_CREDENTIAL_INPUT):
         app = _manager()
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await settle(pilot)
@@ -283,17 +232,7 @@ async def test_a_plain_text_field_is_still_typed_into(tmp_path) -> None:
 @pytest.mark.asyncio
 async def test_edit_dialog_uses_the_operator_label_without_exposing_the_schema_path(tmp_path) -> None:
     """A storage address is not usable guidance and must never enter the dialog."""
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        # Registration validates facts against registry authority, so it runs under a real lease.
-        with bundled_indexed_authority().operation():
-            _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-            register_profile_with_credentials(
-                label=_LABEL,
-                passphrase=_CREDENTIAL_INPUT,
-                profile_create_context=_profile_create_context_for_test,
-                profile_decode_context=_profile_decode_context_for_test,
-            )
-
+    with registered_manager_subject(tmp_path, label=_LABEL, passphrase=_CREDENTIAL_INPUT):
         app = _manager()
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await settle(pilot)
@@ -311,17 +250,7 @@ async def test_edit_dialog_uses_the_operator_label_without_exposing_the_schema_p
 @pytest.mark.asyncio
 async def test_a_date_box_says_which_layout_it_wants(tmp_path) -> None:
     """A typed box whose shape is not evident must state it before it is used."""
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        # Registration validates facts against registry authority, so it runs under a real lease.
-        with bundled_indexed_authority().operation():
-            _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-            register_profile_with_credentials(
-                label=_LABEL,
-                passphrase=_CREDENTIAL_INPUT,
-                profile_create_context=_profile_create_context_for_test,
-                profile_decode_context=_profile_decode_context_for_test,
-            )
-
+    with registered_manager_subject(tmp_path, label=_LABEL, passphrase=_CREDENTIAL_INPUT):
         app = _manager()
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await settle(pilot)

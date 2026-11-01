@@ -20,6 +20,24 @@ body_record_ids = [
     "modelo-369-exterior-t36902",
     "modelo-369-exterior-t36903",
 ]
+period_tokens = [
+    "1T",
+    "2T",
+    "3T",
+    "4T",
+    "01",
+    "02",
+    "03",
+    "04",
+    "05",
+    "06",
+    "07",
+    "08",
+    "09",
+    "10",
+    "11",
+    "12",
+]
 
 [[revisions.esquema-exterior.export_layouts.filing_envelope.prefix_fields]]
 role = "opening_tag"

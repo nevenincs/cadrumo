@@ -161,6 +161,8 @@ _FIELD_KEYS: Final[frozenset[str]] = frozenset(
         "minimum_year",
         "presence_marker",
         "absent_fill",
+        "scheme_period_part",
+        "scheme_period_type",
         "legal_refs",
         "source_refs",
     },
@@ -181,6 +183,8 @@ _FIELD_KEYS_PRESENT_ONLY_WHEN_DECLARED: Final[tuple[str, ...]] = (
     "minimum_year",
     "presence_marker",
     "absent_fill",
+    "scheme_period_part",
+    "scheme_period_type",
 )
 
 

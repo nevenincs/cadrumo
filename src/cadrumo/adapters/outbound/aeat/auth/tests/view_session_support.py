@@ -7,7 +7,6 @@ that supplies them is not the behaviour under test.
 
 from __future__ import annotations
 
-import shutil
 from collections.abc import AsyncGenerator, Callable, Generator
 from contextlib import AbstractContextManager, asynccontextmanager, contextmanager
 from pathlib import Path
@@ -24,6 +23,7 @@ from cadrumo.adapters.outbound.aeat.browser.tests.real_http_boundary import (
 from cadrumo.adapters.outbound.aeat.browser.tests.view_page_support import until
 from cadrumo.adapters.persistence.operations.tests.supervision_support import run_to_settlement
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
+from cadrumo.adapters.persistence.profile.tests.sealed_profile_world import copy_sealed_tree, sealed_tree
 from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
@@ -81,65 +81,71 @@ class OperationHost:
             self.lock_state_at_unknown = lock_state(self._kind)
 
 
-@contextmanager
-def certificate_profile(
-    tmp_path: Path,
-    operation: PinnedAuthorityOperation,
-    *,
-    tax_id: str = CERTIFICATE_NIF,
-    template: Path | None = None,
-) -> Generator[None]:
-    """A registered, unlocked profile whose configured provider is a certificate for ``tax_id``'s holder.
+def _certificate_settings(tmp_path: Path) -> AbstractContextManager[object]:
+    return override_settings(
+        cadrumo_active_profile=None,
+        cadrumo_certificate_path=_build_bundle(tmp_path),
+        cadrumo_certificate_password_secret=SecretStr(CERTIFICATE_INPUT),
+        cadrumo_browser_close_timeout_ms=15_000,
+    )
 
-    With ``template`` -- the storage root :func:`certificate_profile_template`
-    left behind -- the profile is a copy of that already-registered root rather
-    than a fresh registration, so the password wrap is paid once per template.
+
+def _clave_permanente_settings(_tmp_path: Path) -> AbstractContextManager[object]:
+    return override_settings(
+        cadrumo_active_profile=None,
+        cadrumo_clave_permanente_password=SecretStr(CERTIFICATE_INPUT),
+        cadrumo_browser_close_timeout_ms=15_000,
+    )
+
+
+_PROVIDER_SETTINGS: Final = {"certificate": _certificate_settings, "clave_permanente": _clave_permanente_settings}
+
+
+@contextmanager
+def _provider_profile(
+    tmp_path: Path, operation: PinnedAuthorityOperation, *, provider: str, facts: tuple[tuple[str, str], ...]
+) -> Generator[None]:
+    """Open this test's own copy of a profile registered once per worker with ``provider`` configured.
+
+    The registered root is built through the real registration and operator
+    auth doors under the same settings the test runs with, then copied whole;
+    the test's session is open over its own copy before the copy lands.
     """
+
+    def build(origin: Path) -> None:
+        with (
+            isolated_profile_storage_root(tmp_path=origin),
+            _PROVIDER_SETTINGS[provider](origin),
+            open_test_profile_session(PROFILE_ID),
+        ):
+            register_minimal_profile(profile_id=PROFILE_ID, overrides=dict(facts))
+            configure_operator_auth(provider, operator_scope_ports=OPERATOR_SCOPE_PORTS, operation=operation)
+
+    origin, _ = sealed_tree(("aeat view profile", provider, facts, str(operation.generation)), build)
     with (
         isolated_profile_storage_root(tmp_path=tmp_path) as storage_root,
-        override_settings(
-            cadrumo_active_profile=None,
-            cadrumo_certificate_path=_build_bundle(tmp_path),
-            cadrumo_certificate_password_secret=SecretStr(CERTIFICATE_INPUT),
-            cadrumo_browser_close_timeout_ms=15_000,
-        ),
+        _PROVIDER_SETTINGS[provider](tmp_path),
         open_test_profile_session(PROFILE_ID),
     ):
-        if template is None:
-            register_minimal_profile(profile_id=PROFILE_ID, overrides={"identity.tax_id": tax_id})
-            configure_operator_auth("certificate", operator_scope_ports=OPERATOR_SCOPE_PORTS, operation=operation)
-        else:
-            shutil.copytree(template, storage_root, dirs_exist_ok=True)
+        copy_sealed_tree(origin / storage_root.name, storage_root)
         yield
 
 
-def certificate_profile_template(
-    base: Path, operation: PinnedAuthorityOperation, *, tax_id: str = CERTIFICATE_NIF
-) -> Path:
-    """Register a certificate profile once and return its closed, copyable storage root."""
-    with certificate_profile(base, operation, tax_id=tax_id):
-        pass
-    return base / "cadrumo-storage"
+def certificate_profile(
+    tmp_path: Path, operation: PinnedAuthorityOperation, *, tax_id: str = CERTIFICATE_NIF
+) -> AbstractContextManager[None]:
+    """A registered, unlocked profile whose configured provider is a certificate for ``tax_id``'s holder."""
+    return _provider_profile(tmp_path, operation, provider="certificate", facts=(("identity.tax_id", tax_id),))
 
 
-@contextmanager
-def clave_permanente_profile(tmp_path: Path, operation: PinnedAuthorityOperation) -> Generator[None]:
+def clave_permanente_profile(tmp_path: Path, operation: PinnedAuthorityOperation) -> AbstractContextManager[None]:
     """A registered, unlocked profile whose configured provider is Cl@ve Permanente for its own NIF."""
-    with (
-        isolated_profile_storage_root(tmp_path=tmp_path),
-        override_settings(
-            cadrumo_active_profile=None,
-            cadrumo_clave_permanente_password=SecretStr(CERTIFICATE_INPUT),
-            cadrumo_browser_close_timeout_ms=15_000,
-        ),
-        open_test_profile_session(PROFILE_ID),
-    ):
-        register_minimal_profile(
-            profile_id=PROFILE_ID,
-            overrides={"identity.tax_id": CERTIFICATE_NIF, "auth.dni_nie": CERTIFICATE_NIF},
-        )
-        configure_operator_auth("clave_permanente", operator_scope_ports=OPERATOR_SCOPE_PORTS, operation=operation)
-        yield
+    return _provider_profile(
+        tmp_path,
+        operation,
+        provider="clave_permanente",
+        facts=(("identity.tax_id", CERTIFICATE_NIF), ("auth.dni_nie", CERTIFICATE_NIF)),
+    )
 
 
 def session_path(kind: AuthProviderKind = AuthProviderKind.CERTIFICATE) -> Path:

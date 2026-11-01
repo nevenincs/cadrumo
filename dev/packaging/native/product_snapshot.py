@@ -13,6 +13,7 @@ from cadrumo.core.toml import parse_toml
 from dev.first_party_source import PYTEST_CONFTEST
 from dev.source_tree import line_ending_policies, normalise_with, repository_files, snapshot
 
+from .action_cache import enrolled_input_paths
 from .hashing import digest, transformed_digest
 
 _PRODUCT_INPUT_EXCLUSIONS = frozenset({"__pycache__", ".git", "tests"})
@@ -61,10 +62,7 @@ def _input_manifest_members(root: Path, inputs: Path | None) -> frozenset[str] |
         return None
     repository = root.resolve()
     members: set[str] = set()
-    for line in inputs.read_text(encoding="utf-8").splitlines():
-        if not line.strip():
-            continue
-        candidate = Path(line)
+    for candidate in enrolled_input_paths(inputs):
         if not candidate.is_absolute():
             candidate = repository / candidate
         try:
@@ -73,7 +71,7 @@ def _input_manifest_members(root: Path, inputs: Path | None) -> frozenset[str] |
             # Runtime receipts and generated authority are admitted by CMake but
             # live outside the source snapshot and are checked by its input hash.
             continue
-        # CMake has already filtered recursive inputs. Keep explicit owners such
+        # The tree policy has already filtered recursive inputs. Keep explicit owners such
         # as the root uv.lock even when their suffix matches that filter.
         members.add(relative)
     return frozenset(members)
@@ -82,7 +80,7 @@ def _input_manifest_members(root: Path, inputs: Path | None) -> frozenset[str] |
 def _membership_changed(detail: str) -> RuntimeError:
     return RuntimeError(
         "Product source membership changed while capturing the wheel inputs "
-        f"({detail}). Re-run the CMake build so CONFIGURE_DEPENDS refreshes inputs-product.txt, then retry."
+        f"({detail}). Retry once the wheel package roots and source files are stable."
     )
 
 

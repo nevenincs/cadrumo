@@ -6,7 +6,7 @@ date: '2026-10-30'
 tier: L1
 modified: '2026-10-31'
 body_schema: body-v2
-body_hash: 'sha256:3693c7225147f6243cda38b61272a26109afa0478ab384e7bb58626fe509755e'
+body_hash: 'sha256:f1a3c9d39f562a892e76194cecf4690549edbc2d556328e782d0cef14d975e77'
 ---
 
 # `registry-owned-facts` plan
@@ -23,8 +23,8 @@ Move every remaining tax number, limit, period rule and form code from productio
 - [x] `S02` - Derive box lists from registry declarations per revision; `src/cadrumo/application/modelo/projection.py, src/cadrumo/application/calculations/, src/cadrumo/domain/calculations/registry/`.
 - [x] `S03` - Move form claves and code tables into registry vocabularies; `src/cadrumo/application/filing/, src/cadrumo/domain/contribuyente/renta_codes.py, src/cadrumo/application/wizard/, src/cadrumo/domain/calculations/registry/withholding_bindings.py`.
 - [x] `S04` - Move modelo routing rules and sets into registry declarations; `src/cadrumo/application/aggregation/, src/cadrumo/domain/calculations/registry/applicability.py, src/cadrumo/domain/deadlines/`.
-- [x] `S05` - Move period rules with legal force into the registry; `src/cadrumo/domain/period.py, src/cadrumo/domain/renta/maritime_exemption.py`.
-- [x] `S06` - Extend the literal gate across domain and application, covering field bounds, box ids and letter claves, and republish the authority; `dev/quality/tests/`.
+- [ ] `S05` - Move period rules with legal force into the registry; `src/cadrumo/domain/period.py, src/cadrumo/domain/renta/maritime_exemption.py`.
+- [ ] `S06` - Extend the literal gate across domain and application, covering field bounds, box ids and letter claves, and republish the authority; `dev/quality/tests/`.
 - [x] `S07` - Bind the Modelo 100 elemento patrimonial rows as repeated rows per sale; `src/cadrumo/domain/calculations/registry/actividad_asset_disposal_bindings.py, src/cadrumo/_data/registry/aeat/modelos/100/`.
 
 ## Parallelization

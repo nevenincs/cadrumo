@@ -8911,7 +8911,7 @@ workspace:
         refused: Cadrumo did not create the declaration.
         saved_unread: The declaration was created, but its answer was not read. The
           list is read again; open it from there.
-        search_placeholder: Number or name, for example 303 or IVA
+        search_placeholder: Search
         show_all: Show all modelos, not only yours
         start_confirm: Start {modelo} for {period}?
         unknown: Cadrumo could not tell whether the declaration was created.
@@ -8935,7 +8935,7 @@ workspace:
         help: This row cannot be opened here yet.
       search:
         hint: Search by Modelo number, name or period
-        modelo: Find a modelo
+        modelo: Search
       sort:
         amount: Amount
         by: Sort by
@@ -9737,7 +9737,7 @@ workspace:
     search:
       count: 'Boxes found: {count}'
       empty: No box matches {query}.
-      placeholder: Find a box by number or words
+      placeholder: Search
     section:
       box: Box {box}
       boxes: Boxes {first} to {last}

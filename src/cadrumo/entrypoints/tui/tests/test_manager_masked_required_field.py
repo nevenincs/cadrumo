@@ -33,7 +33,6 @@ from ....adapters.persistence.storage.tests.profile_capsule_runtime import load_
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import (
     profile_authority_contexts as _profile_contexts_for_test,
 )
-from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....application.user_profile.fact_write import apply_manager_profile_field_mutation
 from ....application.user_profile.login_session import authenticate_profile_for_invocation
 from ....application.user_profile.overview import (
@@ -42,7 +41,6 @@ from ....application.user_profile.overview import (
     ProfileOverview,
     build_profile_overview,
 )
-from ....application.user_profile.registration import register_profile_with_credentials
 from ....core.bucket_pointer import require_active_bucket_id
 from ....core.classification.policies import SensitivityClass
 from ....domain.calculations.registry.authority import bundled_indexed_authority
@@ -52,6 +50,7 @@ from ..components.status import PinnedStatusBar
 from ..profile.edit_screens import FieldEditScreen
 from ..profile.overview import ProfileManagerScreen
 from .manager_pilot import wait_until_settled
+from .manager_subject_profile import registered_manager_subject
 from .settling import settle
 
 pytestmark = [
@@ -195,16 +194,7 @@ async def test_a_required_masked_field_holding_a_value_keeps_it_on_a_blank_save(
     subject -- it is the whole reason silence is acceptable here, so the
     two are worth reading together.
     """
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        # Registration validates facts against registry authority, so it runs under a real lease.
-        with bundled_indexed_authority().operation():
-            _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-            register_profile_with_credentials(
-                label=_LABEL,
-                passphrase=_CREDENTIAL_INPUT,
-                profile_create_context=_profile_create_context_for_test,
-                profile_decode_context=_profile_decode_context_for_test,
-            )
+    with registered_manager_subject(tmp_path, label=_LABEL, passphrase=_CREDENTIAL_INPUT):
         _persist(_MASKED_PATH, _MASKED_VALUE)
         assert _stored().get(_MASKED_PATH) == _MASKED_VALUE, "fixture must start with a value to lose"
 
@@ -228,16 +218,7 @@ async def test_the_dialog_explains_the_no_change_reading_wherever_it_applies(tmp
     it does not apply is worse still. Asserted over both states of the
     same field, so neither half can drift alone.
     """
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        # Registration validates facts against registry authority, so it runs under a real lease.
-        with bundled_indexed_authority().operation():
-            _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-            register_profile_with_credentials(
-                label=_LABEL,
-                passphrase=_CREDENTIAL_INPUT,
-                profile_create_context=_profile_create_context_for_test,
-                profile_decode_context=_profile_decode_context_for_test,
-            )
+    with registered_manager_subject(tmp_path, label=_LABEL, passphrase=_CREDENTIAL_INPUT):
         _persist(_MASKED_PATH, _MASKED_VALUE)
 
         app = ProfileManagerScreen(_live_overview(), persist=_persist)
@@ -271,16 +252,7 @@ async def test_a_required_masked_field_holding_nothing_refuses_a_blank_save(tmp_
     leave them with a field still counted as missing and no account of
     why saving it changed nothing.
     """
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        # Registration validates facts against registry authority, so it runs under a real lease.
-        with bundled_indexed_authority().operation():
-            _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-            register_profile_with_credentials(
-                label=_LABEL,
-                passphrase=_CREDENTIAL_INPUT,
-                profile_create_context=_profile_create_context_for_test,
-                profile_decode_context=_profile_decode_context_for_test,
-            )
+    with registered_manager_subject(tmp_path, label=_LABEL, passphrase=_CREDENTIAL_INPUT):
         assert _MASKED_PATH not in _stored(), "the field must start empty for this to be the case under test"
 
         app = ProfileManagerScreen(_live_overview(), persist=_persist)
@@ -296,17 +268,7 @@ async def test_a_required_masked_field_holding_nothing_refuses_a_blank_save(tmp_
 @pytest.mark.asyncio
 async def test_whitespace_in_an_empty_required_masked_field_refuses_too(tmp_path) -> None:
     """Spaces read as blank everywhere else, so they must draw the same refusal."""
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        # Registration validates facts against registry authority, so it runs under a real lease.
-        with bundled_indexed_authority().operation():
-            _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-            register_profile_with_credentials(
-                label=_LABEL,
-                passphrase=_CREDENTIAL_INPUT,
-                profile_create_context=_profile_create_context_for_test,
-                profile_decode_context=_profile_decode_context_for_test,
-            )
-
+    with registered_manager_subject(tmp_path, label=_LABEL, passphrase=_CREDENTIAL_INPUT):
         app = ProfileManagerScreen(_live_overview(), persist=_persist)
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await settle(pilot)
@@ -325,17 +287,7 @@ async def test_a_typed_value_still_reaches_the_record(tmp_path) -> None:
     save on a required masked field, which would make the field
     unfillable -- a worse failure than the one being fixed.
     """
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        # Registration validates facts against registry authority, so it runs under a real lease.
-        with bundled_indexed_authority().operation():
-            _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-            register_profile_with_credentials(
-                label=_LABEL,
-                passphrase=_CREDENTIAL_INPUT,
-                profile_create_context=_profile_create_context_for_test,
-                profile_decode_context=_profile_decode_context_for_test,
-            )
-
+    with registered_manager_subject(tmp_path, label=_LABEL, passphrase=_CREDENTIAL_INPUT):
         app = ProfileManagerScreen(_live_overview(), persist=_persist)
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await settle(pilot)
@@ -359,17 +311,7 @@ async def test_an_empty_optional_masked_field_behaves_like_any_other_empty_field
     is the point: a masked field holding nothing is not a special case,
     and the outcome is the one every empty optional field already had.
     """
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        # Registration validates facts against registry authority, so it runs under a real lease.
-        with bundled_indexed_authority().operation():
-            _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-            register_profile_with_credentials(
-                label=_LABEL,
-                passphrase=_CREDENTIAL_INPUT,
-                profile_create_context=_profile_create_context_for_test,
-                profile_decode_context=_profile_decode_context_for_test,
-            )
-
+    with registered_manager_subject(tmp_path, label=_LABEL, passphrase=_CREDENTIAL_INPUT):
         app = ProfileManagerScreen(_live_overview(), persist=_persist)
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await settle(pilot)
@@ -409,16 +351,7 @@ async def test_a_required_masked_field_is_never_offered_a_clear_button(tmp_path)
     write door refuses one, so offering the button would promise an
     outcome the dialog then has to take back.
     """
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        # Registration validates facts against registry authority, so it runs under a real lease.
-        with bundled_indexed_authority().operation():
-            _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-            register_profile_with_credentials(
-                label=_LABEL,
-                passphrase=_CREDENTIAL_INPUT,
-                profile_create_context=_profile_create_context_for_test,
-                profile_decode_context=_profile_decode_context_for_test,
-            )
+    with registered_manager_subject(tmp_path, label=_LABEL, passphrase=_CREDENTIAL_INPUT):
         _persist(_MASKED_PATH, _MASKED_VALUE)
 
         app = ProfileManagerScreen(_live_overview(), persist=_persist)

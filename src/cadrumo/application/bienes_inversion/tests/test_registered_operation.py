@@ -165,6 +165,14 @@ def _existing_record(authority_operation: PinnedAuthorityOperation) -> BienInver
         )
 
 
+def test_declared_identifier_is_bounded_at_the_ledger_asset_link_length() -> None:
+    """The ledger's ``investment_asset_id`` allows 128 characters, so a longer identifier could never be linked."""
+    assert _request(identifier="i" * 128).payload.model_dump()["identifier"] == "i" * 128
+
+    with pytest.raises(ValidationError, match="at most 128 characters"):
+        _request(identifier="i" * 129)
+
+
 @pytest.mark.parametrize(
     ("overrides", "expected_reason"),
     [

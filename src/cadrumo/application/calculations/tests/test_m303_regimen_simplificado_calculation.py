@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import date
 from decimal import Decimal
 
@@ -12,7 +11,7 @@ from cadrumo.domain.calculations.registry.tests.published_authority import publi
 
 from ....core.filing_projection_ref import M303RegimenSimplificadoFact
 from ....core.period import Period
-from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.facts.resolution import ResolvedScalarFact, ScalarFactQuery
 from ....domain.calculations.registry.m303_orden_projection_models import M303RegimenSimplificadoSnapshot
@@ -43,12 +42,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 # RDL 7/2024 art. 11.2 reduces the annual simplified cuota of the exercise it enters
 # into force in; the published provision names that exercise.
 _DANA_RELIEF_EXERCISE = published_legal_reference("real-decreto-ley-7-2024:art-11.2").effective_from.year
-
-
-@pytest.fixture
-def authority_operation() -> Iterator[PinnedAuthorityOperation]:
-    with bundled_indexed_authority().operation() as operation:
-        yield operation
 
 
 def _annual_snapshot_and_rows(

@@ -28,7 +28,6 @@ test (aeat-quality-gates).
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -50,7 +49,7 @@ from cadrumo.core.prorrata_register import (
     SectorDiferenciadoLetra,
 )
 from cadrumo.domain.bienes_inversion.register import BienesInversionIvaRegister
-from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.ids import BindingId
 from cadrumo.domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from cadrumo.domain.iva.prorrata import InputClassification
@@ -62,13 +61,6 @@ from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransa
 from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
-
-
-@pytest.fixture
-def authority_operation() -> Iterator[PinnedAuthorityOperation]:
-    """Lease one generation across operator ingress and IVA projection."""
-    with bundled_indexed_authority().operation() as operation:
-        yield operation
 
 
 _BUCKET_ID = "5d5d5d5d-5d5d-4d5d-8d5d-5d5d5d5d5d5d"

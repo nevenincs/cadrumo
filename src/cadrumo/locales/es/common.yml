@@ -9089,7 +9089,7 @@ workspace:
         refused: Cadrumo no ha creado la declaración.
         saved_unread: La declaración se ha creado, pero no se ha podido leer su respuesta.
           La lista se vuelve a leer; ábrela desde allí.
-        search_placeholder: Número o nombre, por ejemplo 303 o IVA
+        search_placeholder: Buscar
         show_all: Mostrar todos los modelos, no solo los tuyos
         start_confirm: ¿Empezar el {modelo} de {period}?
         unknown: Cadrumo no ha podido saber si se ha creado la declaración.
@@ -9113,7 +9113,7 @@ workspace:
         help: Esta fila aún no se puede abrir desde aquí.
       search:
         hint: Busca por número de modelo, nombre o periodo
-        modelo: Buscar un modelo
+        modelo: Buscar
       sort:
         amount: Importe
         by: Ordenar por
@@ -9920,7 +9920,7 @@ workspace:
     search:
       count: 'Casillas encontradas: {count}'
       empty: Ninguna casilla coincide con {query}.
-      placeholder: Busca una casilla por número o por palabras
+      placeholder: Buscar
     section:
       box: Casilla {box}
       boxes: Casillas {first} a {last}

@@ -15,7 +15,6 @@ from collections.abc import Generator
 from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
-from tempfile import TemporaryDirectory
 from typing import Annotated, Final, cast
 
 from pydantic import BaseModel, Field, StringConstraints, ValidationError
@@ -26,7 +25,6 @@ from cadrumo.tests.golden_comparison import canonicalise
 from dev._paths import REPO_ROOT, UTF_8
 from dev.packaging.command_execution import run_command
 from dev.product_environment import ambient_product_settings_removed
-from dev.temporary_output import prepare_temp_root
 
 from .authority_currency import require_current_authority
 from .compare import check_transcript, evaluate_expectations, validate_live_export_evidence
@@ -47,6 +45,7 @@ from .runner import (
     execute_page_sequences,
     execute_sequence,
 )
+from .sandbox import owned_scratch_directory
 from .schema import FrameKind, ParsedSequence, SequenceId
 
 __all__ = [
@@ -459,10 +458,8 @@ def _run_check_child(command: list[str], *, timeout: float | None) -> tuple[str,
         SequenceEngineError: When the child cannot run the check surface
             (any exit other than 0 or 1).
     """
-    with TemporaryDirectory(
-        prefix="cli-sequence-progress-", ignore_cleanup_errors=True, dir=prepare_temp_root()
-    ) as tmp:
-        journal = Path(tmp) / "last-frame.json"
+    with owned_scratch_directory("cli-sequence-progress-") as tmp:
+        journal = tmp / "last-frame.json"
         environment = english_pinned_environment()
         environment[_PROGRESS_JOURNAL_ENV] = str(journal)
         try:
@@ -653,8 +650,8 @@ def check_page_coherence_in_subprocess(
 @contextmanager
 def _execute_in_fresh_sandbox(sequence: ParsedSequence) -> Generator[SequenceTranscript]:
     """Keep disposable artifacts alive through their owning refresh/check."""
-    with TemporaryDirectory(prefix="seq-", ignore_cleanup_errors=True, dir=prepare_temp_root()) as tmp:
-        yield execute_sequence(sequence, sandbox_root=Path(tmp))
+    with owned_scratch_directory("seq-") as tmp:
+        yield execute_sequence(sequence, sandbox_root=tmp)
 
 
 def check_page_coherence(
@@ -847,12 +844,12 @@ def _check_page_coherence_items(docname: str, items: list[DiscoveredSequence], a
     """Check page coherence items."""
     executable = [item for item in items if item.sequence.executed_frames]
     try:
-        with TemporaryDirectory(prefix="page-", ignore_cleanup_errors=True, dir=prepare_temp_root()) as tmp:
+        with owned_scratch_directory("page-") as tmp:
             with _sequence_progress_scope(docname):
                 transcripts = execute_page_sequences(
                     [item.sequence for item in executable],
                     label=docname,
-                    sandbox_root=Path(tmp),
+                    sandbox_root=tmp,
                 )
             for item, transcript in zip(executable, transcripts, strict=True):
                 all_problems.extend(

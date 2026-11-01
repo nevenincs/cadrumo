@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import functools
 import json
 import os
 from collections.abc import Mapping
@@ -630,6 +631,15 @@ def export_fragment_provenance_manifest_json_bytes(manifest: ExportFragmentProve
 
 def load_export_fragment_provenance_manifest(raw: bytes) -> ExportFragmentProvenanceManifest:
     """Load only exact canonical JSON; malformed, duplicate, or old shapes refuse."""
+    return _load_manifest(raw)
+
+
+# One verification pass reads each committed manifest several times over (about
+# three loads per manifest in a conformance enrollment). The loaded manifest is a
+# frozen value of exactly these bytes, so equal bytes share one load; a refusal
+# raises and is not retained.
+@functools.lru_cache(maxsize=256)
+def _load_manifest(raw: bytes) -> ExportFragmentProvenanceManifest:
     try:
         decoded = raw.decode("utf-8")
     except UnicodeDecodeError as exc:

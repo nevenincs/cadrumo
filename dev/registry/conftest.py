@@ -93,23 +93,15 @@ def governed_fact_scope(_worker_compiled_authority: ValidatedRegistryAuthority) 
 def canonical_filing_export_proof(
     _worker_compiled_authority: ValidatedRegistryAuthority,
 ) -> CanonicalTwoChannelFilingExportProofAuthority:
-    """Compose the canonical two-channel filing-export proof once per worker.
+    """Compose the canonical two-channel filing-export proof around the run's one enrollment.
 
     Composition derives the strict conformance enrollment over every filing
-    revision, which costs tens of seconds, and several modules assert against
-    the same composition of the committed tree. Consumers only read it; a test
-    whose subject is composing a different candidate composes its own.
+    revision, which costs tens of seconds, and several modules in several
+    workers assert against the same composition of the committed tree, so the
+    enrollment is derived once per run for each distinct input and every worker
+    binds it to its own compiled authority. Consumers only read it; a test whose
+    subject is composing a different candidate composes its own.
     """
-    from cadrumo.core.resources.bundled_data import bundled_path
+    from .tests.shared_conformance_enrollment import committed_filing_export_proof
 
-    from .._paths import REPO_ROOT
-    from .filing_export_proof_authority import canonical_two_channel_filing_export_proof_authority
-
-    return canonical_two_channel_filing_export_proof_authority(
-        workspace_root=REPO_ROOT,
-        registry_root=bundled_path("registry", "aeat"),
-        source_root=bundled_path(),
-        authority=_worker_compiled_authority,
-        secure_replay_source=None,
-        secure_replay_custody=None,
-    )
+    return committed_filing_export_proof(_worker_compiled_authority)

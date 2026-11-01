@@ -30,7 +30,6 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from hashlib import sha256
 from pathlib import Path
-from tempfile import TemporaryDirectory
 from typing import Final, Protocol, cast
 from uuid import UUID
 
@@ -79,8 +78,7 @@ from dev.docs.sequences.checks import discover_sequences
 from dev.docs.sequences.compare import check_transcript
 from dev.docs.sequences.golden_store import golden_path, read_golden
 from dev.docs.sequences.runner import executed_sequence_sandbox
-from dev.docs.sequences.sandbox import SANDBOX_PROFILE_LABEL, SequenceSandbox
-from dev.temporary_output import prepare_temp_root
+from dev.docs.sequences.sandbox import SANDBOX_PROFILE_LABEL, SequenceSandbox, owned_scratch_directory
 
 DECLARATIONS_PAGE: Final[str] = "declarations"
 NEXT_PAGE: Final[str] = "next-page"
@@ -581,10 +579,8 @@ def scenario_world(sequence_id: str) -> Generator[ScenarioWorld]:
     golden_digest = sha256(golden_path(item.page, item.sequence_id).read_bytes()).hexdigest()
 
     with (
-        TemporaryDirectory(
-            prefix="cadrumo-tui-scenario-", ignore_cleanup_errors=True, dir=prepare_temp_root()
-        ) as scratch,
-        executed_sequence_sandbox(item.sequence, sandbox_root=Path(scratch)) as (sandbox, transcript),
+        owned_scratch_directory("cadrumo-tui-scenario-") as scratch,
+        executed_sequence_sandbox(item.sequence, sandbox_root=scratch) as (sandbox, transcript),
     ):
         divergences = check_transcript(item.sequence, transcript, golden, page=item.page)
         provenance = ScenarioProvenance(

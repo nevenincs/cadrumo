@@ -5,6 +5,7 @@ from __future__ import annotations
 import dataclasses
 import pathlib
 
+import grimp
 import pytest
 
 from ..analysis.load_census import (
@@ -474,3 +475,100 @@ def test_the_reference_map_reads_the_registry_package_once_per_scan(
 
     assert "cadrumo.domain.calculations.registry.module_19" in reference_map.production
     assert len(reads) == 1
+
+
+def _share_scans_under(monkeypatch: pytest.MonkeyPatch, tmp_path: pathlib.Path) -> None:
+    """Make ``tmp_path`` the repository the census shares its scans for, with a private run cache."""
+    from dev.quality import shared_scan
+
+    from ..analysis import load_census
+
+    monkeypatch.setattr(load_census, "REPO_ROOT", tmp_path)
+    monkeypatch.setattr(shared_scan, "_memo", {})
+    monkeypatch.setenv("CADRUMO_RUN_ARTIFACT_ROOT", str(tmp_path / "run-cache"))
+
+
+def _published(tmp_path: pathlib.Path, kind: str) -> list[pathlib.Path]:
+    return sorted((tmp_path / "run-cache" / kind).glob("*/result.pickle"))
+
+
+def test_a_shared_reference_map_follows_an_edit_to_a_scanned_file(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: pathlib.Path,
+) -> None:
+    """The run-wide map is keyed on what it read: an edited consumer is read again, not served stale."""
+    from ..analysis import load_census
+
+    _share_scans_under(monkeypatch, tmp_path)
+    root = tmp_path / "cadrumo"
+    root.mkdir()
+    consumer = root / "consumer.py"
+    consumer.write_text("from cadrumo.domain.calculations.registry.module_a import Thing" + chr(10), encoding="utf-8")
+    monkeypatch.setattr(load_census, "REFERENCE_SCAN_ROOTS", (root,))
+    scan = load_census._reference_map_for.__wrapped__
+
+    before = scan((root,))
+    consumer.write_text("from cadrumo.domain.calculations.registry.module_b import Thing" + chr(10), encoding="utf-8")
+    after = scan((root,))
+
+    assert list(before.production) == ["cadrumo.domain.calculations.registry.module_a"]
+    assert list(after.production) == ["cadrumo.domain.calculations.registry.module_b"]
+    assert len(_published(tmp_path, "registry-load-census-reference-map")) == 2, (
+        "each distinct tree must be published once for the rest of the run"
+    )
+
+
+def test_a_shared_import_graph_follows_an_edit_to_a_scanned_file(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: pathlib.Path,
+) -> None:
+    """The run-wide graph is keyed on every file grimp reads: a new import is seen, not served stale."""
+    from ..analysis import load_census
+
+    _share_scans_under(monkeypatch, tmp_path)
+    package = tmp_path / "src" / "census_probe_package"
+    package.mkdir(parents=True)
+    (package / "__init__.py").write_text("", encoding="utf-8")
+    (package / "leaf.py").write_text("VALUE = 1" + chr(10), encoding="utf-8")
+    (package / "user.py").write_text("VALUE = 2" + chr(10), encoding="utf-8")
+    monkeypatch.setattr(load_census, "SOURCE_ROOT", tmp_path / "src")
+    monkeypatch.setattr(load_census, "ROOT_PACKAGE", "census_probe_package")
+    monkeypatch.syspath_prepend(str(tmp_path / "src"))
+
+    before = load_census.build_runtime_graph()
+    (package / "user.py").write_text("from census_probe_package import leaf" + chr(10), encoding="utf-8")
+    after = load_census.build_runtime_graph()
+
+    assert before.find_modules_that_directly_import("census_probe_package.leaf") == frozenset()
+    assert after.find_modules_that_directly_import("census_probe_package.leaf") == {"census_probe_package.user"}
+    graph = grimp.build_graph("census_probe_package", include_external_packages=False, cache_dir=None)
+    for module in graph.modules:
+        assert after.find_upstream_modules(module) == graph.find_upstream_modules(module), module
+        assert after.find_modules_that_directly_import(module) == graph.find_modules_that_directly_import(module)
+    assert len(_published(tmp_path, "registry-load-census-import-graph")) == 2
+
+
+def test_a_shared_dynamic_import_harvest_follows_an_edit_to_a_scanned_file(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: pathlib.Path,
+) -> None:
+    """The run-wide harvest is keyed on what it read: a new call site is found, not served stale."""
+    from ..analysis import load_census
+
+    _share_scans_under(monkeypatch, tmp_path)
+    root = tmp_path / "cadrumo"
+    root.mkdir()
+    caller = root / "caller.py"
+    caller.write_text("VALUE = 1" + chr(10), encoding="utf-8")
+    monkeypatch.setattr(load_census, "REFERENCE_SCAN_ROOTS", (root,))
+
+    before = load_census.dynamic_import_sites()
+    caller.write_text(
+        "from importlib import import_module" + chr(10) + 'import_module("cadrumo.target")' + chr(10),
+        encoding="utf-8",
+    )
+    after = load_census.dynamic_import_sites()
+
+    assert before == ()
+    assert [(site.module, site.target) for site in after] == [("cadrumo.caller", "cadrumo.target")]
+    assert len(_published(tmp_path, "registry-load-census-dynamic-imports-production")) == 2

@@ -3,11 +3,14 @@
 from __future__ import annotations
 
 from collections import defaultdict
+from collections.abc import Mapping
 from pathlib import Path
+from types import MappingProxyType
+from typing import Final
 
 import yaml
 
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.modelo_localization import binding_locale_key
 from cadrumo.domain.calculations.registry.schema_surfaces import (
     CasillaContinuidadEvolutionDefinition,
@@ -30,53 +33,70 @@ def casilla_occurrences() -> tuple[CasillaOccurrence, ...]:
     return _published_surface()[0]
 
 
-def _published_surface() -> tuple[
+type _PublishedSurface = tuple[
     tuple[CasillaOccurrence, ...],
-    dict[str, tuple[CasillaContinuidadEvolutionDefinition, ...]],
+    Mapping[str, tuple[CasillaContinuidadEvolutionDefinition, ...]],
     frozenset[str],
-]:
-    """Read occurrences, evolutions and binding keys from one authority operation."""
+]
+
+#: The walk visits every revision of every modelo (seconds of work), and each
+#: catalogue a process builds asks for it again; one walk per generation suffices.
+_surface_by_generation: Final[dict[str, _PublishedSurface]] = {}
+
+
+def _published_surface() -> _PublishedSurface:
+    """Read occurrences, evolutions and binding keys from one authority operation, once per generation."""
+    with bundled_indexed_authority().operation() as operation:
+        generation = operation.generation.logical_generation
+        surface = _surface_by_generation.get(generation)
+        if surface is None:
+            surface = _walk_published_surface(operation)
+            _surface_by_generation.clear()
+            _surface_by_generation[generation] = surface
+        return surface
+
+
+def _walk_published_surface(operation: PinnedAuthorityOperation) -> _PublishedSurface:
     found: list[CasillaOccurrence] = []
     evolutions: dict[str, tuple[CasillaContinuidadEvolutionDefinition, ...]] = {}
     binding_keys: set[str] = set()
-    with bundled_indexed_authority().operation() as operation:
-        for modelo_id in operation.modelo_ids():
-            model_evolutions: list[CasillaContinuidadEvolutionDefinition] = []
-            for metadata in operation.modelo_directory(modelo_id).revisions:
-                revision = operation.revision(modelo_id, str(metadata.id))
-                model_evolutions.extend(revision.casilla_continuidad_evolutions)
-                binding_keys.update(
-                    binding_locale_key(str(modelo_id), str(binding.id), field)
-                    for binding in revision.bindings
-                    for field in ("label", "help", "box_number")
+    for modelo_id in operation.modelo_ids():
+        model_evolutions: list[CasillaContinuidadEvolutionDefinition] = []
+        for metadata in operation.modelo_directory(modelo_id).revisions:
+            revision = operation.revision(modelo_id, str(metadata.id))
+            model_evolutions.extend(revision.casilla_continuidad_evolutions)
+            binding_keys.update(
+                binding_locale_key(str(modelo_id), str(binding.id), field)
+                for binding in revision.bindings
+                for field in ("label", "help", "box_number")
+            )
+            found.extend(
+                CasillaOccurrence(
+                    modelo=str(modelo_id),
+                    revision=str(metadata.id),
+                    casilla=str(casilla.id),
+                    number=str(casilla.number),
+                    continuidad_id=None if casilla.continuidad_id is None else str(casilla.continuidad_id),
+                    inherited_from=None if casilla.inherited_from is None else str(casilla.inherited_from),
+                    label_chain=tuple(casilla.localization_keys),
                 )
-                found.extend(
-                    CasillaOccurrence(
-                        modelo=str(modelo_id),
-                        revision=str(metadata.id),
-                        casilla=str(casilla.id),
-                        number=str(casilla.number),
-                        continuidad_id=None if casilla.continuidad_id is None else str(casilla.continuidad_id),
-                        inherited_from=None if casilla.inherited_from is None else str(casilla.inherited_from),
-                        label_chain=tuple(casilla.localization_keys),
-                    )
-                    for casilla in revision.casillas
+                for casilla in revision.casillas
+            )
+            found.extend(
+                CasillaOccurrence(
+                    modelo=str(modelo_id),
+                    revision=str(metadata.id),
+                    casilla=f"construct:{construct.id}",
+                    number="",
+                    continuidad_id=None,
+                    inherited_from=None,
+                    label_chain=tuple(construct.localization_keys),
+                    carries_help=False,
                 )
-                found.extend(
-                    CasillaOccurrence(
-                        modelo=str(modelo_id),
-                        revision=str(metadata.id),
-                        casilla=f"construct:{construct.id}",
-                        number="",
-                        continuidad_id=None,
-                        inherited_from=None,
-                        label_chain=tuple(construct.localization_keys),
-                        carries_help=False,
-                    )
-                    for construct in revision.constructs
-                )
-            evolutions[str(modelo_id)] = tuple(model_evolutions)
-    return tuple(found), evolutions, frozenset(binding_keys)
+                for construct in revision.constructs
+            )
+        evolutions[str(modelo_id)] = tuple(model_evolutions)
+    return tuple(found), MappingProxyType(evolutions), frozenset(binding_keys)
 
 
 def load_casilla_values(locales_dir: Path = LOCALES_DIR) -> Values:

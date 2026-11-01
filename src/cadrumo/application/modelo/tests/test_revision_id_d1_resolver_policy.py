@@ -8,7 +8,6 @@ matches or diverges from the law-determined revision.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import UTC, datetime
 
 import pytest
@@ -16,7 +15,7 @@ import pytest
 from cadrumo.core.config import override_settings
 from cadrumo.core.errors.error_codes import resolve_error_message
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 
@@ -28,13 +27,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _T0 = datetime(2026, 6, 10, 10, 0, 0, tzinfo=UTC)
 _CALC_BUCKET_ID = "65c4334d-2458-4967-9e2f-5046012b4484"
-
-
-@pytest.fixture
-def authority_operation() -> Iterator[PinnedAuthorityOperation]:
-    """Provide one caller-owned registry operation for each resolver assertion."""
-    with bundled_indexed_authority().operation() as operation:
-        yield operation
 
 
 def _work_unit(*, revision_id: str) -> WorkUnit:

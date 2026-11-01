@@ -13,13 +13,12 @@ Authority: ``llm-ledger-classification-design``.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import date
 from decimal import Decimal
 
 import pytest
 
-from ...calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ...calculations.registry.authority import PinnedAuthorityOperation
 from ...calculations.registry.iva_category_catalogue import resolve_iva_category_catalogue
 from ..saturation import IvaRateResolution, resolve_category_rate, split_gross_at_rate
 from ..schema import IvaCategory, IvaRateKind
@@ -27,12 +26,6 @@ from ..schema import IvaCategory, IvaRateKind
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _ON_DATE = date(2025, 6, 1)
-
-
-@pytest.fixture
-def authority_operation() -> Iterator[PinnedAuthorityOperation]:
-    with bundled_indexed_authority().operation() as operation:
-        yield operation
 
 
 def test_domestic_positive_rate_resolves_to_registry_fraction(

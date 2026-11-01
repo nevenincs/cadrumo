@@ -25,7 +25,7 @@ class BienesInversionListRequest(BienesInversionProfileRequest):
 class BienesInversionDeclareRequest(BienesInversionProfileRequest):
     """Declare one capital good using the existing operator-owned facts."""
 
-    identifier: str = Field(min_length=1)
+    identifier: str = Field(min_length=1, max_length=128)
     description: str = Field(min_length=1)
     acquisition_year: int = Field(ge=1900, le=9999)
     acquisition_ledger_id: str = Field(min_length=1, max_length=128)

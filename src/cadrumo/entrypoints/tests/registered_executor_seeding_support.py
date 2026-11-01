@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import hashlib
+from collections.abc import Callable
+from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal
-from typing import cast
+from typing import Final, cast
 from uuid import UUID
 
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -140,6 +142,54 @@ def _seeded_modelo_filing_record(profile_id: UUID, *, operation: PinnedAuthority
         clock=evidence_clock,
     ).filing_record
     return str(record.filing_record_id), str(casilla_id)
+
+
+@dataclass(frozen=True, slots=True)
+class ConformanceProfileSeed:
+    """A seed every case of some definitions starts from, applied once per run to the registered subject.
+
+    ``key`` names every input of ``apply``; ``apply`` writes through the real
+    doors on a profile whose session is live.
+    """
+
+    key: str
+    apply: Callable[[UUID, PinnedAuthorityOperation], object]
+
+
+def _seed_track_participation(profile_id: UUID, operation: PinnedAuthorityOperation) -> object:
+    return _seeded_ledger_track_with_finalized_participation(profile_id, operation=operation)
+
+
+_TRACK_PARTICIPATION_SEED: Final = ConformanceProfileSeed(
+    key="ledger track with a finalized participation", apply=_seed_track_participation
+)
+_PROFILE_SEEDS: Final[dict[str, ConformanceProfileSeed]] = {
+    "ledger.track": _TRACK_PARTICIPATION_SEED,
+    "ledger.participation": _TRACK_PARTICIPATION_SEED,
+    "ledger.participation.rebuild": _TRACK_PARTICIPATION_SEED,
+}
+
+
+def conformance_profile_seed(definition_id: str) -> ConformanceProfileSeed | None:
+    """Return the seed a case of ``definition_id`` starts from, when every such case starts from the same one."""
+    return _PROFILE_SEEDS.get(definition_id)
+
+
+def seeded_ledger_track_transaction_id(profile_id: UUID, *, operation: PinnedAuthorityOperation) -> str:
+    """Return the ledger transaction a real, verified calculation consumed, seeding it unless the profile holds it.
+
+    A case whose runtime started from :data:`_TRACK_PARTICIPATION_SEED` already
+    holds exactly one such calculation; any other case seeds it here.
+    """
+    consumed = [
+        revision.source_transaction_ids
+        for revision in CalculationRevisionCatalogueRepository().load(operation=operation).revisions.values()
+        if revision.source_transaction_ids and revision.state is CalculationRevisionState.VERIFICADO_COMPLETO
+    ]
+    if not consumed:
+        return _seeded_ledger_track_with_finalized_participation(profile_id, operation=operation)
+    assert len(consumed) == 1 and len(consumed[0]) == 1, consumed
+    return consumed[0][0]
 
 
 def _seeded_ledger_track_with_finalized_participation(profile_id: UUID, *, operation: PinnedAuthorityOperation) -> str:

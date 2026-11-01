@@ -31,7 +31,6 @@ invoice. What the gates below pin is that neither half happens silently.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
 
@@ -43,7 +42,7 @@ from cadrumo.domain.iva.schema import IvaCategory
 from ....core.aggregation import LedgerIncomeGrounding
 from ....core.modelo import Modelo
 from ....core.period import Period
-from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.ledger_renta_income_bindings import (
     resolve_ledger_renta_income_aggregation_binding_values,
 )
@@ -64,13 +63,6 @@ from .renta_income_aggregation_support import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
-
-
-@pytest.fixture
-def authority_operation() -> Iterator[PinnedAuthorityOperation]:
-    """Lease one generation across the invoice binding comparisons."""
-    with bundled_indexed_authority().operation() as operation:
-        yield operation
 
 
 # The invoice, stated once. Derived from the two cited rates and the canonical

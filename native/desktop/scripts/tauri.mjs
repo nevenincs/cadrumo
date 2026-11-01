@@ -49,9 +49,11 @@ const stamp = buildStamp(selectedProfile.debug, identity);
 const environment = {
   ...process.env,
   ...selectedProfile.environment,
-  CARGO_TARGET_DIR: backendOnly
-    ? resolve(buildPath("desktop_testing"), "backend-cargo")
-    : buildPath("desktop_cargo"),
+  // One source snapshot and one target directory for every host action:
+  // Cargo keys a path dependency's units by its source path, so a second
+  // snapshot or target would compile cadrumo-application and the whole
+  // dependency graph again for the backend tests.
+  CARGO_TARGET_DIR: buildPath("desktop_cargo"),
   CADRUMO_NATIVE_CONTRACT: contract,
   // The icon the desktop sets for itself where the platform takes none from a bundle.
   CADRUMO_DESKTOP_ICON: resolve(icons, "icon.icns"),
@@ -80,11 +82,11 @@ if (process.env.CADRUMO_DESKTOP_RUST_BIN) {
     (environment[pathKey] ?? "");
 }
 // Preserve Cargo's input timestamps while synchronizing additions and removals.
+// The host's test inputs are data its tests read, never compiled into the image,
+// so a snapshot that already carries them builds the same host.
 const snapshot = snapshotHostSources(
   resolve(desktop, ".."),
-  backendOnly
-    ? resolve(buildPath("desktop_testing"), "backend-host")
-    : buildPath("desktop_host"),
+  buildPath("desktop_host"),
   { incremental: true, tests: backendOnly },
 );
 /** macOS draws an application icon at the size of its whole canvas, and its own

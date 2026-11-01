@@ -40,6 +40,7 @@ __all__ = [
     "file_inputs_digest",
     "run_artifact",
     "run_artifact_root",
+    "run_scoped_digest",
 ]
 
 RUN_ARTIFACT_ROOT_ENV: Final = "CADRUMO_RUN_ARTIFACT_ROOT"
@@ -48,6 +49,7 @@ _TEST_RUN_ROOT_ENV: Final = "CADRUMO_TEST_RUN_ROOT"
 _DEFAULT_WAIT_SECONDS: Final = 1800.0
 _POLL_SECONDS: Final = 0.5
 _STAGING_PREFIX: Final = ".staging-"
+_DIGESTS_DIRECTORY: Final = ".digests"
 
 
 @dataclass(frozen=True, slots=True)
@@ -70,6 +72,11 @@ def run_artifact_root() -> Path:
     override = os.environ.get(RUN_ARTIFACT_ROOT_ENV, "").strip()
     if override:
         return Path(override)
+    return _run_cache_root()
+
+
+def _run_cache_root() -> Path:
+    """Return this pytest run's own cache directory, whatever artifact root override is set."""
     run_root = os.environ.get(_TEST_RUN_ROOT_ENV, "").strip()
     if not run_root:
         raise RuntimeError(
@@ -86,6 +93,51 @@ def file_inputs_digest(kind: str, root: Path, paths: Iterable[Path]) -> str:
         for path in paths
     )
     return content_hash_hex({"schema": "cadrumo-run-artifact-inputs/v1", "kind": kind, "files": entries})
+
+
+def run_scoped_digest(
+    kind: str,
+    compute: Callable[[], str],
+    *,
+    cache_root: Path | None = None,
+    wait_seconds: float = _DEFAULT_WAIT_SECONDS,
+) -> str:
+    """Return the run's one input digest for ``kind``, computing it only in the first process to ask.
+
+    Taking an artifact's input digest can itself be seconds of hashing, and in a
+    shared worktree a peer's edit between two workers' readings would key the
+    same artifact twice in one run. The first process therefore computes it under
+    the kind's lock and records it beside the run's entries; every other process
+    of the run reads the recorded value, so the whole run keys on one snapshot of
+    its inputs. The record lives in the run's own cache directory, never the
+    artifact root, which persists across runs when overridden, so the next run
+    takes a fresh one.
+    """
+    if not kind or PurePosixPath(kind).name != kind or kind.startswith("."):
+        raise ValueError(f"run digest kind must be one plain path segment, got {kind!r}")
+    digests = (cache_root or _run_cache_root()) / _DIGESTS_DIRECTORY
+    record = digests / f"{kind}.digest"
+    if (recorded := _recorded_digest(record)) is not None:
+        return recorded
+    digests.mkdir(parents=True, exist_ok=True)
+    with exclusive_file_lock(digests / kind, timeout=wait_seconds, retry_backoff=_POLL_SECONDS):
+        if (recorded := _recorded_digest(record)) is not None:
+            return recorded
+        digest = compute()
+        if not digest.isalnum():
+            raise ValueError(f"run digest for {kind} must be alphanumeric, got {digest!r}")
+        staging = record.with_name(f"{record.name}{_STAGING_PREFIX}{os.getpid()}")
+        staging.write_text(digest, encoding="ascii")
+        staging.replace(record)
+    return digest
+
+
+def _recorded_digest(record: Path) -> str | None:
+    try:
+        recorded = record.read_text(encoding="ascii").strip()
+    except (OSError, ValueError):
+        return None
+    return recorded if recorded.isalnum() else None
 
 
 def run_artifact(

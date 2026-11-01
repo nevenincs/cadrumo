@@ -75,6 +75,7 @@ from enum import StrEnum
 from typing import Annotated, Final
 
 from pydantic import (
+    AfterValidator,
     BaseModel,
     Field,
     StringConstraints,
@@ -403,6 +404,30 @@ def validate_prorrata_reference(reference_id: str) -> ProrrataReference:
         )
     except ValidationError as exc:
         raise ProrrataInputError(f"invalid prorrata_reference: {normalized!r}") from exc
+
+
+@pydantic_validation_boundary
+def _require_canonical_prorrata_reference_text(value: str) -> str:
+    """Refuse a request's non-blank prorrata reference unless the reference grammar accepts it.
+
+    A blank value is left for the caller's own blank-means-absent normalisation;
+    every other value must pass :func:`validate_prorrata_reference`, so a request
+    cannot store what the IVA aggregation would later report as an invalid reference.
+    """
+    if not value.strip():
+        return value
+    return validate_prorrata_reference(value).reference_id
+
+
+ProrrataReferenceText = Annotated[
+    str,
+    Field(max_length=PRORRATA_REFERENCE_MAX_LENGTH),
+    AfterValidator(_require_canonical_prorrata_reference_text),
+]
+"""A prorrata reference as a write request carries it: bounded and held to the reference grammar.
+
+Stored rows keep the plain text, so a row saved before this check still loads.
+"""
 
 
 def register_entry_prorrata_reference(
@@ -790,6 +815,7 @@ __all__ = (
     "ProrrataInputs",
     "ProrrataKind",
     "ProrrataReference",
+    "ProrrataReferenceText",
     "ProrrataRegime",
     "ProrrataResult",
     "RegularizacionProrrataDireccion",

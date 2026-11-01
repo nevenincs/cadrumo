@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -57,12 +56,6 @@ _EVIDENCE_REFERENCE = "CSV-303-2025-1T-S21"
 _DECLARATION_TYPE_LOCATOR = "modelo-303-page-01:declaration-type:13:1"
 #: A positive result: the only sign a domiciliation (or ingreso) disposition admits.
 _POSITIVE_RESULT = Decimal("100.00")
-
-
-@pytest.fixture
-def authority_operation() -> Iterator[PinnedAuthorityOperation]:
-    with bundled_indexed_authority().operation() as operation:
-        yield operation
 
 
 def _submitted_file_declaration_type(

@@ -61,7 +61,6 @@ from contextvars import ContextVar
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from tempfile import TemporaryDirectory
 from typing import Literal, Unpack, cast
 
 from click.testing import CliRunner, Result
@@ -84,7 +83,12 @@ from cadrumo_runtime.host.tests.frontend.cli.cli_runner import cadrumo_click_com
 from dev.temporary_output import prepare_temp_root
 
 from .errors import SequenceExecutionError
-from .sandbox import SequenceSandbox, _publish_replacement_sandbox_profile, sequence_sandbox
+from .sandbox import (
+    SequenceSandbox,
+    _publish_replacement_sandbox_profile,
+    owned_scratch_directory,
+    sequence_sandbox,
+)
 from .schema import (
     CommandProgram,
     FrameKind,
@@ -738,9 +742,9 @@ def execute_sequence(
     if sandbox_root is not None:
         return _execute_in_root(sequence, sandbox_root, fixtures_root)
     # Engine handles on Windows can outlive the run despite the teardown's
-    # dispose; ignore_cleanup_errors keeps a stale handle from failing the run.
-    with TemporaryDirectory(prefix="seq-", ignore_cleanup_errors=True, dir=prepare_temp_root()) as tmp:
-        return _execute_in_root(sequence, Path(tmp), fixtures_root)
+    # dispose; the owned scratch retries what such a handle refused.
+    with owned_scratch_directory("seq-") as tmp:
+        return _execute_in_root(sequence, tmp, fixtures_root)
 
 
 def _refuse_unexecutable(sequence: ParsedSequence) -> None:
@@ -867,8 +871,8 @@ def execute_page_sequences(
         return ()
     if sandbox_root is not None:
         return _execute_page_in_root(sequences, label, sandbox_root, fixtures_root)
-    with TemporaryDirectory(prefix="page-", ignore_cleanup_errors=True, dir=prepare_temp_root()) as tmp:
-        return _execute_page_in_root(sequences, label, Path(tmp), fixtures_root)
+    with owned_scratch_directory("page-") as tmp:
+        return _execute_page_in_root(sequences, label, tmp, fixtures_root)
 
 
 def _execute_page_in_root(

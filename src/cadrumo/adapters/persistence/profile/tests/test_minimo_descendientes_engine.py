@@ -8,7 +8,6 @@ reach the estatal/autonómico channels and the downstream tariff calculation.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from functools import lru_cache
@@ -22,7 +21,7 @@ from cadrumo.domain.user_profile.tests.profile_creation_authority import (
 
 from .....application.modelo.profile_binding import resolve_profile_sourced_bindings
 from .....core.casilla_id import validated_casilla_id
-from .....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from .....domain.calculations.registry.authority import PinnedAuthorityOperation
 from .....domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from .....domain.calculations.registry.formula_runtime_ops import resolve_parameter
 from .....domain.calculations.registry.schema import RegistrySnapshot
@@ -39,13 +38,6 @@ from ...storage.tests.secure_sql import isolated_runtime_profile
 from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
-
-
-@pytest.fixture
-def authority_operation() -> Iterator[PinnedAuthorityOperation]:
-    """Lease one generation for each persisted profile resolution."""
-    with bundled_indexed_authority().operation() as operation:
-        yield operation
 
 
 def _supported_filing_years() -> tuple[int, ...]:

@@ -25,9 +25,9 @@ from typing import TYPE_CHECKING
 import pytest
 
 from cadrumo.core.directory_scan import scan_directory
-from dev._paths import REPO_ROOT
-from dev.docs.build_paths import docs_html_root
+from cadrumo.core.external_constants import OutputLanguage
 from dev.docs.pagefind_index import build_search_index
+from dev.docs.tests.built_site import built_documentation_site
 
 if TYPE_CHECKING:
     from pagefind.index import PagefindIndex
@@ -37,20 +37,18 @@ from ..docs_site_languages import localized_languages
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
 
-# dev/deploy/tests -> parents[3] is the repo root.
-_REPO_ROOT = REPO_ROOT
-_BUILT_HTML = docs_html_root(_REPO_ROOT)
 _PAGES = 2
 
 
 def _built_root(tmp_path: Path, name: str, *, with_records: bool) -> Path:
-    """Build a real Pagefind index, with or without injected records."""
-    pages = list(scan_directory(_BUILT_HTML, pattern="*.html")[:_PAGES]) if _BUILT_HTML.is_dir() else []
-    if len(pages) < _PAGES:
-        pytest.fail(
-            f"need {_PAGES} built pages under {_BUILT_HTML}; this gate compares real indexes, "
-            "so it needs a real build to read.",
-        )
+    """Build a real Pagefind index, with or without injected records.
+
+    The pages are the first few of the English root of the run's shared
+    documentation compile.
+    """
+    built_html = built_documentation_site().language_root(OutputLanguage.EN.value)
+    pages = sorted(scan_directory(built_html, pattern="*.html"), key=lambda path: path.name)[:_PAGES]
+    assert len(pages) == _PAGES, f"need {_PAGES} built pages under {built_html}; found {len(pages)}"
     site = tmp_path / name
     site.mkdir(parents=True)
     for source in pages:

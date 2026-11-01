@@ -15,7 +15,6 @@ from __future__ import annotations
 
 import json
 import zipfile
-from collections.abc import Iterator
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -25,7 +24,7 @@ import pytest
 from ....core import atomic_write
 from ....core.casilla_id import validated_casilla_id
 from ....core.period import Period
-from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.bindings import CasillaObservation
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
@@ -52,12 +51,6 @@ _NOW = datetime(2026, 7, 3, 12, 0, tzinfo=UTC)
 _BASE_CASILLA = validated_casilla_id("base", surface="test_review_package")
 _CUOTA_CASILLA = validated_casilla_id("cuota", surface="test_review_package")
 _DRAFT_BYTES = b"FICHERO-BOE-BYTES-FOR-REVIEW-PACKAGE-TEST"
-
-
-@pytest.fixture
-def authority_operation() -> Iterator[PinnedAuthorityOperation]:
-    with bundled_indexed_authority().operation() as operation:
-        yield operation
 
 
 def _work_unit(*, bucket_id: str = "bucket-review-package") -> WorkUnit:

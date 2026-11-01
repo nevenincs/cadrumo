@@ -16,14 +16,13 @@ construction.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import date
 from decimal import Decimal
 from typing import Any
 
 import pytest
 
-from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.binding_value_contract import BindingValueChannel
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.formula_expression import evaluate_expression
@@ -48,13 +47,6 @@ from ..profile_binding import (
 from ..profile_derived_facts import ProfileBindingResolutionError
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
-
-
-@pytest.fixture
-def authority_operation() -> Iterator[PinnedAuthorityOperation]:
-    """Lease one generation for each profile-channel transport test."""
-    with bundled_indexed_authority().operation() as operation:
-        yield operation
 
 
 _ANUALIDADES_BINDING = "renta-profile-anualidades-sin-minimo-descendientes"

@@ -122,8 +122,8 @@ def calculation_filing_date(period: Period) -> date:
         return period.end_date
 
     code = period.registry_token
-    if code.startswith("EXT-"):
-        return Period.from_year_and_code(period.filing_year, code.removeprefix("EXT-")).end_date
+    if (scheme_quarter := period.scheme_quarter) is not None:
+        return Period.from_year_and_code(period.filing_year, scheme_quarter.value).end_date
     month = _instalment_month(code)
     if month is not None:
         return _last_day_of_month(period.filing_year, month)

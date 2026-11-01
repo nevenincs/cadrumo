@@ -343,3 +343,30 @@ Reviewed through `b49f3e2399` against the assets core and registry-owned facts p
 
 ### registry-facts | low | Stale comment and remaining literals
 `domain/modelos/row_models.py:262`, `application/actividad_asset/operations.py:207,211`, `_data/registry/aeat/modelos/100/revisions/2022/bindings/0001-declarations.toml:740-745`.
+
+### xml-export | high | Modelo 100 XML writes values past the official length and verification reports a match
+`application/filing/_export_xml_dictionary_values.py:160-183`. Rows `C1ICRC`, `IDENTCCVH1`, `GFCNIF1` and `DP_APENOM_D` exceed their XSD lengths; `verify_export` returned `match`. Recommendation: refuse from the XSD the renderer already loads, at render and at verify.
+
+### literal-gate | high | The literal gate misses most non-trivial positions of a tax number
+`dev/quality/tests/test_tax_literal_sweep.py:419-435,948`. 43 of 56 representative shapes pass: arithmetic, `min`/`max`, defaults, class attributes, collections, dates, year sets, form-code comparisons.
+
+### registry-facts | high | The borrador year table freezes the support envelope in code and disagrees with it
+`adapters/inbound/borrador/_extractors/selection.py:35-41`, `parser.py:54,90,121`, `modelo_100_summary_v2025.py:68`. Year 2026 refuses although the registry declares it; 2021 is accepted below the floor.
+
+### literal-gate | medium | Name exemptions match substrings and name equal-to-calendar values
+`dev/quality/tests/test_tax_literal_sweep.py:94-100,136,442`. `SOLIDARITY_SURCHARGE_THRESHOLD` passes through `ARITY`; the width rule covers two module name patterns only (`:105`).
+
+### named-values | medium | Two arity names hold counts from the Orden
+`formula_runtime_m100.py:323`, `_formula_runtime_m131.py:73`.
+
+### tui-door | medium | TUI asset refusals show raw unlocalized text
+`entrypoints/tui/ledger/actividad_asset.py:268-270,393,411,429,530,549`, `actividad_asset_inputs.py:67`.
+
+### tui-parity | medium | TUI handoff drops the Modelo 100 gaps and requires a quarter
+`entrypoints/tui/ledger/actividad_asset.py:429,438-446`.
+
+### export-envelope | medium | Export uses the validator-only reader and skips its check outside a scope
+`application/filing/export_envelope.py:185-187,230-231`.
+
+### asset-findings | low | Unbound-box finding is over-broad and contradicts the handoff
+`modelo_bindings_actividad_assets.py:789-791,828`, `application/actividad_asset/operations.py:766-770`. Not reachable today.

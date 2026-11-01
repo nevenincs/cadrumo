@@ -13,7 +13,7 @@ the failure mode the project's own no-silent-under-declaration rule names.
 
 from __future__ import annotations
 
-from collections.abc import Generator, Iterable, Iterator
+from collections.abc import Generator, Iterable
 from contextlib import contextmanager
 from datetime import UTC, date, datetime
 from decimal import Decimal
@@ -21,8 +21,6 @@ from pathlib import Path
 from typing import override
 
 import pytest
-
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
 from ....core.period import Period
 from ....core.secure_object_write import SecureObjectWrite
@@ -44,13 +42,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET = "77777777-7777-4777-8777-777777777777"
 _PERIOD = Period.from_year_and_code(2026, "0A")
-
-
-@pytest.fixture
-def authority_operation() -> Iterator[PinnedAuthorityOperation]:
-    """Pin the compiled authority used by the readiness workflow."""
-    with bundled_indexed_authority().operation() as operation:
-        yield operation
 
 
 class _InMemoryTransactionRepository(TransactionCatalogueCoCommitWriterProtocol):

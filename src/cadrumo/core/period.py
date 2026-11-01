@@ -87,6 +87,8 @@ _STANDARD_PERIOD_SET: frozenset[str] = frozenset(member.value for member in Stan
 _INSTALMENT_PERIOD_SET: frozenset[str] = frozenset(
     (StandardPeriodCode.P1, StandardPeriodCode.P2, StandardPeriodCode.P3, StandardPeriodCode.P4),
 )
+#: The registry token of a period qualified by its special-regime scheme.
+_SCHEME_PERIOD_PREFIX = "EXT-"
 _EXTENDED_PERIOD_SET: frozenset[str] = frozenset(("EXT-1T", "EXT-2T", "EXT-3T", "EXT-4T"))
 _ADMINISTRATIVE_PERIOD_SET: frozenset[str] = frozenset(
     ("ALTA", "MODIFICACION", "BAJA", "COMUNICACION", "VARIACION"),
@@ -465,6 +467,20 @@ class Period(BaseModel):
         if standard_code is None:
             return None
         return _QUARTER_ORDINALS.get(standard_code)
+
+    @property
+    def scheme_quarter(self) -> StandardPeriodCode | None:
+        """Return the ordinary quarter a scheme-qualified period names, or ``None`` for any other period."""
+        token = self.registry_token
+        if token not in _EXTENDED_PERIOD_SET:
+            return None
+        return StandardPeriodCode(token.removeprefix(_SCHEME_PERIOD_PREFIX))
+
+    @property
+    def scheme_quarter_ordinal(self) -> int | None:
+        """Return the ordinal of :attr:`scheme_quarter`, or ``None`` for any other period."""
+        quarter = self.scheme_quarter
+        return None if quarter is None else _QUARTER_ORDINALS[quarter]
 
     @property
     def is_quarterly(self) -> bool:

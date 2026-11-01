@@ -14,7 +14,8 @@ The build-time parity gate now covers the property in CI. This module covers
 the OTHER instrument on the OTHER path: the preflight that runs at publish, the
 last check before bytes leave the machine.
 
-Every index here is written by REAL Pagefind over REAL built pages. The
+Every index here is written by REAL Pagefind over REAL built pages, taken from the
+English root of the run's shared documentation compile. The
 pages-only case is not simulated -- it is a genuine no-injection build, exactly
 what the misconfigured deploy produced. Hand-writing fragment bytes would have
 repeated a sibling defect from the same day, where a gate that claimed to read
@@ -35,8 +36,8 @@ from typing import TYPE_CHECKING
 import pytest
 
 from cadrumo.core.directory_scan import scan_directory
-from dev._paths import REPO_ROOT, UTF_8
-from dev.docs.build_paths import docs_html_root
+from cadrumo.core.external_constants import OutputLanguage
+from dev._paths import UTF_8
 from dev.docs.pagefind_index import (
     DECIDED_INJECTED_RECORD_KINDS,
     InjectCallback,
@@ -44,6 +45,7 @@ from dev.docs.pagefind_index import (
     build_shared_search_index,
     injected_record_kinds_in_index,
 )
+from dev.docs.tests.built_site import built_documentation_site
 
 if TYPE_CHECKING:
     from pagefind.index import PagefindIndex
@@ -54,24 +56,30 @@ from ..docs_site_preflight import _require_search_index, _validate_built_site, _
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
 
-# dev/deploy/tests -> parents[3] is the repo root.
-_REPO_ROOT = REPO_ROOT
-_BUILT_HTML = docs_html_root(_REPO_ROOT)
 _UTF_8 = UTF_8
 
 _PAGES = 3
 
 
+def _first_built_pages(built: Path | None = None) -> list[Path]:
+    """Return the first few pages of ``built``, the run's English root unless one is given.
+
+    A root that is absent or holds too few pages is reported as such, before an
+    empty or short corpus can masquerade as a defect in what is built from it.
+    """
+    if built is None:
+        built = built_documentation_site().language_root(OutputLanguage.EN.value)
+    if not built.is_dir():
+        pytest.fail(f"no built documentation HTML at {built}; this preflight reads a real artefact.")
+    pages = sorted(scan_directory(built, pattern="*.html"), key=lambda path: path.name)[:_PAGES]
+    if len(pages) < _PAGES:
+        pytest.fail(f"need {_PAGES} built pages under {built} to assemble a site corpus.")
+    return pages
+
+
 def _page_corpus(tmp_path: Path, name: str) -> Path:
     """Copy a few real built pages into ``name``."""
-    if not _BUILT_HTML.is_dir():
-        pytest.fail(
-            f"no built documentation HTML at {_BUILT_HTML}; this preflight reads a real "
-            "artefact, so it needs a real build to read. Run the docs build first.",
-        )
-    pages = scan_directory(_BUILT_HTML, pattern="*.html")[:_PAGES]
-    if len(pages) < _PAGES:
-        pytest.fail(f"need {_PAGES} built pages under {_BUILT_HTML} to assemble a site corpus.")
+    pages = _first_built_pages()
     site = tmp_path / name
     site.mkdir(parents=True)
     for source in pages:
@@ -224,7 +232,7 @@ def test_the_whole_site_is_refused_on_one_record_free_index(tmp_path: Path, page
     assert "concept" in message
 
 
-def _retargeted_page_corpus(apex: Path, language: str, *, subdirectory: str = "") -> Path:
+def _retargeted_page_corpus(apex: Path, language: str, *, subdirectory: str = "", built: Path | None = None) -> Path:
     """Copy real built pages into ``apex/<language>``, rendered in that language.
 
     The built pages are English, and the index pass refuses a page whose
@@ -234,13 +242,10 @@ def _retargeted_page_corpus(apex: Path, language: str, *, subdirectory: str = ""
     the prose stays English, and prose is not the property under test here.
 
     ``subdirectory`` places the pages deeper inside the root, which is how the
-    English full-scope root carries its API reference tree.
+    English full-scope root carries its API reference tree. ``built`` replaces the
+    run's English root as the source of the pages.
     """
-    if not _BUILT_HTML.is_dir():
-        pytest.fail(f"no built documentation HTML at {_BUILT_HTML}; run the docs build first.")
-    pages = scan_directory(_BUILT_HTML, pattern="*.html")[:_PAGES]
-    if len(pages) < _PAGES:
-        pytest.fail(f"need {_PAGES} built pages under {_BUILT_HTML} to assemble a site corpus.")
+    pages = _first_built_pages(built)
     root = apex / language
     destination = root / subdirectory if subdirectory else root
     destination.mkdir(parents=True, exist_ok=True)
@@ -270,17 +275,16 @@ def _indexed_pages(apex: Path) -> dict[str, set[str]]:
 
 @pytest.mark.parametrize("built_pages", [None, 0, _PAGES - 1])
 def test_a_missing_or_incomplete_build_cannot_supply_the_language_index_corpus(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, built_pages: int | None
+    tmp_path: Path, built_pages: int | None
 ) -> None:
     """Report a missing build before an empty index can masquerade as a filter defect."""
     built = tmp_path / "built"
-    monkeypatch.setattr(__name__ + "._BUILT_HTML", built)
     if built_pages is not None:
         built.mkdir()
         for number in range(built_pages):
             (built / f"{number}.html").write_text("not a complete corpus", encoding=_UTF_8)
     with pytest.raises(pytest.fail.Exception, match=r"built documentation HTML|built pages"):
-        _retargeted_page_corpus(tmp_path / "site", "en")
+        _retargeted_page_corpus(tmp_path / "site", "en", built=built)
     assert not (tmp_path / "site").exists()
 
 

@@ -308,6 +308,9 @@ class FilingEnvelopeDefinition(RegistryModel):
     # Only a design printing its scheme period as a bare quarter sets this, and
     # absence serialises to the existing envelope grammar without an extra key.
     scheme_period_form: Literal["bare_quarter"] | None = Field(default=None, exclude_if=lambda value: value is None)
+    # The period tokens a design's own period row lists; absence serialises to the
+    # existing envelope grammar without an extra key.
+    period_tokens: tuple[str, ...] | None = Field(default=None, exclude_if=lambda value: value is None)
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -573,6 +576,14 @@ class ExportFieldDefinition(RegistryModel):
     populated negative answer, so an ordinary return is never a missing value.
     Carried by generated layouts from the design row they derive from.
     """
+    scheme_period_part: Literal["filing_year", "period_type", "quarter_ordinal"] | None = None
+    """Which part of a scheme-qualified filing period this design row prints.
+
+    The filing period is the one authority for these rows, so an export never asks
+    the operator to restate it. Carried by generated layouts from the reviewed page.
+    """
+    scheme_period_type: str | None = Field(default=None, min_length=1)
+    """The constant a scheme period-type row prints, read from that design row."""
     absent_fill: Literal["spaces"] | None = None
     """How this numeric slot prints when it carries no information.
 
@@ -659,6 +670,10 @@ class ExportFieldDefinition(RegistryModel):
             raise RegistryValidationError(
                 f"export field {self.id!r} declares a presence marker outside a text slot of the marker's width "
                 "fed by a producer fact",
+            )
+        if (self.scheme_period_part == "period_type") != (self.scheme_period_type is not None):
+            raise RegistryValidationError(
+                f"export field {self.id!r} must declare a scheme period type exactly on a period-type row",
             )
         if self.absent_fill is not None and self.data_type not in ZERO_PADDED_EXPORT_DATA_TYPES:
             raise RegistryValidationError(f"export field {self.id!r} declares an absent fill on a non-numeric slot")

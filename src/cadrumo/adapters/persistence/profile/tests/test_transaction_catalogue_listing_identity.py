@@ -11,7 +11,6 @@ fields.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
@@ -23,7 +22,7 @@ from cadrumo.application.ledger.actions_common import build_manual_ledger_result
 from cadrumo.application.ledger.manual_read import list_manual_transactions
 from cadrumo.application.ledger.read_ports import LedgerReadPorts
 
-from .....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from .....domain.calculations.registry.authority import PinnedAuthorityOperation
 from .....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from .....domain.transactions.models import Transaction, TransactionCatalogue
 from .....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
@@ -39,12 +38,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _BUCKET_ID = "51515151-5151-4515-8515-515151515151"
 _ROWS = 36
-
-
-@pytest.fixture
-def authority_operation() -> Iterator[PinnedAuthorityOperation]:
-    with bundled_indexed_authority().operation() as operation:
-        yield operation
 
 
 def _varied_transaction(index: int) -> Transaction:

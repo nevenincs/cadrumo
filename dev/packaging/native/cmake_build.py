@@ -17,7 +17,15 @@ from typing import cast
 from dev._paths import REPO_ROOT
 
 from ..command_execution import CommandResult, run_command
-from .action_cache import action_lock, completed, fingerprint, modified_inputs, receipt_staleness, staleness
+from .action_cache import (
+    action_lock,
+    completed,
+    enrolled_input_paths,
+    fingerprint,
+    modified_inputs,
+    receipt_staleness,
+    staleness,
+)
 from .action_selection import action_toolchain
 from .base_dependencies import sync_base_dependencies
 from .build_directory import require_enrolled_build
@@ -172,7 +180,7 @@ def action_inventory(build: Path, inputs: Path, extra: tuple[Path, ...], selecti
     The keys are the files :func:`.action_cache.fingerprint` reads for the producer's identity,
     so a reader can name exactly which of them changed since the recorded build.
     """
-    paths = {*map(Path, inputs.read_text(encoding="utf-8").splitlines()), *extra}
+    paths = {*enrolled_input_paths(inputs), *extra}
     with digest_cache(build):
         entries = {path.resolve().as_posix(): digest(path) if path.is_file() else "missing" for path in sorted(paths)}
     entries["@selection"] = hashlib.sha256(json.dumps(selection, sort_keys=True).encode("utf-8")).hexdigest()

@@ -22,7 +22,6 @@ Real adapters: the resident registry authority and a real
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from functools import lru_cache
@@ -31,7 +30,7 @@ import pytest
 
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
-from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.tests.published_authority import (
     leased_profile_create_context as _profile_creation_context_for_test,
@@ -47,13 +46,6 @@ from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, U
 from ..profile_binding import _derived_binding_diagnostics, resolve_profile_sourced_bindings
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
-
-
-@pytest.fixture
-def authority_operation() -> Iterator[PinnedAuthorityOperation]:
-    """Lease one authority generation for the resolver under test."""
-    with bundled_indexed_authority().operation() as operation:
-        yield operation
 
 
 _BUCKET = "0de41ce4-0000-4000-8000-000000000512"

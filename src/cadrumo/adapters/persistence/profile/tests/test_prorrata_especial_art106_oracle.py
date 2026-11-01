@@ -31,7 +31,6 @@ general deducible cuota  = (10.50 + 10.50 + 10.50) * 60% = 18.90 (all inputs fla
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from datetime import date as _esp_date
 from decimal import Decimal
@@ -50,7 +49,7 @@ from cadrumo.core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDe
 from cadrumo.core.period import Period
 from cadrumo.core.prorrata_register import ProrrataProvisionalProvenance, ProrrataRegisterRegime
 from cadrumo.domain.bienes_inversion.register import BienesInversionIvaRegister
-from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.ids import BindingId
 from cadrumo.domain.calculations.registry.schema_base import ThresholdComparison
 from cadrumo.domain.iva.deduction_facts import IvaDeductionClassificationProvenance
@@ -61,13 +60,6 @@ from cadrumo.domain.prorrata_register.register import ProrrataRegister, Prorrata
 from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
-
-
-@pytest.fixture
-def authority_operation() -> Iterator[PinnedAuthorityOperation]:
-    """Lease one generation across each art. 106 aggregation chain."""
-    with bundled_indexed_authority().operation() as operation:
-        yield operation
 
 
 #: An explicit resolved margin. These tests exercise the PREDICATE and the

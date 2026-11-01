@@ -21,17 +21,16 @@ from ....adapters.persistence.storage.tests.profile_capsule_runtime import load_
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import (
     profile_authority_contexts as _profile_contexts_for_test,
 )
-from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....application.user_profile.fact_write import apply_manager_profile_field_mutation
 from ....application.user_profile.login_session import authenticate_profile_for_invocation
 from ....application.user_profile.overview import ProfileOverview, build_profile_overview
-from ....application.user_profile.registration import register_profile_with_credentials
 from ....core.bucket_pointer import require_active_bucket_id
 from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ..components.host import ScreenHostApp
 from ..components.status import PinnedStatusBar
 from ..profile.overview import ProfileFieldPersist, ProfileManagerScreen
 from .manager_pilot import wait_until_settled
+from .manager_subject_profile import registered_manager_subject
 from .settling import settle
 
 pytestmark = [
@@ -125,16 +124,7 @@ async def _submit(app, pilot, path: str, value: str) -> None:
 @pytest.mark.asyncio
 async def test_a_blank_submission_on_a_required_field_does_not_clear_it(tmp_path) -> None:
     """The value on the record must be exactly what it was before the edit."""
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        # Registration validates facts against registry authority, so it runs under a real lease.
-        with bundled_indexed_authority().operation():
-            _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-            register_profile_with_credentials(
-                label=_LABEL,
-                passphrase=_CREDENTIAL_INPUT,
-                profile_create_context=_profile_create_context_for_test,
-                profile_decode_context=_profile_decode_context_for_test,
-            )
+    with registered_manager_subject(tmp_path, label=_LABEL, passphrase=_CREDENTIAL_INPUT):
         _write(_REQUIRED_PATH, "12345678Z")
         assert _stored().get(_REQUIRED_PATH) == "12345678Z", "fixture must start with a value to lose"
 
@@ -152,16 +142,7 @@ async def test_a_blank_submission_on_a_required_field_does_not_clear_it(tmp_path
 @pytest.mark.asyncio
 async def test_a_whitespace_only_submission_on_a_required_field_does_not_clear_it(tmp_path) -> None:
     """Spaces are blank to every reader, so they must not delete the value either."""
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        # Registration validates facts against registry authority, so it runs under a real lease.
-        with bundled_indexed_authority().operation():
-            _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-            register_profile_with_credentials(
-                label=_LABEL,
-                passphrase=_CREDENTIAL_INPUT,
-                profile_create_context=_profile_create_context_for_test,
-                profile_decode_context=_profile_decode_context_for_test,
-            )
+    with registered_manager_subject(tmp_path, label=_LABEL, passphrase=_CREDENTIAL_INPUT):
         _write(_REQUIRED_PATH, "12345678Z")
 
         app = ProfileManagerScreen(_live_overview(), persist=_persist)
@@ -181,16 +162,7 @@ async def test_a_blank_submission_on_an_optional_field_still_clears_it(tmp_path)
     two tests above would still pass, so this is what keeps the guard
     narrow rather than merely present.
     """
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        # Registration validates facts against registry authority, so it runs under a real lease.
-        with bundled_indexed_authority().operation():
-            _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-            register_profile_with_credentials(
-                label=_LABEL,
-                passphrase=_CREDENTIAL_INPUT,
-                profile_create_context=_profile_create_context_for_test,
-                profile_decode_context=_profile_decode_context_for_test,
-            )
+    with registered_manager_subject(tmp_path, label=_LABEL, passphrase=_CREDENTIAL_INPUT):
         _write(_OPTIONAL_PATH, "Ada Lovelace")
         assert _stored().get(_OPTIONAL_PATH) == "Ada Lovelace"
 
@@ -215,17 +187,7 @@ async def test_a_write_door_refusal_is_reported_rather_than_taking_the_screen_do
     validated in both completeness modes, so the refusal does not depend
     on the profile's lifecycle state.
     """
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        # Registration validates facts against registry authority, so it runs under a real lease.
-        with bundled_indexed_authority().operation():
-            _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-            register_profile_with_credentials(
-                label=_LABEL,
-                passphrase=_CREDENTIAL_INPUT,
-                profile_create_context=_profile_create_context_for_test,
-                profile_decode_context=_profile_decode_context_for_test,
-            )
-
+    with registered_manager_subject(tmp_path, label=_LABEL, passphrase=_CREDENTIAL_INPUT):
         app = ProfileManagerScreen(_live_overview(), persist=_persist)
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await settle(pilot)

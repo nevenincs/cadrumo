@@ -31,7 +31,7 @@ from cadrumo.core.secure_object_write import SecureObjectWrite
 from ....domain.attachments.models import Attachment
 from ....domain.attachments.protocols import AttachmentStoreProtocol
 from ....domain.buckets.event import BucketEventHistoryCatalogue
-from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.invoices.catalogue import InvoiceCatalogue
 from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from ....domain.modelos.calculation_revision import CalculationRevisionCatalogue
@@ -62,13 +62,6 @@ _IVA_RATE = Decimal("0.21")
 _YEAR = 2026
 _T0 = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)
 _REVISION_ID = "0" * 64
-
-
-@pytest.fixture
-def authority_operation() -> Iterator[PinnedAuthorityOperation]:
-    """Pin the compiled authority across transaction construction and summary."""
-    with bundled_indexed_authority().operation() as operation:
-        yield operation
 
 
 def _secure_write(

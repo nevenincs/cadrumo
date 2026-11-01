@@ -15,7 +15,7 @@ from ...domain.calculations.registry.fixed_width_codec import (
     render_empty_block_slot,
     render_fixed_width_export_field,
 )
-from ...domain.calculations.registry.form_codes import form_for_role, resolve_form_codes
+from ...domain.calculations.registry.form_codes import resolve_form_codes
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.schema_exports import ExportFieldDefinition, ExportRecordDefinition
 from ...domain.filing.errors import FilingExportError, FilingExportValidationError
@@ -280,9 +280,9 @@ def _field_value(
     render_context: FilingRecordRenderContext | None,
     projection_values: Mapping[ProjectionAddress, object],
 ) -> object:
-    m369_period_value = _m369_period_binding_value(field, draft)
-    if m369_period_value is not None:
-        return m369_period_value
+    scheme_period_value = _scheme_period_value(field, draft)
+    if scheme_period_value is not None:
+        return scheme_period_value
     match field.kind:
         case CasillaFieldKind.LITERAL:
             return field.literal
@@ -304,17 +304,18 @@ def _field_value(
             raise FilingExportError(f"unsupported export field kind {field.kind!r}")
 
 
-def _m369_period_binding_value(field: ExportFieldDefinition, draft: ModeloDraft) -> object | None:
-    """Project the typed Exterior period into the three official detail fields."""
-    if draft.modelo != form_for_role("iva.one_stop_shop") or not draft.period.registry_token.startswith("EXT-"):
+def _scheme_period_value(field: ExportFieldDefinition, draft: ModeloDraft) -> object | None:
+    """Project a scheme-qualified filing period into the part its design row prints."""
+    period = draft.period
+    if field.scheme_period_part is None or period.scheme_quarter is None:
         return None
-    if "2-ejercicio-y-periodo-ejercicio" in field.id:
-        return draft.period.filing_year
-    if "2-ejercicio-y-periodo-tipo-de-periodo" in field.id:
-        return "T"
-    if "2-ejercicio-y-periodo-periodo" in field.id:
-        return int(_draft_period_code(draft))
-    return None
+    match field.scheme_period_part:
+        case "filing_year":
+            return period.filing_year
+        case "period_type":
+            return field.scheme_period_type
+        case "quarter_ordinal":
+            return period.scheme_quarter_ordinal
 
 
 def _casilla_field_value(field: ExportFieldDefinition, casilla_values: dict[CasillaId, object]) -> object:
@@ -435,14 +436,7 @@ def _draft_filing_year(draft: ModeloDraft) -> str:
 
 
 def _draft_period_code(draft: ModeloDraft) -> str:
-    registry_token = draft.period.registry_token
-    if (
-        draft.modelo == form_for_role("iva.one_stop_shop")
-        and registry_token.startswith("EXT-")
-        and registry_token.endswith("T")
-    ):
-        return f"{int(registry_token.removeprefix('EXT-').removesuffix('T')):02d}"
-    return registry_token
+    return draft.period.registry_token
 
 
 def _draft_period_start_date(draft: ModeloDraft) -> str:

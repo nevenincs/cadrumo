@@ -11,7 +11,6 @@ enum/Decimal channel mismatch is rejected at the binding boundary.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
 
@@ -20,7 +19,7 @@ import pytest
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 from ....core.aggregation import BindingSourceKind
-from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from ....domain.calculations.registry.ids import BindingId
 from ....domain.calculations.registry.schema import BindingDefinition, FormulaDefinition, RegistrySnapshot
@@ -37,13 +36,6 @@ from ..profile_binding import resolve_profile_sourced_bindings
 from ..profile_derived_facts import ProfileBindingResolutionError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
-
-
-@pytest.fixture
-def authority_operation() -> Iterator[PinnedAuthorityOperation]:
-    """Lease one generation for each profile-binding resolution test."""
-    with bundled_indexed_authority().operation() as operation:
-        yield operation
 
 
 _PROFILE_ID = "10000000-0000-4000-8000-000000000476"

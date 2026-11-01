@@ -19,7 +19,7 @@ from ...core.unit_proportion import is_unit_proportion
 from ...domain.buckets.event import BucketEventId
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.categories.spending_category_catalogue import require_spending_category
-from ...domain.iva.prorrata import PRORRATA_REFERENCE_MAX_LENGTH
+from ...domain.iva.prorrata import ProrrataReferenceText
 from ...domain.transactions.errors import TransactionValidationError
 from ...domain.transactions.model_validation import classification_for_business_share
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
@@ -59,7 +59,7 @@ class LedgerAllocateRequest(BaseModel):
     business_pct: _BusinessShareText
     category_id: Annotated[str, Field(max_length=128)] | None = None
     usage_ratio_id: Annotated[str, Field(max_length=128)] | None = None
-    prorrata_reference: Annotated[str, Field(max_length=PRORRATA_REFERENCE_MAX_LENGTH)] | None = None
+    prorrata_reference: ProrrataReferenceText | None = None
     actor: Annotated[str, Field(min_length=1, max_length=64)] | None = None
 
     @field_validator("business_pct")

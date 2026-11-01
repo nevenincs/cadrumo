@@ -20,7 +20,6 @@ See Also:
 from __future__ import annotations
 
 import json
-from collections.abc import Iterator
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -38,7 +37,7 @@ from .....core.period import Period
 from .....core.prorrata_register import ProrrataProvisionalProvenance, ProrrataRegisterRegime
 from .....core.resources.bundled_data import bundled_path
 from .....core.result_disposition import ResultDisposition
-from .....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from .....domain.calculations.registry.authority import PinnedAuthorityOperation
 from .....domain.calculations.registry.binding_targets import sole_bound_casilla
 from .....domain.calculations.registry.iva_compensation_annual_partition_bindings import (
     M303_COMPENSATION_RESULTADO_CASILLA as M303_RESULTADO_CASILLA,
@@ -89,12 +88,6 @@ _MANUAL_CURRENT_YEAR_TOTAL = Decimal("45000.00")
 _MANUAL_CASILLA_44_REGULARIZACION = Decimal("-217.60")
 _M303_BINDING_ID = "modelo-303-prorrata-regularizacion-casilla-44"
 _M390_BINDING_ID = "modelo-390-prorrata-regularizacion-anual"
-
-
-@pytest.fixture
-def authority_operation() -> Iterator[PinnedAuthorityOperation]:
-    with bundled_indexed_authority().operation() as operation:
-        yield operation
 
 
 def _oracle_payload() -> dict[str, Any]:

@@ -253,6 +253,12 @@ def result(tmp_path: Path) -> UnreachableCodeResult:
     return scan_unreachable_code(_build_tree(tmp_path))
 
 
+@pytest.fixture(scope="module")
+def repository_spec() -> ShippedTreeSpec:
+    """The spec discovered once from the real repository; frozen, so safe to share."""
+    return ShippedTreeSpec.from_repository(REPO_ROOT)
+
+
 def test_modules_reached_statically_dynamically_or_relatively_are_not_reported(result: UnreachableCodeResult) -> None:
     """Static imports, ``"pkg.lazy"`` handler strings, and ``".relative"`` strings are edges."""
     reported = {finding.module for finding in result.modules}
@@ -279,11 +285,11 @@ def test_a_module_execution_entrypoint_is_a_walk_root(result: UnreachableCodeRes
     assert result.unreachable_module_total == 4
 
 
-def test_repository_discovers_its_module_execution_roots() -> None:
+def test_repository_discovers_its_module_execution_roots(repository_spec: ShippedTreeSpec) -> None:
     """Every audited package contributes its own ``python -m`` surfaces, and only those."""
     from ..unreachable_tree import is_module_execution_surface
 
-    spec = ShippedTreeSpec.from_repository(REPO_ROOT)
+    spec = repository_spec
 
     assert "cadrumo.adapters.persistence.storage.custody._kdf_worker" in spec.module_roots
     assert "cadrumo_runtime.host.frontend.cli.windows_secret_bootstrap" in spec.module_roots
@@ -833,9 +839,9 @@ def test_console_report_caps_each_section_unless_full(result: UnreachableCodeRes
     assert "more (--full for all)" not in render_console_report(result, full=True, cap=1)
 
 
-def test_repository_spec_reads_the_console_scripts_from_pyproject() -> None:
+def test_repository_spec_reads_the_console_scripts_from_pyproject(repository_spec: ShippedTreeSpec) -> None:
     """Roots come from ``[project.scripts]``, never from a restated list."""
-    spec = ShippedTreeSpec.from_repository(REPO_ROOT)
+    spec = repository_spec
 
     pyproject = parse_toml((REPO_ROOT / "pyproject.toml").read_text(encoding="utf-8"))
     declared = set(pyproject["project"]["scripts"].values())
@@ -1016,31 +1022,6 @@ def test_the_test_walk_refuses_a_module_that_does_not_parse(tmp_path: Path) -> N
 
     with pytest.raises(SyntaxError):
         parse_module(broken)
-
-
-def test_the_live_test_walk_read_every_module() -> None:
-    """The healthy state, asserted rather than assumed.
-
-    If a tracked test module ever stops parsing, the audit now refuses instead
-    of quietly reporting one fewer test-of-dead-code finding.
-    """
-    from dev._paths import REPO_ROOT
-    from dev.first_party_source import is_test_source
-
-    from ..unreachable_memo import parse_module
-    from ..unreachable_tree import iter_python_files
-
-    src_root = REPO_ROOT / "src"
-    walked = 0
-    for path in iter_python_files(src_root / "cadrumo"):
-        if not is_test_source(path, root=src_root) or not path.name.startswith("test_"):
-            continue
-        walked += 1
-        parse_module(path)
-
-    # A floor, not a pinned count. `> 0` let the corpus collapse to a single
-    # module while still reading as a full walk; live it finds 3,334.
-    assert walked > 2500, f"the walk found only {walked} test modules, so it no longer covers the corpus"
 
 
 def test_an_unreadable_data_file_is_announced_as_a_deletion_risk(

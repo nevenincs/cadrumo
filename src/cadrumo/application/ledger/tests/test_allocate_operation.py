@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from contextlib import asynccontextmanager
 from datetime import date
 from decimal import Decimal
@@ -262,3 +263,44 @@ def test_an_allocation_share_keeps_the_fraction_digits_it_has(share: str) -> Non
     request = operation.LedgerAllocateRequest(profile_id=_PROFILE, transaction_id="a" * 12, business_pct=share)
 
     assert request.business_pct == share
+
+
+@pytest.mark.usefixtures("operation")
+def test_an_allocation_prorrata_reference_must_use_the_reference_grammar() -> None:
+    def submitted(reference: str) -> str:
+        return json.dumps(
+            {
+                "profile_id": str(_PROFILE),
+                "transaction_id": "a" * 12,
+                "business_pct": "0.5",
+                "prorrata_reference": reference,
+            },
+        )
+
+    accepted = operation.LedgerAllocateRequest.model_validate_json(submitted(" prorrata:2026:provisional:general "))
+    assert accepted.prorrata_reference == "prorrata:2026:provisional:general"
+    sectoral = operation.LedgerAllocateRequest.model_validate_json(
+        submitted("prorrata:2026:provisional:especial:sector-retail"),
+    )
+    assert sectoral.prorrata_reference == "prorrata:2026:provisional:especial:sector-retail"
+
+    for malformed in (
+        "telefonia_movil",
+        "prorrata:1999:provisional:general",
+        "prorrata:2026:usage_ratio_personal:general",
+        "prorrata:2026:provisional:general:sector with spaces",
+        "prorrata:2026:provisional:general:" + "s" * 128,
+    ):
+        with pytest.raises(ValidationError, match="prorrata"):
+            operation.LedgerAllocateRequest.model_validate_json(submitted(malformed))
+
+
+@pytest.mark.usefixtures("operation")
+def test_an_allocation_prorrata_reference_is_bounded_before_it_is_parsed() -> None:
+    with pytest.raises(ValidationError, match="at most 128 characters"):
+        operation.LedgerAllocateRequest(
+            profile_id=_PROFILE,
+            transaction_id="a" * 12,
+            business_pct="0.5",
+            prorrata_reference="p" * 129,
+        )

@@ -311,3 +311,35 @@ def test_a_module_vulture_cannot_parse_makes_the_scan_unavailable(tmp_path: Path
     assert partial.findings == ()
     assert "skipped 1 module(s)" in partial.reason
     assert "src/cadrumo/broken.py (invalid decimal literal" in partial.reason
+
+
+def test_the_shared_verdict_follows_an_edit_and_never_shares_an_error(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The run-wide verdict is keyed on what vulture is offered: an edit rescans, a tool error stays private."""
+    from dev.quality import shared_scan
+
+    from .. import dead_code
+
+    root = tmp_path.resolve()
+    package = _populated_tree(root)
+    cache = root / "run-cache"
+    monkeypatch.setattr(dead_code, "REPO_ROOT", root)
+    monkeypatch.setattr(shared_scan, "_memo", {})
+    monkeypatch.setenv("CADRUMO_RUN_ARTIFACT_ROOT", str(cache))
+
+    def published() -> int:
+        return len(list((cache / "audit-dead-code-vulture").glob("*/result.pickle")))
+
+    first = run_dead_code_scan(root)
+    (package / "dead.py").write_text("import json\n", encoding="utf-8")
+    edited = run_dead_code_scan(root)
+
+    assert [finding.message for finding in first.findings] == ["unused import 'os'"]
+    assert [finding.message for finding in edited.findings] == ["unused import 'json'"]
+    assert published() == 2
+
+    (package / "broken.py").write_text("x = 1_\n", encoding="utf-8")
+
+    assert run_dead_code_scan(root).outcome is DeadCodeOutcome.ERROR
+    assert published() == 2, "a tool error says nothing about the tree and must not be served to the run"

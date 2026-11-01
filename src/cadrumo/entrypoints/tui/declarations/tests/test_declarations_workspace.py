@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import ast
 import threading
-from collections.abc import Iterator
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -37,7 +36,7 @@ from .....core.casilla_id import validated_casilla_id
 from .....core.external_constants import OutputLanguage
 from .....core.i18n.render import tr
 from .....core.period import Period
-from .....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from .....domain.calculations.registry.authority import PinnedAuthorityOperation
 from .....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionCatalogue,
@@ -118,13 +117,6 @@ _EXPECTED = {
         "Benyújtás rögzítve",
     ),
 }
-
-
-@pytest.fixture
-def authority_operation() -> Iterator[PinnedAuthorityOperation]:
-    """Keep one indexed authority generation live for each TUI projection test."""
-    with bundled_indexed_authority().operation() as operation:
-        yield operation
 
 
 def _projection(

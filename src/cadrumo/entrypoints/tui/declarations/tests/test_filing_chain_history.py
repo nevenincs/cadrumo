@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import UTC, datetime
 
 import pytest
@@ -22,7 +21,7 @@ from .....application.operator_actions.catalogue import lookup_action
 from .....application.operator_actions.models import ActionReference
 from .....core.i18n.render import tr
 from .....core.period import Period
-from .....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from .....domain.calculations.registry.authority import PinnedAuthorityOperation
 from .....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionCatalogue,
@@ -60,13 +59,6 @@ _RECONCILED_AT = datetime(2026, 5, 5, 9, tzinfo=UTC)
 _OVERRIDDEN_AT = datetime(2026, 5, 6, 9, tzinfo=UTC)
 _CLEARED_AT = datetime(2026, 5, 7, 9, tzinfo=UTC)
 _PERIOD = Period.from_year_and_code(2026, "1T")
-
-
-@pytest.fixture
-def authority_operation() -> Iterator[PinnedAuthorityOperation]:
-    """Keep one indexed authority generation live for the projection."""
-    with bundled_indexed_authority().operation() as operation:
-        yield operation
 
 
 def _revision(

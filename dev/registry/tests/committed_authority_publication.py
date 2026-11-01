@@ -27,7 +27,6 @@ from cadrumo.core.hashing import hash_file
 from cadrumo.domain.calculations.registry.authority_store import AuthorityDescriptor, AuthorityStoreError
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.tests.run_artifact import run_artifact
-from dev.cache_root import dev_cache_dir
 
 from ..compiler.authority import AuthoritySourceSet
 from ..compiler.compiler_source_tree import compiler_source_tree_digest
@@ -64,13 +63,13 @@ class RunPublishedAuthority:
 
 def committed_authority_publication() -> RunPublishedAuthority:
     """Return the publication of the committed bundled sources, publishing it only if no current one exists."""
-    return published_authority(AuthoritySourceSet.bundled(), cache_root=dev_cache_dir("run-artifacts"))
+    return published_authority(AuthoritySourceSet.bundled())
 
 
 def published_authority(
     sources: AuthoritySourceSet,
     *,
-    cache_root: Path,
+    cache_root: Path | None = None,
     publish: AuthorityPublisher | None = None,
 ) -> RunPublishedAuthority:
     """Admit the run artifact publishing ``sources``, publishing it once if none is current.

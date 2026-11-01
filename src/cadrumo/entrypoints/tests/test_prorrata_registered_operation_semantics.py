@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncGenerator, Iterator
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
@@ -33,7 +33,7 @@ from ...application.prorrata_register.result_contracts import ProrrataOperationE
 from ...application.prorrata_register.result_projections import project_prorrata_mutation_result
 from ...application.prorrata_register.service import ProrrataRegisterService
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
-from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...domain.calculations.registry.prorrata_register_catalogue import prorrata_sector_letters
 from ...domain.prorrata_register.register import SectorDefinition
@@ -48,12 +48,6 @@ _PROFILE_ID = UUID("517e31f8-91b9-47b6-9ac1-3e12cc773c4f")
 _runtime_profile = bucket_scoped_runtime_profile_fixture(str(_PROFILE_ID))
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
-
-
-@pytest.fixture
-def authority_operation() -> Iterator[PinnedAuthorityOperation]:
-    with bundled_indexed_authority().operation() as operation:
-        yield operation
 
 
 @dataclass

@@ -11,6 +11,7 @@ from ...core.country_code import CountryCodeAlpha2
 from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.parsing.dates import require_iso8601_date
+from ...domain.iva.prorrata import ProrrataReferenceText
 from ...domain.transactions.enums import BusinessClassification
 from ...domain.transactions.own_accounts import OwnAccountId
 from ..review.filter import LedgerReviewStatus
@@ -74,7 +75,7 @@ class LedgerAddRequest(BaseModel):
     recargo_amount: _AddOptionalDecimalText = None
     irpf_category: _AddOptionalText = None
     usage_ratio_id: _AddOptionalId = None
-    prorrata_reference: Annotated[str, Field(max_length=256)] | None = None
+    prorrata_reference: ProrrataReferenceText | None = None
     art_104_tres_exclusion: Annotated[str, Field(max_length=128)] | None = None
     input_classification: Annotated[str, Field(max_length=128)] | None = None
     prorrata_sector: Annotated[str, Field(max_length=64)] | None = None

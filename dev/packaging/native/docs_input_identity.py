@@ -8,6 +8,8 @@ import os
 import unicodedata
 from pathlib import Path
 
+from .action_cache import enrolled_input_paths
+
 
 def _canonical_file(path: Path) -> Path:
     if not path.is_absolute() or ".." in path.parts:
@@ -55,8 +57,8 @@ def shared_docs_inputs(inputs: Path, authority: tuple[Path, Path], *, source: Pa
     for role, path in zip(("authority/descriptor", "authority/database"), selected, strict=True):
         enroll(role, path)
     names: set[str] = set()
-    for line in inputs.read_text(encoding="utf-8").splitlines():
-        path = _canonical_file(Path(line))
+    for enrolled in enrolled_input_paths(inputs, resolve_roots=True):
+        path = _canonical_file(enrolled)
         if path.is_relative_to(build):
             continue
         if path in selected:

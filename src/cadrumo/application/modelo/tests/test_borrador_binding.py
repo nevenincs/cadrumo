@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import hashlib
-from collections.abc import Generator, Iterator
+from collections.abc import Generator
 from datetime import UTC, datetime
 from decimal import Decimal
 
@@ -14,7 +14,7 @@ from ....core.aggregation import BindingSourceKind
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.errors.error_codes import ErrorCategory, get_registered_error_code
 from ....core.period import Period
-from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.ids import BindingId
 from ....domain.calculations.registry.schema import ModeloRevision, RegistrySnapshot
@@ -116,13 +116,6 @@ class _InMemoryBorradorSnapshotRepository:
 @pytest.fixture
 def snapshot_repository() -> Generator[Borrador100SnapshotRepository]:
     yield _InMemoryBorradorSnapshotRepository(bucket_id=_BUCKET_ID)
-
-
-@pytest.fixture
-def authority_operation() -> Iterator[PinnedAuthorityOperation]:
-    """Lease one indexed authority generation for each binding-resolution test."""
-    with bundled_indexed_authority().operation() as operation:
-        yield operation
 
 
 def _modelo_100_registry_snapshot() -> RegistrySnapshot:

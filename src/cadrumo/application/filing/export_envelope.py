@@ -39,9 +39,6 @@ from .producer_snapshot import FilingProducerSnapshot
 #: The governed fact holding the envelope's declared extents.
 _FORM_ROW_CODES_FACT = "form-row-codes"
 
-#: The registry token of a period qualified by its special-regime scheme.
-_SCHEME_PERIOD_PREFIX = "EXT-"
-
 _ENVELOPE_GRAMMAR_LITERALS: Mapping[FilingEnvelopePrefixRole, str] = {
     FilingEnvelopePrefixRole.OPENING_TAG: "<T",
     FilingEnvelopePrefixRole.DISCRIMINANT: "0",
@@ -196,11 +193,12 @@ def envelope_period_token(period: Period) -> str:
 
 def _declared_envelope_period_token(period: Period, *, envelope: FilingEnvelopeDefinition | None) -> str:
     """Interpret a scheme-qualified quarter only under an envelope that declares printing it bare."""
-    if not period.registry_token.startswith(_SCHEME_PERIOD_PREFIX):
+    scheme_quarter = period.scheme_quarter
+    if scheme_quarter is None:
         return envelope_period_token(period)
     if envelope is None or envelope.scheme_period_form != "bare_quarter":
         raise FilingExportValidationError("a scheme quarter requires an envelope that declares its bare quarter")
-    return period.registry_token.removeprefix(_SCHEME_PERIOD_PREFIX)
+    return scheme_quarter.value
 
 
 def envelope_closer_bytes(*, modelo: Modelo, period: Period, envelope: FilingEnvelopeDefinition | None = None) -> bytes:
@@ -309,10 +307,8 @@ def render_declared_prefix(
     """Render the declared prefix fields to their exact byte extent, or raise."""
     if any(field.role is FilingEnvelopePrefixRole.DECLARANT_TAX_ID for field in prefix_fields):
         token = _declared_envelope_period_token(period, envelope=envelope)
-        if token not in {"1T", "2T", "3T", "4T", *(f"{month:02d}" for month in range(1, 13))}:
-            raise FilingExportValidationError(
-                "declarant envelope period is outside the official monthly/quarterly range"
-            )
+        if envelope is None or envelope.period_tokens is None or token not in envelope.period_tokens:
+            raise FilingExportValidationError("declarant envelope period is outside the range its design lists")
     prefix = b"".join(
         render_envelope_prefix_field(
             field.role,

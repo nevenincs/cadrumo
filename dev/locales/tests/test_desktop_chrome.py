@@ -17,7 +17,7 @@ import yaml
 
 from dev._paths import REPO_ROOT
 
-from .. import desktop_chrome
+from .. import chrome_projection, desktop_chrome
 from .._paths import LOCALES_DIR
 from ..desktop_chrome import (
     DESKTOP_CHROME_AWAITING_CONSUMER,
@@ -130,9 +130,9 @@ def test_generation_composes_runtime_and_service_catalogues(tmp_path: Path, monk
     tax = _catalogues(tmp_path / "tax", {"en": {"desktop.rail.search": "Search"}})
     runtime = _catalogues(tmp_path / "runtime", {"en": {"desktop.attendance.network": "Network access"}})
     service = _catalogues(tmp_path / "service", {"en": {"desktop.agent.title": "Agent"}})
-    monkeypatch.setattr(desktop_chrome, "LOCALES_DIR", tax)
-    monkeypatch.setattr(desktop_chrome, "RUNTIME_LOCALES_DIR", runtime)
-    monkeypatch.setattr(desktop_chrome, "SERVICE_LOCALES_DIR", service)
+    monkeypatch.setattr(chrome_projection, "LOCALES_DIR", tax)
+    monkeypatch.setattr(chrome_projection, "RUNTIME_LOCALES_DIR", runtime)
+    monkeypatch.setattr(chrome_projection, "SERVICE_LOCALES_DIR", service)
     expected = {
         "desktop.rail.search": "Search",
         "desktop.attendance.network": "Network access",
@@ -153,9 +153,9 @@ def test_runtime_catalogue_collisions_refuse_generation(
     }
     values[colliding_owner]["desktop.attendance.network"] = "Conflicting network access"
     roots = {owner: _catalogues(tmp_path / owner, {"en": leaves}) for owner, leaves in values.items()}
-    monkeypatch.setattr(desktop_chrome, "LOCALES_DIR", roots["tax"])
-    monkeypatch.setattr(desktop_chrome, "RUNTIME_LOCALES_DIR", roots["runtime"])
-    monkeypatch.setattr(desktop_chrome, "SERVICE_LOCALES_DIR", roots["service"])
+    monkeypatch.setattr(chrome_projection, "LOCALES_DIR", roots["tax"])
+    monkeypatch.setattr(chrome_projection, "RUNTIME_LOCALES_DIR", roots["runtime"])
+    monkeypatch.setattr(chrome_projection, "SERVICE_LOCALES_DIR", roots["service"])
 
     with pytest.raises(LocaleError, match="catalogue keys overlap"):
         desktop_chrome_strings(roots["tax"], keys=frozenset({"desktop.attendance.network"}), locales=("en",))
@@ -164,9 +164,9 @@ def test_runtime_catalogue_collisions_refuse_generation(
 def test_missing_runtime_translation_refuses_generation(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     tax = _catalogues(tmp_path / "tax", {"en": {}, "es": {}})
     runtime = _catalogues(tmp_path / "runtime", {"en": {"desktop.attendance.network": "Network access"}, "es": {}})
-    monkeypatch.setattr(desktop_chrome, "LOCALES_DIR", tax)
-    monkeypatch.setattr(desktop_chrome, "RUNTIME_LOCALES_DIR", runtime)
-    monkeypatch.setattr(desktop_chrome, "SERVICE_LOCALES_DIR", tmp_path / "absent-service")
+    monkeypatch.setattr(chrome_projection, "LOCALES_DIR", tax)
+    monkeypatch.setattr(chrome_projection, "RUNTIME_LOCALES_DIR", runtime)
+    monkeypatch.setattr(chrome_projection, "SERVICE_LOCALES_DIR", tmp_path / "absent-service")
 
     with pytest.raises(LocaleError, match=r"es:desktop\.attendance\.network is absent"):
         desktop_chrome_strings(tax, keys=frozenset({"desktop.attendance.network"}), locales=("en", "es"))

@@ -23,7 +23,6 @@ previous attempt produced.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import date
 from decimal import Decimal
 
@@ -32,7 +31,7 @@ from pydantic import ValidationError
 
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 
-from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.governed_fact_scope import governed_facts_in_scope
 from ....domain.invoices.enums import IvaRate
 from ....domain.invoices.models import Invoice
@@ -48,13 +47,6 @@ def _pinned_operation() -> PinnedAuthorityOperation:
     scoped = governed_facts_in_scope()
     assert isinstance(scoped, PinnedAuthorityOperation)
     return scoped
-
-
-@pytest.fixture
-def authority_operation() -> Iterator[PinnedAuthorityOperation]:
-    """Lease one generation for invoice-to-casilla binding projections."""
-    with bundled_indexed_authority().operation() as operation:
-        yield operation
 
 
 _BASE = Decimal("5000.00")

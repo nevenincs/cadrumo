@@ -11,9 +11,11 @@ from __future__ import annotations
 import pytest
 
 from dev._paths import REPO_ROOT
+from dev.first_party_source import is_test_source
 
 from ..unreachable_code import run_unreachable_code_scan
 from ..unreachable_models import ModuleReach, UnreachableCodeOutcome
+from ..unreachable_tree import iter_python_files
 
 # One real scan walks every shipped, test and tooling module. Like the sibling
 # whole-tree correctness scans, it runs to completion without an elapsed ceiling.
@@ -33,8 +35,22 @@ def test_real_scan_over_the_tree_returns_a_typed_outcome_with_real_findings(
     The same scan also proves the reference walk read every file. If that ever
     fails, the findings were computed over a corpus missing the named files, and
     the run should be repeated rather than acted on.
+
+    The scan parses every test module under the audited packages and refuses on
+    one that does not parse, so a completed run is also the proof that the test
+    walk read them all. What it cannot show is that the corpus did not collapse,
+    so the discovered test-module count is floored here.
     """
     result = run_unreachable_code_scan(_REPO_ROOT)
+    src_root = _REPO_ROOT / "src"
+    test_modules = [
+        path
+        for path in iter_python_files(src_root / "cadrumo")
+        if is_test_source(path, root=src_root) and path.name.startswith("test_")
+    ]
+    # A floor, not a pinned count. `> 0` let the corpus collapse to a single
+    # module while still reading as a full walk; live it finds 3,334.
+    assert len(test_modules) > 2500, f"the walk found only {len(test_modules)} test modules"
 
     # The absence claim below is satisfied by an EMPTY stderr, so a scan that
     # read nothing at all - a mis-resolved root, a walk that short-circuits -

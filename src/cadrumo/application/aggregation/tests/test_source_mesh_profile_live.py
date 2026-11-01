@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from decimal import Decimal
@@ -23,7 +22,7 @@ from ....core.aggregation import CalculationSourceLineageRole
 from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.config import Settings
 from ....core.period import Period
-from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.errors import FilingYearOutsideSupportEnvelopeError
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.iva_compensation.reconciliation import (
@@ -38,13 +37,6 @@ from ..source_mesh import CalculationSourceContext
 from ..source_profile import ProfileSourceResolver
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
-
-
-@pytest.fixture
-def authority_operation() -> Iterator[PinnedAuthorityOperation]:
-    """Lease one generation through direct and source-mesh profile resolution."""
-    with bundled_indexed_authority().operation() as operation:
-        yield operation
 
 
 _CLOCK = datetime(2026, 5, 21, 10, 0, 0, tzinfo=UTC)

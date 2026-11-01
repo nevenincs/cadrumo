@@ -519,8 +519,6 @@ export function InvoiceEditor({
         closeLabel={t("desktop.ledger.invoices.close")}
         className="ledger-invoice-editor gap-5"
         aria-describedby={undefined}
-        // Escape is the sheet's own dismissal, which asks before edits go.
-        onEscapeKeyDown={(event) => event.preventDefault()}
         onInteractOutside={(event) => {
           if (sending) event.preventDefault();
         }}

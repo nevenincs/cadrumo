@@ -2,23 +2,15 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator
-
 import pytest
 
 from ....core.period import Period
-from ...calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ...calculations.registry.authority import PinnedAuthorityOperation
 from ...calculations.registry.errors import RegistryValidationError
 from ...calculations.registry.tests.published_authority import PublishedGovernedFactSource
 from ..m303_settlement import is_m303_annual_settlement_period, m303_annual_settlement_period_order
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
-
-
-@pytest.fixture
-def authority_operation() -> Iterator[PinnedAuthorityOperation]:
-    with bundled_indexed_authority().operation() as operation:
-        yield operation
 
 
 @pytest.mark.parametrize("filing_year", PublishedGovernedFactSource().supported_filing_years().years)

@@ -16,12 +16,14 @@ from cadrumo.core.filing_projection_ref import (
     M303ProrrataActivityProjectionRef,
 )
 from cadrumo.core.hashing import canonical_json_bytes
+from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.export_literal_fact import ExportLiteralFact
 from cadrumo.domain.calculations.registry.export_value_policy import ExportValuePolicy
 from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding
 from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefinition, ExportLayoutDefinition
+from dev.quality.shared_scan import require_immutable
 
 from ..pipeline import export_fragment_provenance
 from ..pipeline.export_fragment_provenance import (
@@ -952,3 +954,27 @@ def test_an_unattached_verdict_moves_no_attested_byte() -> None:
 
     assert b'"verdict"' not in payload
     assert load_export_fragment_provenance_manifest(payload) == manifest
+
+
+def test_a_committed_manifest_is_loaded_once_per_content_as_a_frozen_value() -> None:
+    raw = bundled_path(
+        "registry", "aeat", "modelos", "303", "revisions", "2026-y-siguientes", "export", "_generation.provenance.json"
+    ).read_bytes()
+
+    first = load_export_fragment_provenance_manifest(raw)
+    again = load_export_fragment_provenance_manifest(bytes(bytearray(raw)))
+
+    assert again is first, "equal manifest bytes must share one validated load"
+    require_immutable(first)
+    assert export_fragment_provenance_manifest_json_bytes(first) == raw
+
+
+def test_a_refused_manifest_is_refused_again_rather_than_remembered() -> None:
+    raw = bundled_path(
+        "registry", "aeat", "modelos", "303", "revisions", "2026-y-siguientes", "export", "_generation.provenance.json"
+    ).read_bytes()
+    not_canonical = raw + b"\n"
+
+    for _attempt in range(2):
+        with pytest.raises(RegistryValidationError, match="not canonical JSON"):
+            load_export_fragment_provenance_manifest(not_canonical)

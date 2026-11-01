@@ -53,7 +53,6 @@ from __future__ import annotations
 
 import gzip
 import json
-import re
 import shutil
 from collections.abc import Mapping
 from dataclasses import dataclass
@@ -74,18 +73,17 @@ from dev.deploy.docs_site_languages import (
     source_root_build_environment,
     translated_roots_compile_command,
 )
-from dev.docs.build_paths import docs_html_root
 
 from ..build import docs_build_language, pagefind_index_mode, resolve_record_injector
 from ..pagefind_index import DECIDED_INJECTED_RECORD_KINDS, SHARED_INDEX_LANGUAGE, build_shared_search_index
 from ..pagefind_inject import InjectionStats
 from ._http_serve_support import serve_directory
+from .built_site import built_documentation_site
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
 
 # dev/docs/tests -> parents[3] is the repo root.
 _REPO_ROOT = REPO_ROOT
-_BUILT_HTML = docs_html_root(_REPO_ROOT)
 
 #: Record kinds the shipped index is required to carry. A kind absent from the
 #: built index means a reader cannot reach that surface at all.
@@ -219,49 +217,27 @@ def _indexed_page_baseline(scratch: Path, roots: Mapping[str, Path]) -> int:
 
 
 def _root_page_corpus(apex: Path, language: str) -> Path:
-    """Write one published root's page corpus, rendered in that root's own language.
+    """Write one published root's page corpus from the run's build of that language.
 
     The root is ``apex/<language>``, which is where the publisher puts it and
-    what gives its pages their addresses in the one index.
-
-    Prefers the real localized root at ``CADRUMO_DOCS_BUILD_ROOT/html/<language>`` when the
-    machine has built one. Otherwise it takes the real English pages and
-    retargets the single signal the index pass reads to decide a page's
-    language -- the ``<html lang>`` attribute, which Sphinx writes from
-    ``CADRUMO_DOCS_LANGUAGE`` and which the pass refuses to disagree with. The
-    localized prose differs, but prose is not the property under test: this gate
-    measures what a reader of each language reaches through the language filter,
-    and the language attribute alone decides which filter value a page carries.
-    Building a real localized Sphinx root per language here would cost minutes
-    each, and the localized builds themselves are already covered by the
-    ``test_docs_build_localized_<lang>`` gates.
+    what gives its pages their addresses in the one index. Its pages are the
+    first few top-level pages of the run's shared documentation compile
+    (:func:`~dev.docs.tests.built_site.built_documentation_site`), which carries
+    every published language: each page is rendered in its root's own language
+    and states it in the ``<html lang>`` attribute the index pass reads to decide
+    which filter value the page carries. Only a few pages are copied; the
+    property under test is what a reader of each language reaches through the
+    language filter, not how many pages a root has.
     """
     site = apex / language
     site.mkdir(parents=True)
-    localized_root = _BUILT_HTML / language
-    sources = (
-        scan_directory(localized_root, pattern="*.html", recursive=True) if language != OutputLanguage.EN.value else ()
+    root = built_documentation_site().language_root(language)
+    sources = sorted(scan_directory(root, pattern="*.html"), key=lambda path: path.name)[:_PAGES_PER_ROOT]
+    assert len(sources) == _PAGES_PER_ROOT, (
+        f"need {_PAGES_PER_ROOT} built pages under {root} to assemble a root corpus; found {len(sources)}"
     )
-    if len(sources) >= _PAGES_PER_ROOT:
-        for source in sources[:_PAGES_PER_ROOT]:
-            (site / source.name).write_bytes(source.read_bytes())
-        return site
-    if not _BUILT_HTML.is_dir():
-        pytest.fail(
-            f"no built documentation HTML at {_BUILT_HTML}; this gate reads the shipped "
-            "artefact, so it needs a real build to read. Run the docs build first.",
-        )
-    english = scan_directory(_BUILT_HTML, pattern="*.html")[:_PAGES_PER_ROOT]
-    if len(english) < _PAGES_PER_ROOT:
-        pytest.fail(
-            f"need {_PAGES_PER_ROOT} built pages under {_BUILT_HTML} to assemble a root corpus; "
-            "this gate reads a real artefact, so it needs a real build to read.",
-        )
-    for source in english:
-        text = source.read_text(encoding="utf-8", errors="replace")
-        retargeted, count = re.subn(r'(<html[^>]*?)\blang="[^"]*"', rf'\1lang="{language}"', text, count=1)
-        assert count == 1, f"built page {source.name} carries no <html lang> attribute to retarget"
-        (site / source.name).write_text(retargeted, encoding="utf-8")
+    for source in sources:
+        (site / source.name).write_bytes(source.read_bytes())
     return site
 
 

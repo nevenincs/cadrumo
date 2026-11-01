@@ -8,7 +8,10 @@ if(NOT WIN32)
 endif()
 set(CADRUMO_BUILD_HELPER "${PROJECT_SOURCE_DIR}/dev/packaging/native/cmake_build.py")
 set(CADRUMO_HELPER "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.cmake_build)
-file(GLOB_RECURSE native_helper_inputs CONFIGURE_DEPENDS "${PROJECT_SOURCE_DIR}/dev/packaging/native/*.py")
+# Helper modules only: their tests/ siblings never run inside an action, so a
+# new or edited test neither reconfigures nor reruns the distribution action.
+file(GLOB native_helper_inputs CONFIGURE_DEPENDS "${PROJECT_SOURCE_DIR}/dev/packaging/native/*.py"
+  "${PROJECT_SOURCE_DIR}/dev/packaging/native/platforms/*.py")
 include("${PROJECT_SOURCE_DIR}/native/cmake/Contract.cmake")
 set(shared_inputs "${PROJECT_BINARY_DIR}/build-paths.json"
   "${PROJECT_SOURCE_DIR}/dev/packaging/native/build_paths.py" "${CADRUMO_BUILD_HELPER}"

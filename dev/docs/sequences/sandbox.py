@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import atexit
 import os
 import shutil
+import tempfile
 from base64 import b64encode
 from collections.abc import Generator, Sequence
 from contextlib import chdir, contextmanager
@@ -39,6 +41,7 @@ from cadrumo.application.user_profile.custody_ports import create_profile_custod
 from cadrumo.application.user_profile.lifecycle import ProfileCapsuleLifecycle
 from cadrumo.core.config import load_settings, override_settings
 from cadrumo.core.hashing import sha256_hex
+from cadrumo.core.pid_liveness import pid_is_alive
 from cadrumo.core.time.clock import frozen_clock
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from dev._paths import REPO_ROOT
@@ -287,6 +290,51 @@ def _provisioned_sandbox_profile(*, published: bool = False) -> Generator[None]:
             observed_at=observed_at,
         )
         yield
+
+
+@contextmanager
+def owned_scratch_directory(prefix: str) -> Generator[Path]:
+    """Hold one scratch directory under the worktree's temporary root, removed by its owner.
+
+    A sandbox's runtime child or database engine can still hold a handle when
+    its scope ends, which on Windows refuses the removal; ignoring that error
+    is how every interrupted or slow-to-release run left a whole sandbox behind.
+    The directory therefore names its owning process: a removal refused at the
+    end of the scope is retried when the process exits, and any directory of
+    the same prefix whose owner is no longer running is reaped before a new one
+    is made, so a run killed outright is cleaned up by the next one.
+
+    Args:
+        prefix: The scratch family, ending in ``-``; one per kind of sandbox.
+
+    Yields:
+        The empty directory, which this scope owns.
+    """
+    root = prepare_temp_root()
+    _reap_orphaned_scratch(root, prefix)
+    directory = Path(tempfile.mkdtemp(prefix=f"{prefix}{os.getpid()}-", dir=root))
+    try:
+        yield directory
+    finally:
+        shutil.rmtree(directory, ignore_errors=True)
+        if directory.exists():
+            atexit.register(shutil.rmtree, directory, True)
+
+
+def _reap_orphaned_scratch(root: Path, prefix: str) -> None:
+    """Remove ``prefix`` scratch directories under ``root`` whose owning process has exited."""
+    for candidate in root.iterdir():
+        owner, separator, _ = candidate.name.removeprefix(prefix).partition("-")
+        if (
+            not candidate.name.startswith(prefix)
+            or not separator
+            or not owner.isdigit()
+            or candidate.is_symlink()
+            or not candidate.is_dir()
+            or pid_is_alive(int(owner))
+        ):
+            continue
+        shutil.rmtree(candidate, ignore_errors=True)
 
 
 def _sandbox_template() -> Path:

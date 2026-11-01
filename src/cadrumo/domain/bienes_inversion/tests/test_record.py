@@ -112,6 +112,17 @@ def test_remaining_regularization_years_disposal_outside_window_is_zero() -> Non
     assert record.remaining_regularization_years(2027, parameters=EXPLICIT_PARAMS) == 0
 
 
+def test_a_stored_identifier_longer_than_the_request_bound_still_loads() -> None:
+    """Only the write request bounds the identifier, so a register saved before that bound still hydrates."""
+    long_identifier = "i" * 129
+
+    register = BienesInversionIvaRegister.model_validate_json(
+        BienesInversionIvaRegister(records=(_record(long_identifier, acquisition_ledger_id="ledger-1"),)).model_dump_json(),
+    )
+
+    assert register.records[0].identifier == long_identifier
+
+
 def test_register_rejects_duplicate_identifiers() -> None:
     """Two records with the same identifier fail register validation."""
     with pytest.raises(pydantic.ValidationError, match="duplicate record identifiers"):

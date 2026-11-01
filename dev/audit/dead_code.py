@@ -48,12 +48,14 @@ from fnmatch import fnmatchcase
 from pathlib import Path
 from typing import Final
 
+import vulture
 from vulture.config import InputError, make_config
 
 from dev._paths import REPO_ROOT, UTF_8
 from dev.exit_codes import ADVISORY_BROKEN, OK
 from dev.first_party_source import DEVELOPMENT_TOOLING, PACKAGING_HOOKS, SOURCE_PACKAGES
 from dev.packaging.command_execution import CommandResult, run_command
+from dev.quality.shared_scan import scanner_identity, shared_scan_result
 
 _UTF_8: Final[str] = UTF_8
 _WHITELIST: Final[str] = "dev/audit/vulture_whitelist.py"
@@ -246,18 +248,30 @@ def offered_module_population(repo_root: Path) -> int:
 
 def _offered_modules_by_target(repo_root: Path) -> dict[str, int]:
     """Count the modules each of :data:`_TARGETS` offers vulture after its exclusions."""
+    return {target: len(modules) for target, modules in _offered_modules(repo_root).items()}
+
+
+def _offered_modules(repo_root: Path) -> dict[str, tuple[Path, ...]]:
+    """List the modules each of :data:`_TARGETS` offers vulture after its exclusions."""
     config = make_config(["--config", str(repo_root / "pyproject.toml"), *_TARGETS])
     patterns = tuple(
         (pattern if any(char in pattern for char in "*?[") else f"*{pattern}*").lower() for pattern in config["exclude"]
     )
-    offered: dict[str, int] = {}
+    offered: dict[str, tuple[Path, ...]] = {}
     for target in _TARGETS:
         candidate = (repo_root / target).resolve()
         modules = (candidate,) if candidate.is_file() else candidate.rglob("*.py") if candidate.is_dir() else ()
-        offered[target] = sum(
-            1 for module in modules if not any(fnmatchcase(str(module).lower(), pattern) for pattern in patterns)
+        offered[target] = tuple(
+            module for module in modules if not any(fnmatchcase(str(module).lower(), pattern) for pattern in patterns)
         )
     return offered
+
+
+def _vulture_inputs(repo_root: Path) -> tuple[Path, ...]:
+    """Every file one vulture run over ``repo_root`` reads: its configuration and each offered module."""
+    root = repo_root.resolve()
+    config = tuple(path for path in (root / "pyproject.toml",) if path.is_file())
+    return (*config, *(module for modules in _offered_modules(root).values() for module in modules))
 
 
 def vulture_command() -> list[str]:
@@ -326,7 +340,26 @@ def run_dead_code_scan(repo_root: Path, *, timeout: float = _VULTURE_TIMEOUT_SEC
     This is the single entry point for every dead-code consumer -- both
     ``dev.audit.dead_weight`` and ``dev.audit.advisory`` call it, so there is
     deliberately no second vulture invocation anywhere in the tree.
+
+    Over this repository the verdict is shared across the run: it is a pure
+    function of the configuration and modules vulture is offered and of the
+    scanner, so it is computed once per distinct content of those and every
+    other process reads it. A tool error is never shared, since a timeout says
+    nothing about the tree. A synthetic tree elsewhere is scanned in place.
     """
+    if repo_root.resolve() != REPO_ROOT:
+        return _scan_dead_code(repo_root, timeout=timeout)
+    return shared_scan_result(
+        "audit-dead-code-vulture",
+        root=REPO_ROOT,
+        inputs=lambda: _vulture_inputs(REPO_ROOT),
+        scanner=scanner_identity(sys.modules[__name__], vulture),
+        compute=lambda: _scan_dead_code(REPO_ROOT, timeout=timeout),
+        publish_if=lambda result: result.outcome is not DeadCodeOutcome.ERROR,
+    )
+
+
+def _scan_dead_code(repo_root: Path, *, timeout: float) -> DeadCodeResult:
     try:
         by_target = _offered_modules_by_target(repo_root)
     except (InputError, OSError, TypeError, ValueError, SystemExit) as exc:

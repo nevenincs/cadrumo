@@ -11,7 +11,6 @@ unanswered, and both surfaces must show that row.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -27,7 +26,7 @@ from cadrumo.application.overview.read_payload import OverviewCalendarRead
 from cadrumo.application.overview.read_request import OverviewReadKind, OverviewReadRequest
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.time.clock import today_madrid
-from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from cadrumo.domain.invoices.enums import IvaRate, PaymentStatus
 from cadrumo.domain.invoices.models import Invoice, InvoiceLine, derive_invoice_id
@@ -65,12 +64,6 @@ _AUTONOMO_FACTS: tuple[UserProfileFact, ...] = (
     UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
     UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
 )
-
-
-@pytest.fixture
-def authority_operation() -> Iterator[PinnedAuthorityOperation]:
-    with bundled_indexed_authority().operation() as operation:
-        yield operation
 
 
 def _sale_above_the_floor() -> Invoice:

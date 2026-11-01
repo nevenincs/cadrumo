@@ -222,6 +222,7 @@ justification = "right"
 signed = false
 design_type = "Num"
 value_policy = "four-digit-year"
+scheme_period_part = "filing_year"
 absent_fill = "spaces"
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021"]
@@ -237,6 +238,8 @@ required = true
 padding = "right_space"
 justification = "left"
 signed = false
+scheme_period_part = "period_type"
+scheme_period_type = "T"
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021"]
 
@@ -253,6 +256,7 @@ justification = "right"
 signed = false
 design_type = "Num"
 value_policy = "enumerated-digits"
+scheme_period_part = "quarter_ordinal"
 absent_fill = "spaces"
 allowed_values = [
     "1",

@@ -1,16 +1,19 @@
 """Reuse a built profile world by copying its settled bytes.
 
 Registering a profile launches a KDF child and publishes a capsule, and most
-tests that do so are about something else. A world is therefore built once per
-pytest worker through the real door, closed so its bytes are at rest, and each
-test receives its own filesystem copy: a mutation, a journal write or a session
-in one copy reaches no other.
+tests that do so are about something else. A profile world is therefore built
+once per test run through the real door, closed so its bytes are at rest, and
+published through the run-wide artifact cache; every worker verifies it and
+each test receives its own filesystem copy: a mutation, a journal write or a
+session in one copy reaches no other.
 
 Three rules keep a copy equivalent to the world it came from:
 
-* A world is private to the process that built it. Profile identity, salt and
-  key are random per registration and the keychain addresses session keys by
-  profile, so two workers must never hold copies of one world.
+* Copies share the world's profile identity, so nothing a copy does may be
+  addressed by the profile alone outside its own root. A sign-in receipt's
+  keychain entry is addressed by the profile and that sign-in's random session
+  identity, and a copy publishes its session without minting a receipt, so
+  concurrent copies in several workers never meet in the keychain.
 * The whole tree is copied, because custody material need not sit under the
   storage root. Only the runtime coordination directory stays behind: the
   installation records in it pin the origin's physical identity, and a copy is
@@ -26,6 +29,7 @@ sign-in on a copy works because the copy holds the real wrapped key.
 
 from __future__ import annotations
 
+import json
 import shutil
 from collections.abc import Callable, Generator, Hashable
 from contextlib import contextmanager
@@ -37,10 +41,12 @@ from uuid import UUID
 
 from .....application.user_profile.login_session import publish_created_profile_session
 from .....core.config import load_settings
+from .....core.errors.hierarchy import CadrumoError
 from .....core.hashing import sha256_hex
 from .....core.storage_taxonomy import StorageCategory
 from .....core.storage_taxonomy_locations import storage_location
 from .....domain.calculations.registry.authority import bundled_indexed_authority
+from .....tests.run_artifact import file_inputs_digest, run_artifact, run_artifact_root
 from ...storage.custody.tests.portable_password_custody import portable_password_custody
 from ...storage.master_key.active_session import close_active_bucket_session, current_active_bucket_session
 from ...storage.sql.engine import dispose_engine
@@ -55,6 +61,7 @@ __all__ = [
     "copied_profile_world",
     "copy_sealed_tree",
     "copy_world_into_storage_root",
+    "derived_profile_world",
     "publish_world_session",
     "sealed_profile_world",
     "sealed_tree",
@@ -66,6 +73,13 @@ _STORAGE_ROOT_NAME = "cadrumo-storage"
 
 _TREES: dict[Hashable, tuple[Path, object]] = {}
 _TREE_HOLDERS: list[TemporaryDirectory[str]] = []
+
+_WORLD_KIND = "sealed-profile-world"
+_WORLD_TREE = "tree"
+_WORLD_RECORD = "world.json"
+#: Every key is its own world rather than a newer version of one, so a run keeps all it publishes.
+_WORLD_RETAIN = 4096
+_WORLDS: dict[str, SealedProfileWorld] = {}
 
 
 @dataclass(frozen=True, slots=True)
@@ -116,35 +130,124 @@ def sealed_tree[Built](
     return origin, built
 
 
+def _register_world(tree: Path, register: Callable[[], str]) -> tuple[str, bytes]:
+    """Register one profile into the empty ``tree`` and leave its bytes at rest."""
+    try:
+        with isolated_profile_storage_root(tmp_path=tree), portable_password_custody():
+            profile_id = register()
+            session = current_active_bucket_session()
+            if session is None or session.bucket_id != profile_id:
+                raise AssertionError("a sealed world's registration must leave its own session live")
+            dek = bytes(session.dek)
+            close_active_bucket_session()
+    finally:
+        dispose_engine()
+    return profile_id, dek
+
+
+def _tree_files(tree: Path) -> list[Path]:
+    return [path for path in tree.rglob("*") if path.is_file()]
+
+
+def _tree_digest(tree: Path) -> str:
+    return file_inputs_digest(_WORLD_KIND, tree, _tree_files(tree))
+
+
+def _read_world(entry: Path) -> SealedProfileWorld | None:
+    """Return the world an entry holds when its record names its tree's exact bytes."""
+    try:
+        record = json.loads((entry / _WORLD_RECORD).read_text(encoding="utf-8"))
+        tree = entry / _WORLD_TREE
+        if not isinstance(record, dict) or record.get("tree") != _tree_digest(tree):
+            return None
+        return SealedProfileWorld(origin=tree, profile_id=str(record["profile_id"]), dek=bytes.fromhex(record["dek"]))
+    except (OSError, ValueError, KeyError, TypeError):
+        return None
+
+
 def sealed_profile_world(key: Hashable, register: Callable[[], str]) -> SealedProfileWorld:
-    """Return this worker's world for ``key``, registering its one profile on first use.
+    """Return this run's world for ``key``, registering its one profile on first use anywhere in the run.
 
     ``register`` runs inside an empty isolated root and returns the profile id
     with that profile's session live, as the registration door leaves it. Its
     key derivations are real Argon2id through the exact custody codec, joined
     in this process rather than launched as a child, because the child is not
-    what any copy goes on to test.
+    what any copy goes on to test. ``key`` must name every input ``register``
+    depends on; it is identified by its ``repr`` together with the authority
+    generation and password a copy opens under.
+
+    The world's synthetic key is recorded beside its tree, because a copy is
+    resumed from it in whichever worker takes the copy; the wrapped key it
+    unlocks opens under the public development test password anyway.
     """
     with bundled_indexed_authority().operation() as operation:
         generation = str(operation.generation)
     password = load_settings().cadrumo_dev_test_database_password.get_secret_value()
-    identity = (key, generation, sha256_hex(password.encode()))
+    digest = sha256_hex(repr((key, generation, sha256_hex(password.encode()))).encode())[:32]
+    return _published_world(digest, lambda tree: _register_world(tree, register))
 
-    def build(origin: Path) -> tuple[str, bytes]:
+
+def derived_profile_world(
+    base: SealedProfileWorld,
+    key: Hashable,
+    seed: Callable[[UUID], None],
+    *,
+    profile_decode_context: ProfileDecodeContext,
+) -> SealedProfileWorld:
+    """Return this run's world holding ``base`` after ``seed`` ran on it, seeding on first use anywhere in the run.
+
+    ``seed`` receives the profile id inside its own copy of ``base`` with the
+    session resumed, exactly as a test's copy starts, and writes through the
+    real doors; the result is sealed as a world of its own, so a case that
+    needs "the profile after seed X" copies it instead of repeating the seed.
+    ``key`` must name every input ``seed`` depends on. Only a seed whose result
+    is identical for every case belongs here; a case that needs a distinct
+    seed runs it on its own copy.
+    """
+    digest = sha256_hex(repr((base.origin.parent.name, base.profile_id, key)).encode())[:32]
+
+    def build(tree: Path) -> tuple[str, bytes]:
         try:
-            with isolated_profile_storage_root(tmp_path=origin), portable_password_custody():
-                profile_id = register()
-                session = current_active_bucket_session()
-                if session is None or session.bucket_id != profile_id:
-                    raise AssertionError("a sealed world's registration must leave its own session live")
-                dek = bytes(session.dek)
-                close_active_bucket_session()
+            with copied_profile_world(base, tree, profile_decode_context=profile_decode_context) as (_, profile_id):
+                seed(profile_id)
         finally:
             dispose_engine()
-        return profile_id, dek
+        return base.profile_id, base.dek
 
-    origin, (profile_id, dek) = sealed_tree(identity, build)
-    return SealedProfileWorld(origin=origin, profile_id=profile_id, dek=dek)
+    return _published_world(digest, build)
+
+
+def _published_world(digest: str, build: Callable[[Path], tuple[str, bytes]]) -> SealedProfileWorld:
+    """Return the run's verified world ``digest``, building it into an empty tree on first use anywhere in the run."""
+    known = _WORLDS.get(digest)
+    if known is not None and known.origin.is_dir():
+        return known
+
+    def publish(staging: Path) -> None:
+        tree = staging / _WORLD_TREE
+        tree.mkdir()
+        profile_id, dek = build(tree)
+        record = {"profile_id": profile_id, "dek": dek.hex(), "tree": _tree_digest(tree)}
+        (staging / _WORLD_RECORD).write_text(json.dumps(record), encoding="utf-8")
+
+    def verify(entry: Path) -> bool:
+        return _read_world(entry) is not None
+
+    try:
+        cache_root = run_artifact_root()
+    except RuntimeError:
+        # Outside a test run there is no run to share with, so the process keeps its own.
+        holder = TemporaryDirectory(prefix="sealed-world-")
+        _TREE_HOLDERS.append(holder)
+        cache_root = Path(holder.name)
+    artifact = run_artifact(
+        _WORLD_KIND, digest, publish=publish, verify=verify, cache_root=cache_root, retain=_WORLD_RETAIN
+    )
+    world = _read_world(artifact.root)
+    if world is None:
+        raise CadrumoError(f"the sealed profile world {digest} changed after it was verified")
+    _WORLDS[digest] = world
+    return world
 
 
 def publish_world_session(world: SealedProfileWorld, *, profile_decode_context: ProfileDecodeContext) -> None:

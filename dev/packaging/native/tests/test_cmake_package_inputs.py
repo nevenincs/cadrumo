@@ -11,7 +11,7 @@ import pytest
 from dev._paths import REPO_ROOT
 
 from ...command_execution import run_command
-from ..action_cache import fingerprint
+from ..action_cache import enrolled_input_paths, fingerprint
 from ..cached_command import inventory
 from ..layout import load_layout
 
@@ -211,7 +211,8 @@ def test_product_inputs_include_wheel_sources_without_installer_or_authoring_too
         'file(TO_NATIVE_PATH "packaging/authority" hook_directory)\n'
         f'cadrumo_product_inputs(inputs "{fixture.as_posix()}" packaging/companion "${{hook_directory}}")\n'
         'list(JOIN inputs "\\n" input_lines)\n'
-        'file(WRITE "${CMAKE_BINARY_DIR}/inputs.txt" "${input_lines}\\n")\n',
+        'list(JOIN inputs_trees "\\n" tree_lines)\n'
+        'file(WRITE "${CMAKE_BINARY_DIR}/inputs.txt" "${input_lines}\\n${tree_lines}\\n")\n',
         encoding="utf-8",
     )
     cmake = shutil.which("cmake")
@@ -219,7 +220,10 @@ def test_product_inputs_include_wheel_sources_without_installer_or_authoring_too
     build = tmp_path / "build"
     result = run_command([cmake, "-S", str(tmp_path), "-B", str(build)], cwd=tmp_path)
     assert result.returncode == 0, result.stderr
-    observed = {Path(name).relative_to(fixture).as_posix() for name in (build / "inputs.txt").read_text().splitlines()}
+    observed = {
+        path.relative_to(fixture.resolve()).as_posix()
+        for path in enrolled_input_paths(build / "inputs.txt", resolve_roots=True)
+    }
     assert set(names) & observed == {
         "src/cadrumo/runtime.py",
         "packaging/companion/hatch_build.py",
@@ -227,28 +231,92 @@ def test_product_inputs_include_wheel_sources_without_installer_or_authoring_too
     }
 
 
-def test_source_consumers_share_one_configure_inventory(tmp_path: Path) -> None:
-    """A file added between consumers enters on the next configure without a conflicting glob."""
-    source = tmp_path / "src"
-    source.mkdir()
-    (source / "first.py").write_text("first = True\n", encoding="utf-8")
-    (tmp_path / "CMakeLists.txt").write_text(
-        "cmake_minimum_required(VERSION 4.4)\nproject(SourceInventory LANGUAGES NONE)\n"
+def _touch(root: Path, *names: str) -> None:
+    for name in names:
+        path = root / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(name, encoding="utf-8")
+
+
+def test_product_trees_are_enumerated_when_the_manifest_is_read(tmp_path: Path) -> None:
+    """A file added after the manifest was written is enrolled without running CMake again."""
+    fixture = tmp_path / "fixture"
+    _touch(
+        fixture,
+        "src/pkg/__init__.py",
+        "src/pkg/tests/test_x.py",
+        "src/pkg/conftest.py",
+        "src/pkg/__pycache__/__init__.cpython-313.pyc",
+        "src/pkg/data.lock",
+        "src/pkg/.generated-export-stage-1/payload.bin",
+    )
+    script = tmp_path / "inputs.cmake"
+    manifest = tmp_path / "inputs-product.txt"
+    script.write_text(
         f'include("{(REPO_ROOT / "native/cmake/PackageInputs.cmake").as_posix()}")\n'
-        'cadrumo_source_inputs(first "${CMAKE_SOURCE_DIR}")\n'
-        'file(WRITE "${CMAKE_SOURCE_DIR}/src/late.py" "late = True\\n")\n'
-        'cadrumo_source_inputs(second "${CMAKE_SOURCE_DIR}")\n'
-        'if(NOT first STREQUAL second)\nmessage(FATAL_ERROR "Source inventory changed")\nendif()\n'
-        'list(LENGTH second count)\nfile(WRITE "${CMAKE_BINARY_DIR}/count.txt" "${count}")\n',
+        f'cadrumo_product_inputs(inputs "{fixture.as_posix()}")\n'
+        'list(JOIN inputs "\\n" input_lines)\n'
+        'list(JOIN inputs_trees "\\n" tree_lines)\n'
+        f'file(WRITE "{manifest.as_posix()}" "${{input_lines}}\\n${{tree_lines}}\\n")\n',
         encoding="utf-8",
     )
     cmake = shutil.which("cmake")
     assert cmake is not None
-    build = tmp_path / "build"
-    command = [cmake, "-S", str(tmp_path), "-B", str(build)]
-    result = run_command(command, cwd=tmp_path)
+    result = run_command([cmake, "-P", str(script)], cwd=tmp_path)
     assert result.returncode == 0, result.stderr
-    assert (build / "count.txt").read_text() == "1"
-    result = run_command(command, cwd=tmp_path)
-    assert result.returncode == 0, result.stderr
-    assert (build / "count.txt").read_text() == "2"
+    assert f"tree\tproduct\t{fixture.as_posix()}\tsrc" in manifest.read_text(encoding="utf-8").splitlines()
+
+    _touch(fixture, "src/pkg/new_module.py")
+
+    root = fixture.resolve()
+    observed = {path.relative_to(root).as_posix() for path in enrolled_input_paths(manifest, resolve_roots=True)}
+    assert {name for name in observed if name.startswith("src/")} == {"src/pkg/__init__.py", "src/pkg/new_module.py"}
+
+
+def test_docs_trees_keep_source_test_support_and_drop_documentation_artifacts(tmp_path: Path) -> None:
+    root = tmp_path / "checkout"
+    _touch(
+        root,
+        "src/pkg/tests/support.py",
+        "src/pkg/__pycache__/support.cpython-313.pyc",
+        "docs/index.md",
+        "docs/_build/x.html",
+        "dev/docs/builder.py",
+        "dev/docs/tests/test_y.py",
+        "dev/docs/.aeat-generated-export-transaction-7/state.json",
+    )
+    manifest = tmp_path / "inputs-user-docs.txt"
+    manifest.write_text(
+        "\n".join(f"tree\tdocs\t{root}\t{name}" for name in ("src", "docs", "dev/docs")) + "\n\n",
+        encoding="utf-8",
+    )
+
+    observed = {path.relative_to(root).as_posix() for path in enrolled_input_paths(manifest)}
+
+    assert observed == {"src/pkg/tests/support.py", "docs/index.md", "dev/docs/builder.py"}
+
+
+def test_plain_path_lines_are_returned_unchanged_beside_tree_lines(tmp_path: Path) -> None:
+    root = tmp_path / "checkout"
+    _touch(root, "src/pkg/module.py")
+    plain = tmp_path / "elsewhere/ready"
+    manifest = tmp_path / "inputs.txt"
+    manifest.write_text(f"{plain}\ntree\tproduct\t{root}\tsrc\n", encoding="utf-8")
+
+    assert enrolled_input_paths(manifest) == [plain, root / "src/pkg/module.py"]
+
+
+def test_unknown_tree_policy_is_refused(tmp_path: Path) -> None:
+    manifest = tmp_path / "inputs.txt"
+    manifest.write_text(f"tree\tunlisted\t{tmp_path}\tsrc\n", encoding="utf-8")
+
+    with pytest.raises(ValueError, match="Unknown input tree policy 'unlisted'"):
+        enrolled_input_paths(manifest)
+
+
+def test_malformed_tree_line_is_refused(tmp_path: Path) -> None:
+    manifest = tmp_path / "inputs.txt"
+    manifest.write_text(f"tree\tproduct\t{tmp_path}\n", encoding="utf-8")
+
+    with pytest.raises(ValueError, match="Malformed tree line"):
+        enrolled_input_paths(manifest)

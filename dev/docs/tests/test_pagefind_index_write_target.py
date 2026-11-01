@@ -24,26 +24,19 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.directory_scan import scan_directory
-from dev._paths import REPO_ROOT
-from dev.docs.build_paths import docs_html_root
+from cadrumo.core.external_constants import OutputLanguage
 
 from ..pagefind_index import build_search_index
+from .built_site import built_documentation_site
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
 
-# dev/docs/tests -> parents[3] is the repo root.
-_REPO_ROOT = REPO_ROOT
-_BUILT_HTML = docs_html_root(_REPO_ROOT)
-
 
 def _site(tmp_path: Path) -> Path:
-    """Assemble a small real page corpus to index."""
-    pages = scan_directory(_BUILT_HTML, pattern="*.html")[:2] if _BUILT_HTML.is_dir() else ()
-    if len(pages) < 2:
-        pytest.fail(
-            f"need built documentation HTML under {_BUILT_HTML} to index; "
-            "this test drives the real Pagefind pass, so it needs a real build.",
-        )
+    """Assemble a small real page corpus to index from the run's built English root."""
+    built_html = built_documentation_site().language_root(OutputLanguage.EN.value)
+    pages = sorted(scan_directory(built_html, pattern="*.html"), key=lambda path: path.name)[:2]
+    assert len(pages) == 2, f"need 2 built documentation pages under {built_html} to index; found {len(pages)}"
     site = tmp_path / "site"
     site.mkdir(parents=True)
     for source in pages:

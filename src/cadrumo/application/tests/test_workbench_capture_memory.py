@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import sys
 import threading
-from collections.abc import Callable, Iterator
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, date, datetime, timedelta
 from types import FrameType
@@ -18,7 +18,7 @@ from typing import Any, cast
 
 import pytest
 
-from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.modelos.calculation_revision import CalculationRevisionCatalogue
 from ...domain.modelos.filing_record import ModeloRecordCatalogue
 from ...domain.modelos.work_unit import WorkUnitCatalogue
@@ -36,12 +36,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PROFILE_ID = "11111111-1111-4111-8111-111111111111"
 _NOW = datetime(2026, 9, 3, 10, 30, tzinfo=UTC)
-
-
-@pytest.fixture
-def authority_operation() -> Iterator[PinnedAuthorityOperation]:
-    with bundled_indexed_authority().operation() as operation:
-        yield operation
 
 
 @dataclass

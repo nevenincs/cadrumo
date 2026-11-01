@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import sys
-from collections.abc import Callable, Iterator
+from collections.abc import Callable
 from pathlib import Path
 from typing import cast
 from uuid import UUID
@@ -48,7 +48,6 @@ from cadrumo.core.operations import (
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import (
     PinnedAuthorityOperation,
-    bundled_indexed_authority,
 )
 from cadrumo.entrypoints.tests.modelo_query_operation_test_support import (
     ModeloQueryConformanceCase,
@@ -88,12 +87,6 @@ _GRANTED_IDS = (
     MODELO_WORK_FILE_OPERATION_DEFINITION_ID,
 )
 _PERIOD = Period.from_year_and_code(2025, "1T")
-
-
-@pytest.fixture
-def authority_operation() -> Iterator[PinnedAuthorityOperation]:
-    with bundled_indexed_authority().operation() as operation:
-        yield operation
 
 
 def _structured(result: CallToolResult) -> dict[str, JsonValue]:

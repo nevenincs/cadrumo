@@ -11,7 +11,9 @@ include("${CMAKE_CURRENT_LIST_DIR}/CachedCommand.cmake")
 list(APPEND product_inputs "${CADRUMO_PATH_RUNTIME}/ready" "${CADRUMO_PATH_AGENT}/ready"
   "${CADRUMO_PATH_AGENT}/agent-dependencies.txt" "${CADRUMO_PATH_AGENT}/agent-dependencies.json")
 list(JOIN product_inputs "\n" input_lines)
-file(GENERATE OUTPUT "${PROJECT_BINARY_DIR}/inputs-product.txt" CONTENT "${input_lines}\n")
+# Tree lines are not files: the build action expands them, so they never reach DEPENDS.
+list(JOIN product_inputs_trees "\n" tree_lines)
+file(GENERATE OUTPUT "${PROJECT_BINARY_DIR}/inputs-product.txt" CONTENT "${input_lines}\n${tree_lines}\n")
 cadrumo_build_step(step_comment python_product GROUP dependencies
   SUMMARY "build and install the product wheels from this checkout" OUTPUTS "${CADRUMO_PATH_PRODUCT}")
 add_custom_target(python_product

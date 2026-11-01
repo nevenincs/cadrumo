@@ -44,20 +44,12 @@ def test_real_scan_over_a_small_real_tree_returns_a_typed_outcome() -> None:
     assert result.headline()
 
 
-def test_real_bad_source_path_is_unavailable_not_green() -> None:
-    """A real scan of a path that matches nothing must refuse to claim cleanliness."""
-    _require_uvx()
-    result = run_security_scan(_REPO_ROOT, source_roots=(Path("src/cadrumo/no-such-directory"),))
-
-    assert result.outcome is SecurityOutcome.UNAVAILABLE
-    assert result.is_green is False
-
-
 def test_a_missing_root_beside_a_real_one_is_unavailable_not_a_smaller_scope() -> None:
     """One lost package must not let the surviving roots pose as the whole scope.
 
     The real root alone classifies (see above), so the unavailable verdict here
-    is attributable to the missing root alone.
+    is attributable to the missing root alone. A scan whose every root is missing
+    fails through the same non-zero exit, so this one proof covers it.
     """
     _require_uvx()
     result = run_security_scan(_REPO_ROOT, source_roots=(Path("dev/audit"), Path("src/cadrumo/no-such-directory")))

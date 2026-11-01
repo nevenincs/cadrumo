@@ -29,7 +29,6 @@ a defect rather than a modelling choice needing interpretation.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from functools import cache
@@ -42,7 +41,7 @@ from cadrumo.domain.invoices.enums import IvaRate
 from cadrumo.domain.iva.schema import EUMemberState, IvaCategory
 
 from ....core.period import Period
-from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.eu_member_state_catalogue import require_eu_member_state
 from ....domain.calculations.registry.governed_fact_scope import governed_facts_in_scope
 from ....domain.invoices.models import Invoice
@@ -62,13 +61,6 @@ def _pinned_operation() -> PinnedAuthorityOperation:
     scoped = governed_facts_in_scope()
     assert isinstance(scoped, PinnedAuthorityOperation)
     return scoped
-
-
-@pytest.fixture
-def authority_operation() -> Iterator[PinnedAuthorityOperation]:
-    """Lease one generation for the two-feed binding comparison."""
-    with bundled_indexed_authority().operation() as operation:
-        yield operation
 
 
 _BASE = Decimal("5000.00")

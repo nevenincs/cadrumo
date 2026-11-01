@@ -124,7 +124,7 @@ def test_product_source_snapshot_checks_explicit_root_uv_lock(tmp_path: Path, mo
         product_snapshot.capture_product_source_snapshot(root, tmp_path / "snapshot", inputs)
 
 
-def test_product_source_snapshot_rejects_new_module_missing_from_cmake_census(
+def test_product_source_snapshot_rejects_new_module_added_during_the_snapshot(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     root = tmp_path / "checkout"
@@ -135,8 +135,28 @@ def test_product_source_snapshot_rejects_new_module_missing_from_cmake_census(
         new_module.parent.mkdir(parents=True)
         new_module.write_text("language = 'en'\n", encoding="utf-8")
 
-    with pytest.raises(RuntimeError, match=r"CONFIGURE_DEPENDS refreshes inputs-product.txt"):
+    with pytest.raises(RuntimeError, match=r"Product source membership changed"):
         _capture(root, inputs, monkeypatch, after_snapshot=add_module)
+
+
+def test_product_source_snapshot_enrolls_a_module_added_after_the_manifest_was_written(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    root = tmp_path / "checkout"
+    _product_tree(root)
+    inputs = root.parent / "inputs-trees.txt"
+    entries = [f"tree\tproduct\t{root}\t{name}" for name in product_snapshot._product_source_roots(root)]
+    entries.extend((str(root / "pyproject.toml"), str(root / "uv.lock")))
+    inputs.write_text("\n".join(entries) + "\n", encoding="utf-8")
+    new_module = root / "src/cadrumo_client/transport/profile_language.py"
+    new_module.parent.mkdir(parents=True)
+    new_module.write_text("language = 'en'\n", encoding="utf-8")
+
+    captured = _capture(root, inputs, monkeypatch)
+
+    assert (captured / "src/cadrumo_client/transport/profile_language.py").read_text(encoding="utf-8") == (
+        "language = 'en'\n"
+    )
 
 
 def test_product_source_snapshot_allows_unrelated_frontend_churn(

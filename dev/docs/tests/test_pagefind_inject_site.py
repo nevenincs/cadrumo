@@ -1,9 +1,9 @@
 """Pagefind injection against a real built-HTML site.
 
-Runs the vendored Pagefind binary over a copied subset of the real built HTML
+Runs the vendored Pagefind binary over a copied subset of the run's built English HTML
 and asserts the injection lands once per record, reachable from every language,
 with deep-link targets and ranking weights. These are ``integration``: they need
-the binary and the built site.
+the binary and the run's shared documentation build.
 
 The projection and weighting checks that share the record helper are in
 ``test_pagefind_inject``; the helper itself is in ``_pagefind_inject_support``.
@@ -19,7 +19,6 @@ import pytest
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.external_constants import OutputLanguage
 from dev._paths import REPO_ROOT
-from dev.docs.build_paths import docs_html_root
 
 from ..pagefind_index import SHARED_INDEX_LANGUAGE, build_search_index
 from ..pagefind_inject import (
@@ -30,42 +29,35 @@ from ..pagefind_inject import (
 from ..terminology.concept_card_projection import project_concept_cards
 from ._http_serve_support import serve_directory
 from ._pagefind_inject_support import concept_records
+from .built_site import built_documentation_site
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
 # dev/docs/tests -> parents[3] is the repo root.
 _REPO_ROOT = REPO_ROOT
-_BUILT_HTML = docs_html_root(_REPO_ROOT)
 
 
 def _fixture_site(tmp_path: Path, *, pages: int = 3) -> Path:
     """Copy a small real built-HTML subset into tmp.
 
-    Refuses, naming the absent artefact, when the built HTML root is missing or
-    holds fewer than ``pages`` pages. The built site is an uncommitted build
-    output, so its absence is the ordinary state of a fresh checkout -- and
-    without this refusal the copy silently yields an empty site, Pagefind
-    indexes nothing, and the downstream ``page_count`` assertion reports
-    ``assert 0 == 3``, a diagnostic that blames the injection for a build
-    artefact that was never there. An instrument that cannot tell "the input is
-    absent" from "the input measured zero" is reporting over what it never
-    measured.
+    The pages come from the English root of the run's shared documentation
+    compile, which fails with the build's own report when that compile failed.
+    Refuses, naming the root, when it holds fewer than ``pages`` pages: without
+    this refusal the copy silently yields an empty site, Pagefind indexes
+    nothing, and the downstream ``page_count`` assertion reports ``assert 0 == 3``,
+    a diagnostic that blames the injection for pages that were never there. An
+    instrument that cannot tell "the input is absent" from "the input measured
+    zero" is reporting over what it never measured.
     """
-    if not _BUILT_HTML.is_dir():
-        pytest.fail(
-            f"no built documentation HTML at {_BUILT_HTML}; this gate indexes the "
-            "shipped artefact, so it needs a real build to read. Run the docs build first.",
-        )
+    built_html = built_documentation_site().language_root(OutputLanguage.EN.value)
     site = tmp_path / "site"
     site.mkdir()
-    html = scan_directory(_BUILT_HTML, pattern="*.html", recursive=True)[:pages]
-    if len(html) < pages:
-        pytest.fail(
-            f"built documentation HTML at {_BUILT_HTML} holds {len(html)} page(s); "
-            f"this gate needs {pages}. Run the docs build first.",
-        )
+    html = sorted(scan_directory(built_html, pattern="*.html", recursive=True))[:pages]
+    assert len(html) == pages, (
+        f"built documentation HTML at {built_html} holds {len(html)} page(s); this gate needs {pages}"
+    )
     for source in html:
-        dest = site / source.relative_to(_BUILT_HTML)
+        dest = site / source.relative_to(built_html)
         dest.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy(source, dest)
     return site

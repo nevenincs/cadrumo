@@ -61,7 +61,7 @@ from cadrumo.domain.calculations.registry.source_byte_availability import embedd
 
 from ..compiler.authority_database import build_authority_database
 from ..compiler.authority_state import canonical_authoring_root_pair
-from ..compiler.corpus_provenance import classify_normative_corpus_provenance
+from ..compiler.corpus_provenance import classify_normative_corpus_provenance, corpus_digest_pass
 from ..compiler.identity import resolve_registry_identity
 from ..compiler.legal_grounding import published_legal_evidence_text
 from ..compiler.loader_fingerprints import collect_registry_tree_fingerprints
@@ -339,15 +339,17 @@ def _project_evidence(
     source_root: Path,
 ) -> AuthorityEvidenceProjection:
     """Capture all validated legal anchors as path-free runtime evidence."""
-    entries = tuple(
-        PublishedLegalEvidence(
-            legal_reference_id=str(reference_id),
-            anchored_text=(text := published_legal_evidence_text(reference, source_root=source_root)),
-            text_sha256=sha256_hex(text.encode("utf-8")),
-            provenance=classify_normative_corpus_provenance(source_root, reference.corpus_ref),
+    # Many references cite one corpus file; the pass hashes each file once.
+    with corpus_digest_pass():
+        entries = tuple(
+            PublishedLegalEvidence(
+                legal_reference_id=str(reference_id),
+                anchored_text=(text := published_legal_evidence_text(reference, source_root=source_root)),
+                text_sha256=sha256_hex(text.encode("utf-8")),
+                provenance=classify_normative_corpus_provenance(source_root, reference.corpus_ref),
+            )
+            for reference_id, reference in sorted(legal.items())
         )
-        for reference_id, reference in sorted(legal.items())
-    )
     source_entries = tuple(
         _project_source_evidence(sources[source_id], source_root=source_root)
         for source_id in sorted(embedded_source_ids(sources))

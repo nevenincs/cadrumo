@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import sys
-from collections.abc import Callable, Iterator
+from collections.abc import Callable
 from pathlib import Path
 from typing import cast
 from uuid import UUID
@@ -43,7 +43,7 @@ from cadrumo.core.operations import (
     OperationTerminalCondition,
     profile_operation_subject,
 )
-from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.entrypoints.adapter_composition_ports import build_modelo_history_ports
 from cadrumo.entrypoints.adapter_composition_work_ports import build_calculation_action_ports
 from cadrumo.entrypoints.tests.modelo_projection_history_conformance_support import (
@@ -70,12 +70,6 @@ pytestmark = [
 ]
 
 _PUBLIC_IDS = ("modelo.project", "modelo.compare", "modelo.history.timeline")
-
-
-@pytest.fixture
-def authority_operation() -> Iterator[PinnedAuthorityOperation]:
-    with bundled_indexed_authority().operation() as operation:
-        yield operation
 
 
 def _structured(result: CallToolResult) -> dict[str, JsonValue]:

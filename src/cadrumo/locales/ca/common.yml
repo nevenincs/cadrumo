@@ -9072,7 +9072,7 @@ workspace:
         refused: Cadrumo no ha creat la declaració.
         saved_unread: La declaració s'ha creat, però no se n'ha pogut llegir la resposta.
           La llista es torna a llegir; obre-la des d'allà.
-        search_placeholder: Número o nom, per exemple 303 o IVA
+        search_placeholder: Cerca
         show_all: Mostra tots els models, no només els teus
         start_confirm: Començar el {modelo} de {period}?
         unknown: Cadrumo no ha pogut saber si s'ha creat la declaració.
@@ -9097,7 +9097,7 @@ workspace:
         help: Aquesta fila encara no es pot obrir des d'aquí.
       search:
         hint: Cerca per número de model, nom o període
-        modelo: Cercar un model
+        modelo: Cerca
       sort:
         amount: Import
         by: Ordena per
@@ -9913,7 +9913,7 @@ workspace:
     search:
       count: 'Caselles trobades: {count}'
       empty: Cap casella no coincideix amb {query}.
-      placeholder: Cerca una casella per número o per paraules
+      placeholder: Cerca
     section:
       box: Casella {box}
       boxes: Caselles {first} a {last}
