@@ -6,7 +6,7 @@ tags:
 date: '2026-09-26'
 modified: '2026-11-01'
 body_schema: 'body-v2'
-body_hash: 'sha256:391a81ba56f99d3ed3a38f10fd51ea8dbb9132cc91e373e1848e5abcc448367f'
+body_hash: 'sha256:edade7f5098f9e51ae0493dc45fedf3810863f4f55b5ec4665cee29a9ad29fbd'
 related:
   - '[[2026-09-26-export-parity-adr]]'
   - '[[2026-09-26-export-parity-audit]]'
@@ -27,6 +27,7 @@ related:
   - '[[2026-11-01-export-parity-plan]]'
   - '[[2026-11-01-export-parity-suffered-withholding-schemas-adr]]'
   - '[[2026-11-01-export-parity-suffered-withholding-schemas-reference]]'
+  - '[[2026-11-01-export-parity-withholding-legal-readings-research]]'
 ---
 
 # `export-parity` feature index
@@ -43,9 +44,9 @@ Auto-generated index of all documents tagged with `#export-parity`.
 - `2026-09-27-export-parity-m390-adquisiciones-interiores-exentas-adr` - `export-parity` adr: `m390 adquisiciones interiores exentas` | (**status:** `accepted`)
 - `2026-09-27-export-parity-renta-withholding-sources-adr` - `export-parity` adr: `source Modelo 100 withholding credits from the perceptor side` | (**status:** `accepted`)
 - `2026-11-01-export-parity-binding-capability-grade-adr` - `export-parity` adr: `declared per-binding grade cap that blocks verify, export and local filing` | (**status:** `accepted`)
-- `2026-11-01-export-parity-income-imputation-criterion-adr` - `export-parity` adr: `income imputation criterion` | (**status:** `proposed`)
+- `2026-11-01-export-parity-income-imputation-criterion-adr` - `export-parity` adr: `income imputation criterion` | (**status:** `accepted`)
 - `2026-11-01-export-parity-observation-filing-kind-adr` - `export-parity` adr: `Typed filing kind on captured observations proves complementaria-only casillas zero for originals` | (**status:** `accepted`)
-- `2026-11-01-export-parity-suffered-withholding-schemas-adr` - `export-parity` adr: `suffered-withholding, credit reconciliation and resolution-record schemas` | (**status:** `proposed`)
+- `2026-11-01-export-parity-suffered-withholding-schemas-adr` - `export-parity` adr: `suffered-withholding, credit reconciliation and resolution-record schemas` | (**status:** `accepted`)
 
 ### audit
 
@@ -71,3 +72,4 @@ Auto-generated index of all documents tagged with `#export-parity`.
 - `2026-09-27-export-parity-renta-withholding-sources-research` - `export-parity` research: `renta withholding sources`
 - `2026-11-01-export-parity-datos-fiscales-format-research` - `export-parity` research: `datos-fiscales-format`
 - `2026-11-01-export-parity-income-imputation-criterion-research` - `export-parity` research: `income imputation criterion`
+- `2026-11-01-export-parity-withholding-legal-readings-research` - `export-parity` research: `Withholding legal readings`
