@@ -37,12 +37,9 @@ def _record(note: str, *spans: LegalNoteLanguageSpan) -> LegalProvisionRecord:
     )
 
 
-def test_reviewed_span_checks_spanish_paraphrase_without_hiding_english_typo(tmp_path: Path) -> None:
-    spanish = "La deducción se aplica en el período siguiente."
-    record = _record(
-        f"English commentary definately stays checked. {spanish}",
-        LegalNoteLanguageSpan(text=spanish, language="es"),
-    )
+def _inventory_rendered_record(
+    tmp_path: Path, record: LegalProvisionRecord
+) -> tuple[list[dict[str, object]], dict[str, dict[str, str]]]:
     rendered = render_legal_reference(tmp_path, records=(record,), language=OutputLanguage.EN).pages[0]
     page = tmp_path / rendered.output_relpath
     page.parent.mkdir(parents=True)
@@ -50,6 +47,16 @@ def test_reviewed_span_checks_spanish_paraphrase_without_hiding_english_typo(tmp
     values: dict[str, dict[str, str]] = {}
     findings: list[dict[str, object]] = []
     inventory_generated_document_file(page, tmp_path, Counter(), findings, values)
+    return findings, values
+
+
+def test_reviewed_span_checks_spanish_paraphrase_without_hiding_english_typo(tmp_path: Path) -> None:
+    spanish = "La deducción se aplica en el período siguiente."
+    record = _record(
+        f"English commentary definately stays checked. {spanish}",
+        LegalNoteLanguageSpan(text=spanish, language="es"),
+    )
+    findings, values = _inventory_rendered_record(tmp_path, record)
 
     assert not findings, findings
     assert spanish in values["es"].values()
@@ -209,13 +216,7 @@ def test_quoted_note_inventory_checks_span_and_surrounding_prose_in_their_langua
     spanish = 'La "deducción" se aplica en el período siguiente.'
     note = f"English definately stays checked. {spanish}"
     record = _record(note, LegalNoteLanguageSpan(text=spanish, language="es"))
-    rendered = render_legal_reference(tmp_path, records=(record,), language=OutputLanguage.EN).pages[0]
-    page = tmp_path / rendered.output_relpath
-    page.parent.mkdir(parents=True)
-    page.write_text(rendered.rst, encoding="utf-8")
-    values: dict[str, dict[str, str]] = {}
-    findings: list[dict[str, object]] = []
-    inventory_generated_document_file(page, tmp_path, Counter(), findings, values)
+    findings, values = _inventory_rendered_record(tmp_path, record)
     assert not findings, findings
     assert any("deducción" in text for text in values["es"].values())
     assert all("deducción" not in text for text in values["en"].values())
