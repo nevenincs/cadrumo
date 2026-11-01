@@ -1,4 +1,4 @@
-"""Strict read-only ledger diagnostic payload schemas for CLI commands."""
+"""Strict read-only ledger diagnostic :class:`OutputSchema` payloads for CLI commands."""
 
 from __future__ import annotations
 

@@ -43,7 +43,7 @@ _EXTERNAL_VAT_PROSE_VALUES = {
             "vat",
         },
     ),
-    "domain/calculations/registry/tests/test_registry_locales_parity.py": frozenset(
+    "domain/calculations/registry/tests/registry_locales_parity_scenarios.py": frozenset(
         {
             "Output VAT amount at the standard rate (21%)",
             "Total output VAT calculated at the standard 21% rate.",

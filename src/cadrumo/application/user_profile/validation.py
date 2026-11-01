@@ -693,7 +693,7 @@ def _refuse_first_text_length_issue(
 
 
 def refuse_overlong_profile_text(record: UserProfileRecord, *, schema: ProfileSchemaDefinition) -> None:
-    """Refuse a stored profile holding a text past its field's bound, naming that field.
+    """Refuse a stored :class:`UserProfileRecord` holding a text past its field's bound, naming that field.
 
     Such a value is present rather than missing, so it must not read as an incomplete profile.
     """

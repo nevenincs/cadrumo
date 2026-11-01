@@ -1,4 +1,4 @@
-"""The English wording of the register's dotación messages uses the Spanish tax term, under unchanged keys."""
+"""The English wording of the register's dotación messages says depreciation charge, under unchanged keys."""
 
 from __future__ import annotations
 
@@ -28,11 +28,11 @@ _KEYS = (
 
 
 @pytest.mark.parametrize("key", _KEYS)
-def test_an_english_message_names_the_dotacion_and_no_claim(key: str) -> None:
+def test_an_english_message_names_the_depreciation_charge_and_no_claim(key: str) -> None:
     text = lookup_translation(_NAMESPACE + key, locale="en")
 
     assert text is not None
-    assert "dotaci" in text
+    assert "depreciation charge" in text.lower()
     assert "claim" not in re.sub(r"%\{[^}]*\}", "", text).lower()
 
 

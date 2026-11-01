@@ -1,4 +1,4 @@
-"""The English claim states say dotación, and the missing-form messages say so in plain words."""
+"""The English claim states say depreciation charge, and the missing-form messages say so in plain words."""
 
 from __future__ import annotations
 
@@ -22,12 +22,12 @@ _DOTACION_STATES = (
 
 
 @pytest.mark.parametrize("state", _DOTACION_STATES)
-def test_an_english_claim_state_names_the_dotacion_and_no_claim(state: ActivityAssetClaimState) -> None:
+def test_an_english_claim_state_names_the_depreciation_charge_and_no_claim(state: ActivityAssetClaimState) -> None:
     key = activity_asset_label_key("claim_state", state)
     text = lookup_translation(key, locale="en")
 
     assert text is not None
-    assert "dotaci" in text.lower()
+    assert "depreciation charge" in text.lower()
     assert "claim" not in text.lower()
 
 

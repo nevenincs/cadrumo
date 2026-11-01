@@ -30,16 +30,23 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 _LOCALES = ("en", "es", "ca", "hu")
 _LOCALES_ROOT = Path(__file__).resolve().parents[3] / "locales"
 
-#: Tokens every locale must carry verbatim. Category ids are transport values
-#: and the AEAT terms are the product's own vocabulary, so none of them
-#: translates: a localised spelling would name something the parser and the
-#: catalogue do not have.
+#: Tokens every locale must carry verbatim. Category ids are transport values,
+#: so a localised spelling would name something the parser and the catalogue do
+#: not have.
 _UNTRANSLATED_TOKENS = (
     "actividad_economica",
     "arrendamiento_local",
-    "capital mobiliario",
-    "Royalties",
 )
+
+#: How each locale's reviewed prose names the royalty income and the capital
+#: side of the split. These are wording rather than identifiers, so they differ
+#: by locale, but a catalogue that drops either has lost the sentence's subject.
+_ROYALTY_SPLIT_TERMS = {
+    "en": ("Royalties", "movable capital"),
+    "es": ("cánones", "capital mobiliario"),
+    "ca": ("Royalties", "capital mobiliario"),
+    "hu": ("Royalties", "capital mobiliario"),
+}
 
 # The catalogue pointer is presentation prose and may be translated.  Keep
 # checking that the help still tells an operator where to discover ids without
@@ -68,7 +75,7 @@ def test_the_help_names_the_ids_and_catalogue_guidance(locale: str) -> None:
     """Stable ids stay literal while catalogue guidance remains localised."""
     wording = _classify_help(locale)
 
-    missing = [token for token in _UNTRANSLATED_TOKENS if token not in wording]
+    missing = [token for token in (*_UNTRANSLATED_TOKENS, *_ROYALTY_SPLIT_TERMS[locale]) if token not in wording]
 
     assert not missing, f"{locale} drops: {missing}"
     assert _CATALOGUE_GUIDANCE[locale] in wording.casefold(), f"{locale} drops catalogue guidance"

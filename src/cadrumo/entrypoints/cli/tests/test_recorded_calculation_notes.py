@@ -79,7 +79,7 @@ def test_a_restated_note_says_its_level_its_facts_and_what_to_do() -> None:
 
     (notice,), (line,) = recorded_note_notices((note,), code="modelo.calculation_note")
 
-    assert all(part in notice.message for part in ("897,53", "Office desk", "30/06/2025", "1654"))
+    assert all(part in notice.message for part in ("897,53", "Office desk", "30 jun 2025", "1654"))
     assert notice.context is not None
     assert notice.context["level"] == "check"
     assert notice.message in line
