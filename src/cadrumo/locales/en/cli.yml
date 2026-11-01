@@ -461,6 +461,10 @@ cli:
           at least one).
         con_derecho_volume_help: The sector's annual volume of operations with a right
           to deduct (LIVA art. 104, art. 104.Tres exclusions already applied).
+        declare_gross_help: Declare the gross deductible input VAT before prorrata
+          of an earlier liquidation period you entered by hand, so the annual regularisation
+          (LIVA art. 105.Cuatro) can use it when the ledger holds no input for that
+          period.
         declare_sector_help: 'Declare one differentiated sector (LIVA arts. 9.1.c
           / 101): your art. 9.1.c partition, never inferred from your records.'
         ejercicio_help: Filing year the election covers.
@@ -473,6 +477,20 @@ cli:
           option or revocation.
         general_percentage_help: Provisional deduction percentage 0-100 (LIVA art.
           104.Uno + 105.Uno).
+        gross_absent: No gross base is declared for that liquidation period of {ejercicio},
+          so there is nothing to remove.
+        gross_amount_help: Gross deductible input VAT before prorrata, in euros with
+          up to two decimals.
+        gross_duplicate: A gross base is already declared for that liquidation period
+          of {ejercicio}. Nothing was written; pass --replace to replace it.
+        gross_evidence_help: Reference to your own document that supports the amount.
+        gross_period_help: Modelo 303 liquidation period before the year's settlement
+          liquidation (a quarter such as 1T or a month such as 03).
+        gross_replace_help: Replace the gross base already declared for the same period
+          and sector.
+        gross_sector_unknown: Sector {sector_id} is not a declared differentiated
+          sector. Nothing was written; declare the sector first with declare-sector.
+        gross_year_help: Filing year of the liquidation period.
         group_help: 'Cross-period IVA prorrata register: elect the regime (general
           / especial) and declare differentiated sectors (LIVA arts. 101 / 103 / 105
           / 106).'
@@ -498,6 +516,8 @@ cli:
           or inicio_actividad origin.
         reference_required: Origin {provenance!r} (LIVA art. 105.Dos / 105.Tres) requires
           --reference.
+        remove_gross_help: Remove the gross deductible input VAT you declared for
+          an earlier liquidation period.
         revoke_especial_help: Revoke prorrata especial for an ejercicio after a prior-year
           especial state (LIVA art. 103.Dos.1).
         sector_help: Differentiated-sector id this entry covers; omit for the whole-entity

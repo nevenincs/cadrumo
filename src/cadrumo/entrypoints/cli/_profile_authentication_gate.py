@@ -148,6 +148,8 @@ _PROFILE_CONNECTION_KEYS = frozenset(
         "app_ledger_prorrata_seed",
         "app_ledger_prorrata_seed_sector",
         "app_ledger_prorrata_settle_sector",
+        "app_ledger_prorrata_declare_gross",
+        "app_ledger_prorrata_remove_gross",
         "app_ledger_inventory_list",
         "app_ledger_inventory_create",
         "app_ledger_inventory_movement_add",

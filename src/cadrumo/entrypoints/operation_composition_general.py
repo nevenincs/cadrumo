@@ -326,12 +326,14 @@ def compose_bienes_inversion_registered_operation(inputs: OperationCompositionIn
 def compose_prorrata_register_registered_operations(inputs: OperationCompositionInputs) -> OperationGroupBuild:
     """Compose prorrata register registered operations."""
     from ..application.prorrata_register.registered_operations import (
+        build_prorrata_declare_gross_definition,
         build_prorrata_declare_sector_definition,
         build_prorrata_elect_especial_definition,
         build_prorrata_elect_general_definition,
         build_prorrata_list_definition,
         build_prorrata_list_registration,
         build_prorrata_mutation_registration,
+        build_prorrata_remove_gross_definition,
         build_prorrata_revoke_especial_definition,
         build_prorrata_seed_definition,
         build_prorrata_seed_sector_definition,
@@ -349,6 +351,8 @@ def compose_prorrata_register_registered_operations(inputs: OperationComposition
         build_prorrata_seed_definition(repository, inputs.calculation_actions()),
         build_prorrata_seed_sector_definition(repository),
         build_prorrata_settle_sector_definition(repository),
+        build_prorrata_declare_gross_definition(repository),
+        build_prorrata_remove_gross_definition(repository),
     )
     return built(
         (listing, *mutations),

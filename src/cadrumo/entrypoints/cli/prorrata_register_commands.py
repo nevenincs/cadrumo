@@ -17,18 +17,22 @@ from cadrumo_client.contracts.contracts import RefusalCode
 
 from ...application.operations.public_scalar import PublicDecimal
 from ...application.prorrata_register.operation_requests import (
+    PRORRATA_DECLARE_GROSS_OPERATION_DEFINITION_ID,
     PRORRATA_DECLARE_SECTOR_OPERATION_DEFINITION_ID,
     PRORRATA_ELECT_ESPECIAL_OPERATION_DEFINITION_ID,
     PRORRATA_ELECT_GENERAL_OPERATION_DEFINITION_ID,
     PRORRATA_LIST_OPERATION_DEFINITION_ID,
+    PRORRATA_REMOVE_GROSS_OPERATION_DEFINITION_ID,
     PRORRATA_REVOKE_ESPECIAL_OPERATION_DEFINITION_ID,
     PRORRATA_SEED_OPERATION_DEFINITION_ID,
     PRORRATA_SEED_SECTOR_OPERATION_DEFINITION_ID,
     PRORRATA_SETTLE_SECTOR_OPERATION_DEFINITION_ID,
+    ProrrataDeclareGrossRequest,
     ProrrataDeclareSectorRequest,
     ProrrataElectEspecialRequest,
     ProrrataElectGeneralRequest,
     ProrrataListRequest,
+    ProrrataRemoveGrossRequest,
     ProrrataRevokeEspecialRequest,
     ProrrataSeedRequest,
     ProrrataSeedSectorRequest,
@@ -37,6 +41,7 @@ from ...application.prorrata_register.operation_requests import (
 from ...application.prorrata_register.projection_contracts import (
     ProrrataEntryProjection,
     ProrrataFindingProjection,
+    ProrrataGrossDeclarationProjection,
     ProrrataListProjection,
     ProrrataMutationProjection,
     ProrrataRefusalProjection,
@@ -61,13 +66,16 @@ from .operation_ledger_prorrata_register import (
     validate_prorrata_mutation_completion,
 )
 from .prorrata_register_results import (
+    ProrrataDeclareGrossResult,
     ProrrataDeclareSectorResult,
     ProrrataElectEspecialResult,
     ProrrataElectGeneralResult,
     ProrrataElectResult,
     ProrrataEntryPayload,
     ProrrataEspecialTransitionPayload,
+    ProrrataGrossDeclarationPayload,
     ProrrataListResult,
+    ProrrataRemoveGrossResult,
     ProrrataRevokeEspecialResult,
     ProrrataSeedFindingPayload,
     ProrrataSeedResult,
@@ -207,6 +215,33 @@ def _raise_sector_refusal_if_present(
         )
 
 
+def _raise_gross_refusal_if_present(
+    refusal: ProrrataRefusalProjection,
+    completion: RegisteredOperationCompletion[ProrrataMutationProjection],
+    operation_id: str,
+    reason: str,
+) -> None:
+    """Raise the operator gross-declaration refusal the reason names, if any."""
+    keys = {
+        "gross_declaration_duplicate": "cli.app.ledger.prorrata.gross_duplicate",
+        "gross_declaration_absent": "cli.app.ledger.prorrata.gross_absent",
+        "gross_declaration_sector_unknown": "cli.app.ledger.prorrata.gross_sector_unknown",
+    }
+    key = keys.get(reason)
+    if key is None:
+        return
+    if refusal.ejercicio is None:
+        raise CliRefusedBoundaryError(context={"reason": "invalid_prorrata_refusal"})
+    _raise_prorrata_refusal(
+        key,
+        operation_id=operation_id,
+        refusal=refusal,
+        completion=completion,
+        ejercicio=refusal.ejercicio,
+        sector_id=refusal.sector_id or "",
+    )
+
+
 def _profile_id() -> UUID:
     return UUID(_register_bucket_id())
 
@@ -289,6 +324,7 @@ def _raise_refusal(
     _raise_provenance_refusal_if_present(refusal, completion, provenance, operation_id, reason)
     _raise_seed_refusal_if_present(refusal, completion, operation_id, reason)
     _raise_sector_refusal_if_present(refusal, completion, operation_id, reason)
+    _raise_gross_refusal_if_present(refusal, completion, operation_id, reason)
     _raise_prorrata_refusal(
         "errors.refused.refused_profile_prorrata_register_validation",
         operation_id=operation_id,
@@ -738,6 +774,117 @@ def prorrata_settle_sector(
     _present_registered_operation(completed, render)
 
 
+def _gross_declaration_payload(declaration: ProrrataGrossDeclarationProjection) -> ProrrataGrossDeclarationPayload:
+    return ProrrataGrossDeclarationPayload(
+        ejercicio=declaration.ejercicio,
+        period=declaration.period,
+        sector_id=declaration.sector_id,
+        gross_cuota=format(Decimal(declaration.gross_cuota.decimal), "f"),
+        evidence_reference=declaration.evidence_reference,
+        provenance=declaration.provenance,
+        declared_at=declaration.declared_at.isoformat(),
+    )
+
+
+def _present_gross_declaration(
+    ctx: typer.Context,
+    completed: RegisteredOperationCompletion[ProrrataMutationProjection],
+    projection: ProrrataMutationProjection,
+    *,
+    profile_id: UUID,
+    result_class: type[ProrrataDeclareGrossResult] | type[ProrrataRemoveGrossResult],
+    command: str,
+) -> None:
+    def render() -> None:
+        if projection.gross_declaration is None:
+            raise CliRefusedBoundaryError(context={"reason": "invalid_prorrata_projection"})
+        declaration = _gross_declaration_payload(projection.gross_declaration)
+        payload = result_class(bucket_id=str(profile_id), declaration=declaration, count=int(projection.count or 0))
+        emit_envelope(
+            ctx,
+            command=command,
+            result=payload,
+            lines=(
+                f"bucket\t{profile_id}",
+                f"ejercicio\t{declaration.ejercicio}",
+                f"period\t{declaration.period}",
+                f"sector_id\t{declaration.sector_id or ''}",
+                f"gross_cuota\t{declaration.gross_cuota}",
+                f"evidence_reference\t{declaration.evidence_reference}",
+                f"provenance\t{declaration.provenance}",
+                f"count\t{projection.count}",
+            ),
+        )
+
+    _present_registered_operation(completed, render)
+
+
+def prorrata_declare_gross(
+    ctx: typer.Context,
+    year: int,
+    period: str,
+    amount: str,
+    evidence: str,
+    sector: str | None = None,
+    replace: bool = False,
+) -> None:
+    """Declare an earlier liquidation period's gross deducible cuota before prorrata."""
+    profile_id = _profile_id()
+    request = ProrrataDeclareGrossRequest(
+        profile_id=profile_id,
+        ejercicio=year,
+        period=period,
+        sector_id=sector,
+        gross_cuota=PublicDecimal(decimal=str(parse_decimal_amount(amount, label="amount", signed=False))),
+        evidence_reference=evidence,
+        replace=replace,
+    )
+    completed, projection = _run_mutation(
+        ctx,
+        request,
+        definition_id=PRORRATA_DECLARE_GROSS_OPERATION_DEFINITION_ID,
+        operation_id="declare_gross",
+    )
+    _present_gross_declaration(
+        ctx,
+        completed,
+        projection,
+        profile_id=profile_id,
+        result_class=ProrrataDeclareGrossResult,
+        command=PRORRATA_DECLARE_GROSS_OPERATION_DEFINITION_ID,
+    )
+
+
+def prorrata_remove_gross(
+    ctx: typer.Context,
+    year: int,
+    period: str,
+    sector: str | None = None,
+) -> None:
+    """Remove an earlier liquidation period's operator gross declaration."""
+    profile_id = _profile_id()
+    request = ProrrataRemoveGrossRequest(
+        profile_id=profile_id,
+        ejercicio=year,
+        period=period,
+        sector_id=sector,
+    )
+    completed, projection = _run_mutation(
+        ctx,
+        request,
+        definition_id=PRORRATA_REMOVE_GROSS_OPERATION_DEFINITION_ID,
+        operation_id="remove_gross",
+    )
+    _present_gross_declaration(
+        ctx,
+        completed,
+        projection,
+        profile_id=profile_id,
+        result_class=ProrrataRemoveGrossResult,
+        command=PRORRATA_REMOVE_GROSS_OPERATION_DEFINITION_ID,
+    )
+
+
 def prorrata_list(ctx: typer.Context) -> None:
     """Read every period and differentiated-sector row through the runtime."""
     profile_id = _profile_id()
@@ -776,10 +923,12 @@ def prorrata_list(ctx: typer.Context) -> None:
 
 
 __all__ = [
+    "prorrata_declare_gross",
     "prorrata_declare_sector",
     "prorrata_elect_especial",
     "prorrata_elect_general",
     "prorrata_list",
+    "prorrata_remove_gross",
     "prorrata_revoke_especial",
     "prorrata_seed",
     "prorrata_seed_sector",

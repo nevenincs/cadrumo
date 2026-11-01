@@ -18,6 +18,8 @@ PRORRATA_REVOKE_ESPECIAL_OPERATION_DEFINITION_ID = "ledger.prorrata.revoke_espec
 PRORRATA_SEED_OPERATION_DEFINITION_ID = "ledger.prorrata.seed"
 PRORRATA_SEED_SECTOR_OPERATION_DEFINITION_ID = "ledger.prorrata.seed_sector"
 PRORRATA_SETTLE_SECTOR_OPERATION_DEFINITION_ID = "ledger.prorrata.settle_sector"
+PRORRATA_DECLARE_GROSS_OPERATION_DEFINITION_ID = "ledger.prorrata.declare_gross"
+PRORRATA_REMOVE_GROSS_OPERATION_DEFINITION_ID = "ledger.prorrata.remove_gross"
 
 type ProrrataOperationId = Literal[
     "list",
@@ -28,6 +30,8 @@ type ProrrataOperationId = Literal[
     "seed",
     "seed_sector",
     "settle_sector",
+    "declare_gross",
+    "remove_gross",
 ]
 
 
@@ -99,15 +103,37 @@ class ProrrataSettleSectorRequest(ProrrataProfileRequest):
     sin_derecho_volume: PublicDecimal
 
 
+class ProrrataDeclareGrossRequest(ProrrataProfileRequest):
+    """Declare one earlier liquidation period's gross deducible cuota before prorrata."""
+
+    ejercicio: int
+    period: str
+    sector_id: str | None = None
+    gross_cuota: PublicDecimal
+    evidence_reference: str
+    replace: bool = False
+
+
+class ProrrataRemoveGrossRequest(ProrrataProfileRequest):
+    """Remove one earlier liquidation period's operator gross declaration."""
+
+    ejercicio: int
+    period: str
+    sector_id: str | None = None
+
+
 __all__ = [
+    "PRORRATA_DECLARE_GROSS_OPERATION_DEFINITION_ID",
     "PRORRATA_DECLARE_SECTOR_OPERATION_DEFINITION_ID",
     "PRORRATA_ELECT_ESPECIAL_OPERATION_DEFINITION_ID",
     "PRORRATA_ELECT_GENERAL_OPERATION_DEFINITION_ID",
     "PRORRATA_LIST_OPERATION_DEFINITION_ID",
+    "PRORRATA_REMOVE_GROSS_OPERATION_DEFINITION_ID",
     "PRORRATA_REVOKE_ESPECIAL_OPERATION_DEFINITION_ID",
     "PRORRATA_SEED_OPERATION_DEFINITION_ID",
     "PRORRATA_SEED_SECTOR_OPERATION_DEFINITION_ID",
     "PRORRATA_SETTLE_SECTOR_OPERATION_DEFINITION_ID",
+    "ProrrataDeclareGrossRequest",
     "ProrrataDeclareSectorRequest",
     "ProrrataElectEspecialRequest",
     "ProrrataElectGeneralRequest",
@@ -115,6 +141,7 @@ __all__ = [
     "ProrrataListRequest",
     "ProrrataOperationId",
     "ProrrataProfileRequest",
+    "ProrrataRemoveGrossRequest",
     "ProrrataRevokeEspecialRequest",
     "ProrrataSeedRequest",
     "ProrrataSeedSectorRequest",

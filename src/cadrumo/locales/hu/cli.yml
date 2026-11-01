@@ -484,6 +484,10 @@ cli:
           legalább egy).
         con_derecho_volume_help: Az ágazat éves ügyletvolumene, amelynél levonási
           jog áll fenn (LIVA 104. cikk, a 104.Tres kizárásokkal már csökkentve).
+        declare_gross_help: Add meg egy korábbi, kézzel rögzített bevallási időszak
+          arányosítás előtti bruttó levonható előzetesen felszámított adóját, hogy
+          az éves korrekció (LIVA art. 105.Cuatro) felhasználhassa, ha a nyilvántartásban
+          nincs tétel az adott időszakra.
         declare_sector_help: 'Adj meg egy megkülönböztetett szektort (LIVA 9.1.c /
           101. cikk): az art. 9.1.c szerinti felosztásod, sosem a nyilvántartásokból
           kikövetkeztetve.'
@@ -497,6 +501,22 @@ cli:
           vagy visszavonás bizonyítékának hivatkozása.
         general_percentage_help: Ideiglenes levonási százalék 0-100 (LIVA art. 104.Uno
           + 105.Uno).
+        gross_absent: A(z) {ejercicio} adóév ezen bevallási időszakára nincs megadott
+          bruttó alap, így nincs mit törölni.
+        gross_amount_help: Arányosítás előtti bruttó levonható előzetesen felszámított
+          adó euróban, legfeljebb két tizedesjeggyel.
+        gross_duplicate: A(z) {ejercicio} adóév ezen bevallási időszakára már van
+          megadott bruttó alap. Semmi sem került mentésre; a cseréhez használd a --replace
+          kapcsolót.
+        gross_evidence_help: Az összeget alátámasztó saját dokumentumod hivatkozása.
+        gross_period_help: Az év záró bevallása előtti Modelo 303 bevallási időszak
+          (negyedév, például 1T, vagy hónap, például 03).
+        gross_replace_help: Lecseréli az ugyanarra az időszakra és ágazatra már megadott
+          bruttó alapot.
+        gross_sector_unknown: A(z) {sector_id} ágazat nem bejelentett elkülönített
+          ágazat. Semmi sem került mentésre; előbb jelentsd be az ágazatot a declare-sector
+          paranccsal.
+        gross_year_help: A bevallási időszak adóéve.
         group_help: 'Időszakok közötti IVA prorrata nyilvántartás: válaszd ki a rezsimet
           (general / especial) és add meg a megkülönböztetett szektorokat (LIVA 101
           / 103 / 105 / 106. cikk).'
@@ -523,6 +543,8 @@ cli:
           forrással engedélyezett.
         reference_required: A(z) {provenance!r} forrás (LIVA art. 105.Dos / 105.Tres)
           megköveteli a --reference kapcsolót.
+        remove_gross_help: Töröld egy korábbi bevallási időszakra megadott bruttó
+          levonható előzetesen felszámított adót.
         revoke_especial_help: Vond vissza a különleges arányosítást egy adóévre az
           előző évi különleges állapot után (LIVA 103. cikk Dos.1).
         sector_help: A bejegyzés által lefedett megkülönböztetett szektor azonosítója;

@@ -491,6 +491,10 @@ cli:
           com a mínim un).
         con_derecho_volume_help: Volum anual d'operacions amb dret a deducció del
           sector (LIVA art. 104, amb les exclusions de l'art. 104.Tres ja aplicades).
+        declare_gross_help: Declara les quotes suportades deduïbles brutes abans de
+          la prorrata d'una liquidació anterior que vas introduir a mà, perquè la
+          regularització anual (LIVA art. 105.Cuatro) les pugui fer servir quan el
+          llibre no tingui quotes d'aquest període.
         declare_sector_help: 'Declara un sector diferenciat (LIVA arts. 9.1.c / 101):
           la teva partició de l''art. 9.1.c, mai inferida dels teus registres.'
         ejercicio_help: Exercici (any) que cobreix l'elecció.
@@ -503,6 +507,20 @@ cli:
           de la prorrata especial del període actual.
         general_percentage_help: Percentatge de deducció provisional 0-100 (LIVA art.
           104.Uno + 105.Uno).
+        gross_absent: No hi ha cap base bruta declarada per a aquesta liquidació de
+          {ejercicio}, així que no hi ha res a eliminar.
+        gross_amount_help: Quotes suportades deduïbles brutes abans de la prorrata,
+          en euros amb dos decimals com a màxim.
+        gross_duplicate: Ja hi ha una base bruta declarada per a aquesta liquidació
+          de {ejercicio}. No s'ha desat res; fes servir --replace per substituir-la.
+        gross_evidence_help: Referència al teu propi document que justifica l'import.
+        gross_period_help: Període de liquidació del Model 303 anterior a la liquidació
+          final de l'exercici (un trimestre com 1T o un mes com 03).
+        gross_replace_help: Substitueix la base bruta ja declarada per al mateix període
+          i sector.
+        gross_sector_unknown: El sector {sector_id} no és un sector diferenciat declarat.
+          No s'ha desat res; declara abans el sector amb declare-sector.
+        gross_year_help: Exercici de la liquidació.
         group_help: 'Registre de prorrata d''IVA entre exercicis: tria el règim (general
           / especial) i declara sectors diferenciats (LIVA arts. 101 / 103 / 105 /
           106).'
@@ -529,6 +547,8 @@ cli:
           o inicio_actividad.
         reference_required: L'origen {provenance!r} (LIVA art. 105.Dos / 105.Tres)
           requereix --reference.
+        remove_gross_help: Elimina les quotes suportades deduïbles brutes que vas
+          declarar per a una liquidació anterior.
         revoke_especial_help: Revoca la prorrata especial per a un exercici després
           d'un estat especial de l'exercici anterior (LIVA art. 103.Dos.1).
         sector_help: Identificador del sector diferenciat que cobreix aquesta entrada;
