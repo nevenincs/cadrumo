@@ -21,6 +21,7 @@ that quietly reports nothing.
 
 from __future__ import annotations
 
+import runpy
 from pathlib import Path
 
 import pytest
@@ -152,3 +153,25 @@ def test_a_root_with_no_production_module_refuses_beside_a_populated_one(tmp_pat
     assert run((product,), ["import_overlap"]) == []
     with pytest.raises(SystemExit, match=r"no production modules found under .*cadrumo_mcp"):
         run((product, tmp_path / "cadrumo_mcp"), ["import_overlap"])
+
+
+def test_module_entry_point_runs_every_detector(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Running the module as a script reaches ``main`` with all helpers defined.
+
+    The entry guard once preceded a helper definition, so the script crashed with a
+    ``NameError`` that importing the module never exposed.
+    """
+    package = tmp_path / "pkg"
+    package.mkdir()
+    (package / "__init__.py").write_text("", encoding="utf-8")
+    _module(package, "one.py", _SHARED)
+    _module(package, "two.py", _SHARED)
+    monkeypatch.setattr("sys.argv", ["semantic_duplication", "--root", str(package), "--json"])
+
+    with pytest.raises(SystemExit) as raised:
+        runpy.run_module("dev.audit.semantic_duplication", run_name="__main__")
+
+    assert raised.value.code == 0
+    assert capsys.readouterr().out.lstrip().startswith("[")

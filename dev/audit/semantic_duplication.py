@@ -580,10 +580,6 @@ def _append_expression_mark(inner: ast.AST, marks: list[str]) -> None:
         marks.append(f"bool:{type(inner.op).__name__}")
 
 
-if __name__ == "__main__":
-    raise SystemExit(main())
-
-
 def _enum_reference(node: ast.AST, enum_names: frozenset[str]) -> tuple[str, str] | None:
     if (
         isinstance(node, ast.Attribute)
@@ -593,3 +589,7 @@ def _enum_reference(node: ast.AST, enum_names: frozenset[str]) -> tuple[str, str
     ):
         return node.value.id, node.attr
     return None
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
