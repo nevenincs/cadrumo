@@ -55,6 +55,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 from decimal import Decimal
+from functools import partial
 from pathlib import Path
 
 import pytest
@@ -67,6 +68,7 @@ from cadrumo.adapters.persistence.profile.tests._multi_year_roundtrip_support im
 from cadrumo.adapters.persistence.profile.tests._observation_lookup_support import (
     find_observation,
     save_app_filing_observation,
+    saved_two_ejercicios,
 )
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.foreign_asset_thresholds import foreign_asset_declaration_thresholds
@@ -352,6 +354,17 @@ def test_year_n_and_year_n_plus_1_are_independently_retrievable(tmp_path: Path) 
     assert btc_n != btc_n1, "BTC saldo bled between year-N and year-N+1"
 
 
+_saved_two_ejercicios = partial(
+    saved_two_ejercicios,
+    modelo=_MODELO,
+    period="0A",
+    year_n=_YEAR_N,
+    year_n_plus_1=_YEAR_N_PLUS_1,
+    clock_n=_CLOCK_N,
+    clock_n_plus_1=_CLOCK_N_PLUS_1,
+)
+
+
 def test_token_identity_persists_across_both_annual_cycles(tmp_path: Path) -> None:
     """Token and custodian identifiers survive the roundtrip unchanged across both cycles.
 
@@ -363,16 +376,10 @@ def test_token_identity_persists_across_both_annual_cycles(tmp_path: Path) -> No
     """
     obs_n = _year_n_observation()
     obs_n1 = _year_n_plus_1_observation()
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        repo = CalculationObservationRepository()
-        save_app_filing_observation(repo, obs_n, captured_at=_CLOCK_N)
-        save_app_filing_observation(repo, obs_n1, captured_at=_CLOCK_N_PLUS_1)
-        loaded_n = find_observation(repo, _MODELO, filing_year=_YEAR_N, period="0A")
-        loaded_n1 = find_observation(repo, _MODELO, filing_year=_YEAR_N_PLUS_1, period="0A")
-
-        assert loaded_n is not None
-        assert loaded_n1 is not None
-
+    with _saved_two_ejercicios(tmp_path, obs_n=obs_n, obs_n_plus_1=obs_n1) as (
+        loaded_n,
+        loaded_n1,
+    ):
         # BTC token identity: clave-token=1 must survive unchanged in both cycles.
         token_ids_n = _values_for(loaded_n.observation, _MONEDA_CLAVE_TOKEN_CASILLA)
         token_ids_n1 = _values_for(loaded_n1.observation, _MONEDA_CLAVE_TOKEN_CASILLA)
@@ -422,16 +429,10 @@ def test_year_n_plus_1_btc_delta_exceeds_redeclaration_threshold(tmp_path: Path)
     """
     obs_n = _year_n_observation()
     obs_n1 = _year_n_plus_1_observation()
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        repo = CalculationObservationRepository()
-        save_app_filing_observation(repo, obs_n, captured_at=_CLOCK_N)
-        save_app_filing_observation(repo, obs_n1, captured_at=_CLOCK_N_PLUS_1)
-        loaded_n = find_observation(repo, _MODELO, filing_year=_YEAR_N, period="0A")
-        loaded_n1 = find_observation(repo, _MODELO, filing_year=_YEAR_N_PLUS_1, period="0A")
-
-        assert loaded_n is not None
-        assert loaded_n1 is not None
-
+    with _saved_two_ejercicios(tmp_path, obs_n=obs_n, obs_n_plus_1=obs_n1) as (
+        loaded_n,
+        loaded_n1,
+    ):
         val_n = _values_for(loaded_n.observation, _MONEDA_SALDO_CASILLA)[0]
         val_n1 = _values_for(loaded_n1.observation, _MONEDA_SALDO_CASILLA)[0]
 

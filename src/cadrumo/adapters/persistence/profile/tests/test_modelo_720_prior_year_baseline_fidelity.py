@@ -51,6 +51,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 from decimal import Decimal
+from functools import partial
 from pathlib import Path
 
 import pytest
@@ -79,7 +80,7 @@ from ...storage.tests.secure_sql import isolated_runtime_profile, isolated_two_b
 from ..calculation_observations import CalculationObservationRepository
 from ..iva_compensation_history import IvaCompensationHistoryRepository
 from ._multi_year_roundtrip_support import assert_omitted_casilla_is_detected, assert_two_ejercicio_round_trip
-from ._observation_lookup_support import find_observation, save_app_filing_observation
+from ._observation_lookup_support import find_observation, save_app_filing_observation, saved_two_ejercicios
 from .cross_period_clean_state_support import (
     BUCKET_ID as CLEAN_STATE_BUCKET_ID,
 )
@@ -439,6 +440,17 @@ def test_year_n_and_year_n_plus_1_are_independently_retrievable(tmp_path: Path) 
     )
 
 
+_saved_two_ejercicios = partial(
+    saved_two_ejercicios,
+    modelo=_MODELO,
+    period="0A",
+    year_n=_YEAR_N,
+    year_n_plus_1=_YEAR_N_PLUS_1,
+    clock_n=_CLOCK_N,
+    clock_n_plus_1=_CLOCK_N_PLUS_1,
+)
+
+
 def test_asset_identifier_identity_persists_across_both_annual_cycles(tmp_path: Path) -> None:
     """Asset identifiers survive the roundtrip unchanged across both annual cycles.
 
@@ -450,16 +462,10 @@ def test_asset_identifier_identity_persists_across_both_annual_cycles(tmp_path: 
     """
     obs_n = _year_n_observation()
     obs_n1 = _year_n_plus_1_observation()
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        repo = CalculationObservationRepository()
-        save_app_filing_observation(repo, obs_n, captured_at=_CLOCK_N)
-        save_app_filing_observation(repo, obs_n1, captured_at=_CLOCK_N_PLUS_1)
-        loaded_n = find_observation(repo, _MODELO, filing_year=_YEAR_N, period="0A")
-        loaded_n1 = find_observation(repo, _MODELO, filing_year=_YEAR_N_PLUS_1, period="0A")
-
-        assert loaded_n is not None
-        assert loaded_n1 is not None
-
+    with _saved_two_ejercicios(tmp_path, obs_n=obs_n, obs_n_plus_1=obs_n1) as (
+        loaded_n,
+        loaded_n1,
+    ):
         # Cuentas identifier: Decimal("12345678901234") must survive unchanged.
         ident_cuentas_n = loaded_n.observation.casilla_values.get(_CUENTAS_CODIGO_DE_CUENTA_CASILLA)
         ident_cuentas_n1 = loaded_n1.observation.casilla_values.get(_CUENTAS_CODIGO_DE_CUENTA_CASILLA)
@@ -521,16 +527,10 @@ def test_year_n_plus_1_cuentas_delta_exceeds_redeclaration_threshold(tmp_path: P
     """
     obs_n = _year_n_observation()
     obs_n1 = _year_n_plus_1_observation()
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        repo = CalculationObservationRepository()
-        save_app_filing_observation(repo, obs_n, captured_at=_CLOCK_N)
-        save_app_filing_observation(repo, obs_n1, captured_at=_CLOCK_N_PLUS_1)
-        loaded_n = find_observation(repo, _MODELO, filing_year=_YEAR_N, period="0A")
-        loaded_n1 = find_observation(repo, _MODELO, filing_year=_YEAR_N_PLUS_1, period="0A")
-
-        assert loaded_n is not None
-        assert loaded_n1 is not None
-
+    with _saved_two_ejercicios(tmp_path, obs_n=obs_n, obs_n_plus_1=obs_n1) as (
+        loaded_n,
+        loaded_n1,
+    ):
         # Use cuentas.valoracion to measure the cuentas-class delta specifically.
         val_n = loaded_n.observation.casilla_values.get(_CUENTAS_VALORACION_CASILLA)
         val_n1 = loaded_n1.observation.casilla_values.get(_CUENTAS_VALORACION_CASILLA)
