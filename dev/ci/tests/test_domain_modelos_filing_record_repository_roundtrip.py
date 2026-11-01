@@ -41,6 +41,8 @@ from cadrumo.domain.modelos.filing_record import (
 )
 from cadrumo.domain.modelos.filing_repository import ModeloRecordPersistenceError
 
+from ._filing_record_support import BUCKET_ID, P_2024_2T, RECORD_BUCKET_ID, hex_blob
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 # The registry definition is the sole authority for this namespace's identifier,
@@ -49,30 +51,18 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _FILING_NAMESPACE = MODELO_FILING_RECORD_CATALOGUE_NAMESPACE.namespace
 _FILING_OBJECT_KEY = MODELO_FILING_RECORD_CATALOGUE_NAMESPACE.require_default_object_key()
 _FILING_CATALOGUE_VERSION = MODELO_FILING_RECORD_CATALOGUE_NAMESPACE.schema_version
-_BUCKET_ID = "30330300-0000-4000-8000-000000000700"
-# The catalogue is one encrypted object per bucket and the repository refuses
-# records from another bucket, so the fixture's records carry the same bucket
-# the repository is bound to. _FOREIGN_BUCKET_ID is the isolation probe.
-_RECORD_BUCKET_ID = _BUCKET_ID
+# _FOREIGN_BUCKET_ID is the isolation probe: the repository refuses its records.
 _FOREIGN_BUCKET_ID = "30330300-0000-4000-8000-000000000701"
-_P_2024_2T = Period.from_year_and_code(2024, "2T")
 _P_2026_01 = Period.from_year_and_code(2026, "01")
 _CORRUPT_ENVELOPE_WRITTEN_AT = datetime(2026, 5, 28, 10, 55, 0, tzinfo=UTC)
 _FUTURE_ENVELOPE_WRITTEN_AT = datetime(2026, 5, 28, 11, 0, 0, tzinfo=UTC)
 
 
-def _hex(seed: str) -> str:
-    """Return a stable 64-char hex blob for typed-id fixture values."""
-
-    base = seed * 64
-    return base[:64]
-
-
 def _populated_catalogue() -> ModeloRecordCatalogue:
-    bucket_id = _RECORD_BUCKET_ID
-    work_unit_id = _hex("a")
-    superseded_revision = _hex("b")
-    current_revision = _hex("c")
+    bucket_id = RECORD_BUCKET_ID
+    work_unit_id = hex_blob("a")
+    superseded_revision = hex_blob("b")
+    current_revision = hex_blob("c")
     superseded_filed_at = datetime(2024, 7, 1, 9, 0, 0, tzinfo=UTC)
     current_filed_at = superseded_filed_at + timedelta(days=45)
 
@@ -94,7 +84,7 @@ def _populated_catalogue() -> ModeloRecordCatalogue:
         bucket_id=bucket_id,
         modelo=ModeloCode("303"),
         filing_year=2024,
-        period=_P_2024_2T,
+        period=P_2024_2T,
         filed_at=superseded_filed_at,
         filed_by="aeat.cli.modelo.file",
         notes="initial 2T filing - withheld import IVA at 21%",
@@ -117,7 +107,7 @@ def _populated_catalogue() -> ModeloRecordCatalogue:
         bucket_id=bucket_id,
         modelo=ModeloCode("303"),
         filing_year=2024,
-        period=_P_2024_2T,
+        period=P_2024_2T,
         filed_at=current_filed_at,
         filed_by="aeat.cli.modelo.amend",
         notes="rectifying amendment - missing input IVA on invoice INV-2024-0145",
@@ -135,19 +125,19 @@ def test_filing_record_catalogue_survives_encrypted_storage_roundtrip(
 ) -> None:
     """The two-record supersession chain round-trips through encrypted SQL."""
 
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        repo = ModeloRecordCatalogueRepository(bucket_id=_BUCKET_ID)
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=BUCKET_ID) as profile:
+        repo = ModeloRecordCatalogueRepository(bucket_id=BUCKET_ID)
         original = _populated_catalogue()
         repo.save(original)
-        loaded = ModeloRecordCatalogueRepository(bucket_id=_BUCKET_ID).load()
+        loaded = ModeloRecordCatalogueRepository(bucket_id=BUCKET_ID).load()
 
     assert loaded == original
     assert len(loaded.records) == 2
     current = loaded.current_for(
-        bucket_id=_RECORD_BUCKET_ID,
+        bucket_id=RECORD_BUCKET_ID,
         modelo="303",
         filing_year=2024,
-        period=_P_2024_2T,
+        period=P_2024_2T,
     )
     assert current is not None
     assert current.amends_filing_record_id is not None
@@ -167,17 +157,17 @@ def test_filing_record_catalogue_survives_encrypted_storage_roundtrip(
 def test_filing_record_catalogue_allows_distinct_current_group_members() -> None:
     """Member-scoped filing history keeps separate grupo members independent."""
 
-    bucket_id = _RECORD_BUCKET_ID
+    bucket_id = RECORD_BUCKET_ID
     filed_at = datetime(2026, 2, 20, 9, 0, 0, tzinfo=UTC)
     member_a_id = derive_filing_record_id(
-        work_unit_id=_hex("1"),
-        calculation_revision_id=_hex("2"),
+        work_unit_id=hex_blob("1"),
+        calculation_revision_id=hex_blob("2"),
         filed_by="aeat.cli.modelo.file",
         member_nif="A00000000",
     )
     member_b_id = derive_filing_record_id(
-        work_unit_id=_hex("3"),
-        calculation_revision_id=_hex("4"),
+        work_unit_id=hex_blob("3"),
+        calculation_revision_id=hex_blob("4"),
         filed_by="aeat.cli.modelo.file",
         member_nif="B00000001",
     )
@@ -186,8 +176,8 @@ def test_filing_record_catalogue_allows_distinct_current_group_members() -> None
         records={
             member_a_id: ModeloRecord(
                 filing_record_id=member_a_id,
-                work_unit_id=_hex("1"),
-                calculation_revision_id=_hex("2"),
+                work_unit_id=hex_blob("1"),
+                calculation_revision_id=hex_blob("2"),
                 bucket_id=bucket_id,
                 modelo=ModeloCode("322"),
                 filing_year=2026,
@@ -201,8 +191,8 @@ def test_filing_record_catalogue_allows_distinct_current_group_members() -> None
             ),
             member_b_id: ModeloRecord(
                 filing_record_id=member_b_id,
-                work_unit_id=_hex("3"),
-                calculation_revision_id=_hex("4"),
+                work_unit_id=hex_blob("3"),
+                calculation_revision_id=hex_blob("4"),
                 bucket_id=bucket_id,
                 modelo=ModeloCode("322"),
                 filing_year=2026,
@@ -251,20 +241,20 @@ def test_filing_record_rejects_aeat_acceptance_without_external_evidence() -> No
     """AEAT acceptance must be backed by an external evidence reference."""
     filed_at = datetime(2026, 4, 20, 9, 0, 0, tzinfo=UTC)
     filing_id = derive_filing_record_id(
-        work_unit_id=_hex("9"),
-        calculation_revision_id=_hex("a"),
+        work_unit_id=hex_blob("9"),
+        calculation_revision_id=hex_blob("a"),
         filed_by="aeat.cli.modelo.file",
     )
 
     with pytest.raises(ValidationError, match="confirmed filing record must carry external evidence"):
         ModeloRecord(
             filing_record_id=filing_id,
-            work_unit_id=_hex("9"),
-            calculation_revision_id=_hex("a"),
-            bucket_id=_RECORD_BUCKET_ID,
+            work_unit_id=hex_blob("9"),
+            calculation_revision_id=hex_blob("a"),
+            bucket_id=RECORD_BUCKET_ID,
             modelo=ModeloCode("303"),
             filing_year=2024,
-            period=_P_2024_2T,
+            period=P_2024_2T,
             filed_at=filed_at,
             filed_by="aeat.cli.modelo.file",
             origin=FilingOrigin.AEAT,
@@ -277,18 +267,18 @@ def test_filing_record_model_copy_revalidates_aeat_acceptance_invariant() -> Non
     """Domain copies must not bypass the external-evidence acceptance invariant."""
     filed_at = datetime(2026, 4, 20, 9, 0, 0, tzinfo=UTC)
     filing_id = derive_filing_record_id(
-        work_unit_id=_hex("b"),
-        calculation_revision_id=_hex("c"),
+        work_unit_id=hex_blob("b"),
+        calculation_revision_id=hex_blob("c"),
         filed_by="aeat.cli.modelo.file",
     )
     record = ModeloRecord(
         filing_record_id=filing_id,
-        work_unit_id=_hex("b"),
-        calculation_revision_id=_hex("c"),
-        bucket_id=_RECORD_BUCKET_ID,
+        work_unit_id=hex_blob("b"),
+        calculation_revision_id=hex_blob("c"),
+        bucket_id=RECORD_BUCKET_ID,
         modelo=ModeloCode("303"),
         filing_year=2024,
-        period=_P_2024_2T,
+        period=P_2024_2T,
         filed_at=filed_at,
         filed_by="aeat.cli.modelo.file",
         origin=FilingOrigin.LOCAL,
@@ -304,8 +294,8 @@ def test_filing_record_rejects_external_evidence_without_aeat_acceptance() -> No
     """External evidence cannot exist as a half-stamped filing record."""
     filed_at = datetime(2026, 4, 20, 9, 0, 0, tzinfo=UTC)
     filing_id = derive_filing_record_id(
-        work_unit_id=_hex("d"),
-        calculation_revision_id=_hex("e"),
+        work_unit_id=hex_blob("d"),
+        calculation_revision_id=hex_blob("e"),
         filed_by="aeat.cli.modelo.file",
     )
     evidence = ExternalEvidence(
@@ -317,12 +307,12 @@ def test_filing_record_rejects_external_evidence_without_aeat_acceptance() -> No
     with pytest.raises(ValidationError, match="pendiente filing record must not carry external evidence"):
         ModeloRecord(
             filing_record_id=filing_id,
-            work_unit_id=_hex("d"),
-            calculation_revision_id=_hex("e"),
-            bucket_id=_RECORD_BUCKET_ID,
+            work_unit_id=hex_blob("d"),
+            calculation_revision_id=hex_blob("e"),
+            bucket_id=RECORD_BUCKET_ID,
             modelo=ModeloCode("303"),
             filing_year=2024,
-            period=_P_2024_2T,
+            period=P_2024_2T,
             filed_at=filed_at,
             filed_by="aeat.cli.modelo.file",
             external_evidence=evidence,
@@ -336,18 +326,18 @@ def test_filing_record_model_copy_revalidates_external_evidence_acceptance_invar
     """Copy updates cannot attach external evidence without the acceptance bit."""
     filed_at = datetime(2026, 4, 20, 9, 0, 0, tzinfo=UTC)
     filing_id = derive_filing_record_id(
-        work_unit_id=_hex("f"),
-        calculation_revision_id=_hex("0"),
+        work_unit_id=hex_blob("f"),
+        calculation_revision_id=hex_blob("0"),
         filed_by="aeat.cli.modelo.file",
     )
     record = ModeloRecord(
         filing_record_id=filing_id,
-        work_unit_id=_hex("f"),
-        calculation_revision_id=_hex("0"),
-        bucket_id=_RECORD_BUCKET_ID,
+        work_unit_id=hex_blob("f"),
+        calculation_revision_id=hex_blob("0"),
+        bucket_id=RECORD_BUCKET_ID,
         modelo=ModeloCode("303"),
         filing_year=2024,
-        period=_P_2024_2T,
+        period=P_2024_2T,
         filed_at=filed_at,
         filed_by="aeat.cli.modelo.file",
         origin=FilingOrigin.LOCAL,
@@ -369,14 +359,14 @@ def test_filing_record_catalogue_rejects_duplicate_current_group_member() -> Non
 
     filed_at = datetime(2026, 2, 20, 9, 0, 0, tzinfo=UTC)
     first_id = derive_filing_record_id(
-        work_unit_id=_hex("5"),
-        calculation_revision_id=_hex("6"),
+        work_unit_id=hex_blob("5"),
+        calculation_revision_id=hex_blob("6"),
         filed_by="aeat.cli.modelo.file",
         member_nif="A00000000",
     )
     second_id = derive_filing_record_id(
-        work_unit_id=_hex("7"),
-        calculation_revision_id=_hex("8"),
+        work_unit_id=hex_blob("7"),
+        calculation_revision_id=hex_blob("8"),
         filed_by="aeat.cli.modelo.file",
         member_nif="A00000000",
     )
@@ -386,9 +376,9 @@ def test_filing_record_catalogue_rejects_duplicate_current_group_member() -> Non
             records={
                 first_id: ModeloRecord(
                     filing_record_id=first_id,
-                    work_unit_id=_hex("5"),
-                    calculation_revision_id=_hex("6"),
-                    bucket_id=_RECORD_BUCKET_ID,
+                    work_unit_id=hex_blob("5"),
+                    calculation_revision_id=hex_blob("6"),
+                    bucket_id=RECORD_BUCKET_ID,
                     modelo=ModeloCode("322"),
                     filing_year=2026,
                     period=_P_2026_01,
@@ -401,9 +391,9 @@ def test_filing_record_catalogue_rejects_duplicate_current_group_member() -> Non
                 ),
                 second_id: ModeloRecord(
                     filing_record_id=second_id,
-                    work_unit_id=_hex("7"),
-                    calculation_revision_id=_hex("8"),
-                    bucket_id=_RECORD_BUCKET_ID,
+                    work_unit_id=hex_blob("7"),
+                    calculation_revision_id=hex_blob("8"),
+                    bucket_id=RECORD_BUCKET_ID,
                     modelo=ModeloCode("322"),
                     filing_year=2026,
                     period=_P_2026_01,
@@ -429,17 +419,17 @@ def test_filing_record_catalogue_rejects_amendment_across_member_nif() -> None:
     audit chain across two unrelated members' filings.
     """
 
-    bucket_id = _RECORD_BUCKET_ID
+    bucket_id = RECORD_BUCKET_ID
     filed_at = datetime(2026, 3, 10, 9, 0, 0, tzinfo=UTC)
     baseline_id = derive_filing_record_id(
-        work_unit_id=_hex("1"),
-        calculation_revision_id=_hex("2"),
+        work_unit_id=hex_blob("1"),
+        calculation_revision_id=hex_blob("2"),
         filed_by="aeat.cli.modelo.file",
         member_nif="A00000000",
     )
     amendment_id = derive_filing_record_id(
-        work_unit_id=_hex("1"),
-        calculation_revision_id=_hex("3"),
+        work_unit_id=hex_blob("1"),
+        calculation_revision_id=hex_blob("3"),
         filed_by="aeat.cli.modelo.amend",
         member_nif="B00000001",
     )
@@ -449,8 +439,8 @@ def test_filing_record_catalogue_rejects_amendment_across_member_nif() -> None:
             records={
                 baseline_id: ModeloRecord(
                     filing_record_id=baseline_id,
-                    work_unit_id=_hex("1"),
-                    calculation_revision_id=_hex("2"),
+                    work_unit_id=hex_blob("1"),
+                    calculation_revision_id=hex_blob("2"),
                     bucket_id=bucket_id,
                     modelo=ModeloCode("322"),
                     filing_year=2026,
@@ -467,8 +457,8 @@ def test_filing_record_catalogue_rejects_amendment_across_member_nif() -> None:
                 ),
                 amendment_id: ModeloRecord(
                     filing_record_id=amendment_id,
-                    work_unit_id=_hex("1"),
-                    calculation_revision_id=_hex("3"),
+                    work_unit_id=hex_blob("1"),
+                    calculation_revision_id=hex_blob("3"),
                     bucket_id=bucket_id,
                     modelo=ModeloCode("322"),
                     filing_year=2026,
@@ -506,8 +496,8 @@ def test_filing_record_catalogue_supersession_chain_drift_surfaces_at_load(
 
     import json as _json
 
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        repo = ModeloRecordCatalogueRepository(bucket_id=_BUCKET_ID)
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=BUCKET_ID) as profile:
+        repo = ModeloRecordCatalogueRepository(bucket_id=BUCKET_ID)
         original = _populated_catalogue()
         repo.save(original)
 
@@ -537,7 +527,7 @@ def test_filing_record_catalogue_supersession_chain_drift_surfaces_at_load(
         )
 
         with pytest.raises(ValidationError):
-            ModeloRecordCatalogueRepository(bucket_id=_BUCKET_ID).load()
+            ModeloRecordCatalogueRepository(bucket_id=BUCKET_ID).load()
 
 
 def test_filing_record_catalogue_wrong_inner_classification_is_localized(
@@ -547,7 +537,7 @@ def test_filing_record_catalogue_wrong_inner_classification_is_localized(
 
     from cadrumo.adapters.persistence.storage.envelope.contract import Envelope
 
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=BUCKET_ID) as profile:
         envelope = Envelope[ModeloRecordCatalogue](
             schema_version=_FILING_CATALOGUE_VERSION,
             written_at=_CORRUPT_ENVELOPE_WRITTEN_AT,
@@ -564,7 +554,7 @@ def test_filing_record_catalogue_wrong_inner_classification_is_localized(
         )
 
         with pytest.raises(ModeloRecordPersistenceError) as raised:
-            ModeloRecordCatalogueRepository(bucket_id=_BUCKET_ID).load()
+            ModeloRecordCatalogueRepository(bucket_id=BUCKET_ID).load()
 
     assert raised.value.translated_message == "errors.fail.fail_modelo_filing_record_persistence"
     assert raised.value.context == {
@@ -582,7 +572,7 @@ def test_filing_record_catalogue_unsupported_inner_version_is_localized(
     from cadrumo.adapters.persistence.storage.envelope.contract import Envelope
 
     stored_schema_version = _FILING_CATALOGUE_VERSION + 1
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=BUCKET_ID) as profile:
         envelope = Envelope[ModeloRecordCatalogue](
             schema_version=stored_schema_version,
             written_at=_FUTURE_ENVELOPE_WRITTEN_AT,
@@ -599,7 +589,7 @@ def test_filing_record_catalogue_unsupported_inner_version_is_localized(
         )
 
         with pytest.raises(ModeloRecordPersistenceError) as raised:
-            ModeloRecordCatalogueRepository(bucket_id=_BUCKET_ID).load()
+            ModeloRecordCatalogueRepository(bucket_id=BUCKET_ID).load()
 
     assert raised.value.translated_message == "errors.fail.fail_modelo_filing_record_persistence"
     assert raised.value.context == {
@@ -610,13 +600,13 @@ def test_filing_record_catalogue_unsupported_inner_version_is_localized(
 
 
 def _source_transaction_ids() -> tuple[str, ...]:
-    return (_hex("7"), _hex("8"))
+    return (hex_blob("7"), hex_blob("8"))
 
 
 def test_filing_record_source_transaction_ids_survive_roundtrip(tmp_path: Path) -> None:
     """The denormalised source_transaction_ids footprint round-trips with non-default values."""
-    work_unit_id = _hex("a")
-    revision_id = _hex("c")
+    work_unit_id = hex_blob("a")
+    revision_id = hex_blob("c")
     filed_at = datetime(2024, 7, 1, 9, 0, 0, tzinfo=UTC)
     filing_id = derive_filing_record_id(
         work_unit_id=work_unit_id,
@@ -627,10 +617,10 @@ def test_filing_record_source_transaction_ids_survive_roundtrip(tmp_path: Path) 
         filing_record_id=filing_id,
         work_unit_id=work_unit_id,
         calculation_revision_id=revision_id,
-        bucket_id=_RECORD_BUCKET_ID,
+        bucket_id=RECORD_BUCKET_ID,
         modelo=ModeloCode("303"),
         filing_year=2024,
-        period=_P_2024_2T,
+        period=P_2024_2T,
         filed_at=filed_at,
         filed_by="aeat.cli.modelo.file",
         source_transaction_ids=_source_transaction_ids(),
@@ -640,10 +630,10 @@ def test_filing_record_source_transaction_ids_survive_roundtrip(tmp_path: Path) 
     )
     original = ModeloRecordCatalogue(records={filing_id: record})
 
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
-        repo = ModeloRecordCatalogueRepository(bucket_id=_BUCKET_ID)
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=BUCKET_ID):
+        repo = ModeloRecordCatalogueRepository(bucket_id=BUCKET_ID)
         repo.save(original)
-        loaded = ModeloRecordCatalogueRepository(bucket_id=_BUCKET_ID).load()
+        loaded = ModeloRecordCatalogueRepository(bucket_id=BUCKET_ID).load()
 
     assert loaded == original
     (loaded_record,) = loaded.records.values()
@@ -652,8 +642,8 @@ def test_filing_record_source_transaction_ids_survive_roundtrip(tmp_path: Path) 
 
 def test_derive_filing_record_id_is_stable_regardless_of_source_transaction_ids() -> None:
     """source_transaction_ids is excluded from the content address; the id is unaffected."""
-    work_unit_id = _hex("a")
-    revision_id = _hex("c")
+    work_unit_id = hex_blob("a")
+    revision_id = hex_blob("c")
     filed_at = datetime(2024, 7, 1, 9, 0, 0, tzinfo=UTC)
     derived = derive_filing_record_id(
         work_unit_id=work_unit_id,
@@ -665,10 +655,10 @@ def test_derive_filing_record_id_is_stable_regardless_of_source_transaction_ids(
         filing_record_id=derived,
         work_unit_id=work_unit_id,
         calculation_revision_id=revision_id,
-        bucket_id=_RECORD_BUCKET_ID,
+        bucket_id=RECORD_BUCKET_ID,
         modelo=ModeloCode("303"),
         filing_year=2024,
-        period=_P_2024_2T,
+        period=P_2024_2T,
         filed_at=filed_at,
         filed_by="aeat.cli.modelo.file",
         origin=FilingOrigin.LOCAL,
@@ -686,8 +676,8 @@ def test_filing_record_absent_source_transaction_ids_defaults_to_empty(tmp_path:
     """Anti-tautology proof: a payload missing source_transaction_ids loads as ()."""
     import json as _json
 
-    work_unit_id = _hex("a")
-    revision_id = _hex("c")
+    work_unit_id = hex_blob("a")
+    revision_id = hex_blob("c")
     filed_at = datetime(2024, 7, 1, 9, 0, 0, tzinfo=UTC)
     filing_id = derive_filing_record_id(
         work_unit_id=work_unit_id,
@@ -698,10 +688,10 @@ def test_filing_record_absent_source_transaction_ids_defaults_to_empty(tmp_path:
         filing_record_id=filing_id,
         work_unit_id=work_unit_id,
         calculation_revision_id=revision_id,
-        bucket_id=_RECORD_BUCKET_ID,
+        bucket_id=RECORD_BUCKET_ID,
         modelo=ModeloCode("303"),
         filing_year=2024,
-        period=_P_2024_2T,
+        period=P_2024_2T,
         filed_at=filed_at,
         filed_by="aeat.cli.modelo.file",
         source_transaction_ids=_source_transaction_ids(),
@@ -711,8 +701,8 @@ def test_filing_record_absent_source_transaction_ids_defaults_to_empty(tmp_path:
     )
     original = ModeloRecordCatalogue(records={filing_id: record})
 
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        repo = ModeloRecordCatalogueRepository(bucket_id=_BUCKET_ID)
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=BUCKET_ID) as profile:
+        repo = ModeloRecordCatalogueRepository(bucket_id=BUCKET_ID)
         repo.save(original)
 
         stored = profile.repository.load(
@@ -737,7 +727,7 @@ def test_filing_record_absent_source_transaction_ids_defaults_to_empty(tmp_path:
             payload=_json.dumps(envelope).encode("utf-8"),
         )
 
-        mutated = ModeloRecordCatalogueRepository(bucket_id=_BUCKET_ID).load()
+        mutated = ModeloRecordCatalogueRepository(bucket_id=BUCKET_ID).load()
 
     (mutated_record,) = mutated.records.values()
     assert mutated_record.source_transaction_ids == ()
@@ -752,8 +742,8 @@ def test_filing_record_id_is_clock_free_and_outcome_pinned() -> None:
     same actor collapses onto one record rather than minting a time-stamped
     duplicate; a different actor diverges the identity.
     """
-    work_unit_id = _hex("d")
-    revision_id = _hex("e")
+    work_unit_id = hex_blob("d")
+    revision_id = hex_blob("e")
     record_id = derive_filing_record_id(
         work_unit_id=work_unit_id,
         calculation_revision_id=revision_id,
@@ -763,7 +753,7 @@ def test_filing_record_id_is_clock_free_and_outcome_pinned() -> None:
         filing_record_id=record_id,
         work_unit_id=work_unit_id,
         calculation_revision_id=revision_id,
-        bucket_id=_RECORD_BUCKET_ID,
+        bucket_id=RECORD_BUCKET_ID,
         modelo=ModeloCode("303"),
         filing_year=2026,
         period=_P_2026_01,
@@ -778,7 +768,7 @@ def test_filing_record_id_is_clock_free_and_outcome_pinned() -> None:
         filing_record_id=record_id,
         work_unit_id=work_unit_id,
         calculation_revision_id=revision_id,
-        bucket_id=_RECORD_BUCKET_ID,
+        bucket_id=RECORD_BUCKET_ID,
         modelo=ModeloCode("303"),
         filing_year=2026,
         period=_P_2026_01,
@@ -807,8 +797,8 @@ def test_filing_record_rejects_id_not_matching_outcome() -> None:
     the model validator re-derives the outcome-pinned id and raises, with
     ``filed_at`` populated non-default to confirm it never participates in the id.
     """
-    work_unit_id = _hex("f")
-    revision_id = _hex("e")
+    work_unit_id = hex_blob("f")
+    revision_id = hex_blob("e")
     mismatched_id = derive_filing_record_id(
         work_unit_id=work_unit_id,
         calculation_revision_id=revision_id,
@@ -819,7 +809,7 @@ def test_filing_record_rejects_id_not_matching_outcome() -> None:
             filing_record_id=mismatched_id,
             work_unit_id=work_unit_id,
             calculation_revision_id=revision_id,
-            bucket_id=_RECORD_BUCKET_ID,
+            bucket_id=RECORD_BUCKET_ID,
             modelo=ModeloCode("303"),
             filing_year=2026,
             period=_P_2026_01,
@@ -832,146 +822,10 @@ def test_filing_record_rejects_id_not_matching_outcome() -> None:
         )
 
 
-def _amendment_pair(
-    *,
-    target_id_override: str | None = None,
-    amendment_period: Period | None = None,
-    amendment_filing_year: int | None = None,
-    baseline_successor_override: str | None = None,
-) -> ModeloRecordCatalogue:
-    """Build a baseline plus an amendment whose link can be steered off target."""
-    bucket_id = _RECORD_BUCKET_ID
-    work_unit_id = _hex("a")
-    baseline_revision = _hex("b")
-    amendment_revision = _hex("c")
-    baseline_filed_at = datetime(2024, 7, 1, 9, 0, 0, tzinfo=UTC)
-    amendment_filed_at = baseline_filed_at + timedelta(days=45)
-
-    baseline_id = derive_filing_record_id(
-        work_unit_id=work_unit_id,
-        calculation_revision_id=baseline_revision,
-        filed_by="aeat.cli.modelo.file",
-    )
-    amendment_id = derive_filing_record_id(
-        work_unit_id=work_unit_id,
-        calculation_revision_id=amendment_revision,
-        filed_by="aeat.cli.modelo.amend",
-    )
-    baseline = ModeloRecord(
-        filing_record_id=baseline_id,
-        work_unit_id=work_unit_id,
-        calculation_revision_id=baseline_revision,
-        bucket_id=bucket_id,
-        modelo=ModeloCode("303"),
-        filing_year=2024,
-        period=_P_2024_2T,
-        filed_at=baseline_filed_at,
-        filed_by="aeat.cli.modelo.file",
-        status=ModeloRecordStatus.SUPERSEDIDO,
-        superseded_at=amendment_filed_at,
-        superseded_by_filing_record_id=baseline_successor_override or amendment_id,
-        origin=FilingOrigin.LOCAL,
-        confirmation=AeatConfirmationState.PENDIENTE,
-        declaration_kind=FilingDeclarationKind.ORIGINAL,
-    )
-    period = amendment_period or _P_2024_2T
-    amendment = ModeloRecord(
-        filing_record_id=amendment_id,
-        work_unit_id=work_unit_id,
-        calculation_revision_id=amendment_revision,
-        bucket_id=bucket_id,
-        modelo=ModeloCode("303"),
-        filing_year=amendment_filing_year or 2024,
-        period=period,
-        filed_at=amendment_filed_at,
-        filed_by="aeat.cli.modelo.amend",
-        status=ModeloRecordStatus.VIGENTE,
-        amends_filing_record_id=target_id_override or baseline_id,
-        origin=FilingOrigin.LOCAL,
-        confirmation=AeatConfirmationState.PENDIENTE,
-        declaration_kind=FilingDeclarationKind.COMPLEMENTARIA,
-    )
-    return ModeloRecordCatalogue(records={baseline_id: baseline, amendment_id: amendment})
-
-
-def test_amendment_link_to_a_record_outside_the_catalogue_is_refused() -> None:
-    """A complementaria must correct a filing that exists, not a claimed one."""
-    with pytest.raises(ValidationError, match="not in this catalogue"):
-        _amendment_pair(target_id_override=_hex("f"))
-
-
-def test_amendment_link_to_itself_is_refused() -> None:
-    """A record cannot be its own amendment baseline."""
-    bucket_id = _RECORD_BUCKET_ID
-    work_unit_id = _hex("a")
-    revision = _hex("b")
-    record_id = derive_filing_record_id(
-        work_unit_id=work_unit_id,
-        calculation_revision_id=revision,
-        filed_by="aeat.cli.modelo.amend",
-    )
-    self_amending = ModeloRecord(
-        filing_record_id=record_id,
-        work_unit_id=work_unit_id,
-        calculation_revision_id=revision,
-        bucket_id=bucket_id,
-        modelo=ModeloCode("303"),
-        filing_year=2024,
-        period=_P_2024_2T,
-        filed_at=datetime(2024, 7, 1, 9, 0, 0, tzinfo=UTC),
-        filed_by="aeat.cli.modelo.amend",
-        status=ModeloRecordStatus.VIGENTE,
-        amends_filing_record_id=record_id,
-        origin=FilingOrigin.LOCAL,
-        confirmation=AeatConfirmationState.PENDIENTE,
-        declaration_kind=FilingDeclarationKind.COMPLEMENTARIA,
-    )
-
-    with pytest.raises(ValidationError, match="cannot amend itself"):
-        ModeloRecordCatalogue(records={record_id: self_amending})
-
-
-def test_amendment_link_across_filing_coordinates_is_refused() -> None:
-    """An amendment corrects the same (bucket, modelo, year, period) coordinate."""
-    with pytest.raises(ValidationError, match="across filing coordinates"):
-        _amendment_pair(
-            amendment_period=Period.from_year_and_code(2024, "3T"),
-        )
-
-
-def test_resolvable_same_coordinate_amendment_survives_encrypted_storage(
-    tmp_path: Path,
-) -> None:
-    """Valid parity: a resolvable, distinct, same-coordinate link round-trips."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
-        original = _amendment_pair()
-        ModeloRecordCatalogueRepository(bucket_id=_BUCKET_ID).save(original)
-        loaded = ModeloRecordCatalogueRepository(bucket_id=_BUCKET_ID).load()
-
-    assert loaded == original
-    amendment = loaded.current_for(
-        bucket_id=_RECORD_BUCKET_ID,
-        modelo="303",
-        filing_year=2024,
-        period=_P_2024_2T,
-    )
-    assert amendment is not None
-    assert amendment.amends_filing_record_id is not None
-    baseline = loaded.get(amendment.amends_filing_record_id)
-    assert baseline is not None
-    assert baseline.filing_record_id != amendment.filing_record_id
-    assert (baseline.bucket_id, baseline.modelo, baseline.filing_year, baseline.period) == (
-        amendment.bucket_id,
-        amendment.modelo,
-        amendment.filing_year,
-        amendment.period,
-    )
-
-
 def _record_with_source_transactions(source_transaction_ids: tuple[str, ...]) -> ModeloRecord:
     """Build a current filing record carrying the given ledger provenance footprint."""
-    work_unit_id = _hex("a")
-    revision_id = _hex("c")
+    work_unit_id = hex_blob("a")
+    revision_id = hex_blob("c")
     return ModeloRecord(
         filing_record_id=derive_filing_record_id(
             work_unit_id=work_unit_id,
@@ -980,10 +834,10 @@ def _record_with_source_transactions(source_transaction_ids: tuple[str, ...]) ->
         ),
         work_unit_id=work_unit_id,
         calculation_revision_id=revision_id,
-        bucket_id=_RECORD_BUCKET_ID,
+        bucket_id=RECORD_BUCKET_ID,
         modelo=ModeloCode("303"),
         filing_year=2024,
-        period=_P_2024_2T,
+        period=P_2024_2T,
         filed_at=datetime(2024, 7, 1, 9, 0, 0, tzinfo=UTC),
         filed_by="aeat.cli.modelo.file",
         status=ModeloRecordStatus.VIGENTE,
@@ -998,9 +852,9 @@ def _record_with_source_transactions(source_transaction_ids: tuple[str, ...]) ->
     "malformed",
     (
         ("bad",),
-        (_hex("a").upper(),),
-        (" " + _hex("a")[1:] + "z",),
-        (_hex("a")[:-1] + "g",),
+        (hex_blob("a").upper(),),
+        (" " + hex_blob("a")[1:] + "z",),
+        (hex_blob("a")[:-1] + "g",),
     ),
     ids=("too-short", "uppercase-hex", "non-hex-tail", "non-hex-digit"),
 )
@@ -1013,18 +867,18 @@ def test_source_transaction_ids_must_be_canonical_transaction_identities(malform
 def test_source_transaction_ids_reject_a_repeated_transaction() -> None:
     """A repeat is a double count or a merged footprint, never a second contribution."""
     with pytest.raises(ValidationError, match="must not repeat a transaction"):
-        _record_with_source_transactions((_hex("7"), _hex("7")))
+        _record_with_source_transactions((hex_blob("7"), hex_blob("7")))
 
 
 def test_canonical_source_transaction_footprint_survives_encrypted_storage(tmp_path: Path) -> None:
     """Valid parity: a distinct, canonical footprint round-trips unchanged."""
-    footprint = (_hex("7"), _hex("8"))
+    footprint = (hex_blob("7"), hex_blob("8"))
     record = _record_with_source_transactions(footprint)
     original = ModeloRecordCatalogue(records={record.filing_record_id: record})
 
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
-        ModeloRecordCatalogueRepository(bucket_id=_BUCKET_ID).save(original)
-        loaded = ModeloRecordCatalogueRepository(bucket_id=_BUCKET_ID).load()
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=BUCKET_ID):
+        ModeloRecordCatalogueRepository(bucket_id=BUCKET_ID).save(original)
+        loaded = ModeloRecordCatalogueRepository(bucket_id=BUCKET_ID).load()
 
     assert loaded == original
     loaded_record = loaded.get(record.filing_record_id)
@@ -1034,8 +888,8 @@ def test_canonical_source_transaction_footprint_survives_encrypted_storage(tmp_p
 
 def _foreign_bucket_catalogue() -> ModeloRecordCatalogue:
     """Build a catalogue whose single record belongs to another taxpayer's bucket."""
-    work_unit_id = _hex("a")
-    revision_id = _hex("c")
+    work_unit_id = hex_blob("a")
+    revision_id = hex_blob("c")
     record = ModeloRecord(
         filing_record_id=derive_filing_record_id(
             work_unit_id=work_unit_id,
@@ -1047,7 +901,7 @@ def _foreign_bucket_catalogue() -> ModeloRecordCatalogue:
         bucket_id=_FOREIGN_BUCKET_ID,
         modelo=ModeloCode("303"),
         filing_year=2024,
-        period=_P_2024_2T,
+        period=P_2024_2T,
         filed_at=datetime(2024, 7, 1, 9, 0, 0, tzinfo=UTC),
         filed_by="aeat.cli.modelo.file",
         status=ModeloRecordStatus.VIGENTE,
@@ -1061,15 +915,15 @@ def _foreign_bucket_catalogue() -> ModeloRecordCatalogue:
 def test_foreign_bucket_filing_record_is_refused_at_save(tmp_path: Path) -> None:
     """A receipt from another taxpayer's bucket must not enter this catalogue."""
     with (
-        isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID),
+        isolated_runtime_profile(tmp_path=tmp_path, bucket_id=BUCKET_ID),
         pytest.raises(ModeloRecordPersistenceError) as raised,
     ):
-        ModeloRecordCatalogueRepository(bucket_id=_BUCKET_ID).save(_foreign_bucket_catalogue())
+        ModeloRecordCatalogueRepository(bucket_id=BUCKET_ID).save(_foreign_bucket_catalogue())
 
     assert raised.value.context == {
         "reason": "foreign_bucket_record",
         "boundary": "save",
-        "expected_bucket_id": _BUCKET_ID,
+        "expected_bucket_id": BUCKET_ID,
         "record_bucket_ids": [_FOREIGN_BUCKET_ID],
     }
 
@@ -1085,7 +939,7 @@ def test_foreign_bucket_filing_record_is_refused_at_load(tmp_path: Path) -> None
     from cadrumo.adapters.persistence.storage.envelope.contract import Envelope
 
     catalogue = _foreign_bucket_catalogue()
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=BUCKET_ID) as profile:
         envelope = Envelope[ModeloRecordCatalogue](
             schema_version=_FILING_CATALOGUE_VERSION,
             written_at=_CORRUPT_ENVELOPE_WRITTEN_AT,
@@ -1102,151 +956,11 @@ def test_foreign_bucket_filing_record_is_refused_at_load(tmp_path: Path) -> None
         )
 
         with pytest.raises(ModeloRecordPersistenceError) as raised:
-            ModeloRecordCatalogueRepository(bucket_id=_BUCKET_ID).load()
+            ModeloRecordCatalogueRepository(bucket_id=BUCKET_ID).load()
 
     assert raised.value.context == {
         "reason": "foreign_bucket_record",
         "boundary": "load",
-        "expected_bucket_id": _BUCKET_ID,
+        "expected_bucket_id": BUCKET_ID,
         "record_bucket_ids": [_FOREIGN_BUCKET_ID],
     }
-
-
-def test_one_sided_amendment_link_is_refused() -> None:
-    """Both records must agree about the amendment relationship they share.
-
-    The three-record disagreement: the amendment correctly resolves to its
-    baseline, but the baseline names a third record as its successor. Read
-    forwards the chain is coherent; read backwards it is not, so the audit
-    history depends on which end you start from.
-    """
-    third_party_successor = _hex("e")
-
-    with pytest.raises(ValidationError, match="one-sided amendment link"):
-        _amendment_pair(baseline_successor_override=third_party_successor)
-
-
-def test_amendment_whose_baseline_names_no_successor_is_refused() -> None:
-    """An amendment with no answering back-reference is the same one-sided defect.
-
-    Reaches the refusal through a baseline that is still current, so the
-    supersession side of the link is absent rather than merely wrong.
-    """
-    bucket_id = _RECORD_BUCKET_ID
-    work_unit_id = _hex("a")
-    baseline_revision = _hex("b")
-    amendment_revision = _hex("c")
-    baseline_id = derive_filing_record_id(
-        work_unit_id=work_unit_id,
-        calculation_revision_id=baseline_revision,
-        filed_by="aeat.cli.modelo.file",
-    )
-    amendment_id = derive_filing_record_id(
-        work_unit_id=work_unit_id,
-        calculation_revision_id=amendment_revision,
-        filed_by="aeat.cli.modelo.amend",
-    )
-    baseline_filed_at = datetime(2024, 7, 1, 9, 0, 0, tzinfo=UTC)
-    baseline = ModeloRecord(
-        filing_record_id=baseline_id,
-        work_unit_id=work_unit_id,
-        calculation_revision_id=baseline_revision,
-        bucket_id=bucket_id,
-        modelo=ModeloCode("303"),
-        filing_year=2024,
-        period=_P_2024_2T,
-        filed_at=baseline_filed_at,
-        filed_by="aeat.cli.modelo.file",
-        status=ModeloRecordStatus.VIGENTE,
-        origin=FilingOrigin.LOCAL,
-        confirmation=AeatConfirmationState.PENDIENTE,
-        declaration_kind=FilingDeclarationKind.ORIGINAL,
-    )
-    amendment = ModeloRecord(
-        filing_record_id=amendment_id,
-        work_unit_id=work_unit_id,
-        calculation_revision_id=amendment_revision,
-        bucket_id=bucket_id,
-        modelo=ModeloCode("303"),
-        filing_year=2024,
-        period=_P_2024_2T,
-        filed_at=baseline_filed_at + timedelta(days=45),
-        filed_by="aeat.cli.modelo.amend",
-        status=ModeloRecordStatus.SUPERSEDIDO,
-        superseded_at=baseline_filed_at + timedelta(days=90),
-        superseded_by_filing_record_id=_hex("e"),
-        amends_filing_record_id=baseline_id,
-        origin=FilingOrigin.LOCAL,
-        confirmation=AeatConfirmationState.PENDIENTE,
-        declaration_kind=FilingDeclarationKind.COMPLEMENTARIA,
-    )
-
-    with pytest.raises(ValidationError, match="one-sided amendment link"):
-        ModeloRecordCatalogue(records={baseline_id: baseline, amendment_id: amendment})
-
-
-def test_agreeing_amendment_link_is_accepted() -> None:
-    """Valid parity: forward and reverse links naming each other pass."""
-    catalogue = _amendment_pair()
-
-    amendment = catalogue.current_for(
-        bucket_id=_RECORD_BUCKET_ID,
-        modelo="303",
-        filing_year=2024,
-        period=_P_2024_2T,
-    )
-    assert amendment is not None
-    assert amendment.amends_filing_record_id is not None
-    baseline = catalogue.get(amendment.amends_filing_record_id)
-    assert baseline is not None
-    assert baseline.superseded_by_filing_record_id == amendment.filing_record_id
-
-
-def test_amendment_chain_of_three_agrees_at_every_hop() -> None:
-    """A -> B -> C: each hop's forward and reverse links must name each other."""
-    bucket_id = _RECORD_BUCKET_ID
-    work_unit_id = _hex("a")
-    first_filed_at = datetime(2024, 7, 1, 9, 0, 0, tzinfo=UTC)
-    revisions = (_hex("b"), _hex("c"), _hex("d"))
-    actors = ("aeat.cli.modelo.file", "aeat.cli.modelo.amend", "aeat.cli.modelo.amend")
-    ids = tuple(
-        derive_filing_record_id(
-            work_unit_id=work_unit_id,
-            calculation_revision_id=revision,
-            filed_by=actor,
-        )
-        for revision, actor in zip(revisions, actors, strict=True)
-    )
-    records: dict[str, ModeloRecord] = {}
-    for index, (record_id, revision, actor) in enumerate(zip(ids, revisions, actors, strict=True)):
-        is_last = index == len(ids) - 1
-        filed_at = first_filed_at + timedelta(days=45 * index)
-        records[record_id] = ModeloRecord(
-            filing_record_id=record_id,
-            work_unit_id=work_unit_id,
-            calculation_revision_id=revision,
-            bucket_id=bucket_id,
-            modelo=ModeloCode("303"),
-            filing_year=2024,
-            period=_P_2024_2T,
-            filed_at=filed_at,
-            filed_by=actor,
-            status=ModeloRecordStatus.VIGENTE if is_last else ModeloRecordStatus.SUPERSEDIDO,
-            superseded_at=None if is_last else filed_at + timedelta(days=45),
-            superseded_by_filing_record_id=None if is_last else ids[index + 1],
-            amends_filing_record_id=None if index == 0 else ids[index - 1],
-            origin=FilingOrigin.LOCAL,
-            confirmation=AeatConfirmationState.PENDIENTE,
-            declaration_kind=FilingDeclarationKind.COMPLEMENTARIA,
-        )
-
-    catalogue = ModeloRecordCatalogue(records=records)
-
-    assert len(catalogue) == 3
-    for index, record_id in enumerate(ids[1:], start=1):
-        record = catalogue.get(record_id)
-        assert record is not None
-        assert record.amends_filing_record_id == ids[index - 1]
-        baseline = catalogue.get(ids[index - 1])
-        assert baseline is not None
-        assert baseline.superseded_by_filing_record_id == record_id
