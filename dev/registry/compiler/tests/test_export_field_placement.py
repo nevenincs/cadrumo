@@ -21,11 +21,11 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.core.toml import load_toml, render_toml
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 
 from ...conformance.stamp import bundled_registry_root
+from ...tests.modelo_296_perceptor_support import REVISION, modelo_296_with_second_field_length
 from ..loader import load_modelo_directory, load_shared_catalogues
 from ..profile_schema import capture_profile_schema
 from ..validate_export_field_placement import (
@@ -37,24 +37,6 @@ from ..validate_export_field_placement import (
 from ..validator import RegistryValidator
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
-
-_REVISION = "2024-2025"
-_PERCEPTOR_RECORD = Path("revisions") / _REVISION / "export" / "0002-record-m296-perceptor.toml"
-
-
-def _modelo_296_with_second_field_length(tmp_path: Path, *, length: int) -> Path:
-    """Copy the shipped Modelo 296 tree, re-declaring one field's position count."""
-    modelo_dir = tmp_path / "296"
-    shutil.copytree(bundled_registry_root() / "modelos" / "296", modelo_dir)
-    record = modelo_dir / _PERCEPTOR_RECORD
-    document = load_toml(record)
-    export_layouts = document["revisions"][_REVISION]["export_layouts"]
-    perceptor = next(item for layout in export_layouts for item in layout["records"] if item["id"] == "m296-perceptor")
-    second_field = next(field for field in perceptor["fields"] if field["id"] == "m296-2024.perceptor.f002")
-    assert (second_field["offset"], second_field["length"]) == (2, 3)
-    second_field["length"] = length
-    record.write_text(render_toml(document), encoding="utf-8", newline="\n")
-    return modelo_dir
 
 
 def _placement_refusal_lines(modelo: ModeloDefinition) -> tuple[str, ...]:
@@ -106,7 +88,7 @@ def test_a_planted_overlap_is_refused_naming_the_fields_and_the_positions(tmp_pa
     two declarations. A refusal that named only the record would leave the
     author to find the pair by hand.
     """
-    modelo = load_modelo_directory(_modelo_296_with_second_field_length(tmp_path, length=5))
+    modelo = load_modelo_directory(modelo_296_with_second_field_length(tmp_path, length=5))
 
     refusals = _placement_refusal_lines(modelo)
 
@@ -126,7 +108,7 @@ def test_a_planted_gap_is_reported_naming_the_fields_and_the_positions(tmp_path:
     carries the population the check's module docstring measures, so the gate is
     the advisory's content, not an exception.
     """
-    modelo = load_modelo_directory(_modelo_296_with_second_field_length(tmp_path, length=1))
+    modelo = load_modelo_directory(modelo_296_with_second_field_length(tmp_path, length=1))
 
     planted = [
         advisory
@@ -162,14 +144,14 @@ def test_a_casilla_split_across_two_consecutive_fields_passes() -> None:
     modelo = load_modelo_directory(bundled_registry_root() / "modelos" / "296")
     declarante = next(
         record
-        for layout in modelo.revisions[_REVISION].export_layouts
+        for layout in modelo.revisions[REVISION].export_layouts
         for record in layout.records
         if record.id == "m296-declarante"
     )
     split = tuple(field for field in declarante.fields if str(field.casilla_id) == "03")
 
     assert tuple((field.offset, field.length) for field in split) == ((160, 13), (173, 2))
-    prefix = f"modelo {modelo.id} revision {_REVISION}"
+    prefix = f"modelo {modelo.id} revision {REVISION}"
     assert validate_export_record_field_placement(prefix=prefix, record=declarante) == []
     assert export_record_placement_advisories(prefix=prefix, record=declarante) == ()
 

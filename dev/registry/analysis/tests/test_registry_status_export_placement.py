@@ -14,11 +14,11 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.core.toml import load_toml, render_toml
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 
 from ...compiler.loader import load_modelo_directory
 from ...conformance.stamp import bundled_registry_root
+from ...tests.modelo_296_perceptor_support import modelo_296_with_second_field_length
 from ..registry_status import (
     EXPORT_PLACEMENT_POPULATION,
     ExportPlacementCensus,
@@ -29,9 +29,6 @@ from ..registry_status import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
-
-_REVISION = "2024-2025"
-_PERCEPTOR_RECORD = Path("revisions") / _REVISION / "export" / "0002-record-m296-perceptor.toml"
 
 
 def _status(*, export_placement: ExportPlacementCensus) -> RegistryStatus:
@@ -54,19 +51,11 @@ def _status(*, export_placement: ExportPlacementCensus) -> RegistryStatus:
 
 def _modelo_296(tmp_path: Path, *, second_field_length: int | None = None) -> ModeloDefinition:
     """Load a copy of the shipped Modelo 296 tree, optionally re-declaring one field."""
-    modelo_dir = tmp_path / "296"
-    shutil.copytree(bundled_registry_root() / "modelos" / "296", modelo_dir)
-    if second_field_length is not None:
-        record = modelo_dir / _PERCEPTOR_RECORD
-        document = load_toml(record)
-        export_layouts = document["revisions"][_REVISION]["export_layouts"]
-        perceptor = next(
-            item for layout in export_layouts for item in layout["records"] if item["id"] == "m296-perceptor"
-        )
-        second_field = next(field for field in perceptor["fields"] if field["id"] == "m296-2024.perceptor.f002")
-        assert (second_field["offset"], second_field["length"]) == (2, 3)
-        second_field["length"] = second_field_length
-        record.write_text(render_toml(document), encoding="utf-8", newline="\n")
+    if second_field_length is None:
+        modelo_dir = tmp_path / "296"
+        shutil.copytree(bundled_registry_root() / "modelos" / "296", modelo_dir)
+    else:
+        modelo_dir = modelo_296_with_second_field_length(tmp_path, length=second_field_length)
     return load_modelo_directory(modelo_dir)
 
 
