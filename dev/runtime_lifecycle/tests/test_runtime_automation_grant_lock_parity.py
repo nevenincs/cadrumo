@@ -9,10 +9,12 @@ import time
 from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from contextvars import copy_context
+from dataclasses import dataclass
 from datetime import timedelta
 from importlib.metadata import version
 from pathlib import Path
 from threading import Event
+from typing import Any
 from uuid import UUID, uuid4
 
 import pytest
@@ -25,6 +27,7 @@ from cadrumo.adapters.persistence.storage.custody.acceleration_receipt import de
 from cadrumo.adapters.persistence.storage.custody.automation_native_identity import CLIENT_NAMESPACE
 from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support import (
     PROFILE_INPUT,
+    AdministrationSubject,
     administration_subject,
     changed,
 )
@@ -81,7 +84,7 @@ from cadrumo_client.contracts.automation_lifecycle import AutomationResumeReceip
 from cadrumo_client.contracts.deadline_budget import MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS
 from cadrumo_client.contracts.enrollment_proposal import EnrollmentKind
 from cadrumo_client.contracts.operation_access import OperationObserve, OperationObserved
-from cadrumo_client.contracts.projection_pages import PROJECTION_PAGE_BYTES, ProjectionPageRequest
+from cadrumo_client.contracts.projection_pages import PROJECTION_PAGE_BYTES, ProjectionPage, ProjectionPageRequest
 from cadrumo_client.transport import credentials
 from cadrumo_client.transport.automation_decision import run_automation_decision
 from cadrumo_client.transport.automation_inventory import read_automation_inventory
@@ -205,6 +208,390 @@ def _assert_cli_refused(profile_id: UUID, reference: UUID, secret_store: Automat
     raise AssertionError("revoked or suspended grant admitted a fresh CLI credential connection")
 
 
+@dataclass(frozen=True)
+class _ReleasedAuthRead:
+    """The completed auth read and the exact released document later grant revisions are held to."""
+
+    completion: Any
+    result_reference: OperationResultProjectionRequestV1
+    typed_result: OperationResultProjectionSuccessV1[AuthReadProjection]
+    expected_document: bytes
+    expected_digest: str
+
+
+def _assert_first_page(page: ProjectionPage, released: _ReleasedAuthRead) -> None:
+    assert page.offset == 0
+    assert page.document_digest == released.expected_digest
+    assert page.total_bytes == len(released.expected_document)
+    assert page.decode()
+    assert page.decode() == released.expected_document[:PROJECTION_PAGE_BYTES]
+
+
+def _read_released_auth_result(result_client: FrontendClient, profile_id: UUID) -> _ReleasedAuthRead:
+    assert result_client.status().status.grant_valid
+    completion = run_registered_operation(
+        result_client,
+        AuthReadRequest(profile_id=profile_id, kind="status"),
+        definition_id=AUTH_READ_OPERATION_DEFINITION_ID,
+        subject_ref=profile_operation_subject(str(profile_id)),
+        result_type=AuthReadProjection,
+        request_version=1,
+        result_version=1,
+        timeout=60,
+    )
+    assert completion.terminal_condition is OperationTerminalCondition.SUCCEEDED
+    assert completion.effect is OperationEffect.NONE
+    assert completion.projection.profile_id == profile_id
+    assert completion.projection.kind == "status" and completion.projection.status is not None
+    deadline = time.monotonic() + 10
+    contract = result_client.contract(AUTH_READ_OPERATION_DEFINITION_ID, deadline=deadline)
+    assert contract.result_schema is not None
+    assert contract.result_schema.schema_id == AUTH_READ_RESULT_SCHEMA_ID
+    observed = result_client.operation(
+        OperationObserve(
+            request_id=uuid4(),
+            profile_id=profile_id,
+            session_id=result_client.session_id,
+            observation=OperationObservationRequestV1(
+                operation_id=completion.operation_id, after_cursor=0, page_limit=32
+            ),
+        ),
+        deadline=deadline,
+    )
+    assert isinstance(observed, OperationObserved)
+    assert isinstance(observed.observation, OperationObservationSuccessV1)
+    terminal = observed.observation.projection
+    assert terminal.operation_id == completion.operation_id
+    assert terminal.definition_id == AUTH_READ_OPERATION_DEFINITION_ID
+    assert terminal.subject_ref == profile_operation_subject(str(profile_id))
+    assert terminal.terminal_condition is OperationTerminalCondition.SUCCEEDED
+    result_reference = OperationResultProjectionRequestV1(
+        operation_id=completion.operation_id,
+        terminal_revision=terminal.revision,
+        definition_contract_digest=contract.definition_contract_digest,
+        result_schema=contract.result_schema,
+    )
+    document = result_client.read_result_document(result_reference, timeout=10)
+    typed_result = OperationResultProjectionSuccessV1[AuthReadProjection].model_validate_json(
+        canonical_json_bytes(document)
+    )
+    assert typed_result.projection == completion.projection
+    assert typed_result.result_schema == result_reference.result_schema
+    assert typed_result.definition_contract_digest == result_reference.definition_contract_digest
+    expected_document = canonical_json_bytes(document)
+    expected_digest = sha256_hex(expected_document)
+    released = _ReleasedAuthRead(completion, result_reference, typed_result, expected_document, expected_digest)
+    released_page = result_client.read_result_page(
+        result_reference,
+        ProjectionPageRequest(expected_digest=expected_digest),
+        deadline=time.monotonic() + 10,
+    )
+    _assert_first_page(released_page, released)
+    return released
+
+
+def _approve_in_tui(profile_id: UUID, request_id: UUID) -> None:
+    human = asyncio.run(open_installed_client(profile_id=profile_id, frontend=OperationFrontendProjection.TUI))
+    try:
+        password = bytearray(PROFILE_INPUT.encode("utf-8"))
+        human.login_password(password)
+        assert not any(password)
+        inventory = read_automation_inventory(human).projection
+        review = next(item for item in inventory.requests if item.receipt.request_id == request_id)
+        fresh_proof = bytearray(PROFILE_INPUT.encode("utf-8"))
+        receipt = run_automation_decision(human, review, decision="approve", password=fresh_proof)
+        assert not any(fresh_proof)
+        assert receipt.effect.value == "updated"
+    finally:
+        human_primary = sys.exception()
+        asyncio.run(
+            close_async_resources(
+                human.cleanup_owner(primary_error=human_primary),
+                task_name="grant-result-reviewer-close",
+                primary_error=human_primary,
+            )
+        )
+
+
+async def _sign_in_with_api_reference(pilot: Pilot[object], login: RuntimeLoginScreen, reference: UUID) -> None:
+    # The screen first tries the stored sign-in for the selected profile and
+    # ignores a method change until that attempt has been refused.
+    await pilot.pause()
+    await _until(pilot, lambda: not login._busy, timeout=25)
+    login.query_one("#runtime-login-method", Select).value = RuntimeLoginMethod.API_REFERENCE
+    await pilot.pause()
+    credential = login.query_one("#runtime-login-credential", Input)
+    assert credential.password and credential.value == "" and not credential.display
+    login.query_one("#runtime-login-reference", Input).value = str(reference)
+    login.query_one("#runtime-login-submit", Button).press()
+    await pilot.pause()
+    await _until(pilot, lambda: not login._busy, timeout=25)
+    if not login._transferred:
+        status = login.query_one("#runtime-login-status", PinnedStatusBar)
+        raise AssertionError(f"credential login did not transfer: {status.message}")
+
+
+def _fill_grant_change_form(
+    request: RuntimeAutomationRequesterScreen,
+    destination_id: UUID,
+    kind: EnrollmentKind,
+    grant: AutomationGrant,
+    key: ApiKeyRecord,
+    reference: UUID,
+) -> None:
+    for operation in grant.scope.operations:
+        request.query_one("#automation-request-operations", SelectionList).select(operation)
+    for disclosure in grant.scope.disclosures:
+        request.query_one("#automation-request-disclosures", SelectionList).select(
+            f"{disclosure.projection_id}|{disclosure.category.value}"
+        )
+    chosen_actions = (
+        grant.scope.actions - {AccessAction.RESULT} if kind is EnrollmentKind.CHANGE_SCOPE else grant.scope.actions
+    )
+    for action in chosen_actions:
+        request.query_one("#automation-request-actions", SelectionList).select(action.value)
+    request.query_one("#automation-request-period-mode", Select).value = "all"
+    request.query_one("#automation-request-independent", Checkbox).value = True
+    request.query_one("#automation-request-unattended", Checkbox).value = True
+    expiry = grant.expires_at + timedelta(days=30) if kind is EnrollmentKind.RENEW else grant.expires_at
+    request.query_one("#automation-request-expiry", Input).value = expiry.isoformat()
+    request.query_one("#automation-request-grant", Input).value = str(grant.grant_id)
+    request.query_one("#automation-request-reference", Input).value = str(reference)
+    if kind is EnrollmentKind.ROTATE:
+        request.query_one("#automation-request-key", Input).value = str(key.key_id)
+        request.query_one("#automation-request-key-expiry", Input).value = (now() + timedelta(days=15)).isoformat()
+    proposed = request._draft().proposal(destination_id)
+    assert proposed.kind is kind
+    assert proposed.target_grant_id == grant.grant_id
+    assert proposed.scope.actions == chosen_actions
+    assert proposed.scope == changed(grant.scope, actions=chosen_actions)
+
+
+async def _submit_and_await_approval(
+    pilot: Pilot[object],
+    request: RuntimeAutomationRequesterScreen,
+    profile_id: UUID,
+    pool: ThreadPoolExecutor,
+    owner: NativeRuntimeFixtureOwner,
+) -> AutomationRequestOutcome:
+    request.query_one("#automation-request-submit", Button).press()
+    await _until(pilot, lambda: request._submitted is not None)
+    submitted = request._submitted
+    assert submitted is not None and submitted.stage is EnrollmentStage.REQUESTED
+    approval_context = copy_context()
+    approval = pool.submit(lambda: approval_context.run(_approve_in_tui, profile_id, submitted.request_id))
+    owner.auxiliary.append(approval)
+    await _until(pilot, lambda: request._outcome is not None or approval.done(), timeout=45)
+    if approval.done():
+        approval.result()
+    if request._outcome is None:
+        await _until(pilot, lambda: request._outcome is not None, timeout=45)
+    approval_error = await await_cancellation_complete(
+        asyncio.to_thread(approval.exception, timeout=45),
+        task_name="grant-result-approval-settlement",
+    )
+    if approval_error is not None:
+        raise approval_error
+    outcome = request._outcome
+    assert outcome is not None and outcome.stage is EnrollmentStage.COMPLETE
+    assert not outcome.uncertain and outcome.request_id == submitted.request_id
+    assert PROFILE_INPUT not in str(request.query_one("#automation-request-status", Static).render())
+    return outcome
+
+
+def _grant_change_driver(
+    *,
+    kind: EnrollmentKind,
+    grant: AutomationGrant,
+    key: ApiKeyRecord,
+    reference: UUID,
+    outcomes: list[AutomationRequestOutcome],
+    profile_id: UUID,
+    destination_id: UUID,
+    pool: ThreadPoolExecutor,
+    owner: NativeRuntimeFixtureOwner,
+) -> AutopilotCallbackType:
+    async def drive(pilot: Pilot[object]) -> None:
+        login = pilot.app.screen
+        if isinstance(login, RuntimeLoginScreen):
+            if outcomes:
+                login.action_abandon()
+                return
+            await _sign_in_with_api_reference(pilot, login, reference)
+            return
+
+        app = pilot.app
+        assert isinstance(app, RuntimeRestrictedSessionApp)
+        await _until(
+            pilot,
+            lambda: str(profile_id) in str(app.query_one("#restricted-profile", Static).render()),
+        )
+        await pilot.click("#restricted-request-access")
+        await _until(pilot, lambda: isinstance(app.screen, RuntimeAutomationRequesterScreen))
+        request = app.screen
+        assert isinstance(request, RuntimeAutomationRequesterScreen)
+        assert request._client is not None and request._client.profile_id == profile_id
+        request.query_one("#automation-request-kind", Select).value = kind
+        await asyncio.sleep(0.05)
+        _fill_grant_change_form(request, destination_id, kind, grant, key, reference)
+        outcomes.append(await _submit_and_await_approval(pilot, request, profile_id, pool, owner))
+        request.action_close()
+        await _until(pilot, lambda: not app.is_running or app.screen is app, timeout=10)
+        if app.is_running:
+            app.action_leave()
+
+    return drive
+
+
+def _assert_grant_change_applied(
+    *,
+    kind: EnrollmentKind,
+    subject: AdministrationSubject,
+    before: AutomationGrant,
+    active_key: ApiKeyRecord,
+    current_key: ApiKeyRecord,
+    outcome: AutomationRequestOutcome,
+    reference: UUID,
+    initial_scope: AccessScope,
+) -> tuple[AutomationGrant, UUID, ApiKeyRecord]:
+    """Check the stored grant after one TUI-reviewed change; return it, the live reference and the live key."""
+    prior_reference = reference
+    after = subject.store.snapshot()
+    grant = next(item for item in after.grants if item.grant_id == before.grant_id)
+    assert grant.state is AuthorityState.ACTIVE
+    expected_generation = before.generation + (kind is not EnrollmentKind.ROTATE)
+    assert grant.generation == expected_generation
+    if kind is EnrollmentKind.CHANGE_SCOPE:
+        assert grant.scope.actions == before.scope.actions - {AccessAction.RESULT}
+        assert grant.scope == changed(before.scope, actions=before.scope.actions - {AccessAction.RESULT})
+        assert grant.scope.disclosures == initial_scope.disclosures
+        assert reference == prior_reference
+        preserved_key = next(item for item in after.keys if item.key_id == active_key.key_id)
+        assert changed(preserved_key, last_used_at=active_key.last_used_at) == active_key
+    else:
+        assert grant.scope == before.scope
+    if kind is EnrollmentKind.ROTATE:
+        assert outcome.credential_reference is not None
+        assert outcome.credential_reference != prior_reference
+        reference = outcome.credential_reference
+        predecessor = next(item for item in after.keys if item.key_id == active_key.key_id)
+        assert predecessor.expires_at <= now() + KEY_ROTATION_MAXIMUM_OVERLAP
+        current_key = next(
+            item
+            for item in after.keys
+            if item.grant_id == grant.grant_id
+            and item.state is AuthorityState.ACTIVE
+            and item.key_id != active_key.key_id
+        )
+        assert (CLIENT_NAMESPACE, str(reference)) in subject.client_native.items
+    else:
+        assert outcome.credential_reference is None
+        reference = prior_reference
+    return grant, reference, current_key
+
+
+def _assert_cli_inspects_the_change(
+    profile_id: UUID,
+    kind: EnrollmentKind,
+    outcome: AutomationRequestOutcome,
+    grant: AutomationGrant,
+    current_key: ApiKeyRecord,
+) -> None:
+    assert outcome.request_id is not None
+    inspect = _cli_inspect(profile_id, outcome.request_id)
+    receipt = inspect.review.receipt
+    assert inspect.profile_id == profile_id
+    assert receipt.request_id == outcome.request_id
+    assert receipt.grant_id == grant.grant_id
+    assert receipt.stage is EnrollmentStage.COMPLETE
+    assert receipt.credential_reference == outcome.credential_reference
+    if kind is EnrollmentKind.ROTATE:
+        assert receipt.key_id == current_key.key_id
+    else:
+        assert receipt.key_id is None
+
+
+def _assert_revised_grant_reads(cli_api: FrontendClient, kind: EnrollmentKind, released: _ReleasedAuthRead) -> None:
+    result_reference = released.result_reference
+    if kind is EnrollmentKind.CHANGE_SCOPE:
+        with pytest.raises(FrontendRefusedError) as full_denial:
+            cli_api.read_result_document(result_reference, timeout=10)
+        assert full_denial.value.reason == AccessDenialCode.OPERATION_DENIED.value
+        with pytest.raises(FrontendRefusedError) as page_denial:
+            cli_api.read_result_page(
+                result_reference,
+                ProjectionPageRequest(expected_digest=released.expected_digest),
+                deadline=time.monotonic() + 10,
+            )
+        assert page_denial.value.reason == AccessDenialCode.OPERATION_DENIED.value
+        assert cli_api.status().status.grant_valid
+        return
+    current_document = cli_api.read_result_document(result_reference, timeout=10)
+    current_result = OperationResultProjectionSuccessV1[AuthReadProjection].model_validate_json(
+        canonical_json_bytes(current_document)
+    )
+    assert current_result == released.typed_result
+    assert current_result.projection == released.completion.projection
+    assert current_result.result_schema == result_reference.result_schema
+    assert current_result.definition_contract_digest == result_reference.definition_contract_digest
+    assert canonical_json_bytes(current_document) == released.expected_document
+    current_page = cli_api.read_result_page(
+        result_reference,
+        ProjectionPageRequest(expected_digest=released.expected_digest),
+        deadline=time.monotonic() + 10,
+    )
+    _assert_first_page(current_page, released)
+
+
+def _revoke_active_key_with_tui(subject: AdministrationSubject, profile_id: UUID, active_key: ApiKeyRecord) -> None:
+    human = asyncio.run(open_installed_client(profile_id=profile_id, frontend=OperationFrontendProjection.TUI))
+    try:
+        proof = bytearray(PROFILE_INPUT.encode("utf-8"))
+        human.login_password(proof)
+        assert not any(proof)
+
+        async def no_recovery(*, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS) -> FrontendClient:
+            raise AssertionError("key revocation does not open a recovery connection")
+
+        access = RuntimeAccessManagementScreen(human, open_recovery_client=no_recovery)
+
+        async def revoke_with_tui(pilot: Pilot[None]) -> None:
+            await _until(pilot, lambda: access._admin_available and not access._busy)
+            access.query_one("#runtime-access-target", Input).value = str(active_key.key_id)
+            access.query_one("#runtime-access-deny-key", Button).press()
+            await _until(
+                pilot,
+                lambda: (
+                    not access._busy
+                    and any(
+                        key.key_id == active_key.key_id and key.state is AuthorityState.REVOKED
+                        for key in subject.store.snapshot().keys
+                    )
+                ),
+            )
+            assert str(access.query_one("#runtime-access-status", Static).content) == tr(
+                "tui.runtime_access.denial_acknowledgement",
+                access_denied=tr("flows.confirm.yes"),
+                cleanup_pending=tr("flows.confirm.no"),
+            )
+            access.action_close()
+
+        async def run_revoke_screen() -> None:
+            async with ScreenHostApp(access).run_test(size=(120, 40)) as pilot:
+                await revoke_with_tui(pilot)
+
+        asyncio.run(run_revoke_screen())
+    finally:
+        human_primary = sys.exception()
+        asyncio.run(
+            close_async_resources(
+                human.cleanup_owner(primary_error=human_primary),
+                task_name="grant-result-revoker-close",
+                primary_error=human_primary,
+            )
+        )
+
+
 def test_tui_rotates_renews_changes_scope_and_cli_inspects_same_grant(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -278,28 +665,6 @@ def test_tui_rotates_renews_changes_scope_and_cli_inspects_same_grant(
         monkeypatch.setattr(installed_session, "installed_automation_secret_store", lambda: subject.client_native)
         monkeypatch.setattr(credentials, "installed_automation_secret_store", lambda: subject.client_native)
 
-        def approve(request_id: UUID) -> None:
-            human = asyncio.run(open_installed_client(profile_id=profile_id, frontend=OperationFrontendProjection.TUI))
-            try:
-                password = bytearray(PROFILE_INPUT.encode("utf-8"))
-                human.login_password(password)
-                assert not any(password)
-                inventory = read_automation_inventory(human).projection
-                review = next(item for item in inventory.requests if item.receipt.request_id == request_id)
-                fresh_proof = bytearray(PROFILE_INPUT.encode("utf-8"))
-                receipt = run_automation_decision(human, review, decision="approve", password=fresh_proof)
-                assert not any(fresh_proof)
-                assert receipt.effect.value == "updated"
-            finally:
-                human_primary = sys.exception()
-                asyncio.run(
-                    close_async_resources(
-                        human.cleanup_owner(primary_error=human_primary),
-                        task_name="grant-result-reviewer-close",
-                        primary_error=human_primary,
-                    )
-                )
-
         with override_settings(
             cadrumo_storage_root=storage_root,
             cadrumo_output_language="en",
@@ -331,68 +696,7 @@ def test_tui_rotates_renews_changes_scope_and_cli_inspects_same_grant(
                 )
                 result_client = _connect_cli(profile_id, reference, subject.client_native)
                 try:
-                    assert result_client.status().status.grant_valid
-                    completion = run_registered_operation(
-                        result_client,
-                        AuthReadRequest(profile_id=profile_id, kind="status"),
-                        definition_id=AUTH_READ_OPERATION_DEFINITION_ID,
-                        subject_ref=profile_operation_subject(str(profile_id)),
-                        result_type=AuthReadProjection,
-                        request_version=1,
-                        result_version=1,
-                        timeout=60,
-                    )
-                    assert completion.terminal_condition is OperationTerminalCondition.SUCCEEDED
-                    assert completion.effect is OperationEffect.NONE
-                    assert completion.projection.profile_id == profile_id
-                    assert completion.projection.kind == "status" and completion.projection.status is not None
-                    deadline = time.monotonic() + 10
-                    contract = result_client.contract(AUTH_READ_OPERATION_DEFINITION_ID, deadline=deadline)
-                    assert contract.result_schema is not None
-                    assert contract.result_schema.schema_id == AUTH_READ_RESULT_SCHEMA_ID
-                    observed = result_client.operation(
-                        OperationObserve(
-                            request_id=uuid4(),
-                            profile_id=profile_id,
-                            session_id=result_client.session_id,
-                            observation=OperationObservationRequestV1(
-                                operation_id=completion.operation_id, after_cursor=0, page_limit=32
-                            ),
-                        ),
-                        deadline=deadline,
-                    )
-                    assert isinstance(observed, OperationObserved)
-                    assert isinstance(observed.observation, OperationObservationSuccessV1)
-                    terminal = observed.observation.projection
-                    assert terminal.operation_id == completion.operation_id
-                    assert terminal.definition_id == AUTH_READ_OPERATION_DEFINITION_ID
-                    assert terminal.subject_ref == profile_operation_subject(str(profile_id))
-                    assert terminal.terminal_condition is OperationTerminalCondition.SUCCEEDED
-                    result_reference = OperationResultProjectionRequestV1(
-                        operation_id=completion.operation_id,
-                        terminal_revision=terminal.revision,
-                        definition_contract_digest=contract.definition_contract_digest,
-                        result_schema=contract.result_schema,
-                    )
-                    document = result_client.read_result_document(result_reference, timeout=10)
-                    typed_result = OperationResultProjectionSuccessV1[AuthReadProjection].model_validate_json(
-                        canonical_json_bytes(document)
-                    )
-                    assert typed_result.projection == completion.projection
-                    assert typed_result.result_schema == result_reference.result_schema
-                    assert typed_result.definition_contract_digest == result_reference.definition_contract_digest
-                    expected_document = canonical_json_bytes(document)
-                    expected_digest = sha256_hex(expected_document)
-                    released_page = result_client.read_result_page(
-                        result_reference,
-                        ProjectionPageRequest(expected_digest=expected_digest),
-                        deadline=time.monotonic() + 10,
-                    )
-                    assert released_page.offset == 0
-                    assert released_page.document_digest == expected_digest
-                    assert released_page.total_bytes == len(expected_document)
-                    assert released_page.decode()
-                    assert released_page.decode() == expected_document[:PROJECTION_PAGE_BYTES]
+                    released = _read_released_auth_result(result_client, profile_id)
                 finally:
                     result_primary = sys.exception()
                     asyncio.run(
@@ -405,7 +709,6 @@ def test_tui_rotates_renews_changes_scope_and_cli_inspects_same_grant(
                 changes = (EnrollmentKind.ROTATE, EnrollmentKind.RENEW, EnrollmentKind.CHANGE_SCOPE)
 
                 for kind in changes:
-                    prior_reference = reference
                     before_change = subject.store.snapshot()
                     current_grant = next(item for item in before_change.grants if item.grant_id == grant.grant_id)
                     active_key = next(
@@ -414,204 +717,37 @@ def test_tui_rotates_renews_changes_scope_and_cli_inspects_same_grant(
                         if item.grant_id == grant.grant_id and item.state is AuthorityState.ACTIVE
                     )
                     outcome_holder: list[AutomationRequestOutcome] = []
-
-                    def drive_for(
-                        selected_kind: EnrollmentKind = kind,
-                        selected_grant: AutomationGrant = current_grant,
-                        selected_key: ApiKeyRecord = active_key,
-                        selected_reference: UUID = prior_reference,
-                        outcomes: list[AutomationRequestOutcome] = outcome_holder,
-                    ) -> AutopilotCallbackType:
-                        async def drive(pilot: Pilot[object]) -> None:
-                            login = pilot.app.screen
-                            if isinstance(login, RuntimeLoginScreen):
-                                if outcomes:
-                                    login.action_abandon()
-                                    return
-                                # The screen first tries the stored sign-in for the selected profile and
-                                # ignores a method change until that attempt has been refused.
-                                await pilot.pause()
-                                await _until(pilot, lambda: not login._busy, timeout=25)
-                                login.query_one(
-                                    "#runtime-login-method", Select
-                                ).value = RuntimeLoginMethod.API_REFERENCE
-                                await pilot.pause()
-                                credential = login.query_one("#runtime-login-credential", Input)
-                                assert credential.password and credential.value == "" and not credential.display
-                                login.query_one("#runtime-login-reference", Input).value = str(selected_reference)
-                                login.query_one("#runtime-login-submit", Button).press()
-                                await pilot.pause()
-                                await _until(pilot, lambda: not login._busy, timeout=25)
-                                if not login._transferred:
-                                    status = login.query_one("#runtime-login-status", PinnedStatusBar)
-                                    raise AssertionError(f"credential login did not transfer: {status.message}")
-                                return
-
-                            app = pilot.app
-                            assert isinstance(app, RuntimeRestrictedSessionApp)
-                            await _until(
-                                pilot,
-                                lambda: str(profile_id) in str(app.query_one("#restricted-profile", Static).render()),
-                            )
-                            await pilot.click("#restricted-request-access")
-                            await _until(pilot, lambda: isinstance(app.screen, RuntimeAutomationRequesterScreen))
-                            request = app.screen
-                            assert isinstance(request, RuntimeAutomationRequesterScreen)
-                            assert request._client is not None and request._client.profile_id == profile_id
-                            request.query_one("#automation-request-kind", Select).value = selected_kind
-                            await asyncio.sleep(0.05)
-                            for operation in selected_grant.scope.operations:
-                                request.query_one("#automation-request-operations", SelectionList).select(operation)
-                            for disclosure in selected_grant.scope.disclosures:
-                                request.query_one("#automation-request-disclosures", SelectionList).select(
-                                    f"{disclosure.projection_id}|{disclosure.category.value}"
-                                )
-                            chosen_actions = (
-                                selected_grant.scope.actions - {AccessAction.RESULT}
-                                if selected_kind is EnrollmentKind.CHANGE_SCOPE
-                                else selected_grant.scope.actions
-                            )
-                            for action in chosen_actions:
-                                request.query_one("#automation-request-actions", SelectionList).select(action.value)
-                            request.query_one("#automation-request-period-mode", Select).value = "all"
-                            request.query_one("#automation-request-independent", Checkbox).value = True
-                            request.query_one("#automation-request-unattended", Checkbox).value = True
-                            expiry = (
-                                selected_grant.expires_at + timedelta(days=30)
-                                if selected_kind is EnrollmentKind.RENEW
-                                else selected_grant.expires_at
-                            )
-                            request.query_one("#automation-request-expiry", Input).value = expiry.isoformat()
-                            request.query_one("#automation-request-grant", Input).value = str(selected_grant.grant_id)
-                            request.query_one("#automation-request-reference", Input).value = str(selected_reference)
-                            if selected_kind is EnrollmentKind.ROTATE:
-                                request.query_one("#automation-request-key", Input).value = str(selected_key.key_id)
-                                request.query_one("#automation-request-key-expiry", Input).value = (
-                                    now() + timedelta(days=15)
-                                ).isoformat()
-                            proposed = request._draft().proposal(destination_id)
-                            assert proposed.kind is selected_kind
-                            assert proposed.target_grant_id == selected_grant.grant_id
-                            assert proposed.scope.actions == chosen_actions
-                            assert proposed.scope == changed(selected_grant.scope, actions=chosen_actions)
-                            request.query_one("#automation-request-submit", Button).press()
-                            await _until(pilot, lambda: request._submitted is not None)
-                            submitted = request._submitted
-                            assert submitted is not None and submitted.stage is EnrollmentStage.REQUESTED
-                            approval = pool.submit(copy_context().run, approve, submitted.request_id)
-                            owner.auxiliary.append(approval)
-                            await _until(pilot, lambda: request._outcome is not None or approval.done(), timeout=45)
-                            if approval.done():
-                                approval.result()
-                            if request._outcome is None:
-                                await _until(pilot, lambda: request._outcome is not None, timeout=45)
-                            approval_error = await await_cancellation_complete(
-                                asyncio.to_thread(approval.exception, timeout=45),
-                                task_name="grant-result-approval-settlement",
-                            )
-                            if approval_error is not None:
-                                raise approval_error
-                            outcome = request._outcome
-                            assert outcome is not None and outcome.stage is EnrollmentStage.COMPLETE
-                            assert not outcome.uncertain and outcome.request_id == submitted.request_id
-                            assert PROFILE_INPUT not in str(
-                                request.query_one("#automation-request-status", Static).render()
-                            )
-                            outcomes.append(outcome)
-                            request.action_close()
-                            await _until(pilot, lambda: not app.is_running or app.screen is app, timeout=10)
-                            if app.is_running:
-                                app.action_leave()
-
-                        return drive
-
-                    assert main(headless=True, auto_pilot=drive_for()) == 0
+                    driver = _grant_change_driver(
+                        kind=kind,
+                        grant=current_grant,
+                        key=active_key,
+                        reference=reference,
+                        outcomes=outcome_holder,
+                        profile_id=profile_id,
+                        destination_id=destination_id,
+                        pool=pool,
+                        owner=owner,
+                    )
+                    assert main(headless=True, auto_pilot=driver) == 0
                     assert len(outcome_holder) == 1
                     outcome = outcome_holder[0]
                     assert outcome.request_id is not None
-                    after = subject.store.snapshot()
-                    grant = next(item for item in after.grants if item.grant_id == current_grant.grant_id)
-                    assert grant.state is AuthorityState.ACTIVE
-                    expected_generation = current_grant.generation + (kind is not EnrollmentKind.ROTATE)
-                    assert grant.generation == expected_generation
-                    if kind is EnrollmentKind.CHANGE_SCOPE:
-                        assert grant.scope.actions == current_grant.scope.actions - {AccessAction.RESULT}
-                        assert grant.scope == changed(
-                            current_grant.scope, actions=current_grant.scope.actions - {AccessAction.RESULT}
-                        )
-                        assert grant.scope.disclosures == initial_scope.disclosures
-                        assert reference == prior_reference
-                        preserved_key = next(item for item in after.keys if item.key_id == active_key.key_id)
-                        assert changed(preserved_key, last_used_at=active_key.last_used_at) == active_key
-                    else:
-                        assert grant.scope == current_grant.scope
-                    if kind is EnrollmentKind.ROTATE:
-                        assert outcome.credential_reference is not None
-                        assert outcome.credential_reference != prior_reference
-                        reference = outcome.credential_reference
-                        predecessor = next(item for item in after.keys if item.key_id == active_key.key_id)
-                        assert predecessor.expires_at <= now() + KEY_ROTATION_MAXIMUM_OVERLAP
-                        current_key = next(
-                            item
-                            for item in after.keys
-                            if item.grant_id == grant.grant_id
-                            and item.state is AuthorityState.ACTIVE
-                            and item.key_id != active_key.key_id
-                        )
-                        assert (CLIENT_NAMESPACE, str(reference)) in subject.client_native.items
-                    else:
-                        assert outcome.credential_reference is None
-                        reference = prior_reference
-
-                    inspect = _cli_inspect(profile_id, outcome.request_id)
-                    receipt = inspect.review.receipt
-                    assert inspect.profile_id == profile_id
-                    assert receipt.request_id == outcome.request_id
-                    assert receipt.grant_id == grant.grant_id
-                    assert receipt.stage is EnrollmentStage.COMPLETE
-                    assert receipt.credential_reference == outcome.credential_reference
-                    if kind is EnrollmentKind.ROTATE:
-                        assert receipt.key_id == current_key.key_id
-                    else:
-                        assert receipt.key_id is None
+                    grant, reference, current_key = _assert_grant_change_applied(
+                        kind=kind,
+                        subject=subject,
+                        before=current_grant,
+                        active_key=active_key,
+                        current_key=current_key,
+                        outcome=outcome,
+                        reference=reference,
+                        initial_scope=initial_scope,
+                    )
+                    _assert_cli_inspects_the_change(profile_id, kind, outcome, grant, current_key)
                     cli_api = _connect_cli(profile_id, reference, subject.client_native)
                     try:
                         assert cli_api.profile_id == profile_id
                         assert cli_api.status().status.grant_valid
-                        if kind is EnrollmentKind.CHANGE_SCOPE:
-                            with pytest.raises(FrontendRefusedError) as full_denial:
-                                cli_api.read_result_document(result_reference, timeout=10)
-                            assert full_denial.value.reason == AccessDenialCode.OPERATION_DENIED.value
-                            with pytest.raises(FrontendRefusedError) as page_denial:
-                                cli_api.read_result_page(
-                                    result_reference,
-                                    ProjectionPageRequest(expected_digest=expected_digest),
-                                    deadline=time.monotonic() + 10,
-                                )
-                            assert page_denial.value.reason == AccessDenialCode.OPERATION_DENIED.value
-                            assert cli_api.status().status.grant_valid
-                        else:
-                            current_document = cli_api.read_result_document(result_reference, timeout=10)
-                            current_result = OperationResultProjectionSuccessV1[AuthReadProjection].model_validate_json(
-                                canonical_json_bytes(current_document)
-                            )
-                            assert current_result == typed_result
-                            assert current_result.projection == completion.projection
-                            assert current_result.result_schema == result_reference.result_schema
-                            assert (
-                                current_result.definition_contract_digest == result_reference.definition_contract_digest
-                            )
-                            assert canonical_json_bytes(current_document) == expected_document
-                            current_page = cli_api.read_result_page(
-                                result_reference,
-                                ProjectionPageRequest(expected_digest=expected_digest),
-                                deadline=time.monotonic() + 10,
-                            )
-                            assert current_page.offset == 0
-                            assert current_page.document_digest == expected_digest
-                            assert current_page.total_bytes == len(expected_document)
-                            assert current_page.decode()
-                            assert current_page.decode() == expected_document[:PROJECTION_PAGE_BYTES]
+                        _assert_revised_grant_reads(cli_api, kind, released)
                     finally:
                         cli_primary = sys.exception()
                         asyncio.run(
@@ -626,56 +762,7 @@ def test_tui_rotates_renews_changes_scope_and_cli_inspects_same_grant(
                 live_cli = _connect_cli(profile_id, reference, subject.client_native)
                 opened_clients.append(live_cli)
                 assert live_cli.status().status.grant_valid
-                human = asyncio.run(
-                    open_installed_client(profile_id=profile_id, frontend=OperationFrontendProjection.TUI)
-                )
-                try:
-                    proof = bytearray(PROFILE_INPUT.encode("utf-8"))
-                    human.login_password(proof)
-                    assert not any(proof)
-
-                    async def no_recovery(
-                        *, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS
-                    ) -> FrontendClient:
-                        raise AssertionError("key revocation does not open a recovery connection")
-
-                    access = RuntimeAccessManagementScreen(human, open_recovery_client=no_recovery)
-
-                    async def revoke_with_tui(pilot: Pilot[None]) -> None:
-                        await _until(pilot, lambda: access._admin_available and not access._busy)
-                        access.query_one("#runtime-access-target", Input).value = str(active_key.key_id)
-                        access.query_one("#runtime-access-deny-key", Button).press()
-                        await _until(
-                            pilot,
-                            lambda: (
-                                not access._busy
-                                and any(
-                                    key.key_id == active_key.key_id and key.state is AuthorityState.REVOKED
-                                    for key in subject.store.snapshot().keys
-                                )
-                            ),
-                        )
-                        assert str(access.query_one("#runtime-access-status", Static).content) == tr(
-                            "tui.runtime_access.denial_acknowledgement",
-                            access_denied=tr("flows.confirm.yes"),
-                            cleanup_pending=tr("flows.confirm.no"),
-                        )
-                        access.action_close()
-
-                    async def run_revoke_screen() -> None:
-                        async with ScreenHostApp(access).run_test(size=(120, 40)) as pilot:
-                            await revoke_with_tui(pilot)
-
-                    asyncio.run(run_revoke_screen())
-                finally:
-                    human_primary = sys.exception()
-                    asyncio.run(
-                        close_async_resources(
-                            human.cleanup_owner(primary_error=human_primary),
-                            task_name="grant-result-revoker-close",
-                            primary_error=human_primary,
-                        )
-                    )
+                _revoke_active_key_with_tui(subject, profile_id, active_key)
                 revoked = next(item for item in subject.store.snapshot().keys if item.key_id == active_key.key_id)
                 assert revoked.state is AuthorityState.REVOKED
                 _assert_fenced(live_cli)
@@ -823,6 +910,92 @@ def test_tui_profile_lock_resumes_only_selected_grant_seen_by_cli(tmp_path: Path
                 pool.shutdown(wait=True, cancel_futures=True)
 
 
+async def _assert_administration_presented_disabled(
+    pilot: Pilot[None], app: ScreenHostApp[None], access: RuntimeAccessManagementScreen, factories: list[FrontendClient]
+) -> None:
+    await _until(
+        pilot,
+        lambda: (
+            AccessDenialCode.HUMAN_AUTHORITY_REQUIRED.value
+            in str(access.query_one("#runtime-access-status", Static).content)
+        ),
+    )
+    # Wait for the actual inventory request, not just the initial default flags.
+    await asyncio.wait_for(app.workers.wait_for_complete(), 30)
+    assert not access.access_lost
+    assert not access.query_one("#runtime-access-sessions", Static).content
+    assert not access.query_one("#runtime-access-lock-current", Button).disabled
+    for suffix in (
+        "create-automation",
+        "view-automation",
+        "refresh",
+        "lock-selected",
+        "lock-profile",
+        "deny-key",
+        "deny-grant",
+        "deny-all",
+    ):
+        assert access.query_one(f"#runtime-access-{suffix}", Button).disabled
+    create = access.query_one("#runtime-access-create-automation", Button)
+    access.on_button_pressed(Button.Pressed(create))
+    await pilot.pause()
+    assert app.screen is access and not factories
+
+
+async def _assert_forced_commands_refused(
+    app: ScreenHostApp[None],
+    access: RuntimeAccessManagementScreen,
+    api: FrontendClient,
+    subject: AdministrationSubject,
+    factories: list[FrontendClient],
+    *,
+    targets: tuple[tuple[str, UUID | None], ...],
+    before: object,
+    enrollment_before: object,
+    lock_before: object,
+) -> None:
+    # Force real command dispatch past disabled-button presentation. Authority still refuses.
+    for suffix, target in targets:
+        access.query_one("#runtime-access-target", Input).value = str(target) if target else ""
+        access.query_one("#runtime-access-status", Static).update("")
+        access.on_button_pressed(Button.Pressed(access.query_one(f"#runtime-access-{suffix}", Button)))
+        await asyncio.wait_for(app.workers.wait_for_complete(), 30)
+        assert AccessDenialCode.HUMAN_AUTHORITY_REQUIRED.value in str(
+            access.query_one("#runtime-access-status", Static).content
+        )
+        assert not access.access_lost and not access._admin_available
+        current = subject.store.snapshot()
+        assert current == before
+        assert subject.store.enrollment_state() == enrollment_before
+        assert subject.store.profile_lock_state() == lock_before
+        assert (await asyncio.to_thread(api.status)).status.grant_valid
+    assert not factories
+
+
+async def _lock_only_the_current_session(
+    pilot: Pilot[None],
+    access: RuntimeAccessManagementScreen,
+    api: FrontendClient,
+    sibling: FrontendClient,
+    subject: AdministrationSubject,
+    session_id: UUID,
+    *,
+    before: object,
+    enrollment_before: object,
+    lock_before: object,
+) -> None:
+    access.query_one("#runtime-access-lock-current", Button).press()
+    await _until(pilot, lambda: access.access_lost and not access._busy)
+    assert str(session_id) in str(access.query_one("#runtime-access-status", Static).content)
+    await asyncio.to_thread(_assert_fenced, api)
+    current = subject.store.snapshot()
+    assert current == before
+    assert subject.store.enrollment_state() == enrollment_before
+    assert subject.store.profile_lock_state() == lock_before
+    assert (await asyncio.to_thread(sibling.status)).status.grant_valid
+    access.action_close()
+
+
 def test_api_reference_tui_refuses_programmatic_administration_but_can_lock_own_session(
     tmp_path: Path,
 ) -> None:
@@ -904,65 +1077,35 @@ def test_api_reference_tui_refuses_programmatic_administration_but_can_lock_own_
                 )
                 app = ScreenHostApp(access)
                 async with app.run_test(size=(140, 48)) as pilot:
-                    await _until(
-                        pilot,
-                        lambda: (
-                            AccessDenialCode.HUMAN_AUTHORITY_REQUIRED.value
-                            in str(access.query_one("#runtime-access-status", Static).content)
+                    await _assert_administration_presented_disabled(pilot, app, access, factories)
+                    await _assert_forced_commands_refused(
+                        app,
+                        access,
+                        api,
+                        subject,
+                        factories,
+                        targets=(
+                            ("lock-selected", sibling_id),
+                            ("deny-key", initial.key_id),
+                            ("deny-grant", initial.grant_id),
+                            ("deny-all", None),
+                            ("lock-profile", None),
                         ),
+                        before=before,
+                        enrollment_before=enrollment_before,
+                        lock_before=lock_before,
                     )
-                    # Wait for the actual inventory request, not just the initial default flags.
-                    await asyncio.wait_for(app.workers.wait_for_complete(), 30)
-                    assert not access.access_lost
-                    assert not access.query_one("#runtime-access-sessions", Static).content
-                    assert not access.query_one("#runtime-access-lock-current", Button).disabled
-                    for suffix in (
-                        "create-automation",
-                        "view-automation",
-                        "refresh",
-                        "lock-selected",
-                        "lock-profile",
-                        "deny-key",
-                        "deny-grant",
-                        "deny-all",
-                    ):
-                        assert access.query_one(f"#runtime-access-{suffix}", Button).disabled
-                    create = access.query_one("#runtime-access-create-automation", Button)
-                    access.on_button_pressed(Button.Pressed(create))
-                    await pilot.pause()
-                    assert app.screen is access and not factories
-                    # Force real command dispatch past disabled-button presentation. Authority still refuses.
-                    for suffix, target in (
-                        ("lock-selected", sibling_id),
-                        ("deny-key", initial.key_id),
-                        ("deny-grant", initial.grant_id),
-                        ("deny-all", None),
-                        ("lock-profile", None),
-                    ):
-                        access.query_one("#runtime-access-target", Input).value = str(target) if target else ""
-                        access.query_one("#runtime-access-status", Static).update("")
-                        access.on_button_pressed(Button.Pressed(access.query_one(f"#runtime-access-{suffix}", Button)))
-                        await asyncio.wait_for(app.workers.wait_for_complete(), 30)
-                        assert AccessDenialCode.HUMAN_AUTHORITY_REQUIRED.value in str(
-                            access.query_one("#runtime-access-status", Static).content
-                        )
-                        assert not access.access_lost and not access._admin_available
-                        current = subject.store.snapshot()
-                        assert current == before
-                        assert subject.store.enrollment_state() == enrollment_before
-                        assert subject.store.profile_lock_state() == lock_before
-                        assert (await asyncio.to_thread(api.status)).status.grant_valid
-                    assert not factories
-                    access.query_one("#runtime-access-lock-current", Button).press()
-                    await _until(pilot, lambda: access.access_lost and not access._busy)
-                    assert str(session_id) in str(access.query_one("#runtime-access-status", Static).content)
-                    await asyncio.to_thread(_assert_fenced, api)
-                    current = subject.store.snapshot()
-                    assert current == before
-                    assert subject.store.enrollment_state() == enrollment_before
-                    assert subject.store.profile_lock_state() == lock_before
-                    assert (await asyncio.to_thread(sibling.status)).status.grant_valid
-                    access.action_close()
+                    await _lock_only_the_current_session(
+                        pilot,
+                        access,
+                        api,
+                        sibling,
+                        subject,
+                        session_id,
+                        before=before,
+                        enrollment_before=enrollment_before,
+                        lock_before=lock_before,
+                    )
                 # Locking this lease does not revoke its protected credential or grant.
                 fresh = await open_installed_credential_client(
                     profile_id=profile_id,
