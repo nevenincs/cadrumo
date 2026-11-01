@@ -7,7 +7,7 @@ import sys
 import time
 from collections.abc import Generator
 from concurrent.futures import ThreadPoolExecutor
-from contextlib import AbstractContextManager, contextmanager
+from contextlib import contextmanager
 from datetime import timedelta
 from pathlib import Path
 from threading import Event, RLock
@@ -15,7 +15,6 @@ from typing import NoReturn
 from uuid import uuid4
 
 import pytest
-from pydantic import SecretBytes
 
 from cadrumo.adapters.persistence.operations.journal import OperationJournalRepository
 from cadrumo.adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
@@ -29,7 +28,6 @@ from cadrumo.application.operations.models import OperationId, OperationRequest
 from cadrumo.application.operations.persistence.leases import operation_conflict_scope_reference
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
-from cadrumo.application.user_profile.automation_enrollment import EnrollmentTransition
 from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation
 from cadrumo.application.user_profile.profile_operation_contracts import ProfileFieldMutationOperationRequest
 from cadrumo.application.user_profile.profile_record_repository import ProfileRecordRepository
@@ -46,16 +44,14 @@ from cadrumo_client.contracts.model_runs import ModelRunOutcome, ModelRunRefusal
 from cadrumo_runtime.contracts.worker_authorization import (
     WorkerAuthorityRequest,
     WorkerAuthorizationRequest,
-    WorkerAutomationInventoryAllowed,
-    WorkerAutomationInventoryRequest,
     WorkerModelRun,
     WorkerResponseScopeRequest,
 )
-from cadrumo_runtime.contracts.worker_enrollment import WorkerApprovalPublication, WorkerApprovalRequest
 
 from ...adapters import profile_worker_transport
 from ...adapters.profile_worker import ProfileWorkerProcess
 from ...adapters.tests.profile_worker_support import PROFILE_INPUT, changed, lease, worker_profiles
+from ...adapters.tests.worker_authority_support import UnavailableApprovalAuthority
 from ..session_owner import ProfileWorkerSessionOwner
 
 pytestmark = [
@@ -280,7 +276,7 @@ def test_worker_hosts_the_canonical_operation_services_and_rechecks_custody(tmp_
             worker.close()
 
 
-class BoundaryAuthority:
+class BoundaryAuthority(UnavailableApprovalAuthority):
     """Explicit authorization fault port; encryption, native transport and writes are real."""
 
     def __init__(self, *, deny_commit: bool) -> None:
@@ -311,25 +307,9 @@ class BoundaryAuthority:
                 expires_at=now() + timedelta(seconds=20),
             )
 
-    def automation_inventory(
-        self, request: WorkerAutomationInventoryRequest
-    ) -> AbstractContextManager[WorkerAutomationInventoryAllowed]:
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-
     def operations_advanced(self, operation_ids: tuple[OperationId, ...], *, records_changed: bool = False) -> None:
         with self.guard:
             self.advanced.append(operation_ids)
-
-    def approval_preflight(self, request: WorkerApprovalRequest) -> None:
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-
-    def approval_phase(self, request: WorkerApprovalRequest, password: SecretBytes | None) -> bool | None:
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-
-    def approval_publication(
-        self, authority: WorkerAuthorizationRequest, command: WorkerApprovalPublication
-    ) -> EnrollmentTransition | None:
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
 
     def model_run(
         self, authority: WorkerAuthorizationRequest, command: WorkerModelRun, body: bytearray

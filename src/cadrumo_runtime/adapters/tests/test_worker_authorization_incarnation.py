@@ -16,11 +16,9 @@ from pathlib import Path
 from uuid import uuid4
 
 import pytest
-from pydantic import SecretBytes
 
 from cadrumo.application.user_profile.access_contracts import ProfileAccessBinding
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
-from cadrumo.application.user_profile.automation_enrollment import EnrollmentTransition
 from cadrumo_client.contracts.access_refusals import AccessAllowed, AccessDenialCode, OperationResponseScopeAllowed
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.contracts.model_runs import ModelRunOutcome
@@ -32,16 +30,14 @@ from cadrumo_runtime.contracts.worker_authorization import (
     WorkerAuthorityRequest,
     WorkerAuthorizationAcknowledgement,
     WorkerAuthorizationRequest,
-    WorkerAutomationInventoryAllowed,
-    WorkerAutomationInventoryRequest,
     WorkerModelRun,
     WorkerOperationsAdvanced,
 )
-from cadrumo_runtime.contracts.worker_enrollment import WorkerApprovalPublication, WorkerApprovalRequest
 
 from ..worker_authorization import WorkerAuthorizationServer
 from ..worker_authorization_connections import WorkerAuthorizationConnections
 from .profile_worker_support import owner_id
+from .worker_authority_support import UnavailableApprovalAuthority
 from .worker_authorization_incarnation_fixture import IncarnationSeed
 
 pytestmark = [
@@ -54,7 +50,7 @@ pytestmark = [
 _FIXTURE = "cadrumo_runtime.adapters.tests.worker_authorization_incarnation_fixture"
 
 
-class Owner:
+class Owner(UnavailableApprovalAuthority):
     """Runtime owner port that admits nothing and records any report that reaches it."""
 
     def __init__(self) -> None:
@@ -65,24 +61,8 @@ class Owner:
     ) -> AbstractContextManager[AccessAllowed | OperationResponseScopeAllowed]:
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
 
-    def automation_inventory(
-        self, request: WorkerAutomationInventoryRequest
-    ) -> AbstractContextManager[WorkerAutomationInventoryAllowed]:
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-
     def operations_advanced(self, operation_ids: tuple[str, ...], *, records_changed: bool = False) -> None:
         self.advanced.append(operation_ids)
-
-    def approval_preflight(self, request: WorkerApprovalRequest) -> None:
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-
-    def approval_phase(self, request: WorkerApprovalRequest, password: SecretBytes | None) -> bool | None:
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-
-    def approval_publication(
-        self, authority: WorkerAuthorizationRequest, command: WorkerApprovalPublication
-    ) -> EnrollmentTransition | None:
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
 
     def model_run(
         self, authority: WorkerAuthorizationRequest, command: WorkerModelRun, body: bytearray

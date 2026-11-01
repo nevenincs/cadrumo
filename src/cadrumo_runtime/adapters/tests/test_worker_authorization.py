@@ -7,7 +7,7 @@ import sys
 import time
 from collections.abc import Generator
 from concurrent.futures import Future
-from contextlib import AbstractContextManager, contextmanager
+from contextlib import contextmanager
 from datetime import timedelta
 from pathlib import Path
 from threading import Event, RLock
@@ -15,12 +15,10 @@ from typing import Literal
 from uuid import uuid4
 
 import pytest
-from pydantic import SecretBytes
 
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.access_contracts import ProfileAccessBinding
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
-from cadrumo.application.user_profile.automation_enrollment import EnrollmentTransition
 from cadrumo.core.time.clock import now
 from cadrumo_client.contracts.access_refusals import AccessAllowed, AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import (
@@ -35,15 +33,13 @@ from cadrumo_client.transport.windows_process import WindowsProcessScope
 from cadrumo_runtime.contracts.worker_authorization import (
     WorkerAuthorityRequest,
     WorkerAuthorizationRequest,
-    WorkerAutomationInventoryAllowed,
-    WorkerAutomationInventoryRequest,
     WorkerModelRun,
     WorkerResponseScopeRequest,
 )
-from cadrumo_runtime.contracts.worker_enrollment import WorkerApprovalPublication, WorkerApprovalRequest
 
 from ..worker_authorization import WorkerAuthorizationServer
 from .profile_worker_support import owner_id
+from .worker_authority_support import UnavailableApprovalAuthority
 from .worker_authorization_fixture import Seed
 
 pytestmark = [
@@ -54,7 +50,7 @@ pytestmark = [
 ]
 
 
-class Authority:
+class Authority(UnavailableApprovalAuthority):
     def __init__(self, seed: Seed, scope: WindowsProcessScope, root: Path, process_handle: int) -> None:
         self.seed, self.scope = seed, scope
         self.lock = RLock()
@@ -97,24 +93,8 @@ class Authority:
                 else:
                     self.completion.set_result(None)
 
-    def automation_inventory(
-        self, request: WorkerAutomationInventoryRequest
-    ) -> AbstractContextManager[WorkerAutomationInventoryAllowed]:
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-
     def operations_advanced(self, operation_ids: tuple[str, ...], *, records_changed: bool = False) -> None:
         self.advanced.append(operation_ids)
-
-    def approval_preflight(self, request: WorkerApprovalRequest) -> None:
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-
-    def approval_phase(self, request: WorkerApprovalRequest, password: SecretBytes | None) -> bool | None:
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-
-    def approval_publication(
-        self, authority: WorkerAuthorizationRequest, command: WorkerApprovalPublication
-    ) -> EnrollmentTransition | None:
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
 
     def model_run(
         self, authority: WorkerAuthorizationRequest, command: WorkerModelRun, body: bytearray
