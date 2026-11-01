@@ -137,6 +137,17 @@ personal-only transaction has been classified, but nothing about it belongs
 in a business calculation."""
 
 
+RULE_DECIDED_STATES: frozenset[BusinessClassification] = frozenset(
+    {
+        BusinessClassification.BUSINESS,
+        BusinessClassification.PERSONAL,
+        BusinessClassification.SKIPPED_BY_RULE,
+    },
+)
+"""What a person is offered to have a rule decide. The rule's contract accepts any
+classification; this narrower offer is what a frontend puts in front of a person."""
+
+
 SHARE_BEARING_STATES: frozenset[BusinessClassification] = frozenset(
     {
         BusinessClassification.MIXED,

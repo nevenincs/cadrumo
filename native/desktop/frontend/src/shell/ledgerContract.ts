@@ -74,6 +74,29 @@ export const IMPORT_ISSUES = [
 ] as const;
 export type ImportIssue = (typeof IMPORT_ISSUES)[number];
 
+/** The classifications that decide a movement; the others are dispositions. */
+export const DECIDED_CLASSIFICATIONS = [
+  "BUSINESS",
+  "PERSONAL",
+  "MIXED",
+] as const;
+export const isDecidedClassification = (id: string): boolean =>
+  (DECIDED_CLASSIFICATIONS as readonly string[]).includes(id);
+
+/** The classifications under which a movement carries business figures. */
+export const BUSINESS_BEARING_CLASSIFICATIONS = ["BUSINESS", "MIXED"] as const;
+export const isBusinessBearing = (id: string): boolean =>
+  (BUSINESS_BEARING_CLASSIFICATIONS as readonly string[]).includes(id);
+
+/** The classifications a person may have a rule decide. */
+export const RULE_CLASSIFICATIONS = [
+  "BUSINESS",
+  "PERSONAL",
+  "SKIPPED_BY_RULE",
+] as const;
+export const isRuleClassification = (id: string): boolean =>
+  (RULE_CLASSIFICATIONS as readonly string[]).includes(id);
+
 /** The fields a movement may be corrected in. */
 export const LEDGER_UPDATE_FIELDS = [
   "booked_date",

@@ -820,6 +820,7 @@ export type LedgerStagedRowAnswer = {
   found: boolean;
   classified: boolean;
   takes_expense_category: boolean;
+  takes_share: boolean;
   category_settable: boolean;
   category_on_income: boolean;
   tax_set_skip: "transfer" | "personal" | "unclassified" | null;
@@ -831,6 +832,7 @@ export type LedgerStagedRowAnswer = {
   notes: LedgerStagedNote[];
 };
 export type LedgerStagedCheckResult = {
+  profile_id: string;
   input_digest: string;
   rows: LedgerStagedRowAnswer[];
   drafts: { key: string; blockers: LedgerStagedBlocker[] }[];

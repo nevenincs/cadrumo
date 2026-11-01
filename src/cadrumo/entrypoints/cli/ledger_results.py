@@ -105,6 +105,7 @@ class LedgerStagedRowPayload(OutputSchema):
     found: bool
     classified: bool
     takes_expense_category: bool
+    takes_share: bool
     category_settable: bool
     category_on_income: bool
     tax_set_skip: str | None
