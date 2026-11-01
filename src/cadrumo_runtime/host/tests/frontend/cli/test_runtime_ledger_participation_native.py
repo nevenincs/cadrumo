@@ -3,9 +3,12 @@
 from __future__ import annotations
 
 import sys
+from collections.abc import Mapping
+from dataclasses import dataclass
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
+from typing import Any
 from uuid import UUID
 
 import pytest
@@ -38,7 +41,7 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 from cadrumo.domain.iva.schema import IvaCategory
 from cadrumo.domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
-from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
+from cadrumo.domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState
 from cadrumo.domain.modelos.participation_index import TransactionRevisionParticipationIndex
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
@@ -50,7 +53,7 @@ from cadrumo_client.contracts.access_vocabulary import (
     DisclosureCategory,
     DisclosurePermission,
 )
-from cadrumo_runtime.host.tests.frontend.cli.native_api_cli_support import native_api_cli_session
+from cadrumo_runtime.host.tests.frontend.cli.native_api_cli_support import NativeApiCliSession, native_api_cli_session
 
 pytestmark = [
     pytest.mark.integration,
@@ -116,6 +119,221 @@ def _seed_canonical_transactions(
         assert len(transaction_id) == 64
         seeded[label] = transaction_id
     return seeded
+
+
+@dataclass(frozen=True)
+class _CanonicalParticipation:
+    """The verified revision and participation index read from the encrypted profile."""
+
+    bucket_id: str
+    revision_repository: CalculationRevisionCatalogueRepository
+    revisions_before: Mapping[str, CalculationRevision]
+    index: TransactionRevisionParticipationIndex
+    payload: dict[str, object]
+
+
+def _calculate_and_verify_303(
+    api: NativeApiCliSession[dict[str, str]], authority_operation: PinnedAuthorityOperation
+) -> tuple[str, str]:
+    """Create, calculate and verify the 2025 1T modelo 303 work unit under the human password."""
+    created = api.invoke_password(
+        "app",
+        "modelo",
+        "work",
+        "create",
+        "--modelo",
+        "303",
+        "--year",
+        "2025",
+        "--period",
+        "1T",
+    )
+    assert created.exit_code == 0, created.output
+    work_unit_id = unwrap_cli_result(created).get("work_unit_id")
+    assert isinstance(work_unit_id, str) and work_unit_id
+
+    period = Period.from_year_and_code(2025, "1T")
+    _reauthenticate_profile(
+        profile_label=api.profile_label,
+        profile_id=api.profile_id,
+        authority_operation=authority_operation,
+    )
+    IvaWalletDecisionRepository().save_decision(
+        IvaCompensationReconciliationDecision(
+            taxpayer_nif="12345678Z",
+            target_year=2025,
+            target_period=period,
+            target_registry_snapshot_ref=published_snapshot("303", filing_year=2025, period="1T").snapshot_ref,
+            source_registry_snapshot_refs=(),
+            selected_authority="aeat_wallet",
+            selected_amount=Decimal("0.00"),
+            wallet_amount=Decimal("0.00"),
+            local_recurrence_amount=None,
+            override_amount=None,
+            divergence="match",
+            blocked=False,
+            stale_wallet=False,
+            reason_identity="first_period_zero_aeat_wallet",
+            wallet_captured_at=datetime(2025, 4, 1, 10, tzinfo=UTC),
+            decided_at=datetime(2025, 4, 1, 10, tzinfo=UTC),
+        )
+    )
+    close_active_bucket_session()
+
+    calculated = api.invoke_password(
+        "app",
+        "modelo",
+        "work",
+        "calculate",
+        work_unit_id,
+        "--joint-return-elected",
+    )
+    assert calculated.exit_code == 0, calculated.output
+    calculation_revision_id = unwrap_cli_result(calculated).get("calculation_revision_id")
+    assert isinstance(calculation_revision_id, str) and calculation_revision_id
+    verified = api.invoke_password("app", "modelo", "work", "verify", work_unit_id)
+    assert verified.exit_code == 0, verified.output
+    assert unwrap_cli_result(verified).get("granted_verificado_completo") is True
+    return work_unit_id, calculation_revision_id
+
+
+def _read_canonical_participation(
+    api: NativeApiCliSession[dict[str, str]],
+    authority_operation: PinnedAuthorityOperation,
+    *,
+    work_unit_id: str,
+    calculation_revision_id: str,
+) -> _CanonicalParticipation:
+    """Only the in-window source transaction participates in the verified revision."""
+    seeded = api.prepared
+    period = Period.from_year_and_code(2025, "1T")
+    _reauthenticate_profile(
+        profile_label=api.profile_label,
+        profile_id=api.profile_id,
+        authority_operation=authority_operation,
+    )
+    bucket_id = str(api.profile_id)
+    revision_repository = CalculationRevisionCatalogueRepository(bucket_id=bucket_id)
+    revisions_before = revision_repository.load(operation=authority_operation).revisions
+    revision = revisions_before[calculation_revision_id]
+    assert revision.state is CalculationRevisionState.VERIFICADO_COMPLETO
+    assert revision.source_transaction_ids == (seeded["source"],)
+    assert seeded["outside"] not in revision.source_transaction_ids
+    work_units = WorkUnitCatalogueRepository(bucket_id=bucket_id).load()
+    work_unit = work_units.get(work_unit_id)
+    assert work_unit is not None
+
+    participation_repository = TransactionParticipationIndexRepository(bucket_id=bucket_id)
+    canonical_index = participation_repository.load(seeded["source"])
+    assert canonical_index.transaction_id == seeded["source"]
+    assert len(canonical_index.participations) == 1
+    canonical_entry = canonical_index.participations[0]
+    assert canonical_entry.calculation_revision_id == calculation_revision_id
+    assert canonical_entry.work_unit_id == work_unit.work_unit_id
+    assert canonical_entry.modelo == work_unit.modelo
+    assert canonical_entry.period == period
+    assert canonical_entry.filing_year == 2025
+    assert canonical_entry.filing_record_id is None
+    assert participation_repository.load(seeded["outside"]).participations == ()
+    canonical_payload = canonical_index.model_dump(mode="json")
+    close_active_bucket_session()
+    return _CanonicalParticipation(bucket_id, revision_repository, revisions_before, canonical_index, canonical_payload)
+
+
+def _assert_lookup_returns_canonical_index(
+    api: NativeApiCliSession[dict[str, str]], canonical: _CanonicalParticipation
+) -> None:
+    seeded = api.prepared
+    lookup = api.invoke_credential_reference("app", "ledger", "participation", seeded["source"])
+    assert lookup.exit_code == 0, lookup.output
+    assert unwrap_cli_result(lookup) == canonical.payload
+    empty_lookup = api.invoke_credential_reference("app", "ledger", "participation", seeded["outside"])
+    assert empty_lookup.exit_code == 0, empty_lookup.output
+    assert unwrap_cli_result(empty_lookup) == {"transaction_id": seeded["outside"], "participations": []}
+
+
+def _plant_stale_index(
+    api: NativeApiCliSession[dict[str, str]],
+    authority_operation: PinnedAuthorityOperation,
+    canonical: _CanonicalParticipation,
+) -> dict[str, Any]:
+    """Save a participation for the outside transaction that no revision supports."""
+    _reauthenticate_profile(
+        profile_label=api.profile_label,
+        profile_id=api.profile_id,
+        authority_operation=authority_operation,
+    )
+    participation_repository = TransactionParticipationIndexRepository(bucket_id=canonical.bucket_id)
+    stale_index = TransactionRevisionParticipationIndex(
+        transaction_id=api.prepared["outside"],
+        participations=canonical.index.participations,
+    )
+    participation_repository.save(stale_index)
+    stale_payload = stale_index.model_dump(mode="json")
+    close_active_bucket_session()
+    return stale_payload
+
+
+def _assert_rebuild_without_commit_is_denied(
+    api: NativeApiCliSession[dict[str, str]],
+    authority_operation: PinnedAuthorityOperation,
+    canonical: _CanonicalParticipation,
+    stale_payload: dict[str, Any],
+) -> None:
+    seeded = api.prepared
+    refused_rebuild = api.invoke_credential_reference("app", "ledger", "participation", "rebuild")
+    assert refused_rebuild.exit_code == 2, refused_rebuild.output
+    refusal = require_error_document(refused_rebuild.output)["error"]
+    assert refusal["code"] == "REFUSED_RUNTIME_FRONTEND", refusal
+    context = refusal["context"]
+    assert context == {"reason": "operation_denied", "request_faults": "", "sign_in": "null"}, refusal
+    # Missing COMMIT is denied at admission, so there is no operation
+    # receipt to inspect. Verify the actual encrypted records stayed intact
+    # below, and retain the successful human rebuild as the positive control.
+    assert "operation_id" not in context
+    assert api.runtime_health().ready
+    assert "stale_removed_count" not in refused_rebuild.output
+
+    _reauthenticate_profile(
+        profile_label=api.profile_label,
+        profile_id=api.profile_id,
+        authority_operation=authority_operation,
+    )
+    assert canonical.revision_repository.load(operation=authority_operation).revisions == canonical.revisions_before
+    after_denial_repository = TransactionParticipationIndexRepository(bucket_id=canonical.bucket_id)
+    assert after_denial_repository.load(seeded["source"]).model_dump(mode="json") == canonical.payload
+    assert after_denial_repository.load(seeded["outside"]).model_dump(mode="json") == stale_payload
+    assert after_denial_repository.exists(seeded["outside"])
+    close_active_bucket_session()
+
+
+def _assert_human_rebuild_prunes_only_the_stale_index(
+    api: NativeApiCliSession[dict[str, str]],
+    authority_operation: PinnedAuthorityOperation,
+    canonical: _CanonicalParticipation,
+) -> None:
+    seeded = api.prepared
+    rebuilt = api.invoke_password("app", "ledger", "participation", "rebuild")
+    assert rebuilt.exit_code == 0, rebuilt.output
+    rebuild_payload = unwrap_cli_result(rebuilt)
+    assert rebuild_payload == {
+        "transaction_count": 1,
+        "participation_count": 1,
+        "revision_count": 1,
+        "stale_removed_count": 1,
+    }
+
+    _reauthenticate_profile(
+        profile_label=api.profile_label,
+        profile_id=api.profile_id,
+        authority_operation=authority_operation,
+    )
+    assert canonical.revision_repository.load(operation=authority_operation).revisions == canonical.revisions_before
+    rebuilt_repository = TransactionParticipationIndexRepository(bucket_id=canonical.bucket_id)
+    assert rebuilt_repository.load(seeded["source"]).model_dump(mode="json") == canonical.payload
+    assert rebuilt_repository.load(seeded["outside"]).participations == ()
+    assert not rebuilt_repository.exists(seeded["outside"])
+    close_active_bucket_session()
 
 
 def test_native_participation_reads_canonical_index_rebuilds_and_requires_commit(
@@ -197,163 +415,16 @@ def test_native_participation_reads_canonical_index_rebuilds_and_requires_commit
         invoke_cli=run_cadrumo_cli,
     ) as api:
         close_active_bucket_session()
-        seeded = api.prepared
-        assert set(seeded) == {"source", "outside"}
+        assert set(api.prepared) == {"source", "outside"}
 
-        created = api.invoke_password(
-            "app",
-            "modelo",
-            "work",
-            "create",
-            "--modelo",
-            "303",
-            "--year",
-            "2025",
-            "--period",
-            "1T",
+        work_unit_id, calculation_revision_id = _calculate_and_verify_303(api, authority_operation)
+        canonical = _read_canonical_participation(
+            api,
+            authority_operation,
+            work_unit_id=work_unit_id,
+            calculation_revision_id=calculation_revision_id,
         )
-        assert created.exit_code == 0, created.output
-        work_unit_id = unwrap_cli_result(created).get("work_unit_id")
-        assert isinstance(work_unit_id, str) and work_unit_id
-
-        period = Period.from_year_and_code(2025, "1T")
-        _reauthenticate_profile(
-            profile_label=api.profile_label,
-            profile_id=api.profile_id,
-            authority_operation=authority_operation,
-        )
-        IvaWalletDecisionRepository().save_decision(
-            IvaCompensationReconciliationDecision(
-                taxpayer_nif="12345678Z",
-                target_year=2025,
-                target_period=period,
-                target_registry_snapshot_ref=published_snapshot("303", filing_year=2025, period="1T").snapshot_ref,
-                source_registry_snapshot_refs=(),
-                selected_authority="aeat_wallet",
-                selected_amount=Decimal("0.00"),
-                wallet_amount=Decimal("0.00"),
-                local_recurrence_amount=None,
-                override_amount=None,
-                divergence="match",
-                blocked=False,
-                stale_wallet=False,
-                reason_identity="first_period_zero_aeat_wallet",
-                wallet_captured_at=datetime(2025, 4, 1, 10, tzinfo=UTC),
-                decided_at=datetime(2025, 4, 1, 10, tzinfo=UTC),
-            )
-        )
-        close_active_bucket_session()
-
-        calculated = api.invoke_password(
-            "app",
-            "modelo",
-            "work",
-            "calculate",
-            work_unit_id,
-            "--joint-return-elected",
-        )
-        assert calculated.exit_code == 0, calculated.output
-        calculation_revision_id = unwrap_cli_result(calculated).get("calculation_revision_id")
-        assert isinstance(calculation_revision_id, str) and calculation_revision_id
-        verified = api.invoke_password("app", "modelo", "work", "verify", work_unit_id)
-        assert verified.exit_code == 0, verified.output
-        assert unwrap_cli_result(verified).get("granted_verificado_completo") is True
-
-        _reauthenticate_profile(
-            profile_label=api.profile_label,
-            profile_id=api.profile_id,
-            authority_operation=authority_operation,
-        )
-        bucket_id = str(api.profile_id)
-        revision_repository = CalculationRevisionCatalogueRepository(bucket_id=bucket_id)
-        revisions_before = revision_repository.load(operation=authority_operation).revisions
-        revision = revisions_before[calculation_revision_id]
-        assert revision.state is CalculationRevisionState.VERIFICADO_COMPLETO
-        assert revision.source_transaction_ids == (seeded["source"],)
-        assert seeded["outside"] not in revision.source_transaction_ids
-        work_units = WorkUnitCatalogueRepository(bucket_id=bucket_id).load()
-        work_unit = work_units.get(work_unit_id)
-        assert work_unit is not None
-
-        participation_repository = TransactionParticipationIndexRepository(bucket_id=bucket_id)
-        canonical_index = participation_repository.load(seeded["source"])
-        assert canonical_index.transaction_id == seeded["source"]
-        assert len(canonical_index.participations) == 1
-        canonical_entry = canonical_index.participations[0]
-        assert canonical_entry.calculation_revision_id == calculation_revision_id
-        assert canonical_entry.work_unit_id == work_unit.work_unit_id
-        assert canonical_entry.modelo == work_unit.modelo
-        assert canonical_entry.period == period
-        assert canonical_entry.filing_year == 2025
-        assert canonical_entry.filing_record_id is None
-        assert participation_repository.load(seeded["outside"]).participations == ()
-        canonical_payload = canonical_index.model_dump(mode="json")
-        close_active_bucket_session()
-
-        lookup = api.invoke_credential_reference("app", "ledger", "participation", seeded["source"])
-        assert lookup.exit_code == 0, lookup.output
-        assert unwrap_cli_result(lookup) == canonical_payload
-        empty_lookup = api.invoke_credential_reference("app", "ledger", "participation", seeded["outside"])
-        assert empty_lookup.exit_code == 0, empty_lookup.output
-        assert unwrap_cli_result(empty_lookup) == {"transaction_id": seeded["outside"], "participations": []}
-
-        _reauthenticate_profile(
-            profile_label=api.profile_label,
-            profile_id=api.profile_id,
-            authority_operation=authority_operation,
-        )
-        participation_repository = TransactionParticipationIndexRepository(bucket_id=bucket_id)
-        stale_index = TransactionRevisionParticipationIndex(
-            transaction_id=seeded["outside"],
-            participations=canonical_index.participations,
-        )
-        participation_repository.save(stale_index)
-        stale_payload = stale_index.model_dump(mode="json")
-        close_active_bucket_session()
-
-        refused_rebuild = api.invoke_credential_reference("app", "ledger", "participation", "rebuild")
-        assert refused_rebuild.exit_code == 2, refused_rebuild.output
-        refusal = require_error_document(refused_rebuild.output)["error"]
-        assert refusal["code"] == "REFUSED_RUNTIME_FRONTEND", refusal
-        context = refusal["context"]
-        assert context == {"reason": "operation_denied", "request_faults": "", "sign_in": "null"}, refusal
-        # Missing COMMIT is denied at admission, so there is no operation
-        # receipt to inspect. Verify the actual encrypted records stayed intact
-        # below, and retain the successful human rebuild as the positive control.
-        assert "operation_id" not in context
-        assert api.runtime_health().ready
-        assert "stale_removed_count" not in refused_rebuild.output
-
-        _reauthenticate_profile(
-            profile_label=api.profile_label,
-            profile_id=api.profile_id,
-            authority_operation=authority_operation,
-        )
-        assert revision_repository.load(operation=authority_operation).revisions == revisions_before
-        after_denial_repository = TransactionParticipationIndexRepository(bucket_id=bucket_id)
-        assert after_denial_repository.load(seeded["source"]).model_dump(mode="json") == canonical_payload
-        assert after_denial_repository.load(seeded["outside"]).model_dump(mode="json") == stale_payload
-        assert after_denial_repository.exists(seeded["outside"])
-        close_active_bucket_session()
-
-        rebuilt = api.invoke_password("app", "ledger", "participation", "rebuild")
-        assert rebuilt.exit_code == 0, rebuilt.output
-        rebuild_payload = unwrap_cli_result(rebuilt)
-        assert rebuild_payload == {
-            "transaction_count": 1,
-            "participation_count": 1,
-            "revision_count": 1,
-            "stale_removed_count": 1,
-        }
-
-        _reauthenticate_profile(
-            profile_label=api.profile_label,
-            profile_id=api.profile_id,
-            authority_operation=authority_operation,
-        )
-        assert revision_repository.load(operation=authority_operation).revisions == revisions_before
-        rebuilt_repository = TransactionParticipationIndexRepository(bucket_id=bucket_id)
-        assert rebuilt_repository.load(seeded["source"]).model_dump(mode="json") == canonical_payload
-        assert rebuilt_repository.load(seeded["outside"]).participations == ()
-        assert not rebuilt_repository.exists(seeded["outside"])
-        close_active_bucket_session()
+        _assert_lookup_returns_canonical_index(api, canonical)
+        stale_payload = _plant_stale_index(api, authority_operation, canonical)
+        _assert_rebuild_without_commit_is_denied(api, authority_operation, canonical, stale_payload)
+        _assert_human_rebuild_prunes_only_the_stale_index(api, authority_operation, canonical)

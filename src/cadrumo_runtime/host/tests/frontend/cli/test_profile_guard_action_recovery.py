@@ -16,7 +16,7 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profi
 from cadrumo.application.operator_actions.catalogue import OPERATOR_ACTION_CATALOGUE
 from cadrumo.application.operator_surface.verb_input_contracts import cli_argv_for
 from cadrumo.application.workflow.profile_bucket_scan import read_profile_bucket
-from cadrumo.core.bucket_pointer import read_pointer
+from cadrumo.core.bucket_pointer import BucketPointer, read_pointer
 from cadrumo.core.config import load_settings
 from cadrumo.core.errors.error_codes import ErrorCategory, get_error_exit_code
 from cadrumo.domain.user_profile.values import UserProfileFact
@@ -64,6 +64,182 @@ def _invoke_recovered_profile(arguments: tuple[str, ...]) -> Result:
     )
 
 
+def _assert_text_refusal() -> None:
+    """The clean-root mutation is refused in text with the projected profile-create action."""
+    text_refusal = invoke_cached_cli(
+        _ORIGINAL_ARGUMENTS,
+        catch_exceptions=False,
+    )
+
+    assert text_refusal.exit_code == get_error_exit_code(ErrorCategory.REFUSED), text_refusal.output
+    text = semantic_cli_output(text_refusal)
+    assert f"  command: {_ORIGINAL_LEAF_KEY}" in text
+    assert f'  action.failed_condition_id: "{_FAILED_CONDITION_ID}"' in text
+    assert f'"evidence_id":"{_FAILED_EVIDENCE_ID}"' in text
+    assert (
+        '  action.action: {"action_id":"operator.profile.create",'
+        '"cli_path":["aeat","config","profile","create"],'
+        '"target_command_key":"config.profile.create"}'
+    ) in text
+    assert '"argument_name":"profile_name"' in text
+    assert '  action.missing_argument_names: ["profile_name"]' in text
+    assert '  action.conditionality: "requires_arguments"' in text
+    assert "  action.no_recovery_outcome: null" in text
+    assert "suggestion:" not in text
+
+
+def _json_refusal_projection() -> dict[str, object]:
+    """The same refusal in JSON carries one typed projected action and no free-text suggestion."""
+    json_refusal = invoke_cached_cli(
+        ("--format", "json", *_ORIGINAL_ARGUMENTS),
+        catch_exceptions=False,
+    )
+
+    assert json_refusal.exit_code == get_error_exit_code(ErrorCategory.REFUSED), json_refusal.output
+    assert json_refusal.stdout == ""
+    refusal_document = _json_object(json_refusal.stderr)
+    assert refusal_document["command"] == _ORIGINAL_LEAF_KEY
+    error = cast(dict[str, object], refusal_document["error"])
+    assert "suggestion" not in error
+    projected = cast(dict[str, object], error["action"])
+    assert projected == {
+        "failed_condition_id": _FAILED_CONDITION_ID,
+        "evidence": [
+            {
+                "condition_id": _FAILED_CONDITION_ID,
+                "evidence_id": _FAILED_EVIDENCE_ID,
+                "provenance": "application_state",
+                "values": {
+                    "active_profile_present": False,
+                    "registered_profile_count": 0,
+                },
+            }
+        ],
+        "action": {
+            "action_id": _RECOVERY_ACTION_ID,
+            "cli_path": ["aeat", "config", "profile", "create"],
+            "target_command_key": "config.profile.create",
+        },
+        "argument_bindings": [
+            {
+                "argument_name": "profile_name",
+                "status": "missing",
+                "value": None,
+                "source": None,
+                "source_key": None,
+                "source_evidence_id": None,
+            }
+        ],
+        "missing_argument_names": ["profile_name"],
+        "conditionality": "requires_arguments",
+        "no_recovery_outcome": None,
+    }
+    return projected
+
+
+def _execute_projected_recovery(projected: dict[str, object], storage_root: Path) -> BucketPointer:
+    """Run the catalogue action named by the refusal against its live schema and check what it created."""
+    projected_action = cast(dict[str, object], projected["action"])
+    action_id = cast(str, projected_action["action_id"])
+    target_command_key = cast(str, projected_action["target_command_key"])
+    catalogue_entry = OPERATOR_ACTION_CATALOGUE.lookup(action_id)
+    assert action_id == _RECOVERY_ACTION_ID
+    assert target_command_key == catalogue_entry.target_command_key
+
+    live_schema = build_verb_input_schemas((target_command_key,))[target_command_key]
+    missing_argument_names = cast(list[str], projected["missing_argument_names"])
+    live_parameter_names = {parameter.name for parameter in live_schema.parameters}
+    assert set(missing_argument_names) <= live_parameter_names
+
+    recovery_input: dict[str, object] = {
+        "profile_name": "recovered",
+        "quiet": True,
+        "entity_type": "natural_person",
+        "tax_id": "12345678Z",
+        "name": "Recovered",
+        "surnames": "Operator",
+        "activity": "design",
+        "iva_regime": "GENERAL",
+    }
+    assert set(missing_argument_names) <= recovery_input.keys()
+    recovery_argv = cli_argv_for(live_schema, recovery_input)
+
+    recovery = invoke_profile_create(tuple(recovery_argv))
+
+    assert recovery.exit_code == 0, recovery.output
+    recovery_document = _json_object(recovery.stdout)
+    assert recovery_document["command"] == target_command_key
+    assert recovery_document["active_profile"] == "recovered"
+    assert recovery_document["result"] == {
+        "profile_name": "recovered",
+        "status": "created",
+        "active_profile": "recovered",
+    }
+    active_pointer = read_pointer(storage_root)
+    registered_profile = read_profile_bucket("recovered")
+    assert active_pointer.bucket_id is not None
+    assert registered_profile is not None
+    assert registered_profile.bucket_id == active_pointer.bucket_id
+    return active_pointer
+
+
+def _assert_closed_session_refusal_projects_login(storage_root: Path, active_pointer: BucketPointer) -> None:
+    # The persisted ratio must match declared home-office facts so the
+    # final protected read exercises recovery rather than a censo refusal.
+    set_active_test_profile_facts(
+        (
+            UserProfileFact(path="vivienda_office.total_m2", value=Decimal("100")),
+            UserProfileFact(path="vivienda_office.office_m2", value=Decimal("50")),
+        )
+    )
+    close_active_bucket_session()
+    assert read_pointer(storage_root) == active_pointer
+
+    # A closed session is itself a guarded refusal whose projected action is
+    # the login that reopens it; the chain follows that action before retrying.
+    locked = invoke_cached_cli(("--format", "json", *_ORIGINAL_ARGUMENTS), catch_exceptions=False)
+    assert locked.exit_code != 0
+    locked_error = cast(dict[str, object], _json_object(locked.stderr)["error"])
+    locked_verdict = cast(dict[str, object], locked_error["action"])
+    locked_action = cast(dict[str, object], locked_verdict["action"])
+    assert locked_action["target_command_key"] == "config.login"
+    login = login_profile("recovered")
+    assert login.exit_code == 0, login.output
+
+
+def _assert_retry_persists_the_mutation() -> None:
+    retry = _invoke_recovered_profile(_ORIGINAL_ARGUMENTS)
+
+    assert retry.exit_code == 0, retry.output
+    retry_document = _json_object(retry.stdout)
+    assert retry_document["command"] == _ORIGINAL_LEAF_KEY
+    assert retry_document["active_profile"] == "recovered"
+    assert retry_document["status"] == "warning"
+    notices = cast(list[dict[str, object]], retry_document["notices"])
+    assert any(notice["code"] == "config.login.session_not_persisted" for notice in notices)
+    assert retry_document["result"] == {
+        "bucket_id": "<bucket-id>",
+        "category": "arrendamiento_vivienda_afecto",
+        "ratio": "0.5",
+    }
+
+    close_active_bucket_session()
+    relogin = login_profile("recovered")
+    assert relogin.exit_code == 0, relogin.output
+    persisted = _invoke_recovered_profile(("app", "ledger", "ratios", "list"))
+
+    assert persisted.exit_code == 0, persisted.output
+    persisted_document = _json_object(persisted.stdout)
+    assert persisted_document["command"] == "ledger.ratios.list"
+    assert persisted_document["active_profile"] == "recovered"
+    assert persisted_document["result"] == {
+        "bucket_id": "<bucket-id>",
+        "rows": [{"category": "arrendamiento_vivienda_afecto", "ratio": "0.5"}],
+        "count": 1,
+        "censo_mismatch": None,
+    }
+
+
 def test_clean_root_refusal_executes_projected_profile_recovery_then_retries(
     tmp_path: Path,
 ) -> None:
@@ -71,163 +247,8 @@ def test_clean_root_refusal_executes_projected_profile_recovery_then_retries(
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         storage_root.mkdir(parents=True, exist_ok=True)
         with native_profile_view_server(storage_root):
-            text_refusal = invoke_cached_cli(
-                _ORIGINAL_ARGUMENTS,
-                catch_exceptions=False,
-            )
-
-            assert text_refusal.exit_code == get_error_exit_code(ErrorCategory.REFUSED), text_refusal.output
-            text = semantic_cli_output(text_refusal)
-            assert f"  command: {_ORIGINAL_LEAF_KEY}" in text
-            assert f'  action.failed_condition_id: "{_FAILED_CONDITION_ID}"' in text
-            assert f'"evidence_id":"{_FAILED_EVIDENCE_ID}"' in text
-            assert (
-                '  action.action: {"action_id":"operator.profile.create",'
-                '"cli_path":["aeat","config","profile","create"],'
-                '"target_command_key":"config.profile.create"}'
-            ) in text
-            assert '"argument_name":"profile_name"' in text
-            assert '  action.missing_argument_names: ["profile_name"]' in text
-            assert '  action.conditionality: "requires_arguments"' in text
-            assert "  action.no_recovery_outcome: null" in text
-            assert "suggestion:" not in text
-
-            json_refusal = invoke_cached_cli(
-                ("--format", "json", *_ORIGINAL_ARGUMENTS),
-                catch_exceptions=False,
-            )
-
-            assert json_refusal.exit_code == get_error_exit_code(ErrorCategory.REFUSED), json_refusal.output
-            assert json_refusal.stdout == ""
-            refusal_document = _json_object(json_refusal.stderr)
-            assert refusal_document["command"] == _ORIGINAL_LEAF_KEY
-            error = cast(dict[str, object], refusal_document["error"])
-            assert "suggestion" not in error
-            projected = cast(dict[str, object], error["action"])
-            assert projected == {
-                "failed_condition_id": _FAILED_CONDITION_ID,
-                "evidence": [
-                    {
-                        "condition_id": _FAILED_CONDITION_ID,
-                        "evidence_id": _FAILED_EVIDENCE_ID,
-                        "provenance": "application_state",
-                        "values": {
-                            "active_profile_present": False,
-                            "registered_profile_count": 0,
-                        },
-                    }
-                ],
-                "action": {
-                    "action_id": _RECOVERY_ACTION_ID,
-                    "cli_path": ["aeat", "config", "profile", "create"],
-                    "target_command_key": "config.profile.create",
-                },
-                "argument_bindings": [
-                    {
-                        "argument_name": "profile_name",
-                        "status": "missing",
-                        "value": None,
-                        "source": None,
-                        "source_key": None,
-                        "source_evidence_id": None,
-                    }
-                ],
-                "missing_argument_names": ["profile_name"],
-                "conditionality": "requires_arguments",
-                "no_recovery_outcome": None,
-            }
-
-            projected_action = cast(dict[str, object], projected["action"])
-            action_id = cast(str, projected_action["action_id"])
-            target_command_key = cast(str, projected_action["target_command_key"])
-            catalogue_entry = OPERATOR_ACTION_CATALOGUE.lookup(action_id)
-            assert action_id == _RECOVERY_ACTION_ID
-            assert target_command_key == catalogue_entry.target_command_key
-
-            live_schema = build_verb_input_schemas((target_command_key,))[target_command_key]
-            missing_argument_names = cast(list[str], projected["missing_argument_names"])
-            live_parameter_names = {parameter.name for parameter in live_schema.parameters}
-            assert set(missing_argument_names) <= live_parameter_names
-
-            recovery_input: dict[str, object] = {
-                "profile_name": "recovered",
-                "quiet": True,
-                "entity_type": "natural_person",
-                "tax_id": "12345678Z",
-                "name": "Recovered",
-                "surnames": "Operator",
-                "activity": "design",
-                "iva_regime": "GENERAL",
-            }
-            assert set(missing_argument_names) <= recovery_input.keys()
-            recovery_argv = cli_argv_for(live_schema, recovery_input)
-
-            recovery = invoke_profile_create(tuple(recovery_argv))
-
-            assert recovery.exit_code == 0, recovery.output
-            recovery_document = _json_object(recovery.stdout)
-            assert recovery_document["command"] == target_command_key
-            assert recovery_document["active_profile"] == "recovered"
-            assert recovery_document["result"] == {
-                "profile_name": "recovered",
-                "status": "created",
-                "active_profile": "recovered",
-            }
-            active_pointer = read_pointer(storage_root)
-            registered_profile = read_profile_bucket("recovered")
-            assert active_pointer.bucket_id is not None
-            assert registered_profile is not None
-            assert registered_profile.bucket_id == active_pointer.bucket_id
-
-            # The persisted ratio must match declared home-office facts so the
-            # final protected read exercises recovery rather than a censo refusal.
-            set_active_test_profile_facts(
-                (
-                    UserProfileFact(path="vivienda_office.total_m2", value=Decimal("100")),
-                    UserProfileFact(path="vivienda_office.office_m2", value=Decimal("50")),
-                )
-            )
-            close_active_bucket_session()
-            assert read_pointer(storage_root) == active_pointer
-
-            # A closed session is itself a guarded refusal whose projected action is
-            # the login that reopens it; the chain follows that action before retrying.
-            locked = invoke_cached_cli(("--format", "json", *_ORIGINAL_ARGUMENTS), catch_exceptions=False)
-            assert locked.exit_code != 0
-            locked_error = cast(dict[str, object], _json_object(locked.stderr)["error"])
-            locked_verdict = cast(dict[str, object], locked_error["action"])
-            locked_action = cast(dict[str, object], locked_verdict["action"])
-            assert locked_action["target_command_key"] == "config.login"
-            login = login_profile("recovered")
-            assert login.exit_code == 0, login.output
-
-            retry = _invoke_recovered_profile(_ORIGINAL_ARGUMENTS)
-
-            assert retry.exit_code == 0, retry.output
-            retry_document = _json_object(retry.stdout)
-            assert retry_document["command"] == _ORIGINAL_LEAF_KEY
-            assert retry_document["active_profile"] == "recovered"
-            assert retry_document["status"] == "warning"
-            notices = cast(list[dict[str, object]], retry_document["notices"])
-            assert any(notice["code"] == "config.login.session_not_persisted" for notice in notices)
-            assert retry_document["result"] == {
-                "bucket_id": "<bucket-id>",
-                "category": "arrendamiento_vivienda_afecto",
-                "ratio": "0.5",
-            }
-
-            close_active_bucket_session()
-            relogin = login_profile("recovered")
-            assert relogin.exit_code == 0, relogin.output
-            persisted = _invoke_recovered_profile(("app", "ledger", "ratios", "list"))
-
-            assert persisted.exit_code == 0, persisted.output
-            persisted_document = _json_object(persisted.stdout)
-            assert persisted_document["command"] == "ledger.ratios.list"
-            assert persisted_document["active_profile"] == "recovered"
-            assert persisted_document["result"] == {
-                "bucket_id": "<bucket-id>",
-                "rows": [{"category": "arrendamiento_vivienda_afecto", "ratio": "0.5"}],
-                "count": 1,
-                "censo_mismatch": None,
-            }
+            _assert_text_refusal()
+            projected = _json_refusal_projection()
+            active_pointer = _execute_projected_recovery(projected, storage_root)
+            _assert_closed_session_refusal_projects_login(storage_root, active_pointer)
+            _assert_retry_persists_the_mutation()

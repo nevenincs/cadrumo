@@ -142,6 +142,116 @@ def runtime_profile(tmp_path: Path) -> Iterator[tuple[Path, str]]:
         yield storage_root, bucket_id
 
 
+def _assert_logout_refused_without_proof(storage_root: Path, record: Path) -> None:
+    # Registration selects the profile but mints no saved sign-in. Without
+    # proof, logout cannot assert that it has revoked human access.
+    assert not record.exists()
+    first_logout = _run(storage_root, ("config", "logout"), as_json=True)
+    assert first_logout.returncode == 2, _output(first_logout)
+    first_error = json.loads(first_logout.stderr)["error"]
+    assert first_error["code"] == "REFUSED_CLI_BOUNDARY"
+    assert first_error["context"] == {"reason": "absent"}
+    assert not record.exists()
+
+
+def _login_over_secrets_channel(storage_root: Path, bucket_id: str, record: Path) -> subprocess.CompletedProcess[str]:
+    # 1. login over the bounded strict-JSON secrets channel; the
+    #    passphrase is never an argv value.
+    logged_in = _run(
+        storage_root,
+        ("config", "login", bucket_id, "--secrets-stdin"),
+        as_json=True,
+        stdin_payload=json.dumps({"passphrase": _CREDENTIAL_INPUT}),
+    )
+    assert logged_in.returncode == 0, _output(logged_in)
+    envelope = _envelope(logged_in)
+    assert envelope["command"] == "config.login"
+    result = envelope["result"]
+    assert result["already_authenticated"] is False
+    assert result["closed_previous_profile"] is None
+    # The new payload field rides the envelope redaction funnel like
+    # every other profile identifier: the raw UUID must never reach
+    # stdout, so the emitted value is the placeholder, not the id.
+    assert result["profile_id"] == CLI_PROFILE_ID_PLACEHOLDER
+    assert bucket_id not in logged_in.stdout
+
+    # 2. THE COUPLING: the envelope's persistence claim must match the
+    #    filesystem. A login that reports a saved session without
+    #    writing one -- or writes one while reporting otherwise --
+    #    fails here on any host.
+    persisted = result["session_persisted"]
+    assert persisted is True
+    assert record.is_file()
+    return logged_in
+
+
+def _resume_without_secrets(
+    storage_root: Path, bucket_id: str
+) -> tuple[subprocess.CompletedProcess[str], subprocess.CompletedProcess[str]]:
+    # 3. Separate unattended processes resume the actual saved proof and
+    # read encrypted profile content without another password channel.
+    resumed_before_logout = _run(storage_root, ("config", "login", bucket_id), as_json=True)
+    assert resumed_before_logout.returncode == 0, _output(resumed_before_logout)
+    assert _envelope(resumed_before_logout)["result"]["already_authenticated"] is True
+    follow_on = _run(storage_root, ("config", "profile", "view"))
+    assert follow_on.returncode == 0, _output(follow_on)
+    assert "identity.name\tSession Lifecycle Operator" in follow_on.stdout
+    return resumed_before_logout, follow_on
+
+
+def _strong_logout_then_refused_resume(
+    storage_root: Path, bucket_id: str, record: Path
+) -> tuple[subprocess.CompletedProcess[str], subprocess.CompletedProcess[str], subprocess.CompletedProcess[str]]:
+    # 4. Strong logout revokes human access, retaining only the target hint.
+    logged_out = _run(storage_root, ("config", "logout"), as_json=True)
+    assert logged_out.returncode == 0, _output(logged_out)
+    logout_document = _envelope(logged_out)
+    assert logout_document["result"]["scope"] == "profile_human_access"
+    assert logout_document["result"]["human_receipt_revoked"] is True
+    assert logout_document["result"]["automation_revoked"] is False
+    assert logout_document["result"]["receipt_removed"] is True
+    assert not record.exists()
+    listed = _run(storage_root, ("config", "profile", "list"), as_json=True)
+    assert listed.returncode == 0, _output(listed)
+    assert [(item["name"], item["active"]) for item in _envelope(listed)["result"]["profiles"]] == [
+        ("session-operator", True)
+    ]
+
+    again = _run(storage_root, ("config", "logout"), as_json=True)
+    assert again.returncode == 2, _output(again)
+    repeat = json.loads(again.stderr)["error"]
+    assert repeat["code"] == "REFUSED_CLI_BOUNDARY" and repeat["context"] == {"reason": "absent"}
+    assert not record.exists()
+
+    resumed = _run(storage_root, ("config", "login", bucket_id), as_json=True)
+    assert resumed.returncode == 2, _output(resumed)
+    absent = json.loads(resumed.stderr)["error"]
+    assert absent["code"] == "REFUSED_CLI_BOUNDARY"
+    assert absent["action"]["failed_condition_id"] == "profile.human.input_channel_available"
+    assert absent["action"]["evidence"][0]["values"]["password_channel_available"] is False
+    assert not record.exists()
+    return logged_out, again, resumed
+
+
+def _reopen_with_password(
+    storage_root: Path, bucket_id: str, record: Path
+) -> tuple[subprocess.CompletedProcess[str], subprocess.CompletedProcess[str]]:
+    reopened = _run(
+        storage_root,
+        ("config", "login", bucket_id, "--secrets-stdin"),
+        as_json=True,
+        stdin_payload=json.dumps({"passphrase": _CREDENTIAL_INPUT}),
+    )
+    assert reopened.returncode == 0, _output(reopened)
+    reopened_result = _envelope(reopened)["result"]
+    assert reopened_result["already_authenticated"] is False and reopened_result["session_persisted"] is True
+    assert record.is_file()
+    shown = _run(storage_root, ("config", "profile", "view"))
+    assert shown.returncode == 0, _output(shown)
+    assert "identity.name\tSession Lifecycle Operator" in shown.stdout
+    return reopened, shown
+
+
 @pytest.mark.os_keychain
 class TestSessionLifecycle:
     """Actual OS-held receipt continuity across independently admitted commands."""
@@ -149,97 +259,13 @@ class TestSessionLifecycle:
     def test_login_resume_and_logout_lifecycle(self, runtime_profile: tuple[Path, str]) -> None:
         """Fresh proof creates a receipt; cold reads resume it until strong sign-out."""
         storage_root, bucket_id = runtime_profile
-
-        # Registration selects the profile but mints no saved sign-in. Without
-        # proof, logout cannot assert that it has revoked human access.
         record = _session_record(storage_root, bucket_id)
-        assert not record.exists()
-        first_logout = _run(storage_root, ("config", "logout"), as_json=True)
-        assert first_logout.returncode == 2, _output(first_logout)
-        first_error = json.loads(first_logout.stderr)["error"]
-        assert first_error["code"] == "REFUSED_CLI_BOUNDARY"
-        assert first_error["context"] == {"reason": "absent"}
-        assert not record.exists()
 
-        # 1. login over the bounded strict-JSON secrets channel; the
-        #    passphrase is never an argv value.
-        logged_in = _run(
-            storage_root,
-            ("config", "login", bucket_id, "--secrets-stdin"),
-            as_json=True,
-            stdin_payload=json.dumps({"passphrase": _CREDENTIAL_INPUT}),
-        )
-        assert logged_in.returncode == 0, _output(logged_in)
-        envelope = _envelope(logged_in)
-        assert envelope["command"] == "config.login"
-        result = envelope["result"]
-        assert result["already_authenticated"] is False
-        assert result["closed_previous_profile"] is None
-        # The new payload field rides the envelope redaction funnel like
-        # every other profile identifier: the raw UUID must never reach
-        # stdout, so the emitted value is the placeholder, not the id.
-        assert result["profile_id"] == CLI_PROFILE_ID_PLACEHOLDER
-        assert bucket_id not in logged_in.stdout
-
-        # 2. THE COUPLING: the envelope's persistence claim must match the
-        #    filesystem. A login that reports a saved session without
-        #    writing one -- or writes one while reporting otherwise --
-        #    fails here on any host.
-        persisted = result["session_persisted"]
-        assert persisted is True
-        assert record.is_file()
-
-        # 3. Separate unattended processes resume the actual saved proof and
-        # read encrypted profile content without another password channel.
-        resumed_before_logout = _run(storage_root, ("config", "login", bucket_id), as_json=True)
-        assert resumed_before_logout.returncode == 0, _output(resumed_before_logout)
-        assert _envelope(resumed_before_logout)["result"]["already_authenticated"] is True
-        follow_on = _run(storage_root, ("config", "profile", "view"))
-        assert follow_on.returncode == 0, _output(follow_on)
-        assert "identity.name\tSession Lifecycle Operator" in follow_on.stdout
-
-        # 4. Strong logout revokes human access, retaining only the target hint.
-        logged_out = _run(storage_root, ("config", "logout"), as_json=True)
-        assert logged_out.returncode == 0, _output(logged_out)
-        logout_document = _envelope(logged_out)
-        assert logout_document["result"]["scope"] == "profile_human_access"
-        assert logout_document["result"]["human_receipt_revoked"] is True
-        assert logout_document["result"]["automation_revoked"] is False
-        assert logout_document["result"]["receipt_removed"] is True
-        assert not record.exists()
-        listed = _run(storage_root, ("config", "profile", "list"), as_json=True)
-        assert listed.returncode == 0, _output(listed)
-        assert [(item["name"], item["active"]) for item in _envelope(listed)["result"]["profiles"]] == [
-            ("session-operator", True)
-        ]
-
-        again = _run(storage_root, ("config", "logout"), as_json=True)
-        assert again.returncode == 2, _output(again)
-        repeat = json.loads(again.stderr)["error"]
-        assert repeat["code"] == "REFUSED_CLI_BOUNDARY" and repeat["context"] == {"reason": "absent"}
-        assert not record.exists()
-
-        resumed = _run(storage_root, ("config", "login", bucket_id), as_json=True)
-        assert resumed.returncode == 2, _output(resumed)
-        absent = json.loads(resumed.stderr)["error"]
-        assert absent["code"] == "REFUSED_CLI_BOUNDARY"
-        assert absent["action"]["failed_condition_id"] == "profile.human.input_channel_available"
-        assert absent["action"]["evidence"][0]["values"]["password_channel_available"] is False
-        assert not record.exists()
-
-        reopened = _run(
-            storage_root,
-            ("config", "login", bucket_id, "--secrets-stdin"),
-            as_json=True,
-            stdin_payload=json.dumps({"passphrase": _CREDENTIAL_INPUT}),
-        )
-        assert reopened.returncode == 0, _output(reopened)
-        reopened_result = _envelope(reopened)["result"]
-        assert reopened_result["already_authenticated"] is False and reopened_result["session_persisted"] is True
-        assert record.is_file()
-        shown = _run(storage_root, ("config", "profile", "view"))
-        assert shown.returncode == 0, _output(shown)
-        assert "identity.name\tSession Lifecycle Operator" in shown.stdout
+        _assert_logout_refused_without_proof(storage_root, record)
+        logged_in = _login_over_secrets_channel(storage_root, bucket_id, record)
+        resumed_before_logout, follow_on = _resume_without_secrets(storage_root, bucket_id)
+        logged_out, again, resumed = _strong_logout_then_refused_resume(storage_root, bucket_id, record)
+        reopened, shown = _reopen_with_password(storage_root, bucket_id, record)
         for invocation in (logged_in, resumed_before_logout, follow_on, logged_out, again, resumed, reopened, shown):
             assert _CREDENTIAL_INPUT not in invocation.stdout + invocation.stderr
 
