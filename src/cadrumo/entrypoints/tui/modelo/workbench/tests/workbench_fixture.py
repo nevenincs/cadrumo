@@ -18,6 +18,7 @@ from ......application.modelo.calculation_report import CalculationReportRowRole
 from ......application.modelo.casilla_help import ModeloCasillaHelpCardV1
 from ......application.modelo.casilla_help_formula import ModeloHelpFormulaV1
 from ......application.modelo.source_policy import source_policy
+from ......application.modelo.work_form import build_modelo_work_form
 from ......application.modelo.work_form_models import (
     ModeloFormBinding,
     ModeloFormCasillaAddressV1,
@@ -37,8 +38,12 @@ from ......application.modelo.work_form_models import (
     ModeloFormTextDisclosure,
     ModeloWorkForm,
 )
-from ......application.modelo.work_form_service import ModeloWorkFormLoadV1
-from ......application.modelo.work_review import ModeloWorkProgress
+from ......application.modelo.work_form_service import ModeloWorkFormLoadV1, modelo_form_snapshot
+from ......application.modelo.work_review import (
+    ModeloWorkProgress,
+    ModeloWorkReview,
+    build_modelo_work_review_casillas,
+)
 from ......core.aggregation import BindingSourceKind
 from ......core.casilla_id import CasillaId
 from ......core.errors.hierarchy import CadrumoError
@@ -46,7 +51,10 @@ from ......core.external_constants import OutputLanguage
 from ......core.modelo_export_artefact import ModeloExportArtefact
 from ......core.modelo_work_progress_state import ModeloWorkProgressState
 from ......core.period import Period
+from ......domain.calculations.registry.authority import PinnedAuthorityOperation
 from ......domain.calculations.registry.schema_form_layouts import FormCellKind, FormPageCondition
+from ......domain.modelos.codes import ModeloCode
+from ......domain.modelos.verification_report import ModeloVerificationFinding
 from ...m303_evidence import OrdinaryM303FilingEvidenceSubmission
 from ..header import ResultView, StatusLine
 from ..ports import (
@@ -66,7 +74,7 @@ if TYPE_CHECKING:
     from ....operations.controller_port import OperationControllerPort
 
 
-def _text(text: str) -> ModeloFormText:
+def form_text(text: str) -> ModeloFormText:
     return ModeloFormText(text=text, disclosure=ModeloFormTextDisclosure.LOCALIZED)
 
 
@@ -90,7 +98,7 @@ def form_field(
     return ModeloFormField(
         address=ModeloFormCasillaAddressV1(casilla_id=box),
         box=box,
-        label=_text(label),
+        label=form_text(label),
         help=help_text,
         data_type="money",
         value=value,
@@ -102,7 +110,7 @@ def form_field(
     )
 
 
-def _counts(fields: list[ModeloFormField]) -> ModeloFormCounts:
+def form_counts(fields: list[ModeloFormField]) -> ModeloFormCounts:
     def count(origin: ModeloFormOrigin) -> int:
         return sum(1 for item in fields if item.origin is origin)
 
@@ -119,10 +127,49 @@ def _counts(fields: list[ModeloFormField]) -> ModeloFormCounts:
     )
 
 
-def _section(section_id: str, heading: str, fields: list[ModeloFormField]) -> ModeloFormSection:
+def form_section(section_id: str, heading: str, fields: list[ModeloFormField]) -> ModeloFormSection:
     blocks = tuple(ModeloFormFieldBlock(id=f"f{item.box}", field=item) for item in fields)
     return ModeloFormSection(
-        id=section_id, heading=_text(heading), official_heading=None, blocks=blocks, counts=_counts(fields)
+        id=section_id, heading=form_text(heading), official_heading=None, blocks=blocks, counts=form_counts(fields)
+    )
+
+
+def registry_form(
+    operation: PinnedAuthorityOperation,
+    *,
+    modelo: str,
+    year: int,
+    code: str,
+    findings: tuple[ModeloVerificationFinding, ...],
+) -> ModeloWorkForm:
+    """Build the form of one real published registry revision, carrying ``findings`` and no work yet."""
+    period = Period.from_year_and_code(year, code)
+    revision_id = str(operation.revision_for_context(modelo, filing_year=year, period=code).id)
+    snapshot = modelo_form_snapshot(operation, ModeloCode(modelo), year, period, revision_id)
+    review = ModeloWorkReview(
+        bucket_id="13000000-0000-4000-8000-000000000349",
+        modelo=modelo,
+        filing_year=year,
+        period=period,
+        registry_revision_id=snapshot.revision.id,
+        work_unit_id="e" * 64,
+        calculation_revision_id=None,
+        lifecycle_state=None,
+        verification_outcome=None,
+        progress=ModeloWorkProgress(state=ModeloWorkProgressState.UNDEFINED),
+        casillas=build_modelo_work_review_casillas(snapshot=snapshot, revision=None, operation=operation),
+        findings=findings,
+        blockers=(),
+    )
+    return build_modelo_work_form(
+        review=review,
+        snapshot=snapshot,
+        layout=operation.form_layout(modelo, snapshot.revision.id),
+        revision=None,
+        permitted_surface=None,
+        entered_casilla_ids=None,
+        overridden_binding_ids=None,
+        language=OutputLanguage.EN,
     )
 
 
@@ -184,14 +231,14 @@ def synthetic_form(*, calculated: bool = True, needs_input: bool = True) -> Mode
     grid = ModeloFormGridBlock(
         id="grid",
         columns=(
-            ModeloFormGridColumn(key="base", heading=_text("Base imponible")),
-            ModeloFormGridColumn(key="tipo", heading=_text("Tipo %")),
-            ModeloFormGridColumn(key="cuota", heading=_text("Cuota")),
+            ModeloFormGridColumn(key="base", heading=form_text("Base imponible")),
+            ModeloFormGridColumn(key="tipo", heading=form_text("Tipo %")),
+            ModeloFormGridColumn(key="cuota", heading=form_text("Cuota")),
         ),
         rows=(
             ModeloFormGridRow(
                 key="r21",
-                heading=_text("Régimen general 21 %"),
+                heading=form_text("Régimen general 21 %"),
                 cells=(
                     ModeloFormGridCell(kind=FormCellKind.CASILLA, field=base),
                     ModeloFormGridCell(kind=FormCellKind.DESIGN_CONSTANT, literal="21,00"),
@@ -200,29 +247,33 @@ def synthetic_form(*, calculated: bool = True, needs_input: bool = True) -> Mode
             ),
         ),
     )
-    first_section = _section("p1.s1", "I. Actividades económicas", [income, expenses, net])
+    first_section = form_section("p1.s1", "I. Actividades económicas", [income, expenses, net])
     grid_section = ModeloFormSection(
-        id="p1.s2", heading=_text("IVA devengado"), official_heading=None, blocks=(grid,), counts=_counts([base, quota])
+        id="p1.s2",
+        heading=form_text("IVA devengado"),
+        official_heading=None,
+        blocks=(grid,),
+        counts=form_counts([base, quota]),
     )
-    second_section = _section("p2.s1", "III. Total liquidación", [withholding, result])
+    second_section = form_section("p2.s1", "III. Total liquidación", [withholding, result])
     pages = (
         ModeloFormPage(
             id="p1",
-            heading=_text("Liquidación"),
+            heading=form_text("Liquidación"),
             official_ref="DR13001",
             condition=FormPageCondition.ALWAYS,
             applies=True,
             sections=(first_section, grid_section),
-            counts=_counts([income, expenses, net, base, quota]),
+            counts=form_counts([income, expenses, net, base, quota]),
         ),
         ModeloFormPage(
             id="p2",
-            heading=_text("Resultado"),
+            heading=form_text("Resultado"),
             official_ref="DR13002",
             condition=FormPageCondition.ALWAYS,
             applies=True,
             sections=(second_section,),
-            counts=_counts([withholding, result]),
+            counts=form_counts([withholding, result]),
         ),
     )
     every = [income, expenses, net, base, quota, withholding, result, working]
@@ -238,7 +289,7 @@ def synthetic_form(*, calculated: bool = True, needs_input: bool = True) -> Mode
         pages=pages,
         working_figures=(working,),
         result_addresses=("19",),
-        counts=_counts(every),
+        counts=form_counts(every),
         progress=ModeloWorkProgress(state=ModeloWorkProgressState.UNDEFINED),
         operator_entries_known=True,
         edit_admitted=True,
