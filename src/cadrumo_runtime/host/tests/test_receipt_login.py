@@ -7,9 +7,11 @@ import sys
 import time
 from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
+from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 from threading import Event
+from typing import Any
 from uuid import UUID, uuid4
 
 import keyring
@@ -20,7 +22,11 @@ from cadrumo.adapters.persistence.storage.custody import acceleration_keychain
 from cadrumo.adapters.persistence.storage.custody.acceleration_receipt import profile_session_path
 from cadrumo.adapters.persistence.storage.custody.acceleration_receipt_crypto import profile_session_login_binding
 from cadrumo.adapters.persistence.storage.custody.sign_in_generation import SignInGeneration, SignInGenerationCustody
-from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support import PROFILE_INPUT, administration_subject
+from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support import (
+    PROFILE_INPUT,
+    AdministrationSubject,
+    administration_subject,
+)
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import profile_authority_contexts
 from cadrumo.application.operations.registry import OperationFrontendProjection
@@ -94,6 +100,225 @@ def _session(client: VerifiedConnection, profile_id: UUID, session_id: UUID, act
     return client.session(request, deadline=time.monotonic() + 5)
 
 
+@dataclass(frozen=True)
+class _ReceiptRig:
+    endpoint: WindowsEndpoint
+    profiles: RuntimeProfileConnections
+    profile_id: UUID
+    native_login: LoginObservation
+    api_credential: bytes
+    receipt_path: Path
+    original_receipt: bytes
+    receipt_metadata: dict[str, Any]
+    receipt_expiry: datetime
+    clients: list[VerifiedConnection]
+
+
+def _publish_receipt(
+    enrollment: AdministrationSubject, root: Path, profile_id: UUID, native_login: LoginObservation
+) -> tuple[Path, bytes, dict[str, Any], datetime]:
+    # The worker's own publication step, run in this process so the
+    # receipt key lands in this process's keyring: it binds the
+    # receipt to the native login the runtime observes below.
+    _, decode = profile_authority_contexts()
+    with authenticate_profile_candidate(
+        bucket_id=profile_id, passphrase_callback=lambda: PROFILE_INPUT, profile_decode_context=decode
+    ) as candidate:
+        assert candidate.persist_acceleration_receipt(
+            login_id=native_login.login_id,
+            binding=enrollment.store.binding,
+            sign_in=SignInGenerationCustody(root=root, binding=enrollment.store.binding).establish().current,
+        )
+    receipt_path = profile_session_path(storage_root=root, profile_id=profile_id)
+    original_receipt = receipt_path.read_bytes()
+    receipt_metadata = json.loads(original_receipt)
+    assert receipt_metadata["login_binding"] == profile_session_login_binding(
+        profile_id=profile_id,
+        session_id=UUID(receipt_metadata["session_id"]),
+        login_id=native_login.login_id,
+    )
+    receipt_expiry = min(
+        datetime.fromisoformat(receipt_metadata["idle_deadline"]),
+        datetime.fromisoformat(receipt_metadata["absolute_deadline"]),
+    )
+    return receipt_path, original_receipt, receipt_metadata, receipt_expiry
+
+
+def _admit_api_after_invalid_proofs(
+    rig: _ReceiptRig,
+    api: VerifiedConnection,
+    human: VerifiedConnection,
+    invalid_api: VerifiedConnection,
+    invalid_receipt: VerifiedConnection,
+) -> UUID:
+    profile_id = rig.profile_id
+    presence = human.sign_in_status(
+        SignInStatusRequest(request_id=uuid4(), profile_id=profile_id),
+        deadline=time.monotonic() + 5,
+    )
+    assert isinstance(presence, SignInStatusReply)
+    assert presence.status.presence is SignInPresence.PRESENT
+    assert not rig.profiles._profiles  # Observation must not start a worker.
+    assert rig.receipt_path.read_bytes() == rig.original_receipt
+    invalid_api_reply = _login(invalid_api, profile_id, "api_key", bytearray(b"x" * 32), persist_receipt=True)
+    invalid_receipt_reply = _login(invalid_receipt, profile_id, "receipt", bytearray(b"x" * 32), persist_receipt=True)
+    for denied in (invalid_api_reply, invalid_receipt_reply):
+        assert isinstance(denied, AccessRefusal)
+        assert denied.code is RefusalCode.INVALID_FRAME
+    admitted_api = _login(api, profile_id, "api_key", bytearray(rig.api_credential))
+    assert isinstance(admitted_api, ProfileStatus) and admitted_api.status.session_id is not None
+    assert admitted_api.human_login is None
+    return admitted_api.status.session_id
+
+
+def _resume_with_receipt_proof(
+    rig: _ReceiptRig,
+    api: VerifiedConnection,
+    human: VerifiedConnection,
+    stranger: VerifiedConnection,
+    api_id: UUID,
+) -> ProfileStatus:
+    profile_id, receipt_metadata = rig.profile_id, rig.receipt_metadata
+    # A copied session UUID and a frontend label cannot stand in for the receipt key.
+    copied = _session(stranger, profile_id, api_id, "session_status")
+    assert isinstance(copied, AccessRefusal)
+    wrong = bytearray(b"\x00" * 32)
+    with borrow_receipt_proof(profile_id=profile_id) as proof:
+        assert bytes(proof) != bytes(wrong)
+        denied = _login(human, profile_id, "receipt", wrong)
+        assert isinstance(denied, AccessRefusal)
+        assert rig.receipt_path.read_bytes() == rig.original_receipt
+        accepted = _login(human, profile_id, "receipt", proof)
+        assert isinstance(accepted, ProfileStatus), accepted
+    assert proof == bytes(32)
+    first_human_id = accepted.status.session_id
+    assert first_human_id is not None and first_human_id != api_id
+    assert accepted.status.session_expires_at == rig.receipt_expiry
+    assert accepted.human_login is not None
+    assert accepted.human_login.resumed and accepted.human_login.session_persisted
+    assert accepted.human_login.authenticated_at == datetime.fromisoformat(receipt_metadata["issued_at"])
+    assert accepted.human_login.idle_deadline == datetime.fromisoformat(receipt_metadata["idle_deadline"])
+    assert accepted.human_login.absolute_deadline == datetime.fromisoformat(receipt_metadata["absolute_deadline"])
+    assert rig.receipt_path.read_bytes() == rig.original_receipt
+    assert isinstance(_session(api, profile_id, api_id, "session_status"), ProfileStatus)
+    return accepted
+
+
+def _relock_and_resume_again(
+    rig: _ReceiptRig,
+    api: VerifiedConnection,
+    human: VerifiedConnection,
+    stranger: VerifiedConnection,
+    api_id: UUID,
+    accepted: ProfileStatus,
+) -> tuple[UUID, Event]:
+    profile_id = rig.profile_id
+    first_human_id = accepted.status.session_id
+    assert first_human_id is not None
+    locked = _session(human, profile_id, first_human_id, "session_lock")
+    assert isinstance(locked, SessionsLocked) and locked.session_ids == (first_human_id,)
+    assert isinstance(_session(stranger, profile_id, first_human_id, "session_status"), AccessRefusal)
+    with borrow_receipt_proof(profile_id=profile_id) as fresh_proof:
+        second = _login(stranger, profile_id, "receipt", fresh_proof)
+        assert isinstance(second, ProfileStatus), second
+    assert fresh_proof == bytes(32)
+    second_human_id = second.status.session_id
+    assert second_human_id is not None and second_human_id != first_human_id
+    retired_notice = Event()
+    stranger.subscribe_session_events(
+        lambda event: (
+            retired_notice.set() if isinstance(event, SessionEvent) and event.session_id == second_human_id else None
+        )
+    )
+    assert second.status.session_expires_at == accepted.status.session_expires_at
+    assert second.human_login == accepted.human_login
+    assert rig.receipt_path.read_bytes() == rig.original_receipt
+    assert isinstance(_session(api, profile_id, api_id, "session_status"), ProfileStatus)
+    return second_human_id, retired_notice
+
+
+def _observe_lock_down_without_revocation(rig: _ReceiptRig) -> None:
+    host = rig.profiles._profiles[rig.profile_id]
+    native_login = rig.native_login
+    with host.guard:
+        native_login.lock_state = OsLockState.UNKNOWN
+        assert host.observe_human_lock_down() == ()
+        assert rig.receipt_path.read_bytes() == rig.original_receipt
+        native_login.lock_state = OsLockState.UNLOCKED
+        original_logins = host._logins
+        unrelated = LoginObservation(owner_id(), login_id="other-login", lock_state=OsLockState.LOCKED)
+        host._logins = lambda: (unrelated,)
+        try:
+            assert host.observe_human_lock_down() == ()
+            assert rig.receipt_path.read_bytes() == rig.original_receipt
+        finally:
+            host._logins = original_logins
+
+
+def _revoke_by_sign_out(rig: _ReceiptRig, stranger: VerifiedConnection, second_human_id: UUID) -> None:
+    revoked = _session(stranger, rig.profile_id, second_human_id, "human_sign_out")
+    assert isinstance(revoked, HumanSignedOut), revoked
+    assert second_human_id in revoked.session_ids
+    assert revoked.receipt_removed and revoked.keychain_removed
+    assert revoked.automation_enabled is True
+    # The issued key is not tied to the sign-in, so automation access remains.
+    assert revoked.automation_access_remains is True
+
+
+def _revoke_by_positive_lock(rig: _ReceiptRig, second_human_id: UUID) -> None:
+    host = rig.profiles._profiles[rig.profile_id]
+    with host.guard:
+        rig.native_login.lock_state = OsLockState.LOCKED
+        retired = host.observe_human_lock_down()
+        assert second_human_id in retired
+        assert host.observe_human_lock_down() == ()
+        rig.profiles._retired(retired)
+        rig.native_login.lock_state = OsLockState.UNLOCKED
+
+
+def _revoke_and_refuse_stale_proof(
+    rig: _ReceiptRig,
+    api: VerifiedConnection,
+    human: VerifiedConnection,
+    stranger: VerifiedConnection,
+    api_id: UUID,
+    second_human_id: UUID,
+    retired_notice: Event,
+    revocation: str,
+) -> None:
+    profile_id = rig.profile_id
+    with borrow_receipt_proof(profile_id=profile_id) as stale_proof:
+        if revocation == "sign_out":
+            _revoke_by_sign_out(rig, stranger, second_human_id)
+        else:
+            _revoke_by_positive_lock(rig, second_human_id)
+        assert retired_notice.wait(5), "idle client must receive retirement on its verified stream"
+        assert not rig.receipt_path.exists()
+        stale = _login(human, profile_id, "receipt", stale_proof)
+        assert isinstance(stale, AccessRefusal)
+        assert stale.sign_in is not None and stale.sign_in.reason == "absent"
+    assert isinstance(_session(api, profile_id, api_id, "session_status"), ProfileStatus)
+    absent = human.sign_in_status(
+        SignInStatusRequest(request_id=uuid4(), profile_id=profile_id),
+        deadline=time.monotonic() + 5,
+    )
+    assert isinstance(absent, SignInStatusReply)
+    assert absent.status.presence is SignInPresence.ABSENT
+
+
+def _refuse_retired_and_api_upgrade(
+    rig: _ReceiptRig, api: VerifiedConnection, stranger: VerifiedConnection, second_human_id: UUID
+) -> None:
+    profile_id = rig.profile_id
+    stranger.close()
+    replacement = connect_verified(rig.endpoint)
+    rig.clients.append(replacement)
+    assert isinstance(_session(replacement, profile_id, second_human_id, "session_status"), AccessRefusal)
+    # An API-authenticated connection has no human upgrade by session identity or frontend alone.
+    api_upgrade = _login(api, profile_id, "receipt", bytearray(b"\x00" * 32))
+    assert isinstance(api_upgrade, AccessRefusal)
+
+
 @pytest.mark.parametrize("revocation", ["sign_out", "positive_lock"])
 def test_receipt_proof_reenters_without_password_or_api_promotion(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, revocation: str
@@ -125,29 +350,8 @@ def test_receipt_proof_reenters_without_password_or_api_promotion(
             profile_id = enrollment.store.binding.profile_id
             close_active_bucket_session()
             native_login = LoginObservation(owner_id())
-            # The worker's own publication step, run in this process so the
-            # receipt key lands in this process's keyring: it binds the
-            # receipt to the native login the runtime observes below.
-            _, decode = profile_authority_contexts()
-            with authenticate_profile_candidate(
-                bucket_id=profile_id, passphrase_callback=lambda: PROFILE_INPUT, profile_decode_context=decode
-            ) as candidate:
-                assert candidate.persist_acceleration_receipt(
-                    login_id=native_login.login_id,
-                    binding=enrollment.store.binding,
-                    sign_in=SignInGenerationCustody(root=root, binding=enrollment.store.binding).establish().current,
-                )
-            receipt_path = profile_session_path(storage_root=root, profile_id=profile_id)
-            original_receipt = receipt_path.read_bytes()
-            receipt_metadata = json.loads(original_receipt)
-            assert receipt_metadata["login_binding"] == profile_session_login_binding(
-                profile_id=profile_id,
-                session_id=UUID(receipt_metadata["session_id"]),
-                login_id=native_login.login_id,
-            )
-            receipt_expiry = min(
-                datetime.fromisoformat(receipt_metadata["idle_deadline"]),
-                datetime.fromisoformat(receipt_metadata["absolute_deadline"]),
+            receipt_path, original_receipt, receipt_metadata, receipt_expiry = _publish_receipt(
+                enrollment, root, profile_id, native_login
             )
 
             stop, boot = Event(), uuid4()
@@ -164,138 +368,34 @@ def test_receipt_proof_reenters_without_password_or_api_promotion(
                 endpoint, product_version="test", stop=stop, profiles=profiles, boot_id=boot
             )
             clients: list[VerifiedConnection] = []
+            rig = _ReceiptRig(
+                endpoint,
+                profiles,
+                profile_id,
+                native_login,
+                api_credential.get_secret_value(),
+                receipt_path,
+                original_receipt,
+                receipt_metadata,
+                receipt_expiry,
+                clients,
+            )
             with ThreadPoolExecutor(max_workers=1) as pool:
                 running = pool.submit(server.serve)
                 try:
                     assert server.ready.wait(3)
                     api, human, stranger, invalid_api, invalid_receipt = (connect_verified(endpoint) for _ in range(5))
                     clients.extend((api, human, stranger, invalid_api, invalid_receipt))
-                    presence = human.sign_in_status(
-                        SignInStatusRequest(request_id=uuid4(), profile_id=profile_id),
-                        deadline=time.monotonic() + 5,
+                    api_id = _admit_api_after_invalid_proofs(rig, api, human, invalid_api, invalid_receipt)
+                    accepted = _resume_with_receipt_proof(rig, api, human, stranger, api_id)
+                    second_human_id, retired_notice = _relock_and_resume_again(
+                        rig, api, human, stranger, api_id, accepted
                     )
-                    assert isinstance(presence, SignInStatusReply)
-                    assert presence.status.presence is SignInPresence.PRESENT
-                    assert not profiles._profiles  # Observation must not start a worker.
-                    assert receipt_path.read_bytes() == original_receipt
-                    invalid_api_reply = _login(
-                        invalid_api, profile_id, "api_key", bytearray(b"x" * 32), persist_receipt=True
+                    _observe_lock_down_without_revocation(rig)
+                    _revoke_and_refuse_stale_proof(
+                        rig, api, human, stranger, api_id, second_human_id, retired_notice, revocation
                     )
-                    invalid_receipt_reply = _login(
-                        invalid_receipt, profile_id, "receipt", bytearray(b"x" * 32), persist_receipt=True
-                    )
-                    for denied in (invalid_api_reply, invalid_receipt_reply):
-                        assert isinstance(denied, AccessRefusal)
-                        assert denied.code is RefusalCode.INVALID_FRAME
-                    admitted_api = _login(api, profile_id, "api_key", bytearray(api_credential.get_secret_value()))
-                    assert isinstance(admitted_api, ProfileStatus) and admitted_api.status.session_id is not None
-                    assert admitted_api.human_login is None
-                    api_id = admitted_api.status.session_id
-
-                    # A copied session UUID and a frontend label cannot stand in for the receipt key.
-                    copied = _session(stranger, profile_id, api_id, "session_status")
-                    assert isinstance(copied, AccessRefusal)
-                    wrong = bytearray(b"\x00" * 32)
-                    with borrow_receipt_proof(profile_id=profile_id) as proof:
-                        assert bytes(proof) != bytes(wrong)
-                        denied = _login(human, profile_id, "receipt", wrong)
-                        assert isinstance(denied, AccessRefusal)
-                        assert receipt_path.read_bytes() == original_receipt
-                        accepted = _login(human, profile_id, "receipt", proof)
-                        assert isinstance(accepted, ProfileStatus), accepted
-                    assert proof == bytes(32)
-                    first_human_id = accepted.status.session_id
-                    assert first_human_id is not None and first_human_id != api_id
-                    assert accepted.status.session_expires_at == receipt_expiry
-                    assert accepted.human_login is not None
-                    assert accepted.human_login.resumed and accepted.human_login.session_persisted
-                    assert accepted.human_login.authenticated_at == datetime.fromisoformat(
-                        receipt_metadata["issued_at"]
-                    )
-                    assert accepted.human_login.idle_deadline == datetime.fromisoformat(
-                        receipt_metadata["idle_deadline"]
-                    )
-                    assert accepted.human_login.absolute_deadline == datetime.fromisoformat(
-                        receipt_metadata["absolute_deadline"]
-                    )
-                    assert receipt_path.read_bytes() == original_receipt
-                    assert isinstance(_session(api, profile_id, api_id, "session_status"), ProfileStatus)
-
-                    locked = _session(human, profile_id, first_human_id, "session_lock")
-                    assert isinstance(locked, SessionsLocked) and locked.session_ids == (first_human_id,)
-                    assert isinstance(_session(stranger, profile_id, first_human_id, "session_status"), AccessRefusal)
-                    with borrow_receipt_proof(profile_id=profile_id) as fresh_proof:
-                        second = _login(stranger, profile_id, "receipt", fresh_proof)
-                        assert isinstance(second, ProfileStatus), second
-                    assert fresh_proof == bytes(32)
-                    second_human_id = second.status.session_id
-                    assert second_human_id is not None and second_human_id != first_human_id
-                    retired_notice = Event()
-                    stranger.subscribe_session_events(
-                        lambda event: (
-                            retired_notice.set()
-                            if isinstance(event, SessionEvent) and event.session_id == second_human_id
-                            else None
-                        )
-                    )
-                    assert second.status.session_expires_at == accepted.status.session_expires_at
-                    assert second.human_login == accepted.human_login
-                    assert receipt_path.read_bytes() == original_receipt
-                    assert isinstance(_session(api, profile_id, api_id, "session_status"), ProfileStatus)
-
-                    host = profiles._profiles[profile_id]
-                    with host.guard:
-                        native_login.lock_state = OsLockState.UNKNOWN
-                        assert host.observe_human_lock_down() == ()
-                        assert receipt_path.read_bytes() == original_receipt
-                        native_login.lock_state = OsLockState.UNLOCKED
-                        original_logins = host._logins
-                        unrelated = LoginObservation(owner_id(), login_id="other-login", lock_state=OsLockState.LOCKED)
-                        host._logins = lambda: (unrelated,)
-                        try:
-                            assert host.observe_human_lock_down() == ()
-                            assert receipt_path.read_bytes() == original_receipt
-                        finally:
-                            host._logins = original_logins
-                    with borrow_receipt_proof(profile_id=profile_id) as stale_proof:
-                        if revocation == "sign_out":
-                            revoked = _session(stranger, profile_id, second_human_id, "human_sign_out")
-                            assert isinstance(revoked, HumanSignedOut), revoked
-                            assert second_human_id in revoked.session_ids
-                            assert revoked.receipt_removed and revoked.keychain_removed
-                            assert revoked.automation_enabled is True
-                            # The issued key is not tied to the sign-in, so automation access remains.
-                            assert revoked.automation_access_remains is True
-                        else:
-                            with host.guard:
-                                native_login.lock_state = OsLockState.LOCKED
-                                retired = host.observe_human_lock_down()
-                                assert second_human_id in retired
-                                assert host.observe_human_lock_down() == ()
-                                profiles._retired(retired)
-                                native_login.lock_state = OsLockState.UNLOCKED
-                        assert retired_notice.wait(5), "idle client must receive retirement on its verified stream"
-                        assert not receipt_path.exists()
-                        stale = _login(human, profile_id, "receipt", stale_proof)
-                        assert isinstance(stale, AccessRefusal)
-                        assert stale.sign_in is not None and stale.sign_in.reason == "absent"
-                    assert isinstance(_session(api, profile_id, api_id, "session_status"), ProfileStatus)
-                    absent = human.sign_in_status(
-                        SignInStatusRequest(request_id=uuid4(), profile_id=profile_id),
-                        deadline=time.monotonic() + 5,
-                    )
-                    assert isinstance(absent, SignInStatusReply)
-                    assert absent.status.presence is SignInPresence.ABSENT
-
-                    stranger.close()
-                    replacement = connect_verified(endpoint)
-                    clients.append(replacement)
-                    assert isinstance(
-                        _session(replacement, profile_id, second_human_id, "session_status"), AccessRefusal
-                    )
-                    # An API-authenticated connection has no human upgrade by session identity or frontend alone.
-                    api_upgrade = _login(api, profile_id, "receipt", bytearray(b"\x00" * 32))
-                    assert isinstance(api_upgrade, AccessRefusal)
+                    _refuse_retired_and_api_upgrade(rig, api, stranger, second_human_id)
                 finally:
                     for client in clients:
                         client.close()
