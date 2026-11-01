@@ -314,7 +314,7 @@ export type Asset = {
   acquired: string;
   base: number;
   method: string;
-  claimed: string;
+  claimed: { period: string; cents: number };
   revisions: number;
 };
 export type Consent = {

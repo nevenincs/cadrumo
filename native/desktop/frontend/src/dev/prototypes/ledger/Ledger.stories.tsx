@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { userEvent } from "storybook/test";
+import { formatDecimal } from "@/shared/numbers";
 import { LedgerPrototype, type Scenario } from "./App";
 import { find, press, saveAll } from "./plays";
 import { SCENARIOS } from "./scenarios";
@@ -259,13 +260,17 @@ export const ExportClean: Story = story(SCENARIOS.exportClean, {
 
 export const SplitMovement: Story = story(SCENARIOS.split, {
   name: "Split a movement into parts",
-  play: async ({ canvasElement }) => {
+  play: async ({ canvasElement, globals }) => {
     const field = await find(
       canvasElement,
       "input[aria-label='Part 1 amount']",
     );
     await userEvent.clear(field);
-    await userEvent.type(field, "70.00");
+    // Typed in the marks of the language shown, as a person types it.
+    await userEvent.type(
+      field,
+      formatDecimal(String(globals.locale), "70.00", { minFraction: 2 }),
+    );
   },
 });
 

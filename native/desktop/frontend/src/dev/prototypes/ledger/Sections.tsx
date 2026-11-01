@@ -2326,7 +2326,7 @@ export function DocDetail({ d }: { d: Doc }) {
                       ([k, [, origin, grounding]]) => (
                         <tr key={k}>
                           <td className="muted t-sm">{DRAFT_LABEL[k] || k}</td>
-                          <td style={{ minWidth: "14.25rem" }}>
+                          <td style={{ minWidth: "calc(var(--spacing) * 57)" }}>
                             <TypedField
                               field={DRAFT_FIELD[k] ?? { kind: "text" }}
                               controlSize="sm"
@@ -3438,7 +3438,7 @@ export function DiagnosticsPane() {
                 .length + 6}
             </dd>
             <dt>Cost</dt>
-            <dd>0.00 EUR · all read on this computer</dd>
+            <dd>{fmtMoney(0)} EUR · all read on this computer</dd>
           </dl>
         </div>
       </div>
@@ -4574,7 +4574,12 @@ export function AssetsPane() {
               render: (x) => fmtMoney(x.base),
             },
             { key: "method", label: "Method" },
-            { key: "claimed", label: "Claimed" },
+            {
+              key: "claimed",
+              label: "Claimed",
+              render: (x) =>
+                `${x.claimed.period}: ${fmtMoney(x.claimed.cents)}`,
+            },
             { key: "revisions", label: "Revisions", num: true },
           ]}
         />
