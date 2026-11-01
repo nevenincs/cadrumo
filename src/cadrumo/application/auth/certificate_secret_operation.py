@@ -15,7 +15,12 @@ from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.models import STRICT_FROZEN_CONFIG
-from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ...core.operations import (
+    EFFECTS_OF_A_SUCCEEDED_RECEIPT,
+    OperationEffect,
+    OperationTerminalCondition,
+    profile_operation_subject,
+)
 from ...core.time.clock import now
 from ..operations.access_resolution import (
     HUMAN_SINGLE_RUN_COMMITTING_PERIOD_INDEPENDENT_DEFINITION_RESULT_PROFILE_VALUES_ACCESS,
@@ -269,7 +274,7 @@ def _require_certificate_secret_receipt(result: BaseModel, receipt: OperationTer
             CERTIFICATE_CREDENTIAL_REMOVE_OPERATION_DEFINITION_ID,
         }
         or receipt.condition is not OperationTerminalCondition.SUCCEEDED
-        or receipt.effect not in {OperationEffect.NONE, OperationEffect.UPDATED}
+        or receipt.effect not in EFFECTS_OF_A_SUCCEEDED_RECEIPT
     ):
         raise ValueError("invalid certificate secret result")
 

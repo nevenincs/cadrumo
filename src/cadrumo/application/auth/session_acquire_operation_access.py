@@ -8,7 +8,7 @@ from pydantic import BaseModel, ConfigDict
 
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
-from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ...core.operations import EFFECTS_OF_A_SUCCEEDED_RECEIPT, OperationTerminalCondition, profile_operation_subject
 from ..operations.access_resolution import (
     HUMAN_SINGLE_RUN_COMMITTING_PERIOD_INDEPENDENT_DEFINITION_RESULT_PROFILE_VALUES_ACCESS,
     OperationAccessContext,
@@ -57,7 +57,7 @@ def project_auth_session_acquire_result(result: BaseModel, receipt: OperationTer
         type(result) is not AuthLoginResult
         or receipt.identity.definition_id != AUTH_SESSION_ACQUIRE_OPERATION_DEFINITION_ID
         or receipt.condition is not OperationTerminalCondition.SUCCEEDED
-        or receipt.effect not in {OperationEffect.NONE, OperationEffect.UPDATED}
+        or receipt.effect not in EFFECTS_OF_A_SUCCEEDED_RECEIPT
     ):
         raise ValueError("invalid provider login result")
     try:

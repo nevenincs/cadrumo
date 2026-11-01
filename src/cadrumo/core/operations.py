@@ -104,6 +104,12 @@ operation returns :attr:`OperationEffect.PARTIAL` when some sub-operations
 fail, for the contrasting case."""
 
 
+EFFECTS_OF_A_SUCCEEDED_RECEIPT: frozenset[OperationEffect] = EFFECTS_WITHOUT_PARTIAL_COMMIT - {OperationEffect.UNKNOWN}
+"""Effects a ``SUCCEEDED`` receipt may carry when the result it releases is only valid
+for a settled outcome: nothing changed, or everything applied, never an ambiguous or
+partial extent."""
+
+
 class OperationDurability(StrEnum):
     """Persistence and recovery guarantee declared by an operation definition."""
 
