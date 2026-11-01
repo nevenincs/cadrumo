@@ -7,13 +7,18 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.application.modelo.export_contracts import ModeloExportResult, ModeloIvaWalletDecisionProvenance
+from cadrumo.application.modelo.export_contracts import (
+    ModeloExportCommand,
+    ModeloExportResult,
+    ModeloIvaWalletDecisionProvenance,
+)
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 
 from ....application.calculations.observations_repository import PriorDomiciliationElectionProjection
 from ....application.operations.models import OperationIdentity, OperationTerminalReceipt
 from ....application.operations.operation_definition import OperationDefinition
 from ....application.operations.registry import OperationPublicDefinitionRegistrationV1, OperationRegistry
+from ....core.errors.error_codes import resolve_error_message
 from ....core.modelo_export_artefact import ModeloExportArtefact
 from ....core.operations import OperationEffect, OperationTerminalCondition
 from ....core.payment_election import PaymentElection
@@ -24,7 +29,10 @@ from ....core.result_disposition import ResultDisposition
 from ....domain.calculations.registry.tax_id_format import SubjectTaxId
 from ....domain.filing.schema import ModeloCasillaProvenance
 from ....domain.filing.software_identity import AeatSoftwareIdentityGrade
+from ....domain.modelos.errors import ModeloExportError
+from ...filing.errors import ModeloApplicationError
 from ..calculation_summary_pdf_ports import CalculationSummaryCertifier, CalculationSummaryPdfRequest
+from ..export import _export_write_failure
 from ..export_operation import build_modelo_export_definition, build_modelo_export_registration
 from ..export_ports import ModeloExportPorts
 from ..export_projection import (
@@ -44,6 +52,36 @@ _WORK_UNIT_ID = "b" * 64
 _BASELINE_FILING_ID = "c" * 64
 _FILE_DIGEST = "d" * 64
 _AT = datetime(2026, 9, 26, 8, 30, tzinfo=UTC)
+
+
+@pytest.mark.parametrize("locale", ["en", "es", "ca", "hu"])
+def test_a_box_refusal_keeps_its_message_and_context_at_the_export_boundary(locale: str) -> None:
+    """The boundary preserves filing's refusal without replacing it by a disk error."""
+    context = {"box": "fixture-box", "limit": "3", "observed": 4}
+    refusal = ModeloApplicationError(
+        translated_message="application.filing.export.errors.xml_value_too_long", context=context
+    )
+    command = ModeloExportCommand.model_construct(calculation_revision_id="revision-1")
+
+    failure = _export_write_failure(command, refusal)
+
+    assert isinstance(failure, ModeloExportError)
+    assert failure.translated_message == refusal.translated_message
+    assert failure.context == {"calculation_revision_id": "revision-1", **context}
+    message = resolve_error_message(failure, locale=locale)
+    assert "fixture-box" in message
+    assert "3" in message
+    assert "xml_value" not in message
+    assert "cause" not in failure.context
+
+
+def test_another_export_failure_keeps_the_generic_message_and_its_cause() -> None:
+    command = ModeloExportCommand.model_construct(calculation_revision_id="revision-1")
+
+    failure = _export_write_failure(command, ModeloApplicationError("a layout invariant broke"))
+
+    assert failure.translated_message == "application.modelo.errors.export_draft_write_failed"
+    assert failure.context == {"calculation_revision_id": "revision-1", "cause": "a layout invariant broke"}
 
 
 def _canonical_receipt(

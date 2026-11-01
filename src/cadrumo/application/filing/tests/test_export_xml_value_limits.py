@@ -30,9 +30,7 @@ from ....domain.calculations.registry.bindings import resolve_available_bound_in
 from ....domain.calculations.registry.export_xml_dictionary import XmlDictionaryEntry, xml_dictionary_entries
 from ....domain.filing.protocols import ModeloInputValue
 from ....domain.filing.schema import ModeloDraft
-from ....domain.modelos.errors import ModeloExportError
 from ....domain.submission.models import ModeloDraftStatus
-from ...modelo.export import ModeloExportCommand, _export_write_failure
 from .._export_xml_dictionary import render_xml_dictionary_layout
 from .._export_xml_dictionary_modelo100 import modelo_100_unfiled_comunidad_paths, registry_modelo_100_xml_declarations
 from ..draft_construction import build_draft
@@ -666,12 +664,9 @@ def test_the_operator_reads_which_box_and_which_limit_and_never_the_value(
     entry = _named_row(provider, "C1ICRC")
     limit = int(_facet("tipo_ReferenciaCatastral", "maxLength"))
     secret = "7" * (limit + 1)
-    refusal = _refused(provider, entry, secret)
-    command = ModeloExportCommand.model_construct(calculation_revision_id="revision-1")
+    failure = _refused(provider, entry, secret)
 
-    failure = _export_write_failure(command, refusal)
-
-    assert isinstance(failure, ModeloExportError)
+    assert isinstance(failure, ModeloApplicationError)
     message = resolve_error_message(failure, locale=locale)
     assert _box(entry) in message
     assert str(limit) in message
@@ -679,14 +674,4 @@ def test_the_operator_reads_which_box_and_which_limit_and_never_the_value(
     assert secret not in message
     assert secret not in render_error_text(failure)
     assert failure.context is not None
-    assert failure.context["calculation_revision_id"] == "revision-1"
     assert "cause" not in failure.context
-
-
-def test_another_export_failure_keeps_the_generic_message_and_its_cause() -> None:
-    command = ModeloExportCommand.model_construct(calculation_revision_id="revision-1")
-
-    failure = _export_write_failure(command, ModeloApplicationError("a layout invariant broke"))
-
-    assert failure.translated_message == "application.modelo.errors.export_draft_write_failed"
-    assert failure.context == {"calculation_revision_id": "revision-1", "cause": "a layout invariant broke"}
