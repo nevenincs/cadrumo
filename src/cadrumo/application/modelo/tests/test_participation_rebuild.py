@@ -110,6 +110,11 @@ class _CalculationRepository(CalculationRevisionCatalogueRepositoryProtocol):
         return bool(self._catalogue.revisions)
 
     @override
+    def stored_catalogue_is_known_override_free(self) -> bool:
+        """Report unknown: this fake holds no stored bytes that could prove override-freeness."""
+        return False
+
+    @override
     def load_revisioned(
         self, *, operation: PinnedAuthorityOperation | None = None
     ) -> tuple[CalculationRevisionCatalogue, str]:

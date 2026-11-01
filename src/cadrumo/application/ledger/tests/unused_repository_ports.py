@@ -18,6 +18,9 @@ class ProfileOnlyCatalogueRepository[CatalogueT: BaseModel]:
     def exists(self) -> bool:
         raise AssertionError("this unit test does not access this catalogue")
 
+    def stored_catalogue_is_known_override_free(self) -> bool:
+        raise AssertionError("this unit test does not probe this catalogue's stored bytes")
+
     def load(self, **_kwargs: object) -> CatalogueT:
         raise AssertionError("this unit test does not read this catalogue")
 

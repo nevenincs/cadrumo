@@ -140,6 +140,9 @@ class _InMemoryCalculationRevisionRepository:
     def exists(self) -> bool:
         return bool(self._catalogue.revisions)
 
+    def stored_catalogue_is_known_override_free(self) -> bool:
+        return False
+
     def load_revisioned(
         self, *, operation: PinnedAuthorityOperation | None = None
     ) -> tuple[CalculationRevisionCatalogue, str]:
