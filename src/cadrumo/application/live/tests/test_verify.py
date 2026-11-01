@@ -42,6 +42,20 @@ def _record_de1(svc: VerifyService, verdict: IdentityCheckVerdict, checked_at: d
     )
 
 
+def _service_with_one_nif_iva_and_one_tgvi_observation() -> VerifyService:
+    svc = _service()
+    ts = datetime(2025, 3, 15, tzinfo=UTC)
+    _record_de1(svc, IdentityCheckVerdict.VALID, ts)
+    svc.record(
+        bucket_id=_BUCKET_ID,
+        surface=VerifySurface.TGVI,
+        nif="ES1",
+        verdict=IdentityCheckVerdict.VALID,
+        checked_at=ts,
+    )
+    return svc
+
+
 class TestRecord:
     def test_record_persists_observation(self) -> None:
         svc = _service()
@@ -102,42 +116,12 @@ class TestRecord:
 
 class TestListObservations:
     def test_list_returns_all_observations(self) -> None:
-        svc = _service()
-        ts = datetime(2025, 3, 15, tzinfo=UTC)
-        svc.record(
-            bucket_id=_BUCKET_ID,
-            surface=VerifySurface.NIF_IVA,
-            nif="DE1",
-            verdict=IdentityCheckVerdict.VALID,
-            checked_at=ts,
-        )
-        svc.record(
-            bucket_id=_BUCKET_ID,
-            surface=VerifySurface.TGVI,
-            nif="ES1",
-            verdict=IdentityCheckVerdict.VALID,
-            checked_at=ts,
-        )
+        svc = _service_with_one_nif_iva_and_one_tgvi_observation()
         all_obs = svc.list_observations(bucket_id=_BUCKET_ID)
         assert len(all_obs) == 2
 
     def test_list_filters_by_surface(self) -> None:
-        svc = _service()
-        ts = datetime(2025, 3, 15, tzinfo=UTC)
-        svc.record(
-            bucket_id=_BUCKET_ID,
-            surface=VerifySurface.NIF_IVA,
-            nif="DE1",
-            verdict=IdentityCheckVerdict.VALID,
-            checked_at=ts,
-        )
-        svc.record(
-            bucket_id=_BUCKET_ID,
-            surface=VerifySurface.TGVI,
-            nif="ES1",
-            verdict=IdentityCheckVerdict.VALID,
-            checked_at=ts,
-        )
+        svc = _service_with_one_nif_iva_and_one_tgvi_observation()
         nif_iva_obs = svc.list_observations(bucket_id=_BUCKET_ID, surface=VerifySurface.NIF_IVA)
         tgvi_obs = svc.list_observations(bucket_id=_BUCKET_ID, surface=VerifySurface.TGVI)
         assert len(nif_iva_obs) == 1
