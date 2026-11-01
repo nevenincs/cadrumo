@@ -461,6 +461,7 @@ def test_the_handoff_reads_the_accrual_route_with_or_without_claims() -> None:
     unclaimed = operations.filing_handoff(tax_year=2025, m130_period=period)
     assert unclaimed.material_m130 is not None
     assert unclaimed.material_m130.amount == Decimal("257.86")
+    assert unclaimed.material_m100 is not None
     assert unclaimed.material_m100.amount == Decimal("0.00")
     assert unclaimed.material_m100.claim_ids == ()
 
@@ -472,6 +473,7 @@ def test_the_handoff_reads_the_accrual_route_with_or_without_claims() -> None:
 
     assert claimed.material_m130 is not None
     assert claimed.material_m130.amount == Decimal("257.86")
+    assert claimed.material_m100 is not None
     assert claimed.material_m100.claim_ids == (claim.claim_id,)
     assert claimed.material_m100.amount == Decimal("257.86")
 

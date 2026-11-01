@@ -51,7 +51,8 @@ def entry_options(ctx: typer.Context) -> None:
         command="ledger.entry-options",
         result=result,
         lines=tuple(
-            f"{family.family}\t{option.value}" + (f"\t{tr(option.label_key)}" if option.label_key else "")
+            f"{family.family}\t{option.value}"
+            + (f"\t{tr(option.label_key)}" if option.label_key is not None and option.label_key != "" else "")
             for family in result.families
             for option in family.options
         ),

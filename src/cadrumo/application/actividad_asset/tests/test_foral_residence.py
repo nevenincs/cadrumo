@@ -203,4 +203,5 @@ def test_a_common_territory_resident_forecasts_and_hands_off(
     handoff = common.filing_handoff(tax_year=2025, m130_period=Period.from_year_and_code(2025, "4T"))
 
     assert forecast.asset_id == asset_id
+    assert handoff.material_m100 is not None
     assert handoff.material_m100.tax_year == 2025

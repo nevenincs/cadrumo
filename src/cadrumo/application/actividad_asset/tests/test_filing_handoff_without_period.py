@@ -97,6 +97,7 @@ def test_a_year_alone_projects_the_modelo_100_boxes_and_no_modelo_130_figure() -
 
     assert bare.material_m130 is None
     assert bare.intangible_m130 is None
+    assert bare.material_m100 is not None
     assert bare.material_m100.claim_ids == (claim.claim_id,)
     assert bare.material_m100 == framed.material_m100
     assert bare.intangible_m100 == framed.intangible_m100

@@ -26,7 +26,11 @@ def _ordered(fact_file: str, order_key: str, excluded_key: str | None = None) ->
     members: dict[str, None] = {}
     for variant in fact["variants"]:
         entries = {entry["key"]: entry["value"] for entry in variant["payload"]["entries"]}
-        excluded = {token.strip() for token in entries.get(excluded_key, "").split(",")} if excluded_key else set()
+        excluded = (
+            {token.strip() for token in entries.get(excluded_key, "").split(",")}
+            if excluded_key is not None and excluded_key != ""
+            else set()
+        )
         members |= dict.fromkeys(
             token.strip()
             for token in entries.get(order_key, "").split(",")

@@ -56,6 +56,7 @@ def test_the_names_reach_the_wire_beside_their_box_and_restore_from_it() -> None
 
     wire = ActivityAssetFilingHandoffSnapshot.from_domain(handoff)
 
+    assert wire.material_m100 is not None
     assert wire.material_m100.box_name == "Depreciation of tangible fixed assets"
     assert wire.material_m130 is not None
     assert wire.intangible_m130 is not None

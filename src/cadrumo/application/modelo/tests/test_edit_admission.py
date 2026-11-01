@@ -55,6 +55,7 @@ from ..edit_models import (
     ModeloEditNonWritableScalarSurfaceEntryV1,
     ModeloEditParsedValueV1,
     ModeloEditParseReason,
+    ModeloEditParseRefusalV1,
     ModeloEditParseRequestV1,
     ModeloEditParseResultV1,
     ModeloEditRefusalCode,
@@ -309,6 +310,7 @@ def test_every_yes_or_no_on_a_published_declaration_reads_the_1_or_0_its_editor_
         ):
             refused = _read_entry(baseline, address, lexeme, language)
             assert isinstance(refused, ModeloEditRefusedV1), address
+            assert isinstance(refused.refusal, ModeloEditParseRefusalV1)
             assert refused.refusal.reason is reason
 
 
@@ -363,6 +365,7 @@ def test_a_box_that_declares_a_blank_token_keeps_missing_blank_and_refused_apart
     assert marked.value == "X"
     refused = _read_entry(baseline, address, "Y", OutputLanguage.ES)
     assert isinstance(refused, ModeloEditRefusedV1)
+    assert isinstance(refused.refusal, ModeloEditParseRefusalV1)
     assert refused.refusal.reason is ModeloEditParseReason.NOT_IN_CHOICES
 
 
@@ -453,6 +456,7 @@ def test_a_date_or_year_box_the_filer_fills_is_refused_for_want_of_an_engine_cha
         assert reasons[casilla_id] is ModeloEditNonWritableReason.VALUE_CHANNEL_UNAVAILABLE
         read = _read_entry(baseline, ModeloEditScalarAddressV1(casilla_id=casilla_id), "2025", OutputLanguage.ES)
         assert isinstance(read, ModeloEditRefusedV1)
+        assert isinstance(read.refusal, ModeloEditParseRefusalV1)
         assert read.refusal.reason is ModeloEditParseReason.ADDRESS_NOT_WRITABLE
 
 
