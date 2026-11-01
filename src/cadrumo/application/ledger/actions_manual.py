@@ -76,6 +76,7 @@ from .actions_common import (
 )
 from .actions_import import apply_fx_conversion as _apply_fx_conversion
 from .evidence import PurchaseInvoiceEvidence
+from .fx_value_consistency import require_consistent_fx_value
 from .models import (
     ManualLedgerTransactionCommand,
     ManualLedgerTransactionResult,
@@ -528,8 +529,10 @@ def transaction_from_command(
     payload.update(_classification_fields(command, occurred_at=occurred_at))
     # The stamp above is rewritten by every write to a classified row. Whose
     # decision the classification is changes only when this write changes it.
+    built = Transaction.model_validate(payload)
+    require_consistent_fx_value(built)
     return with_classification_origin(
-        Transaction.model_validate(payload),
+        built,
         replaces=classification_predecessor,
         written=written_origin(command),
         decided=classification_decided,
@@ -541,10 +544,10 @@ def _fx_conversion_fields(
     currency_normalizer: CurrencyNormalizationService | None,
 ) -> dict[str, object]:
     """Project the converted foreign-currency fields, empty when no rate resolves."""
-    fx_rate, value_in_eur, _rate_source, _rate_date_iso = _apply_fx_conversion(raw, currency_normalizer)
+    fx_rate, value_in_eur, rate_source, rate_date_iso = _apply_fx_conversion(raw, currency_normalizer)
     if fx_rate is None or value_in_eur is None:
         return {}
-    return {"fx_rate": fx_rate, "value_in_eur": value_in_eur}
+    return {"fx_rate": fx_rate, "value_in_eur": value_in_eur, "rate_source": rate_source, "rate_date": rate_date_iso}
 
 
 def carry_forward_invoice_link(current: Transaction, replacement: Transaction) -> Transaction:
@@ -584,7 +587,14 @@ def carry_forward_fx(current: Transaction, replacement: Transaction) -> Transact
         return replacement
     if replacement.raw.amount != current.raw.amount or replacement.raw.currency != current.raw.currency:
         return replacement
-    return replacement.model_copy(update={"fx_rate": current.fx_rate, "value_in_eur": current.value_in_eur})
+    return replacement.model_copy(
+        update={
+            "fx_rate": current.fx_rate,
+            "value_in_eur": current.value_in_eur,
+            "rate_source": current.rate_source,
+            "rate_date": current.rate_date,
+        },
+    )
 
 
 def _classification_fields(

@@ -843,6 +843,9 @@ application:
         szükséges.
       evidence_detachment_unknown_attachment: 'A nyilvántartásaidban szereplő tranzakció
         nem hordozza a következő csatolmányokat: %{attachment_ids}.'
+      fx_value_inconsistent: A(z) %{value_in_eur} euróban megadott érték nem egyezik
+        a(z) %{currency} összeg %{fx_rate} árfolyamon átváltott értékével, ami %{expected_value_in_eur}.
+        Javítsd az euróértéket vagy az árfolyamot, és próbáld újra.
       idempotency_key_conflict: Az idempotencia-kulcs már egy eltérő adatokkal tárolt
         tranzakciót azonosít. Használj új idempotencia-kulcsot másik mozgáshoz, vagy
         hagyd el a kulcsot szándékos duplikátum hozzáadásához.
