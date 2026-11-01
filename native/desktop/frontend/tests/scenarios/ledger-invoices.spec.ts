@@ -327,14 +327,22 @@ test("each requirement and rule is refused on its own field", async ({
 
   await field(target, "invoice_class").selectOption("RECTIFICATIVA");
   await field(target, "series").fill("");
+  // The ledger's own findings, shown once the field has been left.
+  await field(target, "series").blur();
+  await field(target, "rectifies_invoice_number").focus();
+  await field(target, "rectifies_invoice_number").blur();
   await expect(
     editor(target).getByText(
-      label("desktop.ledger.invoices.problem.series_required"),
+      label(
+        "application.invoices.figures_preview.rule_finding.series_required_for_rectificativa",
+      ),
     ),
   ).toBeVisible();
   await expect(
     editor(target).getByText(
-      label("desktop.ledger.invoices.problem.rectifies_required"),
+      label(
+        "application.invoices.figures_preview.rule_finding.rectified_invoice_required",
+      ),
     ),
   ).toBeVisible();
 });
@@ -529,7 +537,7 @@ test("a stored invoice shows its identity and lines as fixed", async ({
       }),
     ).toHaveCount(0);
   const fixed = editor(target).locator("[data-fixed]");
-  await expect(fixed).toHaveCount(6);
+  await expect(fixed).toHaveCount(5);
   await expect(fixed.filter({ hasText: "F-2026-018" })).toHaveAttribute(
     "aria-describedby",
     /.+/,

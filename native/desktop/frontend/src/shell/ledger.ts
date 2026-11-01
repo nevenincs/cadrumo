@@ -776,8 +776,15 @@ export type InvoicePreviewLine = {
   spending_category_id?: string | null;
   oss_rate_kind?: string | null;
 };
+/** What a correction restates of the stored invoice it corrects. */
+export type InvoicePreviewStored = {
+  invoice_id: string;
+  grand_total: PublicDecimal;
+  operation_date_role?: string | null;
+};
 /** A draft invoice, every field optional because it is incomplete while it
- * is typed. It states `lines` or a bare `base_total`, never both. */
+ * is typed. It states `lines` or a bare `base_total`, never both; a correction
+ * states the bare base with `stored`. */
 export type InvoicePreviewRequest = {
   operation_date?: string | null;
   issued_at?: string | null;
@@ -803,6 +810,7 @@ export type InvoicePreviewRequest = {
     situacion_inmueble?: string | null;
     referencia_catastral?: string | null;
   } | null;
+  stored?: InvoicePreviewStored | null;
 };
 export type InvoicePreviewOnDateSource =
   "operation_date" | "issued_at" | "today";
@@ -856,9 +864,14 @@ export type InvoicePreviewFinding = {
   values: { key: string; value: string | number | boolean | PublicDecimal }[];
   label_key: string;
 };
+/** What a verdict was reached over. `correction_facts` judged only what a
+ * correction states: the update checks the whole stored record again and can
+ * still refuse. */
+export type InvoicePreviewVerdictScope = "whole_draft" | "correction_facts";
 /** The backend's whole answer for one draft, bound to it by `input_digest`.
- * `would_accept` is acceptance's own verdict; a duplicate is decided only
- * when the invoice is added. */
+ * `would_accept` on a whole draft is acceptance's own verdict; a duplicate is
+ * decided only when the invoice is added. `rule_findings` names the document
+ * rules outside the figures, as far as an incomplete draft lets them be asked. */
 export type InvoicePreviewResult = {
   profile_id: string;
   input_digest: string;
@@ -873,6 +886,8 @@ export type InvoicePreviewResult = {
   verdict: InvoicePreviewVerdict;
   refusal_code: string | null;
   invoice_id: string | null;
+  rule_findings: InvoicePreviewFinding[];
+  verdict_scope: InvoicePreviewVerdictScope;
 };
 
 /** The fields a stored invoice may be corrected in; its identity and lines

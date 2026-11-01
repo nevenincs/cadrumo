@@ -198,6 +198,10 @@ export function invoiceOperations(ledger: FixtureLedger, tools: Tools) {
         ...finding,
         line_key: finding.line_key === null ? null : rekey(finding.line_key),
       })),
+      rule_findings: (result.rule_findings as JsonObject[]).map((finding) => ({
+        ...finding,
+        line_key: finding.line_key === null ? null : rekey(finding.line_key),
+      })),
     };
   }
 
@@ -259,6 +263,8 @@ export function invoiceOperations(ledger: FixtureLedger, tools: Tools) {
       verdict: "incomplete",
       refusal_code: null,
       invoice_id: null,
+      rule_findings: [],
+      verdict_scope: request.stored ? "correction_facts" : "whole_draft",
     };
   }
 

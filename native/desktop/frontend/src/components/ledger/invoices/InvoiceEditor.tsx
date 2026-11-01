@@ -258,8 +258,9 @@ export function InvoiceEditor({
     if (!problem) return null;
     if (
       tried ||
-      problem.kind === "finding" ||
-      (touched.has(field) && problem.kind === "grammar")
+      (problem.kind === "finding" && !problem.quiet) ||
+      (touched.has(field) &&
+        (problem.kind === "grammar" || problem.kind === "finding"))
     )
       return problemText(t, problem);
     return null;
@@ -1376,7 +1377,6 @@ function NewInvoice({
                     {...bind("referencia", "referencia")}
                     suggestions={referenciaCatastralOptions(invoices)}
                     mono
-                    maxLength={25}
                   />
                 )}
               </FormField>
@@ -1724,11 +1724,6 @@ function StoredInvoice({
       <TextEditor {...wired(control)} {...bind(key, field)} {...offered} />
     );
   const rectificativa = correction.invoiceClass === "RECTIFICATIVA";
-  // The ledger answers a stored invoice's retención from its base alone, so
-  // it names no amount left to pay; with no retención that is the total.
-  const noRetention =
-    correction.retentionRate.trim() === "" &&
-    correction.retentionAmount.trim() === "";
   return (
     <>
       <Alert icon={<Icon name="lock" />} className="ledger-invoice-identity">
@@ -1821,25 +1816,17 @@ function StoredInvoice({
             value={formatDay(locale, invoice.issued_at)}
             reason={fixed}
           />
-          {invoice.operation_date === null ? (
-            <FixedField
-              label={t("desktop.ledger.invoices.field.operation_date")}
-              value={t("desktop.ledger.invoices.none")}
-              reason={t("desktop.ledger.invoices.operation_date_fixed")}
-            />
-          ) : (
-            <FormField
-              label={t("desktop.ledger.invoices.field.operation_date")}
-              error={shown("operation_date")}
-            >
-              {(control) => (
-                <DateEditor
-                  {...wired(control)}
-                  {...bind("operationDate", "operation_date")}
-                />
-              )}
-            </FormField>
-          )}
+          <FormField
+            label={t("desktop.ledger.invoices.field.operation_date")}
+            error={shown("operation_date")}
+          >
+            {(control) => (
+              <DateEditor
+                {...wired(control)}
+                {...bind("operationDate", "operation_date")}
+              />
+            )}
+          </FormField>
           <FixedField
             label={t("desktop.ledger.invoices.field.currency")}
             value={invoice.currency}
@@ -1921,8 +1908,8 @@ function StoredInvoice({
             rate={correction.retentionRate}
             amount={correction.retentionAmount}
             answered={preview.current?.retention ?? null}
-            net={noRetention ? invoice.grand_total.decimal : null}
-            withheld={null}
+            net={preview.current?.totals.net_of_retention?.decimal ?? null}
+            withheld={preview.current?.retention.amount?.decimal ?? null}
             rateError={shown("retention_rate")}
             amountError={shown("retention_amount")}
             onRate={(value) => correct("retentionRate", value)}

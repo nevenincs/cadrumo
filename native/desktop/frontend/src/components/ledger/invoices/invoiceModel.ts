@@ -111,19 +111,17 @@ export type Problem =
       kind: "finding";
       finding: InvoicePreviewFinding;
       slots: readonly InvoicePreviewRateSlot[];
+      /** A document rule waits for the field to be left or the add to be
+       * tried, so a form being filled in is not told off for what it lacks. */
+      quiet?: boolean;
     };
 export type RuleProblem =
   | "choose_kind"
   | "country_letters"
   | "currency_letters"
-  | "tax_id_required"
-  | "series_required"
-  | "rectifies_required"
   | "choose_rate"
   | "no_line"
-  | "lease_reference_not_allowed"
-  | "payment_id_shape"
-  | "operation_date_fixed";
+  | "payment_id_shape";
 
 const grammar = (refusal: GrammarRefusal): Problem => ({
   kind: "grammar",
@@ -149,7 +147,7 @@ function decimalField(
 /** A one-line text field: its value, or its problem. */
 function textField(
   raw: string,
-  max: number,
+  max?: number,
 ): { value: string | null; problem: Problem | null } {
   const parsed = parseLine(raw, max);
   if (parsed.kind === "refused")
@@ -179,7 +177,7 @@ function readLine(
   const note = (field: string, problem: Problem | null) => {
     if (problem) problems[`line:${line.key}:${field}`] = problem;
   };
-  const description = textField(line.description, 4096);
+  const description = textField(line.description);
   note("description", description.problem);
   const quantity = decimalField(line.quantity, QUANTITY_RULE);
   note("quantity", quantity.problem);
@@ -209,6 +207,22 @@ const INVOICE_PLACES: Record<string, string> = {
   retention_rate: "retention_rate",
   retention_amount: "retention_amount",
 };
+/** Where a document rule's fields are shown. A figure finding that names a
+ * date concerns the rates of that date, and is not the date's own problem. */
+const RULE_PLACES: Record<string, string> = {
+  counterparty_name: "counterparty_name",
+  counterparty_tax_id: "counterparty_tax_id",
+  counterparty_country: "counterparty_country",
+  invoice_number: "invoice_number",
+  currency: "currency",
+  series: "series",
+  rectifies_invoice_number: "rectifies_invoice_number",
+  referencia_catastral: "referencia",
+  situacion_inmueble: "situacion",
+  operation_date: "operation_date",
+  iva_category: "iva_category",
+  invoice_class: "invoice_class",
+};
 const LINE_PLACES: Record<string, string> = {
   description: "description",
   quantity: "quantity",
@@ -219,8 +233,11 @@ const LINE_PLACES: Record<string, string> = {
 };
 
 /** The field a finding is shown on, if the form has one. */
-function placeOf(finding: InvoicePreviewFinding): string | null {
-  const places = finding.line_key ? LINE_PLACES : INVOICE_PLACES;
+function placeOf(
+  finding: InvoicePreviewFinding,
+  invoicePlaces: Record<string, string>,
+): string | null {
+  const places = finding.line_key ? LINE_PLACES : invoicePlaces;
   const field = finding.fields.find((name) => name in places);
   if (!field) return null;
   return finding.line_key
@@ -243,12 +260,25 @@ function placeFindings(
 ): PlacedFindings {
   const placed: PlacedFindings = { warnings: {}, general: [] };
   for (const finding of answer.findings) {
-    const place = placeOf(finding);
+    const place = placeOf(finding, INVOICE_PLACES);
     if (place === null) placed.general.push(finding);
     else if (finding.severity === "warning") placed.warnings[place] = finding;
     else if (problems[place]) placed.general.push(finding);
     else
       problems[place] = { kind: "finding", finding, slots: answer.rate_slots };
+  }
+  // A field already showing its own problem says enough: the rest of what the
+  // rules found there follows once that is put right.
+  for (const finding of answer.rule_findings) {
+    const place = placeOf(finding, RULE_PLACES);
+    if (place === null) placed.general.push(finding);
+    else
+      problems[place] ??= {
+        kind: "finding",
+        finding,
+        slots: answer.rate_slots,
+        quiet: true,
+      };
   }
   return placed;
 }
@@ -375,21 +405,21 @@ export function readDraft(draft: InvoiceDraft): DraftReading {
   const currency = draft.currency.trim();
   if (currency !== "" && !CURRENCY.test(currency))
     problems.currency = { kind: "rule", rule: "currency_letters" };
-  const number = textField(draft.number, 128);
+  const number = textField(draft.number);
   note("invoice_number", number.problem);
   const issued = parseIsoDate(draft.issuedAt);
   if (issued.kind === "refused") problems.issued_at = grammar(issued.refusal);
   const operation = parseIsoDate(draft.operationDate);
   if (operation.kind === "refused")
     problems.operation_date = grammar(operation.refusal);
-  const taxId = textField(draft.taxId, 64);
+  const taxId = textField(draft.taxId);
   note("counterparty_tax_id", taxId.problem);
-  const series = textField(draft.series, 64);
+  const series = textField(draft.series);
   note("series", series.problem);
-  const rectifies = textField(draft.rectifies, 128);
+  const rectifies = textField(draft.rectifies);
   note("rectifies_invoice_number", rectifies.problem);
   const leased = draft.kind === "issued" && draft.lease;
-  const referencia = textField(draft.referencia, 25);
+  const referencia = textField(draft.referencia);
   if (leased) note("referencia", referencia.problem);
   return {
     problems,
@@ -459,30 +489,6 @@ function placeMissing(
       problems[place] = { kind: "rule", rule: "choose_rate" };
     else problems[place] = { kind: "missing" };
   }
-}
-
-/** The ledger refused for a reason it does not name yet: these say where the
- * person may look. They decide nothing. */
-function invalidHints(
-  draft: InvoiceDraft,
-  preview: InvoicePreviewRequest,
-  problems: Record<string, Problem>,
-): void {
-  const hint = (field: string, rule: RuleProblem) => {
-    problems[field] ??= { kind: "rule", rule };
-  };
-  if (preview.counterparty_tax_id === null)
-    hint("counterparty_tax_id", "tax_id_required");
-  if (draft.invoiceClass === "RECTIFICATIVA") {
-    if (preview.series === null) hint("series", "series_required");
-    if (preview.rectifies_invoice_number === null)
-      hint("rectifies_invoice_number", "rectifies_required");
-  }
-  if (
-    preview.business_premises_lease?.referencia_catastral &&
-    (draft.situacion === "3" || draft.situacion === "4")
-  )
-    hint("referencia", "lease_reference_not_allowed");
 }
 
 /** The add the ledger's answer allows: the document's own words with the
@@ -572,8 +578,6 @@ export function checkDraft(
   if (current) {
     findings = placeFindings(current, problems);
     placeMissing(current, problems);
-    if (current.refusal_code === "invalid_invoice")
-      invalidHints(draft, preview, problems);
   }
   const wellFormed = Object.keys(typed).length === 0;
   const lines = current
@@ -601,7 +605,8 @@ export function checkDraft(
     refusedUnsaid:
       current !== null &&
       current.verdict === "would_refuse" &&
-      !refuses(current),
+      !refuses(current) &&
+      current.rule_findings.length === 0,
     request,
     invoiceId: request ? (accepted?.invoice_id ?? null) : null,
   };
@@ -717,29 +722,58 @@ function percentText(fraction: string): string | null {
   return canonicalDecimal(rest ? `${whole}.${rest}` : whole);
 }
 
-/** A stored invoice's retención as the ledger is asked about it: its lines
- * are fixed, so the stored base stands in for them. */
+/** A correction as the ledger is asked about it: its lines are fixed, so the
+ * stored base and total stand in for them, and `stored` says so. */
 export function correctionPreview(
   invoice: CatalogueInvoice,
   draft: CorrectionDraft,
 ): InvoicePreviewRequest {
   const operation = parseIsoDate(draft.operationDate);
   const retention = readRetention(draft.retentionRate, draft.retentionAmount);
+  const country = draft.country.trim().toUpperCase();
   return {
+    kind: invoice.kind,
+    invoice_class: draft.invoiceClass,
+    series: textField(draft.series).value,
+    rectifies_invoice_number:
+      draft.invoiceClass === "RECTIFICATIVA"
+        ? textField(draft.rectifies).value
+        : null,
+    counterparty_tax_id: invoice.counterparty_tax_id,
+    counterparty_country: COUNTRY.test(country) ? country : null,
+    iva_category: blankOr(draft.ivaCategory),
     issued_at: invoice.issued_at,
     operation_date: operation.kind === "value" ? operation.value : null,
     base_total: invoice.base_total,
     retention_rate: retention.rate,
     retention_amount: retention.amount,
+    stored: {
+      invoice_id: invoice.invoice_id,
+      grand_total: invoice.grand_total,
+      operation_date_role: invoice.operation_date_role,
+    },
   };
 }
+
+/** The fields whose change the ledger's answer judges. Anything else goes
+ * without waiting for it, so a note can be fixed while the ledger is away. */
+const JUDGED_FIELDS: ReadonlySet<InvoiceUpdateField> = new Set([
+  "counterparty_country",
+  "iva_category",
+  "operation_date",
+  "series",
+  "invoice_class",
+  "rectifies_invoice_number",
+  "retention_rate",
+  "retention_amount",
+]);
 
 export type CorrectionCheck = {
   /** The fields whose value differs from the stored one. */
   changed: InvoiceUpdateField[];
   problems: Record<string, Problem>;
   findings: PlacedFindings;
-  /** A changed retención has no answer from the ledger yet. */
+  /** A change the ledger judges has no answer from it yet. */
   awaitingAnswer: boolean;
   request: InvoiceUpdateRequest | null;
 };
@@ -751,9 +785,9 @@ const HEX64 = /^[0-9a-f]{64}$/;
 export const isPaymentId = (text: string) => HEX64.test(text);
 
 /** The correction a draft makes to `invoice`, field by field. Only the fields
- * the update accepts are ever sent, and only those that changed. A changed
- * retención goes only once the ledger's answer to it, `current`, refuses
- * nothing. */
+ * the update accepts are ever sent, and only those that changed. A change
+ * the ledger judges goes only once its answer, `current`, refuses nothing;
+ * that answer covers the stated facts, and the update checks the whole record. */
 export function checkCorrection(
   invoice: CatalogueInvoice,
   draft: CorrectionDraft,
@@ -797,23 +831,14 @@ export function checkCorrection(
     problems.operation_date = grammar(operation.refusal);
   else {
     const next = operation.kind === "value" ? operation.value : null;
-    // A stored operation date has its role beside it, which no correction
-    // can set: a date can be moved, not added or taken away.
-    if (next !== invoice.operation_date) {
-      if (next === null || invoice.operation_date === null)
-        problems.operation_date = {
-          kind: "rule",
-          rule: "operation_date_fixed",
-        };
-      else set("operation_date", next);
-    }
+    if (next !== invoice.operation_date) set("operation_date", next);
   }
-  const series = textField(draft.series, 64);
+  const series = textField(draft.series);
   if (series.problem) problems.series = series.problem;
   else if (series.value !== invoice.series) set("series", series.value);
   if (draft.invoiceClass !== invoice.invoice_class)
     set("invoice_class", draft.invoiceClass);
-  const rectifies = textField(draft.rectifies, 128);
+  const rectifies = textField(draft.rectifies);
   const rectificativa = draft.invoiceClass === "RECTIFICATIVA";
   const rectified = rectificativa ? rectifies.value : null;
   // Only a rectificativa names the invoice it rectifies: leaving that class
@@ -822,15 +847,6 @@ export function checkCorrection(
     problems.rectifies_invoice_number = rectifies.problem;
   else if (rectified !== invoice.rectifies_invoice_number)
     set("rectifies_invoice_number", rectified);
-  if (rectificativa) {
-    if (series.value === null && !series.problem)
-      problems.series = { kind: "rule", rule: "series_required" };
-    if (rectifies.value === null && !rectifies.problem)
-      problems.rectifies_invoice_number = {
-        kind: "rule",
-        rule: "rectifies_required",
-      };
-  }
   const retention = readRetention(draft.retentionRate, draft.retentionAmount);
   if (retention.rateProblem) problems.retention_rate = retention.rateProblem;
   if (retention.amountProblem)
@@ -851,9 +867,9 @@ export function checkCorrection(
     !sameNumber(retention.amount, invoice.retention_amount);
   if (rateChanged) set("retention_rate", retention.rate);
   if (amountChanged) set("retention_amount", retention.amount);
-  const retentionChanged = rateChanged || amountChanged;
+  const judged = changed.some((field) => JUDGED_FIELDS.has(field));
   const findings: PlacedFindings =
-    retentionChanged && current
+    judged && current
       ? placeFindings(current, problems)
       : { warnings: {}, general: [] };
   const paymentId = draft.paymentId.trim().toLowerCase();
@@ -865,7 +881,7 @@ export function checkCorrection(
   const ordered = INVOICE_UPDATE_FIELDS.filter((field) =>
     changed.includes(field),
   );
-  const awaitingAnswer = retentionChanged && current === null;
+  const awaitingAnswer = judged && current === null;
   return {
     changed: ordered,
     problems,
@@ -875,7 +891,8 @@ export function checkCorrection(
       ordered.length > 0 &&
       Object.keys(problems).length === 0 &&
       findings.general.length === 0 &&
-      !awaitingAnswer
+      !awaitingAnswer &&
+      !(judged && current?.verdict === "would_refuse")
         ? {
             invoice_id: invoice.invoice_id,
             patch: { values, fields: ordered },

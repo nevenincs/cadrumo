@@ -457,18 +457,83 @@ test("before the registry's rates, the served finding stands and no rate is inve
   ]);
 });
 
-test("a refusal the ledger does not explain is said, and points where it may be", () => {
+test("a document rule shows the ledger's own finding on its field, and waits to be asked", () => {
   const check = checked(filled({ taxId: "" }), "no_tax_id");
   expect(check.request).toBeNull();
-  expect(check.refusedUnsaid).toBe(true);
-  expect(check.problems.counterparty_tax_id).toEqual({
-    kind: "rule",
-    rule: "tax_id_required",
+  expect(check.refusedUnsaid).toBe(false);
+  expect(check.problems.counterparty_tax_id).toMatchObject({
+    kind: "finding",
+    quiet: true,
+    finding: {
+      code: "counterparty_tax_id_required",
+      label_key:
+        "application.invoices.figures_preview.rule_finding.counterparty_tax_id_required",
+    },
   });
   expect(
     checked(filled({ retentionRate: "15" }), "retention_rate_alone")
       .refusedUnsaid,
   ).toBe(false);
+});
+
+test("a category that mandates the tax id, a bad checksum and the lease rules come from the ledger", () => {
+  const code = (name: string, draft: InvoiceDraft, place: string) => {
+    const problem = checked(draft, name).problems[place];
+    return problem?.kind === "finding" ? problem.finding.code : null;
+  };
+  expect(
+    code(
+      "tax_id_required_by_category",
+      filled({ taxId: "", invoiceClass: "SIMPLIFICADA" }),
+      "counterparty_tax_id",
+    ),
+  ).toBe("counterparty_tax_id_required_by_category");
+  expect(
+    code(
+      "tax_id_bad_checksum",
+      filled({ taxId: "A58818502" }),
+      "counterparty_tax_id",
+    ),
+  ).toBe("counterparty_tax_id_invalid");
+  const leased = { lease: true, situacion: "1", referencia: "A".repeat(26) };
+  // The form no longer holds the number: 26 characters reach the ledger.
+  expect(readDraft(filled(leased)).problems.referencia).toBeUndefined();
+  expect(code("lease_reference_too_long", filled(leased), "referencia")).toBe(
+    "lease_reference_too_long",
+  );
+  expect(answer("lease_reference_too_long").rule_findings[0]!.values).toEqual([
+    { key: "limit", value: "25" },
+  ]);
+  expect(
+    code(
+      "lease_reference_abroad",
+      filled({ lease: true, situacion: "4", referencia: "REF" }),
+      "referencia",
+    ),
+  ).toBe("lease_reference_not_allowed");
+});
+
+test("a rectificativa hears both of its rules from the ledger", () => {
+  const check = checked(
+    filled({ invoiceClass: "RECTIFICATIVA", series: "" }),
+    "rectificativa_incomplete",
+  );
+  expect(check.request).toBeNull();
+  expect(check.problems.series).toMatchObject({
+    finding: { code: "series_required_for_rectificativa" },
+  });
+  expect(check.problems.rectifies_invoice_number).toMatchObject({
+    finding: { code: "rectified_invoice_required" },
+  });
+});
+
+test("a refusal nobody can place is still said to be unsaid", () => {
+  const silent = {
+    ...answer("no_tax_id"),
+    rule_findings: [],
+  };
+  const draft = filled({ taxId: "" });
+  expect(checkDraft(draft, readDraft(draft), silent).refusedUnsaid).toBe(true);
 });
 
 test("a finding is worded by its served key with its served values", () => {
@@ -636,25 +701,8 @@ test("a correction sends only the changed fields the update accepts", () => {
     ),
   ).toBe(true);
   expect(holdsCorrection(stored, paid.request!)).toBe(false);
-  // An operation date with its role can move but not go.
-  expect(
-    checkCorrection(stored, { ...draft, operationDate: "" }, null).problems
-      .operation_date,
-  ).toEqual({
-    kind: "rule",
-    rule: "operation_date_fixed",
-  });
-  expect(
-    checkCorrection(
-      invoice(),
-      {
-        ...correctionOf(invoice()),
-        operationDate: "2026-03-01",
-      },
-      null,
-    ).problems.operation_date,
-  ).toEqual({ kind: "rule", rule: "operation_date_fixed" });
-  // Leaving the rectificativa class takes its number away.
+  // Leaving the rectificativa class takes its number away, once the ledger
+  // has answered the change.
   const rectified = invoice({
     invoice_class: "RECTIFICATIVA",
     rectifies_invoice_number: "F-2026-001",
@@ -666,7 +714,7 @@ test("a correction sends only the changed fields the update accepts", () => {
         ...correctionOf(rectified),
         invoiceClass: "ORDINARIA",
       },
-      null,
+      answer("correction_no_retention"),
     ).request?.patch,
   ).toEqual({
     values: { invoice_class: "ORDINARIA", rectifies_invoice_number: null },
@@ -681,8 +729,78 @@ test("a correction sends only the changed fields the update accepts", () => {
   });
 });
 
+test("a stored date, series and rectified number take the ledger's verdict", () => {
+  const dated = invoice({
+    operation_date: "2026-03-01",
+    operation_date_role: "OPERATION_PERFORMED",
+  });
+  const taken = checkCorrection(
+    dated,
+    { ...correctionOf(dated), operationDate: "" },
+    answer("correction_date_taken_away"),
+  );
+  expect(taken.request).toBeNull();
+  expect(taken.problems.operation_date).toMatchObject({
+    finding: { code: "operation_date_role_mismatch" },
+  });
+  const plain = invoice();
+  const added = checkCorrection(
+    plain,
+    { ...correctionOf(plain), operationDate: "2026-03-01" },
+    answer("correction_date_added"),
+  );
+  expect(added.request).toBeNull();
+  expect(added.problems.operation_date).toMatchObject({
+    finding: { code: "operation_date_role_mismatch" },
+  });
+  const rectificativa = checkCorrection(
+    plain,
+    { ...correctionOf(plain), invoiceClass: "RECTIFICATIVA", series: "" },
+    answer("correction_rectificativa_incomplete"),
+  );
+  expect(rectificativa.request).toBeNull();
+  expect(rectificativa.problems.series).toMatchObject({
+    finding: { code: "series_required_for_rectificativa" },
+  });
+  expect(rectificativa.problems.rectifies_invoice_number).toMatchObject({
+    finding: { code: "rectified_invoice_required" },
+  });
+  // Neither is decided here: with no answer the change only waits.
+  const waiting = checkCorrection(
+    plain,
+    { ...correctionOf(plain), invoiceClass: "RECTIFICATIVA", series: "" },
+    null,
+  );
+  expect(waiting.awaitingAnswer).toBe(true);
+  expect(waiting.problems.series).toBeUndefined();
+});
+
+test("a correction is asked about with the stored invoice it restates, and its answer says what is left to pay", () => {
+  const stored = invoice({
+    counterparty_tax_id: "A58818501",
+    base_total: { decimal: "1000" },
+  });
+  expect(
+    correctionPreview(stored, {
+      ...correctionOf(stored),
+      retentionRate: "7",
+      retentionAmount: "70",
+    }),
+  ).toMatchObject(
+    recorded.correction_rate_7!.request as Record<string, unknown>,
+  );
+  // 1000 x 7 % = 70 withheld, so 1210.00 - 70 = 1140.00 is left to pay.
+  const answered = answer("correction_rate_7");
+  expect(answered.verdict_scope).toBe("correction_facts");
+  expect(answered.totals.net_of_retention).toEqual({ decimal: "1140.00" });
+  expect(answer("correction_no_retention").totals.net_of_retention).toEqual({
+    decimal: "1210.00",
+  });
+});
+
 test("a changed retención waits for the ledger's answer and takes its verdict", () => {
   const stored = invoice({
+    counterparty_tax_id: "A58818501",
     base_total: { decimal: "1000" },
     retention_rate: { decimal: "0.15" },
     retention_amount: { decimal: "150" },
@@ -712,7 +830,7 @@ test("a changed retención waits for the ledger's answer and takes its verdict",
   expect(differs.problems.retention_rate).toMatchObject({
     finding: { code: "retention_amount_mismatch" },
   });
-  // A read that failed holds back only a retención that changed.
+  // A read that failed holds back only a change the ledger judges.
   expect(
     checkCorrection(stored, { ...correctionOf(stored), notes: "Cobrada" }, null)
       .request,
