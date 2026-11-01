@@ -68,6 +68,8 @@ aggregation:
         no tiene porcentaje provisional resuelto.
       domestic_identification_on_intra_community_transaction: Una identificación a
         efectos del IVA española no es válida para una operación intracomunitaria.
+      especial_missing_input_classification: 'La prorrata especial exige declarar
+        el uso de cada entrada deducible: hay una entrada deducible sin clasificación.'
       eu_member_state_on_export_transaction: Las operaciones de exportación o asimiladas
         no pueden llevar un Estado miembro de la UE; recibido %{member_state}.
       exemption_article_outside_domestic_exempt: El artículo de exención %{value}
@@ -101,6 +103,8 @@ aggregation:
         aporta identidad de sector explícita.
       sectorized_input_unknown_sector: Una entrada de IVA sectorizada referencia un
         sector desconocido.
+      settlement_apportionment_requires_general_regime: El porcentaje definitivo de
+        la última liquidación solo se aplica en prorrata general de toda la entidad.
       unaccepted_registry_value: '%{field} figura como %{value}, un valor que la autoridad
         fijada del registro tributario no admite para %{effective_date}, así que el
         apunte no puede alimentar el cálculo del IVA. Corrige ese valor en el apunte.'

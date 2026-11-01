@@ -64,6 +64,8 @@ aggregation:
         nincs feloldott ideiglenes százalék.
       domestic_identification_on_intra_community_transaction: A spanyol héa-azonosító
         nem érvényes Közösségen belüli ügylethez.
+      especial_missing_input_classification: 'A különleges arányosításhoz minden levonható
+        tétel felhasználását meg kell adni: egy levonható tételnek nincs besorolása.'
       eu_member_state_on_export_transaction: 'Export vagy exporttal egy tekintet alá
         eső ügylet nem tartalmazhat EU-tagállamot; kapott érték: %{member_state}.'
       exemption_article_outside_domestic_exempt: A(z) %{value} mentességi cikk csak
@@ -93,6 +95,9 @@ aggregation:
         kifejezett szektorazonosítót.
       sectorized_input_unknown_sector: Egy szektorizált áfa-tétel ismeretlen szektorra
         hivatkozik.
+      settlement_apportionment_requires_general_regime: Az utolsó bevallási időszak
+        végleges százaléka csak a teljes szervezetre kiterjedő általános arányosításnál
+        alkalmazható.
       unaccepted_registry_value: A(z) %{field} mező értéke %{value}, amelyet a rögzített
         adónyilvántartási jogosultság %{effective_date} dátumra nem fogad el, ezért
         a tétel nem kerülhet be az IVA-számításba. Javítsd ezt az értéket a főkönyvi

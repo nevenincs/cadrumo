@@ -13,6 +13,7 @@ from typing import ClassVar
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.period import Period
 from ...domain.bienes_inversion.register import BienesInversionIvaRegister
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.binding_targets import bound_casilla_binding_ids
 from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from ...domain.calculations.registry.form_codes import form_for_role
@@ -26,6 +27,7 @@ from ...domain.calculations.registry.ledger_iva_bindings import (
     unsupported_ledger_iva_observations,
 )
 from ...domain.calculations.registry.ledger_iva_screen_bindings import invoice_ledger_screen_binding_ids
+from ...domain.calculations.registry.prorrata_register_catalogue import general_prorrata_register_regime
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ...domain.iva.schema import IvaCategory
@@ -55,6 +57,7 @@ from .iva_ledger import (
     IvaLedgerAggregationIssue,
     IvaLedgerAggregationIssueReason,
     IvaLedgerProrrataApportionment,
+    IvaLedgerSettlementApportionment,
     aggregate_iva_ledger_observations_from_repositories,
 )
 from .iva_ledger_apportionment import resolve_iva_ledger_binding_values
@@ -183,8 +186,16 @@ class LedgerIvaAggregationSourceResolver:
         prorrata_register_repository: ProrrataRegisterRepositoryProtocol,
         investment_asset_register: BienesInversionIvaRegister | None = None,
         investment_asset_profile_id: str | None = None,
+        settlement: IvaLedgerSettlementApportionment | None = None,
     ) -> None:
-        """Bind repositories used to resolve IVA ledger sources."""
+        """Bind repositories used to resolve IVA ledger sources.
+
+        ``settlement`` carries the year's definitive prorrata percentage for
+        the annual settlement liquidation once it is derivable. It is attached
+        only to a whole-entity general apportionment; any other apportionment
+        keeps its provisional percentage.
+        """
+        self._settlement = settlement
         self._transaction_repository = transaction_repository
         self._invoice_catalogue_read_ports = invoice_catalogue_read_ports
         self._prorrata_register_repository = prorrata_register_repository
@@ -218,6 +229,7 @@ class LedgerIvaAggregationSourceResolver:
                     source_kinds=self.owned_sources,
                     error=exc,
                 )
+            aggregation = _with_settlement_apportionment(aggregation, self._settlement, operation=operation)
             transaction_ids = {observation.ledger_id for observation in aggregation.observations}
             transaction_ids.update(reference.transaction_id for reference in aggregation.prorrata_references)
             binding_values = resolve_iva_ledger_binding_values(
@@ -404,6 +416,26 @@ def _present_unroutable_iva_categories(
     )
 
 
+def _with_settlement_apportionment(
+    aggregation: IvaLedgerAggregation,
+    settlement: IvaLedgerSettlementApportionment | None,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> IvaLedgerAggregation:
+    """Attach the settlement percentage to a whole-entity general apportionment only."""
+    apportionment = aggregation.prorrata_apportionment
+    if (
+        settlement is None
+        or apportionment is None
+        or apportionment.sector_apportionments
+        or apportionment.regime != general_prorrata_register_regime(authority=operation)
+    ):
+        return aggregation
+    return aggregation.model_copy(
+        update={"prorrata_apportionment": apportionment.model_copy(update={"settlement": settlement})}
+    )
+
+
 def _iva_prorrata_apportionment_provenance(
     revision: ModeloRevision,
     period: Period,
@@ -438,6 +470,11 @@ def _iva_prorrata_apportionment_source_ref(
     )
     if apportionment.source_observation_ref is not None:
         source_ref = f"{source_ref}:source-observation:{apportionment.source_observation_ref}"
+    if apportionment.settlement is not None:
+        source_ref = (
+            f"{source_ref}:settlement:{apportionment.settlement.period.registry_token}:"
+            f"definitive:{apportionment.settlement.percentage}"
+        )
     return source_ref
 
 

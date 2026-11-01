@@ -111,6 +111,7 @@ def test_regularizacion_is_deduccion_complementaria_when_definitiva_exceeds_prov
 
     result = compute_regularizacion_prorrata_anual(
         cuotas_soportadas_deducibles=cuotas,
+        deducciones_provisionales_practicadas=_deduccion(cuotas, provisional),
         prorrata_provisional_pct=provisional,
         prorrata_definitiva_pct=definitiva,
     )
@@ -118,6 +119,59 @@ def test_regularizacion_is_deduccion_complementaria_when_definitiva_exceeds_prov
     assert result.deduccion_definitiva == Decimal("18000.00")
     assert result.importe == expected_importe
     assert result.direccion is RegularizacionProrrataDireccion.DEDUCCION
+
+
+def test_aeat_manual_example_regularises_only_the_earlier_quarters() -> None:
+    """Manual práctico de IVA 2025, prorrata general regularisation example.
+
+    Provisional 73%; the year's volumes 25.000 con derecho over 45.000 total
+    give 55,56% rounded up to a definitive 56% (art. 104.Dos). The fourth
+    quarter deducts its own cuotas at 56% directly, so the regularisation box
+    covers only the first three quarters: gross cuotas 400 + 420 + 460 = 1.280,
+    deducted at 73% as 292,00 + 306,60 + 335,80 = 934,40. The manual's box is
+    1.280 x 56% - 934,40 = -217,60.
+    """
+    definitiva = compute_prorrata_definitiva_anual(
+        ProrrataInputs(
+            operaciones_con_derecho_deduccion=Decimal("25000"),
+            operaciones_sin_derecho_deduccion=Decimal("20000"),
+        ),
+        year=2025,
+    ).percentage
+    provisional = Decimal("73")
+    quarters = (Decimal("400.00"), Decimal("420.00"), Decimal("460.00"))
+    practised = sum((_deduccion(cuota, provisional) for cuota in quarters), Decimal("0"))
+
+    result = compute_regularizacion_prorrata_anual(
+        cuotas_soportadas_deducibles=sum(quarters, Decimal("0")),
+        deducciones_provisionales_practicadas=practised,
+        prorrata_provisional_pct=provisional,
+        prorrata_definitiva_pct=definitiva,
+    )
+
+    assert definitiva == Decimal("56")
+    assert practised == Decimal("934.40")
+    assert result.importe == Decimal("-217.60")
+    assert result.direccion is RegularizacionProrrataDireccion.INGRESO
+
+
+def test_regularizacion_subtracts_the_deductions_actually_practised() -> None:
+    """Each liquidation rounded its own boxes, so the practised total is taken as filed.
+
+    Two quarters of 0,03 at 50% each practised 0,02 (half-up), 0,04 in all,
+    while 50% of the summed 0,06 is 0,03. At an unchanged definitive 50% the
+    rounding excess is regularised: 0,03 - 0,04 = -0,01. Re-deriving the
+    practised deduction from the summed cuotas would hide it.
+    """
+    result = compute_regularizacion_prorrata_anual(
+        cuotas_soportadas_deducibles=Decimal("0.06"),
+        deducciones_provisionales_practicadas=_deduccion(Decimal("0.03"), Decimal("50")) * 2,
+        prorrata_provisional_pct=Decimal("50"),
+        prorrata_definitiva_pct=Decimal("50"),
+    )
+
+    assert result.deduccion_provisional == Decimal("0.04")
+    assert result.importe == Decimal("-0.01")
 
 
 def test_regularizacion_is_ingreso_when_definitiva_below_provisional() -> None:
@@ -141,6 +195,7 @@ def test_regularizacion_is_ingreso_when_definitiva_below_provisional() -> None:
 
     result = compute_regularizacion_prorrata_anual(
         cuotas_soportadas_deducibles=cuotas,
+        deducciones_provisionales_practicadas=_deduccion(cuotas, provisional),
         prorrata_provisional_pct=provisional,
         prorrata_definitiva_pct=definitiva,
     )
@@ -152,6 +207,7 @@ def test_no_regularizacion_when_percentages_coincide() -> None:
     """Equal provisional and definitive percentages leave nothing to regularise."""
     result = compute_regularizacion_prorrata_anual(
         cuotas_soportadas_deducibles=Decimal("50000.00"),
+        deducciones_provisionales_practicadas=_deduccion(Decimal("50000.00"), Decimal("88")),
         prorrata_provisional_pct=Decimal("88"),
         prorrata_definitiva_pct=Decimal("88"),
     )
@@ -163,6 +219,7 @@ def test_negative_cuota_is_refused() -> None:
     with pytest.raises(ProrrataInputError):
         compute_regularizacion_prorrata_anual(
             cuotas_soportadas_deducibles=Decimal("-1"),
+            deducciones_provisionales_practicadas=Decimal("0"),
             prorrata_provisional_pct=Decimal("50"),
             prorrata_definitiva_pct=Decimal("60"),
         )
@@ -173,6 +230,7 @@ def test_out_of_range_percentage_is_refused() -> None:
         with pytest.raises(ProrrataInputError):
             compute_regularizacion_prorrata_anual(
                 cuotas_soportadas_deducibles=Decimal("1000.00"),
+                deducciones_provisionales_practicadas=Decimal("0"),
                 prorrata_provisional_pct=pct,
                 prorrata_definitiva_pct=Decimal("60"),
             )

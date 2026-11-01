@@ -7,22 +7,23 @@ declared in `corpus/manual_oracles/modelo-303-2025-prorrata-general-regularizaci
 The test seeds the manual's raw inputs, not values _produced by the formula under
 test: prior-year operations 32.000/12.000 produce the manual's provisional 73%;
 current-year operations 25.000/20.000 produce the manual's definitive 56%; first
-three quarters carry 1.280 EUR supported IVA and the fourth quarter carries
-160 EUR. The expected values asserted below are the manual's own stated figures:
-934,40; 716,80; 217,60; 89,60; -128,00; and the bundled casilla figure.
+three quarters carry 400/420/460 EUR supported IVA, each deducted at 73%, and the
+fourth quarter carries 160 EUR deducted directly at the definitive 56%. The
+expected values asserted below are the manual's own stated figures: 934,40;
+716,80; 217,60; 89,60; -128,00; and the bundled casilla figure.
 
 Only the definitive percentage is read from the payload's
 `expected_by_casilla_id`, because that map is reserved for casillas the registry
 engine computes and a verification expectation reconciles. The annual volumes
 are the scenario's GIVENS (input_kind=manual) and the casilla-44 regularizacion
-is _produced by the prorrata_regularizacion source resolver rather than by a
-registry formula, so all three ride here as named constants quoting the manual
+is produced by the domain regularisation over the earlier quarters rather than
+by a registry formula, so all three ride here as named constants quoting the manual
 directly - the same shape the other seven manual figures in this module already
 use.
 
 See Also:
-    :func:`~application.calculations._prorrata_regularizacion.project_prorrata_regularizacion_feed`
-        Projection whose casilla-44 output is pinned to the manual oracle.
+    :func:`~domain.iva.prorrata.compute_regularizacion_prorrata_anual`
+        Domain regularisation whose casilla-44 amount is pinned to the manual oracle.
     :func:`~domain.iva.compute_prorrata_general`
         Domain percentage compute used to reproduce the manual's prior-year
         provisional percentage from raw operation volumes.
@@ -41,7 +42,6 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.application.calculations.prorrata_regularizacion import project_prorrata_regularizacion_feed
 from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.money.rounding import round_to_cents
@@ -57,6 +57,7 @@ from cadrumo.domain.iva.prorrata import (
     ProrrataKind,
     RegularizacionProrrataDireccion,
     compute_prorrata_general,
+    compute_regularizacion_prorrata_anual,
 )
 
 from ..compiler.authority import compiled_bundled_authority
@@ -79,12 +80,12 @@ _CASILLA_44_ID: CasillaId = validated_casilla_id("44", surface="test casilla id"
 
 _PRIOR_YEAR_CON_DERECHO = Decimal("32000.00")
 _PRIOR_YEAR_SIN_DERECHO = Decimal("12000.00")
-_FIRST_THREE_QUARTERS_INPUT_IVA = Decimal("1280.00")
+_FIRST_THREE_QUARTERS_INPUT_IVA = (Decimal("400.00"), Decimal("420.00"), Decimal("460.00"))
 _FOURTH_QUARTER_INPUT_IVA = Decimal("160.00")
 
 #: The manual's current-year 'n' operations: locales 25.000 EUR con derecho and
 #: viviendas 20.000 EUR exentas sin derecho, so the annual total volume is
-#: 45.000 EUR. Scenario givens fed to the engine, not values checked against it.
+#: 45.000 EUR. Scenario givens: the payload's declared figures must quote them.
 _MANUAL_CURRENT_YEAR_CON_DERECHO = Decimal("25000.00")
 _MANUAL_CURRENT_YEAR_TOTAL = Decimal("45000.00")
 
@@ -163,6 +164,10 @@ def _m303_prorrata_percentage_from_manual_annual_volumes(payload: ManualWorkedEx
     snapshot = compiled_bundled_authority().snapshot("303", filing_year=payload.filing_year, period="4T")
     binding_values = _m303_zero_bindings()
     manual_volume_inputs = oracle_declared_figures(_ORACLE_PAYLOAD_NAME)
+    assert manual_volume_inputs == {
+        _VOLUMEN_CON_DERECHO_ID: _MANUAL_CURRENT_YEAR_CON_DERECHO,
+        _VOLUMEN_TOTAL_ID: _MANUAL_CURRENT_YEAR_TOTAL,
+    }
     inputs = {
         **resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values),
         **manual_volume_inputs,
@@ -180,9 +185,9 @@ def test_m303_prorrata_regularizacion_reproduces_aeat_manual_oracle() -> None:
     """The real registry/domain chain reproduces the bundled AEAT manual figures.
 
     See Also:
-        :func:`~application.calculations._prorrata_regularizacion.project_prorrata_regularizacion_feed`
-            Application projection under test for the signed Modelo 303 casilla
-            44 regularizacion value.
+        :func:`~domain.iva.prorrata.compute_regularizacion_prorrata_anual`
+            Domain regularisation under test for the signed Modelo 303 casilla
+            44 value.
         :class:`~domain.iva.RegularizacionProrrataResult`
             Result carrier whose provisional, definitive, importe, and direction
             fields are compared against the manual figures.
@@ -203,13 +208,15 @@ def test_m303_prorrata_regularizacion_reproduces_aeat_manual_oracle() -> None:
     )
     assert provisional.percentage == _MANUAL_PROVISIONAL_PERCENTAGE
 
-    projection = project_prorrata_regularizacion_feed(
-        cuotas_soportadas_deducibles=_FIRST_THREE_QUARTERS_INPUT_IVA,
+    practised_per_quarter = tuple(
+        round_to_cents(cuota * provisional.percentage / Decimal("100")) for cuota in _FIRST_THREE_QUARTERS_INPUT_IVA
+    )
+    result = compute_regularizacion_prorrata_anual(
+        cuotas_soportadas_deducibles=sum(_FIRST_THREE_QUARTERS_INPUT_IVA, Decimal("0")),
+        deducciones_provisionales_practicadas=sum(practised_per_quarter, Decimal("0")),
         prorrata_provisional_pct=provisional.percentage,
         prorrata_definitiva_pct=definitive_percentage,
-        operaciones_sin_derecho_deduccion=(_MANUAL_CURRENT_YEAR_TOTAL - _MANUAL_CURRENT_YEAR_CON_DERECHO),
     )
-    result = projection.result
     assert result.direccion is RegularizacionProrrataDireccion.INGRESO
     assert result.deduccion_provisional == _MANUAL_FIRST_THREE_QUARTERS_DEDUCTION
     assert result.deduccion_definitiva == _MANUAL_FIRST_THREE_QUARTERS_CORRECT_DEDUCTION
@@ -223,13 +230,11 @@ def test_m303_prorrata_regularizacion_reproduces_aeat_manual_oracle() -> None:
         and binding.provider.regularizacion_output is ProrrataRegularizacionOutput.MODELO_303_CASILLA_44
     )
     assert casillas_by_binding(snapshot.revision)[prorrata_binding.id] == (_CASILLA_44_ID,)
-    assert projection.proposed_value == _MANUAL_CASILLA_44_REGULARIZACION
+    assert result.importe == _MANUAL_CASILLA_44_REGULARIZACION
 
     fourth_quarter_deductible = round_to_cents(_FOURTH_QUARTER_INPUT_IVA * definitive_percentage / Decimal("100"))
-    regularizacion_value = projection.proposed_value
+    regularizacion_value = result.importe
     definitive_deduction = result.deduccion_definitiva
-    assert regularizacion_value is not None
-    assert definitive_deduction is not None
     assert fourth_quarter_deductible == _MANUAL_FOURTH_QUARTER_CURRENT_DEDUCTION
     assert regularizacion_value + fourth_quarter_deductible == (_MANUAL_FOURTH_QUARTER_NET_DEDUCTION)
     assert definitive_deduction + fourth_quarter_deductible == _MANUAL_ANNUAL_DEDUCTION

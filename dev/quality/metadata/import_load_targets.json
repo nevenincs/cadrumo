@@ -657,6 +657,7 @@
         "cadrumo.application.calculations.m303_carry_ingress",
         "cadrumo.application.calculations.m303_regimen_simplificado",
         "cadrumo.application.calculations.m303_regimen_simplificado_annual_summary",
+        "cadrumo.application.calculations.m303_settlement_observation",
         "cadrumo.application.calculations.maritime_exemption_service",
         "cadrumo.application.calculations.multi_year",
         "cadrumo.application.calculations.observations_repository",

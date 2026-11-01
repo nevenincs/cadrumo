@@ -12,7 +12,6 @@ from ....core.aggregation import BindingSourceKind
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.models import STRICT_FROZEN_CONFIG
-from ....core.period import StandardPeriodCode
 from .errors import RegistryValidationError
 from .form_codes import form_role_validator
 
@@ -20,6 +19,7 @@ __all__ = [
     "ProrrataRegularizacionOutput",
     "ProrrataRegularizacionOutputValue",
     "ProrrataRegularizacionProvider",
+    "ProrrataSourcePeriodSelection",
     "prorrata_definitive_percentage_source_casilla_id",
     "prorrata_source_casilla_ids",
 ]
@@ -66,12 +66,19 @@ _PRORRATA_REGULARIZACION_SOURCE_IDS: tuple[CasillaId, ...] = (
     "iva.prorrata-volumen-total",
     _PRORRATA_DEFINITIVE_PERCENTAGE_SOURCE_ID,
 )
-_PRORRATA_REGULARIZACION_SOURCE_PERIODS: tuple[str, ...] = (
-    StandardPeriodCode.Q1.value,
-    StandardPeriodCode.Q2.value,
-    StandardPeriodCode.Q3.value,
-    StandardPeriodCode.Q4.value,
-)
+
+
+class ProrrataSourcePeriodSelection(StrEnum):
+    """How a prorrata regularisation selects the source liquidation periods.
+
+    ``FILER_LIQUIDATION_CADENCE`` reads the liquidation periods of the cadence
+    the filer actually files under -- calendar quarters or, for a monthly filer,
+    calendar months (RD 1624/1992 art. 71.3) -- from the period selectors of the
+    revisions declaring the source modelo for the regularised year, so one
+    declaration serves every past and future year without naming a period.
+    """
+
+    FILER_LIQUIDATION_CADENCE = "filer_liquidation_cadence"
 
 
 def prorrata_definitive_percentage_source_casilla_id(
@@ -97,7 +104,7 @@ class ProrrataRegularizacionProvider(BaseModel):
 
     source_modelo: Annotated[str, AfterValidator(form_role_validator("iva.periodic"))]
     source_casilla_ids: tuple[CasillaId, ...]
-    source_periods: tuple[str, ...]
+    source_period_selection: Literal[ProrrataSourcePeriodSelection.FILER_LIQUIDATION_CADENCE]
     regularizacion_output: ProrrataRegularizacionOutputValue
 
     @field_validator("source_casilla_ids")
@@ -108,15 +115,5 @@ class ProrrataRegularizacionProvider(BaseModel):
             raise RegistryValidationError(
                 "prorrata_regularizacion selector must declare the Modelo 303 deductible-total, "
                 "annual prorrata volume, and definitive-percentage casilla ids in canonical order",
-            )
-        return value
-
-    @field_validator("source_periods")
-    @classmethod
-    @pydantic_validation_boundary
-    def _source_periods_are_full_year(cls, value: tuple[str, ...]) -> tuple[str, ...]:
-        if value != _PRORRATA_REGULARIZACION_SOURCE_PERIODS:
-            raise RegistryValidationError(
-                "prorrata_regularizacion selector must declare all four quarters as source_periods",
             )
         return value

@@ -27,6 +27,7 @@ from ...domain.calculations.registry.ledger_iva_bindings import (
 )
 from ...domain.calculations.registry.prorrata_register_catalogue import (
     especial_prorrata_register_regime,
+    general_prorrata_register_regime,
     ninguna_prorrata_register_regime,
 )
 from ...domain.calculations.registry.prorrata_vocabulary import (
@@ -85,6 +86,14 @@ def resolve_iva_ledger_binding_values(
     binding_values = resolve_ledger_iva_aggregation_binding_values(revision, observations)
     if prorrata_apportionment is None:
         return binding_values
+    if prorrata_apportionment.settlement is not None:
+        return _apply_settlement_apportionment(
+            revision,
+            observations,
+            binding_values,
+            prorrata_apportionment,
+            operation=operation,
+        )
     if prorrata_apportionment.sector_apportionments:
         # Sectores diferenciados (LIVA arts. 9.1.c / 101): route each input to
         # its sector's percentage; common-use (no sector) at art. 104.Dos.
@@ -112,6 +121,60 @@ def resolve_iva_ledger_binding_values(
         return binding_values
     return {
         binding_id: value * multiplier if binding_id in deducible_binding_ids else value
+        for binding_id, value in binding_values.items()
+    }
+
+
+def _apply_settlement_apportionment(
+    revision: ModeloRevision,
+    observations: Sequence[IvaLedgerObservation],
+    binding_values: dict[BindingId, Decimal],
+    apportionment: IvaLedgerProrrataApportionment,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> dict[BindingId, Decimal]:
+    """Deduct the settlement liquidation's cuotas at the definitive percentage.
+
+    LIVA art. 105.Cuatro: the year's last liquidation applies the definitive
+    percentage to its own cuotas; earlier liquidations keep the provisional
+    one. Each side goes through the ordinary apportionment, and only deducible
+    cuota bindings are recombined -- every other binding keeps its
+    unapportioned value from the whole observation set.
+
+    Raises:
+        AggregationValidationError: When a differentiated-sector or especial
+            apportionment carries a settlement percentage, which has no
+            derivation here.
+    """
+    settlement = apportionment.settlement
+    if settlement is None:
+        return binding_values
+    if apportionment.sector_apportionments or apportionment.regime != general_prorrata_register_regime(
+        authority=operation
+    ):
+        raise AggregationValidationError(
+            tr("aggregation.iva_ledger.errors.settlement_apportionment_requires_general_regime"),
+            context={"regime": str(apportionment.regime), "period": settlement.period.registry_token},
+        )
+    deducible_binding_ids = deducible_cuota_binding_ids(revision)
+    if not deducible_binding_ids:
+        return binding_values
+    provisional = apportionment.model_copy(update={"settlement": None})
+    definitive = provisional.model_copy(update={"percentage": settlement.percentage})
+    in_settlement = tuple(item for item in observations if settlement.period.contains(item.transaction_date))
+    earlier = tuple(item for item in observations if not settlement.period.contains(item.transaction_date))
+    settled_values = resolve_iva_ledger_binding_values(
+        revision, in_settlement, prorrata_apportionment=definitive, operation=operation
+    )
+    earlier_values = resolve_iva_ledger_binding_values(
+        revision, earlier, prorrata_apportionment=provisional, operation=operation
+    )
+    return {
+        binding_id: (
+            settled_values.get(binding_id, Decimal("0")) + earlier_values.get(binding_id, Decimal("0"))
+            if binding_id in deducible_binding_ids
+            else value
+        )
         for binding_id, value in binding_values.items()
     }
 
@@ -154,12 +217,16 @@ def _partition_by_input_classification(
 ) -> dict[InputClassification, list[IvaLedgerObservation]]:
     """Bucket ``observations`` by their art. 106 input classification.
 
-    An unclassified observation defaults to the registry-declared mixed-use token
-    (the mixed-use default). Shared by the general especial-regime
-    apportionment and the per-partition primitive so both partition
-    identically.
+    Only rows bearing deduction authority carry a deducible cuota, so only they
+    are partitioned. Art. 106.Uno makes the use of each input the taxpayer's own
+    fact; a deducible row with no declared use has no lawful percentage, so it
+    is refused exactly as the sectorised path refuses it, never routed to the
+    common slice. Shared by the whole-entity especial apportionment and the
+    per-partition primitive so both partition identically.
 
     Raises:
+        AggregationValidationError: When a deducible observation declares no
+            input classification.
         UnacceptedLedgerRegistryValueError: When an observation declares a
             classification the pinned vocabulary does not list. No deduction
             percentage exists for it, so it is refused rather than routed.
@@ -170,10 +237,14 @@ def _partition_by_input_classification(
         for classification in input_classification_tokens(effective_date=effective_date, authority=operation)
     }
     for observation in observations:
-        classification = observation.input_classification or default_input_classification(
-            effective_date=effective_date,
-            authority=operation,
-        )
+        if observation.deduction_fact_kind is None:
+            continue
+        classification = observation.input_classification
+        if classification is None:
+            raise AggregationValidationError(
+                tr("aggregation.iva_ledger.errors.especial_missing_input_classification"),
+                context={"ledger_id": observation.ledger_id},
+            )
         partition = partitions.get(classification)
         if partition is None:
             raise UnacceptedLedgerRegistryValueError(

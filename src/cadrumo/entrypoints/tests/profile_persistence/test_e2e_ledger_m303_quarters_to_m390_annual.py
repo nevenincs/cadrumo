@@ -59,6 +59,7 @@ from cadrumo.adapters.persistence.profile.modelos_calculation import Calculation
 from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from cadrumo.adapters.persistence.profile.tests.modelo_export_ports_support import modelo_export_ports_for_test
 from cadrumo.adapters.persistence.profile.tests.secure_objects_fixture import secure_objects
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
@@ -81,9 +82,11 @@ from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.errors.hierarchy import CadrumoError
+from cadrumo.core.i18n.render import tr as render_tr
 from cadrumo.core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from cadrumo.core.period import Period
 from cadrumo.core.prior_domiciliation_election import PriorDomiciliationElection
+from cadrumo.core.prorrata_register import ProrrataProvisionalProvenance, ProrrataRegisterRegime
 from cadrumo.core.result_disposition import ResultDisposition
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
@@ -107,6 +110,7 @@ from cadrumo.domain.iva_compensation.reconciliation import (
 from cadrumo.domain.modelos.calculation_revision import CalculationRevision
 from cadrumo.domain.modelos.verification_report import VerificationCompletenessStatus, VerificationReport
 from cadrumo.domain.modelos.work_unit import WorkUnit
+from cadrumo.domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
@@ -374,6 +378,7 @@ def _persist_year_of_invoices(
     *,
     filing_year: int = _YEAR,
     facts_by_period: dict[str, dict[str, Decimal]] = _LAURA_QUARTER_FACTS,
+    received_rate_percent: Decimal = Decimal("21"),
 ) -> StoredIvaByPeriod:
     """Persist all four quarters' issued + received IVA operations once upfront.
 
@@ -402,7 +407,7 @@ def _persist_year_of_invoices(
             invoice_number=f"REC-{filing_year}-{period}",
             issued_at=date(filing_year, _QUARTER_MONTH[period], 10),
             taxable_base=facts["received_base"],
-            iva_rate=Decimal("21"),
+            iva_rate=received_rate_percent,
             currency="EUR",
             rate_provider=catalogue_ports.rate_provider,
         )
@@ -422,6 +427,7 @@ def _persist_year_of_invoices(
             iva_amount=facts["received_iva"],
             period=period,
             filing_year=filing_year,
+            iva_rate=received_rate_percent / Decimal("100"),
             purchase_invoice_evidence_id=purchase_invoice.invoice_id,
             # Domestic purchase from an ES supplier: cuota soportada established
             # by that supplier's invoice (LIVA art. 97.Uno.1).
@@ -648,6 +654,7 @@ def _calculate_m303_quarter_revision(
     filing_year: int = _YEAR,
     taxpayer_nif: str = _TAX_ID,
     calculated_at: datetime = _FILE_AT,
+    extra_casilla_inputs: dict[CasillaId, Decimal] | None = None,
     operation: PinnedAuthorityOperation,
 ) -> tuple[WorkUnit, CalculationRevision]:
     """Run the live bucket-aggregation M303 calc for one quarter without projecting filed observations."""
@@ -691,7 +698,7 @@ def _calculate_m303_quarter_revision(
             # Manual, formula-operand "resultado" casillas (58/68/70/76/77/109/18)
             # the fichero-BOE completeness manifest requires but the engine never
             # auto-zero-fills; see ``_MODELO_303_MANUAL_RESULTADO_CASILLA_ZEROS``.
-            casilla_inputs=manual_zeros,
+            casilla_inputs={**manual_zeros, **(extra_casilla_inputs or {})},
             binding_values={
                 # No prior-period compensación carry in this scenario (each quarter
                 # is net-positive); autoconsumo del promotor is nil for this filer.
@@ -710,10 +717,16 @@ def _calculate_m303_quarter_revision(
 
 
 def _calculate_and_file_m303_quarter(
-    secure_objects: SecureObjectRepository, *, period: str, operation: PinnedAuthorityOperation
+    secure_objects: SecureObjectRepository,
+    *,
+    period: str,
+    extra_casilla_inputs: dict[CasillaId, Decimal] | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> CalculationRevision:
     """Run the live bucket-aggregation M303 calc for one quarter and project its filed observation."""
-    work_unit, revision = _calculate_m303_quarter_revision(secure_objects, period=period, operation=operation)
+    work_unit, revision = _calculate_m303_quarter_revision(
+        secure_objects, period=period, extra_casilla_inputs=extra_casilla_inputs, operation=operation
+    )
     persist_filed_revision_observation(
         revision=revision,
         work_unit=work_unit,
@@ -1099,4 +1112,156 @@ def test_m390_refuses_zero_reconciliation_when_m303_calculated_but_observations_
         _M390_DEVENGADA,
         _M390_DEDUCIBLE,
         _M390_RESULTADO,
+    )
+
+
+# AEAT Manual practico IVA 2025, Capitulo 5, prorrata general example
+# (`corpus/manuals/iva/2025/source.pdf#Pag.137-138`). The provisional percentage
+# carried from the previous year is 73 %; the year's operations (locales
+# 25.000 EUR con derecho, viviendas 20.000 EUR exentas) give a definitive
+# 25.000 / 45.000 = 56 %. Quarterly cuotas soportadas 400 / 420 / 460 / 160 EUR
+# arise from received invoices at 10 %. The issued 21 % sales split the year's
+# con-derecho volume across the quarters.
+_PRORRATA_QUARTER_FACTS: dict[str, dict[str, Decimal]] = {
+    period: {
+        "issued_base": issued_base,
+        "issued_iva": issued_base * Decimal("0.21"),
+        "received_base": received_iva * 10,
+        "received_iva": received_iva,
+        "eu_supply_base": Decimal("0.00"),
+        "reverse_charge_base": Decimal("0.00"),
+        "reverse_charge_iva": Decimal("0.00"),
+    }
+    for period, issued_base, received_iva in (
+        ("1T", Decimal("6000.00"), Decimal("400.00")),
+        ("2T", Decimal("6000.00"), Decimal("420.00")),
+        ("3T", Decimal("6000.00"), Decimal("460.00")),
+        ("4T", Decimal("7000.00"), Decimal("160.00")),
+    )
+}
+_PRORRATA_PROVISIONAL_PERCENTAGE = Decimal("73")
+_PRORRATA_VOLUMEN_CON_DERECHO: CasillaId = validated_casilla_id("iva.prorrata-volumen-con-derecho")
+_PRORRATA_VOLUMEN_TOTAL: CasillaId = validated_casilla_id("iva.prorrata-volumen-total")
+_SOPORTADO_INTERIORES: CasillaId = validated_casilla_id("iva.soportado.interiores")
+_CASILLA_44: CasillaId = validated_casilla_id("44")
+_CASILLA_45: CasillaId = validated_casilla_id("45")
+_M390_PRORRATA_REGULARIZACION: CasillaId = validated_casilla_id("iva.anual.regularizacion-prorrata-definitiva")
+_M390_INTERIORES_CORRIENTES_CUOTA: CasillaId = validated_casilla_id(
+    "iva.anual.deducible.interiores-corrientes.soportado.cuota"
+)
+# The manual's printed figures, independent of the engine.
+_MANUAL_PRACTISED_DEDUCTIONS_1T_3T = {"1T": Decimal("292.00"), "2T": Decimal("306.60"), "3T": Decimal("335.80")}
+_MANUAL_4T_DEFINITIVE_DEDUCTION = Decimal("89.60")
+_MANUAL_EXCESO_DE_DEDUCCION = Decimal("-217.60")
+_MANUAL_4T_CASILLA_45 = Decimal("-128.00")
+_MANUAL_YEAR_DEDUCTIONS = Decimal("806.40")
+_MANUAL_YEAR_INTERIORES_CORRIENTES_CUOTA = Decimal("1024.00")
+
+
+def _save_general_prorrata_register(secure_objects: SecureObjectRepository) -> None:
+    """Declare the general prorrata with the provisional percentage carried from the prior year."""
+    prior_year = _YEAR - 1
+    ProrrataRegisterRepository(bucket_id=_BUCKET_ID, objects=secure_objects).save(
+        ProrrataRegister(
+            entries=(
+                ProrrataRegisterEntry(
+                    ejercicio=_YEAR,
+                    regime=ProrrataRegisterRegime.from_registry("general"),
+                    especial_transition=None,
+                    provisional_percentage=_PRORRATA_PROVISIONAL_PERCENTAGE,
+                    provisional_provenance=ProrrataProvisionalProvenance.from_registry("carried_prior_definitiva"),
+                    source_observation_ref=f"303:{prior_year}:4T",
+                    source_registry_snapshot_refs=(
+                        published_authority_operation()
+                        .snapshot("303", filing_year=prior_year, period="4T")
+                        .snapshot_ref,
+                    ),
+                ),
+            ),
+        )
+    )
+
+
+def test_general_prorrata_settles_in_the_fourth_quarter_and_folds_into_m390(
+    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
+) -> None:
+    """Ledger to M303 to M390 reproduces the AEAT manual's general prorrata regularisation.
+
+    The first three quarters deduct at the provisional 73 %; the fourth quarter
+    deducts its own cuotas at the definitive 56 % and regularises only the
+    earlier quarters in casilla 44 (LIVA art. 105.Seis). The annual summary
+    restates the settlement box and sums the per-period deductions.
+    """
+    _store_profile(secure_objects)
+    _save_general_prorrata_register(secure_objects)
+    _persist_year_of_invoices(
+        secure_objects,
+        facts_by_period=_PRORRATA_QUARTER_FACTS,
+        received_rate_percent=Decimal("10"),
+    )
+
+    filed: dict[str, CalculationRevision] = {}
+    for period in ("1T", "2T", "3T"):
+        filed[period] = _calculate_and_file_m303_quarter(secure_objects, period=period, operation=operation)
+        casillas = filed[period].casilla_values
+        assert Decimal(casillas[_SOPORTADO_INTERIORES]) == _MANUAL_PRACTISED_DEDUCTIONS_1T_3T[period]
+        assert Decimal(casillas[_CASILLA_44]) == Decimal("0.00")
+    filed["4T"] = _calculate_and_file_m303_quarter(
+        secure_objects,
+        period="4T",
+        extra_casilla_inputs={
+            _PRORRATA_VOLUMEN_CON_DERECHO: Decimal("25000.00"),
+            _PRORRATA_VOLUMEN_TOTAL: Decimal("45000.00"),
+        },
+        operation=operation,
+    )
+    settlement = filed["4T"].casilla_values
+    assert Decimal(settlement[_SOPORTADO_INTERIORES]) == _MANUAL_4T_DEFINITIVE_DEDUCTION
+    assert Decimal(settlement[_CASILLA_44]) == _MANUAL_EXCESO_DE_DEDUCCION
+    assert Decimal(settlement[_CASILLA_45]) == _MANUAL_4T_CASILLA_45
+
+    year_deductions = sum((Decimal(filed[p].casilla_values[_CASILLA_45]) for p in _QUARTER_ORDER), Decimal("0"))
+    assert year_deductions == _MANUAL_YEAR_DEDUCTIONS
+
+    annual = _calculate_m390_annual(secure_objects, operation=operation)
+    assert Decimal(annual.casilla_values[_M390_PRORRATA_REGULARIZACION]) == _MANUAL_EXCESO_DE_DEDUCCION
+    assert Decimal(annual.casilla_values[_M390_INTERIORES_CORRIENTES_CUOTA]) == (
+        _MANUAL_YEAR_INTERIORES_CORRIENTES_CUOTA
+    )
+    assert Decimal(annual.casilla_values[_M390_DEDUCIBLE]) == _MANUAL_YEAR_DEDUCTIONS
+
+
+def test_settlement_quarter_without_filed_earlier_quarter_leaves_casilla_44_unresolved(
+    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
+) -> None:
+    """A missing first-quarter liquidation keeps the regularisation unresolved, never zero."""
+    _store_profile(secure_objects)
+    _save_general_prorrata_register(secure_objects)
+    _persist_year_of_invoices(
+        secure_objects,
+        facts_by_period=_PRORRATA_QUARTER_FACTS,
+        received_rate_percent=Decimal("10"),
+    )
+    for period in ("2T", "3T"):
+        _calculate_and_file_m303_quarter(secure_objects, period=period, operation=operation)
+
+    _work_unit, revision = _calculate_m303_quarter_revision(
+        secure_objects,
+        period="4T",
+        extra_casilla_inputs={
+            _PRORRATA_VOLUMEN_CON_DERECHO: Decimal("25000.00"),
+            _PRORRATA_VOLUMEN_TOTAL: Decimal("45000.00"),
+        },
+        operation=operation,
+    )
+
+    # The persisted unresolved-binding issue is what blocks verification and
+    # filing of the box until a recalculation clears it.
+    casilla_44_issues = tuple(
+        issue
+        for issue in revision.source_issues
+        if issue.reason == "unresolved_binding" and issue.casilla_id == _CASILLA_44
+    )
+    assert tuple(issue.message for issue in casilla_44_issues) == (
+        render_tr("application.calculations.prorrata_regularizacion.unresolved.source_periods_missing", periods="1T"),
     )

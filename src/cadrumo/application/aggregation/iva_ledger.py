@@ -281,6 +281,24 @@ class IvaLedgerSectorApportionment(BaseModel):
     regime: ProrrataRegisterRegime = Field(default_factory=general_prorrata_register_regime)
 
 
+class IvaLedgerSettlementApportionment(BaseModel):
+    """Definitive prorrata percentage for the year's annual settlement liquidation.
+
+    LIVA art. 105.Cuatro has the last liquidation of the year -- the fourth
+    quarter, or month 12 for a monthly filer -- deduct its own cuotas at the
+    year's definitive percentage, while the regularisation box corrects only
+    the earlier liquidations. Observations dated inside ``period`` are
+    apportioned at ``percentage``; every other observation keeps the
+    provisional percentage of the enclosing apportionment, so a Modelo 390
+    spanning the whole year reproduces each periodic liquidation.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    period: Period
+    percentage: Decimal = Field(..., ge=Decimal("0"), le=HUNDRED)
+
+
 class IvaLedgerProrrataApportionment(BaseModel):
     """Prorrata percentage applied to deducible ledger IVA cuotas.
 
@@ -313,6 +331,13 @@ class IvaLedgerProrrataApportionment(BaseModel):
     source_observation_ref: str | None = Field(default=None, min_length=1)
     authorisation_reference: str | None = Field(default=None, min_length=1)
     sector_apportionments: tuple[IvaLedgerSectorApportionment, ...] = ()
+    settlement: IvaLedgerSettlementApportionment | None = None
+    """Definitive percentage for the settlement liquidation, once it is known.
+
+    Only a whole-entity general apportionment carries one: the differentiated
+    and especial settlements are not yet derived and stay with their
+    provisional percentage while the regularisation box remains unresolved.
+    """
 
 
 class IvaDifferentiatedDeductionContribution(BaseModel):
@@ -345,12 +370,12 @@ class AnnualDeducibleTotalsByRegime(BaseModel):
     exceeds the deducción under the especial regime by ten percent or more.
     ``deduction_under_general`` is mechanically derivable for any bucket (art. 104
     applies one whole-entity percentage), so it is always honest; the especial
-    total (art. 106 per-input classification) is honest only when the register
-    regime is ESPECIAL, or when every deducible soportado row of the ejercicio
-    carries a declared ``input_classification`` — ``unclassified_deducible_count``
-    records how many deducible soportado observations are still unclassified, so
-    the caller can decide whether the especial total is honestly computable or the
-    filer must first classify.
+    total (art. 106 per-input classification) exists only when every deducible
+    soportado row of the ejercicio carries a declared ``input_classification``,
+    whatever the register regime, and is ``None`` otherwise.
+    ``unclassified_deducible_count`` records how many deducible soportado
+    observations are still unclassified, so the caller can tell the filer to
+    classify first.
 
     See Also:
         :func:`compute_annual_deducible_totals_by_regime`
@@ -361,7 +386,7 @@ class AnnualDeducibleTotalsByRegime(BaseModel):
     model_config = _STRICT_FROZEN
 
     deduction_under_general: Decimal = Field(..., ge=Decimal("0"))
-    deduction_under_especial: Decimal = Field(..., ge=Decimal("0"))
+    deduction_under_especial: Decimal | None = Field(..., ge=Decimal("0"))
     unclassified_deducible_count: int = Field(..., ge=0)
     regime: ProrrataRegisterRegime
 
@@ -877,6 +902,7 @@ __all__ = [
     "IvaLedgerAggregationIssueReason",
     "IvaLedgerProrrataApportionment",
     "IvaLedgerSectorApportionment",
+    "IvaLedgerSettlementApportionment",
     "ProrrataLedgerReference",
     "aggregate_iva_ledger_observations",
     "aggregate_iva_ledger_observations_from_repositories",

@@ -313,14 +313,45 @@ application:
         taxpayer_nif_blank: The taxpayer NIF must not be blank when it forms the IVA
           wallet decision key.
     prorrata_regularizacion:
-      advisory: 'Prorrata regularisation by definitive percentage (LIVA arts. 104-105)
-        for %{year}: provisional prorrata %{provisional}% → definitive %{definitiva}%
-        (%{sentido}). Regularisation proposed for %{target}: %{value}. Confirm the
-        value before filing.'
-      sentido_deduccion: additional deduction
-      sentido_ingreso: payment due
       target_casilla: box %{number}
       target_declared: the declared regularisation box
+      unresolved:
+        current_year_inputs: 'The prorrata regularisation needs these current-year
+          values before it can be calculated: %{casillas}.'
+        provisional_missing: The %{year} prorrata regularisation needs the provisional
+          percentage, from your prorrata register or from the prior year's filed settlement
+          liquidation.
+        regime_not_derived: The %{year} regularisation for prorrata especial or differentiated
+          sectors is not derived automatically yet; calculate the box yourself before
+          filing.
+        selector_unmapped: The prorrata regularisation binding does not map to a resolver
+          output.
+        settlement_observation_ambiguous: More than one Modelo 303 settlement liquidation
+          is filed (%{periods}); keep only the cadence you actually filed.
+        settlement_observation_missing: The annual prorrata regularisation restates
+          the filed Modelo 303 settlement liquidation, and none is filed for %{periods}.
+        settlement_observation_refused: The filed Modelo 303 settlement liquidation
+          %{periods} carries a form revision that no longer matches the one the law
+          selects; recalculate and file it again.
+        settlement_observation_without_regularizacion: The filed Modelo 303 settlement
+          liquidation %{periods} carries no prorrata regularisation value.
+        sin_derecho_volume_absent: Your register applies prorrata in %{year}, but
+          the declared volumes show no operations without the right to deduct; the
+          regularisation for that case is not derived automatically. Check the volumes
+          or calculate the box yourself.
+        source_period_cuotas_missing: 'Liquidation %{period} was filed without the
+          deductible boxes the regularisation needs: %{casillas}.'
+        source_period_ledger_divergence: Liquidation %{period} declared %{filed} in
+          %{casilla}, but its ledger input VAT at the provisional %{percentage}% gives
+          %{expected}; reconcile the ledger with the filed liquidation before regularising.
+        source_periods_missing: 'The regularisation covers the year''s earlier liquidations,
+          and these are not filed: %{periods}.'
+        source_periods_refused: 'These earlier liquidations carry a form revision
+          that no longer matches the one the law selects: %{periods}; recalculate
+          and file them again.'
+        volumes_undeclared: Prorrata applies in %{year}, but the annual operation
+          volumes are not declared (%{casillas}); declare them so the definitive percentage
+          can be calculated.
   filing:
     build_draft:
       errors:

@@ -341,14 +341,46 @@ application:
         taxpayer_nif_blank: El NIF del contribuyente no puede estar en blanco cuando
           forma la clave de decisión de la cartera de IVA.
     prorrata_regularizacion:
-      advisory: 'Regularización de prorrata por porcentaje definitivo (LIVA arts.
-        104-105) para %{year}: prorrata provisional %{provisional}% → definitiva %{definitiva}%
-        (%{sentido}). Regularización propuesta para %{target}: %{value}. Confirma
-        el valor antes de presentar.'
-      sentido_deduccion: deducción complementaria
-      sentido_ingreso: ingreso
       target_casilla: casilla %{number}
       target_declared: la casilla de regularización declarada
+      unresolved:
+        current_year_inputs: 'La regularización de prorrata necesita estos valores
+          del ejercicio antes de calcularse: %{casillas}.'
+        provisional_missing: La regularización de prorrata de %{year} necesita el
+          porcentaje provisional, de tu registro de prorrata o de la última liquidación
+          presentada del ejercicio anterior.
+        regime_not_derived: La regularización de %{year} en prorrata especial o sectores
+          diferenciados aún no se calcula automáticamente; calcula tú la casilla antes
+          de presentar.
+        selector_unmapped: La vinculación de la regularización de prorrata no corresponde
+          a ninguna salida del resolutor.
+        settlement_observation_ambiguous: Consta más de una última liquidación del
+          modelo 303 (%{periods}); conserva solo la periodicidad que presentaste.
+        settlement_observation_missing: La regularización anual de prorrata reproduce
+          la última liquidación presentada del modelo 303, y no consta ninguna para
+          %{periods}.
+        settlement_observation_refused: La última liquidación presentada del modelo
+          303 %{periods} lleva una revisión del formulario que ya no coincide con
+          la que fija la ley; vuelve a calcularla y presentarla.
+        settlement_observation_without_regularizacion: La última liquidación presentada
+          del modelo 303 %{periods} no incluye valor de regularización de prorrata.
+        sin_derecho_volume_absent: Tu registro aplica prorrata en %{year}, pero los
+          volúmenes declarados no muestran operaciones sin derecho a deducción; la
+          regularización de ese caso no se calcula automáticamente. Revisa los volúmenes
+          o calcula tú la casilla.
+        source_period_cuotas_missing: 'La liquidación %{period} se presentó sin las
+          casillas deducibles que necesita la regularización: %{casillas}.'
+        source_period_ledger_divergence: La liquidación %{period} declaró %{filed}
+          en %{casilla}, pero sus cuotas del libro al %{percentage}% provisional dan
+          %{expected}; concilia el libro con la liquidación presentada antes de regularizar.
+        source_periods_missing: 'La regularización abarca las liquidaciones anteriores
+          del ejercicio, y estas no constan presentadas: %{periods}.'
+        source_periods_refused: 'Estas liquidaciones anteriores llevan una revisión
+          del formulario que ya no coincide con la que fija la ley: %{periods}; vuelve
+          a calcularlas y presentarlas.'
+        volumes_undeclared: La prorrata se aplica en %{year}, pero no constan los
+          volúmenes anuales de operaciones (%{casillas}); decláralos para poder calcular
+          el porcentaje definitivo.
   filing:
     build_draft:
       errors:

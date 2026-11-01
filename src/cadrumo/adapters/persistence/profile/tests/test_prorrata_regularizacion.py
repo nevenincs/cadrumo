@@ -1,11 +1,9 @@
-"""Deferred-source advisory projection for the annual prorrata regularización.
+"""Applicability, missing-carry and settlement write-back for the annual prorrata regularización.
 
 See Also:
-    :mod:`~application.calculations._prorrata_regularizacion`
-        Projection module under test: casilla-44 advisory, M390 feed proposal,
-        and declared-volume ledger divergence rollup.
-    :func:`~domain.iva.compute_regularizacion_prorrata_anual`
-        Pure domain computation whose signed result the projection carries.
+    :mod:`~application.calculations.prorrata_regularizacion`
+        Module under test: applicability, missing-provisional advisory and
+        declared-volume ledger divergence rollup.
     :class:`~domain.calculations.registry.IvaLedgerObservation`
         Typed ledger row used to prove advisory-only annual volume divergence.
     :class:`~application.aggregation.CalculationSourceDiagnostic`
@@ -22,9 +20,7 @@ import pytest
 
 from .....application.calculations.prorrata_regularizacion import (
     build_prorrata_missing_provisional_advisory,
-    buildprorrata_regularizacion_advisory,
     derive_prorrata_applicability,
-    project_prorrata_regularizacion_feed,
 )
 from .....application.calculations.tests.filing_evidence import general_m303_filing_evidence
 from .....application.modelo.filing_revision_persistence import persist_filed_revision
@@ -59,7 +55,6 @@ from .....domain.calculations.registry.schema import ModeloRevision
 from .....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from .....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from .....domain.iva.flow import IvaFlowDirection
-from .....domain.iva.prorrata import RegularizacionProrrataDireccion
 from .....domain.iva.schema import IvaCategory, IvaExemptionArticle, IvaLedgerObservationRole, IvaRateKind
 from .....domain.modelos.calculation_repository import upsert_calculation_revision
 from .....domain.modelos.calculation_revision import (
@@ -279,70 +274,6 @@ def test_mixed_trader_in_year_missing_carry_is_visible_not_defaulted_to_100() ->
     assert "definitiva del ejercicio anterior" in diagnostic.message
 
 
-def test_advisory_fires_for_casilla_44_when_prorrata_applies_and_percentages_differ() -> None:
-    """A trader with sin-derecho volumes and a percentage delta is alerted, not silent."""
-    result, diagnostic = buildprorrata_regularizacion_advisory(
-        cuotas_soportadas_deducibles=Decimal("20000.00"),
-        prorrata_provisional_pct=Decimal("80"),
-        prorrata_definitiva_pct=Decimal("90"),
-        operaciones_sin_derecho_deduccion=Decimal("10000"),
-        regularizacion_year=2025,
-        revision=_settlement_revision(),
-    )
-    assert result.direccion is RegularizacionProrrataDireccion.DEDUCCION
-    assert result.importe == Decimal("2000.00")
-    assert diagnostic is not None
-    assert diagnostic.source_kind == BindingSourceKind.PRORRATA_REGULARIZACION.value
-    assert diagnostic.binding_source is BindingSourceKind.PRORRATA_REGULARIZACION
-    snapshot = published_authority_operation().snapshot(
-        Modelo("303").value,
-        filing_year=_SETTLEMENT_YEAR,
-        period=_SETTLEMENT_PERIOD,
-    )
-    prorrata_binding = next(
-        binding
-        for binding in snapshot.revision.bindings
-        if binding.source is BindingSourceKind.PRORRATA_REGULARIZACION
-        and isinstance(binding.provider, ProrrataRegularizacionProvider)
-        and binding.provider.regularizacion_output is ProrrataRegularizacionOutput.MODELO_303_CASILLA_44
-    )
-    assert diagnostic.casilla_id in casillas_by_binding(snapshot.revision)[prorrata_binding.id]
-    assert "casilla 44" in diagnostic.message
-    assert "2000.00" in diagnostic.message
-
-
-def test_projection_feeds_m303_casilla_44_from_declared_volume_definitive_percentage() -> None:
-    """The declared-volume definitive percentage is the percentage projected to casilla 44."""
-    declared_volume_total = Decimal("200000.00")
-    declared_volume_con_derecho = Decimal("150000.00")
-    declared_definitive_percentage = Decimal("75")
-    projection = project_prorrata_regularizacion_feed(
-        cuotas_soportadas_deducibles=Decimal("20000.00"),
-        prorrata_provisional_pct=Decimal("80"),
-        prorrata_definitiva_pct=declared_definitive_percentage,
-        operaciones_sin_derecho_deduccion=declared_volume_total - declared_volume_con_derecho,
-    )
-
-    assert projection.result.prorrata_definitiva_pct == declared_definitive_percentage
-    assert projection.operaciones_sin_derecho_deduccion == Decimal("50000.00")
-    snapshot = published_authority_operation().snapshot(
-        Modelo("303").value,
-        filing_year=_SETTLEMENT_YEAR,
-        period=_SETTLEMENT_PERIOD,
-    )
-    prorrata_binding = next(
-        binding
-        for binding in snapshot.revision.bindings
-        if binding.source is BindingSourceKind.PRORRATA_REGULARIZACION
-        and isinstance(binding.provider, ProrrataRegularizacionProvider)
-        and binding.provider.regularizacion_output is ProrrataRegularizacionOutput.MODELO_303_CASILLA_44
-    )
-    casilla_44_id = next(casilla.id for casilla in snapshot.revision.casillas if casilla.number == "44")
-    assert casillas_by_binding(snapshot.revision)[prorrata_binding.id] == (casilla_44_id,)
-    assert projection.proposed_value is not None
-    assert projection.proposed_value == projection.result.importe
-
-
 @pytest.mark.parametrize(
     ("filing_year", "period", "revision_id"),
     (
@@ -375,66 +306,6 @@ def test_modelo_303_period_below_the_support_floor_refuses() -> None:
         published_authority_operation().snapshot(Modelo("303").value, filing_year=2020, period="4T")
 
 
-def test_advisory_is_silent_when_no_sin_derecho_operations() -> None:
-    """No exempt-without-right volume ⇒ prorrata does not apply ⇒ no advisory noise."""
-    result, diagnostic = buildprorrata_regularizacion_advisory(
-        cuotas_soportadas_deducibles=Decimal("20000.00"),
-        prorrata_provisional_pct=Decimal("80"),
-        prorrata_definitiva_pct=Decimal("90"),
-        operaciones_sin_derecho_deduccion=Decimal("0"),
-        regularizacion_year=2025,
-        revision=_settlement_revision(),
-    )
-    assert diagnostic is None
-    assert result.importe == Decimal("2000.00")
-
-
-def test_advisory_is_silent_when_percentages_coincide() -> None:
-    """No regularización is due when provisional equals definitive."""
-    _result, diagnostic = buildprorrata_regularizacion_advisory(
-        cuotas_soportadas_deducibles=Decimal("20000.00"),
-        prorrata_provisional_pct=Decimal("90"),
-        prorrata_definitiva_pct=Decimal("90"),
-        operaciones_sin_derecho_deduccion=Decimal("10000"),
-        regularizacion_year=2025,
-        revision=_settlement_revision(),
-    )
-    assert diagnostic is None
-
-
-def test_advisory_reports_ingreso_direction_when_definitiva_below_provisional() -> None:
-    """A downward regularización is surfaced as an ingreso in the message."""
-    result, diagnostic = buildprorrata_regularizacion_advisory(
-        cuotas_soportadas_deducibles=Decimal("12000.00"),
-        prorrata_provisional_pct=Decimal("85"),
-        prorrata_definitiva_pct=Decimal("70"),
-        operaciones_sin_derecho_deduccion=Decimal("30000"),
-        regularizacion_year=2025,
-        revision=_settlement_revision(),
-    )
-    assert result.direccion is RegularizacionProrrataDireccion.INGRESO
-    assert diagnostic is not None
-    assert "ingreso" in diagnostic.message
-
-
-def test_zero_definitive_deduction_side_still_surfaces_casilla_44_advisory() -> None:
-    """A 0% definitive prorrata is visible as settlement regularizacion, not silence."""
-    result, diagnostic = buildprorrata_regularizacion_advisory(
-        cuotas_soportadas_deducibles=Decimal("12000.00"),
-        prorrata_provisional_pct=Decimal("80"),
-        prorrata_definitiva_pct=Decimal("0"),
-        operaciones_sin_derecho_deduccion=Decimal("100000"),
-        regularizacion_year=2026,
-        revision=_settlement_revision(),
-    )
-
-    assert result.prorrata_definitiva_pct == Decimal("0")
-    assert result.direccion is RegularizacionProrrataDireccion.INGRESO
-    assert diagnostic is not None
-    assert diagnostic.binding_source is BindingSourceKind.PRORRATA_REGULARIZACION
-    assert "casilla 44" in diagnostic.message
-
-
 def test_fully_taxable_art94_no_volume_default_stays_quiet() -> None:
     """No prorrata-volume evidence leaves the full-deduction default without advisory noise."""
     applicability = derive_prorrata_applicability()
@@ -444,20 +315,10 @@ def test_fully_taxable_art94_no_volume_default_stays_quiet() -> None:
         ejercicio=2026,
         revision=_settlement_revision(),
     )
-    result, regularizacion = buildprorrata_regularizacion_advisory(
-        cuotas_soportadas_deducibles=Decimal("12000.00"),
-        prorrata_provisional_pct=Decimal("100"),
-        prorrata_definitiva_pct=Decimal("100"),
-        operaciones_sin_derecho_deduccion=Decimal("0"),
-        regularizacion_year=2026,
-        revision=_settlement_revision(),
-    )
 
     assert applicability.applies is False
     assert applicability.evidence_kinds == ()
     assert missing_carry is None
-    assert regularizacion is None
-    assert result.prorrata_definitiva_pct == Decimal("100")
 
 
 def test_settlement_writeback_persists_observation_that_seeds_next_year_carried_entry(

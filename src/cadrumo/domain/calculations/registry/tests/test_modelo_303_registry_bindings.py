@@ -26,7 +26,7 @@ from .modelo_303_registry_constants import (
     _M303_PRORRATA_REGULARIZACION_BINDING,
     _M303_PRORRATA_REGULARIZACION_CASILLA,
     _M303_PRORRATA_REGULARIZACION_SOURCE_CASILLAS,
-    _M303_PRORRATA_REGULARIZACION_SOURCE_PERIODS,
+    _M303_PRORRATA_REGULARIZACION_SOURCE_PERIOD_SELECTION,
     _M303_RECORD_DESIGN_SOURCE_BY_REVISION,
     _WWW1_HOST,
     _WWW6_HOST,
@@ -302,7 +302,7 @@ def test_modelo_303_prorrata_regularizacion_binding_feeds_casilla_44(
     assert selector_as_dict(binding) == {
         "source_modelo": "303",
         "source_casilla_ids": _M303_PRORRATA_REGULARIZACION_SOURCE_CASILLAS,
-        "source_periods": _M303_PRORRATA_REGULARIZACION_SOURCE_PERIODS,
+        "source_period_selection": _M303_PRORRATA_REGULARIZACION_SOURCE_PERIOD_SELECTION,
         "regularizacion_output": "modelo_303_casilla_44",
     }
     assert binding_aggregation_op(binding) is BindingAggregationOp.SUM

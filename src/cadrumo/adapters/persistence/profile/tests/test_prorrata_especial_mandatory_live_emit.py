@@ -173,7 +173,6 @@ def _collect(period_token: str = _SETTLEMENT_PERIOD) -> tuple[CalculationSourceD
         period_token=period_token,
         filing_year=_EJERCICIO,
         bucket_id=_BUCKET,
-        observation_repository=CalculationObservationRepository(),
         prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET),
         transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET),
         bienes_inversion_repository=BienesInversionIvaRegisterRepository(bucket_id=_BUCKET),
@@ -307,6 +306,36 @@ def test_prompt_for_general_bucket_with_unclassified_row(
     assert "elect-especial" in diagnostic.message
     assert "1 operaciones sin clasificar" in diagnostic.message
     # No fabricated amount: the prompt carries no monetary figure.
+    assert not _parenthesised_amounts(diagnostic.message)
+
+
+def test_prompt_for_especial_bucket_with_unclassified_row(
+    tmp_path: Path,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """An ESPECIAL bucket with an unclassified deducible row prompts rather than fires.
+
+    The unclassified row has no art. 106 rule, so the especial deduction is
+    not derivable: it is never counted as common use to produce an amount.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET) as profile:
+        _save_txns(
+            profile,
+            (
+                _purchase(
+                    "buy-common", cuota=Decimal("210.00"), classification=InputClassification.from_registry("common")
+                ),
+                _purchase("buy-unclassified", cuota=Decimal("210.00"), classification=None),
+            ),
+        )
+        _declare(ProrrataRegisterRegime.from_registry("especial"), operation=operation, percentage=_GENERAL_PCT)
+        especial = _especial_diagnostics(_collect())
+
+    assert len(especial) == 1
+    diagnostic = especial[0]
+    assert diagnostic.reason == "prorrata_especial_check_unavailable"
+    assert "1 operaciones sin clasificar" in diagnostic.message
     assert not _parenthesised_amounts(diagnostic.message)
 
 

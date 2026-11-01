@@ -52,7 +52,7 @@ _M303_PRORRATA_BLOCK = f'''
 id = "{_M303_PRORRATA_ID}-planted-duplicate"
 provider = {{ kind = "prorrata_regularizacion", source_modelo = "303", source_casilla_ids = \
 ["iva.cuota-deducible-total", "iva.prorrata-volumen-con-derecho", "iva.prorrata-volumen-total", \
-"iva.prorrata-porcentaje"], source_periods = ["1T", "2T", "3T", "4T"], \
+"iva.prorrata-porcentaje"], source_period_selection = "filer_liquidation_cadence", \
 regularizacion_output = "modelo_303_casilla_44" }}
 value = {{ data_type = "money", channel = "decimal" }}
 legal_refs = ["ley-37-1992:art-104", "ley-37-1992:art-105", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]

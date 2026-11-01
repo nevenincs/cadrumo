@@ -526,6 +526,49 @@ def test_especial_all_common_reduces_to_general_byte_identical(
     assert especial_bytes == general_bytes
 
 
+def test_especial_refuses_an_unclassified_deducible_input(
+    tmp_path: Path,
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    """Prorrata especial refuses a deducible input with no art. 106 classification.
+
+    Art. 106.Uno routes each cuota by its use: full, none, or the general
+    percentage only for common-use inputs. An unclassified input has no rule,
+    so it is refused rather than treated as common use, which would deduct
+    the general percentage of a cuota that may be wholly deductible or wholly
+    non-deductible.
+    """
+    revision = published_authority_operation().revision_with_export_layouts("303", "2022")
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        objects = profile.repository
+        tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects)
+        tx_repo.save(
+            TransactionCatalogue.from_transactions(
+                (
+                    _fully_taxable_sale("sale-unclassified"),
+                    _classified_purchase("buy-common", InputClassification.from_registry("common")),
+                    _fully_taxable_purchase("buy-unclassified"),
+                ),
+            ),
+        )
+        _seed_register(objects, regime=ProrrataRegisterRegime.from_registry("especial"), percentage=Decimal("80"))
+        aggregation = aggregate_iva_ledger_observations_from_repositories(
+            bucket_id=_BUCKET_ID,
+            period=_PERIOD,
+            transaction_repository=tx_repo,
+            operation=authority_operation,
+        )
+        with pytest.raises(AggregationValidationError) as raised:
+            resolve_iva_ledger_binding_values(
+                revision,
+                aggregation.observations,
+                prorrata_apportionment=aggregation.prorrata_apportionment,
+                operation=authority_operation,
+            )
+
+    assert str(raised.value) == "aggregation.iva_ledger.errors.especial_missing_input_classification"
+
+
 # --- Sectores diferenciados (LIVA arts. 9.1.c / 101) --------------------------
 
 

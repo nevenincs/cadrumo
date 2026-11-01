@@ -48,7 +48,7 @@ _M303_PRORRATA_REGULARIZACION_SOURCE_CASILLAS: tuple[CasillaId, ...] = (
     validated_casilla_id("iva.prorrata-volumen-total"),
     validated_casilla_id("iva.prorrata-porcentaje"),
 )
-_M303_PRORRATA_REGULARIZACION_SOURCE_PERIODS = ("1T", "2T", "3T", "4T")
+_M303_PRORRATA_REGULARIZACION_SOURCE_PERIOD_SELECTION = "filer_liquidation_cadence"
 #: Modelo 390's four exact-year revisions. The revision-span split replaced the
 #: single open-ended `2010-y-siguientes` revision with one revision per design
 #: year, each claiming exactly one bundled diseño. Tests that assert a STRUCTURAL
@@ -575,7 +575,7 @@ def test_modelo_390_declares_prorrata_regularizacion_annual_field(revision_id: s
     assert selector_as_dict(binding) == {
         "source_modelo": "303",
         "source_casilla_ids": _M303_PRORRATA_REGULARIZACION_SOURCE_CASILLAS,
-        "source_periods": _M303_PRORRATA_REGULARIZACION_SOURCE_PERIODS,
+        "source_period_selection": _M303_PRORRATA_REGULARIZACION_SOURCE_PERIOD_SELECTION,
         "regularizacion_output": "modelo_390_regularizacion_anual",
     }
     assert binding_aggregation_op(binding) is BindingAggregationOp.SUM

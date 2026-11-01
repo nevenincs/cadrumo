@@ -331,14 +331,47 @@ application:
         taxpayer_nif_blank: Az adózó adóazonosítója (NIF) nem lehet üres, ha az IVA-tárca
           döntési kulcsát alkotja.
     prorrata_regularizacion:
-      advisory: 'Arányosítás véglegesítése a végleges százalék alapján (LIVA 104-105.
-        cikk) a %{year}. évre: ideiglenes arány %{provisional}% → végleges %{definitiva}%
-        (%{sentido}). Javasolt korrekció ide: %{target}: %{value}. Benyújtás előtt
-        hagyd jóvá az értéket.'
-      sentido_deduccion: további levonás
-      sentido_ingreso: befizetés
       target_casilla: '%{number}. rubrika'
       target_declared: a bejelentett korrekciós rubrika
+      unresolved:
+        current_year_inputs: 'Az arányosítás-korrekció kiszámításához szükség van
+          ezekre a tárgyévi értékekre: %{casillas}.'
+        provisional_missing: A %{year}. évi arányosítás-korrekcióhoz szükség van az
+          ideiglenes százalékra az arányosítási nyilvántartásodból vagy az előző év
+          benyújtott utolsó bevallásából.
+        regime_not_derived: A különleges arányosítás vagy az elkülönült ágazatok %{year}.
+          évi korrekciója még nem számolódik automatikusan; benyújtás előtt számold
+          ki magad a rovatot.
+        selector_unmapped: Az arányosítás-korrekció kötése egyetlen feloldó kimenethez
+          sem tartozik.
+        settlement_observation_ambiguous: Több utolsó 303-as bevallás is szerepel
+          (%{periods}); csak azt a gyakoriságot tartsd meg, amelyben ténylegesen benyújtottál.
+        settlement_observation_missing: 'Az éves arányosítás-korrekció a benyújtott
+          utolsó 303-as bevallást ismétli meg, de ehhez nincs benyújtott bevallás:
+          %{periods}.'
+        settlement_observation_refused: A benyújtott utolsó 303-as bevallás (%{periods})
+          olyan nyomtatványváltozatot visel, amely már nem egyezik a jogszabály által
+          kijelölttel; számold újra és nyújtsd be ismét.
+        settlement_observation_without_regularizacion: A benyújtott utolsó 303-as
+          bevallás (%{periods}) nem tartalmaz arányosítás-korrekciós értéket.
+        sin_derecho_volume_absent: A nyilvántartásod a(z) %{year}. évre arányosítást
+          alkalmaz, de a megadott volumenek nem mutatnak levonásra nem jogosító ügyletet;
+          ennek az esetnek a korrekciója nem számolódik automatikusan. Ellenőrizd
+          a volumeneket, vagy számold ki magad a rovatot.
+        source_period_cuotas_missing: 'A(z) %{period} bevallás a korrekcióhoz szükséges
+          levonható rovatok nélkül lett benyújtva: %{casillas}.'
+        source_period_ledger_divergence: A(z) %{period} bevallás %{filed} összeget
+          tartalmaz a(z) %{casilla} rovatban, de a nyilvántartás adója az ideiglenes
+          %{percentage}% mellett %{expected}; a korrekció előtt egyeztesd a nyilvántartást
+          a benyújtott bevallással.
+        source_periods_missing: 'A korrekció az év korábbi bevallási időszakaira terjed
+          ki, és ezek nincsenek benyújtva: %{periods}.'
+        source_periods_refused: 'Ezek a korábbi bevallások olyan nyomtatványváltozatot
+          viselnek, amely már nem egyezik a jogszabály által kijelölttel: %{periods};
+          számold újra és nyújtsd be őket ismét.'
+        volumes_undeclared: A(z) %{year}. évre arányosítás alkalmazandó, de az éves
+          ügyleti volumenek nincsenek megadva (%{casillas}); add meg őket, hogy a
+          végleges százalék kiszámítható legyen.
   filing:
     build_draft:
       errors:
