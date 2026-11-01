@@ -14,6 +14,7 @@ and the defect proof both hold in the same run.
 
 from __future__ import annotations
 
+import dataclasses
 import typing
 from datetime import date
 from typing import Literal
@@ -53,13 +54,12 @@ from ..binding_provider_registration import (
 from ..binding_temporal import FilingYearOffset, FilingYearOffsetByTargetPeriod, SameFilingYearPeriods
 from ..binding_terminal_origin import TerminalOriginClass, TerminalOriginExpectation
 from ..binding_value_contract import BindingValueChannel
-from ..bindings import validate_binding_selector_shape
 from ..errors import RegistryValidationError
 from ..ids import RevisionId
 from ..invoice_bindings import PayableInvoiceProvider
 from ..ledger_iva_bindings import LedgerIvaProvider
 from ..manual_input_selector import ManualInputProvider
-from ..profile_bindings import ProfileProvider, validate_profile_binding
+from ..profile_bindings import ProfileProvider
 from ..relation_prefill_bindings import RelationPrefillProvider
 from ..schema import BindingDefinition
 from ..schema_base import CasillaDataType
@@ -151,18 +151,30 @@ def test_every_provider_union_member_has_a_registration() -> None:
     assert frozenset(BINDING_PROVIDER_REGISTRATIONS) == member_kinds
 
 
-def test_every_kind_enrols_a_build_time_validator() -> None:
-    """No kind passes through a no-op slot: each row names the gate for its cross-invariants."""
-    assert all(callable(registration.validator) for registration in BINDING_PROVIDER_REGISTRATIONS.values())
+@pytest.mark.parametrize("kind", sorted(BINDING_PROVIDER_REGISTRATIONS, key=lambda kind: kind.value))
+def test_every_registration_enrols_a_callable_validator(kind: BindingSourceKind) -> None:
+    """Each kind is gated by its own enrolled validator; none relies on the model alone."""
+    registration = registration_for(kind)
+
+    assert callable(registration.validator)
+    assert validator_for(kind) is registration.validator
 
 
-def test_a_well_formed_profile_binding_passes_its_enrolled_validator() -> None:
-    """The profile row enrols the profile gate, and a scalar text binding earns no diagnostic."""
-    registration = registration_for(BindingSourceKind.PROFILE)
+def test_a_registration_without_a_validator_is_refused() -> None:
+    """The table cannot exist with a kind whose validator is missing."""
+    profile = registration_for(BindingSourceKind.PROFILE)
+    unvalidated = dataclasses.replace(profile, validator=None)
+    fabricated = tuple(
+        unvalidated if registration.kind is profile.kind else registration
+        for registration in BINDING_PROVIDER_REGISTRATIONS.values()
+    )
 
-    assert registration.validator is validate_profile_binding
-    assert validator_for(BindingSourceKind.PROFILE) is validate_profile_binding
-    assert validate_binding_selector_shape(_binding(ProfileProvider(profile_key="declarante.nif"))) == []
+    with pytest.raises(RegistryValidationError, match="must enrol a build-time validator"):
+        validate_binding_provider_registrations(fabricated)
+
+    assert set(validate_binding_provider_registrations(tuple(BINDING_PROVIDER_REGISTRATIONS.values()))) == set(
+        BINDING_PROVIDER_REGISTRATIONS,
+    )
 
 
 @pytest.mark.parametrize("kind", sorted(_DEFERRED_KINDS, key=lambda kind: kind.value))
@@ -632,14 +644,14 @@ def test_a_pagos_fraccionados_ingresados_fold_reading_its_result_pair_is_accepte
     binding = _binding(_pagos_relation_provider("19", "18"), op=BindingAggregationOp.PAGOS_FRACCIONADOS_INGRESADOS)
 
     assert validate_binding_against_registration(binding) == ()
-    assert validate_binding_selector_shape(binding) == []
+    assert validator_for(binding.source)(binding) == []
 
 
 def test_a_pagos_fraccionados_ingresados_fold_missing_the_previously_paid_casilla_is_refused() -> None:
     """With only the result casilla the earlier payment of a complementaria would be lost."""
     binding = _binding(_pagos_relation_provider("19"), op=BindingAggregationOp.PAGOS_FRACCIONADOS_INGRESADOS)
 
-    diagnostics = validate_binding_selector_shape(binding)
+    diagnostics = validator_for(binding.source)(binding)
 
     assert len(diagnostics) == 1
     assert "'pagos_fraccionados_ingresados' must read exactly 2 source casilla(s)" in diagnostics[0]
@@ -649,7 +661,7 @@ def test_a_sum_fold_over_two_source_casillas_is_refused() -> None:
     """A sum folds one casilla per filing; a second declared casilla would silently be dropped."""
     binding = _binding(_pagos_relation_provider("19", "18"), op=BindingAggregationOp.SUM)
 
-    diagnostics = validate_binding_selector_shape(binding)
+    diagnostics = validator_for(binding.source)(binding)
 
     assert len(diagnostics) == 1
     assert "'sum' must read exactly 1 source casilla(s)" in diagnostics[0]
