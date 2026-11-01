@@ -75,9 +75,9 @@ const meta = {
     onRevoke: NOOP,
     onRefresh: NOOP,
   },
-  render: (args: Args) => (
+  render: (args: Args, { globals }) => (
     <div className="w-settings max-w-full">
-      <AgentAccess {...args} />
+      <AgentAccess {...args} locale={String(globals.locale)} />
     </div>
   ),
 } satisfies Meta<Args>;

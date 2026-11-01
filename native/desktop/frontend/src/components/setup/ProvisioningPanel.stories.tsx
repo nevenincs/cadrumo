@@ -12,6 +12,7 @@ import {
 import type { SetupShape } from "../../dev/setupFixture";
 import { catalogLanes } from "../../shell/localModelLanes";
 import { ProvisioningPanel } from "./ProvisioningPanel";
+import { SOURCE_LOCALE, useStrings } from "../../shell/strings";
 
 // The provisioning panel over the scenario host's synthetic setup: one row
 // per element the made-up engine reports, each with its own status, size,
@@ -34,6 +35,7 @@ type Args = {
 };
 
 function Screen({ shape, latencyMs, starts }: Args) {
+  const { locale = SOURCE_LOCALE } = useStrings();
   // One made-up computer: a model the setup downloads is one the agent's
   // catalog then reports held.
   const models = useMemo(() => fixtureModelPresence(), []);
@@ -47,7 +49,7 @@ function Screen({ shape, latencyMs, starts }: Args) {
       openPanel
     >
       <ProvisioningPanel
-        locale="en"
+        locale={locale}
         onCopyDetails={() => undefined}
         localAi={localAi}
       />

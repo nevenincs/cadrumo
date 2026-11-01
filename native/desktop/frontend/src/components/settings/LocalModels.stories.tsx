@@ -9,6 +9,7 @@ import { LocalModels } from "./LocalModels";
 import { ProviderSettings } from "./ProviderSettings";
 import { PROVIDERS } from "./ProviderSettings.stories";
 import type { ProviderStatus } from "./types";
+import { SOURCE_LOCALE, useStrings } from "../../shell/strings";
 
 // The real provider settings of the made-up lane that runs on this computer,
 // opened, with the real model list: the agent's recommended models and the
@@ -74,6 +75,7 @@ function listHost({ added, staleAfterRead }: Scene): LocalModelHost {
 }
 
 function Settings(scene: Scene) {
+  const { locale = SOURCE_LOCALE } = useStrings();
   const host = useMemo(() => listHost(scene), [scene]);
   const root = useRef<HTMLDivElement>(null);
   const [on, setOn] = useState(true);
@@ -97,7 +99,7 @@ function Settings(scene: Scene) {
           onReset={() => undefined}
           onRefresh={() => undefined}
           localModels={() => (
-            <LocalModels lane={LOCAL_LANE} host={host} locale="en" />
+            <LocalModels lane={LOCAL_LANE} host={host} locale={locale} />
           )}
         />
       </div>

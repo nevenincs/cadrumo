@@ -3,100 +3,83 @@ import type { ComponentProps } from "react";
 import { userEvent } from "storybook/test";
 import { APPEARANCE_NOTE, NOOP } from "./Composer.stories";
 import { HistoryList } from "./HistoryList";
+import { conversationGroups } from "../../shell/agentViews";
+import type { AgentConversationRecord } from "../../shell/agentViews";
 import type { ConversationGroup } from "./types";
 
 // Appearance only: fixed conversations under fixed headings. Archive,
 // Restore and Delete do nothing here; the confirmation is opened by the
 // story's own press.
 
-export const ACTIVE_GROUPS: ConversationGroup[] = [
-  {
-    heading: "Today",
-    conversations: [
-      {
-        id: "c1",
-        title: "IVA del tercer trimestre",
-        lastActivityLabel: "2 hours ago",
-        documentCount: 4,
-        archived: false,
-        current: true,
-      },
-      {
-        id: "c2",
-        title: "Facturas de septiembre sin clasificar",
-        lastActivityLabel: "5 hours ago",
-        documentCount: 23,
-        archived: false,
-      },
-    ],
-  },
-  {
-    heading: "Previous 7 days",
-    conversations: [
-      {
-        id: "c3",
-        title: "Plazo del modelo 130",
-        lastActivityLabel: "3 days ago",
-        documentCount: 0,
-        archived: false,
-      },
-      {
-        id: "c4",
-        title:
-          "Gastos deducibles del vehículo y kilometraje del segundo semestre",
-        lastActivityLabel: "6 days ago",
-        documentCount: 2,
-        archived: false,
-      },
-    ],
-  },
-  {
-    heading: "Earlier",
-    conversations: [
-      {
-        id: "c5",
-        title: "Retenciones de alquiler",
-        lastActivityLabel: "5 weeks ago",
-        documentCount: 1,
-        archived: false,
-      },
-    ],
-  },
-];
+// The conversations as the service lists them, grouped and worded by the same
+// function the column uses, so headings and "ago" labels follow the language
+// shown. The clock is fixed: the specimen never moves.
+const NOW = new Date(2026, 9, 30, 12, 0, 0);
+const HOURS = 3_600_000;
+const DAYS = 24 * HOURS;
+const conversation = (
+  id: string,
+  title: string,
+  before: number,
+  archived = false,
+): AgentConversationRecord => ({
+  id,
+  title,
+  last_active_at: new Date(NOW.getTime() - before).toISOString(),
+  archived,
+});
 
-const ARCHIVED_GROUPS: ConversationGroup[] = [
-  {
-    heading: "Earlier",
-    conversations: [
-      {
-        id: "x1",
-        title: "Renta 2025",
-        lastActivityLabel: "4 months ago",
-        documentCount: 9,
-        archived: true,
-      },
-      {
-        id: "x2",
-        title: "Alta en el censo",
-        lastActivityLabel: "7 months ago",
-        documentCount: 0,
-        archived: true,
-      },
-    ],
-  },
+const RECORDS: readonly AgentConversationRecord[] = [
+  conversation("c1", "IVA del tercer trimestre", 2 * HOURS),
+  conversation("c2", "Facturas de septiembre sin clasificar", 5 * HOURS),
+  conversation("c3", "Plazo del modelo 130", 30 * HOURS),
+  conversation(
+    "c4",
+    "Gastos deducibles del vehículo y kilometraje del segundo semestre",
+    6 * DAYS,
+  ),
+  conversation("c5", "Retenciones de alquiler", 35 * DAYS),
+  conversation("x1", "Renta 2025", 120 * DAYS, true),
+  conversation("x2", "Alta en el censo", 210 * DAYS, true),
 ];
+const DOCUMENT_COUNTS: Readonly<Record<string, number>> = {
+  c1: 4,
+  c2: 23,
+  c3: 0,
+  c4: 2,
+  c5: 1,
+  x1: 9,
+  x2: 0,
+};
 
-type Args = ComponentProps<typeof HistoryList>;
+/** The history's groups in a language, active or archived. */
+export const historyGroups = (
+  locale: string,
+  archived = false,
+): ConversationGroup[] =>
+  conversationGroups(RECORDS, {
+    locale,
+    archived,
+    currentId: "c1",
+    untitled: "",
+    now: NOW,
+    documentCounts: DOCUMENT_COUNTS,
+  });
+
+// The groups come from the language shown, so a story says only whether the
+// history has any.
+type Args = Omit<ComponentProps<typeof HistoryList>, "groups"> & {
+  empty?: boolean;
+};
 
 const meta = {
   title: "Shell/Agent/History list",
-  excludeStories: /^[A-Z][A-Z_]*$/,
+  excludeStories: /^(?:[A-Z][A-Z_]*|historyGroups)$/,
   parameters: {
     fill: true,
     docs: { description: { component: APPEARANCE_NOTE } },
   },
   args: {
-    groups: ACTIVE_GROUPS,
     archivedCount: 2,
     onToggleArchived: NOOP,
     onOpen: NOOP,
@@ -104,10 +87,17 @@ const meta = {
     onRestore: NOOP,
     onDelete: NOOP,
   },
-  render: (args: Args) => (
+  render: ({ empty, ...args }: Args, { globals }) => (
     <div className="flex h-dvh w-(--agent-w) flex-col border-r bg-background">
       <p className="px-3 pt-3 text-xs text-faint">{APPEARANCE_NOTE}</p>
-      <HistoryList {...args} />
+      <HistoryList
+        {...args}
+        groups={
+          empty
+            ? []
+            : historyGroups(String(globals.locale), args.viewingArchived)
+        }
+      />
     </div>
   ),
 } satisfies Meta<Args>;
@@ -128,11 +118,11 @@ export const DeleteConfirmation: Story = {
 
 export const Archived: Story = {
   name: "Archived view",
-  args: { groups: ARCHIVED_GROUPS, viewingArchived: true },
+  args: { viewingArchived: true },
 };
 
 export const Empty: Story = {
-  args: { groups: [], archivedCount: 0 },
+  args: { empty: true, archivedCount: 0 },
 };
 
 export const NoSearchResults: Story = {

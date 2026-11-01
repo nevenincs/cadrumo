@@ -3,6 +3,7 @@ import { ProvisioningStage } from "../../dev/ProvisioningStage";
 import type { SetupShape } from "../../dev/setupFixture";
 import { ProvisioningPanel } from "./ProvisioningPanel";
 import { SetupOffer } from "./SetupOffer";
+import { SOURCE_LOCALE, useStrings } from "../../shell/strings";
 
 // What a feature that could not run offers beside its refusal, over the
 // scenario host's synthetic setup: the component by name and the way into
@@ -11,12 +12,13 @@ import { SetupOffer } from "./SetupOffer";
 // offered.
 
 function Screen({ shape, action }: { shape: SetupShape; action: string }) {
+  const { locale = SOURCE_LOCALE } = useStrings();
   return (
     <ProvisioningStage shape={shape} latencyMs={0}>
       <div className="grid w-settings gap-3 bg-popover p-3.5">
         <SetupOffer action={action} />
       </div>
-      <ProvisioningPanel locale="en" onCopyDetails={() => undefined} />
+      <ProvisioningPanel locale={locale} onCopyDetails={() => undefined} />
     </ProvisioningStage>
   );
 }
