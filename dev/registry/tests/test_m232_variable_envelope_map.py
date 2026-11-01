@@ -42,6 +42,7 @@ _DESIGNS = (
 )
 
 
+@pytest.mark.usefixtures("governed_fact_scope")
 @pytest.mark.parametrize(("epoch", "revision", "source_ref", "source_sha256", "total_row"), _DESIGNS)
 def test_m232_complete_source_join_and_envelope(
     epoch: str, revision: str, source_ref: str, source_sha256: str, total_row: int

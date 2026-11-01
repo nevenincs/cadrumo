@@ -331,6 +331,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.entrypoints.tui.ledger.actividad_asset_inputs.InputRefusedError",
+        ErrorCode(
+            code="REFUSED_TUI_ACTIVITY_ASSET_INPUT",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_cli_boundary",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.entrypoints.tui.installation.acts.ActInputError",
         ErrorCode(
             code="REFUSED_TUI_INSTALLATION_ACT_INPUT",
