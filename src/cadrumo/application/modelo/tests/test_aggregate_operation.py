@@ -254,6 +254,18 @@ def _executor_context(
     )
 
 
+def _pin_profile_and_preparation(
+    monkeypatch: pytest.MonkeyPatch, executor: ModeloAggregateExecutor, prepared: object
+) -> None:
+    """Pin the active profile in both guards and make the executor prepare the supplied capture."""
+    monkeypatch.setattr(
+        "cadrumo.application.modelo.aggregate_operation.require_active_bucket_id",
+        lambda: str(_PROFILE),
+    )
+    monkeypatch.setattr("cadrumo.application.operations.profile_guard.require_active_bucket_id", lambda: str(_PROFILE))
+    monkeypatch.setattr(executor, "_prepare", lambda *_args: prepared)
+
+
 def _terminal_receipt(
     *,
     effect: OperationEffect,
@@ -622,12 +634,7 @@ def test_ledger_capture_reports_updated_or_replay_without_releasing_rows(
         cadence=object(),
         calculation_rows=None,
     )
-    monkeypatch.setattr(
-        "cadrumo.application.modelo.aggregate_operation.require_active_bucket_id",
-        lambda: str(_PROFILE),
-    )
-    monkeypatch.setattr("cadrumo.application.operations.profile_guard.require_active_bucket_id", lambda: str(_PROFILE))
-    monkeypatch.setattr(executor, "_prepare", lambda *_args: prepared)
+    _pin_profile_and_preparation(monkeypatch, executor, prepared)
 
     def aggregate_then_advance(command: PerModeloAggregationCommand, *, operation: PinnedAuthorityOperation):
         result = aggregate_per_modelo(command, operation=operation)
@@ -694,12 +701,7 @@ def test_ledger_source_conflict_refuses_and_ambiguous_write_keeps_effect_unknown
         cadence=object(),
         calculation_rows=None,
     )
-    monkeypatch.setattr(
-        "cadrumo.application.modelo.aggregate_operation.require_active_bucket_id",
-        lambda: str(_PROFILE),
-    )
-    monkeypatch.setattr("cadrumo.application.operations.profile_guard.require_active_bucket_id", lambda: str(_PROFILE))
-    monkeypatch.setattr(executor, "_prepare", lambda *_args: prepared)
+    _pin_profile_and_preparation(monkeypatch, executor, prepared)
 
     class _Producer:
         def __init__(self, *, service: object) -> None:
@@ -760,12 +762,7 @@ def test_catalogue_revision_change_before_commit_refuses_without_producer_write(
         cadence=object(),
         calculation_rows=None,
     )
-    monkeypatch.setattr(
-        "cadrumo.application.modelo.aggregate_operation.require_active_bucket_id",
-        lambda: str(_PROFILE),
-    )
-    monkeypatch.setattr("cadrumo.application.operations.profile_guard.require_active_bucket_id", lambda: str(_PROFILE))
-    monkeypatch.setattr(executor, "_prepare", lambda *_args: prepared)
+    _pin_profile_and_preparation(monkeypatch, executor, prepared)
 
     result = asyncio.run(executor.execute(request, context))
 
