@@ -81,12 +81,14 @@ def test_real_english_cli_help_keeps_glosses_under_spelling_review(monkeypatch: 
 @pytest.mark.parametrize("locale", ["en", "es", "ca", "hu"])
 def test_amendment_and_provenance_help_mark_real_wire_values(locale: str) -> None:
     choices = tr("cli.app.modelo.work.amendment_kind_help", locale=locale)
+    wizard_choices = tr("cli.app.modelo.work.amend_wizard_kind_help", locale=locale)
     for kind in CalculationRevisionAmendmentKind:
         assert f"`{kind.value}`" in choices
+        assert f"`{kind.value}`" in wizard_choices
     provenance = tr("cli.ledger.classify.apply_help", locale=locale)
     assert "`llm:`" in provenance
     assert validate_classified_by_shape("llm:example") == "llm:example"
-    filtered, _excluded = filtered_translation_text(f"{choices} {provenance} misspeling")
+    filtered, _excluded = filtered_translation_text(f"{choices} {wizard_choices} {provenance} misspeling")
     assert "misspeling" in translation_words(filtered)
     assert not {kind.value for kind in CalculationRevisionAmendmentKind}.intersection(translation_words(filtered))
     assert "llm" not in translation_words(filtered)

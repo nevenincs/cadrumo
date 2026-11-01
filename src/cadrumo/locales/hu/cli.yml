@@ -1473,8 +1473,8 @@ cli:
         amend_wizard_help: 'Egyszerű nyelven végigvezeti egy már benyújtott bevallás
           helyesbítésén: mely rovatok változtak, a javított értékek és a bevallás
           típusa, majd rögzíti'
-        amend_wizard_kind_help: a complementaria hozzáadódik a korábban bevallott
-          adóhoz; a sustitutiva teljesen felváltja a korábbi bevallást; a rectificativa
+        amend_wizard_kind_help: a `complementaria` hozzáadódik a korábban bevallott
+          adóhoz; a `sustitutiva` teljesen felváltja a korábbi bevallást; a `rectificativa`
           az egységesített helyesbítési mechanizmus azoknál a nyomtatványoknál, amelyeknél
           a rendelet ezt bevezette (pl. Modelo 303 a 2023-as adóévtől).
         amend_wizard_kind_prompt: Helyesbítés típusa (%{choices})

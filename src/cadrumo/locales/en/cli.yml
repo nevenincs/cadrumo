@@ -1392,10 +1392,10 @@ cli:
         amend_wizard_help: 'Guide the correction of a declaration already filed, in
           plain language: which boxes changed, the corrected values and the declaration
           kind, then record it'
-        amend_wizard_kind_help: complementaria adds to the prior tax due; sustitutiva
-          fully replaces the prior filing; rectificativa is the unified correction
+        amend_wizard_kind_help: '`complementaria` adds to the prior tax due; `sustitutiva`
+          fully replaces the prior filing; `rectificativa` is the unified correction
           mechanism for modelos whose order implements it (e.g. Modelo 303 from filing
-          year 2023).
+          year 2023).'
         amend_wizard_kind_prompt: Amendment kind (%{choices})
         amend_wizard_m303_rectificativa_motive_prompt: Modelo 303 rectificativa motive
           (%{choices})

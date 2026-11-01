@@ -1501,10 +1501,10 @@ cli:
         amend_wizard_help: 'Guía la corrección de una declaración ya presentada en
           lenguaje sencillo: qué casillas cambiaron, los valores corregidos y el tipo
           de declaración, y la registra'
-        amend_wizard_kind_help: complementaria añade a la cuota previamente declarada;
-          sustitutiva reemplaza por completo la declaración anterior; rectificativa
+        amend_wizard_kind_help: '`complementaria` añade a la cuota previamente declarada;
+          `sustitutiva` reemplaza por completo la declaración anterior; `rectificativa`
           es el mecanismo unificado de corrección para los modelos cuya orden lo implementa
-          (p. ej. Modelo 303 desde el ejercicio 2023).
+          (p. ej. Modelo 303 desde el ejercicio 2023).'
         amend_wizard_kind_prompt: Tipo de rectificación (%{choices})
         amend_wizard_m303_rectificativa_motive_prompt: Motivo de la rectificativa
           del modelo 303 (%{choices})

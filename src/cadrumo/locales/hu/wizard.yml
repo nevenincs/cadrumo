@@ -338,13 +338,13 @@ wizard:
         help: IRPF jövedelemkategória; add meg a --irpf-income-categories kapcsolót
           kategóriánként egyszer
       irpf-special-regime:
-        help: IRPF különleges adózási rend. "general" a legtöbb adózó számára. "impatriado"
+        help: IRPF különleges adózási rend. `general` a legtöbb adózó számára. `impatriado`
           Spanyolországba áthelyezett és a Beckham-törvény szerinti adózást (LIRPF
           93. cikkely) választó munkavállalók számára, az áthelyezés utáni első 6
           évre.
       irpf-special-regime-start-date:
         help: A munkavállaló kiküldött-adózásba lépésének dátuma (ÉÉÉÉ-HH-NN). Csak
-          akkor, ha az irpf-special-regime értéke "impatriado". RIRPF 116. cikkely.
+          akkor, ha az irpf-special-regime értéke `impatriado`. RIRPF 116. cikkely.
           Az adózási rend a 6. naptári év végén jár le.
       iva-cash-accounting-regime-enrolled:
         help: Az IVA pénzforgalmi különös szabályozásába való bejelentkezés megadása.

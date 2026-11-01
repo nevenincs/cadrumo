@@ -313,12 +313,12 @@ wizard:
       irpf-income-categories:
         help: IRPF income category; pass --irpf-income-categories once per category
       irpf-special-regime:
-        help: IRPF special regime. "general" for most taxpayers. "impatriado" for
+        help: IRPF special regime. `general` for most taxpayers. `impatriado` for
           workers who relocated to Spain and elected the Beckham Law regime (Art.
           93 LIRPF), available for the first 6 years after relocation.
       irpf-special-regime-start-date:
         help: Date the worker elected the impatriate regime (YYYY-MM-DD). Only when
-          irpf-special-regime is "impatriado". RIRPF Art. 116. The regime expires
+          irpf-special-regime is `impatriado`. RIRPF Art. 116. The regime expires
           at the end of the 6th calendar year.
       iva-cash-accounting-regime-enrolled:
         help: Declare enrolment in the special IVA cash-accounting regime.

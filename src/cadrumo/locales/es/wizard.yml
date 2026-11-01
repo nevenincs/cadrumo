@@ -322,12 +322,12 @@ wizard:
         help: Categoría de renta IRPF; indica --irpf-income-categories una vez por
           categoría
       irpf-special-regime:
-        help: Régimen especial IRPF. "general" para la mayoría de contribuyentes.
-          "impatriado" para trabajadores desplazados a España acogidos a la Ley Beckham
+        help: Régimen especial IRPF. `general` para la mayoría de contribuyentes.
+          `impatriado` para trabajadores desplazados a España acogidos a la Ley Beckham
           (Art. 93 LIRPF), aplicable los primeros 6 años tras el traslado.
       irpf-special-regime-start-date:
         help: Fecha en que el trabajador optó por el régimen de impatriados (AAAA-MM-DD).
-          Solo cuando irpf-special-regime es "impatriado". RIRPF Art. 116. El régimen
+          Solo cuando irpf-special-regime es `impatriado`. RIRPF Art. 116. El régimen
           expira al finalizar el 6.º año natural.
       iva-cash-accounting-regime-enrolled:
         help: Declara la inscripción en el régimen especial del criterio de caja del
