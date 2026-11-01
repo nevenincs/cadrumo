@@ -655,4 +655,5 @@ profile:
       del model
     numeric_field_invalid: El camp numèric no és vàlid
     required_field_missing: Falta un camp obligatori del perfil.
+    text_too_long: Text massa llarg
     unknown_field: Camp desconegut

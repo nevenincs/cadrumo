@@ -2497,6 +2497,8 @@ application:
         {maximum_utf8_bytes} UTF-8 bytes; received {utf8_byte_count}.
       profile_proof_cancelled: The profile password check was cancelled before it
         finished.
+      profile_text_too_long: The field %{field} holds at most %{limit} characters;
+        shorten it.
       recovery_already_enrolled: This profile already has a recovery code. Disable
         it first to issue a new one.
       recovery_code_rejected: The recovery code is not correct; the passphrase is

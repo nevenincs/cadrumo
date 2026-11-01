@@ -653,4 +653,5 @@ profile:
     modelo_work_profile_baseline_missing: Modelo work profile baseline is missing
     numeric_field_invalid: Numeric field is invalid
     required_field_missing: Required profile field missing.
+    text_too_long: Text too long
     unknown_field: Unknown field

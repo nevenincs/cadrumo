@@ -156,12 +156,22 @@ class ProfileFieldDefinition(BaseModel):
     legal_refs: tuple[_Description, ...] = Field(default=())
     minimum: Decimal | None = None
     maximum: Decimal | None = None
+    #: The longest text a string field holds, in characters, for a field the
+    #: filing path carries into a bounded record.
+    max_length: int | None = Field(default=None, gt=0)
 
     @field_validator("type", mode="before")
     @classmethod
     @pydantic_validation_boundary
     def _parse_type(cls, value: object) -> object:
         return _parse_str_enum(ProfileFieldType, value)
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _max_length_bounds_text(self) -> ProfileFieldDefinition:
+        if self.max_length is not None and self.type is not ProfileFieldType.STRING:
+            raise UserProfileValidationError("max_length is declared only on a string field")
+        return self
 
     @field_validator("code_list", mode="before")
     @classmethod
@@ -537,6 +547,20 @@ def numeric_value_refusal(field: ProfileFieldDefinition, value: object) -> str |
     return None
 
 
+def text_length_refusal(field: ProfileFieldDefinition, value: object) -> str | None:
+    """Return why ``value`` overruns ``field``'s declared length, or ``None``.
+
+    The message names the field and the counts and never quotes the value, because
+    the bounded fields hold taxpayer names and contact details.
+    """
+    if field.max_length is None or not isinstance(value, str):
+        return None
+    observed = len(value.strip())
+    if observed <= field.max_length:
+        return None
+    return f"{field.key} holds {observed} characters and admits at most {field.max_length}"
+
+
 def boolean_value_refusal(field: ProfileFieldDefinition, value: object) -> str | None:
     """Return why ``value`` fails ``field``'s boolean declaration, or ``None``.
 
@@ -598,6 +622,7 @@ class ProfileValueRefusalKind(StrEnum):
     NUMERIC = "numeric"
     BOOLEAN = "boolean"
     EMAIL = "email"
+    TEXT_LENGTH = "text_length"
 
 
 class ProfileValueRefusal(BaseModel):
@@ -744,6 +769,7 @@ def profile_value_refusal(field: ProfileFieldDefinition, value: object) -> Profi
         (ProfileValueRefusalKind.BOOLEAN, boolean_value_refusal(field, value)),
         (ProfileValueRefusalKind.DATE, date_value_refusal(field, value)),
         (ProfileValueRefusalKind.EMAIL, email_value_refusal(field, value)),
+        (ProfileValueRefusalKind.TEXT_LENGTH, text_length_refusal(field, value)),
     ):
         if refusal is not None:
             return ProfileValueRefusal(kind=kind, message=refusal)

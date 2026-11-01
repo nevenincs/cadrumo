@@ -8,6 +8,7 @@ The name's alphabet is read from the bundled XSD, never from the code under test
 
 from __future__ import annotations
 
+import json
 import re
 from collections.abc import Iterator
 from decimal import Decimal
@@ -104,6 +105,85 @@ def _verified_work_unit() -> str:
     verified = invoke_cached_cli(["--format", "json", "app", "modelo", "work", "verify", revision_id])
     assert verified.exit_code == 0, verified.output
     return work_unit_id
+
+
+def _json_error(output: str) -> dict[str, object]:
+    return json.loads(output)["error"]
+
+
+def test_a_stored_surname_past_the_profile_bound_refuses_new_work_naming_the_fact(
+    runtime_profile: TestRuntimeProfile,
+) -> None:
+    surnames = "Pérez" * 80
+    _seed(runtime_profile, name="Ana", surnames=surnames)
+
+    result = invoke_cached_cli(
+        [
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "work",
+            "create",
+            "--modelo",
+            "100",
+            "--year",
+            str(_FILING_YEAR),
+            "--period",
+            _PERIOD,
+            "--revision",
+            str(_FILING_YEAR),
+        ]
+    )
+
+    assert result.exit_code != 0
+    error = _json_error(result.output)
+    assert error["code"] == "REFUSED_PROFILE_SCHEMA_VALIDATION", error
+    assert error["category"] == "REFUSED", error
+    assert "Apellidos" in str(error["message"]), error
+    assert "256" in str(error["message"]), error
+    assert surnames not in result.output
+
+
+def test_a_surname_stored_past_the_bound_after_work_began_refuses_calculate_naming_the_fact(
+    runtime_profile: TestRuntimeProfile,
+) -> None:
+    _seed(runtime_profile, name="Ana", surnames="Pérez Núñez")
+    work_unit_id = create_modelo_work_unit_via_cli(
+        modelo="100", filing_year=_FILING_YEAR, period=_PERIOD, revision=str(_FILING_YEAR)
+    )
+    surnames = "Pérez" * 80
+    _seed(runtime_profile, name="Ana", surnames=surnames)
+
+    result = invoke_cached_cli(
+        ["--format", "json", "app", "modelo", "work", "calculate", work_unit_id, *_CALCULATE_FLAGS]
+    )
+
+    assert result.exit_code != 0
+    error = _json_error(result.output)
+    assert error["code"] == "REFUSED_PROFILE_SCHEMA_VALIDATION", error
+    assert error["category"] == "REFUSED", error
+    assert "Apellidos" in str(error["message"]), error
+    assert "256" in str(error["message"]), error
+    assert surnames not in result.output
+
+
+@pytest.mark.parametrize("surnames_length", [77, 252])
+def test_a_name_past_the_official_box_refuses_export_naming_the_box(
+    runtime_profile: TestRuntimeProfile, tmp_path: Path, surnames_length: int
+) -> None:
+    """Composed with a space and ``ANA``, these make the 81 and 256 character ends of the range."""
+    surnames = "P" * surnames_length
+    _seed(runtime_profile, name="Ana", surnames=surnames)
+    output = tmp_path / "modelo-100.xml"
+
+    result = invoke_cached_cli(["app", "modelo", "export", _verified_work_unit(), "--output", str(output)])
+
+    assert result.exit_code != 0
+    assert "DP_APENOM_D" in result.output
+    assert "application.filing" not in result.output
+    assert surnames not in result.output
+    assert not output.exists()
 
 
 def test_a_mixed_case_accented_name_exports_in_capitals(runtime_profile: TestRuntimeProfile, tmp_path: Path) -> None:

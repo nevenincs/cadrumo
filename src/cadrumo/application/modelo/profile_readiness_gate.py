@@ -55,7 +55,11 @@ from ..user_profile.preflight import (
 )
 from ..user_profile.profile_record_repository import ProfileRecordRepository, take_invocation_profile_record
 from ..user_profile.projections import projection_for_taxpayer, record_to_path_values
-from ..user_profile.validation import MODELO_WORK_PROFILE_BASELINE_MISSING_CODE, ProfileValidationService
+from ..user_profile.validation import (
+    MODELO_WORK_PROFILE_BASELINE_MISSING_CODE,
+    ProfileValidationService,
+    refuse_overlong_profile_text,
+)
 from .action_errors import ModeloProfileReadinessError
 from .work_profile import ModeloWorkProfile
 
@@ -509,6 +513,7 @@ def _require_profile_filing_ready(
             missing.append(requirement)
     if not missing:
         return
+    refuse_overlong_profile_text(record, schema=profile_decode_context.schema)
     # These are public schema labels/citations, not the private wizard question
     # ids stored under "missing" and stripped from recorded runtime errors.
     raise ModeloProfileReadinessError(

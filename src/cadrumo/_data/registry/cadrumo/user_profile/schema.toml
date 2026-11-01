@@ -81,6 +81,7 @@ key = "name"
 type = "string"
 required = false
 sensitivity = "identity"
+max_length = 256
 description = "Declarant given name or display name."
 model_selectors = ["name", "modelo_100"]
 legal_refs = ["orden-hac-242-2025:art-3", "orden-hac-277-2026:art-3"]
@@ -90,6 +91,7 @@ key = "surnames"
 type = "string"
 required = false
 sensitivity = "identity"
+max_length = 256
 description = "Declarant surnames for person filings."
 model_selectors = ["surnames", "modelo_100"]
 legal_refs = ["orden-hac-242-2025:art-3", "orden-hac-277-2026:art-3"]
@@ -99,6 +101,7 @@ key = "legal_name"
 type = "string"
 required = false
 sensitivity = "identity"
+max_length = 256
 description = "Legal or company name for entity-style export headers."
 
 [[sections.fields]]
@@ -253,6 +256,7 @@ legal_refs = ["rdleg-1-2004:art-6.3"]
 [[sections.fields]]
 key = "contact_person_phone"
 type = "string"
+max_length = 256
 required = false
 sensitivity = "identity"
 effective_dated = true
@@ -262,6 +266,7 @@ model_selectors = ["contact.contact_person_phone"]
 [[sections.fields]]
 key = "contact_person_name"
 type = "string"
+max_length = 256
 required = false
 sensitivity = "identity"
 effective_dated = true

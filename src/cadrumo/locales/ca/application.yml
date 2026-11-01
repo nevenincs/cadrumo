@@ -2634,6 +2634,8 @@ application:
         com a màxim {maximum_utf8_bytes} bytes UTF-8; se n'han rebut {utf8_byte_count}.
       profile_proof_cancelled: S'ha cancel·lat la comprovació de la contrasenya del
         perfil abans d'acabar.
+      profile_text_too_long: El camp %{field} admet com a màxim %{limit} caràcters;
+        escurça'l.
       recovery_already_enrolled: Aquest perfil ja té un codi de recuperació. Desactiva'l
         primer per emetre'n un de nou.
       recovery_code_rejected: El codi de recuperació no és correcte; la contrasenya

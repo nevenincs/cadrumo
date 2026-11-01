@@ -300,6 +300,16 @@ def validate_profile_schema_identity(
         )
 
 
+def compose_legal_full_name(*, surnames: str, name: str) -> str:
+    """Compose a Spanish legal full name from its ordered parts.
+
+    AEAT writes an individual's name surnames-first, and a missing part must not
+    leave a doubled separator behind. This is the single home of that join, so the
+    write door judging a name and the export path carrying it read the same text.
+    """
+    return " ".join(part for part in (surnames.strip(), name.strip()) if part)
+
+
 def validate_profile_fact(fact: UserProfileFact, *, schema: ProfileSchemaDefinition) -> None:
     """Validate schema-dependent provenance for one already-typed fact."""
     declared = declared_provenance_sources(schema)
@@ -526,6 +536,7 @@ __all__ = [
     "UserProfileFactValue",
     "UserProfileRecord",
     "UserProfileSnapshot",
+    "compose_legal_full_name",
     "create_user_profile_record",
     "declared_provenance_sources",
     "decode_user_profile_record",

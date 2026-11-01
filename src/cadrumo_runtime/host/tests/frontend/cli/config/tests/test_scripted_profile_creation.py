@@ -589,3 +589,40 @@ def test_a_duplicate_label_is_refused_before_any_key_is_derived(tmp_path: Path) 
         if any(marker in call for marker in _KEY_DERIVATION_CALL_MARKERS)
     )
     assert derived == []
+
+
+@pytest.mark.parametrize(
+    ("name", "surnames"),
+    [("Ana", "P" * 257), ("N" * 128, "S" * 128)],
+    ids=["a surname past its own bound", "a name and surnames that overrun together"],
+)
+def test_scripted_create_refuses_a_name_a_filing_cannot_carry_naming_the_field(
+    tmp_path: Path, name: str, surnames: str
+) -> None:
+    with override_settings(**_storage_overrides(tmp_path, passphrase=_CREDENTIAL_INPUT)):
+        created = invoke_cached_cli(
+            (
+                "--format",
+                "json",
+                "config",
+                "profile",
+                "create",
+                "Overlong Operator",
+                "--quiet",
+                "--secrets-stdin",
+                "--entity-type",
+                "natural_person",
+                "--tax-id",
+                "12345678Z",
+                "--name",
+                name,
+                "--surnames",
+                surnames,
+            ),
+            input=_creation_payload(),
+        )
+
+    assert created.exit_code != 0, created.output
+    assert surnames not in created.output
+    assert "Apellidos" in created.output
+    assert "256" in created.output

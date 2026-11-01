@@ -11,7 +11,7 @@ from collections.abc import Iterable
 from typing import Final
 
 from ...core.errors.severity import BaseSeverity
-from ...domain.user_profile.errors import UserProfileValidationError
+from ...domain.user_profile.errors import ProfileSchemaValidationError, UserProfileError, UserProfileValidationError
 from ...domain.user_profile.plantilla_media import PlantillaMediaRefusalKind, plantilla_media_refusals
 from ...domain.user_profile.schema import (
     ProfileFieldDefinition,
@@ -24,6 +24,7 @@ from ...domain.user_profile.schema import (
 from ...domain.user_profile.values import (
     UserProfileFact,
     UserProfileRecord,
+    compose_legal_full_name,
     section_field_key,
     validate_profile_fact,
 )
@@ -88,6 +89,10 @@ DATE_VALUE_ISSUE_CODE: Final[str] = "invalid_date_value"
 """Issue code for a date field carrying something that is not a calendar day."""
 
 EMAIL_VALUE_ISSUE_CODE: Final[str] = "invalid_email_value"
+TEXT_LENGTH_ISSUE_CODE: Final[str] = "text_too_long"
+_IDENTITY_NAME_PATH: Final[str] = "identity.name"
+_IDENTITY_SURNAMES_PATH: Final[str] = "identity.surnames"
+_IDENTITY_LEGAL_NAME_PATH: Final[str] = "identity.legal_name"
 """Issue code for an email field carrying something that is not an address.
 
 Not a completeness code, for the same reason as its siblings: an entry that
@@ -142,6 +147,7 @@ PROFILE_VALIDATION_ISSUE_CODES: Final[tuple[str, ...]] = (
     ENUM_VALUE_ISSUE_CODE,
     DATE_VALUE_ISSUE_CODE,
     EMAIL_VALUE_ISSUE_CODE,
+    TEXT_LENGTH_ISSUE_CODE,
     DERIVED_FIELD_ISSUE_CODE,
     UNKNOWN_FIELD_ISSUE_CODE,
     EFFECTIVE_WINDOW_UNUSED_CODE,
@@ -163,6 +169,7 @@ _ISSUE_CODE_BY_REFUSAL_KIND: Final[dict[ProfileValueRefusalKind, str]] = {
     ProfileValueRefusalKind.NUMERIC: NUMERIC_VALUE_ISSUE_CODE,
     ProfileValueRefusalKind.BOOLEAN: BOOLEAN_VALUE_ISSUE_CODE,
     ProfileValueRefusalKind.EMAIL: EMAIL_VALUE_ISSUE_CODE,
+    ProfileValueRefusalKind.TEXT_LENGTH: TEXT_LENGTH_ISSUE_CODE,
 }
 """How a refusal kind is reported as an issue.
 
@@ -243,6 +250,7 @@ class ProfileValidationService:
         issues.extend(self._conditional_completeness_issues(facts))
         issues.extend(self._atribucion_socio_country_issues(facts))
         issues.extend(self._plantilla_media_issues(facts))
+        issues.extend(self._composed_legal_name_issues(facts))
         issues.extend(self._unenforced_expiry_issues(facts))
         return ProfileValidationReport(
             profile_id=profile_id,
@@ -445,6 +453,32 @@ class ProfileValidationService:
             if fact.valid_to is not None
         )
 
+    def _composed_legal_name_issues(self, facts: tuple[UserProfileFact, ...]) -> tuple[ProfileValidationIssue, ...]:
+        """Refuse a name and surnames that each fit and together overrun the legal name's bound.
+
+        A natural person's filing carries the two joined as one legal name, so each
+        part fitting alone does not make the name a filing can hold.
+        """
+        declared = self._field_index.get(_IDENTITY_LEGAL_NAME_PATH)
+        limit = None if declared is None else declared[1].max_length
+        if limit is None:
+            return ()
+        values = {fact.path: fact.value for fact in facts}
+        surnames, name = values.get(_IDENTITY_SURNAMES_PATH), values.get(_IDENTITY_NAME_PATH)
+        if not isinstance(surnames, str) or not isinstance(name, str):
+            return ()
+        observed = len(compose_legal_full_name(surnames=surnames, name=name))
+        if observed <= limit:
+            return ()
+        return (
+            ProfileValidationIssue(
+                severity=BaseSeverity.ERROR,
+                code=TEXT_LENGTH_ISSUE_CODE,
+                path=_IDENTITY_SURNAMES_PATH,
+                message=f"surnames and name together hold {observed} characters and admit at most {limit}",
+            ),
+        )
+
     def _required_field_issues(
         self,
         facts: tuple[UserProfileFact, ...],
@@ -608,14 +642,13 @@ def reject_invalid_profile_facts(
         ProfileSchemaValidationError: When any blocking issue remains, naming
             the refused paths and why.
     """
-    from ...domain.user_profile.errors import ProfileSchemaValidationError
-
     service = ProfileValidationService(schema=schema)
     report = service.validate_facts(profile_id, facts)
     blocking = _blocking_profile_issues(report, require_complete=require_complete)
     if not blocking:
         return
     detail = _blocking_profile_detail(blocking)
+    _refuse_first_text_length_issue(blocking, schema=schema)
     raise ProfileSchemaValidationError(
         f"{_PROFILE_SCHEMA_VALIDATION_MESSAGE}: {detail}",
         context={
@@ -626,6 +659,42 @@ def reject_invalid_profile_facts(
         },
         translated_message="application.user_profile.errors.lifecycle_schema_validation_failed",
     )
+
+
+def profile_text_too_long_error(path: str, *, limit: int, schema: ProfileSchemaDefinition) -> UserProfileError:
+    """Build the refusal naming the profile field to shorten by its operator label, never its value."""
+    from .preflight import build_profile_preflight_requirement
+
+    return ProfileSchemaValidationError(
+        f"profile field {path} admits at most {limit} characters",
+        context={"field": build_profile_preflight_requirement(path, schema=schema).label, "limit": limit},
+        translated_message="application.user_profile.errors.profile_text_too_long",
+    )
+
+
+def _refuse_first_text_length_issue(
+    issues: tuple[ProfileValidationIssue, ...],
+    *,
+    schema: ProfileSchemaDefinition,
+) -> None:
+    limits = {
+        f"{section.key}.{field.key}": field.max_length
+        for section in schema.sections
+        for field in section.fields
+        if field.max_length is not None
+    }
+    for issue in issues:
+        if issue.code == TEXT_LENGTH_ISSUE_CODE and issue.path is not None:
+            raise profile_text_too_long_error(issue.path, limit=limits[issue.path], schema=schema)
+
+
+def refuse_overlong_profile_text(record: UserProfileRecord, *, schema: ProfileSchemaDefinition) -> None:
+    """Refuse a stored profile holding a text past its field's bound, naming that field.
+
+    Such a value is present rather than missing, so it must not read as an incomplete profile.
+    """
+    report = ProfileValidationService(schema=schema).validate_record(record)
+    _refuse_first_text_length_issue(report.issues, schema=schema)
 
 
 def _blocking_profile_issues(
@@ -663,7 +732,10 @@ __all__ = [
     "NUMERIC_VALUE_ISSUE_CODE",
     "PROFILE_VALIDATION_ISSUE_CODES",
     "REQUIRED_FIELD_MISSING_CODE",
+    "TEXT_LENGTH_ISSUE_CODE",
     "UNKNOWN_FIELD_ISSUE_CODE",
     "ProfileValidationService",
+    "profile_text_too_long_error",
+    "refuse_overlong_profile_text",
     "reject_invalid_profile_facts",
 ]

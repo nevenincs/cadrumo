@@ -21,9 +21,12 @@ for it is the value the filed record addresses.
 
 from __future__ import annotations
 
-from collections.abc import Collection, Mapping, Sequence
+from collections.abc import Collection, Generator, Mapping, Sequence
+from contextlib import contextmanager
 from dataclasses import dataclass
 from decimal import Decimal
+
+from pydantic import ValidationError
 
 from ...core.aggregation import BindingSourceKind
 from ...core.casilla_id import CasillaId
@@ -41,13 +44,14 @@ from ...domain.contribuyente.entity_type import entity_type_natural_person_token
 from ...domain.user_profile.errors import ProfileNotFoundError
 from ...domain.user_profile.registry_contract import profile_binding_selectors
 from ...domain.user_profile.schema import ProfileSchemaDefinition
-from ...domain.user_profile.values import UserProfileFactValue
+from ...domain.user_profile.values import UserProfileFactValue, compose_legal_full_name
 from ..aggregation.source_mesh import CalculationSourceDiagnostic
 from ..filing.producer_snapshot import DeclarationContactFacts, PresenterIdentity, TaxpayerIdentityFacts
 
 # Reuse the public defining module's canonical fact-index and scalar resolver;
 # export shaping must not grow a second profile fact authority.
 from ..user_profile.projections import profile_fact_index
+from ..user_profile.validation import profile_text_too_long_error
 from .profile_binding import resolve_profile_binding_value
 
 _SURNAMES_NAME_FORMAT = "surnames_name"
@@ -61,6 +65,18 @@ _IDENTITY_LEGAL_NAME_KEY = "identity.legal_name"
 _ENTITY_TYPE_KEY = "taxpayer_type.entity_type"
 _CONTACT_PERSON_PHONE_KEY = "contact.contact_person_phone"
 _CONTACT_PERSON_NAME_KEY = "contact.contact_person_name"
+
+#: The stored profile fact to correct when a bounded producer field overruns.
+_IDENTITY_TEXT_PROFILE_FACTS: Mapping[str, str] = {
+    "legal_name": _IDENTITY_LEGAL_NAME_KEY,
+    "given_name": _IDENTITY_NAME_KEY,
+    "surnames": _IDENTITY_SURNAMES_KEY,
+    "full_name": _IDENTITY_SURNAMES_KEY,
+}
+_CONTACT_TEXT_PROFILE_FACTS: Mapping[str, str] = {
+    "phone": _CONTACT_PERSON_PHONE_KEY,
+    "full_name": _CONTACT_PERSON_NAME_KEY,
+}
 
 #: The stored profile facts each taxpayer-identity producer fact is shaped from
 #: by ``_taxpayer_identity_facts``. An export refusing a blank required identity
@@ -268,18 +284,6 @@ def profile_text_casilla_gap_diagnostics(
     return tuple(diagnostics)
 
 
-def compose_legal_full_name(*, surnames: str, name: str) -> str:
-    """Compose a Spanish legal full name from its ordered parts.
-
-    AEAT writes an individual's name surnames-first, and a blank part must not
-    leave a doubled separator behind. This is the single home for that join:
-    the export header path and the dictionary-field resolver below both write
-    the operator's name onto the same declaration, so two separate joins could
-    disagree on one artefact.
-    """
-    return " ".join(part for part in (surnames.strip(), name.strip()) if part)
-
-
 def _profile_export_binding_applies(
     binding: BindingDefinition,
     fact_index: Mapping[str, UserProfileFactValue],
@@ -455,7 +459,7 @@ def resolve_export_identity(
     if record is None:
         return None
     resolved_schema = operation.profile_schema() if schema is None else schema
-    return _identity_from_profile_facts(profile_fact_index(record, resolved_schema))
+    return _identity_from_profile_facts(profile_fact_index(record, resolved_schema), schema=resolved_schema)
 
 
 def _load_profile_record(
@@ -515,11 +519,14 @@ def resolve_declaration_contact(
     facts = profile_fact_index(record, resolved_schema)
     phone = str(facts.get(_CONTACT_PERSON_PHONE_KEY) or "").strip()
     full_name = str(facts.get(_CONTACT_PERSON_NAME_KEY) or "").strip()
-    return DeclarationContactFacts(phone=phone or None, full_name=full_name or None)
+    with _refusing_overlong_profile_text(_CONTACT_TEXT_PROFILE_FACTS, schema=resolved_schema):
+        return DeclarationContactFacts(phone=phone or None, full_name=full_name or None)
 
 
 def _identity_from_profile_facts(
     facts: Mapping[str, UserProfileFactValue],
+    *,
+    schema: ProfileSchemaDefinition,
 ) -> tuple[PresenterIdentity, TaxpayerIdentityFacts] | None:
     """Build the explicit presenter/taxpayer pair from indexed profile facts."""
     tax_id = str(facts.get(_IDENTITY_TAX_ID_KEY) or "").strip()
@@ -535,6 +542,7 @@ def _identity_from_profile_facts(
         surnames=surnames,
         legal_name=legal_name,
         entity_type=entity_type,
+        schema=schema,
     )
     if identity.full_name is None:
         return None
@@ -547,23 +555,50 @@ def _taxpayer_identity_facts(
     surnames: str,
     legal_name: str,
     entity_type: str,
+    schema: ProfileSchemaDefinition,
 ) -> TaxpayerIdentityFacts:
     """Shape natural-person and entity names into the producer's four facts."""
-    if entity_type == entity_type_natural_person_token().value:
-        full_name = compose_legal_full_name(surnames=surnames, name=name)
+    with _refusing_overlong_profile_text(_IDENTITY_TEXT_PROFILE_FACTS, schema=schema):
+        if entity_type == entity_type_natural_person_token().value:
+            full_name = compose_legal_full_name(surnames=surnames, name=name)
+            return TaxpayerIdentityFacts(
+                legal_name=None,
+                given_name=name or None,
+                surnames=surnames or None,
+                full_name=full_name or None,
+            )
+        registered = legal_name or compose_legal_full_name(surnames=surnames, name=name)
         return TaxpayerIdentityFacts(
-            legal_name=None,
-            given_name=name or None,
-            surnames=surnames or None,
-            full_name=full_name or None,
+            legal_name=registered or None,
+            given_name=None,
+            surnames=None,
+            full_name=registered or None,
         )
-    registered = legal_name or compose_legal_full_name(surnames=surnames, name=name)
-    return TaxpayerIdentityFacts(
-        legal_name=registered or None,
-        given_name=None,
-        surnames=None,
-        full_name=registered or None,
-    )
+
+
+@contextmanager
+def _refusing_overlong_profile_text(
+    profile_facts: Mapping[str, str],
+    *,
+    schema: ProfileSchemaDefinition,
+) -> Generator[None]:
+    """Report a stored text that overruns a producer's bound as the profile fact to correct.
+
+    A profile written before its field declared a bound, or a composed name each of
+    whose parts fits, reaches the producer here. The operator declares the profile
+    fact and never sees the producer record, so the refusal names the fact.
+    """
+    try:
+        yield
+    except ValidationError as exc:
+        for error in exc.errors(include_input=False, include_url=False):
+            if error["type"] == "string_too_long":
+                raise profile_text_too_long_error(
+                    profile_facts[str(error["loc"][0])],
+                    limit=error["ctx"]["max_length"],
+                    schema=schema,
+                ) from exc
+        raise
 
 
 def _profile_export_values_from_facts(

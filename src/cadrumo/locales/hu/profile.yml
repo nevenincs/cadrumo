@@ -662,4 +662,5 @@ profile:
       profil-alapmező
     numeric_field_invalid: Érvénytelen numerikus mező
     required_field_missing: Hiányzik egy kötelező profilmező.
+    text_too_long: Túl hosszú szöveg
     unknown_field: Ismeretlen mező

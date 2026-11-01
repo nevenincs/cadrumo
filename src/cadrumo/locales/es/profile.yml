@@ -656,4 +656,5 @@ profile:
       del modelo
     numeric_field_invalid: El campo numérico no es válido
     required_field_missing: Falta un campo obligatorio del perfil.
+    text_too_long: Texto demasiado largo
     unknown_field: Campo desconocido
