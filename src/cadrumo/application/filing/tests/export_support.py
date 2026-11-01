@@ -75,9 +75,10 @@ def _typed_producer_snapshot(*, complementaria: bool = False) -> FilingProducerS
     )
 
 
-def _typed_modelo_131_producer_snapshot() -> FilingProducerSnapshot:
+def _general_ingreso_producer_snapshot(modelo: str) -> FilingProducerSnapshot:
+    """Producer facts for a general-profile ingreso filing by the standard test taxpayer."""
     return build_filing_producer_snapshot(
-        modelo=Modelo("131"),
+        modelo=Modelo(modelo),
         taxpayer_tax_id="12345678Z",
         taxpayer_identity=TaxpayerIdentityFacts(
             legal_name=None,
@@ -98,6 +99,10 @@ def _typed_modelo_131_producer_snapshot() -> FilingProducerSnapshot:
         refund_account=None,
         charge_account=None,
     )
+
+
+def _typed_modelo_131_producer_snapshot() -> FilingProducerSnapshot:
+    return _general_ingreso_producer_snapshot("131")
 
 
 _M111_RETENCIONES_TOTAL_CASILLA, _M111_RESULTADO_CASILLA = (
@@ -612,28 +617,7 @@ def _field_slice(layout: ExportLayoutDefinition, record_id: str, field_id: str) 
 
 def m151_producer_snapshot() -> FilingProducerSnapshot:
     """Producer facts for the Modelo 151 export coordinate."""
-    return build_filing_producer_snapshot(
-        modelo=Modelo("151"),
-        taxpayer_tax_id="12345678Z",
-        taxpayer_identity=TaxpayerIdentityFacts(
-            legal_name=None,
-            given_name="Ana",
-            surnames="Prueba",
-            full_name="Ana Prueba",
-        ),
-        presenter=PresenterIdentity(tax_id="00000000T", full_name="Gestoría Prueba"),
-        model_profile=GeneralFilingProfileFacts(),
-        elections=FilingElectionFacts(
-            result_disposition=ResultDisposition.INGRESO,
-            payment=PaymentElection.INGRESO,
-            refund=RefundElection.COMPENSAR,
-            prior_domiciliation=PriorDomiciliationElection.KEEP,
-        ),
-        amendment_evidence=None,
-        m303_filing_facts=None,
-        refund_account=None,
-        charge_account=None,
-    )
+    return _general_ingreso_producer_snapshot("151")
 
 
 @cache
