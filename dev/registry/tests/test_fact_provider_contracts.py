@@ -1,4 +1,4 @@
-"""Machine contract for the Wave 2 governed-fact provider handoff."""
+"""Machine contract for the registered governed-fact providers."""
 
 from __future__ import annotations
 
@@ -19,7 +19,7 @@ from ..compiler.fact_providers import (
 from ..compiler.modelo_projections import ModeloParameterFact
 
 _ROOT = Path(__file__).resolve().parents[3]
-_MANIFEST = _ROOT / "dev/registry/analysis/facts_wave2_provider_handoff.toml"
+_MANIFEST = _ROOT / "dev/registry/analysis/fact_provider_contracts.toml"
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _AUTHORED_FACT_FAMILIES = {
@@ -37,7 +37,7 @@ def _manifest() -> dict[str, Any]:
     return parse_toml(_MANIFEST.read_text(encoding="utf-8"))
 
 
-def test_handoff_covers_exact_live_provider_and_fact_family_denominator() -> None:
+def test_contracts_cover_exact_live_provider_and_fact_family_denominator() -> None:
     manifest = _manifest()
     contracts = manifest["contracts"]
     registrations = {registration.provider_id: registration for registration in FACT_PROVIDER_REGISTRATIONS}
@@ -77,7 +77,7 @@ def test_handoff_covers_exact_live_provider_and_fact_family_denominator() -> Non
         assert all(variant.ownership.value == "authored" for variant in fact.variants)
 
 
-def test_handoff_targets_live_consumer_files_and_retirement_ledgers() -> None:
+def test_contracts_target_live_consumer_files_and_retirement_ledgers() -> None:
     manifest = _manifest()
     for contract in manifest["contracts"]:
         assert all((_ROOT / path).exists() for path in contract["consumer_files"])

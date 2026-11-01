@@ -1,4 +1,4 @@
-"""Focused handoff contract for the complete Wave 2 fact-provider set."""
+"""Contracts every registered fact provider must satisfy."""
 
 from __future__ import annotations
 
@@ -16,19 +16,19 @@ from ..maintenance_support import reset_registry_caches
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_WAVE2_PROVIDER_IDS = (
+_REGISTERED_PROVIDER_IDS = (
     "authored-facts",
     "modelo-parameter-projections",
 )
 
 
-def test_every_wave2_provider_compiles_into_the_validated_authority(
+def test_every_registered_provider_compiles_into_the_validated_authority(
     registry_tree: tuple[tuple[ModeloDefinition, ...], RegistryCatalogues],
 ) -> None:
     root = bundled_path("registry", "aeat")
     modelos, _catalogues = registry_tree
 
-    assert tuple(registration.provider_id for registration in FACT_PROVIDER_REGISTRATIONS) == _WAVE2_PROVIDER_IDS
+    assert tuple(registration.provider_id for registration in FACT_PROVIDER_REGISTRATIONS) == _REGISTERED_PROVIDER_IDS
     for registration in FACT_PROVIDER_REGISTRATIONS:
         registration.compile(root)
 
@@ -42,7 +42,7 @@ def test_every_wave2_provider_compiles_into_the_validated_authority(
     assert projected_fact_ids <= catalogue.facts.keys()
 
 
-def test_every_wave2_fact_variant_retains_its_declared_provenance() -> None:
+def test_every_registered_fact_variant_retains_its_declared_provenance() -> None:
     facts = compile_registered_fact_providers(bundled_path("registry", "aeat")).facts.values()
 
     assert facts
@@ -52,7 +52,7 @@ def test_every_wave2_fact_variant_retains_its_declared_provenance() -> None:
             assert all(citation.required_text for citation in variant.source_citations)
 
 
-def test_wave2_provider_fingerprints_cover_every_file_backed_provider() -> None:
+def test_provider_fingerprints_cover_every_file_backed_provider() -> None:
     root = bundled_path("registry", "aeat")
 
     for registration in FACT_PROVIDER_REGISTRATIONS:
@@ -61,7 +61,7 @@ def test_wave2_provider_fingerprints_cover_every_file_backed_provider() -> None:
             assert fingerprints, f"{registration.provider_id} contributes no authority fingerprint"
 
 
-def test_authority_reset_invokes_every_wave2_provider_reset(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_authority_reset_invokes_every_provider_reset(monkeypatch: pytest.MonkeyPatch) -> None:
     resets: list[str] = []
     registrations = tuple(
         replace(registration, reset=lambda provider_id=registration.provider_id: resets.append(provider_id))
@@ -70,4 +70,4 @@ def test_authority_reset_invokes_every_wave2_provider_reset(monkeypatch: pytest.
     monkeypatch.setattr(provider_module, "FACT_PROVIDER_REGISTRATIONS", registrations)
     reset_registry_caches()
 
-    assert resets == list(_WAVE2_PROVIDER_IDS)
+    assert resets == list(_REGISTERED_PROVIDER_IDS)
