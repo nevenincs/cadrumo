@@ -1485,7 +1485,7 @@ complexity-gate:
 test-complexity-gate:
     @uv run --no-sync python -m dev.test_runs.command --family audit-runs --label test-complexity-gate -- uv run --no-sync python -m dev.audit.complexity --tests --gate
 
-[doc('Reject test-file duplication above the 1.25% duplicated-line ceiling with the production scan settings. Slow: about two minutes.')]
+[doc('Reject test-file duplication above the declared duplicated-line ceiling with the production scan settings. Slow: about two minutes.')]
 [group('check')]
 test-duplication-gate:
     @uv run --no-sync python -m dev.test_runs.command --family audit-runs --label test-duplication-gate -- uv run --no-sync python -m dev.audit.duplication --tests-gate
