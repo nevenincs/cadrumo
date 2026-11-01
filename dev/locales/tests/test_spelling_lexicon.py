@@ -1775,6 +1775,45 @@ def test_category_search_keywords_allow_only_dictionary_backed_accentless_spanis
     assert inventory["spelling_unknown_words"] == 1
 
 
+@pytest.mark.parametrize("locale", ("en", "ca", "es", "hu"))
+@pytest.mark.parametrize(
+    ("category", "alias", "mutated"),
+    (
+        ("asesoria_contable", "gestoria", "gestorria"),
+        ("asesoria_fiscal", "gestoria", "gestorria"),
+        ("subcontratacion", "subcontratacion", "subcontrattacion"),
+        ("suministros_home_office_gas", "butano", "buttano"),
+    ),
+)
+def test_attested_category_aliases_require_the_exact_key_and_token(
+    monkeypatch: pytest.MonkeyPatch, locale: str, category: str, alias: str, mutated: str
+) -> None:
+    class Dictionary:
+        def lookup(self, word: str) -> bool:
+            return False
+
+    monkeypatch.setattr(
+        "dev.locales.signal_spelling.load_dictionaries",
+        lambda repository: {language: Dictionary() for language in ("en", "ca", "es", "hu")},
+    )
+    key = f"desktop.ledger.category_keywords.{category}"
+    other_keys = (
+        key + ".extra",
+        key + "_other",
+        "desktop.ledger.category_keywords.unrelated",
+        f"desktop.ledger.categories.{category}",
+        "guide",
+    )
+    text = f"{alias} {mutated} misspeling"
+    values = {candidate: text for candidate in (key, *other_keys)}
+    spelling, _inventory, _findings = spellcheck_catalogues(set(values), {locale: values}, REPO_ROOT)
+
+    assert set(spelling[(locale, key)]) == {mutated, "misspeling"}
+    for candidate in other_keys:
+        assert set(spelling[(locale, candidate)]) == {alias, mutated, "misspeling"}
+    assert not is_project_spelling(locale, alias)
+
+
 def test_hungarian_abbreviations_require_the_complete_dictionary_form(monkeypatch: pytest.MonkeyPatch) -> None:
     class Dictionary:
         def lookup(self, word: str) -> bool:

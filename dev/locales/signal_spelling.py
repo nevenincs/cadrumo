@@ -30,6 +30,19 @@ _SPANISH_SEARCH_ABBREVIATIONS: Final[frozenset[str]] = frozenset({"ibi", "irpf"}
 _SEARCH_NAME_AND_INITIALISM_ALIASES: Final[frozenset[str]] = frozenset(
     {"tgss", "pc", "adsl", "itv", "cadrumo", "url", "dehu", "repl", "boe", "tui"}
 )
+# RAE attests gestoría, subcontratación and butano:
+# https://dle.rae.es/gestor%C3%ADa
+# https://dle.rae.es/subcontrataci%C3%B3n
+# https://dle.rae.es/butano
+# These dictionary gaps are accepted only in their actual category search data.
+# _amortizable_keywords unions all four catalogues, and _words folds accents on
+# both aliases and input. Neither translated labels nor other keys inherit them.
+_CATEGORY_SEARCH_ALIAS_DICTIONARY_GAPS: Final[dict[str, frozenset[str]]] = {
+    "desktop.ledger.category_keywords.asesoria_contable": frozenset({"gestoria"}),
+    "desktop.ledger.category_keywords.asesoria_fiscal": frozenset({"gestoria"}),
+    "desktop.ledger.category_keywords.subcontratacion": frozenset({"subcontratacion"}),
+    "desktop.ledger.category_keywords.suministros_home_office_gas": frozenset({"butano"}),
+}
 
 
 def spellcheck_catalogues(
@@ -221,7 +234,12 @@ def _discard_known_search_keywords(
         _locale, key = cell
         if not is_search_keyword_surface(key):
             continue
-        accepted = {word for word in words if _is_known_search_keyword(word, spanish_dictionary, english_dictionary)}
+        exact_aliases = _CATEGORY_SEARCH_ALIAS_DICTIONARY_GAPS.get(key, frozenset())
+        accepted = {
+            word
+            for word in words
+            if word in exact_aliases or _is_known_search_keyword(word, spanish_dictionary, english_dictionary)
+        }
         words.difference_update(accepted)
         if not words:
             del unknown_by_cell[cell]
