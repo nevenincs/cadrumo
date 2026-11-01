@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+import asyncio
 import errno
 import os
 import stat
+import tempfile
+import threading
 import time
 from collections import Counter
 from collections.abc import Generator
@@ -13,11 +16,13 @@ from typing import Literal
 
 import pytest
 
+from ......core.async_cleanup import AsyncResourceCleanupError, async_cleanup_failures
 from ......core.config import Settings
 from .. import _kdf_worker_observation as observation
 from .. import _kdf_worker_supervision as supervision
 from .._kdf_worker_supervision import _SupervisedKdfWorker
 from ..errors import ProfileCustodyRefusal, ProfileCustodyRefusedError
+from ..kdf_supervision import ProfileKdfPrewarm
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -137,3 +142,72 @@ def test_partial_start_closes_every_acquired_descriptor_once(
     prior_closes = closes.copy()
     worker._close(failed=True)
     assert closes == prior_closes
+
+
+@pytest.mark.parametrize("prewarmed", [False, True])
+def test_failed_enter_retains_real_pipe_cleanup_until_reader_settles(
+    prewarmed: bool, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """A failed context entry cannot abandon a reader or start a fallback worker."""
+    release = threading.Event()
+    started = threading.Event()
+    captured: list[tuple[_SupervisedKdfWorker, int, int, Path]] = []
+
+    def start(worker: _SupervisedKdfWorker) -> None:
+        request_read, worker._request_fd = os.pipe()
+        worker._result_fd, result_write = os.pipe()
+        os.close(request_read)
+        os.close(result_write)
+        worker._neutral_directory = tempfile.TemporaryDirectory(dir=tmp_path)
+        result_fd = worker._result_fd
+        assert result_fd is not None and worker._request_fd is not None
+
+        def read() -> None:
+            started.set()
+            release.wait()
+            assert os.read(result_fd, 1) == b""
+
+        reader = threading.Thread(target=read, daemon=True)
+        worker._readers.append(reader)
+        reader.start()
+        assert started.wait(5)
+        captured.append((worker, worker._request_fd, result_fd, Path(worker._neutral_directory.name)))
+
+    def no_ready(_worker: _SupervisedKdfWorker) -> tuple[int, bytes]:
+        raise TimeoutError("synthetic readiness failure")
+
+    monkeypatch.setattr(_SupervisedKdfWorker, "_start", start)
+    monkeypatch.setattr(_SupervisedKdfWorker, "_read_response_frame", no_ready)
+    settings = Settings(cadrumo_storage_root=tmp_path)
+    prewarm = ProfileKdfPrewarm(settings=settings) if prewarmed else None
+    try:
+        if prewarm is None:
+            with pytest.raises(ProfileCustodyRefusedError) as caught:
+                _SupervisedKdfWorker(deadline=time.monotonic() + 30, settings=settings).__enter__()
+        else:
+            prewarm._launch()
+            with pytest.raises(ProfileCustodyRefusedError) as caught:
+                prewarm.take(deadline=time.monotonic() + 30)
+            prewarm.refill()
+            assert len(captured) == 1
+        worker, request_fd, result_fd, directory = captured[0]
+        owners = async_cleanup_failures(caught.value)
+        assert len(owners) == 1 and owners[0].resources == (worker,)
+        assert worker._cleanup_pending() and directory.is_dir()
+        with pytest.raises(AsyncResourceCleanupError):
+            asyncio.run(owners[0].retry_cleanup())
+        assert worker._cleanup_pending()
+        release.set()
+        asyncio.run(owners[0].retry_cleanup())
+        assert not worker._cleanup_pending() and not directory.exists()
+        for descriptor in (request_fd, result_fd):
+            with pytest.raises(OSError):
+                os.fstat(descriptor)
+        if prewarm is not None:
+            assert prewarm.take(deadline=time.monotonic() + 30) is None
+    finally:
+        release.set()
+        if captured:
+            captured[0][0]._close(failed=True)
+        if prewarm is not None:
+            prewarm.close()

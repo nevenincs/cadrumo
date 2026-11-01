@@ -592,6 +592,7 @@ class ProfileKdfPrewarm:
         self._lock = threading.Lock()
         self._settled = threading.Condition(self._lock)
         self._spare: _SupervisedKdfWorker | None = None
+        self._failed_launch: tuple[_SupervisedKdfWorker, BaseException] | None = None
         self._launching = False
         self._closed = False
         # Lets close() abandon a launch that has not attested, so no spare outlives its owner.
@@ -601,7 +602,7 @@ class ProfileKdfPrewarm:
     def refill(self) -> None:
         """Start launching a spare unless one is ready, launching, or the owner closed."""
         with self._lock:
-            if self._closed or self._spare is not None or self._launching:
+            if self._closed or self._spare is not None or self._launching or self._failed_launch is not None:
                 return
             self._launching = True
         context = contextvars.copy_context()
@@ -615,15 +616,23 @@ class ProfileKdfPrewarm:
 
     def _launch(self) -> None:
         spare: _SupervisedKdfWorker | None = None
+        candidate: _SupervisedKdfWorker | None = None
         try:
-            spare = _SupervisedKdfWorker(
+            candidate = _SupervisedKdfWorker(
                 deadline=time.monotonic() + PROFILE_CUSTODY_KDF_OPERATION_DEADLINE_SECONDS,
                 settings=self._settings,
                 cancellation=self._launch_cancellation,
-            ).__enter__()
-        except (ProfileCustodyRefusedError, ProfileProofCancelledError, TimeoutError, OSError, ValueError):
-            # A failed spare already released itself and logged its lifecycle;
-            # the next operation launches its own child instead.
+            )
+            spare = candidate.__enter__()
+        except BaseException as error:
+            # An incompletely settled launch must remain owned and cannot fall back to a new child.
+            if candidate is not None and candidate._cleanup_pending():
+                with self._settled:
+                    self._failed_launch = (candidate, error)
+            if not isinstance(
+                error, (ProfileCustodyRefusedError, ProfileProofCancelledError, TimeoutError, OSError, ValueError)
+            ):
+                raise
             spare = None
         finally:
             try:
@@ -652,6 +661,7 @@ class ProfileKdfPrewarm:
                 watching.enter_context(cancellation.watch(self._wake))
             with self._settled:
                 self._wait_for_launch(deadline=deadline, cancellation=cancellation)
+                self._raise_unsettled_launch()
                 spare, self._spare = self._spare, None
         if cancellation is not None and cancellation.cancelled:
             if spare is not None:
@@ -686,6 +696,15 @@ class ProfileKdfPrewarm:
         with self._settled:
             self._settled.notify_all()
 
+    def _raise_unsettled_launch(self) -> None:
+        """Keep a failed launch until its retained owner has actually settled."""
+        failed = self._failed_launch
+        if failed is not None:
+            worker, error = failed
+            if worker._cleanup_pending():
+                raise error
+            self._failed_launch = None
+
     def close(self) -> None:
         """Stop launching spares and contain the idle one and any still launching."""
         with self._settled:
@@ -695,6 +714,7 @@ class ProfileKdfPrewarm:
         self._launch_cancellation.cancel()
         with self._settled:
             self._settled.wait_for(lambda: not self._launching)
+            self._raise_unsettled_launch()
         atexit.unregister(self.close)
         if spare is not None:
             spare.__exit__(None, None, None)

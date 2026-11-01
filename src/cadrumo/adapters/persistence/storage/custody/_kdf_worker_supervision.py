@@ -18,6 +18,7 @@ from typing import Literal, cast
 from pydantic import ValidationError
 
 from .....application.user_profile.proof_cancellation import ProfileProofCancellation, ProfileProofCancelledError
+from .....core.async_cleanup import AsyncResourceCleanupError, attach_async_cleanup_error
 from .....core.config import Settings, load_settings
 from .....core.storage_taxonomy import StorageCategory
 from .....core.storage_taxonomy_locations import storage_path
@@ -49,14 +50,12 @@ from ._kdf_operations import KdfOperation
 from ._kdf_process import (
     launch_worker as _launch_worker,
 )
-from ._kdf_process import (
-    terminate_process_tree as _terminate_process_tree,
-)
 from ._kdf_refusals import resource_refusal as _resource_refusal
 from ._kdf_refusals import supervision_refusal as _supervision_refusal
 from ._kdf_windows_job import _WindowsJob
+from ._kdf_worker_cleanup import KdfWorkerCleanup
 from ._kdf_worker_identity import verify_ready_worker as _verify_ready_worker
-from ._kdf_worker_observation import KDF_WORKER_PHASE_FIELDS, KdfCleanupPart, KdfWorkerObservation, KdfWorkerStage
+from ._kdf_worker_observation import KDF_WORKER_PHASE_FIELDS, KdfCleanupPart, KdfWorkerStage
 from .records import ProfileCustodyKdfParameters, ProfileCustodyWrappedDek
 
 _NEVER_ATTESTED = "_kdf_worker_never_attested"
@@ -67,7 +66,7 @@ def kdf_worker_never_attested(error: BaseException) -> bool:
     return error.__dict__.get(_NEVER_ATTESTED) is True
 
 
-class _SupervisedKdfWorker(KdfWorkerObservation):
+class _SupervisedKdfWorker(KdfWorkerCleanup):
     """One process with a complete no-fallback lifecycle and bounded pipes."""
 
     def __init__(
@@ -82,6 +81,7 @@ class _SupervisedKdfWorker(KdfWorkerObservation):
         self._absolute_deadline = absolute_deadline
         self._cancellation = cancellation
         self._readers: list[threading.Thread] = []
+        self._cleanup_lock = threading.Lock()
         self._temporary_root = storage_path(StorageCategory.TEMPORARY_FILES, settings=settings or load_settings())
         self._process: subprocess.Popen[bytes] | None = None
         self._request_fd: int | None = None
@@ -272,6 +272,11 @@ class _SupervisedKdfWorker(KdfWorkerObservation):
             with self._phase("cleanup"):
                 self._close(failed=failed)
         except BaseException as cleanup_error:
+            if self._cleanup_pending():
+                retained = AsyncResourceCleanupError(
+                    (self,), (cleanup_error,), retry_task_name="profile-kdf-cleanup", close_attempts=1
+                )
+                attach_async_cleanup_error(cleanup_error, retained)
             self._emit_diagnostic(
                 cleanup_status="failed",
                 cleanup_error=cleanup_error,
@@ -407,61 +412,6 @@ class _SupervisedKdfWorker(KdfWorkerObservation):
                 raise _supervision_refusal()
         except OSError:
             raise _supervision_refusal() from None
-
-    def _close(self, *, failed: bool) -> None:
-        process = self._process
-        job = self._job
-        if process is not None:
-            with self._cleanup_span("process"):
-                if failed or process.poll() is None:
-                    _terminate_process_tree(process, job)
-                elif job is not None:
-                    job.close()
-                try:
-                    process.wait(timeout=1.0)
-                except subprocess.TimeoutExpired:
-                    _terminate_process_tree(process, job)
-                if process.returncode is None:
-                    raise _supervision_refusal()
-                self._process = None
-                self._job = None
-        # A Windows reader may hold the CRT descriptor lock while blocked in
-        # os.read. Settle its writer before closing the parent pipe ends.
-        self._close_pipes()
-        if process is None and job is not None:
-            with self._cleanup_span("process"):
-                job.close()
-                self._job = None
-        with self._cleanup_span("directory"):
-            self._cleanup_neutral_directory()
-
-    def _close_pipes(self) -> None:
-        with self._cleanup_span("pipes"):
-            for reader in self._readers:
-                reader.join(timeout=1.0)
-                if reader.is_alive():
-                    raise _supervision_refusal()
-            self._readers.clear()
-            _close_fd(self._request_fd)
-            _close_fd(self._result_fd)
-            self._request_fd = None
-            self._result_fd = None
-
-    def _cleanup_neutral_directory(self) -> None:
-        if self._neutral_directory is not None:
-            try:
-                for attempt in range(10):
-                    try:
-                        self._neutral_directory.cleanup()
-                    except OSError:
-                        if attempt == 9:
-                            raise
-                        time.sleep(0.05)
-                    else:
-                        self._neutral_directory = None
-                        return
-            except OSError:
-                raise _supervision_refusal() from None
 
 
 __all__ = ["_SupervisedKdfWorker"]
