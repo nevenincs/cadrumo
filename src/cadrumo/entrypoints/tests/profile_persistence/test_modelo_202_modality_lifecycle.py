@@ -267,6 +267,23 @@ def _seed_prior_m200_evidence(*, bucket_id: str, operation: PinnedAuthorityOpera
     )
 
 
+def _create_first_payment_work_unit(
+    work_repo: WorkUnitCatalogueRepository, operation: PinnedAuthorityOperation
+) -> WorkUnit:
+    """Create the 2026 first-payment-period modelo 202 work unit over ``work_repo``."""
+    snapshot = published_authority_operation().snapshot("202", filing_year=2026, period="1P")
+    return create_work_unit(
+        bucket_id=_BUCKET_ID,
+        modelo="202",
+        filing_year=2026,
+        period=Period.from_year_and_code(2026, "1P"),
+        revision_id=snapshot.revision.id,
+        ports=_work_ports(work_repo),
+        clock=_CLOCK,
+        operation=operation,
+    )
+
+
 def _calculate_m202(
     *,
     bucket_id: str,
@@ -360,17 +377,7 @@ def test_m202_missing_required_bindings_refuses_before_persisting_zero_draft(
         _seed_profile(bucket_id=_BUCKET_ID, incn=None)
         work_repo = WorkUnitCatalogueRepository()
         calc_repo = CalculationRevisionCatalogueRepository()
-        snapshot = published_authority_operation().snapshot("202", filing_year=2026, period="1P")
-        work_unit = create_work_unit(
-            bucket_id=_BUCKET_ID,
-            modelo="202",
-            filing_year=2026,
-            period=Period.from_year_and_code(2026, "1P"),
-            revision_id=snapshot.revision.id,
-            ports=_work_ports(work_repo),
-            clock=_CLOCK,
-            operation=operation,
-        )
+        work_unit = _create_first_payment_work_unit(work_repo, operation)
 
         with (
             pytest.raises(ModeloRequiredBindingsMissingError) as exc_info,
@@ -409,17 +416,7 @@ def test_m202_legacy_zero_revision_cannot_verify_file_or_export(
         calc_repo = CalculationRevisionCatalogueRepository()
         filing_repo = ModeloRecordCatalogueRepository()
         verification_repo = VerificationReportCatalogueRepository()
-        snapshot = published_authority_operation().snapshot("202", filing_year=2026, period="1P")
-        work_unit = create_work_unit(
-            bucket_id=_BUCKET_ID,
-            modelo="202",
-            filing_year=2026,
-            period=Period.from_year_and_code(2026, "1P"),
-            revision_id=snapshot.revision.id,
-            ports=_work_ports(work_repo),
-            clock=_CLOCK,
-            operation=operation,
-        )
+        work_unit = _create_first_payment_work_unit(work_repo, operation)
         draft = _seed_legacy_zero_m202_revision(
             work_unit=work_unit,
             calculation_repository=calc_repo,
@@ -576,17 +573,7 @@ def test_m202_missing_incn_with_explicit_relation_values_refuses_calculate(
         _seed_prior_m200_evidence(bucket_id=_BUCKET_ID, operation=operation)
         work_repo = WorkUnitCatalogueRepository()
         CalculationRevisionCatalogueRepository()
-        snapshot = published_authority_operation().snapshot("202", filing_year=2026, period="1P")
-        work_unit = create_work_unit(
-            bucket_id=_BUCKET_ID,
-            modelo="202",
-            filing_year=2026,
-            period=Period.from_year_and_code(2026, "1P"),
-            revision_id=snapshot.revision.id,
-            ports=_work_ports(work_repo),
-            clock=_CLOCK,
-            operation=operation,
-        )
+        work_unit = _create_first_payment_work_unit(work_repo, operation)
 
         with (
             pytest.raises(ModeloRequiredBindingsMissingError) as exc_info,
