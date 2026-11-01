@@ -16,6 +16,7 @@ from textual.widgets import Button, Input, OptionList, Select, Static
 
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.application.operations.registry import OperationFrontendProjection
+from cadrumo.application.user_profile.overview import ProfileOverview
 from cadrumo.core.bucket_pointer import require_active_bucket_id
 from cadrumo.core.credentials import assess_profile_password
 from cadrumo.core.external_constants import OutputLanguage
@@ -25,6 +26,7 @@ from cadrumo.domain.user_profile.values import ProfileSetupState
 from cadrumo.entrypoints.tui.components.host import ScreenHostApp
 from cadrumo.entrypoints.tui.profile.aeat_auth_setup import AeatAuthSetupScreen
 from cadrumo.entrypoints.tui.profile.edit_screens import FieldEditScreen
+from cadrumo.entrypoints.tui.profile.overview import ProfileManagerScreen
 from cadrumo.entrypoints.tui.profile.setup_journey import ProfileSetupStage
 from cadrumo.entrypoints.tui.secret.registration import (
     RegistrationScreen,
@@ -103,123 +105,133 @@ async def _click[Result](pilot: Pilot[Result], selector: str) -> None:
     assert await pilot.click(button), f"Wizard control could not be clicked: {selector}"
 
 
-async def _walk(client: FrontendClient, label: str) -> None:
-    composition = ProfileManagerClientComposition(client, profile_label=label, output_language=OutputLanguage.EN)
-    screen = await asyncio.to_thread(composition.compose)
-    cached = screen.overview
-    async with ScreenHostApp(screen).run_test(size=(160, 60)) as pilot:
-        await _until(pilot, lambda: screen.query_one("#onboarding-continue", Button).is_attached, "overview")
-        assert screen.overview.setup_state is ProfileSetupState.INCOMPLETE
-        assert screen._setup_stage is ProfileSetupStage.OVERVIEW
-        await _click(pilot, "#onboarding-continue")
-        await _until(pilot, lambda: screen._setup_stage is ProfileSetupStage.GET_DATA, "get data")
-        await _until(pilot, lambda: screen._auth_readiness is not None, "initial authentication requirements")
-        assert screen.query_one("#source-censal_review Button", Button).disabled
-        await _click(pilot, "#manager-auth-edit")
-        await _until(pilot, lambda: isinstance(pilot.app.screen, AeatAuthSetupScreen), "open authentication")
-        editor = pilot.app.screen
-        assert isinstance(editor, AeatAuthSetupScreen)
-        await _until(pilot, lambda: not editor.query_one("#aeat-auth-save", Button).disabled, "load saved settings")
-        editor.query_one("#aeat-auth-method", Select).value = "clave_movil"
-        editor.query_one("#aeat-auth-route", Select).value = "app_request"
-        editor.query_one("#aeat-auth-field-0", Input).value = "12345678Z"
-        editor.query_one("#aeat-auth-field-1", Input).value = "12345678Z"
-        await _click(pilot, "#aeat-auth-save")
-        await _until(pilot, lambda: not editor._busy, "save incomplete authentication")
-        assert editor._snapshot is not None
-        assert not editor._snapshot[1].ready
-        assert any(
-            item.field == "auth.fecha_validez" and not item.satisfied for item in editor._snapshot[1].requirements
-        )
-        editor.query_one("#aeat-auth-field-2", Input).value = "not-a-date"
-        await _click(pilot, "#aeat-auth-save")
-        await _until(pilot, lambda: not editor._busy, "reject invalid validity date")
-        assert str(editor.query_one("#aeat-auth-message", Static).render()).strip()
-        assert not editor._snapshot[1].ready
-        editor.query_one("#aeat-auth-field-2", Input).value = "2030-01-01"
-        await _click(pilot, "#aeat-auth-save")
-        await _until(pilot, lambda: not editor._busy, "save complete authentication")
-        assert editor._snapshot is not None and editor._snapshot[1].ready, str(
-            editor.query_one("#aeat-auth-message", Static).render()
-        )
-        await _click(pilot, "#aeat-auth-close")
-        await _until(pilot, lambda: pilot.app.screen is screen, "return to get data")
-        await _until(
-            pilot,
-            lambda: any(not button.disabled for button in screen.query(Button).filter("#source-censal_review Button")),
-            "enable sync",
-        )
-        assert tr("tui.aeat_auth.ready") in str(screen.query_one("#manager-auth-readiness", Static).render())
-        await _click(pilot, "#manager-auth-edit")
-        await _until(pilot, lambda: isinstance(pilot.app.screen, AeatAuthSetupScreen), "reopen authentication")
-        reopened = pilot.app.screen
-        assert isinstance(reopened, AeatAuthSetupScreen)
-        await _until(pilot, lambda: reopened._snapshot is not None, "reload persisted authentication")
-        assert reopened._snapshot is not None and reopened._snapshot[1].ready
-        assert reopened.query_one("#aeat-auth-method", Select).value == "clave_movil"
-        assert reopened.query_one("#aeat-auth-route", Select).value == "app_request"
-        reopened.query_one("#aeat-auth-method", Select).value = "clave_permanente"
-        await settle(pilot, workers=False)
-        reopened.query_one("#aeat-auth-secret", Input).value = "synthetic-wizard-password"
-        await _click(pilot, "#aeat-auth-save")
-        await _until(pilot, lambda: not reopened._busy, "save changed method and protected password")
-        assert reopened._snapshot is not None and reopened._snapshot[1].ready
-        assert reopened._snapshot[1].provider == "clave_permanente"
-        assert reopened.query_one("#aeat-auth-secret", Input).value == ""
-        await _click(pilot, "#aeat-auth-close")
-        await _until(pilot, lambda: pilot.app.screen is screen, "return from reopened authentication")
-        await _until(
-            pilot,
-            lambda: bool(screen.query("#manager-auth-edit")),
-            "authentication editor available after method change",
-        )
-        await _click(pilot, "#manager-auth-edit")
-        await _until(pilot, lambda: isinstance(pilot.app.screen, AeatAuthSetupScreen), "reopen protected credentials")
-        protected = pilot.app.screen
-        assert isinstance(protected, AeatAuthSetupScreen)
-        await _until(pilot, lambda: protected._snapshot is not None, "read back saved protected credentials")
-        assert protected._snapshot is not None and protected._snapshot[1].ready
-        assert protected.query_one("#aeat-auth-method", Select).value == "clave_permanente"
-        assert protected.query_one("#aeat-auth-secret", Input).value == ""
-        await _click(pilot, "#aeat-auth-close")
-        await _until(pilot, lambda: pilot.app.screen is screen, "return to wizard after credential readback")
-        await _click(pilot, "#onboarding-continue")
-        await _until(pilot, lambda: screen._setup_stage is ProfileSetupStage.REQUIRED, "required answers")
-        print("wizard required fields:", ", ".join(screen.overview.missing_required))
-        await _click(pilot, "#onboarding-continue")
-        for _ in range(50):
-            await _until(
-                pilot,
-                lambda: (
-                    (
-                        isinstance(pilot.app.screen, FieldEditScreen)
-                        and bool(pilot.app.screen.query("#edit-options, #edit-input"))
-                    )
-                    or (screen._pending_write is None and not screen.overview.missing_required)
-                ),
-                "next required answer",
-            )
-            if not isinstance(pilot.app.screen, FieldEditScreen):
-                break
-            dialog = pilot.app.screen
-            field = dialog._field
-            assert field.path in _ANSWERS, f"No verified answer supplied for wizard field {field.path}"
-            answer = _ANSWERS[field.path]
-            if field.choices:
-                values = [choice.value for choice in field.choices]
-                assert answer in values, f"Wizard field {field.path} has different choices: {values}"
-                dialog.query_one("#edit-options", OptionList).highlighted = values.index(answer)
-            else:
-                dialog.query_one("#edit-input", Input).value = answer
-            await _click(pilot, "#btn-edit-save")
-            await settle(pilot, workers=False)
-        assert not screen.overview.missing_required, screen.overview.missing_required
-        await _until(pilot, lambda: screen._setup_stage is ProfileSetupStage.REVIEW, "review")
-        assert screen.overview.setup_state is ProfileSetupState.INCOMPLETE
-        await _click(pilot, "#onboarding-continue")
-        await _until(pilot, lambda: screen.overview.setup_state is ProfileSetupState.COMPLETE, "finish setup")
-        assert screen._setup_stage is ProfileSetupStage.READY
+async def _enter_get_data_stage(pilot: Pilot[object], screen: ProfileManagerScreen) -> None:
+    await _until(pilot, lambda: screen.query_one("#onboarding-continue", Button).is_attached, "overview")
+    assert screen.overview.setup_state is ProfileSetupState.INCOMPLETE
+    assert screen._setup_stage is ProfileSetupStage.OVERVIEW
+    await _click(pilot, "#onboarding-continue")
+    await _until(pilot, lambda: screen._setup_stage is ProfileSetupStage.GET_DATA, "get data")
+    await _until(pilot, lambda: screen._auth_readiness is not None, "initial authentication requirements")
+    assert screen.query_one("#source-censal_review Button", Button).disabled
 
+
+async def _save_authentication_settings(pilot: Pilot[object], screen: ProfileManagerScreen) -> None:
+    """An incomplete, an invalid and finally a complete authentication setting are each saved and judged."""
+    await _click(pilot, "#manager-auth-edit")
+    await _until(pilot, lambda: isinstance(pilot.app.screen, AeatAuthSetupScreen), "open authentication")
+    editor = pilot.app.screen
+    assert isinstance(editor, AeatAuthSetupScreen)
+    await _until(pilot, lambda: not editor.query_one("#aeat-auth-save", Button).disabled, "load saved settings")
+    editor.query_one("#aeat-auth-method", Select).value = "clave_movil"
+    editor.query_one("#aeat-auth-route", Select).value = "app_request"
+    editor.query_one("#aeat-auth-field-0", Input).value = "12345678Z"
+    editor.query_one("#aeat-auth-field-1", Input).value = "12345678Z"
+    await _click(pilot, "#aeat-auth-save")
+    await _until(pilot, lambda: not editor._busy, "save incomplete authentication")
+    assert editor._snapshot is not None
+    assert not editor._snapshot[1].ready
+    assert any(item.field == "auth.fecha_validez" and not item.satisfied for item in editor._snapshot[1].requirements)
+    editor.query_one("#aeat-auth-field-2", Input).value = "not-a-date"
+    await _click(pilot, "#aeat-auth-save")
+    await _until(pilot, lambda: not editor._busy, "reject invalid validity date")
+    assert str(editor.query_one("#aeat-auth-message", Static).render()).strip()
+    assert not editor._snapshot[1].ready
+    editor.query_one("#aeat-auth-field-2", Input).value = "2030-01-01"
+    await _click(pilot, "#aeat-auth-save")
+    await _until(pilot, lambda: not editor._busy, "save complete authentication")
+    assert editor._snapshot is not None and editor._snapshot[1].ready, str(
+        editor.query_one("#aeat-auth-message", Static).render()
+    )
+    await _click(pilot, "#aeat-auth-close")
+    await _until(pilot, lambda: pilot.app.screen is screen, "return to get data")
+    await _until(
+        pilot,
+        lambda: any(not button.disabled for button in screen.query(Button).filter("#source-censal_review Button")),
+        "enable sync",
+    )
+    assert tr("tui.aeat_auth.ready") in str(screen.query_one("#manager-auth-readiness", Static).render())
+
+
+async def _change_method_and_protected_password(pilot: Pilot[object], screen: ProfileManagerScreen) -> None:
+    await _click(pilot, "#manager-auth-edit")
+    await _until(pilot, lambda: isinstance(pilot.app.screen, AeatAuthSetupScreen), "reopen authentication")
+    reopened = pilot.app.screen
+    assert isinstance(reopened, AeatAuthSetupScreen)
+    await _until(pilot, lambda: reopened._snapshot is not None, "reload persisted authentication")
+    assert reopened._snapshot is not None and reopened._snapshot[1].ready
+    assert reopened.query_one("#aeat-auth-method", Select).value == "clave_movil"
+    assert reopened.query_one("#aeat-auth-route", Select).value == "app_request"
+    reopened.query_one("#aeat-auth-method", Select).value = "clave_permanente"
+    await settle(pilot, workers=False)
+    reopened.query_one("#aeat-auth-secret", Input).value = "synthetic-wizard-password"
+    await _click(pilot, "#aeat-auth-save")
+    await _until(pilot, lambda: not reopened._busy, "save changed method and protected password")
+    assert reopened._snapshot is not None and reopened._snapshot[1].ready
+    assert reopened._snapshot[1].provider == "clave_permanente"
+    assert reopened.query_one("#aeat-auth-secret", Input).value == ""
+    await _click(pilot, "#aeat-auth-close")
+    await _until(pilot, lambda: pilot.app.screen is screen, "return from reopened authentication")
+    await _until(
+        pilot,
+        lambda: bool(screen.query("#manager-auth-edit")),
+        "authentication editor available after method change",
+    )
+
+
+async def _read_back_protected_credentials(pilot: Pilot[object], screen: ProfileManagerScreen) -> None:
+    await _click(pilot, "#manager-auth-edit")
+    await _until(pilot, lambda: isinstance(pilot.app.screen, AeatAuthSetupScreen), "reopen protected credentials")
+    protected = pilot.app.screen
+    assert isinstance(protected, AeatAuthSetupScreen)
+    await _until(pilot, lambda: protected._snapshot is not None, "read back saved protected credentials")
+    assert protected._snapshot is not None and protected._snapshot[1].ready
+    assert protected.query_one("#aeat-auth-method", Select).value == "clave_permanente"
+    assert protected.query_one("#aeat-auth-secret", Input).value == ""
+    await _click(pilot, "#aeat-auth-close")
+    await _until(pilot, lambda: pilot.app.screen is screen, "return to wizard after credential readback")
+
+
+async def _answer_required_fields_and_finish(pilot: Pilot[object], screen: ProfileManagerScreen) -> None:
+    """Answer each required field with its verified answer, review, and complete setup."""
+    await _click(pilot, "#onboarding-continue")
+    await _until(pilot, lambda: screen._setup_stage is ProfileSetupStage.REQUIRED, "required answers")
+    print("wizard required fields:", ", ".join(screen.overview.missing_required))
+    await _click(pilot, "#onboarding-continue")
+    for _ in range(50):
+        await _until(
+            pilot,
+            lambda: (
+                (
+                    isinstance(pilot.app.screen, FieldEditScreen)
+                    and bool(pilot.app.screen.query("#edit-options, #edit-input"))
+                )
+                or (screen._pending_write is None and not screen.overview.missing_required)
+            ),
+            "next required answer",
+        )
+        if not isinstance(pilot.app.screen, FieldEditScreen):
+            break
+        dialog = pilot.app.screen
+        field = dialog._field
+        assert field.path in _ANSWERS, f"No verified answer supplied for wizard field {field.path}"
+        answer = _ANSWERS[field.path]
+        if field.choices:
+            values = [choice.value for choice in field.choices]
+            assert answer in values, f"Wizard field {field.path} has different choices: {values}"
+            dialog.query_one("#edit-options", OptionList).highlighted = values.index(answer)
+        else:
+            dialog.query_one("#edit-input", Input).value = answer
+        await _click(pilot, "#btn-edit-save")
+        await settle(pilot, workers=False)
+    assert not screen.overview.missing_required, screen.overview.missing_required
+    await _until(pilot, lambda: screen._setup_stage is ProfileSetupStage.REVIEW, "review")
+    assert screen.overview.setup_state is ProfileSetupState.INCOMPLETE
+    await _click(pilot, "#onboarding-continue")
+    await _until(pilot, lambda: screen.overview.setup_state is ProfileSetupState.COMPLETE, "finish setup")
+    assert screen._setup_stage is ProfileSetupStage.READY
+
+
+async def _edit_profile_after_reopening(client: FrontendClient, label: str, cached: ProfileOverview) -> None:
     reopened = ProfileManagerClientComposition(
         client, profile_label=label, output_language=OutputLanguage.EN
     ).compose_from_overview(cached)
@@ -251,6 +263,20 @@ async def _walk(client: FrontendClient, label: str) -> None:
             )
             == "Edited after reopening"
         )
+
+
+async def _walk(client: FrontendClient, label: str) -> None:
+    composition = ProfileManagerClientComposition(client, profile_label=label, output_language=OutputLanguage.EN)
+    screen = await asyncio.to_thread(composition.compose)
+    cached = screen.overview
+    async with ScreenHostApp(screen).run_test(size=(160, 60)) as pilot:
+        await _enter_get_data_stage(pilot, screen)
+        await _save_authentication_settings(pilot, screen)
+        await _change_method_and_protected_password(pilot, screen)
+        await _read_back_protected_credentials(pilot, screen)
+        await _answer_required_fields_and_finish(pilot, screen)
+
+    await _edit_profile_after_reopening(client, label, cached)
 
 
 def test_native_wizard_registration_authentication_and_completion(
