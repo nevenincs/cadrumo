@@ -38,6 +38,7 @@ from .lifecycle_notices import LifecycleNoticeBoard
 from .operation_contract_cache import OperationContractCache
 from .protocol_contract import (
     MCP_TOOL_NAMES,
+    PERSON_ACT_DENIAL_CODES,
     PERSON_ACT_REMEDY,
     has_refusal,
     public_value,
@@ -407,7 +408,7 @@ class RuntimeMcpAdapter:
         status = reply.get("status")
         denial = reply.get("denial") or (status.get("denial") if isinstance(status, dict) else None)
         code = reply.get("code") if reply.get("outcome") == "refused" else denial
-        if code in {AccessDenialCode.PERSON_ACT_REQUIRED.value, AccessDenialCode.HUMAN_AUTHORITY_REQUIRED.value}:
+        if code in PERSON_ACT_DENIAL_CODES:
             self._person_act_remedy(name, args, reply)
         if code or has_refusal(reply):
             # These replies are protocol successes, so transport exception
@@ -485,7 +486,7 @@ class RuntimeMcpAdapter:
 
     def _add_refusal_remedy(self, code: str, reply: dict[str, Any]) -> None:
         """Choose the refusal remedy after any ended lease has been released."""
-        if code in {AccessDenialCode.PERSON_ACT_REQUIRED.value, AccessDenialCode.HUMAN_AUTHORITY_REQUIRED.value}:
+        if code in PERSON_ACT_DENIAL_CODES:
             # The runtime refused the person's own act; the agent is told to ask the person.
             reply["remedy"] = PERSON_ACT_REMEDY
         elif (remedy := connection_unavailable_remedy(code)) is not None and remedy:
