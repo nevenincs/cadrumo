@@ -53,7 +53,7 @@ def _join_linenos(tree: ast.AST) -> set[int]:
     return found
 
 
-def _function_spans(tree: ast.AST) -> list[tuple[int, int, str]]:
+def function_spans(tree: ast.AST) -> list[tuple[int, int, str]]:
     """Return ``(start, end, dotted name)`` for every function, nested ones included."""
     spans: list[tuple[int, int, str]] = []
 
@@ -71,7 +71,7 @@ def _function_spans(tree: ast.AST) -> list[tuple[int, int, str]]:
     return spans
 
 
-def _enclosing_scope(lineno: int, spans: list[tuple[int, int, str]]) -> str:
+def enclosing_scope(lineno: int, spans: list[tuple[int, int, str]]) -> str:
     """Return the innermost function containing ``lineno``, or the module scope."""
     enclosing = [(start, name) for start, end, name in spans if start <= lineno <= end]
     return max(enclosing)[1] if enclosing else _MODULE_SCOPE
@@ -106,7 +106,7 @@ def _root_bound_names(tree: ast.AST, spans: list[tuple[int, int, str]]) -> dict[
             continue
         if node.value is None or not _is_root_access(node.value):
             continue
-        scope = _enclosing_scope(node.lineno, spans)
+        scope = enclosing_scope(node.lineno, spans)
         for target in targets:
             if isinstance(target, ast.Name):
                 bound.setdefault(scope, []).append((target.id, node.lineno))
@@ -143,7 +143,7 @@ def root_join_sites(module: str, tree: ast.AST) -> tuple[JoinSite, ...]:
     fires or does not. The innermost enclosing function wins, so a join inside
     a closure is attributed to the closure rather than to its host.
     """
-    spans = _function_spans(tree)
+    spans = function_spans(tree)
     bound = _root_bound_names(tree, spans)
     linenos: set[int] = set(_join_linenos(tree))
 
@@ -157,10 +157,10 @@ def root_join_sites(module: str, tree: ast.AST) -> tuple[JoinSite, ...]:
             continue
         receiver = _unwrap_path_call(target)
         if isinstance(receiver, ast.Name) and _binds_root(
-            receiver.id, _enclosing_scope(receiver.lineno, spans), receiver.lineno, bound
+            receiver.id, enclosing_scope(receiver.lineno, spans), receiver.lineno, bound
         ):
             linenos.add(receiver.lineno)
 
     return tuple(
-        JoinSite(module=module, function=_enclosing_scope(lineno, spans), lineno=lineno) for lineno in sorted(linenos)
+        JoinSite(module=module, function=enclosing_scope(lineno, spans), lineno=lineno) for lineno in sorted(linenos)
     )
