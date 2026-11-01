@@ -439,6 +439,65 @@ def _persist_legacy_verified_revision(
     return legacy
 
 
+def _assert_blocked_report_carries_both_severities(report) -> None:
+    assert report.granted_verificado_completo is False
+    assert report.completeness_status is VerificationCompletenessStatus.BLOCKED
+    blocking = [
+        finding for finding in report.findings if finding.severity is ModeloVerificationFindingSeverity.BLOCKING
+    ]
+    warning = [finding for finding in report.findings if finding.severity is ModeloVerificationFindingSeverity.WARNING]
+    assert blocking != []
+    assert warning != []
+
+
+def _evidence_findings_of(report, revision) -> list:
+    expected_source_refs = tuple(dict.fromkeys(ref for obs in revision.observations for ref in obs.source_refs))
+    evidence_findings = [
+        finding
+        for finding in report.findings
+        if finding.source_refs == expected_source_refs
+        and finding.kind in {ModeloVerificationFindingKind.BLOCKING_RULE, ModeloVerificationFindingKind.ADVISORY}
+    ]
+    assert evidence_findings
+    assert all(finding.source_refs == expected_source_refs for finding in evidence_findings)
+    assert all("deductible_iva_evidence" not in finding.source_refs for finding in evidence_findings)
+    assert all("output_iva_evidence" not in finding.source_refs for finding in evidence_findings)
+    assert all(
+        "_" not in source_ref and "-" in source_ref
+        for finding in evidence_findings
+        for source_ref in finding.source_refs
+    )
+    return evidence_findings
+
+
+def _assert_evidence_findings_split_blocking_and_advisory(evidence_findings) -> None:
+    # The deductible finding is BLOCKING while the output side stays an
+    # ADVISORY; each remains factual and has no persisted recovery prose.
+    assert any(finding.kind is ModeloVerificationFindingKind.BLOCKING_RULE for finding in evidence_findings)
+    assert any(finding.kind is ModeloVerificationFindingKind.ADVISORY for finding in evidence_findings)
+    assert all("next_action" not in finding.model_dump(mode="json") for finding in evidence_findings)
+
+
+def _assert_evidence_projections(verification, evidence_findings) -> None:
+    evidence_projections = tuple(
+        projection for projection in verification.finding_preconditions if projection.finding in evidence_findings
+    )
+    assert len(evidence_projections) == len(evidence_findings)
+    assert all(
+        projection.precondition_failure is not None
+        and projection.precondition_failure.scenario_id == "modelo.work.verify.deductible_iva_evidence.missing"
+        and projection.precondition_failure.verdict.action is None
+        and projection.precondition_failure.verdict.no_recovery_outcome is not None
+        for projection in evidence_projections
+        if projection.finding.severity is ModeloVerificationFindingSeverity.BLOCKING
+    )
+    assert all(
+        projection.precondition_failure is None
+        for projection in evidence_projections
+        if projection.finding.severity is ModeloVerificationFindingSeverity.WARNING
+    )
+
+
 def test_modelo_303_verify_blocks_on_deductible_gap_and_only_warns_on_the_output_gap(
     secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
@@ -488,52 +547,10 @@ def test_modelo_303_verify_blocks_on_deductible_gap_and_only_warns_on_the_output
         )
     report = verification.report
 
-    assert report.granted_verificado_completo is False
-    assert report.completeness_status is VerificationCompletenessStatus.BLOCKED
-    blocking = [
-        finding for finding in report.findings if finding.severity is ModeloVerificationFindingSeverity.BLOCKING
-    ]
-    warning = [finding for finding in report.findings if finding.severity is ModeloVerificationFindingSeverity.WARNING]
-    assert blocking != []
-    assert warning != []
-    expected_source_refs = tuple(dict.fromkeys(ref for obs in revision.observations for ref in obs.source_refs))
-    evidence_findings = [
-        finding
-        for finding in report.findings
-        if finding.source_refs == expected_source_refs
-        and finding.kind in {ModeloVerificationFindingKind.BLOCKING_RULE, ModeloVerificationFindingKind.ADVISORY}
-    ]
-    assert evidence_findings
-    assert all(finding.source_refs == expected_source_refs for finding in evidence_findings)
-    assert all("deductible_iva_evidence" not in finding.source_refs for finding in evidence_findings)
-    assert all("output_iva_evidence" not in finding.source_refs for finding in evidence_findings)
-    assert all(
-        "_" not in source_ref and "-" in source_ref
-        for finding in evidence_findings
-        for source_ref in finding.source_refs
-    )
-    # The deductible finding is BLOCKING while the output side stays an
-    # ADVISORY; each remains factual and has no persisted recovery prose.
-    assert any(finding.kind is ModeloVerificationFindingKind.BLOCKING_RULE for finding in evidence_findings)
-    assert any(finding.kind is ModeloVerificationFindingKind.ADVISORY for finding in evidence_findings)
-    assert all("next_action" not in finding.model_dump(mode="json") for finding in evidence_findings)
-    evidence_projections = tuple(
-        projection for projection in verification.finding_preconditions if projection.finding in evidence_findings
-    )
-    assert len(evidence_projections) == len(evidence_findings)
-    assert all(
-        projection.precondition_failure is not None
-        and projection.precondition_failure.scenario_id == "modelo.work.verify.deductible_iva_evidence.missing"
-        and projection.precondition_failure.verdict.action is None
-        and projection.precondition_failure.verdict.no_recovery_outcome is not None
-        for projection in evidence_projections
-        if projection.finding.severity is ModeloVerificationFindingSeverity.BLOCKING
-    )
-    assert all(
-        projection.precondition_failure is None
-        for projection in evidence_projections
-        if projection.finding.severity is ModeloVerificationFindingSeverity.WARNING
-    )
+    _assert_blocked_report_carries_both_severities(report)
+    evidence_findings = _evidence_findings_of(report, revision)
+    _assert_evidence_findings_split_blocking_and_advisory(evidence_findings)
+    _assert_evidence_projections(verification, evidence_findings)
     # The load-bearing half: a blocked verify must leave NO frozen bundle and a
     # still-open draft. If either moved, the operator would be locked out of the
     # target exactly as before, and the promotion would have changed the message
