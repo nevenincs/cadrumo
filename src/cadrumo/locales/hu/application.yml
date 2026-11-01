@@ -2575,7 +2575,8 @@ application:
         lévő profilt. A kapszula visszaállításkor megtartja az azonosságát, ezért
         a biztonsági mentés csak olyan tárolóba állítható vissza, amely még nem tartalmazza,
         vagy az eredeti profil törlése után.
-      lifecycle_schema_validation_failed: A profiladatok nem felelnek meg a felhasználóiprofil-sémának.
+      lifecycle_schema_validation_failed: A profiladatok nem felelnek meg a felhasználói
+        profil sémájának.
       passphrase_confirmation_mismatch: Az új jelszó és a megerősítése nem egyezik.
       passphrase_current_rejected: A jelenlegi jelszó helytelen; a jelszó nem változott.
       profile_already_exists: A(z) %{profile} profil már létezik; futtasd az aeat

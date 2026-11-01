@@ -387,7 +387,7 @@ errors:
     canonical_invoice_draft_reader_unavailable: A kiválasztott számlatervezet-olvasó
       nem érhető el.
     canonical_invoice_source_persistence: A számlaforrás-katalógust nem sikerült beolvasni.
-    canonical_llm_diagnostics_read: A nyelvimodell-diagnosztikát nem sikerült beolvasni.
+    canonical_llm_diagnostics_read: A nyelvi modell diagnosztikáját nem sikerült beolvasni.
     canonical_m036_declaration_persistence: A Modelo 036 bevallást nem sikerült menteni.
     canonical_m145_communication_record_persistence: A Modelo 145 kommunikációs rekordját
       nem sikerült menteni.
@@ -641,8 +641,8 @@ errors:
       teljesítette az érvényesítést.
     integrity_storage_classification: Egy rekord deklarált érzékenységi osztálya nem
       kompatibilis az adattárával.
-    integrity_storage_corpus_bundle: A corpuscsomagot nem sikerült feldolgozni vagy
-      ellenőrizni.
+    integrity_storage_corpus_bundle: A korpusz csomagját nem sikerült feldolgozni
+      vagy ellenőrizni.
     integrity_storage_corpus_manifest: A korpuszjegyzéket nem sikerült elemezni vagy
       érvényesíteni.
     integrity_storage_corpus_manifest_tamper: A korpuszjegyzék önellenőrzéshez használt

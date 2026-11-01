@@ -931,8 +931,8 @@ wizard:
       title: Adózói típus
     title: Beállítási varázsló
     verifier:
-      impatriado_requires_start_date: 'Impatrióta rendszer: a különleges rendszer
-        kezdő dátuma kötelező. Add meg a kezdő dátumot.'
+      impatriado_requires_start_date: A beköltözők különleges rendszeréhez kezdő dátum
+        szükséges. Add meg a kezdő dátumot.
       monoparental_requires_hijos_warning: 'Egyszülős családi egység: az egyszülős
         egységként való közös adóbevallás (LIRPF 82.1.2° cikkely) kiskorú gyermekeket
         igényel a családi egységben. Eltartott gyermekek nélkül a közös bevallás nem

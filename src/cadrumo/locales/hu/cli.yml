@@ -3066,10 +3066,10 @@ cli:
         állítja be, kézzel nem adható meg. Válassz egyet: BUSINESS, PERSONAL, MIXED,
         vagy hagyd ki a --classification kapcsolót, hogy a sor besorolatlan maradjon.'
       taxable_base_help: ÁFA-mentes alapösszeg.
-      usage_ratio_help: Beállított használatiarány-azonosító, nem tetszőleges szöveg.
-        Új arány létrehozása vagy hozzárendelése előtt ellenőrizd a beállított arányokat
-        és a jogosult kategóriákat; a tétel --category-id kategóriájához már tartoznia
-        kell ennek az aránynak.
+      usage_ratio_help: A beállított használati arány azonosítója, nem tetszőleges
+        szöveg. Új arány létrehozása vagy hozzárendelése előtt ellenőrizd a beállított
+        arányokat és a jogosult kategóriákat; a tétel --category-id kategóriájához
+        már tartoznia kell ennek az aránynak.
       value_date_help: Értékdátum (ÉÉÉÉ-HH-NN).
     allocate:
       business_pct_help: Üzleti célú arány 0 és 1 között MIXED/arányos sorokhoz; teljesen
