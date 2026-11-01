@@ -429,6 +429,9 @@ test("a new profile is offered beside sign-in, refuses a name already in use, an
 }) => {
   await seedLayout(target);
   await open(target, "signed-out");
+  await expect(dialog(target).locator('[data-slot="separator"]')).toHaveCount(
+    1,
+  );
   await dialog(target)
     .getByRole("button", { name: label("desktop.account.new_profile") })
     .click();
@@ -784,6 +787,10 @@ test("where it is not known whether somebody is signed in, no other profile and 
   await expect(password(target)).toBeVisible();
   await expect(dialog(target).locator("select")).toHaveCount(0);
   await expect(dialog(target).locator(".new-profile")).toHaveCount(0);
+  // The divider above that button goes with it.
+  await expect(dialog(target).locator('[data-slot="separator"]')).toHaveCount(
+    0,
+  );
   // The palette offers no new profile either.
   await target.keyboard.press("Escape");
   await target
