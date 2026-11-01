@@ -73,7 +73,7 @@ from .....core.time.clock import now
 from .....domain.user_profile.errors import UserProfileError
 from .._playwright import PlaywrightTimeoutError
 from ..browser.desktop import interactive_desktop_available
-from . import session_store as session_store
+from . import session_store
 from ._clave_movil_page_flow import _ClaveMovilPageFlowMixin
 from ._clave_movil_salvage import _ClaveMovilSessionSalvageMixin
 from ._clave_provider_common import (

@@ -62,7 +62,7 @@ from .....core.config_support import AEAT_CERTIFICATE_PROTECTED_URL
 from .....core.errors.hierarchy import AeatLoginAssertionError
 from .....core.logging import get_logger
 from .....core.time.clock import now
-from . import session_store as session_store
+from . import session_store
 from .authenticator_persistence import (
     AEAT_STORAGE_STATE_SCHEMA_VERSION,
     PersistedSessionMetadata,

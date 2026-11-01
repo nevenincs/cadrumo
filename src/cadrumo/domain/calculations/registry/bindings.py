@@ -49,9 +49,6 @@ from .bindings_previous_filing import PreviousFilingProvider
 from .casilla_membership import text_family_casilla_ids
 from .errors import RegistryValidationError
 from .ids import BindingId, FormulaId, LegalRefId, ModeloId, SourceRefId
-from .invoice_bindings import (
-    InvoiceProviderBase as InvoiceProviderBase,
-)
 from .iva_compensation_annual_partition_bindings import (
     IvaCompensationAnnualPartition,
     IvaCompensationAnnualPartitionProvider,

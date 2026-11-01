@@ -69,18 +69,7 @@ from ._capsule_filesystem import (
 from ._capsule_filesystem import (
     write_through_windows_publication_fence as _write_through_windows_publication_fence,
 )
-from ._inventory import (
-    PROFILE_CUSTODY_INVENTORY_MAX_ENTRIES as _INVENTORY_MAX_ENTRIES,
-)
-from ._inventory import (
-    PROFILE_CUSTODY_INVENTORY_MAX_TOTAL_BYTES as _INVENTORY_MAX_TOTAL_BYTES,
-)
-from ._inventory import (
-    ProfileCustodyInventory as _CanonicalProfileCustodyInventory,
-)
-from ._inventory import (
-    ProfileCustodyInventoryEntry as _CanonicalProfileCustodyInventoryEntry,
-)
+from ._inventory import ProfileCustodyInventory
 from ._inventory import (
     inventory_profile_custody_capsule as _inventory_profile_custody_capsule,
 )
@@ -322,7 +311,7 @@ def _release_bucket_file_handles(profile_id: UUID) -> None:
     Called here rather than left to callers because the two functions below ARE
     the destruction path: putting it at the boundary means no caller can forget,
     and there is nothing to forget on the platforms that would have tolerated
-    the open handle -- which is exactly what would have kept the defect hidden.
+    the open handle.
 
     Disposal is idempotent and bucket-scoped: engines cached for other buckets
     and for explicit database URLs are untouched, and disposing when nothing is
@@ -417,14 +406,6 @@ def remove_profile_custody_deletion_tombstone(
             staging_handle=tombstone_handle,
             snapshot=snapshot,
         )
-
-
-# The inventory owner was split into `_inventory`; retain these exports as the
-# current public custody vocabulary and ensure all later staged helpers use it.
-PROFILE_CUSTODY_INVENTORY_MAX_ENTRIES = _INVENTORY_MAX_ENTRIES
-PROFILE_CUSTODY_INVENTORY_MAX_TOTAL_BYTES = _INVENTORY_MAX_TOTAL_BYTES
-ProfileCustodyInventory = _CanonicalProfileCustodyInventory
-ProfileCustodyInventoryEntry = _CanonicalProfileCustodyInventoryEntry
 
 
 def publish_profile_custody_capsule(
@@ -1140,9 +1121,8 @@ def load_committed_profile_password_material(
     capsule_path = marker_path.parent
     if not _lexists(capsule_path, trace=trace):
         raise ProfileCustodyRecordError("profile capsule is not committed")
-    # Recognize and read under the same retained directory identity. A separate
-    # recognition pass reopened the ancestry and parsed the marker twice on
-    # every authorization check. Nothing is cached between checks.
+    # Recognize and read under the same retained directory identity. Nothing is
+    # cached between checks.
     if os.name != "nt":
         with ExitStack() as anchors:
             capsule_fd = anchors.enter_context(_posix_directory_fd(capsule_path))
@@ -1206,16 +1186,12 @@ __all__ = [
     "PROFILE_CUSTODY_COMMIT_MAX_BYTES",
     "PROFILE_CUSTODY_COMMIT_SCHEMA_VERSION",
     "PROFILE_CUSTODY_DELETION_FILENAME",
-    "PROFILE_CUSTODY_INVENTORY_MAX_ENTRIES",
-    "PROFILE_CUSTODY_INVENTORY_MAX_TOTAL_BYTES",
     "PROFILE_CUSTODY_LABEL_FILENAME",
     "PROFILE_CUSTODY_LABEL_MAX_BYTES",
     "PROFILE_CUSTODY_LAYOUT_VERSION",
     "ProfileCustodyCapsuleSummaryWitness",
     "ProfileCustodyCommit",
     "ProfileCustodyDeletionMarker",
-    "ProfileCustodyInventory",
-    "ProfileCustodyInventoryEntry",
     "ProfileCustodyPasswordMaterial",
     "ProfileCustodyRecoveryMaterial",
     "install_committed_profile_custody_recovery_envelope",

@@ -72,7 +72,6 @@ from .schema_references import (
     RegistrySnapshotRef,
     TemporalProjectionDirection,
 )
-from .schema_rounding import RegistryRoundingCode as RegistryRoundingCode
 from .schema_rounding import RegistryRoundingCodeValue
 from .schema_scalars import (
     BicString as _BicString,

@@ -60,7 +60,7 @@ from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 from cadrumo_client.transport.operation_controller import OperationController, await_terminal_projection
-from cadrumo_client.transport.operation_reads import read_operation as read_operation
+from cadrumo_client.transport.operation_reads import read_operation
 
 _ATTESTATION_ACTOR = "operator:tui-modelo"
 _ATTESTATION_TIMEOUT_SECONDS = 60.0

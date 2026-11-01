@@ -22,9 +22,6 @@ from cadrumo.domain.calculations.registry.revision_order import ordered_revision
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
 
-from ._validate_semantic_role_required import (
-    collect_casillas_by_semantic_role as collect_casillas_by_semantic_role,
-)
 from .validate_semantic_role_typos import grouped_semantic_role_typo_twin_failures
 from .validation_memoization import ModeloIdentityMemo
 
