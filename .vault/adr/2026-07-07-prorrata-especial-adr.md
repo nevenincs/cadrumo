@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#prorrata-especial'
 date: '2026-07-07'
-modified: '2026-10-03'
-body_hash: 'sha256:9e77626f2e03a41a178fcd481b22ff34d54e6b5a2af3e4777883fea0270c236b'
+modified: '2026-11-01'
+body_hash: 'sha256:9cd22cde9bd33334726ea23904045e90724a79db52be9355da02e42d2223d67e'
 related:
   - "[[2026-07-05-cross-period-prorrata-adr]]"
   - "[[2026-07-01-iva-complexity-hardening-scope-adr]]"
@@ -259,3 +259,23 @@ report):
   `prorrata-sectores-diferenciados` and `prorrata-art104-tres-exclusions`.**
 - `src/cadrumo/core/external_constants.py` — `PRORRATA_ESPECIAL_MANDATORY_MULTIPLE` already
   exists; read-only, no write.
+
+## Amendment 2026-11-01: unclassified especial inputs refuse
+
+Operator-approved on 2026-11-01. This section refines the Constraints bullet on
+unclassified inputs and the matching Consequences bullet; where they differ,
+this section governs.
+
+An especial bucket with a deducible input that carries no art. 106
+classification is refused in the shared apportionment with the registered key
+`aggregation.iva_ledger.errors.especial_missing_input_classification`
+(`src/cadrumo/application/aggregation/iva_ledger_apportionment.py:213`,
+`src/cadrumo/application/aggregation/iva_ledger_apportionment.py:245`). The
+input is never treated as common use, which would deduct the general percentage
+of a cuota that may be wholly deductible or wholly non-deductible. The annual
+especial deduction total is absent, not zero, while any deducible input is
+unclassified, and the +10 % mandatory-especial check prompts for classification
+instead of reporting an amount. The settlement split of the cross-period
+prorrata amendment applies to the general regime only; an especial register at
+settlement stays unresolved with a finding until the approved especial
+partition lands.

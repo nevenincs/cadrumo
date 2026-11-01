@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#cross-period-prorrata'
 date: '2026-07-05'
-modified: '2026-10-03'
-body_hash: 'sha256:4c7cb0e03b01defecf60e0e79b592967cd509079f100fab4308952e9dd4b7c0b'
+modified: '2026-11-01'
+body_hash: 'sha256:3728a652f480a17c2a828e58eef6d633a4c648edc5ae836e1893b54fe3f18163'
 related:
   - "[[2026-07-01-iva-complexity-hardening-scope-adr]]"
   - "[[2026-07-01-iva-complexity-hardening-scope-research]]"
@@ -368,3 +368,80 @@ supplies the missing model, not a shortcut past the proof gate.
 - Pathway: the register's regime/sector axes are the landing slots for prorrata
   especial and sectores diferenciados; the divergence advisory is the natural
   ratchet toward ledger-derived volumes once exclusion classification exists.
+
+## Amendment 2026-11-01: settlement split, gross base, cadence periods, unresolved inputs
+
+Operator-approved on 2026-11-01. This section refines the Settlement and
+In-year apportionment paragraphs above; where they differ, this section governs.
+The accepted text is kept as the original record.
+
+**Base is gross.** The definitive percentage applies to "la suma de las cuotas
+soportadas" (LIVA art. 105.Seis): the gross deductible cuotas after the
+arts. 95/96 exclusions and before any percentage. The deductions practised are
+read from what each regularised liquidation actually declared, not re-derived
+from the provisional percentage, because each liquidation rounded its own boxes.
+The domain call takes both values
+(`src/cadrumo/domain/iva/prorrata.py:731`).
+
+**Split A at the settlement liquidation.** The last liquidation of the year
+(fourth quarter for a quarterly filer, month 12 for a monthly filer) deducts its
+own cuotas directly at the definitive percentage, and casilla 44 regularises only
+the earlier liquidations:
+`44 = round_half_up(definitive% x sum of earlier gross cuotas) - sum of earlier
+practised deductions`. The ledger apportionment carries a settlement period and
+percentage and splits deducible rows by date between the definitive and the
+provisional percentage (`src/cadrumo/application/aggregation/iva_ledger.py:284`,
+`src/cadrumo/application/aggregation/iva_ledger_apportionment.py:128`). The
+calculate path stages the definitive percentage for the settlement liquidation
+from the declared annual volumes, and for the Modelo 390 from the filed
+settlement observation
+(`src/cadrumo/application/modelo/calculation_source_mesh_actions.py:250`,
+`src/cadrumo/application/modelo/_calculation_source_staging.py:263`). The split
+is general-regime only: for an especial or sectorized register the settlement
+liquidation keeps the provisional apportionment and casilla 44 stays unresolved
+with a finding, and the apportionment refuses a settlement percentage handed
+directly to a non-general register. Oracle: AEAT Manual practico IVA 2025, pages 137-138
+(provisional 73 %, definitive 56 %, first-to-third-quarter cuotas 400/420/460,
+practised 934.40, fourth-quarter cuotas 160 giving casilla 29 = 89.60,
+casilla 44 = -217.60, fourth-quarter casilla 45 = -128.00, year deductions
+806.40), reproduced end to end from ledger to Modelo 303 to Modelo 390
+(`src/cadrumo/entrypoints/tests/profile_persistence/test_e2e_ledger_m303_quarters_to_m390_annual.py:1185`).
+
+**Modelo 390.** The annual regularisation field restates the filed settlement
+liquidation's casilla 44; it does not recompute it. Exactly one filed terminal
+liquidation across the cadences the registry declares for the year is admitted;
+none, several, or one whose revision stamp cannot be re-confirmed stays a named
+unresolved outcome
+(`src/cadrumo/application/calculations/m303_settlement_observation.py:58`,
+`src/cadrumo/application/calculations/prorrata_regularizacion.py:819`). The
+Modelo 390 deducible boxes stay per-period consistent: earlier periods at the
+provisional percentage, the settlement period at the definitive one.
+
+**Cadence-derived source periods.** The prorrata provider no longer lists fixed
+source periods; it declares `source_period_selection =
+"filer_liquidation_cadence"` and the liquidation periods come from the
+registry's period selection for the filer's cadence
+(`src/cadrumo/domain/calculations/registry/prorrata_regularizacion_bindings.py:81`,
+`src/cadrumo/domain/iva/m303_settlement.py:40`). This is a provider-schema
+change in the Modelo 303 and 390 binding declarations and takes effect at the
+next authority publication.
+
+**Missing inputs stay unresolved.** Casilla 44 is a structural zero in every
+non-settlement liquidation
+(`src/cadrumo/application/calculations/prorrata_regularizacion.py:871`). At the
+settlement liquidation, a missing or refused earlier liquidation, undeclared
+annual volumes while prorrata applies, an underivable regime, a missing
+provisional percentage, an earlier liquidation without its filed deducible box,
+or a disagreement between the ledger's gross cuotas at the provisional
+percentage and the filed deduction leaves the box unresolved with a finding that
+names the periods or casillas concerned
+(`src/cadrumo/application/calculations/prorrata_regularizacion.py:1032`,
+`src/cadrumo/application/calculations/prorrata_regularizacion.py:1065`,
+`src/cadrumo/application/calculations/prorrata_regularizacion.py:1135`). The
+operator-supplied-values merge and the divergent casilla-44 advisory projection
+are removed: the resolver is the one route to the box.
+
+**Approved for later, unresolved now.** Partitioning sectorized or especial
+registers across the settlement split, and an operator-declared gross input for
+manually entered periods, are approved follow-ups. Until they land those cases
+stay unresolved with a finding rather than estimated.
