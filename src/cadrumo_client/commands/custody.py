@@ -15,7 +15,7 @@ from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.i18n.render import tr
 from cadrumo.core.json_contract import Notice, NoticeSeverity
 from cadrumo.core.output_rendering import OutputFormat, render_command_output
-from cadrumo.core.profile_session import ProfileSessionRefusalReason, ReceiptBindingRefusal
+from cadrumo.core.profile_session import ProfileSessionRefusalReason
 from cadrumo_client.commands import profile_selection
 from cadrumo_client.commands.custody_payloads import ConfigLogoutResult
 from cadrumo_client.commands.errors import CliRefusedBoundaryError, attach_cli_policy_verdict
@@ -27,6 +27,7 @@ from cadrumo_client.commands.secure_input import (
     select_machine_secret_channel,
     terminal_can_prompt_for_secrets,
 )
+from cadrumo_client.commands.sign_in_refusal_projection import session_refusal_translation_key
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.contracts.sign_in import HumanSignedOut
 from cadrumo_client.contracts.sign_in_outcomes import ProfileLoginOutcome, ProfileReceiptRefusedError
@@ -473,34 +474,8 @@ def _activate_subcommand_output_language(ctx: typer.Context, language: OutputLan
     clear_output_language_cache()
 
 
-def _session_refusal_key(reason: ProfileSessionRefusalReason, binding: ReceiptBindingRefusal | None) -> str:
-    """Preserve binding failure precedence over the recorded session refusal reason."""
-    if binding is ReceiptBindingRefusal.LOGIN_MISMATCH:
-        return "cli.config.errors.profile_session_login_mismatch"
-    elif binding is ReceiptBindingRefusal.GENERATION_CHANGED:
-        return "cli.config.errors.profile_session_signed_out"
-    elif binding is not None:
-        return "cli.config.errors.profile_session_unreadable"
-    elif reason is ProfileSessionRefusalReason.CUSTODY_CHANGED:
-        return "cli.config.errors.profile_session_custody_changed"
-    elif reason is ProfileSessionRefusalReason.SCHEMA_VERSION_MISMATCH:
-        return "cli.config.errors.profile_session_outdated"
-    elif reason in {ProfileSessionRefusalReason.MALFORMED, ProfileSessionRefusalReason.TAMPERED}:
-        return "cli.config.errors.profile_session_unreadable"
-    elif reason is ProfileSessionRefusalReason.KEYRING_UNAVAILABLE:
-        return "errors.auth.auth_storage_keyring_unavailable"
-    elif reason in {
-        ProfileSessionRefusalReason.ABSENT,
-        ProfileSessionRefusalReason.KEYCHAIN_ENTRY_MISSING,
-    }:
-        return "cli.config.errors.profile_session_absent"
-    else:
-        return "cli.config.errors.profile_session_expired"
-
-
 def _raise_frontend_refusal(error: FrontendRefusedError) -> NoReturn:
     """Translate the runtime's typed session refusal at the command boundary."""
-    from cadrumo.core.profile_session import ProfileSessionRefusalReason
     from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
     sign_in = error.sign_in
@@ -510,7 +485,7 @@ def _raise_frontend_refusal(error: FrontendRefusedError) -> NoReturn:
     elif sign_in is not None and sign_in.reason == "credential_rejected":
         key = "application.user_profile.errors.profile_authentication_refused"
     elif sign_in is not None and isinstance(sign_in.reason, ProfileSessionRefusalReason):
-        key = _session_refusal_key(sign_in.reason, sign_in.binding)
+        key = session_refusal_translation_key(sign_in.reason, sign_in.binding)
     elif error.reason == AccessDenialCode.PROFILE_LOCKED.value:
         key = "errors.refused.profile_locked"
     raise CliRefusedBoundaryError(error.reason, context=error.context, translated_message=key) from None
