@@ -122,47 +122,49 @@ export function ApprovalPrompt({
   return (
     <section
       aria-labelledby={headingId}
-      className="agent-approval grid max-h-[60dvh] gap-3 overflow-y-auto rounded-xl bg-card p-3.5 text-card-foreground shadow-raised"
+      className="agent-approval flex max-h-[60dvh] flex-col gap-3 rounded-xl bg-card p-3.5 text-card-foreground shadow-raised"
     >
-      <div className="flex items-start gap-2">
-        <Icon
-          name={source === "agent_tool" ? "agent" : "lock"}
-          size="md"
-          className="mt-0.5 text-muted-foreground"
-        />
-        <div className="grid min-w-0 gap-1">
-          {toolCall && (
-            <p id={headingId} className="text-sm text-muted-foreground">
-              {title ??
+      <div className="-mx-1 min-h-0 overflow-y-auto px-1">
+        <div className="flex items-start gap-2">
+          <Icon
+            name={source === "agent_tool" ? "agent" : "lock"}
+            size="md"
+            className="mt-0.5 text-muted-foreground"
+          />
+          <div className="grid min-w-0 gap-1">
+            {toolCall && (
+              <p id={headingId} className="text-sm text-muted-foreground">
+                {title ??
+                  (source === "agent_tool"
+                    ? t("desktop.agent.approval_tool_title")
+                    : t("desktop.agent.approval_review_title"))}
+              </p>
+            )}
+            <h3
+              id={toolCall ? undefined : headingId}
+              className="text-base font-semibold text-foreground wrap-anywhere"
+            >
+              {toolCall ||
+                title ||
                 (source === "agent_tool"
                   ? t("desktop.agent.approval_tool_title")
                   : t("desktop.agent.approval_review_title"))}
-            </p>
-          )}
-          <h3
-            id={toolCall ? undefined : headingId}
-            className="text-base font-semibold text-foreground wrap-anywhere"
-          >
-            {toolCall ||
-              title ||
-              (source === "agent_tool"
-                ? t("desktop.agent.approval_tool_title")
-                : t("desktop.agent.approval_review_title"))}
-          </h3>
-          {(toolServer || showKind) && (
-            <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
-              {toolServer && <Badge>{toolServer}</Badge>}
-              {showKind && <Badge>{toolKindWords(t, toolKind)}</Badge>}
-            </div>
-          )}
-          {detail && (
-            <p className="text-sm whitespace-pre-wrap text-muted-foreground wrap-anywhere">
-              {detail}
-            </p>
-          )}
+            </h3>
+            {(toolServer || showKind) && (
+              <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+                {toolServer && <Badge>{toolServer}</Badge>}
+                {showKind && <Badge>{toolKindWords(t, toolKind)}</Badge>}
+              </div>
+            )}
+            {detail && (
+              <p className="text-sm whitespace-pre-wrap text-muted-foreground wrap-anywhere">
+                {detail}
+              </p>
+            )}
+          </div>
         </div>
       </div>
-      <div className="flex flex-wrap justify-end gap-2">
+      <div className="flex shrink-0 flex-wrap justify-end gap-2">
         {ordered.map((option) => (
           <AgentTextAction
             key={option.option_id}
