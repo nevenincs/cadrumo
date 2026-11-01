@@ -28,8 +28,14 @@ _JSON_OBJECT: TypeAdapter[dict[str, JsonValue]] = TypeAdapter(dict[str, JsonValu
 _ADMIN_EXCHANGE_SECONDS = 6.0
 
 
-def service_admin(bearer: bytearray, port: int, action: AdminAction, **fields: Any) -> dict[str, JsonValue]:
-    """Use the service's typed, bounded parent-administration protocol for public reads."""
+def service_admin(
+    bearer: bytearray, port: int, action: AdminAction, *, within: float = _ADMIN_EXCHANGE_SECONDS, **fields: Any
+) -> dict[str, JsonValue]:
+    """Use the service's typed, bounded parent-administration protocol for public reads.
+
+    ``within`` bounds every observation of one read, busy answers included; a cold provider status launches the
+    agent program several times and needs more than the default.
+    """
     if action not in {"catalog", "status"}:
         raise AcceptanceError("shared service admin permits catalog and status reads only")
     if "secret_bytes" in fields:
@@ -39,7 +45,7 @@ def service_admin(bearer: bytearray, port: int, action: AdminAction, **fields: A
     except ValidationError as error:
         raise AcceptanceError("service admin request failed its typed contract") from error
     require(bool(bearer), "service admin authority has been closed")
-    deadline = time.monotonic() + _ADMIN_EXCHANGE_SECONDS
+    deadline = time.monotonic() + within
     while True:
         request = request.model_copy(update={"request_id": uuid4()})
         encoded = request.model_dump_json(exclude_none=True).encode("utf-8")

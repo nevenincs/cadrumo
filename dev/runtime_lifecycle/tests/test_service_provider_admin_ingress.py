@@ -33,6 +33,7 @@ from cadrumo_client.contracts.service_access import ServiceConnected
 from cadrumo_client.transport.service_client import InstalledServiceClient
 from cadrumo_runtime.host.tests.test_service_records import service_record_runtime
 
+from ..service_admin_channel import service_admin
 from .provider_catalog_support import (
     local_model_list_capability,
     provider_record_capability,
@@ -40,6 +41,8 @@ from .provider_catalog_support import (
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+_COLD_STATUS_SECONDS = 60.0
 
 _JSON_OBJECT: TypeAdapter[dict[str, JsonValue]] = TypeAdapter(dict[str, JsonValue])
 
@@ -187,8 +190,10 @@ def test_actual_service_provider_actions_require_parent_authority_and_live_encry
 
             assert isinstance(runtime.admit(client), ServiceConnected)
             assert client.claim() is not None
-            status = _exchange(server.port, bytes(admin), _provider_request("status"))["result"]
-            assert isinstance(status, dict)
+            # A cold status read launches the agent program for its catalog, sign-in state and sign-in
+            # methods in turn and outlasts the service's read bound; the admin channel observes the
+            # same read again until it answers.
+            status = service_admin(admin, server.port, "status", within=_COLD_STATUS_SECONDS)
             initial = _provider_entry(status)
             available = initial["available"]
             assert isinstance(available, bool)
@@ -211,8 +216,7 @@ def test_actual_service_provider_actions_require_parent_authority_and_live_encry
                     stale = _exchange(server.port, bytes(admin), _provider_request("remove", revision))
                     assert stale["result"] == {"code": "revision_conflict"}
                 revision = _entry_revision(entry)
-                reread = _exchange(server.port, bytes(admin), _provider_request("status"))["result"]
-                assert isinstance(reread, dict)
+                reread = service_admin(admin, server.port, "status")
                 assert _provider_entry(reread) == entry
                 assert "synthetic-provider-secret" not in json.dumps(reread)
         finally:
