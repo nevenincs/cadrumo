@@ -31,6 +31,7 @@ from ...core.time.clock import now
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.bienes_inversion_catalogue import resolve_bienes_inversion_catalogue
 from ...domain.calculations.registry.invoice_legal_classification import resolve_invoice_legal_classification_catalogue
+from ...domain.invoices.enums import default_invoice_class, invoice_class_rectificativa, invoice_class_simplificada
 from ...domain.calculations.registry.irnr_tipo_renta import resolve_tipo_renta_irnr_catalogue
 from ...domain.calculations.registry.iva_category_catalogue import resolve_iva_category_catalogue
 from ...domain.calculations.registry.iva_deduction_catalogue import iva_deduction_fact_kinds
@@ -169,6 +170,24 @@ def _spending_options(
     )
 
 
+def _invoice_class_options(on_date: date | None) -> tuple[LedgerEntryOptionProjection, ...]:
+    """Offer each invoice class, filed under what it means to whoever fills a form in.
+
+    A form starts on the ``default`` class, a ``corrective`` one names the invoice it
+    rectifies and a ``simplified`` one may leave the counterparty's tax id out; the
+    tokens stay the registry's.
+    """
+    groups = {
+        default_invoice_class(effective_date=on_date): "default",
+        invoice_class_simplificada(effective_date=on_date): "simplified",
+        invoice_class_rectificativa(effective_date=on_date): "corrective",
+    }
+    return tuple(
+        LedgerEntryOptionProjection(value=str(token), group=groups.get(token))
+        for token in resolve_invoice_legal_classification_catalogue(effective_date=on_date).invoice_class_choices
+    )
+
+
 def _usage_ratio_options(
     on_date: date | None, operation: PinnedAuthorityOperation
 ) -> tuple[LedgerEntryOptionProjection, ...]:
@@ -209,7 +228,7 @@ def ledger_entry_options(
         ("usage_ratio_category", _usage_ratio_options(on_date, operation)),
         (
             "invoice_class",
-            _plain(resolve_invoice_legal_classification_catalogue(effective_date=on_date).invoice_class_choices),
+            _invoice_class_options(on_date),
         ),
         (
             "premises_situation",

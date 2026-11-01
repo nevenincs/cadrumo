@@ -471,3 +471,15 @@ def test_admission_binds_the_exact_profile() -> None:
 
     assert resolved.request.profile_id == _PROFILE
     assert AccessAction.COMMIT not in resolved.policy.actions
+
+
+def test_each_invoice_class_is_filed_under_what_it_means_to_a_form(authority_operation: PinnedAuthorityOperation) -> None:
+    served = ledger_entry_options(uuid4(), operation=authority_operation, on_date=date(2026, 4, 15))
+    family = next(item for item in served.families if item.family == "invoice_class")
+    # The registry's three classes: a form starts on the ordinary one, a rectificativa names
+    # what it rectifies, and a simplificada may leave the tax id out.
+    assert {option.value: option.group for option in family.options} == {
+        "ORDINARIA": "default",
+        "SIMPLIFICADA": "simplified",
+        "RECTIFICATIVA": "corrective",
+    }
