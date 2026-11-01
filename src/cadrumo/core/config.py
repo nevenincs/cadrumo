@@ -583,7 +583,7 @@ class Settings(CadrumoLlmSettings, AuthorityRootSettings, GoogleOAuthClientSetti
     cadrumo_clave_movil_timeout_ms: int = Field(
         default=120_000,
         ge=1_000,
-        le=131_072,
+        le=120_000,
         description=(
             "Maximum time (milliseconds) the Cl@ve Móvil provider waits for "
             "AEAT browser-side authentication completion "
@@ -631,7 +631,7 @@ class Settings(CadrumoLlmSettings, AuthorityRootSettings, GoogleOAuthClientSetti
     cadrumo_clave_permanente_timeout_ms: int = Field(
         default=60_000,
         ge=1_000,
-        le=131_072,
+        le=120_000,
         description=(
             "Maximum time (milliseconds) the Cl@ve Permanente provider "
             "waits for the AEAT/Cl@ve IdP login form round-trip to "

@@ -638,6 +638,24 @@ def test_clave_movil_operator_wait_is_capped_at_two_minutes() -> None:
     """Cl@ve Móvil approval waits fail fast enough for production retry loops."""
 
     assert Settings().cadrumo_clave_movil_timeout_ms == 120_000
+    assert Settings(cadrumo_clave_movil_timeout_ms=120_000).cadrumo_clave_movil_timeout_ms == 120_000
 
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError) as refused:
         Settings(cadrumo_clave_movil_timeout_ms=120_001)
+
+    (violation,) = refused.value.errors()
+    assert violation["loc"] == ("cadrumo_clave_movil_timeout_ms",)
+    assert violation["type"] == "less_than_equal"
+
+
+def test_clave_permanente_operator_wait_is_capped_at_two_minutes() -> None:
+    """A headless Cl@ve login has the same independent elapsed-time ceiling."""
+    assert Settings().cadrumo_clave_permanente_timeout_ms == 60_000
+    assert Settings(cadrumo_clave_permanente_timeout_ms=120_000).cadrumo_clave_permanente_timeout_ms == 120_000
+
+    with pytest.raises(ValidationError) as refused:
+        Settings(cadrumo_clave_permanente_timeout_ms=120_001)
+
+    (violation,) = refused.value.errors()
+    assert violation["loc"] == ("cadrumo_clave_permanente_timeout_ms",)
+    assert violation["type"] == "less_than_equal"
