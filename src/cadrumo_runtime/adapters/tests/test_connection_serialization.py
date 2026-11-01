@@ -14,9 +14,7 @@ import pytest
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo_client.contracts.contracts import (
     ByteChannel,
-    ChannelWake,
     ClientHello,
-    Peer,
     RefusalCode,
     RefusalError,
     ServerHello,
@@ -24,6 +22,7 @@ from cadrumo_client.contracts.contracts import (
 from cadrumo_client.contracts.profile_access import AccessRefusal, ProfileLogin, SecretReady, SessionRequest
 from cadrumo_client.transport.frame_io import read_document, read_secret, write_document
 from cadrumo_client.transport.framing import VerifiedConnection
+from cadrumo_client.transport.tests.delegating_channel import DelegatingChannel
 from cadrumo_client.transport.windows import WindowsEndpoint
 from cadrumo_runtime.adapters.connection_handshake import accept_connection_handshake
 
@@ -37,29 +36,16 @@ pytestmark = [
 ]
 
 
-class PausingChannel:
+class PausingChannel(DelegatingChannel):
     """Pause one real request write after its native channel sends the frame."""
 
     def __init__(self, channel: ByteChannel) -> None:
-        self.channel = channel
+        super().__init__(channel)
         self.armed = False
         self.sent = Event()
         self.release = Event()
         self._lock = Lock()
         self.writes = 0
-
-    @property
-    def peer(self) -> Peer:
-        return self.channel.peer
-
-    def read_exact(self, count: int, *, deadline: float) -> bytes:
-        return self.channel.read_exact(count, deadline=deadline)
-
-    def read_ready(self) -> bool:
-        return self.channel.read_ready()
-
-    def wait_readable(self, *wakes: ChannelWake) -> bool:
-        return self.channel.wait_readable(*wakes)
 
     def write_all(self, payload: bytes | bytearray, *, deadline: float) -> None:
         self.channel.write_all(payload, deadline=deadline)
@@ -71,9 +57,6 @@ class PausingChannel:
                 self.sent.set()
                 if not self.release.wait(5):
                     raise TimeoutError("first exchange was not released")
-
-    def close(self) -> None:
-        self.channel.close()
 
 
 def test_concurrent_status_exchanges_share_only_their_own_native_connection(tmp_path: Path) -> None:
