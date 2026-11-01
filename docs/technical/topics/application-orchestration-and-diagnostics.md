@@ -46,13 +46,13 @@ The principal strength is explicit state and effect vocabulary: unknown, unavail
 
 ## Detailed articles
 
-- [Configuration reset and diagnostics](../articles/026-configuration-reset-and-diagnostics.md) — `STAGE-2-026`
-- [Local reader provisioning, workstation health, and application contracts](../articles/027-local-reader-provisioning-workstation-health-and-application-contracts.md) — `STAGE-2-027`
-- [Runtime admission, canonical state, and storage-route policy](../articles/028-runtime-admission-canonical-state-and-storage-route-policy.md) — `STAGE-2-028`
-- [Installed workbench generations and workstation checks](../articles/029-installed-workbench-generations-and-workstation-checks.md) — `STAGE-2-029`
-- [Activity-asset claims and AEAT Sync workspace projection](../articles/030-activity-asset-claims-and-aeat-sync-workspace-projection.md) — `STAGE-2-030`
-- [Offline search, evidence bundles, and export boundaries](../articles/044-offline-search-evidence-bundles-and-export-boundaries.md) — `STAGE-2-044`
-- [Interactive flows and profile-bound inventory operations](../articles/048-interactive-flows-and-profile-bound-inventory-operations.md) — `STAGE-2-048`
+- [Configuration reset and diagnostics](../articles/026-configuration-reset-and-diagnostics.md)
+- [Local reader provisioning, workstation health, and application contracts](../articles/027-local-reader-provisioning-workstation-health-and-application-contracts.md)
+- [Runtime admission, canonical state, and storage-route policy](../articles/028-runtime-admission-canonical-state-and-storage-route-policy.md)
+- [Installed workbench generations and workstation checks](../articles/029-installed-workbench-generations-and-workstation-checks.md)
+- [Activity-asset claims and AEAT Sync workspace projection](../articles/030-activity-asset-claims-and-aeat-sync-workspace-projection.md)
+- [Offline search, evidence bundles, and export boundaries](../articles/044-offline-search-evidence-bundles-and-export-boundaries.md)
+- [Interactive flows and profile-bound inventory operations](../articles/048-interactive-flows-and-profile-bound-inventory-operations.md)
 
 
 ```{toctree}

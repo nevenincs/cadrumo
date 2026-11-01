@@ -25,7 +25,7 @@ Start with the architecture on this page, choose a topic for a subsystem overvie
 ## Architecture
 
 <!-- preserved:architecture -->
-Cadrumo is organized around a local profile and a pinned tax-authority generation. Its CLI, terminal workbench and MCP harness present workflows; a native installed runtime admits identity and hosts registered operations; application services assemble sources and lifecycle decisions; domain and registry code calculate or validate typed tax facts; adapters handle encrypted local storage, browsers, files, models and Google. The architecture is deliberately asymmetric: local calculation/export and authenticated AEAT observation are present, while an outbound AEAT submission path is refused. A source module's declared contract is not automatically an end-to-end guarantee; the important question at each boundary is who supplies the authority, bytes and revision that the next layer trusts. [CLI composition](topics/operator-interfaces-part-1.md), [runtime](topics/runtime-tui-and-agent-harness.md), no-submit gate (`src/cadrumo/core/access_gate/gate.py`), [analyses](articles/154-entrypoint-adapter-composition.md), [118](articles/118-live-access-policy-corpus-integrity-and-decimal-contracts.md).
+Cadrumo is organized around a local profile and a pinned tax-authority generation. Its CLI, terminal workbench and MCP harness present workflows; a native installed runtime admits identity and hosts registered operations; application services assemble sources and lifecycle decisions; domain and registry code calculate or validate typed tax facts; adapters handle encrypted local storage, browsers, files, models and Google. The architecture is deliberately asymmetric: local calculation/export and authenticated AEAT observation are present, while an outbound AEAT submission path is refused. A source module's declared contract is not automatically an end-to-end guarantee; the important question at each boundary is who supplies the authority, bytes and revision that the next layer trusts. [CLI composition](topics/operator-interfaces-command-graph.md), [runtime](topics/runtime-tui-and-agent-harness.md), no-submit gate (`src/cadrumo/core/access_gate/gate.py`), [analyses](articles/154-entrypoint-adapter-composition.md), [118](articles/118-live-access-policy-corpus-integrity-and-decimal-contracts.md).
 
 ```mermaid
 flowchart TD
@@ -47,7 +47,7 @@ flowchart TD
 
 ### Entry and authority route
 
-The Typer graph is authored as command specifications: canonical identity, arguments, secret fields, effect policy, output schema and deferred handler. Help/schema discovery can inspect those declarations without opening a profile or browser. At dispatch, the composition root resolves exact-profile repositories, pinned authority, registered definitions and adapter lifetimes; command policy can refuse a live write before materializing a handler. The CLI-to-worker bridge validates a typed request, observes operation settlement under a deadline, checks result identity/schema/effect and correlates reviews. A timeout remains `UNKNOWN` rather than becoming a safe-to-retry error. Command metadata is reconciled against live leaves, but it cannot prove what a worker actually does. Command graph (`src/cadrumo/entrypoints/cli/command_graph.py`), composition (`src/cadrumo/entrypoints/operation_composition.py`), registered bridge (`src/cadrumo/entrypoints/cli/runtime_registered_operation.py`), surface reconciliation (`src/cadrumo/application/operator_surface/manifest.py`), [full topics](topics/operator-interfaces-part-1.md), [part 2](topics/operator-interfaces-part-2.md), [analysis](articles/170-cli-error-handling-ledger-actions-and-modelo-work.md).
+The Typer graph is authored as command specifications: canonical identity, arguments, secret fields, effect policy, output schema and deferred handler. Help/schema discovery can inspect those declarations without opening a profile or browser. At dispatch, the composition root resolves exact-profile repositories, pinned authority, registered definitions and adapter lifetimes; command policy can refuse a live write before materializing a handler. The CLI-to-worker bridge validates a typed request, observes operation settlement under a deadline, checks result identity/schema/effect and correlates reviews. A timeout remains `UNKNOWN` rather than becoming a safe-to-retry error. Command metadata is reconciled against live leaves, but it cannot prove what a worker actually does. Command graph (`src/cadrumo/entrypoints/cli/command_graph.py`), composition (`src/cadrumo/entrypoints/operation_composition.py`), registered bridge (`src/cadrumo/entrypoints/cli/runtime_registered_operation.py`), surface reconciliation (`src/cadrumo/application/operator_surface/manifest.py`), [full topics](topics/operator-interfaces-command-graph.md), [transport and bridges](topics/operator-interfaces-transport-and-bridges.md), [analysis](articles/170-cli-error-handling-ledger-actions-and-modelo-work.md).
 
 The Textual app reads authenticated runtime projections for Home, Declarations, Ledger, AEAT Sync, profiles and Modelo work, and its Operations, Installation and Reference destinations offer every registered operation, every sessionless installation act and the catalogue reads, built from the same contracts the command line and MCP use. It stages typed edits and reviews, leaving final validation and mutation with registered services. Its general operation modal renders public paged events and supports digest/revision-bound `REVIEW`; `INPUT` and `CHOICE` interactions are shown but cannot be answered on any frontend. The MCP service offers a typed seventeen-tool catalogue on its default `full` surface, its four setup tools served by the native component engine, and an exact-profile runtime adapter that works only inside the one signed-in or key-admitted profile; every registered operation inside that profile is submittable from the command line, the terminal workbench and MCP with the same decision, effect and result, the person's credential, session and installation acts excepted, and the only difference is the recorded actor (`agent:mcp.<session kind>.<client id>` for an execution admitted on MCP) and a narrower surface that a person chooses when starting the server. It serves no persona, operating rule or workflow skill; cadrumo-agent owns that material. This keeps interface convenience separate from the owner of profile access, financial arithmetic and durable effects. TUI projection (`src/cadrumo/entrypoints/tui/runtime_workbench.py`), modal (`src/cadrumo/entrypoints/tui/operations/modal.py`), MCP (`src/cadrumo_mcp/mcp/protocol_contract.py`), [full topic](topics/runtime-tui-and-agent-harness.md), [analysis](articles/182-supervised-operation-modal-and-profile-manager.md).
 
@@ -57,9 +57,9 @@ The operation supervisor is a durable execution protocol, not a queue that assum
 
 ### Tax work and data flow
 
-Application services are organized by lifecycle rather than one monolithic tax engine. Profile setup validates a complete fact record; ledger and invoice services turn imported or reviewed evidence into canonical financial sources; aggregation composes typed scalar, row and relationship values; Modelo work selects a law-applicable registry revision, calculates a BORRADOR, verifies a separate report, exports a local file and may record a pending local filing. The domain registry supplies dated facts, bindings, formulas, applicable periods, source/legal references and export layouts. It is pinned for an operation so an in-flight calculation does not silently mix authority generations. Incomplete source values remain unresolved; model suggestions do not calculate regulated amounts. Profile fact writer (`src/cadrumo/application/user_profile/fact_write.py`), [ledger path](topics/ledger-invoices-and-registers.md), source mesh (`src/cadrumo/application/aggregation/source_mesh.py`), calculation (`src/cadrumo/application/modelo/calculation_actions.py`), [full topics](topics/modelo-work-and-revision-lifecycle-part-1.md), [14](topics/tax-calculation-domain.md), [analyses](articles/067-modelo-calculation-preparation-edits-and-evidence-gates.md), [137](articles/137-revision-selection-withholding-aggregation-and-row-provenance.md).
+Application services are organized by lifecycle rather than one monolithic tax engine. Profile setup validates a complete fact record; ledger and invoice services turn imported or reviewed evidence into canonical financial sources; aggregation composes typed scalar, row and relationship values; Modelo work selects a law-applicable registry revision, calculates a BORRADOR, verifies a separate report, exports a local file and may record a pending local filing. The domain registry supplies dated facts, bindings, formulas, applicable periods, source/legal references and export layouts. It is pinned for an operation so an in-flight calculation does not silently mix authority generations. Incomplete source values remain unresolved; model suggestions do not calculate regulated amounts. Profile fact writer (`src/cadrumo/application/user_profile/fact_write.py`), [ledger path](topics/ledger-invoices-and-registers.md), source mesh (`src/cadrumo/application/aggregation/source_mesh.py`), calculation (`src/cadrumo/application/modelo/calculation_actions.py`), [full topics](topics/modelo-work-calculation-and-filing.md), [14](topics/tax-calculation-domain.md), [analyses](articles/067-modelo-calculation-preparation-edits-and-evidence-gates.md), [137](articles/137-revision-selection-withholding-aggregation-and-row-provenance.md).
 
-The filing boundary branches. Local export maps a verified snapshot to a fixed-width or XML record design, checks parity, writes and re-reads bytes. Local `work file` co-records a `PRESENTADO` revision with AEAT status pending. Separately, authenticated browser adapters read AEAT census, filed registers, receipts, wallet and notifications into profile-bound custody. A captured row or PDF is an observation; receipt promotion requires digest, CSV, model/period, taxpayer and current-filing-chain checks. Reconciliation may confirm, flag a discrepancy or retain uncertainty; an amendment starts a new pending local correction. The workflow engine itself creates/validates local drafts with `submission_id=None`, and the core live-write gate refuses outbound submission. Export (`src/cadrumo/application/filing/export.py`), local filing (`src/cadrumo/application/modelo/revision_persistence.py`), receipt (`src/cadrumo/application/live/filed_observation_persistence.py`), workflow (`src/cadrumo/application/workflow/engine.py`), [full topics](topics/filing-and-live-state.md), [11](topics/modelo-work-and-revision-lifecycle-part-1.md), [analyses](articles/045-filing-draft-approval-and-local-export-pipeline.md), [064](articles/064-filed-declaration-capture-evidence-enrollment-and-history-sweep.md).
+The filing boundary branches. Local export maps a verified snapshot to a fixed-width or XML record design, checks parity, writes and re-reads bytes. Local `work file` co-records a `PRESENTADO` revision with AEAT status pending. Separately, authenticated browser adapters read AEAT census, filed registers, receipts, wallet and notifications into profile-bound custody. A captured row or PDF is an observation; receipt promotion requires digest, CSV, model/period, taxpayer and current-filing-chain checks. Reconciliation may confirm, flag a discrepancy or retain uncertainty; an amendment starts a new pending local correction. The workflow engine itself creates/validates local drafts with `submission_id=None`, and the core live-write gate refuses outbound submission. Export (`src/cadrumo/application/filing/export.py`), local filing (`src/cadrumo/application/modelo/revision_persistence.py`), receipt (`src/cadrumo/application/live/filed_observation_persistence.py`), workflow (`src/cadrumo/application/workflow/engine.py`), [full topics](topics/filing-and-live-state.md), [11](topics/modelo-work-calculation-and-filing.md), [analyses](articles/045-filing-draft-approval-and-local-export-pipeline.md), [064](articles/064-filed-declaration-capture-evidence-enrollment-and-history-sweep.md).
 
 Read models form another branch. Calendar and coverage combine registry deadlines, positive taxpayer applicability, local work and already-loaded observations without fetching AEAT. Home, review queue, pipeline and search project availability, attention and next actions from captured state. Registered read operations bind exact profile and period/whole-profile scope and release only successful no-effect receipts. Search is intentionally an in-memory snapshot over admitted workbench projections, with process-keyed result IDs and destination access rechecked on opening. This design prevents a read UI from silently becoming a remote acquisition service or using absence as proof that no obligation exists. Calendar (`src/cadrumo/application/overview/calendar.py`), coverage (`src/cadrumo/application/overview/coverage.py`), read result (`src/cadrumo/application/overview/read_result.py`), search (`src/cadrumo/application/search/installed_workbench.py`), [full topic](topics/operations-profiles-and-workflows.md), [analysis](articles/093-overview-calendar-filing-evidence-and-readiness-views.md).
 
@@ -81,8 +81,8 @@ These previews describe each topic's scope. Open a topic for its full report, th
 ::::{grid} 1 1 2 2
 :gutter: 3
 
-:::{grid-item-card} Operator interfaces, part 1: command graph and principal workflows
-:link: topics/operator-interfaces-part-1
+:::{grid-item-card} Operator interfaces: command graph and principal workflows
+:link: topics/operator-interfaces-command-graph
 :link-type: doc
 
 Command declarations, dispatch, and principal operator workflows.
@@ -90,8 +90,8 @@ Command declarations, dispatch, and principal operator workflows.
 15 detailed articles.
 :::
 
-:::{grid-item-card} Operator interfaces, part 2: secure transport and operation bridges
-:link: topics/operator-interfaces-part-2
+:::{grid-item-card} Operator interfaces: secure transport and operation bridges
+:link: topics/operator-interfaces-transport-and-bridges
 :link-type: doc
 
 Typed requests, session identity, result validation, and review replies across the CLI-to-worker bridge.
@@ -180,8 +180,8 @@ Ledger classification, invoice intake, evidence confirmation, model proposals, a
 15 detailed articles.
 :::
 
-:::{grid-item-card} Modelo work and revision lifecycle, part 1
-:link: topics/modelo-work-and-revision-lifecycle-part-1
+:::{grid-item-card} Modelo work and revision lifecycle: calculation, export and filing
+:link: topics/modelo-work-calculation-and-filing
 :link-type: doc
 
 Calculation, editing, verification, export, local filing records, reconciliation, and amendment.
@@ -189,8 +189,8 @@ Calculation, editing, verification, export, local filing records, reconciliation
 17 detailed articles.
 :::
 
-:::{grid-item-card} Modelo work and revision lifecycle, part 2: verification, workbench and workspace
-:link: topics/modelo-work-and-revision-lifecycle-part-2
+:::{grid-item-card} Modelo work and revision lifecycle: verification, workbench and workspace
+:link: topics/modelo-work-verification-and-workspace
 :link-type: doc
 
 Work identity, verification gates, workbench projections, and workspace freshness.
@@ -276,11 +276,11 @@ topics/document-and-financial-imports
 topics/external-integrations-and-local-runtime
 topics/filing-and-live-state
 topics/ledger-invoices-and-registers
-topics/modelo-work-and-revision-lifecycle-part-1
-topics/modelo-work-and-revision-lifecycle-part-2
+topics/modelo-work-calculation-and-filing
+topics/modelo-work-verification-and-workspace
 topics/operations-profiles-and-workflows
-topics/operator-interfaces-part-1
-topics/operator-interfaces-part-2
+topics/operator-interfaces-command-graph
+topics/operator-interfaces-transport-and-bridges
 topics/persistence-and-secure-storage
 topics/runtime-tui-and-agent-harness
 topics/tax-calculation-domain

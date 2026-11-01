@@ -4,7 +4,7 @@
 
 > This page describes the analyzed source snapshot. Its findings and limitations are not a certification of the current branch.
 
-**Report:** `STAGE-2-096` · **Topic:** [Operations, profiles and workflows](../topics/operations-profiles-and-workflows.md)
+**Topic:** [Operations, profiles and workflows](../topics/operations-profiles-and-workflows.md)
 
 <!-- preserved:article -->
 **Scope:** 30 files under `src/cadrumo/application/review` and `src/cadrumo_client/contracts`, totaling 5,292 lines, 196,454 bytes, and 40,876 measured `o200k_base` proxy tokens. All eight bounded-reader pages and assigned ranges were read. Static inspection only; no application execution or tests were run. Runtime transport types describe protocol boundaries; this chunk does not establish behavior of platform-specific transport or storage adapters.

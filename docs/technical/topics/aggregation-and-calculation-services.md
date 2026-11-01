@@ -42,15 +42,15 @@ These are static code observations and conditional integration risks. No calcula
 
 ## Detailed articles
 
-- [Aggregation, IVA screening, and fiscal evidence](../articles/031-aggregation-iva-screening-and-fiscal-evidence.md) — `STAGE-2-031`
-- [Aggregation sources, evidence, and withholding projections](../articles/032-aggregation-sources-evidence-and-withholding-projections.md) — `STAGE-2-032`
-- [IVA ledger, filing drift, and withholding arrivals](../articles/033-iva-ledger-filing-drift-and-withholding-arrivals.md) — `STAGE-2-033`
-- [Model bindings, OSS/IOSS, and Renta expenses](../articles/034-model-bindings-oss-ioss-and-renta-expenses.md) — `STAGE-2-034`
-- [Renta ledgers, withholding rollups, and aggregation service](../articles/035-renta-ledgers-withholding-rollups-and-aggregation-service.md) — `STAGE-2-035`
-- [Source resolution contracts and withholding capture](../articles/036-source-resolution-contracts-and-withholding-capture.md) — `STAGE-2-036`
-- [Filing carries, cross-period clean state, and calculation advisories](../articles/041-filing-carries-cross-period-clean-state-and-calculation-advisories.md) — `STAGE-2-041`
-- [IVA compensation, M303 evidence, and annual handoffs](../articles/042-iva-compensation-m303-evidence-and-annual-handoffs.md) — `STAGE-2-042`
-- [Prorrata settlement, relation prefill, and row-set reconstruction](../articles/043-prorrata-settlement-relation-prefill-and-row-set-reconstruction.md) — `STAGE-2-043`
+- [Aggregation, IVA screening, and fiscal evidence](../articles/031-aggregation-iva-screening-and-fiscal-evidence.md)
+- [Aggregation sources, evidence, and withholding projections](../articles/032-aggregation-sources-evidence-and-withholding-projections.md)
+- [IVA ledger, filing drift, and withholding arrivals](../articles/033-iva-ledger-filing-drift-and-withholding-arrivals.md)
+- [Model bindings, OSS/IOSS, and Renta expenses](../articles/034-model-bindings-oss-ioss-and-renta-expenses.md)
+- [Renta ledgers, withholding rollups, and aggregation service](../articles/035-renta-ledgers-withholding-rollups-and-aggregation-service.md)
+- [Source resolution contracts and withholding capture](../articles/036-source-resolution-contracts-and-withholding-capture.md)
+- [Filing carries, cross-period clean state, and calculation advisories](../articles/041-filing-carries-cross-period-clean-state-and-calculation-advisories.md)
+- [IVA compensation, M303 evidence, and annual handoffs](../articles/042-iva-compensation-m303-evidence-and-annual-handoffs.md)
+- [Prorrata settlement, relation prefill, and row-set reconstruction](../articles/043-prorrata-settlement-relation-prefill-and-row-set-reconstruction.md)
 
 
 ```{toctree}

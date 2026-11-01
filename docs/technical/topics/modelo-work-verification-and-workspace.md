@@ -1,4 +1,4 @@
-# Modelo work and revision lifecycle, part 2: verification, workbench and workspace
+# Modelo work and revision lifecycle: verification, workbench and workspace
 
 [Technical overview](../architecture.md) · [Article index](../articles/catalogue.md) · [Snapshot and reading guide](../reading-guide.md)
 
@@ -7,7 +7,7 @@
 ::::{dropdown} Topic summary
 
 <!-- preserved:summary -->
-Work addressing binds a model/year/period or exact ID to one law-selected registry revision and rechecks work-catalogue/profile-pointer freshness. Creation applies profile readiness and applicability gates, co-commits work with its event, and distinguishes reuse, update and unknown prepublication effect. The canonical form combines registry layout, saved calculation, operator-entry provenance, verification, source records and deadlines; local filing state is explicitly separate from AEAT submission. [Full synthesis](modelo-work-and-revision-lifecycle-part-2.md), addressing (`src/cadrumo/application/modelo/work_addressing.py`), form (`src/cadrumo/application/modelo/work_form.py`), [detail](../articles/085-work-creation-form-editing-and-inventory.md).
+Work addressing binds a model/year/period or exact ID to one law-selected registry revision and rechecks work-catalogue/profile-pointer freshness. Creation applies profile readiness and applicability gates, co-commits work with its event, and distinguishes reuse, update and unknown prepublication effect. The canonical form combines registry layout, saved calculation, operator-entry provenance, verification, source records and deadlines; local filing state is explicitly separate from AEAT submission. [Full synthesis](modelo-work-verification-and-workspace.md), addressing (`src/cadrumo/application/modelo/work_addressing.py`), form (`src/cadrumo/application/modelo/work_form.py`), [detail](../articles/085-work-creation-form-editing-and-inventory.md).
 
 Verification reads registry-authored predicates and prior filing/ledger/wallet evidence. Uncertain applicability keeps a cross-period blocker; a 303 carry needs a matching unblocked wallet decision. Empty annual withholding detail needs attested absence not contradicted by liability evidence, but that gate does not test a sparse nonempty store. Workbench reads need a human session (the person's own sign-in, on any frontend) and are baseline-bound; wizard missing-input prompts are typed, and workflow gate results are persisted before later verify/file transitions. Cross-period (`src/cadrumo/application/modelo/verification_cross_period.py`), withholding (`src/cadrumo/application/modelo/withholding_detail_gate.py`), workflow (`src/cadrumo/application/modelo/workflow_gate.py`), [detail](../articles/084-cross-period-checks-verification-reports-and-work-addressing.md), [detail](../articles/086-work-lifecycle-review-wizard-and-workflow-gate.md).
 
@@ -40,11 +40,11 @@ Several bounded implementation questions remain. Unknown blocking-predicate synt
 
 ## Detailed articles
 
-- [Cross-period checks, verification reports, and work addressing](../articles/084-cross-period-checks-verification-reports-and-work-addressing.md) — `STAGE-2-084`
-- [Work creation, form editing, and inventory](../articles/085-work-creation-form-editing-and-inventory.md) — `STAGE-2-085`
-- [Work lifecycle, review, wizard, and workflow gate](../articles/086-work-lifecycle-review-wizard-and-workflow-gate.md) — `STAGE-2-086`
-- [Modelo workspace read projection](../articles/087-modelo-workspace-read-projection.md) — `STAGE-2-087`
-- [Workspace producer contracts and capture ports](../articles/088-workspace-producer-contracts-and-capture-ports.md) — `STAGE-2-088`
+- [Cross-period checks, verification reports, and work addressing](../articles/084-cross-period-checks-verification-reports-and-work-addressing.md)
+- [Work creation, form editing, and inventory](../articles/085-work-creation-form-editing-and-inventory.md)
+- [Work lifecycle, review, wizard, and workflow gate](../articles/086-work-lifecycle-review-wizard-and-workflow-gate.md)
+- [Modelo workspace read projection](../articles/087-modelo-workspace-read-projection.md)
+- [Workspace producer contracts and capture ports](../articles/088-workspace-producer-contracts-and-capture-ports.md)
 
 
 ```{toctree}

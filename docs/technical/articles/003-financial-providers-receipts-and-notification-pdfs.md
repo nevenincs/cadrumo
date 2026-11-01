@@ -4,7 +4,7 @@
 
 > This page describes the analyzed source snapshot. Its findings and limitations are not a certification of the current branch.
 
-**Report:** `STAGE-2-003` · **Topic:** [Document and financial imports](../topics/document-and-financial-imports.md)
+**Topic:** [Document and financial imports](../topics/document-and-financial-imports.md)
 
 <!-- preserved:article -->
 ## Scope

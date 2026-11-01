@@ -1,4 +1,4 @@
-# Modelo work and revision lifecycle, part 1
+# Modelo work and revision lifecycle: calculation, export and filing
 
 [Technical overview](../architecture.md) · [Article index](../articles/catalogue.md) · [Snapshot and reading guide](../reading-guide.md)
 
@@ -7,7 +7,7 @@
 ::::{dropdown} Topic summary
 
 <!-- preserved:summary -->
-The [full topic synthesis](modelo-work-and-revision-lifecycle-part-1.md) tracks work-unit calculation, edit, verification, local export, local filing, external-evidence reconciliation and amendment. A registry-pinned source mesh combines profile, ledger, invoices, withholding and prior declarations into a content-addressed BORRADOR revision. Verification checks filing-grade authority, source completeness, ledger drift and model-specific evidence. Local export writes an artifact; local filing creates a PRESENTADO revision whose AEAT status remains pending. External receipt/register matching is the separate promotion path; an amendment again starts as a pending local correction. Calculation (`src/cadrumo/application/modelo/calculation_actions.py`) Verification (`src/cadrumo/application/modelo/verification_actions.py`) Local filing (`src/cadrumo/application/modelo/revision_persistence.py`) Reconciliation (`src/cadrumo/application/modelo/filing_chain_reconciliation.py`) ([067](../articles/067-modelo-calculation-preparation-edits-and-evidence-gates.md), [069](../articles/069-aggregation-operations-amendments-and-profile-bindings.md), [070](../articles/070-modelo-calculation-input-and-persistence-orchestration.md), [074](../articles/074-external-filing-evidence-local-filing-and-filing-views.md), [078](../articles/078-supervised-filing-lifecycle-and-operation-contracts.md), [082](../articles/082-review-package-exchange-and-modelo-revision-persistence.md), [083](../articles/083-revision-selection-settlement-presentation-and-verification.md))
+The [full topic synthesis](modelo-work-calculation-and-filing.md) tracks work-unit calculation, edit, verification, local export, local filing, external-evidence reconciliation and amendment. A registry-pinned source mesh combines profile, ledger, invoices, withholding and prior declarations into a content-addressed BORRADOR revision. Verification checks filing-grade authority, source completeness, ledger drift and model-specific evidence. Local export writes an artifact; local filing creates a PRESENTADO revision whose AEAT status remains pending. External receipt/register matching is the separate promotion path; an amendment again starts as a pending local correction. Calculation (`src/cadrumo/application/modelo/calculation_actions.py`) Verification (`src/cadrumo/application/modelo/verification_actions.py`) Local filing (`src/cadrumo/application/modelo/revision_persistence.py`) Reconciliation (`src/cadrumo/application/modelo/filing_chain_reconciliation.py`) ([067](../articles/067-modelo-calculation-preparation-edits-and-evidence-gates.md), [069](../articles/069-aggregation-operations-amendments-and-profile-bindings.md), [070](../articles/070-modelo-calculation-input-and-persistence-orchestration.md), [074](../articles/074-external-filing-evidence-local-filing-and-filing-views.md), [078](../articles/078-supervised-filing-lifecycle-and-operation-contracts.md), [082](../articles/082-review-package-exchange-and-modelo-revision-persistence.md), [083](../articles/083-revision-selection-settlement-presentation-and-verification.md))
 
 The stage gates preserve source/override precedence, typed provenance, registry revision identity and exact profile/period authority. An edit baseline is short-lived and value-free; active execution supports scalar/binding edits while refusing row intents. M123 with captured withholding refuses calculation through export pending a settled count rule; M193 prior-accrual settlement has a later filing/export refusal. M036 records and operator observations are local assertions; M145 is a payer communication, with filing/submission links explicitly refused. Report PDF signatures are pinned to a profile key only when store verification succeeds, and expressly do not claim AEAT status. Edit admission (`src/cadrumo/application/modelo/edit_admission.py`) M123 gate (`src/cadrumo/application/modelo/m123_count_authority_gate.py`) M145 ownership (`src/cadrumo/application/modelo/m145_communication.py`) Report verification (`src/cadrumo/application/modelo/calculation_report_verification.py`) ([071](../articles/071-calculation-findings-reports-and-pdf-verification.md), [072](../articles/072-declaration-projections-help-dependencies-and-edit-admission.md), [073](../articles/073-edit-value-contracts-and-modelo-export.md), [075](../articles/075-modelo-history-invoice-withholding-capture-and-iva-wallet.md), [076](../articles/076-local-observations-m036-records-and-m145-communications.md), [077](../articles/077-tax-evidence-private-previews-and-spreadsheet-operations.md), [079](../articles/079-profile-derived-bindings-and-filing-readiness.md))
 
@@ -50,23 +50,23 @@ The main strengths are pinned registry coordinates, separated source and operato
 
 ## Detailed articles
 
-- [Modelo calculation preparation, edits, and evidence gates](../articles/067-modelo-calculation-preparation-edits-and-evidence-gates.md) — `STAGE-2-067`
-- [Modelo reconciliation, advisories, and work projections](../articles/068-modelo-reconciliation-advisories-and-work-projections.md) — `STAGE-2-068`
-- [Aggregation operations, amendments, and profile bindings](../articles/069-aggregation-operations-amendments-and-profile-bindings.md) — `STAGE-2-069`
-- [Modelo calculation input and persistence orchestration](../articles/070-modelo-calculation-input-and-persistence-orchestration.md) — `STAGE-2-070`
-- [Calculation findings, reports, and PDF verification](../articles/071-calculation-findings-reports-and-pdf-verification.md) — `STAGE-2-071`
-- [Declaration projections, help, dependencies, and edit admission](../articles/072-declaration-projections-help-dependencies-and-edit-admission.md) — `STAGE-2-072`
-- [Edit value contracts and Modelo export](../articles/073-edit-value-contracts-and-modelo-export.md) — `STAGE-2-073`
-- [External filing evidence, local filing and filing views](../articles/074-external-filing-evidence-local-filing-and-filing-views.md) — `STAGE-2-074`
-- [Modelo history, invoice withholding capture, and IVA wallet](../articles/075-modelo-history-invoice-withholding-capture-and-iva-wallet.md) — `STAGE-2-075`
-- [Local observations, M036 records, and M145 communications](../articles/076-local-observations-m036-records-and-m145-communications.md) — `STAGE-2-076`
-- [Tax evidence, private previews, and spreadsheet operations](../articles/077-tax-evidence-private-previews-and-spreadsheet-operations.md) — `STAGE-2-077`
-- [Supervised filing lifecycle and operation contracts](../articles/078-supervised-filing-lifecycle-and-operation-contracts.md) — `STAGE-2-078`
-- [Profile-derived bindings and filing readiness](../articles/079-profile-derived-bindings-and-filing-readiness.md) — `STAGE-2-079`
-- [Modelo projections, queries, quickfile, and recipient encryption](../articles/080-modelo-projections-queries-quickfile-and-recipient-encryption.md) — `STAGE-2-080`
-- [Reconciliation, filing disposition, and accountant review packages](../articles/081-reconciliation-filing-disposition-and-accountant-review-packages.md) — `STAGE-2-081`
-- [Review-package exchange and Modelo revision persistence](../articles/082-review-package-exchange-and-modelo-revision-persistence.md) — `STAGE-2-082`
-- [Revision selection, settlement presentation, and verification](../articles/083-revision-selection-settlement-presentation-and-verification.md) — `STAGE-2-083`
+- [Modelo calculation preparation, edits, and evidence gates](../articles/067-modelo-calculation-preparation-edits-and-evidence-gates.md)
+- [Modelo reconciliation, advisories, and work projections](../articles/068-modelo-reconciliation-advisories-and-work-projections.md)
+- [Aggregation operations, amendments, and profile bindings](../articles/069-aggregation-operations-amendments-and-profile-bindings.md)
+- [Modelo calculation input and persistence orchestration](../articles/070-modelo-calculation-input-and-persistence-orchestration.md)
+- [Calculation findings, reports, and PDF verification](../articles/071-calculation-findings-reports-and-pdf-verification.md)
+- [Declaration projections, help, dependencies, and edit admission](../articles/072-declaration-projections-help-dependencies-and-edit-admission.md)
+- [Edit value contracts and Modelo export](../articles/073-edit-value-contracts-and-modelo-export.md)
+- [External filing evidence, local filing and filing views](../articles/074-external-filing-evidence-local-filing-and-filing-views.md)
+- [Modelo history, invoice withholding capture, and IVA wallet](../articles/075-modelo-history-invoice-withholding-capture-and-iva-wallet.md)
+- [Local observations, M036 records, and M145 communications](../articles/076-local-observations-m036-records-and-m145-communications.md)
+- [Tax evidence, private previews, and spreadsheet operations](../articles/077-tax-evidence-private-previews-and-spreadsheet-operations.md)
+- [Supervised filing lifecycle and operation contracts](../articles/078-supervised-filing-lifecycle-and-operation-contracts.md)
+- [Profile-derived bindings and filing readiness](../articles/079-profile-derived-bindings-and-filing-readiness.md)
+- [Modelo projections, queries, quickfile, and recipient encryption](../articles/080-modelo-projections-queries-quickfile-and-recipient-encryption.md)
+- [Reconciliation, filing disposition, and accountant review packages](../articles/081-reconciliation-filing-disposition-and-accountant-review-packages.md)
+- [Review-package exchange and Modelo revision persistence](../articles/082-review-package-exchange-and-modelo-revision-persistence.md)
+- [Revision selection, settlement presentation, and verification](../articles/083-revision-selection-settlement-presentation-and-verification.md)
 
 
 ```{toctree}

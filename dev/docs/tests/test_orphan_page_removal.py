@@ -1,11 +1,10 @@
 """Full builds purge orphaned pages and never resolve operator storage.
 
-Furo bakes theme variables and templates into every page at build time, so a
-built page whose source was removed keeps rendering its build-era design and
-leaks into the search index (the docs-brand audit found 2208 such orphans
-rendering a retired theme). :func:`dev.docs.output_cleanup.remove_orphan_pages` is the
-full-build purge; :func:`dev.docs.build.ensure_isolated_storage_root` keeps
-the build's application imports off the workstation's product state.
+Furo bakes theme variables and templates into every page at build time, so a built page
+whose source was removed keeps rendering its build-era design and leaks into the search
+index. :func:`dev.docs.output_cleanup.remove_orphan_pages` is the full-build purge;
+:func:`dev.docs.build.ensure_isolated_storage_root` keeps the build's application
+imports off the workstation's product state.
 
 Run via::
 
@@ -88,10 +87,8 @@ def test_localized_site_roots_survive_an_apex_sweep(tmp_path: Path) -> None:
     The deploy publishes ``/es/``, ``/ca/`` and ``/hu/`` as subdirectories of the
     same HTML tree the English root occupies, and their pages carry the same
     docnames one level down. Resolved against ``docs/`` those docnames find
-    nothing, so before the exemption every localized page was an orphan by this
-    function's own test and an apex build deleted all of them -- leaving exactly
-    the residue that was long mis-diagnosed: a language
-    directory holding asset subdirectories and not one rendered page.
+    nothing, so this function's own test would classify every localized page as an
+    orphan and an apex build would delete all of them.
 
     The assertion is paired with a real orphan in the same tree, so an exemption
     widened until it swept nothing would fail here rather than pass vacuously.

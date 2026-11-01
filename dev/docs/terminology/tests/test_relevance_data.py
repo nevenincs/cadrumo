@@ -67,9 +67,8 @@ class _BuildSurfaces(TypedDict):
 #: below. The existing guard proves the FILE is present; it cannot prove the
 #: file carries anything, and an empty ``mappings`` list validates perfectly
 #: well. Every gate here ranges over that list, so an emptied sweep would
-#: leave all seven reporting green over nothing. Live: 114 mappings across
-#: 49 concepts. ``failed_query_count`` is deliberately NOT floored -- it is a
-#: count of problems and belongs at zero.
+#: leave all seven reporting green over nothing. ``failed_query_count`` is
+#: deliberately NOT floored -- it is a count of problems and belongs at zero.
 _MINIMUM_RELEVANCE_MAPPINGS = 75
 _MINIMUM_RELEVANCE_CONCEPTS = 30
 
@@ -191,7 +190,7 @@ def _target_resolves(target: str, surfaces: _BuildSurfaces) -> bool:
 
     # Casilla namespace: the per-modelo reference page plus the casilla anchor
     # (_generated/casillas/<modelo>.html#casilla-<slug>). The query-string
-    # hand-off is retired; the target is now a real page+anchor.
+    # hand-off is absent; the target is a real page+anchor.
     casilla_match = re.fullmatch(r"_generated/casillas/(?P<modelo>[A-Za-z0-9-]+)\.html#casilla-[a-z0-9-]+", target)
     if casilla_match:
         return casilla_match.group("modelo") in casilla_modelos
@@ -343,11 +342,9 @@ def test_drift_gate_actually_rejects_a_stale_target(build_surfaces: _BuildSurfac
 def test_a_fabricated_cli_page_or_anchor_is_rejected(build_surfaces: _BuildSurfaces) -> None:
     """A CLI deep link that merely matches the family shape but names no real command is refused.
 
-    Reproduces the audit finding: a family-shaped regular expression alone
-    accepted a fabricated page (`cli/app/not-real.html`) and a fabricated
-    anchor on an otherwise-real family page
-    (`cli/config/not-real.html#bogus`). Real membership in the live-generated
-    CLI target inventory refuses both.
+    Membership in the live-generated CLI target inventory refuses a fabricated
+    page (`cli/app/not-real.html`) and a fabricated anchor on a real family page
+    (`cli/config/not-real.html#bogus`).
     """
     assert not _target_resolves("cli/app/not-real.html", build_surfaces)
     assert not _target_resolves("cli/config/not-real.html#bogus", build_surfaces)

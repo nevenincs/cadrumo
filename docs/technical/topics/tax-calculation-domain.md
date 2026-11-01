@@ -50,20 +50,20 @@ This packet is static analysis of the domain layer. It establishes parser/select
 
 ## Detailed articles
 
-- [Registry formulas and filing-row materialization](../articles/124-registry-formulas-and-filing-row-materialization.md) — `STAGE-2-124`
-- [Taxpayer applicability and indexed registry authority](../articles/125-taxpayer-applicability-and-indexed-registry-authority.md) — `STAGE-2-125`
-- [Binding enrollment, prior filings, deadlines, and lineage](../articles/126-binding-enrollment-prior-filings-deadlines-and-lineage.md) — `STAGE-2-126`
-- [Casilla identity, legal vocabularies, and fixed-width exports](../articles/127-casilla-identity-legal-vocabularies-and-fixed-width-exports.md) — `STAGE-2-127`
-- [Governed facts and export conversion](../articles/128-governed-facts-and-export-conversion.md) — `STAGE-2-128`
-- [Formula evaluation, traceability, and row-source bindings](../articles/129-formula-evaluation-traceability-and-row-source-bindings.md) — `STAGE-2-129`
-- [Dated tax vocabularies, inheritance, and IVA carries](../articles/130-dated-tax-vocabularies-inheritance-and-iva-carries.md) — `STAGE-2-130`
-- [Ledger binding families and Modelo 303 evidence projections](../articles/131-ledger-binding-families-and-modelo-303-evidence-projections.md) — `STAGE-2-131`
-- [Modelo 303 projections, profile bindings, and registry scope](../articles/132-modelo-303-projections-profile-bindings-and-registry-scope.md) — `STAGE-2-132`
-- [Registry reporting, cross-filing relations, and coverage checks](../articles/133-registry-reporting-cross-filing-relations-and-coverage-checks.md) — `STAGE-2-133`
-- [Withholding bindings, revision validation, and registry schema](../articles/134-withholding-bindings-revision-validation-and-registry-schema.md) — `STAGE-2-134`
-- [Registry schemas for exports, extraction, forms, and governance](../articles/135-registry-schemas-for-exports-extraction-forms-and-governance.md) — `STAGE-2-135`
-- [Casilla verification contracts and filing snapshots](../articles/136-casilla-verification-contracts-and-filing-snapshots.md) — `STAGE-2-136`
-- [Revision selection, withholding aggregation, and row provenance](../articles/137-revision-selection-withholding-aggregation-and-row-provenance.md) — `STAGE-2-137`
+- [Registry formulas and filing-row materialization](../articles/124-registry-formulas-and-filing-row-materialization.md)
+- [Taxpayer applicability and indexed registry authority](../articles/125-taxpayer-applicability-and-indexed-registry-authority.md)
+- [Binding enrollment, prior filings, deadlines, and lineage](../articles/126-binding-enrollment-prior-filings-deadlines-and-lineage.md)
+- [Casilla identity, legal vocabularies, and fixed-width exports](../articles/127-casilla-identity-legal-vocabularies-and-fixed-width-exports.md)
+- [Governed facts and export conversion](../articles/128-governed-facts-and-export-conversion.md)
+- [Formula evaluation, traceability, and row-source bindings](../articles/129-formula-evaluation-traceability-and-row-source-bindings.md)
+- [Dated tax vocabularies, inheritance, and IVA carries](../articles/130-dated-tax-vocabularies-inheritance-and-iva-carries.md)
+- [Ledger binding families and Modelo 303 evidence projections](../articles/131-ledger-binding-families-and-modelo-303-evidence-projections.md)
+- [Modelo 303 projections, profile bindings, and registry scope](../articles/132-modelo-303-projections-profile-bindings-and-registry-scope.md)
+- [Registry reporting, cross-filing relations, and coverage checks](../articles/133-registry-reporting-cross-filing-relations-and-coverage-checks.md)
+- [Withholding bindings, revision validation, and registry schema](../articles/134-withholding-bindings-revision-validation-and-registry-schema.md)
+- [Registry schemas for exports, extraction, forms, and governance](../articles/135-registry-schemas-for-exports-extraction-forms-and-governance.md)
+- [Casilla verification contracts and filing snapshots](../articles/136-casilla-verification-contracts-and-filing-snapshots.md)
+- [Revision selection, withholding aggregation, and row provenance](../articles/137-revision-selection-withholding-aggregation-and-row-provenance.md)
 
 
 ```{toctree}

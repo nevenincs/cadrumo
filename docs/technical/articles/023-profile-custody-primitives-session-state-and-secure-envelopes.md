@@ -4,7 +4,7 @@
 
 > This page describes the analyzed source snapshot. Its findings and limitations are not a certification of the current branch.
 
-**Report:** `STAGE-2-023` · **Topic:** [Persistence and secure storage](../topics/persistence-and-secure-storage.md)
+**Topic:** [Persistence and secure storage](../topics/persistence-and-secure-storage.md)
 
 <!-- preserved:article -->
 ## Scope

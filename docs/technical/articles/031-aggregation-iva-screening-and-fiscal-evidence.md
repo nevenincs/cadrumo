@@ -4,7 +4,7 @@
 
 > This page describes the analyzed source snapshot. Its findings and limitations are not a certification of the current branch.
 
-**Report:** `STAGE-2-031` · **Topic:** [Aggregation and calculation services](../topics/aggregation-and-calculation-services.md)
+**Topic:** [Aggregation and calculation services](../topics/aggregation-and-calculation-services.md)
 
 <!-- preserved:article -->
 ## Scope

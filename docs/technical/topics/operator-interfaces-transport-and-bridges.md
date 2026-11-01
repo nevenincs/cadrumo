@@ -1,4 +1,4 @@
-# Operator interfaces, part 2: secure transport and operation bridges
+# Operator interfaces: secure transport and operation bridges
 
 [Technical overview](../architecture.md) · [Article index](../articles/catalogue.md) · [Snapshot and reading guide](../reading-guide.md)
 
@@ -7,7 +7,7 @@
 ::::{dropdown} Topic summary
 
 <!-- preserved:summary -->
-The registered-operation bridge is the common CLI-to-worker protocol: it validates a typed request against a definition, binds profile/frontend/session identity, observes settlement, checks result/effect/schema, and correlates review replies. Timeout and incomplete observations stay `UNKNOWN`, which matters for mutations that may have committed. Ledger, Modelo, spreadsheet, review-package, live-capture and profile commands reuse this mechanism. A capture receipt proves that the local operation reported evidence; it does not independently authenticate current AEAT state or establish a submitted return. [Full synthesis](operator-interfaces-part-2.md), runner (`src/cadrumo_client/commands/registered_operation.py`), [detail](../articles/171-cli-period-registered-operation-and-ledger-bridges.md), [detail](../articles/173-modelo-discovery-review-exchange-profile-admission-and-workflow-reads.md).
+The registered-operation bridge is the common CLI-to-worker protocol: it validates a typed request against a definition, binds profile/frontend/session identity, observes settlement, checks result/effect/schema, and correlates review replies. Timeout and incomplete observations stay `UNKNOWN`, which matters for mutations that may have committed. Ledger, Modelo, spreadsheet, review-package, live-capture and profile commands reuse this mechanism. A capture receipt proves that the local operation reported evidence; it does not independently authenticate current AEAT state or establish a submitted return. [Full synthesis](operator-interfaces-transport-and-bridges.md), runner (`src/cadrumo_client/commands/registered_operation.py`), [detail](../articles/171-cli-period-registered-operation-and-ledger-bridges.md), [detail](../articles/173-modelo-discovery-review-exchange-profile-admission-and-workflow-reads.md).
 
 Secret input admits one bounded stdin/descriptor channel, rejects duplicate JSON keys, closes descriptors and wipes mutable byte buffers. Exact-profile runtime admission and invocation-owned client cleanup constrain lifetime; immutable decoded strings and native credential handling are outside the wipe claim. Profile edits carry revision/content-digest preconditions and preserve “committed but readback failed” outcomes. Local file input and provider effects are delegated to workers, so CLI path normalization does not by itself prove filesystem containment. Secure input (`src/cadrumo_client/commands/secure_input.py`), profile admission (`src/cadrumo_client/commands/profile_admission.py`), profile patch (`src/cadrumo/entrypoints/cli/config/operation_profile_patch.py`), [detail](../articles/169-secure-cli-input-profile-bridges-and-storage-controls.md).
 
@@ -42,11 +42,11 @@ The command-surface reconciler compares live callback aliases, inputs, policies 
 
 ## Detailed articles
 
-- [Secure CLI input, profile bridges, and storage controls](../articles/169-secure-cli-input-profile-bridges-and-storage-controls.md) — `STAGE-2-169`
-- [CLI error handling, ledger actions, and Modelo work](../articles/170-cli-error-handling-ledger-actions-and-modelo-work.md) — `STAGE-2-170`
-- [CLI period, registered-operation, and ledger bridges](../articles/171-cli-period-registered-operation-and-ledger-bridges.md) — `STAGE-2-171`
-- [Ledger and Modelo CLI operations](../articles/172-ledger-and-modelo-cli-operations.md) — `STAGE-2-172`
-- [Modelo discovery, review exchange, profile admission, and workflow reads](../articles/173-modelo-discovery-review-exchange-profile-admission-and-workflow-reads.md) — `STAGE-2-173`
+- [Secure CLI input, profile bridges, and storage controls](../articles/169-secure-cli-input-profile-bridges-and-storage-controls.md)
+- [CLI error handling, ledger actions, and Modelo work](../articles/170-cli-error-handling-ledger-actions-and-modelo-work.md)
+- [CLI period, registered-operation, and ledger bridges](../articles/171-cli-period-registered-operation-and-ledger-bridges.md)
+- [Ledger and Modelo CLI operations](../articles/172-ledger-and-modelo-cli-operations.md)
+- [Modelo discovery, review exchange, profile admission, and workflow reads](../articles/173-modelo-discovery-review-exchange-profile-admission-and-workflow-reads.md)
 
 
 ```{toctree}

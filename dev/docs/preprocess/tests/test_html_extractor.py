@@ -388,8 +388,7 @@ def test_lorca_reduction_is_scoped_to_its_observed_heading() -> None:
 def test_toc_and_form_boilerplate_is_stripped() -> None:
     """Known TOC/markup boilerplate is ABSENT; known article prose is PRESENT.
 
-    The F4 audit flagged TOC link farms polluting the index; this is the
-    proof they no longer ship. Asserts across every unit's text.
+    Asserts across every unit's text.
     """
     output = build_outputs(_LAW_HTML, repo_root=_REPO_ROOT)[0]
     body = "\n".join(u.text for u in output.units)
@@ -598,9 +597,9 @@ _WRAPPED_ARTICLE_EXCERPT = (
 def test_plain_heading_excerpt_splits_on_its_declared_article_fragments(tmp_path: Path) -> None:
     """Each ``<div id="aN"><h2>Articulo N.`` becomes its own titled unit at ``#aN``.
 
-    Unsplit, the excerpt was one anonymous unit, so a citation of article 1
-    verified against article 6's text too. The capture note after the last
-    wrapper is not article text and stays out of every unit.
+    One anonymous unit would let a citation of article 1 verify against article
+    6's text too. The capture note after the last wrapper is not article text
+    and stays out of every unit.
     """
     source = tmp_path / "orden-probe.html"
     source.write_text(_WRAPPED_ARTICLE_EXCERPT, encoding="utf-8")

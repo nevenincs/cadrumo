@@ -1,4 +1,4 @@
-# Operator interfaces, part 1: command graph and principal workflows
+# Operator interfaces: command graph and principal workflows
 
 [Technical overview](../architecture.md) · [Article index](../articles/catalogue.md) · [Snapshot and reading guide](../reading-guide.md)
 
@@ -7,7 +7,7 @@
 ::::{dropdown} Topic summary
 
 <!-- preserved:summary -->
-The CLI is Cadrumo's primary operator surface. Declarative command fragments expose parameters, secrets, effect policies and output schemas, and demand-load handlers. The composed operation registry binds exact-profile repositories, secure writers and pinned tax authority. Ledger, invoice, evidence, Modelo, live-capture, overview and profile-management commands turn application results into typed text/JSON envelopes. A local calculation, verification, internal filing record, exported file and observed AEAT receipt are distinct states; none alone proves live submission. [Full synthesis](operator-interfaces-part-1.md), graph (`src/cadrumo_client/commands/graph.py`), composition (`src/cadrumo/entrypoints/operation_composition.py`), [detail](../articles/154-entrypoint-adapter-composition.md), [detail](../articles/165-prorrata-review-root-cli-and-command-authority.md).
+The CLI is Cadrumo's primary operator surface. Declarative command fragments expose parameters, secrets, effect policies and output schemas, and demand-load handlers. The composed operation registry binds exact-profile repositories, secure writers and pinned tax authority. Ledger, invoice, evidence, Modelo, live-capture, overview and profile-management commands turn application results into typed text/JSON envelopes. A local calculation, verification, internal filing record, exported file and observed AEAT receipt are distinct states; none alone proves live submission. [Full synthesis](operator-interfaces-command-graph.md), graph (`src/cadrumo_client/commands/graph.py`), composition (`src/cadrumo/entrypoints/operation_composition.py`), [detail](../articles/154-entrypoint-adapter-composition.md), [detail](../articles/165-prorrata-review-root-cli-and-command-authority.md).
 
 The knowledge displayed to operators comes from profile facts, pinned registries, ledger/evidence records and captured remote observations. Discovery names source categories and legal references without establishing their present legal validity. Off-host document extraction requires explicit consent and digest-bound review; model classification remains a proposal until accepted, with registry logic supplying regulated arithmetic. Live capture reports partial/empty/refused outcomes, and notification-document fetch is guarded by captured read state. Evidence (`src/cadrumo/entrypoints/cli/_ledger_evidence_cli.py`), Modelo discovery (`src/cadrumo/entrypoints/cli/_modelo_discovery_cli.py`), notification guard (`src/cadrumo/entrypoints/cli/_app_live_notifications_cli.py`), [detail](../articles/157-live-aeat-cli-capture-and-snapshot-surfaces.md), [detail](../articles/159-ledger-invoice-and-document-evidence-operator-flows.md).
 
@@ -48,21 +48,21 @@ This synthesis describes the on-disk command and composition contracts. It does 
 
 ## Detailed articles
 
-- [Entrypoint adapter composition](../articles/154-entrypoint-adapter-composition.md) — `STAGE-2-154`
-- [Entrypoint operation and read composition](../articles/155-entrypoint-operation-and-read-composition.md) — `STAGE-2-155`
-- [CLI command contracts and operator surfaces](../articles/156-cli-command-contracts-and-operator-surfaces.md) — `STAGE-2-156`
-- [Live AEAT CLI capture and snapshot surfaces](../articles/157-live-aeat-cli-capture-and-snapshot-surfaces.md) — `STAGE-2-157`
-- [CLI contracts, execution projection, diagnostics and evidence notices](../articles/158-cli-contracts-execution-projection-diagnostics-and-evidence-notices.md) — `STAGE-2-158`
-- [Ledger, invoice and document-evidence operator flows](../articles/159-ledger-invoice-and-document-evidence-operator-flows.md) — `STAGE-2-159`
-- [Ledger review, imports, rules, inventory and read surfaces](../articles/160-ledger-review-imports-rules-inventory-and-read-surfaces.md) — `STAGE-2-160`
-- [Modelo command support, discovery, amendment and export surfaces](../articles/161-modelo-command-support-discovery-amendment-and-export-surfaces.md) — `STAGE-2-161`
-- [Modelo local records, wallet, preview, and non-work command contracts](../articles/162-modelo-local-records-wallet-preview-and-non-work-command-contracts.md) — `STAGE-2-162`
-- [Modelo projection, readiness, filing evidence and sharing surfaces](../articles/163-modelo-projection-readiness-filing-evidence-and-sharing-surfaces.md) — `STAGE-2-163`
-- [Work inspection, overview, verification and profile authentication](../articles/164-work-inspection-overview-verification-and-profile-authentication.md) — `STAGE-2-164`
-- [Prorrata, review, root CLI and command authority](../articles/165-prorrata-review-root-cli-and-command-authority.md) — `STAGE-2-165`
-- [Shared CLI transport and profile configuration surfaces](../articles/166-shared-cli-transport-and-profile-configuration-surfaces.md) — `STAGE-2-166`
-- [Profile maintenance, repair, and Google operations](../articles/167-profile-maintenance-repair-and-google-operations.md) — `STAGE-2-167`
-- [Profile custody, provisioning, and runtime configuration](../articles/168-profile-custody-provisioning-and-runtime-configuration.md) — `STAGE-2-168`
+- [Entrypoint adapter composition](../articles/154-entrypoint-adapter-composition.md)
+- [Entrypoint operation and read composition](../articles/155-entrypoint-operation-and-read-composition.md)
+- [CLI command contracts and operator surfaces](../articles/156-cli-command-contracts-and-operator-surfaces.md)
+- [Live AEAT CLI capture and snapshot surfaces](../articles/157-live-aeat-cli-capture-and-snapshot-surfaces.md)
+- [CLI contracts, execution projection, diagnostics and evidence notices](../articles/158-cli-contracts-execution-projection-diagnostics-and-evidence-notices.md)
+- [Ledger, invoice and document-evidence operator flows](../articles/159-ledger-invoice-and-document-evidence-operator-flows.md)
+- [Ledger review, imports, rules, inventory and read surfaces](../articles/160-ledger-review-imports-rules-inventory-and-read-surfaces.md)
+- [Modelo command support, discovery, amendment and export surfaces](../articles/161-modelo-command-support-discovery-amendment-and-export-surfaces.md)
+- [Modelo local records, wallet, preview, and non-work command contracts](../articles/162-modelo-local-records-wallet-preview-and-non-work-command-contracts.md)
+- [Modelo projection, readiness, filing evidence and sharing surfaces](../articles/163-modelo-projection-readiness-filing-evidence-and-sharing-surfaces.md)
+- [Work inspection, overview, verification and profile authentication](../articles/164-work-inspection-overview-verification-and-profile-authentication.md)
+- [Prorrata, review, root CLI and command authority](../articles/165-prorrata-review-root-cli-and-command-authority.md)
+- [Shared CLI transport and profile configuration surfaces](../articles/166-shared-cli-transport-and-profile-configuration-surfaces.md)
+- [Profile maintenance, repair, and Google operations](../articles/167-profile-maintenance-repair-and-google-operations.md)
+- [Profile custody, provisioning, and runtime configuration](../articles/168-profile-custody-provisioning-and-runtime-configuration.md)
 
 
 ```{toctree}

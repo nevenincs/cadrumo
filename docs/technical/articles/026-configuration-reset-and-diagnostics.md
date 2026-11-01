@@ -4,7 +4,7 @@
 
 > This page describes the analyzed source snapshot. Its findings and limitations are not a certification of the current branch.
 
-**Report:** `STAGE-2-026` · **Topic:** [Application orchestration and diagnostics](../topics/application-orchestration-and-diagnostics.md)
+**Topic:** [Application orchestration and diagnostics](../topics/application-orchestration-and-diagnostics.md)
 
 <!-- preserved:article -->
 ## Scope

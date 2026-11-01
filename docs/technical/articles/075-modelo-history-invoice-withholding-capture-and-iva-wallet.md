@@ -4,7 +4,7 @@
 
 > This page describes the analyzed source snapshot. Its findings and limitations are not a certification of the current branch.
 
-**Report:** `STAGE-2-075` · **Topic:** [Modelo work and revision lifecycle, part 1](../topics/modelo-work-and-revision-lifecycle-part-1.md)
+**Topic:** [Modelo work and revision lifecycle: calculation, export and filing](../topics/modelo-work-calculation-and-filing.md)
 
 <!-- preserved:article -->
 **Scope:** 14 implementation files in src/cadrumo/application/modelo; 5,292 lines, 228,423 bytes, and 47,093 manifest-measured tokens. All nine bounded-reader pages were inspected in order. No application execution or tests were run.
