@@ -12,9 +12,14 @@ from pydantic import BaseModel
 
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support import administration_subject, changed
+from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support import (
+    AdministrationSubject,
+    administration_subject,
+    changed,
+)
 from cadrumo.adapters.persistence.storage.custody.tests.native_enrollment_recipient import NativeEnrollmentRecipient
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
+from cadrumo.application.modelo.lifecycle_advisories import ModeloLifecycleAdvisories
 from cadrumo.application.modelo.revision_selection_operation import (
     ModeloWorkRevisionProjection,
     ModeloWorkRevisionRequest,
@@ -40,6 +45,7 @@ from cadrumo.application.operations.frontend_requests import (
 from cadrumo.core.hashing import canonical_json_bytes
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.modelos.work_unit import WorkUnit
 from cadrumo.entrypoints.operation_composition import build_production_operation_registry
 from cadrumo.entrypoints.tests.modelo_operation_test_support import (
     seeded_modelo_verification_report,
@@ -154,6 +160,218 @@ def _run[T: BaseModel](
     return result_type.model_validate(projected.projection), terminal.effect
 
 
+def _seed_work_unit(
+    profile_id: UUID, operation: PinnedAuthorityOperation, *, calculate_in_runtime: bool
+) -> tuple[WorkUnit, str | None, str | None]:
+    if calculate_in_runtime:
+        return seeded_modelo_work_unit(profile_id, operation=operation), None, None
+    revision_id, report_id = seeded_modelo_verification_report(profile_id, operation=operation)
+    revision = CalculationRevisionCatalogueRepository().load().get(revision_id)
+    assert revision is not None
+    unit = WorkUnitCatalogueRepository().load().get(revision.work_unit_id)
+    assert unit is not None
+    return unit, revision_id, report_id
+
+
+def _enroll_scoped_key(subject: AdministrationSubject, unit: WorkUnit, *, calculate_in_runtime: bool) -> bytes:
+    requester = changed(subject.owner.requesting, destination_id=subject.owner.requesting.client_id)
+    subject.owner.requesting = requester
+    recipient = NativeEnrollmentRecipient(requester=requester, secrets_store=subject.client_native)
+    subject.owner.delivery.endpoint = recipient
+    definitions = frozenset({"modelo.work.revision", "modelo.work.verify", "modelo.work.file"})
+    if calculate_in_runtime:
+        definitions |= {"modelo.work.calculate"}
+    registry = build_production_operation_registry()
+    disclosures = {
+        DisclosurePermission(
+            destination_id=requester.client_id,
+            projection_id=OPERATION_OBSERVATION_PROJECTION_ID,
+            category=DisclosureCategory.OPERATION_METADATA,
+        )
+    }
+    for definition_id in definitions:
+        result_schema = registry.lookup_public_contract(definition_id).result_schema
+        assert result_schema is not None
+        disclosures.add(
+            DisclosurePermission(
+                destination_id=requester.client_id,
+                projection_id=result_schema.schema_id,
+                category=DisclosureCategory.TAX_VALUES,
+            )
+        )
+    scope = AccessScope(
+        operations=definitions,
+        actions=frozenset(
+            {
+                AccessAction.SUBMIT,
+                AccessAction.START,
+                AccessAction.RESUME,
+                AccessAction.COMMIT,
+                AccessAction.OBSERVE,
+                AccessAction.RESULT,
+                AccessAction.CANCEL,
+                AccessAction.DETACH,
+            }
+        ),
+        disclosures=frozenset(disclosures),
+        periods=frozenset({unit.period}),
+        allow_period_independent=False,
+        allow_delegation=False,
+    )
+    facts = subject.owner.current
+    assert facts.session is not None
+    subject.owner.current = changed(
+        facts, profile=changed(facts.profile, scope=scope), session=changed(facts.session, scope=scope)
+    )
+    request_id = uuid4()
+    subject.service.request(request_id, changed(subject.proposal, scope=scope))
+    subject.approve(request_id)
+    enrollment = next(item for item in subject.store.enrollment_state().requests if item.request_id == request_id)
+    credential = recipient.possession(enrollment)
+    assert credential is not None
+    return credential.get_secret_value()
+
+
+def _calculate_twice(client: VerifiedConnection, profile_id: UUID, session_id: UUID, unit: WorkUnit) -> str:
+    calculate = ModeloWorkCalculateRequest.model_validate_json(
+        canonical_json_bytes(
+            {
+                "work_unit_id": unit.work_unit_id,
+                "actor": "native-operator",
+                "caller_context": "explicit",
+                "inputs": {
+                    "binding_overrides": [
+                        {"key": key, "value": "0"}
+                        for key in (
+                            "irpf.previous_year_economic_activity_net_income",
+                            "modelo-130-resultados-negativos-anteriores",
+                            "modelo-130-pagos-fraccionados-anteriores",
+                        )
+                    ]
+                },
+            }
+        )
+    )
+    calculated, calculate_effect = _run(
+        client,
+        profile_id,
+        session_id,
+        definition_id="modelo.work.calculate",
+        subject_ref=unit.work_unit_id,
+        payload=calculate,
+        result_type=ModeloWorkCalculatePublicResultV2,
+    )
+    assert calculate_effect is OperationEffect.UPDATED
+    assert calculated.revision_published
+    assert calculated.calculation.bucket_id == str(profile_id)
+    assert calculated.unit.work_unit_id == unit.work_unit_id
+    assert calculated.unit.current_calculation_revision_id == calculated.calculation_revision_id
+    assert calculated.calculation.registry_snapshot_ref.revision_id == unit.revision_id
+    assert calculated.calculation.period.to_period() == unit.period
+    revision_id = calculated.calculation_revision_id
+    repeated, repeat_effect = _run(
+        client,
+        profile_id,
+        session_id,
+        definition_id="modelo.work.calculate",
+        subject_ref=unit.work_unit_id,
+        payload=calculate,
+        result_type=ModeloWorkCalculatePublicResultV2,
+    )
+    assert repeated.calculation_revision_id == revision_id
+    assert not repeated.revision_published
+    # The revision witness does not cover incidental writers.
+    assert repeat_effect is OperationEffect.UNKNOWN
+    return revision_id
+
+
+def _select_and_verify(
+    client: VerifiedConnection,
+    profile_id: UUID,
+    session_id: UUID,
+    unit: WorkUnit,
+    revision_id: str,
+    seeded_report_id: str | None,
+    *,
+    calculate_in_runtime: bool,
+) -> tuple[ModeloLifecycleAdvisories, str]:
+    selected, read_effect = _run(
+        client,
+        profile_id,
+        session_id,
+        definition_id="modelo.work.revision",
+        subject_ref=profile_operation_subject(str(profile_id)),
+        payload=ModeloWorkRevisionRequest(profile_id=profile_id, calculation_revision_id=revision_id),
+        result_type=ModeloWorkRevisionProjection,
+    )
+    assert read_effect is OperationEffect.NONE
+    assert selected.verification_report_id == seeded_report_id
+    assert selected.unit.work_unit_id == unit.work_unit_id
+    verified, verify_effect = _run(
+        client,
+        profile_id,
+        session_id,
+        definition_id="modelo.work.verify",
+        subject_ref=unit.work_unit_id,
+        payload=ModeloWorkVerifyRequest(calculation_revision_id=revision_id, actor="native-operator"),
+        result_type=ModeloWorkVerifyPublicResultV2,
+    )
+    assert verify_effect is (OperationEffect.UPDATED if calculate_in_runtime else OperationEffect.NONE)
+    if seeded_report_id is not None:
+        assert verified.verification.report.verification_report_id == seeded_report_id
+    assert verified.verification.published is calculate_in_runtime
+    assert verified.advisories.work_unit_id == unit.work_unit_id
+    assert verified.advisories.calculation_revision_id == revision_id
+    assert verified.advisories.period == unit.period.registry_token
+    return verified.advisories, verified.verification_report_id
+
+
+def _file_twice_and_refuse_foreign_subject(
+    client: VerifiedConnection,
+    profile_id: UUID,
+    session_id: UUID,
+    unit: WorkUnit,
+    revision_id: str,
+    report_id: str,
+    advisories: ModeloLifecycleAdvisories,
+) -> None:
+    filing = ModeloWorkFileRequest(
+        approval=ModeloWorkFileApproval(calculation_revision_id=revision_id, verification_report_id=report_id),
+        actor="native-operator",
+    )
+    receipts = []
+    for expected_effect in (OperationEffect.UPDATED, OperationEffect.NONE):
+        filed, file_effect = _run(
+            client,
+            profile_id,
+            session_id,
+            definition_id="modelo.work.file",
+            subject_ref=unit.work_unit_id,
+            payload=filing,
+            result_type=ModeloWorkFilePublicResultV2,
+        )
+        assert file_effect is expected_effect
+        assert filed.published is (expected_effect is OperationEffect.UPDATED)
+        record = filed.record.to_record()
+        assert record.bucket_id == str(profile_id)
+        assert record.calculation_revision_id == revision_id
+        assert not record.aeat_accepted
+        assert filed.handoff_required
+        assert filed.advisories == advisories
+        receipts.append(record)
+    assert receipts[0] == receipts[1]
+    denied = _submit(
+        client,
+        profile_id,
+        session_id,
+        definition_id="modelo.work.file",
+        subject_ref=revision_id,
+        payload_json=filing.model_dump_json(),
+    )
+    assert isinstance(denied, AccessRefusal)
+    assert denied.code is AccessDenialCode.OPERATION_DENIED
+
+
 @pytest.mark.parametrize("calculate_in_runtime", [False, True])
 def test_native_scoped_revision_verify_and_file_return_actual_receipts(
     tmp_path: Path, *, operation: PinnedAuthorityOperation, calculate_in_runtime: bool
@@ -168,71 +386,8 @@ def test_native_scoped_revision_verify_and_file_return_actual_receipts(
         tmp_path, os_owner_id=owner_id(), installation_id=installation_state.installation_id
     ) as subject:
         profile_id = subject.store.binding.profile_id
-        if calculate_in_runtime:
-            unit = seeded_modelo_work_unit(profile_id, operation=operation)
-            revision_id = report_id = None
-        else:
-            revision_id, report_id = seeded_modelo_verification_report(profile_id, operation=operation)
-            revision = CalculationRevisionCatalogueRepository().load().get(revision_id)
-            assert revision is not None
-            unit = WorkUnitCatalogueRepository().load().get(revision.work_unit_id)
-            assert unit is not None
-        requester = changed(subject.owner.requesting, destination_id=subject.owner.requesting.client_id)
-        subject.owner.requesting = requester
-        recipient = NativeEnrollmentRecipient(requester=requester, secrets_store=subject.client_native)
-        subject.owner.delivery.endpoint = recipient
-        definitions = frozenset({"modelo.work.revision", "modelo.work.verify", "modelo.work.file"})
-        if calculate_in_runtime:
-            definitions |= {"modelo.work.calculate"}
-        registry = build_production_operation_registry()
-        disclosures = {
-            DisclosurePermission(
-                destination_id=requester.client_id,
-                projection_id=OPERATION_OBSERVATION_PROJECTION_ID,
-                category=DisclosureCategory.OPERATION_METADATA,
-            )
-        }
-        for definition_id in definitions:
-            result_schema = registry.lookup_public_contract(definition_id).result_schema
-            assert result_schema is not None
-            disclosures.add(
-                DisclosurePermission(
-                    destination_id=requester.client_id,
-                    projection_id=result_schema.schema_id,
-                    category=DisclosureCategory.TAX_VALUES,
-                )
-            )
-        scope = AccessScope(
-            operations=definitions,
-            actions=frozenset(
-                {
-                    AccessAction.SUBMIT,
-                    AccessAction.START,
-                    AccessAction.RESUME,
-                    AccessAction.COMMIT,
-                    AccessAction.OBSERVE,
-                    AccessAction.RESULT,
-                    AccessAction.CANCEL,
-                    AccessAction.DETACH,
-                }
-            ),
-            disclosures=frozenset(disclosures),
-            periods=frozenset({unit.period}),
-            allow_period_independent=False,
-            allow_delegation=False,
-        )
-        facts = subject.owner.current
-        assert facts.session is not None
-        subject.owner.current = changed(
-            facts, profile=changed(facts.profile, scope=scope), session=changed(facts.session, scope=scope)
-        )
-        request_id = uuid4()
-        subject.service.request(request_id, changed(subject.proposal, scope=scope))
-        subject.approve(request_id)
-        enrollment = next(item for item in subject.store.enrollment_state().requests if item.request_id == request_id)
-        credential = recipient.possession(enrollment)
-        assert credential is not None
-        key = credential.get_secret_value()
+        unit, revision_id, report_id = _seed_work_unit(profile_id, operation, calculate_in_runtime=calculate_in_runtime)
+        key = _enroll_scoped_key(subject, unit, calculate_in_runtime=calculate_in_runtime)
         close_active_bucket_session()
 
         with serving_runtime(
@@ -245,121 +400,19 @@ def test_native_scoped_revision_verify_and_file_return_actual_receipts(
             try:
                 session_id = admit_session(client, profile_id, method="api_key", proof=key)
                 if calculate_in_runtime:
-                    calculate = ModeloWorkCalculateRequest.model_validate_json(
-                        canonical_json_bytes(
-                            {
-                                "work_unit_id": unit.work_unit_id,
-                                "actor": "native-operator",
-                                "caller_context": "explicit",
-                                "inputs": {
-                                    "binding_overrides": [
-                                        {"key": key, "value": "0"}
-                                        for key in (
-                                            "irpf.previous_year_economic_activity_net_income",
-                                            "modelo-130-resultados-negativos-anteriores",
-                                            "modelo-130-pagos-fraccionados-anteriores",
-                                        )
-                                    ]
-                                },
-                            }
-                        )
-                    )
-                    calculated, calculate_effect = _run(
-                        client,
-                        profile_id,
-                        session_id,
-                        definition_id="modelo.work.calculate",
-                        subject_ref=unit.work_unit_id,
-                        payload=calculate,
-                        result_type=ModeloWorkCalculatePublicResultV2,
-                    )
-                    assert calculate_effect is OperationEffect.UPDATED
-                    assert calculated.revision_published
-                    assert calculated.calculation.bucket_id == str(profile_id)
-                    assert calculated.unit.work_unit_id == unit.work_unit_id
-                    assert calculated.unit.current_calculation_revision_id == calculated.calculation_revision_id
-                    assert calculated.calculation.registry_snapshot_ref.revision_id == unit.revision_id
-                    assert calculated.calculation.period.to_period() == unit.period
-                    revision_id = calculated.calculation_revision_id
-                    repeated, repeat_effect = _run(
-                        client,
-                        profile_id,
-                        session_id,
-                        definition_id="modelo.work.calculate",
-                        subject_ref=unit.work_unit_id,
-                        payload=calculate,
-                        result_type=ModeloWorkCalculatePublicResultV2,
-                    )
-                    assert repeated.calculation_revision_id == revision_id
-                    assert not repeated.revision_published
-                    # The revision witness does not cover incidental writers.
-                    assert repeat_effect is OperationEffect.UNKNOWN
+                    revision_id = _calculate_twice(client, profile_id, session_id, unit)
                 assert revision_id is not None
-                selected, read_effect = _run(
+                advisories, verified_report_id = _select_and_verify(
                     client,
                     profile_id,
                     session_id,
-                    definition_id="modelo.work.revision",
-                    subject_ref=profile_operation_subject(str(profile_id)),
-                    payload=ModeloWorkRevisionRequest(profile_id=profile_id, calculation_revision_id=revision_id),
-                    result_type=ModeloWorkRevisionProjection,
+                    unit,
+                    revision_id,
+                    report_id,
+                    calculate_in_runtime=calculate_in_runtime,
                 )
-                assert read_effect is OperationEffect.NONE
-                assert selected.verification_report_id == report_id
-                assert selected.unit.work_unit_id == unit.work_unit_id
-                verified, verify_effect = _run(
-                    client,
-                    profile_id,
-                    session_id,
-                    definition_id="modelo.work.verify",
-                    subject_ref=unit.work_unit_id,
-                    payload=ModeloWorkVerifyRequest(calculation_revision_id=revision_id, actor="native-operator"),
-                    result_type=ModeloWorkVerifyPublicResultV2,
+                _file_twice_and_refuse_foreign_subject(
+                    client, profile_id, session_id, unit, revision_id, verified_report_id, advisories
                 )
-                assert verify_effect is (OperationEffect.UPDATED if calculate_in_runtime else OperationEffect.NONE)
-                if report_id is not None:
-                    assert verified.verification.report.verification_report_id == report_id
-                assert verified.verification.published is calculate_in_runtime
-                report_id = verified.verification_report_id
-                assert verified.advisories.work_unit_id == unit.work_unit_id
-                assert verified.advisories.calculation_revision_id == revision_id
-                assert verified.advisories.period == unit.period.registry_token
-                filing = ModeloWorkFileRequest(
-                    approval=ModeloWorkFileApproval(
-                        calculation_revision_id=revision_id, verification_report_id=report_id
-                    ),
-                    actor="native-operator",
-                )
-                receipts = []
-                for expected_effect in (OperationEffect.UPDATED, OperationEffect.NONE):
-                    filed, file_effect = _run(
-                        client,
-                        profile_id,
-                        session_id,
-                        definition_id="modelo.work.file",
-                        subject_ref=unit.work_unit_id,
-                        payload=filing,
-                        result_type=ModeloWorkFilePublicResultV2,
-                    )
-                    assert file_effect is expected_effect
-                    assert filed.published is (expected_effect is OperationEffect.UPDATED)
-                    record = filed.record.to_record()
-                    assert record.bucket_id == str(profile_id)
-                    assert record.calculation_revision_id == revision_id
-                    assert not record.aeat_accepted
-                    assert filed.handoff_required
-                    assert filed.advisories == verified.advisories
-                    receipts.append(record)
-                assert receipts[0] == receipts[1]
-                denied = _submit(
-                    client,
-                    profile_id,
-                    session_id,
-                    definition_id="modelo.work.file",
-                    subject_ref=revision_id,
-                    payload_json=filing.model_dump_json(),
-                )
-                assert isinstance(denied, AccessRefusal)
-                assert denied.code is AccessDenialCode.OPERATION_DENIED
             finally:
                 client.close()
