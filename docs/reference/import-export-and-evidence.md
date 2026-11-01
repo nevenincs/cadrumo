@@ -168,7 +168,7 @@ the profile passphrase and works outside any one profile.
 
 The sealed custody archive is an encrypted profile backup, not a structured,
 readable copy of one profile's records. It excludes recovery material,
-process-local state, and rebuildable derivatives. Restore it with the profile
+process-local state, and derived files that can be recreated. Restore it with the profile
 passphrase. A restored profile starts without a recovery code; enable one
 again afterwards if you want it.
 

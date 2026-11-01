@@ -235,7 +235,7 @@ Choose sources before either is read:
 - Do not select both `stdin` and a descriptor for the same option pair.
 - Do not assign `stdin` to both the root and leaf scopes.
 - Do not assign the same descriptor number to both scopes.
-- Use root fd plus leaf `stdin`, root `stdin` plus leaf fd, or two different
+- Use root file descriptor plus leaf `stdin`, root `stdin` plus leaf file descriptor, or two different
   descriptors when one invocation needs both objects.
 
 A selected source that does not apply to the resolved command or exact profile
@@ -254,7 +254,7 @@ are refused.
 On POSIX, start the process with the pipe's read descriptor in the child
 process's `pass_fds` allowlist, then pass that number to `--secrets-fd` or
 `--profile-secrets-fd`. On Windows, do not assume a numeric CRT descriptor is
-inherited directly. Allowlist inheritable Windows HANDLEs and use the supported
+inherited directly. Allowlist inheritable Windows <code>HANDLE</code>s and use the supported
 bootstrap wrapper to convert them with `msvcrt.open_osfhandle`. Recovery
 enrolment uses one writable handoff HANDLE and one readable verification
 HANDLE:

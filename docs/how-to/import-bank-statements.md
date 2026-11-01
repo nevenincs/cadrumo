@@ -265,7 +265,7 @@ and [LLM-assisted suggestions](classify-with-llm.md).
 Run preflight before calculating a modelo, then check the overall state of your records.
 Preflight looks at each record inside the period and flags anything still missing
 before any sums are trusted - a missing classification, category, base, VAT
-amount, VAT rate, split reference, or unconvertible currency:
+amount, VAT rate, split reference, or currency that cannot be converted:
 
 ```{cli-sequence} import-check-readiness
 :verify: Confirm the period's readiness is reported for the classified quarter.

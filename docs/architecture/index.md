@@ -108,7 +108,7 @@ imports an outer one.
   command families, `config` and `app`.
 
 Two boundary rules keep the layers honest. Boundary data crosses as validated
-pydantic v2 models, never loose dictionaries. Closed value sets are declared as
+Pydantic v2 models, never loose dictionaries. Closed value sets are declared as
 typed enums in `core` and flow as enum members, so an invalid value is rejected
 at the boundary.
 

@@ -76,9 +76,9 @@ The example starts from the first quarter's entries, already recorded and classi
 ```
 
 Calculation routes the classified entries into the VAT boxes: the sale's 210 of
-VAT charged (repercutido), the purchase's 105 of deductible VAT paid (soportado),
+VAT charged (<span lang="es">repercutido</span>), the purchase's 105 of deductible VAT paid (<span lang="es">soportado</span>),
 and the seeded wallet feeds the prior-compensation box. With Ana's rows the
-quarter ends with VAT to pay - repercutido exceeds soportado.
+quarter ends with VAT to pay - <span lang="es">repercutido</span> exceeds <span lang="es">soportado</span>.
 
 Enter the calculated box values at the portal, then record the filing with `aeat app modelo work file` and download the AEAT receipt with `aeat app modelo reconcile pull`. The first-quarter sequence runs the first command and shows the second as an example that is not run. This is the same closing rhythm as every filing in these run-throughs.
 
@@ -116,7 +116,7 @@ Skip this stage unless you invoice clients or buy from suppliers in other EU
 member states.
 
 If Ana takes an EU client, the operations must also appear on the recapitulative
-Modelo 349 - a listing, per EU counterparty (operador intracomunitario), of the
+Modelo 349 - a listing, per EU counterparty (<span lang="es">operador intracomunitario</span>), of the
 period's intra-community operations. The operations are recorded as invoices
 carrying the counterparty's country and EU VAT number, and the VAT number is worth
 checking against the VIES register first. That check is a live read from AEAT, so

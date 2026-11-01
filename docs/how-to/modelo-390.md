@@ -27,7 +27,7 @@ Modelo 390 is the annual summary of your quarterly VAT filings. To prepare it:
 
 Not every taxpayer files Modelo 390. AEAT exonerates taxpayers included in the
 Suministro Inmediato de Información (SII), and quarterly filers taxed only in
-territorio común whose activity is under the régimen simplificado, the rental
+<span lang="es">territorio común</span> whose activity is under the régimen simplificado, the rental
 of urban property, or both. They report their annual
 operations in the Modelo 303 for the last period instead - see the AEAT guide to
 the

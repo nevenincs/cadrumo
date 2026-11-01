@@ -11,8 +11,8 @@ not submit them to the Agencia Estatal de Administración Tributaria (AEAT). For
 Modelo 130 it writes a local fichero-BOE file that you present through the AEAT
 portal.
 
-Meet the persona this run-through follows: Ana García López, a consultant
-(*consultoría*) who started her activity on January 1, 2026, invoices her clients
+Meet the persona this run-through follows: <span lang="es">Ana García López</span>, a consultant
+(*<span lang="es">consultoría</span>*) who started her activity on January 1, 2026, invoices her clients
 with 21 percent VAT, and buys office material as she goes. The same persona and
 the same records continue in [The VAT year](iva-lifecycle.md) - the two
 run-throughs describe the same business from two tax angles.

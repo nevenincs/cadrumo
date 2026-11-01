@@ -125,11 +125,11 @@ AEAT instructions for Modelo 130:
   boxes 14, 17, and 19).
 
 Nothing is payable for this quarter: only a positive box 19 is paid (instructions,
-section "Ingreso"). In the first, second, or third quarter, a negative box 19 is
-declared "A deducir": a later instalment of the same year deducts it through box
+section "<span lang="es">Ingreso</span>"). In the first, second, or third quarter, a negative box 19 is
+declared "<span lang="es">A deducir</span>": a later instalment of the same year deducts it through box
 15, never by more than that quarter's positive box 14 (instructions, box 15 and
-section "A deducir"). In the fourth quarter, a negative result is declared
-"Negativa" instead. The calculation also reports the amount as
+section "<span lang="es">A deducir</span>"). In the fourth quarter, a negative result is declared
+"<span lang="es">Negativa</span>" instead. The calculation also reports the amount as
 `saldo-negativo-fin-periodo`, `100.00`, and the draft passes the check like any
 other. For how later quarters build on this one, see [Prepare a Modelo 130 IRPF
 instalment](modelo-130.md#each-quarter-is-cumulative).

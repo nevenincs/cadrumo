@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-15 06:26+0200\n"
+"POT-Creation-Date: 2026-11-01 02:37+0100\n"
 "PO-Revision-Date: 2026-07-18 13:20+0200\n"
 "Last-Translator: Cadrumo hu docs <docs@cadrumo>\n"
 "Language: hu\n"
@@ -24,11 +24,13 @@ msgstr "Azonosság és elnevezés"
 
 #: ../../reference/identity-and-naming.md:3
 msgid ""
-"The Agencia Estatal de Administración Tributaria (AEAT) is the external tax authority. CLI means "
-"command-line interface. MCP means Model Context Protocol."
+"The Agencia Estatal de Administración Tributaria (AEAT) is the external "
+"tax authority. CLI means command-line interface. MCP means Model Context "
+"Protocol."
 msgstr ""
-"Az Agencia Estatal de Administración Tributaria (AEAT) a külső adóhatóság. A CLI a parancssori "
-"felületet jelenti. Az MCP a Model Context Protocolt jelenti."
+"Az Agencia Estatal de Administración Tributaria (AEAT) a külső "
+"adóhatóság. A CLI a parancssori felületet jelenti. Az MCP a Model Context"
+" Protocolt jelenti."
 
 #: ../../reference/identity-and-naming.md:6
 msgid "Canonical product identity"
@@ -95,7 +97,7 @@ msgid "MCP tool naming"
 msgstr "MCP-eszközök elnevezése"
 
 #: ../../reference/identity-and-naming.md
-msgid "Unprefixed names advertised by `tools/list`"
+msgid "Names advertised by `tools/list` without a prefix"
 msgstr "A `tools/list` által hirdetett előtag nélküli nevek"
 
 #: ../../reference/identity-and-naming.md
@@ -122,15 +124,15 @@ msgstr "Kísérő Python-névtér"
 msgid "`cadrumo_data`"
 msgstr "`cadrumo_data`"
 
-#: ../../reference/identity-and-naming.md:23
+#: ../../reference/identity-and-naming.md:22
 msgid ""
-"These values identify one product. There is no alternate human CLI spelling or Python import "
-"alias."
+"These values identify one product. There is no alternate human CLI "
+"spelling or Python import alias."
 msgstr ""
-"Ezek az értékek egyetlen terméket azonosítanak. Nincs alternatív emberi CLI-írásmód vagy Python-"
-"importalias."
+"Ezek az értékek egyetlen terméket azonosítanak. Nincs alternatív emberi "
+"CLI-írásmód vagy Python-importalias."
 
-#: ../../reference/identity-and-naming.md:26
+#: ../../reference/identity-and-naming.md:25
 msgid "Product and authority names"
 msgstr "Termék- és hivatali nevek"
 
@@ -155,11 +157,8 @@ msgid "`Cadrumo` or the canonical identifier in the identity table"
 msgstr "`Cadrumo` vagy a kanonikus azonosító az azonosságtáblában"
 
 #: ../../reference/identity-and-naming.md
-msgid ""
-"Cadrumo CLI, Cadrumo profile, `cadrumo` package, "
-"`CADRUMO_STORAGE_ROOT`"
-msgstr ""
-"Cadrumo CLI, Cadrumo-profil, `cadrumo` csomag, `CADRUMO_STORAGE_ROOT`"
+msgid "Cadrumo CLI, Cadrumo profile, `cadrumo` package, `CADRUMO_STORAGE_ROOT`"
+msgstr "Cadrumo CLI, Cadrumo-profil, `cadrumo` csomag, `CADRUMO_STORAGE_ROOT`"
 
 #: ../../reference/identity-and-naming.md
 msgid "Spanish tax authority"
@@ -170,15 +169,21 @@ msgid "`AEAT`"
 msgstr "`AEAT`"
 
 #: ../../reference/identity-and-naming.md
-msgid "AEAT portal, AEAT credentials, AEAT official file, AEAT legal source, AEAT taxonomy"
-msgstr "AEAT-portál, AEAT-hitelesítő adatok, AEAT hivatalos fájl, AEAT jogforrás, AEAT-taxonómia"
-
-#: ../../reference/identity-and-naming.md:33
 msgid ""
-"AEAT is an external authority and counterparty, not the application name. Authority-owned terms "
-"such as *modelo*, *casilla*, *justificante*, and official period or classification tokens keep "
-"their AEAT meaning inside Cadrumo."
+"AEAT portal, AEAT credentials, AEAT official file, AEAT legal source, "
+"AEAT taxonomy"
 msgstr ""
-"Az AEAT külső hatóság és ellenoldal, nem az alkalmazás neve. A hivatal tulajdonában lévő "
-"fogalmak, mint a *modelo*, a *casilla*, a *justificante*, valamint a hivatalos időszak- vagy "
-"osztályozási jelölők a Cadrumón belül megtartják AEAT-jelentésüket."
+"AEAT-portál, AEAT-hitelesítő adatok, AEAT hivatalos fájl, AEAT jogforrás,"
+" AEAT-taxonómia"
+
+#: ../../reference/identity-and-naming.md:32
+msgid ""
+"AEAT is an external authority and counterparty, not the application name."
+" Authority-owned terms such as *modelo*, *casilla*, *justificante*, and "
+"official period or classification tokens keep their AEAT meaning inside "
+"Cadrumo."
+msgstr ""
+"Az AEAT külső hatóság és ellenoldal, nem az alkalmazás neve. A hivatal "
+"tulajdonában lévő fogalmak, mint a *modelo*, a *casilla*, a "
+"*justificante*, valamint a hivatalos időszak- vagy osztályozási jelölők a"
+" Cadrumón belül megtartják AEAT-jelentésüket."

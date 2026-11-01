@@ -14,7 +14,7 @@ authority. CLI means command-line interface. MCP means Model Context Protocol.
 | Repository | `nevenincs/cadrumo` |
 | MCP server identity | `cadrumo` |
 | MCP executable | `cadrumo-mcp` |
-| MCP tool naming | Unprefixed names advertised by `tools/list` |
+| MCP tool naming | Names advertised by `tools/list` without a prefix |
 | Product environment prefix | `CADRUMO_` |
 | Companion distributions | `cadrumo-data-manuals`, `cadrumo-data-official`, `cadrumo-data-normatives` |
 | Companion Python namespace | `cadrumo_data` |

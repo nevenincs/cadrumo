@@ -10,7 +10,7 @@ Nothing Cadrumo produces is advice or a guarantee. No calculation, draft, check,
 Cadrumo never files. It does not submit to the AEAT and cannot file for you. You
 file yourself, through official channels, and bear sole responsibility for that
 filing. Because tax law changes and depends on your circumstances, consult a
-qualified professional such as an asesor fiscal or gestor for advice on your
+qualified professional such as an <span lang="es">asesor fiscal</span> or <span lang="es">gestor</span> for advice on your
 situation.
 
 Cadrumo is provided "as is", without warranty of any kind, under the Apache

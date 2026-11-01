@@ -16,7 +16,7 @@ Where you make a change depends on what you're changing:
 When working with generated documentation, understand the following terminology:
 
 - **stub**: A reference stub page is a generated reStructuredText (`.rst`) file under `docs/api/`. Each stub corresponds to a Python module or package and contains the `automodule` directive that makes Sphinx pull the live docstrings from the code. A full build writes the stubs fresh from the module tree, so adding or removing a module needs no extra step.
-- **sequence golden**: The committed, recorded output of a documented CLI sequence. Only `just docs-generate-sequences` writes goldens.
+- **sequence golden file**: The committed, recorded output of a documented CLI sequence. Only `just docs-generate-sequences` writes golden files.
 
 ## Preview and verify a change
 
@@ -27,10 +27,10 @@ Choose the narrowest preview that shows your change:
 - **Live preview:** `just docs-serve` rebuilds and refreshes the browser whenever a page under `docs/` changes. It serves the taxpayer-facing pages on port 8788, and running it again attaches to the preview that is already running. To watch docstrings and API pages as well, run `uv run --no-sync python -m dev.docs.serve --scope full --open-browser`.
 - **Full build:** `just docs-build` builds the whole site, including the API reference. Run it before you hand a change over for review.
 
-Previews render CLI sequences from their committed goldens and don't execute them, so a preview never proves a sequence still matches the product. Verify the sequences and the rest of the documentation with:
+Previews render CLI sequences from their committed golden files and don't execute them, so a preview never proves a sequence still matches the product. Verify the sequences and the rest of the documentation with:
 
 ```bash
-just docs-sequences-check  # re-runs the documented CLI sequences against their goldens
+just docs-sequences-check  # re-runs the documented CLI sequences against their golden files
 just check-docs-api        # confirms the API reference covers every documented module
 just docs-check            # validates cross-references and command references
 ```

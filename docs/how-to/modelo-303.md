@@ -58,7 +58,7 @@ Load-bearing details for building this state yourself:
   for no. Cadrumo never assumes the answer, and `work calculate` refuses
   without one of `--joint-return-elected` or `--no-joint-return-elected`.
 - Calculation charges 210.00 of VAT on the sale (`IVA repercutido`) and deducts
-  105.00 on the purchase (`IVA soportado`), so box 71 (Resultado final) is 105.00,
+  105.00 on the purchase (`IVA soportado`), so box 71 (<span lang="es">Resultado final</span>) is 105.00,
   the VAT due for the quarter. The deductible VAT counts at calculate time; the
   attached supporting document is what lets the entry be filed, not what changes
   the figure.
@@ -69,10 +69,10 @@ Load-bearing details for building this state yourself:
 - `verify` reports `completeness complete` and `granted true`, and `work file`
   records the filing in Cadrumo. `export` writes the file with the all-zero
   development software identity and says so in a warning notice.
-- Box 65 ("% atribuible a la Administración del Estado") resolves to 100
-  automatically for a común-territory profile, so box 66 and the headline box 71
-  (Resultado final) carry the full régimen-general result. Cadrumo supports
-  común-territory profiles only.
+- Box 65 ("% <span lang="es">atribuible a la Administración del Estado</span>") resolves to 100
+  automatically for a profile in <span lang="es">territorio común</span>, so box 66 and the headline box 71
+  (<span lang="es">Resultado final</span>) carry the full régimen-general result. Cadrumo supports
+  profiles in <span lang="es">territorio común</span> only.
 
 The rest of this guide explains each step and the checks around it.
 

@@ -149,7 +149,7 @@ does none of that. After you update:
 1. Run `cadrumo-runtime config google login`. A sign-in from an earlier version is not
    reused; Cadrumo tells you to sign in again.
 2. Keep earlier workbooks for review. Cadrumo does not adopt historical
-   unreceipted workbooks or search Drive to repair them. Use `publish` to make a
+   workbooks without receipts or search Drive to repair them. Use `publish` to make a
    new review copy from a saved calculation revision.
 
 These are no longer available:

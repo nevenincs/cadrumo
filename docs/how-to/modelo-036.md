@@ -2,8 +2,8 @@
 
 The official procedure name is "<span lang="es">Modelo 036. Censo de empresarios,
 profesionales y retenedores - Declaración censal de alta, modificación y baja.</span>"
-It is the AEAT census declaration you use to register, update, or deregister your
-tax situation. You file it yourself at AEAT's Sede Electrónica (the sede), the
+It is the AEAT census declaration you use to register, update your details, or end
+your registration. You file it yourself at AEAT's <span lang="es">Sede Electrónica</span> (the <span lang="es">sede</span>), the
 official online portal. The commands on this page only record that fact in your
 local audit trail afterwards - they never file anything at AEAT. To keep your
 registered census facts current in your profile, see

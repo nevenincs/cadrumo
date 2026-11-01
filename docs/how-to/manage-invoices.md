@@ -131,7 +131,7 @@ and confirms the link on the invoice:
 Remove a catalogue invoice you created by mistake, confirming with `--yes`.
 If the invoice is still linked to a transaction, the removal is refused, so
 the bank transaction never ends up citing an invoice that no longer exists.
-`aeat` has no command that unlinks an invoice. Removing the linked transaction
+`aeat` has no command to remove an invoice link. Removing the linked transaction
 releases the link (see [Correct mistakes in your records](correct-ledger-entries.md)).
 The example removes an invoice that has no link:
 

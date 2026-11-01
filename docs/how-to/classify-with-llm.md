@@ -159,7 +159,7 @@ Attach a purchase invoice or receipt to a transaction (see [Attach invoices and 
 - **A text-layer PDF** has its text extracted on this computer and read by the
   model chosen for the text extraction role.
 
-Neither read needs an acknowledgement, and both work in gestor and
+Neither read needs an acknowledgement, and both work in <span lang="es">gestor</span> and
 professional deployments. `--read-evidence` on its own is enough. `--llm`
 without `--read-evidence` classifies from the transaction row only and never
 reads the attached document. To read the attached document with the vision model
@@ -250,7 +250,7 @@ service reads the document with a provider you set up for the signed-in
 profile, and `aeat` holds no model key for it. It runs only when the
 deployment permits off-host reads, the profile's `cloud_evidence_upload`
 capability is on, and you pass `--acknowledge-off-host` for that one read.
-Gestor deployments never allow it. Treat the document as taxpayer data before
+<span lang="es">Gestor</span> deployments never allow it. Treat the document as taxpayer data before
 you use it. The settings that govern it are
 in the [environment overrides reference](../reference/environment-overrides.md).
 

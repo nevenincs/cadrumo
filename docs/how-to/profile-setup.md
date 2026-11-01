@@ -428,7 +428,7 @@ capability off, then show the posture again:
 The three capabilities are:
 
 - `cloud_evidence_upload`: allow sending sensitive supporting documents to a
-  cloud LLM provider. Off by default. Barred for gestor profiles.
+  cloud LLM provider. Off by default. Barred for <span lang="es">gestor</span> profiles.
 - `llm_vision`: read scanned and image invoices with the vision model you
   chose in the Cadrumo agent. On by default. It does not decide where
   the read runs: a model that reads off this computer also needs

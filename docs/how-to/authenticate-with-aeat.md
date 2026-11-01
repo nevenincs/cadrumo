@@ -51,7 +51,7 @@ Cadrumo supports three providers:
 - `clave_permanente`: Cl@ve Permanente, a DNI/NIE and password login.
 
 Pass the identifier to `--provider`. Cl@ve PIN and the electronic national ID
-card (DNI electrónico) are not supported.
+card (<span lang="es">DNI electrónico</span>) are not supported.
 
 ## Configure a provider
 
@@ -233,8 +233,8 @@ To remove local authentication state for every configured provider:
 ## Act for someone else (apoderado)
 
 If you act as an authorized tax representative for another taxpayer, record
-locally who you represent and the relevant AEAT apoderamiento scopes. An
-apoderado is an authorized representative, such as a gestor or asesor.
+locally who you represent and the relevant AEAT <span lang="es">apoderamiento</span> scopes. An
+<span lang="es">apoderado</span> is an authorized representative, such as a <span lang="es">gestor</span> or <span lang="es">asesor</span>.
 
 The power of attorney itself is granted at AEAT. The represented party authorizes
 you through AEAT's own power of attorney procedures. The commands in this section

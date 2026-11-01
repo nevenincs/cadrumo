@@ -88,8 +88,8 @@ The projection needs a version of the official Modelo 100 form for the year you 
 
 The output shows the accumulated Modelo 130 figures (income, expenses, net
 result, instalments paid) and the projected Modelo 100 result: the taxable
-base, the state and regional gross tax (cuota íntegra), the state and regional
-net tax (cuota líquida), and the resulting tax (cuota resultante).
+base, the state and regional gross tax (<span lang="es">cuota íntegra</span>), the state and regional
+net tax (<span lang="es">cuota líquida</span>), and the resulting tax (<span lang="es">cuota resultante</span>).
 
 **Read the extrapolation flag before trusting the numbers.** With fewer than
 four quarters filed, the projection extrapolates a full year from the

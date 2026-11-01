@@ -34,7 +34,7 @@ Some answers also include a scheduling note. Treat it as a pointer, not a calend
 
 - **Applicable** - the form applies to you for that year. Plan to prepare and file it.
 - **Not applicable** - your taxpayer situation excludes it. The rationale tells you which fact rules it out.
-- **Attribution pass-through** - your entity is in régimen de atribución de rentas, such as a comunidad de bienes or a sociedad civil without a commercial object (sin objeto mercantil). The entity passes its income through to its members, so it doesn't file the income-tax self-assessment itself (Modelo 100, 130, 200, or 202). The members declare the attributed income on their own returns.
+- **Attribution pass-through** - your entity is in <span lang="es">régimen de atribución de rentas</span>, such as a <span lang="es">comunidad de bienes</span> or a <span lang="es">sociedad civil</span> without a commercial object (<span lang="es">sin objeto mercantil</span>). The entity passes its income through to its members, so it doesn't file the income-tax self-assessment itself (Modelo 100, 130, 200, or 202). The members declare the attributed income on their own returns.
 - **Incomplete** - the tool cannot decide and refuses to guess. Usually your profile is missing the facts needed; see [When the answer is incomplete](#when-the-verdict-is-incomplete). For a few forms the tool has not yet derived an applicability rule. The rationale says so, and in that case no profile change alters the answer.
 
 (when-the-verdict-is-incomplete)=
