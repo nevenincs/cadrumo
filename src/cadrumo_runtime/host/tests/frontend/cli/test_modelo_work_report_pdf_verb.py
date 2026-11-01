@@ -513,13 +513,14 @@ def pdf_extra_absent() -> Iterator[None]:
 
 @pytest.mark.usefixtures("pdf_extra_absent")
 @pytest.mark.parametrize(
-    ("language", "phrase"),
-    (("es", "complemento opcional"), ("en", "optional")),
+    ("language", "phrase", "component"),
+    (("es", "componente opcional", "«pdf»"), ("en", "optional", "“pdf”")),
 )
 def test_without_the_pdf_extra_the_summary_is_refused_before_the_work_unit_is_read(
     tmp_path: Path,
     language: str,
     phrase: str,
+    component: str,
     report_session: NativeApiCliSession[None],
 ) -> None:
     """An absent work unit proves the refusal precedes its private catalogue read."""
@@ -531,7 +532,8 @@ def test_without_the_pdf_extra_the_summary_is_refused_before_the_work_unit_is_re
     error = require_error_document(refused.output)["error"]
     assert error["code"] == "REFUSED_CALCULATION_SUMMARY_PDF_UNAVAILABLE"
     assert phrase in error["message"]
-    assert "cadrumo[pdf]" in error["message"]
+    assert component in error["message"]
+    assert "cadrumo[pdf]" not in error["message"]
     assert not output.exists()
 
 
