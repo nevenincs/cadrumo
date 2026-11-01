@@ -18,18 +18,15 @@ from uuid import uuid4
 import pytest
 
 from cadrumo.adapters.persistence.storage.custody.kdf_supervision import profile_kdf_lease
-from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support import PROFILE_INPUT, administration_subject
-from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
+from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support import PROFILE_INPUT
 from cadrumo.core.config import override_settings
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.contracts.deadline_budget import exchange_deadline
 from cadrumo_client.contracts.profile_access import ProfileStatus, SessionRequest
-from cadrumo_client.transport.installation import installation
-from cadrumo_client.transport.windows import WindowsEndpoint
 
-from ...adapters.tests.profile_worker_support import owner_id
-from .served_runtime import connect_verified, serving_runtime
-from .test_profile_connections import LoginObservation, login
+from .served_profile_runtime import serving_enrolled_profile
+from .served_runtime import connect_verified
+from .test_profile_connections import login
 
 pytestmark = [
     pytest.mark.integration,
@@ -46,72 +43,55 @@ _QUEUED_SIGN_IN_SECONDS = 5.0
 def test_a_sign_in_queued_for_a_taken_kdf_permit_ends_with_its_caller_and_leaves_the_worker_serving(
     tmp_path: Path,
 ) -> None:
-    root = tmp_path / "cadrumo-storage"
-    root.mkdir()
-    endpoint = WindowsEndpoint(storage_root=root)
-    installation_state = installation(
-        storage_root=root, os_owner_id=owner_id(), storage_identity=endpoint.storage_identity
-    )
-    with administration_subject(
-        tmp_path, os_owner_id=owner_id(), installation_id=installation_state.installation_id
-    ) as subject:
-        profile_id = subject.store.binding.profile_id
-        close_active_bucket_session()
-        observation = LoginObservation(owner_id())
-        with serving_runtime(
-            endpoint,
-            root,
-            capture_login=lambda _channel: observation,
-            secret_store=lambda: subject.native,
-            workers=2,
-            ready_seconds=30,
-        ) as served:
-            first, second = connect_verified(endpoint), connect_verified(endpoint)
-            clients = [first, second]
+    with serving_enrolled_profile(tmp_path, workers=2, ready_seconds=30) as profile:
+        endpoint, profile_id = profile.endpoint, profile.profile_id
+        served, root = profile.served, profile.root
+        first, second = connect_verified(endpoint), connect_verified(endpoint)
+        clients = [first, second]
+        try:
+            admitted = login(first, profile_id, "password", PROFILE_INPUT.encode())
+            assert isinstance(admitted, ProfileStatus), admitted
+            first_session = admitted.status.session_id
+            assert first_session is not None
+            held, release = Event(), Event()
+
+            def hold_permit() -> None:
+                with (
+                    override_settings(cadrumo_storage_root=root),
+                    profile_kdf_lease(deadline=time.monotonic() + 30),
+                ):
+                    held.set()
+                    release.wait(60)
+
+            holding = served.pool.submit(copy_context().run, hold_permit)
             try:
-                admitted = login(first, profile_id, "password", PROFILE_INPUT.encode())
-                assert isinstance(admitted, ProfileStatus), admitted
-                first_session = admitted.status.session_id
-                assert first_session is not None
-                held, release = Event(), Event()
-
-                def hold_permit() -> None:
-                    with (
-                        override_settings(cadrumo_storage_root=root),
-                        profile_kdf_lease(deadline=time.monotonic() + 30),
-                    ):
-                        held.set()
-                        release.wait(60)
-
-                holding = served.pool.submit(copy_context().run, hold_permit)
-                try:
-                    assert held.wait(30)
-                    # The worker's unwrap waits for the permit within the caller's budget; the caller
-                    # running out of it is a timeout, never a wrong password.
-                    with pytest.raises(RefusalError) as queued:
-                        login(second, profile_id, "password", PROFILE_INPUT.encode(), seconds=_QUEUED_SIGN_IN_SECONDS)
-                    assert queued.value.reason is RefusalCode.TIMEOUT
-                finally:
-                    release.set()
-                    holding.result(timeout=30)
-                # The worker still holds the first person's session: it did not end with the refusal.
-                status = first.session(
-                    SessionRequest(
-                        action="session_status",
-                        request_id=uuid4(),
-                        profile_id=profile_id,
-                        session_id=first_session,
-                    ),
-                    deadline=exchange_deadline(),
-                )
-                assert isinstance(status, ProfileStatus), status
-                assert status.status.session_id == first_session and status.status.denial is None
-                # With the permit free again, the same password signs in on a new connection.
-                retry = connect_verified(endpoint)
-                clients.append(retry)
-                again = login(retry, profile_id, "password", PROFILE_INPUT.encode())
-                assert isinstance(again, ProfileStatus), again
-                assert again.status.denial is None and again.status.session_id is not None
+                assert held.wait(30)
+                # The worker's unwrap waits for the permit within the caller's budget; the caller
+                # running out of it is a timeout, never a wrong password.
+                with pytest.raises(RefusalError) as queued:
+                    login(second, profile_id, "password", PROFILE_INPUT.encode(), seconds=_QUEUED_SIGN_IN_SECONDS)
+                assert queued.value.reason is RefusalCode.TIMEOUT
             finally:
-                for client in clients:
-                    client.close()
+                release.set()
+                holding.result(timeout=30)
+            # The worker still holds the first person's session: it did not end with the refusal.
+            status = first.session(
+                SessionRequest(
+                    action="session_status",
+                    request_id=uuid4(),
+                    profile_id=profile_id,
+                    session_id=first_session,
+                ),
+                deadline=exchange_deadline(),
+            )
+            assert isinstance(status, ProfileStatus), status
+            assert status.status.session_id == first_session and status.status.denial is None
+            # With the permit free again, the same password signs in on a new connection.
+            retry = connect_verified(endpoint)
+            clients.append(retry)
+            again = login(retry, profile_id, "password", PROFILE_INPUT.encode())
+            assert isinstance(again, ProfileStatus), again
+            assert again.status.denial is None and again.status.session_id is not None
+        finally:
+            for client in clients:
+                client.close()
