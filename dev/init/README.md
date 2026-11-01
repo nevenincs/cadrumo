@@ -19,7 +19,7 @@ The recipes:
 | Recipe                        | What it does                                                  |
 | ----------------------------- | ------------------------------------------------------------- |
 | `just init`                   | Complete provisioning, including browsers, RAG and authority. |
-| `just setup`                  | Locked Python, repository tooling and local configuration.     |
+| `just setup`                  | Locked Python, repository tooling, locale dictionaries and local configuration. |
 | `just setup-repository-tools` | Framework enrollment and pinned repository tooling; no Git hooks. |
 | `just setup-check`            | Reports whether the worktree is initialized. Mutates nothing. |
 | `just setup-workstation-tools` | Optional workstation CLI provisioning.                       |
@@ -72,6 +72,15 @@ the repository.
 **Multiplatform without shell branching.** The bootstrap phases run explicit
 argument vectors through one Python runner. Full initialization composes the
 same provisioning commands on each platform.
+
+**Locale dictionaries need no Node.** The tools phase runs
+`dev.locales.dictionary_provisioning`, which reads `package-lock.json`,
+downloads the pinned dictionary tarballs, verifies their `sha512` integrity
+before unpacking, refuses entries that escape the package and publishes each
+package atomically into `node_modules/`. Valid packages cost no network;
+`just setup-locale-spelling` runs the same provisioner. The step is required, so
+a machine that cannot reach `registry.npmjs.org` fails `setup` naming the
+package and the next action.
 
 **It provisions the worktree, not the workstation.** `uv`, `just`, and the
 required repository tools are the operator's responsibility; `setup` converges

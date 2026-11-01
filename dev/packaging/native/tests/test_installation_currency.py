@@ -24,7 +24,7 @@ def _prepared(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> tuple[Path, Pa
     for name in ("LICENSE", "NOTICE"):
         (controls / name).write_bytes((installation.REPO_ROOT / name).read_bytes())
     monkeypatch.setattr(installation, "REPO_ROOT", controls)
-    payload, identity = payload_fixture(tmp_path, "windows-x86-64", manager=True)
+    payload, identity = payload_fixture(tmp_path, "windows-x86-64")
     build = tmp_path / "build"
     build.mkdir()
     paths = {f"installation_{name}": f"installation/{name}" for name in ("stage", "metadata", "work", "receipts")}

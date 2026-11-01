@@ -149,7 +149,7 @@ class _LocalesStatusSignalProcessor:
             details = decoded["details"]
             assert isinstance(summary, dict)
             assert isinstance(details, dict)
-            outcome = str(decoded["outcome"])
+            outcome = _outcome_with_gating_findings(str(decoded["outcome"]), details)
             headline = str(decoded.get("headline", "Locale status produced no headline."))
         report_path = run_dir / "artifacts" / "locale-status.json"
         backlog_path = run_dir / "artifacts" / "locale-backlog.jsonl"
@@ -239,7 +239,7 @@ def _validated_locale_payload(raw: str) -> dict[str, object]:
     decoded = json.loads(raw)
     if not _is_json_object(decoded):
         raise ValueError("locale status payload is not a JSON object")
-    if decoded.get("outcome") not in {"backlog", "complete"}:
+    if decoded.get("outcome") not in {"backlog", "advisory", "complete"}:
         raise ValueError("locale status payload has an unknown outcome")
     if not isinstance(decoded.get("summary"), dict):
         raise ValueError("locale status payload has no summary object")
@@ -256,14 +256,29 @@ def _locale_payload_candidate(line: str) -> dict[str, object] | None:
         return None
 
 
+def _outcome_with_gating_findings(outcome: str, details: dict[str, object]) -> str:
+    """Refuse an advisory-only outcome that the payload's own findings contradict."""
+    if outcome != "advisory":
+        return outcome
+    findings = details.get("findings")
+    if not isinstance(findings, list) or not all(
+        isinstance(finding, dict) and finding.get("classification") == "advisory" for finding in findings
+    ):
+        return "backlog"
+    return outcome
+
+
 def _locale_run_classification(exit_status: int, outcome: str, blocking: bool) -> tuple[str, str]:
-    """Keep unavailable, backlog and complete outcomes distinct for blocking and advisory commands."""
+    """Keep unavailable, backlog, advisory and complete outcomes distinct for blocking and advisory commands."""
     if exit_status in {7, 127} or outcome == "unavailable":
         classification = "tool_failure"
         result = "unavailable"
     elif outcome == "backlog":
         classification = "blocking_findings" if blocking else "advisory_findings"
         result = "failed" if blocking else "backlog"
+    elif outcome == "advisory":
+        classification = "advisory_findings"
+        result = "passed_with_advisories" if blocking else "advisory"
     else:
         classification = "clean"
         result = "passed" if blocking else "complete"

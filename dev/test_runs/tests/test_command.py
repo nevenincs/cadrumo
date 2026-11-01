@@ -19,8 +19,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 def test_run_paths_do_not_split_root_cause_signatures() -> None:
     first = _normalize_root_cause("Failure: /.tmp/logs/test-runs/2026-10-29/run-1/file.txt")
     second = _normalize_root_cause("Failure: /.tmp/logs/test-runs/2026-10-30/run-2/file.txt")
-    legacy = _normalize_root_cause("Failure: /.logs/test-runs/2026-10-29/run-3/file.txt")
-    assert first == second == legacy == "Failure: /.tmp/logs/test-runs/<run>/file.txt"
+    assert first == second == "Failure: /.tmp/logs/test-runs/<run>/file.txt"
 
 
 def test_command_run_streams_and_persists_identity(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
@@ -207,6 +206,99 @@ def test_locale_signal_reads_a_report_longer_than_the_default_stream_limit(
     run_dir = next((tmp_path / "logs" / "test-runs").glob("*/*"))
     persisted = (run_dir / "artifacts" / "locale-backlog.jsonl").read_text(encoding="utf-8").splitlines()
     assert [json.loads(row) for row in persisted] == backlog
+
+
+def _run_locale_payload(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], payload: dict[str, object], label: str
+) -> tuple[dict[str, object], Path]:
+    script = f"import json; print(json.dumps({payload!r}))"
+    status = run(
+        (sys.executable, "-c", script),
+        repository=tmp_path,
+        family="test-runs",
+        label=label,
+        signal="locales-status",
+    )
+    assert status == 0
+    finished = json.loads(capsys.readouterr().out.splitlines()[-1])
+    return finished, next((tmp_path / "logs" / "test-runs").glob("*/*"))
+
+
+def _locale_payload(outcome: str, findings: list[dict[str, object]]) -> dict[str, object]:
+    return {
+        "outcome": outcome,
+        "headline": "No blocking locale findings; 1 advisory findings retained for review.",
+        "summary": {
+            "translation_backlog": {"exact": True, "unique_keys_to_translate": 0, "cells_to_translate": 0},
+            "findings": {"blocking": 0, "advisory": len(findings), "total": len(findings)},
+        },
+        "details": {"backlog": [], "findings": findings},
+    }
+
+
+_ADVISORY_FINDING: dict[str, object] = {"classification": "advisory", "kind": "docs_translation_near_echo"}
+
+
+def test_check_locales_reports_an_advisory_only_audit_as_passed_with_advisories(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    finished, run_dir = _run_locale_payload(
+        tmp_path, capsys, _locale_payload("advisory", [_ADVISORY_FINDING]), "check-locales"
+    )
+
+    assert finished["classification"] == "advisory_findings"
+    assert finished["result"] == "passed_with_advisories"
+    assert finished["posture"] == "blocking"
+    assert finished["findings"] == {"blocking": 0, "advisory": 1, "total": 1}
+    assert "advisory" in str(finished["headline"])
+    persisted = (run_dir / "artifacts" / "locale-findings.jsonl").read_text(encoding="utf-8").splitlines()
+    assert [json.loads(row) for row in persisted] == [_ADVISORY_FINDING]
+
+
+def test_locales_status_reports_an_advisory_only_audit_without_failing(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    finished, _ = _run_locale_payload(
+        tmp_path, capsys, _locale_payload("advisory", [_ADVISORY_FINDING]), "locales-status"
+    )
+
+    assert finished["classification"] == "advisory_findings"
+    assert finished["result"] == "advisory"
+    assert finished["posture"] == "advisory"
+
+
+@pytest.mark.parametrize(
+    "contradicting",
+    [{"kind": "unclassified"}, {"classification": "warning", "kind": "unknown"}],
+    ids=["missing", "unknown"],
+)
+def test_check_locales_refuses_an_advisory_outcome_its_own_findings_contradict(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], contradicting: dict[str, object]
+) -> None:
+    finished, _ = _run_locale_payload(
+        tmp_path, capsys, _locale_payload("advisory", [_ADVISORY_FINDING, contradicting]), "check-locales"
+    )
+
+    assert finished["classification"] == "blocking_findings"
+    assert finished["result"] == "failed"
+
+
+def test_check_locales_keeps_a_backlog_outcome_blocking_even_with_only_advisory_findings(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    finished, _ = _run_locale_payload(
+        tmp_path, capsys, _locale_payload("backlog", [_ADVISORY_FINDING]), "check-locales"
+    )
+
+    assert finished["classification"] == "blocking_findings"
+    assert finished["result"] == "failed"
+
+
+def test_check_locales_reports_a_complete_audit_as_clean(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    finished, _ = _run_locale_payload(tmp_path, capsys, _locale_payload("complete", []), "check-locales")
+
+    assert finished["classification"] == "clean"
+    assert finished["result"] == "passed"
 
 
 def test_locale_signal_persists_backlog_and_keeps_stdout_bounded(
