@@ -228,3 +228,20 @@ A bare enum under strict validation refuses the plain token a serialised layout 
 imported row carries, so those fields take this literal over the members above rather
 than restating the pair.
 """
+
+
+def decimal_separator_proved_by(body: str) -> DecimalSeparatorValue | None:
+    """Return which separator a printed amount's digits and marks prove decimal, if either.
+
+    With both marks the later one is the decimal mark; a lone comma is one; a lone dot is one
+    unless the token reads equally as a Spanish thousands group, which proves nothing.
+    """
+    has_comma = "," in body
+    has_dot = "." in body
+    if has_comma and has_dot:
+        return DecimalSeparator.COMMA if body.rfind(",") > body.rfind(".") else DecimalSeparator.PERIOD
+    if has_comma:
+        return DecimalSeparator.COMMA
+    if has_dot and not european_thousands_reading_is_ambiguous(body):
+        return DecimalSeparator.PERIOD
+    return None

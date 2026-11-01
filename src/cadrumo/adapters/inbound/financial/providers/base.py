@@ -60,7 +60,11 @@ from .....application.ledger.invoice_label_vocabulary import MONTHS
 from .....application.operator_actions.models import PreconditionVerdict
 from .....core.config import load_settings
 from .....core.decimal.coercion import coerce_decimal
-from .....core.decimal.grammar import DecimalSeparator, DecimalSeparatorValue, european_thousands_reading_is_ambiguous
+from .....core.decimal.grammar import (
+    DecimalSeparatorValue,
+    decimal_separator_proved_by,
+    european_thousands_reading_is_ambiguous,
+)
 from .....core.errors.hierarchy import CadrumoError, CoreValidationError
 from .....core.hashing import sha256_hex as _sha256_hex
 from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
@@ -635,15 +639,7 @@ def infer_day_first(printed_dates: Iterable[str]) -> bool | None:
 def _decimal_vote(printed: str) -> DecimalSeparatorValue | None:
     """Return which separator one printed amount proves is decimal, if any."""
     body = "".join(char for char in printed if char.isdigit() or char in ",.")
-    has_comma = "," in body
-    has_dot = "." in body
-    if has_comma and has_dot:
-        return DecimalSeparator.COMMA if body.rfind(",") > body.rfind(".") else DecimalSeparator.PERIOD
-    if has_comma:
-        return DecimalSeparator.COMMA
-    if has_dot and not european_thousands_reading_is_ambiguous(body):
-        return DecimalSeparator.PERIOD
-    return None
+    return decimal_separator_proved_by(body)
 
 
 def infer_decimal_separator(printed_amounts: Iterable[str]) -> tuple[DecimalSeparatorValue | None, bool]:
