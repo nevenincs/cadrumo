@@ -1,10 +1,9 @@
 """Repo-wide privacy lint: committed text must carry no operator-identifying data.
 
-The operator directive is that every committed document is free of *actual*
-identifying data — machine host names, OS login user names, home-directory
-paths, and private/tailnet network identifiers. This gate is the standing guard
-that keeps the tree clean after the one-off scrub: it fails the moment a banned
-token reappears in any tracked file.
+Committed documents must be free of *actual* identifying data — machine host
+names, OS login user names, home-directory paths, and private/tailnet network
+identifiers. This gate is the standing guard that keeps the tree clean: it fails
+the moment a banned token reappears in any tracked file.
 
 Scope and judgement:
 
@@ -12,10 +11,9 @@ Scope and judgement:
   attribution. The project's public copyright holder / privacy responsible
   party ("Neve Nincs") and the published ``hello@neve.md`` contact address on
   the neve.md domain are legally load-bearing attribution carried in NOTICE,
-  PRIVACY.md and license-chain tests; they are intentionally
-  public and are NOT banned here. The retired personal identity that predated
-  it is now a privacy leak if it resurfaces in a shipped doc and is banned
-  below.
+  PRIVACY.md and license-chain tests; they are intentionally public and are
+  NOT banned here. The retired personal identity is a privacy leak if it
+  resurfaces in a shipped doc, and is banned below.
 - Runner *labels* (``[self-hosted, Linux, X64]``) are GitHub configuration, not
   machine names, and are untouched.
 
@@ -27,10 +25,7 @@ Implementation note: the scan reads every file the repository enumerates
 (:func:`dev.source_tree.repository_files`, which already returns the same
 union a VCS would honour -- committed content plus new files nobody has
 ignored) rather than asking twice for a "tracked" half and an "untracked"
-half. That split used to matter only because it was answered by two different
-commands with two different blind spots; this repo's own records once carried
-an account DNS zone id while untracked, and the tracked-only half of the old
-scan was green for the whole time it did.
+half.
 """
 
 from __future__ import annotations
@@ -74,13 +69,13 @@ _BANNED_LITERALS: tuple[str, ...] = (
     _token("/Users", "/gergely"),  # operator macOS home path
 )
 
-# Retired public identity, banned in SHIPPED surfaces only. Superseded by
-# "Neve Nincs" / hello@neve.md; the old personal name and contact address are a
-# privacy leak if they reappear in any published/shipped document. They are
-# scanned with .vault/ and .vaultspec/ excluded, because those trees are
-# removable development scaffolding whose historical records legitimately retain
-# the prior attribution — the exclusion applies ONLY to this retired-identity
-# set, never to the machine/login/path tokens above (which stay tree-wide).
+# Retired public identity, banned in shipped surfaces only. The old personal name
+# and contact address are a privacy leak if they reappear in any published or
+# shipped document. They are scanned with .vault/ and .vaultspec/ excluded,
+# because those trees are removable development scaffolding whose historical
+# records legitimately retain the prior attribution — the exclusion applies ONLY
+# to this retired-identity set, never to the machine/login/path tokens above
+# (which stay tree-wide).
 _BANNED_IN_SHIPPED_SURFACES: tuple[str, ...] = (
     _token("Gergely", " Wootsch"),  # retired public personal name
     _token("hello@gergely", "-wootsch.com"),  # retired public contact email
@@ -103,15 +98,13 @@ _BANNED_PATTERNS: tuple[str, ...] = (
 # carries its own concerns only, so a leak here is a disclosure question and not
 # a tidiness one.
 #
-# On why this is split between shapes and fragment tokens, which is the honest
-# part: shape detection works only where a shape is distinctive. A cloud role
-# identifier is unmistakable. A DNS zone or cloud account id is thirty-two hex
-# characters, which is indistinguishable from an index job id, a document
-# internal id, or a library digest -- measured at eighty-two legitimate
-# occurrences in this tree, so banning that shape would produce noise that gets
-# silenced rather than corrected. Known values are therefore banned by fragment
-# token, exactly as the operator tokens are, and the shape rules cover only what
-# a shape can honestly identify.
+# On why this is split between shapes and fragment tokens, which is the honest part:
+# shape detection works only where a shape is distinctive. A cloud role identifier is
+# unmistakable. A DNS zone or cloud account id is thirty-two hex characters, which is
+# indistinguishable from an index job id, a document internal id, or a library digest, so
+# banning that shape would produce noise that gets silenced rather than corrected. Known
+# values are therefore banned by fragment token, exactly as the operator tokens are, and
+# the shape rules cover only what a shape can honestly identify.
 #
 # What this cannot catch, stated rather than implied: an identifier belonging to
 # a sibling product whose value nobody recorded here. The detector narrows the
@@ -133,10 +126,9 @@ _BANNED_CROSS_PROJECT_PATTERNS: tuple[str, ...] = (
 )
 
 # Exact (relative-path, token) exemptions for genuine functional survivors, each
-# with a stated reason. Empty today: the scrub left no functional survivor that
-# still carries a banned token. A future functional survivor (e.g. a runner name
-# that GitHub's registry requires verbatim) is recorded here, never by weakening
-# the token list.
+# with a stated reason. Empty while no functional survivor still carries a banned
+# token. A future functional survivor (e.g. a runner name that GitHub's registry
+# requires verbatim) is recorded here, never by weakening the token list.
 _ALLOWLIST: dict[tuple[str, str], str] = {}
 
 #: A large untracked binary or build output is read as text, so a size ceiling

@@ -102,7 +102,8 @@ _ROOT: Path = REPO_ROOT
 _CI_INCAPABLE_MARKERS: frozenset[str] = frozenset(
     {
         # Needs a tool outside the Python dependency set: LibreOffice for binary
-        # .xls conversion, or the npm-installed Hunspell dictionaries.
+        # .xls conversion, or the full locale orthography pass, which needs
+        # dictionaries that `just setup` provisions but no CI lane enrols.
         "external_tool",
         # Reads a real external service; opt-in, and never enabled on CI.
         "aeat_live",

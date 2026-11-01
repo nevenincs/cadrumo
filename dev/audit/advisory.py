@@ -22,7 +22,7 @@ Two things this module adds that no existing `dev/audit` scanner has:
   machine-readable single shot), mirroring `dev.audit.report`'s own
   red/amber/green shape.
 * Disk output, every run, of the FULL uncapped result in a unique
-  date-partitioned directory below `.logs/audit-runs/`. That tree is transient
+  date-partitioned directory below `.tmp/logs/audit-runs/`. That tree is transient
   command output, reclaimed by the next clean and read back by nothing, so a
   finding that must outlive the run belongs in durable evidence. The files are: `summary.json`
   (machine-parseable), `summary.md` (the same content, human-readable, no
