@@ -281,7 +281,7 @@ def ledger_check(
 ) -> None:
     """Surface ledger anomalies and broken invoice links without mutating state."""
     from .common import emit_envelope
-    from .ledger_results import LedgerCheckResult, LedgerLinkInconsistencyPayload
+    from .ledger_diagnostic_results import LedgerCheckResult, LedgerLinkInconsistencyPayload
     from .operation_ledger_check import read_ledger_check_for_cli
     from .period_parsing import _optional_canonical_period
 
@@ -363,7 +363,7 @@ def ledger_preflight(ctx: typer.Context, period: str, year: int) -> None:
         lines.append(f"advisory\tempty_ledger\t{message}")
     for issue in report.issues:
         lines.append(f"issue\t{issue.transaction_id}\t{issue.reason.value}\t{issue.detail}")
-    from .ledger_results import LedgerPreflightResult
+    from .ledger_diagnostic_results import LedgerPreflightResult
 
     emit_envelope(
         ctx,

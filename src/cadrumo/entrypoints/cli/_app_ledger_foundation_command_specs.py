@@ -329,7 +329,7 @@ LEDGER_FOUNDATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         handler=LazyBinding.available(DeferredTarget(".ledger_read_commands", "ledger_check", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget(".ledger_results", "LedgerCheckResult", __package__),
+            target=DeferredTarget(".ledger_diagnostic_results", "LedgerCheckResult", __package__),
             identity="ledger.check",
         ),
     ),

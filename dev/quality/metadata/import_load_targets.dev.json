@@ -533,6 +533,7 @@
         "dev.locales.locale_nodes",
         "dev.locales.locale_tree",
         "dev.locales.locale_yaml",
+        "dev.locales.m303_carry_fstring_registrations",
         "dev.locales.manager",
         "dev.locales.manager_chrome",
         "dev.locales.modelo_casilla_catalogue",
