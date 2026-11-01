@@ -89,33 +89,42 @@ def _declared_source(
     node: ast.ClassDef, module: ShippedModule, modules: Mapping[str, ShippedModule]
 ) -> tuple[str, str] | None:
     """Read ``return <fact id>, "<prefix>"`` from the class's own source method."""
-    for statement in node.body:
-        if not (isinstance(statement, ast.FunctionDef) and statement.name == CODE_SOURCE_METHOD):
-            continue
-        returns = [inner.value for inner in ast.walk(statement) if isinstance(inner, ast.Return)]
-        if len(returns) != 1 or not isinstance(returns[0], ast.Tuple) or len(returns[0].elts) != 2:
+    method = next(
+        (item for item in node.body if isinstance(item, ast.FunctionDef) and item.name == CODE_SOURCE_METHOD),
+        None,
+    )
+    if method is None:
+        return None
+    returns = [inner.value for inner in ast.walk(method) if isinstance(inner, ast.Return)]
+    match returns:
+        case [ast.Tuple(elts=[fact_node, prefix_node])]:
+            fact_id = _string_value(fact_node, module, modules)
+            prefix = _string_value(prefix_node, module, modules)
+            return (fact_id, prefix) if fact_id and prefix else None
+        case _:
             return None
-        fact_node, prefix_node = returns[0].elts
-        fact_id = _string_value(fact_node, module, modules)
-        prefix = _string_value(prefix_node, module, modules)
-        return (fact_id, prefix) if fact_id and prefix else None
-    return None
 
 
 def _string_value(node: ast.expr, module: ShippedModule, modules: Mapping[str, ShippedModule]) -> str:
     """Resolve a literal, or a module constant, locally or one import away."""
-    if isinstance(node, ast.Constant):
-        return node.value if isinstance(node.value, str) else ""
-    if not isinstance(node, ast.Name):
-        return ""
-    local = _module_constant(module, node.id)
+    match node:
+        case ast.Constant(value=str() as text):
+            return text
+        case ast.Name(id=name):
+            return _named_string(name, module, modules)
+        case _:
+            return ""
+
+
+def _named_string(name: str, module: ShippedModule, modules: Mapping[str, ShippedModule]) -> str:
+    local = _module_constant(module, name)
     if local:
         return local
     for statement in module.tree.body:
         if not isinstance(statement, ast.ImportFrom):
             continue
         for alias in statement.names:
-            if (alias.asname or alias.name) != node.id:
+            if (alias.asname or alias.name) != name:
                 continue
             base = resolve_relative_import(module.name, module.is_package, statement.level, statement.module)
             target = modules.get(base) if base is not None else None
@@ -123,17 +132,26 @@ def _string_value(node: ast.expr, module: ShippedModule, modules: Mapping[str, S
     return ""
 
 
+def _assignment_parts(statement: ast.stmt) -> tuple[list[ast.Name], ast.expr | None] | None:
+    """Return the simple names a plain or annotated assignment binds, with its value."""
+    match statement:
+        case ast.Assign(targets=targets, value=value):
+            return [target for target in targets if isinstance(target, ast.Name)], value
+        case ast.AnnAssign(target=ast.Name() as target, value=value):
+            return [target], value
+        case _:
+            return None
+
+
 def _module_constant(module: ShippedModule, name: str) -> str:
     for statement in module.tree.body:
-        if isinstance(statement, ast.Assign):
-            targets = [t for t in statement.targets if isinstance(t, ast.Name)]
-            value = statement.value
-        elif isinstance(statement, ast.AnnAssign) and isinstance(statement.target, ast.Name):
-            targets, value = [statement.target], statement.value
-        else:
+        parts = _assignment_parts(statement)
+        if parts is None:
             continue
-        if any(t.id == name for t in targets) and isinstance(value, ast.Constant) and isinstance(value.value, str):
-            return value.value
+        targets, value = parts
+        match value:
+            case ast.Constant(value=str() as text) if any(target.id == name for target in targets):
+                return text
     return ""
 
 
