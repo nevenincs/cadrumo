@@ -126,6 +126,11 @@ class IvaLedgerAggregationIssueReason(StrEnum):
     # 0 % box -- the return publishes both the rate and the cuota, so the
     # contradiction is checkable arithmetically without any other source.
     CUOTA_ON_ZERO_RATED_ROW = "cuota_on_zero_rated_row"
+    # The declared cuota is not base x the declared tipo within one cent, the
+    # same tolerance the invoice path applies to a line. The rate was already
+    # proven in force on the operation date, so the amount is what disagrees;
+    # routing the row would file a cuota its own base and tipo contradict.
+    CUOTA_DISAGREES_WITH_RATE = "cuota_disagrees_with_rate"
     # The mirror of the above, one field over. The operator declared a category
     # whose cuota is zero BY LAW for the side of the operation this row is on --
     # an issued inversión del sujeto pasivo supply, an exempt or not-subject

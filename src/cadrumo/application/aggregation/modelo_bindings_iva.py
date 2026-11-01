@@ -96,6 +96,7 @@ _IVA_SELECTED_SCOPE_EVIDENCE_FAILURE_REASONS = frozenset(
         IvaLedgerAggregationIssueReason.MISSING_DEDUCTION_CLASSIFICATION,
         IvaLedgerAggregationIssueReason.INADMISSIBLE_DEDUCTION_CLASSIFICATION,
         IvaLedgerAggregationIssueReason.CUOTA_ON_ZERO_RATED_ROW,
+        IvaLedgerAggregationIssueReason.CUOTA_DISAGREES_WITH_RATE,
         IvaLedgerAggregationIssueReason.NON_ZERO_RATE_ON_ZERO_CUOTA_CATEGORY,
         IvaLedgerAggregationIssueReason.NON_ARISING_CATEGORY_FOR_INVOICE_SIDE,
         IvaLedgerAggregationIssueReason.MISSING_COUNTERPARTY_IDENTIFICATION_STATE,

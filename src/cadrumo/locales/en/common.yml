@@ -50,6 +50,9 @@ aggregation:
       cash_accounting_evidence_incoherent: 'The cash accounting timing on this IVA
         row is inconsistent: %{refusal}. Correct the operation date or the payment
         evidence on the ledger entry.'
+      cuota_disagrees_with_rate: Declared IVA cuota %{declared} does not match base
+        %{base} at rate %{rate}, which gives %{expected}. Correct the cuota, the base
+        or the IVA rate.
       deduction_authority_on_non_deducible_row: An IVA row that bears no deductible
         cuota cannot carry a deduction classification; IVA category %{category} settles
         as %{flow_direction}. Remove the declared deduction kind, or correct the category.

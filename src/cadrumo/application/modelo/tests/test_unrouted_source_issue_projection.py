@@ -121,6 +121,7 @@ def test_a_diagnostic_with_no_binding_source_is_not_persisted(operation: PinnedA
         "unsupported_iva_rate",
         "missing_deduction_classification",
         "cuota_on_zero_rated_row",
+        "cuota_disagrees_with_rate",
         "non_zero_rate_on_zero_cuota_category",
         "non_arising_category_for_invoice_side",
         "missing_counterparty_identification_state",

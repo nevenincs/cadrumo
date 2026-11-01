@@ -53,6 +53,9 @@ aggregation:
       cash_accounting_evidence_incoherent: 'Los datos de criterio de caja de este
         apunte de IVA son incoherentes: %{refusal}. Corrige la fecha de la operación
         o la evidencia de cobro o pago del apunte.'
+      cuota_disagrees_with_rate: La cuota de IVA declarada %{declared} no coincide
+        con la base %{base} al tipo %{rate}, que da %{expected}. Corrige la cuota,
+        la base o el tipo de IVA.
       deduction_authority_on_non_deducible_row: Una fila de IVA que no soporta cuota
         deducible no puede llevar una clasificación de deducción; la categoría de
         IVA %{category} se liquida como %{flow_direction}. Elimina el tipo de deducción

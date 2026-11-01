@@ -12,6 +12,7 @@ from datetime import date
 from decimal import Decimal
 
 from ...core.i18n.render import tr as render_tr
+from ...core.money.rounding import CENT, round_to_cents
 from ...core.period import Period
 from ...core.time.clock import today_madrid
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -575,6 +576,23 @@ def _resolved_iva_transaction_amounts(
     )
     if isinstance(rate_kind, _IvaTransactionOutcome):
         return rate_kind
+    # Recargo de equivalencia is left out: its own tipo is not carried on the
+    # row, only its amount, so only the IVA cuota can be recomputed here.
+    expected_cuota = (taxable_base * iva_rate).quantize(Decimal("0.0001"))
+    if abs(iva_amount - expected_cuota) > CENT:
+        return _IvaTransactionOutcome(
+            gate_issue=IvaLedgerAggregationIssue(
+                transaction_id=transaction_id,
+                reason=IvaLedgerAggregationIssueReason.CUOTA_DISAGREES_WITH_RATE,
+                detail=render_tr(
+                    "aggregation.iva_ledger.errors.cuota_disagrees_with_rate",
+                    base=str(taxable_base),
+                    rate=str(iva_rate),
+                    declared=str(iva_amount),
+                    expected=str(round_to_cents(expected_cuota)),
+                ),
+            ),
+        )
     # Only the cuota follows the business share. The Modelo 303 instructions
     # declare the deductible bases "sin prorratear" (IVA Deducible), and for
     # bienes de inversion state that the base goes unreduced even where the

@@ -49,6 +49,9 @@ aggregation:
       cash_accounting_evidence_incoherent: 'A pénzforgalmi elszámolás időzítési adatai
         ezen az IVA-tételen ellentmondásosak: %{refusal}. Javítsd a főkönyvi tétel
         ügyleti dátumát vagy fizetési bizonyítékát.'
+      cuota_disagrees_with_rate: A megadott %{declared} IVA-összeg nem egyezik a(z)
+        %{base} alap és a(z) %{rate} kulcs szorzatával, ami %{expected}. Javítsd az
+        IVA-összeget, az alapot vagy az IVA-kulcsot.
       deduction_authority_on_non_deducible_row: Az olyan IVA-sor, amely nem hordoz
         levonható adóösszeget, nem viselhet levonási osztályozást; a %{category} IVA-kategória
         %{flow_direction} irányban számol el. Töröld a megadott levonási típust, vagy

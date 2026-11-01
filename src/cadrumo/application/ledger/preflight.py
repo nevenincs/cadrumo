@@ -838,6 +838,9 @@ _IVA_ISSUE_REASONS_NOT_REACHING_PREFLIGHT: Final[Mapping[IvaLedgerAggregationIss
     IvaLedgerAggregationIssueReason.CUOTA_ON_ZERO_RATED_ROW: (
         "projection-path arithmetic contradiction screen between rate and cuota"
     ),
+    IvaLedgerAggregationIssueReason.CUOTA_DISAGREES_WITH_RATE: (
+        "projection-path arithmetic contradiction screen between base, rate and cuota"
+    ),
     IvaLedgerAggregationIssueReason.NON_ZERO_RATE_ON_ZERO_CUOTA_CATEGORY: (
         "projection-path screen reading the Axis-A component table for the declared category"
     ),
@@ -887,6 +890,7 @@ OPERATOR_ACTION_BY_IVA_LEDGER_AGGREGATION_ISSUE: Mapping[
             OperatorActionAxis.RESOLVE_REVISION_MISMATCH
         ),
         IvaLedgerAggregationIssueReason.CUOTA_ON_ZERO_RATED_ROW: OperatorActionAxis.RESOLVE_VALUE_DIVERGENCE,
+        IvaLedgerAggregationIssueReason.CUOTA_DISAGREES_WITH_RATE: OperatorActionAxis.RESOLVE_VALUE_DIVERGENCE,
         IvaLedgerAggregationIssueReason.NON_ZERO_RATE_ON_ZERO_CUOTA_CATEGORY: (
             OperatorActionAxis.RESOLVE_VALUE_DIVERGENCE
         ),
