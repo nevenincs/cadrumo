@@ -756,7 +756,7 @@ def _render_group_reference(
     # The group's own page, not the family page this is called from.
     with markup_page(_verb_group_page_stem(family, group)):
         content = (
-            _rst_heading(f"{family} {group}", "=")
+            _rst_heading(f"``{family} {group}``", "=")
             + "\n"
             + "".join(_render_graph_command(language, node.path, node.spec) for node in group_nodes)
         )

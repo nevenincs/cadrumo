@@ -10,7 +10,7 @@ from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.entrypoints.cli.command_specs import COMMAND_GRAPH
 from dev.locales.signal_document_prose import visible_document_prose
 
-from ..cli_reference import _cli_help_as_rst, _render_graph_command
+from ..cli_reference import _cli_help_as_rst, _render_graph_command, _render_group_reference
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.docs]
 
@@ -52,6 +52,29 @@ def test_multilingual_compile_receives_rst_code_markup(tmp_path: Path) -> None:
     fragment = page.parent / f"{FRAGMENT_PREFIX}ledger.rst"
     text = fragment.read_text(encoding="utf-8")
     assert "``fifo``" in text and "``pmp``" in text
+
+
+@pytest.mark.parametrize("language", list(OutputLanguage))
+def test_generated_command_group_title_is_a_literal_with_the_same_visible_title_and_anchor(
+    language: OutputLanguage, tmp_path: Path
+) -> None:
+    family_nodes = tuple(node for node in COMMAND_GRAPH.nodes() if len(node.path) > 3 and node.path[1] == "config")
+    rendered: dict[str, str] = {}
+    _render_group_reference("config", "collab", family_nodes, language, tmp_path, rendered, [])
+    page = tmp_path / "config" / "collab.rst"
+    document = publish_doctree(
+        page.read_text(encoding="utf-8"), settings_overrides={"report_level": 5, "halt_level": 6}
+    )
+    title = next(document.findall(nodes.title))
+    reference = publish_doctree("config collab\n=============\n")
+    assert title.astext() == next(reference.findall(nodes.title)).astext() == "config collab"
+    assert title.parent["ids"] == next(reference.findall(nodes.title)).parent["ids"]
+    assert [node.astext() for node in title.findall(nodes.literal)] == ["config collab"]
+    heading = "\n".join(page.read_text(encoding="utf-8").splitlines()[:2])
+    page.write_text(f"{heading}\n\nNearby misspeling.\n", encoding="utf-8")
+    prose = " ".join(text for _line, text in visible_document_prose(page))
+    assert "collab" not in prose
+    assert "misspeling" in prose
 
 
 @pytest.mark.parametrize("language", list(OutputLanguage))
