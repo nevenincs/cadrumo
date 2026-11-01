@@ -697,7 +697,7 @@ def test_simplified_intangible_table_methods_refuse_with_the_sources_that_leave_
         with _refused(
             ActividadAssetUnsupportedError,
             "simplified_intangible_table_method",
-            rendered=r"RIRPF art\. 30\.1a.*Orden of 27 March 1998",
+            rendered=r"RIRPF art\. 30\.1a.*Order of 27 March 1998",
         ):
             _charge(_asset(election, basis="3000", kind=AssetKind.INTANGIBLE))
 

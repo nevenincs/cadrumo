@@ -7,13 +7,13 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.application.aggregation.counterpart import counterpart_operation_catalogue_entries
 from cadrumo.core.aggregation import BindingSourceKind, IntracomOperationType
 from cadrumo.core.errors.hierarchy import InternalInvariantError
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.errors import GovernedFactNotApplicableError, RegistryValidationError
 from cadrumo.domain.calculations.registry.facts.payloads import MappingFactPayload
+from cadrumo.domain.calculations.registry.facts.schema import GovernedFactCatalogue
 from cadrumo.domain.calculations.registry.governed_fact_scope import CandidateFactAuthority, validating_governed_facts
 from cadrumo.domain.calculations.registry.invoice_bindings import (
     CollectibleInvoiceProvider,
@@ -24,17 +24,16 @@ from cadrumo.domain.calculations.registry.invoice_bindings import (
     resolve_invoice_binding_row_values,
     resolve_invoice_binding_values,
 )
+from cadrumo.domain.calculations.registry.m347_threshold import resolve_counterpart_operation_claves
+from cadrumo.domain.calculations.registry.snapshot_globals import SupportedFilingYearsCatalogue
 from cadrumo.domain.calculations.registry.tests.fact_scope import outside_governed_fact_validation
 
-from ..compiler.loader import load_registry_tree
+from ..compiler.fact_loader import load_governed_facts
+from ..compiler.loader import load_registry_tree, load_shared_catalogues
 from ..compiler.validator import RegistryValidator
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_VOCABULARY_KEYS = {
-    "347": "modelo.347.operation_claves",
-    "349": "modelo.349.operation_claves",
-}
 _CLAVE_PROVIDERS = (
     CollectibleInvoiceProvider,
     M347ThirdPartyOperationProvider,
@@ -44,8 +43,7 @@ _CLAVE_PROVIDERS = (
 
 
 def _vocabulary(operation: PinnedAuthorityOperation, modelo: str, effective_date: date) -> frozenset[str]:
-    entries = counterpart_operation_catalogue_entries(effective_date, operation=operation)
-    return frozenset(entries[_VOCABULARY_KEYS[modelo]].split(","))
+    return resolve_counterpart_operation_claves(modelo, effective_date=effective_date, authority=operation)
 
 
 def _floor_date(operation: PinnedAuthorityOperation) -> date:
@@ -78,6 +76,40 @@ def test_the_two_vocabularies_are_declared_apart() -> None:
     with bundled_indexed_authority().operation() as operation:
         floor = _floor_date(operation)
         assert _vocabulary(operation, "347", floor) != _vocabulary(operation, "349", floor)
+
+
+def _authored_authority(*, floor: int) -> CandidateFactAuthority:
+    """Resolve the authored facts under a widened support envelope.
+
+    The editions before the product's support floor are authored data; what is
+    under test is what each design prints, not what the product admits.
+    """
+    facts = load_governed_facts(bundled_path("registry", "aeat", "facts"))
+    support = load_shared_catalogues(bundled_path("registry", "aeat")).require_supported_filing_years()
+    support = SupportedFilingYearsCatalogue(floor=floor, horizon=support.horizon, hard_ceiling=support.hard_ceiling)
+    return CandidateFactAuthority(GovernedFactCatalogue(facts={fact.fact_id: fact for fact in facts}), support)
+
+
+@pytest.mark.parametrize("year", [2010, 2011, 2013, 2019, 2020, 2024, 2025])
+def test_the_m347_vocabulary_is_declared_for_every_design_edition(year: int) -> None:
+    claves = resolve_counterpart_operation_claves(
+        "347", effective_date=date(year, 6, 1), authority=_authored_authority(floor=2008)
+    )
+    assert claves == frozenset("ABCDEFG")
+
+
+def test_the_m347_vocabulary_is_not_asserted_before_the_first_design_that_prints_it() -> None:
+    with pytest.raises(GovernedFactNotApplicableError):
+        resolve_counterpart_operation_claves(
+            "347", effective_date=date(2009, 12, 31), authority=_authored_authority(floor=2008)
+        )
+
+
+def test_the_m349_vocabulary_is_not_asserted_before_its_catalogue_window() -> None:
+    with pytest.raises(GovernedFactNotApplicableError):
+        resolve_counterpart_operation_claves(
+            "349", effective_date=date(2019, 12, 31), authority=_authored_authority(floor=2008)
+        )
 
 
 @pytest.fixture(scope="module")
@@ -115,7 +147,7 @@ def test_candidate_revision_uses_candidate_fact_not_the_installed_generation(can
     modelos, catalogues = candidate_registry
     modelo = next(item for item in modelos if item.id == "349")
     revision = next(iter(modelo.revisions.values()))
-    fact_id = "m347-m349-counterpart-operation-catalogue"
+    fact_id = "m349-operation-clave-vocabulary"
     fact = catalogues.facts.facts[fact_id]
     variant = fact.variants[0]
     assert isinstance(variant.payload, MappingFactPayload)
@@ -150,7 +182,7 @@ def test_candidate_revision_rechecks_the_fact_when_its_window_changes(candidate_
     modelos, catalogues = candidate_registry
     modelo = next(item for item in modelos if item.id == "349")
     revision = next(iter(modelo.revisions.values()))
-    fact_id = "m347-m349-counterpart-operation-catalogue"
+    fact_id = "m349-operation-clave-vocabulary"
     fact = catalogues.facts.facts[fact_id]
     assert len(fact.variants) == 1
     variant = fact.variants[0]
@@ -183,7 +215,7 @@ def test_candidate_revision_refuses_a_missing_catalogue(candidate_registry) -> N
     modelos, catalogues = candidate_registry
     modelo = next(item for item in modelos if item.id == "349")
     revision = next(iter(modelo.revisions.values()))
-    fact_id = "m347-m349-counterpart-operation-catalogue"
+    fact_id = "m349-operation-clave-vocabulary"
     facts = catalogues.facts.model_copy(
         update={"facts": {key: value for key, value in catalogues.facts.facts.items() if key != fact_id}}
     )

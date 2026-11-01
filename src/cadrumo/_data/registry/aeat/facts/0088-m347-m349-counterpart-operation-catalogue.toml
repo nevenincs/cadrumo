@@ -46,8 +46,6 @@ kind = "mapping"
 entries = [
     { key = "modelo.347.operation_kinds", value = "entregas_y_prestaciones,adquisiciones_y_recepciones,operaciones_seguros,arrendamientos_locales,subvenciones_y_ayudas" },
     { key = "modelo.349.operation_kinds", value = "entrega_intracomunitaria_bienes,adquisicion_intracomunitaria_bienes,prestacion_servicios_intracom,adquisicion_servicios_intracom,triangular" },
-    { key = "modelo.347.operation_claves", value = "A,B,C,D,E,F,G" },
-    { key = "modelo.349.operation_claves", value = "E,M,H,A,T,S,I,R,D,C" },
     { key = "modelo.347.detail_record", value = "declarado" },
     { key = "modelo.349.detail_record", value = "operador" },
     { key = "modelo.347.binding_source", value = "m347_third_party_operation" },

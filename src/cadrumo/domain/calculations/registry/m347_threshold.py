@@ -61,15 +61,7 @@ _M347_THRESHOLD_BUCKETS_FACT: Final = StringMappingFact(
         value_whitespace=MappingValueWhitespace.STRIP,
     ),
 )
-_M347_OPERATION_CLAVES_SUBJECT: Final = "M347 and M349 counterpart operation catalogue"
-_COUNTERPART_OPERATION_FACT: Final = StringMappingFact(
-    fact_id="m347-m349-counterpart-operation-catalogue",
-    date_axis=DateAxis.FILING_PERIOD,
-    policy=StringMappingPolicy(
-        subject=_M347_OPERATION_CLAVES_SUBJECT,
-        value_whitespace=MappingValueWhitespace.STRIP,
-    ),
-)
+_M347_OPERATION_CLAVES_SUBJECT: Final = "M347 and M349 counterpart operation clave vocabulary"
 _BUCKET_ORDER_KEY: Final = "bucket.order"
 _BUCKET_PREFIX: Final = "bucket."
 _BUCKET_FIELDS: Final = frozenset({"claves", "floor_fact", "declared_regardless_of_amount", "reading_unsettled"})
@@ -79,6 +71,9 @@ def resolve_counterpart_operation_claves(
     modelo: str, *, effective_date: date, authority: GovernedFactSource | None = None
 ) -> frozenset[str]:
     """Resolve one modelo's operation letters from the pinned filing-period fact.
+
+    Each modelo owns its vocabulary fact, ``m<modelo>-operation-clave-vocabulary``,
+    whose variants start at the earliest record design that prints the letters.
 
     Args:
         modelo: The declaration whose own vocabulary is required.
@@ -92,7 +87,15 @@ def resolve_counterpart_operation_claves(
         RegistryValidationError: When the catalogue or its declared letters are invalid.
     """
     selected = require_governed_fact_authority(authority, subject=_M347_OPERATION_CLAVES_SUBJECT)
-    entries = _COUNTERPART_OPERATION_FACT.resolve_entries(selected, effective_date=effective_date)
+    fact = StringMappingFact(
+        fact_id=f"m{modelo}-operation-clave-vocabulary",
+        date_axis=DateAxis.FILING_PERIOD,
+        policy=StringMappingPolicy(
+            subject=_M347_OPERATION_CLAVES_SUBJECT,
+            value_whitespace=MappingValueWhitespace.STRIP,
+        ),
+    )
+    entries = fact.resolve_entries(selected, effective_date=effective_date)
     tokens = unique_mapping_tokens(entries, f"modelo.{modelo}.operation_claves", subject=_M347_OPERATION_CLAVES_SUBJECT)
     if any(len(token) != 1 or not token.isascii() or not token.isalpha() or not token.isupper() for token in tokens):
         raise RegistryValidationError(

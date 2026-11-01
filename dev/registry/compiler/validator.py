@@ -512,12 +512,14 @@ class RegistryValidator:
         authority = CandidateFactAuthority(self._facts, self._support)
         return [
             failure
-            for point in _candidate_clave_dates(revision, authority)
+            for point in _candidate_clave_dates(modelo.id, revision, authority)
             for failure in _candidate_clave_failures_at(modelo.id, selectors, point, authority, prefix)
         ]
 
 
-def _candidate_clave_dates(revision: ModeloRevision, authority: CandidateFactAuthority) -> tuple[date, ...]:
+def _candidate_clave_dates(
+    modelo: str, revision: ModeloRevision, authority: CandidateFactAuthority
+) -> tuple[date, ...]:
     """Cover the supported revision window and each fact start or end transition."""
     support = authority.supported_filing_years()
     floor = max(revision.valid_from, date(support.floor, 1, 1))
@@ -527,7 +529,7 @@ def _candidate_clave_dates(revision: ModeloRevision, authority: CandidateFactAut
     if floor > ceiling:
         return ()
     points = {floor}
-    fact = authority.catalogue.facts.get("m347-m349-counterpart-operation-catalogue")
+    fact = authority.catalogue.facts.get(f"m{modelo}-operation-clave-vocabulary")
     if fact is not None:
         for variant in fact.variants:
             points.update(point for point in _fact_transition_dates(variant) if floor <= point <= ceiling)
