@@ -35,7 +35,54 @@ from .signal_tokens import (
 # These exact Catalan pronoun forms are attested in the operator guides. Keep
 # the verb visible and the set closed; arbitrary stems still need checking.
 # https://aplicacions.llengua.gencat.cat/llc/AppJava/pdf/ortografia_catalana_versio_digital.pdf
-_CATALAN_HYPHENATED_CLITIC_RE = re.compile(r"(?<![\w-])(?P<form>[Mm]antén-(?:lo|los)|revisar-los|traçar-lo)(?![\w-])")
+_CATALAN_NE_VERB_FORMS = (
+    "aconsegueix",
+    "afegeix",
+    "afegir",
+    "aportar",
+    "canviar",
+    "començar",
+    "configura",
+    "configurar",
+    "confirmar",
+    "conservar",
+    "consultar",
+    "controlar",
+    "conèixer",
+    "crear",
+    "declarar",
+    "demostrant",
+    "demostrar",
+    "desar",
+    "desbloquejar",
+    "eliminar",
+    "esborrar",
+    "escriu",
+    "gestionar",
+    "indicar",
+    "iniciar",
+    "intentar",
+    "introdueix",
+    "introduint",
+    "llegeix",
+    "llegir",
+    "obrir",
+    "obtenir",
+    "reduir",
+    "registrar",
+    "reobrir",
+    "resol",
+    "segueix",
+    "seguir",
+    "seleccionar",
+    "suprimir",
+    "tria",
+    "triar",
+)
+_CATALAN_HYPHENATED_CLITIC_RE = re.compile(
+    r"(?<![\w-])(?P<form>[Mm]antén-(?:lo|los)|revisar-los|traçar-lo|"
+    r"(?i:(?:" + "|".join(map(re.escape, _CATALAN_NE_VERB_FORMS)) + r")-ne))(?![\w-])"
+)
 # The export/VIES definitions and architecture/CLI guides retain these
 # complete English standard, license and product names.
 # Route each word to English rather than exempting its spelling.
