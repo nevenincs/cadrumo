@@ -590,6 +590,14 @@ class ActivityAssetRevision(CachedIdentityModel):
         payload["supersedes_revision_id"] = self.supersedes_revision_id
         return content_hash_hex(payload)
 
+    def stated_references(self) -> tuple[str, ...]:
+        """Every evidence and election reference this revision states."""
+        vehicle = self.vehicle_affectation
+        return (
+            *self.amortization.stated_references(),
+            *((vehicle.evidence_reference,) if vehicle is not None else ()),
+        )
+
     def same_charge_facts(self, other: ActivityAssetRevision) -> bool:
         """Say whether two revisions state every fact a charge rests on, whatever else each records."""
         return self.model_dump(exclude=_FIGURE_NEUTRAL_FIELDS) == other.model_dump(exclude=_FIGURE_NEUTRAL_FIELDS)

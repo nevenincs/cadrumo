@@ -8,7 +8,6 @@ from typing import override
 
 from pydantic import TypeAdapter, ValidationError
 from textual.app import ComposeResult
-from textual.widget import Widget
 from textual.widgets import Button, Input, Static
 
 from ....application.actividad_asset.activity_asset_contracts import ActivityAssetSupersedingClaim
@@ -28,7 +27,6 @@ from ....domain.renta.actividad_asset.lifecycle import ActivityAssetRevision, As
 from ....domain.renta.actividad_asset.register_records import ActivityAssetDescriptorFacts
 from ....domain.renta.actividad_asset.schedule import ScheduledAmortizationCharge, parse_requested_free_amount
 from ..account import AccountSessionExpiredError
-from ..components.language import localized
 from ..operations.outcome import OperationOutcomeUnknownError, unknown_outcome_of
 from .actividad_asset_inputs import (
     InputRefusedError,
@@ -37,6 +35,7 @@ from .actividad_asset_inputs import (
     stated_disposal,
     stated_revision,
 )
+from .actividad_asset_view import DISPOSAL_INPUT_LOCALE_KEYS, FACT_INPUT_LOCALE_KEYS, compose_activity_asset
 from .actividad_asset_words import (
     form_options_text,
     limits_line,
@@ -63,43 +62,6 @@ _WRITE_BUTTONS = ("#asset-create", "#asset-correct", "#asset-claim", "#asset-des
 _SUPERSEDING_CLAIMS = TypeAdapter(tuple[ActivityAssetSupersedingClaim, ...])
 
 _FILING_YEAR = TypeAdapter(FilingYear)
-
-#: The facts a new element states with typed fields; a field left empty states nothing, never zero.
-_FACT_INPUT_LOCALE_KEYS = {
-    "asset-price": "tui.ledger.activity_asset.price",
-    "asset-non-deductible-iva": "tui.ledger.activity_asset.non_deductible_iva",
-    "asset-in-service-date": "tui.ledger.activity_asset.in_service_date",
-    "asset-method": "tui.ledger.activity_asset.method",
-}
-
-#: The baja's inputs with literal keys, shared by rendering, clearing and locale discovery.
-_DISPOSAL_INPUT_LOCALE_KEYS = {
-    "asset-disposal-date": "tui.ledger.activity_asset.disposal_date",
-    "asset-disposal-reason": "tui.ledger.activity_asset.disposal_reason",
-    "asset-disposal-proceeds": "tui.ledger.activity_asset.disposal_proceeds",
-    "asset-disposal-costs": "tui.ledger.activity_asset.disposal_costs",
-    "asset-disposal-market-value": "tui.ledger.activity_asset.disposal_market_value",
-    "asset-disposal-prior-regime": "tui.ledger.activity_asset.disposal_prior_regime",
-    "asset-disposal-later-affectation": "tui.ledger.activity_asset.disposal_later_affectation",
-}
-
-#: Closed read controls with literal keys, shared by rendering and locale discovery.
-_READ_BUTTON_LOCALE_KEYS = {
-    "asset-list": "tui.ledger.activity_asset.list",
-    "asset-plan": "tui.ledger.activity_asset.plan",
-    "asset-timeline": "tui.ledger.activity_asset.timeline",
-    "asset-disposal-calculate": "tui.ledger.activity_asset.disposal_calculate",
-    "asset-acquisition-candidates": "tui.ledger.activity_asset.acquisition_candidates",
-}
-
-
-#: The inputs the served reads fill, each worded by the catalogue key that names it.
-_OPEN_INPUT_LOCALE_KEYS = {
-    "asset-covered-from": "desktop.ledger.assets.from",
-    "asset-covered-until": "desktop.ledger.assets.until",
-    "asset-filing-tax-year": "desktop.ledger.assets.year",
-    "asset-filing-m130-period": "desktop.ledger.assets.quarter",
-}
 
 
 @dataclass(frozen=True, slots=True)
@@ -136,12 +98,6 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
         self._filled: dict[str, str] = {}
         """What the screen put in an input from a served default, so a later read renews it and a typed value stays."""
 
-    @staticmethod
-    def _open_input(input_id: str) -> Widget:
-        """An input that opens empty, named by its catalogue word."""
-        key = _OPEN_INPUT_LOCALE_KEYS[input_id]
-        return localized(Input(placeholder=tr(key), id=input_id), key)
-
     def _fill(self, fills: tuple[tuple[str, str], ...]) -> None:
         """Put served defaults in the inputs they are for, leaving anything the operator typed."""
         for input_id, text in fills:
@@ -158,87 +114,8 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
 
     @override
     def compose(self) -> ComposeResult:
-        """Render typed JSON boundaries while keeping all arithmetic in application code."""
-        yield localized(
-            Static(tr("tui.ledger.activity_asset.title"), classes="cadrumo-banner"), "tui.ledger.activity_asset.title"
-        )
-        # Where a refusal to leave while an action is out is said.
-        yield Static("", id="ledger-flow-status", markup=False)
-        yield localized(
-            Input(placeholder=tr("tui.ledger.activity_asset.asset_id"), id="asset-id"),
-            "tui.ledger.activity_asset.asset_id",
-        )
-        yield localized(
-            Input(placeholder=tr("tui.ledger.activity_asset.revision"), id="asset-revision-json"),
-            "tui.ledger.activity_asset.revision",
-        )
-        yield localized(
-            Input(placeholder=tr("tui.ledger.activity_asset.name"), id="asset-name"),
-            "tui.ledger.activity_asset.name",
-        )
-        yield localized(
-            Input(placeholder=tr("tui.ledger.activity_asset.serial"), id="asset-serial"),
-            "tui.ledger.activity_asset.serial",
-        )
-        for input_id, key in _FACT_INPUT_LOCALE_KEYS.items():
-            yield localized(Input(placeholder=tr(key), id=input_id), key)
-        yield localized(
-            Button(tr("tui.ledger.activity_asset.create"), id="asset-create"), "tui.ledger.activity_asset.create"
-        )
-        yield localized(
-            Button(tr("tui.ledger.activity_asset.describe"), id="asset-describe"),
-            "tui.ledger.activity_asset.describe",
-        )
-        yield localized(
-            Button(tr("tui.ledger.activity_asset.inspect"), id="asset-inspect"), "tui.ledger.activity_asset.inspect"
-        )
-        yield localized(
-            Input(placeholder=tr("tui.ledger.activity_asset.superseding_claims"), id="asset-superseding-claims"),
-            "tui.ledger.activity_asset.superseding_claims",
-        )
-        yield localized(
-            Button(tr("tui.ledger.activity_asset.correct"), id="asset-correct"), "tui.ledger.activity_asset.correct"
-        )
-        for input_id, key in _DISPOSAL_INPUT_LOCALE_KEYS.items():
-            yield localized(Input(placeholder=tr(key), id=input_id), key)
-        yield localized(
-            Button(tr("tui.ledger.activity_asset.dispose"), id="asset-dispose"),
-            "tui.ledger.activity_asset.dispose",
-        )
-        for button_id, key in _READ_BUTTON_LOCALE_KEYS.items():
-            yield localized(Button(tr(key), id=button_id), key)
-        yield Static("", id="asset-current-revision-id", markup=False)
-        yield localized(
-            Input(placeholder=tr("tui.ledger.activity_asset.free_amount"), id="asset-free-amount"),
-            "tui.ledger.activity_asset.free_amount",
-        )
-        # The dates, year and quarter open empty: reading the register, the plan and the form options fills them
-        # from what those reads serve.
-        yield self._open_input("asset-covered-from")
-        yield self._open_input("asset-covered-until")
-        yield localized(
-            Input(placeholder=tr("tui.ledger.activity_asset.supersedes"), id="asset-supersedes-claim-id"),
-            "tui.ledger.activity_asset.supersedes",
-        )
-        yield localized(
-            Button(tr("tui.ledger.activity_asset.forecast"), id="asset-forecast"), "tui.ledger.activity_asset.forecast"
-        )
-        yield localized(
-            Button(tr("tui.ledger.activity_asset.claim"), id="asset-claim"), "tui.ledger.activity_asset.claim"
-        )
-        yield self._open_input("asset-filing-tax-year")
-        yield self._open_input("asset-filing-m130-period")
-        yield localized(
-            Button(tr("tui.ledger.activity_asset.filing"), id="asset-filing-handoff"),
-            "tui.ledger.activity_asset.filing",
-        )
-        yield Input(value="material", id="asset-options-kind")
-        yield localized(
-            Button(tr("tui.ledger.activity_asset.form_options"), id="asset-form-options"),
-            "tui.ledger.activity_asset.form_options",
-        )
-        yield Static("", id="asset-result", markup=False)
-        yield Static("", id="asset-recovery", markup=False)
+        """Render the activity-asset controls."""
+        yield from compose_activity_asset()
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         """Dispatch every mutation through the injected shared operations, one action at a time."""
@@ -261,13 +138,7 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
         try:
             result = await asyncio.to_thread(self._dispatch, button_id)
         except AccountSessionExpiredError as exc:
-            self._clear_private_view()
-            if unknown_outcome_of(exc) is None:
-                self.query_one("#asset-result", Static).update(f"refused\t{exc}")
-            else:
-                # Lost with the change perhaps saved: unknown, not refused. Signing in composes the screen again.
-                self._hold_writes(self._named_asset_id)
-                self.query_one("#asset-result", Static).update(f"unknown\t{resolve_error_message(exc)}")
+            self._show_expired_session(exc)
             return
         except OperationOutcomeUnknownError as exc:
             # The change may be saved, so it is never reported as refused, and no write is offered over the
@@ -289,15 +160,7 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
             )
             return
         except Exception:
-            # Anything else would end the whole window. A write may have been saved, so its writes are held.
-            if f"#{button_id}" in _WRITE_BUTTONS:
-                self._hold_writes(self._named_asset_id)
-                unknown = OperationOutcomeUnknownError(operation_id=button_id or "", effect=None)
-                self.query_one("#asset-result", Static).update(f"unknown\t{resolve_error_message(unknown)}")
-            else:
-                self.query_one("#asset-result", Static).update(
-                    f"refused\t{tr('tui.ledger.activity_asset.errors.unexpected')}"
-                )
+            self._show_unexpected_outcome(button_id)
             return
         finally:
             # Cleared with no await before the outcome is on screen, so leaving never hides it.
@@ -309,6 +172,26 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
         if result.current_revision_id is not None:
             self.query_one("#asset-current-revision-id", Static).update(
                 f"current_revision_id\t{result.current_revision_id}"
+            )
+
+    def _show_expired_session(self, exc: AccountSessionExpiredError) -> None:
+        """Discard private facts and distinguish a refused change from an unknown outcome."""
+        self._clear_private_view()
+        if unknown_outcome_of(exc) is None:
+            self.query_one("#asset-result", Static).update(f"refused\t{exc}")
+        else:
+            self._hold_writes(self._named_asset_id)
+            self.query_one("#asset-result", Static).update(f"unknown\t{resolve_error_message(exc)}")
+
+    def _show_unexpected_outcome(self, button_id: str | None) -> None:
+        """Keep uncertain writes held while reporting unexpected read failures as refusals."""
+        if f"#{button_id}" in _WRITE_BUTTONS:
+            self._hold_writes(self._named_asset_id)
+            unknown = OperationOutcomeUnknownError(operation_id=button_id or "", effect=None)
+            self.query_one("#asset-result", Static).update(f"unknown\t{resolve_error_message(unknown)}")
+        else:
+            self.query_one("#asset-result", Static).update(
+                f"refused\t{tr('tui.ledger.activity_asset.errors.unexpected')}"
             )
 
     def _hold_writes(self, asset_id: str | None) -> None:
@@ -358,8 +241,8 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
             "#asset-options-kind",
             "#asset-filing-tax-year",
             "#asset-filing-m130-period",
-            *(f"#{input_id}" for input_id in _DISPOSAL_INPUT_LOCALE_KEYS),
-            *(f"#{input_id}" for input_id in _FACT_INPUT_LOCALE_KEYS),
+            *(f"#{input_id}" for input_id in DISPOSAL_INPUT_LOCALE_KEYS),
+            *(f"#{input_id}" for input_id in FACT_INPUT_LOCALE_KEYS),
         ):
             self.query_one(selector, Input).value = ""
         self.query_one("#asset-current-revision-id", Static).update("")
@@ -454,26 +337,7 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
         self, button_id: str | None, asset_id: str, _revision_json: str
     ) -> _ActivityAssetScreenResult:
         if button_id == "asset-filing-handoff":
-            tax_year = self._stated_filing_year()
-            m130_period = self._stated_quarter(tax_year)
-            result = self._actions.filing_handoff(
-                ActivityAssetFilingRequestV1(tax_year=tax_year, m130_period=m130_period),
-            )
-            if m130_period is not None and (result.material_m130 is None or result.intangible_m130 is None):
-                raise InternalInvariantError("activity-asset handoff for a Modelo 130 period omitted its accruals")
-            amounts = [
-                f"m100_material={_box_amount(result.material_m100)}",
-                f"m100_intangible={_box_amount(result.intangible_m100)}",
-            ]
-            if result.material_m130 is not None and result.intangible_m130 is not None:
-                amounts += [
-                    f"m130_material={result.material_m130.amount}",
-                    f"m130_intangible={result.intangible_m130.amount}",
-                ]
-            # An amount of zero is said beside the intervals the box leaves out, so it is never left unexplained.
-            return _ActivityAssetScreenResult(
-                message="\n".join(["filing_handoff\t" + "\t".join(amounts), *map(m100_gap_line, result.m100_gaps)])
-            )
+            return self._filing_handoff_result()
         if button_id == "asset-describe":
             self._named_asset_id = self._required_asset_id(asset_id)
             history = self._actions.describe(asset_id, self._descriptor())
@@ -495,6 +359,28 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
                 ),
             )
         raise ValueError("unknown activity-asset action")
+
+    def _filing_handoff_result(self) -> _ActivityAssetScreenResult:
+        """Describe filing accruals together with the intervals they omit."""
+        tax_year = self._stated_filing_year()
+        m130_period = self._stated_quarter(tax_year)
+        result = self._actions.filing_handoff(
+            ActivityAssetFilingRequestV1(tax_year=tax_year, m130_period=m130_period),
+        )
+        if m130_period is not None and (result.material_m130 is None or result.intangible_m130 is None):
+            raise InternalInvariantError("activity-asset handoff for a Modelo 130 period omitted its accruals")
+        amounts = [
+            f"m100_material={_box_amount(result.material_m100)}",
+            f"m100_intangible={_box_amount(result.intangible_m100)}",
+        ]
+        if result.material_m130 is not None and result.intangible_m130 is not None:
+            amounts += [
+                f"m130_material={result.material_m130.amount}",
+                f"m130_intangible={result.intangible_m130.amount}",
+            ]
+        return _ActivityAssetScreenResult(
+            message="\n".join(["filing_handoff\t" + "\t".join(amounts), *map(m100_gap_line, result.m100_gaps)])
+        )
 
     def _dispatch_register(
         self, button_id: str | None, asset_id: str, _revision_json: str

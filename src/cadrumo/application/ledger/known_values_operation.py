@@ -161,17 +161,7 @@ def _known_texts(uses: Iterable[tuple[str | None, date, str | None]]) -> tuple[t
         if len(text) > KNOWN_VALUE_MAX_LENGTH:
             overlong = True
             continue
-        party = (party or "").strip() or None
-        key = _folded(text)
-        row = held.get(key)
-        if row is None:
-            held[key] = _HeldText(text, 1, used_on, party, used_on if party else None)
-            continue
-        row.uses += 1
-        if used_on >= row.last_used:
-            row.text, row.last_used = text, used_on
-        if party and (row.counterparty_used is None or used_on >= row.counterparty_used):
-            row.counterparty, row.counterparty_used = party, used_on
+        _record_text_use(held, text, used_on, party)
     ordered = sorted(held.items(), key=lambda item: (-item[1].last_used.toordinal(), item[0]))
     return (
         tuple(
@@ -180,6 +170,21 @@ def _known_texts(uses: Iterable[tuple[str | None, date, str | None]]) -> tuple[t
         ),
         overlong or len(ordered) > KNOWN_VALUES_PER_KIND,
     )
+
+
+def _record_text_use(held: dict[str, _HeldText], text: str, used_on: date, party: str | None) -> None:
+    """Update one folded text and its latest independently stated counterparty."""
+    party = (party or "").strip() or None
+    key = _folded(text)
+    row = held.get(key)
+    if row is None:
+        held[key] = _HeldText(text, 1, used_on, party, used_on if party is not None else None)
+        return
+    row.uses += 1
+    if used_on >= row.last_used:
+        row.text, row.last_used = text, used_on
+    if party is not None and (row.counterparty_used is None or used_on >= row.counterparty_used):
+        row.counterparty, row.counterparty_used = party, used_on
 
 
 @dataclass(slots=True)
@@ -197,9 +202,9 @@ class _HeldParty:
         self.uses += 1
         if used_on >= self.last_used:
             self.name, self.last_used = name, used_on
-        if country and used_on >= self.country_used:
+        if country is not None and country != "" and used_on >= self.country_used:
             self.country, self.country_used = country, used_on
-        if state and used_on >= self.state_used:
+        if state is not None and state != "" and used_on >= self.state_used:
             self.state, self.state_used = state, used_on
 
 
@@ -212,32 +217,8 @@ def _known_counterparties(
     A name under two tax ids stays two parties, and the movements with that name
     join neither: an offered tax id must be the only one the name can mean.
     """
-    by_tax_id: dict[str, _HeldParty] = {}
-    tax_ids_of: dict[str, set[str]] = {}
-    untaxed: list[tuple[str, date, str | None, str | None]] = []
-    for invoice in invoices.values():
-        name = invoice.counterparty_name.strip()
-        tax_id = (invoice.counterparty_tax_id or "").strip().upper()
-        if not name or not tax_id:
-            if name:
-                untaxed.append((name, invoice.issued_at, invoice.counterparty_country or None, None))
-            continue
-        tax_ids_of.setdefault(_folded(name), set()).add(tax_id)
-        by_tax_id.setdefault(tax_id, _HeldParty(name, tax_id)).see(
-            name, invoice.issued_at, invoice.counterparty_country or None, None
-        )
-    for transaction in transactions:
-        name = transaction.raw.display_counterparty.strip()
-        if name:
-            state = transaction.counterparty_identification_state
-            untaxed.append(
-                (
-                    name,
-                    transaction.raw.value_date or transaction.raw.booked_date,
-                    transaction.counterparty_country,
-                    state.value if state is not None else None,
-                )
-            )
+    by_tax_id, tax_ids_of, untaxed = _invoice_counterparties(invoices)
+    untaxed.extend(_movement_counterparties(transactions))
     by_name: dict[str, _HeldParty] = {}
     for name, used_on, country, state in untaxed:
         key = _folded(name)
@@ -264,6 +245,43 @@ def _known_counterparties(
         ),
         overlong or len(fitting) > KNOWN_VALUES_PER_KIND,
     )
+
+
+def _invoice_counterparties(
+    invoices: StoredInvoiceCatalogue,
+) -> tuple[dict[str, _HeldParty], dict[str, set[str]], list[tuple[str, date, str | None, str | None]]]:
+    """Collect invoice identities and the names that can unambiguously resolve to them."""
+    by_tax_id: dict[str, _HeldParty] = {}
+    tax_ids_of: dict[str, set[str]] = {}
+    untaxed: list[tuple[str, date, str | None, str | None]] = []
+    for invoice in invoices.values():
+        name = invoice.counterparty_name.strip()
+        tax_id = (invoice.counterparty_tax_id or "").strip().upper()
+        if not name or not tax_id:
+            if name:
+                untaxed.append((name, invoice.issued_at, invoice.counterparty_country or None, None))
+            continue
+        tax_ids_of.setdefault(_folded(name), set()).add(tax_id)
+        by_tax_id.setdefault(tax_id, _HeldParty(name, tax_id)).see(
+            name, invoice.issued_at, invoice.counterparty_country or None, None
+        )
+    return by_tax_id, tax_ids_of, untaxed
+
+
+def _movement_counterparties(
+    transactions: Iterable[Transaction],
+) -> Iterable[tuple[str, date, str | None, str | None]]:
+    """Read stated counterparties without inventing tax identities for movements."""
+    for transaction in transactions:
+        name = transaction.raw.display_counterparty.strip()
+        if name:
+            state = transaction.counterparty_identification_state
+            yield (
+                name,
+                transaction.raw.value_date or transaction.raw.booked_date,
+                transaction.counterparty_country,
+                state.value if state is not None else None,
+            )
 
 
 def _asset_reference_uses(history: ActivityAssetHistory) -> Iterable[tuple[str | None, date, str | None]]:
@@ -314,11 +332,6 @@ class LedgerKnownValuesExecutor:
         kinds = frozenset(payload.kinds)
         bucket_id = str(payload.profile_id)
         movements = self._movements(bucket_id, context) if kinds & _MOVEMENT_KINDS else ()
-        m210 = tuple(
-            (classification, _dated(row))
-            for row in movements
-            if (classification := row.m210_income_classification) is not None
-        )
         found: dict[str, object] = {}
         cut: list[LedgerKnownValueKind] = []
 
@@ -333,6 +346,24 @@ class LedgerKnownValuesExecutor:
                 "counterparties",
                 self._counterparties(bucket_id, context, movements),
             )
+        self._keep_movement_texts(kinds, movements, keep)
+        if LedgerKnownValueKind.ASSET_REFERENCE in kinds:
+            keep(
+                LedgerKnownValueKind.ASSET_REFERENCE,
+                "asset_references",
+                _known_texts(_asset_reference_uses(self._ports.asset_history(bucket_id).load())),
+            )
+        return LedgerKnownValuesProjection.model_validate(
+            {"profile_id": payload.profile_id, **found, "truncated": tuple(cut)}
+        )
+
+    @staticmethod
+    def _keep_movement_texts(
+        kinds: frozenset[LedgerKnownValueKind],
+        movements: tuple[Transaction, ...],
+        keep: Callable[[LedgerKnownValueKind, str, tuple[tuple[BaseModel, ...], bool]], None],
+    ) -> None:
+        """Project requested free-text fields from the already authenticated movements."""
         if LedgerKnownValueKind.DESCRIPTION in kinds:
             keep(
                 LedgerKnownValueKind.DESCRIPTION,
@@ -345,6 +376,20 @@ class LedgerKnownValuesExecutor:
                 "group_labels",
                 _known_texts((row.group_label, _dated(row), None) for row in movements),
             )
+        LedgerKnownValuesExecutor._keep_m210_texts(kinds, movements, keep)
+
+    @staticmethod
+    def _keep_m210_texts(
+        kinds: frozenset[LedgerKnownValueKind],
+        movements: tuple[Transaction, ...],
+        keep: Callable[[LedgerKnownValueKind, str, tuple[tuple[BaseModel, ...], bool]], None],
+    ) -> None:
+        """Project the payer and asset identities stated in M210 classifications."""
+        m210 = tuple(
+            (classification, _dated(row))
+            for row in movements
+            if (classification := row.m210_income_classification) is not None
+        )
         if LedgerKnownValueKind.M210_PAYER in kinds:
             keep(
                 LedgerKnownValueKind.M210_PAYER,
@@ -357,15 +402,6 @@ class LedgerKnownValuesExecutor:
                 "m210_assets",
                 _known_texts((row.asset_or_right_id, used_on, None) for row, used_on in m210),
             )
-        if LedgerKnownValueKind.ASSET_REFERENCE in kinds:
-            keep(
-                LedgerKnownValueKind.ASSET_REFERENCE,
-                "asset_references",
-                _known_texts(_asset_reference_uses(self._ports.asset_history(bucket_id).load())),
-            )
-        return LedgerKnownValuesProjection.model_validate(
-            {"profile_id": payload.profile_id, **found, "truncated": tuple(cut)}
-        )
 
     async def execute(
         self, request: OperationRequest[LedgerKnownValuesRequest], context: OperationExecutorContext

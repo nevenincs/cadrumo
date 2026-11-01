@@ -443,6 +443,38 @@ class ActivityAssetAmortizationElection(CachedIdentityModel):
     renewable_self_consumption: RenewableSelfConsumptionEvidence | None = None
     used_original_price: UsedAssetOriginalPrice | None = None
 
+    def stated_references(self) -> tuple[str, ...]:
+        """Every evidence, approval and election reference this election states."""
+        charging = self.charging_infrastructure
+        renewable = self.renewable_self_consumption
+        used = self.used_original_price
+        return tuple(
+            reference
+            for reference in (
+                *self._method_evidence_references(),
+                self.research_development_evidence_reference,
+                charging.technical_documentation_reference if charging is not None else None,
+                charging.installation_certificate_reference if charging is not None else None,
+                renewable.documentation_reference if renewable is not None else None,
+                used.evidence_reference if used is not None else None,
+            )
+            if reference is not None
+        )
+
+    def _method_evidence_references(self) -> tuple[str | None, ...]:
+        """Collect the evidence and elections for plan, useful life and enterprise methods."""
+        plan = self.approved_plan
+        useful_life = self.useful_life
+        small = self.small_enterprise
+        low_value = self.low_value
+        return (
+            plan.approval_reference if plan is not None else None,
+            useful_life.evidence_reference if useful_life is not None else None,
+            small.evidence_reference if small is not None else None,
+            low_value.election_reference if low_value is not None else None,
+            low_value.new_material_evidence_reference if low_value is not None else None,
+        )
+
     @field_validator("linear_coefficient")
     @classmethod
     def _require_fraction(cls, value: Decimal | None) -> Decimal | None:

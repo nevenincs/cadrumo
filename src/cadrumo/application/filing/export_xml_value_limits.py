@@ -268,6 +268,23 @@ def _element_violations(
         if simple is not None:
             yield from _value_violations(node.text or "", simple, path=path)
         return
+    yield from _attribute_violations(node, complex_type, path=path, schema=schema)
+    children = {item.get("name"): item for item in xsd_declared_children(complex_type)}
+    for child in node:
+        child_path = f"{path}/{child.tag}"
+        child_declaration = children.get(child.tag)
+        if child_declaration is None:
+            yield _Violation(
+                path=child_path, translated_message="application.filing.export.errors.xml_value_undeclared"
+            )
+        else:
+            yield from _element_violations(child, child_declaration, path=child_path, schema=schema)
+
+
+def _attribute_violations(
+    node: Element[str], complex_type: Element[str], *, path: str, schema: XmlValueSchema
+) -> Iterator[_Violation]:
+    """Validate the attributes declared on this complex type in document order."""
     attributes = {item.get("name"): item for item in complex_type.findall(f"{XSD_NS}attribute")}
     for name, value in node.attrib.items():
         # A namespaced attribute such as ``xsi:noNamespaceSchemaLocation`` belongs to
@@ -284,16 +301,6 @@ def _element_violations(
         simple = _declared_simple_type(attribute, schema)
         if simple is not None:
             yield from _value_violations(value, simple, path=attribute_path)
-    children = {item.get("name"): item for item in xsd_declared_children(complex_type)}
-    for child in node:
-        child_path = f"{path}/{child.tag}"
-        child_declaration = children.get(child.tag)
-        if child_declaration is None:
-            yield _Violation(
-                path=child_path, translated_message="application.filing.export.errors.xml_value_undeclared"
-            )
-        else:
-            yield from _element_violations(child, child_declaration, path=child_path, schema=schema)
 
 
 def _undeclared_children(node: Element[str], path: str) -> Iterator[_Violation]:
@@ -329,7 +336,7 @@ def _declared_simple_type(declaration: Element[str], schema: XmlValueSchema) -> 
 def _parse_simple_type(node: Element[str], *, source_id: str, name: str) -> _SimpleType:
     restrictions = node.findall(f"{XSD_NS}restriction")
     base = restrictions[0].get("base") if len(restrictions) == 1 else None
-    if base not in _XSD_BASES or base is None:
+    if base is None or base not in _XSD_BASES:
         raise _schema_unreadable(source_id, name)
     facets = [item for item in restrictions[0] if not str(item.tag).endswith("annotation")]
     if any(str(item.tag).removeprefix(XSD_NS) not in _KNOWN_FACETS for item in facets):
