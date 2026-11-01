@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import asyncio
 import threading
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from uuid import UUID
@@ -10,7 +12,7 @@ from uuid import UUID
 import pytest
 from pydantic import BaseModel
 
-from cadrumo.application.operations.error_detail import OperationErrorDetailV1
+from cadrumo.application.operations.error_detail import OperationErrorDetailKind, OperationErrorDetailV1
 from cadrumo.application.operations.frontend_projection import (
     OperationNoPendingInteractionV1,
     OperationPublicProjectionV1,
@@ -22,6 +24,7 @@ from cadrumo.application.operations.registry import (
     OperationPublicDefinitionContractV1,
     OperationRegistry,
 )
+from cadrumo.core.errors.hierarchy import RecordedRegisteredError
 from cadrumo.core.operations import (
     OperationEffect,
     OperationLifecycle,
@@ -179,3 +182,78 @@ def install_scripted_controller(
 
     monkeypatch.setattr(OperationController, "submit", classmethod(submit))
     return submissions
+
+
+def assert_door_raises_the_recorded_error_of_a_refusal_receipt[RequestT](
+    monkeypatch: pytest.MonkeyPatch,
+    *,
+    registry: OperationRegistry,
+    definition_id: str,
+    make_door: Callable[[SessionClient], Callable[[RequestT], Awaitable[object]]],
+    request: RequestT,
+) -> None:
+    """Prove a door raises the registered error a refusal receipt recorded, reading its detail and no result."""
+    client = SessionClient()
+    detail = OperationErrorDetailV1(
+        kind=OperationErrorDetailKind.REGISTERED_ERROR,
+        error_code=RECORDED_CODE,
+        message_key=RECORDED_KEY,
+        context=(),
+    )
+    observation = terminal_observation(
+        registry, definition_id, condition=OperationTerminalCondition.REFUSED, refusal_ref=RECORDED_CODE
+    )
+    controller = ScriptedController(observation=observation, result=None, detail=detail)
+    install_scripted_controller(monkeypatch, client, controller)
+
+    with pytest.raises(RecordedRegisteredError) as raised:
+        asyncio.run(make_door(client)(request))
+
+    assert raised.value.recorded_code == RECORDED_CODE
+    assert controller.detail_reads == 1
+    assert controller.result_reads == []
+
+
+def assert_door_fails_closed_when_its_session_lapses[RequestT](
+    monkeypatch: pytest.MonkeyPatch,
+    *,
+    registry: OperationRegistry,
+    definition_id: str,
+    make_door: Callable[[SessionClient], Callable[[RequestT], Awaitable[object]]],
+    request: RequestT,
+) -> None:
+    """Prove a door submits nothing once its pinned session no longer matches the client's."""
+    client = SessionClient()
+    submissions = install_scripted_controller(
+        monkeypatch,
+        client,
+        ScriptedController(observation=terminal_observation(registry, definition_id), result=None),
+    )
+    door = make_door(client)
+    client.session_id = UUID("7cc00000-0000-4000-8000-0000000000cc")
+
+    with pytest.raises(AccountSessionExpiredError):
+        asyncio.run(door(request))
+
+    assert submissions == []
+
+
+def assert_door_reads_its_session_off_the_event_loop_thread[RequestT](
+    monkeypatch: pytest.MonkeyPatch,
+    *,
+    observation: OperationObservationSuccessV1,
+    result: BaseModel,
+    make_door: Callable[[SessionClient], Callable[[RequestT], Awaitable[object]]],
+    request: RequestT,
+) -> None:
+    """Prove the blocking session read around a door's operation never runs on the awaiting loop's thread."""
+    client = SessionClient()
+    controller = ScriptedController(observation=observation, result=result)
+    install_scripted_controller(monkeypatch, client, controller)
+    door = make_door(client)
+    client.session_read_threads.clear()
+
+    asyncio.run(door(request))
+
+    assert client.session_read_threads, "a door reads its session around its operation"
+    assert threading.get_ident() not in client.session_read_threads
