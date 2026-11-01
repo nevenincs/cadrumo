@@ -296,9 +296,7 @@ def test_product_build_reuses_companion_wheels_and_installed_files_on_python_edi
     assert companion.stat().st_mtime_ns == installed_mtime
 
 
-def test_product_authority_snapshot_retires_only_previous_snapshot_generation(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def _staged_old_authority(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> tuple[Path, Path, Path, list[Path], Path]:
     authoring = tmp_path / "authoring"
     authoring.mkdir()
     descriptor = authoring / "authority.current.json"
@@ -310,6 +308,13 @@ def test_product_authority_snapshot_retires_only_previous_snapshot_generation(
     source = tmp_path / "snapshot"
     source.mkdir()
     product._stage_product_authority(authoring, source)
+    return authoring, descriptor, old, current, source
+
+
+def test_product_authority_snapshot_retires_only_previous_snapshot_generation(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    authoring, descriptor, old, current, source = _staged_old_authority(tmp_path, monkeypatch)
     unchanged_mtime = (source / ".authority" / old.name).stat().st_mtime_ns
     product._stage_product_authority(authoring, source)
     assert (source / ".authority" / old.name).stat().st_mtime_ns == unchanged_mtime
@@ -328,17 +333,7 @@ def test_product_authority_snapshot_retires_only_previous_snapshot_generation(
 def test_product_authority_capture_failure_preserves_previous_selected_pair(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    authoring = tmp_path / "authoring"
-    authoring.mkdir()
-    descriptor = authoring / "authority.current.json"
-    old = authoring / "authority-old.sqlite3"
-    old.write_bytes(b"old authority")
-    descriptor.write_text(old.name, encoding="utf-8")
-    current = [old]
-    monkeypatch.setattr(product, "selected_published_authority", lambda _: (descriptor, current[0]))
-    source = tmp_path / "snapshot"
-    source.mkdir()
-    product._stage_product_authority(authoring, source)
+    authoring, descriptor, old, current, source = _staged_old_authority(tmp_path, monkeypatch)
     new = authoring / "authority-new.sqlite3"
     new.write_bytes(b"new authority")
     current[0] = new
