@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 import time
 from dataclasses import dataclass, field, replace
-from typing import cast
+from typing import TypeIs, cast
 from uuid import UUID, uuid4
 
 from pydantic import BaseModel, JsonValue, RootModel, TypeAdapter, ValidationError
@@ -134,6 +134,21 @@ def _parse_settled_result[ResultT: BaseModel](
     except ValidationError:
         raise RefusalError(RefusalCode.INVALID_FRAME) from None
     return result
+
+
+def _is_review_success(value: BaseModel) -> TypeIs[OperationReviewProjectionSuccessV1[BaseModel]]:
+    return isinstance(value, OperationReviewProjectionSuccessV1)
+
+
+def _parse_review_success(raw: bytes, model: type[BaseModel]) -> OperationReviewProjectionSuccessV1[BaseModel]:
+    """Validate a review success envelope specialised to ``model``; any other shape is an invalid frame."""
+    success_type = OperationReviewProjectionSuccessV1.__class_getitem__(model)
+    if not (isinstance(success_type, type) and issubclass(success_type, BaseModel)):
+        raise RefusalError(RefusalCode.INVALID_FRAME)
+    parsed = success_type.model_validate_json(raw)
+    if not _is_review_success(parsed):
+        raise RefusalError(RefusalCode.INVALID_FRAME)
+    return parsed
 
 
 def _settled_result_matches_binding[ResultT: BaseModel](
@@ -570,14 +585,9 @@ class OperationController:
             if reply.document.get("outcome") == "refused":
                 return OperationReviewProjectionRefusalV1.model_validate_json(raw), content_hash_hex(reply.document)
             model = RuntimeReviewDocument if projection_type is BaseModel else projection_type
-            success_type = OperationReviewProjectionSuccessV1.__class_getitem__(model)
-            if not (isinstance(success_type, type) and issubclass(success_type, BaseModel)):
-                raise RefusalError(RefusalCode.INVALID_FRAME)
-            resolved = success_type.model_validate_json(raw)
+            resolved = _parse_review_success(raw, model)
         except ValidationError:
             raise RefusalError(RefusalCode.INVALID_FRAME) from None
-        if not isinstance(resolved, OperationReviewProjectionSuccessV1):
-            raise RefusalError(RefusalCode.INVALID_FRAME)
         if (
             resolved.projection_schema != reference.review_projection_schema
             or resolved.definition_contract_digest != reference.definition_contract_digest
