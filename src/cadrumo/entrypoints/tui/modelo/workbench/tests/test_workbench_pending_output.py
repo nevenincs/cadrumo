@@ -47,7 +47,7 @@ async def test_verified_saved_values_cannot_bypass_pending_intent_at_either_outp
             await settle(pilot)
             assert screen._load is not None
             saved_progress = screen._progress(screen._load)
-            assert not saved_progress.filing_withheld and screen._load.verified
+            assert saved_progress.blocking == 0 and saved_progress.assumed == 0 and screen._load.verified
             _stage(screen, intent)
             staged = screen.staged_changes
             await pilot.press("e")

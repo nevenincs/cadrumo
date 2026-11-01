@@ -133,7 +133,6 @@ def test_an_attested_empty_detail_sends_the_filer_to_the_check_and_then_no_longe
         "only the check can say whether the empty detail stands"
     )
     assert next_line == "Check the declaration"
-    assert progress_before.filing_withheld, "filing stays withheld until the check has spoken"
     assert actions.requested == ["verify"], "F8 runs the check"
 
     assert _ATTESTED in {finding.message_locale_key for finding in report.findings}
@@ -155,9 +154,7 @@ def test_an_unattested_empty_detail_stays_blocked_by_the_checks_own_finding(tmp_
         progress_after = _progress(after)
 
     assert progress_before.next_action is ModeloFormNextAction.VERIFY
-    assert progress_before.filing_withheld
     assert not report.granted_verificado_completo
     assert _REASON not in {note.reason for note in after.form.calculation_notes}
     assert _blocking_on_the_cause(after.form) == [_UNPROVEN], "the check refused, and its finding is what blocks"
     assert progress_after.next_action is ModeloFormNextAction.RESOLVE
-    assert progress_after.filing_withheld

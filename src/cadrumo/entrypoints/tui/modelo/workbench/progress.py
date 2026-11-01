@@ -134,11 +134,6 @@ class WorkbenchProgress:
     #: so the findings list, not the next box, leads to them.
     findings_lead: bool = False
 
-    @property
-    def filing_withheld(self) -> bool:
-        """Whether an assumed value or something that blocks filing withholds the file and the recording."""
-        return self.assumed > 0 or self.blocking > 0
-
 
 def workbench_progress(form: ModeloWorkForm, *, staged: int, verified: bool, filed: bool) -> WorkbenchProgress:
     """Place a declaration on the filing journey from its form and lifecycle facts.

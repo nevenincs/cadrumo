@@ -156,11 +156,11 @@ def test_recording_comes_after_the_file_and_is_withheld_as_the_file_is() -> None
     blocking = workbench_progress(_with_current_file(_cause("one-blocking")), staged=0, verified=True, filed=False)
     filed = workbench_progress(_cause("one-blocking"), staged=0, verified=True, filed=True)
 
-    assert file_first.next_action is ModeloFormNextAction.EXPORT and not file_first.filing_withheld
-    assert record_next.next_action is ModeloFormNextAction.RECORD_AFTER_FILE and not record_next.filing_withheld
-    assert assumed.filing_withheld and assumed.assumed == 1 and assumed.next_action is ModeloFormNextAction.CONFIRM
-    assert blocking.filing_withheld and blocking.blocking == 1 and blocking.next_action is ModeloFormNextAction.RESOLVE
-    assert not filed.filing_withheld
+    assert file_first.next_action is ModeloFormNextAction.EXPORT
+    assert record_next.next_action is ModeloFormNextAction.RECORD_AFTER_FILE
+    assert assumed.assumed == 1 and assumed.next_action is ModeloFormNextAction.CONFIRM
+    assert blocking.blocking == 1 and blocking.next_action is ModeloFormNextAction.RESOLVE
+    assert filed.next_action is not ModeloFormNextAction.RESOLVE
 
 
 def _blocked() -> ModeloWorkForm:

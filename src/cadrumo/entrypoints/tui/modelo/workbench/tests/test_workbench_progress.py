@@ -172,7 +172,6 @@ def test_a_note_only_the_check_decides_sends_the_unchecked_declaration_to_the_ch
 
     assert progress.next_action is ModeloFormNextAction.VERIFY
     assert line == "Check the declaration"
-    assert progress.filing_withheld, "it still withholds filing until the check has spoken"
     assert _statuses(progress)[WorkbenchStep.REVIEW] is StepStatus.CURRENT
 
 
