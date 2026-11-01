@@ -817,6 +817,140 @@ def test_work_calculate_modelo_180_refuses_a_perceptor_row_field_before_parsing_
     assert "aeat" not in envelope["error"]["message"]
 
 
+def _seed_ledger_and_zero_wallet_decision(bucket_id, sale, purchase):
+    from cadrumo.adapters.persistence.profile.calculation_observations import IvaWalletDecisionRepository
+    from cadrumo.domain.iva_compensation.reconciliation import (
+        IvaCompensationAuthoritySource,
+        IvaCompensationReconciliationDecision,
+    )
+
+    TransactionCatalogueRepository(bucket_id=bucket_id).save(
+        TransactionCatalogue.from_transactions((sale, purchase)),
+    )
+    decision = IvaCompensationReconciliationDecision(
+        taxpayer_nif="12345678Z",
+        target_year=2025,
+        target_period=Period.from_year_and_code(2025, "1T"),
+        target_registry_snapshot_ref=published_snapshot("303", filing_year=2025, period="1T").snapshot_ref,
+        source_registry_snapshot_refs=(published_snapshot("303", filing_year=2025, period="1T").snapshot_ref,),
+        selected_authority="local_recurrence",
+        selected_amount=Decimal("0"),
+        wallet_amount=None,
+        local_recurrence_amount=Decimal("0"),
+        authority_sources=(
+            IvaCompensationAuthoritySource(
+                source_kind="local_recurrence",
+                amount=Decimal("0"),
+                source_locator="test:local-recurrence:2025:1T",
+                source_modelo="303",
+                source_filing_year=2025,
+                source_periods=(Period.from_year_and_code(2025, "1T"),),
+                registry_snapshot_refs=(published_snapshot("303", filing_year=2025, period="1T").snapshot_ref,),
+            ),
+        ),
+        override_amount=None,
+        divergence="wallet_missing",
+        blocked=False,
+        stale_wallet=False,
+        reason_identity="first_period_zero_aeat_wallet",
+        decided_at=_IVA_WALLET_DECIDED_AT,
+    )
+    IvaWalletDecisionRepository().save_decision(decision)
+
+
+def _assert_calculated_source_mesh(payload, persisted, sale, purchase):
+    payload_provenance = payload["source_provenance"]
+    assert payload_provenance, "calculate JSON must carry the persisted source-mesh trace"
+    assert {row["source_ref"] for row in payload_provenance} == {
+        source.source_ref for source in persisted.source_provenance
+    }
+    assert persisted.source_transaction_ids == tuple(sorted((sale.transaction_id, purchase.transaction_id)))
+    assert Decimal(persisted.binding_overrides["modelo-303-iva-repercutido-general-cuota"]) == sale.iva_amount
+    assert Decimal(persisted.binding_overrides["modelo-303-iva-soportado-interiores-cuota"]) == purchase.iva_amount
+    observations = {observation.casilla_id: observation for observation in persisted.observations}
+    output_observation = observations["iva.repercutido.general"]
+    input_observation = observations["iva.soportado.interiores"]
+    assert output_observation.formula_id is None
+    assert input_observation.formula_id is None
+    assert output_observation.legal_refs
+    assert input_observation.legal_refs
+    assert output_observation.source_refs
+    assert input_observation.source_refs
+    payload_observations = {observation["casilla_id"]: observation for observation in payload["observations"]}
+    assert payload_observations["iva.repercutido.general"]["source_refs"] == list(output_observation.source_refs)
+    assert payload_observations["iva.soportado.interiores"]["source_refs"] == list(input_observation.source_refs)
+    return output_observation, input_observation
+
+
+def _assert_observations_command_payload(
+    observations_result, revision_id, work_unit, payload, output_observation, input_observation
+):
+    assert observations_result.exit_code == 0, observations_result.output
+    observations_payload = _payload(observations_result.output)
+    assert observations_payload["operation"] == "modelo.work.observations"
+    assert observations_payload["calculation_revision_id"] == revision_id
+    assert observations_payload["work_unit_id"] == work_unit["work_unit_id"]
+    assert observations_payload["observation_count"] == len(payload["observations"])
+    command_observations = {
+        observation["casilla_id"]: observation for observation in observations_payload["observations"]
+    }
+    assert command_observations["iva.repercutido.general"]["legal_refs"] == list(output_observation.legal_refs)
+    assert command_observations["iva.repercutido.general"]["source_refs"] == list(output_observation.source_refs)
+    assert command_observations["iva.soportado.interiores"]["legal_refs"] == list(input_observation.legal_refs)
+    assert command_observations["iva.soportado.interiores"]["source_refs"] == list(input_observation.source_refs)
+
+
+def _assert_observations_text_output(text_observations, revision_id, output_observation):
+    assert text_observations.exit_code == 0, text_observations.output
+    assert "operation\tmodelo.work.observations" in text_observations.output
+    assert f"calculation_revision_id\t{revision_id}" in text_observations.output
+    assert "iva.repercutido.general" in text_observations.output
+    assert output_observation.legal_refs[0] in text_observations.output
+    assert output_observation.source_refs[0] in text_observations.output
+
+
+def _assert_wizard_emits_source_mesh_provenance(capsys, native_profile, operation, work_unit, persisted):
+    # The wizard's success emitter receives the same persisted calculation
+    # result as calculate. Exercise its real JSON envelope with this
+    # source-mesh-backed revision, rather than a hand-built payload, so a
+    # future mapper exclusion cannot make its provenance disappear.
+    import typer
+    import typer.main
+
+    from cadrumo.application.modelo.calculate_input import ModeloWorkCalculationServiceResult
+    from cadrumo.application.modelo.calculation_operation import calculation_public_result
+    from cadrumo.entrypoints.cli._modelo_work_wizard_cli import _emit_wizard_result
+
+    from .modelo_work_scenarios import load_work_unit_by_id
+
+    wizard_app = typer.Typer()
+
+    @wizard_app.command()
+    def _noop() -> None: ...
+
+    wizard_context = typer.Context(typer.main.get_command(wizard_app), obj={"format": "json"})
+    authenticate_profile_for_invocation(
+        name=_PROFILE_LABEL,
+        passphrase_callback=lambda: native_profile.passphrase,
+        profile_decode_context=operation.profile_decode_context(),
+    )
+    wizard_work_unit = load_work_unit_by_id(work_unit_id=work_unit["work_unit_id"])
+    _emit_wizard_result(
+        wizard_context,
+        calculation_public_result(
+            ModeloWorkCalculationServiceResult(revision=persisted, work_unit=wizard_work_unit, revision_published=True),
+            operation=operation,
+        ),
+        (),
+        language=OutputLanguage.EN,
+    )
+    wizard_payload = _payload(capsys.readouterr().out)
+    assert wizard_payload["source_provenance"], "wizard JSON must carry the persisted source-mesh trace"
+    assert {row["source_ref"] for row in wizard_payload["source_provenance"]} == {
+        source.source_ref for source in persisted.source_provenance
+    }
+
+
 def test_work_calculate_persists_ledger_source_mesh_observations(
     capsys: pytest.CaptureFixture[str],
     operation: PinnedAuthorityOperation,
@@ -857,45 +991,7 @@ def test_work_calculate_persists_ledger_source_mesh_observations(
             passphrase_callback=lambda: native_profile.passphrase,
             profile_decode_context=operation.profile_decode_context(),
         ).bucket_id
-        from cadrumo.adapters.persistence.profile.calculation_observations import IvaWalletDecisionRepository
-        from cadrumo.domain.iva_compensation.reconciliation import (
-            IvaCompensationAuthoritySource,
-            IvaCompensationReconciliationDecision,
-        )
-
-        TransactionCatalogueRepository(bucket_id=bucket_id).save(
-            TransactionCatalogue.from_transactions((sale, purchase)),
-        )
-        decision = IvaCompensationReconciliationDecision(
-            taxpayer_nif="12345678Z",
-            target_year=2025,
-            target_period=Period.from_year_and_code(2025, "1T"),
-            target_registry_snapshot_ref=published_snapshot("303", filing_year=2025, period="1T").snapshot_ref,
-            source_registry_snapshot_refs=(published_snapshot("303", filing_year=2025, period="1T").snapshot_ref,),
-            selected_authority="local_recurrence",
-            selected_amount=Decimal("0"),
-            wallet_amount=None,
-            local_recurrence_amount=Decimal("0"),
-            authority_sources=(
-                IvaCompensationAuthoritySource(
-                    source_kind="local_recurrence",
-                    amount=Decimal("0"),
-                    source_locator="test:local-recurrence:2025:1T",
-                    source_modelo="303",
-                    source_filing_year=2025,
-                    source_periods=(Period.from_year_and_code(2025, "1T"),),
-                    registry_snapshot_refs=(published_snapshot("303", filing_year=2025, period="1T").snapshot_ref,),
-                ),
-            ),
-            override_amount=None,
-            divergence="wallet_missing",
-            blocked=False,
-            stale_wallet=False,
-            reason_identity="first_period_zero_aeat_wallet",
-            decided_at=_IVA_WALLET_DECIDED_AT,
-        )
-        IvaWalletDecisionRepository().save_decision(decision)
-
+        _seed_ledger_and_zero_wallet_decision(bucket_id, sale, purchase)
         result = _cli(
             native_profile,
             "--format",
@@ -918,27 +1014,7 @@ def test_work_calculate_persists_ledger_source_mesh_observations(
         )
         persisted = CalculationRevisionCatalogueRepository().load().revisions[revision_id]
 
-        payload_provenance = payload["source_provenance"]
-        assert payload_provenance, "calculate JSON must carry the persisted source-mesh trace"
-        assert {row["source_ref"] for row in payload_provenance} == {
-            source.source_ref for source in persisted.source_provenance
-        }
-        assert persisted.source_transaction_ids == tuple(sorted((sale.transaction_id, purchase.transaction_id)))
-        assert Decimal(persisted.binding_overrides["modelo-303-iva-repercutido-general-cuota"]) == sale.iva_amount
-        assert Decimal(persisted.binding_overrides["modelo-303-iva-soportado-interiores-cuota"]) == purchase.iva_amount
-        observations = {observation.casilla_id: observation for observation in persisted.observations}
-        output_observation = observations["iva.repercutido.general"]
-        input_observation = observations["iva.soportado.interiores"]
-        assert output_observation.formula_id is None
-        assert input_observation.formula_id is None
-        assert output_observation.legal_refs
-        assert input_observation.legal_refs
-        assert output_observation.source_refs
-        assert input_observation.source_refs
-        payload_observations = {observation["casilla_id"]: observation for observation in payload["observations"]}
-        assert payload_observations["iva.repercutido.general"]["source_refs"] == list(output_observation.source_refs)
-        assert payload_observations["iva.soportado.interiores"]["source_refs"] == list(input_observation.source_refs)
-
+        output_observation, input_observation = _assert_calculated_source_mesh(payload, persisted, sale, purchase)
         observations_result = _cli(
             native_profile,
             "--format",
@@ -949,20 +1025,9 @@ def test_work_calculate_persists_ledger_source_mesh_observations(
             "observations",
             revision_id,
         )
-        assert observations_result.exit_code == 0, observations_result.output
-        observations_payload = _payload(observations_result.output)
-        assert observations_payload["operation"] == "modelo.work.observations"
-        assert observations_payload["calculation_revision_id"] == revision_id
-        assert observations_payload["work_unit_id"] == work_unit["work_unit_id"]
-        assert observations_payload["observation_count"] == len(payload["observations"])
-        command_observations = {
-            observation["casilla_id"]: observation for observation in observations_payload["observations"]
-        }
-        assert command_observations["iva.repercutido.general"]["legal_refs"] == list(output_observation.legal_refs)
-        assert command_observations["iva.repercutido.general"]["source_refs"] == list(output_observation.source_refs)
-        assert command_observations["iva.soportado.interiores"]["legal_refs"] == list(input_observation.legal_refs)
-        assert command_observations["iva.soportado.interiores"]["source_refs"] == list(input_observation.source_refs)
-
+        _assert_observations_command_payload(
+            observations_result, revision_id, work_unit, payload, output_observation, input_observation
+        )
         text_observations = _cli(
             native_profile,
             "app",
@@ -971,54 +1036,8 @@ def test_work_calculate_persists_ledger_source_mesh_observations(
             "observations",
             revision_id,
         )
-        assert text_observations.exit_code == 0, text_observations.output
-        assert "operation\tmodelo.work.observations" in text_observations.output
-        assert f"calculation_revision_id\t{revision_id}" in text_observations.output
-        assert "iva.repercutido.general" in text_observations.output
-        assert output_observation.legal_refs[0] in text_observations.output
-        assert output_observation.source_refs[0] in text_observations.output
-
-        # The wizard's success emitter receives the same persisted calculation
-        # result as calculate. Exercise its real JSON envelope with this
-        # source-mesh-backed revision, rather than a hand-built payload, so a
-        # future mapper exclusion cannot make its provenance disappear.
-        import typer
-        import typer.main
-
-        from cadrumo.application.modelo.calculate_input import ModeloWorkCalculationServiceResult
-        from cadrumo.application.modelo.calculation_operation import calculation_public_result
-        from cadrumo.entrypoints.cli._modelo_work_wizard_cli import _emit_wizard_result
-
-        from .modelo_work_scenarios import load_work_unit_by_id
-
-        wizard_app = typer.Typer()
-
-        @wizard_app.command()
-        def _noop() -> None: ...
-
-        wizard_context = typer.Context(typer.main.get_command(wizard_app), obj={"format": "json"})
-        authenticate_profile_for_invocation(
-            name=_PROFILE_LABEL,
-            passphrase_callback=lambda: native_profile.passphrase,
-            profile_decode_context=operation.profile_decode_context(),
-        )
-        wizard_work_unit = load_work_unit_by_id(work_unit_id=work_unit["work_unit_id"])
-        _emit_wizard_result(
-            wizard_context,
-            calculation_public_result(
-                ModeloWorkCalculationServiceResult(
-                    revision=persisted, work_unit=wizard_work_unit, revision_published=True
-                ),
-                operation=operation,
-            ),
-            (),
-            language=OutputLanguage.EN,
-        )
-        wizard_payload = _payload(capsys.readouterr().out)
-        assert wizard_payload["source_provenance"], "wizard JSON must carry the persisted source-mesh trace"
-        assert {row["source_ref"] for row in wizard_payload["source_provenance"]} == {
-            source.source_ref for source in persisted.source_provenance
-        }
+        _assert_observations_text_output(text_observations, revision_id, output_observation)
+        _assert_wizard_emits_source_mesh_provenance(capsys, native_profile, operation, work_unit, persisted)
 
 
 def _seed_zero_iva_wallet_decision() -> None:
