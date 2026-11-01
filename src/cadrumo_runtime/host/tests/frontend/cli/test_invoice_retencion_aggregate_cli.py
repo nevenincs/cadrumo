@@ -64,6 +64,7 @@ from cadrumo.domain.user_profile.tests.general_regime_facts import GENERAL_REGIM
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo.entrypoints.adapter_composition_ports import build_retencion_observation_ports
 from cadrumo.entrypoints.adapter_composition_work_ports import build_calculation_action_ports
+from cadrumo.tests.withholding_zero_blocks import zeroed_withholding_blocks
 
 from .native_api_cli_support import native_api_cli_session, operation_lifecycle_scope
 from .test_runtime_invoice_add import password_profile_session
@@ -142,16 +143,7 @@ def _withholding_evidence_payload(
         clave=RetencionClave.from_registry("G"),
         percibido_dinerario=Decimal("1000.00"),
         retencion_practicada=Decimal("150.00"),
-        incapacity_cash_perception=Decimal("0"),
-        incapacity_cash_withholding=Decimal("0"),
-        incapacity_kind_value=Decimal("0"),
-        incapacity_kind_ingreso_a_cuenta=Decimal("0"),
-        incapacity_kind_repercutido=Decimal("0"),
-        foral_retention_estatal=Decimal("0"),
-        foral_retention_navarra=Decimal("0"),
-        foral_retention_araba=Decimal("0"),
-        foral_retention_gipuzkoa=Decimal("0"),
-        foral_retention_bizkaia=Decimal("0"),
+        **zeroed_withholding_blocks(),
         base_retenciones=Decimal("1000.00"),
         porcentaje_retencion=Decimal("15"),
     )

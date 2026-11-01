@@ -39,6 +39,7 @@ from cadrumo.entrypoints.adapter_composition_ports import (
     build_retencion_observation_ports,
     build_withholding_observation_service,
 )
+from cadrumo.tests.withholding_zero_blocks import zeroed_withholding_blocks
 
 from ...domain.iva.schema import InvoiceKind
 
@@ -116,16 +117,7 @@ def seed_invoice_withholding_conformance_case(
             clave=RetencionClave.from_registry("G"),
             percibido_dinerario=subtotal,
             retencion_practicada=Decimal("95.00"),
-            incapacity_cash_perception=Decimal("0"),
-            incapacity_cash_withholding=Decimal("0"),
-            incapacity_kind_value=Decimal("0"),
-            incapacity_kind_ingreso_a_cuenta=Decimal("0"),
-            incapacity_kind_repercutido=Decimal("0"),
-            foral_retention_estatal=Decimal("0"),
-            foral_retention_navarra=Decimal("0"),
-            foral_retention_araba=Decimal("0"),
-            foral_retention_gipuzkoa=Decimal("0"),
-            foral_retention_bizkaia=Decimal("0"),
+            **zeroed_withholding_blocks(),
             base_retenciones=subtotal,
             porcentaje_retencion=Decimal("19"),
         )

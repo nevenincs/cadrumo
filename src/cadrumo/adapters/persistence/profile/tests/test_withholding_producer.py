@@ -61,6 +61,7 @@ from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.tests.authored_editions import newest_authored_edition
 from cadrumo.domain.calculations.registry.withholding_bindings import WithholdingObservation
+from cadrumo.tests.withholding_zero_blocks import zeroed_withholding_blocks
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 _PROFESSIONAL_SCHEME = RetencionScheme("actividades_profesionales")
@@ -211,16 +212,7 @@ def _annual_detail(
         subclave=subclave,
         percibido_dinerario=Decimal(taxable_base),
         retencion_practicada=Decimal(retencion_amount),
-        incapacity_cash_perception=Decimal("0"),
-        incapacity_cash_withholding=Decimal("0"),
-        incapacity_kind_value=Decimal("0"),
-        incapacity_kind_ingreso_a_cuenta=Decimal("0"),
-        incapacity_kind_repercutido=Decimal("0"),
-        foral_retention_estatal=Decimal("0"),
-        foral_retention_navarra=Decimal("0"),
-        foral_retention_araba=Decimal("0"),
-        foral_retention_gipuzkoa=Decimal("0"),
-        foral_retention_bizkaia=Decimal("0"),
+        **zeroed_withholding_blocks(),
         base_retenciones=Decimal(taxable_base),
         porcentaje_retencion=Decimal("19"),
     )
@@ -239,16 +231,7 @@ def _capital_pending_payment_detail(*, transaction_date: date) -> Modelo193Pendi
             clave=RetencionClave.from_registry("B"),
             percibido_dinerario=Decimal("500.00"),
             retencion_practicada=Decimal("95.00"),
-            incapacity_cash_perception=Decimal("0"),
-            incapacity_cash_withholding=Decimal("0"),
-            incapacity_kind_value=Decimal("0"),
-            incapacity_kind_ingreso_a_cuenta=Decimal("0"),
-            incapacity_kind_repercutido=Decimal("0"),
-            foral_retention_estatal=Decimal("0"),
-            foral_retention_navarra=Decimal("0"),
-            foral_retention_araba=Decimal("0"),
-            foral_retention_gipuzkoa=Decimal("0"),
-            foral_retention_bizkaia=Decimal("0"),
+            **zeroed_withholding_blocks(),
             base_retenciones=Decimal("500.00"),
             porcentaje_retencion=Decimal("19"),
             clave_codigo=4,

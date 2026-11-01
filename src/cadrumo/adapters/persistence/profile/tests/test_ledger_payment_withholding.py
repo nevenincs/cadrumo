@@ -42,6 +42,7 @@ from cadrumo.domain.calculations.registry.tests.published_authority import publi
 from cadrumo.domain.calculations.registry.withholding_bindings import WithholdingObservation
 from cadrumo.domain.transactions.enums import TransactionDirection, TransactionLifecycleState
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
+from cadrumo.tests.withholding_zero_blocks import zeroed_withholding_blocks
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
@@ -100,16 +101,7 @@ def _annual_detail(transaction: Transaction, *, paid_on: date = _PAID_ON) -> Wit
         clave=RetencionClave.from_registry("A"),
         percibido_dinerario=_GROSS,
         retencion_practicada=_IRPF,
-        incapacity_cash_perception=Decimal("0"),
-        incapacity_cash_withholding=Decimal("0"),
-        incapacity_kind_value=Decimal("0"),
-        incapacity_kind_ingreso_a_cuenta=Decimal("0"),
-        incapacity_kind_repercutido=Decimal("0"),
-        foral_retention_estatal=Decimal("0"),
-        foral_retention_navarra=Decimal("0"),
-        foral_retention_araba=Decimal("0"),
-        foral_retention_gipuzkoa=Decimal("0"),
-        foral_retention_bizkaia=Decimal("0"),
+        **zeroed_withholding_blocks(),
         base_retenciones=_GROSS,
         porcentaje_retencion=Decimal("15"),
         gastos_deducibles=_EMPLOYEE_SOCIAL_SECURITY,

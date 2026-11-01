@@ -54,6 +54,7 @@ from cadrumo.domain.invoices.enums import IvaRate, PaymentStatus, iva_rate_perce
 from cadrumo.domain.invoices.models import Invoice, InvoiceLine
 from cadrumo.domain.iva.schema import IvaCategory
 from cadrumo.domain.user_profile.values import UserProfileFact
+from cadrumo.tests.withholding_zero_blocks import zeroed_withholding_blocks
 
 from .....domain.iva.schema import InvoiceKind
 
@@ -131,16 +132,7 @@ def _professional_request(invoice: Invoice) -> InvoiceWithholdingEvidenceRequest
             clave=RetencionClave.from_registry("G"),
             percibido_dinerario=Decimal("500.00"),
             retencion_practicada=Decimal("95.00"),
-            incapacity_cash_perception=Decimal("0"),
-            incapacity_cash_withholding=Decimal("0"),
-            incapacity_kind_value=Decimal("0"),
-            incapacity_kind_ingreso_a_cuenta=Decimal("0"),
-            incapacity_kind_repercutido=Decimal("0"),
-            foral_retention_estatal=Decimal("0"),
-            foral_retention_navarra=Decimal("0"),
-            foral_retention_araba=Decimal("0"),
-            foral_retention_gipuzkoa=Decimal("0"),
-            foral_retention_bizkaia=Decimal("0"),
+            **zeroed_withholding_blocks(),
             base_retenciones=Decimal("500.00"),
             porcentaje_retencion=Decimal("19"),
         ),

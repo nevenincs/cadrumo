@@ -68,6 +68,7 @@ from cadrumo.entrypoints.tests.profile_persistence.verification_repository_suppo
     build_test_certificate_secret_backend_factory,
     build_test_verification_repository_bundle,
 )
+from cadrumo.tests.withholding_zero_blocks import zeroed_withholding_blocks
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.calculation_observations import CalculationObservationRepository
@@ -573,16 +574,7 @@ def _seed_m190_withholding_detail(
                 subclave=subclave,
                 percibido_dinerario=Decimal("1000.00"),
                 retencion_practicada=Decimal("150.00"),
-                incapacity_cash_perception=Decimal("0"),
-                incapacity_cash_withholding=Decimal("0"),
-                incapacity_kind_value=Decimal("0"),
-                incapacity_kind_ingreso_a_cuenta=Decimal("0"),
-                incapacity_kind_repercutido=Decimal("0"),
-                foral_retention_estatal=Decimal("0"),
-                foral_retention_navarra=Decimal("0"),
-                foral_retention_araba=Decimal("0"),
-                foral_retention_gipuzkoa=Decimal("0"),
-                foral_retention_bizkaia=Decimal("0"),
+                **zeroed_withholding_blocks(),
                 base_retenciones=Decimal("0"),
             )
         ],

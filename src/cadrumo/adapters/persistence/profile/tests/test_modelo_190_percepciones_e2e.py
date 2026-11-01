@@ -16,6 +16,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.tests.withholding_zero_blocks import zeroed_withholding_blocks
+
 from .....application.aggregation.percepciones_observations_repository import PercepcionObservationPorts
 from .....application.aggregation.retencion_observations_repository import RetencionObservationPorts
 from .....application.aggregation.source_mesh import CalculationSourceContext
@@ -46,16 +48,7 @@ def _obs(nif: str, clave: RetencionClave) -> WithholdingObservation:
         clave=clave,
         percibido_dinerario=Decimal("1000"),
         retencion_practicada=Decimal("190"),
-        incapacity_cash_perception=Decimal("0"),
-        incapacity_cash_withholding=Decimal("0"),
-        incapacity_kind_value=Decimal("0"),
-        incapacity_kind_ingreso_a_cuenta=Decimal("0"),
-        incapacity_kind_repercutido=Decimal("0"),
-        foral_retention_estatal=Decimal("0"),
-        foral_retention_navarra=Decimal("0"),
-        foral_retention_araba=Decimal("0"),
-        foral_retention_gipuzkoa=Decimal("0"),
-        foral_retention_bizkaia=Decimal("0"),
+        **zeroed_withholding_blocks(),
         base_retenciones=Decimal("0"),
     )
 
