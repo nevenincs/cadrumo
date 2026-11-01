@@ -28,10 +28,7 @@ from ....application.operations.persistence.journal import (
     OperationRecoveryInventoryEntry,
     OperationRecoveryInventoryPage,
 )
-from ....application.operations.persistence.leases import (
-    OperationOwnerLease,
-    operation_conflict_scope_reference,
-)
+from ....application.operations.persistence.leases import OperationOwnerLease
 from ....application.operations.persistence.replay import (
     OperationReplayLimit,
     OperationReplayPage,
@@ -47,7 +44,7 @@ from ....core.storage_taxonomy import StorageCategory
 from ....core.storage_taxonomy_locations import storage_location
 from ..storage.errors import RepositoryError
 from ..storage.master_key.login_handover_journal import handover_journal_path
-from ._journal_validation import OperationJournalRecord, validate_advance
+from ._journal_validation import OperationJournalRecord, validate_advance, validate_lease
 from .financial_journal_purge import FinancialEditJournalPurgeRefusedError, purge_legacy_financial_edit_journal
 from .lease import OperationLeaseStorage
 
@@ -297,7 +294,7 @@ class _SnapshotJournalRepository(JournalRepositoryBase[OperationJournalRecord]):
 
     def create(self, snapshot: OperationPersistedSnapshot, *, lease: OperationOwnerLease) -> str:
         """Create the initial snapshot and its retry claim in one journal write."""
-        self._validate_lease(snapshot, lease)
+        validate_lease(snapshot, lease)
         self._ensure_root()
         path = self.path_for(snapshot.operation_id)
         with exclusive_file_lock(self.lock_target):
@@ -327,7 +324,7 @@ class _SnapshotJournalRepository(JournalRepositoryBase[OperationJournalRecord]):
         """Atomically advance an existing snapshot to one non-terminal successor."""
         if snapshot.lifecycle is OperationLifecycle.TERMINAL:
             raise RepositoryError("a terminal operation snapshot is committed only with its lease release")
-        self._validate_lease(snapshot, lease)
+        validate_lease(snapshot, lease)
         self._ensure_root()
         with exclusive_file_lock(self.lock_target):
             self._advance_unlocked(snapshot, expected_revision=expected_revision, lease=lease)
@@ -348,7 +345,7 @@ class _SnapshotJournalRepository(JournalRepositoryBase[OperationJournalRecord]):
         """
         if snapshot.lifecycle is not OperationLifecycle.TERMINAL:
             raise RepositoryError("operation settlement commit requires a terminal snapshot")
-        self._validate_lease(snapshot, lease)
+        validate_lease(snapshot, lease)
         self._ensure_root()
         with exclusive_file_lock(self.lock_target):
             self._advance_unlocked(snapshot, expected_revision=expected_revision, lease=lease)
@@ -380,17 +377,6 @@ class _SnapshotJournalRepository(JournalRepositoryBase[OperationJournalRecord]):
         self._validate_advance(current.snapshot, snapshot, expected_revision)
         record = OperationJournalRecord(snapshot=snapshot, history=(*current.history, *snapshot.events))
         self._write(path, record)
-
-    @staticmethod
-    def _validate_lease(snapshot: OperationPersistedSnapshot, lease: OperationOwnerLease) -> None:
-        if lease.operation_id != snapshot.operation_id:
-            raise RepositoryError("operation lease does not match the persisted snapshot identity")
-        expected_scope_ref = operation_conflict_scope_reference(
-            definition_id=snapshot.identity.definition_id,
-            subject_ref=snapshot.identity.subject_ref,
-        )
-        if lease.scope_ref != expected_scope_ref:
-            raise RepositoryError("operation lease does not match the persisted snapshot conflict scope")
 
     @staticmethod
     def _validate_create(snapshot: OperationPersistedSnapshot, expected_revision: OperationRevision) -> None:
