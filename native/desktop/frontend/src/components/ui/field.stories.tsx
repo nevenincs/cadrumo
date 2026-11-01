@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
+import { expect } from "storybook/test";
 import { Specimen } from "@/dev/catalogue/Frame";
 import { Field, FieldDescription, FieldError, FieldLabel } from "./field";
 import { Input } from "./input";
@@ -62,6 +63,30 @@ export const TextInput: Story = {
       </Specimen>
     </div>
   ),
+};
+
+export const LongPlaceholder: Story = {
+  render: () => (
+    <div className="max-w-80">
+      <Specimen
+        title="Narrower than its placeholder"
+        note="The placeholder is cut with an ellipsis, never mid-letter."
+        className="grid"
+      >
+        <div className="w-40">
+          <Input
+            controlSize="sm"
+            aria-label="Find"
+            placeholder="A placeholder much longer than the field it sits in"
+          />
+        </div>
+      </Specimen>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const field = canvasElement.querySelector("input")!;
+    await expect(getComputedStyle(field).textOverflow).toBe("ellipsis");
+  },
 };
 
 export const PasswordField: Story = {
