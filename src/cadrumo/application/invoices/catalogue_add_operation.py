@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from datetime import date
-from decimal import Decimal
+from decimal import Decimal, DecimalException
 from typing import Literal
 
 from pydantic import BaseModel, ValidationError
@@ -13,7 +13,7 @@ from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
-from ...core.errors.hierarchy import InternalInvariantError
+from ...core.errors.hierarchy import CoreValidationError, InternalInvariantError
 from ...core.operations import OperationEffect
 from ...core.time.clock import now
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -120,6 +120,10 @@ class InvoiceAddExecutor:
                 authority_operation,
             ):
                 raise
+            async with context.cancellation.irreversible_section():
+                return await _record_invoice_add_refusal(context, payload, "invalid_invoice")
+        except (CoreValidationError, DecimalException):
+            # After the registry clause: RegistryValidationError is a CoreValidationError too.
             async with context.cancellation.irreversible_section():
                 return await _record_invoice_add_refusal(context, payload, "invalid_invoice")
         return await await_cancellation_complete(

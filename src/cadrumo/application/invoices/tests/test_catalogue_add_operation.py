@@ -552,6 +552,42 @@ def test_invalid_invoice_is_a_typed_refusal_with_no_effect_or_write(monkeypatch)
     assert project_invoice_add_result(context.operands.value, receipt) == result
 
 
+@pytest.mark.parametrize(
+    "overrides",
+    (
+        pytest.param({"currency": "E1"}, id="malformed-currency"),
+        pytest.param(
+            {
+                "taxable_base": None,
+                "iva_rate": None,
+                "lines": (
+                    InvoiceAddLine(
+                        description="Service",
+                        quantity=PublicDecimal(decimal="1E+30"),
+                        unit_price=PublicDecimal(decimal="100.00"),
+                        subtotal=PublicDecimal(decimal="100.00"),
+                        iva_rate="RATE_21",
+                        iva_amount=PublicDecimal(decimal="21.00"),
+                    ),
+                ),
+            },
+            id="magnitude-beyond-decimal-arithmetic",
+        ),
+    ),
+)
+def test_a_value_the_domain_cannot_carry_is_the_same_typed_refusal_as_any_invalid_invoice(
+    overrides: dict[str, object], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    context, ports = _execute_add(_request(**overrides), monkeypatch)
+
+    assert context.events.effects == []
+    assert context.operands.value is not None
+    result = context.operands.value.result
+    assert result.outcome == "validation_error"
+    assert result.validation_code == "invalid_invoice"
+    assert len(ports.invoice_repository.load()) == 0
+
+
 def _execute_add(
     payload: InvoiceAddRequest, monkeypatch: pytest.MonkeyPatch
 ) -> tuple[_Context, CatalogueCreationPorts]:
