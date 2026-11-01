@@ -558,6 +558,25 @@ def test_later_pages_reuse_one_invocation_only_for_the_same_reader_and_recheck_a
     _exercise(tmp_path, scenario)
 
 
+def test_delivering_a_settled_result_discards_the_response_bearer_reserved_at_submission(tmp_path: Path) -> None:
+    """An operation that settled without a review does not hold its bearer until shutdown."""
+
+    async def scenario(worker: _Worker) -> None:
+        operation_id = await worker.run(worker.person, _CLI)
+        broker = worker.host.composed()._response_broker
+        actor = f"session:{worker.person.session_id}"
+
+        with pytest.raises(ValueError, match="already reserved"):
+            broker.reserve(operation_id, actor)
+
+        worker.host.release_delivered_result(operation_id)
+        worker.host.release_delivered_result(operation_id)
+
+        broker.reserve(operation_id, actor).close()
+
+    _exercise(tmp_path, scenario)
+
+
 def test_a_review_read_and_a_stopped_operations_detail_answer_alike_on_every_frontend(tmp_path: Path) -> None:
     """A review read and a refused operation's public detail follow the result's rule."""
 

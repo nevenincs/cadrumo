@@ -442,6 +442,9 @@ class ProfileWorkerOperationHost:
         services = self.services
         if services is not None:
             services.release_ephemeral_result(operation_id)
+            # A result is read only from a terminal settlement, which has no review left to answer; the
+            # bearer reserved at submission is dead weight unless an operation ended without being reviewed.
+            services.discard_review_actor(operation_id)
 
     def forget_settled_ephemeral(self) -> None:
         """Forget pending private projections: the worker outlives its last session, its reads do not."""
