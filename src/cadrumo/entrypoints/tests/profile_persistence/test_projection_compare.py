@@ -12,7 +12,7 @@ from pydantic import ValidationError
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
-from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from cadrumo.application.modelo.projection import (
     ModeloCompareDeltaRow,
     ModeloProjectionCasillaObservation,
@@ -83,6 +83,29 @@ def _seed_work_unit(
     )
 
 
+def _seed_consecutive_work_units(
+    profile: TestRuntimeProfile, operation: PinnedAuthorityOperation
+) -> tuple[CalculationRevisionCatalogueRepository, WorkUnit, WorkUnit]:
+    """Open the profile's calculation catalogue and seed its 2025 work unit and, a minute later, its 2026 one."""
+    work_repository = WorkUnitCatalogueRepository(objects=profile.repository)
+    calculation_repository = CalculationRevisionCatalogueRepository(objects=profile.repository)
+    work_2025 = _seed_work_unit(
+        work_repository,
+        bucket_id=profile.bucket_id,
+        filing_year=2025,
+        clock=_T0,
+        operation=operation,
+    )
+    work_2026 = _seed_work_unit(
+        work_repository,
+        bucket_id=profile.bucket_id,
+        filing_year=2026,
+        clock=_T0 + timedelta(minutes=1),
+        operation=operation,
+    )
+    return calculation_repository, work_2025, work_2026
+
+
 def _seed_revision(
     repository: CalculationRevisionCatalogueRepository,
     *,
@@ -151,22 +174,7 @@ def test_compare_uses_revision_observation_rowsfrom_registry_snapshot(
     """Comparison rows must not lose registry-grounded provenance."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         _seed_complete_profile(profile.bucket_id)
-        work_repository = WorkUnitCatalogueRepository(objects=profile.repository)
-        calculation_repository = CalculationRevisionCatalogueRepository(objects=profile.repository)
-        work_2025 = _seed_work_unit(
-            work_repository,
-            bucket_id=profile.bucket_id,
-            filing_year=2025,
-            clock=_T0,
-            operation=operation,
-        )
-        work_2026 = _seed_work_unit(
-            work_repository,
-            bucket_id=profile.bucket_id,
-            filing_year=2026,
-            clock=_T0 + timedelta(minutes=1),
-            operation=operation,
-        )
+        calculation_repository, work_2025, work_2026 = _seed_consecutive_work_units(profile, operation)
         revision_2025 = _seed_revision(
             calculation_repository,
             work_unit=work_2025,
@@ -227,22 +235,7 @@ def test_compare_reports_a_one_cent_delta_exactly_with_no_tolerance_absorption(
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         _seed_complete_profile(profile.bucket_id)
-        work_repository = WorkUnitCatalogueRepository(objects=profile.repository)
-        calculation_repository = CalculationRevisionCatalogueRepository(objects=profile.repository)
-        work_2025 = _seed_work_unit(
-            work_repository,
-            bucket_id=profile.bucket_id,
-            filing_year=2025,
-            clock=_T0,
-            operation=operation,
-        )
-        work_2026 = _seed_work_unit(
-            work_repository,
-            bucket_id=profile.bucket_id,
-            filing_year=2026,
-            clock=_T0 + timedelta(minutes=1),
-            operation=operation,
-        )
+        calculation_repository, work_2025, work_2026 = _seed_consecutive_work_units(profile, operation)
         _seed_revision(
             calculation_repository,
             work_unit=work_2025,
