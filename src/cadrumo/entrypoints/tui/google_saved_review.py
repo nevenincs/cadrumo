@@ -25,7 +25,6 @@ from ...application.export.google_review_operation_contracts import (
     GoogleReviewRequest,
     GoogleReviewResult,
 )
-from ...application.export.publication_receipt import ReadablePayloadCategory
 from ...application.operations.frontend_projection import (
     OperationPublicProjectionV1,
     OperationReviewAvailableInteractionV1,
@@ -75,13 +74,7 @@ def validate_saved_google_review(
     request: GoogleReviewRequest, review: GoogleReviewProjection, *, operation_id: str
 ) -> None:
     """Bind the readable disclosure to this selected revision, filing and invocation."""
-    if (
-        not _saved_review_matches_request(request, review, operation_id)
-        or not review.root_folder_id.strip()
-        or not review.readable_by_authorized_users
-        or ReadablePayloadCategory.CALCULATION not in review.payload_categories
-        or not set(review.payload_categories) <= {ReadablePayloadCategory.CALCULATION, ReadablePayloadCategory.LEDGER}
-    ):
+    if not _saved_review_matches_request(request, review, operation_id) or not review.discloses_a_readable_calculation:
         raise RefusalError(RefusalCode.INVALID_FRAME)
 
 
