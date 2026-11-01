@@ -17,20 +17,17 @@ from __future__ import annotations
 import pytest
 from textual.widgets import Input, Static
 
-from ....adapters.persistence.storage.tests.profile_capsule_runtime import load_test_profile_record
-from ....adapters.persistence.storage.tests.profile_capsule_runtime import (
-    profile_authority_contexts as _profile_contexts_for_test,
-)
-from ....application.user_profile.fact_write import apply_manager_profile_field_mutation
-from ....application.user_profile.login_session import authenticate_profile_for_invocation
-from ....application.user_profile.overview import ProfileOverview, build_profile_overview
-from ....core.bucket_pointer import require_active_bucket_id
-from ....domain.calculations.registry.authority import bundled_indexed_authority
+from ....application.user_profile.overview import ProfileOverview
 from ..components.host import ScreenHostApp
 from ..components.status import PinnedStatusBar
 from ..profile.overview import ProfileFieldPersist, ProfileManagerScreen
 from .manager_pilot import wait_until_settled
-from .manager_subject_profile import registered_manager_subject
+from .manager_subject_profile import (
+    manager_subject_overview,
+    manager_subject_stored_facts,
+    registered_manager_subject,
+    write_manager_subject_field,
+)
 from .settling import settle
 
 pytestmark = [
@@ -49,46 +46,22 @@ _OPTIONAL_PATH = "identity.name"
 _MALFORMED_PATH = "auth.fecha_validez"
 
 
-def _ensure_logged_in() -> None:
-    """Unlock the registered profile so the capsule will serve its record.
-
-    Registration closes its own session and the custody capsule is the sole
-    profile authority, so every read or write door below needs an authenticated
-    session. Logging in derives the same DEK the capsule was sealed under.
-    """
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-    authenticate_profile_for_invocation(
-        name=_LABEL,
-        passphrase_callback=lambda: _CREDENTIAL_INPUT,
-        profile_decode_context=_profile_decode_context_for_test,
-    )
-
-
 def _live_overview(label: str = _LABEL):
-    # Building the overview validates facts against registry authority; lease it here, on whatever thread runs this.
-    with bundled_indexed_authority().operation():
-        _ensure_logged_in()
-        record = load_test_profile_record(require_active_bucket_id())
-        return build_profile_overview(record, label=label, schema=_profile_contexts_for_test()[1].schema)
+    return manager_subject_overview(label=label, passphrase=_CREDENTIAL_INPUT)
 
 
 def _write(
     path: str, value: str, expected_revision: int | None = None, expected_content_digest: str | None = None
 ) -> ProfileOverview:
     """The production write door, so an edit here travels the real path."""
-    # Building the overview validates facts against registry authority; lease it here, on whatever thread runs this.
-    with bundled_indexed_authority().operation():
-        _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-        _ensure_logged_in()
-        record = apply_manager_profile_field_mutation(
-            profile_id=require_active_bucket_id(),
-            path=path,
-            value=value,
-            expected_revision=expected_revision,
-            expected_content_digest=expected_content_digest,
-            profile_decode_context=_profile_decode_context_for_test,
-        )
-        return build_profile_overview(record, label=_LABEL, schema=_profile_contexts_for_test()[1].schema)
+    return write_manager_subject_field(
+        label=_LABEL,
+        passphrase=_CREDENTIAL_INPUT,
+        path=path,
+        value=value,
+        expected_revision=expected_revision,
+        expected_content_digest=expected_content_digest,
+    )
 
 
 def _persist_door(path: str, value: str, expected_revision: int, expected_content_digest: str) -> ProfileOverview:
@@ -100,9 +73,7 @@ _persist: ProfileFieldPersist = _persist_door
 
 
 def _stored() -> dict[str, object | None]:
-    _ensure_logged_in()
-    reloaded = load_test_profile_record(require_active_bucket_id())
-    return {fact.path: fact.value for fact in reloaded.facts}
+    return manager_subject_stored_facts(label=_LABEL, passphrase=_CREDENTIAL_INPUT)
 
 
 def _notice(app: ProfileManagerScreen) -> str:
