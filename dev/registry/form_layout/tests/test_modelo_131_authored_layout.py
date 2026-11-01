@@ -17,15 +17,7 @@ from ...compiler.loader import load_modelo_directory
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
-@pytest.mark.parametrize("revision_id", ["2024", "2025", "2026", "2026-3t-4t"])
-def test_131_groups_keep_all_boxes_context_and_additional_records(revision_id: str) -> None:
-    revision = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/131")).revisions[revision_id]
-    layout = revision.form_layouts[0]
-    assert form_layout_failures(revision) == ()
-    assert layout.seed_source.value == "authored"
-    assert layout.review.state.value == "generated"
-    assert [p.id for p in layout.pages] == ["pag-1", "dpa", "did"]
-    sections = {s.id: s for s in layout.pages[0].sections}
+def _assert_131_liquidation_sections_keep_their_boxes(sections: dict) -> None:
     assert list(sections) == [
         "identificacion",
         "devengo",
@@ -49,6 +41,9 @@ def test_131_groups_keep_all_boxes_context_and_additional_records(revision_id: s
             )
             == boxes
         )
+
+
+def _assert_131_context_fields_resolve_to_producers_and_draft(revision, sections: dict) -> None:
     context = [b for s in sections.values() for b in s.blocks if isinstance(b, FormContextFieldBlock)]
     assert len(context) == 5
     fields = [resolve_form_context_field(revision, b) for b in context]
@@ -61,8 +56,9 @@ def test_131_groups_keep_all_boxes_context_and_additional_records(revision_id: s
         "filing_year",
         "period_code",
     }
-    grids = [b for b in sections["liquidacion-i"].blocks if isinstance(b, FormGridBlock)]
-    assert len(grids) == 1 and len(grids[0].rows) == 5
+
+
+def _assert_131_bound_fields(sections: dict, revision_id: str) -> None:
     bindings = {
         b.binding_id
         for s in sections.values()
@@ -76,4 +72,20 @@ def test_131_groups_keep_all_boxes_context_and_additional_records(revision_id: s
     if revision_id == "2025":
         assert "modelo-131.page1.agraria-ingresos-ordinarias-generales" in bindings
         assert "modelo-131.page1.agraria-ingresos-prioritarias-ceuta-melilla-la-palma" in bindings
+
+
+@pytest.mark.parametrize("revision_id", ["2024", "2025", "2026", "2026-3t-4t"])
+def test_131_groups_keep_all_boxes_context_and_additional_records(revision_id: str) -> None:
+    revision = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/131")).revisions[revision_id]
+    layout = revision.form_layouts[0]
+    assert form_layout_failures(revision) == ()
+    assert layout.seed_source.value == "authored"
+    assert layout.review.state.value == "generated"
+    assert [p.id for p in layout.pages] == ["pag-1", "dpa", "did"]
+    sections = {s.id: s for s in layout.pages[0].sections}
+    _assert_131_liquidation_sections_keep_their_boxes(sections)
+    _assert_131_context_fields_resolve_to_producers_and_draft(revision, sections)
+    grids = [b for b in sections["liquidacion-i"].blocks if isinstance(b, FormGridBlock)]
+    assert len(grids) == 1 and len(grids[0].rows) == 5
+    _assert_131_bound_fields(sections, revision_id)
     assert any(pin.source_ref == "boe-2015-1656-modelos-130-131-form" for pin in layout.design_sources)
