@@ -251,6 +251,228 @@ def _launch_parent(tmp_path: Path, *, mode: str | None = None) -> subprocess.Pop
     )
 
 
+def _await_worker_ready_facts(
+    tmp_path: Path, parent: subprocess.Popen[bytes], browser_descendants: bool
+) -> dict[str, Any]:
+    ready = tmp_path / "linux-worker-ready.json"
+    failure = tmp_path / "linux-worker-failure.json"
+    deadline = time.monotonic() + 90
+    while not ready.exists():
+        if browser_descendants:
+            _assert_browser_not_failed(tmp_path)
+        assert parent.poll() is None, "the real Linux profile owner exited before admission: " + (
+            failure.read_text(encoding="ascii") if failure.exists() else "no safe diagnostic"
+        )
+        assert time.monotonic() < deadline, "the contained worker did not become ready"
+        time.sleep(0.05)
+    if browser_descendants:
+        _assert_browser_not_failed(tmp_path)
+    facts = cast(dict[str, Any], json.loads(ready.read_text(encoding="ascii")))
+    acquired = json.loads((tmp_path / "linux-worker-acquired.json").read_text(encoding="ascii"))
+    assert all(facts[name] == value for name, value in acquired.items())
+    return facts
+
+
+def _verify_resistant_descendants(
+    cleanup: _ContainmentCleanup,
+    tmp_path: Path,
+    parent: subprocess.Popen[bytes],
+    facts: dict[str, Any],
+    worker_pid: int,
+    guardian_pid: int,
+) -> None:
+    records = json.loads((tmp_path / "linux-worker-descendants.json").read_text(encoding="ascii"))
+    assert isinstance(records, list) and len(records) == 2
+    assert {record["role"] for record in records} == {"child", "grandchild"}
+    descendants = {record["role"]: record for record in records}
+    assert descendants["child"]["parent_pid"] == worker_pid
+    assert descendants["grandchild"]["parent_pid"] == descendants["child"]["pid"]
+    assert len({record["pid"] for record in records}) == 2
+    for record in records:
+        pid = record["pid"]
+        assert type(pid) is int and pid > 0 and pid not in {parent.pid, worker_pid, guardian_pid}
+        descriptor = open_linux_pidfd(pid)
+        cleanup.descendant_fds.append(descriptor)
+        assert not _dead(descriptor)
+        assert linux_process_start_identity(pid) == record["start_identity"]
+        assert _cgroup_for(pid) == facts["cgroup"]
+        assert os.getsid(pid) == pid and os.getpgid(pid) == pid
+        assert pid != int(facts["worker_group"])
+        status = (Path("/proc") / str(pid) / "status").read_text(encoding="ascii")
+        ignored = next(line.split()[1] for line in status.splitlines() if line.startswith("SigIgn:"))
+        assert int(ignored, 16) & (1 << (signal.SIGTERM - 1))
+        assert linux_process_start_identity(pid) == record["start_identity"]
+        assert not _dead(descriptor)
+
+
+def _await_browser_record(
+    tmp_path: Path, parent: subprocess.Popen[bytes], worker_pid: int, worker_fd: int, guardian_fd: int
+) -> dict[str, Any]:
+    browser_ready = tmp_path / "linux-worker-browser.json"
+    deadline = time.monotonic() + 30
+    while not browser_ready.exists():
+        _assert_browser_not_failed(tmp_path)
+        assert parent.poll() is None and not _dead(worker_fd) and not _dead(guardian_fd)
+        assert time.monotonic() < deadline, "admitted worker did not launch its real local browser"
+        time.sleep(0.05)
+    _assert_browser_not_failed(tmp_path)
+    browser = json.loads(browser_ready.read_text(encoding="ascii"))
+    assert browser["title"] == "synthetic containment"
+    assert browser["worker_pid"] == worker_pid
+    assert browser["worker_start_identity"] == linux_process_start_identity(worker_pid)
+    return browser
+
+
+def _verify_parent_marker(
+    tmp_path: Path, parent: subprocess.Popen[bytes], worker_pid: int, guardian_pid: int
+) -> tuple[int, int]:
+    marker = json.loads((tmp_path / "linux-parent-marker.json").read_text(encoding="ascii"))
+    device, inode = marker["device"], marker["inode"]
+    assert type(device) is int and type(inode) is int and inode > 0
+    parent_marker = (Path("/proc") / str(parent.pid) / "fd" / str(marker["fd"])).stat()
+    assert (parent_marker.st_dev, parent_marker.st_ino) == (device, inode)
+    parent_flags = (Path("/proc") / str(parent.pid) / "fdinfo" / str(marker["fd"])).read_text(encoding="ascii")
+    flags = next(row.split()[1] for row in parent_flags.splitlines() if row.startswith("flags:"))
+    assert not int(flags, 8) & os.O_CLOEXEC
+    for pid in (worker_pid, guardian_pid):
+        _assert_marker_absent(pid, device=device, inode=inode)
+    return device, inode
+
+
+def _verify_worker_marker(
+    tmp_path: Path, worker_pid: int, guardian_pid: int, device: int, inode: int
+) -> tuple[int, int]:
+    worker_marker = json.loads((tmp_path / "linux-worker-marker.json").read_text(encoding="ascii"))
+    assert isinstance(worker_marker, dict) and set(worker_marker) == {"pid", "fd", "device", "inode"}
+    assert type(worker_marker["pid"]) is int and worker_marker["pid"] == worker_pid
+    worker_device, worker_inode = worker_marker["device"], worker_marker["inode"]
+    worker_marker_fd = worker_marker["fd"]
+    assert type(worker_device) is int and type(worker_inode) is int and worker_inode > 0
+    assert type(worker_marker_fd) is int and worker_marker_fd >= 0
+    assert (worker_device, worker_inode) != (device, inode)
+    native_marker = (Path("/proc") / str(worker_pid) / "fd" / str(worker_marker_fd)).stat()
+    assert (native_marker.st_dev, native_marker.st_ino) == (worker_device, worker_inode)
+    native_marker_flags = (Path("/proc") / str(worker_pid) / "fdinfo" / str(worker_marker_fd)).read_text(
+        encoding="ascii"
+    )
+    worker_flags = next(row.split()[1] for row in native_marker_flags.splitlines() if row.startswith("flags:"))
+    assert not int(worker_flags, 8) & os.O_CLOEXEC
+    _assert_marker_absent(guardian_pid, device=worker_device, inode=worker_inode)
+    return worker_device, worker_inode
+
+
+def _verify_browser_roles(
+    cleanup: _ContainmentCleanup,
+    facts: dict[str, Any],
+    executable: Path,
+    worker_pid: int,
+    guardian_pid: int,
+    markers: tuple[int, int, int, int],
+) -> None:
+    device, inode, worker_device, worker_inode = markers
+    group = Path("/sys/fs/cgroup") / str(facts["cgroup"]).lstrip("/")
+    membership_files = tuple(group.rglob("cgroup.procs"))
+    assert 1 <= len(membership_files) <= 64
+    members = {
+        int(pid) for membership in membership_files for pid in membership.read_text(encoding="ascii").splitlines()
+    }
+    assert 4 <= len(members) <= 4096
+    browser_roles: set[str] = set()
+    for pid in members - {worker_pid, guardian_pid}:
+        native = Path("/proc") / str(pid)
+        started = linux_process_start_identity(pid)
+        descriptor = open_linux_pidfd(pid)
+        cleanup.descendant_fds.append(descriptor)
+        assert not _dead(descriptor)
+        assert _cgroup_for(pid) == facts["cgroup"]
+        _assert_marker_absent(pid, device=device, inode=inode)
+        _assert_marker_absent(pid, device=worker_device, inode=worker_inode)
+        selected = (native / "exe").resolve(strict=True)
+        # Chromium setproctitle flattens zygote-child argv into one
+        # space-separated title. Match exact switches in either native
+        # representation; role classification also requires exact exe.
+        arguments = (native / "cmdline").read_bytes().replace(b"\0", b" ").split()
+        assert linux_process_start_identity(pid) == started
+        assert not _dead(descriptor)
+        if selected != executable:
+            continue
+        if b"--type=renderer" in arguments:
+            role = "renderer"
+        elif b"--remote-debugging-pipe" in arguments and not any(
+            argument.startswith(b"--type=") for argument in arguments
+        ):
+            role = "browser"
+        else:
+            continue
+        browser_roles.add(role)
+    assert browser_roles == {"browser", "renderer"}
+
+
+def _verify_browser_descendants(
+    cleanup: _ContainmentCleanup,
+    tmp_path: Path,
+    parent: subprocess.Popen[bytes],
+    facts: dict[str, Any],
+    worker_pid: int,
+    guardian_pid: int,
+    worker_fd: int,
+    guardian_fd: int,
+) -> None:
+    browser = _await_browser_record(tmp_path, parent, worker_pid, worker_fd, guardian_fd)
+    executable = Path(browser["executable"]).resolve(strict=True)
+    assert executable.is_file()
+    device, inode = _verify_parent_marker(tmp_path, parent, worker_pid, guardian_pid)
+    worker_device, worker_inode = _verify_worker_marker(tmp_path, worker_pid, guardian_pid, device, inode)
+    _verify_browser_roles(
+        cleanup, facts, executable, worker_pid, guardian_pid, (device, inode, worker_device, worker_inode)
+    )
+    assert len(cleanup.descendant_fds) >= 2
+    assert browser["worker_start_identity"] == linux_process_start_identity(worker_pid)
+    assert not _dead(worker_fd) and not _dead(guardian_fd)
+
+
+def _inflict_owner_loss(
+    failed_owner: str,
+    parent: subprocess.Popen[bytes],
+    cleanup: _ContainmentCleanup,
+    facts: dict[str, Any],
+    worker_fd: int,
+    browser_descendants: bool,
+) -> None:
+    if failed_owner == "runtime_parent":
+        os.kill(parent.pid, signal.SIGKILL)
+    elif failed_owner == "guardian":
+        killed = run_containment_command_sync(
+            ContainmentCommand.SYSTEMCTL,
+            (
+                "--user",
+                "--no-pager",
+                "--no-ask-password",
+                "kill",
+                "--kill-whom=main",
+                "--signal=SIGKILL",
+                str(facts["unit"]),
+            ),
+        )
+        assert killed.returncode == 0
+    elif failed_owner == "worker":
+        assert browser_descendants and parent.poll() is None
+        assert all(not _dead(descriptor) for descriptor in cleanup.descendant_fds)
+        if sys.platform == "linux":
+            library = ctypes.CDLL(None, use_errno=True)
+            native_signal = library.pidfd_send_signal
+            native_signal.argtypes = (ctypes.c_int, ctypes.c_int, ctypes.c_void_p, ctypes.c_uint)
+            native_signal.restype = ctypes.c_int
+            ctypes.set_errno(0)
+            result = int(native_signal(worker_fd, signal.SIGKILL, None, 0))
+            native_errno = ctypes.get_errno()
+            assert result == 0, f"native PIDFD signal failed (errno={native_errno})"
+        else:
+            raise AssertionError("worker PIDFD signaling requires Linux")
+    else:
+        raise AssertionError("unknown failed containment owner")
+
+
 @pytest.mark.parametrize(
     ("failed_owner", "resistant_descendants", "browser_descendants"),
     [
@@ -273,22 +495,7 @@ def test_linux_worker_service_kills_independent_group_on_owner_loss(
     cleanup = _ContainmentCleanup(parent, tmp_path)
     primary: BaseException | None = None
     try:
-        ready = tmp_path / "linux-worker-ready.json"
-        failure = tmp_path / "linux-worker-failure.json"
-        deadline = time.monotonic() + 90
-        while not ready.exists():
-            if browser_descendants:
-                _assert_browser_not_failed(tmp_path)
-            assert parent.poll() is None, "the real Linux profile owner exited before admission: " + (
-                failure.read_text(encoding="ascii") if failure.exists() else "no safe diagnostic"
-            )
-            assert time.monotonic() < deadline, "the contained worker did not become ready"
-            time.sleep(0.05)
-        if browser_descendants:
-            _assert_browser_not_failed(tmp_path)
-        facts = cast(dict[str, Any], json.loads(ready.read_text(encoding="ascii")))
-        acquired = json.loads((tmp_path / "linux-worker-acquired.json").read_text(encoding="ascii"))
-        assert all(facts[name] == value for name, value in acquired.items())
+        facts = _await_worker_ready_facts(tmp_path, parent, browser_descendants)
         cleanup.record_scope(facts)
         worker_pid, guardian_pid = int(facts["worker_pid"]), int(facts["guardian_pid"])
         assert int(facts["runtime_pid"]) == parent.pid
@@ -299,142 +506,12 @@ def test_linux_worker_service_kills_independent_group_on_owner_loss(
         worker_fd, guardian_fd = cleanup.worker_fd, cleanup.guardian_fd
         assert not _dead(worker_fd) and not _dead(guardian_fd)
         if resistant_descendants:
-            records = json.loads((tmp_path / "linux-worker-descendants.json").read_text(encoding="ascii"))
-            assert isinstance(records, list) and len(records) == 2
-            assert {record["role"] for record in records} == {"child", "grandchild"}
-            descendants = {record["role"]: record for record in records}
-            assert descendants["child"]["parent_pid"] == worker_pid
-            assert descendants["grandchild"]["parent_pid"] == descendants["child"]["pid"]
-            assert len({record["pid"] for record in records}) == 2
-            for record in records:
-                pid = record["pid"]
-                assert type(pid) is int and pid > 0 and pid not in {parent.pid, worker_pid, guardian_pid}
-                descriptor = open_linux_pidfd(pid)
-                cleanup.descendant_fds.append(descriptor)
-                assert not _dead(descriptor)
-                assert linux_process_start_identity(pid) == record["start_identity"]
-                assert _cgroup_for(pid) == facts["cgroup"]
-                assert os.getsid(pid) == pid and os.getpgid(pid) == pid
-                assert pid != int(facts["worker_group"])
-                status = (Path("/proc") / str(pid) / "status").read_text(encoding="ascii")
-                ignored = next(line.split()[1] for line in status.splitlines() if line.startswith("SigIgn:"))
-                assert int(ignored, 16) & (1 << (signal.SIGTERM - 1))
-                assert linux_process_start_identity(pid) == record["start_identity"]
-                assert not _dead(descriptor)
+            _verify_resistant_descendants(cleanup, tmp_path, parent, facts, worker_pid, guardian_pid)
         if browser_descendants:
-            browser_ready = tmp_path / "linux-worker-browser.json"
-            deadline = time.monotonic() + 30
-            while not browser_ready.exists():
-                _assert_browser_not_failed(tmp_path)
-                assert parent.poll() is None and not _dead(worker_fd) and not _dead(guardian_fd)
-                assert time.monotonic() < deadline, "admitted worker did not launch its real local browser"
-                time.sleep(0.05)
-            _assert_browser_not_failed(tmp_path)
-            browser = json.loads(browser_ready.read_text(encoding="ascii"))
-            assert browser["title"] == "synthetic containment"
-            assert browser["worker_pid"] == worker_pid
-            assert browser["worker_start_identity"] == linux_process_start_identity(worker_pid)
-            executable = Path(browser["executable"]).resolve(strict=True)
-            assert executable.is_file()
-            marker = json.loads((tmp_path / "linux-parent-marker.json").read_text(encoding="ascii"))
-            device, inode = marker["device"], marker["inode"]
-            assert type(device) is int and type(inode) is int and inode > 0
-            parent_marker = (Path("/proc") / str(parent.pid) / "fd" / str(marker["fd"])).stat()
-            assert (parent_marker.st_dev, parent_marker.st_ino) == (device, inode)
-            parent_flags = (Path("/proc") / str(parent.pid) / "fdinfo" / str(marker["fd"])).read_text(encoding="ascii")
-            flags = next(row.split()[1] for row in parent_flags.splitlines() if row.startswith("flags:"))
-            assert not int(flags, 8) & os.O_CLOEXEC
-            for pid in (worker_pid, guardian_pid):
-                _assert_marker_absent(pid, device=device, inode=inode)
-            worker_marker = json.loads((tmp_path / "linux-worker-marker.json").read_text(encoding="ascii"))
-            assert isinstance(worker_marker, dict) and set(worker_marker) == {"pid", "fd", "device", "inode"}
-            assert type(worker_marker["pid"]) is int and worker_marker["pid"] == worker_pid
-            worker_device, worker_inode = worker_marker["device"], worker_marker["inode"]
-            worker_marker_fd = worker_marker["fd"]
-            assert type(worker_device) is int and type(worker_inode) is int and worker_inode > 0
-            assert type(worker_marker_fd) is int and worker_marker_fd >= 0
-            assert (worker_device, worker_inode) != (device, inode)
-            native_marker = (Path("/proc") / str(worker_pid) / "fd" / str(worker_marker_fd)).stat()
-            assert (native_marker.st_dev, native_marker.st_ino) == (worker_device, worker_inode)
-            native_marker_flags = (Path("/proc") / str(worker_pid) / "fdinfo" / str(worker_marker_fd)).read_text(
-                encoding="ascii"
+            _verify_browser_descendants(
+                cleanup, tmp_path, parent, facts, worker_pid, guardian_pid, worker_fd, guardian_fd
             )
-            worker_flags = next(row.split()[1] for row in native_marker_flags.splitlines() if row.startswith("flags:"))
-            assert not int(worker_flags, 8) & os.O_CLOEXEC
-            _assert_marker_absent(guardian_pid, device=worker_device, inode=worker_inode)
-            group = Path("/sys/fs/cgroup") / str(facts["cgroup"]).lstrip("/")
-            membership_files = tuple(group.rglob("cgroup.procs"))
-            assert 1 <= len(membership_files) <= 64
-            members = {
-                int(pid)
-                for membership in membership_files
-                for pid in membership.read_text(encoding="ascii").splitlines()
-            }
-            assert 4 <= len(members) <= 4096
-            browser_roles: set[str] = set()
-            for pid in members - {worker_pid, guardian_pid}:
-                native = Path("/proc") / str(pid)
-                started = linux_process_start_identity(pid)
-                descriptor = open_linux_pidfd(pid)
-                cleanup.descendant_fds.append(descriptor)
-                assert not _dead(descriptor)
-                assert _cgroup_for(pid) == facts["cgroup"]
-                _assert_marker_absent(pid, device=device, inode=inode)
-                _assert_marker_absent(pid, device=worker_device, inode=worker_inode)
-                selected = (native / "exe").resolve(strict=True)
-                # Chromium setproctitle flattens zygote-child argv into one
-                # space-separated title. Match exact switches in either native
-                # representation; role classification also requires exact exe.
-                arguments = (native / "cmdline").read_bytes().replace(b"\0", b" ").split()
-                assert linux_process_start_identity(pid) == started
-                assert not _dead(descriptor)
-                if selected != executable:
-                    continue
-                if b"--type=renderer" in arguments:
-                    role = "renderer"
-                elif b"--remote-debugging-pipe" in arguments and not any(
-                    argument.startswith(b"--type=") for argument in arguments
-                ):
-                    role = "browser"
-                else:
-                    continue
-                browser_roles.add(role)
-            assert browser_roles == {"browser", "renderer"}
-            assert len(cleanup.descendant_fds) >= 2
-            assert browser["worker_start_identity"] == linux_process_start_identity(worker_pid)
-            assert not _dead(worker_fd) and not _dead(guardian_fd)
-        if failed_owner == "runtime_parent":
-            os.kill(parent.pid, signal.SIGKILL)
-        elif failed_owner == "guardian":
-            killed = run_containment_command_sync(
-                ContainmentCommand.SYSTEMCTL,
-                (
-                    "--user",
-                    "--no-pager",
-                    "--no-ask-password",
-                    "kill",
-                    "--kill-whom=main",
-                    "--signal=SIGKILL",
-                    str(facts["unit"]),
-                ),
-            )
-            assert killed.returncode == 0
-        elif failed_owner == "worker":
-            assert browser_descendants and parent.poll() is None
-            assert all(not _dead(descriptor) for descriptor in cleanup.descendant_fds)
-            if sys.platform == "linux":
-                library = ctypes.CDLL(None, use_errno=True)
-                native_signal = library.pidfd_send_signal
-                native_signal.argtypes = (ctypes.c_int, ctypes.c_int, ctypes.c_void_p, ctypes.c_uint)
-                native_signal.restype = ctypes.c_int
-                ctypes.set_errno(0)
-                result = int(native_signal(worker_fd, signal.SIGKILL, None, 0))
-                native_errno = ctypes.get_errno()
-                assert result == 0, f"native PIDFD signal failed (errno={native_errno})"
-            else:
-                raise AssertionError("worker PIDFD signaling requires Linux")
-        else:
-            raise AssertionError("unknown failed containment owner")
+        _inflict_owner_loss(failed_owner, parent, cleanup, facts, worker_fd, browser_descendants)
         deadline = time.monotonic() + 10
         while not (
             _dead(worker_fd)
@@ -455,6 +532,93 @@ def test_linux_worker_service_kills_independent_group_on_owner_loss(
         asyncio.run(close_async_resources(cleanup, task_name="linux-containment-fixture-close", primary_error=primary))
 
 
+def _await_registration_barrier(
+    tmp_path: Path, parent: subprocess.Popen[bytes]
+) -> tuple[dict[str, Any], dict[str, Any], float]:
+    registered = tmp_path / "linux-worker-registered.json"
+    deadline = time.monotonic() + 90
+    while not registered.exists():
+        assert parent.poll() is None, "runtime owner exited before real registration acknowledgment"
+        assert time.monotonic() < deadline, "real systemd registration did not reach the barrier"
+        time.sleep(0.05)
+    assert parent.poll() is None
+    record = json.loads(registered.read_text(encoding="ascii"))
+    reservation = json.loads((tmp_path / "linux-worker-acquired.json").read_text(encoding="ascii"))
+    assert set(record) == {"runtime_pid", "unit", "cgroup", "barrier_deadline"}
+    assert {name: record[name] for name in reservation} == reservation
+    barrier_deadline = record["barrier_deadline"]
+    assert type(barrier_deadline) is float and math.isfinite(barrier_deadline)
+    assert set(reservation) == {"runtime_pid", "unit", "cgroup"}
+    assert reservation["runtime_pid"] == parent.pid and reservation["cgroup"] == ""
+    assert not (tmp_path / "linux-worker-ready.json").exists()
+    assert not (tmp_path / "linux-registration-release").exists()
+    return record, reservation, barrier_deadline
+
+
+def _await_active_guardian(unit: str, parent: subprocess.Popen[bytes]) -> dict[str, str]:
+    deadline = time.monotonic() + 10
+    while True:
+        properties = _unit_properties(unit)
+        if properties["ActiveState"] == "active" and int(properties["MainPID"]) > 0:
+            break
+        assert parent.poll() is None
+        assert time.monotonic() < deadline, "registered guardian did not become active"
+        time.sleep(0.05)
+    assert properties["KillMode"] == "control-group" and properties["ExitType"] == "main"
+    assert properties["SendSIGKILL"] == "yes" and properties["TimeoutStopUSec"] == "1s"
+    return properties
+
+
+def _verify_registered_guardian(
+    parent: subprocess.Popen[bytes], guardian_pid: int, guardian_fd: int, guardian_start: str, cgroup: str
+) -> Path:
+    assert not _dead(guardian_fd) and _cgroup_for(guardian_pid) == cgroup
+    guardian_native = Path("/proc") / str(guardian_pid)
+    interpreter = Path(sys.executable).resolve(strict=True)
+    assert (guardian_native / "exe").resolve(strict=True) == interpreter
+    guardian_args = (guardian_native / "cmdline").read_bytes().split(b"\0")
+    assert guardian_args[1:4] == [b"-I", b"-m", b"cadrumo_runtime.host.linux_worker_guardian"]
+    assert guardian_args[guardian_args.index(b"--parent-pid") + 1] == str(parent.pid).encode("ascii")
+    assert guardian_args[guardian_args.index(b"--parent-start") + 1] == linux_process_start_identity(parent.pid).encode(
+        "ascii"
+    )
+    assert linux_process_start_identity(guardian_pid) == guardian_start and not _dead(guardian_fd)
+    return interpreter
+
+
+def _await_registered_worker(parent: subprocess.Popen[bytes], guardian_pid: int, guardian_fd: int, cgroup: str) -> int:
+    deadline = time.monotonic() + 10
+    while True:
+        membership = (Path("/sys/fs/cgroup") / cgroup.lstrip("/") / "cgroup.procs").read_text(encoding="ascii")
+        members = {int(pid) for pid in membership.splitlines()}
+        assert 1 <= len(members) <= 4096
+        workers: list[int] = []
+        for pid in members - {guardian_pid}:
+            arguments = (Path("/proc") / str(pid) / "cmdline").read_bytes().split(b"\0")
+            if arguments[1:5] == [b"-I", b"-B", b"-m", b"cadrumo_runtime.host.worker"]:
+                workers.append(pid)
+        if workers:
+            assert len(workers) == 1
+            return workers[0]
+        assert parent.poll() is None and not _dead(guardian_fd)
+        assert time.monotonic() < deadline, "registered guardian did not launch the real installed worker"
+        time.sleep(0.05)
+
+
+def _verify_registered_worker(
+    worker_pid: int, worker_fd: int, worker_start: str, guardian_pid: int, cgroup: str, interpreter: Path
+) -> None:
+    assert not _dead(worker_fd) and _cgroup_for(worker_pid) == cgroup
+    worker_native = Path("/proc") / str(worker_pid)
+    assert (worker_native / "exe").resolve(strict=True) == interpreter
+    worker_args = (worker_native / "cmdline").read_bytes().split(b"\0")
+    assert worker_args[1:5] == [b"-I", b"-B", b"-m", b"cadrumo_runtime.host.worker"]
+    stat_fields = (worker_native / "stat").read_text(encoding="ascii").rsplit(") ", 1)[1].split()
+    assert int(stat_fields[1]) == guardian_pid
+    assert os.getpgid(worker_pid) == worker_pid and os.getsid(worker_pid) == worker_pid
+    assert linux_process_start_identity(worker_pid) == worker_start and not _dead(worker_fd)
+
+
 def test_linux_worker_owner_loss_during_registration(tmp_path: Path) -> None:
     """Lose the owner after native registration, before launch receives its ACK."""
     if sys.platform != "linux":
@@ -463,82 +627,23 @@ def test_linux_worker_owner_loss_during_registration(tmp_path: Path) -> None:
     cleanup = _ContainmentCleanup(parent, tmp_path)
     primary: BaseException | None = None
     try:
-        registered = tmp_path / "linux-worker-registered.json"
-        deadline = time.monotonic() + 90
-        while not registered.exists():
-            assert parent.poll() is None, "runtime owner exited before real registration acknowledgment"
-            assert time.monotonic() < deadline, "real systemd registration did not reach the barrier"
-            time.sleep(0.05)
-        assert parent.poll() is None
-        record = json.loads(registered.read_text(encoding="ascii"))
-        reservation = json.loads((tmp_path / "linux-worker-acquired.json").read_text(encoding="ascii"))
-        assert set(record) == {"runtime_pid", "unit", "cgroup", "barrier_deadline"}
-        assert {name: record[name] for name in reservation} == reservation
-        barrier_deadline = record["barrier_deadline"]
-        assert type(barrier_deadline) is float and math.isfinite(barrier_deadline)
-        assert set(reservation) == {"runtime_pid", "unit", "cgroup"}
-        assert reservation["runtime_pid"] == parent.pid and reservation["cgroup"] == ""
-        assert not (tmp_path / "linux-worker-ready.json").exists()
-        assert not (tmp_path / "linux-registration-release").exists()
+        _record, reservation, barrier_deadline = _await_registration_barrier(tmp_path, parent)
         # Resolve the native cgroup once before committing scope ownership.
         # On failure, cleanup alone recovers the unknown reserved cgroup.
         unit = reservation["unit"]
-        deadline = time.monotonic() + 10
-        while True:
-            properties = _unit_properties(unit)
-            if properties["ActiveState"] == "active" and int(properties["MainPID"]) > 0:
-                break
-            assert parent.poll() is None
-            assert time.monotonic() < deadline, "registered guardian did not become active"
-            time.sleep(0.05)
-        assert properties["KillMode"] == "control-group" and properties["ExitType"] == "main"
-        assert properties["SendSIGKILL"] == "yes" and properties["TimeoutStopUSec"] == "1s"
+        properties = _await_active_guardian(unit, parent)
         guardian_pid = int(properties["MainPID"])
         cgroup = properties["ControlGroup"]
         cleanup.record_scope({"runtime_pid": parent.pid, "unit": unit, "cgroup": cgroup})
         guardian_start = linux_process_start_identity(guardian_pid)
         cleanup.guardian_fd = open_linux_pidfd(guardian_pid)
         guardian_fd = cleanup.guardian_fd
-        assert not _dead(guardian_fd) and _cgroup_for(guardian_pid) == cgroup
-        guardian_native = Path("/proc") / str(guardian_pid)
-        interpreter = Path(sys.executable).resolve(strict=True)
-        assert (guardian_native / "exe").resolve(strict=True) == interpreter
-        guardian_args = (guardian_native / "cmdline").read_bytes().split(b"\0")
-        assert guardian_args[1:4] == [b"-I", b"-m", b"cadrumo_runtime.host.linux_worker_guardian"]
-        assert guardian_args[guardian_args.index(b"--parent-pid") + 1] == str(parent.pid).encode("ascii")
-        assert guardian_args[guardian_args.index(b"--parent-start") + 1] == linux_process_start_identity(
-            parent.pid
-        ).encode("ascii")
-        assert linux_process_start_identity(guardian_pid) == guardian_start and not _dead(guardian_fd)
-        deadline = time.monotonic() + 10
-        while True:
-            membership = (Path("/sys/fs/cgroup") / cgroup.lstrip("/") / "cgroup.procs").read_text(encoding="ascii")
-            members = {int(pid) for pid in membership.splitlines()}
-            assert 1 <= len(members) <= 4096
-            workers: list[int] = []
-            for pid in members - {guardian_pid}:
-                arguments = (Path("/proc") / str(pid) / "cmdline").read_bytes().split(b"\0")
-                if arguments[1:5] == [b"-I", b"-B", b"-m", b"cadrumo_runtime.host.worker"]:
-                    workers.append(pid)
-            if workers:
-                assert len(workers) == 1
-                worker_pid = workers[0]
-                break
-            assert parent.poll() is None and not _dead(guardian_fd)
-            assert time.monotonic() < deadline, "registered guardian did not launch the real installed worker"
-            time.sleep(0.05)
+        interpreter = _verify_registered_guardian(parent, guardian_pid, guardian_fd, guardian_start, cgroup)
+        worker_pid = _await_registered_worker(parent, guardian_pid, guardian_fd, cgroup)
         worker_start = linux_process_start_identity(worker_pid)
         cleanup.worker_fd = open_linux_pidfd(worker_pid)
         worker_fd = cleanup.worker_fd
-        assert not _dead(worker_fd) and _cgroup_for(worker_pid) == cgroup
-        worker_native = Path("/proc") / str(worker_pid)
-        assert (worker_native / "exe").resolve(strict=True) == interpreter
-        worker_args = (worker_native / "cmdline").read_bytes().split(b"\0")
-        assert worker_args[1:5] == [b"-I", b"-B", b"-m", b"cadrumo_runtime.host.worker"]
-        stat_fields = (worker_native / "stat").read_text(encoding="ascii").rsplit(") ", 1)[1].split()
-        assert int(stat_fields[1]) == guardian_pid
-        assert os.getpgid(worker_pid) == worker_pid and os.getsid(worker_pid) == worker_pid
-        assert linux_process_start_identity(worker_pid) == worker_start and not _dead(worker_fd)
+        _verify_registered_worker(worker_pid, worker_fd, worker_start, guardian_pid, cgroup, interpreter)
         assert linux_process_start_identity(guardian_pid) == guardian_start and not _dead(guardian_fd)
         assert _unit_properties(unit)["MainPID"] == str(guardian_pid)
         assert parent.poll() is None and not (tmp_path / "linux-worker-ready.json").exists()
