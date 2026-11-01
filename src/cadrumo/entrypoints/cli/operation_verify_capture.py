@@ -20,7 +20,11 @@ from ...application.live.verify_capture_operation import (
 )
 from ...core.identity.tax_id import tax_id_identity_token
 from ...core.identity_check_verdict import IdentityCheckVerdictValue
-from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ...core.operations import (
+    EFFECTS_OF_A_SUCCEEDED_RECEIPT,
+    OperationTerminalCondition,
+    profile_operation_subject,
+)
 
 
 def read_verify_capture_for_cli(
@@ -77,5 +81,5 @@ def _verify_capture_receipt_invalid(
         or (projection.expected != expected)
         or (completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED)
         or (completed.refusal_code is not None)
-        or (completed.effect not in {OperationEffect.UPDATED, OperationEffect.NONE})
+        or (completed.effect not in EFFECTS_OF_A_SUCCEEDED_RECEIPT)
     )

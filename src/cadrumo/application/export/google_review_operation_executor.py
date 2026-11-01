@@ -13,7 +13,7 @@ from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.hashing import content_hash_hex, sha256_hex
-from ...core.operations import OperationEffect, OperationInteractionKind
+from ...core.operations import EFFECTS_OF_A_SUCCEEDED_RECEIPT, OperationEffect, OperationInteractionKind
 from ...core.time.clock import now
 from ..operations.interactions import OperationConsumedInteraction, OperationPendingInteraction
 from ..operations.models import OperationRequest
@@ -192,7 +192,7 @@ async def _settle_approved_publication(
         raise ValueError("publication lacks exact durable receipt custody")
     settled = tracker.effect()
     sheets = tuple(item for item in receipt.artifacts if item.kind is ManagedArtifactKind.REVIEW_SHEET)
-    if len(sheets) != 1 or settled not in {OperationEffect.NONE, OperationEffect.UPDATED}:
+    if len(sheets) != 1 or settled not in EFFECTS_OF_A_SUCCEEDED_RECEIPT:
         raise ValueError("publication lacks one settled native spreadsheet")
     result = GoogleReviewExecutionResult(
         identity=context.identity,

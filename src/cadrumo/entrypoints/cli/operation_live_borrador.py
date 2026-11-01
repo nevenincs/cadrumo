@@ -26,7 +26,12 @@ from ...application.live.borrador_100_operation import (
 )
 from ...application.live.snapshot_base import SnapshotLifecycleState, SnapshotStateFilter
 from ...application.operations.public_period import PublicPeriod
-from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ...core.operations import (
+    EFFECTS_OF_A_SUCCEEDED_RECEIPT,
+    OperationEffect,
+    OperationTerminalCondition,
+    profile_operation_subject,
+)
 
 type _ReadKind = Literal["list", "view", "latest"]
 
@@ -118,7 +123,7 @@ def import_borrador_100_for_cli(
     expected_source = f"file-import:sha256:{projection.source_pdf_sha256}"
     if (
         completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
-        or completed.effect not in {OperationEffect.NONE, OperationEffect.UPDATED}
+        or completed.effect not in EFFECTS_OF_A_SUCCEEDED_RECEIPT
         or completed.refusal_code is not None
         or projection.profile_id != client.profile_id
         or snapshot.filing_year != filing_year

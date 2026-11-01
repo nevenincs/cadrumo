@@ -44,6 +44,7 @@ from ...core.hex import Hex64Str
 from ...core.i18n.render import output_language
 from ...core.identity.hex_ids import CalculationRevisionId
 from ...core.operations import (
+    EFFECTS_OF_A_SUCCEEDED_RECEIPT,
     OperationEffect,
     OperationLifecycle,
     OperationTerminalCondition,
@@ -354,7 +355,7 @@ class GoogleSavedReviewScreen(Screen[None]):
         try:
             self._require_session()
             review = self._review
-            if review is None or projection.effect not in {OperationEffect.NONE, OperationEffect.UPDATED}:
+            if review is None or projection.effect not in EFFECTS_OF_A_SUCCEEDED_RECEIPT:
                 raise RefusalError(RefusalCode.INVALID_FRAME)
             result = await controller.read_settled_result(projection, GoogleReviewResult, result_version=1)
             self._require_session()
