@@ -42,6 +42,7 @@ simply does not exist; typing it yields Click's standard "No such command".
 from __future__ import annotations
 
 import os
+import re
 import subprocess
 import sys
 import textwrap
@@ -208,6 +209,18 @@ def _rst_heading(text: str, char: str) -> str:
     return f"{text}\n{char * len(text)}\n"
 
 
+_CLI_INLINE_CODE = re.compile(r"(?<![\w:`\\=])`(?P<code>[^`\s](?:[^`\r\n]*?[^`\s])?)`(?![\w`_])")
+
+
+def _cli_help_as_rst(value: str) -> str:
+    """Render authored Markdown code spans as RST inline literals.
+
+    RST roles, links, already doubled literals, and unclosed markup retain
+    their original meaning. The visible content of every code span is kept.
+    """
+    return _CLI_INLINE_CODE.sub(lambda match: f"``{match.group('code')}``", value)
+
+
 def _render_graph_command(language: OutputLanguage, path: tuple[str, ...], spec: object) -> str:
     """Render one authored command specification without runtime tree inspection."""
     from cadrumo.core.i18n.render import tr
@@ -223,21 +236,21 @@ def _render_graph_command(language: OutputLanguage, path: tuple[str, ...], spec:
     parts = [
         _rst_heading(" ".join(path), "-"),
         "\n",
-        same_wording(tr(spec.help_key.value), language),
+        same_wording(_cli_help_as_rst(tr(spec.help_key.value)), language),
         "\n\n",
     ]
     if spec.parameters:
         parts.append(docs_chrome("docs.cli.command.parameters_heading", language) + "\n\n")
     for parameter in spec.parameters:
         is_argument = isinstance(parameter, ArgumentSpec)
-        declaration = parameter.name if is_argument else " / ".join(parameter.declarations)
+        declaration = f"``{parameter.name}``" if is_argument else " / ".join(parameter.declarations)
         required = parameter.default.kind.value == "required"
 
         # The help key NAMES the operator-facing sentence rather than being it. Emitting
         # the key put dotted identifiers such as ``cli.ledger.add.description_help`` on
         # every parameter of every page of the published reference.
         described = (
-            same_wording(tr(parameter.help_key.value), language)
+            same_wording(_cli_help_as_rst(tr(parameter.help_key.value)), language)
             if parameter.help_key
             else docs_chrome("docs.cli.command.no_description", language)
         )
