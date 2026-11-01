@@ -1502,8 +1502,8 @@ cli:
           közül.
         amend_wizard_value_prompt: Javított érték a(z) %{number} rovathoz (%{label}),
           jelenleg %{previous_value}
-        amendment_kind_help: A módosítás jogi típusa (complementaria, sustitutiva
-          vagy rectificativa)
+        amendment_kind_help: A módosítás jogi típusa (`complementaria`, `sustitutiva`
+          vagy `rectificativa`)
         amendment_reason_help: A helyesbítés szabad szöveges indoka (megőrződik az
           ellenőrzési naplóban).
         app_help: Nyomtatványbevallások életciklusának kezelése.
@@ -3128,7 +3128,7 @@ cli:
         status paranccsal egyezően.'
       year_help: Bevallási év a --period kapcsolóhoz (pl. 2024).
     classify:
-      apply_help: 'Az LLM javaslatát llm: forrással menti, nem csak előnézetet készít.'
+      apply_help: Az LLM javaslatát `llm:` forrással menti, nem csak előnézetet készít.
       auto_split_help: Olvasd be a csatolt számlát, és ha többkomponensű, bontsd soronkénti
         alap/áfa-gyermekekre; egyébként osztályozd helyben (a --read-evidence kapcsoló
         szükséges).

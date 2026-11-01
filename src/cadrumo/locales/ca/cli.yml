@@ -13,7 +13,7 @@ cli:
           a un model o per a tots.
         group_help: Configura els teus comptes bancaris propis i designa'ls per a
           càrrecs i devolucions de models.
-        holding_help: Si n'ets titular únic (titular) o cotitular (cotitular).
+        holding_help: Si n'ets titular únic (`titular`) o cotitular (`cotitular`).
         label_help: El teu nom per al compte.
         list_help: Llista els teus comptes propis, emmascarats, amb les seves designacions.
         modelo_help: Model de tres xifres al qual s'aplica la designació; tots si
@@ -1516,8 +1516,8 @@ cli:
           caselles llistades.
         amend_wizard_value_prompt: Valor corregit per a la casella %{number} (%{label}),
           actualment %{previous_value}
-        amendment_kind_help: Classe legal de la modificació (complementària, substitutiva
-          o rectificativa)
+        amendment_kind_help: Classe legal de la modificació (`complementaria`, `sustitutiva`
+          o `rectificativa`)
         amendment_reason_help: Motiu lliure de la correcció (es conserva al registre
           d'auditoria)
         app_help: Gestionar el cicle de vida de les declaracions d'un model
@@ -3162,8 +3162,8 @@ cli:
         amb aeat app ledger status.'
       year_help: Any de declaració per a --period (p. ex. 2024).
     classify:
-      apply_help: 'Desa el suggeriment de l''LLM amb origen llm: en lloc de només
-        previsualitzar-lo.'
+      apply_help: Desa el suggeriment de l'LLM amb origen `llm:` en lloc de només
+        previsualitzar-lo.
       auto_split_help: Llegeix la factura adjunta i, quan és multicomponent, la divideix
         en fills base/IVA per línia; si no, la classifica al lloc (requereix --read-evidence).
       auto_split_needs_evidence: '--auto-split requereix --read-evidence: la decisió

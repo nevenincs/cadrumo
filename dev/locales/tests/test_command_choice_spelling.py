@@ -7,6 +7,9 @@ import pytest
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.i18n.render import tr
 from cadrumo.domain.calculations.registry.censo_modelos import CensoModeloEventKind
+from cadrumo.domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind
+from cadrumo.domain.transactions.model_validation import validate_classified_by_shape
+from cadrumo.domain.transactions.own_accounts import OwnAccountHolding
 
 from ..signal_spelling import spellcheck_catalogues
 from ..signal_tokens import filtered_translation_text, translation_words
@@ -73,3 +76,24 @@ def test_real_english_cli_help_keeps_glosses_under_spelling_review(monkeypatch: 
     )
     spelling, _inventory, _findings = spellcheck_catalogues({"help"}, {"en": {"help": value}}, Path("."))
     assert spelling == {("en", "help"): ("chnage",)}
+
+
+@pytest.mark.parametrize("locale", ["en", "es", "ca", "hu"])
+def test_amendment_and_provenance_help_mark_real_wire_values(locale: str) -> None:
+    choices = tr("cli.app.modelo.work.amendment_kind_help", locale=locale)
+    for kind in CalculationRevisionAmendmentKind:
+        assert f"`{kind.value}`" in choices
+    provenance = tr("cli.ledger.classify.apply_help", locale=locale)
+    assert "`llm:`" in provenance
+    assert validate_classified_by_shape("llm:example") == "llm:example"
+    filtered, _excluded = filtered_translation_text(f"{choices} {provenance} misspeling")
+    assert "misspeling" in translation_words(filtered)
+    assert not {kind.value for kind in CalculationRevisionAmendmentKind}.intersection(translation_words(filtered))
+    assert "llm" not in translation_words(filtered)
+
+
+@pytest.mark.parametrize("locale", ["en", "es", "ca"])
+def test_account_help_marks_actual_holding_choices(locale: str) -> None:
+    value = tr("cli.app.ledger.account.holding_help", locale=locale)
+    for holding in OwnAccountHolding:
+        assert f"`{holding.value}`" in value

@@ -13,7 +13,7 @@ cli:
           one modelo or for all.
         group_help: Set up your own bank accounts and designate them for modelo charges
           and refunds.
-        holding_help: Whether you hold the account alone (titular) or jointly (cotitular).
+        holding_help: Whether you hold the account alone (`titular`) or jointly (`cotitular`).
         label_help: Your name for the account.
         list_help: List your own accounts, masked, with their role designations.
         modelo_help: Three-digit modelo the designation applies to; every modelo when
@@ -1419,8 +1419,8 @@ cli:
           %{period} return recorded as filed; choose from the listed box numbers.
         amend_wizard_value_prompt: Corrected value for casilla %{number} (%{label}),
           currently %{previous_value}
-        amendment_kind_help: Legal kind of the amendment (complementaria, sustitutiva
-          or rectificativa)
+        amendment_kind_help: Legal kind of the amendment (`complementaria`, `sustitutiva`
+          or `rectificativa`)
         amendment_reason_help: Free-text reason for the correction (kept in the audit
           trail)
         app_help: Manage the lifecycle of modelo declarations
@@ -2948,8 +2948,8 @@ cli:
         status.'
       year_help: Filing year for --period (e.g. 2024).
     classify:
-      apply_help: 'Save the LLM suggestion with source llm: instead of only previewing
-        it.'
+      apply_help: Save the LLM suggestion with source `llm:` instead of only previewing
+        it.
       auto_split_help: Read the attached invoice and, when it is multi-component,
         split it into per-line base/IVA children; otherwise classify it in place (requires
         --read-evidence).

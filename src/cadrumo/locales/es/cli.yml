@@ -13,7 +13,7 @@ cli:
           un modelo o para todos.
         group_help: Configura tus cuentas bancarias propias y desígnalas para cargos
           y devoluciones de modelos.
-        holding_help: Si eres titular único de la cuenta (titular) o cotitular (cotitular).
+        holding_help: Si eres titular único de la cuenta (`titular`) o cotitular (`cotitular`).
         label_help: Tu nombre para la cuenta.
         list_help: Lista tus cuentas propias, enmascaradas, con sus designaciones.
         modelo_help: Modelo de tres cifras al que se aplica la designación; todos
@@ -1530,8 +1530,8 @@ cli:
           casillas listadas.
         amend_wizard_value_prompt: Valor corregido para la casilla %{number} (%{label}),
           actualmente %{previous_value}
-        amendment_kind_help: Clase legal de la modificación (complementaria, sustitutiva
-          o rectificativa)
+        amendment_kind_help: Clase legal de la modificación (`complementaria`, `sustitutiva`
+          o `rectificativa`)
         amendment_reason_help: Motivo libre de la corrección (se conserva en el registro
           de auditoría)
         app_help: Gestionar el ciclo de vida de las declaraciones de un modelo
@@ -3186,7 +3186,8 @@ cli:
         con aeat app ledger status.'
       year_help: Año de declaración para --period (p. ej. 2024).
     classify:
-      apply_help: 'Guarda la sugerencia del LLM con origen llm: en lugar de solo previsualizarla.'
+      apply_help: Guarda la sugerencia del LLM con origen `llm:` en lugar de solo
+        previsualizarla.
       auto_split_help: Lee la factura adjunta y, cuando es multicomponente, la divide
         en hijos base/IVA por línea; si no, la clasifica en su sitio (requiere --read-evidence).
       auto_split_needs_evidence: '--auto-split requiere --read-evidence: la decisión
