@@ -7,10 +7,12 @@ from dataclasses import replace
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
+from typing import NamedTuple
 
 import pytest
 from pydantic import AnyHttpUrl, TypeAdapter
 
+from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
 )
@@ -201,6 +203,27 @@ def _verification_repositories(
         verification=verification_repository,
         observation=observation_repository,
         bucket_event=bucket_event_repository,
+    )
+
+
+class _FixtureRepositories(NamedTuple):
+    work_units: WorkUnitCatalogueRepository
+    calculations: CalculationRevisionCatalogueRepository
+    filings: ModeloRecordCatalogueRepository
+    reports: VerificationReportCatalogueRepository
+    observations: CalculationObservationRepository
+    events: BucketEventHistoryRepository
+
+
+def _fixture_repositories(objects: SecureObjectRepository) -> _FixtureRepositories:
+    """Open the verification fixture's catalogues over one profile's secure objects."""
+    return _FixtureRepositories(
+        work_units=WorkUnitCatalogueRepository(objects=objects),
+        calculations=CalculationRevisionCatalogueRepository(objects=objects, bucket_id=_BUCKET_ID),
+        filings=ModeloRecordCatalogueRepository(objects=objects, bucket_id=_BUCKET_ID),
+        reports=VerificationReportCatalogueRepository(objects=objects, bucket_id=_BUCKET_ID),
+        observations=CalculationObservationRepository(objects=objects),
+        events=BucketEventHistoryRepository(objects=objects),
     )
 
 
@@ -499,12 +522,7 @@ def test_verify_modelo_390_persists_cross_period_clean_state_blockers_when_prior
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         _store_ready_profile_record()
         objects = profile.repository
-        work_units = WorkUnitCatalogueRepository(objects=objects)
-        calculations = CalculationRevisionCatalogueRepository(objects=objects, bucket_id=_BUCKET_ID)
-        filings = ModeloRecordCatalogueRepository(objects=objects, bucket_id=_BUCKET_ID)
-        reports = VerificationReportCatalogueRepository(objects=objects, bucket_id=_BUCKET_ID)
-        observations = CalculationObservationRepository(objects=objects)
-        events = BucketEventHistoryRepository(objects=objects)
+        work_units, calculations, filings, reports, observations, events = _fixture_repositories(objects)
         revision_id = _persist_390_draft(
             work_unit_repository=work_units,
             calculation_repository=calculations,
@@ -543,12 +561,7 @@ def test_verify_modelo_390_refuses_csv_register_prior_filing_without_justificant
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         _store_ready_profile_record()
         objects = profile.repository
-        work_units = WorkUnitCatalogueRepository(objects=objects)
-        calculations = CalculationRevisionCatalogueRepository(objects=objects, bucket_id=_BUCKET_ID)
-        filings = ModeloRecordCatalogueRepository(objects=objects, bucket_id=_BUCKET_ID)
-        reports = VerificationReportCatalogueRepository(objects=objects, bucket_id=_BUCKET_ID)
-        observations = CalculationObservationRepository(objects=objects)
-        events = BucketEventHistoryRepository(objects=objects)
+        work_units, calculations, filings, reports, observations, events = _fixture_repositories(objects)
         _seed_303_cross_period_sources(
             work_unit_repository=work_units,
             calculation_repository=calculations,
@@ -597,12 +610,7 @@ def test_verify_fails_closed_when_profile_records_no_activity_start_date(tmp_pat
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         _store_ready_profile_record()
         objects = profile.repository
-        work_units = WorkUnitCatalogueRepository(objects=objects)
-        calculations = CalculationRevisionCatalogueRepository(objects=objects, bucket_id=_BUCKET_ID)
-        filings = ModeloRecordCatalogueRepository(objects=objects, bucket_id=_BUCKET_ID)
-        reports = VerificationReportCatalogueRepository(objects=objects, bucket_id=_BUCKET_ID)
-        observations = CalculationObservationRepository(objects=objects)
-        events = BucketEventHistoryRepository(objects=objects)
+        work_units, calculations, filings, reports, observations, events = _fixture_repositories(objects)
         revision_id = _persist_390_draft(
             work_unit_repository=work_units,
             calculation_repository=calculations,
