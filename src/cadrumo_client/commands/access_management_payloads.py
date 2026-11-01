@@ -140,7 +140,7 @@ def _same_request(
         and submitted.review_digest == terminal.review_digest
         and submitted.grant_id == terminal.grant_id
         and submitted.stage is EnrollmentStage.REQUESTED
-        and terminal.stage in {EnrollmentStage.COMPLETE, EnrollmentStage.DECLINED}
+        and terminal.stage.is_terminal
     )
 
 
