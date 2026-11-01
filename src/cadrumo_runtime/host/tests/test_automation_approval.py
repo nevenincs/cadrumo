@@ -10,7 +10,6 @@ from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from threading import Event
-from typing import Literal
 from uuid import UUID, uuid4
 
 import pytest
@@ -50,7 +49,6 @@ from cadrumo_client.contracts.access_vocabulary import (
     DisclosurePageRequest,
     DisclosurePermission,
 )
-from cadrumo_client.contracts.deadline_budget import exchange_deadline
 from cadrumo_client.contracts.enrollment_access import EnrollmentPrepare, EnrollmentPrepared
 from cadrumo_client.contracts.enrollment_proposal import EnrollmentKind, EnrollmentProposal
 from cadrumo_client.contracts.operation_access import (
@@ -71,7 +69,6 @@ from cadrumo_client.contracts.profile_access import (
     AccessRefusal,
     ProfileDisclosurePage,
     ProfileDisclosurePageRequest,
-    ProfileLogin,
     ProfileStatus,
     SessionRequest,
 )
@@ -83,7 +80,7 @@ from cadrumo_client.transport.windows import WindowsEndpoint
 from ...adapters.tests.profile_worker_support import owner_id
 from ...adapters.tests.retained_server import RetainedRuntimeTransportServer
 from ..profile_connections import RuntimeProfileConnections
-from .served_runtime import SyntheticLogin, connect_verified
+from .served_runtime import SyntheticLogin, admit_session, connect_verified
 
 pytestmark = [
     pytest.mark.integration,
@@ -92,26 +89,6 @@ pytestmark = [
     pytest.mark.skipif(sys.platform != "win32", reason="requires real native Windows profile workers"),
     pytest.mark.usefixtures("authority_operation"),
 ]
-
-
-def _login(
-    client: VerifiedConnection,
-    profile_id: UUID,
-    *,
-    frontend: OperationFrontendProjection,
-    method: Literal["password", "receipt", "api_key"],
-    proof: bytes,
-) -> UUID:
-    secret = bytearray(proof)
-    result = client.login(
-        ProfileLogin(request_id=uuid4(), profile_id=profile_id, frontend=frontend, method=method),
-        secret,
-        deadline=exchange_deadline(),
-    )
-    assert secret == bytes(len(proof))
-    assert isinstance(result, ProfileStatus)
-    assert result.status.session_id is not None
-    return result.status.session_id
 
 
 def _seed_renewal(subject: AdministrationSubject, *, boot: UUID) -> tuple[EnrollmentProposal, bytes]:
@@ -296,7 +273,7 @@ def _request_renewal(
     api_key: bytes,
     renewal_proposal: EnrollmentProposal,
 ) -> tuple[_Renewal, set[UUID]]:
-    human_id = _login(
+    human_id = admit_session(
         human,
         profile_id,
         frontend=OperationFrontendProjection.CLI,
@@ -314,7 +291,7 @@ def _request_renewal(
     )
     assert isinstance(human_status, ProfileStatus)
     human_destinations = _disclosure_destinations(human, profile_id, human_id)
-    api_id = _login(
+    api_id = admit_session(
         api,
         profile_id,
         frontend=OperationFrontendProjection.CLI,

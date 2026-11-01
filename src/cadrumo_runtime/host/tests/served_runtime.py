@@ -144,20 +144,20 @@ def admit_session(
     connection: VerifiedConnection,
     profile_id: UUID,
     *,
-    method: Literal["password", "api_key"],
+    method: Literal["password", "receipt", "api_key"],
     proof: bytes,
+    frontend: OperationFrontendProjection = OperationFrontendProjection.CLI,
+    deadline_seconds: float | None = None,
 ) -> UUID:
-    """Sign in over ``connection`` and return the admitted session, checking the proof buffer was wiped."""
+    """Sign in over ``connection`` and return the admitted session, checking the proof buffer was wiped.
+
+    The exchange budget is the runtime's own unless ``deadline_seconds`` bounds it.
+    """
     secret = bytearray(proof)
     reply = connection.login(
-        ProfileLogin(
-            request_id=uuid4(),
-            profile_id=profile_id,
-            frontend=OperationFrontendProjection.CLI,
-            method=method,
-        ),
+        ProfileLogin(request_id=uuid4(), profile_id=profile_id, frontend=frontend, method=method),
         secret,
-        deadline=exchange_deadline(),
+        deadline=exchange_deadline() if deadline_seconds is None else time.monotonic() + deadline_seconds,
     )
     assert secret == bytes(len(proof))
     assert isinstance(reply, ProfileStatus), reply
