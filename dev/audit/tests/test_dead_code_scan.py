@@ -9,6 +9,9 @@ runner against a live process.
 
 from __future__ import annotations
 
+import json
+import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -343,3 +346,20 @@ def test_the_shared_verdict_follows_an_edit_and_never_shares_an_error(
 
     assert run_dead_code_scan(root).outcome is DeadCodeOutcome.ERROR
     assert published() == 2, "a tool error says nothing about the tree and must not be served to the run"
+
+
+def test_the_module_entry_runs_a_complete_scan_and_reports_it() -> None:
+    """``python -m dev.audit.dead_code`` shares its result across processes without a pickle refusal."""
+    completed = subprocess.run(
+        [sys.executable, "-m", "dev.audit.dead_code", "--json"],
+        cwd=_REPO_ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+        timeout=600,
+    )
+
+    assert completed.returncode == 0, completed.stderr[-2000:]
+    report = json.loads(completed.stdout)
+    assert report["outcome"] in {DeadCodeOutcome.CLEAN.value, DeadCodeOutcome.FINDINGS.value}, report["reason"]
+    assert report["modules_offered"] >= MINIMUM_OFFERED_MODULES

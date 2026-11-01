@@ -515,4 +515,9 @@ def _skipped_module_match(line: str) -> re.Match[str] | None:
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    # Under ``-m`` this module is ``__main__``, so the scan result would pickle as
+    # ``__main__.DeadCodeResult``, which the shared-scan reader refuses. Run the
+    # importable copy so its types carry their real module path.
+    from importlib import import_module
+
+    sys.exit(import_module("dev.audit.dead_code").main())
