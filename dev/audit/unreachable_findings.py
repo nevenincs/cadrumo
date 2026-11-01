@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ast
+from collections import Counter
 from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
@@ -15,6 +16,7 @@ from dev.quality.source_import_analysis import (
 
 from .unreachable_dataclasses import dataclass_member_uses
 from .unreachable_definitions import collection_uses, source_definitions
+from .unreachable_form_codes import CodeSources, DeclaredCodes, member_code_is_declared
 from .unreachable_frameworks import framework_contracts
 from .unreachable_graph import _collapse_packages, _importers_of_span, reachable_closure, resolved_symbol_uses
 from .unreachable_memo import parse_module, walked
@@ -101,15 +103,17 @@ def _symbol_findings(
     outside: OutsideUse,
     data_tokens: frozenset[str],
     declared_values: frozenset[str],
-) -> tuple[tuple[SymbolFinding, ...], int, int]:
-    """Return the symbol findings, the data-corpus clears, and the ``dev/`` clears.
+    form_codes: _FormCodes | None = None,
+) -> tuple[tuple[SymbolFinding, ...], int, int, int]:
+    """Return the symbol findings and the data, ``dev/`` and registry-code clear counts.
 
-    The two clear counts stay separate because they answer different
-    questions: ``data_cleared`` is a registry declaration naming a member the
-    import graph cannot see, while ``dev_cleared`` is a repository gate that
-    consumes the symbol. Folding them into one number under the data name
-    would misreport both.
+    The clear counts stay separate because they answer different questions:
+    ``data_cleared`` is a registry declaration naming a member the import graph
+    cannot see, ``dev_cleared`` is a repository gate that consumes the symbol,
+    and ``registry_cleared`` is a registry-coded enum member whose code the
+    registry declares. Folding them into one number would misreport all three.
     """
+    form_codes = form_codes or _FormCodes({}, {})
     entries = spec.entry_points
     member_names: set[str] = set()
     literal_tokens: set[str] = set()
@@ -134,13 +138,12 @@ def _symbol_findings(
     )
     usage = _SymbolUsage(member_names, literal_tokens, resolved_uses, self_uses, whole_use, schema_uses)
     findings: list[SymbolFinding] = []
-    data_cleared = 0
-    dev_cleared = 0
+    cleared: Counter[str] = Counter()
     audited_reach = sorted(name for name in runtime_reach if spec.audits(name))
     for name in audited_reach:
         module = modules[name]
         for definition in source_definitions(module.tree, contracts.get(name)):
-            finding, data_clear, dev_clear = _definition_finding(
+            finding, clearance = _definition_finding(
                 name,
                 module,
                 definition,
@@ -149,13 +152,18 @@ def _symbol_findings(
                 outside,
                 data_tokens,
                 declared_values,
+                form_codes,
             )
-            data_cleared += data_clear
-            dev_cleared += dev_clear
+            cleared[clearance] += 1
             if finding is not None:
                 findings.append(finding)
     # An overloaded definition yields one row per signature; keep the first.
-    return tuple({finding.id: finding for finding in findings}.values()), data_cleared, dev_cleared
+    return (
+        tuple({finding.id: finding for finding in findings}.values()),
+        cleared[_DATA],
+        cleared[_DEV],
+        cleared[_REGISTRY],
+    )
 
 
 def _test_subjects(test: ShippedModule, known: frozenset[str]) -> tuple[frozenset[str], frozenset[tuple[str, str]]]:
@@ -277,6 +285,21 @@ def _unreachable_module_finding(
     )
 
 
+_PYTHON = "python"
+_DATA = "data"
+_DEV = "dev"
+_REGISTRY = "registry"
+_KEPT = "reported"
+
+
+@dataclass(frozen=True)
+class _FormCodes:
+    """Registry-coded enums and the codes the shipped declarations give them."""
+
+    sources: CodeSources
+    declared: DeclaredCodes
+
+
 @dataclass(frozen=True)
 class _SymbolUsage:
     """Resolved Python uses consulted before data and development consumers."""
@@ -326,17 +349,22 @@ def _definition_finding(
     outside: OutsideUse,
     data_tokens: frozenset[str],
     declared_values: frozenset[str],
-) -> tuple[SymbolFinding | None, int, int]:
-    """Clear resolved uses while counting data and development-tool clears separately."""
+    form_codes: _FormCodes,
+) -> tuple[SymbolFinding | None, str]:
+    """Clear resolved uses, naming which kind of evidence cleared the definition."""
     if _python_reaches_definition(name, definition, usage):
-        return None, 0, 0
+        return None, _PYTHON
     if _data_reaches_definition(definition, data_tokens, declared_values):
-        return None, 1, 0
+        return None, _DATA
+    if definition.kind is SymbolKind.ENUM_MEMBER and member_code_is_declared(
+        name, definition.owner, definition.value, form_codes.sources, form_codes.declared
+    ):
+        return None, _REGISTRY
     labels = outside.labels_for_name(definition.name)
     # Tests annotate findings; only a resolved tooling or build-hook edge clears.
     resolved_labels = outside.resolved_labels(name, definition.qualname)
     if TRUSTED_OUTSIDE_LABELS.intersection(resolved_labels):
-        return None, 0, int(DEV_LABEL in resolved_labels)
+        return None, _DEV if DEV_LABEL in resolved_labels else _PYTHON
     return (
         SymbolFinding(
             path=relative_to_repo(module.path, spec),
@@ -347,8 +375,7 @@ def _definition_finding(
             used_by=labels,
             module=name,
         ),
-        0,
-        0,
+        _KEPT,
     )
 
 
