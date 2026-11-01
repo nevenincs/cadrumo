@@ -91,13 +91,139 @@ def _fact_values(client: FrontendClient) -> tuple[int, str, dict[str, str]]:
     return viewed.record_revision, viewed.content_digest, facts
 
 
+def _apply_patch_then_repeat(
+    client: FrontendClient, profile_id: UUID, initial: UserProfileRecord
+) -> tuple[int, str, dict[str, str]]:
+    client.login_password(bytearray(PROFILE_INPUT.encode()))
+    first = run_profile_mutation(
+        client,
+        _patch(
+            profile_id,
+            revision=initial.record_revision,
+            digest=initial.content_digest,
+            values=(("output-language", "ca"), ("name", "Ada Example")),
+        ),
+        timeout=60,
+    )
+    assert first.effect is OperationEffect.UPDATED
+    assert type(first.projection) is ProfilePatchOperationProjection
+    assert first.projection.changed
+    assert first.projection.record_revision == initial.record_revision + 1
+    revision, digest, facts = _fact_values(client)
+    assert revision == first.projection.record_revision
+    assert facts[PROFILE_OUTPUT_LANGUAGE_PATH] == "ca"
+    assert facts["identity.name"] == "Ada Example"
+
+    same = run_profile_mutation(
+        client,
+        _patch(
+            profile_id,
+            revision=revision,
+            digest=digest,
+            values=(("output-language", "ca"), ("name", "Ada Example")),
+        ),
+        timeout=60,
+    )
+    assert same.effect is OperationEffect.NONE
+    assert type(same.projection) is ProfilePatchOperationProjection
+    assert not same.projection.changed
+    assert same.projection.record_revision == revision
+    return revision, digest, facts
+
+
+def _refuse_invalid_stale_and_foreign_patches(
+    client: FrontendClient,
+    profile_id: UUID,
+    foreign_id: UUID,
+    initial: UserProfileRecord,
+    current: tuple[int, str, dict[str, str]],
+) -> None:
+    revision, digest, _facts = current
+    with pytest.raises(ProfileMutationRunError) as invalid:
+        run_profile_mutation(
+            client,
+            _patch(
+                profile_id,
+                revision=revision,
+                digest=digest,
+                values=(("name", "Unpublished"), ("no-such-question", "bad")),
+            ),
+            timeout=60,
+        )
+    assert invalid.value.operation_id
+    assert invalid.value.terminal_condition is OperationTerminalCondition.REFUSED
+    assert invalid.value.effect is not OperationEffect.UPDATED
+    assert _fact_values(client) == current
+
+    with pytest.raises(ProfileMutationRunError) as stale:
+        run_profile_mutation(
+            client,
+            _patch(
+                profile_id,
+                revision=initial.record_revision,
+                digest=initial.content_digest,
+                values=(("name", "Stale"),),
+            ),
+            timeout=60,
+        )
+    assert stale.value.reason == "FAIL_PROFILE_RECORD_CONFLICT"
+    assert _fact_values(client) == current
+
+    with pytest.raises(FrontendRefusedError):
+        run_profile_mutation(
+            client,
+            _patch(
+                foreign_id,
+                revision=revision,
+                digest=digest,
+                values=(("name", "Wrong profile"),),
+            ),
+            timeout=60,
+        )
+    assert _fact_values(client) == current
+
+
+def _clear_name_keeping_language(client: FrontendClient, profile_id: UUID, revision: int, digest: str) -> None:
+    cleared = run_profile_mutation(
+        client,
+        _patch(profile_id, revision=revision, digest=digest, values=(("name", ""),)),
+        timeout=60,
+    )
+    assert cleared.effect is OperationEffect.UPDATED
+    assert type(cleared.projection) is ProfilePatchOperationProjection
+    assert cleared.projection.changed
+    assert cleared.projection.record_revision == revision + 1
+    final_revision, _, final_facts = _fact_values(client)
+    assert final_revision == cleared.projection.record_revision
+    assert "identity.name" not in final_facts
+    assert final_facts[PROFILE_OUTPUT_LANGUAGE_PATH] == "ca"
+
+
+def _assert_two_revisions_and_foreign_untouched(
+    root: Path,
+    profile_id: UUID,
+    foreign_id: UUID,
+    initial: tuple[UserProfileRecord, int],
+    foreign_initial: tuple[UserProfileRecord, int],
+) -> None:
+    final, final_events = _snapshot(profile_id, root=root)
+    assert final.record_revision == initial[0].record_revision + 2
+    assert final_events == initial[1] + 2
+    assert any(fact.path == PROFILE_OUTPUT_LANGUAGE_PATH and fact.value == "ca" for fact in final.facts)
+    assert not any(fact.path == "identity.name" and fact.value is not None for fact in final.facts)
+    foreign, foreign_events = _snapshot(foreign_id, root=root)
+    assert foreign.record_revision == foreign_initial[0].record_revision
+    assert foreign.content_digest == foreign_initial[0].content_digest
+    assert foreign_events == foreign_initial[1]
+
+
 def test_native_patch_is_atomic_noop_and_exact_profile_bound(tmp_path: Path) -> None:
     """Two answers publish once; refusals and no-op cannot publish half a patch."""
     with worker_profiles(tmp_path) as (root, targets):
         profile_id = targets[0][0].binding.profile_id
         foreign_id = targets[1][0].binding.profile_id
-        initial, initial_events = _snapshot(profile_id, root=root)
-        foreign_initial, foreign_initial_events = _snapshot(foreign_id, root=root)
+        initial = _snapshot(profile_id, root=root)
+        foreign_initial = _snapshot(foreign_id, root=root)
         endpoint = WindowsEndpoint(storage_root=root)
         installation(storage_root=root, os_owner_id=owner_id(), storage_identity=endpoint.storage_identity)
         native = MemoryNativePort()
@@ -112,106 +238,10 @@ def test_native_patch_is_atomic_noop_and_exact_profile_bound(tmp_path: Path) -> 
                 FrontendClient.open(served.launch, profile_id=profile_id, frontend=OperationFrontendProjection.TUI)
             )
             with client:
-                client.login_password(bytearray(PROFILE_INPUT.encode()))
-                first = run_profile_mutation(
-                    client,
-                    _patch(
-                        profile_id,
-                        revision=initial.record_revision,
-                        digest=initial.content_digest,
-                        values=(("output-language", "ca"), ("name", "Ada Example")),
-                    ),
-                    timeout=60,
-                )
-                assert first.effect is OperationEffect.UPDATED
-                assert type(first.projection) is ProfilePatchOperationProjection
-                assert first.projection.changed
-                assert first.projection.record_revision == initial.record_revision + 1
-                revision, digest, facts = _fact_values(client)
-                assert revision == first.projection.record_revision
-                assert facts[PROFILE_OUTPUT_LANGUAGE_PATH] == "ca"
-                assert facts["identity.name"] == "Ada Example"
-
-                same = run_profile_mutation(
-                    client,
-                    _patch(
-                        profile_id,
-                        revision=revision,
-                        digest=digest,
-                        values=(("output-language", "ca"), ("name", "Ada Example")),
-                    ),
-                    timeout=60,
-                )
-                assert same.effect is OperationEffect.NONE
-                assert type(same.projection) is ProfilePatchOperationProjection
-                assert not same.projection.changed
-                assert same.projection.record_revision == revision
-
-                with pytest.raises(ProfileMutationRunError) as invalid:
-                    run_profile_mutation(
-                        client,
-                        _patch(
-                            profile_id,
-                            revision=revision,
-                            digest=digest,
-                            values=(("name", "Unpublished"), ("no-such-question", "bad")),
-                        ),
-                        timeout=60,
-                    )
-                assert invalid.value.operation_id
-                assert invalid.value.terminal_condition is OperationTerminalCondition.REFUSED
-                assert invalid.value.effect is not OperationEffect.UPDATED
-                assert _fact_values(client) == (revision, digest, facts)
-
-                with pytest.raises(ProfileMutationRunError) as stale:
-                    run_profile_mutation(
-                        client,
-                        _patch(
-                            profile_id,
-                            revision=initial.record_revision,
-                            digest=initial.content_digest,
-                            values=(("name", "Stale"),),
-                        ),
-                        timeout=60,
-                    )
-                assert stale.value.reason == "FAIL_PROFILE_RECORD_CONFLICT"
-                assert _fact_values(client) == (revision, digest, facts)
-
-                with pytest.raises(FrontendRefusedError):
-                    run_profile_mutation(
-                        client,
-                        _patch(
-                            foreign_id,
-                            revision=revision,
-                            digest=digest,
-                            values=(("name", "Wrong profile"),),
-                        ),
-                        timeout=60,
-                    )
-                assert _fact_values(client) == (revision, digest, facts)
-
-                cleared = run_profile_mutation(
-                    client,
-                    _patch(profile_id, revision=revision, digest=digest, values=(("name", ""),)),
-                    timeout=60,
-                )
-                assert cleared.effect is OperationEffect.UPDATED
-                assert type(cleared.projection) is ProfilePatchOperationProjection
-                assert cleared.projection.changed
-                assert cleared.projection.record_revision == revision + 1
-                final_revision, _, final_facts = _fact_values(client)
-                assert final_revision == cleared.projection.record_revision
-                assert "identity.name" not in final_facts
-                assert final_facts[PROFILE_OUTPUT_LANGUAGE_PATH] == "ca"
-        final, final_events = _snapshot(profile_id, root=root)
-        assert final.record_revision == initial.record_revision + 2
-        assert final_events == initial_events + 2
-        assert any(fact.path == PROFILE_OUTPUT_LANGUAGE_PATH and fact.value == "ca" for fact in final.facts)
-        assert not any(fact.path == "identity.name" and fact.value is not None for fact in final.facts)
-        foreign, foreign_events = _snapshot(foreign_id, root=root)
-        assert foreign.record_revision == foreign_initial.record_revision
-        assert foreign.content_digest == foreign_initial.content_digest
-        assert foreign_events == foreign_initial_events
+                current = _apply_patch_then_repeat(client, profile_id, initial[0])
+                _refuse_invalid_stale_and_foreign_patches(client, profile_id, foreign_id, initial[0], current)
+                _clear_name_keeping_language(client, profile_id, current[0], current[1])
+        _assert_two_revisions_and_foreign_untouched(root, profile_id, foreign_id, initial, foreign_initial)
 
 
 def test_canonical_language_bridge_writes_registered_fact_and_notifies_other_frontend(tmp_path: Path) -> None:
