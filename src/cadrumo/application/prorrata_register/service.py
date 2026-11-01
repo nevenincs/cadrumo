@@ -27,7 +27,7 @@ See Also:
 
 from __future__ import annotations
 
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from decimal import Decimal
 from typing import Literal
@@ -39,6 +39,7 @@ from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.prorrata_register_catalogue import carried_prior_definitiva_prorrata_provenance
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...domain.prorrata_register.register import (
+    ProrrataOperatorGrossDeclaration,
     ProrrataProvisionalResolution,
     ProrrataRegister,
     ProrrataRegisterEntry,
@@ -248,6 +249,18 @@ class ProrrataRegisterService:
             validate_entry=lambda entry: require_prorrata_entry_coordinates_current(entry, operation=self._operation),
         )
 
+    def rewrite_gross_declarations(
+        self,
+        rewrite: Callable[[ProrrataRegister], tuple[ProrrataOperatorGrossDeclaration, ...]],
+    ) -> ProrrataRegister:
+        """Commit operator gross declarations derived from the latest register candidate.
+
+        ``rewrite`` decides the duplicate, replacement, removal and sector
+        questions against each compare-and-swap candidate and may raise to
+        refuse; the register's own invariants are re-validated on the rebuild.
+        """
+        return self._repository.rewrite_gross_declarations(rewrite)
+
     def list_all(self) -> ProrrataRegister:
         """Return the full active-profile register.
 
@@ -371,6 +384,7 @@ def _register_with_whole_seed(
         entries=(*retained, seed.entry),
         sector_definitions=current.sector_definitions,
         activity_rows=current.activity_rows,
+        gross_declarations=current.gross_declarations,
     )
 
 

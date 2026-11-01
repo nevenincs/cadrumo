@@ -384,10 +384,15 @@ application:
           o calcula tú la casilla.
         source_period_cuotas_missing: 'La liquidación %{period} se presentó sin las
           casillas deducibles que necesita la regularización: %{casillas}.'
+        source_period_gross_disagreement: La liquidación %{period} tiene cuotas soportadas
+          deducibles en el libro con una base bruta de %{ledger}, pero declaraste
+          una base bruta de %{declared}; corrige el libro o sustituye la declaración
+          antes de regularizar.
         source_period_gross_unavailable: La liquidación %{period} declaró cuotas soportadas
           deducibles, pero el libro no contiene ninguna cuota deducible de ese periodo,
           así que se desconocen sus cuotas brutas antes de la prorrata; registra en
-          el libro las cuotas soportadas de ese periodo antes de regularizar.
+          el libro las cuotas soportadas de ese periodo, o declara sus cuotas brutas
+          con 'aeat app ledger prorrata declare-gross', antes de regularizar.
         source_period_ledger_divergence: La liquidación %{period} declaró %{filed}
           en %{casilla}, pero sus cuotas del libro a tus porcentajes provisionales
           de prorrata dan %{expected}; concilia el libro con la liquidación presentada
@@ -395,6 +400,14 @@ application:
         source_period_ledger_refused: Las cuotas soportadas del libro de la liquidación
           %{period} no se pueden repartir con tu registro de prorrata; resuelve ese
           rechazo del libro antes de regularizar.
+        source_period_operator_divergence: La liquidación %{period} declaró %{filed}
+          de cuotas soportadas deducibles, pero la base bruta que declaraste a tus
+          porcentajes provisionales de prorrata da %{expected}; concilia la declaración
+          con la liquidación presentada antes de regularizar.
+        source_period_sector_gross_disagreement: La liquidación %{period} tiene cuotas
+          soportadas deducibles en el libro para el sector %{sector} con una base
+          bruta de %{ledger}, pero declaraste una base bruta de %{declared} para ese
+          sector; corrige el libro o sustituye la declaración antes de regularizar.
         source_periods_missing: 'La regularización abarca las liquidaciones anteriores
           del ejercicio, y estas no constan presentadas: %{periods}.'
         source_periods_refused: 'Estas liquidaciones anteriores llevan una revisión

@@ -353,10 +353,15 @@ application:
           or calculate the box yourself.
         source_period_cuotas_missing: 'Liquidation %{period} was filed without the
           deductible boxes the regularisation needs: %{casillas}.'
+        source_period_gross_disagreement: Liquidation %{period} has deductible input
+          VAT in the ledger with a gross base of %{ledger}, but you declared a gross
+          base of %{declared} for it; correct the ledger or replace the declaration
+          before regularising.
         source_period_gross_unavailable: Liquidation %{period} declared deductible
           input VAT, but the ledger holds no deductible input for it, so its gross
           input VAT before prorrata is unknown; record that period's input VAT in
-          the ledger before regularising.
+          the ledger, or declare its gross input VAT with 'aeat app ledger prorrata
+          declare-gross', before regularising.
         source_period_ledger_divergence: Liquidation %{period} declared %{filed} in
           %{casilla}, but its ledger input VAT at your provisional prorrata percentages
           gives %{expected}; reconcile the ledger with the filed liquidation before
@@ -364,6 +369,14 @@ application:
         source_period_ledger_refused: The ledger input VAT of liquidation %{period}
           cannot be apportioned under your prorrata register; resolve that ledger
           refusal before regularising.
+        source_period_operator_divergence: Liquidation %{period} declared %{filed}
+          of deductible input VAT, but the gross base you declared for it at your
+          provisional prorrata percentages gives %{expected}; reconcile the declaration
+          with the filed liquidation before regularising.
+        source_period_sector_gross_disagreement: Liquidation %{period} has deductible
+          input VAT in the ledger for sector %{sector} with a gross base of %{ledger},
+          but you declared a gross base of %{declared} for that sector; correct the
+          ledger or replace the declaration before regularising.
         source_periods_missing: 'The regularisation covers the year''s earlier liquidations,
           and these are not filed: %{periods}.'
         source_periods_refused: 'These earlier liquidations carry a form revision

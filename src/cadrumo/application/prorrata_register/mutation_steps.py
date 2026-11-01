@@ -11,7 +11,10 @@ from pydantic import BaseModel, ValidationError
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
 from ...core.errors.hierarchy import CadrumoError, InternalInvariantError
+from ...core.period import Period, PeriodError
 from ...core.prorrata_register import ProrrataProvisionalProvenance, ProrrataRegisterRegime
+from ...core.time.clock import now
+from ...domain.calculations.registry.errors import NoRevisionForPeriodError, RegistryValidationError
 from ...domain.calculations.registry.prorrata_register_catalogue import (
     carried_prior_definitiva_prorrata_provenance,
     especial_prorrata_register_regime,
@@ -23,8 +26,10 @@ from ...domain.calculations.registry.prorrata_register_catalogue import (
     revocacion_prorrata_transition,
 )
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ...domain.iva.m303_settlement import m303_liquidation_periods
 from ...domain.prorrata_register.register import (
     ProrrataEspecialTransitionEvidence,
+    ProrrataOperatorGrossDeclaration,
     ProrrataRegister,
     ProrrataRegisterEntry,
     ProrrataRegisterValidationError,
@@ -63,13 +68,14 @@ class CommittedProrrataMutation:
     register: ProrrataRegister
     entry: ProrrataRegisterEntry | None = None
     sector_definition: SectorDefinition | None = None
+    gross_declaration: ProrrataOperatorGrossDeclaration | None = None
     seed: ProrrataPriorDefinitivaSeed | None = None
     findings: tuple[ProrrataSeedFinding, ...] = ()
     prior_ejercicio: int | None = None
 
 
 class ProrrataPreflightRefusalError(CadrumoError):
-    """Known validation refusal raised before the mutation's write section."""
+    """Known refusal raised before anything commits: at preflight or on a CAS candidate rebuild."""
 
     reason: _ProrrataRefusalReason
     detail: str
@@ -417,6 +423,122 @@ def _perform_sector_settlement_request(
     return _perform_sector_settlement(payload, prepared, service)
 
 
+def _gross_declaration_period(
+    ejercicio: int,
+    token: str,
+    context: OperationExecutorContext,
+) -> Period:
+    """Resolve an earlier liquidation period of the pinned Modelo 303 cadence.
+
+    The settlement liquidation deducts its own cuotas at the definitive
+    percentage and is never regularised, so only the periods before it carry a
+    gross base the regularisation reads.
+    """
+    try:
+        period = Period.from_year_and_code(ejercicio, token)
+        cadence = m303_liquidation_periods(period, authority=context.authority_operation)
+    except (PeriodError, RegistryValidationError, NoRevisionForPeriodError) as exc:
+        raise ProrrataPreflightRefusalError(
+            "validation",
+            f"period {token!r} is not a Modelo 303 liquidation period of {ejercicio}",
+        ) from exc
+    if period == cadence[-1]:
+        raise ProrrataPreflightRefusalError(
+            "validation",
+            f"period {token!r} is the settlement liquidation of {ejercicio}; only earlier liquidations are regularised",
+        )
+    return period
+
+
+def _preflight_gross_declaration(
+    payload: BaseModel,
+    context: OperationExecutorContext,
+) -> ProrrataOperatorGrossDeclaration:
+    if not isinstance(payload, _requests.ProrrataDeclareGrossRequest):
+        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+    period = _gross_declaration_period(payload.ejercicio, payload.period, context)
+    try:
+        return ProrrataOperatorGrossDeclaration(
+            ejercicio=payload.ejercicio,
+            period=period,
+            sector_id=payload.sector_id,
+            gross_cuota=Decimal(payload.gross_cuota.decimal),
+            evidence_reference=payload.evidence_reference,
+            declared_at=now(),
+        )
+    except (ProrrataRegisterValidationError, ValidationError) as exc:
+        raise ProrrataPreflightRefusalError("validation", str(exc)) from exc
+
+
+def _preflight_gross_removal(
+    payload: BaseModel,
+    context: OperationExecutorContext,
+) -> Period:
+    if not isinstance(payload, _requests.ProrrataRemoveGrossRequest):
+        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+    return _gross_declaration_period(payload.ejercicio, payload.period, context)
+
+
+def _perform_gross_declaration(
+    payload: BaseModel,
+    prepared: object,
+    service: ProrrataRegisterService,
+) -> CommittedProrrataMutation:
+    if not isinstance(payload, _requests.ProrrataDeclareGrossRequest):
+        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+    if not isinstance(prepared, ProrrataOperatorGrossDeclaration):
+        raise InternalInvariantError("gross declaration preflight did not retain its typed declaration")
+    declaration: ProrrataOperatorGrossDeclaration = prepared
+    replace = payload.replace
+
+    def rewrite(current: ProrrataRegister) -> tuple[ProrrataOperatorGrossDeclaration, ...]:
+        sector_id = declaration.sector_id
+        if sector_id is not None and current.sector_definition_for(sector_id) is None:
+            raise ProrrataPreflightRefusalError(
+                "gross_declaration_sector_unknown",
+                f"sector {sector_id} is not a declared differentiated sector",
+            )
+        if not replace and current.gross_declaration_for(declaration.period, sector_id=sector_id) is not None:
+            raise ProrrataPreflightRefusalError(
+                "gross_declaration_duplicate",
+                f"a gross declaration already exists for {declaration.period}",
+            )
+        retained = tuple(row for row in current.gross_declarations if row.key != declaration.key)
+        return (*retained, declaration)
+
+    register = service.rewrite_gross_declarations(rewrite)
+    return CommittedProrrataMutation(register=register, gross_declaration=declaration)
+
+
+def _perform_gross_removal(
+    payload: BaseModel,
+    prepared: object,
+    service: ProrrataRegisterService,
+) -> CommittedProrrataMutation:
+    if not isinstance(payload, _requests.ProrrataRemoveGrossRequest):
+        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+    if not isinstance(prepared, Period):
+        raise InternalInvariantError("gross removal preflight did not retain its liquidation period")
+    sector_id = payload.sector_id
+    removed: list[ProrrataOperatorGrossDeclaration] = []
+
+    def rewrite(current: ProrrataRegister) -> tuple[ProrrataOperatorGrossDeclaration, ...]:
+        existing = current.gross_declaration_for(prepared, sector_id=sector_id)
+        if existing is None:
+            raise ProrrataPreflightRefusalError(
+                "gross_declaration_absent",
+                f"no gross declaration exists for {prepared}",
+            )
+        removed.append(existing)
+        return tuple(row for row in current.gross_declarations if row.key != existing.key)
+
+    register = service.rewrite_gross_declarations(rewrite)
+    if not removed:
+        raise InternalInvariantError("gross removal committed without reading its declaration")
+    # Each compare-and-swap attempt reads afresh; the last one is the candidate that committed.
+    return CommittedProrrataMutation(register=register, gross_declaration=removed[-1])
+
+
 def preflight_prorrata_operation(
     operation_id: _requests.ProrrataOperationId,
     payload: BaseModel,
@@ -434,6 +556,10 @@ def preflight_prorrata_operation(
         return _preflight_whole_seed(payload, calculation_action_ports_factory)
     if operation_id == "seed_sector":
         return _preflight_sector_seed(payload)
+    if operation_id == "declare_gross":
+        return _preflight_gross_declaration(payload, context)
+    if operation_id == "remove_gross":
+        return _preflight_gross_removal(payload, context)
     raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
 
 
@@ -456,6 +582,10 @@ def perform_prorrata_mutation(
         return _perform_sector_seed_request(payload, service)
     if operation_id == "settle_sector":
         return _perform_sector_settlement_request(payload, prepared, service)
+    if operation_id == "declare_gross":
+        return _perform_gross_declaration(payload, prepared, service)
+    if operation_id == "remove_gross":
+        return _perform_gross_removal(payload, prepared, service)
     raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
 
 

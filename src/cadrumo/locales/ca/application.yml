@@ -382,10 +382,15 @@ application:
           la casella.
         source_period_cuotas_missing: 'La liquidació %{period} es va presentar sense
           les caselles deduïbles que necessita la regularització: %{casillas}.'
+        source_period_gross_disagreement: La liquidació %{period} té quotes suportades
+          deduïbles al llibre amb una base bruta de %{ledger}, però hi vas declarar
+          una base bruta de %{declared}; corregeix el llibre o substitueix la declaració
+          abans de regularitzar.
         source_period_gross_unavailable: La liquidació %{period} va declarar quotes
           suportades deduïbles, però el llibre no conté cap quota deduïble d'aquest
           període, així que es desconeixen les quotes brutes abans de la prorrata;
-          registra al llibre les quotes suportades d'aquest període abans de regularitzar.
+          registra al llibre les quotes suportades d'aquest període, o declara'n les
+          quotes brutes amb 'aeat app ledger prorrata declare-gross', abans de regularitzar.
         source_period_ledger_divergence: La liquidació %{period} va declarar %{filed}
           a %{casilla}, però les quotes del llibre als teus percentatges provisionals
           de prorrata donen %{expected}; concilia el llibre amb la liquidació presentada
@@ -393,6 +398,14 @@ application:
         source_period_ledger_refused: Les quotes suportades del llibre de la liquidació
           %{period} no es poden repartir amb el teu registre de prorrata; resol aquest
           rebuig del llibre abans de regularitzar.
+        source_period_operator_divergence: La liquidació %{period} va declarar %{filed}
+          de quotes suportades deduïbles, però la base bruta que vas declarar als
+          teus percentatges provisionals de prorrata dona %{expected}; concilia la
+          declaració amb la liquidació presentada abans de regularitzar.
+        source_period_sector_gross_disagreement: La liquidació %{period} té quotes
+          suportades deduïbles al llibre per al sector %{sector} amb una base bruta
+          de %{ledger}, però vas declarar una base bruta de %{declared} per a aquest
+          sector; corregeix el llibre o substitueix la declaració abans de regularitzar.
         source_periods_missing: 'La regularització abasta les liquidacions anteriors
           de l''exercici, i aquestes no consten presentades: %{periods}.'
         source_periods_refused: 'Aquestes liquidacions anteriors porten una revisió

@@ -374,10 +374,15 @@ application:
           a volumeneket, vagy számold ki magad a rovatot.
         source_period_cuotas_missing: 'A(z) %{period} bevallás a korrekcióhoz szükséges
           levonható rovatok nélkül lett benyújtva: %{casillas}.'
+        source_period_gross_disagreement: A(z) %{period} bevallás időszakára a nyilvántartásban
+          levonható előzetesen felszámított adó szerepel %{ledger} bruttó alappal,
+          de te %{declared} bruttó alapot adtál meg; a korrekció előtt javítsd a nyilvántartást
+          vagy cseréld le a megadott értéket.
         source_period_gross_unavailable: A(z) %{period} bevallás levonható előzetesen
           felszámított adót tartalmaz, de a nyilvántartásban nincs erre az időszakra
           levonható tétel, így az arányosítás előtti bruttó adó ismeretlen; a korrekció
-          előtt rögzítsd a nyilvántartásban az időszak előzetesen felszámított adóját.
+          előtt rögzítsd a nyilvántartásban az időszak előzetesen felszámított adóját,
+          vagy add meg a bruttó adót az 'aeat app ledger prorrata declare-gross' paranccsal.
         source_period_ledger_divergence: A(z) %{period} bevallás %{filed} összeget
           tartalmaz a(z) %{casilla} rovatban, de a nyilvántartás adója az ideiglenes
           arányosítási százalékaid mellett %{expected}; a korrekció előtt egyeztesd
@@ -385,6 +390,15 @@ application:
         source_period_ledger_refused: A(z) %{period} bevallás nyilvántartott előzetesen
           felszámított adója nem osztható fel az arányosítási nyilvántartásod szerint;
           a korrekció előtt oldd meg a nyilvántartás elutasítását.
+        source_period_operator_divergence: A(z) %{period} bevallás %{filed} levonható
+          előzetesen felszámított adót tartalmaz, de az általad megadott bruttó alap
+          az ideiglenes arányosítási százalékaid mellett %{expected}; a korrekció
+          előtt egyeztesd a megadott értéket a benyújtott bevallással.
+        source_period_sector_gross_disagreement: A(z) %{period} bevallás időszakára
+          a nyilvántartásban a(z) %{sector} ágazatra levonható előzetesen felszámított
+          adó szerepel %{ledger} bruttó alappal, de te %{declared} bruttó alapot adtál
+          meg erre az ágazatra; a korrekció előtt javítsd a nyilvántartást vagy cseréld
+          le a megadott értéket.
         source_periods_missing: 'A korrekció az év korábbi bevallási időszakaira terjed
           ki, és ezek nincsenek benyújtva: %{periods}.'
         source_periods_refused: 'Ezek a korábbi bevallások olyan nyomtatványváltozatot

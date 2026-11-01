@@ -21,12 +21,14 @@ See Also:
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
 from decimal import Decimal
 
 import pydantic
 import pytest
 
 from ....core.modelo import Modelo
+from ....core.period import Period
 from ....core.prorrata_register import (
     ProrrataActivityRowType,
     ProrrataEspecialTransitionKind,
@@ -39,6 +41,7 @@ from ...calculations.registry.tests.published_authority import published_snapsho
 from ..register import (
     ProrrataActivityRow,
     ProrrataEspecialTransitionEvidence,
+    ProrrataOperatorGrossDeclaration,
     ProrrataRegister,
     ProrrataRegisterEntry,
     SectorDefinition,
@@ -708,3 +711,84 @@ def test_sector_definition_letra_hydrates_from_stored_token() -> None:
     restored = SectorDefinition.model_validate_json(original.model_dump_json())
     assert restored == original
     assert restored.letra == SectorDiferenciadoLetra.from_registry("c")
+
+
+def _gross(
+    period: str = "1T",
+    *,
+    sector_id: str | None = None,
+    gross_cuota: str = "400.00",
+    evidence_reference: str = "operator-evidence:303-1T",
+) -> ProrrataOperatorGrossDeclaration:
+    return ProrrataOperatorGrossDeclaration(
+        ejercicio=2024,
+        period=Period.from_year_and_code(2024, period),
+        sector_id=sector_id,
+        gross_cuota=Decimal(gross_cuota),
+        evidence_reference=evidence_reference,
+        declared_at=datetime(2024, 11, 4, 9, 30, tzinfo=UTC),
+    )
+
+
+def test_gross_declaration_refuses_a_negative_cuota() -> None:
+    with pytest.raises(pydantic.ValidationError, match="greater than or equal to 0"):
+        _gross(gross_cuota="-0.01")
+
+
+def test_gross_declaration_refuses_sub_cent_precision() -> None:
+    with pytest.raises(pydantic.ValidationError, match="decimal places"):
+        _gross(gross_cuota="400.005")
+
+
+@pytest.mark.parametrize("evidence", ["", "   "])
+def test_gross_declaration_refuses_empty_evidence(evidence: str) -> None:
+    with pytest.raises(pydantic.ValidationError):
+        _gross(evidence_reference=evidence)
+
+
+def test_gross_declaration_refuses_a_period_of_another_year() -> None:
+    with pytest.raises(pydantic.ValidationError, match="must belong to its ejercicio"):
+        ProrrataOperatorGrossDeclaration(
+            ejercicio=2024,
+            period=Period.from_year_and_code(2025, "1T"),
+            gross_cuota=Decimal("1.00"),
+            evidence_reference="operator-evidence",
+            declared_at=datetime(2024, 11, 4, tzinfo=UTC),
+        )
+
+
+def test_gross_declaration_refuses_a_naive_declaration_instant() -> None:
+    with pytest.raises(pydantic.ValidationError, match="timezone-aware"):
+        ProrrataOperatorGrossDeclaration(
+            ejercicio=2024,
+            period=Period.from_year_and_code(2024, "1T"),
+            gross_cuota=Decimal("1.00"),
+            evidence_reference="operator-evidence",
+            declared_at=datetime.fromisoformat("2024-11-04T00:00:00"),
+        )
+
+
+def test_register_refuses_duplicate_gross_declarations_for_one_period_and_sector() -> None:
+    with pytest.raises(pydantic.ValidationError, match="duplicate"):
+        ProrrataRegister(gross_declarations=(_gross(), _gross(gross_cuota="10.00")))
+
+
+def test_register_refuses_a_gross_declaration_for_an_undeclared_sector() -> None:
+    with pytest.raises(pydantic.ValidationError, match="undeclared differentiated sectors"):
+        ProrrataRegister(gross_declarations=(_gross(sector_id="arrendamiento"),))
+
+
+def test_register_looks_gross_declarations_up_by_period_and_sector() -> None:
+    sector = SectorDefinition(
+        sector_id="arrendamiento",
+        letra=SectorDiferenciadoLetra.from_registry("a"),
+        member_activity_codes=("6820",),
+    )
+    whole = _gross("2T")
+    sectored = _gross("2T", sector_id="arrendamiento", gross_cuota="12.34")
+    register = ProrrataRegister(sector_definitions=(sector,), gross_declarations=(whole, sectored, _gross("1T")))
+
+    assert register.gross_declaration_for(Period.from_year_and_code(2024, "2T"), sector_id=None) == whole
+    assert register.gross_declaration_for(Period.from_year_and_code(2024, "2T"), sector_id="arrendamiento") == sectored
+    assert register.gross_declaration_for(Period.from_year_and_code(2024, "3T"), sector_id=None) is None
+    assert register.gross_declarations_for_period(Period.from_year_and_code(2024, "2T")) == (whole, sectored)

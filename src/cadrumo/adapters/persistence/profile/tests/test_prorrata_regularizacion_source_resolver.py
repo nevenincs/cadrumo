@@ -44,6 +44,7 @@ from .....core.prorrata_register import (
 from .....core.result_disposition import ResultDisposition
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation
 from .....domain.calculations.registry.binding_targets import sole_bound_casilla
+from .....domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from .....domain.calculations.registry.iva_compensation_annual_partition_bindings import (
     M303_COMPENSATION_RESULTADO_CASILLA as M303_RESULTADO_CASILLA,
 )
@@ -54,7 +55,12 @@ from .....domain.calculations.registry.tests.registry_observations import (
 )
 from .....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from .....domain.iva.prorrata import InputClassification
-from .....domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry, SectorDefinition
+from .....domain.prorrata_register.register import (
+    ProrrataOperatorGrossDeclaration,
+    ProrrataRegister,
+    ProrrataRegisterEntry,
+    SectorDefinition,
+)
 from .....domain.transactions.enums import BusinessClassification, TransactionDirection
 from .....domain.transactions.models import Transaction, TransactionCatalogue
 from .....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
@@ -834,3 +840,161 @@ def test_modelo_390_with_both_cadences_filed_is_ambiguous(
 
     message = _sole_unresolved_message(resolution, _M390_BINDING_ID)
     assert message == render_tr(f"{_KEY}.settlement_observation_ambiguous", periods="4T, 12")
+
+
+#: The manual's 1T-3T gross deducible cuotas, which the filed liquidations
+#: deducted at the provisional 73% as 292,00 / 306,60 / 335,80.
+_MANUAL_GROSS = {"1T": Decimal("400.00"), "2T": Decimal("420.00"), "3T": Decimal("460.00")}
+_MANUAL_FILED = {
+    "1T": _filed_deduction(Decimal("292.00")),
+    "2T": _filed_deduction(Decimal("306.60")),
+    "3T": _filed_deduction(Decimal("335.80")),
+}
+
+
+def _register_with_gross(declared: dict[str, Decimal]) -> ProrrataRegister:
+    return _register_with_carried_prior().with_gross_declarations(
+        tuple(
+            ProrrataOperatorGrossDeclaration(
+                ejercicio=_FILING_YEAR,
+                period=Period.from_year_and_code(_FILING_YEAR, period),
+                gross_cuota=gross,
+                evidence_reference=f"operator-evidence:303-{period}",
+                declared_at=_CAPTURED_AT,
+            )
+            for period, gross in declared.items()
+        )
+    )
+
+
+def _operator_source_refs(resolution: CalculationSourceResolution) -> set[str]:
+    return {
+        row.source_ref for row in resolution.provenance if row.terminal_origin is TerminalOriginClass.OPERATOR_INPUT
+    }
+
+
+def test_operator_declared_gross_bases_reproduce_the_manual_box_without_ledger_input(
+    tmp_path: Path,
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    """Manual práctico IVA 2025 pp. 137-138 from hand-entered quarters.
+
+    The ledger holds no input IVA for 1T-3T; the operator declared their gross
+    cuotas 400/420/460. At the provisional 73% the quarters practised 934,40;
+    the definitive 56% allows 0,56 x 1.280 = 716,80, so casilla 44 is
+    716,80 - 934,40 = -217,60.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        resolution, _snapshot_4t = _resolve(
+            profile.repository,
+            modelo=Modelo("303").value,
+            period="4T",
+            authority_operation=authority_operation,
+            register=_register_with_gross(_MANUAL_GROSS),
+            filed=_MANUAL_FILED,
+        )
+
+    assert resolution.unresolved_binding_ids == ()
+    assert resolution.binding_values == {_M303_BINDING_ID: _MANUAL_CASILLA_44_REGULARIZACION}
+    assert _operator_source_refs(resolution) == {
+        f"prorrata-register:{_FILING_YEAR}:operator_declared:{period}" for period in ("1T", "2T", "3T")
+    }
+
+
+def test_operator_declarations_fill_only_the_quarters_the_ledger_leaves_empty(
+    tmp_path: Path,
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    """A ledger-backed 2T and declared 1T/3T regularise to the same manual box."""
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        resolution, _snapshot_4t = _resolve(
+            profile.repository,
+            modelo=Modelo("303").value,
+            period="4T",
+            authority_operation=authority_operation,
+            register=_register_with_gross({"1T": _MANUAL_GROSS["1T"], "3T": _MANUAL_GROSS["3T"]}),
+            transactions=(_purchase("buy-2t", period="2T", cuota=Decimal("420.00")),),
+            filed=_MANUAL_FILED,
+        )
+
+    assert resolution.binding_values == {_M303_BINDING_ID: _MANUAL_CASILLA_44_REGULARIZACION}
+    assert _operator_source_refs(resolution) == {
+        f"prorrata-register:{_FILING_YEAR}:operator_declared:1T",
+        f"prorrata-register:{_FILING_YEAR}:operator_declared:3T",
+    }
+
+
+def test_the_ledger_wins_over_an_agreeing_operator_declaration(
+    tmp_path: Path,
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        resolution, _snapshot_4t = _resolve(
+            profile.repository,
+            modelo=Modelo("303").value,
+            period="4T",
+            authority_operation=authority_operation,
+            register=_register_with_gross(_MANUAL_GROSS),
+            transactions=(
+                _purchase("buy-1t", period="1T", cuota=Decimal("400.00")),
+                _purchase("buy-2t", period="2T", cuota=Decimal("420.00")),
+                _purchase("buy-3t", period="3T", cuota=Decimal("460.00")),
+            ),
+            filed=_MANUAL_FILED,
+        )
+
+    assert resolution.binding_values == {_M303_BINDING_ID: _MANUAL_CASILLA_44_REGULARIZACION}
+    assert _operator_source_refs(resolution) == set()
+
+
+def test_an_operator_declaration_the_ledger_contradicts_is_unresolved(
+    tmp_path: Path,
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    """The ledger holds 400,00 for 1T but the operator declared 410,00: neither is used."""
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        resolution, _snapshot_4t = _resolve(
+            profile.repository,
+            modelo=Modelo("303").value,
+            period="4T",
+            authority_operation=authority_operation,
+            register=_register_with_gross({"1T": Decimal("410.00")}),
+            transactions=(
+                _purchase("buy-1t", period="1T", cuota=Decimal("400.00")),
+                _purchase("buy-2t", period="2T", cuota=Decimal("420.00")),
+                _purchase("buy-3t", period="3T", cuota=Decimal("460.00")),
+            ),
+            filed=_MANUAL_FILED,
+        )
+
+    message = _sole_unresolved_message(resolution, _M303_BINDING_ID)
+    assert message == render_tr(
+        f"{_KEY}.source_period_gross_disagreement",
+        period="1T",
+        ledger=Decimal("400.00"),
+        declared=Decimal("410.00"),
+    )
+
+
+def test_an_operator_declaration_the_filed_liquidation_contradicts_is_unresolved(
+    tmp_path: Path,
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    """1T filed 292,00 but a declared 420,00 at 73% deducts 306,60: the declaration is not trusted."""
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        resolution, _snapshot_4t = _resolve(
+            profile.repository,
+            modelo=Modelo("303").value,
+            period="4T",
+            authority_operation=authority_operation,
+            register=_register_with_gross({**_MANUAL_GROSS, "1T": Decimal("420.00")}),
+            filed=_MANUAL_FILED,
+        )
+
+    message = _sole_unresolved_message(resolution, _M303_BINDING_ID)
+    assert message == render_tr(
+        f"{_KEY}.source_period_operator_divergence",
+        period="1T",
+        filed=Decimal("292.00"),
+        expected=Decimal("306.60"),
+    )

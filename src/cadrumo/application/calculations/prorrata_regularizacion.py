@@ -71,6 +71,7 @@ from ...domain.iva.m303_settlement import is_m303_annual_settlement_period, m303
 from ...domain.iva.prorrata import RegularizacionProrrataParticion, compute_regularizacion_prorrata_particionada
 from ...domain.prorrata_register.protocols import ProrrataRegisterRepositoryProtocol
 from ...domain.prorrata_register.register import (
+    ProrrataOperatorGrossDeclaration,
     ProrrataProvisionalResolution,
     ProrrataRegister,
     ProrrataRegisterEntry,
@@ -682,6 +683,42 @@ def _source_provenance(
     )
 
 
+def _operator_declared_provenance(
+    *,
+    context: CalculationSourceContext,
+    revision: ModeloRevision,
+    declarations: Iterable[ProrrataOperatorGrossDeclaration],
+    parent: CalculationSourceProvenance,
+) -> tuple[CalculationSourceProvenance, ...]:
+    """Name each operator-declared gross base the regularised periods rest on.
+
+    A declaration stands in for an empty ledger, so it contributes to the
+    regularised-periods node rather than replacing it, and its terminal origin
+    is the operator's own input.
+    """
+    return tuple(
+        CalculationSourceProvenance(
+            resolver_id=ProrrataRegularizacionSourceResolver.resolver_id,
+            resolved_binding_source=_SOURCE_KIND,
+            contributor_source_kind=_SOURCE_KIND.value,
+            contributor_binding_source=_SOURCE_KIND,
+            lineage_role=CalculationSourceLineageRole.CONTRIBUTOR,
+            source_ref=(
+                f"prorrata-register:{declaration.ejercicio}:{declaration.provenance}:"
+                f"{declaration.period.registry_token}"
+                + (f":{declaration.sector_id}" if declaration.sector_id is not None else "")
+            ),
+            parent_source_ref=parent.source_ref,
+            terminal_origin=TerminalOriginClass.OPERATOR_INPUT,
+            source_filing_year=context.filing_year,
+            source_periods=(declaration.period.registry_token,),
+            legal_refs=_binding_legal_refs(revision),
+            source_refs=_binding_source_refs(revision),
+        )
+        for declaration in declarations
+    )
+
+
 class ProrrataRegularizacionSourceResolver:
     """Resolve the annual prorrata-general regularisation from governed sources.
 
@@ -1060,7 +1097,16 @@ class ProrrataRegularizacionSourceResolver:
             owned_sources=self.owned_sources,
             declared_binding_ids=declared_binding_ids,
             value=result.importe,
-            provenance=(*provisional_provenance, periods_provenance),
+            provenance=(
+                *provisional_provenance,
+                periods_provenance,
+                *_operator_declared_provenance(
+                    context=context,
+                    revision=revision,
+                    declarations=totals.operator_declared,
+                    parent=periods_provenance,
+                ),
+            ),
         )
 
     def _applicable_settlement_refusal(

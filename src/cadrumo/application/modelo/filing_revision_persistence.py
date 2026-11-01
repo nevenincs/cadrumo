@@ -221,6 +221,7 @@ def _build_prorrata_settlement_write(
             entries=(*retained, entry),
             sector_definitions=register.sector_definitions,
             activity_rows=register.activity_rows,
+            gross_declarations=register.gross_declarations,
         ),
         expected_revision_id=register_revision_id,
     )
