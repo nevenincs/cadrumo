@@ -77,6 +77,7 @@ from .....application.prorrata_register.operation_requests import (
 from .....application.prorrata_register.projection_contracts import (
     ProrrataEntryProjection,
     ProrrataEspecialTransitionProjection,
+    ProrrataListedEntryProjection,
     ProrrataListProjection,
     ProrrataMutationProjection,
     ProrrataRefusalProjection,
@@ -244,6 +245,27 @@ def synthetic_prorrata_entry(
     )
 
 
+def listed_prorrata_entry(entry: ProrrataEntryProjection) -> ProrrataListedEntryProjection:
+    """Add synthetic list-reference metadata without changing the stored entry.
+
+    Like the operation test door, this presentation fixture names its supplied
+    percentage; it does not resolve registry facts or calculate a percentage.
+    Keeping this separate leaves mutation responses on their base entry DTO.
+    """
+    if isinstance(entry, ProrrataListedEntryProjection):
+        return entry
+    settled = entry.definitive_percentage is not None
+    held = settled or entry.provisional_percentage is not None
+    named = held and not entry.interrupted and entry.regime in {"general", "especial"}
+    kind = "definitiva" if settled else "provisional"
+    sector = f":{entry.sector_id}" if entry.sector_id is not None else ""
+    return ProrrataListedEntryProjection(
+        **dict(entry),
+        reference_id=f"prorrata:{entry.ejercicio}:{kind}:{entry.regime}{sector}" if named else None,
+        reference_kind=kind if named else None,
+    )
+
+
 class MemoryProrrataRegisterDoor:
     """A synthetic prorrata register answering with the registered projections."""
 
@@ -274,7 +296,7 @@ class MemoryProrrataRegisterDoor:
             raise AccountSessionExpiredError()
         return ProrrataListProjection(
             profile_id=request.profile_id,
-            entries=tuple(self.entries),
+            entries=tuple(listed_prorrata_entry(entry) for entry in self.entries),
             sectors=tuple(self.sectors),
             count=len(self.entries),
         )
@@ -748,6 +770,7 @@ __all__ = [
     "MemoryCapitalGoodsDoor",
     "MemoryInventoryDoor",
     "MemoryProrrataRegisterDoor",
+    "listed_prorrata_entry",
     "synthetic_acquisition_cost",
     "synthetic_capital_good",
     "synthetic_closing_authority",

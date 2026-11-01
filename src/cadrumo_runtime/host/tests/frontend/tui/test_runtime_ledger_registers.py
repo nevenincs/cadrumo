@@ -126,6 +126,7 @@ from cadrumo.entrypoints.tui.ledger.registers_capital_goods import CAPITAL_GOODS
 from cadrumo.entrypoints.tui.ledger.registers_inventory import INVENTORY_TOOL_KEY, LedgerInventoryScreen
 from cadrumo.entrypoints.tui.ledger.registers_prorrata import PRORRATA_TOOL_KEY, LedgerProrrataRegisterScreen
 from cadrumo.entrypoints.tui.ledger.tests.registers_fixtures import (
+    listed_prorrata_entry,
     synthetic_acquisition_cost,
     synthetic_capital_good,
     synthetic_closing_authority,
@@ -474,7 +475,12 @@ _SUCCESSES: tuple[_Case, ...] = (
         PRORRATA_LIST_OPERATION_DEFINITION_ID,
         _prorrata,
         lambda door: door.read_register(ProrrataListRequest(profile_id=_PROFILE_ID)),
-        ProrrataListProjection(profile_id=_PROFILE_ID, entries=(synthetic_prorrata_entry(2025),), sectors=(), count=1),
+        ProrrataListProjection(
+            profile_id=_PROFILE_ID,
+            entries=(listed_prorrata_entry(synthetic_prorrata_entry(2025)),),
+            sectors=(),
+            count=1,
+        ),
         OperationEffect.NONE,
         False,
     ),
