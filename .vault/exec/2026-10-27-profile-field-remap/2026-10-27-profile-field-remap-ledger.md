@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#profile-field-remap'
 date: '2026-10-27'
-modified: '2026-10-28'
+modified: '2026-11-01'
 body_schema: 'body-v2'
-body_hash: 'sha256:69a30d81dac05a8ebb71d9e3e5719364fb325642f6dcd267eb9ed7eab0f58793'
+body_hash: 'sha256:294e054b99fc8b296475b8031b78cb6ab8bad290905b9394f162f8af33db4da7'
 related:
   - "[[2026-10-27-profile-field-remap-plan]]"
 ---
@@ -408,6 +408,19 @@ related:
 - `S12` `M` `docs/_sequences/how-to/first-quarterly-filing/modelo-130-first-quarter.json`
 - `S12` `verify:` `python -m dev.docs.sequences refresh over 23 affected pages; masked diff shows only authority-derived ids changed` -> `pass`
 - `S12` `verify:` `python -m dev.docs.sequences check --page how-to/classify-transactions` -> `pass`
+- `S07` `A` `src/cadrumo/application/ledger/entry_options_operation.py`
+- `S07` `A` `src/cadrumo/entrypoints/cli/entry_options_commands.py`
+- `S07` `A` `src/cadrumo/application/ledger/tests/test_entry_options.py`
+- `S07` `A` `dev/locales/desktop_entry_option_keys.py`
+- `S07` `M` `native/desktop/frontend/src/components/ledger/suggestions/SuggestionsProvider.tsx`
+- `S07` `M` `native/desktop/frontend/src/components/ledger/suggestions/ledgerSuggestions.ts`
+- `S07` `M` `native/desktop/frontend/src/components/ledger/inspector/movementFields.ts`
+- `S07` `M` `native/desktop/frontend/src/components/ledger/inspector/ClassifySection.tsx`
+- `S07` `M` `native/desktop/frontend/src/components/ledger/invoices/InvoiceEditor.tsx`
+- `S07` `M` `native/desktop/src-tauri/src/shell/ledger/admitted.rs`
+- `S07` `verify:` `test_entry_options.py` -> `pass`
+- `S07` `verify:` `desktop-frontend-check` -> `pass`
+- `S07` `verify:` `desktop-host-unit-test shell::ledger` -> `pass`
 
 ## Notes
 
@@ -426,3 +439,4 @@ related:
 - `S04` Docs sequence goldens that print ratios eligible stay stale until the registry authority is republished and dev.docs.sequences refresh runs.
 - `S11` 11 suite failures attributed outside S11: caplog tests vs the asynchronous log dispatch of 6cbfacbc8b; dict-constant naming in tui ledger files; atribucion sample row vs S01 schema; desktop.browser locale keys of the uncommitted sede-browser hunks
 - `S12` dev/locales: 2 failures outside S12 scope (other sessions' desktop.browser prose-name keys and tui ledger dict-constant naming); the BUSINESS-vehicle 100 per cent IVA for a stated listed use is not implemented, no datum records it
+- `S07` Spending-category, IVA and IRPF lists moved to S13; no ISO 4217 list exists in the registry, so currency serves the existing recogniser list

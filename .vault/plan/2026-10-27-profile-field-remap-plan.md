@@ -9,9 +9,9 @@ related:
   - '[[2026-10-04-desktop-shell-adr]]'
   - '[[2026-10-23-desktop-ledger-editor-adr]]'
   - '[[2026-10-27-profile-field-remap-iva-usage-share-adr]]'
-modified: '2026-10-27'
+modified: '2026-11-01'
 body_schema: body-v2
-body_hash: 'sha256:45bf7a1f024fa243664a572b7676abf74a40f2b763f7b874b7f49a94c0fc2efd'
+body_hash: 'sha256:d077dbc1ef0ad867be11c1e72bf25543a11d756a2e44aaf21cbd1c61163b1584'
 ---
 
 # `profile-field-remap` plan
@@ -42,7 +42,8 @@ Decision coverage: field deletion is routine execution under `2026-08-10-current
 - [x] `S04` - serve category label, notes and proportionality kind from the registry in ledger.ratios responses and render them in the Ratios pane; `src/cadrumo/application/ledger/ratios.py`.
 - [x] `S05` - apply the usage ratio exactly once through the category rule evaluator for annual Renta and Modelo 130 (user ruling 2026-10-27: the ledger usage-ratio store and registry rule own the ratio; a row business_pct no longer scales usage-ratio categories), proven by tests through the real resolvers; `src/cadrumo/application/aggregation/renta_ledger.py`.
 - [x] `S06` - amend the desktop shell ADR: the window holds no domain data or domain logic and only remaps values the backend serves to CLI and TUI; `.vault/adr/2026-10-04-desktop-shell-adr.md`.
-- [ ] `S07` - replace frontend ledger vocabularies and usage-ratio category lists with served backend vocabularies; `native/desktop/frontend/src/shell/ledgerVocabulary.ts`.
+- [x] `S07` - serve the ledger entry vocabularies (country, currency, deduction fact kind, Modelo 210 income type and payer mode) from `ledger.entry-options` and offer them in the ledger forms; `src/cadrumo/application/ledger/entry_options_operation.py`.
+- [ ] `S13` - replace the remaining frontend spending-category, IVA and IRPF lists and usage-ratio category lists with served backend vocabularies; `native/desktop/frontend/src/shell/ledgerVocabulary.ts`.
 - [ ] `S08` - replace frontend classification availability, field routes, clearing and identity rules with backend-served contract data; `native/desktop/frontend/src/shell/ledgerCommands.ts`.
 - [ ] `S09` - replace frontend invoice arithmetic, retention, validation facts and the IVA rate table with a backend invoice preview operation; `native/desktop/frontend/src/components/ledger/invoices/invoiceModel.ts`.
 - [ ] `S10` - replace frontend rule-pattern matching, percent and period grammar with backend previews and served grammar; `native/desktop/frontend/src/components/ledger/setup/setupModel.ts`.
