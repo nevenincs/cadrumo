@@ -136,6 +136,27 @@ def _parsed_rows(count: int, digest: str) -> tuple[SimpleNamespace, ...]:
     return (SimpleNamespace(raw=SimpleNamespace(provenance=SimpleNamespace(source_sha256=digest))),) * count
 
 
+class _StoringOperands:
+    """Secure-operand port that keeps every stored execution result for inspection."""
+
+    def __init__(self, stored: list[LedgerImportExecutionResult]) -> None:
+        self._stored = stored
+
+    async def put(self, result: LedgerImportExecutionResult, *, written_at):
+        del written_at
+        self._stored.append(result)
+        return "secure-result-reference"
+
+
+def _install_import_pipeline(monkeypatch: pytest.MonkeyPatch, *, prepare, persist) -> None:
+    """Pin the active profile and substitute the staging and persistence seams of the import executor."""
+    from .. import import_operation as operation_module
+
+    monkeypatch.setattr("cadrumo.application.operations.profile_guard.require_active_bucket_id", lambda: str(_PROFILE))
+    monkeypatch.setattr(operation_module, "prepare_ledger_source_import", prepare)
+    monkeypatch.setattr(operation_module, "persist_prepared_ledger_source_import", persist)
+
+
 def test_import_request_rejects_more_than_the_registered_file_limit() -> None:
     with pytest.raises(ValidationError):
         LedgerImportRequest(
@@ -149,8 +170,6 @@ def test_over_budget_file_is_refused_before_persist_and_later_small_file_fits(
     monkeypatch: pytest.MonkeyPatch, operation: PinnedAuthorityOperation
 ) -> None:
     """Row limits are applied during staging, before any source reaches persistence."""
-    from .. import import_operation as operation_module
-
     counts = {"first.csv": MAX_LEDGER_IMPORT_ROWS - 1, "over.csv": 2, "later.csv": 1}
     prepared_paths: list[str] = []
     persisted_paths: list[str] = []
@@ -176,22 +195,14 @@ def test_over_budget_file_is_refused_before_persist_and_later_small_file_fits(
         persisted_paths.append(name)
         return _source_result(bucket_id=str(_PROFILE), rows=counts[name])
 
-    class _Operands:
-        async def put(self, result: LedgerImportExecutionResult, *, written_at):
-            del written_at
-            stored.append(result)
-            return "secure-result-reference"
-
-    monkeypatch.setattr("cadrumo.application.operations.profile_guard.require_active_bucket_id", lambda: str(_PROFILE))
-    monkeypatch.setattr(operation_module, "prepare_ledger_source_import", prepare)
-    monkeypatch.setattr(operation_module, "persist_prepared_ledger_source_import", persist)
+    _install_import_pipeline(monkeypatch, prepare=prepare, persist=persist)
     context = executor_context(
         LEDGER_IMPORT_OPERATION_DEFINITION_ID,
         profile_id=str(_PROFILE),
         operation=operation,
         cancellation=cancellation,
         events=events,
-        operands=_Operands(),
+        operands=_StoringOperands(stored),
     )
     request = OperationRequest(
         definition_id=LEDGER_IMPORT_OPERATION_DEFINITION_ID,
@@ -223,8 +234,6 @@ def test_a_file_whose_parsed_bytes_differ_from_the_preview_digest_is_refused_bef
     monkeypatch: pytest.MonkeyPatch, operation: PinnedAuthorityOperation
 ) -> None:
     """Apply imports only the bytes a preview reported; a changed file is refused, never written."""
-    from .. import import_operation as operation_module
-
     digests = {"kept.csv": "b" * 64, "changed.csv": "c" * 64}
     persisted_paths: list[str] = []
     stored: list[LedgerImportExecutionResult] = []
@@ -242,22 +251,14 @@ def test_a_file_whose_parsed_bytes_differ_from_the_preview_digest_is_refused_bef
         persisted_paths.append(staged.command.path.name)
         return _source_result(bucket_id=str(_PROFILE), rows=2)
 
-    class _Operands:
-        async def put(self, result: LedgerImportExecutionResult, *, written_at):
-            del written_at
-            stored.append(result)
-            return "secure-result-reference"
-
-    monkeypatch.setattr("cadrumo.application.operations.profile_guard.require_active_bucket_id", lambda: str(_PROFILE))
-    monkeypatch.setattr(operation_module, "prepare_ledger_source_import", prepare)
-    monkeypatch.setattr(operation_module, "persist_prepared_ledger_source_import", persist)
+    _install_import_pipeline(monkeypatch, prepare=prepare, persist=persist)
     context = executor_context(
         LEDGER_IMPORT_OPERATION_DEFINITION_ID,
         profile_id=str(_PROFILE),
         operation=operation,
         cancellation=_Cancellation(),
         events=RecordingEvents(),
-        operands=_Operands(),
+        operands=_StoringOperands(stored),
     )
     request = OperationRequest(
         definition_id=LEDGER_IMPORT_OPERATION_DEFINITION_ID,
@@ -313,8 +314,6 @@ def test_each_source_is_staged_under_the_session_label_for_automation_and_the_pr
     recorded: str,
 ) -> None:
     """The import request carries no label, so the staged command names the session or the profile."""
-    from .. import import_operation as operation_module
-
     actors: list[str] = []
     repository = ProfileOnlyCatalogueRepository[TransactionCatalogue](str(_PROFILE))
 
@@ -331,21 +330,14 @@ def test_each_source_is_staged_under_the_session_label_for_automation_and_the_pr
         assert frontend is not None and identity.definition_id == LEDGER_IMPORT_OPERATION_DEFINITION_ID
         return OperationExecutionCaller(frontend=frontend, session_kind=SessionKind.ATTENDED, client_id=_SESSION_CLIENT)
 
-    class _Operands:
-        async def put(self, result: LedgerImportExecutionResult, *, written_at):
-            del result, written_at
-            return "secure-result-reference"
-
-    monkeypatch.setattr("cadrumo.application.operations.profile_guard.require_active_bucket_id", lambda: str(_PROFILE))
-    monkeypatch.setattr(operation_module, "prepare_ledger_source_import", prepare)
-    monkeypatch.setattr(operation_module, "persist_prepared_ledger_source_import", persist)
+    _install_import_pipeline(monkeypatch, prepare=prepare, persist=persist)
     context = executor_context(
         LEDGER_IMPORT_OPERATION_DEFINITION_ID,
         profile_id=str(_PROFILE),
         operation=operation,
         cancellation=_Cancellation(),
         events=RecordingEvents(),
-        operands=_Operands(),
+        operands=_StoringOperands([]),
     )
     request = OperationRequest(
         definition_id=LEDGER_IMPORT_OPERATION_DEFINITION_ID,
