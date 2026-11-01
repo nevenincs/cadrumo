@@ -126,6 +126,14 @@ The window asks once, when a field first wants the values, and holds the answer 
 
 Evidence: `src/cadrumo/application/ledger/known_values_operation.py`, `native/desktop/src-tauri/src/shell/ledger/admitted.rs`, `native/desktop/frontend/src/components/ledger/suggestions/SuggestionsProvider.tsx`, `src/cadrumo/domain/iva/prorrata.py`.
 
+### Amendment 2026-10-31: the entry vocabulary read
+
+Accepted under the owner's instruction of 2026-10-31 to finish the remaining entry-field items.
+
+`ledger.entry-options` joins the closed list as a read, with no effect and no path input. It serves the codes and closed choices the ledger forms offer: country and currency codes, deduction fact kinds, and M210 tipo renta and payer modes. The window words them and adds `Intl` names but holds no list of its own. Offering a code does not narrow what the backend admits: a typed country or currency code stays allowed where the backend checks shape rather than membership.
+
+Evidence: `src/cadrumo/application/ledger/entry_options_operation.py`, `native/desktop/src-tauri/src/shell/ledger/admitted.rs`.
+
 ## Rationale
 
 The registered contracts are already the authority for every ledger request, and the relay already carries them for this person in this session. A closed list of ids in the host stops the window from naming arbitrary operations, which is what separated the capabilities record from a general bridge, and it does so without writing each contract twice. Paths and secrets stay with the host, as the shell record requires.
