@@ -11,12 +11,14 @@ from uuid import UUID, uuid4
 
 from textual.app import App
 from textual.await_complete import AwaitComplete
+from textual.pilot import Pilot
+from textual.widgets import Input, Select
 
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.login_interaction import ProfileLoginChoice
 from cadrumo.core.async_cleanup import close_async_resources
 from cadrumo.core.profile_session import ProfileSessionRefusalReason
-from cadrumo.entrypoints.tui.tests.settling import SETTLE_TIMEOUT_SECONDS
+from cadrumo.entrypoints.tui.tests.settling import SETTLE_TIMEOUT_SECONDS, settle_until
 from cadrumo_client.contracts.access_refusals import ProfileAccessStatus
 from cadrumo_client.contracts.access_vocabulary import AccessScope, AuthorityState, Availability, EffectiveScopeSummary
 from cadrumo_client.contracts.automation_lifecycle import AutomationResumeReceipt
@@ -32,6 +34,7 @@ from .....frontend.tui.secret.runtime_login_contracts import (
     RuntimeCredentialClientOpener,
     RuntimeLoginAcceptor,
     RuntimeLoginHandoff,
+    RuntimeLoginMethod,
 )
 
 
@@ -272,3 +275,16 @@ def login_choices() -> tuple[ProfileLoginChoice, ProfileLoginChoice]:
         ProfileLoginChoice(profile_id=str(uuid4()), label="First profile"),
         ProfileLoginChoice(profile_id=str(uuid4()), label="Second profile"),
     )
+
+
+async def submit_stored_reference(pilot: Pilot[None], screen: RuntimeLoginScreen) -> None:
+    """Choose the stored API reference method, enter a fresh reference and submit the screen."""
+    screen.query_one("#runtime-login-method", Select).value = RuntimeLoginMethod.API_REFERENCE
+    await settle_until(
+        pilot,
+        lambda: screen.query_one("#runtime-login-reference", Input).display,
+        "screen.query_one('#runtime-login-reference', Input).display",
+        workers=False,
+    )
+    screen.query_one("#runtime-login-reference", Input).value = str(uuid4())
+    screen.action_submit()

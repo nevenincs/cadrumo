@@ -32,6 +32,7 @@ from ._runtime_login_support import (
     UnmountNotifiedScreen,
     failed_reference_admission,
     login_choices,
+    submit_stored_reference,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -112,15 +113,7 @@ async def test_unmount_during_failed_reference_open_drains_then_retries_cleanup(
     host = LoginHost(screen)
     async with host.run_test(size=(120, 40)) as pilot:
         await settle(pilot, workers=False)
-        screen.query_one("#runtime-login-method", Select).value = RuntimeLoginMethod.API_REFERENCE
-        await settle_until(
-            pilot,
-            lambda: screen.query_one("#runtime-login-reference", Input).display,
-            "screen.query_one('#runtime-login-reference', Input).display",
-            workers=False,
-        )
-        screen.query_one("#runtime-login-reference", Input).value = str(uuid4())
-        screen.action_submit()
+        await submit_stored_reference(pilot, screen)
         await asyncio.wait_for(started.wait(), SETTLE_TIMEOUT_SECONDS)
         host.pop_screen()
         await asyncio.wait_for(screen.unmounting.wait(), SETTLE_TIMEOUT_SECONDS)
@@ -163,15 +156,7 @@ async def test_returned_reference_status_refusal_keeps_primary_and_retries_faile
     )
     async with LoginHost(screen).run_test(size=(120, 40)) as pilot:
         await settle(pilot, workers=False)
-        screen.query_one("#runtime-login-method", Select).value = RuntimeLoginMethod.API_REFERENCE
-        await settle_until(
-            pilot,
-            lambda: screen.query_one("#runtime-login-reference", Input).display,
-            "screen.query_one('#runtime-login-reference', Input).display",
-            workers=False,
-        )
-        screen.query_one("#runtime-login-reference", Input).value = str(uuid4())
-        screen.action_submit()
+        await submit_stored_reference(pilot, screen)
         await settle_until(
             pilot,
             lambda: client.close_calls == 1 and not screen._busy,
