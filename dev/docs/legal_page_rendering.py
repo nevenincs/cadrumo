@@ -11,8 +11,8 @@ from cadrumo.core.errors.hierarchy import CorpusAnchorResolutionError
 from cadrumo.core.external_constants import OutputLanguage
 from dev.corpus.text import corpus_redaction_marks, resolve_anchored_extracted_unit
 
-from ._locale_chrome import chrome_anchor, docs_chrome, same_wording
-from .compile_slots import Rendering, language_text
+from ._locale_chrome import chrome_anchor, docs_chrome, docs_fragment, same_wording
+from .compile_slots import Rendering, _educated, language_text
 from .legal_note_languages import legal_note_language_ranges
 from .legal_reference_models import LegalPage, LegalProvisionRecord, LegalReferenceError
 from .legal_reference_routing import (
@@ -229,14 +229,10 @@ def _catalogue_note_projection(
 def _catalogue_note_html(note: str, spans: tuple[tuple[int, int, str], ...], language: OutputLanguage) -> list[str]:
     """Render verified quote ranges as language-marked HTML text runs."""
     label = escape(docs_chrome("docs.legal.record.note", language))
-    pieces: list[str] = []
-    cursor = 0
-    for start, end, span_language in spans:
-        pieces.append(escape(note[cursor:start]))
-        pieces.append(f'<span lang="{span_language}">{escape(note[start:end])}</span>')
-        cursor = end
-    pieces.append(escape(note[cursor:]))
-    body = "".join(pieces)
+    if "'" in note or '"' in note:
+        body = docs_fragment(lambda page_language: _catalogue_note_body(note, spans, page_language), language)
+    else:
+        body = _catalogue_note_body(note, spans, language)
     return [
         "",
         "   .. raw:: html",
@@ -248,14 +244,42 @@ def _catalogue_note_html(note: str, spans: tuple[tuple[int, int, str], ...], lan
     ]
 
 
+def _catalogue_note_body(note: str, spans: tuple[tuple[int, int, str], ...], language: OutputLanguage) -> str:
+    """Keep page-language typography while applying exact source ranges."""
+    if "'" in note or '"' in note:
+        note = _educated(note, language.value)
+    pieces: list[str] = []
+    cursor = 0
+    for start, end, span_language in spans:
+        pieces.append(escape(note[cursor:start]))
+        pieces.append(f'<span lang="{span_language}">{escape(note[start:end])}</span>')
+        cursor = end
+    pieces.append(escape(note[cursor:]))
+    return "".join(pieces)
+
+
 def _supports_inline_note_markup(note: str | None) -> bool:
-    """Limit raw HTML to text whose old RST smart-quote pass cannot change it."""
+    """Admit plain text only when typography preserves every annotated offset."""
     if note is None or any(char in note for char in "\r\n<>"):
         return False
     folded = note.casefold()
     if any(token in folded for token in ("http://", "https://", "www.", "mailto:", "ftp://")):
         return False
-    return not any(token in note for token in ("'", '"', "--", "..."))
+    return not any(token in note for token in ("--", "...")) and _all_quote_offsets_preserved(note)
+
+
+def _all_quote_offsets_preserved(note: str) -> bool:
+    if "'" not in note and '"' not in note:
+        return True
+    return all(_quote_offsets_preserved(note, language) for language in OutputLanguage)
+
+
+def _quote_offsets_preserved(note: str, language: OutputLanguage) -> bool:
+    """Allow typography only when it changes one quote to one character in place."""
+    educated = _educated(note, language.value)
+    return len(educated) == len(note) and all(
+        original == rendered or original in "'\"" for original, rendered in zip(note, educated, strict=True)
+    )
 
 
 _DATA_ROOT = Path("src") / "cadrumo" / "_data"
