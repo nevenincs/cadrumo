@@ -146,7 +146,7 @@ function DialogFooter({
         "flex flex-wrap items-center justify-end gap-2",
         // The surface's own padding is taken back so the bar meets its edges.
         sticky &&
-          "sticky bottom-0 -mx-5 -mb-5 rounded-b-xl border-t border-border bg-card px-5 pt-3 pb-5",
+          "sticky -bottom-5 -mx-5 -mb-5 rounded-b-xl border-t border-border bg-card px-5 pt-3 pb-5",
         className,
       )}
       {...props}

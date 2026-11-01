@@ -48,7 +48,10 @@ const meta: Meta<typeof Queue> = {
 export default meta;
 type Story = StoryObj<typeof Queue>;
 
-export const Queued: Story = { name: "To match" };
+export const Queued: Story = {
+  name: "To match",
+  args: { shape: "documents" },
+};
 export const NothingToMatch: Story = {
   name: "Nothing to match",
   args: { shape: "empty" },

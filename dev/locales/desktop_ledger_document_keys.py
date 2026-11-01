@@ -54,6 +54,7 @@ DESKTOP_LEDGER_DOCUMENT_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.ledger.inspector.documents.none",
         "desktop.ledger.inspector.documents.pick_failed",
         "desktop.ledger.inspector.documents.purchase_invoice",
+        "desktop.ledger.inspector.documents.search",
         "desktop.ledger.inspector.drop",
         "desktop.ledger.inspector.earlier",
         "desktop.ledger.inspector.effective_date",

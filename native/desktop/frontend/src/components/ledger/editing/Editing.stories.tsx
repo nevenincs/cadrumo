@@ -11,6 +11,7 @@ import {
 import type { LedgerShape } from "@/dev/ledgerFixture";
 import type { StageCell } from "../../../shell/ledgerStage";
 import { PausedBanner, usePagePause, WritePauseContext } from "../WritePause";
+import { translator } from "../../../shell/strings";
 import { useSealedMovements } from "../useSealedMovements";
 import { TypedEditor } from "./CellEditor";
 import { ChangesTray } from "./ChangesTray";
@@ -220,15 +221,21 @@ const PASTE: PastePlan = {
 };
 
 const paste = (plan: Partial<PastePlan>): StoryObj => ({
-  render: () => (
-    <PasteDialog
-      plan={{ ...PASTE, ...plan }}
-      columns={["Description", "Counterparty", "Amount"]}
-      singleWrites={plan.newIdentity ?? 0}
-      onPaste={noop}
-      onCancel={noop}
-    />
-  ),
+  render: (_args, { globals }) => {
+    const t = translator(String(globals.locale ?? "en"));
+    const held = { ...PASTE, ...plan };
+    return (
+      <PasteDialog
+        plan={held}
+        columns={held.columns.map((column) =>
+          t(`desktop.ledger.column.${column}`),
+        )}
+        singleWrites={plan.newIdentity ?? 0}
+        onPaste={noop}
+        onCancel={noop}
+      />
+    );
+  },
 });
 
 export const PasteRows = paste({});

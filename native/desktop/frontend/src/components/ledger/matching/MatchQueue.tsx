@@ -16,6 +16,7 @@ import { useStrings, type Translate } from "../../../shell/strings";
 import { formatDay } from "../../../shared/dateFormats";
 import { formatAmount } from "../../../shared/numbers";
 import { seriesAndNumber } from "../invoices/invoiceModel";
+import { needsInvoice } from "../movements/movementsModel";
 import {
   inconsistencies,
   reconcile,
@@ -461,13 +462,18 @@ export function MatchQueue({
         description={t("desktop.ledger.loading")}
       />
     );
-  else if (found.list.length === 0)
+  else if (found.list.length === 0) {
+    // No suggestion is not no work: movements may still wait for an invoice
+    // that none of the invoices fits.
+    const waiting = (rows ?? []).filter(needsInvoice).length;
     list = (
       <p className="ledger-match-empty px-3 py-2 text-sm text-muted-foreground">
-        {t("desktop.ledger.matching.empty")}
+        {waiting > 0
+          ? t("desktop.ledger.matching.empty_waiting", { count: waiting })
+          : t("desktop.ledger.matching.empty")}
       </p>
     );
-  else
+  } else
     list = (
       <ul
         className="ledger-match-list"

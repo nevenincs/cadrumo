@@ -35,6 +35,7 @@ DESKTOP_LEDGER_CATALOGUE_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.ledger.matching.direction.invoice_only",
         "desktop.ledger.matching.direction.transaction_only",
         "desktop.ledger.matching.empty",
+        "desktop.ledger.matching.empty_waiting",
         "desktop.ledger.matching.invoice_line",
         "desktop.ledger.matching.link",
         "desktop.ledger.matching.link_named",

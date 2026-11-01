@@ -694,6 +694,8 @@ export function fixtureLedger(): FixtureLedger {
       const amount = random.between(kind.low, kind.high);
       const withEvidence = kind.category === "arrendamiento_local";
       const evidenceId = withEvidence ? hex64(`evidence:${month}`) : null;
+      // Every third month's invoice is a scan, which is a picture.
+      const scanned = month % 3 === 0;
       if (evidenceId) {
         const base = Math.round((amount * 100) / 121);
         evidence.push({
@@ -701,7 +703,7 @@ export function fixtureLedger(): FixtureLedger {
           bucket_id: LEDGER_FIXTURE_PROFILE_ID,
           source_sha256: hex64(`evidence-bytes:${month}`),
           attachment_id: hex64(`evidence-bytes:${month}`),
-          media_kind: month % 3 === 0 ? "image" : "pdf",
+          media_kind: scanned ? "image" : "pdf",
           supplier: "Coworking Ribera, S.L.",
           invoice_number: `CR-2026-${String(month).padStart(4, "0")}`,
           invoice_date: day(month, 1),
@@ -711,7 +713,7 @@ export function fixtureLedger(): FixtureLedger {
           notes: "",
           created_at: stamp(day(month, 2), 30),
           updated_at: stamp(day(month, 2), 30),
-          source_path: `coworking-ribera-2026-${String(month).padStart(2, "0")}.pdf`,
+          source_path: `coworking-ribera-2026-${String(month).padStart(2, "0")}.${scanned ? "jpg" : "pdf"}`,
         });
       }
       const paid = push(kind, date, amount, {

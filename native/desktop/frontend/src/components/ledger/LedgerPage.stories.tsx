@@ -1,12 +1,49 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { userEvent, waitFor } from "storybook/test";
 import { LedgerStage, storyMovementIds } from "@/dev/LedgerStage";
+import { typeAsAPerson } from "@/dev/personTyping";
 import { translator } from "../../shell/strings";
 import { LEDGER_SHAPES } from "@/dev/ledgerFixture";
 
 // The Ledger page over the scenario's synthetic ledger, one story for each
 // way that ledger answers. The page is the one the window mounts; only the
 // port behind it is the fixture's.
+
+/** Changes a movement's description as a person does and saves it, so the
+ * ledger's answer to the write shows. */
+async function saved({
+  canvasElement,
+}: {
+  canvasElement: HTMLElement;
+}): Promise<void> {
+  const body = canvasElement.ownerDocument.body;
+  const found = <Element extends HTMLElement>(
+    root: HTMLElement,
+    selector: string,
+  ) =>
+    waitFor(() => {
+      const element = root.querySelector<Element>(selector);
+      if (!element) throw new Error(`${selector} is not drawn yet`);
+      return element;
+    });
+  const cell = await found(
+    canvasElement,
+    "[data-kind=data] [data-column=description]",
+  );
+  await userEvent.click(cell);
+  await userEvent.keyboard("{Enter}");
+  const input = await found<HTMLInputElement>(body, ".ledger-cell-editor");
+  await typeAsAPerson(input, "Checked against the statement");
+  await userEvent.click(await found(canvasElement, ".ledger-tray-review"));
+  const save = await waitFor(() => {
+    const button = body.querySelector<HTMLElement>(
+      ".ledger-apply-save:not([aria-disabled=true])",
+    );
+    if (!button) throw new Error("the save button is not ready yet");
+    return button;
+  });
+  await userEvent.click(save);
+}
 
 const meta: Meta<typeof LedgerStage> = {
   title: "Ledger/Page",
@@ -28,11 +65,16 @@ export const Movements: Story = {};
 export const Empty: Story = { args: { shape: "empty" } };
 export const Large: Story = { args: { shape: "large" } };
 export const Reading: Story = { args: { shape: "slow" } };
-export const Refused: Story = { args: { shape: "refused" } };
+export const Refused: Story = {
+  name: "Writes refused",
+  args: { shape: "refused" },
+  play: async (context) => saved(context),
+};
 export const Unavailable: Story = { args: { shape: "unavailable" } };
 export const WritesNotSettled: Story = {
   name: "Writes not settled",
   args: { shape: "unknown" },
+  play: async (context) => saved(context),
 };
 export const SignedOut: Story = { args: { signedOut: true } };
 export const AllPeriods: Story = {
@@ -48,7 +90,10 @@ export const WithInspector: Story = {
 };
 export const ToMatch: Story = {
   name: "To match queue",
-  args: { view: { savedView: "to_match", inspectorOpen: true } },
+  args: {
+    shape: "documents",
+    view: { savedView: "to_match", inspectorOpen: true },
+  },
 };
 export const Searching: Story = {
   name: "Searching the movements",

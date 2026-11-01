@@ -125,6 +125,7 @@ function Toolbar({ view, grouped }: ToolbarArgs) {
     columnLayout({ hidden: [], order: [] }),
   );
   const [density, setDensity] = useState<"compact" | "comfortable">("compact");
+  const t = useStrings();
   return (
     <div className="p-3">
       <MovementsToolbar
@@ -161,7 +162,7 @@ function Toolbar({ view, grouped }: ToolbarArgs) {
         onWantAccounts={noop}
         groupLabels={["Studio", "Home office"]}
         reasons={["missing_category", "missing_proportionality_reference"]}
-        status="40 movements"
+        status={t("desktop.ledger.movements_count", { count: 40 })}
       />
     </div>
   );
@@ -245,11 +246,19 @@ export const ClassifyMixed = classify({
       : { staged: 0, missing: 4, unread: 0 },
   onOpenRatios: noop,
 });
-export const ClassifyMixedShareRefused = classify({
-  kind: "mixed",
-  initialShare: "140",
-  error: "A share is between 0 and 100.",
-});
+function RefusedShare() {
+  const t = useStrings();
+  return (
+    <Classify
+      kind="mixed"
+      initialShare="140"
+      error={t("desktop.ledger.classify.share_refused", { raw: "140" })}
+    />
+  );
+}
+export const ClassifyMixedShareRefused: StoryObj = {
+  render: () => <RefusedShare />,
+};
 const staged = fn();
 // What the share staged as the page reads it: typed points reach the wire as
 // the same fraction a grid cell gives them.

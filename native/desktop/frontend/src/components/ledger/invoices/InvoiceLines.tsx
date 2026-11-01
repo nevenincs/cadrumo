@@ -14,6 +14,7 @@ import {
 } from "../../../shell/ledgerVocabulary";
 import { useStrings, type Translate } from "../../../shell/strings";
 import { formatAmount, formatDecimal } from "../../../shared/numbers";
+import { formatUnitPrice } from "../unitPrice";
 import {
   RATE_SLOTS,
   type LineDraft,
@@ -356,7 +357,7 @@ export function StoredLines({
                 {formatDecimal(locale, line.quantity.decimal)}
               </td>
               <td className={`${CELL} text-end tabular-nums`}>
-                {formatDecimal(locale, line.unit_price.decimal)}
+                {formatUnitPrice(locale, line.unit_price.decimal)}
               </td>
               <td className={`${CELL} text-end tabular-nums`}>
                 {formatAmount(locale, line.subtotal.decimal)}
