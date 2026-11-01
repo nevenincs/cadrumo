@@ -40,11 +40,11 @@ from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.core.text_fold import normalise_corpus_text
-from cadrumo.domain.calculations.registry.binding_value_contract import BindingValueChannel
 from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from cadrumo.domain.calculations.registry.formula_runtime_ops import resolve_parameter
 from cadrumo.domain.calculations.registry.relations import relation_prefill_bindings_for_period
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
+from cadrumo.domain.calculations.registry.tests.modelo_100_registry_support import neutral_binding_values
 
 from ..compiler.authority import compiled_bundled_authority
 from ..compiler.loader import load_shared_catalogues
@@ -147,22 +147,9 @@ def _snapshot(year: str) -> RegistrySnapshot:
 def _calculate(year: str, inputs: dict[str, Decimal]) -> dict[CasillaId, Decimal]:
     snapshot = _snapshot(year)
     revision = snapshot.revision
-    decimals: dict[str, Decimal] = {}
-    booleans: dict[str, bool] = {}
-    dates: dict[str, date] = {}
-    enums: dict[str, str] = {}
-    for binding in revision.bindings:
-        if binding.source is BindingSourceKind.RELATION_PREFILL:
-            continue
-        channel = binding.value.channel
-        if channel in {BindingValueChannel.DECIMAL, BindingValueChannel.INTEGER}:
-            decimals[binding.id] = Decimal("0")
-        elif channel is BindingValueChannel.BOOLEAN:
-            booleans[binding.id] = False
-        elif channel is BindingValueChannel.DATE:
-            dates[binding.id] = date(1975, 6, 15)
-        elif channel is BindingValueChannel.ENUM:
-            enums[binding.id] = "madrid"
+    decimals, booleans, dates, enums = neutral_binding_values(
+        binding for binding in revision.bindings if binding.source is not BindingSourceKind.RELATION_PREFILL
+    )
     decimals["renta-profile-declaration-type"] = Decimal("1")
     result = calculate_registry_snapshot(
         snapshot,

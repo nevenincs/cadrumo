@@ -9,11 +9,12 @@ from .....core.aggregation import BindingAggregationOp, BindingSourceKind
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from ..binding_aggregation import binding_aggregation_op
 from ..binding_temporal import SameFilingYearPeriods
-from ..binding_value_contract import BindingValueChannel
 from ..formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
+from ..ids import BindingId
 from ..relations import RegistryFoldRequirement, relation_prefill_bindings_for_period, relation_source_requirements
 from ..schema import ModeloRevision, RegistrySnapshot
 from ._cross_dependency_calculation_support import _observations_from_requirements
+from .modelo_100_registry_support import neutral_binding_values
 from .relation_fixture import resolve_relation_values_from_observations
 
 _M100_PAGOS_CASILLA: CasillaId = validated_casilla_id("0604", surface="_M100_PAGOS_CASILLA")
@@ -33,28 +34,14 @@ _EXPECTED_0604 = _EXPECTED_M130_TOTAL + _EXPECTED_M131_TOTAL
 
 def _neutral_binding_inputs(
     revision: ModeloRevision,
-) -> tuple[dict[str, Decimal], dict[str, bool], dict[str, date], dict[str, str]]:
+) -> tuple[dict[BindingId, Decimal], dict[BindingId, bool], dict[BindingId, date], dict[BindingId, str]]:
     """Neutral values for every scalar binding the edition declares.
 
-    Relations arrive through their own channel; an individual Madrid filer with
-    no other income, family or carry-forward is the neutral profile.
+    Relations arrive through their own channel.
     """
-    decimals: dict[str, Decimal] = {}
-    booleans: dict[str, bool] = {}
-    dates: dict[str, date] = {}
-    enums: dict[str, str] = {}
-    for binding in revision.bindings:
-        if binding.source is BindingSourceKind.RELATION_PREFILL:
-            continue
-        channel = binding.value.channel
-        if channel in {BindingValueChannel.DECIMAL, BindingValueChannel.INTEGER}:
-            decimals[binding.id] = Decimal("0")
-        elif channel is BindingValueChannel.BOOLEAN:
-            booleans[binding.id] = False
-        elif channel is BindingValueChannel.DATE:
-            dates[binding.id] = date(1975, 6, 15)
-        elif channel is BindingValueChannel.ENUM:
-            enums[binding.id] = "madrid"
+    decimals, booleans, dates, enums = neutral_binding_values(
+        binding for binding in revision.bindings if binding.source is not BindingSourceKind.RELATION_PREFILL
+    )
     if any(binding.id == "renta-profile-declaration-type" for binding in revision.bindings):
         decimals["renta-profile-declaration-type"] = Decimal("1")
     return decimals, booleans, dates, enums
