@@ -20,6 +20,7 @@ from ...application.search.workbench import (
     WorkbenchDestinationAdmission,
     WorkbenchDestinationAdmissionState,
     WorkbenchSearchResult,
+    require_admission_reason_matches_state,
 )
 from ...core.errors.hierarchy import CadrumoError, pydantic_validation_boundary
 from ...core.hex import Hex64Str
@@ -107,11 +108,7 @@ class TuiDestinationAdmissionV1(BaseModel):
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _reason_matches_state(self) -> Self:
-        if self.state is WorkbenchDestinationAdmissionState.AVAILABLE:
-            if self.reason_code is not None:
-                raise ValueError("an available destination cannot carry an admission reason")
-        elif self.reason_code is None:
-            raise ValueError("a non-available destination requires an admission reason")
+        require_admission_reason_matches_state(self.state, self.reason_code)
         return self
 
     @classmethod

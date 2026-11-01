@@ -279,6 +279,16 @@ type WorkbenchNaturalAddress = Annotated[
 ]
 
 
+def require_admission_reason_matches_state(
+    state: WorkbenchDestinationAdmissionState, reason_code: NamespacedId | None
+) -> None:
+    """Refuse an available admission that explains itself or an unavailable one that does not."""
+    if state is WorkbenchDestinationAdmissionState.AVAILABLE and reason_code is not None:
+        raise ValueError("an available destination cannot carry an admission reason")
+    if state is not WorkbenchDestinationAdmissionState.AVAILABLE and reason_code is None:
+        raise ValueError("a non-available destination requires an admission reason")
+
+
 class WorkbenchDestinationAdmission(BaseModel):
     """Destination identity and truthful availability for a search result."""
 
@@ -291,10 +301,7 @@ class WorkbenchDestinationAdmission(BaseModel):
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _reason_matches_state(self) -> Self:
-        if self.state is WorkbenchDestinationAdmissionState.AVAILABLE and self.reason_code is not None:
-            raise ValueError("an available destination cannot carry an admission reason")
-        if self.state is not WorkbenchDestinationAdmissionState.AVAILABLE and self.reason_code is None:
-            raise ValueError("a non-available destination requires an admission reason")
+        require_admission_reason_matches_state(self.state, self.reason_code)
         return self
 
 
@@ -608,4 +615,5 @@ __all__ = [
     "WorkbenchSearchService",
     "WorkbenchSearchSource",
     "WorkbenchSearchStatus",
+    "require_admission_reason_matches_state",
 ]
