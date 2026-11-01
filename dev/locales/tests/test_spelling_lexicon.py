@@ -2042,3 +2042,26 @@ def test_hungarian_attested_name_and_tax_term_inflections_remain_exact() -> None
             assert not is_project_spelling(locale, form)
     for typo in ("Cadrumoról", "Bizkaiánakx", "Gipuzkoanak", "Anatól", "Rentanal", "Tributarianak"):
         assert not is_project_spelling("hu", typo)
+
+
+def test_hungarian_attested_native_technical_forms_keep_typo_checks() -> None:
+    forms = (
+        "ellenaláírás",
+        "imputáció",
+        "imputációhoz",
+        "bájtokból",
+        "főrovat",
+        "borostyánsárgára",
+        "Szkriptelt",
+        "szkriptelhető",
+        "szkriptelheted",
+        "gyorsítótárazza",
+        "regularizációs",
+    )
+    for form in forms:
+        assert is_project_spelling("hu", form)
+        assert not is_project_spelling("hu", form + "x")
+        for locale in ("en", "ca", "es"):
+            assert not is_project_spelling(locale, form)
+    for typo in ("ellenalairas", "imputaciohoz", "bajtokbol", "forovat", "szkriptelhetó"):
+        assert not is_project_spelling("hu", typo)

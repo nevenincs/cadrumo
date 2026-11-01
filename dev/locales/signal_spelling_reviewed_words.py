@@ -938,6 +938,29 @@ REVIEWED_LOCALE_SPELLINGS: dict[str, frozenset[str]] = {
             "altával",
             "complementariát",
             "soportadót",
+            # Exact native technical and domain terms in current guidance.
+            # https://real-eod.mtak.hu/2328/134/2kotet_1.pdf
+            # https://www.ksh.hu/statszemle_archive/2008/2008_04/2008_04_001.pdf
+            # https://repo.lib.semmelweis.hu/bitstream/handle/123456789/6974/pulayattila.d_DOIs.pdf?sequence=1
+            # https://www.sztnh.gov.hu/sw/static/file/202402-szemle.pdf
+            # https://aol.mnl.gov.hu/adatbazis/urbaria-et-conscriptiones/adatlap/10275
+            # https://eur-lex.europa.eu/legal-content/HU/TXT/PDF/?uri=CELEX%3A32003R1785
+            # https://learn.microsoft.com/hu-hu/windows/win32/shell/scriptable-shell-objects-roadmap
+            # https://learn.microsoft.com/hu-hu/fabric/extensibility-toolkit/setup-guide
+            # https://hub.hellowp.io/hu/plugins/wp-all-import-pro/
+            # https://support.microsoft.com/hu-hu/office/collab-files/office-document-cache-settings
+            # https://mnbprogram.bme.hu/wp-content/uploads/2021/10/1_2_4_Tanulmany_AdversarialTamadasokAck.pdf
+            "ellenaláírás",
+            "imputáció",
+            "imputációhoz",
+            "bájtokból",
+            "főrovat",
+            "borostyánsárgára",
+            "Szkriptelt",
+            "szkriptelhető",
+            "szkriptelheted",
+            "gyorsítótárazza",
+            "regularizációs",
             "modeló",
             "modelók",
             "modelót",
