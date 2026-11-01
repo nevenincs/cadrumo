@@ -1174,16 +1174,23 @@ application:
         what: Egy ügyvezetői tétel levonási kulcsa eltér az alkalmazandó kulcstól.
         what_to_do: Hasonlítsd össze a kulcsot a hivatalos útmutatóval, és szükség
           esetén javítsd a tételt.
-      advisory_retencion_credit_grade:
-        what: 'A kiállított számláiból származó levonási jóváírás nincs teljesen megerősítve:
-          a Cadrumo még nem erősítette meg, melyik adóévhez tartozik.'
-        what_to_do: Benyújtás előtt vesd össze az összeget az egyes ügyfelek levonási
-          igazolásával erre az adóévre.
+      advisory_binding_value:
+        what: 'Egy mező összege olyan értelmezésen alapul, amelyet a Cadrumo még nem
+          tud megerősíteni: megnézheted és előnézetben láthatod, de a bevallást ezzel
+          nem ellenőrizheted, nem exportálhatod és nem rögzítheted.'
+        what_to_do: Vesd össze az összeget a saját nyilvántartásoddal és a kifizető
+          igazolásával. Amíg az összeg függőben van, a Cadrumo nem tudja ellenőrizni,
+          exportálni vagy rögzíteni ezt a bevallást; egy későbbi változat, amely megerősíti
+          az időszakot, feloldja.
       aggregation_activity_undeclared:
         what: A(z) {box} rovat nullát mutat, pedig ebben az időszakban vannak tevékenységtípus
           nélküli bevételei.
         what_to_do: Add meg a tevékenység típusát ezeknél a bevételi tételeknél, majd
           számolj újra.
+      calculation_screen_outdated:
+        what: Ez a számítás a Cadrumo jelenlegi ellenőrzései előtt készült, ezért
+          ebben a formában nem ellenőrizhető, nem exportálható és nem rögzíthető.
+        what_to_do: Számold újra a bevallást, majd ellenőrizd.
       deferred_binding_source:
         what: A Cadrumo a nyilatkozat egy értékét még nem tölti ki automatikusan.
         what_to_do: Nincs teendőd, hacsak az az érték nem vonatkozik rád. Ha igen,
@@ -1455,6 +1462,14 @@ application:
         ezért nem szerepel benne.'
       activity_undeclared: '{element}: a vásárlásához nincs tevékenységtípus, és egy
         másik eszközöd mezőgazdasági, ezért nem mezőgazdaságiként számít.'
+      advisory_imputation_period_ungrounded: 'A(z) {box} mező: {amount} levont adóelőleg
+        függőben van, mert nincs megerősítve, melyik időszakhoz tartozik. A levonás
+        annak a jövedelemnek az időszakához tartozik, amelyből levonták (RIRPF 79.
+        cikk), a nyilvántartásod pedig minden befizetést a bankba érkezés napjával
+        datál, ami csak akkor helyes, ha a pénzforgalmi elszámolást választottad (RIRPF
+        7.2. cikk; LIRPF 14.1.b cikk).'
+      advisory_value_proven_zero: 'A(z) {box} mező: a nulla érvényes, mert az időszakban
+        nincs olyan tétel, amelynek az időszaka kétséges lehetne.'
       agrarian_excluded: '{element}: mezőgazdasági tevékenységhez tartozik, ezért
         kimarad a(z) {period_end} napon végződő időszak előlegéből.'
       amortization_box_unbound: '{element}: ebben a kiadásban nincs mező az értékcsökkenési

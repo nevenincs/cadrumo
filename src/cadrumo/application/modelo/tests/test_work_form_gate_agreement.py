@@ -36,6 +36,7 @@ from ....domain.modelos.verification_report import VerificationCompletenessStatu
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ..calculation_note_gate import ModeloCalculationBlockedError, require_work_unit_calculation_unblocked
 from ..calculation_notes import PRINTED_BOX_REASONS, note_attention
+from ..calculation_screen import calculation_screen_stamp
 from ..edit_admission import RESPONSIBLE_OWNER
 from ..edit_models import ModeloEditDomainRefusalV1, ModeloEditRefusalCode, ModeloEditRefusedV1
 from ..work_form_findings import ModeloFormAttention
@@ -76,7 +77,11 @@ def _work_unit(operation: PinnedAuthorityOperation) -> WorkUnit:
     )
 
 
-def _revision(unit: WorkUnit, *issues: CalculationSourceIssue) -> CalculationRevision:
+def _revision(
+    operation: PinnedAuthorityOperation, unit: WorkUnit, *issues: CalculationSourceIssue
+) -> CalculationRevision:
+    """A revision stamped with the screen a calculation under ``operation`` runs, so only its notes decide."""
+    stamp = calculation_screen_stamp(form_snapshot(operation, "210", 2025, "0A"), operation=operation)
     return CalculationRevision(
         calculation_revision_id=derive_calculation_revision_id(
             work_unit_id=unit.work_unit_id,
@@ -86,6 +91,7 @@ def _revision(unit: WorkUnit, *issues: CalculationSourceIssue) -> CalculationRev
             source_issues=issues,
             filing_instance_evidence=None,
             source_provenance=(),
+            screen_stamp=stamp,
         ),
         work_unit_id=unit.work_unit_id,
         registry_snapshot_ref=RegistrySnapshotRef(
@@ -99,6 +105,7 @@ def _revision(unit: WorkUnit, *issues: CalculationSourceIssue) -> CalculationRev
         filing_instance_evidence=None,
         source_provenance=(),
         source_issues=issues,
+        screen_stamp=stamp,
     )
 
 
@@ -152,7 +159,7 @@ def _gate_admits(unit: WorkUnit, revision: CalculationRevision, operation: Pinne
 
 def _agrees(operation: PinnedAuthorityOperation, note: _Note | None) -> None:
     unit = _work_unit(operation)
-    revision = _revision(unit) if note is None else _revision(unit, note.issue())
+    revision = _revision(operation, unit) if note is None else _revision(operation, unit, note.issue())
     form = _checked_form(operation, revision)
 
     admitted = _gate_admits(unit, revision, operation)
@@ -197,7 +204,7 @@ def test_omitted_amortization_is_shown_without_holding_a_checked_return(
     operation: PinnedAuthorityOperation, reason: str
 ) -> None:
     unit = _work_unit(operation)
-    revision = _revision(unit, _Note(reason).issue())
+    revision = _revision(operation, unit, _Note(reason).issue())
     form = _checked_form(operation, revision)
 
     assert _gate_admits(unit, revision, operation)
@@ -226,7 +233,7 @@ def test_an_amortization_note_leaves_the_check_as_the_next_step_of_an_unchecked_
 ) -> None:
     """Nothing can clear such a note, so counting it as missing would offer a fill with nothing to fill."""
     unit = _work_unit(operation)
-    form = _checked_form(operation, _revision(unit)).model_copy(
+    form = _checked_form(operation, _revision(operation, unit)).model_copy(
         update={
             "verification": None,
             "calculation_notes": (
@@ -254,7 +261,7 @@ def test_an_unresolved_working_figure_is_worth_checking_yet_held_as_the_gates_ho
     assert unprinted, "the Modelo 210 form keeps some figure it does not print"
     for note in (_Note("unresolved_binding", unprinted[0]), _Note("unresolved_binding")):
         unit = _work_unit(operation)
-        revision = _revision(unit, note.issue())
+        revision = _revision(operation, unit, note.issue())
         checked = _checked_form(operation, revision)
         (shown,) = [item for item in checked.calculation_notes if item.reason == note.reason]
 
@@ -268,7 +275,7 @@ def test_an_unrouted_one_stop_shop_row_is_the_modelo_369_checks_and_the_gates_ad
 ) -> None:
     note = _Note("unrouted_observation", binding_source=BindingSourceKind.LEDGER_OSS_AGGREGATION)
     unit = _work_unit(operation)
-    revision = _revision(unit, note.issue())
+    revision = _revision(operation, unit, note.issue())
 
     assert _gate_admits(unit, revision, operation)
     (shown,) = _checked_form(operation, revision).calculation_notes

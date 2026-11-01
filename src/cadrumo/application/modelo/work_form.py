@@ -164,7 +164,7 @@ def build_modelo_work_form(
         language=language,
         unworked_casilla_ids=frozenset(
             casilla_id
-            for reason, casilla_id, _, _ in sources
+            for reason, casilla_id, _, _, _ in sources
             if reason in UNWORKED_BOX_REASONS and casilla_id is not None
         ),
         element_names=element_names,

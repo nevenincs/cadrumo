@@ -71,7 +71,7 @@ def _two_elements_without_claims() -> tuple[CalculationSourceDiagnostic, ...]:
 def _persisted(operation: PinnedAuthorityOperation) -> tuple[CalculationRevision, tuple[CalculationSourceIssue, ...]]:
     snapshot = operation.snapshot("100", filing_year=2025, period="0A")
     issues = _unrouted_source_issues(_two_elements_without_claims(), snapshot_printed_boxes(operation, snapshot))
-    revision = _revision(_work_unit(operation), *issues)
+    revision = _revision(operation, _work_unit(operation), *issues)
     return CalculationRevision.model_validate_json(revision.model_dump_json()), issues
 
 
@@ -122,7 +122,10 @@ def test_two_notes_of_one_reason_are_two_calculations(operation: PinnedAuthority
         **base, fact=CalculationNoteFact.of(CalculationNoteSentence.ACCRUAL_UNAVAILABLE, element="lathe")
     )
 
-    assert _revision(unit, first).calculation_revision_id != _revision(unit, second).calculation_revision_id
+    assert (
+        _revision(operation, unit, first).calculation_revision_id
+        != _revision(operation, unit, second).calculation_revision_id
+    )
 
 
 def test_a_long_technical_account_does_not_fail_the_calculation(operation: PinnedAuthorityOperation) -> None:

@@ -108,6 +108,7 @@ from .calculation_action_ports import (
 from .calculation_publication import CalculationRevisionPublication
 from .calculation_resolution import build_calculation_replay_payloads as _build_calculation_replay_payloads
 from .calculation_resolution import resolve_calculation_inputs as _resolve_calculation_inputs
+from .calculation_screen import calculation_screen_stamp
 from .m123_count_authority_gate import Modelo123CountAuthorityStage, require_modelo_123_count_authority
 from .m303_filing_evidence import validate_m303_filing_instance_evidence_for_revision
 from .profile_export_binding import resolve_profile_text_casilla_inputs
@@ -384,6 +385,7 @@ def calculate_modelo_revision_with_trusted_mesh_sources(
         work_unit_id=work_unit_id,
         registry_snapshot_ref=snapshot.snapshot_ref,
         rendering_snapshot=_capture_calculation_rendering(snapshot, operation=ports.operation),
+        screen_stamp=calculation_screen_stamp(snapshot, operation=ports.operation),
         work_unit=work_unit,
         work_units=work_units,
         work_units_revision_id=prepared.work_units_revision_id,

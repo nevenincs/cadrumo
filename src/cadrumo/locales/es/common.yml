@@ -264,6 +264,8 @@ aggregation:
         contener tipos de fuente en blanco.
       owned_sources_duplicate: Las fuentes propiedad del mallado de fuentes deben
         ser únicas.
+      proven_zero_value_not_zero: Un resolvedor de fuentes declaró un cero probado
+        para una vinculación cuyo valor no es cero.
       provenance_binding_source_mismatch: El tipo de origen declarado en la fila de
         procedencia no coincide con el origen del valor al que dice pertenecer. Los
         dos deben nombrar el mismo origen para que la trazabilidad sea comprobable.

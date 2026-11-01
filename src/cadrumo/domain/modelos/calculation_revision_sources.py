@@ -9,7 +9,7 @@ from typing import Final, Literal, Self
 
 from pydantic import BaseModel, Field, model_validator
 
-from ...core.aggregation import BindingSourceKind, BindingValueOutcome, CalculationSourceLineageRole
+from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.authority_grade import BindingGradeCapReason
 from ...core.casilla_id import CasillaId
 from ...core.errors.hierarchy import pydantic_validation_boundary
@@ -165,6 +165,7 @@ class CalculationNoteSentence(StrEnum):
     DISPOSAL_MINIMUM_UNRESOLVED = "disposal_minimum_unresolved"
     DISPOSAL_EXEMPTION_NOT_COMPUTED = "disposal_exemption_not_computed"
     ADVISORY_IMPUTATION_PERIOD_UNGROUNDED = "advisory_imputation_period_ungrounded"
+    ADVISORY_VALUE_PROVEN_ZERO = "advisory_value_proven_zero"
 
 
 GRADE_CAP_NOTE_SENTENCES: Final[Mapping[BindingGradeCapReason, CalculationNoteSentence]] = MappingProxyType(
@@ -287,8 +288,9 @@ class CalculationSourceIssue(BaseModel):
     what was known about the register at calculation stays with the filed record.
     None of them withholds anything. ``advisory_binding_value`` is a value a
     binding produced whose declared grade cap stops it at calculation: it names
-    the box the value reaches and the binding, and withholds filing unless the
-    resolver stated a proven zero. ``fact`` states such a note's own row, element,
+    the box the value reaches and the binding, and withholds filing until a
+    recalculation under an uncapped binding clears it; a capped value its
+    resolver proved to be zero withholds nothing and is not persisted. ``fact`` states such a note's own row, element,
     interval and amount. ``binding_source`` is ``None`` only where the condition
     names no binding source kind.
     """
@@ -328,20 +330,6 @@ class CalculationSourceIssue(BaseModel):
     source_ref: str | None = Field(default=None, min_length=1, max_length=256)
     casilla_id: CasillaId | None = None
     fact: CalculationNoteFact | None = None
-    value_outcome: BindingValueOutcome | None = None
-    """What the resolver stated about the rows a capped value rests on; ``None`` when it stated nothing.
-
-    Set only on ``advisory_binding_value``. The gate reads it rather than the
-    amount: a proven zero withholds nothing, and every other case, including
-    an outcome the resolver never stated, withholds.
-    """
-
-    @model_validator(mode="after")
-    @pydantic_validation_boundary
-    def _outcome_belongs_to_a_capped_value(self) -> Self:
-        if self.value_outcome is not None and self.reason != "advisory_binding_value":
-            raise ModeloValidationError("only an advisory binding value carries a value outcome")
-        return self
 
 
 ACTIVITY_ASSET_CLAIM_REF_PREFIX: Final = "activity-asset-claim:"

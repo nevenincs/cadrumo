@@ -231,6 +231,46 @@ required_text = [
     "la obligación de retener nacerá en el momento en que se satisfagan o abonen las rentas correspondientes",
 ]
 
+[legal."rd-439-2007:art-7"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rd-439-2007.html#a7"
+document_id = "BOE-A-2007-6820"
+article = "7"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820#a7"
+published_at = 2007-03-31
+effective_from = 2007-04-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-11-01
+reviewed_by = "agent-authored from bundled rd-439-2007.html#a7; the bundled consolidated text carries no amendment note for this article; operator to re-stamp"
+notes = "RIRPF art 7: imputación temporal de rendimientos de actividades económicas. Apartado 1 applies the Impuesto sobre Sociedades accrual criteria; apartado 2.1.º lets a taxpayer keeping the books of art 68.3 to 68.6 opt for the criterio de cobros y pagos, approved by stating it in the declaration and kept for at least three years. Grounds why a ledger that dates each income row by its bank date imputes it correctly only under that election."
+required_text = [
+    "Imputación temporal de rendimientos",
+    "aplicarán a las rentas derivadas de dichas actividades, exclusivamente, los criterios de imputación temporal previstos en el texto refundido de la Ley del Impuesto sobre Sociedades",
+    "podrán optar por el criterio de cobros y pagos para imputar temporalmente los ingresos y gastos de todas sus actividades económicas",
+    "por el solo hecho de así manifestarlo en la correspondiente declaración, y deberá mantenerse durante un plazo mínimo de tres años",
+]
+
+[legal."rd-439-2007:art-79"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rd-439-2007.html#a79"
+document_id = "BOE-A-2007-6820"
+article = "79"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820#a79"
+published_at = 2007-03-31
+effective_from = 2007-04-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-11-01
+reviewed_by = "agent-authored from bundled rd-439-2007.html#a79; the bundled consolidated text carries no amendment note for this article; operator to re-stamp"
+notes = "RIRPF art 79: imputación temporal de las retenciones o ingresos a cuenta. A retención is imputed to the period the income it was practised on is imputed to, whenever it was practised. Grounds why a retención credit keyed by payment date is not grounded until the income's own imputation is."
+required_text = [
+    "Imputación temporal de las retenciones o ingresos a cuenta",
+    "Las retenciones o ingresos a cuenta se imputarán por los contribuyentes al período en que se imputen las rentas sometidas a retención o ingreso a cuenta, con independencia del momento en que se hayan practicado",
+]
+
 [legal."rd-439-2007:art-94"]
 evidence_tier = "legal_authority"
 authority = "boe"
@@ -5761,6 +5801,26 @@ obtiene los rendimientos / a quien corresponde la imputación / titular' del Mod
 ley-35-2006.html#a11; operator to confirm and re-stamp."""
 required_text = [
     "Individualización de rentas",
+]
+
+[legal."ley-35-2006:art-14"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006.html#a14"
+document_id = "BOE-A-2006-20764"
+article = "14"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a14"
+published_at = 2006-11-29
+effective_from = 2020-01-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-11-01
+reviewed_by = "agent-authored from bundled ley-35-2006.html#a14; effective_from is the effect date of the current redaction of apartados 1 and 2 (art. 2 Ley 8/2020, Ref. BOE-A-2020-16346), the conservative claim the bundled text supports; operator to re-stamp"
+notes = "LIRPF art 14: imputación temporal. Apartado 1.b imputes rendimientos de actividades económicas under the Impuesto sobre Sociedades rules, subject to the regulatory specialities RIRPF art 7 establishes. Grounds, with RIRPF art 7.2 and art 79, why the period of an activity retención follows the period of its income rather than its payment date."
+required_text = [
+    "Imputación temporal",
+    "Los ingresos y gastos que determinan la renta a incluir en la base del impuesto se imputarán al período impositivo que corresponda",
+    "Los rendimientos de actividades económicas se imputarán conforme a lo dispuesto en la normativa reguladora del Impuesto sobre Sociedades, sin perjuicio de las especialidades que reglamentariamente puedan establecerse",
 ]
 
 [legal."ley-35-2006:art-14.2.m"]

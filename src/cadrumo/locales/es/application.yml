@@ -1213,16 +1213,23 @@ application:
           el que corresponde.
         what_to_do: Compara ese tipo con las instrucciones oficiales y corrige el
           registro si hace falta.
-      advisory_retencion_credit_grade:
-        what: 'La deducción por retenciones de tus facturas emitidas no está del todo
-          confirmada: Cadrumo aún no ha confirmado a qué ejercicio corresponde.'
-        what_to_do: Compara el importe con el certificado de retenciones de cada cliente
-          para este ejercicio antes de presentar.
+      advisory_binding_value:
+        what: 'Una cifra de una casilla se basa en una lectura que Cadrumo aún no
+          puede confirmar: puedes verla y previsualizarla, pero no comprobar, exportar
+          ni registrar la declaración con ella.'
+        what_to_do: Compara la cifra con tus registros y con el certificado del pagador.
+          Mientras esté en espera, Cadrumo no puede comprobar, exportar ni registrar
+          esta declaración; una versión posterior que confirme el periodo la liberará.
       aggregation_activity_undeclared:
         what: La casilla {box} muestra cero, aunque tienes ingresos en este periodo
           sin tipo de actividad.
         what_to_do: Indica el tipo de actividad en esos registros de ingresos y vuelve
           a calcular.
+      calculation_screen_outdated:
+        what: Este cálculo se hizo antes de las comprobaciones actuales de Cadrumo
+          sobre sus cifras, así que no se puede comprobar, exportar ni registrar tal
+          como está.
+        what_to_do: Vuelve a calcular la declaración y compruébala después.
       deferred_binding_source:
         what: Cadrumo todavía no rellena automáticamente una cifra de esta declaración.
         what_to_do: No tienes que hacer nada, salvo que esa cifra te afecte. Si te
@@ -1493,6 +1500,14 @@ application:
         no se incluye.'
       activity_undeclared: '{element}: su compra no indica tipo de actividad y otro
         de tus elementos es agrario, así que se cuenta como no agraria.'
+      advisory_imputation_period_ungrounded: 'Casilla {box}: {amount} de retenciones
+        quedan en espera porque no está confirmado el periodo al que corresponden.
+        Una retención se imputa al periodo de la renta sobre la que se practicó (art.
+        79 RIRPF), y tus registros fechan cada cobro por su llegada al banco, lo que
+        solo es correcto si optaste por el criterio de cobros y pagos (art. 7.2 RIRPF;
+        art. 14.1.b LIRPF).'
+      advisory_value_proven_zero: 'Casilla {box}: el cero se mantiene, porque en el
+        periodo no hay ninguna cifra cuyo periodo pueda estar en duda.'
       agrarian_excluded: '{element}: pertenece a una actividad agraria, así que queda
         fuera del pago fraccionado del periodo que termina el {period_end}.'
       amortization_box_unbound: '{element}: esta edición no tiene casilla para su

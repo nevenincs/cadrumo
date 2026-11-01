@@ -1063,6 +1063,7 @@
         "dev.registry.compiler.validate_applicability_section",
         "dev.registry.compiler.validate_authority_grade",
         "dev.registry.compiler.validate_below_floor_export_refs",
+        "dev.registry.compiler.validate_binding_grade_caps",
         "dev.registry.compiler.validate_bindings",
         "dev.registry.compiler.validate_constructs",
         "dev.registry.compiler.validate_cross_revision",

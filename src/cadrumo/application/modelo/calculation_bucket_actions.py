@@ -66,7 +66,13 @@ from .calculation_action_ports import (
     CalculationActionPorts,
 )
 from .calculation_diagnostics import collect_bucket_aggregation_advisory_diagnostics
-from .calculation_notes import CALCULATION_NOTES, PRINTED_BOX_REASONS, durable_binding_source, with_element_names
+from .calculation_notes import (
+    CALCULATION_NOTES,
+    PRINTED_BOX_REASONS,
+    capped_value_proven_zero,
+    durable_binding_source,
+    with_element_names,
+)
 from .calculation_publication import CalculationRevisionPublication
 from .calculation_source_policy import BUCKET_AGGREGATION_LOCK_SOURCES, CALLER_OVERRIDABLE_CARRY_SOURCES
 from .printed_boxes import PrintedBoxes, snapshot_printed_boxes
@@ -823,6 +829,9 @@ def _durable_source_issue_reason(diagnostic: CalculationSourceDiagnostic) -> _Du
     if diagnostic.reason == "unhandled_binding_source":
         return "unhandled_binding_source"
     if diagnostic.reason == "advisory_binding_value":
+        # A proven zero withholds nothing, so it stays with this calculation's held notes.
+        if capped_value_proven_zero(diagnostic.reason, diagnostic.value_outcome):
+            return None
         return "advisory_binding_value"
     return _durable_invoice_source_reason(diagnostic)
 
@@ -874,7 +883,6 @@ def _unrouted_source_issues(
                 resolver_id=diagnostic.resolver_id,
                 source_ref=diagnostic.source_ref,
                 fact=diagnostic.fact,
-                value_outcome=diagnostic.value_outcome,
             ),
         )
     return tuple(issues)

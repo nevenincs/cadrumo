@@ -1207,16 +1207,24 @@ application:
           el que correspon.
         what_to_do: Compara aquest tipus amb les instruccions oficials i corregeix
           el registre si cal.
-      advisory_retencion_credit_grade:
-        what: 'La deducció per retencions de les teves factures emeses no està del
-          tot confirmada: Cadrumo encara no ha confirmat a quin exercici correspon.'
-        what_to_do: Compara l'import amb el certificat de retencions de cada client
-          per a aquest exercici abans de presentar.
+      advisory_binding_value:
+        what: 'Una xifra d''una casella es basa en una lectura que Cadrumo encara
+          no pot confirmar: pots veure-la i previsualitzar-la, però no comprovar,
+          exportar ni registrar la declaració amb ella.'
+        what_to_do: Compara la xifra amb els teus registres i amb el certificat del
+          pagador. Mentre estigui en espera, Cadrumo no pot comprovar, exportar ni
+          registrar aquesta declaració; una versió posterior que confirmi el període
+          l'alliberarà.
       aggregation_activity_undeclared:
         what: La casella {box} mostra zero, tot i que tens ingressos en aquest període
           sense tipus d'activitat.
         what_to_do: Indica el tipus d'activitat en aquests registres d'ingressos i
           torna a calcular.
+      calculation_screen_outdated:
+        what: Aquest càlcul es va fer abans de les comprovacions actuals de Cadrumo
+          sobre les seves xifres, així que no es pot comprovar, exportar ni registrar
+          tal com està.
+        what_to_do: Torna a calcular la declaració i comprova-la després.
       deferred_binding_source:
         what: Cadrumo encara no emplena automàticament una xifra d'aquesta declaració.
         what_to_do: No has de fer res, tret que aquesta xifra t'afecti. Si t'afecta,
@@ -1489,6 +1497,14 @@ application:
       activity_undeclared: '{element}: la seva compra no indica tipus d''activitat
         i un altre dels teus elements és agrari, de manera que es compta com a no
         agrària.'
+      advisory_imputation_period_ungrounded: 'Casella {box}: {amount} de retencions
+        queden en espera perquè no està confirmat el període al qual corresponen.
+        Una retenció s''imputa al període de la renda sobre la qual es va practicar
+        (art. 79 RIRPF), i els teus registres daten cada cobrament per la seva arribada
+        al banc, cosa que només és correcta si vas optar pel criteri de cobraments
+        i pagaments (art. 7.2 RIRPF; art. 14.1.b LIRPF).'
+      advisory_value_proven_zero: 'Casella {box}: el zero es manté, perquè en el període
+        no hi ha cap xifra el període de la qual pugui ser dubtós.'
       agrarian_excluded: '{element}: pertany a una activitat agrària, de manera que
         queda fora del pagament fraccionat del període que acaba el {period_end}.'
       amortization_box_unbound: '{element}: aquesta edició no té casella per a la

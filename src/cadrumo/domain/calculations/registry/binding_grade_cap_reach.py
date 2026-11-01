@@ -100,11 +100,11 @@ def capped_binding_reach(
     built outside build validation still sees it rather than losing it.
     """
     caps = {binding.id: binding.grade_cap for binding in revision.bindings if binding.grade_cap is not None}
+    reach: dict[BindingId, CappedBindingReach] = {}
     if not caps:
-        return MappingProxyType({})
+        return MappingProxyType(reach)
     bound = casillas_by_binding(revision)
     redirected = binding_output_redirects(revision, authority=authority)
-    reach: dict[BindingId, CappedBindingReach] = {}
     for binding_id, cap in caps.items():
         casilla_ids = list(bound.get(binding_id, ()))
         casilla_ids.extend(casilla_id for casilla_id in redirected.get(binding_id, ()) if casilla_id not in casilla_ids)

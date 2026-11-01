@@ -9,7 +9,7 @@ from typing import Literal, Self
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from ...core.aggregation import BindingSourceKind
+from ...core.aggregation import BindingSourceKind, BindingValueOutcome
 from ...core.casilla_id import CasillaId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -58,6 +58,7 @@ class CalculationSourceDiagnosticSnapshot(BaseModel):
     out_of_window_count: int | None = Field(default=None, ge=1)
     out_of_window_min_filing_date: date | None = None
     out_of_window_max_filing_date: date | None = None
+    value_outcome: BindingValueOutcome | None = None
 
     @classmethod
     def from_diagnostic(cls, diagnostic: CalculationSourceDiagnostic) -> Self:

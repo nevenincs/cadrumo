@@ -233,9 +233,7 @@ def capped_value_proven_zero(reason: str, outcome: BindingValueOutcome | None) -
     return reason == "advisory_binding_value" and outcome is BindingValueOutcome.PROVEN_ZERO
 
 
-def note_attention(
-    reason: str, *, box: str | None, outcome: BindingValueOutcome | None = None
-) -> ModeloFormAttention:
+def note_attention(reason: str, *, box: str | None, outcome: BindingValueOutcome | None = None) -> ModeloFormAttention:
     """Place one diagnostic reason on the filer's scale; ``box`` is the number the form prints for the box it names.
 
     ``box`` is ``None`` when the reason names no box or a working figure the
