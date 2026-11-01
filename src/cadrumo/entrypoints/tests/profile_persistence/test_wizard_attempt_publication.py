@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncGenerator, Callable
-from contextlib import asynccontextmanager
+from collections.abc import AsyncGenerator, Callable, Iterator
+from contextlib import asynccontextmanager, contextmanager
 from pathlib import Path
 from types import SimpleNamespace
 from typing import cast
@@ -13,6 +13,9 @@ from uuid import UUID
 import pytest
 
 from ....adapters.persistence.operations.secure_references import operation_secure_reference_repository
+from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....application.modelo import calculate_input
 from ....application.modelo.calculation_action_ports import CalculationActionPortsFactory
@@ -113,6 +116,25 @@ def _real_request(unit_id: str, *, binding_values: dict[str, str]) -> OperationR
     )
 
 
+@contextmanager
+def _attempt_executor(
+    work_repo: WorkUnitCatalogueRepository,
+    revision_repo: CalculationRevisionCatalogueRepository,
+    event_repo: BucketEventHistoryRepository,
+) -> Iterator[ModeloWorkWizardAttemptExecutor]:
+    """Bind the attempt executor to the test repositories' real calculation ports."""
+    with calculation_ports_for_test(
+        bucket_id=_PROFILE_ID,
+        work_unit_repository=work_repo,
+        calculation_repository=revision_repo,
+        bucket_event_repository=event_repo,
+    ) as ports:
+        yield ModeloWorkWizardAttemptExecutor(
+            calculation_action_ports_factory=cast(CalculationActionPortsFactory, cast(object, lambda **_kw: ports)),
+            attachment_store_factory=cast(Callable[[str], AttachmentStoreProtocol], cast(object, lambda _id: None)),
+        )
+
+
 def test_real_missing_input_attempt_persists_encrypted_needs_input_without_revision(
     tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
@@ -128,16 +150,7 @@ def test_real_missing_input_attempt_persists_encrypted_needs_input_without_revis
         request = _real_request(unit.work_unit_id, binding_values=binding_values)
         operands = operation_secure_reference_repository(objects=profile.repository)
         events = _Events()
-        with calculation_ports_for_test(
-            bucket_id=_PROFILE_ID,
-            work_unit_repository=work_repo,
-            calculation_repository=revision_repo,
-            bucket_event_repository=event_repo,
-        ) as ports:
-            executor = ModeloWorkWizardAttemptExecutor(
-                calculation_action_ports_factory=cast(CalculationActionPortsFactory, cast(object, lambda **_kw: ports)),
-                attachment_store_factory=cast(Callable[[str], AttachmentStoreProtocol], cast(object, lambda _id: None)),
-            )
+        with _attempt_executor(work_repo, revision_repo, event_repo) as executor:
             reference = asyncio.run(
                 executor.execute(
                     request,
@@ -177,16 +190,7 @@ def test_real_calculated_attempt_keeps_ordinary_public_result_and_updated_effect
         request = _real_request(unit.work_unit_id, binding_values={})
         operands = operation_secure_reference_repository(objects=profile.repository)
         events = _Events()
-        with calculation_ports_for_test(
-            bucket_id=_PROFILE_ID,
-            work_unit_repository=work_repo,
-            calculation_repository=revision_repo,
-            bucket_event_repository=event_repo,
-        ) as ports:
-            executor = ModeloWorkWizardAttemptExecutor(
-                calculation_action_ports_factory=cast(CalculationActionPortsFactory, cast(object, lambda **_kw: ports)),
-                attachment_store_factory=cast(Callable[[str], AttachmentStoreProtocol], cast(object, lambda _id: None)),
-            )
+        with _attempt_executor(work_repo, revision_repo, event_repo) as executor:
             reference = asyncio.run(
                 executor.execute(
                     request,
@@ -225,25 +229,16 @@ def test_postpublication_same_tag_does_not_persist_needs_input(
         request = _real_request(unit.work_unit_id, binding_values={})
         operands = operation_secure_reference_repository(objects=profile.repository)
         events = _Events()
-        with calculation_ports_for_test(
-            bucket_id=_PROFILE_ID,
-            work_unit_repository=work_repo,
-            calculation_repository=revision_repo,
-            bucket_event_repository=event_repo,
-        ) as ports:
-            executor = ModeloWorkWizardAttemptExecutor(
-                calculation_action_ports_factory=cast(CalculationActionPortsFactory, cast(object, lambda **_kw: ports)),
-                attachment_store_factory=cast(Callable[[str], AttachmentStoreProtocol], cast(object, lambda _id: None)),
-            )
-            with pytest.raises(RegistryValidationError) as refused:
-                asyncio.run(
-                    executor.execute(
-                        request,
-                        _executor_context(
-                            unit_id=unit.work_unit_id, operation=operation, events=events, operands=operands
-                        ),
-                    )
+        with (
+            _attempt_executor(work_repo, revision_repo, event_repo) as executor,
+            pytest.raises(RegistryValidationError) as refused,
+        ):
+            asyncio.run(
+                executor.execute(
+                    request,
+                    _executor_context(unit_id=unit.work_unit_id, operation=operation, events=events, operands=operands),
                 )
+            )
         assert type(refused.value) is RegistryValidationError
         assert events.effects == [OperationEffect.UNKNOWN]
         revisions = revision_repo.load().revisions
