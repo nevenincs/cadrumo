@@ -3164,8 +3164,9 @@ cli:
     classify:
       apply_help: Desa el suggeriment de l'LLM amb origen `llm:` en lloc de només
         previsualitzar-lo.
-      auto_split_help: Llegeix la factura adjunta i, quan és multicomponent, la divideix
-        en fills base/IVA per línia; si no, la classifica al lloc (requereix --read-evidence).
+      auto_split_help: Llegeix la factura adjunta i, quan conté diversos components,
+        la divideix en fills base/IVA per línia; si no, la classifica al lloc (requereix
+        --read-evidence).
       auto_split_needs_evidence: '--auto-split requereix --read-evidence: la decisió
         de divisió es llegeix de la factura.'
       auto_split_single_line: 'factura d''una sola línia: no cal divisió; --apply

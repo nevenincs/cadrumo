@@ -848,8 +848,8 @@ cli:
       audit:
         bundle_id_help: Identificador del paquete de evidencia (SHA-256 completo o
           prefijo inequívoco).
-        check_help: Reverificar un paquete de evidencia recalculando los digests de
-          los registros.
+        check_help: Volver a verificar un paquete de evidencia recalculando los resúmenes
+          criptográficos de los registros.
         export_help: Generar un archivo ZIP determinista del paquete de evidencia
           (manifest.json se escribe el último).
         force_incomplete_help: Permitir la exportación cuando la verificación señale
@@ -2858,7 +2858,7 @@ cli:
         notice_warning: Aviso
         occupancy: Ocupación
         path: Ruta
-        reclaimable: Liberable
+        reclaimable: Se puede liberar
         removed_entries: Entradas eliminadas
         resolved_paths: Rutas resueltas
         retained_entries: Entradas conservadas
@@ -2885,7 +2885,7 @@ cli:
         lifecycle:
           durable: duradera
           mixed: mixta
-          reclaimable: liberable
+          reclaimable: se puede liberar
         occupancy:
           absent: ausente
           empty: vacía
