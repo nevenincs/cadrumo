@@ -4,7 +4,7 @@ A provider kind used to be real only by agreement between three tables that
 could each be edited alone: a selector-model lookup, a validator lookup, and the
 application route table. Seven authored kinds proved the arrangement does not
 hold -- they carried a model and a validator, reached calculation, and had no
-owner at all, visible only as an advisory diagnostic.
+owner at all.
 
 :data:`BINDING_PROVIDER_REGISTRATIONS` replaces the agreement with one row per
 union member. The row carries the member's model, its build-time validator, the
@@ -48,7 +48,10 @@ from .actividad_asset_disposal_bindings import (
     validate_activity_asset_disposal_binding,
 )
 from .afiliado_contribution_bindings import AfiliadoContributionProvider, validate_afiliado_contribution_binding
-from .bienes_inversion_regularizacion_bindings import BienesInversionRegularizacionProvider
+from .bienes_inversion_regularizacion_bindings import (
+    BienesInversionRegularizacionProvider,
+    validate_bienes_inversion_regularizacion_binding,
+)
 from .binding_aggregation import binding_aggregation_op
 from .binding_provider import BindingProvider
 from .binding_temporal import temporal_reach_diagnostic
@@ -77,7 +80,10 @@ from .invoice_bindings import (
     validate_invoice_binding,
 )
 from .irnr_ledger_bindings import LedgerIrnrIncomeProvider, validate_ledger_irnr_income_aggregation_binding
-from .iva_compensation_annual_partition_bindings import IvaCompensationAnnualPartitionProvider
+from .iva_compensation_annual_partition_bindings import (
+    IvaCompensationAnnualPartitionProvider,
+    validate_iva_compensation_annual_partition_binding,
+)
 from .ledger_binding_validation import LEDGER_AGGREGATION_OPS
 from .ledger_impatriado_bindings import (
     LedgerImpatriadoIncomeProvider,
@@ -94,12 +100,15 @@ from .ledger_renta_gastos_pago_fraccionado_bindings import (
     validate_ledger_renta_gastos_pago_fraccionado_aggregation_binding,
 )
 from .ledger_renta_income_bindings import LedgerRentaIncomeProvider, validate_ledger_renta_income_aggregation_binding
-from .m303_regimen_simplificado_annual_summary_bindings import M303RegimenSimplificadoAnnualSummaryProvider
-from .manual_input_selector import ManualInputProvider
-from .profile_bindings import ProfileProvider
-from .prorrata_regularizacion_bindings import ProrrataRegularizacionProvider
-from .relation_prefill_bindings import RelationPrefillProvider
-from .relations import validate_relation_prefill_binding
+from .m303_regimen_simplificado_annual_summary_bindings import (
+    M303RegimenSimplificadoAnnualSummaryProvider,
+    validate_m303_regimen_simplificado_annual_summary_binding,
+)
+from .manual_input_selector import ManualInputProvider, validate_manual_input_binding
+from .profile_bindings import ProfileProvider, validate_profile_binding
+from .prorrata_regularizacion_bindings import ProrrataRegularizacionProvider, validate_prorrata_regularizacion_binding
+from .relation_prefill_bindings import RelationPrefillProvider, validate_relation_prefill_binding
+from .relations import validate_relation_prefill_fold_arity
 from .retenciones_bindings import RetencionesAggregationProvider, validate_retenciones_aggregation_binding
 from .withholding296_bindings import Withholding296Provider, validate_withholding296_binding_selector_shape
 from .withholding_bindings import WithholdingProvider, validate_withholding_binding_selector_shape
@@ -177,14 +186,13 @@ class BindingProviderRegistration:
 
     kind: BindingSourceKind
     provider_model: type[BaseModel]
-    validator: BindingProviderValidator | None
-    """The family's build-time gate, or ``None`` when the union member is the whole gate.
+    validator: BindingProviderValidator
+    """The family's build-time gate: every kind enrols one.
 
-    A family whose only build-time invariant is its own provider shape needs no
-    validator: the discriminated union has already constructed that member from
-    the authored row, so re-validating the typed member against its own class
-    can produce no diagnostic. ``None`` states that the member carries the gate,
-    rather than dressing a no-op call up as one.
+    The discriminated union has already constructed the provider member from the
+    authored row, so a validator earns its place by lifting the cross-invariants
+    between the member and the binding around it (value contract, aggregation,
+    applicability) that the member alone cannot see.
     """
     permitted_value_channels: frozenset[BindingValueChannel]
     permitted_aggregation_ops: frozenset[BindingAggregationOp]
@@ -284,10 +292,22 @@ _DEFERRED_PERCEPTOR_OWNER: Final = (
 )
 
 
+def _validate_relation_prefill(binding: BindingDefinition) -> list[str]:
+    """Join the relation_prefill shape-and-reach gate with the fold-arity gate.
+
+    The shape gate already owns a copy's single source casilla, so the fold
+    arity is only added for the folds that read a different count per filing.
+    """
+    failures = validate_relation_prefill_binding(binding)
+    if binding_aggregation_op(binding) is not BindingAggregationOp.COPY:
+        failures.extend(validate_relation_prefill_fold_arity(binding))
+    return failures
+
+
 def _filing_grade(
     kind: BindingSourceKind,
     provider_model: type[BaseModel],
-    validator: BindingProviderValidator | None,
+    validator: BindingProviderValidator,
     *,
     channels: frozenset[BindingValueChannel],
     ops: frozenset[BindingAggregationOp],
@@ -315,7 +335,7 @@ def _filing_grade(
 def _deferred(
     kind: BindingSourceKind,
     provider_model: type[BaseModel],
-    validator: BindingProviderValidator | None,
+    validator: BindingProviderValidator,
     *,
     origins: frozenset[TerminalOriginClass],
     owner: str,
@@ -343,7 +363,7 @@ def _deferred(
 def _non_runtime(
     kind: BindingSourceKind,
     provider_model: type[BaseModel],
-    validator: BindingProviderValidator | None,
+    validator: BindingProviderValidator,
     *,
     origin: TerminalOriginClass,
     resolver_id: str,
@@ -368,7 +388,7 @@ def _non_runtime(
 def _ledger_aggregation(
     kind: BindingSourceKind,
     provider_model: type[BaseModel],
-    validator: BindingProviderValidator | None,
+    validator: BindingProviderValidator,
     *,
     resolver_id: str,
     output: ProviderOutputShape = "scalar",
@@ -418,7 +438,7 @@ _REGISTRATIONS: Final[tuple[BindingProviderRegistration, ...]] = (
     _non_runtime(
         BindingSourceKind.MANUAL_INPUT,
         ManualInputProvider,
-        None,
+        validate_manual_input_binding,
         origin=TerminalOriginClass.OPERATOR_INPUT,
         resolver_id=_MANUAL_INPUT_RESOLVER_ID,
         admits_aeat_prefill=True,
@@ -433,7 +453,7 @@ _REGISTRATIONS: Final[tuple[BindingProviderRegistration, ...]] = (
     _filing_grade(
         BindingSourceKind.PROFILE,
         ProfileProvider,
-        None,
+        validate_profile_binding,
         # Scalar profile fields use the carry operation; repeating typed
         # profile collections emit provider-native row sets. The two shapes
         # share one provider kind, so both channels and cardinalities belong
@@ -460,7 +480,7 @@ _REGISTRATIONS: Final[tuple[BindingProviderRegistration, ...]] = (
     _filing_grade(
         BindingSourceKind.RELATION_PREFILL,
         RelationPrefillProvider,
-        validate_relation_prefill_binding,
+        _validate_relation_prefill,
         channels=_MONEY_OR_COUNT_CHANNELS,
         ops=_FOLD_OPS | frozenset({BindingAggregationOp.PAGOS_FRACCIONADOS_INGRESADOS}),
         origins=frozenset({TerminalOriginClass.FILED_MODELO_CASILLA}),
@@ -471,7 +491,7 @@ _REGISTRATIONS: Final[tuple[BindingProviderRegistration, ...]] = (
     _filing_grade(
         BindingSourceKind.IVA_COMPENSATION_ANNUAL_PARTITION,
         IvaCompensationAnnualPartitionProvider,
-        None,
+        validate_iva_compensation_annual_partition_binding,
         channels=_MONEY_CHANNELS,
         ops=_FOLD_OPS,
         origins=frozenset(
@@ -484,7 +504,7 @@ _REGISTRATIONS: Final[tuple[BindingProviderRegistration, ...]] = (
     _filing_grade(
         BindingSourceKind.M303_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY,
         M303RegimenSimplificadoAnnualSummaryProvider,
-        None,
+        validate_m303_regimen_simplificado_annual_summary_binding,
         channels=_MONEY_CHANNELS,
         ops=_FOLD_OPS,
         origins=frozenset({TerminalOriginClass.FILED_MODELO_CASILLA}),
@@ -495,7 +515,7 @@ _REGISTRATIONS: Final[tuple[BindingProviderRegistration, ...]] = (
     _filing_grade(
         BindingSourceKind.PRORRATA_REGULARIZACION,
         ProrrataRegularizacionProvider,
-        None,
+        validate_prorrata_regularizacion_binding,
         channels=_MONEY_CHANNELS,
         ops=_FOLD_OPS,
         origins=frozenset({TerminalOriginClass.DERIVED_CALCULATION}),
@@ -506,7 +526,7 @@ _REGISTRATIONS: Final[tuple[BindingProviderRegistration, ...]] = (
     _filing_grade(
         BindingSourceKind.BIENES_INVERSION_REGULARIZACION,
         BienesInversionRegularizacionProvider,
-        None,
+        validate_bienes_inversion_regularizacion_binding,
         channels=_MONEY_CHANNELS,
         ops=_FOLD_OPS,
         origins=frozenset({TerminalOriginClass.DERIVED_CALCULATION}),
@@ -786,6 +806,15 @@ def _require_one_registration_per_pseudo_owner(registrations: tuple[BindingProvi
             )
 
 
+def _require_validator(registration: BindingProviderRegistration) -> None:
+    """Refuse a registration that enrols no callable validator."""
+    if not callable(registration.validator):
+        raise RegistryValidationError(
+            f"binding provider kind {registration.kind.value!r} must enrol a build-time validator",
+            context={"kind": registration.kind.value},
+        )
+
+
 def validate_binding_provider_registrations(
     registrations: tuple[BindingProviderRegistration, ...],
 ) -> Mapping[BindingSourceKind, BindingProviderRegistration]:
@@ -802,6 +831,7 @@ def validate_binding_provider_registrations(
         _require_declared_content(registration)
         _require_channel_shape(registration)
         _require_disposition_matches_route(registration)
+        _require_validator(registration)
     return MappingProxyType({registration.kind: registration for registration in registrations})
 
 
@@ -967,13 +997,8 @@ def registration_for(kind: BindingSourceKind) -> BindingProviderRegistration:
     return registration
 
 
-def validator_for(kind: BindingSourceKind) -> BindingProviderValidator | None:
-    """Return the build-time validator enrolled for one provider kind, if it has one.
-
-    ``None`` is the enrolled answer for a family whose provider member is its own
-    complete gate, not a missing registration: a kind with no row cannot reach
-    here at all.
-    """
+def validator_for(kind: BindingSourceKind) -> BindingProviderValidator:
+    """Return the build-time validator enrolled for one provider kind."""
     return registration_for(kind).validator
 
 

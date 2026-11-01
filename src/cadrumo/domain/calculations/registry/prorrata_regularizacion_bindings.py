@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from enum import StrEnum
-from typing import Annotated, Literal, Protocol
+from typing import TYPE_CHECKING, Annotated, Literal, Protocol
 
 from pydantic import AfterValidator, BaseModel, field_validator
 
@@ -13,8 +13,12 @@ from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.period import StandardPeriodCode
+from .binding_selector_utils import computed_money_binding_failures
 from .errors import RegistryValidationError
 from .form_codes import form_role_validator
+
+if TYPE_CHECKING:
+    from .schema import BindingDefinition
 
 __all__ = [
     "ProrrataRegularizacionOutput",
@@ -22,6 +26,7 @@ __all__ = [
     "ProrrataRegularizacionProvider",
     "prorrata_definitive_percentage_source_casilla_id",
     "prorrata_source_casilla_ids",
+    "validate_prorrata_regularizacion_binding",
 ]
 
 
@@ -120,3 +125,13 @@ class ProrrataRegularizacionProvider(BaseModel):
                 "prorrata_regularizacion selector must declare all four quarters as source_periods",
             )
         return value
+
+
+def validate_prorrata_regularizacion_binding(binding: BindingDefinition) -> list[str]:
+    """Return the build-time diagnostics for one prorrata regularisation binding.
+
+    The provider model pins the source casillas and periods and the landing
+    output; what remains is the value contract, which must be the monetary
+    regularisation the resolver computes.
+    """
+    return computed_money_binding_failures(binding, "prorrata-regularizacion")

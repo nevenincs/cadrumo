@@ -10,7 +10,7 @@ other end: the credit of earlier ejercicios the year's autoliquidaciones applied
 from __future__ import annotations
 
 from enum import StrEnum
-from typing import Annotated, Literal
+from typing import TYPE_CHECKING, Annotated, Literal
 
 from pydantic import AfterValidator, BaseModel, field_validator
 
@@ -19,8 +19,12 @@ from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.period import StandardPeriodCode
+from .binding_selector_utils import computed_money_binding_failures
 from .errors import RegistryValidationError
 from .form_codes import form_role_validator
+
+if TYPE_CHECKING:
+    from .schema import BindingDefinition
 
 __all__ = [
     "M303_COMPENSATION_APLICADA_CASILLA",
@@ -34,6 +38,7 @@ __all__ = [
     "IvaCompensationAnnualPartition",
     "IvaCompensationAnnualPartitionProvider",
     "IvaCompensationAnnualPartitionValue",
+    "validate_iva_compensation_annual_partition_binding",
 ]
 
 
@@ -138,3 +143,12 @@ class IvaCompensationAnnualPartitionProvider(BaseModel):
                 "iva_compensation_annual_partition selector must declare every quarter of the year as source_periods",
             )
         return value
+
+
+def validate_iva_compensation_annual_partition_binding(binding: BindingDefinition) -> list[str]:
+    """Return the build-time diagnostics for one annual-partition binding.
+
+    The provider model pins the source casillas and periods; what remains is the
+    value contract, which must be the monetary amount the FIFO partition yields.
+    """
+    return computed_money_binding_failures(binding, "iva-compensation-annual-partition")

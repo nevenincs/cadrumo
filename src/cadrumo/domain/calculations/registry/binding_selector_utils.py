@@ -14,6 +14,7 @@ from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from ....core.type_guards import is_str_keyed_dict
 from .binding_aggregation import binding_aggregation_op
+from .binding_value_contract import BindingDataType
 from .errors import RegistryValidationError
 from .manual_input_selector import ManualInputProvider
 from .schema_exports import ExportFieldDataType, OneBasedExportOffset
@@ -33,6 +34,7 @@ __all__ = [
     "binding_row_set_selector",
     "boolean_binding_encoded_values",
     "canonical_selector_key_hint",
+    "computed_money_binding_failures",
     "intracommunity_clave_validator",
     "invariant_diagnostics",
     "manual_input_record_field_selector",
@@ -715,6 +717,29 @@ def invariant_diagnostics(
     except RegistryValidationError as exc:
         return [f"binding {binding.id!r} (source={binding.source!r}) {label} invariants violated: {exc}"]
     return []
+
+
+def computed_money_binding_failures(binding: BindingDefinition, label: str) -> list[str]:
+    """Return the diagnostics for a computed-IVA binding that is not a plain money output.
+
+    The four computed IVA kinds hand their resolver a destination, not an
+    operation: the resolver produces the amount itself and never reads the
+    declared aggregation, so an authored operator would be a dead declaration
+    that reads as if it chose how the amount folds. Their amount is a monetary
+    quantity, so any other value data type contradicts the quantity computed.
+    """
+    failures: list[str] = []
+    if binding.value.data_type is not BindingDataType.MONEY:
+        failures.append(
+            f"binding {binding.id!r} (source={binding.source!r}) {label} invariants violated: "
+            f"value data_type must be money, not {binding.value.data_type.value!r}",
+        )
+    if binding.aggregation is not None:
+        failures.append(
+            f"binding {binding.id!r} (source={binding.source!r}) {label} invariants violated: "
+            "the resolver computes the amount and never reads an aggregation, so none may be authored",
+        )
+    return failures
 
 
 def uppercase_alpha_code(field_label: str) -> Callable[[type, str], str]:

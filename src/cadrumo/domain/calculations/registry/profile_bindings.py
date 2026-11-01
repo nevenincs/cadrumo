@@ -10,16 +10,20 @@ would leave the value's origin ambiguous.
 
 from __future__ import annotations
 
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
 
 from pydantic import BaseModel, Field, model_validator
 
 from ....core.aggregation import BindingSourceKind
 from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.models import STRICT_FROZEN_CONFIG
+from .binding_value_contract import BindingValueChannel
 from .errors import RegistryValidationError
 
-__all__ = ["ProfileProvider"]
+if TYPE_CHECKING:
+    from .schema import BindingDefinition
+
+__all__ = ["ProfileProvider", "validate_profile_binding"]
 
 
 class ProfileProvider(BaseModel):
@@ -78,6 +82,8 @@ class ProfileProvider(BaseModel):
             )
         if has_composite and self.format is None:
             raise RegistryValidationError("profile composite selector (profile_keys) requires a format renderer")
+        if self.repeating and not has_collection:
+            raise RegistryValidationError("profile selector with repeating=true must declare profile_model")
         if has_collection:
             if self.field is None:
                 raise RegistryValidationError("profile model selector must declare field")
@@ -97,12 +103,28 @@ class ProfileProvider(BaseModel):
         return self
 
 
-# ---------------------------------------------------------------------------
-# Per-family build-time validator dispatch
-#
-# The selector lookup table this module used to own is gone: the provider union
-# in :mod:`~domain.calculations.registry.binding_provider` hydrates a binding
-# into its family model at construction, so no second table is needed to say
-# which model a source kind validates against. What remains is the op/fact
-# cross-invariant validator per family, keyed by the same discriminator.
-# ---------------------------------------------------------------------------
+def validate_profile_binding(binding: BindingDefinition) -> list[str]:
+    """Return the build-time diagnostics for one profile binding.
+
+    A repeating profile collection emits provider-native rows, so it must travel
+    the row-set channel, and a scalar or composite profile value has no rows to
+    emit, so it must not. The composite projection renders text through its
+    format renderer, so its value must travel the text channel.
+    """
+    provider = binding.provider
+    if not isinstance(provider, ProfileProvider):
+        return [f"binding {binding.id!r} (source={binding.source!r}) is not a profile provider"]
+    channel = binding.value.channel
+    prefix = f"binding {binding.id!r} (source={binding.source!r}) profile invariants violated:"
+    failures: list[str] = []
+    if provider.repeating and channel is not BindingValueChannel.ROW_SET:
+        failures.append(
+            f"{prefix} a repeating collection must use the row_set channel, not {channel.value!r}",
+        )
+    if not provider.repeating and channel is BindingValueChannel.ROW_SET:
+        failures.append(f"{prefix} the row_set channel requires a repeating collection selector")
+    if provider.profile_keys and channel is not BindingValueChannel.TEXT:
+        failures.append(
+            f"{prefix} a composite projection renders text and must use the text channel, not {channel.value!r}",
+        )
+    return failures
