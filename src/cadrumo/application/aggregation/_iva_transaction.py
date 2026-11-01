@@ -576,23 +576,6 @@ def _resolved_iva_transaction_amounts(
     )
     if isinstance(rate_kind, _IvaTransactionOutcome):
         return rate_kind
-    # Recargo de equivalencia is left out: its own tipo is not carried on the
-    # row, only its amount, so only the IVA cuota can be recomputed here.
-    expected_cuota = (taxable_base * iva_rate).quantize(Decimal("0.0001"))
-    if abs(iva_amount - expected_cuota) > CENT:
-        return _IvaTransactionOutcome(
-            gate_issue=IvaLedgerAggregationIssue(
-                transaction_id=transaction_id,
-                reason=IvaLedgerAggregationIssueReason.CUOTA_DISAGREES_WITH_RATE,
-                detail=render_tr(
-                    "aggregation.iva_ledger.errors.cuota_disagrees_with_rate",
-                    base=str(taxable_base),
-                    rate=str(iva_rate),
-                    declared=str(iva_amount),
-                    expected=str(round_to_cents(expected_cuota)),
-                ),
-            ),
-        )
     # Only the cuota follows the business share. The Modelo 303 instructions
     # declare the deductible bases "sin prorratear" (IVA Deducible), and for
     # bienes de inversion state that the base goes unreduced even where the
@@ -922,6 +905,35 @@ def iva_transaction_gate_issue(
     return None
 
 
+def _cuota_disagrees_with_rate_issue(transaction: Transaction) -> IvaLedgerAggregationIssue | None:
+    """Refuse a row whose declared cuota is not its base at its declared tipo.
+
+    Runs after category classification, so a category's own refusal (a cuota
+    that is zero by law, a combination that describes no operation) names the
+    real fault first. Recargo de equivalencia is left out: its own tipo is not
+    carried on the row, only its amount, so only the IVA cuota is recomputed.
+    """
+    taxable_base = transaction.taxable_base
+    iva_amount = transaction.iva_amount
+    iva_rate = transaction.iva_rate
+    if taxable_base is None or iva_amount is None or iva_rate is None:
+        return None
+    expected_cuota = (taxable_base * iva_rate).quantize(Decimal("0.0001"))
+    if abs(iva_amount - expected_cuota) <= CENT:
+        return None
+    return IvaLedgerAggregationIssue(
+        transaction_id=transaction.transaction_id,
+        reason=IvaLedgerAggregationIssueReason.CUOTA_DISAGREES_WITH_RATE,
+        detail=render_tr(
+            "aggregation.iva_ledger.errors.cuota_disagrees_with_rate",
+            base=str(taxable_base),
+            rate=str(iva_rate),
+            declared=str(iva_amount),
+            expected=str(round_to_cents(expected_cuota)),
+        ),
+    )
+
+
 def _admit_iva_transaction(
     transaction: Transaction,
     *,
@@ -950,6 +962,9 @@ def _admit_iva_transaction(
     )
     if isinstance(classification, _IvaTransactionOutcome):
         return classification
+    cuota_issue = _cuota_disagrees_with_rate_issue(transaction)
+    if cuota_issue is not None:
+        return _IvaTransactionOutcome(gate_issue=cuota_issue)
     return _IvaTransactionAdmission(context=context, amounts=amounts, classification=classification)
 
 
