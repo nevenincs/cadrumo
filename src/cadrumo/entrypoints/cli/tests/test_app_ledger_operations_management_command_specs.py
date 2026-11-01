@@ -576,6 +576,18 @@ _EXPECTED_COMMANDS: Final[tuple[_ExpectedCommand, ...]] = (
         ),
     ),
     _expected_command(
+        "app_ledger_entry_options",
+        "app_ledger",
+        "entry-options",
+        "leaf",
+        "cli.ledger.entry_options_help",
+        "none",
+        "cadrumo.entrypoints.cli.entry_options_commands:entry_options",
+        _expected_result_schema(
+            _TARGET, "cadrumo.entrypoints.cli.ledger_results:LedgerEntryOptionsResult", "ledger.entry-options"
+        ),
+    ),
+    _expected_command(
         "app_ledger_participation",
         "app_ledger",
         "participation",
@@ -600,7 +612,7 @@ _EXPECTED_COMMANDS: Final[tuple[_ExpectedCommand, ...]] = (
         "none",
         "cadrumo.entrypoints.cli.ledger_read_commands:ledger_preflight",
         _expected_result_schema(
-            _TARGET, "cadrumo.entrypoints.cli.ledger_results:LedgerPreflightResult", "ledger.preflight"
+            _TARGET, "cadrumo.entrypoints.cli.ledger_diagnostic_results:LedgerPreflightResult", "ledger.preflight"
         ),
         (
             _expected_option("period", "--period", "cli.ledger.export.period_help", default=_REQUIRED_DEFAULT),

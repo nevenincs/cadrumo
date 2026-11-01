@@ -409,7 +409,7 @@ LEDGER_MANAGEMENT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.ledger.entry_options_help"),
         short_help_key=None,
-        invocation=InvocationSpec(invoke_without_command=False, no_args_is_help=False, context_parameter="ctx"),
+        invocation=_LEAF_INVOCATION,
         parameters=(),
         policy=_POLICY_5,
         handler=LazyBinding.available(DeferredTarget(".entry_options_commands", "entry_options", __package__)),

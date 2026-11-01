@@ -183,7 +183,9 @@ class ProfileFieldChoice(BaseModel):
     label: str
 
 
-_NO_CODE_LISTS: Final[Mapping[ProfileFieldCodeList, tuple[str, ...]]] = MappingProxyType({})
+_NO_CODE_LISTS: Final[Mapping[ProfileFieldCodeList, tuple[str, ...]]] = MappingProxyType[
+    ProfileFieldCodeList, tuple[str, ...]
+]({})
 
 
 def profile_field_choices(
