@@ -903,6 +903,9 @@ application:
         records requires at least one attachment id.
       evidence_detachment_unknown_attachment: The transaction in your records does
         not carry attachment(s) %{attachment_ids}.
+      fx_value_inconsistent: The euro value %{value_in_eur} does not match the %{currency}
+        amount converted at rate %{fx_rate}, which gives %{expected_value_in_eur}.
+        Correct the euro value or the rate and try again.
       idempotency_key_conflict: The idempotency key already identifies a stored transaction
         with different details. Use a new idempotency key for a different movement,
         or omit the key to append a deliberate duplicate.

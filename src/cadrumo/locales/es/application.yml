@@ -961,6 +961,9 @@ application:
         al menos un id de adjunto.
       evidence_detachment_unknown_attachment: La transacción de tus registros no lleva
         los adjuntos %{attachment_ids}.
+      fx_value_inconsistent: El valor en euros %{value_in_eur} no coincide con el
+        importe en %{currency} convertido al tipo %{fx_rate}, que da %{expected_value_in_eur}.
+        Corrige el valor en euros o el tipo e inténtalo de nuevo.
       idempotency_key_conflict: La clave de idempotencia ya identifica una transacción
         almacenada con datos distintos. Usa una clave de idempotencia nueva para un
         movimiento diferente, u omite la clave para añadir un duplicado deliberado.

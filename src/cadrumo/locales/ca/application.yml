@@ -957,6 +957,9 @@ application:
         requereix almenys un id d'adjunt.
       evidence_detachment_unknown_attachment: La transacció dels teus registres no
         porta els adjunts %{attachment_ids}.
+      fx_value_inconsistent: El valor en euros %{value_in_eur} no coincideix amb l'import
+        en %{currency} convertit al tipus %{fx_rate}, que dona %{expected_value_in_eur}.
+        Corregeix el valor en euros o el tipus i torna-ho a provar.
       idempotency_key_conflict: La clau d'idempotència ja identifica una transacció
         emmagatzemada amb dades diferents. Usa una clau d'idempotència nova per a
         un moviment diferent, o omet la clau per afegir un duplicat deliberat.

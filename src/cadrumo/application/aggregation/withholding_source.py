@@ -50,7 +50,7 @@ from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.hashing import sha256_hex
 from ...core.i18n.translatable import Translatable as tr
 from ...core.modelo import Modelo
-from ...domain.calculations.registry.authority import bundled_indexed_authority
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from ...domain.calculations.registry.ids import LegalRefId, SourceRefId
 from ...domain.calculations.registry.schema import ModeloRevision
@@ -80,7 +80,7 @@ from .source_mesh import (
     CalculationSourceProvenance,
     CalculationSourceResolution,
 )
-from .source_resolution_operations import storage_degradation_resolution
+from .source_resolution_operations import source_context_operation, storage_degradation_resolution
 from .withholding_filing_cadence import (
     WithholdingFilerCadence,
     require_quarterly_withholding_source,
@@ -313,14 +313,17 @@ def _refuse_unscheduled_quarters(
     )
 
 
-def _work_profile_cadence(context: CalculationSourceContext) -> WithholdingFilerCadence:
-    """Resolve the filer cadence from the profile the calculation loaded."""
-    with bundled_indexed_authority().operation() as operation:
-        return withholding_filer_cadence_for_work_profile(
-            context.profile,
-            filing_year=context.filing_year,
-            operation=operation,
-        )
+def _work_profile_cadence(
+    context: CalculationSourceContext,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> WithholdingFilerCadence:
+    """Resolve the filer cadence from the profile the calculation loaded, under ``operation``'s generation."""
+    return withholding_filer_cadence_for_work_profile(
+        context.profile,
+        filing_year=context.filing_year,
+        operation=operation,
+    )
 
 
 class WithholdingSourceResolver:
@@ -362,6 +365,7 @@ class WithholdingSourceResolver:
         composition: AnnualWithholdingComposition,
         *,
         filing_year: int,
+        operation: PinnedAuthorityOperation,
     ) -> tuple[Modelo193PhaseRow, ...]:
         if composition.capital_disclosure_retenciones is None:
             return ()
@@ -369,8 +373,7 @@ class WithholdingSourceResolver:
             composition.capital_disclosure_retenciones.value,
             filing_year,
         )
-        with bundled_indexed_authority().operation() as operation:
-            pending_disclosure_years = modelo_193_pending_disclosure_years(operation)
+        pending_disclosure_years = modelo_193_pending_disclosure_years(operation)
         return materialize_modelo_193_disclosure_phases(
             allocations,
             filing_year=filing_year,
@@ -384,6 +387,7 @@ class WithholdingSourceResolver:
         period: Period,
         revision: ModeloRevision,
         cadence: Callable[[], WithholdingFilerCadence],
+        operation: PinnedAuthorityOperation,
     ) -> AnnualWithholdingDetail | None:
         """Return the stored per-perceptor-clave rows the calculation reads for ``modelo`` in ``period``.
 
@@ -406,7 +410,7 @@ class WithholdingSourceResolver:
         composition = annual_withholding_composition(modelo)
         _refuse_unscheduled_quarters(composition, modelo=modelo, cadence=cadence)
         window = self._window(composition, modelo=modelo, period=period)
-        phase_rows = self._disclosure_phase_rows(composition, filing_year=period.filing_year)
+        phase_rows = self._disclosure_phase_rows(composition, filing_year=period.filing_year, operation=operation)
         _refuse_allocation_collisions(
             modelo=modelo,
             filing_year=period.filing_year,
@@ -422,12 +426,14 @@ class WithholdingSourceResolver:
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
         """Resolve withholding totals from the bucket-scoped observation store."""
         try:
-            detail = self.load_calculation_detail(
-                modelo=context.modelo,
-                period=context.period,
-                revision=context.revision,
-                cadence=lambda: _work_profile_cadence(context),
-            )
+            with source_context_operation(context) as operation:
+                detail = self.load_calculation_detail(
+                    modelo=context.modelo,
+                    period=context.period,
+                    revision=context.revision,
+                    cadence=lambda: _work_profile_cadence(context, operation=operation),
+                    operation=operation,
+                )
         except (PercepcionObservationPersistenceError, RetencionObservationPersistenceError) as exc:
             return storage_degradation_resolution(
                 resolver_id=self.resolver_id,
