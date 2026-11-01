@@ -10,16 +10,16 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import FilingYearOutsideSupportEnvelopeError
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.temporal import select_revision
-from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
-
-from ._modelo_303_registry_support import (
+from cadrumo.domain.calculations.registry.tests.modelo_303_registry_constants import (
     _M303_ANNUAL_ORDEN_SOURCE_BY_REVISION,
     _M303_EXPLICIT_RECORD_DESIGN_REVISIONS,
     _M303_EXTRACTION_PROFILE_TARGET_LEGAL_REFS_BY_REVISION,
     _M303_RECORD_DESIGN_LAYOUT_MODIFICATION_LEGAL_REF,
     _M303_RECORD_DESIGN_SOURCE_BY_REVISION,
-    load_modelo_303,
 )
+from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
+
+from ._modelo_303_registry_support import load_modelo_303
 from .authored_edition_support import source_first_exercise, source_with_sha256
 from .profile_schema_support import committed_registry_validator
 
