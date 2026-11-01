@@ -35,7 +35,7 @@ def fields_cleared_by_classification(classification: BusinessClassification) -> 
     A classification that bears no share drops the share and its usage ratio;
     one with no business component also drops the business figures.
     """
-    cleared: frozenset[str] = frozenset()
+    cleared = frozenset[str]()
     if not takes_business_share(classification):
         cleared |= SHARE_DEPENDENT_FIELDS
     if classification not in BUSINESS_BEARING_STATES:

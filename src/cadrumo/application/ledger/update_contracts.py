@@ -43,7 +43,9 @@ LEDGER_UPDATE_FIELD_NAMES = frozenset(
     }
 )
 # Facts every transaction carries: an update may replace them but never blank or remove them.
-LEDGER_UPDATE_REQUIRED_FIELD_NAMES = frozenset({"booked_date", "amount", "currency", "direction", "description", "notes"})
+LEDGER_UPDATE_REQUIRED_FIELD_NAMES = frozenset(
+    {"booked_date", "amount", "currency", "direction", "description", "notes"}
+)
 LedgerUpdatePatchField = Literal[
     "booked_date",
     "value_date",

@@ -129,7 +129,7 @@ def test_every_recorded_answer_is_what_the_backend_answers() -> None:
 
 
 # Defined only when given the questions, since with none there is nothing to record.
-if os.environ.get("CADRUMO_STAGED_CHECK_UNRECORDED"):
+if os.environ.get("CADRUMO_STAGED_CHECK_UNRECORDED", "") != "":
 
     def test_record_the_questions_the_fixtures_could_not_answer() -> None:
         recording = _recording() if _RECORDING.exists() else {"rows": {}, "drafts": {}}

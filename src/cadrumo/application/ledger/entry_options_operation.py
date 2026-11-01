@@ -31,13 +31,13 @@ from ...core.time.clock import now
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.bienes_inversion_catalogue import resolve_bienes_inversion_catalogue
 from ...domain.calculations.registry.invoice_legal_classification import resolve_invoice_legal_classification_catalogue
-from ...domain.invoices.enums import default_invoice_class, invoice_class_rectificativa, invoice_class_simplificada
 from ...domain.calculations.registry.irnr_tipo_renta import resolve_tipo_renta_irnr_catalogue
 from ...domain.calculations.registry.iva_category_catalogue import resolve_iva_category_catalogue
 from ...domain.calculations.registry.iva_deduction_catalogue import iva_deduction_fact_kinds
 from ...domain.calculations.registry.prorrata_register_catalogue import resolve_prorrata_register_catalogue
 from ...domain.categories.spending_category_catalogue import resolve_spending_category_catalogue
 from ...domain.invoices.business_premises import SituacionInmueble
+from ...domain.invoices.enums import default_invoice_class, invoice_class_rectificativa, invoice_class_simplificada
 from ...domain.iva.establishment import catalogued_country_codes
 from ...domain.transactions.irpf_categories import ledger_irpf_category_catalogue
 from ...domain.transactions.m210_income_classification import m210_payer_modes

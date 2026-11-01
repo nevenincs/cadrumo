@@ -55,9 +55,7 @@ def _add_outgoing(profile: NativeCliProfileFixture) -> str:
 
 
 def _row(transaction_id: str, **cells: str | None) -> str:
-    return json.dumps(
-        {"transaction_id": transaction_id, "cells": [{"field": k, "value": v} for k, v in cells.items()]}
-    )
+    return json.dumps({"transaction_id": transaction_id, "cells": [{"field": k, "value": v} for k, v in cells.items()]})
 
 
 def test_staged_cells_are_answered_and_nothing_is_written(tmp_path: Path) -> None:

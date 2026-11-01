@@ -130,6 +130,10 @@ def route_for_cell(*, field: str, clear: bool, classified: bool) -> tuple[WriteR
     return None, "cannot_clear"
 
 
+def _filled(value: str | None) -> bool:
+    return value is not None and value != ""
+
+
 def _decimal_text(value: Decimal | None) -> str | None:
     return None if value is None else display_decimal(value)
 
@@ -231,7 +235,7 @@ def _routes_of_row(
     """Route each cell; a clear the classification's own write performs travels with that write."""
     chosen = next((cell for cell in row.cells if cell.field == "business_classification"), None)
     carrier: WriteRoute | None = None
-    carried: frozenset[str] = frozenset()
+    carried = frozenset[str]()
     if chosen is not None and chosen.value is not None:
         carrier, _ = route_for_cell(field=chosen.field, clear=False, classified=classified)
         chosen_state = _classification(chosen.value)
@@ -280,7 +284,7 @@ def check_stored_row(row: LedgerStagedRow, transaction: Transaction) -> LedgerSt
     routed = {route.route for route in routes}
     sends_classification = bool(routed & {"bulk", "classify"}) or (row.m210_staged and classified)
     if sends_classification and classification is not None and takes_business_share(classification):
-        if not after["business_pct"]:
+        if not _filled(after["business_pct"]):
             blockers.append(LedgerStagedBlocker(kind="mixed_needs_share"))
         elif "business_pct" not in staged_fields:
             notes.append(LedgerStagedNote(kind="sends_current_share", value=after["business_pct"]))
@@ -333,19 +337,19 @@ def check_stored_row(row: LedgerStagedRow, transaction: Transaction) -> LedgerSt
 
 def check_draft(draft: LedgerStagedDraft) -> LedgerStagedDraftAnswer:
     """Answer one new movement."""
-    fields = {item.field: item.value for item in draft.fields}
-    missing = tuple(field for field in _DRAFT_REQUIRED_FIELDS if not fields.get(field))
+    fields: dict[str, str | None] = {item.field: item.value for item in draft.fields}
+    missing = tuple(field for field in _DRAFT_REQUIRED_FIELDS if not _filled(fields.get(field)))
     blockers: list[LedgerStagedBlocker] = []
     if missing:
         blockers.append(LedgerStagedBlocker(kind="draft_incomplete", fields=missing))
     classification = _classification(fields.get("business_classification"))
     share_bearing = classification is not None and takes_business_share(classification)
-    if share_bearing and not fields.get("business_pct"):
+    if share_bearing and not _filled(fields.get("business_pct")):
         blockers.append(LedgerStagedBlocker(kind="mixed_needs_share"))
-    if not share_bearing and fields.get("business_pct"):
+    if not share_bearing and _filled(fields.get("business_pct")):
         blockers.append(LedgerStagedBlocker(kind="share_needs_mixed"))
     if _direction(fields.get("direction")) is TransactionDirection.INTERNAL_TRANSFER:
-        found: list[str] = [field for field in _DRAFT_TRANSFER_TAX_FIELDS if fields.get(field)]
+        found: list[str] = [field for field in _DRAFT_TRANSFER_TAX_FIELDS if _filled(fields.get(field))]
         if classification in BUSINESS_BEARING_STATES:
             found.insert(0, "business_classification")
         if found:
