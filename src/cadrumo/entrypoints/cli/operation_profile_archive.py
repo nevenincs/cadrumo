@@ -22,6 +22,7 @@ from ...application.user_profile.archive_operation import (
     ProfileArchivePushRequest,
     ProfileArchiveReconcileProjection,
     ProfileArchiveReconcileRequest,
+    profile_archive_push_expected_effects,
 )
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 
@@ -88,18 +89,13 @@ def run_profile_archive_push(
     request: ProfileArchivePushRequest,
 ) -> ProfileArchivePushProjection:
     """Return the complete mirror report correlated to its submitted filters."""
-    expected_effects = (
-        frozenset({OperationEffect.NONE})
-        if request.dry_run
-        else frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN})
-    )
     completed = _run_archive_operation(
         ctx,
         request,
         profile_id=request.profile_id,
         definition_id=PROFILE_ARCHIVE_PUSH_OPERATION_DEFINITION_ID,
         result_type=ProfileArchivePushProjection,
-        expected_effects=expected_effects,
+        expected_effects=profile_archive_push_expected_effects(dry_run=request.dry_run),
     )
     projection = completed.projection
     report = projection.report
