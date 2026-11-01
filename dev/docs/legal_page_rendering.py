@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 from html import escape
 from pathlib import Path
 from typing import Final
@@ -49,6 +50,25 @@ def _rst_literal(text: str) -> str:
     if "`" in text:
         raise LegalReferenceError(f"catalogue value {text!r} cannot be rendered as an inline literal")
     return f"``{text}``"
+
+
+def _rst_provenance_text(text: str, record: LegalProvisionRecord) -> str:
+    """Style only this record's exact source identifiers within reviewer prose."""
+    reference, separator, fragment = record.corpus_ref.partition("#")
+    identifiers = {record.legal_id, record.document_id, record.corpus_ref, reference, Path(reference).name}
+    if separator and fragment:
+        identifiers.update((fragment, "#" + fragment))
+    alternatives = "|".join(
+        re.escape(value) for value in sorted(identifiers, key=lambda value: (-len(value), value)) if value
+    )
+    pattern = re.compile(r"(?<![\w/#.:-])(?:" + alternatives + r")(?![\w/#:-]|\.[\w])")
+    parts: list[str] = []
+    previous = 0
+    for match in pattern.finditer(text):
+        parts.extend((_rst_escape(text[previous : match.start()]), _rst_literal(match.group())))
+        previous = match.end()
+    parts.append(_rst_escape(text[previous:]))
+    return "".join(parts)
 
 
 def _rst_heading(text: str, underline: str) -> str:
@@ -182,7 +202,7 @@ def _catalogue_record_fields(record: LegalProvisionRecord, language: OutputLangu
     if record.reviewed_by is not None:
         fields.append(
             f":{docs_chrome('docs.legal.record.reviewed_by', language)}: "
-            f"{same_wording(record.reviewed_by, language, as_source=_rst_escape)}",
+            f"{same_wording(record.reviewed_by, language, as_source=lambda text: _rst_provenance_text(text, record))}",
         )
     return fields
 
