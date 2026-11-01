@@ -82,6 +82,44 @@ def test_modelo_721_articles_are_content_deadline_and_annex_amendment() -> None:
     )
 
 
+def _assert_721_era_revision_window(revision, filing_year: int, *, is_open: bool, era_end) -> None:
+    assert revision.authority_grade is not None
+    assert revision.authority_grade.value == "applicability"
+    assert revision.valid_from == date(filing_year, 1, 1)
+    assert revision.valid_to == era_end
+    if is_open:
+        # An open era cannot be spelled with an explicit `years` list, so this one
+        # is the range form with no upper bound.
+        assert revision.period_selector.years == ()
+        assert revision.period_selector.year_from == filing_year
+        assert revision.period_selector.year_to is None
+    else:
+        assert revision.period_selector.years == (filing_year,)
+        assert revision.period_selector.year_from is None
+    assert revision.period_selector.includes_year(filing_year)
+
+
+def _assert_721_era_source(source, filing_year: int, era_end) -> None:
+    assert source.authority == "boe"
+    assert source.evidence_tier == "layout_authority"
+    assert source.kind == "form_spec"
+    assert source.applies_from == date(filing_year, 1, 1)
+    assert source.applies_to == era_end
+    assert source.corpus_path.endswith(".pdf")
+    verify_source_file(REPO_ROOT, source)
+
+
+def _assert_721_era_deadline_windows(revision, filing_year: int, *, is_open: bool) -> None:
+    # The open era covers every later supported year and declares one window
+    # per year, so a closed era holds exactly its own and an open one holds
+    # its own among them, never two windows for one year.
+    window_years = [window.filing_year for window in revision.deadline_windows]
+    assert filing_year in window_years
+    assert len(set(window_years)) == len(window_years)
+    if not is_open:
+        assert set(window_years) == {filing_year}
+
+
 def test_modelo_721_selects_only_its_two_hash_pinned_boe_form_spec_eras() -> None:
     """Each selected year names and verifies only its official BOE package."""
     modelo, catalogues = _modelo_721()
@@ -92,46 +130,20 @@ def test_modelo_721_selects_only_its_two_hash_pinned_boe_form_spec_eras() -> Non
         revision = modelo.revisions[str(filing_year)]
         source = catalogues.sources[source_ref]
 
-        assert revision.authority_grade is not None
-        assert revision.authority_grade.value == "applicability"
         # 2024 is OPEN: HAC/1504/2024 substitutes the anexo of Orden HFP/886/2023 and
         # applies it "por primera vez" to ejercicio 2024, and BOE's consolidated
         # Referencias posteriores for BOE-A-2023-17429 (read 2026-08-30) records that
         # substitution as the ONLY subsequent amendment -- nothing in 2025 or 2026.
         is_open = filing_year == 2024
         era_end = None if is_open else date(filing_year, 12, 31)
-        assert revision.valid_from == date(filing_year, 1, 1)
-        assert revision.valid_to == era_end
-        if is_open:
-            # An open era cannot be spelled with an explicit `years` list, so this one
-            # is the range form with no upper bound.
-            assert revision.period_selector.years == ()
-            assert revision.period_selector.year_from == filing_year
-            assert revision.period_selector.year_to is None
-        else:
-            assert revision.period_selector.years == (filing_year,)
-            assert revision.period_selector.year_from is None
-        assert revision.period_selector.includes_year(filing_year)
+        _assert_721_era_revision_window(revision, filing_year, is_open=is_open, era_end=era_end)
         assert {ref for ref in revision.source_refs if ref.startswith("boe-modelo-721-")} == {source_ref}
         assert revision.export_layouts == ()
-        assert source.authority == "boe"
-        assert source.evidence_tier == "layout_authority"
-        assert source.kind == "form_spec"
-        assert source.applies_from == date(filing_year, 1, 1)
-        assert source.applies_to == era_end
-        assert source.corpus_path.endswith(".pdf")
-        verify_source_file(REPO_ROOT, source)
+        _assert_721_era_source(source, filing_year, era_end)
         assert select_revision(modelo, filing_year=filing_year, period="0A", on=date(filing_year, 12, 31)) == revision
 
         assert {ref.workbook_source for ref in revision.workbook_parity_refs} == {source_ref}
-        # The open era covers every later supported year and declares one window
-        # per year, so a closed era holds exactly its own and an open one holds
-        # its own among them, never two windows for one year.
-        window_years = [window.filing_year for window in revision.deadline_windows]
-        assert filing_year in window_years
-        assert len(set(window_years)) == len(window_years)
-        if not is_open:
-            assert set(window_years) == {filing_year}
+        _assert_721_era_deadline_windows(revision, filing_year, is_open=is_open)
         assert all(casilla.source_refs == (source_ref,) for casilla in revision.casillas)
 
     revision_2023 = modelo.revisions["2023"]
