@@ -298,6 +298,8 @@ pub fn run(
         }
     };
     let exiting = settle.clone();
+    let ending = startup.clone();
+    let mut requested = 0;
     let code = app.run_return(move |handle, event| match event {
         // AppKit has started on this thread; the installed desktop gets no icon from
         // its bundle, so it sets its own.
@@ -305,15 +307,20 @@ pub fn run(
         tauri::RunEvent::Ready => {
             cadrumo_platform::application_icon::set(include_bytes!(env!("CADRUMO_DESKTOP_ICON")));
         }
-        tauri::RunEvent::ExitRequested { .. } => {
+        tauri::RunEvent::ExitRequested { code, .. } => {
             diagnostics.host_exit_requested();
+            if requested == 0 {
+                requested = code.unwrap_or(0);
+            }
         }
         tauri::RunEvent::Exit => {
             // A quit that skips the exit request still records it, and the process
             // may end before the return path could record the outcome or drain the
             // log writer, so both are durable here.
             diagnostics.host_exit_requested();
-            finish_exit(exiting(handle), &diagnostics);
+            let outcome = exiting(handle);
+            let code = if ending.failed() { 1 } else { requested };
+            finish_exit(outcome, code, &diagnostics);
         }
         _ => {}
     });
@@ -324,11 +331,12 @@ pub fn run(
     Ok(code)
 }
 
-/// Records a shutdown outcome and drains the log before the platform may end the process.
-/// The first recorded stop wins, so the return path repeating it adds nothing.
-fn finish_exit(outcome: Result<()>, diagnostics: &Diagnostics) {
+/// Records a shutdown outcome and the code the host was asked to exit with, and drains
+/// the log before the platform may end the process. The first recorded stop wins, so
+/// the return path repeating it adds nothing.
+fn finish_exit(outcome: Result<()>, requested: i32, diagnostics: &Diagnostics) {
     let code = match outcome {
-        Ok(()) => 0,
+        Ok(()) => requested,
         Err(error) => {
             diagnostics.failure(error);
             1
@@ -783,7 +791,7 @@ mod tests {
         diagnostics.configure(&directory, 1 << 20, 1).unwrap();
         assert!(diagnostics.host_exit_requested());
         assert!(!diagnostics.host_exit_requested());
-        super::finish_exit(Ok(()), &diagnostics);
+        super::finish_exit(Ok(()), 0, &diagnostics);
         diagnostics.host_stopped(1);
         let current = diagnostics.snapshot(u64::MAX).paths.unwrap().current;
         let text = std::fs::read_to_string(current).unwrap();
@@ -791,6 +799,19 @@ mod tests {
         assert_eq!(text.matches("host_exit_requested").count(), 1, "{text}");
         assert_eq!(text.matches("host_stopped").count(), 1, "{text}");
         assert!(text.contains("\"hostExitCode\":0"), "{text}");
+    }
+
+    #[test]
+    fn a_refused_start_records_the_exit_code_it_was_asked_for() {
+        let directory = std::env::temp_dir().join(format!("exit-refused-{}", std::process::id()));
+        std::fs::create_dir_all(&directory).unwrap();
+        let diagnostics = Diagnostics::default();
+        diagnostics.configure(&directory, 1 << 20, 1).unwrap();
+        super::finish_exit(Ok(()), 1, &diagnostics);
+        let current = diagnostics.snapshot(u64::MAX).paths.unwrap().current;
+        let text = std::fs::read_to_string(current).unwrap();
+        let _ = std::fs::remove_dir_all(&directory);
+        assert!(text.contains("\"hostExitCode\":1"), "{text}");
     }
 
     #[cfg(unix)]
