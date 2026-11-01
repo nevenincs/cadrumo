@@ -37,9 +37,11 @@ from ....adapters.persistence.profile.tests.published_authority_support import p
 from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from ....application.filing.draft_construction import build_draft
 from ....application.filing.draft_review import ModeloApprovalStaleReason, approval_stale_reasons, approve_draft
+from ....application.filing.draft_review_ports import DraftReviewPorts
 from ....application.filing.runtime import ModeloOperatorProfile, build_runtime_schema_provider
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from ....domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
 from ....domain.filing.protocols import CasillaSchemaProvider
@@ -102,6 +104,35 @@ def _prior_observation(*, value: str) -> RegistryModeloObservation:
     )
 
 
+def _save_prior_filing(repository: CalculationObservationRepository, value: str) -> None:
+    """Store the prior filing's observation at ``value``, replacing any earlier one at the same key."""
+    repository.save(
+        repository.prepare_observation_envelope(
+            _prior_observation(value=value),
+            source_kind="app_filing",
+            stamped_revision_id=_stamped_revision_id(),
+        )
+    )
+
+
+def _approve_operator_draft(
+    draft: ModeloDraft,
+    *,
+    bucket_id: str,
+    schema_provider: CasillaSchemaProvider,
+    ports: DraftReviewPorts,
+    operation: PinnedAuthorityOperation,
+) -> ModeloDraft:
+    return approve_draft(
+        draft,
+        bucket_id=bucket_id,
+        approved_by="operator",
+        schema_provider=schema_provider,
+        ports=ports,
+        operation=operation,
+    )
+
+
 def test_approval_goes_stale_when_prior_filing_observation_changes(
     _active_bucket_runtime: TestRuntimeProfile,
 ) -> None:
@@ -111,18 +142,11 @@ def test_approval_goes_stale_when_prior_filing_observation_changes(
         draft = _ready_draft(schema_provider)
         repository = CalculationObservationRepository(bucket_id=bucket_id)
 
-        repository.save(
-            repository.prepare_observation_envelope(
-                _prior_observation(value="100.00"),
-                source_kind="app_filing",
-                stamped_revision_id=_stamped_revision_id(),
-            )
-        )
+        _save_prior_filing(repository, "100.00")
         ports = build_draft_review_ports(bucket_id=bucket_id)
-        approved = approve_draft(
+        approved = _approve_operator_draft(
             draft,
             bucket_id=bucket_id,
-            approved_by="operator",
             schema_provider=schema_provider,
             ports=ports,
             operation=_authority_operation_for_test,
@@ -133,13 +157,7 @@ def test_approval_goes_stale_when_prior_filing_observation_changes(
 
         # Mutate ONLY the prior filing: same (modelo, year, period) key, different
         # filed value, so the self-loaded observation-store digest must change.
-        repository.save(
-            repository.prepare_observation_envelope(
-                _prior_observation(value="250.00"),
-                source_kind="app_filing",
-                stamped_revision_id=_stamped_revision_id(),
-            )
-        )
+        _save_prior_filing(repository, "250.00")
 
         reasons = approval_stale_reasons(
             approved,
@@ -171,18 +189,11 @@ def test_approval_not_stale_when_prior_filing_observations_unchanged(
         draft = _ready_draft(schema_provider)
         repository = CalculationObservationRepository(bucket_id=bucket_id)
 
-        repository.save(
-            repository.prepare_observation_envelope(
-                _prior_observation(value="100.00"),
-                source_kind="app_filing",
-                stamped_revision_id=_stamped_revision_id(),
-            )
-        )
+        _save_prior_filing(repository, "100.00")
         ports = build_draft_review_ports(bucket_id=bucket_id)
-        approved = approve_draft(
+        approved = _approve_operator_draft(
             draft,
             bucket_id=bucket_id,
-            approved_by="operator",
             schema_provider=schema_provider,
             ports=ports,
             operation=_authority_operation_for_test,
