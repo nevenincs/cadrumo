@@ -55,14 +55,12 @@ def compose_live_filed_history_operation(inputs: OperationCompositionInputs) -> 
     from ..adapters.outbound.aeat.browser.factory import BrowserRuntimeResourceScope
     from ..adapters.persistence.profile.sync_runs import SyncRunRecordRepository
     from ..application.live.filed_history_operation import (
-        bind_shared_filed_history_pull,
         build_filed_history_operation_definition,
         build_filed_history_operation_registration,
     )
     from .live_state_composition import (
         compose_live_state,
         preflight_filed_history_provider,
-        pull_filed_history_with_shared_composition,
     )
 
     del inputs
@@ -70,7 +68,6 @@ def compose_live_filed_history_operation(inputs: OperationCompositionInputs) -> 
         sync_run_repository_factory=SyncRunRecordRepository,
         composition_factory=compose_live_state,
         browser_resources_factory=BrowserRuntimeResourceScope,
-        pull=bind_shared_filed_history_pull(pull_filed_history_with_shared_composition),
         provider_preflight=preflight_filed_history_provider,
     )
     return built((definition,), (build_filed_history_operation_registration(definition),))

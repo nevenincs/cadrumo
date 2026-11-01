@@ -72,7 +72,6 @@ from .filed_history_events import (
     FILED_HISTORY_PHASE_PERSISTENCE,
     FILED_HISTORY_PHASE_PROVENANCE,
     FILED_HISTORY_PHASE_REGISTER_ACCESS,
-    FiledHistoryEventSink,
 )
 from .filed_history_pull import pull_filed_history
 from .filed_observation_ports import FiledObservationPersistencePorts
@@ -240,80 +239,6 @@ type FiledHistoryPull = Callable[
     ],
     Awaitable[FiledHistoryOnboardingRun],
 ]
-
-
-class SharedFiledHistoryPull(Protocol):
-    """Positional contract of a composition-owned filed-history pull callback.
-
-    The composing entrypoint supplies its shared pull through this contract and
-    :func:`bind_shared_filed_history_pull` adapts it to :data:`FiledHistoryPull`,
-    so the entrypoint never depends on the executor-owned emitter contract.
-    """
-
-    def __call__(
-        self,
-        payload: FiledHistoryOperationRequest,
-        profile: TaxpayerProfile | None,
-        repository: SyncRunRecordRepositoryProtocol | None,
-        events: FiledHistoryEventSink | None,
-        ports: FiledObservationPersistencePorts,
-        filed_data_port: FiledDataCapturePort,
-        iva_remote_state_port: IvaRemoteStatePort,
-        notifications_ports: NotificationsPorts,
-        certificate_secret_backend_factory: CertificateSecretBackendFactory,
-        browser_session_factory: BrowserSessionFactoryPort,
-        operator_scope_ports: OperatorScopePorts,
-        effect_guard: FiledEffectGuard,
-        on_session_write: SessionWriteReporter,
-        /,
-    ) -> Awaitable[object]:
-        """Run one filed-history pull with the supplied composed dependencies."""
-        ...
-
-
-def bind_shared_filed_history_pull(shared_pull: SharedFiledHistoryPull) -> FiledHistoryPull:
-    """Adapt a shared composition callback to the operation's typed pull contract.
-
-    The submitted request already carries the payload fields the shared pull
-    reads, so it is forwarded unchanged; a result other than the canonical
-    :class:`FiledHistoryOnboardingRun` is refused rather than settled.
-    """
-
-    async def pull(
-        payload: FiledHistoryOperationRequest,
-        profile: TaxpayerProfile | None,
-        repository: SyncRunRecordRepositoryProtocol,
-        events: OperationEventEmitter,
-        ports: FiledObservationPersistencePorts,
-        filed_data_port: FiledDataCapturePort,
-        iva_remote_state_port: IvaRemoteStatePort,
-        notifications_ports: NotificationsPorts,
-        certificate_secret_backend_factory: CertificateSecretBackendFactory,
-        browser_session_factory: BrowserSessionFactoryPort,
-        operator_scope_ports: OperatorScopePorts,
-        effect_guard: FiledEffectGuard,
-        on_session_write: SessionWriteReporter,
-    ) -> FiledHistoryOnboardingRun:
-        result = await shared_pull(
-            payload,
-            profile,
-            repository,
-            events,
-            ports,
-            filed_data_port,
-            iva_remote_state_port,
-            notifications_ports,
-            certificate_secret_backend_factory,
-            browser_session_factory,
-            operator_scope_ports,
-            effect_guard,
-            on_session_write,
-        )
-        if not isinstance(result, FiledHistoryOnboardingRun):
-            raise TypeError("shared filed-history composition returned an invalid result")
-        return result
-
-    return pull
 
 
 type FiledHistoryProfileResolver = Callable[[PinnedAuthorityOperation], TaxpayerProfile | None]
@@ -735,8 +660,6 @@ __all__ = [
     "FiledHistoryPublicResultV1",
     "FiledHistoryPull",
     "FiledHistorySyncRunRepositoryFactory",
-    "SharedFiledHistoryPull",
-    "bind_shared_filed_history_pull",
     "build_filed_history_operation_definition",
     "build_filed_history_operation_registration",
     "require_capture_output_root",

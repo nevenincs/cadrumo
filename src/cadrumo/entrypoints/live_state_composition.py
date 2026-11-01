@@ -92,8 +92,6 @@ from ..application.live.errors import LiveApplicationError, LiveApplicationInput
 from ..application.live.expedientes_ports import ExpedientesDeclaration
 from ..application.live.filed_capture_accumulator import capture_report_path
 from ..application.live.filed_data_ports import FiledDataCapturePort, FiledEffectGuard
-from ..application.live.filed_history_events import FiledHistoryEventSink
-from ..application.live.filed_history_operation import FiledHistoryOperationRequest
 from ..application.live.filed_observation_persistence import (
     latest_declarations_by_period,
     persistiva_compensation_history_observations_strict,
@@ -129,7 +127,6 @@ from ..application.live.remote_state_models import (
 from ..application.live.remote_state_outcomes import evidence_ref
 from ..application.live.session import SessionWriteReporter, active_verified_session, ensure_live_authenticated_session
 from ..application.modelo.work_lifecycle_ports import WorkLifecyclePorts
-from ..application.storage.sync_runs.records import SyncRunRecordRepositoryProtocol
 from ..application.user_profile.access_errors import ProfileAccessRefusedError
 from ..core.bucket_pointer import require_active_bucket_id
 from ..core.config import Settings, load_settings
@@ -142,7 +139,6 @@ from ..core.storage_taxonomy import StorageCategory
 from ..core.storage_taxonomy_locations import storage_path
 from ..core.time.clock import now
 from ..domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
-from ..domain.deadlines.models import TaxpayerProfile
 from ..domain.iva_compensation.carry_forward import (
     IvaCompensationCarryForwardLot,
     IvaCompensationPeriodState,
@@ -779,48 +775,6 @@ def persist_and_reconcile_iva_compensation_wallet(
     )
 
 
-async def pull_filed_history_with_shared_composition(
-    payload: FiledHistoryOperationRequest,
-    profile: TaxpayerProfile | None,
-    repository: SyncRunRecordRepositoryProtocol | None,
-    events: FiledHistoryEventSink | None,
-    ports: FiledObservationPersistencePorts,
-    filed_data_port: FiledDataCapturePort,
-    iva_remote_state_port: IvaRemoteStatePort,
-    notifications_ports: NotificationsPorts,
-    certificate_secret_backend_factory: CertificateSecretBackendFactory,
-    browser_session_factory: BrowserSessionFactoryPort,
-    operator_scope_ports: OperatorScopePorts,
-    effect_guard: FiledEffectGuard,
-    on_session_write: SessionWriteReporter,
-):
-    """Invoke the filed-history service with the explicitly composed bundle.
-
-    Core types:
-    :class:`~cadrumo.domain.deadlines.models.TaxpayerProfile`.
-    """
-    from ..application.live.filed_history_pull import pull_filed_history
-
-    return await pull_filed_history(
-        certificate_secret_backend_factory=certificate_secret_backend_factory,
-        browser_session_factory=browser_session_factory,
-        operator_scope_ports=operator_scope_ports,
-        filed_data_port=filed_data_port,
-        iva_remote_state_port=iva_remote_state_port,
-        notifications_ports=notifications_ports,
-        ports=ports,
-        output_root=payload.resolved_output_root(),
-        profile=profile,
-        today=payload.today,
-        limit=payload.limit,
-        dry_run=payload.dry_run,
-        sync_run_repository=repository,
-        events=events,
-        effect_guard=effect_guard,
-        on_session_write=on_session_write,
-    )
-
-
 def taxpayer_ref(value: str | None) -> str:
     """Return a redacted taxpayer identity reference."""
     token = tax_id_identity_token(value) if value is not None else ""
@@ -907,7 +861,6 @@ __all__ = [
     "compose_notification_document_service",
     "compose_notifications_ports",
     "persist_and_reconcile_iva_compensation_wallet",
-    "pull_filed_history_with_shared_composition",
     "taxpayer_ref",
 ]
 
