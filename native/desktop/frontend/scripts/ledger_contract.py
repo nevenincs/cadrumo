@@ -13,6 +13,7 @@ this. This module writes the unformatted source to standard output.
 
 from __future__ import annotations
 
+import sys
 from collections.abc import Sequence
 from enum import StrEnum
 
@@ -121,7 +122,7 @@ def render() -> str:
 
 def main() -> None:
     """Write the unformatted module to standard output."""
-    print(render(), end="")
+    sys.stdout.write(render())
 
 
 if __name__ == "__main__":
