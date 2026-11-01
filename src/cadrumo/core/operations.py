@@ -84,6 +84,13 @@ class OperationEffect(StrEnum):
     PARTIAL = "partial"
     UNKNOWN = "unknown"
 
+    @classmethod
+    def of_confirmed_writes(cls, *, wrote: bool, incomplete: bool) -> OperationEffect:
+        """Extent of an operation with no uncertain write: partial when earlier writes stand but work is incomplete."""
+        if not wrote:
+            return cls.NONE
+        return cls.PARTIAL if incomplete else cls.UPDATED
+
 
 EFFECTS_WITHOUT_PARTIAL_COMMIT: frozenset[OperationEffect] = frozenset(
     {

@@ -11,6 +11,7 @@ from pydantic import BaseModel, Field, model_validator
 from ...core.aggregation import IntracomOperationType
 from ...core.hex import Hex64Str
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+from ...core.operations import OperationEffect
 from ...domain.iva.schema import InvoiceKind
 from .catalogue_intake_refusal import (
     InvoiceWizardValidationRefusalProjection,
@@ -96,6 +97,11 @@ class InvoiceImportProjection(BaseModel):
     created_invoice_ids: tuple[Hex64Str, ...]
     unmapped_column_headers: tuple[_Text, ...]
     mapping_reasons: tuple[_Text, ...]
+
+    @property
+    def settled_effect(self) -> OperationEffect:
+        """The mutation effect an import receipt must carry for these row facts."""
+        return OperationEffect.of_confirmed_writes(wrote=self.created > 0, incomplete=bool(self.refused))
 
     @model_validator(mode="after")
     def _complete_rows(self) -> Self:

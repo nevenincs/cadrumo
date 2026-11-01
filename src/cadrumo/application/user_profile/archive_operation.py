@@ -265,9 +265,7 @@ def _archive_effect(
 ) -> OperationEffect:
     if handoff or tracker.has_uncertain_write:
         return OperationEffect.UNKNOWN
-    if tracker.confirmed_write:
-        return OperationEffect.PARTIAL if failures else OperationEffect.UPDATED
-    return OperationEffect.NONE
+    return OperationEffect.of_confirmed_writes(wrote=tracker.confirmed_write, incomplete=failures)
 
 
 async def _settle_archive_work(

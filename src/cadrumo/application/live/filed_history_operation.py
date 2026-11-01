@@ -337,9 +337,7 @@ def settled_filed_history_effect(run: FiledHistoryOnboardingRun) -> OperationEff
         or run.iva_wallet_status == "reconciled"
         or run.notificaciones_status == "captured"
     )
-    if committed:
-        return OperationEffect.PARTIAL if failures else OperationEffect.UPDATED
-    return OperationEffect.NONE
+    return OperationEffect.of_confirmed_writes(wrote=committed, incomplete=failures)
 
 
 async def _settlement_reference(
