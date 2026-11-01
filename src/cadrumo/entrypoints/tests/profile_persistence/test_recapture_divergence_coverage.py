@@ -53,7 +53,8 @@ from cadrumo.application.live.filed_history_discovery import recapture_divergenc
 from cadrumo.application.live.filed_observation_persistence import persist_filed_calculation_observation
 from cadrumo.application.storage.sync_runs.records import SyncRunCoverage
 from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError
-from cadrumo.entrypoints.tests.profile_persistence.test_filed_capture_calculation_history import _filed_ports
+
+from ._filed_capture_history_ports_support import filed_ports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -111,7 +112,7 @@ def test_a_recapture_divergence_is_producible_without_contacting_aeat(tmp_path: 
     """
     with _secure_backend(tmp_path):
         repository = CalculationObservationRepository()
-        ports = _filed_ports(bucket_id=_SESSION_BUCKET_ID, root=tmp_path, calculation_repository=repository)
+        ports = filed_ports(bucket_id=_SESSION_BUCKET_ID, root=tmp_path, calculation_repository=repository)
         persist_filed_calculation_observation(
             _observation(result=_ORIGINAL_RESULT),
             ports=ports,
@@ -130,7 +131,7 @@ def test_recapture_advisory_refuses_a_divergent_persisted_coordinate(tmp_path: P
     prior = _observation(result=_ORIGINAL_RESULT)
     with _secure_backend(tmp_path):
         repository = CalculationObservationRepository()
-        ports = _filed_ports(bucket_id=_SESSION_BUCKET_ID, root=tmp_path, calculation_repository=repository)
+        ports = filed_ports(bucket_id=_SESSION_BUCKET_ID, root=tmp_path, calculation_repository=repository)
         persist_filed_calculation_observation(prior, ports=ports)
         stored = repository.load_observation(prior.modelo, prior.period)
         assert stored is not None
@@ -157,7 +158,7 @@ def test_enrolment_reaches_fewer_units_than_absorption_raises_divergences(tmp_pa
     """
     with _secure_backend(tmp_path):
         repository = CalculationObservationRepository()
-        ports = _filed_ports(bucket_id=_SESSION_BUCKET_ID, root=tmp_path, calculation_repository=repository)
+        ports = filed_ports(bucket_id=_SESSION_BUCKET_ID, root=tmp_path, calculation_repository=repository)
         persist_filed_calculation_observation(
             _observation(result=_ORIGINAL_RESULT),
             ports=ports,
