@@ -417,7 +417,7 @@ class LedgerInvoiceWizardScreen(LedgerConfirmationFlowScreen):
     @override
     def _cancel_flow(self) -> None:
         """Cancel before anything is submitted; nothing has been written."""
-        if self.flow_state not in {LedgerFlowState.EDITING, LedgerFlowState.CONFIRMING}:
+        if not self.can_cancel_flow:
             return
         self._transition(LedgerFlowState.CANCELLED)
         self.query_one("#ledger-flow-status", Static).update(tr("tui.ledger.invoices.wizard.cancelled"))

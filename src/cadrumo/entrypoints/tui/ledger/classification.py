@@ -179,10 +179,7 @@ class LedgerClassificationScreen(LedgerConfirmationFlowScreen):
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         """Confirm through the injected door or cancel without mutation."""
-        if event.button.id == "ledger-classification-cancel" and self.flow_state in {
-            LedgerFlowState.EDITING,
-            LedgerFlowState.CONFIRMING,
-        }:
+        if event.button.id == "ledger-classification-cancel" and self.can_cancel_flow:
             self._cancel_flow()
             return
         if (
@@ -284,7 +281,7 @@ class LedgerClassificationScreen(LedgerConfirmationFlowScreen):
 
     @override
     def _cancel_flow(self) -> None:
-        if self.flow_state not in {LedgerFlowState.EDITING, LedgerFlowState.CONFIRMING}:
+        if not self.can_cancel_flow:
             return
         self.selected_classification = None
         self._pending_patch = None
