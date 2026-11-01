@@ -13,23 +13,16 @@ the failure mode the project's own no-silent-under-declaration rule names.
 
 from __future__ import annotations
 
-from collections.abc import Generator, Iterable
+from collections.abc import Generator
 from contextlib import contextmanager
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
-from typing import override
 
 import pytest
 
 from ....core.period import Period
-from ....core.secure_object_write import SecureObjectWrite
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from ....domain.transactions.date_partition import (
-    LedgerDatePartition,
-    OutOfWindowTransactionIndexEntry,
-    OutOfWindowTransactionSummary,
-)
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
@@ -37,99 +30,12 @@ from ....domain.usage_ratios.model import UsageRatioProfile
 from ..preflight import preflight_ledger_tax_readiness
 from ..protocols import TransactionCatalogueCoCommitWriterProtocol
 from ..readiness_query import LedgerReadinessIssueV1, ledger_readiness_issues
+from .in_memory_transaction_repository import InMemoryTransactionRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET = "77777777-7777-4777-8777-777777777777"
 _PERIOD = Period.from_year_and_code(2026, "0A")
-
-
-class _InMemoryTransactionRepository(TransactionCatalogueCoCommitWriterProtocol):
-    """Deterministic inward fake for the readiness transaction read port."""
-
-    def __init__(self, *, bucket_id: str, catalogue: TransactionCatalogue) -> None:
-        self._bucket_id = bucket_id
-        self._catalogue = catalogue
-
-    @property
-    @override
-    def bucket_id(self) -> str:
-        return self._bucket_id
-
-    @override
-    def exists(self) -> bool:
-        return bool(self._catalogue.transactions)
-
-    @override
-    def load(self) -> TransactionCatalogue:
-        return self._catalogue
-
-    @override
-    def load_for_date_range(self, start: date, end: date) -> TransactionCatalogue:
-        return TransactionCatalogue.from_transactions(
-            transaction
-            for transaction in self._catalogue
-            if start <= (transaction.raw.value_date or transaction.raw.booked_date) <= end
-        )
-
-    @override
-    def load_by_ids(self, transaction_ids: Iterable[str]) -> TransactionCatalogue:
-        requested = frozenset(transaction_ids)
-        return TransactionCatalogue.from_transactions(
-            transaction for transaction in self._catalogue if transaction.transaction_id in requested
-        )
-
-    @override
-    def partition_by_date_range(self, start: date, end: date) -> LedgerDatePartition:
-        in_window: list[Transaction] = []
-        out_of_window: list[OutOfWindowTransactionIndexEntry] = []
-        for transaction in self._catalogue:
-            filing_date = transaction.raw.value_date or transaction.raw.booked_date
-            if start <= filing_date <= end:
-                in_window.append(transaction)
-            else:
-                out_of_window.append(
-                    OutOfWindowTransactionIndexEntry(
-                        transaction_id=transaction.transaction_id,
-                        filing_date=filing_date,
-                    ),
-                )
-        return LedgerDatePartition(
-            in_window=TransactionCatalogue.from_transactions(in_window),
-            out_of_window=tuple(out_of_window),
-            out_of_window_summary=OutOfWindowTransactionSummary.from_index_entries(out_of_window),
-            index_complete=True,
-        )
-
-    @override
-    def save(self, catalogue: TransactionCatalogue) -> None:
-        self._catalogue = catalogue
-
-    @override
-    def save_with_secure_object_writes(
-        self,
-        catalogue: TransactionCatalogue,
-        extra_writes: tuple[SecureObjectWrite, ...],
-    ) -> None:
-        if extra_writes:
-            raise AssertionError("readiness transaction fake does not support secure-object writes")
-        self.save(catalogue)
-
-    @override
-    def replace_if_current_with_secure_object_writes(
-        self,
-        current: Transaction,
-        replacement: Transaction,
-        extra_writes: tuple[SecureObjectWrite, ...],
-    ) -> None:
-        if extra_writes:
-            raise AssertionError("readiness transaction fake does not support secure-object writes")
-        if self._catalogue.get(current.transaction_id) != current:
-            raise AssertionError("guarded replacement received a stale baseline")
-        updated = dict(self._catalogue.transactions)
-        updated.pop(current.transaction_id)
-        updated[replacement.transaction_id] = replacement
-        self._catalogue = TransactionCatalogue.from_transactions(updated.values())
 
 
 def _transaction(
@@ -171,7 +77,7 @@ def _transaction(
 @contextmanager
 def _stored(*transactions: Transaction) -> Generator[TransactionCatalogueCoCommitWriterProtocol]:
     """Build a deterministic catalogue through the application read protocol."""
-    yield _InMemoryTransactionRepository(
+    yield InMemoryTransactionRepository(
         bucket_id=_BUCKET,
         catalogue=TransactionCatalogue.from_transactions(transactions),
     )

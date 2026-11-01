@@ -13,7 +13,7 @@ engines cannot drift without a red test.
 
 from __future__ import annotations
 
-from collections.abc import Callable, Generator, Iterable, Iterator
+from collections.abc import Callable, Generator, Iterator
 from contextlib import contextmanager
 from datetime import UTC, date, datetime
 from decimal import Decimal
@@ -35,14 +35,10 @@ from ....domain.modelos.protocols import CalculationRevisionCatalogueRepositoryP
 from ....domain.modelos.work_unit import WorkUnitCatalogue
 from ....domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ....domain.transactions.classification_rule import LedgerClassificationRule
-from ....domain.transactions.date_partition import (
-    LedgerDatePartition,
-)
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....domain.usage_ratios.model import UsageRatioProfile
-from ...tests.ledger_partition_support import partition_by_filing_date
 from ..action_ports import LedgerActionPorts
 from ..actions_classification import (
     ClassificationRulePlan,
@@ -53,9 +49,9 @@ from ..actions_classification import (
 from ..protocols import (
     BucketEventHistoryCoCommitWriterProtocol,
     InvoiceCatalogueCoCommitWriterProtocol,
-    TransactionCatalogueCoCommitWriterProtocol,
 )
 from ..rule_repository import LedgerClassificationRuleRepositoryProtocol
+from .in_memory_transaction_repository import InMemoryTransactionRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -75,73 +71,6 @@ class _InMemoryRuleRepository(LedgerClassificationRuleRepositoryProtocol):
     @override
     def list_rules(self) -> tuple[LedgerClassificationRule, ...]:
         return tuple(sorted(self._rules.values(), key=lambda rule: (rule.priority, rule.rule_id)))
-
-
-class _InMemoryTransactionRepository(TransactionCatalogueCoCommitWriterProtocol):
-    """Minimal co-commit transaction capability used by application policy tests."""
-
-    def __init__(self, catalogue: TransactionCatalogue) -> None:
-        self._catalogue = catalogue
-
-    @property
-    @override
-    def bucket_id(self) -> str:
-        return _BUCKET
-
-    @override
-    def exists(self) -> bool:
-        return bool(self._catalogue.transactions)
-
-    @override
-    def load(self) -> TransactionCatalogue:
-        return self._catalogue
-
-    @override
-    def load_for_date_range(self, start: date, end: date) -> TransactionCatalogue:
-        return TransactionCatalogue.from_transactions(
-            transaction
-            for transaction in self._catalogue
-            if start <= (transaction.raw.value_date or transaction.raw.booked_date) <= end
-        )
-
-    @override
-    def load_by_ids(self, transaction_ids: Iterable[str]) -> TransactionCatalogue:
-        requested = frozenset(transaction_ids)
-        return TransactionCatalogue.from_transactions(
-            transaction for transaction in self._catalogue if transaction.transaction_id in requested
-        )
-
-    @override
-    def partition_by_date_range(self, start: date, end: date) -> LedgerDatePartition:
-        return partition_by_filing_date(self._catalogue, start, end)
-
-    @override
-    def save(self, catalogue: TransactionCatalogue) -> None:
-        self._catalogue = catalogue
-
-    @override
-    def save_with_secure_object_writes(
-        self,
-        catalogue: TransactionCatalogue,
-        extra_writes: tuple[SecureObjectWrite, ...],
-    ) -> None:
-        del extra_writes
-        self._catalogue = catalogue
-
-    @override
-    def replace_if_current_with_secure_object_writes(
-        self,
-        current: Transaction,
-        replacement: Transaction,
-        extra_writes: tuple[SecureObjectWrite, ...],
-    ) -> None:
-        del extra_writes
-        if self._catalogue.get(current.transaction_id) != current:
-            raise AssertionError("guarded replacement received a stale baseline")
-        updated = dict(self._catalogue.transactions)
-        updated.pop(current.transaction_id)
-        updated[replacement.transaction_id] = replacement
-        self._catalogue = TransactionCatalogue.from_transactions(updated.values())
 
 
 class _InMemoryEventRepository(BucketEventHistoryCoCommitWriterProtocol):
@@ -403,7 +332,11 @@ class _ClassificationScenario:
         self.rule_repository = _InMemoryRuleRepository()
         self.ports = LedgerActionPorts(
             operation=operation,
-            transaction_repository=_InMemoryTransactionRepository(transactions),
+            transaction_repository=InMemoryTransactionRepository(
+                bucket_id=_BUCKET,
+                catalogue=transactions,
+                permit_secure_object_writes=True,
+            ),
             bucket_event_repository=_InMemoryEventRepository(),
             invoice_repository=_EmptyInvoiceRepository(),
             attachment_store=_InMemoryAttachmentStore(),
