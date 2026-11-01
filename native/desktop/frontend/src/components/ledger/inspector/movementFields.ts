@@ -79,6 +79,7 @@ const OFFERED: Partial<Record<StageField, FieldSuggest>> = {
   counterparty_identification_state: { kind: "state" },
   currency: { kind: "currency" },
   group_label: { kind: "group", opensEmpty: true },
+  investment_asset_id: { kind: "investment_asset" },
 };
 const COUNTRY = /^[A-Z]{2}$/;
 const CURRENCY = /^[A-Z]{3}$/;
@@ -160,6 +161,45 @@ function shownValue(
   if (value === null || value === "")
     return t("desktop.ledger.inspector.not_set");
   return valueText(t, locale, field, value);
+}
+
+/** A field the backend serves a closed list for, worded from that list. While
+ * the list cannot be read the field stays typed, and the backend still decides.
+ * A stored value outside the list stays on offer, so it is never lost. */
+export function servedChoiceField(
+  scope: FieldScope,
+  field: StageField,
+  options: readonly { value: string; label: string }[] | null,
+): InspectorFieldProps {
+  const base = stagedField(scope, field, "token");
+  if (options === null) return base;
+  const { t, row, changes } = scope;
+  const current = effectiveFacts(row, changes)[field] ?? null;
+  const stored = storedFieldValue(row, field);
+  const word = (value: string) =>
+    options.find((option) => option.value === value)?.label ?? value;
+  const held = new Set(
+    [current, stored].filter(
+      (value): value is string =>
+        !!value && !options.some((option) => option.value === value),
+    ),
+  );
+  return {
+    ...base,
+    ...(current ? { shown: word(current) } : {}),
+    ...(base.was != null && stored ? { was: word(stored) } : {}),
+    editor: {
+      kind: "choice",
+      value: current,
+      options: [
+        ...[...held].map((value) => ({ value, label: value })),
+        ...options,
+      ],
+      ...(clearRefusal(field) === null
+        ? { clear: t("desktop.ledger.inspector.clear") }
+        : {}),
+    },
+  };
 }
 
 /** The inspector field for one movement field. `onPick` is called when a

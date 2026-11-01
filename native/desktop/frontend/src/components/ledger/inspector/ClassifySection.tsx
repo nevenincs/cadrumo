@@ -43,9 +43,17 @@ import {
 import { InspectorField } from "./InspectorField";
 import { ModelSuggestion } from "./ModelSuggestion";
 import { decidedBy, eventName, ivaCategoryOptions } from "./inspectorWords";
-import { fieldLock, stagedField, type FieldScope } from "./movementFields";
+import {
+  fieldLock,
+  servedChoiceField,
+  stagedField,
+  type FieldScope,
+} from "./movementFields";
 import { useLedgerRead } from "./useInspectorReads";
-import { useFieldSuggestions } from "../suggestions/SuggestionsProvider";
+import {
+  useFieldSuggestions,
+  useServedChoices,
+} from "../suggestions/SuggestionsProvider";
 import { formatTime } from "../../../shared/dateFormats";
 import { formatPercent, heldDecimal } from "../../../shared/numbers";
 
@@ -140,6 +148,7 @@ export function ClassifySection({
     name: Parameters<typeof stagedField>[1],
     kind: Parameters<typeof stagedField>[2],
   ) => <InspectorField key={name} {...stagedField(scope, name, kind)} />;
+  const deductionKinds = useServedChoices("deduction_fact_kind");
 
   const stageShare = () => {
     const parsed = parseFractionPercent(share);
@@ -431,7 +440,10 @@ export function ClassifySection({
         <dl className="mt-2 grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-0.5">
           {field("counterparty_country", "country")}
           {field("counterparty_identification_state", "country")}
-          {field("deduction_fact_kind", "token")}
+          <InspectorField
+            key="deduction_fact_kind"
+            {...servedChoiceField(scope, "deduction_fact_kind", deductionKinds)}
+          />
           {field("investment_asset_id", "token")}
         </dl>
         {/* Each movement's forms start from its own facts. */}
@@ -503,6 +515,60 @@ const M210_LABELS: Record<M210Field, string> = {
 const heldRate = (stored: string | null | undefined) =>
   stored ? heldDecimal(stored) : "";
 
+type ServedChoices = readonly { value: string; label: string }[];
+
+/** One served closed choice of the Modelo 210 form. Nothing chosen is a choice
+ * too, since the form takes all its answers or none. A value the row already
+ * holds stays on offer even where the list no longer has it. */
+function M210Choice({
+  entry,
+  label,
+  options,
+}: {
+  entry: {
+    id: string;
+    value: string;
+    disabled: boolean;
+    invalid: boolean;
+    describedBy: string | undefined;
+    onChange: (next: string) => void;
+  };
+  label: string;
+  options: ServedChoices;
+}) {
+  const t = useStrings();
+  const held = entry.value.trim();
+  const listed = options.find((option) => option.value === held);
+  return (
+    <Combobox
+      label={label}
+      value={held}
+      invalid={entry.invalid}
+      describedBy={entry.describedBy}
+      options={[
+        { value: "", label: t("desktop.ledger.inspector.not_set") },
+        ...(held && !listed ? [{ value: held, label: held }] : []),
+        ...options,
+      ]}
+      emptyLabel={t("desktop.ledger.inspector.no_match")}
+      onCommit={(chosen) => entry.onChange(chosen)}
+    >
+      <Button
+        id={entry.id}
+        variant="outline"
+        size="sm"
+        disabled={entry.disabled}
+        className="min-w-0 justify-between"
+      >
+        <span className="truncate">
+          {listed?.label || held || t("desktop.ledger.inspector.not_set")}
+        </span>
+        <Icon name="chevronDown" size="xs" />
+      </Button>
+    </Combobox>
+  );
+}
+
 /** The Modelo 210 facts of income a non-resident earns in Spain, sent with
  * the movement's single classification. */
 function M210Form({
@@ -545,6 +611,10 @@ function M210Form({
   const offered = {
     payer_id: useFieldSuggestions("m210_payer"),
     asset_or_right_id: useFieldSuggestions("m210_asset"),
+  };
+  const choices: Partial<Record<M210Field, ServedChoices | null>> = {
+    tipo_renta_code: useServedChoices("m210_tipo_renta", { withCode: true }),
+    payer_mode: useServedChoices("m210_payer_mode"),
   };
   return (
     <form
@@ -619,7 +689,13 @@ function M210Form({
             <FieldLabel htmlFor={entry.id} className="font-normal">
               {t(M210_LABELS[name])}
             </FieldLabel>
-            {name === "gross_income_amount" ? (
+            {choices[name] ? (
+              <M210Choice
+                entry={entry}
+                label={t(M210_LABELS[name])}
+                options={choices[name]}
+              />
+            ) : name === "gross_income_amount" ? (
               <MoneyEditor {...entry} />
             ) : name === "applicable_rate" ? (
               <PercentEditor unit="fraction" {...entry} />
@@ -704,6 +780,7 @@ function AllocateForm({
     `ratios:${id}:${year}`,
     ratiosWanted,
   );
+  const prorrataOffers = useFieldSuggestions("prorrata_reference", { year });
   const ownCategory = effectiveFacts(row, scope.changes).category_id;
   const ratioOptions = useMemo(() => {
     if (ratios?.kind !== "ready" || ratios.result.outcome !== "available")
@@ -794,9 +871,10 @@ function AllocateForm({
           id={`${formId}-prorrata`}
           controlSize="sm"
           value={prorrata}
-          maxLength={256}
           disabled={lock !== null}
           onChange={setProrrata}
+          opensEmpty
+          {...prorrataOffers}
         />
       </Field>
       {error && (

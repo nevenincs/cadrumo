@@ -745,6 +745,28 @@ application:
       wallet_local_recurrence_divergence: Az AEAT tárca és a helyi ismétlődés eltér;
         felülvizsgálat szükséges az automatikus eredmény előállítása előtt.
   ledger:
+    entry_options:
+      deduction_fact_kind:
+        domestic_current: Belföldi beszerzés, forgóeszköz
+        domestic_investment: Belföldi beszerzés, beruházási tárgyi eszköz
+        import_current: Import, forgóeszköz
+        import_investment: Import, beruházási tárgyi eszköz
+        intra_eu_current: EU-n belüli beszerzés, forgóeszköz
+        intra_eu_investment: EU-n belüli beszerzés, beruházási tárgyi eszköz
+        reagp_compensation: REAGP-kompenzáció
+        rectification: Levonás helyesbítése
+      m210_income_concept:
+        canones: Jogdíj
+        dividend: Osztalék
+        ganancia_patrimonial: Vagyonnyereség
+        general: Általános jövedelem
+        inmobiliaria: Ingatlan után betudott jövedelem
+        interest: Kamat
+        pension: Nyugdíj
+        ue_residente: EU- vagy EGT-lakos jövedelme
+      m210_payer_mode:
+        multiple_payers_code_35: Több kifizető (35-ös kód)
+        single_payer: Egy kifizető
     errors:
       evidence_attachment_requires_ids: A bizonylatnak a nyilvántartásaidhoz való
         csatolásához vásárlási bizonyítékra vagy csatolmány-azonosítókra van szükség.
@@ -1454,6 +1476,60 @@ application:
         too_long: Írj legfeljebb {length} karaktert.
         too_many_decimals: Legfeljebb {digits} tizedesjegyet használj; nincs kerekítés.
         too_short: Írj legalább {length} karaktert.
+    edit_choice:
+      province_code:
+        '01': Álava
+        '02': Albacete
+        '03': Alicante
+        '04': Almería
+        '05': Ávila
+        '06': Badajoz
+        '07': Illes Balears
+        08: Barcelona
+        09: Burgos
+        '10': Cáceres
+        '11': Cádiz
+        '12': Castellón
+        '13': Ciudad Real
+        '14': Córdoba
+        '15': Coruña, A
+        '16': Cuenca
+        '17': Girona
+        '18': Granada
+        '19': Guadalajara
+        '20': Guipúzcoa
+        '21': Huelva
+        '22': Huesca
+        '23': Jaén
+        '24': León
+        '25': Lleida
+        '26': Rioja, La
+        '27': Lugo
+        '28': Madrid
+        '29': Málaga
+        '30': Murcia
+        '31': Navarra
+        '32': Ourense
+        '33': Asturias
+        '34': Palencia
+        '35': Palmas, Las
+        '36': Pontevedra
+        '37': Salamanca
+        '38': S. C. Tenerife
+        '39': Cantabria
+        '40': Segovia
+        '41': Sevilla
+        '42': Soria
+        '43': Tarragona
+        '44': Teruel
+        '45': Toledo
+        '46': Valencia
+        '47': Valladolid
+        '48': Vizcaya
+        '49': Zamora
+        '50': Zaragoza
+        '51': Ceuta
+        '52': Melilla
     errors:
       amendment_complementaria_liability_decrease: A Modelo {modelo} nyomtatvány {filing_year}
         adóévi {period} időszakára vonatkozó kiegészítő bevallás (complementaria)

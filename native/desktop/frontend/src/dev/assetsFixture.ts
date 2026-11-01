@@ -14,6 +14,7 @@ import type {
   DescriptorFacts,
   DisposalCalculation,
   DisposalFacts,
+  MethodFactKind,
   PlanClaim,
   PlanRow,
   ReasonFact,
@@ -49,7 +50,7 @@ type Handler = (request: JsonObject) => JsonObject;
 /** One fact an election of a method states, as the options serve it. */
 type ServedFact = {
   path: string[];
-  kind: string;
+  kind: MethodFactKind;
   required: boolean;
   required_with_group: boolean;
   token_family: string | null;

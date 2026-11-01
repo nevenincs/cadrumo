@@ -357,6 +357,21 @@ def test_native_inventory_options_serve_history_kinds_and_marked_roles(tmp_path:
         }
 
 
+def test_native_ledger_entry_options_serve_each_vocabulary(tmp_path: Path) -> None:
+    with native_cli_profile_scope(tmp_path) as profile:
+        profile.register(label="native-entry-options", facts=_PROFILE_FACTS)
+
+        served = _invoke(profile, "app", "ledger", "entry-options")
+
+        assert served.exit_code == 0, served.output
+        families = {item["family"]: item["options"] for item in unwrap_cli_result(served)["families"]}
+        assert {"ES", "DE"} <= {item["value"] for item in families["country"]}
+        assert "EUR" in {item["value"] for item in families["currency"]}
+        assert [item["value"] for item in families["m210_payer_mode"]] == ["single_payer", "multiple_payers_code_35"]
+        assert "rectification" in {item["value"] for item in families["deduction_fact_kind"]}
+        assert "13" not in {item["value"] for item in families["m210_tipo_renta"]}
+
+
 def test_native_inventory_inspect_names_held_documents_and_the_list_does_not(tmp_path: Path) -> None:
     with native_cli_profile_scope(tmp_path) as profile:
         profile.register(label="native-inventory-names", facts=_PROFILE_FACTS)

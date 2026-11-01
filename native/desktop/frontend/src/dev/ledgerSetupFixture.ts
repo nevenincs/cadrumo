@@ -13,6 +13,29 @@ import type {
   LedgerDefinitionId,
 } from "../shell/ledger";
 import { isSpendingCategory } from "../shell/ledgerVocabulary";
+
+const entryWord = (family: string, value: string, word = value) => ({
+  value,
+  label_key: `application.ledger.entry_options.${family}.${word}`,
+});
+/** A trimmed copy of what `ledger.entry-options` serves. */
+const ENTRY_OPTION_FAMILIES = {
+  country: ["DE", "ES", "FR", "PT"].map((value) => ({
+    value,
+    label_key: null,
+  })),
+  currency: ["EUR", "GBP", "USD"].map((value) => ({ value, label_key: null })),
+  deduction_fact_kind: ["domestic_current", "rectification"].map((value) =>
+    entryWord("deduction_fact_kind", value),
+  ),
+  m210_payer_mode: ["single_payer", "multiple_payers_code_35"].map((value) =>
+    entryWord("m210_payer_mode", value),
+  ),
+  m210_tipo_renta: [
+    entryWord("m210_income_concept", "02", "inmobiliaria"),
+    entryWord("m210_income_concept", "24", "general"),
+  ],
+};
 import { assetOperations } from "./assetsFixture";
 import { RATIO_ELIGIBLE_FIXTURE } from "./fixtures/ledgerRatios";
 import type {
@@ -2212,7 +2235,15 @@ export function setupOperations(ledger: FixtureLedger, tools: Tools) {
         profile_id: profileId,
         entries: [...prorrata]
           .sort((a, b) => b.ejercicio - a.ejercicio)
-          .map(entryOf),
+          .map((found) => {
+            const kind = found.definitive ? "definitiva" : "provisional";
+            const sector = found.sector_id ? `:${found.sector_id}` : "";
+            return {
+              ...entryOf(found),
+              reference_id: `prorrata:${found.ejercicio}:${kind}:${found.regime}${sector}`,
+              reference_kind: kind,
+            };
+          }),
         sectors: sectors.map(sectorOf),
         count: prorrata.length,
       };
@@ -2237,6 +2268,15 @@ export function setupOperations(ledger: FixtureLedger, tools: Tools) {
           correction_count: book.history.length,
           advisories: advisoriesOf(book),
         })),
+      };
+    },
+    "ledger.entry-options": (request) => {
+      fromKeys(request, []);
+      return {
+        profile_id: profileId,
+        families: Object.entries(ENTRY_OPTION_FAMILIES).map(
+          ([family, options]) => ({ family, options }),
+        ),
       };
     },
     "ledger.inventory.options": (request) => {

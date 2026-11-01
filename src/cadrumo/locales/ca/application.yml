@@ -763,6 +763,28 @@ application:
       wallet_local_recurrence_divergence: La cartera de l'AEAT i la recurrència local
         difereixen; cal una revisió abans de generar el resultat automàtic.
   ledger:
+    entry_options:
+      deduction_fact_kind:
+        domestic_current: Operacions interiors corrents
+        domestic_investment: Operacions interiors amb béns d'inversió
+        import_current: Importacions de béns corrents
+        import_investment: Importacions de béns d'inversió
+        intra_eu_current: Adquisicions intracomunitàries de béns corrents
+        intra_eu_investment: Adquisicions intracomunitàries de béns d'inversió
+        reagp_compensation: Compensacions del REAGP
+        rectification: Rectificació de deduccions
+      m210_income_concept:
+        canones: Cànons
+        dividend: Dividends
+        ganancia_patrimonial: Guany patrimonial
+        general: Renda general
+        inmobiliaria: Renda immobiliària imputada
+        interest: Interessos
+        pension: Pensió
+        ue_residente: Renda de resident a la UE o l'EEE
+      m210_payer_mode:
+        multiple_payers_code_35: Diversos pagadors (codi 35)
+        single_payer: Un pagador
     errors:
       evidence_attachment_requires_ids: Adjuntar un justificant als teus registres
         requereix evidència de compra o identificadors d'adjunt.
@@ -1493,6 +1515,60 @@ application:
         too_long: Escriu com a màxim {length} caràcters.
         too_many_decimals: Fes servir com a màxim {digits} decimals; no s'arrodoneix.
         too_short: Escriu almenys {length} caràcters.
+    edit_choice:
+      province_code:
+        '01': Álava
+        '02': Albacete
+        '03': Alicante
+        '04': Almería
+        '05': Ávila
+        '06': Badajoz
+        '07': Illes Balears
+        08: Barcelona
+        09: Burgos
+        '10': Cáceres
+        '11': Cádiz
+        '12': Castellón
+        '13': Ciudad Real
+        '14': Córdoba
+        '15': Coruña, A
+        '16': Cuenca
+        '17': Girona
+        '18': Granada
+        '19': Guadalajara
+        '20': Guipúzcoa
+        '21': Huelva
+        '22': Huesca
+        '23': Jaén
+        '24': León
+        '25': Lleida
+        '26': Rioja, La
+        '27': Lugo
+        '28': Madrid
+        '29': Málaga
+        '30': Murcia
+        '31': Navarra
+        '32': Ourense
+        '33': Asturias
+        '34': Palencia
+        '35': Palmas, Las
+        '36': Pontevedra
+        '37': Salamanca
+        '38': S. C. Tenerife
+        '39': Cantabria
+        '40': Segovia
+        '41': Sevilla
+        '42': Soria
+        '43': Tarragona
+        '44': Teruel
+        '45': Toledo
+        '46': Valencia
+        '47': Valladolid
+        '48': Vizcaya
+        '49': Zamora
+        '50': Zaragoza
+        '51': Ceuta
+        '52': Melilla
     errors:
       amendment_complementaria_liability_decrease: Una complementària per al model
         {modelo}, exercici {filing_year}, període {period} rebaixaria el resultat

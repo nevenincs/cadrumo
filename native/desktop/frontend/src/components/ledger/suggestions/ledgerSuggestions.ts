@@ -1,13 +1,20 @@
 // What the ledger's own records offer a field as it is typed in. Every list is
-// drawn from rows the window already holds for the exact profile on screen,
-// most recent first. A suggestion decides nothing: a pick is a draft edit the
+// drawn from what the window holds for the exact profile on screen: the rows it
+// has drawn and, once read, the known values of the whole history, most recent
+// first. A suggestion decides nothing: a pick is a draft edit the
 // person sees, and the ledger still checks it on save. A pick never carries a
 // classification, category, IVA category, operation type, rate or retention.
 
 import type { Suggestion } from "@/components/ui/suggestions";
 import { countryName, currencyName } from "../../../shared/codeNames";
 import { formatDay } from "../../../shared/dateFormats";
-import type { CatalogueInvoice, LedgerRow } from "../../../shell/ledger";
+import type {
+  CatalogueInvoice,
+  KnownCounterparty,
+  KnownText,
+  LedgerRow,
+} from "../../../shell/ledger";
+import type { CapitalGood } from "../../../shell/ledgerSetup";
 
 /** The sibling fields a counterparty pick can fill. */
 export type PartyFill = "name" | "tax_id" | "country";
@@ -205,15 +212,30 @@ export function invoiceNumberOptions(
 export function usedCodeOptions(
   codes: readonly (string | null)[],
   named?: (code: string) => string | undefined,
+  served?: { codes: readonly string[]; locale: string },
 ): Suggestion[] {
   const uses = new Map<string, number>();
   for (const code of codes) {
     const held = code?.trim().toUpperCase();
     if (held) uses.set(held, (uses.get(held) ?? 0) + 1);
   }
-  return [...uses]
+  const offer = (code: string): Suggestion => ({
+    value: code,
+    label: code,
+    note: named?.(code),
+  });
+  const used = [...uses]
     .sort((left, right) => right[1] - left[1])
-    .map(([code]) => ({ value: code, label: code, note: named?.(code) }));
+    .map(([code]) => offer(code));
+  if (!served) return used;
+  const collator = new Intl.Collator(served.locale);
+  const others = served.codes
+    .filter((code) => !uses.has(code))
+    .map(offer)
+    .sort((left, right) =>
+      collator.compare(left.note ?? left.value, right.note ?? right.value),
+    );
+  return [...used, ...others];
 }
 
 const newestRowsFirst = (rows: readonly LedgerRow[]) =>
@@ -222,10 +244,11 @@ const newestRowsFirst = (rows: readonly LedgerRow[]) =>
   );
 
 /** Movement descriptions, each offering the counterparty it was last used
- * with. */
+ * with: staged, then held rows, then the rest of the history. */
 export function descriptionOptions(
   rows: readonly LedgerRow[],
   staged: readonly string[] = [],
+  known: readonly KnownText[] = [],
 ): Suggestion[] {
   const seen = new Set<string>();
   const options: Suggestion[] = [];
@@ -244,19 +267,27 @@ export function descriptionOptions(
   for (const text of staged) add(text);
   for (const { transaction } of newestRowsFirst(rows))
     add(transaction.description, transaction.counterparty.trim());
+  for (const value of known) add(value.text, value.counterparty ?? undefined);
   return options;
 }
 
-/** Movement counterparties: staged, then held rows, then the catalogue's
- * parties. A row's country and identification state come along as fills. */
+/** Movement counterparties: staged, then held rows, then the history, then
+ * the catalogue's parties. A party's country and identification state come
+ * along as fills; a tax id only tells two apart, as a movement states none. */
 export function counterpartyOptions(
   rows: readonly LedgerRow[],
   invoices: readonly CatalogueInvoice[] | null,
   staged: readonly string[] = [],
+  known: readonly KnownCounterparty[] = [],
 ): Suggestion[] {
   const seen = new Set<string>();
   const options: Suggestion[] = [];
-  const add = (name: string, fills?: Record<string, string>, note?: string) => {
+  const add = (
+    name: string,
+    fills?: Record<string, string>,
+    note?: string,
+    keyword?: string | null,
+  ) => {
     const held = name.trim();
     const key = fold(held);
     if (!held || seen.has(key)) return;
@@ -265,6 +296,7 @@ export function counterpartyOptions(
       value: held,
       label: held,
       note,
+      keywords: keyword ? [keyword] : undefined,
       fills: fills && Object.keys(fills).length > 0 ? fills : undefined,
     });
   };
@@ -281,6 +313,22 @@ export function counterpartyOptions(
           }
         : {}),
     });
+  for (const party of known)
+    add(
+      party.name,
+      {
+        ...(party.country ? { counterparty_country: party.country } : {}),
+        ...(party.identification_state
+          ? { counterparty_identification_state: party.identification_state }
+          : {}),
+      },
+      partyNote({
+        name: party.name,
+        taxId: party.tax_id,
+        country: party.country,
+      }),
+      party.tax_id,
+    );
   for (const party of parties(newestFirst(invoices ?? [])))
     add(
       party.name,
@@ -290,10 +338,44 @@ export function counterpartyOptions(
   return options;
 }
 
-/** Group labels in use. */
-export function groupOptions(rows: readonly LedgerRow[]): Suggestion[] {
+/** Group labels in use: staged, then held rows, then the history. */
+export function groupOptions(
+  rows: readonly LedgerRow[],
+  staged: readonly string[] = [],
+  known: readonly KnownText[] = [],
+): Suggestion[] {
   return plainOptions(
-    distinctText(newestRowsFirst(rows).map((row) => row.group_label)),
+    distinctText([
+      ...staged,
+      ...newestRowsFirst(rows).map((row) => row.group_label),
+      ...known.map((value) => value.text),
+    ]),
+  );
+}
+
+/** A free text the held rows state, then the history's. */
+export function heldThenKnownOptions(
+  held: readonly (string | null)[],
+  known: readonly KnownText[] = [],
+): Suggestion[] {
+  return plainOptions(
+    distinctText([...held, ...known.map((value) => value.text)]),
+  );
+}
+
+/** Capital goods by the identifier a movement names them with, those of the
+ * movement's year first. */
+export function capitalGoodOptions(
+  goods: readonly CapitalGood[],
+  year?: number,
+): Suggestion[] {
+  return firstThose(goods, (good) => good.acquisition_year === year).map(
+    (good) => ({
+      value: good.identifier,
+      label: good.identifier,
+      note: good.description || undefined,
+      keywords: good.description ? [good.description] : undefined,
+    }),
   );
 }
 
@@ -328,20 +410,24 @@ export function partySeriesOptions(
 export const invoiceCountryOptions = (
   invoices: readonly CatalogueInvoice[],
   locale: string,
+  served?: readonly string[] | null,
 ): Suggestion[] =>
   usedCodeOptions(
     invoices.map((invoice) => invoice.counterparty_country),
     (code) => countryName(locale, code) ?? undefined,
+    served ? { codes: served, locale } : undefined,
   );
 
 /** Currencies named by the catalogue, the most used first. */
 export const invoiceCurrencyOptions = (
   invoices: readonly CatalogueInvoice[],
   locale: string,
+  served?: readonly string[] | null,
 ): Suggestion[] =>
   usedCodeOptions(
     invoices.map((invoice) => invoice.currency),
     (code) => currencyName(locale, code) ?? undefined,
+    served ? { codes: served, locale } : undefined,
   );
 
 /** Cadastral references the catalogue's leases already record, newest first. */

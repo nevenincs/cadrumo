@@ -716,6 +716,28 @@ application:
       wallet_local_recurrence_divergence: The AEAT wallet and the local recurrence
         diverge; a review is required before the automatic result is produced.
   ledger:
+    entry_options:
+      deduction_fact_kind:
+        domestic_current: Domestic purchases, current goods
+        domestic_investment: Domestic purchases, capital goods
+        import_current: Imports, current goods
+        import_investment: Imports, capital goods
+        intra_eu_current: Intra-EU acquisitions, current goods
+        intra_eu_investment: Intra-EU acquisitions, capital goods
+        reagp_compensation: Farming compensation (REAGP)
+        rectification: Rectified deduction
+      m210_income_concept:
+        canones: Royalties
+        dividend: Dividends
+        ganancia_patrimonial: Capital gain
+        general: General income
+        inmobiliaria: Imputed real estate income
+        interest: Interest
+        pension: Pension
+        ue_residente: EU or EEA resident income
+      m210_payer_mode:
+        multiple_payers_code_35: Several payers (code 35)
+        single_payer: One payer
     errors:
       evidence_attachment_requires_ids: Attaching a supporting document to your records
         requires purchase evidence or attachment ids.
@@ -1410,6 +1432,60 @@ application:
         too_long: Type at most {length} characters.
         too_many_decimals: Use at most {digits} decimal places; nothing is rounded.
         too_short: Type at least {length} characters.
+    edit_choice:
+      province_code:
+        '01': Álava
+        '02': Albacete
+        '03': Alicante
+        '04': Almería
+        '05': Ávila
+        '06': Badajoz
+        '07': Illes Balears
+        08: Barcelona
+        09: Burgos
+        '10': Cáceres
+        '11': Cádiz
+        '12': Castellón
+        '13': Ciudad Real
+        '14': Córdoba
+        '15': Coruña, A
+        '16': Cuenca
+        '17': Girona
+        '18': Granada
+        '19': Guadalajara
+        '20': Guipúzcoa
+        '21': Huelva
+        '22': Huesca
+        '23': Jaén
+        '24': León
+        '25': Lleida
+        '26': Rioja, La
+        '27': Lugo
+        '28': Madrid
+        '29': Málaga
+        '30': Murcia
+        '31': Navarra
+        '32': Ourense
+        '33': Asturias
+        '34': Palencia
+        '35': Palmas, Las
+        '36': Pontevedra
+        '37': Salamanca
+        '38': S. C. Tenerife
+        '39': Cantabria
+        '40': Segovia
+        '41': Sevilla
+        '42': Soria
+        '43': Tarragona
+        '44': Teruel
+        '45': Toledo
+        '46': Valencia
+        '47': Valladolid
+        '48': Vizcaya
+        '49': Zamora
+        '50': Zaragoza
+        '51': Ceuta
+        '52': Melilla
     errors:
       amendment_complementaria_liability_decrease: A complementaria for modelo {modelo}
         filing year {filing_year} period {period} would lower the declared result

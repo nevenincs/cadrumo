@@ -42,6 +42,7 @@ import type {
   InventoryEvidenceAddRequest,
   InventoryEvidenceAddResult,
   InventoryOptionsResult,
+  LedgerEntryOptionsResult,
   InventoryCorrectRequest,
   InventoryCreateRequest,
   InventoryCreateResult,
@@ -118,6 +119,7 @@ export const LEDGER_DEFINITIONS = [
   "ledger.classify.single",
   "ledger.counterparty",
   "ledger.detach",
+  "ledger.entry-options",
   "ledger.evidence.add",
   "ledger.evidence.attachment_queue",
   "ledger.evidence.attachment_view",
@@ -161,6 +163,7 @@ export const LEDGER_DEFINITIONS = [
   "ledger.invoice.update",
   "ledger.invoice.view",
   "ledger.invoice.wizard",
+  "ledger.known-values",
   "ledger.link",
   "ledger.list",
   "ledger.llm-diagnostics",
@@ -417,6 +420,44 @@ export type LedgerListResult = {
   offset: number;
   limit: number | null;
   by_group: boolean;
+};
+
+/** The kinds of text a profile's own records can offer. */
+export type LedgerKnownValueKind =
+  | "counterparty"
+  | "description"
+  | "group_label"
+  | "m210_payer"
+  | "m210_asset"
+  | "asset_reference";
+export type LedgerKnownValuesRequest = { kinds: LedgerKnownValueKind[] };
+/** One party as the records name it. The tax id comes from an invoice; a
+ * movement states none, and joins one only if its name can mean no other. */
+export type KnownCounterparty = {
+  name: string;
+  tax_id: string | null;
+  country: string | null;
+  identification_state: string | null;
+  uses: number;
+  last_used: string;
+};
+export type KnownText = {
+  text: string;
+  uses: number;
+  last_used: string;
+  counterparty: string | null;
+};
+/** Each list is the newest of its kind; `truncated` names the kinds that hold
+ * more than they show. */
+export type LedgerKnownValuesResult = {
+  profile_id: string;
+  counterparties: KnownCounterparty[];
+  descriptions: KnownText[];
+  group_labels: KnownText[];
+  m210_payers: KnownText[];
+  m210_assets: KnownText[];
+  asset_references: KnownText[];
+  truncated: LedgerKnownValueKind[];
 };
 
 export type LedgerViewRequest = { transaction_prefix: string };
@@ -1839,6 +1880,7 @@ export type LedgerCheckResult = {
 };
 
 export interface LedgerRequests {
+  "ledger.known-values": LedgerKnownValuesRequest;
   "ledger.list": LedgerListRequest;
   "ledger.view": LedgerViewRequest;
   "ledger.update": LedgerUpdateRequest;
@@ -1915,6 +1957,7 @@ export interface LedgerRequests {
   "ledger.inventory.closing-value.record": InventoryClosingValueRequest;
   "ledger.inventory.evidence.add": InventoryEvidenceAddRequest;
   "ledger.inventory.options": Record<string, never>;
+  "ledger.entry-options": Record<string, never>;
   "ledger.inventory.inspect": InventoryBookRequest;
   "ledger.inventory.describe": InventoryDescribeRequest;
   "ledger.inventory.correct": InventoryCorrectRequest;
@@ -1940,6 +1983,7 @@ export interface LedgerRequests {
   "ledger.reset": LedgerResetRequest;
 }
 export interface LedgerResults {
+  "ledger.known-values": LedgerKnownValuesResult;
   "ledger.list": LedgerListResult;
   "ledger.view": LedgerViewResult;
   "ledger.update": LedgerUpdateResult;
@@ -2014,6 +2058,7 @@ export interface LedgerResults {
   "ledger.inventory.closing-value.record": InventoryClosingAuthorityResult;
   "ledger.inventory.evidence.add": InventoryEvidenceAddResult;
   "ledger.inventory.options": InventoryOptionsResult;
+  "ledger.entry-options": LedgerEntryOptionsResult;
   "ledger.inventory.inspect": InventoryInspectResult;
   "ledger.inventory.describe": InventoryChangeResult;
   "ledger.inventory.correct": InventoryChangeResult;

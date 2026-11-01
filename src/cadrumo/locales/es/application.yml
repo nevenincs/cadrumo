@@ -766,6 +766,28 @@ application:
       wallet_local_recurrence_divergence: La cartera de la AEAT y la recurrencia local
         difieren; se requiere una revisión antes de generar el resultado automático.
   ledger:
+    entry_options:
+      deduction_fact_kind:
+        domestic_current: Operaciones interiores corrientes
+        domestic_investment: Operaciones interiores con bienes de inversión
+        import_current: Importaciones de bienes corrientes
+        import_investment: Importaciones de bienes de inversión
+        intra_eu_current: Adquisiciones intracomunitarias de bienes corrientes
+        intra_eu_investment: Adquisiciones intracomunitarias de bienes de inversión
+        reagp_compensation: Compensaciones del REAGP
+        rectification: Rectificación de deducciones
+      m210_income_concept:
+        canones: Cánones
+        dividend: Dividendos
+        ganancia_patrimonial: Ganancia patrimonial
+        general: Renta general
+        inmobiliaria: Renta inmobiliaria imputada
+        interest: Intereses
+        pension: Pensión
+        ue_residente: Renta de residente en la UE o el EEE
+      m210_payer_mode:
+        multiple_payers_code_35: Varios pagadores (código 35)
+        single_payer: Un pagador
     errors:
       evidence_attachment_requires_ids: Adjuntar un justificante a tus registros requiere
         evidencia de compra o identificadores de adjunto.
@@ -1490,6 +1512,60 @@ application:
         too_long: Escribe como máximo {length} caracteres.
         too_many_decimals: Usa como máximo {digits} decimales; no se redondea.
         too_short: Escribe al menos {length} caracteres.
+    edit_choice:
+      province_code:
+        '01': Álava
+        '02': Albacete
+        '03': Alicante
+        '04': Almería
+        '05': Ávila
+        '06': Badajoz
+        '07': Illes Balears
+        08: Barcelona
+        09: Burgos
+        '10': Cáceres
+        '11': Cádiz
+        '12': Castellón
+        '13': Ciudad Real
+        '14': Córdoba
+        '15': Coruña, A
+        '16': Cuenca
+        '17': Girona
+        '18': Granada
+        '19': Guadalajara
+        '20': Guipúzcoa
+        '21': Huelva
+        '22': Huesca
+        '23': Jaén
+        '24': León
+        '25': Lleida
+        '26': Rioja, La
+        '27': Lugo
+        '28': Madrid
+        '29': Málaga
+        '30': Murcia
+        '31': Navarra
+        '32': Ourense
+        '33': Asturias
+        '34': Palencia
+        '35': Palmas, Las
+        '36': Pontevedra
+        '37': Salamanca
+        '38': S. C. Tenerife
+        '39': Cantabria
+        '40': Segovia
+        '41': Sevilla
+        '42': Soria
+        '43': Tarragona
+        '44': Teruel
+        '45': Toledo
+        '46': Valencia
+        '47': Valladolid
+        '48': Vizcaya
+        '49': Zamora
+        '50': Zaragoza
+        '51': Ceuta
+        '52': Melilla
     errors:
       amendment_complementaria_liability_decrease: Una complementaria para el modelo
         {modelo}, ejercicio {filing_year}, período {period} rebajaría el resultado

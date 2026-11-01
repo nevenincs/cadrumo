@@ -318,9 +318,15 @@ export type ProrrataSector = {
   letra: string;
   member_activity_codes: string[];
 };
+/** An entry as the register lists it, with the reference the backend gives
+ * the percentage it holds in force; null where no reference can name it. */
+export type ProrrataListedEntry = ProrrataEntry & {
+  reference_id: string | null;
+  reference_kind: string | null;
+};
 export type ProrrataListResult = {
   profile_id: string;
-  entries: ProrrataEntry[];
+  entries: ProrrataListedEntry[];
   sectors: ProrrataSector[];
   count: number;
 };
@@ -732,6 +738,15 @@ export type InventoryOptionsResult = {
   families: {
     family: string;
     options: { value: string; label_key: string; role?: string | null }[];
+  }[];
+};
+/** What a ledger entry form offers. A code with no key is named by the window
+ * with `Intl`; a code's list says what is known, not what is allowed. */
+export type LedgerEntryOptionsResult = {
+  profile_id: string;
+  families: {
+    family: string;
+    options: { value: string; label_key: string | null }[];
   }[];
 };
 /** A document the person chose, now kept: what a purchase or a closing
@@ -1259,11 +1274,23 @@ export type TableGroup = {
 /** One reason a baja is accepted with, and the catalogue key that words it. */
 export type DisposalReasonOption = { reason: string; label_key: string };
 
+/** How an election's fact is stated, as the options serve it. */
+export type MethodFactKind =
+  | "text"
+  | "date"
+  | "whole"
+  | "flag"
+  | "choice"
+  | "class"
+  | "amount"
+  | "share"
+  | "decimal"
+  | "rows";
 /** One fact an election of a method states, as the options serve it. */
 export type MethodFact = {
   /** From the election down to the fact. */
   path: string[];
-  kind: string;
+  kind: MethodFactKind;
   required: boolean;
   /** Required once the fact's optional group is stated. */
   required_with_group: boolean;

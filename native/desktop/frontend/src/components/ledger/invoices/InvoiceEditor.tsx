@@ -44,6 +44,7 @@ import { useStrings, type Translate } from "../../../shell/strings";
 import { localDay } from "../../../shared/dates";
 import { formatDay } from "../../../shared/dateFormats";
 import { formatAmount, formatPercent } from "../../../shared/numbers";
+import { useServedCodes } from "../suggestions/SuggestionsProvider";
 import {
   emptyFills,
   invoiceCountryOptions,
@@ -745,6 +746,8 @@ function NewInvoice({
   say(text: string): void;
 }) {
   const t = useStrings();
+  const servedCountries = useServedCodes("country");
+  const servedCurrencies = useServedCodes("currency");
   const bind = (key: keyof InvoiceDraft, field: string) => ({
     value: draft[key] as string,
     onChange: (value: string) => edit(key, value as never),
@@ -900,7 +903,11 @@ function NewInvoice({
               <CountryEditor
                 {...wired(control)}
                 {...bind("country", "counterparty_country")}
-                suggestions={invoiceCountryOptions(invoices, locale)}
+                suggestions={invoiceCountryOptions(
+                  invoices,
+                  locale,
+                  servedCountries,
+                )}
               />
             )}
           </FormField>
@@ -1022,7 +1029,11 @@ function NewInvoice({
               <CurrencyEditor
                 {...wired(control)}
                 {...bind("currency", "currency")}
-                suggestions={invoiceCurrencyOptions(invoices, locale)}
+                suggestions={invoiceCurrencyOptions(
+                  invoices,
+                  locale,
+                  servedCurrencies,
+                )}
               />
             )}
           </FormField>
@@ -1512,6 +1523,7 @@ function StoredInvoice({
   ): void;
 }) {
   const t = useStrings();
+  const servedCountries = useServedCodes("country");
   const fixed = t("desktop.ledger.invoices.fixed");
   const bind = (key: keyof CorrectionDraft, field: string) => ({
     value: correction[key] as string,
@@ -1568,7 +1580,11 @@ function StoredInvoice({
               <CountryEditor
                 {...wired(control)}
                 {...bind("country", "counterparty_country")}
-                suggestions={invoiceCountryOptions(invoices, locale)}
+                suggestions={invoiceCountryOptions(
+                  invoices,
+                  locale,
+                  servedCountries,
+                )}
               />
             )}
           </FormField>

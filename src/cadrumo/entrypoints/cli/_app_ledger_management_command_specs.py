@@ -403,6 +403,23 @@ LEDGER_MANAGEMENT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
+        "app_ledger_entry_options",
+        "app_ledger",
+        "entry-options",
+        kind=CommandNodeKind.LEAF,
+        help_key=TranslationKey("cli.ledger.entry_options_help"),
+        short_help_key=None,
+        invocation=InvocationSpec(invoke_without_command=False, no_args_is_help=False, context_parameter="ctx"),
+        parameters=(),
+        policy=_POLICY_5,
+        handler=LazyBinding.available(DeferredTarget(".entry_options_commands", "entry_options", __package__)),
+        result_schema=ResultSchemaSpec(
+            SchemaState.TARGET,
+            target=DeferredTarget(".ledger_results", "LedgerEntryOptionsResult", __package__),
+            identity="ledger.entry-options",
+        ),
+    ),
+    CommandSpec(
         "app_ledger_participation",
         "app_ledger",
         "participation",
@@ -481,7 +498,7 @@ LEDGER_MANAGEMENT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         handler=LazyBinding.available(DeferredTarget(".ledger_read_commands", "ledger_preflight", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget(".ledger_results", "LedgerPreflightResult", __package__),
+            target=DeferredTarget(".ledger_diagnostic_results", "LedgerPreflightResult", __package__),
             identity="ledger.preflight",
         ),
     ),
