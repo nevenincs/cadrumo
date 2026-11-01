@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import json
 from datetime import UTC, datetime
+from typing import Any
 
 import pytest
 
@@ -65,23 +66,7 @@ def _seed_runs() -> None:
         )
 
 
-def test_llm_usage_aggregates_by_provider_and_model(diagnostics_native_profile: NativeCliProfileFixture) -> None:
-    """The verb groups real recorded runs by provider, then by model within each provider."""
-    _seed_runs()
-
-    result = invoke_diagnostics(["--format", "json", "app", "diagnostics", "llm-usage"], diagnostics_native_profile)
-    assert result.exit_code == 0, result.output
-    payload = _json_result(result)
-
-    assert payload["has_run_data"] is True
-    assert payload["total_runs"] == 6
-    assert payload["total_succeeded"] == 5
-    assert payload["total_failed"] == 1
-
-    providers = {row["provider"]: row for row in payload["by_provider"]}
-    assert set(providers) == {"llm:claude:test-model", "llm:codex:test-model"}
-
-    claude = providers["llm:claude:test-model"]
+def _assert_claude_usage(claude: dict[str, Any]) -> None:
     assert claude["runs"] == 4
     assert claude["succeeded"] == 3
     assert claude["failed"] == 1
@@ -103,7 +88,8 @@ def test_llm_usage_aggregates_by_provider_and_model(diagnostics_native_profile: 
     assert claude_model_b["failed"] == 1
     assert claude_model_b["success_rate"] == "0.5000"
 
-    codex = providers["llm:codex:test-model"]
+
+def _assert_codex_usage(codex: dict[str, Any]) -> None:
     assert codex["runs"] == 2
     assert codex["succeeded"] == 2
     assert codex["failed"] == 0
@@ -111,6 +97,26 @@ def test_llm_usage_aggregates_by_provider_and_model(diagnostics_native_profile: 
     assert len(codex["models"]) == 1
     assert codex["models"][0]["model"] == "model-a"
     assert codex["models"][0]["runs"] == 2
+
+
+def test_llm_usage_aggregates_by_provider_and_model(diagnostics_native_profile: NativeCliProfileFixture) -> None:
+    """The verb groups real recorded runs by provider, then by model within each provider."""
+    _seed_runs()
+
+    result = invoke_diagnostics(["--format", "json", "app", "diagnostics", "llm-usage"], diagnostics_native_profile)
+    assert result.exit_code == 0, result.output
+    payload = _json_result(result)
+
+    assert payload["has_run_data"] is True
+    assert payload["total_runs"] == 6
+    assert payload["total_succeeded"] == 5
+    assert payload["total_failed"] == 1
+
+    providers = {row["provider"]: row for row in payload["by_provider"]}
+    assert set(providers) == {"llm:claude:test-model", "llm:codex:test-model"}
+
+    _assert_claude_usage(providers["llm:claude:test-model"])
+    _assert_codex_usage(providers["llm:codex:test-model"])
 
     assert payload["overall_success_rate"] == "0.8333"
 
