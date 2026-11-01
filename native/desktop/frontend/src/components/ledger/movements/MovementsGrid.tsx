@@ -17,6 +17,7 @@ import { Icon } from "@/components/ui/icon";
 import { facts, listed } from "@/shell/compose";
 import type { LedgerRow } from "../../../shell/ledger";
 import { useStrings, type Translate } from "../../../shell/strings";
+import { draftedWidth } from "../editing/editingModel";
 import { GridRoomContext } from "../gridRoom";
 import {
   AmountCell,
@@ -96,6 +97,8 @@ export type ColumnContext = {
   currencySlot?: boolean;
   /** How many kinds of mark the movements carry beside their status. */
   statusMarks?: number;
+  /** New movements are being drafted: some columns widen for them. */
+  drafting?: boolean;
   /** Staged editing, where the grid takes edits. */
   editing?: ColumnEditing;
 };
@@ -290,6 +293,12 @@ function movementColumns(
     );
     const wordyStatus =
       column === "status" && context.density === "comfortable";
+    const natural =
+      column === "status"
+        ? statusWidth(context.density, context.statusMarks)
+        : column === "date"
+          ? dateWidth(context.withYear)
+          : spec.width;
     return {
       id: column,
       label: name,
@@ -316,12 +325,7 @@ function movementColumns(
           }
         : {}),
       width:
-        width ??
-        (column === "status"
-          ? statusWidth(context.density, context.statusMarks)
-          : column === "date"
-            ? dateWidth(context.withYear)
-            : spec.width),
+        width ?? (context.drafting ? draftedWidth(column, natural) : natural),
       ...(spec.minWidth !== undefined ? { minWidth: spec.minWidth } : {}),
       ...(spec.grow !== undefined && width === undefined
         ? { grow: spec.grow }

@@ -279,11 +279,14 @@ const cell = (
   ...(typed === undefined
     ? {}
     : {
+        // The date editor floats in a popover outside the canvas, so the
+        // editor is looked for in the whole document.
         play: async ({ canvasElement }) => {
           const input = await waitFor(() => {
-            const found = canvasElement.querySelector<HTMLInputElement>(
-              ".ledger-cell-editor",
-            );
+            const found =
+              canvasElement.ownerDocument.querySelector<HTMLInputElement>(
+                ".ledger-cell-editor",
+              );
             if (!found) throw new Error("the cell is not open yet");
             return found;
           });

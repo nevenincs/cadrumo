@@ -1902,7 +1902,7 @@ desktop:
       ratio_unread: Ratios de uso sin leer
       search_category: Buscar
       select_range: Selecciona el rango
-      share: Parte empresarial
+      share: Parte profesional
       share_categories: Solo categorías que admiten una parte de uso empresarial
       share_refused: '«{raw}» no es una parte: escribe un porcentaje, como 50 para
         el 50 %.'
@@ -2204,7 +2204,7 @@ desktop:
         supplier: Proveedor
         taxable_base: Base imponible
       record_added: Documento añadido
-      record_refused: Escríbelo como 2026-10-15, 60.50 o 21
+      record_refused: Escríbelo como 2026-10-15, 60,50 o 21
       record_removed: Registro eliminado
       record_saved: Registro guardado
       records: Registros de justificantes
@@ -2292,7 +2292,7 @@ desktop:
       redone: 'Rehecho: {what}'
       refusal:
         ambiguous_grouping: '«{raw}» se puede leer de dos maneras: escríbelo sin separador
-          de miles, como 1000 o 1.5.'
+          de miles, como 1000 o 1,5.'
         cannot_clear: Esto no se puede vaciar. Escribe otro valor en su lugar.
         comma_decimal: '«{raw}» usa coma decimal: escribe {suggestion}.'
         currency_symbol: '«{raw}» lleva símbolo de moneda: escribe solo el número.'
@@ -2560,7 +2560,7 @@ desktop:
       rebuilt: 'Reconstruido. Enlaces actualizados: {links}.'
       reset: Zona de peligro · reiniciar el libro
       reset_blocked: El reinicio está bloqueado
-      reset_blocker: Modelo {modelo} · {year} {period} · {state} cita movimientos
+      reset_blocker: Modelo {modelo} · {period} {year} · {state} cita movimientos
       reset_confirm: 'Reiniciar y quitar · movimientos: {movements}'
       reset_reason: Motivo
       reset_reason_hint: Queda en el registro de auditoría · hasta {limit} caracteres
@@ -2570,7 +2570,7 @@ desktop:
       run_check: Hacer la comprobación
       stale: Declaraciones por recalcular
       stale_none: 'Ninguna: cada cálculo cubre los movimientos tal como están.'
-      stale_row: 'Modelo {modelo} · {year} {period} · desde el cálculo, cambiados:
+      stale_row: 'Modelo {modelo} · {period} {year} · desde el cálculo, cambiados:
         {changed}, quitados: {removed}'
       status: Estado · {period}
       unconverted: Extranjeros sin cambio
@@ -3019,8 +3019,8 @@ desktop:
         category_needed: Elige una categoría para la parte {part}.
         choose_category: Elige una categoría
         count: Una división tiene de 2 a {max} partes.
-        description: Las partes suman {amount} {currency}. La última parte se queda
-          con lo que falta.
+        description: Las partes suman {amount}. La última parte se queda con lo que
+          falta.
         description_needed: La parte {part} necesita una descripción.
         duplicate: 'La parte {part} es igual que otra: cambia su importe o descripción.'
         mixed_hint: ¿Lo usas en parte para trabajar? Usa Mixto con una parte.
@@ -3046,7 +3046,7 @@ desktop:
         draft: Borrador
         filed_confirmed: Presentado · justificante confirmado
         filed_local: Presentado en local · estado en la AEAT sin confirmar
-        name: Modelo {modelo} · {year} {period}
+        name: Modelo {modelo} · {period} {year}
         none: Ninguna declaración usa aún este movimiento.
         not_built: Vínculos con declaraciones aún sin generar
         superseded: Sustituido
@@ -3247,7 +3247,7 @@ desktop:
       read_failed: No se han podido leer las facturas.
       refusal:
         ambiguous_grouping: '"{raw}" se puede leer de dos maneras. Escribe 1500 o
-          1.5.'
+          1,5.'
         comma_decimal: '"{raw}": usa punto para los decimales.'
         currency_symbol: '"{raw}": sin símbolo de moneda.'
         date_not_in_calendar: '"{raw}" no es un día del calendario.'

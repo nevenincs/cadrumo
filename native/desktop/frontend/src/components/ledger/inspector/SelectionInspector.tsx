@@ -667,18 +667,20 @@ export function SelectionInspector({
                 </SegmentedControlItem>
               ))}
             </SegmentedControl>
-            <Field className="w-20 gap-0.5">
+            <Field className="w-fit gap-0.5">
               <FieldLabel htmlFor={`${shareId}-share`} className="font-normal">
                 {t("desktop.ledger.inspector.share")}
               </FieldLabel>
-              <PercentEditor
-                unit="fraction"
-                id={`${shareId}-share`}
-                controlSize="sm"
-                value={share}
-                disabled={blocked}
-                onChange={setShare}
-              />
+              <div className="w-20">
+                <PercentEditor
+                  unit="fraction"
+                  id={`${shareId}-share`}
+                  controlSize="sm"
+                  value={share}
+                  disabled={blocked}
+                  onChange={setShare}
+                />
+              </div>
             </Field>
           </div>
           {undecided ? (

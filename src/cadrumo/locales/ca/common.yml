@@ -1906,7 +1906,7 @@ desktop:
       ratio_unread: Ràtios d'ús sense llegir
       search_category: Cerca
       select_range: Selecciona el rang
-      share: Part empresarial
+      share: Part professional
       share_categories: Només categories que admeten una part d'ús empresarial
       share_refused: '«{raw}» no és una part: escriu un percentatge, com 50 per al
         50 %.'
@@ -2209,7 +2209,7 @@ desktop:
         supplier: Proveïdor
         taxable_base: Base imposable
       record_added: Document afegit
-      record_refused: Escriu-ho com 2026-10-15, 60.50 o 21
+      record_refused: Escriu-ho com 2026-10-15, 60,50 o 21
       record_removed: Registre eliminat
       record_saved: Registre desat
       records: Registres de justificants
@@ -2297,7 +2297,7 @@ desktop:
       redone: 'Refet: {what}'
       refusal:
         ambiguous_grouping: '«{raw}» es pot llegir de dues maneres: escriu-lo sense
-          separador de milers, com 1000 o 1.5.'
+          separador de milers, com 1000 o 1,5.'
         cannot_clear: Això no es pot buidar. Escriu-hi un altre valor.
         comma_decimal: '«{raw}» usa coma decimal: escriu {suggestion}.'
         currency_symbol: '«{raw}» porta símbol de moneda: escriu només el número.'
@@ -2562,7 +2562,7 @@ desktop:
       rebuilt: 'Reconstruït. Enllaços actualitzats: {links}.'
       reset: Zona de perill · reinicia el llibre
       reset_blocked: El reinici està bloquejat
-      reset_blocker: Model {modelo} · {year} {period} · {state} cita moviments
+      reset_blocker: Model {modelo} · {period} {year} · {state} cita moviments
       reset_confirm: 'Reinicia i treu · moviments: {movements}'
       reset_reason: Motiu
       reset_reason_hint: Queda al registre d'auditoria · fins a {limit} caràcters
@@ -2572,7 +2572,7 @@ desktop:
       run_check: Fes la comprovació
       stale: Declaracions per recalcular
       stale_none: 'Cap: cada càlcul cobreix els moviments tal com són.'
-      stale_row: 'Model {modelo} · {year} {period} · des del càlcul, canviats: {changed},
+      stale_row: 'Model {modelo} · {period} {year} · des del càlcul, canviats: {changed},
         trets: {removed}'
       status: Estat · {period}
       unconverted: Estrangers sense canvi
@@ -3020,8 +3020,7 @@ desktop:
         category_needed: Tria una categoria per a la part {part}.
         choose_category: Tria una categoria
         count: Una divisió té de 2 a {max} parts.
-        description: Les parts sumen {amount} {currency}. L'última part es queda el
-          que falta.
+        description: Les parts sumen {amount}. L'última part es queda el que falta.
         description_needed: La part {part} necessita una descripció.
         duplicate: 'La part {part} és igual que una altra: canvia''n l''import o la
           descripció.'
@@ -3048,7 +3047,7 @@ desktop:
         draft: Esborrany
         filed_confirmed: Presentat · justificant confirmat
         filed_local: Presentat en local · estat a l'AEAT sense confirmar
-        name: Model {modelo} · {year} {period}
+        name: Model {modelo} · {period} {year}
         none: Cap declaració no fa servir encara aquest moviment.
         not_built: Vincles amb declaracions encara sense generar
         superseded: Substituït
@@ -3248,7 +3247,7 @@ desktop:
       read_failed: No s'han pogut llegir les factures.
       refusal:
         ambiguous_grouping: '"{raw}" es pot llegir de dues maneres. Escriu 1500 o
-          1.5.'
+          1,5.'
         comma_decimal: '"{raw}": fes servir punt per als decimals.'
         currency_symbol: '"{raw}": sense símbol de moneda.'
         date_not_in_calendar: '"{raw}" no és un dia del calendari.'

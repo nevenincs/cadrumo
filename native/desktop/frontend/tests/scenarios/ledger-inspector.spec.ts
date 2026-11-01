@@ -837,6 +837,15 @@ test("a split's last part takes the remainder, and its parts may be classified",
     .click();
   const dialog = target.locator(".ledger-split");
   await expect(dialog).toBeVisible();
+  // The movement's amount names its currency once, in the figure.
+  await expect(dialog).toContainText(
+    label("desktop.ledger.inspector.split.description", {
+      amount: new Intl.NumberFormat("en", {
+        style: "currency",
+        currency: "EUR",
+      }).format(amount),
+    }),
+  );
   await dialog.locator(".ledger-split-amount").first().fill("20");
   // The remainder is a figure drawn in the window's language: English groups
   // thousands with a comma and always shows two decimals.

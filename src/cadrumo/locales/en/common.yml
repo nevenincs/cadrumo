@@ -2521,7 +2521,7 @@ desktop:
       rebuilt: Rebuilt. {links} links updated.
       reset: Danger zone · reset the ledger
       reset_blocked: Reset is blocked
-      reset_blocker: Modelo {modelo} · {year} {period} · {state} cites movements
+      reset_blocker: Modelo {modelo} · {period} {year} · {state} cites movements
       reset_confirm: 'Reset and remove · movements: {movements}'
       reset_reason: Reason
       reset_reason_hint: Kept in the audit trail · up to {limit} characters
@@ -2531,7 +2531,7 @@ desktop:
       run_check: Run the check
       stale: Declarations to recalculate
       stale_none: 'None: every calculation covers the movements as they are.'
-      stale_row: 'Modelo {modelo} · {year} {period} · since it was calculated, changed:
+      stale_row: 'Modelo {modelo} · {period} {year} · since it was calculated, changed:
         {changed}, removed: {removed}'
       status: Status · {period}
       unconverted: Foreign without a rate
@@ -2978,8 +2978,7 @@ desktop:
         category_needed: Choose a category for part {part}.
         choose_category: Choose a category
         count: A split has 2 to {max} parts.
-        description: The parts add up to {amount} {currency}. The last part takes
-          what is left.
+        description: The parts add up to {amount}. The last part takes what is left.
         description_needed: Part {part} needs a description.
         duplicate: 'Part {part} is the same as another: change its amount or description.'
         mixed_hint: Partly used for work? Use Mixed with a share instead.
@@ -3005,7 +3004,7 @@ desktop:
         draft: Draft
         filed_confirmed: Filed · receipt confirmed
         filed_local: Filed locally · AEAT status not confirmed
-        name: Modelo {modelo} · {year} {period}
+        name: Modelo {modelo} · {period} {year}
         none: No declaration uses this movement yet.
         not_built: Declaration links not built yet
         superseded: Superseded

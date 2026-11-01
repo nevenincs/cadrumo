@@ -387,9 +387,9 @@ export const ToMatch: Story = {
   args: { mode: "match" },
 };
 
-type SplitArgs = { id?: string };
+type SplitArgs = { id?: string; locale: string };
 
-function Split({ id }: SplitArgs) {
+function Split({ id, locale }: SplitArgs) {
   const port = useLedgerPort();
   const read = useLedgerRead(port);
   const row: LedgerRow | undefined =
@@ -400,7 +400,7 @@ function Split({ id }: SplitArgs) {
   return row ? (
     <SplitDialog
       row={row}
-      locale="en"
+      locale={locale}
       onStage={noop}
       onClose={noop}
       say={noop}
@@ -410,7 +410,9 @@ function Split({ id }: SplitArgs) {
 
 export const SplitMovement: StoryObj<SplitArgs> = {
   name: "Split a movement",
-  render: (args) => <Split {...args} />,
+  render: (args, { globals }) => (
+    <Split {...args} locale={String(globals.locale ?? "en")} />
+  ),
 };
 
 type ActionArgs = {

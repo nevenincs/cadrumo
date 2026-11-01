@@ -1886,7 +1886,7 @@ desktop:
       ratio_unread: A használati arányok nincsenek beolvasva
       search_category: Keresés
       select_range: Tartomány kijelölése
-      share: Üzleti rész
+      share: Üzleti arány
       share_categories: Csak üzleti használati arányt elfogadó kategóriák
       share_refused: '„{raw}” nem arány: írj százalékot, például 50-et az 50%-hoz.'
       skipped: 'Változatlan marad: {count}'
@@ -2191,7 +2191,7 @@ desktop:
         supplier: Szállító
         taxable_base: Adóalap
       record_added: Dokumentum hozzáadva
-      record_refused: 'Így írd: 2026-10-15, 60.50 vagy 21'
+      record_refused: 'Így írd: 2026-10-15, 60,50 vagy 21'
       record_removed: Bejegyzés törölve
       record_saved: Bejegyzés mentve
       records: Bizonylatok
@@ -2279,7 +2279,7 @@ desktop:
       redone: 'Újra: {what}'
       refusal:
         ambiguous_grouping: '„{raw}” kétféleképp olvasható: írd tagolás nélkül, például
-          1000 vagy 1.5.'
+          1000 vagy 1,5.'
         cannot_clear: Ezt nem lehet törölni. Írj be helyette másik értéket.
         comma_decimal: '„{raw}” tizedesvesszős: írd így: {suggestion}.'
         currency_symbol: '„{raw}” pénznemjelet tartalmaz: csak a számot írd.'
@@ -2543,7 +2543,7 @@ desktop:
       rebuilt: 'Újraépítve. Frissített kapcsolatok: {links}.'
       reset: Veszélyzóna · a napló alaphelyzetbe állítása
       reset_blocked: Az alaphelyzetbe állítás tiltott
-      reset_blocker: '{modelo}-s nyomtatvány · {year} {period} · {state} tételekre
+      reset_blocker: '{modelo}-s nyomtatvány · {period} {year} · {state} tételekre
         hivatkozik'
       reset_confirm: 'Alaphelyzet és eltávolítás · tételek: {movements}'
       reset_reason: Indok
@@ -2554,7 +2554,7 @@ desktop:
       run_check: Ellenőrzés futtatása
       stale: Újraszámolandó bevallások
       stale_none: 'Nincs: minden számítás a jelenlegi tételekre épül.'
-      stale_row: '{modelo}-s nyomtatvány · {year} {period} · a számítás óta módosult:
+      stale_row: '{modelo}-s nyomtatvány · {period} {year} · a számítás óta módosult:
         {changed}, törlődött: {removed}'
       status: Állapot · {period}
       unconverted: Árfolyam nélküli devizás
@@ -3003,8 +3003,7 @@ desktop:
         category_needed: Válassz kategóriát a(z) {part}. részhez.
         choose_category: Válassz kategóriát
         count: Egy felosztás 2–{max} részből áll.
-        description: A részek összege {amount} {currency}. Az utolsó rész kapja a
-          maradékot.
+        description: A részek összege {amount}. Az utolsó rész kapja a maradékot.
         description_needed: A(z) {part}. résznek leírás kell.
         duplicate: 'A(z) {part}. rész megegyezik egy másikkal: módosítsd az összegét
           vagy a leírását.'
@@ -3031,7 +3030,7 @@ desktop:
         draft: Tervezet
         filed_confirmed: Benyújtva · igazolás megerősítve
         filed_local: Helyben benyújtva · AEAT-állapot nincs megerősítve
-        name: '{modelo}. számú modell · {year} {period}'
+        name: '{modelo}. számú modell · {period} {year}'
         none: Még egy bevallás sem használja ezt a tételt.
         not_built: A bevallási kapcsolatok még nem készültek el
         superseded: Felülírva
@@ -3230,7 +3229,7 @@ desktop:
         not_subject: Nem tárgya
       read_failed: A számlák nem olvashatók be.
       refusal:
-        ambiguous_grouping: '"{raw}" kétféleképpen érthető. Írd így: 1500 vagy 1.5.'
+        ambiguous_grouping: '"{raw}" kétféleképpen érthető. Írd így: 1500 vagy 1,5.'
         comma_decimal: '"{raw}": tizedesponttal írd.'
         currency_symbol: '"{raw}": pénznemjel nélkül.'
         date_not_in_calendar: '"{raw}" nem létező nap.'

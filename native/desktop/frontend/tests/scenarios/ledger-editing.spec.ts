@@ -596,6 +596,14 @@ async function fillDraft(target: Page, description: string) {
   await expect(cellOf(draft, "direction")).toContainText(
     label("desktop.ledger.draft.required"),
   );
+  // The new mark and each required word fit their columns whole.
+  for (const column of ["status", "date", "direction"])
+    expect(
+      await cellOf(draft, column).evaluate(
+        (cell) => cell.scrollWidth <= cell.clientWidth,
+      ),
+      column,
+    ).toBe(true);
   // It opens on its date.
   await expect(cellOf(draft, "date")).toBeFocused();
   await target.keyboard.type("2026-10-21");
