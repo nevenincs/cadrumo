@@ -74,11 +74,13 @@ from .signal_tokens import filtered_translation_text
 # https://bizum.com/es/sobre-bizum/
 # https://poppler.freedesktop.org/
 # https://diataxis.fr/
+# https://www.facturae.gob.es/formato
 _SOFTWARE_PROPER_NAMES = frozenset(
     {
         "Apple",
         "Bizum",
         "Diátaxis",
+        "Facturae",
         "GitHub",
         "Linux",
         "Markdown",

@@ -120,6 +120,7 @@ def test_software_proper_names_preserve_exact_case_and_stem_boundaries(locale: s
         "Apple",
         "Bizum",
         "Diátaxis",
+        "Facturae",
         "GitHub",
         "Linux",
         "Markdown",
@@ -274,6 +275,17 @@ def test_pydantic_brand_keeps_code_literal_and_adjacent_typo_distinct() -> None:
     unknown, inventory, _ = spellcheck_catalogues(set(), {}, REPO_ROOT, additional_values=values)
     assert not inventory["spelling_tool_failures"]
     assert unknown[("ca", "example")] == ("Pydantci",)
+
+
+@pytest.mark.parametrize("locale", ["ca", "en", "es", "hu"])
+def test_facturae_format_name_is_exact_and_preserves_neighbouring_typos(locale: str) -> None:
+    assert is_project_spelling(locale, "Facturae")
+    assert not is_project_spelling(locale, "facturae")
+    assert not is_project_spelling(locale, "Facturaee")
+    values = {locale: {"example": "Facturae Facturaee"}}
+    unknown, inventory, _ = spellcheck_catalogues(set(), {}, REPO_ROOT, additional_values=values)
+    assert not inventory["spelling_tool_failures"]
+    assert "Facturaee" in unknown[(locale, "example")]
     assert not is_project_spelling("ca", "pydantic")
 
 
@@ -354,9 +366,13 @@ def test_attested_forms_do_not_hide_nearby_typos_or_untranslated_prose() -> None
         ("en", "galicia", "Galicia"),
         ("en", "la_rioja", "La Rioja"),
         ("hu", "castilla_la_mancha", "Kasztília-La Mancha"),
+        ("hu", "asturias", "Asztúria"),
+        ("hu", "cantabria", "Kantábria"),
         ("hu", "extremadura", "Extremadura"),
         ("hu", "galicia", "Galicia"),
         ("hu", "la_rioja", "La Rioja"),
+        ("hu", "murcia", "Murcia"),
+        ("es", "andalucia", "Andalucía"),
     ],
 )
 @pytest.mark.parametrize(
@@ -382,7 +398,8 @@ def test_reviewed_residence_names_are_whole_labels_under_their_actual_region(
     assert not is_known_residence_region_label(locale, key, label.swapcase())
     assert not is_known_residence_region_label(locale, key_template.format("madrid"), label)
     assert not is_known_residence_region_label(locale, "application.test.prose", label)
-    assert not is_known_residence_region_label("es", key, label)
+    other_locale = "en" if locale == "es" else "es"
+    assert not is_known_residence_region_label(other_locale, key, label)
 
 
 def test_residence_name_recognition_does_not_hide_extra_or_misspelled_prose() -> None:
@@ -1805,7 +1822,7 @@ def test_attested_category_aliases_require_the_exact_key_and_token(
         "guide",
     )
     text = f"{alias} {mutated} misspeling"
-    values = {candidate: text for candidate in (key, *other_keys)}
+    values: dict[str, object] = {candidate: text for candidate in (key, *other_keys)}
     spelling, _inventory, _findings = spellcheck_catalogues(set(values), {locale: values}, REPO_ROOT)
 
     assert set(spelling[(locale, key)]) == {mutated, "misspeling"}

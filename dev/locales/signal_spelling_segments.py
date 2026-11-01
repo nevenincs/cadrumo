@@ -65,10 +65,21 @@ _RESIDENCE_REGION_LABELS: dict[str, dict[str, tuple[str, ...]]] = {
         "la_rioja": ("La Rioja",),
     },
     "hu": {
+        # The European Commission's Hungarian regional designations:
+        # https://fish-commercial-names.ec.europa.eu/fish-names/commercial-designations_hu?ms=ES&msLang=es&page=12&rows=100&s=1&v=1
+        "asturias": ("Asztúria",),
+        "cantabria": ("Kantábria",),
         "castilla_la_mancha": ("Kasztília-La Mancha",),
         "extremadura": ("Extremadura",),
         "galicia": ("Galicia",),
         "la_rioja": ("La Rioja",),
+        # https://eur-lex.europa.eu/legal-content/HU/TXT/?uri=CELEX%3A02003D0467-20210101
+        "murcia": ("Murcia",),
+    },
+    "es": {
+        # The autonomous community's own official name:
+        # https://www.juntadeandalucia.es/organismos/transparencia/informacion-juridica/estatuto.html
+        "andalucia": ("Andalucía",),
     },
 }
 _RESIDENCE_REGION_LABEL_KEY_RE = re.compile(

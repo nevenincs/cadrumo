@@ -9,6 +9,7 @@ from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.i18n.render import extract_placeholders
 from cadrumo.core.period import accepted_filing_period_codes
 from cadrumo.domain.calculations.registry.censo_modelos import CensoModeloEventKind
+from cadrumo.domain.modelos.calculation_revision_amendment import M303RectificativaMotive
 
 from .signal_command_paths import command_path_pattern, filter_detail_row_examples, registered_operation_id_pattern
 from .signal_syntax import (
@@ -89,6 +90,23 @@ _PROFILE_RESIDENCE_EXAMPLE_RE = re.compile(r"(?<![\w-])--tax-residence-ccaa[ \t]
 # The two copyable CCAA examples name values admitted by CCAA.from_label;
 # require the whole ordered pair so a bare or misspelled region is still checked.
 _RESIDENCE_EXAMPLE_PAIR_RE = re.compile(r"(?<![\w-])cataluna,[ \t]+comunidad-valenciana(?![\w-])")
+# The bulk classifier requires both of these CSV headers. Optional columns
+# and malformed alternatives remain visible to the spelling signal.
+_CLASSIFICATION_HEADER_RE = re.compile(r"(?<!\w)transaction_id,[ \t]*classification(?![\w-])")
+_M303_MOTIVES_RE = re.compile(
+    r"(?<![\w-])(?P<first>"
+    + re.escape(M303RectificativaMotive.RECTIFICACIONES.value)
+    + r")[ \t]+(?:or|o|vagy)[ \t]+(?P<second>"
+    + re.escape(M303RectificativaMotive.DISCREPANCIA_CRITERIO_ADMINISTRATIVO.value)
+    + r")(?![\w-])"
+)
+# Match the complete three-choice list but remove only its exact wire tokens;
+# every translated explanation between them remains dictionary input.
+_PRORRATA_INPUT_CHOICES_RE = re.compile(
+    r"(?<![\w-])(?P<deductible>exclusively_deductible)[^;\r\n]*;[ \t]*"
+    r"(?P<nondeductible>exclusively_non_deductible)[^;\r\n]*;[ \t]*(?P<common>common)(?![\w-])"
+)
+_RICH_STYLE_SPAN_RE = re.compile(r"\[(?P<style>[A-Za-z][A-Za-z0-9 _-]*)\](?P<body>[^\[\]\r\n]*)\[/\]")
 # A keyboard modifier is syntax; leave the key or the localized mouse action
 # visible. Escape is admitted only alongside its actual interpolated back label.
 _CONTROL_MODIFIER_RE = re.compile(r"(?<![\w-])Ctrl\+(?=⏎|[^\W\d_])")
@@ -157,6 +175,28 @@ def _visible_assignment_label(match: re.Match[str]) -> str:
     return " " if name == match.group("parameter") else f" {name} "
 
 
+def _filter_rich_styles(value: str) -> tuple[str, int]:
+    """Keep visible Rich span text and count only styles that Rich admits."""
+    from rich.errors import StyleSyntaxError
+    from rich.style import Style
+
+    excluded = 0
+
+    def replace(match: re.Match[str]) -> str:
+        nonlocal excluded
+        try:
+            Style.parse(match.group("style"))
+        except StyleSyntaxError:
+            return match.group()
+        excluded += 1
+        body = match.group("body")
+        if not isinstance(body, str):
+            raise TypeError("Rich span body must be text")
+        return body
+
+    return _RICH_STYLE_SPAN_RE.sub(replace, value), excluded
+
+
 def _visible_review_filter_glosses(match: re.Match[str]) -> str:
     """Retain punctuation and both user-facing glosses around actual keys."""
     text = list(match.group())
@@ -203,6 +243,8 @@ def filtered_translation_text(value: str) -> tuple[str, int]:
     labels, while targets remain outside the dictionary surface.
     """
     text, excluded = filter_detail_row_examples(value)
+    text, rich_excluded = _filter_rich_styles(text)
+    excluded += rich_excluded
     for pattern, replacement in (
         (TRANSLATION_HTML_TAG_RE, " "),
         (TRANSLATION_MARKDOWN_LINK_RE, visible_link_label),
@@ -214,11 +256,14 @@ def filtered_translation_text(value: str) -> tuple[str, int]:
         (_PARAMETER_ASSIGNMENT_RE, _visible_assignment_label),
         (_MINUTE_QUANTITY_RE, r"\g<value>"),
         (_OBSERVATION_HEADER_RE, " "),
+        (_CLASSIFICATION_HEADER_RE, " "),
         (_ROOT_JSON_OPTION_RE, " "),
         (_PROFILE_RESIDENCE_EXAMPLE_RE, " "),
         (_RESIDENCE_EXAMPLE_PAIR_RE, " "),
         (_CONTROL_MODIFIER_RE, " "),
         (_ESCAPE_BACK_LABEL_RE, " "),
+        (_M303_MOTIVES_RE, _visible_review_filter_glosses),
+        (_PRORRATA_INPUT_CHOICES_RE, _visible_review_filter_glosses),
         (registered_operation_id_pattern(), " "),
         (TRANSLATION_PLACEHOLDER_RE, " "),
         (_OUTPUT_LANGUAGE_CHOICES_RE, " "),
