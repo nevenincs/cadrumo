@@ -16,6 +16,7 @@ from pathlib import Path
 import pytest
 import rtoml
 
+from ...compiler.authority import compiled_bundled_authority
 from ...compiler.export_fragment_grammar import EXPORT_FRAGMENT_PROVENANCE_FILENAME
 from ...pipeline.generated_tree_dispositions import disposition_ledger_from_path
 from ..generated_tree_state import GeneratedTreeState
@@ -24,6 +25,7 @@ from ..registry_status import (
     ProjectedTargets,
     RegistryStatus,
     _payload,
+    declared_revision_filing_years,
     project_target_states,
 )
 
@@ -252,3 +254,11 @@ def test_classes_that_describe_no_drift_do_not_explain_one(tmp_path: Path, row: 
 
     assert dict(projected.counts)["drifted"] == 1
     assert _currentness(projected) == "failed"
+
+
+def test_a_revision_declared_as_a_year_range_reports_the_end_of_its_range() -> None:
+    """A range selector lists no years, yet its last declared year decides whether it is below the floor."""
+    modelo = compiled_bundled_authority().modelo("341")
+
+    assert declared_revision_filing_years(modelo, "2005-2015") == (2015,)
+    assert declared_revision_filing_years(modelo, "2016-y-siguientes") == ()

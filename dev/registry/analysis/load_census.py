@@ -945,7 +945,7 @@ def _trace_script(regime: str) -> str:
                         modelo,
                         authority.catalogues,
                         source_root=source_root,
-                        filing_year=FILING_YEAR,
+                        filing_year=authority.supported_filing_years().horizon,
                         period=period,
                     )
                 except Exception:
@@ -960,7 +960,6 @@ from pathlib import Path
 SOURCE = Path({str(SOURCE_ROOT)!r}).resolve()
 TOOL = sys.monitoring
 TOOL_ID = TOOL.PROFILER_ID
-FILING_YEAR = 2024
 
 
 def module_for(filename):
