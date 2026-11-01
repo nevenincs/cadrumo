@@ -5,7 +5,7 @@ tags:
 date: '2026-11-01'
 modified: '2026-11-01'
 body_schema: 'body-v2'
-body_hash: 'sha256:3c8c8839ee3c765b407d4cc9a32d98e7bdeff68f6cdfec0b2589c53bd143170a'
+body_hash: 'sha256:d5f1d37256f505469c9d410c249df4a51b41ea04ada1468693500e1f65444d41'
 related:
   - "[[2026-09-27-export-parity-renta-withholding-sources-research]]"
 ---
@@ -105,6 +105,7 @@ Two points stay ambiguous and must stay advisory in the ADR: Modelo 130 inclusio
 - Each row's filing date is `transaction.raw.value_date or transaction.raw.booked_date` (`:926-940`). This is the cash-basis criterion, applied to every taxpayer.
 - The linked invoice's `operation_date` and `issued_at` are never consulted for dating. For an accrual taxpayer, a December invoice collected in January lands in N+1.
 - Bank rows with no linked invoice have no accrual date at all.
+- Activity expenses are dated the same way: `transaction.raw.value_date or transaction.raw.booked_date` in the expense ledger (`src/cadrumo/application/aggregation/renta_gasto_ledger.py:488`, `:599`, `:661`) and in the shared Renta ledger (`src/cadrumo/application/aggregation/renta_ledger.py:972`). The imputation rule in law covers "ingresos y gastos" (LIS art. 11.1; RIRPF art. 7.2.1.º, above), so an accrual taxpayer's expenses are mis-dated by the same mechanism. In Modelo 130 they reach casilla 02 (role `irpf_pf_gastos`) beside casilla 01 (role `irpf_pf_ingresos`) (`src/cadrumo/_data/registry/aeat/modelos/130/revisions/2019-y-siguientes/casillas/0001-declarations.toml:2-17`).
 
 ### Prior-record check
 
@@ -118,7 +119,7 @@ Two points stay ambiguous and must stay advisory in the ADR: Modelo 130 inclusio
 - What an absent criterion fact means. Reading absence as accrual matches the legal default. Reading it as undeclared matches the profile schema's convention for operator facts ("absent means undeclared and must not be read as either value", `schema.toml:937`) and the payer-fact declaration-state ruling (`2026-09-23-calendar-obligations-payer-fact-declaration-state-adr`). The evidence favours undeclared, with accrual offered as the proposed answer, because a cash-basis election made in an earlier year cannot be seen from a fresh profile.
 - Eligibility, given that no accounting fact exists.
 - Whether the three-year minimum is enforced by a finding or a refusal.
-- How unresolved accrual dates (no linked invoice, an advance payment) are graded.
+- How unresolved accrual dates (no linked invoice, an advance payment) are graded, for income and for expenses.
 - How accrued-but-unpaid withholding is surfaced.
 - The Modelo 130 edge.
 - The year of transitional amounts when the criterion changes.
@@ -147,6 +148,8 @@ Two points stay ambiguous and must stay advisory in the ADR: Modelo 130 inclusio
 - `src/cadrumo/_data/registry/cadrumo/user_profile/schema.toml:914-937`
 - `src/cadrumo/domain/invoices/models.py:322-324`
 - `src/cadrumo/application/aggregation/renta_income_ledger.py:300-320`, `:443`, `:926-940`
+- `src/cadrumo/application/aggregation/renta_gasto_ledger.py:488`, `:599`, `:661`; `src/cadrumo/application/aggregation/renta_ledger.py:972`
+- `src/cadrumo/_data/registry/aeat/modelos/130/revisions/2019-y-siguientes/casillas/0001-declarations.toml:2-17`
 - DGT V1429-19, V0486-14, V1177-25 and V3298-15, primary text read 2026-11-01 at https://petete.tributos.hacienda.gob.es/consultas/?num_consulta=V1429-19 (substitute each number)
 - TEAC 00/03187/2011/00/00 of 27-09-2012, primary text read 2026-11-01 at https://serviciostelematicosext.hacienda.gob.es/TEAC/DYCTEA/criterio.aspx?id=00/03187/2011/00/0/1
 - Unverified: no claim above rests on a search snippet. The absence of later TEAC doctrine rests on a single DYCTEA query.

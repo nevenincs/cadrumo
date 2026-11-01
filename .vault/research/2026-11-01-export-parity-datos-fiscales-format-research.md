@@ -5,21 +5,21 @@ tags:
 date: '2026-11-01'
 modified: '2026-11-01'
 body_schema: 'body-v2'
-body_hash: 'sha256:c1a91ea62128cb795f05f39881d306e5d58b37d06159c399003ec8fc1d27cd51'
+body_hash: 'sha256:0fcf272b870dea6381c4bdcd3cbf4d0578a6e0a31fd71be1ee6d9734ae8a61f4'
 related:
   - "[[2026-09-27-export-parity-renta-withholding-sources-adr]]"
 ---
 
 # `export-parity` research: `datos-fiscales-format`
 
-Question: in what official format does AEAT deliver a taxpayer's IRPF datos fiscales, and has AEAT published a record design or schema that would let Cadrumo build the parser that export-parity ADR Step 6 pins "to the official download format"? Plan Steps `P06.S23`, `P06.S24` and `P06.S10` depend on the answer. The evidence shows two official delivery shapes. The first is an authenticated HTML consultation with a "Generar PDF" print. The second is a "fichero DFP o DF" that the datos fiscales procedure produces and that Renta Web consumes. AEAT publishes a value dictionary for the concepts and claves in that file. It publishes no positional layout, no schema and no encoding for it, and none of the PDF view either. The Modelo 100 record-design page lists only the declaration's dictionaries and XSD. A parser pinned to an official published design therefore cannot be built now, and a synthetic specimen cannot be authored from a design, because no such design exists. Any pin has to come from an operator-supplied, redacted specimen.
+Question: in what official format does AEAT deliver a taxpayer's IRPF datos fiscales, and has AEAT published a record design or schema that would let Cadrumo build the parser that export-parity ADR Step 6 pins "to the official download format"? Plan Steps `P06.S23`, `P06.S24`, `P06.S09` and `P06.S10` depend on the answer. The evidence shows two official delivery shapes. The first is an authenticated HTML consultation with a "Generar PDF" print. The second is a "fichero DFP o DF" that the datos fiscales procedure produces and that Renta Web consumes. AEAT publishes a value dictionary for the concepts and claves in that file. It publishes no positional layout, no schema and no encoding for it, and none of the PDF view either. The Modelo 100 record-design page lists only the declaration's dictionaries and XSD. A parser pinned to an official published design therefore cannot be built now, and a synthetic specimen cannot be authored from a design, because no such design exists. Any pin has to come from an operator-supplied, redacted specimen.
 
 ## Findings
 
 ### Legal basis: the orden grants access but names no format
 
 - Orden HAC/242/2025, art. 5.2, lets taxpayers obtain the borrador and the datos fiscales electronically from 2 April 2025, "a través del Servicio de tramitación del borrador/declaración" at the Sede. Art. 5.3 says that failing to obtain them does not relieve the filing obligation. The article names no file format, record design or schema (`src/cadrumo/_data/corpus/normatives/html/orden-hac-242-2025.html.extracted.md:51-56`). Art. 9 (line 101) makes only the latest reference number valid for access to the borrador or the datos fiscales (`:101`).
-- The registry cites this orden only for arts. 3 and 8 (`src/cadrumo/_data/registry/aeat/legal/irpf.toml:5637`, `:5657`). Lines 51-55 of `irpf.toml` hold the RIRPF art. 14 entry, not art. 5 of the orden. No registry legal key exists for art. 5.
+- The legal catalogue keys this orden for arts. 3, 8 and 11 in `src/cadrumo/_data/registry/aeat/legal/irpf.toml` (`:5637`, `:5657`, `:5677`) and for arts. 2 and 4 in `src/cadrumo/_data/registry/aeat/legal/patrimonio.toml` (`:424`, `:443`). Lines 51-55 of `irpf.toml` hold the RIRPF art. 14 entry, not art. 5 of the orden. No registry legal key `orden-hac-242-2025:art-5` exists.
 - The 2025 Renta manual repeats the access rule for campaign 2025 (8 April to 30 June 2026). It names a separate Sede trámite, "Datos fiscales", and the APP-AEAT mobile view, and it describes no file format (`src/cadrumo/_data/corpus/manuals/renta/2025/part1/source.pdf.extracted.md:1375-1438`). This is consistent with the earlier research's "What AEAT prefills" finding (`2026-09-27-export-parity-renta-withholding-sources-research`).
 
 ### Format 1: consultation view with a PDF print
@@ -56,18 +56,18 @@ Question: in what official format does AEAT deliver a taxpayer's IRPF datos fisc
 - For a specimen, the operator must supply, for one named ejercicio (2025 preferred), one of: the "Generar PDF" output of "Consulta de datos fiscales" with "Todas las páginas del índice", or, if Renta Web or the trámite actually offers it, the saved DFP or DF file. The specimen must cover at least one trabajo payer, one actividad profesional payer (clave G), one capital-mobiliario payer and one pagos fraccionados row. Before the file enters the repo, every NIF, name, address, reference number, CSV and amount must be replaced with synthetic values that keep geometry and claves. The operator should also state the campaign date it was obtained and the exact Sede path used.
 - `P06.S23` (pinned parser, record and namespaces): the record type, the encrypted namespaces and a parser that refuses everything, on the censal precedent, are buildable now. Pinned extraction waits for the specimen, and the parser must key its pin to the ejercicio and refuse other years.
 - `P06.S24` (manual import with identity refusal and content-addressed capture): the CLI, identity refusal, digest-keyed capture and idempotency are buildable against the refusing parser. End-to-end acceptance waits for the specimen.
-- `P06.S10` (read-only live pull): already gated on the live-write guard and an attended session (`.vault/plan/2026-11-01-export-parity-plan.md:251`). That session is also the earliest moment the HTML view's structure can be observed. Its capture must likewise be redacted before any fixture is derived from it.
+- `P06.S10` (read-only live pull): already gated on the live-write guard owned by another domain and on one attended live session (the plan's Parallelization ordering for `P06.S10`). That session is also the earliest moment the HTML view's structure can be observed. Its capture must likewise be redacted before any fixture is derived from it.
 - Not investigated: the Renta Web client code or network traffic, which would be an authenticated service and is out of bounds; editions for 2023 to 2025 of the incorporation instructions beyond the 404 probe; the 2021 edition's contents; and the colaboración social channels.
 
 ## Sources
 
 - `src/cadrumo/_data/corpus/normatives/html/orden-hac-242-2025.html.extracted.md:51-56`, `:101`
-- `src/cadrumo/_data/registry/aeat/legal/irpf.toml:51-55`, `:5637`, `:5657`
+- `src/cadrumo/_data/registry/aeat/legal/irpf.toml:51-55`, `:5637`, `:5657`, `:5677`; `src/cadrumo/_data/registry/aeat/legal/patrimonio.toml:424`, `:443`
 - `src/cadrumo/_data/corpus/manuals/renta/2025/part1/source.pdf.extracted.md:1375-1438`
 - `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_100/manifest.json:1-20`
 - `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_100/files/19-100-ejercicio-2014-417-kb-pdf.pdf.extracted.md:390`
 - `src/cadrumo/adapters/inbound/censo/parser.py:25-41`
-- `.vault/plan/2026-11-01-export-parity-plan.md:236-239`, `:251`
+- `2026-11-01-export-parity-plan`, Steps `P06.S23`, `P06.S24`, `P06.S09` and `P06.S10`, and its Parallelization ordering for them
 - https://sede.agenciatributaria.gob.es/Sede/Ayuda/25Presentacion/100/6_1.html (fetched 2026-11-01)
 - https://sede.agenciatributaria.gob.es/Sede/ayuda/consultas-informaticas/renta-ayuda-tecnica/renta-2023/consulta-datos-fiscales-2023.html (fetched 2026-11-01)
 - https://sede.agenciatributaria.gob.es/Sede/ayuda/consultas-informaticas/renta-ayuda-tecnica/servicios-app/datos-fiscales.html (fetched 2026-11-01)

@@ -13,7 +13,7 @@ related:
   - '[[2026-06-01-calculation-test-oracle-discipline-adr]]'
 modified: '2026-11-01'
 body_schema: body-v2
-body_hash: 'sha256:a0c27c325bd9a7f19f363a01d918d14256dfd0beb821e20ac64154a4da72470d'
+body_hash: 'sha256:50f09b0868d0390be723d18741dccdf2ca77348798896ac3bf1db72ab35b03d2'
 ---
 
 # `export-parity` plan
@@ -42,6 +42,8 @@ Draft and accept the decision records and grounding that every later Phase build
 - [ ] `P01.S12` - Ground and draft the suffered-withholding, reconciliation and resolution-record schemas as a code reference and an export-parity ADR amendment; `.vault/reference/ and .vault/adr/`.
 - [ ] `P01.S13` - Ground the income imputation criterion in primary LIRPF, RIRPF, DGT and TEAC text and draft its profile-fact decision; `.vault/research/ and .vault/adr/`.
 - [ ] `P01.S04` - Ground the AEAT datos fiscales download format against an official specimen or record design; `.vault/research/`.
+- [ ] `P01.S28` - Coordinate the tier-divergence and filing-kind effects with the IVA, registry-binding and consumer domains before P02.S16 and P04.S07; `.vault/plan/`.
+- [ ] `P01.S27` - Present the open rulings from the decision records (zero cap, casilla 06 endpoint, absent imputation fact, legal readings, cross-domain coordination) and record the operator's answers; `.vault/adr/`.
 
 ### Phase `P02` - Build the grade, filing-kind and borrador foundations
 
@@ -58,13 +60,14 @@ Give the Modelo 100 credit casillas a typed, encrypted per-payer evidence source
 
 - [ ] `P03.S17` - Add the suffered-withholding namespace, record, source kind, validator and resolver with encrypted round-trip tests; `src/cadrumo/core/aggregation.py, src/cadrumo/application/aggregation/ and src/cadrumo/adapters/persistence/`.
 - [ ] `P03.S18` - Add the certificate import flow under the app hierarchy; `src/cadrumo/entrypoints/cli/ and src/cadrumo/application/`.
-- [ ] `P03.S06` - Fold the manual 0596 certificate binding into the family, move aeat_prefilled and bind 0596, 0597, 0598 and 0603 by semantic role; `src/cadrumo/_data/registry/aeat/modelos/100/`.
+- [ ] `P03.S29` - Add the absence-attestation operation for credit classes a taxpayer has no payer for; `src/cadrumo/application/ and src/cadrumo/entrypoints/cli/`.
+- [ ] `P03.S06` - Fold the manual 0596 certificate binding into the family with the borrador cross-check-only marker, and bind 0596, 0597 and 0603 by semantic role; `src/cadrumo/_data/registry/aeat/modelos/100/`.
 
 ### Phase `P04` - Reconcile credit sources with blocking findings
 
 Compare every credit casilla against its declared cross-check sources at cent precision and block filing on any open disagreement.
 
-- [ ] `P04.S19` - Declare per-casilla value and cross-check sources and emit blocking reconciliation findings through verify, the CLI handoff and the report; `src/cadrumo/_data/registry/aeat/modelos/100/ and src/cadrumo/application/modelo/`.
+- [ ] `P04.S19` - Declare per-casilla value and cross-check sources and emit blocking reconciliation findings through verify, the CLI handoff and the report, excluding the 0599 against Modelo 130 cross-check; `src/cadrumo/_data/registry/aeat/modelos/100/ and src/cadrumo/application/modelo/`.
 - [ ] `P04.S20` - Add the operator resolution record keyed to the disputed amounts; `src/cadrumo/application/modelo/ and src/cadrumo/adapters/persistence/`.
 - [ ] `P04.S07` - Make the precedence overlay report tier divergence and block under the taxonomy amendment; `src/cadrumo/application/aggregation/source_resolution_operations.py`.
 
@@ -72,8 +75,10 @@ Compare every credit casilla against its declared cross-check sources at cent pr
 
 Key activity income and withholding by accrual or receipt date per the elected criterion, so 0599 and Modelo 130 casilla 06 credit the right year.
 
-- [ ] `P05.S21` - Add the imputation-criterion profile fact and its wizard question; `src/cadrumo/_data/registry/cadrumo/user_profile/schema.toml and src/cadrumo/application/wizard/`.
-- [ ] `P05.S22` - Key ledger activity income and withholding by the criterion and surface accrued-but-unpaid withholding as a rectification finding; `src/cadrumo/application/aggregation/renta_income_ledger.py and _renta_income_evidence.py`.
+- [ ] `P05.S21` - Add the imputation-criterion profile fact and its wizard question; `src/cadrumo/_data/registry/cadrumo/user_profile/schema.toml, src/cadrumo/application/wizard/ and the Modelo 100 registry at the 2022 baseline`.
+- [ ] `P05.S22` - Key ledger activity income, expenses and withholding by the criterion and surface accrued-but-unpaid withholding as a rectification finding; `src/cadrumo/application/aggregation/renta_income_ledger.py and _renta_income_evidence.py`.
+- [ ] `P05.S30` - Add the 0599 against fourth-quarter Modelo 130 casilla 06 cross-check under the imputation criterion; `src/cadrumo/_data/registry/aeat/modelos/100/ and src/cadrumo/application/modelo/`.
+- [ ] `P05.S31` - Present the Modelo 130 casilla 06 filing-grade promotion for operator ruling; `.vault/adr/`.
 - [ ] `P05.S08` - Present the 0599 filing-grade promotion for operator ruling; `.vault/adr/`.
 
 ### Phase `P06` - Ingest AEAT datos fiscales as a cross-check source
@@ -91,11 +96,12 @@ Prove the mixed personas end to end against independent oracles, close the remai
 
 - [ ] `P07.S25` - Make manual prior-accrual Modelo 193 rows face the settled-amount export gate; `src/cadrumo/application/filing/ and src/cadrumo/application/modelo/`.
 - [ ] `P07.S26` - Prove the employee, employee-autonomo and payer personas end to end with independent oracles and extend the income-tax journey to 0599; `src/cadrumo/entrypoints/tests/ and dev/acceptance/income_tax/`.
+- [ ] `P07.S32` - Retire CalculationRevisionAmendmentKind in favour of the one filing declaration kind; `src/cadrumo/domain/modelos/ and src/cadrumo/application/modelo/`.
 - [ ] `P07.S11` - Record the 1577 and 0598 follow-ups and hand off the touched modelos and revisions for authority publication; `.vault/plan/`.
 
 ## Parallelization
 
-P01 Steps run in parallel as drafts, each by one Opus agent supported by Haiku context packs; S01 and S02 go first because they unblock P02. Hard ordering: S14 needs S01; S05 needs S14; S16 needs S02; S07 needs S03; P03 and P04 need S12; P05 needs S13; P06 needs S04, and S10 also needs the live-write guard owned by another domain plus one attended live session. Within P02, S16 and S15 may run in parallel with S14 because their write sets are disjoint. P06 parsing (S23) may run alongside P03 and P04; S09 needs S19. P07 runs last. Concurrent writers keep disjoint files, serialize Modelo 100 registry edits, and run gates on a quiet tree. One orchestrator commits each Step.
+P01 Steps run in parallel as drafts, each by one Opus agent supported by Haiku context packs; S01 and S02 go first because they unblock P02. Hard ordering: S14 needs S01; S05 needs S14; S16 needs S02; S07 needs S03; P03 and P04 need S12; P05 needs S13; P06 needs S04, and S10 also needs the live-write guard owned by another domain plus one attended live session. Within P02, S16 and S15 may run in parallel with S14 because their write sets are disjoint. P06 parsing (S23) may run alongside P03 and P04; S09 needs S19. P07 runs last. From the 2026-11-01 independent review of the P01 drafts: every Step after P01 also needs the S27 rulings and S28 cross-domain coordination that cover it; S14 needs the zero-cap and casilla 06 endpoint rulings; S15 needs S12, which defines the key contract, terminal origins and content identity; S17 needs S15; S06 lands the borrador cross-check-only marker with or before any move of the prefill flag, so the borrador never wins outright; S30 needs S22 and S19; S31 and S08 need S22 and S30. S23, S24 and S09 may build against a parser that refuses every file, but their acceptance waits on an operator-supplied, redacted datos fiscales specimen. Concurrent writers keep disjoint files, serialize Modelo 100 registry edits, and run gates on a quiet tree. One orchestrator commits each Step.
 
 ## Verification
 
