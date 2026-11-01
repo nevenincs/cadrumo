@@ -3031,7 +3031,7 @@ desktop:
         draft: Tervezet
         filed_confirmed: Benyújtva · igazolás megerősítve
         filed_local: Helyben benyújtva · AEAT-állapot nincs megerősítve
-        name: '{modelo}-es modell · {year} {period}'
+        name: '{modelo}. számú modell · {year} {period}'
         none: Még egy bevallás sem használja ezt a tételt.
         not_built: A bevallási kapcsolatok még nem készültek el
         superseded: Felülírva
