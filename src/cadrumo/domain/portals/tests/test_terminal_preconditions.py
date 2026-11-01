@@ -11,6 +11,7 @@ import pytest
 
 from ....core.errors.hierarchy import TerminalPreconditionErrorMixin
 from ....core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
+from ....tests.terminal_precondition_ast import call_name, fact_expressions, keyword_value
 from .. import errors as errors_module
 from .. import registry as registry_module
 from ..errors import (
@@ -102,20 +103,6 @@ _REGISTRY_TERMINAL_CARRIERS: dict[str, _CarrierContract] = {
 }
 
 
-def _call_name(node: ast.expr) -> str | None:
-    if isinstance(node, ast.Name):
-        return node.id
-    if isinstance(node, ast.Attribute):
-        return node.attr
-    return None
-
-
-def _keyword(call: ast.Call, name: str) -> ast.expr:
-    value = next((keyword.value for keyword in call.keywords if keyword.arg == name), None)
-    assert value is not None, f"missing {name}"
-    return value
-
-
 def _assignments(node: ast.AST) -> dict[str, ast.expr]:
     assignments: dict[str, ast.expr] = {}
     for candidate in ast.walk(node):
@@ -124,21 +111,6 @@ def _assignments(node: ast.AST) -> dict[str, ast.expr]:
                 if isinstance(target, ast.Name):
                     assignments[target.id] = candidate.value
     return assignments
-
-
-def _fact_expressions(
-    call: ast.Call,
-    assignments: dict[str, ast.expr] | None = None,
-) -> tuple[tuple[str, str], ...]:
-    facts = _keyword(call, "facts")
-    if isinstance(facts, ast.Name) and assignments is not None:
-        facts = assignments[facts.id]
-    assert isinstance(facts, ast.Dict)
-    values: list[tuple[str, str]] = []
-    for key, value in zip(facts.keys, facts.values, strict=True):
-        assert isinstance(key, ast.Constant) and isinstance(key.value, str)
-        values.append((key.value, ast.unparse(value)))
-    return tuple(values)
 
 
 def _integrity_invariant(call: ast.Call) -> PortalRegistryInvariant:
@@ -159,15 +131,15 @@ def _registry_terminal_carriers() -> dict[str, ast.Call]:
                 node
                 for node in ast.walk(function)
                 if isinstance(node, ast.Call)
-                and _call_name(node.func) in {"portal_integrity_error", "unknown_modelo_error"}
+                and call_name(node.func) in {"portal_integrity_error", "unknown_modelo_error"}
             ),
             key=lambda node: node.lineno,
         )
         for call in calls:
-            call_name = _call_name(call.func)
-            assert call_name is not None
-            occurrences[call_name] = occurrences.get(call_name, 0) + 1
-            key = f"{function.name}:{call_name}:{occurrences[call_name]}"
+            name = call_name(call.func)
+            assert name is not None
+            occurrences[name] = occurrences.get(name, 0) + 1
+            key = f"{function.name}:{name}:{occurrences[name]}"
             assert key not in carriers, f"duplicate portal terminal carrier {key}"
             carriers[key] = call
     return carriers
@@ -180,22 +152,22 @@ def _failure_constructor(function_name: str) -> tuple[ast.Call, dict[str, ast.ex
         next(
             node
             for node in ast.walk(function)
-            if isinstance(node, ast.Call) and _call_name(node.func) == "PortalFailureClassification"
+            if isinstance(node, ast.Call) and call_name(node.func) == "PortalFailureClassification"
         ),
         _assignments(function),
     )
 
 
 def _failure_condition(call: ast.Call) -> PortalRegistryPrecondition:
-    value = _keyword(call, "condition")
+    value = keyword_value(call, "condition")
     assert isinstance(value, ast.Attribute) and isinstance(value.value, ast.Name)
     assert value.value.id == "PortalRegistryPrecondition"
     return PortalRegistryPrecondition[value.attr]
 
 
 def _failure_policy(call: ast.Call) -> tuple[ActionEvidenceProvenance, NoRecoveryOutcome]:
-    provenance = _keyword(call, "provenance")
-    outcome = _keyword(call, "outcome")
+    provenance = keyword_value(call, "provenance")
+    outcome = keyword_value(call, "outcome")
     assert isinstance(provenance, ast.Attribute) and isinstance(provenance.value, ast.Name)
     assert isinstance(outcome, ast.Attribute) and isinstance(outcome.value, ast.Name)
     assert provenance.value.id == "ActionEvidenceProvenance"
@@ -227,11 +199,11 @@ def test_portal_terminal_carrier_totality_is_exact_and_mutation_sensitive() -> N
     assert set(observed) == set(_REGISTRY_TERMINAL_CARRIERS)
     for key, carrier in observed.items():
         expected = _REGISTRY_TERMINAL_CARRIERS[key]
-        if _call_name(carrier.func) == "portal_integrity_error":
+        if call_name(carrier.func) == "portal_integrity_error":
             assert _integrity_invariant(carrier) is expected.invariant
-            assert _fact_expressions(carrier) == expected.facts
+            assert fact_expressions(carrier) == expected.facts
         else:
-            assert _call_name(carrier.func) == "unknown_modelo_error"
+            assert call_name(carrier.func) == "unknown_modelo_error"
             assert ast.unparse(carrier.args[0]) == expected.facts[0][1]
 
 
@@ -254,9 +226,9 @@ def test_portal_failure_classification_is_single_homed_in_domain() -> None:
             )
         ]
         constructors = {
-            _call_name(node.func)
+            call_name(node.func)
             for node in ast.walk(tree)
-            if isinstance(node, ast.Call) and _call_name(node.func) in {"PreconditionVerdict", "ConditionEvidence"}
+            if isinstance(node, ast.Call) and call_name(node.func) in {"PreconditionVerdict", "ConditionEvidence"}
         }
         assert imports_application == [], module.__name__
         assert not constructors, module.__name__
@@ -265,10 +237,10 @@ def test_portal_failure_classification_is_single_homed_in_domain() -> None:
     unknown_failure = next(
         node
         for node in ast.walk(unknown_tree)
-        if isinstance(node, ast.Call) and _call_name(node.func) == "PortalFailureClassification"
+        if isinstance(node, ast.Call) and call_name(node.func) == "PortalFailureClassification"
     )
     assert _failure_condition(unknown_failure) is PortalRegistryPrecondition.PORTAL_REGISTERED
-    assert _fact_expressions(unknown_failure, _assignments(unknown_tree)) == (
+    assert fact_expressions(unknown_failure, _assignments(unknown_tree)) == (
         ("portal", "portal"),
         ("portal_registered", "False"),
     )
@@ -279,7 +251,7 @@ def test_portal_failure_classification_is_single_homed_in_domain() -> None:
 
     unknown_modelo_failure, unknown_modelo_assignments = _failure_constructor("unknown_modelo_error")
     assert _failure_condition(unknown_modelo_failure) is PortalRegistryPrecondition.MODELO_CODE_RECOGNISED
-    assert _fact_expressions(unknown_modelo_failure, unknown_modelo_assignments) == (
+    assert fact_expressions(unknown_modelo_failure, unknown_modelo_assignments) == (
         ("modelo", "modelo"),
         ("modelo_code_recognised", "False"),
     )
@@ -290,7 +262,7 @@ def test_portal_failure_classification_is_single_homed_in_domain() -> None:
 
     integrity_failure, _integrity_assignments = _failure_constructor("portal_integrity_error")
     assert _failure_condition(integrity_failure) is PortalRegistryPrecondition.INTEGRITY_VALID
-    assert ast.unparse(_keyword(integrity_failure, "facts")) == "context"
+    assert ast.unparse(keyword_value(integrity_failure, "facts")) == "context"
     assert _failure_policy(integrity_failure) == (
         ActionEvidenceProvenance.APPLICATION_STATE,
         NoRecoveryOutcome.SAFETY,
@@ -321,7 +293,7 @@ def test_get_portal_has_exactly_the_two_registered_refusal_carriers() -> None:
             (
                 node
                 for node in ast.walk(get_portal_function)
-                if isinstance(node, ast.Call) and _call_name(node.func) == "UnknownPortalError"
+                if isinstance(node, ast.Call) and call_name(node.func) == "UnknownPortalError"
             ),
             key=lambda node: node.lineno,
         )

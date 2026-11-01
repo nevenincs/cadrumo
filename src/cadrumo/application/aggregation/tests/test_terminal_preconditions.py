@@ -34,6 +34,7 @@ from ....domain.iva.schema import (
     IvaLedgerObservationRole,
     IvaRateKind,
 )
+from ....tests.terminal_precondition_ast import call_name, fact_expressions
 from .. import _modelo_bindings_invoice_iva as modelo_bindings_module
 from .. import _modelo_bindings_invoice_iva_refusal as modelo_bindings_refusal_module
 from .. import _preconditions as preconditions_module
@@ -153,14 +154,6 @@ _ATTACHMENT_MODULES: tuple[ModuleType, ...] = (
 )
 
 
-def _call_name(node: ast.expr) -> str | None:
-    if isinstance(node, ast.Name):
-        return node.id
-    if isinstance(node, ast.Attribute):
-        return node.attr
-    return None
-
-
 def _aggregation_carriers() -> dict[str, ast.Call]:
     carriers: dict[str, ast.Call] = {}
     for module in _ATTACHMENT_MODULES:
@@ -195,7 +188,7 @@ def _aggregation_carriers() -> dict[str, ast.Call]:
 
             @override
             def visit_Call(self, node: ast.Call) -> None:
-                if _call_name(node.func) in {"AggregationUnsupportedModeloError", "AggregationValidationError"}:
+                if call_name(node.func) in {"AggregationUnsupportedModeloError", "AggregationValidationError"}:
                     verdict = next(
                         (keyword.value for keyword in node.keywords if keyword.arg == "precondition_verdict"),
                         None,
@@ -220,7 +213,7 @@ def _keyword(call: ast.Call, name: str) -> ast.expr | None:
 def _precondition(call: ast.Call) -> ast.Call:
     value = _keyword(call, "precondition_verdict")
     assert isinstance(value, ast.Call)
-    assert _call_name(value.func) == "aggregation_no_recovery_verdict"
+    assert call_name(value.func) == "aggregation_no_recovery_verdict"
     return value
 
 
@@ -229,16 +222,6 @@ def _condition(precondition: ast.Call) -> AggregationPreconditionCondition:
     assert isinstance(value, ast.Attribute) and isinstance(value.value, ast.Name)
     assert value.value.id == "AggregationPreconditionCondition"
     return AggregationPreconditionCondition[value.attr]
-
-
-def _fact_expressions(precondition: ast.Call) -> tuple[tuple[str, str], ...]:
-    facts = _keyword(precondition, "facts")
-    assert isinstance(facts, ast.Dict)
-    values: list[tuple[str, str]] = []
-    for key, value in zip(facts.keys, facts.values, strict=True):
-        assert isinstance(key, ast.Constant) and isinstance(key.value, str)
-        values.append((key.value, ast.unparse(value)))
-    return tuple(values)
 
 
 def _normalized_outcome(precondition: ast.Call) -> NoRecoveryOutcome:
@@ -257,7 +240,7 @@ def _helper_provenance() -> ActionEvidenceProvenance:
     calls = [
         node
         for node in ast.walk(tree)
-        if isinstance(node, ast.Call) and _call_name(node.func) == "no_action_precondition_verdict"
+        if isinstance(node, ast.Call) and call_name(node.func) == "no_action_precondition_verdict"
     ]
     assert len(calls) == 1
     value = _keyword(calls[0], "provenance")
@@ -297,7 +280,7 @@ def test_aggregation_terminal_attachment_totality_is_exact_and_mutation_sensitiv
         expected = _AGGREGATION_FAILURE_TOTALITY[key]
         precondition = _precondition(carrier)
         assert _condition(precondition) is expected.condition
-        assert _fact_expressions(precondition) == expected.facts
+        assert fact_expressions(precondition) == expected.facts
         assert _helper_provenance() is expected.provenance
         assert _normalized_outcome(precondition) is expected.outcome
 
@@ -308,9 +291,9 @@ def test_aggregation_preconditions_use_the_shared_mixin_and_single_canonical_con
     for module in modules:
         tree = ast.parse(inspect.getsource(module))
         constructed = {
-            _call_name(node.func)
+            call_name(node.func)
             for node in ast.walk(tree)
-            if isinstance(node, ast.Call) and _call_name(node.func) in {"PreconditionVerdict", "ConditionEvidence"}
+            if isinstance(node, ast.Call) and call_name(node.func) in {"PreconditionVerdict", "ConditionEvidence"}
         }
         assert not constructed, module.__name__
 
@@ -318,7 +301,7 @@ def test_aggregation_preconditions_use_the_shared_mixin_and_single_canonical_con
         module.__name__
         for module in modules
         for node in ast.walk(ast.parse(inspect.getsource(module)))
-        if isinstance(node, ast.Call) and _call_name(node.func) == "no_action_precondition_verdict"
+        if isinstance(node, ast.Call) and call_name(node.func) == "no_action_precondition_verdict"
     ]
     assert delegates == [preconditions_module.__name__]
 

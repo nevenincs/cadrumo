@@ -16,6 +16,7 @@ from playwright.async_api import async_playwright
 from ......core.config import Settings
 from ......core.errors.hierarchy import TerminalPreconditionErrorMixin
 from ......core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
+from ......tests.terminal_precondition_ast import call_name, fact_expressions, keyword_value
 from .. import evasion as evasion_module
 from .. import factory as factory_module
 from .. import session as session_module
@@ -133,14 +134,6 @@ _BROWSER_PRODUCER_MODULES: tuple[ModuleType, ...] = (
 )
 
 
-def _call_name(node: ast.expr) -> str | None:
-    if isinstance(node, ast.Name):
-        return node.id
-    if isinstance(node, ast.Attribute):
-        return node.attr
-    return None
-
-
 def _message_identity(node: ast.expr) -> str:
     if isinstance(node, ast.Constant) and isinstance(node.value, str):
         return node.value
@@ -184,7 +177,7 @@ def _browser_error_carriers() -> dict[str, ast.Call]:
 
             @override
             def visit_Call(self, node: ast.Call) -> None:
-                error_type = _call_name(node.func)
+                error_type = call_name(node.func)
                 if error_type in {
                     "BrowserError",
                     "BrowserEvasionError",
@@ -200,38 +193,22 @@ def _browser_error_carriers() -> dict[str, ast.Call]:
     return carriers
 
 
-def _keyword(call: ast.Call, name: str) -> ast.expr:
-    value = next((keyword.value for keyword in call.keywords if keyword.arg == name), None)
-    assert value is not None, f"missing {name}"
-    return value
-
-
 def _precondition(call: ast.Call) -> ast.Call:
-    value = _keyword(call, "precondition_verdict")
+    value = keyword_value(call, "precondition_verdict")
     assert isinstance(value, ast.Call)
-    assert _call_name(value.func) == "browser_no_action_verdict"
+    assert call_name(value.func) == "browser_no_action_verdict"
     return value
 
 
 def _condition(precondition: ast.Call) -> BrowserPreconditionCondition:
-    value = _keyword(precondition, "condition")
+    value = keyword_value(precondition, "condition")
     assert isinstance(value, ast.Attribute) and isinstance(value.value, ast.Name)
     assert value.value.id == "BrowserPreconditionCondition"
     return BrowserPreconditionCondition[value.attr]
 
 
-def _fact_expressions(precondition: ast.Call) -> tuple[tuple[str, str], ...]:
-    facts = _keyword(precondition, "facts")
-    assert isinstance(facts, ast.Dict)
-    values: list[tuple[str, str]] = []
-    for key, value in zip(facts.keys, facts.values, strict=True):
-        assert isinstance(key, ast.Constant) and isinstance(key.value, str)
-        values.append((key.value, ast.unparse(value)))
-    return tuple(values)
-
-
 def _outcome(precondition: ast.Call) -> NoRecoveryOutcome:
-    value = _keyword(precondition, "outcome")
+    value = keyword_value(precondition, "outcome")
     assert isinstance(value, ast.Attribute) and isinstance(value.value, ast.Name)
     assert value.value.id == "NoRecoveryOutcome"
     return NoRecoveryOutcome[value.attr]
@@ -269,7 +246,7 @@ def test_browser_failure_totality_uses_one_canonical_no_action_projection() -> N
         expected = _BROWSER_FAILURE_TOTALITY[key]
         precondition = _precondition(carrier)
         assert _condition(precondition) is expected.condition
-        assert _fact_expressions(precondition) == expected.facts
+        assert fact_expressions(precondition) == expected.facts
         assert _outcome(precondition) is expected.outcome
 
 
@@ -283,17 +260,17 @@ def test_browser_producers_have_no_direct_verdict_constructor_or_authored_recove
         assert "str(exc)" not in source
         tree = ast.parse(inspect.getsource(module))
         constructed = {
-            _call_name(node.func)
+            call_name(node.func)
             for node in ast.walk(tree)
-            if isinstance(node, ast.Call) and _call_name(node.func) in {"PreconditionVerdict", "ConditionEvidence"}
+            if isinstance(node, ast.Call) and call_name(node.func) in {"PreconditionVerdict", "ConditionEvidence"}
         }
         assert not constructed, module.__name__
 
     delegate_calls = [
-        (module.__name__, _call_name(node.func))
+        (module.__name__, call_name(node.func))
         for module in (*_BROWSER_PRODUCER_MODULES, errors_module)
         for node in ast.walk(ast.parse(inspect.getsource(module)))
-        if isinstance(node, ast.Call) and _call_name(node.func) == "no_action_precondition_verdict"
+        if isinstance(node, ast.Call) and call_name(node.func) == "no_action_precondition_verdict"
     ]
     assert delegate_calls == [(errors_module.__name__, "no_action_precondition_verdict")]
 

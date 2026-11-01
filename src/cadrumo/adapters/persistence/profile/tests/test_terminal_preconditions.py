@@ -42,6 +42,7 @@ from cadrumo.domain.iva_compensation.filed_derivation import (
     M303CompensationAvailableDerivation,
     M303CompensationBasis,
 )
+from cadrumo.tests.terminal_precondition_ast import call_name, fact_expressions, keyword_value
 
 from .published_authority_support import published_authority_operation
 
@@ -129,20 +130,6 @@ _TERMINAL_CARRIER_TOTALITY: dict[str, _CarrierContract] = {
 _TERMINAL_PRODUCER_MODULES: tuple[ModuleType, ...] = (m303_module, observations_adapter_module)
 
 
-def _call_name(node: ast.expr) -> str | None:
-    if isinstance(node, ast.Name):
-        return node.id
-    if isinstance(node, ast.Attribute):
-        return node.attr
-    return None
-
-
-def _keyword(call: ast.Call, name: str) -> ast.expr:
-    value = next((keyword.value for keyword in call.keywords if keyword.arg == name), None)
-    assert value is not None, f"missing {name}"
-    return value
-
-
 def _function_assignments(function: ast.FunctionDef) -> dict[str, ast.expr]:
     assignments: dict[str, ast.expr] = {}
     for node in ast.walk(function):
@@ -157,7 +144,7 @@ def _precondition_builder(value: ast.expr, assignments: dict[str, ast.expr]) -> 
     if isinstance(value, ast.Name):
         value = assignments[value.id]
     assert isinstance(value, ast.Call)
-    assert _call_name(value.func) == "calculation_no_recovery_verdict"
+    assert call_name(value.func) == "calculation_no_recovery_verdict"
     return value
 
 
@@ -167,16 +154,6 @@ def _condition(builder: ast.Call) -> CalculationRefusalPrecondition:
     assert isinstance(value, ast.Attribute) and isinstance(value.value, ast.Name)
     assert value.value.id == "CalculationRefusalPrecondition"
     return CalculationRefusalPrecondition[value.attr]
-
-
-def _fact_expressions(builder: ast.Call) -> tuple[tuple[str, str], ...]:
-    facts = _keyword(builder, "facts")
-    assert isinstance(facts, ast.Dict)
-    values: list[tuple[str, str]] = []
-    for key, value in zip(facts.keys, facts.values, strict=True):
-        assert isinstance(key, ast.Constant) and isinstance(key.value, str)
-        values.append((key.value, ast.unparse(value)))
-    return tuple(values)
 
 
 def _terminal_carriers() -> dict[str, ast.Call]:
@@ -192,16 +169,16 @@ def _terminal_carriers() -> dict[str, ast.Call]:
                     node
                     for node in ast.walk(function)
                     if isinstance(node, ast.Call)
-                    and _call_name(node.func) in error_names
+                    and call_name(node.func) in error_names
                     and any(keyword.arg == "precondition_verdict" for keyword in node.keywords)
                 ),
                 key=lambda node: node.lineno,
             )
             for call in calls:
-                error_name = _call_name(call.func)
+                error_name = call_name(call.func)
                 assert error_name is not None
                 occurrences[error_name] = occurrences.get(error_name, 0) + 1
-                _precondition_builder(_keyword(call, "precondition_verdict"), assignments)
+                _precondition_builder(keyword_value(call, "precondition_verdict"), assignments)
                 key = (
                     f"{module.__name__.rsplit('.', maxsplit=1)[-1]}:{function.name}:"
                     f"{error_name}:{occurrences[error_name]}"
@@ -295,9 +272,9 @@ def test_calculation_terminal_carrier_totality_is_exact_and_mutation_sensitive()
             )
             if isinstance(node, ast.FunctionDef) and node.name == key.split(":")[1]
         )
-        builder = _precondition_builder(_keyword(carrier, "precondition_verdict"), _function_assignments(function))
+        builder = _precondition_builder(keyword_value(carrier, "precondition_verdict"), _function_assignments(function))
         assert _condition(builder) is expected.condition
-        assert _fact_expressions(builder) == expected.facts
+        assert fact_expressions(builder) == expected.facts
         assert expected.provenance is ActionEvidenceProvenance.RUNTIME_OBSERVATION
         assert expected.outcome is NoRecoveryOutcome.SAFETY
         assert not any(keyword.arg == "outcome" for keyword in builder.keywords)
@@ -308,9 +285,9 @@ def test_calculation_terminal_preconditions_have_one_canonical_no_action_authori
     for module in modules:
         tree = ast.parse(inspect.getsource(module))
         constructed = {
-            _call_name(node.func)
+            call_name(node.func)
             for node in ast.walk(tree)
-            if isinstance(node, ast.Call) and _call_name(node.func) in {"PreconditionVerdict", "ConditionEvidence"}
+            if isinstance(node, ast.Call) and call_name(node.func) in {"PreconditionVerdict", "ConditionEvidence"}
         }
         assert not constructed, module.__name__
 
@@ -318,7 +295,7 @@ def test_calculation_terminal_preconditions_have_one_canonical_no_action_authori
         module.__name__
         for module in modules
         for node in ast.walk(ast.parse(inspect.getsource(module)))
-        if isinstance(node, ast.Call) and _call_name(node.func) == "no_action_precondition_verdict"
+        if isinstance(node, ast.Call) and call_name(node.func) == "no_action_precondition_verdict"
     }
     assert direct_canonical_calls == {errors_module.__name__}
 
@@ -338,10 +315,10 @@ def test_calculation_terminal_preconditions_have_one_canonical_no_action_authori
     canonical = next(
         node
         for node in ast.walk(helper)
-        if isinstance(node, ast.Call) and _call_name(node.func) == "no_action_precondition_verdict"
+        if isinstance(node, ast.Call) and call_name(node.func) == "no_action_precondition_verdict"
     )
-    assert ast.unparse(_keyword(canonical, "provenance")) == "ActionEvidenceProvenance.RUNTIME_OBSERVATION"
-    assert ast.unparse(_keyword(canonical, "outcome")) == "outcome"
+    assert ast.unparse(keyword_value(canonical, "provenance")) == "ActionEvidenceProvenance.RUNTIME_OBSERVATION"
+    assert ast.unparse(keyword_value(canonical, "outcome")) == "outcome"
 
 
 def test_m303_disposition_contradiction_has_an_exact_safety_verdict(tmp_path: Path) -> None:
