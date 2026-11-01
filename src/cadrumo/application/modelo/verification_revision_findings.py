@@ -291,6 +291,7 @@ def append_registry_predicate_findings(
             target.casilla_values,
             predicate_profile,
             target.input_values_by_casilla_id,
+            declared_casilla_ids=frozenset(casilla.id for casilla in snapshot.revision.casillas),
             blocking_finding_observer=lambda finding, predicate: failures_by_finding_id.__setitem__(
                 id(finding),
                 build_verification_precondition_failure(
