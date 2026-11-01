@@ -12,7 +12,7 @@ import sys
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
-from typing import Any
+from typing import Any, Protocol
 from uuid import UUID, uuid4
 
 import pytest
@@ -173,8 +173,23 @@ class _QuickfileObservations:
         return document
 
 
-def _watch_quickfile_client(monkeypatch: pytest.MonkeyPatch, selected: RegistrySnapshot) -> _QuickfileObservations:
-    observations = _QuickfileObservations(selected)
+class _ClientObservations(Protocol):
+    def operation(self, client: FrontendClient, request: OperationRequest, *, deadline: float) -> OperationReply: ...
+
+    def result(
+        self,
+        client: FrontendClient,
+        result: OperationResultProjectionRequestV1,
+        *,
+        timeout: float,
+        deadline: float | None,
+    ) -> dict[str, JsonValue]: ...
+
+
+def _route_client_through[ObservationsT: _ClientObservations](
+    monkeypatch: pytest.MonkeyPatch, observations: ObservationsT
+) -> ObservationsT:
+    """Route every frontend operation and result read through ``observations`` and return it."""
 
     def observe_operation(client: FrontendClient, request: OperationRequest, *, deadline: float) -> OperationReply:
         return observations.operation(client, request, deadline=deadline)
@@ -191,6 +206,12 @@ def _watch_quickfile_client(monkeypatch: pytest.MonkeyPatch, selected: RegistryS
     monkeypatch.setattr(FrontendClient, "operation", observe_operation)
     monkeypatch.setattr(FrontendClient, "read_result_document", observe_result)
     return observations
+
+
+def _watch_quickfile_client(monkeypatch: pytest.MonkeyPatch, selected: RegistrySnapshot) -> _QuickfileObservations:
+    observations = _QuickfileObservations(selected)
+
+    return _route_client_through(monkeypatch, observations)
 
 
 def _reopen_oracle(
@@ -385,21 +406,7 @@ class _M115Observations:
 def _watch_m115_client(monkeypatch: pytest.MonkeyPatch) -> _M115Observations:
     observations = _M115Observations()
 
-    def observe_operation(client: FrontendClient, request: OperationRequest, *, deadline: float) -> OperationReply:
-        return observations.operation(client, request, deadline=deadline)
-
-    def observe_result(
-        client: FrontendClient,
-        result: OperationResultProjectionRequestV1,
-        *,
-        timeout: float = 60,
-        deadline: float | None = None,
-    ) -> dict[str, JsonValue]:
-        return observations.result(client, result, timeout=timeout, deadline=deadline)
-
-    monkeypatch.setattr(FrontendClient, "operation", observe_operation)
-    monkeypatch.setattr(FrontendClient, "read_result_document", observe_result)
-    return observations
+    return _route_client_through(monkeypatch, observations)
 
 
 def _urban_rent_withholding_evidence(invoice_id: str) -> InvoiceWithholdingEvidenceRequest:
