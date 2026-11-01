@@ -24,6 +24,11 @@ export type ServedVocabulary = {
   /** The spending categories a business-use share applies to. */
   usageRatioCategories: readonly string[];
   invoiceClasses: readonly string[];
+  /** The invoice class the registry files as the plain one, the simplified
+   * one and the corrective one; null where none is served with that group. */
+  defaultClass: string | null;
+  simplifiedClass: string | null;
+  correctiveClass: string | null;
   premisesSituations: readonly string[];
   prorrataProvenances: readonly string[];
   sectorLetters: readonly string[];
@@ -43,6 +48,9 @@ export const NO_VOCABULARY: ServedVocabulary = {
   categories: NONE,
   usageRatioCategories: NONE,
   invoiceClasses: NONE,
+  defaultClass: null,
+  simplifiedClass: null,
+  correctiveClass: null,
   premisesSituations: NONE,
   prorrataProvenances: NONE,
   sectorLetters: NONE,
@@ -61,6 +69,10 @@ export function servedVocabulary(
     result.families
       .find((served) => served.family === family)
       ?.options.map((option) => option.value) ?? NONE;
+  const classOfGroup = (group: string): string | null =>
+    result.families
+      .find((served) => served.family === "invoice_class")
+      ?.options.find((option) => option.group === group)?.value ?? null;
   const families = new Map<string, string[]>();
   for (const family of result.families)
     if (family.family === "spending_category")
@@ -79,6 +91,9 @@ export function servedVocabulary(
     categories: categoryFamilies.flatMap(([, members]) => members),
     usageRatioCategories: values("usage_ratio_category"),
     invoiceClasses: values("invoice_class"),
+    defaultClass: classOfGroup("default"),
+    simplifiedClass: classOfGroup("simplified"),
+    correctiveClass: classOfGroup("corrective"),
     premisesSituations: values("premises_situation"),
     prorrataProvenances: values("prorrata_provenance"),
     sectorLetters: values("prorrata_sector_letter"),

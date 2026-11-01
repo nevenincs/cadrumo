@@ -171,6 +171,7 @@ export function InvoiceEditor({
   say(text: string): void;
 }) {
   const t = useStrings();
+  const vocabulary = useVocabulary();
   const opened =
     target.kind === "open"
       ? (invoices.find((found) => found.invoice_id === target.invoiceId) ??
@@ -179,9 +180,24 @@ export function InvoiceEditor({
   // The stored invoice as it was opened: a write closes the editor.
   const [stored] = useState<CatalogueInvoice | null>(opened);
   const [draft, setDraft] = useState<InvoiceDraft>(() =>
-    emptyDraft(nextLineKey()),
+    emptyDraft(nextLineKey(), vocabulary.defaultClass),
   );
   const initialDraft = useRef(JSON.stringify(draft));
+  // The vocabulary can arrive after the draft opened: the served default
+  // fills a class still unchosen, and the draft as opened takes it too, so
+  // the fill is not an edit.
+  useEffect(() => {
+    if (draft.invoiceClass !== "" || vocabulary.defaultClass === null) return;
+    const served = vocabulary.defaultClass;
+    setDraft((held) =>
+      held.invoiceClass === "" ? { ...held, invoiceClass: served } : held,
+    );
+    const asOpened: InvoiceDraft = JSON.parse(initialDraft.current);
+    initialDraft.current = JSON.stringify({
+      ...asOpened,
+      invoiceClass: served,
+    });
+  }, [draft.invoiceClass, vocabulary.defaultClass]);
   const [correction, setCorrection] = useState<CorrectionDraft | null>(() =>
     opened ? correctionOf(opened) : null,
   );
@@ -210,15 +226,18 @@ export function InvoiceEditor({
   }, []);
 
   const isNew = target.kind === "new";
-  const reading = useMemo(() => readDraft(draft), [draft]);
+  const reading = useMemo(
+    () => readDraft(draft, vocabulary.correctiveClass),
+    [draft, vocabulary.correctiveClass],
+  );
   const asked = useMemo(
     () =>
       isNew
         ? reading.preview
         : stored && correction
-          ? correctionPreview(stored, correction)
+          ? correctionPreview(stored, correction, vocabulary.correctiveClass)
           : {},
-    [isNew, reading, stored, correction],
+    [isNew, reading, stored, correction, vocabulary.correctiveClass],
   );
   const preview = useInvoicePreview(port, asked);
   const answered = preview.current;
@@ -229,9 +248,14 @@ export function InvoiceEditor({
   const corrected = useMemo(
     () =>
       stored && correction
-        ? checkCorrection(stored, correction, answered)
+        ? checkCorrection(
+            stored,
+            correction,
+            answered,
+            vocabulary.correctiveClass,
+          )
         : null,
-    [stored, correction, answered],
+    [stored, correction, answered, vocabulary.correctiveClass],
   );
   const ready = isNew ? check.request : (corrected?.request ?? null);
   const stage =
@@ -920,10 +944,11 @@ function NewInvoice({
   const suggestion = suggestNumber(invoices, {
     kind: draft.kind,
     invoiceClass: draft.invoiceClass,
+    correctiveClass: vocabulary.correctiveClass,
     series: draft.series,
     year,
   });
-  const rectificativa = draft.invoiceClass === "RECTIFICATIVA";
+  const rectificativa = draft.invoiceClass === vocabulary.correctiveClass;
   const numberHint =
     suggestion && draft.number.trim() !== suggestion.number ? (
       <span className="flex flex-wrap items-center gap-2">
@@ -1033,7 +1058,7 @@ function NewInvoice({
           <FormField
             label={t("desktop.ledger.invoices.field.counterparty_tax_id")}
             hint={
-              issued && draft.invoiceClass === "SIMPLIFICADA"
+              issued && draft.invoiceClass === vocabulary.simplifiedClass
                 ? t("desktop.ledger.invoices.hint.tax_id_optional")
                 : undefined
             }
@@ -1734,7 +1759,7 @@ function StoredInvoice({
     (control: ControlProps) => (
       <TextEditor {...wired(control)} {...bind(key, field)} {...offered} />
     );
-  const rectificativa = correction.invoiceClass === "RECTIFICATIVA";
+  const rectificativa = correction.invoiceClass === vocabulary.correctiveClass;
   return (
     <>
       <Alert icon={<Icon name="lock" />} className="ledger-invoice-identity">
@@ -2025,6 +2050,7 @@ function Confirmation({
   locale: string;
 }) {
   const t = useStrings();
+  const vocabulary = useVocabulary();
   if (isNew && draftRequest)
     return (
       <Alert icon={<Icon name="info" />} className="ledger-invoice-confirm">
@@ -2077,7 +2103,9 @@ function Confirmation({
       case "invoice_class":
         return classLabel(t, draft.invoiceClass);
       case "rectifies_invoice_number":
-        return draft.invoiceClass === "RECTIFICATIVA" ? draft.rectifies : "";
+        return draft.invoiceClass === vocabulary.correctiveClass
+          ? draft.rectifies
+          : "";
       case "payment_id":
         return draft.paymentId;
     }

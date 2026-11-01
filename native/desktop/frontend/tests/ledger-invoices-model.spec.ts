@@ -27,6 +27,9 @@ import {
   type LineDraft,
 } from "../src/components/ledger/invoices/invoiceModel";
 import { findingText } from "../src/components/ledger/invoices/invoiceWords";
+import { SERVED } from "./support/servedVocabulary";
+
+const CORRECTIVE = SERVED.correctiveClass;
 
 // How the invoice editor holds the ledger's answer to the draft on the page,
 // what it lets through on each answer, and the catalogue's own filter, sort
@@ -112,7 +115,7 @@ function filled(
   first: Partial<LineDraft> = {},
 ): InvoiceDraft {
   return {
-    ...emptyDraft("line-1"),
+    ...emptyDraft("line-1", SERVED.defaultClass),
     kind: "issued",
     series: "F",
     number: "F-2026-021",
@@ -136,7 +139,11 @@ function filled(
 
 /** What the editor knows of a draft once `name` answered it. */
 const checked = (draft: InvoiceDraft, name: string | null) =>
-  checkDraft(draft, readDraft(draft), name === null ? null : answer(name));
+  checkDraft(
+    draft,
+    readDraft(draft, CORRECTIVE),
+    name === null ? null : answer(name),
+  );
 
 // ---- The session ---------------------------------------------------------------
 
@@ -277,7 +284,7 @@ test("a ledger call that throws is the same failure", async () => {
 // ---- What each answer lets through -----------------------------------------------
 
 test("the draft goes to the ledger as typed, blank fields null", () => {
-  const { preview, problems } = readDraft(filled());
+  const { preview, problems } = readDraft(filled(), CORRECTIVE);
   expect(problems).toEqual({});
   expect(preview).toMatchObject(
     recorded.two_lines!.request as Record<string, unknown>,
@@ -285,9 +292,9 @@ test("the draft goes to the ledger as typed, blank fields null", () => {
   expect(preview.lines?.map(({ key }) => key)).toEqual(["line-1", "line-2"]);
   expect(preview.printed_total).toBeNull();
   // A line nobody typed on is left out.
-  const opened = emptyDraft("line-1");
-  expect(readDraft(opened).preview.lines).toEqual([]);
-  expect(readDraft(opened).preview.counterparty_country).toBeNull();
+  const opened = emptyDraft("line-1", SERVED.defaultClass);
+  expect(readDraft(opened, CORRECTIVE).preview.lines).toEqual([]);
+  expect(readDraft(opened, CORRECTIVE).preview.counterparty_country).toBeNull();
 });
 
 test("an add carries the answer's figures, and only with an answer to this very draft", () => {
@@ -343,7 +350,7 @@ test("a figure typed badly keeps the add back even if an answer accepts", () => 
 });
 
 test("nothing is assumed: the ledger names what a bare draft lacks", () => {
-  const check = checked(emptyDraft("l1"), "bare_2026");
+  const check = checked(emptyDraft("l1", SERVED.defaultClass), "bare_2026");
   expect(check.request).toBeNull();
   expect(check.problems.kind).toEqual({ kind: "rule", rule: "choose_kind" });
   expect(check.problems.counterparty_country).toEqual({ kind: "missing" });
@@ -359,7 +366,7 @@ test("nothing is assumed: the ledger names what a bare draft lacks", () => {
 
 test("a stated IVA within the backend's cent is sent as stated", () => {
   const draft = filled({}, { statedIva: "115.51" });
-  expect(readDraft(draft).preview.lines?.[0]?.iva_amount).toEqual({
+  expect(readDraft(draft, CORRECTIVE).preview.lines?.[0]?.iva_amount).toEqual({
     decimal: "115.51",
   });
   const check = checked(draft, "stated_iva_within");
@@ -497,7 +504,9 @@ test("a category that mandates the tax id, a bad checksum and the lease rules co
   ).toBe("counterparty_tax_id_invalid");
   const leased = { lease: true, situacion: "1", referencia: "A".repeat(26) };
   // The form no longer holds the number: 26 characters reach the ledger.
-  expect(readDraft(filled(leased)).problems.referencia).toBeUndefined();
+  expect(
+    readDraft(filled(leased), CORRECTIVE).problems.referencia,
+  ).toBeUndefined();
   expect(code("lease_reference_too_long", filled(leased), "referencia")).toBe(
     "lease_reference_too_long",
   );
@@ -533,7 +542,9 @@ test("a refusal nobody can place is still said to be unsaid", () => {
     rule_findings: [],
   };
   const draft = filled({ taxId: "" });
-  expect(checkDraft(draft, readDraft(draft), silent).refusedUnsaid).toBe(true);
+  expect(
+    checkDraft(draft, readDraft(draft, CORRECTIVE), silent).refusedUnsaid,
+  ).toBe(true);
 });
 
 test("a finding is worded by its served key with its served values", () => {
@@ -559,7 +570,8 @@ test("a finding is worded by its served key with its served values", () => {
 
 test("a retención rate is read as points and reaches the wire as a fraction", () => {
   const wire = (retentionRate: string) =>
-    readDraft(filled({ retentionRate })).preview.retention_rate?.decimal;
+    readDraft(filled({ retentionRate }), CORRECTIVE).preview.retention_rate
+      ?.decimal;
   expect(wire("15")).toBe("0.15");
   expect(wire("0.5")).toBe("0.005");
   expect(wire("0.5%")).toBe("0.005");
@@ -569,7 +581,8 @@ test("a retención rate is read as points and reaches the wire as a fraction", (
   expect(typed).toBe("0.5");
   expect(wire(typed ?? "")).toBe("0.005");
   expect(
-    readDraft(filled({ retentionRate: "150" })).problems.retention_rate,
+    readDraft(filled({ retentionRate: "150" }), CORRECTIVE).problems
+      .retention_rate,
   ).toMatchObject({ refusal: { key: "percent_above_100" } });
 });
 
@@ -620,7 +633,14 @@ test("the next number follows the highest in its series, class and year", () => 
     series: string,
     invoiceClass: "ORDINARIA" | "SIMPLIFICADA" | "RECTIFICATIVA" = "ORDINARIA",
     year = 2026,
-  ) => suggestNumber(catalogue, { kind: "issued", invoiceClass, series, year });
+  ) =>
+    suggestNumber(catalogue, {
+      kind: "issued",
+      invoiceClass,
+      correctiveClass: CORRECTIVE,
+      series,
+      year,
+    });
   expect(ask("F")).toEqual({ series: "F", number: "F-2026-021" });
   // With no series typed, the class's most used series that year.
   expect(ask("")).toEqual({ series: "2026", number: "2026-032" });
@@ -643,6 +663,7 @@ test("the next number follows the highest in its series, class and year", () => 
     suggestNumber(catalogue, {
       kind: "received",
       invoiceClass: "ORDINARIA",
+      correctiveClass: CORRECTIVE,
       series: "F",
       year: 2026,
     }),
@@ -658,7 +679,7 @@ test("a stored rate that points write as 12.345 is held longer, so no language r
   // `12.345` alone is a thousands run in Spanish; the held spelling is not.
   expect(draft.retentionRate).toBe("12.3450");
   expect(draft.retentionAmount).toBe("123.45");
-  expect(checkCorrection(stored, draft, null)).toMatchObject({
+  expect(checkCorrection(stored, draft, null, CORRECTIVE)).toMatchObject({
     changed: [],
     problems: {},
     request: null,
@@ -674,7 +695,7 @@ test("a correction sends only the changed fields the update accepts", () => {
   });
   const draft = correctionOf(stored);
   expect(draft.retentionRate).toBe("15");
-  expect(checkCorrection(stored, draft, null)).toMatchObject({
+  expect(checkCorrection(stored, draft, null, CORRECTIVE)).toMatchObject({
     changed: [],
     request: null,
   });
@@ -686,6 +707,7 @@ test("a correction sends only the changed fields the update accepts", () => {
       notes: "Cobrada",
     },
     null,
+    CORRECTIVE,
   );
   expect(paid.request).toEqual({
     invoice_id: stored.invoice_id,
@@ -715,14 +737,15 @@ test("a correction sends only the changed fields the update accepts", () => {
         invoiceClass: "ORDINARIA",
       },
       answer("correction_no_retention"),
+      CORRECTIVE,
     ).request?.patch,
   ).toEqual({
     values: { invoice_class: "ORDINARIA", rectifies_invoice_number: null },
     fields: ["invoice_class", "rectifies_invoice_number"],
   });
   expect(
-    checkCorrection(stored, { ...draft, paymentId: "abc" }, null).problems
-      .payment_id,
+    checkCorrection(stored, { ...draft, paymentId: "abc" }, null, CORRECTIVE)
+      .problems.payment_id,
   ).toEqual({
     kind: "rule",
     rule: "payment_id_shape",
@@ -738,6 +761,7 @@ test("a stored date, series and rectified number take the ledger's verdict", () 
     dated,
     { ...correctionOf(dated), operationDate: "" },
     answer("correction_date_taken_away"),
+    CORRECTIVE,
   );
   expect(taken.request).toBeNull();
   expect(taken.problems.operation_date).toMatchObject({
@@ -748,6 +772,7 @@ test("a stored date, series and rectified number take the ledger's verdict", () 
     plain,
     { ...correctionOf(plain), operationDate: "2026-03-01" },
     answer("correction_date_added"),
+    CORRECTIVE,
   );
   expect(added.request).toBeNull();
   expect(added.problems.operation_date).toMatchObject({
@@ -757,6 +782,7 @@ test("a stored date, series and rectified number take the ledger's verdict", () 
     plain,
     { ...correctionOf(plain), invoiceClass: "RECTIFICATIVA", series: "" },
     answer("correction_rectificativa_incomplete"),
+    CORRECTIVE,
   );
   expect(rectificativa.request).toBeNull();
   expect(rectificativa.problems.series).toMatchObject({
@@ -770,6 +796,7 @@ test("a stored date, series and rectified number take the ledger's verdict", () 
     plain,
     { ...correctionOf(plain), invoiceClass: "RECTIFICATIVA", series: "" },
     null,
+    CORRECTIVE,
   );
   expect(waiting.awaitingAnswer).toBe(true);
   expect(waiting.problems.series).toBeUndefined();
@@ -781,11 +808,15 @@ test("a correction is asked about with the stored invoice it restates, and its a
     base_total: { decimal: "1000" },
   });
   expect(
-    correctionPreview(stored, {
-      ...correctionOf(stored),
-      retentionRate: "7",
-      retentionAmount: "70",
-    }),
+    correctionPreview(
+      stored,
+      {
+        ...correctionOf(stored),
+        retentionRate: "7",
+        retentionAmount: "70",
+      },
+      CORRECTIVE,
+    ),
   ).toMatchObject(
     recorded.correction_rate_7!.request as Record<string, unknown>,
   );
@@ -810,13 +841,18 @@ test("a changed retención waits for the ledger's answer and takes its verdict",
     retentionRate: "7",
     retentionAmount: "70",
   };
-  expect(correctionPreview(stored, seven)).toMatchObject(
+  expect(correctionPreview(stored, seven, CORRECTIVE)).toMatchObject(
     recorded.correction_rate_7!.request as Record<string, unknown>,
   );
-  const waiting = checkCorrection(stored, seven, null);
+  const waiting = checkCorrection(stored, seven, null, CORRECTIVE);
   expect(waiting.awaitingAnswer).toBe(true);
   expect(waiting.request).toBeNull();
-  const answered = checkCorrection(stored, seven, answer("correction_rate_7"));
+  const answered = checkCorrection(
+    stored,
+    seven,
+    answer("correction_rate_7"),
+    CORRECTIVE,
+  );
   expect(answered.request?.patch.values).toEqual({
     retention_rate: { decimal: "0.07" },
     retention_amount: { decimal: "70" },
@@ -825,6 +861,7 @@ test("a changed retención waits for the ledger's answer and takes its verdict",
     stored,
     { ...seven, retentionAmount: "60" },
     answer("correction_rate_differs"),
+    CORRECTIVE,
   );
   expect(differs.request).toBeNull();
   expect(differs.problems.retention_rate).toMatchObject({
@@ -832,8 +869,12 @@ test("a changed retención waits for the ledger's answer and takes its verdict",
   });
   // A read that failed holds back only a change the ledger judges.
   expect(
-    checkCorrection(stored, { ...correctionOf(stored), notes: "Cobrada" }, null)
-      .request,
+    checkCorrection(
+      stored,
+      { ...correctionOf(stored), notes: "Cobrada" },
+      null,
+      CORRECTIVE,
+    ).request,
   ).not.toBeNull();
 });
 
