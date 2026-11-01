@@ -9,13 +9,11 @@ import pytest
 
 from ...compiler.authority import compiled_bundled_authority
 from ...tests.authored_edition_support import source_first_exercise, source_with_sha256
-from ..semantic_map import SemanticMapEntry, load_semantic_map
+from ..semantic_map import SemanticMapEntry
 from ._m390_semantic_map_support import (
     assert_anchors_biject_to_layout,
     assert_page_07_close,
-    entry_index,
-    field_index,
-    load_design,
+    load_edition_pair,
     render_edition,
 )
 
@@ -142,13 +140,14 @@ def _stable_payload(entry: SemanticMapEntry, revision: str) -> _StablePayload:
 def test_m390_dana_reduction_design_bijects_every_parser_anchor_to_the_reviewed_revision_owner() -> None:
     authority = compiled_bundled_authority()
     revision = authority.modelo("390").revisions[str(_DESIGN_EXERCISE)]
-    predecessor_design = load_design(
-        _PREDECESSOR_SOURCE_REF, filing_year=_PREDECESSOR_EXERCISE, epoch=str(_PREDECESSOR_EXERCISE)
+    pair = load_edition_pair(
+        source_ref=_SOURCE_REF,
+        exercise=_DESIGN_EXERCISE,
+        predecessor_source_ref=_PREDECESSOR_SOURCE_REF,
+        predecessor_exercise=_PREDECESSOR_EXERCISE,
     )
-    design = load_design(_SOURCE_REF, filing_year=_DESIGN_EXERCISE, epoch=str(_DESIGN_EXERCISE))
-    predecessor_fields = field_index(predecessor_design)
-    fields = field_index(design)
-    delta = {key for key in predecessor_fields.keys() | fields.keys() if predecessor_fields.get(key) != fields.get(key)}
+    design, predecessor_fields, fields, delta = pair.design, pair.predecessor_fields, pair.fields, pair.delta
+    entries = pair.entries
 
     assert len(predecessor_fields) == 541
     assert len(fields) == 621
@@ -156,12 +155,8 @@ def test_m390_dana_reduction_design_bijects_every_parser_anchor_to_the_reviewed_
     assert len(set(predecessor_fields) & set(fields) - delta) == 341
     assert sum(len(envelope.prefix_fields) for envelope in design.variable_envelopes) == 13
 
-    predecessor_map = load_semantic_map(Path(f"dev/registry/mappings/modelo_390/{_PREDECESSOR_EXERCISE}"))
-    semantic_map = load_semantic_map(Path(f"dev/registry/mappings/modelo_390/{_DESIGN_EXERCISE}"))
-    predecessor_entries = entry_index(predecessor_map.entries)
-    entries = entry_index(semantic_map.entries)
-    stable = set(predecessor_fields) & set(fields) - delta
-    assert {key: _stable_payload(predecessor_entries[key], str(_PREDECESSOR_EXERCISE)) for key in stable} == {
+    stable = pair.stable
+    assert {key: _stable_payload(pair.predecessor_entries[key], str(_PREDECESSOR_EXERCISE)) for key in stable} == {
         key: _stable_payload(entries[key], str(_DESIGN_EXERCISE)) for key in stable
     }
 

@@ -7,12 +7,11 @@ from pathlib import Path
 import pytest
 
 from ...tests.authored_edition_support import source_first_exercise, source_with_sha256
-from ..semantic_map import SemanticMapEntry, load_semantic_map
+from ..semantic_map import SemanticMapEntry
 from ..source_defects import source_defects_for
 from ._m390_semantic_map_support import (
     assert_page_07_close,
-    field_index,
-    load_design,
+    load_edition_pair,
     render_edition,
 )
 
@@ -161,15 +160,14 @@ def _normalized_reused_owner(
 
 
 def test_m390_recargo_relayout_reuses_522_predecessor_anchors_and_pins_the_exact_page_2_delta() -> None:
-    predecessor_design = load_design(
-        _PREDECESSOR_SOURCE_REF, filing_year=_PREDECESSOR_EXERCISE, epoch=str(_PREDECESSOR_EXERCISE)
+    pair = load_edition_pair(
+        source_ref=_SOURCE_REF,
+        exercise=_DESIGN_EXERCISE,
+        predecessor_source_ref=_PREDECESSOR_SOURCE_REF,
+        predecessor_exercise=_PREDECESSOR_EXERCISE,
     )
-    design = load_design(_SOURCE_REF, filing_year=_DESIGN_EXERCISE, epoch=str(_DESIGN_EXERCISE))
-    predecessor_fields = field_index(predecessor_design)
-    fields = field_index(design)
-    measured_delta = {
-        key for key in predecessor_fields.keys() | fields.keys() if predecessor_fields.get(key) != fields.get(key)
-    }
+    design, predecessor_fields, fields, measured_delta = pair.design, pair.predecessor_fields, pair.fields, pair.delta
+    entries = pair.entries
 
     assert measured_delta == _PAGE_2_DELTA
     assert len(predecessor_fields) == 537
@@ -177,14 +175,8 @@ def test_m390_recargo_relayout_reuses_522_predecessor_anchors_and_pins_the_exact
     assert len(set(predecessor_fields) & set(fields) - measured_delta) == 522
     assert sum(len(envelope.prefix_fields) for envelope in design.variable_envelopes) == 13
 
-    predecessor_map = load_semantic_map(Path(f"dev/registry/mappings/modelo_390/{_PREDECESSOR_EXERCISE}"))
-    semantic_map = load_semantic_map(Path(f"dev/registry/mappings/modelo_390/{_DESIGN_EXERCISE}"))
-    predecessor_entries = {
-        (entry.anchor.record_identity, entry.anchor.source_cell): entry for entry in predecessor_map.entries
-    }
-    entries = {(entry.anchor.record_identity, entry.anchor.source_cell): entry for entry in semantic_map.entries}
-    unchanged_keys = set(predecessor_fields) & set(fields) - measured_delta
-    assert {key: _normalized_reused_owner(predecessor_entries[key]) for key in unchanged_keys} == {
+    unchanged_keys = pair.stable
+    assert {key: _normalized_reused_owner(pair.predecessor_entries[key]) for key in unchanged_keys} == {
         key: _normalized_reused_owner(entries[key]) for key in unchanged_keys
     }
     actual = tuple(
