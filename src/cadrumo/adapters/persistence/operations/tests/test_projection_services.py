@@ -44,6 +44,7 @@ from cadrumo.application.operations.projection_services import (
 from cadrumo.application.operations.registry import (
     OperationFrontendProjection,
     OperationPublicDefinitionContractV1,
+    OperationRegistry,
 )
 from cadrumo.core.operations import (
     OperationEffect,
@@ -82,6 +83,26 @@ from .projection_services_support import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+def _settle_terminal(
+    root: Path,
+    repository: OperationJournalRepository,
+    registry: OperationRegistry,
+    terminal: OperationPersistedSnapshot,
+) -> tuple[OperationPublicDefinitionContractV1, OperationResultProjectionRequestV1]:
+    """Journal a running operation, commit its terminal settlement and build the result request for it."""
+    _write(root, repository, _running_snapshot(registry))
+    asyncio.run(repository.commit_settlement(terminal, expected_revision=0, lease=_lease()))
+    contract = registry.lookup_public_contract(_DEFINITION_ID)
+    assert contract.result_schema is not None
+    request = OperationResultProjectionRequestV1(
+        operation_id=_OPERATION_ID,
+        terminal_revision=terminal.revision,
+        definition_contract_digest=contract.definition_contract_digest,
+        result_schema=contract.result_schema,
+    )
+    return contract, request
 
 
 def test_review_resolution_uses_encrypted_operand_and_is_read_only(tmp_path: Path) -> None:
@@ -189,16 +210,7 @@ def test_result_resolution_uses_encrypted_operand_and_public_contract(tmp_path: 
             result_code="safe.result"
         )
         terminal = _terminal_snapshot(registry, result_ref=result_ref)
-        _write(root, repository, _running_snapshot(registry))
-        asyncio.run(repository.commit_settlement(terminal, expected_revision=0, lease=_lease()))
-        contract = registry.lookup_public_contract(_DEFINITION_ID)
-        assert contract.result_schema is not None
-        request = OperationResultProjectionRequestV1(
-            operation_id=_OPERATION_ID,
-            terminal_revision=terminal.revision,
-            definition_contract_digest=contract.definition_contract_digest,
-            result_schema=contract.result_schema,
-        )
+        contract, request = _settle_terminal(root, repository, registry, terminal)
         service = OperationResultProjectionService(reader=repository, registry=registry, operands=operands)
 
         result = asyncio.run(service.resolve(request, PublicProjectionResult))
@@ -280,16 +292,7 @@ def _paged_result_rig(tmp_path: Path, profile: TestRuntimeProfile) -> _PagedResu
     operands = operation_secure_reference_repository(objects=profile.repository)
     result_ref = asyncio.run(operands.put(ProjectionResult(result_code="safe.result"), written_at=_NOW))
     terminal = _terminal_snapshot(registry, result_ref=result_ref)
-    _write(root, repository, _running_snapshot(registry))
-    asyncio.run(repository.commit_settlement(terminal, expected_revision=0, lease=_lease()))
-    contract = registry.lookup_public_contract(_DEFINITION_ID)
-    assert contract.result_schema is not None
-    request = OperationResultProjectionRequestV1(
-        operation_id=_OPERATION_ID,
-        terminal_revision=terminal.revision,
-        definition_contract_digest=contract.definition_contract_digest,
-        result_schema=contract.result_schema,
-    )
+    contract, request = _settle_terminal(root, repository, registry, terminal)
     service = OperationResultProjectionService(reader=repository, registry=registry, operands=operands)
     return _PagedResultRig(
         service=service,
@@ -381,16 +384,7 @@ def test_refused_detail_uses_encrypted_operand_and_preserves_the_refused_receipt
         assert asyncio.run(operands.resolve(detail_ref, PrivateRefusalDetail)) == private_detail
 
         terminal = _refused_snapshot(registry, detail_ref=detail_ref)
-        _write(root, repository, _running_snapshot(registry))
-        asyncio.run(repository.commit_settlement(terminal, expected_revision=0, lease=_lease()))
-        contract = registry.lookup_public_contract(_DEFINITION_ID)
-        assert contract.result_schema is not None
-        request = OperationResultProjectionRequestV1(
-            operation_id=_OPERATION_ID,
-            terminal_revision=terminal.revision,
-            definition_contract_digest=contract.definition_contract_digest,
-            result_schema=contract.result_schema,
-        )
+        _, request = _settle_terminal(root, repository, registry, terminal)
         service = OperationResultProjectionService(reader=repository, registry=registry, operands=operands)
         before = _observe_refused_operation(repository, registry, expected_effect=OperationEffect.UNKNOWN)
 
@@ -440,16 +434,7 @@ def test_unavailable_refused_detail_keeps_refusal_code_and_unknown_effect_observ
         else:
             detail_ref = asyncio.run(operands.put(ProjectionResult(result_code=_REFUSAL_SENTINEL), written_at=_NOW))
         terminal = _refused_snapshot(registry, detail_ref=detail_ref, effect=OperationEffect.UNKNOWN)
-        _write(root, repository, _running_snapshot(registry))
-        asyncio.run(repository.commit_settlement(terminal, expected_revision=0, lease=_lease()))
-        contract = registry.lookup_public_contract(_DEFINITION_ID)
-        assert contract.result_schema is not None
-        request = OperationResultProjectionRequestV1(
-            operation_id=_OPERATION_ID,
-            terminal_revision=terminal.revision,
-            definition_contract_digest=contract.definition_contract_digest,
-            result_schema=contract.result_schema,
-        )
+        _, request = _settle_terminal(root, repository, registry, terminal)
         service = OperationResultProjectionService(reader=repository, registry=registry, operands=operands)
         before = _observe_refused_operation(repository, registry, expected_effect=OperationEffect.UNKNOWN)
 
@@ -495,16 +480,7 @@ def test_result_projection_service_never_releases_result_ref_from_non_success_te
             condition=condition,
             effect=OperationEffect.NONE,
         )
-        _write(root, repository, _running_snapshot(registry))
-        asyncio.run(repository.commit_settlement(terminal, expected_revision=0, lease=_lease()))
-        contract = registry.lookup_public_contract(_DEFINITION_ID)
-        assert contract.result_schema is not None
-        request = OperationResultProjectionRequestV1(
-            operation_id=_OPERATION_ID,
-            terminal_revision=terminal.revision,
-            definition_contract_digest=contract.definition_contract_digest,
-            result_schema=contract.result_schema,
-        )
+        _, request = _settle_terminal(root, repository, registry, terminal)
 
         result = asyncio.run(
             OperationResultProjectionService(reader=repository, registry=registry, operands=operands).resolve(
@@ -535,16 +511,7 @@ def test_identity_result_projection_validates_the_encrypted_stored_model(
         operands = operation_secure_reference_repository(objects=profile.repository)
         result_ref = asyncio.run(operands.put(stored, written_at=_NOW))
         terminal = _terminal_snapshot(registry, result_ref=result_ref)
-        _write(root, repository, _running_snapshot(registry))
-        asyncio.run(repository.commit_settlement(terminal, expected_revision=0, lease=_lease()))
-        contract = registry.lookup_public_contract(_DEFINITION_ID)
-        assert contract.result_schema is not None
-        request = OperationResultProjectionRequestV1(
-            operation_id=_OPERATION_ID,
-            terminal_revision=terminal.revision,
-            definition_contract_digest=contract.definition_contract_digest,
-            result_schema=contract.result_schema,
-        )
+        _, request = _settle_terminal(root, repository, registry, terminal)
         result = asyncio.run(
             OperationResultProjectionService(reader=repository, registry=registry, operands=operands).resolve(
                 request, ProjectionResult
