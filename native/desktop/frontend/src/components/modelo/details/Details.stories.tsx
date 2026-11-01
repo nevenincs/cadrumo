@@ -58,6 +58,7 @@ export function StorySession({
       key={language}
       name={`${declaration}-${language}`}
       adjust={adjust}
+      baselineFrom={session.edits ? `${declaration}-en` : undefined}
     >
       {(read) => <Session {...session} envelope={read} />}
     </ModeloEnvelope>

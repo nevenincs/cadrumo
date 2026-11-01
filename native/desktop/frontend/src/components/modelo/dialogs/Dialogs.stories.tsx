@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, userEvent, waitFor, within } from "storybook/test";
 import type { ModeloShape } from "../../../dev/modeloFixture";
+import { translator } from "../../../shell/strings";
 import type { ModeloWorkbenchFormProjectionV1 } from "../../../shell/modeloContract";
 import { StorySession, typedAmount } from "../details/Details.stories";
 import { FilingView } from "./FilingView";
@@ -83,14 +84,20 @@ export const ReviewApplyUnknown: Story = {
   render: (_, { globals }) => (
     <Review locale={globals.locale} shape="unknown" />
   ),
-  play: async ({ canvasElement }) => {
+  play: async ({ canvasElement, globals }) => {
     const page = within(canvasElement.ownerDocument.body);
     const apply = await page.findByRole(
       "button",
-      { name: /workspace\.modelo\.review\.apply|Apply/ },
+      {
+        name: translator(String(globals.locale))(
+          "workspace.modelo.review.apply",
+        ),
+      },
       { timeout: READ_WAIT },
     );
-    await waitFor(() => expect(apply).toBeEnabled());
+    await waitFor(() => expect(apply).toBeEnabled(), {
+      timeout: READ_WAIT,
+    });
     await userEvent.click(apply);
     await page.findByRole("alert");
     await expect(apply).toBeDisabled();
@@ -102,14 +109,20 @@ export const ReviewApplyRefused: Story = {
   render: (_, { globals }) => (
     <Review locale={globals.locale} shape="refused" />
   ),
-  play: async ({ canvasElement }) => {
+  play: async ({ canvasElement, globals }) => {
     const page = within(canvasElement.ownerDocument.body);
     const apply = await page.findByRole(
       "button",
-      { name: /workspace\.modelo\.review\.apply|Apply/ },
+      {
+        name: translator(String(globals.locale))(
+          "workspace.modelo.review.apply",
+        ),
+      },
       { timeout: READ_WAIT },
     );
-    await waitFor(() => expect(apply).toBeEnabled());
+    await waitFor(() => expect(apply).toBeEnabled(), {
+      timeout: READ_WAIT,
+    });
     await userEvent.click(apply);
   },
 };
