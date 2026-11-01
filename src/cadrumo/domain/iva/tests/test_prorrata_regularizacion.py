@@ -24,8 +24,10 @@ from ..prorrata import (
     ProrrataInputs,
     ProrrataKind,
     RegularizacionProrrataDireccion,
+    RegularizacionProrrataParticion,
     compute_prorrata_definitiva_anual,
     compute_regularizacion_prorrata_anual,
+    compute_regularizacion_prorrata_particionada,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -234,3 +236,42 @@ def test_out_of_range_percentage_is_refused() -> None:
                 prorrata_provisional_pct=pct,
                 prorrata_definitiva_pct=Decimal("60"),
             )
+
+
+def test_each_partition_applies_its_own_definitive_percentage() -> None:
+    """LIVA art. 101.Uno: two sectors regularise separately and the box is their sum.
+
+    Sector A: 150,00 gross deducted at 80 % (120,00), definitive 70 % gives
+    105,00. Sector B: 200,00 gross deducted at 30 % (60,00), definitive 40 %
+    gives 80,00. Each step is computed independently below.
+    """
+    deduccion_definitiva = _deduccion(Decimal("150.00"), Decimal("70")) + _deduccion(Decimal("200.00"), Decimal("40"))
+    practised = _deduccion(Decimal("150.00"), Decimal("80")) + _deduccion(Decimal("200.00"), Decimal("30"))
+
+    result = compute_regularizacion_prorrata_particionada(
+        particiones=(
+            RegularizacionProrrataParticion(
+                cuotas_soportadas_deducibles=Decimal("150.00"), prorrata_definitiva_pct=Decimal("70")
+            ),
+            RegularizacionProrrataParticion(
+                cuotas_soportadas_deducibles=Decimal("200.00"), prorrata_definitiva_pct=Decimal("40")
+            ),
+        ),
+        deducciones_provisionales_practicadas=practised,
+    )
+
+    assert result.deduccion_definitiva == deduccion_definitiva == Decimal("185.00")
+    assert result.importe == deduccion_definitiva - practised == Decimal("5.00")
+    assert result.direccion is RegularizacionProrrataDireccion.DEDUCCION
+
+
+def test_no_regularisable_partition_has_a_zero_definitive_deduction() -> None:
+    """An especial year whose inputs are all exclusively used leaves nothing for art. 105 to correct."""
+    result = compute_regularizacion_prorrata_particionada(
+        particiones=(),
+        deducciones_provisionales_practicadas=Decimal("0.00"),
+    )
+
+    assert result.deduccion_definitiva == Decimal("0")
+    assert result.importe == Decimal("0")
+    assert result.direccion is RegularizacionProrrataDireccion.NINGUNA

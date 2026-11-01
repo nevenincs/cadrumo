@@ -345,12 +345,26 @@ application:
       unresolved:
         current_year_inputs: 'La regularització de prorrata necessita aquests valors
           de l''exercici abans de calcular-se: %{casillas}.'
+        gross_negative: Les quotes suportades deduïbles brutes de les liquidacions
+          anteriors són negatives (%{amount}) després de les rectificacions. La llei
+          no preveu cap regularització sobre una base negativa, així que rectifica
+          les deduccions a les liquidacions afectades i calcula tu la casella.
         provisional_missing: La regularització de prorrata del %{year} necessita el
           percentatge provisional, del teu registre de prorrata o de l'última liquidació
           presentada de l'exercici anterior.
-        regime_not_derived: La regularització del %{year} en prorrata especial o sectors
-          diferenciats encara no es calcula automàticament; calcula tu la casella
-          abans de presentar.
+        regime_not_derived: 'La regularització del %{year} de les quotes suportades
+          d''ús comú en diversos sectors diferenciats no es calcula automàticament:
+          el seu percentatge només computa les operacions dels sectors que comparteixen
+          l''ús i tracta com a sense dret a deducció les operacions dels règims d''agricultura
+          i de recàrrec d''equivalència, cosa que els volums declarats no mostren.
+          Calcula tu la casella abans de presentar.'
+        register_regime_not_apportioning: El teu registre de prorrata no recull cap
+          règim que reparteixi la deducció el %{year}, però els volums declarats mostren
+          operacions sense dret a deducció; corregeix el registre o els volums abans
+          de regularitzar.
+        sector_definitive_missing: 'Aquests sectors diferenciats no tenen percentatge
+          definitiu liquidat per al %{year}: %{sectors}; liquida cada sector abans
+          de regularitzar.'
         selector_unmapped: La vinculació de la regularització de prorrata no correspon
           a cap sortida del resolutor.
         settlement_observation_ambiguous: Consta més d'una última liquidació del model
@@ -368,9 +382,17 @@ application:
           la casella.
         source_period_cuotas_missing: 'La liquidació %{period} es va presentar sense
           les caselles deduïbles que necessita la regularització: %{casillas}.'
+        source_period_gross_unavailable: La liquidació %{period} va declarar quotes
+          suportades deduïbles, però el llibre no conté cap quota deduïble d'aquest
+          període, així que es desconeixen les quotes brutes abans de la prorrata;
+          registra al llibre les quotes suportades d'aquest període abans de regularitzar.
         source_period_ledger_divergence: La liquidació %{period} va declarar %{filed}
-          a %{casilla}, però les quotes del llibre al %{percentage}% provisional donen
-          %{expected}; concilia el llibre amb la liquidació presentada abans de regularitzar.
+          a %{casilla}, però les quotes del llibre als teus percentatges provisionals
+          de prorrata donen %{expected}; concilia el llibre amb la liquidació presentada
+          abans de regularitzar.
+        source_period_ledger_refused: Les quotes suportades del llibre de la liquidació
+          %{period} no es poden repartir amb el teu registre de prorrata; resol aquest
+          rebuig del llibre abans de regularitzar.
         source_periods_missing: 'La regularització abasta les liquidacions anteriors
           de l''exercici, i aquestes no consten presentades: %{periods}.'
         source_periods_refused: 'Aquestes liquidacions anteriors porten una revisió

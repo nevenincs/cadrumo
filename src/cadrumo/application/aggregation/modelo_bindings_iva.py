@@ -13,7 +13,6 @@ from typing import ClassVar
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.period import Period
 from ...domain.bienes_inversion.register import BienesInversionIvaRegister
-from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.binding_targets import bound_casilla_binding_ids
 from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from ...domain.calculations.registry.form_codes import form_for_role
@@ -27,7 +26,6 @@ from ...domain.calculations.registry.ledger_iva_bindings import (
     unsupported_ledger_iva_observations,
 )
 from ...domain.calculations.registry.ledger_iva_screen_bindings import invoice_ledger_screen_binding_ids
-from ...domain.calculations.registry.prorrata_register_catalogue import general_prorrata_register_regime
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ...domain.iva.schema import IvaCategory
@@ -190,10 +188,10 @@ class LedgerIvaAggregationSourceResolver:
     ) -> None:
         """Bind repositories used to resolve IVA ledger sources.
 
-        ``settlement`` carries the year's definitive prorrata percentage for
-        the annual settlement liquidation once it is derivable. It is attached
-        only to a whole-entity general apportionment; any other apportionment
-        keeps its provisional percentage.
+        ``settlement`` carries the year's definitive prorrata percentages for
+        the annual settlement liquidation once they are derivable. A
+        sectorized apportionment takes it only when it settles every declared
+        sector.
         """
         self._settlement = settlement
         self._transaction_repository = transaction_repository
@@ -229,7 +227,7 @@ class LedgerIvaAggregationSourceResolver:
                     source_kinds=self.owned_sources,
                     error=exc,
                 )
-            aggregation = _with_settlement_apportionment(aggregation, self._settlement, operation=operation)
+            aggregation = _with_settlement_apportionment(aggregation, self._settlement)
             transaction_ids = {observation.ledger_id for observation in aggregation.observations}
             transaction_ids.update(reference.transaction_id for reference in aggregation.prorrata_references)
             binding_values = resolve_iva_ledger_binding_values(
@@ -419,17 +417,19 @@ def _present_unroutable_iva_categories(
 def _with_settlement_apportionment(
     aggregation: IvaLedgerAggregation,
     settlement: IvaLedgerSettlementApportionment | None,
-    *,
-    operation: PinnedAuthorityOperation,
 ) -> IvaLedgerAggregation:
-    """Attach the settlement percentage to a whole-entity general apportionment only."""
+    """Attach the settlement percentages when they cover the apportionment's declared sectors.
+
+    A sectorized apportionment is settled only when the settlement names
+    exactly its declared sectors; otherwise the settlement liquidation keeps
+    its provisional percentages and the regularisation box reports the
+    unsettled sector.
+    """
     apportionment = aggregation.prorrata_apportionment
-    if (
-        settlement is None
-        or apportionment is None
-        or apportionment.sector_apportionments
-        or apportionment.regime != general_prorrata_register_regime(authority=operation)
-    ):
+    if settlement is None or apportionment is None:
+        return aggregation
+    declared = {sector.sector_id for sector in apportionment.sector_apportionments}
+    if {item.sector_id for item in settlement.sector_percentages} != declared:
         return aggregation
     return aggregation.model_copy(
         update={"prorrata_apportionment": apportionment.model_copy(update={"settlement": settlement})}
@@ -475,6 +475,8 @@ def _iva_prorrata_apportionment_source_ref(
             f"{source_ref}:settlement:{apportionment.settlement.period.registry_token}:"
             f"definitive:{apportionment.settlement.percentage}"
         )
+        for sector in apportionment.settlement.sector_percentages:
+            source_ref = f"{source_ref}:sector:{sector.sector_id}:definitive:{sector.percentage}"
     return source_ref
 
 

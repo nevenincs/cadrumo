@@ -100,8 +100,9 @@ aggregation:
         aporta identitat de sector explícita.
       sectorized_input_unknown_sector: Una entrada d'IVA sectoritzada referencia un
         sector desconegut.
-      settlement_apportionment_requires_general_regime: El percentatge definitiu de
-        l'última liquidació només s'aplica en prorrata general de tota l'entitat.
+      settlement_apportionment_sector_mismatch: Els percentatges definitius de l'última
+        liquidació han d'anomenar exactament els sectors diferenciats que declara
+        el teu registre de prorrata.
       unaccepted_registry_value: '%{field} consta com a %{value}, un valor que l''autoritat
         fixada del registre tributari no admet per a %{effective_date}, així que l''apunt
         no pot alimentar el càlcul de l''IVA. Corregeix aquest valor a l''apunt.'

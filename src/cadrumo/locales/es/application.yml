@@ -346,12 +346,26 @@ application:
       unresolved:
         current_year_inputs: 'La regularización de prorrata necesita estos valores
           del ejercicio antes de calcularse: %{casillas}.'
+        gross_negative: Las cuotas soportadas deducibles brutas de las liquidaciones
+          anteriores son negativas (%{amount}) tras las rectificaciones. La ley no
+          prevé una regularización sobre una base negativa, así que rectifica las
+          deducciones en las liquidaciones afectadas y calcula tú la casilla.
         provisional_missing: La regularización de prorrata de %{year} necesita el
           porcentaje provisional, de tu registro de prorrata o de la última liquidación
           presentada del ejercicio anterior.
-        regime_not_derived: La regularización de %{year} en prorrata especial o sectores
-          diferenciados aún no se calcula automáticamente; calcula tú la casilla antes
-          de presentar.
+        regime_not_derived: 'La regularización de %{year} de las cuotas soportadas
+          de uso común en varios sectores diferenciados no se calcula automáticamente:
+          su porcentaje solo computa las operaciones de los sectores que comparten
+          el uso y trata como sin derecho a deducción las operaciones de los regímenes
+          de agricultura y de recargo de equivalencia, algo que los volúmenes declarados
+          no muestran. Calcula tú la casilla antes de presentar.'
+        register_regime_not_apportioning: Tu registro de prorrata no recoge un régimen
+          que reparta la deducción en %{year}, pero los volúmenes declarados muestran
+          operaciones sin derecho a deducción; corrige el registro o los volúmenes
+          antes de regularizar.
+        sector_definitive_missing: 'Estos sectores diferenciados no tienen porcentaje
+          definitivo liquidado para %{year}: %{sectors}; liquida cada sector antes
+          de regularizar.'
         selector_unmapped: La vinculación de la regularización de prorrata no corresponde
           a ninguna salida del resolutor.
         settlement_observation_ambiguous: Consta más de una última liquidación del
@@ -370,9 +384,17 @@ application:
           o calcula tú la casilla.
         source_period_cuotas_missing: 'La liquidación %{period} se presentó sin las
           casillas deducibles que necesita la regularización: %{casillas}.'
+        source_period_gross_unavailable: La liquidación %{period} declaró cuotas soportadas
+          deducibles, pero el libro no contiene ninguna cuota deducible de ese periodo,
+          así que se desconocen sus cuotas brutas antes de la prorrata; registra en
+          el libro las cuotas soportadas de ese periodo antes de regularizar.
         source_period_ledger_divergence: La liquidación %{period} declaró %{filed}
-          en %{casilla}, pero sus cuotas del libro al %{percentage}% provisional dan
-          %{expected}; concilia el libro con la liquidación presentada antes de regularizar.
+          en %{casilla}, pero sus cuotas del libro a tus porcentajes provisionales
+          de prorrata dan %{expected}; concilia el libro con la liquidación presentada
+          antes de regularizar.
+        source_period_ledger_refused: Las cuotas soportadas del libro de la liquidación
+          %{period} no se pueden repartir con tu registro de prorrata; resuelve ese
+          rechazo del libro antes de regularizar.
         source_periods_missing: 'La regularización abarca las liquidaciones anteriores
           del ejercicio, y estas no constan presentadas: %{periods}.'
         source_periods_refused: 'Estas liquidaciones anteriores llevan una revisión

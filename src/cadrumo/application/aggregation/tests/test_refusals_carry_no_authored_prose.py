@@ -70,7 +70,7 @@ _MIGRATED_KEYS: tuple[str, ...] = (
     "aggregation.iva_ledger.errors.sectorized_input_inactive_sector",
     "aggregation.iva_ledger.errors.sectorized_input_missing_sector_identity",
     "aggregation.iva_ledger.errors.sectorized_input_unknown_sector",
-    "aggregation.iva_ledger.errors.settlement_apportionment_requires_general_regime",
+    "aggregation.iva_ledger.errors.settlement_apportionment_sector_mismatch",
     "aggregation.m303_arrivals.errors.prorrata_register_contradictory_transition_evidence",
     "aggregation.m303_arrivals.errors.prorrata_register_incomplete_current_year_declaration",
     "aggregation.m303_arrivals.errors.prorrata_revocacion_without_prior_year_especial",

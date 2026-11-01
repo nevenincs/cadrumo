@@ -94,9 +94,9 @@ aggregation:
         explicit sector identity.
       sectorized_input_unknown_sector: A sectorised IVA input references an unknown
         sector.
-      settlement_apportionment_requires_general_regime: The definitive percentage
-        of the settlement liquidation is only applied under whole-entity prorrata
-        general.
+      settlement_apportionment_sector_mismatch: The definitive percentages of the
+        settlement liquidation must name exactly the differentiated sectors your prorrata
+        register declares.
       unaccepted_registry_value: '%{field} is recorded as %{value}, which the pinned
         tax registry authority does not accept for %{effective_date}, so the row cannot
         feed the IVA calculation. Correct that value on the ledger entry.'

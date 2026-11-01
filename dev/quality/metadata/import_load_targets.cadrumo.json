@@ -664,6 +664,7 @@
         "cadrumo.application.calculations.ports",
         "cadrumo.application.calculations.prorrata_especial_advisory",
         "cadrumo.application.calculations.prorrata_regularizacion",
+        "cadrumo.application.calculations.prorrata_regularizacion_periods",
         "cadrumo.application.calculations.registry_preconditions",
         "cadrumo.application.calculations.relation_prefill",
         "cadrumo.application.calculations.relation_prefill_diagnostics",

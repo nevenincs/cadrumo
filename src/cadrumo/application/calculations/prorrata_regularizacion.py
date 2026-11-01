@@ -1,10 +1,11 @@
-"""Source resolver for the annual prorrata-general regularisation (LIVA arts. 104-105).
+"""Source resolver for the annual prorrata regularisation (LIVA arts. 101 and 104-106).
 
 Resolves the Modelo 303 regularisation box (Regularización prorrata por
 porcentaje definitivo - Cuota) and the Modelo 390 annual regularisation field
-for a taxpayer under prorrata general. The settlement liquidation of the year
+for a taxpayer under prorrata, general or especial, whole-entity or with
+differentiated sectors. The settlement liquidation of the year
 -- the fourth quarter, or month 12 for a monthly filer -- deducts its own
-cuotas at the definitive percentage through the IVA ledger; the box
+cuotas at the definitive percentages through the IVA ledger; the box
 regularises only the earlier liquidations, whose gross cuotas are re-derived
 from the ledger and whose practised deductions are read from their filed
 observations. The Modelo 390 field restates the filed settlement box.
@@ -14,8 +15,9 @@ volume casillas, never from a single quarter. Missing or contradicted inputs
 stay unresolved with a finding that names them; nothing defaults to zero.
 
 See Also:
-    :func:`~domain.iva.prorrata.compute_regularizacion_prorrata_anual`
-        Pure LIVA art. 105.Cuatro computation the resolver feeds.
+    :func:`~domain.iva.prorrata.compute_regularizacion_prorrata_particionada`
+        Pure LIVA art. 105.Cuatro computation the resolver feeds, one
+        partition per differentiated sector or regularisable slice.
     :func:`~domain.iva.m303_settlement.m303_liquidation_periods`
         Registry cadence the regularised liquidations are read from.
     :mod:`~application.aggregation.iva_ledger_apportionment`
@@ -41,12 +43,9 @@ from ...core.casilla_id import CasillaId
 from ...core.decimal.constants import MONEY_ZERO
 from ...core.i18n.render import tr
 from ...core.models import STRICT_FROZEN_CONFIG
-from ...core.money.rounding import round_to_cents
-from ...core.period import Period
 from ...domain.bienes_inversion.register import BienesInversionIvaRegister
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.binding_targets import (
-    bound_casilla_binding_ids,
     casillas_by_binding,
     sole_bound_casilla,
 )
@@ -57,7 +56,6 @@ from ...domain.calculations.registry.ids import (
     SourceRefId,
 )
 from ...domain.calculations.registry.prorrata_register_catalogue import (
-    general_prorrata_register_regime,
     regime_apportions_deduction,
 )
 from ...domain.calculations.registry.prorrata_regularizacion_bindings import (
@@ -70,7 +68,7 @@ from ...domain.calculations.registry.schema import (
     RegistrySnapshot,
 )
 from ...domain.iva.m303_settlement import is_m303_annual_settlement_period, m303_liquidation_periods
-from ...domain.iva.prorrata import compute_regularizacion_prorrata_anual
+from ...domain.iva.prorrata import RegularizacionProrrataParticion, compute_regularizacion_prorrata_particionada
 from ...domain.prorrata_register.protocols import ProrrataRegisterRepositoryProtocol
 from ...domain.prorrata_register.register import (
     ProrrataProvisionalResolution,
@@ -80,9 +78,6 @@ from ...domain.prorrata_register.register import (
 )
 from ...domain.transactions.errors import TransactionPersistenceError
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
-from ..aggregation.iva_ledger import aggregate_iva_ledger_observations_from_repositories
-from ..aggregation.iva_ledger_apportionment import deducible_cuota_binding_ids, resolve_iva_ledger_binding_values
-from ..aggregation.modelo_bindings import aggregation_period_for_modelo
 from ..aggregation.source_mesh import (
     CalculationSourceContext,
     CalculationSourceDiagnostic,
@@ -93,7 +88,13 @@ from ..aggregation.source_resolution_operations import storage_degradation_resol
 from ..persistence_errors import PersistenceDegradationError
 from ..prorrata_register.service import require_prorrata_register_coordinates_current
 from .m303_settlement_observation import M303SettlementObservationState, m303_annual_settlement_observation
-from .observations_repository import CalculationObservationRepositoryProtocol, ObservationEnvelopePayload
+from .observations_repository import CalculationObservationRepositoryProtocol
+from .prorrata_regularizacion_periods import (
+    RegularisedPeriodLedger,
+    RegularisedPeriodRefusal,
+    format_period_list,
+    partition_definitive_percentages,
+)
 from .revision_carry_gate import revision_carry_outcome
 
 # Registry-owned prorrata declarations are read from the selected Modelo 303/390
@@ -681,41 +682,6 @@ def _source_provenance(
     )
 
 
-def _period_list(periods: Iterable[Period]) -> str:
-    return ", ".join(period.registry_token for period in periods)
-
-
-@dataclass(frozen=True, slots=True)
-class _RegularisedPeriodTotals:
-    """Gross cuotas and practised deductions of the liquidations the box regularises."""
-
-    gross: Decimal
-    practised: Decimal
-    casilla_ids: tuple[CasillaId, ...]
-
-
-@dataclass(frozen=True, slots=True)
-class _RegularisedPeriodRefusal:
-    message: str
-
-
-def _deducible_casilla_gross(
-    revision: ModeloRevision,
-    binding_values: Mapping[BindingId, Decimal],
-) -> dict[CasillaId, Decimal]:
-    """Map each deducible cuota casilla to the gross ledger value of its bound binding."""
-    deducible = deducible_cuota_binding_ids(revision)
-    gross: dict[CasillaId, Decimal] = {}
-    for casilla in revision.casillas:
-        binding_id = next(
-            (candidate for candidate in bound_casilla_binding_ids(casilla) if candidate in deducible),
-            None,
-        )
-        if binding_id is not None:
-            gross[casilla.id] = binding_values.get(binding_id, MONEY_ZERO)
-    return gross
-
-
 class ProrrataRegularizacionSourceResolver:
     """Resolve the annual prorrata-general regularisation from governed sources.
 
@@ -725,15 +691,20 @@ class ProrrataRegularizacionSourceResolver:
     IVA ledger already deducts at the definitive percentage, the box
     regularises the earlier liquidations of the same cadence::
 
-        box = round(definitiva% x sum of gross cuotas) - sum of deductions practised
+        box = sum over partitions of round(definitiva_k% x gross cuotas_k)
+              - deductions practised on those cuotas
 
-    The gross cuotas come from the ledger for each earlier liquidation and the
-    practised deductions from its filed observation; a liquidation whose filed
-    deducible boxes do not equal its ledger cuotas at the provisional
-    percentage is refused rather than guessed. Any missing input -- an
-    undeclared volume, an absent or refused earlier liquidation, a regime whose
-    regularisation is not derived here -- leaves the box unresolved with a
-    finding naming it.
+    A whole-entity general register is one partition. Each differentiated
+    sector is its own partition at its settled definitive percentage
+    (art. 101.Uno), and under prorrata especial only the common-use slice is
+    regularised (art. 106.Uno regla 3.ª). The gross cuotas come from the ledger
+    for each earlier liquidation, partitioned exactly as the in-year
+    apportionment deducted them, and the practised deductions from its filed
+    observation; a liquidation whose filed deducible boxes do not equal that
+    apportionment is refused rather than guessed. Any missing input -- an
+    undeclared volume, an absent or refused earlier liquidation, an unsettled
+    sector, cross-sector common use, a negative gross base -- leaves the box
+    unresolved with a finding naming it.
 
     Modelo 390: the annual regularisation restates the filed settlement
     liquidation's own box, so the summary and the periodic return cannot
@@ -775,10 +746,15 @@ class ProrrataRegularizacionSourceResolver:
         self._undeclared_current_year_casilla_ids = frozenset(undeclared_current_year_casilla_ids)
         self._prorrata_register_repository = prorrata_register_repository
         self._observation_repository = observation_repository
-        self._transaction_repository = transaction_repository
-        self._investment_asset_register = investment_asset_register
-        self._investment_asset_profile_id = investment_asset_profile_id
         self._operation = operation
+        self._periods = RegularisedPeriodLedger(
+            prorrata_register_repository=prorrata_register_repository,
+            observation_repository=observation_repository,
+            transaction_repository=transaction_repository,
+            investment_asset_register=investment_asset_register,
+            investment_asset_profile_id=investment_asset_profile_id,
+            operation=operation,
+        )
         self._registry_snapshot = registry_snapshot
 
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
@@ -827,7 +803,7 @@ class ProrrataRegularizacionSourceResolver:
             filing_year=context.filing_year,
             operation=self._operation,
         )
-        periods = _period_list(settlement.periods)
+        periods = format_period_list(settlement.periods)
         if settlement.state is M303SettlementObservationState.MISSING:
             return self._unresolved(
                 revision,
@@ -1013,23 +989,63 @@ class ProrrataRegularizacionSourceResolver:
                 provisional_source.provenance,
             )
 
-        regularised_periods = m303_liquidation_periods(context.period, authority=self._operation)[:-1]
-        totals = self._regularised_period_totals(
+        return self._regularised_resolution(
             context,
             revision,
-            regularised_periods,
+            declared_binding_ids,
+            register,
             provisional_percentage=provisional_source.percentage,
+            provisional_provenance=provisional_source.provenance,
+            whole_entity_definitive=self._current_year_values[definitiva_id],
         )
-        if isinstance(totals, _RegularisedPeriodRefusal):
-            return self._unresolved(revision, declared_binding_ids, totals.message, provisional_source.provenance)
-        result = compute_regularizacion_prorrata_anual(
-            cuotas_soportadas_deducibles=totals.gross,
+
+    def _regularised_resolution(
+        self,
+        context: CalculationSourceContext,
+        revision: ModeloRevision,
+        declared_binding_ids: tuple[BindingId, ...],
+        register: ProrrataRegister,
+        *,
+        provisional_percentage: Decimal,
+        provisional_provenance: tuple[CalculationSourceProvenance, ...],
+        whole_entity_definitive: Decimal,
+    ) -> CalculationSourceResolution:
+        """Regularise the earlier liquidations at each partition's definitive percentage."""
+        liquidation_periods = m303_liquidation_periods(context.period, authority=self._operation)
+        regularised_periods = liquidation_periods[:-1]
+        source_modelo = _prorrata_source_modelo(revision)
+        totals = self._periods.totals(
+            context,
+            regularised_periods,
+            source_modelo=source_modelo,
+            provisional_percentage=provisional_percentage,
+        )
+        if isinstance(totals, RegularisedPeriodRefusal):
+            return self._unresolved(revision, declared_binding_ids, totals.message, provisional_provenance)
+        definitives = partition_definitive_percentages(
+            context,
+            register,
+            totals,
+            whole_entity_definitive=whole_entity_definitive,
+            cross_sector_common_use=register.is_sectorized
+            and (
+                totals.common_use_sector_input
+                or self._periods.settlement_common_use_input(context, liquidation_periods[-1])
+            ),
+        )
+        if isinstance(definitives, RegularisedPeriodRefusal):
+            return self._unresolved(revision, declared_binding_ids, definitives.message, provisional_provenance)
+        result = compute_regularizacion_prorrata_particionada(
+            particiones=tuple(
+                RegularizacionProrrataParticion(
+                    cuotas_soportadas_deducibles=gross,
+                    prorrata_definitiva_pct=definitives[sector_id],
+                )
+                for sector_id, gross in totals.gross_by_partition.items()
+            ),
             deducciones_provisionales_practicadas=totals.practised,
-            prorrata_provisional_pct=provisional_source.percentage,
-            prorrata_definitiva_pct=self._current_year_values[definitiva_id],
         )
         tokens = tuple(period.registry_token for period in regularised_periods)
-        source_modelo = _prorrata_source_modelo(revision)
         periods_provenance = _source_provenance(
             context=context,
             revision=revision,
@@ -1044,7 +1060,7 @@ class ProrrataRegularizacionSourceResolver:
             owned_sources=self.owned_sources,
             declared_binding_ids=declared_binding_ids,
             value=result.importe,
-            provenance=(*provisional_source.provenance, periods_provenance),
+            provenance=(*provisional_provenance, periods_provenance),
         )
 
     def _applicable_settlement_refusal(
@@ -1067,133 +1083,12 @@ class ProrrataRegularizacionSourceResolver:
                 year=context.filing_year,
             )
         entry = _entry_for_register_provenance(register, ejercicio=context.filing_year)
-        general = general_prorrata_register_regime(authority=self._operation)
-        if register.is_sectorized or (entry is not None and entry.regime != general):
+        if entry is not None and not regime_apportions_deduction(entry.regime, authority=self._operation):
             return tr(
-                "application.calculations.prorrata_regularizacion.unresolved.regime_not_derived",
+                "application.calculations.prorrata_regularizacion.unresolved.register_regime_not_apportioning",
                 year=context.filing_year,
             )
         return None
-
-    def _regularised_period_totals(
-        self,
-        context: CalculationSourceContext,
-        revision: ModeloRevision,
-        periods: tuple[Period, ...],
-        *,
-        provisional_percentage: Decimal,
-    ) -> _RegularisedPeriodTotals | _RegularisedPeriodRefusal:
-        """Sum the earlier liquidations' gross ledger cuotas and their filed deductions."""
-        source_modelo = _prorrata_source_modelo(revision)
-        payloads: dict[Period, ObservationEnvelopePayload] = {}
-        missing: list[Period] = []
-        refused: list[Period] = []
-        for period in periods:
-            payload = self._observation_repository.load_observation(source_modelo, period)
-            if payload is None:
-                missing.append(period)
-            elif revision_carry_outcome(payload.registry_snapshot_ref, operation=self._operation).refused:
-                refused.append(period)
-            else:
-                payloads[period] = payload
-        reasons: list[str] = []
-        if missing:
-            reasons.append(
-                tr(
-                    "application.calculations.prorrata_regularizacion.unresolved.source_periods_missing",
-                    periods=_period_list(missing),
-                )
-            )
-        if refused:
-            reasons.append(
-                tr(
-                    "application.calculations.prorrata_regularizacion.unresolved.source_periods_refused",
-                    periods=_period_list(refused),
-                )
-            )
-        if reasons:
-            return _RegularisedPeriodRefusal(" ".join(reasons))
-
-        gross_total = Decimal("0")
-        practised_total = Decimal("0")
-        casilla_ids: list[CasillaId] = []
-        for period, payload in payloads.items():
-            period_totals = self._period_totals(
-                context,
-                period,
-                payload,
-                source_modelo=source_modelo,
-                provisional_percentage=provisional_percentage,
-            )
-            if isinstance(period_totals, _RegularisedPeriodRefusal):
-                return period_totals
-            gross_total += period_totals.gross
-            practised_total += period_totals.practised
-            casilla_ids.extend(casilla_id for casilla_id in period_totals.casilla_ids if casilla_id not in casilla_ids)
-        return _RegularisedPeriodTotals(gross=gross_total, practised=practised_total, casilla_ids=tuple(casilla_ids))
-
-    def _period_totals(
-        self,
-        context: CalculationSourceContext,
-        period: Period,
-        payload: ObservationEnvelopePayload,
-        *,
-        source_modelo: str,
-        provisional_percentage: Decimal,
-    ) -> _RegularisedPeriodTotals | _RegularisedPeriodRefusal:
-        """Re-derive one earlier liquidation's gross cuotas and check its filed deductions."""
-        period_revision = self._operation.revision_for_context(
-            source_modelo,
-            filing_year=period.filing_year,
-            period=period.registry_token,
-            on=period.end_date,
-        )
-        aggregation = aggregate_iva_ledger_observations_from_repositories(
-            bucket_id=context.bucket_id,
-            period=aggregation_period_for_modelo(filing_year=period.filing_year, code=period.registry_token),
-            transaction_repository=self._transaction_repository,
-            prorrata_register_repository=self._prorrata_register_repository,
-            investment_asset_register=self._investment_asset_register,
-            investment_asset_profile_id=self._investment_asset_profile_id,
-            operation=self._operation,
-        )
-        gross_by_casilla = _deducible_casilla_gross(
-            period_revision,
-            resolve_iva_ledger_binding_values(
-                period_revision,
-                aggregation.observations,
-                prorrata_apportionment=None,
-                operation=self._operation,
-            ),
-        )
-        filed = payload.observation.casilla_values
-        absent = tuple(casilla_id for casilla_id in gross_by_casilla if casilla_id not in filed)
-        if absent:
-            return _RegularisedPeriodRefusal(
-                tr(
-                    "application.calculations.prorrata_regularizacion.unresolved.source_period_cuotas_missing",
-                    period=period.registry_token,
-                    casillas=", ".join(absent),
-                )
-            )
-        for casilla_id, gross in gross_by_casilla.items():
-            expected = round_to_cents(gross * provisional_percentage / Decimal("100"))
-            if filed[casilla_id] != expected:
-                return _RegularisedPeriodRefusal(
-                    tr(
-                        "application.calculations.prorrata_regularizacion.unresolved.source_period_ledger_divergence",
-                        period=period.registry_token,
-                        casilla=casilla_id,
-                        filed=filed[casilla_id],
-                        expected=expected,
-                        percentage=provisional_percentage,
-                    )
-                )
-        return _RegularisedPeriodTotals(
-            gross=sum(gross_by_casilla.values(), Decimal("0")),
-            practised=sum((filed[casilla_id] for casilla_id in gross_by_casilla), Decimal("0")),
-            casilla_ids=tuple(gross_by_casilla),
-        )
 
 
 __all__ = [

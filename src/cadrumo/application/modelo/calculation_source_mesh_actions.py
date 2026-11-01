@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING
 from ...core.aggregation import BindingSourceKind
 from ...core.casilla_id import CasillaId
 from ...core.irnr import M210GrossIncomeSourceMode
+from ...core.period import Period
 from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.ids import (
     BindingId,
@@ -21,9 +22,12 @@ from ...domain.calculations.registry.iva_wallet_carry_targets import (
 from ...domain.calculations.registry.prorrata_regularizacion_bindings import prorrata_source_casilla_ids
 from ...domain.iva.m303_settlement import is_m303_annual_settlement_period
 from ...domain.modelos.work_unit import WorkUnit
+from ...domain.prorrata_register.register import ProrrataRegisterError
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
-from ..aggregation.iva_ledger import IvaLedgerSettlementApportionment
+from ..aggregation.iva_ledger import IvaLedgerSettlementApportionment, settled_sector_definitive_percentages
 from ..calculations.m303_settlement_observation import m303_annual_settlement_observation
+from ..persistence_errors import PersistenceDegradationError
+from ..prorrata_register.service import require_prorrata_register_coordinates_current
 from ..user_profile.profile_read_ports import ProfileReadPorts
 from ._calculation_source_staging import (
     add_expected_missing_binding_diagnostics as _add_expected_missing_binding_diagnostics,
@@ -290,7 +294,9 @@ def _prorrata_settlement_apportionment(
         )
         if percentage is None:
             return None
-        return IvaLedgerSettlementApportionment(period=work_unit.period, percentage=percentage)
+        return _settlement_with_sector_definitives(
+            work_unit, ports=ports, period=work_unit.period, percentage=percentage
+        )
     if work_unit.modelo != form_for_role("iva.annual_summary"):
         return None
     settlement = m303_annual_settlement_observation(
@@ -306,7 +312,35 @@ def _prorrata_settlement_apportionment(
     percentage = filed.get(source_ids[_PRORRATA_DEFINITIVE_ROLE])
     if volumen_total is None or volumen_total <= Decimal("0") or percentage is None:
         return None
-    return IvaLedgerSettlementApportionment(period=settlement.periods[0], percentage=percentage)
+    return _settlement_with_sector_definitives(
+        work_unit, ports=ports, period=settlement.periods[0], percentage=percentage
+    )
+
+
+def _settlement_with_sector_definitives(
+    work_unit: WorkUnit,
+    *,
+    ports: CalculationActionPorts,
+    period: Period,
+    percentage: Decimal,
+) -> IvaLedgerSettlementApportionment | None:
+    """Attach each differentiated sector's settled definitive percentage (LIVA art. 101.Uno).
+
+    A sectorized register whose sectors are not all settled keeps the whole
+    settlement liquidation at its provisional percentages; an unreadable
+    register is left to the ledger resolver, which reports the degradation.
+    """
+    try:
+        register = require_prorrata_register_coordinates_current(
+            ports.prorrata_register_repository.load(),
+            operation=ports.operation,
+        )
+    except (PersistenceDegradationError, ProrrataRegisterError):
+        return None
+    sector_percentages = settled_sector_definitive_percentages(register, work_unit.filing_year)
+    if sector_percentages is None:
+        return None
+    return IvaLedgerSettlementApportionment(period=period, percentage=percentage, sector_percentages=sector_percentages)
 
 
 #: Reviewed source order of the registry's prorrata selector.

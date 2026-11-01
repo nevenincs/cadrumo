@@ -95,9 +95,9 @@ aggregation:
         kifejezett szektorazonosítót.
       sectorized_input_unknown_sector: Egy szektorizált áfa-tétel ismeretlen szektorra
         hivatkozik.
-      settlement_apportionment_requires_general_regime: Az utolsó bevallási időszak
-        végleges százaléka csak a teljes szervezetre kiterjedő általános arányosításnál
-        alkalmazható.
+      settlement_apportionment_sector_mismatch: Az utolsó bevallási időszak végleges
+        százalékainak pontosan az arányosítási nyilvántartásodban rögzített elkülönült
+        ágazatokat kell megnevezniük.
       unaccepted_registry_value: A(z) %{field} mező értéke %{value}, amelyet a rögzített
         adónyilvántartási jogosultság %{effective_date} dátumra nem fogad el, ezért
         a tétel nem kerülhet be az IVA-számításba. Javítsd ezt az értéket a főkönyvi

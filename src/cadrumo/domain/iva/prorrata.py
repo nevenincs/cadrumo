@@ -690,6 +690,90 @@ class RegularizacionProrrataResult(_ProrrataStrictFrozen):
     direccion: RegularizacionProrrataDireccion
 
 
+class RegularizacionProrrataParticion(_ProrrataStrictFrozen):
+    """One slice of the regularised cuotas that carries its own definitive percentage.
+
+    A whole-entity general prorrata is a single partition. A taxpayer with
+    differentiated sectors applies the deduction regime separately per sector
+    (LIVA art. 101.Uno), and under prorrata especial only the common-use cuotas
+    take the art. 104 percentage and its art. 105 procedure (art. 106.Uno
+    regla 3.ª), so each such slice is its own partition.
+
+    Attributes:
+        cuotas_soportadas_deducibles: The partition's gross deductible cuotas
+            in the regularised liquidations (art. 105.Seis), non-negative.
+        prorrata_definitiva_pct: The partition's definitive percentage.
+    """
+
+    cuotas_soportadas_deducibles: Decimal = Field(..., ge=Decimal("0"))
+    prorrata_definitiva_pct: Percentage
+
+
+class RegularizacionProrrataParticionadaResult(_ProrrataStrictFrozen):
+    """Outcome of an annual regularisation summed over its partitions (LIVA art. 105.Cuatro).
+
+    Attributes:
+        particiones: The partitions, in the caller's order.
+        deduccion_provisional: The deductions actually practised on every
+            partition's cuotas in the regularised liquidations.
+        deduccion_definitiva: The sum of each partition's
+            ``round(cuotas x definitiva% / 100)``.
+        importe: ``deduccion_definitiva - deduccion_provisional``.
+        direccion: :class:`RegularizacionProrrataDireccion` describing the sign.
+    """
+
+    particiones: tuple[RegularizacionProrrataParticion, ...]
+    deduccion_provisional: Decimal
+    deduccion_definitiva: Decimal
+    importe: Decimal
+    direccion: RegularizacionProrrataDireccion
+
+
+def compute_regularizacion_prorrata_particionada(
+    *,
+    particiones: tuple[RegularizacionProrrataParticion, ...],
+    deducciones_provisionales_practicadas: Decimal,
+) -> RegularizacionProrrataParticionadaResult:
+    """Compute the annual regularisation over partitions with their own definitive percentages.
+
+    Each partition applies its own definitive percentage to its own gross cuotas
+    (LIVA arts. 101.Uno, 105.Seis and 106.Uno regla 3.ª), rounded to cents per
+    partition as a separately applied deduction regime is; the deductions the
+    regularised liquidations actually practised on those cuotas are then
+    subtracted once::
+
+        deduccion_definitiva = sum(round(cuotas_k x definitiva_k% / 100))
+        importe              = deduccion_definitiva - deducciones_practicadas
+
+    No partition means no cuota the art. 105 procedure reaches (for example a
+    prorrata especial year whose inputs are all exclusively used), so the
+    definitive deduction is zero.
+    """
+    deduccion_definitiva = sum(
+        (
+            _round_to_cents(particion.cuotas_soportadas_deducibles * particion.prorrata_definitiva_pct / Decimal("100"))
+            for particion in particiones
+        ),
+        Decimal("0"),
+    )
+    importe = deduccion_definitiva - deducciones_provisionales_practicadas
+    return RegularizacionProrrataParticionadaResult(
+        particiones=particiones,
+        deduccion_provisional=deducciones_provisionales_practicadas,
+        deduccion_definitiva=deduccion_definitiva,
+        importe=importe,
+        direccion=_regularizacion_direccion(importe),
+    )
+
+
+def _regularizacion_direccion(importe: Decimal) -> RegularizacionProrrataDireccion:
+    if importe > Decimal("0"):
+        return RegularizacionProrrataDireccion.DEDUCCION
+    if importe < Decimal("0"):
+        return RegularizacionProrrataDireccion.INGRESO
+    return RegularizacionProrrataDireccion.NINGUNA
+
+
 def compute_prorrata_definitiva_anual(
     inputs: ProrrataInputs,
     *,
@@ -791,23 +875,23 @@ def compute_regularizacion_prorrata_anual(
         if pct < Decimal("0") or pct > Decimal("100"):
             raise ProrrataInputError(f"{label} out of range 0..100, got {pct}")
 
-    deduccion_provisional = deducciones_provisionales_practicadas
-    deduccion_definitiva = _round_to_cents(cuotas_soportadas_deducibles * prorrata_definitiva_pct / Decimal("100"))
-    importe = deduccion_definitiva - deduccion_provisional
-    if importe > Decimal("0"):
-        direccion = RegularizacionProrrataDireccion.DEDUCCION
-    elif importe < Decimal("0"):
-        direccion = RegularizacionProrrataDireccion.INGRESO
-    else:
-        direccion = RegularizacionProrrataDireccion.NINGUNA
+    particionada = compute_regularizacion_prorrata_particionada(
+        particiones=(
+            RegularizacionProrrataParticion(
+                cuotas_soportadas_deducibles=cuotas_soportadas_deducibles,
+                prorrata_definitiva_pct=prorrata_definitiva_pct,
+            ),
+        ),
+        deducciones_provisionales_practicadas=deducciones_provisionales_practicadas,
+    )
     return RegularizacionProrrataResult(
         cuotas_soportadas_deducibles=cuotas_soportadas_deducibles,
         prorrata_provisional_pct=prorrata_provisional_pct,
         prorrata_definitiva_pct=prorrata_definitiva_pct,
-        deduccion_provisional=deduccion_provisional,
-        deduccion_definitiva=deduccion_definitiva,
-        importe=importe,
-        direccion=direccion,
+        deduccion_provisional=particionada.deduccion_provisional,
+        deduccion_definitiva=particionada.deduccion_definitiva,
+        importe=particionada.importe,
+        direccion=particionada.direccion,
     )
 
 
@@ -827,10 +911,13 @@ __all__ = (
     "ProrrataRegime",
     "ProrrataResult",
     "RegularizacionProrrataDireccion",
+    "RegularizacionProrrataParticion",
+    "RegularizacionProrrataParticionadaResult",
     "RegularizacionProrrataResult",
     "compute_prorrata_definitiva_anual",
     "compute_prorrata_general",
     "compute_regularizacion_prorrata_anual",
+    "compute_regularizacion_prorrata_particionada",
     "deductible_percentage_for",
     "especial_mandatory_rule",
     "is_especial_mandatory",

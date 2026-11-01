@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterable, Mapping, Sequence
+from dataclasses import dataclass
 from decimal import Decimal
 
 from ...core.decimal.constants import HUNDRED
@@ -27,12 +28,12 @@ from ...domain.calculations.registry.ledger_iva_bindings import (
 )
 from ...domain.calculations.registry.prorrata_register_catalogue import (
     especial_prorrata_register_regime,
-    general_prorrata_register_regime,
     ninguna_prorrata_register_regime,
 )
 from ...domain.calculations.registry.prorrata_vocabulary import (
     default_input_classification,
     input_classification_tokens,
+    resolve_input_classification_definition,
 )
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.iva.prorrata import (
@@ -44,6 +45,7 @@ from .iva_ledger import (
     IvaDifferentiatedDeductionContribution,
     IvaLedgerProrrataApportionment,
     IvaLedgerSectorApportionment,
+    IvaLedgerSettlementApportionment,
 )
 
 
@@ -133,34 +135,34 @@ def _apply_settlement_apportionment(
     *,
     operation: PinnedAuthorityOperation,
 ) -> dict[BindingId, Decimal]:
-    """Deduct the settlement liquidation's cuotas at the definitive percentage.
+    """Deduct the settlement liquidation's cuotas at the definitive percentages.
 
     LIVA art. 105.Cuatro: the year's last liquidation applies the definitive
     percentage to its own cuotas; earlier liquidations keep the provisional
-    one. Each side goes through the ordinary apportionment, and only deducible
+    one. A differentiated sector applies its own settled definitive
+    (art. 101.Uno) and prorrata especial applies the definitive only to the
+    common-use slice (art. 106.Uno regla 3.ª), because the settlement side runs
+    the same regime-aware apportionment as every other period. Only deducible
     cuota bindings are recombined -- every other binding keeps its
     unapportioned value from the whole observation set.
 
     Raises:
-        AggregationValidationError: When a differentiated-sector or especial
-            apportionment carries a settlement percentage, which has no
-            derivation here.
+        AggregationValidationError: When the settlement's sector percentages
+            do not name exactly the apportionment's declared sectors.
     """
     settlement = apportionment.settlement
     if settlement is None:
         return binding_values
-    if apportionment.sector_apportionments or apportionment.regime != general_prorrata_register_regime(
-        authority=operation
-    ):
-        raise AggregationValidationError(
-            tr("aggregation.iva_ledger.errors.settlement_apportionment_requires_general_regime"),
-            context={"regime": str(apportionment.regime), "period": settlement.period.registry_token},
-        )
     deducible_binding_ids = deducible_cuota_binding_ids(revision)
     if not deducible_binding_ids:
         return binding_values
     provisional = apportionment.model_copy(update={"settlement": None})
-    definitive = provisional.model_copy(update={"percentage": settlement.percentage})
+    definitive = provisional.model_copy(
+        update={
+            "percentage": settlement.percentage,
+            "sector_apportionments": _definitive_sector_apportionments(provisional, settlement),
+        }
+    )
     in_settlement = tuple(item for item in observations if settlement.period.contains(item.transaction_date))
     earlier = tuple(item for item in observations if not settlement.period.contains(item.transaction_date))
     settled_values = resolve_iva_ledger_binding_values(
@@ -177,6 +179,28 @@ def _apply_settlement_apportionment(
         )
         for binding_id, value in binding_values.items()
     }
+
+
+def _definitive_sector_apportionments(
+    provisional: IvaLedgerProrrataApportionment,
+    settlement: IvaLedgerSettlementApportionment,
+) -> tuple[IvaLedgerSectorApportionment, ...]:
+    """Replace each declared sector's provisional percentage with its settled definitive one."""
+    definitive_by_sector = {item.sector_id: item.percentage for item in settlement.sector_percentages}
+    declared = {sector.sector_id for sector in provisional.sector_apportionments}
+    if set(definitive_by_sector) != declared:
+        raise AggregationValidationError(
+            tr("aggregation.iva_ledger.errors.settlement_apportionment_sector_mismatch"),
+            context={
+                "period": settlement.period.registry_token,
+                "declared_sector_count": len(declared),
+                "settled_sector_count": len(definitive_by_sector),
+            },
+        )
+    return tuple(
+        sector.model_copy(update={"percentage": definitive_by_sector[sector.sector_id]})
+        for sector in provisional.sector_apportionments
+    )
 
 
 def _apply_especial_apportionment(
@@ -257,6 +281,90 @@ def _partition_by_input_classification(
     return partitions
 
 
+@dataclass(frozen=True, slots=True)
+class IvaDeducibleCuotaPartition:
+    """One slice of deducible cuotas sharing a single deduction percentage.
+
+    ``sector_id`` is the differentiated sector (``None`` for a whole-entity
+    register, or for the cross-sector common-use inputs of a sectorized one).
+    ``input_classification`` is the art. 106 slice under prorrata especial and
+    ``None`` under general. ``deduction_percentage`` is the percentage the
+    apportionment applies to the slice, and ``regularisable`` says whether that
+    percentage is the art. 104 percentage whose art. 105 procedure the annual
+    regularisation corrects: every general slice and the especial common slice
+    (LIVA art. 106.Uno regla 3.ª); the fixed-percentage especial slices are
+    final. ``gross_by_binding`` holds the slice's unapportioned deducible cuota
+    per binding.
+    """
+
+    sector_id: str | None
+    regime: ProrrataRegisterRegime
+    input_classification: InputClassification | None
+    deduction_percentage: Decimal
+    regularisable: bool
+    gross_by_binding: Mapping[BindingId, Decimal]
+
+    def deduction_by_binding(self) -> dict[BindingId, Decimal]:
+        """Return the slice's apportioned (unrounded) deducible cuota per binding."""
+        multiplier = self.deduction_percentage / HUNDRED
+        return {binding_id: value * multiplier for binding_id, value in self.gross_by_binding.items()}
+
+
+def _regime_partitions(
+    revision: ModeloRevision,
+    observations: Sequence[IvaLedgerObservation],
+    *,
+    sector_id: str | None,
+    percentage: Decimal,
+    regime: ProrrataRegisterRegime,
+    deducible_binding_ids: frozenset[BindingId],
+    operation: PinnedAuthorityOperation,
+) -> tuple[IvaDeducibleCuotaPartition, ...]:
+    """Split one observation set into its regime's deduction slices.
+
+    ``GENERAL`` is one slice at ``percentage`` (LIVA art. 104); ``ESPECIAL``
+    is one slice per declared art. 106 input classification, with
+    ``percentage`` as the common (regla 3.ª) percentage. Every slice resolves
+    through the same canonical registry resolver.
+    """
+    if regime != especial_prorrata_register_regime(authority=operation):
+        values = resolve_ledger_iva_aggregation_binding_values(revision, observations)
+        return (
+            IvaDeducibleCuotaPartition(
+                sector_id=sector_id,
+                regime=regime,
+                input_classification=None,
+                deduction_percentage=percentage,
+                regularisable=True,
+                gross_by_binding={
+                    binding_id: values.get(binding_id, Decimal("0")) for binding_id in deducible_binding_ids
+                },
+            ),
+        )
+    partitions: list[IvaDeducibleCuotaPartition] = []
+    for classification, partition_observations in _partition_by_input_classification(
+        observations, operation=operation
+    ).items():
+        if not partition_observations:
+            continue
+        values = resolve_ledger_iva_aggregation_binding_values(revision, partition_observations)
+        partitions.append(
+            IvaDeducibleCuotaPartition(
+                sector_id=sector_id,
+                regime=regime,
+                input_classification=classification,
+                deduction_percentage=deductible_percentage_for(classification, percentage),
+                regularisable=resolve_input_classification_definition(
+                    classification, authority=operation
+                ).uses_general_percentage,
+                gross_by_binding={
+                    binding_id: values.get(binding_id, Decimal("0")) for binding_id in deducible_binding_ids
+                },
+            )
+        )
+    return tuple(partitions)
+
+
 def _apportioned_deducible_cuota(
     revision: ModeloRevision,
     observations: Sequence[IvaLedgerObservation],
@@ -268,34 +376,76 @@ def _apportioned_deducible_cuota(
 ) -> dict[BindingId, Decimal]:
     """Return only the deducible-cuota binding contributions for one observation set.
 
-    Applies the observation set's regime at ``percentage``: ``GENERAL`` multiplies
-    every deducible cuota by ``percentage`` (LIVA art. 104); ``ESPECIAL`` routes
-    each deducible cuota per the observation's ``input_classification`` (LIVA
-    art. 106.Uno reglas 100%/0%/general), with ``percentage`` as the common
-    (regla 3.ª) percentage. Both branches resolve through the SAME canonical
-    registry resolver, so one aggregation path drives every regime. This is the
-    per-partition primitive the sectores-diferenciados routing composes over each
-    sector.
+    Sums the regime's deduction slices (:func:`_regime_partitions`), so the
+    apportionment and the annual regularisation read one partition of the same
+    cuotas. This is the per-partition primitive the sectores-diferenciados
+    routing composes over each sector.
     """
     result: dict[BindingId, Decimal] = dict.fromkeys(deducible_binding_ids, Decimal("0"))
-    if regime == especial_prorrata_register_regime(authority=operation):
-        partitions = _partition_by_input_classification(observations, operation=operation)
-        for classification, partition_observations in partitions.items():
-            if not partition_observations:
-                continue
-            multiplier = deductible_percentage_for(classification, percentage) / HUNDRED
-            if multiplier == 0:
-                continue
-            partition_values = resolve_ledger_iva_aggregation_binding_values(revision, partition_observations)
-            for binding_id in deducible_binding_ids:
-                result[binding_id] += partition_values.get(binding_id, Decimal("0")) * multiplier
-        return result
-    # GENERAL regime: a single multiplier over the whole observation set.
-    multiplier = percentage / HUNDRED
-    partition_values = resolve_ledger_iva_aggregation_binding_values(revision, observations)
-    for binding_id in deducible_binding_ids:
-        result[binding_id] = partition_values.get(binding_id, Decimal("0")) * multiplier
+    for partition in _regime_partitions(
+        revision,
+        observations,
+        sector_id=None,
+        percentage=percentage,
+        regime=regime,
+        deducible_binding_ids=deducible_binding_ids,
+        operation=operation,
+    ):
+        if partition.deduction_percentage == 0:
+            continue
+        for binding_id, value in partition.deduction_by_binding().items():
+            result[binding_id] += value
     return result
+
+
+def resolve_iva_deducible_cuota_partitions(
+    revision: ModeloRevision,
+    observations: Iterable[IvaLedgerObservation],
+    *,
+    apportionment: IvaLedgerProrrataApportionment,
+    operation: PinnedAuthorityOperation,
+) -> tuple[IvaDeducibleCuotaPartition, ...]:
+    """Partition deducible cuotas exactly as the apportionment deducts them.
+
+    A whole-entity register yields its regime's slices; a sectorized register
+    (LIVA art. 101.Uno) yields each declared sector's slices at that sector's
+    percentage and the cross-sector common-use slice at the whole-entity
+    percentage, refusing missing or unknown sector identity as the
+    apportionment does. The apportionment's own percentages are used; a
+    settlement percentage, which applies only inside the settlement
+    liquidation, is ignored here.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
+    """
+    rows = tuple(observations)
+    deducible_binding_ids = deducible_cuota_binding_ids(revision)
+    if not apportionment.sector_apportionments:
+        return _regime_partitions(
+            revision,
+            rows,
+            sector_id=None,
+            percentage=apportionment.percentage,
+            regime=apportionment.regime,
+            deducible_binding_ids=deducible_binding_ids,
+            operation=operation,
+        )
+    by_sector, sector_rows = _sectorized_deduction_partitions(apportionment, rows, operation=operation)
+    partitions: list[IvaDeducibleCuotaPartition] = []
+    for sector_key, partition_observations in sector_rows.items():
+        percentage, regime = _partition_apportionment(apportionment, by_sector, sector_key)
+        partitions.extend(
+            _regime_partitions(
+                revision,
+                partition_observations,
+                sector_id=sector_key,
+                percentage=percentage,
+                regime=regime,
+                deducible_binding_ids=deducible_binding_ids,
+                operation=operation,
+            )
+        )
+    return tuple(partitions)
 
 
 def _apply_sector_apportionment(

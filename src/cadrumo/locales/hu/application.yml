@@ -336,12 +336,26 @@ application:
       unresolved:
         current_year_inputs: 'Az arányosítás-korrekció kiszámításához szükség van
           ezekre a tárgyévi értékekre: %{casillas}.'
+        gross_negative: A korábbi bevallási időszakok levonható bruttó előzetesen
+          felszámított adója a helyesbítések után negatív (%{amount}). A törvény nem
+          ír elő korrekciót negatív alapra, ezért helyesbítsd a levonásokat az érintett
+          bevallásokban, és számold ki magad a rovatot.
         provisional_missing: A %{year}. évi arányosítás-korrekcióhoz szükség van az
           ideiglenes százalékra az arányosítási nyilvántartásodból vagy az előző év
           benyújtott utolsó bevallásából.
-        regime_not_derived: A különleges arányosítás vagy az elkülönült ágazatok %{year}.
-          évi korrekciója még nem számolódik automatikusan; benyújtás előtt számold
-          ki magad a rovatot.
+        regime_not_derived: 'Az elkülönült ágazatokban közösen használt beszerzések
+          előzetesen felszámított adójának %{year}. évi korrekciója nem számolódik
+          automatikusan: a százaléka csak a használatban osztozó ágazatok ügyleteit
+          veszi figyelembe, és a mezőgazdasági, valamint a kiegyenlítő pótlékos különleges
+          rendszer ügyleteit levonásra nem jogosítónak tekinti, ezt pedig a megadott
+          volumenek nem mutatják. Benyújtás előtt számold ki magad a rovatot.'
+        register_regime_not_apportioning: Az arányosítási nyilvántartásod a(z) %{year}.
+          évre nem rögzít arányosító rendszert, de a megadott volumenek levonásra
+          nem jogosító ügyleteket mutatnak; a korrekció előtt javítsd a nyilvántartást
+          vagy a volumeneket.
+        sector_definitive_missing: 'Ezeknek az elkülönült ágazatoknak nincs lezárt
+          végleges százaléka a(z) %{year}. évre: %{sectors}; a korrekció előtt zárd
+          le mindegyik ágazatot.'
         selector_unmapped: Az arányosítás-korrekció kötése egyetlen feloldó kimenethez
           sem tartozik.
         settlement_observation_ambiguous: Több utolsó 303-as bevallás is szerepel
@@ -360,10 +374,17 @@ application:
           a volumeneket, vagy számold ki magad a rovatot.
         source_period_cuotas_missing: 'A(z) %{period} bevallás a korrekcióhoz szükséges
           levonható rovatok nélkül lett benyújtva: %{casillas}.'
+        source_period_gross_unavailable: A(z) %{period} bevallás levonható előzetesen
+          felszámított adót tartalmaz, de a nyilvántartásban nincs erre az időszakra
+          levonható tétel, így az arányosítás előtti bruttó adó ismeretlen; a korrekció
+          előtt rögzítsd a nyilvántartásban az időszak előzetesen felszámított adóját.
         source_period_ledger_divergence: A(z) %{period} bevallás %{filed} összeget
           tartalmaz a(z) %{casilla} rovatban, de a nyilvántartás adója az ideiglenes
-          %{percentage}% mellett %{expected}; a korrekció előtt egyeztesd a nyilvántartást
-          a benyújtott bevallással.
+          arányosítási százalékaid mellett %{expected}; a korrekció előtt egyeztesd
+          a nyilvántartást a benyújtott bevallással.
+        source_period_ledger_refused: A(z) %{period} bevallás nyilvántartott előzetesen
+          felszámított adója nem osztható fel az arányosítási nyilvántartásod szerint;
+          a korrekció előtt oldd meg a nyilvántartás elutasítását.
         source_periods_missing: 'A korrekció az év korábbi bevallási időszakaira terjed
           ki, és ezek nincsenek benyújtva: %{periods}.'
         source_periods_refused: 'Ezek a korábbi bevallások olyan nyomtatványváltozatot

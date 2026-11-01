@@ -281,6 +281,15 @@ class IvaLedgerSectorApportionment(BaseModel):
     regime: ProrrataRegisterRegime = Field(default_factory=general_prorrata_register_regime)
 
 
+class IvaLedgerSettlementSectorPercentage(BaseModel):
+    """One differentiated sector's settled definitive percentage (LIVA arts. 101.Uno, 105.Cuatro)."""
+
+    model_config = _STRICT_FROZEN
+
+    sector_id: str = Field(min_length=1, max_length=64)
+    percentage: Decimal = Field(..., ge=Decimal("0"), le=HUNDRED)
+
+
 class IvaLedgerSettlementApportionment(BaseModel):
     """Definitive prorrata percentage for the year's annual settlement liquidation.
 
@@ -291,12 +300,28 @@ class IvaLedgerSettlementApportionment(BaseModel):
     apportioned at ``percentage``; every other observation keeps the
     provisional percentage of the enclosing apportionment, so a Modelo 390
     spanning the whole year reproduces each periodic liquidation.
+
+    Under differentiated sectors (LIVA art. 101.Uno) each declared sector
+    settles its own definitive percentage, carried in
+    ``sector_percentages``; ``percentage`` is then the definitive percentage
+    of the cross-sector common-use inputs. Under prorrata especial
+    ``percentage`` reaches only the common-use slice (art. 106.Uno regla 3.ª).
     """
 
     model_config = _STRICT_FROZEN
 
     period: Period
     percentage: Decimal = Field(..., ge=Decimal("0"), le=HUNDRED)
+    sector_percentages: tuple[IvaLedgerSettlementSectorPercentage, ...] = ()
+
+    @field_validator("sector_percentages")
+    @classmethod
+    def _sector_percentages_are_unique(
+        cls, value: tuple[IvaLedgerSettlementSectorPercentage, ...]
+    ) -> tuple[IvaLedgerSettlementSectorPercentage, ...]:
+        if len({item.sector_id for item in value}) != len(value):
+            raise ValueError("settlement sector percentages must name each sector once")
+        return value
 
 
 class IvaLedgerProrrataApportionment(BaseModel):
@@ -332,11 +357,12 @@ class IvaLedgerProrrataApportionment(BaseModel):
     authorisation_reference: str | None = Field(default=None, min_length=1)
     sector_apportionments: tuple[IvaLedgerSectorApportionment, ...] = ()
     settlement: IvaLedgerSettlementApportionment | None = None
-    """Definitive percentage for the settlement liquidation, once it is known.
+    """Definitive percentages for the settlement liquidation, once they are known.
 
-    Only a whole-entity general apportionment carries one: the differentiated
-    and especial settlements are not yet derived and stay with their
-    provisional percentage while the regularisation box remains unresolved.
+    A differentiated-sector apportionment carries one only when every declared
+    sector has settled its definitive percentage; otherwise the settlement
+    liquidation keeps the provisional percentages while the regularisation box
+    stays unresolved.
     """
 
 
@@ -895,6 +921,31 @@ def sector_scoped_apportionment(
     )
 
 
+def settled_sector_definitive_percentages(
+    register: ProrrataRegister,
+    ejercicio: int,
+) -> tuple[IvaLedgerSettlementSectorPercentage, ...] | None:
+    """Return every declared sector's settled definitive percentage for the ejercicio.
+
+    LIVA art. 101.Uno has each differentiated sector apply its own deduction
+    regime, so its settlement liquidation deducts at the sector's own
+    definitive percentage (art. 105.Cuatro), written on its
+    ``(ejercicio, sector_id)`` register entry when the sector is settled. A
+    whole-entity register returns an empty tuple; a sectorized register with
+    any sector not yet settled returns ``None`` so no sector is settled while
+    another keeps its provisional percentage.
+    """
+    percentages: list[IvaLedgerSettlementSectorPercentage] = []
+    for sector_id in register.sector_ids():
+        entry = register.entry_for(ejercicio, sector_id=sector_id)
+        if entry is None or entry.definitive_percentage is None:
+            return None
+        percentages.append(
+            IvaLedgerSettlementSectorPercentage(sector_id=sector_id, percentage=entry.definitive_percentage)
+        )
+    return tuple(percentages)
+
+
 __all__ = [
     "AnnualDeducibleTotalsByRegime",
     "IvaLedgerAggregation",
@@ -903,7 +954,9 @@ __all__ = [
     "IvaLedgerProrrataApportionment",
     "IvaLedgerSectorApportionment",
     "IvaLedgerSettlementApportionment",
+    "IvaLedgerSettlementSectorPercentage",
     "ProrrataLedgerReference",
     "aggregate_iva_ledger_observations",
     "aggregate_iva_ledger_observations_from_repositories",
+    "settled_sector_definitive_percentages",
 ]
