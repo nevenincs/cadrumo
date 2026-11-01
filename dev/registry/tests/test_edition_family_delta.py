@@ -20,6 +20,7 @@ from ..conformance.loader_directory_mode_support import write_standard_manifest
 from ..edition_delta_assessment import assess_migration_state
 from ..edition_family_delta import restates_stated_whole_sequence
 from ..edition_family_delta_collapse import collapse_keyed_families
+from .synthetic_delta_edition_support import write_sectioned_edition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -65,29 +66,6 @@ def _layout(revision_id: str, *records: str) -> str:
     return text
 
 
-def _edition(
-    modelo_dir: Path,
-    revision_id: str,
-    *,
-    manifest_extra: str = "",
-    sections: dict[str, str],
-) -> Path:
-    year = int(revision_id)
-    revision_dir = modelo_dir / "revisions" / revision_id
-    revision_dir.mkdir(parents=True)
-    (revision_dir / "revision.toml").write_text(
-        f'[revisions."{revision_id}"]\nvalid_from = {year}-01-01\nvalid_to = {year}-12-31\n'
-        f'period_selector = {{ years = [{year}], periods = ["0A"] }}\n'
-        f'legal_refs = ["{_REF}"]\nsource_refs = ["{_SOURCE}"]\n' + manifest_extra,
-        encoding="utf-8",
-        newline="\n",
-    )
-    for section, text in sections.items():
-        (revision_dir / section).mkdir()
-        (revision_dir / section / "0001-declarations.toml").write_text(text, encoding="utf-8", newline="\n")
-    return revision_dir
-
-
 def _modelo(root: Path) -> Path:
     modelo_dir = root / "999"
     modelo_dir.mkdir(parents=True)
@@ -116,7 +94,7 @@ def test_a_declared_position_is_kept_and_no_greedy_position_is_appended(tmp_path
     declared, so the family carried four positions for one move.
     """
     source = _modelo(tmp_path / "source")
-    _edition(
+    write_sectioned_edition(
         source,
         "2024",
         sections={
@@ -126,7 +104,7 @@ def test_a_declared_position_is_kept_and_no_greedy_position_is_appended(tmp_path
             ),
         },
     )
-    _edition(
+    write_sectioned_edition(
         source,
         "2025",
         manifest_extra=(
@@ -149,7 +127,7 @@ def test_a_declared_position_is_kept_and_no_greedy_position_is_appended(tmp_path
 def test_the_order_is_restored_with_one_move_per_member_out_of_place(tmp_path: Path) -> None:
     """With no position declared the collapse emits the minimal set: one move, not three."""
     source = _modelo(tmp_path / "source")
-    _edition(
+    write_sectioned_edition(
         source,
         "2024",
         sections={
@@ -160,7 +138,7 @@ def test_the_order_is_restored_with_one_move_per_member_out_of_place(tmp_path: P
         },
     )
     # A restated family carries its members in exactly the order it states them.
-    _edition(
+    write_sectioned_edition(
         source,
         "2025",
         manifest_extra=(
@@ -200,8 +178,10 @@ def test_a_casilla_storage_baseline_declared_alone_leaves_the_families_as_author
     formulas = "".join(
         _formula("{rev}", formula_id, f"000{index}") for index, formula_id in enumerate(_FORMULAS, start=1)
     )
-    _edition(source, "2024", sections={"casillas": _casillas("2024"), "formulas": formulas.replace("{rev}", "2024")})
-    _edition(
+    write_sectioned_edition(
+        source, "2024", sections={"casillas": _casillas("2024"), "formulas": formulas.replace("{rev}", "2024")}
+    )
+    write_sectioned_edition(
         source,
         "2025",
         manifest_extra='casilla_storage_baseline = "2024"\n',
@@ -226,8 +206,10 @@ def test_a_family_baseline_the_author_declared_is_still_used(tmp_path: Path) -> 
     formulas = "".join(
         _formula("{rev}", formula_id, f"000{index}") for index, formula_id in enumerate(_FORMULAS, start=1)
     )
-    _edition(source, "2024", sections={"casillas": _casillas("2024"), "formulas": formulas.replace("{rev}", "2024")})
-    _edition(
+    write_sectioned_edition(
+        source, "2024", sections={"casillas": _casillas("2024"), "formulas": formulas.replace("{rev}", "2024")}
+    )
+    write_sectioned_edition(
         source,
         "2025",
         manifest_extra='casilla_storage_baseline = "2024"\nfamily_storage_baseline = "2024"\n',
@@ -256,13 +238,13 @@ def _layout_modelo(root: Path, *, successor_layout: str, successor_extra: str = 
     collapse over it; the layout is the family under test.
     """
     source = _modelo(root)
-    _edition(
+    write_sectioned_edition(
         source,
         "2024",
         sections={"casillas": _casillas("2024"), "export_layouts": _layout("2024", "cabecera", "detalle")},
     )
     sections = {"export_layouts": successor_layout} if successor_layout else {}
-    _edition(
+    write_sectioned_edition(
         source,
         "2025",
         manifest_extra='family_storage_baseline = "2024"\nscoped_families = ["export_layouts"]\n' + successor_extra,
@@ -325,8 +307,10 @@ def test_a_record_folding_override_is_reported_and_stated_again(tmp_path: Path) 
 
 def _window_modelo(root: Path, *, successor_extra: str) -> Path:
     source = _modelo(root)
-    _edition(source, "2024", sections={"casillas": _casillas("2024"), "deadline_windows": _window("2024", 2024)})
-    _edition(
+    write_sectioned_edition(
+        source, "2024", sections={"casillas": _casillas("2024"), "deadline_windows": _window("2024", 2024)}
+    )
+    write_sectioned_edition(
         source,
         "2025",
         manifest_extra='family_storage_baseline = "2024"\n' + successor_extra,
