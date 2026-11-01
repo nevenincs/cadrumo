@@ -46,6 +46,10 @@ from cadrumo.core.operations import OperationEffect, OperationTerminalCondition,
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.export import resolve_export_layout
 from cadrumo.domain.calculations.registry.export_parse import parse_export_payload
+from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
+from cadrumo.domain.modelos.calculation_revision import CalculationRevisionCatalogue
+from cadrumo.domain.modelos.verification_report import VerificationReportCatalogue
+from cadrumo.domain.modelos.work_unit import WorkUnitCatalogue
 from cadrumo.tests.cli_envelope import require_error_document, unwrap_cli_result, unwrap_envelope_notices
 from cadrumo_client.commands.registered_operation import run_registered_operation
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
@@ -99,56 +103,53 @@ def _invoke(profile: NativeCliProfileFixture, *arguments: str) -> Result:
     return _invoke_native_command(profile, "app", "quickfile", *arguments)
 
 
-def test_native_quickfile_calculates_then_retains_cross_period_refusal_and_exact_profile(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-    authority_operation: PinnedAuthorityOperation,
-) -> None:
-    """Persist the canonical M130 chain and refuse an unavailable previous filing."""
-    selected = authority_operation.snapshot("130", filing_year=2025, period="1T")
-    output = (tmp_path / "native-modelo-130.txt").resolve()
-    original_operation = FrontendClient.operation
-    original_result = FrontendClient.read_result_document
-    requests: dict[str, QuickfileRequest] = {}
-    terminal: dict[str, tuple[OperationTerminalCondition | None, OperationEffect]] = {}
-    projections: list[QuickfileProjection] = []
-    foreign_refused = False
+class _QuickfileObservations:
+    """Watch the real client: every quickfile submission and its settled result are checked in flight."""
 
-    def observe_operation(client: FrontendClient, request: OperationRequest, *, deadline: float) -> OperationReply:
-        reply = original_operation(client, request, deadline=deadline)
+    def __init__(self, selected: RegistrySnapshot) -> None:
+        self.revision_id = str(selected.revision.id)
+        self.original_operation = FrontendClient.operation
+        self.original_result = FrontendClient.read_result_document
+        self.requests: dict[str, QuickfileRequest] = {}
+        self.terminal: dict[str, tuple[OperationTerminalCondition | None, OperationEffect]] = {}
+        self.projections: list[QuickfileProjection] = []
+        self.foreign_refused = False
+
+    def operation(self, client: FrontendClient, request: OperationRequest, *, deadline: float) -> OperationReply:
+        reply = self.original_operation(client, request, deadline=deadline)
         if isinstance(request, OperationSubmit) and request.definition_id == QUICKFILE_OPERATION_DEFINITION_ID:
             assert isinstance(reply, OperationSubmitted)
             payload = QuickfileRequest.model_validate_json(request.payload_json)
             assert payload.profile_id == client.profile_id
             assert request.subject_ref == profile_operation_subject(str(client.profile_id))
-            assert payload.revision_id == str(selected.revision.id)
-            requests[reply.receipt.operation_id] = payload
+            assert payload.revision_id == self.revision_id
+            self.requests[reply.receipt.operation_id] = payload
         if isinstance(reply, OperationObserved) and isinstance(reply.observation, OperationObservationSuccessV1):
             state = reply.observation.projection
-            terminal[state.operation_id] = (state.terminal_condition, state.effect)
+            self.terminal[state.operation_id] = (state.terminal_condition, state.effect)
         return reply
 
-    def observe_result(
+    def result(
+        self,
         client: FrontendClient,
         result: OperationResultProjectionRequestV1,
         *,
         timeout: float = 60,
         deadline: float | None = None,
     ) -> dict[str, JsonValue]:
-        nonlocal foreign_refused
-        document = original_result(client, result, timeout=timeout, deadline=deadline)
-        if result.operation_id not in requests:
+        document = self.original_result(client, result, timeout=timeout, deadline=deadline)
+        if result.operation_id not in self.requests:
             return document
         envelope = OperationResultProjectionSuccessV1[QuickfileProjection].model_validate_json(
             canonical_json_bytes(document)
         )
         projection = envelope.projection
-        payload = requests[result.operation_id]
+        payload = self.requests[result.operation_id]
         assert projection.profile_id == payload.profile_id == client.profile_id
         assert projection.period == payload.period
         assert projection.registry_revision_id == payload.revision_id
-        assert terminal[result.operation_id] == (OperationTerminalCondition.SUCCEEDED, projection.effect)
-        projections.append(projection)
+        assert self.terminal[result.operation_id] == (OperationTerminalCondition.SUCCEEDED, projection.effect)
+        self.projections.append(projection)
         # Exercise the actual resolver before dispatch even if the frontend also
         # rejects an asserted foreign bucket during its own input validation.
         foreign = QuickfileRequest.model_validate(
@@ -167,11 +168,104 @@ def test_native_quickfile_calculates_then_retains_cross_period_refusal_and_exact
             )
         assert denied.value.reason == AccessDenialCode.PROFILE_MISMATCH.value
         assert client.status().status.connected
-        foreign_refused = True
+        self.foreign_refused = True
         return document
+
+
+def _watch_quickfile_client(monkeypatch: pytest.MonkeyPatch, selected: RegistrySnapshot) -> _QuickfileObservations:
+    observations = _QuickfileObservations(selected)
+
+    def observe_operation(client: FrontendClient, request: OperationRequest, *, deadline: float) -> OperationReply:
+        return observations.operation(client, request, deadline=deadline)
+
+    def observe_result(
+        client: FrontendClient,
+        result: OperationResultProjectionRequestV1,
+        *,
+        timeout: float = 60,
+        deadline: float | None = None,
+    ) -> dict[str, JsonValue]:
+        return observations.result(client, result, timeout=timeout, deadline=deadline)
 
     monkeypatch.setattr(FrontendClient, "operation", observe_operation)
     monkeypatch.setattr(FrontendClient, "read_result_document", observe_result)
+    return observations
+
+
+def _reopen_oracle(
+    profile: NativeCliProfileFixture, profile_id: UUID, authority_operation: PinnedAuthorityOperation
+) -> None:
+    close_active_bucket_session()
+    authenticate_profile_for_invocation(
+        name=str(profile_id),
+        passphrase_callback=lambda: profile.passphrase,
+        profile_decode_context=authority_operation.profile_decode_context(),
+    )
+
+
+def _assert_partial_projection(
+    reply: Result, observed: _QuickfileObservations, profile_id: UUID, output: Path
+) -> QuickfileProjection:
+    """The chain stops at verify with the cross-period refusal, writes nothing to the export path."""
+    payload = unwrap_cli_result(reply)
+    assert payload["completed"] is False and payload["stopped_at_stage"] == QuickfileStage.VERIFY.value
+    assert payload["granted_verificado_completo"] is False and payload["export"] is None
+    assert len(observed.projections) == 1 and observed.foreign_refused
+    projection = observed.projections[0]
+    assert projection.profile_id == profile_id
+    assert projection.effect is OperationEffect.PARTIAL and projection.write_count > 0
+    assert tuple(row.stage for row in projection.stages) == QUICKFILE_STAGE_ORDER
+    assert projection.stages[1].status is QuickfileStageStatus.OK
+    assert projection.stages[2].status is QuickfileStageStatus.OK
+    assert projection.stages[3].status is QuickfileStageStatus.REFUSED
+    assert projection.stages[4].status is QuickfileStageStatus.SKIPPED
+    assert projection.work_unit_id is not None and projection.calculation_revision_id is not None
+    assert projection.verification_report is not None and not projection.verification_report.granted_verificado_completo
+    assert projection.export is None and not output.exists()
+    notices = json.dumps(unwrap_envelope_notices(reply.output), sort_keys=True)
+    assert "cross_period_dependency_unclean" in notices
+    assert "irpf.previous_year_economic_activity_net_income" in notices
+    return projection
+
+
+def _assert_persisted_chain(
+    projection: QuickfileProjection,
+    selected: RegistrySnapshot,
+    authority_operation: PinnedAuthorityOperation,
+    bucket_id: str,
+) -> tuple[WorkUnitCatalogue, CalculationRevisionCatalogue, VerificationReportCatalogue]:
+    work_before = WorkUnitCatalogueRepository(bucket_id=bucket_id).load()
+    calculations_before = CalculationRevisionCatalogueRepository(bucket_id=bucket_id).load(
+        operation=authority_operation
+    )
+    reports_before = VerificationReportCatalogueRepository(bucket_id=bucket_id).load(operation=authority_operation)
+    assert projection.work_unit_id is not None and projection.calculation_revision_id is not None
+    assert projection.verification_report is not None
+    work = work_before.get(projection.work_unit_id)
+    assert work is not None and work.bucket_id == bucket_id
+    assert work.modelo == "130" and work.revision_id == selected.revision.id
+    assert work.period == projection.period.to_period()
+    calculation = calculations_before.get(projection.calculation_revision_id)
+    assert calculation is not None and calculation.work_unit_id == work.work_unit_id
+    assert calculation.registry_snapshot_ref.revision_id == selected.revision.id
+    assert calculation.registry_snapshot_ref.modelo == "130"
+    assert calculation.registry_snapshot_ref.period == "1T"
+    report = reports_before.get(projection.verification_report.verification_report_id)
+    assert report is not None and report.calculation_revision_id == calculation.calculation_revision_id
+    assert not report.granted_verificado_completo
+    assert any(row.message_locale_key.endswith("cross_period_dependency_unclean") for row in report.findings)
+    return work_before, calculations_before, reports_before
+
+
+def test_native_quickfile_calculates_then_retains_cross_period_refusal_and_exact_profile(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    """Persist the canonical M130 chain and refuse an unavailable previous filing."""
+    selected = authority_operation.snapshot("130", filing_year=2025, period="1T")
+    output = (tmp_path / "native-modelo-130.txt").resolve()
+    observed = _watch_quickfile_client(monkeypatch, selected)
     with native_cli_profile_scope(tmp_path) as profile:
         observations: list[RuntimeFailureObservation] = []
         profile.failure_observer = observations.append
@@ -216,66 +310,21 @@ def test_native_quickfile_calculates_then_retains_cross_period_refusal_and_exact
         )
         reply = _invoke(profile, *arguments)
         assert reply.exit_code == 1, reply.output + "\n" + "\n".join(str(row) for row in observations)
-        payload = unwrap_cli_result(reply)
-        assert payload["completed"] is False and payload["stopped_at_stage"] == QuickfileStage.VERIFY.value
-        assert payload["granted_verificado_completo"] is False and payload["export"] is None
-        assert len(projections) == 1 and foreign_refused
-        projection = projections[0]
-        assert projection.profile_id == profile_id
-        assert projection.effect is OperationEffect.PARTIAL and projection.write_count > 0
-        assert tuple(row.stage for row in projection.stages) == QUICKFILE_STAGE_ORDER
-        assert projection.stages[1].status is QuickfileStageStatus.OK
-        assert projection.stages[2].status is QuickfileStageStatus.OK
-        assert projection.stages[3].status is QuickfileStageStatus.REFUSED
-        assert projection.stages[4].status is QuickfileStageStatus.SKIPPED
-        assert projection.work_unit_id is not None and projection.calculation_revision_id is not None
-        assert (
-            projection.verification_report is not None
-            and not projection.verification_report.granted_verificado_completo
-        )
-        assert projection.export is None and not output.exists()
-        notices = json.dumps(unwrap_envelope_notices(reply.output), sort_keys=True)
-        assert "cross_period_dependency_unclean" in notices
-        assert "irpf.previous_year_economic_activity_net_income" in notices
+        projection = _assert_partial_projection(reply, observed, profile_id, output)
 
-        def reopen() -> None:
-            close_active_bucket_session()
-            authenticate_profile_for_invocation(
-                name=str(profile_id),
-                passphrase_callback=lambda: profile.passphrase,
-                profile_decode_context=authority_operation.profile_decode_context(),
-            )
-
-        reopen()
+        _reopen_oracle(profile, profile_id, authority_operation)
         try:
             bucket_id = str(profile_id)
-            work_before = WorkUnitCatalogueRepository(bucket_id=bucket_id).load()
-            calculations_before = CalculationRevisionCatalogueRepository(bucket_id=bucket_id).load(
-                operation=authority_operation
+            work_before, calculations_before, reports_before = _assert_persisted_chain(
+                projection, selected, authority_operation, bucket_id
             )
-            reports_before = VerificationReportCatalogueRepository(bucket_id=bucket_id).load(
-                operation=authority_operation
-            )
-            work = work_before.get(projection.work_unit_id)
-            assert work is not None and work.bucket_id == bucket_id
-            assert work.modelo == "130" and work.revision_id == selected.revision.id
-            assert work.period == projection.period.to_period()
-            calculation = calculations_before.get(projection.calculation_revision_id)
-            assert calculation is not None and calculation.work_unit_id == work.work_unit_id
-            assert calculation.registry_snapshot_ref.revision_id == selected.revision.id
-            assert calculation.registry_snapshot_ref.modelo == "130"
-            assert calculation.registry_snapshot_ref.period == "1T"
-            report = reports_before.get(projection.verification_report.verification_report_id)
-            assert report is not None and report.calculation_revision_id == calculation.calculation_revision_id
-            assert not report.granted_verificado_completo
-            assert any(row.message_locale_key.endswith("cross_period_dependency_unclean") for row in report.findings)
         finally:
             close_active_bucket_session()
         denied = _invoke(profile, *arguments, "--bucket-id", str(uuid4()))
         assert denied.exit_code == 2, (denied.output, observations)
         require_error_document(denied.output)
-        assert len(projections) == 1 and not output.exists()
-        reopen()
+        assert len(observed.projections) == 1 and not output.exists()
+        _reopen_oracle(profile, profile_id, authority_operation)
         try:
             assert WorkUnitCatalogueRepository(bucket_id=bucket_id).load() == work_before
             assert (
