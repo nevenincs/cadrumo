@@ -1842,6 +1842,33 @@ def test_real_dictionaries_check_names_abbreviations_and_sentence_ends(monkeypat
     assert set(spelling[("en", "typo")]) == {"Móvill", "vee", "Móvil"}
 
 
+@pytest.mark.parametrize(
+    ("locale", "word"),
+    [("en", word) for word in ("transitorily", "unseizable", "registrable", "uncollectible", "unapplied", "sublessee")]
+    + [
+        ("es", word)
+        for word in (
+            "caución",
+            "tautológica",
+            "enrutado",
+            "autoritativo",
+            "exoneraciones",
+            "improcedentemente",
+            "reinvertida",
+            "enchufables",
+            "indisponible",
+            "autorrepercusión",
+            "cofinanciadoras",
+        )
+    ],
+)
+def test_attested_legal_note_words_keep_their_language_and_reject_typos(locale: str, word: str) -> None:
+    assert is_project_spelling(locale, word)
+    assert not is_project_spelling(locale, word + "qq")
+    for other in {"en", "ca", "es", "hu"} - {locale}:
+        assert not is_project_spelling(other, word)
+
+
 def test_us_english_behavior_is_recognized_without_accepting_a_typo() -> None:
     assert is_project_spelling("en", "behavior")
     assert not is_project_spelling("en", "behavor")

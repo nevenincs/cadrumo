@@ -36,6 +36,19 @@ REVIEWED_SPANISH_LEGAL_SPELLINGS = frozenset(
 REVIEWED_LOCALE_SPELLINGS: dict[str, frozenset[str]] = {
     "en": frozenset(
         {
+            # Exact English legal-note dictionary gaps, independently attested:
+            # https://www.merriam-webster.com/dictionary/transitorily
+            # https://www.merriam-webster.com/dictionary/unseizable
+            # https://www.merriam-webster.com/dictionary/registrable
+            # https://www.merriam-webster.com/dictionary/uncollectible
+            # https://www.merriam-webster.com/dictionary/unapplied
+            # https://www.merriam-webster.com/legal/sublessee
+            "transitorily",
+            "unseizable",
+            "registrable",
+            "uncollectible",
+            "unapplied",
+            "sublessee",
             # Technical prose forms used in the project documentation and UI.
             # https://learn.microsoft.com/en-us/dynamics365/guidance/implementation-guide/extend-your-solution-guidance-product-fo
             # https://learn.microsoft.com/en-us/dynamics365/fin-ops-core/dev-itpro/data-entities/dual-write/dual-write-async-faq
@@ -357,6 +370,33 @@ REVIEWED_LOCALE_SPELLINGS: dict[str, frozenset[str]] = {
     ),
     "es": frozenset(
         {
+            # Exact Spanish legal-note forms, never English fallback vocabulary.
+            # DLE lemmas attest the listed forms or their regular gender,
+            # plural, participle and -mente inflections:
+            # https://dle.rae.es/cauci%C3%B3n
+            # https://dle.rae.es/tautol%C3%B3gico
+            # https://dle.rae.es/enrutado
+            # https://dle.rae.es/autoritativo
+            # https://dle.rae.es/exoneraci%C3%B3n
+            # https://dle.rae.es/improcedente
+            # https://dle.rae.es/reinvertir
+            # https://dle.rae.es/enchufable
+            # https://dle.rae.es/indisponible
+            "caución",
+            "tautológica",
+            "enrutado",
+            "autoritativo",
+            "exoneraciones",
+            "improcedentemente",
+            "reinvertida",
+            "enchufables",
+            "indisponible",
+            # Exact fiscal usage (domain attestation, not a DLE claim):
+            # https://serviciostelematicosext.hacienda.gob.es/TEAC/DYCTEA/criterio.aspx?id=00%2F04628%2F2009%2F00%2F0%2F1
+            "autorrepercusión",
+            # Exact native Spanish administrative usage, not a participle claim:
+            # https://sede.mscbs.gob.es/ciudadanos/procAdministrativos.do?cod=3125710&tipo=detallar
+            "cofinanciadoras",
             # Fiscal and technical prose attested by the tax-administration
             # association, the RAE, Python's glossary, and the software vendor.
             # https://www.ciat.org/Biblioteca/ConferenciasTecnicas/2010/Espanol/e-book_conferencia_paris_2010.pdf

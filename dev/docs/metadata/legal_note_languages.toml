@@ -764,6 +764,12 @@ text = "contenido del régimen simplificado. Determinación de las cuotas tribut
 language = "es"
 text = "exención sobre dividendos y rentas derivadas de la transmisión de valores representativos de los fondos propios de entidades residentes y no residentes en territorio español."
 
+[[legal."ley-27-2014:art-21"]]
+language = "es"
+text = "Establece el régimen de "
+[[legal."ley-27-2014:art-21"]]
+language = "es"
+text = ": dividendos y ganancias por transmisión de acciones quedan exentos cuando se cumple el umbral del 5 por ciento de participación sostenida durante un año, con requisito adicional para no residentes de tributación mínima al 10 por ciento nominal. Base sustantiva de las correcciones negativas por dividendos exentos en M200."
 [[legal."ley-27-2014:art-22"]]
 language = "es"
 text = "exención de las rentas obtenidas en el extranjero a través de un establecimiento permanente. Establece la exención para rentas positivas obtenidas por EPs no residentes cuando el EP haya estado sujeto al impuesto extranjero a un tipo nominal de al menos el 10 por ciento, junto con la exención en transmisión o cese del EP. Las rentas negativas no se integran salvo en caso de cese (con minoración por rentas positivas previamente exentas o deducidas). Base sustantiva de las correcciones por rentas-EP-no-residente en M200."
@@ -868,6 +874,9 @@ text = "Convenio Económico Navarra"
 language = "es"
 text = "disposición final cuarta"
 
+[[legal."valenciana-ley-13-1997:art-2-bis"]]
+language = "ca"
+text = "Comunitat Valenciana"
 [[legal."ley-49-2002:art-10"]]
 language = "es"
 text = "Impuesto sobre Sociedades"
@@ -1100,6 +1109,15 @@ text = "Una lista recortada o ampliada por la cola deja de satisfacer la tercera
 language = "es"
 text = "Benicull de Xúquer rompe el orden alfabético del resto del anexo; se conserva tal cual porque así lo pública el BOE, y no se reordena."
 
+[[legal."real-decreto-ley-6-2024:anexo"]]
+language = "es"
+text = "11 se remite a el en lugar de enumerar."
+[[legal."real-decreto-ley-6-2024:anexo"]]
+language = "es"
+text = "consolidated_as_of fecha esas bytes: el anexo es modificable por Acuerdo de Consejo de Ministros conforme al art. 1 apartado 4, así que una lista sin fecha sería una instantánea disfrazada de norma."
+[[legal."real-decreto-ley-6-2024:anexo"]]
+language = "es"
+text = "required_text ancla tres puntos que discriminan esta versión concreta: el titulo del listado, la entrada 43 con su salvedad territorial literal (Loriguilla, solo núcleo urbano junto A3, que ninguna otra redacción comparte) y la entrada 78, que cierra la lista."
 [[legal."real-decreto-ley-6-2024:art-1"]]
 language = "es"
 text = "RDL 6/2024 art."
@@ -1144,6 +1162,9 @@ text = "Los AID correspondientes a dotaciones por deterioro de créditos por ins
 language = "es"
 text = "Funda la sección activos_impuesto_diferido_aid_art_130_lis del Modelo 200, que hasta ahora citaba únicamente la lista genérica de 18 artículos común a toda la revisión y no el artículo que establece el derecho."
 
+[[legal."ley-27-2014:art-130"]]
+language = "es"
+text = "13.1.a), y los derivados de los apartados 1 y 2 del art. 14 (sistemas de previsión social y prejubilación), pueden convertirse en crédito exigible por un importe igual a la cuota líquida positiva del periodo impositivo de generación, cuando concurra alguna de las circunstancias del apartado 2 (perdidas contables en los términos que fija, o liquidación o insolvencia judicialmente declarada)."
 [[legal."real-decreto-ley-4-2024:art-4"]]
 language = "es"
 text = "RDL 4/2024 art."
@@ -1284,6 +1305,9 @@ text = "rentas sujetas a retención o ingreso a cuenta (apartados 1-2) y rentas 
 language = "es"
 text = "Garantías para el aplazamiento y fraccionamiento de la deuda."
 
+[[legal."ley-58-2003:art-82"]]
+language = "es"
+text = "certificado de seguro de caución"
 [[legal."ley-58-2003:art-191"]]
 language = "es"
 text = "Infracción por dejar de ingresar la deuda tributaria resultante de una autoliquidación."
@@ -1403,3 +1427,58 @@ text = "Disposición final única de la Orden EHA/1033/2011: sustituye el anexo 
 [[legal."ley-27-2014:art-12"]]
 language = "es"
 text = "porcentaje constante degresivo"
+[[legal."ley-37-1992:art-106"]]
+language = "es"
+text = "Artículo 106 LIVA: la prorrata especial. Apartado Uno, tres reglas de deducción por uso del input: 1a las cuotas soportadas en bienes/servicios utilizados EXCLUSIVAMENTE en operaciones con derecho a deducción se deducen INTEGRAMENTE (100%); 2a las utilizadas EXCLUSIVAMENTE en operaciones sin derecho NO son deducibles (0%); 3a las utilizadas SOLO EN PARTE en operaciones con derecho se deducen en la proporción del porcentaje general del art 104.Dos y siguientes, con el procedimiento del art 105. Base legal del enrutado por InputClassification (exclusively_deductible/exclusively_non_deductible/common)."
+[[legal."ley-37-1992:art-92"]]
+language = "es"
+text = "LIVA art 92: cuotas tributarias deducibles. Establece el derecho del sujeto pasivo a deducir las cuotas del IVA devengadas por las operaciones que ha soportado por repercusión directa o por las operaciones equivalentes (importaciones, adquisiciones intracomunitarias, autorrepercusión). Es la base legal del flujo IVA soportado y deducible."
+[[legal."orden-eha-3435-2007:anexo-i"]]
+language = "es"
+text = "Aprobación del Modelo 117 como autoliquidación periódica de retenciones, ingresos a cuenta y pagos a cuenta sobre rentas o ganancias por transmisiones o reembolsos de participaciones de IIC y transmisiones de derechos de suscripción."
+[[legal."rd-439-2007:art-109"]]
+language = "es"
+text = "RIRPF art 109: obligados al pago fraccionado. Establece que los contribuyentes que ejercen actividades económicas autoliquidan e ingresan pagos fraccionados de IRPF y recoge las excepciones por retenciones o ingresos a cuenta iguales o superiores al 70 por ciento."
+[[legal."rd-439-2007:art-110"]]
+language = "es"
+text = "Base reglamentaria del importe del pago fraccionado de actividades económicas: 20 por ciento para estimación directa, escala 4/3/2 por ciento para estimación objetiva con datos-base, regla sin datos-base al 2 por ciento, actividades agrarias al 2 por ciento, minoraciones y porcentajes superiores. Para la revisión 2019-y-siguientes, la regla especifica de resultados negativos de trimestres anteriores del Modelo 130 se verifica contra las instrucciones AEAT del modelo; no contra un apartado 110.5 vigente."
+[[legal."ley-27-2014:art-13"]]
+language = "es"
+text = "LIS art 13: correcciones de valor - perdida por deterioro del valor de los elementos patrimoniales. Establece la deducibilidad del deterioro de créditos cuando concurra una de cuatro circunstancias (6 meses de vencimiento, concurso, alzamiento de bienes, reclamación judicial / arbitral), las exclusiones (créditos públicos, vinculadas excepto liquidación concursal, estimaciones globales), y la no-deducibilidad general del deterioro de inmovilizado material/intangible/inversiones inmobiliarias y participaciones. Base sustantiva de la dotaciones_deterioro_creditos_u_otros_activos section de M200."
+[[legal."orden-hac-1276-2019:art-quinto"]]
+language = "es"
+text = "Orden HAC/1276/2019 artículo quinto: modifica el Modelo 280 para sustituir el sistema de multienvíos por TGVI Online desde el ejercicio 2019."
+[[legal."baleares-dl-1-2014:art-2"]]
+language = "ca"
+text = "Illes Balears"
+[[legal."ley-11-2020:da-76"]]
+language = "es"
+text = "Centenario del Rugby en España y de la"
+
+[[legal."ley-11-2020:da-76"]]
+language = "ca"
+text = "Unió Esportiva Santboiana"
+
+[[legal."ley-37-1992:art-101"]]
+language = "es"
+text = "Artículo 101 LIVA: régimen de deducciones en sectores diferenciados de la actividad. Apartado Uno: el sujeto pasivo que realiza actividades económicas en sectores diferenciados (art 9.1.c) debe aplicar SEPARADAMENTE el régimen de deducciones respecto de cada uno; la prorrata especial puede aplicarse independientemente por sector (letras a', c', d'); los sectores de la letra b' se rigen por sus regímenes especiales. Las adquisiciones para uso EN COMÚN en varios sectores se deducen por el porcentaje del art 104.Dos y siguientes (porcentaje común). Base legal del enrutado por sector: cada input a la deducción de SU sector; el input de uso común al porcentaje común del art 104.Dos. Apartado Dos (DIFERIDO en esta fase): la Administración puede autorizar un régimen de deducción COMÚN a los sectores de la letra a', autorización que NO surte efectos en el ano en que el total de cuotas deducibles por el régimen común exceda en un 20 por 100 al que resultaría aplicando con independencia el régimen de cada sector"
+
+[[legal."ley-41-1994:art-78-segundo"]]
+language = "es"
+text = "Ley 41/1994, de 30 de diciembre, de Presupuestos Generales del Estado para 1995, art. 78 (Tipos impositivos), apartado Segundo: da nueva redacción al art. 91 LIVA y fija el tipo super-reducido en el 4 por 100, elevando además el reducido del 6 al 7 por 100 en el mismo apartado. Esta es la provisión que ESTABLECE el 4 por ciento; el art. 91 LIVA es el artículo marco que lo aloja. Las dos entradas hermanas de RDL 20/2012 lo dicen explícitamente en sus propias notas: el tipo super-reducido es ANTERIOR a aquella norma y no puede heredarla por proximidad. EFECTOS: el propio encabezado del artículo dice 'Con efectos a partir del día 1 de enero de 1995 se da nueva redacción a los siguientes preceptos de la Ley 37/1992', de modo que la fecha citable esta en el texto y no en una nota. El atributo fecha_vigencia del endpoint marca 19950120, diecinueve días más tarde; tomarlo como effective_from sería erróneo. IDENTIFICACIÓN DEL APARTADO: el apartado Primero modifica el art. 90 (tipo general, 16 por 100) y el Segundo el art. 91, por lo que citar el Primero para el 4 por ciento sería erróneo en un apartado, el mismo error que las notas de 2012 documentan. No hay trampa de ancla en este documento: contiene una sola cadena 'Articulo 78', a diferencia del de 2012, que contiene tres 'Articulo 23' de los cuales el primero pertenece a otra ley. CORROBORACION INDEPENDIENTE: recorrer las 41 redacciones consolidadas del art. 91 LIVA muestra Dos = 3 por 100 hasta la redacción previa a esta norma y Dos = 4 por 100 desde ella, ininterrumpidamente hasta hoy; es un diff antes/despues, no una lectura de prosa. PROVENANCIA. Documento adquirido mediante la herramienta de adquisición del corpus consolidado oficial (modo artículo), sha256 1c484707bac3ccf0ef6a252fe1272fb8dedde5150a9bf35f81048450b8308b61, 15448 bytes, leído de nuevo desde disco antes de redactar esta entrada. La captura se hizo SIN required_text a propósito: fijar la frase del 4 por ciento antes de leer el fichero habría hecho tautológica la comprobación. Entrada preparada por agente y fundamentada en el texto empaquetado leído directamente; no la ha revisado un operador humano, y reviewed_by lo declara así."
+
+[[legal."ley-58-2003:art-65"]]
+language = "es"
+text = "Aplazamiento y fraccionamiento del pago."
+
+[[legal."ley-58-2003:art-65"]]
+language = "es"
+text = "certificado de seguro de caución"
+
+[[legal."ley-35-2006:art-11"]]
+language = "es"
+text = "LIRPF art 11: individualización de rentas — la renta se entiende obtenida por los contribuyentes en función del origen o fuente (rendimientos del trabajo por quien genera el derecho, del capital por los titulares de los elementos, de actividades por quien las realiza, ganancias por los titulares). Base legal de las casillas 'Contribuyente que obtiene los rendimientos / a quien corresponde la imputación / titular' del Modelo 100 (toma de datos ampliada)."
+
+[[legal."real-decreto-ley-4-2024:art-1"]]
+language = "es"
+text = "RDL 4/2024 art. 1: tipos impositivos temporales del IVA sobre determinados alimentos y los tipos del recargo de equivalencia correlativos. Dos ventanas. Del 1 de julio al 30 de septiembre de 2024: 5 % para aceites de semilla y pastas alimenticias, 0 % para alimentos de primera necesidad incluido el aceite de oliva; recargo 0,62 % y 0 % respectivamente. Del 1 de octubre al 31 de diciembre de 2024: 7,5 % y 2 %; recargo 1 % y 0,26 %. ALCANCE. Esta entrada cubre solo lo que fija el artículo 1. El artículo 2 del mismo real decreto-ley modifica el art. 91 Dos.1.1 LIVA con efectos desde el 1 de enero de 2025 y es una provisión distinta que necesita su propia entrada; el texto consolidado de la LIVA solo anota ese artículo 2, que es la razón por la que este instrumento parecía fijar únicamente una fecha de 2025. Las ventanas anteriores al 1 de julio de 2024 las fijan RDL 20/2022, RDL 18/2022, RDL 5/2023 y RDL 8/2023, ninguno de los cuales esta en el corpus. CONTRASTE INDEPENDIENTE. Las cuatro cifras del recargo (0,62 / 0 / 1 / 0,26) coinciden con los tipos que declara el diseño de registro del Modelo 390 en las casillas 665/666, 663/664, 693/694 y 691/692, y 0,62 es estable en las revisiones 2023, 2024 y 2025 del diseño. El preámbulo del propio real decreto-ley redondea 0,62 a \"0,6\"; prevalece el texto operativo, y el diseño lo corrobora de forma independiente. PROVENANCIA DE LA REVISIÓN. Entrada preparada por agente y fundamentada en el texto autoritativo empaquetado (documento BOE integro, sha256 3738875c89c223a8e561eb994d0349affd3006d7b4104e4e9e99b337f64dcc58). No la ha revisado un operador humano; reviewed_by lo declara así. El modelo tipa review_status como Literal[\"reviewed\"], de modo que la procedencia honesta se registra en el campo reviewed_by hasta que un operador re-selle la entrada. NOTA PARA QUIEN EDITE required_text. Las cuatro frases operativas son idénticas salvo la cifra, de modo que un required_text tomado del prefijo común coincide con las cuatro y no discrimina nada. Cada entrada lleva su cifra. Además el documento separa \"del\" de la cifra con un espacio duro (U+00A0), pero la puerta lo normaliza a espacio normal antes de comparar, así que required_text usa espacio normal: incrustar el espacio duro hace fallar todas las coincidencias."
