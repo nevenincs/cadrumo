@@ -20,6 +20,11 @@ class AutomationDenialKind(StrEnum):
     ALL = "all"
     PROFILE_LOCK = "profile_lock"
 
+    @property
+    def targets_a_record(self) -> bool:
+        """Whether this denial names one key or grant, and so must carry its identifier."""
+        return self in {AutomationDenialKind.KEY, AutomationDenialKind.GRANT}
+
 
 class AutomationDenial(BaseModel):
     """Exact authorized change, safe to retain as a pending denial intent."""
@@ -32,7 +37,7 @@ class AutomationDenial(BaseModel):
 
     @model_validator(mode="after")
     def _target(self) -> AutomationDenial:
-        if (self.kind in {AutomationDenialKind.KEY, AutomationDenialKind.GRANT}) != (self.target_id is not None):
+        if self.kind.targets_a_record != (self.target_id is not None):
             raise ValueError("denial target does not match action")
         return self
 
