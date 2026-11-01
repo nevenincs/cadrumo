@@ -115,3 +115,33 @@ calculation.
   over its contributing transactions' tax-relevant facts), and any divergence
   between the live ledger and a filed snapshot MUST surface as an explicit
   staleness signal -- uniformly for every modelo, ledger-fed or not.
+
+## Amendment 2026-11-01: versioned fingerprint field sets
+
+Approved by the operator on 2026-11-01. The single projection listed under
+Implementation is superseded by versioned field sets in
+`src/cadrumo/application/aggregation/ledger_filing_snapshot.py`. Each stored
+snapshot carries `fingerprint_field_set_version` and is always compared under
+its own version; an unknown version is refused, never reinterpreted. A field set
+is never widened in place, because that would report drift on every sealed
+filing and draft at once, and stored snapshots cannot be rehashed honestly since
+sealing-time values were not retained.
+
+Version 1 is the projection listed above. Version 2 adds the recargo, usage
+ratio, deduction fact kind and the four prorrata declarations. Version 3, now
+current, adds `investment_asset_id` and `counterparty_identification_state`,
+the two IVA-relevant transaction facts the manual edit path can change on a
+BORRADOR row. Snapshots under an older version report
+`covers_current_fact_set=false`, which is non-blocking; drafts anchored under an
+older version gain the new coverage on recalculation.
+
+Facts that IVA aggregation reads but no write path can change
+(`operation_date`, cash-accounting treatment and payment evidence,
+`exemption_article`, `rectifies_ledger_id` and similar) stay out of the field
+set until a write path admits them. `deduction_provenance` is excluded on
+purpose: it follows the evidence link, which the separate evidence gate covers.
+A guard test
+(`src/cadrumo/application/aggregation/tests/test_ledger_fingerprint_write_path_coverage.py`)
+derives the writable fields from the real mutation signature and manual command
+mapping and fails when a writable, IVA-read field is neither fingerprinted nor
+explicitly excluded with a reason, so the next such field forces a new version.
