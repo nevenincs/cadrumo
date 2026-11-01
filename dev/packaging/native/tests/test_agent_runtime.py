@@ -77,23 +77,9 @@ def test_runtime_declaration_refuses_an_unofficial_or_incomplete_pin(tmp_path: P
         agent_runtime_validation.load_runtime_declaration(source)
 
 
-@pytest.mark.parametrize("target", ["windows-x86-64", "linux-x86-64"])
-def test_build_uses_locked_production_closure_and_stage_preserves_package_files(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, target: str
+def _assert_production_install_invocation(
+    calls: Sequence[tuple[list[str], Path, Mapping[str, str]]], node: Path, npm_cli: Path, source: Path
 ) -> None:
-    """npm runs against copied inputs with scripts/dev/optional/bin links disabled."""
-    source = _agent_source(tmp_path / "agent-source")
-    node, npm_cli = _build_tools(tmp_path)
-    archive = _node_archive(target)
-    declaration = _point_config_at_archive(source, target, archive)
-    _mock_download(monkeypatch, archive)
-    monkeypatch.setenv("NPM_TOKEN", "fixture-only-token")
-    monkeypatch.setenv("NODE_AUTH_TOKEN", "fixture-only-token")
-    calls = _mock_npm(monkeypatch, node)
-
-    output = tmp_path / "build" / "agent" / "runtime"
-    agent_runtime.build_agent_runtime(output, source, target, node=node, npm_cli=npm_cli)
-
     assert len(calls) == 2
     install_argv, install_cwd, install_environment = calls[1]
     assert install_argv[:3] == [str(node), str(npm_cli), "ci"]
@@ -113,7 +99,8 @@ def test_build_uses_locked_production_closure_and_stage_preserves_package_files(
     assert (source / "package-lock.json").read_bytes() == _package_lock_bytes()
     assert (source / "node_modules/dev-only-fixture/index.js").read_text(encoding="utf-8") == "source-only\n"
 
-    expected_node = output / "node" / ("node.exe" if target == "windows-x86-64" else "bin/node")
+
+def _assert_built_runtime_tree(output: Path, expected_node: Path) -> None:
     assert expected_node.read_bytes() == b"pinned-node-binary"
     assert (output / "node/LICENSE").read_bytes() == b"Node runtime license\n"
     assert not (output / "node-archive-extracted").exists()
@@ -124,13 +111,10 @@ def test_build_uses_locked_production_closure_and_stage_preserves_package_files(
     assert (output / "node_modules/@agentclientprotocol/claude-agent-acp/LICENSE").is_file()
     assert (output / "node_modules/@agentclientprotocol/claude-agent-acp/NOTICE").is_file()
 
-    receipt = agent_runtime_validation.verify_agent_runtime(output, declaration)
-    assert receipt["target"] == target
-    assert receipt["node_version"] == _NODE_VERSION
-    assert receipt["package_lock_sha256"] == hashlib.sha256(_package_lock_bytes()).hexdigest()
-    assert "node/LICENSE" in receipt["files"]
-    assert _ACP_ENTRY_NAME in receipt["files"]
 
+def _assert_stage_preserves_package_files(
+    tmp_path: Path, output: Path, expected_node: Path, declaration: agent_runtime_validation.NodeRuntimeDeclaration
+) -> None:
     package_root = tmp_path / "app" / "cadrumo"
     package_root.mkdir(parents=True)
     (package_root / "existing-package.py").write_text("preserve\n", encoding="utf-8")
@@ -140,6 +124,37 @@ def test_build_uses_locked_production_closure_and_stage_preserves_package_files(
     assert (package_root / "node_modules" / _ACP_ENTRY_NAME.removeprefix("node_modules/")).is_file()
     assert (package_root / "agent-runtime.json").read_bytes() == (output / "runtime-receipt.json").read_bytes()
     assert not (package_root / "runtime-receipt.json").exists()
+
+
+@pytest.mark.parametrize("target", ["windows-x86-64", "linux-x86-64"])
+def test_build_uses_locked_production_closure_and_stage_preserves_package_files(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, target: str
+) -> None:
+    """npm runs against copied inputs with scripts/dev/optional/bin links disabled."""
+    source = _agent_source(tmp_path / "agent-source")
+    node, npm_cli = _build_tools(tmp_path)
+    archive = _node_archive(target)
+    declaration = _point_config_at_archive(source, target, archive)
+    _mock_download(monkeypatch, archive)
+    monkeypatch.setenv("NPM_TOKEN", "fixture-only-token")
+    monkeypatch.setenv("NODE_AUTH_TOKEN", "fixture-only-token")
+    calls = _mock_npm(monkeypatch, node)
+
+    output = tmp_path / "build" / "agent" / "runtime"
+    agent_runtime.build_agent_runtime(output, source, target, node=node, npm_cli=npm_cli)
+
+    _assert_production_install_invocation(calls, node, npm_cli, source)
+    expected_node = output / "node" / ("node.exe" if target == "windows-x86-64" else "bin/node")
+    _assert_built_runtime_tree(output, expected_node)
+
+    receipt = agent_runtime_validation.verify_agent_runtime(output, declaration)
+    assert receipt["target"] == target
+    assert receipt["node_version"] == _NODE_VERSION
+    assert receipt["package_lock_sha256"] == hashlib.sha256(_package_lock_bytes()).hexdigest()
+    assert "node/LICENSE" in receipt["files"]
+    assert _ACP_ENTRY_NAME in receipt["files"]
+
+    _assert_stage_preserves_package_files(tmp_path, output, expected_node, declaration)
 
 
 def test_ranged_adapter_spec_installs_the_locked_exact_version(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
