@@ -17,7 +17,8 @@ each one names a declaration that cannot resolve to the value it promises:
   -- two alternates that disagree on data type or channel are not equivalents,
   and the casilla would take a different typed value depending on which one
   resolved;
-* a second ``prorrata_regularizacion`` binding in one revision, and two row
+* a second ``prorrata_regularizacion`` binding in one revision, two
+  ``bienes_inversion_regularizacion`` bindings for one output, and two row
   bindings claiming one ``row_field`` of one export record. Both are order
   refusals: the prorrata consumer reads its four source roles positionally out
   of the concatenated declaration order, and export field derivation keeps the
@@ -34,16 +35,12 @@ each one names a declaration that cannot resolve to the value it promises:
 * two deducible ``ledger_iva_aggregation`` bindings that split one quantity by
   deduction kind and still both claim a kind. The corrientes and bienes de
   inversión boxes of Modelo 303 and 390 read the same category, rate and flow,
-  so an overlap declares the same deduction in both boxes.
-
-The remaining check, an unreferenced binding without the explicit
-``non_calculation`` disposition, is :func:`unreferenced_binding_advisories` and
-is deliberately NOT part of the failure list: the authored corpus still carries
-enough such rows across the loadable modelos that enrolling it as an error would
-refuse the corpus rather than gate it. It is a public diagnostic now and becomes
-a refusal once the corpus rewrite lands. No count is recorded here: a number in
-prose is stale the first time a modelo is authored, and the advisory itself
-reports the live population.
+  so an overlap declares the same deduction in both boxes;
+* a binding no typed consumer names -- no casilla, formula, export or relation --
+  that does not declare the explicit ``non_calculation`` disposition. An
+  orphaned declaration cannot be told from an export-only one unless the author
+  says which it is, so the disposition is the only way a row without a consumer
+  stays in the registry.
 """
 
 from __future__ import annotations
@@ -51,6 +48,9 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from cadrumo.core.aggregation import BindingAggregationOp
+from cadrumo.domain.calculations.registry.bienes_inversion_regularizacion_bindings import (
+    BienesInversionRegularizacionProvider,
+)
 from cadrumo.domain.calculations.registry.binding_aggregation import binding_aggregation_op
 from cadrumo.domain.calculations.registry.binding_provider_registration import (
     BINDING_PROVIDER_REGISTRATIONS,
@@ -73,7 +73,7 @@ if TYPE_CHECKING:
 __all__ = [
     "binding_temporal_support_failures",
     "informational_binding_ids",
-    "unreferenced_binding_advisories",
+    "unreferenced_binding_failures",
     "validate_binding_registration_section",
 ]
 
@@ -151,8 +151,10 @@ def validate_binding_registration_section(*, prefix: str, revision: ModeloRevisi
         failures.extend(_registration_failures(prefix=prefix, binding=binding, bound_by=bound_by))
     failures.extend(_alternate_contract_failures(prefix=prefix, revision=revision))
     failures.extend(_prorrata_duplicate_failures(prefix=prefix, revision=revision))
+    failures.extend(_bienes_duplicate_output_failures(prefix=prefix, revision=revision))
     failures.extend(_duplicate_row_field_failures(prefix=prefix, revision=revision))
     failures.extend(_deduction_kind_overlap_failures(prefix=prefix, revision=revision))
+    failures.extend(unreferenced_binding_failures(prefix=prefix, revision=revision))
     return failures
 
 
@@ -205,6 +207,27 @@ def _prorrata_duplicate_failures(*, prefix: str, revision: ModeloRevision) -> li
         f"{prefix}: {len(declared)} prorrata_regularizacion bindings are declared ({sorted(declared)}); "
         f"the positional source roles are read from one binding's reviewed order, so a second declaration "
         f"makes the regularisation depend on binding fragment merge order",
+    ]
+
+
+def _bienes_duplicate_output_failures(*, prefix: str, revision: ModeloRevision) -> list[str]:
+    """Refuse two bienes de inversion regularisation bindings landing in one output.
+
+    The consumer keeps one binding per output and replaces an earlier one with a
+    later one without saying so, so two bindings for the same output resolve to
+    whichever binding fragment merged last -- a filename accident rather than a
+    declaration. The ambiguity is rejected at the source.
+    """
+    by_output: dict[str, list[BindingId]] = {}
+    for binding in revision.bindings:
+        if isinstance(binding.provider, BienesInversionRegularizacionProvider):
+            by_output.setdefault(str(binding.provider.regularizacion_output), []).append(binding.id)
+    return [
+        f"{prefix}: {len(ids)} bienes_inversion_regularizacion bindings ({sorted(ids)}) land in output "
+        f"{output!r}; the consumer keeps only the last, so the regularisation depends on binding fragment "
+        f"merge order"
+        for output, ids in sorted(by_output.items())
+        if len(ids) > 1
     ]
 
 
@@ -265,37 +288,36 @@ def _unreadable(value: object) -> bool:
     return value is not None and not isinstance(value, str)
 
 
-def unreferenced_binding_advisories(*, prefix: str, revision: ModeloRevision) -> tuple[str, ...]:
-    """Return one advisory per binding no typed consumer names.
+def unreferenced_binding_failures(*, prefix: str, revision: ModeloRevision) -> list[str]:
+    """Return one failure per binding no typed consumer names.
 
     A binding with no casilla, formula, export, or relation consumer is either
     an orphan or an export-only declaration; the second case says so through
     ``applicability.kind == "non_calculation"`` and is skipped here. The
-    remainder is an advisory rather than a refusal while the authored corpus
-    still carries several hundred such rows.
+    remainder is refused.
 
     The skipped rows are not lost: :func:`informational_binding_ids` reports the
     same population under its own name, so a disposition moves a row from one
     counted line to another rather than out of the report.
     """
     consumers = binding_consumers(revision)
-    advisories: list[str] = []
+    failures: list[str] = []
     for binding in revision.bindings:
         if consumers[binding.id]:
             continue
         if binding.applicability.kind == BindingApplicabilityKind.NON_CALCULATION:
             continue
-        advisories.append(
+        failures.append(
             f"{prefix}: binding {binding.id!r} is named by no casilla, formula, export, or relation and "
             f"declares no non_calculation applicability",
         )
-    return tuple(advisories)
+    return failures
 
 
 def informational_binding_ids(revision: ModeloRevision) -> tuple[BindingId, ...]:
     """Return the bindings of one revision that declare a non-calculation disposition.
 
-    The counterpart of :func:`unreferenced_binding_advisories`: the advisory
+    The counterpart of :func:`unreferenced_binding_failures`: the refusal
     skips these rows, and this is where they stay visible. Authoring a
     disposition must move a binding between two reported lines, never make it
     disappear, or the disposition would become a way to silence a row rather

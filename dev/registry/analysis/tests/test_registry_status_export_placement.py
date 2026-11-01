@@ -42,7 +42,6 @@ def _status(*, export_placement: ExportPlacementCensus) -> RegistryStatus:
         authority_recorded_digest=None,
         authority_candidate_digest=None,
         loadable=True,
-        unreferenced_bindings=(),
         informational_bindings=(),
         details=(),
         export_placement=export_placement,

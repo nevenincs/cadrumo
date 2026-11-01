@@ -234,9 +234,7 @@ def validate_binding_section(
     failures.extend(
         f"{prefix}: {failure}" for failure in validate_m303_regimen_simplificado_annual_summary_revision(revision)
     )
-    failures.extend(
-        f"{prefix}: {failure}" for failure in validate_iva_compensation_annual_partition_revision(revision)
-    )
+    failures.extend(f"{prefix}: {failure}" for failure in validate_iva_compensation_annual_partition_revision(revision))
     for target_failures in (
         ledger_renta_income_target_failures,
         ledger_renta_gastos_estimacion_directa_target_failures,

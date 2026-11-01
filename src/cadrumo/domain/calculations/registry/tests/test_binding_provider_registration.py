@@ -14,6 +14,7 @@ and the defect proof both hold in the same run.
 
 from __future__ import annotations
 
+import dataclasses
 import typing
 from datetime import date
 from typing import Literal
@@ -151,9 +152,30 @@ def test_every_provider_union_member_has_a_registration() -> None:
     assert frozenset(BINDING_PROVIDER_REGISTRATIONS) == member_kinds
 
 
-def test_every_kind_enrols_a_build_time_validator() -> None:
-    """No kind passes through a no-op slot: each row names the gate for its cross-invariants."""
-    assert all(callable(registration.validator) for registration in BINDING_PROVIDER_REGISTRATIONS.values())
+@pytest.mark.parametrize("kind", sorted(BINDING_PROVIDER_REGISTRATIONS, key=lambda kind: kind.value))
+def test_every_registration_enrols_a_callable_validator(kind: BindingSourceKind) -> None:
+    """Each kind is gated by its own enrolled validator; none relies on the model alone."""
+    registration = registration_for(kind)
+
+    assert callable(registration.validator)
+    assert validator_for(kind) is registration.validator
+
+
+def test_a_registration_without_a_validator_is_refused() -> None:
+    """The table cannot exist with a kind whose validator is missing."""
+    profile = registration_for(BindingSourceKind.PROFILE)
+    unvalidated = dataclasses.replace(profile, validator=None)
+    fabricated = tuple(
+        unvalidated if registration.kind is profile.kind else registration
+        for registration in BINDING_PROVIDER_REGISTRATIONS.values()
+    )
+
+    with pytest.raises(RegistryValidationError, match="must enrol a build-time validator"):
+        validate_binding_provider_registrations(fabricated)
+
+    assert set(validate_binding_provider_registrations(tuple(BINDING_PROVIDER_REGISTRATIONS.values()))) == set(
+        BINDING_PROVIDER_REGISTRATIONS,
+    )
 
 
 def test_a_well_formed_profile_binding_passes_its_enrolled_validator() -> None:

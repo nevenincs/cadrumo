@@ -117,7 +117,6 @@ def _currentness(projected: ProjectedTargets) -> str:
         authority_recorded_digest=None,
         authority_candidate_digest=None,
         loadable=True,
-        unreferenced_bindings=(),
         informational_bindings=(),
         details=projected.details,
     )
