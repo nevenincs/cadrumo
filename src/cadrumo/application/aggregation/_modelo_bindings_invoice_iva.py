@@ -292,6 +292,8 @@ def _declared_category_line_observation(
         deduction_provenance=(deduction_authority.deduction_provenance if deduction_authority is not None else None),
         investment_asset_id=(deduction_authority.investment_asset_id if deduction_authority is not None else None),
         rectifies_ledger_id=(deduction_authority.rectifies_ledger_id if deduction_authority is not None else None),
+        input_classification=(deduction_authority.input_classification if deduction_authority is not None else None),
+        prorrata_sector_id=(deduction_authority.prorrata_sector_id if deduction_authority is not None else None),
     )
 
 
@@ -362,6 +364,8 @@ def _standard_invoice_line_iva_observation(
         deduction_provenance=(deduction_authority.deduction_provenance if deduction_authority is not None else None),
         investment_asset_id=(deduction_authority.investment_asset_id if deduction_authority is not None else None),
         rectifies_ledger_id=(deduction_authority.rectifies_ledger_id if deduction_authority is not None else None),
+        input_classification=(deduction_authority.input_classification if deduction_authority is not None else None),
+        prorrata_sector_id=(deduction_authority.prorrata_sector_id if deduction_authority is not None else None),
     )
 
 
