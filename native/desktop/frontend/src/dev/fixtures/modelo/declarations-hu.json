@@ -2426,19 +2426,19 @@
     {
       "zone": "declarations",
       "availability": "available",
-      "observed_at": "2026-11-01T03:16:12.253251Z",
+      "observed_at": "2026-11-01T07:56:38.732010Z",
       "words": "Elérhető"
     },
     {
       "zone": "calculation_revisions",
       "availability": "available",
-      "observed_at": "2026-11-01T03:16:12.253251Z",
+      "observed_at": "2026-11-01T07:56:38.732010Z",
       "words": "Elérhető"
     },
     {
       "zone": "filing_history",
       "availability": "available",
-      "observed_at": "2026-11-01T03:16:12.253251Z",
+      "observed_at": "2026-11-01T07:56:38.732010Z",
       "words": "Elérhető"
     }
   ],
@@ -2446,14 +2446,14 @@
     {
       "source": "schedule",
       "availability": "available",
-      "observed_at": "2026-11-01T03:16:12.253251Z",
-      "words": "Jogi ütemezés: Elérhető · Megfigyelve: 2026. nov. 1. 03:16 UTC"
+      "observed_at": "2026-11-01T07:56:38.732010Z",
+      "words": "Jogi ütemezés: Elérhető · Megfigyelve: 2026. nov. 1. 07:56 UTC"
     },
     {
       "source": "local.filing",
       "availability": "available",
-      "observed_at": "2026-11-01T03:16:12.253251Z",
-      "words": "Helyi benyújtás: Elérhető · Megfigyelve: 2026. nov. 1. 03:16 UTC"
+      "observed_at": "2026-11-01T07:56:38.732010Z",
+      "words": "Helyi benyújtás: Elérhető · Megfigyelve: 2026. nov. 1. 07:56 UTC"
     },
     {
       "source": "aeat.evidence",

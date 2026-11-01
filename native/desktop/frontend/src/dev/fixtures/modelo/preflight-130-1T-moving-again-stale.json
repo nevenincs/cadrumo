@@ -7,7 +7,7 @@
     "refusal": {
       "kind": "stale_edit_baseline",
       "edit_contract_version": 1,
-      "baseline_id": "4bbb86c26f052893d708ea66e34f763a3ed0b21080e4effac5cdb457b6e8f6a3",
+      "baseline_id": "7654fa5deeb4024f1ba43c52f7b9bc7c8fef53fc2eb2eed5df87abe9f0a0e4fb",
       "mismatching_coordinates": [
         "work_unit_record_digest",
         "calculation_head_digest",

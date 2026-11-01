@@ -9,7 +9,7 @@
       "period": { "filing_year": 2026, "code": "1T" },
       "registry_revision_id": "2019-y-siguientes",
       "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
-      "calculation_revision_id": "2899ef6e93e2311ab3804eb13fc3f8b6064717f52a6e88894720e6709dd1334d",
+      "calculation_revision_id": "9c3192421567d97cfb46ef8bd0584017301294d49b8df8b2f5f58448f318438f",
       "language": "es",
       "layout_provenance": "generated",
       "inspection_reason": null,
@@ -1586,8 +1586,8 @@
       "aeat_data": null,
       "filing": null,
       "last_export": {
-        "exported_at": "2026-11-01T03:17:11.668528Z",
-        "calculation_revision_id": "24d99c6044169757ce85cbe4366b7259250712cabc87be9232c4334aa901e1f6",
+        "exported_at": "2026-11-01T07:57:35.613540Z",
+        "calculation_revision_id": "cf385462b5343960905feb73173d3c448c71c3617c6ac1c91ccdf2a32390d9d3",
         "current": false
       },
       "edit_closure": null,
@@ -1604,7 +1604,7 @@
       "workspace_contract_version": 1,
       "edit_contract_version": 1,
       "operation_manifest_version": 4,
-      "contract_set_digest": "e6478bcdded0aca8770ff1d32f358108c15961c2cbeaa98bf55f8129c768591f",
+      "contract_set_digest": "0cfdbf479b0370dd1d78530f6ba5948664006054c534d2a99409964b9dd23c28",
       "operation_definition_id": "modelo.edit.apply",
       "definition_contract_digest": "073e2a8d43e20d60d4f5c71d2739448725074872eafc33f8b13786f0821f82b9",
       "request_schema": {
@@ -1639,9 +1639,9 @@
     "period_filing_year": 2026,
     "period_code": "1T",
     "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
-    "work_unit_record_digest": "2071835585ca45d77744e0e49fa25fb2f583cdc1444306c2f8856f961ea2d3ae",
-    "calculation_head_digest": "6c0727d503f44b95bcfe6fe670f37217db27868f42c7e9e4c9441b66858510eb",
-    "current_calculation_revision_id": "2899ef6e93e2311ab3804eb13fc3f8b6064717f52a6e88894720e6709dd1334d",
+    "work_unit_record_digest": "0dafe2ee64fab5a053f89843bc68027d5b1e15438cf94c8bf8b4c93d2fca4bcc",
+    "calculation_head_digest": "310c216c7650af8281e273da28cb1702f72265f655a7a2ca74370e24fa5a9110",
+    "current_calculation_revision_id": "9c3192421567d97cfb46ef8bd0584017301294d49b8df8b2f5f58448f318438f",
     "law_selected_revision_id": "2019-y-siguientes",
     "schema_identity": {
       "schema_id": "modelo-130-2019-y-siguientes",
@@ -1944,9 +1944,9 @@
     ],
     "permitted_surface_digest": "2705e6476442c123bb8c6979cb9d82e81dc02301b0f923b4b78f24941d4686dd",
     "mutation_family": "calculate",
-    "issued_at": "2026-11-01T03:17:35.619175Z",
-    "expires_at": "2026-11-01T03:22:35.619175Z",
-    "baseline_id": "909d05bc8243e84bbe869ad5b7058207d490b8123ea3581dfb761f190e691ad6"
+    "issued_at": "2026-11-01T07:58:00.479567Z",
+    "expires_at": "2026-11-01T08:03:00.479567Z",
+    "baseline_id": "0a4c19a8a98d2ea19c603b9cb7495abad88e689f58ba28e427233335eb2c7c35"
   },
   "admission_refusal": null,
   "admission_refusal_words": null,
@@ -1956,7 +1956,7 @@
     "count": 0,
     "findings_lead": false,
     "recorded_at": null,
-    "file_created_at": "2026-11-01T03:17:11.668528Z",
+    "file_created_at": "2026-11-01T07:57:35.613540Z",
     "receipt_to_add": false
   },
   "header": {
@@ -1982,7 +1982,7 @@
       "help": null
     },
     "file": {
-      "exported_at": "2026-11-01T03:17:11.668528Z",
+      "exported_at": "2026-11-01T07:57:35.613540Z",
       "created_on": "1 nov 2026",
       "current": false,
       "words": "El fichero del 1 nov 2026 está desactualizado. Vuelve a generarlo."
@@ -2014,7 +2014,7 @@
     "words": "La declaración aún no se ha comprobado.",
     "unapplied_words": null
   },
-  "calculation_revision_id": "2899ef6e93e2311ab3804eb13fc3f8b6064717f52a6e88894720e6709dd1334d",
+  "calculation_revision_id": "9c3192421567d97cfb46ef8bd0584017301294d49b8df8b2f5f58448f318438f",
   "verification_report_id": null,
   "asks_m303_evidence": false,
   "asks_modelo_390": false,

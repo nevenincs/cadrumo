@@ -1008,22 +1008,22 @@ def _admitted(work: Any, *, issued_at: datetime | None = None) -> Any:
 # The window sends every check, apply and renewal on the baseline the form it
 # shows admitted. Each edit envelope is therefore read on the baseline of one
 # written form, and named after that form: ``preflight-<form>-entry-<boxes>-<language>``
-# reads entries as typed in that language, ``preflight-<form>-review`` and
+# reads entries as typed in that language on that language's form, ``preflight-<form>-review`` and
 # ``preflight-<form>-stale`` check the staged changes with the changes the
 # window holds, ``apply-<form>`` applies them and ``renew-<form>`` renews the
 # form's baseline.
 
 
-def _form_envelope(directory: Path, form: str) -> dict[str, Any]:
-    """The written English envelope of ``form``, as the window holds it."""
-    return cast(dict[str, Any], json.loads((directory / f"modelo-{form}-en.json").read_text("utf-8")))
+def _form_envelope(directory: Path, form: str, language: str = "en") -> dict[str, Any]:
+    """The written envelope of ``form`` in ``language``, as the window holds it."""
+    return cast(dict[str, Any], json.loads((directory / f"modelo-{form}-{language}.json").read_text("utf-8")))
 
 
-def _form_baseline(directory: Path, form: str) -> Any:
-    """The baseline the read of ``form`` admitted, as the window holds it from that envelope."""
+def _form_baseline(directory: Path, form: str, language: str = "en") -> Any:
+    """The baseline the read of ``form`` in ``language`` admitted, as the window holds it from that envelope."""
     from cadrumo.application.modelo.edit_baseline_projection import ModeloEditApplyBaselineV1
 
-    admitted = _form_envelope(directory, form).get("admitted_baseline")
+    admitted = _form_envelope(directory, form, language).get("admitted_baseline")
     if admitted is None:
         raise SystemExit(f"the form {form} admitted no edit baseline")
     return ModeloEditApplyBaselineV1.model_validate_json(json.dumps(admitted))
@@ -1046,7 +1046,6 @@ def _write_entries(directory: Path, work: Any, form: str, *typed: tuple[tuple[st
     """Read entries as typed into boxes of ``form``, one check per boxes and language, as the window sends each."""
     from cadrumo.application.modelo.workbench_operations import MODELO_EDIT_PREFLIGHT_OPERATION_DEFINITION_ID
 
-    baseline = _form_baseline(directory, form)
     for entries in typed:
         boxes = "-".join(box for box, _ in entries)
         for language in LANGUAGES:
@@ -1054,7 +1053,7 @@ def _write_entries(directory: Path, work: Any, form: str, *typed: tuple[tuple[st
             read = _edit(
                 work,
                 MODELO_EDIT_PREFLIGHT_OPERATION_DEFINITION_ID,
-                _edit_document(baseline, typed=lexemes, language=language),
+                _edit_document(_form_baseline(directory, form, language), typed=lexemes, language=language),
             )
             _write(directory, f"preflight-{form}-entry-{boxes}-{language}.json", _expect_model(read))
 
