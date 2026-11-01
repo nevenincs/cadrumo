@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from uuid import uuid4
 
@@ -14,7 +14,7 @@ from ....domain.transactions.classification_effects import fields_cleared_by_cla
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.errors import TransactionValidationError
 from ....domain.transactions.models import Transaction, derive_transaction_id
-from ....domain.transactions.raw_transaction import RawTransaction
+from ..actions_manual import transaction_from_command
 from ..classify_requests import LedgerClassifyPatch, LedgerClassifyRequest
 from ..manual_update import command_from_patch
 from ..models import ManualLedgerTransactionCommand, ManualLedgerTransactionPatch
@@ -28,17 +28,9 @@ from ..staged_check_contracts import (
 )
 from ..update_contracts import LedgerUpdatePatch, LedgerUpdateRequest
 
-pytestmark = pytest.mark.usefixtures("authority_operation")
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
-_RAW = RawTransaction(
-    provider_transaction_id="manual-1",
-    booked_date=date(2026, 3, 2),
-    value_date=None,
-    amount=Decimal("36.30"),
-    currency="EUR",
-    counterparty=None,
-    description="SUMINISTRO",
-)
+_NOW = datetime(2026, 3, 2, 10, tzinfo=UTC)
 
 
 def _stored(
@@ -48,26 +40,29 @@ def _stored(
     business_pct: Decimal | None = None,
     category_id: str | None = None,
     evidence: str | None = None,
-    raw: RawTransaction = _RAW,
 ) -> Transaction:
-    return Transaction.model_validate(
-        {
-            "transaction_id": derive_transaction_id(raw),
-            "raw": raw,
-            "direction": direction,
-            "business_classification": classification,
-            "business_pct": business_pct,
-            "category_id": category_id,
-            "purchase_invoice_evidence_id": evidence,
-            "created_at": "2026-03-02T10:00:00Z",
-            "modified_at": "2026-03-02T10:00:00Z",
-        }
+    built = transaction_from_command(
+        ManualLedgerTransactionCommand(
+            bucket_id=str(uuid4()),
+            booked_date=date(2026, 3, 2),
+            amount=Decimal("36.30"),
+            currency="EUR",
+            direction=direction,
+            description="SUMINISTRO",
+            business_classification=classification,
+            business_pct=business_pct,
+            category_id=category_id,
+            actor="operator",
+            source_command="test",
+        ),
+        occurred_at=_NOW,
     )
+    return built if evidence is None else built.model_copy(update={"purchase_invoice_evidence_id": evidence})
 
 
 def _row(*cells: tuple[str, str | None], evidence_staged: bool = False, m210: bool = False) -> LedgerStagedRow:
     return LedgerStagedRow(
-        transaction_id=derive_transaction_id(_RAW),
+        transaction_id="a" * 64,
         cells=tuple(LedgerStagedCell.model_validate({"field": field, "value": value}) for field, value in cells),
         evidence_staged=evidence_staged,
         m210_staged=m210,
@@ -248,10 +243,12 @@ def test_the_writer_refuses_the_core_of_what_a_transfer_is_held_back_for() -> No
         "actor": "operator",
         "source_command": "test",
     }
-    with pytest.raises(TransactionValidationError, match="must not carry tax"):
+    with pytest.raises(ValidationError, match="must not carry tax"):
         ManualLedgerTransactionCommand.model_validate({**base, "category_id": "office_supplies"})
-    with pytest.raises(TransactionValidationError, match="must not be classified"):
-        ManualLedgerTransactionCommand.model_validate({**base, "business_classification": "BUSINESS"})
+    with pytest.raises(ValidationError, match="must not be classified"):
+        ManualLedgerTransactionCommand.model_validate(
+            {**base, "business_classification": BusinessClassification.BUSINESS}
+        )
 
 
 @pytest.mark.parametrize(
@@ -272,12 +269,13 @@ def test_what_gives_a_movement_a_new_id(cells: tuple[tuple[str, str], ...], expe
 
 
 def test_each_identity_verdict_matches_the_id_the_owner_derives() -> None:
-    before = derive_transaction_id(_RAW)
-    changed = _RAW.model_copy(update={"amount": Decimal("40")})
+    raw = _stored().raw
+    before = derive_transaction_id(raw)
+    changed = raw.model_copy(update={"amount": Decimal("40")})
     assert derive_transaction_id(changed) != before
-    same = _RAW.model_copy(update={"amount": Decimal("36.3")})
+    same = raw.model_copy(update={"amount": Decimal("36.3")})
     assert derive_transaction_id(same) == before
-    dated = _RAW.model_copy(update={"value_date": date(2026, 3, 2)})
+    dated = raw.model_copy(update={"value_date": date(2026, 3, 2)})
     assert derive_transaction_id(dated) == before
 
 

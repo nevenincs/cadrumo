@@ -3107,6 +3107,11 @@ cli:
       help: Detach attachments from a transaction in your records without deleting
         their bytes.
       id_help: Transaction id (or an unambiguous prefix).
+    staged_check_help: 'Answer staged ledger work the way the writers would take it, without saving anything.'
+    staged_check_row_help: 'Repeatable JSON object for one movement: `transaction_id`, `cells` and optional `evidence_staged` and `m210_staged`.'
+    staged_check_draft_help: 'Repeatable JSON object for one new movement: `key` and `fields`.'
+    staged_check_category_help: 'Repeatable spending category to judge against a classification.'
+    staged_check_invalid: 'Each staged row and draft must be a JSON object of the expected shape.'
     entry_options_help: Show the values a ledger entry form offers.
     errors:
       business_pct_out_of_range: Business-use share %{value} (= %{percent}) is out

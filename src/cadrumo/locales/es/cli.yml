@@ -3350,6 +3350,11 @@ cli:
       attachment_help: Id del adjunto que se separa; repetible.
       help: Separa adjuntos de un movimiento de tus registros sin borrar sus bytes.
       id_help: Id del movimiento (o un prefijo inequívoco).
+    staged_check_help: 'Responde al trabajo preparado del libro como lo tomarían las escrituras, sin guardar nada.'
+    staged_check_row_help: 'Objeto JSON repetible para un movimiento: `transaction_id`, `cells` y, si procede, `evidence_staged` y `m210_staged`.'
+    staged_check_draft_help: 'Objeto JSON repetible para un movimiento nuevo: `key` y `fields`.'
+    staged_check_category_help: 'Categoría de gasto repetible que se contrasta con una clasificación.'
+    staged_check_invalid: 'Cada fila y borrador preparados deben ser un objeto JSON con la forma esperada.'
     entry_options_help: Muestra los valores que ofrece un formulario de entrada del
       libro.
     errors:

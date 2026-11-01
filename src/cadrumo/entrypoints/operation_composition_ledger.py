@@ -212,6 +212,18 @@ def compose_ledger_evidence_ingestion_operation(inputs: OperationCompositionInpu
     return built(definitions, build_ledger_evidence_ingestion_registrations(definitions))
 
 
+def compose_ledger_staged_check_operation(inputs: OperationCompositionInputs) -> OperationGroupBuild:
+    """Compose the read that answers staged ledger work the way the writers would take it."""
+    from ..application.ledger.staged_check_operation import (
+        build_ledger_staged_check_definition,
+        build_ledger_staged_check_registration,
+    )
+
+    del inputs
+    definition = build_ledger_staged_check_definition()
+    return built((definition,), (build_ledger_staged_check_registration(definition),))
+
+
 def compose_ledger_entry_options_operation(inputs: OperationCompositionInputs) -> OperationGroupBuild:
     """Compose the read of the ledger entry vocabularies."""
     from ..application.ledger.entry_options_operation import (

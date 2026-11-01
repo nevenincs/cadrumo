@@ -3293,6 +3293,11 @@ cli:
       help: Csatolmányok leválasztása egy tranzakcióról a nyilvántartásban, a bájtjaik
         törlése nélkül.
       id_help: A tranzakció azonosítója (vagy egyértelmű előtagja).
+    staged_check_help: 'Megválaszolja az előkészített könyvelési munkát úgy, ahogy az írási műveletek fogadnák, semmit sem ment.'
+    staged_check_row_help: 'Ismételhető JSON-objektum egy tételhez: `transaction_id`, `cells`, és szükség esetén `evidence_staged` és `m210_staged`.'
+    staged_check_draft_help: 'Ismételhető JSON-objektum egy új tételhez: `key` és `fields`.'
+    staged_check_category_help: 'Ismételhető költségkategória, amelyet egy besorolással vetünk össze.'
+    staged_check_invalid: 'Minden előkészített sornak és piszkozatnak a várt alakú JSON-objektumnak kell lennie.'
     entry_options_help: Megmutatja, milyen értékeket kínál a könyvelési beviteli űrlap.
     errors:
       business_pct_out_of_range: A(z) %{value} (= %{percent}) üzleti használati arány
