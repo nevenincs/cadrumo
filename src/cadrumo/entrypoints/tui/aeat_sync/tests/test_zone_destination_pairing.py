@@ -68,7 +68,7 @@ def test_the_controller_builds_its_target_from_the_shared_pairing() -> None:
     ``target`` call for every zone.
     """
     from ...navigation import TuiScreenContextV1
-    from .test_aeat_sync_workspace import _projection
+    from ._aeat_sync_workspace_support import _projection
 
     controller_type = _controller_type()
     controller = controller_type(TuiScreenContextV1(destination="workbench.aeat_sync"), _projection())
