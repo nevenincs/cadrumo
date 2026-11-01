@@ -157,11 +157,24 @@ def raise_if_invoice_iva_would_be_silent(
         ports=ports,
         operation=operation,
     )
+    # A withheld invoice's cuota is gross, so it is weighed against the ledger's
+    # gross cuota: a prorrata reduces what the ledger deducts, not what it records.
+    gross_transaction_binding_values = (
+        transaction_binding_values
+        if prorrata_apportionment is None
+        else resolve_iva_ledger_binding_values(
+            context.revision,
+            ledger_observations,
+            prorrata_apportionment=None,
+            operation=operation,
+        )
+    )
     return _raise_if_screened_invoice_iva_would_be_silent(
         context=context,
         screened_bindings=screened_bindings,
         screened=screened,
         transaction_binding_values=transaction_binding_values,
+        gross_transaction_binding_values=gross_transaction_binding_values,
         prorrata_apportionment=prorrata_apportionment,
         operation=operation,
     )
@@ -173,6 +186,7 @@ def _raise_if_screened_invoice_iva_would_be_silent(
     screened_bindings: tuple[BindingId, ...],
     screened: ScreenedInvoiceIva,
     transaction_binding_values: Mapping[BindingId, Decimal],
+    gross_transaction_binding_values: Mapping[BindingId, Decimal],
     prorrata_apportionment: IvaLedgerProrrataApportionment | None,
     operation: PinnedAuthorityOperation,
 ) -> InvoiceIvaSilenceReport:
@@ -181,6 +195,10 @@ def _raise_if_screened_invoice_iva_would_be_silent(
     The repository-backed wrapper owns acquisition and period screening. This
     deterministic half owns the one refusal policy over that frozen result, so
     callers and proofs use the same IVA binding projector and terminal facts.
+    Withheld invoices carry no binding of their own, so their gross cuota is
+    weighed against ``gross_transaction_binding_values`` -- the ledger before
+    any prorrata -- while projected invoices are apportioned like the ledger
+    and compared with ``transaction_binding_values``.
     """
     # Withholding an unauthorised input row is unconditional; REFUSING the whole
     # filing over it is not. This guard's criterion, stated in its own docstring,
@@ -197,7 +215,7 @@ def _raise_if_screened_invoice_iva_would_be_silent(
             for screen_binding in invoice_ledger_screen_bindings(context.revision, modelo=context.modelo)
             if screen_binding.binding_id in screened_bindings
         ),
-        transaction_binding_values=transaction_binding_values,
+        transaction_binding_values=gross_transaction_binding_values,
     )
     if uncovered_authority_evidence > Decimal("0"):
         missing_invoice_ids = tuple(sorted(invoice.invoice_id for invoice in screened.deduction_authority_missing))
