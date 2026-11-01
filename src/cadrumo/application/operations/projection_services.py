@@ -132,6 +132,7 @@ from .frontend_requests import (
     OperationWorkspaceRefreshTargetVersionHeader,
 )
 from .interactions import (
+    REVIEW_RESPONSE_INTENTS,
     OperationActorReference,
     OperationApplyResponse,
     OperationConsumedInteraction,
@@ -247,7 +248,7 @@ class BoundOperationSecureResponseAuthority:
         clock: Callable[[], datetime],
     ) -> Self:
         """Bind one mutable bearer to an exact pending REVIEW decision."""
-        if not intents or not intents <= frozenset({OperationResponseIntent.APPLY, OperationResponseIntent.REJECT}):
+        if not intents or not intents <= REVIEW_RESPONSE_INTENTS:
             raise ValueError("secure response authority requires supported REVIEW intents")
         return cls(
             operation_id=operation_id,

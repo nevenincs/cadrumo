@@ -13,6 +13,7 @@ from ...core.hashing import content_hash_hex
 from ...core.identity.digest import ContentDigest
 from .frontend_requests import OperationResponseControlRequestV1
 from .interactions import (
+    REVIEW_RESPONSE_INTENTS,
     OperationActorReference,
     OperationInteractionId,
     OperationPendingInteraction,
@@ -161,7 +162,7 @@ class OperationResponseAuthorityBrokerMixin(_AuthorityHost):
             entry = self._entries.get(request.operation_id)
             if entry is None or not self._entry_matches(request, pending, capability, entry, clock=clock):
                 raise ValueError("response authority is unavailable")
-            return frozenset({OperationResponseIntent.APPLY, OperationResponseIntent.REJECT})
+            return REVIEW_RESPONSE_INTENTS
 
     def bind(
         self,
@@ -198,7 +199,7 @@ class OperationResponseAuthorityBrokerMixin(_AuthorityHost):
                 reviewed_proposal_digest=pending.reviewed_proposal_digest,
                 actor_ref=request.actor_ref,
                 expires_at=pending.request.expires_at,
-                intents=frozenset({OperationResponseIntent.APPLY, OperationResponseIntent.REJECT}),
+                intents=REVIEW_RESPONSE_INTENTS,
                 response_token=token.decode("ascii"),
                 clock=clock,
             )

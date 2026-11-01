@@ -55,6 +55,12 @@ class OperationResponseIntent(StrEnum):
     REJECT = "reject"
 
 
+REVIEW_RESPONSE_INTENTS: frozenset[OperationResponseIntent] = frozenset(
+    {OperationResponseIntent.APPLY, OperationResponseIntent.REJECT}
+)
+"""Every decision a review continuation admits."""
+
+
 OperationResponseIntentValue = Literal[
     OperationResponseIntent.APPLY,
     OperationResponseIntent.REJECT,
