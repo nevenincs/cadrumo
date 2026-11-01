@@ -13,7 +13,7 @@ from decimal import Decimal, InvalidOperation
 from typing import Final
 from uuid import UUID
 
-from ...core.identity.content_hash import content_hash_hex
+from ...core.hashing import content_hash_hex
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.categories.spending_category_catalogue import resolve_spending_category_catalogue
 from ...domain.transactions.classification_effects import fields_cleared_by_classification, takes_expense_category
@@ -108,7 +108,7 @@ _DRAFT_REQUIRED_FIELDS: Final = ("booked_date", "amount", "currency", "direction
 _STAGE_ONLY_FIELDS: Final = frozenset({"deduction_fact_kind", "investment_asset_id"})
 
 
-def _route(*, field: str, clear: bool, classified: bool) -> tuple[WriteRoute | None, RouteRefusal | None]:
+def route_for_cell(*, field: str, clear: bool, classified: bool) -> tuple[WriteRoute | None, RouteRefusal | None]:
     """Choose the write that takes one cell, from what each registered write accepts.
 
     A clear, a field only an update takes, and a tax figure on a row with no
@@ -130,14 +130,12 @@ def _route(*, field: str, clear: bool, classified: bool) -> tuple[WriteRoute | N
     return None, "cannot_clear"
 
 
-def route_for_cell(field: str, *, clear: bool, classified: bool) -> tuple[WriteRoute | None, RouteRefusal | None]:
-    """Return the write that takes one staged cell, or why none can."""
-    return _route(field=field, clear=clear, classified=classified)
+def _decimal_text(value: Decimal | None) -> str | None:
+    return None if value is None else display_decimal(value)
 
 
 def _stored_facts(transaction: Transaction) -> dict[str, str | None]:
     raw = transaction.raw
-    decimal = lambda value: None if value is None else display_decimal(value)  # noqa: E731
     return {
         "booked_date": raw.booked_date.isoformat(),
         "value_date": None if raw.value_date is None else raw.value_date.isoformat(),
@@ -149,12 +147,12 @@ def _stored_facts(transaction: Transaction) -> dict[str, str | None]:
         "group_label": transaction.group_label,
         "own_account_id": transaction.own_account_id,
         "business_classification": transaction.business_classification.value,
-        "business_pct": decimal(transaction.business_pct),
+        "business_pct": _decimal_text(transaction.business_pct),
         "category_id": transaction.category_id,
         "usage_ratio_id": transaction.usage_ratio_id,
-        "taxable_base": decimal(transaction.taxable_base),
-        "iva_rate": decimal(transaction.iva_rate),
-        "iva_amount": decimal(transaction.iva_amount),
+        "taxable_base": _decimal_text(transaction.taxable_base),
+        "iva_rate": _decimal_text(transaction.iva_rate),
+        "iva_amount": _decimal_text(transaction.iva_amount),
         "iva_category": None if transaction.iva_category is None else str(transaction.iva_category),
         "irpf_category": transaction.irpf_category,
         "notes": transaction.notes or None,
@@ -235,7 +233,7 @@ def _routes_of_row(
     carrier: WriteRoute | None = None
     carried: frozenset[str] = frozenset()
     if chosen is not None and chosen.value is not None:
-        carrier, _ = _route(field=chosen.field, clear=False, classified=classified)
+        carrier, _ = route_for_cell(field=chosen.field, clear=False, classified=classified)
         chosen_state = _classification(chosen.value)
         if carrier is not None and chosen_state is not None:
             carried = fields_cleared_by_classification(chosen_state)
@@ -247,7 +245,7 @@ def _routes_of_row(
         if clear and cell.field in carried:
             routes.append(LedgerStagedRoute(field=cell.field, route=carrier, refused=None))
             continue
-        route, refused = _route(field=cell.field, clear=clear, classified=classified)
+        route, refused = route_for_cell(field=cell.field, clear=clear, classified=classified)
         routes.append(LedgerStagedRoute(field=cell.field, route=route, refused=refused))
         if refused == "cannot_clear":
             cannot_clear.append(cell.field)
@@ -338,7 +336,7 @@ def check_draft(draft: LedgerStagedDraft) -> LedgerStagedDraftAnswer:
     missing = tuple(field for field in _DRAFT_REQUIRED_FIELDS if not fields.get(field))
     blockers: list[LedgerStagedBlocker] = []
     if missing:
-        blockers.append(LedgerStagedBlocker(kind="needs_classification", fields=()) if False else _incomplete(missing))
+        blockers.append(LedgerStagedBlocker(kind="draft_incomplete", fields=missing))
     classification = _classification(fields.get("business_classification"))
     share_bearing = classification is not None and takes_business_share(classification)
     if share_bearing and not fields.get("business_pct"):
@@ -351,7 +349,7 @@ def check_draft(draft: LedgerStagedDraft) -> LedgerStagedDraftAnswer:
             found.insert(0, "business_classification")
         if found:
             blockers.append(LedgerStagedBlocker(kind="transfer_with_tax", fields=tuple(found)))
-    return LedgerStagedDraftAnswer(key=draft.key, blockers=tuple(blockers), missing_fields=missing)
+    return LedgerStagedDraftAnswer(key=draft.key, blockers=tuple(blockers))
 
 
 def _category_fit(category: str, *, operation: PinnedAuthorityOperation) -> LedgerStagedCategoryFit:

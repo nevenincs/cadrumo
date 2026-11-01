@@ -147,7 +147,14 @@ class LedgerStagedBlocker(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
-    kind: Literal["cannot_clear", "needs_classification", "mixed_needs_share", "share_needs_mixed", "transfer_with_tax"]
+    kind: Literal[
+        "cannot_clear",
+        "needs_classification",
+        "mixed_needs_share",
+        "share_needs_mixed",
+        "transfer_with_tax",
+        "draft_incomplete",
+    ]
     fields: tuple[str, ...] = ()
 
 
@@ -188,7 +195,6 @@ class LedgerStagedDraftAnswer(BaseModel):
 
     key: str
     blockers: tuple[LedgerStagedBlocker, ...] = ()
-    missing_fields: tuple[DraftFieldName, ...] = ()
 
 
 class LedgerStagedCategoryFit(BaseModel):

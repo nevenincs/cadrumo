@@ -43,7 +43,7 @@ LEDGER_UPDATE_FIELD_NAMES = frozenset(
     }
 )
 # Facts every transaction carries: an update may replace them but never blank or remove them.
-_REQUIRED_FIELD_NAMES = frozenset({"booked_date", "amount", "currency", "direction", "description", "notes"})
+LEDGER_UPDATE_REQUIRED_FIELD_NAMES = frozenset({"booked_date", "amount", "currency", "direction", "description", "notes"})
 LedgerUpdatePatchField = Literal[
     "booked_date",
     "value_date",
@@ -184,7 +184,7 @@ class LedgerUpdateRequest(BaseModel):
 
     @model_validator(mode="after")
     def _required_facts_are_not_cleared(self) -> LedgerUpdateRequest:
-        for field_name in sorted(_REQUIRED_FIELD_NAMES & set(self.patch_fields)):
+        for field_name in sorted(LEDGER_UPDATE_REQUIRED_FIELD_NAMES & set(self.patch_fields)):
             value = getattr(self.patch, field_name)
             if value is None or (isinstance(value, str) and not value.strip()):
                 raise ValueError(f"ledger update cannot clear {field_name}; omit it to leave it unchanged")
@@ -267,6 +267,7 @@ __all__ = [
     "LEDGER_UPDATE_MAX_VALIDATION_MESSAGES",
     "LEDGER_UPDATE_OPERATION_DEFINITION_ID",
     "LEDGER_UPDATE_PHASE",
+    "LEDGER_UPDATE_REQUIRED_FIELD_NAMES",
     "LEDGER_UPDATE_VALIDATION_REFUSAL_CODE",
     "LedgerUpdateExecutionResult",
     "LedgerUpdateOperationResult",

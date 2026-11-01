@@ -37,7 +37,7 @@ LedgerClassifyPatchField = Literal[
     "notes",
 ]
 
-_CLASSIFY_FIELDS = frozenset(
+CLASSIFY_FIELD_NAMES = frozenset(
     {
         "business_classification",
         "business_pct",
@@ -55,6 +55,9 @@ _CLASSIFY_FIELDS = frozenset(
         "notes",
     },
 )
+
+CLASSIFY_UNCLEARABLE_FIELD_NAMES = frozenset({"business_classification", "notes"})
+"""Selected fields a classification can replace but never blank: the writer requires a value for each."""
 
 _ClassifyFields = Annotated[tuple[LedgerClassifyPatchField, ...], Field(min_length=1, max_length=16)]
 
@@ -197,7 +200,7 @@ class LedgerClassifyRequest(BaseModel):
         cls,
         value: tuple[LedgerClassifyPatchField, ...],
     ) -> tuple[LedgerClassifyPatchField, ...]:
-        if len(set(value)) != len(value) or not set(value) <= _CLASSIFY_FIELDS:
+        if len(set(value)) != len(value) or not set(value) <= CLASSIFY_FIELD_NAMES:
             raise ValueError("ledger classify fields must be unique supported fields")
         if value != tuple(sorted(value)):
             raise ValueError("ledger classify fields must use canonical sorted order")
@@ -232,7 +235,7 @@ def require_primary_classification(patch: LedgerClassifyPatch, patch_fields: Col
 def _require_selected_patch_values(request: LedgerClassifyRequest) -> None:
     selected = set(request.patch_fields)
     patch_values = request.patch.model_dump()
-    unselected_fields = _CLASSIFY_FIELDS - {"m210_income_classification"} - selected
+    unselected_fields = CLASSIFY_FIELD_NAMES - {"m210_income_classification"} - selected
     if any(patch_values[name] is not None for name in unselected_fields):
         raise ValueError("ledger classify request contains an unselected patch value")
 
