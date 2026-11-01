@@ -37,6 +37,9 @@ _FORMS = [
             ("achatarramiento", "s"),
             ("desafectación", "es"),
             ("regenerable", "s"),
+            ("individualización", "es"),
+            ("concursal", "es"),
+            ("minoración", "es"),
             ("reanudable", "s"),
             ("auditable", "s"),
             ("contrafirmante", "s"),
@@ -65,8 +68,18 @@ def test_reviewed_native_forms_preserve_language_case_stem_and_ending(word: str)
     assert not is_reviewed_spanish_form(word[:2] + "x" + word[2:])
     assert not is_reviewed_spanish_form(word[:-1] + "z")
     for locale in ("en", "ca", "hu"):
-        # These two homographs were already enrolled in their own languages.
-        assert is_project_spelling(locale, word) == ((locale, word) in {("en", "auditable"), ("ca", "tipada")})
+        # These words also have independent language or legal-term coverage.
+        assert is_project_spelling(locale, word) == (
+            (locale, word)
+            in {
+                ("en", "auditable"),
+                ("en", "regenerable"),
+                ("en", "minoración"),
+                ("ca", "tipada"),
+                ("ca", "minoración"),
+                ("hu", "minoración"),
+            }
+        )
     unaccented = "".join(c for c in unicodedata.normalize("NFD", word) if unicodedata.category(c) != "Mn")
     if unaccented != word:
         assert not is_reviewed_spanish_form(unaccented)

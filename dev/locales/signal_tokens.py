@@ -146,7 +146,7 @@ DESCENDANT_RELATION_CHOICES_RE = re.compile(
 # Keep both the numeric context and the closed spelling list: a bare suffix,
 # misspelling or arbitrary Latin-looking word must still reach its dictionary.
 _ARTICLE_ORDINAL = (
-    r"(?:bis|quater|nonies|noniesdecies|octiesdecies|quatervicies|quinquies|quinvicies|sexies|unvicies|terdecies|"
+    r"(?:bis|quater|nonies|noniesdecies|octiesdecies|septiesdecies|septvicies|quatervicies|quinquies|quinvicies|sexies|unvicies|terdecies|"
     r"quaterdecies|undecies|decies|duodecies|quinquiesdecies|duovicies|sexvicies|tervicies|vicies|octovicies)(?![\w-])"
 )
 _NUMBERED_ARTICLE_REFERENCE_RE = re.compile(

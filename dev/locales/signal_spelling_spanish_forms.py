@@ -188,6 +188,12 @@ _NUMBER_ENDINGS = {
     "achatarramiento": "s",
     "desafectación": "es",
     "regenerable": "s",
+    # https://dle.rae.es/individualizaci%C3%B3n
+    # https://dle.rae.es/concursal
+    # https://dle.rae.es/minoraci%C3%B3n
+    "individualización": "es",
+    "concursal": "es",
+    "minoración": "es",
     "subcomando": "s",
     "reanudable": "s",
     "auditable": "s",

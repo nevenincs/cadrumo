@@ -2000,13 +2000,30 @@ def test_reviewed_technical_forms_keep_exact_spelling_and_language_scope() -> No
         "Subcode",
         "Sectorised",
         "Foral",
+        "unremitted",
+        "domiciliation",
+        "ungrounded",
+        "regenerable",
     )
     for form in forms:
         assert is_project_spelling("en", form)
         assert not is_project_spelling("en", form + "x")
         for locale in ("ca", "es", "hu"):
-            assert not is_project_spelling(locale, form)
-    for typo in ("discardible", "undecryptible", "unhandld", "untrustted", "Unmaped", "Sectorizedd", "Forall"):
+            # The same adjective is independently attested in Spanish.
+            assert is_project_spelling(locale, form) == (locale == "es" and form == "regenerable")
+    for typo in (
+        "discardible",
+        "undecryptible",
+        "unhandld",
+        "untrustted",
+        "Unmaped",
+        "Sectorizedd",
+        "Forall",
+        "unremited",
+        "domicilliation",
+        "ungroundded",
+        "regenerible",
+    ):
         assert not is_project_spelling("en", typo)
 
 
