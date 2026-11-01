@@ -128,6 +128,10 @@ _UNSWEPT_MODULE_RATIONALES: dict[str, str] = {
         "Modelo 190 signed-reintegro context invariants are consumed by record_field_renderer.py, "
         "so they reach the operator only through record_renderer.py/export.py at the artifact boundary."
     ),
+    "m193_context_validation.py": (
+        "Modelo 193 pending and devengo context invariants are consumed by record_field_renderer.py, "
+        "so they reach the operator only through record_renderer.py/export.py at the artifact boundary."
+    ),
     "m280_context_validation.py": (
         "Modelo 280 negative-imputation context invariants are consumed by record_field_renderer.py, "
         "so they reach the operator only through record_renderer.py/export.py at the artifact boundary."
