@@ -83,6 +83,29 @@ def _verify_modelo_revision_with_preconditions(calculation_revision_id: str, **k
         )
 
 
+def _verify_with_repositories(calculation_revision_id: str, repos: Repos) -> Any:
+    """Verify one revision as operator A over the fixture repositories at the fourth tick."""
+    (
+        work_unit_repository,
+        calculation_repository,
+        filing_repository,
+        verification_repository,
+        bucket_event_repository,
+    ) = repos
+    return _verify_modelo_revision_with_preconditions(
+        calculation_revision_id,
+        actor="operator-A",
+        workflow_profile=workflow_profile(),
+        work_unit_repository=work_unit_repository,
+        calculation_repository=calculation_repository,
+        filing_repository=filing_repository,
+        verification_repository=verification_repository,
+        bucket_event_repository=bucket_event_repository,
+        clock=T4,
+        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+    )
+
+
 def _file_modelo_revision(calculation_revision_id: str, **kwargs: Any) -> Any:
     for key in (
         "work_unit_repository",
@@ -204,27 +227,9 @@ def test_direct_verify_rejects_discarded_draft_without_creating_a_report_or_even
     work_unit, revision = _calculated_target(repos)
     _discard_target(work_unit=work_unit, repos=repos)
     before = _catalogue_snapshot(repos)
-    (
-        work_unit_repository,
-        calculation_repository,
-        filing_repository,
-        verification_repository,
-        bucket_event_repository,
-    ) = repos
 
     with pytest.raises(CalculationRevisionNotFoundError) as raised:
-        _verify_modelo_revision_with_preconditions(
-            revision.calculation_revision_id,
-            actor="operator-A",
-            workflow_profile=workflow_profile(),
-            work_unit_repository=work_unit_repository,
-            calculation_repository=calculation_repository,
-            filing_repository=filing_repository,
-            verification_repository=verification_repository,
-            bucket_event_repository=bucket_event_repository,
-            clock=T4,
-            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-        )
+        _verify_with_repositories(revision.calculation_revision_id, repos)
 
     _assert_terminal_parent_refusal(
         raised,
@@ -238,29 +243,11 @@ def test_direct_verify_rejects_discarded_draft_without_creating_a_report_or_even
 def test_direct_verify_rejects_discarded_verified_revision_before_idempotent_return(repos: Repos) -> None:
     """A discarded parent beats the verified-revision no-op and leaves its report untouched."""
     work_unit, revision = _verified_target(repos)
-    (
-        work_unit_repository,
-        calculation_repository,
-        filing_repository,
-        verification_repository,
-        bucket_event_repository,
-    ) = repos
     _discard_target(work_unit=work_unit, repos=repos)
     before = _catalogue_snapshot(repos)
 
     with pytest.raises(CalculationRevisionNotFoundError) as raised:
-        _verify_modelo_revision_with_preconditions(
-            revision.calculation_revision_id,
-            actor="operator-A",
-            workflow_profile=workflow_profile(),
-            work_unit_repository=work_unit_repository,
-            calculation_repository=calculation_repository,
-            filing_repository=filing_repository,
-            verification_repository=verification_repository,
-            bucket_event_repository=bucket_event_repository,
-            clock=T4,
-            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-        )
+        _verify_with_repositories(revision.calculation_revision_id, repos)
 
     _assert_terminal_parent_refusal(
         raised,
