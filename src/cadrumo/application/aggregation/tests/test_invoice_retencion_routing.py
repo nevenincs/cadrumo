@@ -22,6 +22,7 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 
 from ....core.aggregation import BindingSourceKind, RetencionScheme
@@ -190,7 +191,9 @@ def test_defects_accumulate_so_one_pass_shows_everything_wrong() -> None:
     )
 
 
-def test_routed_observations_aggregate_through_the_existing_modelo_111_path() -> None:
+def test_routed_observations_aggregate_through_the_existing_modelo_111_path(
+    operation: PinnedAuthorityOperation,
+) -> None:
     """A routable invoice's observation is consumable by the aggregator that already exists.
 
     This is what "route into the store, never fork a path" has to mean in
@@ -203,6 +206,7 @@ def test_routed_observations_aggregate_through_the_existing_modelo_111_path() ->
     aggregation = aggregate_retenciones_111(
         _routed_observations(first, second),
         period=Period.from_year_and_code(2026, "1T"),
+        operation=operation,
     )
 
     assert aggregation.total_retencion == Decimal("450.00")
@@ -266,7 +270,7 @@ def _modelo_111_revision() -> ModeloRevision:
     ).revision
 
 
-def test_the_committed_m111_bindings_receive_the_invoice_figures() -> None:
+def test_the_committed_m111_bindings_receive_the_invoice_figures(operation: PinnedAuthorityOperation) -> None:
     """A received invoice reaches the casillas that declare the liability.
 
     The base casilla takes the base imponible, never the grand total: the
@@ -285,6 +289,7 @@ def test_the_committed_m111_bindings_receive_the_invoice_figures() -> None:
     aggregation = aggregate_retenciones_111(
         _routed_observations(invoice),
         period=Period.from_year_and_code(2026, "1T"),
+        operation=operation,
     )
 
     resolved = resolve_retenciones_aggregation_binding_values(_modelo_111_revision(), aggregation)
@@ -294,7 +299,7 @@ def test_the_committed_m111_bindings_receive_the_invoice_figures() -> None:
     assert resolved[_M111_ACTIVIDADES_PERCEPTORES_BINDING] == Decimal("1")
 
 
-def test_the_filed_base_is_never_the_grand_total() -> None:
+def test_the_filed_base_is_never_the_grand_total(operation: PinnedAuthorityOperation) -> None:
     """The declared base must exclude the IVA the invoice also carries.
 
     Stated as its own case because the two figures are both present on the
@@ -308,6 +313,7 @@ def test_the_filed_base_is_never_the_grand_total() -> None:
     aggregation = aggregate_retenciones_111(
         _routed_observations(invoice),
         period=Period.from_year_and_code(2026, "1T"),
+        operation=operation,
     )
 
     resolved = resolve_retenciones_aggregation_binding_values(_modelo_111_revision(), aggregation)

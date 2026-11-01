@@ -45,13 +45,14 @@ from .source_mesh import (
     CalculationSourceProvenance,
     CalculationSourceResolution,
 )
+from .source_resolution_operations import source_context_operation, storage_degradation_resolution
 from .source_resolution_operations import (
     source_provenance_for as _provenance_for,
 )
-from .source_resolution_operations import storage_degradation_resolution
 from .withholding_modelo_routing import annual_source_observations_modelo
 
 if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ...domain.calculations.registry.schema import ModeloRevision
 
 _RETENCIONES_AGGREGATORS = {
@@ -95,6 +96,7 @@ class RetencionesAggregationSourceResolver:
         observations: tuple[RetencionObservation, ...],
         *,
         period: Period,
+        operation: PinnedAuthorityOperation,
     ) -> RetencionesAggregation:
         """Aggregate per-perceptor retención observations for ``modelo``.
 
@@ -107,7 +109,7 @@ class RetencionesAggregationSourceResolver:
         (``aeat-calculation-aggregation``). Raises ``KeyError``
         for a non-retenciones modelo, matching the prior service dispatch.
         """
-        return _RETENCIONES_AGGREGATORS[modelo](tuple(observations), period=period)
+        return _RETENCIONES_AGGREGATORS[modelo](tuple(observations), period=period, operation=operation)
 
     @staticmethod
     def supports_modelo(modelo: str) -> bool:
@@ -169,7 +171,8 @@ class RetencionesAggregationSourceResolver:
                 attested_periods=self._m115_no_relevant_payment_periods,
             )
             if is_m115_no_relevant_payment:
-                aggregation = self.aggregate(context.modelo, (), period=context.period)
+                with source_context_operation(context) as operation:
+                    aggregation = self.aggregate(context.modelo, (), period=context.period, operation=operation)
                 return CalculationSourceResolution(
                     resolver_id=self.resolver_id,
                     owned_sources=self.owned_sources,
@@ -224,7 +227,13 @@ class RetencionesAggregationSourceResolver:
                     },
                 ),
             )
-        aggregation = self.aggregate(context.modelo, tuple(observations), period=context.period)
+        with source_context_operation(context) as operation:
+            aggregation = self.aggregate(
+                context.modelo,
+                tuple(observations),
+                period=context.period,
+                operation=operation,
+            )
         return CalculationSourceResolution(
             resolver_id=self.resolver_id,
             owned_sources=self.owned_sources,

@@ -323,7 +323,12 @@ def aggregate_per_modelo(
     # than asserting it.
     modelo = ModeloCode(command.modelo)
     if provider is PerModeloAggregationContributor.RETENCIONES:
-        aggregation = _aggregate_retenciones(command.modelo, command.period, command.retencion_observations)
+        aggregation = _aggregate_retenciones(
+            command.modelo,
+            command.period,
+            command.retencion_observations,
+            operation=operation,
+        )
     elif provider is PerModeloAggregationContributor.COUNTERPART:
         aggregation = _aggregate_counterpart(
             command.modelo,
@@ -414,6 +419,7 @@ def load_calculation_withholding_rows(
         period=period,
         revision=revision,
         cadence=cadence,
+        operation=operation,
     )
     return CalculationWithholdingRows(
         revision_id=revision.id,
@@ -426,13 +432,15 @@ def _aggregate_retenciones(
     modelo: str,
     period: Period,
     observations: tuple[RetencionObservation, ...],
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> RetencionesAggregation:
     # Delegate to the ONE canonical mesh resolver aggregation entry point so the
     # per-modelo service (CLI aggregate / pull) and the live calculate mesh share
     # a single retenciones dispatch and cannot drift
     # (aeat-calculation-aggregation). ``provider_for_modelo`` has
     # already confirmed ``modelo`` is one of the retenciones modelos.
-    return RetencionesAggregationSourceResolver.aggregate(modelo, observations, period=period)
+    return RetencionesAggregationSourceResolver.aggregate(modelo, observations, period=period, operation=operation)
 
 
 def _aggregate_counterpart(

@@ -38,6 +38,7 @@ from ....core.errors.error_codes import get_registered_error_code
 from ....core.foreign_asset_obligation import MODELO_720_FOREIGN_ASSET_CLASS_CODES, M720AssetClassCode
 from ....core.operator_action_enums import NoRecoveryOutcome
 from ....core.period import Period
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from ....domain.calculations.registry.temporal import select_revision
 from ....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
@@ -731,15 +732,19 @@ def _mixed_scheme_retencion_observations() -> tuple[RetencionObservation, ...]:
 
 
 @pytest.mark.parametrize("modelo", ["111", "115", "123", "180", "190", "193"])
-def test_retenciones_collapse_service_and_mesh_reproduce_prior_core_exactly(modelo: str) -> None:
+def test_retenciones_collapse_service_and_mesh_reproduce_prior_core_exactly(
+    modelo: str, operation: PinnedAuthorityOperation
+) -> None:
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         observations = _mixed_scheme_retencion_observations()
         period = _RETENCIONES_PERIOD[modelo]
-        expected = _RETENCIONES_CORE_ORACLE[modelo](observations, period=period)
+        expected = _RETENCIONES_CORE_ORACLE[modelo](observations, period=period, operation=operation)
 
         # The one canonical mesh-resolver aggregation entry point (the calculate path uses
         # this via ``resolve``) and the per-modelo service (which now delegates to it).
-        mesh_value = RetencionesAggregationSourceResolver.aggregate(modelo, observations, period=period)
+        mesh_value = RetencionesAggregationSourceResolver.aggregate(
+            modelo, observations, period=period, operation=operation
+        )
         service_value = aggregate_per_modelo(
             PerModeloAggregationCommand(modelo=modelo, period=period, retencion_observations=observations),
             operation=_authority_operation_for_test,
@@ -750,16 +755,16 @@ def test_retenciones_collapse_service_and_mesh_reproduce_prior_core_exactly(mode
         assert isinstance(service_value, RetencionesAggregation)
 
 
-def test_retenciones_collapse_dispatch_is_not_cross_wired() -> None:
+def test_retenciones_collapse_dispatch_is_not_cross_wired(operation: PinnedAuthorityOperation) -> None:
     # Anti-tautology guard: the shared dispatch routes each modelo to a DISTINCT core,
     # so the equality-to-oracle assertions above are not trivially satisfiable. The three
     # quarterly modelos select disjoint scheme families from the same fixture, yielding
     # distinct non-empty rollups; if the dispatch collapsed two modelos onto one core the
     # rollup schemes would coincide and this assertion — plus the oracle equality — fail.
     observations = _mixed_scheme_retencion_observations()
-    m111 = RetencionesAggregationSourceResolver.aggregate("111", observations, period=_P_2025_Q1)
-    m115 = RetencionesAggregationSourceResolver.aggregate("115", observations, period=_P_2025_Q1)
-    m123 = RetencionesAggregationSourceResolver.aggregate("123", observations, period=_P_2025_Q1)
+    m111 = RetencionesAggregationSourceResolver.aggregate("111", observations, period=_P_2025_Q1, operation=operation)
+    m115 = RetencionesAggregationSourceResolver.aggregate("115", observations, period=_P_2025_Q1, operation=operation)
+    m123 = RetencionesAggregationSourceResolver.aggregate("123", observations, period=_P_2025_Q1, operation=operation)
 
     assert m111.rollups and m115.rollups and m123.rollups
     schemes_by_modelo = {
@@ -775,7 +780,9 @@ def test_retenciones_collapse_dispatch_is_not_cross_wired() -> None:
     assert len({m111.total_retencion, m115.total_retencion, m123.total_retencion}) == 3
 
 
-def test_retenciones_collapse_preserves_landed_distinct_nif_perceptor_count() -> None:
+def test_retenciones_collapse_preserves_landed_distinct_nif_perceptor_count(
+    operation: PinnedAuthorityOperation,
+) -> None:
     # The distinct-NIF perceptor-count result (on the annual summary
     # modelos 180/193) must be unchanged by the collapse. Two urban observations with
     # distinct NIFs must still count as two perceptors through the one shared path.
@@ -803,8 +810,10 @@ def test_retenciones_collapse_preserves_landed_distinct_nif_perceptor_count() ->
             modelo_180_property=_urban_property("B00000042"),
         ),
     )
-    expected = aggregate_retenciones_180(observations, period=_P_2025_ANNUAL)
-    mesh_value = RetencionesAggregationSourceResolver.aggregate("180", observations, period=_P_2025_ANNUAL)
+    expected = aggregate_retenciones_180(observations, period=_P_2025_ANNUAL, operation=operation)
+    mesh_value = RetencionesAggregationSourceResolver.aggregate(
+        "180", observations, period=_P_2025_ANNUAL, operation=operation
+    )
 
     assert expected.total_perceptors == 2
     assert mesh_value == expected

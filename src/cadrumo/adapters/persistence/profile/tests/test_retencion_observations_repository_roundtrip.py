@@ -34,6 +34,7 @@ from cadrumo.application.aggregation.retenciones import RetencionObservation, ag
 from cadrumo.core.aggregation import AggregationCaptureKind, BindingSourceKind, RetencionScheme
 from cadrumo.core.external_constants import UTF_8_ENCODING
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 
 from ...storage.envelope.tests.record_set_authoring import replace_records
 from ...storage.sql.tests.raw_key_writer import save_with_raw_key
@@ -321,7 +322,9 @@ def test_replacement_leaves_other_windows_untouched(tmp_path: Path) -> None:
         assert repo.load_observations("180", neighbour) == (neighbour_row,)
 
 
-def test_whitespace_variant_nifs_are_one_perceptor_in_store_and_aggregation(tmp_path: Path) -> None:
+def test_whitespace_variant_nifs_are_one_perceptor_in_store_and_aggregation(
+    tmp_path: Path, operation: PinnedAuthorityOperation
+) -> None:
     """Canonically-equal NIF declarations resolve to ONE perceptor everywhere.
 
     The observation model held the NIF exactly as declared while the repository
@@ -350,7 +353,9 @@ def test_whitespace_variant_nifs_are_one_perceptor_in_store_and_aggregation(tmp_
         assert padded.perceptor_nif == canonical.perceptor_nif == "12345678Z"
 
         # Modelo 111 is periodic; the observations accrue in the first quarter.
-        aggregation = aggregate_retenciones_111((padded, canonical), period=Period.from_year_and_code(2024, "1T"))
+        aggregation = aggregate_retenciones_111(
+            (padded, canonical), period=Period.from_year_and_code(2024, "1T"), operation=operation
+        )
         assert aggregation.total_perceptors == 1
         assert len(aggregation.rollups) == 1
 

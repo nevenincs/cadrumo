@@ -58,7 +58,7 @@ from cadrumo.application.aggregation.withholding_recognition import (
 )
 from cadrumo.core.aggregation import BindingSourceKind, RetencionClave, RetencionScheme
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.tests.authored_editions import newest_authored_edition
 from cadrumo.domain.calculations.registry.withholding_bindings import WithholdingObservation
 from cadrumo.tests.withholding_zero_blocks import zeroed_withholding_blocks
@@ -410,7 +410,9 @@ def _settle_capital_later(
 
 
 def _assert_settlement_adds_no_second_123_liability(
-    repository: SecureObjectRepository, unpaid: WithholdingEvidenceCaptureResult
+    repository: SecureObjectRepository,
+    unpaid: WithholdingEvidenceCaptureResult,
+    authority_operation: PinnedAuthorityOperation,
 ) -> None:
     _after_reopen_producer, after_reopen_service = _producer_for(repository)
     persisted_after_settlement = RetencionObservationRepositoryAdapter(objects=repository).load_observations(
@@ -419,7 +421,7 @@ def _assert_settlement_adds_no_second_123_liability(
     assert len(persisted_after_settlement) == 1
     assert len(after_reopen_service.read_window(unpaid.scope).entries) == 1
     aggregation = RetencionesAggregationSourceResolver.aggregate(
-        "123", persisted_after_settlement, period=unpaid.scope.period
+        "123", persisted_after_settlement, period=unpaid.scope.period, operation=authority_operation
     )
     assert aggregation.total_taxable_base == Decimal("500.00")
     assert aggregation.total_retencion == Decimal("95.00")
@@ -482,12 +484,13 @@ def _assert_replay_is_idempotent_and_stale_baseline_refused(
 
 def test_unpaid_exigible_capital_reopens_and_later_settlement_does_not_duplicate_123_liability(
     tmp_path: Path,
+    authority_operation: PinnedAuthorityOperation,
 ) -> None:
     """One active allocation yields both accepted annual phases without another 123 row."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         unpaid, reopened_producer, reopened_service = _capture_unpaid_capital_and_reopen(profile.repository)
         settled_command, settled = _settle_capital_later(reopened_producer, reopened_service, unpaid)
-        _assert_settlement_adds_no_second_123_liability(profile.repository, unpaid)
+        _assert_settlement_adds_no_second_123_liability(profile.repository, unpaid, authority_operation)
         _assert_replay_is_idempotent_and_stale_baseline_refused(
             reopened_producer, reopened_service, unpaid, settled, settled_command
         )
@@ -773,7 +776,9 @@ def test_exact_liability_cap_and_replay_do_not_double_count(tmp_path: Path) -> N
         assert len(service.read_window(replay.scope).entries) == 4
 
 
-def test_rent_allocations_reopen_as_two_annual_property_rows(tmp_path: Path) -> None:
+def test_rent_allocations_reopen_as_two_annual_property_rows(
+    tmp_path: Path, authority_operation: PinnedAuthorityOperation
+) -> None:
     """The annual materializer reads active 115 quarters, not a second annual store."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         producer, _service = _producer_for(profile.repository)
@@ -823,7 +828,9 @@ def test_rent_allocations_reopen_as_two_annual_property_rows(tmp_path: Path) -> 
         repository = RetencionObservationRepositoryAdapter(objects=profile.repository)
         annual_source = repository.load_annual_source_observations("115", 2025)
         assert len(annual_source) == 3
-        result = aggregate_retenciones_180(annual_source, period=Period.from_year_and_code(2025, "0A"))
+        result = aggregate_retenciones_180(
+            annual_source, period=Period.from_year_and_code(2025, "0A"), operation=authority_operation
+        )
         assert result.type2_record_count == 2
         assert result.total_perceptors == 1
         assert result.total_taxable_base == Decimal("500.00")

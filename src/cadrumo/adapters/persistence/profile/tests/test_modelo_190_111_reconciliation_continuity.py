@@ -59,7 +59,7 @@ from .....core.aggregation import (
 )
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.period import Period
-from .....domain.calculations.registry.authority import bundled_indexed_authority
+from .....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from .....domain.calculations.registry.bindings import (
     RegistryModeloObservation,
     resolve_available_bound_inputs_by_casilla_id,
@@ -317,6 +317,7 @@ def _calculate_111(
     filing_year: int,
     period: str,
     casilla_inputs: dict[CasillaId, Decimal],
+    operation: PinnedAuthorityOperation,
 ) -> RegistryCalculationResult:
     """Run the REAL 111 quarterly calculation and return the engine result."""
     snapshot = published_authority_operation().snapshot(_MODELO_111, filing_year=filing_year, period=period)
@@ -327,6 +328,7 @@ def _calculate_111(
             casilla_inputs=casilla_inputs,
         ),
         period=Period.from_year_and_code(filing_year, period),
+        operation=operation,
     )
     binding_values = resolve_retenciones_aggregation_binding_values(snapshot.revision, retenciones)
     bound_inputs = resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
@@ -384,6 +386,7 @@ def _compute_year_111_totals(
     *,
     filing_year: int,
     obs_repo: CalculationObservationRepository,
+    operation: PinnedAuthorityOperation,
 ) -> dict[CasillaId, Decimal]:
     """Calculate all four 111 quarters, persist observations, return casilla sums.
 
@@ -395,7 +398,7 @@ def _compute_year_111_totals(
         cid: Decimal("0") for cid in (*_IMPORTE_CASILLAS, _M111_RETENCIONES_TOTAL_CASILLA)
     }
     for period, inputs in quarters.items():
-        result = _calculate_111(filing_year=filing_year, period=period, casilla_inputs=inputs)
+        result = _calculate_111(filing_year=filing_year, period=period, casilla_inputs=inputs, operation=operation)
         obs_repo.save(
             obs_repo.prepare_observation_envelope(
                 _111_observation(filing_year=filing_year, period=period, result=result),
@@ -412,7 +415,9 @@ def _compute_year_111_totals(
     return totals
 
 
-def test_modelo_111_quarterly_engine_produces_retenciones_casilla(tmp_path: Path) -> None:
+def test_modelo_111_quarterly_engine_produces_retenciones_casilla(
+    tmp_path: Path, operation: PinnedAuthorityOperation
+) -> None:
     """The 111 engine computes total retenciones (casilla 28) from sub-totals.
 
     The value is _produced by the real engine, never hand-computed. This is
@@ -423,6 +428,7 @@ def test_modelo_111_quarterly_engine_produces_retenciones_casilla(tmp_path: Path
             filing_year=_YEAR_N,
             period="1T",
             casilla_inputs=_YEAR_N_QUARTERS["1T"],
+            operation=operation,
         )
     assert result.values[_M111_RETENCIONES_TOTAL_CASILLA] > Decimal("0")
     assert (
@@ -442,7 +448,9 @@ def test_modelo_190_relation_prefill_aggregates_111_quarters(tmp_path: Path) -> 
     """
     with isolated_runtime_profile(tmp_path=tmp_path), bundled_indexed_authority().operation() as operation:
         obs_repo = CalculationObservationRepository()
-        expected = _compute_year_111_totals(_YEAR_N_QUARTERS, filing_year=_YEAR_N, obs_repo=obs_repo)
+        expected = _compute_year_111_totals(
+            _YEAR_N_QUARTERS, filing_year=_YEAR_N, obs_repo=obs_repo, operation=operation
+        )
         snapshot_190 = published_authority_operation().snapshot(_MODELO_190, filing_year=_YEAR_N, period="0A")
         prefill = resolve_relations_from_local_store(snapshot_190, operation=operation, repository=obs_repo)
         relation_ids = {
@@ -477,8 +485,10 @@ def test_modelo_190_year_isolation_ignores_prior_year_observations(tmp_path: Pat
     """
     with isolated_runtime_profile(tmp_path=tmp_path), bundled_indexed_authority().operation() as operation:
         obs_repo = CalculationObservationRepository()
-        _compute_year_111_totals(_YEAR_N_QUARTERS, filing_year=_YEAR_N, obs_repo=obs_repo)
-        expected_n1 = _compute_year_111_totals(_YEAR_N_PLUS_1_QUARTERS, filing_year=_YEAR_N_PLUS_1, obs_repo=obs_repo)
+        _compute_year_111_totals(_YEAR_N_QUARTERS, filing_year=_YEAR_N, obs_repo=obs_repo, operation=operation)
+        expected_n1 = _compute_year_111_totals(
+            _YEAR_N_PLUS_1_QUARTERS, filing_year=_YEAR_N_PLUS_1, obs_repo=obs_repo, operation=operation
+        )
         snapshot_190_n1 = published_authority_operation().snapshot(_MODELO_190, filing_year=_YEAR_N_PLUS_1, period="0A")
         prefill = resolve_relations_from_local_store(snapshot_190_n1, operation=operation, repository=obs_repo)
 
@@ -520,9 +530,13 @@ def test_modelo_190_111_reconciliation_enrolls_two_renta_years(tmp_path: Path) -
         obs_repo = CalculationObservationRepository()
 
         # Year N: calculate four 111 quarters, persist, resolve 190, calculate 190.
-        expected_n = _compute_year_111_totals(_YEAR_N_QUARTERS, filing_year=_YEAR_N, obs_repo=obs_repo)
+        expected_n = _compute_year_111_totals(
+            _YEAR_N_QUARTERS, filing_year=_YEAR_N, obs_repo=obs_repo, operation=operation
+        )
         # 111 feeder: evidence the feeder year via one real quarterly calculation.
-        _q1_result = _calculate_111(filing_year=_YEAR_N, period="1T", casilla_inputs=_YEAR_N_QUARTERS["1T"])
+        _q1_result = _calculate_111(
+            filing_year=_YEAR_N, period="1T", casilla_inputs=_YEAR_N_QUARTERS["1T"], operation=operation
+        )
 
         snapshot_190_n = published_authority_operation().snapshot(_MODELO_190, filing_year=_YEAR_N, period="0A")
         prefill_n = resolve_relations_from_local_store(snapshot_190_n, operation=operation, repository=obs_repo)
@@ -540,11 +554,14 @@ def test_modelo_190_111_reconciliation_enrolls_two_renta_years(tmp_path: Path) -
         )
 
         # Year N+1: same pipeline.
-        expected_n1 = _compute_year_111_totals(_YEAR_N_PLUS_1_QUARTERS, filing_year=_YEAR_N_PLUS_1, obs_repo=obs_repo)
+        expected_n1 = _compute_year_111_totals(
+            _YEAR_N_PLUS_1_QUARTERS, filing_year=_YEAR_N_PLUS_1, obs_repo=obs_repo, operation=operation
+        )
         _q1_result_n1 = _calculate_111(
             filing_year=_YEAR_N_PLUS_1,
             period="1T",
             casilla_inputs=_YEAR_N_PLUS_1_QUARTERS["1T"],
+            operation=operation,
         )
 
         snapshot_190_n1 = published_authority_operation().snapshot(_MODELO_190, filing_year=_YEAR_N_PLUS_1, period="0A")
