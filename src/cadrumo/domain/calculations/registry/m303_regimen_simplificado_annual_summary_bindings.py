@@ -183,7 +183,9 @@ def validate_m303_regimen_simplificado_annual_summary_binding(binding: BindingDe
     failures: list[str] = []
     count_failure = _source_read_count_failure(selector)
     if count_failure is not None:
-        failures.append(f"binding {binding.id!r} (source={binding.source!r}) {label} invariants violated: {count_failure}")
+        failures.append(
+            f"binding {binding.id!r} (source={binding.source!r}) {label} invariants violated: {count_failure}",
+        )
     if selector.summary_casilla_id not in _SUMMARY_ENDPOINTS:
         failures.append(
             f"binding {binding.id!r} (source={binding.source!r}) {label} invariants violated: "

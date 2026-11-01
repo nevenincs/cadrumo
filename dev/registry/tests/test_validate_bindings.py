@@ -21,7 +21,7 @@ from cadrumo.domain.calculations.registry.errors import RegistryLoadError
 
 from ..compiler.loader import load_modelo_directory
 from ..compiler.validate_bindings import (
-    unreferenced_binding_advisories,
+    unreferenced_binding_failures,
     validate_binding_registration_section,
 )
 
@@ -250,18 +250,18 @@ def _append_binding_row(tree: Path, new_id: str, *, extra: str = "") -> None:
     path.write_text(fragment.rstrip(newline) + newline + newline + copied, encoding="utf-8")
 
 
-def test_a_binding_no_consumer_names_earns_an_unreferenced_advisory(tmp_path: Path) -> None:
+def test_a_binding_no_consumer_names_earns_an_unreferenced_failure(tmp_path: Path) -> None:
     tree = _copy_modelo(tmp_path, "151")
     _append_binding_row(tree, "modelo-151-impatriado-orphan")
 
     revision = _revision(tree, _M151_REVISION)
-    advisories = unreferenced_binding_advisories(prefix="modelo 151 revision 2025-y-siguientes", revision=revision)
+    failures = unreferenced_binding_failures(prefix="modelo 151 revision 2025-y-siguientes", revision=revision)
 
-    assert [a for a in advisories if "modelo-151-impatriado-orphan" in a and "named by no casilla" in a]
-    assert not [a for a in advisories if _M151_BINDING_ID in a and "orphan" not in a]
+    assert [f for f in failures if "modelo-151-impatriado-orphan" in f and "named by no casilla" in f]
+    assert not [f for f in failures if _M151_BINDING_ID in f and "orphan" not in f]
 
 
-def test_a_non_calculation_binding_earns_no_unreferenced_advisory(tmp_path: Path) -> None:
+def test_a_non_calculation_binding_earns_no_unreferenced_failure(tmp_path: Path) -> None:
     tree = _copy_modelo(tmp_path, "151")
     _append_binding_row(
         tree,
@@ -274,11 +274,14 @@ def test_a_non_calculation_binding_earns_no_unreferenced_advisory(tmp_path: Path
 
     revision = _revision(tree, _M151_REVISION)
 
-    assert unreferenced_binding_advisories(prefix="modelo 151", revision=revision) == ()
+    assert unreferenced_binding_failures(prefix="modelo 151", revision=revision) == []
+    assert _failures(tree, _M151_REVISION) == []
 
 
-def test_an_orphan_binding_stays_out_of_the_refusal_list(tmp_path: Path) -> None:
+def test_an_orphan_binding_is_in_the_refusal_list(tmp_path: Path) -> None:
     tree = _copy_modelo(tmp_path, "151")
     _append_binding_row(tree, "modelo-151-impatriado-orphan")
 
-    assert _failures(tree, _M151_REVISION) == []
+    failures = _failures(tree, _M151_REVISION)
+
+    assert [f for f in failures if "modelo-151-impatriado-orphan" in f and "named by no casilla" in f]

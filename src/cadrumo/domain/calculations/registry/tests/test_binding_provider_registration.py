@@ -14,6 +14,7 @@ and the defect proof both hold in the same run.
 
 from __future__ import annotations
 
+import dataclasses
 import typing
 from datetime import date
 from typing import Literal
@@ -53,7 +54,6 @@ from ..binding_provider_registration import (
 from ..binding_temporal import FilingYearOffset, FilingYearOffsetByTargetPeriod
 from ..binding_terminal_origin import TerminalOriginClass, TerminalOriginExpectation
 from ..binding_value_contract import BindingValueChannel
-from ..bindings import validate_binding_selector_shape
 from ..errors import RegistryValidationError
 from ..ids import RevisionId
 from ..invoice_bindings import PayableInvoiceProvider
@@ -151,18 +151,30 @@ def test_every_provider_union_member_has_a_registration() -> None:
     assert frozenset(BINDING_PROVIDER_REGISTRATIONS) == member_kinds
 
 
-def test_a_kind_whose_member_is_its_own_gate_enrols_no_validator() -> None:
-    """``None`` is an enrolled answer: the table imports, and the gate returns nothing.
+@pytest.mark.parametrize("kind", sorted(BINDING_PROVIDER_REGISTRATIONS, key=lambda kind: kind.value))
+def test_every_registration_enrols_a_callable_validator(kind: BindingSourceKind) -> None:
+    """Each kind is gated by its own enrolled validator; none relies on the model alone."""
+    registration = registration_for(kind)
 
-    A family with no cross-invariant beyond its provider shape has nothing left
-    to check once the union has constructed the member, so its registration
-    carries no validator and the build-time gate earns no diagnostic.
-    """
-    registration = registration_for(BindingSourceKind.PROFILE)
+    assert callable(registration.validator)
+    assert validator_for(kind) is registration.validator
 
-    assert registration.validator is None
-    assert validator_for(BindingSourceKind.PROFILE) is None
-    assert validate_binding_selector_shape(_binding(ProfileProvider(profile_key="declarante.nif"))) == []
+
+def test_a_registration_without_a_validator_is_refused() -> None:
+    """The table cannot exist with a kind whose validator is missing."""
+    profile = registration_for(BindingSourceKind.PROFILE)
+    unvalidated = dataclasses.replace(profile, validator=None)
+    fabricated = tuple(
+        unvalidated if registration.kind is profile.kind else registration
+        for registration in BINDING_PROVIDER_REGISTRATIONS.values()
+    )
+
+    with pytest.raises(RegistryValidationError, match="must enrol a build-time validator"):
+        validate_binding_provider_registrations(fabricated)
+
+    assert set(validate_binding_provider_registrations(tuple(BINDING_PROVIDER_REGISTRATIONS.values()))) == set(
+        BINDING_PROVIDER_REGISTRATIONS,
+    )
 
 
 @pytest.mark.parametrize("kind", sorted(_DEFERRED_KINDS, key=lambda kind: kind.value))
