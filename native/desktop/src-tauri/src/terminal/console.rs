@@ -236,7 +236,8 @@ const FALLBACK_SHELL: &str = "/bin/zsh";
 /// Whether `shell` is an absolute path the system's list of shells names.
 #[cfg(any(target_os = "macos", test))]
 fn listed_shell(shell: &Path, shells: &str) -> bool {
-    shell.is_absolute()
+    // The system's list holds POSIX paths whatever the host platform.
+    shell.to_string_lossy().starts_with('/')
         && shells
             .lines()
             .map(str::trim)

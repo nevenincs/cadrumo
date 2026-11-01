@@ -32,7 +32,7 @@ const action = process.argv[2] ?? "build";
 const backendOnly = ["test-unit", "test-package", "clippy-backend"].includes(
   action,
 );
-const filter = process.argv[3];
+const filter = process.argv[3] ?? process.env.CADRUMO_DESKTOP_HOST_TEST_FILTER;
 if (
   (backendOnly || action === "test") &&
   (process.argv.length > 4 || filter?.startsWith("-"))
@@ -239,6 +239,10 @@ if (action === "build") {
 } else if (action === "test" || action === "clippy" || backendOnly) {
   const testing = ["test", "test-unit", "test-package"].includes(action);
   const live = ["test", "test-package", "clippy"].includes(action);
+  if (testing && filter)
+    console.error(
+      `Only desktop host tests matching "${filter}" run: this is not the whole suite.`,
+    );
   const args = testing
     ? [
         "test",
