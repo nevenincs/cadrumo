@@ -2287,7 +2287,7 @@ export function DocDetail({ d }: { d: Doc }) {
       ) : null}
       {d.state === "draft" ? (
         <>
-          <div className="split2">
+          <div className="split2 reading">
             <div className="paper" aria-label="Page preview (placeholder)">
               <b>{vals.supplier || vals.customer || "Document"}</b>
               <span className="mono t-xs">{vals.invoice_number || ""}</span>
@@ -2325,10 +2325,8 @@ export function DocDetail({ d }: { d: Doc }) {
                     {Object.entries(d.draft).map(
                       ([k, [, origin, grounding]]) => (
                         <tr key={k}>
-                          <td className="muted t-sm" style={{ width: "30%" }}>
-                            {DRAFT_LABEL[k] || k}
-                          </td>
-                          <td>
+                          <td className="muted t-sm">{DRAFT_LABEL[k] || k}</td>
+                          <td style={{ minWidth: "14.25rem" }}>
                             <TypedField
                               field={DRAFT_FIELD[k] ?? { kind: "text" }}
                               controlSize="sm"
@@ -2339,7 +2337,7 @@ export function DocDetail({ d }: { d: Doc }) {
                               }
                             />
                           </td>
-                          <td style={{ width: "36%" }}>
+                          <td className="wrapc">
                             {edited(k) ? (
                               <span className="prov reconciled">
                                 <i></i>Entered by you
