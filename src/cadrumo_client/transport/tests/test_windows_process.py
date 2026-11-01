@@ -434,83 +434,121 @@ class _LaunchOwnerLossCleanup:
             raise BaseExceptionGroup("native launch fixture resources remain owned", failures)
 
 
-@pytest.mark.asyncio
-async def test_owner_loss_after_native_creation_before_process_publication(tmp_path: Path) -> None:
-    """The kernel-contained child dies while its launch has not returned an owner."""
+async def _read_unpublished_launch_facts(owner: _LaunchOwnerLossCleanup, record: Path) -> _UnpublishedLaunchFacts:
+    assert owner.process.stdout is not None
+    ready = await asyncio.wait_for(owner.process.stdout.readline(), timeout=5)
+    assert ready.strip() == b"native-created-unpublished"
+    encoded = record.read_bytes()
+    assert 0 < len(encoded) <= 4096
+    facts = _UnpublishedLaunchFacts.model_validate_json(encoded)
+    assert facts.owner_pid == owner.process.pid
+    assert facts.child_pid > 0 and facts.child_pid != facts.owner_pid
+    assert facts.job_handle > 0 and facts.published_children == 0
+    assert math.isfinite(facts.barrier_deadline)
+    return facts
+
+
+def _hold_owner_child_and_job(owner: _LaunchOwnerLossCleanup, facts: _UnpublishedLaunchFacts) -> None:
     import win32api
     import win32con
     import win32event
     import win32job
     import win32process
 
+    owner.owner_handle = win32api.OpenProcess(
+        win32con.SYNCHRONIZE
+        | win32con.PROCESS_QUERY_INFORMATION
+        | win32con.PROCESS_TERMINATE
+        | win32con.PROCESS_DUP_HANDLE,
+        False,
+        facts.owner_pid,
+    )
+    owner.child_handle = win32api.OpenProcess(
+        win32con.SYNCHRONIZE | win32con.PROCESS_QUERY_INFORMATION, False, facts.child_pid
+    )
+    assert win32event.WaitForSingleObject(owner.owner_handle, 0) == win32event.WAIT_TIMEOUT
+    assert win32event.WaitForSingleObject(owner.child_handle, 0) == win32event.WAIT_TIMEOUT
+    assert win32process.GetProcessTimes(owner.owner_handle)["CreationTime"].isoformat() == facts.owner_created
+    assert win32process.GetProcessTimes(owner.child_handle)["CreationTime"].isoformat() == facts.child_created
+    owner.job_handle = win32api.DuplicateHandle(
+        owner.owner_handle,
+        facts.job_handle,
+        win32api.GetCurrentProcess(),
+        win32job.JOB_OBJECT_QUERY | win32job.JOB_OBJECT_TERMINATE,
+        False,
+        0,
+    )
+    assert win32job.IsProcessInJob(owner.child_handle, owner.job_handle)
+
+
+def _hold_job_members(
+    owner: _LaunchOwnerLossCleanup, facts: _UnpublishedLaunchFacts
+) -> tuple[tuple[int, ...], dict[int, str]]:
+    import win32api
+    import win32con
+    import win32event
+    import win32job
+    import win32process
+
+    members = win32job.QueryInformationJobObject(owner.job_handle, win32job.JobObjectBasicProcessIdList)
+    assert isinstance(members, tuple) and 0 < len(members) <= 4096
+    assert all(type(pid) is int and pid > 0 for pid in members)
+    assert len(set(members)) == len(members)
+    assert facts.child_pid in members and facts.owner_pid not in members
+    creations = {facts.child_pid: facts.child_created}
+    for pid in members:
+        if pid == facts.child_pid:
+            handle = owner.child_handle
+        else:
+            handle = win32api.OpenProcess(win32con.SYNCHRONIZE | win32con.PROCESS_QUERY_INFORMATION, False, pid)
+            owner.member_handles[pid] = handle
+            creations[pid] = win32process.GetProcessTimes(handle)["CreationTime"].isoformat()
+        assert win32event.WaitForSingleObject(handle, 0) == win32event.WAIT_TIMEOUT
+        assert win32job.IsProcessInJob(handle, owner.job_handle)
+    return members, creations
+
+
+def _reobserve_job_members(
+    owner: _LaunchOwnerLossCleanup,
+    facts: _UnpublishedLaunchFacts,
+    members: tuple[int, ...],
+    creations: dict[int, str],
+) -> None:
+    import win32event
+    import win32job
+    import win32process
+
+    assert win32event.WaitForSingleObject(owner.owner_handle, 0) == win32event.WAIT_TIMEOUT
+    assert win32process.GetProcessTimes(owner.owner_handle)["CreationTime"].isoformat() == facts.owner_created
+    assert set(win32job.QueryInformationJobObject(owner.job_handle, win32job.JobObjectBasicProcessIdList)) == set(
+        members
+    )
+    for pid in members:
+        handle = owner.child_handle if pid == facts.child_pid else owner.member_handles[pid]
+        assert win32event.WaitForSingleObject(handle, 0) == win32event.WAIT_TIMEOUT
+        assert win32process.GetProcessTimes(handle)["CreationTime"].isoformat() == creations[pid]
+        assert win32job.IsProcessInJob(handle, owner.job_handle)
+    limits = win32job.QueryInformationJobObject(owner.job_handle, win32job.JobObjectExtendedLimitInformation)
+    assert limits["BasicLimitInformation"]["LimitFlags"] == win32job.JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE
+    assert sorted(win32job.QueryInformationJobObject(owner.job_handle, win32job.JobObjectBasicProcessIdList)) == sorted(
+        members
+    )
+
+
+@pytest.mark.asyncio
+async def test_owner_loss_after_native_creation_before_process_publication(tmp_path: Path) -> None:
+    """The kernel-contained child dies while its launch has not returned an owner."""
+    import win32api
+    import win32event
+
     record = tmp_path / "unpublished-native-launch.json"
     owner = _LaunchOwnerLossCleanup(await launch_fixture(_FIXTURE, "launch-owner-loss", str(record)))
     primary: BaseException | None = None
     try:
-        assert owner.process.stdout is not None
-        ready = await asyncio.wait_for(owner.process.stdout.readline(), timeout=5)
-        assert ready.strip() == b"native-created-unpublished"
-        encoded = record.read_bytes()
-        assert 0 < len(encoded) <= 4096
-        facts = _UnpublishedLaunchFacts.model_validate_json(encoded)
-        assert facts.owner_pid == owner.process.pid
-        assert facts.child_pid > 0 and facts.child_pid != facts.owner_pid
-        assert facts.job_handle > 0 and facts.published_children == 0
-        assert math.isfinite(facts.barrier_deadline)
-        owner.owner_handle = win32api.OpenProcess(
-            win32con.SYNCHRONIZE
-            | win32con.PROCESS_QUERY_INFORMATION
-            | win32con.PROCESS_TERMINATE
-            | win32con.PROCESS_DUP_HANDLE,
-            False,
-            facts.owner_pid,
-        )
-        owner.child_handle = win32api.OpenProcess(
-            win32con.SYNCHRONIZE | win32con.PROCESS_QUERY_INFORMATION, False, facts.child_pid
-        )
-        assert win32event.WaitForSingleObject(owner.owner_handle, 0) == win32event.WAIT_TIMEOUT
-        assert win32event.WaitForSingleObject(owner.child_handle, 0) == win32event.WAIT_TIMEOUT
-        assert win32process.GetProcessTimes(owner.owner_handle)["CreationTime"].isoformat() == facts.owner_created
-        assert win32process.GetProcessTimes(owner.child_handle)["CreationTime"].isoformat() == facts.child_created
-        owner.job_handle = win32api.DuplicateHandle(
-            owner.owner_handle,
-            facts.job_handle,
-            win32api.GetCurrentProcess(),
-            win32job.JOB_OBJECT_QUERY | win32job.JOB_OBJECT_TERMINATE,
-            False,
-            0,
-        )
-        assert win32job.IsProcessInJob(owner.child_handle, owner.job_handle)
-        members = win32job.QueryInformationJobObject(owner.job_handle, win32job.JobObjectBasicProcessIdList)
-        assert isinstance(members, tuple) and 0 < len(members) <= 4096
-        assert all(type(pid) is int and pid > 0 for pid in members)
-        assert len(set(members)) == len(members)
-        assert facts.child_pid in members and facts.owner_pid not in members
-        creations = {facts.child_pid: facts.child_created}
-        for pid in members:
-            if pid == facts.child_pid:
-                handle = owner.child_handle
-            else:
-                handle = win32api.OpenProcess(win32con.SYNCHRONIZE | win32con.PROCESS_QUERY_INFORMATION, False, pid)
-                owner.member_handles[pid] = handle
-                creations[pid] = win32process.GetProcessTimes(handle)["CreationTime"].isoformat()
-            assert win32event.WaitForSingleObject(handle, 0) == win32event.WAIT_TIMEOUT
-            assert win32job.IsProcessInJob(handle, owner.job_handle)
-        assert win32event.WaitForSingleObject(owner.owner_handle, 0) == win32event.WAIT_TIMEOUT
-        assert win32process.GetProcessTimes(owner.owner_handle)["CreationTime"].isoformat() == facts.owner_created
-        assert set(win32job.QueryInformationJobObject(owner.job_handle, win32job.JobObjectBasicProcessIdList)) == set(
-            members
-        )
-        for pid in members:
-            handle = owner.child_handle if pid == facts.child_pid else owner.member_handles[pid]
-            assert win32event.WaitForSingleObject(handle, 0) == win32event.WAIT_TIMEOUT
-            assert win32process.GetProcessTimes(handle)["CreationTime"].isoformat() == creations[pid]
-            assert win32job.IsProcessInJob(handle, owner.job_handle)
-        limits = win32job.QueryInformationJobObject(owner.job_handle, win32job.JobObjectExtendedLimitInformation)
-        assert limits["BasicLimitInformation"]["LimitFlags"] == win32job.JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE
-        assert sorted(
-            win32job.QueryInformationJobObject(owner.job_handle, win32job.JobObjectBasicProcessIdList)
-        ) == sorted(members)
+        facts = await _read_unpublished_launch_facts(owner, record)
+        _hold_owner_child_and_job(owner, facts)
+        members, creations = _hold_job_members(owner, facts)
+        _reobserve_job_members(owner, facts, members, creations)
         # A controller-held Job would keep the child alive after its owner dies.
         owner.release_job_observation()
         assert owner.job_handle is None
