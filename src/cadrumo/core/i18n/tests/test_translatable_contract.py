@@ -7,25 +7,27 @@ See Also:
     :func:`~cadrumo.core.i18n.render.tr`
         Reserved runtime translation function whose ``tr`` binding must not be
         shadowed outside the i18n renderer.
-    :func:`~tests._inventory.package_ast_items`
-        Shared AST inventory used to scan declarations across the repository.
+    :func:`~cadrumo.tests.inventory.iter_parsed_sources`
+        Shared streaming parse used to scan declarations across the repository.
 """
 
 from __future__ import annotations
 
 import ast
-from collections.abc import Mapping
+import re
 from pathlib import Path
 from typing import override
 
 import pytest
 
-from ....tests.inventory import SRC_CADRUMO, package_ast_items, repo_relative
+from ....tests.inventory import SRC_CADRUMO, iter_parsed_sources, package_python_files, repo_relative, source_may_spell
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _TRANSLATABLE_EXPORT = SRC_CADRUMO / "core" / "i18n" / "__init__.py"
 _TRANSLATION_RENDERER = SRC_CADRUMO / "core" / "i18n" / "render.py"
+_GOVERNED_IDENTIFIERS = re.compile(r"\b(?:Translatable|tr|_t)\b")
+"""Every violation names one of these identifiers, so a module spelling none has none."""
 
 
 def _location(path: Path, node: ast.AST, message: str) -> str:
@@ -213,13 +215,58 @@ class _TranslatableContractVisitor(ast.NodeVisitor):
             self.violations.append(_location(self.path, node, "shadows reserved i18n name 'tr'"))
 
 
-def test_translatable_instances_use_only_tr_alias_without_shadowing(source_tree_ast: Mapping[Path, ast.AST]) -> None:
+def _violations_in(path: Path, tree: ast.AST) -> list[str]:
+    visitor = _TranslatableContractVisitor(path)
+    visitor.visit(tree)
+    return visitor.violations
+
+
+def _may_violate(source: str) -> bool:
+    return source_may_spell(source, _GOVERNED_IDENTIFIERS)
+
+
+def test_translatable_instances_use_only_tr_alias_without_shadowing() -> None:
     """``Translatable`` values must be declared as ``tr(...)`` with no local shadowing."""
 
     violations: list[str] = []
-    for path, tree in package_ast_items(source_tree_ast, include_data=True):
-        visitor = _TranslatableContractVisitor(path)
-        visitor.visit(tree)
-        violations.extend(visitor.violations)
+    for path, _source, tree in iter_parsed_sources(package_python_files(), admits=_may_violate):
+        violations.extend(_violations_in(path, tree))
 
     assert violations == []
+
+
+@pytest.mark.parametrize(
+    "source",
+    [
+        "from cadrumo.core.i18n import Translatable\n",
+        "import gettext as tr\n",
+        "from gettext import gettext as tr\n",
+        "def tr() -> None: ...\n",
+        "async def _t() -> None: ...\n",
+        "def render(tr: str) -> None: ...\n",
+        "def render(*tr: str) -> None: ...\n",
+        "def render(**_t: str) -> None: ...\n",
+        "class tr: ...\n",
+        "tr = 1\n",
+        "a, (b, *tr) = values\n",
+        "tr: str = ''\n",
+        "tr += 1\n",
+        "for tr in values: ...\n",
+        "with value as tr: ...\n",
+        "try: ...\nexcept Error as tr: ...\n",
+        "(tr := 1)\n",
+        "Translatable('key')\n",
+        "i18n.Translatable('key')\n",
+        "_t('key')\n",
+        "\uff54\uff52 = 1\n",
+    ],
+)
+def test_the_screen_admits_every_shape_the_contract_reports(source: str) -> None:
+    """A violation the text screen hid would pass this gate silently."""
+    assert _violations_in(SRC_CADRUMO / "probe.py", ast.parse(source)), source
+    assert _may_violate(source), source
+
+
+def test_the_screen_refuses_a_module_naming_no_governed_identifier() -> None:
+    """The screen must select: admitting everything would hide a broken pattern behind a slow pass."""
+    assert not _may_violate("from .render import trace\n\nstring = 'attribute'\nx_t = _tail\n")

@@ -11,6 +11,7 @@ from pathlib import Path
 import pytest
 
 from ....core.directory_scan import scan_directory
+from ....tests.inventory import parse_source
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -206,87 +207,68 @@ def _iter_modules() -> Iterator[tuple[Path, ast.Module]]:
         )
         raise AssertionError(message)
     for path in modules:
-        yield path, ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        yield path, parse_source(path.read_text(encoding="utf-8"), filename=str(path))
 
 
 def _relative(path: Path) -> str:
     return path.relative_to(_source_root()).as_posix()
 
 
-def _dicts_with_enclosing_function(module: ast.Module) -> Iterator[tuple[ast.Dict, str | None]]:
-    """Yield every dict literal paired with the function that encloses it."""
-    enclosing: list[str] = []
-    results: list[tuple[ast.Dict, str | None]] = []
-
-    def walk(node: ast.AST) -> None:
-        entered = isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef)
-        if entered:
-            enclosing.append(node.name)  # type: ignore[union-attr]
-        if isinstance(node, ast.Dict):
-            results.append((node, enclosing[-1] if enclosing else None))
-        for child in ast.iter_child_nodes(node):
-            walk(child)
-        if entered:
-            enclosing.pop()
-
-    walk(module)
-    return iter(results)
+_LEAF_NODES = (ast.Name, ast.Constant, ast.expr_context, ast.operator, ast.unaryop, ast.boolop, ast.cmpop)
+"""Nodes that hold nothing this gate reads, so a walk need not enter them."""
 
 
-def _fact_containers_with_enclosing_function(
-    module: ast.Module,
-) -> Iterator[tuple[ast.Tuple | ast.List, str | None]]:
-    """Yield every fact container paired with the function that encloses it."""
-    enclosing: list[str] = []
-    results: list[tuple[ast.Tuple | ast.List, str | None]] = []
-    shared = _shared_fact_tuples(module)
+class _ProfileShapeFindings:
+    """The three incomplete-shape tallies, accumulated over the tree."""
 
-    def walk(node: ast.AST) -> None:
-        entered = isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef)
-        if entered:
-            enclosing.append(node.name)  # type: ignore[union-attr]
-        if isinstance(node, ast.Tuple | ast.List) and _profile_fact_paths(node, shared):
-            results.append((node, enclosing[-1] if enclosing else None))
-        for child in ast.iter_child_nodes(node):
-            walk(child)
-        if entered:
-            enclosing.pop()
+    def __init__(self) -> None:
+        self.fact_containers: Counter[tuple[str, str | None]] = Counter()
+        self.modelo_iva_constructors: list[tuple[str, int, frozenset[str]]] = []
+        self.literal_maps: Counter[tuple[str, str | None]] = Counter()
 
-    walk(module)
-    return iter(results)
+    def scan(self, relative_path: str, module: ast.Module) -> None:
+        """Read every shape in one walk, tracking the enclosing function."""
+        shared_fact_tuples = _shared_fact_tuples(module)
+
+        def walk(node: ast.AST, enclosing: str | None) -> None:
+            if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
+                enclosing = node.name
+            elif isinstance(node, ast.Call):
+                self._read_constructor(relative_path, node)
+            elif isinstance(node, ast.Tuple | ast.List):
+                fact_paths = _profile_fact_paths(node, shared_fact_tuples)
+                if _IVA_REGIME_PATH in fact_paths and _REQUIRED_IVA_FACT_PATHS - fact_paths:
+                    self.fact_containers[(relative_path, enclosing)] += 1
+            elif isinstance(node, ast.Dict):
+                literal_paths = frozenset(
+                    key.value for key in node.keys if isinstance(key, ast.Constant) and isinstance(key.value, str)
+                )
+                if _IVA_REGIME_PATH in literal_paths and _REQUIRED_IVA_FACT_PATHS - literal_paths:
+                    self.literal_maps[(relative_path, enclosing)] += 1
+            for child in ast.iter_child_nodes(node):
+                if not isinstance(child, _LEAF_NODES):
+                    walk(child, enclosing)
+
+        walk(module, None)
+
+    def _read_constructor(self, relative_path: str, node: ast.Call) -> None:
+        if _called_name(node) != "ModeloIVAProfile":
+            return
+        provided = frozenset(keyword.arg for keyword in node.keywords if keyword.arg is not None)
+        missing = _REQUIRED_MODELO_IVA_KEYWORDS - provided
+        if missing:
+            self.modelo_iva_constructors.append((relative_path, node.lineno, missing))
 
 
 def test_every_claimed_current_iva_profile_has_the_canonical_required_axes() -> None:
-    incomplete_fact_containers: Counter[tuple[str, str | None]] = Counter()
-    incomplete_modelo_iva_constructors: list[tuple[str, int, frozenset[str]]] = []
-    incomplete_literal_maps: Counter[tuple[str, str | None]] = Counter()
-
+    findings = _ProfileShapeFindings()
     for path, module in _iter_modules():
-        relative_path = _relative(path)
-        for node in ast.walk(module):
-            if isinstance(node, ast.Call) and _called_name(node) == "ModeloIVAProfile":
-                provided = frozenset(keyword.arg for keyword in node.keywords if keyword.arg is not None)
-                missing = _REQUIRED_MODELO_IVA_KEYWORDS - provided
-                if missing:
-                    incomplete_modelo_iva_constructors.append((relative_path, node.lineno, missing))
+        findings.scan(_relative(path), module)
 
-        shared_fact_tuples = _shared_fact_tuples(module)
-        for fact_container, enclosing_function in _fact_containers_with_enclosing_function(module):
-            fact_paths = _profile_fact_paths(fact_container, shared_fact_tuples)
-            if _IVA_REGIME_PATH in fact_paths and _REQUIRED_IVA_FACT_PATHS - fact_paths:
-                incomplete_fact_containers[(relative_path, enclosing_function)] += 1
-
-        for dict_node, enclosing_function in _dicts_with_enclosing_function(module):
-            literal_paths = frozenset(
-                key.value for key in dict_node.keys if isinstance(key, ast.Constant) and isinstance(key.value, str)
-            )
-            if _IVA_REGIME_PATH in literal_paths and _REQUIRED_IVA_FACT_PATHS - literal_paths:
-                incomplete_literal_maps[(relative_path, enclosing_function)] += 1
-
-    assert incomplete_fact_containers == Counter(
+    assert findings.fact_containers == Counter(
         (entry.path, entry.function) for entry in _FACT_CONTAINER_NON_PROFILE_EXCLUSIONS
     )
-    assert incomplete_modelo_iva_constructors == []
-    assert incomplete_literal_maps == Counter(
+    assert findings.modelo_iva_constructors == []
+    assert findings.literal_maps == Counter(
         {(entry.path, entry.function): entry.expected_count for entry in _LITERAL_NON_PROFILE_EXCLUSIONS}
     )

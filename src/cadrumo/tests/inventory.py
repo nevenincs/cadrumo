@@ -5,10 +5,12 @@ from __future__ import annotations
 import ast
 import gc
 import re
-from collections.abc import Iterable, Iterator, Mapping
+import unicodedata
+from collections import deque
+from collections.abc import Callable, Iterable, Iterator, Mapping
 from functools import cache
 from pathlib import Path
-from typing import Final, Protocol, override, runtime_checkable
+from typing import Final, NamedTuple, Protocol, override, runtime_checkable
 
 from ..core.directory_scan import DirectoryEntryKind, scan_directory
 
@@ -422,20 +424,122 @@ def _parsed_ast_for_path(path: Path) -> ast.AST | None:
     except (OSError, UnicodeDecodeError):
         _AST_CACHE[path] = None
         return None
-    # A syntax tree holds no reference cycle, so a cyclic collection its
-    # allocations trigger re-traverses every tree already cached and frees
-    # nothing; over the whole package that was about two thirds of parse time.
+    try:
+        tree = parse_source(source, filename=str(path))
+    except SyntaxError:
+        tree = None
+    _AST_CACHE[path] = tree
+    return tree
+
+
+def parse_source(source: str, *, filename: str) -> ast.Module:
+    """Parse *source* with cyclic collection paused for the parse.
+
+    A syntax tree holds no reference cycle, so a cyclic collection its
+    allocations trigger re-traverses every tree still alive and frees nothing;
+    over the whole package that was about two thirds of parse time.
+    """
     collecting = gc.isenabled()
     gc.disable()
     try:
-        tree = ast.parse(source, filename=str(path))
-    except SyntaxError:
-        tree = None
+        return ast.parse(source, filename=filename)
     finally:
         if collecting:
             gc.enable()
-    _AST_CACHE[path] = tree
-    return tree
+
+
+class ParsedSource(NamedTuple):
+    """One module's source text and syntax tree, alive for one loop iteration."""
+
+    path: Path
+    source: str
+    tree: ast.Module
+
+
+def iter_parsed_sources(
+    paths: Iterable[Path],
+    *,
+    admits: Callable[[str], bool] | None = None,
+) -> Iterator[ParsedSource]:
+    """Yield each readable, parseable module of *paths*, retaining no tree.
+
+    The streaming sibling of :func:`package_ast_items`, for a gate that makes one
+    pass and keeps only its findings. Holding the whole package's trees while
+    parsing the next one costs far more than the parse: over 7,988 modules,
+    measured at 33s retained against 11s dropped, because the collections that
+    run between parses re-traverse every tree still alive. Sharing a retained
+    tree only pays for itself across several passes.
+
+    Args:
+        paths: The modules to read, in the order to yield them.
+        admits: Optional screen over the source text. A module it refuses is not
+            parsed, so it must admit every module the gate could report.
+
+    Yields:
+        One :class:`ParsedSource` per admitted module. A file that cannot be read
+        or parsed is skipped, as it is not a member of ``source_tree_ast`` either.
+    """
+    for path in paths:
+        try:
+            source = path.read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            continue
+        if admits is not None and not admits(source):
+            continue
+        try:
+            tree = parse_source(source, filename=str(path))
+        except SyntaxError:
+            continue
+        yield ParsedSource(path, source, tree)
+
+
+def source_may_spell(source: str, identifiers: re.Pattern[str]) -> bool:
+    """Whether *source* can hold an identifier matching *identifiers*.
+
+    Python compares identifiers after NFKC normalization, so a compatibility
+    character can spell an ASCII name without containing it. Searching the
+    normalized text keeps this screen a strict superset of what a parse finds.
+    """
+    return identifiers.search(source if source.isascii() else unicodedata.normalize("NFKC", source)) is not None
+
+
+_STATEMENT_NODES: Final[tuple[type[ast.AST], ...]] = (ast.stmt, ast.excepthandler, ast.match_case)
+"""The node kinds that are statements or carry a block of them."""
+
+
+def iter_statements(
+    tree: ast.AST,
+    *,
+    prune: Callable[[ast.AST], bool] | None = None,
+) -> Iterator[ast.AST]:
+    """Yield the statements under *tree* in :func:`ast.walk` order, skipping expressions.
+
+    A statement can only nest inside another statement's block, never inside an
+    expression, so a gate that reads statements alone need not visit the
+    expression nodes that make up most of a tree. ``except`` handlers and
+    ``match`` cases are yielded too, being the nodes that carry those blocks.
+
+    Args:
+        tree: The node to start beneath.
+        prune: Optional predicate; a matching node is neither yielded nor entered.
+
+    Yields:
+        Each statement, breadth first.
+    """
+    pending: deque[ast.AST] = deque(_nested_blocks(tree))
+    while pending:
+        node = pending.popleft()
+        if prune is not None and prune(node):
+            continue
+        yield node
+        pending.extend(_nested_blocks(node))
+
+
+def _nested_blocks(node: ast.AST) -> Iterator[ast.AST]:
+    """Yield the nodes held directly in *node*'s statement blocks."""
+    for child in ast.iter_child_nodes(node):
+        if isinstance(child, _STATEMENT_NODES):
+            yield child
 
 
 def _selectable_paths(cache: Mapping[Path, ast.AST]) -> Iterable[Path]:
