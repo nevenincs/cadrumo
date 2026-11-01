@@ -43,16 +43,10 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 __all__ = ["repositories"]
 
 
-def test_single_child_suggestion_does_not_recommend_split(
-    repositories: tuple[TransactionCatalogueRepository, BucketEventHistoryRepository, SecureObjectRepository],
-    *,
-    operation: PinnedAuthorityOperation,
-) -> None:
-    repository, _events, _objects = repositories
-    tx_id = _seed_parent(repository, amount=Decimal("121.00"))
-
+def _suggest_single_line_split(repository: TransactionCatalogueRepository, tx_id: str):
+    """Ask the split proposer for its single-line (no split) answer on ``tx_id``."""
     with bundled_indexed_authority().operation() as operation:
-        suggestion = suggest_evidence_split(
+        return suggest_evidence_split(
             bucket_id=_BUCKET,
             transaction_id=tx_id,
             operation=operation,
@@ -62,6 +56,17 @@ def test_single_child_suggestion_does_not_recommend_split(
             settings=load_settings(),
             ports=NO_EVIDENCE_LLM_PORTS,
         )
+
+
+def test_single_child_suggestion_does_not_recommend_split(
+    repositories: tuple[TransactionCatalogueRepository, BucketEventHistoryRepository, SecureObjectRepository],
+    *,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    repository, _events, _objects = repositories
+    tx_id = _seed_parent(repository, amount=Decimal("121.00"))
+
+    suggestion = _suggest_single_line_split(repository, tx_id)
 
     assert suggestion.recommends_split is False
     assert len(suggestion.children) == 1
@@ -76,17 +81,7 @@ def test_apply_evidence_split_refuses_a_no_split_verdict(
 ) -> None:
     repository, events, objects = repositories
     tx_id = _seed_parent(repository, amount=Decimal("121.00"))
-    with bundled_indexed_authority().operation() as operation:
-        suggestion = suggest_evidence_split(
-            bucket_id=_BUCKET,
-            transaction_id=tx_id,
-            operation=operation,
-            proposer=_split_subprocess_proposer(response=_single_line_proposal(), operation=operation),
-            transaction_repository=repository,
-            read_evidence=False,
-            settings=load_settings(),
-            ports=NO_EVIDENCE_LLM_PORTS,
-        )
+    suggestion = _suggest_single_line_split(repository, tx_id)
     with (
         ledger_ports_for_test(
             bucket_id=_BUCKET,
@@ -112,17 +107,7 @@ def test_apply_evidence_classification_writes_in_place_from_the_lone_child(
 ) -> None:
     repository, events, objects = repositories
     tx_id = _seed_parent(repository, amount=Decimal("121.00"))
-    with bundled_indexed_authority().operation() as operation:
-        suggestion = suggest_evidence_split(
-            bucket_id=_BUCKET,
-            transaction_id=tx_id,
-            operation=operation,
-            proposer=_split_subprocess_proposer(response=_single_line_proposal(), operation=operation),
-            transaction_repository=repository,
-            read_evidence=False,
-            settings=load_settings(),
-            ports=NO_EVIDENCE_LLM_PORTS,
-        )
+    suggestion = _suggest_single_line_split(repository, tx_id)
 
     with ledger_ports_for_test(
         bucket_id=_BUCKET,
