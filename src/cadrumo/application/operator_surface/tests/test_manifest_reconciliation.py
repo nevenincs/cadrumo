@@ -127,7 +127,7 @@ def test_reconciliation_requires_reasoned_authoritative_external_exclusion() -> 
             subject_leaf_key="app.ledger.list",
             surface=ReconciliationSurface.SURFACE_EXPOSURE,
             reason="operator-only policy class",
-            authority="profile-policy ADR",
+            authority="profile access policy",
             provenance="external policy projection",
         ),
     )
@@ -135,7 +135,7 @@ def test_reconciliation_requires_reasoned_authoritative_external_exclusion() -> 
 
     assert report.leaves[0].surface_exposure is not None
     assert report.leaves[0].surface_exposure.exposed is False
-    assert report.leaves[0].exclusions[0].authority == "profile-policy ADR"
+    assert report.leaves[0].exclusions[0].authority == "profile access policy"
 
 
 def test_reconciliation_accounts_for_the_root_status_callback_without_a_mounted_family() -> None:

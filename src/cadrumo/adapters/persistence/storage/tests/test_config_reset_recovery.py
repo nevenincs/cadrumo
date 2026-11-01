@@ -128,15 +128,11 @@ _CRASH_HARNESS = _SETTINGS_PREAMBLE + dedent(
     effect_return_by_boundary = {
         "auth_clearing_after_effect": ("operator_cleanup.py", "clear_operator_auth_acquisition_locks"),
         "pointer_reconciling_after_effect": ("profile_pointer.py", "clear"),
-        # The module holding ProfileCapsuleLifecycle.delete was renamed from
-        # _lifecycle.py to lifecycle.py. This pin kept the old spelling, which
-        # then matched only the unrelated invoices/_lifecycle.py -- a module
-        # with no delete at all -- so the trace never fired and the boundary
-        # was never injected. A pin naming a file is a rename away from
-        # testing nothing, which is why the RuntimeError below exists.
-        # That collider has since been renamed again, to
-        # invoices/catalogue_lifecycle.py, so the name above no longer
-        # resolves; it is kept because it is what actually collided.
+        # A pin naming a file is a rename away from testing nothing: a stale
+        # spelling can match an unrelated module with no ``delete``, so the
+        # trace never fires and the boundary is never injected. The
+        # RuntimeError below refuses that silent no-op. The package-qualified
+        # path keeps the pin from matching another ``lifecycle.py``.
         "deleting_after_effect": ("user_profile/lifecycle.py", "delete"),
     }
 

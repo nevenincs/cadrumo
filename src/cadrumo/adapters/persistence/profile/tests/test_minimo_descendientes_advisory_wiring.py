@@ -1,31 +1,24 @@
 """The mínimo advisory collectors are actually consulted by the coordinator.
 
 A collector that returns the right rows when called directly, and is never
-called, protects nobody. Every mínimo-por-descendientes collector was wired
-into :func:`collect_bucket_aggregation_advisory_diagnostics` with no test on
-the wiring itself: deleting a call line failed nothing, because every test
-invoked the collectors directly.
+called, protects nobody.
 
-So these tests drive the COORDINATOR and assert the advisory arrives through it.
+These tests drive the COORDINATOR and assert the advisory arrives through it.
 Nothing here calls a collector, which is the whole point -- a test that would
 still pass with the wiring line removed is testing the collector twice and the
 wiring never.
 
 All four mínimo-family collectors are covered, plus ``settlement_not_computed``
-as the first of the non-mínimo wirings. An earlier pass claimed "both
-collectors" and covered two, having enumerated the population from what it had
-touched rather than from the coordinator's own call block. Read whole, that
-block wires TEN collectors.
+as the first of the non-mínimo wirings. The coordinator's call block wires
+TEN collectors.
 
-Audit state of the other five, measured rather than assumed:
 ``prorrata_regularizacion`` is covered by
 ``test_prorrata_especial_mandatory_live_emit``, which drives this coordinator
 and asserts its kind arrives. ``official_box_unpopulated``,
 ``prior_payment_not_deducted``, ``prior_payment_minoracion_not_captured`` and
 ``bienes_inversion_regularizacion`` remain unwired-tested: each needs its own
 modelo fixture (a seeded observation repository, an M303 ledger) rather than a
-revision and a profile, so they are a separate piece of work rather than more
-cases here.
+revision and a profile.
 """
 
 from __future__ import annotations
@@ -123,7 +116,7 @@ def _source_kinds(casilla_values: dict[CasillaId, Decimal]) -> set[str]:
 
 
 def test_the_rentas_undeclared_advisory_reaches_the_coordinator() -> None:
-    """The new collector's wiring, which would otherwise ship unguarded.
+    """The rentas-undeclared collector's wiring, which would otherwise ship unguarded.
 
     A cohabiting 10-year-old with no rentas figure, against a non-zero
     aggregate: exactly the state the collector fires on. If its call line were
@@ -134,7 +127,7 @@ def test_the_rentas_undeclared_advisory_reaches_the_coordinator() -> None:
 
 
 def test_the_undeclared_advisory_reaches_the_coordinator() -> None:
-    """The pre-existing wiring the review found unguarded.
+    """Wiring of the zero-aggregate collector.
 
     A profile with no descendiente facts against a zero aggregate is the state
     that collector owns, and it is reached through the coordinator here rather
@@ -179,7 +172,7 @@ def _supported_year_with_manual_settlement() -> int:
 
 
 def test_the_settlement_advisory_reaches_the_coordinator() -> None:
-    """A non-mínimo wiring, audited because this class keeps producing findings.
+    """A non-mínimo wiring.
 
     ``settlement_not_computed`` fires where a revision declares a settlement-role
     casilla that is NOT computed, which only the partially modelled Modelo 100
@@ -256,9 +249,8 @@ def test_the_coordinator_stays_quiet_when_no_collector_has_anything_to_say() -> 
 def test_the_undeclared_advisory_grounds_from_the_casilla_it_addresses() -> None:
     """Casilla-derived: this advisory's subject IS casilla 0513's own zero.
 
-    Population A in the grounding reference's own terms -- the casilla already
-    carries the exact provision the message names (plain "Art. 58"), so the
-    correct disposition is the casilla-derived path, not a minted assertion.
+    The casilla already carries the exact provision the message names (plain
+    "Art. 58"), so the message is derived from the casilla, not asserted separately.
     """
     diagnostics = tuple(
         diagnostic

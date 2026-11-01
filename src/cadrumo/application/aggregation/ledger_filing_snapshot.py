@@ -6,10 +6,7 @@ listing, and :mod:`application.modelo.verification_actions` for the Modelo 303
 deductible-evidence verify gate.
 
 That list names the callers as they stand and is not a guarantee that no other
-site reaches these functions; grep before relying on it. It previously named two
-modules that call nothing here at all, which is worse than naming none: a reader
-auditing the staleness refusal went looking in the wrong package, found nothing,
-and had every reason to conclude the enforcement did not exist.
+site reaches these functions; grep before relying on it.
 
 The pure records live in :mod:`domain.modelos.ledger_filing_snapshot`.
 This application module holds the Transaction-aware halves:
@@ -79,15 +76,14 @@ from ...domain.transactions.models import Transaction, TransactionCatalogue
 # (``art_104_tres_exclusion``, ``input_classification``, ``prorrata_sector_id``,
 # ``prorrata_reference``).
 #
-# The six declaration fields are where the gap was REACHABLE, and that is worth
-# stating precisely because it is narrower than it first looks. ``Transaction``
+# The declaration fields are narrower in effect than they first look. ``Transaction``
 # enforces ``taxable_base + iva_amount + recargo_amount == gross``, so a
 # surcharge cannot move without moving an amount V1 already covered; a
 # recargo-only drift is invisible to a V1 hash but cannot exist in a valid
 # catalogue. The declarations carry no such identity: reclassifying a row's
 # ``input_classification`` changes what it deducts while every amount stays put,
-# so a V1 comparison filed it under ``unchanged`` and the verdict reported that
-# a filed return still matched a ledger whose deduction had since changed.
+# so a V1 comparison would file it under ``unchanged``, reporting that a filed
+# return still matched a ledger whose deduction had changed.
 #
 # A V1 snapshot is NOT upgraded by recomputation. Rehashing it under V2 would
 # assert that the wider facts were checked when the filing was sealed, which

@@ -482,17 +482,12 @@ async def _assert_own_name_representation_form(page: Page, *, expected_path: str
 async def _dismiss_pre303_alert_modal_if_present(page: Page) -> None:
     """Dismiss AEAT's pre303 alert modal, delegating to the canonical collapsed check.
 
-    Per operator directive, this reader's prior raw-substring test (no
-    ``"show"``-class check at all) was ruled the incorrect half of a critical
-    double declaration against the auth reader's copy and is deleted, not
-    kept as an alternative -- see
-    :func:`~adapters.outbound.aeat._representation_gate.dismiss_pre303_alert_modal_if_present` for
-    the collapsed predicate and the residual evidence gap this ruling
-    accepts. Unlike the auth caller, this one supplies a diagnostic: a
-    decline here is NEW behaviour (the deleted version would have clicked in
-    this exact case), on a live AEAT money-surface reader, so it must be
-    visible in this reader's own log output rather than read off a stack
-    trace three layers away if the read subsequently stalls or times out.
+    Unlike the auth caller, this one supplies a diagnostic on a decline: the
+    decline happens on a live AEAT money-surface reader, so it must be visible
+    in this reader's own log output rather than read off a stack trace three
+    layers away if the read subsequently stalls or times out. The collapsed
+    predicate and the residual evidence gap it accepts are documented on
+    :func:`~adapters.outbound.aeat._representation_gate.dismiss_pre303_alert_modal_if_present`.
     """
 
     def _log_declined_hidden_modal() -> None:
@@ -633,17 +628,9 @@ async def _submit_wallet_execute_gate_if_present(
             failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED,
         ) from exc
     # Every exit from here is a landing this read rests on, so the rule runs
-    # before the shape is judged rather than inside one branch. It used to sit
-    # only in the ``wallet-execute-submit-present`` arm below, which left the
-    # other statuses -- ``no-wallet-form`` above all, what a page carrying no
-    # wallet form yields, including AEAT's acting-capacity gate -- returning
-    # with no landing rule run at all. The parser refused those pages anyway,
-    # for want of a wallet table, but it answers "is this a wallet?" and so
-    # reported a changed external shape where the truth was an undeclared
-    # landing -- sending the next reader to widen the parser rather than to ask
-    # why AEAT served that page. Asserting here also orders the diagnostics
-    # correctly: an undeclared landing is named as one before a wallet-shaped
-    # page is judged for its form action.
+    # before the shape is judged rather than inside one branch. Asserting here
+    # also orders the diagnostics correctly: an undeclared landing is named as
+    # one before a wallet-shaped page is judged for its form action.
     _assert_read_landing(page)
     if result == "unexpected-wallet-form":
         raise SedeNavigationError(
@@ -961,14 +948,13 @@ def _landed_wallet_url(page: object) -> str:
     REFUSES when the landing is unreadable, rather than falling back to the
     unnumbered wallet URL.
 
-    The fallback used to be defended as "the best true answer available".
-    It is not an answer at all: AEAT dispatches the authenticated session
-    across its numbered pool, so exactly when the landing cannot be read is
-    when there is no evidence the read stayed on the unnumbered origin.
-    Recording it would print a guess into the observation's ``source_url``,
-    where a later reader cannot distinguish it from a measurement.
+    AEAT dispatches the authenticated session across its numbered pool, so
+    exactly when the landing cannot be read is when there is no evidence the
+    read stayed on the unnumbered origin. Recording the unnumbered URL there
+    would print a guess into the observation's ``source_url``, where a later
+    reader cannot distinguish it from a measurement.
 
-    Conforms to the censal reader, which already refused for this reason.
+    Matches the censal reader, which refuses for the same reason.
 
     Raises:
         SedeNavigationError: When the landing carries no usable scheme + host.
@@ -990,10 +976,9 @@ def assert_wallet_read_landing(landing_url: str) -> None:
     ejercicio and periodo and then clicks AEAT's ``ejecutar`` SUBMIT input.
     That click issues a browser form POST which the first-party HTTP guard
     never sees and which the package's forbidden-verb source scan permits
-    by design, so before this rule nothing established where the POST had
-    landed. The post-execute shape check reads the returned HTML's form
-    action, which is a DOM AEAT controls and says nothing about the URL
-    actually served.
+    by design, so the landing it reaches must be checked here. The
+    post-execute shape check reads the returned HTML's form action, which is a
+    DOM AEAT controls and says nothing about the URL actually served.
 
     The allow-list is the traversal itself, and every entry is an existing
     declared constant rather than a new claim: the Cl@ve access selector,

@@ -102,9 +102,8 @@ def _diagnostics_ports() -> DiagnosticsPorts:
     )
 
 
-#: A declared continuation this module never expects to see rendered. It was a
-#: bare sentinel string until ``next_action`` became a typed record; the action
-#: id now carries the same "must not appear in the output" identity.
+#: A declared continuation this module never expects to see rendered. The action
+#: id carries the same "must not appear in the output" identity.
 _UNRENDERED_NEXT_ACTION = declare_next_action("operator.profile.descendiente")
 
 
@@ -290,13 +289,7 @@ def test_profile_readiness_reports_no_profile_configured_when_genuinely_absent()
 
 
 def test_profile_readiness_reports_the_lock_rather_than_no_profile_configured(tmp_path: Path) -> None:
-    """A locked profile must not fall through to the "no profile configured" row.
-
-    Before the fix: neither status set diagnostics keys off included
-    ``profile_locked``, so a real, intact, merely-not-logged-in profile fell
-    through to the same summary a cold environment with no profile at all
-    gets -- true of the second, false of the first.
-    """
+    """A locked profile must not fall through to the "no profile configured" row."""
     from .....core.i18n.render import tr
 
     with isolated_runtime_profile(tmp_path=tmp_path), suspend_active_session():
@@ -341,9 +334,7 @@ def test_secure_objects_integrity_check_reports_unreadable_rows_from_rotated_mas
 ) -> None:
     """A namespace populated under master key K1 must be reported as unreadable under K2.
 
-    Guards the divergence the audit flagged: ``secure_state.load`` used
-    to report ``ok`` while iterating read paths crashed. The new
-    ``secure_objects.integrity`` row must surface non-zero unreadable
+    The ``secure_objects.integrity`` row must surface non-zero unreadable
     counts whenever rows from a prior keychain generation persist.
     """
     db_path = tmp_path / "rotated.db"
@@ -647,8 +638,8 @@ def test_the_preview_reports_nothing_without_a_session_rather_than_a_false_corru
 
     Every row is undecryptable without the bucket key, so a probe that ran
     keyless would report a sound bucket as entirely corrupt.  The repair path
-    used to open a shared-master session of its own to avoid that; it now opens
-    none, and the substrate refusal underneath leaves the report empty.
+    opens no session of its own, and the substrate refusal underneath leaves the
+    report empty.
 
     The served read is what gives the sessionless one meaning: it proves the row
     is there and decrypts cleanly, so an empty sessionless report is the missing
@@ -826,9 +817,7 @@ def test_diagnostic_check_defaults_to_operator_audience_and_no_findings() -> Non
 def test_profile_check_warn_row_names_every_missing_required_key() -> None:
     """``profile.readiness`` warn rows must name the missing keys, not a counter.
 
-    Reproduces cluster F / M14: a bare ``N/M`` counter or a one-word
-    ``warn`` verdict told the operator nothing actionable. The fixed row
-    carries one :class:`DiagnosticFinding` per unset required key and one
+    The row carries one :class:`DiagnosticFinding` per unset required key and one
     canonical profile-editor action on the parent check.
     """
 
@@ -858,8 +847,7 @@ def test_profile_check_warn_row_names_every_missing_required_key() -> None:
     assert verdict.action is not None
     assert verdict.action.action_id == "operator.profile.edit"
     assert verdict.argument_bindings[0].value == "demo"
-    # The bare counter must no longer be the only signal: the row carries
-    # one finding per cause.
+    # The row carries one finding per cause rather than a bare counter.
     assert len(check.findings) == 3
 
 
@@ -915,18 +903,16 @@ def test_render_config_repair_text_lists_specific_findings() -> None:
     assert "identity.tax_id" in rendered
     # The status report's declared continuation must not leak into the
     # application-level rendering: projecting it is the entrypoint's job. The
-    # action id is the greppable identity now that the field is a typed record
-    # rather than the free string this once pinned.
+    # action id is the greppable identity.
     assert _UNRENDERED_NEXT_ACTION.action.action_id not in rendered
 
 
 def test_render_config_repair_text_marks_internal_problems_distinctly() -> None:
     """Internal application defects must read differently from operator gaps.
 
-    A persona saw an internal repair ``fail`` and believed their own profile
-    was invalid. The renderer tags an
-    ``audience='internal'`` row so a taxpayer is not alarmed into
-    thinking they forgot a field; operator-fixable rows carry no tag.
+    The renderer tags an ``audience='internal'`` row so a taxpayer is not
+    alarmed into thinking they forgot a field; operator-fixable rows carry no
+    tag.
     """
 
     from .....core.i18n.render import tr

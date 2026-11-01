@@ -147,8 +147,8 @@ def test_modelo_390_carry_boxes_resolve_through_fifo_partition_with_carried_pend
     M390 annual compensation partition through its production source resolver.
     The two carry-box bindings must carry the FIFO partition
     (box 97 = 120, box 662 = 0), NOT the per-period relation sums (50 / 100),
-    proving the registry no longer routes the boxes through the double-counting
-    per-period relation path.
+    proving the boxes are not routed through the double-counting per-period
+    relation path.
     """
     quarter_chain = [
         ("1T", Decimal("-100.00"), Decimal("100.00"), Decimal("0.00"), Decimal("0.00"), Decimal("100.00")),

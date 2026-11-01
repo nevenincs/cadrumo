@@ -140,19 +140,12 @@ def _parse_sidecar_byte_length(value: object) -> int:
 def _parse_sidecar_written_at(value: object) -> datetime:
     """Return the sidecar's persisted write instant, or classify corruption.
 
-    ``get`` and ``iter_objects`` each parsed this field with their own copy of
-    the same three lines, and both substituted ``now()`` when the value was
-    missing or unparseable. That turned immutable storage corruption into
-    apparently fresh metadata, and — because the two surfaces call the clock at
-    different instants — made the SAME object report two different write times
-    depending on which one an operator read it through. The payload stayed
-    intact while its chronology silently did not, so nothing downstream could
-    learn the sidecar had been damaged.
+    A missing or unparseable value is classified as corruption rather than
+    replaced with the current time, so damaged metadata cannot appear fresh.
 
     A tz-naive value is refused rather than assumed UTC. The writer stores an
     aware instant, so a naive one is damage; reading it as UTC would recover a
-    wrong instant wherever the writer was not on UTC, which is the same silent
-    substitution in a smaller disguise.
+    wrong instant wherever the writer was not on UTC.
 
     Raises:
         :class:`StorageCorruptionError`: When the field is absent, is not a
@@ -462,10 +455,9 @@ class LocalFileSystemProvider:
         master-key ``O_EXCL`` + mode ``0o600`` + fsync pattern) rather than
         the standard tier. The payload here is already-encrypted ciphertext
         (encryption and classification stay above this provider layer), but
-        the 2026-05-30 security-paths audit flagged the sidecar's plaintext
-        ``content_hash``/``byte_length`` metadata as a size-channel
-        inference aid against the encrypted blob set, so the object file is
-        hardened defence-in-depth even though its own content is opaque.
+        the sidecar's plaintext ``content_hash``/``byte_length`` metadata is a
+        size-channel inference aid against the encrypted blob set, so the object
+        file is hardened defence-in-depth even though its own content is opaque.
         The sidecar is written afterwards through
         :func:`~cadrumo.core.atomic_write.atomic_write_text` (standard
         tier), closing the crash window where a torn sidecar write could
@@ -581,10 +573,9 @@ class LocalFileSystemProvider:
         if not stored_hash:
             # A sidecar with no digest cannot be verified against, and
             # ProviderObjectMetadata.content_hash is min_length=1, so the only
-            # alternatives are to refuse or to invent a value. This used to
-            # invent one -- `stored_hash or f"sha256-{actual_hash}"` -- which
-            # handed the caller a digest computed from whatever bytes were on
-            # disk, indistinguishable from one that had actually been checked.
+            # alternatives are to refuse or to invent a value. Inventing one would
+            # hand the caller a digest computed from whatever bytes were on disk,
+            # indistinguishable from one that had actually been checked.
             # `put` refuses a blank content_hash, so reaching here means the
             # sidecar was truncated or edited outside the application.
             raise OutboundStorageIntegrityError(
@@ -634,27 +625,20 @@ class LocalFileSystemProvider:
         ``missing_ok=True`` so a pre-existing orphaned payload without a
         sidecar is still cleanly deleted.
 
-        A failure leaves the PAIR, never half of it. The payload used to be
-        unlinked first and the sidecar second, so a sidecar cleanup that failed
-        after the payload was already gone raised while leaving nothing to
-        retry: ``iter_objects`` no longer reported the object, ``get`` could
-        not read it, and the orphaned sidecar path then blocked a re-``put``
-        under the same key. The object was un-deletable, un-readable and
-        un-writable at once.
+        A failure leaves the PAIR, never half of it.
 
-        Two changes make the failure recoverable. The sidecar goes first, so a
-        refusal there removes nothing at all. And its bytes are read before
-        that removal, so a payload unlink that then fails can put the sidecar
-        back — the sidecar is metadata this method already holds, whereas the
-        payload is not something it could restore. Either way the retry that
-        follows sees the same state the caller started from.
+        The sidecar goes first, so a refusal there removes nothing at all.
+        And its bytes are read before that removal, so a payload unlink that
+        then fails can put the sidecar back — the sidecar is metadata this
+        method already holds, whereas the payload is not something it could
+        restore. Either way the retry that follows sees the same state the
+        caller started from.
 
         Both unlinks are guarded on ``OSError`` rather than ``PermissionError``
         alone: the ways a filesystem refuses to remove a path are not one
         errno, and on some platforms an unlink of a directory-shaped sidecar
         raises :exc:`IsADirectoryError`, which is not a
-        :exc:`PermissionError`. A narrower catch let exactly the corruption
-        shape above escape untranslated.
+        :exc:`PermissionError`.
 
         Args:
             namespace: Logical bucket name.
@@ -726,8 +710,7 @@ class LocalFileSystemProvider:
         way out, and a restore that raised would replace the operator's real
         failure with a second one. A failure here is logged and leaves the
         payload orphaned — the state ``get`` already reports as corrupt and
-        ``iter_objects`` already skips, which is strictly better than the
-        vanished-object state this whole path exists to avoid.
+        ``iter_objects`` already skips, which is preferable to a vanished object.
         """
         if contents is None:
             return

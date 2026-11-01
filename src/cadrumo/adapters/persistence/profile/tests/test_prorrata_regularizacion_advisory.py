@@ -2,14 +2,11 @@
 
 Exercises :func:`~application.modelo.prorrata_regularizacion_advisory.collect_prorrata_regularizacion_diagnostics`
 against a REAL registry-loaded Modelo 303 revision and a REAL encrypted
-:class:`~application.calculations.CalculationObservationRepository` inside
-a genuine bucket runtime (``isolated_runtime_profile``) — no mocks, no stubs.
-The pure LIVA arts. 104-105 math itself is proven in
-``domain/iva/tests/test_prorrata_regularizacion.py`` and the pure advisory
-projection in ``application/calculations/tests/test_prorrata_regularizacion.py``;
-this module proves the projection is actually WIRED into the calculate-path
-advisory fan-out, which was the gap the review found (the builder shipped with
-zero production callers).
+:class:`~application.calculations.CalculationObservationRepository` inside a genuine bucket
+runtime (``isolated_runtime_profile``) — no mocks, no stubs. The pure LIVA arts. 104-105 math
+itself is proven in ``domain/iva/tests/test_prorrata_regularizacion.py`` and the pure advisory
+projection in ``application/calculations/tests/test_prorrata_regularizacion.py``; this module
+proves the projection is actually wired into the calculate-path advisory fan-out.
 
 See Also:
     :mod:`~application.modelo.prorrata_regularizacion_advisory`
@@ -64,7 +61,7 @@ from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_BUCKET = "108e9631-8e8f-4a81-840f-39ba3e07a70b"  # was 'prorrata-advisory-bucket'
+_BUCKET = "108e9631-8e8f-4a81-840f-39ba3e07a70b"
 _YEAR = 2026
 _PRIOR_YEAR = 2025
 _SETTLEMENT_PERIOD_CODE = "4T"

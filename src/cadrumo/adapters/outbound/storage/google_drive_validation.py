@@ -53,9 +53,9 @@ def validate_namespace(namespace: str) -> str:
 def validate_hmac(object_key_hmac: str) -> str:
     """Delegate to the one admissibility rule both backends share.
 
-    This backend previously accepted any non-blank value, so the delegation
-    NARROWS what it admits. Deliberate: the key is a contract-level digest and
-    nothing legitimate produces a character outside the admissible set.
+    The delegation narrows what this backend admits. Deliberate: the key is a
+    contract-level digest and nothing legitimate produces a character outside
+    the admissible set.
     """
     return assert_admissible_object_key_hmac(object_key_hmac, backend="google_drive")
 

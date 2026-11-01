@@ -35,9 +35,9 @@ from cadrumo_client.transport.windows_owned_process import WindowsOwnedProcess
 from cadrumo_runtime.contracts.worker_authorization import WorkerAuthorityRequest
 
 from ...adapters.profile_worker import ProfileWorkerProcess
-from ...adapters.profile_worker_operation_client import ProfileWorkerSubmission
 from ...adapters.tests.profile_worker_support import lease, worker_profiles
 from ...contracts.profile_host import ProfileDrainResult
+from ...contracts.profile_worker import ProfileWorkerSubmission
 from ..profile_connections import RuntimeProfileConnections
 from ..profile_host import RuntimeProfileHost
 from ..session_owner import ProfileWorkerSessionOwner

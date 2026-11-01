@@ -1,70 +1,36 @@
-"""Characterisation of the pre303 alert-modal dismissal, post-collapse.
+"""Tests for the canonical pre303 alert-modal dismissal.
 
-Round-3 semantic duplicate discovery found `_dismiss_pre303_alert_modal_if_present`
-implemented twice -- once in `auth._clave_movil_page_flow` (a method on
-`_ClaveMovilPageFlowMixin`), once in `sede.iva_compensation_wallet` (a free
-function) -- with no cross-reference between the two, and TWO real
-behavioural divergences rather than a calling-convention difference: (1) the
-auth copy checked the modal's CSS `"show"` class before acting at all, the
-wallet copy did a raw substring check on the page HTML with no class-state
-test; (2) the auth copy tried several continue-button selector variants with
-a generic fallback, the wallet copy tried exactly one constructed selector
-with no fallback.
+The canonical predicate clicks the continue button only when the alert modal carries the
+`"show"` class, so a modal that is present but hidden is declined. Both callers share it.
+The generic fallback selector can only succeed where the earlier selectors fail, so it
+cannot remove a working click path.
 
-This module started as a CHARACTERISATION pass -- pinning what each
-implementation did, not what it should do -- so the class-gate question (1)
-could be decided on evidence rather than argument. The four cells it produced:
-
-    ==========  =================  ===================
-                shown              present-but-hidden
-    ==========  =================  ===================
-    auth        clicks             declines
-    wallet      clicks             ALSO clicks
-    ==========  =================  ===================
-
-Two separate rulings followed, on two different timelines. The fallback
-axis (2) was judged STRICTLY ADDITIVE -- a candidate selector can only
-succeed where the current code already failed, so no working click path can
-regress -- and was promoted immediately. The class-gate axis (1) was
-initially HELD: it REMOVES an action (the wallet declining to click), and
-the synthetic fixture below cannot prove that removal safe on AEAT's actual
-page. That hold was subsequently OVERRIDDEN by operator directive: the two
-independent implementations were ruled a critical double declaration, and
-the auth predicate -- checking the modal actually carries `"show"` before
-acting -- was ruled canonical. The wallet's substring-only version is
-deleted, not kept as an alternative, per
-:func:`~adapters.outbound.aeat.dismiss_pre303_alert_modal_if_present`.
-
-**The residual risk the override accepts does not disappear because the
-directive arrived.** The synthetic fixture proves the two implementations
-differed on the structure their own selector-construction code expects, not
-that the class-check is correct against AEAT's real page. If the wallet's
-modal can render shown WITHOUT the `"show"` class on that specific page, this
-collapse trades a demonstrated over-click risk for an undemonstrated hang
-risk. That is why the wallet caller now supplies a diagnostic
-(`on_declined_hidden_modal`) that must surface in its own log output when it
-declines -- see `test_wallet_surfaces_a_diagnostic_when_it_declines_the_hidden_modal`
-below. The evidence that would close this gap for good -- a real capture of
-the modal in both states, or an observed live run -- still does not exist.
+**The residual risk of the class check is not settled by these tests.** The synthetic
+fixture below exercises only the structure that the selector-construction code expects,
+so it does not show that the class-check is correct against AEAT's real page. If the
+wallet's modal can render shown WITHOUT the `"show"` class on that specific page, the
+canonical predicate trades a demonstrated over-click risk for an undemonstrated hang
+risk. The wallet caller therefore supplies a diagnostic (`on_declined_hidden_modal`)
+that must surface in its own log output when it declines -- see
+`test_wallet_surfaces_a_diagnostic_when_it_declines_the_hidden_modal` below. The
+evidence that would close this gap for good -- a real capture of the modal in both
+states, or an observed live run -- still does not exist.
 
 ## Fixture provenance
 
 No recorded AEAT capture of the pre303 alert modal exists in
 `src/cadrumo/tests/fixtures/aeat-sede/` (checked: the closest fixture,
-`dialogo-representacion-gate.html`, is a real capture of the representation
-DISPATCHER page, not the alert modal, and no test references it). The HTML
-below is therefore SYNTHETIC: hand-built to carry only the structure both
-implementations actually inspect (`#alertsModal`, its `class` attribute, and
-one continue button), using the real configured selectors
-(`Settings.external_constants().aeat.pre303.alert_modal_selector` /
-`.alert_continue_button_text`) rather than invented ones. It proves the two
-implementations differ (and, post-collapse, now agree) on the structure AS WE
-UNDERSTAND IT from reading their selector-construction code -- which is
-weaker than proving their behaviour matches AEAT's real page, since the real
-page's exact markup (surrounding modal framework classes, whether the button
-carries additional wrapper elements) is unverified. Treat every assertion
-below as "given this reasonable synthetic shape," not "given AEAT's actual
-page."
+`dialogo-representacion-gate.html`, is a real capture of the representation DISPATCHER
+page, not the alert modal, and no test references it). The HTML below is therefore
+SYNTHETIC: hand-built to carry only the structure the selector code actually inspects
+(`#alertsModal`, its `class` attribute, and one continue button), using the real
+configured selectors (`Settings.external_constants().aeat.pre303.alert_modal_selector` /
+`.alert_continue_button_text`) rather than invented ones. It exercises the canonical
+predicate on the structure AS WE UNDERSTAND IT from reading the selector-construction
+code -- which is weaker than proving its behaviour matches AEAT's real page, since the
+real page's exact markup (surrounding modal framework classes, whether the button carries
+additional wrapper elements) is unverified. Treat every assertion below as "given this
+reasonable synthetic shape," not "given AEAT's actual page."
 """
 
 from __future__ import annotations
@@ -103,9 +69,7 @@ _HTML_SHOWN = f"""
 """
 
 # SYNTHETIC — identical to _HTML_SHOWN except the modal carries no "show"
-# class: present in the DOM, not visually up. This is the state the two
-# pre-collapse implementations treated differently, and the collapsed
-# canonical predicate now treats identically for both callers.
+# class: present in the DOM, not visually up.
 _HTML_HIDDEN = f"""
 <html><body>
   <div id="{_MODAL_SELECTOR.lstrip("#")}" class="modal" role="dialog">
@@ -180,8 +144,7 @@ async def _run_auth(page: _ScriptedPage) -> None:
 
 async def _run_wallet(page: _ScriptedPage) -> None:
     # Same substitution as the auth path above: the fake implements exactly the
-    # members this call touches, and the mypy-shaped suppression it carried
-    # silences nothing in the checkers actually running.
+    # members this call touches.
     await _wallet_dismiss(cast("Page", page))
 
 
@@ -192,7 +155,7 @@ def _run(coro_factory: Callable[[], Coroutine[Any, Any, None]]) -> None:
 
 
 def test_auth_dismisses_the_modal_when_shown() -> None:
-    """Cell 1/4: auth clicks through when the modal carries the "show" class."""
+    """Auth clicks through when the modal carries the "show" class."""
     page = _ScriptedPage(_HTML_SHOWN, click_matches=_matches_when_shown_and_labelled)
 
     _run(lambda: _run_auth(page))
@@ -201,10 +164,9 @@ def test_auth_dismisses_the_modal_when_shown() -> None:
 
 
 def test_auth_declines_when_the_modal_is_present_but_hidden() -> None:
-    """Cell 2/4: auth performs ZERO clicks when the modal lacks the "show" class.
+    """Auth performs ZERO clicks when the modal lacks the "show" class.
 
-    This is now the CANONICAL predicate, not merely "auth's own behaviour" --
-    both callers share this check post-collapse.
+    This is the canonical predicate, which both callers share.
     """
     page = _ScriptedPage(_HTML_HIDDEN, click_matches=_matches_when_shown_and_labelled)
 
@@ -214,12 +176,11 @@ def test_auth_declines_when_the_modal_is_present_but_hidden() -> None:
 
 
 def test_wallet_dismisses_the_modal_when_shown() -> None:
-    """Cell 3/4: wallet clicks through when the modal is genuinely shown.
+    """Wallet clicks through when the modal is genuinely shown.
 
-    Post-collapse, the wallet's selectors are ``.show``-scoped too (the
-    canonical predicate is unconditional, not parameterised per caller), so
-    the matching predicate here is the SAME one the auth test above uses --
-    before the collapse this used a `.show`-agnostic predicate instead.
+    The wallet's selectors are ``.show``-scoped too (the canonical predicate
+    is unconditional, not parameterised per caller), so the matching predicate
+    here is the same one the auth test above uses.
     """
     page = _ScriptedPage(_HTML_SHOWN, click_matches=_matches_when_shown_and_labelled)
 
@@ -228,17 +189,12 @@ def test_wallet_dismisses_the_modal_when_shown() -> None:
     assert page.attempted_selectors, "wallet path did not attempt to dismiss a shown modal"
 
 
-def test_wallet_now_declines_when_the_modal_is_present_but_hidden() -> None:
-    """Cell 4/4, POST-COLLAPSE: wallet now performs ZERO clicks on a present-but-hidden modal.
+def test_wallet_declines_when_the_modal_is_present_but_hidden() -> None:
+    """Wallet performs ZERO clicks on a present-but-hidden modal.
 
-    This is the cell the four-cell table names as CHANGED. Before the
-    collapse this test (as `test_wallet_ALSO_clicks_when_the_modal_is_present_but_hidden`)
-    asserted the opposite -- that the wallet clicked here too, demonstrating
-    the divergence the operator later ruled a critical double declaration.
-    The assertion is inverted deliberately, not silently: if it fails, the
-    collapse has been undone (a second implementation reappeared, or the
-    canonical predicate stopped checking `"show"`), which is exactly the
-    regression this module exists to catch.
+    If this fails, a second implementation has reappeared or the canonical
+    predicate has stopped checking `"show"`; that is the regression this module
+    exists to catch.
     """
     page = _ScriptedPage(_HTML_HIDDEN, click_matches=_matches_when_shown_and_labelled)
 
@@ -246,7 +202,7 @@ def test_wallet_now_declines_when_the_modal_is_present_but_hidden() -> None:
 
     assert page.attempted_selectors == [], (
         f"wallet path clicked a modal with no 'show' class: {page.attempted_selectors} "
-        "-- the collapse to the auth predicate has regressed"
+        "-- the canonical predicate no longer checks the show class"
     )
 
 
@@ -255,14 +211,11 @@ def test_wallet_surfaces_a_diagnostic_when_it_declines_the_hidden_modal(
 ) -> None:
     """The wallet's decline must be visible in its own log output, not silent.
 
-    Declining is NEW behaviour for the wallet reader (the deleted
-    substring-only version would have clicked in exactly this case), on a
-    live AEAT money-surface reader with an unproven-on-the-real-page
-    predicate, so a decline here must be diagnosable from the wallet's own
-    output rather than read off a stack trace three layers away if the read
-    subsequently stalls. The auth caller passes no diagnostic callback
-    (matching its own unchanged pre-collapse behaviour); this test is
-    wallet-specific.
+    The wallet reader is a live AEAT money-surface reader whose predicate is
+    unproven on the real page, so a decline here must be diagnosable from the
+    wallet's own output rather than read off a stack trace three layers away if
+    the read subsequently stalls. The auth caller passes no diagnostic callback;
+    this test is wallet-specific.
     """
     page = _ScriptedPage(_HTML_HIDDEN, click_matches=_matches_when_shown_and_labelled)
 
@@ -297,11 +250,9 @@ def test_auth_falls_back_to_the_generic_modal_footer_button_when_unlabelled() ->
 def test_wallet_shares_the_generic_modal_footer_fallback() -> None:
     """The wallet reaches the SAME fallback the auth path does, via the one shared implementation.
 
-    Post-collapse, the wallet's selectors are also ``.show``-scoped (the
-    canonical predicate is unconditional), so this uses the same matching
-    predicate as the auth-side fallback test above -- before the collapse
-    this used a `.show`-agnostic predicate, since the wallet's own selectors
-    were unscoped then.
+    The wallet's selectors are also ``.show``-scoped (the canonical predicate
+    is unconditional), so this uses the same matching predicate as the
+    auth-side fallback test above.
     """
     page = _ScriptedPage(_HTML_SHOWN_UNLABELLED_BUTTON, click_matches=_matches_when_shown_unlabelled)
 

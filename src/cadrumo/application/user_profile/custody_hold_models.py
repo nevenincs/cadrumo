@@ -20,11 +20,9 @@ from ..profile_deletion_hold_contract import (
 )
 
 #: Current write version for :class:`ProfileCustodyHoldEvidence`. This format is
-#: REGENERABLE (see the campaign's nested-persisted-format-boundary ADR): its
-#: ``refresh()`` writer unconditionally recomputes and overwrites, and nothing
-#: reads its on-disk file back through the typed model, so no upgrader or
-#: durability floor applies -- naming the constant is the outstanding half of
-#: its classification.
+#: REGENERABLE: its ``refresh()`` writer unconditionally recomputes and
+#: overwrites, and nothing reads its on-disk file back through the typed model,
+#: so no upgrader or durability floor applies.
 CUSTODY_HOLD_EVIDENCE_SCHEMA_VERSION: Final[Literal[1]] = 1
 
 
