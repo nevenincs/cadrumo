@@ -78,7 +78,10 @@ import {
   type RefusedCell,
 } from "./editingModel";
 import { choiceLabels, fieldName, lockText, refusalText } from "./editingWords";
-import type { SuggestionKind } from "../suggestions/SuggestionsProvider";
+import {
+  useVocabulary,
+  type SuggestionKind,
+} from "../suggestions/SuggestionsProvider";
 import { CostDialog, PasteDialog } from "./PasteDialog";
 import {
   formatAmount,
@@ -187,9 +190,10 @@ export function useMovementEditing(input: MovementEditingInput) {
     () => new Map(content.drafts.map((draft) => [draft.key, draft])),
     [content.drafts],
   );
+  const vocabulary = useVocabulary();
   const labels = useMemo(
-    () => choiceLabels(t, input.accounts),
-    [t, input.accounts],
+    () => choiceLabels(t, input.accounts, vocabulary),
+    [t, input.accounts, vocabulary],
   );
   const [refused, setRefused] = useState<ReadonlyMap<string, RefusedCell>>(
     () => new Map(),

@@ -15,9 +15,9 @@ import { importBatchFilters } from "../../../shell/ledgerImports";
 import type { StagedContent } from "../../../shell/ledgerStage";
 import {
   categoryFamily,
-  SPENDING_CATEGORY_FAMILIES,
-  type ImportIssue,
-} from "../../../shell/ledgerVocabulary";
+  type ServedVocabulary,
+} from "../../../shell/ledgerServedVocabulary";
+import type { ImportIssue } from "../../../shell/ledgerVocabulary";
 import type {
   LedgerWindowScope,
   ReadinessSnapshot,
@@ -877,13 +877,19 @@ export function normalisedDescription(text: string): string {
 }
 
 /** The value a row is grouped by, or "" where it has none. */
-export function groupValue(row: LedgerRow, by: GroupingId): string {
+export function groupValue(
+  row: LedgerRow,
+  by: GroupingId,
+  vocabulary: ServedVocabulary,
+): string {
   const t = row.transaction;
   switch (by) {
     case "category":
       return t.category_id ?? "";
     case "category_family":
-      return t.category_id ? (categoryFamily(t.category_id) ?? "") : "";
+      return t.category_id
+        ? (categoryFamily(vocabulary, t.category_id) ?? "")
+        : "";
     case "classification":
       return t.business_classification;
     case "status":
@@ -978,10 +984,6 @@ export type MovementGroup = {
   rows: LedgerRow[];
 };
 
-const FAMILY_ORDER = new Map<string, number>(
-  SPENDING_CATEGORY_FAMILIES.map(([family], at) => [family, at]),
-);
-
 /**
  * The rows in groups, each group's rows in the order given. Months follow
  * the date order, families the registry's; counterparty and description
@@ -996,11 +998,16 @@ export function groupRows(
     label: (value: string) => string;
     pendingFirst: boolean;
     descending: boolean;
+    /** The registry's families, which order the family groups. */
+    vocabulary: ServedVocabulary;
   },
 ): MovementGroup[] {
+  const familyOrder = new Map<string, number>(
+    options.vocabulary.categoryFamilies.map(([family], at) => [family, at]),
+  );
   const groups = new Map<string, LedgerRow[]>();
   for (const row of rows) {
-    const value = groupValue(row, by);
+    const value = groupValue(row, by, options.vocabulary);
     const members = groups.get(value);
     if (members) members.push(row);
     else groups.set(value, [row]);
@@ -1013,7 +1020,7 @@ export function groupRows(
     if (by === "month")
       return options.descending ? b.localeCompare(a) : a.localeCompare(b);
     if (by === "category_family")
-      return (FAMILY_ORDER.get(a) ?? 99) - (FAMILY_ORDER.get(b) ?? 99);
+      return (familyOrder.get(a) ?? 99) - (familyOrder.get(b) ?? 99);
     if (by === "counterparty" || by === "description")
       return (
         (options.pendingFirst ? pending(right) - pending(left) : 0) ||

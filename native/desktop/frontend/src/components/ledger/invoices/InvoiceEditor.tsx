@@ -41,9 +41,10 @@ import type {
   PaymentStatus,
 } from "../../../shell/ledger";
 import { compareDecimal } from "../../../shell/ledgerGrammar";
-import { IVA_CATEGORIES, isIvaCategory } from "../../../shell/ledgerVocabulary";
 import { useNavigationGuard } from "../../../shell/navigation/hooks";
-import { useStrings, type Translate } from "../../../shell/strings";
+import { useStrings } from "../../../shell/strings";
+import { wordOrToken } from "../../../shell/tokenWords";
+import { ivaCategoryLabel } from "../movements/movementWords";
 import { localDay } from "../../../shared/dates";
 import { formatDay } from "../../../shared/dateFormats";
 import {
@@ -51,7 +52,11 @@ import {
   formatPercent,
   heldDecimal,
 } from "../../../shared/numbers";
-import { useServedCodes } from "../suggestions/SuggestionsProvider";
+import { ServedOptions } from "../suggestions/ServedOptions";
+import {
+  useServedCodes,
+  useVocabulary,
+} from "../suggestions/SuggestionsProvider";
 import {
   emptyFills,
   invoiceCountryOptions,
@@ -74,10 +79,8 @@ import {
 import { DraftLines, StoredLines } from "./InvoiceLines";
 import {
   CREATION_INVARIANTS,
-  INVOICE_CLASSES,
   OPERATION_TYPES,
   PAYMENT_STATUSES,
-  PREMISES_SITUATIONS,
   checkCorrection,
   checkDraft,
   correctionOf,
@@ -126,9 +129,6 @@ type Outcome =
   | { kind: "failed"; code: string }
   | { kind: "unknown"; pending: Pending; checked: boolean }
   | { kind: "not_saved" };
-
-const ivaCategoryLabel = (t: Translate, id: string) =>
-  isIvaCategory(id) ? t(`desktop.ledger.iva_category.${id}`) : id;
 
 let lineKeys = 0;
 const nextLineKey = () => {
@@ -887,6 +887,7 @@ function NewInvoice({
   say(text: string): void;
 }) {
   const t = useStrings();
+  const vocabulary = useVocabulary();
   const servedCountries = useServedCodes("country");
   const servedCurrencies = useServedCodes("currency");
   const bind = (key: keyof InvoiceDraft, field: string) => ({
@@ -1079,11 +1080,11 @@ function NewInvoice({
                   )
                 }
               >
-                {INVOICE_CLASSES.map((token) => (
-                  <option key={token} value={token}>
-                    {classLabel(t, token)}
-                  </option>
-                ))}
+                <ServedOptions
+                  values={vocabulary.invoiceClasses}
+                  stored={draft.invoiceClass}
+                  label={(token) => classLabel(t, token)}
+                />
               </NativeSelect>
             )}
           </FormField>
@@ -1359,11 +1360,17 @@ function NewInvoice({
                     <option value="">
                       {t("desktop.ledger.invoices.not_stated")}
                     </option>
-                    {PREMISES_SITUATIONS.map((code) => (
-                      <option key={code} value={code}>
-                        {t(`desktop.ledger.invoices.situacion.s${code}`)}
-                      </option>
-                    ))}
+                    <ServedOptions
+                      values={vocabulary.premisesSituations}
+                      stored={draft.situacion}
+                      label={(code) =>
+                        wordOrToken(
+                          t,
+                          "desktop.ledger.invoices.situacion.s",
+                          code,
+                        )
+                      }
+                    />
                   </NativeSelect>
                 )}
               </FormField>
@@ -1611,6 +1618,7 @@ function IvaCategoryField({
   unset: string;
 }) {
   const t = useStrings();
+  const vocabulary = useVocabulary();
   return (
     <FormField label={t("desktop.ledger.invoices.field.iva_category")}>
       {(control) => (
@@ -1620,11 +1628,11 @@ function IvaCategoryField({
           onChange={(event) => onChange(event.target.value)}
         >
           <option value="">{unset}</option>
-          {IVA_CATEGORIES.map((category) => (
-            <option key={category} value={category}>
-              {ivaCategoryLabel(t, category)}
-            </option>
-          ))}
+          <ServedOptions
+            values={vocabulary.ivaCategories}
+            stored={value}
+            label={(category) => ivaCategoryLabel(t, category)}
+          />
         </NativeSelect>
       )}
     </FormField>
@@ -1707,6 +1715,7 @@ function StoredInvoice({
   ): void;
 }) {
   const t = useStrings();
+  const vocabulary = useVocabulary();
   const servedCountries = useServedCodes("country");
   const fixed = t("desktop.ledger.invoices.fixed");
   const bind = (key: keyof CorrectionDraft, field: string) => ({
@@ -1785,11 +1794,11 @@ function StoredInvoice({
                   correct("invoiceClass", event.target.value)
                 }
               >
-                {INVOICE_CLASSES.map((token) => (
-                  <option key={token} value={token}>
-                    {classLabel(t, token)}
-                  </option>
-                ))}
+                <ServedOptions
+                  values={vocabulary.invoiceClasses}
+                  stored={correction.invoiceClass}
+                  label={(token) => classLabel(t, token)}
+                />
               </NativeSelect>
             )}
           </FormField>

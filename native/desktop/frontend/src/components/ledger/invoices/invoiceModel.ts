@@ -40,14 +40,8 @@ import { heldDecimal } from "../../../shared/numbers";
 
 // ---- Vocabularies -----------------------------------------------------------
 
-/** The registry's invoice classes, by their tokens. Held only until the
- * ledger's entry options serve them. */
-export const INVOICE_CLASSES = [
-  "ORDINARIA",
-  "SIMPLIFICADA",
-  "RECTIFICATIVA",
-] as const;
-export type InvoiceClass = (typeof INVOICE_CLASSES)[number];
+/** An invoice class as the registry names it; the ledger serves which. */
+export type InvoiceClass = string;
 
 export const PAYMENT_STATUSES: readonly PaymentStatus[] = [
   "PENDING",
@@ -70,10 +64,6 @@ export const OPERATION_TYPES = [
   "D",
   "C",
 ] as const;
-
-/** Where a leased business premises is, as the record design codes it. Held
- * only until the ledger's entry options serve them. */
-export const PREMISES_SITUATIONS = ["1", "2", "3", "4"] as const;
 
 // ---- Lines -------------------------------------------------------------------
 

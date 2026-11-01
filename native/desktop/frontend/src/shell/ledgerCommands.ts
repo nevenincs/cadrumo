@@ -13,7 +13,11 @@ import {
   type StageEvent,
   type StagedContent,
 } from "./ledgerStage";
-import { isSpendingCategory, takesShare } from "./ledgerVocabulary";
+import {
+  isSpendingCategory,
+  takesShare,
+  type ServedVocabulary,
+} from "./ledgerServedVocabulary";
 
 export const CLASSIFY_KINDS = ["business", "personal", "mixed"] as const;
 export type ClassifyKind = (typeof CLASSIFY_KINDS)[number];
@@ -195,6 +199,8 @@ export type ClassifyRequest = {
   ratios?: ConfiguredRatios;
   /** What is staged already: a movement is read as it would be saved. */
   staged?: StagedContent;
+  /** The registry's lists as served: with none, no category fits. */
+  vocabulary: ServedVocabulary;
 };
 
 export type ClassifyOutcome =
@@ -240,8 +246,8 @@ export function classifyCells(
     const given = request.category ?? null;
     const fits =
       given !== null &&
-      isSpendingCategory(given) &&
-      (request.kind === "business" || takesShare(given));
+      isSpendingCategory(request.vocabulary, given) &&
+      (request.kind === "business" || takesShare(request.vocabulary, given));
     if (expenses > 0 && !fits) return { kind: "needs", field: "category" };
     if (expenses > 0) category = given;
   }
@@ -332,6 +338,7 @@ export function categoryCells(
   ids: readonly string[],
   category: string,
   rows: ReadonlyMap<string, LedgerRow>,
+  vocabulary: ServedVocabulary,
   staged?: StagedContent,
 ):
   | {
@@ -350,7 +357,7 @@ export function categoryCells(
       row.transaction.lifecycle_state !== "ACTIVE" ||
       !TAKES_CATEGORY.includes(row.transaction.business_classification) ||
       !takesExpenseCategory(row, staged) ||
-      !isSpendingCategory(category)
+      !isSpendingCategory(vocabulary, category)
     ) {
       skipped += 1;
       continue;

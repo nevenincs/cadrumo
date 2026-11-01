@@ -74,6 +74,7 @@ import {
   type Readiness,
 } from "../../../shell/ledgerWindow";
 import { useStrings, type Translate } from "../../../shell/strings";
+import { useVocabulary } from "../suggestions/SuggestionsProvider";
 import { formatMonth, monthNames } from "../../../shared/dateFormats";
 import { formatAmount, formatCount } from "../../../shared/numbers";
 import {
@@ -142,7 +143,6 @@ import { RowRevealNotice, useRowReveal, type LinkedRow } from "../RowReveal";
 import { movementHiding, withoutHiding } from "./movementReveal";
 import type { MovementsView } from "./useMovementsView";
 import type { ImportedBatches } from "../../../shell/ledgerImports";
-import type { SpendingCategoryFamily } from "../../../shell/ledgerVocabulary";
 
 /** How long a confirmation stays on screen. */
 const TOAST_MS = 4000;
@@ -365,7 +365,7 @@ function groupLabelOf(
     case "category":
       return categoryLabel(t, value);
     case "category_family":
-      return familyLabel(t, value as SpendingCategoryFamily);
+      return familyLabel(t, value);
     case "classification":
       return classificationLabel(t, value);
     case "status":
@@ -567,6 +567,7 @@ export function MovementsSection({
     [rows],
   );
   const { ratios } = useConfiguredRatios(port, reader, years);
+  const vocabulary = useVocabulary();
 
   // ---- What is shown ---------------------------------------------------------
   const labels = useMemo<SortLabels>(
@@ -619,7 +620,7 @@ export function MovementsSection({
     if (!grouping) return null;
     const firstOf = new Map<string, LedgerRow>();
     for (const row of sorted) {
-      const value = groupValue(row, grouping);
+      const value = groupValue(row, grouping, vocabulary);
       if (!firstOf.has(value)) firstOf.set(value, row);
     }
     return groupRows(sorted, grouping, {
@@ -630,8 +631,18 @@ export function MovementsSection({
       pendingFirst: savedView === "to_classify",
       descending:
         effectiveSort.key === "date" && effectiveSort.direction === "desc",
+      vocabulary,
     });
-  }, [grouping, sorted, savedView, effectiveSort, t, locale, accounts]);
+  }, [
+    grouping,
+    sorted,
+    savedView,
+    effectiveSort,
+    t,
+    locale,
+    accounts,
+    vocabulary,
+  ]);
 
   // The group headers' buttons act on the state of the moment they are
   // pressed.
@@ -725,6 +736,7 @@ export function MovementsSection({
         search: { months, category: labels.category },
         grouping,
         collapsed,
+        vocabulary,
       });
       if (!hiding) return null;
       return () => {
@@ -953,7 +965,7 @@ export function MovementsSection({
   ): string | null {
     const overwritten = overwrittenBy(kind, ids);
     const outcome = classifyCells(
-      { kind, ids, ...answer, ratios, staged: stage.content },
+      { kind, ids, ...answer, ratios, staged: stage.content, vocabulary },
       byId,
     );
     if (outcome.kind === "refused")
@@ -1028,7 +1040,14 @@ export function MovementsSection({
     const answer = scope?.answer ?? {};
     const split = categorySplit(availability.ids, byId, stage.content);
     const outcome = classifyCells(
-      { kind, ids: availability.ids, ...answer, ratios, staged: stage.content },
+      {
+        kind,
+        ids: availability.ids,
+        ...answer,
+        ratios,
+        staged: stage.content,
+        vocabulary,
+      },
       byId,
     );
     // What the control already asked for is not asked again, and nothing
@@ -1879,6 +1898,7 @@ export function MovementsSection({
                 asking.ids,
                 answer.category ?? "",
                 byId,
+                vocabulary,
                 stage.content,
               );
               if (outcome.kind === "staged") {

@@ -1,3 +1,4 @@
+import { SERVED } from "./support/servedVocabulary";
 import { expect, test } from "@playwright/test";
 import type { LedgerRow } from "../src/shell/ledger";
 import { RELAY_PAYLOAD_LIMIT } from "../src/shell/relayBounds";
@@ -510,7 +511,10 @@ test("reclassifying Mixed movements saves them together: the classification clea
     ["business", "material_oficina"],
     ["personal", undefined],
   ] as const) {
-    const outcome = classifyCells({ kind, ids, category }, rows.rows);
+    const outcome = classifyCells(
+      { vocabulary: SERVED, kind, ids, category },
+      rows.rows,
+    );
     expect(outcome.kind).toBe("staged");
     if (outcome.kind !== "staged") return;
     // The share's clear is staged, so the grid shows no share on the row.
@@ -859,6 +863,7 @@ test("Mixed names the category's configured usage ratio, through the bulk, and s
   });
   const outcome = classifyCells(
     {
+      vocabulary: SERVED,
       kind: "mixed",
       ids,
       share: "30",
@@ -890,7 +895,13 @@ test("Mixed names the category's configured usage ratio, through the bulk, and s
   expect(named).toEqual([[phone.transaction.transaction_id, "telefonia_fija"]]);
   // Without the ratios read, Mixed names none and stages the rest.
   const unseen = classifyCells(
-    { kind: "mixed", ids, share: "30", category: "telefonia_fija" },
+    {
+      vocabulary: SERVED,
+      kind: "mixed",
+      ids,
+      share: "30",
+      category: "telefonia_fija",
+    },
     rows.rows,
   );
   expect(

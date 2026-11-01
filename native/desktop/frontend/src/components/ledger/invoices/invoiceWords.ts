@@ -12,11 +12,7 @@ import type {
 import type { Translate } from "../../../shell/strings";
 import { formatDay } from "../../../shared/dateFormats";
 import { formatDecimal } from "../../../shared/numbers";
-import {
-  INVOICE_CLASSES,
-  PAYMENT_STATUSES,
-  type Problem,
-} from "./invoiceModel";
+import { PAYMENT_STATUSES, type Problem } from "./invoiceModel";
 
 const lower = (token: string) => token.toLowerCase();
 
@@ -26,10 +22,11 @@ export const kindLabel = (t: Translate, kind: InvoiceKind) =>
 export const kindChoice = (t: Translate, kind: InvoiceKind) =>
   t(`desktop.ledger.invoices.kind_choice.${kind}`);
 
-export const classLabel = (t: Translate, token: string) =>
-  (INVOICE_CLASSES as readonly string[]).includes(token)
-    ? t(`desktop.ledger.invoices.class.${lower(token)}`)
-    : token;
+export const classLabel = (t: Translate, token: string) => {
+  const key = `desktop.ledger.invoices.class.${lower(token)}`;
+  const said = t(key);
+  return said === key ? token : said;
+};
 
 export const paymentLabel = (t: Translate, status: string) =>
   PAYMENT_STATUSES.includes(status as PaymentStatus)

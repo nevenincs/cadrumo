@@ -7,11 +7,16 @@ is an international standard's token, and the backend holds no name for it.
 The country and currency lists are what is known, not what is allowed: a ledger
 record checks those codes by shape, so a real jurisdiction outside these lists
 stays recordable. The other lists are closed by the writers that read them.
+
+A catalogue the registry dates is read on ``on_date``, and on the registry's own
+default day when none is given; the undated lists ignore it.
 """
 
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Iterable
+from datetime import date
 from typing import Final, Literal
 from uuid import UUID
 
@@ -24,10 +29,18 @@ from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import OperationEffect, profile_operation_subject
 from ...core.time.clock import now
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...domain.calculations.registry.bienes_inversion_catalogue import resolve_bienes_inversion_catalogue
+from ...domain.calculations.registry.invoice_legal_classification import resolve_invoice_legal_classification_catalogue
 from ...domain.calculations.registry.irnr_tipo_renta import resolve_tipo_renta_irnr_catalogue
+from ...domain.calculations.registry.iva_category_catalogue import resolve_iva_category_catalogue
 from ...domain.calculations.registry.iva_deduction_catalogue import iva_deduction_fact_kinds
+from ...domain.calculations.registry.prorrata_register_catalogue import resolve_prorrata_register_catalogue
+from ...domain.categories.spending_category_catalogue import resolve_spending_category_catalogue
+from ...domain.invoices.business_premises import SituacionInmueble
 from ...domain.iva.establishment import catalogued_country_codes
+from ...domain.transactions.irpf_categories import ledger_irpf_category_catalogue
 from ...domain.transactions.m210_income_classification import m210_payer_modes
+from ...domain.usage_ratios.model import eligible_usage_ratio_categories
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_READ_CAPABILITIES
 from ..operations.models import (
@@ -48,24 +61,42 @@ LEDGER_ENTRY_OPTIONS_OPERATION_DEFINITION_ID: Final = "ledger.entry-options"
 ENTRY_OPTION_LABEL_PREFIX: Final = "application.ledger.entry_options."
 """Where the words of the served tokens live, one family under it per kind of word."""
 
-type EntryOptionFamily = Literal["country", "currency", "deduction_fact_kind", "m210_payer_mode", "m210_tipo_renta"]
+type EntryOptionFamily = Literal[
+    "country",
+    "currency",
+    "deduction_fact_kind",
+    "m210_payer_mode",
+    "m210_tipo_renta",
+    "iva_category",
+    "irpf_category",
+    "spending_category",
+    "usage_ratio_category",
+    "invoice_class",
+    "premises_situation",
+    "prorrata_provenance",
+    "prorrata_sector_letter",
+    "capital_good_kind",
+    "capital_good_disposal",
+]
 
 
 class LedgerEntryOptionsRequest(BaseModel):
-    """Ask for the vocabularies; they do not vary by ledger row."""
+    """Ask for the vocabularies; they vary by the day a dated one is read on, not by ledger row."""
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     profile_id: UUID
+    on_date: date | None = None
 
 
 class LedgerEntryOptionProjection(BaseModel):
-    """One offered value and, where the backend words it, the key of its word."""
+    """One offered value, the key of its word where the backend words it, and the group it is filed under."""
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     value: str
     label_key: str | None = None
+    group: str | None = None
 
 
 class LedgerEntryOptionFamilyProjection(BaseModel):
@@ -122,8 +153,41 @@ def _tipo_renta_options(operation: PinnedAuthorityOperation) -> tuple[LedgerEntr
     )
 
 
-def ledger_entry_options(profile_id: UUID, *, operation: PinnedAuthorityOperation) -> LedgerEntryOptionsProjection:
+def _plain(tokens: Iterable[object]) -> tuple[LedgerEntryOptionProjection, ...]:
+    return tuple(LedgerEntryOptionProjection(value=str(token)) for token in tokens)
+
+
+def _spending_options(
+    on_date: date | None, operation: PinnedAuthorityOperation
+) -> tuple[LedgerEntryOptionProjection, ...]:
+    """Offer each spending category under the family the registry files it in."""
+    catalogue = resolve_spending_category_catalogue(effective_date=on_date, authority=operation)
+    return tuple(
+        LedgerEntryOptionProjection(value=str(category), group=family.value)
+        for family, members in catalogue.family_members.items()
+        for category in members
+    )
+
+
+def _usage_ratio_options(
+    on_date: date | None, operation: PinnedAuthorityOperation
+) -> tuple[LedgerEntryOptionProjection, ...]:
+    """Offer the categories a usage ratio applies to, in the spending catalogue's order.
+
+    Which categories take a ratio is the registry's proportionality kind, which does not vary by day.
+    """
+    eligible = eligible_usage_ratio_categories()
+    catalogue = resolve_spending_category_catalogue(effective_date=on_date, authority=operation)
+    return _plain(category for category in catalogue.categories if category in eligible)
+
+
+def ledger_entry_options(
+    profile_id: UUID, *, operation: PinnedAuthorityOperation, on_date: date | None = None
+) -> LedgerEntryOptionsProjection:
     """Read every vocabulary from its owner, under one pinned authority generation."""
+    prorrata = resolve_prorrata_register_catalogue(effective_date=on_date, authority=operation)
+    # These two owners take the scope's pinned generation, which the operation runs inside.
+    capital = resolve_bienes_inversion_catalogue(effective_date=on_date)
     families: tuple[tuple[EntryOptionFamily, tuple[LedgerEntryOptionProjection, ...]], ...] = (
         ("country", _codes(catalogued_country_codes(operation=operation))),
         ("currency", _codes(CURRENCY_CODES)),
@@ -136,6 +200,25 @@ def ledger_entry_options(profile_id: UUID, *, operation: PinnedAuthorityOperatio
             _worded("m210_payer_mode", tuple(mode.value for mode in m210_payer_modes(operation=operation))),
         ),
         ("m210_tipo_renta", _tipo_renta_options(operation)),
+        (
+            "iva_category",
+            _plain(resolve_iva_category_catalogue(effective_date=on_date, authority=operation).all_categories),
+        ),
+        ("irpf_category", _plain(item.id for item in ledger_irpf_category_catalogue(authority=operation))),
+        ("spending_category", _spending_options(on_date, operation)),
+        ("usage_ratio_category", _usage_ratio_options(on_date, operation)),
+        (
+            "invoice_class",
+            _plain(resolve_invoice_legal_classification_catalogue(effective_date=on_date).invoice_class_choices),
+        ),
+        (
+            "premises_situation",
+            _plain(SituacionInmueble.form_codes(effective_date=on_date, authority=operation).values()),
+        ),
+        ("prorrata_provenance", _plain(item.token for item in prorrata.provenances)),
+        ("prorrata_sector_letter", _plain(item.token for item in prorrata.sector_letters)),
+        ("capital_good_kind", _plain(capital.kind_choices)),
+        ("capital_good_disposal", _plain(capital.disposal_regime_choices)),
     )
     return LedgerEntryOptionsProjection(
         profile_id=profile_id,
@@ -166,7 +249,10 @@ class LedgerEntryOptionsExecutor:
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
         await context.events.phase(LEDGER_ENTRY_OPTIONS_OPERATION_DEFINITION_ID)
         options = await asyncio.to_thread(
-            ledger_entry_options, request.payload.profile_id, operation=context.authority_operation
+            ledger_entry_options,
+            request.payload.profile_id,
+            operation=context.authority_operation,
+            on_date=request.payload.on_date,
         )
         return await context.operands.put(LedgerEntryOptionsExecutionResult(result=options), written_at=now())
 

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Iterator
+from datetime import date
 from decimal import Decimal
 from importlib.resources import files
 from types import SimpleNamespace
@@ -19,9 +20,22 @@ from cadrumo_client.contracts.access_vocabulary import AccessAction, Availabilit
 
 from ....core.operations import profile_operation_subject
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ....domain.calculations.registry.bienes_inversion_catalogue import resolve_bienes_inversion_catalogue
+from ....domain.calculations.registry.invoice_legal_classification import resolve_invoice_legal_classification_catalogue
+from ....domain.calculations.registry.iva_category_catalogue import resolve_iva_category_catalogue
 from ....domain.calculations.registry.iva_deduction_catalogue import resolve_iva_deduction_catalogue
+from ....domain.calculations.registry.prorrata_register_catalogue import (
+    prorrata_sector_letters,
+    resolve_prorrata_register_catalogue,
+)
+from ....domain.categories.spending_category import SpendingCategory, SpendingCategoryFamily
+from ....domain.categories.spending_category_catalogue import resolve_spending_category_catalogue
+from ....domain.invoices.business_premises import SituacionInmueble
 from ....domain.iva.establishment import StatedCountryCodeStatus, stated_country_code_status
+from ....domain.transactions.irpf_categories import ledger_irpf_category_catalogue, require_ledger_irpf_category
 from ....domain.transactions.m210_income_classification import M210IncomeClassification
+from ....domain.usage_ratios.errors import UsageRatioValidationError
+from ....domain.usage_ratios.model import UsageRatioProfile, eligible_usage_ratio_categories
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...operations.models import OperationIdentity, OperationRequest
 from ...operations.owner import OperationExecutorContext
@@ -59,7 +73,178 @@ def served(operation: PinnedAuthorityOperation) -> dict[str, tuple[tuple[str, st
 
 
 def test_every_family_is_served_once(served: dict[str, tuple[tuple[str, str | None], ...]]) -> None:
-    assert set(served) == {"country", "currency", "deduction_fact_kind", "m210_payer_mode", "m210_tipo_renta"}
+    assert set(served) == {
+        "country",
+        "currency",
+        "deduction_fact_kind",
+        "m210_payer_mode",
+        "m210_tipo_renta",
+        "iva_category",
+        "irpf_category",
+        "spending_category",
+        "usage_ratio_category",
+        "invoice_class",
+        "premises_situation",
+        "prorrata_provenance",
+        "prorrata_sector_letter",
+        "capital_good_kind",
+        "capital_good_disposal",
+    }
+
+
+def _values(served: dict[str, tuple[tuple[str, str | None], ...]], family: str) -> list[str]:
+    return [value for value, _ in served[family]]
+
+
+def test_iva_categories_are_the_registry_catalogue_in_its_order(
+    served: dict[str, tuple[tuple[str, str | None], ...]], operation: PinnedAuthorityOperation
+) -> None:
+    catalogue = resolve_iva_category_catalogue(authority=operation)
+
+    assert _values(served, "iva_category") == [str(token) for token in catalogue.all_categories]
+    assert {"domestic_general", "intra_community_supply", "unknown"} <= set(_values(served, "iva_category"))
+    for token in _values(served, "iva_category"):
+        assert str(catalogue.require(token)) == token
+
+
+def test_irpf_categories_are_the_taxonomy_ids(
+    served: dict[str, tuple[tuple[str, str | None], ...]], operation: PinnedAuthorityOperation
+) -> None:
+    ids = _values(served, "irpf_category")
+
+    assert ids == [item.id for item in ledger_irpf_category_catalogue(authority=operation)]
+    assert "actividad_economica" in ids
+    for category in ids:
+        assert require_ledger_irpf_category(category, authority=operation) == category
+
+
+def test_each_spending_category_is_served_once_under_the_family_the_registry_files_it_in(
+    served: dict[str, tuple[tuple[str, str | None], ...]], operation: PinnedAuthorityOperation
+) -> None:
+    projection = {
+        family.family: family.options for family in ledger_entry_options(_PROFILE, operation=operation).families
+    }
+    options = projection["spending_category"]
+    catalogue = resolve_spending_category_catalogue(authority=operation)
+
+    values = [option.value for option in options]
+    assert len(values) == len(set(values))
+    assert set(values) == {str(category) for category in catalogue.categories}
+    assert {option.label_key for option in options} == {None}
+    for option in options:
+        assert option.group is not None
+        assert str(catalogue.family_for(SpendingCategory.from_registry(option.value))) == option.group
+    assert {option.group for option in options} == {family.value for family in SpendingCategoryFamily}
+    assert _values(served, "spending_category") == values
+
+
+def test_usage_ratio_categories_are_the_ones_a_ratio_may_be_stated_for(
+    served: dict[str, tuple[tuple[str, str | None], ...]], operation: PinnedAuthorityOperation
+) -> None:
+    offered = _values(served, "usage_ratio_category")
+
+    assert offered
+    assert set(offered) == {str(category) for category in eligible_usage_ratio_categories()}
+    assert set(offered) <= set(_values(served, "spending_category"))
+    assert "ibi_vivienda_afecto" in offered
+    assert "material_oficina" not in offered
+    # The writer that owns the ratio accepts every offered category and refuses the others.
+    empty = UsageRatioProfile()
+    for category in offered:
+        stated = empty.with_ratio(SpendingCategory.from_registry(category), Decimal("0.5"))
+        assert stated.ratios[SpendingCategory.from_registry(category)] == Decimal("0.5")
+    with pytest.raises(UsageRatioValidationError):
+        empty.with_ratio(SpendingCategory.from_registry("material_oficina"), Decimal("0.5"))
+
+
+def test_invoice_classes_are_the_ones_the_registry_declares(
+    served: dict[str, tuple[tuple[str, str | None], ...]], operation: PinnedAuthorityOperation
+) -> None:
+    classes = _values(served, "invoice_class")
+    catalogue = resolve_invoice_legal_classification_catalogue()
+
+    assert classes == [str(token) for token in catalogue.invoice_class_choices]
+    assert {
+        str(catalogue.ordinaria_token),
+        str(catalogue.simplificada_token),
+        str(catalogue.rectificativa_token),
+    } == set(classes)
+
+
+def test_premises_situations_are_the_codes_the_record_carries(
+    served: dict[str, tuple[tuple[str, str | None], ...]], operation: PinnedAuthorityOperation
+) -> None:
+    codes = _values(served, "premises_situation")
+
+    assert codes == list(SituacionInmueble.form_codes(authority=operation).values())
+    assert len(codes) == len(SituacionInmueble)
+    for code in codes:
+        assert SituacionInmueble.from_code(code, authority=operation).value in {m.value for m in SituacionInmueble}
+
+
+def test_prorrata_provenances_and_sector_letters_are_the_register_vocabularies(
+    served: dict[str, tuple[tuple[str, str | None], ...]], operation: PinnedAuthorityOperation
+) -> None:
+    catalogue = resolve_prorrata_register_catalogue(authority=operation)
+
+    assert _values(served, "prorrata_provenance") == [str(item.token) for item in catalogue.provenances]
+    assert _values(served, "prorrata_sector_letter") == [
+        str(token) for token in prorrata_sector_letters(authority=operation)
+    ]
+    assert _values(served, "prorrata_sector_letter")
+    for provenance in _values(served, "prorrata_provenance"):
+        assert str(catalogue.require_provenance(provenance)) == provenance
+
+
+def test_capital_goods_kinds_and_disposals_are_the_register_vocabularies(
+    served: dict[str, tuple[tuple[str, str | None], ...]], operation: PinnedAuthorityOperation
+) -> None:
+    catalogue = resolve_bienes_inversion_catalogue()
+
+    assert _values(served, "capital_good_kind") == [str(kind) for kind in catalogue.kind_choices]
+    assert _values(served, "capital_good_disposal") == [str(regime) for regime in catalogue.disposal_regime_choices]
+    for kind in _values(served, "capital_good_kind"):
+        assert str(catalogue.require_kind(kind)) == kind
+
+
+def test_a_dated_catalogue_is_read_on_the_day_asked_and_the_undated_ones_ignore_it(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    years = sorted(operation.supported_filing_years().years)
+    assert len(years) >= 2
+    first, last = date(years[0], 6, 30), date(years[-1], 6, 30)
+
+    for day in (first, last):
+        projection = ledger_entry_options(_PROFILE, operation=operation, on_date=day)
+        by_family = {family.family: [option.value for option in family.options] for family in projection.families}
+        assert by_family["iva_category"] == [
+            str(token)
+            for token in resolve_iva_category_catalogue(effective_date=day, authority=operation).all_categories
+        ]
+        assert by_family["invoice_class"] == [
+            str(token)
+            for token in resolve_invoice_legal_classification_catalogue(effective_date=day).invoice_class_choices
+        ]
+        assert by_family["spending_category"] == [
+            str(category)
+            for members in resolve_spending_category_catalogue(
+                effective_date=day, authority=operation
+            ).family_members.values()
+            for category in members
+        ]
+    early = ledger_entry_options(_PROFILE, operation=operation, on_date=first)
+    late = ledger_entry_options(_PROFILE, operation=operation, on_date=last)
+    undated = {"country", "currency", "irpf_category", "usage_ratio_category", "m210_payer_mode"}
+    assert {f.family: f.options for f in early.families if f.family in undated} == {
+        f.family: f.options for f in late.families if f.family in undated
+    }
+
+
+def test_the_request_names_a_day_or_none() -> None:
+    assert LedgerEntryOptionsRequest(profile_id=_PROFILE).on_date is None
+    assert LedgerEntryOptionsRequest(profile_id=_PROFILE, on_date=date(2026, 1, 31)).on_date == date(2026, 1, 31)
+    with pytest.raises(ValidationError):
+        LedgerEntryOptionsRequest.model_validate({"profile_id": str(_PROFILE), "on_date": "not-a-day"})
 
 
 def test_country_codes_are_sorted_catalogued_and_carry_no_word(

@@ -47,6 +47,7 @@ import {
   classificationLabel,
   directionLabel,
   statusLabel,
+  vocabularyEmpty,
 } from "../movements/movementWords";
 import { currencySums } from "../movements/movementsModel";
 import { STATUS_ICONS } from "../movements/MovementCells";
@@ -75,7 +76,10 @@ import {
   skipName,
 } from "./inspectorWords";
 import { useLedgerRead } from "./useInspectorReads";
-import { useFieldSuggestions } from "../suggestions/SuggestionsProvider";
+import {
+  useFieldSuggestions,
+  useVocabulary,
+} from "../suggestions/SuggestionsProvider";
 import { useWritePause, WriteHold } from "../WritePause";
 import { formatAmount } from "../../../shared/numbers";
 
@@ -174,6 +178,7 @@ export function SelectionInspector({
   say: (text: string) => void;
 }) {
   const t = useStrings();
+  const vocabulary = useVocabulary();
   const shareId = useId();
   const selected = useMemo(
     () => ids.flatMap((id) => (rows.has(id) ? [rows.get(id)!] : [])),
@@ -375,7 +380,12 @@ export function SelectionInspector({
           label={label}
           value={null}
           options={options}
-          emptyLabel={t("desktop.ledger.inspector.no_match")}
+          emptyLabel={vocabularyEmpty(
+            t,
+            vocabulary,
+            t("desktop.ledger.inspector.no_match"),
+            options.length,
+          )}
           onCommit={(value) => stageSet(field, value)}
         >
           <Button
@@ -692,17 +702,17 @@ export function SelectionInspector({
               {choice(
                 "category_id",
                 fieldName(t, "category_id"),
-                categoryOptions(t),
+                categoryOptions(t, vocabulary),
               )}
               {choice(
                 "iva_category",
                 fieldName(t, "iva_category"),
-                ivaCategoryOptions(t),
+                ivaCategoryOptions(t, vocabulary),
               )}
               {choice(
                 "irpf_category",
                 fieldName(t, "irpf_category"),
-                irpfCategoryOptions(t),
+                irpfCategoryOptions(t, vocabulary),
               )}
             </>
           )}

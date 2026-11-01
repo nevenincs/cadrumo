@@ -39,6 +39,7 @@ import {
   classificationText,
   ivaCategoryLabel,
   reasonDetail,
+  vocabularyEmpty,
 } from "../movements/movementWords";
 import { InspectorField } from "./InspectorField";
 import { ModelSuggestion } from "./ModelSuggestion";
@@ -53,6 +54,7 @@ import { useLedgerRead } from "./useInspectorReads";
 import {
   useFieldSuggestions,
   useServedChoices,
+  useVocabulary,
 } from "../suggestions/SuggestionsProvider";
 import { formatTime } from "../../../shared/dateFormats";
 import { formatPercent, heldDecimal } from "../../../shared/numbers";
@@ -122,6 +124,7 @@ export function ClassifySection({
   say: (text: string) => void;
 }) {
   const t = useStrings();
+  const vocabulary = useVocabulary();
   const { row, changes, locale, onStage } = scope;
   const id = row.transaction.transaction_id;
   const effective = effectiveFacts(row, changes);
@@ -390,8 +393,13 @@ export function ClassifySection({
             <Combobox
               label={fieldName(t, "iva_category")}
               value={deriveCategory}
-              options={ivaCategoryOptions(t)}
-              emptyLabel={t("desktop.ledger.inspector.no_match")}
+              options={ivaCategoryOptions(t, vocabulary)}
+              emptyLabel={vocabularyEmpty(
+                t,
+                vocabulary,
+                t("desktop.ledger.inspector.no_match"),
+                vocabulary.ivaCategories.length,
+              )}
               onCommit={setDeriveCategory}
             >
               <Button

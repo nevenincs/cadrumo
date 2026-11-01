@@ -12,14 +12,24 @@ import type {
   JsonValue,
   LedgerDefinitionId,
 } from "../shell/ledger";
-import { isSpendingCategory } from "../shell/ledgerVocabulary";
+import servedEntryOptions from "./fixtures/ledgerEntryOptions.json" with { type: "json" };
 
 const entryWord = (family: string, value: string, word = value) => ({
   value,
   label_key: `application.ledger.entry_options.${family}.${word}`,
 });
-/** A trimmed copy of what `ledger.entry-options` serves. */
+const served = (family: string) =>
+  servedEntryOptions.families.find((found) => found.family === family)!.options;
+const SPENDING_CATEGORIES = new Set(
+  served("spending_category").map((option) => option.value),
+);
+const isSpendingCategory = (id: string) => SPENDING_CATEGORIES.has(id);
+/** What `ledger.entry-options` serves: the registry's families as recorded,
+ * and a trimmed copy of the country, currency and Modelo 210 ones. */
 const ENTRY_OPTION_FAMILIES = {
+  ...Object.fromEntries(
+    servedEntryOptions.families.map(({ family, options }) => [family, options]),
+  ),
   country: ["DE", "ES", "FR", "PT"].map((value) => ({
     value,
     label_key: null,
@@ -105,7 +115,9 @@ const fromKeys = (request: JsonObject, allowed: readonly string[]) => {
 
 const PROVENANCES = ["aeat_autorizada", "inicio_actividad"];
 const CARRIED = "carried_prior_definitiva";
-const SECTOR_LETTERS = ["a", "b", "c", "d"];
+const SECTOR_LETTERS = served("prorrata_sector_letter").map(
+  (option) => option.value,
+);
 /** Reasons the catalogue names otherwise than the typed reason is. */
 const REASON_KEY_NAMES: Record<string, string> = {
   activity_conflict: "actividad_conflict",

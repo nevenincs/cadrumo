@@ -65,10 +65,11 @@ if TYPE_CHECKING:
 
 
 class LedgerEntryOptionPayload(OutputSchema):
-    """One offered value and, where the backend words it, the key of its word."""
+    """One offered value, the key of its word where the backend words it, and the group it is filed under."""
 
     value: str
     label_key: str | None = None
+    group: str | None = None
 
 
 class LedgerEntryOptionFamilyPayload(OutputSchema):

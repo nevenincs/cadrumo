@@ -59,6 +59,7 @@ import {
 } from "./inspectorWords";
 import { JumpIndex } from "./JumpIndex";
 import { useLedgerRead } from "./useInspectorReads";
+import { useVocabulary } from "../suggestions/SuggestionsProvider";
 import { formatAmount } from "../../../shared/numbers";
 import { formatDay } from "../../../shared/dateFormats";
 
@@ -202,6 +203,7 @@ export function MovementInspector({
   const tracked = track?.kind === "ready" ? track.result : null;
   const sealing = (tracked?.participated_in ?? []).filter(seals);
   const sealed = sealing.length > 0;
+  const vocabulary = useVocabulary();
   const scope = {
     t,
     locale,
@@ -209,6 +211,7 @@ export function MovementInspector({
     changes,
     sealed,
     accounts,
+    vocabulary,
     onStage,
   };
 

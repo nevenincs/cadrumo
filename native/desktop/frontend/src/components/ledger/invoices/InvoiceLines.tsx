@@ -14,12 +14,11 @@ import type {
   InvoicePreviewLineResult,
   InvoicePreviewRateSlot,
 } from "../../../shell/ledger";
-import {
-  SPENDING_CATEGORY_FAMILIES,
-  isSpendingCategory,
-} from "../../../shell/ledgerVocabulary";
 import { useStrings, type Translate } from "../../../shell/strings";
+import { wordOrToken } from "../../../shell/tokenWords";
 import { formatAmount, formatDecimal } from "../../../shared/numbers";
+import { vocabularyEmpty } from "../movements/movementWords";
+import { useVocabulary } from "../suggestions/SuggestionsProvider";
 import { formatUnitPrice } from "../unitPrice";
 import { lineEntered, type LineDraft, type Problem } from "./invoiceModel";
 import { problemText, rateLabel } from "./invoiceWords";
@@ -35,7 +34,7 @@ const LINE_FIELDS = [
 type LineField = (typeof LINE_FIELDS)[number];
 
 const categoryLabel = (t: Translate, id: string) =>
-  isSpendingCategory(id) ? t(`desktop.ledger.category.${id}`) : id;
+  wordOrToken(t, "desktop.ledger.category.", id);
 
 const HEAD_ROW =
   "h-control-sm border-b border-border-strong text-xs text-muted-foreground";
@@ -94,6 +93,7 @@ export function DraftLines({
   onRemove(key: string): void;
 }) {
   const t = useStrings();
+  const vocabulary = useVocabulary();
   const id = useId();
   const received = kind === "received";
   const problemOf = (line: LineDraft, field: LineField) =>
@@ -268,20 +268,36 @@ export function DraftLines({
                         <option value="">
                           {t("desktop.ledger.invoices.none")}
                         </option>
-                        {SPENDING_CATEGORY_FAMILIES.map(([family, members]) => (
-                          <optgroup
-                            key={family}
-                            label={t(
-                              `desktop.ledger.category_family.${family}`,
-                            )}
-                          >
-                            {members.map((member) => (
-                              <option key={member} value={member}>
-                                {categoryLabel(t, member)}
-                              </option>
-                            ))}
-                          </optgroup>
-                        ))}
+                        {line.category !== "" &&
+                          !vocabulary.categories.includes(line.category) && (
+                            <option value={line.category}>
+                              {categoryLabel(t, line.category)}
+                            </option>
+                          )}
+                        {vocabulary.categories.length === 0 &&
+                          vocabulary.state !== "ready" && (
+                            <option value="" disabled>
+                              {vocabularyEmpty(t, vocabulary, "", 0)}
+                            </option>
+                          )}
+                        {vocabulary.categoryFamilies.map(
+                          ([family, members]) => (
+                            <optgroup
+                              key={family}
+                              label={wordOrToken(
+                                t,
+                                "desktop.ledger.category_family.",
+                                family,
+                              )}
+                            >
+                              {members.map((member) => (
+                                <option key={member} value={member}>
+                                  {categoryLabel(t, member)}
+                                </option>
+                              ))}
+                            </optgroup>
+                          ),
+                        )}
                       </NativeSelect>
                     </td>
                   )}

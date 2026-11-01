@@ -402,11 +402,15 @@ export function ChoiceField({
   className,
   required,
   error,
+  unserved,
 }: {
   label: string;
   value: string;
   onValue(value: string): void;
   options: readonly { value: string; label: string }[];
+  /** What to say in place of the options while the list they come from is
+   * being read or could not be: the choice is then closed. */
+  unserved?: string | null;
   placeholder?: string;
   hint?: string;
   className?: string;
@@ -430,12 +434,17 @@ export function ChoiceField({
         aria-required={required || undefined}
         aria-invalid={error ? true : undefined}
         aria-describedby={describedBy}
+        disabled={options.length === 0 && !!unserved}
         onChange={(event) => onValue(event.target.value)}
       >
-        {placeholder !== undefined && (
-          <option value="" disabled={required}>
-            {placeholder}
-          </option>
+        {options.length === 0 && unserved ? (
+          <option value="">{unserved}</option>
+        ) : (
+          placeholder !== undefined && (
+            <option value="" disabled={required}>
+              {placeholder}
+            </option>
+          )
         )}
         {options.map((option) => (
           <option key={option.value} value={option.value}>

@@ -1,3 +1,4 @@
+import { SERVED } from "./support/servedVocabulary";
 import { expect, test } from "@playwright/test";
 import {
   NO_ACCOUNT,
@@ -55,6 +56,9 @@ const labels: ChoiceLabels & { mixedShare: (share: string) => string } = {
   category: (id) => (id === "material_oficina" ? "Material de oficina" : id),
   ivaCategory: (id) => id,
   irpfCategory: (id) => id,
+  categories: SERVED.categories,
+  ivaCategories: SERVED.ivaCategories,
+  irpfCategories: SERVED.irpfCategories,
   account: (id) => (id === "acc-01" ? "Cuenta del estudio" : id),
   accounts: ["acc-01", "acc-02"],
   noAccount: "Sin cuenta",

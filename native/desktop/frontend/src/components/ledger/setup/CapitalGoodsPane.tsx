@@ -19,6 +19,8 @@ import type {
 } from "../../../shell/ledgerSetup";
 import type { LedgerRow } from "../../../shell/ledger";
 import { LEDGER_PAGE_SIZE } from "../../../shell/ledgerWindow";
+import { vocabularyEmpty } from "../movements/movementWords";
+import { useVocabulary } from "../suggestions/SuggestionsProvider";
 import { useStrings } from "../../../shell/strings";
 import { WriteHold } from "../WritePause";
 import { formatDay } from "../../../shared/dateFormats";
@@ -42,9 +44,6 @@ import type { SetupProps } from "./setupProps";
 import { parsePoints, setupCall, wholeYear } from "./setupModel";
 import { grammarText, tokenText } from "./setupWords";
 
-const KINDS = ["mueble", "inmueble"] as const;
-const DISPOSALS = ["sujeta_no_exenta", "exenta_o_no_sujeta"] as const;
-
 /**
  * Bienes de inversión: capital goods whose IVA deduction is regularised over
  * the years after their purchase, each declared once with its cuota and its
@@ -52,6 +51,7 @@ const DISPOSALS = ["sujeta_no_exenta", "exenta_o_no_sujeta"] as const;
  */
 export function CapitalGoodsPane({ port, reader, locale, rows }: SetupProps) {
   const t = useStrings();
+  const vocabulary = useVocabulary();
   const { read, reload } = useSetupRead(
     port,
     reader,
@@ -342,7 +342,13 @@ export function CapitalGoodsPane({ port, reader, locale, rows }: SetupProps) {
               value={kind}
               onValue={setKind}
               placeholder={t("desktop.ledger.form.choose")}
-              options={KINDS.map((value) => ({
+              unserved={vocabularyEmpty(
+                t,
+                vocabulary,
+                "",
+                vocabulary.capitalKinds.length,
+              )}
+              options={vocabulary.capitalKinds.map((value) => ({
                 value,
                 label: tokenText(t, "capital.kind", value),
               }))}
@@ -455,9 +461,15 @@ export function CapitalGoodsPane({ port, reader, locale, rows }: SetupProps) {
               label={t("desktop.ledger.capital.disposal_regime")}
               value={disposalRegime}
               onValue={setDisposalRegime}
+              unserved={vocabularyEmpty(
+                t,
+                vocabulary,
+                "",
+                vocabulary.capitalDisposals.length,
+              )}
               options={[
                 { value: "", label: t("desktop.ledger.form.none") },
-                ...DISPOSALS.map((value) => ({
+                ...vocabulary.capitalDisposals.map((value) => ({
                   value,
                   label: tokenText(t, "capital.disposal", value),
                 })),

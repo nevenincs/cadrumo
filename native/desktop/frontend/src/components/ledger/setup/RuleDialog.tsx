@@ -20,13 +20,14 @@ import type { LedgerPort, LedgerRow } from "../../../shell/ledger";
 import type { RuleSeed } from "../../../shell/ledgerCommands";
 import type { LedgerRuleRow } from "../../../shell/ledgerSetup";
 import type { StageEvent } from "../../../shell/ledgerStage";
-import { SPENDING_CATEGORY_FAMILIES } from "../../../shell/ledgerVocabulary";
 import { useStrings } from "../../../shell/strings";
+import { useVocabulary } from "../suggestions/SuggestionsProvider";
 import { landingSettle, useWritePause, WriteHold } from "../WritePause";
 import {
   categoryLabel,
   categoryOption,
   classificationLabel,
+  vocabularyEmpty,
 } from "../movements/movementWords";
 import { descriptionWords, listOptions } from "../suggestions/setupSuggestions";
 import { EditorField } from "./EditorField";
@@ -174,14 +175,15 @@ export function RuleDialog({
   const patternBroken = advanced && pattern !== "" && !patternMatcher(pattern);
   const hits = rows && pattern ? patternHits(pattern, rows) : null;
   const matches = rows && pattern ? patternMatches(pattern, rows) : null;
+  const vocabulary = useVocabulary();
   const categories = useMemo<ComboboxOption[]>(
     () => [
       { value: "", label: t("desktop.ledger.rules.no_category") },
-      ...SPENDING_CATEGORY_FAMILIES.flatMap(([family, members]) =>
+      ...vocabulary.categoryFamilies.flatMap(([family, members]) =>
         members.map((member) => categoryOption(t, family, member)),
       ),
     ],
-    [t],
+    [t, vocabulary],
   );
   const priority = priorityAt(ordered, position);
   const changesRule =
@@ -377,7 +379,12 @@ export function RuleDialog({
                 label={t("desktop.ledger.rules.category")}
                 value={takesCategory ? category : ""}
                 options={categories}
-                emptyLabel={t("desktop.ledger.classify.no_category_match")}
+                emptyLabel={vocabularyEmpty(
+                  t,
+                  vocabulary,
+                  t("desktop.ledger.classify.no_category_match"),
+                  vocabulary.categories.length,
+                )}
                 placeholder={t("desktop.ledger.classify.search_category")}
                 onCommit={(value) => setCategory(value)}
               >

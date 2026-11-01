@@ -33,6 +33,7 @@ import {
   valueText,
 } from "../editing/editingWords";
 import { accountLabel } from "../movements/movementWords";
+import type { ServedVocabulary } from "../../../shell/ledgerServedVocabulary";
 import type {
   FieldControl,
   FieldEditor,
@@ -115,6 +116,8 @@ export type FieldScope = {
   /** A finalized declaration cites the movement. */
   sealed: boolean;
   accounts: readonly OwnAccountChoice[] | null;
+  /** The registry's lists, once served; empty until then. */
+  vocabulary: ServedVocabulary;
   onStage: (event: StageEvent) => void;
 };
 
@@ -210,7 +213,7 @@ export function stagedField(
   kind: FieldKind,
   onPick?: (picked: Suggestion) => void,
 ): InspectorFieldProps {
-  const { t, row, changes, accounts, onStage } = scope;
+  const { t, row, changes, accounts, vocabulary, onStage } = scope;
   const id = row.transaction.transaction_id;
   const stored = storedFieldValue(row, field);
   const facts = effectiveFacts(row, changes);
@@ -235,13 +238,13 @@ export function stagedField(
       editor = choice(directionOptions(t));
       break;
     case "category":
-      editor = choice(categoryOptions(t), clear);
+      editor = choice(categoryOptions(t, vocabulary), clear);
       break;
     case "iva_category":
-      editor = choice(ivaCategoryOptions(t), clear);
+      editor = choice(ivaCategoryOptions(t, vocabulary), clear);
       break;
     case "irpf_category":
-      editor = choice(irpfCategoryOptions(t), clear);
+      editor = choice(irpfCategoryOptions(t, vocabulary), clear);
       break;
     case "account":
       editor = choice(
@@ -250,7 +253,7 @@ export function stagedField(
       );
       break;
     default: {
-      const labels = choiceLabels(t, accounts);
+      const labels = choiceLabels(t, accounts, vocabulary);
       const parse = (raw: string): FieldParse => {
         const text = raw.trim();
         if (text === "") {

@@ -41,12 +41,7 @@ import {
   type StagedRowChanges,
   type StagedValue,
 } from "../../../shell/ledgerStage";
-import {
-  DIRECTIONS,
-  IRPF_CATEGORIES,
-  IVA_CATEGORIES,
-  SPENDING_CATEGORIES,
-} from "../../../shell/ledgerVocabulary";
+import { DIRECTIONS } from "../../../shell/ledgerVocabulary";
 import type { ColumnId } from "../movements/movementsModel";
 
 // ---- Columns and fields --------------------------------------------------------
@@ -226,6 +221,11 @@ export type ChoiceLabels = {
   category: (id: string) => string;
   ivaCategory: (id: string) => string;
   irpfCategory: (id: string) => string;
+  /** The lists the registry serves for the three category columns: empty
+   * until served, so nothing typed is taken for one. */
+  categories: readonly string[];
+  ivaCategories: readonly string[];
+  irpfCategories: readonly string[];
   /** An own account's label, and the ids the register holds. */
   account: (id: string) => string;
   accounts: readonly string[];
@@ -301,11 +301,11 @@ export function parseCell(
     case "direction":
       return choose(raw, DIRECTIONS, labels.direction, DIRECTION_ALIASES);
     case "category":
-      return choose(raw, SPENDING_CATEGORIES, labels.category);
+      return choose(raw, labels.categories, labels.category);
     case "iva_category":
-      return choose(raw, IVA_CATEGORIES, labels.ivaCategory);
+      return choose(raw, labels.ivaCategories, labels.ivaCategory);
     case "irpf_category":
-      return choose(raw, IRPF_CATEGORIES, labels.irpfCategory);
+      return choose(raw, labels.irpfCategories, labels.irpfCategory);
     case "account": {
       if (raw.trim() !== "" && fold(raw) === fold(labels.noAccount))
         return { kind: "value", value: { value: NO_ACCOUNT } };

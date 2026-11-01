@@ -48,13 +48,13 @@ import {
   type StagedAction,
   type StagedContent,
 } from "../../../shell/ledgerStage";
-import { SPENDING_CATEGORY_FAMILIES } from "../../../shell/ledgerVocabulary";
 import { useStrings, type Translate } from "../../../shell/strings";
 import {
   categoryLabel,
   categoryOption,
   classificationText,
   ivaCategoryLabel,
+  vocabularyEmpty,
 } from "../movements/movementWords";
 import {
   changeGroups,
@@ -72,7 +72,10 @@ import {
 import { fieldName, valueText } from "./editingWords";
 import type { LockProgress, useLedgerApply } from "./useLedgerApply";
 import { useWritePause } from "../WritePause";
-import { useFieldSuggestions } from "../suggestions/SuggestionsProvider";
+import {
+  useFieldSuggestions,
+  useVocabulary,
+} from "../suggestions/SuggestionsProvider";
 import { WindowedList } from "./WindowedList";
 import { formatCount, formatPercent } from "../../../shared/numbers";
 
@@ -300,12 +303,13 @@ function BlockerFixes({
   const [currency, setCurrency] = useState("");
   const currencies = useFieldSuggestions("currency");
   const ids = held.filter((entry) => !entry.draft).map((entry) => entry.id);
+  const vocabulary = useVocabulary();
   const categories = useMemo<ComboboxOption[]>(
     () =>
-      SPENDING_CATEGORY_FAMILIES.flatMap(([family, members]) =>
+      vocabulary.categoryFamilies.flatMap(([family, members]) =>
         members.map((member) => categoryOption(t, family, member)),
       ),
-    [t],
+    [t, vocabulary],
   );
   const button = (label: string, run: () => void, name?: string) => (
     <Button
@@ -334,7 +338,7 @@ function BlockerFixes({
   };
   const classifyAll = (kind: "business" | "personal", category?: string) => {
     const outcome = classifyCells(
-      { kind, ids, category, staged: content },
+      { kind, ids, category, staged: content, vocabulary },
       rows,
     );
     if (outcome.kind === "staged") onStage(outcome.event);
@@ -350,7 +354,12 @@ function BlockerFixes({
             label={t("desktop.ledger.classify.category")}
             value={null}
             options={categories}
-            emptyLabel={t("desktop.ledger.classify.no_category_match")}
+            emptyLabel={vocabularyEmpty(
+              t,
+              vocabulary,
+              t("desktop.ledger.classify.no_category_match"),
+              categories.length,
+            )}
             placeholder={t("desktop.ledger.classify.search_category")}
             onCommit={(category) => classifyAll("business", category)}
           >

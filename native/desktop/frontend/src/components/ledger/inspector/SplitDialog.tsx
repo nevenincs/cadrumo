@@ -25,7 +25,11 @@ import type {
 } from "../../../shell/ledgerStage";
 import { useStrings } from "../../../shell/strings";
 import { refusalText } from "../editing/editingWords";
-import { categoryLabel, classificationLabel } from "../movements/movementWords";
+import {
+  categoryLabel,
+  classificationLabel,
+  vocabularyEmpty,
+} from "../movements/movementWords";
 import {
   SPLIT_PARTS_MAX,
   checkSplit,
@@ -33,7 +37,10 @@ import {
   type SplitProblem,
 } from "./inspectorModel";
 import { categoryOptions } from "./inspectorWords";
-import { useFieldSuggestions } from "../suggestions/SuggestionsProvider";
+import {
+  useFieldSuggestions,
+  useVocabulary,
+} from "../suggestions/SuggestionsProvider";
 import { formatAmount } from "../../../shared/numbers";
 
 type Part = {
@@ -76,6 +83,7 @@ export function SplitDialog({
   const tx = row.transaction;
   // A part's words: the movement's own first, then the ledger's.
   const described = useFieldSuggestions("description");
+  const vocabulary = useVocabulary();
   const partWords = useMemo(
     () =>
       described.suggestions && [
@@ -332,8 +340,13 @@ export function SplitDialog({
                         part: at + 1,
                       })}
                       value={part.category}
-                      options={categoryOptions(t)}
-                      emptyLabel={t("desktop.ledger.inspector.no_match")}
+                      options={categoryOptions(t, vocabulary)}
+                      emptyLabel={vocabularyEmpty(
+                        t,
+                        vocabulary,
+                        t("desktop.ledger.inspector.no_match"),
+                        vocabulary.categories.length,
+                      )}
                       onCommit={(chosen) => update(at, { category: chosen })}
                     >
                       <Button variant="outline" size="sm">
