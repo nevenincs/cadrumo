@@ -8,7 +8,6 @@ import sys
 import time
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import suppress
-from datetime import timedelta
 from importlib.metadata import version
 from pathlib import Path
 from threading import Event
@@ -25,14 +24,11 @@ from cadrumo.adapters.persistence.storage.custody.tests.automation_support impor
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.automation_enrollment import AutomationReceiptProjection, EnrollmentStage
 from cadrumo.core.config import override_settings
-from cadrumo.core.time.clock import now
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
-from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.contracts.contracts import ClientHello
 from cadrumo_client.contracts.deadline_budget import MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS
 from cadrumo_client.contracts.enrollment_access import EnrollmentPrepare, EnrollmentPrepared
-from cadrumo_client.contracts.enrollment_proposal import EnrollmentKind, EnrollmentProposal
 from cadrumo_client.contracts.profile_access import AccessRefusal
 from cadrumo_client.transport.enrollment_client import NativeEnrollmentClient
 from cadrumo_client.transport.framing import VerifiedConnection
@@ -43,6 +39,7 @@ from cadrumo_runtime.adapters.tests.retained_server import RetainedRuntimeTransp
 from cadrumo_runtime.commands.tests.config.runtime_cli import invoke_runtime_cli
 from cadrumo_runtime.host.profile_connections import RuntimeProfileConnections
 
+from ..automation_proposal_support import enrollment_proposal
 from ..served_runtime import SyntheticLogin
 
 pytestmark = [
@@ -68,24 +65,6 @@ def _requester(
     )
     assert isinstance(prepared, EnrollmentPrepared), prepared
     return connection, NativeEnrollmentClient(connection=connection, prepared=prepared, secrets_store=native_store)
-
-
-def _proposal() -> EnrollmentProposal:
-    return EnrollmentProposal(
-        kind=EnrollmentKind.ENROLL,
-        scope=AccessScope(
-            operations=frozenset({"user-profile.field-mutation"}),
-            actions=frozenset({AccessAction.SUBMIT, AccessAction.START, AccessAction.COMMIT}),
-            disclosures=frozenset(),
-            periods=None,
-            allow_period_independent=True,
-            allow_delegation=False,
-        ),
-        expires_at=now() + timedelta(days=30),
-        key_expires_at=now() + timedelta(days=15),
-        unattended=True,
-        allow_os_lock=False,
-    )
 
 
 def _cli(profile_id: UUID, *leaf: str, password: str = PROFILE_INPUT) -> Result:
@@ -268,7 +247,7 @@ def _assert_decline_keeps_one_grant(
 ) -> Result:
     second_requester, second_enrollment = _requester(endpoint, profile_id, MemoryNativePort())
     try:
-        second = second_enrollment.submit(_proposal())
+        second = second_enrollment.submit(enrollment_proposal())
         declined = _cli(
             profile_id,
             "decline",
@@ -302,7 +281,7 @@ def _review_and_decide(
     """Inspect, refuse bad proofs, approve with delivery, then decline a second request."""
     requester, enrollment = _requester(endpoint, profile_id, client_native)
     try:
-        pending = enrollment.submit(_proposal())
+        pending = enrollment.submit(enrollment_proposal())
         assert pending.stage is EnrollmentStage.REQUESTED
         with override_settings(cadrumo_storage_root=root, cadrumo_output_language="en"):
             _assert_inspect_shows_requested_review(profile_id, pending)

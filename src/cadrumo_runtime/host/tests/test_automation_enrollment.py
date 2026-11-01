@@ -7,7 +7,6 @@ import sys
 import time
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
-from datetime import timedelta
 from pathlib import Path
 from threading import Event
 from typing import Literal, override
@@ -40,12 +39,10 @@ from cadrumo.application.user_profile.automation_operations import (
     AutomationOperationRequest,
 )
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
-from cadrumo.core.time.clock import now
-from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope, AuthorityState
+from cadrumo_client.contracts.access_vocabulary import AuthorityState
 from cadrumo_client.contracts.automation_codes import AutomationCustodyError
 from cadrumo_client.contracts.deadline_budget import MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS, exchange_deadline
 from cadrumo_client.contracts.enrollment_access import EnrollmentInspect, EnrollmentPrepare, EnrollmentPrepared
-from cadrumo_client.contracts.enrollment_proposal import EnrollmentKind, EnrollmentProposal
 from cadrumo_client.contracts.operation_access import (
     OperationAcknowledged,
     OperationContract,
@@ -68,6 +65,7 @@ from cadrumo_client.transport.windows import WindowsEndpoint
 from ...adapters.tests.profile_worker_support import PROFILE_INPUT, owner_id, worker_profiles
 from ...adapters.tests.retained_server import RetainedRuntimeTransportServer
 from ..profile_connections import RuntimeProfileConnections
+from .automation_proposal_support import enrollment_proposal
 from .served_runtime import SyntheticLogin, connect_verified
 
 pytestmark = [
@@ -259,21 +257,7 @@ def _prepare_and_submit(
         deadline=time.monotonic() + 5,
     )
     assert isinstance(wrong_request, AccessRefusal)
-    proposal = EnrollmentProposal(
-        kind=EnrollmentKind.ENROLL,
-        scope=AccessScope(
-            operations=frozenset({"user-profile.field-mutation"}),
-            actions=frozenset({AccessAction.SUBMIT, AccessAction.START, AccessAction.COMMIT}),
-            disclosures=frozenset(),
-            periods=None,
-            allow_period_independent=True,
-            allow_delegation=False,
-        ),
-        expires_at=now() + timedelta(days=30),
-        key_expires_at=now() + timedelta(days=15),
-        unattended=True,
-        allow_os_lock=False,
-    )
+    proposal = enrollment_proposal()
     submitted = client.submit(proposal, timeout=10)
     assert submitted.request_id == prepared.enrollment_request_id
     assert submitted.stage is EnrollmentStage.REQUESTED
@@ -559,24 +543,7 @@ def test_client_native_store_failure_does_not_complete_enrollment(tmp_path: Path
                     client = NativeEnrollmentClient(
                         connection=requester, prepared=prepared, secrets_store=client_native
                     )
-                    submitted = client.submit(
-                        EnrollmentProposal(
-                            kind=EnrollmentKind.ENROLL,
-                            scope=AccessScope(
-                                operations=frozenset({"user-profile.field-mutation"}),
-                                actions=frozenset({AccessAction.SUBMIT, AccessAction.START, AccessAction.COMMIT}),
-                                disclosures=frozenset(),
-                                periods=None,
-                                allow_period_independent=True,
-                                allow_delegation=False,
-                            ),
-                            expires_at=now() + timedelta(days=30),
-                            key_expires_at=now() + timedelta(days=15),
-                            unattended=True,
-                            allow_os_lock=False,
-                        ),
-                        timeout=10,
-                    )
+                    submitted = client.submit(enrollment_proposal(), timeout=10)
                     human_id = _login(human, profile_id, method="password", proof=PROFILE_INPUT.encode())
                     done = Event()
 

@@ -6,7 +6,6 @@ import sys
 import time
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
-from datetime import timedelta
 from importlib.metadata import version
 from pathlib import Path
 from threading import Event
@@ -26,11 +25,9 @@ from cadrumo.application.user_profile.automation_enrollment import (
     EnrollmentStage,
 )
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition
-from cadrumo.core.time.clock import now
-from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope, AuthorityState
+from cadrumo_client.contracts.access_vocabulary import AuthorityState
 from cadrumo_client.contracts.deadline_budget import MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS
 from cadrumo_client.contracts.enrollment_access import EnrollmentPrepare, EnrollmentPrepared
-from cadrumo_client.contracts.enrollment_proposal import EnrollmentKind, EnrollmentProposal
 from cadrumo_client.transport.automation_decision import (
     AutomationDecisionCompletion,
     AutomationDecisionRunError,
@@ -47,6 +44,7 @@ from cadrumo_client.transport.windows import WindowsEndpoint
 from ...adapters.tests.profile_worker_support import PROFILE_INPUT, owner_id, worker_profiles
 from ...adapters.tests.retained_server import RetainedRuntimeTransportServer
 from ..profile_connections import RuntimeProfileConnections
+from .automation_proposal_support import enrollment_proposal
 from .served_runtime import SyntheticLogin, connect_installed
 
 pytestmark = [
@@ -56,24 +54,6 @@ pytestmark = [
     pytest.mark.skipif(sys.platform != "win32", reason="requires real native Windows profile workers"),
     pytest.mark.usefixtures("authority_operation"),
 ]
-
-
-def _proposal() -> EnrollmentProposal:
-    return EnrollmentProposal(
-        kind=EnrollmentKind.ENROLL,
-        scope=AccessScope(
-            operations=frozenset({"user-profile.field-mutation"}),
-            actions=frozenset({AccessAction.SUBMIT, AccessAction.START, AccessAction.COMMIT}),
-            disclosures=frozenset(),
-            periods=None,
-            allow_period_independent=True,
-            allow_delegation=False,
-        ),
-        expires_at=now() + timedelta(days=30),
-        key_expires_at=now() + timedelta(days=15),
-        unattended=True,
-        allow_os_lock=False,
-    )
 
 
 def _requester(
@@ -111,7 +91,7 @@ def _review_and_refuse_wrong_password(
     decision: _Decision,
 ) -> tuple[AutomationReceiptProjection, AutomationReviewProjection, str]:
     human, enrollment = decision.human, decision.enrollment
-    first = enrollment.submit(_proposal())
+    first = enrollment.submit(enrollment_proposal())
     assert first.stage is EnrollmentStage.REQUESTED
     human_password = bytearray(PROFILE_INPUT.encode())
     human.login_password(human_password, timeout=25)
@@ -200,7 +180,7 @@ def _decline_with_delivered_key(decision: _Decision, approved_inventory: Automat
 
         second_requester, second_enrollment = _requester(endpoint, decision.profile_id, MemoryNativePort())
         try:
-            second = second_enrollment.submit(_proposal())
+            second = second_enrollment.submit(enrollment_proposal())
             second_review = _review(human, second.request_id)
             with pytest.raises(FrontendRefusedError):
                 run_automation_decision(api, second_review, decision="decline")
