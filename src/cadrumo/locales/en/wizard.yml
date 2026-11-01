@@ -451,8 +451,8 @@ wizard:
           4 = separated or divorced, 5 = registered civil partnership.'
       taxpayer-marriage-date:
         help: Start date of the current marriage (YYYY-MM-DD). Only when marital status
-          = 2 (married). Derives casillas 0245/0246/0247 (matrimonio sobrevenido,
-          Art. 82 LIRPF).
+          = 2 (married). Derives casillas 0245/0246/0247 (marriage duration during
+          the tax year, Art. 82 LIRPF).
       taxpayer-sex:
         help: 'First taxpayer sex: H = male, M = female.'
       third-party-transactions-above-347-threshold:

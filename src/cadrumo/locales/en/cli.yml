@@ -1456,16 +1456,16 @@ cli:
         casilla_not_decimal: 'The --casilla value for {key} is not a decimal: {value}.'
         causante_ccaa_help: CCAA of habitual residence of the deceased (ISD Modelo
           650/660) or CCAA where the transferred asset is located (ITPyAJD Modelo
-          600/620). Determines the competent Hacienda (Ley 22/2009 Art. 32). País
-          Vasco and Navarra are foral regimes; consult the corresponding regional
+          600/620). Determines the competent Hacienda (Ley 22/2009 Art. 32). Basque
+          Country and Navarra are foral regimes; consult the corresponding regional
           Hacienda.
         compare_taxation_error: 'Joint vs. individual comparison not available: {detail}'
         compare_taxation_help: 'Compare the IRPF tax liability under joint filing
-          (conjunta, Art. 82-84 LIRPF) and individual filing for an existing Modelo
-          100 declaration. Cadrumo calculates twice, once with declaration_type=2
-          (conjunta) and once with declaration_type=1 (individual), from the same
-          profile data, and outputs the tax liability difference and a recommendation.
-          Nothing is saved: no calculation is stored.'
+          (Art. 82-84 LIRPF) and individual filing for an existing Modelo 100 declaration.
+          Cadrumo calculates twice, once with declaration_type=2 (joint) and once
+          with declaration_type=1 (individual), from the same profile data, and outputs
+          the tax liability difference and a recommendation. Nothing is saved: no
+          calculation is stored.'
         compare_taxation_recommendation_line: 'RECOMMENDATION: {recommendation} -
           {reason}'
         compare_taxation_work_unit_not_found: Declaration {work_unit_id} not found;
