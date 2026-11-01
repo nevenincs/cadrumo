@@ -8,7 +8,8 @@ from collections.abc import Mapping
 
 from .signal_contracts import DictionaryLike, ExcludedStructuralInventory
 from .signal_policy import LOCALES, SPELLING_SURFACES
-from .signal_spelling_reviewed_words import REVIEWED_LOCALE_SPELLINGS, REVIEWED_SPANISH_LEGAL_SPELLINGS
+from .signal_spelling_reviewed_words import REVIEWED_LOCALE_SPELLINGS
+from .signal_spelling_reviewed_words_es import REVIEWED_SPANISH_LEGAL_SPELLINGS
 from .signal_spelling_segments import (
     is_known_official_province_label,
     is_known_residence_region_label,
