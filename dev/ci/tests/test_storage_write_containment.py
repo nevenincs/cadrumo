@@ -219,6 +219,112 @@ def _module_aliases(tree: ast.Module) -> tuple[dict[str, str], dict[str, str], d
     return modules, symbols, _string_constants(tree)
 
 
+def _literal_origins(
+    item: ast.AST,
+    *,
+    names: dict[str, frozenset[str]],
+    path_literals: set[ast.AST],
+    constants: dict[str, str],
+) -> set[str]:
+    if isinstance(item, ast.Name) and item.id in names:
+        return set(names[item.id])
+    if isinstance(item, ast.Name) and item in path_literals:
+        origin = _literal_external_origin(constants.get(item.id, ""))
+        return set() if origin is None else {origin}
+    if isinstance(item, ast.Constant) and isinstance(item.value, str) and item in path_literals:
+        origin = _literal_external_origin(item.value)
+        return set() if origin is None else {origin}
+    return set()
+
+
+def _is_home_lookup(item: ast.Call, path: tuple[str, ...]) -> bool:
+    if path[-2:] == ("Path", "home"):
+        return True
+    return (
+        path[-1:] == ("expanduser",)
+        and isinstance(item.func, ast.Attribute)
+        and any(
+            isinstance(part, ast.Constant) and isinstance(part.value, str) and part.value.startswith("~")
+            for part in ast.walk(item.func.value)
+        )
+    )
+
+
+def _expands_outside_operator_root(
+    item: ast.Call,
+    *,
+    modules: dict[str, str],
+    symbols: dict[str, str],
+    constants: dict[str, str],
+    temp_controlled: bool,
+    controlled_transports: frozenset[str],
+) -> bool:
+    """Report an ``os.path.expanduser`` whose subject is not a CADRUMO_ override."""
+    subject = item.args[0] if item.args else None
+    if subject is None:
+        return True
+    for part in ast.walk(subject):
+        environment_key = _environment_key(part, constants, modules, symbols)
+        origin = _environment_origin(
+            environment_key, temp_controlled=temp_controlled, controlled_transports=controlled_transports
+        )
+        if origin is None and environment_key is not None and environment_key.startswith("CADRUMO_"):
+            return False
+    return True
+
+
+def _is_tempfile_constructor(path: tuple[str, ...], symbols: dict[str, str]) -> bool:
+    return (
+        bool(path[-1:])
+        and path[-1] in _TEMP_APIS
+        and ("tempfile" in path or symbols.get(path[-1], "").startswith("tempfile."))
+    )
+
+
+def _unqualified_temp_constructor(item: ast.Call, path: tuple[str, ...]) -> bool:
+    directory = next((kw.value for kw in item.keywords if kw.arg == "dir"), None)
+    if directory is None and len(item.args) > _TEMP_DIR_POSITION[path[-1]]:
+        directory = item.args[_TEMP_DIR_POSITION[path[-1]]]
+    return directory is None or (isinstance(directory, ast.Constant) and directory.value is None)
+
+
+def _call_origins(
+    item: ast.Call,
+    *,
+    modules: dict[str, str],
+    symbols: dict[str, str],
+    constants: dict[str, str],
+    temp_controlled: bool,
+    controlled_transports: frozenset[str],
+) -> set[str]:
+    path = _call_path(item, modules, symbols)
+    if _is_home_lookup(item, path):
+        return {"home"}
+    if path[-3:] == ("os", "path", "expanduser"):
+        if _expands_outside_operator_root(
+            item,
+            modules=modules,
+            symbols=symbols,
+            constants=constants,
+            temp_controlled=temp_controlled,
+            controlled_transports=controlled_transports,
+        ):
+            return {"home"}
+        return set()
+    if _is_tempfile_constructor(path, symbols):
+        return {"ambient-temp"} if _unqualified_temp_constructor(item, path) and not temp_controlled else set()
+    if path[-1:] in {("gettempdir",), ("gettempdirb",)} and "tempfile" in path and not temp_controlled:
+        return {"ambient-temp"}
+    return set()
+
+
+def _tempdir_attribute_origins(item: ast.Attribute, modules: dict[str, str], *, temp_controlled: bool) -> set[str]:
+    path = _attribute_path(item)
+    if path and modules.get(path[0], path[0]) == "tempfile" and path[-1:] == ("tempdir",) and not temp_controlled:
+        return {"ambient-temp"}
+    return set()
+
+
 def _path_origin(
     node: ast.AST,
     *,
@@ -243,67 +349,24 @@ def _path_origin(
     for item in ast.walk(node):
         if item in path_components or item in selectors:
             continue
-        if isinstance(item, ast.Name) and item.id in names:
-            found.update(names[item.id])
-        elif isinstance(item, ast.Name) and item in path_literals:
-            origin = _literal_external_origin(constants.get(item.id, ""))
-            if origin is not None:
-                found.add(origin)
-        elif isinstance(item, ast.Constant) and isinstance(item.value, str) and item in path_literals:
-            origin = _literal_external_origin(item.value)
-            if origin is not None:
-                found.add(origin)
+        found.update(_literal_origins(item, names=names, path_literals=path_literals, constants=constants))
         key = _environment_key(item, constants, modules, symbols)
         origin = _environment_origin(key, temp_controlled=temp_controlled, controlled_transports=controlled_transports)
         if origin is not None:
             found.add(origin)
         if isinstance(item, ast.Call):
-            path = _call_path(item, modules, symbols)
-            if path[-2:] == ("Path", "home") or (
-                path[-1:] == ("expanduser",)
-                and isinstance(item.func, ast.Attribute)
-                and any(
-                    isinstance(part, ast.Constant) and isinstance(part.value, str) and part.value.startswith("~")
-                    for part in ast.walk(item.func.value)
+            found.update(
+                _call_origins(
+                    item,
+                    modules=modules,
+                    symbols=symbols,
+                    constants=constants,
+                    temp_controlled=temp_controlled,
+                    controlled_transports=controlled_transports,
                 )
-            ):
-                found.add("home")
-            elif path[-3:] == ("os", "path", "expanduser"):
-                subject = item.args[0] if item.args else None
-                if subject is None or not any(
-                    _environment_origin(
-                        _environment_key(part, constants, modules, symbols),
-                        temp_controlled=temp_controlled,
-                        controlled_transports=controlled_transports,
-                    )
-                    is None
-                    and (environment_key := _environment_key(part, constants, modules, symbols)) is not None
-                    and environment_key.startswith("CADRUMO_")
-                    for part in ast.walk(subject)
-                ):
-                    found.add("home")
-            elif (
-                path[-1:]
-                and path[-1] in _TEMP_APIS
-                and ("tempfile" in path or symbols.get(path[-1], "").startswith("tempfile."))
-            ):
-                directory = next((kw.value for kw in item.keywords if kw.arg == "dir"), None)
-                if directory is None and len(item.args) > _TEMP_DIR_POSITION[path[-1]]:
-                    directory = item.args[_TEMP_DIR_POSITION[path[-1]]]
-                no_directory = directory is None or (isinstance(directory, ast.Constant) and directory.value is None)
-                if no_directory and not temp_controlled:
-                    found.add("ambient-temp")
-            elif path[-1:] in {("gettempdir",), ("gettempdirb",)} and "tempfile" in path and not temp_controlled:
-                found.add("ambient-temp")
+            )
         elif isinstance(item, ast.Attribute) and item.attr == "tempdir":
-            path = _attribute_path(item)
-            if (
-                path
-                and modules.get(path[0], path[0]) == "tempfile"
-                and path[-1:] == ("tempdir",)
-                and not temp_controlled
-            ):
-                found.add("ambient-temp")
+            found.update(_tempdir_attribute_origins(item, modules, temp_controlled=temp_controlled))
     return found
 
 
@@ -315,41 +378,82 @@ def _assigned_names(target: ast.expr) -> tuple[str, ...]:
     return ()
 
 
-def _write_targets(
-    call: ast.Call, modules: dict[str, str], symbols: dict[str, str], constants: dict[str, str]
-) -> tuple[ast.AST, ...]:
-    path = _call_path(call, modules, symbols)
-    name = path[-1] if path else ""
-    owner = path[-2] if len(path) > 1 else ""
-    if name in _TEMP_APIS and ("tempfile" in path or symbols.get(name, "").startswith("tempfile.")):
-        directory = next((kw.value for kw in call.keywords if kw.arg == "dir"), None)
-        if directory is None and len(call.args) > _TEMP_DIR_POSITION[name]:
-            directory = call.args[_TEMP_DIR_POSITION[name]]
-        return (
-            (call,)
-            if directory is None or (isinstance(directory, ast.Constant) and directory.value is None)
-            else (directory,)
-        )
-    if name in {"write_text", "write_bytes", "mkdir", "makedirs", "touch", "unlink", "remove", "rmdir"} and isinstance(
-        call.func, ast.Attribute
-    ):
+_MUTATING_METHODS: Final[frozenset[str]] = frozenset(
+    {"write_text", "write_bytes", "mkdir", "makedirs", "touch", "unlink", "remove", "rmdir"}
+)
+_LOG_HANDLERS: Final[frozenset[str]] = frozenset(
+    {"FileHandler", "RotatingFileHandler", "TimedRotatingFileHandler", "WatchedFileHandler"}
+)
+
+
+def _mode_argument(call: ast.Call, position: int) -> ast.AST | None:
+    if len(call.args) > position:
+        return call.args[position]
+    return next((kw.value for kw in call.keywords if kw.arg == "mode"), None)
+
+
+def _name_and_owner(path: tuple[str, ...]) -> tuple[str, str]:
+    return (path[-1] if path else ""), (path[-2] if len(path) > 1 else "")
+
+
+def _tempfile_targets(
+    call: ast.Call, path: tuple[str, ...], symbols: dict[str, str], constants: dict[str, str]
+) -> tuple[ast.AST, ...] | None:
+    name, _ = _name_and_owner(path)
+    if not (name in _TEMP_APIS and ("tempfile" in path or symbols.get(name, "").startswith("tempfile."))):
+        return None
+    directory = next((kw.value for kw in call.keywords if kw.arg == "dir"), None)
+    if directory is None and len(call.args) > _TEMP_DIR_POSITION[name]:
+        directory = call.args[_TEMP_DIR_POSITION[name]]
+    if directory is None or (isinstance(directory, ast.Constant) and directory.value is None):
+        return (call,)
+    return (directory,)
+
+
+def _method_targets(
+    call: ast.Call, path: tuple[str, ...], symbols: dict[str, str], constants: dict[str, str]
+) -> tuple[ast.AST, ...] | None:
+    name, _ = _name_and_owner(path)
+    if not isinstance(call.func, ast.Attribute):
+        return None
+    if name in _MUTATING_METHODS:
         return (call.func.value,)
-    if name == "open" and isinstance(call.func, ast.Attribute):
-        mode = call.args[0] if call.args else next((kw.value for kw in call.keywords if kw.arg == "mode"), None)
-        if _write_mode(mode, constants):
-            return (call.func.value,)
-    if name in {"open", "fdopen"} and owner in {"", "io"}:
-        mode = (
-            call.args[1] if len(call.args) > 1 else next((kw.value for kw in call.keywords if kw.arg == "mode"), None)
-        )
-        if call.args and _write_mode(mode, constants):
-            return (call.args[0],)
+    if name == "open" and _write_mode(_mode_argument(call, 0), constants):
+        return (call.func.value,)
+    return None
+
+
+def _builtin_open_targets(
+    call: ast.Call, path: tuple[str, ...], symbols: dict[str, str], constants: dict[str, str]
+) -> tuple[ast.AST, ...] | None:
+    name, owner = _name_and_owner(path)
+    if (
+        name in {"open", "fdopen"}
+        and owner in {"", "io"}
+        and call.args
+        and _write_mode(_mode_argument(call, 1), constants)
+    ):
+        return (call.args[0],)
+    return None
+
+
+def _os_targets(
+    call: ast.Call, path: tuple[str, ...], symbols: dict[str, str], constants: dict[str, str]
+) -> tuple[ast.AST, ...] | None:
+    name, owner = _name_and_owner(path)
     if owner == "os" and name in {"mkdir", "makedirs", "unlink", "remove", "rmdir"}:
         return tuple(call.args[:1])
     if owner == "os" and name in {"replace", "rename"}:
         return tuple(call.args[:2])
     if owner == "shutil" and name in {"copy", "copy2", "copyfile", "copytree", "move"}:
         return (call.args[1],) if len(call.args) > 1 else ()
+    return None
+
+
+def _database_and_log_targets(
+    call: ast.Call, path: tuple[str, ...], symbols: dict[str, str], constants: dict[str, str]
+) -> tuple[ast.AST, ...] | None:
+    name, owner = _name_and_owner(path)
     if (
         owner in {"sqlite3", "apsw"}
         and name == "connect"
@@ -357,20 +461,39 @@ def _write_targets(
         and not (isinstance(call.args[0], ast.Constant) and call.args[0].value == ":memory:")
     ):
         return (call.args[0],)
-    if name in {"FileHandler", "RotatingFileHandler", "TimedRotatingFileHandler", "WatchedFileHandler"}:
+    if name in _LOG_HANDLERS:
         return (call.args[0],) if call.args else tuple(kw.value for kw in call.keywords if kw.arg == "filename")
-    if owner == "zipfile" and name == "ZipFile":
-        mode = (
-            call.args[1] if len(call.args) > 1 else next((kw.value for kw in call.keywords if kw.arg == "mode"), None)
-        )
-        if _write_mode(mode, constants) and call.args:
-            return (call.args[0],)
-    if owner == "tarfile" and name == "open":
-        mode = (
-            call.args[1] if len(call.args) > 1 else next((kw.value for kw in call.keywords if kw.arg == "mode"), None)
-        )
-        if _write_mode(mode, constants) and call.args:
-            return (call.args[0],)
+    return None
+
+
+def _archive_targets(
+    call: ast.Call, path: tuple[str, ...], symbols: dict[str, str], constants: dict[str, str]
+) -> tuple[ast.AST, ...] | None:
+    name, owner = _name_and_owner(path)
+    archive_open = (owner == "zipfile" and name == "ZipFile") or (owner == "tarfile" and name == "open")
+    if archive_open and _write_mode(_mode_argument(call, 1), constants) and call.args:
+        return (call.args[0],)
+    return None
+
+
+_TARGET_RESOLVERS: Final = (
+    _tempfile_targets,
+    _method_targets,
+    _builtin_open_targets,
+    _os_targets,
+    _database_and_log_targets,
+    _archive_targets,
+)
+
+
+def _write_targets(
+    call: ast.Call, modules: dict[str, str], symbols: dict[str, str], constants: dict[str, str]
+) -> tuple[ast.AST, ...]:
+    path = _call_path(call, modules, symbols)
+    for resolve in _TARGET_RESOLVERS:
+        targets = resolve(call, path, symbols, constants)
+        if targets is not None:
+            return targets
     return ()
 
 
@@ -573,6 +696,76 @@ def _assigned_names_for_statement(statement: ast.stmt) -> tuple[str, ...]:
     return ()
 
 
+class _TempBootstrap:
+    """Facts a conftest statement sequence establishes about temp-root pinning."""
+
+    def __init__(self, modules: dict[str, str], symbols: dict[str, str], constants: dict[str, str]) -> None:
+        self.modules = modules
+        self.symbols = symbols
+        self.constants = constants
+        self.roots: set[str] = set()
+        self.root_lines: list[int] = []
+        self.configured_env: set[str] = set()
+        self.configured_lines: list[int] = []
+        self.tempfile_is_configured = False
+
+    def uses_temp_root(self, value: ast.AST) -> bool:
+        return any(isinstance(part, ast.Name) and part.id in self.roots for part in ast.walk(value))
+
+    def record_root(self, statement: ast.stmt, call: tuple[str, ...], targets: list[ast.expr]) -> None:
+        if call[-1:] == ("prepare_temporary_directory",) or call == ("dev", "temporary_output", "prepare_temp_root"):
+            self.roots.update(name for target in targets for name in _assigned_names(target))
+            self.root_lines.append(statement.lineno)
+
+    def record_environ_update(self, statement: ast.stmt, value: ast.Call, call: tuple[str, ...]) -> None:
+        if not (call[-1:] == ("update",) and isinstance(value.func, ast.Attribute) and value.args):
+            return
+        receiver = value.func.value
+        is_environ = (
+            isinstance(receiver, ast.Attribute)
+            and receiver.attr == "environ"
+            and isinstance(receiver.value, ast.Name)
+            and self.modules.get(receiver.value.id, receiver.value.id) == "os"
+        )
+        mapping = value.args[0]
+        if not (is_environ and isinstance(mapping, ast.Dict)):
+            return
+        for key, item_value in zip(mapping.keys, mapping.values, strict=False):
+            name = _literal(key, self.constants)
+            if name in _TEMP_ENV and self.uses_temp_root(item_value):
+                self.configured_env.add(name)
+                self.configured_lines.append(statement.lineno)
+
+    def record_tempdir(self, statement: ast.stmt, value: ast.expr, targets: list[ast.expr]) -> None:
+        for target in targets:
+            target_path = _attribute_path(target)
+            if (
+                target_path
+                and self.modules.get(target_path[0], target_path[0]) == "tempfile"
+                and target_path[-1:] == ("tempdir",)
+                and self.uses_temp_root(value)
+            ):
+                self.tempfile_is_configured = True
+                self.configured_lines.append(statement.lineno)
+
+    def record(self, statement: ast.stmt) -> None:
+        if isinstance(statement, ast.Assign):
+            value, targets = statement.value, list(statement.targets)
+        elif isinstance(statement, ast.AnnAssign):
+            value, targets = statement.value, [statement.target]
+        elif isinstance(statement, ast.Expr):
+            value, targets = statement.value, []
+        else:
+            return
+        if value is None:
+            return
+        if isinstance(value, ast.Call):
+            call = _call_path(value, self.modules, self.symbols)
+            self.record_root(statement, call, targets)
+            self.record_environ_update(statement, value, call)
+        self.record_tempdir(statement, value, targets)
+
+
 def _pytest_temp_bootstrap(root: Path) -> bool:
     """Prove conftest pins OS and stdlib temp before its first temp lookup."""
     try:
@@ -580,73 +773,15 @@ def _pytest_temp_bootstrap(root: Path) -> bool:
     except (OSError, UnicodeDecodeError, SyntaxError):
         return False
     modules, symbols = _imports(tree)
-    constants = _string_constants(tree)
-    roots: set[str] = set()
-    root_lines: list[int] = []
-    configured_env: set[str] = set()
-    configured_lines: list[int] = []
-    tempfile_is_configured = False
-
-    def uses_temp_root(value: ast.AST) -> bool:
-        return any(isinstance(part, ast.Name) and part.id in roots for part in ast.walk(value))
-
+    scan = _TempBootstrap(modules, symbols, _string_constants(tree))
     for statement in tree.body:
-        if isinstance(statement, ast.Assign):
-            value = statement.value
-            targets = statement.targets
-        elif isinstance(statement, ast.AnnAssign):
-            value = statement.value
-            targets = [statement.target]
-        elif isinstance(statement, ast.Expr):
-            value = statement.value
-            targets = []
-        else:
-            continue
-        if value is None:
-            continue
-        if isinstance(value, ast.Call):
-            call = _call_path(value, modules, symbols)
-            if call[-1:] == ("prepare_temporary_directory",) or call == (
-                "dev",
-                "temporary_output",
-                "prepare_temp_root",
-            ):
-                roots.update(name for target in targets for name in _assigned_names(target))
-                root_lines.append(statement.lineno)
-
-            if call[-1:] == ("update",) and isinstance(value.func, ast.Attribute) and value.args:
-                receiver = value.func.value
-                is_environ = (
-                    isinstance(receiver, ast.Attribute)
-                    and receiver.attr == "environ"
-                    and isinstance(receiver.value, ast.Name)
-                    and modules.get(receiver.value.id, receiver.value.id) == "os"
-                )
-                mapping = value.args[0]
-                if is_environ and isinstance(mapping, ast.Dict):
-                    for key, item_value in zip(mapping.keys, mapping.values, strict=False):
-                        name = _literal(key, constants)
-                        if name in _TEMP_ENV and uses_temp_root(item_value):
-                            configured_env.add(name)
-                            configured_lines.append(statement.lineno)
-
-        for target in targets:
-            target_path = _attribute_path(target) if isinstance(target, ast.expr) else ()
-            if (
-                target_path
-                and modules.get(target_path[0], target_path[0]) == "tempfile"
-                and target_path[-1:] == ("tempdir",)
-                and uses_temp_root(value)
-            ):
-                tempfile_is_configured = True
-                configured_lines.append(statement.lineno)
-
+        scan.record(statement)
     first_temp_use = _first_temp_use(tree)
-    last_binding = max((*root_lines, *configured_lines), default=0)
+    last_binding = max((*scan.root_lines, *scan.configured_lines), default=0)
     return (
-        bool(roots)
-        and _TEMP_ENV.issubset(configured_env)
-        and tempfile_is_configured
+        bool(scan.roots)
+        and _TEMP_ENV.issubset(scan.configured_env)
+        and scan.tempfile_is_configured
         and first_temp_use is not None
         and last_binding < first_temp_use
     )
