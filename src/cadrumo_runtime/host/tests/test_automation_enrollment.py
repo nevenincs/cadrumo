@@ -63,10 +63,8 @@ from cadrumo_client.transport.installation import installation
 from cadrumo_client.transport.windows import WindowsEndpoint
 
 from ...adapters.tests.profile_worker_support import PROFILE_INPUT, owner_id, worker_profiles
-from ...adapters.tests.retained_server import RetainedRuntimeTransportServer
-from ..profile_connections import RuntimeProfileConnections
 from .automation_proposal_support import enrollment_proposal
-from .served_runtime import SyntheticLogin, connect_verified
+from .served_runtime import SyntheticLogin, connect_verified, serving_runtime
 
 pytestmark = [
     pytest.mark.integration,
@@ -432,65 +430,43 @@ def test_preunlock_requester_receives_protected_credential_then_fresh_api_login(
         store = AutomationControlStore(root=root, binding=binding, secrets_store=server_native)
         assert store.enrollment_state().requests == ()
         assert store.enrollment_state().grants == ()
-        stop, boot = Event(), uuid4()
-        profiles = RuntimeProfileConnections(
-            storage_root=root,
-            storage_identity=endpoint.storage_identity,
-            runtime_boot_id=boot,
-            stop=stop,
+        with serving_runtime(
+            endpoint,
+            root,
             capture_login=lambda _channel: SyntheticLogin("preunlock-enrollment-native-login"),
             secret_store=lambda: server_native,
-        )
-        profiles.prepare_registry()
-        server = RetainedRuntimeTransportServer(
-            endpoint, product_version="test", stop=stop, profiles=profiles, boot_id=boot
-        )
-        with ThreadPoolExecutor(max_workers=3) as pool:
-            running = pool.submit(server.serve)
+            workers=3,
+        ) as served:
+            boot = served.boot
+            pool = served.pool
+            requester, human, other = (
+                connect_verified(endpoint),
+                connect_verified(endpoint),
+                connect_verified(endpoint),
+            )
             try:
-                while not server.ready.wait(0.01):
-                    if running.done():
-                        running.result()
-                        pytest.fail("runtime stopped before readiness")
-                requester, human, other = (
-                    connect_verified(endpoint),
-                    connect_verified(endpoint),
-                    connect_verified(endpoint),
+                run = _Preunlock(
+                    endpoint,
+                    profile_id,
+                    binding,
+                    boot,
+                    pool,
+                    store,
+                    server_native,
+                    client_native,
+                    requester,
+                    human,
+                    other,
                 )
-                try:
-                    run = _Preunlock(
-                        endpoint,
-                        profile_id,
-                        binding,
-                        boot,
-                        pool,
-                        store,
-                        server_native,
-                        client_native,
-                        requester,
-                        human,
-                        other,
-                    )
-                    prepared, client, submitted = _prepare_and_submit(run)
-                    human_id = _review_and_refuse_wrong_digest(run, prepared, submitted)
-                    completed = _approve_while_polling(run, client, submitted, human_id)
-                    reference = _assert_delivered_candidate(run, client, submitted, completed)
-                    _login_with_delivered_credential(run, client, reference, human_id)
-                finally:
-                    requester.close()
-                    human.close()
-                    other.close()
+                prepared, client, submitted = _prepare_and_submit(run)
+                human_id = _review_and_refuse_wrong_digest(run, prepared, submitted)
+                completed = _approve_while_polling(run, client, submitted, human_id)
+                reference = _assert_delivered_candidate(run, client, submitted, completed)
+                _login_with_delivered_credential(run, client, reference, human_id)
             finally:
-                primary = sys.exception()
-                stop.set()
-                try:
-                    try:
-                        running.result()
-                    except Exception:
-                        if primary is None:
-                            raise
-                finally:
-                    endpoint.close()
+                requester.close()
+                human.close()
+                other.close()
 
 
 def test_client_native_store_failure_does_not_complete_enrollment(tmp_path: Path) -> None:
@@ -511,140 +487,115 @@ def test_client_native_store_failure_does_not_complete_enrollment(tmp_path: Path
         client_native.fail_write = CLIENT_NAMESPACE
         store = AutomationControlStore(root=root, binding=binding, secrets_store=server_native)
         assert store.enrollment_state().requests == ()
-        stop, boot = Event(), uuid4()
-        profiles = RuntimeProfileConnections(
-            storage_root=root,
-            storage_identity=endpoint.storage_identity,
-            runtime_boot_id=boot,
-            stop=stop,
+        with serving_runtime(
+            endpoint,
+            root,
             capture_login=lambda _channel: SyntheticLogin("preunlock-enrollment-native-login"),
             secret_store=lambda: server_native,
-        )
-        profiles.prepare_registry()
-        server = RetainedRuntimeTransportServer(
-            endpoint, product_version="test", stop=stop, profiles=profiles, boot_id=boot
-        )
-        with ThreadPoolExecutor(max_workers=3) as pool:
-            running = pool.submit(server.serve)
+            workers=3,
+        ) as served:
+            pool = served.pool
+            requester, human = connect_verified(endpoint), connect_verified(endpoint)
             try:
-                while not server.ready.wait(0.01):
-                    if running.done():
-                        running.result()
-                        pytest.fail("runtime stopped before readiness")
-                requester, human = connect_verified(endpoint), connect_verified(endpoint)
+                prepared = requester.enrollment_prepare(
+                    EnrollmentPrepare(
+                        request_id=uuid4(), profile_id=profile_id, frontend=OperationFrontendProjection.TUI
+                    ),
+                    deadline=time.monotonic() + 5,
+                )
+                assert isinstance(prepared, EnrollmentPrepared)
+                client = NativeEnrollmentClient(connection=requester, prepared=prepared, secrets_store=client_native)
+                submitted = client.submit(enrollment_proposal(), timeout=10)
+                human_id = _login(human, profile_id, method="password", proof=PROFILE_INPUT.encode())
+                done = Event()
+
+                def poll_client() -> None:
+                    while not done.is_set():
+                        # A delivery exchange waits behind the publication fence the approval holds
+                        # while it commits; a shorter poll ends the delivery being approved.
+                        client.poll(timeout=MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS)
+
+                polling = pool.submit(poll_client)
                 try:
-                    prepared = requester.enrollment_prepare(
-                        EnrollmentPrepare(
-                            request_id=uuid4(), profile_id=profile_id, frontend=OperationFrontendProjection.TUI
-                        ),
-                        deadline=time.monotonic() + 5,
-                    )
-                    assert isinstance(prepared, EnrollmentPrepared)
-                    client = NativeEnrollmentClient(
-                        connection=requester, prepared=prepared, secrets_store=client_native
-                    )
-                    submitted = client.submit(enrollment_proposal(), timeout=10)
-                    human_id = _login(human, profile_id, method="password", proof=PROFILE_INPUT.encode())
-                    done = Event()
-
-                    def poll_client() -> None:
-                        while not done.is_set():
-                            # A delivery exchange waits behind the publication fence the approval holds
-                            # while it commits; a shorter poll ends the delivery being approved.
-                            client.poll(timeout=MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS)
-
-                    polling = pool.submit(poll_client)
-                    try:
-                        _, _, failed = _submit_operation(
-                            human,
-                            profile_id=profile_id,
-                            session_id=human_id,
-                            definition_id=AUTOMATION_APPROVE_OPERATION_DEFINITION_ID,
-                            payload=AutomationOperationRequest(
-                                profile_id=profile_id,
-                                request_id=submitted.request_id,
-                                review_digest=submitted.review_digest,
-                            ),
-                            password=PROFILE_INPUT.encode(),
-                        )
-                        assert failed.projection.terminal_condition is OperationTerminalCondition.REFUSED
-                        assert failed.projection.effect is OperationEffect.UNKNOWN
-                    finally:
-                        done.set()
-                        polling.result()
-                    state = store.enrollment_state()
-                    assert len(state.requests) == len(state.grants) == 1
-                    assert state.requests[0].stage is EnrollmentStage.CANDIDATE
-                    assert state.requests[0].credential_reference is not None
-                    assert state.grants[0].grant.state is AuthorityState.PENDING
-                    assert len(state.grants[0].keys) == 1
-                    assert state.grants[0].keys[0].key.state is AuthorityState.PENDING
-                    reference = str(state.requests[0].credential_reference)
-                    assert ("write", CLIENT_NAMESPACE, reference) in client_native.events
-                    assert (CLIENT_NAMESPACE, reference) not in client_native.items
-                    assert (CLIENT_NAMESPACE, reference) not in server_native.items
-                    assert client.inspect(timeout=5) is not None
-                    with pytest.raises(AutomationCustodyError):
-                        client.credential()
-
-                    _, _, wrong_decline = _submit_operation(
+                    _, _, failed = _submit_operation(
                         human,
                         profile_id=profile_id,
                         session_id=human_id,
-                        definition_id=AUTOMATION_DECLINE_OPERATION_DEFINITION_ID,
-                        payload=AutomationOperationRequest(
-                            profile_id=profile_id, request_id=submitted.request_id, review_digest="0" * 64
-                        ),
-                    )
-                    assert wrong_decline.projection.terminal_condition is OperationTerminalCondition.REFUSED
-                    assert store.enrollment_state().requests[0].stage is EnrollmentStage.CANDIDATE
-
-                    decline_contract, decline_op, declined = _submit_operation(
-                        human,
-                        profile_id=profile_id,
-                        session_id=human_id,
-                        definition_id=AUTOMATION_DECLINE_OPERATION_DEFINITION_ID,
+                        definition_id=AUTOMATION_APPROVE_OPERATION_DEFINITION_ID,
                         payload=AutomationOperationRequest(
                             profile_id=profile_id,
                             request_id=submitted.request_id,
                             review_digest=submitted.review_digest,
                         ),
+                        password=PROFILE_INPUT.encode(),
                     )
-                    assert declined.projection.terminal_condition is OperationTerminalCondition.SUCCEEDED
-                    assert declined.projection.effect is OperationEffect.UPDATED
-                    declined_receipt = (
-                        OperationResultProjectionSuccessV1[AutomationReceiptProjection]
-                        .model_validate_json(
-                            json.dumps(
-                                _result(
-                                    human,
-                                    profile_id=profile_id,
-                                    session_id=human_id,
-                                    contract=decline_contract,
-                                    submitted=decline_op,
-                                    observed=declined,
-                                ).document
-                            )
+                    assert failed.projection.terminal_condition is OperationTerminalCondition.REFUSED
+                    assert failed.projection.effect is OperationEffect.UNKNOWN
+                finally:
+                    done.set()
+                    polling.result()
+                state = store.enrollment_state()
+                assert len(state.requests) == len(state.grants) == 1
+                assert state.requests[0].stage is EnrollmentStage.CANDIDATE
+                assert state.requests[0].credential_reference is not None
+                assert state.grants[0].grant.state is AuthorityState.PENDING
+                assert len(state.grants[0].keys) == 1
+                assert state.grants[0].keys[0].key.state is AuthorityState.PENDING
+                reference = str(state.requests[0].credential_reference)
+                assert ("write", CLIENT_NAMESPACE, reference) in client_native.events
+                assert (CLIENT_NAMESPACE, reference) not in client_native.items
+                assert (CLIENT_NAMESPACE, reference) not in server_native.items
+                assert client.inspect(timeout=5) is not None
+                with pytest.raises(AutomationCustodyError):
+                    client.credential()
+
+                _, _, wrong_decline = _submit_operation(
+                    human,
+                    profile_id=profile_id,
+                    session_id=human_id,
+                    definition_id=AUTOMATION_DECLINE_OPERATION_DEFINITION_ID,
+                    payload=AutomationOperationRequest(
+                        profile_id=profile_id, request_id=submitted.request_id, review_digest="0" * 64
+                    ),
+                )
+                assert wrong_decline.projection.terminal_condition is OperationTerminalCondition.REFUSED
+                assert store.enrollment_state().requests[0].stage is EnrollmentStage.CANDIDATE
+
+                decline_contract, decline_op, declined = _submit_operation(
+                    human,
+                    profile_id=profile_id,
+                    session_id=human_id,
+                    definition_id=AUTOMATION_DECLINE_OPERATION_DEFINITION_ID,
+                    payload=AutomationOperationRequest(
+                        profile_id=profile_id,
+                        request_id=submitted.request_id,
+                        review_digest=submitted.review_digest,
+                    ),
+                )
+                assert declined.projection.terminal_condition is OperationTerminalCondition.SUCCEEDED
+                assert declined.projection.effect is OperationEffect.UPDATED
+                declined_receipt = (
+                    OperationResultProjectionSuccessV1[AutomationReceiptProjection]
+                    .model_validate_json(
+                        json.dumps(
+                            _result(
+                                human,
+                                profile_id=profile_id,
+                                session_id=human_id,
+                                contract=decline_contract,
+                                submitted=decline_op,
+                                observed=declined,
+                            ).document
                         )
-                        .projection
                     )
-                    assert declined_receipt.stage is EnrollmentStage.DECLINED
-                    assert declined_receipt.request_id == submitted.request_id
-                    assert declined_receipt.review_digest == submitted.review_digest
-                    assert store.enrollment_state().requests[0].stage is EnrollmentStage.DECLINED
-                    assert store.snapshot().grants[0].state is AuthorityState.PENDING
-                    assert store.snapshot().keys[0].state is AuthorityState.PENDING
-                finally:
-                    requester.close()
-                    human.close()
+                    .projection
+                )
+                assert declined_receipt.stage is EnrollmentStage.DECLINED
+                assert declined_receipt.request_id == submitted.request_id
+                assert declined_receipt.review_digest == submitted.review_digest
+                assert store.enrollment_state().requests[0].stage is EnrollmentStage.DECLINED
+                assert store.snapshot().grants[0].state is AuthorityState.PENDING
+                assert store.snapshot().keys[0].state is AuthorityState.PENDING
             finally:
-                primary = sys.exception()
-                stop.set()
-                try:
-                    try:
-                        running.result()
-                    except Exception:
-                        if primary is None:
-                            raise
-                finally:
-                    endpoint.close()
+                requester.close()
+                human.close()
