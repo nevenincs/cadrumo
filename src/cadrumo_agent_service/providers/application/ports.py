@@ -124,7 +124,6 @@ class ProviderCatalogUnavailableReason(StrEnum):
 
     AGENT_NOT_FOUND = "agent_not_found"
     AGENT_FAILED = "agent_failed"
-    AGENT_TIMED_OUT = "agent_timed_out"
     CATALOG_MALFORMED = "catalog_malformed"
 
 

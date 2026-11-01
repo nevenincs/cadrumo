@@ -77,11 +77,6 @@ def _source(catalog: ProviderCatalogSource) -> ProviderSettingsAgentCredentialSo
             AgentHostRefusal.LAUNCH_FAILED,
             AgentLauncherRefusal.SERVICE_FAILED,
         ),
-        (
-            ProviderCatalogUnavailableReason.AGENT_TIMED_OUT,
-            AgentHostRefusal.LAUNCH_FAILED,
-            AgentLauncherRefusal.SERVICE_FAILED,
-        ),
     ],
 )
 def test_catalog_failure_retains_its_category_and_safe_diagnostic(
