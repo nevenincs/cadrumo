@@ -698,37 +698,7 @@ def test_graded_admission_carries_the_canonical_review_of_a_calculated_unit(repo
 
 def test_review_joins_real_persisted_calculation_into_origin_layers(repos: Repos) -> None:
     work_repo, calculation_repo, filing_repo, verification_repo, bucket_event_repo = repos
-    work_unit = _persist_work_unit(repos)
-    profile = load_test_profile_record(_BUCKET_ID)
-    replace_test_profile_record(
-        profile.model_copy(
-            update={
-                "facts": (
-                    *profile.facts,
-                    UserProfileFact(path="iva.m303_regime_composition", value="general"),
-                    UserProfileFact(path="iva.redeme_enrolled", value=False),
-                    UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-                    UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-                    UserProfileFact(
-                        path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled",
-                        value=False,
-                    ),
-                ),
-            },
-        ),
-    )
-    with calculation_ports_for_test(
-        bucket_id=work_unit.bucket_id,
-        work_unit_repository=work_repo,
-        calculation_repository=calculation_repo,
-        bucket_event_repository=bucket_event_repo,
-    ) as _calculation_ports_413:
-        revision = calculate_modelo_revision(
-            work_unit.work_unit_id,
-            casilla_inputs=DEFAULT_130_BASELINE_INPUTS,
-            binding_values={**DEFAULT_130_BINDING_VALUES, _M130_INCOME_BINDING: Decimal("9000")},
-            ports=_calculation_ports_413,
-        )
+    work_unit, revision = _calculated_m130(repos)
 
     with bundled_indexed_authority().operation() as operation:
         review = build_modelo_work_review(
