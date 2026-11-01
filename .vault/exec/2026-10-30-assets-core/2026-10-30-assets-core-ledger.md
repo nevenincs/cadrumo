@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#assets-core'
 date: '2026-10-30'
-modified: '2026-10-30'
+modified: '2026-11-01'
 body_schema: 'body-v2'
-body_hash: 'sha256:fae695b6c47c953692af9c1a2bfbb3bff411ffbd09f5b78302ae4464a1ce9687'
+body_hash: 'sha256:cc4479dcf4689da1e92753ec434c69a18eddcd93f4d34a49afe37ae0a69ca2d8'
 related:
   - "[[2026-10-30-assets-core-plan]]"
 ---
@@ -164,6 +164,14 @@ related:
 - `S11` `verify:` `just check-import-boundaries` -> `fail`
 - `S11` `verify:` `just check-types` -> `fail`
 - `S11` `by:` `vaultspec-high-executor`
+- `S14` `M` `.vault/audit/2026-09-21-assets-core-audit.md`
+- `S14` `verify:` `integrated review, two rounds, findings in audit` -> `pass`
+- `S17` `M` `src/cadrumo/entrypoints/tui/ledger/actividad_asset.py`
+- `S17` `M` `src/cadrumo/application/actividad_asset/operations.py`
+- `S17` `M` `src/cadrumo/application/aggregation/modelo_bindings_actividad_assets.py`
+- `S17` `M` `src/cadrumo/application/filing/export_xml_value_limits.py`
+- `S17` `verify:` `domain 6985 passed` -> `pass`
+- `S17` `verify:` `tui and ledger tests 1449 passed, 1 failed` -> `fail`
 
 ## Notes
 
@@ -180,3 +188,5 @@ related:
 - `S15` Commits c96ed24d34, 7afacfdf69 and 21ed48d88b. MCP has a schema contract test only, no refusal run through the MCP server.
 - `S11` Commits b5977bc267 and bc9a05e9ac. check-import-boundaries: `tool_failure,` loadability unavailable, zero hard findings, while another session edits dev/quality import tooling; rerun at review. check-types: 6 diagnostics outside S11's files.
 - `S11` Modelo 100 gain, loss, baja and excess casillas have no bindings yet, so those rows are blocking `unrouted_observation` notes under the disposal ADR; clave 1626 and agrarian excess remain unestablished.
+- `S14` No independent review after the final fix round.
+- `S17` Open failures: 18 wording tests after 363afdf50f translated dotacion to English; installed runtime not rebuilt, no live journey run.
