@@ -56,6 +56,7 @@ import {
 import type { SetupProps } from "../setup/setupProps";
 import { setupCall, type SetupCall } from "../setup/setupModel";
 import { grammarText } from "../setup/setupWords";
+import { formatUnitPrice } from "../unitPrice";
 import { useWritePause, WriteHold } from "../WritePause";
 import {
   blankExtra,
@@ -2499,10 +2500,7 @@ export function StockPane({
                 sort: (movement) => rankDecimal(movement.unit_cost?.decimal),
                 cell: (movement) =>
                   movement.unit_cost
-                    ? formatDecimal(locale, movement.unit_cost.decimal, {
-                        minFraction: 2,
-                        maxFraction: 6,
-                      })
+                    ? formatUnitPrice(locale, movement.unit_cost.decimal)
                     : "—",
               },
               {
