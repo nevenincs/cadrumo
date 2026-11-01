@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import date
 from typing import cast
 
@@ -11,8 +12,10 @@ from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
+from cadrumo.domain.calculations.registry.schema_revision_members import DependencyClassificationDefinition
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 
 from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
@@ -58,12 +61,13 @@ def test_committed_modelo_720_validates_against_catalogues() -> None:
     assert set(modelo.revisions) == {"2013-y-siguientes"}
 
 
-def test_validator_rejects_missing_factual_evidence_previous_filing_classification() -> None:
-    """The actual prior-year valuations require their Modelo 720 classification.
+def _modelo_720_with_previous_filing_classification(
+    rewrite: Callable[[DependencyClassificationDefinition], DependencyClassificationDefinition | None],
+) -> tuple[ModeloDefinition, RegistryCatalogues]:
+    """The loaded Modelo 720 with its prior-year classification rewritten, or removed when ``rewrite`` returns ``None``.
 
-    This removes the loaded revision's sole factual-evidence classification and
-    its construct membership together, so the refusal proves the direct
-    previous-filing completeness gate rather than a dangling construct id.
+    The classification leaves its construct's membership list in both cases, so
+    a refusal proves the direct previous-filing gate rather than a dangling id.
     """
     modelo, catalogues = _load_modelo_720()
     revision = modelo.revisions["2013-y-siguientes"]
@@ -76,10 +80,16 @@ def test_validator_rejects_missing_factual_evidence_previous_filing_classificati
             ),
         },
     )
+    replacement = rewrite(classification)
     mutated_revision = revision.model_copy(
         update={
             "dependency_classifications": tuple(
-                item for item in revision.dependency_classifications if item.id != classification.id
+                item
+                for item in (
+                    replacement if candidate.id == classification.id else candidate
+                    for candidate in revision.dependency_classifications
+                )
+                if item is not None
             ),
             "constructs": tuple(item if item.id != construct.id else mutated_construct for item in revision.constructs),
         },
@@ -87,6 +97,17 @@ def test_validator_rejects_missing_factual_evidence_previous_filing_classificati
     mutated_modelo = modelo.model_copy(
         update={"revisions": {**modelo.revisions, revision.id: mutated_revision}},
     )
+    return mutated_modelo, catalogues
+
+
+def test_validator_rejects_missing_factual_evidence_previous_filing_classification() -> None:
+    """The actual prior-year valuations require their Modelo 720 classification.
+
+    This removes the loaded revision's sole factual-evidence classification and
+    its construct membership together, so the refusal proves the direct
+    previous-filing completeness gate rather than a dangling construct id.
+    """
+    mutated_modelo, catalogues = _modelo_720_with_previous_filing_classification(lambda _classification: None)
 
     with pytest.raises(
         RegistryValidationError,
@@ -97,31 +118,10 @@ def test_validator_rejects_missing_factual_evidence_previous_filing_classificati
 
 def test_validator_rejects_non_dependency_previous_filing_classification() -> None:
     """A direct prior-year baseline cannot be re-labelled as non-dependent."""
-    modelo, catalogues = _load_modelo_720()
-    revision = modelo.revisions["2013-y-siguientes"]
-    classification = next(item for item in revision.dependency_classifications if item.source_modelo == "720")
-    construct = next(item for item in revision.constructs if classification.id in item.dependency_classifications)
-    mutated_construct = construct.model_copy(
-        update={
-            "dependency_classifications": tuple(
-                item for item in construct.dependency_classifications if item != classification.id
-            ),
-        },
-    )
-    mutated_classification = classification.model_copy(
-        update={"treatment": "non_dependency", "target_constructs": (), "binding_refs": ()},
-    )
-    mutated_revision = revision.model_copy(
-        update={
-            "dependency_classifications": tuple(
-                mutated_classification if item.id == classification.id else item
-                for item in revision.dependency_classifications
-            ),
-            "constructs": tuple(item if item.id != construct.id else mutated_construct for item in revision.constructs),
-        },
-    )
-    mutated_modelo = modelo.model_copy(
-        update={"revisions": {**modelo.revisions, revision.id: mutated_revision}},
+    mutated_modelo, catalogues = _modelo_720_with_previous_filing_classification(
+        lambda classification: classification.model_copy(
+            update={"treatment": "non_dependency", "target_constructs": (), "binding_refs": ()},
+        )
     )
 
     with pytest.raises(
