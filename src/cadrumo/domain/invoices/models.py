@@ -37,7 +37,7 @@ from ...core.identity.bucket import BucketId
 from ...core.identity.hex_ids import InvoiceId
 from ...core.identity.tax_id import TaxIdIdentityToken
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core.money.rounding import CENT, round_to_cents
+from ...core.money.rounding import round_to_cents
 from ...core.time.utc import UtcInstant, parse_iso_datetime
 from ...core.type_adapters import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER
 from ..calculations.registry.errors import RegistryValidationError
@@ -71,6 +71,22 @@ from .enums import (
     resolve_iva_rate_token,
 )
 from .errors import InvoiceValidationError
+from .figures import (
+    figure_refusal,
+    invoice_total_findings,
+    line_amount_finding,
+    line_iva_finding,
+    line_rate_refusal_finding,
+    line_subtotal_finding,
+    nonnumeric_invoice_findings,
+    quantity_finding,
+    raise_first_figure_finding,
+    recargo_ceiling_finding,
+    recargo_sign_finding,
+    retention_findings,
+    suplido_finding,
+    total_sign_finding,
+)
 
 if TYPE_CHECKING:
     pass
@@ -79,17 +95,6 @@ from ...core.time.clock import today_madrid
 from .validators import (
     is_eu_member_state_code,
 )
-
-"""Rounding slack allowed between a declared retención amount and rate.
-
-The invoice-level totals are compared *exactly* because each is a sum of
-line figures that were themselves already rounded to the cent. A retención
-amount is not a sum: it is a rate applied to the base, so the recorded figure
-legitimately differs from the recomputed product in the last cent depending on
-where the issuer rounded. One cent is the same slack
-:data:`~core.money.rounding.CENT` grants the line-level ``subtotal * iva_rate``
-product, for the same reason.
-"""
 
 _SIMPLIFICADA_MANDATORY_TAX_ID_FACT_ID = "invoice-simplificada-counterparty-tax-id-applicability"
 
@@ -283,24 +288,20 @@ class InvoiceLine(BaseModel):
     @classmethod
     @pydantic_validation_boundary
     def _require_positive_quantity(cls, value: Decimal) -> Decimal:
-        if value <= Decimal("0"):
-            raise InvoiceValidationError("quantity must be strictly positive")
+        raise_first_figure_finding((quantity_finding(value),))
         return value
 
     @field_validator("unit_price", "subtotal", "iva_amount")
     @classmethod
     @pydantic_validation_boundary
     def _require_non_negative(cls, value: Decimal) -> Decimal:
-        if value < Decimal("0"):
-            raise InvoiceValidationError("monetary value must be non-negative")
+        raise_first_figure_finding((line_amount_finding(value),))
         return value
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _validate_arithmetic(self) -> Self:
-        expected_subtotal = (self.quantity * self.unit_price).quantize(Decimal("0.0001"))
-        if abs(self.subtotal - expected_subtotal) > CENT:
-            raise InvoiceValidationError("subtotal must equal quantity * unit_price within 1 cent")
+        raise_first_figure_finding((line_subtotal_finding(self.quantity, self.unit_price, self.subtotal),))
         # IVA-rate arithmetic has an explicit devengo-date dependency.  A line
         # deliberately has no date of its own, so the enclosing Invoice checks
         # it once its operation/issue date is available rather than parsing a
@@ -639,8 +640,7 @@ class Invoice(BaseModel):
     @classmethod
     @pydantic_validation_boundary
     def _require_non_negative_totals(cls, value: Decimal) -> Decimal:
-        if value < Decimal("0"):
-            raise InvoiceValidationError("invoice totals must be non-negative")
+        raise_first_figure_finding((total_sign_finding(value),))
         return value
 
     @field_validator("lines")
@@ -719,70 +719,39 @@ class Invoice(BaseModel):
             try:
                 rate = answer_once(iva_rate_percentage, line.iva_rate, devengo_date)
             except IvaRateNotFoundError as exc:
-                raise InvoiceValidationError(
-                    f"line rate {line.iva_rate.name} was not in force on {devengo_date.isoformat()}: {exc}",
-                ) from exc
+                raise figure_refusal(line_rate_refusal_finding(line.iva_rate, devengo_date, exc)) from exc
             if line.oss_rate_kind is not None:
                 continue
-            if rate is None:
-                if line.iva_amount != Decimal("0"):
-                    raise InvoiceValidationError("iva_amount must be zero for nonnumeric IVA lines")
-                continue
-            expected_iva = (line.subtotal * rate).quantize(Decimal("0.0001"))
-            if abs(line.iva_amount - expected_iva) > CENT:
-                raise InvoiceValidationError("iva_amount must equal subtotal * iva_rate within 1 cent")
+            raise_first_figure_finding((line_iva_finding(line.subtotal, line.iva_amount, rate),))
         return self
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _validate_totals_and_exempt_invariants(self) -> Self:
-        line_subtotal_sum = sum((line.subtotal for line in self.lines), start=Decimal("0"))
-        line_iva_sum = sum((line.iva_amount for line in self.lines), start=Decimal("0"))
-        _normalization.require_equal(
-            self.base_total,
-            line_subtotal_sum,
-            "base_total must equal the exact sum of line subtotals",
-        )
-        _normalization.require_equal(
-            self.iva_total,
-            line_iva_sum,
-            "iva_total must equal the exact sum of line iva amounts",
-        )
-        recargo = self.recargo_amount or Decimal("0")
-        suplido = self.suplido_amount or Decimal("0")
-        _normalization.require_equal(
-            self.grand_total,
-            self.base_total + self.iva_total + recargo + suplido,
-            "grand_total must equal base_total + iva_total + recargo_amount + suplido_amount exactly",
+        raise_first_figure_finding(
+            invoice_total_findings(
+                base_total=self.base_total,
+                iva_total=self.iva_total,
+                grand_total=self.grand_total,
+                line_subtotals=[line.subtotal for line in self.lines],
+                line_iva_amounts=[line.iva_amount for line in self.lines],
+                recargo=self.recargo_amount,
+                suplido=self.suplido_amount,
+            )
         )
         devengo_date = self.operation_date or self.issued_at
         all_non_numeric = all(
             answer_once(iva_rate_percentage, line.iva_rate, devengo_date) is None for line in self.lines
         )
         if all_non_numeric:
-            # Checked before the grand-total equality below so the operator is
-            # told which component is impossible, rather than being handed a
-            # totals mismatch they would have to decompose themselves. The
-            # recargo rides on the cuota of a taxable supply (LIVA art. 161),
-            # so a supply bearing no cuota by law bears no recargo either. A
-            # suplido is unrelated to whether the underlying supply is taxable
-            # -- it is a disbursement made in the client's name (LIVA
-            # art. 78.Tres.3.º) -- so it stays permitted here.
-            _normalization.raise_first_invoice_violation(
-                (
-                    (
-                        self.iva_total != Decimal("0"),
-                        "iva_total must be zero when every line is nonnumeric",
-                    ),
-                    (
-                        recargo != Decimal("0"),
-                        "recargo_amount must be zero when every line is nonnumeric",
-                    ),
-                    (
-                        self.grand_total != self.base_total + suplido,
-                        "grand_total must equal base_total + suplido_amount when every line is nonnumeric",
-                    ),
-                ),
+            raise_first_figure_finding(
+                nonnumeric_invoice_findings(
+                    base_total=self.base_total,
+                    iva_total=self.iva_total,
+                    grand_total=self.grand_total,
+                    recargo=self.recargo_amount,
+                    suplido=self.suplido_amount,
+                )
             )
         return self
 
@@ -822,10 +791,7 @@ class Invoice(BaseModel):
         proportion of nothing, and inferring the amount from it would
         manufacture a figure the document never stated.
         """
-        _require_non_negative_retention_amount(self.retention_amount)
-        _validate_retention_rate_shape(self.retention_rate, self.retention_amount)
-        _require_retention_amount_within_base(self.retention_amount, self.base_total)
-        _validate_retention_rate_amount(self.retention_rate, self.retention_amount, self.base_total)
+        raise_first_figure_finding(retention_findings(self.retention_rate, self.retention_amount, self.base_total))
         return self
 
     @model_validator(mode="after")
@@ -862,14 +828,9 @@ class Invoice(BaseModel):
         published pairing when one cuota-bearing tier is identifiable; a
         multi-tier invoice remains unattributed rather than guessed.
         """
-        if self.recargo_amount is None:
-            return self
-        _normalization.require_optional_non_negative(self.recargo_amount, "recargo_amount must be non-negative")
-        if self.recargo_amount > self.iva_total:
-            raise InvoiceValidationError(
-                "recargo_amount must not exceed iva_total; every recargo tier is a smaller "
-                "percentage than the IVA rate it accompanies (LIVA art. 161)",
-            )
+        raise_first_figure_finding(
+            (recargo_sign_finding(self.recargo_amount), recargo_ceiling_finding(self.recargo_amount, self.iva_total))
+        )
         return self
 
     @model_validator(mode="after")
@@ -895,9 +856,7 @@ class Invoice(BaseModel):
         statement about a suplido"; an explicit zero is "one was considered
         and none arose".
         """
-        if self.suplido_amount is None:
-            return self
-        _normalization.require_optional_non_negative(self.suplido_amount, "suplido_amount must be non-negative")
+        raise_first_figure_finding((suplido_finding(self.suplido_amount),))
         return self
 
     @model_validator(mode="after")
@@ -1190,44 +1149,3 @@ def _normalise_linked_transaction_ids(value: object) -> tuple[str, ...]:
 
 def _is_hex_digest(value: str, *, length: int) -> bool:
     return len(value) == length and all(char in "0123456789abcdef" for char in value)
-
-
-def _require_non_negative_retention_amount(amount: Decimal | None) -> None:
-    if amount is not None and amount < Decimal("0"):
-        raise InvoiceValidationError(
-            "retention_amount must be non-negative",
-            context={"fields": ("retention_amount",)},
-        )
-
-
-def _validate_retention_rate_shape(rate: Decimal | None, amount: Decimal | None) -> None:
-    if rate is not None:
-        if rate < Decimal("0") or rate > Decimal("1"):
-            raise InvoiceValidationError(
-                "retention_rate must be a fraction between 0 and 1 (0.15 for a 15 % retención), not a percentage",
-                context={"fields": ("retention_rate",)},
-            )
-        if amount is None:
-            raise InvoiceValidationError(
-                "retention_rate requires retention_amount; a rate alone declares no withheld figure",
-                context={"fields": ("retention_rate", "retention_amount")},
-            )
-
-
-def _require_retention_amount_within_base(amount: Decimal | None, base: Decimal) -> None:
-    if amount is not None and amount > base:
-        raise InvoiceValidationError(
-            "retention_amount must not exceed base_total; the retención base is the "
-            "base imponible (ingresos íntegros), not the IVA-inclusive total",
-            context={"fields": ("retention_amount", "base_total")},
-        )
-
-
-def _validate_retention_rate_amount(rate: Decimal | None, amount: Decimal | None, base: Decimal) -> None:
-    if rate is not None and amount is not None:
-        expected_retencion = (base * rate).quantize(Decimal("0.0001"))
-        if abs(amount - expected_retencion) > CENT:
-            raise InvoiceValidationError(
-                "retention_amount must equal base_total * retention_rate within 1 cent",
-                context={"fields": ("retention_rate", "retention_amount", "base_total")},
-            )

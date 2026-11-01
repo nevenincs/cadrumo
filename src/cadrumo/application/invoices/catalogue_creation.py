@@ -55,6 +55,7 @@ from ...domain.invoices.enums import (
     resolve_iva_rate_slot as resolve_iva_rate_slot_for_date,
 )
 from ...domain.invoices.errors import InvoiceValidationError
+from ...domain.invoices.figures import computed_grand_total, computed_line_iva, rounded_line_totals
 from ...domain.invoices.models import Invoice, InvoiceLine
 from ...domain.iva.errors import IvaRateNotFoundError
 from ...domain.iva.schema import InvoiceKind, IvaCategory
@@ -271,7 +272,7 @@ def _resolve_invoice_line_totals(
     if taxable_base is None:
         raise InvoiceValidationError("taxable_base is required when lines are not supplied")
     base_total = round_to_cents(taxable_base)
-    iva_amount = Decimal("0") if iva_percentage is None else round_to_cents(taxable_base * iva_percentage)
+    iva_amount = computed_line_iva(taxable_base, iva_percentage)
     return (
         base_total,
         iva_amount,
@@ -295,8 +296,10 @@ def _totals_from_supplied_invoice_lines(
         raise InvoiceValidationError("lines must not be empty")
     if not all(isinstance(item, InvoiceLine) for item in lines):
         raise InvoiceValidationError("lines must be InvoiceLine records")
-    base_total = round_to_cents(sum((item.subtotal for item in lines), Decimal("0")))
-    iva_total = round_to_cents(sum((item.iva_amount for item in lines), Decimal("0")))
+    base_total, iva_total = rounded_line_totals(
+        [item.subtotal for item in lines],
+        [item.iva_amount for item in lines],
+    )
     return base_total, iva_total, [item.model_dump(mode="json") for item in lines]
 
 
@@ -568,8 +571,7 @@ def _build_pinned_catalogue_invoice(
         # while a retencion is settled outside it, which is why only the recargo
         # appears here. The model re-checks this identity exactly, so a caller that
         # states a recargo the lines do not support is refused rather than balanced.
-        recargo = recargo_amount or Decimal("0")
-        grand_total = base_total + iva_total + recargo
+        grand_total = computed_grand_total(base_total, iva_total, recargo_amount)
         invoice_payload: dict[str, object] = {
             "bucket_id": bucket_id,
             "kind": kind.value,
