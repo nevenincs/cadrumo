@@ -356,8 +356,7 @@ def scan_complexity(
     return measure_population(source_population(scope, tests=tests), cognitive_threshold=cognitive_threshold)
 
 
-def main() -> int:
-    """Render the live scan; findings are advisory and tool failure is not."""
+def _parse_arguments() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Report every current code-complexity hotspot.")
     parser.add_argument("--tests", action="store_true", help="Audit test files instead of production packages.")
     parser.add_argument(
@@ -374,6 +373,20 @@ def main() -> int:
     args = parser.parse_args()
     if args.gate and args.threshold != DEFAULT_COGNITIVE_THRESHOLD:
         parser.error("--gate requires the fixed cognitive complexity threshold of 20")
+    return args
+
+
+def _test_tree_gate_status(scan: ComplexityScan) -> int:
+    failing = tree_gate_findings(scan)
+    dev_files = [hit for hit in scan.cyclomatic if hit.path.startswith(f"{DEVELOPMENT_TOOLING}/")]
+    print(f"test-tree gate: {len(failing)} rank E/F or oversized-module finding(s) in {', '.join(SOURCE_PACKAGES)}")
+    print(f"  dev test files (report only): {sum(hit.grade >= _TEST_GATE_CC_RANK for hit in dev_files)} E/F")
+    return FAILED if failing else OK
+
+
+def main() -> int:
+    """Render the live scan; findings are advisory and tool failure is not."""
+    args = _parse_arguments()
     try:
         scan = scan_complexity(tests=args.tests, cognitive_threshold=args.threshold)
     except (OSError, RuntimeError) as exc:
@@ -388,11 +401,7 @@ def main() -> int:
     for line in scan.rendered_findings():
         print(f"  {line}")
     if args.gate and args.tests:
-        failing = tree_gate_findings(scan)
-        dev_files = [hit for hit in scan.cyclomatic if hit.path.startswith(f"{DEVELOPMENT_TOOLING}/")]
-        print(f"test-tree gate: {len(failing)} rank E/F or oversized-module finding(s) in {', '.join(SOURCE_PACKAGES)}")
-        print(f"  dev test files (report only): {sum(hit.grade >= _TEST_GATE_CC_RANK for hit in dev_files)} E/F")
-        return FAILED if failing else OK
+        return _test_tree_gate_status(scan)
     return FAILED if args.gate and scan.finding_count else OK
 
 
