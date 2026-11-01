@@ -128,7 +128,7 @@ _FACT_CONTAINER_NON_PROFILE_EXCLUSIONS = (
         "schema-minimum fragment composed with the IVA block by each complete-profile fixture",
     ),
     _ProfileShapeExclusion(
-        "src/cadrumo/application/tests/test_workbench_generation.py",
+        "src/cadrumo/application/tests/test_workbench_generation_home.py",
         "test_an_incomplete_profile_publishes_reasoned_zones_instead_of_failing",
         "deliberately incomplete profile proves the workbench reasons about the gap instead of failing",
     ),
