@@ -47,6 +47,11 @@ class OperationRequestStoragePolicy(StrEnum):
     SECURE_REFERENCE = "secure_reference"
     CREDENTIAL_FREE_JOURNAL = "credential_free_journal"
 
+    @classmethod
+    def for_private_request(cls, private: bool) -> OperationRequestStoragePolicy:
+        """A request that carries private data is stored by secure reference, never in the plain journal."""
+        return cls.SECURE_REFERENCE if private else cls.CREDENTIAL_FREE_JOURNAL
+
 
 class OperationConflictScope(StrEnum):
     """Lease scope used to exclude conflicting operation owners."""

@@ -218,11 +218,7 @@ def _definition(
     effects = frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN})
     if mutation:
         effects = effects | {OperationEffect.UPDATED}
-    request_storage = (
-        OperationRequestStoragePolicy.SECURE_REFERENCE
-        if sensitive_input
-        else OperationRequestStoragePolicy.CREDENTIAL_FREE_JOURNAL
-    )
+    request_storage = OperationRequestStoragePolicy.for_private_request(sensitive_input)
     sensitive = (
         OperationSensitiveInputPolicy.SECURE_REFERENCE if sensitive_input else OperationSensitiveInputPolicy.NONE
     )
