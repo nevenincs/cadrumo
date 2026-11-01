@@ -3,6 +3,10 @@
 from __future__ import annotations
 
 import re
+from functools import lru_cache
+from importlib.resources import files
+
+from cadrumo.core.spanish_postcode import SPANISH_PROVINCE_CODES
 
 from .signal_command_paths import command_path_pattern, registered_operation_id_pattern
 from .signal_contracts import DictionaryLike
@@ -95,6 +99,49 @@ def is_known_residence_region_label(locale: str, key: str, value: str) -> bool:
         return False
     region = match.group("profile") or match.group("wizard")
     return value in _RESIDENCE_REGION_LABELS.get(locale, {}).get(region, ())
+
+
+_PROVINCE_CHOICE_KEY_RE = re.compile(r"application\.modelo\.edit_choice\.province_code\.(\d{2})\Z")
+_PROVINCE_TABLE_START = "del domicilio fiscal del declarado según la relación siguiente:\n"
+_PROVINCE_TABLE_END = (
+    "En el caso de no residentes que no operen en territorio español mediante establecimiento permanente, "
+    "se consignará 99."
+)
+
+
+def _official_province_labels_from_table(source: str) -> dict[str, str]:
+    """Read the complete code/name table from the bundled official record design."""
+    if source.count(_PROVINCE_TABLE_START) != 1 or source.count(_PROVINCE_TABLE_END) != 1:
+        raise ValueError("official province table boundaries are missing or ambiguous")
+    table = source.split(_PROVINCE_TABLE_START, 1)[1].split(_PROVINCE_TABLE_END, 1)[0]
+    lines = table.splitlines()
+    if len(lines) != 2 * len(SPANISH_PROVINCE_CODES):
+        raise ValueError("official province table has an unexpected number of rows")
+    labels = dict(zip(lines[1::2], lines[::2], strict=True))
+    if (
+        set(labels) != set(SPANISH_PROVINCE_CODES)
+        or len(set(labels.values())) != len(labels)
+        or any(not label.strip() or label != label.strip() for label in labels.values())
+    ):
+        raise ValueError("official province table has invalid or duplicate entries")
+    return labels
+
+
+@lru_cache(maxsize=1)
+def _official_province_labels() -> dict[str, str]:
+    """Load the same official source that governs the edit-choice vocabulary."""
+    source = (
+        files("cadrumo")
+        .joinpath("_data", "corpus", "normatives", "html", "orden-eha-3481-2008.html.extracted.md")
+        .read_text(encoding="utf-8")
+    )
+    return _official_province_labels_from_table(source)
+
+
+def is_known_official_province_label(key: str, value: str) -> bool:
+    """Recognize only the complete official label for its actual province code."""
+    match = _PROVINCE_CHOICE_KEY_RE.fullmatch(key)
+    return match is not None and _official_province_labels().get(match.group(1)) == value
 
 
 # These are attested Hungarian endings on structural stems, not a productive

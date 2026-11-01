@@ -10,6 +10,7 @@ from .signal_contracts import DictionaryLike, ExcludedStructuralInventory
 from .signal_policy import LOCALES, SPELLING_SURFACES
 from .signal_spelling_reviewed_words import REVIEWED_LOCALE_SPELLINGS, REVIEWED_SPANISH_LEGAL_SPELLINGS
 from .signal_spelling_segments import (
+    is_known_official_province_label,
     is_known_residence_region_label,
     spanish_word_context,
     translation_spelling_segments,
@@ -381,7 +382,7 @@ def record_unknown_spelling_word(
     """Record unknown spelling word."""
     owner_cell = (owner_locale, key)
     value = cell_text[owner_cell]
-    if is_known_residence_region_label(owner_locale, key, value):
+    if is_known_official_province_label(key, value) or is_known_residence_region_label(owner_locale, key, value):
         return
     stem = word.removesuffix(".") if dictionary_locale == "hu" else word
     if _known_latin_phrase_word(value, stem):
