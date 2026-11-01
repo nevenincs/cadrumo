@@ -85,6 +85,9 @@ _RELATION_PREFILL_SOURCE = "relation_prefill"
 
 _M131_RENDIMIENTO_CASILLA: CasillaId = validated_casilla_id("01", surface="_M131_RENDIMIENTO_CASILLA")
 _M131_RESULTADO_CASILLA: CasillaId = validated_casilla_id("15", surface="_M131_RESULTADO_CASILLA")
+# Casilla 14 holds what earlier autoliquidaciones of the quarter already paid; an
+# original filing has none, so it is zero.
+_M131_PRIOR_RESULT_CASILLA: CasillaId = validated_casilla_id("14", surface="_M131_PRIOR_RESULT_CASILLA")
 _M100_EO_RENDIMIENTO_CASILLA: CasillaId = validated_casilla_id("1481", surface="_M100_EO_RENDIMIENTO_CASILLA")
 _M100_EO_SUM_CASILLA: CasillaId = validated_casilla_id("1482", surface="_M100_EO_SUM_CASILLA")
 _M100_EO_TOTAL_CASILLA: CasillaId = validated_casilla_id("1484", surface="_M100_EO_TOTAL_CASILLA")
@@ -172,6 +175,7 @@ def _seed_m131_quarters(objects: SecureObjectRepository) -> None:
                     casilla_values={
                         _M131_RENDIMIENTO_CASILLA: _M131_ANNUAL_RENDIMIENTO_ESTIMATE,
                         _M131_RESULTADO_CASILLA: pago,
+                        _M131_PRIOR_RESULT_CASILLA: Decimal("0"),
                     },
                 ),
             ),

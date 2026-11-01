@@ -113,6 +113,7 @@ _PULLED_C19_BY_QUARTER: dict[str, Decimal] = {
 _PULLED_C19_TOTAL = Decimal("1416.00")
 
 _M130_SOURCE_CASILLA: CasillaId = validated_casilla_id("19", surface="_M130_SOURCE_CASILLA")
+_M130_PRIOR_RESULT_CASILLA: CasillaId = validated_casilla_id("18", surface="_M130_PRIOR_RESULT_CASILLA")
 _M100_PAGOS_CASILLA: CasillaId = validated_casilla_id("0604", surface="_M100_PAGOS_CASILLA")
 _M100_BASE_LIQUIDABLE_NEGATIVA_GENERAL_CASILLA: CasillaId = validated_casilla_id(
     "1391",
@@ -162,6 +163,15 @@ def _synthetic_register_row(period_code: str) -> FiledDeclaracionObservation:
                 value_kind=CasillaValueKind.NUMERIC,
                 source_artefact_kind="submitted_file",
                 source_locator=f"submitted-file:{_M130_SOURCE_CASILLA}",
+                confidence=1.0,
+            ),
+            # An original autoliquidación's submitted file carries casilla 18 as zero.
+            ObservedCasillaValue(
+                casilla_id=_M130_PRIOR_RESULT_CASILLA,
+                value="0",
+                value_kind=CasillaValueKind.NUMERIC,
+                source_artefact_kind="submitted_file",
+                source_locator=f"submitted-file:{_M130_PRIOR_RESULT_CASILLA}",
                 confidence=1.0,
             ),
         ),

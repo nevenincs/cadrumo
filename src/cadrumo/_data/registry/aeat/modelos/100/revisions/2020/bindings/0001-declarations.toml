@@ -20,30 +20,59 @@ source_refs = ["aeat-dr-100-2020-dictionary", "aeat-renta-2020-manual-parte1", "
 [[revisions."2020".bindings.source_citations]]
 source_ref = "aeat-renta-2020-manual-parte1"
 required_text = ["Modelo 100", "ejercicio 2020"]
+# Casilla 0604 credits the pagos fraccionados actually paid, read from the
+# effective (latest) Modelo 130 autoliquidacion of each quarter. Casilla 19 is
+# casilla 17 minus casilla 18, where casilla 18 holds what earlier
+# autoliquidaciones of the same quarter already resulted a ingresar (zero when
+# none did). A positive casilla 19 is paid; a negative one is not paid and is
+# deducted from a later quarter through casilla 15. So each quarter paid
+# casilla 18 plus the positive part of casilla 19, which the
+# pagos_fraccionados_ingresados fold applies to the declared ["19", "18"] pair.
 [[revisions."2020".bindings]]
 id = "renta-modelo-130-pagos-fraccionados"
-provider = { kind = "relation_prefill", relation_kind = "cross_model_output", dependency_role = "instalment_to_final_settlement", source_modelo = "130", source_casilla_id = "19", temporal = { kind = "same_filing_year_periods", source_periods = ["1T", "2T", "3T", "4T"] } }
+provider = { kind = "relation_prefill", relation_kind = "cross_model_output", dependency_role = "instalment_to_final_settlement", source_modelo = "130", source_casilla_ids = ["19", "18"], temporal = { kind = "same_filing_year_periods", source_periods = ["1T", "2T", "3T", "4T"] } }
 applicability = { kind = "target_periods", periods = ["0A"] }
 value = { data_type = "money", channel = "decimal" }
-aggregation = { op = "sum" }
+aggregation = { op = "pagos_fraccionados_ingresados" }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
-source_refs = ["aeat-renta-2020-manual-parte1", "boe-modelo-100-2020-form"]
+source_refs = ["aeat-renta-2020-manual-parte1", "boe-modelo-100-2020-form", "aeat-modelo-130-instructions"]
 
 [[revisions."2020".bindings.source_citations]]
 source_ref = "aeat-renta-2020-manual-parte1"
 required_text = ["Modelo 100", "ejercicio 2020"]
+
+[[revisions."2020".bindings.source_citations]]
+source_ref = "aeat-modelo-130-instructions"
+required_text = [
+    "el resultado a ingresar de las autoliquidaciones, modelo 130, presentadas anteriormente por el mismo ejercicio y período",
+    "podrá deducirse en cualquiera de los siguientes pagos fraccionados",
+    "Si la cantidad consignada en la casilla 19 es positiva",
+]
+# The Modelo 131 instructions lay out the same chain: casilla 15 is casilla 13
+# minus casilla 14, casilla 14 holds what earlier autoliquidaciones of the same
+# quarter already resulted a ingresar, and a negative casilla 15 is deducted
+# from a later quarter rather than paid. Each quarter paid casilla 14 plus the
+# positive part of casilla 15.
 [[revisions."2020".bindings]]
 id = "renta-modelo-131-pagos-fraccionados"
-provider = { kind = "relation_prefill", relation_kind = "cross_model_output", dependency_role = "instalment_to_final_settlement", source_modelo = "131", source_casilla_id = "15", temporal = { kind = "same_filing_year_periods", source_periods = ["1T", "2T", "3T", "4T"] } }
+provider = { kind = "relation_prefill", relation_kind = "cross_model_output", dependency_role = "instalment_to_final_settlement", source_modelo = "131", source_casilla_ids = ["15", "14"], temporal = { kind = "same_filing_year_periods", source_periods = ["1T", "2T", "3T", "4T"] } }
 applicability = { kind = "target_periods", periods = ["0A"] }
 value = { data_type = "money", channel = "decimal" }
-aggregation = { op = "sum" }
+aggregation = { op = "pagos_fraccionados_ingresados" }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "rd-439-2007:art-110", "orden-eha-672-2007:art-3"]
-source_refs = ["aeat-renta-2020-manual-parte1", "boe-modelo-100-2020-form"]
+source_refs = ["aeat-renta-2020-manual-parte1", "boe-modelo-100-2020-form", "aeat-modelo-131-instructions"]
 
 [[revisions."2020".bindings.source_citations]]
 source_ref = "aeat-renta-2020-manual-parte1"
 required_text = ["Modelo 100", "ejercicio 2020"]
+
+[[revisions."2020".bindings.source_citations]]
+source_ref = "aeat-modelo-131-instructions"
+required_text = [
+    "el resultado a ingresar de las autoliquidaciones, modelo 131, presentadas anteriormente por el mismo ejercicio y período",
+    "podrá deducirse en cualquiera de los siguientes pagos fraccionados",
+    "Si la cantidad consignada en la casilla 15 es positiva",
+]
 # Eligibility flag for the LIRPF art. 64/75 anualidades por alimentos separate-
 # escala régimen. Art. 64 grants the separate escala only to a payer who
 # satisfies judicial anualidades "sin derecho a la aplicación por estos últimos

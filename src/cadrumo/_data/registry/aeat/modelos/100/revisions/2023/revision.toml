@@ -7886,19 +7886,19 @@ sequence_order = {legal_refs = [0, 1, 2, 3, 15, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13
 family = "dependency_classifications"
 selector = {revision = "2022", id = "renta-dep-130"}
 sequence_additions = {source_refs = ["aeat-renta-2023-manual-parte1", "boe-modelo-100-2023-form"]}
-sequence_removals = {source_refs = [0, 1]}
+sequence_removals = {source_refs = [1, 2]}
 
 [[revisions."2023".family_overrides]]
 family = "dependency_classifications"
 selector = {revision = "2022", id = "renta-dep-131"}
 sequence_additions = {source_refs = ["aeat-renta-2023-manual-parte1", "boe-modelo-100-2023-form"]}
-sequence_removals = {source_refs = [0, 1]}
+sequence_removals = {source_refs = [1, 2]}
 
 [[revisions."2023".family_overrides]]
 family = "constructs"
 selector = {revision = "2022", id = "renta-dependent-modelos"}
 sequence_additions = {source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-renta-2023-manual-parte1", "boe-modelo-100-2023-form"]}
-sequence_removals = {source_refs = [0, 1, 2, 3, 4]}
+sequence_removals = {source_refs = [2, 3, 4, 5, 6]}
 
 [[revisions."2023".family_overrides]]
 family = "constructs"
@@ -8222,13 +8222,13 @@ sequence_order = {source_refs = [1, 0]}
 family = "bindings"
 selector = {revision = "2022", id = "renta-modelo-130-pagos-fraccionados"}
 sequence_additions = {source_citations = [{source_ref = "aeat-renta-2023-manual-parte1", required_text = ["Modelo 100", "ejercicio 2023"]}], source_refs = ["aeat-renta-2023-manual-parte1", "boe-modelo-100-2023-form"]}
-sequence_removals = {source_citations = [0], source_refs = [0, 1]}
+sequence_removals = {source_citations = [1], source_refs = [1, 2]}
 
 [[revisions."2023".family_overrides]]
 family = "bindings"
 selector = {revision = "2022", id = "renta-modelo-131-pagos-fraccionados"}
 sequence_additions = {source_citations = [{source_ref = "aeat-renta-2023-manual-parte1", required_text = ["Modelo 100", "ejercicio 2023"]}], source_refs = ["aeat-renta-2023-manual-parte1", "boe-modelo-100-2023-form"]}
-sequence_removals = {source_citations = [0], source_refs = [0, 1]}
+sequence_removals = {source_citations = [1], source_refs = [1, 2]}
 
 [[revisions."2023".family_overrides]]
 family = "bindings"

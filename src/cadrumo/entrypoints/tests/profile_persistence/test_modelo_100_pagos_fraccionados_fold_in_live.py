@@ -5,16 +5,17 @@ ingresados") is a *computed* casilla whose registry formula
 ``renta-pagos-fraccionados-ingresados`` sums two cross-model relations:
 
 * ``renta-modelo-130-pagos-fraccionados`` — ``source_modelo='130'``,
-  ``source_casilla_id='19'``, ``source_periods=('1T','2T','3T','4T')``.
+  ``source_casilla_ids=('19', '18')``, ``source_periods=('1T','2T','3T','4T')``.
 * ``renta-modelo-131-pagos-fraccionados`` — ``source_modelo='131'``,
-  ``source_casilla_id='15'``, same four periods. A direct-estimation taxpayer
-  does not file M131, so that mutually exclusive leg resolves as explicit zero
-  without synthetic filings.
+  ``source_casilla_ids=('15', '14')``, same four periods. A direct-estimation
+  taxpayer does not file M131, so that mutually exclusive leg resolves as
+  explicit zero without synthetic filings.
 
 Each relation materialises into its declared ``target_binding``
-(``renta-modelo-130-pagos-fraccionados`` / ``-131-``), whose registry
-binding declares ``source='relation_prefill'`` with a ``sum`` aggregation over
-``source_casilla_id``. :class:`RelationPrefillSourceResolver` is enrolled in the
+(``renta-modelo-130-pagos-fraccionados`` / ``-131-``), whose registry binding
+declares ``source='relation_prefill'`` with the ``pagos_fraccionados_ingresados``
+aggregation: per quarter, the effective filing's previously paid result plus the
+positive part of its own result. :class:`RelationPrefillSourceResolver` is enrolled in the
 live source mesh, making the relation canonical for cross-modelo fold-in. This
 module proves the wiring works end-to-end on the LIVE operator calculate path
 (:func:`calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`):
@@ -102,6 +103,13 @@ _M130_C19_BY_PERIOD: dict[str, Decimal] = {
 }
 _EXPECTED_M130_TOTAL = Decimal("1520.00")
 _M130_SOURCE_CASILLA_ID: CasillaId = validated_casilla_id("19", surface="_M130_SOURCE_CASILLA_ID")
+_M130_PRIOR_RESULT_CASILLA_ID: CasillaId = validated_casilla_id("18", surface="_M130_PRIOR_RESULT_CASILLA_ID")
+_M130_LIQUIDACION_CASILLA_ID: CasillaId = validated_casilla_id("14", surface="_M130_LIQUIDACION_CASILLA_ID")
+_M130_NEGATIVOS_ANTERIORES_CASILLA_ID: CasillaId = validated_casilla_id(
+    "15",
+    surface="_M130_NEGATIVOS_ANTERIORES_CASILLA_ID",
+)
+_M130_DIFERENCIA_CASILLA_ID: CasillaId = validated_casilla_id("17", surface="_M130_DIFERENCIA_CASILLA_ID")
 _M100_ANNUAL_PERIOD = "0A"
 _M100_PAGOS_CASILLA: CasillaId = validated_casilla_id("0604", surface="_M100_PAGOS_CASILLA")
 _M100_BASE_LIQUIDABLE_NEGATIVA_GENERAL_CASILLA: CasillaId = validated_casilla_id(
@@ -122,34 +130,50 @@ def _seed_m130_quarters(
     obs_repo: CalculationObservationRepository,
     periods: tuple[str, ...],
 ) -> Decimal:
-    """Persist one M130/2024 filing observation per requested period carrying c19.
+    """Persist one original M130/2024 filing observation per requested period.
 
     Persisted through the production observation-persistence API
     (:meth:`CalculationObservationRepository.save_observation`) — the same write
     path the local-file carry flow uses — stamped with the non-official
-    ``app_filing`` source_kind. Returns the summed c19 over the seeded periods.
+    ``app_filing`` source_kind. Each filing is an original autoliquidación, so
+    casilla 18 carries zero. Returns the summed c19 over the seeded periods.
     """
     total = Decimal("0")
     for period in periods:
         value = _M130_C19_BY_PERIOD[period]
-        save_stamped_observation(
+        _save_m130_filing(
             obs_repo,
-            RegistryModeloObservation(
-                modelo="130",
-                filing_year=_YEAR,
-                period=period,
-                observations=registry_grounded_observations(
-                    modelo="130",
-                    filing_year=_YEAR,
-                    period=period,
-                    casilla_values={_M130_SOURCE_CASILLA_ID: value},
-                ),
-            ),
-            source_kind=APP_FILING_SOURCE_KIND,
-            captured_at=_T0,
+            period=period,
+            casilla_values={_M130_SOURCE_CASILLA_ID: value, _M130_PRIOR_RESULT_CASILLA_ID: Decimal("0")},
         )
         total += value
     return total
+
+
+def _save_m130_filing(
+    obs_repo: CalculationObservationRepository,
+    *,
+    period: str,
+    casilla_values: dict[CasillaId, Decimal],
+    captured_at: datetime = _T0,
+) -> None:
+    """Persist one M130/2024 autoliquidación; a later save replaces the quarter's effective filing."""
+    save_stamped_observation(
+        obs_repo,
+        RegistryModeloObservation(
+            modelo="130",
+            filing_year=_YEAR,
+            period=period,
+            observations=registry_grounded_observations(
+                modelo="130",
+                filing_year=_YEAR,
+                period=period,
+                casilla_values=casilla_values,
+            ),
+        ),
+        source_kind=APP_FILING_SOURCE_KIND,
+        captured_at=captured_at,
+    )
 
 
 def _seed_prior_year_m100_zero_carry(secure_objects: SecureObjectRepository) -> None:
@@ -370,6 +394,156 @@ def test_m100_no_prior_m130_filing_leaves_0604_unresolved_with_diagnostic(
 ) -> None:
     """An absent prior M130 set leaves 0604 blank and names the missing relation."""
     result = _calculate_m100_annual(secure_objects, operation=operation)
+
+    assert _M100_PAGOS_CASILLA not in result.revision.casilla_values
+    assert any(
+        diagnostic.source_kind == _RELATION_PREFILL_SOURCE
+        and diagnostic.relation_id == _M130_PAGOS_RELATION_ID
+        and diagnostic.reason == "source_issue"
+        for diagnostic in result.source_diagnostics
+    ), result.source_diagnostics
+
+
+# The scenarios below derive 0604 by hand from the AEAT Modelo 130 instructions,
+# never from the registry: casilla 17 = 14 - 15 - 16; casilla 18 holds "el
+# resultado a ingresar de las autoliquidaciones, modelo 130, presentadas
+# anteriormente por el mismo ejercicio y período" (zero when none resulted a
+# ingresar); casilla 19 = 17 - 18; a negative casilla 19 "podrá deducirse en
+# cualquiera de los siguientes pagos fraccionados" (through a later casilla 15)
+# and only a positive casilla 19 goes to "Ingreso". So the amount paid for a
+# quarter, read from its effective filing, is casilla 18 plus the positive part
+# of casilla 19.
+
+
+def _original(c19: str) -> dict[CasillaId, Decimal]:
+    """Return an original autoliquidación's result pair (no earlier filing, so casilla 18 is zero)."""
+    return {_M130_SOURCE_CASILLA_ID: Decimal(c19), _M130_PRIOR_RESULT_CASILLA_ID: Decimal("0")}
+
+
+def _calculate_0604(
+    secure_objects: SecureObjectRepository,
+    *,
+    filings: tuple[tuple[str, dict[CasillaId, Decimal]], ...],
+    operation: PinnedAuthorityOperation,
+):
+    obs_repo = CalculationObservationRepository()
+    for index, (period, casilla_values) in enumerate(filings):
+        _save_m130_filing(
+            obs_repo,
+            period=period,
+            casilla_values=casilla_values,
+            captured_at=_T0.replace(minute=index),
+        )
+    return _calculate_m100_annual(secure_objects, operation=operation)
+
+
+def test_m100_0604_adds_every_positive_quarter(
+    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
+) -> None:
+    """Four positive quarters were each paid in full."""
+    result = _calculate_0604(
+        secure_objects,
+        filings=(
+            ("1T", _original("120.00")),
+            ("2T", _original("80.00")),
+            ("3T", _original("150.00")),
+            ("4T", _original("50.00")),
+        ),
+        operation=operation,
+    )
+
+    # oracle: AEAT-MODELO-130-INSTRUCCIONES casilla 19 y (4) Ingreso; 120.00 + 80.00 + 150.00 + 50.00
+    assert Decimal(result.revision.casilla_values[_M100_PAGOS_CASILLA]) == Decimal("400.00")
+
+
+def test_m100_0604_credits_no_payment_for_a_negative_quarter_deducted_later(
+    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
+) -> None:
+    """A negative 1T is not paid; 2T deducts it through casilla 15 and pays only its own result."""
+    result = _calculate_0604(
+        secure_objects,
+        filings=(
+            ("1T", {**_original("-100.00"), _M130_DIFERENCIA_CASILLA_ID: Decimal("-100.00")}),
+            (
+                "2T",
+                {
+                    **_original("200.00"),
+                    _M130_LIQUIDACION_CASILLA_ID: Decimal("300.00"),
+                    _M130_NEGATIVOS_ANTERIORES_CASILLA_ID: Decimal("100.00"),
+                    _M130_DIFERENCIA_CASILLA_ID: Decimal("200.00"),
+                },
+            ),
+            ("3T", _original("0.00")),
+            ("4T", _original("50.00")),
+        ),
+        operation=operation,
+    )
+
+    # oracle: AEAT-MODELO-130-INSTRUCCIONES casillas 15, 17 y 19; paid 0 + (300 - 100) + 0 + 50 = 250.00.
+    # A signed sum of casilla 19 would give 150.00 and count the deducted 100.00 twice.
+    assert Decimal(result.revision.casilla_values[_M100_PAGOS_CASILLA]) == Decimal("250.00")
+
+
+def test_m100_0604_credits_no_payment_for_a_negative_fourth_quarter(
+    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
+) -> None:
+    """A negative 4T has no later quarter to deduct it and reduces nothing already paid."""
+    result = _calculate_0604(
+        secure_objects,
+        filings=(
+            ("1T", _original("120.00")),
+            ("2T", _original("80.00")),
+            ("3T", _original("150.00")),
+            ("4T", _original("-30.00")),
+        ),
+        operation=operation,
+    )
+
+    # oracle: AEAT-MODELO-130-INSTRUCCIONES casilla 19 y (4) Ingreso; 120.00 + 80.00 + 150.00 + 0 = 350.00
+    assert Decimal(result.revision.casilla_values[_M100_PAGOS_CASILLA]) == Decimal("350.00")
+
+
+def test_m100_0604_reads_a_complementaria_as_the_quarter_total_paid(
+    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
+) -> None:
+    """A complementaria replaces 2T's effective filing; the quarter paid its 18 plus its 19."""
+    complementaria = {
+        _M130_DIFERENCIA_CASILLA_ID: Decimal("260.00"),
+        _M130_PRIOR_RESULT_CASILLA_ID: Decimal("200.00"),
+        _M130_SOURCE_CASILLA_ID: Decimal("60.00"),
+    }
+    result = _calculate_0604(
+        secure_objects,
+        filings=(
+            ("1T", _original("100.00")),
+            ("2T", _original("200.00")),
+            ("2T", complementaria),
+            ("3T", _original("50.00")),
+            ("4T", _original("40.00")),
+        ),
+        operation=operation,
+    )
+
+    # oracle: AEAT-MODELO-130-INSTRUCCIONES casillas 18 y 19; 2T paid 200.00 then 60.00 = 260.00,
+    # so 100.00 + 260.00 + 50.00 + 40.00 = 450.00 (casilla 19 alone would give 250.00).
+    assert Decimal(result.revision.casilla_values[_M100_PAGOS_CASILLA]) == Decimal("450.00")
+
+
+def test_m100_0604_stays_unresolved_when_the_effective_complementaria_lacks_casilla_18(
+    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
+) -> None:
+    """Without casilla 18 the quarter's earlier payment is unknown, so 0604 is not guessed."""
+    result = _calculate_0604(
+        secure_objects,
+        filings=(
+            ("1T", _original("100.00")),
+            ("2T", _original("200.00")),
+            ("2T", {_M130_DIFERENCIA_CASILLA_ID: Decimal("260.00"), _M130_SOURCE_CASILLA_ID: Decimal("60.00")}),
+            ("3T", _original("50.00")),
+            ("4T", _original("40.00")),
+        ),
+        operation=operation,
+    )
 
     assert _M100_PAGOS_CASILLA not in result.revision.casilla_values
     assert any(

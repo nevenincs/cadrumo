@@ -15,6 +15,7 @@ from __future__ import annotations
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
+from ....core.aggregation import RelationAggregationOp
 from ....core.period import Period
 from .errors import RegistryValidationError
 
@@ -26,18 +27,20 @@ if TYPE_CHECKING:
 def gather_observed_requirement_values(
     requirement: RegistryFoldRequirement,
     observations: tuple[RegistryModeloObservation, ...],
-) -> tuple[Decimal, ...]:
+) -> tuple[tuple[Decimal, ...], ...]:
     """Return the source-casilla values matched for one fold requirement, per period.
 
     Matches exactly one
     :class:`~domain.calculations.registry.bindings.RegistryModeloObservation` per
-    declared source period and extracts the requirement's single source
-    :class:`~core.casilla_id.CasillaId` value from each. The
-    returned tuple carries one value per ``requirement.periods`` entry, in
-    declaration order, ready for :func:`fold_observed_requirement_values`.
+    declared source period and extracts every one of the requirement's source
+    :class:`~core.casilla_id.CasillaId` values from it. The returned tuple carries
+    one entry per ``requirement.periods`` entry, in declaration order; each entry
+    holds the period's values in ``requirement.source_casilla_ids`` order, ready
+    for :func:`fold_observed_requirement_values`. A matched filing that lacks any
+    declared source casilla is refused, so the requirement stays unresolved
+    rather than reading the missing value as zero.
     """
-    source_casilla_id = requirement.source_casilla_ids[0]
-    values: list[Decimal] = []
+    per_period: list[tuple[Decimal, ...]] = []
     for source_period in _filed_cadence_periods(requirement, observations):
         matches = tuple(
             observation
@@ -51,15 +54,19 @@ def gather_observed_requirement_values(
                 f"relation requirement {_requirement_ids(requirement)!r} expected one observed filing "
                 f"{requirement.source_modelo!r}/{requirement.filing_year}/{source_period!r}, found {len(matches)}",
             )
-        value = matches[0].casilla_values.get(source_casilla_id)
-        if value is None:
-            raise RegistryValidationError(
-                f"relation requirement {_requirement_ids(requirement)!r} requires observed source casilla id "
-                f"{source_casilla_id!r} from "
-                f"{requirement.source_modelo!r}/{requirement.filing_year}/{source_period!r}",
-            )
-        values.append(value)
-    return tuple(values)
+        casilla_values = matches[0].casilla_values
+        period_values: list[Decimal] = []
+        for source_casilla_id in requirement.source_casilla_ids:
+            value = casilla_values.get(source_casilla_id)
+            if value is None:
+                raise RegistryValidationError(
+                    f"relation requirement {_requirement_ids(requirement)!r} requires observed source casilla id "
+                    f"{source_casilla_id!r} from "
+                    f"{requirement.source_modelo!r}/{requirement.filing_year}/{source_period!r}",
+                )
+            period_values.append(value)
+        per_period.append(tuple(period_values))
+    return tuple(per_period)
 
 
 def _filed_cadence_periods(
@@ -129,12 +136,14 @@ def fold_sum_or_copy(
 
 def fold_observed_requirement_values(
     requirement: RegistryFoldRequirement,
-    values: tuple[Decimal, ...],
+    values: tuple[tuple[Decimal, ...], ...],
 ) -> Decimal:
-    """Fold per-period source values through a requirement's ``copy`` / ``sum`` op.
+    """Fold per-period source values through a requirement's declared op.
 
-    ``copy`` requires exactly one gathered value and returns it; ``sum`` adds the
-    gathered values. This is the one fold both relation paths apply to a
+    ``copy`` requires exactly one gathered period and returns its value; ``sum``
+    adds the gathered values; ``pagos_fraccionados_ingresados`` applies
+    :func:`fold_pagos_fraccionados_ingresados`. This is the one fold both
+    relation paths apply to a
     :class:`~domain.calculations.registry.relations.RegistryFoldRequirement`; the
     period match is :func:`gather_observed_requirement_values`.
     """
@@ -146,12 +155,52 @@ def fold_observed_requirement_values(
         raise RegistryValidationError(
             f"relation requirement {_requirement_ids(requirement)!r} declares no aggregation op to fold with",
         )
+    subject = f"relation requirement {_requirement_ids(requirement)!r}"
+    if aggregation_op is RelationAggregationOp.PAGOS_FRACCIONADOS_INGRESADOS:
+        return fold_pagos_fraccionados_ingresados(values, subject=subject)
     return fold_sum_or_copy(
-        aggregation_op,
-        values,
-        subject=f"relation requirement {_requirement_ids(requirement)!r}",
+        aggregation_op.value,
+        tuple(_single_value(period_values, subject=subject) for period_values in values),
+        subject=subject,
         copy_unit="observation",
     )
+
+
+def fold_pagos_fraccionados_ingresados(
+    values: tuple[tuple[Decimal, ...], ...],
+    *,
+    subject: str,
+) -> Decimal:
+    """Sum what pago-fraccionado autoliquidaciones actually paid over their periods.
+
+    Each entry is one period's effective (latest) autoliquidación as the pair
+    ``(resultado, resultado a ingresar de las anteriores)``. The AEAT Modelo 130
+    and 131 instructions set the period's result as its liquidación minus what
+    earlier autoliquidaciones of the same period already resulted a ingresar (zero
+    when none did); a positive result is paid, while a negative one is not paid
+    and may instead be deducted in a later period of the same ejercicio. So the
+    amount paid for a period is the earlier paid result plus the positive part of
+    the current one, and those amounts add across periods. A negative result
+    contributes nothing here; its later deduction already lowers the result of
+    the period that applies it.
+    """
+    zero = Decimal("0")
+    total = zero
+    for period_values in values:
+        if len(period_values) != 2:
+            raise RegistryValidationError(
+                f"{subject} pagos_fraccionados_ingresados aggregation requires the result casilla and the "
+                f"previously paid result casilla per period; got {len(period_values)} values",
+            )
+        resultado, resultado_anteriores = period_values
+        total += resultado_anteriores + max(resultado, zero)
+    return total
+
+
+def _single_value(period_values: tuple[Decimal, ...], *, subject: str) -> Decimal:
+    if len(period_values) != 1:
+        raise RegistryValidationError(f"{subject} folds one source casilla per period; got {len(period_values)}")
+    return period_values[0]
 
 
 def _requirement_ids(requirement: RegistryFoldRequirement) -> tuple[str, ...]:

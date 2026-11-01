@@ -57,6 +57,12 @@ class BindingAggregationOp(StrEnum):
             selected observations (e.g. Modelo 349 operator counts).
         PRIOR_PAGOS_FRACCIONADOS: Modelo 130 cumulative pago-fraccionado carry
             that nets the prior positive declaration against the running total.
+        PAGOS_FRACCIONADOS_INGRESADOS: The amount pago-fraccionado
+            autoliquidaciones actually paid, folded across their source periods.
+            Each period's effective filing contributes the result already paid
+            by earlier autoliquidaciones of that period (second source casilla)
+            plus the positive part of its own result (first source casilla); a
+            negative result is not paid but deducted from later periods.
     """
 
     SUM = "sum"
@@ -64,6 +70,7 @@ class BindingAggregationOp(StrEnum):
     COPY = "copy"
     COUNT_DISTINCT = "count_distinct"
     PRIOR_PAGOS_FRACCIONADOS = "prior_pagos_fraccionados"
+    PAGOS_FRACCIONADOS_INGRESADOS = "pagos_fraccionados_ingresados"
 
 
 class BindingAggregation(BaseModel):
@@ -107,17 +114,21 @@ class RelationAggregationOp(StrEnum):
 
     A relation's ``aggregation.op`` selects how a cross-modelo fold-in folds its
     matched source filings: :attr:`COPY` carries a single source value through
-    unchanged (the default when a relation declares no aggregation), and
-    :attr:`SUM` adds the matched per-period source values (annual summaries). This
-    is a deliberately separate axis from :class:`BindingAggregationOp` (which
-    governs ``BindingDefinition`` folds and carries the binding-only ``rows``
-    / ``count_distinct`` / ``prior_pagos_fraccionados`` members); the two are not
-    interchanged. The complete set declared across the registry relation tree is
-    ``copy`` and ``sum``.
+    unchanged (the default when a relation declares no aggregation),
+    :attr:`SUM` adds the matched per-period source values (annual summaries), and
+    :attr:`PAGOS_FRACCIONADOS_INGRESADOS` adds, per matched period, the result
+    already paid by earlier autoliquidaciones plus the positive part of the
+    period's own result. This is a deliberately separate axis from
+    :class:`BindingAggregationOp` (which governs ``BindingDefinition`` folds and
+    carries the binding-only ``rows`` / ``count_distinct`` /
+    ``prior_pagos_fraccionados`` members); the two are not interchanged. The
+    complete set declared across the registry relation tree is ``copy``, ``sum``
+    and ``pagos_fraccionados_ingresados``.
     """
 
     COPY = "copy"
     SUM = "sum"
+    PAGOS_FRACCIONADOS_INGRESADOS = "pagos_fraccionados_ingresados"
 
 
 class AggregationCaptureKind(StrEnum):

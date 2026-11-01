@@ -995,11 +995,12 @@ def test_modelo_100_m131_pagos_fraccionados_cumulative_wires_to_casilla_0604(
         "renta-modelo-131-pagos-fraccionados",
     }
 
-    # The binding for M131 must declare the correct source_modelo and source_casilla_id.
+    # The binding for M131 must declare the correct source_modelo and its result pair:
+    # casilla 15 (resultado) then casilla 14 (resultado a ingresar de las anteriores).
     binding = next(b for b in snapshot.revision.bindings if b.id == "renta-modelo-131-pagos-fraccionados")
     assert selector_as_dict(binding) == {
         "source_modelo": "131",
-        "source_casilla_id": _M131_PAGOS_FRACCIONADOS_CASILLA,
+        "source_casilla_ids": (_M131_PAGOS_FRACCIONADOS_CASILLA, "14"),
         "relation_kind": RelationKind.CROSS_MODEL_OUTPUT,
         "dependency_role": RelationDependencyRole.INSTALMENT_TO_FINAL_SETTLEMENT,
         "temporal": {

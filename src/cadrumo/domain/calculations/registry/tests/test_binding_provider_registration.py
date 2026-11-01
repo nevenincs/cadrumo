@@ -49,7 +49,7 @@ from ..binding_provider_registration import (
     validate_binding_provider_registrations,
     validator_for,
 )
-from ..binding_temporal import FilingYearOffset
+from ..binding_temporal import FilingYearOffset, SameFilingYearPeriods
 from ..binding_terminal_origin import TerminalOriginClass, TerminalOriginExpectation
 from ..binding_value_contract import BindingValueChannel
 from ..bindings import validate_binding_selector_shape
@@ -499,3 +499,41 @@ def test_a_fabricated_registration_with_an_absolute_coordinate_is_refused() -> N
 
     with pytest.raises(RegistryValidationError, match="stay relative to the target filing context"):
         require_relative_provider_coordinates(fabricated)
+
+
+def _pagos_relation_provider(*source_casilla_ids: str) -> RelationPrefillProvider:
+    return RelationPrefillProvider(
+        relation_kind="cross_model_output",
+        dependency_role="instalment_to_final_settlement",
+        source_modelo="130",
+        source_casilla_ids=source_casilla_ids,
+        temporal=SameFilingYearPeriods(source_periods=("1T", "2T", "3T", "4T")),
+    )
+
+
+def test_a_pagos_fraccionados_ingresados_fold_reading_its_result_pair_is_accepted() -> None:
+    """The fold reads each quarter's result and previously paid result, so two casillas validate."""
+    binding = _binding(_pagos_relation_provider("19", "18"), op=BindingAggregationOp.PAGOS_FRACCIONADOS_INGRESADOS)
+
+    assert validate_binding_against_registration(binding) == ()
+    assert validate_binding_selector_shape(binding) == []
+
+
+def test_a_pagos_fraccionados_ingresados_fold_missing_the_previously_paid_casilla_is_refused() -> None:
+    """With only the result casilla the earlier payment of a complementaria would be lost."""
+    binding = _binding(_pagos_relation_provider("19"), op=BindingAggregationOp.PAGOS_FRACCIONADOS_INGRESADOS)
+
+    diagnostics = validate_binding_selector_shape(binding)
+
+    assert len(diagnostics) == 1
+    assert "'pagos_fraccionados_ingresados' must read exactly 2 source casilla(s)" in diagnostics[0]
+
+
+def test_a_sum_fold_over_two_source_casillas_is_refused() -> None:
+    """A sum folds one casilla per filing; a second declared casilla would silently be dropped."""
+    binding = _binding(_pagos_relation_provider("19", "18"), op=BindingAggregationOp.SUM)
+
+    diagnostics = validate_binding_selector_shape(binding)
+
+    assert len(diagnostics) == 1
+    assert "'sum' must read exactly 1 source casilla(s)" in diagnostics[0]
