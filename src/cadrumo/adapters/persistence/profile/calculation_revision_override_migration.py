@@ -76,7 +76,8 @@ _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 #: Repositories, each composed for one operation, whose stored catalogue this
 #: operation has already brought onto binding ids. Nothing writes a retired key,
 #: so one operation has nothing to migrate twice; its later callers still read
-#: and validate the catalogue they use.
+#: and validate the catalogue they use. This covers a catalogue holding overrides,
+#: which the repository's content-keyed proof does not.
 _SETTLED_REPOSITORIES: WeakSet[CalculationRevisionCatalogueRepositoryProtocol] = WeakSet()
 
 
@@ -200,6 +201,8 @@ def _rekeyed_overrides_for_revision(
             a binding the revision's own registry snapshot declares; or two
             retired keys fold onto one binding carrying different values.
     """
+    if not revision.relation_overrides:
+        return {}, ()
     current_binding_ids = join_targets | _declared_binding_ids(
         revision.registry_snapshot_ref,
         operation=operation,
@@ -356,6 +359,10 @@ def migrate_stored_relation_overrides_to_binding_ids(
     idempotent in storage as well as in memory, so re-running it does not churn
     the row's revision lineage.
 
+    A catalogue with no override has nothing to rekey or refuse, so when the
+    repository already knows that of the row's exact bytes, nothing is read. The
+    caller's own guarded read still validates the catalogue before any write.
+
     Args:
         repository: The bucket-bound calculation-revision catalogue repository.
         operation: Existing generation-pinned authority operation.
@@ -363,13 +370,14 @@ def migrate_stored_relation_overrides_to_binding_ids(
     Returns:
         The identifier-only record of what moved, carrying the migrated
         catalogue, or ``None`` when this repository already completed a
-        migration and so read nothing. A failed run settles nothing.
+        migration or the stored bytes are known to hold no override, and so
+        nothing was read. A failed run settles nothing.
 
     Raises:
         OrphanedRelationOverrideError: A stored override key could not be
             resolved to a binding.
     """
-    if repository in _SETTLED_REPOSITORIES:
+    if repository in _SETTLED_REPOSITORIES or repository.stored_catalogue_is_known_override_free():
         return None
     catalogue, expected_revision_id = repository.load_revisioned(operation=operation)
     result = rekey_calculation_revision_overrides(catalogue, operation=operation)

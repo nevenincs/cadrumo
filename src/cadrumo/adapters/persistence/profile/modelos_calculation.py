@@ -39,6 +39,8 @@ Core types:
 
 from __future__ import annotations
 
+from collections import OrderedDict
+from threading import Lock
 from typing import TYPE_CHECKING
 
 from pydantic import ValidationError
@@ -47,6 +49,7 @@ from cadrumo.domain.calculations.registry.tax_id_format import SubjectTaxId
 
 from ....core.bucket_pointer import resolve_repository_bucket_id
 from ....core.diagnostic_log import diagnostic_timing_event
+from ....core.hashing import sha256_hex
 from ....core.logging import get_logger
 from ....core.modelo import Modelo
 from ....core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID, SecureObjectWrite
@@ -65,6 +68,7 @@ from ....domain.modelos.calculation_revision_aggregate import (
 )
 from ....domain.modelos.errors import raise_catalogue_integrity_error
 from ....domain.modelos.work_unit import WorkUnitCatalogue
+from ..storage.crypto.encrypted_columns import secure_object_key_digest
 from ..storage.runtime_repository import secure_object_repository_for_bucket
 from ..storage.secure_object_namespaces import MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE
 from ._secure_enveloped_document import ProfileEnvelopedModelSecurePersistence
@@ -81,6 +85,40 @@ def _catalogue_phase(stage: str) -> None:
 
 
 _CALCULATION_PERSISTENCE_MESSAGE = "errors.fail.fail_modelo_calculation_revision_persistence"
+
+_OVERRIDE_FREE_PAYLOADS_RETAINED = 64
+
+
+class _OverrideFreePayloadDigests:
+    """Bounded process memory of plaintext digests whose catalogue carries no relation override.
+
+    Each entry is a fact about exact bytes, so it holds whichever store, profile,
+    writer or authority generation meets those bytes later, and a write that never
+    commits leaves a true entry no row matches. It keeps only the digest the row
+    already stores beside its ciphertext.
+    """
+
+    def __init__(self) -> None:
+        self._digests: OrderedDict[str, None] = OrderedDict()
+        self._lock = Lock()
+
+    def remember(self, payload: bytes, catalogue: CalculationRevisionCatalogue) -> None:
+        """Record ``payload`` when its decoded ``catalogue`` carries no override at all."""
+        if any(revision.relation_overrides for revision in catalogue.values()):
+            return
+        digest = sha256_hex(payload)
+        with self._lock:
+            self._digests[digest] = None
+            self._digests.move_to_end(digest)
+            while len(self._digests) > _OVERRIDE_FREE_PAYLOADS_RETAINED:
+                self._digests.popitem(last=False)
+
+    def __contains__(self, digest: str) -> bool:
+        with self._lock:
+            return digest in self._digests
+
+
+_OVERRIDE_FREE_PAYLOADS = _OverrideFreePayloadDigests()
 
 
 class CalculationRevisionCatalogueRepository:
@@ -278,7 +316,21 @@ class CalculationRevisionCatalogueRepository:
             assert_revision_snapshot_evidence_coverage(revision)
         self._require_parent_coordinates(envelope.payload, work_units=aggregate_context.work_units)
         _catalogue_phase("load_validation_end")
+        _OVERRIDE_FREE_PAYLOADS.remember(record.payload, envelope.payload)
         return envelope.payload, record.revision_id
+
+    def stored_catalogue_is_known_override_free(self) -> bool:
+        """Report whether the stored row's bytes are already known to hold no relation override.
+
+        Reads only the row's plaintext digest, under the same session freshness and
+        bucket checks as every other read, and decrypts nothing. ``False`` means
+        unknown, not that an override exists.
+        """
+        definition = MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE
+        digest = self._objects.namespace_payload_hashes(definition.namespace).get(
+            secure_object_key_digest(definition.require_default_object_key()),
+        )
+        return digest is not None and digest in _OVERRIDE_FREE_PAYLOADS
 
     def _require_parent_coordinates(
         self,
@@ -412,6 +464,7 @@ class CalculationRevisionCatalogueRepository:
             catalogue,
             expected_revision_id=expected_revision_id,
         )
+        _OVERRIDE_FREE_PAYLOADS.remember(write.payload, catalogue)
         _catalogue_phase("encode_end")
         return write
 
