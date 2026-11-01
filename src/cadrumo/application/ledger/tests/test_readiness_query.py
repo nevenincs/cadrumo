@@ -26,10 +26,10 @@ from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from ....domain.usage_ratios.model import UsageRatioProfile
 from ..preflight import preflight_ledger_tax_readiness
 from ..protocols import TransactionCatalogueCoCommitWriterProtocol
 from ..readiness_query import LedgerReadinessIssueV1, ledger_readiness_issues
+from .action_port_fakes import empty_usage_ratio_profile
 from .in_memory_transaction_repository import InMemoryTransactionRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -83,13 +83,6 @@ def _stored(*transactions: Transaction) -> Generator[TransactionCatalogueCoCommi
     )
 
 
-def _empty_usage_ratio_profile(*, bucket_id: str, operation: PinnedAuthorityOperation) -> UsageRatioProfile:
-    """Bind an empty usage-ratio profile for readiness cases without censo rows."""
-    del bucket_id
-    del operation
-    return UsageRatioProfile()
-
-
 def _readiness(
     repository: TransactionCatalogueCoCommitWriterProtocol,
     operation: PinnedAuthorityOperation,
@@ -100,7 +93,7 @@ def _readiness(
         bucket_id=_BUCKET,
         period=_PERIOD,
         transaction_repository=repository,
-        usage_ratio_profile_loader=_empty_usage_ratio_profile,
+        usage_ratio_profile_loader=empty_usage_ratio_profile,
         operation=operation,
         catalogue=catalogue,
     )
@@ -157,7 +150,7 @@ def test_an_issue_whose_row_left_the_catalogue_is_joined_with_its_facts_unset(
             bucket_id=_BUCKET,
             period=_PERIOD,
             transaction_repository=repository,
-            usage_ratio_profile_loader=_empty_usage_ratio_profile,
+            usage_ratio_profile_loader=empty_usage_ratio_profile,
             operation=authority_operation,
             catalogue=catalogue,
         )
