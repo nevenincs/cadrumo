@@ -426,7 +426,7 @@ class LedgerInvoiceWizardScreen(LedgerConfirmationFlowScreen):
     def _start_again(self) -> None:
         """Open a fresh wizard: after a refusal it keeps the values and opens at the first refused field."""
         state = self.flow_state
-        if state not in {LedgerFlowState.SUCCEEDED, LedgerFlowState.FAILED, LedgerFlowState.CANCELLED}:
+        if not state.is_settled:
             return
         values = {} if state is LedgerFlowState.SUCCEEDED else self.values
         refusal = None if self.outcome is None else self.outcome.refusal

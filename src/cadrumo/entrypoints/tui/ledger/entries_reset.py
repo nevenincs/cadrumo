@@ -164,11 +164,7 @@ class LedgerResetScreen(LedgerConfirmationFlowScreen):
                 self._ask_confirmation()
             case "entries-reset-cancel" if self.can_cancel_flow:
                 self._cancel_flow()
-            case "entries-reset-again" if self.flow_state in {
-                LedgerFlowState.SUCCEEDED,
-                LedgerFlowState.FAILED,
-                LedgerFlowState.CANCELLED,
-            }:
+            case "entries-reset-again" if self.flow_state.is_settled:
                 self.refresh_after_write(self._start_again)
             case _:
                 return

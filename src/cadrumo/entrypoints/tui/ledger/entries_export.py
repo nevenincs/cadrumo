@@ -227,11 +227,7 @@ class LedgerEntriesExportScreen(LedgerConfirmationFlowScreen):
                 self.query_one("#entries-export-cancel", Button).disabled = True
                 status.update(tr("tui.ledger.entry_tools.export.writing"))
                 self.run_worker(self._submit(), exclusive=True)
-            case "entries-export-again" if self.flow_state in {
-                LedgerFlowState.SUCCEEDED,
-                LedgerFlowState.FAILED,
-                LedgerFlowState.CANCELLED,
-            }:
+            case "entries-export-again" if self.flow_state.is_settled:
                 self.refresh_after_write(self._start_again)
             case _:
                 return

@@ -146,6 +146,11 @@ class LedgerFlowState(StrEnum):
     FAILED = "failed"
     CANCELLED = "cancelled"
 
+    @property
+    def is_settled(self) -> bool:
+        """Whether the flow has reached an end state, leaving only a fresh start."""
+        return self in {LedgerFlowState.SUCCEEDED, LedgerFlowState.FAILED, LedgerFlowState.CANCELLED}
+
 
 type LedgerClassificationPatchV1 = ManualLedgerTransactionPatch | LedgerClassifyPatch
 type LedgerClassificationPatchBuilderV1 = Callable[[dict[str, object]], LedgerClassificationPatchV1]

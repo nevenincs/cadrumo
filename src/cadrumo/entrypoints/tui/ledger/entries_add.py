@@ -295,11 +295,7 @@ class LedgerEntryAddScreen(LedgerConfirmationFlowScreen):
                 self.query_one("#entries-add-cancel", Button).disabled = True
                 status.update(tr("tui.ledger.records.saving"))
                 self.run_worker(self._submit(), exclusive=True)
-            case "entries-add-again" if self.flow_state in {
-                LedgerFlowState.SUCCEEDED,
-                LedgerFlowState.FAILED,
-                LedgerFlowState.CANCELLED,
-            }:
+            case "entries-add-again" if self.flow_state.is_settled:
                 initial = None if self.flow_state is LedgerFlowState.SUCCEEDED else self.staged
                 self.refresh_after_write(lambda: self._start_again(initial))
             case "entries-add-open" if self.flow_state is LedgerFlowState.SUCCEEDED:

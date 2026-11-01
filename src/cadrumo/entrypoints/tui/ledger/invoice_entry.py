@@ -491,11 +491,7 @@ class LedgerInvoiceEntryScreen(LedgerConfirmationFlowScreen):
                 self.query_one("#ledger-invoice-cancel", Button).disabled = True
                 self.query_one("#ledger-flow-status", Static).update(tr("tui.ledger.invoice.progress"))
                 self.run_worker(self._submit(), exclusive=True)
-            case "ledger-invoice-again" if self.flow_state in {
-                LedgerFlowState.SUCCEEDED,
-                LedgerFlowState.FAILED,
-                LedgerFlowState.CANCELLED,
-            }:
+            case "ledger-invoice-again" if self.flow_state.is_settled:
                 self.refresh_after_write(lambda: self.post_message(LedgerInvoiceEntryRequested()))
             case _:
                 return

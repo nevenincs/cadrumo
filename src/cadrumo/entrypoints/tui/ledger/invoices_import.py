@@ -348,7 +348,7 @@ class LedgerInvoiceImportScreen(LedgerConfirmationFlowScreen):
 
     def _start_again(self) -> None:
         """Open a fresh form carrying what was typed, once this attempt has settled."""
-        if self.flow_state not in {LedgerFlowState.SUCCEEDED, LedgerFlowState.FAILED, LedgerFlowState.CANCELLED}:
+        if not self.flow_state.is_settled:
             return
         form = self.form
 

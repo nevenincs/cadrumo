@@ -320,11 +320,7 @@ class LedgerImportScreen(LedgerConfirmationFlowScreen):
                 self.query_one("#ledger-import-cancel", Button).disabled = True
                 self.query_one("#ledger-flow-status", Static).update(tr("tui.ledger.import.progress"))
                 self.run_worker(self._submit(), exclusive=True)
-            case "ledger-import-again" if self.flow_state in {
-                LedgerFlowState.SUCCEEDED,
-                LedgerFlowState.FAILED,
-                LedgerFlowState.CANCELLED,
-            }:
+            case "ledger-import-again" if self.flow_state.is_settled:
                 self._start_again()
             case _:
                 return
