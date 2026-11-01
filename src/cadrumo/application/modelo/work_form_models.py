@@ -473,8 +473,11 @@ def comparable_entry(value: ModeloFormScalar) -> ModeloEditWireScalar:
     """A value as two entries of it compare: an amount by its figure, whatever trailing zeros it was written with.
 
     ``1234.5`` and ``1234.50`` are the same figure, so they compare equal here,
-    as they do as numbers; every other kind of value compares as it is.
+    as they do as numbers. A yes or no is held as the figure its channel carries,
+    so an entry of one compares as that figure. Every other kind of value compares as it is.
     """
+    if isinstance(value, bool):
+        return "1" if value else "0"
     if isinstance(value, Decimal):
         return format(value.normalize(), "f")
     return None if value is None else wire_scalar_value(value)

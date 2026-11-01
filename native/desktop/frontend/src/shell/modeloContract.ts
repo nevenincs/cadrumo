@@ -3066,10 +3066,16 @@ export type ModeloEditBindingIntentKind =
   "set_override_value" | "remove_override";
 
 /**
- * One registry-declared choice: the stored code, never translated.
+ * One offered choice: the stored code, never translated, and the catalogue id
+ * of its word where it has one.
+ *
+ * A form's design can declare the blank itself as a choice, as an unmarked
+ * checkbox: an empty `code` is that stated blank, which is neither an entry
+ * that was never made nor a refused one.
  */
 export type ModeloEditChoiceV1 = {
   code: string;
+  word: string | null;
 };
 
 /**

@@ -24,6 +24,7 @@ from typing import Annotated, Final
 
 from pydantic import Field
 
+from ...core.spanish_postcode import SPANISH_PROVINCE_CODES
 from ...domain.calculations.registry.binding_value_contract import BindingDataType, BindingValueChannel
 from ...domain.calculations.registry.runtime_graph import enum_consumed_binding_ids, revision_date_binding_ids
 from ...domain.calculations.registry.schema import BindingDefinition, ModeloRevision
@@ -86,10 +87,20 @@ class ModeloEditRatioUnit(StrEnum):
     UNDECLARED = "undeclared"
 
 
-class ModeloEditChoiceV1(EditModel):
-    """One registry-declared choice: the stored code, never translated."""
+EDIT_CHOICE_LABEL_PREFIX: Final = "application.modelo.edit_choice."
+"""Where the words of served choices live, one family under it per data type."""
 
-    code: _BoundedToken
+
+class ModeloEditChoiceV1(EditModel):
+    """One offered choice: the stored code, never translated, and the catalogue id of its word where it has one.
+
+    A form's design can declare the blank itself as a choice, as an unmarked
+    checkbox: an empty ``code`` is that stated blank, which is neither an entry
+    that was never made nor a refused one.
+    """
+
+    code: Annotated[str, Field(max_length=128)]
+    word: _BoundedToken | None = None
 
 
 class ModeloEditValueGrammarV1(EditModel):
@@ -178,6 +189,16 @@ def _canonical_grammar_bound(value: Decimal | None) -> str | None:
     return None if value is None else canonical_decimal_string(value)
 
 
+def _casilla_choices(data_type: str, declared: tuple[str, ...] | None) -> tuple[ModeloEditChoiceV1, ...] | None:
+    """Return what a box offers: its declared list, or every province for a province box declaring none."""
+    if data_type != CasillaDataType.PROVINCE_CODE:
+        return None if declared is None else tuple(ModeloEditChoiceV1(code=token) for token in declared)
+    return tuple(
+        ModeloEditChoiceV1(code=token, word=f"{EDIT_CHOICE_LABEL_PREFIX}{data_type}.{token}")
+        for token in (SPANISH_PROVINCE_CODES if declared is None else declared)
+    )
+
+
 def casilla_value_grammar(casilla: CasillaDefinition) -> ModeloEditValueGrammarV1:
     """Project one casilla definition onto its entry grammar."""
     data_type = str(casilla.data_type)
@@ -195,11 +216,7 @@ def casilla_value_grammar(casilla: CasillaDefinition) -> ModeloEditValueGrammarV
         sign=constraints.sign if constraints is not None else CasillaSignConstraint.ANY,
         minimum=_canonical_grammar_bound(minimum),
         maximum=_canonical_grammar_bound(maximum),
-        choices=(
-            tuple(ModeloEditChoiceV1(code=token) for token in constraints.enum)
-            if constraints is not None and constraints.enum is not None
-            else None
-        ),
+        choices=_casilla_choices(data_type, constraints.enum if constraints is not None else None),
         min_length=constraints.min_length if constraints is not None else None,
         max_length=constraints.max_length if constraints is not None else None,
         pattern=constraints.pattern if constraints is not None else None,
@@ -259,6 +276,7 @@ def binding_value_grammar(binding: BindingDefinition, *, revision: ModeloRevisio
 
 
 __all__ = [
+    "EDIT_CHOICE_LABEL_PREFIX",
     "MONEY_FRACTION_DIGITS",
     "MONEY_OPERAND_MAXIMUM",
     "ModeloEditChoiceV1",

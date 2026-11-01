@@ -283,7 +283,6 @@ def _runtime_registrations(
     descendant_disability_grades: tuple[str, ...],
 ) -> tuple[FStringKeyRegistration, ...]:
     """Enumerate runtime refusal, action and terminal-condition copy."""
-    from cadrumo.application.calculations.m303_carry_ingress import M303_CARRY_ERROR_NAMESPACE
     from cadrumo.application.live.errors import LiveIvaAcquisitionFailureMode
     from cadrumo.application.review.filter import LedgerReviewStatus
     from cadrumo.application.workflow.resume import WorkflowResumeRefusalReason
@@ -291,6 +290,8 @@ def _runtime_registrations(
     from cadrumo.core.operations import OperationTerminalCondition
     from cadrumo.entrypoints.tui.components.account_chrome import AccountActionV1
     from dev.locales.activity_asset_fstring_registrations import activity_asset_dynamic_registrations
+    from dev.locales.desktop_entry_option_keys import ENTRY_OPTION_KEYS
+    from dev.locales.desktop_modelo_choice_keys import MODELO_CHOICE_KEYS
     from dev.locales.inventory_fstring_registrations import inventory_dynamic_registrations
 
     return (
@@ -385,47 +386,64 @@ def _runtime_registrations(
             )
             for prefix in ("tui.root.account", "tui.root.account_key", "tui.root.account_help")
         ),
-        FStringKeyRegistration(
-            # Bounded enumeration, pinned to the _translated_error codes in
-            # application/calculations/m303_carry_ingress.py, which keys every
-            # refusal under M303_CARRY_ERROR_NAMESPACE.
-            description="application.calculations.m303_carry.errors.* (M303 carry ingress refusals)",
-            key_factory=lambda v: f"{M303_CARRY_ERROR_NAMESPACE}.{v}",
-            values=(
-                "available_compensation_formula_missing",
-                "carry_operands_disagree_with_formula",
-                "casilla_id_invalid",
-                "disposition_code_not_admitted",
-                "disposition_code_undeclared",
-                "disposition_result_sign_incompatible",
-                "duplicate_header_facts",
-                "envelope_not_normalized",
-                "formula_mapping_required",
-                "header_code_invalid",
-                "header_code_not_admitted",
-                "incomplete_supported_operands",
-                "invalid_registry_observation",
-                "local_disposition_header_disagreement",
-                "local_filing_disposition_required",
-                "local_filing_provenance_required",
-                "non_target_modelo_envelope",
-                "official_disposition_header_disagreement",
-                "official_header_required",
-                "registry_resolution_unavailable",
-                "registry_scope_invalid",
-                "result_casilla_required",
-                "supplied_available_contradicts_derivation",
-                "supplied_disposition_not_admitted",
-                "supplied_pair_contradicts_derivation",
-                "unsupported_provenance",
-            ),
-        ),
+        _m303_carry_error_registration(),
         *_diagnostics_command_spec_registrations(),
         *inventory_dynamic_registrations(),
+        FStringKeyRegistration(
+            description="application.ledger.entry_options.* (served ledger entry vocabularies)",
+            key_factory=lambda key: key,
+            values=tuple(sorted(ENTRY_OPTION_KEYS)),
+        ),
+        FStringKeyRegistration(
+            description="application.modelo.edit_choice.* (words of the choices a Modelo box serves)",
+            key_factory=lambda key: key,
+            values=tuple(sorted(MODELO_CHOICE_KEYS)),
+        ),
         *activity_asset_dynamic_registrations(),
         *_custody_stdin_registrations(),
         *_modelo_work_help_registrations(),
         *_modelo_workbench_registrations(),
+    )
+
+
+def _m303_carry_error_registration() -> FStringKeyRegistration:
+    """Build the closed M303 carry-ingress refusal registration."""
+    from cadrumo.application.calculations.m303_carry_ingress import M303_CARRY_ERROR_NAMESPACE
+
+    return FStringKeyRegistration(
+        # Bounded enumeration, pinned to the _translated_error codes in
+        # application/calculations/m303_carry_ingress.py, which keys every
+        # refusal under M303_CARRY_ERROR_NAMESPACE.
+        description="application.calculations.m303_carry.errors.* (M303 carry ingress refusals)",
+        key_factory=lambda v: f"{M303_CARRY_ERROR_NAMESPACE}.{v}",
+        values=(
+            "available_compensation_formula_missing",
+            "carry_operands_disagree_with_formula",
+            "casilla_id_invalid",
+            "disposition_code_not_admitted",
+            "disposition_code_undeclared",
+            "disposition_result_sign_incompatible",
+            "duplicate_header_facts",
+            "envelope_not_normalized",
+            "formula_mapping_required",
+            "header_code_invalid",
+            "header_code_not_admitted",
+            "incomplete_supported_operands",
+            "invalid_registry_observation",
+            "local_disposition_header_disagreement",
+            "local_filing_disposition_required",
+            "local_filing_provenance_required",
+            "non_target_modelo_envelope",
+            "official_disposition_header_disagreement",
+            "official_header_required",
+            "registry_resolution_unavailable",
+            "registry_scope_invalid",
+            "result_casilla_required",
+            "supplied_available_contradicts_derivation",
+            "supplied_disposition_not_admitted",
+            "supplied_pair_contradicts_derivation",
+            "unsupported_provenance",
+        ),
     )
 
 

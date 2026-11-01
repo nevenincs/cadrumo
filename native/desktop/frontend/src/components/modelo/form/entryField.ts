@@ -14,6 +14,9 @@ type CasillaDataType = ModeloEditWritableScalarSurfaceEntryV1["data_type"];
 
 const MONO: FieldSpec = { kind: "text", mono: true };
 
+/** The family of words a box's served choices ship with. */
+const CHOICE_WORDS = "application.modelo.edit_choice.province_code.";
+
 /** Keyed by the generated type, so a type the registry gains does not compile
  * until it is placed here. A yes or no has no box of its own: `readsYesNo`
  * places it from the grammar. */
@@ -98,9 +101,17 @@ export function entryField(
   if (grammar.choices)
     return {
       kind: "choice",
+      // A box's design may declare the blank as a choice; the first row is it.
       choices: [
         { value: "", label: "—" },
-        ...grammar.choices.map(({ code }) => ({ value: code, label: code })),
+        ...grammar.choices
+          .filter(({ code }) => code !== "")
+          .map(({ code, word }) => ({
+            value: code,
+            label: word?.startsWith(CHOICE_WORDS)
+              ? `${code} · ${t(word)}`
+              : code,
+          })),
       ],
     };
   if (grammar.ratio_unit === "percent")

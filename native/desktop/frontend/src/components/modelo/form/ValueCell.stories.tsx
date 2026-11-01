@@ -46,7 +46,7 @@ const figure = (
 ) => grammar(data_type, { family: "decimal", channel: "decimal", ...over });
 
 const choices = (...codes: string[]) => ({
-  choices: codes.map((code) => ({ code })),
+  choices: codes.map((code) => ({ code, word: null })),
 });
 
 function Cell({

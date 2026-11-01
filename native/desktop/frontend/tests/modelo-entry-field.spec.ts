@@ -106,9 +106,48 @@ test("a ratio has a percent box only where its grammar says percent", () => {
     });
 });
 
+test("a province box says the name beside its code", () => {
+  const offered = grammar("province_code", {
+    choices: [
+      { code: "28", word: "application.modelo.edit_choice.province_code.28" },
+      { code: "99", word: "something.else.99" },
+    ],
+  });
+  expect(entryField(t, offered)).toEqual({
+    kind: "choice",
+    choices: [
+      { value: "", label: "—" },
+      {
+        value: "28",
+        label: "28 · <application.modelo.edit_choice.province_code.28>",
+      },
+      { value: "99", label: "99" },
+    ],
+  });
+});
+
+test("a blank the design declares is the one empty row, not a second", () => {
+  const offered = grammar("text", {
+    choices: [
+      { code: "X", word: null },
+      { code: "", word: null },
+    ],
+  });
+  expect(entryField(t, offered)).toEqual({
+    kind: "choice",
+    choices: [
+      { value: "", label: "—" },
+      { value: "X", label: "X" },
+    ],
+  });
+});
+
 test("a box with declared choices offers exactly those codes, untranslated", () => {
   const offered = grammar("province_code", {
-    choices: [{ code: "08" }, { code: "17" }],
+    choices: [
+      { code: "08", word: null },
+      { code: "17", word: null },
+    ],
   });
   expect(entryField(t, offered)).toEqual({
     kind: "choice",
