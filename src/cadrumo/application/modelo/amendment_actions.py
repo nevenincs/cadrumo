@@ -117,6 +117,7 @@ from .action_errors import (
 from .amendment_action_ports import AmendmentActionPorts
 from .calculation_revision_gate import require_calculation_revision_coordinates_current
 from .filed_revision_observation import filed_revision_observation_writes, prepare_filed_revision_observation
+from .filing_revision_persistence import filed_calculation_revision
 from .lifecycle_clock_gate import (
     ModeloLifecycleClockOperation,
     amendment_ordering_instants,
@@ -658,7 +659,7 @@ def _finalize_amendment(
         now=now,
     )
 
-    filed_amendment = _filed_amendment_revision(verified_amendment, actor=actor, now=now)
+    filed_amendment = filed_calculation_revision(target=verified_amendment, actor=actor, now=now)
     revisions = upsert_calculation_revision(revisions, filed_amendment, aggregate_context=aggregate_context)
     prepared_observation = prepare_filed_revision_observation(
         revision=filed_amendment,
@@ -779,7 +780,7 @@ def _build_amendment_draft_revision(
 
     ``detail_rows`` arrives already resolved, from
     :func:`_require_amendment_detail_rows`. Neither
-    :func:`_verified_amendment_revision` nor :func:`_filed_amendment_revision`
+    :func:`_verified_amendment_revision` nor :func:`.filing_revision_persistence.filed_calculation_revision`
     recomputes anything — both are pure state transitions — so whatever is set
     here is what an amended M347, M349, M184 or M232 declares. Defaulting it
     silently filed those declaring no counterparties at all; inheriting the
@@ -933,22 +934,6 @@ def _verified_amendment_revision(
             "updated_at": now,
             "ledger_filing_snapshot": ledger_filing_snapshot,
             "ledger_filing_evidence": ledger_filing_evidence,
-        },
-    )
-
-
-def _filed_amendment_revision(
-    verified_amendment: CalculationRevision,
-    *,
-    actor: str,
-    now: datetime,
-) -> CalculationRevision:
-    return verified_amendment.model_copy(
-        update={
-            "state": CalculationRevisionState.PRESENTADO,
-            "filed_at": now,
-            "filed_by": actor.strip(),
-            "updated_at": now,
         },
     )
 
