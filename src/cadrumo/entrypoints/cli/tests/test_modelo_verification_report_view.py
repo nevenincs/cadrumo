@@ -28,7 +28,7 @@ _REGISTRY_SNAPSHOT_REF = RegistrySnapshotRef(
 )
 
 
-def _render_in_every_locale(locale_key: str, message_facts: dict[str, object]) -> dict[str, str]:
+def _render_in_every_locale(locale_key: str, message_facts: dict[str, str | int]) -> dict[str, str]:
     """Render one blocking finding through each supported catalogue and check what every rendering must lack."""
     from ....core.config import override_settings
     from ....domain.modelos.verification_report import (
