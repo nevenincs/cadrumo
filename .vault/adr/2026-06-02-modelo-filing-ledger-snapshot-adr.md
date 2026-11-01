@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#modelo-filing-ledger-snapshot'
 date: '2026-06-02'
-modified: '2026-08-15'
-body_hash: 'sha256:47d9da7beae9498386bafc5096b68737aab91345bdcd8e6211ca9a98557880d6'
+modified: '2026-11-01'
+body_hash: 'sha256:f7f1a7c5c7a5be6d902b1ed48649bb7ba6c613bb68db2e3c43ca49e69e327aa7'
 related:
   - "[[2026-06-02-ledger-operator-hardening-adr]]"
   - '[[2026-06-04-modelo-filing-ledger-snapshot-research]]'

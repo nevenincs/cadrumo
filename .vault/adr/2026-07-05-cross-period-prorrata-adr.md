@@ -4,7 +4,7 @@ tags:
   - '#cross-period-prorrata'
 date: '2026-07-05'
 modified: '2026-11-01'
-body_hash: 'sha256:3728a652f480a17c2a828e58eef6d633a4c648edc5ae836e1893b54fe3f18163'
+body_hash: 'sha256:2271caac6c876e653ce8466b306b93f1dba4c5e1668fbdc3aeebd770de17169d'
 related:
   - "[[2026-07-01-iva-complexity-hardening-scope-adr]]"
   - "[[2026-07-01-iva-complexity-hardening-scope-research]]"
@@ -397,10 +397,14 @@ from the declared annual volumes, and for the Modelo 390 from the filed
 settlement observation
 (`src/cadrumo/application/modelo/calculation_source_mesh_actions.py:250`,
 `src/cadrumo/application/modelo/_calculation_source_staging.py:263`). The split
-is general-regime only: for an especial or sectorized register the settlement
-liquidation keeps the provisional apportionment and casilla 44 stays unresolved
-with a finding, and the apportionment refuses a settlement percentage handed
-directly to a non-general register. Oracle: AEAT Manual practico IVA 2025, pages 137-138
+applies per partition (LIVA arts. 101.Uno, 105 and 106.Uno regla 3.ª): a
+general register is one partition, each differentiated sector is regularised
+and settled at its own definitive percentage, and under prorrata especial only
+the common-use slice is regularised
+(`src/cadrumo/application/calculations/prorrata_regularizacion_periods.py`).
+An unsettled sector, common-use input shared across sectors, a missing gross
+base or a negative total keeps casilla 44 unresolved with a finding; an
+unsettled sector's settlement liquidation keeps its provisional percentage. Oracle: AEAT Manual practico IVA 2025, pages 137-138
 (provisional 73 %, definitive 56 %, first-to-third-quarter cuotas 400/420/460,
 practised 934.40, fourth-quarter cuotas 160 giving casilla 29 = 89.60,
 casilla 44 = -217.60, fourth-quarter casilla 45 = -128.00, year deductions

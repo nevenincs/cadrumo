@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#deadline-window-revision-authority'
 date: '2026-08-24'
-modified: '2026-10-22'
+modified: '2026-11-01'
 body_schema: 'body-v1'
-body_hash: 'sha256:b60431a9aa9709fb45b9330a63838bfa7b4803639af2b8aa3f54c67ae2c5fed3'
+body_hash: 'sha256:31d4316565921c7c63897ec4e1675cc300a91b5cd1a0b96e952930b5c454f060'
 related:
   - "[[2026-08-24-deadline-window-revision-authority-research]]"
   - '[[2026-08-24-deadline-window-revision-authority-reference]]'

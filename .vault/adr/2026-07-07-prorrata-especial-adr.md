@@ -4,7 +4,7 @@ tags:
   - '#prorrata-especial'
 date: '2026-07-07'
 modified: '2026-11-01'
-body_hash: 'sha256:9cd22cde9bd33334726ea23904045e90724a79db52be9355da02e42d2223d67e'
+body_hash: 'sha256:e844413b271f43549981bde9fc2322c59d0aae9f29fb8899619678225b24e0cf'
 related:
   - "[[2026-07-05-cross-period-prorrata-adr]]"
   - "[[2026-07-01-iva-complexity-hardening-scope-adr]]"
@@ -276,6 +276,7 @@ of a cuota that may be wholly deductible or wholly non-deductible. The annual
 especial deduction total is absent, not zero, while any deducible input is
 unclassified, and the +10 % mandatory-especial check prompts for classification
 instead of reporting an amount. The settlement split of the cross-period
-prorrata amendment applies to the general regime only; an especial register at
-settlement stays unresolved with a finding until the approved especial
-partition lands.
+prorrata amendment applies to the especial common-use slice only (art. 106.Uno
+regla 3.ª); inputs deducted at 100 % or 0 % are not regularised. The AEAT
+Manual practico IVA 2025 especial example gives a common-slice casilla 44 of
+-17.00 and a year total of 889.60.
