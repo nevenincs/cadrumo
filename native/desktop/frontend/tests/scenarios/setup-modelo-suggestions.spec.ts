@@ -99,7 +99,7 @@ test("a prorrata reference is offered from the register's earlier ones", async (
   await expect(reference).toBeFocused();
 });
 
-test("an account's bank block and number are offered nothing and keep out of browser history", async ({
+test("an account's number and bank code are offered nothing and keep out of browser history", async ({
   page: target,
 }) => {
   await openSetup(
@@ -112,7 +112,7 @@ test("an account's bank block and number are offered nothing and keep out of bro
     .first()
     .click();
   const form = target.locator(".ledger-account-form");
-  for (const key of ["iban", "swift_bic", "bank_country"]) {
+  for (const key of ["iban", "swift_bic"]) {
     const secret = field(form, `desktop.ledger.accounts.${key}`);
     await expect(secret).toHaveAttribute("type", "password");
     await expect(secret).toHaveAttribute("autocomplete", "new-password");
@@ -125,6 +125,15 @@ test("an account's bank block and number are offered nothing and keep out of bro
     await expect(plain).toHaveAttribute("autocomplete", "off");
     await expect(plain).not.toHaveAttribute("role", "combobox");
   }
+  // The bank's country is a plain code field that offers the served countries.
+  const country = field(form, "desktop.ledger.accounts.bank_country");
+  await expect(country).toHaveAttribute("type", "text");
+  await expect(country).toHaveAttribute("autocomplete", "off");
+  await country.fill("F");
+  await expect(options(target).filter({ hasText: "FR" })).toBeVisible();
+  await target.keyboard.press("ArrowDown");
+  await target.keyboard.press("Enter");
+  await expect(country).toHaveValue("FR");
   // The currency is a plain code field that offers the codes in use.
   const currency = field(form, "desktop.ledger.accounts.currency");
   await expect(currency).toHaveAttribute("autocomplete", "off");

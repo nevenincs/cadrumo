@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { userEvent, waitFor, within } from "storybook/test";
+import { typeAsAPerson } from "@/dev/personTyping";
 import {
   STORY_PERIOD,
   STORY_READER,
@@ -338,7 +339,7 @@ async function writePurchase(context: PlayContext) {
   await press(context, t("desktop.ledger.stock.action.add_movement"));
   await pick(context, t("desktop.ledger.inventory.kind_label"), "purchase");
   const write = async (label: string, text: string) =>
-    userEvent.type(await field(context, label), text);
+    typeAsAPerson((await field(context, label)) as HTMLInputElement, text);
   await write(t("desktop.ledger.inventory.date"), "2026-03-04");
   await write(t("desktop.ledger.inventory.quantity"), "100");
   await write(t("desktop.ledger.stock.field.price"), "1000.50");

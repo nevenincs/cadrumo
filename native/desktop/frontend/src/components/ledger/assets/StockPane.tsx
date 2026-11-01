@@ -2500,7 +2500,7 @@ export function StockPane({
                 cell: (movement) =>
                   movement.unit_cost
                     ? formatDecimal(locale, movement.unit_cost.decimal, {
-                        minFraction: 0,
+                        minFraction: 2,
                         maxFraction: 6,
                       })
                     : "—",

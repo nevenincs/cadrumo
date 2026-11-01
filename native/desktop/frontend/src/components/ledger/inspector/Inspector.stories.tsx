@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import { userEvent, waitFor } from "storybook/test";
+import { typeAsAPerson } from "@/dev/personTyping";
 import {
   STORY_PERIOD,
   STORY_READER,
@@ -18,6 +19,7 @@ import { LedgerInspector } from "./LedgerInspector";
 import type { SectionInspectorContext } from "./inspectorContext";
 import type { InspectorFocus } from "./MovementInspector";
 import type { RightPanelMode } from "./RightPanel";
+import { LedgerSuggestions } from "../suggestions/SuggestionsProvider";
 import { SplitDialog } from "./SplitDialog";
 
 // The panel beside the movements grid, over the movements the scenario's
@@ -72,50 +74,58 @@ function Inspector({
       }
     : null;
   return (
-    <div className="flex h-full min-h-0 justify-end">
-      {read.rows && read.window && (
-        <LedgerInspector
-          port={port}
-          reader={STORY_READER}
-          rows={read.rows}
-          generation={read.window.generation}
-          stage={stage}
-          onStage={onStage}
-          sealed={sealed}
-          unread={unread}
-          selection={selection}
-          onSelection={setSelection}
-          context={context}
-          mode={panelMode}
-          onMode={setPanelMode}
-          matchPanel={
-            <MatchQueue
-              port={port}
-              reader={STORY_READER}
-              shown={panelMode === "match"}
-              rows={read.rows}
-              generation={read.generation}
-              stage={stage}
-              onStage={onStage}
-              onChoose={(id) => {
-                setSelection(new Set([id]));
-                setPanelMode("movement");
-              }}
-              locale={locale}
-            />
-          }
-          width={width}
-          onWidth={setWidth}
-          focus={NOT_FOCUSED}
-          locale={locale}
-          onClose={noop}
-          onOpenInvoice={noop}
-          onExport={noop}
-          onMakeRule={noop}
-          copy={async () => undefined}
-        />
-      )}
-    </div>
+    <LedgerSuggestions
+      port={port}
+      reader={STORY_READER}
+      rows={read.rows}
+      stage={stage.content}
+      applied={stage.applied}
+    >
+      <div className="flex h-full min-h-0 justify-end">
+        {read.rows && read.window && (
+          <LedgerInspector
+            port={port}
+            reader={STORY_READER}
+            rows={read.rows}
+            generation={read.window.generation}
+            stage={stage}
+            onStage={onStage}
+            sealed={sealed}
+            unread={unread}
+            selection={selection}
+            onSelection={setSelection}
+            context={context}
+            mode={panelMode}
+            onMode={setPanelMode}
+            matchPanel={
+              <MatchQueue
+                port={port}
+                reader={STORY_READER}
+                shown={panelMode === "match"}
+                rows={read.rows}
+                generation={read.generation}
+                stage={stage}
+                onStage={onStage}
+                onChoose={(id) => {
+                  setSelection(new Set([id]));
+                  setPanelMode("movement");
+                }}
+                locale={locale}
+              />
+            }
+            width={width}
+            onWidth={setWidth}
+            focus={NOT_FOCUSED}
+            locale={locale}
+            onClose={noop}
+            onOpenInvoice={noop}
+            onExport={noop}
+            onMakeRule={noop}
+            copy={async () => undefined}
+          />
+        )}
+      </div>
+    </LedgerSuggestions>
   );
 }
 
@@ -238,23 +248,46 @@ const openTaxFacts = async (root: HTMLElement) => {
   return more;
 };
 
-/** Types into the field whose label is `label` in the first form in `root`. */
-const typedInto = async (form: HTMLElement, label: string, text: string) => {
-  const target = await waitFor(
+/** The control whose label is `label` in `form`, once it is drawn. */
+const controlOf = <Control extends HTMLElement>(
+  form: HTMLElement,
+  label: string,
+) =>
+  waitFor(
     () => {
       const found = [...form.querySelectorAll("label")].find(
         (candidate) => candidate.textContent?.trim() === label,
       );
-      const input = found?.htmlFor
-        ? form.querySelector<HTMLInputElement>(`[id="${found.htmlFor}"]`)
+      const control = found?.htmlFor
+        ? form.querySelector<Control>(`[id="${found.htmlFor}"]`)
         : null;
-      if (!input) throw new Error(`${label} is not drawn yet`);
-      return input;
+      if (!control) throw new Error(`${label} is not drawn yet`);
+      return control;
     },
     { timeout: 5000 },
   );
-  await userEvent.clear(target);
-  await userEvent.type(target, text);
+
+/** Types into the field whose label is `label` in `form`, then leaves it. */
+const typedInto = async (form: HTMLElement, label: string, text: string) =>
+  typeAsAPerson(await controlOf<HTMLInputElement>(form, label), text);
+
+/** Opens the list whose label is `label` in `form` and chooses the entry the
+ * served list words with `code`. */
+const chosenInto = async (form: HTMLElement, label: string, code: string) => {
+  await userEvent.click(await controlOf(form, label));
+  const entries = await waitFor(
+    () => {
+      const found = [...document.body.querySelectorAll('[role="option"]')];
+      if (found.length === 0) throw new Error("the list is not drawn yet");
+      return found;
+    },
+    { timeout: 5000 },
+  );
+  const entry = entries.find((found) =>
+    found.textContent?.trim().startsWith(code),
+  );
+  if (!entry) throw new Error(`the list offers nothing for ${code}`);
+  await userEvent.click(entry);
 };
 
 export const IncomeForNonResident: Story = {
@@ -271,7 +304,7 @@ export const IncomeForNonResident: Story = {
     const labels = [...form.querySelectorAll("label")].map(
       (label) => label.textContent?.trim() ?? "",
     );
-    await typedInto(form, labels[0]!, "01");
+    await chosenInto(form, labels[0]!, "02");
     await typedInto(form, labels[1]!, "12500.5");
     await typedInto(form, labels[4]!, "b12 345 678");
   },

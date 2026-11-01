@@ -507,6 +507,21 @@ test("an inventory valuation preview records nothing", async ({
   expect(await listed.textContent()).toBe(before);
 });
 
+test("a stock movement's unit cost reads to two places beside its cost", async ({
+  page: target,
+}) => {
+  await openLedger(target);
+  await openAssets(target, true);
+  await target
+    .locator(".ledger-stock-table")
+    .getByRole("button", { name: "Papelería y reprografía", exact: true })
+    .click();
+  const movement = target.locator(".ledger-stock-movements tbody tr").first();
+  // The book holds 4.1 and 410: the unit cost shows the cents the cost does.
+  await expect(movement.locator("td").nth(3)).toHaveText("4.10");
+  await expect(movement.locator("td").nth(4)).toHaveText("410.00");
+});
+
 test("a closing value's files and a purchase's files are chosen in the file dialog, and a file the book refuses is said so", async ({
   page: target,
 }) => {

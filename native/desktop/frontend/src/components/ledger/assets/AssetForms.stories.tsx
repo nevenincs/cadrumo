@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { expect, fireEvent, userEvent, waitFor } from "storybook/test";
 import { STORY_READER, useLedgerPort } from "@/dev/LedgerStage";
 import { SEED_ELEMENTS } from "@/dev/assetsSeed";
+import { typeAsAPerson } from "@/dev/personTyping";
 import { ledgerClassOf } from "@/dev/ledgerClassesFixture";
 import type { LedgerShape } from "@/dev/ledgerFixture";
 import type { LedgerPort } from "../../../shell/ledger";
@@ -113,17 +114,18 @@ const drawn = <Found extends HTMLElement>(root: Root, selector: string) =>
     { timeout: 5000 },
   );
 
-// A change is made as a change event, not by pointer and keys: a person who
+// A choice is made as a change event, not by pointer and keys: a person who
 // opens a picker or a list while the form is being filled keeps it open, since
-// nothing here counts as a click outside it.
+// nothing here counts as a click outside it. A written field is typed in and
+// left, as a person does, so it settles into the form it shows at rest.
 
-/** Sets the field the options named `key` to `text`. */
+/** Writes `text` into the field the options named `key`, then leaves it. */
 const typed = async (root: Root, key: string, text: string) => {
   const input = await drawn<HTMLInputElement>(
     root,
     `[data-field="${key}"] input`,
   );
-  await fireEvent.change(input, { target: { value: text } });
+  await typeAsAPerson(input, text);
 };
 
 /** Chooses the `nth` of the choices the options served for `key`. */
@@ -283,6 +285,7 @@ export const AddElementEditors: Story = adding({
     const root = context.canvasElement;
     await steps(
       (found) => chosen(found, "asset_kind", 0),
+      (found) => typed(found, "in_service_date", "2026-06-15"),
       (found) => chosenValue(found, "basis_stage", "taxpayer_owned"),
       (found) => chosenValue(found, "opening_status", "known"),
     )(context);

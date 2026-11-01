@@ -193,6 +193,51 @@ for (const [locale, typed, shown] of [
     await expect(entry).toHaveValue(shown);
   });
 
+// A backend hands a day as `2026-06-15` and an amount as `19800.00`. At rest the
+// field shows them in the window's language, and canonical text typed or pasted
+// is read and then restyled when the field is left.
+for (const [locale, shown] of [
+  ["en", "Jun 15, 2026"],
+  ["es", "15 jun 2026"],
+  ["hu", "2026. jún. 15."],
+] as const)
+  test(`a held ISO day shows in ${locale} at rest, and one typed restyles on leaving`, async ({
+    page,
+  }) => {
+    const rest = await open(page, {
+      field: { kind: "date" },
+      locale,
+      value: "2026-06-15",
+    });
+    await expect(rest).toHaveValue(shown);
+    const entry = await open(page, { field: { kind: "date" }, locale });
+    await entry.fill("2026-06-15");
+    await expect(held(page)).toHaveText("2026-06-15");
+    await elsewhere(page);
+    await expect(entry).toHaveValue(shown);
+  });
+
+for (const [locale, shown] of [
+  ["en", "19,800.00"],
+  ["es", "19.800,00"],
+  ["hu", `19${NBSP}800,00`],
+] as const)
+  test(`a held canonical amount shows in ${locale} at rest, and one typed restyles on leaving`, async ({
+    page,
+  }) => {
+    const rest = await open(page, {
+      field: { kind: "money" },
+      locale,
+      value: "19800.00",
+    });
+    await expect(rest).toHaveValue(shown);
+    const entry = await open(page, { field: { kind: "money" }, locale });
+    await entry.fill("19800.00");
+    await expect(held(page)).toHaveText("19800.00");
+    await elsewhere(page);
+    await expect(entry).toHaveValue(shown);
+  });
+
 test("a date also reads ISO, and refuses what names no day", async ({
   page,
 }) => {
