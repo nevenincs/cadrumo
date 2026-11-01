@@ -99,7 +99,8 @@ async def _cold_tui_recovery(
     )
     app = _ColdRecoveryApp(screen)
     async with app.run_test(size=(120, 50)) as pilot:
-        await settle(pilot)
+        # The app holds its presenting worker for as long as the login screen is shown.
+        await settle(pilot, workers=False)
         password = screen.query_one("#runtime-login-resume-password", Input)
         grants = screen.query_one("#runtime-login-resume-grants", Input)
         assert password.password
