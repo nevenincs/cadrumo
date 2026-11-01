@@ -113,6 +113,163 @@ def run_protected_live_cli(root: Path, logs: Path, stage: str, arguments: Sequen
     return _cli_result(stdout, stage)
 
 
+def _load_or_create_journal(root: Path, journal_path: Path) -> dict[str, object]:
+    """Reuse the retry journal when it exists; otherwise bind a new run to the synthetic work selection."""
+    if journal_path.exists():
+        return _JSON_OBJECT.validate_json(journal_path.read_text(encoding="utf-8"), strict=True)
+    run_id = uuid4()
+    source_envelope = _JSON_OBJECT.validate_json(
+        (root / "session03-driver/work-create-130.json").read_text(encoding="utf-8"), strict=True
+    )
+    source = _JSON_OBJECT.validate_python(source_envelope["result"], strict=True)
+    period = _JSON_OBJECT.validate_python(source["period"], strict=True)
+    if source["modelo"] != "130" or source["filing_year"] != 2025 or period["code"] != "4T":
+        raise RuntimeError("synthetic work selection no longer matches its original coordinates")
+    journal: dict[str, object] = {
+        "version": 1,
+        "run_id": str(run_id),
+        "publication_id": str(uuid4()),
+        "work_unit_id": _text_field(source, "work_unit_id"),
+        "synthetic_input": str(Decimal(100000 + run_id.int % 90000000) / 100),
+    }
+    _write_json(journal_path, journal)
+    return journal
+
+
+def _ensure_saved_calculation(
+    root: Path, evidence: Path, journal: dict[str, object], journal_path: Path, work_id: str
+) -> None:
+    """Save a new synthetic revision once; a retry reuses the journaled revision."""
+    if "calculation_revision_id" in journal:
+        return
+    if "previous_revision_ids" not in journal:
+        previous = run_protected_live_cli(
+            root, evidence, "previous-revisions", ["app", "modelo", "work", "revisions", work_id]
+        )
+        previous_rows = _JSON_OBJECT_ROWS.validate_python(previous["revisions"], strict=True)
+        journal["previous_revision_ids"] = [_text_field(row, "calculation_revision_id") for row in previous_rows]
+        _write_json(journal_path, journal)
+    old_ids = set(_TEXT_LIST.validate_python(journal["previous_revision_ids"], strict=True))
+    calculated = run_protected_live_cli(
+        root,
+        evidence,
+        "calculate",
+        [
+            "app",
+            "modelo",
+            "work",
+            "calculate",
+            work_id,
+            "--casilla",
+            f"05={_text_field(journal, 'synthetic_input')}",
+            "--casilla",
+            "06=0.00",
+            "--binding",
+            "irpf.previous_year_economic_activity_net_income=13000",
+            "--binding",
+            "modelo-130-resultados-negativos-anteriores=0",
+        ],
+    )
+    revision_id = _text_field(calculated, "calculation_revision_id")
+    if revision_id in old_ids or calculated.get("saved") is not True:
+        raise RuntimeError("calculation did not save a new synthetic revision")
+    journal["calculation_revision_id"] = revision_id
+    _write_json(journal_path, journal)
+
+
+def _verify_saved_revision(
+    root: Path, evidence: Path, journal: dict[str, object], revision_id: str, work_id: str
+) -> None:
+    baseline = run_protected_live_cli(
+        root, evidence, "saved-revision", ["app", "modelo", "work", "revision", revision_id]
+    )
+    if baseline["calculation_revision_id"] != revision_id or baseline["work_unit_id"] != work_id:
+        raise RuntimeError("saved revision differs from the selected synthetic calculation")
+    inputs = _TEXT_MAP.validate_python(baseline["input_values_by_casilla_id"], strict=True)
+    if not any(Decimal(value) == Decimal(_text_field(journal, "synthetic_input")) for value in inputs.values()):
+        raise RuntimeError("retained synthetic input did not round-trip")
+
+
+def _ensure_local_export(
+    root: Path, evidence: Path, journal: dict[str, object], journal_path: Path, revision_id: str, output: Path
+) -> None:
+    if "xlsx" in journal:
+        return
+    local_result = run_protected_live_cli(
+        root,
+        evidence,
+        "local-export",
+        [
+            "app",
+            "modelo",
+            "spreadsheet",
+            "review",
+            "--calculation-revision-id",
+            revision_id,
+            "--output",
+            str(output),
+            "--replace",
+        ],
+    )
+    local = _JSON_OBJECT.validate_python(local_result["publication"], strict=True)
+    if local["calculation_revision_id"] != revision_id:
+        raise RuntimeError("local export selected a different revision")
+    journal["xlsx"] = local
+    _write_json(journal_path, journal)
+
+
+def _inspect_workbook(output: Path, revision_id: str) -> tuple[int, int]:
+    """Return the sheet and formula counts of a workbook that carries the retained revision identity."""
+    from openpyxl import load_workbook
+
+    workbook = load_workbook(output, data_only=False)
+    try:
+        values = [str(cell.value) for sheet in workbook for row in sheet for cell in row if cell.value is not None]
+        formula_count = sum(cell.data_type == "f" for sheet in workbook for row in sheet for cell in row)
+        if revision_id not in values or formula_count or len(workbook.sheetnames) < 3:
+            raise RuntimeError("actual workbook lacks retained revision identity or immutable review structure")
+        sheet_count = len(workbook.sheetnames)
+    finally:
+        workbook.close()
+    return sheet_count, formula_count
+
+
+def _ensure_native_publication(
+    root: Path,
+    evidence: Path,
+    journal: dict[str, object],
+    journal_path: Path,
+    revision_id: str,
+    publication_id: str,
+    xlsx: dict[str, object],
+) -> None:
+    if "google" in journal:
+        return
+    native_result = run_protected_live_cli(
+        root,
+        evidence,
+        "native-publish",
+        [
+            "app",
+            "modelo",
+            "spreadsheet",
+            "publish",
+            "--calculation-revision-id",
+            revision_id,
+            "--publication-id",
+            publication_id,
+            "--accept-readable-export",
+        ],
+    )
+    native = _JSON_OBJECT.validate_python(native_result["publication"], strict=True)
+    if native["publication_id"] != publication_id:
+        raise RuntimeError("native publication returned another idempotency identity")
+    if _text_field(native, "snapshot_digest") != _text_field(xlsx, "snapshot_digest"):
+        raise RuntimeError("local and native exports used different retained snapshots")
+    journal["google"] = native
+    _write_json(journal_path, journal)
+
+
 def run_live_export_acceptance(workspace: Path, storage_root: Path) -> dict[str, object]:
     """Save a fresh synthetic revision, export XLSX, and publish its native review.
 
@@ -128,135 +285,22 @@ def run_live_export_acceptance(workspace: Path, storage_root: Path) -> dict[str,
     logs = root / "logs/live-export-acceptance"
     logs.mkdir(parents=True, exist_ok=True)
     journal_path = logs / "acceptance-journal.json"
-    journal: dict[str, object]
-    if journal_path.exists():
-        journal = _JSON_OBJECT.validate_json(journal_path.read_text(encoding="utf-8"), strict=True)
-    else:
-        run_id = uuid4()
-        source_envelope = _JSON_OBJECT.validate_json(
-            (root / "session03-driver/work-create-130.json").read_text(encoding="utf-8"), strict=True
-        )
-        source = _JSON_OBJECT.validate_python(source_envelope["result"], strict=True)
-        period = _JSON_OBJECT.validate_python(source["period"], strict=True)
-        if source["modelo"] != "130" or source["filing_year"] != 2025 or period["code"] != "4T":
-            raise RuntimeError("synthetic work selection no longer matches its original coordinates")
-        journal = {
-            "version": 1,
-            "run_id": str(run_id),
-            "publication_id": str(uuid4()),
-            "work_unit_id": _text_field(source, "work_unit_id"),
-            "synthetic_input": str(Decimal(100000 + run_id.int % 90000000) / 100),
-        }
-        _write_json(journal_path, journal)
+    journal = _load_or_create_journal(root, journal_path)
     publication_id = _text_field(journal, "publication_id")
     UUID(publication_id)
     evidence = logs / _text_field(journal, "run_id")
     evidence.mkdir(exist_ok=True)
     work_id = _text_field(journal, "work_unit_id")
-    if "calculation_revision_id" not in journal:
-        if "previous_revision_ids" not in journal:
-            previous = run_protected_live_cli(
-                root, evidence, "previous-revisions", ["app", "modelo", "work", "revisions", work_id]
-            )
-            previous_rows = _JSON_OBJECT_ROWS.validate_python(previous["revisions"], strict=True)
-            journal["previous_revision_ids"] = [_text_field(row, "calculation_revision_id") for row in previous_rows]
-            _write_json(journal_path, journal)
-        old_ids = set(_TEXT_LIST.validate_python(journal["previous_revision_ids"], strict=True))
-        calculated = run_protected_live_cli(
-            root,
-            evidence,
-            "calculate",
-            [
-                "app",
-                "modelo",
-                "work",
-                "calculate",
-                work_id,
-                "--casilla",
-                f"05={_text_field(journal, 'synthetic_input')}",
-                "--casilla",
-                "06=0.00",
-                "--binding",
-                "irpf.previous_year_economic_activity_net_income=13000",
-                "--binding",
-                "modelo-130-resultados-negativos-anteriores=0",
-            ],
-        )
-        revision_id = _text_field(calculated, "calculation_revision_id")
-        if revision_id in old_ids or calculated.get("saved") is not True:
-            raise RuntimeError("calculation did not save a new synthetic revision")
-        journal["calculation_revision_id"] = revision_id
-        _write_json(journal_path, journal)
+    _ensure_saved_calculation(root, evidence, journal, journal_path, work_id)
     revision_id = _text_field(journal, "calculation_revision_id")
-    baseline = run_protected_live_cli(
-        root, evidence, "saved-revision", ["app", "modelo", "work", "revision", revision_id]
-    )
-    if baseline["calculation_revision_id"] != revision_id or baseline["work_unit_id"] != work_id:
-        raise RuntimeError("saved revision differs from the selected synthetic calculation")
-    inputs = _TEXT_MAP.validate_python(baseline["input_values_by_casilla_id"], strict=True)
-    if not any(Decimal(value) == Decimal(_text_field(journal, "synthetic_input")) for value in inputs.values()):
-        raise RuntimeError("retained synthetic input did not round-trip")
+    _verify_saved_revision(root, evidence, journal, revision_id, work_id)
     output = evidence / "saved-calculation-review.xlsx"
-    if "xlsx" not in journal:
-        local_result = run_protected_live_cli(
-            root,
-            evidence,
-            "local-export",
-            [
-                "app",
-                "modelo",
-                "spreadsheet",
-                "review",
-                "--calculation-revision-id",
-                revision_id,
-                "--output",
-                str(output),
-                "--replace",
-            ],
-        )
-        local = _JSON_OBJECT.validate_python(local_result["publication"], strict=True)
-        if local["calculation_revision_id"] != revision_id:
-            raise RuntimeError("local export selected a different revision")
-        journal["xlsx"] = local
-        _write_json(journal_path, journal)
-    from openpyxl import load_workbook
-
-    workbook = load_workbook(output, data_only=False)
-    try:
-        values = [str(cell.value) for sheet in workbook for row in sheet for cell in row if cell.value is not None]
-        formula_count = sum(cell.data_type == "f" for sheet in workbook for row in sheet for cell in row)
-        if revision_id not in values or formula_count or len(workbook.sheetnames) < 3:
-            raise RuntimeError("actual workbook lacks retained revision identity or immutable review structure")
-        sheet_count = len(workbook.sheetnames)
-    finally:
-        workbook.close()
+    _ensure_local_export(root, evidence, journal, journal_path, revision_id, output)
+    sheet_count, formula_count = _inspect_workbook(output, revision_id)
     xlsx = _JSON_OBJECT.validate_python(journal["xlsx"], strict=True)
     if hashlib.sha256(output.read_bytes()).hexdigest() != _text_field(xlsx, "file_sha256"):
         raise RuntimeError("published XLSX bytes differ from the registered receipt")
-    if "google" not in journal:
-        native_result = run_protected_live_cli(
-            root,
-            evidence,
-            "native-publish",
-            [
-                "app",
-                "modelo",
-                "spreadsheet",
-                "publish",
-                "--calculation-revision-id",
-                revision_id,
-                "--publication-id",
-                publication_id,
-                "--accept-readable-export",
-            ],
-        )
-        native = _JSON_OBJECT.validate_python(native_result["publication"], strict=True)
-        if native["publication_id"] != publication_id:
-            raise RuntimeError("native publication returned another idempotency identity")
-        if _text_field(native, "snapshot_digest") != _text_field(xlsx, "snapshot_digest"):
-            raise RuntimeError("local and native exports used different retained snapshots")
-        journal["google"] = native
-        _write_json(journal_path, journal)
+    _ensure_native_publication(root, evidence, journal, journal_path, revision_id, publication_id, xlsx)
     package = importlib.util.find_spec("cadrumo")
     if package is None or package.origin is None:
         raise RuntimeError("CLI package origin cannot be established")
