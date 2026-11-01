@@ -409,15 +409,8 @@ def test_ledger_classify_persists_professional_service_paid_net_of_irpf_withhold
     assert transaction["irpf_category"] == "actividad_economica"
 
 
-def test_ledger_classify_persists_rent_paid_net_of_withholding(
-    tmp_path: Path,
-) -> None:
-    """A rent bank payment net of withholding can keep full invoice IVA facts.
-
-    Persona repro: commercial rent 2700 + 567 IVA - 513 withholding = 2754 paid.
-    The CLI path must persist the full rent invoice substrate so Modelo 303 can
-    aggregate the 567 IVA soportado instead of rejecting the row at classify time.
-    """
+def _add_net_rent_payment() -> str:
+    """Add the bank payment of a rent invoice net of its withholding and return its transaction id."""
     added = _invoke(
         [
             "--format",
@@ -436,31 +429,47 @@ def test_ledger_classify_persists_rent_paid_net_of_withholding(
         ],
     )
     assert added.exit_code == 0, added.output
-    transaction_id = json.loads(added.output)["result"]["transaction_id"]
+    return json.loads(added.output)["result"]["transaction_id"]
+
+
+def _classify_net_rent_arguments(transaction_id: str, irpf_category: str, *tail: str) -> list[str]:
+    """Classify the net rent payment as business rent with the full invoice IVA facts."""
+    return [
+        "app",
+        "ledger",
+        "classify",
+        transaction_id,
+        "--classification",
+        "BUSINESS",
+        "--category-id",
+        "arrendamiento_local",
+        "--taxable-base",
+        "2700.00",
+        "--iva-rate",
+        "0.21",
+        "--iva-amount",
+        "567.00",
+        "--iva-category",
+        "domestic_general",
+        "--irpf-category",
+        irpf_category,
+        *tail,
+    ]
+
+
+def test_ledger_classify_persists_rent_paid_net_of_withholding(
+    tmp_path: Path,
+) -> None:
+    """A rent bank payment net of withholding can keep full invoice IVA facts.
+
+    Persona repro: commercial rent 2700 + 567 IVA - 513 withholding = 2754 paid.
+    The CLI path must persist the full rent invoice substrate so Modelo 303 can
+    aggregate the 567 IVA soportado instead of rejecting the row at classify time.
+    """
+    transaction_id = _add_net_rent_payment()
 
     classified = _invoke(
-        [
-            "app",
-            "ledger",
-            "classify",
-            transaction_id,
-            "--classification",
-            "BUSINESS",
-            "--category-id",
-            "arrendamiento_local",
-            "--taxable-base",
-            "2700.00",
-            "--iva-rate",
-            "0.21",
-            "--iva-amount",
-            "567.00",
-            "--iva-category",
-            "domestic_general",
-            "--irpf-category",
-            "arrendamiento_local",
-            "--actor",
-            "Javier",
-        ],
+        _classify_net_rent_arguments(transaction_id, "arrendamiento_local", "--actor", "Javier"),
         env={"CADRUMO_OUTPUT_LANGUAGE": "en"},
     )
     assert classified.exit_code == 0, classified.output
@@ -483,47 +492,10 @@ def test_ledger_classify_rent_net_withholding_refusal_names_accepted_irpf_ids(
     tmp_path: Path,
 ) -> None:
     """A guessed rent withholding id is refused with discoverable accepted ids."""
-    added = _invoke(
-        [
-            "--format",
-            "json",
-            "app",
-            "ledger",
-            "add",
-            "--date",
-            "2025-04-05",
-            "--amount",
-            "2754.00",
-            "--direction",
-            "OUTGOING",
-            "--description",
-            "Alquiler local neto de retencion",
-        ],
-    )
-    assert added.exit_code == 0, added.output
-    transaction_id = json.loads(added.output)["result"]["transaction_id"]
+    transaction_id = _add_net_rent_payment()
 
     classified = _invoke(
-        [
-            "app",
-            "ledger",
-            "classify",
-            transaction_id,
-            "--classification",
-            "BUSINESS",
-            "--category-id",
-            "arrendamiento_local",
-            "--taxable-base",
-            "2700.00",
-            "--iva-rate",
-            "0.21",
-            "--iva-amount",
-            "567.00",
-            "--iva-category",
-            "domestic_general",
-            "--irpf-category",
-            "rental_withholding",
-        ],
+        _classify_net_rent_arguments(transaction_id, "rental_withholding"),
         env={"CADRUMO_OUTPUT_LANGUAGE": "en", "COLUMNS": "160"},
     )
 
