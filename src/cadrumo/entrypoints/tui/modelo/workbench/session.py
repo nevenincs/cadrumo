@@ -36,11 +36,11 @@ from .....application.modelo.work_form_models import (
     ModeloFormScalar,
     ModeloWorkForm,
     address_key,
-    comparable_entry,
     confirmable,
     edit_address,
 )
 from .....application.modelo.work_form_rebase import ModeloFormRebaseOutcome, held_change, rebase_outcome
+from .....application.modelo.work_form_scalar_values import comparable_entry
 from .....application.modelo.work_form_typing_effect import ModeloFormDisplacement, field_displacement
 from .....core.external_constants import OutputLanguage
 from .....core.i18n.render import tr

@@ -20,10 +20,10 @@ from ..work_form_models import (
     ModeloFormEditability,
     ModeloFormField,
     ModeloFormOrigin,
-    comparable_entry,
     revised_field,
 )
 from ..work_form_rebase import ModeloFormRebaseOutcome, held_change, rebase_outcome
+from ..work_form_scalar_values import comparable_entry
 from .work_form_fixture import built_form
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

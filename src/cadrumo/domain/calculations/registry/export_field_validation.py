@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Final
 
 from ..export_field_kind import CasillaFieldKind
 from .errors import RegistryValidationError
+from .export_field_policy_validation import validate_export_field_policy_metadata
 from .export_semantics import ExportSemanticPayloadAxis, export_semantic_payload_axis
 from .export_value_policy import ExportValuePolicy, export_value_policy_wire_length
 from .fixed_width_codec import validate_fixed_width_shape
@@ -82,6 +83,7 @@ def validate_export_field_kind(field: ExportFieldDefinition) -> None:
     _validate_required_for(field)
     _validate_required_with(field)
     _validate_design_type(field)
+    validate_export_field_policy_metadata(field)
 
 
 def export_field_wire_shape(field: ExportFieldDefinition) -> tuple[str, str, str, bool, str | None]:

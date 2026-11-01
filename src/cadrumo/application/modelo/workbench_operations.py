@@ -95,8 +95,8 @@ from .edit_review_wording import (
 from .edit_transient_operand import modelo_edit_financial_operand
 from .edit_value_grammar import ModeloEditValueGrammarV1
 from .work_amend_correction import correction_value_grammars
-from .work_form_models import comparable_entry
 from .work_form_rebase import ModeloFormRebaseEntryV1, rebase_report
+from .work_form_scalar_values import comparable_entry
 from .work_form_service import modelo_form_snapshot
 from .work_lifecycle import get_work_unit
 from .work_lifecycle_ports import ActiveWorkLifecyclePortsFactory

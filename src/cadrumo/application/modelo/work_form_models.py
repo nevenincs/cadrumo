@@ -71,6 +71,7 @@ from .calculation_report import CalculationReportRowRole
 from .edit_apply_scalar_contracts import ModeloEditWireScalar, wire_scalar_value
 from .source_policy import SourceFamily, SourceOverridePolicy, SourcePolicyV1, SourceSurface
 from .work_form_findings import ModeloFormAttention, ModeloFormIssue
+from .work_form_scalar_values import comparable_entry, holds_zero
 from .work_review import ModeloWorkProgress
 
 type ModeloFormScalar = Decimal | int | str | bool | date | None
@@ -444,11 +445,6 @@ def _confirmable_of(data: dict[str, object]) -> bool:
     )
 
 
-def holds_zero(value: ModeloFormScalar) -> bool:
-    """Whether a value is an amount of exactly zero: a figure the form holds, which is not the same as nothing."""
-    return isinstance(value, Decimal | int) and not isinstance(value, bool) and value == 0
-
-
 def _default_edit_address(data: dict[str, object]) -> ModeloFormAddressV1:
     return _edit_address_of(_factory_address(data), _factory_editability(data), _factory_bindings(data))
 
@@ -467,20 +463,6 @@ TYPED_EDITABILITIES: Final[frozenset[ModeloFormEditability]] = frozenset(
     }
 )
 """Editabilities under which the filer may type a value on the field itself."""
-
-
-def comparable_entry(value: ModeloFormScalar) -> ModeloEditWireScalar:
-    """A value as two entries of it compare: an amount by its figure, whatever trailing zeros it was written with.
-
-    ``1234.5`` and ``1234.50`` are the same figure, so they compare equal here,
-    as they do as numbers. A yes or no is held as the figure its channel carries,
-    so an entry of one compares as that figure. Every other kind of value compares as it is.
-    """
-    if isinstance(value, bool):
-        return "1" if value else "0"
-    if isinstance(value, Decimal):
-        return format(value.normalize(), "f")
-    return None if value is None else wire_scalar_value(value)
 
 
 def _takes_typed_value_of(data: dict[str, object]) -> bool:
@@ -568,7 +550,8 @@ class ModeloFormField(_FormModel):
     takes_typed_value: bool = Field(default_factory=_takes_typed_value_of)
     #: Whether the box holds a value the filer entered that they can remove.
     clearable: bool = Field(default_factory=_clearable_of)
-    #: The filer's own value as an entry of it compares (see :func:`comparable_entry`); typing it again
+    #: The filer's own value as an entry of it compares (see
+    #: :func:`~cadrumo.application.modelo.work_form_scalar_values.comparable_entry`); typing it again
     #: changes nothing. ``None`` when the value is not the filer's own.
     own_value: ModeloEditWireScalar = Field(default_factory=_own_value_of)
     #: The value confirming the box stages, as an entry of it compares, the form ``own_value`` takes;
@@ -1244,7 +1227,6 @@ __all__ = [
     "edit_address",
     "field_standing",
     "fitting_standings",
-    "holds_zero",
     "map_form_fields",
     "map_section_fields",
     "revised_field",

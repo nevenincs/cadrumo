@@ -71,6 +71,22 @@ def test_m369_required_complementaria_marker_keeps_the_official_negative_answer(
         parse_fixed_width_export_field(unrelated, " ")
 
 
+@pytest.mark.parametrize("marker", [" ", "CC"])
+def test_presence_marker_refuses_blank_or_wrong_width(marker: str) -> None:
+    with pytest.raises(ValidationError, match="presence marker"):
+        _field(
+            kind="header",
+            casilla_id=None,
+            producer_key=FilingProducerKey.AMENDMENT_IS_COMPLEMENTARIA,
+            data_type="text",
+            length=1,
+            required=True,
+            padding="right_space",
+            justification="left",
+            presence_marker=marker,
+        )
+
+
 @pytest.mark.parametrize(("kind", "literal", "expected"), (("literal", "25", "25"), ("filler", None, "  ")))
 def test_retained_wire_values_do_not_override_declared_constants(kind: str, literal: str | None, expected: str) -> None:
     field = _field(

@@ -30,7 +30,7 @@ from .errors import RegistryValidationError
 from .export_literal_fact import ExportLiteralFact, resolve_export_literal_fact
 from .export_record_components import validate_export_record_components
 from .export_semantics import ExportComputedKey, ExportDraftAttribute
-from .export_value_policy import ExportValuePolicy, ExportValuePolicyValue
+from .export_value_policy import ExportValuePolicyValue
 from .fixed_width_codec import (
     ExportEncodingValue,
     ExportJustificationValue,
@@ -40,7 +40,6 @@ from .fixed_width_codec import (
 from .governed_fact_scope import governed_facts_in_scope
 from .ids import BindingId, ExportFieldId, ExportLayoutId, ProjectionEndpointId, RecordId, SourceRefId
 from .schema_base import (
-    ZERO_PADDED_EXPORT_DATA_TYPES,
     CasillaDataType,
     LegalRefs,
     RegistryModel,
@@ -659,24 +658,6 @@ class ExportFieldDefinition(RegistryModel):
     @pydantic_validation_boundary
     def _validate_field_kind(self) -> ExportFieldDefinition:
         _export_field_validation.validate_export_field_kind(self)
-        if self.minimum_year is not None and self.value_policy is not ExportValuePolicy.FOUR_DIGIT_YEAR:
-            raise RegistryValidationError("minimum_year requires the four-digit-year value policy")
-        if self.presence_marker is not None and (
-            self.producer_key is None
-            or self.data_type != "text"
-            or self.length != len(self.presence_marker)
-            or not self.presence_marker.strip()
-        ):
-            raise RegistryValidationError(
-                f"export field {self.id!r} declares a presence marker outside a text slot of the marker's width "
-                "fed by a producer fact",
-            )
-        if (self.scheme_period_part == "period_type") != (self.scheme_period_type is not None):
-            raise RegistryValidationError(
-                f"export field {self.id!r} must declare a scheme period type exactly on a period-type row",
-            )
-        if self.absent_fill is not None and self.data_type not in ZERO_PADDED_EXPORT_DATA_TYPES:
-            raise RegistryValidationError(f"export field {self.id!r} declares an absent fill on a non-numeric slot")
         return self
 
     def wire_shape(self) -> tuple[str, str, str, bool, str | None]:
