@@ -39,7 +39,7 @@ def form_sources[M: (SheetExportMetadata, SheetReviewMetadata, SheetTemplatePrev
     """Resolve source cells and refuse ambiguous casilla values."""
     sources: dict[str, SheetValueCell | SheetFormulaCell] = {}
     for cell in (*plan.value_cells, *plan.formula_cells):
-        if cell.casilla_id is not None and cell.address.tab in (TabName.ENTRADAS, TabName.CALCULOS):
+        if cell.casilla_id is not None and cell.address.tab.holds_casilla_cells:
             if cell.casilla_id in sources:
                 raise CalcSheetsEngineError("form source contains ambiguous duplicate casilla values")
             sources[cell.casilla_id] = cell

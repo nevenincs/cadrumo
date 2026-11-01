@@ -95,6 +95,11 @@ class TabName(StrEnum):
     GUIDE = "Guía"
     FORM = "Modelo"
 
+    @property
+    def holds_casilla_cells(self) -> bool:
+        """Whether the tab lays out the casilla inputs and their calculations."""
+        return self in {TabName.ENTRADAS, TabName.CALCULOS}
+
 
 _A1_COLUMN = re.compile(r"^[A-Z]{1,3}$")
 
