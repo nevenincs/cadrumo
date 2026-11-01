@@ -849,20 +849,17 @@ def test_enrollment_recorder_evidences_two_distinct_annual_cycles_and_matches_ma
     obs_n = _year_n_observation()
     obs_n1 = _year_n_plus_1_observation()
 
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        repo = CalculationObservationRepository()
-        # --- Year N -------------------------------------------------------
-        save_app_filing_observation(repo, obs_n, captured_at=_CLOCK_N)
-        loaded_n = find_observation(repo, _MODELO, filing_year=_YEAR_N, period="0A")
-        assert loaded_n is not None
-        assert loaded_n.observation == obs_n
-        _count_n = sum(1 for _p in repo.iter_modelo(_MODELO) if _p.observation.filing_year == _YEAR_N)
-
-        # --- Year N+1 -----------------------------------------------------
-        save_app_filing_observation(repo, obs_n1, captured_at=_CLOCK_N_PLUS_1)
-        loaded_n1 = find_observation(repo, _MODELO, filing_year=_YEAR_N_PLUS_1, period="0A")
-        assert loaded_n1 is not None
-        assert loaded_n1.observation == obs_n1
-        _count_n1 = sum(1 for _p in repo.iter_modelo(_MODELO) if _p.observation.filing_year == _YEAR_N_PLUS_1)
+    assert_two_ejercicio_round_trip(
+        tmp_path=tmp_path,
+        stage="both",
+        modelo=_MODELO,
+        period="0A",
+        obs_n=obs_n,
+        obs_n_plus_1=obs_n1,
+        year_n=_YEAR_N,
+        year_n_plus_1=_YEAR_N_PLUS_1,
+        clock_n=_CLOCK_N,
+        clock_n_plus_1=_CLOCK_N_PLUS_1,
+    )
 
     # --- Enrollment recording (outside the profile context) ---------------
