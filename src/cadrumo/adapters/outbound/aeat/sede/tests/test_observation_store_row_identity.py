@@ -21,7 +21,6 @@ at this boundary can catch it.
 
 from __future__ import annotations
 
-import hashlib
 import json
 from datetime import UTC, datetime
 from decimal import Decimal
@@ -32,7 +31,6 @@ from pydantic import AnyHttpUrl
 
 from ......core.config import Settings
 from ......core.period import Period
-from ......domain.calculations.registry.tests.published_authority import published_snapshot
 from .....persistence.storage.secure_object_namespaces import (
     AEAT_FILED_DECLARATION_ARTEFACTS_NAMESPACE,
     AEAT_FILED_DECLARATION_OBSERVATIONS_NAMESPACE,
@@ -43,11 +41,10 @@ from ..errors import SedeValidationError
 from ..iva_compensation_wallet_parsing import WALLET_URL
 from ..observation_store import FiledDeclaracionObservationStore
 from ..schema import (
-    FiledDeclaracionArtefact,
-    FiledDeclaracionObservation,
     IvaCompensationWalletObservation,
     IvaCompensationWalletRow,
 )
+from .observation_store_support import declaration_pdf_artefact, filed_declaration_observation
 from .wallet_observation_inventory import list_iva_wallet_observations
 
 pytestmark = [pytest.mark.usefixtures("authority_operation"), pytest.mark.unit, pytest.mark.hex_outbound_adapter]
@@ -55,31 +52,6 @@ pytestmark = [pytest.mark.usefixtures("authority_operation"), pytest.mark.unit, 
 _BUCKET_ID = "d0ab4fce-5ade-4781-9880-7a851f2bf2e1"  # was 'sede-row-identity'
 _AEAT = Settings.external_constants().aeat
 _COTEJO_DOCUMENT_URL = f"{_AEAT.domains.www6}{_AEAT.sede_paths.cotejo_document}"
-
-
-def _artefact(body: bytes) -> FiledDeclaracionArtefact:
-    return FiledDeclaracionArtefact(
-        kind="declaration_pdf",
-        source_url=AnyHttpUrl(f"{_COTEJO_DOCUMENT_URL}?CSV=TUD4V9XAUV7QJ8QV"),
-        content_type="application/pdf",
-        byte_count=len(body),
-        sha256=hashlib.sha256(body).hexdigest(),
-        captured_at=datetime(2024, 7, 1, 9, 0, 0, tzinfo=UTC),
-    )
-
-
-def _observation(expediente_id: str, artefact: FiledDeclaracionArtefact) -> FiledDeclaracionObservation:
-    return FiledDeclaracionObservation(
-        modelo="100",
-        ejercicio=2023,
-        period=Period.from_year_and_code(2023, "0A"),
-        expediente_id=expediente_id,
-        status="PRESENTADA",
-        presented_at=datetime(2024, 6, 30, 12, 34, 56, tzinfo=UTC),
-        authenticated_identity="12345678Z",
-        artefacts=(artefact,),
-        registry_snapshot_ref=published_snapshot("100", filing_year=2023, period="0A").snapshot_ref,
-    )
 
 
 def _wallet(target_year: int, captured_at: datetime) -> IvaCompensationWalletObservation:
@@ -148,9 +120,9 @@ def test_a_filed_observation_under_a_foreign_row_is_refused_on_targeted_load(tmp
     """The targeted lookup refuses instead of answering with the other declaration."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         store = FiledDeclaracionObservationStore(tmp_path / "sede-cache")
-        artefact = _artefact(b"%PDF-1.7 A")
-        path_a = store.persist_observation(_observation("202310013522456T", artefact))
-        store.persist_observation(_observation("202410013522999B", artefact))
+        artefact = declaration_pdf_artefact(b"%PDF-1.7 A")
+        path_a = store.persist_observation(filed_declaration_observation(artefact, expediente_id="202310013522456T"))
+        store.persist_observation(filed_declaration_observation(artefact, expediente_id="202410013522999B"))
 
         _substitute(
             profile.repository._engine,
@@ -171,9 +143,9 @@ def test_a_filed_observation_under_a_foreign_row_is_refused_on_enumeration(tmp_p
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         store = FiledDeclaracionObservationStore(tmp_path / "sede-cache")
-        artefact = _artefact(b"%PDF-1.7 A")
-        store.persist_observation(_observation("202310013522456T", artefact))
-        store.persist_observation(_observation("202410013522999B", artefact))
+        artefact = declaration_pdf_artefact(b"%PDF-1.7 A")
+        store.persist_observation(filed_declaration_observation(artefact, expediente_id="202310013522456T"))
+        store.persist_observation(filed_declaration_observation(artefact, expediente_id="202410013522999B"))
 
         _substitute(
             profile.repository._engine,
@@ -220,9 +192,9 @@ def test_the_substituted_row_really_holds_a_valid_foreign_payload(tmp_path: Path
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         store = FiledDeclaracionObservationStore(tmp_path / "sede-cache")
-        artefact = _artefact(b"%PDF-1.7 A")
-        store.persist_observation(_observation("202310013522456T", artefact))
-        store.persist_observation(_observation("202410013522999B", artefact))
+        artefact = declaration_pdf_artefact(b"%PDF-1.7 A")
+        store.persist_observation(filed_declaration_observation(artefact, expediente_id="202310013522456T"))
+        store.persist_observation(filed_declaration_observation(artefact, expediente_id="202410013522999B"))
 
         _substitute(
             profile.repository._engine,
@@ -249,8 +221,8 @@ def test_an_untampered_store_still_loads_and_lists(tmp_path: Path) -> None:
     """The binding must not turn every legitimate read into a refusal."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         store = FiledDeclaracionObservationStore(tmp_path / "sede-cache")
-        artefact = _artefact(b"%PDF-1.7 A")
-        observation = _observation("202310013522456T", artefact)
+        artefact = declaration_pdf_artefact(b"%PDF-1.7 A")
+        observation = filed_declaration_observation(artefact, expediente_id="202310013522456T")
         wallet = _wallet(2026, datetime(2026, 4, 1, 9, 0, tzinfo=UTC))
 
         path = store.persist_observation(observation)
@@ -276,9 +248,9 @@ def test_an_artefact_whose_bytes_do_not_match_its_reference_is_refused(tmp_path:
         body_a = b"%PDF-1.7 body A"
         body_b = b"%PDF-1.7 body B, a different filing entirely"
         key = ("100", 2023, Period.from_year_and_code(2023, "0A"), "202310013522456T")
-        ref_a = store.persist_artefact(key, _artefact(body_a), body_a).storage_ref
+        ref_a = store.persist_artefact(key, declaration_pdf_artefact(body_a), body_a).storage_ref
         assert ref_a is not None
-        store.persist_artefact(key, _artefact(body_b), body_b)
+        store.persist_artefact(key, declaration_pdf_artefact(body_b), body_b)
 
         _substitute(
             profile.repository._engine,
@@ -310,7 +282,7 @@ def test_an_untampered_artefact_still_loads(tmp_path: Path) -> None:
         store = FiledDeclaracionObservationStore(tmp_path / "sede-cache")
         body = b"%PDF-1.7 body A"
         key = ("100", 2023, Period.from_year_and_code(2023, "0A"), "202310013522456T")
-        ref = store.persist_artefact(key, _artefact(body), body).storage_ref
+        ref = store.persist_artefact(key, declaration_pdf_artefact(body), body).storage_ref
         assert ref is not None
 
         assert store.load_artefact(ref) == body
