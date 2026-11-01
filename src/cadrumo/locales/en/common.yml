@@ -3104,6 +3104,10 @@ desktop:
         retention_rate: Withholding tax rate
         series: Series
         situacion: Property situation
+      figures_retry: Try again
+      figures_unavailable: Figures not available. The ledger did not answer, and your
+        draft is kept.
+      figures_updating: Updating the figures…
       fixed: Part of the invoice's identity. Remove it and add it again to change
         it.
       from_lines: From the lines
@@ -3141,6 +3145,7 @@ desktop:
       line:
         actions: Actions
         add: Add a line
+        calculated: Calculated {amount}
         category: Category
         choose_rate: Choose a rate
         description: Description
@@ -3154,8 +3159,9 @@ desktop:
         unit_price: Unit price
       lines: Lines
       lines_fixed: Fixed
-      lines_note: A dot for decimals, up to six places, no thousands separator. Subtotal
-        and IVA are worked out to the cent.
+      lines_note: A dot for decimals, up to six places, no thousands separator. The
+        ledger works out subtotal and IVA; fill them in only to state what the document
+        prints.
       linked: Linked movements
       linked_count: 'Linked movements: {count}'
       links_permanent: 'A link is permanent: it can''t be removed.'
@@ -3166,6 +3172,7 @@ desktop:
       next_number: 'Next in series {series}: {number}'
       next_number_series: Choose a series to see its next number.
       none: None
+      not_available: Not available
       not_met: not met
       not_saved: It wasn't saved. Your edits are kept.
       not_stated: Not stated
@@ -3191,17 +3198,9 @@ desktop:
         no_line: Add at least one line.
         operation_date_fixed: Once added, it can move but not be added or removed.
         payment_id_shape: 64 hexadecimal characters.
-        printed_differs: The lines add up to {total}.
-        recargo_above_iva: Can't exceed the IVA.
         rectifies_required: Name the invoice it rectifies.
-        retention_above_base: Can't exceed the taxable base.
-        retention_differs: The rate gives {amount}.
-        retention_needs_amount: A rate needs its amount.
         series_required: A rectificativa needs a series.
         tax_id_required: Required, except on an issued simplified invoice.
-      rate:
-        exempt: Exempt
-        not_subject: Not subject
       read_failed: Couldn't read the invoices.
       refusal:
         ambiguous_grouping: '"{raw}" can be read two ways. Write 1500 or 1.5.'
@@ -3232,7 +3231,7 @@ desktop:
       remove_question: Remove this invoice?
       removed: Invoice {number} removed
       retention: Withholding tax, outside the total
-      retention_presets: Common withholding tax rates
+      retention_implied: The rate gives {amount}.
       review: Review
       review_changes: Review changes ({count})
       save: Save
@@ -3258,6 +3257,8 @@ desktop:
       unmatched: Unmatched
       use: Use
       use_number: Use {number}
+      would_refuse: The ledger would refuse this invoice as it stands. Check its tax
+        ID and document fields.
     irpf_category:
       actividad_economica: Economic activity
       arrendamiento_local: Rent of business premises

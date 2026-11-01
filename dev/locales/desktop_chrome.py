@@ -32,6 +32,7 @@ from pathlib import Path
 from types import MappingProxyType
 from typing import Final
 
+from cadrumo.application.invoices.figures_preview_contracts import INVOICE_FIGURES_PREVIEW_LABEL_PREFIX
 from cadrumo.core.atomic_write import atomic_write_text
 from cadrumo.core.external_constants import UTF_8_ENCODING
 from cadrumo_client.contracts.navigation import load_navigation_register
@@ -54,6 +55,7 @@ from .desktop_ledger_workflow_keys import DESKTOP_LEDGER_WORKFLOW_KEYS
 from .desktop_modelo_choice_keys import MODELO_CHOICE_FAMILIES, MODELO_CHOICE_KEYS
 from .desktop_workspace_keys import WORKSPACE_FAMILIES, WORKSPACE_KEYS
 from .errors import LocaleError
+from .invoice_figures_preview_keys import FINDING_KEYS, RATE_SLOT_KEYS
 
 #: The shell's locales, source locale first.
 DESKTOP_LOCALES: Final[tuple[str, ...]] = ("en", "es", "ca", "hu")
@@ -512,7 +514,15 @@ DESKTOP_CHROME_FAMILIES: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType
         "desktop.ledger.invoices.kind.": ("issued", "received"),
         "desktop.ledger.invoices.kind_choice.": ("issued", "received"),
         "desktop.ledger.invoices.kinds.": ("all", "issued", "received"),
-        "desktop.ledger.invoices.line.": ("description", "quantity", "unit_price", "rate", "category"),
+        "desktop.ledger.invoices.line.": (
+            "description",
+            "quantity",
+            "unit_price",
+            "subtotal",
+            "rate",
+            "iva",
+            "category",
+        ),
         "desktop.ledger.invoices.payment.": ("paid", "pending", "partially_paid", "overdue", "cancelled"),
         "desktop.ledger.invoices.problem.": (
             "choose_kind",
@@ -523,16 +533,10 @@ DESKTOP_CHROME_FAMILIES: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType
             "rectifies_required",
             "choose_rate",
             "no_line",
-            "recargo_above_iva",
-            "printed_differs",
-            "retention_above_base",
-            "retention_needs_amount",
-            "retention_differs",
             "lease_reference_not_allowed",
             "payment_id_shape",
             "operation_date_fixed",
         ),
-        "desktop.ledger.invoices.rate.": ("exempt", "not_subject"),
         "desktop.ledger.invoices.refusal.": (
             "too_long",
             "signed",
@@ -888,6 +892,8 @@ DESKTOP_CHROME_KEYS: Final[frozenset[str]] = (
     | INVENTORY_KEYS
     | ENTRY_OPTION_KEYS
     | MODELO_CHOICE_KEYS
+    | FINDING_KEYS
+    | RATE_SLOT_KEYS
 )
 
 #: Declared keys no shell source names yet, because their view is still being
@@ -900,7 +906,7 @@ DESKTOP_CHROME_AWAITING_CONSUMER: Final[frozenset[str]] = frozenset({"desktop.si
 #: Keys the application serves with its data and the shell translates as they
 #: come, so its source never names them. Their declaration reads the same
 #: shape that serves them, and generation refuses until each word is authored.
-DESKTOP_CHROME_SERVED_KEYS: Final[frozenset[str]] = MODELO_CHOICE_KEYS
+DESKTOP_CHROME_SERVED_KEYS: Final[frozenset[str]] = MODELO_CHOICE_KEYS | FINDING_KEYS | RATE_SLOT_KEYS
 
 #: A whole key in quotes, or the fixed head of a template literal up to ``${``.
 _SHELL_LITERAL_KEY: Final[re.Pattern[str]] = re.compile(
@@ -1001,7 +1007,13 @@ def _in_shell_form(key: str, value: str) -> str:
     ``%{name}`` placeholder and a ``{name}`` one the same way, so the sentence is
     unchanged. Every other key still refuses the form.
     """
-    if not key.startswith((*ASSET_PERCENT_PLACEHOLDER_PREFIXES, *INVENTORY_PERCENT_PLACEHOLDER_PREFIXES)):
+    if not key.startswith(
+        (
+            *ASSET_PERCENT_PLACEHOLDER_PREFIXES,
+            *INVENTORY_PERCENT_PLACEHOLDER_PREFIXES,
+            INVOICE_FIGURES_PREVIEW_LABEL_PREFIX,
+        )
+    ):
         return value
     return _PERCENT_PLACEHOLDER.sub(r"{\1}", value)
 

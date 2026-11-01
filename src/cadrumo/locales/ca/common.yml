@@ -3147,6 +3147,10 @@ desktop:
         retention_rate: Tipus de retenció
         series: Sèrie
         situacion: Situació de l'immoble
+      figures_retry: Torna-ho a provar
+      figures_unavailable: Xifres no disponibles. El llibre no ha respost i el teu
+        esborrany es conserva.
+      figures_updating: S'estan actualitzant les xifres…
       fixed: Forma part de la identitat de la factura. Per canviar-ho, elimina-la
         i torna-la a afegir.
       from_lines: Segons les línies
@@ -3184,6 +3188,7 @@ desktop:
       line:
         actions: Accions
         add: Afegeix una línia
+        calculated: Calculat {amount}
         category: Categoria
         choose_rate: Tria un tipus
         description: Descripció
@@ -3198,7 +3203,8 @@ desktop:
       lines: Línies
       lines_fixed: Fixes
       lines_note: Punt per als decimals, fins a sis, sense separador de milers. El
-        subtotal i l'IVA es calculen al cèntim.
+        llibre calcula el subtotal i l'IVA; omple'ls només per indicar el que imprimeix
+        el document.
       linked: Moviments vinculats
       linked_count: 'Moviments vinculats: {count}'
       links_permanent: 'Un vincle és permanent: no es pot treure.'
@@ -3209,6 +3215,7 @@ desktop:
       next_number: 'Següent de la sèrie {series}: {number}'
       next_number_series: Tria una sèrie per veure'n el número següent.
       none: Cap
+      not_available: No disponible
       not_met: pendent
       not_saved: No s'ha desat. Els teus canvis es conserven.
       not_stated: Sense indicar
@@ -3234,17 +3241,9 @@ desktop:
         no_line: Afegeix almenys una línia.
         operation_date_fixed: Un cop afegida, es pot canviar, però no afegir ni treure.
         payment_id_shape: 64 caràcters hexadecimals.
-        printed_differs: Les línies sumen {total}.
-        recargo_above_iva: No pot superar l'IVA.
         rectifies_required: Indica la factura que rectifica.
-        retention_above_base: No pot superar la base imposable.
-        retention_differs: El tipus dona {amount}.
-        retention_needs_amount: Un tipus necessita el seu import.
         series_required: Una rectificativa necessita sèrie.
         tax_id_required: Obligatori, excepte en una simplificada emesa.
-      rate:
-        exempt: Exempt
-        not_subject: No subjecte
       read_failed: No s'han pogut llegir les factures.
       refusal:
         ambiguous_grouping: '"{raw}" es pot llegir de dues maneres. Escriu 1500 o
@@ -3276,7 +3275,7 @@ desktop:
       remove_question: Vols eliminar aquesta factura?
       removed: Factura {number} eliminada
       retention: Retenció, fora del total
-      retention_presets: Tipus de retenció habituals
+      retention_implied: El tipus dona {amount}.
       review: Revisa
       review_changes: Revisa els canvis ({count})
       save: Desa
@@ -3303,6 +3302,8 @@ desktop:
       unmatched: Sense vincular
       use: Fes-lo servir
       use_number: Fes servir {number}
+      would_refuse: El llibre rebutjaria aquesta factura tal com està. Revisa'n el
+        NIF i els camps del document.
     irpf_category:
       actividad_economica: Activitat econòmica
       arrendamiento_local: Arrendament de local

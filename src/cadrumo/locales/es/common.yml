@@ -3146,6 +3146,10 @@ desktop:
         retention_rate: Tipo de retención
         series: Serie
         situacion: Situación del inmueble
+      figures_retry: Vuelve a intentarlo
+      figures_unavailable: Cifras no disponibles. El libro no ha respondido y tu borrador
+        se conserva.
+      figures_updating: Actualizando las cifras…
       fixed: Forma parte de la identidad de la factura. Para cambiarlo, elimínala
         y vuelve a añadirla.
       from_lines: Según las líneas
@@ -3183,6 +3187,7 @@ desktop:
       line:
         actions: Acciones
         add: Añadir una línea
+        calculated: Calculado {amount}
         category: Categoría
         choose_rate: Elige un tipo
         description: Descripción
@@ -3197,7 +3202,8 @@ desktop:
       lines: Líneas
       lines_fixed: Fijas
       lines_note: Punto para los decimales, hasta seis, sin separador de miles. El
-        subtotal y el IVA se calculan al céntimo.
+        libro calcula el subtotal y el IVA; rellénalos solo para indicar lo que imprime
+        el documento.
       linked: Movimientos vinculados
       linked_count: 'Movimientos vinculados: {count}'
       links_permanent: 'Un vínculo es permanente: no se puede quitar.'
@@ -3208,6 +3214,7 @@ desktop:
       next_number: 'Siguiente de la serie {series}: {number}'
       next_number_series: Elige una serie para ver su siguiente número.
       none: Ninguno
+      not_available: No disponible
       not_met: pendiente
       not_saved: No se ha guardado. Tus cambios se conservan.
       not_stated: Sin indicar
@@ -3234,17 +3241,9 @@ desktop:
         operation_date_fixed: Una vez añadida, se puede cambiar, pero no añadir ni
           quitar.
         payment_id_shape: 64 caracteres hexadecimales.
-        printed_differs: Las líneas suman {total}.
-        recargo_above_iva: No puede superar el IVA.
         rectifies_required: Indica la factura que rectifica.
-        retention_above_base: No puede superar la base imponible.
-        retention_differs: El tipo da {amount}.
-        retention_needs_amount: Un tipo necesita su importe.
         series_required: Una rectificativa necesita serie.
         tax_id_required: Obligatorio, salvo en una simplificada emitida.
-      rate:
-        exempt: Exento
-        not_subject: No sujeto
       read_failed: No se han podido leer las facturas.
       refusal:
         ambiguous_grouping: '"{raw}" se puede leer de dos maneras. Escribe 1500 o
@@ -3276,7 +3275,7 @@ desktop:
       remove_question: ¿Eliminar esta factura?
       removed: Factura {number} eliminada
       retention: Retención, fuera del total
-      retention_presets: Tipos de retención habituales
+      retention_implied: El tipo da {amount}.
       review: Revisar
       review_changes: Revisar cambios ({count})
       save: Guardar
@@ -3303,6 +3302,8 @@ desktop:
       unmatched: Sin vincular
       use: Usar
       use_number: Usar {number}
+      would_refuse: El libro rechazaría esta factura tal como está. Revisa su NIF
+        y los campos del documento.
     irpf_category:
       actividad_economica: Actividad económica
       arrendamiento_local: Arrendamiento de local

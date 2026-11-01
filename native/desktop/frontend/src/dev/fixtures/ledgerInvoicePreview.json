@@ -1,0 +1,4278 @@
+{
+  "note": "Answers of `aeat app ledger invoice preview` through a real profile worker, on synthetic drafts. Only the decimal tags the CLI flattens were restored. `argv` is the command each came from.",
+  "recordings": {
+    "bare_2026": {
+      "argv": ["--invoice-date", "2026-10-23"],
+      "request": {
+        "issued_at": "2026-10-23"
+      },
+      "result": {
+        "input_digest": "645011f71d3d5f5b8eb9ab4d74962179906873804d012bf29dd4a3163f482910",
+        "on_date": "2026-10-23",
+        "on_date_source": "issued_at",
+        "rate_slots": [
+          {
+            "slot": "RATE_0",
+            "fraction": {
+              "decimal": "0"
+            },
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_0"
+          },
+          {
+            "slot": "RATE_2",
+            "fraction": null,
+            "in_force": false,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_2"
+          },
+          {
+            "slot": "RATE_4",
+            "fraction": {
+              "decimal": "0.04"
+            },
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_4"
+          },
+          {
+            "slot": "RATE_5",
+            "fraction": null,
+            "in_force": false,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_5"
+          },
+          {
+            "slot": "RATE_7.5",
+            "fraction": null,
+            "in_force": false,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_7_5"
+          },
+          {
+            "slot": "RATE_10",
+            "fraction": {
+              "decimal": "0.1"
+            },
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_10"
+          },
+          {
+            "slot": "RATE_21",
+            "fraction": {
+              "decimal": "0.21"
+            },
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_21"
+          },
+          {
+            "slot": "EXEMPT",
+            "fraction": null,
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.exempt"
+          },
+          {
+            "slot": "NOT_SUBJECT",
+            "fraction": null,
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.not_subject"
+          }
+        ],
+        "lines": [],
+        "totals": {
+          "base": null,
+          "iva": null,
+          "recargo": null,
+          "total": null,
+          "net_of_retention": null
+        },
+        "retention": {
+          "rate": null,
+          "amount": null,
+          "implied": null
+        },
+        "findings": [],
+        "missing_fields": [
+          "kind",
+          "invoice_number",
+          "counterparty_name",
+          "counterparty_country",
+          "currency",
+          "lines"
+        ],
+        "verdict": "incomplete",
+        "refusal_code": null,
+        "invoice_id": null
+      }
+    },
+    "two_lines": {
+      "argv": [
+        "--kind",
+        "issued",
+        "--counterparty-name",
+        "Norte Digital S. Coop.",
+        "--counterparty-nif",
+        "A58818501",
+        "--country-code",
+        "ES",
+        "--series",
+        "F",
+        "--invoice-number",
+        "F-2026-021",
+        "--invoice-date",
+        "2026-10-23",
+        "--currency",
+        "EUR",
+        "--invoice-class",
+        "ORDINARIA",
+        "--line",
+        "{\"key\": \"line-1\", \"description\": \"Diseño de marca\", \"quantity\": \"1\", \"unit_price\": \"550\", \"iva_rate\": \"RATE_21\"}",
+        "--line",
+        "{\"key\": \"line-2\", \"description\": \"Piezas gráficas\", \"quantity\": \"2\", \"unit_price\": \"275\", \"iva_rate\": \"RATE_21\"}"
+      ],
+      "request": {
+        "kind": "issued",
+        "counterparty_name": "Norte Digital S. Coop.",
+        "counterparty_tax_id": "A58818501",
+        "counterparty_country": "ES",
+        "series": "F",
+        "invoice_number": "F-2026-021",
+        "issued_at": "2026-10-23",
+        "currency": "EUR",
+        "invoice_class": "ORDINARIA",
+        "lines": [
+          {
+            "description": "Diseño de marca",
+            "quantity": {
+              "decimal": "1"
+            },
+            "unit_price": {
+              "decimal": "550"
+            },
+            "iva_rate": "RATE_21"
+          },
+          {
+            "description": "Piezas gráficas",
+            "quantity": {
+              "decimal": "2"
+            },
+            "unit_price": {
+              "decimal": "275"
+            },
+            "iva_rate": "RATE_21"
+          }
+        ]
+      },
+      "result": {
+        "input_digest": "8ecee457f8ea84dd9fd5ce76c240364d1d6640ab274c7f43fefe6e7913992f30",
+        "on_date": "2026-10-23",
+        "on_date_source": "issued_at",
+        "rate_slots": [
+          {
+            "slot": "RATE_0",
+            "fraction": {
+              "decimal": "0"
+            },
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_0"
+          },
+          {
+            "slot": "RATE_2",
+            "fraction": null,
+            "in_force": false,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_2"
+          },
+          {
+            "slot": "RATE_4",
+            "fraction": {
+              "decimal": "0.04"
+            },
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_4"
+          },
+          {
+            "slot": "RATE_5",
+            "fraction": null,
+            "in_force": false,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_5"
+          },
+          {
+            "slot": "RATE_7.5",
+            "fraction": null,
+            "in_force": false,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_7_5"
+          },
+          {
+            "slot": "RATE_10",
+            "fraction": {
+              "decimal": "0.1"
+            },
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_10"
+          },
+          {
+            "slot": "RATE_21",
+            "fraction": {
+              "decimal": "0.21"
+            },
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_21"
+          },
+          {
+            "slot": "EXEMPT",
+            "fraction": null,
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.exempt"
+          },
+          {
+            "slot": "NOT_SUBJECT",
+            "fraction": null,
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.not_subject"
+          }
+        ],
+        "lines": [
+          {
+            "key": "line-1",
+            "subtotal": {
+              "computed": {
+                "decimal": "550.00"
+              },
+              "stated": null,
+              "verdict": null,
+              "submitted": {
+                "decimal": "550.00"
+              }
+            },
+            "iva_amount": {
+              "computed": {
+                "decimal": "115.50"
+              },
+              "stated": null,
+              "verdict": null,
+              "submitted": {
+                "decimal": "115.50"
+              }
+            }
+          },
+          {
+            "key": "line-2",
+            "subtotal": {
+              "computed": {
+                "decimal": "550.00"
+              },
+              "stated": null,
+              "verdict": null,
+              "submitted": {
+                "decimal": "550.00"
+              }
+            },
+            "iva_amount": {
+              "computed": {
+                "decimal": "115.50"
+              },
+              "stated": null,
+              "verdict": null,
+              "submitted": {
+                "decimal": "115.50"
+              }
+            }
+          }
+        ],
+        "totals": {
+          "base": {
+            "decimal": "1100.00"
+          },
+          "iva": {
+            "decimal": "231.00"
+          },
+          "recargo": null,
+          "total": {
+            "decimal": "1331.00"
+          },
+          "net_of_retention": {
+            "decimal": "1331.00"
+          }
+        },
+        "retention": {
+          "rate": null,
+          "amount": null,
+          "implied": null
+        },
+        "findings": [],
+        "missing_fields": [],
+        "verdict": "would_accept",
+        "refusal_code": null,
+        "invoice_id": "61fc0fd2aa74a97a40c9abd7c77db37c91403fc6ba77e54bb04e0f98f6c36e3d"
+      }
+    },
+    "retention_15": {
+      "argv": [
+        "--kind",
+        "issued",
+        "--counterparty-name",
+        "Norte Digital S. Coop.",
+        "--counterparty-nif",
+        "A58818501",
+        "--country-code",
+        "ES",
+        "--series",
+        "F",
+        "--invoice-number",
+        "F-2026-021",
+        "--invoice-date",
+        "2026-10-23",
+        "--currency",
+        "EUR",
+        "--invoice-class",
+        "ORDINARIA",
+        "--retention-rate",
+        "0.15",
+        "--retention-amount",
+        "165",
+        "--line",
+        "{\"key\": \"line-1\", \"description\": \"Diseño de marca\", \"quantity\": \"1\", \"unit_price\": \"550\", \"iva_rate\": \"RATE_21\"}",
+        "--line",
+        "{\"key\": \"line-2\", \"description\": \"Piezas gráficas\", \"quantity\": \"2\", \"unit_price\": \"275\", \"iva_rate\": \"RATE_21\"}"
+      ],
+      "request": {
+        "kind": "issued",
+        "counterparty_name": "Norte Digital S. Coop.",
+        "counterparty_tax_id": "A58818501",
+        "counterparty_country": "ES",
+        "series": "F",
+        "invoice_number": "F-2026-021",
+        "issued_at": "2026-10-23",
+        "currency": "EUR",
+        "invoice_class": "ORDINARIA",
+        "lines": [
+          {
+            "description": "Diseño de marca",
+            "quantity": {
+              "decimal": "1"
+            },
+            "unit_price": {
+              "decimal": "550"
+            },
+            "iva_rate": "RATE_21"
+          },
+          {
+            "description": "Piezas gráficas",
+            "quantity": {
+              "decimal": "2"
+            },
+            "unit_price": {
+              "decimal": "275"
+            },
+            "iva_rate": "RATE_21"
+          }
+        ],
+        "retention_rate": {
+          "decimal": "0.15"
+        },
+        "retention_amount": {
+          "decimal": "165"
+        }
+      },
+      "result": {
+        "input_digest": "a01c6d14658abbb4b01900ba93a6da6eaae7b9ba46b95356591b677f8a68e5d6",
+        "on_date": "2026-10-23",
+        "on_date_source": "issued_at",
+        "rate_slots": [
+          {
+            "slot": "RATE_0",
+            "fraction": {
+              "decimal": "0"
+            },
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_0"
+          },
+          {
+            "slot": "RATE_2",
+            "fraction": null,
+            "in_force": false,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_2"
+          },
+          {
+            "slot": "RATE_4",
+            "fraction": {
+              "decimal": "0.04"
+            },
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_4"
+          },
+          {
+            "slot": "RATE_5",
+            "fraction": null,
+            "in_force": false,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_5"
+          },
+          {
+            "slot": "RATE_7.5",
+            "fraction": null,
+            "in_force": false,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_7_5"
+          },
+          {
+            "slot": "RATE_10",
+            "fraction": {
+              "decimal": "0.1"
+            },
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_10"
+          },
+          {
+            "slot": "RATE_21",
+            "fraction": {
+              "decimal": "0.21"
+            },
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_21"
+          },
+          {
+            "slot": "EXEMPT",
+            "fraction": null,
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.exempt"
+          },
+          {
+            "slot": "NOT_SUBJECT",
+            "fraction": null,
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.not_subject"
+          }
+        ],
+        "lines": [
+          {
+            "key": "line-1",
+            "subtotal": {
+              "computed": {
+                "decimal": "550.00"
+              },
+              "stated": null,
+              "verdict": null,
+              "submitted": {
+                "decimal": "550.00"
+              }
+            },
+            "iva_amount": {
+              "computed": {
+                "decimal": "115.50"
+              },
+              "stated": null,
+              "verdict": null,
+              "submitted": {
+                "decimal": "115.50"
+              }
+            }
+          },
+          {
+            "key": "line-2",
+            "subtotal": {
+              "computed": {
+                "decimal": "550.00"
+              },
+              "stated": null,
+              "verdict": null,
+              "submitted": {
+                "decimal": "550.00"
+              }
+            },
+            "iva_amount": {
+              "computed": {
+                "decimal": "115.50"
+              },
+              "stated": null,
+              "verdict": null,
+              "submitted": {
+                "decimal": "115.50"
+              }
+            }
+          }
+        ],
+        "totals": {
+          "base": {
+            "decimal": "1100.00"
+          },
+          "iva": {
+            "decimal": "231.00"
+          },
+          "recargo": null,
+          "total": {
+            "decimal": "1331.00"
+          },
+          "net_of_retention": {
+            "decimal": "1166.00"
+          }
+        },
+        "retention": {
+          "rate": {
+            "decimal": "0.15"
+          },
+          "amount": {
+            "decimal": "165"
+          },
+          "implied": {
+            "decimal": "165.00"
+          }
+        },
+        "findings": [],
+        "missing_fields": [],
+        "verdict": "would_accept",
+        "refusal_code": null,
+        "invoice_id": "61fc0fd2aa74a97a40c9abd7c77db37c91403fc6ba77e54bb04e0f98f6c36e3d"
+      }
+    },
+    "retention_rate_alone": {
+      "argv": [
+        "--kind",
+        "issued",
+        "--counterparty-name",
+        "Norte Digital S. Coop.",
+        "--counterparty-nif",
+        "A58818501",
+        "--country-code",
+        "ES",
+        "--series",
+        "F",
+        "--invoice-number",
+        "F-2026-021",
+        "--invoice-date",
+        "2026-10-23",
+        "--currency",
+        "EUR",
+        "--invoice-class",
+        "ORDINARIA",
+        "--retention-rate",
+        "0.15",
+        "--line",
+        "{\"key\": \"line-1\", \"description\": \"Diseño de marca\", \"quantity\": \"1\", \"unit_price\": \"550\", \"iva_rate\": \"RATE_21\"}",
+        "--line",
+        "{\"key\": \"line-2\", \"description\": \"Piezas gráficas\", \"quantity\": \"2\", \"unit_price\": \"275\", \"iva_rate\": \"RATE_21\"}"
+      ],
+      "request": {
+        "kind": "issued",
+        "counterparty_name": "Norte Digital S. Coop.",
+        "counterparty_tax_id": "A58818501",
+        "counterparty_country": "ES",
+        "series": "F",
+        "invoice_number": "F-2026-021",
+        "issued_at": "2026-10-23",
+        "currency": "EUR",
+        "invoice_class": "ORDINARIA",
+        "lines": [
+          {
+            "description": "Diseño de marca",
+            "quantity": {
+              "decimal": "1"
+            },
+            "unit_price": {
+              "decimal": "550"
+            },
+            "iva_rate": "RATE_21"
+          },
+          {
+            "description": "Piezas gráficas",
+            "quantity": {
+              "decimal": "2"
+            },
+            "unit_price": {
+              "decimal": "275"
+            },
+            "iva_rate": "RATE_21"
+          }
+        ],
+        "retention_rate": {
+          "decimal": "0.15"
+        }
+      },
+      "result": {
+        "input_digest": "aa44fa1557a78ccd315959e57f4c127789a7f407fa7a6d47012dc59ca6e0d5cf",
+        "on_date": "2026-10-23",
+        "on_date_source": "issued_at",
+        "rate_slots": [
+          {
+            "slot": "RATE_0",
+            "fraction": {
+              "decimal": "0"
+            },
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_0"
+          },
+          {
+            "slot": "RATE_2",
+            "fraction": null,
+            "in_force": false,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_2"
+          },
+          {
+            "slot": "RATE_4",
+            "fraction": {
+              "decimal": "0.04"
+            },
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_4"
+          },
+          {
+            "slot": "RATE_5",
+            "fraction": null,
+            "in_force": false,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_5"
+          },
+          {
+            "slot": "RATE_7.5",
+            "fraction": null,
+            "in_force": false,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_7_5"
+          },
+          {
+            "slot": "RATE_10",
+            "fraction": {
+              "decimal": "0.1"
+            },
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_10"
+          },
+          {
+            "slot": "RATE_21",
+            "fraction": {
+              "decimal": "0.21"
+            },
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_21"
+          },
+          {
+            "slot": "EXEMPT",
+            "fraction": null,
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.exempt"
+          },
+          {
+            "slot": "NOT_SUBJECT",
+            "fraction": null,
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.not_subject"
+          }
+        ],
+        "lines": [
+          {
+            "key": "line-1",
+            "subtotal": {
+              "computed": {
+                "decimal": "550.00"
+              },
+              "stated": null,
+              "verdict": null,
+              "submitted": {
+                "decimal": "550.00"
+              }
+            },
+            "iva_amount": {
+              "computed": {
+                "decimal": "115.50"
+              },
+              "stated": null,
+              "verdict": null,
+              "submitted": {
+                "decimal": "115.50"
+              }
+            }
+          },
+          {
+            "key": "line-2",
+            "subtotal": {
+              "computed": {
+                "decimal": "550.00"
+              },
+              "stated": null,
+              "verdict": null,
+              "submitted": {
+                "decimal": "550.00"
+              }
+            },
+            "iva_amount": {
+              "computed": {
+                "decimal": "115.50"
+              },
+              "stated": null,
+              "verdict": null,
+              "submitted": {
+                "decimal": "115.50"
+              }
+            }
+          }
+        ],
+        "totals": {
+          "base": {
+            "decimal": "1100.00"
+          },
+          "iva": {
+            "decimal": "231.00"
+          },
+          "recargo": null,
+          "total": {
+            "decimal": "1331.00"
+          },
+          "net_of_retention": null
+        },
+        "retention": {
+          "rate": {
+            "decimal": "0.15"
+          },
+          "amount": null,
+          "implied": {
+            "decimal": "165.00"
+          }
+        },
+        "findings": [
+          {
+            "code": "retention_rate_without_amount",
+            "severity": "refusal",
+            "fields": ["retention_rate", "retention_amount"],
+            "line_key": null,
+            "values": [],
+            "label_key": "application.invoices.figures_preview.finding.retention_rate_without_amount"
+          }
+        ],
+        "missing_fields": [],
+        "verdict": "would_refuse",
+        "refusal_code": "retention_rate_without_amount",
+        "invoice_id": null
+      }
+    },
+    "retention_above_base": {
+      "argv": [
+        "--kind",
+        "issued",
+        "--counterparty-name",
+        "Norte Digital S. Coop.",
+        "--counterparty-nif",
+        "A58818501",
+        "--country-code",
+        "ES",
+        "--series",
+        "F",
+        "--invoice-number",
+        "F-2026-021",
+        "--invoice-date",
+        "2026-10-23",
+        "--currency",
+        "EUR",
+        "--invoice-class",
+        "ORDINARIA",
+        "--retention-rate",
+        "0.15",
+        "--retention-amount",
+        "1200",
+        "--line",
+        "{\"key\": \"line-1\", \"description\": \"Diseño de marca\", \"quantity\": \"1\", \"unit_price\": \"550\", \"iva_rate\": \"RATE_21\"}",
+        "--line",
+        "{\"key\": \"line-2\", \"description\": \"Piezas gráficas\", \"quantity\": \"2\", \"unit_price\": \"275\", \"iva_rate\": \"RATE_21\"}"
+      ],
+      "request": {
+        "kind": "issued",
+        "counterparty_name": "Norte Digital S. Coop.",
+        "counterparty_tax_id": "A58818501",
+        "counterparty_country": "ES",
+        "series": "F",
+        "invoice_number": "F-2026-021",
+        "issued_at": "2026-10-23",
+        "currency": "EUR",
+        "invoice_class": "ORDINARIA",
+        "lines": [
+          {
+            "description": "Diseño de marca",
+            "quantity": {
+              "decimal": "1"
+            },
+            "unit_price": {
+              "decimal": "550"
+            },
+            "iva_rate": "RATE_21"
+          },
+          {
+            "description": "Piezas gráficas",
+            "quantity": {
+              "decimal": "2"
+            },
+            "unit_price": {
+              "decimal": "275"
+            },
+            "iva_rate": "RATE_21"
+          }
+        ],
+        "retention_rate": {
+          "decimal": "0.15"
+        },
+        "retention_amount": {
+          "decimal": "1200"
+        }
+      },
+      "result": {
+        "input_digest": "a17e6b803ab8635288394125e141351e964c531c9a4ed448b5f7f104af4f9a9d",
+        "on_date": "2026-10-23",
+        "on_date_source": "issued_at",
+        "rate_slots": [
+          {
+            "slot": "RATE_0",
+            "fraction": {
+              "decimal": "0"
+            },
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_0"
+          },
+          {
+            "slot": "RATE_2",
+            "fraction": null,
+            "in_force": false,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_2"
+          },
+          {
+            "slot": "RATE_4",
+            "fraction": {
+              "decimal": "0.04"
+            },
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_4"
+          },
+          {
+            "slot": "RATE_5",
+            "fraction": null,
+            "in_force": false,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_5"
+          },
+          {
+            "slot": "RATE_7.5",
+            "fraction": null,
+            "in_force": false,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_7_5"
+          },
+          {
+            "slot": "RATE_10",
+            "fraction": {
+              "decimal": "0.1"
+            },
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_10"
+          },
+          {
+            "slot": "RATE_21",
+            "fraction": {
+              "decimal": "0.21"
+            },
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_21"
+          },
+          {
+            "slot": "EXEMPT",
+            "fraction": null,
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.exempt"
+          },
+          {
+            "slot": "NOT_SUBJECT",
+            "fraction": null,
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.not_subject"
+          }
+        ],
+        "lines": [
+          {
+            "key": "line-1",
+            "subtotal": {
+              "computed": {
+                "decimal": "550.00"
+              },
+              "stated": null,
+              "verdict": null,
+              "submitted": {
+                "decimal": "550.00"
+              }
+            },
+            "iva_amount": {
+              "computed": {
+                "decimal": "115.50"
+              },
+              "stated": null,
+              "verdict": null,
+              "submitted": {
+                "decimal": "115.50"
+              }
+            }
+          },
+          {
+            "key": "line-2",
+            "subtotal": {
+              "computed": {
+                "decimal": "550.00"
+              },
+              "stated": null,
+              "verdict": null,
+              "submitted": {
+                "decimal": "550.00"
+              }
+            },
+            "iva_amount": {
+              "computed": {
+                "decimal": "115.50"
+              },
+              "stated": null,
+              "verdict": null,
+              "submitted": {
+                "decimal": "115.50"
+              }
+            }
+          }
+        ],
+        "totals": {
+          "base": {
+            "decimal": "1100.00"
+          },
+          "iva": {
+            "decimal": "231.00"
+          },
+          "recargo": null,
+          "total": {
+            "decimal": "1331.00"
+          },
+          "net_of_retention": null
+        },
+        "retention": {
+          "rate": {
+            "decimal": "0.15"
+          },
+          "amount": {
+            "decimal": "1200"
+          },
+          "implied": {
+            "decimal": "165.00"
+          }
+        },
+        "findings": [
+          {
+            "code": "retention_amount_above_base",
+            "severity": "refusal",
+            "fields": ["retention_amount", "base_total"],
+            "line_key": null,
+            "values": [
+              {
+                "key": "base_total",
+                "value": {
+                  "decimal": "1100.00"
+                }
+              },
+              {
+                "key": "stated",
+                "value": {
+                  "decimal": "1200"
+                }
+              }
+            ],
+            "label_key": "application.invoices.figures_preview.finding.retention_amount_above_base"
+          },
+          {
+            "code": "retention_amount_mismatch",
+            "severity": "refusal",
+            "fields": ["retention_rate", "retention_amount", "base_total"],
+            "line_key": null,
+            "values": [
+              {
+                "key": "expected",
+                "value": {
+                  "decimal": "165.0000"
+                }
+              },
+              {
+                "key": "stated",
+                "value": {
+                  "decimal": "1200"
+                }
+              }
+            ],
+            "label_key": "application.invoices.figures_preview.finding.retention_amount_mismatch"
+          }
+        ],
+        "missing_fields": [],
+        "verdict": "would_refuse",
+        "refusal_code": "retention_amount_above_base",
+        "invoice_id": null
+      }
+    },
+    "retention_differs": {
+      "argv": [
+        "--kind",
+        "issued",
+        "--counterparty-name",
+        "Norte Digital S. Coop.",
+        "--counterparty-nif",
+        "A58818501",
+        "--country-code",
+        "ES",
+        "--series",
+        "F",
+        "--invoice-number",
+        "F-2026-021",
+        "--invoice-date",
+        "2026-10-23",
+        "--currency",
+        "EUR",
+        "--invoice-class",
+        "ORDINARIA",
+        "--retention-rate",
+        "0.15",
+        "--retention-amount",
+        "160",
+        "--line",
+        "{\"key\": \"line-1\", \"description\": \"Diseño de marca\", \"quantity\": \"1\", \"unit_price\": \"550\", \"iva_rate\": \"RATE_21\"}",
+        "--line",
+        "{\"key\": \"line-2\", \"description\": \"Piezas gráficas\", \"quantity\": \"2\", \"unit_price\": \"275\", \"iva_rate\": \"RATE_21\"}"
+      ],
+      "request": {
+        "kind": "issued",
+        "counterparty_name": "Norte Digital S. Coop.",
+        "counterparty_tax_id": "A58818501",
+        "counterparty_country": "ES",
+        "series": "F",
+        "invoice_number": "F-2026-021",
+        "issued_at": "2026-10-23",
+        "currency": "EUR",
+        "invoice_class": "ORDINARIA",
+        "lines": [
+          {
+            "description": "Diseño de marca",
+            "quantity": {
+              "decimal": "1"
+            },
+            "unit_price": {
+              "decimal": "550"
+            },
+            "iva_rate": "RATE_21"
+          },
+          {
+            "description": "Piezas gráficas",
+            "quantity": {
+              "decimal": "2"
+            },
+            "unit_price": {
+              "decimal": "275"
+            },
+            "iva_rate": "RATE_21"
+          }
+        ],
+        "retention_rate": {
+          "decimal": "0.15"
+        },
+        "retention_amount": {
+          "decimal": "160"
+        }
+      },
+      "result": {
+        "input_digest": "764929752dd28c67074efe22c4da56f23c515ea7a02d7c9657475242c3456ad4",
+        "on_date": "2026-10-23",
+        "on_date_source": "issued_at",
+        "rate_slots": [
+          {
+            "slot": "RATE_0",
+            "fraction": {
+              "decimal": "0"
+            },
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_0"
+          },
+          {
+            "slot": "RATE_2",
+            "fraction": null,
+            "in_force": false,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_2"
+          },
+          {
+            "slot": "RATE_4",
+            "fraction": {
+              "decimal": "0.04"
+            },
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_4"
+          },
+          {
+            "slot": "RATE_5",
+            "fraction": null,
+            "in_force": false,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_5"
+          },
+          {
+            "slot": "RATE_7.5",
+            "fraction": null,
+            "in_force": false,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_7_5"
+          },
+          {
+            "slot": "RATE_10",
+            "fraction": {
+              "decimal": "0.1"
+            },
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_10"
+          },
+          {
+            "slot": "RATE_21",
+            "fraction": {
+              "decimal": "0.21"
+            },
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_21"
+          },
+          {
+            "slot": "EXEMPT",
+            "fraction": null,
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.exempt"
+          },
+          {
+            "slot": "NOT_SUBJECT",
+            "fraction": null,
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.not_subject"
+          }
+        ],
+        "lines": [
+          {
+            "key": "line-1",
+            "subtotal": {
+              "computed": {
+                "decimal": "550.00"
+              },
+              "stated": null,
+              "verdict": null,
+              "submitted": {
+                "decimal": "550.00"
+              }
+            },
+            "iva_amount": {
+              "computed": {
+                "decimal": "115.50"
+              },
+              "stated": null,
+              "verdict": null,
+              "submitted": {
+                "decimal": "115.50"
+              }
+            }
+          },
+          {
+            "key": "line-2",
+            "subtotal": {
+              "computed": {
+                "decimal": "550.00"
+              },
+              "stated": null,
+              "verdict": null,
+              "submitted": {
+                "decimal": "550.00"
+              }
+            },
+            "iva_amount": {
+              "computed": {
+                "decimal": "115.50"
+              },
+              "stated": null,
+              "verdict": null,
+              "submitted": {
+                "decimal": "115.50"
+              }
+            }
+          }
+        ],
+        "totals": {
+          "base": {
+            "decimal": "1100.00"
+          },
+          "iva": {
+            "decimal": "231.00"
+          },
+          "recargo": null,
+          "total": {
+            "decimal": "1331.00"
+          },
+          "net_of_retention": null
+        },
+        "retention": {
+          "rate": {
+            "decimal": "0.15"
+          },
+          "amount": {
+            "decimal": "160"
+          },
+          "implied": {
+            "decimal": "165.00"
+          }
+        },
+        "findings": [
+          {
+            "code": "retention_amount_mismatch",
+            "severity": "refusal",
+            "fields": ["retention_rate", "retention_amount", "base_total"],
+            "line_key": null,
+            "values": [
+              {
+                "key": "expected",
+                "value": {
+                  "decimal": "165.0000"
+                }
+              },
+              {
+                "key": "stated",
+                "value": {
+                  "decimal": "160"
+                }
+              }
+            ],
+            "label_key": "application.invoices.figures_preview.finding.retention_amount_mismatch"
+          }
+        ],
+        "missing_fields": [],
+        "verdict": "would_refuse",
+        "refusal_code": "retention_amount_mismatch",
+        "invoice_id": null
+      }
+    },
+    "printed_differs": {
+      "argv": [
+        "--kind",
+        "issued",
+        "--counterparty-name",
+        "Norte Digital S. Coop.",
+        "--counterparty-nif",
+        "A58818501",
+        "--country-code",
+        "ES",
+        "--series",
+        "F",
+        "--invoice-number",
+        "F-2026-021",
+        "--invoice-date",
+        "2026-10-23",
+        "--currency",
+        "EUR",
+        "--invoice-class",
+        "ORDINARIA",
+        "--printed-total",
+        "1330.99",
+        "--line",
+        "{\"key\": \"line-1\", \"description\": \"Diseño de marca\", \"quantity\": \"1\", \"unit_price\": \"550\", \"iva_rate\": \"RATE_21\"}",
+        "--line",
+        "{\"key\": \"line-2\", \"description\": \"Piezas gráficas\", \"quantity\": \"2\", \"unit_price\": \"275\", \"iva_rate\": \"RATE_21\"}"
+      ],
+      "request": {
+        "kind": "issued",
+        "counterparty_name": "Norte Digital S. Coop.",
+        "counterparty_tax_id": "A58818501",
+        "counterparty_country": "ES",
+        "series": "F",
+        "invoice_number": "F-2026-021",
+        "issued_at": "2026-10-23",
+        "currency": "EUR",
+        "invoice_class": "ORDINARIA",
+        "lines": [
+          {
+            "description": "Diseño de marca",
+            "quantity": {
+              "decimal": "1"
+            },
+            "unit_price": {
+              "decimal": "550"
+            },
+            "iva_rate": "RATE_21"
+          },
+          {
+            "description": "Piezas gráficas",
+            "quantity": {
+              "decimal": "2"
+            },
+            "unit_price": {
+              "decimal": "275"
+            },
+            "iva_rate": "RATE_21"
+          }
+        ],
+        "printed_total": {
+          "decimal": "1330.99"
+        }
+      },
+      "result": {
+        "input_digest": "80ede53597b33de14b3cc8ccd51fdff5c14f20fbf4171bb6fe938c896872815d",
+        "on_date": "2026-10-23",
+        "on_date_source": "issued_at",
+        "rate_slots": [
+          {
+            "slot": "RATE_0",
+            "fraction": {
+              "decimal": "0"
+            },
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_0"
+          },
+          {
+            "slot": "RATE_2",
+            "fraction": null,
+            "in_force": false,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_2"
+          },
+          {
+            "slot": "RATE_4",
+            "fraction": {
+              "decimal": "0.04"
+            },
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_4"
+          },
+          {
+            "slot": "RATE_5",
+            "fraction": null,
+            "in_force": false,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_5"
+          },
+          {
+            "slot": "RATE_7.5",
+            "fraction": null,
+            "in_force": false,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_7_5"
+          },
+          {
+            "slot": "RATE_10",
+            "fraction": {
+              "decimal": "0.1"
+            },
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_10"
+          },
+          {
+            "slot": "RATE_21",
+            "fraction": {
+              "decimal": "0.21"
+            },
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_21"
+          },
+          {
+            "slot": "EXEMPT",
+            "fraction": null,
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.exempt"
+          },
+          {
+            "slot": "NOT_SUBJECT",
+            "fraction": null,
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.not_subject"
+          }
+        ],
+        "lines": [
+          {
+            "key": "line-1",
+            "subtotal": {
+              "computed": {
+                "decimal": "550.00"
+              },
+              "stated": null,
+              "verdict": null,
+              "submitted": {
+                "decimal": "550.00"
+              }
+            },
+            "iva_amount": {
+              "computed": {
+                "decimal": "115.50"
+              },
+              "stated": null,
+              "verdict": null,
+              "submitted": {
+                "decimal": "115.50"
+              }
+            }
+          },
+          {
+            "key": "line-2",
+            "subtotal": {
+              "computed": {
+                "decimal": "550.00"
+              },
+              "stated": null,
+              "verdict": null,
+              "submitted": {
+                "decimal": "550.00"
+              }
+            },
+            "iva_amount": {
+              "computed": {
+                "decimal": "115.50"
+              },
+              "stated": null,
+              "verdict": null,
+              "submitted": {
+                "decimal": "115.50"
+              }
+            }
+          }
+        ],
+        "totals": {
+          "base": {
+            "decimal": "1100.00"
+          },
+          "iva": {
+            "decimal": "231.00"
+          },
+          "recargo": null,
+          "total": {
+            "decimal": "1331.00"
+          },
+          "net_of_retention": {
+            "decimal": "1331.00"
+          }
+        },
+        "retention": {
+          "rate": null,
+          "amount": null,
+          "implied": null
+        },
+        "findings": [
+          {
+            "code": "printed_total_differs",
+            "severity": "warning",
+            "fields": ["printed_total"],
+            "line_key": null,
+            "values": [
+              {
+                "key": "computed",
+                "value": {
+                  "decimal": "1331.00"
+                }
+              },
+              {
+                "key": "printed",
+                "value": {
+                  "decimal": "1330.99"
+                }
+              }
+            ],
+            "label_key": "application.invoices.figures_preview.finding.printed_total_differs"
+          }
+        ],
+        "missing_fields": [],
+        "verdict": "would_accept",
+        "refusal_code": null,
+        "invoice_id": "61fc0fd2aa74a97a40c9abd7c77db37c91403fc6ba77e54bb04e0f98f6c36e3d"
+      }
+    },
+    "printed_matches": {
+      "argv": [
+        "--kind",
+        "issued",
+        "--counterparty-name",
+        "Norte Digital S. Coop.",
+        "--counterparty-nif",
+        "A58818501",
+        "--country-code",
+        "ES",
+        "--series",
+        "F",
+        "--invoice-number",
+        "F-2026-021",
+        "--invoice-date",
+        "2026-10-23",
+        "--currency",
+        "EUR",
+        "--invoice-class",
+        "ORDINARIA",
+        "--printed-total",
+        "1331",
+        "--line",
+        "{\"key\": \"line-1\", \"description\": \"Diseño de marca\", \"quantity\": \"1\", \"unit_price\": \"550\", \"iva_rate\": \"RATE_21\"}",
+        "--line",
+        "{\"key\": \"line-2\", \"description\": \"Piezas gráficas\", \"quantity\": \"2\", \"unit_price\": \"275\", \"iva_rate\": \"RATE_21\"}"
+      ],
+      "request": {
+        "kind": "issued",
+        "counterparty_name": "Norte Digital S. Coop.",
+        "counterparty_tax_id": "A58818501",
+        "counterparty_country": "ES",
+        "series": "F",
+        "invoice_number": "F-2026-021",
+        "issued_at": "2026-10-23",
+        "currency": "EUR",
+        "invoice_class": "ORDINARIA",
+        "lines": [
+          {
+            "description": "Diseño de marca",
+            "quantity": {
+              "decimal": "1"
+            },
+            "unit_price": {
+              "decimal": "550"
+            },
+            "iva_rate": "RATE_21"
+          },
+          {
+            "description": "Piezas gráficas",
+            "quantity": {
+              "decimal": "2"
+            },
+            "unit_price": {
+              "decimal": "275"
+            },
+            "iva_rate": "RATE_21"
+          }
+        ],
+        "printed_total": {
+          "decimal": "1331"
+        }
+      },
+      "result": {
+        "input_digest": "f258e01cb49086c096a0082c868b37a6558f1e4b38565a3f0f1cae692dc8c387",
+        "on_date": "2026-10-23",
+        "on_date_source": "issued_at",
+        "rate_slots": [
+          {
+            "slot": "RATE_0",
+            "fraction": {
+              "decimal": "0"
+            },
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_0"
+          },
+          {
+            "slot": "RATE_2",
+            "fraction": null,
+            "in_force": false,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_2"
+          },
+          {
+            "slot": "RATE_4",
+            "fraction": {
+              "decimal": "0.04"
+            },
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_4"
+          },
+          {
+            "slot": "RATE_5",
+            "fraction": null,
+            "in_force": false,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_5"
+          },
+          {
+            "slot": "RATE_7.5",
+            "fraction": null,
+            "in_force": false,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_7_5"
+          },
+          {
+            "slot": "RATE_10",
+            "fraction": {
+              "decimal": "0.1"
+            },
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_10"
+          },
+          {
+            "slot": "RATE_21",
+            "fraction": {
+              "decimal": "0.21"
+            },
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_21"
+          },
+          {
+            "slot": "EXEMPT",
+            "fraction": null,
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.exempt"
+          },
+          {
+            "slot": "NOT_SUBJECT",
+            "fraction": null,
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.not_subject"
+          }
+        ],
+        "lines": [
+          {
+            "key": "line-1",
+            "subtotal": {
+              "computed": {
+                "decimal": "550.00"
+              },
+              "stated": null,
+              "verdict": null,
+              "submitted": {
+                "decimal": "550.00"
+              }
+            },
+            "iva_amount": {
+              "computed": {
+                "decimal": "115.50"
+              },
+              "stated": null,
+              "verdict": null,
+              "submitted": {
+                "decimal": "115.50"
+              }
+            }
+          },
+          {
+            "key": "line-2",
+            "subtotal": {
+              "computed": {
+                "decimal": "550.00"
+              },
+              "stated": null,
+              "verdict": null,
+              "submitted": {
+                "decimal": "550.00"
+              }
+            },
+            "iva_amount": {
+              "computed": {
+                "decimal": "115.50"
+              },
+              "stated": null,
+              "verdict": null,
+              "submitted": {
+                "decimal": "115.50"
+              }
+            }
+          }
+        ],
+        "totals": {
+          "base": {
+            "decimal": "1100.00"
+          },
+          "iva": {
+            "decimal": "231.00"
+          },
+          "recargo": null,
+          "total": {
+            "decimal": "1331.00"
+          },
+          "net_of_retention": {
+            "decimal": "1331.00"
+          }
+        },
+        "retention": {
+          "rate": null,
+          "amount": null,
+          "implied": null
+        },
+        "findings": [],
+        "missing_fields": [],
+        "verdict": "would_accept",
+        "refusal_code": null,
+        "invoice_id": "61fc0fd2aa74a97a40c9abd7c77db37c91403fc6ba77e54bb04e0f98f6c36e3d"
+      }
+    },
+    "recargo_above_iva": {
+      "argv": [
+        "--kind",
+        "issued",
+        "--counterparty-name",
+        "Norte Digital S. Coop.",
+        "--counterparty-nif",
+        "A58818501",
+        "--country-code",
+        "ES",
+        "--series",
+        "F",
+        "--invoice-number",
+        "F-2026-021",
+        "--invoice-date",
+        "2026-10-23",
+        "--currency",
+        "EUR",
+        "--invoice-class",
+        "ORDINARIA",
+        "--recargo",
+        "231.01",
+        "--line",
+        "{\"key\": \"line-1\", \"description\": \"Diseño de marca\", \"quantity\": \"1\", \"unit_price\": \"550\", \"iva_rate\": \"RATE_21\"}",
+        "--line",
+        "{\"key\": \"line-2\", \"description\": \"Piezas gráficas\", \"quantity\": \"2\", \"unit_price\": \"275\", \"iva_rate\": \"RATE_21\"}"
+      ],
+      "request": {
+        "kind": "issued",
+        "counterparty_name": "Norte Digital S. Coop.",
+        "counterparty_tax_id": "A58818501",
+        "counterparty_country": "ES",
+        "series": "F",
+        "invoice_number": "F-2026-021",
+        "issued_at": "2026-10-23",
+        "currency": "EUR",
+        "invoice_class": "ORDINARIA",
+        "lines": [
+          {
+            "description": "Diseño de marca",
+            "quantity": {
+              "decimal": "1"
+            },
+            "unit_price": {
+              "decimal": "550"
+            },
+            "iva_rate": "RATE_21"
+          },
+          {
+            "description": "Piezas gráficas",
+            "quantity": {
+              "decimal": "2"
+            },
+            "unit_price": {
+              "decimal": "275"
+            },
+            "iva_rate": "RATE_21"
+          }
+        ],
+        "recargo_amount": {
+          "decimal": "231.01"
+        }
+      },
+      "result": {
+        "input_digest": "f0cf0ab76579c6c584e8e4bee5e47a546b3b910605d49bdd2637285646fac8b8",
+        "on_date": "2026-10-23",
+        "on_date_source": "issued_at",
+        "rate_slots": [
+          {
+            "slot": "RATE_0",
+            "fraction": {
+              "decimal": "0"
+            },
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_0"
+          },
+          {
+            "slot": "RATE_2",
+            "fraction": null,
+            "in_force": false,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_2"
+          },
+          {
+            "slot": "RATE_4",
+            "fraction": {
+              "decimal": "0.04"
+            },
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_4"
+          },
+          {
+            "slot": "RATE_5",
+            "fraction": null,
+            "in_force": false,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_5"
+          },
+          {
+            "slot": "RATE_7.5",
+            "fraction": null,
+            "in_force": false,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_7_5"
+          },
+          {
+            "slot": "RATE_10",
+            "fraction": {
+              "decimal": "0.1"
+            },
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_10"
+          },
+          {
+            "slot": "RATE_21",
+            "fraction": {
+              "decimal": "0.21"
+            },
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_21"
+          },
+          {
+            "slot": "EXEMPT",
+            "fraction": null,
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.exempt"
+          },
+          {
+            "slot": "NOT_SUBJECT",
+            "fraction": null,
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.not_subject"
+          }
+        ],
+        "lines": [
+          {
+            "key": "line-1",
+            "subtotal": {
+              "computed": {
+                "decimal": "550.00"
+              },
+              "stated": null,
+              "verdict": null,
+              "submitted": {
+                "decimal": "550.00"
+              }
+            },
+            "iva_amount": {
+              "computed": {
+                "decimal": "115.50"
+              },
+              "stated": null,
+              "verdict": null,
+              "submitted": {
+                "decimal": "115.50"
+              }
+            }
+          },
+          {
+            "key": "line-2",
+            "subtotal": {
+              "computed": {
+                "decimal": "550.00"
+              },
+              "stated": null,
+              "verdict": null,
+              "submitted": {
+                "decimal": "550.00"
+              }
+            },
+            "iva_amount": {
+              "computed": {
+                "decimal": "115.50"
+              },
+              "stated": null,
+              "verdict": null,
+              "submitted": {
+                "decimal": "115.50"
+              }
+            }
+          }
+        ],
+        "totals": {
+          "base": {
+            "decimal": "1100.00"
+          },
+          "iva": {
+            "decimal": "231.00"
+          },
+          "recargo": {
+            "decimal": "231.01"
+          },
+          "total": {
+            "decimal": "1562.01"
+          },
+          "net_of_retention": {
+            "decimal": "1562.01"
+          }
+        },
+        "retention": {
+          "rate": null,
+          "amount": null,
+          "implied": null
+        },
+        "findings": [
+          {
+            "code": "recargo_above_iva_total",
+            "severity": "refusal",
+            "fields": ["recargo_amount", "iva_total"],
+            "line_key": null,
+            "values": [
+              {
+                "key": "iva_total",
+                "value": {
+                  "decimal": "231.00"
+                }
+              },
+              {
+                "key": "stated",
+                "value": {
+                  "decimal": "231.01"
+                }
+              }
+            ],
+            "label_key": "application.invoices.figures_preview.finding.recargo_above_iva_total"
+          }
+        ],
+        "missing_fields": [],
+        "verdict": "would_refuse",
+        "refusal_code": "recargo_above_iva_total",
+        "invoice_id": null
+      }
+    },
+    "stated_iva_within": {
+      "argv": [
+        "--kind",
+        "issued",
+        "--counterparty-name",
+        "Norte Digital S. Coop.",
+        "--counterparty-nif",
+        "A58818501",
+        "--country-code",
+        "ES",
+        "--series",
+        "F",
+        "--invoice-number",
+        "F-2026-021",
+        "--invoice-date",
+        "2026-10-23",
+        "--currency",
+        "EUR",
+        "--invoice-class",
+        "ORDINARIA",
+        "--line",
+        "{\"key\": \"line-1\", \"description\": \"Diseño de marca\", \"quantity\": \"1\", \"unit_price\": \"550\", \"iva_rate\": \"RATE_21\", \"iva_amount\": \"115.51\"}",
+        "--line",
+        "{\"key\": \"line-2\", \"description\": \"Piezas gráficas\", \"quantity\": \"2\", \"unit_price\": \"275\", \"iva_rate\": \"RATE_21\"}"
+      ],
+      "request": {
+        "kind": "issued",
+        "counterparty_name": "Norte Digital S. Coop.",
+        "counterparty_tax_id": "A58818501",
+        "counterparty_country": "ES",
+        "series": "F",
+        "invoice_number": "F-2026-021",
+        "issued_at": "2026-10-23",
+        "currency": "EUR",
+        "invoice_class": "ORDINARIA",
+        "lines": [
+          {
+            "description": "Diseño de marca",
+            "quantity": {
+              "decimal": "1"
+            },
+            "unit_price": {
+              "decimal": "550"
+            },
+            "iva_rate": "RATE_21",
+            "iva_amount": {
+              "decimal": "115.51"
+            }
+          },
+          {
+            "description": "Piezas gráficas",
+            "quantity": {
+              "decimal": "2"
+            },
+            "unit_price": {
+              "decimal": "275"
+            },
+            "iva_rate": "RATE_21"
+          }
+        ]
+      },
+      "result": {
+        "input_digest": "5865b8b8e2fd611f0d70e63f49cff0cf93302323b95d095fb4c98230111bbf95",
+        "on_date": "2026-10-23",
+        "on_date_source": "issued_at",
+        "rate_slots": [
+          {
+            "slot": "RATE_0",
+            "fraction": {
+              "decimal": "0"
+            },
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_0"
+          },
+          {
+            "slot": "RATE_2",
+            "fraction": null,
+            "in_force": false,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_2"
+          },
+          {
+            "slot": "RATE_4",
+            "fraction": {
+              "decimal": "0.04"
+            },
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_4"
+          },
+          {
+            "slot": "RATE_5",
+            "fraction": null,
+            "in_force": false,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_5"
+          },
+          {
+            "slot": "RATE_7.5",
+            "fraction": null,
+            "in_force": false,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_7_5"
+          },
+          {
+            "slot": "RATE_10",
+            "fraction": {
+              "decimal": "0.1"
+            },
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_10"
+          },
+          {
+            "slot": "RATE_21",
+            "fraction": {
+              "decimal": "0.21"
+            },
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_21"
+          },
+          {
+            "slot": "EXEMPT",
+            "fraction": null,
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.exempt"
+          },
+          {
+            "slot": "NOT_SUBJECT",
+            "fraction": null,
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.not_subject"
+          }
+        ],
+        "lines": [
+          {
+            "key": "line-1",
+            "subtotal": {
+              "computed": {
+                "decimal": "550.00"
+              },
+              "stated": null,
+              "verdict": null,
+              "submitted": {
+                "decimal": "550.00"
+              }
+            },
+            "iva_amount": {
+              "computed": {
+                "decimal": "115.50"
+              },
+              "stated": {
+                "decimal": "115.51"
+              },
+              "verdict": "within_tolerance",
+              "submitted": {
+                "decimal": "115.51"
+              }
+            }
+          },
+          {
+            "key": "line-2",
+            "subtotal": {
+              "computed": {
+                "decimal": "550.00"
+              },
+              "stated": null,
+              "verdict": null,
+              "submitted": {
+                "decimal": "550.00"
+              }
+            },
+            "iva_amount": {
+              "computed": {
+                "decimal": "115.50"
+              },
+              "stated": null,
+              "verdict": null,
+              "submitted": {
+                "decimal": "115.50"
+              }
+            }
+          }
+        ],
+        "totals": {
+          "base": {
+            "decimal": "1100.00"
+          },
+          "iva": {
+            "decimal": "231.01"
+          },
+          "recargo": null,
+          "total": {
+            "decimal": "1331.01"
+          },
+          "net_of_retention": {
+            "decimal": "1331.01"
+          }
+        },
+        "retention": {
+          "rate": null,
+          "amount": null,
+          "implied": null
+        },
+        "findings": [],
+        "missing_fields": [],
+        "verdict": "would_accept",
+        "refusal_code": null,
+        "invoice_id": "b775e509bd0690677e87a7b8dc4628f4adfce4c6aaba705a9eeff185d091d031"
+      }
+    },
+    "stated_iva_refused": {
+      "argv": [
+        "--kind",
+        "issued",
+        "--counterparty-name",
+        "Norte Digital S. Coop.",
+        "--counterparty-nif",
+        "A58818501",
+        "--country-code",
+        "ES",
+        "--series",
+        "F",
+        "--invoice-number",
+        "F-2026-021",
+        "--invoice-date",
+        "2026-10-23",
+        "--currency",
+        "EUR",
+        "--invoice-class",
+        "ORDINARIA",
+        "--line",
+        "{\"key\": \"line-1\", \"description\": \"Diseño de marca\", \"quantity\": \"1\", \"unit_price\": \"550\", \"iva_rate\": \"RATE_21\", \"iva_amount\": \"115.60\"}",
+        "--line",
+        "{\"key\": \"line-2\", \"description\": \"Piezas gráficas\", \"quantity\": \"2\", \"unit_price\": \"275\", \"iva_rate\": \"RATE_21\"}"
+      ],
+      "request": {
+        "kind": "issued",
+        "counterparty_name": "Norte Digital S. Coop.",
+        "counterparty_tax_id": "A58818501",
+        "counterparty_country": "ES",
+        "series": "F",
+        "invoice_number": "F-2026-021",
+        "issued_at": "2026-10-23",
+        "currency": "EUR",
+        "invoice_class": "ORDINARIA",
+        "lines": [
+          {
+            "description": "Diseño de marca",
+            "quantity": {
+              "decimal": "1"
+            },
+            "unit_price": {
+              "decimal": "550"
+            },
+            "iva_rate": "RATE_21",
+            "iva_amount": {
+              "decimal": "115.60"
+            }
+          },
+          {
+            "description": "Piezas gráficas",
+            "quantity": {
+              "decimal": "2"
+            },
+            "unit_price": {
+              "decimal": "275"
+            },
+            "iva_rate": "RATE_21"
+          }
+        ]
+      },
+      "result": {
+        "input_digest": "c624d2a1da3e75814b14866d08d16be81ce26eda3cea5f52b68f83b9b1042496",
+        "on_date": "2026-10-23",
+        "on_date_source": "issued_at",
+        "rate_slots": [
+          {
+            "slot": "RATE_0",
+            "fraction": {
+              "decimal": "0"
+            },
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_0"
+          },
+          {
+            "slot": "RATE_2",
+            "fraction": null,
+            "in_force": false,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_2"
+          },
+          {
+            "slot": "RATE_4",
+            "fraction": {
+              "decimal": "0.04"
+            },
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_4"
+          },
+          {
+            "slot": "RATE_5",
+            "fraction": null,
+            "in_force": false,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_5"
+          },
+          {
+            "slot": "RATE_7.5",
+            "fraction": null,
+            "in_force": false,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_7_5"
+          },
+          {
+            "slot": "RATE_10",
+            "fraction": {
+              "decimal": "0.1"
+            },
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_10"
+          },
+          {
+            "slot": "RATE_21",
+            "fraction": {
+              "decimal": "0.21"
+            },
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_21"
+          },
+          {
+            "slot": "EXEMPT",
+            "fraction": null,
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.exempt"
+          },
+          {
+            "slot": "NOT_SUBJECT",
+            "fraction": null,
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.not_subject"
+          }
+        ],
+        "lines": [
+          {
+            "key": "line-1",
+            "subtotal": {
+              "computed": {
+                "decimal": "550.00"
+              },
+              "stated": null,
+              "verdict": null,
+              "submitted": {
+                "decimal": "550.00"
+              }
+            },
+            "iva_amount": {
+              "computed": {
+                "decimal": "115.50"
+              },
+              "stated": {
+                "decimal": "115.60"
+              },
+              "verdict": "refused",
+              "submitted": null
+            }
+          },
+          {
+            "key": "line-2",
+            "subtotal": {
+              "computed": {
+                "decimal": "550.00"
+              },
+              "stated": null,
+              "verdict": null,
+              "submitted": {
+                "decimal": "550.00"
+              }
+            },
+            "iva_amount": {
+              "computed": {
+                "decimal": "115.50"
+              },
+              "stated": null,
+              "verdict": null,
+              "submitted": {
+                "decimal": "115.50"
+              }
+            }
+          }
+        ],
+        "totals": {
+          "base": {
+            "decimal": "1100.00"
+          },
+          "iva": null,
+          "recargo": null,
+          "total": null,
+          "net_of_retention": null
+        },
+        "retention": {
+          "rate": null,
+          "amount": null,
+          "implied": null
+        },
+        "findings": [
+          {
+            "code": "line_iva_mismatch",
+            "severity": "refusal",
+            "fields": ["iva_amount", "subtotal", "iva_rate"],
+            "line_key": "line-1",
+            "values": [
+              {
+                "key": "expected",
+                "value": {
+                  "decimal": "115.5000"
+                }
+              },
+              {
+                "key": "stated",
+                "value": {
+                  "decimal": "115.60"
+                }
+              }
+            ],
+            "label_key": "application.invoices.figures_preview.finding.line_iva_mismatch"
+          }
+        ],
+        "missing_fields": [],
+        "verdict": "would_refuse",
+        "refusal_code": "line_iva_mismatch",
+        "invoice_id": null
+      }
+    },
+    "stated_subtotal_within": {
+      "argv": [
+        "--kind",
+        "issued",
+        "--counterparty-name",
+        "Norte Digital S. Coop.",
+        "--counterparty-nif",
+        "A58818501",
+        "--country-code",
+        "ES",
+        "--series",
+        "F",
+        "--invoice-number",
+        "F-2026-021",
+        "--invoice-date",
+        "2026-10-23",
+        "--currency",
+        "EUR",
+        "--invoice-class",
+        "ORDINARIA",
+        "--line",
+        "{\"key\": \"line-1\", \"description\": \"Diseño de marca\", \"quantity\": \"1\", \"unit_price\": \"550\", \"iva_rate\": \"RATE_21\", \"subtotal\": \"550.01\"}",
+        "--line",
+        "{\"key\": \"line-2\", \"description\": \"Piezas gráficas\", \"quantity\": \"2\", \"unit_price\": \"275\", \"iva_rate\": \"RATE_21\"}"
+      ],
+      "request": {
+        "kind": "issued",
+        "counterparty_name": "Norte Digital S. Coop.",
+        "counterparty_tax_id": "A58818501",
+        "counterparty_country": "ES",
+        "series": "F",
+        "invoice_number": "F-2026-021",
+        "issued_at": "2026-10-23",
+        "currency": "EUR",
+        "invoice_class": "ORDINARIA",
+        "lines": [
+          {
+            "description": "Diseño de marca",
+            "quantity": {
+              "decimal": "1"
+            },
+            "unit_price": {
+              "decimal": "550"
+            },
+            "iva_rate": "RATE_21",
+            "subtotal": {
+              "decimal": "550.01"
+            }
+          },
+          {
+            "description": "Piezas gráficas",
+            "quantity": {
+              "decimal": "2"
+            },
+            "unit_price": {
+              "decimal": "275"
+            },
+            "iva_rate": "RATE_21"
+          }
+        ]
+      },
+      "result": {
+        "input_digest": "524311a240774b530c3bfb9874005faba0d4681b792cb876123cc220a3ae5491",
+        "on_date": "2026-10-23",
+        "on_date_source": "issued_at",
+        "rate_slots": [
+          {
+            "slot": "RATE_0",
+            "fraction": {
+              "decimal": "0"
+            },
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_0"
+          },
+          {
+            "slot": "RATE_2",
+            "fraction": null,
+            "in_force": false,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_2"
+          },
+          {
+            "slot": "RATE_4",
+            "fraction": {
+              "decimal": "0.04"
+            },
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_4"
+          },
+          {
+            "slot": "RATE_5",
+            "fraction": null,
+            "in_force": false,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_5"
+          },
+          {
+            "slot": "RATE_7.5",
+            "fraction": null,
+            "in_force": false,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_7_5"
+          },
+          {
+            "slot": "RATE_10",
+            "fraction": {
+              "decimal": "0.1"
+            },
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_10"
+          },
+          {
+            "slot": "RATE_21",
+            "fraction": {
+              "decimal": "0.21"
+            },
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_21"
+          },
+          {
+            "slot": "EXEMPT",
+            "fraction": null,
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.exempt"
+          },
+          {
+            "slot": "NOT_SUBJECT",
+            "fraction": null,
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.not_subject"
+          }
+        ],
+        "lines": [
+          {
+            "key": "line-1",
+            "subtotal": {
+              "computed": {
+                "decimal": "550.00"
+              },
+              "stated": {
+                "decimal": "550.01"
+              },
+              "verdict": "within_tolerance",
+              "submitted": {
+                "decimal": "550.01"
+              }
+            },
+            "iva_amount": {
+              "computed": {
+                "decimal": "115.50"
+              },
+              "stated": null,
+              "verdict": null,
+              "submitted": {
+                "decimal": "115.50"
+              }
+            }
+          },
+          {
+            "key": "line-2",
+            "subtotal": {
+              "computed": {
+                "decimal": "550.00"
+              },
+              "stated": null,
+              "verdict": null,
+              "submitted": {
+                "decimal": "550.00"
+              }
+            },
+            "iva_amount": {
+              "computed": {
+                "decimal": "115.50"
+              },
+              "stated": null,
+              "verdict": null,
+              "submitted": {
+                "decimal": "115.50"
+              }
+            }
+          }
+        ],
+        "totals": {
+          "base": {
+            "decimal": "1100.01"
+          },
+          "iva": {
+            "decimal": "231.00"
+          },
+          "recargo": null,
+          "total": {
+            "decimal": "1331.01"
+          },
+          "net_of_retention": {
+            "decimal": "1331.01"
+          }
+        },
+        "retention": {
+          "rate": null,
+          "amount": null,
+          "implied": null
+        },
+        "findings": [],
+        "missing_fields": [],
+        "verdict": "would_accept",
+        "refusal_code": null,
+        "invoice_id": "b775e509bd0690677e87a7b8dc4628f4adfce4c6aaba705a9eeff185d091d031"
+      }
+    },
+    "stated_subtotal_refused": {
+      "argv": [
+        "--kind",
+        "issued",
+        "--counterparty-name",
+        "Norte Digital S. Coop.",
+        "--counterparty-nif",
+        "A58818501",
+        "--country-code",
+        "ES",
+        "--series",
+        "F",
+        "--invoice-number",
+        "F-2026-021",
+        "--invoice-date",
+        "2026-10-23",
+        "--currency",
+        "EUR",
+        "--invoice-class",
+        "ORDINARIA",
+        "--line",
+        "{\"key\": \"line-1\", \"description\": \"Diseño de marca\", \"quantity\": \"1\", \"unit_price\": \"550\", \"iva_rate\": \"RATE_21\", \"subtotal\": \"550.50\"}",
+        "--line",
+        "{\"key\": \"line-2\", \"description\": \"Piezas gráficas\", \"quantity\": \"2\", \"unit_price\": \"275\", \"iva_rate\": \"RATE_21\"}"
+      ],
+      "request": {
+        "kind": "issued",
+        "counterparty_name": "Norte Digital S. Coop.",
+        "counterparty_tax_id": "A58818501",
+        "counterparty_country": "ES",
+        "series": "F",
+        "invoice_number": "F-2026-021",
+        "issued_at": "2026-10-23",
+        "currency": "EUR",
+        "invoice_class": "ORDINARIA",
+        "lines": [
+          {
+            "description": "Diseño de marca",
+            "quantity": {
+              "decimal": "1"
+            },
+            "unit_price": {
+              "decimal": "550"
+            },
+            "iva_rate": "RATE_21",
+            "subtotal": {
+              "decimal": "550.50"
+            }
+          },
+          {
+            "description": "Piezas gráficas",
+            "quantity": {
+              "decimal": "2"
+            },
+            "unit_price": {
+              "decimal": "275"
+            },
+            "iva_rate": "RATE_21"
+          }
+        ]
+      },
+      "result": {
+        "input_digest": "955c1ed539bf95588257f543389fdd4e394e59e888ef4ba3adb17c28f76e8e88",
+        "on_date": "2026-10-23",
+        "on_date_source": "issued_at",
+        "rate_slots": [
+          {
+            "slot": "RATE_0",
+            "fraction": {
+              "decimal": "0"
+            },
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_0"
+          },
+          {
+            "slot": "RATE_2",
+            "fraction": null,
+            "in_force": false,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_2"
+          },
+          {
+            "slot": "RATE_4",
+            "fraction": {
+              "decimal": "0.04"
+            },
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_4"
+          },
+          {
+            "slot": "RATE_5",
+            "fraction": null,
+            "in_force": false,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_5"
+          },
+          {
+            "slot": "RATE_7.5",
+            "fraction": null,
+            "in_force": false,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_7_5"
+          },
+          {
+            "slot": "RATE_10",
+            "fraction": {
+              "decimal": "0.1"
+            },
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_10"
+          },
+          {
+            "slot": "RATE_21",
+            "fraction": {
+              "decimal": "0.21"
+            },
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_21"
+          },
+          {
+            "slot": "EXEMPT",
+            "fraction": null,
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.exempt"
+          },
+          {
+            "slot": "NOT_SUBJECT",
+            "fraction": null,
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.not_subject"
+          }
+        ],
+        "lines": [
+          {
+            "key": "line-1",
+            "subtotal": {
+              "computed": {
+                "decimal": "550.00"
+              },
+              "stated": {
+                "decimal": "550.50"
+              },
+              "verdict": "refused",
+              "submitted": null
+            },
+            "iva_amount": {
+              "computed": null,
+              "stated": null,
+              "verdict": null,
+              "submitted": null
+            }
+          },
+          {
+            "key": "line-2",
+            "subtotal": {
+              "computed": {
+                "decimal": "550.00"
+              },
+              "stated": null,
+              "verdict": null,
+              "submitted": {
+                "decimal": "550.00"
+              }
+            },
+            "iva_amount": {
+              "computed": {
+                "decimal": "115.50"
+              },
+              "stated": null,
+              "verdict": null,
+              "submitted": {
+                "decimal": "115.50"
+              }
+            }
+          }
+        ],
+        "totals": {
+          "base": null,
+          "iva": null,
+          "recargo": null,
+          "total": null,
+          "net_of_retention": null
+        },
+        "retention": {
+          "rate": null,
+          "amount": null,
+          "implied": null
+        },
+        "findings": [
+          {
+            "code": "line_subtotal_mismatch",
+            "severity": "refusal",
+            "fields": ["subtotal", "quantity", "unit_price"],
+            "line_key": "line-1",
+            "values": [
+              {
+                "key": "expected",
+                "value": {
+                  "decimal": "550.0000"
+                }
+              },
+              {
+                "key": "stated",
+                "value": {
+                  "decimal": "550.50"
+                }
+              }
+            ],
+            "label_key": "application.invoices.figures_preview.finding.line_subtotal_mismatch"
+          }
+        ],
+        "missing_fields": [],
+        "verdict": "would_refuse",
+        "refusal_code": "line_subtotal_mismatch",
+        "invoice_id": null
+      }
+    },
+    "rate_not_in_force": {
+      "argv": [
+        "--kind",
+        "issued",
+        "--counterparty-name",
+        "Norte Digital S. Coop.",
+        "--counterparty-nif",
+        "A58818501",
+        "--country-code",
+        "ES",
+        "--series",
+        "F",
+        "--invoice-number",
+        "F-2026-021",
+        "--invoice-date",
+        "2026-10-23",
+        "--currency",
+        "EUR",
+        "--invoice-class",
+        "ORDINARIA",
+        "--line",
+        "{\"key\": \"line-1\", \"description\": \"Diseño de marca\", \"quantity\": \"1\", \"unit_price\": \"550\", \"iva_rate\": \"RATE_5\"}",
+        "--line",
+        "{\"key\": \"line-2\", \"description\": \"Piezas gráficas\", \"quantity\": \"2\", \"unit_price\": \"275\", \"iva_rate\": \"RATE_21\"}"
+      ],
+      "request": {
+        "kind": "issued",
+        "counterparty_name": "Norte Digital S. Coop.",
+        "counterparty_tax_id": "A58818501",
+        "counterparty_country": "ES",
+        "series": "F",
+        "invoice_number": "F-2026-021",
+        "issued_at": "2026-10-23",
+        "currency": "EUR",
+        "invoice_class": "ORDINARIA",
+        "lines": [
+          {
+            "description": "Diseño de marca",
+            "quantity": {
+              "decimal": "1"
+            },
+            "unit_price": {
+              "decimal": "550"
+            },
+            "iva_rate": "RATE_5"
+          },
+          {
+            "description": "Piezas gráficas",
+            "quantity": {
+              "decimal": "2"
+            },
+            "unit_price": {
+              "decimal": "275"
+            },
+            "iva_rate": "RATE_21"
+          }
+        ]
+      },
+      "result": {
+        "input_digest": "342926d9336ac9dd5f3bfdde3fd7d5542d543a2c2f21bb6f2fb16df059b7c134",
+        "on_date": "2026-10-23",
+        "on_date_source": "issued_at",
+        "rate_slots": [
+          {
+            "slot": "RATE_0",
+            "fraction": {
+              "decimal": "0"
+            },
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_0"
+          },
+          {
+            "slot": "RATE_2",
+            "fraction": null,
+            "in_force": false,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_2"
+          },
+          {
+            "slot": "RATE_4",
+            "fraction": {
+              "decimal": "0.04"
+            },
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_4"
+          },
+          {
+            "slot": "RATE_5",
+            "fraction": null,
+            "in_force": false,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_5"
+          },
+          {
+            "slot": "RATE_7.5",
+            "fraction": null,
+            "in_force": false,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_7_5"
+          },
+          {
+            "slot": "RATE_10",
+            "fraction": {
+              "decimal": "0.1"
+            },
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_10"
+          },
+          {
+            "slot": "RATE_21",
+            "fraction": {
+              "decimal": "0.21"
+            },
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_21"
+          },
+          {
+            "slot": "EXEMPT",
+            "fraction": null,
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.exempt"
+          },
+          {
+            "slot": "NOT_SUBJECT",
+            "fraction": null,
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.not_subject"
+          }
+        ],
+        "lines": [
+          {
+            "key": "line-1",
+            "subtotal": {
+              "computed": {
+                "decimal": "550.00"
+              },
+              "stated": null,
+              "verdict": null,
+              "submitted": {
+                "decimal": "550.00"
+              }
+            },
+            "iva_amount": {
+              "computed": null,
+              "stated": null,
+              "verdict": null,
+              "submitted": null
+            }
+          },
+          {
+            "key": "line-2",
+            "subtotal": {
+              "computed": {
+                "decimal": "550.00"
+              },
+              "stated": null,
+              "verdict": null,
+              "submitted": {
+                "decimal": "550.00"
+              }
+            },
+            "iva_amount": {
+              "computed": {
+                "decimal": "115.50"
+              },
+              "stated": null,
+              "verdict": null,
+              "submitted": {
+                "decimal": "115.50"
+              }
+            }
+          }
+        ],
+        "totals": {
+          "base": {
+            "decimal": "1100.00"
+          },
+          "iva": null,
+          "recargo": null,
+          "total": null,
+          "net_of_retention": null
+        },
+        "retention": {
+          "rate": null,
+          "amount": null,
+          "implied": null
+        },
+        "findings": [
+          {
+            "code": "line_rate_not_in_force",
+            "severity": "refusal",
+            "fields": ["iva_rate"],
+            "line_key": "line-1",
+            "values": [
+              {
+                "key": "on_date",
+                "value": "2026-10-23"
+              },
+              {
+                "key": "slot",
+                "value": "RATE_5"
+              }
+            ],
+            "label_key": "application.invoices.figures_preview.finding.line_rate_not_in_force"
+          }
+        ],
+        "missing_fields": [],
+        "verdict": "would_refuse",
+        "refusal_code": "line_rate_not_in_force",
+        "invoice_id": null
+      }
+    },
+    "rate_in_force_2023": {
+      "argv": [
+        "--kind",
+        "issued",
+        "--counterparty-name",
+        "Norte Digital S. Coop.",
+        "--counterparty-nif",
+        "A58818501",
+        "--country-code",
+        "ES",
+        "--series",
+        "F",
+        "--invoice-number",
+        "F-2026-021",
+        "--invoice-date",
+        "2023-03-01",
+        "--currency",
+        "EUR",
+        "--invoice-class",
+        "ORDINARIA",
+        "--line",
+        "{\"key\": \"line-1\", \"description\": \"Diseño de marca\", \"quantity\": \"1\", \"unit_price\": \"550\", \"iva_rate\": \"RATE_5\"}"
+      ],
+      "request": {
+        "kind": "issued",
+        "counterparty_name": "Norte Digital S. Coop.",
+        "counterparty_tax_id": "A58818501",
+        "counterparty_country": "ES",
+        "series": "F",
+        "invoice_number": "F-2026-021",
+        "issued_at": "2023-03-01",
+        "currency": "EUR",
+        "invoice_class": "ORDINARIA",
+        "lines": [
+          {
+            "description": "Diseño de marca",
+            "quantity": {
+              "decimal": "1"
+            },
+            "unit_price": {
+              "decimal": "550"
+            },
+            "iva_rate": "RATE_5"
+          }
+        ]
+      },
+      "result": {
+        "input_digest": "c2a69b98c80f96b52f5b77d406cfcec7ecfbb1b5ef9b1302cc4d6e4a42038694",
+        "on_date": "2023-03-01",
+        "on_date_source": "issued_at",
+        "rate_slots": [
+          {
+            "slot": "RATE_0",
+            "fraction": {
+              "decimal": "0"
+            },
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_0"
+          },
+          {
+            "slot": "RATE_2",
+            "fraction": null,
+            "in_force": false,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_2"
+          },
+          {
+            "slot": "RATE_4",
+            "fraction": {
+              "decimal": "0.04"
+            },
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_4"
+          },
+          {
+            "slot": "RATE_5",
+            "fraction": {
+              "decimal": "0.05"
+            },
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_5"
+          },
+          {
+            "slot": "RATE_7.5",
+            "fraction": null,
+            "in_force": false,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_7_5"
+          },
+          {
+            "slot": "RATE_10",
+            "fraction": {
+              "decimal": "0.1"
+            },
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_10"
+          },
+          {
+            "slot": "RATE_21",
+            "fraction": {
+              "decimal": "0.21"
+            },
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_21"
+          },
+          {
+            "slot": "EXEMPT",
+            "fraction": null,
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.exempt"
+          },
+          {
+            "slot": "NOT_SUBJECT",
+            "fraction": null,
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.not_subject"
+          }
+        ],
+        "lines": [
+          {
+            "key": "line-1",
+            "subtotal": {
+              "computed": {
+                "decimal": "550.00"
+              },
+              "stated": null,
+              "verdict": null,
+              "submitted": {
+                "decimal": "550.00"
+              }
+            },
+            "iva_amount": {
+              "computed": {
+                "decimal": "27.50"
+              },
+              "stated": null,
+              "verdict": null,
+              "submitted": {
+                "decimal": "27.50"
+              }
+            }
+          }
+        ],
+        "totals": {
+          "base": {
+            "decimal": "550.00"
+          },
+          "iva": {
+            "decimal": "27.50"
+          },
+          "recargo": null,
+          "total": {
+            "decimal": "577.50"
+          },
+          "net_of_retention": {
+            "decimal": "577.50"
+          }
+        },
+        "retention": {
+          "rate": null,
+          "amount": null,
+          "implied": null
+        },
+        "findings": [],
+        "missing_fields": [],
+        "verdict": "would_accept",
+        "refusal_code": null,
+        "invoice_id": "9ed4c6d01fc477535a46107a052fb822529586681f9130df63f2d8a7b376bdab"
+      }
+    },
+    "before_registry": {
+      "argv": [
+        "--kind",
+        "issued",
+        "--counterparty-name",
+        "Norte Digital S. Coop.",
+        "--counterparty-nif",
+        "A58818501",
+        "--country-code",
+        "ES",
+        "--series",
+        "F",
+        "--invoice-number",
+        "F-2026-021",
+        "--invoice-date",
+        "2021-06-01",
+        "--currency",
+        "EUR",
+        "--invoice-class",
+        "ORDINARIA",
+        "--line",
+        "{\"key\": \"line-1\", \"description\": \"Diseño de marca\", \"quantity\": \"1\", \"unit_price\": \"550\", \"iva_rate\": \"RATE_21\"}",
+        "--line",
+        "{\"key\": \"line-2\", \"description\": \"Piezas gráficas\", \"quantity\": \"2\", \"unit_price\": \"275\", \"iva_rate\": \"RATE_21\"}"
+      ],
+      "request": {
+        "kind": "issued",
+        "counterparty_name": "Norte Digital S. Coop.",
+        "counterparty_tax_id": "A58818501",
+        "counterparty_country": "ES",
+        "series": "F",
+        "invoice_number": "F-2026-021",
+        "issued_at": "2021-06-01",
+        "currency": "EUR",
+        "invoice_class": "ORDINARIA",
+        "lines": [
+          {
+            "description": "Diseño de marca",
+            "quantity": {
+              "decimal": "1"
+            },
+            "unit_price": {
+              "decimal": "550"
+            },
+            "iva_rate": "RATE_21"
+          },
+          {
+            "description": "Piezas gráficas",
+            "quantity": {
+              "decimal": "2"
+            },
+            "unit_price": {
+              "decimal": "275"
+            },
+            "iva_rate": "RATE_21"
+          }
+        ]
+      },
+      "result": {
+        "input_digest": "8908155569ddf71b07f1f1837e915a14e01297ada8f9babac9abd566e6c85ec1",
+        "on_date": "2021-06-01",
+        "on_date_source": "issued_at",
+        "rate_slots": [],
+        "lines": [
+          {
+            "key": "line-1",
+            "subtotal": {
+              "computed": {
+                "decimal": "550.00"
+              },
+              "stated": null,
+              "verdict": null,
+              "submitted": {
+                "decimal": "550.00"
+              }
+            },
+            "iva_amount": {
+              "computed": null,
+              "stated": null,
+              "verdict": null,
+              "submitted": null
+            }
+          },
+          {
+            "key": "line-2",
+            "subtotal": {
+              "computed": {
+                "decimal": "550.00"
+              },
+              "stated": null,
+              "verdict": null,
+              "submitted": {
+                "decimal": "550.00"
+              }
+            },
+            "iva_amount": {
+              "computed": null,
+              "stated": null,
+              "verdict": null,
+              "submitted": null
+            }
+          }
+        ],
+        "totals": {
+          "base": {
+            "decimal": "1100.00"
+          },
+          "iva": null,
+          "recargo": null,
+          "total": null,
+          "net_of_retention": null
+        },
+        "retention": {
+          "rate": null,
+          "amount": null,
+          "implied": null
+        },
+        "findings": [
+          {
+            "code": "rate_date_unresolved",
+            "severity": "refusal",
+            "fields": ["iva_rate", "operation_date", "issued_at"],
+            "line_key": null,
+            "values": [
+              {
+                "key": "on_date",
+                "value": "2021-06-01"
+              }
+            ],
+            "label_key": "application.invoices.figures_preview.finding.rate_date_unresolved"
+          }
+        ],
+        "missing_fields": [],
+        "verdict": "would_refuse",
+        "refusal_code": "rate_date_unresolved",
+        "invoice_id": null
+      }
+    },
+    "no_tax_id": {
+      "argv": [
+        "--kind",
+        "issued",
+        "--counterparty-name",
+        "Norte Digital S. Coop.",
+        "--country-code",
+        "ES",
+        "--series",
+        "F",
+        "--invoice-number",
+        "F-2026-021",
+        "--invoice-date",
+        "2026-10-23",
+        "--currency",
+        "EUR",
+        "--invoice-class",
+        "ORDINARIA",
+        "--line",
+        "{\"key\": \"line-1\", \"description\": \"Diseño de marca\", \"quantity\": \"1\", \"unit_price\": \"550\", \"iva_rate\": \"RATE_21\"}",
+        "--line",
+        "{\"key\": \"line-2\", \"description\": \"Piezas gráficas\", \"quantity\": \"2\", \"unit_price\": \"275\", \"iva_rate\": \"RATE_21\"}"
+      ],
+      "request": {
+        "kind": "issued",
+        "counterparty_name": "Norte Digital S. Coop.",
+        "counterparty_tax_id": null,
+        "counterparty_country": "ES",
+        "series": "F",
+        "invoice_number": "F-2026-021",
+        "issued_at": "2026-10-23",
+        "currency": "EUR",
+        "invoice_class": "ORDINARIA",
+        "lines": [
+          {
+            "description": "Diseño de marca",
+            "quantity": {
+              "decimal": "1"
+            },
+            "unit_price": {
+              "decimal": "550"
+            },
+            "iva_rate": "RATE_21"
+          },
+          {
+            "description": "Piezas gráficas",
+            "quantity": {
+              "decimal": "2"
+            },
+            "unit_price": {
+              "decimal": "275"
+            },
+            "iva_rate": "RATE_21"
+          }
+        ]
+      },
+      "result": {
+        "input_digest": "d6ce82cf58bd4981fefb38b9f75583b896256f366759950e883a6f5d9ae1db6c",
+        "on_date": "2026-10-23",
+        "on_date_source": "issued_at",
+        "rate_slots": [
+          {
+            "slot": "RATE_0",
+            "fraction": {
+              "decimal": "0"
+            },
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_0"
+          },
+          {
+            "slot": "RATE_2",
+            "fraction": null,
+            "in_force": false,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_2"
+          },
+          {
+            "slot": "RATE_4",
+            "fraction": {
+              "decimal": "0.04"
+            },
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_4"
+          },
+          {
+            "slot": "RATE_5",
+            "fraction": null,
+            "in_force": false,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_5"
+          },
+          {
+            "slot": "RATE_7.5",
+            "fraction": null,
+            "in_force": false,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_7_5"
+          },
+          {
+            "slot": "RATE_10",
+            "fraction": {
+              "decimal": "0.1"
+            },
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_10"
+          },
+          {
+            "slot": "RATE_21",
+            "fraction": {
+              "decimal": "0.21"
+            },
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_21"
+          },
+          {
+            "slot": "EXEMPT",
+            "fraction": null,
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.exempt"
+          },
+          {
+            "slot": "NOT_SUBJECT",
+            "fraction": null,
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.not_subject"
+          }
+        ],
+        "lines": [
+          {
+            "key": "line-1",
+            "subtotal": {
+              "computed": {
+                "decimal": "550.00"
+              },
+              "stated": null,
+              "verdict": null,
+              "submitted": {
+                "decimal": "550.00"
+              }
+            },
+            "iva_amount": {
+              "computed": {
+                "decimal": "115.50"
+              },
+              "stated": null,
+              "verdict": null,
+              "submitted": {
+                "decimal": "115.50"
+              }
+            }
+          },
+          {
+            "key": "line-2",
+            "subtotal": {
+              "computed": {
+                "decimal": "550.00"
+              },
+              "stated": null,
+              "verdict": null,
+              "submitted": {
+                "decimal": "550.00"
+              }
+            },
+            "iva_amount": {
+              "computed": {
+                "decimal": "115.50"
+              },
+              "stated": null,
+              "verdict": null,
+              "submitted": {
+                "decimal": "115.50"
+              }
+            }
+          }
+        ],
+        "totals": {
+          "base": {
+            "decimal": "1100.00"
+          },
+          "iva": {
+            "decimal": "231.00"
+          },
+          "recargo": null,
+          "total": {
+            "decimal": "1331.00"
+          },
+          "net_of_retention": {
+            "decimal": "1331.00"
+          }
+        },
+        "retention": {
+          "rate": null,
+          "amount": null,
+          "implied": null
+        },
+        "findings": [],
+        "missing_fields": [],
+        "verdict": "would_refuse",
+        "refusal_code": "invalid_invoice",
+        "invoice_id": null
+      }
+    },
+    "rectificativa_incomplete": {
+      "argv": [
+        "--kind",
+        "issued",
+        "--counterparty-name",
+        "Norte Digital S. Coop.",
+        "--counterparty-nif",
+        "A58818501",
+        "--country-code",
+        "ES",
+        "--invoice-number",
+        "F-2026-021",
+        "--invoice-date",
+        "2026-10-23",
+        "--currency",
+        "EUR",
+        "--invoice-class",
+        "RECTIFICATIVA",
+        "--line",
+        "{\"key\": \"line-1\", \"description\": \"Diseño de marca\", \"quantity\": \"1\", \"unit_price\": \"550\", \"iva_rate\": \"RATE_21\"}",
+        "--line",
+        "{\"key\": \"line-2\", \"description\": \"Piezas gráficas\", \"quantity\": \"2\", \"unit_price\": \"275\", \"iva_rate\": \"RATE_21\"}"
+      ],
+      "request": {
+        "kind": "issued",
+        "counterparty_name": "Norte Digital S. Coop.",
+        "counterparty_tax_id": "A58818501",
+        "counterparty_country": "ES",
+        "series": null,
+        "invoice_number": "F-2026-021",
+        "issued_at": "2026-10-23",
+        "currency": "EUR",
+        "invoice_class": "RECTIFICATIVA",
+        "lines": [
+          {
+            "description": "Diseño de marca",
+            "quantity": {
+              "decimal": "1"
+            },
+            "unit_price": {
+              "decimal": "550"
+            },
+            "iva_rate": "RATE_21"
+          },
+          {
+            "description": "Piezas gráficas",
+            "quantity": {
+              "decimal": "2"
+            },
+            "unit_price": {
+              "decimal": "275"
+            },
+            "iva_rate": "RATE_21"
+          }
+        ]
+      },
+      "result": {
+        "input_digest": "a96ccca32927b7171c10f44ddf2c22582ad999af632c4a82b4f23bd3c556dc0e",
+        "on_date": "2026-10-23",
+        "on_date_source": "issued_at",
+        "rate_slots": [
+          {
+            "slot": "RATE_0",
+            "fraction": {
+              "decimal": "0"
+            },
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_0"
+          },
+          {
+            "slot": "RATE_2",
+            "fraction": null,
+            "in_force": false,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_2"
+          },
+          {
+            "slot": "RATE_4",
+            "fraction": {
+              "decimal": "0.04"
+            },
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_4"
+          },
+          {
+            "slot": "RATE_5",
+            "fraction": null,
+            "in_force": false,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_5"
+          },
+          {
+            "slot": "RATE_7.5",
+            "fraction": null,
+            "in_force": false,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_7_5"
+          },
+          {
+            "slot": "RATE_10",
+            "fraction": {
+              "decimal": "0.1"
+            },
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_10"
+          },
+          {
+            "slot": "RATE_21",
+            "fraction": {
+              "decimal": "0.21"
+            },
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_21"
+          },
+          {
+            "slot": "EXEMPT",
+            "fraction": null,
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.exempt"
+          },
+          {
+            "slot": "NOT_SUBJECT",
+            "fraction": null,
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.not_subject"
+          }
+        ],
+        "lines": [
+          {
+            "key": "line-1",
+            "subtotal": {
+              "computed": {
+                "decimal": "550.00"
+              },
+              "stated": null,
+              "verdict": null,
+              "submitted": {
+                "decimal": "550.00"
+              }
+            },
+            "iva_amount": {
+              "computed": {
+                "decimal": "115.50"
+              },
+              "stated": null,
+              "verdict": null,
+              "submitted": {
+                "decimal": "115.50"
+              }
+            }
+          },
+          {
+            "key": "line-2",
+            "subtotal": {
+              "computed": {
+                "decimal": "550.00"
+              },
+              "stated": null,
+              "verdict": null,
+              "submitted": {
+                "decimal": "550.00"
+              }
+            },
+            "iva_amount": {
+              "computed": {
+                "decimal": "115.50"
+              },
+              "stated": null,
+              "verdict": null,
+              "submitted": {
+                "decimal": "115.50"
+              }
+            }
+          }
+        ],
+        "totals": {
+          "base": {
+            "decimal": "1100.00"
+          },
+          "iva": {
+            "decimal": "231.00"
+          },
+          "recargo": null,
+          "total": {
+            "decimal": "1331.00"
+          },
+          "net_of_retention": {
+            "decimal": "1331.00"
+          }
+        },
+        "retention": {
+          "rate": null,
+          "amount": null,
+          "implied": null
+        },
+        "findings": [],
+        "missing_fields": [],
+        "verdict": "would_refuse",
+        "refusal_code": "invalid_invoice",
+        "invoice_id": null
+      }
+    },
+    "story_brand_design": {
+      "argv": [
+        "--kind",
+        "issued",
+        "--counterparty-name",
+        "Norte Digital S. Coop.",
+        "--counterparty-nif",
+        "A58818501",
+        "--country-code",
+        "ES",
+        "--series",
+        "F",
+        "--invoice-number",
+        "F-2026-021",
+        "--invoice-date",
+        "2026-10-23",
+        "--currency",
+        "EUR",
+        "--invoice-class",
+        "ORDINARIA",
+        "--line",
+        "{\"key\": \"line-1\", \"description\": \"Brand design\", \"quantity\": \"1\", \"unit_price\": \"550\", \"iva_rate\": \"RATE_21\"}"
+      ],
+      "request": {
+        "kind": "issued",
+        "counterparty_name": "Norte Digital S. Coop.",
+        "counterparty_tax_id": "A58818501",
+        "counterparty_country": "ES",
+        "series": "F",
+        "invoice_number": "F-2026-021",
+        "issued_at": "2026-10-23",
+        "currency": "EUR",
+        "invoice_class": "ORDINARIA",
+        "lines": [
+          {
+            "description": "Brand design",
+            "quantity": {
+              "decimal": "1"
+            },
+            "unit_price": {
+              "decimal": "550"
+            },
+            "iva_rate": "RATE_21"
+          }
+        ]
+      },
+      "result": {
+        "input_digest": "50b1bcfa5b9f6556c0aa5d8c625edb49e701d3c99eaa8acde4540fbc94a7c526",
+        "on_date": "2026-10-23",
+        "on_date_source": "issued_at",
+        "rate_slots": [
+          {
+            "slot": "RATE_0",
+            "fraction": {
+              "decimal": "0"
+            },
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_0"
+          },
+          {
+            "slot": "RATE_2",
+            "fraction": null,
+            "in_force": false,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_2"
+          },
+          {
+            "slot": "RATE_4",
+            "fraction": {
+              "decimal": "0.04"
+            },
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_4"
+          },
+          {
+            "slot": "RATE_5",
+            "fraction": null,
+            "in_force": false,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_5"
+          },
+          {
+            "slot": "RATE_7.5",
+            "fraction": null,
+            "in_force": false,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_7_5"
+          },
+          {
+            "slot": "RATE_10",
+            "fraction": {
+              "decimal": "0.1"
+            },
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_10"
+          },
+          {
+            "slot": "RATE_21",
+            "fraction": {
+              "decimal": "0.21"
+            },
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_21"
+          },
+          {
+            "slot": "EXEMPT",
+            "fraction": null,
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.exempt"
+          },
+          {
+            "slot": "NOT_SUBJECT",
+            "fraction": null,
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.not_subject"
+          }
+        ],
+        "lines": [
+          {
+            "key": "line-1",
+            "subtotal": {
+              "computed": {
+                "decimal": "550.00"
+              },
+              "stated": null,
+              "verdict": null,
+              "submitted": {
+                "decimal": "550.00"
+              }
+            },
+            "iva_amount": {
+              "computed": {
+                "decimal": "115.50"
+              },
+              "stated": null,
+              "verdict": null,
+              "submitted": {
+                "decimal": "115.50"
+              }
+            }
+          }
+        ],
+        "totals": {
+          "base": {
+            "decimal": "550.00"
+          },
+          "iva": {
+            "decimal": "115.50"
+          },
+          "recargo": null,
+          "total": {
+            "decimal": "665.50"
+          },
+          "net_of_retention": {
+            "decimal": "665.50"
+          }
+        },
+        "retention": {
+          "rate": null,
+          "amount": null,
+          "implied": null
+        },
+        "findings": [],
+        "missing_fields": [],
+        "verdict": "would_accept",
+        "refusal_code": null,
+        "invoice_id": "8963fa40b7213d5e8159651e67d0084cd41518fb6b6e805914b0e137c6ac6824"
+      }
+    },
+    "correction_rate_7": {
+      "argv": [
+        "--invoice-date",
+        "2026-03-02",
+        "--retention-rate",
+        "0.07",
+        "--retention-amount",
+        "70",
+        "--taxable-base",
+        "1000"
+      ],
+      "request": {
+        "issued_at": "2026-03-02",
+        "base_total": {
+          "decimal": "1000"
+        },
+        "retention_rate": {
+          "decimal": "0.07"
+        },
+        "retention_amount": {
+          "decimal": "70"
+        }
+      },
+      "result": {
+        "input_digest": "534c9b6a32597b6e7bd323175e14fdc4288b182a0d21e70712048c99d3d24191",
+        "on_date": "2026-03-02",
+        "on_date_source": "issued_at",
+        "rate_slots": [
+          {
+            "slot": "RATE_0",
+            "fraction": {
+              "decimal": "0"
+            },
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_0"
+          },
+          {
+            "slot": "RATE_2",
+            "fraction": null,
+            "in_force": false,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_2"
+          },
+          {
+            "slot": "RATE_4",
+            "fraction": {
+              "decimal": "0.04"
+            },
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_4"
+          },
+          {
+            "slot": "RATE_5",
+            "fraction": null,
+            "in_force": false,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_5"
+          },
+          {
+            "slot": "RATE_7.5",
+            "fraction": null,
+            "in_force": false,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_7_5"
+          },
+          {
+            "slot": "RATE_10",
+            "fraction": {
+              "decimal": "0.1"
+            },
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_10"
+          },
+          {
+            "slot": "RATE_21",
+            "fraction": {
+              "decimal": "0.21"
+            },
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_21"
+          },
+          {
+            "slot": "EXEMPT",
+            "fraction": null,
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.exempt"
+          },
+          {
+            "slot": "NOT_SUBJECT",
+            "fraction": null,
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.not_subject"
+          }
+        ],
+        "lines": [],
+        "totals": {
+          "base": {
+            "decimal": "1000"
+          },
+          "iva": null,
+          "recargo": null,
+          "total": null,
+          "net_of_retention": null
+        },
+        "retention": {
+          "rate": {
+            "decimal": "0.07"
+          },
+          "amount": {
+            "decimal": "70"
+          },
+          "implied": {
+            "decimal": "70.00"
+          }
+        },
+        "findings": [],
+        "missing_fields": [
+          "kind",
+          "invoice_number",
+          "counterparty_name",
+          "counterparty_country",
+          "currency",
+          "lines"
+        ],
+        "verdict": "incomplete",
+        "refusal_code": null,
+        "invoice_id": null
+      }
+    },
+    "correction_rate_differs": {
+      "argv": [
+        "--invoice-date",
+        "2026-03-02",
+        "--retention-rate",
+        "0.07",
+        "--retention-amount",
+        "60",
+        "--taxable-base",
+        "1000"
+      ],
+      "request": {
+        "issued_at": "2026-03-02",
+        "base_total": {
+          "decimal": "1000"
+        },
+        "retention_rate": {
+          "decimal": "0.07"
+        },
+        "retention_amount": {
+          "decimal": "60"
+        }
+      },
+      "result": {
+        "input_digest": "04234cfb4d820a0941ea16a467cbe2580cfb09d5360225fad0d461f1366e1a0c",
+        "on_date": "2026-03-02",
+        "on_date_source": "issued_at",
+        "rate_slots": [
+          {
+            "slot": "RATE_0",
+            "fraction": {
+              "decimal": "0"
+            },
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_0"
+          },
+          {
+            "slot": "RATE_2",
+            "fraction": null,
+            "in_force": false,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_2"
+          },
+          {
+            "slot": "RATE_4",
+            "fraction": {
+              "decimal": "0.04"
+            },
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_4"
+          },
+          {
+            "slot": "RATE_5",
+            "fraction": null,
+            "in_force": false,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_5"
+          },
+          {
+            "slot": "RATE_7.5",
+            "fraction": null,
+            "in_force": false,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_7_5"
+          },
+          {
+            "slot": "RATE_10",
+            "fraction": {
+              "decimal": "0.1"
+            },
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_10"
+          },
+          {
+            "slot": "RATE_21",
+            "fraction": {
+              "decimal": "0.21"
+            },
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.rate_21"
+          },
+          {
+            "slot": "EXEMPT",
+            "fraction": null,
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.exempt"
+          },
+          {
+            "slot": "NOT_SUBJECT",
+            "fraction": null,
+            "in_force": true,
+            "coverage_gap": false,
+            "label_key": "application.invoices.figures_preview.rate_slot.not_subject"
+          }
+        ],
+        "lines": [],
+        "totals": {
+          "base": {
+            "decimal": "1000"
+          },
+          "iva": null,
+          "recargo": null,
+          "total": null,
+          "net_of_retention": null
+        },
+        "retention": {
+          "rate": {
+            "decimal": "0.07"
+          },
+          "amount": {
+            "decimal": "60"
+          },
+          "implied": {
+            "decimal": "70.00"
+          }
+        },
+        "findings": [
+          {
+            "code": "retention_amount_mismatch",
+            "severity": "refusal",
+            "fields": ["retention_rate", "retention_amount", "base_total"],
+            "line_key": null,
+            "values": [
+              {
+                "key": "expected",
+                "value": {
+                  "decimal": "70.0000"
+                }
+              },
+              {
+                "key": "stated",
+                "value": {
+                  "decimal": "60"
+                }
+              }
+            ],
+            "label_key": "application.invoices.figures_preview.finding.retention_amount_mismatch"
+          }
+        ],
+        "missing_fields": [
+          "kind",
+          "invoice_number",
+          "counterparty_name",
+          "counterparty_country",
+          "currency",
+          "lines"
+        ],
+        "verdict": "incomplete",
+        "refusal_code": null,
+        "invoice_id": null
+      }
+    }
+  }
+}

@@ -168,6 +168,10 @@ list(FILTER desktop_chrome_inputs EXCLUDE REGEX "/dev/locales/tests/")
 list(APPEND desktop_chrome_inputs "${CADRUMO_SOURCE_ROOT}/src/cadrumo/core/i18n/render.py"
   "${CADRUMO_SOURCE_ROOT}/dev/_paths.py" "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/cmake_build.py"
   "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/build_directory.py"
+  # The invoice preview's served keys are declared from these.
+  "${CADRUMO_SOURCE_ROOT}/src/cadrumo/domain/invoices/figures.py"
+  "${CADRUMO_SOURCE_ROOT}/src/cadrumo/application/invoices/figures_preview_contracts.py"
+  "${CADRUMO_SOURCE_ROOT}/src/cadrumo/_data/registry/aeat/facts/0094-iva-rate-slot-catalogue.toml"
   # The shell source names the keys; generation refuses one it would not carry.
   "${CMAKE_CURRENT_SOURCE_DIR}/frontend/src")
 set(desktop_palette_inputs "${CADRUMO_SOURCE_ROOT}/docs/conf.py" "${CADRUMO_SOURCE_ROOT}/docs/_static/cadrumo-docs.css"

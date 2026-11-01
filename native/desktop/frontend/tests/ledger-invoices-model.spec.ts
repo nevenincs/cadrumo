@@ -1,28 +1,56 @@
 import { expect, test } from "@playwright/test";
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import { readLocaleDecimal } from "../src/shared/numbers";
-import type { CatalogueInvoice } from "../src/shell/ledger";
+import type {
+  CatalogueInvoice,
+  InvoicePreviewRequest,
+  InvoicePreviewResult,
+} from "../src/shell/ledger";
+import {
+  InvoicePreviewSession,
+  type PreviewReply,
+} from "../src/components/ledger/invoices/invoicePreview";
 import {
   NO_FILTER,
   checkCorrection,
   checkDraft,
   correctionOf,
+  correctionPreview,
   emptyDraft,
   filterCatalogue,
   holdsCorrection,
-  isAddedInvoice,
-  lineFigures,
-  retentionFigures,
+  readDraft,
   sortCatalogue,
   suggestNumber,
-  sumDecimals,
-  timesToCent,
   type InvoiceDraft,
   type LineDraft,
 } from "../src/components/ledger/invoices/invoiceModel";
+import { findingText } from "../src/components/ledger/invoices/invoiceWords";
 
-// The invoice editor's arithmetic and checks, against figures worked out by
-// hand, and the catalogue's own filter, sort and next-number rules over
-// synthetic invoices.
+// How the invoice editor holds the ledger's answer to the draft on the page,
+// what it lets through on each answer, and the catalogue's own filter, sort
+// and next-number rules. Answers are outputs recorded from the real backend,
+// and every figure asserted is one that backend served.
+
+type Recording = {
+  request: InvoicePreviewRequest;
+  result: InvoicePreviewResult;
+};
+const recorded = (
+  JSON.parse(
+    readFileSync(
+      fileURLToPath(
+        new URL(
+          "../src/dev/fixtures/ledgerInvoicePreview.json",
+          import.meta.url,
+        ),
+      ),
+      "utf8",
+    ),
+  ) as { recordings: Record<string, Recording> }
+).recordings;
+const answer = (name: string) => recorded[name]!.result;
 
 function invoice(facts: Partial<CatalogueInvoice> = {}): CatalogueInvoice {
   return {
@@ -67,98 +95,218 @@ function invoice(facts: Partial<CatalogueInvoice> = {}): CatalogueInvoice {
 }
 
 const line = (facts: Partial<LineDraft>): LineDraft => ({
-  key: "l1",
-  description: "Diseño",
+  key: "line-1",
+  description: "Diseño de marca",
   quantity: "1",
-  unitPrice: "",
-  rate: "",
+  unitPrice: "550",
+  rate: "RATE_21",
   category: "",
+  statedSubtotal: "",
+  statedIva: "",
   ...facts,
 });
 
-function filled(facts: Partial<InvoiceDraft> = {}): InvoiceDraft {
+/** The draft of the `two_lines` recording, with what a case states over it. */
+function filled(
+  facts: Partial<InvoiceDraft> = {},
+  first: Partial<LineDraft> = {},
+): InvoiceDraft {
   return {
-    ...emptyDraft("l1"),
+    ...emptyDraft("line-1"),
     kind: "issued",
+    series: "F",
     number: "F-2026-021",
     issuedAt: "2026-10-23",
     counterpartyName: "Norte Digital S. Coop.",
-    taxId: "F00000022",
+    taxId: "A58818501",
     country: "es",
     currency: "eur",
     lines: [
-      line({ key: "l1", unitPrice: "550", rate: "RATE_21" }),
-      line({ key: "l2", quantity: "2", unitPrice: "275", rate: "RATE_21" }),
+      line(first),
+      line({
+        key: "line-2",
+        description: "Piezas gráficas",
+        quantity: "2",
+        unitPrice: "275",
+      }),
     ],
     ...facts,
   };
 }
 
-test("exact decimal sums and products round to the cent", () => {
-  expect(sumDecimals(["0.1", "0.2"])).toBe("0.3");
-  expect(timesToCent("3", "33.333333")).toBe("100");
-  expect(timesToCent("2.5", "0.21")).toBe("0.53");
-  expect(timesToCent("19.99", "0.21")).toBe("4.2");
+/** What the editor knows of a draft once `name` answered it. */
+const checked = (draft: InvoiceDraft, name: string | null) =>
+  checkDraft(draft, readDraft(draft), name === null ? null : answer(name));
+
+// ---- The session ---------------------------------------------------------------
+
+/** A ledger whose answers the test gives one at a time. */
+function ledger() {
+  const asked: {
+    request: InvoicePreviewRequest;
+    reply(reply: PreviewReply): Promise<void>;
+  }[] = [];
+  const session = new InvoicePreviewSession(
+    (request) =>
+      new Promise<PreviewReply>((resolve) => {
+        asked.push({
+          request,
+          reply: async (reply) => {
+            resolve(reply);
+            // Past the session's own continuation.
+            await new Promise((settled) => setTimeout(settled));
+          },
+        });
+      }),
+    // Long enough that only `commit` sends anything here.
+    60_000,
+  );
+  return { asked, session };
+}
+const draftA: InvoicePreviewRequest = { issued_at: "2026-10-23" };
+const draftB: InvoicePreviewRequest = { issued_at: "2023-03-01" };
+const said = (name: string): PreviewReply => ({
+  kind: "answer",
+  result: answer(name),
 });
 
-test("a line's subtotal and IVA come from its quantity, price and slot", () => {
-  const priced = lineFigures(
-    line({ quantity: "3", unitPrice: "12.5", rate: "RATE_21" }),
-  );
-  expect(priced).toMatchObject({
-    complete: true,
-    subtotal: "37.5",
-    iva: "7.88",
+test("an answer counts only for the draft it was asked about, by its digest", async () => {
+  const { asked, session } = ledger();
+  session.want(draftA);
+  expect(session.snapshot()).toMatchObject({
+    shown: null,
+    current: null,
+    updating: true,
   });
-  expect(lineFigures(line({ unitPrice: "100", rate: "RATE_7.5" })).iva).toBe(
-    "7.5",
-  );
-  expect(lineFigures(line({ unitPrice: "80", rate: "EXEMPT" })).iva).toBe("0");
-  // No rate is chosen for the person.
-  const unrated = lineFigures(line({ unitPrice: "80" }));
-  expect(unrated.complete).toBe(false);
-  expect(unrated.problems.rate).toEqual({ kind: "rule", rule: "choose_rate" });
-  // Quantities go through the one number grammar.
-  const grouped = lineFigures(
-    line({ quantity: "1.500", unitPrice: "2", rate: "RATE_21" }),
-  );
-  expect(grouped.problems.quantity).toMatchObject({
-    kind: "grammar",
-    refusal: { key: "ambiguous_grouping" },
+  session.commit();
+  await asked[0]!.reply(said("two_lines"));
+  expect(session.snapshot().current).toBe(answer("two_lines"));
+  expect(session.snapshot().digest).toBe(answer("two_lines").input_digest);
+  expect(session.snapshot().updating).toBe(false);
+
+  // An edit leaves the last answer on show, and no longer current.
+  session.want(draftB);
+  expect(session.snapshot()).toMatchObject({
+    shown: answer("two_lines"),
+    current: null,
+    digest: null,
+    updating: true,
   });
-  expect(
-    lineFigures(line({ quantity: "0", unitPrice: "2", rate: "RATE_21" }))
-      .problems.quantity,
-  ).toMatchObject({ refusal: { key: "zero" } });
-  // An untouched line, with only its opening quantity, is not entered.
-  expect(lineFigures(line({ description: "" })).entered).toBe(false);
+  session.commit();
+  await asked[1]!.reply(said("rate_in_force_2023"));
+  expect(session.snapshot().current).toBe(answer("rate_in_force_2023"));
+
+  // Back to the draft already asked: its earlier answer was replaced.
+  session.want(draftA);
+  expect(session.snapshot().current).toBeNull();
 });
 
-test("two lines at 21% with a 15% retención add up as the invoice prints", () => {
-  const check = checkDraft(filled({ retentionRate: "15" }));
-  expect(check.totals).toEqual({
-    base: "1100",
-    iva: "231",
-    recargo: null,
-    total: "1331",
+test("one request is in flight, the latest wins, and a stale answer is dropped", async () => {
+  const { asked, session } = ledger();
+  session.want(draftA);
+  session.commit();
+  session.want(draftB);
+  session.commit();
+  expect(asked).toHaveLength(1);
+  await asked[0]!.reply(said("two_lines"));
+  // The overtaken answer says nothing, not even as the one on show.
+  expect(session.snapshot()).toMatchObject({ shown: null, current: null });
+  expect(asked.map(({ request }) => request)).toEqual([draftA, draftB]);
+  await asked[1]!.reply(said("rate_in_force_2023"));
+  expect(session.snapshot().current).toBe(answer("rate_in_force_2023"));
+});
+
+test("typing rests before anything is asked", async () => {
+  const asked: InvoicePreviewRequest[] = [];
+  const session = new InvoicePreviewSession(async (request) => {
+    asked.push(request);
+    return said("bare_2026");
+  }, 5);
+  session.want(draftA);
+  session.want(draftB);
+  expect(asked).toEqual([]);
+  await expect.poll(() => session.snapshot().current).toBe(answer("bare_2026"));
+  expect(asked).toEqual([draftB]);
+});
+
+test("an unavailable ledger leaves no figure, asks again on an edit or a retry, and is never unknown", async () => {
+  const { asked, session } = ledger();
+  session.want(draftA);
+  session.commit();
+  await asked[0]!.reply(said("two_lines"));
+  session.want(draftB);
+  session.commit();
+  await asked[1]!.reply({ kind: "failed" });
+  // Nothing cached survives it: no figure and no rate slot.
+  expect(session.snapshot()).toEqual({
+    shown: null,
+    current: null,
+    digest: null,
+    updating: false,
+    failed: true,
   });
-  expect(check.retention).toMatchObject({
-    rate: "0.15",
-    amount: "165",
-    implied: "165",
+  // The same draft is not asked about again by itself.
+  session.want(draftB);
+  session.commit();
+  expect(asked).toHaveLength(2);
+  session.retry();
+  expect(session.snapshot()).toMatchObject({ failed: false, updating: true });
+  expect(asked).toHaveLength(3);
+  await asked[2]!.reply({ kind: "failed" });
+  // An edit asks again.
+  session.want(draftA);
+  session.commit();
+  expect(asked).toHaveLength(4);
+  await asked[3]!.reply(said("two_lines"));
+  expect(session.snapshot()).toMatchObject({
+    current: answer("two_lines"),
+    failed: false,
   });
+});
+
+test("a ledger call that throws is the same failure", async () => {
+  const session = new InvoicePreviewSession(
+    () => Promise.reject(new Error()),
+    0,
+  );
+  session.want(draftA);
+  session.commit();
+  await expect.poll(() => session.snapshot().failed).toBe(true);
+});
+
+// ---- What each answer lets through -----------------------------------------------
+
+test("the draft goes to the ledger as typed, blank fields null", () => {
+  const { preview, problems } = readDraft(filled());
+  expect(problems).toEqual({});
+  expect(preview).toMatchObject(
+    recorded.two_lines!.request as Record<string, unknown>,
+  );
+  expect(preview.lines?.map(({ key }) => key)).toEqual(["line-1", "line-2"]);
+  expect(preview.printed_total).toBeNull();
+  // A line nobody typed on is left out.
+  const opened = emptyDraft("line-1");
+  expect(readDraft(opened).preview.lines).toEqual([]);
+  expect(readDraft(opened).preview.counterparty_country).toBeNull();
+});
+
+test("an add carries the answer's figures, and only with an answer to this very draft", () => {
+  const draft = filled();
+  expect(checked(draft, null).request).toBeNull();
+  const check = checked(draft, "two_lines");
+  expect(check.invoiceId).toBe(answer("two_lines").invoice_id);
   expect(check.invariants).toEqual({
     counterparty: true,
     country: true,
     line: true,
     totals: true,
   });
-  expect(check.problems).toEqual({});
   expect(check.request).toEqual({
     kind: "issued",
     counterparty_name: "Norte Digital S. Coop.",
-    counterparty_tax_id: "F00000022",
+    counterparty_tax_id: "A58818501",
     counterparty_country: "ES",
+    series: "F",
     invoice_number: "F-2026-021",
     issued_at: "2026-10-23",
     currency: "EUR",
@@ -166,29 +314,36 @@ test("two lines at 21% with a 15% retención add up as the invoice prints", () =
     invoice_class: "ORDINARIA",
     lines: [
       {
-        description: "Diseño",
+        description: "Diseño de marca",
         quantity: { decimal: "1" },
         unit_price: { decimal: "550" },
-        subtotal: { decimal: "550" },
+        subtotal: { decimal: "550.00" },
         iva_rate: "RATE_21",
-        iva_amount: { decimal: "115.5" },
+        iva_amount: { decimal: "115.50" },
       },
       {
-        description: "Diseño",
+        description: "Piezas gráficas",
         quantity: { decimal: "2" },
         unit_price: { decimal: "275" },
-        subtotal: { decimal: "550" },
+        subtotal: { decimal: "550.00" },
         iva_rate: "RATE_21",
-        iva_amount: { decimal: "115.5" },
+        iva_amount: { decimal: "115.50" },
       },
     ],
-    retention_rate: { decimal: "0.15" },
-    retention_amount: { decimal: "165" },
   });
 });
 
-test("nothing is assumed: no kind, country, currency or line until given", () => {
-  const check = checkDraft(emptyDraft("l1"));
+test("a figure typed badly keeps the add back even if an answer accepts", () => {
+  const check = checked(filled({}, { quantity: "1.500" }), "two_lines");
+  expect(check.request).toBeNull();
+  expect(check.problems["line:line-1:quantity"]).toMatchObject({
+    kind: "grammar",
+    refusal: { key: "ambiguous_grouping" },
+  });
+});
+
+test("nothing is assumed: the ledger names what a bare draft lacks", () => {
+  const check = checked(emptyDraft("l1"), "bare_2026");
   expect(check.request).toBeNull();
   expect(check.problems.kind).toEqual({ kind: "rule", rule: "choose_kind" });
   expect(check.problems.counterparty_country).toEqual({ kind: "missing" });
@@ -202,86 +357,144 @@ test("nothing is assumed: no kind, country, currency or line until given", () =>
   });
 });
 
-test("each creation invariant and rule refuses on its own field", () => {
-  expect(
-    checkDraft(filled({ counterpartyName: " " })).problems.counterparty_name,
-  ).toEqual({
-    kind: "missing",
+test("a stated IVA within the backend's cent is sent as stated", () => {
+  const draft = filled({}, { statedIva: "115.51" });
+  expect(readDraft(draft).preview.lines?.[0]?.iva_amount).toEqual({
+    decimal: "115.51",
   });
-  expect(
-    checkDraft(filled({ country: "ESP" })).problems.counterparty_country,
-  ).toEqual({
-    kind: "rule",
-    rule: "country_letters",
-  });
-  const unfinished = checkDraft(
-    filled({
-      lines: [line({ key: "l9", description: "Montaje", unitPrice: "40" })],
-    }),
+  const check = checked(draft, "stated_iva_within");
+  expect(check.problems).toEqual({});
+  expect(check.request?.lines?.[0]?.iva_amount).toEqual({ decimal: "115.51" });
+});
+
+test("a stated IVA the backend refuses stays on its own field", () => {
+  const check = checked(
+    filled({}, { statedIva: "115.60" }),
+    "stated_iva_refused",
   );
-  expect(unfinished.invariants.line).toBe(false);
-  expect(unfinished.problems["line:l9:rate"]).toEqual({
-    kind: "rule",
-    rule: "choose_rate",
+  expect(check.request).toBeNull();
+  expect(check.problems["line:line-1:statedIva"]).toMatchObject({
+    kind: "finding",
+    finding: { code: "line_iva_mismatch" },
   });
-  const printed = checkDraft(filled({ printedTotal: "1330.99" }));
-  expect(printed.invariants.totals).toBe(false);
-  expect(printed.problems.printed).toEqual({
-    kind: "rule",
-    rule: "printed_differs",
-    values: { total: "1331" },
-  });
-  expect(checkDraft(filled({ recargo: "231.01" })).problems.recargo).toEqual({
-    kind: "rule",
-    rule: "recargo_above_iva",
-  });
-  expect(
-    checkDraft(
-      filled({
-        retentionRate: "15",
-        retentionAmount: "1101",
-        retentionTouched: true,
-      }),
-    ).problems.retention_amount,
-  ).toEqual({ kind: "rule", rule: "retention_above_base" });
-  expect(
-    checkDraft(
-      filled({
-        retentionRate: "15",
-        retentionAmount: "160",
-        retentionTouched: true,
-      }),
-    ).problems.retention_amount,
-  ).toMatchObject({ rule: "retention_differs" });
-  expect(
-    checkDraft(filled({ retentionRate: "150" })).problems.retention_rate,
-  ).toMatchObject({ refusal: { key: "percent_above_100" } });
-  const rectificativa = checkDraft(
-    filled({ invoiceClass: "RECTIFICATIVA", series: "" }),
+});
+
+test("a stated subtotal is accepted and refused by the served answer alone", () => {
+  const within = checked(
+    filled({}, { statedSubtotal: "550.01" }),
+    "stated_subtotal_within",
   );
-  expect(rectificativa.problems.series).toEqual({
-    kind: "rule",
-    rule: "series_required",
+  expect(within.request?.lines?.[0]?.subtotal).toEqual({ decimal: "550.01" });
+  const refused = checked(
+    filled({}, { statedSubtotal: "550.50" }),
+    "stated_subtotal_refused",
+  );
+  expect(refused.request).toBeNull();
+  expect(refused.problems["line:line-1:statedSubtotal"]).toMatchObject({
+    kind: "finding",
   });
-  expect(rectificativa.problems.rectifies_invoice_number).toEqual({
-    kind: "rule",
-    rule: "rectifies_required",
+});
+
+test("a printed total that differs warns and blocks nothing", () => {
+  const check = checked(filled({ printedTotal: "1330.99" }), "printed_differs");
+  expect(check.findings.warnings.printed?.code).toBe("printed_total_differs");
+  expect(check.problems.printed).toBeUndefined();
+  expect(check.invariants.totals).toBe(true);
+  expect(check.request).not.toBeNull();
+});
+
+test("the retención is the backend's to judge, on its own fields", () => {
+  const typed = filled({ retentionRate: "15", retentionAmount: "165" });
+  const fine = checked(typed, "retention_15");
+  expect(fine.request?.retention_rate).toEqual({ decimal: "0.15" });
+  expect(fine.request?.retention_amount).toEqual({ decimal: "165" });
+  expect(
+    checked(filled({ retentionRate: "15" }), "retention_rate_alone").problems
+      .retention_rate,
+  ).toMatchObject({
+    finding: { code: "retention_rate_without_amount" },
+  });
+  const differs = checked(
+    filled({ retentionRate: "15", retentionAmount: "160" }),
+    "retention_differs",
+  );
+  expect(differs.request).toBeNull();
+  expect(differs.problems.retention_rate).toMatchObject({
+    finding: { code: "retention_amount_mismatch" },
+  });
+  const above = checked(
+    filled({ retentionRate: "15", retentionAmount: "1200" }),
+    "retention_above_base",
+  );
+  expect(above.problems.retention_amount).toMatchObject({
+    finding: { code: "retention_amount_above_base" },
   });
   expect(
-    checkDraft(filled({ taxId: "" })).problems.counterparty_tax_id,
-  ).toEqual({
+    checked(filled({ recargo: "231.01" }), "recargo_above_iva").problems
+      .recargo,
+  ).toMatchObject({ finding: { code: "recargo_above_iva_total" } });
+});
+
+test("a date that strands a rate is a finding on that line", () => {
+  const check = checked(filled({}, { rate: "RATE_5" }), "rate_not_in_force");
+  expect(check.request).toBeNull();
+  expect(check.problems["line:line-1:rate"]).toMatchObject({
+    kind: "finding",
+    finding: { code: "line_rate_not_in_force" },
+  });
+  const slot = (name: string, token: string) =>
+    answer(name).rate_slots.find(({ slot }) => slot === token)?.in_force;
+  expect(slot("rate_not_in_force", "RATE_5")).toBe(false);
+  expect(slot("rate_in_force_2023", "RATE_5")).toBe(true);
+});
+
+test("before the registry's rates, the served finding stands and no rate is invented", () => {
+  const check = checked(filled({ issuedAt: "2021-06-01" }), "before_registry");
+  expect(answer("before_registry").rate_slots).toEqual([]);
+  expect(check.request).toBeNull();
+  expect(check.findings.general.map(({ code }) => code)).toEqual([
+    "rate_date_unresolved",
+  ]);
+});
+
+test("a refusal the ledger does not explain is said, and points where it may be", () => {
+  const check = checked(filled({ taxId: "" }), "no_tax_id");
+  expect(check.request).toBeNull();
+  expect(check.refusedUnsaid).toBe(true);
+  expect(check.problems.counterparty_tax_id).toEqual({
     kind: "rule",
     rule: "tax_id_required",
   });
-  // An issued simplificada may leave the tax id out.
   expect(
-    checkDraft(filled({ taxId: "", invoiceClass: "SIMPLIFICADA" })).problems,
-  ).toEqual({});
+    checked(filled({ retentionRate: "15" }), "retention_rate_alone")
+      .refusedUnsaid,
+  ).toBe(false);
+});
+
+test("a finding is worded by its served key with its served values", () => {
+  const words: { key: string; values?: Record<string, string | number> }[] = [];
+  const t = Object.assign(
+    (key: string, values?: Record<string, string | number>) => {
+      words.push({ key, values });
+      return key;
+    },
+    { locale: "en" },
+  );
+  const refused = answer("rate_not_in_force");
+  findingText(t, refused.findings[0]!, refused.rate_slots);
+  expect(words.at(-1)?.key).toBe(refused.findings[0]!.label_key);
+  expect(words.at(-1)?.values?.on_date).toContain("2026");
+  const differs = answer("printed_differs");
+  findingText(t, differs.findings[0]!, differs.rate_slots);
+  expect(words.at(-1)?.values).toEqual({
+    computed: "1,331.00",
+    printed: "1,330.99",
+  });
 });
 
 test("a retención rate is read as points and reaches the wire as a fraction", () => {
   const wire = (retentionRate: string) =>
-    checkDraft(filled({ retentionRate })).request?.retention_rate?.decimal;
+    readDraft(filled({ retentionRate })).preview.retention_rate?.decimal;
   expect(wire("15")).toBe("0.15");
   expect(wire("0.5")).toBe("0.005");
   expect(wire("0.5%")).toBe("0.005");
@@ -290,16 +503,9 @@ test("a retención rate is read as points and reaches the wire as a fraction", (
   const typed = readLocaleDecimal("es", "0,5");
   expect(typed).toBe("0.5");
   expect(wire(typed ?? "")).toBe("0.005");
-  expect(checkDraft(filled({ retentionRate: "0.5" })).problems).toEqual({});
-});
-
-test("a retención amount can stand alone; a rate cannot", () => {
-  expect(retentionFigures("1000", "", "150").problems).toEqual({});
-  expect(retentionFigures("1000", "15", "").problems.amount).toEqual({
-    kind: "rule",
-    rule: "retention_needs_amount",
-  });
-  expect(retentionFigures("1000", "15", "150.01").problems).toEqual({});
+  expect(
+    readDraft(filled({ retentionRate: "150" })).problems.retention_rate,
+  ).toMatchObject({ refusal: { key: "percent_above_100" } });
 });
 
 test("the next number follows the highest in its series, class and year", () => {
@@ -387,7 +593,7 @@ test("a stored rate that points write as 12.345 is held longer, so no language r
   // `12.345` alone is a thousands run in Spanish; the held spelling is not.
   expect(draft.retentionRate).toBe("12.3450");
   expect(draft.retentionAmount).toBe("123.45");
-  expect(checkCorrection(stored, draft)).toMatchObject({
+  expect(checkCorrection(stored, draft, null)).toMatchObject({
     changed: [],
     problems: {},
     request: null,
@@ -403,15 +609,19 @@ test("a correction sends only the changed fields the update accepts", () => {
   });
   const draft = correctionOf(stored);
   expect(draft.retentionRate).toBe("15");
-  expect(checkCorrection(stored, draft)).toMatchObject({
+  expect(checkCorrection(stored, draft, null)).toMatchObject({
     changed: [],
     request: null,
   });
-  const paid = checkCorrection(stored, {
-    ...draft,
-    paymentStatus: "PAID",
-    notes: "Cobrada",
-  });
+  const paid = checkCorrection(
+    stored,
+    {
+      ...draft,
+      paymentStatus: "PAID",
+      notes: "Cobrada",
+    },
+    null,
+  );
   expect(paid.request).toEqual({
     invoice_id: stored.invoice_id,
     patch: {
@@ -426,29 +636,23 @@ test("a correction sends only the changed fields the update accepts", () => {
     ),
   ).toBe(true);
   expect(holdsCorrection(stored, paid.request!)).toBe(false);
-  // A new rate works the amount out again.
-  const seven = checkCorrection(stored, {
-    ...draft,
-    retentionRate: "7",
-    retentionTouched: false,
-  });
-  expect(seven.request?.patch.values).toEqual({
-    retention_rate: { decimal: "0.07" },
-    retention_amount: { decimal: "70" },
-  });
   // An operation date with its role can move but not go.
   expect(
-    checkCorrection(stored, { ...draft, operationDate: "" }).problems
+    checkCorrection(stored, { ...draft, operationDate: "" }, null).problems
       .operation_date,
   ).toEqual({
     kind: "rule",
     rule: "operation_date_fixed",
   });
   expect(
-    checkCorrection(invoice(), {
-      ...correctionOf(invoice()),
-      operationDate: "2026-03-01",
-    }).problems.operation_date,
+    checkCorrection(
+      invoice(),
+      {
+        ...correctionOf(invoice()),
+        operationDate: "2026-03-01",
+      },
+      null,
+    ).problems.operation_date,
   ).toEqual({ kind: "rule", rule: "operation_date_fixed" });
   // Leaving the rectificativa class takes its number away.
   const rectified = invoice({
@@ -456,34 +660,63 @@ test("a correction sends only the changed fields the update accepts", () => {
     rectifies_invoice_number: "F-2026-001",
   });
   expect(
-    checkCorrection(rectified, {
-      ...correctionOf(rectified),
-      invoiceClass: "ORDINARIA",
-    }).request?.patch,
+    checkCorrection(
+      rectified,
+      {
+        ...correctionOf(rectified),
+        invoiceClass: "ORDINARIA",
+      },
+      null,
+    ).request?.patch,
   ).toEqual({
     values: { invoice_class: "ORDINARIA", rectifies_invoice_number: null },
     fields: ["invoice_class", "rectifies_invoice_number"],
   });
   expect(
-    checkCorrection(stored, { ...draft, paymentId: "abc" }).problems.payment_id,
+    checkCorrection(stored, { ...draft, paymentId: "abc" }, null).problems
+      .payment_id,
   ).toEqual({
     kind: "rule",
     rule: "payment_id_shape",
   });
 });
 
-test("an add read back is recognised by its identity", () => {
-  const request = checkDraft(filled()).request!;
+test("a changed retención waits for the ledger's answer and takes its verdict", () => {
   const stored = invoice({
-    invoice_number: "F-2026-021",
-    issued_at: "2026-10-23",
-    counterparty_tax_id: "F00000022",
-    grand_total: { decimal: "1331.00" },
+    base_total: { decimal: "1000" },
+    retention_rate: { decimal: "0.15" },
+    retention_amount: { decimal: "150" },
   });
-  expect(isAddedInvoice(stored, request)).toBe(true);
+  const seven = {
+    ...correctionOf(stored),
+    retentionRate: "7",
+    retentionAmount: "70",
+  };
+  expect(correctionPreview(stored, seven)).toMatchObject(
+    recorded.correction_rate_7!.request as Record<string, unknown>,
+  );
+  const waiting = checkCorrection(stored, seven, null);
+  expect(waiting.awaitingAnswer).toBe(true);
+  expect(waiting.request).toBeNull();
+  const answered = checkCorrection(stored, seven, answer("correction_rate_7"));
+  expect(answered.request?.patch.values).toEqual({
+    retention_rate: { decimal: "0.07" },
+    retention_amount: { decimal: "70" },
+  });
+  const differs = checkCorrection(
+    stored,
+    { ...seven, retentionAmount: "60" },
+    answer("correction_rate_differs"),
+  );
+  expect(differs.request).toBeNull();
+  expect(differs.problems.retention_rate).toMatchObject({
+    finding: { code: "retention_amount_mismatch" },
+  });
+  // A read that failed holds back only a retención that changed.
   expect(
-    isAddedInvoice({ ...stored, grand_total: { decimal: "1331.01" } }, request),
-  ).toBe(false);
+    checkCorrection(stored, { ...correctionOf(stored), notes: "Cobrada" }, null)
+      .request,
+  ).not.toBeNull();
 });
 
 test("the catalogue filters by kind, class, payment, links, period and words", () => {

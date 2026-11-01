@@ -3,14 +3,18 @@
 // page's language, and why a typed value was not taken. A token the page
 // does not know is shown as itself, never guessed at.
 
-import type { InvoiceKind, PaymentStatus } from "../../../shell/ledger";
+import type {
+  InvoiceKind,
+  InvoicePreviewFinding,
+  InvoicePreviewRateSlot,
+  PaymentStatus,
+} from "../../../shell/ledger";
 import type { Translate } from "../../../shell/strings";
-import { formatPercent } from "../../../shared/numbers";
+import { formatDay } from "../../../shared/dateFormats";
+import { formatDecimal } from "../../../shared/numbers";
 import {
   INVOICE_CLASSES,
   PAYMENT_STATUSES,
-  RATE_SLOTS,
-  isRateSlot,
   type Problem,
 } from "./invoiceModel";
 
@@ -32,13 +36,32 @@ export const paymentLabel = (t: Translate, status: string) =>
     ? t(`desktop.ledger.invoices.payment.${lower(status)}`)
     : status;
 
-/** A rate slot as the invoice prints it: `21%`, or Exempt or Not subject. */
-export function rateLabel(t: Translate, locale: string, slot: string): string {
-  if (!isRateSlot(slot)) return slot;
-  const fraction = RATE_SLOTS.find((found) => found.slot === slot)!.fraction;
-  if (fraction === null)
-    return t(`desktop.ledger.invoices.rate.${lower(slot)}`);
-  return formatPercent(locale, fraction, { unit: "fraction", maxFraction: 1 });
+/** A rate slot in the word the ledger serves for it. */
+export function rateLabel(
+  t: Translate,
+  slots: readonly InvoicePreviewRateSlot[],
+  token: string,
+): string {
+  const served = slots.find((found) => found.slot === token);
+  return served ? t(served.label_key) : token;
+}
+
+/** What the ledger found, in its catalogue's words and with its values. */
+export function findingText(
+  t: Translate,
+  finding: InvoicePreviewFinding,
+  slots: readonly InvoicePreviewRateSlot[],
+): string {
+  const locale = t.locale ?? "en";
+  const values: Record<string, string | number> = {};
+  for (const { key, value } of finding.values) {
+    if (typeof value === "object")
+      values[key] = formatDecimal(locale, value.decimal, { minFraction: 2 });
+    else if (key === "on_date") values[key] = formatDay(locale, String(value));
+    else if (key === "slot") values[key] = rateLabel(t, slots, String(value));
+    else values[key] = typeof value === "number" ? value : String(value);
+  }
+  return t(finding.label_key, values);
 }
 
 /** Why a value was not taken, in plain words, with the spelling meant
@@ -48,6 +71,8 @@ export function problemText(t: Translate, problem: Problem): string {
     return t("desktop.ledger.invoices.problem.missing");
   if (problem.kind === "rule")
     return t(`desktop.ledger.invoices.problem.${problem.rule}`, problem.values);
+  if (problem.kind === "finding")
+    return findingText(t, problem.finding, problem.slots);
   const { key, raw, suggestion, limit } = problem.refusal;
   const said = t(`desktop.ledger.invoices.refusal.${key}`, {
     raw,

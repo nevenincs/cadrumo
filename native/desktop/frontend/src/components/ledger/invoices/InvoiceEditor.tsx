@@ -32,18 +32,25 @@ import type {
   InvoiceAddRequest,
   InvoiceAddResult,
   InvoiceKind,
+  InvoicePreviewFinding,
+  InvoicePreviewRateSlot,
+  InvoicePreviewRetention,
   InvoiceUpdateField,
   InvoiceUpdateRequest,
   LedgerPort,
   PaymentStatus,
 } from "../../../shell/ledger";
-import { parsePercent } from "../../../shell/ledgerGrammar";
+import { compareDecimal } from "../../../shell/ledgerGrammar";
 import { IVA_CATEGORIES, isIvaCategory } from "../../../shell/ledgerVocabulary";
 import { useNavigationGuard } from "../../../shell/navigation/hooks";
 import { useStrings, type Translate } from "../../../shell/strings";
 import { localDay } from "../../../shared/dates";
 import { formatDay } from "../../../shared/dateFormats";
-import { formatAmount, formatPercent } from "../../../shared/numbers";
+import {
+  formatAmount,
+  formatPercent,
+  heldDecimal,
+} from "../../../shared/numbers";
 import { useServedCodes } from "../suggestions/SuggestionsProvider";
 import {
   emptyFills,
@@ -71,23 +78,26 @@ import {
   OPERATION_TYPES,
   PAYMENT_STATUSES,
   PREMISES_SITUATIONS,
-  RETENTION_PRESETS,
   checkCorrection,
   checkDraft,
   correctionOf,
+  correctionPreview,
   emptyDraft,
   emptyLine,
   isPaymentId,
-  lessDecimal,
+  readDraft,
+  retentionRate,
   seriesAndNumber,
-  shownRetentionAmount,
   suggestNumber,
   type CorrectionDraft,
   type InvoiceDraft,
+  type PlacedFindings,
   type Problem,
 } from "./invoiceModel";
+import { useInvoicePreview, type PreviewView } from "./invoicePreview";
 import {
   classLabel,
+  findingText,
   kindChoice,
   kindLabel,
   paymentLabel,
@@ -107,7 +117,7 @@ export type EditorTarget =
 
 /** A write the editor sent and did not see settle. */
 type Pending =
-  | { what: "add"; request: InvoiceAddRequest }
+  | { what: "add"; request: InvoiceAddRequest; invoiceId: string | null }
   | { what: "update"; request: InvoiceUpdateRequest }
   | { what: "remove"; invoiceId: string };
 
@@ -173,7 +183,14 @@ export function InvoiceEditor({
   const [correction, setCorrection] = useState<CorrectionDraft | null>(() =>
     opened ? correctionOf(opened) : null,
   );
-  const [stage, setStage] = useState<"edit" | "confirm" | "remove">("edit");
+  const [chosen, setStage] = useState<"edit" | "remove">("edit");
+  // Review waits for the ledger's answer to the draft as it stands: asked
+  // for here, it opens once that answer would accept.
+  const [wantsReview, setWantsReview] = useState(false);
+  const backToEdit = () => {
+    setStage("edit");
+    setWantsReview(false);
+  };
   const [asking, setAsking] = useState(false);
   const [sending, setSending] = useState(false);
   const [outcome, setOutcome] = useState<Outcome | null>(null);
@@ -191,11 +208,34 @@ export function InvoiceEditor({
   }, []);
 
   const isNew = target.kind === "new";
-  const check = useMemo(() => checkDraft(draft), [draft]);
-  const corrected = useMemo(
-    () => (stored && correction ? checkCorrection(stored, correction) : null),
-    [stored, correction],
+  const reading = useMemo(() => readDraft(draft), [draft]);
+  const asked = useMemo(
+    () =>
+      isNew
+        ? reading.preview
+        : stored && correction
+          ? correctionPreview(stored, correction)
+          : {},
+    [isNew, reading, stored, correction],
   );
+  const preview = useInvoicePreview(port, asked);
+  const answered = preview.current;
+  const check = useMemo(
+    () => checkDraft(draft, reading, answered),
+    [draft, reading, answered],
+  );
+  const corrected = useMemo(
+    () =>
+      stored && correction
+        ? checkCorrection(stored, correction, answered)
+        : null,
+    [stored, correction, answered],
+  );
+  const ready = isNew ? check.request : (corrected?.request ?? null);
+  const stage =
+    chosen === "edit" && wantsReview && ready && duplicate === null
+      ? "confirm"
+      : chosen;
   const problems: Record<string, Problem> = isNew
     ? check.problems
     : (corrected?.problems ?? {});
@@ -216,7 +256,11 @@ export function InvoiceEditor({
   const shown = (field: string) => {
     const problem = problems[field];
     if (!problem) return null;
-    if (tried || (touched.has(field) && problem.kind === "grammar"))
+    if (
+      tried ||
+      problem.kind === "finding" ||
+      (touched.has(field) && problem.kind === "grammar")
+    )
       return problemText(t, problem);
     return null;
   };
@@ -227,7 +271,7 @@ export function InvoiceEditor({
     setDraft((held) => ({ ...held, [key]: value }));
     if (key === "number") setDuplicate(null);
     if (outcome?.kind !== "unknown") setOutcome(null);
-    setStage("edit");
+    backToEdit();
   };
   const correct = <K extends keyof CorrectionDraft>(
     key: K,
@@ -235,7 +279,7 @@ export function InvoiceEditor({
   ) => {
     setCorrection((held) => (held ? { ...held, [key]: value } : held));
     if (outcome?.kind !== "unknown") setOutcome(null);
-    setStage("edit");
+    backToEdit();
   };
 
   const close = () => {
@@ -257,7 +301,7 @@ export function InvoiceEditor({
     }
     if (landed.kind === "not_saved") {
       setOutcome({ kind: "not_saved" });
-      setStage("edit");
+      backToEdit();
       return;
     }
     if (pending.what === "remove") {
@@ -281,7 +325,7 @@ export function InvoiceEditor({
   /** Reads whether `pending` landed. */
   const landedOf = (pending: Pending): Promise<Landed> =>
     pending.what === "add"
-      ? addLanded(port, pending.request)
+      ? addLanded(port, pending.invoiceId)
       : pending.what === "update"
         ? updateLanded(port, pending.request)
         : removeLanded(port, pending.invoiceId);
@@ -317,7 +361,7 @@ export function InvoiceEditor({
 
   const refusedText = () => t("desktop.ledger.invoices.refused");
 
-  const add = async (request: InvoiceAddRequest) => {
+  const add = async (request: InvoiceAddRequest, invoiceId: string | null) => {
     setSending(true);
     const answer = await write(port, "ledger.invoice.add", request);
     setSending(false);
@@ -345,17 +389,17 @@ export function InvoiceEditor({
       if (detail && detail.outcome === "validation_error")
         refuseAdd(detail as InvoiceAddResult);
       else setOutcome({ kind: "refused", text: refusedText() });
-      setStage("edit");
+      backToEdit();
       return;
     }
     if (answer.kind === "unknown")
-      undetermined({ what: "add", request }, answer.saved);
+      undetermined({ what: "add", request, invoiceId }, answer.saved);
     else setOutcome({ kind: "failed", code: answer.code });
   };
   const refuseAdd = (
     result: Pick<InvoiceAddResult, "validation_code" | "invoice_id">,
   ) => {
-    setStage("edit");
+    backToEdit();
     if (result.validation_code === "duplicate_invoice") {
       setDuplicate(result.invoice_id ?? "");
       setOutcome(null);
@@ -380,7 +424,7 @@ export function InvoiceEditor({
       onClose();
     } else if (answer.kind === "refused") {
       setOutcome({ kind: "refused", text: refusedText() });
-      setStage("edit");
+      backToEdit();
     } else if (answer.kind === "unknown")
       undetermined({ what: "update", request }, answer.saved);
     else setOutcome({ kind: "failed", code: answer.code });
@@ -398,7 +442,7 @@ export function InvoiceEditor({
       onClose();
     } else if (answer.kind === "refused") {
       setOutcome({ kind: "refused", text: refusedText() });
-      setStage("edit");
+      backToEdit();
     } else if (answer.kind === "unknown")
       undetermined({ what: "remove", invoiceId }, answer.saved);
     else setOutcome({ kind: "failed", code: answer.code });
@@ -430,6 +474,7 @@ export function InvoiceEditor({
       <NewInvoice
         draft={draft}
         check={check}
+        preview={preview}
         invoices={invoices}
         locale={locale}
         shown={shown}
@@ -446,6 +491,7 @@ export function InvoiceEditor({
     body = (
       <StoredInvoice
         invoice={stored!}
+        preview={preview}
         invoices={invoices}
         correction={correction!}
         locale={locale}
@@ -456,6 +502,12 @@ export function InvoiceEditor({
     );
 
   const changed = corrected?.changed ?? [];
+  // A stored invoice asks the ledger about its retención alone, so a read
+  // that failed matters there only once a retención is being changed.
+  const retentionAsked =
+    isNew ||
+    changed.includes("retention_rate") ||
+    changed.includes("retention_amount");
   const primary = (): ReactNode => {
     if (unknown) return null;
     if (isNew) {
@@ -465,7 +517,7 @@ export function InvoiceEditor({
             <Button
               size="sm"
               pending={sending}
-              onClick={() => void add(check.request!)}
+              onClick={() => void add(check.request!, check.invoiceId)}
             >
               {t("desktop.ledger.invoices.add")}
             </Button>
@@ -476,7 +528,8 @@ export function InvoiceEditor({
           size="sm"
           onClick={() => {
             setTried(true);
-            if (check.request && duplicate === null) setStage("confirm");
+            preview.commit();
+            setWantsReview(true);
           }}
         >
           {t("desktop.ledger.invoices.review")}
@@ -504,7 +557,8 @@ export function InvoiceEditor({
         onClick={() => {
           if (changed.length === 0) return;
           setTried(true);
-          if (corrected.request) setStage("confirm");
+          preview.commit();
+          setWantsReview(true);
         }}
       >
         {t("desktop.ledger.invoices.review_changes", { count: changed.length })}
@@ -573,13 +627,28 @@ export function InvoiceEditor({
           onCheck={checkPending}
         />
 
-        <div className="flex flex-col gap-6">{body}</div>
+        <PreviewNotes
+          failed={preview.failed && retentionAsked}
+          onRetry={preview.retry}
+          refusedUnsaid={isNew && check.refusedUnsaid}
+          findings={
+            isNew ? check.findings : (corrected?.findings ?? NO_FINDINGS)
+          }
+          slots={preview.shown?.rate_slots ?? []}
+        />
+
+        <div
+          className="flex flex-col gap-6"
+          onBlurCapture={() => preview.commit()}
+        >
+          {body}
+        </div>
 
         {stage === "confirm" && (
           <Confirmation
             isNew={isNew}
             draftRequest={check.request}
-            totals={check.totals}
+            total={preview.current?.totals.total?.decimal ?? ""}
             stored={stored}
             correction={correction}
             changed={changed}
@@ -651,6 +720,77 @@ export function InvoiceEditor({
 const numberOf = (invoice: CatalogueInvoice | null) =>
   invoice ? seriesAndNumber(invoice) : "";
 
+const NO_FINDINGS: PlacedFindings = { warnings: {}, general: [] };
+
+/** What the ledger could not answer, or found with no field to show it on. */
+function PreviewNotes({
+  failed,
+  onRetry,
+  refusedUnsaid,
+  findings,
+  slots,
+}: {
+  failed: boolean;
+  onRetry(): void;
+  refusedUnsaid: boolean;
+  findings: PlacedFindings;
+  slots: readonly InvoicePreviewRateSlot[];
+}) {
+  const t = useStrings();
+  const lineWarnings: InvoicePreviewFinding[] = Object.entries(
+    findings.warnings,
+  ).flatMap(([place, finding]) => (place.startsWith("line:") ? [finding] : []));
+  const notes = [...findings.general, ...lineWarnings];
+  return (
+    <>
+      {failed && (
+        <Alert
+          tone="warning"
+          role="alert"
+          icon={<Icon name="alert" />}
+          className="ledger-invoice-unavailable"
+        >
+          <AlertTitle>
+            {t("desktop.ledger.invoices.figures_unavailable")}
+          </AlertTitle>
+          <div className="mt-1">
+            <Button size="xs" variant="outline" onClick={onRetry}>
+              {t("desktop.ledger.invoices.figures_retry")}
+            </Button>
+          </div>
+        </Alert>
+      )}
+      {refusedUnsaid && (
+        <Alert
+          tone="warning"
+          icon={<Icon name="alert" />}
+          className="ledger-invoice-would-refuse"
+        >
+          {t("desktop.ledger.invoices.would_refuse")}
+        </Alert>
+      )}
+      {notes.length > 0 && (
+        <Alert
+          tone="warning"
+          icon={<Icon name="alert" />}
+          className="ledger-invoice-findings"
+        >
+          <ul className="flex flex-col gap-0.5 text-sm">
+            {notes.map((finding) => (
+              <li
+                key={`${finding.code}-${finding.line_key ?? ""}`}
+                data-finding={finding.code}
+              >
+                {findingText(t, finding, slots)}
+              </li>
+            ))}
+          </ul>
+        </Alert>
+      )}
+    </>
+  );
+}
+
 function OutcomeAlert({
   outcome,
   sending,
@@ -719,6 +859,7 @@ function OutcomeAlert({
 function NewInvoice({
   draft,
   check,
+  preview,
   invoices,
   locale,
   shown,
@@ -732,6 +873,7 @@ function NewInvoice({
 }: {
   draft: InvoiceDraft;
   check: ReturnType<typeof checkDraft>;
+  preview: PreviewView;
   invoices: readonly CatalogueInvoice[];
   locale: string;
   shown(field: string): string | null;
@@ -806,12 +948,22 @@ function NewInvoice({
     duplicate !== null
       ? t("desktop.ledger.invoices.duplicate")
       : shown("invoice_number");
-  const base = check.totals.base;
-  const retentionAmount = shownRetentionAmount(draft, base);
-  const lineShown = (key: string, field: string) =>
-    tried ||
-    (touched.has(`line:${key}:${field}`) &&
-      check.problems[`line:${key}:${field}`]?.kind === "grammar");
+  const lineShown = (key: string, field: string) => {
+    const place = `line:${key}:${field}`;
+    const problem = check.problems[place];
+    return (
+      tried ||
+      problem?.kind === "finding" ||
+      (touched.has(place) && problem?.kind === "grammar")
+    );
+  };
+  const served = preview.shown;
+  const warned = (place: string) => {
+    const finding = check.findings.warnings[place];
+    return finding && served
+      ? findingText(t, finding, served.rate_slots)
+      : undefined;
+  };
 
   return (
     <>
@@ -1096,7 +1248,8 @@ function NewInvoice({
             draft.counterpartyName,
           )}
           lines={draft.lines}
-          figures={check.lines}
+          figures={served?.lines ?? []}
+          slots={served?.rate_slots ?? []}
           kind={draft.kind}
           locale={locale}
           problems={check.problems}
@@ -1130,12 +1283,15 @@ function NewInvoice({
             <TotalsList
               locale={locale}
               currency={draft.currency.trim().toUpperCase()}
-              base={check.totals.base}
-              iva={check.totals.iva}
-              total={check.totals.total}
+              base={served?.totals.base?.decimal ?? null}
+              iva={served?.totals.iva?.decimal ?? null}
+              total={served?.totals.total?.decimal ?? null}
+              failed={preview.failed}
+              updating={preview.updating && served !== null}
               recargo={
                 <FormField
                   label={t("desktop.ledger.invoices.field.recargo")}
+                  hint={warned("recargo")}
                   error={shown("recargo")}
                 >
                   {(control) => (
@@ -1150,7 +1306,10 @@ function NewInvoice({
             />
             <FormField
               label={t("desktop.ledger.invoices.field.printed_total")}
-              hint={t("desktop.ledger.invoices.hint.printed_total")}
+              hint={
+                warned("printed") ??
+                t("desktop.ledger.invoices.hint.printed_total")
+              }
               error={shown("printed")}
             >
               {(control) => (
@@ -1165,18 +1324,14 @@ function NewInvoice({
           <Retention
             locale={locale}
             rate={draft.retentionRate}
-            amount={retentionAmount}
-            total={check.totals.total}
+            amount={draft.retentionAmount}
+            answered={preview.current?.retention ?? null}
+            net={served?.totals.net_of_retention?.decimal ?? null}
+            withheld={served?.retention.amount?.decimal ?? null}
             rateError={shown("retention_rate")}
             amountError={shown("retention_amount")}
-            onRate={(value) => {
-              edit("retentionRate", value);
-              edit("retentionTouched", false);
-            }}
-            onAmount={(value) => {
-              edit("retentionAmount", value);
-              edit("retentionTouched", true);
-            }}
+            onRate={(value) => edit("retentionRate", value)}
+            onAmount={(value) => edit("retentionAmount", value)}
             onBlur={touch}
           />
         </div>
@@ -1284,31 +1439,44 @@ function TotalsList({
   base,
   iva,
   total,
+  failed = false,
+  updating = false,
   recargo,
 }: {
   locale: string;
   currency: string;
-  base: string;
-  iva: string;
-  total: string;
+  /** Each the ledger's, and null while it has not answered one. */
+  base: string | null;
+  iva: string | null;
+  total: string | null;
+  failed?: boolean;
+  updating?: boolean;
   recargo: ReactNode;
 }) {
   const t = useStrings();
   const row = "flex items-baseline justify-between gap-3";
+  const blank = failed ? t("desktop.ledger.invoices.not_available") : "—";
   return (
-    <div className="ledger-invoice-totals flex flex-col gap-2 text-base">
+    <div
+      className="ledger-invoice-totals flex flex-col gap-2 text-base"
+      data-updating={updating || undefined}
+    >
       <dl className="flex flex-col gap-2">
         <div className={row}>
           <dt className="text-muted-foreground">
             {t("desktop.ledger.invoices.base")}
           </dt>
-          <dd className="tabular-nums">{formatAmount(locale, base)}</dd>
+          <dd className="tabular-nums">
+            {base === null ? blank : formatAmount(locale, base)}
+          </dd>
         </div>
         <div className={row}>
           <dt className="text-muted-foreground">
             {t("desktop.ledger.invoices.iva")}
           </dt>
-          <dd className="tabular-nums">{formatAmount(locale, iva)}</dd>
+          <dd className="tabular-nums">
+            {iva === null ? blank : formatAmount(locale, iva)}
+          </dd>
         </div>
       </dl>
       {recargo}
@@ -1316,21 +1484,31 @@ function TotalsList({
         <div className={cn(row, "border-t border-border pt-2 font-medium")}>
           <dt>{t("desktop.ledger.invoices.total")}</dt>
           <dd className="ledger-invoice-total tabular-nums">
-            {formatAmount(locale, total, { currency })}
+            {total === null ? blank : formatAmount(locale, total, { currency })}
           </dd>
         </div>
       </dl>
+      {updating && (
+        <p
+          className="ledger-invoice-updating text-xs text-muted-foreground"
+          role="status"
+        >
+          {t("desktop.ledger.invoices.figures_updating")}
+        </p>
+      )}
     </div>
   );
 }
 
-/** Retención, outside the total: worked out from its rate and editable,
- * with what is left to be paid. */
+/** Retención, outside the total, typed as the document states it. The ledger
+ * says what its rate implies, and what is left to be paid. */
 function Retention({
   locale,
   rate,
   amount,
-  total,
+  answered,
+  net,
+  withheld,
   rateError,
   amountError,
   onRate,
@@ -1340,7 +1518,11 @@ function Retention({
   locale: string;
   rate: string;
   amount: string;
-  total: string;
+  /** The ledger's answer to this very retención, or null while none. */
+  answered: InvoicePreviewRetention | null;
+  /** What the ledger says is left to pay, and the retención it took off. */
+  net: string | null;
+  withheld: string | null;
   rateError: string | null;
   amountError: string | null;
   onRate(value: string): void;
@@ -1348,30 +1530,16 @@ function Retention({
   onBlur(field: string): void;
 }) {
   const t = useStrings();
-  const withheld = /^\d+(\.\d+)?$/.test(amount.trim()) ? amount.trim() : null;
-  const left = withheld === null ? total : lessDecimal(total, withheld);
+  const implied = answered?.implied?.decimal ?? null;
+  const offerImplied =
+    implied !== null &&
+    (answered?.amount == null ||
+      compareDecimal(answered.amount.decimal, implied) !== 0);
   return (
     <div className="ledger-invoice-retention flex flex-col gap-3 rounded-lg bg-accent p-3">
       <span className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
         {t("desktop.ledger.invoices.retention")}
       </span>
-      <div
-        role="group"
-        aria-label={t("desktop.ledger.invoices.retention_presets")}
-        className="flex flex-wrap gap-1"
-      >
-        {RETENTION_PRESETS.map((preset) => (
-          <Button
-            key={preset}
-            variant="pill"
-            size="xs"
-            aria-pressed={rate.trim() === preset}
-            onClick={() => onRate(preset)}
-          >
-            {formatPercent(locale, preset, { unit: "points" })}
-          </Button>
-        ))}
-      </div>
       <div className="grid grid-cols-2 gap-2">
         <FormField
           label={t("desktop.ledger.invoices.field.retention_rate")}
@@ -1403,16 +1571,32 @@ function Retention({
           )}
         </FormField>
       </div>
-      <p className="ledger-invoice-to-pay text-sm tabular-nums">
-        {withheld !== null && left !== null
-          ? t("desktop.ledger.invoices.to_pay_withheld", {
-              amount: formatAmount(locale, left),
-              retention: formatAmount(locale, withheld),
-            })
-          : t("desktop.ledger.invoices.to_pay", {
-              amount: formatAmount(locale, total),
-            })}
-      </p>
+      {offerImplied && (
+        <p className="ledger-invoice-implied flex flex-wrap items-center gap-2 text-sm tabular-nums">
+          {t("desktop.ledger.invoices.retention_implied", {
+            amount: formatAmount(locale, implied),
+          })}
+          <Button
+            variant="link"
+            size="xs"
+            onClick={() => onAmount(heldDecimal(implied))}
+          >
+            {t("desktop.ledger.invoices.use")}
+          </Button>
+        </p>
+      )}
+      {net !== null && (
+        <p className="ledger-invoice-to-pay text-sm tabular-nums">
+          {withheld !== null
+            ? t("desktop.ledger.invoices.to_pay_withheld", {
+                amount: formatAmount(locale, net),
+                retention: formatAmount(locale, withheld),
+              })
+            : t("desktop.ledger.invoices.to_pay", {
+                amount: formatAmount(locale, net),
+              })}
+        </p>
+      )}
     </div>
   );
 }
@@ -1501,6 +1685,7 @@ function NotesField({
 
 function StoredInvoice({
   invoice,
+  preview,
   invoices,
   correction,
   locale,
@@ -1509,6 +1694,7 @@ function StoredInvoice({
   correct,
 }: {
   invoice: CatalogueInvoice;
+  preview: PreviewView;
   /** The catalogue, for what a field can offer. */
   invoices: readonly CatalogueInvoice[];
   correction: CorrectionDraft;
@@ -1538,7 +1724,11 @@ function StoredInvoice({
       <TextEditor {...wired(control)} {...bind(key, field)} {...offered} />
     );
   const rectificativa = correction.invoiceClass === "RECTIFICATIVA";
-  const amount = shownRetentionAmount(correction, invoice.base_total.decimal);
+  // The ledger answers a stored invoice's retención from its base alone, so
+  // it names no amount left to pay; with no retención that is the total.
+  const noRetention =
+    correction.retentionRate.trim() === "" &&
+    correction.retentionAmount.trim() === "";
   return (
     <>
       <Alert icon={<Icon name="lock" />} className="ledger-invoice-identity">
@@ -1697,6 +1887,7 @@ function StoredInvoice({
       >
         <StoredLines
           lines={invoice.lines}
+          slots={preview.shown?.rate_slots ?? []}
           kind={invoice.kind}
           locale={locale}
         />
@@ -1728,18 +1919,14 @@ function StoredInvoice({
           <Retention
             locale={locale}
             rate={correction.retentionRate}
-            amount={amount}
-            total={invoice.grand_total.decimal}
+            amount={correction.retentionAmount}
+            answered={preview.current?.retention ?? null}
+            net={noRetention ? invoice.grand_total.decimal : null}
+            withheld={null}
             rateError={shown("retention_rate")}
             amountError={shown("retention_amount")}
-            onRate={(value) => {
-              correct("retentionRate", value);
-              correct("retentionTouched", false);
-            }}
-            onAmount={(value) => {
-              correct("retentionAmount", value);
-              correct("retentionTouched", true);
-            }}
+            onRate={(value) => correct("retentionRate", value)}
+            onAmount={(value) => correct("retentionAmount", value)}
             onBlur={touch}
           />
         </div>
@@ -1825,7 +2012,7 @@ const FIELD_LABELS: Record<InvoiceUpdateField, string> = {
 function Confirmation({
   isNew,
   draftRequest,
-  totals,
+  total,
   stored,
   correction,
   changed,
@@ -1833,7 +2020,7 @@ function Confirmation({
 }: {
   isNew: boolean;
   draftRequest: InvoiceAddRequest | null;
-  totals: { total: string };
+  total: string;
   stored: CatalogueInvoice | null;
   correction: CorrectionDraft | null;
   changed: readonly InvoiceUpdateField[];
@@ -1849,7 +2036,7 @@ function Confirmation({
             draftRequest.invoice_number,
             formatDay(locale, draftRequest.issued_at),
             draftRequest.counterparty_name,
-            formatAmount(locale, totals.total, {
+            formatAmount(locale, total, {
               currency: draftRequest.currency,
             }),
           ])}
@@ -1880,13 +2067,13 @@ function Confirmation({
           ? formatDay(locale, draft.operationDate)
           : "";
       case "retention_rate": {
-        const rate = parsePercent(draft.retentionRate);
+        const rate = retentionRate(draft.retentionRate);
         return rate.kind === "value"
           ? formatPercent(locale, rate.value, { unit: "fraction" })
           : draft.retentionRate;
       }
       case "retention_amount":
-        return shownRetentionAmount(draft, stored.base_total.decimal);
+        return draft.retentionAmount;
       case "series":
         return draft.series;
       case "invoice_class":
