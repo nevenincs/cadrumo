@@ -78,6 +78,11 @@ REVIEWED_LOCALE_SPELLINGS: dict[str, frozenset[str]] = {
             # https://www.merriam-webster.com/dictionary/ungrounded
             # https://www.merriam-webster.com/dictionary/regenerable
             "unremitted",
+            "Unremitted",
+            # https://dictionary.cambridge.org/dictionary/english/unbundle
+            # https://dictionary.cambridge.org/dictionary/english/derogation
+            "unbundled",
+            "derogations",
             "domiciliation",
             "ungrounded",
             "regenerable",
