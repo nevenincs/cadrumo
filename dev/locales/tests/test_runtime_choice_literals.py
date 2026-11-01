@@ -15,6 +15,7 @@ from cadrumo.core.calculation_report_format import CalculationReportDocumentForm
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.i18n.render import extract_placeholders, tr
 from cadrumo.core.identity_check_verdict import IdentityCheckVerdict
+from cadrumo.core.json_contract import Notice, NoticeSeverity
 from cadrumo.core.ledger_sort import LedgerSortField, LedgerSortOrder
 from cadrumo.core.output_rendering import OutputFormat
 from cadrumo.core.rescate_type import RescateType
@@ -179,7 +180,6 @@ def test_explanations_use_native_prose_and_informal_singular(
         ("cli.config.google.export_capability_disabled", "aeat config profile capabilities set google_export on"),
         ("errors.refused.refused_modelo_360_solicitud_account_bic_missing", "aeat app ledger account update"),
         ("cli.config.profile.create_recovery_skipped", "cadrumo-runtime config profile recovery enable"),
-        ("cli.config.profile.create_login_required", "aeat config login profile-example"),
         ("cli.app.modelo.work.discard_requires_yes", "aeat app modelo work discard work-example --yes"),
         ("cli.config.profile.row.row_help", "aeat config profile view"),
         ("tui.ledger.import.invoice_book_unavailable", "aeat app ledger invoice import"),
@@ -202,3 +202,14 @@ def test_command_help_preserves_complete_registered_paths_and_interpolated_argum
         word for _, words, _ in translation_spelling_segments(value + " misspellledd", key, locale) for word in words
     }
     assert "misspellledd" in prose_words
+
+
+@pytest.mark.parametrize("locale", ["ca", "en", "es", "hu"])
+def test_profile_creation_login_notice_is_safe_interpolated_prose(locale: str) -> None:
+    # The producer supplies the executable as a typed, profile-bound action;
+    # test_profile_password_inbound_matrix covers that actual action and quoting.
+    value = tr("cli.config.profile.create_login_required", locale=locale, profile="profile-example")
+    notice = Notice(code="PROFILE_LOGIN_REQUIRED", severity=NoticeSeverity.WARNING, message=value)
+    assert "profile-example" in notice.message
+    assert "aeat config" not in notice.message.casefold()
+    assert not extract_placeholders(notice.message)
