@@ -13,8 +13,6 @@ from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, field_validator
 
 from cadrumo.core.hashing import hash_file
 from cadrumo.core.link_safety import is_link_like
-from cadrumo.core.locks import exclusive_file_lock
-from cadrumo.core.locks_errors import LockAcquisitionError
 from cadrumo.core.toml import parse_toml
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.ids import ModeloId, RevisionId
@@ -212,16 +210,6 @@ class GeneratedExportTransactionPaths:
         return self.target_root.parent
 
     @property
-    def legacy_lock_identity(self) -> Path:
-        """The previous in-root lock identity retained for migration detection."""
-        return self.target_root / f".generated-export-transaction-{self.modelo}-{self.revision_id}"
-
-    @property
-    def legacy_journal(self) -> Path:
-        """The previous in-root journal path, which must not be mistaken for new state."""
-        return self.target_root / f"{self.legacy_lock_identity.name}.json"
-
-    @property
     def backup_prefix(self) -> str:
         """The name prefix every rollback backup sibling of this transaction carries."""
         return f".generated-export-backup-{self.modelo}-{self.revision_id}-"
@@ -273,28 +261,6 @@ class GeneratedExportTransactionPaths:
         if staging.exists() or is_link_like(staging):
             raise RegistryValidationError(f"generated export staging sibling unexpectedly exists: {staging}")
         return staging
-
-
-def _require_no_legacy_transaction(transaction_paths: GeneratedExportTransactionPaths) -> None:
-    """Refuse old in-root journals and detect an active holder without deleting sidecars."""
-    if transaction_paths.legacy_journal.exists():
-        raise RegistryValidationError(
-            "legacy generated export journal requires recovery at its original location; "
-            f"preserved journal: {transaction_paths.legacy_journal}",
-        )
-    try:
-        with exclusive_file_lock(transaction_paths.legacy_lock_identity, timeout=0):
-            pass
-    except LockAcquisitionError as exc:
-        raise RegistryValidationError(
-            "legacy generated export transaction is active at its original lock; retry after it finishes: "
-            f"{transaction_paths.legacy_lock_identity}.lock",
-        ) from exc
-    if transaction_paths.legacy_journal.exists():
-        raise RegistryValidationError(
-            "legacy generated export journal appeared during transaction admission; "
-            f"preserved journal: {transaction_paths.legacy_journal}",
-        )
 
 
 def _require_single_path_component(value: str, *, subject: str) -> None:

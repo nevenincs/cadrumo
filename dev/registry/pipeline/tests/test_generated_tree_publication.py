@@ -245,33 +245,6 @@ def _bundle_transaction_siblings(context: GeneratedExportTreePublicationContext)
     )
 
 
-def test_new_sidecars_retain_old_lock_and_refuse_a_legacy_journal(tmp_path: Path) -> None:
-    """The relocated transaction namespace preserves legacy sidecars and refuses old journals."""
-    target_root = tmp_path / "registry" / "aeat"
-    target_root.mkdir(parents=True)
-    paths = GeneratedExportTransactionPaths(target_root.resolve(), ISOLATED_TREE.modelo, ISOLATED_TREE.revision)
-
-    assert not recover_interrupted_supersession_bundle(
-        target_root=target_root,
-        modelo=ISOLATED_TREE.modelo,
-        revision=ISOLATED_TREE.revision,
-    )
-    legacy_lock_sidecar = paths.legacy_lock_identity.with_name(f"{paths.legacy_lock_identity.name}.lock")
-    assert legacy_lock_sidecar.exists()
-    assert not paths.legacy_journal.exists()
-    assert not paths.journal.exists()
-
-    paths.legacy_journal.write_bytes(b"{}\n")
-    with pytest.raises(RegistryValidationError, match="requires recovery at its original location"):
-        recover_interrupted_supersession_bundle(
-            target_root=target_root,
-            modelo=ISOLATED_TREE.modelo,
-            revision=ISOLATED_TREE.revision,
-        )
-    assert paths.legacy_journal.read_bytes() == b"{}\n"
-    assert not paths.journal.exists()
-
-
 @pytest.mark.parametrize(
     ("modelo", "revision"),
     (

@@ -22,7 +22,6 @@ from .tree_publication_contracts import (
     _REVISION_ID_ADAPTER,
     GeneratedExportPublicationJournal,
     GeneratedExportTransactionPaths,
-    _require_no_legacy_transaction,
     _require_single_path_component,
     export_provenance_file_sha256,
 )
@@ -62,9 +61,7 @@ def recover_interrupted_supersession_bundle(*, target_root: Path, modelo: str, r
         modelo=validated_modelo,
         revision_id=validated_revision,
     )
-    _require_no_legacy_transaction(paths)
     with exclusive_file_lock(paths.lock_identity):
-        _require_no_legacy_transaction(paths)
         if not paths.journal.exists():
             return False
         journal = load_generated_export_publication_journal(paths.journal)
