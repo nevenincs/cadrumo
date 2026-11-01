@@ -12,6 +12,7 @@ import sys
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
+from typing import Any
 from uuid import UUID, uuid4
 
 import pytest
@@ -339,30 +340,53 @@ def test_native_quickfile_calculates_then_retains_cross_period_refusal_and_exact
             close_active_bucket_session()
 
 
-def test_native_quickfile_m115_completes_all_stages_and_exports_valid_local_bytes(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-    authority_operation: PinnedAuthorityOperation,
-) -> None:
-    """Capture real invoice evidence and export the verified synthetic M115 revision."""
-    original_operation = FrontendClient.operation
-    original_result = FrontendClient.read_result_document
-    quickfile_ids: set[str] = set()
-    receipts: dict[str, tuple[OperationTerminalCondition | None, OperationEffect]] = {}
-    projections: list[QuickfileProjection] = []
+class _M115Observations:
+    """Collect the quickfile projections that cross the real client."""
 
-    def observe_operation(client: FrontendClient, request: OperationRequest, *, deadline: float) -> OperationReply:
-        reply = original_operation(client, request, deadline=deadline)
+    def __init__(self) -> None:
+        self.original_operation = FrontendClient.operation
+        self.original_result = FrontendClient.read_result_document
+        self.quickfile_ids: set[str] = set()
+        self.receipts: dict[str, tuple[OperationTerminalCondition | None, OperationEffect]] = {}
+        self.projections: list[QuickfileProjection] = []
+
+    def operation(self, client: FrontendClient, request: OperationRequest, *, deadline: float) -> OperationReply:
+        reply = self.original_operation(client, request, deadline=deadline)
         if isinstance(request, OperationSubmit) and request.definition_id == QUICKFILE_OPERATION_DEFINITION_ID:
             assert isinstance(reply, OperationSubmitted)
             payload = QuickfileRequest.model_validate_json(request.payload_json)
             assert payload.profile_id == client.profile_id and payload.modelo == "115"
             assert request.subject_ref == profile_operation_subject(str(client.profile_id))
-            quickfile_ids.add(reply.receipt.operation_id)
+            self.quickfile_ids.add(reply.receipt.operation_id)
         if isinstance(reply, OperationObserved) and isinstance(reply.observation, OperationObservationSuccessV1):
             state = reply.observation.projection
-            receipts[state.operation_id] = (state.terminal_condition, state.effect)
+            self.receipts[state.operation_id] = (state.terminal_condition, state.effect)
         return reply
+
+    def result(
+        self,
+        client: FrontendClient,
+        result: OperationResultProjectionRequestV1,
+        *,
+        timeout: float = 60,
+        deadline: float | None = None,
+    ) -> dict[str, JsonValue]:
+        document = self.original_result(client, result, timeout=timeout, deadline=deadline)
+        if result.operation_id in self.quickfile_ids:
+            envelope = OperationResultProjectionSuccessV1[QuickfileProjection].model_validate_json(
+                canonical_json_bytes(document)
+            )
+            assert envelope.projection.profile_id == client.profile_id
+            assert self.receipts[result.operation_id] == (OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED)
+            self.projections.append(envelope.projection)
+        return document
+
+
+def _watch_m115_client(monkeypatch: pytest.MonkeyPatch) -> _M115Observations:
+    observations = _M115Observations()
+
+    def observe_operation(client: FrontendClient, request: OperationRequest, *, deadline: float) -> OperationReply:
+        return observations.operation(client, request, deadline=deadline)
 
     def observe_result(
         client: FrontendClient,
@@ -371,18 +395,112 @@ def test_native_quickfile_m115_completes_all_stages_and_exports_valid_local_byte
         timeout: float = 60,
         deadline: float | None = None,
     ) -> dict[str, JsonValue]:
-        document = original_result(client, result, timeout=timeout, deadline=deadline)
-        if result.operation_id in quickfile_ids:
-            envelope = OperationResultProjectionSuccessV1[QuickfileProjection].model_validate_json(
-                canonical_json_bytes(document)
-            )
-            assert envelope.projection.profile_id == client.profile_id
-            assert receipts[result.operation_id] == (OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED)
-            projections.append(envelope.projection)
-        return document
+        return observations.result(client, result, timeout=timeout, deadline=deadline)
 
     monkeypatch.setattr(FrontendClient, "operation", observe_operation)
     monkeypatch.setattr(FrontendClient, "read_result_document", observe_result)
+    return observations
+
+
+def _urban_rent_withholding_evidence(invoice_id: str) -> InvoiceWithholdingEvidenceRequest:
+    return InvoiceWithholdingEvidenceRequest(
+        invoice_id=invoice_id,
+        income_kind=WithholdingIncomeKind.URBAN_RENT,
+        scheme=RetencionScheme("arrendamiento_urbano"),
+        recipient_tax_status=WithholdingRecipientTaxStatus.RESIDENT,
+        recipient_tax_regime=WithholdingRecipientTaxRegime.IRPF,
+        payment_event_id="m115-rent-payment-2025-03-15",
+        payment_occurred_on=date(2025, 3, 15),
+        allocation_id="m115-rent-allocation-1",
+        idempotency_key="m115-rent-allocation-1",
+        allocated_base=Decimal("2700.00"),
+        allocated_withholding=Decimal("513.00"),
+        allocated_settlement=Decimal("2754.00"),
+        modelo_180_property=Modelo180PropertyEvidence(
+            property_key="quickfile-rent-property",
+            situation="1",
+            cadastral_reference="1234567VK4713C0001XY",
+            address=Modelo180StructuredAddress(
+                province_code="28",
+                municipality_code="28079",
+                municipality="Madrid",
+                locality="Madrid",
+                postal_code="28001",
+                street_type="CL",
+                street_name="Ejemplo",
+                number_type="NUM",
+                house_number="1",
+            ),
+            recipient_province_code="28",
+            modality="1",
+            accrual_year=2025,
+            withholding_percentage=Decimal("19.00"),
+        ),
+    )
+
+
+def _assert_completed_projection(
+    payload: dict[str, Any], projection: QuickfileProjection, profile_id: UUID, output: Path
+) -> bytes:
+    assert payload["completed"] is True and payload["stopped_at_stage"] is None
+    assert payload["granted_verificado_completo"] is True
+    assert projection.profile_id == profile_id and projection.completed
+    assert projection.effect is OperationEffect.UPDATED and projection.write_count > 0
+    assert tuple(row.stage for row in projection.stages) == QUICKFILE_STAGE_ORDER
+    assert projection.stages[0].status in {QuickfileStageStatus.OK, QuickfileStageStatus.WARNING}
+    assert all(row.status is QuickfileStageStatus.OK for row in projection.stages[1:])
+    assert projection.stopped_at_stage is None
+    assert projection.work_unit_id is not None and projection.calculation_revision_id is not None
+    assert projection.verification_report is not None and projection.verification_report.granted_verificado_completo
+    receipt = projection.export
+    assert receipt is not None and receipt.bucket_id == str(profile_id)
+    assert receipt.output_path == str(output)
+    exported = output.read_bytes()
+    assert exported and receipt.byte_size == len(exported)
+    assert receipt.file_sha256 == sha256_hex(exported)
+    return exported
+
+
+def _assert_export_matches_persisted_calculation(
+    projection: QuickfileProjection, exported: bytes, bucket_id: str, authority_operation: PinnedAuthorityOperation
+) -> None:
+    assert projection.work_unit_id is not None and projection.calculation_revision_id is not None
+    assert projection.verification_report is not None
+    work = WorkUnitCatalogueRepository(bucket_id=bucket_id).load().get(projection.work_unit_id)
+    calculation = (
+        CalculationRevisionCatalogueRepository(bucket_id=bucket_id)
+        .load(operation=authority_operation)
+        .get(projection.calculation_revision_id)
+    )
+    report = (
+        VerificationReportCatalogueRepository(bucket_id=bucket_id)
+        .load(operation=authority_operation)
+        .get(projection.verification_report.verification_report_id)
+    )
+    assert work is not None and work.bucket_id == bucket_id and work.modelo == "115"
+    assert calculation is not None and calculation.work_unit_id == work.work_unit_id
+    assert report is not None and report.granted_verificado_completo
+    assert report.calculation_revision_id == calculation.calculation_revision_id
+    snapshot = authority_operation.snapshot("115", filing_year=2025, period="1T", revision_id=work.revision_id)
+    assert projection.registry_revision_id == snapshot.revision.id
+    layout = resolve_export_layout(snapshot, str(snapshot.revision.export_layouts[0].id)).layout
+    parsed = parse_export_payload(layout, exported)
+    compared = 0
+    for field in parsed.casillas:
+        if field.value is not None and field.casilla_id is not None and field.casilla_id in calculation.casilla_values:
+            assert field.value == calculation.casilla_values[field.casilla_id]
+            compared += 1
+    assert compared > 0
+    assert Decimal("513.00") in calculation.casilla_values.values()
+
+
+def test_native_quickfile_m115_completes_all_stages_and_exports_valid_local_bytes(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    """Capture real invoice evidence and export the verified synthetic M115 revision."""
+    observed = _watch_m115_client(monkeypatch)
     with override_settings(cadrumo_cli_reveal_identifiers=True), native_cli_profile_scope(tmp_path) as profile:
         profile.register(
             label="native-quickfile-m115",
@@ -443,40 +561,7 @@ def test_native_quickfile_m115_completes_all_stages_and_exports_valid_local_byte
         )
         invoice_id = unwrap_cli_result(created)["invoice_id"]
         assert isinstance(invoice_id, str)
-        evidence = InvoiceWithholdingEvidenceRequest(
-            invoice_id=invoice_id,
-            income_kind=WithholdingIncomeKind.URBAN_RENT,
-            scheme=RetencionScheme("arrendamiento_urbano"),
-            recipient_tax_status=WithholdingRecipientTaxStatus.RESIDENT,
-            recipient_tax_regime=WithholdingRecipientTaxRegime.IRPF,
-            payment_event_id="m115-rent-payment-2025-03-15",
-            payment_occurred_on=date(2025, 3, 15),
-            allocation_id="m115-rent-allocation-1",
-            idempotency_key="m115-rent-allocation-1",
-            allocated_base=Decimal("2700.00"),
-            allocated_withholding=Decimal("513.00"),
-            allocated_settlement=Decimal("2754.00"),
-            modelo_180_property=Modelo180PropertyEvidence(
-                property_key="quickfile-rent-property",
-                situation="1",
-                cadastral_reference="1234567VK4713C0001XY",
-                address=Modelo180StructuredAddress(
-                    province_code="28",
-                    municipality_code="28079",
-                    municipality="Madrid",
-                    locality="Madrid",
-                    postal_code="28001",
-                    street_type="CL",
-                    street_name="Ejemplo",
-                    number_type="NUM",
-                    house_number="1",
-                ),
-                recipient_province_code="28",
-                modality="1",
-                accrual_year=2025,
-                withholding_percentage=Decimal("19.00"),
-            ),
-        )
+        evidence = _urban_rent_withholding_evidence(invoice_id)
         captured = invoke(
             "app",
             "modelo",
@@ -507,24 +592,9 @@ def test_native_quickfile_m115_completes_all_stages_and_exports_valid_local_byte
             str(output),
         )
         payload = unwrap_cli_result(completed)
-        assert payload["completed"] is True and payload["stopped_at_stage"] is None
-        assert payload["granted_verificado_completo"] is True
-        assert len(projections) == 1
-        projection = projections[0]
-        assert projection.profile_id == profile_id and projection.completed
-        assert projection.effect is OperationEffect.UPDATED and projection.write_count > 0
-        assert tuple(row.stage for row in projection.stages) == QUICKFILE_STAGE_ORDER
-        assert projection.stages[0].status in {QuickfileStageStatus.OK, QuickfileStageStatus.WARNING}
-        assert all(row.status is QuickfileStageStatus.OK for row in projection.stages[1:])
-        assert projection.stopped_at_stage is None
-        assert projection.work_unit_id is not None and projection.calculation_revision_id is not None
-        assert projection.verification_report is not None and projection.verification_report.granted_verificado_completo
-        receipt = projection.export
-        assert receipt is not None and receipt.bucket_id == str(profile_id)
-        assert receipt.output_path == str(output)
-        exported = output.read_bytes()
-        assert exported and receipt.byte_size == len(exported)
-        assert receipt.file_sha256 == sha256_hex(exported)
+        assert len(observed.projections) == 1
+        projection = observed.projections[0]
+        exported = _assert_completed_projection(payload, projection, profile_id, output)
         close_active_bucket_session()
         authenticate_profile_for_invocation(
             name=profile.label,
@@ -532,36 +602,6 @@ def test_native_quickfile_m115_completes_all_stages_and_exports_valid_local_byte
             profile_decode_context=authority_operation.profile_decode_context(),
         )
         try:
-            bucket_id = str(profile_id)
-            work = WorkUnitCatalogueRepository(bucket_id=bucket_id).load().get(projection.work_unit_id)
-            calculation = (
-                CalculationRevisionCatalogueRepository(bucket_id=bucket_id)
-                .load(operation=authority_operation)
-                .get(projection.calculation_revision_id)
-            )
-            report = (
-                VerificationReportCatalogueRepository(bucket_id=bucket_id)
-                .load(operation=authority_operation)
-                .get(projection.verification_report.verification_report_id)
-            )
-            assert work is not None and work.bucket_id == bucket_id and work.modelo == "115"
-            assert calculation is not None and calculation.work_unit_id == work.work_unit_id
-            assert report is not None and report.granted_verificado_completo
-            assert report.calculation_revision_id == calculation.calculation_revision_id
-            snapshot = authority_operation.snapshot("115", filing_year=2025, period="1T", revision_id=work.revision_id)
-            assert projection.registry_revision_id == snapshot.revision.id
-            layout = resolve_export_layout(snapshot, str(snapshot.revision.export_layouts[0].id)).layout
-            parsed = parse_export_payload(layout, exported)
-            compared = 0
-            for field in parsed.casillas:
-                if (
-                    field.value is not None
-                    and field.casilla_id is not None
-                    and field.casilla_id in calculation.casilla_values
-                ):
-                    assert field.value == calculation.casilla_values[field.casilla_id]
-                    compared += 1
-            assert compared > 0
-            assert Decimal("513.00") in calculation.casilla_values.values()
+            _assert_export_matches_persisted_calculation(projection, exported, str(profile_id), authority_operation)
         finally:
             close_active_bucket_session()
