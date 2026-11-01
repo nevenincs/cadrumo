@@ -9,8 +9,8 @@ import type {
   CatalogueInvoice,
   CatalogueInvoiceLine,
   InvoiceKind,
-  PaymentStatus,
 } from "../../shell/ledger";
+import type { PaymentStatus } from "../../shell/ledgerContract";
 
 type Example = {
   kind: InvoiceKind;

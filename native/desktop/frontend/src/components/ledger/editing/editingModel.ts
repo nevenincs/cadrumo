@@ -41,7 +41,7 @@ import {
   type StagedRowChanges,
   type StagedValue,
 } from "../../../shell/ledgerStage";
-import { DIRECTIONS } from "../../../shell/ledgerVocabulary";
+import { DIRECTIONS } from "../../../shell/ledgerContract";
 import type { ColumnId } from "../movements/movementsModel";
 
 // ---- Columns and fields --------------------------------------------------------

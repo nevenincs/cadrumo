@@ -10,13 +10,15 @@ import { Icon } from "@/components/ui/icon";
 import { Spinner } from "@/components/ui/spinner";
 import { facts } from "../../../shell/compose";
 import {
-  EVIDENCE_UPDATE_FIELDS,
   type EvidenceRecord,
-  type EvidenceUpdateField,
   type EvidenceUpdateRequest,
   type LedgerPort,
   type LedgerRow,
 } from "../../../shell/ledger";
+import {
+  EVIDENCE_UPDATE_FIELDS,
+  type EvidenceUpdateField,
+} from "../../../shell/ledgerContract";
 import { readAnswer } from "../../../shell/ledgerWindow";
 import { useStrings } from "../../../shell/strings";
 import { localDay } from "../../../shared/dates";

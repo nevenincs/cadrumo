@@ -30,7 +30,7 @@ import {
   IMPORT_ISSUES,
   LIFECYCLE_STATES,
   type ImportIssue,
-} from "../../../shell/ledgerVocabulary";
+} from "../../../shell/ledgerContract";
 import { useStrings, type Translate } from "../../../shell/strings";
 import { ColumnChooser } from "./ColumnChooser";
 import {

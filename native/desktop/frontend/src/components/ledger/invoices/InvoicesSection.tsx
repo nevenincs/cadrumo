@@ -24,12 +24,12 @@ import { useStrings, type Translate } from "../../../shell/strings";
 import { formatDay } from "../../../shared/dateFormats";
 import { formatAmount } from "../../../shared/numbers";
 import { RowRevealNotice, useRowReveal, type LinkedRow } from "../RowReveal";
+import { PAYMENT_STATUSES } from "../../../shell/ledgerContract";
 import { ServedOptions } from "../suggestions/ServedOptions";
 import { useVocabulary } from "../suggestions/SuggestionsProvider";
 import { INVOICE_TSV_COLUMNS, invoicesTsv } from "../transfer/tsv";
 import { InvoiceEditor, type EditorTarget } from "./InvoiceEditor";
 import {
-  PAYMENT_STATUSES,
   filterCatalogue,
   seriesAndNumber,
   sortCatalogue,

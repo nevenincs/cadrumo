@@ -7,12 +7,12 @@ import type {
   InvoiceKind,
   InvoicePreviewFinding,
   InvoicePreviewRateSlot,
-  PaymentStatus,
 } from "../../../shell/ledger";
 import type { Translate } from "../../../shell/strings";
 import { formatDay } from "../../../shared/dateFormats";
 import { formatDecimal } from "../../../shared/numbers";
-import { PAYMENT_STATUSES, type Problem } from "./invoiceModel";
+import { isPaymentStatus } from "../../../shell/ledgerContract";
+import type { Problem } from "./invoiceModel";
 
 const lower = (token: string) => token.toLowerCase();
 
@@ -29,7 +29,7 @@ export const classLabel = (t: Translate, token: string) => {
 };
 
 export const paymentLabel = (t: Translate, status: string) =>
-  PAYMENT_STATUSES.includes(status as PaymentStatus)
+  isPaymentStatus(status)
     ? t(`desktop.ledger.invoices.payment.${lower(status)}`)
     : status;
 

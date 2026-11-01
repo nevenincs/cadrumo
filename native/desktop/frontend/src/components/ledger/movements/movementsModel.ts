@@ -17,7 +17,7 @@ import {
   categoryFamily,
   type ServedVocabulary,
 } from "../../../shell/ledgerServedVocabulary";
-import type { ImportIssue } from "../../../shell/ledgerVocabulary";
+import type { ImportIssue } from "../../../shell/ledgerContract";
 import type {
   LedgerWindowScope,
   ReadinessSnapshot,

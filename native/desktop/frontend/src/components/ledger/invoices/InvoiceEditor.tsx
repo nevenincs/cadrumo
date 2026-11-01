@@ -35,11 +35,15 @@ import type {
   InvoicePreviewFinding,
   InvoicePreviewRateSlot,
   InvoicePreviewRetention,
-  InvoiceUpdateField,
   InvoiceUpdateRequest,
   LedgerPort,
-  PaymentStatus,
 } from "../../../shell/ledger";
+import {
+  OPERATION_TYPES,
+  PAYMENT_STATUSES,
+  type InvoiceUpdateField,
+  type PaymentStatus,
+} from "../../../shell/ledgerContract";
 import { compareDecimal } from "../../../shell/ledgerGrammar";
 import { useNavigationGuard } from "../../../shell/navigation/hooks";
 import { useStrings } from "../../../shell/strings";
@@ -79,8 +83,6 @@ import {
 import { DraftLines, StoredLines } from "./InvoiceLines";
 import {
   CREATION_INVARIANTS,
-  OPERATION_TYPES,
-  PAYMENT_STATUSES,
   checkCorrection,
   checkDraft,
   correctionOf,

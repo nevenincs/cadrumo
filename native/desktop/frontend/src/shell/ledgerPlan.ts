@@ -8,7 +8,6 @@
 
 import {
   LEDGER_BULK_CLASSIFY_COLUMNS,
-  LEDGER_UPDATE_FIELDS,
   type JsonObject,
   type LedgerAddRequest,
   type LedgerBulkClassifyRequest,
@@ -16,10 +15,10 @@ import {
   type LedgerClassifyRequest,
   type LedgerDefinitionId,
   type LedgerRow,
-  type LedgerUpdateField,
   type LedgerUpdateRequest,
   type OutputLanguage,
 } from "./ledger";
+import { LEDGER_UPDATE_FIELDS, type LedgerUpdateField } from "./ledgerContract";
 import { RELAY_PAYLOAD_LIMIT } from "./relayBounds";
 import {
   canonicalDecimal,

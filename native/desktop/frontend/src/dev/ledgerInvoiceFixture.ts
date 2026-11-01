@@ -10,12 +10,16 @@
 // that was not recorded is answered as incomplete.
 
 import {
-  INVOICE_UPDATE_FIELDS,
   type CatalogueInvoice,
   type CatalogueInvoiceLine,
   type JsonObject,
   type JsonValue,
 } from "../shell/ledger";
+import {
+  INVOICE_UPDATE_FIELDS,
+  OPERATION_TYPES,
+  isPaymentStatus,
+} from "../shell/ledgerContract";
 import type { FixtureLedger } from "./fixtures/ledger";
 import recorded from "./fixtures/ledgerInvoicePreview.json" with { type: "json" };
 
@@ -53,8 +57,6 @@ const SLOTS: Record<string, bigint | null> = {
   NOT_SUBJECT: null,
 };
 const CLASSES = ["ORDINARIA", "SIMPLIFICADA", "RECTIFICATIVA"];
-const PAYMENTS = ["PAID", "PENDING", "PARTIALLY_PAID", "OVERDUE", "CANCELLED"];
-const OPERATION_TYPES = ["E", "H", "M", "S", "T", "R", "A", "I", "D", "C"];
 const ADD_FIELDS = new Set([
   "kind",
   "counterparty_name",
@@ -354,7 +356,10 @@ export function invoiceOperations(ledger: FixtureLedger, tools: Tools) {
     const operationDate = text(request.operation_date);
     if (operationDate !== null && !DATE.test(operationDate)) invalid();
     const operationType = text(request.operation_type);
-    if (operationType !== null && !OPERATION_TYPES.includes(operationType))
+    if (
+      operationType !== null &&
+      !(OPERATION_TYPES as readonly string[]).includes(operationType)
+    )
       invalid();
     const lines = request.lines ?? [];
     if (!Array.isArray(lines)) invalid();
@@ -524,7 +529,7 @@ export function invoiceOperations(ledger: FixtureLedger, tools: Tools) {
     for (const field of ["retention_rate", "retention_amount"] as const)
       if (fields.includes(field)) decimal(values[field]);
     const status = text(values.payment_status);
-    if (status !== null && !PAYMENTS.includes(status)) invalid();
+    if (status !== null && !isPaymentStatus(status)) invalid();
     // From here on the runtime has said its effect may be unknown.
     const found = lookup(selector);
     if (found.kind !== "found") throw new InvoiceUnsettled();

@@ -7,6 +7,7 @@
 // a refusal whose detail is the operation's own result, as the host passes
 // it on. Everything it answers is synthetic.
 
+import { isClassification } from "../shell/ledgerContract";
 import type {
   JsonObject,
   JsonValue,
@@ -100,15 +101,6 @@ const decimalOf = (value: JsonValue | undefined): string => {
 };
 const decimal = (value: string) => ({ decimal: value });
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
-const DECIDED = ["BUSINESS", "PERSONAL", "MIXED"];
-const CLASSIFICATIONS = [
-  ...DECIDED,
-  "NOT_YET_PROCESSED",
-  "PROCESSED_UNCLASSIFIED",
-  "SKIPPED_BY_RULE",
-  "FAILED_VALIDATION",
-  "REVIEWED_EXCLUDED",
-];
 const fromKeys = (request: JsonObject, allowed: readonly string[]) => {
   if (Object.keys(request).some((key) => !allowed.includes(key))) invalid();
 };
@@ -530,7 +522,7 @@ export function setupOperations(ledger: FixtureLedger, tools: Tools) {
     const pattern = request.description_pattern;
     if (typeof pattern !== "string") return invalid();
     const classification = required(request.classification);
-    if (!CLASSIFICATIONS.includes(classification)) invalid();
+    if (!isClassification(classification)) invalid();
     const priority = request.priority ?? 100;
     if (
       typeof priority !== "number" ||

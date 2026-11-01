@@ -23,7 +23,7 @@ import { formatDay } from "@/shared/dateFormats";
 import type { FieldSpec } from "@/shared/fieldKind";
 import { formatDecimal } from "@/shared/numbers";
 import type { DraftField, StageField } from "../../../shell/ledgerStage";
-import { DIRECTIONS } from "../../../shell/ledgerVocabulary";
+import { DIRECTIONS } from "../../../shell/ledgerContract";
 import { useStrings } from "../../../shell/strings";
 import {
   categoryOption,

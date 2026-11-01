@@ -8,6 +8,12 @@
 // only: never in storage, a log line or an error message.
 
 import type {
+  EvidenceUpdateField,
+  InvoiceUpdateField,
+  LedgerUpdateField,
+  PaymentStatus,
+} from "./ledgerContract";
+import type {
   ActivityAssetChangeResult,
   ActivityAssetClaimRequest,
   ActivityAssetClaimResult,
@@ -470,23 +476,6 @@ export type LedgerViewResult = {
   latest_llm_rejection: { occurred_at: string; operator_reason: string } | null;
 };
 
-export const LEDGER_UPDATE_FIELDS = [
-  "booked_date",
-  "value_date",
-  "amount",
-  "direction",
-  "currency",
-  "counterparty",
-  "description",
-  "taxable_base",
-  "iva_rate",
-  "iva_amount",
-  "irpf_category",
-  "notes",
-  "group_label",
-  "own_account_id",
-] as const;
-export type LedgerUpdateField = (typeof LEDGER_UPDATE_FIELDS)[number];
 /** Editing the amount, description, date or own account gives the movement
  * a new `transaction_id`; the result names it. */
 export type LedgerUpdateRequest = {
@@ -646,8 +635,6 @@ export type LedgerAddResult = {
 };
 
 export type InvoiceKind = "issued" | "received";
-export type PaymentStatus =
-  "PAID" | "PENDING" | "PARTIALLY_PAID" | "OVERDUE" | "CANCELLED";
 export type CatalogueInvoiceLine = {
   description: string;
   quantity: PublicDecimal;
@@ -890,24 +877,6 @@ export type InvoicePreviewResult = {
   verdict_scope: InvoicePreviewVerdictScope;
 };
 
-/** The fields a stored invoice may be corrected in; its identity and lines
- * are not among them. */
-export const INVOICE_UPDATE_FIELDS = [
-  "counterparty_name",
-  "counterparty_country",
-  "notes",
-  "payment_status",
-  "iva_category",
-  "operation_type",
-  "operation_date",
-  "retention_rate",
-  "retention_amount",
-  "series",
-  "invoice_class",
-  "rectifies_invoice_number",
-  "payment_id",
-] as const;
-export type InvoiceUpdateField = (typeof INVOICE_UPDATE_FIELDS)[number];
 export type InvoiceUpdateValues = {
   counterparty_name?: string | null;
   counterparty_country?: string | null;
@@ -1575,16 +1544,6 @@ export type EvidenceViewResult = {
     | { kind: "success"; record: EvidenceRecord }
     | { kind: "refused"; evidence_record_present: false };
 };
-export const EVIDENCE_UPDATE_FIELDS = [
-  "supplier",
-  "invoice_number",
-  "invoice_date",
-  "taxable_base",
-  "iva_rate",
-  "iva_amount",
-  "notes",
-] as const;
-export type EvidenceUpdateField = (typeof EVIDENCE_UPDATE_FIELDS)[number];
 /** A correction: `patch_fields` names what changes, and a named field sent
  * as null clears it. Decimals are in their shortest spelling. */
 export type EvidenceUpdateRequest = {

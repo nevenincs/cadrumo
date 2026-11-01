@@ -2,7 +2,7 @@ import type { ComboboxOption } from "@/components/ui/combobox";
 import type { LedgerParticipation } from "../../../shell/ledger";
 import type { OwnAccountChoice } from "../../../shell/ledgerMovementReads";
 import type { ServedVocabulary } from "../../../shell/ledgerServedVocabulary";
-import { DIRECTIONS } from "../../../shell/ledgerVocabulary";
+import { DIRECTIONS } from "../../../shell/ledgerContract";
 import type { Translate } from "../../../shell/strings";
 import {
   categoryOption,

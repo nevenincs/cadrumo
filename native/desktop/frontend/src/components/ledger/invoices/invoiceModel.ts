@@ -5,7 +5,6 @@
 // an add sends the figures of the answer to the very draft on the page.
 
 import {
-  INVOICE_UPDATE_FIELDS,
   type CatalogueInvoice,
   type InvoiceAddLine,
   type InvoiceAddRequest,
@@ -15,12 +14,15 @@ import {
   type InvoicePreviewRateSlot,
   type InvoicePreviewRequest,
   type InvoicePreviewResult,
-  type InvoiceUpdateField,
   type InvoiceUpdateRequest,
   type InvoiceUpdateValues,
-  type PaymentStatus,
   type PublicDecimal,
 } from "../../../shell/ledger";
+import {
+  INVOICE_UPDATE_FIELDS,
+  type InvoiceUpdateField,
+  type PaymentStatus,
+} from "../../../shell/ledgerContract";
 import {
   QUANTITY_RULE,
   TAX_AMOUNT_RULE,
@@ -42,28 +44,6 @@ import { heldDecimal } from "../../../shared/numbers";
 
 /** An invoice class as the registry names it; the ledger serves which. */
 export type InvoiceClass = string;
-
-export const PAYMENT_STATUSES: readonly PaymentStatus[] = [
-  "PENDING",
-  "PARTIALLY_PAID",
-  "PAID",
-  "OVERDUE",
-  "CANCELLED",
-];
-
-/** The Modelo 349 operation keys an invoice may carry. */
-export const OPERATION_TYPES = [
-  "E",
-  "H",
-  "M",
-  "S",
-  "T",
-  "R",
-  "A",
-  "I",
-  "D",
-  "C",
-] as const;
 
 // ---- Lines -------------------------------------------------------------------
 

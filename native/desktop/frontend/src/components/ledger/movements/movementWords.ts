@@ -11,7 +11,7 @@ import {
   isClassification,
   isDirection,
   isLifecycleState,
-} from "../../../shell/ledgerVocabulary";
+} from "../../../shell/ledgerContract";
 import type { ServedVocabulary } from "../../../shell/ledgerServedVocabulary";
 import type { Translate } from "../../../shell/strings";
 import { wordOrToken } from "../../../shell/tokenWords";
