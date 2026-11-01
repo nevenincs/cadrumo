@@ -6651,6 +6651,8 @@ tui:
       errors:
         amount_invalid: Az összeget csak számjegyekkel, tizedesponttal add meg, például
           1500.00.
+        amount_required: 'Add meg az összeget itt: „{field}”. Ha nincs ilyen, írj
+          0.00-t.'
         asset_id_required: Először add meg az elem azonosítóját.
         choice_invalid: 'Válassz az alábbiak közül: {options}.'
         date_invalid: Add meg a dátumot ÉÉÉÉ-HH-NN alakban, például 2025-06-30.

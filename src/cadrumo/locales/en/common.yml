@@ -6547,6 +6547,7 @@ tui:
         amount_invalid: Write the amount in digits only, with a point for the decimals,
           for example 1500.00.
         asset_id_required: Write the asset identifier first.
+        amount_required: Write an amount in “{field}”. If there is none, write 0.00.
         choice_invalid: 'Choose one of these: {options}.'
         date_invalid: Write the date as YYYY-MM-DD, for example 2025-06-30.
         entry_unreadable: One of the values you wrote can't be read. Check the dates,

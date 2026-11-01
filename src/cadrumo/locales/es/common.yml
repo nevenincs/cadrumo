@@ -6676,6 +6676,8 @@ tui:
       errors:
         amount_invalid: Escribe el importe solo con cifras y con punto para los decimales,
           por ejemplo 1500.00.
+        amount_required: Escribe un importe en «{field}». Si no hay ninguno, escribe
+          0.00.
         asset_id_required: Escribe primero el identificador del elemento.
         choice_invalid: 'Elige una de estas opciones: {options}.'
         date_invalid: Escribe la fecha como AAAA-MM-DD, por ejemplo 2025-06-30.

@@ -6673,6 +6673,7 @@ tui:
         amount_invalid: Escriu l'import només amb xifres i amb punt per als decimals,
           per exemple 1500.00.
         asset_id_required: Escriu primer l'identificador de l'element.
+        amount_required: Escriu un import a «{field}». Si no n'hi ha cap, escriu 0.00.
         choice_invalid: 'Tria una d''aquestes opcions: {options}.'
         date_invalid: Escriu la data com AAAA-MM-DD, per exemple 2025-06-30.
         entry_unreadable: No es pot llegir un dels valors que has escrit. Revisa les
