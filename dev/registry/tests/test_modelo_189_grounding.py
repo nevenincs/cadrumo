@@ -15,6 +15,7 @@ from ._gate_support import (
     assert_deadline_window_for_filing_year,
     assert_edition_opens_at_filing_year,
     assert_sole_current_edition,
+    assert_source_refs_not_stale,
 )
 from .authored_edition_support import newest_authored_edition
 
@@ -84,12 +85,7 @@ def test_modelo_189_current_registry_uses_current_edition_sources_without_fake_c
     assert {link.surface for link in revision.application_links} == {"deadline", "export", "filing"}
     assert {schedule.id for schedule in revision.filing_schedules} == {"modelo-189-anual"}
 
-    stale_refs = {"enrolled-modelo-189-procedure", "enrolled-modelo-189-layout"}
-    observed_source_refs = set(modelo.source_refs) | set(revision.source_refs)
-    observed_source_refs.update(ref.workbook_source for ref in revision.workbook_parity_refs)
-    observed_source_refs.update(ref for casilla in revision.casillas for ref in casilla.source_refs)
-    observed_source_refs.update(ref for link in revision.application_links for ref in link.source_refs)
-    assert stale_refs.isdisjoint(observed_source_refs)
+    assert_source_refs_not_stale(modelo, revision, {"enrolled-modelo-189-procedure", "enrolled-modelo-189-layout"})
 
     verify_legal_catalogue(
         {ref: authority.catalogues.legal[ref] for ref in _M189_LEGAL_REFS},
