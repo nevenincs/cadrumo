@@ -96,12 +96,18 @@ def _snapshot_checked_facts(restated_on: date | None) -> tuple[GovernedFact, ...
     retenciones binding, and the M190 perceptor clave scope by a cross-domain
     check. A scope naming no casilla is refused as an empty declaration, so it
     names one. The first-slice check asks the role routing whether it is looking
-    at the annual renta form, whichever modelo the snapshot holds.
+    at the annual renta form, whichever modelo the snapshot holds. Listing the
+    modelos reads the ceded autonomic codes from the form-row codes.
     """
     return (
         _snapshot_checked_fact(
             "modelo-role-routing",
             (("renta.annual", "100"),),
+            restated_on=restated_on,
+        ),
+        _snapshot_checked_fact(
+            "form-row-codes",
+            (("ceded_autonomic.modelos", "600,620,650,660"),),
             restated_on=restated_on,
         ),
         _snapshot_checked_fact(
