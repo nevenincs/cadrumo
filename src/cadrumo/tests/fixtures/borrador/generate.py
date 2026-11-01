@@ -179,7 +179,7 @@ def render_borrador_pdf(year: int, casilla_values: Mapping[CasillaId, Decimal]) 
     c.drawRightString(210 * mm - margin, y, f"Ejercicio: {year}")
     y -= 5 * mm
 
-    c.drawString(margin, y, "NIF: 12345678T")
+    c.drawString(margin, y, "NIF: 12345678Z")
     y -= 5 * mm
 
     c.setFont("Helvetica-Bold", 11)

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from decimal import Decimal
 from pathlib import Path
@@ -12,10 +12,12 @@ from ...core.casilla_id import CasillaId
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.hashing import sha256_hex
 from ...core.identity.digest import ContentDigest
+from ...core.identity.documents import IdentityError
 from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.schema_extraction import ExtractionProfileDefinition, ExtractionSurface
+from ...domain.calculations.registry.tax_id_runtime import validate_runtime_spanish_tax_id
 from .borrador_100_operation_ports import (
     Borrador100ArtefactKind,
     Borrador100ImportObservation,
@@ -50,6 +52,7 @@ def prepare_borrador_100_import(
     period: Period,
     operation: PinnedAuthorityOperation,
     parser: Borrador100ImportParserPort,
+    profile_tax_id: Callable[[], str | None],
 ) -> PreparedBorrador100Import:
     """Resolve authority, read once, and validate the parser receipt before writes."""
     profile = _resolve_import_profile(operation, filing_year=filing_year, period=period)
@@ -62,6 +65,7 @@ def prepare_borrador_100_import(
         extraction_profile=profile,
     )
     coverage = _require_parser_receipt(observation, profile=profile, digest=digest, filing_year=filing_year)
+    _require_document_belongs_to_profile(observation.tax_id, profile_tax_id())
     binding_values, blanks = _collect_import_values(profile, observation.values)
     return PreparedBorrador100Import(
         extraction_profile_id=profile.id,
@@ -116,6 +120,31 @@ def _require_parser_receipt(
     ):
         raise InternalInvariantError("borrador parser receipt differs from its pinned source/profile")
     return coverage
+
+
+def _canonical_tax_id(value: str | None) -> str | None:
+    if value is None or not value.strip():
+        return None
+    try:
+        return validate_runtime_spanish_tax_id(value)
+    except IdentityError:
+        return None
+
+
+def _require_document_belongs_to_profile(document_tax_id: str | None, recorded_tax_id: str | None) -> None:
+    """Refuse a capture of another taxpayer, or one whose ownership cannot be confirmed.
+
+    Both identifiers are compared in the canonical form the censal ownership guard uses.
+    Absence or a malformed identifier on either side is not a match.
+    """
+    recorded = _canonical_tax_id(recorded_tax_id)
+    if recorded is None:
+        raise LiveApplicationInputError(translated_message="cli.app.live.borrador.import_profile_tax_id_unusable")
+    printed = _canonical_tax_id(document_tax_id)
+    if printed is None:
+        raise LiveApplicationInputError(translated_message="cli.app.live.borrador.import_tax_id_unreadable")
+    if printed != recorded:
+        raise LiveApplicationInputError(translated_message="cli.app.live.borrador.import_tax_id_mismatch")
 
 
 def _collect_import_values(

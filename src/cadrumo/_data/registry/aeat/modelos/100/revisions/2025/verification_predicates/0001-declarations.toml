@@ -69,5 +69,7 @@ legal_refs = ["ley-35-2006:art-50"]
 # category-keyed rule would fire on precisely those filers. implies_nonzero holds
 # trivially when the antecedent <= 0, so a filer with no trabajo income never fires.
 #
-# The remedy is an income-certificate value, NOT a filing to capture: the taxpayer
-# never filed Modelo 111 and it cannot arrive from AEAT on this taxpayer's behalf.
+# The remedy is the payer's withholding certificate, keyed as the casilla value.
+# Modelo 111 is the payer's return, not this taxpayer's, so there is no filing of
+# theirs to capture. AEAT's datos fiscales report what payers declared, but only
+# as information, and Cadrumo does not read them yet.

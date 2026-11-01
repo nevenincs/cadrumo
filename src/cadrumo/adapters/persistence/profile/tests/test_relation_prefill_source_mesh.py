@@ -52,6 +52,7 @@ _M115_PERCEPTORES_CASILLA: CasillaId = validated_casilla_id("01")
 _M115_BASE_CASILLA: CasillaId = validated_casilla_id("02")
 _M115_RETENCIONES_CASILLA: CasillaId = validated_casilla_id("03")
 _M130_RESULTADO_FINAL_CASILLA: CasillaId = validated_casilla_id("19")
+_M130_PRIOR_RESULT_CASILLA: CasillaId = validated_casilla_id("18")
 _M202_2023_2024_PRIOR_PAYMENTS_BINDING = "modelo-202-pagos-fraccionados-anteriores"
 
 
@@ -591,7 +592,8 @@ def _modelo_130_pagos_observations(values_by_period: dict[str, Decimal]) -> tupl
             modelo="130",
             filing_year=2024,
             period=period,
-            casilla_values={_M130_RESULTADO_FINAL_CASILLA: value},
+            # Original autoliquidaciones: no earlier filing of the quarter, so casilla 18 is zero.
+            casilla_values={_M130_RESULTADO_FINAL_CASILLA: value, _M130_PRIOR_RESULT_CASILLA: Decimal("0")},
         )
         for period, value in values_by_period.items()
     )
@@ -601,7 +603,10 @@ def _m130_pagos_requirement(
     requirements: tuple[RegistryFoldRequirement, ...],
 ) -> RegistryFoldRequirement:
     return next(
-        r for r in requirements if r.source_modelo == "130" and r.source_casilla_ids == (_M130_RESULTADO_FINAL_CASILLA,)
+        r
+        for r in requirements
+        if r.source_modelo == "130"
+        and r.source_casilla_ids == (_M130_RESULTADO_FINAL_CASILLA, _M130_PRIOR_RESULT_CASILLA)
     )
 
 

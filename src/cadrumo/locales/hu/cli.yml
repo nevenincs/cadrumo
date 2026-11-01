@@ -629,8 +629,15 @@ cli:
         import_help: Helyi Modelo 100 borrador PDF importálása a pillanatkép-tárolóba.
         import_period_help: Időszakkód (alapértelmezés 0A, a Modelo 100 éves időszaka).
         import_period_invalid: Az időszakkód nem érvényes ehhez a benyújtási évhez.
+        import_profile_tax_id_unusable: A profilodnak nincs érvényes adóazonosítója,
+          ezért a PDF tulajdonosa nem erősíthető meg; először rögzítsd az azonosítódat.
+          Semmi sem lett importálva.
         import_profile_unresolved: A nyomtatványdefiníciók nem deklarálnak egyetlen
           borrador kinyerési profilt sem ehhez az adóévhez és időszakhoz.
+        import_tax_id_mismatch: A PDF-en szereplő adóazonosító nem egyezik e profil
+          adóazonosítójával; semmi sem lett importálva.
+        import_tax_id_unreadable: A PDF nem tartalmaz érvényes adóazonosítót, ezért
+          a tulajdonosa nem erősíthető meg; semmi sem lett importálva.
         latest_help: A legfrissebb aktív pillanatkép megjelenítése egy benyújtási
           évre.
         list_help: Mentett Modelo 100 borrador pillanatképek listázása.

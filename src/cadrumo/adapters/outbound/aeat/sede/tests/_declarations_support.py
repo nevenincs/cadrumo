@@ -144,6 +144,9 @@ _M130_RESULTADOS_NEGATIVOS_ANTERIORES_CASILLA: CasillaId = validated_casilla_id(
 _M130_DIFERENCIA_CASILLA: CasillaId = validated_casilla_id("17", surface="_M130_DIFERENCIA_CASILLA")
 _M130_RESULTADO_FINAL_CASILLA: CasillaId = validated_casilla_id("19", surface="_M130_RESULTADO_FINAL_CASILLA")
 _M131_RESULTADO_CASILLA: CasillaId = validated_casilla_id("15", surface="_M131_RESULTADO_CASILLA")
+# Original filings carry no earlier paid result: casilla 18 (Modelo 130) and casilla 14 (Modelo 131) are zero.
+_M130_PRIOR_RESULT_CASILLA: CasillaId = validated_casilla_id("18", surface="_M130_PRIOR_RESULT_CASILLA")
+_M131_PRIOR_RESULT_CASILLA: CasillaId = validated_casilla_id("14", surface="_M131_PRIOR_RESULT_CASILLA")
 _DECL_RETENCIONES_TOTAL_CASILLA: CasillaId = validated_casilla_id(
     "decl.retenciones-total",
     surface="_DECL_RETENCIONES_TOTAL_CASILLA",
@@ -439,7 +442,7 @@ def _renta_2025_relation_observations() -> tuple[FiledDeclaracionObservation, ..
             modelo="130",
             ejercicio=2025,
             period=period,
-            casilla_values={_M130_RESULTADO_FINAL_CASILLA: value},
+            casilla_values={_M130_RESULTADO_FINAL_CASILLA: value, _M130_PRIOR_RESULT_CASILLA: Decimal("0")},
         )
         for period, value in {
             "1T": Decimal("14"),
@@ -453,7 +456,7 @@ def _renta_2025_relation_observations() -> tuple[FiledDeclaracionObservation, ..
             modelo="131",
             ejercicio=2025,
             period=period,
-            casilla_values={_M131_RESULTADO_CASILLA: value},
+            casilla_values={_M131_RESULTADO_CASILLA: value, _M131_PRIOR_RESULT_CASILLA: Decimal("0")},
         )
         for period, value in {
             "1T": Decimal("22"),

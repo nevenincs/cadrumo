@@ -9,7 +9,7 @@ from .....core.aggregation import RelationAggregationOp
 from ..bindings import RegistryModeloObservation
 from ..errors import RegistryValidationError
 from ..ids import BindingId
-from ..observation_fold import gather_observed_requirement_values
+from ..observation_fold import fold_pagos_fraccionados_ingresados, resolve_observed_requirement_value
 from ..relations import _fold_op, relation_prefill_bindings_for_period, relation_source_requirements
 from ..schema import ModeloRevision
 
@@ -41,21 +41,19 @@ def resolve_relation_values_from_observations(
         :func:`cadrumo.domain.calculations.registry.formula_runtime.calculate_registry_snapshot`.
     """
     available = tuple(observations)
-    external_outputs: dict[BindingId, Decimal | tuple[Decimal, ...]] = {}
+    resolved: dict[BindingId, Decimal] = {}
     for requirement in relation_source_requirements(revision, filing_year=filing_year, period=period):
-        values = gather_observed_requirement_values(requirement, available)
-        raw_value: Decimal | tuple[Decimal, ...]
-        if requirement.aggregation_op == "copy":
-            if len(values) != 1:
-                raise RegistryValidationError(
-                    f"fold requirement {requirement.target_bindings!r} copy aggregation requires one observation",
-                )
-            raw_value = values[0]
-        else:
-            raw_value = values
+        value = resolve_observed_requirement_value(requirement, available)
         for binding_id in requirement.target_bindings:
-            external_outputs[binding_id] = raw_value
-    return resolve_relation_values(revision, external_outputs, period=period)
+            resolved[binding_id] = value
+    missing = sorted(
+        binding.id
+        for binding, _ in relation_prefill_bindings_for_period(revision, period=period)
+        if binding.id not in resolved
+    )
+    if missing:
+        raise RegistryValidationError(f"missing relation-prefill values for {missing!r}")
+    return resolved
 
 
 def relation_prefill_values_as_binding_values(
@@ -84,7 +82,7 @@ def relation_prefill_values_as_binding_values(
 
 def resolve_relation_values(
     revision: ModeloRevision,
-    external_outputs: Mapping[BindingId, Decimal | tuple[Decimal, ...]],
+    external_outputs: Mapping[BindingId, Decimal | tuple[Decimal, ...] | tuple[tuple[Decimal, ...], ...]],
     *,
     period: str | None = None,
 ) -> dict[BindingId, Decimal]:
@@ -100,8 +98,9 @@ def resolve_relation_values(
             relation-prefill bindings are resolved against the supplied outputs.
         external_outputs: Caller-supplied per-binding values keyed by
             :class:`~cadrumo.domain.calculations.registry.ids.BindingId`; a
-            :class:`decimal.Decimal` under ``copy`` aggregation or a tuple of
-            Decimals under ``sum``.
+            :class:`decimal.Decimal` under ``copy`` aggregation, a tuple of
+            Decimals under ``sum``, or one tuple of source-casilla values per
+            period under ``pagos_fraccionados_ingresados``.
         period: Optional period token; restricts active bindings to those whose
             applicability admits it.
     """
@@ -119,10 +118,27 @@ def resolve_relation_values(
             if not isinstance(raw_value, Decimal):
                 raise RegistryValidationError(f"relation-prefill binding {binding.id!r} copy requires one Decimal")
             resolved[binding.id] = raw_value
-        else:
+        elif _fold_op(binding) is RelationAggregationOp.SUM:
             if not isinstance(raw_value, tuple):
                 raise RegistryValidationError(
                     f"relation-prefill binding {binding.id!r} sum requires a tuple of Decimal values",
                 )
-            resolved[binding.id] = sum(raw_value, Decimal("0"))
+            resolved[binding.id] = sum(_decimal_items(raw_value, binding_id=binding.id), Decimal("0"))
+        else:
+            if not isinstance(raw_value, tuple):
+                raise RegistryValidationError(
+                    f"relation-prefill binding {binding.id!r} {_fold_op(binding).value} requires one tuple of "
+                    "source-casilla values per period",
+                )
+            resolved[binding.id] = fold_pagos_fraccionados_ingresados(
+                tuple(_decimal_items(item, binding_id=binding.id) for item in raw_value),
+                subject=f"relation-prefill binding {binding.id!r}",
+            )
     return resolved
+
+
+def _decimal_items(values: object, *, binding_id: BindingId) -> tuple[Decimal, ...]:
+    """Return ``values`` as a tuple of Decimals, refusing any other shape."""
+    if not isinstance(values, tuple) or not all(isinstance(item, Decimal) for item in values):
+        raise RegistryValidationError(f"relation-prefill binding {binding_id!r} requires a tuple of Decimal values")
+    return tuple(item for item in values if isinstance(item, Decimal))

@@ -99,6 +99,7 @@ from .manual_input_selector import ManualInputProvider
 from .profile_bindings import ProfileProvider
 from .prorrata_regularizacion_bindings import ProrrataRegularizacionProvider
 from .relation_prefill_bindings import RelationPrefillProvider
+from .relations import validate_relation_prefill_binding
 from .retenciones_bindings import RetencionesAggregationProvider, validate_retenciones_aggregation_binding
 from .withholding296_bindings import Withholding296Provider, validate_withholding296_binding_selector_shape
 from .withholding_bindings import WithholdingProvider, validate_withholding_binding_selector_shape
@@ -459,9 +460,9 @@ _REGISTRATIONS: Final[tuple[BindingProviderRegistration, ...]] = (
     _filing_grade(
         BindingSourceKind.RELATION_PREFILL,
         RelationPrefillProvider,
-        None,
+        validate_relation_prefill_binding,
         channels=_MONEY_OR_COUNT_CHANNELS,
-        ops=_FOLD_OPS,
+        ops=_FOLD_OPS | frozenset({BindingAggregationOp.PAGOS_FRACCIONADOS_INGRESADOS}),
         origins=frozenset({TerminalOriginClass.FILED_MODELO_CASILLA}),
         output="scalar",
         resolver_id="relation_prefill",

@@ -4,12 +4,13 @@ tags:
   - '#index'
   - '#calculation-aggregation-taxonomy'
 date: '2026-08-16'
-modified: '2026-08-27'
+modified: '2026-11-01'
 body_schema: 'body-v2'
-body_hash: 'sha256:86473ab84d0f3fbe739cbf8d582be4a0835655db2fee5e85c242da594ed2c406'
+body_hash: 'sha256:401aa83daaa10416b4134954f4786cc3d8018e51a4dd225f5155bd68506375ef'
 related:
   - '[[2026-06-10-calculation-aggregation-taxonomy-adr]]'
   - '[[2026-06-10-calculation-aggregation-taxonomy-research]]'
+  - '[[2026-11-01-calculation-aggregation-taxonomy-tier-divergence-adr]]'
 ---
 
 # `calculation-aggregation-taxonomy` feature index
@@ -21,6 +22,7 @@ Auto-generated index of all documents tagged with `#calculation-aggregation-taxo
 ### adr
 
 - `2026-06-10-calculation-aggregation-taxonomy-adr` - `calculation-aggregation-taxonomy` adr: `Canonical aggregation mechanism per calculation type` | (**status:** `accepted`)
+- `2026-11-01-calculation-aggregation-taxonomy-tier-divergence-adr` - `calculation-aggregation-taxonomy` adr: `Block filing-bound precedence tier divergence instead of overwriting silently` | (**status:** `proposed`)
 
 ### research
 

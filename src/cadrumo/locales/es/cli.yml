@@ -641,8 +641,15 @@ cli:
           modelo 100)
         import_period_invalid: El código de periodo no es válido para ese ejercicio
           fiscal.
+        import_profile_tax_id_unusable: Tu perfil no tiene un NIF válido, así que
+          no se puede confirmar el titular del PDF; registra primero tu NIF. No se
+          importó nada.
         import_profile_unresolved: Las definiciones del modelo no declaran un único
           perfil de extracción de borrador para ese ejercicio y periodo.
+        import_tax_id_mismatch: El NIF impreso en el PDF no coincide con el de este
+          perfil; no se importó nada.
+        import_tax_id_unreadable: El PDF no lleva un NIF válido, así que no se puede
+          confirmar su titular; no se importó nada.
         latest_help: Mostrar el snapshot activo más reciente de un ejercicio fiscal
         list_help: Listar snapshots persistidos del borrador del modelo 100
         modelo_100_help: Comandos de snapshots del borrador del modelo 100

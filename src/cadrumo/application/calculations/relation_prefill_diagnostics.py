@@ -104,7 +104,7 @@ def absent_bound_carry_diagnostics(
                     f"carry {relation_id!r} found no modelo {requirement.source_modelo} "
                     f"{requirement.filing_year} {','.join(requirement.periods)} filing in the local "
                     f"store, so its bound casilla declares zero rather than the carried "
-                    f"{requirement.source_casilla_ids[0]}. That reduces no liability and therefore "
+                    f"{', '.join(requirement.source_casilla_ids)}. That reduces no liability and therefore "
                     "over-declares."
                 ),
                 remedy=(
@@ -345,7 +345,9 @@ def unresolved_relation_diagnostics(
         # elision cuts into the trailing relation-id listing rather than the
         # facts themselves; `relation_ids` above is the full, un-elided,
         # machine-readable membership regardless of what the prose keeps.
-        facts_text = ", ".join(sorted({requirement.source_casilla_ids[0] for _, requirement in members}))
+        facts_text = ", ".join(
+            sorted({casilla_id for _, requirement in members for casilla_id in requirement.source_casilla_ids})
+        )
         relation_ids_text = ", ".join(member_relation_ids)
         diagnostics.append(
             CalculationSourceDiagnostic(

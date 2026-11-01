@@ -71,9 +71,10 @@ legal_refs = ["ley-35-2006:dt-18"]
 # trivially when the antecedent <= 0, so a filer with no trabajo income at all
 # never fires.
 #
-# The remedy is an income-certificate value, NOT a filing to capture: the taxpayer
-# never filed Modelo 111 and the pull cannot fetch a return somebody else filed
-# about them. Any surface rendering this must not tell them to pull anything.
+# The remedy is the payer's withholding certificate, keyed as the casilla value.
+# Modelo 111 is the payer's return, not this taxpayer's, so there is no filing of
+# theirs to capture. AEAT's datos fiscales report what payers declared, but only
+# as information, and Cadrumo does not read them yet.
 
 # Anexo I instruccion 2.3 incompatibilities: the personal asalariado index is
 # not applied with the medios de produccion ajenos index, and forestal

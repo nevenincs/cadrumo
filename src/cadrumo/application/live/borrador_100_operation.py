@@ -239,6 +239,7 @@ class Borrador100ImportExecutor:
                 period=payload.period.to_period(),
                 operation=ports.operation,
                 parser=ports.parser,
+                profile_tax_id=ports.profile_tax_id,
             )
             tracker = LedgerCommitAttemptTracker()
             service = Borrador100SnapshotService(

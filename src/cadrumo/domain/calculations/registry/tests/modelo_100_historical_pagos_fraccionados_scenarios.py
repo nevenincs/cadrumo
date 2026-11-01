@@ -24,6 +24,8 @@ _M100_TOTAL_PAGOS_A_CUENTA_CASILLA: CasillaId = validated_casilla_id(
 )
 _M130_SOURCE_CASILLA: CasillaId = validated_casilla_id("19", surface="_M130_SOURCE_CASILLA")
 _M131_SOURCE_CASILLA: CasillaId = validated_casilla_id("15", surface="_M131_SOURCE_CASILLA")
+_M130_PRIOR_RESULT_CASILLA: CasillaId = validated_casilla_id("18", surface="_M130_PRIOR_RESULT_CASILLA")
+_M131_PRIOR_RESULT_CASILLA: CasillaId = validated_casilla_id("14", surface="_M131_PRIOR_RESULT_CASILLA")
 
 _M130_QUARTERS = (Decimal("100"), Decimal("200"), Decimal("300"), Decimal("400"))
 _M131_QUARTERS = (Decimal("25"), Decimal("30"), Decimal("35"), Decimal("40"))
@@ -117,9 +119,9 @@ def check_relation_contract(revision: ModeloRevision) -> None:
     binding_130, provider_130 = relation_bindings["renta-modelo-130-pagos-fraccionados"]
     binding_131, provider_131 = relation_bindings["renta-modelo-131-pagos-fraccionados"]
     assert provider_130.source_modelo == "130"
-    assert provider_130.declared_source_casilla_ids == (_M130_SOURCE_CASILLA,)
+    assert provider_130.declared_source_casilla_ids == (_M130_SOURCE_CASILLA, _M130_PRIOR_RESULT_CASILLA)
     assert provider_131.source_modelo == "131"
-    assert provider_131.declared_source_casilla_ids == (_M131_SOURCE_CASILLA,)
+    assert provider_131.declared_source_casilla_ids == (_M131_SOURCE_CASILLA, _M131_PRIOR_RESULT_CASILLA)
     assert isinstance(provider_130.temporal, SameFilingYearPeriods)
     assert isinstance(provider_131.temporal, SameFilingYearPeriods)
     assert provider_130.temporal.source_periods == ("1T", "2T", "3T", "4T")
@@ -128,8 +130,8 @@ def check_relation_contract(revision: ModeloRevision) -> None:
     assert provider_131.required_source_periods == ("1T", "2T", "3T", "4T")
     assert binding_130.aggregation is not None
     assert binding_131.aggregation is not None
-    assert binding_aggregation_op(binding_130) is BindingAggregationOp.SUM
-    assert binding_aggregation_op(binding_131) is BindingAggregationOp.SUM
+    assert binding_aggregation_op(binding_130) is BindingAggregationOp.PAGOS_FRACCIONADOS_INGRESADOS
+    assert binding_aggregation_op(binding_131) is BindingAggregationOp.PAGOS_FRACCIONADOS_INGRESADOS
 
     assert any(
         "renta-pagos-fraccionados-ingresados" in construct.formulas

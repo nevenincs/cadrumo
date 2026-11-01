@@ -32,7 +32,7 @@ from ....core.filing_year import FilingYear
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.period import Period, RegistrySelectorPeriodCode
 from .binding_aggregation import binding_aggregation_op
-from .binding_selector_utils import unique_tuple
+from .binding_selector_utils import invariant_diagnostics, unique_tuple
 from .binding_temporal import binding_applies_to_period
 from .errors import RegistryValidationError
 from .ids import BindingId, LegalRefId, ModeloId, SourceRefId
@@ -54,16 +54,28 @@ __all__ = [
     "relation_requirement_index",
     "relation_source_requirements",
     "source_presence_gaps",
+    "validate_relation_prefill_binding",
 ]
 
-#: The two folds an observation-backed requirement can perform. A binding may
+#: The folds an observation-backed requirement can perform. A binding may
 #: declare any :class:`~core.aggregation.BindingAggregationOp`, but only these
-#: two describe folding matched source FILINGS; a row-emitting or counting op
-#: on a cross-filing fold is a declaration error rather than a fold this module
-#: can perform, so it is refused instead of coerced.
+#: describe folding matched source FILINGS; a row-emitting or counting op on a
+#: cross-filing fold is a declaration error rather than a fold this module can
+#: perform, so it is refused instead of coerced.
 _FOLD_OPS: Mapping[BindingAggregationOp, RelationAggregationOp] = {
     BindingAggregationOp.COPY: RelationAggregationOp.COPY,
     BindingAggregationOp.SUM: RelationAggregationOp.SUM,
+    BindingAggregationOp.PAGOS_FRACCIONADOS_INGRESADOS: RelationAggregationOp.PAGOS_FRACCIONADOS_INGRESADOS,
+}
+
+#: How many source casillas each fold reads from every matched filing. ``copy``
+#: and ``sum`` read one value; ``pagos_fraccionados_ingresados`` reads the
+#: period's own result and then the result already paid by earlier
+#: autoliquidaciones of the same period, in that declared order.
+_FOLD_SOURCE_CASILLA_COUNTS: Mapping[RelationAggregationOp, int] = {
+    RelationAggregationOp.COPY: 1,
+    RelationAggregationOp.SUM: 1,
+    RelationAggregationOp.PAGOS_FRACCIONADOS_INGRESADOS: 2,
 }
 
 
@@ -93,7 +105,7 @@ class RegistryFoldRequirement(BaseModel):
     a same-modelo direct ``previous_filing`` carry (``binding_ids`` populated).
     Both the source-period and source-casilla axes are PLURAL so the record is
     a superset of the two shapes: a relation-prefill requirement fans plural
-    ``periods`` against a single ``source_casilla_ids`` member, while a
+    ``periods`` against the casillas its fold op reads from each filing, while a
     ``previous_filing`` requirement carries a single ``periods`` member against
     plural ``source_casilla_ids``. ``legal_refs`` and ``source_refs`` retain the
     originating binding's grounding for operator diagnostics.
@@ -185,7 +197,7 @@ type _FoldRequirementKey = tuple[
     str,
     int,
     tuple[str, ...],
-    CasillaId,
+    tuple[CasillaId, ...],
     RelationDependencyRole,
     RelationDependencyTreatment,
     str,
@@ -285,15 +297,16 @@ def _group_fold_requirements(
                 f"relation_prefill binding {binding.id!r} source modelo {provider.source_modelo!r} "
                 "has no dependency classification",
             )
+        fold_op = _fold_op(binding)
         for source_year, source_periods in _anchors_by_source_year(provider, filing_year=filing_year, period=period):
             key = (
                 provider.source_modelo,
                 source_year,
                 source_periods,
-                _single_source_casilla(binding, provider),
+                _fold_source_casillas(binding, provider, fold_op),
                 provider.dependency_role,
                 classification.treatment,
-                _fold_op(binding).value,
+                fold_op.value,
             )
             bucket = grouped.setdefault(key, _FoldRequirementBucket())
             bucket.target_bindings.add(binding.id)
@@ -302,20 +315,46 @@ def _group_fold_requirements(
     return grouped
 
 
-def _single_source_casilla(binding: BindingDefinition, provider: RelationPrefillProvider) -> CasillaId:
-    """Return the one source casilla a relation-prefill fold reads.
+def _fold_source_casillas(
+    binding: BindingDefinition,
+    provider: RelationPrefillProvider,
+    fold_op: RelationAggregationOp,
+) -> tuple[CasillaId, ...]:
+    """Return the ordered source casillas a relation-prefill fold reads.
 
-    The fold matches one source casilla per requirement; a provider declaring
-    several would silently collapse to the first, so the shape is refused here
+    Each fold reads a fixed number of casillas from every matched filing
+    (:data:`_FOLD_SOURCE_CASILLA_COUNTS`). A provider declaring a different
+    number would silently collapse to some of them, so the shape is refused here
     rather than reinterpreted.
     """
     declared = provider.declared_source_casilla_ids
-    if len(declared) != 1:
+    expected = _FOLD_SOURCE_CASILLA_COUNTS[fold_op]
+    if len(declared) != expected:
         raise RegistryValidationError(
-            f"relation_prefill binding {binding.id!r} must read exactly one source casilla",
+            f"relation_prefill binding {binding.id!r} aggregation {fold_op.value!r} must read exactly "
+            f"{expected} source casilla(s)",
             context={"binding_id": binding.id, "source_casilla_ids": ",".join(declared)},
         )
-    return declared[0]
+    return declared
+
+
+def _validate_relation_prefill_invariants(binding: BindingDefinition) -> None:
+    provider = binding.provider
+    if not isinstance(provider, RelationPrefillProvider):
+        raise RegistryValidationError(f"binding {binding.id!r} does not carry a relation_prefill provider")
+    _fold_source_casillas(binding, provider, _fold_op(binding))
+
+
+def validate_relation_prefill_binding(binding: BindingDefinition) -> list[str]:
+    """Validate a relation_prefill binding's fold op and source-casilla arity at build time.
+
+    The provider member already validates its own shape; what it cannot see is
+    the binding's aggregation op, which decides how many source casillas the
+    fold reads from each matched filing. Lifting that pairing here refuses a
+    malformed declaration at snapshot construction instead of leaving the
+    relation silently unresolved on a taxpayer calculation.
+    """
+    return invariant_diagnostics(binding, "relation-prefill", _validate_relation_prefill_invariants)
 
 
 def _anchors_by_source_year(
@@ -348,7 +387,7 @@ def _registry_fold_requirement(
         source_modelo,
         source_year,
         source_periods,
-        source_casilla_id,
+        source_casilla_ids,
         dependency_role,
         dependency_treatment,
         aggregation_op,
@@ -362,7 +401,7 @@ def _registry_fold_requirement(
             if (filing_period := filing_period_from_scope(source_year, source_period)) is not None
         ),
         periods=source_periods,
-        source_casilla_ids=(source_casilla_id,),
+        source_casilla_ids=source_casilla_ids,
         target_bindings=tuple(sorted(values.target_bindings)),
         dependency_role=dependency_role,
         dependency_treatment=dependency_treatment,

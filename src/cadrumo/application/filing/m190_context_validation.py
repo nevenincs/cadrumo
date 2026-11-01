@@ -51,6 +51,7 @@ _M190_CLAVE_ID = "modelo-190-perc-clave"
 _M190_SUBCLAVE_ID = "modelo-190-perc-subclave"
 _M190_FILING_YEAR_ID = "modelo-190-perc-year"
 _M190_DEVENGO_YEAR_ID = "modelo-190-perc-ejercicio-devengo"
+_M190_NO_DEVENGO_YEAR = "0000"
 
 
 _M190_REVIEWED_SOURCES = {
@@ -252,3 +253,6 @@ def _require_m190_signed_components(
             filing_year=filing_year,
             devengo_year=devengo_year,
         )
+    # The design fills the field only for atrasos or reintegros of earlier exercises, whatever the amount's sign.
+    if devengo_year != _M190_NO_DEVENGO_YEAR and not _m190_prior_year_is_valid(filing_year, devengo_year):
+        raise FilingExportValidationError("modelo 190 devengo year must be earlier than the declaration year")

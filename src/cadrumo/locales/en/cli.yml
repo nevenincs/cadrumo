@@ -598,8 +598,14 @@ cli:
           period)
         import_period_invalid: The filing period code is not valid for that filing
           year.
+        import_profile_tax_id_unusable: Your profile has no valid taxpayer ID, so
+          the PDF's owner cannot be confirmed; record your ID first. Nothing was imported.
         import_profile_unresolved: The modelo definitions declare no single borrador
           extraction profile for that filing year and period.
+        import_tax_id_mismatch: The taxpayer ID printed on the PDF differs from this
+          profile's; nothing was imported.
+        import_tax_id_unreadable: The PDF carries no valid taxpayer ID, so its owner
+          cannot be confirmed; nothing was imported.
         latest_help: Show the most recent active snapshot for a filing year
         list_help: List persisted Modelo 100 borrador snapshots
         modelo_100_help: Modelo 100 borrador snapshot commands
