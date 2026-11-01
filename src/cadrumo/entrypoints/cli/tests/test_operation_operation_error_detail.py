@@ -13,19 +13,13 @@ from __future__ import annotations
 import json
 from collections.abc import Callable
 from datetime import UTC, datetime
-from pathlib import Path
-from typing import Any, NoReturn, cast, override
+from typing import Any, cast, override
 from uuid import UUID
 
 import pytest
 from pydantic import JsonValue, TypeAdapter
 
 import cadrumo_client.commands.registered_operation_deadlines as registered_operation_deadlines
-from cadrumo.application.auth.operator_scope_ports import (
-    OperatorScopeBucketPaths,
-    OperatorScopePorts,
-    OperatorScopeSession,
-)
 from cadrumo.application.cli_exception_preconditions import (
     CliExceptionPrecondition,
     cli_exception_no_recovery_verdict,
@@ -36,8 +30,6 @@ from cadrumo.application.modelo.calculation_operation import (
     build_modelo_work_calculate_registration,
 )
 from cadrumo.application.modelo.operation_definitions import (
-    build_modelo_work_file_definition,
-    build_modelo_work_file_registration,
     build_modelo_work_verify_definition,
     build_modelo_work_verify_registration,
 )
@@ -113,6 +105,8 @@ from cadrumo_client.contracts.operation_access import (
 from cadrumo_client.contracts.projection_pages import encode_projection_document, project_encoded_page
 from cadrumo_client.transport.frontend_client import FrontendClient
 
+from .operation_contract_support import modelo_work_file_contract, unavailable, unavailable_operator_scope_ports
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _PROFILE = UUID("aa000000-0000-4000-8000-0000000000aa")
@@ -160,14 +154,10 @@ def test_profile_requirement_explanation_survives_recorded_detail(message_key: s
     assert "private-flow-id" not in envelope.model_dump_json()
 
 
-def _unavailable(*_args: object, **_kwargs: object) -> NoReturn:
-    raise AssertionError("contract construction must not open a private profile")
-
-
 def _contract() -> OperationPublicDefinitionContractV1:
     definition = build_modelo_work_calculate_definition(
-        calculation_action_ports_factory=_unavailable,
-        attachment_store_factory=_unavailable,
+        calculation_action_ports_factory=unavailable,
+        attachment_store_factory=unavailable,
     )
     return build_modelo_work_calculate_registration(definition).contract
 
@@ -412,32 +402,12 @@ def test_a_record_fault_detail_keeps_the_outbound_payload_classification() -> No
     assert error.terminal_precondition_verdict is None
 
 
-class _UnavailableOperatorScope:
-    """Tripwire ports: constructing the real public contract needs no private custody."""
-
-    def resolve(self, root: Path, bucket_id: str) -> NoReturn:
-        return _unavailable(root, bucket_id)
-
-    def acquire_lock(self, paths: OperatorScopeBucketPaths, *, wait_seconds: float) -> NoReturn:
-        return _unavailable(paths, wait_seconds=wait_seconds)
-
-    def release_lock(self, paths: OperatorScopeBucketPaths) -> NoReturn:
-        return _unavailable(paths)
-
-    def current(self) -> NoReturn:
-        return _unavailable()
-
-    def serves_bucket(self, session: OperatorScopeSession | None, bucket_id: str) -> NoReturn:
-        return _unavailable(session, bucket_id)
-
-
 def _verification_contract() -> OperationPublicDefinitionContractV1:
-    unavailable = _UnavailableOperatorScope()
     definition = build_modelo_work_verify_definition(
-        certificate_secret_backend_factory=_unavailable,
-        operator_scope_ports=OperatorScopePorts(storage=unavailable, session=unavailable),
-        verification_repository_bundle_factory=_unavailable,
-        profile_resolver=_unavailable,
+        certificate_secret_backend_factory=unavailable,
+        operator_scope_ports=unavailable_operator_scope_ports(),
+        verification_repository_bundle_factory=unavailable,
+        profile_resolver=unavailable,
     )
     return build_modelo_work_verify_registration(definition).contract
 
@@ -696,17 +666,10 @@ def test_filing_settlement_preserves_approval_and_bounded_exchanges(
     result_deadline: float | None,
 ) -> None:
     """Filing waits independently of transport, without replaying an approved operation on expiry."""
-    unavailable = _UnavailableOperatorScope()
-    definition = build_modelo_work_file_definition(
-        operator_scope_ports=OperatorScopePorts(storage=unavailable, session=unavailable),
-        filing_action_ports_factory=_unavailable,
-        certificate_secret_backend_factory=_unavailable,
-        profile_resolver=_unavailable,
-    )
     wire = _VerificationWire(
         elapsed_after_poll=elapsed,
         outcome_after_poll=outcome,
-        public_contract=build_modelo_work_file_registration(definition).contract,
+        public_contract=modelo_work_file_contract(),
     )
     _verification_clock(monkeypatch, wire)
     request = ModeloWorkFileRequest(

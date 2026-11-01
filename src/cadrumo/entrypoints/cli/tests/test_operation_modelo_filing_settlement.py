@@ -4,25 +4,15 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from datetime import UTC, datetime
-from pathlib import Path
-from typing import NoReturn, override
+from typing import override
 from uuid import UUID
 
 import pytest
 from pydantic import JsonValue, TypeAdapter
 
 import cadrumo_client.commands.registered_operation_deadlines as registered_operation_deadlines
-from cadrumo.application.auth.operator_scope_ports import (
-    OperatorScopeBucketPaths,
-    OperatorScopePorts,
-    OperatorScopeSession,
-)
 from cadrumo.application.modelo.filing_projection import ModeloFilingRecordSnapshot
 from cadrumo.application.modelo.lifecycle_advisories import ModeloLifecycleAdvisories
-from cadrumo.application.modelo.operation_definitions import (
-    build_modelo_work_file_definition,
-    build_modelo_work_file_registration,
-)
 from cadrumo.application.modelo.operation_shared import MODELO_WORK_FILE_OPERATION_DEFINITION_ID
 from cadrumo.application.modelo.work_filing_contracts import (
     ModeloWorkFileApproval,
@@ -75,6 +65,8 @@ from cadrumo_client.contracts.operation_access import (
 from cadrumo_client.contracts.projection_pages import encode_projection_document, project_encoded_page
 from cadrumo_client.transport.frontend_client import FrontendClient
 
+from .operation_contract_support import modelo_work_file_contract
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _PROFILE = UUID("aa000000-0000-4000-8000-0000000000aa")
@@ -82,40 +74,6 @@ _SESSION = UUID("bb000000-0000-4000-8000-0000000000bb")
 _OPERATION = "c" * 64
 _WORK_UNIT = "b" * 64
 _NOW = datetime(2026, 10, 2, tzinfo=UTC)
-
-
-def _unavailable(*_args: object, **_kwargs: object) -> NoReturn:
-    raise AssertionError("contract construction must not open a private profile")
-
-
-class _UnavailableOperatorScope:
-    """Tripwire ports: constructing the real public contract needs no private custody."""
-
-    def resolve(self, root: Path, bucket_id: str) -> NoReturn:
-        return _unavailable(root, bucket_id)
-
-    def acquire_lock(self, paths: OperatorScopeBucketPaths, *, wait_seconds: float) -> NoReturn:
-        return _unavailable(paths, wait_seconds=wait_seconds)
-
-    def release_lock(self, paths: OperatorScopeBucketPaths) -> NoReturn:
-        return _unavailable(paths)
-
-    def current(self) -> NoReturn:
-        return _unavailable()
-
-    def serves_bucket(self, session: OperatorScopeSession | None, bucket_id: str) -> NoReturn:
-        return _unavailable(session, bucket_id)
-
-
-def _filing_contract() -> OperationPublicDefinitionContractV1:
-    unavailable = _UnavailableOperatorScope()
-    definition = build_modelo_work_file_definition(
-        certificate_secret_backend_factory=_unavailable,
-        operator_scope_ports=OperatorScopePorts(storage=unavailable, session=unavailable),
-        filing_action_ports_factory=_unavailable,
-        profile_resolver=_unavailable,
-    )
-    return build_modelo_work_file_registration(definition).contract
 
 
 class _FilingWire(FrontendClient):
@@ -129,7 +87,7 @@ class _FilingWire(FrontendClient):
         self._profile_id = _PROFILE
         self._session_id = _SESSION
         self._frontend = OperationFrontendProjection.CLI
-        self.public_contract = _filing_contract()
+        self.public_contract = modelo_work_file_contract()
         self.contract_set_digest = OperationPublicContractSetV1.build((self.public_contract,)).contract_set_digest
         self.result_reads: list[OperationResultProjectionRequestV1] = []
         self.outcome = "running"
