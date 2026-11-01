@@ -13,6 +13,7 @@ false-fire guard.
 
 from __future__ import annotations
 
+import re
 from collections.abc import Iterable, Sequence
 from decimal import Decimal
 from typing import TYPE_CHECKING, Literal, Protocol
@@ -21,7 +22,7 @@ from pydantic import BaseModel, Field, field_validator
 
 from ....core.aggregation import BindingSourceKind
 from ....core.casilla_id import CasillaId, validated_casilla_id
-from ....core.country_code import CountryCodeAlpha2
+from ....core.country_code import COUNTRY_CODE_ALPHA2_PATTERN, CountryCodeAlpha2
 from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.modelo import Modelo
 from ....core.models import STRICT_FROZEN_CONFIG
@@ -79,7 +80,7 @@ class LedgerIrnrIncomeProvider(BaseModel):
     @classmethod
     @pydantic_validation_boundary
     def _require_distinct_uppercase_jurisdictions(cls, value: tuple[str, ...]) -> tuple[str, ...]:
-        if any(not code.isalpha() or code != code.upper() for code in value):
+        if any(re.fullmatch(COUNTRY_CODE_ALPHA2_PATTERN, code) is None for code in value):
             raise ValueError("ledger_irnr_income_aggregation source_jurisdictions must be uppercase alpha-2 codes")
         if len(set(value)) != len(value):
             raise ValueError("ledger_irnr_income_aggregation source_jurisdictions must not repeat a code")
