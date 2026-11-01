@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterator
+from contextlib import contextmanager
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -17,6 +19,7 @@ from cadrumo.application.modelo.calculate_input_validation import (
     ModeloCalculateDecimalInputError,
     ModeloCalculateTextInputError,
 )
+from cadrumo.application.modelo.calculation_action_ports import CalculationActionPorts
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
@@ -24,6 +27,7 @@ from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.contribuyente.descendant import DescendantInfo
 from cadrumo.domain.contribuyente.descendant_facts import descendant_facts_from_list
+from cadrumo.domain.modelos.work_unit import WorkUnit
 from cadrumo.entrypoints.adapter_composition_work_ports import build_calculation_action_ports
 
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
@@ -50,10 +54,11 @@ _M200_MANUAL_DECIMAL_CASILLA: CasillaId = validated_casilla_id(
 )
 
 
-def test_work_calculate_input_bundle_rejects_ambiguous_reused_printed_number(
-    tmp_path: Path, *, operation: PinnedAuthorityOperation
-) -> None:
-    """A raw ``--casilla`` token must be the canonical ``casilla.id``."""
+@contextmanager
+def _m200_calculation_unit(
+    bucket_id: str, tmp_path: Path
+) -> Iterator[tuple[CalculationActionPorts, WorkUnit, PinnedAuthorityOperation]]:
+    """Open an isolated profile holding one modelo 200 work unit, with its calculation ports and pinned authority."""
     period = Period.from_year_and_code(2025, "0A")
     snapshot = published_authority_operation().snapshot(
         "200",
@@ -64,8 +69,6 @@ def test_work_calculate_input_bundle_rejects_ambiguous_reused_printed_number(
         # and modelo 200's revision honestly declares calculation.
         grade=RegistryAuthorityGrade.CALCULATION,
     )
-
-    bucket_id = _PROFILE_ID
     with isolated_profile_storage_root(tmp_path=tmp_path), open_test_profile_session(bucket_id):
         # Seeded through a detached WorkflowState, never a repository read:
         # the capsule publishes by an atomic no-replace rename onto
@@ -92,18 +95,27 @@ def test_work_calculate_input_bundle_rejects_ambiguous_reused_printed_number(
                 clock=datetime(2026, 6, 26, 12, 0, tzinfo=UTC),
                 operation=operation,
             )
+            yield calculation_ports, work_unit, operation
 
-            with pytest.raises(ModeloCalculateCasillaInputError) as exc_info:
-                build_work_calculate_input_bundle(
-                    work_unit_id=work_unit.work_unit_id,
-                    ports=calculation_ports,
-                    casilla_overrides={_M200_AMBIGUOUS_PRINTED_NUMBER: "100.00"},
-                    binding_overrides={},
-                    relation_overrides={},
-                    detail_rows=(),
-                    borrador_snapshot_id=None,
-                    operation=operation,
-                )
+
+def test_work_calculate_input_bundle_rejects_ambiguous_reused_printed_number(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
+    """A raw ``--casilla`` token must be the canonical ``casilla.id``."""
+    with (
+        _m200_calculation_unit(_PROFILE_ID, tmp_path) as (calculation_ports, work_unit, operation),
+        pytest.raises(ModeloCalculateCasillaInputError) as exc_info,
+    ):
+        build_work_calculate_input_bundle(
+            work_unit_id=work_unit.work_unit_id,
+            ports=calculation_ports,
+            casilla_overrides={_M200_AMBIGUOUS_PRINTED_NUMBER: "100.00"},
+            binding_overrides={},
+            relation_overrides={},
+            detail_rows=(),
+            borrador_snapshot_id=None,
+            operation=operation,
+        )
 
     # The competing casilla ids travel as facts; the refusal itself renders from
     # its registered key, so neither id can be asserted through str(exc).
@@ -150,53 +162,17 @@ def _m200_bundle_with_casilla_value(
     raw_value: str, *, tmp_path: Path, operation: PinnedAuthorityOperation
 ) -> WorkCalculateInputBundle:
     """Drive the real calculate-input boundary with one manual ``--casilla`` value."""
-    period = Period.from_year_and_code(2025, "0A")
-    snapshot = published_authority_operation().snapshot(
-        "200",
-        filing_year=2025,
-        period=period.registry_token,
-        # These exercise the CALCULATE path, so they need the rung that
-        # computes amounts. The accessor defaults to the strictest rung,
-        # and modelo 200's revision honestly declares calculation.
-        grade=RegistryAuthorityGrade.CALCULATION,
-    )
-    bucket_id = _DECIMAL_GRAMMAR_PROFILE_ID
-    with isolated_profile_storage_root(tmp_path=tmp_path), open_test_profile_session(bucket_id):
-        # Seeded through a detached WorkflowState, never a repository read:
-        # the capsule publishes by an atomic no-replace rename onto
-        # ``buckets/<profile-id>``, which a workflow-state repository
-        # construction would otherwise materialise first and collide with.
-        register_minimal_profile(
-            profile_id=bucket_id,
-            overrides={
-                "identity.tax_id": "B66012345",
-                "identity.legal_name": "Calculate Input SL",
-                "taxpayer_type.entity_type": "legal_entity",
-                "taxpayer_type.legal_entity_form": "sl",
-            },
+    with _m200_calculation_unit(_DECIMAL_GRAMMAR_PROFILE_ID, tmp_path) as (calculation_ports, work_unit, operation):
+        return build_work_calculate_input_bundle(
+            work_unit_id=work_unit.work_unit_id,
+            ports=calculation_ports,
+            casilla_overrides={_M200_MANUAL_DECIMAL_CASILLA: raw_value},
+            binding_overrides={},
+            relation_overrides={},
+            detail_rows=(),
+            borrador_snapshot_id=None,
+            operation=operation,
         )
-        with bundled_indexed_authority().operation() as operation:
-            calculation_ports = build_calculation_action_ports(bucket_id=bucket_id, operation=operation)
-            work_unit = create_work_unit(
-                bucket_id=bucket_id,
-                modelo="200",
-                filing_year=2025,
-                period=period,
-                revision_id=snapshot.revision.id,
-                ports=calculation_ports.work_lifecycle_ports,
-                clock=datetime(2026, 6, 26, 12, 0, tzinfo=UTC),
-                operation=operation,
-            )
-            return build_work_calculate_input_bundle(
-                work_unit_id=work_unit.work_unit_id,
-                ports=calculation_ports,
-                casilla_overrides={_M200_MANUAL_DECIMAL_CASILLA: raw_value},
-                binding_overrides={},
-                relation_overrides={},
-                detail_rows=(),
-                borrador_snapshot_id=None,
-                operation=operation,
-            )
 
 
 @pytest.mark.parametrize("raw_value", _NON_CANONICAL_CASILLA_VALUES)
