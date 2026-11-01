@@ -29,15 +29,13 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
-
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.governed_fact_scope import governed_facts_in_scope
 from ....domain.invoices.enums import IvaRate
 from ....domain.invoices.models import Invoice
 from ....domain.iva.schema import InvoiceKind, IvaCategory
 from .._modelo_bindings_invoice_iva import _invoice_line_iva_observation
-from ..iva_ledger_apportionment import resolve_iva_ledger_binding_values
+from .invoice_screen_resolution_support import resolved_for
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -54,10 +52,6 @@ _DEVENGO = date(2024, 3, 15)
 
 _CASILLA_59 = "modelo-303-casilla-59-entregas-intracomunitarias-base"
 _CASILLA_60 = "modelo-303-casilla-60-exportaciones-base"
-
-
-def _revision():
-    return published_snapshot("303", filing_year=2024, period="1T").revision
 
 
 def _invoice(
@@ -107,35 +101,6 @@ def _invoice(
     )
 
 
-def _resolved_for(invoice: Invoice, *, operation: PinnedAuthorityOperation) -> dict[str, Decimal]:
-    """Project the invoice's single line the way the screen does, then resolve."""
-    line = invoice.lines[0]
-    base_amount_eur = invoice.line_amount_eur(line.subtotal)
-    iva_amount_eur = invoice.line_amount_eur(line.iva_amount)
-    assert base_amount_eur is not None
-    assert iva_amount_eur is not None
-    observation = _invoice_line_iva_observation(
-        invoice=invoice,
-        line=line,
-        line_index=0,
-        devengo_date=_DEVENGO,
-        recargo_amount=Decimal("0"),
-        base_amount_eur=base_amount_eur,
-        iva_amount_eur=iva_amount_eur,
-        operation=operation,
-    )
-    if observation is None:
-        return {}
-    return {
-        str(k): v
-        for k, v in resolve_iva_ledger_binding_values(
-            _revision(),
-            (observation,),
-            operation=operation,
-        ).items()
-    }
-
-
 def test_an_intra_community_supply_base_reaches_casilla_59(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
@@ -145,7 +110,7 @@ def test_an_intra_community_supply_base_reaches_casilla_59(
     an intra-community one rather than a domestic exemption. Both print an
     exempt slot, so nothing but the declared category distinguishes them.
     """
-    resolved = _resolved_for(
+    resolved = resolved_for(
         _invoice(category=IvaCategory("intra_community_supply"), country="DE"),
         operation=authority_operation,
     )
@@ -163,7 +128,7 @@ def test_an_export_base_reaches_casilla_60(authority_operation: PinnedAuthorityO
     that sent every exempt base to one casilla would satisfy either test alone
     and fail the pair.
     """
-    resolved = _resolved_for(
+    resolved = resolved_for(
         _invoice(
             category=IvaCategory("export_third_country_zero_rated"),
             country="US",
@@ -190,7 +155,7 @@ def test_a_domestic_exemption_is_not_routed_to_either_base_casilla(
     routing keyed on "the cuota is zero" rather than on the declared category
     would put this base in casilla 59 and over-declare intra-community volume.
     """
-    resolved = _resolved_for(
+    resolved = resolved_for(
         _invoice(category=IvaCategory("domestic_exempt"), country="ES", tax_id="ESB12345674", identification="es"),
         operation=authority_operation,
     )
@@ -211,7 +176,7 @@ def test_an_intra_community_supply_to_a_third_country_is_not_routed(
     the aggregate. Routing it would report volume to a member state that never
     received it.
     """
-    resolved = _resolved_for(
+    resolved = resolved_for(
         _invoice(
             category=IvaCategory("intra_community_supply"),
             country="US",
@@ -246,7 +211,7 @@ def test_an_export_claimed_to_a_member_state_is_not_routed(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
     """The mirror coupling: an export leaves the Union, so an EU counterparty contradicts it."""
-    resolved = _resolved_for(
+    resolved = resolved_for(
         _invoice(
             category=IvaCategory("export_third_country_zero_rated"),
             country="FR",
