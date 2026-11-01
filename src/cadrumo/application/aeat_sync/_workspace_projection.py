@@ -224,11 +224,7 @@ def _validate_census_source_observations(
     if census_observation is not None:
         for zone in (AeatSyncWorkspaceZone.OVERVIEW, AeatSyncWorkspaceZone.CENSUS):
             source = next(item for item in obs[zone].sources if item.source is AeatSyncWorkspaceSource.AEAT_CENSUS)
-            if (
-                source.availability
-                not in {AeatSyncWorkspaceAvailability.AVAILABLE, AeatSyncWorkspaceAvailability.STALE}
-                or source.observed_at != census_observation.row.captured_at
-            ):
+            if not _observable(source.availability) or source.observed_at != census_observation.row.captured_at:
                 raise AeatSyncWorkspaceProjectionError("census evidence contradicts its source observation")
 
 

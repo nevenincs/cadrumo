@@ -3,9 +3,9 @@
 from textual.widgets import DataTable
 
 from ....application.aeat_sync.workspace import (
-    AeatSyncWorkspaceAvailability,
     AeatSyncWorkspaceZone,
     AeatSyncWorkspaceZoneStateV1,
+    source_observation_is_observable,
 )
 from ....application.live.notifications_read_operation import NotificationsListPublicResultV1
 from ....core.i18n.render import tr
@@ -64,7 +64,7 @@ def closed_zone_copy(state: AeatSyncWorkspaceZoneStateV1) -> str:
             availability=status_label(source.availability),
         )
         for source in state.sources
-        if source.availability not in {AeatSyncWorkspaceAvailability.AVAILABLE, AeatSyncWorkspaceAvailability.STALE}
+        if not source_observation_is_observable(source.availability)
     ]
     if not missing:
         return tr("tui.aeat_sync.refusal.source")

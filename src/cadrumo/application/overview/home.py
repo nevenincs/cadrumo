@@ -59,6 +59,11 @@ class HomeAvailability(StrEnum):
     NEVER_CAPTURED = "never_captured"
     UNAVAILABLE = "unavailable"
 
+    @property
+    def is_observable(self) -> bool:
+        """Whether the zone holds an observation that can support a claim, current or stale."""
+        return self in {HomeAvailability.AVAILABLE, HomeAvailability.STALE}
+
 
 class HomeSessionPosture(StrEnum):
     """Local profile-custody posture for the current TUI session."""
