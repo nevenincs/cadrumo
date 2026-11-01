@@ -45,8 +45,11 @@ const figure = (
   over: Partial<ModeloEditValueGrammarV1> = {},
 ) => grammar(data_type, { family: "decimal", channel: "decimal", ...over });
 
-const choices = (...codes: string[]) => ({
-  choices: codes.map((code) => ({ code, word: null })),
+const provinces = (...codes: string[]) => ({
+  choices: codes.map((code) => ({
+    code,
+    word: `application.modelo.edit_choice.province_code.${code}`,
+  })),
 });
 
 function Cell({
@@ -120,15 +123,10 @@ export const NifIva = opened(grammar("nif_iva"));
 export const Iban = opened(grammar("iban"));
 export const Bic = opened(grammar("bic"));
 export const CountryCode = opened(grammar("country_code"));
-export const CountryCodeChoices = opened(
-  grammar("country_code", choices("ES", "PT", "FR")),
-);
-export const PeriodCode = opened(
-  grammar("period_code", choices("1T", "2T", "3T", "4T")),
-);
-export const CcaaCode = opened(grammar("ccaa_code", choices("01", "02", "09")));
+export const PeriodCode = opened(grammar("period_code"));
+export const CcaaCode = opened(grammar("ccaa_code"));
 export const ProvinceCode = opened(
-  grammar("province_code", choices("08", "17", "25", "43")),
+  grammar("province_code", provinces("08", "17", "25", "43")),
 );
 export const PostalCode = opened(grammar("postal_code"));
 export const MunicipalityCode = opened(grammar("municipality_code"));
@@ -148,6 +146,7 @@ export const BooleanStaged: Story = {
           comparable: true,
         },
         entry: "1",
+        read: null,
         normalisations: [],
         beforeChanged: false,
       })}
