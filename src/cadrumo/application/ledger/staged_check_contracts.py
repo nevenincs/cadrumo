@@ -177,6 +177,7 @@ class LedgerStagedRowAnswer(BaseModel):
     found: bool
     classified: bool = False
     takes_expense_category: bool = False
+    takes_share: bool = False
     category_settable: bool = False
     category_on_income: bool = False
     tax_set_skip: TaxSetSkip | None = None

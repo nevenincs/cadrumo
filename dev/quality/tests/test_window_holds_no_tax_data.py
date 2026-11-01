@@ -75,16 +75,7 @@ _FIGURE_KEYS: Final = frozenset({"subtotal", "iva_amount", "retention_amount", "
 _RULES: Final = ("vocabulary", "rates", "multiplication", "figures")
 
 #: Copies awaiting removal, keyed by file (relative to ``src``) and rule.
-_PENDING: Final[dict[tuple[str, str], str]] = {
-    (
-        "components/ledger/invoices/invoiceModel.ts",
-        "vocabulary",
-    ): "compares invoice classes to decide which field a class takes",
-    (
-        "components/ledger/invoices/InvoiceEditor.tsx",
-        "vocabulary",
-    ): "compares invoice classes to decide which field a class takes",
-}
+_PENDING: Final[dict[tuple[str, str], str]] = {}
 
 
 # ---------------------------------------------------------------------------

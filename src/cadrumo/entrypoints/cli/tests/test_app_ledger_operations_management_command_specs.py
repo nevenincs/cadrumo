@@ -592,6 +592,33 @@ _EXPECTED_COMMANDS: Final[tuple[_ExpectedCommand, ...]] = (
         ),
     ),
     _expected_command(
+        "app_ledger_staged_check",
+        "app_ledger",
+        "staged-check",
+        "leaf",
+        "cli.ledger.staged_check_help",
+        "none",
+        "cadrumo.entrypoints.cli.staged_check_commands:staged_check",
+        _expected_result_schema(
+            _TARGET, "cadrumo.entrypoints.cli.ledger_results:LedgerStagedCheckEnvelope", "ledger.staged-check"
+        ),
+        parameters=(
+            _expected_option(
+                "row", "--row", "cli.ledger.staged_check_row_help", default=_EMPTY_TUPLE_DEFAULT, multiple=True
+            ),
+            _expected_option(
+                "draft", "--draft", "cli.ledger.staged_check_draft_help", default=_EMPTY_TUPLE_DEFAULT, multiple=True
+            ),
+            _expected_option(
+                "category",
+                "--category",
+                "cli.ledger.staged_check_category_help",
+                default=_EMPTY_TUPLE_DEFAULT,
+                multiple=True,
+            ),
+        ),
+    ),
+    _expected_command(
         "app_ledger_participation",
         "app_ledger",
         "participation",

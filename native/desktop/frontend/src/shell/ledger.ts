@@ -203,6 +203,7 @@ export const LEDGER_DEFINITIONS = [
   "ledger.rule.list",
   "ledger.split.manual",
   "ledger.split.review",
+  "ledger.staged.check",
   "ledger.stash",
   "ledger.status",
   "ledger.track",
@@ -774,6 +775,72 @@ export type InvoicePreviewStored = {
 /** A draft invoice, every field optional because it is incomplete while it
  * is typed. It states `lines` or a bare `base_total`, never both; a correction
  * states the bare base with `stored`. */
+/** One staged change: a value to set, or a clear when `value` is null. */
+export type LedgerStagedCell = { field: string; value: string | null };
+export type LedgerStagedRow = {
+  transaction_id: string;
+  cells: LedgerStagedCell[];
+  evidence_staged: boolean;
+  m210_staged: boolean;
+};
+export type LedgerStagedDraft = {
+  key: string;
+  fields: { field: string; value: string }[];
+};
+/** Staged work and the movements asked about, answered the way the writers
+ * would take them, plus the categories to judge a classification against. */
+export type LedgerStagedCheckRequest = {
+  rows: LedgerStagedRow[];
+  drafts: LedgerStagedDraft[];
+  categories: string[];
+};
+export type LedgerStagedRoute = {
+  field: string;
+  route: "bulk" | "classify" | "update" | null;
+  refused: "cannot_clear" | "needs_classification" | null;
+};
+export type LedgerStagedBlocker = {
+  kind:
+    | "cannot_clear"
+    | "needs_classification"
+    | "mixed_needs_share"
+    | "share_needs_mixed"
+    | "transfer_with_tax"
+    | "draft_incomplete";
+  fields: string[];
+};
+export type LedgerStagedNote = {
+  kind:
+    | "sends_current_classification"
+    | "sends_current_share"
+    | "new_identity";
+  value: string | null;
+  fields: string[];
+};
+export type LedgerStagedRowAnswer = {
+  transaction_id: string;
+  found: boolean;
+  classified: boolean;
+  takes_expense_category: boolean;
+  takes_share: boolean;
+  category_settable: boolean;
+  category_on_income: boolean;
+  tax_set_skip: "transfer" | "personal" | "unclassified" | null;
+  transfer_locked_fields: string[];
+  classifying_fields: string[];
+  identity_fields: string[];
+  routes: LedgerStagedRoute[];
+  blockers: LedgerStagedBlocker[];
+  notes: LedgerStagedNote[];
+};
+export type LedgerStagedCheckResult = {
+  profile_id: string;
+  input_digest: string;
+  rows: LedgerStagedRowAnswer[];
+  drafts: { key: string; blockers: LedgerStagedBlocker[] }[];
+  categories: { category: string; business: boolean; mixed: boolean }[];
+};
+
 export type InvoicePreviewRequest = {
   operation_date?: string | null;
   issued_at?: string | null;
@@ -1982,6 +2049,7 @@ export interface LedgerRequests {
   "ledger.invoice.view": InvoiceViewRequest;
   "ledger.invoice.add": InvoiceAddRequest;
   "ledger.invoice.preview": InvoicePreviewRequest;
+  "ledger.staged.check": LedgerStagedCheckRequest;
   "ledger.invoice.update": InvoiceUpdateRequest;
   "ledger.invoice.remove": InvoiceRemoveRequest;
   "ledger.status": LedgerStatusRequest;
@@ -2085,6 +2153,7 @@ export interface LedgerResults {
   "ledger.invoice.view": InvoiceViewResult;
   "ledger.invoice.add": InvoiceAddResult;
   "ledger.invoice.preview": InvoicePreviewResult;
+  "ledger.staged.check": LedgerStagedCheckResult;
   "ledger.invoice.update": InvoiceUpdateResult;
   "ledger.invoice.remove": InvoiceRemoveResult;
   "ledger.status": LedgerStatusResult;

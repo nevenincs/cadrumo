@@ -316,6 +316,7 @@ def check_stored_row(row: LedgerStagedRow, transaction: Transaction) -> LedgerSt
         found=True,
         classified=classified,
         takes_expense_category=takes_category,
+        takes_share=classification is not None and takes_business_share(classification),
         category_settable=settable,
         category_on_income=(classification in BUSINESS_BEARING_STATES)
         and bool(after["category_id"])

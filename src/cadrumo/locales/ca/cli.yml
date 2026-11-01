@@ -3350,6 +3350,11 @@ cli:
       help: Separa adjunts d'un moviment dels teus registres sense esborrar-ne els
         bytes.
       id_help: Id del moviment (o un prefix inequívoc).
+    staged_check_help: 'Respon a la feina preparada del llibre com la prendrien les escriptures, sense desar res.'
+    staged_check_row_help: 'Objecte JSON repetible per a un moviment: `transaction_id`, `cells` i, si escau, `evidence_staged` i `m210_staged`.'
+    staged_check_draft_help: 'Objecte JSON repetible per a un moviment nou: `key` i `fields`.'
+    staged_check_category_help: 'Categoria de despesa repetible que es contrasta amb una classificació.'
+    staged_check_invalid: 'Cada fila i esborrany preparats han de ser un objecte JSON amb la forma esperada.'
     entry_options_help: Mostra els valors que ofereix un formulari d'entrada del llibre.
     errors:
       business_pct_out_of_range: La proporció d'ús professional %{value} (= %{percent})

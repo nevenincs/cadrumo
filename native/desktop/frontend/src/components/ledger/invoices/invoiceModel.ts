@@ -285,9 +285,12 @@ export type InvoiceDraft = {
   lines: LineDraft[];
 };
 
-export const emptyDraft = (firstLine: string): InvoiceDraft => ({
+export const emptyDraft = (
+  firstLine: string,
+  defaultClass: string | null,
+): InvoiceDraft => ({
   kind: null,
-  invoiceClass: "ORDINARIA",
+  invoiceClass: defaultClass ?? "",
   series: "",
   number: "",
   issuedAt: "",
@@ -351,7 +354,10 @@ export type DraftReading = {
 };
 
 /** The draft on the wire, with whatever is not well formed left blank. */
-export function readDraft(draft: InvoiceDraft): DraftReading {
+export function readDraft(
+  draft: InvoiceDraft,
+  correctiveClass: string | null,
+): DraftReading {
   const problems: Record<string, Problem> = {};
   const note = (field: string, problem: Problem | null) => {
     if (problem) problems[field] = problem;
@@ -395,7 +401,7 @@ export function readDraft(draft: InvoiceDraft): DraftReading {
     problems,
     preview: {
       kind: draft.kind,
-      invoice_class: draft.invoiceClass,
+      invoice_class: draft.invoiceClass || null,
       series: series.value,
       invoice_number: number.value,
       issued_at: issued.kind === "value" ? issued.value : null,
@@ -409,7 +415,7 @@ export function readDraft(draft: InvoiceDraft): DraftReading {
       iva_category: blankOr(draft.ivaCategory),
       operation_type: blankOr(draft.operationType),
       rectifies_invoice_number:
-        draft.invoiceClass === "RECTIFICATIVA" ? rectifies.value : null,
+        draft.invoiceClass === correctiveClass ? rectifies.value : null,
       recargo_amount: recargo.value,
       printed_total: printed.value,
       retention_rate: retention.rate,
@@ -600,13 +606,14 @@ export function suggestNumber(
   want: {
     kind: InvoiceKind | null;
     invoiceClass: InvoiceClass;
+    correctiveClass: string | null;
     series: string;
     year: number;
   },
 ): NumberSuggestion | null {
   if (want.kind !== "issued") return null;
   const typed = want.series.trim();
-  if (!typed && want.invoiceClass === "RECTIFICATIVA") return null;
+  if (!typed && want.invoiceClass === want.correctiveClass) return null;
   const pool = invoices.filter(
     (invoice) =>
       invoice.kind === "issued" &&
@@ -697,6 +704,7 @@ function percentText(fraction: string): string | null {
 export function correctionPreview(
   invoice: CatalogueInvoice,
   draft: CorrectionDraft,
+  correctiveClass: string | null,
 ): InvoicePreviewRequest {
   const operation = parseIsoDate(draft.operationDate);
   const retention = readRetention(draft.retentionRate, draft.retentionAmount);
@@ -706,7 +714,7 @@ export function correctionPreview(
     invoice_class: draft.invoiceClass,
     series: textField(draft.series).value,
     rectifies_invoice_number:
-      draft.invoiceClass === "RECTIFICATIVA"
+      draft.invoiceClass === correctiveClass
         ? textField(draft.rectifies).value
         : null,
     counterparty_tax_id: invoice.counterparty_tax_id,
@@ -762,6 +770,7 @@ export function checkCorrection(
   invoice: CatalogueInvoice,
   draft: CorrectionDraft,
   current: InvoicePreviewResult | null,
+  correctiveClass: string | null,
 ): CorrectionCheck {
   const problems: Record<string, Problem> = {};
   const values: InvoiceUpdateValues = {};
@@ -809,7 +818,7 @@ export function checkCorrection(
   if (draft.invoiceClass !== invoice.invoice_class)
     set("invoice_class", draft.invoiceClass);
   const rectifies = textField(draft.rectifies);
-  const rectificativa = draft.invoiceClass === "RECTIFICATIVA";
+  const rectificativa = draft.invoiceClass === correctiveClass;
   const rectified = rectificativa ? rectifies.value : null;
   // Only a rectificativa names the invoice it rectifies: leaving that class
   // takes the number away.

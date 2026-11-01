@@ -24,18 +24,23 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from collections.abc import Iterable, Iterator, Mapping
 from datetime import date
-from pathlib import Path
 from typing import TypedDict
 
-from cadrumo.core.toml import parse_toml
+from pydantic import BaseModel
+
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.schema_base import MANIFEST_ONLY
+from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 from cadrumo.domain.calculations.registry.schema_references import (
     source_window_applies_across,
 )
 
-ROOT = Path(__file__).resolve().parents[3]
-LEGAL = ROOT / "src/cadrumo/_data/registry/aeat/legal"
-MODELOS = ROOT / "src/cadrumo/_data/registry/aeat/modelos"
+from ..compiler.authority import compiled_bundled_authority
+
+#: A catalogue entry's period window: ``(from, to)``, either side open.
+type Window = tuple[date | None, date | None]
 
 
 #: Imported, never restated. ``source_window_applies_across`` calls itself the
@@ -45,114 +50,94 @@ MODELOS = ROOT / "src/cadrumo/_data/registry/aeat/modelos"
 applies_across = source_window_applies_across
 
 
-def source_windows(legal_dir: Path | None = None) -> dict[str, tuple[date | None, date | None, str]]:
-    """Return applicability windows declared by every bundled source catalogue."""
-    windows: dict[str, tuple[date | None, date | None, str]] = {}
-    for path in sorted((legal_dir or LEGAL).rglob("*.toml")):
-        payload = parse_toml(path.read_text(encoding="utf-8"))
-        for source_id, entry in (payload.get("sources") or {}).items():
-            windows[source_id] = (
-                entry.get("applies_from"),
-                entry.get("applies_to"),
-                path.name,
-            )
-    return windows
+def source_windows(catalogues: RegistryCatalogues) -> dict[str, Window]:
+    """Return applicability windows declared by every source in the hydrated catalogue."""
+    return {source_id: (entry.applies_from, entry.applies_to) for source_id, entry in catalogues.sources.items()}
 
 
-def legal_windows(legal_dir: Path | None = None) -> dict[str, tuple[date | None, date | None, str]]:
+def legal_windows(catalogues: RegistryCatalogues) -> dict[str, Window]:
     """Every [legal.*] reference's period window.
 
     A legal reference states its reach two ways. ``governs_periods_from`` /
     ``governs_periods_to`` name the PERIODS the provision governs and are the
     right axis; ``effective_from`` / ``effective_to`` name when the text was in
     force, which for an orden published after the ejercicio it governs is a
-    different thing entirely. Prefer the period axis and fall back to
-    effectiveness, because most entries declare only the latter.
+    different thing entirely. Only the period axis is admissible.
     """
-    windows: dict[str, tuple[date | None, date | None, str]] = {}
-    for path in sorted((legal_dir or LEGAL).rglob("*.toml")):
-        payload = parse_toml(path.read_text(encoding="utf-8"))
-        for ref_id, entry in (payload.get("legal") or {}).items():
-            # ONLY the period axis is admissible. ``effective_from`` says when
-            # the text came into force, which for an orden published after the
-            # ejercicio it governs is a different date entirely -- Orden
-            # HAC/657/2025 is effective 1 July 2025 and governs periods in 2024.
-            # Reading effectiveness as a period window is the same category error
-            # as reading a source's publication date as its applicability window,
-            # and it produced 59 findings of which none was a defect.
-            #
-            # An entry declaring only effectiveness makes NO claim about periods,
-            # so there is nothing for a citation to contradict. That is a real
-            # gap in the corpus -- 719 of 724 legal entries are in that state --
-            # but it is a missing declaration, not a wrong one.
-            if entry.get("governs_periods_from") is None:
+    # An entry declaring only effectiveness makes NO claim about periods, so
+    # there is nothing for a citation to contradict. Reading effectiveness as a
+    # period window is the same category error as reading a source's publication
+    # date as its applicability window: Orden HAC/657/2025 is effective 1 July
+    # 2025 and governs periods in 2024, and that reading produced 59 findings of
+    # which none was a defect. The missing declaration is a gap in the corpus,
+    # not a wrong one.
+    return {
+        ref_id: (entry.governs_periods_from, entry.governs_periods_to)
+        for ref_id, entry in catalogues.legal.items()
+        if entry.governs_periods_from is not None
+    }
+
+
+def _is_delta_declaration(name: str, value: object) -> bool:
+    """Whether a revision field is manifest-only authoring machinery rather than effective data.
+
+    Overrides, removals, positions and attestations name rows by id and carry the
+    edit, not the row. The rows they edit are in the hydrated families.
+    """
+    field = ModeloRevision.model_fields[name]
+    return MANIFEST_ONLY in field.metadata and _holds_models(value)
+
+
+def _holds_models(value: object) -> bool:
+    """Whether a field value is, or directly contains, a registry model."""
+    if isinstance(value, BaseModel):
+        return True
+    if isinstance(value, Mapping):
+        return any(isinstance(item, BaseModel) for item in value.values())
+    return isinstance(value, tuple | list | frozenset) and any(isinstance(item, BaseModel) for item in value)
+
+
+def _leaves(value: object, field: str) -> Iterator[tuple[str, str]]:
+    """Yield every string under ``value`` with the nearest field name that carries it."""
+    if isinstance(value, str):
+        yield field, value
+    elif isinstance(value, BaseModel):
+        for name in type(value).model_fields:
+            yield from _leaves(getattr(value, name), name)
+    elif isinstance(value, Mapping):
+        for item in value.values():
+            yield from _leaves(item, field)
+    elif isinstance(value, tuple | list | frozenset):
+        for item in value:
+            yield from _leaves(item, field)
+
+
+def cited_sources(revision: ModeloRevision, known: set[str]) -> dict[str, list[str]]:
+    """Source ids named anywhere in one hydrated revision, and where.
+
+    "Where" is ``family#field``: the revision family that holds the citation and
+    the field that carries it, because the field decides the role as much as the
+    family does. A field of the revision itself reads ``revision#field``. The
+    revision is the hydrated one, so a citation inherited from a predecessor is
+    found here exactly as one the revision authored.
+    """
+    found: dict[str, list[str]] = {}
+    for name in ModeloRevision.model_fields:
+        value = getattr(revision, name)
+        if _is_delta_declaration(name, value):
+            continue
+        head = name if _holds_models(value) else "revision"
+        for field, text in _leaves(value, name):
+            if text not in known:
                 continue
-            windows[ref_id] = (
-                entry.get("governs_periods_from"),
-                entry.get("governs_periods_to"),
-                path.name,
-            )
-    return windows
-
-
-def revision_spans(revision_dir: Path) -> tuple[date, date | None] | None:
-    """Read the validity span declared by one modelo revision directory."""
-    manifest = revision_dir / "revision.toml"
-    if not manifest.exists():
-        return None
-    payload = parse_toml(manifest.read_text(encoding="utf-8"))
-    for body in (payload.get("revisions") or {}).values():
-        start = body.get("valid_from")
-        if isinstance(start, date):
-            end = body.get("valid_to")
-            return start, end if isinstance(end, date) else None
-    return None
-
-
-def cited_sources(revision_dir: Path, known: set[str]) -> dict[str, list[str]]:
-    """Source ids named anywhere under one revision, and where.
-
-    "Where" is the file path plus the TOML key the id sits under, because the key
-    decides the role as much as the directory does. An id inside
-    ``additional_source_refs`` or ``continuidad_evidence`` on a casilla shard is a
-    comparison against an earlier generation, not a claim that the earlier design
-    governs this revision.
-    """
-    found: dict[str, list[str]] = {}
-    for path in sorted(revision_dir.rglob("*.toml")):
-        relative = str(path.relative_to(revision_dir)).replace("\\", "/")
-        for source_id, locations in _citation_file_sources(path, relative, known).items():
-            found.setdefault(source_id, []).extend(locations)
+            where = found.setdefault(text, [])
+            location = f"{head}#{field}"
+            if location not in where:
+                where.append(location)
     return found
 
 
-def _citation_file_sources(path: Path, relative: str, known: set[str]) -> dict[str, list[str]]:
-    """Read known source ids and their active TOML key from one file."""
-    found: dict[str, list[str]] = {}
-    open_key = ""
-    for raw in path.read_text(encoding="utf-8").splitlines():
-        open_key, citation_key, source_ids = _citation_line(raw, known, open_key)
-        for source_id in source_ids:
-            found.setdefault(source_id, []).append(f"{relative}#{citation_key}")
-    return found
-
-
-def _citation_line(raw: str, known: set[str], open_key: str) -> tuple[str, str, tuple[str, ...]]:
-    """Return the next active key, citation key, and known ids named on one TOML line."""
-    line = raw.strip()
-    if line.startswith("#"):
-        return open_key, open_key, ()
-    key, separator, _remainder = line.partition("=")
-    if separator and not key.strip().startswith("["):
-        open_key = key.strip()
-    citation_key = open_key
-    source_ids = tuple(source_id for source_id in known if f'"{source_id}"' in line)
-    if line.endswith("]") and "[" not in line:
-        open_key = ""
-    return open_key, citation_key, source_ids
-
-
-#: A citation's FILE ROLE decides whether a non-overlapping window is a defect.
+#: A citation's FAMILY ROLE decides whether a non-overlapping window is a defect.
 #: Two roles cite outside their own span by design and must not be swept:
 #:
 #: HISTORICAL -- a continuity or identifier evolution names the design a concept
@@ -163,7 +148,7 @@ def _citation_line(raw: str, known: set[str], open_key: str) -> tuple[str, str, 
 #: its period. Modelo 322's 2022 revision citing the 2023 calendario is correct.
 #:
 #: GOVERNING -- the revision's own approving orden, form spec or record design,
-#: cited by revision.toml, a casilla shard or an export layout. Here a window
+#: cited by the revision itself, a casilla or an export layout. Here a window
 #: that excludes the revision IS the presentation-date defect.
 def family_stem(source_id: str) -> str:
     """The part of a source id that survives a generation change.
@@ -216,7 +201,7 @@ def classify(cited_in: list[str], *, superseded: bool = False, calendar_evidence
 
 
 def _citation_role(where: str, *, calendar_evidence: bool) -> str:
-    """Read a citation file's semantic role without inferring it from its date."""
+    """Read a citation's semantic role from its family and field, never from its date."""
     location, _, key = where.partition("#")
     head = location.split("/")[0]
     if head in {"casilla_continuidad_evolutions", "identifier_evolutions"}:
@@ -258,7 +243,6 @@ class SourceWindowFinding(TypedDict):
     revision_span: list[str | None]
     source: str
     source_window: list[str | None]
-    catalogue: str
     cited_in: list[str]
     role: str
 
@@ -281,79 +265,53 @@ def screen_line(findings: list[SourceWindowFinding], revisions: int, citations: 
 
 
 def scan(
-    legal_dir: Path | None = None,
-    modelos_dir: Path | None = None,
+    modelos: Iterable[ModeloDefinition],
+    catalogues: RegistryCatalogues,
     only_modelo: str | None = None,
 ) -> tuple[list[SourceWindowFinding], int, int]:
     """Return (findings, revisions_checked, citations_checked).
 
-    Directories are parameters so a gate can point this at a constructed tree
-    and plant a finding of each role. A screen only reachable through the live
-    corpus cannot be given a defect to catch.
+    The hydrated modelos and catalogues are parameters so a gate can hand this a
+    constructed registry and plant a finding of each role. A screen only
+    reachable through the live corpus cannot be given a defect to catch.
     """
-    windows = source_windows(legal_dir)
-    legal = legal_windows(legal_dir)
+    windows = source_windows(catalogues)
     # A ref id could in principle be declared in both families; the source
     # catalogue wins so an id is never counted twice under two roles.
-    legal = {k: v for k, v in legal.items() if k not in windows}
+    legal = {k: v for k, v in legal_windows(catalogues).items() if k not in windows}
     known = set(windows) | set(legal)
-    return _scan_modelos(modelos_dir or MODELOS, only_modelo, windows, legal, known)
-
-
-def _scan_modelos(
-    modelos_dir: Path,
-    only_modelo: str | None,
-    windows: dict[str, tuple[date | None, date | None, str]],
-    legal: dict[str, tuple[date | None, date | None, str]],
-    known: set[str],
-) -> tuple[list[SourceWindowFinding], int, int]:
-    """Visit the selected modelo directories and combine their revision scans."""
     findings: list[SourceWindowFinding] = []
     revisions_checked = citations_checked = 0
-    for modelo_dir in sorted(modelos_dir.iterdir()):
-        if not modelo_dir.is_dir():
+    for modelo in sorted(modelos, key=lambda definition: str(definition.id)):
+        if only_modelo not in (None, "") and str(modelo.id) != only_modelo:
             continue
-        if (only_modelo is not None and only_modelo) and modelo_dir.name != only_modelo:
-            continue
-        model_findings, model_revisions, model_citations = _scan_modelo(modelo_dir, windows, legal, known)
-        findings.extend(model_findings)
-        revisions_checked += model_revisions
-        citations_checked += model_citations
+        for revision_id in sorted(modelo.revisions):
+            revision_findings, citations = _scan_revision(
+                str(modelo.id), revision_id, modelo.revisions[revision_id], windows, legal, known
+            )
+            findings.extend(revision_findings)
+            revisions_checked += 1
+            citations_checked += citations
     return findings, revisions_checked, citations_checked
 
 
-def _scan_modelo(
-    modelo_dir: Path,
-    windows: dict[str, tuple[date | None, date | None, str]],
-    legal: dict[str, tuple[date | None, date | None, str]],
-    known: set[str],
-) -> tuple[list[SourceWindowFinding], int, int]:
-    """Walk one modelo's revision directories and aggregate measured citations."""
-    findings: list[SourceWindowFinding] = []
-    revisions_checked = citations_checked = 0
-    for revision_dir in sorted((modelo_dir / "revisions").glob("*")):
-        if not revision_dir.is_dir():
-            continue
-        revision_findings, checked, citations = _scan_revision(modelo_dir.name, revision_dir, windows, legal, known)
-        findings.extend(revision_findings)
-        revisions_checked += checked
-        citations_checked += citations
-    return findings, revisions_checked, citations_checked
+def bundled_scan(only_modelo: str | None = None) -> tuple[list[SourceWindowFinding], int, int]:
+    """Scan the compiled bundled registry, the same hydration the other screens read."""
+    authority = compiled_bundled_authority()
+    return scan(authority.modelos, authority.catalogues, only_modelo)
 
 
 def _scan_revision(
     modelo: str,
-    revision_dir: Path,
-    windows: dict[str, tuple[date | None, date | None, str]],
-    legal: dict[str, tuple[date | None, date | None, str]],
+    revision_id: str,
+    revision: ModeloRevision,
+    windows: dict[str, Window],
+    legal: dict[str, Window],
     known: set[str],
-) -> tuple[list[SourceWindowFinding], int, int]:
-    """Inspect citations within one revision's declared validity span."""
-    span = revision_spans(revision_dir)
-    if span is None:
-        return [], 0, 0
-    span_from, span_to = span
-    cited = cited_sources(revision_dir, known)
+) -> tuple[list[SourceWindowFinding], int]:
+    """Inspect citations of one hydrated revision against its own validity span."""
+    span_from, span_to = revision.valid_from, revision.valid_to
+    cited = cited_sources(revision, known)
     covering = _covering_sources(cited, windows, legal, span_from, span_to)
     findings: list[SourceWindowFinding] = []
     citations_checked = 0
@@ -361,7 +319,7 @@ def _scan_revision(
         window = legal[source_id] if source_id in legal else windows[source_id]
         finding, checked = _citation_finding(
             modelo,
-            revision_dir.name,
+            revision_id,
             source_id,
             where,
             window,
@@ -373,13 +331,13 @@ def _scan_revision(
         citations_checked += checked
         if finding is not None:
             findings.append(finding)
-    return findings, 1, citations_checked
+    return findings, citations_checked
 
 
 def _covering_sources(
     cited: dict[str, list[str]],
-    windows: dict[str, tuple[date | None, date | None, str]],
-    legal: dict[str, tuple[date | None, date | None, str]],
+    windows: dict[str, Window],
+    legal: dict[str, Window],
     span_from: date,
     span_to: date | None,
 ) -> set[str]:
@@ -401,14 +359,14 @@ def _citation_finding(
     revision: str,
     source_id: str,
     where: list[str],
-    window: tuple[date | None, date | None, str],
+    window: Window,
     is_legal: bool,
     covering: set[str],
     span_from: date,
     span_to: date | None,
 ) -> tuple[SourceWindowFinding | None, int]:
     """Create one non-overlap finding and return whether its window was measured."""
-    applies_from, applies_to, catalogue = window
+    applies_from, applies_to = window
     if applies_from is None and applies_to is None:
         return None, 0
     if applies_across(
@@ -428,7 +386,6 @@ def _citation_finding(
                 applies_from.isoformat() if applies_from else None,
                 applies_to.isoformat() if applies_to else None,
             ],
-            "catalogue": catalogue,
             "cited_in": where,
             "role": _finding_role(source_id, where, is_legal, covering),
         },
@@ -458,7 +415,7 @@ def main() -> int:
     parser.add_argument("--screen", action="store_true", help="print only the screen line")
     arguments = parser.parse_args()
 
-    findings, revisions_checked, citations_checked = scan(only_modelo=arguments.modelo)
+    findings, revisions_checked, citations_checked = bundled_scan(arguments.modelo)
 
     if arguments.screen:
         print(screen_line(findings, revisions_checked, citations_checked))
@@ -485,7 +442,7 @@ def main() -> int:
         print(
             f"{finding['role']:<11} modelo {finding['modelo']} rev {finding['revision']} "
             f"[{span[0]}..{span[1] or 'open'}] cites {finding['source']} "
-            f"[{window[0] or 'open'}..{window[1] or 'open'}]  ({finding['catalogue']})"
+            f"[{window[0] or 'open'}..{window[1] or 'open'}]"
         )
         for where in finding["cited_in"][:4]:
             print(f"              in {where}")

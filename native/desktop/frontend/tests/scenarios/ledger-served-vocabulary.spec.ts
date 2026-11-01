@@ -81,9 +81,9 @@ test("a stored class stays on offer as itself while the list is not available", 
   await target.locator(".pane-docs .pane-head .ledger-add").click();
   await expect(editor(target)).toBeVisible();
   const classes = field(target, "invoice_class");
-  // A new invoice starts as the ordinary class; the unserved list has no word for it.
-  await expect(classes).toHaveValue("ORDINARIA");
-  await expect(classes.locator("option:checked")).toHaveText("ORDINARIA");
+  // A new invoice starts with no class chosen: the unserved list has no word
+  // for the plain one, and the window holds none of its own.
+  await expect(classes).toHaveValue("");
   await expect(classes.locator("option[disabled]")).toHaveText(
     label("desktop.ledger.unavailable"),
   );

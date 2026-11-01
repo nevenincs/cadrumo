@@ -75,6 +75,72 @@ class LedgerEntryOptionsResult(OutputSchema):
     families: list[LedgerEntryOptionFamilyPayload]
 
 
+class LedgerStagedRoutePayload(OutputSchema):
+    """Where one staged cell goes, or why it can go nowhere."""
+
+    field: str
+    route: str | None
+    refused: str | None
+
+
+class LedgerStagedBlockerPayload(OutputSchema):
+    """Why a movement's staged work cannot be sent as it stands."""
+
+    kind: str
+    fields: list[str]
+
+
+class LedgerStagedNotePayload(OutputSchema):
+    """What sending the work carries along without holding it back."""
+
+    kind: str
+    value: str | None
+    fields: list[str]
+
+
+class LedgerStagedRowPayload(OutputSchema):
+    """The backend's answer for one movement as staged."""
+
+    transaction_id: str
+    found: bool
+    classified: bool
+    takes_expense_category: bool
+    takes_share: bool
+    category_settable: bool
+    category_on_income: bool
+    tax_set_skip: str | None
+    transfer_locked_fields: list[str]
+    classifying_fields: list[str]
+    identity_fields: list[str]
+    routes: list[LedgerStagedRoutePayload]
+    blockers: list[LedgerStagedBlockerPayload]
+    notes: list[LedgerStagedNotePayload]
+
+
+class LedgerStagedDraftPayload(OutputSchema):
+    """The backend's answer for one new movement."""
+
+    key: str
+    blockers: list[LedgerStagedBlockerPayload]
+
+
+class LedgerStagedCategoryFitPayload(OutputSchema):
+    """Which classifications may name a category."""
+
+    category: str
+    business: bool
+    mixed: bool
+
+
+class LedgerStagedCheckEnvelope(OutputSchema):
+    """JSON envelope for ``aeat app ledger staged-check``."""
+
+    input_digest: str
+    rows: list[LedgerStagedRowPayload]
+    drafts: list[LedgerStagedDraftPayload]
+    categories: list[LedgerStagedCategoryFitPayload]
+
+
 class LedgerInvoicePreviewRateSlotPayload(OutputSchema):
     """One IVA rate slot's standing on the draft's date; no fraction means no rate applies."""
 
@@ -897,6 +963,13 @@ __all__ = [
     "LedgerSplitChildIdPayload",
     "LedgerSplitChildProposalPayload",
     "LedgerSplitResult",
+    "LedgerStagedBlockerPayload",
+    "LedgerStagedCategoryFitPayload",
+    "LedgerStagedCheckEnvelope",
+    "LedgerStagedDraftPayload",
+    "LedgerStagedNotePayload",
+    "LedgerStagedRoutePayload",
+    "LedgerStagedRowPayload",
     "LedgerStaleFilingPayload",
     "LedgerStashResult",
     "LedgerStatusResult",

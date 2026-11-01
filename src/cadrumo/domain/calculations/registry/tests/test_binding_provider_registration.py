@@ -59,7 +59,7 @@ from ..ids import RevisionId
 from ..invoice_bindings import PayableInvoiceProvider
 from ..ledger_iva_bindings import LedgerIvaProvider
 from ..manual_input_selector import ManualInputProvider
-from ..profile_bindings import ProfileProvider
+from ..profile_bindings import ProfileProvider, validate_profile_binding
 from ..relation_prefill_bindings import RelationPrefillProvider
 from ..schema import BindingDefinition
 from ..schema_base import CasillaDataType
@@ -151,17 +151,17 @@ def test_every_provider_union_member_has_a_registration() -> None:
     assert frozenset(BINDING_PROVIDER_REGISTRATIONS) == member_kinds
 
 
-def test_a_kind_whose_member_is_its_own_gate_enrols_no_validator() -> None:
-    """``None`` is an enrolled answer: the table imports, and the gate returns nothing.
+def test_every_kind_enrols_a_build_time_validator() -> None:
+    """No kind passes through a no-op slot: each row names the gate for its cross-invariants."""
+    assert all(callable(registration.validator) for registration in BINDING_PROVIDER_REGISTRATIONS.values())
 
-    A family with no cross-invariant beyond its provider shape has nothing left
-    to check once the union has constructed the member, so its registration
-    carries no validator and the build-time gate earns no diagnostic.
-    """
+
+def test_a_well_formed_profile_binding_passes_its_enrolled_validator() -> None:
+    """The profile row enrols the profile gate, and a scalar text binding earns no diagnostic."""
     registration = registration_for(BindingSourceKind.PROFILE)
 
-    assert registration.validator is None
-    assert validator_for(BindingSourceKind.PROFILE) is None
+    assert registration.validator is validate_profile_binding
+    assert validator_for(BindingSourceKind.PROFILE) is validate_profile_binding
     assert validate_binding_selector_shape(_binding(ProfileProvider(profile_key="declarante.nif"))) == []
 
 
