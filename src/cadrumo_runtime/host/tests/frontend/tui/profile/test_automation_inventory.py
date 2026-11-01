@@ -389,8 +389,8 @@ async def test_unmount_clears_rows_and_drains_inflight_read_without_late_publish
         assert not client.closed
 
 
-async def _open_decision_modal(
-    pilot: Pilot[None], inventory: subject.RuntimeAutomationInventoryScreen, choice: Literal["approve", "decline"]
+async def _open_decision_modal[ResultT](
+    pilot: Pilot[ResultT], inventory: subject.RuntimeAutomationInventoryScreen, choice: Literal["approve", "decline"]
 ) -> decision_subject.RuntimeAutomationDecisionScreen:
     """Select the one pending request, press its approve or decline button and return the decision modal."""
     await settle_until(

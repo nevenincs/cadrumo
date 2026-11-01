@@ -7,6 +7,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from threading import Event, Lock
+from typing import override
 from uuid import uuid4
 
 import pytest
@@ -47,6 +48,7 @@ class PausingChannel(DelegatingChannel):
         self._lock = Lock()
         self.writes = 0
 
+    @override
     def write_all(self, payload: bytes | bytearray, *, deadline: float) -> None:
         self.channel.write_all(payload, deadline=deadline)
         if self.armed and payload[:1] == b"J":

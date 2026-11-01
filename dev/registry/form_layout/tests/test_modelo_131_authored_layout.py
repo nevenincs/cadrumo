@@ -9,6 +9,7 @@ from cadrumo.domain.calculations.registry.schema_form_layouts import (
     FormContextFieldBlock,
     FormFieldBlock,
     FormGridBlock,
+    FormSectionDefinition,
 )
 
 from ...compiler.form_layout_integrity import form_layout_failures
@@ -17,7 +18,7 @@ from ...compiler.loader import load_modelo_directory
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
-def _assert_131_liquidation_sections_keep_their_boxes(sections: dict) -> None:
+def _assert_131_liquidation_sections_keep_their_boxes(sections: dict[str, FormSectionDefinition]) -> None:
     assert list(sections) == [
         "identificacion",
         "devengo",
@@ -43,7 +44,9 @@ def _assert_131_liquidation_sections_keep_their_boxes(sections: dict) -> None:
         )
 
 
-def _assert_131_context_fields_resolve_to_producers_and_draft(revision, sections: dict) -> None:
+def _assert_131_context_fields_resolve_to_producers_and_draft(
+    revision, sections: dict[str, FormSectionDefinition]
+) -> None:
     context = [b for s in sections.values() for b in s.blocks if isinstance(b, FormContextFieldBlock)]
     assert len(context) == 5
     fields = [resolve_form_context_field(revision, b) for b in context]
@@ -58,7 +61,7 @@ def _assert_131_context_fields_resolve_to_producers_and_draft(revision, sections
     }
 
 
-def _assert_131_bound_fields(sections: dict, revision_id: str) -> None:
+def _assert_131_bound_fields(sections: dict[str, FormSectionDefinition], revision_id: str) -> None:
     bindings = {
         b.binding_id
         for s in sections.values()

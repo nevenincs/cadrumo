@@ -208,7 +208,7 @@ def _request() -> OperationRequest[BaseModel]:
     )
 
 
-async def _submit_bind_and_start(supervisor, executor: _FailureAfterGrantExecutor) -> str:
+async def _submit_bind_and_start(supervisor: OperationSupervisor, executor: _FailureAfterGrantExecutor) -> str:
     """Submit an operation, bind its typed financial operands, record the requirement and start it."""
     operation_id = await supervisor.submit(_request(), operation_id=_OPERATION_ID)
     await supervisor.bind_typed_financial_operand(

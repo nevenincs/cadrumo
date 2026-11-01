@@ -282,7 +282,7 @@ def _link_installation_client(journey: _GoogleJourney, installation_client: OAut
         )
 
 
-def _assert_linked_status(journey: _GoogleJourney, instant: datetime) -> dict[str, JsonValue]:
+def _assert_linked_status(journey: _GoogleJourney, instant: datetime) -> dict[str, object]:
     linked = unwrap_cli_result(journey.invoke("status"))
     assert linked["session_present"] is True
     definition, effect, outcome = journey.state.completions[-1]
@@ -312,7 +312,7 @@ def _assert_linked_status(journey: _GoogleJourney, instant: datetime) -> dict[st
 
 
 def _logout_twice_and_keep_folder(
-    journey: _GoogleJourney, linked: dict[str, JsonValue], reopened_folder: DriveConfig | None
+    journey: _GoogleJourney, linked: dict[str, object], reopened_folder: DriveConfig | None
 ) -> None:
     # The flag that claimed to refresh without consent no longer exists.
     removed_flag = _invoke(journey.profile, "login", "--refresh-only")

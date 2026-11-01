@@ -8,6 +8,7 @@ from collections.abc import Generator
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from threading import Event, Thread
+from typing import override
 from uuid import uuid4
 
 import pytest
@@ -77,6 +78,7 @@ class _Counted(DelegatingChannel):
         super().__init__(channel)
         self.waits = 0
 
+    @override
     def wait_readable(self, *wakes: ChannelWake) -> bool:
         self.waits += 1
         return self.channel.wait_readable(*wakes)

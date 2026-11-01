@@ -149,7 +149,7 @@ class _Sweep(_BoundReader, ast.NodeVisitor):
             for statement in ast.walk(tree)
             if isinstance(statement, ast.ImportFrom) and statement.module == "decimal"
             for alias in statement.names
-            if alias.name == "Decimal" and alias.asname
+            if alias.name == "Decimal" and alias.asname is not None
         }
         self.findings: list[str] = []
 
@@ -230,7 +230,10 @@ class _Sweep(_BoundReader, ast.NodeVisitor):
 
     def _spells_another_form(self, value: str) -> bool:
         spelled = _SPELLED_FORM.match(value)
-        return spelled is not None and spelled[1] in self._modelos and spelled[1] != self._own_form
+        if spelled is None:
+            return False
+        form = str(spelled[1])
+        return form in self._modelos and form != self._own_form
 
     def _named_value_admitted(self, name: str, number: float) -> bool:
         if self._machine:
@@ -769,7 +772,7 @@ class _Sweep(_BoundReader, ast.NodeVisitor):
                 self._report("letter_clave", members, node)
 
     def _visit_date(self, node: ast.Call, keywords: dict[str | None, ast.expr]) -> None:
-        parts = [*node.args[:3]]
+        parts: list[ast.expr | None] = [*node.args[:3]]
         parts += [keywords.get(part) for part in ("year", "month", "day")[len(parts) :]]
         year, month, day = (_constant_number(argument) for argument in parts)
         if year is not None:
@@ -930,7 +933,7 @@ class _Sweep(_BoundReader, ast.NodeVisitor):
             if isinstance(key, ast.Constant) and _single_code_letter(key.value) and self._holds_facts():
                 self._report("letter_key", key.value, key)
             key_number = _constant_number(key)
-            if key_number is not None and self._holds_facts() and self._may_be_fact(key_number, ""):
+            if key is not None and key_number is not None and self._holds_facts() and self._may_be_fact(key_number, ""):
                 self._report("dict_key", key_number, key)
         for key, value in zip(node.keys, node.values, strict=True):
             number = _constant_number(value)

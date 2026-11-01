@@ -465,8 +465,6 @@ def _idle_owner_and_contender(
         storage_root=tmp_path / "durable-state", profile_objects=profile.repository
     )
     registry = supervisor_registry(executor_type=IdleExecutor, build=IdleExecutor)
-    owner_options = {} if owner_lease_duration is None else {"lease_duration": owner_lease_duration}
-    contender_options = {} if contender_at is None else {"clock": lambda: contender_at}
     owner = operation_supervisor(
         registry=registry,
         journal=journal,
@@ -474,7 +472,7 @@ def _idle_owner_and_contender(
         operands=operands,
         owner_id="1" * 64,
         token="2" * 64,
-        **owner_options,
+        lease_duration=timedelta(minutes=10) if owner_lease_duration is None else owner_lease_duration,
     )
     contender = operation_supervisor(
         registry=registry,
@@ -483,7 +481,7 @@ def _idle_owner_and_contender(
         operands=operands,
         owner_id="3" * 64,
         token="4" * 64,
-        **contender_options,
+        clock=None if contender_at is None else (lambda: contender_at),
     )
     return journal, leases, owner, contender
 

@@ -40,6 +40,7 @@ class _Counted(DelegatingChannel):
         self.waits = 0
         self.endings: list[bool | RefusalCode] = []
 
+    @override
     def wait_readable(self, *wakes: ChannelWake) -> bool:
         self.waits += 1
         try:

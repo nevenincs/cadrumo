@@ -30,7 +30,7 @@ from .profile_schema_support import committed_registry_validator, committed_supp
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 
-def _load_modelo_720():
+def _load_modelo_720() -> tuple[ModeloDefinition, RegistryCatalogues]:
     return _committed_modelo("720")
 
 

@@ -50,8 +50,8 @@ from ...domain.contribuyente.inventory.records import (
     MovementKind,
     ValuationMethod,
 )
-from ._decimal_wire import bounded_decimal_wire_text
-from ._wire_scalars import IsoDateText, enum_value_text
+from ._decimal_wire import bounded_decimal_wire_validator
+from ._wire_scalars import IsoDateText, enum_value_validator
 
 # The inventory transport is built by dumping the canonical InventoryLedger to
 # JSON and re-validating the mapping, so every field below stays a string on
@@ -63,12 +63,14 @@ from ._wire_scalars import IsoDateText, enum_value_text
 # deductible ratio on the share scale, and a local ``_HUNDRED`` beside a local
 # ``_ONE`` is exactly the pairing that lets one field silently take the other
 # convention. Named constants say which scale is meant.
-_PositiveQuantity = bounded_decimal_wire_text(minimum=ZERO, exclusive_minimum=True)
-_NonNegativeAmount = bounded_decimal_wire_text(minimum=ZERO)
-_IvaRatePct = bounded_decimal_wire_text(minimum=PERCENTAGE_MIN, maximum=PERCENTAGE_MAX)
-_DeductibleRatio = bounded_decimal_wire_text(minimum=UNIT_PROPORTION_MIN, maximum=UNIT_PROPORTION_MAX)
-_MovementKindText = enum_value_text(MovementKind)
-_ValuationMethodText = enum_value_text(ValuationMethod)
+_PositiveQuantity = Annotated[str, bounded_decimal_wire_validator(minimum=ZERO, exclusive_minimum=True)]
+_NonNegativeAmount = Annotated[str, bounded_decimal_wire_validator(minimum=ZERO)]
+_IvaRatePct = Annotated[str, bounded_decimal_wire_validator(minimum=PERCENTAGE_MIN, maximum=PERCENTAGE_MAX)]
+_DeductibleRatio = Annotated[
+    str, bounded_decimal_wire_validator(minimum=UNIT_PROPORTION_MIN, maximum=UNIT_PROPORTION_MAX)
+]
+_MovementKindText = Annotated[str, enum_value_validator(MovementKind)]
+_ValuationMethodText = Annotated[str, enum_value_validator(ValuationMethod)]
 
 
 def _validate_inventory_schema_version(value: str) -> str:
@@ -92,19 +94,19 @@ class InventoryStockLayerPayload(OutputSchema):
     """One :class:`StockLayer` transport row."""
 
     sku: NonEmptyStr = "default"
-    quantity: _PositiveQuantity  # type: ignore[valid-type]  # TYPE-IGNORE-RATIONALE-DYNAMIC-BOUNDED-DECIMAL: dynamically constructed wire-text type mypy cannot statically validate as a field annotation
-    unit_cost: _NonNegativeAmount  # type: ignore[valid-type]  # TYPE-IGNORE-RATIONALE-DYNAMIC-BOUNDED-DECIMAL: dynamically constructed wire-text type mypy cannot statically validate as a field annotation
+    quantity: _PositiveQuantity
+    unit_cost: _NonNegativeAmount
     source_movement_id: NonEmptyStr
 
 
 class InventoryAcquisitionCostSummaryPayload(OutputSchema):
     """Operator-safe acquisition summary without evidence identities."""
 
-    consideration_excluding_iva: _NonNegativeAmount  # type: ignore[valid-type]  # TYPE-IGNORE-RATIONALE-DYNAMIC-BOUNDED-DECIMAL: dynamically constructed wire-text type mypy cannot statically validate as a field annotation
-    directly_attributable_cost_total: _NonNegativeAmount  # type: ignore[valid-type]  # TYPE-IGNORE-RATIONALE-DYNAMIC-BOUNDED-DECIMAL: dynamically constructed wire-text type mypy cannot statically validate as a field annotation
-    nonrecoverable_iva_included: _NonNegativeAmount  # type: ignore[valid-type]  # TYPE-IGNORE-RATIONALE-DYNAMIC-BOUNDED-DECIMAL: dynamically constructed wire-text type mypy cannot statically validate as a field annotation
-    recoverable_iva_excluded: _NonNegativeAmount  # type: ignore[valid-type]  # TYPE-IGNORE-RATIONALE-DYNAMIC-BOUNDED-DECIMAL: dynamically constructed wire-text type mypy cannot statically validate as a field annotation
-    total_acquisition_cost: _NonNegativeAmount  # type: ignore[valid-type]  # TYPE-IGNORE-RATIONALE-DYNAMIC-BOUNDED-DECIMAL: dynamically constructed wire-text type mypy cannot statically validate as a field annotation
+    consideration_excluding_iva: _NonNegativeAmount
+    directly_attributable_cost_total: _NonNegativeAmount
+    nonrecoverable_iva_included: _NonNegativeAmount
+    recoverable_iva_excluded: _NonNegativeAmount
+    total_acquisition_cost: _NonNegativeAmount
     component_count: NonNegativeInt
     evidence_count: PositiveCount
     complete: bool
@@ -147,14 +149,14 @@ class InventoryMovementPayload(OutputSchema):
 
     movement_id: NonEmptyStr
     movement_date: IsoDateText
-    kind: _MovementKindText  # type: ignore[valid-type]  # TYPE-IGNORE-RATIONALE-DYNAMIC-BOUNDED-DECIMAL: dynamically constructed wire-text type mypy cannot statically validate as a field annotation
+    kind: _MovementKindText
     sku: NonEmptyStr = "default"
-    quantity: _PositiveQuantity  # type: ignore[valid-type]  # TYPE-IGNORE-RATIONALE-DYNAMIC-BOUNDED-DECIMAL: dynamically constructed wire-text type mypy cannot statically validate as a field annotation
-    unit_cost: _NonNegativeAmount | None = None  # type: ignore[valid-type]  # TYPE-IGNORE-RATIONALE-DYNAMIC-BOUNDED-DECIMAL: dynamically constructed wire-text type mypy cannot statically validate as a field annotation
-    taxable_base: _NonNegativeAmount | None = None  # type: ignore[valid-type]  # TYPE-IGNORE-RATIONALE-DYNAMIC-BOUNDED-DECIMAL: dynamically constructed wire-text type mypy cannot statically validate as a field annotation
-    iva_rate: _IvaRatePct  # type: ignore[valid-type]  # TYPE-IGNORE-RATIONALE-DYNAMIC-BOUNDED-DECIMAL: dynamically constructed wire-text type mypy cannot statically validate as a field annotation
-    iva_amount: _NonNegativeAmount | None = None  # type: ignore[valid-type]  # TYPE-IGNORE-RATIONALE-DYNAMIC-BOUNDED-DECIMAL: dynamically constructed wire-text type mypy cannot statically validate as a field annotation
-    deductible_iva_ratio: _DeductibleRatio  # type: ignore[valid-type]  # TYPE-IGNORE-RATIONALE-DYNAMIC-BOUNDED-DECIMAL: dynamically constructed wire-text type mypy cannot statically validate as a field annotation
+    quantity: _PositiveQuantity
+    unit_cost: _NonNegativeAmount | None = None
+    taxable_base: _NonNegativeAmount | None = None
+    iva_rate: _IvaRatePct
+    iva_amount: _NonNegativeAmount | None = None
+    deductible_iva_ratio: _DeductibleRatio
     acquisition_cost: InventoryAcquisitionCostSummaryPayload | None = None
     schema_version: _InventorySchemaVersion
     acquisition_detail: InventoryAcquisitionDetailPayload | None = None
@@ -203,8 +205,8 @@ class InventoryLedgerPayload(OutputSchema):
 
     actividad_id: NonEmptyStr
     year: InventoryYear
-    valuation_method: _ValuationMethodText  # type: ignore[valid-type]  # TYPE-IGNORE-RATIONALE-DYNAMIC-BOUNDED-DECIMAL: dynamically constructed wire-text type mypy cannot statically validate as a field annotation
-    opening_stock: _NonNegativeAmount  # type: ignore[valid-type]  # TYPE-IGNORE-RATIONALE-DYNAMIC-BOUNDED-DECIMAL: dynamically constructed wire-text type mypy cannot statically validate as a field annotation
+    valuation_method: _ValuationMethodText
+    opening_stock: _NonNegativeAmount
     opening_layers: list[InventoryStockLayerPayload] = []
     closing_authority_fingerprints: InventoryClosingAuthorityFingerprintPayload | None = None
     period_movements: list[InventoryMovementPayload] = []

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncGenerator, Callable, Iterator
+from collections.abc import AsyncGenerator, Callable, Generator
 from contextlib import asynccontextmanager, contextmanager
 from pathlib import Path
 from types import SimpleNamespace
@@ -121,7 +121,7 @@ def _attempt_executor(
     work_repo: WorkUnitCatalogueRepository,
     revision_repo: CalculationRevisionCatalogueRepository,
     event_repo: BucketEventHistoryRepository,
-) -> Iterator[ModeloWorkWizardAttemptExecutor]:
+) -> Generator[ModeloWorkWizardAttemptExecutor]:
     """Bind the attempt executor to the test repositories' real calculation ports."""
     with calculation_ports_for_test(
         bucket_id=_PROFILE_ID,

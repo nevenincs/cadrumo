@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 from functools import wraps
-from typing import Annotated, ClassVar, Literal, override
+from typing import Annotated, Any, ClassVar, Literal, override
 
 import pytest
 from pydantic import BaseModel, Field, create_model
@@ -130,13 +130,13 @@ def test_decorated_schema_method_remains_authoritative() -> None:
         @wraps(BaseModel.model_json_schema)
         def model_json_schema(
             cls,
-            by_alias: bool = True,
+            by_alias: bool | None = None,
             ref_template: str = "#/$defs/{model}",
             schema_generator: type[GenerateJsonSchema] = GenerateJsonSchema,
             mode: JsonSchemaMode = "validation",
             *,
             union_format: Literal["any_of", "primitive_type_array"] = "any_of",
-        ) -> dict[str, object]:
+        ) -> dict[str, Any]:
             assert schema_generator is GenerateJsonSchema
             cls.calls += 1
             schema = super().model_json_schema(

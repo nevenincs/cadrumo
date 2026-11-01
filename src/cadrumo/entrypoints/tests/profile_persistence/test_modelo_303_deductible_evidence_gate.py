@@ -78,6 +78,7 @@ from ....domain.modelos.calculation_revision import (
 )
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.verification_report import (
+    ModeloVerificationFinding,
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
     VerificationCompletenessStatus,
@@ -450,7 +451,7 @@ def _assert_blocked_report_carries_both_severities(report) -> None:
     assert warning != []
 
 
-def _evidence_findings_of(report, revision) -> list:
+def _evidence_findings_of(report: VerificationReport, revision: CalculationRevision) -> list[ModeloVerificationFinding]:
     expected_source_refs = tuple(dict.fromkeys(ref for obs in revision.observations for ref in obs.source_refs))
     evidence_findings = [
         finding

@@ -20,7 +20,7 @@ flagged independently from the selector check.
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
 import pytest
@@ -69,7 +69,7 @@ def test_groi_verdict_parser_recognises_live_telefonica_certification() -> None:
 
 
 @asynccontextmanager
-async def _groi_form_page() -> AsyncIterator[Page]:
+async def _groi_form_page() -> AsyncGenerator[Page]:
     """Open the GROI check form in a fresh browser context and close the session afterwards."""
     settings = Settings()
     session = await default_browser_session_factory(settings)

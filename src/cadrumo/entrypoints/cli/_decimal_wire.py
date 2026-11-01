@@ -24,7 +24,7 @@ See Also:
 from __future__ import annotations
 
 from decimal import Decimal
-from typing import Annotated, Any
+from typing import Annotated
 
 from pydantic import AfterValidator
 
@@ -57,13 +57,13 @@ NonNegativeDecimalWireText = Annotated[str, AfterValidator(_non_negative)]
 """A decimal magnitude rendered for the JSON wire that must not be negative."""
 
 
-def bounded_decimal_wire_text(
+def bounded_decimal_wire_validator(
     *,
     minimum: Decimal | None = None,
     maximum: Decimal | None = None,
     exclusive_minimum: bool = False,
-) -> Any:
-    """Return a wire-decimal type additionally bounded to a range.
+) -> AfterValidator:
+    """Return a validator bounding a wire-decimal string to a range.
 
     Canonical models express these bounds on a real
     :class:`~decimal.Decimal` field (``gt=0`` for a movement quantity,
@@ -78,8 +78,8 @@ def bounded_decimal_wire_text(
             matching a canonical ``gt=`` bound rather than ``ge=``.
 
     Returns:
-        An ``Annotated[str, ...]`` type validating the canonical grammar
-        and then the range.
+        An ``AfterValidator`` for ``Annotated[str, ...]`` that checks the
+        canonical grammar and then the range.
     """
 
     def _check(value: str) -> str:
@@ -98,7 +98,7 @@ def bounded_decimal_wire_text(
             raise ValueError(f"{value!r} must not exceed {maximum}")
         return value
 
-    return Annotated[str, AfterValidator(_check)]
+    return AfterValidator(_check)
 
 
-__all__ = ["DecimalWireText", "NonNegativeDecimalWireText", "bounded_decimal_wire_text"]
+__all__ = ["DecimalWireText", "NonNegativeDecimalWireText", "bounded_decimal_wire_validator"]

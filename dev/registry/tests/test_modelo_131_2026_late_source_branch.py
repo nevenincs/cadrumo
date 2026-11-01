@@ -8,6 +8,8 @@ from functools import cache
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.manual_input_selector import ManualInputProvider
+from cadrumo.domain.calculations.registry.schema import BindingDefinition
 from cadrumo.domain.calculations.registry.temporal import select_revision
 from dev.registry.compiler.legal_grounding import verify_legal_reference_grounding
 from dev.registry.compiler.loader import load_modelo_directory, load_shared_catalogues
@@ -39,11 +41,13 @@ def test_actual_2026_filing_window_selects_its_own_source_branch(period: str, on
     }
 
 
-def _bindings_by_offset(revision) -> dict:
+def _bindings_by_offset(revision) -> dict[tuple[str, int], BindingDefinition]:
     return {
         (binding.provider.record, binding.provider.offset): binding
         for binding in revision.bindings
-        if hasattr(binding.provider, "record") and hasattr(binding.provider, "offset")
+        if isinstance(binding.provider, ManualInputProvider)
+        and binding.provider.record is not None
+        and binding.provider.offset is not None
     }
 
 
@@ -93,6 +97,8 @@ def test_late_hydrated_delta_rekeys_only_four_source_changed_binding_slots() -> 
     for coordinate in changed:
         binding = late_by_offset[coordinate]
         assert str(binding.id).endswith("-ceuta-melilla-la-palma")
+        assert isinstance(binding.provider, ManualInputProvider)
+        assert binding.provider.field is not None
         assert binding.provider.field.endswith("-ceuta-melilla-la-palma")
         assert "real-decreto-ley-23-2026:art-1" in binding.legal_refs
         assert "aeat-dr-131-2026-late" in binding.source_refs

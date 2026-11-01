@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
@@ -67,7 +67,7 @@ def saved_two_ejercicios(
     year_n_plus_1: int,
     clock_n: datetime,
     clock_n_plus_1: datetime,
-) -> Iterator[tuple[ObservationEnvelopePayload, ObservationEnvelopePayload]]:
+) -> Generator[tuple[ObservationEnvelopePayload, ObservationEnvelopePayload]]:
     """Save both exercises in an isolated profile and yield the two reloaded envelopes.
 
     Fails when either exercise cannot be found again after its save.

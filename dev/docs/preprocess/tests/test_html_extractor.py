@@ -23,6 +23,7 @@ Exercises real corpus HTML through the production extractor (no mocks):
 from __future__ import annotations
 
 import hashlib
+from collections.abc import Mapping
 from decimal import Decimal
 from pathlib import Path
 
@@ -265,7 +266,7 @@ def _anchors_with_prefix(output: PreprocessOutput, prefix: str, excluded: str) -
 
 
 def _assert_activity_unit(
-    fragments: dict[str | None, PreprocessUnit],
+    fragments: Mapping[str, PreprocessUnit],
     anchor: str,
     *,
     number: str,

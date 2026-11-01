@@ -429,7 +429,9 @@ def _add_net_rent_payment() -> str:
         ],
     )
     assert added.exit_code == 0, added.output
-    return json.loads(added.output)["result"]["transaction_id"]
+    transaction_id = json.loads(added.output)["result"]["transaction_id"]
+    assert isinstance(transaction_id, str), transaction_id
+    return transaction_id
 
 
 def _classify_net_rent_arguments(transaction_id: str, irpf_category: str, *tail: str) -> list[str]:

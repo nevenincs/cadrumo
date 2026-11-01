@@ -28,7 +28,7 @@ question instead of recomputing it. The memo is bounded by these invariants:
 
 from __future__ import annotations
 
-from collections.abc import Callable, Generator, Hashable
+from collections.abc import Callable, Generator
 from contextlib import contextmanager
 from contextvars import ContextVar
 from dataclasses import dataclass, field
@@ -43,7 +43,7 @@ class _ValidationPass:
     """The authorities seen by one pass and the answers given under each."""
 
     authorities: dict[int, GovernedFactSource] = field(default_factory=dict)
-    answers: dict[tuple[Hashable, ...], object] = field(default_factory=dict)
+    answers: dict[tuple[object, ...], object] = field(default_factory=dict)
 
 
 _ACTIVE_PASS: ContextVar[_ValidationPass | None] = ContextVar("invoice_validation_pass", default=None)
@@ -67,7 +67,8 @@ def answer_once[**P, R](projection: Callable[P, R], /, *args: P.args, **kwargs: 
 
     ``projection`` must be deterministic for its arguments, the authority in
     scope and the current civil date, and must return an immutable value.
-    Arguments must be hashable.
+    Arguments must be hashable; an unhashable argument raises ``TypeError``
+    when the memo key is looked up, rather than being answered unmemoised.
     """
     active = _ACTIVE_PASS.get()
     authority = governed_facts_in_scope()
@@ -75,7 +76,7 @@ def answer_once[**P, R](projection: Callable[P, R], /, *args: P.args, **kwargs: 
         return projection(*args, **kwargs)
     authority_key = id(authority)
     active.authorities.setdefault(authority_key, authority)
-    key: tuple[Hashable, ...] = (
+    key: tuple[object, ...] = (
         authority_key,
         projection,
         today_madrid(),

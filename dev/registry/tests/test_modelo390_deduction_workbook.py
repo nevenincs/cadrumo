@@ -10,6 +10,7 @@ from cadrumo.adapters.outbound.workbook.calc_sheets_xlsx import materialize_expo
 from cadrumo.application.storage.calc_sheets.engine import build_export_plan
 from cadrumo.application.storage.calc_sheets.form_workbook import add_form_workbook
 from cadrumo.application.storage.calc_sheets.records import OperatorInput, OperatorInputs, TabName
+from cadrumo.core.casilla_id import CasillaId
 
 from ..workbook_demo import build_demonstration_plan, demonstration_snapshot
 from ..workbook_demo_cases import DEMO_CASES, DemoCase
@@ -37,13 +38,13 @@ _DEDUCTION_COMPONENT_NUMBERS = (
 )
 
 
-def _deduction_input_leaves(snapshot, owners) -> set:
+def _deduction_input_leaves(snapshot, owners) -> set[CasillaId]:
     """Return the manual casillas the deduction components depend on, following formulas to their leaves."""
     casillas = {c.id: c for c in snapshot.revision.casillas}
     formulas = {f.id: f for f in snapshot.revision.formulas}
     pending = [owners[number] for number in _DEDUCTION_COMPONENT_NUMBERS]
-    leaves = set()
-    visited = set()
+    leaves: set[CasillaId] = set()
+    visited: set[CasillaId] = set()
     while pending:
         owner = pending.pop()
         if owner in visited:

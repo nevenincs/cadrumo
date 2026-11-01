@@ -22,21 +22,21 @@ Decimal magnitudes have the same problem and are handled by the sibling
 from __future__ import annotations
 
 from enum import StrEnum
-from typing import Annotated, Any
+from typing import Annotated
 
 from pydantic import AfterValidator
 
 from ...core.parsing.dates import require_iso8601_date
 
 
-def enum_value_text(enum_cls: type[StrEnum]) -> Any:
-    """Return a wire-string type constrained to ``enum_cls``'s accepted values.
+def enum_value_validator(enum_cls: type[StrEnum]) -> AfterValidator:
+    """Return a validator constraining a wire string to ``enum_cls``'s accepted values.
 
     Args:
         enum_cls: The canonical closed set the transport value must belong to.
 
     Returns:
-        An ``Annotated[str, ...]`` type accepting exactly the enum's values.
+        An ``AfterValidator`` for ``Annotated[str, ...]`` accepting exactly the enum's values.
         The refusal names the accepted set, so a malformed payload reports the
         options rather than a bare "value invalid".
     """
@@ -47,7 +47,7 @@ def enum_value_text(enum_cls: type[StrEnum]) -> Any:
             raise ValueError(f"{value!r} is not one of the accepted {enum_cls.__name__} values: {', '.join(accepted)}")
         return value
 
-    return Annotated[str, AfterValidator(_check)]
+    return AfterValidator(_check)
 
 
 def _validate_iso_date(value: str) -> str:
@@ -66,4 +66,4 @@ def _validate_iso_date(value: str) -> str:
 IsoDateText = Annotated[str, AfterValidator(_validate_iso_date)]
 """A calendar day rendered for the JSON wire as a zero-padded ISO-8601 string."""
 
-__all__ = ["IsoDateText", "enum_value_text"]
+__all__ = ["IsoDateText", "enum_value_validator"]

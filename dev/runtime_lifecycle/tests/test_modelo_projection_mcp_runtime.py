@@ -283,7 +283,7 @@ async def _release_and_check(
     assert released.definition_contract_digest == contract.definition_contract_digest
     assert released.projection == expected
     disclosed = released.projection.model_dump(mode="json")
-    return disclosed.get("authority_generation") == authority_operation.pin().logical_generation
+    return bool(disclosed.get("authority_generation") == authority_operation.pin().logical_generation)
 
 
 @pytest.mark.anyio

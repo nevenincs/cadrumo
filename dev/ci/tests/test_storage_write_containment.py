@@ -749,12 +749,16 @@ class _TempBootstrap:
                 self.configured_lines.append(statement.lineno)
 
     def record(self, statement: ast.stmt) -> None:
+        value: ast.expr | None
+        targets: list[ast.expr] = []
         if isinstance(statement, ast.Assign):
-            value, targets = statement.value, list(statement.targets)
+            value = statement.value
+            targets.extend(statement.targets)
         elif isinstance(statement, ast.AnnAssign):
-            value, targets = statement.value, [statement.target]
+            value = statement.value
+            targets.append(statement.target)
         elif isinstance(statement, ast.Expr):
-            value, targets = statement.value, []
+            value = statement.value
         else:
             return
         if value is None:

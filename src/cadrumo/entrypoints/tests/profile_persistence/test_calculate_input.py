@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from datetime import UTC, date, datetime
 from decimal import Decimal
@@ -57,7 +57,7 @@ _M200_MANUAL_DECIMAL_CASILLA: CasillaId = validated_casilla_id(
 @contextmanager
 def _m200_calculation_unit(
     bucket_id: str, tmp_path: Path
-) -> Iterator[tuple[CalculationActionPorts, WorkUnit, PinnedAuthorityOperation]]:
+) -> Generator[tuple[CalculationActionPorts, WorkUnit, PinnedAuthorityOperation]]:
     """Open an isolated profile holding one modelo 200 work unit, with its calculation ports and pinned authority."""
     period = Period.from_year_and_code(2025, "0A")
     snapshot = published_authority_operation().snapshot(

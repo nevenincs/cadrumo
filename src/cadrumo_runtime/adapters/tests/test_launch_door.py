@@ -9,6 +9,7 @@ import threading
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from pathlib import Path
+from typing import override
 
 import pytest
 
@@ -193,6 +194,7 @@ class _FailOnceNativeChannel(DelegatingChannel):
         self.close_threads: list[int] = []
         self.released = False
 
+    @override
     def close(self) -> None:
         if self.released:
             return

@@ -15,16 +15,20 @@ from .published_authority import published_snapshot
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 
-def _published_formula(modelo: str, period: str, op: str, filing_year: int) -> tuple[FormulaExpression, dict]:
+def _published_formula(
+    modelo: str, period: str, op: str, filing_year: int
+) -> tuple[FormulaExpression, dict[str, ParameterDefinition]]:
     revision = published_snapshot(modelo, filing_year=filing_year, period=period).revision
     [expression] = [formula.expression for formula in revision.formulas if formula.expression.op == op]
     parameters: dict[str, ParameterDefinition] = {str(parameter.id): parameter for parameter in revision.parameters}
     return expression, parameters
 
 
-def _run(expression: FormulaExpression, *, parameters: dict, filing_year: int) -> Decimal:
+def _run(expression: FormulaExpression, *, parameters: dict[str, ParameterDefinition], filing_year: int) -> Decimal:
     """Evaluate with every casilla the formula reads at zero, so only the shape of the formula is at stake."""
-    values: dict[CasillaId, Decimal] = {arg.casilla_id: Decimal(0) for arg in expression.args if arg.casilla_id}
+    values: dict[CasillaId, Decimal] = {
+        arg.casilla_id: Decimal(0) for arg in expression.args if arg.casilla_id is not None and arg.casilla_id != ""
+    }
     return evaluate_expression(
         expression,
         values=values,
@@ -41,7 +45,7 @@ def _run(expression: FormulaExpression, *, parameters: dict, filing_year: int) -
     )
 
 
-def _modulos_previo() -> tuple[FormulaExpression, dict]:
+def _modulos_previo() -> tuple[FormulaExpression, dict[str, ParameterDefinition]]:
     return _published_formula("131", "1T", "m131_resolve_modulos_previo", 2023)
 
 

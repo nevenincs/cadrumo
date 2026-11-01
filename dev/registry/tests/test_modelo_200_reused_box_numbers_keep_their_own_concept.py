@@ -50,7 +50,7 @@ from ..compiler.authority import compiled_bundled_authority
 from ..compiler.record_design import extract_record_design
 from ..conformance.modelo_200_echoes import MODELO_200_ECHO_CELLS as _ECHOES
 from ..edition_export_scenarios import m200_export_scenario
-from ..edition_round_trip import SYNTHETIC_TAX_ID
+from ..edition_round_trip import SYNTHETIC_TAX_ID, EditionExportScenario
 from ..pipeline.semantic_map import SemanticMap, load_semantic_map
 from .authored_edition_support import authored_revisions
 
@@ -750,7 +750,7 @@ def _assert_box_fields_match_the_design(
     )
 
 
-def _reused_box_renderer(operation, period: Period, scenario, number: str):
+def _reused_box_renderer(operation, period: Period, scenario: EditionExportScenario, number: str):
     """Return a renderer that exports the scenario with only the given reused-box inputs supplied."""
     provider = build_runtime_schema_provider(
         operation=operation,

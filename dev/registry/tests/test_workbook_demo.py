@@ -736,7 +736,7 @@ def test_authored_131_activity_table_has_live_readable_bound_cells() -> None:
     assert plan.metadata.registry_sha not in text
 
 
-def _assert_232_related_party_values(values: dict) -> None:
+def _assert_232_related_party_values(values: dict[str, Decimal | str | bool | None]) -> None:
     assert values["vinculada-1-importe"] == Decimal("250000")
     assert values["vinculada-2-importe"] == Decimal("175000")
     assert values["vinculada-1-ingreso-pago"] == "I"

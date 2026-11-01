@@ -48,7 +48,7 @@ def _assert_156_saved_member_rows(snapshot, saved) -> None:
     assert second["cotizacion-diciembre-situacion"] is None
 
 
-def _assert_156_form_shows_members_and_declarant(plan, values: dict) -> None:
+def _assert_156_form_shows_members_and_declarant(plan, values: dict[str, Decimal | str | bool | None]) -> None:
     assert "numero-justificante" not in values
     form_values = [cell.value for cell in plan.value_cells if cell.address.tab is TabName.FORM]
     assert values["declarante-razon-social"] == "Mutualidad ficticia Ejemplo"

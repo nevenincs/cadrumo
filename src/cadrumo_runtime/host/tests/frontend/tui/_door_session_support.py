@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import threading
-from collections.abc import Awaitable, Callable
+from collections.abc import Callable, Coroutine
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from uuid import UUID
@@ -189,7 +189,7 @@ def assert_door_raises_the_recorded_error_of_a_refusal_receipt[RequestT](
     *,
     registry: OperationRegistry,
     definition_id: str,
-    make_door: Callable[[SessionClient], Callable[[RequestT], Awaitable[object]]],
+    make_door: Callable[[SessionClient], Callable[[RequestT], Coroutine[object, object, object]]],
     request: RequestT,
 ) -> None:
     """Prove a door raises the registered error a refusal receipt recorded, reading its detail and no result."""
@@ -219,7 +219,7 @@ def assert_door_fails_closed_when_its_session_lapses[RequestT](
     *,
     registry: OperationRegistry,
     definition_id: str,
-    make_door: Callable[[SessionClient], Callable[[RequestT], Awaitable[object]]],
+    make_door: Callable[[SessionClient], Callable[[RequestT], Coroutine[object, object, object]]],
     request: RequestT,
 ) -> None:
     """Prove a door submits nothing once its pinned session no longer matches the client's."""
@@ -243,7 +243,7 @@ def assert_door_reads_its_session_off_the_event_loop_thread[RequestT](
     *,
     observation: OperationObservationSuccessV1,
     result: BaseModel,
-    make_door: Callable[[SessionClient], Callable[[RequestT], Awaitable[object]]],
+    make_door: Callable[[SessionClient], Callable[[RequestT], Coroutine[object, object, object]]],
     request: RequestT,
 ) -> None:
     """Prove the blocking session read around a door's operation never runs on the awaiting loop's thread."""

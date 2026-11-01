@@ -570,9 +570,14 @@ class OperationController:
             if reply.document.get("outcome") == "refused":
                 return OperationReviewProjectionRefusalV1.model_validate_json(raw), content_hash_hex(reply.document)
             model = RuntimeReviewDocument if projection_type is BaseModel else projection_type
-            resolved = OperationReviewProjectionSuccessV1[model].model_validate_json(raw)
+            success_type = OperationReviewProjectionSuccessV1.__class_getitem__(model)
+            if not (isinstance(success_type, type) and issubclass(success_type, BaseModel)):
+                raise RefusalError(RefusalCode.INVALID_FRAME)
+            resolved = success_type.model_validate_json(raw)
         except ValidationError:
             raise RefusalError(RefusalCode.INVALID_FRAME) from None
+        if not isinstance(resolved, OperationReviewProjectionSuccessV1):
+            raise RefusalError(RefusalCode.INVALID_FRAME)
         if (
             resolved.projection_schema != reference.review_projection_schema
             or resolved.definition_contract_digest != reference.definition_contract_digest

@@ -118,6 +118,7 @@ async def test_external_details_never_borrows_the_local_amount_and_returns_to_th
             await pilot.press("t")
             await settle(pilot)
             assert detail.display
+            assert external.calendar is not None
             assert str(detail.render()) == external.calendar.aeat_reference_id
             await pilot.press("t")
             await settle(pilot)

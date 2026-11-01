@@ -73,7 +73,7 @@ def test_identity_period_and_payment_have_separate_reading_sections(scheme: str)
     assert len(placed) == len(set(placed)), "A field must not become editable in two sections"
 
 
-def _detail_grids(layout) -> list:
+def _detail_grids(layout) -> list[FormGridBlock]:
     return [
         block
         for page in layout.pages
