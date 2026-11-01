@@ -92,18 +92,8 @@ def _natural_person_record(
     )
 
 
-def test_observe_local_m100_prior_feeds_m100_and_m130_previous_filing_prefill(
-    runtime_profile: TestRuntimeProfile, *, operation: PinnedAuthorityOperation
-) -> None:
-    """A CLI-recorded local M100/2024 observation resolves Sofia's two prior-filing carries.
-
-    The assertion drives the real CLI command, persists into the real encrypted
-    observation store, and then reads through the real previous-filing resolver.
-    Expected values are the operator's literal zero observation and the registry
-    selectors: M100/2025 reads prior M100 casilla 1391, while M130/1T reads the
-    sum of prior M100 casillas 0224/1479/1553/1577.
-    """
-
+def _record_local_prior_observation() -> None:
+    """The CLI records the operator's literal zero observation without creating any filing record."""
     result = invoke_cached_cli(
         [
             "--format",
@@ -164,6 +154,8 @@ def test_observe_local_m100_prior_feeds_m100_and_m130_previous_filing_prefill(
         "config.login.session_not_persisted",
     ]
 
+
+def _assert_prior_filing_prefills(runtime_profile: TestRuntimeProfile, operation: PinnedAuthorityOperation) -> None:
     with open_test_profile_session(runtime_profile.bucket_id):
         repository = CalculationObservationRepository()
         observed = repository.load_observation("100", Period.from_year_and_code(2024, "0A"))
@@ -193,7 +185,8 @@ def test_observe_local_m100_prior_feeds_m100_and_m130_previous_filing_prefill(
         )
         assert m130_prefill.binding_values["irpf.previous_year_economic_activity_net_income"] == Decimal("0")
 
-    _seed_natural_person_profile(runtime_profile)
+
+def _assert_m130_calculation_consumes_the_observation() -> None:
     created = invoke_cached_cli(
         [
             "--format",
@@ -240,6 +233,24 @@ def test_observe_local_m100_prior_feeds_m100_and_m130_previous_filing_prefill(
     previous_income = calculated_payload["binding_overrides"]["irpf.previous_year_economic_activity_net_income"]
     assert Decimal(previous_income) == Decimal("0")
     assert Decimal(calculated_payload["casilla_values"]["13"]) == Decimal("100.00")
+
+
+def test_observe_local_m100_prior_feeds_m100_and_m130_previous_filing_prefill(
+    runtime_profile: TestRuntimeProfile, *, operation: PinnedAuthorityOperation
+) -> None:
+    """A CLI-recorded local M100/2024 observation resolves Sofia's two prior-filing carries.
+
+    The assertion drives the real CLI command, persists into the real encrypted
+    observation store, and then reads through the real previous-filing resolver.
+    Expected values are the operator's literal zero observation and the registry
+    selectors: M100/2025 reads prior M100 casilla 1391, while M130/1T reads the
+    sum of prior M100 casillas 0224/1479/1553/1577.
+    """
+
+    _record_local_prior_observation()
+    _assert_prior_filing_prefills(runtime_profile, operation)
+    _seed_natural_person_profile(runtime_profile)
+    _assert_m130_calculation_consumes_the_observation()
 
 
 def _observe_local(*arguments: str) -> dict[str, Any]:
