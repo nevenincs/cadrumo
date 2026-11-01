@@ -20,40 +20,10 @@ from cadrumo.adapters.persistence.storage.custody.tests.receipt_sign_in import (
 )
 from cadrumo.core.profile_session import ProfileSessionRefusalReason
 
+from .human_keyring_support import HumanKeyring
+from .human_keyring_support import human_keyring as human_keyring
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
-
-
-class _KeyringError(Exception):
-    """Controlled existing human keyring failure."""
-
-
-class _HumanKeyring:
-    """Exact service/account in-memory keyring for the real receipt writer."""
-
-    def __init__(self) -> None:
-        self.entries: dict[tuple[str, str], str] = {}
-        self.reads = 0
-
-    def get_password(self, service_name: str, username: str) -> str | None:
-        """Read one exact human account."""
-        self.reads += 1
-        return self.entries.get((service_name, username))
-
-    def set_password(self, service_name: str, username: str, password: str) -> None:
-        """Store one exact human account."""
-        self.entries[(service_name, username)] = password
-
-    def delete_password(self, service_name: str, username: str) -> None:
-        """Remove one exact human account."""
-        self.entries.pop((service_name, username), None)
-
-
-@pytest.fixture
-def human_keyring(monkeypatch: pytest.MonkeyPatch) -> _HumanKeyring:
-    """Compose the real receipt crypto/filesystem with a controlled store."""
-    keyring = _HumanKeyring()
-    monkeypatch.setattr(acceleration_keychain, "_keyring", lambda: (keyring, _KeyringError, _KeyringError))
-    return keyring
 
 
 def _mint_receipt(root: Path, profile_id: UUID, opened: datetime, dek: bytes) -> PersistedProfileSession:
@@ -95,7 +65,7 @@ def _resume_with_key(
 
 
 def test_a_wrong_proof_is_non_destructive_and_uses_no_keyring_lookup(
-    tmp_path: Path, human_keyring: _HumanKeyring
+    tmp_path: Path, human_keyring: HumanKeyring
 ) -> None:
     profile_id = uuid4()
     other_id = uuid4()
@@ -130,7 +100,7 @@ def test_a_wrong_proof_is_non_destructive_and_uses_no_keyring_lookup(
 
 
 def test_a_wrong_proof_under_another_login_deletes_nothing_and_the_sign_in_survives(
-    tmp_path: Path, human_keyring: _HumanKeyring
+    tmp_path: Path, human_keyring: HumanKeyring
 ) -> None:
     profile_id = uuid4()
     opened = datetime(2026, 9, 27, 12, tzinfo=UTC)
@@ -175,7 +145,7 @@ def test_a_wrong_proof_under_another_login_deletes_nothing_and_the_sign_in_survi
 )
 def test_the_runtime_reader_deletes_a_receipt_its_own_bytes_refuse(
     tmp_path: Path,
-    human_keyring: _HumanKeyring,
+    human_keyring: HumanKeyring,
     case: str,
     reason: ProfileSessionRefusalReason,
     binding: receipt.ReceiptBindingRefusal | None,
