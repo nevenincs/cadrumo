@@ -23,7 +23,8 @@ The fingerprint covers exactly the transaction facts that can move a casilla --
 dates, amount magnitude, currency, direction, business classification and
 proportionality, the IVA base/rate/amount/category, the spending and IRPF
 categories, the M210 source-jurisdiction/classification facts, the EU member
-state, the FX conversion, and the lifecycle state.
+state, the FX conversion, the lifecycle state, and (from field-set version 3)
+the bienes de inversion link and the customer's identifying Member State.
 Cosmetic fields (description, counterparty, notes) are deliberately excluded so
 staleness fires on material change, not on a relabel.
 
@@ -131,13 +132,37 @@ _FINGERPRINT_FIELDS_V2: tuple[tuple[str, str], ...] = (
     ("prorrata_reference", "prorrata_reference"),
 )
 
+# V3 adds the two IVA facts an operator can still change through the manual
+# ledger edit path without moving anything V2 watches. ``investment_asset_id``
+# links a row to the bienes de inversion register, and the deduction admission
+# checks that link; ``counterparty_identification_state`` is the Member State
+# that identified the customer, and an intra-community supply is admitted only
+# when it validates. Neither moves an amount, so an edit to either on a
+# BORRADOR contributor left a V2 anchor unchanged and verify sealed values
+# computed under the old admission outcome.
+#
+# Both are scalars (an opaque identifier and a registry token whose canonical
+# text is its ``value``), so ``_normalise`` already renders them
+# deterministically and without a repr.
+#
+# The non-writable facts the IVA resolvers also read (``operation_date``, the
+# criterio de caja fields, ``exemption_article``, ``rectifies_ledger_id``) stay
+# out until a write path can change them; the write-path coverage test fails
+# the moment one can, which forces the next version rather than a silent gap.
+_FINGERPRINT_FIELDS_V3: tuple[tuple[str, str], ...] = (
+    *_FINGERPRINT_FIELDS_V2,
+    ("investment_asset_id", "investment_asset_id"),
+    ("counterparty_identification_state", "counterparty_identification_state"),
+)
+
 _FINGERPRINT_FIELD_SETS: Final[Mapping[int, tuple[tuple[str, str], ...]]] = {
     1: _FINGERPRINT_FIELDS_V1,
     2: _FINGERPRINT_FIELDS_V2,
+    3: _FINGERPRINT_FIELDS_V3,
 }
 
 #: The version every NEW snapshot is sealed under.
-CURRENT_FINGERPRINT_FIELD_SET_VERSION: Final = 2
+CURRENT_FINGERPRINT_FIELD_SET_VERSION: Final = 3
 
 
 def _fingerprint_fields(field_set_version: int) -> tuple[tuple[str, str], ...]:
@@ -319,6 +344,8 @@ def _evidence_row(
         m210_payer_id=m210_classification.payer_id if m210_classification is not None else None,
         m210_asset_or_right_id=(m210_classification.asset_or_right_id if m210_classification is not None else None),
         counterparty_country=transaction.counterparty_country,
+        investment_asset_id=transaction.investment_asset_id,
+        counterparty_identification_state=_enum_value(transaction.counterparty_identification_state),
         fx_rate=transaction.fx_rate,
         value_in_eur=transaction.value_in_eur,
         lifecycle_state=transaction.lifecycle_state.value,
