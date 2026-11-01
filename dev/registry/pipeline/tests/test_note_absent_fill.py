@@ -15,7 +15,7 @@ from cadrumo.domain.calculations.registry.tests.published_authority import publi
 from ..note_absent_fill import _NOTE_ABSENT_FILLS, note_absent_fill_for
 from ..record_design_intermediate import RecordDesignIntermediateSource
 
-pytestmark = [pytest.mark.unit]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _DESIGN = (
     "corpus",

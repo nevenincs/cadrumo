@@ -52,6 +52,7 @@ def _declaration(*, roles: tuple[tuple[R, int], ...] = _ROLES) -> FilingEnvelope
         closer_derivation="relative-closer-v1",
         total_derivation="emitted-byte-total-v1",
         scheme_period_form="bare_quarter",
+        period_tokens=("1T", "2T", "3T", "4T", *(f"{month:02d}" for month in range(1, 13))),
     )
 
 
@@ -66,6 +67,7 @@ def test_declarant_prefix_and_closer_use_only_source_stated_slots() -> None:
         period=period,
         product_software_identity=None,
         declarant_tax_id="Y0000001S",
+        envelope=declaration,
     )
     assert len(rendered) == 328
     assert rendered[:17] == b"<T369020251T0000>"
@@ -80,7 +82,7 @@ def test_declarant_prefix_and_closer_use_only_source_stated_slots() -> None:
         FilingEnvelopeDefinition.model_validate_json(
             json.dumps({**serialised, "product_identity_requirement": "aeat-product-software-identity-v1"})
         )
-    with pytest.raises(FilingExportValidationError, match="monthly/quarterly"):
+    with pytest.raises(FilingExportValidationError, match="range its design lists"):
         render_declared_prefix(
             declaration.prefix_fields,
             prefix_extent=328,
@@ -88,6 +90,7 @@ def test_declarant_prefix_and_closer_use_only_source_stated_slots() -> None:
             period=Period.from_year_and_code(2025, "0A"),
             product_software_identity=None,
             declarant_tax_id="Y0000001S",
+            envelope=declaration,
         )
 
 
