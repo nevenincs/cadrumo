@@ -10,13 +10,12 @@ one perceptor under two claves counts as two percepciones.
 
 from __future__ import annotations
 
-from datetime import date
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
 
-from cadrumo.tests.withholding_zero_blocks import zeroed_withholding_blocks
+from cadrumo.application.aggregation.tests.withholding_observation_support import perceptor_observation
 
 from .....application.aggregation.percepciones_observations_repository import PercepcionObservationPorts
 from .....application.aggregation.retencion_observations_repository import RetencionObservationPorts
@@ -27,7 +26,6 @@ from .....core.aggregation import AggregationCaptureKind, RetencionClave
 from .....core.casilla_id import validated_casilla_id
 from .....core.period import Period
 from .....domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
-from .....domain.calculations.registry.withholding_bindings import WithholdingObservation
 from ...storage.tests.secure_sql import isolated_runtime_profile
 from ..percepciones_observations import PercepcionObservationRepositoryAdapter
 from ..retencion_observations import RetencionObservationRepositoryAdapter
@@ -38,19 +36,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET_ID = "36363636-3636-4363-8363-363636363636"
 _TOTAL_PERCEPCIONES = validated_casilla_id("decl.total-percepciones", surface="test")
-
-
-def _obs(nif: str, clave: RetencionClave) -> WithholdingObservation:
-    return WithholdingObservation(
-        source_id=f"row-{nif}-{clave}",
-        perceptor_tax_id=nif,
-        transaction_date=date(2024, 6, 1),
-        clave=clave,
-        percibido_dinerario=Decimal("1000"),
-        retencion_practicada=Decimal("190"),
-        **zeroed_withholding_blocks(),
-        base_retenciones=Decimal("0"),
-    )
 
 
 def test_m190_percepciones_count_resolves_distinct_from_store_to_bound_casilla(tmp_path: Path) -> None:
@@ -67,9 +52,9 @@ def test_m190_percepciones_count_resolves_distinct_from_store_to_bound_casilla(t
             period=source_period,
             source_kind=AggregationCaptureKind.AGGREGATE_PULL,
             observations=[
-                _obs("11111111H", RetencionClave.from_registry("A")),
-                _obs("11111111H", RetencionClave.from_registry("G")),
-                _obs("22222222J", RetencionClave.from_registry("A")),
+                perceptor_observation("11111111H", RetencionClave.from_registry("A")),
+                perceptor_observation("11111111H", RetencionClave.from_registry("G")),
+                perceptor_observation("22222222J", RetencionClave.from_registry("A")),
             ],
         )
         snapshot = published_authority_operation().snapshot("190", filing_year=2024, period="0A")
