@@ -453,6 +453,14 @@ cli:
           T háromszögügylet, S nyújtott szolgáltatás, I igénybe vett szolgáltatás,
           R vevői készlet áthelyezése, D vevői készlet visszaszállítása, C vevői készlet
           címzettcseréje'
+        preview_help: 'Számlatervezet előnézete: az összegek, az észrevételek és az
+          ítélet, amelyet a létrehozási művelet adna, bármi mentése nélkül.'
+        preview_line_help: Egy tervezeti számlasorhoz ismételhető JSON-objektum, opcionális
+          `key`, `description`, `quantity`, `unit_price`, `iva_rate`, `subtotal` és
+          `iva_amount` mezőkkel. A kihagyott összeg ismeretlen marad. Használd a --taxable-base
+          helyett.
+        preview_printed_total_help: A dokumentumra nyomtatott végösszeg, amelyet a
+          kiszámított végösszeggel hasonlít össze.
         recargo_help: Az adótételre felszámított recargo de equivalencia (LIVA 161.
           cikk). A retencióval ellentétben a számla végösszegén belül szerepel.
         rectifies_help: Annak a számlának a száma, amelyet ez a rectificativa javít.

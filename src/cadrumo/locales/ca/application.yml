@@ -700,6 +700,62 @@ application:
           a una importació exempta (clau M, o H mitjançant representant fiscal).'
         unsupported_iva_rate: 'El tipus d''IVA %{iva_rate} no es reconeix; usa un
           de: %{accepted}.'
+    figures_preview:
+      finding:
+        base_total_not_line_sum: La base total no coincideix amb la suma dels subtotals
+          de les línies.
+        figure_out_of_range: Una xifra és massa gran per calcular-la al cèntim.
+        grand_total_identity: El total no coincideix amb la base més l'IVA més el
+          recàrrec.
+        iva_total_not_line_sum: L'IVA total no coincideix amb la suma de les quotes
+          de les línies.
+        line_amount_negative: Un preu, un subtotal o una quota d'IVA no pot ser negatiu.
+        line_iva_mismatch: La quota indicada, %{stated}, difereix en més d'un cèntim
+          del subtotal pel tipus, %{expected}.
+        line_iva_not_zero_for_nonnumeric: Una línia exempta o no subjecta no porta
+          quota d'IVA, però aquesta en indica %{stated}.
+        line_quantity_not_positive: La quantitat ha de ser més gran que zero.
+        line_rate_coverage_gap: Cadrumo no té tipus registrats per a %{slot} el %{on_date},
+          així que no el pot aplicar.
+        line_rate_not_in_force: El tipus d'IVA %{slot} no estava vigent el %{on_date}.
+        line_rate_undeclared: El tipus d'IVA %{slot} no és cap dels que declara el
+          registre.
+        line_subtotal_mismatch: El subtotal indicat, %{stated}, difereix en més d'un
+          cèntim de quantitat per preu unitari, %{expected}.
+        nonnumeric_grand_total_identity: Si totes les línies són exemptes o no subjectes,
+          el total ha de ser igual a la base.
+        nonnumeric_iva_total_not_zero: Si totes les línies són exemptes o no subjectes,
+          l'IVA total ha de ser zero.
+        nonnumeric_recargo_not_zero: Si totes les línies són exemptes o no subjectes,
+          el recàrrec ha de ser zero.
+        printed_total_differs: El total imprès, %{printed}, difereix del total calculat,
+          %{computed}.
+        rate_date_unresolved: El registre no declara tipus d'IVA per al %{on_date},
+          així que no es pot calcular l'IVA.
+        recargo_above_iva_total: El recàrrec, %{stated}, no pot superar l'IVA total,
+          %{iva_total}.
+        recargo_negative: El recàrrec no pot ser negatiu.
+        retention_amount_above_base: La retenció, %{stated}, no pot superar la base,
+          %{base_total}.
+        retention_amount_mismatch: La retenció indicada, %{stated}, difereix en més
+          d'un cèntim de la base pel tipus, %{expected}.
+        retention_amount_negative: L'import de la retenció no pot ser negatiu.
+        retention_rate_out_of_range: El tipus de retenció és una fracció entre 0 i
+          1, per exemple 0.15 per a un 15 %, no un percentatge.
+        retention_rate_without_amount: Un tipus de retenció necessita l'import retingut;
+          el tipus sol no declara cap retenció.
+        suplido_negative: L'import del suplert no pot ser negatiu.
+        total_negative: El total d'una factura no pot ser negatiu.
+      rate_slot:
+        exempt: Exempta
+        not_subject: No subjecta
+        rate_0: IVA 0 %
+        rate_10: IVA 10 %
+        rate_2: IVA 2 %
+        rate_21: IVA 21 %
+        rate_4: IVA 4 %
+        rate_5: IVA 5 %
+        rate_7_5: IVA 7,5 %
     lifecycle:
       errors:
         ambiguous_invoice_prefix: 'El prefix d''identificador de factura %{invoice_id}

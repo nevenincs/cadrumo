@@ -458,6 +458,14 @@ cli:
           A adquisicions, T lliuraments triangulars, S serveis prestats, I serveis
           adquirits, R transferències de béns en consigna, D devolucions de béns en
           consigna, C substitucions del destinatari en consigna'
+        preview_help: 'Previsualitza un esborrany de factura: les xifres, els avisos
+          i el veredicte que assoliria l''operació d''alta, sense desar res.'
+        preview_line_help: Objecte JSON repetible per a una línia de l'esborrany,
+          amb `key`, `description`, `quantity`, `unit_price`, `iva_rate`, `subtotal`
+          i `iva_amount` opcionals. Una xifra que ometis queda sense conèixer. Fes-lo
+          servir en lloc de --taxable-base.
+        preview_printed_total_help: El total imprès al document, que es compara amb
+          el total calculat.
         recargo_help: Recàrrec d'equivalència repercutit sobre la quota (LIVA art.
           161). Va inclòs en el total de la factura, a diferència d'una retenció.
         rectifies_help: Número de la factura que corregeix aquesta rectificativa.

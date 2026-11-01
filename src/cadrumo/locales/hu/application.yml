@@ -685,6 +685,63 @@ application:
           esetén).'
         unsupported_iva_rate: 'A(z) %{iva_rate} IVA-kulcs nem ismert; használd az
           alábbiak egyikét: %{accepted}.'
+    figures_preview:
+      finding:
+        base_total_not_line_sum: Az alapösszeg nem egyezik a sorok részösszegeinek
+          összegével.
+        figure_out_of_range: Egy szám túl nagy ahhoz, hogy centre pontosan ki lehessen
+          számolni.
+        grand_total_identity: A végösszeg nem egyezik az alap, az áfa és az egyenértékűségi
+          pótdíj összegével.
+        iva_total_not_line_sum: Az áfa összesen nem egyezik a sorok áfa-összegeinek
+          összegével.
+        line_amount_negative: Az ár, a részösszeg és az áfa összege nem lehet negatív.
+        line_iva_mismatch: A megadott áfa-összeg (%{stated}) több mint egy centtel
+          eltér a részösszeg és a kulcs szorzatától (%{expected}).
+        line_iva_not_zero_for_nonnumeric: A mentes vagy az áfa hatályán kívüli sor
+          nem tartalmaz áfát, de ezen %{stated} szerepel.
+        line_quantity_not_positive: A mennyiségnek nullánál nagyobbnak kell lennie.
+        line_rate_coverage_gap: A Cadrumo nem tartja nyilván a(z) %{slot} kulcsot
+          %{on_date} napjára, ezért nem alkalmazhatja.
+        line_rate_not_in_force: A(z) %{slot} áfakulcs nem volt hatályban %{on_date}
+          napján.
+        line_rate_undeclared: A(z) %{slot} áfakulcsot nem deklarálja a nyilvántartás.
+        line_subtotal_mismatch: A megadott részösszeg (%{stated}) több mint egy centtel
+          eltér a mennyiség és az egységár szorzatától (%{expected}).
+        nonnumeric_grand_total_identity: Ha minden sor mentes vagy az áfa hatályán
+          kívüli, a végösszegnek meg kell egyeznie az alappal.
+        nonnumeric_iva_total_not_zero: Ha minden sor mentes vagy az áfa hatályán kívüli,
+          az áfa összesen nulla kell legyen.
+        nonnumeric_recargo_not_zero: Ha minden sor mentes vagy az áfa hatályán kívüli,
+          az egyenértékűségi pótdíj nulla kell legyen.
+        printed_total_differs: A számlán nyomtatott végösszeg (%{printed}) eltér a
+          kiszámított végösszegtől (%{computed}).
+        rate_date_unresolved: A nyilvántartás nem ad meg áfakulcsot %{on_date} napjára,
+          ezért az áfa nem számolható ki.
+        recargo_above_iva_total: Az egyenértékűségi pótdíj (%{stated}) nem haladhatja
+          meg az áfa összesen értékét (%{iva_total}).
+        recargo_negative: Az egyenértékűségi pótdíj nem lehet negatív.
+        retention_amount_above_base: A levonás (%{stated}) nem haladhatja meg az alapot
+          (%{base_total}).
+        retention_amount_mismatch: A megadott levonás (%{stated}) több mint egy centtel
+          eltér az alap és a kulcs szorzatától (%{expected}).
+        retention_amount_negative: A levonás összege nem lehet negatív.
+        retention_rate_out_of_range: A levonás kulcsa 0 és 1 közötti tört, például
+          0.15 a 15 %-hoz, nem százalék.
+        retention_rate_without_amount: A levonás kulcsához meg kell adni a levont
+          összeget; a kulcs önmagában nem rögzít levonást.
+        suplido_negative: A vevő nevében kifizetett költségek összege nem lehet negatív.
+        total_negative: A számla végösszege nem lehet negatív.
+      rate_slot:
+        exempt: Mentes
+        not_subject: Az áfa hatályán kívül
+        rate_0: ÁFA 0%
+        rate_10: ÁFA 10%
+        rate_2: ÁFA 2%
+        rate_21: ÁFA 21%
+        rate_4: ÁFA 4%
+        rate_5: ÁFA 5%
+        rate_7_5: ÁFA 7,5%
     lifecycle:
       errors:
         ambiguous_invoice_prefix: 'A(z) %{invoice_id} számlaazonosító-előtag nem egyértelmű;

@@ -34,6 +34,7 @@ from ...application.invoices.catalogue_update_operation import (
     InvoiceUpdateRequest,
     InvoiceUpdateResult,
 )
+from ...application.invoices.figures_preview_contracts import InvoiceFiguresPreviewRequest, InvoiceFiguresPreviewResult
 from ...application.ledger.allocate_operation import LedgerAllocateOperationResult, LedgerAllocateRequest
 from ...application.ledger.bulk_classify_operation import (
     LEDGER_BULK_CLASSIFY_OPERATION_DEFINITION_ID,
@@ -79,6 +80,7 @@ from ...application.ledger.status_operation import LedgerStatusProjection, Ledge
 from ...application.ledger.update_contracts import LedgerUpdateOperationResult, LedgerUpdateRequest
 from ...application.ledger.view_operation import LedgerViewProjection, LedgerViewRequest
 from ...application.operations.capabilities import OperationRequestStoragePolicy
+from ...application.operations.public_scalar import PublicDecimal
 from ...application.review.filter import LedgerReviewStatus
 from ...core.invoice_link import LinkInconsistencyDirection
 from ...core.operations import (
@@ -413,6 +415,25 @@ def assert_ledger_invoice_add_outcome(ctx: ExecutorOutcome) -> None:
     assert invoice.invoice_number == "CONFORMANCE-INVOICE-2025-ADD"
     assert invoice.grand_total == Decimal("121.00")
     assert created.invoice == CatalogueInvoiceSnapshot.from_invoice(invoice)
+
+
+def assert_ledger_invoice_preview_outcome(ctx: ExecutorOutcome) -> None:
+    """Check the ledger.invoice.preview answer, which acceptance would reach and nothing stores."""
+    assert isinstance(ctx.payload, InvoiceFiguresPreviewRequest)
+    answer = ctx.resolve(InvoiceFiguresPreviewResult)
+    assert isinstance(answer, InvoiceFiguresPreviewResult)
+    assert answer.profile_id == ctx.profile_id
+    assert answer.verdict == "would_accept"
+    assert answer.invoice_id is not None
+    assert answer.refusal_code is None
+    # 100.00 at 21 percent: 21.00 of IVA, 121.00 in all.
+    assert (answer.totals.base, answer.totals.iva, answer.totals.total) == (
+        PublicDecimal(decimal="100.00"),
+        PublicDecimal(decimal="21.00"),
+        PublicDecimal(decimal="121.00"),
+    )
+    assert not InvoiceCatalogueRepository(bucket_id=str(ctx.profile_id)).load().invoices
+    assert ctx.definition.capabilities.permitted_effects == frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN})
 
 
 def assert_invoice_list_outcome(ctx: ExecutorOutcome) -> None:
@@ -768,6 +789,7 @@ LEDGER_OUTCOME_ASSERTIONS: dict[str, Callable[[ExecutorOutcome], None]] = {
     "ledger.status": assert_ledger_status_outcome,
     "ledger.check": assert_ledger_check_outcome,
     "ledger.invoice.add": assert_ledger_invoice_add_outcome,
+    "ledger.invoice.preview": assert_ledger_invoice_preview_outcome,
     INVOICE_LIST_OPERATION_DEFINITION_ID: assert_invoice_list_outcome,
     INVOICE_VIEW_OPERATION_DEFINITION_ID: assert_invoice_view_outcome,
     INVOICE_REMOVE_OPERATION_DEFINITION_ID: assert_invoice_remove_outcome,

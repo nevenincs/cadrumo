@@ -115,6 +115,7 @@ from .operation_composition_general import (
 )
 from .operation_composition_inputs import OperationCompositionInputs
 from .operation_composition_ledger import (
+    compose_invoice_figures_preview_operation,
     compose_invoices_catalogue_add_operation,
     compose_invoices_catalogue_intake_operation,
     compose_invoices_catalogue_read_operation,
@@ -271,6 +272,7 @@ _OPERATION_COMPOSITION_GROUPS: Mapping[str, _GroupComposer] = {
     "application.invoices.catalogue_read_operation": compose_invoices_catalogue_read_operation,
     "application.invoices.catalogue_remove_operation": compose_invoices_catalogue_remove_operation,
     "application.invoices.catalogue_update_operation": compose_invoices_catalogue_update_operation,
+    "application.invoices.figures_preview_operation": compose_invoice_figures_preview_operation,
     "application.ledger.add_operation": compose_ledger_add_operation,
     "application.ledger.allocate_operation": compose_ledger_allocate_operation,
     "application.ledger.attachment_mutation_operation": compose_ledger_attachment_mutation_operation,

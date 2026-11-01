@@ -654,6 +654,60 @@ application:
           H via a fiscal representative).'
         unsupported_iva_rate: 'IVA rate %{iva_rate} is not recognised; use one of:
           %{accepted}.'
+    figures_preview:
+      finding:
+        base_total_not_line_sum: The base total is not the sum of the line subtotals.
+        figure_out_of_range: A figure is too large to be calculated to the cent.
+        grand_total_identity: The total is not the base plus the IVA plus the recargo
+          de equivalencia.
+        iva_total_not_line_sum: The IVA total is not the sum of the line IVA amounts.
+        line_amount_negative: A price, a subtotal or an IVA amount cannot be negative.
+        line_iva_mismatch: The stated IVA amount, %{stated}, differs by more than
+          a cent from the subtotal times the rate, %{expected}.
+        line_iva_not_zero_for_nonnumeric: An exempt or not-subject line carries no
+          IVA, but this one states %{stated}.
+        line_quantity_not_positive: The quantity must be greater than zero.
+        line_rate_coverage_gap: Cadrumo has no rates on record for %{slot} on %{on_date},
+          so it cannot apply it.
+        line_rate_not_in_force: The IVA rate %{slot} was not in force on %{on_date}.
+        line_rate_undeclared: The IVA rate %{slot} is not one the registry declares.
+        line_subtotal_mismatch: The stated subtotal, %{stated}, differs by more than
+          a cent from quantity times unit price, %{expected}.
+        nonnumeric_grand_total_identity: When every line is exempt or not subject,
+          the total must equal the base.
+        nonnumeric_iva_total_not_zero: When every line is exempt or not subject, the
+          IVA total must be zero.
+        nonnumeric_recargo_not_zero: When every line is exempt or not subject, the
+          recargo de equivalencia must be zero.
+        printed_total_differs: The printed total, %{printed}, differs from the calculated
+          total, %{computed}.
+        rate_date_unresolved: The registry declares no IVA rates for %{on_date}, so
+          no IVA can be worked out.
+        recargo_above_iva_total: The recargo de equivalencia, %{stated}, cannot exceed
+          the IVA total, %{iva_total}.
+        recargo_negative: The recargo de equivalencia cannot be negative.
+        retention_amount_above_base: The withholding, %{stated}, cannot exceed the
+          base, %{base_total}.
+        retention_amount_mismatch: The stated withholding, %{stated}, differs by more
+          than a cent from the base times the rate, %{expected}.
+        retention_amount_negative: The withholding amount cannot be negative.
+        retention_rate_out_of_range: The withholding rate is a fraction between 0
+          and 1, such as 0.15 for 15 %, not a percentage.
+        retention_rate_without_amount: A withholding rate needs the withheld amount;
+          a rate alone states nothing withheld.
+        suplido_negative: The amount of expenses paid on the client's behalf cannot
+          be negative.
+        total_negative: An invoice total cannot be negative.
+      rate_slot:
+        exempt: Exempt
+        not_subject: Not subject
+        rate_0: IVA 0 %
+        rate_10: IVA 10 %
+        rate_2: IVA 2 %
+        rate_21: IVA 21 %
+        rate_4: IVA 4 %
+        rate_5: IVA 5 %
+        rate_7_5: IVA 7.5 %
     lifecycle:
       errors:
         ambiguous_invoice_prefix: 'The invoice id prefix %{invoice_id} is ambiguous;

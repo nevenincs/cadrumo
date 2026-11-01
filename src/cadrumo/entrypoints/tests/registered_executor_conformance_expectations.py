@@ -754,6 +754,12 @@ _EXPECTATIONS: Mapping[str, RegisteredExecutorConformanceCase] = _expectations_o
             "ledger.invoice.add", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED, ("ledger.invoice.add",)
         ),
         RegisteredExecutorConformanceCase(
+            "ledger.invoice.preview",
+            OperationTerminalCondition.SUCCEEDED,
+            OperationEffect.NONE,
+            ("ledger.invoice.preview",),
+        ),
+        RegisteredExecutorConformanceCase(
             MODELO_INVOICE_WITHHOLDING_CAPTURE_OPERATION_DEFINITION_ID,
             OperationTerminalCondition.SUCCEEDED,
             OperationEffect.UPDATED,

@@ -159,6 +159,7 @@ export const LEDGER_DEFINITIONS = [
   "ledger.invoice.add",
   "ledger.invoice.import",
   "ledger.invoice.list",
+  "ledger.invoice.preview",
   "ledger.invoice.remove",
   "ledger.invoice.update",
   "ledger.invoice.view",
@@ -759,6 +760,119 @@ export type InvoiceAddResult = {
   euro_value_pending: boolean;
   simplificada_tax_id_advisory_required: boolean;
   validation_code: InvoiceAddValidation | null;
+};
+
+/** One line of a draft invoice. A figure the draft does not state yet is
+ * left out, which is never the same as zero. `key` correlates the answer's
+ * line to this one. */
+export type InvoicePreviewLine = {
+  key: string;
+  description?: string | null;
+  quantity?: PublicDecimal | null;
+  unit_price?: PublicDecimal | null;
+  iva_rate?: string | null;
+  subtotal?: PublicDecimal | null;
+  iva_amount?: PublicDecimal | null;
+  spending_category_id?: string | null;
+  oss_rate_kind?: string | null;
+};
+/** A draft invoice, every field optional because it is incomplete while it
+ * is typed. It states `lines` or a bare `base_total`, never both. */
+export type InvoicePreviewRequest = {
+  operation_date?: string | null;
+  issued_at?: string | null;
+  lines?: InvoicePreviewLine[];
+  base_total?: PublicDecimal | null;
+  recargo_amount?: PublicDecimal | null;
+  retention_rate?: PublicDecimal | null;
+  retention_amount?: PublicDecimal | null;
+  printed_total?: PublicDecimal | null;
+  kind?: InvoiceKind | null;
+  invoice_number?: string | null;
+  counterparty_name?: string | null;
+  counterparty_tax_id?: string | null;
+  counterparty_country?: string | null;
+  currency?: string | null;
+  invoice_class?: string | null;
+  iva_category?: string | null;
+  operation_type?: string | null;
+  series?: string | null;
+  rectifies_invoice_number?: string | null;
+  notes?: string;
+  business_premises_lease?: {
+    situacion_inmueble?: string | null;
+    referencia_catastral?: string | null;
+  } | null;
+};
+export type InvoicePreviewOnDateSource =
+  "operation_date" | "issued_at" | "today";
+export type InvoicePreviewVerdict =
+  "incomplete" | "would_accept" | "would_refuse";
+export type InvoicePreviewFigureVerdict =
+  "equal" | "within_tolerance" | "refused" | "not_checked";
+export type InvoicePreviewSeverity = "refusal" | "warning";
+/** A rate slot's standing on the draft's date. `fraction` is null when no
+ * rate applies; `label_key` names the slot's word. */
+export type InvoicePreviewRateSlot = {
+  slot: string;
+  fraction: PublicDecimal | null;
+  in_force: boolean;
+  coverage_gap: boolean;
+  label_key: string;
+};
+/** The backend's figure, the stated one with its verdict, and the one add
+ * would store. */
+export type InvoicePreviewFigure = {
+  computed: PublicDecimal | null;
+  stated: PublicDecimal | null;
+  verdict: InvoicePreviewFigureVerdict | null;
+  submitted: PublicDecimal | null;
+};
+export type InvoicePreviewLineResult = {
+  key: string;
+  subtotal: InvoicePreviewFigure;
+  iva_amount: InvoicePreviewFigure;
+};
+/** A total is null until every part of it is known. */
+export type InvoicePreviewTotals = {
+  base: PublicDecimal | null;
+  iva: PublicDecimal | null;
+  recargo: PublicDecimal | null;
+  total: PublicDecimal | null;
+  net_of_retention: PublicDecimal | null;
+};
+export type InvoicePreviewRetention = {
+  rate: PublicDecimal | null;
+  amount: PublicDecimal | null;
+  implied: PublicDecimal | null;
+};
+/** One closed finding. `code` is stable, `values` are what it compared and
+ * `label_key` names its word. */
+export type InvoicePreviewFinding = {
+  code: string;
+  severity: InvoicePreviewSeverity;
+  fields: string[];
+  line_key: string | null;
+  values: { key: string; value: string | number | boolean | PublicDecimal }[];
+  label_key: string;
+};
+/** The backend's whole answer for one draft, bound to it by `input_digest`.
+ * `would_accept` is acceptance's own verdict; a duplicate is decided only
+ * when the invoice is added. */
+export type InvoicePreviewResult = {
+  profile_id: string;
+  input_digest: string;
+  on_date: string;
+  on_date_source: InvoicePreviewOnDateSource;
+  rate_slots: InvoicePreviewRateSlot[];
+  lines: InvoicePreviewLineResult[];
+  totals: InvoicePreviewTotals;
+  retention: InvoicePreviewRetention;
+  findings: InvoicePreviewFinding[];
+  missing_fields: string[];
+  verdict: InvoicePreviewVerdict;
+  refusal_code: string | null;
+  invoice_id: string | null;
 };
 
 /** The fields a stored invoice may be corrected in; its identity and lines
@@ -1891,6 +2005,7 @@ export interface LedgerRequests {
   "ledger.invoice.list": InvoiceListRequest;
   "ledger.invoice.view": InvoiceViewRequest;
   "ledger.invoice.add": InvoiceAddRequest;
+  "ledger.invoice.preview": InvoicePreviewRequest;
   "ledger.invoice.update": InvoiceUpdateRequest;
   "ledger.invoice.remove": InvoiceRemoveRequest;
   "ledger.status": LedgerStatusRequest;
@@ -1993,6 +2108,7 @@ export interface LedgerResults {
   "ledger.invoice.list": InvoiceListResult;
   "ledger.invoice.view": InvoiceViewResult;
   "ledger.invoice.add": InvoiceAddResult;
+  "ledger.invoice.preview": InvoicePreviewResult;
   "ledger.invoice.update": InvoiceUpdateResult;
   "ledger.invoice.remove": InvoiceRemoveResult;
   "ledger.status": LedgerStatusResult;

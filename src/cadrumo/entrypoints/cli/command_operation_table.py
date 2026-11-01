@@ -111,6 +111,7 @@ COMMAND_OPERATION_ROWS: Final[tuple[tuple[tuple[str, ...], str | None], ...]] = 
     (("app", "ledger", "invoice", "add"), "ledger.invoice.add"),
     (("app", "ledger", "invoice", "import"), "ledger.invoice.import"),
     (("app", "ledger", "invoice", "list"), "ledger.invoice.list"),
+    (("app", "ledger", "invoice", "preview"), "ledger.invoice.preview"),
     (("app", "ledger", "invoice", "remove"), "ledger.invoice.remove"),
     (("app", "ledger", "invoice", "update"), "ledger.invoice.update"),
     (("app", "ledger", "invoice", "view"), "ledger.invoice.view"),

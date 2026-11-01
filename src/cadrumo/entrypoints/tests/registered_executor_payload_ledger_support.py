@@ -24,6 +24,7 @@ from ...application.invoices.catalogue_update_operation import (
     INVOICE_UPDATE_OPERATION_DEFINITION_ID,
     InvoiceUpdatePatch,
 )
+from ...application.invoices.figures_preview_contracts import InvoiceFiguresPreviewLine
 from ...application.ledger.action_ports import LedgerActionPorts
 from ...application.ledger.actions_import import LedgerProviderID
 from ...application.ledger.actions_split_merge import split_transaction
@@ -656,6 +657,31 @@ def _ledger_invoice_add(ctx: PayloadContext) -> PayloadResult:
     )
 
 
+def _ledger_invoice_preview(ctx: PayloadContext) -> PayloadResult:
+    return ctx.request(
+        ctx.profile_subject,
+        {
+            "profile_id": ctx.profile_id,
+            "kind": InvoiceKind.RECEIVED,
+            "counterparty_name": "Conformance Supplier",
+            "counterparty_tax_id": "B12345674",
+            "counterparty_country": "ES",
+            "invoice_number": "CONFORMANCE-INVOICE-2025-PREVIEW",
+            "issued_at": date(2025, 5, 1),
+            "currency": "EUR",
+            "lines": (
+                InvoiceFiguresPreviewLine(
+                    key="a",
+                    description="Conformance service",
+                    quantity=PublicDecimal(decimal="1"),
+                    unit_price=PublicDecimal(decimal="100.00"),
+                    iva_rate="RATE_21",
+                ),
+            ),
+        },
+    )
+
+
 def _ledger_invoice_stored(ctx: PayloadContext) -> PayloadResult:
     invoice = _seed_conformance_invoice(ctx.profile_id)
     values: dict[str, object] = {"profile_id": ctx.profile_id}
@@ -754,6 +780,7 @@ LEDGER_BUILDERS: dict[str, PayloadBuilder] = {
     "ledger.actividad-asset.form-options": _ledger_actividad_asset,
     "ledger.actividad-asset.acquisition-candidates": _ledger_actividad_asset,
     "ledger.invoice.add": _ledger_invoice_add,
+    "ledger.invoice.preview": _ledger_invoice_preview,
     "ledger.invoice.list": _ledger_invoice_stored,
     "ledger.invoice.view": _ledger_invoice_stored,
     "ledger.invoice.remove": _ledger_invoice_stored,

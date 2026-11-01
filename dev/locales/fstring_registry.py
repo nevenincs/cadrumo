@@ -293,6 +293,7 @@ def _runtime_registrations(
     from dev.locales.desktop_entry_option_keys import ENTRY_OPTION_KEYS
     from dev.locales.desktop_modelo_choice_keys import MODELO_CHOICE_KEYS
     from dev.locales.inventory_fstring_registrations import inventory_dynamic_registrations
+    from dev.locales.invoice_figures_preview_keys import FINDING_KEYS, RATE_SLOT_KEYS
 
     from .m303_carry_fstring_registrations import m303_carry_error_registration
 
@@ -395,6 +396,16 @@ def _runtime_registrations(
             description="application.ledger.entry_options.* (served ledger entry vocabularies)",
             key_factory=lambda key: key,
             values=tuple(sorted(ENTRY_OPTION_KEYS)),
+        ),
+        FStringKeyRegistration(
+            description="application.invoices.figures_preview.finding.* (words of the closed figure findings)",
+            key_factory=lambda key: key,
+            values=tuple(sorted(FINDING_KEYS)),
+        ),
+        FStringKeyRegistration(
+            description="application.invoices.figures_preview.rate_slot.* (words of the declared IVA rate slots)",
+            key_factory=lambda key: key,
+            values=tuple(sorted(RATE_SLOT_KEYS)),
         ),
         FStringKeyRegistration(
             description="application.modelo.edit_choice.* (words of the choices a Modelo box serves)",

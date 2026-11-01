@@ -460,6 +460,14 @@ cli:
           T entregas triangulares, S servicios prestados, I servicios adquiridos,
           R transferencias de bienes en consigna, D devoluciones de bienes en consigna,
           C sustituciones del destinatario en consigna'
+        preview_help: 'Previsualiza un borrador de factura: las cifras, los avisos
+          y el veredicto que alcanzaría la operación de alta, sin guardar nada.'
+        preview_line_help: Objeto JSON repetible para una línea del borrador, con
+          `key`, `description`, `quantity`, `unit_price`, `iva_rate`, `subtotal` e
+          `iva_amount` opcionales. Una cifra que omitas queda sin conocer. Úsalo en
+          lugar de --taxable-base.
+        preview_printed_total_help: El total impreso en el documento, que se compara
+          con el total calculado.
         recargo_help: Recargo de equivalencia repercutido sobre la cuota (LIVA art.
           161). Va incluido en el total de la factura, a diferencia de una retención.
         rectifies_help: Número de la factura que corrige esta rectificativa.

@@ -160,6 +160,18 @@ def compose_invoices_catalogue_update_operation(inputs: OperationCompositionInpu
     return built((definition,), (build_invoice_update_registration(definition),))
 
 
+def compose_invoice_figures_preview_operation(inputs: OperationCompositionInputs) -> OperationGroupBuild:
+    """Compose the read that answers an invoice draft with the backend's own figures."""
+    from ..application.invoices.figures_preview_operation import (
+        build_invoice_figures_preview_definition,
+        build_invoice_figures_preview_registration,
+    )
+
+    del inputs
+    definition = build_invoice_figures_preview_definition()
+    return built((definition,), (build_invoice_figures_preview_registration(definition),))
+
+
 # -- ledger ------------------------------------------------------------------------------------------------------------
 
 

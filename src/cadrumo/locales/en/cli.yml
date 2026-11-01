@@ -430,6 +430,13 @@ cli:
           after an exempt import, H the same via a fiscal representative, A acquisitions
           of goods, T triangular supplies, S services supplied, I services acquired,
           R call-off-stock transfers, D call-off-stock returns, C call-off-stock substitutions'
+        preview_help: 'Preview an invoice draft: the figures, findings and verdict
+          the add operation would reach, without saving anything.'
+        preview_line_help: Repeatable JSON object for one draft line, with optional
+          `key`, `description`, `quantity`, `unit_price`, `iva_rate`, `subtotal` and
+          `iva_amount`. A figure left out stays unknown. Use it instead of --taxable-base.
+        preview_printed_total_help: The total printed on the document, compared with
+          the calculated total.
         recargo_help: Equivalence surcharge charged on top of the tax quota (LIVA
           art. 161). It is included in the invoice total, unlike withholding.
         rectifies_help: Number of the invoice this rectificativa corrects.

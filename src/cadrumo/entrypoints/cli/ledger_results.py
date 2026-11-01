@@ -84,6 +84,86 @@ class LedgerEntryOptionsResult(OutputSchema):
     families: list[LedgerEntryOptionFamilyPayload]
 
 
+class LedgerInvoicePreviewRateSlotPayload(OutputSchema):
+    """One IVA rate slot's standing on the draft's date; no fraction means no rate applies."""
+
+    slot: str
+    fraction: str | None
+    in_force: bool
+    coverage_gap: bool
+    label_key: str
+
+
+class LedgerInvoicePreviewFigurePayload(OutputSchema):
+    """The backend's figure, the stated one with its verdict, and what add would store."""
+
+    computed: str | None
+    stated: str | None
+    verdict: str | None
+    submitted: str | None
+
+
+class LedgerInvoicePreviewLinePayload(OutputSchema):
+    """One draft line's figures, correlated to the request by its key."""
+
+    key: str
+    subtotal: LedgerInvoicePreviewFigurePayload
+    iva_amount: LedgerInvoicePreviewFigurePayload
+
+
+class LedgerInvoicePreviewTotalsPayload(OutputSchema):
+    """The totals known so far; an unknown one is null, never zero."""
+
+    base: str | None
+    iva: str | None
+    recargo: str | None
+    total: str | None
+    net_of_retention: str | None
+
+
+class LedgerInvoicePreviewRetentionPayload(OutputSchema):
+    """The stated retención and the amount its rate implies on the known base."""
+
+    rate: str | None
+    amount: str | None
+    implied: str | None
+
+
+class LedgerInvoicePreviewFactPayload(OutputSchema):
+    """One value a finding compared."""
+
+    key: str
+    value: str | int | bool
+
+
+class LedgerInvoicePreviewFindingPayload(OutputSchema):
+    """One closed finding, located by field and, on a line, by the line's key."""
+
+    code: str
+    severity: str
+    fields: list[str]
+    line_key: str | None
+    values: list[LedgerInvoicePreviewFactPayload]
+    label_key: str
+
+
+class LedgerInvoicePreviewResult(OutputSchema):
+    """JSON envelope for ``aeat app ledger invoice preview``."""
+
+    input_digest: str
+    on_date: str
+    on_date_source: str
+    rate_slots: list[LedgerInvoicePreviewRateSlotPayload]
+    lines: list[LedgerInvoicePreviewLinePayload]
+    totals: LedgerInvoicePreviewTotalsPayload
+    retention: LedgerInvoicePreviewRetentionPayload
+    findings: list[LedgerInvoicePreviewFindingPayload]
+    missing_fields: list[str]
+    verdict: str
+    refusal_code: str | None
+    invoice_id: str | None
+
+
 class M210IncomeClassificationPayload(OutputSchema):
     """Operator-visible persisted M210 classification facts for one ledger row."""
 
@@ -1171,6 +1251,14 @@ __all__ = [
     "LedgerImportSourcePayload",
     "LedgerImportTransactionRefPayload",
     "LedgerImportValidationPayload",
+    "LedgerInvoicePreviewFactPayload",
+    "LedgerInvoicePreviewFigurePayload",
+    "LedgerInvoicePreviewFindingPayload",
+    "LedgerInvoicePreviewLinePayload",
+    "LedgerInvoicePreviewRateSlotPayload",
+    "LedgerInvoicePreviewResult",
+    "LedgerInvoicePreviewRetentionPayload",
+    "LedgerInvoicePreviewTotalsPayload",
     "LedgerLinkResult",
     "LedgerListResult",
     "LedgerListRowPayload",

@@ -529,6 +529,7 @@
         "dev.locales.errors",
         "dev.locales.fstring_registry",
         "dev.locales.inventory_fstring_registrations",
+        "dev.locales.invoice_figures_preview_keys",
         "dev.locales.locale_audit",
         "dev.locales.locale_nodes",
         "dev.locales.locale_tree",
