@@ -9,20 +9,22 @@ when the source was filed relative to the target.
 
 from __future__ import annotations
 
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
 
 from pydantic import BaseModel, Field, model_validator
 
-from ....core.aggregation import BindingSourceKind
+from ....core.aggregation import BindingAggregationOp, BindingSourceKind
 from ....core.casilla_id import CasillaId
 from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.models import STRICT_FROZEN_CONFIG
+from .binding_aggregation import binding_aggregation_op
 from .binding_temporal import (
     BindingTemporalSelector,
     FiledCurrentPeriod,
     FilingYearOffset,
     FilingYearOffsetByTargetPeriod,
     SameFilingYearPeriods,
+    TargetPeriods,
     temporal_max_year_delta,
     temporal_period_anchors,
 )
@@ -30,7 +32,10 @@ from .errors import RegistryValidationError
 from .ids import ModeloId
 from .relation_dependency import RelationDependencyRoleField, RelationKindField
 
-__all__ = ["RelationPrefillProvider"]
+if TYPE_CHECKING:
+    from .schema import BindingDefinition
+
+__all__ = ["RelationPrefillProvider", "validate_relation_prefill_binding"]
 
 
 class RelationPrefillProvider(BaseModel):
@@ -127,3 +132,34 @@ class RelationPrefillProvider(BaseModel):
                 context={"dependency_role": str(self.dependency_role)},
             )
         return self
+
+
+def validate_relation_prefill_binding(binding: BindingDefinition) -> list[str]:
+    """Return the build-time diagnostics for one relation_prefill binding.
+
+    A ``copy`` carries a single source value, so it needs exactly one source
+    casilla and exactly one source anchor for every target period it applies to.
+    A binding scoped to target periods must also name a source window for each of
+    them: one that names none applies yet scopes out, leaving a blank where a
+    value was promised. Both questions read the canonical temporal projection,
+    so no period or year is restated here.
+    """
+    provider = binding.provider
+    if not isinstance(provider, RelationPrefillProvider):
+        return [f"binding {binding.id!r} (source={binding.source!r}) is not a relation_prefill provider"]
+    prefix = f"binding {binding.id!r} (source={binding.source!r}) relation-prefill invariants violated:"
+    is_copy = binding_aggregation_op(binding) is BindingAggregationOp.COPY
+    failures: list[str] = []
+    if is_copy and len(provider.declared_source_casilla_ids) != 1:
+        failures.append(f"{prefix} copy aggregation requires exactly one source casilla")
+    if isinstance(binding.applicability, TargetPeriods):
+        for period in binding.applicability.periods:
+            anchors = provider.required_period_anchors_for_target(period)
+            if not anchors:
+                failures.append(f"{prefix} the temporal selector names no source window for target period {period!r}")
+            elif is_copy and len(anchors) != 1:
+                failures.append(
+                    f"{prefix} copy aggregation requires exactly one source anchor for target period {period!r}, "
+                    f"found {len(anchors)}",
+                )
+    return failures

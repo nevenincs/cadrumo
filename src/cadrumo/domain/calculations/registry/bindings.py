@@ -77,6 +77,8 @@ __all__ = [
     "iva_compensation_annual_partition_requirement",
     "resolve_available_bound_inputs_by_casilla_id",
     "resolve_bound_casilla_binding_value",
+    "validate_binding_selector_shape",
+    "validate_iva_compensation_annual_partition_revision",
 ]
 
 
@@ -414,7 +416,7 @@ def iva_compensation_annual_partition_requirement(
         return None
 
     first_selector = provider_member(bindings[0], IvaCompensationAnnualPartitionProvider)
-    targets, legal_refs, source_refs = _collect_iva_compensation_partition_bindings(bindings, first_selector)
+    targets, legal_refs, source_refs = _collect_iva_compensation_partition_bindings(bindings)
     return IvaCompensationAnnualPartitionRequirement(
         source_modelo=first_selector.source_modelo,
         source_periods=first_selector.source_periods,
@@ -431,6 +433,23 @@ def iva_compensation_annual_partition_requirement(
     )
 
 
+def validate_iva_compensation_annual_partition_revision(revision: ModeloRevision) -> list[str]:
+    """Return build-time failures for the revision's annual compensation-partition family.
+
+    The per-binding validator cannot see sibling bindings, and the partition
+    outputs are a sibling invariant: each half of the partition may be targeted
+    at most once, or the one that the resolver reads depends on declaration order.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
+    """
+    try:
+        iva_compensation_annual_partition_requirement(revision)
+    except RegistryValidationError as exc:
+        return [str(exc)]
+    return []
+
+
 def _iva_compensation_annual_partition_bindings(
     revision: ModeloRevision,
 ) -> tuple[BindingDefinition, ...]:
@@ -444,39 +463,22 @@ def _iva_compensation_annual_partition_bindings(
 
 def _collect_iva_compensation_partition_bindings(
     bindings: tuple[BindingDefinition, ...],
-    first_selector: IvaCompensationAnnualPartitionProvider,
 ) -> tuple[
     dict[IvaCompensationAnnualPartition, BindingId],
     set[LegalRefId],
     set[SourceRefId],
 ]:
-    """Validate shared selectors and collect target ids plus provenance refs."""
+    """Collect target ids, refusing a duplicate output, plus provenance refs."""
     targets: dict[IvaCompensationAnnualPartition, BindingId] = {}
     legal_refs: set[LegalRefId] = set()
     source_refs: set[SourceRefId] = set()
     for binding in bindings:
         selector = provider_member(binding, IvaCompensationAnnualPartitionProvider)
-        _require_shared_iva_compensation_selector(selector, first_selector)
         output = IvaCompensationAnnualPartition(selector.partition_output)
         targets[output] = _unique_partition_binding_id(targets.get(output), binding.id, output)
         legal_refs.update(binding.legal_refs)
         source_refs.update(binding.source_refs)
     return targets, legal_refs, source_refs
-
-
-def _require_shared_iva_compensation_selector(
-    selector: IvaCompensationAnnualPartitionProvider,
-    first_selector: IvaCompensationAnnualPartitionProvider,
-) -> None:
-    """Require every annual partition binding to use one source selector."""
-    if (
-        selector.source_modelo != first_selector.source_modelo
-        or selector.source_casilla_ids != first_selector.source_casilla_ids
-        or selector.source_periods != first_selector.source_periods
-    ):
-        raise RegistryValidationError(
-            "iva_compensation_annual_partition bindings must share one source selector",
-        )
 
 
 def _unique_partition_binding_id(
@@ -600,11 +602,6 @@ def validate_binding_selector_shape(binding: BindingDefinition) -> list[str]:
     covers exactly the provider union, and the union refuses an unknown member
     at construction -- so this function holds no opinion about membership.
 
-    A registration may enrol no validator at all. That is the stated answer for
-    a family whose provider member is its own complete gate: the union built
-    that member from the authored row, so there is nothing left to check and no
-    diagnostic to earn.
-
     Each family validator validates the provider shape (projected through the
     same normalised mapping the resolve-time helpers see, so the gate is never
     stricter than runtime) and lifts that family's op/fact cross-invariants to
@@ -612,7 +609,4 @@ def validate_binding_selector_shape(binding: BindingDefinition) -> list[str]:
     preserving the underlying pydantic field error, so the snapshot-build gate
     collects every failure across a revision in one pass.
     """
-    validator = validator_for(binding.source)
-    if validator is None:
-        return []
-    return validator(binding)
+    return validator_for(binding.source)(binding)
