@@ -2352,7 +2352,10 @@
   gap: calc(var(--spacing) * 4);
 }
 :where(.ledger-proto) .split2.reading {
-  grid-template-columns: minmax(0, 1fr) minmax(32rem, 1.7fr);
+  grid-template-columns: minmax(0, 1fr) minmax(
+      calc(var(--spacing) * 128),
+      1.7fr
+    );
 }
 :where(.ledger-proto) .split-list {
   display: grid;
