@@ -77,7 +77,6 @@ __all__ = [
     "iva_compensation_annual_partition_requirement",
     "resolve_available_bound_inputs_by_casilla_id",
     "resolve_bound_casilla_binding_value",
-    "validate_binding_selector_shape",
     "validate_iva_compensation_annual_partition_revision",
 ]
 
