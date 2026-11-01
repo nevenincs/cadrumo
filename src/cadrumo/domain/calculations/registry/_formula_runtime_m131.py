@@ -49,7 +49,7 @@ from .formula_runtime_ops import (
 )
 from .formula_runtime_ops import text_tolerant_casilla_value
 from .ids import ParameterId
-from .schema_formula import FormulaExpression
+from .schema_formula import FormulaExpression, ParameterDefinition
 
 if TYPE_CHECKING:
     from .formula_expression import EvalContext
@@ -102,6 +102,25 @@ def _m131_resolve_modulos_previo_args(expression: FormulaExpression) -> _M131Res
     )
 
 
+def _require_every_tabled_modulo_slot(
+    args: _M131ResolveModulosPrevioArgs, parameter: ParameterDefinition, *, filing_year: int
+) -> None:
+    """Refuse a formula with fewer módulo slots than its year's table prices, which would drop a trailing módulo."""
+    tabled = max(
+        (
+            int(entry.key.rpartition(":")[2])
+            for entry in parameter.keyed_brackets
+            if entry.valid_from.year <= filing_year and (entry.valid_to is None or entry.valid_to.year >= filing_year)
+        ),
+        default=0,
+    )
+    if len(args.modulo_unit_casilla_ids) < tabled:
+        raise RegistryValidationError(
+            f"formula op 'm131_resolve_modulos_previo' declares {len(args.modulo_unit_casilla_ids)} módulo slots "
+            f"but parameter {parameter.id!r} prices {tabled}",
+        )
+
+
 def evaluate_m131_resolve_modulos_previo(expression: FormulaExpression, ctx: _EvalContext) -> Decimal:
     """Resolve the M131/M100 estimación-objetiva Fase 1ª rendimiento neto previo.
 
@@ -130,6 +149,8 @@ def evaluate_m131_resolve_modulos_previo(expression: FormulaExpression, ctx: _Ev
     ctx.operand_casilla_refs.append(args.epigrafe_casilla_id)
     parameter = ctx.parameters.get(args.coefficient_parameter)
     ctx.operand_refs.append(args.coefficient_parameter)
+    if parameter is not None:
+        _require_every_tabled_modulo_slot(args, parameter, filing_year=ctx.filing_year)
     if not epigrafe or parameter is None:
         return ZERO
     total = ZERO

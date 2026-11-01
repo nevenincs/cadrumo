@@ -37,7 +37,7 @@ from ..draft_construction import build_draft
 from ..errors import ModeloApplicationError
 from ..export import export_draft
 from ..export_verification import DeclaracionVerifyVerdict, verify_export
-from ..export_xml_value_limits import refuse_xml_values_outside_schema
+from ..export_xml_value_limits import canonical_xml_text, refuse_xml_values_outside_schema, xml_value_schema
 from ..runtime import ModeloOperatorProfile, RegistrySchemaAccessor, build_runtime_schema_provider
 from .export_support import m151_producer_snapshot
 
@@ -675,3 +675,27 @@ def test_the_operator_reads_which_box_and_which_limit_and_never_the_value(
     assert secret not in render_error_text(failure)
     assert failure.context is not None
     assert "cause" not in failure.context
+
+
+_CODE_TYPE_XSD = """<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:element name="Doc">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="Code">
+          <xs:simpleType><xs:restriction base="xs:string"><xs:pattern value="[A-Z]+"/></xs:restriction></xs:simpleType>
+        </xs:element>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>"""
+
+
+@pytest.mark.parametrize(
+    ("typed", "kept"),
+    [("si", "SI"), ("\u0131", "\u0131"), ("\u017f", "\u017f"), ("a\u0131", "a\u0131")],
+    ids=["a plain letter capitalizes", "dotless i", "long s", "mixed"],
+)
+def test_a_letter_that_capitalizes_into_plain_ascii_never_becomes_a_code_letter(typed: str, kept: str) -> None:
+    schema = xml_value_schema(DefusedElementTree.fromstring(_CODE_TYPE_XSD), source_id="fixture", root_tag="Doc")
+
+    assert canonical_xml_text(schema, "Doc/Code", typed) == kept

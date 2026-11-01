@@ -1779,6 +1779,9 @@ cli:
         preview_maritime_exemption_qualifying_days_help: Spanyol területen kívüli
           munkavégzés naptári napjai az adóéven belül. Az Art. 7.p) alkalmazásakor
           az --annual-salary mellett kötelező.
+        preview_maritime_exemption_year_help: Az előnézni kívánt adóév; ez határozza
+          meg a napokat, a felső határt és az arányt. Alapértelmezés szerint a mai
+          dátumé.
         prior_domiciliation_election_help: A korábbi 303-as bevallás csoportos beszedésének
           megtartása vagy törlése/módosítása; a törléshez vagy módosításhoz egy korábbi,
           U típusú, importált AEAT-bizonyítékkal alátámasztott benyújtásra épülő helyesbítő

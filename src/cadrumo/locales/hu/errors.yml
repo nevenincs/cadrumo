@@ -120,6 +120,7 @@ errors:
       hiányoznak.
     m100_art85_revision_flag_invalid: A Modelo 100 85. cikke szerinti felülvizsgált
       kataszteri érték jelölőjének a hivatalos X jelölőnégyzet-értéknek kell lennie.
+    m184_days_past_the_year: '{days} nap nem fér bele a(z) {filing_year}. évbe.'
     m210_gastos_deducibles_negative: A(z) M210 gastos_deducibles %{casilla_id} nem
       lehet negatív; kapott érték %{value}.
     m210_gastos_deducibles_not_allowed: A(z) M210 gastos_deducibles %{casilla_id}

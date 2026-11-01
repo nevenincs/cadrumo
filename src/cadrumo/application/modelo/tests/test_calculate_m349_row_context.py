@@ -12,6 +12,7 @@ from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....domain.modelos.row_models import (
+    Modelo184MemberRow,
     Modelo349CountryPrefixContextError,
     Modelo349OperadorRow,
     Modelo349RectificacionRow,
@@ -80,3 +81,18 @@ def test_application_accepts_supported_rectification_context() -> None:
             base_anterior=Decimal("30.00"),
         )
         validate_detail_rows((row,), work_unit=_unit(), operation=operation)
+
+
+@pytest.mark.parametrize(("filing_year", "refused"), [(2024, False), (2026, True)])
+def test_a_member_day_count_is_held_to_the_days_of_its_own_year(filing_year: int, refused: bool) -> None:
+    row = Modelo184MemberRow(
+        nif="33333333C", porcentaje=Decimal("100"), importe=Decimal("0"), clave="D", dias_miembro=366
+    )
+    unit = _unit().model_copy(update={"filing_year": filing_year})
+    with bundled_indexed_authority().operation() as operation:
+        if refused:
+            with pytest.raises(ModeloCalculateDetailRowsError) as raised:
+                validate_detail_rows((row,), work_unit=unit, operation=operation)
+            assert raised.value.context == {"days": "366", "filing_year": "2026"}
+        else:
+            validate_detail_rows((row,), work_unit=unit, operation=operation)

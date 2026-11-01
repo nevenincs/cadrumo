@@ -1684,6 +1684,8 @@ cli:
         preview_maritime_exemption_qualifying_days_help: Calendar days worked outside
           Spanish territory in the tax year. Required alongside --annual-salary when
           Art. 7.p) applies.
+        preview_maritime_exemption_year_help: Tax year to preview; it fixes the days,
+          the cap and the fraction. Defaults to today's.
         prior_domiciliation_election_help: Keep or cancel/modify the prior Modelo
           303 direct debit; cancelling or modifying it requires a rectificativa over
           an earlier filing of kind U that is backed by imported AEAT evidence.

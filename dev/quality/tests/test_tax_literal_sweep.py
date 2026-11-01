@@ -187,7 +187,7 @@ A tax limit counts casillas, rows, amounts or days of a form, so ``RESEARCH_DEDU
 and ``SOLIDARITY_SURCHARGE_THRESHOLD`` no longer reads as an operator's arity."""
 
 _LEXICAL_NAME: Final = re.compile(
-    r"(?:^|_)(?:EVENT_IDS|EXIT_CODE|STATUS_CODE|ISO_\d+|ALPHA\d|GROUP_WIDTH|FILE_NAME|KEY_MIN|SHORT_TEXT"
+    r"(?:^|_)(?:EVENT_IDS|EXIT_CODE|STATUS_CODE|ISO_\d+|ALPHA\d|GROUP_WIDTH|GROUP_SIZE|FILE_NAME|KEY_MIN|SHORT_TEXT"
     r"|MODELO_ID|PERIOD_TOKEN|FRACTION_DIGITS|SHORTEST)(?:_|$)",
     re.IGNORECASE,
 )

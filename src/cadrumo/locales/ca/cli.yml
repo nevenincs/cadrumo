@@ -1790,6 +1790,8 @@ cli:
         preview_maritime_exemption_qualifying_days_help: Dies naturals treballats
           fora del territori espanyol en l'exercici. Obligatori juntament amb --annual-salary
           quan s'aplica l'Art. 7.p).
+        preview_maritime_exemption_year_help: Exercici que vols previsualitzar; fixa
+          els dies, el límit i la fracció. Per defecte, el d'avui.
         prior_domiciliation_election_help: Manté o sol·licita la baixa/modificació
           de la domiciliació prèvia del Model 303; la baixa/modificació exigeix una
           rectificativa sobre una presentació prèvia de tipus U avalada per evidència

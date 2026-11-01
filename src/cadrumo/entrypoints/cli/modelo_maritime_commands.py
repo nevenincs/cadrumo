@@ -150,6 +150,7 @@ def work_preview_maritime_exemption(
     annual_salary: str | None = None,
     qualifying_days: int | None = None,
     gross_navigation_income: str | None = None,
+    filing_year: int | None = None,
     output_language: OutputLanguage | None = None,
 ) -> None:
     """Resolve and render the maritime exemption preview for the active profile.
@@ -168,6 +169,7 @@ def work_preview_maritime_exemption(
         annual_salary=annual_salary_decimal,
         qualifying_days=qualifying_days,
         gross_navigation_income=gross_navigation_decimal,
+        filing_year=filing_year,
     )
     retmar_warning = (
         resolve_error_message(

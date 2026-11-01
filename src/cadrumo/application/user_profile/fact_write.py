@@ -117,6 +117,7 @@ def apply_profile_fact_changes(
         next_facts,
         require_complete=current.setup_state is not ProfileSetupState.INCOMPLETE,
         schema=profile_context.schema,
+        changed_paths=frozenset(changed_paths),
     )
     # A write that changes nothing is not a write. Publishing it anyway bumped
     # the revision and appended a profile.values.updated event, so the evidence

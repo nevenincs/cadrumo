@@ -144,7 +144,7 @@ def test_an_asset_reference_outside_the_persisted_identity_contract_is_refused(a
         (M720IdentifierScheme.IBAN, "DE89370400440532013001", "check digits"),
         (M720IdentifierScheme.IBAN, "de89 3704 0044 0532 0130 00", "canonical"),
         (M720IdentifierScheme.ISIN, "US0378331006", "ISIN"),
-        (M720IdentifierScheme.NO_ISIN_ISSUER_COUNTRY, "LU", "Z plus the issuer country"),
+        (M720IdentifierScheme.NO_ISIN_ISSUER_COUNTRY, "LU", "marker plus the issuer country"),
         (M720IdentifierScheme.NO_ISIN_ISSUER_COUNTRY, "Zlu", "uppercase"),
         (M720IdentifierScheme.NONE, "anything", "carries no value"),
         (M720IdentifierScheme.ISIN, "", "requires a value"),
