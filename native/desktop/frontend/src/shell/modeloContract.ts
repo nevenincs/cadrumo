@@ -128,6 +128,16 @@ export type BindingValueChannel =
   "decimal" | "integer" | "boolean" | "text" | "date" | "enum" | "row_set";
 
 /**
+ * What a resolver states about the rows one binding's value rests on.
+ *
+ * A zero from a window with nothing to sum and a zero from rows whose quantity
+ * was left out are one `Decimal("0")`. Only the resolver that read the rows
+ * can tell them apart, so it states which case applies beside the value and no
+ * consumer infers it from the amount.
+ */
+export type BindingValueOutcome = "proven_zero" | "from_bearing_rows";
+
+/**
  * One canonical event payload entry in a closed public schema.
  */
 export type BucketEventDetail = {
@@ -383,7 +393,8 @@ export type CalculationNoteSentence =
   | "disposal_minimum_exceeded_deduction"
   | "disposal_no_minimum_authority"
   | "disposal_minimum_unresolved"
-  | "disposal_exemption_not_computed";
+  | "disposal_exemption_not_computed"
+  | "advisory_imputation_period_ungrounded";
 
 /**
  * Closed set of serialisations of one modelo calculation report.
@@ -482,7 +493,7 @@ export type CalculationSourceDiagnosticSnapshot = {
     | "inferred_retencion_sectoral_rate_unconfirmed"
     | "inferred_retencion_excluded_from_credit"
     | "unresolved_retencion_substrate"
-    | "advisory_retencion_credit_grade"
+    | "advisory_binding_value"
     | "m349_clave_inferred_from_category"
     | "unconverted_foreign_currency"
     | "unclassified_declarant_role_fact"
@@ -585,9 +596,12 @@ export type CalculationSourceDiagnosticSnapshot = {
  * same way: the amortization is left out and the rest of the declaration
  * stands. The other activity-asset reasons persist as durable notes for the
  * same cause: what was known about the register at calculation stays with the
- * filed record. None of them withholds anything. `fact` states such a note's
- * own row, element, interval and amount. `binding_source` is `None` only where
- * the condition names no binding source kind.
+ * filed record. None of them withholds anything. `advisory_binding_value` is a
+ * value a binding produced whose declared grade cap stops it at calculation:
+ * it names the box the value reaches and the binding, and withholds filing
+ * unless the resolver stated a proven zero. `fact` states such a note's own
+ * row, element, interval and amount. `binding_source` is `None` only where the
+ * condition names no binding source kind.
  */
 export type CalculationSourceIssue = {
   reason:
@@ -614,13 +628,15 @@ export type CalculationSourceIssue = {
     | "register_acquisition_partly_accounted"
     | "register_acquisition_row_missing"
     | "register_owned_capital_acquisition"
-    | "ledger_expense_may_be_durable";
+    | "ledger_expense_may_be_durable"
+    | "advisory_binding_value";
   binding_source: BindingSourceKind | null;
   message: string;
   resolver_id: string | null;
   source_ref: string | null;
   casilla_id: CasillaId | null;
   fact: CalculationNoteFact | null;
+  value_outcome: BindingValueOutcome | null;
 };
 
 /**
