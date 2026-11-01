@@ -76,6 +76,98 @@ def _invoke(*args: str):
     )
 
 
+def _assert_rename_then_status(original: WorkUnit) -> None:
+    """Renaming by registry address keeps identity and creation time; status reads the renamed unit."""
+    renamed = _invoke(
+        "app",
+        "modelo",
+        "work",
+        "rename",
+        "--modelo",
+        "130",
+        "--year",
+        "2026",
+        "--period",
+        "1T",
+        "--revision",
+        "2019-y-siguientes",
+        "--name",
+        "Renamed through worker",
+    )
+    assert renamed.exit_code == 0, renamed.output
+    rename_result = json.loads(renamed.stdout)["result"]
+    assert rename_result["work_unit_id"] == original.work_unit_id
+    assert rename_result["bucket_id"] == "<bucket-id>"
+    assert rename_result["name"] == "Renamed through worker"
+    assert rename_result["created_at"] == original.created_at.isoformat()
+    assert rename_result["updated_at"] != original.updated_at.isoformat()
+    assert PROFILE_INPUT not in renamed.output
+
+    status = _invoke("app", "modelo", "work", "status", original.work_unit_id)
+    assert status.exit_code == 0, status.output
+    status_result = json.loads(status.stdout)["result"]
+    assert status_result["operation"] == "modelo.work.status"
+    assert status_result["work_unit_id"] == original.work_unit_id
+    assert status_result["name"] == "Renamed through worker"
+    assert status_result["bucket_id"] == "<bucket-id>"
+    assert status_result["period"] == {"filing_year": 2026, "code": "1T"}
+    assert status_result["updated_at"] == rename_result["updated_at"]
+    assert PROFILE_INPUT not in status.output
+
+
+def _assert_discard_and_refused_followups(original: WorkUnit) -> None:
+    """A foreign bucket is refused, discard records its reason once, and later edits are refused."""
+    foreign = _invoke(
+        "app",
+        "modelo",
+        "work",
+        "discard",
+        original.work_unit_id,
+        "--bucket-id",
+        str(uuid4()),
+        "--yes",
+    )
+    assert foreign.exit_code != 0
+    assert PROFILE_INPUT not in foreign.output
+
+    discarded = _invoke(
+        "app",
+        "modelo",
+        "work",
+        "discard",
+        original.work_unit_id,
+        "--reason",
+        "Duplicate work",
+        "--yes",
+    )
+    assert discarded.exit_code == 0, discarded.output
+    discard_result = json.loads(discarded.stdout)["result"]
+    assert discard_result["work_unit_id"] == original.work_unit_id
+    assert discard_result["name"] == "Renamed through worker"
+    assert discard_result["state"] == "descartado"
+    assert discard_result["discard_reason"] == "Duplicate work"
+    assert discard_result["discarded_at"] is not None
+    assert PROFILE_INPUT not in discarded.output
+
+    repeated = _invoke("app", "modelo", "work", "discard", original.work_unit_id, "--yes")
+    assert repeated.exit_code != 0
+    assert repeated.stdout == ""
+    repeated_error = json.loads(repeated.stderr)["error"]
+    assert repeated_error["context"]["operation_id"]
+    assert PROFILE_INPUT not in repeated.output
+
+    renamed_after_discard = _invoke(
+        "app", "modelo", "work", "rename", original.work_unit_id, "--name", "Must not change"
+    )
+    assert renamed_after_discard.exit_code != 0
+    assert renamed_after_discard.stdout == ""
+    assert PROFILE_INPUT not in renamed_after_discard.output
+
+    no_target = _invoke("app", "modelo", "work", "rename", "--name", "Missing target")
+    assert no_target.exit_code != 0
+    assert no_target.stdout == ""
+
+
 def test_installed_cli_rename_and_discard_use_exact_worker_snapshot(tmp_path: Path) -> None:
     root = tmp_path / "cadrumo-storage"
     root.mkdir()
@@ -111,91 +203,8 @@ def test_installed_cli_rename_and_discard_use_exact_worker_snapshot(tmp_path: Pa
             running = pool.submit(server.serve)
             try:
                 assert server.ready.wait(3)
-                renamed = _invoke(
-                    "app",
-                    "modelo",
-                    "work",
-                    "rename",
-                    "--modelo",
-                    "130",
-                    "--year",
-                    "2026",
-                    "--period",
-                    "1T",
-                    "--revision",
-                    "2019-y-siguientes",
-                    "--name",
-                    "Renamed through worker",
-                )
-                assert renamed.exit_code == 0, renamed.output
-                rename_result = json.loads(renamed.stdout)["result"]
-                assert rename_result["work_unit_id"] == original.work_unit_id
-                assert rename_result["bucket_id"] == "<bucket-id>"
-                assert rename_result["name"] == "Renamed through worker"
-                assert rename_result["created_at"] == original.created_at.isoformat()
-                assert rename_result["updated_at"] != original.updated_at.isoformat()
-                assert PROFILE_INPUT not in renamed.output
-
-                status = _invoke("app", "modelo", "work", "status", original.work_unit_id)
-                assert status.exit_code == 0, status.output
-                status_result = json.loads(status.stdout)["result"]
-                assert status_result["operation"] == "modelo.work.status"
-                assert status_result["work_unit_id"] == original.work_unit_id
-                assert status_result["name"] == "Renamed through worker"
-                assert status_result["bucket_id"] == "<bucket-id>"
-                assert status_result["period"] == {"filing_year": 2026, "code": "1T"}
-                assert status_result["updated_at"] == rename_result["updated_at"]
-                assert PROFILE_INPUT not in status.output
-
-                foreign = _invoke(
-                    "app",
-                    "modelo",
-                    "work",
-                    "discard",
-                    original.work_unit_id,
-                    "--bucket-id",
-                    str(uuid4()),
-                    "--yes",
-                )
-                assert foreign.exit_code != 0
-                assert PROFILE_INPUT not in foreign.output
-
-                discarded = _invoke(
-                    "app",
-                    "modelo",
-                    "work",
-                    "discard",
-                    original.work_unit_id,
-                    "--reason",
-                    "Duplicate work",
-                    "--yes",
-                )
-                assert discarded.exit_code == 0, discarded.output
-                discard_result = json.loads(discarded.stdout)["result"]
-                assert discard_result["work_unit_id"] == original.work_unit_id
-                assert discard_result["name"] == "Renamed through worker"
-                assert discard_result["state"] == "descartado"
-                assert discard_result["discard_reason"] == "Duplicate work"
-                assert discard_result["discarded_at"] is not None
-                assert PROFILE_INPUT not in discarded.output
-
-                repeated = _invoke("app", "modelo", "work", "discard", original.work_unit_id, "--yes")
-                assert repeated.exit_code != 0
-                assert repeated.stdout == ""
-                repeated_error = json.loads(repeated.stderr)["error"]
-                assert repeated_error["context"]["operation_id"]
-                assert PROFILE_INPUT not in repeated.output
-
-                renamed_after_discard = _invoke(
-                    "app", "modelo", "work", "rename", original.work_unit_id, "--name", "Must not change"
-                )
-                assert renamed_after_discard.exit_code != 0
-                assert renamed_after_discard.stdout == ""
-                assert PROFILE_INPUT not in renamed_after_discard.output
-
-                no_target = _invoke("app", "modelo", "work", "rename", "--name", "Missing target")
-                assert no_target.exit_code != 0
-                assert no_target.stdout == ""
+                _assert_rename_then_status(original)
+                _assert_discard_and_refused_followups(original)
             finally:
                 stop.set()
                 running.result(timeout=15)
