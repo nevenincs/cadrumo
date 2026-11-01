@@ -46,6 +46,7 @@ from ...core.time.clock import now
 from ...domain.calculations.registry.applicability import derive_modelo_applicability as _derive_modelo_applicability
 from ...domain.calculations.registry.applicability import taxpayer_model_is_declared as _taxpayer_model_is_declared
 from ...domain.calculations.registry.applicability_models import ApplicabilityVerdict as _ApplicabilityVerdict
+from ...domain.deadlines.domiciliation_cutoff import resolve_payment_cutoff as _resolve_payment_cutoff
 from ...domain.deadlines.engine import DeadlineEngine as _DeadlineEngine
 from ...domain.deadlines.engine import ScheduleProducer as _ScheduleProducer
 from ...domain.deadlines.engine import classify_obligation_status as _classify_obligation_status
@@ -189,8 +190,9 @@ def _registry_window_for_work_unit(
 
     Window matching belongs to the deadline domain, which owns the year/token
     rule and the no-window behaviour. Overview is a projection: it consumes the
-    same window the extemporaneidad surface consumes and reads the ``opens_on``
-    and ``payment_cutoff_on`` fields that surface does not need.
+    same window the extemporaneidad surface consumes, reads the ``opens_on``
+    field that surface does not need, and takes the payment cutoff from the
+    deadline domain's cutoff resolver.
     """
     return _resolve_filing_window(
         str(unit.modelo),
@@ -203,16 +205,24 @@ def _registry_window_for_work_unit(
 def _work_unit_window_dates(
     unit: _WorkUnit,
     *,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[date, date, date | None]:
-    """Return the calendar span used to place a local work unit row."""
+    """Return the calendar span used to place a local work unit row, with its payment cutoff."""
     window = _registry_window_for_work_unit(unit, operation=operation)
+    opens_on, closes_on = _work_unit_window_span(unit, window)
+    if window is None:
+        return opens_on, closes_on, None
+    return opens_on, closes_on, _resolve_payment_cutoff(str(unit.modelo), window, operation=operation).cutoff_on
+
+
+def _work_unit_window_span(unit: _WorkUnit, window: DeadlineWindowDefinition | None) -> tuple[date, date]:
+    """Return the calendar span used to place a local work unit row."""
     if window is not None:
-        return window.opens_on, window.closes_on, window.payment_cutoff_on
+        return window.opens_on, window.closes_on
     if unit.period.has_date_span():
-        return unit.period.start_date, unit.period.end_date, None
+        return unit.period.start_date, unit.period.end_date
     anchor = unit.created_at.date()
-    return anchor, anchor, None
+    return anchor, anchor
 
 
 def _work_unit_intersects_range(
@@ -222,7 +232,7 @@ def _work_unit_intersects_range(
     holiday_territory: _CalendarCCAA | None,
     operation: PinnedAuthorityOperation,
 ) -> bool:
-    opens_on, closes_on, _payment_cutoff_on = _work_unit_window_dates(unit, operation=operation)
+    opens_on, closes_on = _work_unit_window_span(unit, _registry_window_for_work_unit(unit, operation=operation))
     return _window_intersects_range(
         opens_on,
         closes_on,

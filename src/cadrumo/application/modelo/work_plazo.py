@@ -315,6 +315,7 @@ def calculated_m210_plazo_resolution(
         # the absent quota as a zero one.
         return None
 
+    from ...domain.deadlines.domiciliation_cutoff import resolve_payment_cutoff
     from ...domain.deadlines.plazo import resolve_filing_window
     from .result_disposition_resolution import resolve_modelo_result_disposition
 
@@ -334,6 +335,7 @@ def calculated_m210_plazo_resolution(
         work_unit.period,
         resultado=resultado,
         tipo_renta_code=tipo_renta_code,
+        authority=operation,
     )
     if window is None:
         return None
@@ -351,8 +353,15 @@ def calculated_m210_plazo_resolution(
     }
     if tipo_renta_code is not None:
         context["tipo_renta_code"] = tipo_renta_code
-    if window.payment_cutoff_on is not None:
-        context["payment_cutoff_on"] = window.payment_cutoff_on.isoformat()
+    if operation is None:
+        from ...domain.calculations.registry.authority import bundled_indexed_authority
+
+        with bundled_indexed_authority().operation() as bundled:
+            payment_cutoff_on = resolve_payment_cutoff(str(work_unit.modelo), window, operation=bundled).cutoff_on
+    else:
+        payment_cutoff_on = resolve_payment_cutoff(str(work_unit.modelo), window, operation=operation).cutoff_on
+    if payment_cutoff_on is not None:
+        context["payment_cutoff_on"] = payment_cutoff_on.isoformat()
 
     return M210PlazoResolution(closes_on=window.closes_on.isoformat(), context=context)
 
