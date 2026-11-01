@@ -36,6 +36,7 @@ from ..filed_capture_queries import (
     list_filed_data_bulk,
     walk_or_failure_row,
 )
+from ..filed_data import BulkFiledDataListingReport
 from ..filed_data_capture import (
     _absorb_declarations,
     capture_filed_data,
@@ -89,6 +90,33 @@ class _Declaration:
 
 def _declaration() -> FiledRegisterDeclarationProtocol:
     return _Declaration()
+
+
+def _assert_unsupported_surface_failures(report: BulkFiledDataCaptureReport | BulkFiledDataListingReport) -> None:
+    """Both modelos without an authenticated filed-declarations read surface fail for 2024."""
+    failures = {failure.modelo: failure for failure in report.failures}
+    assert set(failures) == {"151", "721"}
+    assert failures["151"].year == 2024
+    assert failures["151"].error_type == "LiveApplicationInputError"
+    assert "declares no authenticated filed-declarations read surface" in failures["151"].message
+    assert failures["721"].year == 2024
+    assert failures["721"].error_type == "LiveApplicationInputError"
+    assert "declares no authenticated filed-declarations read surface" in failures["721"].message
+
+
+def _denied_guard(events: list[str]) -> type:
+    """An effect guard that records its entry and refuses it as an inactive grant."""
+
+    class DeniedGuard:
+        async def __aenter__(self) -> None:
+            events.append("guard")
+            raise ProfileAccessRefusedError(AccessDenialCode.GRANT_INACTIVE)
+
+        async def __aexit__(self, exc_type, exc, traceback) -> bool:
+            del exc_type, exc, traceback
+            return False
+
+    return DeniedGuard
 
 
 def test_revoked_filed_capture_discards_staged_bytes_before_any_local_write(tmp_path: Path) -> None:
@@ -181,18 +209,11 @@ def test_single_capture_revocation_after_remote_fetch_discards_bytes(
             on_session_write: SessionWriteReporter | None = None,
         ) -> AsyncGenerator[Register]:
             assert operation == "live-filed-read"
-            assert effect_guard is DeniedGuard
+            assert effect_guard is denied_guard
             assert on_session_write is None
             yield Register()
 
-    class DeniedGuard:
-        async def __aenter__(self) -> None:
-            events.append("guard")
-            raise ProfileAccessRefusedError(AccessDenialCode.GRANT_INACTIVE)
-
-        async def __aexit__(self, exc_type, exc, traceback) -> bool:
-            del exc_type, exc, traceback
-            return False
+    denied_guard = _denied_guard(events)
 
     bundle = in_memory_filed_observation_test_bundle()
     with bundled_indexed_authority().operation() as operation, pytest.raises(ProfileAccessRefusedError) as refusal:
@@ -203,7 +224,7 @@ def test_single_capture_revocation_after_remote_fetch_discards_bytes(
                 year=2025,
                 output_root=tmp_path,
                 ports=bundle.ports,
-                effect_guard=DeniedGuard,
+                effect_guard=denied_guard,
                 operation=operation,
             )
         )
@@ -239,19 +260,12 @@ def test_source_capture_revocation_after_remote_fetch_discards_batch(
         ):
             del revision
             assert (filing_year, period, operation) == (2025, Period.from_year_and_code(2025, "1T"), "live-filed-read")
-            assert effect_guard is DeniedGuard
+            assert effect_guard is denied_guard
             assert on_session_write is None
             events.append("remote")
             return Staged()
 
-    class DeniedGuard:
-        async def __aenter__(self) -> None:
-            events.append("guard")
-            raise ProfileAccessRefusedError(AccessDenialCode.GRANT_INACTIVE)
-
-        async def __aexit__(self, exc_type, exc, traceback) -> bool:
-            del exc_type, exc, traceback
-            return False
+    denied_guard = _denied_guard(events)
 
     bundle = in_memory_filed_observation_test_bundle()
     with bundled_indexed_authority().operation() as operation, pytest.raises(ProfileAccessRefusedError) as refusal:
@@ -263,7 +277,7 @@ def test_source_capture_revocation_after_remote_fetch_discards_batch(
                 period=Period.from_year_and_code(2025, "1T"),
                 output_root=tmp_path,
                 ports=bundle.ports,
-                effect_guard=DeniedGuard,
+                effect_guard=denied_guard,
                 operation=operation,
             )
         )
@@ -488,14 +502,7 @@ def test_bulk_capture_reports_registry_unsupported_modelos_as_local_boundaries(t
     assert report.captured_count == 0
     assert report.dry_run is dry_run
     assert report.failed_count == 2
-    failures = {failure.modelo: failure for failure in report.failures}
-    assert set(failures) == {"151", "721"}
-    assert failures["151"].year == 2024
-    assert failures["151"].error_type == "LiveApplicationInputError"
-    assert "declares no authenticated filed-declarations read surface" in failures["151"].message
-    assert failures["721"].year == 2024
-    assert failures["721"].error_type == "LiveApplicationInputError"
-    assert "declares no authenticated filed-declarations read surface" in failures["721"].message
+    _assert_unsupported_surface_failures(report)
 
 
 def test_bulk_capture_report_exposes_its_evidence_notices_channel(tmp_path: Path) -> None:
@@ -559,14 +566,7 @@ def test_bulk_listing_reports_registry_unsupported_modelos_as_local_boundaries()
     assert report.modelos == ("151", "721")
     assert report.row_count == 0
     assert report.failed_count == 2
-    failures = {failure.modelo: failure for failure in report.failures}
-    assert set(failures) == {"151", "721"}
-    assert failures["151"].year == 2024
-    assert failures["151"].error_type == "LiveApplicationInputError"
-    assert "declares no authenticated filed-declarations read surface" in failures["151"].message
-    assert failures["721"].year == 2024
-    assert failures["721"].error_type == "LiveApplicationInputError"
-    assert "declares no authenticated filed-declarations read surface" in failures["721"].message
+    _assert_unsupported_surface_failures(report)
 
 
 def test_truncated_register_read_reuses_the_per_pair_failure_taxonomy() -> None:
