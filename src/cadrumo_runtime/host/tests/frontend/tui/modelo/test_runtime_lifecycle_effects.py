@@ -37,7 +37,7 @@ from cadrumo.application.operations.frontend_projection import (
 from cadrumo.application.operations.frontend_requests import OperationObservationSuccessV1, OperationPublicEventPageV1
 from cadrumo.application.operations.persistence.replay import OperationReplayStatus
 from cadrumo.application.operations.public_period import PublicPeriod
-from cadrumo.application.operations.registry import OperationRegistry
+from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
 from cadrumo.core.calculation_report_format import CalculationReportDocumentFormat
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.modelo_export_artefact import ModeloExportArtefact
@@ -390,3 +390,19 @@ def test_settled_export_result_is_absent_without_a_readable_success() -> None:
     assert asyncio.run(door(refusing_reader).settled_export_result(succeeded)) is None
     assert asyncio.run(door(unreachable_reader).settled_export_result(refused)) is None
     assert asyncio.run(door(None).settled_export_result(succeeded)) is None
+
+
+@pytest.mark.parametrize("modelo", ["303", "100"])
+def test_lifecycle_door_binds_attestation_admission_for_any_modelo(modelo: str) -> None:
+    client = SimpleNamespace(frontend=OperationFrontendProjection.TUI, profile_id=uuid4(), session_id=uuid4())
+    declaration = SimpleNamespace(work_unit_id=_WORK_UNIT_ID, modelo=modelo)
+
+    door = runtime_lifecycle.compose_runtime_modelo_lifecycle_door(
+        cast(FrontendClient, client),
+        cast(Any, declaration),
+        calculation_revision_id=None,
+        verification_report_id=None,
+        asks_modelo_390=False,
+    )
+
+    assert door.m303_exonerado_390_attestation_admission is not None

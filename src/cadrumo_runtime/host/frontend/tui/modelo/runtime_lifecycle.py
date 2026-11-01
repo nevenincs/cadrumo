@@ -328,7 +328,7 @@ def compose_runtime_modelo_lifecycle_door(
         edit_renewal=bindings.renew,
         edit_preflight=bindings.preflight,
         apply_prerequisite=bindings.prerequisite,
-        m303_exonerado_390_attestation_admission=(bindings.admit if str(declaration.modelo) == "303" else None),
+        m303_exonerado_390_attestation_admission=bindings.admit,
         asks_modelo_390=asks_modelo_390,
         submit_operation=bindings.submit,
         read_export_result=bindings.read_export_result,
