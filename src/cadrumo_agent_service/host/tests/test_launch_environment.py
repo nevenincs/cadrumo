@@ -88,13 +88,16 @@ def test_declared_provider_binary_directories_reach_the_native_agent_host(
     assert "API_KEY" not in environment
 
 
-@pytest.mark.parametrize(
+_PACKAGED_NODE_LAYOUTS = pytest.mark.parametrize(
     ("platform", "python_name", "packages_relative", "node_relative", "separator"),
     [
         ("win32", "python.exe", "cadrumo/site-packages", ("node", "node.exe"), ";"),
         ("linux", "python", "lib/cadrumo/site-packages", ("node", "bin", "node"), ":"),
     ],
 )
+
+
+@_PACKAGED_NODE_LAYOUTS
 def test_packaged_node_bin_precedes_declared_provider_binary_directories(
     tmp_path: Path,
     platform: str,
@@ -135,13 +138,7 @@ def test_packaged_node_bin_precedes_declared_provider_binary_directories(
     assert environment[EXTERNAL_BIN_DIRECTORIES_VARIABLE] == expected_directories
 
 
-@pytest.mark.parametrize(
-    ("platform", "python_name", "packages_relative", "node_relative", "separator"),
-    [
-        ("win32", "python.exe", "cadrumo/site-packages", ("node", "node.exe"), ";"),
-        ("linux", "python", "lib/cadrumo/site-packages", ("node", "bin", "node"), ":"),
-    ],
-)
+@_PACKAGED_NODE_LAYOUTS
 def test_missing_packaged_node_keeps_declared_provider_directories_without_phantom_entries(
     tmp_path: Path,
     platform: str,
@@ -171,13 +168,7 @@ def test_missing_packaged_node_keeps_declared_provider_directories_without_phant
     assert str(packages.parent.joinpath(*node_relative[:-1])) not in environment[EXTERNAL_BIN_DIRECTORIES_VARIABLE]
 
 
-@pytest.mark.parametrize(
-    ("platform", "python_name", "packages_relative", "node_relative", "separator"),
-    [
-        ("win32", "python.exe", "cadrumo/site-packages", ("node", "node.exe"), ";"),
-        ("linux", "python", "lib/cadrumo/site-packages", ("node", "bin", "node"), ":"),
-    ],
-)
+@_PACKAGED_NODE_LAYOUTS
 @pytest.mark.parametrize("manifest_state", ["missing", "malformed"])
 def test_missing_or_malformed_package_manifest_never_injects_node_directory(
     tmp_path: Path,
