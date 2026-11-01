@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import sys
+from dataclasses import dataclass
 from pathlib import Path
 from typing import cast
 from uuid import UUID
@@ -32,8 +33,8 @@ from cadrumo.application.ledger.manual_read import (
 )
 from cadrumo.application.ledger.models import LedgerStatusReport
 from cadrumo.application.ledger.preflight import preflight_ledger_tax_readiness
-from cadrumo.application.ledger.readiness_query import ledger_readiness_issues
-from cadrumo.application.ledger.stale_filing_query import read_stale_ledger_filings
+from cadrumo.application.ledger.readiness_query import LedgerReadinessIssueV1, ledger_readiness_issues
+from cadrumo.application.ledger.stale_filing_query import LedgerStaleFilingV1, read_stale_ledger_filings
 from cadrumo.application.ledger.status_operation import LEDGER_STATUS_OPERATION_DEFINITION_ID
 from cadrumo.application.operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
 from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation, resolve_login_target
@@ -41,8 +42,10 @@ from cadrumo.application.user_profile.tests.profile_values import complete_profi
 from cadrumo.core.config import override_settings
 from cadrumo.core.period import Period
 from cadrumo.core.redaction.rules import redact_structured_for_cli_output
-from cadrumo.domain.buckets.event import BucketEventObjectType, BucketEventType
+from cadrumo.domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.modelos.participation_index import TransactionRevisionParticipationIndex
+from cadrumo.domain.transactions.models import Transaction
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo.entrypoints.cli.tests.modelo_work_scenarios import operator_profile_facts
 from cadrumo.entrypoints.ledger_action_composition import compose_ledger_action_ports
@@ -104,6 +107,247 @@ def _assert_status_matches_canonical_report(payload: dict[str, object], report: 
         assert payload[field] == value
 
 
+@dataclass(frozen=True)
+class _CliReads:
+    """Payloads returned by the human CLI surfaces under test."""
+
+    unfiltered: dict[str, object]
+    filtered: dict[str, object]
+    history: dict[str, object]
+    view: dict[str, object]
+    track: dict[str, object]
+
+
+@dataclass(frozen=True)
+class _EncryptedOracle:
+    """What the encrypted catalogue and event history say, read after the CLI sessions closed."""
+
+    stored: Transaction
+    all_report: LedgerStatusReport
+    period_report: LedgerStatusReport
+    readiness: tuple[LedgerReadinessIssueV1, ...]
+    stale: tuple[LedgerStaleFilingV1, ...]
+    canonical_view: dict[str, object]
+    canonical_track: dict[str, object]
+    participation: TransactionRevisionParticipationIndex
+    history_events: tuple[BucketEvent, ...]
+
+
+def _seed_ledger_transaction(fixture: NativeCliProfileFixture, label: str) -> tuple[str, str, str]:
+    """Add one business transaction and check the CLI masks the profile identifier."""
+    seeded = _invoke_with_human_password(
+        fixture,
+        label=label,
+        command=(
+            "app",
+            "ledger",
+            "add",
+            "--date",
+            "2026-02-10",
+            "--amount",
+            "242.00",
+            "--direction",
+            "OUTGOING",
+            "--description",
+            "Q1 business expense missing tax facts",
+            "--classification",
+            "BUSINESS",
+            "--actor",
+            "native-ledger-reader",
+            "--idempotency-key",
+            "native-ledger-status-history",
+        ),
+    )
+    assert seeded.exit_code == 0, seeded.output
+    seeded_payload = unwrap_cli_result(seeded)
+    cli_bucket_id = cast(str, seeded_payload["bucket_id"])
+    transaction_id = cast(str, seeded_payload["transaction_id"])
+    assert len(transaction_id) == 64
+    resolved_target = resolve_login_target(label)
+    bucket_id = resolved_target.bucket_id
+    expected_cli_bucket_id = redact_structured_for_cli_output({"bucket_id": bucket_id}, reveal_identifiers=False)[
+        "bucket_id"
+    ]
+    assert cli_bucket_id == expected_cli_bucket_id
+    assert seeded_payload["bucket_id"] == expected_cli_bucket_id
+    return transaction_id, bucket_id, expected_cli_bucket_id
+
+
+def _read_cli_surfaces(
+    fixture: NativeCliProfileFixture, label: str, transaction_id: str, expected_cli_bucket_id: str
+) -> _CliReads:
+    """Read status, history, view and track as JSON and text under the human password."""
+    unfiltered = _invoke_with_human_password(fixture, label=label, command=("app", "ledger", "status"))
+    assert unfiltered.exit_code == 0, unfiltered.output
+    unfiltered_payload = unwrap_cli_result(unfiltered)
+
+    filtered = _invoke_with_human_password(
+        fixture,
+        label=label,
+        command=("app", "ledger", "status", "--period", "1T", "--year", "2026"),
+    )
+    assert filtered.exit_code == 0, filtered.output
+    filtered_payload = unwrap_cli_result(filtered)
+
+    prefix = transaction_id[:12]
+    history = _invoke_with_human_password(fixture, label=label, command=("app", "ledger", "history", prefix))
+    assert history.exit_code == 0, history.output
+    history_payload = unwrap_cli_result(history)
+
+    view = _invoke_with_human_password(fixture, label=label, command=("app", "ledger", "view", prefix))
+    assert view.exit_code == 0, view.output
+    view_payload = unwrap_cli_result(view)
+
+    track = _invoke_with_human_password(fixture, label=label, command=("app", "ledger", "track", prefix))
+    assert track.exit_code == 0, track.output
+    track_payload = unwrap_cli_result(track)
+
+    view_text = _invoke_with_human_password(
+        fixture, label=label, command=("app", "ledger", "view", prefix), output_format="text"
+    )
+    assert view_text.exit_code == 0, view_text.output
+    assert transaction_id in view_text.output
+    assert "Q1 business expense missing tax facts" in view_text.output
+
+    track_text = _invoke_with_human_password(
+        fixture, label=label, command=("app", "ledger", "track", prefix), output_format="text"
+    )
+    assert track_text.exit_code == 0, track_text.output
+    assert transaction_id in track_text.output
+    assert unfiltered_payload["bucket_id"] == expected_cli_bucket_id
+    assert filtered_payload["bucket_id"] == expected_cli_bucket_id
+    assert history_payload["bucket_id"] == expected_cli_bucket_id
+    return _CliReads(unfiltered_payload, filtered_payload, history_payload, view_payload, track_payload)
+
+
+def _read_encrypted_oracle(
+    fixture: NativeCliProfileFixture,
+    label: str,
+    bucket_id: str,
+    transaction_id: str,
+    period: Period,
+    authority_operation: PinnedAuthorityOperation,
+) -> _EncryptedOracle:
+    """Reauthenticate and read the catalogue and append-only history as the independent oracle."""
+    # The CLI calls have closed their password-authenticated worker sessions.
+    # Reauthenticate with the actual fixture password before reading the
+    # encrypted catalogue and append-only event history as the oracle.
+    close_active_bucket_session()
+    login = authenticate_profile_for_invocation(
+        name=label,
+        passphrase_callback=lambda: fixture.passphrase,
+        profile_decode_context=authority_operation.profile_decode_context(),
+    )
+    active_session = current_active_bucket_session()
+    assert login.bucket_id == bucket_id
+    assert active_session is not None
+    assert active_session.bucket_id == bucket_id, (
+        f"encrypted oracle session bound {active_session.bucket_id}, expected requested profile {bucket_id}"
+    )
+    try:
+        ports = compose_ledger_action_ports(bucket_id=bucket_id, operation=authority_operation)
+        catalogue = TransactionCatalogueRepository(bucket_id=bucket_id).load()
+        stored = catalogue.get(transaction_id)
+        assert stored is not None
+        assert stored.transaction_id == transaction_id
+        assert stored.created_event_id is not None
+        assert stored.raw.amount == 242
+
+        all_report = summarize_manual_transactions(bucket_id=bucket_id, ports=ports, catalogue=catalogue)
+        period_report = summarize_manual_transactions(
+            bucket_id=bucket_id, period=period, ports=ports, catalogue=catalogue
+        )
+        readiness = ledger_readiness_issues(
+            preflight_ledger_tax_readiness(
+                bucket_id=bucket_id,
+                period=period,
+                transaction_repository=ports.transaction_repository,
+                usage_ratio_profile_loader=ports.usage_ratio_profile_loader,
+                operation=authority_operation,
+                catalogue=catalogue,
+            ),
+            catalogue,
+        )
+        stale = read_stale_ledger_filings(
+            register_reader=lambda revision: revision.activity_asset_consumption,
+            bucket_id=bucket_id,
+            revisions=ports.calculation_repository.load(operation=authority_operation).revisions,
+            work_units=ports.work_unit_repository.load(),
+            transactions=catalogue,
+        )
+        manual = get_manual_transaction(bucket_id=bucket_id, transaction_id=transaction_id, ports=ports)
+        canonical_view = ledger_transaction_result_payload(manual).model_dump(mode="json")
+        canonical_track = {
+            "bucket_id": bucket_id,
+            "transaction": ledger_transaction_payload(manual.transaction).model_dump(mode="json"),
+            "tracking": ledger_transaction_tracking_payload(manual.transaction).model_dump(mode="json"),
+            "source_filename": None,
+            "source_row_index": None,
+            "participated_in": None,
+        }
+        participation = TransactionParticipationIndexRepository(bucket_id=bucket_id).load(transaction_id)
+        events = (
+            BucketEventHistoryRepository()
+            .load()
+            .for_object(
+                object_type=BucketEventObjectType.LEDGER_TRANSACTION,
+                object_id=transaction_id,
+            )
+        )
+        history_events = tuple(event for event in events if event.event_type in LEDGER_HISTORY_EVENT_TYPES)
+    finally:
+        close_active_bucket_session()
+    return _EncryptedOracle(
+        stored,
+        all_report,
+        period_report,
+        readiness,
+        stale,
+        canonical_view,
+        canonical_track,
+        participation,
+        history_events,
+    )
+
+
+def _assert_status_reads_match_oracle(reads: _CliReads, oracle: _EncryptedOracle) -> None:
+    _assert_status_matches_canonical_report(reads.unfiltered, oracle.all_report)
+    _assert_status_matches_canonical_report(reads.filtered, oracle.period_report)
+    assert reads.filtered["period"] == {"filing_year": 2026, "code": "1T"}
+    assert reads.filtered["checked_transaction_count"] == oracle.period_report.checked_transaction_count == 1
+    assert reads.filtered["readiness_issue_count"] == len(oracle.readiness)
+    assert reads.filtered["readiness_issues"] == redact_structured_for_cli_output(
+        [issue.model_dump(mode="json") for issue in oracle.readiness], reveal_identifiers=False
+    )
+    expected_stale_filings = redact_structured_for_cli_output(
+        [finding.model_dump(mode="json") for finding in oracle.stale], reveal_identifiers=False
+    )
+    assert reads.unfiltered["stale_filings"] == expected_stale_filings
+    assert reads.filtered["stale_filings"] == expected_stale_filings
+
+
+def _assert_view_track_and_history_match_oracle(
+    reads: _CliReads, oracle: _EncryptedOracle, transaction_id: str
+) -> None:
+    assert reads.view == redact_structured_for_cli_output(oracle.canonical_view, reveal_identifiers=False)
+    assert oracle.participation.transaction_id == transaction_id
+    assert oracle.participation.participations == ()
+    assert reads.track == redact_structured_for_cli_output(oracle.canonical_track, reveal_identifiers=False)
+    assert reads.track["participated_in"] is None
+
+    history_events = oracle.history_events
+    assert reads.history["transaction_id"] == oracle.stored.transaction_id
+    assert reads.history["event_count"] == len(history_events) == 1
+    expected_history_events = redact_structured_for_cli_output(
+        [event.model_dump(mode="json") for event in history_events], reveal_identifiers=False
+    )
+    assert reads.history["events"] == expected_history_events
+    assert history_events[0].event_id == oracle.stored.created_event_id
+    assert history_events[0].event_type is BucketEventType.LEDGER_TRANSACTION_CREATED
+    assert history_events[0].actor == "native-ledger-reader"
+    assert history_events[0].payload["source_command"] == "aeat app ledger add"
+
+
 def test_native_human_cli_reads_encrypted_ledger_status_history_view_and_track(
     tmp_path: Path, authority_operation: PinnedAuthorityOperation
 ) -> None:
@@ -129,183 +373,12 @@ def test_native_human_cli_reads_encrypted_ledger_status_history_view_and_track(
         assert fixture.label is not None
         label = fixture.label
         close_active_bucket_session()
-        seeded = _invoke_with_human_password(
-            fixture,
-            label=label,
-            command=(
-                "app",
-                "ledger",
-                "add",
-                "--date",
-                "2026-02-10",
-                "--amount",
-                "242.00",
-                "--direction",
-                "OUTGOING",
-                "--description",
-                "Q1 business expense missing tax facts",
-                "--classification",
-                "BUSINESS",
-                "--actor",
-                "native-ledger-reader",
-                "--idempotency-key",
-                "native-ledger-status-history",
-            ),
-        )
-        assert seeded.exit_code == 0, seeded.output
-        seeded_payload = unwrap_cli_result(seeded)
-        cli_bucket_id = cast(str, seeded_payload["bucket_id"])
-        transaction_id = cast(str, seeded_payload["transaction_id"])
-        assert len(transaction_id) == 64
-        resolved_target = resolve_login_target(label)
-        bucket_id = resolved_target.bucket_id
-        expected_cli_bucket_id = redact_structured_for_cli_output({"bucket_id": bucket_id}, reveal_identifiers=False)[
-            "bucket_id"
-        ]
-        assert cli_bucket_id == expected_cli_bucket_id
-        assert seeded_payload["bucket_id"] == expected_cli_bucket_id
-
-        unfiltered = _invoke_with_human_password(fixture, label=label, command=("app", "ledger", "status"))
-        assert unfiltered.exit_code == 0, unfiltered.output
-        unfiltered_payload = unwrap_cli_result(unfiltered)
-
+        transaction_id, bucket_id, expected_cli_bucket_id = _seed_ledger_transaction(fixture, label)
         period = Period.from_year_and_code(2026, "1T")
-        filtered = _invoke_with_human_password(
-            fixture,
-            label=label,
-            command=("app", "ledger", "status", "--period", "1T", "--year", "2026"),
-        )
-        assert filtered.exit_code == 0, filtered.output
-        filtered_payload = unwrap_cli_result(filtered)
-
-        prefix = transaction_id[:12]
-        history = _invoke_with_human_password(fixture, label=label, command=("app", "ledger", "history", prefix))
-        assert history.exit_code == 0, history.output
-        history_payload = unwrap_cli_result(history)
-
-        view = _invoke_with_human_password(fixture, label=label, command=("app", "ledger", "view", prefix))
-        assert view.exit_code == 0, view.output
-        view_payload = unwrap_cli_result(view)
-
-        track = _invoke_with_human_password(fixture, label=label, command=("app", "ledger", "track", prefix))
-        assert track.exit_code == 0, track.output
-        track_payload = unwrap_cli_result(track)
-
-        view_text = _invoke_with_human_password(
-            fixture, label=label, command=("app", "ledger", "view", prefix), output_format="text"
-        )
-        assert view_text.exit_code == 0, view_text.output
-        assert transaction_id in view_text.output
-        assert "Q1 business expense missing tax facts" in view_text.output
-
-        track_text = _invoke_with_human_password(
-            fixture, label=label, command=("app", "ledger", "track", prefix), output_format="text"
-        )
-        assert track_text.exit_code == 0, track_text.output
-        assert transaction_id in track_text.output
-        assert unfiltered_payload["bucket_id"] == expected_cli_bucket_id
-        assert filtered_payload["bucket_id"] == expected_cli_bucket_id
-        assert history_payload["bucket_id"] == expected_cli_bucket_id
-
-        # The CLI calls have closed their password-authenticated worker sessions.
-        # Reauthenticate with the actual fixture password before reading the
-        # encrypted catalogue and append-only event history as the oracle.
-        close_active_bucket_session()
-        login = authenticate_profile_for_invocation(
-            name=label,
-            passphrase_callback=lambda: fixture.passphrase,
-            profile_decode_context=authority_operation.profile_decode_context(),
-        )
-        active_session = current_active_bucket_session()
-        assert login.bucket_id == bucket_id
-        assert active_session is not None
-        assert active_session.bucket_id == bucket_id, (
-            f"encrypted oracle session bound {active_session.bucket_id}, expected requested profile {bucket_id}"
-        )
-        try:
-            ports = compose_ledger_action_ports(bucket_id=bucket_id, operation=authority_operation)
-            catalogue = TransactionCatalogueRepository(bucket_id=bucket_id).load()
-            stored = catalogue.get(transaction_id)
-            assert stored is not None
-            assert stored.transaction_id == transaction_id
-            assert stored.created_event_id is not None
-            assert stored.raw.amount == 242
-
-            all_report = summarize_manual_transactions(bucket_id=bucket_id, ports=ports, catalogue=catalogue)
-            period_report = summarize_manual_transactions(
-                bucket_id=bucket_id, period=period, ports=ports, catalogue=catalogue
-            )
-            readiness = ledger_readiness_issues(
-                preflight_ledger_tax_readiness(
-                    bucket_id=bucket_id,
-                    period=period,
-                    transaction_repository=ports.transaction_repository,
-                    usage_ratio_profile_loader=ports.usage_ratio_profile_loader,
-                    operation=authority_operation,
-                    catalogue=catalogue,
-                ),
-                catalogue,
-            )
-            stale = read_stale_ledger_filings(
-                register_reader=lambda revision: revision.activity_asset_consumption,
-                bucket_id=bucket_id,
-                revisions=ports.calculation_repository.load(operation=authority_operation).revisions,
-                work_units=ports.work_unit_repository.load(),
-                transactions=catalogue,
-            )
-            manual = get_manual_transaction(bucket_id=bucket_id, transaction_id=transaction_id, ports=ports)
-            canonical_view = ledger_transaction_result_payload(manual).model_dump(mode="json")
-            canonical_track = {
-                "bucket_id": bucket_id,
-                "transaction": ledger_transaction_payload(manual.transaction).model_dump(mode="json"),
-                "tracking": ledger_transaction_tracking_payload(manual.transaction).model_dump(mode="json"),
-                "source_filename": None,
-                "source_row_index": None,
-                "participated_in": None,
-            }
-            participation = TransactionParticipationIndexRepository(bucket_id=bucket_id).load(transaction_id)
-            events = (
-                BucketEventHistoryRepository()
-                .load()
-                .for_object(
-                    object_type=BucketEventObjectType.LEDGER_TRANSACTION,
-                    object_id=transaction_id,
-                )
-            )
-            history_events = tuple(event for event in events if event.event_type in LEDGER_HISTORY_EVENT_TYPES)
-        finally:
-            close_active_bucket_session()
-
-        _assert_status_matches_canonical_report(unfiltered_payload, all_report)
-        _assert_status_matches_canonical_report(filtered_payload, period_report)
-        assert filtered_payload["period"] == {"filing_year": 2026, "code": "1T"}
-        assert filtered_payload["checked_transaction_count"] == period_report.checked_transaction_count == 1
-        assert filtered_payload["readiness_issue_count"] == len(readiness)
-        assert filtered_payload["readiness_issues"] == redact_structured_for_cli_output(
-            [issue.model_dump(mode="json") for issue in readiness], reveal_identifiers=False
-        )
-        expected_stale_filings = redact_structured_for_cli_output(
-            [finding.model_dump(mode="json") for finding in stale], reveal_identifiers=False
-        )
-        assert unfiltered_payload["stale_filings"] == expected_stale_filings
-        assert filtered_payload["stale_filings"] == expected_stale_filings
-
-        assert view_payload == redact_structured_for_cli_output(canonical_view, reveal_identifiers=False)
-        assert participation.transaction_id == transaction_id
-        assert participation.participations == ()
-        assert track_payload == redact_structured_for_cli_output(canonical_track, reveal_identifiers=False)
-        assert track_payload["participated_in"] is None
-
-        assert history_payload["transaction_id"] == stored.transaction_id
-        assert history_payload["event_count"] == len(history_events) == 1
-        expected_history_events = redact_structured_for_cli_output(
-            [event.model_dump(mode="json") for event in history_events], reveal_identifiers=False
-        )
-        assert history_payload["events"] == expected_history_events
-        assert history_events[0].event_id == stored.created_event_id
-        assert history_events[0].event_type is BucketEventType.LEDGER_TRANSACTION_CREATED
-        assert history_events[0].actor == "native-ledger-reader"
-        assert history_events[0].payload["source_command"] == "aeat app ledger add"
+        reads = _read_cli_surfaces(fixture, label, transaction_id, expected_cli_bucket_id)
+        oracle = _read_encrypted_oracle(fixture, label, bucket_id, transaction_id, period, authority_operation)
+        _assert_status_reads_match_oracle(reads, oracle)
+        _assert_view_track_and_history_match_oracle(reads, oracle, transaction_id)
 
 
 def test_native_api_ledger_status_requires_all_periods_even_when_query_selects_one(

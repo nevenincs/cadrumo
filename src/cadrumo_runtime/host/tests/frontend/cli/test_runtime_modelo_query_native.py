@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import sys
 from pathlib import Path
+from typing import Any
 
 import pytest
 from click.testing import Result
@@ -45,6 +46,141 @@ def _invoke(profile: NativeCliProfileFixture, *command: str, language: str = "en
     return result
 
 
+_INVENTORY_BUCKETS = (
+    "required_manual",
+    "optional_manual",
+    "detail_row_fields",
+    "ledger_derivable",
+    "profile_derivable",
+    "previous_filing",
+    "relation_prefill",
+    "live_observation",
+    "unbucketed_sources",
+)
+
+
+def _assert_readiness_labels(rows: list[object], language: str) -> None:
+    """Every binding's readiness text is the localised label of its source kind."""
+    with override_settings(cadrumo_output_language=language):
+        for row in rows:
+            assert isinstance(row, dict)
+            assert row["readiness"] == tr(
+                CLAVES_LOCALE_DISPONIBILIDAD_POR_ORIGEN_VINCULACION_LOCALE_KEYS[BindingSourceKind(row["source"])]
+            )
+
+
+def _assert_override_preview(
+    profile: NativeCliProfileFixture,
+    operation: PinnedAuthorityOperation,
+    scope: tuple[str, ...],
+    rows: list[object],
+) -> dict[str, Any]:
+    """The last of two overrides wins for one binding and every other binding is unchanged."""
+    first = rows[0]
+    assert isinstance(first, dict)
+    binding_id = first["binding_id"]
+    assert isinstance(binding_id, str)
+    resolved = _invoke(
+        profile,
+        "app",
+        "modelo",
+        "bindings",
+        "resolve",
+        *scope,
+        "--binding",
+        f"{binding_id}=0.25",
+        "--binding",
+        f"{binding_id}=0.75",
+    )
+    assert resolved.exit_code == 0, resolved.output
+    preview = unwrap_cli_result(resolved)
+    assert preview["authority_generation"] == operation.generation.logical_generation
+    assert preview["override_count"] == 1
+    preview_rows = preview["bindings"]
+    assert isinstance(preview_rows, list) and len(preview_rows) == len(rows)
+    for source, target in zip(rows, preview_rows, strict=True):
+        assert isinstance(source, dict) and isinstance(target, dict)
+        for key in (
+            "binding_id",
+            "source",
+            "readiness",
+            "typed_enum",
+            "legal_refs",
+            "source_refs",
+            "relation_inputs",
+            "encoded_options",
+        ):
+            assert target[key] == source[key]
+        assert target["override"] == ("0.75" if target["binding_id"] == binding_id else None)
+    return preview
+
+
+def _assert_inventory_is_grounded(
+    profile: NativeCliProfileFixture, operation: PinnedAuthorityOperation
+) -> dict[str, Any]:
+    inventory_result = _invoke(profile, "app", "modelo", "requires", "303", "--year", "2025", "--period", "1T")
+    assert inventory_result.exit_code == 0, inventory_result.output
+    inventory = unwrap_cli_result(inventory_result)
+    assert inventory["authority_generation"] == operation.generation.logical_generation
+    assert inventory["profile_checked"] is True
+    for bucket in _INVENTORY_BUCKETS:
+        entries = inventory[bucket]
+        assert isinstance(entries, list)
+        for entry in entries:
+            assert isinstance(entry, dict)
+            assert entry["legal_refs"] and entry["source_refs"]
+    return inventory
+
+
+def _assert_readiness_axes(
+    profile: NativeCliProfileFixture,
+    operation: PinnedAuthorityOperation,
+    scope: tuple[str, ...],
+    preview: dict[str, Any],
+    inventory: dict[str, Any],
+) -> None:
+    readiness_result = _invoke(profile, "app", "modelo", "readiness", *scope)
+    assert readiness_result.exit_code in {0, 2}, readiness_result.output
+    readiness = unwrap_cli_result(readiness_result)
+    assert readiness["authority_generation"] == operation.generation.logical_generation
+    assert readiness_result.exit_code == (0 if readiness["ready"] else 2)
+    assert readiness["revision_id"] == preview["revision"] == inventory["revision"]
+    assert readiness["ledger_period"] is not None
+    assert isinstance(readiness["missing_bindings"], list)
+    assert isinstance(readiness["missing"], list)
+
+
+def _assert_hungarian_listing_and_inventory(
+    profile: NativeCliProfileFixture,
+    operation: PinnedAuthorityOperation,
+    scope: tuple[str, ...],
+    rows: list[object],
+    failures: list[RuntimeFailureObservation],
+) -> None:
+    hungarian = _invoke(profile, "app", "modelo", "bindings", "list", *scope, language="hu")
+    assert hungarian.exit_code == 0, (hungarian.output, failures)
+    hungarian_rows = unwrap_cli_result(hungarian)["bindings"]
+    assert isinstance(hungarian_rows, list) and len(hungarian_rows) == len(rows)
+    _assert_readiness_labels(hungarian_rows, "hu")
+    hungarian_inventory_result = _invoke(
+        profile, "app", "modelo", "requires", "303", "--year", "2025", "--period", "1T", language="hu"
+    )
+    assert hungarian_inventory_result.exit_code == 0, hungarian_inventory_result.output
+    hungarian_inventory = unwrap_cli_result(hungarian_inventory_result)
+    assert hungarian_inventory["authority_generation"] == operation.generation.logical_generation
+    with override_settings(cadrumo_output_language="hu"):
+        canonical_casillas = registry_casillas_for_registry_scope(
+            "303", filing_year=2025, period="1T", operation=operation
+        )
+    labels = {row.casilla_id: row.label for row in canonical_casillas.rows}
+    for bucket in _INVENTORY_BUCKETS:
+        entries = hungarian_inventory[bucket]
+        assert isinstance(entries, list)
+        for entry in entries:
+            assert isinstance(entry, dict)
+            assert entry["label"] == labels[entry["casilla_id"]]
+
+
 def test_native_modelo_binding_preview_inventory_and_readiness(
     tmp_path: Path, operation: PinnedAuthorityOperation
 ) -> None:
@@ -77,115 +213,11 @@ def test_native_modelo_binding_preview_inventory_and_readiness(
         assert listing["authority_generation"] == operation.generation.logical_generation
         rows = listing["bindings"]
         assert isinstance(rows, list) and rows
-        with override_settings(cadrumo_output_language="en"):
-            for row in rows:
-                assert isinstance(row, dict)
-                assert row["readiness"] == tr(
-                    CLAVES_LOCALE_DISPONIBILIDAD_POR_ORIGEN_VINCULACION_LOCALE_KEYS[BindingSourceKind(row["source"])]
-                )
-        first = rows[0]
-        assert isinstance(first, dict)
-        binding_id = first["binding_id"]
-        assert isinstance(binding_id, str)
-        resolved = _invoke(
-            profile,
-            "app",
-            "modelo",
-            "bindings",
-            "resolve",
-            *scope,
-            "--binding",
-            f"{binding_id}=0.25",
-            "--binding",
-            f"{binding_id}=0.75",
-        )
-        assert resolved.exit_code == 0, resolved.output
-        preview = unwrap_cli_result(resolved)
-        assert preview["authority_generation"] == operation.generation.logical_generation
-        assert preview["override_count"] == 1
-        preview_rows = preview["bindings"]
-        assert isinstance(preview_rows, list) and len(preview_rows) == len(rows)
-        for source, target in zip(rows, preview_rows, strict=True):
-            assert isinstance(source, dict) and isinstance(target, dict)
-            for key in (
-                "binding_id",
-                "source",
-                "readiness",
-                "typed_enum",
-                "legal_refs",
-                "source_refs",
-                "relation_inputs",
-                "encoded_options",
-            ):
-                assert target[key] == source[key]
-            assert target["override"] == ("0.75" if target["binding_id"] == binding_id else None)
-        inventory_result = _invoke(profile, "app", "modelo", "requires", "303", "--year", "2025", "--period", "1T")
-        assert inventory_result.exit_code == 0, inventory_result.output
-        inventory = unwrap_cli_result(inventory_result)
-        assert inventory["authority_generation"] == operation.generation.logical_generation
-        assert inventory["profile_checked"] is True
-        for bucket in (
-            "required_manual",
-            "optional_manual",
-            "detail_row_fields",
-            "ledger_derivable",
-            "profile_derivable",
-            "previous_filing",
-            "relation_prefill",
-            "live_observation",
-            "unbucketed_sources",
-        ):
-            entries = inventory[bucket]
-            assert isinstance(entries, list)
-            for entry in entries:
-                assert isinstance(entry, dict)
-                assert entry["legal_refs"] and entry["source_refs"]
-        readiness_result = _invoke(profile, "app", "modelo", "readiness", *scope)
-        assert readiness_result.exit_code in {0, 2}, readiness_result.output
-        readiness = unwrap_cli_result(readiness_result)
-        assert readiness["authority_generation"] == operation.generation.logical_generation
-        assert readiness_result.exit_code == (0 if readiness["ready"] else 2)
-        assert readiness["revision_id"] == preview["revision"] == inventory["revision"]
-        assert readiness["ledger_period"] is not None
-        assert isinstance(readiness["missing_bindings"], list)
-        assert isinstance(readiness["missing"], list)
+        _assert_readiness_labels(rows, "en")
+        preview = _assert_override_preview(profile, operation, scope, rows)
+        inventory = _assert_inventory_is_grounded(profile, operation)
+        _assert_readiness_axes(profile, operation, scope, preview, inventory)
         relisted = _invoke(profile, "app", "modelo", "bindings", "list", *scope)
         assert relisted.exit_code == 0, relisted.output
         assert unwrap_cli_result(relisted) == listing
-        hungarian = _invoke(profile, "app", "modelo", "bindings", "list", *scope, language="hu")
-        assert hungarian.exit_code == 0, (hungarian.output, failures)
-        hungarian_rows = unwrap_cli_result(hungarian)["bindings"]
-        assert isinstance(hungarian_rows, list) and len(hungarian_rows) == len(rows)
-        with override_settings(cadrumo_output_language="hu"):
-            for row in hungarian_rows:
-                assert isinstance(row, dict)
-                assert row["readiness"] == tr(
-                    CLAVES_LOCALE_DISPONIBILIDAD_POR_ORIGEN_VINCULACION_LOCALE_KEYS[BindingSourceKind(row["source"])]
-                )
-        hungarian_inventory_result = _invoke(
-            profile, "app", "modelo", "requires", "303", "--year", "2025", "--period", "1T", language="hu"
-        )
-        assert hungarian_inventory_result.exit_code == 0, hungarian_inventory_result.output
-        hungarian_inventory = unwrap_cli_result(hungarian_inventory_result)
-        assert hungarian_inventory["authority_generation"] == operation.generation.logical_generation
-        with override_settings(cadrumo_output_language="hu"):
-            canonical_casillas = registry_casillas_for_registry_scope(
-                "303", filing_year=2025, period="1T", operation=operation
-            )
-        labels = {row.casilla_id: row.label for row in canonical_casillas.rows}
-        for bucket in (
-            "required_manual",
-            "optional_manual",
-            "detail_row_fields",
-            "ledger_derivable",
-            "profile_derivable",
-            "previous_filing",
-            "relation_prefill",
-            "live_observation",
-            "unbucketed_sources",
-        ):
-            entries = hungarian_inventory[bucket]
-            assert isinstance(entries, list)
-            for entry in entries:
-                assert isinstance(entry, dict)
-                assert entry["label"] == labels[entry["casilla_id"]]
+        _assert_hungarian_listing_and_inventory(profile, operation, scope, rows, failures)
