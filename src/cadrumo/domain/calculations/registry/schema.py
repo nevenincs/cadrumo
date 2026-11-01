@@ -33,6 +33,7 @@ from ....core.period import Period, RegistrySelectorPeriodCode
 from ....core.revision_review import RevisionReviewStatus
 from ....core.tax_domain import TaxDomain
 from ....core.type_guards import is_object_mapping
+from .binding_grade_cap import BindingGradeCap
 from .binding_provider import BindingProvider
 from .binding_temporal import (
     AllRevisionContexts,
@@ -300,6 +301,9 @@ class BindingDefinition(RegistryModel):
     # direct-carry (`_binding_prefill`) tiers. The three share only the word
     # "prefill" and must not be merged.
     aeat_prefilled: bool = False
+    # Absent means the binding reaches as far as its revision's grade; a cap
+    # only narrows that reach (see :mod:`.binding_grade_cap`).
+    grade_cap: BindingGradeCap | None = None
     legal_refs: LegalRefs
     source_refs: SourceRefs
     source_citations: tuple[SourceCitation, ...] = Field(default_factory=tuple)

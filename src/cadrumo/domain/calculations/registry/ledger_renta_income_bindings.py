@@ -10,6 +10,7 @@ from pydantic import BaseModel, model_validator
 
 from ....core.aggregation import (
     BindingSourceKind,
+    BindingValueOutcome,
     LedgerIncomeGrounding,
     LedgerWithholdingDerivation,
 )
@@ -660,6 +661,42 @@ def _withholding_partition(
         inferred_observations=inferred,
         unresolved_observations=unresolved,
     )
+
+
+def _carries_withholding(observation: RentaIncomeObservationProtocol) -> bool:
+    """Whether a consumed row bears a retención, or might: only a known nothing is not bearing."""
+    derivation = observation.withheld_derivation
+    if derivation in _INFERRED_WITHHOLDING_DERIVATIONS or derivation in _UNRESOLVED_WITHHOLDING_DERIVATIONS:
+        return True
+    if derivation is LedgerWithholdingDerivation.DECLARED_ON_LINKED_INVOICE:
+        return observation.withheld_amount != 0
+    return False
+
+
+def ledger_renta_withholding_value_outcomes(
+    revision: ModeloRevision,
+    observations: Iterable[RentaIncomeObservationProtocol],
+) -> dict[BindingId, BindingValueOutcome]:
+    """State, for each declared-only retención binding on ``revision``, what its value rests on.
+
+    A binding whose matched rows carry no retención, and could not carry an
+    unknown one, has a proven zero: no row in its window raises the question of
+    which period a retención belongs to. Any row with a declared, reconstructed
+    or undeterminable retención makes the value rest on bearing rows, even when
+    the declared-only sum is zero because those figures were left out.
+    """
+    observed = tuple(observations)
+    outcomes: dict[BindingId, BindingValueOutcome] = {}
+    for binding in revision.bindings:
+        if binding.source != BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION:
+            continue
+        selector = provider_member(binding, LedgerRentaIncomeProvider)
+        if selector.fact != LedgerIncomeFact.DECLARED_WITHHELD_AMOUNT_SUM:
+            continue
+        matcher = casilla_target_matcher(selector)
+        bearing = any(_carries_withholding(observation) for observation in observed if matcher(observation))
+        outcomes[binding.id] = BindingValueOutcome.FROM_BEARING_ROWS if bearing else BindingValueOutcome.PROVEN_ZERO
+    return outcomes
 
 
 def validate_ledger_renta_income_aggregation_binding(binding: BindingDefinition) -> list[str]:

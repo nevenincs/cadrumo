@@ -28,7 +28,7 @@ from typing import Annotated, ClassVar, Final, Protocol, Self, runtime_checkable
 
 from pydantic import BaseModel, Field, InstanceOf, TypeAdapter, field_serializer, field_validator, model_validator
 
-from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
+from ...core.aggregation import BindingSourceKind, BindingValueOutcome, CalculationSourceLineageRole
 from ...core.casilla_id import CasillaId
 from ...core.decimal.coercion import coerce_decimal
 from ...core.errors.hierarchy import CoreValidationError, pydantic_validation_boundary
@@ -353,6 +353,8 @@ class CalculationSourceDiagnostic(BaseModel):
     out_of_window_count: int | None = Field(default=None, ge=1)
     out_of_window_min_filing_date: date | None = None
     out_of_window_max_filing_date: date | None = None
+    value_outcome: BindingValueOutcome | None = None
+    """The resolver's stated outcome for a capped value; set only on ``advisory_binding_value``."""
 
     @model_validator(mode="before")
     @classmethod
@@ -611,6 +613,15 @@ class CalculationSourceResolution(BaseModel):
     m303_regimen_simplificado_annual_summary_handoff: M303RegimenSimplificadoAnnualSummaryHandoff | None = None
     diagnostics: tuple[CalculationSourceDiagnostic, ...] = Field(default_factory=tuple)
     provenance: tuple[CalculationSourceProvenance, ...] = Field(default_factory=tuple)
+    value_outcomes: Mapping[BindingId, BindingValueOutcome] = Field(default_factory=dict)
+    """What the resolver states about the rows each binding value rests on, where it can say.
+
+    Only the resolver that read the rows can tell a zero from a window with
+    nothing to sum apart from a zero whose rows carried the quantity, so it says
+    which applies here and no consumer infers it from the amount. A binding with
+    no entry has no stated outcome, which a capped value reads as withholding.
+    A proven zero is refused for a binding whose value is not zero.
+    """
 
     @field_validator("owned_sources", mode="before")
     @classmethod
@@ -938,6 +949,29 @@ class CalculationSourceResolution(BaseModel):
                 raise SourceMeshError("aggregation.source_mesh.errors.row_casilla_source_identity_mismatch")
         return self
 
+    @field_validator("value_outcomes")
+    @classmethod
+    @pydantic_validation_boundary
+    def _freeze_value_outcomes(
+        cls, value: Mapping[BindingId, BindingValueOutcome]
+    ) -> Mapping[BindingId, BindingValueOutcome]:
+        return MappingProxyType(dict(value))
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _proven_zero_is_zero(self) -> CalculationSourceResolution:
+        """Refuse a proven zero stated for a binding whose resolved value is not zero."""
+        contradicted = sorted(
+            binding_id
+            for binding_id, outcome in self.value_outcomes.items()
+            if outcome is BindingValueOutcome.PROVEN_ZERO
+            and binding_id in self.binding_values
+            and self.binding_values[binding_id] != 0
+        )
+        if contradicted:
+            raise SourceMeshError("aggregation.source_mesh.errors.proven_zero_value_not_zero")
+        return self
+
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _provenance_names_its_producing_resolver(self) -> CalculationSourceResolution:
@@ -946,6 +980,12 @@ class CalculationSourceResolution(BaseModel):
         _require_contributor_provenance_parents(self.provenance, primary_refs)
         _validate_provenance_resolver_ids(self.provenance, self.resolver_id)
         return self
+
+    @field_serializer("value_outcomes")
+    def _serialize_value_outcomes(
+        self, value: Mapping[BindingId, BindingValueOutcome]
+    ) -> dict[BindingId, BindingValueOutcome]:
+        return dict(value)
 
     @field_serializer("binding_values")
     def _serialize_binding_values(self, value: Mapping[BindingId, Decimal]) -> dict[BindingId, Decimal]:

@@ -43,6 +43,7 @@ from ._calculation_source_staging import (
 )
 from ._calculation_source_staging import stage_prorrata_definitive_percentage
 from ._transaction_catalogue_cache import MemoizedTransactionCatalogueRepository
+from .advisory_binding_value import add_advisory_binding_value_diagnostics
 from .calculation_action_ports import (
     CalculationActionPorts,
 )
@@ -248,7 +249,8 @@ def resolve_bucket_source_mesh(
     )
     source_resolution = _add_unhandled_source_diagnostics(snapshot.revision, source_resolution)
     source_resolution = _add_terminal_origin_diagnostics(snapshot.revision, source_resolution)
-    return _add_expected_missing_binding_diagnostics(snapshot.revision, source_resolution)
+    source_resolution = _add_expected_missing_binding_diagnostics(snapshot.revision, source_resolution)
+    return add_advisory_binding_value_diagnostics(snapshot, source_resolution, operation=ports.operation)
 
 
 def _prorrata_settlement_apportionment(

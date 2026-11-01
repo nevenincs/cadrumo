@@ -5,12 +5,24 @@ tags:
 date: '2026-11-01'
 modified: '2026-11-01'
 body_schema: 'body-v2'
-body_hash: 'sha256:6801e4f618750be7a9d467319b2cc9979782638a9086d6620a9e12127a81b13d'
+body_hash: 'sha256:5d9599beb8a085b4931eea0455696b6fb015cc26c01a5d16c968a869daeb73d4'
 related:
   - "[[2026-09-27-export-parity-renta-withholding-sources-adr]]"
   - "[[2026-11-01-export-parity-suffered-withholding-schemas-reference]]"
+  - '[[2026-11-01-export-parity-withholding-legal-readings-research]]'
 ---
-# `export-parity` adr: `suffered-withholding, credit reconciliation and resolution-record schemas` | (**status:** `proposed`)
+# `export-parity` adr: `suffered-withholding, credit reconciliation and resolution-record schemas` | (**status:** `accepted`)
+
+Accepted 2026-11-01 on the operator's rulings and the primary-source grounding recorded below.
+
+## Operator rulings 2026-11-01
+
+- The repercutido ingreso a cuenta reading is a regulated question, to be grounded in the norms and implemented as the norms say. `2026-11-01-export-parity-withholding-legal-readings-research`, Q5, grounds it, and section 3 records the result.
+- The remaining recommendations of this record were accepted.
+- On the absence-attestation question the operator answered "I do not know" and delegated the decision. It was decided on the merits by the orchestrator as fail-closed applicability (section 5) and is reversible by a later ruling.
+- The payer-year timing constraint on the datos fiscales cross-check (section 8) follows from DGT V4965-16 as read in the research.
+
+This record's own opening paragraph describes the amendment as proposed. With this acceptance, the wording under "Proposed wording for the accepted record" is authorized to be applied to `2026-09-27-export-parity-renta-withholding-sources-adr` by its owning Step.
 
 This record proposes an amendment to the accepted `2026-09-27-export-parity-renta-withholding-sources-adr`. That record fixes the intent of its Steps 2, 4 and 5. This record settles the persisted schemas, which the operator authorized on 2026-11-01 with the design to be approved before any code. The accepted record stays unchanged until this proposal is authorized. The wording to apply then is under "Proposed wording for the accepted record". The scope is plan Phases P03 and P04 (Steps S17, S18, S29, S06, S19 and S20) of `2026-11-01-export-parity-plan`. Evidence is in `2026-11-01-export-parity-suffered-withholding-schemas-reference`.
 
@@ -107,7 +119,15 @@ A record is never dropped silently, under two rules that section 5 shares:
 - `replaces_evidence_fingerprint`, optional.
 - `captured_at`.
 
-Derived quantities: `pago_a_cuenta = retencion + ingreso_a_cuenta`. The proposed reading is that repercusión does not reduce the credit, because LIRPF art. 99.6 makes it decide only inclusion in the base imponible. That reading is an open operator question (see "Open questions"). The schema does not depend on the answer, because `ingreso_a_cuenta_repercutido` is stored separately; only the `pago_a_cuenta` derivation would change. The write port refuses three kinds of record:
+Derived quantities: `pago_a_cuenta = retencion + ingreso_a_cuenta`. The credit is the full ingreso a cuenta whether or not it is repercutido (explicit text, read together; `2026-11-01-export-parity-withholding-legal-readings-research`, Q5). LIRPF art. 99.6 presumes the ingreso a cuenta made and has the contribuyente include in the base imponible the valuation of the retribución en especie and the ingreso a cuenta "salvo que le hubiera sido repercutido"; art. 43.2 repeats it for the valuation; art. 79.e deducts "los ingresos a cuenta" from the cuota líquida with no repercusión condition, and art. 99.1 counts them as pagos a cuenta. Repercusión therefore removes the ingreso a cuenta from the income only. DGT V1974-21 (binding) confirms the base side with a worked example (valuation 10, ingreso a cuenta 2, rendimiento íntegro en especie 12 when not repercutido) and DGT V1122-11 confirms that the payer's 190 and certificate carry separate "ingresos a cuenta efectuados" and "repercutidos" fields. Consequences for the schema:
+
+- `pago_a_cuenta = retencion + ingreso_a_cuenta`, in full.
+- Modelo 100 casilla 0007 (Importe íntegro) = 0004 (Valoración) + 0005 (Ingresos a cuenta) - 0006 (Ing. a cuenta repercutidos). Casilla 0596 carries the full 0005.
+- Activity income in kind has no separate casilla: its valuation plus any unrepercutido ingreso a cuenta enters ingresos íntegros, and the ingreso a cuenta is credited through 0599.
+- Valuation of the ingreso a cuenta: work income at the rate times the art. 43.1 valuation (RIRPF art. 102), capital mobiliario at the rate times acquisition cost or payer cost plus 20 per cent (art. 103), activity income at the rate times market value (art. 104). The valuation never includes the ingreso a cuenta.
+- A repercutido amount above the ingreso a cuenta is refused (already enforced above).
+
+The write port refuses three kinds of record:
 
 - one whose payer NIF equals the active profile's NIF, because self-withholding is a payer-side fact;
 - one whose `ejercicio` lies outside the supported filing years, or whose pinned Modelo 100 revision declares no member of the family (section 2);
@@ -132,7 +152,11 @@ The row-identity AAD (`encrypted_columns.py:51`) binds namespace, key digest and
 ### 5. Absent, zero and missing
 
 - **Absent.** The revision declares no `retencion_soportada` binding or cross-check. The resolver returns `None` and reads nothing. No stored record can fall here unreported, because the write port refuses records for such an ejercicio (section 2).
-- **Missing.** The family is read and no record and no attestation exist for (ejercicio, class). The bound casilla resolves to nothing, and the existing `unresolved_binding` issue blocks it. A missing value never becomes zero.
+- **Applicability (fail-closed; decided 2026-11-01 on the merits, delegated by the operator, reversible).** Whether a class needs payer records or an attestation comes from the profile's declared income categories for the ejercicio:
+  - a class that is declared, or whose declaration is unknown, requires either payer records or an explicit typed absence attestation before its credit casillas resolve;
+  - a class positively declared absent resolves to proven zero without an attestation;
+  - the attestation is an operator assertion with its own provenance (`OPERATOR_INPUT`, mandatory note). It is never filing evidence of a payer's statement and never counted as a payer certificate.
+- **Missing.** The family is read, the class is applicable under the rule above, and no record and no attestation exist for (ejercicio, class). The bound casilla resolves to nothing, and the existing `unresolved_binding` issue blocks it. A missing value never becomes zero.
 - **Proven zero.** Either records exist whose quantity sums to zero (a certificate stating no retención), or an `absence` attestation exists for (ejercicio, class) with a mandatory operator note, created by the operation of plan Step P03.S29. That gives a filing-grade 0.00 with an `OPERATOR_INPUT` terminal origin. Hypothesis: an attestation contradicted by a ledger income row of the same class is reported as a finding, following `WithholdingDetailAbsence`.
 - **Degraded.** A storage failure is `storage_degradation_resolution` and is never empty.
 
@@ -178,6 +202,8 @@ The row-identity AAD (`encrypted_columns.py:51`) binds namespace, key digest and
 ### 8. Reconciliation finding
 
 - The reconciliation runs after the mesh and overlay on every calculation of a revision that declares the family. It compares the value-source amount with each present cross-check total by exact `Decimal` equality on two-decimal money, without rounding or tolerance. Per-payer totals are compared where both sides carry payer identity: certificates against datos fiscales, and ledger counterparty against certificate payer. That comparison only informs; the casilla total is what blocks.
+
+  Timing constraint on the payer-side comparison (DGT V4965-16, binding; `2026-11-01-export-parity-withholding-legal-readings-research`, Q1 and contradictions note). Payers report withholding in the year of payment, so their certificate and the datos fiscales carry the payment year, while a devengo taxpayer credits withholding in the imputation year. For a devengo taxpayer the 0599 comparison against a certificate or `datos_fiscales { income_class }` therefore compares by the payer's payment year, using the itemised payment dates of the ledger rows. A difference fully explained by itemised accrual-versus-payment timing is not a divergence and raises no `credit_source_disagreement`. A residual difference after that itemisation still blocks, and a cobros y pagos taxpayer compares directly, since imputation and payment coincide.
 - One shared typed fact, `SourceDisagreementFact`, is added to `CalculationSourceIssue` as an optional `disagreement` field. Older revisions parse with `None`. It is the one type for both this reconciliation and the `tier-divergence` screen; the persisted reason (`credit_source_disagreement` or `precedence_tier_divergence`) is the only discriminator. One type gives one resolution record, one finding-key derivation and one renderer. It holds:
   - modelo, filing year, period and work unit id;
   - registry revision id and `inputs_digest`, the content digest of the registry declarations the comparison read (the `credit_reconciliation` entry here, the binding declaration for a tier divergence). It does not hold the authority generation, which changes on every publication (`src/cadrumo/domain/calculations/registry/authority.py:90-122`);
@@ -225,6 +251,9 @@ New reasons, kinds and the optional `disagreement` field are additive, so every 
 - Multi-payer sum to the right casilla.
 - The mixed persona, with payer-side rows leaving every credit unchanged.
 - Agreement producing no finding.
+- A devengo taxpayer whose 0599 differs from the datos fiscales total only by itemised accrual-versus-payment timing raising no finding, and a residual difference still blocking.
+- Applicability: a declared or unknown class without records or attestation blocking, a class declared absent resolving to proven zero, and an attestation never rendered as payer evidence.
+- Credit equal to retención plus the full ingreso a cuenta for a repercutido item, with income equal to casilla 0004 + 0005 - 0006.
 - Each disagreement blocking with the full fact.
 - An absent source reported as not cross-checked.
 - A resolution clearing exactly its key and going stale after any amount changes.
@@ -239,13 +268,14 @@ New reasons, kinds and the optional `disagreement` field are additive, so every 
 ### Dependencies needing an operator ruling
 
 - The `credit_source_disagreement` reason and the `gate_refuses` signature change are shared with every modelo through the gate, the form and the tier-divergence screen. Plan Step P01.S28 coordinates the affected sessions before P04.S19 and P04.S20 land, with its scope ruled by the operator (P01.S27). No product scope is added.
-- The open questions below must be answered before the Steps that depend on them: the repercutido reading before P03.S17 fixes the `pago_a_cuenta` derivation, and the absence-attestation question before P03.S29.
+- The two former open questions are decided (repercutido in section 3, absence applicability in section 5), so neither gates P03.S17 or P03.S29 any longer.
 
 ## Rationale
 
 - A separate kind and namespace is the only shape the payment-contract ADR admits. The per-payer key gives the per-payer cross-check that datos fiscales need in P06, at no further schema cost.
 - Mapping by semantic role, validated against a closed domain table, makes a wrong registry role a build failure rather than a silent misroute. The 0598 finding shows the misroute is real.
-- Crediting the full ingreso a cuenta follows the text of LIRPF art. 99.6.
+- Crediting the full ingreso a cuenta follows the text of LIRPF arts. 79.e and 99.6, as grounded in the legal-readings research.
+- Fail-closed applicability never lets a missing payer record read as zero, and a profile that positively declares a class absent spares the operator an attestation.
 - Persisting the finding in the revision makes verify and export judge what was calculated. Keeping resolutions in their own encrypted store, matched by a content key, lets a resolution follow unchanged amounts across recalculations and expire on any change. That is the accepted record's "stops applying" commitment.
 - Excluding credit value sources from the borrador tier keeps the accepted rejection of prefill-as-primary true. The tier-divergence screen alone would still let the borrador fill a missing certificate. A separate declared marker, rather than an exclusion inferred from another family, keeps snapshot admission and tier participation as two typed facts that the build can check against each other.
 - Keying resolutions to the inputs' content rather than the authority generation is what makes "unchanged amounts keep the resolution" true across publications.
@@ -260,8 +290,8 @@ New reasons, kinds and the optional `disagreement` field are additive, so every 
 - Costs:
   - a new kind, two namespaces, one blocking reason and two advisories, a borrador participation field and a `withholding_side` classification, locale text, and a `gate_refuses` signature change shared by the gate and the form;
   - operators who keyed 0596 manually must re-enter it as a record;
-  - under the current proposal, a pure autonomo must attest absence for 0596, 0597 and 0603, or calculation leaves them unresolved and blocks verify and export (an open question below).
-- Reconsider in three cases: if absence attestation friction proves disproportionate (candidate: deriving applicability from typed profile income-source facts); if entity-row designs land for 0592 to 0594, 0600 and 0601 (they would then take the family as value source); if a DGT or TEAC ruling contradicts the reading of art. 99.6 on repercutido ingresos a cuenta.
+  - under the fail-closed applicability rule, a taxpayer whose profile declares a class, or has not declared it, must supply records or an attestation for it, or calculation leaves the casilla unresolved and blocks verify and export; a class positively declared absent costs nothing.
+- Reconsider in three cases: if a later ruling prefers profile-only applicability without attestations (the fail-closed rule is reversible); if entity-row designs land for 0592 to 0594, 0600 and 0601 (they would then take the family as value source); if a DGT or TEAC ruling contradicts the reading of art. 99.6 on repercutido ingresos a cuenta.
 
 ## Proposed wording for the accepted record
 
@@ -272,5 +302,4 @@ New reasons, kinds and the optional `disagreement` field are additive, so every 
 
 ## Open questions for the operator
 
-- Repercutido ingresos a cuenta (LIRPF art. 99.6). Is a repercutido ingreso a cuenta credited in full, as this record proposes, or does repercusión reduce the credit? The record stores the quantities separately so either answer changes only the `pago_a_cuenta` derivation.
-- Pure-autónomo absence attestation. Must a taxpayer with no payer for a class attest absence per class and ejercicio (the current proposal, plan Step P03.S29), or should applicability derive from typed profile income-source facts so that no attestation is needed where the profile proves no such income?
+None. The repercutido reading is grounded in the norms (section 3), and absence applicability is decided as fail-closed (section 5) and reversible by a later ruling. The research notes that the datos fiscales timing observation was to be verified when P06.S09 declares the cross-check; section 8 now states the constraint it must satisfy.

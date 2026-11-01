@@ -14,15 +14,19 @@ at the domain boundary.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
 from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.time.clock import today_madrid
+from ..calculations.registry.binding_grade_cap_reach import register_binding_output_redirect
 from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ..calculations.registry.governed_fact_scope import GovernedFactSource, require_governed_fact_authority
 from ..calculations.registry.ids import BindingId
 from ..calculations.registry.schema_base import DateAxis
 from ..calculations.registry.validate_cross_domain_snapshot import register_cross_domain_snapshot_check
+
+if TYPE_CHECKING:
+    from ..calculations.registry.schema import ModeloRevision
 
 M130_RETENCIONES_ROUTING_FACT_ID: Final = "m130-retenciones-output-routing"
 
@@ -106,12 +110,31 @@ def check_m130_retenciones_output_casilla(
     ]
 
 
+def m130_retenciones_output_redirect(
+    revision: ModeloRevision, authority: GovernedFactSource | None
+) -> dict[BindingId, tuple[CasillaId, ...]]:
+    """Return the routed binding of ``revision`` and the output casilla the route writes it to.
+
+    Empty unless the revision declares both the routed binding and its output
+    casilla: a revision without the binding has nothing redirected, and one
+    without the casilla is refused by the snapshot check above.
+    """
+    route = _registry_m130_retenciones_route(authority=authority)
+    if route.binding_id not in {binding.id for binding in revision.bindings}:
+        return {}
+    if route.output_casilla not in {casilla.id for casilla in revision.casillas}:
+        return {}
+    return {route.binding_id: (route.output_casilla,)}
+
+
 register_cross_domain_snapshot_check(check_m130_retenciones_output_casilla)
+register_binding_output_redirect(m130_retenciones_output_redirect)
 
 
 __all__ = [
     "M130_RETENCIONES_ROUTING_FACT_ID",
     "M130RetencionesRoute",
     "check_m130_retenciones_output_casilla",
+    "m130_retenciones_output_redirect",
     "resolve_m130_retenciones_route",
 ]

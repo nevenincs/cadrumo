@@ -148,6 +148,11 @@ def collect_snapshot_ref_ids(
     )
     for kind_records in flat_records:
         _collect_grounded_record_refs(kind_records, legal_ids=legal_ids, source_ids=source_ids)
+    # A binding's grade cap cites the provisions that leave its value short of
+    # filing grade; the snapshot must resolve them for the note that names them.
+    for binding in revision.bindings:
+        if binding.grade_cap is not None:
+            legal_ids.update(binding.grade_cap.legal_refs)
     _collect_cross_reference_predicate_refs(revision, legal_ids=legal_ids, source_ids=source_ids)
     _collect_export_layout_refs(revision, legal_ids=legal_ids, source_ids=source_ids)
     _collect_deadline_schedule_refs(

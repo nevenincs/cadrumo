@@ -16,7 +16,7 @@ from datetime import date
 from decimal import Decimal
 from typing import Protocol
 
-from ...core.aggregation import BindingSourceKind
+from ...core.aggregation import BindingSourceKind, BindingValueOutcome
 from ...core.casilla_id import CasillaId
 from ...core.i18n.translatable import Translatable as tr
 from ...core.logging import get_logger
@@ -182,6 +182,7 @@ class _SourceResolutionMergeState:
     casilla_owners: dict[CasillaId, str] = field(default_factory=dict)
     borrador_provenance: BorradorSourceProvenance | None = None
     m303_regimen_simplificado_annual_summary_handoff: M303RegimenSimplificadoAnnualSummaryHandoff | None = None
+    value_outcomes: dict[BindingId, BindingValueOutcome] = field(default_factory=dict)
 
     def absorb(self, resolution: CalculationSourceResolution) -> None:
         self._absorb_closed_record_rows(resolution)
@@ -252,6 +253,16 @@ class _SourceResolutionMergeState:
         self.m303_regimen_simplificado_annual_summary_handoff = handoff
 
     def _absorb_precedence_values(self, resolution: CalculationSourceResolution) -> None:
+        # An outcome speaks for the value it was stated beside: a later tier's
+        # value replaces the earlier outcome along with the earlier value.
+        for binding_id in (
+            *resolution.binding_values,
+            *resolution.enum_binding_values,
+            *resolution.date_binding_values,
+            *resolution.boolean_binding_values,
+        ):
+            self.value_outcomes.pop(binding_id, None)
+        self.value_outcomes.update(resolution.value_outcomes)
         self.binding_values.update(resolution.binding_values)
         self.enum_binding_values.update(resolution.enum_binding_values)
         self.date_binding_values.update(resolution.date_binding_values)
@@ -281,6 +292,7 @@ class _SourceResolutionMergeState:
         self.unresolved_relation_ids.difference_update(resolution.relation_values)
 
     def _absorb_binding_values(self, resolution: CalculationSourceResolution) -> None:
+        self.value_outcomes.update(resolution.value_outcomes)
         for binding_id, value in resolution.binding_values.items():
             _claim_binding(self.binding_owners, binding_id, resolution.resolver_id)
             self.binding_values[binding_id] = value
@@ -362,6 +374,7 @@ class _SourceResolutionMergeState:
             m303_regimen_simplificado_annual_summary_handoff=self.m303_regimen_simplificado_annual_summary_handoff,
             diagnostics=tuple(self.diagnostics),
             provenance=tuple(self.provenance),
+            value_outcomes=self.value_outcomes,
         )
 
 
