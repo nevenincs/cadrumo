@@ -37,6 +37,9 @@ from cadrumo.application.auth.tests.certificate_secret_fakes import InMemoryCert
 from cadrumo.core.auth_provider import AuthProviderKind
 from cadrumo.core.config import load_settings, override_settings
 from cadrumo.domain.calculations.registry.authority import (
+    PinnedAuthorityOperation,
+)
+from cadrumo.domain.calculations.registry.authority import (
     bundled_indexed_authority as _certificate_indexed_authority_for_test,
 )
 from cadrumo.tests.certificates import CERTIFICATE_BUNDLE_INPUT, build_pkcs12_bundle
@@ -55,6 +58,52 @@ from .certificate_sources_check_support import (
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
+
+
+def _register_and_select_personal_source(tmp_path: Path, operation: PinnedAuthorityOperation) -> Path:
+    """Register a valid ``personal`` certificate source with no bound secret and select it."""
+    _register_operator_profile()
+    now = datetime.now(UTC)
+    cert_path = build_pkcs12_bundle(
+        tmp_path,
+        not_valid_before=now - timedelta(days=1),
+        not_valid_after=now + timedelta(days=200),
+        name="personal",
+        subject_cn="gestor-personal",
+    )
+    register_operator_certificate_source(
+        name="personal",
+        certificate_path=cert_path,
+        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+        operation=operation,
+    )
+    select_operator_certificate_source(
+        name="personal",
+        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+        operation=operation,
+    )
+    return cert_path
+
+
+def _describe_and_probe_omitted(certificate_secret_backend_factory: InMemoryCertificateSecretBackendFactory):
+    """Describe the certificate provider, then read the omitted-provider status and test through the operator surface."""
+    provider_description = select_provider(
+        AuthProviderKind.CERTIFICATE,
+        settings=load_settings(),
+        certificate_secret_backend_factory=certificate_secret_backend_factory,
+        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+    ).describe()
+    omitted_status = inspect_operator_auth(
+        certificate_secret_backend_factory=certificate_secret_backend_factory,
+        operator_probe_ports=_OPERATOR_PROBE_PORTS,
+        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+    )
+    omitted_test = run_operator_auth_test(
+        certificate_secret_backend_factory=certificate_secret_backend_factory,
+        operator_probe_ports=_OPERATOR_PROBE_PORTS,
+        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+    )
+    return provider_description, omitted_status, omitted_test
 
 
 def test_resolver_returns_selected_source_path_and_secure_storage_secret(
@@ -141,26 +190,7 @@ def test_selected_source_without_secret_fails_closed_no_global_credential_leak(
 ) -> None:
     """A selected source with no bound secret resolves ``password=None`` and never leaks a global secret."""
     with _certificate_indexed_authority_for_test().operation() as _certificate_authority_operation_for_test:
-        _register_operator_profile()
-        now = datetime.now(UTC)
-        cert_path = build_pkcs12_bundle(
-            tmp_path,
-            not_valid_before=now - timedelta(days=1),
-            not_valid_after=now + timedelta(days=200),
-            name="personal",
-            subject_cn="gestor-personal",
-        )
-        register_operator_certificate_source(
-            name="personal",
-            certificate_path=cert_path,
-            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-            operation=_certificate_authority_operation_for_test,
-        )
-        select_operator_certificate_source(
-            name="personal",
-            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-            operation=_certificate_authority_operation_for_test,
-        )
+        cert_path = _register_and_select_personal_source(tmp_path, _certificate_authority_operation_for_test)
 
         with override_settings(
             cadrumo_certificate_password_secret=SecretStr("unrelated-global-secret"),
@@ -183,26 +213,7 @@ def test_central_provider_and_explicit_or_omitted_probes_fail_closed_without_nam
 ) -> None:
     """A valid global password cannot satisfy a selected named source with no bound secret."""
     with _certificate_indexed_authority_for_test().operation() as _certificate_authority_operation_for_test:
-        _register_operator_profile()
-        now = datetime.now(UTC)
-        cert_path = build_pkcs12_bundle(
-            tmp_path,
-            not_valid_before=now - timedelta(days=1),
-            not_valid_after=now + timedelta(days=200),
-            name="personal",
-            subject_cn="gestor-personal",
-        )
-        register_operator_certificate_source(
-            name="personal",
-            certificate_path=cert_path,
-            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-            operation=_certificate_authority_operation_for_test,
-        )
-        select_operator_certificate_source(
-            name="personal",
-            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-            operation=_certificate_authority_operation_for_test,
-        )
+        cert_path = _register_and_select_personal_source(tmp_path, _certificate_authority_operation_for_test)
         configure_operator_auth(
             AuthProviderKind.CERTIFICATE.value, certificate_path=cert_path, operator_scope_ports=_OPERATOR_SCOPE_PORTS
         )
@@ -266,21 +277,8 @@ def test_bound_named_secret_wins_over_wrong_global_through_central_and_omitted_r
     with override_settings(
         cadrumo_certificate_password_secret=SecretStr("intentionally-wrong-global"),
     ):
-        provider_description = select_provider(
-            AuthProviderKind.CERTIFICATE,
-            settings=load_settings(),
-            certificate_secret_backend_factory=certificate_secret_backend_factory,
-            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-        ).describe()
-        omitted_status = inspect_operator_auth(
-            certificate_secret_backend_factory=certificate_secret_backend_factory,
-            operator_probe_ports=_OPERATOR_PROBE_PORTS,
-            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-        )
-        omitted_test = run_operator_auth_test(
-            certificate_secret_backend_factory=certificate_secret_backend_factory,
-            operator_probe_ports=_OPERATOR_PROBE_PORTS,
-            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+        provider_description, omitted_status, omitted_test = _describe_and_probe_omitted(
+            certificate_secret_backend_factory
         )
 
     assert provider_description.available is True
@@ -432,21 +430,8 @@ def test_central_provider_preserves_unnamed_single_certificate_credential_withou
         cadrumo_certificate_password_secret=SecretStr(CERTIFICATE_BUNDLE_INPUT),
         cadrumo_certificate_friendly_name="legacy-global",
     ):
-        provider_description = select_provider(
-            AuthProviderKind.CERTIFICATE,
-            settings=load_settings(),
-            certificate_secret_backend_factory=certificate_secret_backend_factory,
-            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-        ).describe()
-        omitted_status = inspect_operator_auth(
-            certificate_secret_backend_factory=certificate_secret_backend_factory,
-            operator_probe_ports=_OPERATOR_PROBE_PORTS,
-            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-        )
-        omitted_test = run_operator_auth_test(
-            certificate_secret_backend_factory=certificate_secret_backend_factory,
-            operator_probe_ports=_OPERATOR_PROBE_PORTS,
-            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+        provider_description, omitted_status, omitted_test = _describe_and_probe_omitted(
+            certificate_secret_backend_factory
         )
 
     assert provider_description.available is True
