@@ -8905,6 +8905,7 @@ workspace:
         filed: Registrada com a presentada
         not_applicable: No s'aplica
         overdue: Vençuda
+        unknown: Tancament desconegut
         upcoming: Propera
       local:
         external_baseline_imported: Presentació externa importada

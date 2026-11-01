@@ -1,0 +1,47 @@
+# The procedure that extends a projected nominal filing close falling on an
+# inhábil day. It applies to every modelo, so it carries no modelo selector; the
+# coordinate is the nominal close. Modelos exempt from the extension stay declared
+# in deadline-shift-exempt-modelos.
+#
+# Entries:
+# - rule: "next_business_day", Ley 39/2015 art. 30.5: when the last day of the
+#   plazo is inhábil it is extended to the first día hábil siguiente. Saturdays,
+#   Sundays and declared festivos are inhábiles (art. 30.2). Tax procedures follow
+#   their own rules first and Ley 39/2015 supletoriamente (DA 1.2; Ley 58/2003
+#   art. 7.2); the LGT has no general rule of its own for an autoliquidación close.
+# - calendar_scope: "national", the close moves on weekends and national inhábil
+#   days only. The filer's territory is applied afterwards, by the effective
+#   deadline service, and is never part of a window's close.
+# - inhabil_basis: what grounds calendar_scope. "aeat_published_practice":
+#   AEAT's published closes for Modelo 303 and 390 stay on days inhábiles in a
+#   single autonomous community, which is consistent with art. 31.3 (an
+#   electronic registry counts on the sede's own calendar, without art. 30.6) but
+#   is measured practice rather than a text that says "national only", so the
+#   variant is graded pending review.
+#
+# A year whose national holiday calendar is not published leaves the projected
+# close unknown; it is never computed against a holiday-free calendar.
+
+[fact]
+fact_id = "deadlines.filing-close-inhabil-shift"
+family = "mapping"
+
+[[fact.variants]]
+variant_id = "filing-close-inhabil-shift:national-next-business-day"
+date_axis = "submission_date"
+legal_refs = [
+  "ley-39-2015:art-30.5",
+  "ley-39-2015:art-30.2",
+  "ley-39-2015:art-31.3",
+  "ley-39-2015:da-1.2",
+  "ley-58-2003:art-7.2",
+]
+review_status = "pending_review"
+ownership = "authored"
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "rule", value = "next_business_day" },
+  { key = "calendar_scope", value = "national" },
+  { key = "inhabil_basis", value = "aeat_published_practice" },
+]

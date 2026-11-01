@@ -100,8 +100,8 @@ def _deadline_window_period_for_registry_period(
     registry declares no window for the combination.
     """
     target = Period.from_year_and_code(filing_year, registry_period)
-    window = resolve_filing_window(modelo, filing_year, target)
-    return None if window is None else window.period
+    resolution = resolve_filing_window(modelo, filing_year, target)
+    return None if resolution is None else resolution.period
 
 
 def workflow_period_for_work_unit(work_unit: WorkUnit) -> Period:

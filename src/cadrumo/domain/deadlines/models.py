@@ -113,7 +113,9 @@ class ObligationStatus(StrEnum):
     :attr:`UPCOMING` and :attr:`DUE_SOON` are differentiated by the engine's
     ``due_soon_days`` window (default 14 days).
     :attr:`FILED` and :attr:`NOT_APPLICABLE` are reserved for downstream
-    consumers — the engine never produces them.
+    consumers — the engine never produces them. :attr:`UNKNOWN` is produced
+    only for a projected window whose close is unknown, and is never derived
+    from a date.
 
     Attributes:
         UPCOMING: Window opens in the future or is open but more than
@@ -125,6 +127,10 @@ class ObligationStatus(StrEnum):
         FILED: Downstream marker for filings already submitted.
         NOT_APPLICABLE: Downstream marker for obligations the profile
             no longer triggers.
+        UNKNOWN: The window's close is unknown because a holiday calendar
+            its inhábil-day shift needs is not published; the obligation is
+            neither open-ended nor overdue, and is not classified against
+            its nominal close.
     """
 
     UPCOMING = "UPCOMING"
@@ -133,6 +139,7 @@ class ObligationStatus(StrEnum):
     OVERDUE = "OVERDUE"
     FILED = "FILED"
     NOT_APPLICABLE = "NOT_APPLICABLE"
+    UNKNOWN = "UNKNOWN"
 
 
 class ModeloEnrollment(BaseModel):
@@ -940,6 +947,49 @@ class ModeloDeadline(BaseModel):
         return self
 
 
+class CloseUnknownModeloDeadline(BaseModel):
+    """A filing obligation whose window close is unknown.
+
+    The window is projected from the governed filing-window rule, but a holiday
+    calendar its inhábil-day shift needs is not published. ``opens_on`` and
+    ``nominal_closes_on`` are known; the close is no earlier than the nominal
+    one, and the status is always :attr:`ObligationStatus.UNKNOWN`, never a
+    classification against the nominal date.
+
+    Attributes:
+        modelo: The modelo identifier.
+        period: The period covered.
+        opens_on: The first day of the window.
+        nominal_closes_on: The nominal close before any inhábil-day shift; a
+            lower bound of the unknown close, not the close.
+        status: Always :attr:`ObligationStatus.UNKNOWN`.
+        close_unavailable_reason: Stable token naming why the close is unknown.
+        boe_references: Legal references of the rule the window projects.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    modelo: Annotated[Modelo, BeforeValidator(_parse_modelo_identifier)]
+    period: Annotated[Period, BeforeValidator(_parse_modelo_deadline_period)]
+    opens_on: date
+    nominal_closes_on: date
+    status: ObligationStatus = ObligationStatus.UNKNOWN
+    close_unavailable_reason: str = Field(min_length=1)
+    boe_references: tuple[str, ...] = Field(default_factory=tuple)
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _check_unknown(self) -> CloseUnknownModeloDeadline:
+        """Refuse a classified status or an opening after the nominal close."""
+        if self.status is not ObligationStatus.UNKNOWN:
+            raise DeadlineValidationError(f"a close-unknown obligation cannot carry status {self.status.value}")
+        if self.opens_on > self.nominal_closes_on:
+            raise DeadlineValidationError(
+                f"opens_on ({self.opens_on}) is after nominal_closes_on ({self.nominal_closes_on})",
+            )
+        return self
+
+
 class Schedule(BaseModel):
     """The full filing schedule for a taxpayer profile for a given year.
 
@@ -949,6 +999,10 @@ class Schedule(BaseModel):
         year: The target year.
         obligations: Tuple of :class:`ModeloDeadline` ordered by
             ``(closes_on, modelo, period)``.
+        close_unknown_obligations: Obligations whose projected window close
+            is unknown, ordered by ``(nominal_closes_on, modelo, period)``.
+            They are never dated obligations, so a consumer that judges
+            dates cannot misread them.
         generated_at: UTC timestamp of when :meth:`DeadlineEngine.compute`
             built this schedule. The only non-deterministic field, and
             validated as UTC-aware rather than merely documented as such:
@@ -961,4 +1015,5 @@ class Schedule(BaseModel):
     profile: TaxpayerProfile
     year: int = Field(ge=1900, le=9999)
     obligations: tuple[ModeloDeadline, ...]
+    close_unknown_obligations: tuple[CloseUnknownModeloDeadline, ...] = ()
     generated_at: UtcInstant

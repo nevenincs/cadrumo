@@ -8876,6 +8876,7 @@ workspace:
         filed: Benyújtottként rögzítve
         not_applicable: Nem alkalmazandó
         overdue: Lejárt
+        unknown: Ismeretlen határidő
         upcoming: Közelgő
       local:
         external_baseline_imported: Külső benyújtás importálva

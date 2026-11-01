@@ -445,7 +445,10 @@ def _raise_if_m390_303_reconciliation_would_save_silent_zero(
     for relation_id, binding_id, target_casillas, _source_casilla, annual_casilla in targets:
         if binding_id in resolved_binding_values or annual_casilla in resolved_annual_casillas:
             continue
-        if _calculated_decimal(casilla_values.get(annual_casilla)) == ZERO:
+        # Only a calculated zero proves the slot has nothing to reconcile; an
+        # annual figure the calculation left unresolved is not one.
+        annual_value = casilla_values.get(annual_casilla)
+        if annual_value is not None and _calculated_decimal(annual_value) == ZERO:
             continue
         missing_relations.append(relation_id)
         missing_bindings.append(binding_id)

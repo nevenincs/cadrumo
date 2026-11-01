@@ -8922,6 +8922,7 @@ workspace:
         filed: Registrada como presentada
         not_applicable: No aplica
         overdue: Vencida
+        unknown: Cierre desconocido
         upcoming: Próxima
       local:
         external_baseline_imported: Presentación externa importada

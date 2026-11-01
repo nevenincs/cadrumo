@@ -105,7 +105,8 @@ def test_the_index_stays_bounded(
     operation: PinnedAuthorityOperation,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(deadline_engine, "_project_deadline_windows", lambda operation, year: ())
+    empty = deadline_engine.DeadlineWindowYearIndex(dated=(), projected={}, close_unknown=())
+    monkeypatch.setattr(deadline_engine, "_project_deadline_windows", lambda operation, year: empty)
     for index in range(deadline_engine._DEADLINE_WINDOW_INDEX_LIMIT + 2):
         generation = AuthorityGenerationPin(logical_generation=f"{index:064x}", reader_incarnation="c" * 64)
         repinned = _RepinnedOperation(operation=operation, generation=generation)

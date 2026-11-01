@@ -7,7 +7,9 @@ the rule Orden EHA/1658/2009 declares, held as two governed mapping facts and
 resolved through canonical governed-fact temporal selection:
 
 * ``deadlines.domiciliation-cutoff-clause``: the Anexo II day for the modelo and
-  period, and the nominal close of the filing period.
+  period. The month it falls in and the nominal close of the filing period come
+  from their single home, the filing-window clause
+  (:mod:`cadrumo.domain.deadlines.filing_window_projection`).
 * ``deadlines.domiciliation-procedure``: art. 3.2. Art. 3.2.b extends the Anexo II
   period by the days the filing period is extended when its last day is inhábil.
   From Orden HAC/241/2025 a minimum of días hábiles or naturales must remain
@@ -45,6 +47,7 @@ from ..calculations.registry.schema_base import DateAxis
 from ..calculations.registry.schema_references import TemporalProjectionDirection
 from .errors import DeadlineValidationError
 from .festivos import CalendarCCAA, HolidayCalendar, is_business_day, load_holiday_calendar
+from .filing_window_projection import FilingWindowClause, resolve_filing_window_clause
 
 if TYPE_CHECKING:
     from ..calculations.registry.authority import PinnedAuthorityOperation
@@ -54,7 +57,6 @@ DOMICILIATION_CUTOFF_CLAUSE_FACT_ID: Final = "deadlines.domiciliation-cutoff-cla
 DOMICILIATION_PROCEDURE_FACT_ID: Final = "deadlines.domiciliation-procedure"
 
 _MODELO_SELECTOR: Final = "modelo"
-_MONTH_END: Final = "month_end"
 _SAME_DAYS: Final = "same_days"
 _NO_MARGIN: Final = "none"
 _BUSINESS_OR_CALENDAR_DAYS: Final = "business_or_calendar_days"
@@ -63,7 +65,7 @@ _MAX_DAY_OF_MONTH: Final = 31
 # inhábil days, which is a registry defect rather than a cutoff.
 _MARGIN_SEARCH_DAYS: Final = 62
 
-_CLAUSE_REQUIRED_KEYS: Final = frozenset({"deadline_month_offset", "filing_last_day", "domiciliation_last_day"})
+_CLAUSE_REQUIRED_KEYS: Final = frozenset({"domiciliation_last_day"})
 _CLAUSE_OPTIONAL_KEYS: Final = frozenset({"leap_year_domiciliation_last_day"})
 _PROCEDURE_REQUIRED_KEYS: Final = frozenset(
     {"filing_extension", "margin_rule", "inhabil_base", "inhabil_base_authority"},
@@ -84,7 +86,8 @@ class PaymentCutoffSource(StrEnum):
 class PaymentCutoffUnavailableReason(StrEnum):
     """Why no payment cutoff could be resolved for a window.
 
-    * ``NO_CLAUSE`` -- no Anexo II clause is declared for the modelo and period.
+    * ``NO_CLAUSE`` -- no Anexo II clause, or no filing-window clause giving its
+      month and nominal close, is declared for the modelo and period.
     * ``NO_PROCEDURE`` -- no art. 3.2 procedure variant covers the Anexo II day.
     * ``HOLIDAY_CALENDAR_UNAVAILABLE`` -- a year the margin walk enters has no
       published holiday calendar in the registry.
@@ -136,7 +139,9 @@ class DomiciliationHolidayCoverage(StrEnum):
 class DomiciliationClause:
     """One Anexo II clause: the domiciliación day and the nominal filing close it relates to.
 
-    ``filing_last_day`` of ``None`` means the last day of the deadline month.
+    The deadline month and ``filing_last_day`` are read from the filing-window
+    clause, the single home of the nominal close; ``filing_last_day`` of ``None``
+    means the last day of the deadline month.
     """
 
     deadline_month_offset: int
@@ -238,8 +243,12 @@ def _token(entries: Mapping[str, object], key: str, *, allowed: frozenset[str], 
     return value
 
 
-def domiciliation_clause_from_fact(resolved: ResolvedMappingFact) -> DomiciliationClause:
-    """Read one resolved Anexo II clause, refusing unknown keys and out-of-range days."""
+def domiciliation_clause_from_fact(
+    resolved: ResolvedMappingFact,
+    *,
+    window_clause: FilingWindowClause,
+) -> DomiciliationClause:
+    """Read one resolved Anexo II clause onto its filing-window clause, refusing unknown keys and days."""
     subject = _subject(resolved.fact_id, resolved.variant_id)
     entries = _entries(resolved)
     _require_keys(
@@ -248,20 +257,14 @@ def domiciliation_clause_from_fact(resolved: ResolvedMappingFact) -> Domiciliati
         allowed=_CLAUSE_REQUIRED_KEYS | _CLAUSE_OPTIONAL_KEYS,
         subject=subject,
     )
-    raw_filing_day = entries["filing_last_day"]
-    filing_last_day = (
-        None
-        if raw_filing_day == _MONTH_END
-        else _integer(entries, "filing_last_day", minimum=1, maximum=_MAX_DAY_OF_MONTH, subject=subject)
-    )
     leap_day = (
         _integer(entries, "leap_year_domiciliation_last_day", minimum=1, maximum=_MAX_DAY_OF_MONTH, subject=subject)
         if "leap_year_domiciliation_last_day" in entries
         else None
     )
     return DomiciliationClause(
-        deadline_month_offset=_integer(entries, "deadline_month_offset", minimum=0, maximum=12, subject=subject),
-        filing_last_day=filing_last_day,
+        deadline_month_offset=window_clause.deadline_month_offset,
+        filing_last_day=window_clause.filing_last_day,
         domiciliation_last_day=_integer(
             entries, "domiciliation_last_day", minimum=1, maximum=_MAX_DAY_OF_MONTH, subject=subject
         ),
@@ -557,6 +560,9 @@ def derive_payment_cutoff(
         # filing has none, so no clause can govern it.
         return UnavailablePaymentCutoff(window_id=window.id, reason=PaymentCutoffUnavailableReason.NO_CLAUSE)
     period_end = period.end_date
+    window_clause = resolve_filing_window_clause(operation, modelo=modelo, period=period)
+    if window_clause is None:
+        return UnavailablePaymentCutoff(window_id=window.id, reason=PaymentCutoffUnavailableReason.NO_CLAUSE)
     clause_fact = _resolve_mapping_fact(
         operation,
         MappingFactQuery(
@@ -570,7 +576,7 @@ def derive_payment_cutoff(
     )
     if clause_fact is None:
         return UnavailablePaymentCutoff(window_id=window.id, reason=PaymentCutoffUnavailableReason.NO_CLAUSE)
-    clause = domiciliation_clause_from_fact(clause_fact)
+    clause = domiciliation_clause_from_fact(clause_fact, window_clause=window_clause[0])
     clause_evidence = DomiciliationRuleEvidence.from_fact(clause_fact)
     anexo_on = clause.anexo_day(period_end)
     procedure_fact = _resolve_mapping_fact(

@@ -118,8 +118,10 @@ def _never_consulted(candidate: date) -> bool:
 
 
 def _window(modelo: str, year: int, code: str, operation: PinnedAuthorityOperation) -> DeadlineWindowDefinition:
-    window = resolve_filing_window(modelo, year, Period.from_year_and_code(year, code), authority=operation)
-    assert window is not None, f"no {modelo} window for {year} {code}"
+    resolution = resolve_filing_window(modelo, year, Period.from_year_and_code(year, code), authority=operation)
+    assert resolution is not None, f"no {modelo} window for {year} {code}"
+    window = resolution.dated_window
+    assert window is not None, f"the {modelo} {year} {code} window has no known close"
     return window
 
 
@@ -368,6 +370,22 @@ def test_a_window_past_the_published_holiday_calendars_is_unavailable(operation:
     assert resolved.cutoff_on is None
     assert resolved.procedure is not None
     assert resolved.procedure.projection_direction is TemporalProjectionDirection.FORWARD
+
+
+def test_the_december_2026_cutoff_is_not_authored_and_waits_on_the_2027_calendar(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    # The 2026 domiciliación calendar prints no row for 12M 2026, so no date is
+    # authored for it. Its window closes in 2027, whose días inhábiles are not
+    # published, so the margin cannot be counted.
+    window = _window("303", 2026, "12", operation)
+    assert window.payment_cutoff_on is None
+
+    resolved = resolve_payment_cutoff("303", window, operation=operation)
+
+    assert isinstance(resolved, UnavailablePaymentCutoff)
+    assert resolved.reason is PaymentCutoffUnavailableReason.HOLIDAY_CALENDAR_UNAVAILABLE
+    assert resolved.cutoff_on is None
 
 
 # A filing year well beyond the support horizon, chosen so that 15 July is a

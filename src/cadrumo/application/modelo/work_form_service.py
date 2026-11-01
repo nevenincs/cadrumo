@@ -185,13 +185,19 @@ def modelo_form_deadline(
     )
     if deadline is None:
         return None
+    days_remaining = deadline.days_remaining_on(reference_on)
+    days_overdue = deadline.days_overdue_on(reference_on)
+    if days_remaining is None and days_overdue is None:
+        # The window's close is unknown and its nominal close has passed, so
+        # neither posture can be stated.
+        return None
     return ModeloFormDeadline(
         closes_on=deadline.closes_on,
         nominal_closes_on=deadline.nominal_closes_on,
         holiday_coverage=deadline.holiday_coverage,
         reference_on=reference_on,
-        days_remaining=deadline.days_remaining_on(reference_on),
-        days_overdue=deadline.days_overdue_on(reference_on),
+        days_remaining=days_remaining,
+        days_overdue=days_overdue,
     )
 
 

@@ -24,6 +24,7 @@ from pydantic import BaseModel, Field
 
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.time.clock import now
+from ...domain.deadlines.models import ObligationStatus
 from .calendar_models import (
     CalendarCompleteness,
     CalendarWarning,
@@ -69,6 +70,10 @@ class OverviewAgenda(BaseModel):
             and whose user_state is ``LATE`` (filed obligations are
             excluded — the engine's ``FILED`` flag suppresses them
             via the state mapping).
+
+            Entries whose close is unknown (``status`` ``UNKNOWN``) join no
+            cohort and are never ``next_due``: their nominal close is only a
+            lower bound, so no date claim is made for them.
         generated_at: UTC timestamp of when the aggregator ran.
         warnings: Calendar warnings inherited from the underlying
             calendar build (under-specified profile keys).
@@ -166,7 +171,8 @@ def build_overview_agenda(
     due_soon: list[OverviewCalendarEntry] = []
     overdue: list[OverviewCalendarEntry] = []
     next_due: OverviewCalendarEntry | None = None
-    for entry in calendar.entries:
+    dated_entries = tuple(entry for entry in calendar.entries if entry.status is not ObligationStatus.UNKNOWN)
+    for entry in dated_entries:
         deadline = entry.adjusted_closes_on
         if deadline == as_of:
             due_today.append(entry)
@@ -175,7 +181,7 @@ def build_overview_agenda(
         elif deadline < as_of and entry.user_state is OverviewPeriodState.LATE:
             overdue.append(entry)
 
-    future_or_today = [entry for entry in calendar.entries if entry.adjusted_closes_on >= as_of]
+    future_or_today = [entry for entry in dated_entries if entry.adjusted_closes_on >= as_of]
     if future_or_today:
         next_due = min(
             future_or_today,

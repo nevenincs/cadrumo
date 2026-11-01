@@ -68,7 +68,8 @@ from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObject
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.application.calculations.tests.filing_evidence import general_m303_filing_evidence
 from cadrumo.application.invoices.catalogue_creation import build_catalogue_invoice
-from cadrumo.application.modelo.action_errors import ModeloCrossPeriodCleanStateError
+from cadrumo.application.modelo.action_errors import CalculationRevisionStateError, ModeloCrossPeriodCleanStateError
+from cadrumo.application.modelo.calculation_note_gate import ModeloCalculationBlockedError
 from cadrumo.application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
@@ -77,11 +78,14 @@ from cadrumo.application.modelo.export_contracts import ModeloExportCommand
 from cadrumo.application.modelo.filing_action_ports import FilingActionPorts
 from cadrumo.application.modelo.filing_actions import file_modelo_revision
 from cadrumo.application.modelo.verification_actions import verify_modelo_revision_with_preconditions
+from cadrumo.application.modelo.work_form_models import ModeloFormOrigin, address_key
+from cadrumo.application.modelo.work_form_service import load_modelo_work_form
 from cadrumo.application.modelo.verification_repository_ports import VerificationRepositoryBundle
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.errors.hierarchy import CadrumoError
+from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.i18n.render import tr as render_tr
 from cadrumo.core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from cadrumo.core.period import Period
@@ -108,6 +112,7 @@ from cadrumo.domain.iva_compensation.reconciliation import (
     IvaCompensationReconciliationDecision,
 )
 from cadrumo.domain.modelos.calculation_revision import CalculationRevision
+from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.verification_report import VerificationCompletenessStatus, VerificationReport
 from cadrumo.domain.modelos.work_unit import WorkUnit
 from cadrumo.domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry
@@ -1232,9 +1237,14 @@ def test_general_prorrata_settles_in_the_fourth_quarter_and_folds_into_m390(
 
 
 def test_settlement_quarter_without_filed_earlier_quarter_leaves_casilla_44_unresolved(
-    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
+    secure_objects: SecureObjectRepository, tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
-    """A missing first-quarter liquidation keeps the regularisation unresolved, never zero."""
+    """A missing first-quarter liquidation keeps the regularisation unresolved, never zero.
+
+    The saved revision holds no figure for 44, nor for the deduction total [45]
+    and the general-regime result [46] that sum it, and the unresolved-binding
+    note refuses checking, exporting and recording the declaration.
+    """
     _store_profile(secure_objects)
     _save_general_prorrata_register(secure_objects)
     _persist_year_of_invoices(
@@ -1265,3 +1275,135 @@ def test_settlement_quarter_without_filed_earlier_quarter_leaves_casilla_44_unre
     assert tuple(issue.message for issue in casilla_44_issues) == (
         render_tr("application.calculations.prorrata_regularizacion.unresolved.source_periods_missing", periods="1T"),
     )
+
+    stored = CalculationRevisionCatalogueRepository(objects=secure_objects).load().get(revision.calculation_revision_id)
+    assert stored is not None
+    observed = {observation.casilla_id for observation in stored.observations}
+    for casilla_id in (_CASILLA_44, _CASILLA_45, _DEDUCIBLE_TOTAL, _RESULTADO):
+        assert casilla_id not in stored.casilla_values
+        assert casilla_id not in observed
+    # The quarter's own deduction is still worked out at the definitive 56 %.
+    assert Decimal(stored.casilla_values[_SOPORTADO_INTERIORES]) == _MANUAL_4T_DEFINITIVE_DEDUCTION
+    _assert_form_states_no_figure(secure_objects, (_CASILLA_44, _CASILLA_45), operation=operation)
+    _assert_verify_export_and_file_refused(secure_objects, revision, tmp_path, operation=operation)
+
+
+def _assert_form_states_no_figure(
+    secure_objects: SecureObjectRepository,
+    casilla_ids: tuple[CasillaId, ...],
+    *,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """The editor form shows each box as not worked out, with no value, rather than an imported or summed zero."""
+    with bundled_indexed_authority().operation() as form_operation:
+        form = load_modelo_work_form(
+            _BUCKET_ID,
+            ModeloCode("303"),
+            _YEAR,
+            Period.from_year_and_code(_YEAR, "4T"),
+            operation=form_operation,
+            work_unit_repository=WorkUnitCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
+            calculation_repository=CalculationRevisionCatalogueRepository(objects=secure_objects),
+            verification_repository=VerificationReportCatalogueRepository(objects=secure_objects),
+            admission=None,
+            language=OutputLanguage.EN,
+        ).form
+    fields = {address_key(field.address): field for field in form.fields()}
+    for casilla_id in casilla_ids:
+        field = fields[("casilla", casilla_id)]
+        assert field.origin is ModeloFormOrigin.CALCULATION_FAILED
+        assert field.value is None
+
+
+def _assert_verify_export_and_file_refused(
+    secure_objects: SecureObjectRepository,
+    revision: CalculationRevision,
+    tmp_path: Path,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """Verify refuses on the unresolved-binding note; export and local filing refuse the unverified draft."""
+    wu_repo = WorkUnitCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
+    cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
+    filing_repo = ModeloRecordCatalogueRepository(objects=secure_objects)
+    vr_repo = VerificationReportCatalogueRepository(objects=secure_objects)
+    event_repo = BucketEventHistoryRepository(objects=secure_objects)
+    tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
+
+    with bundled_indexed_authority().operation() as verify_operation, pytest.raises(
+        ModeloCalculationBlockedError
+    ) as verify_refusal:
+        verify_modelo_revision_with_preconditions(
+            revision.calculation_revision_id,
+            certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+            verification_repositories=_verification_ports(
+                operation=verify_operation,
+                work_repo=wu_repo,
+                calc_repo=cr_repo,
+                filing_repo=filing_repo,
+                verification_repo=vr_repo,
+                event_repo=event_repo,
+                tx_repo=tx_repo,
+            ),
+            actor="operator",
+            workflow_profile=workflow_profile(),
+            settings=ready_clave_settings(_TAX_ID),
+            clock=_FILE_AT,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=verify_operation,
+        )
+    assert (verify_refusal.value.context or {})["reason"] == "unresolved_binding"
+
+    # The refused check leaves the draft unverified, so export and local filing
+    # refuse it on state before their own calculation-note gates are reached.
+    output_path = tmp_path / f"modelo-303-{_YEAR}-4T.boe"
+    with bundled_indexed_authority().operation() as export_operation, pytest.raises(
+        CalculationRevisionStateError
+    ) as export_refusal:
+        export_modelo_revision(
+            ModeloExportCommand(
+                calculation_revision_id=revision.calculation_revision_id,
+                output_path=output_path,
+                actor="operator",
+                prior_domiciliation_election=PriorDomiciliationElection.KEEP,
+            ),
+            workflow_profile=workflow_profile(),
+            export_ports=modelo_export_ports_for_test(
+                product_software_identity=_product_software_identity(),
+                bucket_id=_BUCKET_ID,
+                taxpayer_tax_id=_TAX_ID,
+                secure_objects=secure_objects,
+                work_unit=wu_repo,
+                calculation=cr_repo,
+                filing=filing_repo,
+                verification=vr_repo,
+                bucket_event=event_repo,
+            ),
+            operation=export_operation,
+            clock=_FILE_AT,
+        )
+    assert export_refusal.value.translated_message == "application.modelo.errors.export_revision_state_refused"
+    assert not output_path.exists()
+
+    with bundled_indexed_authority().operation() as file_operation, pytest.raises(CalculationRevisionStateError):
+        file_modelo_revision(
+            revision.calculation_revision_id,
+            approved_verification_report_id="verification-report-never-granted",
+            certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+            actor="operator",
+            workflow_profile=workflow_profile(),
+            ports=_filing_ports(
+                work_repo=wu_repo,
+                calc_repo=cr_repo,
+                filing_repo=filing_repo,
+                verification_repo=vr_repo,
+                event_repo=event_repo,
+                wallet_repo=IvaWalletDecisionRepository(objects=secure_objects),
+                observation_repo=CalculationObservationRepository(objects=secure_objects),
+                operation=file_operation,
+            ),
+            clock=_FILE_AT,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=file_operation,
+        )
+    assert not filing_repo.load().records
