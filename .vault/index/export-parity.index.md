@@ -4,9 +4,9 @@ tags:
   - '#index'
   - '#export-parity'
 date: '2026-09-26'
-modified: '2026-09-29'
+modified: '2026-11-01'
 body_schema: 'body-v2'
-body_hash: 'sha256:2a094b1c38b6da37e67f6c078f68b405091c92077f69f8b8e30fbd80f76ef64e'
+body_hash: 'sha256:77f69f2347ff1583bb54815cedc18c9a3120289543a7a4c661df51709f094f00'
 related:
   - '[[2026-09-26-export-parity-adr]]'
   - '[[2026-09-26-export-parity-audit]]'
@@ -19,6 +19,7 @@ related:
   - '[[2026-09-27-export-parity-m390-adquisiciones-interiores-exentas-research]]'
   - '[[2026-09-27-export-parity-renta-withholding-sources-adr]]'
   - '[[2026-09-27-export-parity-renta-withholding-sources-research]]'
+  - '[[2026-11-01-export-parity-plan]]'
 ---
 
 # `export-parity` feature index
@@ -46,6 +47,7 @@ Auto-generated index of all documents tagged with `#export-parity`.
 ### plan
 
 - `2026-09-26-export-parity-plan` - `export-parity` plan
+- `2026-11-01-export-parity-plan` - `export-parity` plan
 
 ### research
 
