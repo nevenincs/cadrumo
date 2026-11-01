@@ -150,7 +150,7 @@ class AutomationRequesterJourney:
         if submitted is None:
             raise RefusalError(RefusalCode.INVALID_FRAME)
         if receipt.stage is EnrollmentStage.COMPLETE and (
-            (receipt.key_id is not None) != (self._kind in {EnrollmentKind.ENROLL, EnrollmentKind.ROTATE})
+            (receipt.key_id is not None) != (self._kind is not None and self._kind.issues_a_key)
         ):
             raise self._uncertain(RefusalError(RefusalCode.INVALID_FRAME))
         try:

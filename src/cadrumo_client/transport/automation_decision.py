@@ -28,7 +28,6 @@ from cadrumo.application.user_profile.automation_operations import (
 )
 from cadrumo.core.errors.hierarchy import CadrumoError
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
-from cadrumo_client.contracts.enrollment_proposal import EnrollmentKind
 
 from ..contracts.access_refusals import AccessDenialCode
 from ..contracts.contracts import RefusalCode, RefusalError
@@ -116,9 +115,7 @@ def _matches_receipt(
     review: AutomationReviewProjection, completed: AutomationReceiptProjection, decision: AutomationDecision
 ) -> bool:
     original = review.receipt
-    if decision == "approve" and (completed.key_id is not None) != (
-        review.proposal.kind in {EnrollmentKind.ENROLL, EnrollmentKind.ROTATE}
-    ):
+    if decision == "approve" and (completed.key_id is not None) != (review.proposal.kind.issues_a_key):
         return False
     return (
         completed.profile_id == original.profile_id

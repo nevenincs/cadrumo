@@ -33,6 +33,11 @@ class EnrollmentKind(StrEnum):
     RENEW = "renew"
     CHANGE_SCOPE = "change_scope"
 
+    @property
+    def issues_a_key(self) -> bool:
+        """Whether approving this kind creates a key, which is then the one the receipt names."""
+        return self in {EnrollmentKind.ENROLL, EnrollmentKind.ROTATE}
+
 
 class EnrollmentProposal(BaseModel):
     """Private consent operand, submitted only through the ephemeral channel."""
@@ -53,7 +58,7 @@ class EnrollmentProposal(BaseModel):
             raise ValueError("grant target does not match enrollment kind")
         if (self.kind is EnrollmentKind.ROTATE) != (self.target_key_id is not None):
             raise ValueError("key target does not match enrollment kind")
-        if (self.kind in {EnrollmentKind.ENROLL, EnrollmentKind.ROTATE}) != (self.key_expires_at is not None):
+        if self.kind.issues_a_key != (self.key_expires_at is not None):
             raise ValueError("key validity must match the reviewed key change")
         if (self.key_expires_at is not None and self.key_expires_at > self.expires_at) or (
             self.allow_os_lock and not self.unattended

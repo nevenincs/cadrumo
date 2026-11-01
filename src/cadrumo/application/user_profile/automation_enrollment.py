@@ -104,18 +104,14 @@ def _require_candidate_stage_consistency(
 ) -> None:
     if stage is EnrollmentStage.REQUESTED and candidate_key_id is not None:
         raise ValueError("unstaged candidate")
-    if stage is EnrollmentStage.CANDIDATE and (
-        kind not in {EnrollmentKind.ENROLL, EnrollmentKind.ROTATE} or candidate_key_id is None
-    ):
+    if stage is EnrollmentStage.CANDIDATE and (not kind.issues_a_key or candidate_key_id is None):
         raise ValueError("missing candidate delivery binding")
 
 
 def _require_completed_stage_consistency(
     stage: EnrollmentStage, kind: EnrollmentKind, candidate_key_id: UUID | None
 ) -> None:
-    if stage is EnrollmentStage.COMPLETE and (
-        (kind in {EnrollmentKind.ENROLL, EnrollmentKind.ROTATE}) != (candidate_key_id is not None)
-    ):
+    if stage is EnrollmentStage.COMPLETE and (kind.issues_a_key != (candidate_key_id is not None)):
         raise ValueError("completed request has inconsistent delivery binding")
 
 

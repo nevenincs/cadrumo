@@ -232,7 +232,7 @@ class RuntimeAutomationRequesterScreen(
 
     def _show_kind(self, kind: EnrollmentKind) -> None:
         visible = {
-            "key-expiry": kind in {EnrollmentKind.ENROLL, EnrollmentKind.ROTATE},
+            "key-expiry": kind.issues_a_key,
             "grant": kind is not EnrollmentKind.ENROLL,
             "key": kind is EnrollmentKind.ROTATE,
             "reference": kind is not EnrollmentKind.ENROLL,
