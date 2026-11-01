@@ -10,7 +10,12 @@ from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.modelos.filing_record import ExternalEvidenceKind
 from ..calendar import build_overview_calendar
 from ..calendar_evidence import calendar_filing_evidence_from_sources
-from ..calendar_models import OverviewAeatSubmissionState, OverviewCalendarRange
+from ..calendar_models import (
+    OverviewAeatSubmissionState,
+    OverviewCalendar,
+    OverviewCalendarFilingEvidence,
+    OverviewCalendarRange,
+)
 from .calendar_test_support import (
     FILED_JUSTIFICANTE_STORAGE_REF as _FILED_JUSTIFICANTE_STORAGE_REF,
 )
@@ -44,6 +49,25 @@ from .calendar_test_support import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+def _april_2025_303_filing_row(
+    evidence: tuple[OverviewCalendarFilingEvidence, ...], operation: PinnedAuthorityOperation
+) -> tuple[OverviewCalendar, OverviewCalendarFilingEvidence]:
+    """Build the April 2025 calendar over ``evidence`` and return it with the 303 first-quarter evidence row."""
+    calendar = build_overview_calendar(
+        _profile(),
+        OverviewCalendarRange(from_date=date(2025, 4, 1), to_date=date(2025, 4, 30)),
+        operation=operation,
+        today=date(2025, 4, 10),
+        filing_evidence=evidence,
+    )
+    row = next(
+        entry.filing_evidence
+        for entry in calendar.entries
+        if entry.modelo == "303" and entry.filing_year == 2025 and entry.period == _PERIOD_2025_1T
+    )
+    return calendar, row
 
 
 def test_calendar_entry_warns_when_local_and_filed_history_aeat_references_disagree(
@@ -133,19 +157,7 @@ def test_calendar_does_not_conflict_live_capture_csv_with_matching_filed_history
         expected_tax_id="X1234567L",
     )
 
-    calendar = build_overview_calendar(
-        _profile(),
-        OverviewCalendarRange(from_date=date(2025, 4, 1), to_date=date(2025, 4, 30)),
-        operation=authority_operation,
-        today=date(2025, 4, 10),
-        filing_evidence=evidence,
-    )
-
-    row = next(
-        entry.filing_evidence
-        for entry in calendar.entries
-        if entry.modelo == "303" and entry.filing_year == 2025 and entry.period == _PERIOD_2025_1T
-    )
+    calendar, row = _april_2025_303_filing_row(evidence, authority_operation)
     assert row.aeat_submission_state is OverviewAeatSubmissionState.JUSTIFICANTE_VERIFIED
     assert row.verified_justificante_csv == csv
     assert row.aeat_evidence_conflict_reference_ids == ()
@@ -184,19 +196,7 @@ def test_calendar_does_not_conflict_matching_verified_csv_across_reference_names
         expected_tax_id="X1234567L",
     )
 
-    calendar = build_overview_calendar(
-        _profile(),
-        OverviewCalendarRange(from_date=date(2025, 4, 1), to_date=date(2025, 4, 30)),
-        operation=authority_operation,
-        today=date(2025, 4, 10),
-        filing_evidence=evidence,
-    )
-
-    row = next(
-        entry.filing_evidence
-        for entry in calendar.entries
-        if entry.modelo == "303" and entry.filing_year == 2025 and entry.period == _PERIOD_2025_1T
-    )
+    calendar, row = _april_2025_303_filing_row(evidence, authority_operation)
     assert row.aeat_submission_state is OverviewAeatSubmissionState.JUSTIFICANTE_VERIFIED
     assert row.verified_justificante_csv == csv
     assert row.aeat_evidence_conflict_reference_ids == ()
