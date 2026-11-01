@@ -187,7 +187,7 @@ const submit = (root: Root) => pressed(root, ".ledger-asset-submit");
 const fillElement = async (root: Root) => {
   await typed(root, "name", "Sierra de cinta");
   await typed(root, "serial_number", "SC-0412");
-  await chosen(root, "asset_kind", 1);
+  await chosenValue(root, "asset_kind", "material");
   await typed(root, "in_service_date", "2026-06-15");
   await chosen(root, "method", 0);
   await chosen(root, "amortization.authority_class_key", 0);
@@ -225,7 +225,7 @@ export const AddElementIncomplete: Story = adding({
 export const AddElementOutsideLedger: Story = adding({
   name: "Add element, bought outside the ledger: date, activity and document",
   play: steps(
-    (root) => chosen(root, "asset_kind", 1),
+    (root) => chosenValue(root, "asset_kind", "material"),
     (root) => typed(root, "in_service_date", "2026-06-15"),
     (root) => chosen(root, "acquisition_shape", 1),
     (root) => typed(root, "declared_acquisition_date", "2024-11-05"),
@@ -236,7 +236,7 @@ export const AddElementOutsideLedger: Story = adding({
 export const AddElementOutsideLedgerLaterPayment: Story = adding({
   name: "Add element, bought outside the ledger, with a later payment from the ledger",
   play: steps(
-    (root) => chosen(root, "asset_kind", 1),
+    (root) => chosenValue(root, "asset_kind", "material"),
     (root) => typed(root, "in_service_date", "2026-06-15"),
     (root) => chosen(root, "acquisition_shape", 1),
     (root) => typed(root, "declared_acquisition_date", "2024-11-05"),
@@ -249,7 +249,7 @@ export const AddElementOutsideLedgerLaterPayment: Story = adding({
 export const AddElementWholeProperty: Story = adding({
   name: "Add element, whole property: its parts",
   play: steps(
-    (root) => chosen(root, "asset_kind", 0),
+    (root) => chosenValue(root, "asset_kind", "material"),
     (root) => typed(root, "in_service_date", "2026-06-15"),
     (root) => chosenValue(root, "basis_stage", "whole_property"),
   ),
@@ -257,7 +257,7 @@ export const AddElementWholeProperty: Story = adding({
 export const AddElementUsedBuilding: Story = adding({
   name: "Add element, bought used: the date the building was built",
   play: steps(
-    (root) => chosen(root, "asset_kind", 0),
+    (root) => chosenValue(root, "asset_kind", "material"),
     (root) => typed(root, "in_service_date", "2026-06-15"),
     (root) => chosenValue(root, "acquired_condition", "used"),
     (root) => chosenValue(root, "basis_stage", "whole_property"),
@@ -266,7 +266,7 @@ export const AddElementUsedBuilding: Story = adding({
 export const AddElementOpeningKnown: Story = adding({
   name: "Add element, opening history known: the facts it can state",
   play: steps(
-    (root) => chosen(root, "asset_kind", 0),
+    (root) => chosenValue(root, "asset_kind", "material"),
     (root) => typed(root, "in_service_date", "2026-06-15"),
     (root) => chosenValue(root, "opening_status", "known"),
   ),
@@ -288,7 +288,7 @@ export const AddElementEditors: Story = adding({
   play: async (context) => {
     const root = context.canvasElement;
     await steps(
-      (found) => chosen(found, "asset_kind", 0),
+      (found) => chosenValue(found, "asset_kind", "material"),
       (found) => typed(found, "in_service_date", "2026-06-15"),
       (found) => chosenValue(found, "basis_stage", "taxpayer_owned"),
       (found) => chosenValue(found, "opening_status", "known"),
@@ -330,7 +330,7 @@ export const AddElementEditors: Story = adding({
 export const AddElementUsedOriginalPrice: Story = adding({
   name: "Add element, bought used on the linear method: the originating price beside the building date",
   play: steps(
-    (root) => chosen(root, "asset_kind", 0),
+    (root) => chosenValue(root, "asset_kind", "material"),
     (root) => typed(root, "in_service_date", "2026-06-15"),
     (root) => chosenValue(root, "method", "linear"),
     (root) => chosenValue(root, "acquired_condition", "used"),
@@ -344,7 +344,7 @@ export const AddElementUsedOriginalPrice: Story = adding({
 export const AddElementNewHidesUsedFacts: Story = adding({
   name: "Add element, bought new: neither the building date nor the originating price is asked",
   play: steps(
-    (root) => chosen(root, "asset_kind", 0),
+    (root) => chosenValue(root, "asset_kind", "material"),
     (root) => typed(root, "in_service_date", "2026-06-15"),
     (root) => chosenValue(root, "method", "linear"),
     (root) => chosenValue(root, "acquired_condition", "new"),
@@ -361,7 +361,7 @@ export const AddElementNewHidesUsedFacts: Story = adding({
 export const AddElementVehicle: Story = adding({
   name: "Add element, a class that requires a vehicle declaration: it opens as required, with no question",
   play: steps(
-    (root) => chosen(root, "asset_kind", 1),
+    (root) => chosenValue(root, "asset_kind", "material"),
     (root) => typed(root, "in_service_date", "2026-06-15"),
     (root) => chosen(root, "method", 0),
     (root) =>
@@ -380,7 +380,7 @@ export const AddElementVehicle: Story = adding({
 export const AddElementClassWithoutVehicle: Story = adding({
   name: "Add element, a class that needs no vehicle declaration: nothing is drawn",
   play: steps(
-    (root) => chosen(root, "asset_kind", 1),
+    (root) => chosenValue(root, "asset_kind", "material"),
     (root) => typed(root, "in_service_date", "2026-06-15"),
     (root) => chosen(root, "method", 0),
     (root) =>
