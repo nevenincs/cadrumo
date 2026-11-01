@@ -38,6 +38,7 @@ from typing import Any, Final
 from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
 from dev.exit_codes import ADVISORY_BROKEN, FAILED, OK
 from dev.first_party_source import (
+    DEVELOPMENT_TOOLING,
     FIRST_PARTY_ROOTS,
     SOURCE_PACKAGES,
     is_bundled_data,
@@ -52,6 +53,10 @@ MODULE_LINE_LIMIT: Final[int] = 1250
 CALLABLE_LINE_LIMIT: Final[int] = 150
 
 _CC_REPORTED_RANK: Final[str] = "C"
+_TEST_GATE_CC_RANK: Final[str] = "E"
+"""The test-tree gate fails callables at this Radon rank or worse (E and F)."""
+TEST_SCAN_ROOTS: Final[tuple[str, ...]] = (*SOURCE_PACKAGES, DEVELOPMENT_TOOLING)
+"""Roots whose test files the test scan reports; only ``SOURCE_PACKAGES`` gate."""
 _MI_CLEAN_RANK: Final[str] = "A"
 # Radon's ``mi`` command counts multiline strings as comments unless told otherwise.
 _MI_MULTILINE_STRINGS_AS_COMMENTS: Final[bool] = True
@@ -91,6 +96,7 @@ class CcHit:
     name: str
     grade: str
     score: int
+    is_class: bool = False
 
     def render(self) -> str:
         """Render the stable path and measured score."""
@@ -162,6 +168,27 @@ class ComplexityScan:
         ]
 
 
+def tree_gate_findings(scan: ComplexityScan, gated_roots: tuple[str, ...] = SOURCE_PACKAGES) -> list[str]:
+    """Render the findings that fail the test-tree gate.
+
+    Only rank E/F callables and modules over :data:`MODULE_LINE_LIMIT` count, and
+    only in files under ``SOURCE_PACKAGES``; every lower hotspot and every
+    development test file stays report-only.
+    """
+    gated = tuple(f"{root}/" for root in gated_roots)
+    findings = [
+        f"cyclomatic: {hit.render()}"
+        for hit in scan.cyclomatic
+        if not hit.is_class and hit.grade >= _TEST_GATE_CC_RANK and hit.path.startswith(gated)
+    ]
+    findings.extend(
+        f"length: {hit.render()}"
+        for hit in scan.lengths
+        if not hit.name and hit.limit == MODULE_LINE_LIMIT and hit.path.startswith(gated)
+    )
+    return findings
+
+
 def _is_test_population(path: Path, *, root: Path) -> bool:
     return is_test_source(path, root=root) and not is_bundled_data(path, root=root)
 
@@ -227,7 +254,7 @@ def cyclomatic_hits(path: str, source: str) -> list[CcHit]:
         (block,) = visitor.classes if isinstance(node, ast.ClassDef) else visitor.functions
         grade = radon_complexity.cc_rank(block.complexity)
         if grade >= _CC_REPORTED_RANK:
-            hits.append(CcHit(path, name, grade, block.complexity))
+            hits.append(CcHit(path, name, grade, block.complexity, isinstance(node, ast.ClassDef)))
     return hits
 
 
@@ -322,10 +349,10 @@ def scan_complexity(
 
     The production scope covers every root in ``roots``, all first-party roots
     by default; the test scope covers the test surface of every package under
-    ``src/``. Each root must exist and yield source files, so a dropped or
+    ``src/`` and of ``dev/``. Each root must exist and yield source files, so a dropped or
     renamed root fails the scan instead of silently shrinking it.
     """
-    scope = roots if roots is not None else (SOURCE_PACKAGES if tests else FIRST_PARTY_ROOTS)
+    scope = roots if roots is not None else (TEST_SCAN_ROOTS if tests else FIRST_PARTY_ROOTS)
     return measure_population(source_population(scope, tests=tests), cognitive_threshold=cognitive_threshold)
 
 
@@ -334,7 +361,9 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Report every current code-complexity hotspot.")
     parser.add_argument("--tests", action="store_true", help="Audit test files instead of production packages.")
     parser.add_argument(
-        "--gate", action="store_true", help="Fail when any current complexity or length finding exists."
+        "--gate",
+        action="store_true",
+        help="Fail on any finding; with --tests, only on src rank E/F callables or modules over the line limit.",
     )
     parser.add_argument(
         "--threshold",
@@ -343,8 +372,6 @@ def main() -> int:
         help="Cognitive complexity threshold for Complexipy.",
     )
     args = parser.parse_args()
-    if args.gate and args.tests:
-        parser.error("--gate requires the full first-party production scope")
     if args.gate and args.threshold != DEFAULT_COGNITIVE_THRESHOLD:
         parser.error("--gate requires the fixed cognitive complexity threshold of 20")
     try:
@@ -353,13 +380,19 @@ def main() -> int:
         print(f"complexity audit unavailable: {exc}", file=sys.stderr)
         return ADVISORY_BROKEN
     scope = (
-        f"test files in {', '.join(SOURCE_PACKAGES)}"
+        f"test files in {', '.join(TEST_SCAN_ROOTS)}"
         if args.tests
         else f"production code in {', '.join(FIRST_PARTY_ROOTS)}"
     )
     print(f"complexity ({scope}): {scan.finding_count} current hotspot(s)")
     for line in scan.rendered_findings():
         print(f"  {line}")
+    if args.gate and args.tests:
+        failing = tree_gate_findings(scan)
+        dev_files = [hit for hit in scan.cyclomatic if hit.path.startswith(f"{DEVELOPMENT_TOOLING}/")]
+        print(f"test-tree gate: {len(failing)} rank E/F or oversized-module finding(s) in {', '.join(SOURCE_PACKAGES)}")
+        print(f"  dev test files (report only): {sum(hit.grade >= _TEST_GATE_CC_RANK for hit in dev_files)} E/F")
+        return FAILED if failing else OK
     return FAILED if args.gate and scan.finding_count else OK
 
 

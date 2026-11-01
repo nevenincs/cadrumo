@@ -14,7 +14,7 @@ from pathlib import Path
 import pytest
 from radon.complexity import add_inner_blocks, cc_visit
 
-from ..complexity import IncompleteScanError, cyclomatic_hits, scan_complexity
+from ..complexity import MODULE_LINE_LIMIT, IncompleteScanError, cyclomatic_hits, scan_complexity, tree_gate_findings
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
@@ -114,3 +114,65 @@ def test_a_file_no_detector_can_measure_makes_the_scan_incomplete(tmp_path: Path
     assert isinstance(caught.value, RuntimeError)
     assert f"{broken.as_posix()} ({reason}" in message
     assert "hot.py" not in message
+
+
+def _gate_tree(tmp_path: Path) -> tuple[Path, Path]:
+    gated, report_only = tmp_path / "gated", tmp_path / "reported"
+    for root in (gated, report_only):
+        (root / "tests").mkdir(parents=True)
+        (root / "tests" / "test_clean.py").write_text("def test_ok():\n    assert True\n", encoding="utf-8")
+    return gated, report_only
+
+
+def _gate(gated: Path, report_only: Path) -> list[str]:
+    scan = scan_complexity(tests=True, roots=(gated.as_posix(), report_only.as_posix()))
+    return tree_gate_findings(scan, (gated.as_posix(),))
+
+
+def test_the_test_tree_gate_passes_clean_input_and_accepts_lower_ranks(tmp_path: Path) -> None:
+    """A clean tree passes, and a rank C callable is a hotspot the gate accepts."""
+    gated, report_only = _gate_tree(tmp_path)
+    moderate = (
+        "def busy(x):\n" + "".join(f"    if x == {i}:\n        return {i}\n" for i in range(12)) + "    return 0\n"
+    )
+    (gated / "tests" / "test_busy.py").write_text(moderate, encoding="utf-8")
+
+    scan = scan_complexity(tests=True, roots=(gated.as_posix(), report_only.as_posix()))
+
+    assert any(hit.name == "busy" for hit in scan.cyclomatic)
+    assert tree_gate_findings(scan, (gated.as_posix(),)) == []
+
+
+def test_the_test_tree_gate_fails_a_planted_rank_f_callable(tmp_path: Path) -> None:
+    """A rank F test function in a gated root fails the gate."""
+    gated, report_only = _gate_tree(tmp_path)
+    (gated / "tests" / "test_hot.py").write_text(_HOT_SOURCE, encoding="utf-8")
+
+    findings = _gate(gated, report_only)
+
+    assert len(findings) == 1
+    assert "test_hot.py::hot" in findings[0]
+
+
+def test_the_test_tree_gate_fails_a_module_over_the_line_limit(tmp_path: Path) -> None:
+    """A test module past the shared module limit fails the gate."""
+    gated, report_only = _gate_tree(tmp_path)
+    (gated / "tests" / "test_big.py").write_text("X = 1\n" * (MODULE_LINE_LIMIT + 1), encoding="utf-8")
+
+    findings = _gate(gated, report_only)
+
+    assert len(findings) == 1
+    assert f"{MODULE_LINE_LIMIT + 1} lines" in findings[0]
+
+
+def test_the_test_tree_gate_reports_but_does_not_fail_offenders_outside_gated_roots(tmp_path: Path) -> None:
+    """Offenders in a report-only root stay visible in the scan but out of the gate."""
+    gated, report_only = _gate_tree(tmp_path)
+    (report_only / "tests" / "test_hot.py").write_text(_HOT_SOURCE, encoding="utf-8")
+    (report_only / "tests" / "test_big.py").write_text("X = 1\n" * (MODULE_LINE_LIMIT + 1), encoding="utf-8")
+
+    scan = scan_complexity(tests=True, roots=(gated.as_posix(), report_only.as_posix()))
+
+    assert scan.cyclomatic
+    assert scan.lengths
+    assert tree_gate_findings(scan, (gated.as_posix(),)) == []

@@ -70,6 +70,9 @@ _CITED_RECIPE: Final[re.Pattern[str]] = re.compile(r"`just ([a-z][a-z0-9-]*)")
 _NOT_AGGREGATED: Final[frozenset[str]] = frozenset(
     {
         "check-code",
+        # Test-surface ratchets: each scan takes about two minutes, too slow for the local aggregate.
+        "test-complexity-gate",
+        "test-duplication-gate",
         "check-repository",
         "check-workflows",
         "check-hooks",
