@@ -5,7 +5,7 @@ tags:
 date: '2026-11-01'
 modified: '2026-11-01'
 body_schema: 'body-v2'
-body_hash: 'sha256:2131eb33061f1e02f9ba3bb44f6d69d824f6a3b85f21a0412b3caf2d4a2543d8'
+body_hash: 'sha256:57dd93b03b748c35ab0c9f1f7ff35e52c6da9b8743a9239756a272c933665c5e'
 related:
   - "[[2026-06-10-calculation-aggregation-taxonomy-adr]]"
   - "[[2026-09-27-export-parity-renta-withholding-sources-adr]]"
@@ -161,7 +161,7 @@ The overlay is shared, so the change reaches every modelo whose revision is grad
 
 To be applied to `2026-06-10-calculation-aggregation-taxonomy-adr` only once this proposal is authorized, as a dated amendment section. Accepted item 5 stays in place and is annotated "amended 2026-11-01".
 
-Applying this wording to the accepted taxonomy record is pending; the orchestrator applies it, and this record does not edit the accepted record.
+Applied 2026-11-01 to the accepted taxonomy record as its dated amendment section, with item 5 annotated.
 
 > **Amendment 2026-11-01: tier divergence on filing-bound bindings blocks.** The precedence ladder of item 5 is unchanged in order. A higher tier that replaces a different lower-tier value on a filing-bound binding no longer wins silently: the overlay compares typed values exactly and persists a `precedence_tier_divergence` finding naming each tier, its value and its provenance. While the finding is open, check, export and local filing are refused; calculation and preview proceed with the ladder's value. Equal values produce no finding. The finding is resolved by correcting the source or by the operator resolution record of `2026-09-27-export-parity-renta-withholding-sources-adr` Step 4. Lower tiers resolve without excluding higher-tier keys, so that suppression is compared too. The phrase "the engine's consistency check adjudicates divergence" in item 5.4, and "the D2 carve-out extension ... is the relief valve" under Consequences, are read under this amendment. Caller overrides of carried values remain permitted, and a divergent one blocks until it is resolved. `iva_wallet_decision` remains outside the ladder (D3).
 
