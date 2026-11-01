@@ -2008,3 +2008,37 @@ def test_reviewed_technical_forms_keep_exact_spelling_and_language_scope() -> No
             assert not is_project_spelling(locale, form)
     for typo in ("discardible", "undecryptible", "unhandld", "untrustted", "Unmaped", "Sectorizedd", "Forall"):
         assert not is_project_spelling("en", typo)
+
+
+def test_hungarian_attested_name_and_tax_term_inflections_remain_exact() -> None:
+    forms = (
+        "Cadrumóról",
+        "Bizkaiának",
+        "Gipuzkoának",
+        "Navarrának",
+        "Navarrában",
+        "Anától",
+        "Anának",
+        "Anára",
+        "Rentánál",
+        "Rentára",
+        "Rentához",
+        "Tributariának",
+        "Tributariával",
+        "Tributariához",
+        "Timbrével",
+        "Macre",
+        "prorratának",
+        "prorratához",
+        "prorratájára",
+        "altával",
+        "complementariát",
+        "soportadót",
+    )
+    for form in forms:
+        assert is_project_spelling("hu", form)
+        assert not is_project_spelling("hu", form + "x")
+        for locale in ("en", "ca", "es"):
+            assert not is_project_spelling(locale, form)
+    for typo in ("Cadrumoról", "Bizkaiánakx", "Gipuzkoanak", "Anatól", "Rentanal", "Tributarianak"):
+        assert not is_project_spelling("hu", typo)
