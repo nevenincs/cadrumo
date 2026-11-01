@@ -154,9 +154,7 @@ _SHARED_EURO_AMOUNTS = (
 def test_the_euro_sign_follows_the_number_exactly_as_the_window_writes_it(
     language: OutputLanguage, expected: tuple[str, ...]
 ) -> None:
-    rendered = tuple(
-        format_casilla_value(value, data_type="money", language=language) for value in _SHARED_EURO_INPUTS
-    )
+    rendered = tuple(format_casilla_value(value, data_type="money", language=language) for value in _SHARED_EURO_INPUTS)
 
     assert rendered == expected
 

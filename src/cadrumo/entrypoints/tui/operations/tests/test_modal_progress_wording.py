@@ -16,7 +16,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
         ("en", "1,234 / 5,678 (21%)"),
         ("es", "1.234 / 5.678 (21%)"),
         ("ca", "1.234 / 5.678 (21%)"),
-        ("hu", "1 234 / 5 678 (21%)"),
+        ("hu", "1\u00a0234 / 5\u00a0678 (21%)"),
     ),
 )
 def test_progress_counts_read_in_the_output_language(language: str, expected: str) -> None:
