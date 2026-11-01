@@ -37,7 +37,6 @@ from .modal import (
 )
 from .refusal_explanation import public_refusal_explanation
 from .request_form import (
-    RequestFieldKind,
     RequestFieldV1,
     derived_subject,
     field_texts,
@@ -189,7 +188,7 @@ class OperationRunScreen(Screen[None]):
             widget = self.query_one(f"#operation-field-{index}")
             if isinstance(widget, Select):
                 select = cast("Select[str]", widget)
-                labels = ("true", "false") if field.kind is RequestFieldKind.BOOLEAN else field.choice_labels
+                labels = field.selection_labels
                 select.value = text if text in labels else Select.NULL
             elif isinstance(widget, TextArea):
                 widget.load_text(text)
@@ -424,7 +423,7 @@ class OperationRunScreen(Screen[None]):
         )
         for index, field in enumerate(self._fields):
             self.query_one(f"#operation-field-label-{index}", Static).update(field_label(field))
-            if not field.session_fixed and field.kind in {RequestFieldKind.BOOLEAN, RequestFieldKind.ENUM}:
+            if not field.session_fixed and field.is_selection:
                 self.query_one(f"#operation-field-{index}", Select).prompt = tr("tui.operations.form.choose")
         self._show_subject(request_document(self._fields, self._texts())[0])
         self._show_page(self._page)

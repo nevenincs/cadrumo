@@ -24,8 +24,8 @@ def field_widget(index: int, field: RequestFieldV1) -> Static | Select[str] | Te
     widget_id = f"operation-field-{index}"
     if field.session_fixed:
         return Static(field.initial, id=widget_id, markup=False)
-    if field.kind in {RequestFieldKind.BOOLEAN, RequestFieldKind.ENUM}:
-        labels = ("true", "false") if field.kind is RequestFieldKind.BOOLEAN else field.choice_labels
+    if field.is_selection:
+        labels = field.selection_labels
         return Select[str](
             [(label, label) for label in labels],
             prompt=tr("tui.operations.form.choose"),
