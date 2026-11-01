@@ -556,7 +556,6 @@ function M210Choice({
       <Button
         id={entry.id}
         variant="outline"
-        size="sm"
         disabled={entry.disabled}
         className="min-w-0 justify-between"
       >
