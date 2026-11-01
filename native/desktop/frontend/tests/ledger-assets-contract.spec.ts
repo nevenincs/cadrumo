@@ -3739,3 +3739,30 @@ test("a typed text of any length is the backend's to refuse, not the form's", ()
   expect(parseField(description, long)).toEqual({ kind: "value", value: long });
   expect(parseField(description, "a\nb").kind).toBe("refused");
 });
+
+test("a kind the edition has no box for draws no box, and says which element goes undeclared", () => {
+  const t = words({
+    "desktop.ledger.assets.handoff_gap_box_unbound":
+      "{name}: no box, nothing from {start} to {end}.",
+  });
+  const handoff: Handoff = {
+    material_m100: null,
+    intangible_m100: null,
+    m100_gaps: [
+      {
+        asset_id: "asset-aaa",
+        kind: "box_unbound",
+        covered_from: "2025-01-01",
+        covered_through: "2025-12-31",
+        covered_until: "2026-01-01",
+        accrued: null,
+      },
+    ],
+    material_m130: null,
+    intangible_m130: null,
+  };
+
+  expect(
+    leftOutNotes(t, "en", handoff, new Map([["asset-aaa", "Laptop"]])),
+  ).toEqual(["Laptop: no box, nothing from Jan 1, 2025 to Dec 31, 2025."]);
+});
