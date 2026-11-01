@@ -303,11 +303,7 @@ def test_runs_lists_persisted_run_ids() -> None:
     assert "130\t2026 1T" in result.output
 
 
-def test_work_runs_projects_a_typed_builder_refusal_without_reconstructing_a_command() -> None:
-    """The real CLI renders persisted facts and no longer carries a string recovery channel."""
-    run = _builder_refused_run("f" * 16)
-    save_run(run)
-
+def _assert_stored_builder_refusal(run: WorkflowResult) -> WorkflowResult:
     stored_before = load_run(run.run_id)
     assert stored_before == run
     terminal = stored_before.steps[-1]
@@ -320,7 +316,10 @@ def test_work_runs_projects_a_typed_builder_refusal_without_reconstructing_a_com
     assert terminal.precondition_verdict.action is not None
     assert terminal.precondition_verdict.action.action_id == "operator.modelo.work.calculate"
     assert terminal.precondition_verdict.missing_argument_names == ("work_unit_id",)
+    return stored_before
 
+
+def _assert_text_runs_listing() -> None:
     text_result = _invoke_work(["runs"])
     assert text_result.exit_code == 0, text_result.output
     assert "run_id\tmodelo\tperiod\tfinal_stage\taborted_reason\tstarted_at\tsummary\taction" in text_result.output
@@ -331,6 +330,8 @@ def test_work_runs_projects_a_typed_builder_refusal_without_reconstructing_a_com
     assert '"missing_argument_names":["work_unit_id"]' in text_result.output
     assert '"conditionality":"requires_arguments"' in text_result.output
 
+
+def _assert_json_runs_projection(run: WorkflowResult) -> None:
     json_result = _invoke_work(["runs"], format="json")
     assert json_result.exit_code == 0, json_result.output
     payload = json.loads(json_result.output)["result"]
@@ -371,6 +372,8 @@ def test_work_runs_projects_a_typed_builder_refusal_without_reconstructing_a_com
         "no_recovery_outcome": None,
     }
 
+
+def _assert_run_and_details_projection(run: WorkflowResult) -> None:
     run_result = _invoke_work(["run", run.run_id], format="json")
     assert run_result.exit_code == 0, run_result.output
     full = json.loads(run_result.output)["result"]
@@ -382,6 +385,17 @@ def test_work_runs_projects_a_typed_builder_refusal_without_reconstructing_a_com
     assert details["summary_detail_facts"] == {"error_code": "workflow.draft.build_failure"}
     assert full["modelo"] == "130"
     assert full["obligation_status"] == "UPCOMING"
+
+
+def test_work_runs_projects_a_typed_builder_refusal_without_reconstructing_a_command() -> None:
+    """The real CLI renders persisted facts and no longer carries a string recovery channel."""
+    run = _builder_refused_run("f" * 16)
+    save_run(run)
+
+    stored_before = _assert_stored_builder_refusal(run)
+    _assert_text_runs_listing()
+    _assert_json_runs_projection(run)
+    _assert_run_and_details_projection(run)
 
     _reopen_oracle_session()
     assert load_run(run.run_id) == stored_before
