@@ -223,6 +223,123 @@ def _physical_authority_payload(actividad_id: str) -> str:
     ).model_dump_json()
 
 
+def _assert_create_and_purchase(profile: NativeCliProfileFixture, failures: list[RuntimeFailureObservation]) -> None:
+    """Creating the ledger and adding a purchase keep the acquisition-cost reference out of the output."""
+    created = _create_ledger(profile, "act-1", opening_stock="100.00")
+    assert created.exit_code == 0, (created.output, failures)
+    create_payload = unwrap_cli_result(created)
+    assert create_payload["actividad_id"] == "act-1"
+    assert create_payload["valuation_method"] == "fifo"
+    assert create_payload["opening_stock"] == "100.00"
+    assert len(create_payload["bucket_event_ids"]) == 1
+
+    purchase = _invoke(
+        profile,
+        "app",
+        "ledger",
+        "inventory",
+        "movement",
+        "add",
+        "--actividad-id",
+        "act-1",
+        "--year",
+        "2026",
+        "--movement-id",
+        "purchase-1",
+        "--date",
+        "2026-03-15",
+        "--kind",
+        "purchase",
+        "--quantity",
+        "10",
+        "--acquisition-cost-stdin",
+        input_text=_ACQUISITION,
+    )
+    assert purchase.exit_code == 0, purchase.output
+    assert "secret-ref" not in purchase.output
+    assert "a" * 64 not in purchase.output
+    acquisition_summary = unwrap_cli_result(purchase)["period_movements"][0]["acquisition_cost"]
+    assert acquisition_summary == {
+        "consideration_excluding_iva": "55.00",
+        "directly_attributable_cost_total": "0.00",
+        "nonrecoverable_iva_included": "0.00",
+        "recoverable_iva_excluded": "11.55",
+        "total_acquisition_cost": "55.00",
+        "component_count": 0,
+        "evidence_count": 3,
+        "complete": True,
+    }
+
+
+def _assert_duplicate_list_and_legacy_refusals(profile: NativeCliProfileFixture) -> None:
+    duplicate = _create_ledger(profile, "act-1", opening_stock="999.00")
+    assert duplicate.exit_code != 0
+    duplicate_error = json.loads(duplicate.output)["error"]
+    assert duplicate_error["code"] == "REFUSED_CLI_BOUNDARY"
+    assert duplicate_error["context"]["reason"] == "activity_conflict"
+    assert duplicate_error["context"]["refusal_code"] == "REFUSED_INVENTORY_ACTIVIDAD_CONFLICT"
+
+    listed = _invoke(profile, "app", "ledger", "inventory", "list")
+    assert listed.exit_code == 0, listed.output
+    listed_payload = unwrap_cli_result(listed)
+    assert listed_payload["count"] == 1
+    assert listed_payload["rows"][0]["actividad_id"] == "act-1"
+    assert listed_payload["rows"][0]["year"] == 2026
+    assert listed_payload["rows"][0]["valuation_method"] == "fifo"
+    assert listed_payload["rows"][0]["opening_stock"] == "100.00"
+    assert listed_payload["rows"][0]["movement_count"] == 1
+
+    legacy_purchase = _invoke(
+        profile,
+        "app",
+        "ledger",
+        "inventory",
+        "movement",
+        "add",
+        "--actividad-id",
+        "act-1",
+        "--year",
+        "2026",
+        "--movement-id",
+        "legacy-1",
+        "--date",
+        "2026-03-15",
+        "--kind",
+        "purchase",
+        "--quantity",
+        "1",
+        "--unit-cost",
+        "5.50",
+    )
+    assert legacy_purchase.exit_code != 0
+    legacy_error = json.loads(legacy_purchase.output)["error"]
+    assert legacy_error["code"] == "REFUSED_CLI_BOUNDARY"
+    assert legacy_error["context"]["reason"] == "inventory_validation"
+    assert legacy_error["context"]["refusal_code"] == "REFUSED_PROFILE_INVENTORY_VALIDATION"
+    assert legacy_error["context"]["movement_id"] == "legacy-1"
+    assert "5.50" not in legacy_purchase.output
+
+
+def _assert_valuation_preview(profile: NativeCliProfileFixture) -> None:
+    preview = _invoke(
+        profile,
+        "app",
+        "ledger",
+        "inventory",
+        "valuation",
+        "preview",
+        "--actividad-id",
+        "act-1",
+        "--year",
+        "2026",
+    )
+    assert preview.exit_code == 0, preview.output
+    preview_payload = unwrap_cli_result(preview)
+    assert preview_payload["derived_closing_value"] == "155.00"
+    assert preview_payload["cogs"] == "0.00"
+    assert len(preview_payload["bucket_event_ids"]) == 1
+
+
 def test_native_inventory_create_list_movement_and_preview_use_profile_worker(
     tmp_path: Path,
 ) -> None:
@@ -231,115 +348,9 @@ def test_native_inventory_create_list_movement_and_preview_use_profile_worker(
         profile.failure_observer = failures.append
         profile.register(label="native-inventory", facts=_PROFILE_FACTS)
 
-        created = _create_ledger(profile, "act-1", opening_stock="100.00")
-        assert created.exit_code == 0, (created.output, failures)
-        create_payload = unwrap_cli_result(created)
-        assert create_payload["actividad_id"] == "act-1"
-        assert create_payload["valuation_method"] == "fifo"
-        assert create_payload["opening_stock"] == "100.00"
-        assert len(create_payload["bucket_event_ids"]) == 1
-
-        purchase = _invoke(
-            profile,
-            "app",
-            "ledger",
-            "inventory",
-            "movement",
-            "add",
-            "--actividad-id",
-            "act-1",
-            "--year",
-            "2026",
-            "--movement-id",
-            "purchase-1",
-            "--date",
-            "2026-03-15",
-            "--kind",
-            "purchase",
-            "--quantity",
-            "10",
-            "--acquisition-cost-stdin",
-            input_text=_ACQUISITION,
-        )
-        assert purchase.exit_code == 0, purchase.output
-        assert "secret-ref" not in purchase.output
-        assert "a" * 64 not in purchase.output
-        acquisition_summary = unwrap_cli_result(purchase)["period_movements"][0]["acquisition_cost"]
-        assert acquisition_summary == {
-            "consideration_excluding_iva": "55.00",
-            "directly_attributable_cost_total": "0.00",
-            "nonrecoverable_iva_included": "0.00",
-            "recoverable_iva_excluded": "11.55",
-            "total_acquisition_cost": "55.00",
-            "component_count": 0,
-            "evidence_count": 3,
-            "complete": True,
-        }
-
-        duplicate = _create_ledger(profile, "act-1", opening_stock="999.00")
-        assert duplicate.exit_code != 0
-        duplicate_error = json.loads(duplicate.output)["error"]
-        assert duplicate_error["code"] == "REFUSED_CLI_BOUNDARY"
-        assert duplicate_error["context"]["reason"] == "activity_conflict"
-        assert duplicate_error["context"]["refusal_code"] == "REFUSED_INVENTORY_ACTIVIDAD_CONFLICT"
-
-        listed = _invoke(profile, "app", "ledger", "inventory", "list")
-        assert listed.exit_code == 0, listed.output
-        listed_payload = unwrap_cli_result(listed)
-        assert listed_payload["count"] == 1
-        assert listed_payload["rows"][0]["actividad_id"] == "act-1"
-        assert listed_payload["rows"][0]["year"] == 2026
-        assert listed_payload["rows"][0]["valuation_method"] == "fifo"
-        assert listed_payload["rows"][0]["opening_stock"] == "100.00"
-        assert listed_payload["rows"][0]["movement_count"] == 1
-
-        legacy_purchase = _invoke(
-            profile,
-            "app",
-            "ledger",
-            "inventory",
-            "movement",
-            "add",
-            "--actividad-id",
-            "act-1",
-            "--year",
-            "2026",
-            "--movement-id",
-            "legacy-1",
-            "--date",
-            "2026-03-15",
-            "--kind",
-            "purchase",
-            "--quantity",
-            "1",
-            "--unit-cost",
-            "5.50",
-        )
-        assert legacy_purchase.exit_code != 0
-        legacy_error = json.loads(legacy_purchase.output)["error"]
-        assert legacy_error["code"] == "REFUSED_CLI_BOUNDARY"
-        assert legacy_error["context"]["reason"] == "inventory_validation"
-        assert legacy_error["context"]["refusal_code"] == "REFUSED_PROFILE_INVENTORY_VALIDATION"
-        assert legacy_error["context"]["movement_id"] == "legacy-1"
-        assert "5.50" not in legacy_purchase.output
-
-        preview = _invoke(
-            profile,
-            "app",
-            "ledger",
-            "inventory",
-            "valuation",
-            "preview",
-            "--actividad-id",
-            "act-1",
-            "--year",
-            "2026",
-        )
-        assert preview.exit_code == 0, preview.output
-        preview_payload = unwrap_cli_result(preview)
-        assert preview_payload["derived_closing_value"] == "155.00"
-        assert preview_payload["cogs"] == "0.00"
-        assert len(preview_payload["bucket_event_ids"]) == 1
+        _assert_create_and_purchase(profile, failures)
+        _assert_duplicate_list_and_legacy_refusals(profile)
+        _assert_valuation_preview(profile)
 
 
 def test_native_inventory_options_serve_history_kinds_and_marked_roles(tmp_path: Path) -> None:
