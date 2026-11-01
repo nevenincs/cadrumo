@@ -72,6 +72,104 @@ def _result_rows(result: Result) -> list[dict[str, object]]:
     return [cast(dict[str, object], row) for row in rows]
 
 
+def _assert_first_batch_commits_once(
+    session: NativeApiCliSession[None],
+    authority_operation: PinnedAuthorityOperation,
+    *,
+    invoice_bytes: bytes,
+    invoice_digest: str,
+) -> dict[str, object]:
+    """A batch without a source refuses; a directory batch stores one attachment, record and draft."""
+    empty = _invoke(session, "app", "ledger", "evidence", "batch", "--kind", "received")
+    assert empty.exit_code != 0, "a batch without a source must refuse instead of returning an empty success"
+
+    first = _invoke(session, "app", "ledger", "evidence", "batch", "invoices", "--kind", "received")
+    assert first.exit_code == 0, first.output
+    first_rows = _result_rows(first)
+    assert len(first_rows) == 1
+    first_row = first_rows[0]
+    assert first_row["source_name"] == _STRUCTURED_INVOICE
+    assert first_row["content_address"] == invoice_digest
+    assert first_row["status"] in {"ingested", "pending_review"}
+
+    bucket_id = str(session.profile_id)
+    with password_profile_session(session.profile_id, authority_operation):
+        attachment_store = AttachmentStore(bucket_id=bucket_id)
+        manifest = attachment_store.load_manifest(invoice_digest)
+        assert manifest.bucket_id == bucket_id
+        assert attachment_store.read_bytes(invoice_digest) == invoice_bytes
+
+        objects = secure_object_repository_for_active_bucket()
+        evidence = PurchaseInvoiceEvidenceRepository(objects=objects).load(bucket_id)
+        assert evidence is not None
+        matching = tuple(row for row in evidence.records if row.source_sha256 == invoice_digest)
+        assert len(matching) == 1
+        assert Path(matching[0].source_path) == Path("invoices") / _STRUCTURED_INVOICE
+        drafts = ExtractionDraftRepository(bucket_id=bucket_id, settings=load_settings()).load(bucket_id)
+        assert drafts is not None and len(drafts.drafts) == 1
+        assert drafts.drafts[0].evidence_reference == matching[0].evidence_id
+        assert drafts.drafts[0].draft.supplier_tax_id is not None
+    return first_row
+
+
+def _assert_replay_is_noop(session: NativeApiCliSession[None], first_row: dict[str, object]) -> None:
+    replay = _invoke(session, "app", "ledger", "evidence", "batch", "invoices", "--kind", "received")
+    assert replay.exit_code == 0, replay.output
+    replay_rows = _result_rows(replay)
+    assert len(replay_rows) == 1
+    assert replay_rows[0]["identity"] == first_row["identity"]
+    assert replay_rows[0]["status"] == "no_op"
+
+
+def _assert_mixed_batch_keeps_each_documents_facts(session: NativeApiCliSession[None], invoice_directory: Path) -> None:
+    malformed = invoice_directory / "malformed.pdf"
+    malformed.write_bytes(b"not a PDF document")
+    mixed = _invoke(
+        session,
+        "app",
+        "ledger",
+        "evidence",
+        "batch",
+        "--kind",
+        "received",
+        "--file",
+        f"invoices/{_STRUCTURED_INVOICE}",
+        "--file",
+        "invoices/malformed.pdf",
+    )
+    assert mixed.exit_code == 1, mixed.output
+    mixed_rows = {str(row["source_name"]): row for row in _result_rows(mixed)}
+    assert mixed_rows[_STRUCTURED_INVOICE]["status"] == "no_op"
+    assert mixed_rows["malformed.pdf"]["status"] == "refused"
+    assert mixed_rows["malformed.pdf"]["refusal_facts"]
+    assert mixed_rows["malformed.pdf"]["refusal_action"]
+    mixed_envelope = json.loads(mixed.output)
+    assert isinstance(mixed_envelope, dict)
+    notices = mixed_envelope["notices"]
+    assert isinstance(notices, list)
+    assert all(not str(notice["code"]).startswith("ledger.evidence.batch.item.") for notice in notices)
+
+    text = _invoke(
+        session,
+        "app",
+        "ledger",
+        "evidence",
+        "batch",
+        "--kind",
+        "received",
+        "--file",
+        f"invoices/{_STRUCTURED_INVOICE}",
+        "--file",
+        "invoices/malformed.pdf",
+        output_format="text",
+    )
+    assert text.exit_code == 1, text.output
+    progress = [line for line in text.output.splitlines() if "ledger.evidence.batch.item." in line]
+    assert len(progress) == 2, f"expected one progress line per document, got: {progress}"
+    assert any("ledger.evidence.batch.item.refused" in line for line in progress)
+    assert any("ledger.evidence.batch.items_refused" in line for line in text.output.splitlines())
+
+
 def test_native_evidence_ingestion_uses_exact_profile_and_preserves_batch_and_refusal_facts(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -98,86 +196,8 @@ def test_native_evidence_ingestion_uses_exact_profile_and_preserves_batch_and_re
         authority_operation=authority_operation,
         invoke_cli=run_cadrumo_cli,
     ) as session:
-        empty = _invoke(session, "app", "ledger", "evidence", "batch", "--kind", "received")
-        assert empty.exit_code != 0, "a batch without a source must refuse instead of returning an empty success"
-
-        first = _invoke(session, "app", "ledger", "evidence", "batch", "invoices", "--kind", "received")
-        assert first.exit_code == 0, first.output
-        first_rows = _result_rows(first)
-        assert len(first_rows) == 1
-        first_row = first_rows[0]
-        assert first_row["source_name"] == _STRUCTURED_INVOICE
-        assert first_row["content_address"] == invoice_digest
-        assert first_row["status"] in {"ingested", "pending_review"}
-
-        bucket_id = str(session.profile_id)
-        with password_profile_session(session.profile_id, authority_operation):
-            attachment_store = AttachmentStore(bucket_id=bucket_id)
-            manifest = attachment_store.load_manifest(invoice_digest)
-            assert manifest.bucket_id == bucket_id
-            assert attachment_store.read_bytes(invoice_digest) == invoice_bytes
-
-            objects = secure_object_repository_for_active_bucket()
-            evidence = PurchaseInvoiceEvidenceRepository(objects=objects).load(bucket_id)
-            assert evidence is not None
-            matching = tuple(row for row in evidence.records if row.source_sha256 == invoice_digest)
-            assert len(matching) == 1
-            assert Path(matching[0].source_path) == Path("invoices") / _STRUCTURED_INVOICE
-            drafts = ExtractionDraftRepository(bucket_id=bucket_id, settings=load_settings()).load(bucket_id)
-            assert drafts is not None and len(drafts.drafts) == 1
-            assert drafts.drafts[0].evidence_reference == matching[0].evidence_id
-            assert drafts.drafts[0].draft.supplier_tax_id is not None
-
-        replay = _invoke(session, "app", "ledger", "evidence", "batch", "invoices", "--kind", "received")
-        assert replay.exit_code == 0, replay.output
-        replay_rows = _result_rows(replay)
-        assert len(replay_rows) == 1
-        assert replay_rows[0]["identity"] == first_row["identity"]
-        assert replay_rows[0]["status"] == "no_op"
-
-        malformed = invoice_directory / "malformed.pdf"
-        malformed.write_bytes(b"not a PDF document")
-        mixed = _invoke(
-            session,
-            "app",
-            "ledger",
-            "evidence",
-            "batch",
-            "--kind",
-            "received",
-            "--file",
-            f"invoices/{_STRUCTURED_INVOICE}",
-            "--file",
-            "invoices/malformed.pdf",
+        first_row = _assert_first_batch_commits_once(
+            session, authority_operation, invoice_bytes=invoice_bytes, invoice_digest=invoice_digest
         )
-        assert mixed.exit_code == 1, mixed.output
-        mixed_rows = {str(row["source_name"]): row for row in _result_rows(mixed)}
-        assert mixed_rows[_STRUCTURED_INVOICE]["status"] == "no_op"
-        assert mixed_rows["malformed.pdf"]["status"] == "refused"
-        assert mixed_rows["malformed.pdf"]["refusal_facts"]
-        assert mixed_rows["malformed.pdf"]["refusal_action"]
-        mixed_envelope = json.loads(mixed.output)
-        assert isinstance(mixed_envelope, dict)
-        notices = mixed_envelope["notices"]
-        assert isinstance(notices, list)
-        assert all(not str(notice["code"]).startswith("ledger.evidence.batch.item.") for notice in notices)
-
-        text = _invoke(
-            session,
-            "app",
-            "ledger",
-            "evidence",
-            "batch",
-            "--kind",
-            "received",
-            "--file",
-            f"invoices/{_STRUCTURED_INVOICE}",
-            "--file",
-            "invoices/malformed.pdf",
-            output_format="text",
-        )
-        assert text.exit_code == 1, text.output
-        progress = [line for line in text.output.splitlines() if "ledger.evidence.batch.item." in line]
-        assert len(progress) == 2, f"expected one progress line per document, got: {progress}"
-        assert any("ledger.evidence.batch.item.refused" in line for line in progress)
-        assert any("ledger.evidence.batch.items_refused" in line for line in text.output.splitlines())
+        _assert_replay_is_noop(session, first_row)
+        _assert_mixed_batch_keeps_each_documents_facts(session, invoice_directory)

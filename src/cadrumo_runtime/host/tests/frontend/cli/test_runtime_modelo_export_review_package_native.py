@@ -6,6 +6,7 @@ import hashlib
 import json
 import sys
 from pathlib import Path
+from typing import Any
 from uuid import UUID
 from zipfile import ZipFile
 
@@ -21,6 +22,7 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 from cadrumo.entrypoints.tests import modelo_operation_test_support
 from cadrumo.tests.cli_envelope import require_schema_envelope
 from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import (
+    NativeCliProfileFixture,
     RuntimeFailureObservation,
     native_cli_profile_scope,
 )
@@ -47,6 +49,110 @@ def _invoke_with_human_password(*, fixture_passphrase: str, label: str, command:
     if fixture_passphrase in result.output:
         pytest.fail("profile credential appeared in CLI output", pytrace=False)
     return result
+
+
+def _assert_export_receipt(
+    fixture: NativeCliProfileFixture,
+    failures: list[RuntimeFailureObservation],
+    tmp_path: Path,
+    *,
+    revision_id: str,
+    work_unit_id: str,
+    period: Period,
+) -> dict[str, Any]:
+    export_path = (tmp_path / "modelo-export.txt").resolve()
+    exported = _invoke_with_human_password(
+        fixture_passphrase=fixture.passphrase,
+        label=_LABEL,
+        command=("app", "modelo", "export", work_unit_id, "--output", str(export_path)),
+    )
+    assert exported.exit_code == 0, (exported.output, failures)
+    export_result = require_schema_envelope(exported.output)
+    assert export_result["calculation_revision_id"] == revision_id
+    assert export_result["work_unit_id"] == work_unit_id
+    assert export_result["bucket_id"] == CLI_BUCKET_ID_PLACEHOLDER
+    assert export_result["filing_year"] == period.filing_year
+    expected_period = {"filing_year": period.filing_year, "code": period.registry_token}
+    assert export_result["period"] == expected_period
+    assert Path(export_result["output_path"]) == export_path
+    exported_bytes = export_path.read_bytes()
+    assert len(exported_bytes) == export_result["byte_size"] > 0
+    assert hashlib.sha256(exported_bytes).hexdigest() == export_result["file_sha256"]
+    assert export_result["bucket_event_id"]
+    return expected_period
+
+
+def _assert_report_receipt(
+    fixture: NativeCliProfileFixture, tmp_path: Path, *, revision_id: str, report_id: str, work_unit_id: str
+) -> None:
+    report_path = (tmp_path / "calculation-ca.csv").resolve()
+    report = _invoke_with_human_password(
+        fixture_passphrase=fixture.passphrase,
+        label=_LABEL,
+        command=(
+            "app",
+            "modelo",
+            "work",
+            "report",
+            work_unit_id,
+            "--output",
+            str(report_path),
+            "--output-language",
+            "ca",
+        ),
+    )
+    assert report.exit_code == 0, report.output
+    report_result = require_schema_envelope(report.output)
+    assert report_result["calculation_revision_id"] == revision_id
+    assert report_result["work_unit_id"] == work_unit_id
+    assert report_result["verification_report_id"] == report_id
+    assert report_result["report_language"] == "ca"
+    assert report_result["document_format"] == "csv"
+    assert report_result["row_count"] > 0
+    report_bytes = report_path.read_bytes()
+    assert report_result["file_sha256"] == hashlib.sha256(report_bytes).hexdigest()
+    assert report_result["byte_size"] == len(report_bytes)
+    assert len(report_result["report_sha256"]) == 64
+    assert report_result["local_calculation_notice"]
+
+
+def _assert_review_package_receipt(
+    fixture: NativeCliProfileFixture,
+    tmp_path: Path,
+    *,
+    revision_id: str,
+    work_unit_id: str,
+    period: Period,
+    expected_period: dict[str, Any],
+) -> None:
+    package_path = (tmp_path / "modelo-review-package.zip").resolve()
+    packaged = _invoke_with_human_password(
+        fixture_passphrase=fixture.passphrase,
+        label=_LABEL,
+        command=(
+            "app",
+            "modelo",
+            "review-package",
+            "build",
+            work_unit_id,
+            "--output",
+            str(package_path),
+        ),
+    )
+    assert packaged.exit_code == 0, packaged.output
+    package_result = require_schema_envelope(packaged.output)
+    assert package_result["calculation_revision_id"] == revision_id
+    assert package_result["work_unit_id"] == work_unit_id
+    assert package_result["bucket_id"] == CLI_BUCKET_ID_PLACEHOLDER
+    assert package_result["filing_year"] == period.filing_year
+    assert package_result["period"] == expected_period
+    assert Path(package_result["output_path"]) == package_path
+    assert package_result["member_count"] >= 1
+    assert package_result["built_by"]
+    assert package_result["built_at"]
+    with ZipFile(package_path) as archive:
+        assert archive.testzip() is None
+        assert archive.namelist()
 
 
 def test_native_cli_export_and_review_package_publish_canonical_receipts(
@@ -85,80 +191,17 @@ def test_native_cli_export_and_review_package_publish_canonical_receipts(
         period = Period.from_year_and_code(2025, "1T")
         close_active_bucket_session()
 
-        export_path = (tmp_path / "modelo-export.txt").resolve()
-        exported = _invoke_with_human_password(
-            fixture_passphrase=fixture.passphrase,
-            label=_LABEL,
-            command=("app", "modelo", "export", work_unit_id, "--output", str(export_path)),
+        expected_period = _assert_export_receipt(
+            fixture, failures, tmp_path, revision_id=revision_id, work_unit_id=work_unit_id, period=period
         )
-        assert exported.exit_code == 0, (exported.output, failures)
-        export_result = require_schema_envelope(exported.output)
-        assert export_result["calculation_revision_id"] == revision_id
-        assert export_result["work_unit_id"] == work_unit_id
-        assert export_result["bucket_id"] == CLI_BUCKET_ID_PLACEHOLDER
-        assert export_result["filing_year"] == period.filing_year
-        expected_period = {"filing_year": period.filing_year, "code": period.registry_token}
-        assert export_result["period"] == expected_period
-        assert Path(export_result["output_path"]) == export_path
-        exported_bytes = export_path.read_bytes()
-        assert len(exported_bytes) == export_result["byte_size"] > 0
-        assert hashlib.sha256(exported_bytes).hexdigest() == export_result["file_sha256"]
-        assert export_result["bucket_event_id"]
-        report_path = (tmp_path / "calculation-ca.csv").resolve()
-        report = _invoke_with_human_password(
-            fixture_passphrase=fixture.passphrase,
-            label=_LABEL,
-            command=(
-                "app",
-                "modelo",
-                "work",
-                "report",
-                work_unit_id,
-                "--output",
-                str(report_path),
-                "--output-language",
-                "ca",
-            ),
+        _assert_report_receipt(
+            fixture, tmp_path, revision_id=revision_id, report_id=report_id, work_unit_id=work_unit_id
         )
-        assert report.exit_code == 0, report.output
-        report_result = require_schema_envelope(report.output)
-        assert report_result["calculation_revision_id"] == revision_id
-        assert report_result["work_unit_id"] == work_unit_id
-        assert report_result["verification_report_id"] == report_id
-        assert report_result["report_language"] == "ca"
-        assert report_result["document_format"] == "csv"
-        assert report_result["row_count"] > 0
-        report_bytes = report_path.read_bytes()
-        assert report_result["file_sha256"] == hashlib.sha256(report_bytes).hexdigest()
-        assert report_result["byte_size"] == len(report_bytes)
-        assert len(report_result["report_sha256"]) == 64
-        assert report_result["local_calculation_notice"]
-
-        package_path = (tmp_path / "modelo-review-package.zip").resolve()
-        packaged = _invoke_with_human_password(
-            fixture_passphrase=fixture.passphrase,
-            label=_LABEL,
-            command=(
-                "app",
-                "modelo",
-                "review-package",
-                "build",
-                work_unit_id,
-                "--output",
-                str(package_path),
-            ),
+        _assert_review_package_receipt(
+            fixture,
+            tmp_path,
+            revision_id=revision_id,
+            work_unit_id=work_unit_id,
+            period=period,
+            expected_period=expected_period,
         )
-        assert packaged.exit_code == 0, packaged.output
-        package_result = require_schema_envelope(packaged.output)
-        assert package_result["calculation_revision_id"] == revision_id
-        assert package_result["work_unit_id"] == work_unit_id
-        assert package_result["bucket_id"] == CLI_BUCKET_ID_PLACEHOLDER
-        assert package_result["filing_year"] == period.filing_year
-        assert package_result["period"] == expected_period
-        assert Path(package_result["output_path"]) == package_path
-        assert package_result["member_count"] >= 1
-        assert package_result["built_by"]
-        assert package_result["built_at"]
-        with ZipFile(package_path) as archive:
-            assert archive.testzip() is None
-            assert archive.namelist()

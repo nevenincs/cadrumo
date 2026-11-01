@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import sys
 from pathlib import Path
+from typing import Any
 from uuid import UUID
 
 import pytest
@@ -20,6 +21,7 @@ from cadrumo.entrypoints.tests.evidence_followup_operation_test_support import (
 )
 from cadrumo.tests.cli_envelope import unwrap_cli_result
 from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import (
+    NativeCliProfileFixture,
     RuntimeFailureObservation,
     native_cli_profile_scope,
 )
@@ -52,6 +54,84 @@ _PROFILE_FACTS = {
 _DRIVE_FILE_ID = "1AbcDEfgHIjkLMnoPQRstuVWxyz12345"
 
 
+def _assert_attachment_queue(
+    profile: NativeCliProfileFixture, failures: list[RuntimeFailureObservation], attachment_id: str
+) -> dict[str, Any]:
+    queue = invoke_native_profile(profile, "app", "ledger", "evidence", "attachment-queue")
+    assert queue.exit_code == 0, (queue.output, failures)
+    queued = unwrap_cli_result(queue)
+    assert queued["count"] == 1
+    assert queued["rows"][0]["attachment_id"] == attachment_id
+    assert queued["rows"][0]["source"] == "GOOGLE_DRIVE"
+    assert queued["rows"][0]["pending_review"] is True
+    return queued
+
+
+def _assert_attachment_view(
+    profile: NativeCliProfileFixture,
+    failures: list[RuntimeFailureObservation],
+    attachment_id: str,
+    queued: dict[str, Any],
+) -> None:
+    viewed_attachment = invoke_native_profile(profile, "app", "ledger", "evidence", "attachment-view", attachment_id)
+    assert viewed_attachment.exit_code == 0, (viewed_attachment.output, failures)
+    attachment = unwrap_cli_result(viewed_attachment)
+    assert attachment["bucket_id"] == queued["bucket_id"]
+    assert attachment["attachment_id"] == attachment_id
+    assert attachment["sha256"] == attachment_id
+    assert attachment["provider_locator"] == _DRIVE_FILE_ID
+    assert attachment["pending_review"] is True
+    assert not {"metadata", "notes"}.intersection(attachment)
+
+
+def _assert_consent_survey(
+    profile: NativeCliProfileFixture, failures: list[RuntimeFailureObservation], queued: dict[str, Any]
+) -> list[dict[str, Any]]:
+    consent = invoke_native_profile(profile, "app", "ledger", "evidence", "consent", "list")
+    assert consent.exit_code == 0, (consent.output, failures)
+    survey = unwrap_cli_result(consent)
+    assert survey["bucket_id"] == queued["bucket_id"]
+    assert survey["transmitted_bytes_are_unrecallable"] is True
+    assert len(survey["consented_dispatches"]) == 1
+    dispatch = survey["consented_dispatches"][0]
+    assert dispatch["provider"] == "openai"
+    assert dispatch["surface"] == "app.ledger.evidence.extract"
+    assert "profile_bucket_id" not in dispatch
+    derived = survey["cloud_derived_artefacts"]
+    assert len(derived) == 1
+    assert derived[0]["provenance_stamp"]
+    return derived
+
+
+def _assert_review_queue_and_view(
+    profile: NativeCliProfileFixture,
+    failures: list[RuntimeFailureObservation],
+    queued: dict[str, Any],
+    derived: list[dict[str, Any]],
+) -> None:
+    review_queue = invoke_native_profile(profile, "app", "ledger", "evidence", "review", "list")
+    assert review_queue.exit_code == 0, (review_queue.output, failures)
+    review = unwrap_cli_result(review_queue)
+    assert review["bucket_id"] == queued["bucket_id"]
+    assert review["filters"] == []
+    assert len(review["rows"]) == 1
+    evidence_id = review["rows"][0]["evidence_reference"]
+    assert derived[0]["evidence_reference"] == evidence_id
+
+    review_view = invoke_native_profile(profile, "app", "ledger", "evidence", "review", "view", evidence_id)
+    assert review_view.exit_code == 0, (review_view.output, failures)
+    reviewed = unwrap_cli_result(review_view)
+    assert reviewed["bucket_id"] == queued["bucket_id"]
+    assert reviewed["evidence_reference"] == evidence_id
+    fields = {row["field"]: row for row in reviewed["fields"]}
+    assert fields["invoice_number"]["value"] == "FAC-2024-0007"
+    assert fields["invoice_number"]["origin"] == "exact_structured"
+    assert fields["invoice_number"]["anchor"] == "FAC-2024-0007"
+    assert fields["taxable_base"]["value"] == "100.00"
+    assert isinstance(reviewed["discrepancies"], list)
+    assert isinstance(reviewed["blockers"], list)
+
+
 def test_native_profile_reads_all_evidence_followup_surfaces(
     tmp_path: Path,
     authority_operation: PinnedAuthorityOperation,
@@ -77,58 +157,7 @@ def test_native_profile_reads_all_evidence_followup_surfaces(
         assert isinstance(case.request, LedgerEvidenceAttachmentViewRequest)
         attachment_id = case.request.attachment_id
         close_active_bucket_session()
-        queue = invoke_native_profile(profile, "app", "ledger", "evidence", "attachment-queue")
-        assert queue.exit_code == 0, (queue.output, failures)
-        queued = unwrap_cli_result(queue)
-        assert queued["count"] == 1
-        assert queued["rows"][0]["attachment_id"] == attachment_id
-        assert queued["rows"][0]["source"] == "GOOGLE_DRIVE"
-        assert queued["rows"][0]["pending_review"] is True
-
-        viewed_attachment = invoke_native_profile(
-            profile, "app", "ledger", "evidence", "attachment-view", attachment_id
-        )
-        assert viewed_attachment.exit_code == 0, (viewed_attachment.output, failures)
-        attachment = unwrap_cli_result(viewed_attachment)
-        assert attachment["bucket_id"] == queued["bucket_id"]
-        assert attachment["attachment_id"] == attachment_id
-        assert attachment["sha256"] == attachment_id
-        assert attachment["provider_locator"] == _DRIVE_FILE_ID
-        assert attachment["pending_review"] is True
-        assert not {"metadata", "notes"}.intersection(attachment)
-
-        consent = invoke_native_profile(profile, "app", "ledger", "evidence", "consent", "list")
-        assert consent.exit_code == 0, (consent.output, failures)
-        survey = unwrap_cli_result(consent)
-        assert survey["bucket_id"] == queued["bucket_id"]
-        assert survey["transmitted_bytes_are_unrecallable"] is True
-        assert len(survey["consented_dispatches"]) == 1
-        dispatch = survey["consented_dispatches"][0]
-        assert dispatch["provider"] == "openai"
-        assert dispatch["surface"] == "app.ledger.evidence.extract"
-        assert "profile_bucket_id" not in dispatch
-        derived = survey["cloud_derived_artefacts"]
-        assert len(derived) == 1
-        assert derived[0]["provenance_stamp"]
-
-        review_queue = invoke_native_profile(profile, "app", "ledger", "evidence", "review", "list")
-        assert review_queue.exit_code == 0, (review_queue.output, failures)
-        review = unwrap_cli_result(review_queue)
-        assert review["bucket_id"] == queued["bucket_id"]
-        assert review["filters"] == []
-        assert len(review["rows"]) == 1
-        evidence_id = review["rows"][0]["evidence_reference"]
-        assert derived[0]["evidence_reference"] == evidence_id
-
-        review_view = invoke_native_profile(profile, "app", "ledger", "evidence", "review", "view", evidence_id)
-        assert review_view.exit_code == 0, (review_view.output, failures)
-        reviewed = unwrap_cli_result(review_view)
-        assert reviewed["bucket_id"] == queued["bucket_id"]
-        assert reviewed["evidence_reference"] == evidence_id
-        fields = {row["field"]: row for row in reviewed["fields"]}
-        assert fields["invoice_number"]["value"] == "FAC-2024-0007"
-        assert fields["invoice_number"]["origin"] == "exact_structured"
-        assert fields["invoice_number"]["anchor"] == "FAC-2024-0007"
-        assert fields["taxable_base"]["value"] == "100.00"
-        assert isinstance(reviewed["discrepancies"], list)
-        assert isinstance(reviewed["blockers"], list)
+        queued = _assert_attachment_queue(profile, failures, attachment_id)
+        _assert_attachment_view(profile, failures, attachment_id, queued)
+        derived = _assert_consent_survey(profile, failures, queued)
+        _assert_review_queue_and_view(profile, failures, queued, derived)
