@@ -86,6 +86,84 @@ class _PreviewBrowserResources:
         self.closed = True
 
 
+def _assert_preview_receipt(receipt, observed, subject_ref):
+    assert receipt is not None
+    assert receipt.identity.definition_id == CENSAL_PREVIEW_OPERATION_DEFINITION_ID
+    assert receipt.identity.subject_ref == subject_ref
+    assert receipt.condition is OperationTerminalCondition.SUCCEEDED
+    assert receipt.effect is OperationEffect.NONE
+    assert receipt.result_ref is not None
+    assert observed.projection.lifecycle is OperationLifecycle.TERMINAL
+    assert observed.projection.terminal_condition is OperationTerminalCondition.SUCCEEDED
+    assert observed.projection.effect is OperationEffect.NONE
+
+
+def _assert_preview_result(preview, profile_id, observation):
+    assert isinstance(preview, CensalPreviewOperationResult)
+    assert preview.profile_id == profile_id
+    assert preview.observation == observation
+    assert preview.applied is False
+    assert preview.source_url == observation.source_url
+    assert tuple(item.path for item in preview.adopted) == (
+        "contact.fiscal_address",
+        "contact.postcode",
+        "contact.fiscal_address_cadastral_reference",
+    )
+    assert all(item.source == CENSO_SOURCE_TAG for item in preview.adopted)
+    assert not preview.unchanged
+    assert not preview.divergences
+
+
+def _assert_latest_observation_is_recoverable(profile_id, observation):
+    # Fresh adapter instances must recover the complete capture from
+    # the settled journal and encrypted result, without another pull.
+    for _ in range(2):
+        stored = asyncio.run(
+            read_latest_censal_observation(
+                profile_id,
+                journal=OperationJournalRepository(storage_root=effective_storage_root() / "operations"),
+                operands=operation_secure_reference_repository(),
+            )
+        )
+        assert stored == observation
+    assert (
+        asyncio.run(
+            read_latest_censal_observation(
+                uuid4(),
+                journal=OperationJournalRepository(storage_root=effective_storage_root() / "operations"),
+                operands=operation_secure_reference_repository(),
+            )
+        )
+        is None
+    )
+
+
+def _assert_preview_worker_resources(
+    profile_id,
+    preflight_profile_ids,
+    acquisition_profile_ids,
+    acquisition_scopes,
+    acquisition_task_names,
+    preflight_task_names,
+    pinned_operations,
+    resources,
+):
+    assert preflight_profile_ids == [profile_id]
+    assert acquisition_profile_ids == [str(profile_id)]
+    assert acquisition_scopes == [True]
+    assert acquisition_task_names == [resources[0].factory_task_name]
+    assert preflight_task_names == [resources[0].factory_task_name]
+    assert pinned_operations
+    assert len(pinned_operations) == 1
+    assert len(resources) == 1
+    assert resources[0].activation_count == 1
+    assert resources[0].close_count == 1
+    assert resources[0].closed
+    assert resources[0].factory_task_name is not None
+    assert resources[0].factory_task_name.startswith("operation-executor-")
+    assert resources[0].close_task_name == "operation-settlement"
+
+
 def test_censal_preview_admits_its_exact_profile_and_settles_without_mutation(
     tmp_path: Path,
     operation: PinnedAuthorityOperation,
@@ -178,16 +256,7 @@ def test_censal_preview_admits_its_exact_profile_and_settles_without_mutation(
             )
             snapshot = asyncio.run(driver.services.submission.supervisor.inspect(submission.receipt.operation_id))
             receipt = snapshot.terminal_receipt
-            assert receipt is not None
-            assert receipt.identity.definition_id == CENSAL_PREVIEW_OPERATION_DEFINITION_ID
-            assert receipt.identity.subject_ref == subject_ref
-            assert receipt.condition is OperationTerminalCondition.SUCCEEDED
-            assert receipt.effect is OperationEffect.NONE
-            assert receipt.result_ref is not None
-            assert observed.projection.lifecycle is OperationLifecycle.TERMINAL
-            assert observed.projection.terminal_condition is OperationTerminalCondition.SUCCEEDED
-            assert observed.projection.effect is OperationEffect.NONE
-
+            _assert_preview_receipt(receipt, observed, subject_ref)
             preview = conformance._resolve_result_projection(
                 driver,
                 runtime_registry,
@@ -196,62 +265,24 @@ def test_censal_preview_admits_its_exact_profile_and_settles_without_mutation(
                 terminal_revision=observed.projection.revision,
                 projection_type=CensalPreviewOperationResult,
             )
-            assert isinstance(preview, CensalPreviewOperationResult)
-            assert preview.profile_id == profile_id
-            assert preview.observation == observation
-            assert preview.applied is False
-            assert preview.source_url == observation.source_url
-            assert tuple(item.path for item in preview.adopted) == (
-                "contact.fiscal_address",
-                "contact.postcode",
-                "contact.fiscal_address_cadastral_reference",
-            )
-            assert all(item.source == CENSO_SOURCE_TAG for item in preview.adopted)
-            assert not preview.unchanged
-            assert not preview.divergences
-
-            # Fresh adapter instances must recover the complete capture from
-            # the settled journal and encrypted result, without another pull.
-            for _ in range(2):
-                stored = asyncio.run(
-                    read_latest_censal_observation(
-                        profile_id,
-                        journal=OperationJournalRepository(storage_root=effective_storage_root() / "operations"),
-                        operands=operation_secure_reference_repository(),
-                    )
-                )
-                assert stored == observation
-            assert (
-                asyncio.run(
-                    read_latest_censal_observation(
-                        uuid4(),
-                        journal=OperationJournalRepository(storage_root=effective_storage_root() / "operations"),
-                        operands=operation_secure_reference_repository(),
-                    )
-                )
-                is None
-            )
-
+            _assert_preview_result(preview, profile_id, observation)
+            _assert_latest_observation_is_recoverable(profile_id, observation)
             record_after = repository.load(profile_id)
             history_after = ProfileRecordStore(session=repository.session).history()
 
         assert record_after == record_before
         assert history_after == history_before
         assert not any(fact.source == CENSO_SOURCE_TAG for fact in record_to_effective_facts(record_after).values())
-        assert preflight_profile_ids == [profile_id]
-        assert acquisition_profile_ids == [str(profile_id)]
-        assert acquisition_scopes == [True]
-        assert acquisition_task_names == [resources[0].factory_task_name]
-        assert preflight_task_names == [resources[0].factory_task_name]
-        assert pinned_operations
-        assert len(pinned_operations) == 1
-        assert len(resources) == 1
-        assert resources[0].activation_count == 1
-        assert resources[0].close_count == 1
-        assert resources[0].closed
-        assert resources[0].factory_task_name is not None
-        assert resources[0].factory_task_name.startswith("operation-executor-")
-        assert resources[0].close_task_name == "operation-settlement"
+        _assert_preview_worker_resources(
+            profile_id,
+            preflight_profile_ids,
+            acquisition_profile_ids,
+            acquisition_scopes,
+            acquisition_task_names,
+            preflight_task_names,
+            pinned_operations,
+            resources,
+        )
 
 
 def test_censal_preview_start_leaves_provider_readiness_to_the_worker_preflight() -> None:

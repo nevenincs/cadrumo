@@ -218,6 +218,131 @@ class _Composition:
     filed_data_port: FiledDataCapturePort
 
 
+def _assert_source_capture_collaborators(
+    provider_preflights,
+    profile_id,
+    authority,
+    filed_port,
+    reconciliation_port,
+    guard_entries,
+    guarded_writes,
+    resources,
+):
+    assert provider_preflights == [(profile_id, authority)]
+    assert filed_port.acquired == [("130", 2026, _TARGET_PERIOD, "live-filed-read")]
+    assert len(reconciliation_port.entries) == 1
+    assert guard_entries == 2
+    assert guarded_writes == ["artefact", "artefact", "manifest", "calculation"]
+    assert resources.closed
+
+
+def _assert_source_capture_result(definition, terminal, projected, tmp_path):
+    assert definition.definition_id == "live.filed-capture.source"
+    assert terminal.lifecycle is OperationLifecycle.TERMINAL
+    assert terminal.terminal_condition is OperationTerminalCondition.SUCCEEDED
+    assert terminal.effect is OperationEffect.UPDATED
+    assert isinstance(projected, OperationResultProjectionSuccessV1)
+    assert isinstance(projected.projection, FiledSourceCapturePublicResultV1)
+    result = projected.projection
+    assert result.output_root == str(tmp_path / "filed-source-output")
+    assert (result.target_modelo, result.target_year, result.target_period) == ("130", 2026, "1T")
+    assert (result.captured_count, result.reached_count) == (1, 1)
+    assert result.observation_paths == (str(Path("memory-observations") / "1" / "manifest.json"),)
+    assert result.artefact_refs == ("memory-artefact:1", "memory-artefact:2")
+    assert result.casilla_count == 1
+    assert result.calculation_observation_count == 1
+    assert result.calculation_observation_keys == ("100:2025:0A",)
+    assert result.justificante_metadata_count == 1
+    assert result.justificante_csvs == (_JUSTIFICANTE_CSV,)
+    assert result.filing_evidence_stamped_count == 0
+    assert result.filing_evidence_conflict_count == 0
+    assert result.evidence_notices == ()
+    return result
+
+
+def _assert_period_independent_commit_admission(admitted):
+    assert admitted.request.period_independent
+    assert admitted.request.periods == frozenset()
+    assert admitted.policy.requires_all_periods
+    assert AccessAction.COMMIT in admitted.policy.actions
+
+
+def _synthetic_source_observation(source_snapshot):
+    observation = FiledDeclaracionObservation(
+        modelo="100",
+        ejercicio=2025,
+        period=_SOURCE_PERIOD,
+        expediente_id=_SOURCE_EXPEDIENTE_ID,
+        status="ALTA",
+        presented_at=_NOW,
+        authenticated_identity=_TAX_ID,
+        artefacts=(
+            FiledDeclaracionArtefact(
+                kind="submitted_file",
+                source_url="https://test.invalid/declared-file",
+                content_type="application/octet-stream",
+                byte_count=len(_SUBMITTED_BODY),
+                sha256=sha256(_SUBMITTED_BODY).hexdigest(),
+                captured_at=_NOW,
+            ),
+            FiledDeclaracionArtefact(
+                kind="justificante_pdf",
+                source_url=f"https://test.invalid/cotejo?CSV={_JUSTIFICANTE_CSV}",
+                content_type="application/pdf",
+                byte_count=len(_JUSTIFICANTE_BODY),
+                sha256=sha256(_JUSTIFICANTE_BODY).hexdigest(),
+                captured_at=_NOW,
+            ),
+        ),
+        casillas=(
+            ObservedCasillaValue(
+                casilla_id="synthetic.text",
+                value="synthetic-source-value",
+                value_kind=CasillaValueKind.TEXT,
+                source_artefact_kind="submitted_file",
+                source_locator="synthetic:1",
+                confidence=1.0,
+            ),
+        ),
+        registry_snapshot_ref=source_snapshot.snapshot_ref,
+    )
+    return observation
+
+
+def _synthetic_source_receipt():
+    receipt = Justificante(
+        csv=_JUSTIFICANTE_CSV,
+        modelo="100",
+        ejercicio="2025",
+        period=_SOURCE_PERIOD,
+        presented_at=_NOW.replace(tzinfo=None),
+        tax_id=_TAX_ID,
+        verification_url=TypeAdapter(AnyHttpUrl).validate_python("https://test.invalid/verificar"),
+        source_pdf_path=Path("justificantes/source-100-2025.pdf"),
+        source_pdf_sha256=sha256(_JUSTIFICANTE_BODY).hexdigest(),
+        parsed_at=_NOW,
+    )
+    return receipt
+
+
+def _assert_source_capture_reconciliation(result, profile):
+    assert len(result.reconciliations) == 1
+    public_reconciliation = result.reconciliations[0]
+    assert public_reconciliation.outcome == FilingReconciliationOutcome.UNVERIFIABLE.value
+    assert (
+        public_reconciliation.bucket_id,
+        public_reconciliation.modelo,
+        public_reconciliation.filing_year,
+    ) == (
+        profile.bucket_id,
+        "100",
+        2025,
+    )
+    assert public_reconciliation.period == "0A"
+    assert public_reconciliation.notices[0].code == FilingReconciliationNoticeCode.CONTENT_UNAVAILABLE.value
+    assert public_reconciliation.notices[0].context == (("source", "synthetic"),)
+
+
 def test_supervisor_binds_source_capture_to_exact_profile_and_projects_reconciliation(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -226,44 +351,7 @@ def test_supervisor_binds_source_capture_to_exact_profile_and_projects_reconcili
     with isolated_runtime_profile(tmp_path=tmp_path) as profile, bundled_indexed_authority().operation() as authority:
         profile_id = UUID(profile.bucket_id)
         source_snapshot = authority.snapshot("100", filing_year=2025, period="0A")
-        observation = FiledDeclaracionObservation(
-            modelo="100",
-            ejercicio=2025,
-            period=_SOURCE_PERIOD,
-            expediente_id=_SOURCE_EXPEDIENTE_ID,
-            status="ALTA",
-            presented_at=_NOW,
-            authenticated_identity=_TAX_ID,
-            artefacts=(
-                FiledDeclaracionArtefact(
-                    kind="submitted_file",
-                    source_url="https://test.invalid/declared-file",
-                    content_type="application/octet-stream",
-                    byte_count=len(_SUBMITTED_BODY),
-                    sha256=sha256(_SUBMITTED_BODY).hexdigest(),
-                    captured_at=_NOW,
-                ),
-                FiledDeclaracionArtefact(
-                    kind="justificante_pdf",
-                    source_url=f"https://test.invalid/cotejo?CSV={_JUSTIFICANTE_CSV}",
-                    content_type="application/pdf",
-                    byte_count=len(_JUSTIFICANTE_BODY),
-                    sha256=sha256(_JUSTIFICANTE_BODY).hexdigest(),
-                    captured_at=_NOW,
-                ),
-            ),
-            casillas=(
-                ObservedCasillaValue(
-                    casilla_id="synthetic.text",
-                    value="synthetic-source-value",
-                    value_kind=CasillaValueKind.TEXT,
-                    source_artefact_kind="submitted_file",
-                    source_locator="synthetic:1",
-                    confidence=1.0,
-                ),
-            ),
-            registry_snapshot_ref=source_snapshot.snapshot_ref,
-        )
+        observation = _synthetic_source_observation(source_snapshot)
         guard_depth = 0
         guard_entries = 0
         guarded_writes: list[str] = []
@@ -272,18 +360,7 @@ def test_supervisor_binds_source_capture_to_exact_profile_and_projects_reconcili
             return guard_depth > 0
 
         bundle = in_memory_filed_observation_test_bundle()
-        receipt = Justificante(
-            csv=_JUSTIFICANTE_CSV,
-            modelo="100",
-            ejercicio="2025",
-            period=_SOURCE_PERIOD,
-            presented_at=_NOW.replace(tzinfo=None),
-            tax_id=_TAX_ID,
-            verification_url=TypeAdapter(AnyHttpUrl).validate_python("https://test.invalid/verificar"),
-            source_pdf_path=Path("justificantes/source-100-2025.pdf"),
-            source_pdf_sha256=sha256(_JUSTIFICANTE_BODY).hexdigest(),
-            parsed_at=_NOW,
-        )
+        receipt = _synthetic_source_receipt()
         reconciliation_port = _SyntheticReconciliation(is_guarded=is_guarded)
         ports = replace(
             bundle.ports,
@@ -401,11 +478,7 @@ def test_supervisor_binds_source_capture_to_exact_profile_and_projects_reconcili
 
         access_context = cli_submit_context(profile_id=profile_id, contract=registration.contract)
         admitted = resolve_operation_access(registry=registry, request=request, context=access_context)
-        assert admitted.request.period_independent
-        assert admitted.request.periods == frozenset()
-        assert admitted.policy.requires_all_periods
-        assert AccessAction.COMMIT in admitted.policy.actions
-
+        _assert_period_independent_commit_admission(admitted)
         assert_foreign_profile_refused(registry=registry, request=request, context=access_context)
 
         _, _, _, supervisor, result_service = build_supervised_operation(
@@ -422,44 +495,15 @@ def test_supervisor_binds_source_capture_to_exact_profile_and_projects_reconcili
             )
         )
 
-    assert definition.definition_id == "live.filed-capture.source"
-    assert terminal.lifecycle is OperationLifecycle.TERMINAL
-    assert terminal.terminal_condition is OperationTerminalCondition.SUCCEEDED
-    assert terminal.effect is OperationEffect.UPDATED
-    assert isinstance(projected, OperationResultProjectionSuccessV1)
-    assert isinstance(projected.projection, FiledSourceCapturePublicResultV1)
-    result = projected.projection
-    assert result.output_root == str(tmp_path / "filed-source-output")
-    assert (result.target_modelo, result.target_year, result.target_period) == ("130", 2026, "1T")
-    assert (result.captured_count, result.reached_count) == (1, 1)
-    assert result.observation_paths == (str(Path("memory-observations") / "1" / "manifest.json"),)
-    assert result.artefact_refs == ("memory-artefact:1", "memory-artefact:2")
-    assert result.casilla_count == 1
-    assert result.calculation_observation_count == 1
-    assert result.calculation_observation_keys == ("100:2025:0A",)
-    assert result.justificante_metadata_count == 1
-    assert result.justificante_csvs == (_JUSTIFICANTE_CSV,)
-    assert result.filing_evidence_stamped_count == 0
-    assert result.filing_evidence_conflict_count == 0
-    assert result.evidence_notices == ()
-    assert len(result.reconciliations) == 1
-    public_reconciliation = result.reconciliations[0]
-    assert public_reconciliation.outcome == FilingReconciliationOutcome.UNVERIFIABLE.value
-    assert (
-        public_reconciliation.bucket_id,
-        public_reconciliation.modelo,
-        public_reconciliation.filing_year,
-    ) == (
-        profile.bucket_id,
-        "100",
-        2025,
+    result = _assert_source_capture_result(definition, terminal, projected, tmp_path)
+    _assert_source_capture_reconciliation(result, profile)
+    _assert_source_capture_collaborators(
+        provider_preflights,
+        profile_id,
+        authority,
+        filed_port,
+        reconciliation_port,
+        guard_entries,
+        guarded_writes,
+        resources,
     )
-    assert public_reconciliation.period == "0A"
-    assert public_reconciliation.notices[0].code == FilingReconciliationNoticeCode.CONTENT_UNAVAILABLE.value
-    assert public_reconciliation.notices[0].context == (("source", "synthetic"),)
-    assert provider_preflights == [(profile_id, authority)]
-    assert filed_port.acquired == [("130", 2026, _TARGET_PERIOD, "live-filed-read")]
-    assert len(reconciliation_port.entries) == 1
-    assert guard_entries == 2
-    assert guarded_writes == ["artefact", "artefact", "manifest", "calculation"]
-    assert resources.closed
