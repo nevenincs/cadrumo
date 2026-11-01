@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import json
 import sys
+from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from importlib.metadata import version
@@ -13,6 +14,7 @@ from threading import Event
 from uuid import UUID, uuid4
 
 import pytest
+from click.testing import Result
 
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
 from cadrumo.adapters.persistence.storage.custody import acceleration_keychain
@@ -44,6 +46,7 @@ from cadrumo.application.user_profile.profile_pointer import (
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo_client.contracts.access_vocabulary import Availability
 from cadrumo_client.contracts.sign_in_outcomes import ProfileReceiptRefusedError
+from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.installation import installation
 from cadrumo_client.transport.installed_client import open_installed_client
 from cadrumo_client.transport.receipt_proof import borrow_receipt_proof
@@ -100,6 +103,78 @@ def _select(profile_id: UUID) -> None:
         transaction.select(str(profile_id))
 
 
+def _persist_receipts(installation_id: UUID, root: Path, first_id: UUID, second_id: UUID, passphrase: str) -> None:
+    """Save a human receipt for each profile, bound to the login and custody the runtime observes."""
+    with (
+        bundled_indexed_authority().operation() as authority,
+        bind_profile_custody_port(build_profile_custody_port()),
+        bind_profile_login_session_port(build_profile_login_session_port()),
+    ):
+        for profile_id, password in ((first_id, ENROLLMENT_PROFILE_INPUT), (second_id, passphrase)):
+            with authenticate_profile_candidate(
+                bucket_id=profile_id,
+                passphrase_callback=lambda password=password: password,
+                profile_decode_context=authority.profile_decode_context(),
+            ) as candidate:
+                # Bind each receipt to the login and custody binding the runtime below observes.
+                binding = current_automation_profile_binding(
+                    profile_id=profile_id,
+                    installation_id=installation_id,
+                    os_owner_id=owner_id(),
+                    root=root,
+                )
+                sign_in = SignInGenerationCustody(root=root, binding=binding)
+                assert candidate.persist_acceleration_receipt(
+                    login_id=_NativeLoginObservation.login_id,
+                    binding=binding,
+                    sign_in=sign_in.establish().current,
+                )
+
+
+def _assert_resume_and_view(
+    run_cadrumo_cli: Callable[..., Result],
+    first_client: FrontendClient,
+    first_id: UUID,
+    second_id: UUID,
+    first_receipt: Path,
+    second_receipt: Path,
+    before_second: bytes,
+    second_metadata: dict[str, str],
+    keyring: _Keyring,
+    second_keyring: dict[tuple[str, str], str],
+) -> tuple[Result, Result]:
+    """Resuming profile B borrows its receipt, retires A's human receipt and spares A's API session."""
+    first_session = first_client.session_id
+    result = run_cadrumo_cli(("--format", "json", "config", "login", str(second_id)))
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.stdout)["result"]
+    assert payload["active_profile"] == "Receipt profile B"
+    assert payload["already_authenticated"] is True
+    assert payload["session_persisted"] is True
+    assert observe_active_profile_pointer().bucket_id == str(second_id)
+    for key, source in (
+        ("authenticated_at", "issued_at"),
+        ("idle_deadline", "idle_deadline"),
+        ("absolute_deadline", "absolute_deadline"),
+    ):
+        assert datetime.fromisoformat(payload[key]) == datetime.fromisoformat(second_metadata[source])
+    # Resume borrows the existing proof; the later profile view
+    # is admitted activity that may reseal that same receipt.
+    assert second_receipt.read_bytes() == before_second
+    assert first_client.status().status.session_id == first_session
+    shown = run_cadrumo_cli(("--format", "json", "--profile", "Receipt profile B", "config", "profile", "view"))
+    assert shown.exit_code == 0, shown.output
+    assert json.loads(shown.stdout)["result"]["display_name"] == "Receipt profile B"
+    # A human sign-in retires other saved human proofs, while independent API authority survives.
+    assert not first_receipt.exists()
+    with pytest.raises(ProfileReceiptRefusedError), borrow_receipt_proof(profile_id=first_id):
+        pytest.fail("another profile's revoked saved sign-in remained usable")
+    proofs_unchanged = keyring.entries == second_keyring
+    assert proofs_unchanged
+
+    return result, shown
+
+
 def test_installed_cli_resumes_other_profile_without_retiring_independent_api_session(
     monkeypatch: pytest.MonkeyPatch,
     _isolated_cli_backend: Path,
@@ -142,30 +217,7 @@ def test_installed_cli_resumes_other_profile_without_retiring_independent_api_se
         close_active_bucket_session()
         second_id = UUID(register_cli_profile(label="Receipt profile B", log_in=False))
         close_active_bucket_session()
-        with (
-            bundled_indexed_authority().operation() as authority,
-            bind_profile_custody_port(build_profile_custody_port()),
-            bind_profile_login_session_port(build_profile_login_session_port()),
-        ):
-            for profile_id, password in ((first_id, ENROLLMENT_PROFILE_INPUT), (second_id, passphrase)):
-                with authenticate_profile_candidate(
-                    bucket_id=profile_id,
-                    passphrase_callback=lambda password=password: password,
-                    profile_decode_context=authority.profile_decode_context(),
-                ) as candidate:
-                    # Bind each receipt to the login and custody binding the runtime below observes.
-                    binding = current_automation_profile_binding(
-                        profile_id=profile_id,
-                        installation_id=installed.installation_id,
-                        os_owner_id=owner_id(),
-                        root=_isolated_cli_backend,
-                    )
-                    sign_in = SignInGenerationCustody(root=_isolated_cli_backend, binding=binding)
-                    assert candidate.persist_acceleration_receipt(
-                        login_id=_NativeLoginObservation.login_id,
-                        binding=binding,
-                        sign_in=sign_in.establish().current,
-                    )
+        _persist_receipts(installed.installation_id, _isolated_cli_backend, first_id, second_id, passphrase)
         _select(first_id)
         first_receipt = receipt_store.profile_session_path(storage_root=_isolated_cli_backend, profile_id=first_id)
         second_receipt = receipt_store.profile_session_path(storage_root=_isolated_cli_backend, profile_id=second_id)
@@ -201,35 +253,18 @@ def test_installed_cli_resumes_other_profile_without_retiring_independent_api_se
                     first_client.login_api_key(proof)
                     proof_wiped = not any(proof)
                     assert proof_wiped
-                    first_session = first_client.session_id
-                    result = run_cadrumo_cli(("--format", "json", "config", "login", str(second_id)))
-                    assert result.exit_code == 0, result.output
-                    payload = json.loads(result.stdout)["result"]
-                    assert payload["active_profile"] == "Receipt profile B"
-                    assert payload["already_authenticated"] is True
-                    assert payload["session_persisted"] is True
-                    assert observe_active_profile_pointer().bucket_id == str(second_id)
-                    for key, source in (
-                        ("authenticated_at", "issued_at"),
-                        ("idle_deadline", "idle_deadline"),
-                        ("absolute_deadline", "absolute_deadline"),
-                    ):
-                        assert datetime.fromisoformat(payload[key]) == datetime.fromisoformat(second_metadata[source])
-                    # Resume borrows the existing proof; the later profile view
-                    # is admitted activity that may reseal that same receipt.
-                    assert second_receipt.read_bytes() == before_second
-                    assert first_client.status().status.session_id == first_session
-                    shown = run_cadrumo_cli(
-                        ("--format", "json", "--profile", "Receipt profile B", "config", "profile", "view")
+                    result, shown = _assert_resume_and_view(
+                        run_cadrumo_cli,
+                        first_client,
+                        first_id,
+                        second_id,
+                        first_receipt,
+                        second_receipt,
+                        before_second,
+                        second_metadata,
+                        keyring,
+                        second_keyring,
                     )
-                    assert shown.exit_code == 0, shown.output
-                    assert json.loads(shown.stdout)["result"]["display_name"] == "Receipt profile B"
-                    # A human sign-in retires other saved human proofs, while independent API authority survives.
-                    assert not first_receipt.exists()
-                    with pytest.raises(ProfileReceiptRefusedError), borrow_receipt_proof(profile_id=first_id):
-                        pytest.fail("another profile's revoked saved sign-in remained usable")
-                    proofs_unchanged = keyring.entries == second_keyring
-                    assert proofs_unchanged
                     assert passphrase not in result.output + shown.output
                 finally:
                     first_client.close()
