@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import type { LedgerRuleRow } from "../src/shell/ledgerSetup";
-import { planApply, ruleApplyClashes } from "../src/shell/ledgerPlan";
+import { ruleApplyClashes } from "../src/shell/ledgerPlan";
 import {
   actionRows,
   EMPTY_STAGE,
@@ -27,6 +27,7 @@ import {
 } from "../src/components/ledger/setup/setupModel";
 import { ibanProblem } from "../src/shared/iban";
 import { hexId, movement } from "./support/ledger";
+import { planRecorded, recordedCheck } from "./support/stagedCheck";
 
 // The Setup sections' pure decisions and the staged rule run. No page is
 // opened.
@@ -246,7 +247,7 @@ test("a staged rule run names no row, follows a new id, and is held while a list
     ["a2", movement("a2")],
     ["b", movement("b")],
   ]);
-  const plan = planApply(state.content, { rows });
+  const plan = planRecorded(state.content, { rows });
   expect(plan.steps).toEqual([
     {
       kind: "action",
@@ -255,7 +256,9 @@ test("a staged rule run names no row, follows a new id, and is held while a list
       request: { reaffirm: true, dry_run: false },
     },
   ]);
-  expect(ruleApplyClashes(run, state.content)).toBe(false);
+  expect(
+    ruleApplyClashes(run, state.content, recordedCheck(state.content, rows)),
+  ).toBe(false);
 
   // A classification the person staged on a listed movement holds it back;
   // a correction does not.
@@ -271,7 +274,7 @@ test("a staged rule run names no row, follows a new id, and is held while a list
       },
     ],
   });
-  const held = planApply(classified.content, { rows });
+  const held = planRecorded(classified.content, { rows });
   expect(held.held.actions).toEqual(["run"]);
   expect(
     held.steps.some(
@@ -291,5 +294,5 @@ test("a staged rule run names no row, follows a new id, and is held while a list
       },
     ],
   });
-  expect(planApply(noted.content, { rows }).held.actions).toEqual([]);
+  expect(planRecorded(noted.content, { rows }).held.actions).toEqual([]);
 });

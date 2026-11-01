@@ -6,18 +6,12 @@
 
 import type { LedgerRow } from "./ledger";
 import { parsePercent, type GrammarRefusal } from "./ledgerGrammar";
+import type { StagedCheck } from "./ledgerStagedCheck";
 import {
-  effectiveFacts,
   storedFieldValue,
   type StageCell,
   type StageEvent,
-  type StagedContent,
 } from "./ledgerStage";
-import {
-  isSpendingCategory,
-  takesShare,
-  type ServedVocabulary,
-} from "./ledgerServedVocabulary";
 
 export const CLASSIFY_KINDS = ["business", "personal", "mixed"] as const;
 export type ClassifyKind = (typeof CLASSIFY_KINDS)[number];
@@ -67,48 +61,18 @@ export type ClassifyAvailability =
 
 const TRANSFER = "INTERNAL_TRANSFER";
 
-/**
- * Whether a movement takes a spending category: an expense, or an income
- * that refunds one, carrying a purchase invoice. A spending category says
- * what a business expense is; pure income is classified by its direction
- * alone and never reads one, as the product's readiness check holds. With
- * `staged`, the movement is read as it would be once saved: its staged
- * direction, and a purchase invoice staged to be attached.
- */
-export function takesExpenseCategory(
-  row: LedgerRow,
-  staged?: StagedContent,
-): boolean {
-  const id = row.transaction.transaction_id;
-  const direction = staged
-    ? effectiveFacts(row, staged.rows[id]).direction
-    : row.transaction.direction;
-  const evidence =
-    row.transaction.purchase_invoice_evidence_id !== null ||
-    (staged?.actions.some(
-      (action) =>
-        (action.kind === "attach" &&
-          action.transactionId === id &&
-          action.evidenceId !== null) ||
-        (action.kind === "attach_file" && action.transactionId === id),
-    ) ??
-      false);
-  return direction === "OUTGOING" || (direction === "INCOMING" && evidence);
-}
-
-/** How the movements a classify command stages split by what they take: a
- * spending category, or none, being income. */
+/** How the movements a classify command stages split by what they take, as
+ * the ledger answers: a spending category, or none, being income. */
 export function categorySplit(
   ids: readonly string[],
   rows: ReadonlyMap<string, LedgerRow>,
-  staged?: StagedContent,
+  check: StagedCheck,
 ): { expenses: number; income: number } {
   let expenses = 0;
   let income = 0;
   for (const id of ids) {
-    const row = rows.get(id);
-    if (!row) continue;
-    if (takesExpenseCategory(row, staged)) expenses += 1;
+    if (!rows.has(id)) continue;
+    if (check.rows.get(id)?.takes_expense_category) expenses += 1;
     else income += 1;
   }
   return { expenses, income };
@@ -173,12 +137,12 @@ export function ratioCoverage(
   rows: ReadonlyMap<string, LedgerRow>,
   category: string,
   ratios: ConfiguredRatios | undefined,
-  staged?: StagedContent,
+  check: StagedCheck,
 ): RatioCoverage {
   const out: RatioCoverage = { staged: 0, missing: 0, unread: 0 };
   for (const id of ids) {
     const row = rows.get(id);
-    if (!row || !takesExpenseCategory(row, staged)) continue;
+    if (!row || !check.rows.get(id)?.takes_expense_category) continue;
     const configured = ratios?.get(yearOf(row));
     if (configured === undefined || configured === null) out.unread += 1;
     else if (configured.has(category)) out.staged += 1;
@@ -197,10 +161,9 @@ export type ClassifyRequest = {
   category?: string | null;
   share?: string | null;
   ratios?: ConfiguredRatios;
-  /** What is staged already: a movement is read as it would be saved. */
-  staged?: StagedContent;
-  /** The registry's lists as served: with none, no category fits. */
-  vocabulary: ServedVocabulary;
+  /** The ledger's answer about the movements as they would be saved and the
+   * category given. Personal asks about neither, so it needs none. */
+  check: StagedCheck | null;
 };
 
 export type ClassifyOutcome =
@@ -242,12 +205,12 @@ export function classifyCells(
     share = parsed.value;
   }
   if (request.kind !== "personal") {
-    const expenses = categorySplit(request.ids, rows, request.staged).expenses;
+    if (!request.check) return { kind: "needs", field: "category" };
+    const expenses = categorySplit(request.ids, rows, request.check).expenses;
     const given = request.category ?? null;
-    const fits =
-      given !== null &&
-      isSpendingCategory(request.vocabulary, given) &&
-      (request.kind === "business" || takesShare(request.vocabulary, given));
+    const fit =
+      given === null ? undefined : request.check?.categories.get(given);
+    const fits = request.kind === "business" ? fit?.business : fit?.mixed;
     if (expenses > 0 && !fits) return { kind: "needs", field: "category" };
     if (expenses > 0) category = given;
   }
@@ -278,7 +241,10 @@ export function classifyCells(
         value: { kind: "clear" },
         stored: storedShare,
       });
-    if (category !== null && takesExpenseCategory(row, request.staged)) {
+    if (
+      category !== null &&
+      request.check?.rows.get(id)?.takes_expense_category
+    ) {
       cells.push({
         id,
         field: "category_id",
@@ -323,23 +289,16 @@ export type ClassifyScope = {
   answer?: { category?: string; share?: string };
 };
 
-/** The classifications a category belongs to: a category says what a
- * business expense is, so it is set only where the movement is Business or
- * Mixed. */
-const TAKES_CATEGORY = ["BUSINESS", "MIXED"];
-
 /**
- * The cells that set `category` on those of `ids` that are active,
- * classified Business or Mixed and take a spending category; the others
- * are counted as skipped, since a movement still to classify is classified
- * first, with its category, and income takes none.
+ * The cells that set `category` on those of `ids` the ledger says can take it;
+ * the others are counted as skipped, since a movement still to classify is
+ * classified first, with its category, and income takes none.
  */
 export function categoryCells(
   ids: readonly string[],
   category: string,
   rows: ReadonlyMap<string, LedgerRow>,
-  vocabulary: ServedVocabulary,
-  staged?: StagedContent,
+  check: StagedCheck,
 ):
   | {
       kind: "staged";
@@ -354,10 +313,8 @@ export function categoryCells(
     const row = rows.get(id);
     if (
       !row ||
-      row.transaction.lifecycle_state !== "ACTIVE" ||
-      !TAKES_CATEGORY.includes(row.transaction.business_classification) ||
-      !takesExpenseCategory(row, staged) ||
-      !isSpendingCategory(vocabulary, category)
+      !check.rows.get(id)?.category_settable ||
+      !check.categories.get(category)?.business
     ) {
       skipped += 1;
       continue;

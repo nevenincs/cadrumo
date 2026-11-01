@@ -810,10 +810,7 @@ export type LedgerStagedBlocker = {
   fields: string[];
 };
 export type LedgerStagedNote = {
-  kind:
-    | "sends_current_classification"
-    | "sends_current_share"
-    | "new_identity";
+  kind: "sends_current_classification" | "sends_current_share" | "new_identity";
   value: string | null;
   fields: string[];
 };

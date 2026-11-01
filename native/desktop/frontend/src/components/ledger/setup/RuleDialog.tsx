@@ -1,3 +1,7 @@
+import {
+  isRuleClassification,
+  RULE_CLASSIFICATIONS,
+} from "../../../shell/ledgerContract";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { TextEditor } from "@/components/editors/TextEditor";
 import { Alert } from "@/components/ui/alert";
@@ -47,13 +51,6 @@ import {
 } from "./setupModel";
 import { ruleName } from "./setupWords";
 
-/** What a rule decides: a classification for the business, or none. */
-export const RULE_CLASSIFICATIONS = [
-  "BUSINESS",
-  "PERSONAL",
-  "SKIPPED_BY_RULE",
-] as const;
-
 /** Where the dialog opens from: a selection or a group, a stored rule, or
  * nothing. */
 export type RuleDialogTarget =
@@ -88,10 +85,7 @@ function firstValues(
     expression: "",
     advanced: false,
     classification:
-      prefill.classification &&
-      (RULE_CLASSIFICATIONS as readonly string[]).includes(
-        prefill.classification,
-      )
+      prefill.classification && isRuleClassification(prefill.classification)
         ? prefill.classification
         : "",
     category: prefill.categoryId ?? "",

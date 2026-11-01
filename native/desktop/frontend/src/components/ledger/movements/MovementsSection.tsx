@@ -47,6 +47,12 @@ import {
   type ClassifyScope,
   type OpenRuleFromSelection,
 } from "../../../shell/ledgerCommands";
+import { isBusinessBearing } from "../../../shell/ledgerContract";
+import {
+  checkOnce,
+  stagedCheckRequest,
+  type StagedCheck,
+} from "../../../shell/ledgerStagedCheck";
 import { useConfiguredRatios } from "../setup/useConfiguredRatios";
 import { ActionDialog, type ActionRequest } from "../inspector/ActionDialog";
 import {
@@ -174,6 +180,8 @@ const idOf = (row: LedgerRow) => row.transaction.transaction_id;
 
 /** A classification dialog asked for, and what it would act on. */
 type Asking = {
+  /** The ledger's answer the asking was made from, where it needed one. */
+  check?: StagedCheck;
   kind: ClassifyKind | "category";
   /** Of `ids`, how many are classified otherwise now. */
   overwritten?: number;
@@ -909,6 +917,7 @@ export function MovementsSection({
     t,
     locale,
     grid,
+    port,
     byId,
     stage,
     onStage,
@@ -958,14 +967,29 @@ export function MovementsSection({
     }).length;
   };
 
-  function stageClassified(
+  /** The ledger's answer about `ids` as they would be saved, and `category`. */
+  const askCheck = (ids: readonly string[], category?: string) =>
+    checkOnce(
+      port,
+      stagedCheckRequest(stage.content, byId, {
+        ids,
+        categories: category ? [category] : [],
+      }),
+    );
+
+  async function stageClassified(
     kind: ClassifyKind,
     ids: readonly string[],
     answer: { category?: string; share?: string },
-  ): string | null {
+  ): Promise<string | null> {
     const overwritten = overwrittenBy(kind, ids);
+    // Personal names no category, so it has nothing to ask.
+    const check =
+      kind === "personal" ? null : await askCheck(ids, answer.category);
+    if (kind !== "personal" && !check)
+      return t("desktop.ledger.apply.read_failed");
     const outcome = classifyCells(
-      { kind, ids, ...answer, ratios, staged: stage.content, vocabulary },
+      { kind, ids, ...answer, ratios, check },
       byId,
     );
     if (outcome.kind === "refused")
@@ -983,7 +1007,7 @@ export function MovementsSection({
     );
     const detail = facts(t, [
       answer.share ? `${answer.share.trim().replace(/\s*%$/, "")}%` : "",
-      answer.category && categorySplit(ids, byId, stage.content).expenses > 0
+      answer.category && check && categorySplit(ids, byId, check).expenses > 0
         ? categoryLabel(t, answer.category)
         : "",
     ]);
@@ -1010,7 +1034,7 @@ export function MovementsSection({
    * asks for a category only where a movement takes one, so income alone
    * is staged at once; Mixed asks for its share and, where a movement
    * takes one, a category a share applies to. */
-  function classifySelection(kind: ClassifyKind, scope?: ClassifyScope) {
+  async function classifySelection(kind: ClassifyKind, scope?: ClassifyScope) {
     const availability = classifyAvailability(
       kind,
       classifyTarget(scope),
@@ -1034,26 +1058,25 @@ export function MovementsSection({
           error: null,
           overwritten,
         });
-      else stageClassified(kind, availability.ids, {});
+      else await stageClassified(kind, availability.ids, {});
       return;
     }
     const answer = scope?.answer ?? {};
-    const split = categorySplit(availability.ids, byId, stage.content);
+    const check = await askCheck(availability.ids, answer.category);
+    if (!check) {
+      setToast(t("desktop.ledger.apply.read_failed"));
+      return;
+    }
+    const split = categorySplit(availability.ids, byId, check);
     const outcome = classifyCells(
-      {
-        kind,
-        ids: availability.ids,
-        ...answer,
-        ratios,
-        staged: stage.content,
-        vocabulary,
-      },
+      { kind, ids: availability.ids, ...answer, ratios, check },
       byId,
     );
     // What the control already asked for is not asked again, and nothing
     // is asked of income alone.
     if (outcome.kind === "staged") {
-      stageClassified(kind, availability.ids, answer);
+      const error = await stageClassified(kind, availability.ids, answer);
+      if (error) setToast(error);
       return;
     }
     // A cell range over other rows than the selection is said, with the
@@ -1071,6 +1094,7 @@ export function MovementsSection({
       partial: availability.partial,
       overwritten: overwrittenBy(kind, availability.ids),
       split,
+      check,
       error:
         outcome.kind === "refused"
           ? t("desktop.ledger.classify.share_refused", {
@@ -1084,16 +1108,21 @@ export function MovementsSection({
   const availabilityOf = (kind: ClassifyKind) =>
     classifyAvailability(kind, classifyTarget(), byId);
 
-  function askCategory(ids: string[]) {
+  async function askCategory(ids: string[]) {
     const takes = ids.filter((id) => {
       const row = byId.get(id);
       return (
         row?.transaction.lifecycle_state === "ACTIVE" &&
-        ["BUSINESS", "MIXED"].includes(row.transaction.business_classification)
+        isBusinessBearing(row.transaction.business_classification)
       );
     });
     if (takes.length === 0) {
       setToast(t("desktop.ledger.classify.category_needs_classification"));
+      return;
+    }
+    const check = await askCheck(takes);
+    if (!check) {
+      setToast(t("desktop.ledger.apply.read_failed"));
       return;
     }
     setAsking({
@@ -1102,7 +1131,7 @@ export function MovementsSection({
       skipped: ids.length - takes.length,
       partial,
       error: null,
-      split: categorySplit(takes, byId, stage.content),
+      split: categorySplit(takes, byId, check),
     });
   }
 
@@ -1827,14 +1856,14 @@ export function MovementsSection({
           key={asking.ids.join(" ")}
           kind={asking.kind}
           ratioOf={
-            asking.kind === "mixed"
+            asking.kind === "mixed" && asking.check
               ? (category) =>
                   ratioCoverage(
                     asking.ids,
                     byId,
                     category,
                     ratios,
-                    stage.content,
+                    asking.check!,
                   )
               : undefined
           }
@@ -1894,28 +1923,40 @@ export function MovementsSection({
               return;
             }
             if (asking.kind === "category") {
-              const outcome = categoryCells(
-                asking.ids,
-                answer.category ?? "",
-                byId,
-                vocabulary,
-                stage.content,
-              );
-              if (outcome.kind === "staged") {
-                onStage(outcome.event);
-                setToast(
-                  t("desktop.ledger.classify.staged_category", {
-                    category: categoryLabel(t, answer.category ?? ""),
-                    count: outcome.movements,
-                  }),
+              const category = answer.category ?? "";
+              void askCheck(asking.ids, category).then((check) => {
+                if (!check) {
+                  setAsking({
+                    ...asking,
+                    error: t("desktop.ledger.apply.read_failed"),
+                  });
+                  return;
+                }
+                const outcome = categoryCells(
+                  asking.ids,
+                  category,
+                  byId,
+                  check,
                 );
-              }
-              setAsking(null);
+                if (outcome.kind === "staged") {
+                  onStage(outcome.event);
+                  setToast(
+                    t("desktop.ledger.classify.staged_category", {
+                      category: categoryLabel(t, category),
+                      count: outcome.movements,
+                    }),
+                  );
+                }
+                setAsking(null);
+              });
               return;
             }
-            const error = stageClassified(asking.kind, asking.ids, answer);
-            if (error) setAsking({ ...asking, error });
-            else setAsking(null);
+            void stageClassified(asking.kind, asking.ids, answer).then(
+              (error) => {
+                if (error) setAsking({ ...asking, error });
+                else setAsking(null);
+              },
+            );
           }}
         />
       )}

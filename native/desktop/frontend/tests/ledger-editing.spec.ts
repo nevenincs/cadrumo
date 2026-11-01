@@ -25,7 +25,6 @@ import {
 } from "../src/components/ledger/editing/editingModel";
 import type { CatalogueInvoice, LedgerRow } from "../src/shell/ledger";
 import type { StepReport } from "../src/shell/ledgerApply";
-import { planApply } from "../src/shell/ledgerPlan";
 import {
   EMPTY_STAGE,
   newDraft,
@@ -34,6 +33,7 @@ import {
   type StagedContent,
 } from "../src/shell/ledgerStage";
 import { hexId, movement } from "./support/ledger";
+import { planRecorded, recordedCheck } from "./support/stagedCheck";
 
 // What editing the movements grid makes of typed, pasted and filled text,
 // and how the page counts and reviews what is staged. No page is opened.
@@ -284,7 +284,19 @@ test("a paste stages cell by cell, leaves blanks, drops what falls past the grid
   );
   if ("kind" in identity) throw new Error("refused");
   expect(identity.needsPreview).toBe(true);
-  expect(identity.newIdentity).toBe(1);
+  // The count of new ids is the backend's to give: the page counts none.
+  expect(identity.newIdentity).toBe(0);
+  const answer = recordedCheck(
+    {
+      rows: {
+        [A]: { description: { kind: "set", value: "NUEVA DESCRIPCION" } },
+      },
+      actions: [],
+      drafts: [],
+    },
+    rows,
+  ).rows.get(A)!;
+  expect(answer.identity_fields).toEqual(["description"]);
 });
 
 test("fill down carries the top value as it would be saved, with a Mixed share", () => {
@@ -376,7 +388,7 @@ test("one counting unit: movements changed, actions and new movements; held back
     drafts: 1,
     actions: 1,
   });
-  const plan = planApply(state.content, {
+  const plan = planRecorded(state.content, {
     rows: new Map([
       [A, movement(A, { business_classification: "BUSINESS" })],
       [B, movement(B)],
@@ -532,7 +544,7 @@ test("a Mixed model approval without a share is held, never saved so", () => {
     writes,
   });
   const rows = new Map([[A, movement(A)]]);
-  const held = planApply(
+  const held = planRecorded(
     {
       rows: {},
       drafts: [],
@@ -546,7 +558,7 @@ test("a Mixed model approval without a share is held, never saved so", () => {
     { kind: "suggestion_needs_share", action: "s" },
   ]);
   expect(held.steps).toEqual([]);
-  const sent = planApply(
+  const sent = planRecorded(
     {
       rows: {},
       drafts: [],

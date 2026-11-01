@@ -6,6 +6,7 @@ import {
 } from "../src/components/ledger/movements/movementWords";
 import { parseCell } from "../src/components/ledger/editing/editingModel";
 import { classifyCells } from "../src/shell/ledgerCommands";
+import { EMPTY_CONTENT } from "../src/shell/ledgerStage";
 import {
   NO_VOCABULARY,
   categoryFamily,
@@ -14,6 +15,7 @@ import {
 } from "../src/shell/ledgerServedVocabulary";
 import { hexId, movement } from "./support/ledger";
 import { SERVED } from "./support/servedVocabulary";
+import { recordedCheck } from "./support/stagedCheck";
 import { label } from "./support/strings";
 
 // The registry's lists the window holds once `ledger.entry-options` has
@@ -135,17 +137,22 @@ test("a category fits a classify command only if it is served, and a share only 
     (category) => !SERVED.usageRatioCategories.includes(category),
   )!;
   const shared = SERVED.usageRatioCategories[0]!;
-  const classify = (
-    vocabulary: typeof SERVED,
-    kind: "business" | "mixed",
-    category: string,
-  ) =>
-    classifyCells({ kind, ids: [OUT], category, share: "50", vocabulary }, rows)
-      .kind;
-  expect(classify(SERVED, "business", plain)).toBe("staged");
-  expect(classify(SERVED, "mixed", plain)).toBe("needs");
-  expect(classify(SERVED, "mixed", shared)).toBe("staged");
-  expect(classify(SERVED, "business", "zz_a_new_category")).toBe("needs");
-  expect(classify(LOADING, "business", plain)).toBe("needs");
-  expect(classify(UNAVAILABLE, "mixed", shared)).toBe("needs");
+  const classify = (kind: "business" | "mixed", category: string) =>
+    classifyCells(
+      {
+        kind,
+        ids: [OUT],
+        category,
+        share: "50",
+        check: recordedCheck(EMPTY_CONTENT, rows, {
+          ids: [OUT],
+          categories: [category],
+        }),
+      },
+      rows,
+    ).kind;
+  expect(classify("business", plain)).toBe("staged");
+  expect(classify("mixed", plain)).toBe("needs");
+  expect(classify("mixed", shared)).toBe("staged");
+  expect(classify("business", "zz_a_new_category")).toBe("needs");
 });

@@ -52,17 +52,6 @@ import {
  * classification facts the grid has no column for. */
 export type FieldKind = EditKind | "country" | "token" | "currency";
 
-const TAX_FIELDS: ReadonlySet<StageField> = new Set([
-  "category_id",
-  "iva_category",
-  "taxable_base",
-  "iva_rate",
-  "iva_amount",
-  "irpf_category",
-  "deduction_fact_kind",
-  "investment_asset_id",
-  "counterparty_identification_state",
-]);
 const CONTROL_OF: Partial<Record<FieldKind, FieldControl>> = {
   date: "date",
   amount: "money",
@@ -115,6 +104,9 @@ export type FieldScope = {
   changes: StagedRowChanges | undefined;
   /** A finalized declaration cites the movement. */
   sealed: boolean;
+  /** What the ledger answers cannot change on the movement as staged; null
+   * until it has answered about this movement. */
+  transferLocked: readonly string[] | null;
   accounts: readonly OwnAccountChoice[] | null;
   /** The registry's lists, once served; empty until then. */
   vocabulary: ServedVocabulary;
@@ -133,16 +125,13 @@ export type InspectorFieldProps = {
 
 /** Why `field` cannot change on the movement, or null. */
 export function fieldLock(scope: FieldScope, field: StageField): string | null {
-  const { t, row, changes, sealed } = scope;
+  const { t, row, sealed, transferLocked } = scope;
   const state = row.transaction.lifecycle_state;
   if (state !== "ACTIVE")
     return lockText(t, { kind: "not_active", lifecycle: state });
   if (sealed) return lockText(t, { kind: "sealed" });
-  if (
-    TAX_FIELDS.has(field) &&
-    effectiveFacts(row, changes).direction === "INTERNAL_TRANSFER"
-  )
-    return lockText(t, { kind: "transfer" });
+  if (transferLocked === null) return t("desktop.ledger.apply.reading");
+  if (transferLocked.includes(field)) return lockText(t, { kind: "transfer" });
   return null;
 }
 

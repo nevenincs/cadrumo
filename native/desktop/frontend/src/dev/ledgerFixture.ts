@@ -31,12 +31,14 @@ import {
   type LedgerSortField,
   type LedgerTransaction,
   type PublicPeriod,
+  type LedgerStagedCheckRequest,
 } from "../shell/ledger";
 import {
   LEDGER_UPDATE_FIELDS,
   type LedgerUpdateField,
 } from "../shell/ledgerContract";
 import { RELAY_PAYLOAD_LIMIT, RELAY_REQUEST_LIMIT } from "../shell/relayBounds";
+import { answerStagedCheck } from "./ledgerStagedCheckFixture";
 import {
   LEDGER_FIXTURE_PROFILE_ID,
   LEDGER_FIXTURE_TODAY,
@@ -1946,6 +1948,20 @@ export function ledgerFixture(options: Options): LedgerPort {
     ...movementWork.reads,
     ...setupWork.reads,
     "ledger.known-values": (request) => knownValues(ledger, request),
+    "ledger.staged.check": (request) => {
+      const answer = answerStagedCheck(
+        request as unknown as LedgerStagedCheckRequest,
+        (id) => {
+          const movement = ledger.movements.find(
+            (each) => each.transaction.transaction_id === id,
+          );
+          return movement ? row(movement) : undefined;
+        },
+        LEDGER_FIXTURE_PROFILE_ID,
+      );
+      if (!answer) throw new Error("unrecorded staged check");
+      return answer as unknown as JsonObject;
+    },
     "ledger.list": (request) => list(ledger, request),
     "ledger.view": (request) => {
       const owned = OWNED_PURCHASES[request.transaction_prefix as string];

@@ -34,6 +34,13 @@ import {
 import { parseFractionPercent, percentOf } from "../../../shell/ledgerGrammar";
 import { askReview, releaseReview } from "../../../shell/ledgerApply";
 import { planApply, SINGLE_WRITE_SECONDS } from "../../../shell/ledgerPlan";
+import { isDecidedClassification } from "../../../shell/ledgerContract";
+import {
+  checkOnce,
+  NOTHING_CHECKED,
+  stagedCheckRequest,
+  useStagedCheck,
+} from "../../../shell/ledgerStagedCheck";
 import {
   reduceStage,
   type StageEvent,
@@ -55,7 +62,6 @@ import { MOVEMENT_TSV_COLUMNS, movementsTsv } from "../transfer/tsv";
 import type { ActionRequest } from "./ActionDialog";
 import type { SectionInspectorContext } from "./inspectorContext";
 import {
-  DECIDED_CLASSIFICATIONS,
   LIFECYCLE_KINDS,
   commonValue,
   completeCohort,
@@ -197,7 +203,17 @@ export function SelectionInspector({
   const content = stage.content;
   // While none of them is classified, or staged to be, the tax fields take
   // nothing yet.
-  const undecided = noneClassified(selected, content);
+  const checked = useStagedCheck(
+    port,
+    useMemo(
+      () =>
+        stagedCheckRequest(content, rows, {
+          ids: selected.map((row) => row.transaction.transaction_id),
+        }),
+      [content, rows, selected],
+    ),
+  );
+  const undecided = noneClassified(selected, checked.current);
   const sums = currencySums(selected);
   const [share, setShare] = useState("");
   const [group, setGroup] = useState("");
@@ -292,9 +308,22 @@ export function SelectionInspector({
           count: visibleCount,
         });
 
-  const stageSet = (field: SetForAllField, value: string, force = false) => {
+  const stageSet = async (
+    field: SetForAllField,
+    value: string,
+    force = false,
+  ) => {
+    // The movements may reach beyond those selected and drawn.
+    const check = await checkOnce(
+      port,
+      stagedCheckRequest(content, rows, { ids }),
+    );
+    if (!check) {
+      say(t("desktop.ledger.apply.read_failed"));
+      return;
+    }
     const found = setForAll(field, value, ids, rows, {
-      content,
+      check,
       sealed,
       unread,
       visible,
@@ -325,9 +354,24 @@ export function SelectionInspector({
       skipped,
     ]);
     if (!force) {
-      const before = planApply(content, { rows, sealed, unread }).summary;
-      const after = planApply(reduceStage(stage, event).content, {
+      const next = reduceStage(stage, event).content;
+      const after_ = await checkOnce(
+        port,
+        stagedCheckRequest(next, rows, { ids }),
+      );
+      if (!after_) {
+        say(t("desktop.ledger.apply.read_failed"));
+        return;
+      }
+      const before = planApply(content, {
         rows,
+        check,
+        sealed,
+        unread,
+      }).summary;
+      const after = planApply(next, {
+        rows,
+        check: after_,
         sealed,
         unread,
       }).summary;
@@ -356,7 +400,7 @@ export function SelectionInspector({
     options: ComboboxOption[],
   ) => {
     const preview = setForAll(field, "x", ids, rows, {
-      content,
+      check: checked.current ?? NOTHING_CHECKED,
       sealed,
       unread,
       visible,
@@ -584,7 +628,7 @@ export function SelectionInspector({
             })}
             {counts.classifications
               .filter(([classification]) =>
-                DECIDED_CLASSIFICATIONS.has(classification),
+                isDecidedClassification(classification),
               )
               .map(([classification, count]) => (
                 <li key={classification}>
@@ -723,7 +767,7 @@ export function SelectionInspector({
             ] as const
           ).map(([field, value, setValue, max]) => {
             const preview = setForAll(field, value || "x", ids, rows, {
-              content,
+              check: checked.current ?? NOTHING_CHECKED,
               sealed,
               unread,
               visible,

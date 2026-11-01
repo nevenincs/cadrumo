@@ -10,6 +10,7 @@ import type {
   LedgerRow,
   LedgerTransaction,
 } from "../../../shell/ledger";
+import type { StagedCheck } from "../../../shell/ledgerStagedCheck";
 import {
   parseDecimal,
   periodOf,
@@ -23,7 +24,6 @@ import {
   type StageCell,
   type StageField,
   type StagedAction,
-  type StagedContent,
 } from "../../../shell/ledgerStage";
 import { statusWord, type StatusWord } from "../movements/movementWords";
 
@@ -128,26 +128,16 @@ export function selectionCounts(
   };
 }
 
-/** The classifications a person decides; the rest are counted by status. */
-export const DECIDED_CLASSIFICATIONS: ReadonlySet<string> = new Set([
-  "BUSINESS",
-  "PERSONAL",
-  "MIXED",
-]);
-
-/** Whether none of the movements is, or is staged to be, classified: the
- * tax fields take nothing until one is. */
+/** Whether the ledger answers that none of the movements is, or is staged to
+ * be, classified: the tax fields take nothing until one is. With no answer the
+ * tax fields wait too. */
 export function noneClassified(
   rows: readonly LedgerRow[],
-  content: StagedContent,
+  check: StagedCheck | null,
 ): boolean {
-  return rows.every((row) => {
-    const classification = effectiveFacts(
-      row,
-      content.rows[row.transaction.transaction_id],
-    ).business_classification;
-    return !classification || !DECIDED_CLASSIFICATIONS.has(classification);
-  });
+  return rows.every(
+    (row) => !check?.rows.get(row.transaction.transaction_id)?.classified,
+  );
 }
 
 /** The fields the selection inspector sets on every selected movement. */
@@ -174,14 +164,12 @@ const TAX_SETS: ReadonlySet<SetForAllField> = new Set([
   "iva_category",
   "irpf_category",
 ]);
-const DECIDED_WITH_TAX = ["BUSINESS", "MIXED"];
-
 /** Why `field` set on `row` would be skipped, judged on the movement as it
  * will be once what is staged on it is saved. */
 export function setSkip(
   field: SetForAllField,
   row: LedgerRow,
-  content: StagedContent,
+  check: StagedCheck,
   sealed: ReadonlySet<string>,
   /** Movements whose sealed state the page could not read. */
   unread?: ReadonlySet<string>,
@@ -191,12 +179,7 @@ export function setSkip(
   if (sealed.has(id)) return "sealed";
   if (unread?.has(id)) return "sealed_unread";
   if (!TAX_SETS.has(field)) return null;
-  const facts = effectiveFacts(row, content.rows[id]);
-  if (facts.direction === "INTERNAL_TRANSFER") return "transfer";
-  if (facts.business_classification === "PERSONAL") return "personal";
-  if (!DECIDED_WITH_TAX.includes(facts.business_classification ?? ""))
-    return "unclassified";
-  return null;
+  return check.rows.get(id)?.tax_set_skip ?? null;
 }
 
 export type SetForAll = {
@@ -215,7 +198,7 @@ export function setForAll(
   ids: readonly string[],
   rows: ReadonlyMap<string, LedgerRow>,
   context: {
-    content: StagedContent;
+    check: StagedCheck;
     sealed: ReadonlySet<string>;
     unread?: ReadonlySet<string>;
     visible: ReadonlySet<string>;
@@ -228,7 +211,7 @@ export function setForAll(
     const skip = setSkip(
       field,
       row,
-      context.content,
+      context.check,
       context.sealed,
       context.unread,
     );

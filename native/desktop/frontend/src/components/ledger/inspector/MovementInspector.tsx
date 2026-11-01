@@ -25,6 +25,10 @@ import { INSPECTOR_CHORD } from "../ledgerChords";
 import { facts, listed, noted } from "../../../shell/compose";
 import type { LedgerPort, LedgerRow } from "../../../shell/ledger";
 import type { ClassifySelection } from "../../../shell/ledgerCommands";
+import {
+  stagedCheckRequest,
+  useStagedCheck,
+} from "../../../shell/ledgerStagedCheck";
 import type { OwnAccountChoice } from "../../../shell/ledgerMovementReads";
 import {
   actionRows,
@@ -204,12 +208,26 @@ export function MovementInspector({
   const sealing = (tracked?.participated_in ?? []).filter(seals);
   const sealed = sealing.length > 0;
   const vocabulary = useVocabulary();
+  const locks = useStagedCheck(
+    port,
+    useMemo(
+      () =>
+        stagedCheckRequest(
+          { ...stage.content, rows: { [id]: changes ?? {} }, drafts: [] },
+          new Map([[id, row]]),
+          { ids: [id] },
+        ),
+      [stage.content, id, changes, row],
+    ),
+  );
+  const answer = (locks.current ?? locks.shown)?.rows.get(id);
   const scope = {
     t,
     locale,
     row,
     changes,
     sealed,
+    transferLocked: answer?.transfer_locked_fields ?? null,
     accounts,
     vocabulary,
     onStage,

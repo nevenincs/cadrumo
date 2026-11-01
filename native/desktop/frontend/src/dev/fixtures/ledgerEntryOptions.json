@@ -401,14 +401,17 @@
       "options": [
         {
           "value": "ORDINARIA",
+          "label_key": null,
           "group": "default"
         },
         {
           "value": "SIMPLIFICADA",
+          "label_key": null,
           "group": "simplified"
         },
         {
           "value": "RECTIFICATIVA",
+          "label_key": null,
           "group": "corrective"
         }
       ]

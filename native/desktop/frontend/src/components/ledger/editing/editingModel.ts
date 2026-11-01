@@ -28,7 +28,6 @@ import type {
   StepReport,
 } from "../../../shell/ledgerApply";
 import {
-  changesIdentity,
   effectiveFacts,
   storedFieldValue,
   unchangedBy,
@@ -669,8 +668,6 @@ export function planPaste(
     });
   }
   const columns: ColumnId[] = [];
-  const identity = new Set<string>();
-  const touched = new Map<string, StagedRowChanges>();
   let touchesIdentity = false;
   for (const { key, column, raw } of targets) {
     if (column === "select") continue;
@@ -691,19 +688,11 @@ export function planPaste(
         : raw.trim() === ""
           ? ({ kind: "empty" } as const)
           : ({ kind: "refused", refusal: { key: "locked", raw } } as const);
-    const before = out.stage.length;
     const placed = placeValue(key, column, subject, input, out, raw);
     if (placed === "blank") blanks += 1;
     if (placed === "staged") {
       changes += 1;
       if (IDENTITY_COLUMNS.has(column)) touchesIdentity = true;
-      if (subject.kind === "row") {
-        const merged = { ...(touched.get(key) ?? subject.changes) };
-        for (const cell of out.stage.slice(before))
-          merged[cell.field] = cell.value;
-        touched.set(key, merged);
-        if (changesIdentity(subject.row, merged).length) identity.add(key);
-      }
     }
   }
   const rows = new Set(targets.map((target) => target.key)).size;
@@ -714,7 +703,7 @@ export function planPaste(
     changes,
     dropped,
     blanks,
-    newIdentity: identity.size,
+    newIdentity: 0,
     needsPreview: block.length > 1 || rows > 1 || touchesIdentity,
   };
 }

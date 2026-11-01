@@ -1,10 +1,8 @@
-// How staged changes become ledger operations. Each value goes to the
-// operation that accepts it, by whether it sets or clears: the bulk
-// classification saves many rows at once but cannot clear, single
-// classification and update take a field mask and can. Every row is checked
-// against its other staged changes before anything is sent, the work is
-// ordered so each step finds the row as it expects, and the bulk is cut into
-// parts the host will carry.
+// How staged changes become ledger operations. Which operation takes each value
+// and what a row's staged state would refuse are the backend's answer to
+// `ledger.staged.check`, which every plan is made from; what is left here is the
+// order of the work, what staged actions must not meet, and cutting the bulk
+// into parts the host will carry.
 
 import {
   LEDGER_BULK_CLASSIFY_COLUMNS,
@@ -26,9 +24,9 @@ import {
   samePeriod,
   type LedgerPeriod,
 } from "./ledgerGrammar";
+import type { StagedCheck } from "./ledgerStagedCheck";
 import {
   actionRows,
-  changesIdentity,
   effectiveFacts,
   STAGE_FIELDS,
   type Draft,
@@ -38,138 +36,9 @@ import {
   type StagedAction,
   type StagedActionKind,
   type StagedContent,
-  type StagedValue,
 } from "./ledgerStage";
 
 export type LedgerWriteRoute = "bulk" | "classify" | "update";
-type Capability = { set: boolean; clear: boolean };
-/** What each operation accepts for one field. */
-export type FieldRoutes = {
-  /** `ledger.classify.bulk`: sets only, since a blank cell is unchanged. */
-  bulk: boolean;
-  /** `ledger.classify.single`, with a field mask. */
-  classify: Capability;
-  /** `ledger.update`, with a field mask. */
-  update: Capability;
-};
-const NONE: Capability = { set: false, clear: false };
-const SET: Capability = { set: true, clear: false };
-const BOTH: Capability = { set: true, clear: true };
-const updateOnly = (update: Capability): FieldRoutes => ({
-  bulk: false,
-  classify: NONE,
-  update,
-});
-const classifyOnly: FieldRoutes = { bulk: false, classify: BOTH, update: NONE };
-const taxFigure: FieldRoutes = { bulk: true, classify: BOTH, update: BOTH };
-
-/** The fields each operation accepts, from their registered contracts. An
- * update can replace notes but never blank them, and nothing clears a
- * usage ratio or a classification. */
-export const FIELD_ROUTES: Record<StageField, FieldRoutes> = {
-  booked_date: updateOnly(SET),
-  value_date: updateOnly(BOTH),
-  amount: updateOnly(SET),
-  direction: updateOnly(SET),
-  currency: updateOnly(SET),
-  counterparty: updateOnly(BOTH),
-  description: updateOnly(SET),
-  group_label: updateOnly(BOTH),
-  own_account_id: updateOnly(BOTH),
-  business_classification: { bulk: true, classify: SET, update: NONE },
-  business_pct: { bulk: true, classify: BOTH, update: NONE },
-  category_id: { bulk: true, classify: BOTH, update: NONE },
-  usage_ratio_id: { bulk: true, classify: NONE, update: NONE },
-  taxable_base: taxFigure,
-  iva_rate: taxFigure,
-  iva_amount: taxFigure,
-  iva_category: { bulk: true, classify: BOTH, update: NONE },
-  irpf_category: taxFigure,
-  notes: { bulk: true, classify: SET, update: SET },
-  deduction_fact_kind: classifyOnly,
-  investment_asset_id: classifyOnly,
-  counterparty_country: classifyOnly,
-  counterparty_identification_state: classifyOnly,
-};
-
-/** The classifications a person decides; the others are dispositions the
- * product sets. */
-export const DECIDED_CLASSIFICATIONS: readonly string[] = [
-  "BUSINESS",
-  "PERSONAL",
-  "MIXED",
-];
-const decided = (classification: string | null | undefined) =>
-  classification != null && DECIDED_CLASSIFICATIONS.includes(classification);
-
-/** Where one staged value goes, or why it can go nowhere. `classified` is
- * whether the row is, or will be, Business, Personal or Mixed. */
-export type RouteDecision =
-  | { route: LedgerWriteRoute }
-  | { refused: "cannot_clear" | "needs_classification" };
-export function routeChange(
-  field: StageField,
-  value: StagedValue,
-  classified: boolean,
-): RouteDecision {
-  const routes = FIELD_ROUTES[field];
-  const clear = value.kind === "clear";
-  const can = (capability: Capability) =>
-    clear ? capability.clear : capability.set;
-  const updateOnlyField =
-    !routes.bulk && !can(routes.classify) && can(routes.update);
-  // A clear, a field only an update takes, and a tax figure on a row with no
-  // classification all go through the update's field mask.
-  if (can(routes.update) && (updateOnlyField || clear || !classified))
-    return { route: "update" };
-  // The bulk never carries a clear: a blank cell there means unchanged.
-  if (!clear && routes.bulk && classified) return { route: "bulk" };
-  if (can(routes.classify) && classified) return { route: "classify" };
-  if (can(routes.classify) || (!clear && routes.bulk))
-    return { refused: "needs_classification" };
-  return { refused: "cannot_clear" };
-}
-
-/** The values a classification write clears by itself, by the
- * classification it sets: anything but Mixed drops the business share and
- * usage ratio, and anything but Business or Mixed the business figures as
- * well. A staged clear of one of them travels with that write. */
-function clearedBy(classification: string): ReadonlySet<StageField> {
-  const cleared = new Set<StageField>();
-  if (classification !== "MIXED") {
-    cleared.add("business_pct");
-    cleared.add("usage_ratio_id");
-  }
-  if (classification !== "BUSINESS" && classification !== "MIXED")
-    for (const field of [
-      "category_id",
-      "taxable_base",
-      "iva_rate",
-      "iva_amount",
-      "irpf_category",
-    ] as const)
-      cleared.add(field);
-  return cleared;
-}
-
-const TAX_FIELDS: readonly StageField[] = [
-  "business_pct",
-  "category_id",
-  "usage_ratio_id",
-  "taxable_base",
-  "iva_rate",
-  "iva_amount",
-  "iva_category",
-  "irpf_category",
-  "deduction_fact_kind",
-  "investment_asset_id",
-  "counterparty_identification_state",
-];
-const CLASSIFICATION_FIELDS: ReadonlySet<StageField> = new Set([
-  ...TAX_FIELDS,
-  "business_classification",
-  "counterparty_country",
-]);
 const DECIMAL_FIELDS: ReadonlySet<StageField> = new Set([
   "amount",
   "business_pct",
@@ -309,6 +178,8 @@ export type LedgerPlan = {
 export type PlanContext = {
   /** The stored rows, as read at the apply. */
   rows: ReadonlyMap<string, LedgerRow>;
+  /** The backend's answer for exactly this content. */
+  check: StagedCheck;
   /** Rows a finalized declaration cites: their facts are sealed. */
   sealed?: ReadonlySet<string>;
   /** Rows whose sealed state was not read: held back, neither sealed nor
@@ -563,16 +434,23 @@ function actionStep(action: StagedAction): PlanStep | null {
 export function ruleApplyClashes(
   action: Extract<StagedAction, { kind: "rule_apply" }>,
   content: StagedContent,
+  check: StagedCheck,
 ): boolean {
   return action.transactionIds.some(
     (id) =>
-      Object.keys(content.rows[id] ?? {}).some((field) =>
-        CLASSIFICATION_FIELDS.has(field as StageField),
-      ) ||
+      (check.rows.get(id)?.classifying_fields.length ?? 0) > 0 ||
       content.actions.some(
         (other) => other.kind === "suggestion" && other.transactionId === id,
       ),
   );
+}
+
+/** A blocker the backend names, in the plan's terms. Some carry no fields. */
+function heldBy(blocker: { kind: string; fields: string[] }) {
+  return blocker.kind === "mixed_needs_share" ||
+    blocker.kind === "share_needs_mixed"
+    ? { kind: blocker.kind }
+    : blocker;
 }
 
 /** The checks one movement's staged work must pass. */
@@ -594,87 +472,30 @@ function checkRow(
     blockers: [],
     notes: [],
   };
-  if (!row) {
+  const answer = context.check.rows.get(id);
+  if (!row || !answer?.found) {
     entry.blockers.push({ kind: "gone" });
     return entry;
   }
   const facts = effectiveFacts(row, changes);
-  const classified = decided(facts.business_classification);
   const m210 = actions.find((action) => action.kind === "m210");
   const edits = fields.length > 0 || m210 !== undefined;
-  const cannotClear: PlanField[] = [];
-  const needsClass: PlanField[] = [];
-  // The classification's own write clears what it drops; a staged clear of
-  // that goes with it and is no write of its own.
-  const chosen = changes.business_classification;
-  const carrier =
-    chosen?.kind === "set"
-      ? routeChange("business_classification", chosen, classified)
-      : null;
-  const carried =
-    chosen?.kind === "set" && carrier && "route" in carrier
-      ? { route: carrier.route, fields: clearedBy(chosen.value) }
-      : null;
-  for (const field of fields) {
-    if (carried?.fields.has(field) && changes[field]!.kind === "clear") {
-      entry.routes[field] = carried.route;
-      continue;
-    }
-    const decision = routeChange(field, changes[field]!, classified);
-    if ("route" in decision) entry.routes[field] = decision.route;
-    else if (decision.refused === "cannot_clear") cannotClear.push(field);
-    else needsClass.push(field);
-  }
-  if (m210 && !classified) needsClass.push("m210_income_classification");
-  if (cannotClear.length)
-    entry.blockers.push({ kind: "cannot_clear", fields: cannotClear });
-  if (needsClass.length)
-    entry.blockers.push({ kind: "needs_classification", fields: needsClass });
-
-  const sendsClassification =
-    Object.values(entry.routes).some(
-      (route) => route === "bulk" || route === "classify",
-    ) ||
-    (m210 !== undefined && classified);
-  if (sendsClassification && facts.business_classification === "MIXED") {
-    if (!facts.business_pct) entry.blockers.push({ kind: "mixed_needs_share" });
-    else if (!changes.business_pct)
-      entry.notes.push({
-        kind: "sends_current_share",
-        share: facts.business_pct,
-      });
-  }
-  if (
-    changes.business_pct?.kind === "set" &&
-    facts.business_classification !== "MIXED"
-  )
-    entry.blockers.push({ kind: "share_needs_mixed" });
-  if (
-    Object.values(entry.routes).includes("bulk") &&
-    !changes.business_classification
-  )
-    entry.notes.push({
-      kind: "sends_current_classification",
-      classification: facts.business_classification!,
-    });
-
-  if (
-    facts.direction === "INTERNAL_TRANSFER" &&
-    fields.some(
-      (field) => field === "direction" || CLASSIFICATION_FIELDS.has(field),
-    )
-  ) {
-    const found: PlanField[] = TAX_FIELDS.filter(
-      (field) => facts[field] !== null && facts[field] !== undefined,
+  const classifyingEdits = answer.classifying_fields.length > 0;
+  for (const route of answer.routes)
+    if (route.route) entry.routes[route.field as StageField] = route.route;
+  for (const blocker of answer.blockers)
+    entry.blockers.push(heldBy(blocker) as PlanBlocker);
+  for (const note of answer.notes)
+    entry.notes.push(
+      note.kind === "new_identity"
+        ? { kind: "new_identity", fields: note.fields as StageField[] }
+        : note.kind === "sends_current_share"
+          ? { kind: "sends_current_share", share: note.value! }
+          : {
+              kind: "sends_current_classification",
+              classification: note.value!,
+            },
     );
-    if (
-      facts.business_classification === "BUSINESS" ||
-      facts.business_classification === "MIXED"
-    )
-      found.unshift("business_classification");
-    if (found.length)
-      entry.blockers.push({ kind: "transfer_with_tax", fields: found });
-  }
 
   const structural = actions.filter((action) => STRUCTURAL.has(action.kind));
   const classifying = actions.filter((action) => CLASSIFYING.has(action.kind));
@@ -701,20 +522,14 @@ function checkRow(
     entry.blockers.push({ kind: "sealed_unread" });
   const first = structural[0];
   if (first && edits) {
-    const classifying =
-      fields.some((field) => CLASSIFICATION_FIELDS.has(field)) ||
-      m210 !== undefined;
     entry.blockers.push(
-      first.kind === "exclude" && classifying
+      first.kind === "exclude" && (classifyingEdits || m210 !== undefined)
         ? { kind: "exclude_and_classification", action: first.id }
         : { kind: "action_and_edits", action: first.id },
     );
   }
   const derivation = classifying[0];
-  if (
-    derivation &&
-    (fields.some((field) => CLASSIFICATION_FIELDS.has(field)) || m210)
-  )
+  if (derivation && (classifyingEdits || m210))
     entry.blockers.push({ kind: "action_and_edits", action: derivation.id });
   // A model approval commits against the movement exactly as it was when
   // the model was asked, so nothing else may change it first.
@@ -764,9 +579,6 @@ function checkRow(
       actions: [...new Set(clashing.map((action) => action.id))],
     });
 
-  const identity = changesIdentity(row, changes);
-  if (identity.length)
-    entry.notes.push({ kind: "new_identity", fields: identity });
   const before = periodOf(row.transaction.date, "quarter");
   const after = periodOf(
     facts.value_date ?? facts.booked_date ?? "",
@@ -777,14 +589,6 @@ function checkRow(
   return entry;
 }
 
-// The currency is asked for like the date: a new movement assumes none.
-const DRAFT_REQUIRED: readonly DraftField[] = [
-  "booked_date",
-  "amount",
-  "currency",
-  "direction",
-  "description",
-];
 const DRAFT_DECIMALS: ReadonlySet<DraftField> = new Set([
   "amount",
   "business_pct",
@@ -793,42 +597,13 @@ const DRAFT_DECIMALS: ReadonlySet<DraftField> = new Set([
   "iva_amount",
   "recargo_amount",
 ]);
-const DRAFT_TAX: readonly DraftField[] = [
-  "business_pct",
-  "category_id",
-  "usage_ratio_id",
-  "taxable_base",
-  "iva_rate",
-  "iva_amount",
-  "iva_category",
-  "irpf_category",
-  "recargo_amount",
-  "deduction_fact_kind",
-  "investment_asset_id",
-  "counterparty_identification_state",
-];
-
-function checkDraft(draft: Draft): DraftEntry {
-  const fields = draft.fields;
-  const blockers: PlanBlocker[] = [];
-  const missing = DRAFT_REQUIRED.filter((field) => !fields[field]);
-  if (missing.length)
-    blockers.push({ kind: "draft_incomplete", fields: missing });
-  const classification = fields.business_classification ?? null;
-  if (classification === "MIXED" && !fields.business_pct)
-    blockers.push({ kind: "mixed_needs_share" });
-  if (classification !== "MIXED" && fields.business_pct)
-    blockers.push({ kind: "share_needs_mixed" });
-  if (fields.direction === "INTERNAL_TRANSFER") {
-    const found: (PlanField | DraftField)[] = DRAFT_TAX.filter(
-      (field) => fields[field],
-    );
-    if (classification === "BUSINESS" || classification === "MIXED")
-      found.unshift("business_classification");
-    if (found.length)
-      blockers.push({ kind: "transfer_with_tax", fields: found });
-  }
-  return { key: draft.key, blockers };
+function checkDraft(draft: Draft, check: StagedCheck): DraftEntry {
+  return {
+    key: draft.key,
+    blockers: (check.drafts.get(draft.key) ?? []).map(
+      (blocker) => heldBy(blocker) as PlanBlocker,
+    ),
+  };
 }
 
 function addRequest(draft: Draft): LedgerAddRequest {
@@ -854,6 +629,7 @@ function bulkRow(
   entry: PlanEntry,
   facts: MovementFacts,
   content: StagedContent,
+  takesShare: boolean,
 ): BulkRow | null {
   const fields = entry.fields.filter((field) => entry.routes[field] === "bulk");
   if (!fields.length) return null;
@@ -864,7 +640,7 @@ function bulkRow(
     transaction_id: entry.transactionId,
     classification: facts.business_classification!,
   };
-  if (facts.business_classification === "MIXED" && facts.business_pct)
+  if (takesShare && facts.business_pct)
     cells.business_pct = wire("business_pct", facts.business_pct);
   for (const field of fields) {
     const change = changes[field];
@@ -880,6 +656,7 @@ function classifyStep(
   facts: MovementFacts,
   content: StagedContent,
   m210: Extract<StagedAction, { kind: "m210" }> | undefined,
+  takesShare: boolean,
 ): Extract<PlanStep, { kind: "classify" }> | null {
   const fields = entry.fields.filter(
     (field) => entry.routes[field] === "classify",
@@ -890,7 +667,7 @@ function classifyStep(
     business_classification: facts.business_classification!,
   };
   const selected = new Set<LedgerClassifyField>(["business_classification"]);
-  if (facts.business_classification === "MIXED" && facts.business_pct) {
+  if (takesShare && facts.business_pct) {
     patch.business_pct = wire("business_pct", facts.business_pct);
     selected.add("business_pct");
   }
@@ -973,7 +750,11 @@ export function planApply(
       context,
     ),
   );
-  const drafts = content.drafts.map(checkDraft);
+  const drafts = content.drafts.map((draft) =>
+    checkDraft(draft, context.check),
+  );
+  const takesShare = (id: string) =>
+    context.check.rows.get(id)?.takes_share ?? false;
   const factsOf = (entry: PlanEntry) =>
     effectiveFacts(
       context.rows.get(entry.transactionId)!,
@@ -982,7 +763,9 @@ export function planApply(
 
   const candidates = entries
     .filter((entry) => !entry.blockers.length)
-    .map((entry) => bulkRow(entry, factsOf(entry), content))
+    .map((entry) =>
+      bulkRow(entry, factsOf(entry), content, takesShare(entry.transactionId)),
+    )
     .filter((row): row is BulkRow => row !== null);
   const split = splitBulk(candidates, limit, context.outputLanguage);
   for (const row of split.tooLarge)
@@ -999,7 +782,13 @@ export function planApply(
       (action): action is Extract<StagedAction, { kind: "m210" }> =>
         action.kind === "m210",
     );
-    const single = classifyStep(entry, facts, content, m210);
+    const single = classifyStep(
+      entry,
+      facts,
+      content,
+      m210,
+      takesShare(entry.transactionId),
+    );
     const update = updateStep(entry, content);
     const oversized = [single, update].some(
       (step) => step !== null && payloadSize(step.request) > limit,
@@ -1034,7 +823,8 @@ export function planApply(
   for (const action of ranked) {
     if (
       actionRows(action).some((id) => blockedRows.has(id)) ||
-      (action.kind === "rule_apply" && ruleApplyClashes(action, content))
+      (action.kind === "rule_apply" &&
+        ruleApplyClashes(action, content, context.check))
     ) {
       heldActions.push(action.id);
       continue;

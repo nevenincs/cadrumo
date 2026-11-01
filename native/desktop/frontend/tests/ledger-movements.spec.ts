@@ -34,15 +34,37 @@ import {
   categorySplit,
   classifyAvailability,
   classifyCells,
-  takesExpenseCategory,
+  type ClassifyRequest,
 } from "../src/shell/ledgerCommands";
-import type { StagedContent } from "../src/shell/ledgerStage";
+import { EMPTY_CONTENT, type StagedContent } from "../src/shell/ledgerStage";
 import type { ReadinessSnapshot } from "../src/shell/ledgerWindow";
 import { hexId, movement } from "./support/ledger";
 import { SERVED } from "./support/servedVocabulary";
+import { recordedCheck } from "./support/stagedCheck";
 
 // What the movements grid makes of a window, and the one classify command.
 // No page is opened.
+
+/** `classifyCells` with the recorded answer for the movements as `content`
+ * would leave them and the category given. Personal asks for none. */
+const classifying = (
+  request: Omit<ClassifyRequest, "check">,
+  rows: ReadonlyMap<string, LedgerRow>,
+  content: StagedContent = EMPTY_CONTENT,
+) =>
+  classifyCells(
+    {
+      ...request,
+      check:
+        request.kind === "personal"
+          ? null
+          : recordedCheck(content, rows, {
+              ids: request.ids,
+              categories: request.category ? [request.category] : [],
+            }),
+    },
+    rows,
+  );
 
 const status = (
   issues: { transaction_id: string; reason: string }[],
@@ -427,27 +449,19 @@ test("classifying asks for what each kind needs and stages it as one step", () =
     ),
   ).toEqual({ kind: "blocked", block: { kind: "transfers_only" } });
 
-  expect(
-    classifyCells({ vocabulary: SERVED, kind: "business", ids: [A] }, byId),
-  ).toEqual({
+  expect(classifying({ kind: "business", ids: [A] }, byId)).toEqual({
     kind: "needs",
     field: "category",
   });
-  expect(
-    classifyCells({ vocabulary: SERVED, kind: "mixed", ids: [A] }, byId),
-  ).toEqual({
+  expect(classifying({ kind: "mixed", ids: [A] }, byId)).toEqual({
     kind: "needs",
     field: "share",
   });
   expect(
-    classifyCells(
-      { vocabulary: SERVED, kind: "mixed", ids: [A], share: "0.5" },
-      byId,
-    ),
+    classifying({ kind: "mixed", ids: [A], share: "0.5" }, byId),
   ).toMatchObject({ kind: "refused", refusal: { key: "percent_as_fraction" } });
-  const staged = classifyCells(
+  const staged = classifying(
     {
-      vocabulary: SERVED,
       kind: "business",
       ids: [A, B],
       category: "material_oficina",
@@ -467,9 +481,8 @@ test("classifying asks for what each kind needs and stages it as one step", () =
   ]);
   // Mixed stages its share as the fraction the product stores, with an
   // expense's category; leaving Mixed clears the stored share.
-  const mixed = classifyCells(
+  const mixed = classifying(
     {
-      vocabulary: SERVED,
       kind: "mixed",
       ids: [A],
       share: "60",
@@ -483,10 +496,7 @@ test("classifying asks for what each kind needs and stages it as one step", () =
     value: { kind: "set", value: "0.6" },
     stored: null,
   });
-  const personal = classifyCells(
-    { vocabulary: SERVED, kind: "personal", ids: [E] },
-    byId,
-  );
+  const personal = classifying({ kind: "personal", ids: [E] }, byId);
   expect(personal.kind === "staged" && personal.event.cells[1]).toEqual({
     id: E,
     field: "business_pct",
@@ -495,7 +505,15 @@ test("classifying asks for what each kind needs and stages it as one step", () =
   });
   // A category alone goes only where the movement takes one.
   expect(
-    categoryCells([A, B, E], "material_oficina", byId, SERVED),
+    categoryCells(
+      [A, B, E],
+      "material_oficina",
+      byId,
+      recordedCheck(EMPTY_CONTENT, byId, {
+        ids: [A, B, E],
+        categories: ["material_oficina"],
+      }),
+    ),
   ).toMatchObject({
     kind: "staged",
     movements: 1,
@@ -519,19 +537,21 @@ test("income takes no spending category, and Mixed only one a share applies to",
   );
   // An income that refunds an expense carries its purchase invoice and
   // takes the expense's category; pure income takes none.
-  expect(takesExpenseCategory(income.get(OUT)!)).toBe(true);
-  expect(takesExpenseCategory(income.get(IN)!)).toBe(false);
-  expect(takesExpenseCategory(income.get(REFUND)!)).toBe(true);
-  expect(categorySplit([OUT, IN, REFUND], income)).toEqual({
+  const incomeCheck = recordedCheck(EMPTY_CONTENT, income, {
+    ids: [OUT, IN, REFUND],
+  });
+  const takes = (id: string) =>
+    incomeCheck.rows.get(id)!.takes_expense_category;
+  expect(takes(OUT)).toBe(true);
+  expect(takes(IN)).toBe(false);
+  expect(takes(REFUND)).toBe(true);
+  expect(categorySplit([OUT, IN, REFUND], income, incomeCheck)).toEqual({
     expenses: 2,
     income: 1,
   });
 
   // Business on income alone is staged at once, with no category.
-  const alone = classifyCells(
-    { vocabulary: SERVED, kind: "business", ids: [IN] },
-    income,
-  );
+  const alone = classifying({ kind: "business", ids: [IN] }, income);
   expect(alone.kind).toBe("staged");
   if (alone.kind !== "staged") return;
   expect(alone.event.cells.map((cell) => cell.field)).toEqual([
@@ -539,18 +559,12 @@ test("income takes no spending category, and Mixed only one a share applies to",
   ]);
   // Business on expenses and income asks for a category, which only the
   // expenses get.
-  expect(
-    classifyCells(
-      { vocabulary: SERVED, kind: "business", ids: [OUT, IN] },
-      income,
-    ),
-  ).toEqual({
+  expect(classifying({ kind: "business", ids: [OUT, IN] }, income)).toEqual({
     kind: "needs",
     field: "category",
   });
-  const both = classifyCells(
+  const both = classifying(
     {
-      vocabulary: SERVED,
       kind: "business",
       ids: [OUT, IN],
       category: "vehiculo_combustible",
@@ -566,9 +580,8 @@ test("income takes no spending category, and Mixed only one a share applies to",
 
   // Mixed takes a category a business-use share applies to.
   expect(
-    classifyCells(
+    classifying(
       {
-        vocabulary: SERVED,
         kind: "mixed",
         ids: [OUT],
         share: "30",
@@ -580,9 +593,8 @@ test("income takes no spending category, and Mixed only one a share applies to",
   // Home depreciation is recorded through the asset register, not a
   // usage-ratio deduction on a ledger movement.
   expect(
-    classifyCells(
+    classifying(
       {
-        vocabulary: SERVED,
         kind: "mixed",
         ids: [OUT],
         share: "30",
@@ -593,9 +605,8 @@ test("income takes no spending category, and Mixed only one a share applies to",
   ).toEqual({ kind: "needs", field: "category" });
   // A mobile line is deductible only in exclusive use, so it takes no share.
   expect(
-    classifyCells(
+    classifying(
       {
-        vocabulary: SERVED,
         kind: "mixed",
         ids: [OUT],
         share: "30",
@@ -604,9 +615,8 @@ test("income takes no spending category, and Mixed only one a share applies to",
       income,
     ),
   ).toEqual({ kind: "needs", field: "category" });
-  const phone = classifyCells(
+  const phone = classifying(
     {
-      vocabulary: SERVED,
       kind: "mixed",
       ids: [OUT],
       share: "30",
@@ -618,10 +628,7 @@ test("income takes no spending category, and Mixed only one a share applies to",
     phone.kind === "staged" && phone.event.cells.map((cell) => cell.field),
   ).toEqual(["business_classification", "business_pct", "category_id"]);
   expect(
-    classifyCells(
-      { vocabulary: SERVED, kind: "mixed", ids: [IN], share: "30" },
-      income,
-    ).kind,
+    classifying({ kind: "mixed", ids: [IN], share: "30" }, income).kind,
   ).toBe("staged");
 
   // A category alone goes to no income.
@@ -638,7 +645,15 @@ test("income takes no spending category, and Mixed only one a share applies to",
     ]),
   );
   expect(
-    categoryCells([OUT, IN, REFUND], "material_oficina", classified, SERVED),
+    categoryCells(
+      [OUT, IN, REFUND],
+      "material_oficina",
+      classified,
+      recordedCheck(EMPTY_CONTENT, classified, {
+        ids: [OUT, IN, REFUND],
+        categories: ["material_oficina"],
+      }),
+    ),
   ).toMatchObject({ kind: "staged", movements: 2, skipped: 1 });
 });
 
@@ -666,23 +681,26 @@ test("whether a movement takes a spending category is read as staged, not as sto
       },
     ],
   };
-  expect(takesExpenseCategory(rows.get(OUT)!)).toBe(true);
-  expect(takesExpenseCategory(rows.get(OUT)!, staged)).toBe(false);
-  expect(takesExpenseCategory(rows.get(IN)!)).toBe(false);
-  expect(takesExpenseCategory(rows.get(IN)!, staged)).toBe(true);
-  expect(categorySplit([OUT, IN], rows, staged)).toEqual({
+  const stored = recordedCheck(EMPTY_CONTENT, rows, { ids: [OUT, IN] });
+  const asStaged = recordedCheck(staged, rows, { ids: [OUT, IN] });
+  const takes = (check: typeof stored, id: string) =>
+    check.rows.get(id)!.takes_expense_category;
+  expect(takes(stored, OUT)).toBe(true);
+  expect(takes(asStaged, OUT)).toBe(false);
+  expect(takes(stored, IN)).toBe(false);
+  expect(takes(asStaged, IN)).toBe(true);
+  expect(categorySplit([OUT, IN], rows, asStaged)).toEqual({
     expenses: 1,
     income: 1,
   });
-  const business = classifyCells(
+  const business = classifying(
     {
-      vocabulary: SERVED,
       kind: "business",
       ids: [OUT, IN],
       category: "material_oficina",
-      staged,
     },
     rows,
+    staged,
   );
   expect(
     business.kind === "staged" &&

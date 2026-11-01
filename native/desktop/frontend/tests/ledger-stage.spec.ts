@@ -1,6 +1,5 @@
 import { expect, test } from "@playwright/test";
 import {
-  changesIdentity,
   EMPTY_STAGE,
   effectiveFacts,
   newDraft,
@@ -13,10 +12,22 @@ import {
   type StageField,
   type StageState,
   type StagedAction,
+  type StagedRowChanges,
 } from "../src/shell/ledgerStage";
+import type { LedgerRow } from "../src/shell/ledger";
 import { hexId, movement } from "./support/ledger";
+import { recordedCheck } from "./support/stagedCheck";
 
 // The staged-changes store. No page is opened.
+
+/** The fields the backend names as giving `row` a new id under `changes`. */
+const changesIdentity = (row: LedgerRow, changes: StagedRowChanges) => {
+  const id = row.transaction.transaction_id;
+  return recordedCheck(
+    { rows: { [id]: changes }, actions: [], drafts: [] },
+    new Map([[id, row]]),
+  ).rows.get(id)!.identity_fields;
+};
 
 const A = hexId("a");
 const B = hexId("b");

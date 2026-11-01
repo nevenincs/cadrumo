@@ -1,6 +1,5 @@
 import { expect, test } from "@playwright/test";
-import type { LedgerLlmSuggestion } from "../src/shell/ledger";
-import { planApply } from "../src/shell/ledgerPlan";
+import type { LedgerLlmSuggestion, LedgerRow } from "../src/shell/ledger";
 import { EMPTY_CONTENT, type StagedContent } from "../src/shell/ledgerStage";
 import {
   checkSplit,
@@ -20,11 +19,20 @@ import {
 import { sameInspectorContext } from "../src/components/ledger/inspector/inspectorContext";
 import { effectiveFacts } from "../src/shell/ledgerStage";
 import { hexId, movement } from "./support/ledger";
+import { planRecorded, recordedCheck } from "./support/stagedCheck";
 
 // What the movement inspector works out without drawing. No page is
 // opened.
 
 const NONE: ReadonlySet<string> = new Set();
+
+/** The recorded answer about every one of `rows` with `content` staged. */
+const checkOf = (content: StagedContent, rows: readonly LedgerRow[]) =>
+  recordedCheck(
+    content,
+    new Map(rows.map((row) => [row.transaction.transaction_id, row])),
+    { ids: rows.map((row) => row.transaction.transaction_id) },
+  );
 
 test("the jump index shows every entry that fits and keeps room for More", () => {
   expect(fittingEntries([60, 70, 50, 60, 60], 40, 400, 4)).toBe(5);
@@ -97,7 +105,7 @@ test("while readiness is not measured, a reviewed movement counts as not measure
 
 test("the selection's tax fields wait for a classification, stored or staged", () => {
   const rows = [movement(hexId("a")), movement(hexId("b"))];
-  expect(noneClassified(rows, EMPTY_CONTENT)).toBe(true);
+  expect(noneClassified(rows, checkOf(EMPTY_CONTENT, rows))).toBe(true);
   const staged: StagedContent = {
     ...EMPTY_CONTENT,
     rows: {
@@ -106,15 +114,23 @@ test("the selection's tax fields wait for a classification, stored or staged", (
       },
     },
   };
-  expect(noneClassified(rows, staged)).toBe(false);
+  expect(noneClassified(rows, checkOf(staged, rows))).toBe(false);
   // A classification staged to be cleared leaves the movement undecided.
   const stored = [movement(hexId("c"), { business_classification: "MIXED" })];
-  expect(noneClassified(stored, EMPTY_CONTENT)).toBe(false);
+  expect(noneClassified(stored, checkOf(EMPTY_CONTENT, stored))).toBe(false);
   expect(
-    noneClassified(stored, {
-      ...EMPTY_CONTENT,
-      rows: { [hexId("c")]: { business_classification: { kind: "clear" } } },
-    }),
+    noneClassified(
+      stored,
+      checkOf(
+        {
+          ...EMPTY_CONTENT,
+          rows: {
+            [hexId("c")]: { business_classification: { kind: "clear" } },
+          },
+        },
+        stored,
+      ),
+    ),
   ).toBe(true);
 });
 
@@ -128,7 +144,7 @@ test("set for all skips a movement whose sealed state was not read, and counts i
   );
   const ids = [...rows.keys()];
   const found = setForAll("notes", "x", ids, rows, {
-    content: EMPTY_CONTENT,
+    check: checkOf(EMPTY_CONTENT, [read, unread]),
     sealed: NONE,
     unread: new Set([unread.transaction.transaction_id]),
     visible: new Set(ids),
@@ -170,7 +186,7 @@ test("set for all skips what cannot take it, and counts hidden movements apart",
     ids.filter((id) => id !== hidden.transaction.transaction_id),
   );
   const found = setForAll("iva_category", "domestic_general", ids, rows, {
-    content: EMPTY_CONTENT,
+    check: checkOf(EMPTY_CONTENT, [...rows.values()]),
     sealed: NONE,
     visible,
   });
@@ -188,7 +204,7 @@ test("set for all skips what cannot take it, and counts hidden movements apart",
   });
   // A group label is no tax fact: Personal and unclassified rows take it.
   const labels = setForAll("group_label", "Oficina", ids, rows, {
-    content: EMPTY_CONTENT,
+    check: checkOf(EMPTY_CONTENT, [...rows.values()]),
     sealed: new Set([business.transaction.transaction_id]),
     visible,
   });
@@ -211,7 +227,7 @@ test("set for all judges a movement as staged: a staged Personal skips tax field
     [id],
     new Map([[id, row]]),
     {
-      content,
+      check: checkOf(content, [row]),
       sealed: NONE,
       visible: new Set([id]),
     },
@@ -233,7 +249,7 @@ test("set-for-all cells plan as one bulk save", () => {
     [...byId.keys()],
     byId,
     {
-      content: EMPTY_CONTENT,
+      check: checkOf(EMPTY_CONTENT, rows),
       sealed: NONE,
       visible: new Set(byId.keys()),
     },
@@ -241,7 +257,7 @@ test("set-for-all cells plan as one bulk save", () => {
   const content: StagedContent = { ...EMPTY_CONTENT, rows: {} };
   for (const cell of found.cells)
     content.rows[cell.id] = { [cell.field]: cell.value };
-  const plan = planApply(content, { rows: byId });
+  const plan = planRecorded(content, { rows: byId });
   expect(plan.summary.together).toBe(12);
   expect(plan.summary.oneAtATime).toBe(0);
 });
@@ -404,7 +420,7 @@ test("a Mixed proposal with no share is held", () => {
   expect(needsShare(suggestion({}))).toBe(false);
   // The plan holds the same approval back.
   const row = movement(hexId("a"));
-  const plan = planApply(
+  const plan = planRecorded(
     {
       ...EMPTY_CONTENT,
       actions: [
