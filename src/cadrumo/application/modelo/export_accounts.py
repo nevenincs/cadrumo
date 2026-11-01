@@ -307,16 +307,17 @@ def require_domiciliation_before_cutoff(
     civil date, since AEAT's direct-debit deadline is a Spanish-calendar day.
     Returns whether the export is a domiciliación no cutoff could be resolved
     for, which is an advisory rather than a refusal: an unknown cutoff is not
-    an open one.
+    an open one. A window whose close is unknown has no cutoff either.
     """
     if resolved_result_disposition is not ResultDisposition.DOMICILIACION:
         return False
-    window = resolve_filing_window(
+    resolved_window = resolve_filing_window(
         str(work_unit.modelo),
         work_unit.filing_year,
         work_unit.period,
         authority=operation,
     )
+    window = None if resolved_window is None else resolved_window.dated_window
     if window is None:
         return True
     resolution = resolve_payment_cutoff(str(work_unit.modelo), window, operation=operation)

@@ -137,6 +137,7 @@ _USER_STATE_FOR_OBLIGATION_STATUS: MappingProxyType[_ObligationStatus, OverviewP
         _ObligationStatus.OVERDUE: OverviewPeriodState.LATE,
         _ObligationStatus.FILED: OverviewPeriodState.FILED,
         _ObligationStatus.NOT_APPLICABLE: OverviewPeriodState.UNKNOWN,
+        _ObligationStatus.UNKNOWN: OverviewPeriodState.UNKNOWN,
     },
 )
 
@@ -290,6 +291,12 @@ class OverviewCalendarEntry(BaseModel):
     The optional :class:`OverviewCalendarFilingEvidence` row attaches local and
     AEAT evidence without changing the legal deadline status from the deadline
     engine.
+
+    A row whose status is :attr:`~domain.deadlines.models.ObligationStatus.UNKNOWN`
+    is a projected window whose close is unknown: ``closes_on`` and
+    ``adjusted_closes_on`` both hold its nominal close, a lower bound the close
+    is never earlier than, its holiday coverage is ``CALENDAR_UNAVAILABLE``, and
+    it carries no payment cutoff, overdue age or recovery.
     """
 
     model_config = _STRICT_FROZEN
@@ -348,6 +355,16 @@ class OverviewCalendarEntry(BaseModel):
         )
         if unevaluated and self.adjusted_closes_on != self.closes_on:
             raise ValueError("OverviewCalendarEntry cannot shift a deadline its holiday coverage did not evaluate")
+        return self
+
+    @model_validator(mode="after")
+    def _enforce_unknown_close_consistency(self) -> OverviewCalendarEntry:
+        if self.status is not _ObligationStatus.UNKNOWN:
+            return self
+        if self.holiday_coverage is not _DeadlineHolidayCoverage.CALENDAR_UNAVAILABLE:
+            raise ValueError("OverviewCalendarEntry with an unknown close must report the calendar as unavailable")
+        if self.payment_cutoff_on is not None or self.recovery is not None:
+            raise ValueError("OverviewCalendarEntry with an unknown close carries no payment cutoff or recovery")
         return self
 
     @model_validator(mode="after")

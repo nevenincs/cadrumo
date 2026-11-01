@@ -193,6 +193,7 @@ def _validate_calendar_obligation_axes(entry: DeclarationsCalendarEntryRefV1) ->
         ObligationStatus.OVERDUE: OverviewPeriodState.LATE,
         ObligationStatus.FILED: OverviewPeriodState.FILED,
         ObligationStatus.NOT_APPLICABLE: OverviewPeriodState.UNKNOWN,
+        ObligationStatus.UNKNOWN: OverviewPeriodState.UNKNOWN,
     }[entry.legal_status]
     if entry.user_state is not expected_user_state:
         raise ValueError("calendar legal status and user state disagree")

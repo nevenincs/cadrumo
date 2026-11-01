@@ -527,7 +527,9 @@ def _scope_matches(
     if scope is DeclarationsCalendarScopeV1.ALL:
         return True
     if scope is DeclarationsCalendarScopeV1.PAST:
-        return row.adjusted_closes_on < as_of
+        # An unknown close is only bounded below by its nominal date, so its
+        # window is not known to have closed.
+        return row.adjusted_closes_on < as_of and row.legal_status is not ObligationStatus.UNKNOWN
     if scope is DeclarationsCalendarScopeV1.UPCOMING:
         return row.adjusted_closes_on >= as_of and row.user_state is OverviewPeriodState.DUE
     if scope is DeclarationsCalendarScopeV1.OVERDUE:

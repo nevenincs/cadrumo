@@ -8743,6 +8743,7 @@ workspace:
         filed: Recorded as filed
         not_applicable: Not applicable
         overdue: Overdue
+        unknown: Close unknown
         upcoming: Upcoming
       local:
         external_baseline_imported: External filing imported

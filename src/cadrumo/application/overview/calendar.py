@@ -53,6 +53,10 @@ from ...domain.deadlines.engine import classify_obligation_status as _classify_o
 from ...domain.deadlines.errors import NoDeadlineWindowsError as _NoDeadlineWindowsError
 from ...domain.deadlines.festivos import CalendarCCAA as _CalendarCCAA
 from ...domain.deadlines.festivos import DeadlineHolidayCoverage as _DeadlineHolidayCoverage
+from ...domain.deadlines.filing_window_projection import (
+    ProjectedFilingWindowCloseUnavailable as _ProjectedFilingWindowCloseUnavailable,
+)
+from ...domain.deadlines.models import CloseUnknownModeloDeadline as _CloseUnknownModeloDeadline
 from ...domain.deadlines.models import ModeloDeadline as _ModeloDeadline
 from ...domain.deadlines.models import ObligationStatus as _ObligationStatus
 from ...domain.deadlines.models import Schedule as _Schedule
@@ -61,6 +65,7 @@ from ...domain.deadlines.plazo import resolve_filing_window as _resolve_filing_w
 from ...domain.deadlines.recargo import build_recovery_for_overdue as _build_recovery_for_overdue
 from ...domain.modelos.work_unit import WorkUnit as _WorkUnit
 from ...domain.modelos.work_unit import WorkUnitState as _WorkUnitState
+from ..modelo.effective_deadline import CALENDAR_UNAVAILABLE_SHIFT_REASON as _CALENDAR_UNAVAILABLE_SHIFT_REASON
 from ..modelo.effective_deadline import effective_filing_deadline as _effective_filing_deadline
 from .calendar_evidence import (
     calendar_entry_filing_evidence as _calendar_entry_filing_evidence,
@@ -115,7 +120,7 @@ from .next_actions import declare_next_action as _declare_next_action
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-    from ...domain.calculations.registry.schema_deadlines import DeadlineWindowDefinition
+    from ...domain.deadlines.filing_window_projection import FilingWindowResolution
     from .applicability_evidence import FilingYearApplicabilityEvidence
 
 
@@ -152,13 +157,21 @@ def _window_intersects_range(
 
 
 def _entry_intersects_range(
-    obligation: _ModeloDeadline,
+    obligation: _ModeloDeadline | _CloseUnknownModeloDeadline,
     calendar_range: _OverviewCalendarRange,
     *,
     holiday_territory: _CalendarCCAA | None,
     operation: PinnedAuthorityOperation,
 ) -> bool:
-    """Return whether ``obligation``'s filing window, to its effective close date, intersects the range."""
+    """Return whether ``obligation``'s filing window, to its effective close date, intersects the range.
+
+    A window whose close is unknown is placed by its opening and its nominal
+    close, the only dates known for it.
+    """
+    if isinstance(obligation, _CloseUnknownModeloDeadline):
+        return (
+            obligation.opens_on <= calendar_range.to_date and obligation.nominal_closes_on >= calendar_range.from_date
+        )
     return _window_intersects_range(
         obligation.opens_on,
         obligation.closes_on,
@@ -185,14 +198,15 @@ def _registry_window_for_work_unit(
     unit: _WorkUnit,
     *,
     operation: PinnedAuthorityOperation | None = None,
-) -> DeadlineWindowDefinition | None:
-    """Return a registry deadline window for ``unit`` when one is bundled.
+) -> FilingWindowResolution | None:
+    """Return the deadline window resolution for ``unit`` when one is authored or projected.
 
     Window matching belongs to the deadline domain, which owns the year/token
-    rule and the no-window behaviour. Overview is a projection: it consumes the
-    same window the extemporaneidad surface consumes, reads the ``opens_on``
-    field that surface does not need, and takes the payment cutoff from the
-    deadline domain's cutoff resolver.
+    rule, authored-over-projected precedence and the no-window behaviour.
+    Overview is a projection: it consumes the same resolution the
+    extemporaneidad surface consumes, reads the ``opens_on`` field that surface
+    does not need, and takes the payment cutoff from the deadline domain's
+    cutoff resolver.
     """
     return _resolve_filing_window(
         str(unit.modelo),
@@ -206,19 +220,28 @@ def _work_unit_window_dates(
     unit: _WorkUnit,
     *,
     operation: PinnedAuthorityOperation,
-) -> tuple[date, date, date | None]:
-    """Return the calendar span used to place a local work unit row, with its payment cutoff."""
-    window = _registry_window_for_work_unit(unit, operation=operation)
-    opens_on, closes_on = _work_unit_window_span(unit, window)
-    if window is None:
-        return opens_on, closes_on, None
-    return opens_on, closes_on, _resolve_payment_cutoff(str(unit.modelo), window, operation=operation).cutoff_on
+) -> tuple[date, date, date | None, _ProjectedFilingWindowCloseUnavailable | None]:
+    """Return the calendar span used to place a local work unit row, its payment cutoff and any unknown close.
+
+    The last member is the close-unknown projection when the window's close is
+    unknown; the span then ends at its nominal close and no cutoff exists.
+    """
+    resolution = _registry_window_for_work_unit(unit, operation=operation)
+    opens_on, closes_on = _work_unit_window_span(unit, resolution)
+    if resolution is None:
+        return opens_on, closes_on, None, None
+    if isinstance(resolution, _ProjectedFilingWindowCloseUnavailable):
+        return opens_on, closes_on, None, resolution
+    cutoff = _resolve_payment_cutoff(str(unit.modelo), resolution.window, operation=operation).cutoff_on
+    return opens_on, closes_on, cutoff, None
 
 
-def _work_unit_window_span(unit: _WorkUnit, window: DeadlineWindowDefinition | None) -> tuple[date, date]:
+def _work_unit_window_span(unit: _WorkUnit, resolution: FilingWindowResolution | None) -> tuple[date, date]:
     """Return the calendar span used to place a local work unit row."""
-    if window is not None:
-        return window.opens_on, window.closes_on
+    if isinstance(resolution, _ProjectedFilingWindowCloseUnavailable):
+        return resolution.opens_on, resolution.nominal_closes_on
+    if resolution is not None:
+        return resolution.opens_on, resolution.closes_on
     if unit.period.has_date_span():
         return unit.period.start_date, unit.period.end_date
     anchor = unit.created_at.date()
@@ -232,7 +255,10 @@ def _work_unit_intersects_range(
     holiday_territory: _CalendarCCAA | None,
     operation: PinnedAuthorityOperation,
 ) -> bool:
-    opens_on, closes_on = _work_unit_window_span(unit, _registry_window_for_work_unit(unit, operation=operation))
+    resolution = _registry_window_for_work_unit(unit, operation=operation)
+    opens_on, closes_on = _work_unit_window_span(unit, resolution)
+    if isinstance(resolution, _ProjectedFilingWindowCloseUnavailable):
+        return opens_on <= calendar_range.to_date and closes_on >= calendar_range.from_date
     return _window_intersects_range(
         opens_on,
         closes_on,
@@ -266,6 +292,8 @@ def _local_work_unit_status(
     closes_on: date,
     today: date,
     due_soon_days: int,
+    *,
+    close_known: bool = True,
 ) -> _ObligationStatus:
     """Classify a local work unit, applying overview's filing gate first.
 
@@ -273,10 +301,13 @@ def _local_work_unit_status(
     intentional difference from the deadline engine's classification: a unit
     the operator has already filed locally is FILED regardless of dates. Every
     date boundary past that gate is the deadline domain's to decide, so it is
-    delegated rather than restated.
+    delegated rather than restated. A window whose close is unknown is
+    ``UNKNOWN`` and is never classified against its nominal close.
     """
     if _work_unit_has_filing_pointers(unit):
         return _ObligationStatus.FILED
+    if not close_known:
+        return _ObligationStatus.UNKNOWN
     return _classify_obligation_status(closes_on, today, due_soon_days)
 
 
@@ -307,7 +338,13 @@ def _annotate_entry_with_work_unit(
     today: date,
     due_soon_days: int,
 ) -> _OverviewCalendarEntry:
-    status = _local_work_unit_status(unit, entry.adjusted_closes_on, today, due_soon_days)
+    status = _local_work_unit_status(
+        unit,
+        entry.adjusted_closes_on,
+        today,
+        due_soon_days,
+        close_known=entry.status is not _ObligationStatus.UNKNOWN,
+    )
     if entry.filing_evidence.aeat_filed:
         status = _ObligationStatus.FILED
     effective_filing_evidence = _filing_evidence_with_work_unit_pointers(unit, (entry.filing_evidence,))
@@ -336,8 +373,33 @@ def _calendar_entry_from_work_unit(
     live_censo_verified_profile_keys: tuple[str, ...] | None,
     operation: PinnedAuthorityOperation,
 ) -> _OverviewCalendarEntry:
-    opens_on, closes_on, payment_cutoff_on = _work_unit_window_dates(unit, operation=operation)
+    opens_on, closes_on, payment_cutoff_on, close_unknown = _work_unit_window_dates(unit, operation=operation)
     effective_filing_evidence = _filing_evidence_with_work_unit_pointers(unit, filing_evidence)
+    work_unit_fields = {
+        "source": _OverviewCalendarEntrySource.LOCAL_WORK_UNIT,
+        "local_work_unit_id": unit.work_unit_id,
+        "local_work_unit_name": unit.name,
+        "local_work_unit_revision_id": unit.revision_id,
+    }
+    if close_unknown is not None:
+        entry = _calendar_entry_from_close_unknown(
+            _CloseUnknownModeloDeadline(
+                modelo=_Modelo(str(unit.modelo)),
+                period=unit.period,
+                opens_on=close_unknown.opens_on,
+                nominal_closes_on=close_unknown.nominal_closes_on,
+                close_unavailable_reason=close_unknown.reason.value,
+                boe_references=close_unknown.legal_refs,
+            ),
+            filing_evidence=effective_filing_evidence,
+            live_censo_verified_profile_keys=live_censo_verified_profile_keys,
+            today=today,
+            operation=operation,
+        )
+        status = _local_work_unit_status(unit, closes_on, today, due_soon_days, close_known=False)
+        if entry.filing_evidence.aeat_filed:
+            status = _ObligationStatus.FILED
+        return entry.model_copy(update={**work_unit_fields, "status": status, "user_state": _user_state_for(status)})
     obligation = _ModeloDeadline(
         modelo=_Modelo(str(unit.modelo)),
         period=unit.period,
@@ -356,14 +418,7 @@ def _calendar_entry_from_work_unit(
         today=today,
         due_soon_days=due_soon_days,
         operation=operation,
-    ).model_copy(
-        update={
-            "source": _OverviewCalendarEntrySource.LOCAL_WORK_UNIT,
-            "local_work_unit_id": unit.work_unit_id,
-            "local_work_unit_name": unit.name,
-            "local_work_unit_revision_id": unit.revision_id,
-        },
-    )
+    ).model_copy(update=work_unit_fields)
 
 
 def _merge_work_units_into_entries(
@@ -481,6 +536,76 @@ def holiday_coverage_statement(
     return _tr("application.overview.calendar.holiday_coverage.calendar_unavailable", locale=locale)
 
 
+def _censo_enrolment_state_for(
+    modelo: str,
+    *,
+    live_censo_verified_profile_keys: tuple[str, ...] | None,
+    operation: PinnedAuthorityOperation,
+    censo_enrolment_states: dict[str, _OverviewCensoEnrolmentState] | None,
+) -> _OverviewCensoEnrolmentState:
+    """Resolve a modelo's censo enrolment state once per calendar build."""
+    censo_enrolment_state = None if censo_enrolment_states is None else censo_enrolment_states.get(modelo)
+    if censo_enrolment_state is None:
+        censo_enrolment_state = _calendar_censo_enrolment_state(
+            modelo=modelo,
+            live_censo_verified_profile_keys=live_censo_verified_profile_keys,
+            operation=operation,
+        )
+        if censo_enrolment_states is not None:
+            censo_enrolment_states[modelo] = censo_enrolment_state
+    return censo_enrolment_state
+
+
+def _calendar_entry_from_close_unknown(
+    obligation: _CloseUnknownModeloDeadline,
+    *,
+    filing_evidence: tuple[_OverviewCalendarFilingEvidence, ...],
+    live_censo_verified_profile_keys: tuple[str, ...] | None,
+    today: date,
+    operation: PinnedAuthorityOperation,
+    censo_enrolment_states: dict[str, _OverviewCensoEnrolmentState] | None = None,
+) -> _OverviewCalendarEntry:
+    """Build the row of a window whose close is unknown.
+
+    The row shows the opening and the nominal close, a lower bound the close
+    is never earlier than, reports the holiday calendar as unavailable, and is
+    ``UNKNOWN`` unless official evidence shows it filed. It is never classified
+    as due or overdue against the nominal date, so it carries no overdue age,
+    recovery or payment cutoff.
+    """
+    period = obligation.period
+    evidence = _calendar_entry_filing_evidence(
+        modelo=obligation.modelo,
+        filing_year=period.filing_year,
+        period=period,
+        evidence=filing_evidence,
+    )
+    status = _ObligationStatus.FILED if evidence.aeat_filed else _ObligationStatus.UNKNOWN
+    return _OverviewCalendarEntry(
+        modelo=obligation.modelo,
+        period=period,
+        opens_on=obligation.opens_on,
+        closes_on=obligation.nominal_closes_on,
+        adjusted_closes_on=obligation.nominal_closes_on,
+        shift_reason=_CALENDAR_UNAVAILABLE_SHIFT_REASON,
+        holiday_coverage=_DeadlineHolidayCoverage.CALENDAR_UNAVAILABLE,
+        holiday_territory=None,
+        payment_cutoff_on=None,
+        evaluated_on=today,
+        days_overdue=None,
+        status=status,
+        user_state=_user_state_for(status),
+        filing_year=period.filing_year,
+        censo_enrolment_state=_censo_enrolment_state_for(
+            obligation.modelo,
+            live_censo_verified_profile_keys=live_censo_verified_profile_keys,
+            operation=operation,
+            censo_enrolment_states=censo_enrolment_states,
+        ),
+        filing_evidence=evidence,
+    )
+
+
 def _calendar_entry_from_obligation(
     obligation: _ModeloDeadline,
     *,
@@ -529,15 +654,12 @@ def _calendar_entry_from_obligation(
                     "error_type": type(exc).__name__,
                 },
             )
-    censo_enrolment_state = None if censo_enrolment_states is None else censo_enrolment_states.get(obligation.modelo)
-    if censo_enrolment_state is None:
-        censo_enrolment_state = _calendar_censo_enrolment_state(
-            modelo=obligation.modelo,
-            live_censo_verified_profile_keys=live_censo_verified_profile_keys,
-            operation=operation,
-        )
-        if censo_enrolment_states is not None:
-            censo_enrolment_states[obligation.modelo] = censo_enrolment_state
+    censo_enrolment_state = _censo_enrolment_state_for(
+        obligation.modelo,
+        live_censo_verified_profile_keys=live_censo_verified_profile_keys,
+        operation=operation,
+        censo_enrolment_states=censo_enrolment_states,
+    )
     return _OverviewCalendarEntry(
         modelo=obligation.modelo,
         period=period,
@@ -611,7 +733,7 @@ def _schedules_for_calendar_range(
 
 
 def _calendar_obligation_projection(
-    obligation: _ModeloDeadline,
+    obligation: _ModeloDeadline | _CloseUnknownModeloDeadline,
     *,
     profile: _TaxpayerProfile,
     calendar_range: _OverviewCalendarRange,
@@ -662,8 +784,19 @@ def _calendar_obligation_projection(
         )
         return None, suppressed_entry, None, disagreeing_modelo
 
-    entry = (
-        _calendar_entry_from_obligation(
+    if not intersects_range:
+        return None, None, obligation.modelo, disagreeing_modelo
+    if isinstance(obligation, _CloseUnknownModeloDeadline):
+        entry = _calendar_entry_from_close_unknown(
+            obligation,
+            filing_evidence=filing_evidence,
+            live_censo_verified_profile_keys=live_censo_verified_profile_keys,
+            today=today,
+            operation=operation,
+            censo_enrolment_states=censo_enrolment_states,
+        )
+    else:
+        entry = _calendar_entry_from_obligation(
             obligation,
             holiday_territory=profile.holiday_territory,
             filing_evidence=filing_evidence,
@@ -673,9 +806,6 @@ def _calendar_obligation_projection(
             operation=operation,
             censo_enrolment_states=censo_enrolment_states,
         )
-        if intersects_range
-        else None
-    )
     return entry, None, obligation.modelo, disagreeing_modelo
 
 
@@ -718,7 +848,9 @@ def _entries_and_suppressed_from_schedules(
     # Every row shares this pinned authority and live-censo tuple. Resolve
     # enrolment once per modelo, rather than reloading rules for each period.
     censo_enrolment_states: dict[str, _OverviewCensoEnrolmentState] = {}
-    obligations = chain.from_iterable(schedule.obligations for schedule in schedules)
+    obligations = chain.from_iterable(
+        (*schedule.obligations, *schedule.close_unknown_obligations) for schedule in schedules
+    )
     for obligation in obligations:
         entry, suppressed_entry, covered_modelo, disagreeing_modelo = _calendar_obligation_projection(
             obligation,

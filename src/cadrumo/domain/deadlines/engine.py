@@ -5,14 +5,18 @@ typed :class:`Schedule`. Filing windows and applicability conditions are
 read from validated calculation registry data supplied by
 :class:`ValidatedRegistryAuthority`. Each window is described by the
 selection metadata of its owning revision paired with its deadline window
-definition.
+definition. A scheduled coordinate no revision authors a window for is
+projected from the governed filing-window rule
+(:mod:`cadrumo.domain.deadlines.filing_window_projection`); a projection
+whose close is unknown is kept apart from the dated windows.
 """
 
 from __future__ import annotations
 
 from collections import OrderedDict
-from collections.abc import Generator
+from collections.abc import Generator, Mapping
 from contextlib import contextmanager
+from dataclasses import dataclass
 from datetime import date
 from threading import Lock
 from typing import TYPE_CHECKING, Final, Protocol, override, runtime_checkable
@@ -37,13 +41,22 @@ if TYPE_CHECKING:
     type DeadlineWindowProjection = tuple[str, RevisionSelectionMetadata, DeadlineWindowDefinition]
     """One projected window: modelo code, its owning revision's selection metadata, and the window."""
 
+    type CloseUnknownWindowProjection = tuple[str, RevisionSelectionMetadata, ProjectedFilingWindowCloseUnavailable]
+    """One close-unknown projection: modelo code, its owning revision's selection metadata, and the projection."""
+
 from .domiciliation_cutoff import resolve_payment_cutoff
 from .errors import (
     DeadlineValidationError,
     NoDeadlineWindowsError,
     ScheduleComputationError,
 )
+from .filing_window_projection import (
+    ProjectedFilingWindow,
+    ProjectedFilingWindowCloseUnavailable,
+    project_unauthored_filing_windows,
+)
 from .models import (
+    CloseUnknownModeloDeadline,
     ModeloDeadline,
     ObligationStatus,
     Recovery,
@@ -124,6 +137,22 @@ def _window_outside_activity_period(
     return activity_end_date is not None and starts_on > activity_end_date
 
 
+@dataclass(frozen=True, slots=True)
+class DeadlineWindowYearIndex:
+    """One filing year's windows from one generation.
+
+    ``dated`` holds every window with a known close: the authored ones and the
+    rule projections of unauthored scheduled coordinates. ``projected`` maps the
+    identity of each projected dated window to its provenance-bearing
+    projection, so a reader can tell it from an authored one. ``close_unknown``
+    holds the projections whose close is unknown; they are never dated windows.
+    """
+
+    dated: tuple[DeadlineWindowProjection, ...]
+    projected: Mapping[str, ProjectedFilingWindow]
+    close_unknown: tuple[CloseUnknownWindowProjection, ...]
+
+
 #: One year's projection, keyed by the generation it was read from. An admitted
 #: generation is immutable, so the index is a pure function of that identity and
 #: the year, and every calendar build re-projected it: the whole modelo
@@ -134,7 +163,7 @@ def _window_outside_activity_period(
 #: each entry retains that year's projected windows.
 _DEADLINE_WINDOW_INDEX: OrderedDict[
     tuple[AuthorityGenerationPin, int],
-    tuple[DeadlineWindowProjection, ...],
+    DeadlineWindowYearIndex,
 ] = OrderedDict()
 _DEADLINE_WINDOW_INDEX_LIMIT: Final = 32
 _DEADLINE_WINDOW_INDEX_LOCK: Final = Lock()
@@ -144,7 +173,19 @@ def indexed_deadline_windows(
     operation: PinnedAuthorityOperation,
     year: int,
 ) -> tuple[DeadlineWindowProjection, ...]:
-    """Project one filing year's deadline windows from a pinned operation.
+    """Project one filing year's dated windows, authored and rule-projected, from a pinned operation.
+
+    Reused for a generation already projected for this year; see
+    :data:`_DEADLINE_WINDOW_INDEX`.
+    """
+    return indexed_deadline_window_year(operation, year).dated
+
+
+def indexed_deadline_window_year(
+    operation: PinnedAuthorityOperation,
+    year: int,
+) -> DeadlineWindowYearIndex:
+    """Project one filing year's complete window index from a pinned operation.
 
     Reused for a generation already projected for this year; see
     :data:`_DEADLINE_WINDOW_INDEX`.
@@ -167,7 +208,7 @@ def indexed_deadline_windows(
 def _project_deadline_windows(
     operation: PinnedAuthorityOperation,
     year: int,
-) -> tuple[DeadlineWindowProjection, ...]:
+) -> DeadlineWindowYearIndex:
     """Walk the directory and project the windows their owning revisions declare for ``year``.
 
     Ownership is decided on the directory metadata by the same selector
@@ -175,6 +216,10 @@ def _project_deadline_windows(
     eager authority's ownership rule. The metadata also carries the owner's
     filing schedules, the only other revision member any consumer of the
     projection reads, so no revision is hydrated.
+
+    Every scheduled coordinate that no owning revision authors a window for is
+    then projected from the governed filing-window rule; an authored window
+    always wins because its coordinate is never projected.
     """
     from ..calculations.registry.temporal import select_revision_metadata
 
@@ -203,6 +248,22 @@ def _project_deadline_windows(
                         },
                     )
                 projected.append((modelo_id, metadata, metadata_window))
+    authored: dict[str, set[str]] = {}
+    for modelo_id, _metadata, window in projected:
+        authored.setdefault(modelo_id, set()).add(window.period.registry_token)
+    rule_projected: dict[str, ProjectedFilingWindow] = {}
+    close_unknown: list[CloseUnknownWindowProjection] = []
+    for row in project_unauthored_filing_windows(
+        operation,
+        year,
+        authored={modelo_id: frozenset(tokens) for modelo_id, tokens in authored.items()},
+    ):
+        if isinstance(row.resolution, ProjectedFilingWindow):
+            projected.append((row.modelo, row.revision, row.resolution.window))
+            rule_projected[row.resolution.window_id] = row.resolution
+        else:
+            close_unknown.append((row.modelo, row.revision, row.resolution))
+    close_unknown.sort(key=lambda item: (item[2].nominal_closes_on, item[0], item[2].period.registry_token))
     projected.sort(
         key=lambda item: (
             item[2].closes_on,
@@ -213,7 +274,7 @@ def _project_deadline_windows(
             () if item[2].tipo_renta_scope is None else tuple(sorted(item[2].tipo_renta_scope)),
         ),
     )
-    return tuple(projected)
+    return DeadlineWindowYearIndex(dated=tuple(projected), projected=rule_projected, close_unknown=tuple(close_unknown))
 
 
 class DeadlineEngine:
@@ -281,8 +342,10 @@ class DeadlineEngine:
         reference_today = today or today_madrid()
         _logger.debug("computing schedule year=%d reference_today=%s", year, reference_today)
         obligations: list[ModeloDeadline] = []
+        close_unknown_obligations: list[CloseUnknownModeloDeadline] = []
         with self._operation_context() as operation:
-            windows = self._deadline_windows(year, operation=operation)
+            year_index = self._deadline_window_year(year, operation=operation)
+            windows = year_index.dated
             for modelo, revision, window in windows:
                 obligation = self._obligation_for_window(
                     profile=profile,
@@ -294,8 +357,12 @@ class DeadlineEngine:
                 )
                 if obligation is not None:
                     obligations.append(obligation)
+            for _modelo, revision, projection in year_index.close_unknown:
+                close_unknown = _close_unknown_obligation(profile=profile, revision=revision, projection=projection)
+                if close_unknown is not None:
+                    close_unknown_obligations.append(close_unknown)
         obligations.sort(key=lambda o: (o.closes_on, o.modelo, o.period.filing_year, o.period.registry_token))
-        if not obligations and not windows:
+        if not obligations and not close_unknown_obligations and not windows and not year_index.close_unknown:
             raise NoDeadlineWindowsError(
                 translated_message=_MISSING_WINDOWS_MESSAGE_KEY,
                 context={"filing_year": year},
@@ -308,6 +375,7 @@ class DeadlineEngine:
             profile=profile,
             year=year,
             obligations=tuple(obligations),
+            close_unknown_obligations=tuple(close_unknown_obligations),
             generated_at=now(),
         )
 
@@ -453,13 +521,21 @@ class DeadlineEngine:
         *,
         operation: PinnedAuthorityOperation | None = None,
     ) -> tuple[DeadlineWindowProjection, ...]:
+        return self._deadline_window_year(year, operation=operation).dated
+
+    def _deadline_window_year(
+        self,
+        year: int,
+        *,
+        operation: PinnedAuthorityOperation | None = None,
+    ) -> DeadlineWindowYearIndex:
         from ..calculations.registry.errors import RegistryError
 
         try:
             if operation is not None:
-                return indexed_deadline_windows(operation, year)
+                return indexed_deadline_window_year(operation, year)
             with self._operation_context() as selected_operation:
-                return indexed_deadline_windows(selected_operation, year)
+                return indexed_deadline_window_year(selected_operation, year)
         except RegistryError as exc:
             raise ScheduleComputationError(
                 translated_message=_SCHEDULE_COMPUTATION_MESSAGE_KEY,
@@ -594,6 +670,44 @@ def _overdue_recovery_or_none(
             exc,
         )
         return None
+
+
+def _close_unknown_obligation(
+    *,
+    profile: TaxpayerProfile,
+    revision: RevisionSelectionMetadata,
+    projection: ProjectedFilingWindowCloseUnavailable,
+) -> CloseUnknownModeloDeadline | None:
+    """Project one close-unknown window into an obligation, or ``None`` when it does not apply.
+
+    The filters are those of a dated window: the owning revision's filing
+    schedule must apply to the profile for the period, and the tax period must
+    overlap the activity period. A projection carries no applicability
+    conditions or result qualifiers of its own.
+    """
+    from ..calculations.registry.schedules import applicable_filing_schedules
+
+    period = projection.period
+    if revision.filing_schedules and not applicable_filing_schedules(revision, profile, period=period.registry_token):
+        return None
+    if _window_outside_activity_period(
+        period=period,
+        entity_type=profile.entity_type,
+        opens_on=projection.opens_on,
+        closes_on=projection.nominal_closes_on,
+        activity_start_date=profile.activity_start_date,
+        activity_end_date=profile.activity_end_date,
+        legal_entity_token=entity_type_legal_entity_token(effective_date=period.end_date),
+    ):
+        return None
+    return CloseUnknownModeloDeadline(
+        modelo=Modelo(projection.modelo),
+        period=period,
+        opens_on=projection.opens_on,
+        nominal_closes_on=projection.nominal_closes_on,
+        close_unavailable_reason=projection.reason.value,
+        boe_references=projection.legal_refs,
+    )
 
 
 def _window_registry_period(window: DeadlineWindowDefinition) -> str:

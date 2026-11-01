@@ -1,16 +1,16 @@
 # The Anexo II clause of Orden EHA/1658/2009 that fixes, per modelo and period, the
-# last day a domiciliación can be ordered with the filing, together with the
-# nominal close of the filing period that art. 3.2.b measures its extension from.
+# last day a domiciliación can be ordered with the filing.
 #
 # Entries:
-# - deadline_month_offset: months after the last month of the period in which
-#   the filing and the domiciliación periods end.
-# - filing_last_day: nominal last day of the filing period in that month, before
-#   any extension for an inhábil day (RD 1624/1992 art. 71); "month_end" is the
-#   last day of the month.
-# - domiciliation_last_day: the Anexo II day.
-# - leap_year_domiciliation_last_day: the Anexo II day when the deadline month
-#   falls in a leap year, where the clause names one.
+# - domiciliation_last_day: the Anexo II day, in the month the filing window
+#   nominally closes.
+# - leap_year_domiciliation_last_day: the Anexo II day when that month falls in a
+#   leap year, where the clause names one.
+#
+# The month and the nominal close of the filing period, which art. 3.2.b
+# measures its extension from, have one home: the filing-window clause
+# (deadlines.filing-window-clause). A modelo declared here without a covering
+# filing-window clause has no derived cutoff.
 #
 # Only Modelo 303 is declared. Anexo II also lists the other modelos whose payment
 # can be domiciliated; each is declared by its own owner.
@@ -42,8 +42,6 @@ required_text = ["presentación del 1 al 30 de enero y del 1 al 20 de abril, jul
 [fact.variants.payload]
 kind = "mapping"
 entries = [
-  { key = "deadline_month_offset", value = 1 },
-  { key = "filing_last_day", value = 20 },
   { key = "domiciliation_last_day", value = 15 },
 ]
 
@@ -65,8 +63,6 @@ required_text = ["presentación del 1 al 30 de enero y del 1 al 20 de abril, jul
 [fact.variants.payload]
 kind = "mapping"
 entries = [
-  { key = "deadline_month_offset", value = 1 },
-  { key = "filing_last_day", value = 30 },
   { key = "domiciliation_last_day", value = 25 },
 ]
 
@@ -91,8 +87,6 @@ required_text = ["presentación del 1 al 30 de cada mes"]
 [fact.variants.payload]
 kind = "mapping"
 entries = [
-  { key = "deadline_month_offset", value = 1 },
-  { key = "filing_last_day", value = 30 },
   { key = "domiciliation_last_day", value = 25 },
 ]
 
@@ -114,8 +108,6 @@ required_text = ["1M 26: 1 de febrero al 2 de marzo"]
 [fact.variants.payload]
 kind = "mapping"
 entries = [
-  { key = "deadline_month_offset", value = 1 },
-  { key = "filing_last_day", value = "month_end" },
   { key = "domiciliation_last_day", value = 23 },
   { key = "leap_year_domiciliation_last_day", value = 24 },
 ]

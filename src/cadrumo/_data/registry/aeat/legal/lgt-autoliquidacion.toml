@@ -1,6 +1,8 @@
 # Procedural articles of Ley 58/2003 (Ley General Tributaria) that
 # govern what makes a Modelo declaration legally filed.
 #
+# - art-7.2: supletory general administrative law, through which the
+#   Ley 39/2015 inhabil-day extension reaches an autoliquidacion close.
 # - art-119: tax declaration regime (any document presented to AEAT
 #   that acknowledges a tax-relevant fact). Frames the locked
 #   semantics of ModeloRecord persistence.
@@ -10,6 +12,24 @@
 # - art-122: complementarias / sustitutivas (amending self-assessments).
 #   Grounds amend_modelo_revision behaviour and the ModeloRecord
 #   SUPERSEDED state transition.
+
+[legal."ley-58-2003:art-7.2"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-58-2003.html#a7"
+document_id = "BOE-A-2003-23186"
+article = "7.2"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2003-23186#a7"
+published_at = 2003-12-18
+effective_from = 2004-07-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-11-01
+reviewed_by = "agent-authored from bundled ley-58-2003.html#a7; operator to re-stamp"
+notes = "LGT art. 7.2: general administrative law applies supletoriamente to tax matters. With Ley 39/2015 DA 1.2 it carries the art. 30.5 inhábil-day extension to an autoliquidación filing close, since the LGT has no general rule of its own for it."
+required_text = [
+    "Tendrán carácter supletorio las disposiciones generales del derecho administrativo y los preceptos del derecho común.",
+]
 
 [legal."ley-58-2003:art-94"]
 evidence_tier = "legal_authority"

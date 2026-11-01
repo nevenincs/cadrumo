@@ -218,7 +218,8 @@ def modelo_work_deadline_posture(
 
     Returns:
         A :class:`ModeloWorkDeadlinePosture`, or ``None`` when the registry has
-        no deadline window for the work unit's filing axis.
+        no deadline window for the work unit's filing axis, or when the window's
+        close is unknown and the reference date is past its nominal close.
 
     See Also:
         :func:`cadrumo.entrypoints.cli._modelo_rendering._work_unit_deadline_output_from_posture`:
@@ -239,12 +240,17 @@ def modelo_work_deadline_posture(
         if deadline is None:
             return None
         days_overdue = deadline.days_overdue_on(resolved_reference_on)
+        days_remaining = deadline.days_remaining_on(resolved_reference_on)
+        if days_overdue is None and days_remaining is None:
+            # A close that is unknown and lies past its nominal date: lateness
+            # cannot be judged, so no posture and no recargo preview are given.
+            return None
         if days_overdue is None:
             return ModeloWorkDeadlinePosture(
                 closes_on=deadline.closes_on,
                 nominal_closes_on=deadline.nominal_closes_on,
                 holiday_coverage=deadline.holiday_coverage,
-                days_remaining=deadline.days_remaining_on(resolved_reference_on),
+                days_remaining=days_remaining,
             )
         try:
             recovery = build_recovery_for_overdue(
@@ -329,7 +335,7 @@ def calculated_m210_plazo_resolution(
     if resultado is None:
         return None
     tipo_renta_code = revision.m210_official_tipo_renta_code
-    window = resolve_filing_window(
+    resolution = resolve_filing_window(
         str(work_unit.modelo),
         work_unit.filing_year,
         work_unit.period,
@@ -337,6 +343,9 @@ def calculated_m210_plazo_resolution(
         tipo_renta_code=tipo_renta_code,
         authority=operation,
     )
+    # A window whose close is unknown yields no notice, as an unknown deadline
+    # does everywhere on this surface; it is never stated against a nominal date.
+    window = None if resolution is None else resolution.dated_window
     if window is None:
         return None
 

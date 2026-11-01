@@ -42,13 +42,10 @@ period = "2026 12"
 period_kind = "monthly"
 opens_on = 2027-01-01
 closes_on = 2027-02-01
-payment_cutoff_on = 2027-01-27
 legal_refs = ["rd-1624-1992:art-71"]
 source_refs = [
     "boe-modelo-303-2008-form",
     "aeat-modelo-303-procedure",
-    "aeat-calendario-contribuyente-2026-simplificado-hasta-1-febrero-2027",
-    "aeat-calendario-contribuyente-2026-domiciliacion",
 ]
 
 [[revisions.2026-y-siguientes.deadline_windows]]

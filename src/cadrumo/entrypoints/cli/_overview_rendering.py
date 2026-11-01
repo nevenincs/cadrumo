@@ -63,6 +63,7 @@ from ...core.json_contract import (
 )
 from ...core.notificacion_estado_servicio import NotificacionEstadoServicio
 from ...core.operator_action_enums import ActionArgumentSource, ActionArgumentStatus
+from ...domain.deadlines.models import ObligationStatus
 from .common import resolve_notice_action
 from .ledger_results import LedgerStatusResult
 from .overview_results import (
@@ -619,9 +620,15 @@ def _next_due_entry(cal: OverviewCalendar) -> OverviewCalendarEntry | None:
 
     The window start is the query's own as-of anchor, so this is "next due" for
     the range the operator asked about rather than for the wall clock -- a
-    historical window reports the first obligation inside it, not none.
+    historical window reports the first obligation inside it, not none. An
+    entry whose close is unknown is never next due, because its nominal close
+    is only a lower bound.
     """
-    upcoming = [entry for entry in cal.entries if entry.adjusted_closes_on >= cal.range.from_date]
+    upcoming = [
+        entry
+        for entry in cal.entries
+        if entry.status is not ObligationStatus.UNKNOWN and entry.adjusted_closes_on >= cal.range.from_date
+    ]
     if not upcoming:
         return None
     return min(upcoming, key=lambda entry: entry.adjusted_closes_on)
