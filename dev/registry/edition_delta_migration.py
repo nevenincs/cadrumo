@@ -63,7 +63,7 @@ finding. Publication-readiness findings, including unchecked export bytes,
 remain visible but do not block a proven source-only replacement. Without
 ``--apply`` nothing outside
 the work directory is written by the migration; the command-line report is
-written separately under the repository's ``.logs/audit-runs`` run-output
+written separately under the repository's ``.tmp/logs/audit-runs`` run-output
 tree, which is transient: the next reclamation removes it, so promote anything
 the decision rests on into durable evidence rather than citing a run directory.
 

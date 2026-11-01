@@ -27,7 +27,7 @@ from cadrumo.domain.calculations.registry.ledger_iva_bindings import resolve_led
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_formula import FormulaExpression
 from cadrumo.domain.calculations.registry.tests.modelo_303_registry_constants import (
-    _M303_RECORD_DESIGN_SOURCE_BY_REVISION,
+    M303_RECORD_DESIGN_SOURCE_BY_REVISION,
 )
 from cadrumo.domain.period import calculation_filing_date
 
@@ -35,7 +35,7 @@ from ..compiler.authority import compiled_bundled_authority
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_domain]
 
-_REVISIONS = tuple(_M303_RECORD_DESIGN_SOURCE_BY_REVISION)
+_REVISIONS = tuple(M303_RECORD_DESIGN_SOURCE_BY_REVISION)
 
 # The AEAT box each semantic carrier stands for where the registry sums a
 # carrier instead of the printed box. The pairs are read off the design labels:
@@ -62,7 +62,7 @@ _DESIGN_TERM = re.compile(r"([+-]?)\s*\[(\d+)\]")
 
 def _design_expression(revision_id: str, box: str) -> tuple[tuple[int, str], ...]:
     """Return the signed terms the revision's own diseño prints for ``box``."""
-    source = compiled_bundled_authority().catalogues.sources[_M303_RECORD_DESIGN_SOURCE_BY_REVISION[revision_id]]
+    source = compiled_bundled_authority().catalogues.sources[M303_RECORD_DESIGN_SOURCE_BY_REVISION[revision_id]]
     design = (bundled_path() / f"{source.corpus_path}.extracted.md").read_text(encoding="utf-8")
     matches = re.findall(rf"\(([^()]*)\)\s*\[{box}\]", design)
     assert len(set(matches)) == 1, f"{revision_id}: design prints {len(set(matches))} expressions for [{box}]"

@@ -14,7 +14,7 @@ source_refs = ["aeat-dr-303-2023"]
 sheet = "DP30302"
 source_row = 6
 source_cell = "A6"
-ordinal = 1
+ordinal = "1"
 record_identity = "DP30302"
 
 [[entries]]
@@ -27,7 +27,7 @@ source_refs = ["aeat-dr-303-2023"]
 sheet = "DP30302"
 source_row = 7
 source_cell = "A7"
-ordinal = 2
+ordinal = "2"
 record_identity = "DP30302"
 
 [[entries]]
@@ -40,7 +40,7 @@ source_refs = ["aeat-dr-303-2023"]
 sheet = "DP30302"
 source_row = 8
 source_cell = "A8"
-ordinal = 3
+ordinal = "3"
 record_identity = "DP30302"
 
 [[entries]]
@@ -53,7 +53,7 @@ source_refs = ["aeat-dr-303-2023"]
 sheet = "DP30302"
 source_row = 9
 source_cell = "A9"
-ordinal = 4
+ordinal = "4"
 record_identity = "DP30302"
 
 [[entries]]
@@ -66,7 +66,7 @@ source_refs = ["aeat-dr-303-2023"]
 sheet = "DP30302"
 source_row = 10
 source_cell = "A10"
-ordinal = 5
+ordinal = "5"
 record_identity = "DP30302"
 
 [[entries]]
@@ -83,7 +83,7 @@ field = "activity_code"
 sheet = "DP30302"
 source_row = 11
 source_cell = "A11"
-ordinal = 6
+ordinal = "6"
 record_identity = "DP30302"
 
 [[entries]]
@@ -100,7 +100,7 @@ fact = "volumen_ingresos"
 sheet = "DP30302"
 source_row = 12
 source_cell = "A12"
-ordinal = 7
+ordinal = "7"
 record_identity = "DP30302"
 
 [[entries]]
@@ -117,7 +117,7 @@ fact = "indice_cuota"
 sheet = "DP30302"
 source_row = 13
 source_cell = "A13"
-ordinal = 8
+ordinal = "8"
 record_identity = "DP30302"
 
 [[entries]]
@@ -134,7 +134,7 @@ fact = "cuota_devengada"
 sheet = "DP30302"
 source_row = 14
 source_cell = "A14"
-ordinal = 9
+ordinal = "9"
 record_identity = "DP30302"
 
 [[entries]]
@@ -151,7 +151,7 @@ fact = "porcentaje_ingreso_cuenta"
 sheet = "DP30302"
 source_row = 15
 source_cell = "A15"
-ordinal = 10
+ordinal = "10"
 record_identity = "DP30302"
 
 [[entries]]
@@ -168,7 +168,7 @@ fact = "ingreso_cuenta"
 sheet = "DP30302"
 source_row = 16
 source_cell = "A16"
-ordinal = 11
+ordinal = "11"
 record_identity = "DP30302"
 
 [[entries]]
@@ -185,7 +185,7 @@ fact = "cuota_soportada_operaciones_corrientes"
 sheet = "DP30302"
 source_row = 17
 source_cell = "A17"
-ordinal = 12
+ordinal = "12"
 record_identity = "DP30302"
 
 [[entries]]
@@ -202,7 +202,7 @@ fact = "cuota_anual_derivada_regimen_simplificado"
 sheet = "DP30302"
 source_row = 18
 source_cell = "A18"
-ordinal = 13
+ordinal = "13"
 record_identity = "DP30302"
 
 [[entries]]
@@ -219,7 +219,7 @@ field = "activity_code"
 sheet = "DP30302"
 source_row = 19
 source_cell = "A19"
-ordinal = 14
+ordinal = "14"
 record_identity = "DP30302"
 
 [[entries]]
@@ -236,7 +236,7 @@ fact = "volumen_ingresos"
 sheet = "DP30302"
 source_row = 20
 source_cell = "A20"
-ordinal = 15
+ordinal = "15"
 record_identity = "DP30302"
 
 [[entries]]
@@ -253,7 +253,7 @@ fact = "indice_cuota"
 sheet = "DP30302"
 source_row = 21
 source_cell = "A21"
-ordinal = 16
+ordinal = "16"
 record_identity = "DP30302"
 
 [[entries]]
@@ -270,7 +270,7 @@ fact = "cuota_devengada"
 sheet = "DP30302"
 source_row = 22
 source_cell = "A22"
-ordinal = 17
+ordinal = "17"
 record_identity = "DP30302"
 
 [[entries]]
@@ -287,7 +287,7 @@ fact = "porcentaje_ingreso_cuenta"
 sheet = "DP30302"
 source_row = 23
 source_cell = "A23"
-ordinal = 18
+ordinal = "18"
 record_identity = "DP30302"
 
 [[entries]]
@@ -304,7 +304,7 @@ fact = "ingreso_cuenta"
 sheet = "DP30302"
 source_row = 24
 source_cell = "A24"
-ordinal = 19
+ordinal = "19"
 record_identity = "DP30302"
 
 [[entries]]
@@ -321,7 +321,7 @@ fact = "cuota_soportada_operaciones_corrientes"
 sheet = "DP30302"
 source_row = 25
 source_cell = "A25"
-ordinal = 20
+ordinal = "20"
 record_identity = "DP30302"
 
 [[entries]]
@@ -338,7 +338,7 @@ fact = "cuota_anual_derivada_regimen_simplificado"
 sheet = "DP30302"
 source_row = 26
 source_cell = "A26"
-ordinal = 21
+ordinal = "21"
 record_identity = "DP30302"
 
 [[entries]]
@@ -355,7 +355,7 @@ field = "iae_epigrafe"
 sheet = "DP30302"
 source_row = 27
 source_cell = "A27"
-ordinal = 22
+ordinal = "22"
 record_identity = "DP30302"
 
 [[entries]]
@@ -372,7 +372,7 @@ field = "auxiliary_activity_indicator"
 sheet = "DP30302"
 source_row = 28
 source_cell = "A28"
-ordinal = 23
+ordinal = "23"
 record_identity = "DP30302"
 
 [[entries]]
@@ -390,7 +390,7 @@ value = "declared_quantity"
 sheet = "DP30302"
 source_row = 29
 source_cell = "A29"
-ordinal = 24
+ordinal = "24"
 record_identity = "DP30302"
 
 [[entries]]
@@ -408,7 +408,7 @@ value = "cuota_devengada"
 sheet = "DP30302"
 source_row = 30
 source_cell = "A30"
-ordinal = 25
+ordinal = "25"
 record_identity = "DP30302"
 
 [[entries]]
@@ -426,7 +426,7 @@ value = "declared_quantity"
 sheet = "DP30302"
 source_row = 31
 source_cell = "A31"
-ordinal = 26
+ordinal = "26"
 record_identity = "DP30302"
 
 [[entries]]
@@ -444,7 +444,7 @@ value = "cuota_devengada"
 sheet = "DP30302"
 source_row = 32
 source_cell = "A32"
-ordinal = 27
+ordinal = "27"
 record_identity = "DP30302"
 
 [[entries]]
@@ -462,7 +462,7 @@ value = "declared_quantity"
 sheet = "DP30302"
 source_row = 33
 source_cell = "A33"
-ordinal = 28
+ordinal = "28"
 record_identity = "DP30302"
 
 [[entries]]
@@ -480,7 +480,7 @@ value = "cuota_devengada"
 sheet = "DP30302"
 source_row = 34
 source_cell = "A34"
-ordinal = 29
+ordinal = "29"
 record_identity = "DP30302"
 
 [[entries]]
@@ -498,7 +498,7 @@ value = "declared_quantity"
 sheet = "DP30302"
 source_row = 35
 source_cell = "A35"
-ordinal = 30
+ordinal = "30"
 record_identity = "DP30302"
 
 [[entries]]
@@ -516,7 +516,7 @@ value = "cuota_devengada"
 sheet = "DP30302"
 source_row = 36
 source_cell = "A36"
-ordinal = 31
+ordinal = "31"
 record_identity = "DP30302"
 
 [[entries]]
@@ -534,7 +534,7 @@ value = "declared_quantity"
 sheet = "DP30302"
 source_row = 37
 source_cell = "A37"
-ordinal = 32
+ordinal = "32"
 record_identity = "DP30302"
 
 [[entries]]
@@ -552,7 +552,7 @@ value = "cuota_devengada"
 sheet = "DP30302"
 source_row = 38
 source_cell = "A38"
-ordinal = 33
+ordinal = "33"
 record_identity = "DP30302"
 
 [[entries]]
@@ -570,7 +570,7 @@ value = "declared_quantity"
 sheet = "DP30302"
 source_row = 39
 source_cell = "A39"
-ordinal = 34
+ordinal = "34"
 record_identity = "DP30302"
 
 [[entries]]
@@ -588,7 +588,7 @@ value = "cuota_devengada"
 sheet = "DP30302"
 source_row = 40
 source_cell = "A40"
-ordinal = 35
+ordinal = "35"
 record_identity = "DP30302"
 
 [[entries]]
@@ -606,7 +606,7 @@ value = "declared_quantity"
 sheet = "DP30302"
 source_row = 41
 source_cell = "A41"
-ordinal = 36
+ordinal = "36"
 record_identity = "DP30302"
 
 [[entries]]
@@ -624,7 +624,7 @@ value = "cuota_devengada"
 sheet = "DP30302"
 source_row = 42
 source_cell = "A42"
-ordinal = 37
+ordinal = "37"
 record_identity = "DP30302"
 
 [[entries]]
@@ -641,7 +641,7 @@ fact = "cuota_devengada_operaciones_corrientes"
 sheet = "DP30302"
 source_row = 43
 source_cell = "A43"
-ordinal = 38
+ordinal = "38"
 record_identity = "DP30302"
 
 [[entries]]
@@ -658,7 +658,7 @@ fact = "reducciones"
 sheet = "DP30302"
 source_row = 44
 source_cell = "A44"
-ordinal = 39
+ordinal = "39"
 record_identity = "DP30302"
 
 [[entries]]
@@ -675,7 +675,7 @@ fact = "indice_corrector_actividad_temporada"
 sheet = "DP30302"
 source_row = 45
 source_cell = "A45"
-ordinal = 40
+ordinal = "40"
 record_identity = "DP30302"
 
 [[entries]]
@@ -692,7 +692,7 @@ fact = "porcentaje_ingreso_cuenta"
 sheet = "DP30302"
 source_row = 46
 source_cell = "A46"
-ordinal = 41
+ordinal = "41"
 record_identity = "DP30302"
 
 [[entries]]
@@ -709,7 +709,7 @@ fact = "ingreso_cuenta"
 sheet = "DP30302"
 source_row = 47
 source_cell = "A47"
-ordinal = 42
+ordinal = "42"
 record_identity = "DP30302"
 
 [[entries]]
@@ -726,7 +726,7 @@ fact = "cuotas_soportadas_operaciones_corrientes"
 sheet = "DP30302"
 source_row = 48
 source_cell = "A48"
-ordinal = 43
+ordinal = "43"
 record_identity = "DP30302"
 
 [[entries]]
@@ -743,7 +743,7 @@ fact = "indice_corrector_actividades_temporada"
 sheet = "DP30302"
 source_row = 49
 source_cell = "A49"
-ordinal = 44
+ordinal = "44"
 record_identity = "DP30302"
 
 [[entries]]
@@ -760,7 +760,7 @@ fact = "resultado_cuarto_trimestre"
 sheet = "DP30302"
 source_row = 50
 source_cell = "A50"
-ordinal = 45
+ordinal = "45"
 record_identity = "DP30302"
 
 [[entries]]
@@ -777,7 +777,7 @@ fact = "porcentaje_cuota_minima"
 sheet = "DP30302"
 source_row = 51
 source_cell = "A51"
-ordinal = 46
+ordinal = "46"
 record_identity = "DP30302"
 
 [[entries]]
@@ -794,7 +794,7 @@ fact = "devolucion_cuotas_soportadas_otros_paises"
 sheet = "DP30302"
 source_row = 52
 source_cell = "A52"
-ordinal = 47
+ordinal = "47"
 record_identity = "DP30302"
 
 [[entries]]
@@ -811,7 +811,7 @@ fact = "cuota_minima"
 sheet = "DP30302"
 source_row = 53
 source_cell = "A53"
-ordinal = 48
+ordinal = "48"
 record_identity = "DP30302"
 
 [[entries]]
@@ -828,7 +828,7 @@ fact = "cuota_anual_derivada_regimen_simplificado"
 sheet = "DP30302"
 source_row = 54
 source_cell = "A54"
-ordinal = 49
+ordinal = "49"
 record_identity = "DP30302"
 
 [[entries]]
@@ -845,7 +845,7 @@ field = "iae_epigrafe"
 sheet = "DP30302"
 source_row = 55
 source_cell = "A55"
-ordinal = 50
+ordinal = "50"
 record_identity = "DP30302"
 
 [[entries]]
@@ -862,7 +862,7 @@ field = "auxiliary_activity_indicator"
 sheet = "DP30302"
 source_row = 56
 source_cell = "A56"
-ordinal = 51
+ordinal = "51"
 record_identity = "DP30302"
 
 [[entries]]
@@ -880,7 +880,7 @@ value = "declared_quantity"
 sheet = "DP30302"
 source_row = 57
 source_cell = "A57"
-ordinal = 52
+ordinal = "52"
 record_identity = "DP30302"
 
 [[entries]]
@@ -898,7 +898,7 @@ value = "cuota_devengada"
 sheet = "DP30302"
 source_row = 58
 source_cell = "A58"
-ordinal = 53
+ordinal = "53"
 record_identity = "DP30302"
 
 [[entries]]
@@ -916,7 +916,7 @@ value = "declared_quantity"
 sheet = "DP30302"
 source_row = 59
 source_cell = "A59"
-ordinal = 54
+ordinal = "54"
 record_identity = "DP30302"
 
 [[entries]]
@@ -934,7 +934,7 @@ value = "cuota_devengada"
 sheet = "DP30302"
 source_row = 60
 source_cell = "A60"
-ordinal = 55
+ordinal = "55"
 record_identity = "DP30302"
 
 [[entries]]
@@ -952,7 +952,7 @@ value = "declared_quantity"
 sheet = "DP30302"
 source_row = 61
 source_cell = "A61"
-ordinal = 56
+ordinal = "56"
 record_identity = "DP30302"
 
 [[entries]]
@@ -970,7 +970,7 @@ value = "cuota_devengada"
 sheet = "DP30302"
 source_row = 62
 source_cell = "A62"
-ordinal = 57
+ordinal = "57"
 record_identity = "DP30302"
 
 [[entries]]
@@ -988,7 +988,7 @@ value = "declared_quantity"
 sheet = "DP30302"
 source_row = 63
 source_cell = "A63"
-ordinal = 58
+ordinal = "58"
 record_identity = "DP30302"
 
 [[entries]]
@@ -1006,7 +1006,7 @@ value = "cuota_devengada"
 sheet = "DP30302"
 source_row = 64
 source_cell = "A64"
-ordinal = 59
+ordinal = "59"
 record_identity = "DP30302"
 
 [[entries]]
@@ -1024,7 +1024,7 @@ value = "declared_quantity"
 sheet = "DP30302"
 source_row = 65
 source_cell = "A65"
-ordinal = 60
+ordinal = "60"
 record_identity = "DP30302"
 
 [[entries]]
@@ -1042,7 +1042,7 @@ value = "cuota_devengada"
 sheet = "DP30302"
 source_row = 66
 source_cell = "A66"
-ordinal = 61
+ordinal = "61"
 record_identity = "DP30302"
 
 [[entries]]
@@ -1060,7 +1060,7 @@ value = "declared_quantity"
 sheet = "DP30302"
 source_row = 67
 source_cell = "A67"
-ordinal = 62
+ordinal = "62"
 record_identity = "DP30302"
 
 [[entries]]
@@ -1078,7 +1078,7 @@ value = "cuota_devengada"
 sheet = "DP30302"
 source_row = 68
 source_cell = "A68"
-ordinal = 63
+ordinal = "63"
 record_identity = "DP30302"
 
 [[entries]]
@@ -1096,7 +1096,7 @@ value = "declared_quantity"
 sheet = "DP30302"
 source_row = 69
 source_cell = "A69"
-ordinal = 64
+ordinal = "64"
 record_identity = "DP30302"
 
 [[entries]]
@@ -1114,7 +1114,7 @@ value = "cuota_devengada"
 sheet = "DP30302"
 source_row = 70
 source_cell = "A70"
-ordinal = 65
+ordinal = "65"
 record_identity = "DP30302"
 
 [[entries]]
@@ -1131,7 +1131,7 @@ fact = "cuota_devengada_operaciones_corrientes"
 sheet = "DP30302"
 source_row = 71
 source_cell = "A71"
-ordinal = 66
+ordinal = "66"
 record_identity = "DP30302"
 
 [[entries]]
@@ -1148,7 +1148,7 @@ fact = "reducciones"
 sheet = "DP30302"
 source_row = 72
 source_cell = "A72"
-ordinal = 67
+ordinal = "67"
 record_identity = "DP30302"
 
 [[entries]]
@@ -1165,7 +1165,7 @@ fact = "indice_corrector_actividad_temporada"
 sheet = "DP30302"
 source_row = 73
 source_cell = "A73"
-ordinal = 68
+ordinal = "68"
 record_identity = "DP30302"
 
 [[entries]]
@@ -1182,7 +1182,7 @@ fact = "porcentaje_ingreso_cuenta"
 sheet = "DP30302"
 source_row = 74
 source_cell = "A74"
-ordinal = 69
+ordinal = "69"
 record_identity = "DP30302"
 
 [[entries]]
@@ -1199,7 +1199,7 @@ fact = "ingreso_cuenta"
 sheet = "DP30302"
 source_row = 75
 source_cell = "A75"
-ordinal = 70
+ordinal = "70"
 record_identity = "DP30302"
 
 [[entries]]
@@ -1216,7 +1216,7 @@ fact = "cuotas_soportadas_operaciones_corrientes"
 sheet = "DP30302"
 source_row = 76
 source_cell = "A76"
-ordinal = 71
+ordinal = "71"
 record_identity = "DP30302"
 
 [[entries]]
@@ -1233,7 +1233,7 @@ fact = "indice_corrector_actividades_temporada"
 sheet = "DP30302"
 source_row = 77
 source_cell = "A77"
-ordinal = 72
+ordinal = "72"
 record_identity = "DP30302"
 
 [[entries]]
@@ -1250,7 +1250,7 @@ fact = "resultado_cuarto_trimestre"
 sheet = "DP30302"
 source_row = 78
 source_cell = "A78"
-ordinal = 73
+ordinal = "73"
 record_identity = "DP30302"
 
 [[entries]]
@@ -1267,7 +1267,7 @@ fact = "porcentaje_cuota_minima"
 sheet = "DP30302"
 source_row = 79
 source_cell = "A79"
-ordinal = 74
+ordinal = "74"
 record_identity = "DP30302"
 
 [[entries]]
@@ -1284,7 +1284,7 @@ fact = "devolucion_cuotas_soportadas_otros_paises"
 sheet = "DP30302"
 source_row = 80
 source_cell = "A80"
-ordinal = 75
+ordinal = "75"
 record_identity = "DP30302"
 
 [[entries]]
@@ -1301,7 +1301,7 @@ fact = "cuota_minima"
 sheet = "DP30302"
 source_row = 81
 source_cell = "A81"
-ordinal = 76
+ordinal = "76"
 record_identity = "DP30302"
 
 [[entries]]
@@ -1318,7 +1318,7 @@ fact = "cuota_anual_derivada_regimen_simplificado"
 sheet = "DP30302"
 source_row = 82
 source_cell = "A82"
-ordinal = 77
+ordinal = "77"
 record_identity = "DP30302"
 
 [[entries]]
@@ -1331,7 +1331,7 @@ source_refs = ["aeat-dr-303-2023"]
 sheet = "DP30302"
 source_row = 83
 source_cell = "A83"
-ordinal = 78
+ordinal = "78"
 record_identity = "DP30302"
 
 [[entries]]
@@ -1344,7 +1344,7 @@ source_refs = ["aeat-dr-303-2023"]
 sheet = "DP30302"
 source_row = 84
 source_cell = "A84"
-ordinal = 79
+ordinal = "79"
 record_identity = "DP30302"
 
 [[entries]]
@@ -1357,7 +1357,7 @@ source_refs = ["aeat-dr-303-2023"]
 sheet = "DP30302"
 source_row = 85
 source_cell = "A85"
-ordinal = 80
+ordinal = "80"
 record_identity = "DP30302"
 
 [[entries]]
@@ -1370,7 +1370,7 @@ source_refs = ["aeat-dr-303-2023"]
 sheet = "DP30302"
 source_row = 86
 source_cell = "A86"
-ordinal = 81
+ordinal = "81"
 record_identity = "DP30302"
 
 [[entries]]
@@ -1383,7 +1383,7 @@ source_refs = ["aeat-dr-303-2023"]
 sheet = "DP30302"
 source_row = 87
 source_cell = "A87"
-ordinal = 82
+ordinal = "82"
 record_identity = "DP30302"
 
 [[entries]]
@@ -1396,7 +1396,7 @@ source_refs = ["aeat-dr-303-2023"]
 sheet = "DP30302"
 source_row = 88
 source_cell = "A88"
-ordinal = 83
+ordinal = "83"
 record_identity = "DP30302"
 
 [[entries]]
@@ -1409,7 +1409,7 @@ source_refs = ["aeat-dr-303-2023"]
 sheet = "DP30302"
 source_row = 89
 source_cell = "A89"
-ordinal = 84
+ordinal = "84"
 record_identity = "DP30302"
 
 [[entries]]
@@ -1422,7 +1422,7 @@ source_refs = ["aeat-dr-303-2023"]
 sheet = "DP30302"
 source_row = 90
 source_cell = "A90"
-ordinal = 85
+ordinal = "85"
 record_identity = "DP30302"
 
 [[entries]]
@@ -1435,7 +1435,7 @@ source_refs = ["aeat-dr-303-2023"]
 sheet = "DP30302"
 source_row = 91
 source_cell = "A91"
-ordinal = 86
+ordinal = "86"
 record_identity = "DP30302"
 
 [[entries]]
@@ -1448,7 +1448,7 @@ source_refs = ["aeat-dr-303-2023"]
 sheet = "DP30302"
 source_row = 92
 source_cell = "A92"
-ordinal = 87
+ordinal = "87"
 record_identity = "DP30302"
 
 [[entries]]
@@ -1461,7 +1461,7 @@ source_refs = ["aeat-dr-303-2023"]
 sheet = "DP30302"
 source_row = 93
 source_cell = "A93"
-ordinal = 88
+ordinal = "88"
 record_identity = "DP30302"
 
 [[entries]]
@@ -1474,7 +1474,7 @@ source_refs = ["aeat-dr-303-2023"]
 sheet = "DP30302"
 source_row = 94
 source_cell = "A94"
-ordinal = 89
+ordinal = "89"
 record_identity = "DP30302"
 
 [[entries]]
@@ -1491,7 +1491,7 @@ fact = "actividad_temporada_dias_ejercicio_anio_anterior"
 sheet = "DP30302"
 source_row = 95
 source_cell = "A95"
-ordinal = 90
+ordinal = "90"
 record_identity = "DP30302"
 
 [[entries]]
@@ -1508,7 +1508,7 @@ fact = "dias_ejercicio_trimestre"
 sheet = "DP30302"
 source_row = 96
 source_cell = "A96"
-ordinal = 91
+ordinal = "91"
 record_identity = "DP30302"
 
 [[entries]]
@@ -1525,7 +1525,7 @@ fact = "empleados_inicio_ejercicio"
 sheet = "DP30302"
 source_row = 97
 source_cell = "A97"
-ordinal = 92
+ordinal = "92"
 record_identity = "DP30302"
 
 [[entries]]
@@ -1542,7 +1542,7 @@ fact = "actividad_temporada_dias_ejercicio_cuarto_trimestre"
 sheet = "DP30302"
 source_row = 98
 source_cell = "A98"
-ordinal = 93
+ordinal = "93"
 record_identity = "DP30302"
 
 [[entries]]
@@ -1559,7 +1559,7 @@ fact = "max_asalariados_simultaneos"
 sheet = "DP30302"
 source_row = 99
 source_cell = "A99"
-ordinal = 94
+ordinal = "94"
 record_identity = "DP30302"
 
 [[entries]]
@@ -1576,7 +1576,7 @@ fact = "lorca_elegible"
 sheet = "DP30302"
 source_row = 100
 source_cell = "A100"
-ordinal = 95
+ordinal = "95"
 record_identity = "DP30302"
 
 [[entries]]
@@ -1593,7 +1593,7 @@ fact = "cuotas_soportadas_cuarto_trimestre"
 sheet = "DP30302"
 source_row = 101
 source_cell = "A101"
-ordinal = 96
+ordinal = "96"
 record_identity = "DP30302"
 
 [[entries]]
@@ -1610,7 +1610,7 @@ fact = "compensaciones_reagp_cuarto_trimestre"
 sheet = "DP30302"
 source_row = 102
 source_cell = "A102"
-ordinal = 97
+ordinal = "97"
 record_identity = "DP30302"
 
 [[entries]]
@@ -1627,7 +1627,7 @@ fact = "personal_asalariado_horas_mayores_19"
 sheet = "DP30302"
 source_row = 103
 source_cell = "A103"
-ordinal = 98
+ordinal = "98"
 record_identity = "DP30302"
 
 [[entries]]
@@ -1644,7 +1644,7 @@ fact = "personal_asalariado_horas_menores_19_o_formacion"
 sheet = "DP30302"
 source_row = 104
 source_cell = "A104"
-ordinal = 99
+ordinal = "99"
 record_identity = "DP30302"
 
 [[entries]]
@@ -1661,7 +1661,7 @@ fact = "personal_asalariado_horas_discapacidad_33"
 sheet = "DP30302"
 source_row = 105
 source_cell = "A105"
-ordinal = 100
+ordinal = "100"
 record_identity = "DP30302"
 
 [[entries]]
@@ -1678,7 +1678,7 @@ fact = "personal_asalariado_horas_convenio_colectivo"
 sheet = "DP30302"
 source_row = 106
 source_cell = "A106"
-ordinal = 101
+ordinal = "101"
 record_identity = "DP30302"
 
 [[entries]]
@@ -1695,7 +1695,7 @@ fact = "personal_no_asalariado_horas_titular"
 sheet = "DP30302"
 source_row = 107
 source_cell = "A107"
-ordinal = 102
+ordinal = "102"
 record_identity = "DP30302"
 
 [[entries]]
@@ -1712,7 +1712,7 @@ fact = "personal_no_asalariado_titular_discapacidad_33"
 sheet = "DP30302"
 source_row = 108
 source_cell = "A108"
-ordinal = 103
+ordinal = "103"
 record_identity = "DP30302"
 
 [[entries]]
@@ -1729,7 +1729,7 @@ fact = "personal_no_asalariado_horas_conyuge"
 sheet = "DP30302"
 source_row = 109
 source_cell = "A109"
-ordinal = 104
+ordinal = "104"
 record_identity = "DP30302"
 
 [[entries]]
@@ -1746,7 +1746,7 @@ fact = "personal_no_asalariado_horas_hijos_menores_18"
 sheet = "DP30302"
 source_row = 110
 source_cell = "A110"
-ordinal = 105
+ordinal = "105"
 record_identity = "DP30302"
 
 [[entries]]
@@ -1764,7 +1764,7 @@ sub_index = 1
 sheet = "DP30302"
 source_row = 111
 source_cell = "A111"
-ordinal = 106
+ordinal = "106"
 record_identity = "DP30302"
 
 [[entries]]
@@ -1782,7 +1782,7 @@ sub_index = 1
 sheet = "DP30302"
 source_row = 112
 source_cell = "A112"
-ordinal = 107
+ordinal = "107"
 record_identity = "DP30302"
 
 [[entries]]
@@ -1800,7 +1800,7 @@ sub_index = 1
 sheet = "DP30302"
 source_row = 113
 source_cell = "A113"
-ordinal = 108
+ordinal = "108"
 record_identity = "DP30302"
 
 [[entries]]
@@ -1818,7 +1818,7 @@ sub_index = 2
 sheet = "DP30302"
 source_row = 114
 source_cell = "A114"
-ordinal = 109
+ordinal = "109"
 record_identity = "DP30302"
 
 [[entries]]
@@ -1836,7 +1836,7 @@ sub_index = 2
 sheet = "DP30302"
 source_row = 115
 source_cell = "A115"
-ordinal = 110
+ordinal = "110"
 record_identity = "DP30302"
 
 [[entries]]
@@ -1854,7 +1854,7 @@ sub_index = 2
 sheet = "DP30302"
 source_row = 116
 source_cell = "A116"
-ordinal = 111
+ordinal = "111"
 record_identity = "DP30302"
 
 [[entries]]
@@ -1872,7 +1872,7 @@ sub_index = 3
 sheet = "DP30302"
 source_row = 117
 source_cell = "A117"
-ordinal = 112
+ordinal = "112"
 record_identity = "DP30302"
 
 [[entries]]
@@ -1890,7 +1890,7 @@ sub_index = 3
 sheet = "DP30302"
 source_row = 118
 source_cell = "A118"
-ordinal = 113
+ordinal = "113"
 record_identity = "DP30302"
 
 [[entries]]
@@ -1908,7 +1908,7 @@ sub_index = 3
 sheet = "DP30302"
 source_row = 119
 source_cell = "A119"
-ordinal = 114
+ordinal = "114"
 record_identity = "DP30302"
 
 [[entries]]
@@ -1926,7 +1926,7 @@ sub_index = 4
 sheet = "DP30302"
 source_row = 120
 source_cell = "A120"
-ordinal = 115
+ordinal = "115"
 record_identity = "DP30302"
 
 [[entries]]
@@ -1944,7 +1944,7 @@ sub_index = 4
 sheet = "DP30302"
 source_row = 121
 source_cell = "A121"
-ordinal = 116
+ordinal = "116"
 record_identity = "DP30302"
 
 [[entries]]
@@ -1962,7 +1962,7 @@ sub_index = 4
 sheet = "DP30302"
 source_row = 122
 source_cell = "A122"
-ordinal = 117
+ordinal = "117"
 record_identity = "DP30302"
 
 [[entries]]
@@ -1979,7 +1979,7 @@ fact = "actividad_temporada_dias_ejercicio_anio_anterior"
 sheet = "DP30302"
 source_row = 123
 source_cell = "A123"
-ordinal = 118
+ordinal = "118"
 record_identity = "DP30302"
 
 [[entries]]
@@ -1996,7 +1996,7 @@ fact = "dias_ejercicio_trimestre"
 sheet = "DP30302"
 source_row = 124
 source_cell = "A124"
-ordinal = 119
+ordinal = "119"
 record_identity = "DP30302"
 
 [[entries]]
@@ -2013,7 +2013,7 @@ fact = "empleados_inicio_ejercicio_actual"
 sheet = "DP30302"
 source_row = 125
 source_cell = "A125"
-ordinal = 120
+ordinal = "120"
 record_identity = "DP30302"
 
 [[entries]]
@@ -2030,7 +2030,7 @@ fact = "actividad_temporada_dias_ejercicio_cuarto_trimestre"
 sheet = "DP30302"
 source_row = 126
 source_cell = "A126"
-ordinal = 121
+ordinal = "121"
 record_identity = "DP30302"
 
 [[entries]]
@@ -2047,7 +2047,7 @@ fact = "max_asalariados_simultaneos"
 sheet = "DP30302"
 source_row = 127
 source_cell = "A127"
-ordinal = 122
+ordinal = "122"
 record_identity = "DP30302"
 
 [[entries]]
@@ -2064,7 +2064,7 @@ fact = "lorca_elegible"
 sheet = "DP30302"
 source_row = 128
 source_cell = "A128"
-ordinal = 123
+ordinal = "123"
 record_identity = "DP30302"
 
 [[entries]]
@@ -2081,7 +2081,7 @@ fact = "cuotas_soportadas_cuarto_trimestre"
 sheet = "DP30302"
 source_row = 129
 source_cell = "A129"
-ordinal = 124
+ordinal = "124"
 record_identity = "DP30302"
 
 [[entries]]
@@ -2098,7 +2098,7 @@ fact = "compensaciones_reagp_cuarto_trimestre"
 sheet = "DP30302"
 source_row = 130
 source_cell = "A130"
-ordinal = 125
+ordinal = "125"
 record_identity = "DP30302"
 
 [[entries]]
@@ -2115,7 +2115,7 @@ fact = "personal_asalariado_horas_mayores_19"
 sheet = "DP30302"
 source_row = 131
 source_cell = "A131"
-ordinal = 126
+ordinal = "126"
 record_identity = "DP30302"
 
 [[entries]]
@@ -2132,7 +2132,7 @@ fact = "personal_asalariado_horas_menores_19_o_formacion"
 sheet = "DP30302"
 source_row = 132
 source_cell = "A132"
-ordinal = 127
+ordinal = "127"
 record_identity = "DP30302"
 
 [[entries]]
@@ -2149,7 +2149,7 @@ fact = "personal_asalariado_horas_discapacidad_33"
 sheet = "DP30302"
 source_row = 133
 source_cell = "A133"
-ordinal = 128
+ordinal = "128"
 record_identity = "DP30302"
 
 [[entries]]
@@ -2166,7 +2166,7 @@ fact = "personal_asalariado_horas_convenio_colectivo"
 sheet = "DP30302"
 source_row = 134
 source_cell = "A134"
-ordinal = 129
+ordinal = "129"
 record_identity = "DP30302"
 
 [[entries]]
@@ -2183,7 +2183,7 @@ fact = "personal_no_asalariado_horas_titular"
 sheet = "DP30302"
 source_row = 135
 source_cell = "A135"
-ordinal = 130
+ordinal = "130"
 record_identity = "DP30302"
 
 [[entries]]
@@ -2200,7 +2200,7 @@ fact = "personal_no_asalariado_titular_discapacidad_33"
 sheet = "DP30302"
 source_row = 136
 source_cell = "A136"
-ordinal = 131
+ordinal = "131"
 record_identity = "DP30302"
 
 [[entries]]
@@ -2217,7 +2217,7 @@ fact = "personal_no_asalariado_horas_conyuge"
 sheet = "DP30302"
 source_row = 137
 source_cell = "A137"
-ordinal = 132
+ordinal = "132"
 record_identity = "DP30302"
 
 [[entries]]
@@ -2234,7 +2234,7 @@ fact = "personal_no_asalariado_horas_hijos_menores_18"
 sheet = "DP30302"
 source_row = 138
 source_cell = "A138"
-ordinal = 133
+ordinal = "133"
 record_identity = "DP30302"
 
 [[entries]]
@@ -2252,7 +2252,7 @@ sub_index = 1
 sheet = "DP30302"
 source_row = 139
 source_cell = "A139"
-ordinal = 134
+ordinal = "134"
 record_identity = "DP30302"
 
 [[entries]]
@@ -2270,7 +2270,7 @@ sub_index = 1
 sheet = "DP30302"
 source_row = 140
 source_cell = "A140"
-ordinal = 135
+ordinal = "135"
 record_identity = "DP30302"
 
 [[entries]]
@@ -2288,7 +2288,7 @@ sub_index = 1
 sheet = "DP30302"
 source_row = 141
 source_cell = "A141"
-ordinal = 136
+ordinal = "136"
 record_identity = "DP30302"
 
 [[entries]]
@@ -2306,7 +2306,7 @@ sub_index = 2
 sheet = "DP30302"
 source_row = 142
 source_cell = "A142"
-ordinal = 137
+ordinal = "137"
 record_identity = "DP30302"
 
 [[entries]]
@@ -2324,7 +2324,7 @@ sub_index = 2
 sheet = "DP30302"
 source_row = 143
 source_cell = "A143"
-ordinal = 138
+ordinal = "138"
 record_identity = "DP30302"
 
 [[entries]]
@@ -2342,7 +2342,7 @@ sub_index = 2
 sheet = "DP30302"
 source_row = 144
 source_cell = "A144"
-ordinal = 139
+ordinal = "139"
 record_identity = "DP30302"
 
 [[entries]]
@@ -2360,7 +2360,7 @@ sub_index = 3
 sheet = "DP30302"
 source_row = 145
 source_cell = "A145"
-ordinal = 140
+ordinal = "140"
 record_identity = "DP30302"
 
 [[entries]]
@@ -2378,7 +2378,7 @@ sub_index = 3
 sheet = "DP30302"
 source_row = 146
 source_cell = "A146"
-ordinal = 141
+ordinal = "141"
 record_identity = "DP30302"
 
 [[entries]]
@@ -2396,7 +2396,7 @@ sub_index = 3
 sheet = "DP30302"
 source_row = 147
 source_cell = "A147"
-ordinal = 142
+ordinal = "142"
 record_identity = "DP30302"
 
 [[entries]]
@@ -2414,7 +2414,7 @@ sub_index = 4
 sheet = "DP30302"
 source_row = 148
 source_cell = "A148"
-ordinal = 143
+ordinal = "143"
 record_identity = "DP30302"
 
 [[entries]]
@@ -2432,7 +2432,7 @@ sub_index = 4
 sheet = "DP30302"
 source_row = 149
 source_cell = "A149"
-ordinal = 144
+ordinal = "144"
 record_identity = "DP30302"
 
 [[entries]]
@@ -2450,7 +2450,7 @@ sub_index = 4
 sheet = "DP30302"
 source_row = 150
 source_cell = "A150"
-ordinal = 145
+ordinal = "145"
 record_identity = "DP30302"
 
 [[entries]]
@@ -2467,7 +2467,7 @@ fact = "cuotas_soportadas_cuarto_trimestre"
 sheet = "DP30302"
 source_row = 151
 source_cell = "A151"
-ordinal = 146
+ordinal = "146"
 record_identity = "DP30302"
 
 [[entries]]
@@ -2484,7 +2484,7 @@ fact = "compensaciones_reagp_cuarto_trimestre"
 sheet = "DP30302"
 source_row = 152
 source_cell = "A152"
-ordinal = 147
+ordinal = "147"
 record_identity = "DP30302"
 
 [[entries]]
@@ -2501,7 +2501,7 @@ fact = "cuotas_soportadas_cuarto_trimestre"
 sheet = "DP30302"
 source_row = 153
 source_cell = "A153"
-ordinal = 148
+ordinal = "148"
 record_identity = "DP30302"
 
 [[entries]]
@@ -2518,7 +2518,7 @@ fact = "compensaciones_reagp_cuarto_trimestre"
 sheet = "DP30302"
 source_row = 154
 source_cell = "A154"
-ordinal = 149
+ordinal = "149"
 record_identity = "DP30302"
 
 [[entries]]
@@ -2535,7 +2535,7 @@ fact = "superficie_horno_dias_cuarto_trimestre"
 sheet = "DP30302"
 source_row = 155
 source_cell = "A155"
-ordinal = 150
+ordinal = "150"
 record_identity = "DP30302"
 
 [[entries]]
@@ -2552,7 +2552,7 @@ fact = "superficie_horno_dias_cuarto_trimestre"
 sheet = "DP30302"
 source_row = 156
 source_cell = "A156"
-ordinal = 151
+ordinal = "151"
 record_identity = "DP30302"
 
 [[entries]]
@@ -2564,7 +2564,7 @@ source_refs = ["aeat-dr-303-2023"]
 sheet = "DP30302"
 source_row = 157
 source_cell = "A157"
-ordinal = 152
+ordinal = "152"
 record_identity = "DP30302"
 
 [[entries]]
@@ -2577,5 +2577,5 @@ source_refs = ["aeat-dr-303-2023"]
 sheet = "DP30302"
 source_row = 158
 source_cell = "A158"
-ordinal = 153
+ordinal = "153"
 record_identity = "DP30302"

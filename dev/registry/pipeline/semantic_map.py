@@ -101,26 +101,6 @@ class _StrictModel(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True, strict=True)
 
 
-def _coerce_ordinal(value: object) -> object:
-    """Accept a legacy authored int literal alongside the parser's printed str label.
-
-    Committed semantic-map authoring data predates the parser's widened
-    ``str | None`` ordinal and still writes bare integers (``ordinal = 14``).
-    Coercing here lets that authored data hydrate unchanged while the anchor's
-    stored value matches the parser type exactly, so ``semantic_anchor_key``
-    and ``intermediate_anchor_key`` compare like-for-like without re-keying
-    committed TOML/JSON.
-    """
-    if value is None or isinstance(value, str):
-        return value
-    if isinstance(value, int) and not isinstance(value, bool):
-        return str(value)
-    raise ValueError("ordinal must be a printed str label, a legacy int literal, or None")
-
-
-type _AnchorOrdinal = Annotated[str | None, BeforeValidator(_coerce_ordinal)]
-
-
 class SemanticMapAnchor(_StrictModel):
     """The complete parser-owned identity of one official design slot.
 
@@ -144,7 +124,7 @@ class SemanticMapAnchor(_StrictModel):
     #: omitted key refuses at load rather than silently defaulting into an
     #: anchor no parser field can ever match. The ONE field that legitimately
     #: has no ordinal declares :attr:`ordinal_absent` instead -- see there.
-    ordinal: _AnchorOrdinal | None = Field(default=None, min_length=1)
+    ordinal: str | None = Field(default=None, min_length=1)
     #: Declares that AEAT printed this row with NO ordinal, so the anchor's
     #: ``ordinal`` is genuinely ``None`` rather than merely unauthored.
     #:

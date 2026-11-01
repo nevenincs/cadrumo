@@ -4655,14 +4655,14 @@ record_identity = "T3690 Estruc. gral"
 sheet = "T3690 Estruc. gral"
 source_row = 16
 source_cell = "A16"
-ordinal = 10
+ordinal = "10"
 record_identity = "T3690 Estruc. gral"
 
 [variable_envelopes.closer_anchor]
 sheet = "T3690 Estruc. gral"
 source_row = 17
 source_cell = "A17"
-ordinal = 11
+ordinal = "11"
 record_identity = "T3690 Estruc. gral"
 
 [variable_envelopes.total_anchor]

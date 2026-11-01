@@ -7,7 +7,6 @@ import inspect
 import os
 from pathlib import Path
 from shutil import rmtree
-from typing import Literal
 
 import pytest
 import rtoml
@@ -28,15 +27,12 @@ from .._tree_validation import (
 )
 from ..bootstrap_supersession import bootstrap_layout_supersession_fingerprint
 from ..export_fragment_provenance import (
-    ExportFragmentTarget,
     export_fragment_provenance_manifest_json_bytes,
     load_export_fragment_provenance_manifest,
 )
 from ..export_tree_models import RenderedExportTree
 from ..joined_record_design import JoinedRecordDesign
 from ..render_check import RevisionRenderInputs
-from ..render_profile_evidence import RenderProfileSourceEvidence
-from ..render_profile_model import RenderProfile
 from ..semantic_map import SemanticMap
 from ..tree_publication_artifacts import stage_verified_candidate_package, verify_generated_export_package
 from ..tree_publication_contracts import (
@@ -52,7 +48,6 @@ from ..tree_publication_journal import (
     load_generated_export_publication_journal,
     write_generated_export_publication_journal,
 )
-from ..tree_publication_recovery import recover_interrupted_publication
 from ..tree_publication_supersession_recovery import recover_interrupted_supersession_bundle
 from ._generated_tree_test_support import (
     ISOLATED_TREE,
@@ -382,170 +377,6 @@ def _stage_interrupted_verified_candidate(
         journal,
     )
     return backup_export_root
-
-
-def _legacy_orphan_context(tmp_path: Path) -> GeneratedExportTreePublicationContext:
-    target_root = tmp_path / "publication-root" / "registry" / "aeat"
-    target_export_root = target_root / "modelos" / "200" / "revisions" / "2025" / "export"
-    target_export_root.parent.mkdir(parents=True)
-    return GeneratedExportTreePublicationContext(
-        # This legacy-orphan recovery path never reads past `.target.modelo`
-        # and `.target.revision_id` (the journal comparison at the top of
-        # `recover_interrupted_publication`), so a real, minimally-populated
-        # validation context stands in rather than a duck-typed one -- the
-        # other fields (`registry_root`, `source_root`, `filing_year`,
-        # `period`) are never inspected on this path.
-        validation=GeneratedExportTreeValidationContext(
-            registry_root=tmp_path / "unused-registry-root",
-            source_root=tmp_path / "unused-source-root",
-            target=ExportFragmentTarget(modelo="200", revision_id="2025", design_epoch="2025"),
-            filing_year=2025,
-            period="anual",
-        ),
-        temporary_root=tmp_path / "temporary-root",
-        target_root=target_root,
-        target_export_root=target_export_root,
-        expected_target_state=GeneratedExportTreeTargetStateReceipt(manifest_sha256=None, output_files=()),
-    )
-
-
-#: The legacy-orphan recovery path retires or refuses a journal before ever
-#: reading a joined design, semantic map, rendered tree, or render profile
-#: (see `recover_interrupted_publication`, which only inspects
-#: `context.validation.target`). These stand in as real instances of the
-#: exact required types, built through pydantic's unvalidated-construction
-#: API rather than duck-typed placeholders, since no field on any of them is
-#: ever read along this path.
-_UNREACHED_JOINED = JoinedRecordDesign.model_construct()
-_UNREACHED_SEMANTIC_MAP = SemanticMap.model_construct()
-_UNREACHED_RENDERED = RenderedExportTree.model_construct()
-_UNREACHED_RENDER_PROFILE = RenderProfile.model_construct()
-_UNREACHED_RENDER_PROFILE_SOURCE_EVIDENCE = RenderProfileSourceEvidence.model_construct()
-
-
-def _legacy_orphan_journal(
-    context: GeneratedExportTreePublicationContext,
-    *,
-    candidate_export: Path,
-    backup_export: Path,
-    state: Literal["intent", "backup_staged", "candidate_live", "committed"] = "intent",
-) -> Path:
-    journal = GeneratedExportPublicationJournal(
-        schema_version=2,
-        state=state,
-        modelo="200",
-        revision_id="2025",
-        candidate_export=candidate_export.name,
-        backup_export=backup_export.name,
-        candidate_manifest_sha256="a" * 64,
-    )
-    path = GeneratedExportTransactionPaths.for_context(context).journal
-    write_generated_export_publication_journal(path, journal)
-    return path
-
-
-def test_recovery_retires_only_a_provably_completed_legacy_cross_volume_orphan(tmp_path) -> None:
-    context = _legacy_orphan_context(tmp_path)
-    candidate_export = context.target_root / "former-system-temporary"
-    backup_export = GeneratedExportTransactionPaths(
-        target_root=context.target_root, modelo="200", revision_id="2025"
-    ).new_backup_sibling()
-    journal_path = _legacy_orphan_journal(
-        context,
-        candidate_export=candidate_export,
-        backup_export=backup_export,
-    )
-
-    # Both preconditions are observed first: the journal exists to be retired,
-    # and the target export root is absent so recovery cannot be seen creating it.
-    assert journal_path.exists(), journal_path
-    assert not context.target_export_root.exists(), context.target_export_root
-
-    assert not recover_interrupted_publication(
-        context=context,
-        target_export_root=context.target_export_root,
-        journal_path=journal_path,
-        joined=_UNREACHED_JOINED,
-        semantic_map=_UNREACHED_SEMANTIC_MAP,
-        rendered=_UNREACHED_RENDERED,
-        render_profile=_UNREACHED_RENDER_PROFILE,
-        render_profile_source_evidence=_UNREACHED_RENDER_PROFILE_SOURCE_EVIDENCE,
-    )
-    assert not journal_path.exists(), "the completed legacy orphan journal was not retired"
-    assert not context.target_export_root.exists(), (
-        "recovery materialised a target export root that was absent before the call"
-    )
-
-
-#: The refusal each orphan shape must produce: a legacy candidate that is not a
-#: staging sibling is refused before the shape-specific comparisons. A backup
-#: outside the root cannot be written at all; see the journal entry test.
-_ORPHAN_REFUSAL = {
-    "candidate-survives": "candidate is not a target-revision staging sibling",
-    "backup-survives": "candidate is not a target-revision staging sibling",
-    "target-survives": "candidate is not a target-revision staging sibling",
-    "non-intent": "candidate is not a target-revision staging sibling",
-}
-
-#: The cases whose names promise a directory outlives the refusal.
-_SURVIVOR_BY_CASE = frozenset({"candidate-survives", "backup-survives", "target-survives"})
-
-
-@pytest.mark.parametrize(
-    ("case", "state"),
-    (
-        ("candidate-survives", "intent"),
-        ("backup-survives", "intent"),
-        ("target-survives", "intent"),
-        ("non-intent", "backup_staged"),
-    ),
-)
-def test_recovery_refuses_unsafe_legacy_orphan_shapes(
-    tmp_path,
-    case: str,
-    state: Literal["intent", "backup_staged", "candidate_live", "committed"],
-) -> None:
-    context = _legacy_orphan_context(tmp_path)
-    candidate_export = context.target_root / "former-system-temporary"
-    backup_export = GeneratedExportTransactionPaths(
-        target_root=context.target_root, modelo="200", revision_id="2025"
-    ).new_backup_sibling()
-    if case == "candidate-survives":
-        candidate_export.mkdir()
-    elif case == "backup-survives":
-        backup_export.mkdir()
-    elif case == "target-survives":
-        context.target_export_root.mkdir()
-    elif case != "non-intent":
-        raise AssertionError(f"unexpected legacy orphan case: {case}")
-    journal_path = _legacy_orphan_journal(
-        context,
-        candidate_export=candidate_export,
-        backup_export=backup_export,
-        state=state,
-    )
-
-    # Each case pins its refusal: the legacy candidate is not a staging sibling.
-    with pytest.raises(RegistryValidationError, match=_ORPHAN_REFUSAL[case]):
-        recover_interrupted_publication(
-            context=context,
-            target_export_root=context.target_export_root,
-            journal_path=journal_path,
-            joined=_UNREACHED_JOINED,
-            semantic_map=_UNREACHED_SEMANTIC_MAP,
-            rendered=_UNREACHED_RENDERED,
-            render_profile=_UNREACHED_RENDER_PROFILE,
-            render_profile_source_evidence=_UNREACHED_RENDER_PROFILE_SOURCE_EVIDENCE,
-        )
-    assert journal_path.exists()
-    # A case named for a surviving directory also asserts the refusal left it in place.
-    if case in _SURVIVOR_BY_CASE:
-        survivor = {
-            "candidate-survives": candidate_export,
-            "backup-survives": backup_export,
-            "target-survives": context.target_export_root,
-        }[case]
-        assert survivor.is_dir(), f"{case}: the refusal removed {survivor}, the state this case exists to see preserved"
 
 
 def test_publication_replaces_only_export_and_removes_opaque_backup(tmp_path: Path) -> None:

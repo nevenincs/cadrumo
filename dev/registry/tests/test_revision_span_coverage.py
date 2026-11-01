@@ -47,10 +47,8 @@ def test_every_modelo_resolves_exactly_one_revision_for_every_filing_year_throug
     claims at all.
 
     Modelo 390 is why a PAIRWISE abutment check would have been wrong here.
-    Measured 2026-08-14 via the development compiler (``compiled_bundled_authority()`` itself
-    refuses to build, over an unrelated export-layout-completeness gate, so
-    this reads the same tier the relayout gate does), every revision is
-    closed-ended --
+    Read through the development compiler, the same tier the relayout gate
+    reads, every revision of it is closed-ended --
 
         2022 | valid_from 2022-01-01 | valid_to 2022-12-31
         2023 | valid_from 2023-01-01 | valid_to 2023-12-31
@@ -65,25 +63,22 @@ def test_every_modelo_resolves_exactly_one_revision_for_every_filing_year_throug
     the second thing this check gets right.
 
     THE HORIZON IS OFFSET-AWARE, NOT A FLAT "THROUGH TODAY" FOR EVERY MODELO.
-    Operator directive, verbatim in substance: an annual return is filed IN
-    ARREARS -- ejercicio 2025's Renta is filed in 2026, ejercicio 2026's is
-    not filed until 2027 -- while a periodic modelo (quarterly, monthly)
-    files WITHIN its own ejercicio. A flat "must resolve through this
-    calendar year" horizon is wrong for the first shape: it would demand a
-    2026 revision for Modelo 390 (the annual IVA summary) today, when AEAT's
-    own filing window for ejercicio 2026 does not open until 2027 and no
-    operator could file it even if the revision existed. :func:`_offset_annual_modelo`
-    derives which shape a modelo is from its ALREADY-DECLARED period cadence
-    -- no new field, an arithmetic ceiling instead of a stored exemption --
-    and the sweep's upper bound becomes last year for an arrears modelo,
-    this year for a periodic one. Measured 2026-08-14: modelos 100, 189,
-    280, 289, 345, 390 and 714 are ALL annual-in-arrears (confirmed against
-    their own declared ``deadline_windows``, not assumed), so none of their
-    "missing 2026" cases were live gaps -- every one was premature, and the
-    gate now correctly does not ask the question until the year the filing
-    window could actually open. No periodic modelo carries a coverage hole
-    at all; if one ever does, it is live TODAY, not next year, and this
-    gate's horizon does not soften that case.
+    An annual return is filed IN ARREARS -- ejercicio 2025's Renta is filed in
+    2026, ejercicio 2026's is not filed until 2027 -- while a periodic modelo
+    (quarterly, monthly) files WITHIN its own ejercicio. A flat "must resolve
+    through this calendar year" horizon is wrong for the first shape: it would
+    demand a 2026 revision for Modelo 390 (the annual IVA summary) today, when
+    AEAT's own filing window for ejercicio 2026 does not open until 2027 and no
+    operator could file it even if the revision existed.
+    :func:`_offset_annual_modelo` derives which shape a modelo is from its
+    ALREADY-DECLARED period cadence -- no new field, an arithmetic ceiling instead
+    of a stored exemption -- and the sweep's upper bound becomes last year for an
+    arrears modelo, this year for a periodic one. Modelos 100, 189, 280, 289, 345,
+    390 and 714 are ALL annual-in-arrears (confirmed against their own declared
+    ``deadline_windows``, not assumed), so the gate does not ask for a year before
+    its filing window opens. No periodic modelo carries a coverage hole at all; if
+    one ever does, it is live TODAY, not next year, and this gate's horizon does
+    not soften that case.
 
     PASS requires, per modelo, for every filing year from its earliest declared
     coverage (:func:`_earliest_declared_year`) through its own horizon
@@ -131,13 +126,6 @@ def test_every_modelo_resolves_exactly_one_revision_for_every_filing_year_throug
     go green the day it is authored and silently start lying every January
     after -- and an arrears modelo's horizon rolls forward with it the SAME
     way, computed from ``date.today()`` on every run, never pinned.
-
-    Measured at authoring time (2026-08-14): PASSES. Zero holes, zero
-    overlaps, tree-wide. This is not a weakened result -- the seven prior
-    "holes" were re-classified, not deleted: their offset status is verified
-    against real declared ``deadline_windows`` data, not asserted, and every
-    one of them still resolves its own current-arrears year (2025). No
-    periodic modelo has ever failed this check.
     """
     modelos, _catalogues = bundled_registry_tree()
     today_year = _current_filing_year()

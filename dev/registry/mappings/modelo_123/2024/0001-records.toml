@@ -151,7 +151,7 @@ record_identity = "DR 12300"
 sheet = "DR 12300"
 source_row = 19
 source_cell = "A19"
-ordinal = 14
+ordinal = "14"
 record_identity = "DR 12300"
 
 [variable_envelopes.closer_anchor]

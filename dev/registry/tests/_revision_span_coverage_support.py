@@ -109,11 +109,6 @@ def _signal_label(evidence_item: str) -> str:
     the same way -- rather than a structural refactor of every signal function's
     return shape to carry a label. Seven signals, seven distinguishable phrasings.
 
-    The seventh, ``straddle``, is why this function raises rather than returning
-    'unknown': it was added to :func:`_compare_design_pair` without being added
-    here, and the loud failure is what surfaced the omission instead of letting a
-    live signal classify as nothing.
-
     Raises rather than falling through to "unknown", deliberately: a seventh
     signal added later without updating this function must fail LOUDLY here,
     the same anti-vacuity posture the rest of the module takes toward a
@@ -221,11 +216,10 @@ def _neighbour_divergence(
       edge, or an identical one on the OTHER side, is a separate finding
       about that other boundary, not evidence against this revision. ``detail``
       names WHICH signal(s) carried the proof (:func:`_signal_label`), so a
-      pass resting on exactly one signal is a property of the returned text,
-      not a fact that only exists in whoever ran this by hand -- a real,
-      single-signal difference IS a legitimate proof (no corroboration
+      pass resting on exactly one signal is visible in the returned text. A
+      real, single-signal difference is a legitimate proof (no corroboration
       threshold is imposed here), but a reader must be able to tell it rests
-      on one signal rather than several before trusting it further.
+      on one signal rather than several.
     * ``proven`` is ``False`` either because every available neighbour
       comparison is IDENTICAL (the split introduced no design change and was
       unwarranted) or because no neighbour has a readable design to compare
@@ -381,7 +375,7 @@ def _revision_span_findings(
 def test_every_modelo_revision_span_is_corpus_proven() -> None:
     """HARD FAIL: every declared revision span must be corpus-PROVEN, tree-wide.
 
-    Operator directive, verbatim in substance: this is a law-derived project.
+    This is a law-derived project.
     AEAT published a record design for every filing year of every modelo that
     has ever existed. Whether this repository has BUNDLED that document is a
     fact about the repository, never a fact about the world -- so a revision
@@ -412,21 +406,16 @@ def test_every_modelo_revision_span_is_corpus_proven() -> None:
          least one adjacent revision's design. That is what justifies the
          split existing at all; an identical neighbour means the split
          introduced no change and was unwarranted, and no neighbour at all
-         means there is nothing to prove it with yet. Operator ruling,
-         verbatim in substance: there is no undecidable verdict, and a span
-         that could NEVER pass regardless of any work anyone does re-creates
-         exactly that under a different name -- structural rather than
-         evidentiary, and worse for it. Both branches here are answerable
+         means there is nothing to prove it with yet. There is no undecidable
+         verdict, and a span that could NEVER pass regardless of any work
+         anyone does re-creates exactly that under a different name --
+         structural rather than evidentiary, and worse for it. Both branches here are answerable
          from corpus: everything is passable.
 
     Passing on fewer than two comparable years for a wide span, or without a
     genuine neighbour divergence for a narrow one, would mean this gate
     reports "proven" for exactly the modelos it looked hardest at and found
-    nothing to compare -- the same shape as the sweep that withdrew nine
-    modelos' export layouts behind real-looking legal citations while the
-    validator checked only that a citation RESOLVED, never that it PROHIBITED
-    anything: the larger the evidence gap, the quieter it was. This gate is
-    built to make that shape impossible to reproduce by omission.
+    nothing to compare.
 
     NO ALLOWLIST. NO PER-MODELO EXEMPTION. NO SKIP, XFAIL, OR CONDITIONAL
     GUARD. A failing revision names its own fix in the same line, because the
@@ -437,46 +426,10 @@ def test_every_modelo_revision_span_is_corpus_proven() -> None:
     single-year revision whose split introduced no design change. Every
     remedy has an owner and an action. None is a status to wait out.
 
-    Measured at authoring time, PER REVISION, which is the precision this
-    property needs -- a modelo-level tally (design-year COUNT anywhere against
-    boundary COUNT anywhere) was tried first and was wrong: it does not check
-    whether the comparable years fall INSIDE the specific revision being
-    judged. Modelo 100 makes the gap concrete -- its bundled designs run
-    2009-2019 while all six of its revisions run 2020-2025, zero overlap --
-    and the modelo-level tally called that "11 designs, 0 boundaries, proven"
-    by counting the absence of a comparison as the success of one. The
-    per-revision check this test runs does not make that mistake.
-
-    97 total revisions: 10 fail the relayout crossing, 64 fail on missing
-    corpus for a multi-year span, 11 fail the neighbour-divergence check for a
-    single-year span (either no readable neighbour exists yet, or the split
-    turned out to introduce no design change), and 12 PASS -- 3 multi-year (131
-    revision 2019-2023; 202 revisions 2019-2022 and 2023-2024) plus 9
-    single-year revisions the neighbour-comparison branch resolves, all from
-    Modelo 131's and Modelo 303's and Modelo 390's declared single-year spans
-    (Modelo 100's six single-year revisions do NOT resolve here -- their own
-    designs are unreadable/unattributed, a corpus gap the neighbour check
-    cannot paper over any more than the multi-year branch could). 85 of 97
-    fail overall, down from 94 before the neighbour-comparison branch existed:
-    real corpus evidence closed 9 revisions the prior instrument could never
-    have proven regardless of any acquisition, because it never asked the
-    question a single-year span can actually answer. Modelo 347's
-    2008-y-siguientes moved from the multi-year branch (misdiagnosed as
-    needing more corpus) to the relayout-crossing branch (its true cause,
-    proven) once the fifth signal stopped discarding evidence it had already
-    computed -- the fail count did not change, its ACCURACY did.
-
-    WHICH INSTRUMENT EACH PASS RESTS ON, stated explicitly because a pass
-    proven by a weaker signal should be legible as such. Of the 9 single-year
-    passes: 5 (131/2024, 303/2023, 390/2022, 390/2023, 390/2024) carry at
-    least one box-KEYED signal (displacement or box-SET); the other 4
-    (131/2025, 131/2026, 303/2025, 390/2025) rest ENTIRELY on box-FREE
-    signals -- occupancy, page-length, position-SET, or description-flip.
-    None of the 9 rests SOLELY on the newest, least-exercised signal
-    (position-SET, added this session) -- every pass position-SET
-    contributes to is independently corroborated by at least one other
-    signal. This number moves as the bundled
-    corpus grows; re-run rather than trust a stale figure.
+    Coverage is measured PER REVISION: a modelo-level tally of design years
+    against boundaries does not check whether the comparable years fall INSIDE
+    the specific revision being judged, and so counts the absence of a
+    comparison as the success of one.
     """
     ordered_by_modelo = _ordered_revisions_by_modelo(_filing_supported_revisions())
 
@@ -616,8 +569,7 @@ def _offset_annual_modelo(revisions: list[tuple[str, ModeloRevision]]) -> bool:
     periodic control, Modelo 303, shows ``opens_on.year == filing_year``. No
     new field is declared for this -- the offset is arithmetic on data the
     registry already carries (the period cadence), not a second axis beside
-    it, per the operator's instruction not to redeclare what is already
-    derivable.
+    it.
 
     A modelo with NO declared periods at all, or with even one non-annual
     period on any revision, is treated as NOT offset -- the strict, urgent

@@ -48,7 +48,7 @@ source_refs = ["aeat-dr-303-2026"]
 sheet = "Registro tipo 1"
 source_row = 14
 source_cell = "A14"
-ordinal = 1
+ordinal = "1"
 record_identity = "registro-tipo-1"
 """
 
@@ -69,7 +69,7 @@ casilla_id = "500"
 sheet = "Registro tipo 1"
 source_row = 14
 source_cell = "A14"
-ordinal = 1
+ordinal = "1"
 record_identity = "registro-tipo-1"
 """
 
@@ -85,7 +85,7 @@ source_refs = ["aeat-dr-303-2026"]
 sheet = "Registro tipo 1"
 source_row = 15
 source_cell = "A15"
-ordinal = 2
+ordinal = "2"
 record_identity = "registro-tipo-1"
 
 [[entries]]
@@ -99,7 +99,7 @@ source_refs = ["aeat-dr-303-2026"]
 sheet = "Registro tipo 1"
 source_row = 16
 source_cell = "A16"
-ordinal = 3
+ordinal = "3"
 record_identity = "registro-tipo-1"
 """
 
@@ -199,7 +199,7 @@ def test_entry_order_uses_the_canonical_cell_before_ordinal_anchor_key(tmp_path:
     earlier_cell_higher_ordinal = (
         _ENTRY.replace("source_row = 14", "source_row = 20")
         .replace('source_cell = "A14"', 'source_cell = "A20"')
-        .replace("ordinal = 1", "ordinal = 2")
+        .replace('ordinal = "1"', 'ordinal = "2"')
         .replace("declarante-nif", "declarante-name")
     )
     _write(
@@ -271,6 +271,17 @@ def test_loader_carries_the_existing_typed_record_discriminator(tmp_path: Path) 
     semantic_map = load_semantic_map(root)
 
     assert semantic_map.records[0].discriminator == RecordDiscriminator(offset=500, length=1, requires="blank")
+
+
+def test_loader_refuses_a_bare_integer_anchor_ordinal(tmp_path: Path) -> None:
+    """An anchor ordinal is the printed label as a string; a bare integer is refused."""
+    root = tmp_path / "semantic-map"
+    root.mkdir()
+    authored = (_RECORD + _ENTRY).replace('ordinal = "1"', "ordinal = 1")
+    _write(root / "0001-authority.toml", _fragment(fragment_id="authority", body=authored))
+
+    with pytest.raises(RegistryValidationError, match="ordinal"):
+        load_semantic_map(root)
 
 
 @pytest.mark.parametrize("slot_literal", ['"1"', "1.0", "true"])
