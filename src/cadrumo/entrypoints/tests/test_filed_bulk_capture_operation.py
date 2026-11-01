@@ -121,6 +121,105 @@ class _NeverOpenFiledDataPort:
         raise AssertionError("unsupported-only preview unexpectedly captured deferred filed observations")
 
 
+def _assert_bulk_commit_admission(admitted, profile_id):
+    assert admitted.request.profile_id == profile_id
+    assert admitted.policy.requires_all_periods
+    assert AccessAction.COMMIT in admitted.policy.actions
+
+
+async def _project_accounting_reports(report, operands, registration, receipt):
+    accounting_projections: list[FiledBulkCapturePublicResultV1] = []
+    # These synthetic scalar reports exercise secure serialization and
+    # the registered projector, independently of provider acquisition.
+    for dry_run, attempted, completed, rows, reached, captured in (
+        (True, True, True, 2, 2, 0),
+        (True, False, False, 0, 0, 0),
+        (False, True, True, 2, 2, 2),
+    ):
+        pair = FiledCapturePairOutcome(
+            modelo="303",
+            year=2025,
+            walk_attempted=attempted,
+            walk_completed=completed,
+            row_count=rows,
+            reached_count=reached,
+            captured_count=captured,
+        )
+        accounting_report = report.model_copy(
+            update={
+                "modelos": ("303",),
+                "dry_run": dry_run,
+                "pair_outcomes": (pair,),
+                "reached_count": reached,
+                "captured_count": captured,
+                "observation_paths": ("first", "second") if captured else (),
+                "calculation_observation_count": 1 if captured else 0,
+                "calculation_observation_keys": ("303:2025:1T",) if captured else (),
+                "failed_count": 0,
+                "failures": (),
+            }
+        )
+        accounting_report.require_consistent()
+        reference = await operands.put(accounting_report, written_at=_NOW)
+        restored = await operands.resolve(reference, BulkFiledDataCaptureReport)
+        public = registration.result_projector(restored, receipt)
+        wire = FiledBulkCapturePublicResultV1.model_validate_json(public.model_dump_json())
+        assert wire.pair_outcomes == (pair,)
+        accounting_projections.append(wire)
+    return accounting_projections
+
+
+def _assert_bulk_terminal(definition, terminal):
+    assert definition.definition_id == "live.filed-capture.bulk"
+    assert terminal.lifecycle is OperationLifecycle.TERMINAL
+    assert terminal.terminal_condition is OperationTerminalCondition.SUCCEEDED
+    assert terminal.effect is OperationEffect.NONE
+
+
+def _assert_bulk_projection(projected):
+    assert isinstance(projected, OperationResultProjectionSuccessV1)
+    assert isinstance(projected.projection, FiledBulkCapturePublicResultV1)
+    return projected.projection
+
+
+def _assert_bulk_preview_totals(result, output_root, composed_roots):
+    assert result.output_root == str(output_root)
+    assert composed_roots == [output_root]
+    assert (result.modelos, result.year_from, result.year_to, result.dry_run) == (("999",), 2025, 2025, True)
+    assert (result.captured_count, result.reached_count, result.failed_count) == (0, 0, 1)
+    assert result.sync_run_ref is None
+    assert result.observation_paths == ()
+    assert result.artefact_refs == ()
+
+
+def _assert_bulk_preview_failure(result):
+    assert len(result.pair_outcomes) == 1
+    pair = result.pair_outcomes[0]
+    assert (pair.modelo, pair.year) == ("999", 2025)
+    assert (pair.walk_attempted, pair.walk_completed) == (False, False)
+    assert (pair.row_count, pair.reached_count, pair.captured_count) == (0, 0, 0)
+    assert len(result.failures) == 1
+    failure = result.failures[0]
+    assert (failure.modelo, failure.year, failure.period, failure.expediente_id) == ("999", 2025, None, None)
+    assert failure.error_type == "LiveApplicationInputError"
+    assert "registry has no modelo definition" in failure.message
+
+
+def _assert_bulk_provider_use(preflight_calls, profile_id, authority, resources):
+    assert preflight_calls == [(profile_id, authority)]
+    assert resources.closed
+
+
+def _assert_bulk_accounting_projections(accounting_projections):
+    preview, unwalked, persisted = accounting_projections
+    assert (preview.pair_outcomes[0].row_count, preview.reached_count, preview.captured_count) == (2, 2, 0)
+    assert unwalked.pair_outcomes[0].walk_attempted is False
+    assert unwalked.pair_outcomes[0].walk_completed is False
+    assert (persisted.pair_outcomes[0].row_count, persisted.captured_count) == (2, 2)
+    assert persisted.calculation_observation_count == 1
+    assert persisted.calculation_observation_keys == ("303:2025:1T",)
+
+
 @pytest.mark.parametrize("names_root", [True, False], ids=["named_root", "configured_default_root"])
 def test_supervisor_records_bulk_preview_for_exact_profile_without_register_access(
     tmp_path: Path, names_root: bool
@@ -171,10 +270,7 @@ def test_supervisor_records_bulk_preview_for_exact_profile_without_register_acce
         )
         access_context = cli_submit_context(profile_id=profile_id, contract=registration.contract)
         admitted = resolve_operation_access(registry=registry, request=request, context=access_context)
-        assert admitted.request.profile_id == profile_id
-        assert admitted.policy.requires_all_periods
-        assert AccessAction.COMMIT in admitted.policy.actions
-
+        _assert_bulk_commit_admission(admitted, profile_id)
         assert_foreign_profile_refused(registry=registry, request=request, context=access_context)
 
         _, _, operands, supervisor, result_service = build_supervised_operation(
@@ -199,78 +295,14 @@ def test_supervisor_records_bulk_preview_for_exact_profile_without_register_acce
             assert receipt is not None and receipt.result_ref is not None
             report = await operands.resolve(receipt.result_ref, BulkFiledDataCaptureReport)
             assert registration.result_projector is not None
-            accounting_projections: list[FiledBulkCapturePublicResultV1] = []
-            # These synthetic scalar reports exercise secure serialization and
-            # the registered projector, independently of provider acquisition.
-            for dry_run, attempted, completed, rows, reached, captured in (
-                (True, True, True, 2, 2, 0),
-                (True, False, False, 0, 0, 0),
-                (False, True, True, 2, 2, 2),
-            ):
-                pair = FiledCapturePairOutcome(
-                    modelo="303",
-                    year=2025,
-                    walk_attempted=attempted,
-                    walk_completed=completed,
-                    row_count=rows,
-                    reached_count=reached,
-                    captured_count=captured,
-                )
-                accounting_report = report.model_copy(
-                    update={
-                        "modelos": ("303",),
-                        "dry_run": dry_run,
-                        "pair_outcomes": (pair,),
-                        "reached_count": reached,
-                        "captured_count": captured,
-                        "observation_paths": ("first", "second") if captured else (),
-                        "calculation_observation_count": 1 if captured else 0,
-                        "calculation_observation_keys": ("303:2025:1T",) if captured else (),
-                        "failed_count": 0,
-                        "failures": (),
-                    }
-                )
-                accounting_report.require_consistent()
-                reference = await operands.put(accounting_report, written_at=_NOW)
-                restored = await operands.resolve(reference, BulkFiledDataCaptureReport)
-                public = registration.result_projector(restored, receipt)
-                wire = FiledBulkCapturePublicResultV1.model_validate_json(public.model_dump_json())
-                assert wire.pair_outcomes == (pair,)
-                accounting_projections.append(wire)
+            accounting_projections = await _project_accounting_reports(report, operands, registration, receipt)
             return terminal, projected, accounting_projections
 
         terminal, projected, accounting_projections = asyncio.run(run())
 
-    assert definition.definition_id == "live.filed-capture.bulk"
-    assert terminal.lifecycle is OperationLifecycle.TERMINAL
-    assert terminal.terminal_condition is OperationTerminalCondition.SUCCEEDED
-    assert terminal.effect is OperationEffect.NONE
-    assert isinstance(projected, OperationResultProjectionSuccessV1)
-    assert isinstance(projected.projection, FiledBulkCapturePublicResultV1)
-    result = projected.projection
-    assert result.output_root == str(output_root)
-    assert composed_roots == [output_root]
-    assert (result.modelos, result.year_from, result.year_to, result.dry_run) == (("999",), 2025, 2025, True)
-    assert (result.captured_count, result.reached_count, result.failed_count) == (0, 0, 1)
-    assert result.sync_run_ref is None
-    assert result.observation_paths == ()
-    assert result.artefact_refs == ()
-    assert len(result.pair_outcomes) == 1
-    pair = result.pair_outcomes[0]
-    assert (pair.modelo, pair.year) == ("999", 2025)
-    assert (pair.walk_attempted, pair.walk_completed) == (False, False)
-    assert (pair.row_count, pair.reached_count, pair.captured_count) == (0, 0, 0)
-    assert len(result.failures) == 1
-    failure = result.failures[0]
-    assert (failure.modelo, failure.year, failure.period, failure.expediente_id) == ("999", 2025, None, None)
-    assert failure.error_type == "LiveApplicationInputError"
-    assert "registry has no modelo definition" in failure.message
-    assert preflight_calls == [(profile_id, authority)]
-    assert resources.closed
-    preview, unwalked, persisted = accounting_projections
-    assert (preview.pair_outcomes[0].row_count, preview.reached_count, preview.captured_count) == (2, 2, 0)
-    assert unwalked.pair_outcomes[0].walk_attempted is False
-    assert unwalked.pair_outcomes[0].walk_completed is False
-    assert (persisted.pair_outcomes[0].row_count, persisted.captured_count) == (2, 2)
-    assert persisted.calculation_observation_count == 1
-    assert persisted.calculation_observation_keys == ("303:2025:1T",)
+    _assert_bulk_terminal(definition, terminal)
+    result = _assert_bulk_projection(projected)
+    _assert_bulk_preview_totals(result, output_root, composed_roots)
+    _assert_bulk_preview_failure(result)
+    _assert_bulk_provider_use(preflight_calls, profile_id, authority, resources)
+    _assert_bulk_accounting_projections(accounting_projections)
