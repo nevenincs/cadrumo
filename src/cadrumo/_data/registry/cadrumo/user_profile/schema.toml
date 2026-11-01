@@ -185,7 +185,7 @@ enum_values = ["qr", "app_request"]
 # own either: reaching a session also needs the contraste plus a Cl@ve PIN or
 # app that is never stored here. The classes themselves say so - SECRET is
 # declared for long-lived authentication material while IDENTITY names the NIF
-# explicitly - and classing this field secret dropped nif-hash, the one
+# explicitly - and classing this field secret would drop nif-hash, the one
 # redaction rule that hashes a NIF, from the policy resolved for it.
 #
 # The agreement between dni_nie and identity.tax_id is enforced ONCE, at the
@@ -195,7 +195,7 @@ enum_values = ["qr", "app_request"]
 # field it names and will not notice the disagreement.
 #
 # Rationale belongs in comments like this one rather than in a description.
-# No surface renders a description as a row label any more -- the status page
+# No surface renders a description as a row label -- the status page
 # and the manager both read the locale catalogue -- but a description is still
 # the string the masking heuristic scans for an unclassified field, and it is
 # what a field renders when no catalogue carries its label yet.
@@ -571,9 +571,9 @@ legal_refs = ["ley-35-2006:art-86", "ley-35-2006:art-87", "orden-hap-2250-2015:a
 # Conditionally required, and conditionally FORBIDDEN. The record layout fills
 # positions 79-80 only for clave 2 and requires BLANCOS for claves 1 and 3, so
 # this field is not a country that happens to be optional -- it is a country the
-# form prohibits on two of its three claves. A default here wrote a value the
-# layout forbids on the majority case, which is why it is captured beside the
-# clave that governs it rather than alone.
+# form prohibits on two of its three claves. It is captured beside the clave
+# that governs it rather than alone: a default would write a value the layout
+# forbids on the majority case.
 [[sections.fields]]
 key = "country_of_residence"
 type = "string"
@@ -593,14 +593,13 @@ legal_refs = ["ley-35-2006:art-86", "ley-35-2006:art-87", "orden-hap-2250-2015:a
 # the diseño attaches to that row. Grounded field-by-field against the
 # SOCIO record's own field text (diseño positions 76-229), never the
 # entidad record's lookalike clave-A subclave table at a different byte
-# range. Deliberately excluded from this scope: the clave-A reducción
-# (positions 109-119 when clave=A, subclave=02 -- its governing article is
-# unresolved pending a dedicated follow-up research pass), provisiones
-# deducibles y gastos de difícil justificación (positions 160-171 -- a
-# computed formula reading the entity's own tipo-2 régimen fact, not an
-# operator-declared value), and the clave-E eligibility test (a member's
-# own IS/IRNR-con-establecimiento classification, which this tree has no
-# representation of yet).
+# range. Deliberately excluded: the clave-A reducción (positions 109-119
+# when clave=A, subclave=02 -- its governing article is unresolved),
+# provisiones deducibles y gastos de difícil justificación (positions
+# 160-171 -- a computed formula reading the entity's own tipo-2 régimen
+# fact, not an operator-declared value), and the clave-E eligibility test
+# (a member's own IS/IRNR-con-establecimiento classification, which this
+# tree does not represent).
 [[sections.fields]]
 key = "clave"
 type = "enum"
@@ -751,7 +750,7 @@ legal_refs = ["ley-35-2006:art-86", "ley-35-2006:art-87", "orden-hap-2250-2015:a
 # (the same >2-year/irregular 30% reduction, capped at EUR 300,000/year,
 # for actividades económicas net yields). The clave-A branch of this same
 # physical field is deliberately NOT modelled here: its governing article
-# is unresolved (see the accepted row-shape ADR).
+# is unresolved.
 [[sections.fields]]
 key = "reduccion"
 type = "money"

@@ -2,10 +2,9 @@
 #
 # THE FILE CARRIES NO YEAR. Nothing in this catalogue is year-dated: every
 # citation names a LIVA article and quotes it verbatim, and the retrieval_date
-# records when the bundled corpus was read, not when the rule applies. The year
-# used to live in the filename alone, which meant admitting a filing year meant
-# copying the whole table -- and a copied table of provisions is a fabricated
-# citation wearing a legal reference.
+# records when the bundled corpus was read, not when the rule applies. A copied
+# table of provisions per year would be a fabricated citation wearing a legal
+# reference.
 #
 # THE SPANS ARE DERIVED, NOT ASSERTED. Each citation's window is bounded by the
 # cited provision's own effective span in the registry legal catalogue, and a

@@ -34,43 +34,33 @@ source_refs = ["boe-modelo-390-2009-form", "aeat-modelo-390-procedure"]
 # low box numbers here ([21]/[22], [23]/[24], [25]/[26]) also occur elsewhere
 # on the same page naming unrelated Reg. ordinario boxes.
 #
-# THE DEFECT THIS CLOSES: M390 previously routed ALL adquisiciones
-# intracomunitarias money (both bienes and servicios, every rate) into the
-# ISP (inversion del sujeto pasivo) export slot at page-02 offset 1492 --
-# box [28] -- via the single rate-blind casilla
-# iva.anual.autorepercutido.intracomunitaria. M303 files the identical
-# ledger categories on its OWN AIC-labelled boxes (11/13), so the two modelos
-# disagreed about where the same money goes. The design itself states the
-# boxes are distinct: [27]/[28] read "IVA deveng. invers. sujeto pasivo",
-# never "Adquis. intracomunit.". LIVA art. 13.1 makes AIC of goods its own
-# hecho imponible, with art. 85 the taxable-person chapter for it -- distinct
-# from art. 84 (entregas y prestaciones interiores, the domestic ISP rule
-# behind boxes [27]/[28] in the sibling casillas file).
+# AIC money is not ISP money. M303 files the identical ledger categories on
+# its OWN AIC-labelled boxes (11/13), and the design states the boxes are
+# distinct: [27]/[28] read "IVA deveng. invers. sujeto pasivo", never "Adquis.
+# intracomunit.". LIVA art. 13.1 makes AIC of goods its own hecho imponible,
+# with art. 85 the taxable-person chapter for it -- distinct from art. 84
+# (entregas y prestaciones interiores, the domestic ISP rule behind boxes
+# [27]/[28] in the sibling casillas file).
 #
-# THE RATE-BLIND iva.anual.autorepercutido.intracomunitaria CASILLA REMAINS
-# THE TOTAL-FEEDING AGGREGATE, unchanged in the annual devengada total
-# formula (civa.anual.repercutido.general__civa.anual.resultado-regimen-general.toml).
-# Its precondition for the two-layer shape
-# holds: that total sums the rate-blind category casilla directly, never the
-# sum of these rate-specific boxes, so adding this box layer cannot double
-# count. Its export_refs move OFF the ISP slot in that same sibling file, in
-# this same change, so the ISP box no longer receives AIC money at all.
+# THE RATE-BLIND iva.anual.autorepercutido.intracomunitaria CASILLA REMAINS THE
+# TOTAL-FEEDING AGGREGATE, unchanged in the annual devengada total formula
+# (civa.anual.repercutido.general__civa.anual.resultado-regimen-general.toml). Its
+# precondition for the two-layer shape holds: that total sums the rate-blind category
+# casilla directly, never the sum of these rate-specific boxes, so adding this box
+# layer cannot double count. Its export_refs sit off the ISP slot in the sibling file,
+# so the ISP box receives no AIC money.
 #
-# EPOCH SCOPING FOR THE PENDING PER-YEAR SPLIT: AIC rung count has exactly
-# THREE states across the 9 bundled designs (2016-2021: 3 rungs, UNLABELLED
-# by rate in the design text -- "Base imponible [21]" with no "Tipo N%"
-# prefix at all; 2022-2023: 5 rungs, 0/4/5/10/21%; 2024-2025: 7 rungs,
-# 0/2/4/5/7,5/10/21%), read directly from the source .xlsx designs. Box
-# identity is STABLE across the widening -- a new rung gets a NEW box number
-# rather than renumbering an existing one -- so no cross-epoch translation is
-# needed for the boxes below; only the 2016-2021 non-existence of a rate
-# label is a real constraint. A rate-specific binding asserting a rate the
-# design never printed would repeat exactly the fabrication this module's own
-# governing ADR forbids, so **these bindings are authored for the 2022-2025
-# design-year range only** -- each casilla below carries its own precise
-# design-year comment, and the pending per-epoch split should drop this
-# fragment from any pre-2022 revision it produces rather than carry it
-# forward unmodified.
+# EPOCH SCOPING: AIC rung count has exactly THREE states across the 9 bundled
+# designs (2016-2021: 3 rungs, UNLABELLED by rate in the design text -- "Base
+# imponible [21]" with no "Tipo N%" prefix at all; 2022-2023: 5 rungs,
+# 0/4/5/10/21%; 2024-2025: 7 rungs, 0/2/4/5/7,5/10/21%), read directly from
+# the source .xlsx designs. Box identity is STABLE across the widening -- a
+# new rung gets a NEW box number rather than renumbering an existing one -- so
+# no cross-epoch translation is needed for the boxes below; only the 2016-2021
+# non-existence of a rate label is a real constraint. A rate-specific binding
+# asserting a rate the design never printed would be fabrication, so **these
+# bindings are authored for the 2022-2025 design-year range only** -- each
+# casilla below carries its own precise design-year comment.
 
 
 # Box [716]/[717] - "Adquis. intracomunit. bienes - Tipo 0%". Design-year validity: 2022-2025 (rate-labelled from the 2022 5-rung design onward).
@@ -502,13 +492,10 @@ additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form
 # Modelo 303's own domestic_reverse_charge binding, which sums
 # general/reduced/super_reduced together rather than splitting by rate.
 #
-# M390 previously had NO domestic-reverse-charge modelling at all: box [28]
-# was instead fed by the AIC-aggregating casilla (see the sibling AIC
-# box-layer file in this directory), and box [27] had no export field.
 # LIVA art. 84.Uno.2 is a materially different hecho imponible from AIC
 # (art. 13/85) -- entregas y prestaciones interiores where the recipient
 # self-assesses, not a cross-border acquisition -- so the two must not share
-# one box, per the ADR this module implements.
+# one box.
 
 # Box [27] - "IVA deveng. invers. sujeto pasivo - Base imponible". Design-year validity: 2016-2025 (epoch-invariant).
 [[revisions."2022".casillas]]
@@ -998,10 +985,9 @@ semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
 legal_refs = ["ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-89", "ley-37-1992:art-92", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 
-# Apartado 5 "IVA deducible" boxes of paginas 3 and 4 that the fichero-BOE
-# layout could not write. Every box number, offset and length is transcribed
-# verbatim from this revision's own bundled Diseno de Registros (source
-# aeat-dr-390-2022, sha256
+# Apartado 5 "IVA deducible" boxes of paginas 3 and 4. Every box number, offset
+# and length is transcribed verbatim from this revision's own bundled Diseno de
+# Registros (source aeat-dr-390-2022, sha256
 # 7c6554f3182df51daaec37284dd891eb925e1f92df7e69bc01b8ccfb8e4f26fe).
 #
 # Pagina 3 carries the deducible rungs by origin -- operaciones interiores
@@ -2045,10 +2031,10 @@ legal_refs = ["ley-37-1992:art-163-quaterdecies", "ley-37-1992:art-163-terdecies
 # Apartado 8 RESTATES three apartado-7 boxes with byte-identical labels --
 # [658], [84] and [659]. Those are the same box written twice, so each is one
 # casilla carrying two export_refs, never a second casilla. [658] and [84]
-# already exist on this revision and simply gain their second export_ref;
-# [659] is new and is declared here with both of its positions. Only
-# [87]-[91] (the administration percentages) and [92]-[94] (the
-# territorio-comun results) are genuinely new boxes.
+# carry the second export_ref; [659] is declared here with both of its
+# positions. Only [87]-[91] (the administration percentages) and [92]-[94]
+# (the territorio-comun results) are boxes apartado 8 adds beyond those
+# restatements.
 #
 # GROUNDING GAP, stated rather than papered over: the territorial split is
 # governed by the Concierto Economico con el Pais Vasco (Ley 12/2002 art. 27)
@@ -2881,14 +2867,12 @@ legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-109
 additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 
 # Rate-blind AIC TOTAL layer, feeding the annual devengada total formula
-# (modelo-390-iva-anual-cuota-devengada-total) so an AIC row whose rate was
-# never recorded is still counted. NO LONGER EXPORTED: it previously carried
-# export_refs pointing at the ISP (inversion del sujeto pasivo) box [28],
-# which was the defect -- AIC and domestic ISP are different LIVA hechos
-# imponibles (art. 13/85 vs art. 84) and the design gives them different
-# boxes. The rate-specific box layer for this quantity lives in
+# (modelo-390-iva-anual-cuota-devengada-total) so an AIC row whose rate was never recorded
+# is still counted. NOT EXPORTED: AIC and domestic ISP are different LIVA hechos imponibles
+# (art. 13/85 vs art. 84) and the design gives them different boxes. The rate-specific box
+# layer for this quantity lives in
 # civa.anual.aic.bienes.tipo-0.base__civa.anual.aic.servicios.tipo-21.cuota.toml,
-# and the domestic ISP boxes [27]/[28] now have their own casillas in
+# and the domestic ISP boxes [27]/[28] have their own casillas in
 # civa.anual.autorepercutido.interior.base__civa.anual.autorepercutido.interior.cuota.toml.
 [[revisions."2022".casillas]]
 id = "iva.anual.autorepercutido.intracomunitaria"
@@ -3641,13 +3625,12 @@ legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-80", "ley-37-1992:art-88",
 #
 # The casilla is named for its RECARGO rate, matching the official box label,
 # while its binding narrows on the IVA rate that statute pairs with it. The three
-# rate-blind recargo tier casillas remain the TOTAL layer: they keep their
-# bindings, keep feeding the annual devengada total, and keep every row including
-# one whose IVA rate was never recorded. That layer therefore sums to MORE than
-# this one by exactly the rate-unrecorded amount.
+# rate-blind recargo tier casillas are the TOTAL layer: they feed the annual
+# devengada total and keep every row, including one whose IVA rate was never
+# recorded. That layer therefore sums to MORE than this one by exactly the
+# rate-unrecorded amount.
 #
-# These carry no export_refs yet. The record decomposition for this block is
-# being established separately, and writing a rate box into the record before the
+# These carry no export_refs. Writing a rate box into the record before the
 # shortfall refusal covers it would render an unpopulated money field as 0,00 --
 # turning a silence into a false nil.
 
@@ -3710,10 +3693,10 @@ legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-91", "rd-1624-1992:art-71"
 #
 # Each casilla owns its official box in the record: the fourteen consecutive
 # money fields at offsets 13-250 of page 2, base preceding cuota within each
-# rate. The rate-blind tier casillas that previously wrote 98/200/234 no longer
-# export, so no casilla both totals and asserts a rate.
+# rate. The rate-blind tier casillas do not export, so no casilla both totals
+# and asserts a rate.
 #
-# The tier casillas remain the TOTAL layer: rate-blind, feeding the annual
+# The tier casillas are the TOTAL layer: rate-blind, feeding the annual
 # devengada total, keeping every row including those whose rate is unrecorded.
 # That layer sums to MORE than this one by exactly the rate-unrecorded amount,
 # which is why the export refuses on the difference rather than hiding it.

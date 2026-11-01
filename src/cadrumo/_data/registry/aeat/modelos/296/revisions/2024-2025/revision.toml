@@ -10,25 +10,6 @@ predecessor = { none = { cause = "official_structure_differs", reason = "aeat-dr
 binding_source_refs = ["aeat-modelo-296-procedure", "boe-modelo-296-form-layout"]
 casilla_source_refs = ["boe-modelo-296-form-text", "boe-modelo-296-form-layout"]
 application_link_source_refs = ["aeat-modelo-296-procedure"]
-# Prepared and reviewed by an agent against the bundled diseno de registros
-# (aeat-dr-296-2024) and the ordenes it cites; NO human operator has
-# countersigned it, and 'agent_reviewed' plus this reviewer token record that
-# state honestly rather than claiming the operator's own sign-off.
-#
-# What the review covered: all 136 design fields across the five records, each
-# classified from the design's own text, and 69 reviewed numeric rules authored
-# from the wording of the field they govern -- this being a PDF design, which
-# carries no Contenido column for the generator to derive from.
-#
-# One binding deserves an operator's eye specifically. Casilla 05 is bound to
-# positions 175-189, RETENCIONES E INGRESOS A CUENTA INGRESADOS, on the reading
-# that the revision's own formula makes 05 = add(04), an identity that holds
-# exactly when the ingreso is not split with a Hacienda Foral -- the same
-# condition the design's AVISO gives for its foral Anexo. That is a tax
-# judgement, not a layout fact.
-#
-# An operator re-stamping this to 'operator_reviewed' is what promotes the
-# revision to a countersigned filing grade.
 review_status = "agent_reviewed"
 reviewed_by = "agent-prepared-pending-operator"
 reviewed_at = 2026-08-19

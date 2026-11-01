@@ -10,21 +10,12 @@ Oracle anchoring: two hijos at twelve months each gives 1200 + 1200 = 2400; at
 six and twelve, 600 + 1200 = 1800. Anti-tautology: moving meses from zero to six
 must move the result from 0 to 600.
 
-A duplicate of that oracle used to run against a profile METHOD that recomputed
-the same formula and had no production consumer. The method was retired and its
-cases went with it, keeping the ones above, which drive the function the
-calculate path actually calls.
-
-Two of the retired cases asserted ELIGIBILITY -- that a child over three, or one
-not cohabiting, contributes nothing. They had no counterpart to run against while
-the live path consumed an operator-supplied list of (hijo, meses) pairs and
-performed no filtering of its own. It now reads the descendant records instead,
-and the child-side condition is the engine's: the authority grants the deduction
-"por cada hijo hasta que el menor alcance los tres anos de edad" to women "que
-tengan derecho a la aplicacion del minimo por descendientes". So those cases are
-restored below against
+The child-side condition is the engine's: the authority grants the deduction "por
+cada hijo hasta que el menor alcance los tres anos de edad" to women "que tengan
+derecho a la aplicacion del minimo por descendientes". The eligibility cases below
+(a child over three, or one not cohabiting, contributes nothing) run against
 :meth:`~domain.contribuyente.DescendantInfo.maternidad_contributing_meses`, which
-is where that filtering now lives.
+holds that filtering.
 """
 
 from __future__ import annotations
@@ -155,7 +146,7 @@ class TestParseDescendienteFlagMesesTrabajo:
         """Every malformed month spec refuses; none is silently dropped.
 
         A dropped month would change the Art. 81.2 proration basis, which is
-        now an intersection rather than a count, so a lost month changes WHICH
+        an intersection rather than a count, so a lost month changes WHICH
         months qualify and not merely how many.
         """
         for case_id, spec in (
@@ -519,8 +510,7 @@ class TestArt811EntryWindowDivergesFromArt582:
         The under-three limb runs from the BIRTH month for every relación, so
         unioning the limbs granted the mother January to September — months
         before the child was hers. This is the over-grant case, and it is worth
-        two figures rather than one: the under-three limb alone is twelve here,
-        which is why the union looked harmless.
+        two figures rather than one: the under-three limb alone is twelve here.
         """
         infant = DescendantInfo(
             birth_date=date(2024, 1, 10),
@@ -577,8 +567,8 @@ class TestArt811EntryWindowDivergesFromArt582:
 class TestMaternidadContributingMeses:
     """The child-side condition Art. 81.1 delegates to the mínimo por descendientes.
 
-    Restores the two eligibility cases the retired profile method carried, now
-    against the predicate the calculate path actually consults.
+    The eligibility cases run against the predicate the calculate path actually
+    consults.
     """
 
     def test_an_eligible_child_contributes_its_declared_months(self) -> None:
@@ -609,9 +599,8 @@ class TestMaternidadContributingMeses:
     def test_a_child_over_the_rentas_ceiling_contributes_nothing(self) -> None:
         """The added half of the predicate: Art. 58.1 excludes on the descendant's own rentas.
 
-        This case is unreachable through a bare age-and-cohabitation test, which
-        is why tying the deduction to the mínimo predicate rather than to a
-        bespoke one is a behaviour change and not a refactor.
+        This case is unreachable through a bare age-and-cohabitation test, which is
+        why the deduction keys on the mínimo predicate rather than a bespoke one.
         """
         child = DescendantInfo(
             birth_date=date(2022, 6, 1),
@@ -624,10 +613,7 @@ class TestMaternidadContributingMeses:
     def test_declared_months_are_capped_by_the_eligible_window(self) -> None:
         """A turning-three child whose mother worked all year contributes the window.
 
-        Twelve declared months against a three-month window yields three. Before
-        the window existed this child contributed NOTHING, because the age test
-        ran once at year-end and the child was three by then -- an under-grant
-        for every family whose child turns three mid-year.
+        Twelve declared months against a three-month window yields three.
         """
         child = DescendantInfo(birth_date=date(2021, 4, 15), meses_madre_trabajo=tuple(range(1, 13)))
 
