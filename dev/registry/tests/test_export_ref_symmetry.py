@@ -10,18 +10,11 @@ not a tally, and it is exactly what a future regression would break.
 
 from __future__ import annotations
 
-from datetime import date
-
 import pytest
 
 from cadrumo.application.modelo.registry_discovery import registry_modelo_codes
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
-from cadrumo.domain.calculations.registry.schema import ModeloRevision
-from cadrumo.domain.calculations.registry.schema_exports import (
-    ExportLayoutDefinition,
-)
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
-from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
 
 from ..analysis.export_ref_symmetry import screen_authority, unsatisfied_export_refs
@@ -30,6 +23,7 @@ from .single_casilla_export_layout_support import (
     CASILLA_01,
     LEGAL_REF,
     SOURCE_REF,
+    revision_with,
     single_casilla_export_layout,
 )
 
@@ -49,23 +43,8 @@ def _casilla(*, export_refs: tuple[str, ...]) -> CasillaDefinition:
     )
 
 
-def _revision(
-    *, casillas: tuple[CasillaDefinition, ...], layouts: tuple[ExportLayoutDefinition, ...]
-) -> ModeloRevision:
-    return ModeloRevision(
-        id="test-revision",
-        localization_key="test.schema.revision.test-revision.label",
-        valid_from=date(2026, 1, 1),
-        period_selector=PeriodSelector(years=(2026,), periods=("1T",)),
-        legal_refs=(LEGAL_REF,),
-        source_refs=(SOURCE_REF,),
-        casillas=casillas,
-        export_layouts=layouts,
-    )
-
-
 def test_satisfied_export_ref_is_not_reported() -> None:
-    revision = _revision(
+    revision = revision_with(
         casillas=(_casilla(export_refs=("layout.declaracion.importe",)),),
         layouts=(single_casilla_export_layout(),),
     )
@@ -74,7 +53,7 @@ def test_satisfied_export_ref_is_not_reported() -> None:
 
 
 def test_unsatisfied_export_ref_is_reported_with_its_coordinates() -> None:
-    revision = _revision(
+    revision = revision_with(
         casillas=(_casilla(export_refs=("layout.declaracion.importe",)),),
         layouts=(),
     )
@@ -86,7 +65,7 @@ def test_unsatisfied_export_ref_is_reported_with_its_coordinates() -> None:
 
 
 def test_casilla_without_export_refs_makes_no_claim() -> None:
-    revision = _revision(casillas=(_casilla(export_refs=()),), layouts=())
+    revision = revision_with(casillas=(_casilla(export_refs=()),), layouts=())
 
     assert unsatisfied_export_refs(revision, modelo_id="000") == ()
 
