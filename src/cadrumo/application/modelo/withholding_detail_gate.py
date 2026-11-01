@@ -278,6 +278,31 @@ def _contradicting_ledger_row_ids(
     )
 
 
+def _attested_quarters(
+    *,
+    source_modelo: Modelo | None,
+    filing_year: int,
+    profile_path_values: Mapping[str, str] | None,
+    operation: PinnedAuthorityOperation,
+) -> tuple[_NoObligationAttestation | None, tuple[str, ...]]:
+    """Return the attestation channel of the periodic source and the quarters it attests for the year."""
+    attestation = next(
+        (
+            channel
+            for role, channel in _NO_OBLIGATION_ATTESTATIONS.items()
+            if source_modelo == form_for_role(role, authority=operation)
+        ),
+        None,
+    )
+    attested_keys: frozenset[tuple[int, str]] = (
+        attestation.read_attested_periods(profile_path_values)
+        if attestation is not None
+        else frozenset[tuple[int, str]]()
+    )
+    attested = tuple(period for period in QUARTERLY_WITHHOLDING_PERIODS if (filing_year, period) in attested_keys)
+    return attestation, attested
+
+
 def resolve_withholding_detail_absence(
     *,
     work_unit: WorkUnit,
@@ -299,20 +324,12 @@ def resolve_withholding_detail_absence(
     modelo = str(work_unit.modelo)
     filing_year = work_unit.filing_year
     source_modelo = annual_withholding_periodic_source(modelo)
-    attestation = next(
-        (
-            channel
-            for role, channel in _NO_OBLIGATION_ATTESTATIONS.items()
-            if source_modelo == form_for_role(role, authority=operation)
-        ),
-        None,
+    attestation, attested = _attested_quarters(
+        source_modelo=source_modelo,
+        filing_year=filing_year,
+        profile_path_values=profile_path_values,
+        operation=operation,
     )
-    attested_keys: frozenset[tuple[int, str]] = (
-        attestation.read_attested_periods(profile_path_values)
-        if attestation is not None
-        else frozenset[tuple[int, str]]()
-    )
-    attested = tuple(period for period in QUARTERLY_WITHHOLDING_PERIODS if (filing_year, period) in attested_keys)
     return WithholdingDetailAbsence(
         modelo=modelo,
         filing_year=filing_year,
