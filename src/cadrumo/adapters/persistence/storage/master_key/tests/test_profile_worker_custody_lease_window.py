@@ -15,7 +15,6 @@ secure-object repository, whose freshness check is the reader that refuses.
 
 from __future__ import annotations
 
-import base64
 import sys
 from collections.abc import Callable, Generator
 from contextlib import contextmanager
@@ -41,7 +40,6 @@ from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
 
 from ...bucket.errors import BucketLockedError
-from ...custody.capsule import load_committed_profile_password_material
 from ...custody.paths import profile_custody_path
 from ...errors import SessionExpiredError
 from ...profile_persistence_composition import composed_profile_persistence_ports
@@ -52,6 +50,7 @@ from .. import profile_worker_custody
 from ..active_session import current_active_bucket_session, get_active_master_key
 from ..bucket_session import BucketSession
 from ..profile_worker_custody import ProfileWorkerCustody
+from .profile_worker_identity_support import published_capsule_identity
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
@@ -391,18 +390,7 @@ def _exercise(tmp_path: Path, case: str) -> None:
         root.mkdir(parents=True, exist_ok=True)
         profile_id = uuid4()
         publish_test_profile_capsule(profile_id, label="Lease window subject", root=root)
-        envelope = load_committed_profile_password_material(profile_id, root=root).envelope
-        identity = ProfileWorkerIdentity(
-            worker_id=uuid4(),
-            runtime_boot_id=uuid4(),
-            binding=ProfileAccessBinding(
-                profile_id=profile_id,
-                installation_id=uuid4(),
-                os_owner_id="synthetic-owner",
-                custody_generation=envelope.password_generation,
-                dek_epoch=UUID(bytes=base64.b64decode(envelope.dek_epoch)),
-            ),
-        )
+        identity = published_capsule_identity(profile_id, root)
         clock = _Clock(now())
         with override_settings(cadrumo_storage_root=root, cadrumo_active_profile=str(profile_id)):
             custody = ProfileWorkerCustody(identity, storage_root=root, monotonic=clock.monotonic)

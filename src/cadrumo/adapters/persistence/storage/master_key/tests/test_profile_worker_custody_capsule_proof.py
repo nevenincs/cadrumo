@@ -8,19 +8,17 @@ isolated owner, since this test's process outlives the case.
 
 from __future__ import annotations
 
-import base64
 from collections.abc import Callable, Generator
 from dataclasses import dataclass
 from datetime import timedelta
 from pathlib import Path
 from threading import Thread
-from uuid import UUID, uuid4
+from uuid import uuid4
 
 import pytest
 
 from cadrumo.application.user_profile.access_contracts import (
     AccessSession,
-    ProfileAccessBinding,
     SessionKind,
     SessionState,
 )
@@ -32,7 +30,6 @@ from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
 
-from ...custody.capsule import load_committed_profile_password_material
 from ...profile_persistence_composition import composed_profile_persistence_ports
 from ...tests.profile_capsule_runtime import derive_test_bucket_key, publish_test_profile_capsule
 from ...tests.secure_sql import isolated_profile_storage_root
@@ -41,6 +38,7 @@ from ..active_session import current_active_bucket_session
 from ..profile_worker_binding import ProfileWorkerBindingOwner
 from ..profile_worker_custody import ProfileWorkerCustody
 from .capsule_read_support import HELD_READ_WAIT_SECONDS, HeldCapsuleRead, republish_capsule_commit
+from .profile_worker_identity_support import published_capsule_identity
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
@@ -92,18 +90,7 @@ def subject(tmp_path: Path) -> Generator[_Subject]:
         root.mkdir(parents=True, exist_ok=True)
         profile_id = uuid4()
         publish_test_profile_capsule(profile_id, label="Capsule proof subject", root=root)
-        envelope = load_committed_profile_password_material(profile_id, root=root).envelope
-        identity = ProfileWorkerIdentity(
-            worker_id=uuid4(),
-            runtime_boot_id=uuid4(),
-            binding=ProfileAccessBinding(
-                profile_id=profile_id,
-                installation_id=uuid4(),
-                os_owner_id="synthetic-owner",
-                custody_generation=envelope.password_generation,
-                dek_epoch=UUID(bytes=base64.b64decode(envelope.dek_epoch)),
-            ),
-        )
+        identity = published_capsule_identity(profile_id, root)
         with override_settings(cadrumo_storage_root=root, cadrumo_active_profile=str(profile_id)):
             custody = ProfileWorkerCustody(identity, storage_root=root, monotonic=lambda: 0.0)
             try:
