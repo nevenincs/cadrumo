@@ -1,7 +1,11 @@
+import { CountryEditor } from "@/components/editors/CountryEditor";
 import { TextEditor } from "@/components/editors/TextEditor";
 import { TypedField } from "@/components/editors/TypedField";
 import type { FieldSpec } from "@/shared/fieldKind";
+import { countryName } from "@/shared/codeNames";
+import { usedCodeOptions } from "../ledger/suggestions/ledgerSuggestions";
 import { profileInput } from "../../shell/profileInput";
+import { useStrings } from "../../shell/strings";
 import type { ProfileField } from "../../shell/userProfile";
 
 const SPECS: Readonly<Record<string, FieldSpec>> = {
@@ -31,7 +35,22 @@ export function ProfileValueEditor({
   describedBy?: string;
   onBlur?(): void;
 }) {
+  const locale = useStrings().locale ?? "en";
   const { name, autoComplete, kind, type } = profileInput(field);
+  if (field.country_options?.length)
+    return (
+      <CountryEditor
+        {...rest}
+        name={name}
+        value={value}
+        onChange={onChange}
+        suggestions={usedCodeOptions(
+          [],
+          (code) => countryName(locale, code) ?? undefined,
+          { codes: field.country_options, locale },
+        )}
+      />
+    );
   const spec = SPECS[kind];
   if (spec)
     return (

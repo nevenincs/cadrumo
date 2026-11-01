@@ -3217,6 +3217,7 @@
         "cadrumo.entrypoints.tui.ledger.action_guards",
         "cadrumo.entrypoints.tui.ledger.actividad_asset",
         "cadrumo.entrypoints.tui.ledger.actividad_asset_inputs",
+        "cadrumo.entrypoints.tui.ledger.actividad_asset_view",
         "cadrumo.entrypoints.tui.ledger.actividad_asset_words",
         "cadrumo.entrypoints.tui.ledger.categorisation_allocate",
         "cadrumo.entrypoints.tui.ledger.categorisation_bulk",

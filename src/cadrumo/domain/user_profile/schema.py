@@ -85,6 +85,17 @@ class ProfileFieldType(StrEnum):
     OBJECT = "object"
 
 
+class ProfileFieldCodeList(StrEnum):
+    """A list of country codes a text field is offered from.
+
+    What is known, not what is allowed: the field keeps taking any code of its
+    shape, so a real jurisdiction outside the list stays recordable.
+    """
+
+    COUNTRIES = "countries"
+    EU_EEA_COUNTRIES = "eu_eea_countries"
+
+
 class ProfileSnapshotPolicy(StrEnum):
     """Accepted profile snapshot stale-check policies."""
 
@@ -131,6 +142,7 @@ class ProfileFieldDefinition(BaseModel):
     effective_dated: bool = False
     description: _Description
     enum_values: tuple[str, ...] = Field(default=())
+    code_list: ProfileFieldCodeList | None = None
     model_selectors: tuple[_Selector, ...] = Field(default=())
     #: Modelos that require this field even though it is not globally required.
     #:
@@ -150,6 +162,19 @@ class ProfileFieldDefinition(BaseModel):
     @pydantic_validation_boundary
     def _parse_type(cls, value: object) -> object:
         return _parse_str_enum(ProfileFieldType, value)
+
+    @field_validator("code_list", mode="before")
+    @classmethod
+    @pydantic_validation_boundary
+    def _parse_code_list(cls, value: object) -> object:
+        return None if value is None else _parse_str_enum(ProfileFieldCodeList, value)
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _code_list_offers_text(self) -> ProfileFieldDefinition:
+        if self.code_list is not None and self.type is not ProfileFieldType.STRING:
+            raise UserProfileValidationError("code_list is declared only on a string field")
+        return self
 
     @field_validator("required_for_modelos", mode="before")
     @classmethod

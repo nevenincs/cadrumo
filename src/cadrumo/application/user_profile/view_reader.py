@@ -14,7 +14,9 @@ from pydantic import ValidationError
 from ...core.config import override_settings
 from ...core.identity.digest import ContentDigest
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-from ...domain.user_profile.schema import ProfileSchemaDefinition
+from ...domain.calculations.registry.renta_codes_catalogue import ue_eea_country_codes
+from ...domain.iva.establishment import catalogued_country_codes
+from ...domain.user_profile.schema import ProfileFieldCodeList, ProfileSchemaDefinition
 from ...domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from ...domain.user_profile.values import ProfileSetupState, UserProfileRecord
 from ..modelo.profile_readiness_gate import (
@@ -210,7 +212,15 @@ def _build_overview_source(
     schema: ProfileSchemaDefinition,
     authority_operation: PinnedAuthorityOperation,
 ) -> tuple[ProfileViewItem, ...] | ProfileViewOperationResult:
-    overview = build_profile_overview(record, schema=schema, flow=build_setup_flow(authority_operation))
+    overview = build_profile_overview(
+        record,
+        schema=schema,
+        flow=build_setup_flow(authority_operation),
+        code_lists={
+            ProfileFieldCodeList.COUNTRIES: tuple(sorted(catalogued_country_codes(operation=authority_operation))),
+            ProfileFieldCodeList.EU_EEA_COUNTRIES: tuple(sorted(ue_eea_country_codes(authority=authority_operation))),
+        },
+    )
     if any(notice.action is not None for notice in overview.notices):
         return _refused_page(common, ProfileViewRefusalCode.PROJECTION_UNAVAILABLE)
     section_items = tuple(

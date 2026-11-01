@@ -80,6 +80,7 @@ if TYPE_CHECKING:
 
     from ...domain.user_profile.schema import (
         ProfileDerivedSelectorDefinition,
+        ProfileFieldCodeList,
         ProfileFieldDefinition,
         ProfileSchemaDefinition,
         ProfileSectionDefinition,
@@ -182,6 +183,9 @@ class ProfileFieldChoice(BaseModel):
     label: str
 
 
+_NO_CODE_LISTS: Final[Mapping[ProfileFieldCodeList, tuple[str, ...]]] = MappingProxyType({})
+
+
 def profile_field_choices(
     field: ProfileFieldDefinition,
     *,
@@ -271,6 +275,8 @@ class ProfileFieldView(BaseModel):
     type" to a page that does not know the difference, and the operator finds
     out which one they got wrong only after the write door refuses.
     """
+    country_options: tuple[str, ...] = Field(default=())
+    """The country codes offered for a field typed as a code; any code of its shape stays allowed."""
     choices: tuple[ProfileFieldChoice, ...] = Field(default=())
     """The closed answer set, or empty for a field that is typed into.
 
@@ -471,6 +477,7 @@ def _field_view(
     label_suffix: str = "",
     row_index: str | None = None,
     conditionally_required: frozenset[str] = frozenset(),
+    code_lists: Mapping[ProfileFieldCodeList, tuple[str, ...]] = _NO_CODE_LISTS,
 ) -> ProfileFieldView:
     """Pair one path with the field declaring it and whatever the record holds there.
 
@@ -502,6 +509,7 @@ def _field_view(
         masked=masked,
         required=field.required or path in conditionally_required,
         field_type=field.type,
+        country_options=() if field.code_list is None else code_lists.get(field.code_list, ()),
         choices=profile_field_choices(field, path=f"{section_key}.{field.key}"),
         help=help_lines,
         about=field.description,
@@ -514,6 +522,7 @@ def _repeatable_section_views(
     values: Mapping[str, str],
     present: frozenset[str],
     field_help: Mapping[str, tuple[str, ...]],
+    code_lists: Mapping[ProfileFieldCodeList, tuple[str, ...]] = _NO_CODE_LISTS,
 ) -> list[ProfileFieldView]:
     """Expand one repeatable section into a row group per instance it holds.
 
@@ -538,6 +547,7 @@ def _repeatable_section_views(
             values=values,
             help_lines=field_help.get(f"{section.key}.{field.key}"),
             row_index=row or None,
+            code_lists=code_lists,
         )
         for row in rows
         for field in section.fields
@@ -707,6 +717,7 @@ def _section_field_views(
     field_help: Mapping[str, tuple[str, ...]],
     derived_selectors: Iterable[ProfileDerivedSelectorDefinition] = (),
     conditionally_required: frozenset[str] = frozenset(),
+    code_lists: Mapping[ProfileFieldCodeList, tuple[str, ...]] = _NO_CODE_LISTS,
 ) -> list[ProfileFieldView]:
     """Every row one section contributes, expanding whatever repeats.
 
@@ -718,7 +729,7 @@ def _section_field_views(
     becomes vacuous rather than wrong.
     """
     if section.repeatable:
-        return _repeatable_section_views(section, values, present, field_help)
+        return _repeatable_section_views(section, values, present, field_help, code_lists)
     views: list[ProfileFieldView] = []
     for field in section.fields:
         if derived_selector_for_path(f"{section.key}.{field.key}", derived_selectors) is not None:
@@ -734,6 +745,7 @@ def _section_field_views(
                 values=values,
                 help_lines=field_help.get(f"{section.key}.{field.key}"),
                 conditionally_required=conditionally_required,
+                code_lists=code_lists,
             ),
         )
     return views
@@ -745,6 +757,7 @@ def build_profile_overview(
     label: str = "",
     schema: ProfileSchemaDefinition | None = None,
     flow: WizardFlow | None = None,
+    code_lists: Mapping[ProfileFieldCodeList, tuple[str, ...]] = _NO_CODE_LISTS,
 ) -> ProfileOverview:
     """Project ``record`` into the manager's landing-page view.
 
@@ -771,6 +784,8 @@ def build_profile_overview(
             question copy becomes each field's help, so a surface shows the
             words the wizard asks with. Without it no field carries help and
             :attr:`ProfileFieldView.about` explains every field.
+        code_lists: The code lists the caller's pinned authority holds. Without
+            them a field declaring one is simply typed into.
 
     Returns:
         A :class:`ProfileOverview` covering every declared section and field.
@@ -821,6 +836,7 @@ def build_profile_overview(
                         field_help,
                         resolved_schema.derived_selectors,
                         conditionally_required,
+                        code_lists,
                     ),
                 ),
             ),

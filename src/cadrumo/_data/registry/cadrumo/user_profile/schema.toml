@@ -471,6 +471,7 @@ legal_refs = ["ley-35-2006:art-9", "trlirnr-rdleg-5-2004:art-2"]
 [[sections.fields]]
 key = "country_of_fiscal_residence"
 type = "string"
+code_list = "countries"
 required = false
 sensitivity = "identity"
 effective_dated = true
@@ -571,6 +572,7 @@ legal_refs = ["ley-35-2006:art-86", "ley-35-2006:art-87", "orden-hap-2250-2015:a
 [[sections.fields]]
 key = "country_of_residence"
 type = "string"
+code_list = "countries"
 required = false
 sensitivity = "identity"
 effective_dated = true
@@ -1549,6 +1551,7 @@ legal_refs = ["orden-hac-242-2025:art-3", "orden-hac-277-2026:art-3"]
 [[sections.fields]]
 key = "eu_eea_country"
 type = "string"
+code_list = "eu_eea_countries"
 required = false
 sensitivity = "identity"
 effective_dated = true

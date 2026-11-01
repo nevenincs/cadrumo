@@ -7,6 +7,8 @@ export type ProfileField = {
   masked: boolean;
   required: boolean;
   field_type: string;
+  /** The country codes offered; any code of the shape stays allowed. */
+  country_options?: string[];
   choices: { value: string; label: string }[];
   help: string[] | null;
   about: string;
