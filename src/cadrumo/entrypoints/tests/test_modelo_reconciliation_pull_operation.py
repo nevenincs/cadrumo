@@ -48,7 +48,6 @@ from ...domain.modelos.work_unit import WorkUnit
 from ...tests.aeat_literal_fixtures import (
     SEDE_TEST_URL_FIXTURE,
 )
-from ..justificante_composition import build_justificante_capture_service
 from . import modelo_operation_test_support
 from . import registered_executor_case_support as conformance
 from .foreign_profile_refusal_support import assert_refused_for_foreign_active_profile
@@ -144,19 +143,7 @@ def _corrupt_manifest(
 def _justificante_snapshot_id(profile_id: UUID, operation: PinnedAuthorityOperation) -> tuple[WorkUnit, str]:
     """Capture the synthetic justificante for the seeded work unit and return the unit with its snapshot id."""
     unit = modelo_operation_test_support.seeded_modelo_work_unit(profile_id, operation=operation)
-    pdf = (
-        Path(__file__).resolve().parents[2] / "tests" / "fixtures" / "justificantes" / "130" / "2024-1T.pdf"
-    ).read_bytes()
-    snapshot = build_justificante_capture_service(str(profile_id)).capture(
-        modelo=str(unit.modelo),
-        filing_year=unit.filing_year,
-        period=unit.period,
-        expediente_id="202413000000001Z",
-        csv="ABCD1234EFGH",
-        pdf_bytes=pdf,
-        pdf_sha256=sha256_hex(pdf),
-        captured_at=datetime(2026, 9, 29, tzinfo=UTC),
-    )
+    snapshot = modelo_operation_test_support.captured_justificante_snapshot(profile_id, unit)
     return unit, snapshot.snapshot_id
 
 
