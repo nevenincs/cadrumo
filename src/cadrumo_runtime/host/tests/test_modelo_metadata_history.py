@@ -224,6 +224,174 @@ def _observe(
     return reply.observation
 
 
+def _run_original_read(
+    api: VerifiedConnection, profile_id: UUID, api_session: UUID
+) -> tuple[OperationContractReply, OperationId, int]:
+    contract = api.operation(
+        OperationContract(
+            request_id=uuid4(),
+            profile_id=profile_id,
+            session_id=api_session,
+            definition_id=_DEFINITION,
+        ),
+        deadline=time.monotonic() + 5,
+    )
+    assert isinstance(contract, OperationContractReply), contract
+    admitted = _submit(api, profile_id, api_session, period=_FIRST)
+    assert isinstance(admitted, OperationSubmitted), admitted
+    operation_id = admitted.receipt.operation_id
+    started = api.operation(
+        OperationControl(
+            action="operation_start",
+            request_id=uuid4(),
+            profile_id=profile_id,
+            session_id=api_session,
+            operation_id=operation_id,
+        ),
+        deadline=time.monotonic() + 10,
+    )
+    assert isinstance(started, OperationAcknowledged), started
+    deadline = time.monotonic() + 10
+    while True:
+        before = _observe(api, profile_id, api_session, operation_id).projection
+        if before.terminal_condition is not None:
+            break
+        assert time.monotonic() < deadline
+        time.sleep(0.02)
+    assert before.terminal_condition is OperationTerminalCondition.SUCCEEDED
+    assert before.effect is OperationEffect.NONE
+    return contract, operation_id, before.revision
+
+
+def _publish_later_candidate(
+    repository: WorkUnitCatalogueRepository, profile_id: UUID, original: WorkUnit, other_period: WorkUnit
+) -> None:
+    # administration_subject still owns the parent process's proven
+    # profile session. This is a real encrypted catalogue write;
+    # the worker and its operation never borrow that session.
+    later = _unit(profile_id, period=_FIRST, revision="2026-history-b", name="Revision B")
+    assert later.work_unit_id != original.work_unit_id
+    repository.save(upsert_work_unit(repository.load(), later))
+    assert {item.work_unit_id for item in repository.load()} == {
+        original.work_unit_id,
+        later.work_unit_id,
+        other_period.work_unit_id,
+    }
+    close_active_bucket_session()
+
+
+def _project_historical_result(
+    api: VerifiedConnection,
+    profile_id: UUID,
+    api_session: UUID,
+    contract: OperationContractReply,
+    operation_id: OperationId,
+    before_revision: int,
+    original: WorkUnit,
+) -> OperationResult:
+    historical = _observe(api, profile_id, api_session, operation_id).projection
+    assert historical.terminal_condition is OperationTerminalCondition.SUCCEEDED
+    assert historical.revision == before_revision
+    schema = contract.contract.result_schema
+    assert schema is not None
+    result_request = OperationResult(
+        request_id=uuid4(),
+        profile_id=profile_id,
+        session_id=api_session,
+        result=OperationResultProjectionRequestV1(
+            operation_id=operation_id,
+            terminal_revision=historical.revision,
+            definition_contract_digest=contract.contract.definition_contract_digest,
+            result_schema=schema,
+        ),
+    )
+    result = api.operation(result_request, deadline=time.monotonic() + 5)
+    assert isinstance(result, OperationProjected), result
+    typed = OperationResultProjectionSuccessV1[ModeloWorkMetadataProjection].model_validate_json(
+        json.dumps(result.document)
+    )
+    assert typed.projection.profile_id == profile_id
+    assert typed.projection.unit.work_unit_id == original.work_unit_id
+    assert typed.projection.unit.revision_id == original.revision_id
+    assert typed.projection.unit.name == "Revision A"
+    assert typed.projection.unit.period.to_period() == _FIRST
+    return result_request
+
+
+def _refuse_ambiguous_and_invalid_reads(api: VerifiedConnection, profile_id: UUID, api_session: UUID) -> None:
+    ambiguous = _submit(api, profile_id, api_session, period=_FIRST)
+    assert isinstance(ambiguous, AccessRefusal), ambiguous
+    assert ambiguous.code is AccessDenialCode.OPERATION_DENIED
+    missing = _submit_payload(
+        api,
+        profile_id,
+        api_session,
+        ModeloWorkMetadataRequest(profile_id=profile_id, work_unit_id="a" * 64).model_dump_json(),
+    )
+    assert isinstance(missing, AccessRefusal), missing
+    assert missing.code is AccessDenialCode.OPERATION_DENIED
+    malformed_period = _submit_payload(
+        api,
+        profile_id,
+        api_session,
+        json.dumps(
+            {
+                "profile_id": str(profile_id),
+                "modelo": "130",
+                "year": 2026,
+                "period": {"filing_year": 2026, "code": "not-a-period"},
+            }
+        ),
+    )
+    assert isinstance(malformed_period, AccessRefusal), malformed_period
+    assert malformed_period.code is AutomationCustodyCode.INVALID
+    invalid_year = _submit_payload(
+        api,
+        profile_id,
+        api_session,
+        json.dumps(
+            {
+                "profile_id": str(profile_id),
+                "modelo": "130",
+                "year": 1899,
+                "period": {"filing_year": 2026, "code": "1T"},
+            }
+        ),
+    )
+    assert isinstance(invalid_year, AccessRefusal), invalid_year
+    assert invalid_year.code is AutomationCustodyCode.INVALID
+    denied_period = _submit(api, profile_id, api_session, period=_OTHER)
+    assert isinstance(denied_period, AccessRefusal), denied_period
+    assert denied_period.code is AccessDenialCode.PERIOD_DENIED
+
+
+def _lock_key_session_and_refuse_result(
+    human: VerifiedConnection,
+    api: VerifiedConnection,
+    profile_id: UUID,
+    human_session: UUID,
+    api_session: UUID,
+    result_request: OperationResult,
+) -> None:
+    locked = human.session(
+        SessionRequest(
+            action="session_lock",
+            request_id=uuid4(),
+            profile_id=profile_id,
+            session_id=human_session,
+            target_session_id=api_session,
+        ),
+        deadline=time.monotonic() + 5,
+    )
+    assert isinstance(locked, SessionsLocked) and api_session in locked.session_ids
+    after_lock = api.operation(result_request.model_copy(update={"request_id": uuid4()}), deadline=time.monotonic() + 5)
+    assert isinstance(after_lock, AccessRefusal), after_lock
+    assert after_lock.code in {
+        AccessDenialCode.SESSION_INACTIVE,
+        AccessDenialCode.AUTHENTICATION_REQUIRED,
+    }
+
+
 def test_recorded_read_keeps_original_revision_after_new_catalogue_candidate(tmp_path: Path) -> None:
     root = tmp_path / "cadrumo-storage"
     root.mkdir()
@@ -252,144 +420,13 @@ def test_recorded_read_keeps_original_revision_after_new_catalogue_candidate(tmp
                 # The person signs in first; the key admits only while they are signed in.
                 human_session = admit_session(human, profile_id, method="password", proof=PROFILE_INPUT.encode())
                 api_session = admit_session(api, profile_id, method="api_key", proof=api_key)
-                contract = api.operation(
-                    OperationContract(
-                        request_id=uuid4(),
-                        profile_id=profile_id,
-                        session_id=api_session,
-                        definition_id=_DEFINITION,
-                    ),
-                    deadline=time.monotonic() + 5,
+                contract, operation_id, before_revision = _run_original_read(api, profile_id, api_session)
+                _publish_later_candidate(repository, profile_id, original, other_period)
+                result_request = _project_historical_result(
+                    api, profile_id, api_session, contract, operation_id, before_revision, original
                 )
-                assert isinstance(contract, OperationContractReply), contract
-                admitted = _submit(api, profile_id, api_session, period=_FIRST)
-                assert isinstance(admitted, OperationSubmitted), admitted
-                operation_id = admitted.receipt.operation_id
-                started = api.operation(
-                    OperationControl(
-                        action="operation_start",
-                        request_id=uuid4(),
-                        profile_id=profile_id,
-                        session_id=api_session,
-                        operation_id=operation_id,
-                    ),
-                    deadline=time.monotonic() + 10,
-                )
-                assert isinstance(started, OperationAcknowledged), started
-                deadline = time.monotonic() + 10
-                while True:
-                    before = _observe(api, profile_id, api_session, operation_id).projection
-                    if before.terminal_condition is not None:
-                        break
-                    assert time.monotonic() < deadline
-                    time.sleep(0.02)
-                assert before.terminal_condition is OperationTerminalCondition.SUCCEEDED
-                assert before.effect is OperationEffect.NONE
-
-                # administration_subject still owns the parent process's proven
-                # profile session. This is a real encrypted catalogue write;
-                # the worker and its operation never borrow that session.
-                later = _unit(profile_id, period=_FIRST, revision="2026-history-b", name="Revision B")
-                assert later.work_unit_id != original.work_unit_id
-                repository.save(upsert_work_unit(repository.load(), later))
-                assert {item.work_unit_id for item in repository.load()} == {
-                    original.work_unit_id,
-                    later.work_unit_id,
-                    other_period.work_unit_id,
-                }
-                close_active_bucket_session()
-
-                historical = _observe(api, profile_id, api_session, operation_id).projection
-                assert historical.terminal_condition is OperationTerminalCondition.SUCCEEDED
-                assert historical.revision == before.revision
-                schema = contract.contract.result_schema
-                assert schema is not None
-                result_request = OperationResult(
-                    request_id=uuid4(),
-                    profile_id=profile_id,
-                    session_id=api_session,
-                    result=OperationResultProjectionRequestV1(
-                        operation_id=operation_id,
-                        terminal_revision=historical.revision,
-                        definition_contract_digest=contract.contract.definition_contract_digest,
-                        result_schema=schema,
-                    ),
-                )
-                result = api.operation(result_request, deadline=time.monotonic() + 5)
-                assert isinstance(result, OperationProjected), result
-                typed = OperationResultProjectionSuccessV1[ModeloWorkMetadataProjection].model_validate_json(
-                    json.dumps(result.document)
-                )
-                assert typed.projection.profile_id == profile_id
-                assert typed.projection.unit.work_unit_id == original.work_unit_id
-                assert typed.projection.unit.revision_id == original.revision_id
-                assert typed.projection.unit.name == "Revision A"
-                assert typed.projection.unit.period.to_period() == _FIRST
-
-                ambiguous = _submit(api, profile_id, api_session, period=_FIRST)
-                assert isinstance(ambiguous, AccessRefusal), ambiguous
-                assert ambiguous.code is AccessDenialCode.OPERATION_DENIED
-                missing = _submit_payload(
-                    api,
-                    profile_id,
-                    api_session,
-                    ModeloWorkMetadataRequest(profile_id=profile_id, work_unit_id="a" * 64).model_dump_json(),
-                )
-                assert isinstance(missing, AccessRefusal), missing
-                assert missing.code is AccessDenialCode.OPERATION_DENIED
-                malformed_period = _submit_payload(
-                    api,
-                    profile_id,
-                    api_session,
-                    json.dumps(
-                        {
-                            "profile_id": str(profile_id),
-                            "modelo": "130",
-                            "year": 2026,
-                            "period": {"filing_year": 2026, "code": "not-a-period"},
-                        }
-                    ),
-                )
-                assert isinstance(malformed_period, AccessRefusal), malformed_period
-                assert malformed_period.code is AutomationCustodyCode.INVALID
-                invalid_year = _submit_payload(
-                    api,
-                    profile_id,
-                    api_session,
-                    json.dumps(
-                        {
-                            "profile_id": str(profile_id),
-                            "modelo": "130",
-                            "year": 1899,
-                            "period": {"filing_year": 2026, "code": "1T"},
-                        }
-                    ),
-                )
-                assert isinstance(invalid_year, AccessRefusal), invalid_year
-                assert invalid_year.code is AutomationCustodyCode.INVALID
-                denied_period = _submit(api, profile_id, api_session, period=_OTHER)
-                assert isinstance(denied_period, AccessRefusal), denied_period
-                assert denied_period.code is AccessDenialCode.PERIOD_DENIED
-
-                locked = human.session(
-                    SessionRequest(
-                        action="session_lock",
-                        request_id=uuid4(),
-                        profile_id=profile_id,
-                        session_id=human_session,
-                        target_session_id=api_session,
-                    ),
-                    deadline=time.monotonic() + 5,
-                )
-                assert isinstance(locked, SessionsLocked) and api_session in locked.session_ids
-                after_lock = api.operation(
-                    result_request.model_copy(update={"request_id": uuid4()}), deadline=time.monotonic() + 5
-                )
-                assert isinstance(after_lock, AccessRefusal), after_lock
-                assert after_lock.code in {
-                    AccessDenialCode.SESSION_INACTIVE,
-                    AccessDenialCode.AUTHENTICATION_REQUIRED,
-                }
+                _refuse_ambiguous_and_invalid_reads(api, profile_id, api_session)
+                _lock_key_session_and_refuse_result(human, api, profile_id, human_session, api_session, result_request)
             finally:
                 api.close()
                 human.close()
