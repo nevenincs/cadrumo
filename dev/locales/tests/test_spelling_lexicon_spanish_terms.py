@@ -433,8 +433,6 @@ def test_audit_hungarian_terms_and_cli_tokens_are_exact_and_language_scoped() ->
 
 
 def test_audit_cli_roots_and_auth_config_labels_are_exact_and_language_scoped() -> None:
-    # The October audit found lowercase command roots and namespaces across
-    # runtime catalogues, plus English diagnostic labels preserving title case.
     expected = {
         "en": {"aeat", "auth", "Auth", "config", "Config"},
         "es": {"aeat", "auth", "config"},
@@ -453,8 +451,6 @@ def test_audit_cli_roots_and_auth_config_labels_are_exact_and_language_scoped() 
 
 
 def test_audit_attested_hungarian_aeat_and_runtime_terms_are_exact_and_language_scoped() -> None:
-    # The October locale batch repeatedly found AEAT filing terminology in
-    # Hungarian prose, plus the exact inflected forms of project storage terms.
     forms = (
         "alta",
         "modificacion",
@@ -549,6 +545,8 @@ def test_audit_attested_hungarian_aeat_and_runtime_terms_are_exact_and_language_
             # Hungarian uses them independently in its localized catalogues.
             "complementaria",
             "rectificativa",
+            # The English filing-kind label is capitalised as AEAT names it.
+            "Rectificativa",
             "cuota",
             "Reglamento",
             "certificado",

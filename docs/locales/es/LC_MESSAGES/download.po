@@ -225,7 +225,7 @@ msgstr "Paquete de Scoop"
 
 #: ../../download.md:93
 msgid "Scoop bucket"
-msgstr "Bucket de Scoop"
+msgstr "Repositorio de Scoop"
 
 #: ../../download.md:96
 msgid "Per-channel install paths:"

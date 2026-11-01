@@ -918,7 +918,7 @@ cli:
           conocidos para {code}@{revision} ({period}): {suggestion}.'
         unscoped_revision_warning: La lista de orígenes no está acotada por %{missing_filters};
           puede incluir ids de orígenes de una versión del modelo oficial que no coincide
-          con la declaración usada por `aeat app modelo work calculate`.
+          con la declaración que usa el cálculo.
         year_help: Ejercicio fiscal del modelo (p. ej. 2026)
       casilla:
         casilla_help: Id de casilla o número impreso de casilla que se debe describir
@@ -2126,7 +2126,7 @@ cli:
         guardadas. Vuelve a ejecutar el comando con --yes para confirmar.
       reset_yes_help: Confirmar el restablecimiento destructivo de la autenticación
       route_help: 'Vía de aprobación de Cl@ve Móvil: app_request (por defecto, funciona
-        sin navegador visible) o qr (abre un navegador visible). Requiere --provider
+        sin navegador visible) o `qr` (abre un navegador visible). Requiere --provider
         clave_movil.'
       status_help: Mostrar el estado de autenticación configurado
       status_summary_configured: La autenticación está configurada pero aún no hay
@@ -2308,7 +2308,7 @@ cli:
         help: Muestra la carpeta de Google Drive creada para el perfil activo
         organize_help: Organiza la carpeta del perfil dentro de Cadrumo
         view_help: Muestra la carpeta de Google Drive creada para el perfil activo.
-      help: Gestionar la integración OAuth de Google Desktop para Drive y Sheets
+      help: Gestionar la integración OAuth de escritorio de Google para Drive y Sheets
       login_help: Ejecutar el flujo de consentimiento OAuth
       logout_help: Limpiar el token de refresco y los metadatos
       probe_help: Comprueba el acceso a la carpeta de Google Drive del perfil
@@ -2728,9 +2728,9 @@ cli:
           usa `base` para la fila sin índice.
         section_help: Clave de la sección repetible del perfil.
       sandbox:
-        active_indicator_info: Estás operando dentro del sandbox %{label}, no en un
-          perfil real; todos los comandos se ejecutan contra este bucket aislado y
-          descartable.
+        active_indicator_info: Estás operando dentro del entorno de pruebas %{label},
+          no en un perfil real; todos los comandos se ejecutan contra este bucket
+          aislado y descartable.
       sessions:
         help: Enumera las sesiones actuales de este perfil en el entorno local.
       show:
@@ -3139,7 +3139,7 @@ cli:
       value_date_help: Fecha valor de la transacción (AAAA-MM-DD)
     allocate:
       business_pct_help: Proporción de uso profesional de 0 a 1 para filas MIXED/proporcionales;
-        no uses ledger allocate para una fila totalmente BUSINESS.
+        no uses `ledger allocate` para una fila totalmente BUSINESS.
       help: Registrar proporcionalidad profesional/personal para un movimiento de
         tus registros
       id_help: Id del movimiento a asignar
@@ -3716,7 +3716,7 @@ cli:
         certificate_secret_remove: Elimina el secreto del certificado almacenado.
         certificate_secret_set: Guarda el secreto del certificado en el almacenamiento
           seguro.
-        diagnostics_logs: Mostrar la ruta del log configurada y sus últimas líneas.
+        diagnostics_logs: Mostrar la ruta del registro configurada y sus últimas líneas.
         diagnostics_quarantine: Gestionar los elementos en cuarentena.
         diagnostics_repair: Ejecutar comprobaciones de salud y reparar el estado de
           la aplicación.
@@ -3759,7 +3759,7 @@ cli:
           reconstruir
         storage_view: Consulta el detalle de una ubicación de almacenamiento concreta
       root:
-        diagnostics_logs: Muestra la ruta del log y sus últimas líneas.
+        diagnostics_logs: Muestra la ruta del registro y sus últimas líneas.
         diagnostics_overview_verbose: Muestra el estado general con más detalle.
         diagnostics_repair_json: Devuelve en JSON el informe completo de salud local.
         diagnostics_version: Muestra la identidad del paquete instalado.

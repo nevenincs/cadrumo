@@ -110,6 +110,6 @@ def test_english_amend_wizard_prompt_renders_line_breaks() -> None:
         locale="en",
     )
     assert rendered == (
-        "Recorded as filed: 303 2025 1T,\ncurrent values:\nBox 01\n"
+        "Recorded as filed: 303 1T 2025,\ncurrent values:\nBox 01\n"
         "Which box numbers changed? (comma/space separated, blank for none)"
     )

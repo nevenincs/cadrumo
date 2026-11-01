@@ -125,7 +125,7 @@ application:
     sessions:
       errors:
         clave_contraste_missing: Cl@ve Móvil signs in by default with an approval
-          request to the Cl@ve app, which needs the contraste printed on your document.
+          request to the Cl@ve app, which needs the `contraste` printed on your document.
           Record %{nie_field} on the active profile for a NIE, or %{dni_field} for
           a DNI. To scan a QR code in a visible browser instead, run `cadrumo-runtime
           config auth configure --provider clave_movil --clave-movil-route qr`.
@@ -503,8 +503,8 @@ application:
   inventory:
     advisories:
       retired_book_leaves_year_unresolved: This inventory was retired but still holds
-        entries, so the %{year} Anexo D stays unresolved. Restore it, or remove its
-        entries.
+        entries, so the %{year} `Anexo D` stays unresolved. Restore it, or remove
+        its entries.
     labels:
       acquisition_evidence_kind:
         attributable_cost_review: Cost check
@@ -2428,7 +2428,7 @@ application:
           exact_iva_rate: Exact IVA rate (text)
           exact_m210_applicable_rate: Exact Modelo 210 rate (text)
           exact_m210_gross_income_amount: Exact Modelo 210 gross income (text)
-          exact_recargo_amount: Exact recargo amount (text)
+          exact_recargo_amount: Exact recargo de equivalencia amount (text)
           exact_taxable_base: Exact taxable base (text)
           exact_value: Exact decimal value (text)
           exported_at: Exported at

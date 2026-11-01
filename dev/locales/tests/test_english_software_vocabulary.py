@@ -12,8 +12,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
     [
         ("Quickstart", "Quickstrat", "QuickStart"),
         ("quickstart", "quickstrat", "QuickStart"),
-        ("subpackages", "subpackges", "Subpackages"),
-        ("docstrings", "docstrngs", "Docstrings"),
+        ("subpackages", "subpackges", "SubPackages"),
+        ("docstrings", "docstrngs", "DocStrings"),
         ("plaintext", "plaintexxt", "Plaintext"),
         ("decrypting", "decryping", "Decrypting"),
         ("decrypted", "decrypetd", "Decrypted"),

@@ -80,7 +80,7 @@ application:
           por lo que solo desbloquear ese perfil, con aeat config login, la revoca.
         scope_conflict: Elige --provider o --all, pero no ambos.
         unreadable_active_profile: 'El perfil activo ''%{active_profile}'' tiene un
-          manifiesto de bucket pero no tiene un registro de perfil legible (status=%{status}).
+          manifiesto de bucket pero no tiene un registro de perfil legible (estado=%{status}).
           Siguiente acción: %{next_action}.'
       login:
         refused_certificate_file_missing: 'No se puede iniciar sesión: el fichero
@@ -2452,15 +2452,15 @@ application:
           concept: Concepto
           fixed_quota: Cuota fija
           formula: Fórmula
-          legal_refs: Ref. legales
+          legal_refs: Referencias legales
           marginal_rate: Tipo marginal
           maximum_base: Base máxima
           minimum_base: Base mínima
-          number: Nº
+          number: Número
           rounding: Redondeo
           section: Sección
           source: Origen
-          source_refs: Ref. fuentes
+          source_refs: Referencias de fuentes
           value: Valor
         protected:
           calculos: Cálculos derivados - protegido para preservar paridad
@@ -2755,8 +2755,8 @@ application:
         Añade estos flags al mismo comando y vuelve a ejecutarlo: %{missing_flags}.'
       persist_patch_unknown_question_id: El parche del asistente referencia un id
         de pregunta desconocido.
-      profile_flag_required: El asistente requiere --profile NAME (sin valor por defecto
-        'default' implícito).
+      profile_flag_required: El asistente requiere --profile NAME (sin alternativa
+        `default` implícita).
       profile_label_taken: Ya existe un perfil llamado %{label}. Elige otro nombre
         o ejecuta el flujo de edición para modificar ese perfil.
       quiet_missing_flags: 'A esta ejecución con --quiet le faltan datos obligatorios.
@@ -2785,8 +2785,8 @@ application:
         missing_tax_id: 'El perfil activo no ha indicado: %{requirements}.'
         no_active_profile: No hay perfil activo configurado.
         projection_failed: El perfil activo no supera la proyección del asistente.
-        unexpected_projection_type: Las respuestas del flujo de setup no se proyectaron
-          como SetupAnswers.
+        unexpected_projection_type: Las respuestas del flujo de configuración no se
+          proyectaron como SetupAnswers.
   workflow:
     errors:
       no_active_profile_bucket: No hay un perfil activo.

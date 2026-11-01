@@ -299,7 +299,7 @@ auth:
     certificate_description: X.509 ügyféltanúsítvány-alapú hitelesítés (FNMT-RCM vagy
       bármely elismert hatóság). Minden Sede-folyamatot támogat.
     certificate_label: Digitális tanúsítvány
-    clave_movil_description: 'Push-jóváhagyásos hitelesítés a Cl@ve-nél regisztrált
+    clave_movil_description: 'Értesítéssel jóváhagyott hitelesítés a Cl@ve-nél regisztrált
       telefon segítségével. Szükséges: DNI/NIE, Cl@ve-regisztráció és párosított eszköz.'
     clave_movil_label: Cl@ve Móvil
     clave_permanente_description: DNI/NIE- és jelszóalapú hitelesítés a Cl@ve Permanente
@@ -5982,7 +5982,7 @@ sheets:
       startup_fund_rendimientos_clave: Alapkezelési jövedelem
       street_name: Közterület neve
       street_type: Közterület jellege
-      subclave: Alkulcs
+      subclave: Részkulcs
       supplier_tax_id: Szállító adóazonosítója
       taxable_base: Visszatartási alap
       territorial_deduction_clave: Ceuta vagy Melilla / La Palma

@@ -2757,8 +2757,8 @@ application:
         Afegeix aquests flags a la mateixa ordre i torna a executar-la: %{missing_flags}.'
       persist_patch_unknown_question_id: El pedaç de l'assistent referència un id
         de pregunta desconegut.
-      profile_flag_required: L'assistent requereix --profile NAME (sense valor per
-        defecte 'default' implícit).
+      profile_flag_required: L'assistent requereix --profile NAME (sense alternativa
+        `default` implícita).
       profile_label_taken: Ja existeix un perfil anomenat %{label}. Tria un altre
         nom o executa el flux d'edició per modificar aquest perfil.
       quiet_missing_flags: 'A aquesta execució amb --quiet li falten dades obligatòries.

@@ -320,8 +320,8 @@ msgid ""
 "Deduct input VAT under general or especial prorrata and declare "
 "differentiated sectors."
 msgstr ""
-"Vond le a beszámítható IVA-t általános vagy especial prorrata szerint, és"
-" vallj be differenciált tevékenységi ágakat."
+"Vond le a beszámítható IVA-t általános vagy különleges arányosítás "
+"(prorrata) szerint, és vallj be differenciált tevékenységi ágakat."
 
 #: ../../how-to/index.md:192
 msgid "Your filings"
@@ -367,8 +367,8 @@ msgid ""
 "Record a registration, amendment, or deregistration you filed at AEAT's "
 "online portal."
 msgstr ""
-"Rögzíts egy alta, modificación vagy baja bejelentést, amelyet az AEAT "
-"portálján nyújtottál be."
+"Rögzíts egy nyilvántartásba vételt, módosítást vagy megszüntetést, "
+"amelyet az AEAT portálján nyújtottál be."
 
 #: ../../how-to/index.md:221
 msgid "Modelo 100 (Renta)"

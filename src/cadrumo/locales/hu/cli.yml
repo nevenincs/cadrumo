@@ -603,7 +603,7 @@ cli:
         description_pattern_help: Reguláris kifejezés minta, amelyet a tranzakció
           leírásához illesztünk (kis- és nagybetűre nem érzékeny).
         empty_pattern: Egy szabályhoz nem üres --description-pattern szükséges (egy
-          szó vagy kifejezés, pl. "software"), hogy illeszkedjen a tranzakciók leírásaihoz.
+          szó vagy kifejezés, pl. "szoftver"), hogy illeszkedjen a tranzakciók leírásaihoz.
         group_help: A nyilvántartások osztályozási szabályainak kezelése és alkalmazása.
         list_empty: (nincsenek tárolt szabályok)
         list_header: "prioritás\tosztályozás\tminta\trule_id"
@@ -896,8 +896,7 @@ cli:
           a(z) {code}@{revision} ({period}) számára: {suggestion}.'
         unscoped_revision_warning: A rovatforrások listája nincs %{missing_filters}
           szerint szűkítve; a hivatalos nyomtatvány olyan változatának forrásazonosítóit
-          is tartalmazhatja, amely nem egyezik a `aeat app modelo work calculate`
-          által használt bevallással.
+          is tartalmazhatja, amely nem egyezik a számításhoz használt bevallással.
         year_help: A nyomtatvány adóéve (pl. 2026).
       casilla:
         casilla_help: Leírandó mezőazonosító vagy nyomtatott mezőszám (pl. 0596).
@@ -1005,7 +1004,7 @@ cli:
         import_declared_kind_help: Az AEAT által erre a benyújtásra rögzített bevallásfajta
           (`original`, `complementaria`, `sustitutiva`, `rectificativa`); kötelező,
           ha az AEAT-nál már van megerősített bevallás az időszakra
-        import_file_help: A külső bevallási forrásból exportált CSV- vagy XLSX-casillajegyzék
+        import_file_help: A külső bevallási forrásból exportált CSV- vagy XLSX-rovatjegyzék
           elérési útja.
         import_help: Cadrumón kívül benyújtott bevallás mentése alap-benyújtási rekordként,
           importált AEAT-igazolt bizonyítékkal.
@@ -1199,7 +1198,7 @@ cli:
         year_help: A kommunikáció éve.
       m360:
         declare_help: 'Egy adóév kérelmének megadása vagy cseréje. A dokumentumot
-          JSON-ként add meg a --secrets-stdin vagy --secrets-fd "solicitud" mezőjében:
+          JSON-ként add meg a --secrets-stdin vagy --secrets-fd `solicitud` mezőjében:
           az adatait és vagy own_account_id-t (a kérelmező saját, SWIFT-BIC-kel rendelkező
           számlája), vagy representante_account-ot.'
         filing_year_help: A kérelem adóéve (pl. 2025).
@@ -1590,11 +1589,11 @@ cli:
         create_stub_modelo_650_refused: 'A Modelo %{modelo} nyomtatvány (ISD öröklések)
           szerinti bevallás létrehozása ebben a CLI-ben nem támogatott. Jogalap: Ley
           29/1987 LISyD és Art. 67 RISD; a rendes határidő a haláltól számított 6
-          hónap. A megfelelő regionális Hacienda adóhatóságnál kell benyújtani.'
+          hónap. A megfelelő regionális adóhatóságnál kell benyújtani.'
         create_stub_modelo_660_refused: 'A Modelo %{modelo} nyomtatvány (ISD hagyatéki
           leltár, a Modelo 650 nyomtatvány melléklete) szerinti bevallás létrehozása
           ebben a CLI-ben nem támogatott. Jogalap: Ley 29/1987 LISyD; a megfelelő
-          regionális Hacienda adóhatóságnál kell benyújtani.'
+          regionális adóhatóságnál kell benyújtani.'
         dependencies_help: Keresztidőszaki bevallástörténeti függőségek és az aktuális
           clean-state blokkolók megjelenítése a célbevalláshoz
         dependencies_period_requires_modelo: A --period beállításhoz kötelező a --modelo.
@@ -1760,9 +1759,8 @@ cli:
         prestacion_inss_exenta_help: Az SZJA alól mentes anyasági/apasági INSS-járadék
           teljes összege (Art. 7.h LIRPF). A revízióhoz tartozó mentességi mezőbe
           kerül rögzítésre, és levonásra kerül a számítható jövedelmek összesítéséből.
-          Add meg a Társadalombiztosítástól (Seguridad Social) kapott bruttó anyasági
-          vagy apasági táppénz összegét. NE add meg a --casilla 0003 (Retribuciones
-          dinerarias) opcióban.
+          Add meg a Társadalombiztosítástól kapott bruttó anyasági vagy apasági táppénz
+          összegét. NE add meg a --casilla 0003 (Retribuciones dinerarias) opcióban.
         prestacion_inss_exenta_not_decimal: 'A --prestacion-inss-exenta értéknek decimális
           összegnek kell lennie; kapott érték: {value}. Használj tizedespontot ezreselválasztó
           nélkül, pl. 1234.56.'
@@ -1879,8 +1877,8 @@ cli:
         revision_selector_help: Revízió választó.
         revision_show_help: Egy tárolt számítási revízió megőrzött mezőértékeinek
           megjelenítése (újraszámítás nélkül).
-        revision_verbose_help: A teljes mezőnkénti képletnyom megjelenítése (op, formula_id,
-          operandus-hivatkozások és -értékek).
+        revision_verbose_help: A teljes mezőnkénti képletnyom megjelenítése (`op`,
+          formula_id, operandus-hivatkozások és -értékek).
         revisions_help: Mentett számítások listázása, opcionálisan egy bevallásra
           szűrve.
         row_empty_key: Üres mezőkulcs a --row {token} mezőben; minden mezőnek KULCS=ÉRTÉK
@@ -2019,7 +2017,7 @@ cli:
           az offline olvasáshoz.
         clear_help: A meghatalmazotti beállítás megszüntetése.
         configure:
-          no_console_hint: 'Az apoderamiento interaktív beállításához konzol szükséges.
+          no_console_hint: 'A meghatalmazás interaktív beállításához konzol szükséges.
             Állítsd be nem interaktív módon: cadrumo-runtime config auth apoderado
             configure --represented-nif NIF --scope SCOPE.'
           represented_nif_help: A képviselt fél NIF-je.
@@ -2052,8 +2050,8 @@ cli:
           file_help: A PKCS#12 (.p12/.pfx) csomag útvonala
           friendly_name_help: Opcionális, ember által olvasható címke, amely eltér
             a --name paramétertől
-          name_help: Ennek a tanúsítványforrásnak az azonosítója (például personal
-            vagy apoderado-acme)
+          name_help: Ennek a tanúsítványforrásnak az azonosítója (például `personal`
+            vagy `apoderado-acme`)
         register_help: Nevesített tanúsítványforrás regisztrálása vagy átirányítása
         remove:
           name_help: Az eltávolítandó regisztrált tanúsítványforrás
@@ -2105,7 +2103,7 @@ cli:
         adatokat. A megerősítéshez futtasd újra a --yes kapcsolóval.
       reset_yes_help: A destruktív hitelesítési visszaállítás megerősítése
       route_help: 'Cl@ve Móvil jóváhagyási mód: app_request (alapértelmezett, látható
-        böngésző nélkül is működik) vagy qr (látható böngészőt nyit). A --provider
+        böngésző nélkül is működik) vagy `qr` (látható böngészőt nyit). A --provider
         clave_movil kapcsoló szükséges.'
       status_help: Beállított hitelesítési állapot megjelenítése.
       status_summary_configured: A hitelesítés be van állítva, de még nincs elérhető
@@ -2316,11 +2314,11 @@ cli:
           ehhez a fiókhoz, vagy add meg a profil jelszavát minden parancsnak a --profile-secrets-stdin
           kapcsolóval.'
         session_not_persisted_unconfirmed: 'Csak ehhez a parancshoz jelentkeztél be:
-          a runtime nem őrizte meg ezt a bejelentkezést, pedig ez a folyamat eléri
-          a rendszerkulcstárat. Vagy megváltozott a bejelentkezés, amíg ez a belépés
-          befejeződött, vagy a runtime olyan bejelentkezésben fut, amely nem éri el
-          a kulcstárat. Jelentkezz be újra; ha ez ismétlődik, indítsd a runtime-ot
-          ugyanabból a bejelentkezésből, mint ezt a parancsot.'
+          a futtatókörnyezet nem őrizte meg ezt a bejelentkezést, pedig ez a folyamat
+          eléri a rendszerkulcstárat. Vagy megváltozott a bejelentkezés, amíg ez a
+          belépés befejeződött, vagy a futtatókörnyezet olyan bejelentkezésben fut,
+          amely nem éri el a kulcstárat. Jelentkezz be újra; ha ez ismétlődik, indítsd
+          a futtatókörnyezetet ugyanabból a bejelentkezésből, mint ezt a parancsot.'
       passphrase_channel_absent: Nem érhető el jelszócsatorna. Futtasd ezt a parancsot
         terminálban, vagy használd a --secrets-stdin vagy --secrets-fd kapcsolót.
       passphrase_prompt: 'Profil jelszava: '
@@ -2379,10 +2377,10 @@ cli:
         push_namespace_help: 'Feltolható névtér (ismételhető; alapértelmezés: minden
           névtér).'
         push_unmanifested_object_warning: '{count} objektumot nem sikerült eltávolítani,
-          miután a névterük manifestje visszatartásra került; tartósan megmaradnak
-          a távoli szolgáltatónál olyan manifest nélkül, amely felsorolhatná vagy
-          egyeztethetné őket. Vizsgáld meg és távolítsd el őket manuálisan, vagy próbáld
-          meg újra a feltöltést, miután a mögöttes hiba megoldódott.'
+          miután a névterük jegyzéke visszatartásra került; tartósan megmaradnak a
+          távoli szolgáltatónál olyan jegyzék nélkül, amely felsorolhatná vagy egyeztethetné
+          őket. Vizsgáld meg és távolítsd el őket manuálisan, vagy próbáld meg újra
+          a feltöltést, miután a mögöttes hiba megoldódott.'
         reconcile_cleared_info: '{count} félbemaradt profilcsomag-export kitakarítva.
           A visszamaradt titkosítatlan ideiglenes fájlok törölve lettek, a lemezre
           már kiírt exportok pedig megkapták a hiányzó naplóbejegyzésüket.'
@@ -2690,7 +2688,7 @@ cli:
         help: A profil feloldása jelszóval és a kiválasztott jogosultságok újraaktiválása.
       row:
         invalid_row: A(z) '%{row}' nem érvényes sorkulcs; használj nemnegatív egész
-          számot vagy base értéket.
+          számot vagy `base` értéket.
         row_help: A `aeat config profile view` által mutatott stabil sorkulcs; az
           index nélküli sorhoz használd a `base` értéket.
         section_help: Az ismételhető profilszakasz kulcsa.
@@ -3067,7 +3065,7 @@ cli:
       source_jurisdiction_help: Két betűs ISO 3166-1 alfa-2 országkód, amely azonosítja
         a jövedelem vagy költség szabályozási forrásjogszabályát (pl. ES spanyol forrás,
         FR francia forrás). Az IRNR és a Beckham-szűrő (LIRPF 93. cikk) követelménye.
-      source_jurisdiction_required_beckham: Az impatriado (LIRPF 93. cikk, Beckham)
+      source_jurisdiction_required_beckham: Az impatriado-rend (LIRPF 93. cikk, Beckham)
         különbözőképp kezeli a spanyol és külföldi forrású jövedelmet; a --source-jurisdiction
         értéket minden tételnél kifejezetten meg kell adni. A csendes ES alapérték
         a külföldi forrású tételeket is bevonná az IRPF alapba (93.5 cikk szegregáció).
@@ -3084,7 +3082,7 @@ cli:
       value_date_help: Értékdátum (ÉÉÉÉ-HH-NN).
     allocate:
       business_pct_help: Üzleti célú arány 0 és 1 között MIXED/arányos sorokhoz; teljesen
-        BUSINESS sorhoz ne használd a ledger allocate parancsot.
+        BUSINESS sorhoz ne használd a `ledger allocate` parancsot.
       help: Üzleti/magáncélú arányosság rögzítése egy tranzakcióhoz a nyilvántartásban.
       id_help: A kiosztandó tranzakció azonosítója.
       prorrata_reference_help: IVA prorrata hivatkozás ÁFA-munkafolyamatokhoz.
@@ -3187,10 +3185,10 @@ cli:
         elutasított.
       irpf_category_help: IRPF-kategória azonosítója. Nettó szakmai számlákhoz actividad_economica;
         nettó bérleti díjakhoz arrendamiento_local vagy arrendamiento_vivienda_afecto.
-        A Royalties és az SGAE-bevétel capital mobiliario a LIRPF 25.4. cikke szerint,
-        ha az adózó nem a szerző, és gazdasági tevékenység a LIRPF 27. cikke szerint,
-        ha az, és folytatja a tevékenységet. Az összes azonosítóért tekintsd meg a
-        nyilvántartásod kategóriakatalógusát.
+        A jogdíjak és az SGAE-bevétel a LIRPF 25.4. cikke szerint ingó tőkéből származó
+        jövedelem, ha az adózó nem a szerző, és gazdasági tevékenységből származó
+        jövedelem a LIRPF 27. cikke szerint, ha az, és folytatja a tevékenységet.
+        Az összes azonosítóért tekintsd meg a nyilvántartásod kategóriakatalógusát.
       iva_amount_help: IVA-összeg.
       iva_category_help: Explicit IVA-kategória felülbírálat erre a tranzakcióra (pl.
         intra_community_supply, export_third_country_zero_rated, export_assimilated_zero_rated,
@@ -3478,7 +3476,7 @@ cli:
       errors:
         min_two_children: A `ledger merge` parancshoz legalább két --child-id értéke
           szükséges.
-      help: Felosztott gyermekek teljes kohortjának újraegyesítése egy friss tranzakcióba.
+      help: Felosztott gyermekek teljes csoportjának újraegyesítése egy friss tranzakcióba.
       reason_help: A bucket-esemény adatcsomagjában és az életciklus-előzményekben
         rögzített ok.
       yes_help: Erősítsd meg az egyesítést (a művelet archiválja az összes gyermeket
@@ -4014,7 +4012,7 @@ cli:
       section_config: '  config - profilbeállítás, hitelesítés, diagnosztika'
       section_ledger: '  app ledger - banki importok és tranzakció-felülvizsgálat'
       section_modelo: '  app modelo - adónyomtatvány-katalógus és bevallások'
-      section_overview: '  app overview - munkaterület állapota és benyújtási naptár'
+      section_overview: '  `app overview` - munkaterület állapota és benyújtási naptár'
       section_review: '  app review - a figyelmedet igénylő elemek'
       sections_heading: Fő szakaszok
       session_login_command: 'Profilmunka indítása vagy megújítása: `aeat config login

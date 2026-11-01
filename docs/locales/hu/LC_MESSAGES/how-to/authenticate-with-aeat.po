@@ -276,9 +276,9 @@ msgid ""
 "machine."
 msgstr ""
 "Újítsd meg a tanúsítványt azzal a szervezettel, amely kiállította, "
-"például a Fábrica Nacional de Moneda y Timbrével (FNMT) vagy az AEAT-val."
-" Ez az eszközön kívül történik. Töltsd le a megújított tanúsítványfájlt "
-"(`.p12` vagy `.pfx`) a gépedre."
+"például a <span lang=\"es\">Fábrica Nacional de Moneda y Timbre</span> "
+"(FNMT) vagy az AEAT-val. Ez az eszközön kívül történik. Töltsd le a "
+"megújított tanúsítványfájlt (`.p12` vagy `.pfx`) a gépedre."
 
 #: ../../how-to/authenticate-with-aeat.md:118
 msgid "Point the tool at the renewed file:"

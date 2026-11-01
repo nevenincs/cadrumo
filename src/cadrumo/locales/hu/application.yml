@@ -129,7 +129,7 @@ application:
     sessions:
       errors:
         clave_contraste_missing: 'A Cl@ve Móvil alapértelmezés szerint jóváhagyási
-          kérést küld a Cl@ve alkalmazásba, ehhez a dokumentumodon szereplő contraste
+          kérést küld a Cl@ve alkalmazásba, ehhez a dokumentumodon szereplő `contraste`
           szükséges. NIE esetén rögzítsd az aktív profilon a következőt: %{nie_field},
           DNI esetén pedig ezt: %{dni_field}. Ha inkább QR-kódot olvasnál be egy látható
           böngészőben, futtasd az `cadrumo-runtime config auth configure --provider
@@ -289,7 +289,7 @@ application:
           szükséges; a kapott érték: Modelo {modelo}, {filing_year}. adóév, {period}
           időszak.'
         result_casilla_required: A Modelo 303 átvitel normalizálásához szükséges a
-          rögzített resultado rovat ({casilla_id}), amelyet a megfigyelés nem tartalmaz.
+          rögzített eredmény rovat ({casilla_id}), amelyet a megfigyelés nem tartalmaz.
         supplied_available_contradicts_derivation: A megadott rendelkezésre álló kompenzáció
           ({supplied_available}) ellentmond a(z) {basis} levezetésnek ({derived_available}).
           Csak az adózó döntheti el, melyik összeget nyújtották be; nincs biztonságos
@@ -2421,7 +2421,7 @@ application:
           concept: Fogalom
           fixed_quota: Fix kvóta
           formula: Képlet
-          legal_refs: Jogi hivatk.
+          legal_refs: Jogi hivatkozások
           marginal_rate: Határkulcs
           maximum_base: Maximum alap
           minimum_base: Minimum alap
@@ -2429,13 +2429,13 @@ application:
           rounding: Kerekítés
           section: Szakasz
           source: Forrás
-          source_refs: Forráshivatk.
+          source_refs: Forráshivatkozások
           value: Érték
         protected:
           calculos: Származtatott számítások - védett a paritás megőrzéséhez
           evidencia: 'Generált bizonyíték: csak olvasható'
           guide: Útmutató - védett
-          provenance: Eredet / audit trail - védett
+          provenance: Eredet / ellenőrzési nyomvonal - védett
           tariffs: Tarifák / aktív paraméterek - védett
       form:
         communication_caption: Adatlap · az adatokat a forráslapokon módosíthatod
@@ -2711,11 +2711,11 @@ application:
         és futtasd újra: %{missing_flags}'
       edit_missing_modelo_requirements: 'Az azonosító adatok teljesek, de ez a profil
         IVA-t vall be, és még hiányoznak a Modelo 303 kötelező mezői. Add hozzá ezeket
-        a flageket ugyanahhoz a parancshoz, és futtasd újra: %{missing_flags}.'
+        a kapcsolókat ugyanahhoz a parancshoz, és futtasd újra: %{missing_flags}.'
       persist_patch_unknown_question_id: A varázsló javítása ismeretlen kérdésazonosítóra
         hivatkozik.
       profile_flag_required: A varázslóhoz --profile NÉV szükséges (nincs implicit
-        "default" tartalék).
+        `default` tartalék).
       profile_label_taken: Már létezik %{label} nevű profil. Válassz másik nevet,
         vagy módosítsd ezt a profilt a szerkesztési folyamattal.
       quiet_missing_flags: 'Ennek a --quiet futtatásnak hiányoznak a kötelező adatok.

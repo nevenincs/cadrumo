@@ -27,12 +27,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
 def _catalogue_source(locale: str) -> Path:
-    """Resolve one committed catalogue's source path, shard directory or flat file.
-
-    Constructing ``LOCALES_DIR / f"{locale}.yml"`` here is what silently
-    retired both assertions below when the catalogues were resharded: the
-    gates stopped checking and started raising.
-    """
+    """Resolve one committed catalogue's source path, shard directory or flat file."""
     source = locale_catalogue_source(LOCALES_DIR, locale)
     if source is None:
         raise AssertionError(f"no committed catalogue found for locale {locale!r}")
@@ -64,13 +59,6 @@ _IDENTITY_HEADING_KEYS = {
 # entry, which the staleness assertion below reports as itself rather than as an
 # unreadable set difference.
 #
-# The ``cli.config.passphrase.*`` prompts were entries here until the
-# ``config rekey`` -> ``config passphrase change`` rename relocated them: the
-# current-passphrase prompt now lives under ``cli.config.custody`` and the
-# create-time pair under ``cli.config.profile``. The verb itself ships and its
-# family is MOUNTED, so the prompts are relocated rather than owed; what remains
-# under ``cli.config.passphrase`` is its help pair and one refusal.
-#
 # The documentation site's download link names the product too, but Hungarian
 # declines it (``Cadrumót``), which the bare-name pattern does not match, so that
 # key is an entry for three locales and not for the fourth.
@@ -78,7 +66,9 @@ _PROSE_KEYS = {
     "ca": {
         "adapters.google.oauth_flow.errors.profile_state_unresolved",
         "adapters.google.profile_binding.errors.no_active_profile",
+        "adapters.outbound.storage.google_drive.errors.create_vault_folder_no_id",
         "adapters.outbound.storage.google_drive.errors.former_vault_folder",
+        "adapters.outbound.storage.google_drive.errors.vault_folder_name_blank",
         "application.iva_wallet.decision_reason.first_period_zero_activity_start_uncontrasted",
         "application.modelo.calc_diagnostic.advisory_retencion_credit_grade.what",
         "application.modelo.calc_diagnostic.deferred_binding_source.what",
@@ -470,7 +460,9 @@ _PROSE_KEYS = {
         "workspace.modelo.review.unknown",
     },
     "es": {
+        "adapters.outbound.storage.google_drive.errors.create_vault_folder_no_id",
         "adapters.outbound.storage.google_drive.errors.former_vault_folder",
+        "adapters.outbound.storage.google_drive.errors.vault_folder_name_blank",
         "application.iva_wallet.decision_reason.first_period_zero_activity_start_uncontrasted",
         "application.modelo.calc_diagnostic.advisory_retencion_credit_grade.what",
         "application.modelo.calc_diagnostic.deferred_binding_source.what",
@@ -666,7 +658,9 @@ _PROSE_KEYS = {
         "workspace.modelo.review.unknown",
     },
     "hu": {
+        "adapters.outbound.storage.google_drive.errors.create_vault_folder_no_id",
         "adapters.outbound.storage.google_drive.errors.former_vault_folder",
+        "adapters.outbound.storage.google_drive.errors.vault_folder_name_blank",
         "application.iva_wallet.decision_reason.first_period_zero_activity_start_uncontrasted",
         "application.modelo.calc_diagnostic.advisory_retencion_credit_grade.what",
         "application.modelo.calc_diagnostic.deferred_binding_source.what",
@@ -1030,19 +1024,13 @@ def test_audit_reports_root_and_nested_format_field_drift(tmp_path: Path) -> Non
 def test_audit_accepts_matching_conversions_escaped_and_literal_braces(tmp_path: Path) -> None:
     """Equivalent names pass despite conversion and harmless brace differences.
 
-    Asserted on ``placeholder_mismatches`` rather than on ``result.ok``, and the
-    change is a ruling rather than a weakening. ``ok`` also requires catalogue
-    COMPLETENESS, and a fixture holding one authored key cannot be complete now
-    that the scaffold no longer fabricates a value for every codebase key it
-    finds. It used to audit clean only because the scaffold wrote each missing
-    key's own dotted path as its value -- a placeholder the honesty ratchet and
-    three coverage gates all refuse, so this case passed on the strength of the
-    very thing those gates exist to catch.
+    Asserted on ``placeholder_mismatches`` rather than on ``result.ok``, because ``ok``
+    also requires catalogue COMPLETENESS, and a fixture holding one authored key cannot
+    be complete: the scaffold does not fabricate a value for a missing key.
 
     The property under test never involved completeness: it is that two
     spellings of one placeholder set are recognised as equivalent. That is what
-    is asserted, and it fails for its own reason now rather than for a reason
-    the fixture happened to satisfy.
+    is asserted.
     """
     values = {
         locale: f"{locale} %{{amount}} {{subject!r}} {{{{escaped}}}} {{not a placeholder}}" for locale in _LOCALES
@@ -1122,12 +1110,9 @@ _EM_DASH_EXEMPT_KEYS: frozenset[tuple[str, str]] = frozenset[tuple[str, str]]()
 def test_committed_catalogues_carry_no_em_dash() -> None:
     """No shipped locale value may contain U+2014; a spaced hyphen reads naturally.
 
-    A rendered page must never show an em dash (operator directive). Every prior
-    occurrence in the four catalogues was the same label/qualifier or
-    parenthetical-aside pattern, none a verbatim official AEAT designation or
-    legal citation, so ``_EM_DASH_EXEMPT_KEYS`` starts empty -- a future
-    genuinely-official exemption is added there by exact key, not by loosening
-    this assertion.
+    A rendered page must never show an em dash. ``_EM_DASH_EXEMPT_KEYS`` is empty, and a
+    genuinely-official exemption is added there by exact key, not by loosening this
+    assertion.
     """
     manager = LocaleManager(src_dir=SRC_DIR, locales_dir=LOCALES_DIR)
     violations: list[str] = []

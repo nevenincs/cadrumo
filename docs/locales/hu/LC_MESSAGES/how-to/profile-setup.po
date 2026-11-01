@@ -522,9 +522,9 @@ msgstr ""
 "Tevékenység esetén az `--irpf-estimation-regime` kapcsolóval rögzítsd, "
 "hogyan állapítja meg az IRPF a tevékenység jövedelmét. A normál vagy "
 "egyszerűsített közvetlen becslési rendszer (`directa_normal` vagy "
-"`directa_simplificada`) Modelo 130-at igényel. Az objektív becslési "
-"rendszer (átalányadózás, `objetiva`) ehelyett Modelo 131-et igényel. Ha "
-"üresen hagyod, a Cadrumo nem feltételez adózási rendszert."
+"`directa_simplificada`) Modelo 130 bevallást igényel. Az objektív "
+"becslési rendszer (átalányadózás, `objetiva`) ehelyett Modelo 131-et "
+"igényel. Ha üresen hagyod, a Cadrumo nem feltételez adózási rendszert."
 
 #: ../../how-to/profile-setup.md:225
 msgid "Identity"
@@ -963,7 +963,7 @@ msgstr ""
 " (`0`, `33` vagy `65`), a `CONVIVENCIA`, a `CUSTODIA`, a `MESES_TRABAJO`,"
 " a `GASTOS_GUARDERIA` és a `NIF`. A teljes listáért futtasd az `aeat "
 "config profile descendiente add --help` parancsot. Adóazonosító nélküli "
-"descendiente is megengedett: hagyd ki a `NIF` kulcsot. A `remove` a "
+"leszármazott is megengedett: hagyd ki a `NIF` kulcsot. A `remove` a "
 "`list` által mutatott pozíciót fogadja, `0`-tól számolva."
 
 #: ../../how-to/profile-setup.md:383
@@ -1077,8 +1077,8 @@ msgid ""
 "lang=\"es\">gestor</span> profiles."
 msgstr ""
 "`cloud_evidence_upload`: érzékeny bizonylatok küldésének engedélyezése "
-"egy felhőalapú LLM-szolgáltatónak. Alapértelmezés szerint kikapcsolva. "
-"Gestor-profiloknál tiltott."
+"egy felhőalapú LLM-szolgáltatónak. Alapértelmezés szerint kikapcsolva. A "
+"<span lang=\"es\">gestor</span> típusú profiloknál tiltott."
 
 #: ../../how-to/profile-setup.md:432
 msgid ""

@@ -205,8 +205,9 @@ msgstr ""
 "béns, `M` lliuraments després d'una importació exempta, `H` el mateix a "
 "través d'un representant fiscal, `A` adquisicions de béns, `T` "
 "lliuraments triangulars, `S` serveis prestats, `I` serveis adquirits, i "
-"les claus d'existències de reserva (call-off stock) `R` (transferències),"
-" `D` (devolucions) i `C` (substitucions)."
+"les claus d'existències de reserva (<span lang=\"en\">call-off "
+"stock</span>) `R` (transferències), `D` (devolucions) i `C` "
+"(substitucions)."
 
 #: ../../how-to/manage-invoices.md:91
 msgid ""

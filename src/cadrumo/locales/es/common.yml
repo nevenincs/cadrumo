@@ -4645,7 +4645,7 @@ entries:
     purpose: Consulta del estado de pagos y devoluciones tributarias.
   portal_dnie_sede_entry:
     label: Acceso con DNI electrónico
-    purpose: Punto de acceso a la Sede mediante DNIe.
+    purpose: Punto de acceso a la Sede mediante el DNI electrónico.
   portal_domiciliacion_bancaria:
     label: Domiciliación bancaria de pagos
     purpose: Domiciliación bancaria de autoliquidaciones y pagos tributarios.

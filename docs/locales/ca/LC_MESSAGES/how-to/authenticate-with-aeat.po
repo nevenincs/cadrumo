@@ -143,7 +143,8 @@ msgid ""
 "supported."
 msgstr ""
 "Passa l'identificador a `--provider`. No s'admeten Cl@ve PIN ni el "
-"document nacional d'identitat electrònic (DNI electrónico)."
+"document nacional d'identitat electrònic (<span lang=\"es\">DNI "
+"electrónico</span>)."
 
 #: ../../how-to/authenticate-with-aeat.md:56
 msgid "Configure a provider"

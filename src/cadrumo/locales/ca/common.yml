@@ -4645,7 +4645,7 @@ entries:
     purpose: Consulta de l'estat de pagaments i devolucions tributàries.
   portal_dnie_sede_entry:
     label: Accés amb DNI electrònic
-    purpose: Punt d'accés a la Seu mitjançant el DNIe.
+    purpose: Punt d'accés a la Seu mitjançant el DNI electrònic.
   portal_domiciliacion_bancaria:
     label: Domiciliació bancària de pagaments
     purpose: Domiciliació bancària d'autoliquidacions i pagaments tributaris.
@@ -4724,7 +4724,7 @@ entries:
     purpose: Àrea personal autenticada del contribuent a la Seu.
   portal_mis_documentos_pendientes_firma:
     label: Documents pendents de signatura
-    purpose: Portasignatures amb els documents pendents de signatura electrònica.
+    purpose: Portafirmes amb els documents pendents de signatura electrònica.
   portal_mis_expedientes:
     label: Els meus expedients
     purpose: Consulta de l'estat dels expedients i tràmits del contribuent.
@@ -6031,7 +6031,8 @@ topic:
     title: Calendari d'obligacions
   casilla:
     body: Una casella és un camp numerat d'un model. Les caselles poden ser manuals,
-      calculades o derivades de bindings. 'aeat app modelo casillas <model>' les llista.
+      calculades o derivades de vinculacions. 'aeat app modelo casillas <model>' les
+      llista.
     title: Caselles
   formats:
     body: La CLI emet sortida en `text` o `json` segons `--format`. JSON és recomanat
@@ -6672,8 +6673,8 @@ tui:
       errors:
         amount_invalid: Escriu l'import només amb xifres i amb punt per als decimals,
           per exemple 1500.00.
-        asset_id_required: Escriu primer l'identificador de l'element.
         amount_required: Escriu un import a «{field}». Si no n'hi ha cap, escriu 0.00.
+        asset_id_required: Escriu primer l'identificador de l'element.
         choice_invalid: 'Tria una d''aquestes opcions: {options}.'
         date_invalid: Escriu la data com AAAA-MM-DD, per exemple 2025-06-30.
         entry_unreadable: No es pot llegir un dels valors que has escrit. Revisa les

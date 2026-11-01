@@ -431,8 +431,9 @@ categories:
     mutualidad_alternativa:
       label: Alternative mutual-insurance contribution
       notes: Deductible up to the RETA maximum quota for common contingencies of each
-        year, and only for the part that covers RETA contingencies, when the mutualidad
-        replaces your RETA membership (Ley 35/2006 art. 30.2, rule 1, second paragraph).
+        year, and only for the part that covers RETA contingencies, when the alternative
+        mutual-insurance scheme replaces your RETA membership (Ley 35/2006 art. 30.2,
+        rule 1, second paragraph).
     publicidad_marketing:
       label: Advertising and marketing
       notes: Fully deductible expense (Ley 35/2006 art. 28.1, other external services).
@@ -5890,7 +5891,7 @@ sheets:
       startup_fund_rendimientos_clave: Fund-management income
       street_name: Street name
       street_type: Street type
-      subclave: Subclave
+      subclave: Subcode
       supplier_tax_id: Supplier tax id
       taxable_base: Withholding base
       territorial_deduction_clave: Ceuta or Melilla / La Palma
@@ -5947,7 +5948,7 @@ topic:
     title: IRPF advance payment
   profile:
     body: The local profile carries your tax identifier (NIF/CIF/DNI/NIE), main activity,
-      IVA/IRPF regime, and optional enrolments (SII, Verifactu, intracomunitario).
+      IVA/IRPF regime, and optional enrolments (SII, Verifactu, intra-community).
       Edit it with 'aeat config profile edit NAME'.
     title: Taxpayer profile
   providers:
@@ -6546,8 +6547,8 @@ tui:
       errors:
         amount_invalid: Write the amount in digits only, with a point for the decimals,
           for example 1500.00.
-        asset_id_required: Write the asset identifier first.
         amount_required: Write an amount in “{field}”. If there is none, write 0.00.
+        asset_id_required: Write the asset identifier first.
         choice_invalid: 'Choose one of these: {options}.'
         date_invalid: Write the date as YYYY-MM-DD, for example 2025-06-30.
         entry_unreadable: One of the values you wrote can't be read. Check the dates,

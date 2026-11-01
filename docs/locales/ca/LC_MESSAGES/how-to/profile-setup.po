@@ -563,8 +563,8 @@ msgstr ""
 "Aquesta eina no modela els règims forals. Establir la comunitat a "
 "`pais_vasco` o `navarra` es rebutja, perquè els residents d'aquests "
 "territoris presenten davant la seva *Hacienda Foral*, en virtut del "
-"*Concierto Económico* (País Vasco) o del *Convenio Económico* (Navarra), "
-"i no davant l'AEAT:"
+"*Concierto Económico* (País Basc) o del *Convenio Económico* (Navarra), i"
+" no davant l'AEAT:"
 
 #: ../../how-to/profile-setup.md:250
 msgid ""

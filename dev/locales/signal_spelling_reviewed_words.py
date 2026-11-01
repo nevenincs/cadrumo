@@ -430,6 +430,17 @@ REVIEWED_LOCALE_SPELLINGS: dict[str, frozenset[str]] = {
             "explotaciones",
             "asociativas",
             "prioritarias",
+            # The recurring Spanish persona's name in the lifecycle guides:
+            "García",
+            "López",
+            # The island named by the Modelo 100 territorial-deduction key
+            # (Ley 35/2006, art. 68.4 and additional provision 57):
+            # https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764
+            "Palma",
+            # The name of the invoicing-system verification regime of Real
+            # Decreto 1007/2023 (written VERI*FACTU in the regulation):
+            # https://www.boe.es/buscar/act.php?id=BOE-A-2023-24840
+            "Verifactu",
         }
     ),
     "es": frozenset(
@@ -700,6 +711,27 @@ REVIEWED_LOCALE_SPELLINGS: dict[str, frozenset[str]] = {
             # The log viewer's own words for its source and its level:
             "logger",
             "Info",
+            # RAE Ortografía: an enclitic pronoun joins the imperative of acortar
+            # (acorta + lo), which takes a written accent:
+            # https://www.rae.es/ortografia/tilde-en-formas-verbales-con-pronombres-encliticos
+            "acórtalo",
+            # The name of the invoicing-system verification regime of Real
+            # Decreto 1007/2023 (written VERI*FACTU in the regulation):
+            # https://www.boe.es/buscar/act.php?id=BOE-A-2023-24840
+            "Verifactu",
+            # Proper names: the exit of the United Kingdom from the EU, which
+            # titles the AEAT instructions cited for Modelo 349 country
+            # prefixes, the scripting language and Apple's computer line:
+            # https://es.wikipedia.org/wiki/Brexit
+            # https://developer.mozilla.org/es/docs/Web/JavaScript
+            # https://www.apple.com/es/mac/
+            "Brexit",
+            "JavaScript",
+            "Mac",
+            # The Spanish public administration's electronic signature
+            # service, whose name the AEAT signature inbox reuses:
+            # https://administracionelectronica.gob.es/ctt/portafirmas
+            "Portafirmas",
         }
     ),
     "ca": frozenset(
@@ -847,6 +879,10 @@ REVIEWED_LOCALE_SPELLINGS: dict[str, frozenset[str]] = {
             "Info",
             # The title of a Spanish ministerial order, as cited:
             "Orden",
+            # The name of the invoicing-system verification regime of Real
+            # Decreto 1007/2023 (written VERI*FACTU in the regulation):
+            # https://www.boe.es/buscar/act.php?id=BOE-A-2023-24840
+            "Verifactu",
         }
     ),
     "hu": frozenset(
@@ -1233,6 +1269,10 @@ REVIEWED_LOCALE_SPELLINGS: dict[str, frozenset[str]] = {
             # A formula's function name and a depreciation method's stored token, both shown as written:
             "max",
             "linear",
+            # The name of the invoicing-system verification regime of Real
+            # Decreto 1007/2023 (written VERI*FACTU in the regulation):
+            # https://www.boe.es/buscar/act.php?id=BOE-A-2023-24840
+            "Verifactu",
         }
     ),
 }

@@ -851,7 +851,7 @@ cli:
           ({period}): {suggestion}.'
         unscoped_revision_warning: The list of box sources is not scoped by %{missing_filters};
           it may include source ids from a version of the official form that does
-          not match the declaration used by `aeat app modelo work calculate`.
+          not match the declaration the calculation uses.
         year_help: Tax year of the modelo (e.g. 2026)
       casilla:
         casilla_help: Casilla id or printed casilla number to describe (e.g. 0596).
@@ -1583,7 +1583,7 @@ cli:
         list_no_active_work_summary: No active declaration is available to continue.
         list_selection_required_summary: Choose one declaration before continuing.
         list_single_status_summary: One declaration is available for inspection.
-        m184_socio_handoff_message: 'Régimen de atribución de rentas: socio %{nif}
+        m184_socio_handoff_message: 'Régimen de atribución de rentas: member %{nif}
           (%{nombre}) receives an attributed base of %{importe} EUR (%{porcentaje}%
           share). On the member''s own workspace, record it as attribution_received
           facts (entity_nif, entity_name, share_pct, base_imponible_attributed, filing_year),

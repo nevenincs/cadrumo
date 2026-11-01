@@ -554,9 +554,9 @@ cli:
           des de la teva observació desada de la liquidació {modelo} {period} {filing_year}
           (LIVA art. 105.Uno). No és un percentatge emès per l'AEAT per a aquest exercici.
         seed_regulated_override_standing: L'exercici {ejercicio} ja té una prorrata
-          provisional {provenance}, que preval sobre l'arrossegament de l'art. 105.Uno.
-          No s'ha escrit res; substitueix aquesta declaració de manera expressa abans
-          d'arrossegar.
+          provisional {provenance}, que preval sobre l'arrossegament de l'art. 105.Uno
+          LIVA. No s'ha escrit res; substitueix aquesta declaració de manera expressa
+          abans d'arrossegar.
         seed_sector_help: Arrossega la prorrata provisional d'un sector diferenciat
           a partir del definitiu de l'any anterior d'aquest mateix sector inscrit
           al registre (LIVA arts. 101.Uno / 105.Uno).
@@ -606,8 +606,8 @@ cli:
           %{matched}, omeses: %{skipped}, sense_coincidència: %{no_match}'
         category_id_help: Categoria de despesa opcional a aplicar.
         classification_help: Classificació objectiu per a les transaccions coincidents.
-        description_pattern_help: Patró regex comparat (sense distinció de majúscules)
-          amb la descripció de la transacció.
+        description_pattern_help: Patró d'expressió regular comparat (sense distinció
+          de majúscules) amb la descripció de la transacció.
         empty_pattern: Una regla necessita un --description-pattern no buit (una paraula
           o frase, p. ex. "software") per coincidir amb les descripcions de les transaccions.
         group_help: Gestiona i aplica regles de classificació dels teus registres.
@@ -911,7 +911,7 @@ cli:
           coneguts per a {code}@{revision} ({period}): {suggestion}.'
         unscoped_revision_warning: La llista d'orígens no està acotada per %{missing_filters};
           pot incloure ids d'orígens d'una versió del model oficial que no coincideix
-          amb la declaració emprada per `aeat app modelo work calculate`.
+          amb la declaració que empra el càlcul.
         year_help: Exercici fiscal del model (p. ex. 2026)
       casilla:
         casilla_help: Id de casella o número imprès de casella que cal descriure (p.
@@ -1218,7 +1218,7 @@ cli:
         year_help: Any de la comunicació.
       m360:
         declare_help: 'Declara o substitueix la sol·licitud d''un exercici. Passa
-          el document com a JSON al camp "solicitud" de --secrets-stdin o --secrets-fd:
+          el document com a JSON al camp `solicitud` de --secrets-stdin o --secrets-fd:
           les dades i own_account_id (un compte propi del sol·licitant amb SWIFT-BIC)
           o representante_account.'
         filing_year_help: Exercici de la sol·licitud (p. ex., 2025).
@@ -1886,7 +1886,7 @@ cli:
         revision_show_help: Mostrar els valors de casella desats d'una revisió de
           càlcul concreta (sense recalcular)
         revision_verbose_help: Mostrar la traça completa de la fórmula per casella
-          (op, formula_id, referències i valors dels operands).
+          (`op`, formula_id, referències i valors dels operands).
         revisions_help: Llistar els càlculs desats, opcionalment filtrats per declaració
         row_empty_key: Clau de camp buida a --row {token}; cada camp ha de tenir el
           format CLAU=VALOR.
@@ -2109,7 +2109,7 @@ cli:
         desades. Torna a executar l'ordre amb --yes per confirmar.
       reset_yes_help: Confirmar el restabliment destructiu de l'autenticació
       route_help: 'Via d''aprovació de Cl@ve Móvil: app_request (per defecte, funciona
-        sense navegador visible) o qr (obre un navegador visible). Requereix --provider
+        sense navegador visible) o `qr` (obre un navegador visible). Requereix --provider
         clave_movil.'
       status_help: Mostrar l'estat d'autenticació configurat
       status_summary_configured: L'autenticació està configurada però encara no hi
@@ -2293,7 +2293,7 @@ cli:
         help: Mostra la carpeta de Google Drive creada per al perfil actiu
         organize_help: Organitza la carpeta del perfil dins de Cadrumo
         view_help: Mostra la carpeta de Google Drive creada per al perfil actiu.
-      help: Gestionar la integració OAuth de Google Desktop per a Drive i Sheets
+      help: Gestionar la integració OAuth d'escriptori de Google per a Drive i Sheets
       login_help: Executar el flux de consentiment OAuth
       logout_help: Esborrar el token de refresc i les metadades
       probe_help: Comprova l'accés a la carpeta de Google Drive del perfil
@@ -2606,7 +2606,7 @@ cli:
         s'inspecciona
       history_event_type_help: Filtrar l'historial per un o més tipus d'esdeveniment
         (repetible)
-      history_help: Mostrar l'historial d'esdeveniments només-append d'un perfil
+      history_help: Mostrar l'historial d'esdeveniments d'un perfil (només s'hi afegeix)
       history_object_id_help: Filtrar l'historial a esdeveniments sobre un object_id
         concret (coincidència exacta)
       history_since_help: Filtrar l'historial a esdeveniments en o després d'aquesta
@@ -2707,8 +2707,9 @@ cli:
           fes servir `base` per a la fila sense índex.
         section_help: Clau de la secció repetible del perfil.
       sandbox:
-        active_indicator_info: Estàs operant dins del sandbox %{label}, no en un perfil
-          real; totes les ordres s'executen contra aquest bucket aïllat i descartable.
+        active_indicator_info: Estàs operant dins de l'entorn de proves %{label},
+          no en un perfil real; totes les ordres s'executen contra aquest bucket aïllat
+          i descartable.
       sessions:
         help: Enumera les sessions actuals d'aquest perfil a l'entorn local.
       show:
@@ -2784,12 +2785,12 @@ cli:
         concertat per a la capçalera del Model 111.
       help: Configuració inicial guiada del perfil tributari
       profile_name_help: Nom del perfil on s'escriuen les respostes
-      quiet_help: Executa sense interacció usant només els valors dels flags indicats,
-        sense preguntar res. Un flag sense valor no s'escriu en lloc de provocar un
-        error, de manera que un perfil nou queda amb la configuració incompleta; `aeat
-        config profile complete-setup` indica les dades que encara li falten. Suficient
-        per si sol; combina amb --accept-defaults per omplir la resta amb els valors
-        per defecte.
+      quiet_help: Executa sense interacció usant només els valors de les opcions indicades,
+        sense preguntar res. Una opció sense valor no s'escriu en lloc de provocar
+        un error, de manera que un perfil nou queda amb la configuració incompleta;
+        `aeat config profile complete-setup` indica les dades que encara li falten.
+        Suficient per si sol; combina amb --accept-defaults per omplir la resta amb
+        els valors per defecte.
     sign_in_status:
       help: Comprova si has iniciat sessió sense reprendre-la ni prolongar-la.
     status:
@@ -2941,7 +2942,7 @@ cli:
       finding_label: '-'
       finding_optional: opcional
       finding_required: obligatori
-      logs_label: Logs
+      logs_label: Registres
       overall_label: Estat
       profile_label: Perfil
       python_label: Python
@@ -3115,7 +3116,7 @@ cli:
       value_date_help: Data valor de la transacció (AAAA-MM-DD)
     allocate:
       business_pct_help: Proporció d'ús professional de 0 a 1 per a files MIXED/proporcionals;
-        no facis servir ledger allocate per a una fila totalment BUSINESS.
+        no facis servir `ledger allocate` per a una fila totalment BUSINESS.
       help: Registrar proporcionalitat professional/personal per a un moviment dels
         teus registres
       id_help: Id del moviment a assignar
@@ -3218,10 +3219,10 @@ cli:
       irpf_category_help: Identificador de categoria d'IRPF. Les factures professionals
         cobrades en net fan servir actividad_economica; els lloguers pagats en net
         fan servir arrendamiento_local o arrendamiento_vivienda_afecto. Royalties
-        i els ingressos de la SGAE són capital mobiliario segons l'art. 25.4 LIRPF
-        quan el contribuent no és l'autor, i activitat econòmica segons l'art. 27
-        LIRPF quan sí que ho és i exerceix l'activitat. Consulta el catàleg de categories
-        dels teus registres per veure tots els identificadors.
+        i els ingressos de la SGAE són rendiments del capital mobiliari segons l'art.
+        25.4 LIRPF quan el contribuent no és l'autor, i activitat econòmica segons
+        l'art. 27 LIRPF quan sí que ho és i exerceix l'activitat. Consulta el catàleg
+        de categories dels teus registres per veure tots els identificadors.
       iva_amount_help: Import d'IVA
       iva_category_help: Categoria d'IVA explícita per a aquesta transacció (p. ex.
         intra_community_supply, export_third_country_zero_rated, export_assimilated_zero_rated,

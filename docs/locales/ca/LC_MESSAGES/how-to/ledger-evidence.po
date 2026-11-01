@@ -203,8 +203,8 @@ msgid ""
 msgstr ""
 "Per desvincular un adjunt complementari sense eliminar-ne els bytes, "
 "executa `aeat app ledger detach` amb l'id del moviment i l'`--attachment-"
-"id` de l'adjunt. Detach no pot esborrar el justificant de factura de "
-"compra."
+"id` de l'adjunt. Aquesta ordre no pot esborrar el justificant de factura "
+"de compra."
 
 #: ../../how-to/ledger-evidence.md:48
 msgid "Invoice records are a separate feature"
