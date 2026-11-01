@@ -8,12 +8,15 @@ resolver services through an isolated encrypted runtime.
 from __future__ import annotations
 
 from collections.abc import Iterator
-from datetime import UTC, date, datetime
+from datetime import date
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
 
+from cadrumo.application.aggregation.tests.renta_gasto_aggregation_support import (
+    gasto_transaction,
+)
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
 )
@@ -28,9 +31,8 @@ from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.period import Period
 from .....core.prorrata_register import ProrrataProvisionalProvenance, ProrrataRegisterRegime
 from .....domain.prorrata_register.register import ProrrataRegisterEntry
-from .....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
-from .....domain.transactions.models import Transaction, TransactionCatalogue
-from .....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
+from .....domain.transactions.enums import TransactionDirection
+from .....domain.transactions.models import TransactionCatalogue
 from .....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from .....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 from ...storage.sql.secure_objects import SecureObjectRepository
@@ -59,78 +61,9 @@ def _prior_m303_snapshot_ref():
     return published_authority_operation().snapshot("303", filing_year=2024, period="4T").snapshot_ref
 
 
-def _raw_transaction(
-    provider_id: str,
-    *,
-    booked_date: date,
-    value_date: date | None,
-    amount: Decimal = Decimal("1000.00"),
-    currency: str = "EUR",
-) -> RawTransaction:
-    return RawTransaction(
-        provider_transaction_id=provider_id,
-        booked_date=booked_date,
-        value_date=value_date,
-        amount=amount,
-        currency=currency,
-        counterparty="Proveedor SA",
-        description=f"gasto row {provider_id}",
-        provenance=RawProvenance(
-            source_path=Path(__file__),
-            source_sha256="b" * 64,
-            source_row_index=1,
-            source_format=SourceFormat.CSV,
-            ingested_at=datetime(2025, 4, 6, 12, 0, tzinfo=UTC),
-            provider_name="CSV provider",
-        ),
-        raw_fields={"Concepto": provider_id},
-    )
-
-
-def _gasto_transaction(
-    provider_id: str,
-    *,
-    value_date: date,
-    amount: Decimal = Decimal("1000.00"),
-    currency: str = "EUR",
-    taxable_base: Decimal | None = None,
-    iva_amount: Decimal | None = None,
-    irpf_category: str | None = None,
-    business_classification: BusinessClassification = BusinessClassification.BUSINESS,
-    business_pct: Decimal | None = None,
-    direction: TransactionDirection = TransactionDirection.OUTGOING,
-    lifecycle_state: TransactionLifecycleState = TransactionLifecycleState.ACTIVE,
-) -> Transaction:
-    return Transaction.model_validate(
-        {
-            "raw": _raw_transaction(
-                provider_id,
-                booked_date=value_date,
-                value_date=value_date,
-                amount=amount,
-                currency=currency,
-            ),
-            "direction": direction,
-            "group_label": None,
-            "source_jurisdiction": "ES",
-            "business_classification": business_classification,
-            "business_pct": business_pct,
-            "purchase_invoice_evidence_id": None,
-            "category_id": "asesoria_fiscal",
-            "taxable_base": taxable_base,
-            "iva_rate": None,
-            "iva_amount": iva_amount,
-            "irpf_category": irpf_category,
-            "lifecycle_state": lifecycle_state,
-            "classified_at": datetime(2025, 4, 6, 13, 0, tzinfo=UTC),
-            "classified_by": "manual",
-        },
-    )
-
-
 def _save_priced_gasto_row(secure_objects: SecureObjectRepository, provider_id: str) -> None:
     """Save one 2025-02-01 gasto of 1000.00 base plus 210.00 IVA under ``provider_id``."""
-    row = _gasto_transaction(
+    row = gasto_transaction(
         provider_id,
         value_date=date(2025, 2, 1),
         amount=Decimal("1210.00"),
@@ -161,9 +94,9 @@ def test_repository_backed_aggregation_emits_casilla_02_sum(
 ) -> None:
     """Full path: persist -> load from repo -> aggregate -> correct casilla 02 value."""
     q1_a_base, q1_b_base, q2_base = Decimal("120.00"), Decimal("80.00"), Decimal("300.00")
-    q1_a = _gasto_transaction("q1-a", value_date=date(2025, 2, 1), taxable_base=q1_a_base)
-    q1_b = _gasto_transaction("q1-b", value_date=date(2025, 3, 15), taxable_base=q1_b_base)
-    q2_only = _gasto_transaction("q2-only", value_date=date(2025, 5, 10), taxable_base=q2_base)
+    q1_a = gasto_transaction("q1-a", value_date=date(2025, 2, 1), taxable_base=q1_a_base)
+    q1_b = gasto_transaction("q1-b", value_date=date(2025, 3, 15), taxable_base=q1_b_base)
+    q2_only = gasto_transaction("q2-only", value_date=date(2025, 5, 10), taxable_base=q2_base)
 
     tx_repo = TransactionCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects)
     tx_repo.save(TransactionCatalogue.from_transactions((q1_a, q1_b, q2_only)))
@@ -214,8 +147,8 @@ def test_repository_backed_aggregation_summarizes_previously_silent_out_of_windo
     secure_objects: SecureObjectRepository,
 ) -> None:
     """Out-of-window rows surface as one compact period-exclusion summary."""
-    in_window = _gasto_transaction("row-in-window", value_date=date(2025, 2, 1), taxable_base=Decimal("50.00"))
-    wrong_direction_out_of_window = _gasto_transaction(
+    in_window = gasto_transaction("row-in-window", value_date=date(2025, 2, 1), taxable_base=Decimal("50.00"))
+    wrong_direction_out_of_window = gasto_transaction(
         "row-wrong-direction-out-of-window",
         value_date=date(2025, 5, 10),
         taxable_base=Decimal("90.00"),
@@ -250,9 +183,9 @@ def test_repository_backed_aggregation_partition_matches_full_scan(
     secure_objects: SecureObjectRepository,
 ) -> None:
     """The partitioned result matches the full-scan result for declared values."""
-    q1_row = _gasto_transaction("row-q1", value_date=date(2025, 2, 1), taxable_base=Decimal("50.00"))
-    q3_row = _gasto_transaction("row-q3", value_date=date(2025, 8, 1), taxable_base=Decimal("70.00"))
-    wrong_direction_q3_row = _gasto_transaction(
+    q1_row = gasto_transaction("row-q1", value_date=date(2025, 2, 1), taxable_base=Decimal("50.00"))
+    q3_row = gasto_transaction("row-q3", value_date=date(2025, 8, 1), taxable_base=Decimal("70.00"))
+    wrong_direction_q3_row = gasto_transaction(
         "row-q3-wrong-direction",
         value_date=date(2025, 9, 1),
         taxable_base=Decimal("30.00"),
@@ -312,7 +245,7 @@ def test_repository_wrapper_exento_iva_regime_joins_the_full_iva_to_the_quarterl
     secure_objects: SecureObjectRepository,
 ) -> None:
     """An EXENTO taxpayer's non-deductible input IVA joins the M130 gasto end to end."""
-    row = _gasto_transaction(
+    row = gasto_transaction(
         "row-exento",
         value_date=date(2025, 2, 1),
         amount=Decimal("9600.00"),

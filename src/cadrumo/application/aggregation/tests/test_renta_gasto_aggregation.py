@@ -8,9 +8,8 @@ the IVA-exclusive deductible base of OUTGOING business expenses.
 
 from __future__ import annotations
 
-from datetime import UTC, date, datetime
+from datetime import date
 from decimal import Decimal
-from pathlib import Path
 
 import pytest
 from pydantic import ValidationError
@@ -27,7 +26,6 @@ from ....domain.categories.spending_category import SpendingCategory
 from ....domain.invoices.catalogue import InvoiceCatalogue
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction, TransactionCatalogue
-from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ..renta_gasto_ledger import (
     RentaGastoLedgerAggregation,
     RentaGastoLedgerAggregationIssueReason,
@@ -36,6 +34,7 @@ from ..renta_gasto_ledger import (
 )
 from ..renta_ledger import aggregate_renta_ledger_expenses
 from ..renta_ledger_models import RentaLedgerAggregationIssueReason
+from .renta_gasto_aggregation_support import gasto_transaction
 from .renta_income_aggregation_support import _period
 from .usage_ratio_support import (
     HOME_OFFICE_SUMINISTRO_RATIO,
@@ -56,78 +55,6 @@ _Q2_2024 = _period(2025, "2T")
 _M130_GASTOS_CASILLA: CasillaId = validated_casilla_id("02")
 
 
-def _raw_transaction(
-    provider_id: str,
-    *,
-    booked_date: date,
-    value_date: date | None,
-    amount: Decimal = Decimal("1000.00"),
-    currency: str = "EUR",
-) -> RawTransaction:
-    return RawTransaction(
-        provider_transaction_id=provider_id,
-        booked_date=booked_date,
-        value_date=value_date,
-        amount=amount,
-        currency=currency,
-        counterparty="Proveedor SA",
-        description=f"gasto row {provider_id}",
-        provenance=RawProvenance(
-            source_path=Path(__file__),
-            source_sha256="b" * 64,
-            source_row_index=1,
-            source_format=SourceFormat.CSV,
-            ingested_at=datetime(2025, 4, 6, 12, 0, tzinfo=UTC),
-            provider_name="CSV provider",
-        ),
-        raw_fields={"Concepto": provider_id},
-    )
-
-
-def _gasto_transaction(
-    provider_id: str,
-    *,
-    value_date: date,
-    amount: Decimal = Decimal("1000.00"),
-    currency: str = "EUR",
-    taxable_base: Decimal | None = None,
-    iva_amount: Decimal | None = None,
-    irpf_category: str | None = None,
-    business_classification: BusinessClassification = BusinessClassification.BUSINESS,
-    business_pct: Decimal | None = None,
-    category_id: str = "asesoria_fiscal",
-    usage_ratio_id: str | None = None,
-    direction: TransactionDirection = TransactionDirection.OUTGOING,
-    lifecycle_state: TransactionLifecycleState = TransactionLifecycleState.ACTIVE,
-) -> Transaction:
-    return Transaction.model_validate(
-        {
-            "raw": _raw_transaction(
-                provider_id,
-                booked_date=value_date,
-                value_date=value_date,
-                amount=amount,
-                currency=currency,
-            ),
-            "direction": direction,
-            "group_label": None,
-            "source_jurisdiction": "ES",
-            "business_classification": business_classification,
-            "business_pct": business_pct,
-            "purchase_invoice_evidence_id": None,
-            "category_id": category_id,
-            "usage_ratio_id": usage_ratio_id,
-            "taxable_base": taxable_base,
-            "iva_rate": None,
-            "iva_amount": iva_amount,
-            "irpf_category": irpf_category,
-            "lifecycle_state": lifecycle_state,
-            "classified_at": datetime(2025, 4, 6, 13, 0, tzinfo=UTC),
-            "classified_by": "manual",
-        },
-    )
-
-
 # ---------------------------------------------------------------------------
 # Pure-aggregator tests (no repository)
 # ---------------------------------------------------------------------------
@@ -136,10 +63,10 @@ def _gasto_transaction(
 def test_q1_window_sums_jan_mar_expense_bases() -> None:
     """Q1 cumulative window [Jan 1 to Mar 31] sums the deductible bases into casilla 02."""
     jan_base, feb_base, mar_base = Decimal("100.00"), Decimal("200.00"), Decimal("50.00")
-    jan = _gasto_transaction("jan", value_date=date(2025, 1, 15), taxable_base=jan_base)
-    feb = _gasto_transaction("feb", value_date=date(2025, 2, 20), taxable_base=feb_base)
-    mar = _gasto_transaction("mar", value_date=date(2025, 3, 31), taxable_base=mar_base)
-    apr = _gasto_transaction("apr", value_date=date(2025, 4, 1), taxable_base=Decimal("999.00"))
+    jan = gasto_transaction("jan", value_date=date(2025, 1, 15), taxable_base=jan_base)
+    feb = gasto_transaction("feb", value_date=date(2025, 2, 20), taxable_base=feb_base)
+    mar = gasto_transaction("mar", value_date=date(2025, 3, 31), taxable_base=mar_base)
+    apr = gasto_transaction("apr", value_date=date(2025, 4, 1), taxable_base=Decimal("999.00"))
     catalogue = TransactionCatalogue.from_transactions((jan, feb, mar, apr))
 
     result = aggregate_renta_gasto_ledger(
@@ -167,9 +94,9 @@ def test_q1_window_sums_jan_mar_expense_bases() -> None:
 def test_q2_window_accumulates_jan_through_jun() -> None:
     """Q2 cumulative window [Jan 1 to Jun 30] includes Q1 rows too (YTD rule)."""
     jan_base, may_base = Decimal("100.00"), Decimal("250.00")
-    jan = _gasto_transaction("jan", value_date=date(2025, 1, 10), taxable_base=jan_base)
-    may = _gasto_transaction("may", value_date=date(2025, 5, 5), taxable_base=may_base)
-    jul = _gasto_transaction("jul", value_date=date(2025, 7, 1), taxable_base=Decimal("400.00"))
+    jan = gasto_transaction("jan", value_date=date(2025, 1, 10), taxable_base=jan_base)
+    may = gasto_transaction("may", value_date=date(2025, 5, 5), taxable_base=may_base)
+    jul = gasto_transaction("jul", value_date=date(2025, 7, 1), taxable_base=Decimal("400.00"))
     catalogue = TransactionCatalogue.from_transactions((jan, may, jul))
 
     result = aggregate_renta_gasto_ledger(
@@ -197,7 +124,7 @@ def test_taxable_base_preferred_over_gross_for_deductible_amount() -> None:
     tagged transaction contributes its base (100), never its IVA-inclusive gross
     (121).
     """
-    tx = _gasto_transaction(
+    tx = gasto_transaction(
         "tagged",
         value_date=date(2025, 2, 1),
         amount=Decimal("121.00"),
@@ -226,7 +153,7 @@ def test_untagged_expense_is_surfaced_not_gross_folded() -> None:
     the pago fraccionado). The row is surfaced as MISSING_TAXABLE_BASE so the
     operator tags it; it does not contribute an observation.
     """
-    tx = _gasto_transaction("untagged", value_date=date(2025, 2, 1), amount=Decimal("80.00"), taxable_base=None)
+    tx = gasto_transaction("untagged", value_date=date(2025, 2, 1), amount=Decimal("80.00"), taxable_base=None)
     catalogue = TransactionCatalogue.from_transactions((tx,))
 
     result = aggregate_renta_gasto_ledger(
@@ -246,7 +173,7 @@ def test_untagged_expense_is_surfaced_not_gross_folded() -> None:
 
 def test_mixed_classification_applies_business_pct() -> None:
     """A MIXED expense contributes only its business fraction of the base."""
-    tx = _gasto_transaction(
+    tx = gasto_transaction(
         "mixed",
         value_date=date(2025, 3, 1),
         taxable_base=Decimal("200.00"),
@@ -269,7 +196,7 @@ def test_mixed_classification_applies_business_pct() -> None:
 
 def test_personal_outgoing_is_skipped_silently() -> None:
     """A personal expense is not a deducible gasto and produces no observation or issue."""
-    tx = _gasto_transaction(
+    tx = gasto_transaction(
         "personal",
         value_date=date(2025, 2, 1),
         taxable_base=Decimal("75.00"),
@@ -300,7 +227,7 @@ def test_irpf_actividad_economica_gasto_flows_despite_unclassified_business() ->
     flow even before the broad business-classification sweep marks it BUSINESS.
     """
     actividad_base = Decimal("180.00")
-    tagged = _gasto_transaction(
+    tagged = gasto_transaction(
         "actividad-tagged",
         value_date=date(2025, 2, 1),
         amount=Decimal("217.80"),
@@ -308,7 +235,7 @@ def test_irpf_actividad_economica_gasto_flows_despite_unclassified_business() ->
         irpf_category="actividad_economica",
         business_classification=BusinessClassification.NOT_YET_PROCESSED,
     )
-    untagged = _gasto_transaction(
+    untagged = gasto_transaction(
         "actividad-untagged",
         value_date=date(2025, 2, 1),
         amount=Decimal("217.80"),
@@ -334,7 +261,7 @@ def test_irpf_actividad_economica_gasto_flows_despite_unclassified_business() ->
 
 def test_reviewed_excluded_irpf_actividad_gasto_stays_excluded() -> None:
     """A final reviewed exclusion cannot re-enter through the actividad category."""
-    tx = _gasto_transaction(
+    tx = gasto_transaction(
         "reviewed-excluded",
         value_date=date(2025, 2, 1),
         taxable_base=Decimal("125.00"),
@@ -359,7 +286,7 @@ def test_reviewed_excluded_irpf_actividad_gasto_stays_excluded() -> None:
 
 def test_incoming_transaction_is_not_a_gasto() -> None:
     """An INCOMING receipt is the income pipeline's concern, never a gasto."""
-    tx = _gasto_transaction(
+    tx = gasto_transaction(
         "income",
         value_date=date(2025, 2, 1),
         taxable_base=Decimal("500.00"),
@@ -382,7 +309,7 @@ def test_incoming_transaction_is_not_a_gasto() -> None:
 
 def test_inactive_transaction_skipped_silently() -> None:
     """An archived/tombstoned expense never reaches the aggregation."""
-    tx = _gasto_transaction(
+    tx = gasto_transaction(
         "inactive",
         value_date=date(2025, 2, 1),
         taxable_base=Decimal("100.00"),
@@ -406,7 +333,7 @@ def test_inactive_transaction_skipped_silently() -> None:
 def test_all_observations_target_casilla_02() -> None:
     """Every gasto observation targets casilla 02 — structural pin for the binding contract."""
     transactions = [
-        _gasto_transaction(f"tx-{i}", value_date=date(2025, 1, i + 1), taxable_base=Decimal("10.00")) for i in range(5)
+        gasto_transaction(f"tx-{i}", value_date=date(2025, 1, i + 1), taxable_base=Decimal("10.00")) for i in range(5)
     ]
     catalogue = TransactionCatalogue.from_transactions(transactions)
 
@@ -425,7 +352,7 @@ def test_all_observations_target_casilla_02() -> None:
 
 def test_gasto_observation_rejects_legacy_target_casilla_key() -> None:
     transactions = [
-        _gasto_transaction("tx-legacy-key", value_date=date(2025, 1, 1), taxable_base=Decimal("10.00")),
+        gasto_transaction("tx-legacy-key", value_date=date(2025, 1, 1), taxable_base=Decimal("10.00")),
     ]
     result = aggregate_renta_gasto_ledger(
         TransactionCatalogue.from_transactions(transactions),
@@ -462,8 +389,8 @@ def test_domain_resolver_folds_gasto_observations_into_the_m130_casilla_02_bindi
     assert str(binding.source) == "ledger_renta_gastos_pago_fraccionado_aggregation"
 
     feb_base, apr_base = Decimal("147.93"), Decimal("100.00")
-    feb = _gasto_transaction("feb", value_date=date(2025, 2, 1), taxable_base=feb_base)
-    apr = _gasto_transaction("apr", value_date=date(2025, 4, 2), taxable_base=apr_base)
+    feb = gasto_transaction("feb", value_date=date(2025, 2, 1), taxable_base=feb_base)
+    apr = gasto_transaction("apr", value_date=date(2025, 4, 2), taxable_base=apr_base)
     catalogue = TransactionCatalogue.from_transactions((feb, apr))
     aggregation = aggregate_renta_gasto_ledger(
         catalogue,
@@ -499,7 +426,7 @@ def test_actividad_marked_row_accepted_by_m130_is_visibly_held_by_m100() -> None
     that the quarterly pipeline already accepted the row and what clears it.
     """
     actividad_base = Decimal("100.00")
-    transaction = _gasto_transaction(
+    transaction = gasto_transaction(
         "actividad-pending-review",
         value_date=date(2025, 2, 1),
         amount=Decimal("121.00"),
@@ -542,7 +469,7 @@ def test_reviewed_business_row_is_accepted_by_both_projections() -> None:
     Without this, the held-row assertion above would also hold for an annual
     projection that refused every activity-marked row unconditionally.
     """
-    transaction = _gasto_transaction(
+    transaction = gasto_transaction(
         "actividad-reviewed",
         value_date=date(2025, 2, 1),
         amount=Decimal("121.00"),
@@ -578,7 +505,7 @@ def test_unmarked_unclassified_row_still_reports_the_generic_state() -> None:
     The new reason is narrower, not a rename: it must not absorb rows that
     carry no classification signal at all.
     """
-    transaction = _gasto_transaction(
+    transaction = gasto_transaction(
         "no-marker",
         value_date=date(2025, 2, 1),
         amount=Decimal("121.00"),
@@ -638,7 +565,7 @@ def _dwelling_row(
     """Return a 100.00 home-office luz bill classified as the classify path stamps it."""
     category = SpendingCategory.from_registry(_HOME_OFFICE_LUZ)
     mixed = classification is BusinessClassification.MIXED
-    return _gasto_transaction(
+    return gasto_transaction(
         provider_id,
         value_date=date(2025, 2, 1),
         amount=Decimal("121.00"),
@@ -730,7 +657,7 @@ def test_activity_marker_does_not_lift_a_mixed_row_in_a_plain_category_past_its_
     The marker used to return full attribution ahead of the classification, so this
     row deducted its whole 200.00.
     """
-    row = _gasto_transaction(
+    row = gasto_transaction(
         "marked-mixed-plain",
         value_date=date(2025, 2, 1),
         taxable_base=Decimal("200.00"),
@@ -773,7 +700,7 @@ def test_operator_usage_ratio_on_a_dwelling_lease_gasto_applies_once(
     """A stored 25 per cent dwelling-lease ratio deducts 25.00 of a 100.00 base, not 100.00 or 6.25."""
     category = SpendingCategory.from_registry("arrendamiento_vivienda_afecto")
     mixed = classification is BusinessClassification.MIXED
-    row = _gasto_transaction(
+    row = gasto_transaction(
         "lease",
         value_date=date(2025, 2, 1),
         taxable_base=_DWELLING_BASE,

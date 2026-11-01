@@ -17,7 +17,6 @@ profile persistence adapter seam with every defaultable field populated NON-defa
 from __future__ import annotations
 
 import json
-from datetime import UTC, datetime
 from decimal import Decimal
 
 import pytest
@@ -29,21 +28,22 @@ from ....core.field_origin import FieldOrigin
 from ..confirmation_gate import ConfirmationBlocker, FindingResolution
 from ..confirmation_record import (
     ConfirmationRecordDocument,
-    FieldAssertion,
     InvoiceConfirmationRecord,
     ResolvedFinding,
     build_confirmation_record,
     field_assertions,
     re_stamped_provenance,
 )
-from ..invoice_draft_records import FieldAmbiguityCandidate, FieldProvenance, InvoiceDraft
+from ..invoice_draft_records import FieldProvenance, InvoiceDraft
+from .confirmation_record_support import (
+    CONFIRMATION_BUCKET_ID,
+    CONFIRMATION_EVIDENCE_SHA,
+    CONFIRMATION_INVOICE_ID,
+    CONFIRMATION_TRANSCRIPTION_SHA,
+    populated_confirmation_record,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-
-_BUCKET_ID = "33333333-3333-4333-8333-333333333333"
-_TRANSCRIPTION_SHA = "a" * 64
-_EVIDENCE_SHA = "b" * 64
-_INVOICE_ID = "c" * 64
 
 
 def _read_draft() -> InvoiceDraft:
@@ -64,7 +64,7 @@ def _read_draft() -> InvoiceDraft:
         iva_amount=Decimal("21.00"),
         grand_total=Decimal("121.00"),
         currency="EUR",
-        transcription_sha256=_TRANSCRIPTION_SHA,
+        transcription_sha256=CONFIRMATION_TRANSCRIPTION_SHA,
         provenance=(
             FieldProvenance(
                 field="supplier_tax_id",
@@ -165,56 +165,6 @@ def test_a_supplied_value_where_the_document_was_silent_records_no_prior_origin(
     assert assertions[0].asserted_value == "ESX1234567L"
 
 
-def _populated_record() -> InvoiceConfirmationRecord:
-    """A record with EVERY defaultable field populated off its default.
-
-    ``evidence_sha256``, ``transcription_sha256``, ``assertions`` and
-    ``resolutions`` all default; a fixture leaving any of them defaulted would
-    roundtrip identically whether the store persisted it or dropped it.
-    """
-    blocker = ConfirmationBlocker(
-        blocker_id="0123456789abcdef",
-        reason=ConfirmationBlockReason.AMBIGUOUS_IDENTITY,
-        field="supplier_tax_id",
-        detail="two tax ids printed on the same document",
-        candidates=(
-            FieldAmbiguityCandidate(value="ESB12345674", anchor="NIF: ESB12345674", note="header block"),
-            FieldAmbiguityCandidate(value="ESX1234567L", anchor="ESX1234567L", note="footer block"),
-        ),
-    )
-    return InvoiceConfirmationRecord(
-        confirmation_id="fedcba9876543210",
-        bucket_id=_BUCKET_ID,
-        invoice_id=_INVOICE_ID,
-        evidence_reference="ev-structured-001",
-        evidence_sha256=_EVIDENCE_SHA,
-        transcription_sha256=_TRANSCRIPTION_SHA,
-        extractor="exact_structured",
-        confirmed_by="gestor@example.test",
-        confirmed_at=datetime(2024, 11, 15, 9, 0, tzinfo=UTC),
-        assertions=(
-            FieldAssertion(
-                field="taxable_base",
-                asserted_value="150.00",
-                prior_value="100.00",
-                prior_origin=FieldOrigin.VISION,
-                prior_grounding=FieldGroundingOutcome.ANCHORED,
-            ),
-        ),
-        resolutions=(
-            ResolvedFinding(
-                blocker=blocker,
-                resolution=FindingResolution(
-                    blocker_id="0123456789abcdef",
-                    action=FindingResolutionAction.CHOOSE_CANDIDATE,
-                    value="ESX1234567L",
-                    note="matched against the paper invoice header",
-                ),
-            ),
-        ),
-    )
-
-
 def test_the_derived_id_is_clock_free() -> None:
     """Two confirmations of the same outcome at different moments address one record.
 
@@ -232,10 +182,10 @@ def test_the_derived_id_is_clock_free() -> None:
         -- which none of them accept -- and verified nothing about the call.
         """
         return build_confirmation_record(
-            bucket_id=_BUCKET_ID,
-            invoice_id=_INVOICE_ID,
+            bucket_id=CONFIRMATION_BUCKET_ID,
+            invoice_id=CONFIRMATION_INVOICE_ID,
             evidence_reference="ev-structured-001",
-            evidence_sha256=_EVIDENCE_SHA,
+            evidence_sha256=CONFIRMATION_EVIDENCE_SHA,
             draft=draft,
             extractor="exact_structured",
             confirmed_by="gestor@example.test",
@@ -259,7 +209,7 @@ def test_deleting_a_persisted_field_makes_the_load_refuse() -> None:
     strict inequality --- the reload must not come back equal to what was saved,
     which is exactly what a silent re-default would produce.
     """
-    document = ConfirmationRecordDocument(bucket_id=_BUCKET_ID, records=(_populated_record(),))
+    document = ConfirmationRecordDocument(bucket_id=CONFIRMATION_BUCKET_ID, records=(populated_confirmation_record(),))
 
     # A JSON round-trip rather than `model_validate` on a dumped dict: the models
     # are strict, so a dict round trip is refused for presenting lists where

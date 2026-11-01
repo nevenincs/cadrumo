@@ -7,11 +7,14 @@ the inward application aggregation tests.
 
 from __future__ import annotations
 
-from datetime import UTC, date, datetime
 from decimal import Decimal
-from pathlib import Path
 
 import pytest
+
+from cadrumo.application.aggregation.tests.ledger_filing_evidence_support import (
+    FILING_EVIDENCE_NOW,
+    filing_evidence_transaction,
+)
 
 from .....application.aggregation.ledger_filing_snapshot import (
     compute_ledger_filing_evidence,
@@ -22,7 +25,6 @@ from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.period import Period
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation
 from .....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
-from .....domain.iva.schema import IvaCategory
 from .....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionCatalogue,
@@ -32,9 +34,7 @@ from .....domain.modelos.calculation_revision import (
 from .....domain.modelos.codes import ModeloCode
 from .....domain.modelos.ledger_filing_snapshot import LedgerFilingEvidence, ManualFactBasisEntry
 from .....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
-from .....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
-from .....domain.transactions.models import Transaction, TransactionCatalogue
-from .....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
+from .....domain.transactions.models import TransactionCatalogue
 from ...storage.sql.secure_objects import SecureObjectRepository
 from ..modelos_calculation import CalculationRevisionCatalogueRepository
 from ..modelos_work_units import WorkUnitCatalogueRepository
@@ -42,50 +42,11 @@ from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
-_NOW = datetime(2026, 4, 6, 12, 0, tzinfo=UTC)
 _BUCKET_ID = "13131313-1313-4313-8313-131313131313"
 _MANUAL_FACT_CASILLA: CasillaId = validated_casilla_id("00501")
 _REVISION_CASILLA: CasillaId = validated_casilla_id("01")
 _LEGAL_REFS = ("ley-37-1992:art-99",)
 _SOURCE_REFS = ("boe-modelo-303-2025-form",)
-
-
-def _txn() -> Transaction:
-    raw = RawTransaction(
-        provider_transaction_id="provider-row-evidence",
-        booked_date=date(2025, 2, 10),
-        value_date=date(2025, 2, 11),
-        amount=Decimal("121.00"),
-        currency="EUR",
-        counterparty="Proveedor SL",
-        description="Compra material oficina",
-        provenance=RawProvenance(
-            source_path=Path(__file__),
-            source_sha256="e" * 64,
-            source_row_index=1,
-            source_format=SourceFormat.MANUAL,
-            ingested_at=_NOW,
-            provider_name="manual",
-        ),
-        raw_fields={"Concepto": "Compra material oficina"},
-    )
-    return Transaction.model_validate(
-        {
-            "raw": raw,
-            "direction": TransactionDirection.OUTGOING,
-            "group_label": None,
-            "source_jurisdiction": "ES",
-            "business_classification": BusinessClassification.BUSINESS,
-            "taxable_base": Decimal("100.00"),
-            "iva_rate": Decimal("0.21"),
-            "iva_amount": Decimal("21.00"),
-            "iva_category": IvaCategory("domestic_general"),
-            "category_id": "material_oficina",
-            "lifecycle_state": TransactionLifecycleState.ACTIVE,
-            "classified_at": _NOW,
-            "classified_by": "manual",
-        },
-    )
 
 
 def _seed_parent_work_unit(secure_objects: SecureObjectRepository, *, revision_id: str) -> str:
@@ -105,8 +66,8 @@ def _seed_parent_work_unit(secure_objects: SecureObjectRepository, *, revision_i
         period=period,
         revision_id=revision_id,
         name="303-2025-1T",
-        created_at=_NOW,
-        updated_at=_NOW,
+        created_at=FILING_EVIDENCE_NOW,
+        updated_at=FILING_EVIDENCE_NOW,
     )
     WorkUnitCatalogueRepository(objects=secure_objects).save(
         WorkUnitCatalogue(work_units={work_unit.work_unit_id: work_unit}),
@@ -151,9 +112,9 @@ def _revision_with_evidence(
             period=period.registry_token,
             casilla_values={_REVISION_CASILLA: Decimal("1")},
         ),
-        created_at=_NOW,
-        updated_at=_NOW,
-        verified_at=_NOW,
+        created_at=FILING_EVIDENCE_NOW,
+        updated_at=FILING_EVIDENCE_NOW,
+        verified_at=FILING_EVIDENCE_NOW,
         verified_by="operator",
         ledger_filing_evidence=evidence,
         filing_instance_evidence=filing_instance_evidence,
@@ -164,18 +125,18 @@ def _revision_with_evidence(
 def test_evidence_roundtrips_through_encrypted_revision(
     secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
-    txn = _txn()
+    txn = filing_evidence_transaction()
     catalogue = TransactionCatalogue.from_transactions((txn,))
     snapshot = compute_ledger_filing_snapshot(
         source_transaction_ids=(txn.transaction_id,),
         catalogue=catalogue,
-        captured_at=_NOW,
+        captured_at=FILING_EVIDENCE_NOW,
     )
     evidence = compute_ledger_filing_evidence(
         source_transaction_ids=(txn.transaction_id,),
         catalogue=catalogue,
         snapshot_fingerprint=snapshot.snapshot_fingerprint,
-        captured_at=_NOW,
+        captured_at=FILING_EVIDENCE_NOW,
         legal_refs=_LEGAL_REFS,
         source_refs=_SOURCE_REFS,
         manual_entries=(
