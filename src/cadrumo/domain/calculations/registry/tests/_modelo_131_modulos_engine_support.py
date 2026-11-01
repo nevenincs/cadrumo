@@ -590,3 +590,23 @@ def _assert_fase4_reduccion_general(epigrafe: str, **modulos: Decimal) -> None:
     assert minorado == expected_minorado
     assert modulos_value == expected_modulos
     assert actividad == expected_actividad
+
+
+def _assert_fase1_previo_matches_orden_coefficients(
+    epigrafe: str,
+    table: dict[int, Decimal],
+    modulos: dict[int, Decimal],
+    expected_previo: Decimal,
+) -> None:
+    """Assert Fase 1ª: the rendimiento neto previo is the módulo units times the Orden coefficients.
+
+    Shared body of the per-activity-class parametrized ``test_fase_1_...``
+    cases; ``table`` maps each módulo index to its Orden coefficient and
+    ``expected_previo`` is the independently transcribed literal result.
+    """
+    previo, _minorado, _modulos, _actividad = _run_modulos_engine(
+        epigrafe,
+        **{f"modulo_{idx}": units for idx, units in modulos.items()},
+    )
+    expected = round_to_cents(sum((units * table[idx] for idx, units in modulos.items()), start=Decimal("0")))
+    assert previo == expected == expected_previo
