@@ -47,9 +47,7 @@ import pytest
 
 from .....core.aggregation import RetencionClave
 from .....core.casilla_id import CasillaId, validated_casilla_id, validated_casilla_id_map
-from .....core.period import Period
 from .....tests.inventory import FIXTURES_DIR
-from ....period import calculation_filing_date
 from ..binding_selector_utils import selector_as_dict
 from ..binding_temporal import BindingTemporalKind
 from ..bindings import RegistryModeloObservation, resolve_available_bound_inputs_by_casilla_id
@@ -68,6 +66,7 @@ from ._cross_dependency_calculation_support import (
     _observations_from_requirements,
     source_editions_calculate,
 )
+from ._registry_filing_date_support import registry_filing_date
 from .authored_editions import authored_revisions_where
 from .modelo_100_registry_support import M100_NO_DESCENDANT_MATERNIDAD_BINDINGS
 from .published_authority import PublishedGovernedFactSource, published_supported_filing_years
@@ -552,7 +551,7 @@ def test_annual_summary_cross_dependency_calculation_resolves_quarterly_filings(
     result = calculate_registry_snapshot(
         snapshot,
         inputs=resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values),
-        date_context={"filing_period": _registry_filing_date(filing_year, "0A")},
+        date_context={"filing_period": registry_filing_date(filing_year, "0A")},
         binding_values=binding_values,
         relation_values=relation_values,
     )
@@ -676,7 +675,7 @@ def test_modelo_190_calculation_resolves_modelo_111_quarterly_filings(
     result = calculate_registry_snapshot(
         snapshot,
         inputs=resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values),
-        date_context={"filing_period": _registry_filing_date(_M190_RELATION_YEAR, "0A")},
+        date_context={"filing_period": registry_filing_date(_M190_RELATION_YEAR, "0A")},
         binding_values=binding_values,
         relation_values=relation_values,
     )
@@ -706,7 +705,7 @@ def test_modelo_100_payment_calculation_resolves_cross_model_periodic_and_annual
     result = calculate_registry_snapshot(
         snapshot,
         inputs={},
-        date_context={"filing_period": _registry_filing_date(2025, "0A")},
+        date_context={"filing_period": registry_filing_date(2025, "0A")},
         relation_values=relation_values,
         binding_values={
             # Production profile resolver supplies this predicate as 1/0 from
@@ -802,7 +801,7 @@ def test_a_filed_modelo_184_does_not_fill_the_member_share_casilla_1577(
     result = calculate_registry_snapshot(
         snapshot,
         inputs={casilla_1577: member_share},
-        date_context={"filing_period": _registry_filing_date(2025, "0A")},
+        date_context={"filing_period": registry_filing_date(2025, "0A")},
         relation_values=relation_values,
         binding_values={
             # Production profile resolver supplies this predicate as 1/0 from
@@ -862,7 +861,7 @@ def test_modelo_100_payment_calculation_consumes_real_modelo_130_quarterly_regis
                 "modelo-130-resultados-negativos-anteriores": Decimal("0"),
                 "modelo-130-pagos-fraccionados-anteriores": casilla_05_carry[period],
             },
-            date_context={"filing_period": _registry_filing_date(filing_year, period)},
+            date_context={"filing_period": registry_filing_date(filing_year, period)},
         )
 
     snapshot = registry_snapshot("100", filing_year, "0A")
@@ -884,7 +883,7 @@ def test_modelo_100_payment_calculation_consumes_real_modelo_130_quarterly_regis
     result = calculate_registry_snapshot(
         snapshot,
         inputs={},
-        date_context={"filing_period": _registry_filing_date(filing_year, "0A")},
+        date_context={"filing_period": registry_filing_date(filing_year, "0A")},
         relation_values=relation_values,
         binding_values={
             # Production profile resolver supplies this predicate as 1/0 from
@@ -1187,70 +1186,3 @@ def _renta_relation_observed_value_from_modelo_130_results(
     if relation_id == "renta-modelo-131-pagos-fraccionados":
         return Decimal("0")
     return Decimal("0")
-
-
-def _registry_filing_date(filing_year: int, period: str) -> date:
-    """Resolve the calculation date context through the typed period authority.
-
-    ``calculate_registry_snapshot`` documents ``date_context["filing_period"]``
-    as the snapshot's typed calculation filing date, and defaults the key to
-    ``calculation_filing_date(snapshot.filing_period)`` when a caller omits it.
-    A test that supplies the key must therefore resolve it from the same
-    authority, or a date-aware registry bracket is selected under a temporal
-    context production would never produce.
-
-    This is deliberately NOT the deadline authority's
-    ``resolve_filing_window``. Three distinct dates exist for one Modelo 130
-    quarter and only one of them is this key's contract: the payment cutoff
-    (the 20th of the following month), the plazo voluntario close
-    (weekend-adjusted, and 30 January for 4T), and the calculation filing
-    period (the quarter end). ``date_context["filing_period"]`` is the third.
-    """
-    return calculation_filing_date(Period.from_year_and_code(filing_year, period))
-
-
-@pytest.mark.parametrize("period", ("1T", "2T", "3T", "4T"))
-def test_registry_filing_date_matches_the_engine_default_date_context(
-    period: str,
-    registry_snapshot: Callable[[str, int, str], RegistrySnapshot],
-) -> None:
-    """The date context this module supplies must equal the engine's own default.
-
-    DISCRIMINATING for all four quarters: restoring the retired
-    twentieth-of-the-following-month map fails every parametrisation
-    (2025-04-20 != 2025-03-31, and so on through 4T).
-
-    ``calculate_registry_snapshot`` defaults ``date_context["filing_period"]``
-    to ``calculation_filing_date(snapshot.filing_period)``. A test that supplies
-    the key by hand therefore has exactly one correct value — the one the engine
-    would have chosen — and any other value silently selects date-aware registry
-    brackets under a temporal context no production call can produce.
-
-    The expected value is read from the loaded snapshot, not restated here, so
-    this asserts agreement with the authority rather than a copied literal.
-    """
-    filing_year = 2025
-    snapshot = registry_snapshot("130", filing_year, period)
-    assert snapshot.filing_period is not None, "M130 snapshot must carry a typed filing period"
-
-    assert _registry_filing_date(filing_year, period) == calculation_filing_date(snapshot.filing_period)
-
-
-@pytest.mark.parametrize("period", ("1T", "2T", "3T", "4T"))
-def test_registry_filing_date_stays_inside_the_filing_year(period: str) -> None:
-    """A quarterly context must never fall in the following calendar year.
-
-    DISCRIMINATING for 4T only, and SUPPORTING for 1T/2T/3T: the retired map
-    kept those three inside the filing year and failed only on 4T, whose
-    2026-01-20 crossed into the next year. The three passing parametrisations
-    are context, not proof.
-
-    Modelo 130's 4T payment cutoff and plazo voluntario close both land in
-    January of the FOLLOWING year. Supplying either as the calculation date
-    context moves a year-keyed registry bracket onto the wrong year's law for
-    every 4T filing, which is the drift this module's date routing exists to
-    prevent.
-    """
-    filing_year = 2025
-
-    assert _registry_filing_date(filing_year, period).year == filing_year
