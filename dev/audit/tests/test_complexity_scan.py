@@ -80,12 +80,23 @@ def test_gate_refuses_an_unmeasurable_file(tmp_path: Path, monkeypatch: pytest.M
     assert complexity.main() == 7
 
 
-def test_gate_refuses_test_only_scope(monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None:
+@pytest.mark.parametrize(("root", "expected"), [("src/cadrumo/tests", 1), ("dev/tests", 0)])
+def test_test_scope_gate_fails_only_on_source_package_findings(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str], root: str, expected: int
+) -> None:
+    oversized = Path(root) / "test_oversized.py"
+    monkeypatch.chdir(tmp_path)
+    oversized.parent.mkdir(parents=True)
+    oversized.write_text("# line\n" * 1251, encoding="utf-8")
+
+    def scan_oversized(*, tests: bool, cognitive_threshold: int) -> ComplexityScan:
+        assert tests
+        return measure_population((oversized,), cognitive_threshold=cognitive_threshold)
+
+    monkeypatch.setattr(complexity, "scan_complexity", scan_oversized)
     monkeypatch.setattr("sys.argv", ["complexity", "--gate", "--tests"])
-    with pytest.raises(SystemExit) as caught:
-        complexity.main()
-    assert caught.value.code == 2
-    assert "full first-party production scope" in capsys.readouterr().err
+    assert complexity.main() == expected
+    assert f"test-tree gate: {expected} rank E/F or oversized-module finding(s)" in capsys.readouterr().out
 
 
 @pytest.mark.parametrize("detector", ["radon_visitors", "radon_complexity", "radon_metrics", "code_complexity"])
