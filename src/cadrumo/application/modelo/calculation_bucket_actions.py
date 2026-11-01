@@ -801,8 +801,9 @@ def _durable_register_note_reason(diagnostic: CalculationSourceDiagnostic) -> _D
 def _durable_source_issue_reason(diagnostic: CalculationSourceDiagnostic) -> _DurableSourceIssueReason | None:
     """Narrow a diagnostic reason to the durable subset, or ``None``.
 
-    Every durable reason describes a value ABSENT from the filing, which is what
-    a verification or export gate reading the persisted revision needs; every
+    Every durable reason describes a value ABSENT from the filing, or present
+    but short of filing grade, which is what a verification or export gate
+    reading the persisted revision needs; every
     other reason is calculate-time operator feedback that dies with the
     response. Written as explicit comparisons rather than a set membership test
     so the narrowing is one the type checker can follow — a mismatch between the
@@ -825,6 +826,8 @@ def _durable_source_issue_reason(diagnostic: CalculationSourceDiagnostic) -> _Du
         return "terminal_origin_mismatch"
     if diagnostic.reason == "unhandled_binding_source":
         return "unhandled_binding_source"
+    if diagnostic.reason == "advisory_binding_value":
+        return "advisory_binding_value"
     return _durable_invoice_source_reason(diagnostic)
 
 
@@ -875,6 +878,7 @@ def _unrouted_source_issues(
                 resolver_id=diagnostic.resolver_id,
                 source_ref=diagnostic.source_ref,
                 fact=diagnostic.fact,
+                value_outcome=diagnostic.value_outcome,
             ),
         )
     return tuple(issues)
@@ -990,6 +994,7 @@ _DurableSourceIssueReason = Literal[
     "register_acquisition_row_missing",
     "register_owned_capital_acquisition",
     "ledger_expense_may_be_durable",
+    "advisory_binding_value",
 ]
 
 

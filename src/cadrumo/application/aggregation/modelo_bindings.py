@@ -59,6 +59,7 @@ from ...domain.calculations.registry.ledger_renta_income_bindings import (
     UngroundedRentaIncome,
     WithholdingDerivationPartition,
     ledger_renta_withholding_derivation_partition,
+    ledger_renta_withholding_value_outcomes,
     resolve_ledger_renta_income_aggregation_binding_values,
     ungrounded_ledger_renta_income_observations,
     unrouted_ledger_renta_income_quantities,
@@ -419,6 +420,13 @@ class LedgerRentaIncomeAggregationSourceResolver:
                 if context.modelo == form_for_role("renta.objective_instalment")
                 else ()
             ),
+            value_outcomes={
+                binding_id: outcome
+                for binding_id, outcome in ledger_renta_withholding_value_outcomes(
+                    context.revision, aggregation.observations
+                ).items()
+                if binding_id in binding_values
+            },
             provenance=tuple(
                 CalculationSourceProvenance(
                     resolver_id=self.resolver_id,
@@ -476,18 +484,15 @@ INFERRED_RETENCION_EXCLUDED_SOURCE_KIND = "inferred_actividad_retencion_excluded
 UNRESOLVED_RETENCION_SOURCE_KIND = "unresolved_actividad_retencion"
 """Source kind for the retención rows whose figure is unknown rather than zero."""
 
-ADVISORY_RETENCION_CREDIT_SOURCE_KIND = "advisory_actividad_retencion_credit"
-"""Source kind for the grade the issued-invoice retención credit carries."""
-
 
 def _withholding_derivation_diagnostics(
     derivation: WithholdingDerivationPartition,
     *,
     resolver_id: str,
 ) -> tuple[CalculationSourceDiagnostic, ...]:
-    """Report what the declared-only retención credit left out, and its grade.
+    """Report what the declared-only retención credit left out.
 
-    Three findings, each about a distinct state the resolved value cannot carry.
+    Two findings, each about a distinct state the resolved value cannot carry.
 
     An INFERRED row holds a figure reconstructed from invoice gross minus cash
     received. It is excluded on purpose, and it is also recoverable: the operator
@@ -500,11 +505,9 @@ def _withholding_derivation_diagnostics(
     Reporting it as zero would assert a proven nothing-withheld, which is exactly
     the collapse ``no-silent-under-declaration`` forbids.
 
-    The GRADE finding travels with every non-zero credit. Which year credits a
-    retención when the payment and the accrual fall in different ejercicios is
-    not yet grounded against the LIRPF, the RIRPF and a DGT consulta, so the
-    figure is advisory: an operator may read it, and no consumer may promote it
-    to a filing-grade claim.
+    How far the credit itself reaches is not this resolver's statement: a
+    binding that reads it declares its own grade cap, and the canonical
+    resolution step reports a capped value for every resolver together.
 
     Returns an empty tuple when the revision declares no declared-only retención
     binding and the rows carried nothing, which is how a revision without the
@@ -548,21 +551,6 @@ def _withholding_derivation_diagnostics(
                     "Record the invoice base and the retención for each transaction, then recalculate; "
                     "until then the credit is incomplete by an unknown amount."
                 ),
-            ),
-        )
-    if derivation.declared_total > Decimal("0"):
-        findings.append(
-            CalculationSourceDiagnostic(
-                reason="advisory_retencion_credit_grade",
-                resolver_id=resolver_id,
-                source_kind=ADVISORY_RETENCION_CREDIT_SOURCE_KIND,
-                message=(
-                    f"the issued-invoice retención credit of {derivation.declared_total} EUR is ADVISORY: "
-                    f"which ejercicio credits a retención when the payment and the accrual fall in "
-                    f"different years is not yet grounded, so the figure must not be filed as a "
-                    f"filing-grade claim without checking it against the payer's certificate"
-                ),
-                remedy="Check the figure against the payer's certificate for the ejercicio before filing.",
             ),
         )
     return tuple(findings)
