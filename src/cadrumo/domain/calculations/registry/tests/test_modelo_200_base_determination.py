@@ -39,22 +39,19 @@ from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from ..formula_runtime import calculate_registry_snapshot
 from ..schema_input_kind import InputKind
+from .modelo_200_casilla_ids import (
+    M200_BIN_APLICADA_CASILLA,
+    M200_CORRECCIONES_AUMENTO_CASILLA,
+    M200_CORRECCIONES_DISMINUCION_CASILLA,
+    M200_CUOTA_INTEGRA_CASILLA,
+    M200_RESERVA_CAPITALIZACION_CASILLA,
+    M200_RESULTADO_CONTABLE_CASILLA,
+)
 from .published_authority import published_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _DISPATCH_BINDING = "modelo-200-profile-legal-entity-form"
-_M200_RESULTADO_CONTABLE_CASILLA: CasillaId = validated_casilla_id(
-    "DP200012:00501", surface="_M200_RESULTADO_CONTABLE_CASILLA"
-)
-_M200_CORRECCIONES_AUMENTO_CASILLA: CasillaId = validated_casilla_id(
-    "DP200013:00417",
-    surface="_M200_CORRECCIONES_AUMENTO_CASILLA",
-)
-_M200_CORRECCIONES_DISMINUCION_CASILLA: CasillaId = validated_casilla_id(
-    "DP200013:00418",
-    surface="_M200_CORRECCIONES_DISMINUCION_CASILLA",
-)
 _M200_BASE_PREVIA_CASILLA: CasillaId = validated_casilla_id("DP200014:00550", surface="_M200_BASE_PREVIA_CASILLA")
 _M200_BASE_PREVIA_FORMULA = "modelo-200-base-imponible-previa"
 _M200_BASE_PREVIA_DEFINITIONAL_REFS = {"ley-27-2014:art-10", "ley-27-2014:art-11"}
@@ -62,16 +59,10 @@ _M200_BASE_IMPONIBLE_CASILLA: CasillaId = validated_casilla_id(
     "DP200014:00552",
     surface="_M200_BASE_IMPONIBLE_CASILLA",
 )
-_M200_RESERVA_CAPITALIZACION_CASILLA: CasillaId = validated_casilla_id(
-    "01032",
-    surface="_M200_RESERVA_CAPITALIZACION_CASILLA",
-)
-_M200_BIN_APLICADA_CASILLA: CasillaId = validated_casilla_id("DP200014:00547", surface="_M200_BIN_APLICADA_CASILLA")
 _M200_BASE_NIVELACION_CASILLA: CasillaId = validated_casilla_id(
     "DP200014:01330",
     surface="_M200_BASE_NIVELACION_CASILLA",
 )
-_M200_CUOTA_INTEGRA_CASILLA: CasillaId = validated_casilla_id("DP200014:00562", surface="_M200_CUOTA_INTEGRA_CASILLA")
 
 
 def _snapshot_2024():
@@ -110,10 +101,10 @@ def test_base_chain_casillas_are_computed_not_manual() -> None:
     by_id = {c.id: c for c in snapshot.revision.casillas}
     assert by_id[_M200_BASE_PREVIA_CASILLA].input_kind == InputKind.COMPUTED
     assert by_id[_M200_BASE_IMPONIBLE_CASILLA].input_kind == InputKind.COMPUTED
-    assert by_id[_M200_RESULTADO_CONTABLE_CASILLA].input_kind == InputKind.MANUAL
-    assert by_id[_M200_CORRECCIONES_AUMENTO_CASILLA].input_kind == InputKind.MANUAL
-    assert by_id[_M200_CORRECCIONES_DISMINUCION_CASILLA].input_kind == InputKind.MANUAL
-    assert by_id[_M200_BIN_APLICADA_CASILLA].input_kind == InputKind.MANUAL
+    assert by_id[M200_RESULTADO_CONTABLE_CASILLA].input_kind == InputKind.MANUAL
+    assert by_id[M200_CORRECCIONES_AUMENTO_CASILLA].input_kind == InputKind.MANUAL
+    assert by_id[M200_CORRECCIONES_DISMINUCION_CASILLA].input_kind == InputKind.MANUAL
+    assert by_id[M200_BIN_APLICADA_CASILLA].input_kind == InputKind.MANUAL
 
 
 def test_base_previa_grounding_cites_lis_definition_and_accrual_rules() -> None:
@@ -136,7 +127,7 @@ def test_positive_resultado_zero_correcciones_yields_nonzero_base() -> None:
     zero compensación BIN MUST compute base previa == resultado contable and
     base imponible == resultado contable — never a silent zero.
     """
-    result = _calculate({_M200_RESULTADO_CONTABLE_CASILLA: Decimal("140000")})
+    result = _calculate({M200_RESULTADO_CONTABLE_CASILLA: Decimal("140000")})
     assert result.values[_M200_BASE_PREVIA_CASILLA] == Decimal("140000.00")
     assert result.values[_M200_BASE_IMPONIBLE_CASILLA] == Decimal("140000.00")
     assert result.values[_M200_BASE_IMPONIBLE_CASILLA] != Decimal("0")
@@ -152,15 +143,15 @@ def test_base_previa_is_complete_sum_of_resultado_and_correccion_subtotals() -> 
     the test fails if any summand is dropped or double-counted.
     """
     inputs = {
-        _M200_RESULTADO_CONTABLE_CASILLA: Decimal("140000"),
-        _M200_CORRECCIONES_AUMENTO_CASILLA: Decimal("30000"),
-        _M200_CORRECCIONES_DISMINUCION_CASILLA: Decimal("10000"),
+        M200_RESULTADO_CONTABLE_CASILLA: Decimal("140000"),
+        M200_CORRECCIONES_AUMENTO_CASILLA: Decimal("30000"),
+        M200_CORRECCIONES_DISMINUCION_CASILLA: Decimal("10000"),
     }
     result = _calculate(inputs)
     expected_previa = (
-        inputs[_M200_RESULTADO_CONTABLE_CASILLA]
-        + inputs[_M200_CORRECCIONES_AUMENTO_CASILLA]
-        - inputs[_M200_CORRECCIONES_DISMINUCION_CASILLA]
+        inputs[M200_RESULTADO_CONTABLE_CASILLA]
+        + inputs[M200_CORRECCIONES_AUMENTO_CASILLA]
+        - inputs[M200_CORRECCIONES_DISMINUCION_CASILLA]
     )
     assert result.values[_M200_BASE_PREVIA_CASILLA] == Decimal("160000.00")
     assert result.values[_M200_BASE_PREVIA_CASILLA] == expected_previa
@@ -176,9 +167,9 @@ def test_reserva_and_bin_reduce_base_with_non_negative_clamp() -> None:
     """
     clamped = _calculate(
         {
-            _M200_RESULTADO_CONTABLE_CASILLA: Decimal("50000"),
-            _M200_RESERVA_CAPITALIZACION_CASILLA: Decimal("20000"),
-            _M200_BIN_APLICADA_CASILLA: Decimal("99999"),
+            M200_RESULTADO_CONTABLE_CASILLA: Decimal("50000"),
+            M200_RESERVA_CAPITALIZACION_CASILLA: Decimal("20000"),
+            M200_BIN_APLICADA_CASILLA: Decimal("99999"),
         },
     )
     assert clamped.values[_M200_BASE_PREVIA_CASILLA] == Decimal("50000.00")
@@ -186,9 +177,9 @@ def test_reserva_and_bin_reduce_base_with_non_negative_clamp() -> None:
 
     within = _calculate(
         {
-            _M200_RESULTADO_CONTABLE_CASILLA: Decimal("50000"),
-            _M200_RESERVA_CAPITALIZACION_CASILLA: Decimal("20000"),
-            _M200_BIN_APLICADA_CASILLA: Decimal("10000"),
+            M200_RESULTADO_CONTABLE_CASILLA: Decimal("50000"),
+            M200_RESERVA_CAPITALIZACION_CASILLA: Decimal("20000"),
+            M200_BIN_APLICADA_CASILLA: Decimal("10000"),
         },
     )
     assert within.values[_M200_BASE_IMPONIBLE_CASILLA] == Decimal("20000.00")
@@ -204,7 +195,7 @@ def test_computed_base_reproduces_manual_cuota_oracle() -> None:
     oracle — confirming the manual->computed flip preserves the downstream
     chain. The expected figures are read from the manual table, not recomputed.
     """
-    result = _calculate({_M200_RESULTADO_CONTABLE_CASILLA: Decimal("1000000")})
+    result = _calculate({M200_RESULTADO_CONTABLE_CASILLA: Decimal("1000000")})
     assert result.values[_M200_BASE_IMPONIBLE_CASILLA] == Decimal("1000000.00")
     assert result.values[_M200_BASE_NIVELACION_CASILLA] == Decimal("1000000.00")
-    assert result.values[_M200_CUOTA_INTEGRA_CASILLA] == Decimal("250000.00")
+    assert result.values[M200_CUOTA_INTEGRA_CASILLA] == Decimal("250000.00")
