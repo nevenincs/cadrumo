@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from decimal import Decimal
 from pathlib import Path
 
@@ -14,9 +15,54 @@ from ..annual_cli_journey import (
     run_iva_annual_foundation_cli_journey,
     run_iva_annual_m390_cli_journey,
 )
+from ..annual_contracts import (
+    IvaAnnualFoundationCliJourneyReceipt,
+    IvaAnnualM390CliJourneyReceipt,
+    IvaQuarterlyLocalFilingReceipt,
+)
+from ..cli_journey import SanitizedCommandReceipt
 from .journey_year_support import newest_fully_authored_journey_year
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+
+def _assert_receipt_is_private_and_clean(
+    receipt: IvaAnnualFoundationCliJourneyReceipt | IvaAnnualM390CliJourneyReceipt,
+) -> None:
+    rendered = str(receipt.to_dict())
+    assert "synthetic-annual-foundation-purchase.pdf" not in rendered
+    assert "profile_passphrase" not in rendered
+    assert "attachment:" not in rendered
+    assert all(command.returncode == 0 for command in receipt.commands)
+
+
+def _assert_local_pending_filing(filing: IvaQuarterlyLocalFilingReceipt) -> None:
+    assert filing.work_unit_id
+    assert filing.calculation_revision_id
+    assert filing.verification_report_id
+    assert filing.verification_status
+    assert filing.filing_record_id
+    assert filing.filing_origin == "local"
+    assert filing.filing_confirmation == "pendiente"
+    assert filing.filing_aeat_accepted is False
+    assert filing.filing_live_submission is False
+
+
+def _assert_m390_commands(commands: Sequence[SanitizedCommandReceipt]) -> None:
+    assert sum(command.argv[2:6] == ("app", "modelo", "work", "file") for command in commands) == 4
+    attestations = [
+        command for command in commands if command.argv[2:6] == ("app", "modelo", "work", "attest-m303-exonerado-390")
+    ]
+    assert len(attestations) == 1
+    assert attestations[0].argv[attestations[0].argv.index("--period") + 1] == "4T"
+    assert sum("--m303-exonerado-390-attachment-id" in command.argv for command in commands) == 1
+    assert sum("--no-joint-return-elected" in command.argv for command in commands) == 4
+    assert not any("--m303-filing-evidence" in command.argv for command in commands)
+    assert any(
+        command.argv[2:6] == ("app", "modelo", "work", "create") and "390" in command.argv and "0A" in command.argv
+        for command in commands
+    )
+    assert not any(command.argv[2:5] == ("app", "modelo", "export") for command in commands)
 
 
 # Measured on a quiet host on 2026-09-23: 96 s wheel build and install, then 337 s of fresh-process
@@ -64,11 +110,7 @@ def test_installed_cli_first_quarter_local_filing_establishes_annual_foundation(
     assert not any(command.argv[2:5] == ("app", "modelo", "export") for command in receipt.commands)
     assert not any("attest-m303-exonerado-390" in command.argv for command in receipt.commands)
     assert not any("--m303-exonerado-390-attachment-id" in command.argv for command in receipt.commands)
-    rendered = str(receipt.to_dict())
-    assert "synthetic-annual-foundation-purchase.pdf" not in rendered
-    assert "profile_passphrase" not in rendered
-    assert "attachment:" not in rendered
-    assert all(command.returncode == 0 for command in receipt.commands)
+    _assert_receipt_is_private_and_clean(receipt)
 
 
 # Measured on a quiet host on 2026-09-23: 713 s of fresh-process authenticated CLI calls across four
@@ -105,15 +147,7 @@ def test_installed_cli_four_local_303_quarters_verify_the_annual_m390(
         Decimal("525.00"),
     )
     for filing in receipt.quarterly_filings:
-        assert filing.work_unit_id
-        assert filing.calculation_revision_id
-        assert filing.verification_report_id
-        assert filing.verification_status
-        assert filing.filing_record_id
-        assert filing.filing_origin == "local"
-        assert filing.filing_confirmation == "pendiente"
-        assert filing.filing_aeat_accepted is False
-        assert filing.filing_live_submission is False
+        _assert_local_pending_filing(filing)
     assert Decimal(receipt.annual_devengada) == Decimal("1470.00")
     assert Decimal(receipt.annual_deducible) == Decimal("105.00")
     assert Decimal(receipt.annual_resultado) == Decimal("1365.00")
@@ -125,24 +159,5 @@ def test_installed_cli_four_local_303_quarters_verify_the_annual_m390(
     assert receipt.source_identity
     assert receipt.package_identity.startswith("cadrumo==")
     assert receipt.purchase_artifact == "<synthetic-purchase-artifact>"
-    assert sum(command.argv[2:6] == ("app", "modelo", "work", "file") for command in receipt.commands) == 4
-    attestations = [
-        command
-        for command in receipt.commands
-        if command.argv[2:6] == ("app", "modelo", "work", "attest-m303-exonerado-390")
-    ]
-    assert len(attestations) == 1
-    assert attestations[0].argv[attestations[0].argv.index("--period") + 1] == "4T"
-    assert sum("--m303-exonerado-390-attachment-id" in command.argv for command in receipt.commands) == 1
-    assert sum("--no-joint-return-elected" in command.argv for command in receipt.commands) == 4
-    assert not any("--m303-filing-evidence" in command.argv for command in receipt.commands)
-    assert any(
-        command.argv[2:6] == ("app", "modelo", "work", "create") and "390" in command.argv and "0A" in command.argv
-        for command in receipt.commands
-    )
-    assert not any(command.argv[2:5] == ("app", "modelo", "export") for command in receipt.commands)
-    rendered = str(receipt.to_dict())
-    assert "synthetic-annual-foundation-purchase.pdf" not in rendered
-    assert "profile_passphrase" not in rendered
-    assert "attachment:" not in rendered
-    assert all(command.returncode == 0 for command in receipt.commands)
+    _assert_m390_commands(receipt.commands)
+    _assert_receipt_is_private_and_clean(receipt)
