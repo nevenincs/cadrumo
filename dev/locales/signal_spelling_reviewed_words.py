@@ -420,6 +420,18 @@ REVIEWED_LOCALE_SPELLINGS: dict[str, frozenset[str]] = {
     ),
     "es": frozenset(
         {
+            # Month abbreviations of the Spanish CLDR medium date format, which
+            # the application writes dates in.
+            "feb",
+            "abr",
+            "may",
+            "jun",
+            "jul",
+            "ago",
+            "sept",
+            "oct",
+            "nov",
+            "dic",
             # Exact Spanish legal-note forms, never English fallback vocabulary.
             # DLE lemmas attest the listed forms or their regular gender,
             # plural, participle and -mente inflections:

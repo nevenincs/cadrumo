@@ -2101,6 +2101,20 @@ application:
       stage_incomplete: The `quickfile` %{stage} stage finished with status %{status}.
       stage_refused: '`quickfile` stopped at the %{stage} stage: the stage was refused
         with %{error_code}.'
+    value_date:
+      month_01: Jan
+      month_02: Feb
+      month_03: Mar
+      month_04: Apr
+      month_05: May
+      month_06: Jun
+      month_07: Jul
+      month_08: Aug
+      month_09: Sep
+      month_10: Oct
+      month_11: Nov
+      month_12: Dec
+      pattern: '{month} {day}, {year}'
     work_form:
       additional_data_for_box: Additional data for box {box}
       box_locator_help:

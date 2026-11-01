@@ -139,7 +139,7 @@ def test_the_sentence_writes_dates_and_amounts_as_the_language_does() -> None:
         box="1654",
     )
 
-    assert "30/06/2025" in note_fact_text(fact, locale="es")
+    assert "30 jun 2025" in note_fact_text(fact, locale="es")
     assert "1.200,00" in note_fact_text(fact, locale="es")
 
 

@@ -5,6 +5,7 @@ import type {
   ModeloWorkHistoryEntryV1,
   OutputLanguage,
 } from "../../../shell/modeloContract";
+import { formatDay } from "../../../shared/dateFormats";
 import { formatAmount } from "../../../shared/numbers";
 import { useStrings, type Translate } from "../../../shell/strings";
 import { HistoryView } from "./HistoryView";
@@ -43,14 +44,21 @@ function entries(t: Translate): ModeloWorkHistoryEntryV1[] {
   }));
 }
 
-const money = (casilla: string, box: string, label: string, filed: string) => ({
+const money = (
+  language: OutputLanguage,
+  casilla: string,
+  box: string,
+  label: string,
+  filed: string,
+) => ({
   casilla_id: casilla,
   box,
   label,
   help: null,
   data_type: "decimal",
   filed_value: filed,
-  filed_value_text: formatAmount("es", filed, { currency: "EUR" }),
+  // The application writes the filed figure in the filer's language.
+  filed_value_text: formatAmount(language, filed),
   edit_address: { kind: "correction" as const, casilla_id: casilla },
   grammar: {
     data_type: "decimal",
@@ -72,39 +80,43 @@ const money = (casilla: string, box: string, label: string, filed: string) => ({
   legal_refs: [],
 });
 
-const CORRECTION: ModeloAmendmentCorrectionContextV1 = {
-  language: "es",
+// The sentences the application serves are English here; the figures and the
+// date are written in the story's language, as the application writes them.
+const correction = (
+  language: OutputLanguage,
+): ModeloAmendmentCorrectionContextV1 => ({
+  language,
   filed: {
     filing_record_id: "synthetic-filing",
-    modelo_title: "Modelo 130 · IRPF pago fraccionado estimación directa",
-    period_words: "1.er trimestre 2026",
+    modelo_title: "Modelo 130 · Personal income tax instalment",
+    period_words: "1st quarter 2026",
     declaration_kind: "original",
-    declaration_kind_words: "Ordinaria",
+    declaration_kind_words: "Original",
     filed_at: "2026-04-18T10:00:00Z",
-    filed_on: "18/04/2026",
+    filed_on: formatDay(language, "2026-04-18"),
   },
   kinds: [
     {
       kind: "complementaria",
       words: "Complementaria",
-      help: "Ingresa la diferencia cuando el resultado sube.",
+      help: "Pays the difference when the result goes up.",
     },
     {
       kind: "rectificativa",
       words: "Rectificativa",
-      help: "Corrige cuando el resultado baja.",
+      help: "Corrects the return when the result goes down.",
     },
   ],
   motive_applies: false,
   motive_kind: null,
   motive_help: null,
   motives: [],
-  reason_prompt: "¿Por qué corriges esta declaración?",
+  reason_prompt: "Why are you correcting this declaration?",
   rows: [
-    money("01", "01", "Ingresos computables", "12400.00"),
-    money("02", "02", "Gastos fiscalmente deducibles", "3100.00"),
+    money(language, "01", "01", "Computable income", "12400.00"),
+    money(language, "02", "02", "Deductible expenses", "3100.00"),
   ],
-};
+});
 
 function History({
   locale,
@@ -126,7 +138,7 @@ function History({
       notice={null}
       correcting={correcting}
       onCorrectingChange={setCorrecting}
-      correction={CORRECTION}
+      correction={correction(locale)}
       onRename={async () => true}
       onDiscard={async () => true}
       onCorrect={null}

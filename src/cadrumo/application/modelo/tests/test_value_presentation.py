@@ -12,6 +12,7 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
+from babel.dates import format_date
 
 from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import lookup_translation
@@ -118,11 +119,22 @@ def test_a_yes_or_no_is_a_word_whatever_channel_carries_it(language: OutputLangu
     assert format_casilla_value(1, data_type="boolean", language=language) == yes
 
 
-def test_dates_follow_the_language_order() -> None:
+def test_dates_read_as_the_window_writes_them() -> None:
     day = date(2026, 3, 31)
 
-    assert format_casilla_value(day, data_type="date", language=OutputLanguage.ES) == "31/03/2026"
-    assert format_casilla_value(day, data_type="date", language=OutputLanguage.HU) == "2026. 03. 31."
+    assert format_casilla_value(day, data_type="date", language=OutputLanguage.EN) == "Mar 31, 2026"
+    assert format_casilla_value(day, data_type="date", language=OutputLanguage.ES) == "31 mar 2026"
+    assert format_casilla_value(day, data_type="date", language=OutputLanguage.CA) == "31 de març 2026"
+    assert format_casilla_value(day, data_type="date", language=OutputLanguage.HU) == "2026. márc. 31."
+
+
+@pytest.mark.parametrize("language", list(OutputLanguage))
+@pytest.mark.parametrize("month", range(1, 13))
+def test_every_month_reads_as_the_languages_medium_date(language: OutputLanguage, month: int) -> None:
+    for day in (date(2026, month, 5), date(2026, month, 20)):
+        written = format_casilla_value(day, data_type="date", language=language)
+
+        assert written == format_date(day, format="medium", locale=language.value)
 
 
 def test_a_bank_account_is_masked_unless_the_editor_asks_for_it() -> None:

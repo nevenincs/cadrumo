@@ -26,6 +26,7 @@ from ....application.modelo.declarations_workspace_contracts import (
     DeclarationsWorkspaceZone,
     DeclarationsWorkspaceZoneStateV1,
 )
+from ....application.modelo.work_form_wording import date_text
 from ....application.overview.calendar_models import (
     OverviewAeatSubmissionState,
     OverviewLocalFilingState,
@@ -34,6 +35,7 @@ from ....application.overview.calendar_models import (
 from ....application.overview.home import HomeAvailability
 from ....core.errors.error_codes import resolve_error_message
 from ....core.errors.hierarchy import CadrumoError
+from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import lookup_translation, output_language, tr
 from ....core.period import Period
 from ....core.text_fold import fold_for_matching
@@ -107,13 +109,15 @@ def natural_address(modelo: object, year: object, period: object) -> str:
 
 
 def timestamp_label(value: datetime) -> str:
-    """Render a deterministic minute-bearing UTC timestamp without locale ambiguity, as the list says one."""
-    return observed_text(value)
+    """Render a deterministic minute-bearing UTC timestamp, as the list says one."""
+    return observed_text(value, OutputLanguage(output_language()))
 
 
 def calendar_date_label(value: date | None) -> str:
     """Render one non-ambiguous legal date."""
-    return tr("workspace.declarations.calendar.none") if value is None else value.strftime("%d/%m/%Y")
+    if value is None:
+        return tr("workspace.declarations.calendar.none")
+    return date_text(value, OutputLanguage(output_language()))
 
 
 def revision_state_label(value: CalculationRevisionState) -> str:

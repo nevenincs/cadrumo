@@ -39,6 +39,21 @@ from .edit_value_grammar import ModeloEditRatioUnit
 VALUE_TRUE_LOCALE_KEY: Final[str] = "application.modelo.calculation_summary.value_true"
 VALUE_FALSE_LOCALE_KEY: Final[str] = "application.modelo.calculation_summary.value_false"
 VALUE_ABSENT_LOCALE_KEY: Final[str] = "application.modelo.calculation_summary.value_absent"
+_DATE_LOCALE_KEY: Final[str] = "application.modelo.value_date.pattern"
+_MONTH_LOCALE_KEYS: Final[tuple[str, ...]] = (
+    "application.modelo.value_date.month_01",
+    "application.modelo.value_date.month_02",
+    "application.modelo.value_date.month_03",
+    "application.modelo.value_date.month_04",
+    "application.modelo.value_date.month_05",
+    "application.modelo.value_date.month_06",
+    "application.modelo.value_date.month_07",
+    "application.modelo.value_date.month_08",
+    "application.modelo.value_date.month_09",
+    "application.modelo.value_date.month_10",
+    "application.modelo.value_date.month_11",
+    "application.modelo.value_date.month_12",
+)
 
 SCREEN_MINUS_SIGN: Final[str] = "\u2212"
 """The minus sign figures carry on screen, so a negative amount reads as one."""
@@ -53,28 +68,25 @@ _DECIMAL_TOKEN: Final[re.Pattern[str]] = re.compile(r"^(?P<sign>-?)(?P<integer>\
 
 
 class LocaleNumberFormat(BaseModel):
-    """How one language writes a figure and a date."""
+    """How one language writes a figure."""
 
     model_config = STRICT_FROZEN_CONFIG
 
     group_separator: str = Field(min_length=1, max_length=1)
     decimal_separator: str = Field(min_length=1, max_length=1)
-    date_pattern: str = Field(min_length=1)
 
 
 LOCALE_NUMBER_FORMATS: Final[Mapping[OutputLanguage, LocaleNumberFormat]] = MappingProxyType(
     {
-        OutputLanguage.ES: LocaleNumberFormat(group_separator=".", decimal_separator=",", date_pattern="%d/%m/%Y"),
-        OutputLanguage.CA: LocaleNumberFormat(group_separator=".", decimal_separator=",", date_pattern="%d/%m/%Y"),
-        OutputLanguage.EN: LocaleNumberFormat(group_separator=",", decimal_separator=".", date_pattern="%d/%m/%Y"),
+        OutputLanguage.ES: LocaleNumberFormat(group_separator=".", decimal_separator=","),
+        OutputLanguage.CA: LocaleNumberFormat(group_separator=".", decimal_separator=","),
+        OutputLanguage.EN: LocaleNumberFormat(group_separator=",", decimal_separator="."),
         # Hungarian groups thousands with a space; a no-break space keeps a figure
         # on one line and extracts as a plain space.
-        OutputLanguage.HU: LocaleNumberFormat(
-            group_separator="\u00a0", decimal_separator=",", date_pattern="%Y. %m. %d."
-        ),
+        OutputLanguage.HU: LocaleNumberFormat(group_separator="\u00a0", decimal_separator=","),
     },
 )
-"""Figure and date formatting per output language; total over the language axis."""
+"""Figure formatting per output language; total over the language axis."""
 
 
 class ValuePresentationKind(StrEnum):
@@ -181,6 +193,13 @@ def _yes_no(value: bool, language: OutputLanguage) -> str:
     return _catalogue_text(VALUE_TRUE_LOCALE_KEY if value else VALUE_FALSE_LOCALE_KEY, language)
 
 
+def _date_words(value: date, language: OutputLanguage) -> str:
+    """A date as the desktop window's medium date reads in ``language``, so no screen shows it two ways."""
+    return _catalogue_text(_DATE_LOCALE_KEY, language).format(
+        day=value.day, month=_catalogue_text(_MONTH_LOCALE_KEYS[value.month - 1], language), year=value.year
+    )
+
+
 def _format_declared_ratio(
     value: Decimal | int | str | bool | date,
     kind: ValuePresentationKind,
@@ -223,7 +242,7 @@ def format_casilla_value(
     two places, and one whose unit is not declared keeps its bare figure rather
     than guess a hundredfold; a decimal or count keeps its own places and takes
     the language's marks; a year stays four plain digits; a yes-or-no is a
-    word; a date follows the language's order; a bank account is masked to its
+    word; a date is the language's medium date; a bank account is masked to its
     first and last four characters unless ``mask_iban`` is false. Codes and
     text are shown as stored.
     """
@@ -231,7 +250,7 @@ def format_casilla_value(
     if isinstance(value, bool):
         return _yes_no(value, language)
     if isinstance(value, date):
-        return value.strftime(LOCALE_NUMBER_FORMATS[language].date_pattern)
+        return _date_words(value, language)
     if kind is ValuePresentationKind.BOOLEAN and isinstance(value, (int, Decimal)) and value in (0, 1):
         return _yes_no(bool(value), language)
     percentage = _format_declared_ratio(value, kind, ratio_unit, language)

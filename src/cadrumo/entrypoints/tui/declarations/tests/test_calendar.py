@@ -118,7 +118,7 @@ def test_exact_scope_overlap_and_evidence_unknown_uses_source_observability() ->
 def test_unicode_and_search_uses_only_safe_localized_fields() -> None:
     controller = calendar_controller(calendar_projection())
     assert [row.modelo for row in controller.visible_entries(DeclarationsCalendarScopeV1.ALL, "VENCIDA 130")] == ["130"]
-    assert [row.modelo for row in controller.visible_entries(DeclarationsCalendarScopeV1.ALL, "20/10/2026 111")] == [
+    assert [row.modelo for row in controller.visible_entries(DeclarationsCalendarScopeV1.ALL, "20 oct 2026 111")] == [
         "111"
     ]
     assert controller.visible_entries(DeclarationsCalendarScopeV1.ALL, "private-work-name nif-token") == ()

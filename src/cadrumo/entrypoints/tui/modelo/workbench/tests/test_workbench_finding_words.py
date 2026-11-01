@@ -388,7 +388,7 @@ def test_a_period_date_and_amount_read_as_the_filer_writes_them() -> None:
         english = {line.level: line.message for line in issue_lines(form)}
 
     assert "periodo 4.º trimestre" in spanish[IssueLevel.INFO]
-    assert "01/03/2025" in spanish[IssueLevel.INFO]
+    assert "1 mar 2025" in spanish[IssueLevel.INFO]
     assert "(1.234,50 EUR)" in spanish[IssueLevel.CHECK]
     assert "difieren en 234,50 EUR" in spanish[IssueLevel.CHECK]
     assert "period 4th quarter" in english[IssueLevel.INFO]

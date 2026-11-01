@@ -2226,6 +2226,20 @@ application:
       stage_incomplete: La etapa %{stage} de `quickfile` terminó con el estado %{status}.
       stage_refused: '`quickfile` se detuvo en la etapa %{stage}: la etapa se rechazó
         con %{error_code}.'
+    value_date:
+      month_01: ene
+      month_02: feb
+      month_03: mar
+      month_04: abr
+      month_05: may
+      month_06: jun
+      month_07: jul
+      month_08: ago
+      month_09: sept
+      month_10: oct
+      month_11: nov
+      month_12: dic
+      pattern: '{day} {month} {year}'
     work_form:
       additional_data_for_box: Dato adicional de la casilla {box}
       box_locator_help:

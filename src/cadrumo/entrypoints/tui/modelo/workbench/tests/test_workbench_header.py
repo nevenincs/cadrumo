@@ -169,12 +169,12 @@ def test_staged_changes_mark_the_result_out_of_date_until_recorded() -> None:
 @pytest.mark.parametrize(
     ("days", "text", "tone"),
     [
-        (21, "Deadline 29/04/2026 · days left: 21", ModeloFormDeadlineTone.NORMAL),
-        (7, "Deadline 15/04/2026 · days left: 7", ModeloFormDeadlineTone.SOON),
-        (4, "Deadline 12/04/2026 · days left: 4", ModeloFormDeadlineTone.SOON),
-        (3, "Deadline 11/04/2026 · days left: 3", ModeloFormDeadlineTone.URGENT),
-        (1, "Deadline 09/04/2026 · days left: 1", ModeloFormDeadlineTone.URGENT),
-        (0, "Deadline today, 08/04/2026", ModeloFormDeadlineTone.URGENT),
+        (21, "Deadline Apr 29, 2026 · days left: 21", ModeloFormDeadlineTone.NORMAL),
+        (7, "Deadline Apr 15, 2026 · days left: 7", ModeloFormDeadlineTone.SOON),
+        (4, "Deadline Apr 12, 2026 · days left: 4", ModeloFormDeadlineTone.SOON),
+        (3, "Deadline Apr 11, 2026 · days left: 3", ModeloFormDeadlineTone.URGENT),
+        (1, "Deadline Apr 9, 2026 · days left: 1", ModeloFormDeadlineTone.URGENT),
+        (0, "Deadline today, Apr 8, 2026", ModeloFormDeadlineTone.URGENT),
     ],
 )
 def test_the_deadline_reads_in_days_and_grows_urgent(days: int, text: str, tone: ModeloFormDeadlineTone) -> None:
@@ -195,11 +195,11 @@ def test_a_passed_a_missing_a_moved_and_a_recorded_deadline() -> None:
         unmoved = deadline_help(with_deadline(form, days_left=10), _EN, recorded=False)
         recorded = deadline_view(with_deadline(form, days_left=10), _EN, recorded=True)
 
-    assert passed is not None and passed.text == "Deadline passed on 05/04/2026: filing now is late"
+    assert passed is not None and passed.text == "Deadline passed on Apr 5, 2026: filing now is late"
     assert passed.tone is ModeloFormDeadlineTone.URGENT
     assert missing is not None and missing.tone is ModeloFormDeadlineTone.MUTED
     assert missing.text == "No deadline on record for this period"
-    assert moved == "The usual deadline is 16/04/2026. It moves to 18/04/2026 because of a weekend or holiday."
+    assert moved == "The usual deadline is Apr 16, 2026. It moves to Apr 18, 2026 because of a weekend or holiday."
     assert unmoved is None
     assert recorded is None
 
@@ -281,7 +281,7 @@ async def test_the_header_fits_every_width_and_keeps_the_result(width: int) -> N
             app.exit(None)
 
     assert parts["#wb-result"].startswith(f"To pay  1,300.00{_NBSP}€")
-    assert parts["#wb-deadline"] == "Deadline 13/04/2026 · days left: 5"
+    assert parts["#wb-deadline"] == "Deadline Apr 13, 2026 · days left: 5"
     assert soon
     assert parts["#wb-stale"] == "◷ out of date: changes not applied yet: 1 [R]"
     assert dimmed

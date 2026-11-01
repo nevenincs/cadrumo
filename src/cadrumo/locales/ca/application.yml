@@ -2227,6 +2227,20 @@ application:
       stage_incomplete: L'etapa %{stage} de `quickfile` ha acabat amb l'estat %{status}.
       stage_refused: '`quickfile` s''ha aturat a l''etapa %{stage}: l''etapa s''ha
         rebutjat amb %{error_code}.'
+    value_date:
+      month_01: de gen.
+      month_02: de febr.
+      month_03: de març
+      month_04: d’abr.
+      month_05: de maig
+      month_06: de juny
+      month_07: de jul.
+      month_08: d’ag.
+      month_09: de set.
+      month_10: d’oct.
+      month_11: de nov.
+      month_12: de des.
+      pattern: '{day} {month} {year}'
     work_form:
       additional_data_for_box: Dada addicional de la casella {box}
       box_locator_help:

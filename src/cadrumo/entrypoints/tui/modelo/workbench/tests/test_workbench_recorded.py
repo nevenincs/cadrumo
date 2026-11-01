@@ -75,7 +75,7 @@ async def test_a_recorded_declaration_is_read_only_and_asks_for_nothing() -> Non
             after_c = str(screen.query_one("#wb-notice", Static).render())
             app.exit(None)
 
-    assert next_line == "Recorded as filed on 15/04/2026"
+    assert next_line == "Recorded as filed on Apr 15, 2026"
     assert stepper == "✓ Fill in ── ✓ Calculate ── ✓ Check ── ✓ Record filing"
     assert not deadline_shown
     assert chips == ""

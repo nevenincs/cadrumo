@@ -73,7 +73,7 @@ def test_a_filed_declaration_is_done_whatever_its_form_still_marks_and_says_when
 
     assert set(_statuses(progress).values()) == {StepStatus.DONE}
     assert progress.next_action is ModeloFormNextAction.RECORDED
-    assert line == "Recorded as filed on 15/04/2026"
+    assert line == "Recorded as filed on Apr 15, 2026"
 
 
 def test_a_verified_declaration_offers_the_file_first_and_recording_after_one_at_a_time() -> None:

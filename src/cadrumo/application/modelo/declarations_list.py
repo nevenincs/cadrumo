@@ -435,13 +435,11 @@ def row_help_words(row: DeclarationListRow, language: OutputLanguage) -> str | N
 
 # -- what the list could read, and what the new-declaration dialog offers -------
 
-_OBSERVED_FORMAT: Final[str] = "%d/%m/%Y %H:%M UTC"
 
-
-def observed_text(moment: datetime) -> str:
+def observed_text(moment: datetime, language: OutputLanguage) -> str:
     """When a source was read, to the minute and in UTC, so no reader mistakes the zone it was read in."""
     utc = moment.astimezone(UTC) if moment.tzinfo is not None else moment
-    return utc.strftime(_OBSERVED_FORMAT)
+    return f"{date_text(utc.date(), language)} {utc:%H:%M} UTC"
 
 
 class ModeloDeclarationsListZoneV1(BaseModel):
@@ -486,7 +484,7 @@ def zone_states(
 def _observed_words(source: DeclarationsCalendarSourceStateV1, language: OutputLanguage) -> str:
     locale = language.value
     if source.observed_at is not None:
-        return observed_text(source.observed_at)
+        return observed_text(source.observed_at, language)
     if source.availability is HomeAvailability.NEVER_CAPTURED:
         return tr("workspace.declarations.calendar.never_observed", locale=locale)
     if source.availability is HomeAvailability.AVAILABLE:

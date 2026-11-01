@@ -2188,6 +2188,20 @@ application:
         be.
       stage_refused: 'A `quickfile` a(z) %{stage} szakasznál leállt: a szakaszt %{error_code}
         kóddal elutasították.'
+    value_date:
+      month_01: jan.
+      month_02: febr.
+      month_03: márc.
+      month_04: ápr.
+      month_05: máj.
+      month_06: jún.
+      month_07: júl.
+      month_08: aug.
+      month_09: szept.
+      month_10: okt.
+      month_11: nov.
+      month_12: dec.
+      pattern: '{year}. {month} {day}.'
     work_form:
       additional_data_for_box: Kiegészítő adat a(z) {box}. rovathoz
       box_locator_help:

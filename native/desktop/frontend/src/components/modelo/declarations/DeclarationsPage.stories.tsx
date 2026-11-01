@@ -53,9 +53,9 @@ function withAeatFiling(port: ModeloPort): ModeloPort {
 
 function withDeadlines(port: ModeloPort): ModeloPort {
   const due = [
-    ["Deadline passed on 20/04/2026: filing now is late", "urgent"],
-    ["Deadline 30/10/2026 · days left: 6", "soon"],
-    ["Deadline 30/01/2027 · days left: 98", "normal"],
+    ["Deadline passed on Apr 20, 2026: filing now is late", "urgent"],
+    ["Deadline Oct 30, 2026 · days left: 6", "soon"],
+    ["Deadline Jan 30, 2027 · days left: 98", "normal"],
   ] as const;
   return {
     ...port,
