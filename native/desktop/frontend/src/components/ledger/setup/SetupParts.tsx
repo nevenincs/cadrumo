@@ -172,6 +172,10 @@ export type Column<Row> = {
   /** The header is read, not shown: an actions column. */
   hidden?: boolean;
   numeric?: boolean;
+  /** The column holds words of its own, such as a kind or a state: it is as
+   * wide as its longest word and wraps only between words. Leave it out for
+   * free text and identifiers, which break anywhere to fit. */
+  keepWords?: boolean;
   /** What ranks a row by this column; leave it out where rows are not
    * ranked, as in an actions column or free text. Absent values are null. */
   sort?(row: Row): SortValue;
@@ -250,7 +254,10 @@ export function SetupTable<Row>({
                   <td
                     key={column.key}
                     className={cn(
-                      "px-2 py-1.5 [overflow-wrap:anywhere]",
+                      "px-2 py-1.5",
+                      column.keepWords
+                        ? "[overflow-wrap:normal]"
+                        : "[overflow-wrap:anywhere]",
                       column.numeric && "text-right tabular-nums",
                     )}
                   >

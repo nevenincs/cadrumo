@@ -32,7 +32,11 @@ const button = (scope: Page | Locator, key: string, values = {}) =>
 const field = (scope: Page | Locator, key: string, values = {}) =>
   scope.getByLabel(label(key, values), { exact: true });
 
-async function openLedger(target: Page, scheme?: "light" | "dark") {
+async function openLedger(
+  target: Page,
+  scheme?: "light" | "dark",
+  language = "en",
+) {
   if (scheme)
     await target.addInitScript((appearance) => {
       localStorage.setItem(
@@ -40,7 +44,9 @@ async function openLedger(target: Page, scheme?: "light" | "dark") {
         JSON.stringify({ prefs: { appearance } }),
       );
     }, scheme);
-  await target.goto("/scenarios.html?scenario=ledger&latency=0&bar=off");
+  await target.goto(
+    `/scenarios.html?scenario=ledger&latency=0&bar=off&lang=${language}`,
+  );
   await target.locator("[data-rail=ledger]").click();
   await expect(page(target).getByRole("grid")).toBeVisible();
 }
@@ -89,9 +95,11 @@ async function openSetup(
 }
 
 /** Opens the Assets tab, on its Stock area where `stock` is given. */
-async function openAssets(target: Page, stock = false) {
+async function openAssets(target: Page, stock = false, language = "en") {
   await head(target)
-    .getByRole("tab", { name: label("desktop.ledger.section.assets") })
+    .getByRole("tab", {
+      name: label("desktop.ledger.section.assets", {}, language),
+    })
     .click();
   await expect(target.locator(".ledger-assets")).toBeVisible();
   if (stock) await area(target, "desktop.ledger.assets.area.stock");
@@ -420,6 +428,58 @@ test("a prorrata election is refused until it names its document", async ({
     label("desktop.ledger.prorrata.refusal.seed_existing_blocked"),
   );
 });
+
+for (const language of ["en", "es", "ca", "hu"]) {
+  test(`the register's kind, method and state words are whole and unclipped in ${language}`, async ({
+    page: target,
+  }) => {
+    // A window narrow enough that the register's columns compete for width.
+    await target.setViewportSize({ width: 1000, height: 900 });
+    await openLedger(target, undefined, language);
+    await openAssets(target, false, language);
+    const list = target.locator(".ledger-assets-list");
+    await expect(list.locator("tbody tr").first()).toBeVisible();
+    const found = await list.evaluate((table) => {
+      const split = (cell: Element) => {
+        const words: string[] = [];
+        const walker = document.createTreeWalker(cell, NodeFilter.SHOW_TEXT);
+        for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+          for (const word of (node.textContent ?? "").matchAll(/\S+/g)) {
+            const range = document.createRange();
+            range.setStart(node, word.index);
+            range.setEnd(node, word.index + word[0].length);
+            if (range.getClientRects().length > 1) words.push(word[0]);
+          }
+        }
+        return words;
+      };
+      const heads = [...table.querySelectorAll("thead th")];
+      const columns = ["kind", "method", "state"].map((id) =>
+        heads.findIndex((head) => head.getAttribute("data-column") === id),
+      );
+      const cells = [...table.querySelectorAll("tbody tr")].flatMap((row) =>
+        columns.map((at) => row.children[at]!),
+      );
+      return {
+        columns,
+        cells: cells.length,
+        clipped: cells
+          .filter((cell) => cell.scrollWidth > cell.clientWidth)
+          .map((cell) => cell.textContent),
+        broken: cells.flatMap(split),
+        // Free text keeps breaking anywhere to fit its column.
+        words: cells.map((cell) => getComputedStyle(cell).overflowWrap),
+        name: getComputedStyle(table.querySelector("tbody td")!).overflowWrap,
+      };
+    });
+    expect(found.columns.every((at) => at >= 0)).toBe(true);
+    expect(found.cells).toBeGreaterThan(8);
+    expect(found.clipped).toEqual([]);
+    expect(found.broken).toEqual([]);
+    expect(new Set(found.words)).toEqual(new Set(["normal"]));
+    expect(found.name).toBe("anywhere");
+  });
+}
 
 test("an inventory valuation preview records nothing", async ({
   page: target,

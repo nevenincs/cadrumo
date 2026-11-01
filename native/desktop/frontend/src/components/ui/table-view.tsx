@@ -123,7 +123,10 @@ function useTableView<R>({
       const base =
         held ??
         Object.fromEntries(
-          columns.map((each) => [each.id, measured[each.id] ?? MIN_PX]),
+          columns.map((each) => [
+            each.id,
+            Math.max(each.minWidth ?? MIN_PX, measured[each.id] ?? MIN_PX),
+          ]),
         );
       const floor = columns.find((each) => each.id === column)?.minWidth;
       return { ...base, [column]: Math.max(floor ?? MIN_PX, width) };

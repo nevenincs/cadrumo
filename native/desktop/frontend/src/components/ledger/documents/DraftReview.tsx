@@ -98,6 +98,7 @@ import {
   seeded,
   sameAsRead,
   sameReading,
+  VALUE_COLUMN_MIN_PX,
   type CorrectionField,
   type Corrections,
   type DocumentReference,
@@ -194,7 +195,12 @@ function ReadingTable({
     columns: [
       { id: "field", label: field, name: field },
       { id: "source", label: source, name: source, resizable: false },
-      { id: "value", label: value, name: value },
+      {
+        id: "value",
+        label: value,
+        name: value,
+        minWidth: VALUE_COLUMN_MIN_PX,
+      },
     ],
     rows,
     resizeLabel: (column) => t("desktop.table.resize_column", { column }),
