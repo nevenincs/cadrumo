@@ -1,15 +1,15 @@
 {
   "result_version": 1,
   "profile_id": "13000000-0000-4000-8000-000000000730",
-  "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
+  "work_unit_id": "b650ba021eda8c3082ea9d66d8be078c7c6247610af8772ddd48d75b604198f6",
   "outcome": {
     "outcome": "evaluated",
-    "baseline_id": "494e3ddbd4709bb5bfce9f3806557e132d95683e3c75f3a659a4c2af79f1afcd",
+    "baseline_id": "35f0fdec2226542dffae39c71b7ef79a604344da66359c822bc0e6eaa0ff7759",
     "findings": []
   },
   "parsed": [
     {
-      "address": { "kind": "scalar", "casilla_id": "06" },
+      "address": { "kind": "scalar", "casilla_id": "42" },
       "value": "1234.56",
       "normalisations": ["separators_removed"],
       "refusal": null,

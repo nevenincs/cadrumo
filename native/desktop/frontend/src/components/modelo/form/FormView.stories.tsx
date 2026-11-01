@@ -7,6 +7,7 @@ import type {
   ModeloWorkbenchFormProjectionV1,
   OutputLanguage,
 } from "../../../shell/modeloContract";
+import { typedAmount } from "../details/Details.stories";
 import { FormView } from "./FormView";
 import { useFormSession, type FormSession } from "./session";
 
@@ -128,7 +129,7 @@ export const Staged: Story = {
         const box = (number: string) =>
           session.placed.find((placed) => placed.field.box === number)?.field;
         const typed = box("06");
-        if (typed) await session.enter(typed, "1.234,56");
+        if (typed) await session.enter(typed, typedAmount(globals.locale));
         session.selectBox("06");
       }}
     />

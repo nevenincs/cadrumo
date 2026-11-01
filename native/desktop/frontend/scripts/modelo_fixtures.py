@@ -93,7 +93,7 @@ EDIT_130: tuple[tuple[str, str], ...] = (("06", "1234.56"),)
 #: The box and figure the correction of the recorded 130 states, as the filer types it.
 CORRECTED_130 = ("06", "150.00")
 #: The Modelo 303 box the edit scenarios type over, as the filer types it and as the desktop stages it.
-TYPED_303: tuple[tuple[str, str], ...] = (("42", "1.234,56"),)
+TYPED_303: tuple[tuple[str, str], ...] = (("42", "1234.56"),)
 EDIT_303: tuple[tuple[str, str], ...] = (("42", "1234.56"),)
 #: The changes the filer stages on the rebase scenario's earlier read: a clear, and two typed values.
 REBASE_STAGED: tuple[tuple[str, str], ...] = (("06", "clear"), ("08", "set"), ("10", "set"))
@@ -106,7 +106,11 @@ REBASE_MOVE: tuple[tuple[str, str], ...] = (("08", "500"),)
 REBASE_MOVE_AGAIN: tuple[tuple[str, str], ...] = (("16", "40"),)
 REBASE_MOVE_ONCE_MORE: tuple[tuple[str, str], ...] = (("18", "30"),)
 #: What the filer types into the first-quarter 130, as typed, and an entry over a box that takes none.
-TYPED_130: tuple[tuple[str, str], ...] = (("06", "1.234,56"),)
+TYPED_130: tuple[tuple[str, str], ...] = (("06", "1234.56"),)
+#: That figure as each language's filer types it; the window's own language reads it.
+TYPED_FIGURE: dict[str, dict[str, str]] = {
+    "1234.56": {"en": "1,234.56", "es": "1.234,56", "ca": "1.234,56", "hu": "1 234,56"},
+}
 UNWRITABLE_130: tuple[str, str] = ("01", "doce")
 #: The change the window holds once that value is staged.
 STAGED_130: tuple[tuple[str, str], ...] = (("06", "set"),)
@@ -899,6 +903,7 @@ def _edit_document(
     intents: tuple[tuple[str, str], ...] = (),
     restored: tuple[str, ...] = (),
     held: list[dict[str, Any]] | None = None,
+    language: str = "en",
 ) -> dict[str, Any]:
     """An edit's operator input as the desktop sends it: entries as typed, or scalar intents setting typed values.
 
@@ -914,7 +919,7 @@ def _edit_document(
     sent = wire.model_dump(mode="json")
     return {
         "input_version": 2,
-        "output_language": "en",
+        "output_language": language,
         "submission": {
             "baseline": sent,
             "mutation_family": sent["mutation_family"],
@@ -932,7 +937,7 @@ def _edit_document(
             **({"held": held} if held is not None else {}),
             "binding_intents": [],
             "lexemes": [
-                {"address": {"kind": "scalar", "casilla_id": box}, "entry_locale": "es", "lexeme": text}
+                {"address": {"kind": "scalar", "casilla_id": box}, "entry_locale": language, "lexeme": text}
                 for box, text in typed
             ],
         },
@@ -1002,8 +1007,8 @@ def _admitted(work: Any, *, issued_at: datetime | None = None) -> Any:
 #
 # The window sends every check, apply and renewal on the baseline the form it
 # shows admitted. Each edit envelope is therefore read on the baseline of one
-# written form, and named after that form: ``preflight-<form>-entry-<boxes>``
-# reads entries as typed, ``preflight-<form>-review`` and
+# written form, and named after that form: ``preflight-<form>-entry-<boxes>-<language>``
+# reads entries as typed in that language, ``preflight-<form>-review`` and
 # ``preflight-<form>-stale`` check the staged changes with the changes the
 # window holds, ``apply-<form>`` applies them and ``renew-<form>`` renews the
 # form's baseline.
@@ -1038,14 +1043,20 @@ def _held(directory: Path, form: str, changes: tuple[tuple[str, str], ...]) -> l
 
 
 def _write_entries(directory: Path, work: Any, form: str, *typed: tuple[tuple[str, str], ...]) -> None:
-    """Read entries as typed into boxes of ``form``, one check per set of boxes, as the window sends each."""
+    """Read entries as typed into boxes of ``form``, one check per boxes and language, as the window sends each."""
     from cadrumo.application.modelo.workbench_operations import MODELO_EDIT_PREFLIGHT_OPERATION_DEFINITION_ID
 
     baseline = _form_baseline(directory, form)
     for entries in typed:
         boxes = "-".join(box for box, _ in entries)
-        read = _edit(work, MODELO_EDIT_PREFLIGHT_OPERATION_DEFINITION_ID, _edit_document(baseline, typed=entries))
-        _write(directory, f"preflight-{form}-entry-{boxes}.json", _expect_model(read))
+        for language in LANGUAGES:
+            lexemes = tuple((box, TYPED_FIGURE.get(text, {}).get(language, text)) for box, text in entries)
+            read = _edit(
+                work,
+                MODELO_EDIT_PREFLIGHT_OPERATION_DEFINITION_ID,
+                _edit_document(baseline, typed=lexemes, language=language),
+            )
+            _write(directory, f"preflight-{form}-entry-{boxes}-{language}.json", _expect_model(read))
 
 
 def _write_check(

@@ -588,7 +588,7 @@ export function modeloFixture(options: Options): ModeloPort {
                       ? entry.address.casilla_id
                       : entry.address.binding_id,
                   )
-                  .join("-")}`
+                  .join("-")}-${entries[0]?.entry_locale}`
               : catalogue[`preflight-${form}-stale`]
                 ? `preflight-${form}-stale`
                 : await reviewHeld(form, held);

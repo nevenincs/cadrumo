@@ -9,7 +9,7 @@
       "period": { "filing_year": 2026, "code": "1T" },
       "registry_revision_id": "2019-y-siguientes",
       "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
-      "calculation_revision_id": "28c87e2b7db479042dba13b9615d669acdcf230566ccabda67171bb10c3cee96",
+      "calculation_revision_id": "83c7b517f2e7cdac14e32cb75e35c1521c8d75c68d43dfe58c72afeaf0c16a3c",
       "language": "es",
       "layout_provenance": "generated",
       "inspection_reason": null,
@@ -1588,15 +1588,15 @@
         "closes_on": "2026-04-20",
         "nominal_closes_on": "2026-04-20",
         "holiday_coverage": "national_only",
-        "reference_on": "2026-10-31",
+        "reference_on": "2026-11-01",
         "days_remaining": null,
-        "days_overdue": 194
+        "days_overdue": 195
       },
       "aeat_data": null,
       "filing": null,
       "last_export": {
-        "exported_at": "2026-10-31T21:56:57.702727Z",
-        "calculation_revision_id": "1ddce0eff2b503a82514f66443ae0d50a8db23703facfe75e9e176b716ad86a0",
+        "exported_at": "2026-11-01T03:17:11.668528Z",
+        "calculation_revision_id": "24d99c6044169757ce85cbe4366b7259250712cabc87be9232c4334aa901e1f6",
         "current": false
       },
       "edit_closure": null,
@@ -1613,9 +1613,9 @@
       "workspace_contract_version": 1,
       "edit_contract_version": 1,
       "operation_manifest_version": 4,
-      "contract_set_digest": "469ea4f43b88ef7d3ddc8e46a53e6236bcfa37167341fad56c8be0be19fb1acf",
+      "contract_set_digest": "e6478bcdded0aca8770ff1d32f358108c15961c2cbeaa98bf55f8129c768591f",
       "operation_definition_id": "modelo.edit.apply",
-      "definition_contract_digest": "0a5464be70052921dbed5abd7efac24eb9efb7a371218d2af75ca7442aedf91f",
+      "definition_contract_digest": "073e2a8d43e20d60d4f5c71d2739448725074872eafc33f8b13786f0821f82b9",
       "request_schema": {
         "schema_id": "modelo.edit.apply.request",
         "schema_version": 2,
@@ -1639,7 +1639,7 @@
       "financial_operand_schema": {
         "schema_id": "modelo.edit.submission",
         "schema_version": 1,
-        "schema_fingerprint": "44a9fbf9f745a918fa95987868c324d253b905a0a55adb35134a5bac000ec353"
+        "schema_fingerprint": "b552091b3c6b35e5a2693c8dccb54641eb5a8406ba2128d99bfb36cbe07cc5fb"
       }
     },
     "bucket_id": "13000000-0000-4000-8000-000000000730",
@@ -1648,9 +1648,9 @@
     "period_filing_year": 2026,
     "period_code": "1T",
     "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
-    "work_unit_record_digest": "e0aea6350cd45679815af0c9e555187db76b9de7cc42b27004401ccfaa071187",
-    "calculation_head_digest": "e79ae4f5bfbc6a5c7d4d2a5e772a6d63fa5ffca9fc8c1439d8fd478f78398664",
-    "current_calculation_revision_id": "28c87e2b7db479042dba13b9615d669acdcf230566ccabda67171bb10c3cee96",
+    "work_unit_record_digest": "62b3bbfecaaf0c7b51c202df328c0adb000a0479f08543094c32b2b34ccb547b",
+    "calculation_head_digest": "ffb24544c56b3ebc5bbf7ca81682b449d5ce5c0c8622e8045ee43eb764419b45",
+    "current_calculation_revision_id": "83c7b517f2e7cdac14e32cb75e35c1521c8d75c68d43dfe58c72afeaf0c16a3c",
     "law_selected_revision_id": "2019-y-siguientes",
     "schema_identity": {
       "schema_id": "modelo-130-2019-y-siguientes",
@@ -1953,9 +1953,9 @@
     ],
     "permitted_surface_digest": "2705e6476442c123bb8c6979cb9d82e81dc02301b0f923b4b78f24941d4686dd",
     "mutation_family": "calculate",
-    "issued_at": "2026-10-31T21:57:13.448364Z",
-    "expires_at": "2026-10-31T22:02:13.448364Z",
-    "baseline_id": "14f561c93110e95da447d6875d2770a2ceaab0fcc4215fb83ca8c4e249fbc97f"
+    "issued_at": "2026-11-01T03:17:25.789849Z",
+    "expires_at": "2026-11-01T03:22:25.789849Z",
+    "baseline_id": "a4943ad7cf3e1dd56ee911e6bd3624218eec28883706a26b1b2db1130477498d"
   },
   "admission_refusal": null,
   "admission_refusal_words": null,
@@ -1965,7 +1965,7 @@
     "count": 0,
     "findings_lead": false,
     "recorded_at": null,
-    "file_created_at": "2026-10-31T21:56:57.702727Z",
+    "file_created_at": "2026-11-01T03:17:11.668528Z",
     "receipt_to_add": false
   },
   "header": {
@@ -1985,16 +1985,16 @@
       "out_of_date_words": null
     },
     "deadline": {
-      "text": "El plazo terminó el 20/04/2026: presentar ahora es fuera de plazo",
-      "short_text": "El plazo terminó el 20/04/2026: presentar ahora es fuera de plazo",
+      "text": "El plazo terminó el 20 abr 2026: presentar ahora es fuera de plazo",
+      "short_text": "El plazo terminó el 20 abr 2026: presentar ahora es fuera de plazo",
       "tone": "urgent",
       "help": null
     },
     "file": {
-      "exported_at": "2026-10-31T21:56:57.702727Z",
-      "created_on": "31/10/2026",
+      "exported_at": "2026-11-01T03:17:11.668528Z",
+      "created_on": "1 nov 2026",
       "current": false,
-      "words": "El fichero del 31/10/2026 está desactualizado. Vuelve a generarlo."
+      "words": "El fichero del 1 nov 2026 está desactualizado. Vuelve a generarlo."
     },
     "export_hold": null
   },
@@ -2033,8 +2033,8 @@
     "words": "La comprobación es correcta.",
     "unapplied_words": "El cálculo guardado superó la comprobación; tus cambios no se han aplicado."
   },
-  "calculation_revision_id": "28c87e2b7db479042dba13b9615d669acdcf230566ccabda67171bb10c3cee96",
-  "verification_report_id": "3f7e2fd57a582151c8377b6ac20c108c3c7b4d6eae1b1d2655995557af9e33a0",
+  "calculation_revision_id": "83c7b517f2e7cdac14e32cb75e35c1521c8d75c68d43dfe58c72afeaf0c16a3c",
+  "verification_report_id": "d6fbc42ec5bf654e3e90a546faff5dbd6c38c5c8a22c4533548f111cd70bf96e",
   "asks_m303_evidence": false,
   "asks_modelo_390": false,
   "registry_revision_id": "2019-y-siguientes",
@@ -2115,7 +2115,7 @@
     "record": {
       "available": false,
       "reason": "file_out_of_date",
-      "words": "El fichero del 31/10/2026 está desactualizado. Vuelve a generarlo. Si ya presentaste ese fichero anterior en la AEAT, inicia una corrección."
+      "words": "El fichero del 1 nov 2026 está desactualizado. Vuelve a generarlo. Si ya presentaste ese fichero anterior en la AEAT, inicia una corrección."
     },
     "review_package": {
       "words": "Paquete para tu gestor",

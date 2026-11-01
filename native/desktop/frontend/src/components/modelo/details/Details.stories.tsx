@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { modeloFixture, type ModeloShape } from "../../../dev/modeloFixture";
 import form130 from "../../../dev/fixtures/modelo/modelo-130-1T-en.json";
 import form303 from "../../../dev/fixtures/modelo/modelo-303-1T-en.json";
+import { formatAmount } from "../../../shared/numbers";
 import { translator } from "../../../shell/strings";
 import type { ModeloPort } from "../../../shell/modelo";
 import type {
@@ -35,6 +36,10 @@ export type StoryProps = {
 
 export const storyLanguage = (locale: unknown): OutputLanguage =>
   locale === "es" || locale === "ca" || locale === "hu" ? locale : "en";
+
+/** The stories' typed figure, as the filer writes it in their own language. */
+export const typedAmount = (locale: unknown) =>
+  formatAmount(storyLanguage(locale), "1234.56");
 
 export function StorySession({
   envelope: initial,
@@ -95,7 +100,7 @@ const F303 = form303 as unknown as ModeloWorkbenchFormProjectionV1;
 const meta: Meta = {
   title: "Modelo/Details",
   parameters: { surface: "card" },
-  excludeStories: ["StorySession", "storyLanguage"],
+  excludeStories: ["StorySession", "storyLanguage", "typedAmount"],
 };
 export default meta;
 type Story = StoryObj;
@@ -166,7 +171,7 @@ export const StagedChange: Story = {
     <Panel
       envelope={F130}
       choose="06"
-      edits={[{ casilla: "06", value: "1.234,56" }]}
+      edits={[{ casilla: "06", value: typedAmount(globals.locale) }]}
       locale={globals.locale}
       docked
     />

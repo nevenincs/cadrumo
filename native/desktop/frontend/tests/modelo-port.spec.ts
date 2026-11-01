@@ -233,12 +233,12 @@ test("a preflight answers the application's reading and zeroes the body", async 
       lexemes: [
         {
           address: { kind: "scalar", casilla_id: "06" },
-          entry_locale: "es",
-          lexeme: "1.234,56",
+          entry_locale: "en",
+          lexeme: "1,234.56",
         },
         {
           address: { kind: "scalar", casilla_id: "01" },
-          entry_locale: "es",
+          entry_locale: "en",
           lexeme: "doce",
         },
       ],
@@ -257,7 +257,7 @@ test("a preflight answers the application's reading and zeroes the body", async 
   ]);
   // A call line names the definition, never what was typed.
   expect(calls).toContain("modelo edit modelo.edit.preflight");
-  expect(calls.join("\n")).not.toContain("1.234,56");
+  expect(calls.join("\n")).not.toContain("1,234.56");
 });
 
 test("the scenario never makes up a result it has no envelope for", async () => {

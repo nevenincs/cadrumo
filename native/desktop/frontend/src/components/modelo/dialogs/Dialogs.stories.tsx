@@ -4,7 +4,7 @@ import form130 from "../../../dev/fixtures/modelo/modelo-130-1T-en.json";
 import form303 from "../../../dev/fixtures/modelo/modelo-303-1T-en.json";
 import type { ModeloShape } from "../../../dev/modeloFixture";
 import type { ModeloWorkbenchFormProjectionV1 } from "../../../shell/modeloContract";
-import { StorySession } from "../details/Details.stories";
+import { StorySession, typedAmount } from "../details/Details.stories";
 import { FilingView } from "./FilingView";
 import { ReviewDialog } from "./ReviewDialog";
 
@@ -41,7 +41,7 @@ function Review({
       envelope={envelope}
       locale={locale}
       shape={shape}
-      edits={[{ casilla: "06", value: "1.234,56" }]}
+      edits={[{ casilla: "06", value: typedAmount(locale) }]}
     >
       {(props) =>
         props.session.stagedCount > 0 && (

@@ -38,7 +38,7 @@ test("the header states the read model's result, deadline and next action", asyn
   await openDeclaration(target, "130");
   const header = workspace(target).locator("header").first();
   await expect(header).toContainText("Result: could not be calculated");
-  await expect(header).toContainText("Deadline passed on 20/04/2026");
+  await expect(header).toContainText("Deadline passed on Apr 20, 2026");
   await expect(
     header.getByRole("button", {
       name: label("workspace.modelo.next_button.resolve"),
