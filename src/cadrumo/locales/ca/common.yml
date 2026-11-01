@@ -1750,6 +1750,7 @@ desktop:
         mueble: Moble
       kind_label: Tipus
       movement: Compra
+      movement_cut: Els {count} més grans d'aquell any
       movement_hint: El moviment del llibre amb què es va pagar
       prorrata: Prorrata inicial
       refusal:
@@ -1903,7 +1904,7 @@ desktop:
       ratio_missing: Sense ràtio d'ús per a {category}
       ratio_staged: Ràtio d'ús · {category}
       ratio_unread: Ràtios d'ús sense llegir
-      search_category: Cerca a les categories
+      search_category: Cerca
       select_range: Selecciona el rang
       share: Part empresarial
       share_categories: Només categories que admeten una part d'ús empresarial
@@ -2334,7 +2335,7 @@ desktop:
       reverted_movement: Moviment revertit
       row_changes: 'Canvis sense desar: {count}'
       row_unsaved: Té canvis sense desar
-      search: Cerca a {column}
+      search: Cerca
       step:
         add_draft: moviment nou
         bulk_set: classificació
@@ -3281,7 +3282,7 @@ desktop:
       save: Desa
       saved: Factura {number} desada
       search: Cerca factures
-      search_placeholder: Número, nom, NIF
+      search_placeholder: Cerca
       situacion:
         s1: Espanya, excepte el País Basc i Navarra
         s2: País Basc o Navarra
@@ -3485,6 +3486,9 @@ desktop:
         seed: Pren {ejercicio} de l'any anterior
         seed_sector: Pren la prorrata provisional d'un sector el {ejercicio}
         settle_sector: Liquida la prorrata definitiva d'un sector el {ejercicio}
+      kind:
+        definitiva: Definitiva
+        provisional: Provisional
       letra:
         a: a · grups CNAE diferents
         b: b · règims especials
@@ -4309,6 +4313,7 @@ desktop:
       Actualitza per comprovar-los.
     saving: S’està desant…
     search: Cerca dades del perfil
+    search_placeholder: Cerca
     sections: Seccions
     signed_out: Inicia sessió per veure i editar el teu perfil.
     title: El teu perfil
@@ -6666,11 +6671,6 @@ tui:
       disposal_reason: 'Motiu: `sale`, `part_exchange`, `theft`, `destruction`, `scrapping`
         o `withdrawal`'
       dispose: Registra la baixa
-      filing: Preparar trasllat a models
-      forecast: Calcular previsió
-      form_options: Opcions del formulari
-      free_amount: Import de llibertat d’amortització (opcional)
-      in_service_date: Data de posada en funcionament (AAAA-MM-DD), substitueix la
       errors:
         amount_invalid: Escriu l'import només amb xifres i amb punt per als decimals,
           per exemple 1500.00.
@@ -6687,6 +6687,11 @@ tui:
         unexpected: No s'ha pogut completar l'acció i no s'ha canviat res. Torna-ho
           a provar.
         year_invalid: Escriu l'any amb quatre xifres, per exemple 2025.
+      filing: Preparar trasllat a models
+      forecast: Calcular previsió
+      form_options: Opcions del formulari
+      free_amount: Import de llibertat d’amortització (opcional)
+      in_service_date: Data de posada en funcionament (AAAA-MM-DD), substitueix la
         de la revisió
       inspect: Inspeccionar
       list: Llista els elements

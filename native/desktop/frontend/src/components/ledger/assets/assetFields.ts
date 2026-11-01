@@ -212,6 +212,11 @@ const ELECTION = "amortization.";
 export const factKey = (path: readonly string[]) =>
   `${ELECTION}${path.join(".")}`;
 
+/** An evidence, approval or election reference the element's facts state. */
+export const statesReference = (key: string) =>
+  key === "vehicle_evidence" ||
+  (key.startsWith(ELECTION) && key.endsWith("_reference"));
+
 /** The shape of an element bought through a purchase the ledger holds. */
 const PURCHASE = "primary_purchase";
 /** The shape of an element bought before the ledger began. */

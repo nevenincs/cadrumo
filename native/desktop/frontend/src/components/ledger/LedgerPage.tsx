@@ -866,7 +866,8 @@ export function LedgerPage({
         port={port}
         reader={reader}
         rows={drawnRows?.rows ?? null}
-        drafts={stage.content.drafts}
+        stage={stage.content}
+        applied={stage.applied}
       >
         {/* The page's own keys reach every part of it, the header included;
           the wrapper draws nothing of its own. */}

@@ -68,6 +68,8 @@ const TOKEN_WORDS = {
     t(`desktop.ledger.prorrata.letra.${token}`),
   "prorrata.provenance": (t: Translate, token: string) =>
     t(`desktop.ledger.prorrata.provenance.${token}`),
+  "prorrata.kind": (t: Translate, token: string) =>
+    t(`desktop.ledger.prorrata.kind.${token}`),
   "prorrata.regime": (t: Translate, token: string) =>
     t(`desktop.ledger.prorrata.regime.${token}`),
   "ratios.kind": (t: Translate, token: string) =>

@@ -345,6 +345,23 @@ function reviewStatus(classification: string): LedgerReviewStatus {
   if (classification === "REVIEWED_EXCLUDED") return "excluded";
   return "reviewed";
 }
+/** The purchases the seeded elements own, which the scenario's rows do not
+ * hold: the assets register has a ledger of its own. */
+const OWNED_PURCHASES: Readonly<Record<string, string>> = {
+  "60f7b87f3cacddd83f50355df93b77d31348798f565db35b4edf4328985c967e":
+    "Compra de la furgoneta",
+};
+
+/** What the scenario's records state only outside anything the page draws. */
+export const KNOWN_ONLY = {
+  counterparty: "Asesoría Antigua, S.L.",
+  description: "Cuota del colegio profesional",
+  group: "Oficina antigua",
+  payer: "PAGADOR-ANTIGUO",
+  right: "DERECHO-ANTIGUO",
+  reference: "EXPEDIENTE-2019/4",
+} as const;
+
 const row = (movement: FixtureMovement): LedgerRow => ({
   transaction: { ...movement.transaction },
   review_status: reviewStatus(movement.transaction.business_classification),
@@ -467,6 +484,55 @@ const compare = (left: string, right: string) =>
 
 /** Filter, then group selection, then sort, then group partition, then
  * the page: the product's order. */
+/** The values the backend would distil from the whole scenario ledger,
+ * whatever period the page holds, and the one record the page never draws. */
+function knownValues(ledger: FixtureLedger, request: JsonObject): JsonObject {
+  const kinds = request.kinds as readonly string[];
+  const newest = [...ledger.movements].sort((a, b) =>
+    b.transaction.date.localeCompare(a.transaction.date),
+  );
+  const distinct = (texts: readonly (string | null)[]) => [
+    ...new Set(texts.filter((text): text is string => Boolean(text))),
+  ];
+  const texts = (kind: string, values: readonly (string | null)[]) =>
+    kinds.includes(kind)
+      ? distinct(values).map((text) => ({
+          text,
+          uses: 1,
+          last_used: "2020-01-15",
+          counterparty: null,
+        }))
+      : [];
+  return {
+    profile_id: LEDGER_FIXTURE_PROFILE_ID,
+    counterparties: kinds.includes("counterparty")
+      ? distinct([
+          ...newest.map((found) => found.transaction.counterparty),
+          KNOWN_ONLY.counterparty,
+        ]).map((name) => ({
+          name,
+          tax_id: name === KNOWN_ONLY.counterparty ? "B99999990" : null,
+          country: name === KNOWN_ONLY.counterparty ? "ES" : null,
+          identification_state: null,
+          uses: 1,
+          last_used: "2020-01-15",
+        }))
+      : [],
+    descriptions: texts("description", [
+      ...newest.map((found) => found.transaction.description),
+      KNOWN_ONLY.description,
+    ]),
+    group_labels: texts("group_label", [
+      ...newest.map((found) => found.group_label),
+      KNOWN_ONLY.group,
+    ]),
+    m210_payers: texts("m210_payer", [KNOWN_ONLY.payer]),
+    m210_assets: texts("m210_asset", [KNOWN_ONLY.right]),
+    asset_references: texts("asset_reference", [KNOWN_ONLY.reference]),
+    truncated: [],
+  };
+}
+
 function list(ledger: FixtureLedger, request: JsonObject): JsonObject {
   const keep = filterOf(request.filters);
   const sortBy = request.sort_by ?? null;
@@ -1885,9 +1951,19 @@ export function ledgerFixture(options: Options): LedgerPort {
     ...evidenceWork.reads,
     ...movementWork.reads,
     ...setupWork.reads,
+    "ledger.known-values": (request) => knownValues(ledger, request),
     "ledger.list": (request) => list(ledger, request),
     "ledger.view": (request) => {
-      const movement = resolve(ledger, request.transaction_prefix);
+      const owned = OWNED_PURCHASES[request.transaction_prefix as string];
+      const movement = owned
+        ? {
+            ...ledger.movements[0]!,
+            transaction: {
+              ...ledger.movements[0]!.transaction,
+              description: owned,
+            },
+          }
+        : resolve(ledger, request.transaction_prefix);
       return {
         profile_id: LEDGER_FIXTURE_PROFILE_ID,
         transaction_prefix: request.transaction_prefix as string,

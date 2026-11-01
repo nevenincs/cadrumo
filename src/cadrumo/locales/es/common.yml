@@ -1754,6 +1754,7 @@ desktop:
         mueble: Mueble
       kind_label: Tipo
       movement: Compra
+      movement_cut: Los {count} mayores de ese año
       movement_hint: El movimiento del libro con el que se pagó
       prorrata: Prorrata inicial
       refusal:
@@ -1899,7 +1900,7 @@ desktop:
       ratio_missing: Sin ratio de uso para {category}
       ratio_staged: Ratio de uso · {category}
       ratio_unread: Ratios de uso sin leer
-      search_category: Busca en las categorías
+      search_category: Buscar
       select_range: Selecciona el rango
       share: Parte empresarial
       share_categories: Solo categorías que admiten una parte de uso empresarial
@@ -2330,7 +2331,7 @@ desktop:
       reverted_movement: Movimiento revertido
       row_changes: 'Cambios sin guardar: {count}'
       row_unsaved: Tiene cambios sin guardar
-      search: Buscar en {column}
+      search: Buscar
       step:
         add_draft: movimiento nuevo
         bulk_set: clasificación
@@ -3280,7 +3281,7 @@ desktop:
       save: Guardar
       saved: Factura {number} guardada
       search: Buscar facturas
-      search_placeholder: Número, nombre, NIF
+      search_placeholder: Buscar
       situacion:
         s1: España, excepto País Vasco y Navarra
         s2: País Vasco o Navarra
@@ -3484,6 +3485,9 @@ desktop:
         seed: Tomar {ejercicio} del año anterior
         seed_sector: Tomar la prorrata provisional de un sector en {ejercicio}
         settle_sector: Liquidar la prorrata definitiva de un sector en {ejercicio}
+      kind:
+        definitiva: Definitiva
+        provisional: Provisional
       letra:
         a: a · grupos CNAE distintos
         b: b · regímenes especiales
@@ -4308,6 +4312,7 @@ desktop:
       actualizado. Actualiza para comprobarlos.
     saving: Guardando…
     search: Buscar datos del perfil
+    search_placeholder: Buscar
     sections: Secciones
     signed_out: Inicia sesión para ver y editar tu perfil.
     title: Tu perfil
@@ -6669,11 +6674,6 @@ tui:
       disposal_reason: 'Motivo: `sale`, `part_exchange`, `theft`, `destruction`, `scrapping`
         o `withdrawal`'
       dispose: Registrar baja
-      filing: Preparar traslado a modelos
-      forecast: Calcular previsión
-      form_options: Opciones del formulario
-      free_amount: Importe de libertad de amortización (opcional)
-      in_service_date: Fecha de puesta en funcionamiento (AAAA-MM-DD), sustituye a
       errors:
         amount_invalid: Escribe el importe solo con cifras y con punto para los decimales,
           por ejemplo 1500.00.
@@ -6690,6 +6690,11 @@ tui:
         unexpected: No se pudo completar la acción y no se ha cambiado nada. Inténtalo
           de nuevo.
         year_invalid: Escribe el año con cuatro cifras, por ejemplo 2025.
+      filing: Preparar traslado a modelos
+      forecast: Calcular previsión
+      form_options: Opciones del formulario
+      free_amount: Importe de libertad de amortización (opcional)
+      in_service_date: Fecha de puesta en funcionamiento (AAAA-MM-DD), sustituye a
         la de la revisión
       inspect: Inspeccionar
       list: Listar elementos

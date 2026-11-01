@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { MoneyEditor } from "@/components/editors/MoneyEditor";
 import { PercentEditor } from "@/components/editors/PercentEditor";
 import { TextEditor } from "@/components/editors/TextEditor";
 import { YearEditor } from "@/components/editors/YearEditor";
 import { Button } from "@/components/ui/button";
+import { Combobox } from "@/components/ui/combobox";
 import { Icon } from "@/components/ui/icon";
 import { facts } from "@/shell/compose";
 import {
@@ -16,8 +17,11 @@ import type {
   CapitalGood,
   CapitalGoodDeclareResult,
 } from "../../../shell/ledgerSetup";
+import type { LedgerRow } from "../../../shell/ledger";
+import { LEDGER_PAGE_SIZE } from "../../../shell/ledgerWindow";
 import { useStrings } from "../../../shell/strings";
 import { WriteHold } from "../WritePause";
+import { formatDay } from "../../../shared/dateFormats";
 import { formatAmount, formatPercent } from "../../../shared/numbers";
 import {
   CallLine,
@@ -46,7 +50,7 @@ const DISPOSALS = ["sujeta_no_exenta", "exenta_o_no_sujeta"] as const;
  * the years after their purchase, each declared once with its cuota and its
  * initial prorrata, and its disposal where there was one.
  */
-export function CapitalGoodsPane({ port, reader, locale }: SetupProps) {
+export function CapitalGoodsPane({ port, reader, locale, rows }: SetupProps) {
   const t = useStrings();
   const { read, reload } = useSetupRead(
     port,
@@ -62,6 +66,7 @@ export function CapitalGoodsPane({ port, reader, locale }: SetupProps) {
   const [kind, setKind] = useState("");
   const [year, setYear] = useState("");
   const [movement, setMovement] = useState("");
+  const [movementLabel, setMovementLabel] = useState("");
   const [cuota, setCuota] = useState("");
   const [pct, setPct] = useState("");
   const [art108, setArt108] = useState("");
@@ -86,6 +91,59 @@ export function CapitalGoodsPane({ port, reader, locale }: SetupProps) {
   const pctParsed = parsePoints(pct);
   const acquired = wholeYear(year);
   const disposed = disposalYear.trim() ? wholeYear(disposalYear) : null;
+  // The purchases a good can name: the largest of the year typed, which is all
+  // that is decrypted, or with no year yet the movements the page has loaded.
+  const yearRows = useSetupRead(
+    port,
+    reader,
+    "ledger.list",
+    open && acquired !== null
+      ? {
+          filters: ["period=0A", `year=${acquired}`],
+          sort_by: "amount",
+          sort_order: "desc",
+          limit: LEDGER_PAGE_SIZE,
+        }
+      : null,
+    `capital-movements:${open ? (acquired ?? "") : ""}`,
+  ).read;
+  const yearResult = yearRows?.kind === "done" ? yearRows.result : null;
+  const declared = read?.kind === "done" ? read.result.rows : null;
+  const purchases = useMemo(() => {
+    const used = new Set(declared?.map((good) => good.acquisition_ledger_id));
+    const pool: readonly LedgerRow[] =
+      acquired === null ? (rows ?? []) : (yearResult?.rows ?? []);
+    return pool
+      .map((row) => row.transaction)
+      .filter(
+        (found) =>
+          found.direction === "OUTGOING" && !used.has(found.transaction_id),
+      )
+      .map((found) => ({
+        value: found.transaction_id,
+        label: facts(t, [
+          found.description,
+          formatDay(locale, found.date),
+          formatAmount(locale, found.amount),
+        ]),
+        keywords: [found.counterparty],
+        found,
+      }));
+  }, [acquired, declared, locale, rows, t, yearResult]);
+  const pickPurchase = (chosen: string) => {
+    const picked = purchases.find((option) => option.value === chosen);
+    if (!picked) return;
+    setMovement(chosen);
+    setMovementLabel(picked.label);
+    if (description.trim() === "") setDescription(picked.found.description);
+    if (year.trim() === "") setYear(picked.found.date.slice(0, 4));
+  };
+  // A good is acquired in the year of its purchase, so a new year drops the pick.
+  const changeYear = (next: string) => {
+    setYear(next);
+    setMovement("");
+    setMovementLabel("");
+  };
   const ready =
     identifier.trim() !== "" &&
     description.trim() !== "" &&
@@ -297,7 +355,7 @@ export function CapitalGoodsPane({ port, reader, locale }: SetupProps) {
                 <YearEditor
                   id={control.id}
                   value={year}
-                  onChange={setYear}
+                  onChange={changeYear}
                   invalid={control.invalid}
                   describedBy={control.describedBy}
                   required
@@ -306,18 +364,36 @@ export function CapitalGoodsPane({ port, reader, locale }: SetupProps) {
             </EditorField>
             <EditorField
               label={t("desktop.ledger.capital.movement")}
-              hint={t("desktop.ledger.capital.movement_hint")}
+              hint={
+                yearResult?.truncated
+                  ? t("desktop.ledger.capital.movement_cut", {
+                      count: LEDGER_PAGE_SIZE,
+                    })
+                  : t("desktop.ledger.capital.movement_hint")
+              }
             >
               {(control) => (
-                <TextEditor
-                  id={control.id}
-                  value={movement}
-                  onChange={setMovement}
-                  invalid={control.invalid}
-                  describedBy={control.describedBy}
-                  mono
-                  required
-                />
+                <Combobox
+                  label={t("desktop.ledger.capital.movement")}
+                  value={movement || null}
+                  options={purchases}
+                  emptyLabel={t("desktop.ledger.inspector.no_match")}
+                  onCommit={pickPurchase}
+                >
+                  <Button
+                    id={control.id}
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    aria-describedby={control.describedBy}
+                    className="ledger-capital-movement w-full justify-between font-normal"
+                  >
+                    <span className="truncate">
+                      {movementLabel || t("desktop.ledger.form.choose")}
+                    </span>
+                    <Icon name="chevronDown" size="xs" />
+                  </Button>
+                </Combobox>
               )}
             </EditorField>
             <EditorField

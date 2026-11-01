@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#desktop-ledger-editor'
 date: '2026-10-23'
-modified: '2026-10-31'
+modified: '2026-11-01'
 body_schema: 'body-v2'
-body_hash: 'sha256:7f96d6ca81e1a4682474929385af2db069f5ff28fbd6dc8992a9b22bbb46a5af'
+body_hash: 'sha256:3acaad80a5eaac28a90cc2479e6ddad629171a5e0eb15ff713341923db8e2459'
 related:
   - "[[2026-10-06-desktop-shell-capabilities-shell-profile-reads-adr]]"
   - "[[2026-10-04-desktop-shell-adr]]"
@@ -113,6 +113,18 @@ The host's closed list and the contract manifest both hold the ids below, and no
 - Inventory, writes: `ledger.inventory.correct`, `.describe`, `.movement.correct`, `.movement.reverse`, `.restore`, `.retire`.
 
 `ledger.evidence.reader-readiness` leaves the list; neither the host list nor the manifest holds it. Runtime request validation and exact-profile authority govern all of these. Evidence: `native/desktop/src-tauri/src/shell/ledger/admitted.rs:57-70` and `:105-119`.
+
+### Amendment 2026-10-31: the known-values read, and three register listings classed as reads
+
+Accepted by the user on 2026-10-31.
+
+`ledger.known-values` joins the closed list as a read. It takes the kinds it is asked for and returns, per kind, the most recent distinct values of the exact profile's whole history, each list capped, with `truncated` naming the kinds that hold more than they show. Each call decrypts the named sources under the operation's profile: no cache, index column or plaintext store holds these values. The CLI (`aeat app ledger known-values`) and the window use this one operation. A movement name joins an invoice's tax id only when the folded name maps to exactly one tax id.
+
+The window asks once, when a field first wants the values, and holds the answer in memory under the constraint above. Values staged and saved afterwards are added there rather than read again, and a re-read follows only a write it could not settle. A pick is draft text; it never fills classification, category, IVA category, operation type, rate or retention.
+
+`ledger.bienes_inversion.list`, `ledger.inventory.list` and `ledger.prorrata.list` are reads in the host's list and in their definitions: each publishes no effect and holds no commit action. `ledger.prorrata.list` gives each entry the reference the domain names for the percentage it holds in force, so the window does not compose one.
+
+Evidence: `src/cadrumo/application/ledger/known_values_operation.py`, `native/desktop/src-tauri/src/shell/ledger/admitted.rs`, `native/desktop/frontend/src/components/ledger/suggestions/SuggestionsProvider.tsx`, `src/cadrumo/domain/iva/prorrata.py`.
 
 ## Rationale
 

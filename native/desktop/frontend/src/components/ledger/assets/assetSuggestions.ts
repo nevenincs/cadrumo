@@ -12,7 +12,12 @@ import {
   useFieldSuggestions,
   useHeldInvoices,
 } from "../suggestions/SuggestionsProvider";
-import type { FieldKind, FormDraft, FormField } from "./assetFields";
+import {
+  statesReference,
+  type FieldKind,
+  type FormDraft,
+  type FormField,
+} from "./assetFields";
 import { purchaseInvoiceFacts } from "./assetWrites";
 
 /** The sibling fields a supplier pick can fill, by what the pick offers. */
@@ -29,9 +34,9 @@ const DESCRIPTOR_FACTS = [
 
 /**
  * The fields with what each offers: suppliers, tax ids, document numbers and
- * acquisition references from the invoices the page holds, and a new
- * element's name from the purchase it names. A fill goes only to a field
- * still empty.
+ * acquisition references from the invoices the page holds, the references the
+ * elements already state, and an element's name from the purchase it names. A
+ * fill goes only to a field still empty.
  */
 export function useAssetSuggestions({
   kind,
@@ -39,6 +44,7 @@ export function useAssetSuggestions({
   draft,
   set,
   purchase,
+  purchaseDescription,
 }: {
   kind: FieldKind;
   fields: readonly FormField[];
@@ -46,6 +52,8 @@ export function useAssetSuggestions({
   set(changes: FormDraft): void;
   /** The purchase a new element names as its acquisition. */
   purchase: AcquisitionCandidate | undefined;
+  /** How the ledger describes the purchase an element already owns. */
+  purchaseDescription: string | null;
 }): FormField[] {
   const names = useFieldSuggestions("supplier");
   const taxIds = useFieldSuggestions("supplier_tax_id");
@@ -56,17 +64,22 @@ export function useAssetSuggestions({
   const references = useFieldSuggestions("invoice_number", {
     invoiceKind: "received",
   });
+  const stated = useFieldSuggestions("asset_reference");
   const fillBeside = (picked: Suggestion) => {
     const entries = emptyFills(picked.fills, draft, SUPPLIER_SIBLINGS);
     if (entries.length > 0) set(Object.fromEntries(entries));
   };
-  const described = purchase?.description.trim() ?? "";
+  const described =
+    (kind === "element"
+      ? purchase?.description
+      : purchaseDescription
+    )?.trim() ?? "";
   const offers: Partial<Record<string, SuggestionProps>> = {
     supplier_name: { ...names, onPick: fillBeside },
     supplier_tax_id: { ...taxIds, onPick: fillBeside },
     document_number: { ...numbers, onPick: fillBeside },
     acquisition_reference: references,
-    ...(kind === "element" && described !== ""
+    ...((kind === "element" || kind === "descriptor") && described !== ""
       ? {
           name: {
             suggestions: [{ value: described, label: described }],
@@ -76,7 +89,8 @@ export function useAssetSuggestions({
       : {}),
   };
   return fields.map((field) => {
-    const found = offers[field.key];
+    const found =
+      offers[field.key] ?? (statesReference(field.key) ? stated : undefined);
     return found === undefined ? field : { ...field, offers: found };
   });
 }

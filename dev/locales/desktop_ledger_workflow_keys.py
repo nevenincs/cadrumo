@@ -944,6 +944,8 @@ DESKTOP_LEDGER_WORKFLOW_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.ledger.prorrata.refusal.seed_source_absent",
         "desktop.ledger.prorrata.refusal.seed_source_blocked",
         "desktop.ledger.prorrata.refusal.validation",
+        "desktop.ledger.prorrata.kind.definitiva",
+        "desktop.ledger.prorrata.kind.provisional",
         "desktop.ledger.prorrata.regime.especial",
         "desktop.ledger.prorrata.regime.general",
         "desktop.ledger.prorrata.sector",

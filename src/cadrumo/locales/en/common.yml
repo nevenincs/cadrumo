@@ -1710,6 +1710,7 @@ desktop:
         mueble: Movable
       kind_label: Kind
       movement: Purchase
+      movement_cut: The {count} largest of that year
       movement_hint: The ledger movement that paid for it
       prorrata: Initial prorrata
       refusal:
@@ -1865,7 +1866,7 @@ desktop:
       ratio_missing: No usage ratio for {category}
       ratio_staged: Usage ratio · {category}
       ratio_unread: Usage ratios not read
-      search_category: Search the categories
+      search_category: Search
       select_range: Select range
       share: Business share
       share_categories: Only categories that take a business-use share
@@ -2292,7 +2293,7 @@ desktop:
       reverted_movement: Movement reverted
       row_changes: 'Unsaved changes: {count}'
       row_unsaved: Has unsaved changes
-      search: Search {column}
+      search: Search
       step:
         add_draft: new movement
         bulk_set: classification
@@ -3236,7 +3237,7 @@ desktop:
       save: Save
       saved: Invoice {number} saved
       search: Search invoices
-      search_placeholder: Number, name, tax ID
+      search_placeholder: Search
       situacion:
         s1: Spain, outside the Basque Country and Navarre
         s2: Basque Country or Navarre
@@ -3438,6 +3439,9 @@ desktop:
         seed: Seed {ejercicio} from the prior year
         seed_sector: Seed a sector's provisional prorrata for {ejercicio}
         settle_sector: Settle a sector's definitive prorrata for {ejercicio}
+      kind:
+        definitiva: Final
+        provisional: Provisional
       letra:
         a: a · different CNAE groups
         b: b · special regimes
@@ -4247,6 +4251,7 @@ desktop:
       Refresh to check them.
     saving: Saving…
     search: Search profile details
+    search_placeholder: Search
     sections: Sections
     signed_out: Sign in to view and edit your profile.
     title: Your profile
@@ -6539,11 +6544,6 @@ tui:
       disposal_reason: 'Reason: `sale`, `part_exchange`, `theft`, `destruction`, `scrapping`
         or `withdrawal`'
       dispose: Record baja
-      filing: Prepare tax form transfer
-      forecast: Calculate forecast
-      form_options: Form options
-      free_amount: Optional accelerated depreciation amount
-      in_service_date: In-service date (YYYY-MM-DD), replaces the revision's date
       errors:
         amount_invalid: Write the amount in digits only, with a point for the decimals,
           for example 1500.00.
@@ -6559,6 +6559,11 @@ tui:
         unexpected: The action could not be completed and nothing was changed. Try
           again.
         year_invalid: Write the year with four digits, for example 2025.
+      filing: Prepare tax form transfer
+      forecast: Calculate forecast
+      form_options: Form options
+      free_amount: Optional accelerated depreciation amount
+      in_service_date: In-service date (YYYY-MM-DD), replaces the revision's date
       inspect: Inspect
       list: List elements
       method: 'Amortisation method: linear, constant_percentage, sum_of_digits, approved_plan

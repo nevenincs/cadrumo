@@ -770,9 +770,21 @@ export function AssetForm({
   const further = candidates.find(
     (candidate) => candidate.transaction_id === form.draft[FURTHER_PURCHASE],
   );
+  const ownedPurchase = base === null ? null : purchaseOf(base.revision);
+  // The element owns its purchase, so it is no longer a candidate: the ledger
+  // says how that one movement is described.
+  const ownedRead = useLedgerRead(
+    port,
+    reader,
+    "ledger.view",
+    kind === "descriptor" && ownedPurchase !== null
+      ? { transaction_prefix: ownedPurchase }
+      : null,
+    `purchase:${ownedPurchase ?? ""}`,
+  );
   usePurchasePrefill({
     active: kind === "descriptor",
-    purchase: base === null ? null : purchaseOf(base.revision),
+    purchase: ownedPurchase,
     stated: context.descriptor,
     draft: form.draft,
     set: setDraft,
@@ -783,6 +795,10 @@ export function AssetForm({
     draft: form.draft,
     set: setDraft,
     purchase: picked,
+    purchaseDescription:
+      ownedRead.read?.kind === "done"
+        ? ownedRead.read.result.transaction.description
+        : null,
   });
   const answered = answer(fields, form.draft, act.delta ? form.initial : null);
   const view = viewOf(write.last, neverReused);

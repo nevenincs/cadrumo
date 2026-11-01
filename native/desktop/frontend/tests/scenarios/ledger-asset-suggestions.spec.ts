@@ -87,6 +87,18 @@ test("a tax id picked fills the empty supplier name", async ({
   await expect(input(target, "supplier_name")).toHaveValue(SUPPLIER);
 });
 
+test("the description offers the name of the purchase the element owns", async ({
+  page: target,
+}) => {
+  await openDescription(target);
+  const name = input(target, "name");
+  await name.click();
+  await name.fill("");
+  await expect(
+    target.getByRole("option").filter({ hasText: "Compra de la furgoneta" }),
+  ).toBeVisible();
+});
+
 test("the suggestions reach no browser storage", async ({ page: target }) => {
   await openDescription(target);
   await pickSupplier(target);

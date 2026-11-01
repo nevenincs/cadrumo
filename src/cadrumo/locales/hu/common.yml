@@ -1730,6 +1730,7 @@ desktop:
         mueble: Ingó
       kind_label: Fajta
       movement: Vásárlás
+      movement_cut: Az adott év {count} legnagyobb tétele
       movement_hint: A napló tétele, amellyel kifizetted
       prorrata: Kezdeti prorrata
       refusal:
@@ -1883,7 +1884,7 @@ desktop:
       ratio_missing: 'Nincs használati arány ehhez: {category}'
       ratio_staged: Használati arány · {category}
       ratio_unread: A használati arányok nincsenek beolvasva
-      search_category: Keress a kategóriák között
+      search_category: Keresés
       select_range: Tartomány kijelölése
       share: Üzleti rész
       share_categories: Csak üzleti használati arányt elfogadó kategóriák
@@ -2314,7 +2315,7 @@ desktop:
       reverted_movement: Tétel visszaállítva
       row_changes: 'Mentetlen változások: {count}'
       row_unsaved: Mentetlen változások
-      search: 'Keresés: {column}'
+      search: Keresés
       step:
         add_draft: új tétel
         bulk_set: besorolás
@@ -3263,7 +3264,7 @@ desktop:
       save: Mentés
       saved: '{number} számla mentve'
       search: Számlák keresése
-      search_placeholder: Szám, név, adószám
+      search_placeholder: Keresés
       situacion:
         s1: Spanyolország, Baszkföld és Navarra kivételével
         s2: Baszkföld vagy Navarra
@@ -3465,6 +3466,9 @@ desktop:
         seed: '{ejercicio} átvétele az előző évből'
         seed_sector: 'Ágazat ideiglenes prorratájának átvétele: {ejercicio}'
         settle_sector: 'Ágazat végleges prorratájának elszámolása: {ejercicio}'
+      kind:
+        definitiva: Végleges
+        provisional: Ideiglenes
       letra:
         a: a · eltérő CNAE-csoportok
         b: b · különleges rendszerek
@@ -4291,6 +4295,7 @@ desktop:
       Frissíts az ellenőrzéshez.
     saving: Mentés…
     search: Profiladatok keresése
+    search_placeholder: Keresés
     sections: Szakaszok
     signed_out: Jelentkezz be a profilod megtekintéséhez és szerkesztéséhez.
     title: A profilod
@@ -6645,11 +6650,6 @@ tui:
       disposal_reason: 'Ok: `sale`, `part_exchange`, `theft`, `destruction`, `scrapping`
         vagy `withdrawal`'
       dispose: Kivezetés rögzítése
-      filing: Adónyomtatványra átvitel előkészítése
-      forecast: Előrejelzés kiszámítása
-      form_options: Űrlapbeállítások
-      free_amount: Szabad értékcsökkenés összege (nem kötelező)
-      in_service_date: Üzembe helyezés napja (ÉÉÉÉ-HH-NN), felülírja a revízióét
       errors:
         amount_invalid: Az összeget csak számjegyekkel, tizedesponttal add meg, például
           1500.00.
@@ -6666,6 +6666,11 @@ tui:
         unexpected: A műveletet nem sikerült végrehajtani, és semmi sem változott.
           Próbáld újra.
         year_invalid: Az évet négy számjeggyel add meg, például 2025.
+      filing: Adónyomtatványra átvitel előkészítése
+      forecast: Előrejelzés kiszámítása
+      form_options: Űrlapbeállítások
+      free_amount: Szabad értékcsökkenés összege (nem kötelező)
+      in_service_date: Üzembe helyezés napja (ÉÉÉÉ-HH-NN), felülírja a revízióét
       inspect: Megtekintés
       list: Elemek listája
       method: 'Értékcsökkenési leírás módja: linear, constant_percentage, sum_of_digits,

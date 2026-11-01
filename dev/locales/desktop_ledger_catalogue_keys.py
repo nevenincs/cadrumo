@@ -571,6 +571,7 @@ DESKTOP_LEDGER_CATALOGUE_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.ledger.capital.kind.mueble",
         "desktop.ledger.capital.kind_label",
         "desktop.ledger.capital.movement",
+        "desktop.ledger.capital.movement_cut",
         "desktop.ledger.capital.movement_hint",
         "desktop.ledger.capital.prorrata",
         "desktop.ledger.capital.refusal.disposal_incomplete",

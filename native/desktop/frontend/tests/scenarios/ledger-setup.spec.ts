@@ -45,6 +45,36 @@ async function openLedger(target: Page, scheme?: "light" | "dark") {
   await expect(page(target).getByRole("grid")).toBeVisible();
 }
 
+test("a capital good names its purchase from the year typed", async ({
+  page: target,
+}) => {
+  await openLedger(target);
+  await openSetup(target, "registers");
+  await area(target, "desktop.ledger.registers.area.capital");
+  await target.locator(".ledger-capital-add").click();
+  const form = target.locator(".ledger-capital-form");
+  const description = field(form, "desktop.ledger.capital.description");
+  const year = field(form, "desktop.ledger.capital.year");
+  const cuota = field(form, "desktop.ledger.capital.cuota");
+  await year.fill("2026");
+  await form.locator(".ledger-capital-movement").click();
+  const options = target.getByRole("listbox").getByRole("option");
+  await expect(options.first()).toBeVisible();
+  const picked = await options.first().innerText();
+  await options.first().click();
+  await expect(form.locator(".ledger-capital-movement")).toContainText(
+    picked.split("\n")[0]!.slice(0, 12),
+  );
+  await expect(description).not.toHaveValue("");
+  await expect(year).toHaveValue("2026");
+  // Nothing states that a movement's IVA is the good's cuota soportada.
+  await expect(cuota).toHaveValue("");
+  await year.fill("2025");
+  await expect(form.locator(".ledger-capital-movement")).toContainText(
+    label("desktop.ledger.form.choose"),
+  );
+});
+
 async function openSetup(
   target: Page,
   section: "rules" | "registers" | "health",

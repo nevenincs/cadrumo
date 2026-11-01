@@ -219,16 +219,47 @@ test("in a grid cell, Enter keeps what was typed and Escape closes only the list
   await expect(cell).toContainText(typed);
 });
 
-test("signing in to another profile holds nothing from the last one", async ({
+test("the history is asked for once, however many fields want it", async ({
   page: target,
 }) => {
-  const catalogueReads = () =>
+  const knownReads = () =>
     target.evaluate(
       () =>
         (
           (window as unknown as { __scenarioHostCalls?: string[] })
             .__scenarioHostCalls ?? []
-        ).filter((call) => call === "ledger ledger.invoice.list").length,
+        ).filter((call) => call === "ledger ledger.known-values").length,
+    );
+  await openGrid(target);
+  expect(await knownReads()).toBe(0);
+  await typeInCell(target, "counterparty", "Ase");
+  await expect(
+    list(target).getByRole("option").filter({
+      hasText: "Asesoría Antigua, S.L.",
+    }),
+  ).toBeVisible();
+  await expect.poll(knownReads).toBe(1);
+  await target.keyboard.press("Escape");
+  await target.keyboard.press("Escape");
+  await typeInCell(target, "description", "Cuota");
+  await expect(
+    list(target).getByRole("option").filter({
+      hasText: "Cuota del colegio profesional",
+    }),
+  ).toBeVisible();
+  expect(await knownReads()).toBe(1);
+});
+
+test("signing in to another profile holds nothing from the last one", async ({
+  page: target,
+}) => {
+  const knownReads = () =>
+    target.evaluate(
+      () =>
+        (
+          (window as unknown as { __scenarioHostCalls?: string[] })
+            .__scenarioHostCalls ?? []
+        ).filter((call) => call === "ledger ledger.known-values").length,
     );
   await openGrid(target);
   const other = await grid(target)
@@ -238,7 +269,7 @@ test("signing in to another profile holds nothing from the last one", async ({
     .innerText();
   await typeInCell(target, "counterparty", other.slice(0, 4));
   await expect(list(target).getByRole("option").first()).toBeVisible();
-  await expect.poll(catalogueReads).toBeGreaterThan(0);
+  await expect.poll(knownReads).toBe(1);
   await target.keyboard.press("Escape");
   await target.keyboard.press("Escape");
 
@@ -281,7 +312,7 @@ test("signing in to another profile holds nothing from the last one", async ({
   await expect(grid(target)).toBeVisible();
 
   // The new page asks its own reader again before it can offer anything.
-  const before = await catalogueReads();
+  const before = await knownReads();
   await typeInCell(target, "counterparty", other.slice(0, 4));
-  await expect.poll(catalogueReads).toBe(before + 1);
+  await expect.poll(knownReads).toBe(before + 1);
 });
