@@ -73,21 +73,17 @@ def test_identity_period_and_payment_have_separate_reading_sections(scheme: str)
     assert len(placed) == len(set(placed)), "A field must not become editable in two sections"
 
 
-@pytest.mark.parametrize("scheme,count", [("exterior", 2), ("union", 5), ("importacion", 2)])
-def test_detail_grids_preserve_all_declared_export_bindings(scheme: str, count: int) -> None:
-    revision = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/369")).revisions[f"esquema-{scheme}"]
-    (layout,) = revision.form_layouts
-    assert form_layout_failures(revision) == ()
-    grids = [
+def _detail_grids(layout) -> list:
+    return [
         block
         for page in layout.pages
         for section in page.sections
         for block in section.blocks
         if isinstance(block, FormGridBlock) and block.id != "resultado-estados"
     ]
-    assert len(grids) == count
-    assert all(len(grid.rows) == 28 for grid in grids)
-    assert all([row.key for row in grid.rows] == [f"fila-{i}" for i in range(1, 29)] for grid in grids)
+
+
+def _assert_detail_bindings_equal_export_bindings(revision, layout, grids) -> None:
     expected = {
         field.binding
         for export in revision.export_layouts
@@ -104,6 +100,9 @@ def test_detail_grids_preserve_all_declared_export_bindings(scheme: str, count: 
         if isinstance(block, FormFieldBlock) and block.binding_id is not None
     )
     assert actual == expected
+
+
+def _assert_detail_review_notes(layout, scheme: str) -> None:
     assert layout.review.state == "generated"
     if scheme == "exterior":
         assert "Additional-payment page remains unimplemented" in (layout.review.notes or "")
@@ -112,6 +111,19 @@ def test_detail_grids_preserve_all_declared_export_bindings(scheme: str, count: 
         assert len(layout.pages) == 3
     else:
         assert "settlement" in (layout.review.notes or "")
+
+
+@pytest.mark.parametrize("scheme,count", [("exterior", 2), ("union", 5), ("importacion", 2)])
+def test_detail_grids_preserve_all_declared_export_bindings(scheme: str, count: int) -> None:
+    revision = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/369")).revisions[f"esquema-{scheme}"]
+    (layout,) = revision.form_layouts
+    assert form_layout_failures(revision) == ()
+    grids = _detail_grids(layout)
+    assert len(grids) == count
+    assert all(len(grid.rows) == 28 for grid in grids)
+    assert all([row.key for row in grid.rows] == [f"fila-{i}" for i in range(1, 29)] for grid in grids)
+    _assert_detail_bindings_equal_export_bindings(revision, layout, grids)
+    _assert_detail_review_notes(layout, scheme)
 
 
 def test_union_establishment_and_dispatch_rows_never_interleave() -> None:
