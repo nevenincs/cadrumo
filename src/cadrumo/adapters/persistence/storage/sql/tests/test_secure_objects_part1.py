@@ -8,6 +8,8 @@ from datetime import UTC, datetime, timedelta, timezone
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
+from sqlalchemy import String
 
 from ......core.classification.policies import SensitivityClass
 from ......core.errors.hierarchy import CoreValidationError
@@ -22,6 +24,7 @@ from ...errors import (
 )
 from ...tests.engine_bootstrap import bootstrap_sqlite_engine
 from ...tests.ephemeral_bucket_session import EphemeralBucketSession
+from ..orm import SecureObjectRow
 from ..secure_object_records import SecureObjectRecord, SecureObjectUnreadable
 from ..secure_objects import SecureObjectRepository
 from ._secure_objects_support import (
@@ -31,6 +34,27 @@ from ._secure_objects_support import (
 from .raw_key_writer import save_with_raw_key
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
+
+
+def test_write_provenance_matches_the_persisted_column_width() -> None:
+    column_type = SecureObjectRow.__table__.c.write_provenance.type
+    assert isinstance(column_type, String)
+    assert column_type.length == 255
+    fields = {
+        "namespace": "test-provenance",
+        "object_key": "one",
+        "classification": SensitivityClass.FINANCIAL,
+        "schema_version": 1,
+        "written_at": datetime(2026, 5, 1, tzinfo=UTC),
+        "payload": b"body",
+    }
+    assert SecureObjectWrite.model_validate({**fields, "write_provenance": "p" * 255}).write_provenance == "p" * 255
+    with pytest.raises(ValidationError) as refused:
+        SecureObjectWrite.model_validate({**fields, "write_provenance": "p" * 256})
+
+    (violation,) = refused.value.errors()
+    assert violation["loc"] == ("write_provenance",)
+    assert violation["type"] == "string_too_long"
 
 
 def test_revision_id_round_trips_for_self_consistency_check(tmp_path: Path) -> None:

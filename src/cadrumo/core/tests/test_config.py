@@ -27,6 +27,7 @@ from types import UnionType
 from typing import Union, get_args, get_origin
 
 import pytest
+from pydantic import ValidationError
 
 from ...tests.env_scope import isolated_aeat_env as _isolated_aeat_env
 from ...tests.env_scope import settings_without_env_file
@@ -45,6 +46,20 @@ from ..storage_taxonomy import StorageCategory
 from ..storage_taxonomy_locations import storage_location
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.usefixtures("operation")]
+
+
+def test_browser_locale_requires_at_least_two_characters() -> None:
+    """Preserve the documented language-tag floor without claiming full parsing."""
+    assert Settings(cadrumo_browser_locale="es").cadrumo_browser_locale == "es"
+    assert Settings(cadrumo_browser_locale="es-ES").cadrumo_browser_locale == "es-ES"
+
+    with pytest.raises(ValidationError) as refused:
+        Settings(cadrumo_browser_locale="x")
+
+    (violation,) = refused.value.errors()
+    assert violation["loc"] == ("cadrumo_browser_locale",)
+    assert violation["type"] == "string_too_short"
+
 
 ENV_EXAMPLE_PATH = REPO_ROOT / "env" / ".env.example"
 

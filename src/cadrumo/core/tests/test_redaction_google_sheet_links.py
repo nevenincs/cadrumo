@@ -23,6 +23,26 @@ def test_exact_text_success_line_preserves_copyable_link() -> None:
     assert redact_for_cli_output(f"callback\t{_URL}") == "callback\thttps://docs.google.com"
 
 
+@pytest.mark.parametrize("length", [10, 200])
+def test_sheet_success_exemption_admits_both_identifier_boundaries(length: int) -> None:
+    sheet_id = "a" * length
+    url = _URL.replace(_ID, sheet_id)
+    payload = {"spreadsheet_id": sheet_id, "spreadsheet_url": url}
+
+    assert redact_structured_for_cli_output(payload) == payload
+    assert redact_for_cli_output(f"spreadsheet_url\t{url}") == f"spreadsheet_url\t{url}"
+
+
+@pytest.mark.parametrize("length", [9, 201])
+def test_invalid_sheet_identifier_has_no_exemption_even_with_matching_sibling(length: int) -> None:
+    sheet_id = "a" * length
+    url = _URL.replace(_ID, sheet_id)
+    payload = {"spreadsheet_id": sheet_id, "spreadsheet_url": url}
+
+    assert redact_structured_for_cli_output(payload)["spreadsheet_url"] == "https://docs.google.com"
+    assert redact_for_cli_output(f"spreadsheet_url\t{url}") == "spreadsheet_url\thttps://docs.google.com"
+
+
 @pytest.mark.parametrize(
     "url",
     [
