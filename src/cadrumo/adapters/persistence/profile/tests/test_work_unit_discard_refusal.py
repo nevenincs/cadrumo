@@ -17,8 +17,6 @@ import pytest
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.modelo.action_errors import WorkUnitMutationRefusedError
 from cadrumo.application.modelo.work_lifecycle import create_work_unit, discard_work_unit, list_work_units
@@ -27,12 +25,8 @@ from cadrumo.core.operator_action_enums import NoRecoveryOutcome
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.modelos.work_unit import WorkUnit, WorkUnitState
-from cadrumo.domain.user_profile.tests.general_regime_facts import GENERAL_REGIME_NATURAL_PERSON_FACTS
-from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
-)
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+
+from .ready_profile_support import seed_ready_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -43,35 +37,13 @@ _FILING_YEAR = 2026
 _PERIOD_CODE = "1T"
 _REVISION_ID = "2019-y-siguientes"
 
-_READY_PROFILE_FACTS: tuple[UserProfileFact, ...] = (
-    UserProfileFact(path="identity.tax_id", value="00000000T"),
-    UserProfileFact(path="identity.name", value="Test Operator"),
-    UserProfileFact(path="identity.surnames", value="Discard Refusal"),
-    *GENERAL_REGIME_NATURAL_PERSON_FACTS,
-    UserProfileFact(path="activities.description", value="economic activity"),
-    UserProfileFact(path="provenance.source", value="manual_cli"),
-)
-
-
-def _seed_ready_profile(objects: SecureObjectRepository, *, bucket_id: str) -> None:
-    seed_test_profile_record(
-        _create_profile_record_for_test(
-            setup_state=ProfileSetupState.COMPLETE,
-            profile_id=bucket_id,
-            facts=_READY_PROFILE_FACTS,
-            created_at=_T0,
-            updated_at=_T0,
-            context=_profile_creation_context_for_test(),
-        ),
-    )
-
 
 @pytest.fixture
 def discard_repos(tmp_path: Path) -> Iterator[tuple[str, WorkUnitCatalogueRepository]]:
     """Yield a real work-unit repository over one isolated runtime profile."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_DISCARD_PROFILE_ID) as profile:
         objects = profile.repository
-        _seed_ready_profile(objects, bucket_id=profile.bucket_id)
+        seed_ready_profile(bucket_id=profile.bucket_id, surnames="Discard Refusal", at=_T0)
         yield profile.bucket_id, WorkUnitCatalogueRepository(objects=objects)
 
 
