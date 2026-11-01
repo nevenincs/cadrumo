@@ -20,7 +20,7 @@ from ..adapters.worker_arguments import validated_worker_arguments
 class _ParentPoll(Protocol):
     """Kernel exit events consumed by the Linux guardian."""
 
-    def register(self, fd: int, eventmask: int = ..., /) -> None:
+    def register(self, fd: int, _eventmask: int = ..., /) -> None:
         """Add one process handle whose exit ends the wait."""
         ...
 
