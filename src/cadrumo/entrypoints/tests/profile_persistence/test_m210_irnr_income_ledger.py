@@ -350,6 +350,110 @@ def test_secure_store_keeps_explicit_classification_and_source_mutation_changes_
     assert persisted_foreign.m210_income_classification == _classification("01", Decimal("500.00"))
 
 
+def _calculate_m210(work_unit_id, *, casilla_inputs, tipo_renta, **options):
+    """Run the bucket-aggregation calculation under a fresh pinned operation."""
+    with bundled_indexed_authority().operation() as operation:
+        return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+            work_unit_id,
+            ports=build_calculation_action_ports(bucket_id=_BUCKET_ID, operation=operation),
+            actor="operator",
+            casilla_inputs=casilla_inputs,
+            text_casilla_inputs={"tipo_renta": tipo_renta},
+            clock=_CLOCK,
+            **options,
+        )
+
+
+def _refused_m210_mode_requests() -> tuple[dict[str, object], ...]:
+    """Requests that mix manual and ledger gross-income authority and must be refused."""
+    return (
+        {
+            "casilla_inputs": {"rendimientos_integros": Decimal("777.00")},
+            "tipo_renta": "pension",
+            "m210_official_tipo_renta_code": "01",
+            "m210_gross_income_source_mode": M210GrossIncomeSourceMode.MANUAL,
+            "detail_rows": (_annual_evidence_row(),),
+        },
+        {
+            "casilla_inputs": {"rendimientos_integros": Decimal("777.00")},
+            "tipo_renta": "general",
+            "m210_official_tipo_renta_code": "01",
+            "m210_gross_income_source_mode": M210GrossIncomeSourceMode.LEDGER,
+            "detail_rows": (_annual_evidence_row(),),
+        },
+        {
+            "casilla_inputs": {},
+            "tipo_renta": "general",
+            "m210_gross_income_source_mode": M210GrossIncomeSourceMode.LEDGER,
+        },
+        {
+            "casilla_inputs": {},
+            "tipo_renta": "pension",
+            "m210_official_tipo_renta_code": "01",
+            "m210_gross_income_source_mode": M210GrossIncomeSourceMode.LEDGER,
+        },
+        {
+            "casilla_inputs": {},
+            "tipo_renta": "general",
+            "m210_official_tipo_renta_code": "01",
+            "m210_gross_income_source_mode": M210GrossIncomeSourceMode.LEDGER,
+            "detail_rows": (_annual_evidence_row(),),
+        },
+    )
+
+
+def _assert_manual_mode_calculation(manual_result, manual) -> None:
+    assert manual.m210_gross_income_source_mode is M210GrossIncomeSourceMode.MANUAL
+    assert manual.casilla_values["rendimientos_integros"] == Decimal("777.00")
+    assert manual.source_transaction_ids == ()
+    assert not any(
+        diagnostic.reason == "unhandled_binding_source" and diagnostic.source_kind == "ledger_irnr_income_aggregation"
+        for diagnostic in manual_result.source_diagnostics
+    )
+
+
+def _assert_ledger_mode_calculation(ledger, manual, es_id) -> None:
+    assert ledger.m210_gross_income_source_mode is M210GrossIncomeSourceMode.LEDGER
+    assert ledger.casilla_values["rendimientos_integros"] == Decimal("900.00")
+    assert ledger.source_transaction_ids == (es_id,)
+    assert ledger.calculation_revision_id != manual.calculation_revision_id
+    assert {source.source_ref for source in ledger.source_provenance} == {f"transaction:{es_id}"}
+    assert len(ledger.detail_rows) == 1
+    derived_row = ledger.detail_rows[0]
+    assert isinstance(derived_row, Modelo210AgrupacionRentaRow)
+    assert derived_row.source_id == es_id
+    assert derived_row.importe == ledger.casilla_values["rendimientos_integros"]
+    assert derived_row.tipo_gravamen == Decimal("0.24")
+    assert derived_row.pagador_id == "ES-PAGADOR-210"
+    assert derived_row.bien_derecho_id == "ES-ACTIVO-210"
+
+
+def _assert_code_35_ledger_calculation(ledger_code_35, code_35_id) -> None:
+    assert ledger_code_35.source_transaction_ids == (code_35_id,)
+    assert len(ledger_code_35.detail_rows) == 1
+    derived_code_35_row = ledger_code_35.detail_rows[0]
+    assert isinstance(derived_code_35_row, Modelo210AgrupacionRentaRow)
+    assert derived_code_35_row.tipo_renta_code == "35"
+    assert derived_code_35_row.pagador_mode == required_m210_payer_mode_for_code(
+        "35",
+        effective_date=_DEVENGO_DATE,
+    )
+    assert derived_code_35_row.pagador_id is None
+
+
+def _assert_ledger_evidence_and_staleness(
+    ledger_evidence, ledger, classification_staleness, jurisdiction_staleness, es_id
+) -> None:
+    evidence_row = ledger_evidence.rows[0]
+    assert evidence_row.source_jurisdiction == "ES"
+    assert evidence_row.m210_official_tipo_renta_code == "01"
+    assert evidence_row.m210_gross_income_amount == ledger.casilla_values["rendimientos_integros"]
+    assert evidence_row.m210_payer_id == "ES-PAGADOR-210"
+    assert "trlirnr-rdleg-5-2004:art-13.1" in evidence_row.legal_refs
+    assert classification_staleness.changed == (es_id,)
+    assert jurisdiction_staleness.changed == (es_id,)
+
+
 def test_m210_gross_income_source_mode_keeps_manual_and_ledger_authority_exclusive(
     tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
@@ -399,87 +503,25 @@ def test_m210_gross_income_source_mode_keeps_manual_and_ledger_authority_exclusi
             operation=operation,
         )
 
-        with bundled_indexed_authority().operation() as operation:
-            manual_result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
-                work_unit.work_unit_id,
-                ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
-                actor="operator",
-                casilla_inputs={"rendimientos_integros": Decimal("777.00")},
-                text_casilla_inputs={"tipo_renta": "general"},
-                m210_official_tipo_renta_code="01",
-                m210_gross_income_source_mode=M210GrossIncomeSourceMode.MANUAL,
-                detail_rows=(_annual_evidence_row(),),
-                clock=_CLOCK,
-            )
+        manual_result = _calculate_m210(
+            work_unit.work_unit_id,
+            casilla_inputs={"rendimientos_integros": Decimal("777.00")},
+            tipo_renta="general",
+            m210_official_tipo_renta_code="01",
+            m210_gross_income_source_mode=M210GrossIncomeSourceMode.MANUAL,
+            detail_rows=(_annual_evidence_row(),),
+        )
         manual = manual_result.revision
-        with pytest.raises(ModeloAggregationBindingError), bundled_indexed_authority().operation() as operation:
-            calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
-                work_unit.work_unit_id,
-                ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
-                actor="operator",
-                casilla_inputs={"rendimientos_integros": Decimal("777.00")},
-                text_casilla_inputs={"tipo_renta": "pension"},
-                m210_official_tipo_renta_code="01",
-                m210_gross_income_source_mode=M210GrossIncomeSourceMode.MANUAL,
-                detail_rows=(_annual_evidence_row(),),
-                clock=_CLOCK,
-            )
-        with pytest.raises(ModeloAggregationBindingError), bundled_indexed_authority().operation() as operation:
-            calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
-                work_unit.work_unit_id,
-                ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
-                actor="operator",
-                casilla_inputs={"rendimientos_integros": Decimal("777.00")},
-                text_casilla_inputs={"tipo_renta": "general"},
-                m210_official_tipo_renta_code="01",
-                m210_gross_income_source_mode=M210GrossIncomeSourceMode.LEDGER,
-                detail_rows=(_annual_evidence_row(),),
-                clock=_CLOCK,
-            )
-        with pytest.raises(ModeloAggregationBindingError), bundled_indexed_authority().operation() as operation:
-            calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
-                work_unit.work_unit_id,
-                ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
-                actor="operator",
-                casilla_inputs={},
-                text_casilla_inputs={"tipo_renta": "general"},
-                m210_gross_income_source_mode=M210GrossIncomeSourceMode.LEDGER,
-                clock=_CLOCK,
-            )
-        with pytest.raises(ModeloAggregationBindingError), bundled_indexed_authority().operation() as operation:
-            calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
-                work_unit.work_unit_id,
-                ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
-                actor="operator",
-                casilla_inputs={},
-                text_casilla_inputs={"tipo_renta": "pension"},
-                m210_official_tipo_renta_code="01",
-                m210_gross_income_source_mode=M210GrossIncomeSourceMode.LEDGER,
-                clock=_CLOCK,
-            )
-        with pytest.raises(ModeloAggregationBindingError), bundled_indexed_authority().operation() as operation:
-            calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
-                work_unit.work_unit_id,
-                ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
-                actor="operator",
-                casilla_inputs={},
-                text_casilla_inputs={"tipo_renta": "general"},
-                m210_official_tipo_renta_code="01",
-                m210_gross_income_source_mode=M210GrossIncomeSourceMode.LEDGER,
-                detail_rows=(_annual_evidence_row(),),
-                clock=_CLOCK,
-            )
-        with bundled_indexed_authority().operation() as operation:
-            ledger = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
-                work_unit.work_unit_id,
-                ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
-                actor="operator",
-                casilla_inputs={},
-                text_casilla_inputs={"tipo_renta": "general"},
-                m210_official_tipo_renta_code="01",
-                m210_gross_income_source_mode=M210GrossIncomeSourceMode.LEDGER,
-                clock=_CLOCK,
-            ).revision
+        for refused in _refused_m210_mode_requests():
+            with pytest.raises(ModeloAggregationBindingError):
+                _calculate_m210(work_unit.work_unit_id, **refused)
+        ledger = _calculate_m210(
+            work_unit.work_unit_id,
+            casilla_inputs={},
+            tipo_renta="general",
+            m210_official_tipo_renta_code="01",
+            m210_gross_income_source_mode=M210GrossIncomeSourceMode.LEDGER,
+        ).revision
         ledger_snapshot = compute_ledger_filing_snapshot(
             source_transaction_ids=ledger.source_transaction_ids,
             catalogue=transaction_repository.load(),
@@ -509,17 +551,13 @@ def test_m210_gross_income_source_mode_keeps_manual_and_ledger_authority_exclusi
             clock=_CLOCK,
             operation=operation,
         )
-        with bundled_indexed_authority().operation() as operation:
-            ledger_code_35 = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
-                code_35_work_unit.work_unit_id,
-                ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
-                actor="operator",
-                casilla_inputs={},
-                text_casilla_inputs={"tipo_renta": "general"},
-                m210_official_tipo_renta_code="35",
-                m210_gross_income_source_mode=M210GrossIncomeSourceMode.LEDGER,
-                clock=_CLOCK,
-            ).revision
+        ledger_code_35 = _calculate_m210(
+            code_35_work_unit.work_unit_id,
+            casilla_inputs={},
+            tipo_renta="general",
+            m210_official_tipo_renta_code="35",
+            m210_gross_income_source_mode=M210GrossIncomeSourceMode.LEDGER,
+        ).revision
         # The verify half of this test moved to
         # test_m210_ledger_mode_evidence_bundle_records_no_manual_gross_income.
         # It cannot run here any more, and the two guards that make it
@@ -570,44 +608,12 @@ def test_m210_gross_income_source_mode_keeps_manual_and_ledger_authority_exclusi
             )
         jurisdiction_staleness = evaluate_ledger_filing_staleness(jurisdiction_snapshot, transaction_repository.load())
 
-    assert manual.m210_gross_income_source_mode is M210GrossIncomeSourceMode.MANUAL
-    assert manual.casilla_values["rendimientos_integros"] == Decimal("777.00")
-    assert manual.source_transaction_ids == ()
-    assert not any(
-        diagnostic.reason == "unhandled_binding_source" and diagnostic.source_kind == "ledger_irnr_income_aggregation"
-        for diagnostic in manual_result.source_diagnostics
+    _assert_manual_mode_calculation(manual_result, manual)
+    _assert_ledger_mode_calculation(ledger, manual, es_id)
+    _assert_code_35_ledger_calculation(ledger_code_35, code_35_id)
+    _assert_ledger_evidence_and_staleness(
+        ledger_evidence, ledger, classification_staleness, jurisdiction_staleness, es_id
     )
-    assert ledger.m210_gross_income_source_mode is M210GrossIncomeSourceMode.LEDGER
-    assert ledger.casilla_values["rendimientos_integros"] == Decimal("900.00")
-    assert ledger.source_transaction_ids == (es_id,)
-    assert ledger.calculation_revision_id != manual.calculation_revision_id
-    assert {source.source_ref for source in ledger.source_provenance} == {f"transaction:{es_id}"}
-    assert len(ledger.detail_rows) == 1
-    derived_row = ledger.detail_rows[0]
-    assert isinstance(derived_row, Modelo210AgrupacionRentaRow)
-    assert derived_row.source_id == es_id
-    assert derived_row.importe == ledger.casilla_values["rendimientos_integros"]
-    assert derived_row.tipo_gravamen == Decimal("0.24")
-    assert derived_row.pagador_id == "ES-PAGADOR-210"
-    assert derived_row.bien_derecho_id == "ES-ACTIVO-210"
-    assert ledger_code_35.source_transaction_ids == (code_35_id,)
-    assert len(ledger_code_35.detail_rows) == 1
-    derived_code_35_row = ledger_code_35.detail_rows[0]
-    assert isinstance(derived_code_35_row, Modelo210AgrupacionRentaRow)
-    assert derived_code_35_row.tipo_renta_code == "35"
-    assert derived_code_35_row.pagador_mode == required_m210_payer_mode_for_code(
-        "35",
-        effective_date=_DEVENGO_DATE,
-    )
-    assert derived_code_35_row.pagador_id is None
-    evidence_row = ledger_evidence.rows[0]
-    assert evidence_row.source_jurisdiction == "ES"
-    assert evidence_row.m210_official_tipo_renta_code == "01"
-    assert evidence_row.m210_gross_income_amount == ledger.casilla_values["rendimientos_integros"]
-    assert evidence_row.m210_payer_id == "ES-PAGADOR-210"
-    assert "trlirnr-rdleg-5-2004:art-13.1" in evidence_row.legal_refs
-    assert classification_staleness.changed == (es_id,)
-    assert jurisdiction_staleness.changed == (es_id,)
 
 
 def test_m210_ledger_mode_evidence_bundle_records_no_manual_gross_income(

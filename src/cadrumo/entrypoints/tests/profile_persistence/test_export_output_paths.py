@@ -55,6 +55,53 @@ __all__ = ["authored_export_clock", "isolated_backend"]
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 
+def _assert_matched_wallet_result(result, output_path: Path) -> None:
+    assert output_path.exists()
+    assert result.modelo == "303"
+    assert result.byte_size == output_path.stat().st_size
+    assert result.file_sha256
+    assert result.resolved_result_disposition is ResultDisposition.NEGATIVA
+    assert result.payment_election is None
+    assert result.refund_election is None
+    assert result.casilla_provenance
+
+
+def _assert_matched_wallet_provenance(result) -> None:
+    provenance = result.iva_wallet_decision_provenance
+    assert provenance is not None
+    assert provenance.selected_authority == "aeat_wallet"
+    assert provenance.divergence == "match"
+    assert provenance.target_year == 2026
+    assert provenance.target_period == Period.from_year_and_code(2026, "2T")
+    assert provenance.decision_ref.startswith("sha256:")
+    assert provenance.authority_source_kinds == ("aeat_wallet", "local_recurrence", "filed_history_observation")
+    assert provenance.authority_source_refs[0].startswith("sha256:")
+
+
+def _assert_matched_wallet_event(event) -> None:
+    assert event.payload["period"] == "2T"
+    assert event.payload["resolved_result_disposition"] == ResultDisposition.NEGATIVA.value
+    assert "refund_election" not in event.payload
+    assert "payment_election" not in event.payload
+    assert event.payload["iva_wallet_selected_authority"] == "aeat_wallet"
+    assert event.payload["iva_wallet_divergence"] == "match"
+    assert event.payload["iva_wallet_target_period"] == "2T"
+
+
+def _assert_matched_wallet_export_is_redacted(result, event, output_path: Path, taxpayer_nif: str) -> None:
+    result_json = result.model_dump_json()
+    event_json = event.model_dump_json()
+    exported_text = output_path.read_text(encoding="utf-8")
+    assert taxpayer_nif in exported_text
+    assert "<T303DID00>" not in exported_text
+    assert taxpayer_nif not in result_json
+    assert taxpayer_nif not in event_json
+    assert "1200" not in result_json
+    assert "1200" not in event_json
+    assert "synthetic-modelo-303-export" not in result_json
+    assert "synthetic-modelo-303-export" not in event_json
+
+
 def test_export_modelo_303_matched_wallet_revision_writes_fichero_with_redacted_wallet_provenance(
     isolated_backend: None,
     tmp_path: Path,
@@ -85,43 +132,11 @@ def test_export_modelo_303_matched_wallet_revision_writes_fichero_with_redacted_
             operation=_authority_operation_for_test,
         )
 
-        assert output_path.exists()
-        assert result.modelo == "303"
-        assert result.byte_size == output_path.stat().st_size
-        assert result.file_sha256
-        assert result.resolved_result_disposition is ResultDisposition.NEGATIVA
-        assert result.payment_election is None
-        assert result.refund_election is None
-        assert result.casilla_provenance
-        provenance = result.iva_wallet_decision_provenance
-        assert provenance is not None
-        assert provenance.selected_authority == "aeat_wallet"
-        assert provenance.divergence == "match"
-        assert provenance.target_year == 2026
-        assert provenance.target_period == Period.from_year_and_code(2026, "2T")
-        assert provenance.decision_ref.startswith("sha256:")
-        assert provenance.authority_source_kinds == ("aeat_wallet", "local_recurrence", "filed_history_observation")
-        assert provenance.authority_source_refs[0].startswith("sha256:")
-
+        _assert_matched_wallet_result(result, output_path)
+        _assert_matched_wallet_provenance(result)
         event = event_repo.load().for_bucket(bucket_id, event_types=(BucketEventType.MODELO_EXPORTED,))[-1]
-        assert event.payload["period"] == "2T"
-        assert event.payload["resolved_result_disposition"] == ResultDisposition.NEGATIVA.value
-        assert "refund_election" not in event.payload
-        assert "payment_election" not in event.payload
-        assert event.payload["iva_wallet_selected_authority"] == "aeat_wallet"
-        assert event.payload["iva_wallet_divergence"] == "match"
-        assert event.payload["iva_wallet_target_period"] == "2T"
-        result_json = result.model_dump_json()
-        event_json = event.model_dump_json()
-        exported_text = output_path.read_text(encoding="utf-8")
-        assert taxpayer_nif in exported_text
-        assert "<T303DID00>" not in exported_text
-        assert taxpayer_nif not in result_json
-        assert taxpayer_nif not in event_json
-        assert "1200" not in result_json
-        assert "1200" not in event_json
-        assert "synthetic-modelo-303-export" not in result_json
-        assert "synthetic-modelo-303-export" not in event_json
+        _assert_matched_wallet_event(event)
+        _assert_matched_wallet_export_is_redacted(result, event, output_path, taxpayer_nif)
 
 
 class _CollectingPayloadConsumer:
