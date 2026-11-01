@@ -183,15 +183,15 @@ application:
     binding_prefill:
       errors:
         observation_merge_key_conflict: 'No se pueden fusionar observaciones con distinta
-          clave de modelo, ejercicio o periodo: {primary_modelo} {primary_filing_year}
-          {primary_period} frente a {overlay_modelo} {overlay_filing_year} {overlay_period}.'
+          clave de modelo, ejercicio o periodo: {primary_modelo} {primary_period}
+          {primary_filing_year} frente a {overlay_modelo} {overlay_period} {overlay_filing_year}.'
     iva_compensation:
       errors:
         annual_partition_casilla_ids_noncanonical: Las observaciones de compensación
           del Modelo 303 deben usar los identificadores de casilla declarados por
           la revisión {revision_id}; {casilla_ids} no están declarados.
         correction_missing: No existe ningún registro de compensación sembrado para
-          %{filing_year}/%{period}; la corrección sobrescribe una siembra existente,
+          %{period} %{filing_year}; la corrección sobrescribe una siembra existente,
           no la crea.
         history_casilla_undeclared: La casilla {casilla_id} no está declarada en el
           modelo {modelo} versión {revision_id}, por lo que no se le puede adjuntar
@@ -218,18 +218,18 @@ application:
           la semilla sobrescribiría el historial almacenado.
     iva_wallet:
       errors:
-        decision_blocks_calculation: La decisión de la cartera de IVA para {target_year}
-          {target_period} está bloqueada por la divergencia {divergence}. Resuelve
-          la divergencia antes de calcular.
-        decision_no_selected_amount: La decisión de la cartera de IVA para {target_year}
-          {target_period} no contiene ningún importe seleccionado, por lo que no se
+        decision_blocks_calculation: La decisión de la cartera de IVA para {target_period}
+          {target_year} está bloqueada por la divergencia {divergence}. Resuelve la
+          divergencia antes de calcular.
+        decision_no_selected_amount: La decisión de la cartera de IVA para {target_period}
+          {target_year} no contiene ningún importe seleccionado, por lo que no se
           puede vincular ningún valor de compensación.
         decision_repository_backend_split: El almacén de decisiones de la cartera
           de IVA y el de observaciones de cálculo deben compartir un único backend
           cifrado cuando la decisión se persiste.
         decision_target_mismatch: La decisión almacenada de la cartera de IVA apunta
-          a {decision_target_year} {decision_target_period}, pero la declaración es
-          {context_filing_year} {context_period}.
+          a {decision_target_period} {decision_target_year}, pero la declaración es
+          {context_period} {context_filing_year}.
         modelo_303_only: La conciliación de la cartera de compensación de IVA solo
           se aplica al Modelo 303; se ha indicado el modelo {modelo}.
     m303_carry:
@@ -1669,7 +1669,7 @@ application:
         como destino casillas calculadas; no se pueden sobrescribir con un valor externo.
         Casillas afectadas: %{computed}.'
       cross_period_clean_state_incomplete: La prueba de estado limpio entre periodos
-        está incompleta para el modelo {modelo} {filing_year} {period}; quedan {finding_count}
+        está incompleta para el modelo {modelo} {period} {filing_year}; quedan {finding_count}
         incidencia(s).
       deductible_iva_evidence_missing: 'Los apuntes con IVA deducible de tus registros
         requieren una factura de compra vinculada. Vincula la factura al apunte y
@@ -1789,8 +1789,8 @@ application:
         de IVA no tiene un importe seleccionado.
       iva_wallet_supplied_decision_mismatch: La decisión de conciliación de la cartera
         de IVA aportada no coincide con la decisión persistida.
-      iva_wallet_target_mismatch: El objetivo de la decisión de cartera de IVA %{target_year}/%{target_period}
-        no coincide con la declaración %{filing_year}/%{period}.
+      iva_wallet_target_mismatch: El objetivo de la decisión de cartera de IVA %{target_period}
+        %{target_year} no coincide con la declaración %{period} %{filing_year}.
       iva_wallet_taxpayer_identity_missing: La conciliación de la cartera de IVA no
         puede continuar sin la identidad del contribuyente de la declaración.
       iva_wallet_taxpayer_mismatch: El contribuyente de la conciliación de la cartera
@@ -1803,7 +1803,7 @@ application:
         sus incidencias antes de calcular.'
       local_observation_actor_blank: Una corrección manual de una observación debe
         indicar quién la registra.
-      local_observation_override_missing: El modelo %{modelo} %{filing_year} %{period}
+      local_observation_override_missing: El modelo %{modelo} %{period} %{filing_year}
         no tiene ninguna corrección manual tuya que eliminar.
       local_observation_reason_blank: Una corrección manual de una observación debe
         indicar su motivo.
@@ -1834,10 +1834,10 @@ application:
         de valor que ningún resolutor de cálculo gestiona. Añade un resolutor o márcalo
         como diferido antes de calcular.'
       profile_readiness_missing: 'El perfil está incompleto para el Modelo %{modelo}
-        %{filing_year} %{period}; completa antes estos datos de perfil: %{profile_requirements}.'
+        %{period} %{filing_year}; completa antes estos datos de perfil: %{profile_requirements}.'
       profile_readiness_not_applicable: 'El Modelo %{modelo} no es aplicable al perfil
         activo (%{applicability_verdict}); referencias legales: %{legal_refs}.'
-      profile_readiness_pre_activity: El Modelo %{modelo} %{filing_year} %{period}
+      profile_readiness_pre_activity: El Modelo %{modelo} %{period} %{filing_year}
         es anterior a la fecha de inicio de actividad del perfil, %{activity_start_date};
         el periodo de declaración termina el %{period_end_date}, así que ninguna unidad
         de trabajo, cálculo ni verificación del Modelo %{modelo} puede avanzar en
@@ -1869,9 +1869,9 @@ application:
         se habilite.
       reconcile_no_active_bucket: No hay un perfil activo; ejecuta `aeat config profile
         create NAME` antes de reconciliar una declaración.
-      refund_election_not_eligible: Se eligió devolver para el Modelo %{modelo} %{filing_year}
-        %{period}, pero la devolución solo está disponible en el último periodo de
-        declaración del año. Arrastra el crédito (compensar) o elige la devolución
+      refund_election_not_eligible: Se eligió devolver para el Modelo %{modelo} %{period}
+        %{filing_year}, pero la devolución solo está disponible en el último periodo
+        de declaración del año. Arrastra el crédito (compensar) o elige la devolución
         en el último periodo.
       review_package_generic: Se produjo un error al generar el paquete de revisión.
       review_package_integrity: 'El paquete de revisión %{package_path} no superó
@@ -1909,7 +1909,7 @@ application:
       work_unit_not_found: No existe ninguna declaración de modelo con id=%{work_unit_id}.
       work_unit_revision_divergence: La declaración %{work_unit_id} se creó con la
         versión %{work_unit_revision} de las definiciones del modelo, pero la versión
-        que se aplica por ley al modelo %{modelo} %{filing_year} %{period} es ahora
+        que se aplica por ley al modelo %{modelo} %{period} %{filing_year} es ahora
         %{law_revision}. Vuelve a crear la declaración para usar la versión actual.
       workflow_gate_no_pending_obligation: 'No hay ninguna obligación de presentación
         pendiente para este modelo/periodo en la fecha actual (la ventana de obligación
@@ -2175,18 +2175,18 @@ application:
         suppression_notice: Aviso de supresión de la AEAT
         xsd: Esquema XML de la AEAT
     iva_wallet:
-      correct_no_record: No existe ningún registro de compensación sembrado para %{filing_year}/%{period}.
-        Ejecuta primero 'aeat app modelo iva-wallet seed'; la corrección sobrescribe
-        una siembra existente.
+      correct_no_record: No existe ningún registro de compensación sembrado para %{period}
+        %{filing_year}. Ejecuta primero 'aeat app modelo iva-wallet seed'; la corrección
+        sobrescribe una siembra existente.
       correct_sealed_blocked: 'Corrección rechazada: un Modelo 303 ya registrado como
-        presentado (%{blocking_filing_year}/%{blocking_period}) ha usado esta base
+        presentado (%{blocking_period} %{blocking_filing_year}) ha usado esta base
         de compensación inicial. Cambiarla alteraría una declaración registrada como
         presentada.'
       override_fresh_wallet_blocked: 'Anulación rechazada: una lectura actual de la
-        cartera de AEAT ya resuelve el Modelo 303 %{filing_year}/%{period}. La evidencia
+        cartera de AEAT ya resuelve el Modelo 303 %{period} %{filing_year}. La evidencia
         reciente de AEAT es la autoridad y una anulación no debe sustituirla.'
       override_sealed_blocked: 'Anulación rechazada: un Modelo 303 ya registrado como
-        presentado (%{blocking_filing_year}/%{blocking_period}) ha usado la base de
+        presentado (%{blocking_period} %{blocking_filing_year}) ha usado la base de
         compensación de este periodo. Registrar una anulación alteraría una declaración
         registrada como presentada.'
       seed_negative_amount: El importe inicial no puede ser negativo.
@@ -2294,6 +2294,11 @@ application:
       unnamed_box: Casilla sin nombre
   overview:
     calendar:
+      event:
+        declaration_filed: Modelo %{modelo} %{period} %{year} presentado en la AEAT
+        filing_record: Registro de presentación del Modelo %{modelo} %{period} %{year}
+        live_justificante: Justificante del Modelo %{modelo} %{period} %{year} leído
+          en la AEAT
       holiday_coverage:
         calendar_unavailable: calendario de festivos no disponible; el plazo original
           no se ha comprobado

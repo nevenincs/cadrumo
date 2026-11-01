@@ -6105,7 +6105,7 @@ tui:
       pull_filed_all: Összes benyújtott bevallás lekérése
       review_census: Törzsadatok áttekintése
     address:
-      declaration: Modelo %{modelo} · %{filing_year} · %{period}
+      declaration: Modelo %{modelo} · %{period} %{filing_year}
     aeat_observation_state:
       accepted: Elfogadva
       not_observed: Nem figyelték meg
@@ -6387,7 +6387,7 @@ tui:
       context_across_records: Minden nyilvántartásra
       reason: A helyi áttekintés javaslata
     action_context: '%{label} - %{reason} · %{context}'
-    address: Modelo %{modelo} · %{filing_year} · %{period}
+    address: Modelo %{modelo} · %{period} %{filing_year}
     aeat_evidence: 'AEAT-adatok: %{state}'
     availability:
       available: Elérhető
@@ -7106,7 +7106,7 @@ tui:
         source_jurisdiction_required_irnr: Nem rezidens adózóként add meg a tétel
           forrás joghatóságát.
         title: Tétel hozzáadása
-      blocker: A(z) {modelo} Modelo ({year} {period}, {state}) hivatkozik erre a tételre.
+      blocker: A(z) {modelo} Modelo ({period} {year}, {state}) hivatkozik erre a tételre.
       browse:
         account: Saját számla (acc-01)
         action:
@@ -7243,11 +7243,11 @@ tui:
         read: Állapot és ellenőrzések olvasása
         ready: 'Kész: {checked} ellenőrzött tételben nincs megállapítás.'
         review_counts: 'Átnézés: függő {pending}, átnézett {reviewed}, kihagyott {skipped}'
-        stale_filing: 'A(z) {modelo} Modelo ({year} {period}) olyan tételekkel lett
+        stale_filing: 'A(z) {modelo} Modelo ({period} {year}) olyan tételekkel lett
           beadva, amelyek azóta változtak: {changed} módosult, {removed} törölve'
-        stale_filing_register: 'A(z) {modelo} {year} {period} modelót olyan eszköznyilvántartással
+        stale_filing_register: 'A(z) {modelo} {period} {year} modelót olyan eszköznyilvántartással
           nyújtottad be, amely azóta megváltozott: {changes} változás'
-        stale_filing_register_unavailable: A(z) {modelo} {year} {period} modelót nem
+        stale_filing_register_unavailable: A(z) {modelo} {period} {year} modelót nem
           sikerült összevetni az eszköznyilvántartással
         status_heading: 'Állapot: {period}'
         title: A napló állapota és ellenőrzései
@@ -7329,7 +7329,7 @@ tui:
         lifecycle_change: '{when}: {previous} → {state} (indoklás: {reason})'
         manual: Kézzel rögzítve
         no_participation: Egyik véglegesített bevallás sem használja ezt a tételt.
-        participation: 'Felhasználja: {modelo} Modelo, {year} {period} ({state})'
+        participation: 'Felhasználja: {modelo} Modelo, {period} {year} ({state})'
         read: Újraolvasás
         siblings: A felosztás többi részével együtt
         state: 'Állapot: {state}'
@@ -7469,7 +7469,7 @@ tui:
           attached: Csatolva. A tételnek most {count} melléklete van.
           attachment: '{attachment} melléklet'
           detached: Leválasztva. A tételnek most {count} melléklete van.
-          revision: Modelo {modelo} {year} {period} ({state})
+          revision: Modelo {modelo} {period} {year} ({state})
           stale: '{count} lezárt Modelo-változat ezen módosítás előtt készült, és
             nem tartalmazza:'
           unchanged: 'Nem változott semmi: a tételnek már pontosan ezek a mellékletei
@@ -8300,7 +8300,7 @@ tui:
           finding: 'Figyelmeztetés [%{code}]: %{message}'
           prior: A(z) %{ejercicio}. gazdasági évből átvéve.
           sector: '%{sector} ágazat · %{letra} betűjel · tevékenységek: %{activities}'
-          seed_source: A Modelo %{modelo} %{year} %{period} helyi megfigyeléséből
+          seed_source: A Modelo %{modelo} %{period} %{year} helyi megfigyeléséből
             átvéve.
         sectors: Elkülönült ágazatok
         title: Prorrata-nyilvántartás
@@ -8770,7 +8770,7 @@ tui:
       unavailable: A keresés nem érhető el ebben a munkamenetben
       unknown: A keresést nem sikerült előkészíteni.
     result:
-      address: Modelo %{modelo} · %{filing_year} · %{period}
+      address: Modelo %{modelo} · %{period} %{filing_year}
       label:
         declaration: Bevallás
         filing: Benyújtás

@@ -176,15 +176,16 @@ application:
     binding_prefill:
       errors:
         observation_merge_key_conflict: 'Eltérő nyomtatvány-, év- vagy időszakkulcsú
-          megfigyelések nem vonhatók össze: {primary_modelo} {primary_filing_year}
-          {primary_period} szemben ezzel: {overlay_modelo} {overlay_filing_year} {overlay_period}.'
+          megfigyelések nem vonhatók össze: {primary_modelo} {primary_period} {primary_filing_year}
+          szemben ezzel: {overlay_modelo} {overlay_period} {overlay_filing_year}.'
     iva_compensation:
       errors:
         annual_partition_casilla_ids_noncanonical: A Modelo 303 kompenzációs megfigyeléseinek
           a(z) {revision_id} változatban deklarált rovat-azonosítókat kell használniuk;
           a(z) {casilla_ids} nincs deklarálva.
-        correction_missing: 'Nincs beállított kompenzációs rekord ehhez: %{filing_year}/%{period};
-          a javítás egy meglévő beállítást ír felül, nem hoz létre újat.'
+        correction_missing: 'Nincs beállított kompenzációs rekord ehhez: %{period}
+          %{filing_year}; a javítás egy meglévő beállítást ír felül, nem hoz létre
+          újat.'
         history_casilla_undeclared: A(z) {casilla_id} rovat nincs deklarálva a Modelo
           {modelo} nyomtatvány {revision_id} változatában, ezért nem rendelhető hozzá
           jogszabályi hivatkozás. Javítsd a rovat hivatkozását.
@@ -210,17 +211,17 @@ application:
           kezdőérték felülírná a tárolt előzményeket.
     iva_wallet:
       errors:
-        decision_blocks_calculation: 'A(z) {target_year} {target_period} IVA-tárca
+        decision_blocks_calculation: 'A(z) {target_period} {target_year} IVA-tárca
           döntést blokkolja a következő eltérés: {divergence}. Oldd fel az eltérést
           a számítás előtt.'
-        decision_no_selected_amount: A(z) {target_year} {target_period} IVA-tárca
+        decision_no_selected_amount: A(z) {target_period} {target_year} IVA-tárca
           döntés nem tartalmaz kiválasztott összeget, ezért nem köthető hozzá kompenzációs
           érték.
         decision_repository_backend_split: Az IVA-tárca döntéstárnak és a számítási
           megfigyelési tárnak egyetlen titkosított háttértárat kell megosztania, amikor
           a döntés megőrzésre kerül.
-        decision_target_mismatch: A tárolt IVA-tárca döntés célja {decision_target_year}
-          {decision_target_period}, a bevallás viszont {context_filing_year} {context_period}.
+        decision_target_mismatch: A tárolt IVA-tárca döntés célja {decision_target_period}
+          {decision_target_year}, a bevallás viszont {context_period} {context_filing_year}.
         modelo_303_only: 'Az IVA-kompenzációs tárca egyeztetése csak a Modelo 303
           esetén alkalmazható; a megadott Modelo: {modelo}.'
     m303_carry:
@@ -1633,7 +1634,7 @@ application:
         rovatokat céloznak, amelyek nem írhatók felül külső értékkel. Érintett rovatok:
         %{computed}.'
       cross_period_clean_state_incomplete: A keresztidőszaki tiszta állapot igazolása
-        hiányos a Modelo {modelo} ({filing_year}, {period}) bevalláshoz; {finding_count}
+        hiányos a Modelo {modelo} ({period} {filing_year}) bevalláshoz; {finding_count}
         probléma maradt.
       deductible_iva_evidence_missing: 'A nyilvántartásaidban szereplő, levonható
         IVA-t tartalmazó tételekhez kapcsolt beszerzési számla szükséges. Kapcsold
@@ -1748,8 +1749,8 @@ application:
         kiválasztott összeg.
       iva_wallet_supplied_decision_mismatch: A megadott IVA-tárca egyeztetési döntés
         nem egyezik a tárolt döntéssel.
-      iva_wallet_target_mismatch: Az IVA-tárca döntés célja (%{target_year}/%{target_period})
-        nem egyezik a bevallással (%{filing_year}/%{period}).
+      iva_wallet_target_mismatch: Az IVA-tárca döntés célja (%{target_period} %{target_year})
+        nem egyezik a bevallással (%{period} %{filing_year}).
       iva_wallet_taxpayer_identity_missing: Az IVA-tárca egyeztetése nem folytatható
         a bevallás adóalany-azonossága nélkül.
       iva_wallet_taxpayer_mismatch: Az IVA-tárca egyeztetés adóalanya nem egyezik
@@ -1762,8 +1763,8 @@ application:
         problémákat számítás előtt.'
       local_observation_actor_blank: A megfigyelés kézi javításának meg kell neveznie
         a rögzítő személyt.
-      local_observation_override_missing: A Modelo %{modelo} nyomtatvány %{filing_year}
-        %{period} időszakában nincs az általad megadott, törölhető kézi javítás.
+      local_observation_override_missing: A Modelo %{modelo} nyomtatvány %{period}
+        %{filing_year} időszakában nincs az általad megadott, törölhető kézi javítás.
       local_observation_reason_blank: A kézi megfigyelés-felülírásnak meg kell adnia
         az okát.
       local_observation_spreadsheet_malformed_rows: 'A táblázatban %{malformed_row_count}
@@ -1792,11 +1793,11 @@ application:
         a(z) %{revision_id} változatban: a nyomtatványdefiníciók olyan értékforrást
         deklarálnak, amelyet egyetlen számítási feloldó sem kezel. Adj hozzá egy feloldót,
         vagy jelöld halasztottként a számítás előtt.'
-      profile_readiness_missing: 'A profil hiányos a Modelo %{modelo} (%{filing_year},
-        %{period}) bevalláshoz; előbb töltsd ki ezeket a profiladatokat: %{profile_requirements}.'
+      profile_readiness_missing: 'A profil hiányos a Modelo %{modelo} (%{period} %{filing_year})
+        bevalláshoz; előbb töltsd ki ezeket a profiladatokat: %{profile_requirements}.'
       profile_readiness_not_applicable: 'A Modelo %{modelo} nem alkalmazható az aktív
         profilra (%{applicability_verdict}); jogszabályi hivatkozások: %{legal_refs}.'
-      profile_readiness_pre_activity: A Modelo %{modelo} (%{filing_year}, %{period})
+      profile_readiness_pre_activity: A Modelo %{modelo} (%{period} %{filing_year})
         a profil tevékenységkezdési dátuma (%{activity_start_date}) előtti; a bevallási
         időszak vége %{period_end_date}, ezért ebben a tevékenység előtti időszakban
         egyetlen Modelo %{modelo} munkaegység, számítás vagy ellenőrzés sem folytatódhat.
@@ -1827,7 +1828,7 @@ application:
         támogatottá válik.
       reconcile_no_active_bucket: Nincs aktív profilmappa; futtasd a(z) `aeat config
         profile create NÉV` parancsot a bevallás egyeztetése előtt.
-      refund_election_not_eligible: A Modelo %{modelo} (%{filing_year}, %{period})
+      refund_election_not_eligible: A Modelo %{modelo} (%{period} %{filing_year})
         bevallásnál visszatérítés (devolver) lett kiválasztva, de visszatérítés csak
         az év utolsó bevallási időszakában kérhető. Vidd át a jóváírást (compensar),
         vagy válaszd a visszatérítést az utolsó időszakban.
@@ -1866,9 +1867,9 @@ application:
       work_unit_not_found: 'Nem található nyomtatvány-bevallás ezzel az azonosítóval:
         %{work_unit_id}.'
       work_unit_revision_divergence: A(z) %{work_unit_id} bevallás a nyomtatványdefiníciók
-        %{work_unit_revision} változatával jött létre, de a(z) %{modelo} %{filing_year}
-        %{period} nyomtatványra jogszabály szerint most a(z) %{law_revision} változat
-        érvényes. Hozd létre újra a bevallást a jelenlegi változat használatához.
+        %{work_unit_revision} változatával jött létre, de a(z) %{modelo} %{period}
+        %{filing_year} nyomtatványra jogszabály szerint most a(z) %{law_revision}
+        változat érvényes. Hozd létre újra a bevallást a jelenlegi változat használatához.
       workflow_gate_no_pending_obligation: 'Nincs függőben lévő benyújtási kötelezettség
         ehhez a nyomtatványhoz/időszakhoz az aktuális dátumon (az AEAT benyújtási
         kötelezettségi ablaka nincs nyitva). A fichero-exporthoz nem szükséges ez
@@ -2135,18 +2136,18 @@ application:
         suppression_notice: AEAT megszüntetési közlemény
         xsd: AEAT XML-séma
     iva_wallet:
-      correct_no_record: 'Nincs beállított kompenzációs rekord ehhez: %{filing_year}/%{period}.
+      correct_no_record: 'Nincs beállított kompenzációs rekord ehhez: %{period} %{filing_year}.
         Először futtasd a ''aeat app modelo iva-wallet seed'' parancsot; a javítás
         egy meglévő beállítást ír felül.'
       correct_sealed_blocked: 'A javítás elutasítva: egy már benyújtottként rögzített
-        Modelo 303 (%{blocking_filing_year}/%{blocking_period}) felhasználta ezt a
+        Modelo 303 (%{blocking_period} %{blocking_filing_year}) felhasználta ezt a
         kezdő kompenzációs alapot. Módosítása egy benyújtottként rögzített bevallást
         változtatna meg.'
       override_fresh_wallet_blocked: 'Felülbírálás elutasítva: az AEAT pénztárának
-        aktuális leolvasása már feloldja a Modelo 303-at %{filing_year}/%{period}.
+        aktuális leolvasása már feloldja a Modelo 303-at %{period} %{filing_year}.
         A friss AEAT-bizonyíték a mérvadó, és a felülbírálás nem írhatja felül.'
       override_sealed_blocked: 'A felülbírálás elutasítva: egy már benyújtottként
-        rögzített Modelo 303 (%{blocking_filing_year}/%{blocking_period}) már felhasználta
+        rögzített Modelo 303 (%{blocking_period} %{blocking_filing_year}) már felhasználta
         ennek az időszaknak a kompenzációs alapját. A felülbírálás rögzítése módosítana
         egy benyújtottként rögzített bevallást.'
       seed_negative_amount: A vetőösszeg nem lehet negatív.
@@ -2262,6 +2263,11 @@ application:
       unnamed_box: Név nélküli rovat
   overview:
     calendar:
+      event:
+        declaration_filed: 'Modelo %{modelo}, %{period} %{year}: benyújtva az AEAT-nál'
+        filing_record: 'Modelo %{modelo}, %{period} %{year}: benyújtási bejegyzés'
+        live_justificante: 'Modelo %{modelo}, %{period} %{year}: az AEAT-nál olvasott
+          igazolás'
       holiday_coverage:
         calendar_unavailable: az ünnepnapi naptár nem érhető el; az eredeti határidő
           nincs ellenőrizve

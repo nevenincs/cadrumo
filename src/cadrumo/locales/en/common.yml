@@ -6012,7 +6012,7 @@ tui:
       pull_filed_all: Pull all filed declarations
       review_census: Review census
     address:
-      declaration: Modelo %{modelo} · %{filing_year} · %{period}
+      declaration: Modelo %{modelo} · %{period} %{filing_year}
     aeat_observation_state:
       accepted: Accepted
       not_observed: Not observed
@@ -6289,7 +6289,7 @@ tui:
       context_across_records: Across records
       reason: Suggested by the local overview
     action_context: '%{label} - %{reason} · %{context}'
-    address: Modelo %{modelo} · %{filing_year} · %{period}
+    address: Modelo %{modelo} · %{period} %{filing_year}
     aeat_evidence: 'AEAT data: %{state}'
     availability:
       available: Available
@@ -7000,7 +7000,7 @@ tui:
         source_jurisdiction_required_irnr: As a non-resident taxpayer, give the source
           jurisdiction of this entry.
         title: Add entry
-      blocker: Modelo {modelo} {year} {period} ({state}) cites this entry.
+      blocker: Modelo {modelo} {period} {year} ({state}) cites this entry.
       browse:
         account: Own account (acc-01)
         action:
@@ -7137,11 +7137,11 @@ tui:
         read: Read status and checks
         ready: 'Ready: no findings in {checked} checked entries.'
         review_counts: 'Review: pending {pending}, reviewed {reviewed}, skipped {skipped}'
-        stale_filing: 'Modelo {modelo} {year} {period} was filed on entries that changed
+        stale_filing: 'Modelo {modelo} {period} {year} was filed on entries that changed
           since: {changed} changed, {removed} removed'
-        stale_filing_register: 'Modelo {modelo} {year} {period} was filed on an asset
+        stale_filing_register: 'Modelo {modelo} {period} {year} was filed on an asset
           register that changed since: {changes} changes'
-        stale_filing_register_unavailable: Modelo {modelo} {year} {period} could not
+        stale_filing_register_unavailable: Modelo {modelo} {period} {year} could not
           be compared with the asset register
         status_heading: Status for {period}
         title: Ledger status and checks
@@ -7221,7 +7221,7 @@ tui:
         lifecycle_change: '{when}: {previous} → {state} (reason: {reason})'
         manual: Entered by hand
         no_participation: No finalized declaration uses this entry.
-        participation: Used by Modelo {modelo} {year} {period} ({state})
+        participation: Used by Modelo {modelo} {period} {year} ({state})
         read: Read again
         siblings: Include the other parts of a split
         state: 'State: {state}'
@@ -7358,7 +7358,7 @@ tui:
           attached: Attached. The entry now has {count} attachments.
           attachment: Attachment {attachment}
           detached: Detached. The entry now has {count} attachments.
-          revision: Modelo {modelo} {year} {period} ({state})
+          revision: Modelo {modelo} {period} {year} ({state})
           stale: '{count} finalized Modelo revisions were calculated before this change
             and do not include it:'
           unchanged: 'Nothing changed: the entry already held exactly these attachments.'
@@ -8178,8 +8178,8 @@ tui:
           finding: 'Notice [%{code}]: %{message}'
           prior: Carried from exercise %{ejercicio}.
           sector: Sector %{sector} · letter %{letra} · activities %{activities}
-          seed_source: Carried from the local Modelo %{modelo} observation for %{year}
-            %{period}.
+          seed_source: Carried from the local Modelo %{modelo} observation for %{period}
+            %{year}.
         sectors: Differentiated sectors
         title: Prorrata register
         tool: Prorrata register
@@ -8640,7 +8640,7 @@ tui:
       unavailable: Search is unavailable in this session
       unknown: Search could not be prepared.
     result:
-      address: Modelo %{modelo} · %{filing_year} · %{period}
+      address: Modelo %{modelo} · %{period} %{filing_year}
       label:
         declaration: Declaration
         filing: Filing

@@ -6126,7 +6126,7 @@ tui:
       pull_filed_all: Obtener todas las declaraciones presentadas
       review_census: Revisar el censo
     address:
-      declaration: Modelo %{modelo} · %{filing_year} · %{period}
+      declaration: Modelo %{modelo} · %{period} %{filing_year}
     aeat_observation_state:
       accepted: Aceptada
       not_observed: No observada
@@ -6410,7 +6410,7 @@ tui:
       context_across_records: En todos los registros
       reason: Sugerida por el resumen local
     action_context: '%{label} - %{reason} · %{context}'
-    address: Modelo %{modelo} · %{filing_year} · %{period}
+    address: Modelo %{modelo} · %{period} %{filing_year}
     aeat_evidence: 'Datos de la AEAT: %{state}'
     availability:
       available: Disponible
@@ -7140,7 +7140,7 @@ tui:
         source_jurisdiction_required_irnr: Como contribuyente no residente, indica
           la jurisdicción de origen de este apunte.
         title: Añadir apunte
-      blocker: El Modelo {modelo} {year} {period} ({state}) cita este apunte.
+      blocker: El Modelo {modelo} {period} {year} ({state}) cita este apunte.
       browse:
         account: Cuenta propia (acc-01)
         action:
@@ -7279,12 +7279,12 @@ tui:
         ready: 'Listo: ningún hallazgo en {checked} apuntes comprobados.'
         review_counts: 'Revisión: pendientes {pending}, revisados {reviewed}, omitidos
           {skipped}'
-        stale_filing: 'El Modelo {modelo} {year} {period} se presentó con apuntes
+        stale_filing: 'El Modelo {modelo} {period} {year} se presentó con apuntes
           que han cambiado: {changed} cambiados, {removed} eliminados'
-        stale_filing_register: 'El Modelo {modelo} {year} {period} se presentó con
+        stale_filing_register: 'El Modelo {modelo} {period} {year} se presentó con
           un registro de activos que ha cambiado: {changes} cambios'
         stale_filing_register_unavailable: No se ha podido comparar el Modelo {modelo}
-          {year} {period} con el registro de activos
+          {period} {year} con el registro de activos
         status_heading: Estado de {period}
         title: Estado y comprobaciones del libro
         totals: Ingresos de la actividad {income}, gastos {expense}, neto {net}
@@ -7365,7 +7365,7 @@ tui:
         lifecycle_change: '{when}: {previous} → {state} (motivo: {reason})'
         manual: Introducido a mano
         no_participation: Ninguna declaración finalizada usa este apunte.
-        participation: Usado por el Modelo {modelo} {year} {period} ({state})
+        participation: Usado por el Modelo {modelo} {period} {year} ({state})
         read: Volver a leer
         siblings: Incluir las otras partes de una división
         state: 'Estado: {state}'
@@ -7507,7 +7507,7 @@ tui:
           attached: Adjuntado. El apunte tiene ahora {count} adjuntos.
           attachment: Adjunto {attachment}
           detached: Desvinculado. El apunte tiene ahora {count} adjuntos.
-          revision: Modelo {modelo} {year} {period} ({state})
+          revision: Modelo {modelo} {period} {year} ({state})
           stale: '{count} revisiones finalizadas de Modelo se calcularon antes de
             este cambio y no lo incluyen:'
           unchanged: 'No ha cambiado nada: el apunte ya tenía exactamente estos adjuntos.'
@@ -8344,7 +8344,7 @@ tui:
           prior: Trasladada desde el ejercicio %{ejercicio}.
           sector: Sector %{sector} · letra %{letra} · actividades %{activities}
           seed_source: Trasladada desde la observación local del Modelo %{modelo}
-            de %{year} %{period}.
+            de %{period} %{year}.
         sectors: Sectores diferenciados
         title: Registro de prorrata
         tool: Registro de prorrata
@@ -8816,7 +8816,7 @@ tui:
       unavailable: La búsqueda no está disponible en esta sesión
       unknown: No se ha podido preparar la búsqueda.
     result:
-      address: Modelo %{modelo} · %{filing_year} · %{period}
+      address: Modelo %{modelo} · %{period} %{filing_year}
       label:
         declaration: Declaración
         filing: Presentación

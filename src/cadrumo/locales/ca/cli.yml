@@ -543,9 +543,8 @@ cli:
           definitiu de l'any anterior (LIVA art. 105.Uno), llegit de l'observació
           segellada de la liquidació del Model 303 anterior.
         seed_local_authority: El percentatge provisional s'ha arrossegat localment
-          des de la teva observació desada de la liquidació {modelo} {filing_year}
-          {period} (LIVA art. 105.Uno). No és un percentatge emès per l'AEAT per a
-          aquest exercici.
+          des de la teva observació desada de la liquidació {modelo} {period} {filing_year}
+          (LIVA art. 105.Uno). No és un percentatge emès per l'AEAT per a aquest exercici.
         seed_regulated_override_standing: L'exercici {ejercicio} ja té una prorrata
           provisional {provenance}, que preval sobre l'arrossegament de l'art. 105.Uno.
           No s'ha escrit res; substitueix aquesta declaració de manera expressa abans
@@ -793,7 +792,7 @@ cli:
       year_help: Exercici de presentació
     modelo:
       aggregate:
-        calculation_rows_absent: 'Model {modelo} {filing_year} {period}: no hi ha
+        calculation_rows_absent: 'Model {modelo} {period} {filing_year}: no hi ha
           files emmagatzemades de les dades {source_family} que llegeix el seu càlcul,
           de manera que aquest informe és buit perquè falten les dades, no perquè
           l''import sigui zero.'
@@ -1504,15 +1503,15 @@ cli:
           d'auditoria)
         amend_wizard_reason_required: Cal un motiu per al registre d'auditoria de
           la correcció.
-        amend_wizard_select_prompt: 'Registrada com a presentada: %{modelo} %{year}
-          %{period}, valors actuals:
+        amend_wizard_select_prompt: 'Registrada com a presentada: %{modelo} %{period}
+          %{year}, valors actuals:
 
           %{summary}
 
           Quins números de casella van canviar? (separats per comes o espais, en blanc
           per a cap)'
         amend_wizard_unknown_casilla: La casella %{token} no forma part de la declaració
-          %{modelo} %{year} %{period} registrada com a presentada; tria una de les
+          %{modelo} %{period} %{year} registrada com a presentada; tria una de les
           caselles llistades.
         amend_wizard_value_prompt: Valor corregit per a la casella %{number} (%{label}),
           actualment %{previous_value}
@@ -1860,7 +1859,7 @@ cli:
         rescate_year_help: Any en que es percep la prestació del rescat (per defecte
           l'any de la declaració). Es compara amb la finestra de l'apartat 4 DT 12a
           LIRPF mesurada des de --contingència-year.
-        result_summary_header: resum del resultat Model %{modelo} %{year} %{period}
+        result_summary_header: resum del resultat Model %{modelo} %{period} %{year}
         resume_help: Valida si pots reintentar una execució de flux interrompuda sense
           contactar amb AEAT. Fes servir --modelo --year --period com a ruta normal;
           els ids exactes queden com a escape avançat.
@@ -3123,7 +3122,7 @@ cli:
       attachment_help: Id d'adjunt segur a enllaçar amb el moviment; repetir per a
         diversos adjunts
       finalized_revision_stale: El justificant es va desar al moviment dels teus registres,
-        però el Modelo %{modelo} %{filing_year} %{period} es va comprovar abans que
+        però el Modelo %{modelo} %{period} %{filing_year} es va comprovar abans que
         existís i conserva el conjunt de justificants anterior.
       help: Adjunta un justificant existent a un moviment dels teus registres.
       id_help: Id del moviment al qual adjuntar el justificant

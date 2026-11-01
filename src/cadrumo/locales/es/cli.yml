@@ -545,9 +545,8 @@ cli:
           definitivo del año anterior (LIVA art. 105.Uno), leído de la observación
           sellada de la liquidación del Modelo 303 anterior.
         seed_local_authority: El porcentaje provisional se ha arrastrado localmente
-          desde tu observación almacenada de la liquidación {modelo} {filing_year}
-          {period} (LIVA art. 105.Uno). No es un porcentaje emitido por la AEAT para
-          este ejercicio.
+          desde tu observación almacenada de la liquidación {modelo} {period} {filing_year}
+          (LIVA art. 105.Uno). No es un porcentaje emitido por la AEAT para este ejercicio.
         seed_regulated_override_standing: El ejercicio {ejercicio} ya tiene una prorrata
           provisional {provenance}, que prevalece sobre el arrastre del art. 105.Uno.
           No se ha escrito nada; sustituye esa declaración de forma expresa antes
@@ -797,7 +796,7 @@ cli:
       year_help: Ejercicio de presentación
     modelo:
       aggregate:
-        calculation_rows_absent: 'Modelo {modelo} {filing_year} {period}: no hay filas
+        calculation_rows_absent: 'Modelo {modelo} {period} {filing_year}: no hay filas
           almacenadas de los datos de {source_family} que lee su cálculo, así que
           este informe está vacío porque faltan los datos, no porque el importe sea
           cero.'
@@ -1518,15 +1517,15 @@ cli:
           de auditoría)
         amend_wizard_reason_required: Se requiere un motivo para el registro de auditoría
           de la corrección.
-        amend_wizard_select_prompt: 'Registrada como presentada: %{modelo} %{year}
-          %{period}, valores actuales:
+        amend_wizard_select_prompt: 'Registrada como presentada: %{modelo} %{period}
+          %{year}, valores actuales:
 
           %{summary}
 
           ¿Qué números de casilla cambiaron? (separados por comas o espacios, en blanco
           para ninguno)'
         amend_wizard_unknown_casilla: La casilla %{token} no forma parte de la declaración
-          %{modelo} %{year} %{period} registrada como presentada; elige una de las
+          %{modelo} %{period} %{year} registrada como presentada; elige una de las
           casillas listadas.
         amend_wizard_value_prompt: Valor corregido para la casilla %{number} (%{label}),
           actualmente %{previous_value}
@@ -1872,7 +1871,7 @@ cli:
         rescate_year_help: Año en que se percibe la prestación del rescate (por defecto
           el año de la declaración). Se compara con la ventana del apartado 4 DT 12a
           LIRPF medida desde --contingencia-year.
-        result_summary_header: resumen del resultado Modelo %{modelo} %{year} %{period}
+        result_summary_header: resumen del resultado Modelo %{modelo} %{period} %{year}
         resume_help: Valida si puedes reintentar una ejecución de flujo interrumpida
           sin contactar con AEAT. Usa --modelo --year --period como ruta normal; los
           ids exactos quedan como escape avanzado.
@@ -3147,7 +3146,7 @@ cli:
       attachment_help: Id de adjunto seguro a enlazar con el movimiento; repetir para
         varios adjuntos
       finalized_revision_stale: El justificante se guardó en el movimiento de tus
-        registros, pero el Modelo %{modelo} %{filing_year} %{period} se comprobó antes
+        registros, pero el Modelo %{modelo} %{period} %{filing_year} se comprobó antes
         de que existiera y conserva su conjunto de justificantes anterior.
       help: Adjunta un justificante existente a un movimiento de tus registros.
       id_help: Id del movimiento al que adjuntar el justificante

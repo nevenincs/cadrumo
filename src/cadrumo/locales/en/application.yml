@@ -171,14 +171,14 @@ application:
     binding_prefill:
       errors:
         observation_merge_key_conflict: 'Observations for different modelo, year or
-          period keys cannot be merged: {primary_modelo} {primary_filing_year} {primary_period}
-          against {overlay_modelo} {overlay_filing_year} {overlay_period}.'
+          period keys cannot be merged: {primary_modelo} {primary_period} {primary_filing_year}
+          against {overlay_modelo} {overlay_period} {overlay_filing_year}.'
     iva_compensation:
       errors:
         annual_partition_casilla_ids_noncanonical: Modelo 303 compensation observations
           must use the casilla identifiers declared by revision {revision_id}; {casilla_ids}
           are not declared.
-        correction_missing: No seeded compensation record exists for %{filing_year}/%{period};
+        correction_missing: No seeded compensation record exists for %{period} %{filing_year};
           correction overwrites an existing seed, it does not create one.
         history_casilla_undeclared: Casilla {casilla_id} is not declared by modelo
           {modelo} version {revision_id}, so no legal reference can be attached to
@@ -201,16 +201,16 @@ application:
           would overwrite stored history.
     iva_wallet:
       errors:
-        decision_blocks_calculation: The IVA wallet decision for {target_year} {target_period}
+        decision_blocks_calculation: The IVA wallet decision for {target_period} {target_year}
           is blocked by the divergence {divergence}. Resolve the divergence before
           calculating.
-        decision_no_selected_amount: The IVA wallet decision for {target_year} {target_period}
+        decision_no_selected_amount: The IVA wallet decision for {target_period} {target_year}
           carries no selected amount, so no compensation value can be bound.
         decision_repository_backend_split: The IVA wallet decision store and the calculation
           observation store must share one encrypted backend when the decision is
           persisted.
-        decision_target_mismatch: The stored IVA wallet decision targets {decision_target_year}
-          {decision_target_period} but the declaration is {context_filing_year} {context_period}.
+        decision_target_mismatch: The stored IVA wallet decision targets {decision_target_period}
+          {decision_target_year} but the declaration is {context_period} {context_filing_year}.
         modelo_303_only: IVA compensation wallet reconciliation applies only to Modelo
           303; modelo {modelo} was supplied.
     m303_carry:
@@ -1584,7 +1584,7 @@ application:
       computed_casilla_binding_conflict: 'Values taken from your records target calculated
         boxes and cannot be overridden by an external value. Affected boxes: %{computed}.'
       cross_period_clean_state_incomplete: Cross-period clean-state proof is incomplete
-        for modelo {modelo} {filing_year} {period}; {finding_count} issue(s) remain.
+        for modelo {modelo} {period} {filing_year}; {finding_count} issue(s) remain.
       deductible_iva_evidence_missing: 'Deductible IVA entries in your records require
         a linked purchase invoice. Link the invoice to the entry, then run aeat app
         modelo work verify again: the check refuses to complete while a deductible
@@ -1691,8 +1691,8 @@ application:
         selected amount.
       iva_wallet_supplied_decision_mismatch: Supplied IVA wallet reconciliation decision
         does not match the persisted decision.
-      iva_wallet_target_mismatch: IVA wallet decision target %{target_year}/%{target_period}
-        does not match declaration %{filing_year}/%{period}.
+      iva_wallet_target_mismatch: IVA wallet decision target %{target_period} %{target_year}
+        does not match declaration %{period} %{filing_year}.
       iva_wallet_taxpayer_identity_missing: IVA wallet reconciliation cannot continue
         without the taxpayer identity of the declaration.
       iva_wallet_taxpayer_mismatch: The IVA wallet reconciliation taxpayer does not
@@ -1704,7 +1704,7 @@ application:
         records for period %{period} and resolve its issues before calculating.'
       local_observation_actor_blank: A manual correction of an observation must name
         the person who records it.
-      local_observation_override_missing: Modelo %{modelo} %{filing_year} %{period}
+      local_observation_override_missing: Modelo %{modelo} %{period} %{filing_year}
         has no manual correction of yours to clear.
       local_observation_reason_blank: A manual observation override must state the
         reason for it.
@@ -1732,11 +1732,11 @@ application:
         on version %{revision_id}: the modelo definitions declare a value source that
         no calculation resolver handles. Add a resolver or mark it as deferred before
         calculating.'
-      profile_readiness_missing: 'Profile is incomplete for Modelo %{modelo} %{filing_year}
-        %{period}; complete these profile facts first: %{profile_requirements}.'
+      profile_readiness_missing: 'Profile is incomplete for Modelo %{modelo} %{period}
+        %{filing_year}; complete these profile facts first: %{profile_requirements}.'
       profile_readiness_not_applicable: 'Modelo %{modelo} is not applicable to the
         active profile (%{applicability_verdict}); legal references: %{legal_refs}.'
-      profile_readiness_pre_activity: Modelo %{modelo} %{filing_year} %{period} is
+      profile_readiness_pre_activity: Modelo %{modelo} %{period} %{filing_year} is
         before the profile activity-start date %{activity_start_date}; the filing
         period ends on %{period_end_date}, so no Modelo %{modelo} work unit, calculation,
         or verification may proceed for this pre-activity period.
@@ -1761,8 +1761,8 @@ application:
         aeat app modelo reconcile import, or wait for this modelo to be enrolled.
       reconcile_no_active_bucket: No active profile bucket; run `aeat config profile
         create NAME` before reconciling a declaration.
-      refund_election_not_eligible: Refund was elected for Modelo %{modelo} %{filing_year}
-        %{period}, but a refund is only available in the year's last filing period.
+      refund_election_not_eligible: Refund was elected for Modelo %{modelo} %{period}
+        %{filing_year}, but a refund is only available in the year's last filing period.
         Carry the credit forward, or make the election in the last period.
       review_package_generic: An error occurred while building the review package.
       review_package_integrity: 'Review package %{package_path} failed the checksum
@@ -1794,7 +1794,7 @@ application:
       work_unit_not_found: No modelo declaration found with id=%{work_unit_id}.
       work_unit_revision_divergence: Declaration %{work_unit_id} was created with
         version %{work_unit_revision} of the modelo definitions, but the version that
-        applies by law to modelo %{modelo} %{filing_year} %{period} is now %{law_revision}.
+        applies by law to modelo %{modelo} %{period} %{filing_year} is now %{law_revision}.
         Create the declaration again to use the current version.
       workflow_gate_no_pending_obligation: 'No pending filing obligation for this
         profile at the current date (the AEAT filing-obligation window is not open).
@@ -2051,17 +2051,17 @@ application:
         suppression_notice: AEAT suppression notice
         xsd: AEAT XML schema
     iva_wallet:
-      correct_no_record: No seeded compensation record exists for %{filing_year}/%{period}.
+      correct_no_record: No seeded compensation record exists for %{period} %{filing_year}.
         Run 'aeat app modelo iva-wallet seed' first; correction overwrites an existing
         seed.
       correct_sealed_blocked: 'Correction refused: a Modelo 303 already recorded as
-        filed (%{blocking_filing_year}/%{blocking_period}) has used this starting
+        filed (%{blocking_period} %{blocking_filing_year}) has used this starting
         compensation basis. Changing it would alter a declaration recorded as filed.'
       override_fresh_wallet_blocked: 'Override refused: a current AEAT wallet reading
-        already resolves Modelo 303 %{filing_year}/%{period}. Fresh AEAT evidence
+        already resolves Modelo 303 %{period} %{filing_year}. Fresh AEAT evidence
         is authoritative and an override must not overrule it.'
       override_sealed_blocked: 'Override refused: a Modelo 303 already recorded as
-        filed (%{blocking_filing_year}/%{blocking_period}) has used this period''s
+        filed (%{blocking_period} %{blocking_filing_year}) has used this period''s
         compensation basis. Recording an override would alter a declaration recorded
         as filed.'
       seed_negative_amount: The seed amount cannot be negative.
@@ -2172,6 +2172,11 @@ application:
       unnamed_box: Unnamed box
   overview:
     calendar:
+      event:
+        declaration_filed: Modelo %{modelo} %{period} %{year} filed at AEAT
+        filing_record: Modelo %{modelo} %{period} %{year} filing record
+        live_justificante: Modelo %{modelo} %{period} %{year} justificante read at
+          AEAT
       holiday_coverage:
         calendar_unavailable: holiday calendar unavailable; the original deadline
           has not been checked

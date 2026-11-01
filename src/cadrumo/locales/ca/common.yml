@@ -6122,7 +6122,7 @@ tui:
       pull_filed_all: Recupera totes les declaracions presentades
       review_census: Revisa el cens
     address:
-      declaration: Modelo %{modelo} · %{filing_year} · %{period}
+      declaration: Modelo %{modelo} · %{period} %{filing_year}
     aeat_observation_state:
       accepted: Acceptada
       not_observed: No observada
@@ -6406,7 +6406,7 @@ tui:
       context_across_records: A tots els registres
       reason: Suggerida pel resum local
     action_context: '%{label} - %{reason} · %{context}'
-    address: Model %{modelo} · %{filing_year} · %{period}
+    address: Model %{modelo} · %{period} %{filing_year}
     aeat_evidence: 'Dades de l''AEAT: %{state}'
     availability:
       available: Disponible
@@ -7132,7 +7132,7 @@ tui:
         source_jurisdiction_required_irnr: Com a contribuent no resident, indica la
           jurisdicció d'origen d'aquest apunt.
         title: Afegeix un apunt
-      blocker: El Modelo {modelo} {year} {period} ({state}) cita aquest apunt.
+      blocker: El Modelo {modelo} {period} {year} ({state}) cita aquest apunt.
       browse:
         account: Compte propi (acc-01)
         action:
@@ -7268,12 +7268,12 @@ tui:
         read: Llegeix l'estat i les comprovacions
         ready: 'A punt: cap troballa en {checked} apunts comprovats.'
         review_counts: 'Revisió: pendents {pending}, revisats {reviewed}, omesos {skipped}'
-        stale_filing: 'El Modelo {modelo} {year} {period} es va presentar amb apunts
+        stale_filing: 'El Modelo {modelo} {period} {year} es va presentar amb apunts
           que han canviat: {changed} canviats, {removed} eliminats'
-        stale_filing_register: 'El Model {modelo} {year} {period} es va presentar
+        stale_filing_register: 'El Model {modelo} {period} {year} es va presentar
           amb un registre d''actius que ha canviat: {changes} canvis'
         stale_filing_register_unavailable: No s'ha pogut comparar el Model {modelo}
-          {year} {period} amb el registre d'actius
+          {period} {year} amb el registre d'actius
         status_heading: Estat de {period}
         title: Estat i comprovacions del llibre
         totals: Ingressos de l'activitat {income}, despeses {expense}, net {net}
@@ -7354,7 +7354,7 @@ tui:
         lifecycle_change: '{when}: {previous} → {state} (motiu: {reason})'
         manual: Introduït a mà
         no_participation: Cap declaració finalitzada no fa servir aquest apunt.
-        participation: Utilitzat pel Modelo {modelo} {year} {period} ({state})
+        participation: Utilitzat pel Modelo {modelo} {period} {year} ({state})
         read: Torna a llegir
         siblings: Inclou les altres parts d'una divisió
         state: 'Estat: {state}'
@@ -7496,7 +7496,7 @@ tui:
           attached: Adjuntat. L'apunt té ara {count} adjunts.
           attachment: Adjunt {attachment}
           detached: Desvinculat. L'apunt té ara {count} adjunts.
-          revision: Modelo {modelo} {year} {period} ({state})
+          revision: Modelo {modelo} {period} {year} ({state})
           stale: '{count} revisions finalitzades de Modelo es van calcular abans d''aquest
             canvi i no l''inclouen:'
           unchanged: 'No ha canviat res: l''apunt ja tenia exactament aquests adjunts.'
@@ -8329,7 +8329,7 @@ tui:
           prior: Traslladada des de l'exercici %{ejercicio}.
           sector: Sector %{sector} · lletra %{letra} · activitats %{activities}
           seed_source: Traslladada des de l'observació local del Modelo %{modelo}
-            de %{year} %{period}.
+            de %{period} %{year}.
         sectors: Sectors diferenciats
         title: Registre de prorrata
         tool: Registre de prorrata
@@ -8799,7 +8799,7 @@ tui:
       unavailable: La cerca no està disponible en aquesta sessió
       unknown: No s'ha pogut preparar la cerca.
     result:
-      address: Model %{modelo} · %{filing_year} · %{period}
+      address: Model %{modelo} · %{period} %{filing_year}
       label:
         declaration: Declaració
         filing: Presentació
