@@ -5,10 +5,12 @@ from __future__ import annotations
 import os
 import sys
 import time
+from collections.abc import Callable
 from contextlib import contextmanager
+from dataclasses import dataclass
 from pathlib import Path
 from threading import Event
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 import pytest
 
@@ -25,12 +27,15 @@ from cadrumo_client.contracts.profile_access import (
 )
 from cadrumo_client.contracts.profile_selection import ActiveProfileReply, ActiveProfileRequest
 from cadrumo_client.contracts.session_events import ProfileLoginChanged
+from cadrumo_client.transport.framing import VerifiedConnection
 from cadrumo_client.transport.frontend_client import FrontendClient
 
 from ...adapters import profile_worker_transport
 from ...adapters.tests.profile_worker_support import PROFILE_INPUT
+from ..profile_connection_login import PendingProfileLogin
+from ..profile_host import RuntimeProfileHost
 from .served_runtime import connect_verified
-from .test_service_records import service_record_runtime
+from .test_service_records import ServiceRecordRuntime, service_record_runtime
 
 pytestmark = [
     pytest.mark.integration,
@@ -41,6 +46,173 @@ pytestmark = [
 ]
 
 
+@dataclass(frozen=True)
+class _PausedProof:
+    entered: Event
+    release: Event
+    proofs: list[UUID]
+    bound_sessions: list[UUID]
+
+
+def _pause_owned_proof(monkeypatch: pytest.MonkeyPatch, host: RuntimeProfileHost, ending: str) -> _PausedProof:
+    entered, release = Event(), Event()
+    original = host.owner.authenticate_human
+    proofs: list[UUID] = []
+    bound_sessions: list[UUID] = []
+
+    @contextmanager
+    def paused(connection_id):
+        with original(connection_id) as outcome:
+            proofs.append(connection_id)
+            if ending != "cancel_bound":
+                entered.set()
+                assert release.wait(20), "test did not release the owned proof"
+            yield outcome
+
+    monkeypatch.setattr(host.owner, "authenticate_human", paused)
+    if ending == "cancel_bound":
+        original_publish = host.authority._publish_human_candidate
+
+        def paused_publication(connection_id, candidate, retirement):
+            bound_sessions.append(candidate.session.session_id)
+            entered.set()
+            assert release.wait(20), "test did not release the bound candidate"
+            return original_publish(connection_id, candidate, retirement)
+
+        monkeypatch.setattr(host.authority, "_publish_human_candidate", paused_publication)
+    return _PausedProof(entered, release, proofs, bound_sessions)
+
+
+def _hold_retained_proof(
+    runtime: ServiceRecordRuntime, contender: VerifiedConnection, request: ProfileLogin, paused: _PausedProof
+) -> tuple[ProfileLoginPending, PendingProfileLogin]:
+    with contender.held_exchange(request, request.request_id, deadline=time.monotonic() + 20) as exchange:
+        assert isinstance(exchange.reply().root, SecretReady)
+        proof = bytearray(PROFILE_INPUT.encode())
+        contender.send_secret(proof, deadline=time.monotonic() + 10)
+        pending = exchange.reply().root
+        assert isinstance(pending, ProfileLoginPending)
+        assert proof == bytearray(len(proof))
+    assert paused.entered.wait(10), "login did not reach its retained proof"
+    return pending, runtime.profiles._pending_logins[pending.connection_id]
+
+
+def _assert_reader_free(
+    runtime: ServiceRecordRuntime, contender: VerifiedConnection, attempt: PendingProfileLogin
+) -> None:
+    status = runtime.human.session(
+        SessionRequest(
+            action="session_status",
+            request_id=uuid4(),
+            profile_id=runtime.profile_id,
+            session_id=runtime.person_session_id,
+        ),
+        deadline=time.monotonic() + 5,
+    )
+    assert isinstance(status, ProfileStatus) and status.status.denial is None
+    wrong = contender.login_status(
+        ProfileLoginStatusQuery(
+            action="profile_login_cancel",
+            request_id=uuid4(),
+            profile_id=runtime.profile_id,
+            login_request_id=uuid4(),
+        ),
+        deadline=time.monotonic() + 5,
+    )
+    assert isinstance(wrong, AccessRefusal) and wrong.code is AccessDenialCode.CONNECTION_MISMATCH
+    assert not attempt.control.cancelled
+
+
+@dataclass(frozen=True)
+class _Ending:
+    runtime: ServiceRecordRuntime
+    contender: VerifiedConnection
+    host: RuntimeProfileHost
+    request: ProfileLogin
+    pending: ProfileLoginPending
+    attempt: PendingProfileLogin
+
+
+def _end_by_cancel(ending: _Ending) -> None:
+    runtime = ending.runtime
+    cancelled = ending.contender.login_status(
+        ProfileLoginStatusQuery(
+            action="profile_login_cancel",
+            request_id=uuid4(),
+            profile_id=runtime.profile_id,
+            login_request_id=ending.request.request_id,
+        ),
+        deadline=time.monotonic() + 5,
+    )
+    assert isinstance(cancelled, ProfileLoginPending)
+    assert ending.attempt.control.cancelled and not ending.attempt.control.committed
+
+
+def _end_by_disconnect(ending: _Ending) -> None:
+    ending.contender.close()
+    assert ending.attempt.control.cancelled_event.wait(5), "runtime did not observe the peer's EOF"
+    assert ending.runtime.profiles._pending_logins.get(ending.pending.connection_id) is ending.attempt
+
+
+def _end_by_lock(ending: _Ending) -> None:
+    ending.host.authority.retire_human_sessions(reason=AccessDenialCode.PROFILE_LOCKED)
+
+
+def _end_by_profile_change(ending: _Ending) -> None:
+    runtime = ending.runtime
+    other = connect_verified(runtime.endpoint)
+    runtime.clients.append(other)
+    other_profile = FrontendClient(
+        other,
+        profile_id=runtime.other_profile_id,
+        frontend=OperationFrontendProjection.CLI,
+    )
+    assert other_profile.login_password(bytearray(PROFILE_INPUT.encode()), persist_receipt=True).status.denial is None
+
+
+def _end_by_commit(ending: _Ending) -> None:
+    """The proof is left to commit on release."""
+
+
+_ENDINGS: dict[str, Callable[[_Ending], None]] = {
+    "cancel": _end_by_cancel,
+    "cancel_bound": _end_by_cancel,
+    "disconnect": _end_by_disconnect,
+    "lock": _end_by_lock,
+    "profile_change": _end_by_profile_change,
+    "commit": _end_by_commit,
+}
+
+
+def _assert_committed_once(ending: _Ending, proofs: list[UUID], result: object) -> None:
+    runtime, attempt = ending.runtime, ending.attempt
+    assert isinstance(result, ProfileStatus) and result.status.denial is None
+    assert attempt.control.committed
+    repeated = ending.contender.login_status(
+        ProfileLoginStatusQuery(
+            action="profile_login_cancel",
+            request_id=uuid4(),
+            profile_id=runtime.profile_id,
+            login_request_id=ending.request.request_id,
+        ),
+        deadline=time.monotonic() + 5,
+    )
+    assert isinstance(repeated, ProfileStatus)
+    assert repeated.status.session_id == result.status.session_id
+    assert not attempt.control.cancelled and len(proofs) == 1
+
+
+def _assert_refused_login(ending: _Ending, bound_sessions: list[UUID], result: object) -> None:
+    attempt = ending.attempt
+    assert isinstance(result, AccessRefusal)
+    assert result.code is AccessDenialCode.AUTHENTICATION_REQUIRED
+    assert not attempt.control.committed
+    assert attempt.connection.session_id is None
+    if bound_sessions:
+        assert ending.host.owner._worker is not None
+        assert bound_sessions[0] not in ending.host.owner._worker.status().sessions
+
+
 @pytest.mark.parametrize("ending", ["cancel", "cancel_bound", "disconnect", "lock", "profile_change", "commit"])
 def test_pending_login_keeps_reader_free_and_fences_late_proof(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, ending: str
@@ -49,31 +221,8 @@ def test_pending_login_keeps_reader_free_and_fences_late_proof(
         contender = connect_verified(runtime.endpoint)
         runtime.clients.append(contender)
         host = runtime.profiles._profiles[runtime.profile_id]
-        entered, release, settled = Event(), Event(), Event()
-        original = host.owner.authenticate_human
-        proofs = []
-        bound_sessions = []
-
-        @contextmanager
-        def paused(connection_id):
-            with original(connection_id) as outcome:
-                proofs.append(connection_id)
-                if ending != "cancel_bound":
-                    entered.set()
-                    assert release.wait(20), "test did not release the owned proof"
-                yield outcome
-
-        monkeypatch.setattr(host.owner, "authenticate_human", paused)
-        if ending == "cancel_bound":
-            original_publish = host.authority._publish_human_candidate
-
-            def paused_publication(connection_id, candidate, retirement):
-                bound_sessions.append(candidate.session.session_id)
-                entered.set()
-                assert release.wait(20), "test did not release the bound candidate"
-                return original_publish(connection_id, candidate, retirement)
-
-            monkeypatch.setattr(host.authority, "_publish_human_candidate", paused_publication)
+        settled = Event()
+        paused = _pause_owned_proof(monkeypatch, host, ending)
         request = ProfileLogin(
             request_id=uuid4(),
             profile_id=runtime.profile_id,
@@ -89,70 +238,14 @@ def test_pending_login_keeps_reader_free_and_fences_late_proof(
             ),
         )
         try:
-            with contender.held_exchange(request, request.request_id, deadline=time.monotonic() + 20) as exchange:
-                assert isinstance(exchange.reply().root, SecretReady)
-                proof = bytearray(PROFILE_INPUT.encode())
-                contender.send_secret(proof, deadline=time.monotonic() + 10)
-                pending = exchange.reply().root
-                assert isinstance(pending, ProfileLoginPending)
-                assert proof == bytearray(len(proof))
-            assert entered.wait(10), "login did not reach its retained proof"
-            attempt = runtime.profiles._pending_logins[pending.connection_id]
-            status = runtime.human.session(
-                SessionRequest(
-                    action="session_status",
-                    request_id=uuid4(),
-                    profile_id=runtime.profile_id,
-                    session_id=runtime.person_session_id,
-                ),
-                deadline=time.monotonic() + 5,
-            )
-            assert isinstance(status, ProfileStatus) and status.status.denial is None
-            wrong = contender.login_status(
-                ProfileLoginStatusQuery(
-                    action="profile_login_cancel",
-                    request_id=uuid4(),
-                    profile_id=runtime.profile_id,
-                    login_request_id=uuid4(),
-                ),
-                deadline=time.monotonic() + 5,
-            )
-            assert isinstance(wrong, AccessRefusal) and wrong.code is AccessDenialCode.CONNECTION_MISMATCH
-            assert not attempt.control.cancelled
-            if ending in {"cancel", "cancel_bound"}:
-                cancelled = contender.login_status(
-                    ProfileLoginStatusQuery(
-                        action="profile_login_cancel",
-                        request_id=uuid4(),
-                        profile_id=runtime.profile_id,
-                        login_request_id=request.request_id,
-                    ),
-                    deadline=time.monotonic() + 5,
-                )
-                assert isinstance(cancelled, ProfileLoginPending)
-                assert attempt.control.cancelled and not attempt.control.committed
-            elif ending == "disconnect":
-                contender.close()
-                assert attempt.control.cancelled_event.wait(5), "runtime did not observe the peer's EOF"
-                assert runtime.profiles._pending_logins.get(pending.connection_id) is attempt
-            elif ending == "lock":
-                host.authority.retire_human_sessions(reason=AccessDenialCode.PROFILE_LOCKED)
-            elif ending == "profile_change":
-                other = connect_verified(runtime.endpoint)
-                runtime.clients.append(other)
-                other_profile = FrontendClient(
-                    other,
-                    profile_id=runtime.other_profile_id,
-                    frontend=OperationFrontendProjection.CLI,
-                )
-                assert (
-                    other_profile.login_password(bytearray(PROFILE_INPUT.encode()), persist_receipt=True).status.denial
-                    is None
-                )
-            release.set()
+            pending, attempt = _hold_retained_proof(runtime, contender, request, paused)
+            _assert_reader_free(runtime, contender, attempt)
+            current = _Ending(runtime, contender, host, request, pending, attempt)
+            _ENDINGS[ending](current)
+            paused.release.set()
             assert attempt.finished.wait(10), "proof owner did not settle after its outcome"
             assert attempt.secret == bytearray(len(attempt.secret))
-            assert len(proofs) == 1
+            assert len(paused.proofs) == 1
             if ending == "disconnect":
                 assert not attempt.control.committed
                 assert attempt.connection.session_id is None
@@ -168,30 +261,11 @@ def test_pending_login_keeps_reader_free_and_fences_late_proof(
                 deadline=time.monotonic() + 5,
             )
             if ending == "commit":
-                assert isinstance(result, ProfileStatus) and result.status.denial is None
-                assert attempt.control.committed
-                repeated = contender.login_status(
-                    ProfileLoginStatusQuery(
-                        action="profile_login_cancel",
-                        request_id=uuid4(),
-                        profile_id=runtime.profile_id,
-                        login_request_id=request.request_id,
-                    ),
-                    deadline=time.monotonic() + 5,
-                )
-                assert isinstance(repeated, ProfileStatus)
-                assert repeated.status.session_id == result.status.session_id
-                assert not attempt.control.cancelled and len(proofs) == 1
+                _assert_committed_once(current, paused.proofs, result)
             else:
-                assert isinstance(result, AccessRefusal)
-                assert result.code is AccessDenialCode.AUTHENTICATION_REQUIRED
-                assert not attempt.control.committed
-                assert attempt.connection.session_id is None
-                if bound_sessions:
-                    assert host.owner._worker is not None
-                    assert bound_sessions[0] not in host.owner._worker.status().sessions
+                _assert_refused_login(current, paused.bound_sessions, result)
         finally:
-            release.set()
+            paused.release.set()
             unsubscribe()
 
 
