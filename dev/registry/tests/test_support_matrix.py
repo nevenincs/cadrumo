@@ -31,6 +31,7 @@ import pytest
 
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.export_layout_format import ExportLayoutFormat
+from cadrumo.domain.calculations.registry.revision_order import ordered_revisions
 from cadrumo.domain.calculations.registry.support_matrix import ModeloEntry, build_support_matrix
 
 from ..compiler.authority import compiled_bundled_authority
@@ -118,6 +119,13 @@ def test_row_reports_latest_revision_by_valid_from() -> None:
     assert entry.supported_revision_ids == tuple(sorted(entry.supported_revision_ids))
 
 
+def test_parallel_revisions_opening_together_are_resolved_by_id_not_declaration_order() -> None:
+    """369's schema variants share one valid_from; the latest is the last by id, as the queries resolve it."""
+    entry = _entries()["369"]
+
+    assert entry.latest_revision_id == "esquema-union"
+
+
 def test_modelo_100_latest_revision_carries_declared_renames() -> None:
     """Ground truth: Modelo 100's 2025 revision declares casilla continuity evolutions.
 
@@ -165,7 +173,7 @@ def test_build_support_matrix_is_never_a_fabricated_positive() -> None:
     entries = _entries()
 
     for modelo in authority.modelos:
-        revision = max(modelo.revisions.values(), key=lambda r: r.valid_from)
+        revision = ordered_revisions(modelo)[-1]
         expected_formats = {layout.format for layout in revision.export_layouts}
         entry = entries[modelo.id]
         assert entry.title == modelo.title

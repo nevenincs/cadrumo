@@ -15,8 +15,9 @@ finding kinds:
 
 ``under_supported``
     The declared grade needs a prerequisite the probe does not find. Filing
-    needs an export layout (fixed-width or XML dictionary) and a completeness
-    manifest; calculation needs a completeness manifest.
+    needs an export layout (fixed-width or XML dictionary); filing and
+    calculation need a completeness manifest when the calculation closure is
+    non-empty. An empty closure admits no manifest, so none is demanded.
 
 ``under_declared``
     The probe finds prerequisites the declared grade does not claim: an
@@ -76,10 +77,10 @@ def grade_findings(revision: ModeloRevision, *, modelo_id: str) -> tuple[GradeFi
     if grade is RegistryAuthorityGrade.FILING:
         if not has_layout:
             findings.append(finding("under_supported", "export_layout"))
-        if not probe.has_completeness_manifest:
+        if probe.calc_grade and not probe.has_completeness_manifest:
             findings.append(finding("under_supported", "completeness_manifest"))
     elif grade is RegistryAuthorityGrade.CALCULATION:
-        if not probe.has_completeness_manifest:
+        if probe.calc_grade and not probe.has_completeness_manifest:
             findings.append(finding("under_supported", "completeness_manifest"))
         if has_layout:
             findings.append(finding("under_declared", "export_layout"))

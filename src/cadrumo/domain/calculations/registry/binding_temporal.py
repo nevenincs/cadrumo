@@ -293,6 +293,41 @@ def temporal_max_year_delta(temporal: BindingTemporalSelector) -> int | None:
     return None
 
 
+def temporal_year_reach(temporal: BindingTemporalSelector) -> int:
+    """Return the largest absolute filing-year distance a member declares.
+
+    Reads every authored year distance: the single offset, each per-target-period
+    offset and an explicit ``max_years`` bound. Members that name no year
+    distance reach ``0``.
+    """
+    if isinstance(temporal, FilingYearOffset):
+        return max(abs(temporal.years), temporal.max_years or 0)
+    if isinstance(temporal, FilingYearOffsetByTargetPeriod):
+        return max((abs(years) for years in temporal.offsets.values()), default=0)
+    return 0
+
+
+def temporal_reach_diagnostic(
+    temporal: BindingTemporalSelector,
+    *,
+    supported_year_span: int,
+) -> str | None:
+    """Return the refusal for a member reaching farther than the support envelope spans.
+
+    ``supported_year_span`` is the distance between the registry's first and
+    last supported filing year. A relative offset longer than that can never
+    land on a supported filing year, so it is an absolute year in disguise
+    (``years = 2024``) or a dead declaration rather than a relative coordinate.
+    """
+    reach = temporal_year_reach(temporal)
+    if reach <= supported_year_span:
+        return None
+    return (
+        f"temporal member {temporal.kind.value!r} reaches {reach} filing years, "
+        f"beyond the {supported_year_span}-year span of the supported filing years"
+    )
+
+
 def temporal_period_anchors(
     temporal: BindingTemporalSelector,
     *,

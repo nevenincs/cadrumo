@@ -46,7 +46,7 @@ def collect_inputs(root: Path) -> SignalInputs:
     runtime_resolvers, resolver_limits = _runtime_resolver_inventory(root)
     limitations = [*registration_limits, *loader_limits, *resolver_limits]
     binding_consumers = _load_binding_consumers(limitations)
-    raw = _collect_raw_inventory(root, registry_root, support_scope)
+    raw = collect_raw_inventory(root, registry_root, support_scope)
     return SignalInputs(
         root=root,
         registry_root=registry_root,
@@ -74,11 +74,12 @@ def _load_binding_consumers(limitations: list[dict[str, object]]):
     return binding_consumers
 
 
-def _collect_raw_inventory(
+def collect_raw_inventory(
     root: Path,
     registry_root: Path,
     support_scope: SupportScope | None,
 ) -> RawInventory:
+    """Inventory the authored (delta-only) revision files, naming modelos that carry no revisions."""
     inventory = RawInventory({}, set(), [], [], [], Counter(), Counter())
     below_floor = support_scope.below_floor if support_scope is not None else frozenset()
     for modelo_dir in sorted(path for path in registry_root.iterdir() if path.is_dir()):
@@ -291,14 +292,12 @@ def _compiled_revisions(
 ) -> tuple[dict[tuple[str, str], ModeloRevision], SupportScope | None, list[dict[str, object]]]:
     limitations: list[dict[str, object]] = []
     _add_import_root(root)
-    try:
-        from dev.registry.compiler.loader import load_registry_tree
+    from dev.registry.compiler.loader import load_registry_tree
 
-        modelos, catalogues = load_registry_tree(authored_registry_root)
-        scope = _support_scope(modelos, catalogues)
-    except Exception as exc:
-        limitations.append({"code": "REGISTRY_LOADER_FAILED", "message": f"{type(exc).__name__}: {exc}"})
-        return {}, None, limitations
+    # A registry that cannot be loaded is a processing error. Falling back to the raw
+    # delta files would report bindings a revision inherits as missing.
+    modelos, catalogues = load_registry_tree(authored_registry_root)
+    scope = _support_scope(modelos, catalogues)
     if scope is None:
         limitations.append(
             {

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import dataclasses
 import pathlib
+import re
 
 import grimp
 import pytest
@@ -572,3 +573,13 @@ def test_a_shared_dynamic_import_harvest_follows_an_edit_to_a_scanned_file(
     assert before == ()
     assert [(site.module, site.target) for site in after] == [("cadrumo.caller", "cadrumo.target")]
     assert len(_published(tmp_path, "registry-load-census-dynamic-imports-production")) == 2
+
+
+def test_the_snapshot_probe_takes_its_filing_year_from_the_support_envelope() -> None:
+    """The generated probe names no filing-year literal; the registry's envelope supplies it."""
+    from ..analysis import load_census
+
+    script = load_census._trace_script("inspection_snapshot")
+
+    assert "authority.supported_filing_years().horizon" in script
+    assert not re.search(r"\b(?:19|20)\d{2}\b", script)

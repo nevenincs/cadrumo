@@ -558,6 +558,22 @@ def _generated_target_inventory(
     return states, excluded, excluded_count, bool(unrenderable)
 
 
+def declared_revision_filing_years(modelo: ModeloDefinition, revision_id: str) -> tuple[int, ...]:
+    """The filing years a revision's selector declares, whether it lists them or spans a range.
+
+    A selector declared with ``year_from``/``year_to`` lists no years, so its last
+    declared year is the range's end; an open-ended range declares no last year.
+    """
+    selector = next(
+        revision.period_selector
+        for candidate_id, revision in modelo.revisions.items()
+        if str(candidate_id) == revision_id
+    )
+    if selector.years:
+        return tuple(selector.years)
+    return (selector.year_to,) if selector.year_to is not None else ()
+
+
 def _project_generated_targets(
     authority: ValidatedRegistryAuthority,
     registry_root: Path,
@@ -572,10 +588,8 @@ def _project_generated_targets(
         excluded,
         dispositions=_explaining_dispositions(disposition_ledger),
         declared_floor=lambda: declared_supported_filing_years_floor(registry_root=registry_root),
-        revision_filing_years=lambda modelo_id, revision_id: next(
-            tuple(revision.period_selector.years)
-            for candidate_id, revision in authority.modelo(modelo_id).revisions.items()
-            if str(candidate_id) == revision_id
+        revision_filing_years=lambda modelo_id, revision_id: declared_revision_filing_years(
+            authority.modelo(modelo_id), revision_id
         ),
         excluded_count=excluded_count,
     )

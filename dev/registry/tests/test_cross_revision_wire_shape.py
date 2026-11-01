@@ -7,7 +7,10 @@ from pathlib import Path
 
 import pytest
 
-from ..analysis.cross_revision_wire_shape import cross_revision_wire_shape_transitions
+from ..analysis.cross_revision_wire_shape import adjacent_revision_pairs, cross_revision_wire_shape_transitions
+from ..compiler.authority import compiled_bundled_authority
+
+_PAIR_2025_2026 = {"999": (("2025", "2026"),)}
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -42,7 +45,7 @@ def test_a_planted_wire_shape_change_is_reported(tmp_path: Path) -> None:
     _write_revision(tmp_path, "999", "2025", (dict(stable),))
     _write_revision(tmp_path, "999", "2026", (dict(moved),))
 
-    transitions = tuple(cross_revision_wire_shape_transitions(tmp_path))
+    transitions = tuple(cross_revision_wire_shape_transitions(tmp_path, _PAIR_2025_2026))
 
     assert len(transitions) == 1
     assert transitions[0].casilla_id == "17"
@@ -56,7 +59,7 @@ def test_an_unchanged_field_is_not_reported(tmp_path: Path) -> None:
     _write_revision(tmp_path, "999", "2025", (dict(field),))
     _write_revision(tmp_path, "999", "2026", (dict(field),))
 
-    assert not tuple(cross_revision_wire_shape_transitions(tmp_path))
+    assert not tuple(cross_revision_wire_shape_transitions(tmp_path, _PAIR_2025_2026))
 
 
 def test_a_change_the_design_accounts_for_is_marked_as_such(tmp_path: Path) -> None:
@@ -80,7 +83,7 @@ def test_a_change_the_design_accounts_for_is_marked_as_such(tmp_path: Path) -> N
     _write_revision(tmp_path, "999", "2025", (dict(earlier),))
     _write_revision(tmp_path, "999", "2026", (dict(later),))
 
-    transition = next(iter(cross_revision_wire_shape_transitions(tmp_path)))
+    transition = next(iter(cross_revision_wire_shape_transitions(tmp_path, _PAIR_2025_2026)))
 
     assert transition.official_statement_changed
 
@@ -96,4 +99,24 @@ def test_a_field_carrying_no_casilla_is_not_compared(tmp_path: Path) -> None:
     _write_revision(tmp_path, "999", "2025", ({**field, "casilla_id": None},))
     _write_revision(tmp_path, "999", "2026", ({**field, "casilla_id": None, "length": 9},))
 
-    assert not tuple(cross_revision_wire_shape_transitions(tmp_path))
+    assert not tuple(cross_revision_wire_shape_transitions(tmp_path, _PAIR_2025_2026))
+
+
+def test_adjacency_follows_validity_order_not_folder_names() -> None:
+    """303's 2024 mid-year pair sorts backwards by folder name; validity order puts it right."""
+    modelo = compiled_bundled_authority().modelo("303")
+    ids = {str(revision) for revision in modelo.revisions}
+
+    pairs = adjacent_revision_pairs(modelo, ids)
+
+    assert ("2023", "2024-hasta-08-y-2t") in pairs
+    assert ("2024-hasta-08-y-2t", "2024-desde-09-y-3t") in pairs
+    assert ("2024-desde-09-y-3t", "2025") in pairs
+    assert ("2023", "2024-desde-09-y-3t") not in pairs
+
+
+def test_parallel_revisions_are_not_paired_as_successive_editions() -> None:
+    """369's parallel schema variants share one window and period vocabulary."""
+    modelo = compiled_bundled_authority().modelo("369")
+
+    assert adjacent_revision_pairs(modelo, {str(revision) for revision in modelo.revisions}) == ()

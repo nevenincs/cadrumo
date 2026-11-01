@@ -17,7 +17,8 @@ from pathlib import Path
 import pytest
 
 from ..binding_signal.consumer_audit import python_binding_references
-from ..bindings import audit
+from ..binding_signal.sources import collect_raw_inventory
+from ..bindings import audit, main
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -57,44 +58,51 @@ def test_present_python_scan_roots_report_no_scope_limitation(tmp_path: Path) ->
     assert [item["code"] for item in limitations] == []
 
 
-def test_modelo_without_revisions_tree_is_reported_as_a_narrowed_scope(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
+def _modelos_root(tmp_path: Path) -> Path:
+    return tmp_path / "src" / "cadrumo" / "_data" / "registry" / "aeat" / "modelos"
+
+
+def test_modelo_without_revisions_tree_is_named_in_the_raw_inventory(tmp_path: Path) -> None:
     """A modelo contributing no coordinate is named rather than quietly dropped."""
-    monkeypatch.setattr(sys, "path", list(sys.path))
-    modelos = tmp_path / "src" / "cadrumo" / "_data" / "registry" / "aeat" / "modelos"
+    modelos = _modelos_root(tmp_path)
     (modelos / "303" / "revisions" / "2024").mkdir(parents=True)
-    (modelos / "303" / "revisions" / "2024" / "revision.toml").write_text(
-        '[revisions."2024"]\npredecessor = "none"\n',
-        encoding="utf-8",
-    )
     (modelos / "390").mkdir(parents=True)
 
-    payload = audit(tmp_path)
+    inventory = collect_raw_inventory(tmp_path, modelos, None)
 
-    withheld = [item for item in _limitations(payload) if item["code"] == "MODELOS_WITHOUT_REVISIONS"]
-    assert len(withheld) == 1
-    assert withheld[0]["count"] == 1
-    assert withheld[0]["items"] == ["src/cadrumo/_data/registry/aeat/modelos/390"]
-    summary = payload["summary"]
-    assert isinstance(summary, dict)
-    assert summary["modelos"] == 1
+    assert inventory.modelos_without_revisions == ["src/cadrumo/_data/registry/aeat/modelos/390"]
+    assert set(inventory.revisions) == {("303", "2024")}
 
 
-def test_every_modelo_carrying_revisions_earns_no_scope_limitation(
+def test_every_modelo_carrying_revisions_is_not_named_as_withheld(tmp_path: Path) -> None:
+    """The modelo limitation is falsifiable: a complete corpus does not raise it."""
+    modelos = _modelos_root(tmp_path)
+    (modelos / "303" / "revisions" / "2024").mkdir(parents=True)
+
+    inventory = collect_raw_inventory(tmp_path, modelos, None)
+
+    assert inventory.modelos_without_revisions == []
+
+
+def test_an_unloadable_registry_is_a_processing_error_not_a_raw_fallback(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
 ) -> None:
-    """The modelo limitation is falsifiable: a complete corpus does not raise it."""
+    """Raw delta files omit inherited bindings, so a loader failure must not degrade into measuring them."""
     monkeypatch.setattr(sys, "path", list(sys.path))
-    modelos = tmp_path / "src" / "cadrumo" / "_data" / "registry" / "aeat" / "modelos"
-    (modelos / "303" / "revisions" / "2024").mkdir(parents=True)
-    (modelos / "303" / "revisions" / "2024" / "revision.toml").write_text(
-        '[revisions."2024"]\npredecessor = "none"\n',
+    revision = _modelos_root(tmp_path) / "303" / "revisions" / "2024"
+    (revision / "bindings").mkdir(parents=True)
+    (revision / "revision.toml").write_text('[revisions."2024"]\npredecessor = "none"\n', encoding="utf-8")
+    (revision / "bindings" / "0001-declarations.toml").write_text(
+        '[[revisions."2024".bindings]]\nid = "modelo-303-synthetic-binding"\n',
         encoding="utf-8",
     )
 
-    payload = audit(tmp_path)
+    with pytest.raises(Exception, match=r"."):
+        audit(tmp_path)
 
-    assert "MODELOS_WITHOUT_REVISIONS" not in _limitation_codes(payload)
+    monkeypatch.setattr(sys, "argv", ["bindings", "--root", str(tmp_path), "--output", str(tmp_path / "out.json")])
+    assert main() == 2
+    assert "processing_error" in capsys.readouterr().out
+    assert not (tmp_path / "out.json").exists()

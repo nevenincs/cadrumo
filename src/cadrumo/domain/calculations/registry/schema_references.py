@@ -637,7 +637,14 @@ def _validate_source_period_selector(
 
 def _validate_source_corpus_path(corpus_path: str) -> None:
     """Require repository-relative POSIX corpus paths."""
-    if "\\" in corpus_path or corpus_path.startswith(("/", ".")):
+    segments = corpus_path.split("/")
+    if (
+        "\\" in corpus_path
+        or corpus_path != corpus_path.strip()
+        or corpus_path.startswith(".")
+        or any(segment in {"", ".", ".."} for segment in segments)
+        or ":" in segments[0]
+    ):
         raise RegistryValidationError("source reference corpus_path must be repository-relative POSIX style")
 
 

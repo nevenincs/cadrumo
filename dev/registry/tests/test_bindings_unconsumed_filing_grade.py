@@ -8,7 +8,6 @@ so the strict signal passed while they went unwired.
 
 from __future__ import annotations
 
-import sys
 from collections.abc import Mapping, Sequence
 from pathlib import Path
 
@@ -16,7 +15,6 @@ import pytest
 
 from ..binding_signal.report import summary as build_summary
 from ..binding_signal.semantics import structural_binding_mentions, unconsumed_binding_report
-from ..bindings import audit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -114,36 +112,6 @@ def test_authoring_delta_families_are_not_read_as_mentions() -> None:
     assert mentions == [("constructs", "b")]
 
 
-def test_bindings_of_an_uncompiled_revision_are_unknown_not_unconsumed(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """Without a typed census a binding is unknown; counting it as an orphan would invent findings."""
-    monkeypatch.setattr(sys, "path", list(sys.path))
-    revision = tmp_path / "src" / "cadrumo" / "_data" / "registry" / "aeat" / "modelos" / "303" / "revisions" / "2024"
-    (revision / "bindings").mkdir(parents=True)
-    (revision / "revision.toml").write_text('[revisions."2024"]\npredecessor = "none"\n', encoding="utf-8")
-    (revision / "bindings" / "0001-declarations.toml").write_text(
-        '[[revisions."2024".bindings]]\nid = "modelo-303-synthetic-binding"\n',
-        encoding="utf-8",
-    )
-
-    payload = audit(tmp_path)
-
-    summary = payload["summary"]
-    assert isinstance(summary, dict)
-    assert summary["classification"] == "processing_error"
-    assert summary["unreferenced_bindings"] == 0
-    assert summary["consumer_census_unavailable_bindings"] == 1
-    limitations = payload["limitations"]
-    assert isinstance(limitations, list)
-    unavailable = [item for item in limitations if item["code"] == "CONSUMER_CENSUS_UNAVAILABLE"]
-    assert [item["by_modelo"] for item in unavailable] == [{"303": 1}]
-    findings = payload["findings"]
-    assert isinstance(findings, list)
-    assert not [item for item in findings if item["code"] == "UNCONSUMED_FILING_GRADE_BINDING"]
-
-
 def _payload(
     findings: list[dict[str, object]],
     *,
@@ -181,13 +149,14 @@ def test_summary_of_an_incomplete_census_says_the_counts_are_partial(tmp_path: P
     payload = _payload(
         [],
         classification="processing_error",
-        limitations=({"code": "REGISTRY_LOADER_FAILED"}, {"code": "CONSUMER_CENSUS_UNAVAILABLE"}),
+        limitations=({"code": "SUPPORT_ENVELOPE_UNAVAILABLE"}, {"code": "CONSUMER_CENSUS_UNAVAILABLE"}),
     )
 
     summary = build_summary(payload, tmp_path / "binding-signal.json")
 
     assert summary["headline"] == (
-        "binding census incomplete (CONSUMER_CENSUS_UNAVAILABLE, REGISTRY_LOADER_FAILED); counts below are partial"
+        "binding census incomplete (CONSUMER_CENSUS_UNAVAILABLE, SUPPORT_ENVELOPE_UNAVAILABLE); "
+        "counts below are partial"
     )
 
 
