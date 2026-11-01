@@ -51,6 +51,7 @@ def _declaration(*, roles: tuple[tuple[R, int], ...] = _ROLES) -> FilingEnvelope
         product_identity_requirement=None,
         closer_derivation="relative-closer-v1",
         total_derivation="emitted-byte-total-v1",
+        scheme_period_form="bare_quarter",
     )
 
 
@@ -95,7 +96,7 @@ def test_declarant_prefix_and_closer_use_only_source_stated_slots() -> None:
 def test_exterior_quarter_uses_source_pinned_369_envelope(quarter: str) -> None:
     declaration = _declaration()
     period = Period.from_year_and_code(2025, f"EXT-{quarter}")
-    with pytest.raises(FilingExportValidationError, match="exact official Modelo 369 envelope"):
+    with pytest.raises(FilingExportValidationError, match="declares its bare quarter"):
         envelope_closer_bytes(modelo=Modelo("369"), period=period)
     rendered = render_declared_prefix(
         declaration.prefix_fields,
@@ -110,14 +111,9 @@ def test_exterior_quarter_uses_source_pinned_369_envelope(quarter: str) -> None:
     assert envelope_closer_bytes(modelo=Modelo("369"), period=period, envelope=declaration) == (
         f"</T36902025{quarter}0000>".encode("ascii")
     )
-    for changed in (
-        declaration.model_copy(update={"source_sha256": "0" * 64}),
-        declaration.model_copy(update={"source_ref": "aeat-dr-369-2022"}),
-    ):
-        with pytest.raises(FilingExportValidationError, match="exact official Modelo 369 envelope"):
-            envelope_closer_bytes(modelo=Modelo("369"), period=period, envelope=changed)
-    with pytest.raises(FilingExportValidationError, match="exact official Modelo 369 envelope"):
-        envelope_closer_bytes(modelo=Modelo("370"), period=period, envelope=declaration)
+    undeclared = declaration.model_copy(update={"scheme_period_form": None})
+    with pytest.raises(FilingExportValidationError, match="declares its bare quarter"):
+        envelope_closer_bytes(modelo=Modelo("369"), period=period, envelope=undeclared)
 
 
 def test_declarant_prefix_cannot_claim_auxiliary_or_partial_roles() -> None:

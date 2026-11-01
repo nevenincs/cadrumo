@@ -909,10 +909,11 @@ def m200_producer_values(snapshot: FilingProducerSnapshot) -> dict[FilingProduce
 def _amendment_marker(amendment: AmendmentEvidence | None) -> str | None:
     if amendment is None:
         return None
+    codes = resolve_form_codes(_FORM_ROW_CODES_FACT)
     if amendment.is_sustitutiva:
-        return "S"
+        return codes.code("aeat.amendment.sustitutiva_marker")
     if amendment.is_complementaria:
-        return "C"
+        return codes.code("aeat.amendment.complementaria_marker")
     return None
 
 
@@ -1210,6 +1211,7 @@ def m303_foral_lexicals(m303_filing: M303FilingLexicals) -> M303ForalLexicals:
     return M303ForalLexicals(prorrata_special_option=value, prorrata_special_revocation=value)
 
 
+_FORM_ROW_CODES_FACT = "form-row-codes"
 _M303_FORM_CODES_FACT = "modelo-303-identification-form-codes"
 _M303_INSOLVENCY_SUBTYPE_KEYS = {
     M303InsolvencyFilingSubtype.PRE_ORDER: "pre_order",

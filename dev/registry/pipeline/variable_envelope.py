@@ -137,6 +137,8 @@ _COMPOSED_OPENING_TAG_EXTENT: Final[int] = 17
 
 #: The exact discriminant and record type the shared grammar fixes. Modelo 220
 #: prints a conditional discriminant instead and is refused by these.
+#: The period row a closer prints when a scheme period reaches the wire as its bare quarter.
+_BARE_QUARTER_PERIOD_CONTENT: Final[str] = '["1T".."4T"]'
 _DISCRIMINANT: Final[str] = "0"
 _RECORD_TYPE: Final[str] = "0000>"
 
@@ -231,7 +233,17 @@ def compile_filing_envelope_definition(
         closer_derivation=FilingEnvelopeCloserDerivation.RELATIVE_CLOSER_V1,
         total_derivation=FilingEnvelopeTotalDerivation.EMITTED_BYTE_TOTAL_V1,
         record_terminator=_source_record_terminator(envelope, source=source),
+        scheme_period_form=_printed_scheme_period_form(envelope),
     )
+
+
+def _printed_scheme_period_form(envelope: RecordDesignIntermediateVariableEnvelope) -> Literal["bare_quarter"] | None:
+    """Read the bare quarter a composite closer's period row prints; other closers state no scheme period."""
+    closing = envelope.closing
+    if not isinstance(closing, RecordDesignIntermediateCompositeRelativeClosing):
+        return None
+    printed = any((part.content or "").startswith(_BARE_QUARTER_PERIOD_CONTENT) for part in closing.parts)
+    return "bare_quarter" if printed else None
 
 
 def validate_variable_envelope(

@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from decimal import Decimal
 
-from ....core.filing_producer_key import FilingProducerKey
 from .errors import RegistryValidationError
 from .export_value_policy import (
     ParsedExportPolicyValue,
@@ -35,16 +34,10 @@ def parse_fixed_width_export_field(
     length = require_length(field)
     _require_raw_width(field, raw, length)
     kind = str(getattr(field.kind, "value", field.kind))
-    if (
-        raw == " "
-        and kind == "header"
-        and field.data_type == "text"
-        and getattr(field, "producer_key", None) is FilingProducerKey.AMENDMENT_IS_COMPLEMENTARIA
-        and "aeat-dr-369-2021" in field.source_refs
-    ):
-        # DR369's complementaria indicator carries C or a space. The latter
-        # is a populated, source-owned negative answer, even when required;
-        # trimming it would turn a valid declaration into absent evidence.
+    if raw == " " and field.presence_marker is not None:
+        # A presence marker's blank is a populated, source-owned negative answer,
+        # even when required; trimming it would turn a valid declaration into
+        # absent evidence.
         require_allowed_value(field, raw)
         return raw
     if _is_inactive_binding_slot(field, raw, length, kind):

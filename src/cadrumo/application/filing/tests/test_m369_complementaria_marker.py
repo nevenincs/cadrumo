@@ -5,7 +5,6 @@ from __future__ import annotations
 import pytest
 
 from cadrumo.core.filing_producer_key import FilingProducerKey
-from cadrumo.core.modelo import Modelo
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 from cadrumo.domain.filing.errors import FilingExportValidationError
 
@@ -31,21 +30,20 @@ def _fields():
 @pytest.mark.parametrize(("value", "expected"), [(None, " "), (False, " "), (True, "C")])
 def test_m369_mandatory_complementaria_slot_renders_ordinary_and_amended_returns(value: bool | None, expected: str):
     for field in _fields():
-        rendered = _header_field_value(
-            field, {FilingProducerKey.AMENDMENT_IS_COMPLEMENTARIA: value}, modelo=Modelo("369")
-        )
+        rendered = _header_field_value(field, {FilingProducerKey.AMENDMENT_IS_COMPLEMENTARIA: value})
         assert format_field(field, rendered) == expected
 
 
 @pytest.mark.parametrize("value", [1, "C", "X", "false"])
 def test_m369_complementaria_refuses_untyped_amendment_values(value: object):
     for field in _fields():
-        with pytest.raises(FilingExportValidationError, match="typed amendment boolean"):
-            _header_field_value(field, {FilingProducerKey.AMENDMENT_IS_COMPLEMENTARIA: value}, modelo=Modelo("369"))
+        with pytest.raises(FilingExportValidationError, match="typed boolean producer fact"):
+            _header_field_value(field, {FilingProducerKey.AMENDMENT_IS_COMPLEMENTARIA: value})
 
 
-def test_m369_marker_rendering_preserves_other_modelos_required_and_presence_rules():
-    [field, *_] = _fields()
+def test_a_slot_declaring_no_marker_keeps_the_general_required_and_presence_rules():
+    [declared, *_] = _fields()
+    field = declared.model_copy(update={"presence_marker": None})
     with pytest.raises(FilingExportValidationError, match="is required"):
         _header_field_value(field, {FilingProducerKey.AMENDMENT_IS_COMPLEMENTARIA: None})
     assert _header_field_value(field, {FilingProducerKey.AMENDMENT_IS_COMPLEMENTARIA: True}) == "X"
@@ -53,5 +51,5 @@ def test_m369_marker_rendering_preserves_other_modelos_required_and_presence_rul
 
 def test_m369_complementaria_refuses_a_missing_producer_fact():
     for field in _fields():
-        with pytest.raises(FilingExportValidationError, match="amendment producer fact"):
-            _header_field_value(field, {}, modelo=Modelo("369"))
+        with pytest.raises(FilingExportValidationError, match="requires its producer fact"):
+            _header_field_value(field, {})

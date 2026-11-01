@@ -76,6 +76,7 @@ required = true
 padding = "right_space"
 justification = "left"
 signed = false
+presence_marker = "C"
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021"]
 

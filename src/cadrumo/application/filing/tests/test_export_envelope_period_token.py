@@ -66,5 +66,5 @@ def test_the_relative_closer_spends_two_characters_on_the_period() -> None:
 def test_the_closer_refuses_a_period_the_envelope_cannot_print() -> None:
     period = Period.from_year_and_code(2025, "EXT-1T")
 
-    with pytest.raises(FilingExportValidationError, match="exact official Modelo 369 envelope"):
+    with pytest.raises(FilingExportValidationError, match="declares its bare quarter"):
         envelope_closer_bytes(modelo=Modelo("369"), period=period)

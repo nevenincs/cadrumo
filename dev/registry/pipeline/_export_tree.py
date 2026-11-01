@@ -36,6 +36,7 @@ from .export_tree_serialization import (
 from .generated_export_inheritance_model import GeneratedExportInheritanceContext
 from .generated_tree_dispositions import type_column_rulings_for
 from .joined_record_design import JoinedRecordDesign, JoinedRecordDesignRecord
+from .note_absent_fill import NoteAbsentFillDeclaration, note_absent_fill_for, with_note_absent_fill
 from .note_literals import NoteLiteralDeclaration, note_literals_for
 from .render_profile import validate_render_profile
 from .render_profile_evidence import RenderProfileSourceEvidence
@@ -91,6 +92,7 @@ def render_complete_export_tree(
         literal_notes=literal_notes,
         note_governed_amounts=note_governed_amounts,
         applicability_notes=applicability_notes,
+        absent_fill_note=note_absent_fill_for(joined.source),
     )
     layout, derivations = _build_export_layout(
         revision_id=revision_id,
@@ -337,6 +339,7 @@ def _render_records(
     literal_notes: tuple[NoteLiteralDeclaration, ...] = (),
     note_governed_amounts: tuple[NoteGovernedAmountDeclaration, ...] = (),
     applicability_notes: tuple[NoteStatedApplicabilityDeclaration, ...] = (),
+    absent_fill_note: NoteAbsentFillDeclaration | None = None,
 ) -> tuple[tuple[ExportRecordDefinition, ...], tuple[ExportFieldDerivation, ...]]:
     records: list[ExportRecordDefinition] = []
     derivations: list[ExportFieldDerivation] = []
@@ -349,15 +352,18 @@ def _render_records(
         record_ids.add(record_id)
         _require_exact_record_geometry(joined_record)
         record_derivations = tuple(
-            _normalise_field(
-                field,
-                transport_profile,
-                render_profile,
-                export_record_id=record_id,
-                source_defects=source_defects,
-                literal_notes=literal_notes,
-                note_governed_amounts=note_governed_amounts,
-                applicability_notes=applicability_notes,
+            with_note_absent_fill(
+                _normalise_field(
+                    field,
+                    transport_profile,
+                    render_profile,
+                    export_record_id=record_id,
+                    source_defects=source_defects,
+                    literal_notes=literal_notes,
+                    note_governed_amounts=note_governed_amounts,
+                    applicability_notes=applicability_notes,
+                ),
+                absent_fill_note,
             )
             for field in joined_record.fields
         )

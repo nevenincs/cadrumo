@@ -58,7 +58,7 @@ def test_m369_required_complementaria_marker_keeps_the_official_negative_answer(
         required=True,
         padding="right_space",
         justification="left",
-        source_refs=("aeat-dr-369-2021",),
+        presence_marker="C",
     )
     for answer in ("C", " "):
         wire = render_fixed_width_export_field(field, answer)
@@ -66,7 +66,7 @@ def test_m369_required_complementaria_marker_keeps_the_official_negative_answer(
         assert render_fixed_width_export_field(field, parse_fixed_width_export_field(field, wire)) == wire
     with pytest.raises(RegistryValidationError, match="has no value"):
         render_fixed_width_export_field(field, None)
-    unrelated = field.model_copy(update={"source_refs": ("aeat-dr-200-2025",)})
+    unrelated = field.model_copy(update={"presence_marker": None})
     with pytest.raises(RegistryValidationError, match="has no value"):
         parse_fixed_width_export_field(unrelated, " ")
 

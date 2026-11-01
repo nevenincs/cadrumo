@@ -13,6 +13,7 @@ record_identity = "T3690 Estruc. gral"
 prefix_extent = 328
 closer_derivation = "relative-closer-v1"
 total_derivation = "emitted-byte-total-v1"
+scheme_period_form = "bare_quarter"
 body_record_ids = [
     "modelo-369-importacion-info-adicional",
     "modelo-369-importacion-t36910",

@@ -6,7 +6,6 @@ from collections.abc import Mapping
 
 from ....core.casilla_id import CasillaId
 from ....core.export_layout_format import ExportLayoutFormat
-from ....core.filing_producer_key import FilingProducerKey
 from ..export_field_kind import CasillaFieldKind
 from .errors import RegistryValidationError
 from .export_components import reconstruct_component_values
@@ -364,12 +363,13 @@ def _parse_field_value(
     field: ExportFieldDefinition,
     raw: str,
 ) -> ParsedExportPolicyValue:
-    if field.producer_key is FilingProducerKey.AMENDMENT_IS_COMPLEMENTARIA and "aeat-dr-369-2021" in field.source_refs:
-        # DR369 v1.1 declares this mandatory byte as [blank | constant "C"].
+    if field.presence_marker is not None:
         # Preserve the ordinary-return blank as its actual text token rather
         # than converting it to None, which would fail required-slot replay.
-        if field.data_type != "text" or field.length != 1 or raw not in {" ", "C"}:
-            raise RegistryValidationError("Modelo 369 complementaria must contain exactly C or one ASCII space")
+        if raw not in {" ", field.presence_marker}:
+            raise RegistryValidationError(
+                f"export field {field.id!r} must contain exactly its presence marker or one ASCII space",
+            )
         return raw
     return parse_fixed_width_export_field(field, raw)
 

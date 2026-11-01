@@ -39,7 +39,14 @@ from .fixed_width_codec import (
 )
 from .governed_fact_scope import governed_facts_in_scope
 from .ids import BindingId, ExportFieldId, ExportLayoutId, ProjectionEndpointId, RecordId, SourceRefId
-from .schema_base import CasillaDataType, LegalRefs, RegistryModel, SourceRefs, coerce_enum_member
+from .schema_base import (
+    ZERO_PADDED_EXPORT_DATA_TYPES,
+    CasillaDataType,
+    LegalRefs,
+    RegistryModel,
+    SourceRefs,
+    coerce_enum_member,
+)
 
 __all__ = [
     "DeclaracionIdiomaValue",
@@ -298,6 +305,9 @@ class FilingEnvelopeDefinition(RegistryModel):
     # Only an exact source-reviewed trailing record marker may set this.
     # Absence serialises to the existing envelope grammar without an extra key.
     record_terminator: Literal["crlf"] | None = Field(default=None, exclude_if=lambda value: value is None)
+    # Only a design printing its scheme period as a bare quarter sets this, and
+    # absence serialises to the existing envelope grammar without an extra key.
+    scheme_period_form: Literal["bare_quarter"] | None = Field(default=None, exclude_if=lambda value: value is None)
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -555,6 +565,21 @@ class ExportFieldDefinition(RegistryModel):
     allowed_values: tuple[str, ...] | None = None
     minimum_year: int | None = Field(default=None, ge=1000)
     """An official lower bound on a four-digit filing-year value."""
+    presence_marker: str | None = Field(default=None, min_length=1)
+    """The constant a mandatory slot prints when its boolean fact holds.
+
+    The design declares such a slot with exactly two contents, a blank or this
+    constant (DR369 prints ``[blanco | constante "C"]``). The blank is the slot's
+    populated negative answer, so an ordinary return is never a missing value.
+    Carried by generated layouts from the design row they derive from.
+    """
+    absent_fill: Literal["spaces"] | None = None
+    """How this numeric slot prints when it carries no information.
+
+    Without it a numeric slot's blank fill is its zero padding. A design can state
+    otherwise for its unused slots, as DR369's general notes 6-7 do, which keeps an
+    absent quantity apart from a declared zero.
+    """
     legal_refs: LegalRefs
     source_refs: SourceRefs
 
@@ -625,6 +650,18 @@ class ExportFieldDefinition(RegistryModel):
         _export_field_validation.validate_export_field_kind(self)
         if self.minimum_year is not None and self.value_policy is not ExportValuePolicy.FOUR_DIGIT_YEAR:
             raise RegistryValidationError("minimum_year requires the four-digit-year value policy")
+        if self.presence_marker is not None and (
+            self.producer_key is None
+            or self.data_type != "text"
+            or self.length != len(self.presence_marker)
+            or not self.presence_marker.strip()
+        ):
+            raise RegistryValidationError(
+                f"export field {self.id!r} declares a presence marker outside a text slot of the marker's width "
+                "fed by a producer fact",
+            )
+        if self.absent_fill is not None and self.data_type not in ZERO_PADDED_EXPORT_DATA_TYPES:
+            raise RegistryValidationError(f"export field {self.id!r} declares an absent fill on a non-numeric slot")
         return self
 
     def wire_shape(self) -> tuple[str, str, str, bool, str | None]:

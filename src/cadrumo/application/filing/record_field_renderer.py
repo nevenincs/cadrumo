@@ -15,7 +15,7 @@ from ...domain.calculations.registry.fixed_width_codec import (
     render_empty_block_slot,
     render_fixed_width_export_field,
 )
-from ...domain.calculations.registry.form_codes import form_for_role
+from ...domain.calculations.registry.form_codes import form_for_role, resolve_form_codes
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.schema_exports import ExportFieldDefinition, ExportRecordDefinition
 from ...domain.filing.errors import FilingExportError, FilingExportValidationError
@@ -27,6 +27,8 @@ from .m280_context_validation import m280_contextual_sign_byte, m280_key_wire, r
 from .producer_snapshot import ChargeAccountSelection, FilingProducerSnapshot, RefundAccountSelection
 from .projection import FilingRecordRenderContext
 from .record_types import ProjectionAddress, RecordRenderRow
+
+_FORM_ROW_CODES_FACT = "form-row-codes"
 
 
 def render_record(
@@ -291,7 +293,7 @@ def _field_value(
         case CasillaFieldKind.BINDING:
             return _binding_field_value(field, binding_values, row_index)
         case CasillaFieldKind.HEADER:
-            return _header_field_value(field, headers, modelo=draft.modelo)
+            return _header_field_value(field, headers)
         case CasillaFieldKind.PROJECTION:
             return projection_field_value(field, render_context, projection_values)
         case CasillaFieldKind.DRAFT:
@@ -356,14 +358,12 @@ def projection_field_value(
         raise FilingExportValidationError(f"export projection address {address!r} has no preflighted value") from exc
 
 
-def _header_field_value(
-    field: ExportFieldDefinition, headers: Mapping[FilingProducerKey, object], *, modelo: str | None = None
-) -> object:
+def _header_field_value(field: ExportFieldDefinition, headers: Mapping[FilingProducerKey, object]) -> object:
     if field.producer_key is None:
         raise FilingExportValidationError(f"export field {field.id!r} must declare producer_key")
     value = headers.get(field.producer_key)
-    if _m369_complementaria_slot(field, modelo):
-        return _complementaria_marker(field, headers, value)
+    if field.presence_marker is not None:
+        return _presence_marker_value(field, headers, value)
     if _is_blank(value) and (field.required or _required_for_this_taxpayer(field, headers)):
         raise FilingExportValidationError(
             f"export producer {field.producer_key!r} is required",
@@ -374,31 +374,21 @@ def _header_field_value(
     return value.strip() if isinstance(value, str) else value
 
 
-def _m369_complementaria_slot(field: ExportFieldDefinition, modelo: str | None) -> bool:
-    return (
-        modelo == form_for_role("iva.one_stop_shop")
-        and field.producer_key is FilingProducerKey.AMENDMENT_IS_COMPLEMENTARIA
-        and "aeat-dr-369-2021" in field.source_refs
-    )
-
-
-def _complementaria_marker(
+def _presence_marker_value(
     field: ExportFieldDefinition,
     headers: Mapping[FilingProducerKey, object],
     value: object,
 ) -> str:
-    # DR369 v1.1 requires the slot itself, with [blank | constant "C"].
-    # No amendment evidence describes an ordinary return; neither that
-    # absence nor a false complementaria fact means a missing wire byte.
-    if field.data_type != "text" or field.length != 1:
-        raise FilingExportValidationError("Modelo 369 complementaria requires a one-byte text slot")
+    # The design requires the slot itself, with a blank or its constant. No
+    # evidence describes an ordinary return; neither that absence nor a false
+    # fact means a missing wire byte.
     if field.producer_key not in headers:
-        raise FilingExportValidationError("Modelo 369 complementaria requires an amendment producer fact")
-    if value is True:
-        return "C"
+        raise FilingExportValidationError(f"export field {field.id!r} requires its producer fact")
+    if value is True and field.presence_marker is not None:
+        return field.presence_marker
     if value is False or value is None:
         return " "
-    raise FilingExportValidationError("Modelo 369 complementaria requires a typed amendment boolean")
+    raise FilingExportValidationError(f"export field {field.id!r} requires a typed boolean producer fact")
 
 
 def _text_presence_marker(field: ExportFieldDefinition, value: bool) -> str | None:
@@ -485,7 +475,7 @@ def continuation_page_marker(
     snapshot: FilingProducerSnapshot,
     context: FilingRecordRenderContext | None = None,
 ) -> str | None:
-    """Render ``C`` on a continuation page of its record and blank on the principal page.
+    """Render the declared marker on a continuation page of its record and blank on the principal page.
 
     The marker says the page continues an earlier page of the same type, which
     is a fact of the record occurrence being written, never of the declaration's
@@ -496,7 +486,9 @@ def continuation_page_marker(
     :class:`~cadrumo.domain.filing.schema.ModeloDraft`.
     """
     del draft, snapshot
-    return "C" if context is not None and context.occurrence > 1 else None
+    if context is None or context.occurrence <= 1:
+        return None
+    return resolve_form_codes(_FORM_ROW_CODES_FACT).code("aeat.page.continuation_marker")
 
 
 def m303_complementaria_marker(

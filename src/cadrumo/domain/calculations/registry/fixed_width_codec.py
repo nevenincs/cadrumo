@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from decimal import ROUND_DOWN, ROUND_HALF_UP, Decimal
 from enum import StrEnum
-from typing import Annotated, Protocol
+from typing import Annotated, Literal, Protocol
 
 from pydantic import BeforeValidator
 
@@ -153,6 +153,12 @@ class ExportField(Protocol):
 
     @property
     def minimum_year(self) -> int | None: ...
+
+    @property
+    def presence_marker(self) -> str | None: ...
+
+    @property
+    def absent_fill(self) -> Literal["spaces"] | None: ...
 
     @property
     def source_refs(self) -> tuple[str, ...]: ...
@@ -598,9 +604,7 @@ def render_empty_block_slot(field: ExportField) -> str:
     obligatorio binds the occurrence, and an absent occurrence fills its block
     exactly as an absent optional slot is filled.
     """
-    if "aeat-dr-369-2021" in field.source_refs:
-        # DR369 v1.1, general notes 6-7, requires ALL unused slots to be
-        # spaces, explicitly including numeric fields and whole empty groups.
+    if field.absent_fill == "spaces":
         # Populated numeric values still use their declared padding; an actual
         # zero is a value, whereas an absent correction is no quantity at all.
         return " " * require_length(field)

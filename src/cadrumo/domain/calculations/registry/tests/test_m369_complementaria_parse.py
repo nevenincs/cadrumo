@@ -36,5 +36,5 @@ def test_m369_complementaria_readback_preserves_the_exact_marker(wire: str):
 @pytest.mark.parametrize("wire", ["X", "S", "0", "1", "c", "", "  ", "\t"])
 def test_m369_complementaria_readback_refuses_tokens_outside_the_official_wire_grammar(wire: str):
     for field in _marker_fields():
-        with pytest.raises(RegistryValidationError, match="exactly C or one ASCII space"):
+        with pytest.raises(RegistryValidationError, match="exactly its presence marker or one ASCII space"):
             _parse_field_value(field, wire)

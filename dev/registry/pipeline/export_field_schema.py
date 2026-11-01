@@ -87,6 +87,7 @@ def _schema_field(
                 "value_policy": value_policy,
                 "allowed_values": allowed_values,
                 "minimum_year": minimum_year,
+                "presence_marker": _presence_marker(joined_field),
                 "legal_refs": semantic_entry.legal_refs,
                 "source_refs": semantic_entry.source_refs,
             },
@@ -94,6 +95,14 @@ def _schema_field(
         normalization_schema_version=EXPORT_RENDER_NORMALIZATION_SCHEMA_VERSION,
         derivation_code=derivation_code,
     )
+
+
+def _presence_marker(joined_field: JoinedRecordDesignField) -> str | None:
+    """Read the constant of a producer-fed slot whose printed contents are a blank or that constant."""
+    if joined_field.semantic_entry.kind.value != "header" or joined_field.parser_field.content is None:
+        return None
+    match = _BLANK_OR_CONSTANT_CONTENT.fullmatch(joined_field.parser_field.content.strip())
+    return None if match is None else match.group("constant")
 
 
 def _combined_requirement(
@@ -133,6 +142,8 @@ def _combined_requirement(
 #: ser: C ... D ... G ... I ... N ... V ..."), so the cell states a requirement
 #: and points at its value list. Read as a qualifier, it shipped the one field
 #: every 303 filing must carry as not required.
+#: A slot whose whole printed content is a blank or one constant, as DR369 prints its Complementaria.
+_BLANK_OR_CONSTANT_CONTENT: Final = re.compile(r'\[blanco \| constante "(?P<constant>[A-Z])"\]')
 _UNCONDITIONAL_REQUIREMENTS: Final[frozenset[str]] = frozenset({"obligatorio", "obligatorio pi"})
 
 

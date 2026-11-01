@@ -6,7 +6,7 @@ family = "mapping"
 variant_id = "form-row-codes:design"
 date_axis = "filing_period"
 legal_refs = ["ley-37-1992:art-164"]
-source_refs = ["aeat-dr-232-2018", "enrolled-modelo-156-layout", "aeat-dr-347-2025", "boe-orden-hfp-1335-2021-iva-authority", "aeat-dr-303-2026", "aeat-dr-222-2025", "aeat-dr-353-2026", "aeat-dr-296-2024", "aeat-dr-360-2010", "aeat-dr-280-2022", "aeat-dr-165-2016-2022", "aeat-dr-190-2020"]
+source_refs = ["aeat-dr-100-2025-xsd", "aeat-dr-720", "aeat-dr-130-2019-v12", "aeat-dr-200-2025", "aeat-dr-232-2018", "enrolled-modelo-156-layout", "aeat-dr-347-2025", "boe-orden-hfp-1335-2021-iva-authority", "aeat-dr-303-2026", "aeat-dr-222-2025", "aeat-dr-353-2026", "aeat-dr-296-2024", "aeat-dr-360-2010", "aeat-dr-280-2022", "aeat-dr-165-2016-2022", "aeat-dr-190-2020"]
 review_status = "agent_reviewed"
 ownership = "authored"
 
@@ -21,16 +21,37 @@ required_text = ["no residentes sin establecimiento permanente"]
 source_ref = "boe-orden-hfp-1335-2021-iva-authority"
 required_text = ["Transporte por autotaxis", "Transporte de mercancías por carretera", "20 por ciento", "siempre que el total no exceda de 180"]
 
+# The Aux/Idioma pattern every Modelo 100 schema gives the declaration's language.
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-100-2025-xsd"
+required_text = ["(E|G|C|V){1}"]
+
+# The Modelo 720 position-102 clave and the five letters its row lists.
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-720"
+required_text = ["CLAVE TIPO DE BIEN O DERECHO", "“C”: Cuentas", "“V”: Valores", "“I”: Acciones", "“S”: Seguros", "“B”: Titularidad"]
+
+# Tipo de declaración: the union of the codes the designs of Modelos 303, 130 and 200 print.
+# These two designs are binary workbooks, read as bytes, so a citation stops before an accent.
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-130-2019-v12"
+required_text = ["U (domiciliaci", "N (negativa) y B (resultado al deducir)"]
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-200-2025"
+required_text = ["R (Renuncia a la devoluci", "X (Devoluci", "transferencia al extranjero"]
+
 # Page 2 occurrences and pages, the Mesas rows, and the five prorrata rows. The row counts of
 # the three repeating 303 blocks are also pinned to each edition's own declarations by a test.
 [[fact.variants.source_citations]]
 source_ref = "aeat-dr-303-2026"
-required_text = ["El número máximo de ocurrencias de la página 2 del modelo es 6", "el número máximo de páginas 2 será 3", "Módulo Mesas", "Prorratas - 5 - Código CNAE", "Versión del Programa (Nota 1)", "NIF Empresa Desarrollo (Nota 1)"]
+required_text = ["Tipo de prorrata [503]", "\"G\", \"E\" o blanco", "C (solicitud de compensación) D (devolución)", "El número máximo de ocurrencias de la página 2 del modelo es 6", "el número máximo de páginas 2 será 3", "Módulo Mesas", "Prorratas - 5 - Código CNAE", "Versión del Programa (Nota 1)", "NIF Empresa Desarrollo (Nota 1)"]
 
-# Tablas A, B and C of the Modelo 232 record design.
+# Tablas A, B and C of the Modelo 232 record design, its declaration's amendment marker
+# and its complementary page's indicator.
 [[fact.variants.source_citations]]
 source_ref = "aeat-dr-232-2018"
-required_text = ["TABLA DE TIPOS DE VINCULACIÓN", "TABLA DE METODOS DE VALORACIÓN", "Clave 11: Otras operaciones"]
+required_text = ["S, C o blanco", "Indicador de página complementaria", "C o blanco", "TABLA DE TIPOS DE VINCULACIÓN", "TABLA DE METODOS DE VALORACIÓN", "Clave 11: Otras operaciones"]
 
 # The affiliate record's name (positions 36-75) and membership number (positions 76-87).
 [[fact.variants.source_citations]]
@@ -187,4 +208,11 @@ entries = [
   { key = "export.signed_amount.component_lengths", value = "1.13.2,1.8.2" },
   { key = "export.signed_magnitude.component_lengths", value = "1.13" },
   { key = "aeat.envelope.period_extent", value = "2" },
+  { key = "aeat.amendment.sustitutiva_marker", value = "S" },
+  { key = "aeat.amendment.complementaria_marker", value = "C" },
+  { key = "aeat.page.continuation_marker", value = "C" },
+  { key = "aeat.declaracion.idioma_codes", value = "E,G,C,V" },
+  { key = "m720.asset_class_codes", value = "C,V,I,S,B" },
+  { key = "m303.prorrata.activity_row_types", value = "G,E" },
+  { key = "aeat.tipo_declaracion.codes", value = "C,D,G,I,N,V,U,X,B,R" },
 ]

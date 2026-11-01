@@ -21,7 +21,7 @@ def _correction_amount() -> ExportFieldDefinition:
     [amount, *_] = [field for field in record.fields if field.data_type == "decimal" and field.decimals == 2]
     assert not amount.required
     assert amount.length == 17
-    assert "aeat-dr-369-2021" in amount.source_refs
+    assert amount.absent_fill == "spaces"
     return amount
 
 
@@ -47,6 +47,6 @@ def test_m369_blank_rule_does_not_supply_missing_required_amount():
         parse_fixed_width_export_field(field, " " * 17)
 
 
-def test_m369_blank_rule_requires_its_canonical_source_reference():
-    field = _correction_amount().model_copy(update={"source_refs": ("aeat-dr-200-2025",)})
+def test_a_numeric_slot_declaring_no_absent_fill_keeps_its_zero_padding():
+    field = _correction_amount().model_copy(update={"absent_fill": None})
     assert render_fixed_width_export_field(field, None) == "0" * 17

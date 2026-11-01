@@ -76,6 +76,7 @@ required = true
 padding = "right_space"
 justification = "left"
 signed = false
+presence_marker = "C"
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021"]
 
@@ -106,6 +107,7 @@ justification = "right"
 signed = false
 design_type = "Num"
 value_policy = "four-digit-year"
+absent_fill = "spaces"
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021"]
 
@@ -150,6 +152,7 @@ justification = "right"
 decimals = 2
 signed = false
 design_type = "Num"
+absent_fill = "spaces"
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021"]
 
@@ -180,6 +183,7 @@ justification = "right"
 signed = false
 design_type = "Num"
 value_policy = "four-digit-year"
+absent_fill = "spaces"
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021"]
 
@@ -224,6 +228,7 @@ justification = "right"
 decimals = 2
 signed = false
 design_type = "Num"
+absent_fill = "spaces"
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021"]
 
@@ -254,6 +259,7 @@ justification = "right"
 signed = false
 design_type = "Num"
 value_policy = "four-digit-year"
+absent_fill = "spaces"
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021"]
 
@@ -298,6 +304,7 @@ justification = "right"
 decimals = 2
 signed = false
 design_type = "Num"
+absent_fill = "spaces"
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021"]
 
@@ -328,6 +335,7 @@ justification = "right"
 signed = false
 design_type = "Num"
 value_policy = "four-digit-year"
+absent_fill = "spaces"
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021"]
 
@@ -372,6 +380,7 @@ justification = "right"
 decimals = 2
 signed = false
 design_type = "Num"
+absent_fill = "spaces"
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021"]
 
@@ -402,6 +411,7 @@ justification = "right"
 signed = false
 design_type = "Num"
 value_policy = "four-digit-year"
+absent_fill = "spaces"
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021"]
 
@@ -446,6 +456,7 @@ justification = "right"
 decimals = 2
 signed = false
 design_type = "Num"
+absent_fill = "spaces"
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021"]
 
@@ -476,6 +487,7 @@ justification = "right"
 signed = false
 design_type = "Num"
 value_policy = "four-digit-year"
+absent_fill = "spaces"
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021"]
 
@@ -520,6 +532,7 @@ justification = "right"
 decimals = 2
 signed = false
 design_type = "Num"
+absent_fill = "spaces"
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021"]
 
@@ -550,6 +563,7 @@ justification = "right"
 signed = false
 design_type = "Num"
 value_policy = "four-digit-year"
+absent_fill = "spaces"
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021"]
 
@@ -594,6 +608,7 @@ justification = "right"
 decimals = 2
 signed = false
 design_type = "Num"
+absent_fill = "spaces"
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021"]
 
@@ -624,6 +639,7 @@ justification = "right"
 signed = false
 design_type = "Num"
 value_policy = "four-digit-year"
+absent_fill = "spaces"
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021"]
 
@@ -668,6 +684,7 @@ justification = "right"
 decimals = 2
 signed = false
 design_type = "Num"
+absent_fill = "spaces"
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021"]
 
@@ -698,6 +715,7 @@ justification = "right"
 signed = false
 design_type = "Num"
 value_policy = "four-digit-year"
+absent_fill = "spaces"
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021"]
 
@@ -742,6 +760,7 @@ justification = "right"
 decimals = 2
 signed = false
 design_type = "Num"
+absent_fill = "spaces"
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021"]
 
@@ -772,6 +791,7 @@ justification = "right"
 signed = false
 design_type = "Num"
 value_policy = "four-digit-year"
+absent_fill = "spaces"
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021"]
 
@@ -816,6 +836,7 @@ justification = "right"
 decimals = 2
 signed = false
 design_type = "Num"
+absent_fill = "spaces"
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021"]
 
@@ -846,6 +867,7 @@ justification = "right"
 signed = false
 design_type = "Num"
 value_policy = "four-digit-year"
+absent_fill = "spaces"
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021"]
 
@@ -890,6 +912,7 @@ justification = "right"
 decimals = 2
 signed = false
 design_type = "Num"
+absent_fill = "spaces"
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021"]
 
@@ -920,6 +943,7 @@ justification = "right"
 signed = false
 design_type = "Num"
 value_policy = "four-digit-year"
+absent_fill = "spaces"
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021"]
 
@@ -964,6 +988,7 @@ justification = "right"
 decimals = 2
 signed = false
 design_type = "Num"
+absent_fill = "spaces"
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021"]
 
@@ -994,6 +1019,7 @@ justification = "right"
 signed = false
 design_type = "Num"
 value_policy = "four-digit-year"
+absent_fill = "spaces"
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021"]
 
@@ -1038,6 +1064,7 @@ justification = "right"
 decimals = 2
 signed = false
 design_type = "Num"
+absent_fill = "spaces"
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021"]
 
@@ -1068,6 +1095,7 @@ justification = "right"
 signed = false
 design_type = "Num"
 value_policy = "four-digit-year"
+absent_fill = "spaces"
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021"]
 
@@ -1112,6 +1140,7 @@ justification = "right"
 decimals = 2
 signed = false
 design_type = "Num"
+absent_fill = "spaces"
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021"]
 
@@ -1142,6 +1171,7 @@ justification = "right"
 signed = false
 design_type = "Num"
 value_policy = "four-digit-year"
+absent_fill = "spaces"
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021"]
 
@@ -1186,6 +1216,7 @@ justification = "right"
 decimals = 2
 signed = false
 design_type = "Num"
+absent_fill = "spaces"
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021"]
 
@@ -1216,6 +1247,7 @@ justification = "right"
 signed = false
 design_type = "Num"
 value_policy = "four-digit-year"
+absent_fill = "spaces"
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021"]
 
@@ -1260,6 +1292,7 @@ justification = "right"
 decimals = 2
 signed = false
 design_type = "Num"
+absent_fill = "spaces"
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021"]
 
@@ -1290,6 +1323,7 @@ justification = "right"
 signed = false
 design_type = "Num"
 value_policy = "four-digit-year"
+absent_fill = "spaces"
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021"]
 
@@ -1334,6 +1368,7 @@ justification = "right"
 decimals = 2
 signed = false
 design_type = "Num"
+absent_fill = "spaces"
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021"]
 
@@ -1343,50 +1378,6 @@ offset = 452
 length = 2
 kind = "binding"
 binding = "modelo-369-union-fichero.7-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-codi-18"
-data_type = "text"
-required = false
-padding = "right_space"
-justification = "left"
-signed = false
-legal_refs = ["orden-hac-610-2021:art-1"]
-source_refs = ["aeat-dr-369-2021"]
-
-[[revisions.esquema-union.export_layouts.records.fields]]
-id = "m369-union-08-454-7-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-ejer-18"
-offset = 454
-length = 4
-kind = "binding"
-binding = "modelo-369-union-fichero.7-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-ejer-18"
-data_type = "integer"
-required = false
-padding = "left_zero"
-justification = "right"
-signed = false
-design_type = "Num"
-value_policy = "four-digit-year"
-legal_refs = ["orden-hac-610-2021:art-1"]
-source_refs = ["aeat-dr-369-2021"]
-
-[[revisions.esquema-union.export_layouts.records.fields]]
-id = "m369-union-08-458-7-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-tipo-18"
-offset = 458
-length = 1
-kind = "binding"
-binding = "modelo-369-union-fichero.7-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-tipo-18"
-data_type = "text"
-required = false
-padding = "right_space"
-justification = "left"
-signed = false
-legal_refs = ["orden-hac-610-2021:art-1"]
-source_refs = ["aeat-dr-369-2021"]
-
-[[revisions.esquema-union.export_layouts.records.fields]]
-id = "m369-union-08-459-7-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-peri-18"
-offset = 459
-length = 2
-kind = "binding"
-binding = "modelo-369-union-fichero.7-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-peri-18"
 data_type = "text"
 required = false
 padding = "right_space"

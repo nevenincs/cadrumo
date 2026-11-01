@@ -159,6 +159,8 @@ _FIELD_KEYS: Final[frozenset[str]] = frozenset(
         "value_policy",
         "allowed_values",
         "minimum_year",
+        "presence_marker",
+        "absent_fill",
         "legal_refs",
         "source_refs",
     },
@@ -177,6 +179,8 @@ _FIELD_KEYS_PRESENT_ONLY_WHEN_DECLARED: Final[tuple[str, ...]] = (
     "design_type",
     "literal_fact",
     "minimum_year",
+    "presence_marker",
+    "absent_fill",
 )
 
 
