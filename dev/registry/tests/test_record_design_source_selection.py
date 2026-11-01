@@ -228,7 +228,7 @@ def test_rejects_a_modelo_303_filename_instead_of_an_explicit_source_reference()
         )
 
 
-def test_record_design_selection_cannot_consult_registry_export_layouts() -> None:
+def _catalogue_top_level_imports() -> tuple[set[tuple[int, str | None, str]], set[str]]:
     catalogue_tree = ast.parse(inspect.getsource(_corpus_catalogue))
     top_level_imported_symbols = {
         (node.level, node.module, alias.name)
@@ -239,6 +239,10 @@ def test_record_design_selection_cannot_consult_registry_export_layouts() -> Non
     top_level_direct_imports = {
         alias.name for node in catalogue_tree.body if isinstance(node, ast.Import) for alias in node.names
     }
+    return top_level_imported_symbols, top_level_direct_imports
+
+
+def _resolver_imports_and_reached_names() -> tuple[set[tuple[int, str | None, str]], set[str], set[str], set[str]]:
     resolver_tree = ast.parse(inspect.getsource(_maintenance_support.resolve_record_design_binary))
     resolver = resolver_tree.body[0]
     assert isinstance(resolver, ast.FunctionDef)
@@ -288,6 +292,12 @@ def test_record_design_selection_cannot_consult_registry_export_layouts() -> Non
         and node.id not in local_names
         and id(node) not in annotation_node_ids
     }
+    return resolver_imports, resolver_globals, call_names, attribute_call_names
+
+
+def test_record_design_selection_cannot_consult_registry_export_layouts() -> None:
+    top_level_imported_symbols, top_level_direct_imports = _catalogue_top_level_imports()
+    resolver_imports, resolver_globals, call_names, attribute_call_names = _resolver_imports_and_reached_names()
 
     # Assert the PROPERTY this test is named for -- the selector must not be able
     # to consult an export layout -- rather than pinning the module's whole import
