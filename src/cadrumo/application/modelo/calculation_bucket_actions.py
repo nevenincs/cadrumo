@@ -193,8 +193,7 @@ class _CallerOverrideReconciliation:
     Carries the values the trusted-mesh calculate call and the diagnostics
     surface consume after caller ``--binding`` / ``--relation`` overrides have
     been folded into the mesh-resolved relation channel and the unresolved /
-    advisory sets have been narrowed to exclude the caller-resolved ids. The
-    diagnostics filtering is set-identical to the pre-extraction inline algebra
+    advisory sets have been narrowed to exclude the caller-resolved ids
     (no-silent-under-declaration).
     """
 
@@ -229,14 +228,14 @@ def _orphaned_override_diagnostics(
 ) -> tuple[CalculationSourceDiagnostic, ...]:
     """Advise on every relation override whose key no binding of this revision carries.
 
-    The fold slot IS the binding now, so the relation channel is keyed by
-    binding id. An override under any other key -- a retired pre-absorption
-    relation id above all, but equally a typo or a key inherited from a
-    different modelo -- is merged into the channel, matches nothing the engine
-    reads, and vanishes. Vanishes is the operative word: the operator entered a
-    figure, the result does not contain it, and nothing anywhere says so. That
-    is a silent under-declaration whenever the figure would have reduced the
-    amount owed, and it is undetectable from the output.
+    The fold slot is the binding, so the relation channel is keyed by binding id.
+    An override under any other key -- a retired relation id above all, but
+    equally a typo or a key inherited from a different modelo -- is merged into
+    the channel, matches nothing the engine reads, and vanishes. Vanishes is the
+    operative word: the operator entered a figure, the result does not contain
+    it, and nothing anywhere says so. That is a silent under-declaration whenever
+    the figure would have reduced the amount owed, and it is undetectable from
+    the output.
 
     Advisory rather than blocking. The interactive ``--relation`` surface
     already refuses an unknown key outright at the input boundary, so what
@@ -273,7 +272,7 @@ def _caller_resolved_source_diagnostics(
     caller_binding_ids: frozenset[BindingId],
     detail_row_binding_values: Mapping[BindingId, Decimal],
 ) -> tuple[CalculationSourceDiagnostic, ...]:
-    """Drop advisories whose relation or binding a caller override resolved (set-identical)."""
+    """Drop advisories whose relation or binding a caller override resolved."""
     return tuple(
         diagnostic
         for diagnostic in source_resolution.diagnostics
@@ -302,10 +301,7 @@ def _reconcile_caller_overrides(
     A caller ``--binding`` override of a relation's target binding resolves that
     relation for formula operands, and a caller ``--binding`` / ``--relation``
     override of an automatically-carried prior value resolves the corresponding
-    unresolved binding / relation and drops its advisory. This helper carries the
-    caller-override carve-out algebra that used to live inline in
-    :func:`calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`;
-    the diagnostics filtering stays set-identical.
+    unresolved binding / relation and drops its advisory.
     """
     caller_relation_values_from_bindings = _caller_relation_values_from_bindings(
         revision,
@@ -843,7 +839,7 @@ def _unrouted_source_issues(
     leave the quantity condition evaporating with the calculate response, so a
     later gate would see a clean persisted revision for exactly the case the
     row-keyed screens cannot report — the silence the quantity screen exists to
-    break, restored one layer down.
+    break.
 
     Every other reason that withholds filing persists the same way, so a
     reopened declaration still says what blocks it. A box whose source

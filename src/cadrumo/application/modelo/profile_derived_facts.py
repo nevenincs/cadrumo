@@ -84,15 +84,15 @@ _MINIMO_DESCENDIENTES_AUTONOMICO_CCAA_INFIXES: dict[str, str] = {
     # Ley 22/2009 art. 46.1.a) cedes normative competence over the mínimo
     # personal y familiar's autonómico half to each comunidad, within a ±10%
     # band per concept. Only Comunidad de Madrid's divergent mínimo por
-    # descendientes table is wired today (Decreto Legislativo 1/2010, art. 2,
+    # descendientes table is wired (Decreto Legislativo 1/2010, art. 2,
     # grounded verbatim against the bundled AEAT Renta manuals 2020-2025,
     # part 1, "Comunidad de Madrid: Importes del mínimo..."); a CCAA absent
-    # from this table falls back to the estatal tranches (the pre-existing
-    # mirror-estatal default), matching the 0511/0512 mínimo-del-contribuyente
-    # precedent. Other CCAA that publish their own mínimo por descendientes
-    # figures for 2025 (Andalucía, Asturias, Baleares, Canarias, Galicia,
-    # Comunitat Valenciana per the bundled 2025 manual) are a named follow-up,
-    # not silently assumed to mirror estatal forever.
+    # from this table falls back to the estatal tranches (the mirror-estatal
+    # default), matching the 0511/0512 mínimo-del-contribuyente precedent.
+    # Other CCAA publish their own mínimo por descendientes figures for 2025
+    # (Andalucía, Asturias, Baleares, Canarias, Galicia, Comunitat Valenciana
+    # per the bundled 2025 manual); their tables are not wired, so they take
+    # the same estatal fallback.
     # The left-hand token is the schema parameter-id segment, not a catalogue
     # lookup.  Keep it as syntax so importing this binding module cannot open
     # an ambient governed-fact scope; the declared profile value is matched
@@ -236,10 +236,9 @@ def renta_family_profile_from_facts(
 ) -> RentaFamilyProfile:
     """Rebuild the canonical family record from the stored profile facts.
 
-    ONE reconstruction, carrying the UNION of what two used to carry separately.
-    That is the point of the function and the reason it must not be simplified
-    back: each of the two halves had something the other lacked, so collapsing
-    onto either wholesale was a silent regression in a different direction.
+    ONE reconstruction, carrying the UNION of two field sets. Each half holds
+    something the other lacks, so reducing the record to either one would
+    silently drop facts.
 
     The BIRTH-DATE PRE-CHECK refuses an unparseable stored date by INDEX. The
     canonical reconstruction refuses too, but names the field without saying
@@ -476,10 +475,7 @@ def _resolve_maternidad_meses_from_fact_index(
             declares_meses=declares_meses,
         )
     profile = renta_family_profile_from_facts(fact_index)
-    # The pairing is the DOMAIN's, asked for rather than recomposed here. This
-    # resolver used to build it inline while `meses_maternidad_por_descendiente`
-    # computed the same thing with no production caller -- two authorities for
-    # one answer, which is how the guarderia half once drifted from its record.
+    # The pairing is the DOMAIN's, asked for rather than recomposed here.
     pairs = profile.meses_maternidad_por_descendiente(snapshot.filing_year, thresholds=thresholds, context=context)
     return _maternidad_resolved_resolution(
         profile,
@@ -675,10 +671,8 @@ def inject_derived_minimo_descendientes_facts(
 
     * the ESTATAL aggregate, from the revision's ``renta-{year}-minimo-
       descendientes-{suffix}-{year}`` Art. 58 parameters, projected onto
-      ``renta_family.descendientes_minimos_aggregate_{year}`` — a
-      user-profile schema field that was previously a dangling selector
-      (declared, never populated); this injector retires that gap rather
-      than minting a new key. Feeds casilla 0513 via the registry
+      ``renta_family.descendientes_minimos_aggregate_{year}``, a
+      user-profile schema field. Feeds casilla 0513 via the registry
       binding ``renta-{year}-profile-minimo-descendientes-estatal``.
     * the AUTONÓMICO aggregate, from the SAME estatal parameters UNLESS the
       filer's declared ``tax_residence.ccaa`` has a wired divergent tranche
@@ -689,22 +683,20 @@ def inject_derived_minimo_descendientes_facts(
       Feeds casilla 0514 via the registry binding
       ``renta-{year}-profile-minimo-descendientes-autonomico``. A CCAA absent
       from the wired set mirrors the estatal aggregate exactly (the
-      pre-existing default, matching the 0511/0512 mínimo-del-contribuyente
+      default, matching the 0511/0512 mínimo-del-contribuyente
       precedent).
 
     Always injects both keys (``Decimal("0")`` for a profile with no eligible
     descendant) so a genuinely childless filer's casillas resolve to the
     legally correct zero rather than an unresolved binding failing the
     calculation outright. Computes ALWAYS: both keys are declared derived, so
-    a value present at either can only be stale or hand-planted, and deferring
-    to it silently substituted an operator's figure for the Art. 58/61
-    computation. The write is to the ephemeral per-calculation index and never
-    persists.
+    a value present at either can only be stale or hand-planted and is never
+    used in place of the Art. 58/61 computation. The write is to the ephemeral
+    per-calculation index and never persists.
 
     No filing-year gate: the parameter-presence checks below already refuse a
-    revision that does not declare the full tranche and threshold tables, which
-    is the same ground the former year frozenset covered but derived from the
-    registry rather than restated as a Python constant.
+    revision that does not declare the full tranche and threshold tables,
+    derived from the registry rather than restated as a Python constant.
 
     Core types:
     :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`.
@@ -820,23 +812,19 @@ def inject_derived_anualidades_eligibility_facts(
     Eligibility here is the SAME Art. 58.1 / Art. 61 predicate the two
     aggregates use, so a descendant excluded by the rentas ceiling or by the
     norma 2ª own-return rule generates no mínimo, leaves the payer legally sin
-    derecho, and correctly RESTORES the separate-escala régimen. Before the
-    predicate carried those conditions this flag read ``0`` for such a
-    descendant and denied a régimen the payer was entitled to — the one gap in
-    this campaign that over-taxes rather than under-declares.
+    derecho, and correctly RESTORES the separate-escala régimen.
 
     Computes ALWAYS: the path is declared derived, so a value present there
-    can only be stale or hand-planted, and deferring to it silently decided a
-    régimen question the law owns. Only the revisions carrying the
-    separate-escala régimen are handled, identified by a declared consuming
-    binding rather than by a hardcoded filing-year set.
+    can only be stale or hand-planted and is never used in place of the
+    computation. Only the revisions carrying the separate-escala régimen
+    are handled, identified by a declared consuming binding rather than by
+    a hardcoded filing-year set.
 
-    THE OTHER HALF OF THE ART. 58 DEPENDENCY INCOMPATIBILITY, stated here
-    because the two rules are one pair and landing one half of a pair is this
-    campaign's most repeated defect. This flag says "the payer has no right to
-    the mínimo, so the separate escala applies"; the dependency assimilation
-    says "a non-cohabiting supporter DOES hold the mínimo". Both cannot be true
-    of the same descendant.
+    THE OTHER HALF OF THE ART. 58 DEPENDENCY INCOMPATIBILITY, stated here because
+    the two rules are one pair. This flag says "the payer has no right to the
+    mínimo, so the separate escala applies"; the dependency assimilation says "a
+    non-cohabiting supporter DOES hold the mínimo". Both cannot be true of the
+    same descendant.
 
     They cannot collide today, and by construction rather than by luck. The
     assimilation requires the filer to declare NO positive anualidades, while
@@ -847,11 +835,9 @@ def inject_derived_anualidades_eligibility_facts(
     on the parameter's default - an explicit False documents the reasoning at
     the call site, where the next reader of this function will be.
 
-    When per-child attribution of anualidades lands, that reasoning expires:
-    a filer could then pay anualidades for one child and assimilate another,
-    and this flag would have to be evaluated per descendant rather than once.
-    Whoever lands that attribution must revisit this function in the same
-    change.
+    The flag is evaluated once for the filer. Were anualidades attributed per
+    child, a filer could pay them for one child and assimilate another, and the
+    flag would have to be evaluated per descendant instead.
 
     Core types:
     :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`.
@@ -878,8 +864,7 @@ def inject_derived_anualidades_eligibility_facts(
             # Explicitly False: this régimen only exists for a filer who PAYS
             # anualidades, and a paying filer already has the dependency
             # assimilation suppressed for every descendant. See this function's
-            # docstring for why the two halves cannot collide, and for what
-            # expires when per-child attribution lands.
+            # docstring for why the two halves cannot collide.
             dependencia_assimilation_available=False,
         )
         for descendant in descendientes
@@ -918,10 +903,10 @@ def is_indeterminate_unidad_familiar(fact_index: Mapping[str, UserProfileFactVal
     """Return whether the filer's unit is a tributación-conjunta or partnered case.
 
     This is exactly the condition that makes the Madrid nacimiento/adopción
-    over-claim guard fail-closed in :func:`inject_derived_autonomic_deduccion_facts`
-    (research F9 — no persisted spouse base imponible to evaluate the
-    unidad-familiar 61.860 € límite). Shared with the verify-path D4 eligibility
-    advisory so both surfaces agree on exactly which units are indeterminate.
+    over-claim guard fail-closed in :func:`inject_derived_autonomic_deduccion_facts`,
+    because no spouse base imponible is persisted to evaluate the unidad-familiar
+    61.860 € límite. Shared with the verify-path eligibility advisory so both
+    surfaces agree on exactly which units are indeterminate.
     """
     declaration_type = str(fact_index.get("renta_filing.declaration_type", "")).strip()
     if declaration_type == RentaDeclaracionType.JOINT.code:
@@ -944,7 +929,7 @@ def madrid_nacimiento_adopcion_candidate_weighted_count(
     status — those over-claim guards are the caller's responsibility. This is
     the shared candidate-count primitive: the injector uses it to populate the
     casilla-1039 binding for the determinable single/monoparental case, and the
-    verify-path D4 advisory uses it to detect a would-be-eligible but
+    verify-path advisory uses it to detect a would-be-eligible but
     indeterminate (conjunta/married) unit that should not silently resolve to
     zero.
     """
@@ -984,15 +969,14 @@ def inject_derived_autonomic_deduccion_facts(
     The trigger is fail-closed: it auto-populates only the unambiguous single /
     monoparental individual filer. A tributación conjunta declaration or a
     married filer needs the spouse's base imponible for the unidad-familiar
-    61.860 € límite, which the app does not persist (research F9); for those
-    cases no count is injected, the registry formula's binding default resolves
-    casilla 1039 to 0, and the operator-facing eligibility advisory surfaces the
-    entitlement instead. A deducción's failure mode is over-claim, so silence on
-    an indeterminate unidad-familiar aggregate is the safe default.
+    61.860 € límite, which the app does not persist; for those cases no count is
+    injected, the registry formula's binding default resolves casilla 1039 to 0,
+    and the operator-facing eligibility advisory surfaces the entitlement
+    instead. A deducción's failure mode is over-claim, so silence on an
+    indeterminate unidad-familiar aggregate is the safe default.
 
-    Only the registry-declared filing year is handled (the first-slice
-    registry formula); other years return early. Idempotent: keys already present are not
-    overwritten.
+    Only the registry-declared filing year is handled; other years return early.
+    Idempotent: keys already present are not overwritten.
     """
     if context is None:
         coordinate = date(filing_year, 12, 31)
@@ -1033,12 +1017,11 @@ def inject_derived_autonomic_deduccion_facts(
 def _guarderia_cap_anual(snapshot: RegistrySnapshot) -> Decimal | None:
     """Resolve the Art. 81.2 annual cap parameter for the snapshot's filing year.
 
-    Its own registry parameter rather than the inline literal the 0613 formula
-    carries: a literal inside a formula expression is registry data the
-    application layer cannot read, and the per-child proration is computed
-    here. Returns ``None`` when the revision declares no such parameter, which
-    leaves the aggregate unresolved rather than proceeding against a guessed
-    ceiling.
+    Its own registry parameter rather than an inline literal in the formula: a
+    literal inside a formula expression is registry data the application layer
+    cannot read, and the per-child proration is computed here. Returns
+    ``None`` when the revision declares no such parameter, which leaves the
+    aggregate unresolved rather than proceeding against a guessed ceiling.
     """
     parameter_id = f"renta-{_GUARDERIA_CAP_PARAMETER_SUFFIX}"
     for parameter in snapshot.revision.parameters:

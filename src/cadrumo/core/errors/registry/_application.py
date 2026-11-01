@@ -10,6 +10,8 @@ from typing import TYPE_CHECKING
 
 from ._application_ledger import DECLARED_ERROR_CODES as _LEDGER_CODES
 from ._application_modelo import DECLARED_ERROR_CODES as _MODELO_CODES
+from ._application_modelo_export_review import DECLARED_ERROR_CODES as _MODELO_EXPORT_REVIEW_CODES
+from ._application_modelo_lifecycle import DECLARED_ERROR_CODES as _MODELO_LIFECYCLE_CODES
 from ._application_modelo_work import MODELO_WORK_ERROR_CODES
 from ._application_operations import DECLARED_ERROR_CODES as _OPERATIONS_CODES
 from ._application_profile import DECLARED_ERROR_CODES as _PROFILE_CODES
@@ -22,6 +24,8 @@ if TYPE_CHECKING:
 
 DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
     *_MODELO_CODES,
+    *_MODELO_EXPORT_REVIEW_CODES,
+    *_MODELO_LIFECYCLE_CODES,
     *MODELO_WORK_ERROR_CODES,
     *_LEDGER_CODES,
     *_PROFILE_CODES,

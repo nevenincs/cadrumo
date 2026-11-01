@@ -1,11 +1,5 @@
 """The state tree is built on request, not as a side effect of writing to it.
 
-Before this, directories in the derived-output taxonomy appeared only when
-some consumer happened to write one: the local provider made its root on
-first write, the journal repository made its own, bucket provisioning made a
-bucket's. A caller could not ask for the tree, and a fresh machine held
-whichever subset had been reached.
-
 The directory names asserted below are deliberate literals. What this module
 defends is that bootstrap *materialises* the declared tree on disk, so the
 expectation must come from outside the declaration: resolving it through the
@@ -192,10 +186,9 @@ def test_the_refusal_probe_would_otherwise_succeed(tmp_path: Path) -> None:
 def test_the_root_is_restricted_to_its_owner(tmp_path: Path) -> None:
     """The tree holds encrypted records, the keys that open them, and the state over both.
 
-    Nothing asserted these bits before, so a refactor restructuring the
-    materialiser could have dropped the hardening in silence -- every other
-    test would keep passing, because a world-readable directory works exactly
-    as well as a private one until someone reads it.
+    A refactor restructuring the materialiser could drop the hardening in
+    silence -- every other test would keep passing, because a world-readable
+    directory works exactly as well as a private one until someone reads it.
 
     The mode assertion is guarded rather than skipped: hosts without POSIX
     modes still exercise everything above it, and the guard carries its own
@@ -249,11 +242,9 @@ def test_the_warm_tree_costs_no_mkdir(tmp_path: Path) -> None:
     """Re-materialising an intact tree must not re-issue creation calls.
 
     Every CLI invocation runs this over the whole taxonomy, so the
-    already-built case is the one that matters. It used to ask three
-    questions per target -- exists, then is_dir, then an unconditional mkdir
-    that re-walked the path -- which is why this pins the absence of the
-    third rather than a duration: a timing would measure the machine, while
-    a mkdir on a directory that is already there is the waste itself.
+    already-built case is the one that matters. This pins the absence of a
+    repeated mkdir rather than a duration: a timing would measure the machine,
+    while a mkdir on a directory that is already there is the waste itself.
     """
     with override_settings(cadrumo_storage_root=tmp_path / "state"):
         settings = load_settings()

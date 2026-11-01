@@ -217,7 +217,7 @@ def formula_operand_references_for_casilla(
 def fold_slots(bindings: tuple[BindingDefinition, ...]) -> tuple[tuple[BindingId, RelationPrefillProvider], ...]:
     """Return every relation-prefill slot among a revision's bindings.
 
-    The fold is declared by the binding itself now, so the slot identity and
+    The fold is declared by the binding itself, so the slot identity and
     the fold identity are the same id; both workspace endpoint rows are built
     from this one pairing rather than from a second family that could name a
     binding this revision does not declare.
@@ -267,12 +267,11 @@ def resolve_static_inspection_schema_identity(
     ``schema_fingerprint`` is a content digest over the inspection's own
     declared identity sets (casilla and binding ids) -- the same shape
     ``_edit_services.py`` uses for its own, differently-typed
-    ``ModeloEditSchemaIdentityV1`` (interface-ADR-governed), adapted to the
+    ``ModeloEditSchemaIdentityV1``, adapted to the
     flatter STATIC_INSPECTION type. ``field_manifest_digest`` is exclusively
     the inspection-rooted field manifest's own digest; the edit
     contract's ``CalculationCompletenessManifest`` digest has its own field
-    (``completeness_manifest_digest``) on its own type and no longer shares
-    this one.
+    (``completeness_manifest_digest``) on its own type.
     """
     field_manifest_port = ModeloWorkspaceFieldManifestPortV1(authority=inspection)
     field_manifest_capture = field_manifest_port.capture_projection_with_epoch()
@@ -300,8 +299,8 @@ def static_inspection_evidence_horizon(inspection: RegistryRevisionInspection) -
 def static_inspection_contributors() -> tuple[ModeloWorkspaceContributorIdentityV1, ...]:
     """Return the four contributor identities STATIC_INSPECTION actually reads.
 
-    Matches the ADR's own admission-scope sentence exactly: "Static inspection
-    captures exactly registry, work, locale_catalogue, and field_manifest."
+    Static inspection captures exactly registry, work, locale_catalogue, and
+    field_manifest.
     """
     return tuple(
         sorted(
@@ -399,9 +398,8 @@ def binding_schema_records(
 ) -> tuple[ModeloWorkspaceSchemaRecordV1, ...]:
     """Build one schema record per binding identity, sorted for stable pagination.
 
-    Narrowed from ``inspection: RegistryRevisionInspection`` to the raw
-    tuples it read internally -- ``BindingDefinition`` is the identical type
-    on both ``RegistryRevisionInspection`` and ``RegistrySnapshot.revision``, so this
+    ``BindingDefinition`` is the identical type on both
+    ``RegistryRevisionInspection`` and ``RegistrySnapshot.revision``, so this
     is ONE shared implementation both admissions call, never two copies that
     could drift. Unlike a casilla, ``BindingDefinition`` IS retained
     whole by both admissions, so ``legal_refs`` is the binding's own real
@@ -438,14 +436,13 @@ def formula_schema_records(
 ) -> tuple[ModeloWorkspaceSchemaRecordV1, ...]:
     """Build one schema record per formula, carrying its own full operand set.
 
-    Narrowed from ``inspection: RegistryRevisionInspection`` to the raw
-    ``formulas`` tuple -- ``FormulaDefinition`` is the identical type on both
-    admissions, so this is ONE shared implementation. A FORMULA row's
-    ``formula_operands`` is that formula's own complete input list (every
-    operand its expression declares, of every kind) -- the mirror of a
-    CASILLA row's ``formula_operands``, which lists only the subset naming
-    that one casilla. Both readings are the same field walked from opposite
-    ends of the identical join.
+    ``FormulaDefinition`` is the identical type on both admissions, so this
+    is ONE shared implementation. A FORMULA row's ``formula_operands`` is
+    that formula's own complete input list (every operand its expression
+    declares, of every kind) -- the mirror of a CASILLA row's
+    ``formula_operands``, which lists only the subset naming that one
+    casilla. Both readings are the same field walked from opposite ends of
+    the identical join.
     """
     records: list[ModeloWorkspaceSchemaRecordV1] = []
     for formula in sorted(formulas, key=lambda item: item.id):
@@ -471,14 +468,12 @@ def parameter_schema_records(
 ) -> tuple[ModeloWorkspaceSchemaRecordV1, ...]:
     """Build one schema record per parameter, keyed off every formula that dispatches to it.
 
-    Narrowed from ``inspection: RegistryRevisionInspection`` to the raw
-    ``parameters``/``formulas`` tuples -- ``ParameterDefinition`` and
-    ``FormulaDefinition`` are the identical type on both admissions, so this
-    is ONE shared implementation. A parameter has no direct outbound edge of
-    its own in the registry schema; the only declared connection is a
-    formula's own ``dispatch_table`` operand naming it, which
-    :func:`formula_expression_operand_references` already extracts as
-    ``ModeloWorkspaceFormulaParameterOperandReferenceV1`` and
+    ``ParameterDefinition`` and ``FormulaDefinition`` are the identical type
+    on both admissions, so this is ONE shared implementation. A parameter
+    has no direct outbound edge of its own in the registry schema; the only
+    declared connection is a formula's own ``dispatch_table`` operand naming
+    it, which :func:`formula_expression_operand_references` already extracts
+    as ``ModeloWorkspaceFormulaParameterOperandReferenceV1`` and
     ``ModeloWorkspaceFormulaDispatchOperandReferenceV1`` entries.
     """
     parameter_operands: dict[str, list[ModeloWorkspaceFormulaOperandReferenceV1]] = {}
