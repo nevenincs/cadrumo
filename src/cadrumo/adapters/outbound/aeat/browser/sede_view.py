@@ -124,6 +124,7 @@ class SedeViewPage:
         self._sign_in_check: asyncio.Task[None] | None = None
         self._sign_in_loads = 0
         self._lost = False
+        self._stream_failed = False
         self._closed = False
 
     @classmethod
@@ -180,6 +181,8 @@ class SedeViewPage:
                     return SedeViewEnd.STOPPED
                 if self._lost:
                     return SedeViewEnd.PAGE_LOST
+                if self._stream_failed:
+                    return SedeViewEnd.STREAM_ENDED
                 item = await asyncio.to_thread(self._sink.receive, timeout=_RECEIVE_SECONDS)
                 if item is None:
                     if self._sink.ended:
@@ -464,11 +467,20 @@ class SedeViewPage:
             else:
                 self._screencast.grant_credit(_SCREENCAST_CREDIT)
                 self._shown = page
+                self._spawn(self._watch_screencast(self._screencast))
         if page.is_closed():
             # The page closed while it was being shown, before its close could move the panel on.
             await self._show_newest()
             return
         await self._send_state()
+
+    async def _watch_screencast(self, screencast: ViewScreencast) -> None:
+        """End the view when the lane to the window fails; a screencast stopped on purpose ends quietly."""
+        try:
+            await screencast.wait_ended()
+        except Exception as exc:
+            logger.error("aeat view screencast delivery failed exc_type=%s", type(exc).__name__)
+            self._stream_failed = True
 
     async def _show_newest(self) -> None:
         newest = next((page for page in reversed(self._pages) if not page.is_closed()), None)

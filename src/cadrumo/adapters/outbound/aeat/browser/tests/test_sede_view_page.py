@@ -101,9 +101,9 @@ class _Running:
 
 
 @asynccontextmanager
-async def _view(tmp_path: Path, site: _Site) -> AsyncGenerator[_Running]:
+async def _view(tmp_path: Path, site: _Site, sink: RecordingViewSink | None = None) -> AsyncGenerator[_Running]:
     settings = Settings(cadrumo_storage_root=tmp_path, cadrumo_browser_headless=True, cadrumo_proxy_url=_CLOSED_PROXY)
-    sink = RecordingViewSink()
+    sink = sink or RecordingViewSink()
     opening = SedeViewOpening(
         settings=settings,
         sink=sink,
@@ -308,6 +308,16 @@ async def test_sede_view_ends_on_the_windows_close_and_on_its_last_page_closing(
     async with _view(tmp_path, site) as running:
         await running.page.close()
         assert await asyncio.wait_for(running.browsing, timeout=10) is SedeViewEnd.PAGE_LOST
+
+
+@pytest.mark.asyncio
+async def test_sede_view_ends_as_a_stream_end_when_the_lane_to_the_window_fails(tmp_path: Path) -> None:
+    site = _Site()
+    _home(site, "<title>Inicio</title>")
+    sink = RecordingViewSink()
+    sink.fail_images = True
+    async with _view(tmp_path, site, sink) as running:
+        assert await asyncio.wait_for(running.browsing, timeout=10) is SedeViewEnd.STREAM_ENDED
 
 
 @pytest.mark.asyncio
