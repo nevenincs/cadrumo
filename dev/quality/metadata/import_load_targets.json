@@ -752,6 +752,7 @@
         "cadrumo.application.filing.history_ports",
         "cadrumo.application.filing.history_repository",
         "cadrumo.application.filing.m190_context_validation",
+        "cadrumo.application.filing.m193_context_validation",
         "cadrumo.application.filing.m280_context_validation",
         "cadrumo.application.filing.producer_snapshot",
         "cadrumo.application.filing.producer_snapshot_m200",
