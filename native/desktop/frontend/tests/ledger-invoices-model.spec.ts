@@ -378,6 +378,22 @@ test("the next number follows the highest in its series, class and year", () => 
   ).toBeNull();
 });
 
+test("a stored rate that points write as 12.345 is held longer, so no language reads it as thousands", () => {
+  const stored = invoice({
+    retention_rate: { decimal: "0.12345" },
+    retention_amount: { decimal: "123.45" },
+  });
+  const draft = correctionOf(stored);
+  // `12.345` alone is a thousands run in Spanish; the held spelling is not.
+  expect(draft.retentionRate).toBe("12.3450");
+  expect(draft.retentionAmount).toBe("123.45");
+  expect(checkCorrection(stored, draft)).toMatchObject({
+    changed: [],
+    problems: {},
+    request: null,
+  });
+});
+
 test("a correction sends only the changed fields the update accepts", () => {
   const stored = invoice({
     retention_rate: { decimal: "0.15" },

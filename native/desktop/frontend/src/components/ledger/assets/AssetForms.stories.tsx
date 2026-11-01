@@ -30,8 +30,10 @@ import { translator } from "../../../shell/strings";
 const noop = () => undefined;
 
 /** How the made-up ledger treats a write: it settles as the shape says, or
- * never answers, or is not reached. */
-type Hold = "none" | "in_flight" | "unavailable" | "too_large";
+ * never answers, or is not reached, or is one another window has just sent
+ * the same of, so the answer is that it was already recorded. */
+type Hold =
+  "none" | "in_flight" | "unavailable" | "too_large" | "recorded_elsewhere";
 
 type Args = { shape?: LedgerShape; hold?: Hold; locale: string };
 
@@ -48,7 +50,9 @@ function useHeldPort(shape: LedgerShape | undefined, hold: Hold): LedgerPort {
           ? base.submit(id, payload)
           : hold === "in_flight"
             ? new Promise(noop)
-            : Promise.reject({ code: hold, operation_id: null }),
+            : hold === "recorded_elsewhere"
+              ? base.submit(id, payload).then(() => base.submit(id, payload))
+              : Promise.reject({ code: hold, operation_id: null }),
     };
   }, [base, hold]);
 }
@@ -713,12 +717,24 @@ export const ClaimDone: Story = claiming("furgoneta", 2026, {
   name: "Record dotación, done",
   play: steps(forecast, claim),
 });
+// Another window records the same dotación between this form's forecast and
+// its send: the backend answers the send as already recorded.
 export const ClaimAlreadyRecorded: Story = claiming("furgoneta", 2026, {
-  name: "Record dotación, sent again: already recorded",
-  play: steps(forecast, claim, async (root) => {
-    await drawn(root, ".ledger-asset-saved");
-    await claim(root);
-  }),
+  name: "Record dotación, recorded by another window meanwhile: already recorded",
+  args: { hold: "recorded_elsewhere" },
+  play: async (context) => {
+    await steps(forecast, claim)(context);
+    const root = context.canvasElement;
+    const t = translator(String(context.globals.locale ?? "en"));
+    await waitFor(() => {
+      const line = root.querySelector(".ledger-asset-saved");
+      if (
+        line?.textContent?.includes(t("desktop.ledger.assets.claim_reused")) !==
+        true
+      )
+        throw new Error("the answer that it was already recorded is not drawn");
+    });
+  },
 });
 export const ClaimConflict: Story = claiming("furgoneta", 2026, {
   name: "Record dotación, overlaps one recorded: refused, offers to correct it",
