@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import re
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -121,12 +122,7 @@ def test_native_verification_stage_is_under_its_declared_output_root(tmp_path: P
         verification_destination(Path("../outside"), build_root)
 
 
-def test_schema_one_contract_projects_the_storage_declaration(tmp_path: Path) -> None:
-    generate(REPO_ROOT, tmp_path)
-    contract = json.loads((tmp_path / "contract.json").read_text(encoding="utf-8"))
-    generated = (tmp_path / "contract.rs").read_text(encoding="utf-8")
-    declaration = load(REPO_ROOT)
-
+def _assert_channel_contracts(tmp_path: Path, contract: dict[str, Any], generated: str) -> None:
     assert contract["schema"] == 1
     assert "#define CADRUMO_CONTRACT_SCHEMA 1" in (tmp_path / "contract.h").read_text(encoding="utf-8")
     assert contract["channel"] == {"build": "stable", "installed_directory": STORAGE_ROOT.product_directory}
@@ -141,7 +137,8 @@ def test_schema_one_contract_projects_the_storage_declaration(tmp_path: Path) ->
     with pytest.raises(ValueError, match="Unsupported release channel"):
         generate(REPO_ROOT, tmp_path / "unknown", "nightly")
 
-    root = contract["root"]
+
+def _assert_root_contract(root: dict[str, Any], declaration: Any, generated: str) -> None:
     # Every image carries the one storage rule, whatever configuration built it.
     assert set(root) == set(declaration.root)
     assert not {"precedence", "relative_override", "development_variable", "development_default"} & set(root)
@@ -163,6 +160,9 @@ def test_schema_one_contract_projects_the_storage_declaration(tmp_path: Path) ->
     for refusal in root["refusals"]:
         assert _rust_strings(generated, f"ROOT_REFUSAL_{refusal.upper()}") == [refusal]
 
+
+def _assert_environment_and_package_contract(contract: dict[str, Any], declaration: Any) -> None:
+    root = contract["root"]
     environment = contract["environment"]
     assert environment["pinned"] == [root["variable"], *declaration.temporary]
     assert environment["host_inherited"]["fields"] == [{"name": declaration.authority.name, "kind": "directory_path"}]
@@ -177,10 +177,13 @@ def test_schema_one_contract_projects_the_storage_declaration(tmp_path: Path) ->
     assert "member_vectors" not in contract
     assert contract["invalid_native_path"]["refusal"] == StorageRootRefusal.INVALID_PATH_INPUT.value
 
+
+def _assert_rust_contract_matches(tmp_path: Path, contract: dict[str, Any], generated: str) -> None:
+    root = contract["root"]
     # contract.rs carries the same data from the same run.
     assert _rust_strings(generated, "ROOT_VARIABLE") == [root["variable"]]
     assert "INSTALLED_ROOT_PRECEDENCE" not in generated and "INSTALLED_RELATIVE_OVERRIDE" not in generated
-    assert _rust_strings(generated, "PINNED_ENV") == environment["pinned"]
+    assert _rust_strings(generated, "PINNED_ENV") == contract["environment"]["pinned"]
     assert _rust_strings(generated, "PACKAGE_MANIFEST") == [contract["package"]["package_manifest"]]
     assert "MODE_PACKAGE" not in generated and "BUILD_STORAGE_ROOT" not in generated
     # The resolver's test vectors live apart from the contract every image includes.
@@ -191,6 +194,18 @@ def test_schema_one_contract_projects_the_storage_declaration(tmp_path: Path) ->
     # The launch conformance vectors are test inputs too: no packaged contract carries them.
     assert "LAUNCH_VECTORS" not in generated and "LAUNCH_VECTORS" in vectors
     assert "vectors" not in contract["application_environment"]
+
+
+def test_schema_one_contract_projects_the_storage_declaration(tmp_path: Path) -> None:
+    generate(REPO_ROOT, tmp_path)
+    contract = json.loads((tmp_path / "contract.json").read_text(encoding="utf-8"))
+    generated = (tmp_path / "contract.rs").read_text(encoding="utf-8")
+    declaration = load(REPO_ROOT)
+
+    _assert_channel_contracts(tmp_path, contract, generated)
+    _assert_root_contract(contract["root"], declaration, generated)
+    _assert_environment_and_package_contract(contract, declaration)
+    _assert_rust_contract_matches(tmp_path, contract, generated)
 
 
 def test_packaged_contract_carries_no_development_storage_rule_or_retired_variable(tmp_path: Path) -> None:
