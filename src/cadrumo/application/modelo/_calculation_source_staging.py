@@ -45,7 +45,11 @@ from ...domain.calculations.registry.ids import (
     RelationId,
 )
 from ...domain.calculations.registry.iva_wallet_carry_targets import iva_wallet_owned_binding_ids_for_revision
-from ...domain.calculations.registry.prorrata_regularizacion_bindings import prorrata_source_casilla_ids
+from ...domain.calculations.registry.prorrata_regularizacion_bindings import (
+    PRORRATA_SOURCE_CASILLA_BY_ROLE,
+    ProrrataSourceRole,
+    prorrata_source_casilla_id,
+)
 from ...domain.calculations.registry.schema import (
     ModeloRevision,
     RegistrySnapshot,
@@ -106,19 +110,9 @@ class _ProrrataRegularizacionInputChannels:
     relation_values: Mapping[RelationId, Decimal] | None
 
 
-_PRORRATA_REGULARIZACION_CURRENT_YEAR_CASILLA_IDS: tuple[CasillaId, ...] = (
-    "iva.cuota-deducible-total",
-    "iva.prorrata-volumen-con-derecho",
-    "iva.prorrata-volumen-total",
-    "iva.prorrata-porcentaje",
+_PRORRATA_REGULARIZACION_CURRENT_YEAR_CASILLA_IDS: tuple[CasillaId, ...] = tuple(
+    PRORRATA_SOURCE_CASILLA_BY_ROLE[role] for role in ProrrataSourceRole
 )
-
-
-#: Reviewed source order of the registry's prorrata selector: the cuota total,
-#: the two annual volumes, then the definitive percentage.
-_PRORRATA_VOLUME_ROLE_START = 1
-_PRORRATA_VOLUME_ROLE_END = 3
-_PRORRATA_DEFINITIVE_ROLE = 3
 
 
 def resolve_prorrata_regularizacion_sources(
@@ -249,15 +243,13 @@ def undeclared_prorrata_volume_casilla_ids(
     is not a declared fact: the definitive percentage it yields must not
     settle a regularisation.
     """
-    source_ids = prorrata_source_casilla_ids(revision.bindings)
-    if len(source_ids) < _PRORRATA_VOLUME_ROLE_END:
-        return ()
-    supplied = {**dict(backend_casilla_inputs or {}), **dict(casilla_inputs or {})}
-    return tuple(
+    volume_ids = tuple(
         casilla_id
-        for casilla_id in source_ids[_PRORRATA_VOLUME_ROLE_START:_PRORRATA_VOLUME_ROLE_END]
-        if casilla_id not in supplied
+        for role in (ProrrataSourceRole.VOLUMEN_CON_DERECHO, ProrrataSourceRole.VOLUMEN_TOTAL)
+        if (casilla_id := prorrata_source_casilla_id(revision.bindings, role)) is not None
     )
+    supplied = {**dict(backend_casilla_inputs or {}), **dict(casilla_inputs or {})}
+    return tuple(casilla_id for casilla_id in volume_ids if casilla_id not in supplied)
 
 
 def stage_prorrata_definitive_percentage(
@@ -282,8 +274,8 @@ def stage_prorrata_definitive_percentage(
     not deduct the settlement liquidation.
     """
     revision = registry_snapshot.revision
-    source_ids = prorrata_source_casilla_ids(revision.bindings)
-    if len(source_ids) <= _PRORRATA_DEFINITIVE_ROLE:
+    definitive_id = prorrata_source_casilla_id(revision.bindings, ProrrataSourceRole.PORCENTAJE_DEFINITIVO)
+    if definitive_id is None:
         return None
     if undeclared_prorrata_volume_casilla_ids(
         revision,
@@ -305,7 +297,6 @@ def stage_prorrata_definitive_percentage(
         ),
         filing_period_date=filing_period_date,
     )
-    definitive_id = source_ids[_PRORRATA_DEFINITIVE_ROLE]
     if definitive_id in materialised.unresolved_casilla_ids:
         return None
     return materialised.values.get(definitive_id)

@@ -40,10 +40,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures(
 _MINIMAL_LEGAL_REF_ID = "rd-439-2007:art-110"
 _MINIMAL_SOURCE_REF_ID = "aeat-modelo-130-instructions"
 _M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01", surface="_M130_INGRESOS_CASILLA")
-_M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA: CasillaId = validated_casilla_id(
-    "iva.cuota-deducible-total",
-    surface="_M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA",
-)
 _M303_PRORRATA_VOLUMEN_CON_DERECHO_CASILLA: CasillaId = validated_casilla_id(
     "iva.prorrata-volumen-con-derecho",
     surface="_M303_PRORRATA_VOLUMEN_CON_DERECHO_CASILLA",
@@ -57,7 +53,6 @@ _M303_PRORRATA_PORCENTAJE_CASILLA: CasillaId = validated_casilla_id(
     surface="_M303_PRORRATA_PORCENTAJE_CASILLA",
 )
 _PRORRATA_REGULARIZACION_SOURCE_IDS: tuple[CasillaId, ...] = (
-    _M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA,
     _M303_PRORRATA_VOLUMEN_CON_DERECHO_CASILLA,
     _M303_PRORRATA_VOLUMEN_TOTAL_CASILLA,
     _M303_PRORRATA_PORCENTAJE_CASILLA,

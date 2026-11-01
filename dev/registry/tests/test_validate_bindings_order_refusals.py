@@ -51,7 +51,7 @@ _M303_PRORRATA_BLOCK = f'''
 [[revisions.{_M303_REVISION}.bindings]]
 id = "{_M303_PRORRATA_ID}-planted-duplicate"
 provider = {{ kind = "prorrata_regularizacion", source_modelo = "303", source_casilla_ids = \
-["iva.cuota-deducible-total", "iva.prorrata-volumen-con-derecho", "iva.prorrata-volumen-total", \
+["iva.prorrata-volumen-con-derecho", "iva.prorrata-volumen-total", \
 "iva.prorrata-porcentaje"], source_period_selection = "filer_liquidation_cadence", \
 regularizacion_output = "modelo_303_casilla_44" }}
 value = {{ data_type = "money", channel = "decimal" }}

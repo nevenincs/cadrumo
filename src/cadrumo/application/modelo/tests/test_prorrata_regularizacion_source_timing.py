@@ -111,7 +111,7 @@ def test_prorrata_regularizacion_source_values_are_materialised_by_registry_engi
     assert snapshot.filing_period is not None
     work_unit = _work_unit(revision_id=snapshot.revision.id)
 
-    materialised = materialise_registry_values_for_source_resolution(
+    engine_values = materialise_registry_values_for_source_resolution(
         registry_snapshot=snapshot,
         work_unit=work_unit,
         casilla_inputs={
@@ -122,7 +122,9 @@ def test_prorrata_regularizacion_source_values_are_materialised_by_registry_engi
         backend_casilla_inputs=None,
         binding_values={"modelo-303-compensacion-pendiente-anteriores": Decimal("0.00")},
         filing_period_date=snapshot.filing_period.end_date,
-    ).select(_PRORRATA_REGULARIZACION_CURRENT_YEAR_CASILLA_IDS)
+    )
+    materialised = engine_values.select(_PRORRATA_REGULARIZACION_CURRENT_YEAR_CASILLA_IDS)
+    cuota_deducible = engine_values.select((_CUOTA_DEDUCIBLE_TOTAL_ID,))
 
     assert tuple(materialised.values) == _PRORRATA_REGULARIZACION_CURRENT_YEAR_CASILLA_IDS
     assert materialised.missing_casilla_ids == ()
@@ -130,8 +132,8 @@ def test_prorrata_regularizacion_source_values_are_materialised_by_registry_engi
     assert materialised.values[_VOLUMEN_CON_DERECHO_ID] == _MANUAL_CURRENT_YEAR_CON_DERECHO
     assert materialised.values[_VOLUMEN_TOTAL_ID] == _MANUAL_CURRENT_YEAR_TOTAL
     assert materialised.values[_PORCENTAJE_ID] == _oracle_expected(_PORCENTAJE_ID)
-    assert materialised.values[_CUOTA_DEDUCIBLE_TOTAL_ID] == _MANUAL_FOURTH_QUARTER_INPUT_IVA
+    assert cuota_deducible.values[_CUOTA_DEDUCIBLE_TOTAL_ID] == _MANUAL_FOURTH_QUARTER_INPUT_IVA
     assert _VOLUMEN_CON_DERECHO_ID in materialised.initial_casilla_ids
     assert _VOLUMEN_TOTAL_ID in materialised.initial_casilla_ids
     assert _PORCENTAJE_ID not in materialised.initial_casilla_ids
-    assert _CUOTA_DEDUCIBLE_TOTAL_ID not in materialised.initial_casilla_ids
+    assert _CUOTA_DEDUCIBLE_TOTAL_ID not in engine_values.initial_casilla_ids

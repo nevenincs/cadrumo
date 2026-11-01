@@ -508,6 +508,7 @@ cli:
         gross_duplicate: A(z) {ejercicio} adóév ezen bevallási időszakára már van
           megadott bruttó alap. Semmi sem került mentésre; a cseréhez használd a --replace
           kapcsolót.
+        gross_ejercicio_help: A bevallási időszak adóéve.
         gross_evidence_help: Az összeget alátámasztó saját dokumentumod hivatkozása.
         gross_period_help: Az év záró bevallása előtti Modelo 303 bevallási időszak
           (negyedév, például 1T, vagy hónap, például 03).
@@ -516,7 +517,6 @@ cli:
         gross_sector_unknown: A(z) {sector_id} ágazat nem bejelentett elkülönített
           ágazat. Semmi sem került mentésre; előbb jelentsd be az ágazatot a declare-sector
           paranccsal.
-        gross_year_help: A bevallási időszak adóéve.
         group_help: 'Időszakok közötti IVA prorrata nyilvántartás: válaszd ki a rezsimet
           (general / especial) és add meg a megkülönböztetett szektorokat (LIVA 101
           / 103 / 105 / 106. cikk).'
