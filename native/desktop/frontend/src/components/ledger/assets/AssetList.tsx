@@ -214,6 +214,7 @@ export function AssetList({
       {
         key: "name",
         label: t(ASSET_KEYS.list.column.name),
+        keepWords: true,
         sort: (row) => row.name,
         cell: (row) => (
           <Button

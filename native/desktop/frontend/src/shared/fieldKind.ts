@@ -21,7 +21,7 @@ export type FieldSpec =
   | { kind: "notes"; maxLength?: number }
   | { kind: "date"; min?: string; max?: string }
   | { kind: "year" }
-  | { kind: "money"; decimals?: number; zero?: boolean }
+  | { kind: "money"; decimals?: number; zero?: boolean; currency?: string }
   | { kind: "decimal"; decimals?: number; zero?: boolean }
   | { kind: "integer" }
   | { kind: "percent"; unit: "fraction" | "points" }

@@ -1,7 +1,10 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { RATIO_ELIGIBLE_FIXTURE } from "../../src/dev/fixtures/ledgerRatios";
+import {
+  RATIO_ELIGIBLE_FIXTURE,
+  ratioWording,
+} from "../../src/dev/fixtures/ledgerRatios";
 import { label } from "../support/strings";
 
 // The Ledger page's Setup sections, and the Assets tab's Stock area, over the
@@ -247,7 +250,10 @@ test("ratios are set and unset for the year chosen", async ({
   await area(target, "desktop.ledger.rules.area.ratios");
   // The pane names a category by the label the backend serves for it, and
   // explains it by the notes served beside it.
-  const served = RATIO_ELIGIBLE_FIXTURE.suministros_home_office_internet!;
+  const served = ratioWording(
+    RATIO_ELIGIBLE_FIXTURE.suministros_home_office_internet!,
+    "en",
+  );
   const category = served.label;
   const table = target.locator(".ledger-ratios-table");
   await expect(table).toBeVisible();
@@ -430,7 +436,7 @@ test("a prorrata election is refused until it names its document", async ({
 });
 
 for (const language of ["en", "es", "ca", "hu"]) {
-  test(`the register's kind, method and state words are whole and unclipped in ${language}`, async ({
+  test(`the register's name, kind, method and state words are whole and unclipped in ${language}`, async ({
     page: target,
   }) => {
     // A window narrow enough that the register's columns compete for width.
@@ -454,7 +460,7 @@ for (const language of ["en", "es", "ca", "hu"]) {
         return words;
       };
       const heads = [...table.querySelectorAll("thead th")];
-      const columns = ["kind", "method", "state"].map((id) =>
+      const columns = ["name", "kind", "method", "state"].map((id) =>
         heads.findIndex((head) => head.getAttribute("data-column") === id),
       );
       const cells = [...table.querySelectorAll("tbody tr")].flatMap((row) =>
@@ -467,9 +473,10 @@ for (const language of ["en", "es", "ca", "hu"]) {
           .filter((cell) => cell.scrollWidth > cell.clientWidth)
           .map((cell) => cell.textContent),
         broken: cells.flatMap(split),
-        // Free text keeps breaking anywhere to fit its column.
         words: cells.map((cell) => getComputedStyle(cell).overflowWrap),
-        name: getComputedStyle(table.querySelector("tbody td")!).overflowWrap,
+        // An identifier keeps breaking anywhere to fit its column.
+        serial: getComputedStyle(table.querySelectorAll("tbody td")[1]!)
+          .overflowWrap,
       };
     });
     expect(found.columns.every((at) => at >= 0)).toBe(true);
@@ -477,7 +484,7 @@ for (const language of ["en", "es", "ca", "hu"]) {
     expect(found.clipped).toEqual([]);
     expect(found.broken).toEqual([]);
     expect(new Set(found.words)).toEqual(new Set(["normal"]));
-    expect(found.name).toBe("anywhere");
+    expect(found.serial).toBe("anywhere");
   });
 }
 

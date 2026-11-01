@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { EntryInput } from "@/components/editors/EntryInput";
+import { EntrySuffix, suffixRoom } from "@/components/editors/EntrySuffix";
 import type { EditorProps } from "@/components/editors/editorProps";
 import {
   decimalReading,
@@ -46,19 +47,13 @@ export function PercentEditor({
     };
   }, [locale, unit]);
   return (
-    <div data-slot="percent-editor" className="relative">
+    <EntrySuffix mark="%" slot="percent-editor">
       <EntryInput
         inputMode="decimal"
         {...editor}
         reading={reading}
-        className={cn("pr-7 text-right tabular-nums", className)}
+        className={cn(suffixRoom("%"), "text-right tabular-nums", className)}
       />
-      <span
-        aria-hidden
-        className="pointer-events-none absolute top-1/2 right-2.5 -translate-y-1/2 text-muted-foreground"
-      >
-        %
-      </span>
-    </div>
+    </EntrySuffix>
   );
 }

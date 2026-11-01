@@ -30,7 +30,11 @@ import type {
   PlanRow,
 } from "../../../shell/ledgerSetup";
 import type { PublicDecimal } from "../../../shell/ledger";
-import { ASSET_FAMILY, type AssetFamily } from "./assetsWords";
+import {
+  ASSET_FAMILY,
+  REGISTER_CURRENCY,
+  type AssetFamily,
+} from "./assetsWords";
 
 // ---- The tab's forms -------------------------------------------------------
 
@@ -243,7 +247,7 @@ export function specOf(found: FormField): FieldSpec | null {
     case "date":
       return { kind: "date" };
     case "amount":
-      return { kind: "money" };
+      return { kind: "money", currency: REGISTER_CURRENCY };
     case "share":
       return { kind: "percent", unit: "fraction" };
     case "quantity":

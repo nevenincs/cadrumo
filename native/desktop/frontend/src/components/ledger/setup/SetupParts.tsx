@@ -229,7 +229,7 @@ export function SetupTable<Row>({
   return (
     <div
       role="group"
-      className="overflow-x-auto"
+      className="shrink-0 overflow-x-auto"
       tabIndex={0}
       aria-label={label}
     >

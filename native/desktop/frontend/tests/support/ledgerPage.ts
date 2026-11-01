@@ -23,3 +23,30 @@ export async function showLedgerColumn(target: Page, column: string) {
       .locator(`[role=columnheader][data-header-column=${column}]`),
   ).toHaveCount(1);
 }
+
+/** Opens the Ledger's Assets tab in the scenario window, on its Stock area
+ * where `stock` is given. */
+export async function openLedgerAssets(
+  target: Page,
+  { stock = false, language = "en" } = {},
+) {
+  await target.goto(
+    `/scenarios.html?scenario=ledger&latency=0&bar=off&lang=${language}`,
+  );
+  await target.locator("[data-rail=ledger]").click();
+  await expect(target.locator(".ledger-page").getByRole("grid")).toBeVisible();
+  await target
+    .locator(".pane-docs .pane-head")
+    .getByRole("tab", {
+      name: label("desktop.ledger.section.assets", {}, language),
+    })
+    .click();
+  await expect(target.locator(".ledger-assets")).toBeVisible();
+  if (stock)
+    await target
+      .getByRole("tab", {
+        name: label("desktop.ledger.assets.area.stock", {}, language),
+        exact: true,
+      })
+      .click();
+}
