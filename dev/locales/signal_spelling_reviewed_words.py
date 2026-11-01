@@ -36,6 +36,22 @@ REVIEWED_SPANISH_LEGAL_SPELLINGS = frozenset(
 REVIEWED_LOCALE_SPELLINGS: dict[str, frozenset[str]] = {
     "en": frozenset(
         {
+            # English legal and administrative usage, including real fostering
+            # and signing roles in the operator interface:
+            # https://www.merriam-webster.com/dictionary/declarant
+            # https://assets.publishing.service.gov.uk/media/64ad6414269c83000c8f5e5a/EWCO_Amendment_Request_Form_v1.0_Published_12.07.2023.pdf
+            # https://regs.maryland.gov/us/md/exec/comar/07.05.03.05
+            "declarant",
+            "Declarant",
+            "declarants",
+            "Declarants",
+            "countersigner",
+            "Preadoptive",
+            # British Python usage, and AEAT's own English income manual:
+            # https://bugs.python.org/msg275615
+            # https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2023/ManualRenta2023_en_gb.pdf
+            "deserialised",
+            "Impatriate",
             # Technical forms in resource, security, import and model prose.
             # https://learn.microsoft.com/en-us/windows/win32/menurc/common-resource-attributes
             # https://learn.microsoft.com/en-us/deployedge/microsoft-edge-browser-policies/deletingundecryptablepasswordsenabled

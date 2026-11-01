@@ -39,6 +39,28 @@ def test_english_redaction_version_terms_are_exact() -> None:
     assert not is_project_spelling("en", "redactionss")
 
 
+def test_english_legal_roles_keep_case_possessive_and_typo_boundaries() -> None:
+    for word in (
+        "declarant",
+        "Declarant",
+        "declarants",
+        "Declarants",
+        "countersigner",
+        "preadoptive",
+        "Preadoptive",
+        "deserialised",
+        "Impatriate",
+    ):
+        assert is_project_spelling("en", word)
+        assert not is_project_spelling("en", word + "x")
+        for locale in ("ca", "es", "hu"):
+            assert not is_project_spelling(locale, word)
+    for word in ("declarant's", "Declarant's", "countersigner's"):
+        assert is_project_spelling("en", word)
+    for word in ("declerant", "declerant's", "countersingner's", "preadopptiv"):
+        assert not is_project_spelling("en", word)
+
+
 def test_attested_english_technical_words_remain_exact_and_language_scoped() -> None:
     words = (
         "updatable",
