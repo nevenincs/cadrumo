@@ -27,7 +27,8 @@ from cadrumo.domain.renta.actividad_asset.disposal import (
 )
 from cadrumo.domain.renta.actividad_asset.lifecycle import AssetKind
 
-from .test_activity_asset_schedule_authority_resolution import _GROWING, _asset, _employment, _linear
+from ._activity_asset_schedule_support import _asset, _linear
+from .test_activity_asset_schedule_authority_methods import _GROWING, _employment
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

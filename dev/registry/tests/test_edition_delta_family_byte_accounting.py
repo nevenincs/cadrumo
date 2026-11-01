@@ -8,7 +8,8 @@ import pytest
 
 from dev.registry.compiler.loader import load_modelo_directory
 from dev.registry.edition_delta_assessment import MigrationAssessment, assess_migration_state
-from dev.registry.tests.test_edition_family_delta import _casillas, _edition, _layout, _modelo
+from dev.registry.tests.synthetic_delta_edition_support import write_sectioned_edition
+from dev.registry.tests.test_edition_family_delta import _casillas, _layout, _modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -25,9 +26,9 @@ def _file_bytes(root: Path) -> int:
 
 def test_generated_full_export_and_empty_successor_are_attributed_once(tmp_path: Path) -> None:
     modelo = _modelo(tmp_path)
-    full = _edition(modelo, "2024", sections={"export": _layout("2024", "cabecera")})
+    full = write_sectioned_edition(modelo, "2024", sections={"export": _layout("2024", "cabecera")})
     (full / "export" / "_generation.provenance.json").write_text("{}\n", encoding="utf-8")
-    empty = _edition(
+    empty = write_sectioned_edition(
         modelo,
         "2025",
         manifest_extra='family_storage_baseline = "2024"\nscoped_families = ["export_layouts"]\n',
@@ -58,7 +59,7 @@ def test_generated_full_export_and_empty_successor_are_attributed_once(tmp_path:
 
 def test_authored_export_and_other_family_keep_their_own_bytes(tmp_path: Path) -> None:
     modelo = _modelo(tmp_path)
-    revision = _edition(
+    revision = write_sectioned_edition(
         modelo,
         "2024",
         sections={"casillas": _casillas("2024"), "export_layouts": _layout("2024", "cabecera")},

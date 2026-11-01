@@ -6,6 +6,7 @@ The existing outward adapter suites own those actual guarantees.
 
 from __future__ import annotations
 
+import functools
 import secrets
 from collections.abc import Callable
 from datetime import datetime, timedelta
@@ -26,11 +27,10 @@ from ..review_package_recipient_encryption import RecipientDecryptionError
 from ..review_package_recipient_registry import RecipientFingerprintRecord, RecipientFingerprintRegister
 from ..review_package_recipient_registry_ports import RecipientFingerprintRegistryPorts
 from ..review_package_signing import ReviewPackageSigningKeypair
-from ._review_package_bytes_support import build_package_path
+from ._review_package_bytes_support import build_package_path, review_package_revision, review_package_work_unit
 from ._review_package_signing_support import InMemoryReviewPackageSigningKeypairCapability
 from .m036_operation_support import INSTANT, PROFILE_ID, CommitFence, Events, Operands
 from .test_m036_lifecycle_service import _EventRepository
-from .test_review_package_signing import _revision, _work_unit
 
 
 class Signing:
@@ -247,8 +247,8 @@ class Subject:
         self.package = build_package_path(
             tmp_path,
             bucket_id=str(PROFILE_ID),
-            work_unit_factory=_work_unit,
-            revision_factory=_revision,
+            work_unit_factory=review_package_work_unit,
+            revision_factory=functools.partial(review_package_revision, source_ref="test-review-package-signing"),
             draft_bytes=b"synthetic reviewed financial draft",
             operation=operation,
         )
