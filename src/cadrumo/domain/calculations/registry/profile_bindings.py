@@ -38,9 +38,9 @@ class ProfileRowsSelector(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    object_path: str = Field(min_length=3, max_length=128, pattern=_FACT_PATH_PATTERN)
+    object_path: str = Field(max_length=128, pattern=_FACT_PATH_PATTERN)
     leaf: str = Field(min_length=1, max_length=64, pattern=r"^[a-z][a-z0-9_]*$")
-    count_path: str = Field(min_length=3, max_length=128, pattern=_FACT_PATH_PATTERN)
+    count_path: str = Field(max_length=128, pattern=_FACT_PATH_PATTERN)
 
     def row_path(self, index: int) -> str:
         """Return the stored fact path of this leaf on row ``index``."""
