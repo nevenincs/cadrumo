@@ -77,6 +77,7 @@ GATE_REFUSED_REASONS: Final[frozenset[str]] = frozenset(
         "unhandled_binding_source",
         "source_domain_not_ready",
         "advisory_binding_value",
+        "precedence_tier_divergence",
     }
 )
 """Reasons the calculation-note gate refuses checking, exporting and recording on.
@@ -119,8 +120,7 @@ DERIVED_GATE_REASONS: Final[frozenset[str]] = frozenset(
 CALCULATION_NOTE_ATTENTION: Final[Mapping[str, ModeloFormAttention]] = MappingProxyType(
     {
         **dict.fromkeys(BLOCKING_REASONS, _B),
-        # A filed figure resting on a contested value withholds recording; one that reaches no box does not.
-        "precedence_tier_divergence": _B,
+        # A contested figure that reaches no exported box withholds nothing.
         "precedence_tier_divergence_advisory": _C,
         # Persisted and shown, not refused: the route it reports may lack a terminal origin by design.
         "terminal_origin_mismatch": _C,
